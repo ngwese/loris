@@ -135,7 +135,8 @@ Dilator::warpTime( double currentTime )
         double stretch = (_target[idx]	- _target[idx-1]) / (_initial[idx] - _initial[idx-1]);			
         newtime = _target[idx-1] + ((currentTime - _initial[idx-1]) * stretch);
     }
-
+	
+	return newtime;
 }
 
 // ---------------------------------------------------------------------------

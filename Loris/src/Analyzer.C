@@ -431,6 +431,10 @@ Analyzer::extractPeaks( std::list< Breakpoint > & frame, double frameTime,
 void 
 Analyzer::thinPeaks( std::list< Breakpoint > & frame, AnalyzerState & state )
 {
+	//	can't do anything if there's fewer than two Breakpoints:
+	if ( frame.size() < 2 )
+		return;
+
 	frame.sort( BreakpointUtils::greater_amplitude() );
 	
 	//	nothing can mask the loudest peak, so I can start with the
