@@ -17,7 +17,14 @@ Note boudaries are near .75 s, 1.25 s, and 2.1 s, and the duration is
 2.4 s. Some fundamental frequencies are 291 Hz at 1 s, 280.5 Hz at
 1.5 s, and 269 Hz at 2.0 s.
 
-Last updated: 28 June 2002 by Kelly Fitz
+notes from trial 1:
+	- cannot use 150 Hz window at all, and 300 Hz is clearly worse
+	than 600 Hz window.
+	- cannot discern any difference between 100 and 150 Hz resolution,
+	with or without distilling
+	- distillation works well
+
+Last updated: 10 July 2002 by Kelly Fitz
 """
 
 print __doc__
