@@ -33,22 +33,17 @@
  *
  */
 
-#include <deque>
-#include <vector>
-
-//	needed for template constructor:
-//#define NO_TEMPLATE_MEMBERS
-#if !defined(NO_TEMPLATE_MEMBERS)
 #include <Exception.h>
 #include <Notifier.h>
+
 #include <algorithm>
+#include <deque>
 #include <functional>
 #include <numeric>
-#endif
+#include <vector>
 
 //	begin namespace
 namespace Loris {
-
 
 // ---------------------------------------------------------------------------
 //	class Filter
@@ -62,29 +57,76 @@ namespace Loris {
 //
 class Filter
 {
-//	-- implementation --
+//	--- interface ---
+public:
+	//	default construction:
+	Filter( void );
+	
+	//	initialized construction:
+	//
+	//	If template members are allowed, then the coefficients
+	//	can be stored in any kind of iterator range, otherwise,
+	//	they must be in an array of doubles.
+	//
+#if !defined(NO_TEMPLATE_MEMBERS)
+	template<typename IterT1, typename IterT2>
+	Filter( IterT1 ma_begin, IterT1 ma_end,	//	feed-forward coeffs
+			IterT2 ar_begin, IterT2 ar_end,	//	feedback coeffs
+			double gain = 1. );
+#else
+	Filter( const double * ma_begin, const double * ma_end, //	feed-forward coeffs
+			const double * ar_begin, const double * ar_end, //	feedback coeffs
+			double gain = 1. );
+#endif
+
+	//	copy and assignment do not copy the delay line state:
+	Filter( const Filter & other );
+	Filter & operator=( const Filter & rhs );
+
+	//	compute next filtered sample from input sample:				
+	double sample( double input );
+
+	//	function call operator:
+	double operator() ( double input ) { return sample(input); }
+	
+	//	clear the delay line:
+	void clear( void );
+	
+//	--- implementation ---
 	//	delay line:
 	std::deque< double > _delayline;
 		
 	//	ARMA coefficients:
 	std::vector< double > _maCoefs, _arCoefs;	
 	
-	//	filter gain (gain applied to output)
+	//	filter gain (applied to output)
 	double _gain;		
 
-//	-- public interface --
-public:
-	//	construction:
+};	//	end of class Filter
+
+// ---------------------------------------------------------------------------
+//	constructor
+// ---------------------------------------------------------------------------
+//	If template members are allowed, then the coefficients
+//	can be stored in any kind of iterator range, otherwise,
+//	they must be in an array of doubles.
+//
 #if !defined(NO_TEMPLATE_MEMBERS)
-	template<typename IterT>
-	Filter( IterT ma_begin, IterT ma_end,	//	feed-forward coeffs
-		IterT ar_begin, IterT ar_end,	//	feedback coeffs
-		double gain = 1. ) :
-		_maCoefs( ma_begin, ma_end ),
-		_arCoefs( ar_begin, ar_end ),
-		_delayline( std::max( ma_end-ma_begin, ar_end-ar_begin ) - 1, 0. ),
-		_gain( gain )
-	{
+template<typename IterT1, typename IterT2>
+Filter::Filter( IterT1 ma_begin, IterT1 ma_end,	//	feed-forward coeffs
+				IterT2 ar_begin, IterT2 ar_end,	//	feedback coeffs
+				double gain ) :
+#else
+inline 
+Filter::Filter( const double * ma_begin, const double * ma_end, //	feed-forward coeffs
+				const double * ar_begin, const double * ar_end, //	feedback coeffs
+				double gain ) :
+#endif
+	_maCoefs( ma_begin, ma_end ),
+	_arCoefs( ar_begin, ar_end ),
+	_delayline( std::max( ma_end-ma_begin, ar_end-ar_begin ) - 1, 0. ),
+	_gain( gain )
+{
 	if ( *ar_begin == 0. )
 	{
 		Throw( InvalidObject, "Tried to create a Filter with zero AR coefficient at zero delay." );
@@ -107,27 +149,8 @@ public:
 
 	debugger << _maCoefs[0] << " " << _maCoefs[1] << " " << _maCoefs[2] << " " << _maCoefs[3] << " " << std::endl;
 	debugger << _arCoefs[0] << " " << _arCoefs[2] << " " << _arCoefs[2] << " " << _arCoefs[3] << " " << std::endl;
+}
 
-	}
-#else
-	Filter( const double * ma_begin, const double * ma_end,
-		const double * ar_begin, const double * ar_end,
-		double gain = 1. );
-#endif
-	
-	//	use compiler-generated:
-	// Filter( const Filter & other );
-	// Filter & operator=( const Filter & rhs );
-	// ~Filter(void);
-		
-	//	next filtered sample from input sample:				
-	double sample( double input );
-
-	//	function call operator:
-	double operator() ( double input )
-		{ return sample(input); }
-	
-};	//	end of class Filter
 
 }	//	end of namespace Loris
 
