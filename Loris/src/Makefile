@@ -87,11 +87,7 @@ OBJ_LORIS = AiffFile.o \
 #
 #	targets:
 #
-lib: classes
-	${CC} -shared ${OBJ_LORIS} ${LIB_LORIS} -o $(OUTPUT)/libloris.so
-
 classes: ${OBJ_LORIS}
-	echo "checked Loris objects"
 
 #
 #	dependencies:
