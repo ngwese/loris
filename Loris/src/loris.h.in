@@ -94,6 +94,11 @@
 	typedef struct Partial Partial;
 #endif
 
+/*
+	Maybe should also have loris_label_t and loris_size_t
+	defined, depending on configure.
+*/
+
 #if defined(__cplusplus)
 	namespace Loris {
 	extern "C" {
@@ -304,20 +309,117 @@ void partialList_splice( PartialList * ptr_this,
 /* ---------------------------------------------------------------- */
 /*		Partial object interface
 /*
-/*
-	startTime, endTime, duration, initialPhase, label, 
-	size (numBreakpoints), setLabel,
-	frequencyAt, amplitudeAt, bandwidthAt, phaseAt
+/*	A Partial represents a single component in the
+	reassigned bandwidth-enhanced additive model. A Partial consists of a
+	chain of Breakpoints describing the time-varying frequency, amplitude,
+	and bandwidth (or noisiness) envelopes of the component, and a 4-byte
+	label. The Breakpoints are non-uniformly distributed in time. For more
+	information about Reassigned Bandwidth-Enhanced Analysis and the
+	Reassigned Bandwidth-Enhanced Additive Sound Model, refer to the Loris
+	website: www.cerlsoundgroup.org/Loris/.
  */ 
+
+/*	Return the start time (seconds) for the specified Partial.
+ */
+double partial_startTime( const Partial * p );
+
+/*	Return the end time (seconds) for the specified Partial.
+ */
+double partial_endTime( const Partial * p );
+
+/*	Return the duration (seconds) for the specified Partial.
+ */
+double partial_duration( const Partial * p );
+
+/*	Return the initial phase (radians) for the specified Partial.
+ */
+double partial_initialPhase( const Partial * p );
+
+/*	Return the integer label for the specified Partial.
+ */
+int partial_label( const Partial * p );
+
+/*	Return the number of Breakpoints in the specified Partial.
+ */
+unsigned long partial_numBreakpoints( const Partial * p );
+
+/*	Return the frequency (Hz) of the specified Partial interpolated
+	at a particular time. It is an error to apply this function to
+	a Partial having no Breakpoints.
+ */
+double partial_frequencyAt( const Partial * p, double t );
+
+/*	Return the bandwidth of the specified Partial interpolated
+	at a particular time. It is an error to apply this function to
+	a Partial having no Breakpoints.
+ */
+double partial_bandwidthAt( const Partial * p, double t );
+
+/*	Return the phase (radians) of the specified Partial interpolated
+	at a particular time. It is an error to apply this function to
+	a Partial having no Breakpoints.
+ */
+double partial_phaseAt( const Partial * p, double t );
+
+/*	Return the (absolute) amplitude of the specified Partial interpolated
+	at a particular time. Partials are assumed to fade out
+	over 1 millisecond at the ends (rather than instantaneously).
+	It is an error to apply this function to a Partial having no Breakpoints.
+ */
+double partial_amplitudeAt( const Partial * p, double t );
+
+/* 	Assign a new integer label to the specified Partial.
+ */
+void partial_setLabel( Partial * p, int label );
 
 /* ---------------------------------------------------------------- */
 /*		Breakpoint object interface
 /*
-/*	
-	frequency, amplitude, bandwidth, phase
-	setFrequency, setAmplitude, setBandwidth, setPhase
+/*	A Breakpoint represents a single breakpoint in the
+	Partial parameter (frequency, amplitude, bandwidth) envelope.
+	Instantaneous phase is also stored, but is only used at the onset of 
+	a partial, or when it makes a transition from zero to nonzero amplitude.
+	
+	Loris Partials represent reassigned bandwidth-enhanced model components.
+	A Partial consists of a chain of Breakpoints describing the time-varying
+	frequency, amplitude, and bandwidth (noisiness) of the component.
+	For more information about Reassigned Bandwidth-Enhanced 
+	Analysis and the Reassigned Bandwidth-Enhanced Additive Sound 
+	Model, refer to the Loris website: 
+	www.cerlsoundgroup.org/Loris/.
  */ 
 
+/*	Return the frequency (Hz) of the specified Breakpoint.
+ */
+double breakpoint_frequency( const Breakpoint * bp );
+
+/* 	Return the (absolute) amplitude of the specified Breakpoint.
+ */
+double breakpoint_amplitude( const Breakpoint * bp );
+
+/*	Return the bandwidth coefficient of the specified Breakpoint.
+ */
+double breakpoint_bandwidth( const Breakpoint * bp );
+
+/*	Return the phase (radians) of the specified Breakpoint.
+ */
+double breakpoint_phase( const Breakpoint * bp );
+
+/*	Assign a new frequency (Hz) to the specified Breakpoint.
+ */
+void breakpoint_setFrequency( Breakpoint * bp, double f );
+
+/* 	Assign a new (absolute) amplitude to the specified Breakpoint.
+ */
+void breakpoint_setAmplitude( Breakpoint * bp, double a );
+
+/*	Assign a new bandwidth coefficient to the specified Breakpoint.
+ */
+void breakpoint_setBandwidth( Breakpoint * bp, double bw );
+
+/*	Assign a new phase (radians) to the specified Breakpoint.
+ */
+void breakpoint_setPhase( Breakpoint * bp, double phi );
 
 /* ---------------------------------------------------------------- */
 /*		non-object-based procedures

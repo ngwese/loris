@@ -255,3 +255,554 @@ void partialList_splice( PartialList * dst, PartialList * src )
 	}
 }
 
+/* ---------------------------------------------------------------- */
+/*		Partial object interface
+/*
+/*	A Partial represents a single component in the
+	reassigned bandwidth-enhanced additive model. A Partial consists of a
+	chain of Breakpoints describing the time-varying frequency, amplitude,
+	and bandwidth (or noisiness) envelopes of the component, and a 4-byte
+	label. The Breakpoints are non-uniformly distributed in time. For more
+	information about Reassigned Bandwidth-Enhanced Analysis and the
+	Reassigned Bandwidth-Enhanced Additive Sound Model, refer to the Loris
+	website: www.cerlsoundgroup.org/Loris/.
+ */ 
+
+/* ---------------------------------------------------------------- */
+/*        partial_startTime        
+/*
+/*	Return the start time (seconds) for the specified Partial.
+ */
+double partial_startTime( const Partial * p )
+{
+	try 
+	{
+		ThrowIfNull((Partial *) p);
+
+		return p->startTime();
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in partial_startTime(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in partial_startTime(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+
+/* ---------------------------------------------------------------- */
+/*        partial_endTime        
+/*
+/*	Return the end time (seconds) for the specified Partial.
+ */
+double partial_endTime( const Partial * p )
+{
+	try 
+	{
+		ThrowIfNull((Partial *) p);
+
+		return p->endTime();
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in partial_endTime(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in partial_endTime(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+
+/* ---------------------------------------------------------------- */
+/*        partial_duration        
+/*
+/*	Return the duration (seconds) for the specified Partial.
+ */
+double partial_duration( const Partial * p )
+{
+	try 
+	{
+		ThrowIfNull((Partial *) p);
+
+		return p->duration();
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in partial_duration(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in partial_duration(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+
+/* ---------------------------------------------------------------- */
+/*        partial_initialPhase        
+/*
+/*	Return the initial phase (radians) for the specified Partial.
+ */
+double partial_initialPhase( const Partial * p )
+{
+	try 
+	{
+		ThrowIfNull((Partial *) p);
+
+		return p->initialPhase();
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in partial_initialPhase(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in partial_initialPhase(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+
+/* ---------------------------------------------------------------- */
+/*        partial_label        
+/*
+/*	Return the integer label for the specified Partial.
+ */
+int partial_label( const Partial * p )
+{
+	try 
+	{
+		ThrowIfNull((Partial *) p);
+
+		return p->label();
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in partial_label(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in partial_label(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+
+/* ---------------------------------------------------------------- */
+/*        partial_numBreakpoints        
+/*
+/*	Return the number of Breakpoints in the specified Partial.
+ */
+unsigned long partial_numBreakpoints( const Partial * p )
+{
+	try 
+	{
+		ThrowIfNull((Partial *) p);
+
+		return p->size();
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in partial_numBreakpoints(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in partial_numBreakpoints(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+
+/* ---------------------------------------------------------------- */
+/*        partial_frequencyAt        
+/*
+/*	Return the frequency (Hz) of the specified Partial interpolated
+	at a particular time. It is an error to apply this function to
+	a Partial having no Breakpoints.
+ */
+double partial_frequencyAt( const Partial * p, double t )
+{
+	try 
+	{
+		ThrowIfNull((Partial *) p);
+
+		return p->frequencyAt( t );
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in partial_frequencyAt(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in partial_frequencyAt(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+
+/* ---------------------------------------------------------------- */
+/*        partial_bandwidthAt        
+/*
+/*	Return the bandwidth of the specified Partial interpolated
+	at a particular time. It is an error to apply this function to
+	a Partial having no Breakpoints.
+ */
+double partial_bandwidthAt( const Partial * p, double t )
+{
+	try 
+	{
+		ThrowIfNull((Partial *) p);
+
+		return p->bandwidthAt( t );
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in partial_bandwidthAt(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in partial_bandwidthAt(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+
+/* ---------------------------------------------------------------- */
+/*        partial_phaseAt        
+/*
+/*	Return the phase (radians) of the specified Partial interpolated
+	at a particular time. It is an error to apply this function to
+	a Partial having no Breakpoints.
+ */
+double partial_phaseAt( const Partial * p, double t )
+{
+	try 
+	{
+		ThrowIfNull((Partial *) p);
+
+		return p->phaseAt( t );
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in partial_phaseAt(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in partial_phaseAt(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+
+/* ---------------------------------------------------------------- */
+/*        partial_amplitudeAt        
+/*
+/*	Return the (absolute) amplitude of the specified Partial interpolated
+	at a particular time. Partials are assumed to fade out
+	over 1 millisecond at the ends (rather than instantaneously).
+	It is an error to apply this function to a Partial having no Breakpoints.
+ */
+double partial_amplitudeAt( const Partial * p, double t )
+{
+	try 
+	{
+		ThrowIfNull((Partial *) p);
+
+		return p->amplitudeAt( t, 0.001 );
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in partial_amplitudeAt(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in partial_amplitudeAt(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+
+/* ---------------------------------------------------------------- */
+/*        partial_setLabel        
+/*
+/* 	Assign a new integer label to the specified Partial.
+ */
+void partial_setLabel( Partial * p, int label )
+{
+	try 
+	{
+		ThrowIfNull((Partial *) p);
+
+		p->setLabel( label );
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in partial_setLabel(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in partial_setLabel(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+
+/* ---------------------------------------------------------------- */
+/*		Breakpoint object interface
+/*
+/*	A Breakpoint represents a single breakpoint in the
+	Partial parameter (frequency, amplitude, bandwidth) envelope.
+	Instantaneous phase is also stored, but is only used at the onset of 
+	a partial, or when it makes a transition from zero to nonzero amplitude.
+	
+	Loris Partials represent reassigned bandwidth-enhanced model components.
+	A Partial consists of a chain of Breakpoints describing the time-varying
+	frequency, amplitude, and bandwidth (noisiness) of the component.
+	For more information about Reassigned Bandwidth-Enhanced 
+	Analysis and the Reassigned Bandwidth-Enhanced Additive Sound 
+	Model, refer to the Loris website: 
+	www.cerlsoundgroup.org/Loris/.
+ */ 
+
+/* ---------------------------------------------------------------- */
+/*        breakpoint_frequency        
+/*
+/*	Return the frequency (Hz) of the specified Breakpoint.
+ */
+double breakpoint_frequency( const Breakpoint * bp )
+{
+	try 
+	{
+		ThrowIfNull((Breakpoint *) bp);
+
+		return bp->frequency();
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in breakpoint_frequency(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in breakpoint_frequency(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+
+/* ---------------------------------------------------------------- */
+/*        breakpoint_amplitude        
+/*
+/* 	Return the (absolute) amplitude of the specified Breakpoint.
+ */
+double breakpoint_amplitude( const Breakpoint * bp )
+{
+	try 
+	{
+		ThrowIfNull((Breakpoint *) bp);
+
+		return bp->amplitude();
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in breakpoint_amplitude(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in breakpoint_amplitude(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+
+/* ---------------------------------------------------------------- */
+/*        breakpoint_bandwidth        
+/*
+/*	Return the bandwidth coefficient of the specified Breakpoint.
+ */
+double breakpoint_bandwidth( const Breakpoint * bp )
+{
+	try 
+	{
+		ThrowIfNull((Breakpoint *) bp);
+
+		return bp->bandwidth();
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in breakpoint_bandwidth(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in breakpoint_bandwidth(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+
+/* ---------------------------------------------------------------- */
+/*        breakpoint_phase        
+/*
+/*	Return the phase (radians) of the specified Breakpoint.
+ */
+double breakpoint_phase( const Breakpoint * bp )
+{
+	try 
+	{
+		ThrowIfNull((Breakpoint *) bp);
+
+		return bp->phase();
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in breakpoint_phase(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in breakpoint_phase(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+
+/* ---------------------------------------------------------------- */
+/*        breakpoint_setFrequency        
+/*
+/*	Assign a new frequency (Hz) to the specified Breakpoint.
+ */
+void breakpoint_setFrequency( Breakpoint * bp, double f )
+{
+	try 
+	{
+		ThrowIfNull((Breakpoint *) bp);
+
+		bp->setFrequency( f );
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in breakpoint_setFrequency(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in breakpoint_setFrequency(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+
+/* ---------------------------------------------------------------- */
+/*        breakpoint_setAmplitude        
+/*
+/* 	Assign a new (absolute) amplitude to the specified Breakpoint.
+ */
+void breakpoint_setAmplitude( Breakpoint * bp, double a )
+{
+	try 
+	{
+		ThrowIfNull((Breakpoint *) bp);
+
+		bp->setAmplitude( a );
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in breakpoint_setAmplitude(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in breakpoint_setAmplitude(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+
+/* ---------------------------------------------------------------- */
+/*        breakpoint_setBandwidth        
+/*
+/*	Assign a new bandwidth coefficient to the specified Breakpoint.
+ */
+void breakpoint_setBandwidth( Breakpoint * bp, double bw )
+{
+	try 
+	{
+		ThrowIfNull((Breakpoint *) bp);
+
+		bp->setBandwidth( bw );
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in breakpoint_setBandwidth(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in breakpoint_setBandwidth(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+
+/* ---------------------------------------------------------------- */
+/*        breakpoint_setPhase        
+/*
+/*	Assign a new phase (radians) to the specified Breakpoint.
+ */
+void breakpoint_setPhase( Breakpoint * bp, double phi )
+{
+	try 
+	{
+		ThrowIfNull((Breakpoint *) bp);
+
+		bp->setPhase( phi );
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in breakpoint_setPhase(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in breakpoint_setPhase(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
