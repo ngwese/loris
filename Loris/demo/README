@@ -1,0 +1,4 @@
+This directory contains a simple sound morphing demonstration using a
+Loris extension module to the Python scripting language. The directory
+morphdemo.out contains sample output from the sound morphing
+demonstration script, morphdemo.py.

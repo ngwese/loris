@@ -139,6 +139,15 @@ read( const char *infilename, std::list<Partial> & partials )
 //
 	SdifGenKill();
 	
+//
+// Make a noise if no Partials were imported:
+//
+	if ( partials.size() == 0 )
+	{
+		notifier << "No Partials were imported from " << infilename 
+				 << ", no (non-empty) 1TRC frames found." << endl;
+	}
+	
 }
 
 #pragma mark -
@@ -235,7 +244,7 @@ readEnvelopeData( SdifFileT *file, std::vector< Partial > & partialsVector )
 		else if ( errPtr->Tag == eBadNbData )
 		{
 			Throw(FileIOException, 
-			"Error reading SDIF file: undefined martrix type. Is the Loris SdifTypes.STYP file accessible?");
+			"Error reading SDIF file: bad martrix data. Does the SdifTypes.STYP file include the bandwidth-enhanced 1TRC definition?");
 		}
 		else
 		{			

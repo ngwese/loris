@@ -1,0 +1,4 @@
+This directory contains SWIG (www.swig.org) interface files for
+building a scripting interface to the Loris library. Includes a
+Makefile and wrappers for building a Python module. (SWIG is not
+required for building the Python module.)

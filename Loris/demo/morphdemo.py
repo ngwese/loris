@@ -72,6 +72,9 @@ loris.distill( flut )
 fname = 'fluteOK.aiff'
 print 'synthesizing', fname, '(%s)' % time.ctime(time.time())
 loris.exportAiff( fname, loris.synthesize( flut, samplerate ), samplerate, 1, 16 )
+fname = 'flute.sdif'
+print 'exporting sdif file:', fname, '(%s)' % time.ctime(time.time())
+loris.exportSdif( fname, flut )
 
 #
 #	analyze clarinet tone
@@ -91,6 +94,9 @@ loris.scaleAmp( clar, loris.BreakpointEnvelopeWithValue( 2 ) )
 fname = 'clarOK.aiff'
 print 'synthesizing', fname, '(%s)' % time.ctime(time.time())
 loris.exportAiff( fname, loris.synthesize( clar, samplerate ), samplerate, 1, 16 )
+fname = 'clarinet.sdif'
+print 'exporting sdif file:', fname, '(%s)' % time.ctime(time.time())
+loris.exportSdif( fname, clar )
 
 #
 #	analyze cello tone
@@ -108,6 +114,9 @@ loris.distill( cel )
 fname = 'cellOK.aiff'
 print 'synthesizing', fname, '(%s)' % time.ctime(time.time())
 loris.exportAiff( fname, loris.synthesize( cel, samplerate ), samplerate, 1, 16 )
+fname = 'cello.sdif'
+print 'exporting sdif file:', fname, '(%s)' % time.ctime(time.time())
+loris.exportSdif( fname, cel )
 
 #
 #	perform temporal dilation

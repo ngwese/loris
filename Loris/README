@@ -1,4 +1,4 @@
-This is Loris.
+This is Loris 1.0beta1.
 
 Loris is an Open Source C++ class library implementing analysis,
 manipulation, and synthesis of digitized sounds using the Reassigned
@@ -19,53 +19,76 @@ Additive Model, contact the developers at loris@cersloundgroup.org, or
 visit them at http://www.cerlsoundgroup.org/Loris/.
 
 The primary distribution point for Loris is SourceForge
-(http://www.sourceforge.net) and its mirrors.
+(http://loris.sourceforge.net) and its mirrors.
 
 DIRECTORIES:
 
 Loris/classes - the Loris C++ class library.
 
 Loris/demo - a simple sound morphing demonstration using a Loris
-extension module to the Python scripting language.
+extension module to the Python scripting language. (Loris demo 
+download only)
 
 Loris/demo/morphdemo.out - sample output from the sound morphing
-demonstration script (sanity chcek).
+demonstration script (sanity check). (Loris demo download only)
 
-Loris/mac - Metrowerks Codewarrior project for building Loris under MacOS.
+Loris/doc - documentation in html format (only for the
+c-linkable procedural interface and the Python interface).
 
-Loris/python - a Python extension module used in the initial
-development of Loris, included temporarily as part of the BETA
-distributions, and will be replaced by a more general scripting
-language interface.
+Loris/lib - target directory for library and scripting module
+builds.
+
+Loris/mac - Metrowerks Codewarrior project for building Loris 
+under MacOS. (Loris mac download only)
+
+Loris/pi - the c-linkable procedural interface to the Loris
+C++ classes. Includes the Makefile for building the Loris
+library.
+
+Loris/scripting - SWIG (www.swig.org) interface files for building
+a scripting interface to the Loris library. Includes a Makefile and 
+wrappers for building a Python module. (SWIG is not required for 
+building the Python module.)
+
+INSTALLATION: 
 
 In order to compile and link the Loris library and scripting
 extensions, you will need the FFTW Fourier transform routines,
-available at http://www.fftw.org/, and the SDIF (Sound Description
+available at www.fftw.org, and the SDIF (Sound Description
 Interchange Format) data formatting routines, available at
-http://cnmat.CNMAT.Berkeley.EDU/SDIF/. FFTW and SDIF are covered by
-their own licenses and copyrights, and are entirely separate from
-Loris.
+www.ircam.fr/sdif. FFTW and SDIF are covered by their own 
+licenses and copyrights, and are entirely separate from Loris.
 
-Loris Makefiles and projects look for the FFTW distribution in a
-directory "FFTW" at the same level as the Loris directory. Loris
-Makefiles and projects look for the SDIF distribution in a directory
-"CNMAT-SDIF-alpha" at the same level as the Loris directory. For
-example:
+Loris Makefiles and projects look for the FFTW and SDIF headers and
+libraries on their default installed locations (/usr/local/include and
+/usr/local/lib, respectively,  on UNIX systems). You may need to
+change your Makefiles or projects if you install these packages in
+some other configuration.
 
-	/usr/local/Loris
-	/usr/local/FFTW/fftw-2.1.3
-	/usr/local/CNMAT-SDIF-alpha
+SDIF:
 
+Loris supports a bandwidth-enhanced version of the SDIF 1TRC format
+that is described in the SdifTypes.STYP file in Loris/lib. Until this 
+matrix format becomes part of the SDIF standard (real soon now), it
+is necessary to replace the SdifTypes.STYP file in the standard 
+distribution with the file in Loris/lib, or to set the SDIFTYPES 
+environment variable, as described in the tutorial material on the
+IRCAM SDIF website (www.ircam.fr/sdif).
 
-You may need to change your Makefiles or projects if you install these
-packages in some other configuration.
+COMPATIBILITY:
 
-PLATFORMS:
+Loris has been tested on various UNIX systems using gcc-2.95.2 and
+MacOS 9 using Metrowerks Codewarrior Pro 5.3. It has also reportedly
+been built using Cygwin, a gcc port for Windows
+(http://sources.redhat.com/cygwin/). It should compile with any
+reasonably standard-compliant compiler.
 
-Loris has been tested under Linux (Slackware) 2.2.13 and IRIX 6.5
-using gcc-2.95.2 and MacOS 9 using Metrowerks Codewarrior Pro 5 (with
-all updates). It should compile with any reasonably standard-compliant
-compiler.
+The Loris module for Python has been tested using Python 1.5.2, and 
+is also reported to work with Python 1.6. It has not yet been tested
+using Python 2.0.
+
+The CodeWarrior project for MacOS requires version 5.3 (5.0 plus all
+updates). It has not been verified to work with version 6.0.
 
 COPYRIGHT AND LICENSE:
 
