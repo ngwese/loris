@@ -7,6 +7,27 @@ See the end for copying conditions.
 Please send Loris bug reports to loris@cerlsoundgroup.org.
 
 -------------------------------------------------------
+changes since 1.0beta6 release:
+
+- Improved Distiller operation.
+
+- Changed iterator behavior in scripting interface (NOTE: this 
+may break previously-working code!) next and prev methods
+for PartialIterators and PartialListIterators no longer advance
+and return themselves, they now return a new iterator at the
+next/prev position, more like pointers, less like STL iterators,
+easier to use.
+
+- Improvements and cleanup in Analyzer, Filter, Oscillator,
+FourierTransform, Synthesizer.
+
+- Updated Mac project for CW7 and carbon.
+
+- Added FrequencyReference class.
+
+- Improved autoconfiguration.
+
+-------------------------------------------------------
 changes since 1.0beta5 release:
 
 - The ReassignedSpectrum class has been modified to compute
