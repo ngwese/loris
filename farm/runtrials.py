@@ -22,6 +22,7 @@ farm = {
 	'elephants': ('elephants.py', ),
 	'flutes': ('flute.py', 'flutter.py', ),
 	'french': ('french.py',),
+	'funny': ('funny.py',),
 	'gong': ('gong.py',),
 	'moses': ('moses.py',),
 	'sax': ('saxriff.py', )
