@@ -85,6 +85,13 @@ public:
 			{ return lhs.label() < rhs.label(); }
 	};
 	
+	struct duration_greater : 
+		public std::binary_function< const Partial, const Partial, bool >
+	{
+		bool operator()( const Partial & lhs, const Partial & rhs ) const 
+			{ return lhs.duration() > rhs.duration(); }
+	};
+	
 
 #if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace PartialUtils

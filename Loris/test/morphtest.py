@@ -61,7 +61,7 @@ clar = loris.importSdif( 'clarinet.sdif' )
 
 try:
 	print 'making a bogus attempt at writing an Spc file'
-	loris.ExportSpc( 90 ).write( 'bad_spc_file.spc', clar )
+	loris.exportSpc( 'bad_spc_file.spc', clar, 90 )
 except:
 	import sys
 	print 'caught:', sys.exc_type, sys.exc_value

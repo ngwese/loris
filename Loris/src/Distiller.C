@@ -231,6 +231,46 @@ static void fixGaps( Partial & dest,
 }
 
 // ---------------------------------------------------------------------------
+//	overlap	(STATIC)
+// ---------------------------------------------------------------------------
+//	Return true if the specified Partial overlaps temporally with any
+//	Partial in the given iterator range.
+//
+template <typename Iterator>
+static bool
+overlap( Iterator partial, Iterator begin, Iterator end )
+{
+	for ( Iterator it = begin; it != end; ++it )
+	{
+		//	note the KLUDGE with the Partial fade times, 
+		//	FIX THIS, CHECK IN MAIN ROUTINE
+		if ( partial->startTime() < it->endTime() + Partial::FadeTime() && 
+			 partial->endTime() > it->startTime() - Partial::FadeTime() )
+			return true;
+	}
+	return false;
+}
+
+// ---------------------------------------------------------------------------
+//	collectEnergy	(STATIC)
+// ---------------------------------------------------------------------------
+//	Return the energy represented by all the Partials in the specified
+//	iterator range at the specified time.
+//
+template <typename Iterator>
+static double
+collectEnergy( double time, Iterator begin, Iterator end )
+{
+	double e = 0.;	
+	for ( Iterator it = begin; it != end; ++it )
+	{
+		double a = it->amplitudeAt( time );
+		e += a * a;
+	}
+	return e;
+}
+
+// ---------------------------------------------------------------------------
 //	Distiller constructor
 // ---------------------------------------------------------------------------
 //
@@ -256,15 +296,41 @@ Distiller::~Distiller( void )
 //
 //	Formerly, zero-labeled Partials are eliminated. Now they remain at
 //	the end of the list.
+/*
+	new way:
+
+	sort partials by length
+	stable_sort by label (preserve length sorting for partials
+		of same label, can I do this? Is list::sort() stable?)
+	for each label:
+		initialize new partial
+		for each partial having this label:
+			if this partial overlaps with any longer partial:
+				skip
+			else
+				insert a zero-amplitude breakpoint before the first breakpoint
+				for each breakpoint in this partial:
+					add up all energy in shorter partials at the time
+						of this breakpoint
+					absorb all that energy as noise
+					add a copy of this breakpoint to the new partial
+				insert a zero-amplitude breakpoint after the last breakpoint
+				
+				
+	initial implementation doesn't seem to screw anything up, but
+	right now, overlap includes the fade-in/out Breakpoints, fix that
+*/
 //
 void 
 Distiller::distill( std::list<Partial> & l )
 {
 	int howmanywerethere = l.size();
 
-	//	sort the std::list< Partial > by label:
+	//	sort the std::list< Partial > by duration and label:
+	debugger << "Distiller sorting Partials by duration..." << endl;
+	l.sort( PartialUtils::duration_greater() );
 	debugger << "Distiller sorting Partials by label..." << endl;
-	l.sort( PartialUtils::label_less() );
+	l.sort( PartialUtils::label_less() );	//	this had better be a stable sort
 	
 	// 	iterate over labels and distill each one:
 	std::list<Partial>::iterator dist_begin = l.begin();
@@ -295,13 +361,45 @@ Distiller::distill( std::list<Partial> & l )
 			newp.setLabel( label );
 			
 			//	iterate over range:
-			for ( std::list< Partial >::const_iterator it = dist_begin; it != dist_end; ++it )
+			for ( std::list< Partial >::iterator it = dist_begin; it != dist_end; ++it )
 			{
-				distill_aux( *it, newp, dist_begin, dist_end );
+				//distill_aux( *it, newp, dist_begin, dist_end );
+					
+				//	skip this Partial if it overlaps with any longer Partial:
+				if ( ! overlap( it, dist_begin, it ) )
+				{
+					//	insert a zero-amplitude breakpoint before the first breakpoint,
+					//	remove a null if necessary:
+					Breakpoint zeroBp = it->begin().breakpoint();
+					zeroBp.setAmplitude( 0. );
+					newp.insert( it->startTime() - Partial::FadeTime(), zeroBp );
+					
+					//	for each breakpoint in this partial:
+					//		add up all energy in shorter partials at the time
+					//			of this breakpoint
+					//		absorb all that energy as noise
+					//		add a copy of this breakpoint to the new partial
+					for ( Partial::const_iterator envpos = it->begin(); envpos != it->end(); ++envpos )
+					{
+						Breakpoint bp = envpos.breakpoint();
+						double time = envpos.time();
+						std::list< Partial >::iterator nextp( it );
+						++nextp;
+						double xse = collectEnergy( time, nextp, dist_end );
+						bp.addNoise( xse );
+						newp.insert( time, bp );
+					}
+					
+					//	insert a zero-amplitude breakpoint after the last breakpoint:
+					Breakpoint otherzeroBp = (--(it->end())).breakpoint();
+					otherzeroBp.setAmplitude( 0. );
+					newp.insert( it->endTime() + Partial::FadeTime(), otherzeroBp );
+				}
 			}
 			
 			//	fill in gaps:
-			fixGaps( newp, dist_begin, dist_end );
+			//	not anymore
+			//fixGaps( newp, dist_begin, dist_end );
 			
 			//	insert the new Partial at the beginning of
 			//	the list, and erase the Partials in the

@@ -58,7 +58,7 @@ exportSdif clarinet.sdif $clar
 PartialList -this [ set clar [ importSdif clarinet.sdif ] ]
 
 puts "making a bogus attempt at writing an Spc file"
-if { [ catch { [ExportSpc -args 90] write bad_spc_file.spc $clar } ] } {
+if { [ catch { exportSpc bad_spc_file.spc $clar 90 } ] } {
 	puts "Spc export failed!"
 	puts "Error Info: $errorInfo"
 	puts "Error Code: $errorCode"
