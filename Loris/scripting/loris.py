@@ -51,7 +51,7 @@ synthesize = _loris.synthesize
 
 sift = _loris.sift
 
-extract = _loris.extract
+extractLabeled = _loris.extractLabeled
 
 scaleAmp = _loris.scaleAmp
 

@@ -41,7 +41,7 @@ endif
 # installed, as it is documented to do, it executes before
 # loris.py and _loris.a are installed, and thus fails.
 loris.pyo: loris.py
-	env PYTHONPATH=$(srcdir):.libs $(PYTHON) -O -c "import loris"
+	env PYTHONPATH=$(srcdir):$(top_builddir)/scripting/.libs $(PYTHON) -O -c "import loris"
 	
 endif
 

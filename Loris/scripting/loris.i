@@ -406,9 +406,9 @@ void sift( PartialList * partials );
  */
 
 
-%newobject extract;
+%newobject extractLabeled;
 %inline %{
-	PartialList * extract( PartialList * partials, long label )
+	PartialList * extractLabeled( PartialList * partials, long label )
 	{
 		PartialList * dst = createPartialList();
 		spliceByLabel( partials, label, dst );
