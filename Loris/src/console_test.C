@@ -21,14 +21,17 @@
 	#include <stdio.h>
 #endif
 
+#include <memory>
+
 #include "Synthesizer.h"
 #include "Exception.h"
-#include "SampleVector.h"
 #include "AiffFile.h"
 #include "BinaryFile.h"
 #include "ImportLemur5.h"
 #include "LoFreqBweKludger.h"
 #include "Breakpoint.h"
+#include "Oscillator.h"
+#include "Filter.h"
 
 #include "Morph.h"
 #include "Distiller.h"
@@ -151,7 +154,7 @@ int main()
 			cout << "weight at " << z << " is " << w(z) << endl;
 		}
 		
-		Morph m( w );
+		Morph m( auto_ptr<Map>(w.clone()) );
 		//m.setFrequencyFunction( w );
 		//m.setAmplitudeFunction( w );
 		//m.setBandwidthFunction( w );
@@ -165,11 +168,14 @@ int main()
 		//	synthesize:
 		const int srate = 44100;
 		const int nsamps = srate * 6;
-		SampleVector buf( nsamps );
+		vector<double> buf( nsamps );
 		Synthesizer synth( buf, srate );
-		synth.setIterator( new LoFreqBweKludger(2000.) );
-		
+		synth.setIterator( auto_ptr<PartialIterator>( new LoFreqBweKludger(2000.) ) );
+		//synth.setOffset( 4 );
+				
 		cout << "synthesizing" << endl;
+		synth.synthesize( m.partials().begin(), m.partials().end() );
+		/*
 		int c = 0;
 		for ( list< Partial >::iterator it = m.partials().begin(); 
 			  it != m.partials().end(); 
@@ -178,6 +184,7 @@ int main()
 			if ( ++c % 10 == 0  )
 				cout << "\t" << c << " partials..." << endl;
 		}
+		*/
 		
 		//	write out samples:
 		string newname(":::morphing:ncsa morph:newelecar.aiff");

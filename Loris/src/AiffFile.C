@@ -14,14 +14,14 @@
 #include "AiffFile.h"
 #include "SampleBuffer.h"
 #include "BinaryFile.h"
-
 #include "ieee.h"
 
 #include <algorithm>
 #include <string>
-using std::string;
-
 #include <limits>
+
+using namespace std;
+
 
 Begin_Namespace( Loris )
 
@@ -29,7 +29,7 @@ Begin_Namespace( Loris )
 //	AiffFile constructor from data in memory
 // ---------------------------------------------------------------------------
 //
-AiffFile::AiffFile( double rate, int chans, int bits, SampleBuffer & buf ) :
+AiffFile::AiffFile( double rate, int chans, int bits, vector< double > & buf ) :
 	SamplesFile( rate, chans, bits, buf )
 {
 }
@@ -39,7 +39,7 @@ AiffFile::AiffFile( double rate, int chans, int bits, SampleBuffer & buf ) :
 // ---------------------------------------------------------------------------
 //	Read immediately.
 //
-AiffFile::AiffFile( BinaryFile & file, SampleBuffer & buf ) :
+AiffFile::AiffFile( BinaryFile & file, vector< double > & buf ) :
 	SamplesFile( buf )
 {
 	read( file );
@@ -165,7 +165,7 @@ AiffFile::readCommon( BinaryFile & file )
 						
 	//	allocate space for the samples:
 	try {
-		_samples.grow( ck.sampleFrames * ck.channels );
+		_samples.resize( ck.sampleFrames * ck.channels, 0. );
 	}
 	catch( LowMemException & ex ) {
 		ex << "Couldn't allocate buffer for AIFF samples.";
@@ -272,7 +272,7 @@ AiffFile::readSampleData( BinaryFile & file )
 void
 AiffFile::readSamples( BinaryFile & file )
 {	
-	static const double oneOverMax = 1. / std::numeric_limits<Int_32>::max();
+	static const double oneOverMax = 1. / numeric_limits<Int_32>::max();
 	
 	pcm_sample z;
 
@@ -429,10 +429,7 @@ AiffFile::writeSampleData( BinaryFile & file )
 void
 AiffFile::writeSamples( BinaryFile & file )
 {	
-	using std::max;
-	using std::min;
-	
-	static const double Maximum_Long = std::numeric_limits<Int_32>::max();
+	static const double Maximum_Long = numeric_limits<Int_32>::max();
 	
 	pcm_sample z;
 

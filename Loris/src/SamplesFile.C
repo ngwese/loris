@@ -14,14 +14,14 @@
 
 #include "LorisLib.h"
 #include "SamplesFile.h"
-#include "SampleBuffer.h"
 #include "BinaryFile.h"
+#include "Exception.h"
 
 #include <algorithm>
 #include <string>
-using std::string;
-
+#include <vector>
 #include <limits>
+using namespace std;
 
 Begin_Namespace( Loris )
 
@@ -29,7 +29,7 @@ Begin_Namespace( Loris )
 //	SamplesFile constructor from data in memory
 // ---------------------------------------------------------------------------
 //
-SamplesFile::SamplesFile( double rate, int chans, int bits, SampleBuffer & buf ) :
+SamplesFile::SamplesFile( double rate, int chans, int bits, vector< double > & buf ) :
 	_sampleRate( rate ),
 	_nChannels( chans ),
 	_sampSize( bits ),
@@ -45,7 +45,7 @@ SamplesFile::SamplesFile( double rate, int chans, int bits, SampleBuffer & buf )
 //	bogus as-is. Invoke this constructor in the initialization of a 
 //	derived object that is going to read immediately from a file.
 //
-SamplesFile::SamplesFile( SampleBuffer & buf ) :
+SamplesFile::SamplesFile( vector< double > & buf ) :
 	_sampleRate( 1 ),
 	_nChannels( 1 ),
 	_sampSize( 1 ),
@@ -73,9 +73,7 @@ SamplesFile::SamplesFile( const SamplesFile & other ) :
 //
 void
 SamplesFile::validateParams( void )
-{
-	using std::find;
-	
+{	
 	if ( _sampleRate < 0. )
 		Throw( InvalidObject, "Bad sample rate in SamplesFile." );
 	

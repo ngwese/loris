@@ -17,11 +17,11 @@
 
 #include "LorisLib.h"
 
+#include <vector>
 #include <memory>	//	for auto_ptr
 
 Begin_Namespace( Loris )
 
-class SampleBuffer;
 class Filter;
 
 // ---------------------------------------------------------------------------
@@ -69,7 +69,7 @@ public:
 	void reset( double radf, double amp, double bw, double ph );
 
 //	sample generation:	
-	void generateSamples( SampleBuffer & buffer, long howMany, long offset,
+	void generateSamples( std::vector< double > & buffer, long howMany, long offset,
 						  double targetFreq, double targetAmp, double targetBw );
 	
 //	-- private helpers --

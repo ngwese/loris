@@ -14,12 +14,12 @@
 
 #include "Synthesizer.h"
 #include "Exception.h"
-#include "SampleBuffer.h"
 #include "Oscillator.h"
 #include "Partial.h"
 #include "PartialIterator.h"
 
 #include <algorithm>
+#include <vector>
 using namespace std;
 
 Begin_Namespace( Loris )
@@ -41,7 +41,7 @@ Begin_Namespace( Loris )
 //	the call, the Synthesizer will own the Oscillator, and the client's auto_ptr
 //	will have no reference (or ownership).
 //
-Synthesizer::Synthesizer( SampleBuffer & buf, double srate, 
+Synthesizer::Synthesizer( vector< double > & buf, double srate, 
 						  auto_ptr< Oscillator > osc ) :
 	_sampleRate( srate ),
 	_offset( 0.001 ),
@@ -72,6 +72,8 @@ Synthesizer::Synthesizer( const Synthesizer & other ) :
 	_iterator( other._iterator->clone() )
 {
 }
+
+
 
 /*
 	This will work when the SampleBuffer class is replaced with
@@ -215,7 +217,7 @@ Synthesizer::synthesizeEnvelopeSegment( long currentSampleOffset )
 		//	used to need.
 		//	Don't synthesize samples past the end of the buffer.
 		long nsamps = ((iterator().time() + offset()) * sampleRate()) - currentSampleOffset;
-		nsamps = min( nsamps, _samples.size() - currentSampleOffset );
+		nsamps = min( nsamps, long(_samples.size()) - currentSampleOffset );
 		Assert( nsamps >= 0 );
 		
 		//	generate nsamps samples starting at currentSampleOffset
@@ -289,7 +291,7 @@ Synthesizer::synthesizeFadeOut( long currentSampleOffset )
 	
 	if ( currentSampleOffset < _samples.size() - 1 ) {
 		//	make sure the ramp doesn't run off the end of the buffer:
-		long rampEnd  = min( currentSampleOffset + rampLen, _samples.size() - 1L );
+		long rampEnd  = min( currentSampleOffset + rampLen, long(_samples.size()) - 1 );
 
 		//	generate samples starting at currentSampleOffset
 		//	targeting zero amplitude, and not changing the frequency

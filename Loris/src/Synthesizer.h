@@ -14,14 +14,13 @@
 // ===========================================================================
 
 #include "LorisLib.h"
-
+#include <vector>
 #include <memory> 	//	for auto_ptr
 
 Begin_Namespace( Loris )
 
 class Partial;
 class Oscillator;
-class SampleBuffer;
 class PartialIterator;
 
 // ---------------------------------------------------------------------------
@@ -33,7 +32,7 @@ class PartialIterator;
 //	Oscillator. The buffer and rate are specified at construction and 
 //	are immutable. 
 //
-//	The Synthesizer does not own its SampleBuffer, the client 
+//	The Synthesizer does not own its sample vector, the client 
 //	is responsible for its construction and destruction. 
 //
 //	Non-standard Oscillator and PartialIterator may be assigned,
@@ -54,7 +53,7 @@ class Synthesizer
 //	-- public interface --
 public:
 //	construction:
-	Synthesizer( SampleBuffer & buf, double srate, 
+	Synthesizer( std::vector< double > & buf, double srate, 
 				 std::auto_ptr< Oscillator > osc = std::auto_ptr< Oscillator >() );
 	Synthesizer( const Synthesizer & other );
 	
@@ -70,6 +69,10 @@ public:
 	
 	double fadeTime( void ) const { return _fadeTime; }
 	void setFadeTime( double x ) { if (x >= 0.) _fadeTime = x; }
+	
+	std::vector< double > & samples( void ) { return _samples; }
+	const std::vector< double > & samples( void ) const { return _samples; }
+	void setSampleBuffer( std::vector< double > & buf ) { _samples = buf; }
 	
 	Oscillator & oscillator( void ) { return *_oscillator; }
 	const Oscillator & oscillator( void ) const { return *_oscillator; }
@@ -109,13 +112,12 @@ private:
 	double _offset;			//	time offset for synthesized Partials, in seconds
 	double _fadeTime;		//	default (maximum) fade in/out time for Partials, in seconds
 	
-	SampleBuffer & _samples;
+	std::vector< double > & _samples;
 	
 	std::auto_ptr< Oscillator > _oscillator;
 	std::auto_ptr< PartialIterator > _iterator;	//	possibly does transformation
 	
 };	//	end of class Synthesizer
-
 
 End_Namespace( Loris )
 

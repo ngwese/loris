@@ -17,10 +17,10 @@
 #include "LorisTypes.h"
 #include "ieee.h"
 #include "SamplesFile.h"
+#include <vector>
 
 Begin_Namespace( Loris )
 
-class SampleBuffer;
 class BinaryFile;
 
 // ---------------------------------------------------------------------------
@@ -33,8 +33,8 @@ class AiffFile : public SamplesFile
 {
 public:
 //	construction:
-	AiffFile( double rate, int chans, int bits, SampleBuffer & buf );
-	AiffFile( BinaryFile & file, SampleBuffer & buf );
+	AiffFile( double rate, int chans, int bits, std::vector< double > & buf );
+	AiffFile( BinaryFile & file, std::vector< double > & buf );
 	
 	AiffFile( const SamplesFile & other );
 	

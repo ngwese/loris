@@ -15,9 +15,10 @@
 #include "LorisLib.h"
 #include "LorisTypes.h"
 
+#include <vector>
+
 Begin_Namespace( Loris )
 
-class SampleBuffer;
 class BinaryFile;
 
 // ---------------------------------------------------------------------------
@@ -33,8 +34,8 @@ class SamplesFile
 {
 protected:
 //	construction:
-	SamplesFile( double rate, int chans, int bits, SampleBuffer & buf );
-	SamplesFile( SampleBuffer & buf );
+	SamplesFile( double rate, int chans, int bits, std::vector< double > & buf );
+	SamplesFile( std::vector< double > & buf );
 	SamplesFile( const SamplesFile & other );
 	
 public:
@@ -50,8 +51,8 @@ public:
 	void setNumChannels( int n ) { _nChannels = n; }
 	void setSampleSize( int n ) { _sampSize = n; }
 	
-	SampleBuffer & samples( void ) { return _samples; }
-	const SampleBuffer & samples( void ) const { return _samples; }
+	std::vector< double > & samples( void ) { return _samples; }
+	const std::vector< double > & samples( void ) const { return _samples; }
 	
 //	reading and writing:
 	virtual void read( BinaryFile & file ) = 0;
@@ -76,7 +77,7 @@ protected:
 	int _nChannels;		//	samples per frame, usually one (mono) in Loris
 	int _sampSize;		//	in bits
 	
-	SampleBuffer & _samples;
+	std::vector< double > & _samples;
 	
 };	//	end of class SamplesFile
 

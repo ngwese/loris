@@ -15,17 +15,18 @@
 
 #include "LorisLib.h"
 #include "Oscillator.h"
-#include "SampleBuffer.h"
 #include "Noise.h"
 #include "Filter.h"
 
+#include <vector>
+
 #if !defined( Deprecated_cstd_headers )
 	#include <cmath>
-	using std::fmod;
-	using std::cos;
 #else
 	#include <math.h>
 #endif
+
+using namespace std;
 
 Begin_Namespace( Loris )
 
@@ -45,7 +46,7 @@ Begin_Namespace( Loris )
 //	the call, the Oscillator will own the Filter, and the client's auto_ptr
 //	will have no reference (or ownership).
 //
-Oscillator::Oscillator( std::auto_ptr< Filter > f ) :
+Oscillator::Oscillator( auto_ptr< Filter > f ) :
 	_frequency( 0. ),	//	radians per sample
 	_amplitude( 0. ),	//	absolute
 	_bandwidth( 0. ),	//	bandwidth coefficient (noise energy / total energy)
@@ -116,7 +117,7 @@ Oscillator::reset( double radf, double amp, double bw, double ph )
 //	will have no reference (or ownership).
 //
 void
-Oscillator::setFilter( std::auto_ptr< Filter > f )
+Oscillator::setFilter( auto_ptr< Filter > f )
 {	
 	if ( ! f.get() )
 		f.reset( new Filter( Filter::NormalCoefs().first, Filter::NormalCoefs().second ) );
@@ -139,7 +140,7 @@ Oscillator::setFilter( std::auto_ptr< Filter > f )
 //	has no knowledge of sample rate... Should be handled by the Synthesizer.
 //
 void
-Oscillator::generateSamples( SampleBuffer & buffer, long howMany, long offset,
+Oscillator::generateSamples( vector< double > & buffer, long howMany, long offset,
 							 double targetFreq, double targetAmp, double targetBw )
 {
 //	if no samples are generated, set the oscillator state to the
