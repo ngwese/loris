@@ -26,7 +26,7 @@ farm = {
 	'gong': ('gong.py',),
 	'moses': ('moses.py',),
 	'sax': ('saxriff.py', ),
-	'trombone': ('tbnflutter', )
+	'trombone': ('tbnflutter.py', )
 }
 	
 if len(sys.argv) > 1:
