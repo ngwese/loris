@@ -664,7 +664,6 @@ typedef std::vector< double > SampleVector;
 using Loris::AiffFile;
 
 	#include "Channelizer.h"
-	#include "Exception.h"
 
 	void channelize( PartialList * partials, 
 					 BreakpointEnvelope * refFreqEnvelope, int refLabel )
@@ -774,7 +773,6 @@ void distill( PartialList * partials )
 
 	#include "AiffFile.h"
 
-	//	AIFF export:
 	void exportAiff( const char * path,
 					 SampleVector * samples,
 					 double samplerate, int nchannels, int bitsPerSamp )
@@ -790,38 +788,114 @@ void distill( PartialList * partials )
 	 */
 				 
 
-	PartialList * importSdif_( const char * path )
-	{
-		PartialList * partials = new PartialList();
-		importSdif( path, partials );
-		return partials;
-	}
+	#include "ExportSdif.h"
 
-	PartialList * morph_( const PartialList * src0, const PartialList * src1, 
-						  const BreakpointEnvelope * ffreq, 
-						  const BreakpointEnvelope * famp, 
-						  const BreakpointEnvelope * fbw )
+	void exportSdif( const char * path, PartialList * partials )
 	{
+		ThrowIfNull((PartialList *) partials);
+
+		if ( partials->size() == 0 ) 
+			Throw( Loris::InvalidObject, "No Partials in PartialList to export to sdif file." );
+	
+		Loris::notifier << "exporting sdif partial data to " << path << endl;		
+		Loris::ExportSdif efout;
+		efout.write( path, *partials );
 		
+	}
+	/*	Export Partials in a PartialList to a SDIF file at the specified
+		file path (or name). SDIF data is written in the 1TRC format.  
+		For more information about SDIF, see the SDIF website at:
+			www.ircam.fr/equipes/analyse-synthese/sdif/  
+	 */
+
+	#include "ImportSdif.h"
+	PartialList * importSdif( const char * path )
+	{
+		Loris::notifier << "importing Partials from " << path << endl;
+		Loris::ImportSdif imp( path );
+
 		PartialList * partials = new PartialList();
-		morph( src0, src1, ffreq, famp, fbw, partials );
+		//	splice() can't throw, can it???
+		partials->splice( partials->end(), imp.partials() );
+
 		return partials;
 	}
 
-	SampleVector * synthesize_( const PartialList * partials, double srate )
+	#include "Morpher.h"
+	PartialList * morph( const PartialList * src0, const PartialList * src1, 
+						 const BreakpointEnvelope * ffreq, 
+						 const BreakpointEnvelope * famp, 
+						 const BreakpointEnvelope * fbw )
 	{
-		SampleVector * samples = new SampleVector();
-		synthesize( partials, samples, srate );
+		ThrowIfNull((PartialList *) src0);
+		ThrowIfNull((PartialList *) src1);
+		ThrowIfNull((BreakpointEnvelope *) ffreq);
+		ThrowIfNull((BreakpointEnvelope *) famp);
+		ThrowIfNull((BreakpointEnvelope *) fbw);
+
+		Loris::notifier << "morphing " << src0->size() << " Partials with "
+						<< src1->size() << " Partials" << endl;
+					
+		//	make a Morpher object and do it:
+		Loris::Morpher m( *ffreq, *famp, *fbw );
+		m.morph( src0->begin(), src0->end(), src1->begin(), src1->end() );
+				
+		//	splice the morphed Partials into a new PartialList:
+		PartialList * dst = new PartialList();
+		//	splice() can't throw, can it???
+		dst->splice( dst->end(), m.partials() );
+		return dst;
+	}
+
+	#include "Synthesizer.h"
+	SampleVector * synthesize( const PartialList * partials, double srate )
+	{
+		ThrowIfNull((PartialList *) partials);
+
+		Loris::notifier << "synthesizing " << partials->size() 
+						<< " Partials at " << srate << " Hz" << endl;
+
+		//	compute the duration:
+		debugger << "computing duration..." << endl;
+		double maxtime = 0.;
+		PartialList::const_iterator it;
+		for ( it = partials->begin(); it != partials->end(); ++it ) 
+		{
+			maxtime = std::max( maxtime, it->endTime() );
+		}
+		debugger << maxtime << " seconds" << endl;
+		
+		//	allocate a SampleVector to accomodate the fade-out at 
+		//	the end of the latest Partial:
+		const long nsamps = long( srate * ( maxtime + Partial::FadeTime() ) );	
+		SampleVector * samples = new SampleVector( nsamps, 0. );
+		
+		//	synthesize:
+		try
+		{
+			Loris::Synthesizer synth( srate, samples->begin(), samples->end() );
+			for ( it = partials->begin(); it != partials->end(); ++it ) 
+			{
+				synth.synthesize( *it );
+			}
+		}
+		catch(...)
+		{
+			delete samples;
+			throw;
+		}
+		
 		return samples;
 	}
 
-#include "Sieve.h"
+	#include "Sieve.h"
 
 	void sift( PartialList * partials )
 	{		
-		char s[256];
-		sprintf(s, "sifting %d Partials", partials->size() );
-		printf_notifier( s );
+		
+		ThrowIfNull((PartialList *) partials);
+
+		Loris::notifier << "sifting " << partials->size() << " Partials" << endl;
 		
 		Loris::Sieve sieve( 0.0001 );
 		sieve.sift( *partials );
@@ -830,6 +904,90 @@ void distill( PartialList * partials )
 		If any two partials with same label overlap in time,
 		keep only the longer of the two partials.
 		Set the label of the shorter duration partial to zero.
+		
+		This used to be "experimental," and is now just 
+		"transitional."
+	 */
+
+	void scaleAmp( PartialList * partials, BreakpointEnvelope * ampEnv )
+	{
+		ThrowIfNull((PartialList *) partials);
+		ThrowIfNull((BreakpointEnvelope *) ampEnv);
+
+		Loris::notifier << "scaling amplitude of " << partials->size() << " Partials" << endl;
+
+		PartialList::iterator listPos;
+		for ( listPos = partials->begin(); listPos != partials->end(); ++listPos ) 
+		{
+			PartialIterator envPos;
+			for ( envPos = listPos->begin(); envPos != listPos->end(); ++envPos ) 
+			{		
+				envPos.breakpoint().setAmplitude( envPos.breakpoint().amplitude() * ampEnv->valueAt(envPos.time()) );
+			}
+		}	
+	}
+	/*	Scale the amplitude of the Partials in a PartialList according 
+		to an envelope representing a time-varying amplitude scale value.
+	 */
+
+	void scaleNoiseRatio( PartialList * partials, BreakpointEnvelope * noiseEnv )
+	{
+		ThrowIfNull((PartialList *) partials);
+		ThrowIfNull((BreakpointEnvelope *) noiseEnv);
+
+		Loris::notifier << "scaling noise ratio of " << partials->size() << " Partials" << endl;
+
+		PartialList::iterator listPos;
+		for ( listPos = partials->begin(); listPos != partials->end(); ++listPos ) 
+		{
+			PartialIterator envPos;
+			for ( envPos = listPos->begin(); envPos != listPos->end(); ++envPos ) 
+			{		
+				//	compute new bandwidth value:
+				double bw = envPos.breakpoint().bandwidth();
+				if ( bw < 1. ) 
+				{
+					double ratio = bw  / (1. - bw);
+					ratio *= noiseEnv->valueAt(envPos.time());
+					bw = ratio / (1. + ratio);
+				}
+				else 
+				{
+					bw = 1.;
+				}
+				
+				envPos.breakpoint().setBandwidth( bw );
+			}
+		}	
+	}
+	/*	Scale the relative noise content of the Partials in a PartialList 
+		according to an envelope representing a (time-varying) noise energy 
+		scale value.
+	 */
+
+	void shiftPitch( PartialList * partials, BreakpointEnvelope * pitchEnv )
+	{
+		ThrowIfNull((PartialList *) partials);
+		ThrowIfNull((BreakpointEnvelope *) pitchEnv);
+
+		Loris::notifier << "shifting pitch of " << partials->size() << " Partials" << endl;
+		
+		PartialList::iterator listPos;
+		for ( listPos = partials->begin(); listPos != partials->end(); ++listPos ) 
+		{
+			PartialIterator envPos;
+			for ( envPos = listPos->begin(); envPos != listPos->end(); ++envPos ) 
+			{		
+				//	compute frequency scale:
+				double scale = 
+					std::pow(2., (0.01 * pitchEnv->valueAt(envPos.time())) /12.);				
+				envPos.breakpoint().setFrequency( envPos.breakpoint().frequency() * scale );
+			}
+		}	
+	}
+	/*	Shift the pitch of all Partials in a PartialList according to 
+		the given pitch envelope. The pitch envelope is assumed to have 
+		units of cents (1/100 of a halfstep).
 	 */
 #ifdef __cplusplus
 extern "C" {
@@ -1126,17 +1284,16 @@ static PyObject *_wrap_exportSdif(PyObject *self, PyObject *args) {
     PyObject *resultobj;
     char *arg0 ;
     PartialList *arg1 ;
-    double arg2 = 0. ;
     PyObject * argo1 =0 ;
     
-    if(!PyArg_ParseTuple(args,"sO|d:exportSdif",&arg0,&argo1,&arg2)) return NULL;
+    if(!PyArg_ParseTuple(args,"sO:exportSdif",&arg0,&argo1)) return NULL;
     if ((SWIG_ConvertPtr(argo1,(void **) &arg1,SWIGTYPE_p_PartialList,1)) == -1) return NULL;
     {
         try
         {
             // LorisErrorString.clear();
             LorisErrorString = "";
-            exportSdif((char const *)arg0,arg1,arg2);
+            exportSdif((char const *)arg0,arg1);
             
             
             //	catch exceptions in the procedural interface, 
@@ -1191,7 +1348,7 @@ static PyObject *_wrap_importSdif(PyObject *self, PyObject *args) {
         {
             // LorisErrorString.clear();
             LorisErrorString = "";
-            result = (PartialList *)importSdif_((char const *)arg0);
+            result = (PartialList *)importSdif((char const *)arg0);
             
             
             //	catch exceptions in the procedural interface, 
@@ -1259,7 +1416,7 @@ static PyObject *_wrap_morph(PyObject *self, PyObject *args) {
         {
             // LorisErrorString.clear();
             LorisErrorString = "";
-            result = (PartialList *)morph_((PartialList const *)arg0,(PartialList const *)arg1,(BreakpointEnvelope const *)arg2,(BreakpointEnvelope const *)arg3,(BreakpointEnvelope const *)arg4);
+            result = (PartialList *)morph((PartialList const *)arg0,(PartialList const *)arg1,(BreakpointEnvelope const *)arg2,(BreakpointEnvelope const *)arg3,(BreakpointEnvelope const *)arg4);
             
             
             //	catch exceptions in the procedural interface, 
@@ -1316,7 +1473,7 @@ static PyObject *_wrap_synthesize(PyObject *self, PyObject *args) {
         {
             // LorisErrorString.clear();
             LorisErrorString = "";
-            result = (SampleVector *)synthesize_((PartialList const *)arg0,arg1);
+            result = (SampleVector *)synthesize((PartialList const *)arg0,arg1);
             
             
             //	catch exceptions in the procedural interface, 
@@ -1355,6 +1512,62 @@ static PyObject *_wrap_synthesize(PyObject *self, PyObject *args) {
         }
         
     }resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_SampleVector);
+    return resultobj;
+}
+
+
+static PyObject *_wrap_sift(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    PartialList *arg0 ;
+    PyObject * argo0 =0 ;
+    
+    if(!PyArg_ParseTuple(args,"O:sift",&argo0)) return NULL;
+    if ((SWIG_ConvertPtr(argo0,(void **) &arg0,SWIGTYPE_p_PartialList,1)) == -1) return NULL;
+    {
+        try
+        {
+            // LorisErrorString.clear();
+            LorisErrorString = "";
+            sift(arg0);
+            
+            
+            //	catch exceptions in the procedural interface, 
+            //	converted to strings by the exception handler 
+            //	in the Loris procedural interface:
+            if ( ! LorisErrorString.empty() )
+            {
+                //	this is an improperly-braced macro!
+                SWIG_exception( SWIG_RuntimeError, (char *) LorisErrorString.c_str() );
+            }
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            //	(these are very unlikely to come from the interface
+            //	code, and cannot escape the procedural interface to
+            //	Loris, which catches all exceptions.)
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
+        }
+        catch( std::string & exs )
+        {
+            //	exceptions generated by functions defined in this
+            //	file may throw std::strings:
+            std::string s("Exception thrown in scripting wrapper code: " );
+            s.append( exs );
+            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
+        }
+        
+    }Py_INCREF(Py_None);
+    resultobj = Py_None;
     return resultobj;
 }
 
@@ -1612,62 +1825,6 @@ static PyObject *_wrap_shiftPitch(PyObject *self, PyObject *args) {
             // LorisErrorString.clear();
             LorisErrorString = "";
             shiftPitch(arg0,arg1);
-            
-            
-            //	catch exceptions in the procedural interface, 
-            //	converted to strings by the exception handler 
-            //	in the Loris procedural interface:
-            if ( ! LorisErrorString.empty() )
-            {
-                //	this is an improperly-braced macro!
-                SWIG_exception( SWIG_RuntimeError, (char *) LorisErrorString.c_str() );
-            }
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            //	(these are very unlikely to come from the interface
-            //	code, and cannot escape the procedural interface to
-            //	Loris, which catches all exceptions.)
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        catch( std::string & exs )
-        {
-            //	exceptions generated by functions defined in this
-            //	file may throw std::strings:
-            std::string s("Exception thrown in scripting wrapper code: " );
-            s.append( exs );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        
-    }Py_INCREF(Py_None);
-    resultobj = Py_None;
-    return resultobj;
-}
-
-
-static PyObject *_wrap_sift(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    PartialList *arg0 ;
-    PyObject * argo0 =0 ;
-    
-    if(!PyArg_ParseTuple(args,"O:sift",&argo0)) return NULL;
-    if ((SWIG_ConvertPtr(argo0,(void **) &arg0,SWIGTYPE_p_PartialList,1)) == -1) return NULL;
-    {
-        try
-        {
-            // LorisErrorString.clear();
-            LorisErrorString = "";
-            sift(arg0);
             
             
             //	catch exceptions in the procedural interface, 
@@ -8739,12 +8896,12 @@ static PyMethodDef loriscMethods[] = {
 	 { "importSdif", _wrap_importSdif, METH_VARARGS },
 	 { "morph", _wrap_morph, METH_VARARGS },
 	 { "synthesize", _wrap_synthesize, METH_VARARGS },
+	 { "sift", _wrap_sift, METH_VARARGS },
 	 { "copyByLabel", _wrap_copyByLabel, METH_VARARGS },
 	 { "createFreqReference", _wrap_createFreqReference, METH_VARARGS },
 	 { "scaleAmp", _wrap_scaleAmp, METH_VARARGS },
 	 { "scaleNoiseRatio", _wrap_scaleNoiseRatio, METH_VARARGS },
 	 { "shiftPitch", _wrap_shiftPitch, METH_VARARGS },
-	 { "sift", _wrap_sift, METH_VARARGS },
 	 { "PartialList_copy", _wrap_PartialList_copy, METH_VARARGS },
 	 { "new_PartialList", _wrap_new_PartialList, METH_VARARGS },
 	 { "delete_PartialList", _wrap_delete_PartialList, METH_VARARGS },

@@ -231,13 +231,13 @@ void scaleAmp( PartialList * partials, BreakpointEnvelope * ampEnv )
 
 		notifier << "scaling amplitude of " << partials->size() << " Partials" << endl;
 
-		for ( PartialList::iterator pIter = partials->begin(); 
-			  pIter != partials->end(); 
-			  ++pIter ) 
+		PartialList::iterator listPos;
+		for ( listPos = partials->begin(); listPos != partials->end(); ++listPos ) 
 		{
-			for ( PartialIterator jack = pIter->begin(); jack != pIter->end(); ++jack ) 
+			PartialIterator envPos;
+			for ( envPos = listPos->begin(); envPos != listPos->end(); ++envPos ) 
 			{		
-				jack.breakpoint().setAmplitude( jack.breakpoint().amplitude() * ampEnv->valueAt(jack.time()) );
+				envPos.breakpoint().setAmplitude( envPos.breakpoint().amplitude() * ampEnv->valueAt(envPos.time()) );
 			}
 		}	
 	}
@@ -272,18 +272,18 @@ void scaleNoiseRatio( PartialList * partials, BreakpointEnvelope * noiseEnv )
 
 		notifier << "scaling noise ratio of " << partials->size() << " Partials" << endl;
 
-		for ( PartialList::iterator pIter = partials->begin(); 
-			  pIter != partials->end(); 
-			  ++pIter ) 
+		PartialList::iterator listPos;
+		for ( listPos = partials->begin(); listPos != partials->end(); ++listPos ) 
 		{
-			for ( PartialIterator jack = pIter->begin(); jack != pIter->end(); ++jack ) 
+			PartialIterator envPos;
+			for ( envPos = listPos->begin(); envPos != listPos->end(); ++envPos ) 
 			{		
 				//	compute new bandwidth value:
-				double bw = jack.breakpoint().bandwidth();
+				double bw = envPos.breakpoint().bandwidth();
 				if ( bw < 1. ) 
 				{
 					double ratio = bw  / (1. - bw);
-					ratio *= noiseEnv->valueAt(jack.time());
+					ratio *= noiseEnv->valueAt(envPos.time());
 					bw = ratio / (1. + ratio);
 				}
 				else 
@@ -291,7 +291,7 @@ void scaleNoiseRatio( PartialList * partials, BreakpointEnvelope * noiseEnv )
 					bw = 1.;
 				}
 				
-				jack.breakpoint().setBandwidth( bw );
+				envPos.breakpoint().setBandwidth( bw );
 			}
 		}	
 	}
@@ -326,16 +326,16 @@ void shiftPitch( PartialList * partials, BreakpointEnvelope * pitchEnv )
 
 		notifier << "shifting pitch of " << partials->size() << " Partials" << endl;
 		
-		for ( PartialList::iterator pIter = partials->begin(); 
-			  pIter != partials->end(); 
-			  ++pIter ) 
+		PartialList::iterator listPos;
+		for ( listPos = partials->begin(); listPos != partials->end(); ++listPos ) 
 		{
-			for ( PartialIterator jack = pIter->begin(); jack != pIter->end(); ++jack ) 
+			PartialIterator envPos;
+			for ( envPos = listPos->begin(); envPos != listPos->end(); ++envPos ) 
 			{		
 				//	compute frequency scale:
 				double scale = 
-					std::pow(2., (0.01 * pitchEnv->valueAt(jack.time())) /12.);				
-				jack.breakpoint().setFrequency( jack.breakpoint().frequency() * scale );
+					std::pow(2., (0.01 * pitchEnv->valueAt(envPos.time())) /12.);				
+				envPos.breakpoint().setFrequency( envPos.breakpoint().frequency() * scale );
 			}
 		}	
 	}

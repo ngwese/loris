@@ -110,7 +110,12 @@
 //	exceptions reported in Loris in LorisErrorString 
 //	This handler will notices those strings, and 
 //	reports them as RuntimeErrors.
-%include exception.i
+//
+//	Improve this exception handler to give more
+//	informative reports, since we really are catchinc
+//	the exceptions now.
+//	&&&&&&&&&&&
+%include exception.i 
 %except {
 	try
 	{	
@@ -216,7 +221,6 @@
 
 %{
 	#include "Channelizer.h"
-	#include "Exception.h"
 %}
 
 %inline %{
@@ -359,7 +363,6 @@ void distill( PartialList * partials )
 %}
 
 %inline %{
-	//	AIFF export:
 	void exportAiff( const char * path,
 					 SampleVector * samples,
 					 double samplerate, int nchannels, int bitsPerSamp )
@@ -376,59 +379,88 @@ void distill( PartialList * partials )
 				 
 %}
 
-void exportSdif( const char * path, PartialList * partials, double hop = 0. );
-/*	Export Partials in a PartialList to a SDIF file at the specified
-	file path (or name). SDIF data is written in the 1TRC format.  
-	For more information about SDIF, see the SDIF website at:
-		www.ircam.fr/equipes/analyse-synthese/sdif/  
-		
-	The hop parameter is currently used to specify a time-domain 
-	resampling of the Partial envelopes. This parameter is 
-	deprecated, and will be removed in future versions, which 
-	will have explicit resampling functionality. If hop is 0., 
-	Partial envelopes will not be resampled, and all Partial 
-	envelope data will be stored.
-	
-	If unspecified, hop defaults to 0.
- */
-
-
-//	wrapper for importSdif() to return a PartialList:
 %{
-	PartialList * importSdif_( const char * path )
+	#include "ExportSdif.h"
+%}
+
+%inline %{
+	void exportSdif( const char * path, PartialList * partials )
 	{
+		ThrowIfNull((PartialList *) partials);
+
+		if ( partials->size() == 0 ) 
+			Throw( Loris::InvalidObject, "No Partials in PartialList to export to sdif file." );
+	
+		Loris::notifier << "exporting sdif partial data to " << path << endl;		
+		Loris::ExportSdif efout;
+		efout.write( path, *partials );
+		
+	}
+	/*	Export Partials in a PartialList to a SDIF file at the specified
+		file path (or name). SDIF data is written in the 1TRC format.  
+		For more information about SDIF, see the SDIF website at:
+			www.ircam.fr/equipes/analyse-synthese/sdif/  
+	 */
+%}
+
+//	SWIG problem:
+//	%new and %inline don't play nice together, so if I %inline
+//	these next three functions, then their return objects don't
+//	get ownership on the scripting side. So cannot use the 
+//	%inline shortcut when the return value is %new.
+//
+%{
+	#include "ImportSdif.h"
+	PartialList * importSdif( const char * path )
+	{
+		Loris::notifier << "importing Partials from " << path << endl;
+		Loris::ImportSdif imp( path );
+
 		PartialList * partials = new PartialList();
-		importSdif( path, partials );
+		//	splice() can't throw, can it???
+		partials->splice( partials->end(), imp.partials() );
+
 		return partials;
 	}
 %}
-%name( importSdif ) %new PartialList * importSdif_( const char * path );
+%new PartialList * importSdif( const char * path );
 /*	Import Partials from an SDIF file at the given file path (or 
 	name), and return them in a PartialList.
 	For more information about SDIF, see the SDIF website at:
 		www.ircam.fr/equipes/analyse-synthese/sdif/  
  */	
 
-//	wrapper for morph() to return a PartialList:
 %{
-	PartialList * morph_( const PartialList * src0, const PartialList * src1, 
-						  const BreakpointEnvelope * ffreq, 
-						  const BreakpointEnvelope * famp, 
-						  const BreakpointEnvelope * fbw )
+	#include "Morpher.h"
+	PartialList * morph( const PartialList * src0, const PartialList * src1, 
+						 const BreakpointEnvelope * ffreq, 
+						 const BreakpointEnvelope * famp, 
+						 const BreakpointEnvelope * fbw )
 	{
-		
-		PartialList * partials = new PartialList();
-		morph( src0, src1, ffreq, famp, fbw, partials );
-		return partials;
+		ThrowIfNull((PartialList *) src0);
+		ThrowIfNull((PartialList *) src1);
+		ThrowIfNull((BreakpointEnvelope *) ffreq);
+		ThrowIfNull((BreakpointEnvelope *) famp);
+		ThrowIfNull((BreakpointEnvelope *) fbw);
+
+		Loris::notifier << "morphing " << src0->size() << " Partials with "
+						<< src1->size() << " Partials" << endl;
+					
+		//	make a Morpher object and do it:
+		Loris::Morpher m( *ffreq, *famp, *fbw );
+		m.morph( src0->begin(), src0->end(), src1->begin(), src1->end() );
+				
+		//	splice the morphed Partials into a new PartialList:
+		PartialList * dst = new PartialList();
+		//	splice() can't throw, can it???
+		dst->splice( dst->end(), m.partials() );
+		return dst;
 	}
 %}
-				
-%name( morph ) 
-%new PartialList *  
-morph_( const PartialList * src0, const PartialList * src1, 
-			const BreakpointEnvelope * ffreq, 
-			const BreakpointEnvelope * famp, 
-			const BreakpointEnvelope * fbw );
+%new PartialList * morph( const PartialList * src0, const PartialList * src1, 
+						  const BreakpointEnvelope * ffreq, 
+						  const BreakpointEnvelope * famp, 
+						  const BreakpointEnvelope * fbw );
 /*	Morph labeled Partials in two PartialLists according to the
 	given frequency, amplitude, and bandwidth (noisiness) morphing
 	envelopes, and return the morphed Partials in a PartialList. 
@@ -439,23 +471,80 @@ morph_( const PartialList * src0, const PartialList * src1,
 	www.cerlsoundgroup.org/Loris/
  */
 
-//	wrapper for synthesize to return a SampleVector:
 %{
-	SampleVector * synthesize_( const PartialList * partials, double srate )
+	#include "Synthesizer.h"
+	SampleVector * synthesize( const PartialList * partials, double srate )
 	{
-		SampleVector * samples = new SampleVector();
-		synthesize( partials, samples, srate );
+		ThrowIfNull((PartialList *) partials);
+
+		Loris::notifier << "synthesizing " << partials->size() 
+						<< " Partials at " << srate << " Hz" << endl;
+
+		//	compute the duration:
+		debugger << "computing duration..." << endl;
+		double maxtime = 0.;
+		PartialList::const_iterator it;
+		for ( it = partials->begin(); it != partials->end(); ++it ) 
+		{
+			maxtime = std::max( maxtime, it->endTime() );
+		}
+		debugger << maxtime << " seconds" << endl;
+		
+		//	allocate a SampleVector to accomodate the fade-out at 
+		//	the end of the latest Partial:
+		const long nsamps = long( srate * ( maxtime + Partial::FadeTime() ) );	
+		SampleVector * samples = new SampleVector( nsamps, 0. );
+		
+		//	synthesize:
+		try
+		{
+			Loris::Synthesizer synth( srate, samples->begin(), samples->end() );
+			for ( it = partials->begin(); it != partials->end(); ++it ) 
+			{
+				synth.synthesize( *it );
+			}
+		}
+		catch(...)
+		{
+			delete samples;
+			throw;
+		}
+		
 		return samples;
 	}
 %}
-%name( synthesize ) 
-%new SampleVector *
-synthesize_( const PartialList * partials, double srate );
+%new SampleVector * synthesize( const PartialList * partials, double srate );
 /*	Synthesize Partials in a PartialList at the given sample
 	rate, and return the (floating point) samples in a SampleVector.
 	The SampleVector is sized to hold as many samples as are needed 
 	for the complete synthesis of all the Partials in the PartialList. 
  */
+
+%{
+	#include "Sieve.h"
+%}
+	
+%inline 
+%{
+	void sift( PartialList * partials )
+	{		
+		
+		ThrowIfNull((PartialList *) partials);
+
+		Loris::notifier << "sifting " << partials->size() << " Partials" << endl;
+		
+		Loris::Sieve sieve( 0.0001 );
+		sieve.sift( *partials );
+	}
+	/*	Lippold's wacky experimental sifting thingie: 
+		If any two partials with same label overlap in time,
+		keep only the longer of the two partials.
+		Set the label of the shorter duration partial to zero.
+		
+		This used to be "experimental," and is now just 
+		"transitional."
+	 */
+%}
 
 /* ---------------------------------------------------------------- */
 /*		utility functions
@@ -467,6 +556,10 @@ synthesize_( const PartialList * partials, double srate );
 	represented by classes in the Loris core.
 %}
 
+/*
+	This isn't needed so badly anymore, since we now
+	have iterators and list mutation support.
+	
 void copyByLabel( const PartialList * src, long label, PartialList * dst );
 /*	Append copies of Partials in the source PartialList having the
 	specified label to the destination PartialList. The source list
@@ -487,48 +580,90 @@ createFreqReference( PartialList * partials, int numSamples,
 	channelization (see channelize()).
  */
  
-void scaleAmp( PartialList * partials, BreakpointEnvelope * ampEnv );
-/*	Scale the amplitude of the Partials in a PartialList according 
-	to an envelope representing a time-varying amplitude scale value.
- */
-				 
-void scaleNoiseRatio( PartialList * partials, BreakpointEnvelope * noiseEnv );
-/*	Scale the relative noise content of the Partials in a PartialList 
-	according to an envelope representing a (time-varying) noise energy 
-	scale value.
- */
+%inline %{
+	void scaleAmp( PartialList * partials, BreakpointEnvelope * ampEnv )
+	{
+		ThrowIfNull((PartialList *) partials);
+		ThrowIfNull((BreakpointEnvelope *) ampEnv);
 
-void shiftPitch( PartialList * partials, BreakpointEnvelope * pitchEnv );
-/*	Shift the pitch of all Partials in a PartialList according to 
-	the given pitch envelope. The pitch envelope is assumed to have 
-	units of cents (1/100 of a halfstep).
- */
- 
- 
-/*
-	EXPERIMENTAL JUNK:
- */
+		Loris::notifier << "scaling amplitude of " << partials->size() << " Partials" << endl;
 
-%{
-#include "Sieve.h"
-%}
-	
-%inline 
-%{
-	void sift( PartialList * partials )
-	{		
-		char s[256];
-		sprintf(s, "sifting %d Partials", partials->size() );
-		printf_notifier( s );
-		
-		Loris::Sieve sieve( 0.0001 );
-		sieve.sift( *partials );
+		PartialList::iterator listPos;
+		for ( listPos = partials->begin(); listPos != partials->end(); ++listPos ) 
+		{
+			PartialIterator envPos;
+			for ( envPos = listPos->begin(); envPos != listPos->end(); ++envPos ) 
+			{		
+				envPos.breakpoint().setAmplitude( envPos.breakpoint().amplitude() * ampEnv->valueAt(envPos.time()) );
+			}
+		}	
 	}
-	/*	Lippold's wacky experimental sifting thingie: 
-		If any two partials with same label overlap in time,
-		keep only the longer of the two partials.
-		Set the label of the shorter duration partial to zero.
+	/*	Scale the amplitude of the Partials in a PartialList according 
+		to an envelope representing a time-varying amplitude scale value.
 	 */
 %}
+				 
+%inline %{
+	void scaleNoiseRatio( PartialList * partials, BreakpointEnvelope * noiseEnv )
+	{
+		ThrowIfNull((PartialList *) partials);
+		ThrowIfNull((BreakpointEnvelope *) noiseEnv);
 
+		Loris::notifier << "scaling noise ratio of " << partials->size() << " Partials" << endl;
 
+		PartialList::iterator listPos;
+		for ( listPos = partials->begin(); listPos != partials->end(); ++listPos ) 
+		{
+			PartialIterator envPos;
+			for ( envPos = listPos->begin(); envPos != listPos->end(); ++envPos ) 
+			{		
+				//	compute new bandwidth value:
+				double bw = envPos.breakpoint().bandwidth();
+				if ( bw < 1. ) 
+				{
+					double ratio = bw  / (1. - bw);
+					ratio *= noiseEnv->valueAt(envPos.time());
+					bw = ratio / (1. + ratio);
+				}
+				else 
+				{
+					bw = 1.;
+				}
+				
+				envPos.breakpoint().setBandwidth( bw );
+			}
+		}	
+	}
+	/*	Scale the relative noise content of the Partials in a PartialList 
+		according to an envelope representing a (time-varying) noise energy 
+		scale value.
+	 */
+%}
+	
+%inline %{
+	void shiftPitch( PartialList * partials, BreakpointEnvelope * pitchEnv )
+	{
+		ThrowIfNull((PartialList *) partials);
+		ThrowIfNull((BreakpointEnvelope *) pitchEnv);
+
+		Loris::notifier << "shifting pitch of " << partials->size() << " Partials" << endl;
+		
+		PartialList::iterator listPos;
+		for ( listPos = partials->begin(); listPos != partials->end(); ++listPos ) 
+		{
+			PartialIterator envPos;
+			for ( envPos = listPos->begin(); envPos != listPos->end(); ++envPos ) 
+			{		
+				//	compute frequency scale:
+				double scale = 
+					std::pow(2., (0.01 * pitchEnv->valueAt(envPos.time())) /12.);				
+				envPos.breakpoint().setFrequency( envPos.breakpoint().frequency() * scale );
+			}
+		}	
+	}
+	/*	Shift the pitch of all Partials in a PartialList according to 
+		the given pitch envelope. The pitch envelope is assumed to have 
+		units of cents (1/100 of a halfstep).
+	 */
+%} 
+ 

@@ -548,18 +548,11 @@ void exportAiff( const char * path, const SampleVector * vec,
 	to integers having bitsPerSamp bits.
  */
 				 
-void exportSdif( const char * path, PartialList * partials, double hop );
+void exportSdif( const char * path, PartialList * partials );
 /*	Export Partials in a PartialList to a SDIF file at the specified
 	file path (or name). SDIF data is written in the 1TRC format.  
 	For more information about SDIF, see the SDIF web site at:
 		www.ircam.fr/equipes/analyse-synthese/sdif/  
-		
-	The hop parameter is currently used to specify a time-domain 
-	resampling of the Partial envelopes. This parameter is 
-	deprecated, and will be removed in future versions, which 
-	will have explicit resampling functionality. If hop is 0., 
-	Partial envelopes will not be resampled, and all Partial 
-	envelope data will be stored.
  */
 
 void exportSpc( const char * path, PartialList * partials,

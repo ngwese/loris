@@ -269,29 +269,22 @@ void exportAiff( const char * path, const SampleVector * vec,
 	file path (or name). SDIF data is written in the 1TRC format.  
 	For more information about SDIF, see the SDIF web site at:
 		www.ircam.fr/equipes/analyse-synthese/sdif/  
-		
-	The hop parameter is currently used to specify a time-domain 
-	resampling of the Partial envelopes. This parameter is 
-	deprecated, and will be removed in future versions, which 
-	will have explicit resampling functionality. If hop is 0., 
-	Partial envelopes will not be resampled, and all Partial 
-	envelope data will be stored.
  */
 extern "C"
-void exportSdif( const char * path, PartialList * partials, double hop )
+void exportSdif( const char * path, PartialList * partials )
 {
-	if ( partials->size() == 0 ) 
-	{
-		notifier << "no partials to export!" << endl;
-		return;
-	}
-	
 	try 
 	{
 		ThrowIfNull((PartialList *) partials);
 
+		if ( partials->size() == 0 ) 
+		{
+			notifier << "no partials to export!" << endl;
+			return;
+		}
+		
 		notifier << "exporting sdif partial data to " << path << endl;		
-		ExportSdif efout( hop );
+		ExportSdif efout;
 		efout.write( path, *partials );
 		
 	}
