@@ -91,6 +91,14 @@ public:
 					PartialList::const_iterator end0,
 					PartialList::const_iterator begin1, 
 					PartialList::const_iterator end1 );
+					
+//	helpers: these expose the morphing functionality to other clients:
+	void morphParameters( const Breakpoint & srcBkpt, const Partial & tgtPartial, 
+						  double time, Breakpoint & retBkpt );
+	void morphParameters( const Partial & srcPartial, const Breakpoint & tgtBkpt, 
+						  double time, Breakpoint & retBkpt );
+	void morphParameters( const Partial & srcPartial, const Partial & tgtPartial, 
+						  double time, Breakpoint & retBkpt );
 
 };	//	end of class Morpher_imp
 
@@ -114,6 +122,119 @@ Morpher_imp::~Morpher_imp( void )
 }
 
 // ---------------------------------------------------------------------------
+//	morphParameters - Breakpoint to Partial
+// ---------------------------------------------------------------------------
+//	Compute morphed parameter values at the specified time, using
+//	the source Breakpoint (assumed to correspond exactly to the
+//	specified time) and the target Partial (whose parameters are
+//	examined at the specified time).
+//
+//	Need to check for tgtPartial being a dummy Partial.
+//
+void
+Morpher_imp::morphParameters( const Breakpoint & srcBkpt, const Partial & tgtPartial, 
+							  double time, Breakpoint & retBkpt )
+{
+	double alphaA = _ampFunction->valueAt( time );
+
+	//	if tgtPartial is a valid Partial, compute 
+	//	weighted average parameters, otherwise just 
+	//	fade the source:
+	if ( tgtPartial.numBreakpoints() > 0 )
+	{
+		//	compute parameter weights:
+		double alphaF = _freqFunction->valueAt( time );
+		double alphaBW = _bwFunction->valueAt( time );
+		
+		//	compute interpolated values for tgtPartial:
+		double tgtamp = tgtPartial.amplitudeAt( time );
+		double tgtfreq = tgtPartial.frequencyAt( time );
+		double tgtbw = tgtPartial.bandwidthAt( time );
+		double tgtph = tgtPartial.phaseAt( time );
+		
+		//	create new weighted average parameters for 
+		//	the return Breakpoint:	
+		retBkpt.setFrequency( (alphaF * tgtfreq) + ((1.-alphaF) * srcBkpt.frequency()) );
+		retBkpt.setAmplitude( (alphaA * tgtamp) + ((1.-alphaA) * srcBkpt.amplitude()) );
+		retBkpt.setBandwidth( (alphaBW * tgtbw) + ((1.-alphaBW) * srcBkpt.bandwidth()) );
+		retBkpt.setPhase( (alphaF * tgtph) + ((1.-alphaF) * srcBkpt.phase()) );
+	}
+	else
+	{
+		//	its a dummy Partial, just fade (amplitude scale)
+		//	the source Breakpoint:
+		retBkpt = srcBkpt;
+		retBkpt.setAmplitude( (1.-alphaA) * srcBkpt.amplitude() );
+	}
+}
+
+// ---------------------------------------------------------------------------
+//	morphParameters - Partial to Breakpoint
+// ---------------------------------------------------------------------------
+//	Compute morphed parameter values at the specified time, using
+//	the source Partial (whose parameters are examined at the specified 
+//	time) and the target Breakpoint (assumed to correspond exactly to 
+//	the specified time).
+//
+//	Need to check for srcPartial being a dummy Partial.
+//
+void
+Morpher_imp::morphParameters( const Partial & srcPartial, const Breakpoint & tgtBkpt, 
+							  double time, Breakpoint & retBkpt )
+{
+	double alphaA = 1. - _ampFunction->valueAt( time );
+	
+	//	if srcPartial is a valid Partial, compute 
+	//	weighted average parameters, otherwise just 
+	//	fade the source:
+	if ( srcPartial.numBreakpoints() > 0 )
+	{
+		//	compute parameter weights:
+		double alphaF = 1. - _freqFunction->valueAt( time );
+		double alphaBW = 1. - _bwFunction->valueAt( time );
+		
+		//	compute interpolated values for tgtPartial:
+		double srcamp = srcPartial.amplitudeAt( time );
+		double srcfreq = srcPartial.frequencyAt( time );
+		double srcbw = srcPartial.bandwidthAt( time );
+		double srcph = srcPartial.phaseAt( time );
+		
+		//	create new weighted average parameters for 
+		//	the return Breakpoint:	
+		retBkpt.setFrequency( (alphaF * srcfreq) + ((1.-alphaF) * tgtBkpt.frequency()) );
+		retBkpt.setAmplitude( (alphaA * srcamp) + ((1.-alphaA) * tgtBkpt.amplitude()) );
+		retBkpt.setBandwidth( (alphaBW * srcbw) + ((1.-alphaBW) * tgtBkpt.bandwidth()) );
+		retBkpt.setPhase( (alphaF * srcph) + ((1.-alphaF) * tgtBkpt.phase()) );
+	}
+	else
+	{
+		//	its a dummy Partial, just fade (amplitude scale)
+		//	the target Breakpoint:
+		retBkpt = tgtBkpt;
+		retBkpt.setAmplitude( (1.-alphaA) * tgtBkpt.amplitude() );
+	}
+}
+
+// ---------------------------------------------------------------------------
+//	morphParameters - Partial to Partial
+// ---------------------------------------------------------------------------
+//	Compute morphed parameter values at the specified time, using
+//	the source  and target Partials, both of whose parameters are 
+//	examined at the specified time.
+//
+//	Need to check for srcPartial or tgtPartial being a dummy Partial.
+//
+void
+Morpher_imp::morphParameters( const Partial & srcPartial, const Partial & tgtPartial, 
+							  double time, Breakpoint & retBkpt )
+{
+	if ( srcPartial.numBreakpoints() == 0 && tgtPartial.numBreakpoints() == 0 )
+		Throw( InvalidArgument, "Cannot morph a pair of dummy (empty) Partials." );
+		
+	
+}
+
+// ---------------------------------------------------------------------------
 //	morphPartial
 // ---------------------------------------------------------------------------
 //	Basic morphing operation: either Partial may be a dummy with no 
@@ -130,8 +251,13 @@ Morpher_imp::morphPartial( const Partial & p0, const Partial & p1, int assignLab
 	newp.setLabel( assignLabel );
 	
 	//	loop over Breakpoints in first partial:
+	Breakpoint tmpBkpt;
 	for ( PartialConstIterator iter = p0.begin(); iter != p0.end(); ++iter )
-	{
+	{	
+		morphParameters( iter.breakpoint(), p1, iter.time(), tmpBkpt );
+		newp.insert( iter.time(), tmpBkpt );
+		
+		/*
 		//	amplitude weight is always used:
 		double alphaA = _ampFunction->valueAt( iter.time() );
 		
@@ -169,11 +295,16 @@ Morpher_imp::morphPartial( const Partial & p0, const Partial & p1, int assignLab
 			//	insert the new Breakpoint in the morphed Partial:
 			newp.insert( iter.time(), newbp );
 		}
+		*/
 	}
 	
 	//	now do it for the other Partial:
 	for ( PartialConstIterator iter = p1.begin(); iter != p1.end(); ++iter )
 	{
+		morphParameters( p0, iter.breakpoint(), iter.time(), tmpBkpt );
+		newp.insert( iter.time(), tmpBkpt );
+		
+		/*
 		//	amplitude weight is always used:
 		double alphaA = 1. - _ampFunction->valueAt( iter.time() );
 		
@@ -211,12 +342,13 @@ Morpher_imp::morphPartial( const Partial & p0, const Partial & p1, int assignLab
 			//	insert the new Breakpoint in the morphed Partial:
 			newp.insert( iter.time(), newbp );
 		}
+		*/
 	}
 	
 		
 	//	add the new partial to the collection,
 	//	if it is valid:
-	if ( newp.begin() != newp.end() ) 
+	if ( newp.numBreakpoints() > 0 ) 
 	{
 		_partials.push_back( newp );
 	}
