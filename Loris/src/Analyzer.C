@@ -17,9 +17,8 @@
 #include <vector>
 #include <memory>
 #include <map>
-#include <algorithm>
-
 #include <set>
+#include <algorithm>
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
@@ -44,10 +43,12 @@ class AnalyzerState
 
 	double _sampleRate;
 	
+	std::set< Partial * > _oldgoobers;			//	yuck?
+	
 public:
 //	construction:
+//	(use compiler-constructed destructor)
 	AnalyzerState( const Analyzer & anal, double srate );
-	//~AnalyzerState();		use compiler-constructed destructor
 	
 //	accessors:
 	ReassignedSpectrum & spectrum(void) { return *_spectrum; }
@@ -58,6 +59,8 @@ public:
 	
 	double sampleRate(void) { return _sampleRate; }
 
+	std::set< Partial * > & goobers(void) { return _oldgoobers; }
+	
 };	//	end of class AnalyzerState
 
 
@@ -210,12 +213,13 @@ Analyzer::analyze( const std::vector< double > & buf, double srate, double offse
 //
 //	Also, need to check for bogus parameters somewhere.
 //
-	const long hop = long( hopTime() * srate )/* + 1 KLUDGE*/;	//	truncate
+	const long hop = long( hopTime() * srate );	//	truncate
 		
 	try { 
-		for ( long winMiddleIdx = 0; // 52 KLUDGE; 
+		for ( long winMiddleIdx = 0; 
 			  winMiddleIdx < buf.size();
-			  winMiddleIdx += hop ) {
+			  winMiddleIdx += hop ) 
+		{
 			//	compute the time of this analysis frame:
 			const double frameTime = ( winMiddleIdx / srate ) + offset;
 			 
@@ -443,9 +447,6 @@ static inline double distance( const Partial & partial,
 void 
 Analyzer::formPartials( std::list< Breakpoint > & frame, double frameTime, AnalyzerState & state )
 {
-//	FIX: oldgoobers this to the state, this isn't safe
-static std::set< Partial * > oldgoobers;
-
 	std::set< Partial * > newgoobers;
 	
 	//	frequency-sort the frame:
@@ -487,14 +488,15 @@ static std::set< Partial * > oldgoobers;
 			continue;	//	don't use peaks with large time corrections
 #endif	//	like Lemur
 
-		//	loop over all Partials, find the eligible Partial
+		//	loop over all eligible Partials, find the Partial
 		//	that is nearest in frequency to the Peak:
+		/*
 		PartialList::iterator nearest = partials().end();
 		for ( PartialList::iterator candidate = partials().begin(); 
 			  candidate != partials().end(); 
 			  ++candidate ) 
 		{
-			if ( oldgoobers.count( &(*candidate) ) == 0 )
+			if ( state.goobers().count( &(*candidate) ) == 0 )
 				continue;
 				
 			//	remember this Partial if it is nearer in frequency 
@@ -506,6 +508,22 @@ static std::set< Partial * > oldgoobers;
 				nearest = candidate;
 			}
 		}
+		*/
+		Partial * nearest = NULL;
+		std::set< Partial * >::iterator candidate;
+		for ( candidate = state.goobers().begin();
+			  candidate != state.goobers().end();
+			  ++candidate )
+		{
+			//	remember this Partial if it is nearer in frequency 
+			//	to the Breakpoint than every other Partial:
+			if ( nearest == NULL || 
+				 distance( **candidate, peak, peakTime ) < distance( *nearest, peak, peakTime ) ) 
+			{
+				//	this Partial is nearest (so far):
+				nearest = *candidate;
+			}
+		}			
 		
 		//	(now have nearest Partial)
 		//	Create a new Partial with this Breakpoint if:
@@ -517,14 +535,14 @@ static std::set< Partial * > oldgoobers;
 		//		closer to the nearest Partial (4)
 		//
 		//	Otherwise, add this Breakpoint to the nearest Partial.
-		double thisdist = (nearest != partials().end()) ? 
+		double thisdist = (nearest != NULL) ? //partials().end()) ? 
 							(distance(*nearest, peak, peakTime)) : 
 							(0.);
 		std::list< Breakpoint >::iterator next = bpIter;
 		++next;
 		std::list< Breakpoint >::iterator prev = bpIter;
 		--prev;
-		if ( nearest == partials().end() /* (1) */ || 
+		if ( nearest == NULL /* (1) */ || 
 			 thisdist > 0.5 * freqResolution() /* (2) */ ||
 			 ( next != frame.end() && 
 			 	thisdist > distance( *nearest, *(next), state.peakTimeCache()[ next->frequency() ] ) ) /* (3) */ ||
@@ -596,7 +614,7 @@ static std::set< Partial * > oldgoobers;
 	 	fclose( spitfile );
 #endif	//	debug
 	 	
-	 oldgoobers = newgoobers;
+	 state.goobers() = newgoobers;
 }
 
 // ---------------------------------------------------------------------------
