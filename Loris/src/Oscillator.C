@@ -168,6 +168,13 @@ Oscillator::generateSamples( std::vector< double > & buffer,
 		//	as long as it brings the phase nearer to zero.)
 		_phase = fmod( p, TwoPi );
 	}
+	else if (endIdx > beginIdx)
+	{
+		//	just advance the phase by the average frequency
+		//	times the number of samples:
+		_phase += (0.5 * (_frequency + targetFreq)) * (endIdx - beginIdx);
+		_phase = fmod( _phase, TwoPi );
+	}
 	
 //	set the state variables to their target values,
 //	just in case they didn't arrive exactly (overshooting

@@ -11,14 +11,11 @@
 // ===========================================================================
 #include "Partial.h"
 #include "Exception.h"
-#include <memory>	//	for auto_ptr
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
 #endif
-
-class Map;
 
 // ---------------------------------------------------------------------------
 //	class Distiller
@@ -29,14 +26,12 @@ class Distiller
 {
 //	-- instance variables --
 	PartialList _partials;	//	collect Partials here
-	std::auto_ptr< Map > _referenceEnv;
-	int _refLabel;
 			
 //	-- public interface --
 public:
 //	construction:	
-	Distiller( const Map & env, int label );
-	~Distiller( void );
+	Distiller( void );
+	// ~Distiller( void );
 	
 //	distillation:
 	void distill( PartialList::const_iterator start,
@@ -53,14 +48,13 @@ protected:
 					 Partial & dest, 
 					 PartialList::const_iterator start,
 					 PartialList::const_iterator end );
-	bool gapAt( double time, 
+/*	bool gapAt( double time, 
 				PartialList::const_iterator start,
 				PartialList::const_iterator end ) const;
-				
+*/				
 	void fixGaps( Partial & dest, 
 				  PartialList::const_iterator start,
-				  PartialList::const_iterator end,
-				  double freqRatio );
+				  PartialList::const_iterator end );
 				   
 //	-- unimplemented --
 private:

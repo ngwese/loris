@@ -25,21 +25,11 @@ namespace Loris {
 //	Distiller constructor
 // ---------------------------------------------------------------------------
 //
-Distiller::Distiller( const Map & env, int label ) :
-	_referenceEnv( env.clone() ),
-	_refLabel( label )
+Distiller::Distiller( void )
 {
-	if ( label <= 0 )
-		Throw( InvalidArgument, "distillation reference label must be positive" );
 }
 
-// ---------------------------------------------------------------------------
-//	Distiller destructor
-// ---------------------------------------------------------------------------
-//
-Distiller::~Distiller( void )
-{
-}
+
 
 // ---------------------------------------------------------------------------
 //	distill
@@ -68,10 +58,7 @@ Distiller::distill( PartialList::const_iterator start,
 	}
 	
 	//	fill in gaps:
-	double ratio;
-	if ( assignLabel > 0 )
-		ratio = assignLabel / _refLabel;
-	fixGaps( newp, start, end, ratio );
+	fixGaps( newp, start, end );
 
 	//	add the newly-distilled partial to the collection:
 	partials().push_back( newp );
@@ -106,17 +93,6 @@ Distiller::distillOne( const Partial & src,
 					   PartialList::const_iterator start,
 					   PartialList::const_iterator end  )
 {
-	//	if there is a gap before the onset of this Partial,
-	//	fade in, but don't insert Breakpoints before zero:
-	/*
-	double gapTime = src.startTime() - Partial::FadeTime();
-	if ( gapTime > 0. && gapAt( gapTime, start, end ) ) 
-	{
-		Breakpoint zeroPt( src.frequencyAt(gapTime), 0., src.bandwidthAt(gapTime), 
-						   src.frequencyAt(gapTime) );
-		dest.insert( gapTime, zeroPt );
-	}
-	*/
 	//	iterate over the source Partial:
 	for ( PartialConstIterator pIter = src.begin(); pIter != src.end(); ++pIter )
 	{
@@ -163,19 +139,10 @@ Distiller::distillOne( const Partial & src,
 		}	//	end if all other Partials are quieter at time of pIter
 		
 	}	//	end iteration over source Partial
-	
-	/*
-	//	if there is a gap after this Partial, fade out:
-	gapTime = src.endTime() + Partial::FadeTime();
-	if ( gapAt( gapTime, start, end ) ) 
-	{
-		Breakpoint zeroPt( src.frequencyAt(gapTime), 0., src.bandwidthAt(gapTime), 
-						   src.frequencyAt(gapTime) );
-		dest.insert( gapTime, zeroPt );
-	}
-	*/
 }
 
+
+/*
 // ---------------------------------------------------------------------------
 //	gapAt
 // ---------------------------------------------------------------------------
@@ -195,6 +162,7 @@ Distiller::gapAt( double time,
 	}
 	return true;
 }
+*/
 
 // ---------------------------------------------------------------------------
 //	fixGaps
@@ -203,13 +171,28 @@ Distiller::gapAt( double time,
 void 
 Distiller::fixGaps( Partial & dest, 
 				  	PartialList::const_iterator start,
-				  	PartialList::const_iterator end,
-				  	double freqRatio )
+				  	PartialList::const_iterator end )
 {
+	/*
+		DO THIS BETTER:
+		
+		make a list of segments, sort it, then build a collapsed
+		list, avoid the collapsing loop altogether:
+		
+		start at first segment
+			while next segment start < current segment end
+				append next to current (or absorb, may not extend)
+				advance next
+			remove all segments between current and next (not including either)
+			advance current 
+		
+	*/
 	//	make a list of segments:
 	std::list< std::pair<double, double> > segments;
 	for ( PartialList::const_iterator p = start; p != end; ++p )
 	{	
+		segments.push_back( std::make_pair( p->startTime(), p->endTime() ) );
+/*
 		std::list< std::pair<double, double> >::iterator seg;
 		for ( seg = segments.begin(); seg != segments.end(); ++seg )
 		{
@@ -232,10 +215,36 @@ Distiller::fixGaps( Partial & dest,
 		{
 			segments.push_back( std::make_pair( p->startTime(), p->endTime() ) );
 		}
+*/
 	}
-	// debugger << "found " << segments.size() << " segments." << endl;
+	//debugger << "found " << segments.size() << " segments." << endl;
 	
-	//	sort and collapse the segments:
+		
+	segments.sort(); 	//	uses op < ( pair<>, pair<> ), does what you think
+	std::list< std::pair<double, double> >::iterator curseg;
+	for ( curseg = segments.begin(); curseg != segments.end(); ++curseg )
+	{
+		//	curseg absorbs all succeeding segments that
+		//	begin before it ends:
+		std::list< std::pair<double, double> >::iterator nextseg = curseg;
+		while ( (++nextseg)->first < curseg->second )
+		{
+			curseg->second = std::max( curseg->second, nextseg->second );
+		}
+		
+		//	nextseg now begins after curseg ends,
+		//	remove all segments after curseg and before
+		//	nextseg (list<> erasure is guaranteed not to 
+		//	invalidate curseg or any iterators refering to
+		//	elements that aren't deleted):
+		std::list< std::pair<double, double> >::iterator del = curseg;
+		++del;
+		segments.erase( del, nextseg );
+	}
+	//debugger << "collapsed to " << segments.size() << " segments" << endl;
+	
+	
+	/*	sort and collapse the segments:
 	//	(if I could guarantee that the Partials were in 
 	//	start time order, I wouldn't need this, right?)
 	std::vector< double > VDBG;
@@ -268,17 +277,13 @@ Distiller::fixGaps( Partial & dest,
 			}
 		}
 	}
-	// debugger << "collapsed to " << segments.size() << " segments" << endl;
-	
-	
-	
+	*/
 	//	fill in gaps between segments:
 	if ( segments.size() > 1 )
 	{
 		std::list< std::pair<double, double> >::iterator seg = segments.begin();
 		std::list< std::pair<double, double> >::iterator nextseg = seg;	
 		++nextseg;
-		int count = 0;
 		while ( nextseg != segments.end() )
 		{	
 			double gap = nextseg->first - seg->second;
@@ -289,23 +294,15 @@ Distiller::fixGaps( Partial & dest,
 			//	fill in the gap if its big enough:
 			if ( gap > 2. * Partial::FadeTime() )
 			{
-				// debugger << "filling in a gap of duration " << gap << endl;
+				//
+				//	HEY should we use zero BW or dest BW?
+				//
 				double time = seg->second + Partial::FadeTime();
-				/*
-				double freq = _referenceEnv->valueAt(time) * freqRatio;
-				double phase = dest.phaseAt(seg->second) +
-					(0.5 * (freq+dest.frequencyAt(seg->second))) * Partial::FadeTime();
-				*/
 				double freq = dest.frequencyAt( seg->second );
 				double phase = dest.phaseAt(seg->second) +  (freq * Partial::FadeTime()); 
 				dest.insert( time, Breakpoint( freq, 0., 0., phase ) );
 				
 				time = nextseg->first - Partial::FadeTime();
-				/*
-				freq = _referenceEnv->valueAt(time) * freqRatio;
-				phase = dest.phaseAt(nextseg->first) -
-					(0.5 * (freq+dest.frequencyAt(nextseg->first))) * Partial::FadeTime();
-				*/
 				freq = dest.frequencyAt( nextseg->first );
 				phase = dest.phaseAt(nextseg->first) - (freq * Partial::FadeTime());
 				dest.insert( time, Breakpoint( freq, 0., 0., phase ) );
@@ -314,9 +311,6 @@ Distiller::fixGaps( Partial & dest,
 			//	advance iterators:
 			++seg;
 			++nextseg;
-			
-			
-			++count;
 		}
 	}
 }
