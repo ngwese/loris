@@ -151,8 +151,13 @@ int main( void )
 		BreakpointEnvelope mf;
 		mf.insertBreakpoint( 0.6, 0 );
 		mf.insertBreakpoint( 2, 1 );
+		
 		Morpher m( mf );
+		m.setMinBreakpointGap( 0.002 );
+		m.setSourceReferenceLabel( 3 );
+		m.setTargetReferenceLabel( 1 );
 		m.morph( clar.begin(), clar.end(), flut.begin(), flut.end() );
+
 
 		// synthesize and export samples
 		cout << "synthesizing " << m.partials().size() << " morphed partials" << endl;

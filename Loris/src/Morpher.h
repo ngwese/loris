@@ -364,6 +364,11 @@ private:
 	//!	morph() implementation accepting two sequences of Partials.
 	void morph_aux( PartialCorrespondence & correspondence );
 	
+   //! Helper function to construct a Partial for morphing by scaling
+   //! the frequencies of the reference Partial. This is used when only
+   //! one of the sources in a morph has a Partial with a particular label.
+	Partial makePartialFromReference( Partial scaleMe, double fscale );
+
 	//!	Helper functions for computing individual morphed parameter values
 	double morphFrequencies( double f0, double f1, double alpha );
 	double morphAmplitudes( double a0, double a1, double alpha );
