@@ -55,11 +55,6 @@
 
 using namespace Loris;
 
-//	forward declarations:
-static void getFreqReference( const std::list< Partial > & partials, int numSamples,
-							  double minFreq, double maxFreq,
-							  BreakpointEnvelope * env_ptr );
-
 int main( )
 {
 	std::cout << "Welcome to the very simple Loris C++ morphing demo!" << endl;
@@ -67,18 +62,18 @@ int main( )
 	std::cout << "Generates a simple linear morph between a " << endl;
 	std::cout << "clarinet and a flute using the C++ library." << endl << endl;
 	
-#if !defined(__MWERKS__)
-	std::string path( std::getenv("srcdir") );
-	path = path + "/";
-#else
-	std::string path("");
-#endif
+	std::string path(""); 
+	if ( std::getenv("srcdir") ) 
+	{
+		path = std::getenv("srcdir");
+		path = path + "/";
+	}
 
 	try 
 	{
 		//	analyze clarinet tone
 		std::cout << "analyzing clarinet 3G#" << endl;
-		Analyzer a(390);
+		Analyzer a(415*.8, 415*1.6);
 		AiffFile f( path + "clarinet.aiff" );
 		std::vector< double > v( f.sampleFrames() );
 		f.getSamples( v.begin(), v.end() );
@@ -87,6 +82,13 @@ int main( )
 		a.analyze( v.begin(), v.end(), f.sampleRate() );
 		clar.splice( clar.end(), a.partials() );
 		
+		FrequencyReference clarRef( clar.begin(), clar.end(), 0, 1000, 20 );
+		Channelizer ch( clarRef.envelope() , 1 );
+		ch.channelize( clar.begin(), clar.end() );
+		
+		Distiller still;
+		still.distill( clar );
+
 		//	make sure that SDIF I/O is working:
 		std::cout << "exporting sdif" << endl;
 		SdifFile::Export( "clarinet.ctest.sdif", clar );
@@ -96,16 +98,6 @@ int main( )
 		clar.splice( clar.end(), ip.partials() );
 		std::cout << "that was fun." << endl;
 		
-		FrequencyReference fr( clar.begin(), clar.end(), 0, 1000 );
-		BreakpointEnvelope clarRef( fr.envelope() );
-		//getFreqReference( clar, 20, 0, 1000, &clarRef );
-							  
-		Channelizer ch( clarRef, 1 );
-		ch.channelize( clar.begin(), clar.end() );
-		
-		Distiller still;
-		still.distill( clar );
-
 		std::cout << "shifting pitch of " << clar.size() << " Partials by 600 cents" << endl;
 		double pscale = std::pow(2., (0.01 * -600) /12.);
 		for ( std::list< Partial >::iterator pIter = clar.begin(); 
@@ -137,10 +129,8 @@ int main( )
 		a.analyze( v.begin(), v.end(), f.sampleRate() );
 		flut.splice( flut.end(), a.partials() );
 
-		BreakpointEnvelope flutRef;
-		getFreqReference( flut, 20, 0, 1000, &flutRef );
-							  
-		ch = Channelizer( flutRef, 1 );
+		FrequencyReference flutRef( flut.begin(), flut.end(), 0, 1000, 20 );
+		ch = Channelizer( flutRef.envelope(), 1 );
 		ch.channelize( flut.begin(), flut.end() );
 
 		still.distill( flut );
@@ -209,69 +199,4 @@ int main( )
 
 	std::cout << "bye" << endl;
 	return 0;
-}
-
-//
-//	This function simulates the behavior of the createFreqReference()
-//	function in the procedural interface (it hasn't yet made it into
-//	the C++ core of Loris).
-//
-static void getFreqReference( const std::list< Partial > & partials, int numSamples,
-							  double minFreq, double maxFreq,
-							  BreakpointEnvelope * env_ptr )
-{
-	if ( numSamples <= 0 )
-		Throw( InvalidArgument, "number of samples in frequency reference must be positive." );
-	
-	if ( maxFreq < minFreq )
-		std::swap( minFreq, maxFreq );
-		
-	//	find the longest Partial in the given frequency range:
-	std::list< Partial >::const_iterator longest = partials.end();
-	for ( std::list< Partial >::const_iterator it = partials.begin(); 
-		  it != partials.end(); 
-		  ++it ) 
-	{
-		//	evaluate the Partial's frequency at its loudest
-		//	(highest sinusoidal amplitude) Breakpoint:
-		PartialConstIterator partialIter = it->begin();
-		double maxAmp = 
-			partialIter->amplitude() * std::sqrt( 1. - partialIter->bandwidth() );
-		double time = partialIter.time();
-		
-		for ( ++partialIter; partialIter != it->end(); ++partialIter ) 
-		{
-			double a = partialIter->amplitude() * 
-						std::sqrt( 1. - partialIter->bandwidth() );
-			if ( a > maxAmp ) 
-			{
-				maxAmp = a;
-				time = partialIter.time();
-			}
-		}			
-		double compareFreq = it->frequencyAt( time );
-		
-		
-		if ( compareFreq < minFreq || compareFreq > maxFreq )
-			continue;
-			
-		if ( longest == partials.end() || it->duration() > longest->duration() ) 
-		{
-			longest = it;
-		}
-	}	
-	
-	if ( longest == partials.end() ) 
-	{
-		Throw( InvalidArgument, "no partials found in the specified frequency range" );
-	}
-
-	//	find n samples, ignoring the end points:
-	double dt = longest->duration() / (numSamples + 1.);
-	for ( int i = 0; i < numSamples; ++i ) 
-	{
-		double t = longest->startTime() + ((i+1) * dt);
-		double f = longest->frequencyAt(t);
-		env_ptr->insertBreakpoint( t, f );
-	}
 }
