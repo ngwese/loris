@@ -40,16 +40,20 @@ namespace Loris {
 // ---------------------------------------------------------------------------
 //	class Breakpoint
 //
-//	Definition of class of objects representing a single breakpoint in the
+//	Class Breakpoint represents a single breakpoint in the
 //	Partial parameter (frequency, amplitude, bandwidth) envelope.
 //	Instantaneous phase is also stored, but is only used at the onset of 
 //	a partial, or when it makes a transition from zero to nonzero amplitude.
-//
+//	
 //	Loris Partials represent reassigned bandwidth-enhanced model components.
 //	A Partial consists of a chain of Breakpoints describing the time-varying
 //	frequency, amplitude, and bandwidth (noisiness) of the component.
-//
-//	Leaf class, do not subclass.
+//	For more information about Reassigned Bandwidth-Enhanced 
+//	Analysis and the Reassigned Bandwidth-Enhanced Additive Sound 
+//	Model, refer to the Loris website: 
+//	www.cerlsoundgroup.org/Loris/.
+//	
+//	Breakpoint is a leaf class, do not subclass.
 //
 class Breakpoint
 {
@@ -61,25 +65,51 @@ class Breakpoint
 	
 //	-- public Breakpoint interface --
 public:
-//	construction:
+//	-- construction --
 //	(use compiler-generated destructor, copy, and assign)
-	Breakpoint( void );	//	needed for STL containability
-	Breakpoint( double f, double a, double b, double p = 0. );
+	/*	Construct a new Breakpoint with all parameters initialized to 0.
+	 */
+ 	Breakpoint( void );	//	needed for STL containability
+	/*	Construct a new Breakpoint with frequency, amplitude, and bandwidth
+		initialized to f, a, and b, respectively, and phase initialized to
+		p, if specified, or 0 otherwise.
+	 */
+ 	Breakpoint( double f, double a, double b, double p = 0. );
 	
-//	comparison:
-	bool operator==( const Breakpoint & rhs ) const;
+//	-- comparison --
+	/*	Comparison operator: return true if the frequency, amplitude, 
+		bandwidth, and phase of this Breakpoint are equal to those of
+		the Breakpoint rhs. Otherwise, return false.
+	 */
+ 	bool operator==( const Breakpoint & rhs ) const;
 
-//	attribute access:
-	double frequency( void ) const { return _frequency; }
-	double amplitude( void ) const { return _amplitude; }
-	double bandwidth( void ) const { return _bandwidth; }
-	double phase( void ) const { return _phase; }
+//	-- attribute access --
+	/*	Return the amplitude of this Breakpoint.
+	 */
+ 	double amplitude( void ) const { return _amplitude; }
+	/*	Return the bandwidth (noisiness) coefficient of this Breakpoint.
+	 */
+ 	double bandwidth( void ) const { return _bandwidth; }
+	/*	Return the frequency of this Breakpoint.
+	 */
+ 	double frequency( void ) const { return _frequency; }
+	/*	Return the phase of this Breakpoint.
+	 */
+ 	double phase( void ) const { return _phase; }
 	
-//	attribute mutation:
-	void setFrequency( double x ) { _frequency = x; }
-	void setAmplitude( double x ) { _amplitude = x; }
-	void setBandwidth( double x ) { _bandwidth = x; }
-	void setPhase( double x ) { _phase = x; }
+//	-- attribute mutation --
+	/*	Set the amplitude of this Breakpoint.
+	 */
+ 	void setAmplitude( double x ) { _amplitude = x; }
+	/*	Set the bandwidth (noisiness) coefficient of this Breakpoint.
+	 */
+ 	void setBandwidth( double x ) { _bandwidth = x; }
+	/*	Set the frequency of this Breakpoint.
+	 */
+ 	void setFrequency( double x ) { _frequency = x; }
+	/*	Set the phase of this Breakpoint.
+	 */
+ 	void setPhase( double x ) { _phase = x; }
 	
 //	add noise (bandwidth) energy:
 //	should this really be part of the interface?

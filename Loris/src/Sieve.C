@@ -87,19 +87,18 @@ struct PartialPtrLabelNE :
 // ---------------------------------------------------------------------------
 //	find_overlapping (template function)
 // ---------------------------------------------------------------------------
-//	Iterate over all other Partials with same labeling.
-//  If any other partial has time-overlap with this partial,
-//  and if this partial is not the longer of the two,
-//  then relabel this Partial with label 0.
+//	Iterate over a range of Partials (presumably) with same labeling.
+//	The range is specified by iterators over a collection of pointers
+//	to Partials (not Partials themselves). Return the first position
+//	in the specified range corresponding to a Partial that overlaps
+//	(in time) the specified Partial, p, or the end of the range if
+//	no Partials in the range overlap.
 //
 //	Overlap is defined by the minimum time gap between Partials
 //	(minGapTime), so Partials that have less then minGapTime
 //	between them are considered overlapping.
 //
-//  Return 1 if we relabel the partial, else return zero.
-//	
-
-template <typename Iter>	//	Iter must be the position of a Partial *
+template <typename Iter>	//	Iter is the position of a Partial *
 Iter
 find_overlapping( Partial & p, double minGapTime, Iter start, Iter end)
 {
@@ -137,7 +136,7 @@ find_overlapping( Partial & p, double minGapTime, Iter start, Iter end)
 		}
 	}
 	
-	//	it is now the position of an overlapping Partial, or end:
+	//	no overlapping Partial found:
 	return end;
 }
 
