@@ -33,12 +33,6 @@ Python module: loris</TITLE>
 	For more information about Bandwidth-Enhanced Partials and the  
 	Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
 	the Loris website: www.cerlsoundgroup.org/Loris/
-<P><TT><B>copy()</B></TT>
-<BLOCKQUOTE>  	Return a new PartialList that is a copy of this 
-			PartialList (i.e. has identical Partials).
-		   
-</BLOCKQUOTE>
-
 <P><TT><B>PartialList()</B></TT>
 <BLOCKQUOTE>  	Return a new empty PartialList.
 		   
@@ -49,33 +43,26 @@ Python module: loris</TITLE>
 		   
 </BLOCKQUOTE>
 
+<P><TT><B>begin()</B></TT>
+<BLOCKQUOTE>  	Return an iterator refering to the first Partial in this PartialList.
+	   
+</BLOCKQUOTE>
+
 <P><TT><B>clear()</B></TT>
 <BLOCKQUOTE>  	Remove (and destroy) all the Partials from this PartialList,
 		leaving it empty.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>size()</B></TT>
-<BLOCKQUOTE>  	Return the number of Partials in this PartialList.
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>begin()</B></TT>
-<BLOCKQUOTE>  	Return an iterator refering to the first Partial in this PartialList.
-	   
+<P><TT><B>copy()</B></TT>
+<BLOCKQUOTE>  	Return a new PartialList that is a copy of this 
+			PartialList (i.e. has identical Partials).
+		   
 </BLOCKQUOTE>
 
 <P><TT><B>end()</B></TT>
 <BLOCKQUOTE>  	Return an iterator refering to the end of this PartialList (an invalid
 		element after the last valid Partial).
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>insert(position,partial)</B></TT>
-<BLOCKQUOTE>  	Insert a copy of the given Partial into this PartialList at
-		the position indicated by the PartialListIterator position.
-		Returns a PartialListIterator refering to the position of the
-		newly-inserted Partial.
 	   
 </BLOCKQUOTE>
 
@@ -88,10 +75,29 @@ Python module: loris</TITLE>
 	   
 </BLOCKQUOTE>
 
+<P><TT><B>insert(position,partial)</B></TT>
+<BLOCKQUOTE>  	Insert a copy of the given Partial into this PartialList at
+		the position indicated by the PartialListIterator position.
+		Returns a PartialListIterator refering to the position of the
+		newly-inserted Partial.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>size()</B></TT>
+<BLOCKQUOTE>  	Return the number of Partials in this PartialList.
+	   
+</BLOCKQUOTE>
+
 <P><TT><B>splice(position,list)</B></TT>
 <BLOCKQUOTE>  	Splice all the Partials in the specified PartialList into
 		this PartialList at the position indicated by the PartialListIterator
 		position. Leaves the other PartialList empty.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>timespan()</B></TT>
+<BLOCKQUOTE>  	Return the minimum start time and maximum end time
+		 	of all Partials in this PartialList in a tuple.
 	   
 </BLOCKQUOTE>
 
@@ -119,6 +125,12 @@ Python module: loris</TITLE>
 	invalidate any other PartialListIterators, refering to other 
 	elements. The validity of an iterator can be verified using the
 	isInRange method.
+<P><TT><B>del this</B></TT>
+<BLOCKQUOTE>  	Destroy this PartialListIterator (doesn't affect the corresponding 
+			Partial).
+		   
+</BLOCKQUOTE>
+
 <P><TT><B>copy()</B></TT>
 <BLOCKQUOTE>  	Return a new PartialListIterator that is a copy of this 
 			PartialListIterator (i.e. refers to the same position
@@ -126,13 +138,24 @@ Python module: loris</TITLE>
 		   
 </BLOCKQUOTE>
 
-<P><TT><B>next()</B></TT>
-<BLOCKQUOTE>  	Increment (advance) this PartialListIterator. Return self.
+<P><TT><B>equals(other)</B></TT>
+<BLOCKQUOTE>  	Return true (1) if this PartialListIterator is equal to the
+			other. PartialListIterators are equal if they refer to the
+			same position in the same PartialList.
 		   
 </BLOCKQUOTE>
 
-<P><TT><B>prev()</B></TT>
-<BLOCKQUOTE>  	Decrement (advance by -1) this PartialListIterator. Return self.
+<P><TT><B>isInRange(begin,end)</B></TT>
+<BLOCKQUOTE>  	Return true (1) if this iterator is within the half-open iterator
+		 	range bounded by begin and end, and false otherwise. This method
+		 	can be used to check the validity of an iterator -- call with 
+		 	begin and end methods of the PartialList as arguments.
+		    
+</BLOCKQUOTE>
+
+<P><TT><B>next()</B></TT>
+<BLOCKQUOTE>  	Return an iterator refering to the next position in the
+			PartialList.
 		   
 </BLOCKQUOTE>
 
@@ -142,22 +165,12 @@ Python module: loris</TITLE>
 		   
 </BLOCKQUOTE>
 
-<P><TT><B>equals(other)</B></TT>
-<BLOCKQUOTE>  	Return true (1) if this PartialListIterator is equal to the
-			other. PartialListIterators are equal is they refer to the
-			same position in the same PartialList.
+<P><TT><B>prev()</B></TT>
+<BLOCKQUOTE>  	Return an iterator refering to the previous position
+			in the PartialList.
 		   
 </BLOCKQUOTE>
 
-<P><TT><B>isInRange(begin,end)</B></TT>
-<BLOCKQUOTE>  	Return true (1) is this iterator is within the half-open iterator
-		 	range bounded by begin and end, and false otherwise. This method
-		 	can be used to check the validity of an iterator -- call with 
-		 	begin and end methods of the PartialList as arguments.
-		    
-</BLOCKQUOTE>
-
-<P><TT><B>del this</B></TT>
 
 <A name="s1_3_">
 <H3>1.3. class Partial</H3></A>
@@ -180,38 +193,13 @@ Python module: loris</TITLE>
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>label()</B></TT>
-<BLOCKQUOTE>   	Return this Partial's label.
+<P><TT><B>amplitudeAt(time)</B></TT>
+<BLOCKQUOTE>   	Return this Partial's interpolated amplitude at the specified time.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>initialPhase()</B></TT>
-<BLOCKQUOTE>   	Return this Partial's starting phase.
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>startTime()</B></TT>
-<BLOCKQUOTE>   	Return this Partial's start time.
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>endTime()</B></TT>
-<BLOCKQUOTE>   	Return this Partial's end time.
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>duration()</B></TT>
-<BLOCKQUOTE>   	Return this Partial's duration.
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>numBreakpoints()</B></TT>
-<BLOCKQUOTE>   	Return this Partial's number of Breakpoints.
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>setLabel(l)</B></TT>
-<BLOCKQUOTE>  	Assign a new label to this Partial.
+<P><TT><B>bandwidthAt(time)</B></TT>
+<BLOCKQUOTE>   	Return this Partial's interpolated bandwidth at the specified time.
 	   
 </BLOCKQUOTE>
 
@@ -221,16 +209,40 @@ Python module: loris</TITLE>
 	   
 </BLOCKQUOTE>
 
+<P><TT><B>copy()</B></TT>
+<BLOCKQUOTE>  	Return a new Partial that is a copy of this 
+			Partial (i.e. has he same label and an identical
+			Breakpoint entvelope.
+		   
+</BLOCKQUOTE>
+
+<P><TT><B>duration()</B></TT>
+<BLOCKQUOTE>   	Return this Partial's duration.
+	   
+</BLOCKQUOTE>
+
 <P><TT><B>end()</B></TT>
 <BLOCKQUOTE>  	Return a PartialIterator refering to the end of this Partial (an invalid
 		element after the last valid Breakpoint).
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>insert(time,bp)</B></TT>
-<BLOCKQUOTE>  	Make a copy of bp and insert it at time (seconds),
-		return an iterator refering to the inserted Breakpoint.
+<P><TT><B>endTime()</B></TT>
+<BLOCKQUOTE>   	Return this Partial's end time.
 	   
+</BLOCKQUOTE>
+
+<P><TT><B>erase(pos)</B></TT>
+<BLOCKQUOTE>   	Erase the Breakpoint at the position of the 
+		given iterator (invalidating the iterator).
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>equals(other)</B></TT>
+<BLOCKQUOTE>  	Return true (1) if this Partial is equal to the other. 
+			Partials are equal is they have the same label and the
+			same Breakpoint envelope.
+		   
 </BLOCKQUOTE>
 
 <P><TT><B>findAfter(time)</B></TT>
@@ -246,24 +258,29 @@ Python module: loris</TITLE>
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>erase(pos)</B></TT>
-<BLOCKQUOTE>   	Erase the Breakpoint at the position of the 
-		given iterator (invalidating the iterator).
-	   
-</BLOCKQUOTE>
-
 <P><TT><B>frequencyAt(time)</B></TT>
 <BLOCKQUOTE>   	Return this Partial's interpolated frequency at the specified time.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>amplitudeAt(time)</B></TT>
-<BLOCKQUOTE>   	Return this Partial's interpolated amplitude at the specified time.
+<P><TT><B>label()</B></TT>
+<BLOCKQUOTE>   	Return this Partial's label.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>bandwidthAt(time)</B></TT>
-<BLOCKQUOTE>   	Return this Partial's interpolated bandwidth at the specified time.
+<P><TT><B>initialPhase()</B></TT>
+<BLOCKQUOTE>   	Return this Partial's starting phase.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>insert(time,bp)</B></TT>
+<BLOCKQUOTE>  	Make a copy of bp and insert it at time (seconds),
+		return an iterator refering to the inserted Breakpoint.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>numBreakpoints()</B></TT>
+<BLOCKQUOTE>   	Return this Partial's number of Breakpoints.
 	   
 </BLOCKQUOTE>
 
@@ -272,18 +289,14 @@ Python module: loris</TITLE>
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>copy()</B></TT>
-<BLOCKQUOTE>  	Return a new Partial that is a copy of this 
-			Partial (i.e. has he same label and an identical
-			Breakpoint entvelope.
-		   
+<P><TT><B>setLabel(l)</B></TT>
+<BLOCKQUOTE>  	Assign a new label to this Partial.
+	   
 </BLOCKQUOTE>
 
-<P><TT><B>equals(other)</B></TT>
-<BLOCKQUOTE>  	Return true (1) if this Partial is equal to the other. 
-			Partials are equal is they have the same label and the
-			same Breakpoint envelope.
-		   
+<P><TT><B>startTime()</B></TT>
+<BLOCKQUOTE>   	Return this Partial's start time.
+	   
 </BLOCKQUOTE>
 
 <A name="s1_4_">
@@ -311,6 +324,12 @@ Python module: loris</TITLE>
 	invalidate any other PartialIterators, refering to other 
 	Breakpoints. The validity of an iterator can be verified using
 	the isInRange method.
+<P><TT><B>del this</B></TT>
+<BLOCKQUOTE>  	Destroy this PartialIterator (doesn't affect the corresponding 
+			Breakpoint).
+		   
+</BLOCKQUOTE>
+
 <P><TT><B>breakpoint()</B></TT>
 <BLOCKQUOTE>        Return (a reference to) the Breakpoint at the position of this
 			PartialIterator.
@@ -321,16 +340,6 @@ Python module: loris</TITLE>
 <BLOCKQUOTE>  	Return a new PartialIterator that is a copy of this 
 			PartialIterator (i.e. refers to the same position
 			in the same Partial).
-		   
-</BLOCKQUOTE>
-
-<P><TT><B>next()</B></TT>
-<BLOCKQUOTE>  	Increment (advance) this PartialIterator. Return self.
-		   
-</BLOCKQUOTE>
-
-<P><TT><B>prev()</B></TT>
-<BLOCKQUOTE>  	Decrement (advance by -1) this PartialIterator. Return self.
 		   
 </BLOCKQUOTE>
 
@@ -349,7 +358,21 @@ Python module: loris</TITLE>
 		    
 </BLOCKQUOTE>
 
-<P><TT><B>del this</B></TT>
+<P><TT><B>next()</B></TT>
+<BLOCKQUOTE>  	Increment (advance) this PartialIterator. Return self.
+		   
+</BLOCKQUOTE>
+
+<P><TT><B>prev()</B></TT>
+<BLOCKQUOTE>  	Decrement (advance by -1) this PartialIterator. Return self.
+		   
+</BLOCKQUOTE>
+
+<P><TT><B>time()</B></TT>
+<BLOCKQUOTE>  	Return the time of the Breakpoint at the position of this
+		PartialIterator.
+		   
+</BLOCKQUOTE>
 
 <A name="s1_5_">
 <H3>1.5. class Breakpoint</H3></A>
@@ -376,11 +399,6 @@ Python module: loris</TITLE>
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>frequency()</B></TT>
-<BLOCKQUOTE>  	Return the frequency of this Breakpoint. 
-	   
-</BLOCKQUOTE>
-
 <P><TT><B>amplitude()</B></TT>
 <BLOCKQUOTE>  	Return the amplitude of this Breakpoint. 
 	   
@@ -388,31 +406,6 @@ Python module: loris</TITLE>
 
 <P><TT><B>bandwidth()</B></TT>
 <BLOCKQUOTE>  	Return the bandwidth of this Breakpoint. 
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>phase()</B></TT>
-<BLOCKQUOTE>  	Return the phase of this Breakpoint. 
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>setFrequency(x)</B></TT>
-<BLOCKQUOTE>  	Assign the frequency of this Breakpoint. 
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>setAmplitude(x)</B></TT>
-<BLOCKQUOTE>  	Assign the amplitude of this Breakpoint. 
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>setBandwidth(x)</B></TT>
-<BLOCKQUOTE>  	Assign the bandwidth of this Breakpoint. 
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>setPhase(x)</B></TT>
-<BLOCKQUOTE>  	Assign the phase of this Breakpoint. 
 	   
 </BLOCKQUOTE>
 
@@ -427,6 +420,36 @@ Python module: loris</TITLE>
 			other. Breakpoints are equal is they have identical 
 			parameter values.
 		   
+</BLOCKQUOTE>
+
+<P><TT><B>frequency()</B></TT>
+<BLOCKQUOTE>  	Return the frequency of this Breakpoint. 
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>phase()</B></TT>
+<BLOCKQUOTE>  	Return the phase of this Breakpoint. 
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>setAmplitude(x)</B></TT>
+<BLOCKQUOTE>  	Assign the amplitude of this Breakpoint. 
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>setBandwidth(x)</B></TT>
+<BLOCKQUOTE>  	Assign the bandwidth of this Breakpoint. 
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>setFrequency(x)</B></TT>
+<BLOCKQUOTE>  	Assign the frequency of this Breakpoint. 
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>setPhase(x)</B></TT>
+<BLOCKQUOTE>  	Assign the phase of this Breakpoint. 
+	   
 </BLOCKQUOTE>
 
 <A name="s1_6_">
