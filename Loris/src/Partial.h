@@ -35,13 +35,13 @@
 #include "Exception.h"
 #include "Breakpoint.h"
 #include <map>
-//#include <list>
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
 #endif
 
+//	declare iterator types for class Partial:
 class PartialIterator;
 class PartialConstIterator;
 
@@ -61,8 +61,8 @@ class PartialConstIterator;
 class Partial
 {
 //	-- instance variables --
-	std::map< double, Breakpoint > _bpmap;	//	Breakpoint envelope:
-	int _label;		//	label:
+	std::map< double, Breakpoint > _bpmap;	//	Breakpoint envelope
+	int _label;								//	label
 
 //	-- public interface --
 public:
@@ -81,45 +81,32 @@ public:
 //	mutation:
 	void setLabel( int l ) { _label = l; }
 	
-//	STL-like container implementation:
-/*
-	iterators, const_iterators, begin and end
-	
-	op ==
-	empty?
-	size - better name?
-	
-	iterator insert( time, bp )
-	void erase(iterator)
-	
-	find( time )	??? nearest? before? after?
-	upper/lower_bound	???
-*/
-
 //	comparison:
 	bool operator== ( const Partial & rhs ) const;
 	
 //	iterator generation:
-	PartialIterator begin( void );
-	PartialIterator end( void );
-	PartialConstIterator begin( void ) const;
-	PartialConstIterator end( void ) const;
+	typedef PartialIterator iterator;
+	typedef PartialConstIterator const_iterator;
+	iterator begin( void );
+	iterator end( void );
+	const_iterator begin( void ) const;
+	const_iterator end( void ) const;
 	
 //	Breakpoint insertion:
 //	Make a copy of bp and insert it at time (seconds),
 //	return a pointer to the inserted Breakpoint.
-	PartialIterator insert( double time, const Breakpoint & bp );
+	iterator insert( double time, const Breakpoint & bp );
 
 //	Return the insertion position for a Breakpoint at
 //	the specified time (that is, the position of the first
 //	Breakpoint at a time later than the specified time).
-	PartialIterator findAfter( double time );
-	PartialConstIterator findAfter( double time ) const;
+	iterator findAfter( double time );
+	const_iterator findAfter( double time ) const;
 	
 //	Return the insertion position for the Breakpoint nearest
 //	the specified time..
-	PartialIterator findNearest( double time );
-	PartialConstIterator findNearest( double time ) const;
+	iterator findNearest( double time );
+	const_iterator findNearest( double time ) const;
 	
 //	Its nice to be able to find out how many Breakpoints
 //	there are:
@@ -128,7 +115,7 @@ public:
 //	Breakpoint removal:
 //	Erase the Breakpoint at the position of the 
 //	given iterator (invalidating the iterator).
-	void erase( PartialIterator & pos );
+	void erase( iterator & pos );
 	
 //	partial envelope interpolation/extrapolation:
 //	Return the interpolated value of a partial parameter at
