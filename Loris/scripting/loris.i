@@ -175,7 +175,7 @@
 		if ( refLabel <= 0 )
 			Throw( Loris::InvalidArgument, "Channelization reference label must be positive." );
 		
-		Loris::notifier << "channelizing " << partials->size() << " Partials" << endl;
+		Loris::notifier << "channelizing " << partials->size() << " Partials" << Loris::endl;
 	
 		Loris::Channelizer chan( *refFreqEnvelope, refLabel );
 		chan.channelize( partials->begin(), partials->end() );		
@@ -244,7 +244,7 @@
 		std::vector<double> tvec = strtovec( target_times );
 		
 		Loris::debugger << ivec.size() << " initial points, " 
-						<< tvec.size() << " target points" << endl;
+						<< tvec.size() << " target points" << Loris::endl;
 			
 		if ( ivec.size() != tvec.size() )
 			Throw( Loris::InvalidArgument, "Invalid arguments to dilate(): there must be as many target points as initial points" );
@@ -257,7 +257,7 @@
 		ThrowIfNull((double *) initial);
 		ThrowIfNull((double *) target);
 	
-		Loris::notifier << "dilating " << partials->size() << " Partials" << endl;
+		Loris::notifier << "dilating " << partials->size() << " Partials" << Loris::endl;
 		Loris::Dilator dil( initial, target, npts );
 		dil.dilate( partials->begin(), partials->end() );
 	}
@@ -285,7 +285,7 @@ void distill( PartialList * partials )
 	{
 		ThrowIfNull((PartialList *) partials);
 	
-		Loris::notifier << "distilling " << partials->size() << " Partials" << endl;
+		Loris::notifier << "distilling " << partials->size() << " Partials" << Loris::endl;
 		Loris::Distiller still;
 		still.distill( *partials );
 		
@@ -331,7 +331,7 @@ void distill( PartialList * partials )
 		if ( partials->size() == 0 ) 
 			Throw( Loris::InvalidObject, "No Partials in PartialList to export to sdif file." );
 	
-		Loris::notifier << "exporting sdif partial data to " << path << endl;		
+		Loris::notifier << "exporting sdif partial data to " << path << Loris::endl;		
 		Loris::ExportSdif efout;
 		efout.write( path, *partials );
 		
@@ -353,7 +353,7 @@ void distill( PartialList * partials )
 	#include "ImportSdif.h"
 	PartialList * importSdif( const char * path )
 	{
-		Loris::notifier << "importing Partials from " << path << endl;
+		Loris::notifier << "importing Partials from " << path << Loris::endl;
 		Loris::ImportSdif imp( path );
 
 		PartialList * partials = new PartialList();
@@ -384,7 +384,7 @@ void distill( PartialList * partials )
 		ThrowIfNull((BreakpointEnvelope *) fbw);
 
 		Loris::notifier << "morphing " << src0->size() << " Partials with "
-						<< src1->size() << " Partials" << endl;
+						<< src1->size() << " Partials" << Loris::endl;
 					
 		//	make a Morpher object and do it:
 		Loris::Morpher m( *ffreq, *famp, *fbw );
@@ -418,17 +418,17 @@ void distill( PartialList * partials )
 		ThrowIfNull((PartialList *) partials);
 
 		Loris::notifier << "synthesizing " << partials->size() 
-						<< " Partials at " << srate << " Hz" << endl;
+						<< " Partials at " << srate << " Hz" << Loris::endl;
 
 		//	compute the duration:
-		debugger << "computing duration..." << endl;
+		debugger << "computing duration..." << Loris::endl;
 		double maxtime = 0.;
 		PartialList::const_iterator it;
 		for ( it = partials->begin(); it != partials->end(); ++it ) 
 		{
 			maxtime = std::max( maxtime, it->endTime() );
 		}
-		debugger << maxtime << " seconds" << endl;
+		debugger << maxtime << " seconds" << Loris::endl;
 		
 		//	allocate a SampleVector to accomodate the fade-out at 
 		//	the end of the latest Partial:
@@ -471,7 +471,7 @@ void distill( PartialList * partials )
 		
 		ThrowIfNull((PartialList *) partials);
 
-		Loris::notifier << "sifting " << partials->size() << " Partials" << endl;
+		Loris::notifier << "sifting " << partials->size() << " Partials" << Loris::endl;
 		
 		Loris::Sieve sieve( 0.0001 );
 		sieve.sift( *partials );
@@ -605,7 +605,7 @@ createFreqReference( PartialList * partials, int numSamples,
 		ThrowIfNull((PartialList *) partials);
 		ThrowIfNull((BreakpointEnvelope *) ampEnv);
 
-		Loris::notifier << "scaling amplitude of " << partials->size() << " Partials" << endl;
+		Loris::notifier << "scaling amplitude of " << partials->size() << " Partials" << Loris::endl;
 
 		PartialList::iterator listPos;
 		for ( listPos = partials->begin(); listPos != partials->end(); ++listPos ) 
@@ -628,7 +628,7 @@ createFreqReference( PartialList * partials, int numSamples,
 		ThrowIfNull((PartialList *) partials);
 		ThrowIfNull((BreakpointEnvelope *) noiseEnv);
 
-		Loris::notifier << "scaling noise ratio of " << partials->size() << " Partials" << endl;
+		Loris::notifier << "scaling noise ratio of " << partials->size() << " Partials" << Loris::endl;
 
 		PartialList::iterator listPos;
 		for ( listPos = partials->begin(); listPos != partials->end(); ++listPos ) 
@@ -665,7 +665,7 @@ createFreqReference( PartialList * partials, int numSamples,
 		ThrowIfNull((PartialList *) partials);
 		ThrowIfNull((BreakpointEnvelope *) pitchEnv);
 
-		Loris::notifier << "shifting pitch of " << partials->size() << " Partials" << endl;
+		Loris::notifier << "shifting pitch of " << partials->size() << " Partials" << Loris::endl;
 		
 		PartialList::iterator listPos;
 		for ( listPos = partials->begin(); listPos != partials->end(); ++listPos ) 
