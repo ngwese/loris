@@ -18,25 +18,22 @@ Begin_Namespace( Loris )
 // ---------------------------------------------------------------------------
 //	class FloatingThreshold
 //
+//	Should really construct this with a Partial range.
+//
 class FloatingThreshold
 {
 //	-- public interface --
 public:
 	//	construction:
 	FloatingThreshold( double range_dB );
-		// : _ratio( pow( 10., - 0.05 * range_dB ) ) {}
 	
 	//	evaluate:
 	//	(minimum clearance)
+	//	Iters are Partials.
 	template< class Iter >
 	boolean evaluate( Partial & p, Iter begin, Iter end ) const
 	{
-		//	loop over Breakpoints in p's envelope, 
-		//	remember the performance of the best Breakpoint:
-		//	(since it only matters whether the best performance
-		//	is positive, bestbp can be initialized to anything
-		//	negative)
-		double bestbp = -1.;
+		//	loop over Breakpoints in p's envelope: 
 		for ( Partial::iterator env = p.begin(); env != p.end(); ++env ) {
 			double time = env->first;
 			Breakpoint & bp = env->second;
@@ -51,14 +48,18 @@ public:
 			//	this Breakpoint's performance is the difference
 			//	between its amplitude and the loudest amplitude
 			//	less the range (range is specified in dB, converted
-			//	to a ratio); remember the best Breakpoint performance:
-			bestbp = std::max( bestbp, bp.amplitude() - ( loudest * _ratio ) );
+			//	to a ratio); if this value is ever non-negative,
+			//	then this partial clears the floating threshold:
+			if ( bp.amplitude() - ( loudest * _ratio ) >= 0. ) {
+				return true;
+			}
 		}
 		
-		//	return true if p ever cleared the floating threshold:
-		return bestbp >= 0.;
+		//	p never cleared the floating threshold:
+		return false;
 	}
 
+	//	this isn't very useful:
 	template< class Iter >
 	boolean operator()( Partial & p, Iter begin, Iter end ) const
 	{
