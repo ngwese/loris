@@ -91,7 +91,6 @@ static void import_partials( const std::string & sdiffilname, PARTIALS & part )
 		part.clear();
 		
 		//	import:
-
 		SdifFile f( sdiffilname );
 
 		//	copy the Partials into the vector:
@@ -191,7 +190,9 @@ static void apply_fadetime( PARTIALS & part, double fadetime )
 //	
 static inline double radianFreq( double hz )
 {
-	return hz * tpidsr;
+	//	only need to compute this once ever
+	static const double TwoPiOverSR = TWOPI / esr;
+	return hz * TwoPiOverSR;
 }
 
 // ---------------------------------------------------------------------------
@@ -223,15 +224,15 @@ static void accum_samples( Oscillator & oscil, Breakpoint & bp, double * bufbegi
 				bw = 1.;
 			else if ( bw < 0. )
 				bw = 0.;
-		
+
 			/*
-#ifdef DEBUG_LORISGENS
+			#ifdef DEBUG_LORISGENS
 			std::cerr << "initializing oscillator " << std::endl;
 			std::cerr << "parameters: " << bp.frequency() << "  ";
 			std::cerr << amp << "  " << bw << std::endl;
-#endif
+			#endif
 			*/
-						
+
 			//	initialize frequency, amplitude, and bandwidth to 
 			//	their target values:
 			/*
@@ -581,20 +582,21 @@ void lorisread_setup( LORISREAD * params )
 
 	//	determine the name of the SDIF file to use:
 	//	this code adapted from ugens8.c pvset()
-	if ( *params->ifilnam == sstrcod )
+	if ( *params->ifilnam == SSTRCOD )
 	{
 		//	use strg name, if given:
-		sdiffilname = unquote(params->STRARG);
+		//sdiffilname = unquote(params->STRARG);
+		sdiffilname = params->STRARG;
 	}
-    /* unclear what this does, not described in pvoc docs
-    else if ((long)*p->ifilnam <= strsmax && strsets != NULL && strsets[(long)*p->ifilnam])
-      strcpy(sdiffilname, strsets[(long)*p->ifilnam]);
-     */
-    else 
-    {
-    	//	else use loris.filnum
-    	char tmp[32];
-    	sprintf(tmp,"loris.%d", (int)*params->ifilnam);
+	/* unclear what this does, not described in pvoc docs
+	else if ((long)*p->ifilnam <= strsmax && strsets != NULL && strsets[(long)*p->ifilnam])
+	strcpy(sdiffilname, strsets[(long)*p->ifilnam]);
+	*/
+	else 
+	{
+		//	else use loris.filnum
+		char tmp[32];
+		sprintf(tmp,"loris.%d", (int)*params->ifilnam);
 		sdiffilname = tmp;
 	}
 	
@@ -614,8 +616,7 @@ extern "C"
 void lorisread( LORISREAD * p )
 {
 	//*(p->result) = 
-	p->imp->updateEnvelopePoints( *p->time, *p->freqenv, 
-												 *p->ampenv, *p->bwenv );
+	p->imp->updateEnvelopePoints( *p->time, *p->freqenv, *p->ampenv, *p->bwenv );
 }
 
 // ---------------------------------------------------------------------------
@@ -657,7 +658,7 @@ struct LorisPlayer
 //
 LorisPlayer::LorisPlayer( LORISPLAY * params ) :
 	reader( EnvelopeReader::Find( params->h.insdshead, (int)*(params->readerIdx) ) ),
-	dblbuffer( ksmps, 0. )
+	dblbuffer( params->h.insdshead->csound->GetKsmps(params->h.insdshead->csound), 0. )
 {
 	if ( reader != NULL )
 		oscils.resize( reader->size() );
@@ -697,8 +698,8 @@ void lorisplay( LORISPLAY * p )
 	
 	//	clear the buffer first!
 	double * bufbegin =  &(player.dblbuffer[0]);
-	clear_buffer( bufbegin, ksmps );
-	
+	clear_buffer( bufbegin, p->h.insdshead->csound->GetKsmps(p->h.insdshead->csound) );
+
 	//	now accumulate samples into the buffer:
 	long numOscils = player.oscils.size();
 	for( long i = 0; i < numOscils; ++i )  
@@ -708,11 +709,11 @@ void lorisplay( LORISPLAY * p )
 								(*p->ampenv) * bp.amplitude(),
 								(*p->bwenv) * bp.bandwidth(),
 								bp.phase() );
-		accum_samples( oscils[i], modifiedBp, bufbegin, ksmps );
+		accum_samples( oscils[i], modifiedBp, bufbegin, p->h.insdshead->csound->GetKsmps(p->h.insdshead->csound) );
 	} 
-	
+
 	//	transfer samples into the result buffer:
-	convert_samples( bufbegin, p->result, ksmps );
+	convert_samples( bufbegin, p->result, p->h.insdshead->csound->GetKsmps(p->h.insdshead->csound) );
 }
 
 // ---------------------------------------------------------------------------
@@ -1070,3 +1071,39 @@ void lorismorph_cleanup(void * p)
 	delete tp->imp;
 }
 
+// ---------------------------------------------------------------------------
+//	Loris csounds plugin
+// ---------------------------------------------------------------------------
+//	Added by Michael Gogins to make Loris generators work as a 
+//	dynamically-loaded plugin to Csound.
+//
+extern "C"
+{
+	OENTRY lorisOentry[] = 
+	{
+		{"lorisread",  sizeof(LORISREAD),  3, "",  "kSikkko", (SUBR) lorisread_setup,  (SUBR) lorisread, 0 },
+		{"lorisplay",  sizeof(LORISPLAY),  5, "a", "ikkk",    (SUBR) lorisplay_setup,  0, (SUBR) lorisplay },
+		{"lorismorph", sizeof(LORISMORPH), 3, "",  "iiikkk",  (SUBR) lorismorph_setup, (SUBR) lorismorph, 0 }
+	};
+
+
+	/**
+	 * Called by Csound to obtain the size of
+	 * the table of OENTRY structures defined in this shared library.
+	 */
+
+	PUBLIC int opcode_size()
+	{
+		return sizeof(OENTRY) * 3;
+	}
+
+	/**
+	 * Called by Csound to obtain a pointer to
+	 * the table of OENTRY structures defined in this shared library.
+	 */
+
+	PUBLIC OENTRY *opcode_init(GLOBALS *csound)
+	{
+		return lorisOentry;
+	}
+};
