@@ -12,9 +12,12 @@ OBJ_LORIS = $(CLASSES)/AiffFile.o \
 			$(CLASSES)/DistributeEnergy.o \
 			$(CLASSES)/Endian.o \
 			$(CLASSES)/Exception.o \
+			$(CLASSES)/ExportSdif.o \
+			$(CLASSES)/ExportSpc.o \
 			$(CLASSES)/Filter.o \
 			$(CLASSES)/FourierTransform.o \
 			$(CLASSES)/ImportLemur.o \
+			$(CLASSES)/ImportSdif.o \
 			$(CLASSES)/KaiserWindow.o \
 			$(CLASSES)/Map.o \
 			$(CLASSES)/Morph.o \
@@ -22,9 +25,6 @@ OBJ_LORIS = $(CLASSES)/AiffFile.o \
 			$(CLASSES)/Partial.o \
 			$(CLASSES)/PartialView.o \
 			$(CLASSES)/ReassignedSpectrum.o \
-			$(CLASSES)/SdifReader.o \
-			$(CLASSES)/SdifWriter.o \
-			$(CLASSES)/SpcFile.o \
 			$(CLASSES)/Synthesizer.o \
 			$(CLASSES)/ieee.o \
 			$(CLASSES)/notifier.o

@@ -18,8 +18,6 @@
 
 #include <cmath>
 
-//using namespace std;
-
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
@@ -31,6 +29,14 @@ namespace Loris {
 //
 Partial::Partial( void ) :
 	_label( 0L )
+{
+}	
+
+// ---------------------------------------------------------------------------
+//	Partial destructor
+// ---------------------------------------------------------------------------
+//
+Partial::~Partial( void )
 {
 }	
 

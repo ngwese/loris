@@ -245,6 +245,25 @@ Distiller::fixGaps( Partial & dest,
 			++nextseg;
 		}
 	}
+	
+	//	make the dest Partial have 0 amplitude
+	//	Breakpoints at its head and tail (VERY 
+	//	important for morphing):
+	if ( dest.amplitudeAt( dest.startTime() ) > 0. )
+	{
+		double time = dest.startTime() - Partial::FadeTime();
+		double freq = dest.frequencyAt(time);
+		double phase = dest.phaseAt(time);
+		dest.insert( time, Breakpoint( freq, 0., 0., phase ) );		
+	}
+	
+	if ( dest.amplitudeAt( dest.endTime() ) > 0. )
+	{
+		double time = dest.endTime() + Partial::FadeTime();
+		double freq = dest.frequencyAt(time);
+		double phase = dest.phaseAt(time);
+		dest.insert( time, Breakpoint( freq, 0., 0., phase ) );		
+	}
 }
 
 #if !defined( NO_LORIS_NAMESPACE )

@@ -45,6 +45,7 @@ public:
 //	construction:
 //	(allow compiler to generate copy, assignment, and destruction):
 	Partial( void );
+	~Partial( void );
 	
 //	access:
 	int label( void ) const { return _label; }

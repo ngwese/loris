@@ -39,9 +39,12 @@ OBJ_LORIS = AiffFile.o \
 			DistributeEnergy.o \
 			Endian.o \
 			Exception.o \
+			ExportSdif.o \
+			ExportSpc.o \
 			Filter.o \
 			FourierTransform.o \
 			ImportLemur.o \
+			ImportSdif.o \
 			KaiserWindow.o \
 			Map.o \
 			Morph.o \
@@ -49,9 +52,6 @@ OBJ_LORIS = AiffFile.o \
 			Partial.o \
 			PartialView.o \
 			ReassignedSpectrum.o \
-			SdifReader.o \
-			SdifWriter.o \
-			SpcFile.o \
 			Synthesizer.o \
 			ieee.o \
 			notifier.o

@@ -21,10 +21,6 @@
 #include <set>
 #include <algorithm>
 
-#if defined(Debug_Loris)
-#include <stdio.h>
-#endif
-
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
@@ -48,7 +44,7 @@ class AnalyzerState
 
 	double _sampleRate;
 	
-	std::set< Partial * > _oldgoobers;			//	yuck?
+	std::vector< Partial * > _oldgoobers;		//	yuck?
 	
 public:
 //	construction:
@@ -64,7 +60,7 @@ public:
 	
 	double sampleRate(void) { return _sampleRate; }
 
-	std::set< Partial * > & goobers(void) { return _oldgoobers; }
+	std::vector< Partial * > & goobers(void) { return _oldgoobers; }
 	
 };	//	end of class AnalyzerState
 
@@ -440,35 +436,16 @@ static inline double distance( const Partial & partial,
 //	Append the Breakpoints to existing Partials, if appropriate, or else 
 //	give birth to new Partials.
 //
+// #define sucks
+#ifdef sucks
 void 
-Analyzer::formPartials( std::list< Breakpoint > & frame, double frameTime, 
+Analyzer::formPartials( std::list< Breakpoint > & frame, double /* frameTime */ , 
 						AnalyzerState & state )
 {
-	std::set< Partial * > newgoobers;
+	std::vector< Partial * > newgoobers;
 	
 	//	frequency-sort the frame:
 	frame.sort( BreakpointUtils::less_frequency() );
-	
-#if defined(Debug_Loris)	
-	bool spit = false;
-	std::FILE * spitfile;
-	if (spit)
-	{
-		spitfile = std::fopen("partials", "w");
-		double deh = frameTime - hopTime() - cropTime();
-		fprintf(spitfile, "at frame time %lf, partials ending after %lf\n",
-				frameTime, deh );
-		for ( PartialList::iterator pIter = partials().begin(); 
-			  pIter != partials().end(); 
-			  ++pIter ) 
-		{
-			if ( pIter->endTime() > deh )
-			{
-				fprintf( spitfile, "end freq %lf\n", pIter->frequencyAt(frameTime) );
-			}
-		}
-	}
-#endif	//	debug
 	
 	//	loop over short-time peaks:
 	std::list< Breakpoint >::iterator bpIter;
@@ -477,30 +454,183 @@ Analyzer::formPartials( std::list< Breakpoint > & frame, double frameTime,
 		const Breakpoint & peak = *bpIter;
 		const double peakTime = state.peakTimeCache()[ peak.frequency() ];
 
-#if defined(Like_Lemur)		
-		//	check the time correction for off-center components:
-		double tcabs = std::abs( peakTime - frameTime );
-#endif	//	like Lemur
-#if 0 // !defined(Like_Lemur)
-		//	don't use peaks with large time corrections:
-		//	This is the only time we toss out peaks without
-		//	saving their energy for bandwidth association.
-		//	
-		//	this may still be what we want... but its 
-		//	different from Lemur's cropping and breaking:
+		//	Loop over all eligible Partials (goobers), 
+		//	find the candidate Partials  nearest in frequency 
+		//	to peak.
 		//
-		//	this is irrelevant now, these are rejected in
-		//	extractPeaks now.
-		if ( tcabs > cropTime() )
+		//	Since we build the goobers collection in the
+		//	order that we process Breakpoints in the frame, 
+		//	increasing-frequency order, the goobers will also
+		//	be sorted in order of increasing frequency of the
+		//	last Breakpoint.)
+		//
+		//	Find the lowest end-frequency Partial that is
+		//	higher in frequency than peak, if such a Partial
+		//	exists in goobers:
+		//
+		//	(this initializer could probably be outside this loop)
+		std::vector< Partial * >::iterator candidate = state.goobers().begin();
+		while ( candidate != state.goobers().end() &&
+				(*candidate)->frequencyAt(peakTime) < peak.frequency() )
 		{
-			continue;	
+			++candidate;			
 		}
-#endif	//	like Lemur
+		
+		//	now candidate points to the end or to 
+		//	the lowest-frequency Partial above this
+		//	peak's frequency, remember this Partial,
+		//	and its predecessor in goobers, the highest
+		//	end-frequency Partial lower in frequency 
+		//	than peak, if such a Partial exists in 
+		//	goobers:
+		Partial * firstChoice = NULL, * secondChoice = NULL;
+		if ( candidate != state.goobers().end() )
+		{
+			secondChoice = *candidate;
+		}
+		
+		if ( candidate != state.goobers().begin() )
+		{
+			--candidate;
+			firstChoice = *candidate;
+		}
+		
+		//	it may be that the candidate below ("firstChoice")
+		//	has already been matched to a peak in this frame,
+		//	in which case firstChoice is the last element of
+		//	newgoobers and we should set firstChoice to secondChoice
+		//	and secondChoice to NULL:
+		if ( newgoobers.size() > 0 && newgoobers.back() == firstChoice )
+		{
+			firstChoice = secondChoice;
+			secondChoice = NULL;
+		}
+		
+		//	if secondChoice is nearer than firstChoice, and
+		//	both exist, swap:
+		if ( firstChoice != NULL && secondChoice != NULL )
+		{
+			if ( distance( *secondChoice, peak ) < distance( *firstChoice, peak ) )
+			{
+				std::swap( firstChoice, secondChoice );
+			}
+		}
+		
+		//	Now have first and seconc choice candidate Partials.
+		//	We will create a new Partial with this Breakpoint if:
+		//	- no candidate (firstChoice) Partial was found (1)
+		//	- the firstChoice Partial is still too far away (2)
+		//	- the next Breakpoint in the Frame exists and is
+		//		closer to the firstChoice Partial (3)
+		//	- the previous Breakpoint in the Frame exists and is
+		//		closer to the firstChoice Partial (4)
+		//
+		//	if there is no firstChoice Partial, or the firstChoice is
+		//	too distant, spawn a new Partial:
+		if ( firstChoice == NULL /* (1) */ ||
+			 distance(*firstChoice, peak) > freqDrift() )
+		{
+			spawnPartial( peakTime, peak );
+			newgoobers.push_back( & partials().back() );
+			continue;
+		}
+		
+		//	otherwise, try to match with firstChoice:
+		Breakpoint * peakAbove = NULL;
+		std::list< Breakpoint >::iterator next = bpIter;
+		++next;
+		if ( next != frame.end() )
+		{
+			peakAbove = &(*next);
+		}
+		
+		Breakpoint * peakBelow = NULL;
+		if ( bpIter != frame.begin() )
+		{
+			std::list< Breakpoint >::iterator prev = bpIter;
+			--prev;
+			peakBelow = &(*prev);
+		}
+		
+		double thisdist = distance(*firstChoice, peak);
+		
+		if ( thisdist < distance( *firstChoice, *peakAbove ) /* (3) */ &&
+			 thisdist <= distance( *firstChoice, *peakBelow ) /* (4) */ ) 
+		{
+			firstChoice->insert( peakTime, peak );
+			newgoobers.push_back( &(*firstChoice) );
+			continue;
+		}
+	
+		//	if firstChoice match fails because an adjacent Breakpoint
+		//	in the frame is closer, then try to match with the
+		//	secondChoice:
+		//
+		//	if there is no secondChoice Partial, or the secondChoice is
+		//	too distant, spawn a new Partial:
+		if ( secondChoice == NULL /* (1) */ ||
+			 distance(*secondChoice, peak) > freqDrift() )
+		{
+			spawnPartial( peakTime, peak );
+			newgoobers.push_back( & partials().back() );
+			continue;
+		}
+		
+		//	determine which other Breakpoint might be a better
+		//	match for secondChoice, if such a Breakpoint exists
+		//	in this frame:
+		double endFreq = secondChoice->frequencyAt( peakTime );
+		Breakpoint * other;
+		if ( endFreq > peak.frequency() )
+		{
+			other = peakAbove;
+		}
+		else
+		{
+			other = peakBelow;
+		}
+		
+		//	if there is no other potential match, or this peak is 
+		//	nearer than the other potential match, then match:
+		if ( other == NULL || 
+			 distance( *secondChoice, peak ) < distance( *secondChoice, *other ) )
+		{
+			secondChoice->insert( peakTime, peak );
+			newgoobers.push_back( &(*secondChoice) );
+		}
+		else //	oh well, spawn another
+		{
+			spawnPartial( peakTime, peak );
+			newgoobers.push_back( & partials().back() );
+		}
+		
+		//	done.		
+	}			 
+	 	
+	 state.goobers() = newgoobers;
+}
 
+#else //	not def sucks
+void 
+Analyzer::formPartials( std::list< Breakpoint > & frame, double frameTime, 
+						AnalyzerState & state )
+{
+	std::vector< Partial * > newgoobers;
+	
+	//	frequency-sort the frame:
+	frame.sort( BreakpointUtils::less_frequency() );
+	
+	//	loop over short-time peaks:
+	std::list< Breakpoint >::iterator bpIter;
+	for( bpIter = frame.begin(); bpIter != frame.end(); ++bpIter ) 
+	{
+		const Breakpoint & peak = *bpIter;
+		const double peakTime = state.peakTimeCache()[ peak.frequency() ];
+		
 		//	loop over all eligible Partials, find the Partial
 		//	that is nearest in frequency to the Peak:
 		Partial * nearest = NULL;
-		std::set< Partial * >::iterator candidate;
+		std::vector< Partial * >::iterator candidate;
 		for ( candidate = state.goobers().begin();
 			  candidate != state.goobers().end();
 			  ++candidate )
@@ -533,75 +663,20 @@ Analyzer::formPartials( std::list< Breakpoint > & frame, double frameTime,
 			 ( next != frame.end() && thisdist > distance( *nearest, *next ) ) /* (3) */ ||
 			 ( bpIter != frame.begin() && thisdist > distance( *nearest, *prev ) ) /* (4) */ ) 
 		{
-			 	
-			 /*debugger << "spawning a partial at frequency " << peak.frequency() <<
-			 			 " amplitude " << peak.amplitude() <<
-			 			 " and time " << peakTime << endl;
-			*/
-#if defined(Like_Lemur)
-//#define No_Cropping_Lemur 1
-#if defined(No_Cropping_Lemur)
-			//	No cropping:
-			if ( 1 ) 
-#else
-			//	Cropping Lemur-style:
-			if ( tcabs < cropTime() )	
-#endif	//	no cropping
-			{
-#endif	//	like Lemur
-				spawnPartial( peakTime, peak );
-				newgoobers.insert( & partials().back() );
-#if defined(Like_Lemur)
-			}
-#endif	//	like Lemur
-#if defined(Debug_Loris)						 
-			if (spit) 
-			 	fprintf( spitfile, "new partial at freq %lf\n", peak.frequency() );
-#endif	//	debug
+			spawnPartial( peakTime, peak );
+			newgoobers.push_back( & partials().back() );
 		}
 		else 
 		{
-			/*debugger << "matching a partial at frequency " << peak.frequency() <<
-			 			" amplitude " << peak.amplitude() <<
-			 			" and time " << peakTime << endl;
-			*/
-#if defined(Like_Lemur)
-//#define No_Breaking_Lemur 1
-#if defined(No_Breaking_Lemur)
-			//	No Partial breaking:
-			if ( 1 ) 
-#else
-			//	Partial breaking Lemur-style:
-			if ( tcabs < cropTime() ||
-				 std::abs( nearest->endTime() - (frameTime - hopTime()) ) < cropTime() )
-#endif	//	no breaking
-		{
-#endif	//	like Lemur
 				nearest->insert( peakTime, peak );
-				newgoobers.insert( &(*nearest) );
-#if defined(Like_Lemur)
-			}
-			else
-			{
-				//	this isn't quite right, should remove that
-				//	last Breakpoint
-				(--nearest->end())->setAmplitude( 0. );
-			}			
-#endif	//	like Lemur
-#if defined(Debug_Loris)						 
-			if (spit) 
-			 	fprintf( spitfile, "connecting partial at freq %lf to freq %lf\n", 
-			 						nearest->frequencyAt(frameTime), peak.frequency() );
-#endif	//	debug
+				newgoobers.push_back( &(*nearest) );
 		}
 	}			 
-#if defined(Debug_Loris)						 
-	 if (spit) 
-	 	fclose( spitfile );
-#endif	//	debug
 	 	
 	 state.goobers() = newgoobers;
 }
+
+#endif	//	def sucks
 
 // ---------------------------------------------------------------------------
 //	spawnPartial
