@@ -253,8 +253,8 @@ void dilate( PartialList * partials,
 /*	Distill labeled (channelized)  Partials in a PartialList into a 
 	PartialList containing a single (labeled) Partial per label. 
 	The distilled PartialList will contain as many Partials as
-	there were non-zero labels (non-empty channels)
-	in the original PartialList. Additionally, unlabeled (label 0) Partials are 
+	there were non-zero labels (non-empty channels) in the original 
+	PartialList. Additionally, unlabeled (label 0) Partials are 
 	"collated" into groups of temporally non-overlapping Partials,
 	assigned an unused label, and fused into a single Partial per
 	group.
@@ -638,7 +638,7 @@ void sift( PartialList * partials )
 		
         Loris::notifier << "sifting " << partials->size() << " Partials" << Loris::endl;
 
-        Loris::Sieve sieve( 0.0001 );
+        Loris::Sieve sieve;
         sieve.sift( partials->begin(), partials->end() );
 	}
 	catch( Exception & ex )

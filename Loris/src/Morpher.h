@@ -33,13 +33,14 @@
  *
  */
 #include "PartialList.h"
+#include "Partial.h"
+
 #include <memory>
 
 //	begin namespace
 namespace Loris {
 
 class Envelope;
-class Partial;
 
 // ---------------------------------------------------------------------------
 //	Class Morpher
@@ -73,8 +74,8 @@ class Morpher
 	
 	PartialList _partials;						//!	collect Partials here
 	
-	Partial::label_type _refLabel0, _refLabel1;	//!	labels of the reference Partials
-												//!	for source and target sounds when 
+	Partial::label_type _refLabel0;  			//!	labels of the reference Partials
+	Partial::label_type _refLabel1;				//!	for source and target sounds when 
 												//!	morphing sequences of labeled Partials,
 												//!	default 0 implies no reference Partial
 

@@ -50,71 +50,46 @@
 
 //	begin namespace
 namespace Loris {
-	
-// ---------------------------------------------------------------------------
-//	class Distiller
-//
-//!	@class Distiller Distiller.h loris/Distiller.h
-//!
-//!	Class Distiller represents an algorithm for "distilling" a group of
-//!	Partials that logically represent a single component into a single
-//!	Partial.
-//!	
-//!	The sound morphing algorithm in Loris requires that Partials in a
-//!	given source be labeled uniquely, that is, no two Partials can have
-//!	the same label. The Distiller enforces this condition. All Partials
-//!	identified with a particular frequency channel (see Channelizer), and,
-//!	therefore, having a common label, are distilled into a single Partial,
-//!	leaving at most a single Partial per frequency channel and label.
-//!	Channels that contain no Partials are not represented in the distilled
-//!	data. Partials that are not labeled, that is, Partials having label 0,
-//!	are are "collated " into groups of non-overlapping (in time)
-//! 	Partials, assigned an unused label (greater than the label associated
-//! 	with any frequency channel), and fused into a single Partial per
-//! 	group. "Collating" is a bit like "sifting" but non-overlapping
-//! 	Partials are grouped without regard to frequency proximity. This
-//! 	algorithm produces the smallest-possible number of collated Partials.
-//! 	Thanks to Ulrike Axen for providing this optimal algorithm.
-//!	
-//!	Distillation modifies the Partial container (a PartialList). All
-//!	Partials in the distilled range having a common label are replaced by
-//!	a single Partial in the distillation process.
-//
-
 
 //	helper function prototypes:
 static Partial distillOne( PartialList & partials, int label,  
-						  double fadeTime, double gapTime = 0 );
+						  double fadeTime, double gapTime );
 static void collateUnlabeled( PartialList & partials, int startLabel, 
-							double fadeTime, double gapTime = 0 );
+							double fadeTime, double gapTime );
 
 // ---------------------------------------------------------------------------
 //	Distiller constructor
 // ---------------------------------------------------------------------------
-//!	Construct a new Distiller using the specified fade time
-//!	for gaps between Partials. When two non-overlapping Partials
-//!	are distilled into a single Partial, the distilled Partial
-//!	fades out at the end of the earlier Partial and back in again
-//!	at the onset of the later one. The fade time is the time over
-//!	which these fades occur. By default, use a 1 ms fade time.
-//!	The gap time is the additional time over which a Partial faded
-//!	out must remain at zero amplitude before it can fade back in.
-//!	By default, use a gap time of 0.
+//	Construct a new Distiller using the specified fade time
+//	for gaps between Partials. When two non-overlapping Partials
+//	are distilled into a single Partial, the distilled Partial
+//	fades out at the end of the earlier Partial and back in again
+//	at the onset of the later one. The fade time is the time over
+//	which these fades occur. By default, use a 1 ms fade time.
+//	The gap time is the additional time over which a Partial faded
+//	out must remain at zero amplitude before it can fade back in.
+//	By default, use a gap time of one tenth of a millisecond, to 
+//	prevent a pair of arbitrarily close null Breakpoints being
+//	inserted.
 //
 Distiller::Distiller( double partialFadeTime, double partialSilentTime ) :
 	_fadeTime( partialFadeTime ),
 	_gapTime( partialSilentTime )
 {
-	if( _fadeTime < 0.0 )
+	if( _fadeTime <= 0.0 )
 	{
-		Throw( InvalidArgument, "Distiller fade time must be non-negative." );
+		Throw( InvalidArgument, "Distiller fade time must be positive." );
+	}
+	if( _gapTime <= 0.0 )
+	{
+		Throw( InvalidArgument, "Distiller gap time must be positive." );
 	}
 }
 
 // ---------------------------------------------------------------------------
 //	Distiller destructor
 // ---------------------------------------------------------------------------
-//!	Destroy this distiller.
+//	Destroy this distiller.
 //
 Distiller::~Distiller( void )
 {
@@ -123,17 +98,17 @@ Distiller::~Distiller( void )
 // ---------------------------------------------------------------------------
 //	distill
 // ---------------------------------------------------------------------------
-//!	Distill labeled Partials in a list into a list containing a single 
-//!	Partial per non-zero label. The distilled list will contain as many 
-//!	Partials as there were non-zero labels in the original list.
-//!
-//!	Unlabeled (zero-labeled) Partials are collated into the smallest-possible 
-//!	number of Partials that does not combine any overlapping Partials.
-//!	Collated Partials assigned labels higher than any label in the original 
-//!	list, and appear at the end of the distilled PartialList.
-//!
-//!	Return an iterator refering to the position of the first collated Partial,
-//!	of the end of the distilled list if there are no collated Partials.
+//	Distill labeled Partials in a list into a list containing a single 
+//	Partial per non-zero label. The distilled list will contain as many 
+//	Partials as there were non-zero labels in the original list.
+//
+//	Unlabeled (zero-labeled) Partials are collated into the smallest-possible 
+//	number of Partials that does not combine any overlapping Partials.
+//	Collated Partials assigned labels higher than any label in the original 
+//	list, and appear at the end of the distilled PartialList.
+//
+//	Return an iterator refering to the position of the first collated Partial,
+//	of the end of the distilled list if there are no collated Partials.
 //
 PartialList::iterator 
 Distiller::distill( PartialList & partials ) 
@@ -323,12 +298,16 @@ static void merge( Partial::const_iterator beg,
 //
 std::pair< Partial::iterator, Partial::iterator >
 findContribution( Partial & pshort, const Partial & plong, 
-				  double fadeTime, double gapTime = 0. )
+				  double fadeTime, double gapTime )
 {
 	//	a Breakpoint can only fit in the gap if there's
 	//	enough time to fade out pshort, introduce a
 	//	space of length gapTime, and fade in the rest
-	//	of plong:
+	//	of plong (don't need to worry about the fade
+	//	in, because we are checking that plong is zero
+	//	at cbeg.time() + clearance anyway, so the fade 
+	//	in must occur after that, and already be part of 
+	//	plong):
 	double clearance = fadeTime + gapTime;
 	
 	Partial::iterator cbeg = pshort.begin();
@@ -391,7 +370,7 @@ static Partial distillOne( PartialList & partials, int label,
 	for ( ++it; it != partials.end(); ++it )
 	{
 		std::pair< Partial::iterator, Partial::iterator > range = 
-			findContribution( *it, newp, fadeTime );
+			findContribution( *it, newp, fadeTime, gapTime );
 		Partial::iterator cb = range.first, ce = range.second;
 		
 		//	merge Breakpoints into the new Partial, if

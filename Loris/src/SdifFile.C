@@ -1516,7 +1516,7 @@ static double getNextFrameTime( const double frameTime,
 		{
 			std::cout << "end" << std::endl;
 		}
-		std::cout << first->time << std::endl;
+		std::cout << first->time << ", index " << first->index << std::endl;
 		std::cout << nextFrameTime << std::endl;
 		std::cout << frameTime << std::endl;
 		std::cout << partialsWithBreakpointsInFrame.size() << std::endl;
@@ -1552,18 +1552,26 @@ indexPartials( const PartialList & partials, ConstPartialPtrs & partialsVector )
 //	Collect all partials active in a particular frame. 
 //
 //  Return true if frameTime is beyond end of all the partials.
+//	Don't need to return this, can just check frame time against
+//	the time of the last BreakpointTime in the allBreakpoints vector.
 //
-static bool
+static void
 collectActiveIndices( const ConstPartialPtrs & partialsVector, 
                       const bool enhanced,
                       const double frameTime, 
                       const double nextFrameTime,
                       std::vector< int > & activeIndices )
 {
+#if Debug_Loris		
+	if ( ! ( nextFrameTime > frameTime ) ) 
+	{
+		std::cout << nextFrameTime << std:: endl;
+		std::cout << "amp 128 : " << partialsVector[128]->amplitudeAt( frameTime ) << std::endl;
+		
+	} 
+#endif
 	Assert( nextFrameTime > frameTime );
-	
-	bool endOfAll = true;
-	
+		
 	for ( int i = 0; i < partialsVector.size(); i++ ) 
 	{
 		Assert( partialsVector[ i ] != 0 );
@@ -1584,10 +1592,6 @@ collectActiveIndices( const ConstPartialPtrs & partialsVector,
 		Partial::const_iterator it = mightBeActive.findAfter( frameTime );
 		if ( it != mightBeActive.end() )
 		{
-			//	mightBeActive ends later than this frame, so this
-			//	frame is not past the end of all Partials.
-			endOfAll = false;
-			
 #if Debug_Loris
 			//	DEBUGGING
 			//	if this one is in this frame, then 
@@ -1614,7 +1618,6 @@ collectActiveIndices( const ConstPartialPtrs & partialsVector,
 		}
 
 	}
-	return endOfAll;
 }
 
 // ---------------------------------------------------------------------------
@@ -1871,7 +1874,6 @@ writeEnvelopeData( FILE * out,
 		nextFrameTime = std::floor( 1000. * nextFrameTime - .001 ) / 1000.0;
 	}
 	
-	bool endOfAll = false;
 	do 
 	{
 
@@ -1885,8 +1887,8 @@ writeEnvelopeData( FILE * out,
 // Make a vector of partial indices that includes all partials active at this time.
 //
 		std::vector< int > activeIndices;
-		endOfAll = collectActiveIndices( partialsVector, enhanced, frameTime, 
-										 nextFrameTime, activeIndices );
+		collectActiveIndices( partialsVector, enhanced, frameTime, 
+							  nextFrameTime, activeIndices );
 
 //
 // Write frame header, matrix header, and matrix data.
@@ -1952,7 +1954,7 @@ writeEnvelopeData( FILE * out,
 			dataVector.clear();
 		}
 	}
-	while (!endOfAll);
+	while ( nextFrameTime < allBreakpoints.back().time );
 	
 #if Debug_Loris	
 	std::cout << "SDIF export found " << DEBUG_allBreakpointsSize << " Breakpoints" << std::endl;
