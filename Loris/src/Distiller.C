@@ -168,26 +168,22 @@ Distiller::distill( std::list<Partial> & container, std::list< Partial >::iterat
 {
 	int howmanywerethere = container.size();
 
+	//	make a new temporary list that can be sorted and
+	//	distilled, since it isn't possible to sort a select
+	//	range of position in a list:
+	std::list<Partial> dist_list;
+	dist_list.splice( dist_list.begin(), container, dist_begin, dist_end );
+	
 	//	sort the std::list< Partial > by duration and label:
 	debugger << "Distiller sorting Partials by duration..." << endl;
-	container.sort( PartialUtils::duration_greater() );
+	dist_list.sort( PartialUtils::duration_greater() );
 	debugger << "Distiller sorting Partials by label..." << endl;
-	container.sort( PartialUtils::label_less() );	//	this had better be a stable sort
+	dist_list.sort( PartialUtils::label_less() );	//	this is a stable sort
 
-	//
-	// HEY this is screwed up, those iterators (args)
-	// aren't valid after sorting!
-	// TEMPORARY:
-	dist_begin = container.begin();
-	dist_end = container.end();
-	// FIX by splicing the specified range into another
-	// list and distilling back into the original container
-	//
-	
 	// 	iterate over labels and distill each one:
-	std::list<Partial>::iterator lowerbound = dist_begin;
+	std::list<Partial>::iterator lowerbound = dist_list.begin();
 					  
-	while ( lowerbound != dist_end )
+	while ( lowerbound != dist_list.end() )
 	{
 		int label = lowerbound->label();
 		debugger << "distilling Partials labeled " << label << endl;
@@ -195,7 +191,7 @@ Distiller::distill( std::list<Partial> & container, std::list< Partial >::iterat
 		//	find the first element in l after lowerbound
 		//	having a label not equal to 'label':
 		std::list<Partial>::iterator upperbound = 
-			std::find_if( lowerbound, dist_end, 
+			std::find_if( lowerbound, dist_list.end(), 
 						  std::not1( std::bind2nd( PartialUtils::label_equals(), label ) ) );
 #ifdef Debug_Loris
 		//	don't want to compute this iterator distance unless debugging:
@@ -321,15 +317,10 @@ Distiller::distill( std::list<Partial> & container, std::list< Partial >::iterat
 				
 			}	//	end loop over distillation range
 			
-			//	insert the new Partial at the beginning of
-			//	the list, and erase the Partials in the
-			//	distilled range:
-			//	(note that insertion doesn't invalidate
-			//	or change any iterators on a std::list,
-			//	so upperbound is still the first list element
-			//	after the inserted Partial)
-			container.erase( lowerbound, upperbound );
-			container.insert( upperbound, newp );
+			//	insert the new Partial at the end of the
+			//	specified distillation range in the original
+			//	container:			//putEmHere = container.insert( putEmHere, newp );
+			container.insert( dist_end, newp );
 		}
 
 		//	advance Partial list iterator:
