@@ -30,9 +30,6 @@ using namespace std;
 
 Begin_Namespace( Loris )
 
-#pragma mark -
-#pragma mark construction
-
 // ---------------------------------------------------------------------------
 //	Synthesizer constructor
 // ---------------------------------------------------------------------------
@@ -66,6 +63,9 @@ Synthesizer::Synthesizer( vector< double > & buf, double srate ) :
 // ---------------------------------------------------------------------------
 //	This will need to be changed is Oscillator ever becomes a base class.
 //
+//	This creates a Synthesizer that shares a sample buffer with
+//	other. Is this desired?
+//
 Synthesizer::Synthesizer( const Synthesizer & other ) :
 	_sampleRate( other._sampleRate ),
 	_offset( other._offset ),
@@ -84,6 +84,9 @@ Synthesizer::Synthesizer( const Synthesizer & other ) :
 //	first, since that could potentially generate a low memory
 //	exception, then all the assignments are made, and they cannot 
 //	generate exceptions.
+//
+//	Unlike the copy constructor, this Synthesizer gets a copy 
+//	of other's sample buffer. Is this desired?
 //
 Synthesizer & 
 Synthesizer::operator=( const Synthesizer & other )
@@ -110,12 +113,8 @@ Synthesizer::operator=( const Synthesizer & other )
 	return *this;
 }
 
-	
-
-#pragma mark -
-#pragma mark synthesis
 // ---------------------------------------------------------------------------
-//	synthesizePartial
+//	synthesize
 // ---------------------------------------------------------------------------
 //	Try to prevent Partial turnon/turnoff artifacts (clicks) by ramping 
 //	Partials up from and down to zero amplitude. If possible, the ramp
@@ -130,7 +129,7 @@ Synthesizer::operator=( const Synthesizer & other )
 //	a click at the end. Yet.
 //	
 void
-Synthesizer::synthesizePartial( const Partial & p )
+Synthesizer::synthesize( const Partial & p )
 {
 //	don't synthesize Partials having zero duration:
 	if ( p.duration() == 0. )
@@ -287,6 +286,23 @@ Synthesizer::synthesizeFadeOut( long currentSampleOffset )
 	}
 
 	return currentSampleOffset;
+}
+
+// ---------------------------------------------------------------------------
+//	setOscillator
+// ---------------------------------------------------------------------------
+//	source/sink pattern of ownership transfer: ownership of new Oscillator is
+//	passed in, ownership of previous Oscillator is passed out, both safely
+//	thanks to use of auto_ptr.
+//
+//	osc defaults to a new Oscillator.
+//	
+auto_ptr< Oscillator > 
+Synthesizer::setOscillator( auto_ptr< Oscillator > osc ) 
+{
+	auto_ptr< Oscillator > ret( _oscillator );
+	_oscillator = osc;
+	return ret;
 }
 
 // ---------------------------------------------------------------------------

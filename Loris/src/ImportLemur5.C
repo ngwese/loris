@@ -180,7 +180,7 @@ ImportLemur5::getPartial( void )
 		}
 
 		if ( p.duration() > 0. ) {
-			mPartials.push_back( p );
+			_partials.push_back( p );
 		}
 		/*
 		else {

@@ -155,22 +155,6 @@ protected:
 public:
 	virtual ~PartialDecorIterator( void ) {}
 	
-/*
-	Don't need this in this class, this one is also an
-	abstract base.
-	
-	//	derived classes must provide a virtual constructor:
-	//	In standard C++, an overriding member can return a type that
-	//	is derived from the return type of the overidden member.
-	//	But not in MIPSPro C++.
-virtual
-#if defined(__sgi) && ! defined(__GNUC__)
-	PartialIterator * 
-#else
-	PartialDecorIterator *	
-#endif
-		clone( void ) const { return new PartialDecorIterator( *this ); }
-*/	
 	//	reset applies the Iterator to a new Partial: 
 	virtual void reset( const Partial & p ) { iterator()->reset( p ); }
 	
@@ -221,6 +205,10 @@ protected:
 	PartialIteratorOwner( const PartialIteratorOwner & other ) : 
 		_iter( other._iter->clone() ) {}
 	
+private:
+	//	not defined:			
+	PartialIteratorOwner & operator= ( const PartialIteratorOwner & );
+
 public:
 	virtual ~PartialIteratorOwner( void ) {}
 

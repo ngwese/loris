@@ -36,7 +36,7 @@ Begin_Namespace( Loris )
 //	this if a sensible way can be found to put it in the core morphing
 //	operation: morphPartial().
 //
-class Morph
+class Morph : public PartialCollector
 {
 //	-- public interface --
 public:
@@ -165,9 +165,6 @@ public:
 //	This is the core morphing operation, called by morph() and crossfade().
 	void morphPartial( const Partial & p1, const Partial & p2, int assignLabel = 0 );
 	
-//	morphed Partial access:	
-	std::list< Partial > & partials(void) { return _partials; }
-
 //	morphing functions access/mutation:	
 	void setFrequencyFunction( const Map & f );
 	void setAmplitudeFunction( const Map & f );
@@ -218,9 +215,6 @@ protected:
 	}
 						
 //	-- instance variables --
-	//	morphed partials:
-	std::list< Partial > _partials;
-	
 	//	morphing functions:
 	std::auto_ptr< Map > _freqFunction;
 	std::auto_ptr< Map > _ampFunction;

@@ -11,7 +11,6 @@
 //
 // ===========================================================================
 #include "LorisLib.h"
-#include "PartialIterator.h"
 #include "Partial.h"
 #include <list>
 
@@ -22,15 +21,18 @@ Begin_Namespace( Loris )
 //
 //	Make this interface more like other function objects in Loris.
 //
-class Distiller : public PartialIteratorOwner
+class Distiller : public PartialCollector
 {
 //	-- public interface --
 public:
 //	construction:
-	Distiller( double x = 0.001 ) : _fadeTime( x ) {}
+	explicit Distiller( double x = 0.001 );
+
+//	copying and assignment:	
+	Distiller( const Distiller & other );
+	Distiller & operator= ( const Distiller & other );
 	
-	//	let the compiler generate these:
-	//Distiller( void );
+	//	let the compiler generate this:
 	//~Distiller( void );
 	
 //	distillation:
@@ -39,8 +41,7 @@ public:
 							 int assignLabel = 0 );
 
 //	access:
-	std::list< Partial > & partials(void) { return _partials; }
-	
+//	is this ever useful?
 	double fadeTime( void ) const { return _fadeTime; }
 	void setFadeTime( double x ) { if ( x > 0. ) _fadeTime = x; } 
 	
@@ -54,7 +55,6 @@ protected:
 
 //	-- instance variables --
 private:
-	std::list< Partial > _partials;
 	double _fadeTime;	//	in seconds
 
 };	//	end of class Distiller

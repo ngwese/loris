@@ -28,15 +28,7 @@ Import::Import( void )
 {
 }
 
-// ---------------------------------------------------------------------------
-//	Import destructor
-// ---------------------------------------------------------------------------
-//	Any Partials remaining in the list mPartials will be destroyed 
-//	automatically.
-//
-Import::~Import( void )
-{
-}
+
 
 
 #pragma mark -

@@ -30,6 +30,7 @@ class BinaryFile;
 // ---------------------------------------------------------------------------
 //	class ImportLemur5
 //
+//	copy? assignment? dehr?
 //
 class ImportLemur5: public Import
 {
@@ -37,7 +38,7 @@ class ImportLemur5: public Import
 public:
 //	construction:
 	ImportLemur5( BinaryFile & lemrFile );
-	virtual ~ImportLemur5( void );
+	~ImportLemur5( void );
 
 //	-- primitve operations --
 	//	check that Lemur file is valid:

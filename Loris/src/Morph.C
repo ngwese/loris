@@ -73,11 +73,12 @@ Morph::Morph( const Map & ff, const Map & af, const Map & bwf ) :
 // ---------------------------------------------------------------------------
 //
 Morph::Morph( const Morph & other ) :
-	_partials( other._partials ),
+	//_partials( other._partials ),
 	_freqFunction( other.frequencyFunction().clone() ),
 	_ampFunction( other.amplitudeFunction().clone() ),
 	_bwFunction( other.bandwidthFunction().clone() ),
-	_crossfadelabel( 0 )
+	_crossfadelabel( 0 ),
+	PartialCollector( other )
 {
 }
 

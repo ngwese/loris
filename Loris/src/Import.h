@@ -31,21 +31,12 @@ Begin_Namespace( Loris )
 //	Import has a Template Method (GoF p.325), importPartials() for performing
 //	the import. Primitive operations must be implemented by subclasses.
 //
-//	The imported Partials are stored in a (STL) list that is accessible to
-//	clients of Import. Any Partials remaining in the list are destroyed
-//	with the Import object. Partials can be transfered from one list to 
-//	another _without_ copying using list.splice().
-//
-class Import
+class Import : public PartialCollector
 {
 //	-- public Import interface --
 public:
 //	template method for importing partials:
 	void importPartials( void );
-	
-//	access to imported Partials:
-	std::list< Partial > & partials( void ) { return mPartials; }
-	const std::list< Partial > & partials ( void ) const { return mPartials; }
 	
 //	-- primitve operations --
 	//	check that source of Partials is valid or ready:
@@ -68,11 +59,7 @@ public:
 protected:
 //	construction:
 	Import( void );
-	virtual ~Import( void );
-
-//	-- instance variables --
-	std::list< Partial > mPartials;	//	list<> of imported Partials
-
+	//virtual ~Import( void ) {}
 };	//	end of class Import
 
 // ---------------------------------------------------------------------------

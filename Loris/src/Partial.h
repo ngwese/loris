@@ -1,6 +1,5 @@
 #ifndef __Loris_partial__
 #define __Loris_partial__
-
 // ===========================================================================
 //	Partial.h
 //
@@ -13,11 +12,11 @@
 //	-kel 16 Aug 99
 //
 // ===========================================================================
-
 #include "LorisLib.h"
 #include "Exception.h"
 #include "Breakpoint.h"
 #include <map>
+#include <list>
 
 Begin_Namespace( Loris )
 
@@ -139,6 +138,48 @@ public:
 		
 };	//	end of class InvalidPartial
 
+// ---------------------------------------------------------------------------
+//	class PartialCollector
+//
+//	Many function objects in Loris generate Partials.
+//	The Partials are stored in a (STL) list that is accessible to
+//	clients. Any Partials remaining in the list are destroyed
+//	with the object. Partials can be transfered from one list to 
+//	another _without_ copying using list::splice().
+//
+//	Mixin class.
+//	Should this be somewhere else?
+//
+class PartialCollector
+{
+//	protected construction 
+//	(base class only, cannot instantiate)
+protected:
+	PartialCollector( void ) {}
+		
+	//	compiler-generated copy constructor and assignment
+	//	are adequate, but need to be protected:
+	PartialCollector( const PartialCollector & other ) :
+		_partials( other._partials ) {}
+
+private:
+	//	not defined:			
+	PartialCollector & operator= ( const PartialCollector & );
+	
+public:
+	//	virtual constructor for subclassing:
+	virtual ~PartialCollector( void ) {}
+
+	//	access:
+	std::list< Partial > & partials( void ) { return _partials; }
+	const std::list< Partial > & partials( void ) const { return _partials; }
+
+//	-- instance variables --
+//	(should be private)
+protected:
+	std::list< Partial > _partials;
+			
+};	//	end of mixin class PartialCollector
 
 End_Namespace( Loris )
 

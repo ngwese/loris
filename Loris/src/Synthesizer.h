@@ -72,27 +72,41 @@ public:
 //	access provided by PartialIteratorOwner:	
 	const std::auto_ptr< Oscillator > & oscillator( void ) const { return _oscillator; }
 	std::auto_ptr< Oscillator > 
-	setOscillator( std::auto_ptr< Oscillator > osc = std::auto_ptr< Oscillator >( new Oscillator() ) ) 
-	{
-		std::auto_ptr< Oscillator > ret( _oscillator );
-		_oscillator = osc;
-		return ret;
-	}
+	setOscillator( std::auto_ptr< Oscillator > osc = 
+					std::auto_ptr< Oscillator >( new Oscillator() ) ) ;
 
 //	synthesis:
-	void synthesizePartial( const Partial & p );	
-	void operator()( const Partial & p ) { synthesizePartial( p ); }
+	void synthesize( const Partial & p );	
+	void operator()( const Partial & p ) { synthesize( p ); }
 	
 //	-- template member functions for synthesis --
 //
 //	Strictly speaking, we can do without these if necessary.
+//
+//	Either remove this or make it more like others, by allowing 
+//	list<Partial> iterators if No_template_members.
+//
+//	Without these, one might use 
+//		for_each( partials.begin(), partials.end(), synth );
+//	to synthesize a collection of Partials, but note that this
+//	makes two copies of the Synthesizer, one on the call to for_each,
+//	and one for its return value. Using references doesn't seem to
+//	get around that problem. It still works, because all the copies
+//	share the same sample buffer (Synthesizer only has a reference
+//	to its buffer), but if its too expensive or if the copying is
+//	otherwise unacceptable, you'd have to write your own loop.
+//
+//	Should I write an extension to the STL that does the thing
+//	we want? You'd think there'd be something, but there isn't.
+//	Call it apply_to_each<InIter, Func>(InIter, InIter, Func &)?
+//	
 //
 #if !defined(No_template_members)
 	template < class Iterator >
 	void synthesize( Iterator begin, Iterator end )
 	{
 		while( begin != end ) {
-			synthesizePartial( *(begin++) );
+			synthesize( *(begin++) );
 		}
 	}
 	
