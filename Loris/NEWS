@@ -9,7 +9,8 @@ Please send Loris bug reports to loris@cerlsoundgroup.org.
 -------------------------------------------------------
 changes since 1.0beta9 release:
 
-- Updated documentation (finally).
+- Updated documentation (finally) including C++
+API documentation (finally).
 
 - added assignment operator to Oscillator so that STL
 containers of them can be used
@@ -34,6 +35,10 @@ more morphing functionality.
 
 - Added PartialPtrs class, a container of pointers to 
 Partials, used internally to make algorithms more generic.
+
+- Removed FadeTime() member from class Partial, added fade 
+time as a parameter to classes Distiller, Synthesizer, and
+Sieve (replacing minGapTime, which is twice the fade time).
 
 -------------------------------------------------------
 changes since 1.0beta8 release:
