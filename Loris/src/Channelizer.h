@@ -141,40 +141,43 @@ public:
 	template<typename Iter>
 	void operator() ( Iter begin, Iter end ) const
 #else
+    inline
 	void operator() ( PartialList::iterator begin, PartialList::iterator end ) const
 #endif
 		 { channelize( begin, end ); }
 		 
 // -- static members --
 
-	//!   Static member that constructs an instance and applies
-	//!   it to a sequence of Partials. 
-	//!   Construct a Channelizer using the specified Envelope
-	//!   and reference label, and use it to channelize a
-	//!   sequence of Partials. 
+	//! Static member that constructs an instance and applies
+	//! it to a sequence of Partials. 
+	//! Construct a Channelizer using the specified Envelope
+	//! and reference label, and use it to channelize a
+	//! sequence of Partials. 
 	//!
-	//!   \param   begin is the beginning of a sequence of Partials to 
-	//!            channelize.
-	//!   \param   end is the end of a sequence of Partials to 
-	//!            channelize.
+	//! \param  begin is the beginning of a sequence of Partials to 
+	//!         channelize.
+	//! \param  end is the end of a sequence of Partials to 
+	//!         channelize.
 	//!	\param 	refChanFreq is an Envelope representing the center frequency
-	//!			   of a channel.
+	//!	        of a channel.
 	//!	\param 	refChanLabel is the corresponding channel number (i.e. 1
-	//!			   if refChanFreq is the lowest-frequency channel, and all 
-	//!			   other channels are harmonics of refChanFreq, or 2 if  
-	//!			   refChanFreq tracks the second harmonic, etc.).
-	//!   \throw   InvalidArgument if refChanLabel is not positive.
+	//!	        if refChanFreq is the lowest-frequency channel, and all 
+	//!         other channels are harmonics of refChanFreq, or 2 if  
+	//!         refChanFreq tracks the second harmonic, etc.).
+	//! \throw  InvalidArgument if refChanLabel is not positive.
 	//!	
 	//!	If compiled with NO_TEMPLATE_MEMBERS defined, then begin and end
 	//!	must be PartialList::iterators, otherwise they can be any type
 	//!	of iterators over a sequence of Partials.
 #if ! defined(NO_TEMPLATE_MEMBERS)
 	template< typename Iter >
-	static void channelize( Iter begin, Iter end, 
-	                        const Envelope & refChanFreq, int refChanLabel );
+	static 
+	void channelize( Iter begin, Iter end, 
+                     const Envelope & refChanFreq, int refChanLabel );
 #else
-	static void channelize( PartialList::iterator begin, PartialList::iterator end,
-	                        const Envelope & refChanFreq, int refChanLabel );
+	static inline 
+	void channelize( PartialList::iterator begin, PartialList::iterator end,
+                     const Envelope & refChanFreq, int refChanLabel );
 #endif	 
 	 
 };	//	end of class Channelizer
@@ -197,6 +200,7 @@ public:
 template<typename Iter>
 void Channelizer::channelize( Iter begin, Iter end ) const
 #else
+inline
 void Channelizer::channelize( PartialList::iterator begin, PartialList::iterator end ) const
 #endif
 {
@@ -236,6 +240,7 @@ template< typename Iter >
 void Channelizer::channelize( Iter begin, Iter end, 
                               const Envelope & refChanFreq, int refChanLabel )
 #else
+inline
 void Channelizer::channelize( PartialList::iterator begin, PartialList::iterator end,
                               const Envelope & refChanFreq, int refChanLabel )
 #endif	 

@@ -92,6 +92,7 @@ public:
 	template<typename Iter1, typename Iter2>
 	Dilator( Iter1 ibegin, Iter1 iend, Iter2 tbegin );
 #else
+    inline
 	Dilator( const double * ibegin, const double * iend, const double * tbegin );
 #endif
 
@@ -173,6 +174,7 @@ public:
 	template<typename Iter>
 	void dilate( Iter dilate_begin, Iter dilate_end  ) const;
 #else
+    inline
 	void dilate( PartialList::iterator dilate_begin, 
 				    PartialList::iterator dilate_end  ) const;
 #endif
@@ -190,6 +192,7 @@ public:
 	template<typename Iter>
 	void operator() ( Iter dilate_begin, Iter dilate_end  ) const;
 #else
+    inline
 	void operator() ( PartialList::iterator dilate_begin, 
 					      PartialList::iterator dilate_end ) const;
 #endif
@@ -232,7 +235,7 @@ public:
 	void dilate( PartialsIter dilate_begin, PartialsIter dilate_end,
 	             TimeIter1 ibegin, TimeIter1 iend, TimeIter2 tbegin  );
 #else
-    static
+    static inline
  	void dilate( PartialList::iterator dilate_begin, 
 				 PartialList::iterator dilate_end,
 		   		 const double * ibegin, const double * iend, 
@@ -265,6 +268,7 @@ public:
 template<typename Iter1, typename Iter2>
 Dilator::Dilator( Iter1 ibegin, Iter1 iend, Iter2 tbegin )
 #else
+inline
 Dilator::Dilator( const double * ibegin, const double * iend, const double * tbegin )
 #endif
 {
@@ -295,6 +299,7 @@ Dilator::Dilator( const double * ibegin, const double * iend, const double * tbe
 template<typename Iter>
 void Dilator::dilate( Iter dilate_begin, Iter dilate_end  ) const
 #else
+inline
 void Dilator::dilate( PartialList::iterator dilate_begin, 
 					  PartialList::iterator dilate_end  ) const
 #endif
@@ -322,6 +327,7 @@ void Dilator::dilate( PartialList::iterator dilate_begin,
 template<typename Iter>
 void Dilator::operator() ( Iter dilate_begin, Iter dilate_end  ) const
 #else
+inline
 void Dilator::operator() ( PartialList::iterator dilate_begin, 
 						   PartialList::iterator dilate_end ) const
 #endif
@@ -388,6 +394,7 @@ template< typename PartialsIter, typename TimeIter1, typename TimeIter2 >
 void Dilator::dilate( PartialsIter dilate_begin, PartialsIter dilate_end,
 			 		  TimeIter1 ibegin, TimeIter1 iend, TimeIter2 tbegin  )
 #else
+inline
 void Dilator::dilate( PartialList::iterator dilate_begin, 
 			 		  PartialList::iterator dilate_end,
 			 		  const double * ibegin, const double * iend, 

@@ -275,11 +275,12 @@ void partialList_splice( PartialList * dst, PartialList * src )
  */
 double partial_startTime( const Partial * p )
 {
+    double ret = 0;
 	try 
 	{
 		ThrowIfNull((Partial *) p);
 
-		return p->startTime();
+		ret = p->startTime();
 	}
 	catch( Exception & ex ) 
 	{
@@ -293,6 +294,7 @@ double partial_startTime( const Partial * p )
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
+	return ret;
 }
 
 /* ---------------------------------------------------------------- */
@@ -302,11 +304,12 @@ double partial_startTime( const Partial * p )
  */
 double partial_endTime( const Partial * p )
 {
+    double ret = 0;
 	try 
 	{
 		ThrowIfNull((Partial *) p);
 
-		return p->endTime();
+		ret = p->endTime();
 	}
 	catch( Exception & ex ) 
 	{
@@ -320,6 +323,7 @@ double partial_endTime( const Partial * p )
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
+	return ret;
 }
 
 /* ---------------------------------------------------------------- */
@@ -329,11 +333,12 @@ double partial_endTime( const Partial * p )
  */
 double partial_duration( const Partial * p )
 {
+    double ret = 0;
 	try 
 	{
 		ThrowIfNull((Partial *) p);
 
-		return p->duration();
+		ret = p->duration();
 	}
 	catch( Exception & ex ) 
 	{
@@ -347,6 +352,7 @@ double partial_duration( const Partial * p )
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
+	return ret;
 }
 
 /* ---------------------------------------------------------------- */
@@ -356,11 +362,12 @@ double partial_duration( const Partial * p )
  */
 double partial_initialPhase( const Partial * p )
 {
+    double ret = 0;
 	try 
 	{
 		ThrowIfNull((Partial *) p);
 
-		return p->initialPhase();
+		ret = p->initialPhase();
 	}
 	catch( Exception & ex ) 
 	{
@@ -374,6 +381,7 @@ double partial_initialPhase( const Partial * p )
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
+	return ret;
 }
 
 /* ---------------------------------------------------------------- */
@@ -383,11 +391,12 @@ double partial_initialPhase( const Partial * p )
  */
 int partial_label( const Partial * p )
 {
+    int ret = 0;
 	try 
 	{
 		ThrowIfNull((Partial *) p);
 
-		return p->label();
+		ret = p->label();
 	}
 	catch( Exception & ex ) 
 	{
@@ -401,6 +410,7 @@ int partial_label( const Partial * p )
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
+	return ret;
 }
 
 /* ---------------------------------------------------------------- */
@@ -410,11 +420,12 @@ int partial_label( const Partial * p )
  */
 unsigned long partial_numBreakpoints( const Partial * p )
 {
+    unsigned long ret = 0;
 	try 
 	{
 		ThrowIfNull((Partial *) p);
 
-		return p->size();
+		ret = p->size();
 	}
 	catch( Exception & ex ) 
 	{
@@ -428,6 +439,7 @@ unsigned long partial_numBreakpoints( const Partial * p )
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
+	return ret;
 }
 
 /* ---------------------------------------------------------------- */
@@ -439,11 +451,12 @@ unsigned long partial_numBreakpoints( const Partial * p )
  */
 double partial_frequencyAt( const Partial * p, double t )
 {
+    double ret = 0;
 	try 
 	{
 		ThrowIfNull((Partial *) p);
 
-		return p->frequencyAt( t );
+		ret = p->frequencyAt( t );
 	}
 	catch( Exception & ex ) 
 	{
@@ -457,6 +470,7 @@ double partial_frequencyAt( const Partial * p, double t )
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
+	return ret;
 }
 
 /* ---------------------------------------------------------------- */
@@ -468,11 +482,12 @@ double partial_frequencyAt( const Partial * p, double t )
  */
 double partial_bandwidthAt( const Partial * p, double t )
 {
+    double ret = 0;
 	try 
 	{
 		ThrowIfNull((Partial *) p);
 
-		return p->bandwidthAt( t );
+		ret = p->bandwidthAt( t );
 	}
 	catch( Exception & ex ) 
 	{
@@ -486,6 +501,7 @@ double partial_bandwidthAt( const Partial * p, double t )
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
+	return ret;
 }
 
 /* ---------------------------------------------------------------- */
@@ -497,11 +513,12 @@ double partial_bandwidthAt( const Partial * p, double t )
  */
 double partial_phaseAt( const Partial * p, double t )
 {
+    double ret = 0;
 	try 
 	{
 		ThrowIfNull((Partial *) p);
 
-		return p->phaseAt( t );
+		ret = p->phaseAt( t );
 	}
 	catch( Exception & ex ) 
 	{
@@ -515,6 +532,7 @@ double partial_phaseAt( const Partial * p, double t )
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
+	return ret;
 }
 
 /* ---------------------------------------------------------------- */
@@ -527,11 +545,12 @@ double partial_phaseAt( const Partial * p, double t )
  */
 double partial_amplitudeAt( const Partial * p, double t )
 {
+    double ret = 0;
 	try 
 	{
 		ThrowIfNull((Partial *) p);
 
-		return p->amplitudeAt( t, 0.001 );
+		ret = p->amplitudeAt( t, 0.001 );
 	}
 	catch( Exception & ex ) 
 	{
@@ -545,6 +564,7 @@ double partial_amplitudeAt( const Partial * p, double t )
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
+	return ret;
 }
 
 /* ---------------------------------------------------------------- */
@@ -598,11 +618,12 @@ void partial_setLabel( Partial * p, int label )
  */
 double breakpoint_frequency( const Breakpoint * bp )
 {
+    double ret = 0;
 	try 
 	{
 		ThrowIfNull((Breakpoint *) bp);
 
-		return bp->frequency();
+		ret = bp->frequency();
 	}
 	catch( Exception & ex ) 
 	{
@@ -616,6 +637,7 @@ double breakpoint_frequency( const Breakpoint * bp )
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
+	return ret;
 }
 
 /* ---------------------------------------------------------------- */
@@ -625,11 +647,12 @@ double breakpoint_frequency( const Breakpoint * bp )
  */
 double breakpoint_amplitude( const Breakpoint * bp )
 {
+    double ret = 0;
 	try 
 	{
 		ThrowIfNull((Breakpoint *) bp);
 
-		return bp->amplitude();
+		ret = bp->amplitude();
 	}
 	catch( Exception & ex ) 
 	{
@@ -643,6 +666,7 @@ double breakpoint_amplitude( const Breakpoint * bp )
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
+	return ret;
 }
 
 /* ---------------------------------------------------------------- */
@@ -652,11 +676,12 @@ double breakpoint_amplitude( const Breakpoint * bp )
  */
 double breakpoint_bandwidth( const Breakpoint * bp )
 {
+    double ret = 0;
 	try 
 	{
 		ThrowIfNull((Breakpoint *) bp);
 
-		return bp->bandwidth();
+		ret = bp->bandwidth();
 	}
 	catch( Exception & ex ) 
 	{
@@ -670,6 +695,7 @@ double breakpoint_bandwidth( const Breakpoint * bp )
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
+	return ret;
 }
 
 /* ---------------------------------------------------------------- */
@@ -679,11 +705,12 @@ double breakpoint_bandwidth( const Breakpoint * bp )
  */
 double breakpoint_phase( const Breakpoint * bp )
 {
+    double ret = 0;
 	try 
 	{
 		ThrowIfNull((Breakpoint *) bp);
 
-		return bp->phase();
+		ret = bp->phase();
 	}
 	catch( Exception & ex ) 
 	{
@@ -697,6 +724,7 @@ double breakpoint_phase( const Breakpoint * bp )
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
+	return ret;
 }
 
 /* ---------------------------------------------------------------- */

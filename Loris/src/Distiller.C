@@ -51,12 +51,6 @@
 //	begin namespace
 namespace Loris {
 
-//	helper function prototypes:
-static Partial distillOne( PartialList & partials, int label,  
-						  double fadeTime, double gapTime );
-static void collateUnlabeled( PartialList & partials, int startLabel, 
-							double fadeTime, double gapTime );
-
 // ---------------------------------------------------------------------------
 //	Distiller constructor
 // ---------------------------------------------------------------------------
@@ -76,133 +70,14 @@ Distiller::Distiller( double partialFadeTime, double partialSilentTime ) :
 	_fadeTime( partialFadeTime ),
 	_gapTime( partialSilentTime )
 {
-	if( _fadeTime <= 0.0 )
+	if ( _fadeTime <= 0.0 )
 	{
 		Throw( InvalidArgument, "Distiller fade time must be positive." );
 	}
-	if( _gapTime <= 0.0 )
+	if ( _gapTime <= 0.0 )
 	{
 		Throw( InvalidArgument, "Distiller gap time must be positive." );
 	}
-}
-
-// ---------------------------------------------------------------------------
-//	Distiller destructor
-// ---------------------------------------------------------------------------
-//	Destroy this distiller.
-//
-Distiller::~Distiller( void )
-{
-}
-
-// ---------------------------------------------------------------------------
-//	distill
-// ---------------------------------------------------------------------------
-//	Distill labeled Partials in a list into a list containing a single 
-//	Partial per non-zero label. The distilled list will contain as many 
-//	Partials as there were non-zero labels in the original list.
-//
-//	Unlabeled (zero-labeled) Partials are collated into the smallest-possible 
-//	number of Partials that does not combine any overlapping Partials.
-//	Collated Partials assigned labels higher than any label in the original 
-//	list, and appear at the end of the distilled PartialList.
-//
-//	Return an iterator refering to the position of the first collated Partial,
-//	of the end of the distilled list if there are no collated Partials.
-//
-PartialList::iterator 
-Distiller::distill( PartialList & partials ) 
-{
-	// save this information for debugging:
-	int howmanywerethere = partials.size();
-
-	//	sort the PartialList by label:
-	debugger << "Distiller sorting Partials by label..." << endl;
-	partials.sort( PartialUtils::compareLabelLess() );
-
-	// 	iterate over labels and distill each one:
-	PartialList::iterator lowerbound = partials.begin();
-	PartialList::iterator enddistilled = partials.begin();
-	
-	//	save zeros here so they can be stuck at the end:
-	PartialList savezeros;
-
-	// 	invariant:
-	// 	Partials on the range [dist_list.begin(), lowerbound)
-	// 	have been distilled already, so lowerbound is either
-	// 	the end of the list (dist_list.end()) or it is the
-	// 	position of the first Partial in the list having a
-	// 	label corresponding to a channel that has not yet 
-	//	been distilled.	
-	int label = 0;				  
-	while ( lowerbound != partials.end() )
-	{
-		label = lowerbound->label();
-		
-		//	find the first element in l after lowerbound
-		//	having a label not equal to 'label':
-		PartialList::iterator upperbound = 
-			std::find_if( lowerbound, partials.end(), 
-						     std::not1( PartialUtils::isLabelEqual( label ) ) );
-		
-		//	[lowerbound, upperbound) is a range of all the
-		//	partials in dist_list labeled label.
-		//
-		//	distill labeled channel, unless label is 0
-		//	(zero-labeled Partials will remain where they
-		//	are, and wind up at the front of the list):	
-		if ( label != 0 )
-		{
-			if ( std::distance( lowerbound, upperbound ) > 1 )
-			{
-				//	make a container of the Partials having the same 
-				//	label, and sort it by duration:
-				PartialList samelabel( lowerbound, upperbound );
-				debugger << "Distiller found " << samelabel.size() 
-						<< " Partials labeled " << label << endl;
-				
-				//	replace the Partial at enddistilled with 
-				// 	the resulting distilled partial:
-				*enddistilled = distillOne( samelabel, label, _fadeTime, _gapTime );
-			}
-			else
-			{
-				*enddistilled = *lowerbound;
-			}
-			++enddistilled;
-		}
-		else	//	label == 0
-		{
-			//	save zero-labeled Partials to splice
-			// 	back into the original list; may have
-			//	to advance enddistilled:
-			if ( enddistilled == lowerbound )
-			{
-				enddistilled = upperbound;
-			}
-			savezeros.splice( savezeros.begin(), partials, lowerbound, upperbound );
-			debugger << "Distiller found " << savezeros.size() 
-					 << " unlabeled Partials, saving..." << endl;
-		}
-
-		//	advance Partial list iterator:
-		lowerbound = upperbound;
-	}
-
-	//	erase leftover Partials in original list:
-	partials.erase( enddistilled, partials.end() );
-
-	PartialList::iterator ret = partials.end();
-	//	collate unlabeled (zero-labeled) Partials:
-	if ( savezeros.size() > 0 )
-	{
-		collateUnlabeled( savezeros, std::max(label+1, 1), _fadeTime, _gapTime );
-		ret = savezeros.begin();
-		partials.splice( partials.end(), savezeros );
-	}
-	debugger << "distilled " << partials.size() << " Partials from " << howmanywerethere << endl;
-	
-	return ret;
 }
 
 #pragma mark -- helpers --
@@ -342,60 +217,74 @@ findContribution( Partial & pshort, const Partial & plong,
 }
 
 // ---------------------------------------------------------------------------
-//	distillOne		(STATIC)
+//	distillOne
 // ---------------------------------------------------------------------------
-//	Helper function for distilling Partials having a common label
-// 	into a single Partial with that label.
+//	Distill a list of Partials having a common label
+// 	into a single Partial with that label, and append it
+//  to the distilled collection. If an empty list of Partials
+//  is passed, then an empty Partial having the specified
+//  label is appended.
 //
-static Partial distillOne( PartialList & partials, int label, 
-						   double fadeTime, double gapTime )
+void Distiller::distillOne( PartialList & partials, Partial::label_type label,
+                            PartialList & distilled )
 {
-	Partial newp;
-	newp.setLabel( label );
+	debugger << "Distiller found " << partials.size() 
+			 << " Partials labeled " << label << endl;
 
-	//	return empty Partial if there is nothing
-	//	to distill:
-	if ( partials.size() == 0 )
-		return newp;
-	
-	//	sort Partials by duration, longer
-	//	Partials will be prefered:
-	partials.sort( PartialUtils::compareDurationGreater() );
-	
-	// keep the longest Partial:
-	PartialList::iterator it = partials.begin();
-	newp = *it;
-		
-	//	iterate over remaining partials:
-	for ( ++it; it != partials.end(); ++it )
-	{
-		std::pair< Partial::iterator, Partial::iterator > range = 
-			findContribution( *it, newp, fadeTime, gapTime );
-		Partial::iterator cb = range.first, ce = range.second;
-		
-		//	merge Breakpoints into the new Partial, if
-		//	there are any that contribute, otherwise
-		//	just absorb the current Partial as noise:
-		if ( cb != ce )
-		{
-			//	absorb the non-contributing part:
-			if ( ce != it->end() )
-			{
-				Partial absorbMe( --Partial::iterator(ce), it->end() );
-				newp.absorb( absorbMe );
-			}
+    //  make a new Partial in the distilled collection,
+    //  insert it in label order:
+    Partial empty;
+    empty.setLabel( label );
+    PartialList::iterator pos = 
+        distilled.insert( std::lower_bound( distilled.begin(), distilled.end(), 
+                                            empty, 
+                                            PartialUtils::compareLabelLess() ),
+                          empty );
+	Partial & newp = *pos;
 
-			// merge the contributing part:
-			merge( cb, ce, newp, fadeTime, gapTime );
-		}
-		else
-		{
-			//	no contribution, absorb the whole thing:
-			newp.absorb( *it );
-		}		
-	}
-	
-	return newp;
+    if ( partials.size() == 1 )
+    {
+        newp = partials.front();
+    }
+	else if ( partials.size() > 0 )  //  it will be an empty Partial otherwise
+    {	
+    	//	sort Partials by duration, longer
+    	//	Partials will be prefered:
+    	partials.sort( PartialUtils::compareDurationGreater() );
+    	
+    	// keep the longest Partial:
+    	PartialList::iterator it = partials.begin();
+    	newp = *it;
+    		
+    	//	iterate over remaining partials:
+    	for ( ++it; it != partials.end(); ++it )
+    	{
+    		std::pair< Partial::iterator, Partial::iterator > range = 
+    			findContribution( *it, newp, _fadeTime, _gapTime );
+    		Partial::iterator cb = range.first, ce = range.second;
+    		
+    		//	merge Breakpoints into the new Partial, if
+    		//	there are any that contribute, otherwise
+    		//	just absorb the current Partial as noise:
+    		if ( cb != ce )
+    		{
+    			//	absorb the non-contributing part:
+    			if ( ce != it->end() )
+    			{
+    				Partial absorbMe( --Partial::iterator(ce), it->end() );
+    				newp.absorb( absorbMe );
+    			}
+
+    			// merge the contributing part:
+    			merge( cb, ce, newp, _fadeTime, _gapTime );
+    		}
+    		else
+    		{
+    			//	no contribution, absorb the whole thing:
+    			newp.absorb( *it );
+    		}		
+    	}
+    }	
 }
 
 // ---------------------------------------------------------------------------
@@ -418,40 +307,42 @@ struct ends_before : public std::unary_function< const Partial, bool >
 // ---------------------------------------------------------------------------
 //	collateUnlabeled
 // ---------------------------------------------------------------------------
-//	Helper function for collating unlabeled Partials into the smallest
+//	Collate unlabeled (zero labeled) Partials into the smallest
 // 	possible number of Partials that does not combine any temporally
 //	overlapping Partials. Give each collated Partial a label, starting
-//	with startlabel, and incrementing.
+//	with startlabel, and incrementing. The unlabeled Partials are
+//  stored (and collated) in the savezeros list.
 //
-static void collateUnlabeled( PartialList & partials, int startlabel, 
-						 double fadeTime, double gapTime )
+void Distiller::collateUnlabeled( PartialList & unlabeled, 
+                                  Partial::label_type startlabel )
 {
-	debugger << "collating " << partials.size() << " Partials..." << endl;
+	debugger << "Distiller found " << unlabeled.size() 
+			 << " unlabeled Partials, collating..." << endl;
 	
 	// 	sort Partials by end time:
 	// 	thanks to Ulrike Axen for this optimal algorithm!
-	partials.sort( ends_earlier );
+	unlabeled.sort( ends_earlier );
 	
 	//	the first (earliest-ending) Partial will be
 	//	the first collated Partial:
-	PartialList::iterator endcollated = partials.begin();
+	PartialList::iterator endcollated = unlabeled.begin();
 	(endcollated++)->setLabel( startlabel++ );
 	
 	//	invariant:
 	//	Partials in the range [partials.begin(), endcollated)
 	//	are the collated Partials.
-	while ( endcollated != partials.end() )
+	while ( endcollated != unlabeled.end() )
 	{
 		//	find a collated Partial that ends
 		//	before this one begins.
 		//	There must be a gap of at least
-		//	twice the fadeTime, because this algorithm
+		//	twice the _fadeTime, because this algorithm
 		//	does not remove any null Breakpoints, and 
 		//	because Partials joined in this way might
 		//	be far apart in frequency.
-		const double clearance = (2.*fadeTime) + gapTime;
+		const double clearance = (2.*_fadeTime) + _gapTime;
 		PartialList::iterator it = 
-			std::find_if( partials.begin(), endcollated, 
+			std::find_if( unlabeled.begin(), endcollated, 
 						  ends_before( endcollated->startTime() - clearance) );
 						  
 		// 	if no such Partial exists, then this Partial
@@ -470,14 +361,14 @@ static void collateUnlabeled( PartialList & partials, int startlabel,
 			
 			//	insert a null at the (current) end
 			//	of collated:
-			double nulltime1 = collated.endTime() + fadeTime;
+			double nulltime1 = collated.endTime() + _fadeTime;
 			Breakpoint null1( collated.frequencyAt(nulltime1), 0., 
 							  collated.bandwidthAt(nulltime1), collated.phaseAt(nulltime1) );			
 			collated.insert( nulltime1, null1 );
 
 			//	insert a null at the beginning of
 			//	of the current Partial:
-			double nulltime2 = addme.startTime() - fadeTime;
+			double nulltime2 = addme.startTime() - _fadeTime;
 			Assert( nulltime2 >= nulltime1 );
 			Breakpoint null2( addme.frequencyAt(nulltime2), 0., 
 							  addme.bandwidthAt(nulltime2), addme.phaseAt(nulltime2) );			
@@ -492,11 +383,11 @@ static void collateUnlabeled( PartialList & partials, int startlabel,
 			}
 			
 			//	remove this Partial from the list:
-			partials.erase( endcollated++ );
+			unlabeled.erase( endcollated++ );
 		}
 	}
 	
-	debugger << "...now have " << partials.size() << endl;
+	debugger << "...now have " << unlabeled.size() << endl;
 }
 
 }	//	end of namespace Loris

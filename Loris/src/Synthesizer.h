@@ -35,14 +35,13 @@
  */
 
 #include "Oscillator.h"
+#include "PartialList.h"
 #include "PartialUtils.h"
 
 #include <vector>
 
 //	begin namespace
 namespace Loris {
-
-class Partial;
 
 // ---------------------------------------------------------------------------
 //	class Synthesizer
@@ -127,19 +126,21 @@ public:
 	//!			Partials including fade out at the ends.
 	//!	\throw	InvalidPartial if any Partial has negative start time.
 #if ! defined(NO_TEMPLATE_MEMBERS)
-	template<typename Iter>
+	template< typename Iter >
 	void synthesize( Iter begin_partials, Iter end_partials );
 #else
+    inline
 	void synthesize( PartialList::iterator begin_partials, 
-					 PartialList::iterator end_partials, );	
+					 PartialList::iterator end_partials );	
 #endif
 	 
 	//!	Function call operator: same as 
 	//!	synthesize( begin_partials, end_partials ).
 #if ! defined(NO_TEMPLATE_MEMBERS)
-	template<typename Iter>
+	template< typename Iter >
 	void operator() ( Iter begin_partials, Iter end_partials );
 #else
+    inline
 	void operator() ( PartialList::iterator begin_partials, 
 					  PartialList::iterator end_partials );
 #endif
