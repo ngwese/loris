@@ -47,64 +47,187 @@ class Partial;
 // ---------------------------------------------------------------------------
 //	class Resampler
 //
-//	Class Resampler represents an algorithm for resampling Partial envelopes
-//	at regular time intervals. Resampling makes the envelope data more suitable 
-//	for exchange (as SDIF data, for example) with other applications that
-//	cannot process raw (continuously-distributed) reassigned data. Resampling
-//	will often greatly reduce the size of the data (by greatly reducing the 
-//	number of Breakpoints in the Partials) without adversely affecting the
-//	quality of the reconstruction.
+//!	Class Resampler represents an algorithm for resampling Partial envelopes
+//!	at regular time intervals. Resampling makes the envelope data more suitable 
+//!	for exchange (as SDIF data, for example) with other applications that
+//!	cannot process raw (continuously-distributed) reassigned data. Resampling
+//!	will often greatly reduce the size of the data (by greatly reducing the 
+//!	number of Breakpoints in the Partials) without adversely affecting the
+//!	quality of the reconstruction.
 //
 class Resampler
 {
-//	-- instance variables --
-	double interval_;	// the resampling interval
-	
-//	-- public interface --
+//	--- public interface ---
 public:
-//	-- construction --
-	Resampler( double sampleInterval );
-	/*	Construct a new Resampler using the specified sampling
-		interval.
-	 */
-	 
-//	-- resampling --
-	void resample( Partial & p ) const;
-	/*	Resample a Partial using this Resampler's stored sampling interval.
-		The Breakpoint times in the resampled Partial will comprise a  
-		contiguous sequence of integer multiples of the sampling interval,
-		beginning with the multiple nearest to the Partial's start time and
-		ending with the multiple nearest to the Partial's end time. Resampling
-		is performed in-place. 
-	 */
-	 
-	void operator() ( Partial & p ) const { resample( p ); }
-	/*	Function call operator: same as resample().
-	 */
-	 
-	void resample( PartialList::iterator begin, PartialList::iterator end  ) const
-	{
-		while ( begin != end )
-			resample( *begin++ );
-	}
-	/*
-		Resample all Partials in the specified (half-open) range using this
-		Resampler's stored sampling interval, so that the Breakpoints in 
-		the Partial envelopes will all lie on a common temporal grid.
-		The Breakpoint times in the resampled Partial will comprise a  
-		contiguous sequence of integer multiples of the sampling interval,
-		beginning with the multiple nearest to the Partial's start time and
-		ending with the multiple nearest to the Partial's end time. Resampling
-		is performed in-place. 
-	 */
+//	--- lifecycle ---
 
-	void operator() ( PartialList::iterator begin, PartialList::iterator end  ) const 
-		{ resample( begin, end ); }
-	/*	Function call operator: same as resample().
-	 */
+	//! Construct a new Resampler using the specified sampling
+	//! interval.
+	//!
+	//! \param  sampleInterval is the resampling interval in seconds, 
+	//!         Breakpoint data is computed at integer multiples of
+	//!         sampleInterval seconds.
+	//! \throw  InvalidArgument if sampleInterval is not positive.
+	explicit Resampler( double sampleInterval );
+   
+	// use compiler-generated copy/assign/destroy
+	
+//	--- resampling ---
+
+	//! Resample a Partial using this Resampler's stored sampling interval.
+	//! The Breakpoint times in the resampled Partial will comprise a  
+   //! contiguous sequence of integer multiples of the sampling interval,
+	//! beginning with the multiple nearest to the Partial's start time and
+	//! ending with the multiple nearest to the Partial's end time. Resampling
+   //! is performed in-place. 
+   //!
+   //! \param  p is the Partial to resample
+	void resample( Partial & p ) const;
+	
 	 
+	//! Function call operator: same as resample( p ).
+	void operator() ( Partial & p ) const 
+	{ 
+	   resample( p ); 
+	}
+	 
+	//! Resample all Partials in the specified (half-open) range using this
+	//! Resampler's stored sampling interval, so that the Breakpoints in 
+	//! the Partial envelopes will all lie on a common temporal grid.
+	//! The Breakpoint times in the resampled Partial will comprise a  
+	//! contiguous sequence of integer multiples of the sampling interval,
+	//! beginning with the multiple nearest to the Partial's start time and
+	//! ending with the multiple nearest to the Partial's end time. Resampling
+	//! is performed in-place. 
+	//!	
+	//!	\param begin is the beginning of the range of Partials to resample
+	//!	\param end is (one-past) the end of the range of Partials to resample
+	//!	
+	//!	If compiled with NO_TEMPLATE_MEMBERS defined, then begin and end
+	//!	must be PartialList::iterators, otherwise they can be any type
+	//!	of iterators over a sequence of Partials.
+#if ! defined(NO_TEMPLATE_MEMBERS)
+	template<typename Iter>
+	void resample( Iter begin, Iter end ) const;
+#else
+   inline 
+	void resample( PartialList::iterator begin, PartialList::iterator end  ) const;
+#endif	 
+
+	//!	Function call operator: same as resample( begin, end ).
+#if ! defined(NO_TEMPLATE_MEMBERS)
+	template<typename Iter>
+	void operator()( Iter begin, Iter end ) const
+#else
+	void operator()( PartialList::iterator begin, PartialList::iterator end  ) const
+#endif	 
+	{ 
+	   resample( begin, end ); 
+	}
+	 
+// -- static members --
+
+	//! Static member that constructs an instance and applies
+	//! it to a sequence of Partials. 
+	//! Construct a Resampler using the specified resampling
+	//! interval, and use it to channelize a sequence of Partials. 
+	//!
+	//! \param  begin is the beginning of a sequence of Partials to 
+	//!         resample.
+	//! \param  end is the end of a sequence of Partials to 
+	//!         resample.
+	//! \param  sampleInterval is the resampling interval in seconds, 
+	//!         Breakpoint data is computed at integer multiples of
+	//!         sampleInterval seconds.
+	//! \throw  InvalidArgument if sampleInterval is not positive.
+	//!	
+	//!	If compiled with NO_TEMPLATE_MEMBERS defined, then begin and end
+	//!	must be PartialList::iterators, otherwise they can be any type
+	//!	of iterators over a sequence of Partials.
+#if ! defined(NO_TEMPLATE_MEMBERS)
+	template< typename Iter >
+	static 
+	void resample( Iter begin, Iter end, double sampleInterval );
+#else
+	static inline 
+	void resample( PartialList::iterator begin, PartialList::iterator end,
+                  double sampleInterval );
+#endif	 
+
+//	--- instance variables ---
+private:
+
+   //!   the resampling interval in seconds
+	double interval_;	
 	
 };	//	end of class Resampler
+
+// ---------------------------------------------------------------------------
+//	resample (sequence of Partials)
+// ---------------------------------------------------------------------------
+//! Resample all Partials in the specified (half-open) range using this
+//! Resampler's stored sampling interval, so that the Breakpoints in 
+//! the Partial envelopes will all lie on a common temporal grid.
+//! The Breakpoint times in the resampled Partial will comprise a  
+//! contiguous sequence of integer multiples of the sampling interval,
+//! beginning with the multiple nearest to the Partial's start time and
+//! ending with the multiple nearest to the Partial's end time. Resampling
+//! is performed in-place. 
+//!	
+//!	\param begin is the beginning of the range of Partials to resample
+//!	\param end is (one-past) the end of the range of Partials to resample
+//!	
+//!	If compiled with NO_TEMPLATE_MEMBERS defined, then begin and end
+//!	must be PartialList::iterators, otherwise they can be any type
+//!	of iterators over a sequence of Partials.
+//
+#if ! defined(NO_TEMPLATE_MEMBERS)
+template<typename Iter>
+void Resampler::resample( Iter begin, Iter end ) const
+#else
+inline 
+void Resampler::resample( PartialList::iterator begin, PartialList::iterator end  ) const
+#endif	 
+{
+	while ( begin != end )
+	{
+		resample( *begin++ );
+	}
+}
+
+// ---------------------------------------------------------------------------
+//	resample (static)
+// ---------------------------------------------------------------------------
+//! Static member that constructs an instance and applies
+//! it to a sequence of Partials. 
+//! Construct a Resampler using the specified resampling
+//! interval, and use it to channelize a sequence of Partials. 
+//!
+//! \param  begin is the beginning of a sequence of Partials to 
+//!         resample.
+//! \param  end is the end of a sequence of Partials to 
+//!         resample.
+//! \param  sampleInterval is the resampling interval in seconds, 
+//!         Breakpoint data is computed at integer multiples of
+//!         sampleInterval seconds.
+//! \throw  InvalidArgument if sampleInterval is not positive.
+//!	
+//!	If compiled with NO_TEMPLATE_MEMBERS defined, then begin and end
+//!	must be PartialList::iterators, otherwise they can be any type
+//!	of iterators over a sequence of Partials.
+//
+#if ! defined(NO_TEMPLATE_MEMBERS)
+template< typename Iter >
+void Resampler::resample( Iter begin, Iter end, double sampleInterval )
+#else
+inline
+void Resampler::resample( PartialList::iterator begin, PartialList::iterator end,
+                          double sampleInterval )
+#endif	 
+{
+   Resampler instance( sampleInterval );
+   instance.resample( begin, end );
+}
 
 }	//	end of namespace Loris
 

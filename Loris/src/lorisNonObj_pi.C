@@ -621,10 +621,9 @@ void resample( PartialList * partials, double interval )
 	{
 		ThrowIfNull((PartialList *) partials);
 		
-        Loris::notifier << "resampling " << partials->size() << " Partials" << Loris::endl;
+      notifier << "resampling " << partials->size() << " Partials" << Loris::endl;
 
-        Loris::Resampler resampler( interval );
-        resampler.resample( partials->begin(), partials->end() );
+      Resampler::resample( partials->begin(), partials->end(), interval );
 	}
 	catch( Exception & ex )
     {

@@ -43,7 +43,6 @@
 #include "Exception.h"
 #include "Notifier.h"
 #include "Partial.h"
-#include "PartialList.h"
 
 //	begin namespace
 namespace Loris {
@@ -51,27 +50,40 @@ namespace Loris {
 // ---------------------------------------------------------------------------
 //	constructor
 // ---------------------------------------------------------------------------
+//! Construct a new Resampler using the specified sampling
+//! interval.
+//!
+//! \param  sampleInterval is the resampling interval in seconds, 
+//!         Breakpoint data is computed at integer multiples of
+//!         sampleInterval seconds.
+//! \throw  InvalidArgument if sampleInterval is not positive.
 //
-Resampler::Resampler( double sampleInterval ) 
+Resampler::Resampler( double sampleInterval ) :
+   interval_( sampleInterval )
 {
-	interval_ = sampleInterval;
+   if ( sampleInterval <= 0. )
+   {
+      Throw( InvalidArgument, "Resampler sample interval must be positive." );
+   }
 }
 
 // ---------------------------------------------------------------------------
 //	resample
 // ---------------------------------------------------------------------------
-//	Resample a Partial using this Resampler's stored sampling interval.
-//	The Breakpoint times in the resampled Partial will comprise a  
-//	contiguous sequence of integer multiples of the sampling interval,
-//	beginning with the multiple nearest to the Partial's start time and
-//	ending withthe multiple nearest to the Partial's end time. Resampling
-//	is performed in-place. 
+//! Resample a Partial using this Resampler's stored sampling interval.
+//! The Breakpoint times in the resampled Partial will comprise a  
+//! contiguous sequence of integer multiples of the sampling interval,
+//! beginning with the multiple nearest to the Partial's start time and
+//! ending with the multiple nearest to the Partial's end time. Resampling
+//! is performed in-place. 
+//!
+//! \param  p is the Partial to resample
 //
 void 
 Resampler::resample( Partial & p ) const
 {
 	debugger << "resampling Partial having " << p.numBreakpoints() 
-			 << " Breakpoints" << endl;
+			   << " Breakpoints" << endl;
 
 	//	create the new Partial:
 	Partial newp;
@@ -83,8 +95,8 @@ Resampler::resample( Partial & p ) const
 	
 	//  resample:
 	for ( double tim = firstTime; 
-		  tim < p.endTime() + ( 0.5 * interval_) ; 
-		  tim += interval_ ) 
+		   tim < p.endTime() + ( 0.5 * interval_) ; 
+		   tim += interval_ ) 
 	{
 		Breakpoint newbp( p.frequencyAt( tim ), p.amplitudeAt( tim ), 
 						  p.bandwidthAt( tim ), p.phaseAt( tim ) );
@@ -93,9 +105,7 @@ Resampler::resample( Partial & p ) const
 
 	//	store the new Partial:
 	p = newp;
-
 }
-
 
 }	//	end of namespace Loris
 
