@@ -33,7 +33,8 @@
  *
  */
 
-#include<Breakpoint.h>
+#include <Breakpoint.h>
+#include <algorithm>
 #include <functional>
 
 //	begin namespace
@@ -67,7 +68,18 @@ class BreakpointUtils
 public:
 #endif
 
-//	predicates:
+//	-- free functions --
+//	Add noise (bandwidth) energy to a Breakpoint by computing new 
+//	amplitude and bandwidth values. enoise may be negative, but 
+//	noise energy cannot be removed (negative energy added) in excess 
+//	of the current noise energy.
+#if defined( NO_NESTED_NAMESPACE )
+	static
+#endif
+	void addNoiseEnergy( Breakpoint & bp, double enoise );
+	
+
+//	-- predicates --
 	struct frequency_between : 
 		public std::unary_function< const Breakpoint, bool >
 	{
@@ -87,7 +99,7 @@ public:
 			double _fmin, _fmax;
 	};
 
-//	comparitors:
+//	-- comparitors --
 	struct less_frequency : 
 		public std::binary_function< const Breakpoint, const Breakpoint, bool >
 	{

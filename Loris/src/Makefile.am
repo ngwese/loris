@@ -37,6 +37,7 @@ pkginclude_HEADERS = AiffFile.h	\
 				Oscillator.h	\
 				Partial.h	\
 				PartialList.h	\
+				PartialPtrs.h	\
 				PartialUtils.h	\
 				ReassignedSpectrum.h	\
 				SdifFile.h	\
@@ -55,6 +56,7 @@ libclasses_la_SOURCES = AiffFile.C \
 		BreakpointEnvelope.C \
 		BreakpointEnvelope.h \
 		Breakpoint.h \
+		BreakpointUtils.C \
 		BreakpointUtils.h \
 		Channelizer.C \
 		Channelizer.h \
@@ -90,6 +92,7 @@ libclasses_la_SOURCES = AiffFile.C \
 		Partial.C \
 		Partial.h \
 		PartialList.h \
+		PartialPtrs.h \
 		PartialUtils.h \
 		random.h \
 		ReassignedSpectrum.C \

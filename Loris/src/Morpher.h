@@ -43,17 +43,25 @@ class Envelope;
 class Partial;
 
 // ---------------------------------------------------------------------------
-//	class Morpher
+//	Class Morpher
 //
-//	Encapsulates manipulations involving 
-//	linear interpolation of Partial parameter envelopes. 
+//	Class Morpher performs sound morphing and Partial parameter
+//	envelope interpolation according to a trio of frequency, amplitude,
+//	and bandwidth morphing functions, described by Envelopes.
+//	Sound morphing is achieved by interpolating the time-varying 
+//	frequencies, amplitudes, and bandwidths of corresponding partials 
+//	obtained from reassigned bandwidth-enhanced analysis of the source 
+//	and target sounds. Partial correspondences may be established by 
+//	labeling, using instances of the Channelizer and Distiller classes.
 //
-//	The Morpher object performs sound morphing (cite Lip's papers, and the book)
-//	by interpolating Partial parmeter envelopes of corresponding Partials in
-//	a pair of source sounds. The correspondences are established by labeling.
-//	The Morpher object collects morphed Partials in a list<Partial>, that can
-//	be accessed by clients.
+//	The Morpher collects morphed Partials in a PartialList, that is
+//	accessible to clients.
 //
+//	For more information about sound morphing using 
+//	the Reassigned Bandwidth-Enhanced Additive Sound 
+//	Model, refer to the Loris website: 
+//	www.cerlsoundgroup.org/Loris/.
+//	
 //	Morpher is a leaf class, do not subclass.
 //
 class Morpher

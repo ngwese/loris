@@ -20,68 +20,66 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *
- * Breakpoint.C
+ * BreakpointUtils.C
  *
- * Implementation of class Loris::Breakpoint.
+ * Breakpoint utility functions collected in namespace BreakpointUtils.
  *
- * Kelly Fitz, 16 Aug 99
+ * Kelly Fitz, 23 May 2002
  * loris@cerlsoundgroup.org
  *
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-
 #if HAVE_CONFIG_H
 	#include <config.h>
 #endif
 
-#include<Breakpoint.h>
-#include<Exception.h>
+#include <BreakpointUtils.h>
 #include <cmath>
 
 //	begin namespace
 namespace Loris {
 
-
-#pragma mark -
-#pragma mark construction
-
 // ---------------------------------------------------------------------------
-//	Breakpoint default constructor
+//	addNoise
 // ---------------------------------------------------------------------------
+//	Add noise (bandwidth) energy to a Breakpoint by computing new 
+//	amplitude and bandwidth values. enoise may be negative, but 
+//	noise energy cannot be removed (negative energy added) in excess 
+//	of the current noise energy.
 //
-Breakpoint::Breakpoint( void ) :
-	_frequency( 0. ),
-	_amplitude( 0. ),
-	_bandwidth( 0. ),
-	_phase( 0. )
+#if defined( NO_NESTED_NAMESPACE )
+static
+#endif
+void 
+BreakpointUtils::addNoiseEnergy( Breakpoint & bp, double enoise )
 {
-}
-
-// ---------------------------------------------------------------------------
-//	Breakpoint constructor
-// ---------------------------------------------------------------------------
-//	Instantaneous phase (p) defaults to 0.
-//	Values are not checked for validity.
-//
-Breakpoint::Breakpoint( double f, double a, double b, double p ) :
-	_frequency( f ),
-	_amplitude( a ),
-	_bandwidth( b ),
-	_phase( p )
-{
-}
-
-// ---------------------------------------------------------------------------
-//	operator==
-// ---------------------------------------------------------------------------
-bool 
-Breakpoint::operator==( const Breakpoint & rhs ) const
-{
-	return _frequency == rhs._frequency &&
-			_amplitude == rhs._amplitude &&
-			_bandwidth == rhs._bandwidth &&
-			_phase == rhs._phase;
+	//	compute current energies:
+	double e = bp.amplitude() * bp.amplitude();	//	current total energy
+	double n = e * bp.bandwidth();				//	current noise energy
+	
+	//	Assert( e >= n );
+	//	could complain, but its recoverable, just fix it:
+	if ( e < n )
+		e = n;
+	
+	//	guard against divide-by-zero, and don't allow
+	//	the sinusoidal energy to decrease:
+	if ( n + enoise > 0. ) 
+	{
+		//	if new noise energy is positive, total
+		//	energy must also be positive:
+		//	Assert( e + enoise > 0 );
+		bp.setBandwidth( (n + enoise) / (e + enoise) );
+		bp.setAmplitude( std::sqrt(e + enoise) );
+	}
+	else 
+	{
+		//	if new noise energy is negative, leave 
+		//	all sinusoidal energy:
+		bp.setBandwidth( 0. );
+		bp.setAmplitude( std::sqrt( e - n ) );
+	}
 }
 
 }	//	end of namespace Loris

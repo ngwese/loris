@@ -37,13 +37,14 @@
  */
 #include "cs.h"
 
-/* declare a structure holding private internal data */
+/* declare structures holding private internal data */
 typedef struct Lorisplay_priv Lorisplay_priv;
+typedef struct Lorismorph_priv Lorismorph_priv;
 
 /*	Define a structure to hold parameters for the lorisplay module. */
 typedef struct 
 {
-	/*	standard structure holding csoudn global data (esr, ksmps, etc.) */
+	/*	standard structure holding csound global data (esr, ksmps, etc.) */
 	OPDS h;  	
 	
 	/* output */
@@ -55,5 +56,22 @@ typedef struct
 	/* private internal data, used by generator */
 	Lorisplay_priv *bwestore;
 } LORISPLAY;
+
+/*	Define a structure to hold parameters for the lorismorph module. */
+typedef struct 
+{
+	/*	standard structure holding csound global data (esr, ksmps, etc.) */
+	OPDS h;  	
+	
+	/* output */
+	float *result;
+	
+	/* unit generator parameters/arguments */
+	float *time, *srcfilnam, *tgtfilnam, *freqenv, *ampenv, *bwenv, *fadetime;    
+
+	/* private internal data, used by generator */
+	Lorismorph_priv *privstore;
+} LORISMORPH;
+
 
 #endif	/* nef INCLUDE_LORISGENS_H */

@@ -36,12 +36,14 @@
 #endif
 
 #include <Distiller.h>
+#include <Breakpoint.h>
+#include <BreakpointUtils.h>
+#include <Exception.h>
 #include <Partial.h>
 #include <PartialList.h>
-#include <Breakpoint.h>
-#include <Exception.h>
 #include <PartialUtils.h>
 #include <Notifier.h>
+
 #include <algorithm>
 #include <cmath>
 
@@ -276,7 +278,7 @@ Distiller::distill( PartialList & container,
 						PartialList::iterator nextp( it );
 						++nextp;
 						double xse = collectEnergy( time, nextp, upperbound );
-						bp.addNoise( xse );
+						BreakpointUtils::addNoiseEnergy( bp, xse );
 						lastInsert = newp.insert( time, bp );
 					}
 			

@@ -104,11 +104,6 @@ public:
 		parameter configuration to another Analyzer. The list of 
 		collected Partials is not copied. 			
 	 */
-	Analyzer & operator = ( const Analyzer & rhs );
-	/*	Change this Analyzer's parameter configuration to 
-		be identical to that of another Analyzer. The list of 
-		collected Partials is not copied or otherwise modified. 			
-	 */
 	~Analyzer( void );
 	/*	Destroy this Analyzer. 								
 	 */
@@ -120,6 +115,11 @@ public:
 		and analysis window width (main lobe, zero-to-zero, in Hz). 
 		All other Analyzer parameters are (re-)computed from the 
 		frequency resolution and window width. 		
+	 */
+	Analyzer & operator = ( const Analyzer & rhs );
+	/*	Change this Analyzer's parameter configuration to 
+		be identical to that of another Analyzer. The list of 
+		collected Partials is not copied or otherwise modified. 			
 	 */
 
 //	-- analysis --

@@ -52,10 +52,8 @@
 using namespace Loris;
 using namespace std;
 
-static void createPartials(Lorisplay_priv *bwestore);
-static void destroy_partials(Partial *part);
-static void destroy_oscillators(Oscillator *oscp);
-static void lorisplay_cleanup(void * p);
+typedef std::vector< Partial > PARTIALS;
+typedef std::vector< Oscillator > OSCILS;
 
 // ---------------------------------------------------------------------------
 //	sdif_openfile
@@ -102,78 +100,12 @@ static SdifFile * sdif_openfile( const std::string & filename )
 }
 
 // ---------------------------------------------------------------------------
-//	Lorisplay_priv definition
-// ---------------------------------------------------------------------------
-// 	Define a structure holding private internal data.
-//
-typedef std::vector< Partial > PARTIALS;
-typedef std::vector< Oscillator > OSCILS;
-
-struct Lorisplay_priv
-{
-	OSCILS oscp;
-	PARTIALS part;
-	
-	std::vector< double > dblbuffer;
-	
-	Lorisplay_priv( LORISPLAY * params );
-	~Lorisplay_priv( void );
-	
-private:
-	void import_partials( const std::string & sdiffilname );
-	void apply_fadetime( double fadetime );
-}; 
-
-// ---------------------------------------------------------------------------
-//	Lorisplay_priv contructor
-// ---------------------------------------------------------------------------
-//
-Lorisplay_priv::Lorisplay_priv( LORISPLAY * params ) :
-	dblbuffer( ksmps, 0. )
-{
-	std::string sdiffilname;
-
-	//	determine the name of the SDIF file to use:
-	//	this code adapted from ugens8.c pvset()
-	if ( *params->ifilnam == sstrcod )
-	{
-		//	use strg name, if given:
-		sdiffilname = unquote(params->STRARG);
-	}
-    /* unclear what this does, not described in pvoc docs
-    else if ((long)*p->ifilnam <= strsmax && strsets != NULL && strsets[(long)*p->ifilnam])
-      strcpy(sdiffilname, strsets[(long)*p->ifilnam]);
-     */
-    else 
-    {
-    	//	else use loris.filnum
-    	char tmp[32];
-    	sprintf(tmp,"loris.%d", (int)*params->ifilnam);
-		sdiffilname = tmp;
-	}
-	
-	//	allocate Partials and Oscillators:
-	import_partials( sdiffilname );
-	apply_fadetime( *params->fadetime );
-}
-
-// ---------------------------------------------------------------------------
-//	Lorisplay_priv detructor
-// ---------------------------------------------------------------------------
-//
-Lorisplay_priv::~Lorisplay_priv( void )
-{
-}
-
-
-// ---------------------------------------------------------------------------
-//	Lorisplay_priv import_partials
+//	import_partials
 // ---------------------------------------------------------------------------
 //	Import the Partials, if necessary, and make a private copy of them,
 //	and allocate Oscillators for each Partial.
 //
-void 
-Lorisplay_priv::import_partials( const std::string & sdiffilname )
+static void import_partials( const std::string & sdiffilname, PARTIALS & part )
 {
 	SdifFile * f = sdif_openfile( sdiffilname );
 	if ( f == NULL )
@@ -184,19 +116,14 @@ Lorisplay_priv::import_partials( const std::string & sdiffilname )
 	//	fadetimes might be different!
 	part.reserve( f->partials().size() );
 	part.insert( part.begin(), f->partials().begin(), f->partials().end() );
-	
-	//	allocate the Oscillators:
-	oscp.resize( part.size() );	
 }
 
-
 // ---------------------------------------------------------------------------
-//	Lorisplay_priv apply_fadetime
+//	apply_fadetime
 // ---------------------------------------------------------------------------
 //	Fade Partials in and out, if fadetime > 0.
 //
-void 
-Lorisplay_priv::apply_fadetime( double fadetime )
+static void apply_fadetime( PARTIALS & part, double fadetime )
 {
 	//	nothing to do if fadetime is zero:
 	if (fadetime <= 0.)
@@ -263,6 +190,9 @@ Lorisplay_priv::apply_fadetime( double fadetime )
 	
 }
 
+// ---------------------------------------------------------------------------
+//	helpers
+// ---------------------------------------------------------------------------
 
 //function gets the amplitude of a partial at a specific time
 static
@@ -304,8 +234,59 @@ void init_oscillator(Partial *part, Oscillator *oscp, float time)
 
 }
 
+// ---------------------------------------------------------------------------
+//	Lorisplay_priv definition
+// ---------------------------------------------------------------------------
+// 	Define a structure holding private internal data.
+//
+struct Lorisplay_priv
+{
+	OSCILS oscp;
+	PARTIALS part;
+	
+	std::vector< double > dblbuffer;
+	
+	Lorisplay_priv( LORISPLAY * params );
+	~Lorisplay_priv( void ) {}
+}; 
+
+// ---------------------------------------------------------------------------
+//	Lorisplay_priv contructor
+// ---------------------------------------------------------------------------
+//
+Lorisplay_priv::Lorisplay_priv( LORISPLAY * params ) :
+	dblbuffer( ksmps, 0. )
+{
+	std::string sdiffilname;
+
+	//	determine the name of the SDIF file to use:
+	//	this code adapted from ugens8.c pvset()
+	if ( *params->ifilnam == sstrcod )
+	{
+		//	use strg name, if given:
+		sdiffilname = unquote(params->STRARG);
+	}
+    /* unclear what this does, not described in pvoc docs
+    else if ((long)*p->ifilnam <= strsmax && strsets != NULL && strsets[(long)*p->ifilnam])
+      strcpy(sdiffilname, strsets[(long)*p->ifilnam]);
+     */
+    else 
+    {
+    	//	else use loris.filnum
+    	char tmp[32];
+    	sprintf(tmp,"loris.%d", (int)*params->ifilnam);
+		sdiffilname = tmp;
+	}
+	
+	//	allocate Partials and Oscillators:
+	import_partials( sdiffilname, part );
+	oscp.resize( part.size() );	
+	apply_fadetime( part, *params->fadetime );
+}
 
 //function runs at initialization time for lorisplay
+static void lorisplay_cleanup(void * p);
+
 extern "C"
 void lorisplay_setup(LORISPLAY *p)
 {
@@ -361,3 +342,42 @@ void lorisplay_cleanup(void * p)
 	delete tp->bwestore;
 }
 
+// ---------------------------------------------------------------------------
+//	Lorismorph_priv definition
+// ---------------------------------------------------------------------------
+// 	Define a structure holding private internal data for lorismorph
+//
+struct Lorismorph_priv
+{
+	OSCILS oscp;
+	
+	PARTIALS src_part_labeled, tgt_part_labeled;
+	PARTIALS src_part_unlabeled, tgt_part_unlabeled;
+	
+	std::vector< double > dblbuffer;
+	
+	Lorismorph_priv( LORISMORPH * params );
+	~Lorismorph_priv( void );
+}; 
+
+// ---------------------------------------------------------------------------
+//	Lorismorph_priv contructor
+// ---------------------------------------------------------------------------
+//
+Lorismorph_priv::Lorismorph_priv( LORISMORPH * params ) :
+	dblbuffer( ksmps, 0. )
+{
+}
+
+/*
+	Yuck. It appears that there's NO WAY to specify two string arguments at all.
+	
+	I think that the way to do this is going to be: implement a reader in the
+	fashion of lpread, and give it a way to specify an index number, something 
+	like lpslot, that can be used to refer to that data later. Then, use this
+	preloaded data in lorismorph, and maybe optionally lorisplay too.
+	
+	The nice thing about a reader is that it could allow is to do temporal
+	feature alignment in Csound too, as in the lp case, where the reader
+	has a time index.
+*/

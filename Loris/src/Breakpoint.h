@@ -57,7 +57,7 @@ namespace Loris {
 //
 class Breakpoint
 {
-//	-- envelope parameters --
+//	-- instance variables --
 	double _frequency;	//	hertz
 	double _amplitude;	//	absolute
 	double _bandwidth;	//	fraction of total energy that is noise energy
@@ -111,11 +111,6 @@ public:
 	 */
  	void setPhase( double x ) { _phase = x; }
 	
-//	add noise (bandwidth) energy:
-//	should this really be part of the interface?
-//	no, it should be in BreakpointUtils, put it there!
-	void addNoise( double x );
-
 };	//	end of class Breakpoint
 
 }	//	end of namespace Loris

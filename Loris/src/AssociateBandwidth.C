@@ -35,10 +35,12 @@
 	#include <config.h>
 #endif
 
-#include<AssociateBandwidth.h>
-#include<Exception.h>
-#include<Notifier.h>
-#include<Breakpoint.h>
+#include <AssociateBandwidth.h>
+#include <Breakpoint.h>
+#include <BreakpointUtils.h>
+#include <Exception.h>
+#include <Notifier.h>
+
 #include <algorithm>
 #include <cmath>
 
@@ -240,7 +242,7 @@ AssociateBandwidth::accumulateNoise( double freq, double amp )
 void 
 AssociateBandwidth::associate( Breakpoint & bp )
 {		
-	bp.addNoise( computeNoiseEnergy( bp.frequency(), bp.amplitude() ) );
+	BreakpointUtils::addNoiseEnergy( bp, computeNoiseEnergy( bp.frequency(), bp.amplitude() ) );
 }
 
 
