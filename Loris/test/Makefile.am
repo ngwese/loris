@@ -29,7 +29,7 @@ test_pi_SOURCES = pitest.c
 if DARWIN
 test_pi_LDADD = $(top_builddir)/src/.libs/libloris.a $(LINK_FFTW) -lstdc++
 else
-test_pi_LDADD = $(top_builddir)/src/libloris.la
+test_pi_LDADD = $(top_builddir)/src/libloris.la -lstdc++
 endif
 
 # Morpher unit tests
