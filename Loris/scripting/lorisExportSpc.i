@@ -41,13 +41,6 @@
 #include "ExportSpc.h"
 using Loris::ExportSpc;
 
-//	for procedural interface construction and 
-//	destruction, see comment below:
-#define LORIS_OPAQUE_POINTERS 0
-#include "loris.h"
-%}
-
-
 // ---------------------------------------------------------------------------
 //	class ExportSpc
 //	
@@ -60,35 +53,24 @@ class ExportSpc
 {
 public:
 //	construction:
-//
-//	Mac ONLY problem:
-//	use the construction and destruction functions in the 
-//	procedural interface until I can determine why deleting
-//	objects with destructors defined out of line (in the Loris
-//	DLL) cause the Macintosh to crash. Using the procedural 
-//	interface causes the objects with out of line destructors
-//	to be constructed and destructed in the DLL, instead of 
-//	across DLL boundaries, which might make a difference on
-//	the Mac.
-//
-%addmethods 
-{
-	ExportSpc( double midiPitch )
-	{
-		return createExportSpc( midiPitch );
-	}
+	ExportSpc( double midiPitch );
 	/*	Construct a new ExportSpc instance configured from the 
 		given MIDI note number. All other ExportSpc parameters
 		are computed fromthe specified note number.
 	 */
-	~ExportSpc( void )
-	{
-		destroyExportSpc( self );
-	}
+	~ExportSpc( void );
 	/*	Destroy this ExportSpc instance.
 	 */
-	 
-//	writing:
+
+	void write( const char * filename, const PartialList & partials );
+	/*	Export the given list of Partials to an spc file having the
+		specified path (or name) according to the current configuration 
+		of this ExportSpc instance.
+	 */
+/*	 
+%addmethods 
+{	 
+	//	writing ptr replacing:
 	void write( const char * filename, const PartialList * partials )
 	{
 		self->write( filename, *partials );
@@ -96,10 +78,9 @@ public:
 	/*	Export the given list of Partials to an spc file having the
 		specified path (or name) according to the current configuration 
 		of this ExportSpc instance.
-	 */
-		
+	 * /
 }
-
+*/
 //	configuration:
 	void configure( double midiPitch );
 	/*	Set the MIDI note number (69.00 = A440) for this spc file,
