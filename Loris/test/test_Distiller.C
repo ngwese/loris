@@ -65,7 +65,7 @@ static bool float_equal( double x, double y )
 {
 	cout << "\t" << x << " == " << y << " ?" << endl;
 	#define EPSILON .0000001
-	if ( std::fabs(x) > 0. )
+	if ( std::fabs(x) > EPSILON )
 		return std::fabs((x-y)/x) < EPSILON;
 	else
 		return std::fabs(x-y) < EPSILON;

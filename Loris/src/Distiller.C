@@ -206,10 +206,10 @@ Distiller::distill( PartialList & partials )
 //	Return true if the specified Partials overlap temporally.
 //
 static bool
-overlap( const Partial & p1, const Partial & p2 )
+overlap( const Partial & p1, const Partial & p2, double fadeTime )
 {
-	return p1.startTime() < p2.endTime() && 
-		   p1.endTime() > p2.startTime();
+	return (p1.startTime() - fadeTime) < (p2.endTime() + fadeTime) && 
+		   (p1.endTime() + fadeTime) > (p2.startTime() - fadeTime);
 }
 
 // ---------------------------------------------------------------------------
@@ -220,11 +220,11 @@ overlap( const Partial & p1, const Partial & p2 )
 //
 template <typename Iterator>
 static bool
-overlap( Iterator partial, Iterator begin, Iterator end )
+overlap( Iterator partial, Iterator begin, Iterator end, double fadeTime )
 {
 	for ( Iterator it = begin; it != end; ++it )
 	{
-		if ( overlap( *partial, *it ) )
+		if ( overlap( *partial, *it, fadeTime ) )
 			return true;
 	}
 	return false;
@@ -422,6 +422,96 @@ static void mergeNonOverlapping( const Partial & src, Partial & dst, double fade
 	}
 }
 
+// ----------- makeNullBefore -----------
+//
+// return a null (zero-amplitude) Breakpoint
+// to preceed the specified Breakpoint
+Breakpoint makeNullBefore( const Breakpoint & bp, double fadeTime )
+{
+	Breakpoint ret( bp );
+	// adjust phase
+	double dp = 2. * Pi * fadeTime * bp.frequency();
+	ret.setPhase( std::fmod( ret.phase() - dp, 2. * Pi ) );
+	ret.setAmplitude(0.);
+	
+	return ret;
+}
+
+// ----------- makeNullAfter -----------
+//
+// return a null (zero-amplitude) Breakpoint
+// to succeed the specified Breakpoint
+Breakpoint makeNullAfter( const Breakpoint & bp, double fadeTime )
+{
+	Breakpoint ret( bp );
+	// adjust phase
+	double dp = 2. * Pi * fadeTime * bp.frequency();
+	ret.setPhase( std::fmod( ret.phase() + dp, 2. * Pi ) );
+	ret.setAmplitude(0.);
+	
+	return ret;
+}
+
+static void mergeNonOverlapping2( const Partial & src, Partial & distilled, double fadeTime )
+{
+	Partial::const_iterator cont_beg = src.begin();
+	Partial::const_iterator cont_end = src.end();
+	
+	if ( cont_beg != cont_end )
+	{
+		// remove Breakpoints from distilled, if necessary:
+		Partial::iterator it = distilled.findAfter( cont_beg.time() - (2.*fadeTime) );
+		Partial::const_iterator cont_last = --Partial::const_iterator(cont_end);
+		double endtime = cont_last.time();
+		while ( it != distilled.end() && it.time() < endtime + (2.*fadeTime) )
+		{
+			it = distilled.erase( it );
+		}
+
+		// merge contributing Breakpoints:
+		Partial::const_iterator insert = cont_beg;
+		while ( insert != cont_end )
+		{
+			distilled.insert( insert.time(), insert.breakpoint() );
+			++insert;
+		}
+	
+		//
+		// INSERT ZEROS HERE!!!!!
+		//
+		// need one, or possibly two before each onset
+		// (only need to do this if there are contributing
+		// Breakpoints)
+		
+		// before contributing region:
+		if ( distilled.amplitudeAt( cont_beg.time() - fadeTime ) > 0. )
+		{
+			Partial::iterator inserted = 
+				distilled.insert( cont_beg.time() - fadeTime, 
+								makeNullBefore( cont_beg.breakpoint(), fadeTime ) );
+			if ( (--inserted)->amplitude() > 0. )
+			{
+				Assert( inserted.time() < cont_beg.time() - (2*fadeTime) );
+				distilled.insert( inserted.time() + fadeTime, makeNullAfter( inserted.breakpoint(), fadeTime ) );
+			}
+		}
+
+		// after contributing region:
+		if ( distilled.amplitudeAt( endtime + fadeTime ) > 0. )
+		{
+			Partial::iterator inserted = 
+				distilled.insert( endtime + fadeTime, makeNullAfter( cont_last.breakpoint(), fadeTime ) );
+			
+			if ( (++inserted)->amplitude() > 0. )
+			{
+				Assert( inserted.time() > endtime + (2*fadeTime) );
+				distilled.insert( inserted.time() - fadeTime, makeNullBefore( inserted.breakpoint(), fadeTime ) );
+			}
+
+		}
+	}					  
+}
+
 // ---------------------------------------------------------------------------
 //	distill_aux		(STATIC)
 // ---------------------------------------------------------------------------
@@ -445,7 +535,7 @@ static void distill_aux( PartialList & partials, int label,
 		//	skip this Partial if it overlaps with any longer Partial:
 		//	Need only consider earlier Partials in the list, because
 		// 	the list is sorted by Partial duration.
-		if ( ! overlap( it, partials.begin(), it ) )
+		if ( ! overlap( it, partials.begin(), it, fadeTime ) )
 		{
 			//	absorb all shorter partials' energy as noise,
 			//	add a copy of this partial to the new partial
@@ -459,13 +549,13 @@ static void distill_aux( PartialList & partials, int label,
 			PartialList::iterator nextp( it );
 			while ( ++nextp != partials.end() )
 			{	
-				if ( overlap(*it, *nextp) )
+				if ( overlap(*it, *nextp, fadeTime) )
 				{
 					debugger << "absorbing energy in Partial starting at time " << nextp->startTime() << endl;
 					it->absorb( *nextp );
 				}
 			}
-			mergeNonOverlapping( *it, newp, fadeTime );			
+			mergeNonOverlapping2( *it, newp, fadeTime );			
 		}		
 	}
 	newp.setLabel( label );
