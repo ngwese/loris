@@ -16,11 +16,13 @@
 // ===========================================================================
 
 #include "LorisLib.h"
-#include "Filter.h"
+//#include "Filter.h"
 #include <vector>
-#include <memory>	//	for auto_ptr
+//#include <memory>	//	for auto_ptr
 
 Begin_Namespace( Loris )
+
+class Filter;
 
 // ---------------------------------------------------------------------------
 //	class Oscillator
@@ -41,7 +43,7 @@ class Oscillator
 public:
 //	construction:
 	Oscillator( void );
-	// ~Oscillator( void );	//	use compiler-generated
+	~Oscillator( void );	//	use compiler-generated
 
 //	reset the whole state at once:
 //	(get rid of this)
@@ -77,7 +79,8 @@ private:
 	double _phase;		//	radians
 
 //	filter for stochastic modulation:
-	std::auto_ptr< Filter > _filter;
+	//std::auto_ptr< Filter > _filter;
+	Filter * _filter;
 
 };	//	end of class Oscillator
 

@@ -37,17 +37,27 @@ Oscillator::Oscillator( void ) :
 	_frequency( 0. ),	//	radians per sample
 	_amplitude( 0. ),	//	absolute
 	_bandwidth( 0. ),	//	bandwidth coefficient (noise energy / total energy)
-	_phase( 0. )		//	radians
+	_phase( 0. ),		//	radians
+	_filter( Null )
 {
 	//	Chebychev order 3, cutoff 500, ripple -1.
-	static const double gain = 4.663939184e+04;
+	static const double filter_gain = 4.663939184e+04;
 	static const double extraScaling = 4.5;	//	was 6.
 	static const double maCoefs[] = { 1., 3., 3., 1. }; 
-	static const double arCoefs[] = { 0.9320209046, -2.8580608586, 2.9258684252, 0. };
+	static const double arCoefs[] = { 0., 2.9258684252, -2.8580608586, 0.9320209046 };
 						   
-	_filter.reset( new Filter( vector< double >( maCoefs, maCoefs + 4 ), 
-							   vector< double >( arCoefs, arCoefs + 4 ),
-							   gain / extraScaling ) );
+	_filter = new Filter( maCoefs, maCoefs + 4, 
+						  arCoefs, arCoefs + 4,
+						  extraScaling / filter_gain );
+}
+
+// ---------------------------------------------------------------------------
+//	Oscillator destruction
+// ---------------------------------------------------------------------------
+//
+Oscillator::~Oscillator( void )
+{
+	delete _filter;
 }
 
 // ---------------------------------------------------------------------------
@@ -71,7 +81,7 @@ Oscillator::reset( double radf, double amp, double bw, double ph )
 //	the specified new values.
 //
 //	In Lemur, we used to synthesize at zero amplitude above the Nyquist 
-//	rate, could stick that in here sometime, except that the Osciillator
+//	rate, could stick that in here sometime, except that the Oscillator
 //	has no knowledge of sample rate... Should be handled by the Synthesizer.
 //
 void
@@ -108,7 +118,7 @@ Oscillator::generateSamples( vector< double > & buffer, long howMany, long offse
 			//
 			//	get a filtered noise sample, use scale as std deviation:
 			//	can build scale into filter gain.
-			noise = _filter->nextSample( gaussian_normal() );
+			noise = _filter->sample( gaussian_normal() );
 
 			//	compute modulation:
 			//
