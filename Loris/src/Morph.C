@@ -41,26 +41,6 @@ Begin_Namespace( Loris )
 #pragma mark -
 #pragma mark stuff
 
-// ---------------------------------------------------------------------------
-//	select
-// ---------------------------------------------------------------------------
-//	From all, select Partials having the specified label, return a vector
-//	of pointers to those Partials.
-//	
-list< Partial >
-select( const list<Partial> & all, int label )
-{
-	list<Partial> ret;
-	
-	list<Partial>::const_iterator it;
-	for ( it = all.begin(); it != all.end(); ++it ) {
-		if ( (*it).label() == label )
-			ret.push_back( *it );
-	}
-	
-	return ret;
-}
-
 
 // ---------------------------------------------------------------------------
 //	dilate
@@ -169,21 +149,84 @@ WeightFunction::weightAtTime( double time ) const
 #pragma mark construction
 
 // ---------------------------------------------------------------------------
-//	Morph constructor
+//	Morph constructor (single morph function)
 // ---------------------------------------------------------------------------
-//	Should clean up the pointers here, and use auto_ptrs, but as long as
-//	this class is not subclassed (so no constructor further down the chain
-//	of inheritence can throw and exception), then there won't be a problem
-//	here, because the only thing that can generate an exception is the 
-//	Distiller construction, and since the other pointers are Null, we won't
-//	have anything else to clean up. FIX ANYWAY, ITS WRONG.
+//	Use auto_ptrs instead to clean up this obscene mess.
 //
-Morph::Morph( void ) :
+Morph::Morph( const WeightFunction & f ) :
 	_freqFunction( Null ),
 	_ampFunction( Null ),
 	_bwFunction( Null ),
-	_distiller( new Distiller() )
+	_minlabel( 0 ),
+	_maxlabel( 200 ),
+	_crossfadelabel( 0 )
 {
+	try {
+		setFrequencyFunction( f );
+		setAmplitudeFunction( f );
+		setBandwidthFunction( f );
+	}
+	catch (...) {
+		delete _freqFunction;
+		delete _ampFunction;
+		delete _bwFunction;
+		throw;
+	}
+}
+
+// ---------------------------------------------------------------------------
+//	Morph constructor (distinct morph functions)
+// ---------------------------------------------------------------------------
+//	Use auto_ptrs instead to clean up this obscene mess.
+//
+Morph::Morph( const WeightFunction & ff, 
+			  const WeightFunction & af, 
+			  const WeightFunction & bwf ) :
+	_freqFunction( Null ),
+	_ampFunction( Null ),
+	_bwFunction( Null ),
+	_minlabel( 0 ),
+	_maxlabel( 200 ),
+	_crossfadelabel( 0 )
+{
+	try {
+		setFrequencyFunction( ff );
+		setAmplitudeFunction( af );
+		setBandwidthFunction( bwf );
+	}
+	catch (...) {
+		delete _freqFunction;
+		delete _ampFunction;
+		delete _bwFunction;
+		throw;
+	}
+}
+
+// ---------------------------------------------------------------------------
+//	Morph copy constructor
+// ---------------------------------------------------------------------------
+//	Use auto_ptrs instead to clean up this obscene mess.
+//
+Morph::Morph( const Morph & other ) :
+	_partials( other._partials ),
+	_freqFunction( Null ),
+	_ampFunction( Null ),
+	_bwFunction( Null ),
+	_minlabel( other._minlabel ),
+	_maxlabel( other._maxlabel ),
+	_crossfadelabel( other._crossfadelabel )
+{
+	try {
+		setFrequencyFunction( other.frequencyFunction() );
+		setAmplitudeFunction( other.amplitudeFunction() );
+		setBandwidthFunction( other.bandwidthFunction() );
+	}
+	catch (...) {
+		delete _freqFunction;
+		delete _ampFunction;
+		delete _bwFunction;
+		throw;
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -195,81 +238,47 @@ Morph::~Morph( void )
 	delete _freqFunction;
 	delete _ampFunction;
 	delete _bwFunction;
-	delete _distiller;
 }
 
 // ---------------------------------------------------------------------------
-//	setFreqFunction
+//	setFrequencyFunction
 // ---------------------------------------------------------------------------
 //
 void
-Morph::setFreqFunction( const WeightFunction & f )
+Morph::setFrequencyFunction( const WeightFunction & f )
 {
 	delete _freqFunction;
 	_freqFunction = new WeightFunction( f );
 }
 
 // ---------------------------------------------------------------------------
-//	setAmpFunction
+//	setAmplitudeFunction
 // ---------------------------------------------------------------------------
 //
 void
-Morph::setAmpFunction( const WeightFunction & f )
+Morph::setAmplitudeFunction( const WeightFunction & f )
 {
 	delete _ampFunction;
 	_ampFunction = new WeightFunction( f );
 }
 
 // ---------------------------------------------------------------------------
-//	setBwFunction
+//	setBandwidthFunction
 // ---------------------------------------------------------------------------
 //
 void
-Morph::setBwFunction( const WeightFunction & f )
+Morph::setBandwidthFunction( const WeightFunction & f )
 {
 	delete _bwFunction;
 	_bwFunction = new WeightFunction( f );
 }
 
 // ---------------------------------------------------------------------------
-//	doit
-// ---------------------------------------------------------------------------
-//
-void
-Morph::doit( const list<Partial> & plist1, const list<Partial> & plist2 )
-{
-	Distiller distill1, distill2;
-	//	loop over lots of labels:
-	for ( int label = 1; label < 300; ++label ) {
-		// find partials with the correct label:
-		list<Partial> sublist1 = select( plist1, label );
-		list<Partial> sublist2 = select( plist2, label );
-		
-		//cout << sublist1.size() << " and " << sublist2.size() << "partials" << endl;
-
-		// sublist1.splice( sublist1.begin(), select( plist1, label ) );
-		// sublist2.splice( sublist2.begin(), select( plist2, label ) );
-		
-		if ( sublist1.size() == 0 && sublist2.size() == 0 ) {
-			continue;
-		}
-		
-		//	distill the sublists into single partials:
-		//const Partial & p1 = distill1.distill( sublist1.begin(), sublist1.end(), label );
-		//const Partial & p2 = distill2.distill( sublist2.begin(), sublist2.end(), label );
-		
-		cout << "morphing partials with label " << label << endl;
-		morphPartial( distill1.distill( sublist1.begin(), sublist1.end(), label ), 
-					  distill2.distill( sublist2.begin(), sublist2.end(), label ) );
-	}
-}
-
-// ---------------------------------------------------------------------------
-//	freqWeight
+//	frequencyFunction
 // ---------------------------------------------------------------------------
 //
 inline const WeightFunction & 
-Morph::freqWeight(void) const 
+Morph::frequencyFunction(void) const 
 { 
 //	make sure the morphing function has been specified:
 	Assert( _freqFunction != Null );
@@ -278,11 +287,11 @@ Morph::freqWeight(void) const
 }
 
 // ---------------------------------------------------------------------------
-//	ampWeight
+//	amplitudeFunction
 // ---------------------------------------------------------------------------
 //
 inline const WeightFunction & 
-Morph::ampWeight(void) const
+Morph::amplitudeFunction(void) const
 { 
 //	make sure the morphing function has been specified:
 	Assert( _ampFunction != Null );
@@ -291,16 +300,99 @@ Morph::ampWeight(void) const
 }
 
 // ---------------------------------------------------------------------------
-//	bwWeight
+//	bandwidthFunction
 // ---------------------------------------------------------------------------
 //
 inline const WeightFunction & 
-Morph::bwWeight(void) const
+Morph::bandwidthFunction(void) const
 { 
 //	make sure the morphing function has been specified:
 	Assert( _bwFunction != Null );
 	
 	return * _bwFunction; 
+}
+
+// ---------------------------------------------------------------------------
+//	setRange
+// ---------------------------------------------------------------------------
+void 
+Morph::setRange( int min, int max )
+{
+	if ( min > max ) 
+		swap( min, max );
+	_minlabel = min;
+	_maxlabel = max;
+}
+
+// ---------------------------------------------------------------------------
+//	crossfadePartials
+// ---------------------------------------------------------------------------
+//	The Partials in the two lists identified by the specified label (default
+//	is 0) are considered to have no correspondences, so they are just faded 
+//	in and out, and not actually morphed. This is the same as morphing each 
+//	with an empty Partial.
+//
+void 
+Morph::crossfadePartials( const list<Partial> & plist1, 
+						  const list<Partial> & plist2, 
+						  int label )
+{
+	//	fade Partials in the first list (the morph source, corresponding
+	//	to a morph weight of 0):
+	for ( list< Partial >::const_iterator it = plist1.begin(); it != plist1.end(); ++it ) {
+		if ( (*it).label() == label ) {
+			morphPartial( *it, Partial() );
+		}
+	}
+	
+	//	fade Partials in the second list (the morph destination, corresponding
+	//	to a morph weight of 1):
+	for ( list< Partial >::const_iterator it = plist2.begin(); it != plist2.end(); ++it ) {
+		if ( (*it).label() == label ) {
+			morphPartial( Partial(), *it );
+		}
+	}
+}
+
+// ---------------------------------------------------------------------------
+//	morph
+// ---------------------------------------------------------------------------
+//
+void
+Morph::morph( const list<Partial> & plist1, const list<Partial> & plist2 )
+{
+	Distiller distill1, distill2;
+	
+	//	loop over lots of labels:
+	for ( int label = _minlabel; label < _maxlabel; ++label ) {
+		if ( label == _crossfadelabel ) {
+			//	do the unlabeled Partials:
+			crossfadePartials( plist1, plist2, _crossfadelabel );
+		}
+		else {
+			//	collect Partials in plist1:
+			list<Partial> sublist1;
+			collectByLabel( plist1.begin(), plist1.end(), sublist1, label );
+
+			//	collect Partials in plist2:
+			list<Partial> sublist2;
+			collectByLabel( plist2.begin(), plist2.end(), sublist2, label );
+			
+			//	don't bother if there's no Partials:
+			if ( sublist1.size() == 0 && sublist2.size() == 0 ) {
+				continue;
+			}
+			
+			cout << "morphing " << sublist1.size() << " and "
+				<< sublist2.size() << " partials with label " << label << endl;
+			
+			//	distill and morph:	
+			//	(either distillation could yield an empty Partial, 
+			//	but morphPartial can deal with it)
+			morphPartial( distill1.distill( sublist1.begin(), sublist1.end(), label ), 
+						  distill2.distill( sublist2.begin(), sublist2.end(), label ) );
+		}
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -322,9 +414,9 @@ Morph::morphPartial( const Partial & p1, const Partial & p2 )
 	
 	//	loop over Breakpoints in first partial:
 	for ( const Breakpoint * bp1 = p1.head(); bp1 != Null; bp1 = bp1->next() ) {
-		double alphaF = freqWeight().weightAtTime( bp1->time() );
-		double alphaA = ampWeight().weightAtTime( bp1->time() );
-		double alphaBW = bwWeight().weightAtTime( bp1->time() );
+		double alphaF = frequencyFunction().weightAtTime( bp1->time() );
+		double alphaA = amplitudeFunction().weightAtTime( bp1->time() );
+		double alphaBW = bandwidthFunction().weightAtTime( bp1->time() );
 		
 		double amp2 = ( p2.duration() > 0. ) ? 
 			p2.amplitudeAt( bp1->time() ) : 0.;
@@ -345,9 +437,9 @@ Morph::morphPartial( const Partial & p1, const Partial & p2 )
 	
 	//	now do it for the other Partial:
 	for ( const Breakpoint * bp2 = p2.head(); bp2 != Null; bp2 = bp2->next() ) {
-		double alphaF = 1. - freqWeight().weightAtTime( bp2->time() );
-		double alphaA = 1. - ampWeight().weightAtTime( bp2->time() );
-		double alphaBW = 1. - bwWeight().weightAtTime( bp2->time() );
+		double alphaF = 1. - frequencyFunction().weightAtTime( bp2->time() );
+		double alphaA = 1. - amplitudeFunction().weightAtTime( bp2->time() );
+		double alphaBW = 1. - bandwidthFunction().weightAtTime( bp2->time() );
 		
 		double amp1 = ( p1.duration() > 0. ) ? 
 			p1.amplitudeAt( bp2->time() ) : 0.;
@@ -373,6 +465,41 @@ Morph::morphPartial( const Partial & p1, const Partial & p2 )
 		_partials.push_back( newp );
 	}
 
+}
+
+// ---------------------------------------------------------------------------
+//	collectByLabel
+// ---------------------------------------------------------------------------
+//	Copy all Partials in the range [start, end) having the specified label 
+//	into collector. It would be more efficient to splice the element from
+//	the original list, but those lists are immutable, so just copy it.
+//
+int
+Morph::collectByLabel( const list<Partial>::const_iterator & start, 
+					   const list<Partial>::const_iterator & end, 
+					   list<Partial> & collector, 
+					   int label ) const
+{
+	//	function object for selecting by label:
+	struct LabelIs
+	{
+		int _x;
+		LabelIs( int x ) : _x(x) {}
+		boolean operator() (const Partial & p) const {
+			return p.label() == _x;
+		}
+	};
+		
+	int n = 0;
+	for ( list< Partial >::const_iterator it = find_if( start, end, LabelIs( label ) );
+			  it != end; 
+			  it = find_if( ++it, end, LabelIs( label ) ) ) {
+		collector.push_back( *it );
+		++n;
+	}
+	
+	//cout << "found " << n << " partials labeled " << label << endl;
+	return n;
 }
 
 

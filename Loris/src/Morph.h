@@ -19,7 +19,6 @@
 Begin_Namespace( Loris )
 
 class WeightFunction;
-class Distiller;
 
 // ---------------------------------------------------------------------------
 //	class Morph
@@ -29,24 +28,49 @@ class Morph
 //	-- public interface --
 public:
 //	construction:
-	Morph( void );
+	Morph( const WeightFunction & f );
+	Morph( const WeightFunction & ff, 
+		   const WeightFunction & af, 
+		   const WeightFunction & bwf );
+	Morph( const Morph & other );
 	~Morph( void );
-	
-	void setFreqFunction( const WeightFunction & f );
-	void setAmpFunction( const WeightFunction & f );
-	void setBwFunction( const WeightFunction & f );
-	
+
+//	morph two sounds (lists of Partials labeled to indicate
+//	correspondences) into a single one:
+	void morph( const std::list<Partial> & plist1, const std::list<Partial> & plist2 );
+
+//	single Partial morph:
 	void morphPartial( const Partial & p1, const Partial & p2 );
-	void doit( const std::list<Partial> & plist1, const std::list<Partial> & plist2 );
 	
+//	morphed Partial access:	
 	std::list< Partial > & partials(void) { return _partials; }
 
+//	crossfade Partials with no correspondences:
+	void crossfadePartials( const std::list<Partial> & plist1, 
+							const std::list<Partial> & plist2, 
+							int label = 0);
 
-//	-- private helpers --
-private:	
-	inline const WeightFunction & freqWeight(void) const;
-	inline const WeightFunction & ampWeight(void) const;
-	inline const WeightFunction & bwWeight(void) const;
+//	specify morphing functions:	
+	void setFrequencyFunction( const WeightFunction & f );
+	void setAmplitudeFunction( const WeightFunction & f );
+	void setBandwidthFunction( const WeightFunction & f );
+
+	inline const WeightFunction & frequencyFunction( void ) const;
+	inline const WeightFunction & amplitudeFunction( void ) const;
+	inline const WeightFunction & bandwidthFunction( void ) const;
+	
+//	label range access:
+	std::pair< int, int > range( void ) const { return std::make_pair( _minlabel, _maxlabel ); }
+	void setRange( int min, int max );
+	
+	int crossfadeLabel( void ) const { return _crossfadelabel; }
+	void setCrossfadeLabel( int l ) { _crossfadelabel = l; }
+	
+//	-- helpers --
+protected:	
+	int collectByLabel( const std::list<Partial>::const_iterator & start, 
+						const std::list<Partial>::const_iterator & end, 
+						std::list<Partial> & collector, int label) const;
 
 //	-- instance variables --
 	//	morphed partials:
@@ -57,8 +81,12 @@ private:
 	WeightFunction * _ampFunction;
 	WeightFunction * _bwFunction;
 	
-	//	distillation (of many partials having the same label):
-	Distiller * _distiller;
+	//	range of labels for morphing:
+	int _minlabel, _maxlabel;
+	
+	//	label for partials that should be crossfaded,
+	//	instead of morphing:
+	int _crossfadelabel;
 
 };	//	end of class Morph
 
