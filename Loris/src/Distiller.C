@@ -513,6 +513,38 @@ static void mergeNonOverlapping2( const Partial & src, Partial & distilled, doub
 }
 
 // ---------------------------------------------------------------------------
+//	findContribution		(STATIC)
+// ---------------------------------------------------------------------------
+//
+std::pair< Partial::iterator, Partial::iterator >
+findContribution( Partial & pshort, const Partial & plong, double fadeTime )
+{
+	Partial::iterator cbeg = pshort.begin();
+	while ( cbeg != pshort.end() && 
+			plong.amplitudeAt( cbeg.time() ) > 0 )
+	{
+		++cbeg;
+	}
+	
+	Partial::iterator cend = cbeg;
+	
+	// if a gap is found, then include the 
+	// onset of the Partial:
+	if ( cbeg != pshort.end() )
+	{
+		cbeg = pshort.begin();
+	}
+	
+	while ( cend != pshort.end() &&
+			plong.amplitudeAt( cend.time() + (2*fadeTime) ) == 0 )
+	{
+		++cend;
+	}
+	
+	return std::make_pair( cbeg, cend );
+}
+
+// ---------------------------------------------------------------------------
 //	distill_aux		(STATIC)
 // ---------------------------------------------------------------------------
 //	Helper function for distilling Partials having a common label
@@ -521,18 +553,47 @@ static void mergeNonOverlapping2( const Partial & src, Partial & distilled, doub
 static void distill_aux( PartialList & partials, int label, 
 						 Partial & newp, double fadeTime )
 {
+	if ( partials.size() == 0 )
+	{
+		newp = Partial();
+		newp.setLabel( label );
+		return;
+	}
+	
 	//	sort Partials by duration, longer
 	//	Partials will be prefered:
 	partials.sort( PartialUtils::duration_greater() );
 	
 	// keep the longest Partial:
 	PartialList::iterator it = partials.begin();
-	newp = Partial();
+	newp.setLabel( label );
+	newp = *it;
 	
 	//	iterate over remaining partials:
-	for ( it = partials.begin(); it != partials.end(); ++it )
+	for ( ++it; it != partials.end(); ++it )
 	{
-		//	skip this Partial if it overlaps with any longer Partial:
+		std::pair< Partial::iterator, Partial::iterator > range = 
+			findContribution( *it, newp, fadeTime );
+		Partial::iterator cb = range.first, ce = range.second;
+		
+		if ( cb != ce )
+		{
+			mergeNonOverlapping2( Partial(cb, ce), newp, fadeTime );	
+		}
+		
+		// abosrb non-contributing ends of shorter:
+		if ( cb != it->begin() )
+		{
+			newp.absorb( Partial( it->begin(), cb ) );
+		}
+		
+		if ( ce != it->end() )
+		{
+			newp.absorb( Partial( ce, it->end() ) );
+		}
+		
+
+/*		//	skip this Partial if it overlaps with any longer Partial:
 		//	Need only consider earlier Partials in the list, because
 		// 	the list is sorted by Partial duration.
 		if ( ! overlap( it, partials.begin(), it, fadeTime ) )
@@ -557,6 +618,7 @@ static void distill_aux( PartialList & partials, int label,
 			}
 			mergeNonOverlapping2( *it, newp, fadeTime );			
 		}		
+*/
 	}
 	newp.setLabel( label );
 }
