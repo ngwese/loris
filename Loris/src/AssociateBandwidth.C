@@ -46,15 +46,15 @@ AssociateBandwidth::~AssociateBandwidth( void )
 //	by defintion, non-negative.
 //
 double 
-AssociateBandwidth::computeNoiseEnergy( double freqHz )
+AssociateBandwidth::computeNoiseEnergy( double freq, double amp )
 {
 	//	don't mess with negative frequencies:
-	if ( freqHz < 0. )
+	if ( freq < 0. )
 		return 0.;
 	
 	//	compute the fractional bin frequency 
 	//	corresponding to freqHz:
-	double bin = binFrequency( freqHz );
+	double bin = binFrequency( freq );
 	
 	//	contribute x to two regions having center
 	//	frequencies less and greater than freqHz:
@@ -66,14 +66,22 @@ AssociateBandwidth::computeNoiseEnergy( double freqHz )
 	double noise = 0.;
 	//	Have to check for alpha == 0, because 
 	//	the weights will be zero (see computeAlpha()):
-	//	(ignore zeroeth region?)
+	//	(ignore lowest regions)
 	const int LowestRegion = 2;
+	/*
 	if ( posAbove < _surplus.size() && alpha != 0. && posAbove >= LowestRegion )
 		noise += _surplus[posAbove] * alpha / _weights[posAbove];
 	
 	if ( posBelow >= LowestRegion )
 		noise += _surplus[posBelow] * (1. - alpha) / _weights[posBelow];
-				
+	*/
+	//	new idea, weight Partials by amplitude:	
+	if ( posAbove < _surplus.size() && alpha != 0. && posAbove >= LowestRegion )
+		noise += _surplus[posAbove] * alpha * amp / _weights[posAbove];
+	
+	if ( posBelow >= LowestRegion )
+		noise += _surplus[posBelow] * (1. - alpha) * amp / _weights[posBelow];
+		
 	return noise;
 }
 
@@ -168,14 +176,16 @@ AssociateBandwidth::reset( void )
 //	The amplitude isn't used for anything.
 //	
 void
-AssociateBandwidth::accumulateSinusoid( double f, double /* a */ )
+AssociateBandwidth::accumulateSinusoid( double freq, double amp )
 {
 	//	don't mess with negative frequencies:
-	if ( f < 0. )
+	if ( freq < 0. )
 		return;
 
 	//	distribute weight at the peak frequency:
-	distribute( f, 1., _weights );
+	//distribute( freq, 1., _weights );\
+	//	new idea: weight Partials by amplitude:
+	distribute( freq, amp, _weights );
 }
 
 // ---------------------------------------------------------------------------
@@ -202,7 +212,7 @@ AssociateBandwidth::accumulateNoise( double freq, double amp )
 void 
 AssociateBandwidth::associate( Breakpoint & bp )
 {		
-	bp.addNoise( computeNoiseEnergy( bp.frequency() ) );
+	bp.addNoise( computeNoiseEnergy( bp.frequency(), bp.amplitude() ) );
 }
 
 

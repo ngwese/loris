@@ -35,8 +35,11 @@ class Analyzer
 						//	conveniently presented as window length, but
 						//	the main lobe width more explicitly highlights
 						//	the critical interaction with _resolution
-	double _minFrequency;	//	lowest frequency component extracted
+	double _minFrequency;	//	lowest frequency (Hz) component extracted
 							//	in spectral analysis
+	double _drift;		//	the maximum frequency (Hz) difference between two 
+						//	consecutive Breakpoints that will be linked to
+						//	form a Partial
 	double _hop;		//	in seconds, time between analysis windows in
 						//	successive spectral analyses
 	double _cropTime;	//	in seconds, maximum time correction for a spectral
@@ -65,6 +68,7 @@ public:
 	double windowWidth( void ) const { return _windowWidth; }
 	double freqFloor( void ) const { return _minFrequency; }
 	double hopTime( void ) const { return _hop; }
+	double freqDrift( void ) const { return _drift;}
 	double cropTime( void ) const { return _cropTime; }
 	double bwRegionWidth( void ) const { return _bwRegionWidth; }
 	
@@ -73,6 +77,7 @@ public:
 	void setAmpFloor( double x ) { _floor = x; }
 	void setWindowWidth( double x ) { _windowWidth = x; }
 	void setFreqFloor( double x ) { _minFrequency = x; }
+	void setFreqDrift( double x ) { _drift = x; }
 	void setHopTime( double x ) { _hop = x; }
 	void setCropTime( double x ) { _cropTime = x; }
 	void setBwRegionWidth( double x ) { _bwRegionWidth = x; }	

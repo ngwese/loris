@@ -62,13 +62,18 @@ Breakpoint::addNoise( double noise )
 	double e = amplitude() * amplitude();	//	current total energy
 	double n = e * bandwidth();				//	current noise energy
 	
+	//	Assert( e >= n );
+	//	could complain, but its recoverable, just fix it:
+	if ( e < n )
+		e = n;
+	
 	//	guard against divide-by-zero, and don't allow
 	//	the sinusoidal energy to decrease:
 	if ( n + noise > 0. ) 
 	{
 		//	if new noise energy is positive, total
 		//	energy must also be positive:
-		Assert( e + noise > 0 );
+		//	Assert( e + noise > 0 );
 		setBandwidth( (n + noise) / (e + noise) );
 		setAmplitude( std::sqrt(e + noise) );
 	}

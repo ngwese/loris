@@ -346,7 +346,7 @@ Partial::bandwidthAt( double time ) const
 double
 Partial::FadeTime( void )
 {
-	const double FADE_TIME = 0.001;	//	1 ms
+	static const double FADE_TIME = 0.001;	//	1 ms
 	return FADE_TIME;
 }
 

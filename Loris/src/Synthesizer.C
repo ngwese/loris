@@ -177,8 +177,10 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ )
 //	interpolate final oscillator state if the target 
 //	final sample is past the end of the buffer:
 	long finalsamp = 
-		std::min( curSampleIdx + long(Partial::FadeTime() * sampleRate()), long(_samples.size()) );
-	double alpha = (finalsamp - curSampleIdx) / (Partial::FadeTime() * sampleRate());
+		std::min( curSampleIdx + long(Partial::FadeTime() * sampleRate()), 
+				  long(_samples.size()) );
+	double alpha = 
+		(finalsamp - curSampleIdx) / (Partial::FadeTime() * sampleRate());
 	tgtradfreq = (alpha * tgtradfreq) + ((1. - alpha) * osc.radianFreq());
 	tgtamp = (alpha * tgtamp) + ((1. - alpha) * osc.amplitude());
 	tgtbw = (alpha * tgtbw) + ((1. - alpha) * osc.bandwidth());

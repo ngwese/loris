@@ -125,6 +125,13 @@ Analyzer::Analyzer( double resolutionHz )
 //	Compute default values for analysis parameters from the single core
 //	parameter, the frequency resolution.
 //
+//	There are basically three classes of analysis parameters:
+//	- the resolution, and params that are usually related to (or
+//	identical to) the resolution (minimum frequency and drift)
+//	- the window width and params that are usually related to (or
+//	identical to) the window width (hop and crop times)
+//	- indepenendent parameters (bw region width and amp floor)
+//
 void
 Analyzer::configure( double resolutionHz )
 {
@@ -156,6 +163,12 @@ Analyzer::configure( double resolutionHz )
 	//	Lip happy, and is always safe?) and allow the client 
 	//	to change it to anything at all.
 	_minFrequency = _resolution;
+	
+	//	frequency drift in Hz is the maximum difference
+	//	in frequency between consecutive Breakpoints in
+	//	a Partial, by default, make it equal the frequency 
+	//	resolution:
+	_drift = _resolution;
 	
 	//	hop time (in seconds) is the inverse of the
 	//	window width....really. Smith and Serra (1990) cite 
@@ -506,7 +519,7 @@ Analyzer::formPartials( std::list< Breakpoint > & frame, double frameTime,
 		std::list< Breakpoint >::iterator prev = bpIter;
 		--prev;
 		if ( nearest == NULL /* (1) */ || 
-			 thisdist > 0.5 * freqResolution() /* (2) */ ||
+			 thisdist > freqDrift() /* (2) */ ||
 			 ( next != frame.end() && thisdist > distance( *nearest, *next ) ) /* (3) */ ||
 			 ( bpIter != frame.begin() && thisdist > distance( *nearest, *prev ) ) /* (4) */ ) 
 		{

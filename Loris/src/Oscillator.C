@@ -112,12 +112,19 @@ Oscillator::generateSamples( std::vector< double > & buffer,
 
 //	determine the number of samples to generate
 //	(none if the amplitude will be zero throughout):	
-	long howMany = 0;
-	if ( targetAmp > 0. || _amplitude > 0. ) 
+	long howMany = endIdx - beginIdx;
+	if ( targetAmp == 0. && _amplitude == 0. ) 
 	{
-		howMany = endIdx - beginIdx;
+		//	if we don't need to generate samples, 
+		//	update the phase anyway (other params
+		//	will be updated below), advance the phase 
+		//	by the average frequency times the number
+		//	of samples:
+		_phase += (0.5 * (_frequency + targetFreq)) * howMany;
+		_phase = fmod( _phase, TwoPi );
+		howMany = 0;
 	}
-	
+
 //	generate and accumulate samples:
 //	(if no samples are generated, the oscillator state 
 //	will be set below to the target values anyway):
@@ -167,13 +174,6 @@ Oscillator::generateSamples( std::vector< double > & buffer,
 		//	(Doesn't really matter much exactly what fmod does, 
 		//	as long as it brings the phase nearer to zero.)
 		_phase = fmod( p, TwoPi );
-	}
-	else if (endIdx > beginIdx)
-	{
-		//	just advance the phase by the average frequency
-		//	times the number of samples:
-		_phase += (0.5 * (_frequency + targetFreq)) * (endIdx - beginIdx);
-		_phase = fmod( _phase, TwoPi );
 	}
 	
 //	set the state variables to their target values,

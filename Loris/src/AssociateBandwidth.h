@@ -48,7 +48,7 @@ public:
 	
 	//	energy accumulation:
 	void accumulateNoise( double freq, double amp );	
-	void accumulateSinusoid( double f, double a  );	
+	void accumulateSinusoid( double freq, double amp  );	
 	
 	//	bandwidth assocation:
 	void associate( Breakpoint & bp );
@@ -60,7 +60,7 @@ public:
 private:	
 //	-- helpers --	
 	//	called in associate():	
-	double computeNoiseEnergy( double freqHz );
+	double computeNoiseEnergy( double freq, double amp );
 	
 	inline double binFrequency( double freq );
 	double computeAlpha( double binfreq );
