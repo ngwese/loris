@@ -65,7 +65,7 @@ static const Partial::label_type DefaultReferenceLabel = 0;
 
 static const double DefaultFixThreshold = -90; 	// dB, very low by default
 static const double DefaultAmpShape = 1E-5; 	   // shaping parameter, see morphAmplitudes
-static const double DefaultBreakpointGap = 1E-3;// minimum time (sec) between Breakpoints in 
+static const double DefaultBreakpointGap = 1E-4;// minimum time (sec) between Breakpoints in 
                                                 // morphed Partials
 
 
