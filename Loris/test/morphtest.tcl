@@ -89,7 +89,7 @@ set end [ Partial_end [ PartialListIterator_partial [ $clar begin ] ] ]
 while { ! [ $iter equals $end ] } {
 	set f [expr $f + [ Breakpoint_frequency [ PartialIterator_breakpoint $iter ] ] ]
 	incr n
-	$iter next
+	PartialIterator -this [ set iter [ $iter next ] ]
 }
 puts "avg frequency of first distilled clarinet partial is [expr $f/$n]"
 

@@ -164,7 +164,8 @@ KaiserWindow::computeShape( double atten )
 //	Compute the length (in samples) of the Kaiser window from the desired 
 //	(approximate) main lobe width and the control parameter. Of course, since 
 //	the window must be an integer number of samples in length, your actual 
-//	lobal mileage may vary. This equation appears in Kaiser and Schafer 1980.
+//	lobal mileage may vary. This equation appears in Kaiser and Schafer 1980
+//	(on the use of the I0 window class for spectral analysis) as Equation 9.
 //
 //	The main width of the main lobe must be normalized by the sample rate,
 //	that is, it is a fraction of the sample rate.
@@ -175,7 +176,10 @@ KaiserWindow::computeLength( double width, double atten )
 	double alpha = computeShape( atten );
 
 	//	The last 0.5 is cheap rounding.
-	return long(1.0 + (2. * sqrt((Pi*Pi) + (alpha*alpha)) / (Pi * width)) + 0.5);
+	//	But I think I don't need cheap rounding because the equation 
+	//	from Kaiser and Schafer has a +1 that appears to be a cheap
+	//	ceiling function.
+	return long(1.0 + (2. * sqrt((Pi*Pi) + (alpha*alpha)) / (Pi * width)) /* + 0.5 */);
 }
 
 #if !defined( NO_LORIS_NAMESPACE )

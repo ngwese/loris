@@ -17,8 +17,8 @@ echo "- aclocal."
 aclocal -I config
 echo "- autoconf."
 autoconf
-echo "- acconfig."
-acconfig
+# echo "- acconfig."
+# acconfig
 echo "- autoheader."
 autoheader
 echo "- automake."

@@ -220,20 +220,7 @@ Analyzer::configure( double resolutionHz )
 	//	frequency resolution:
 	_windowWidth = _resolution;
 	
-	//	OLD COMMENT:
-	//	the bare minimum component frequency that should be
-	//	considered corresponds to two periods of a sine wave
-	//	in the analysis window (this is pretty minimal) and
-	//	this minimum is enforced in extractPeaks(). 
-	//	The _minFrequency allows a higher frequency threshold
-	//	to be set, for harmonic analyses, for example:
-	//
-	//	NEW COMMENT:
-	//	I think that's ugly, the two periods thing can't
-	//	be determined until the analysis is being run (because
-	//	it is sample rate dependent) so the client can't tell
-	//	whether its frequencyFloor setting is relevant or
-	//	is being overriden by the two periods thing. Instead,
+	//	for the minimum frequency, below which no data is kept,
 	//	use the frequency resolution by default (this makes 
 	//	Lip happy, and is always safe?) and allow the client 
 	//	to change it to anything at all.

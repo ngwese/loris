@@ -89,7 +89,7 @@ while not iter.equals(end):
 	bp = iter.breakpoint()
 	f = f + bp.frequency()
 	n = n + 1
-	iter.next()
+	iter = iter.next()
 print "avg frequency of first distilled clarinet partial is", f/n
 
 print 'shifting pitch of clarinet'
