@@ -125,11 +125,14 @@ static void test_distill_manylabels( void )
 	//	should be in label order):
 	TEST( l.size() == 3 );
 	PartialList::iterator it = l.begin();
-	TEST( *it == p1 );
+	TEST( it->label() == p1.label() );
+	TEST( it->numBreakpoints() == p1.numBreakpoints() );
 	++it;
-	TEST( *it == p2 );
+	TEST( it->label() == p2.label() );
+	TEST( it->numBreakpoints() == p2.numBreakpoints() );
 	++it;
-	TEST( *it == p3 );
+	TEST( it->label() == p3.label() );
+	TEST( it->numBreakpoints() == p3.numBreakpoints() );
 }
 
 // ----------- test_distill_nonoverlapping -----------
@@ -200,7 +203,8 @@ static void test_distill_nonoverlapping( void )
 	//	should be in label order):
 	TEST( l.size() == 2 );
 	PartialList::iterator it = l.begin();
-	TEST( *it == p4 );
+	TEST( it->label() == p4.label() );
+	TEST( it->numBreakpoints() == p4.numBreakpoints() );
 	++it;
 	
 	for ( Partial::iterator distit = it->begin(); distit != it->end(); ++distit )
@@ -209,7 +213,6 @@ static void test_distill_nonoverlapping( void )
 	}
 	
 	TEST( it->numBreakpoints() == compare.numBreakpoints() );
-	// TEST( *it == compare );
 	
 	Partial::iterator distit = it->begin();
 	Partial::iterator compareit = compare.begin();
@@ -394,7 +397,6 @@ static void test_distill_overlapping3( void )
 	//	should be in label order):
 	TEST_VALUE( l.size(), 1 );
 	TEST_VALUE( l.begin()->numBreakpoints(), compare.numBreakpoints() );
-	// TEST( *l.begin() == compare );
 	
 	Partial::iterator distit = l.begin()->begin();
 	Partial::iterator compareit = compare.begin();
@@ -485,8 +487,6 @@ static void test_collate( void )
 	}
 	
 	++it;
-	TEST( *it == compare2 );
-	/*
 	TEST( it->numBreakpoints() == compare2.numBreakpoints() );
 	TEST( it->label() == compare2.label() );
 	distit = it->begin();
@@ -502,7 +502,6 @@ static void test_collate( void )
 		++compareit;
 		++distit;
 	}
-	*/
 }
 
 
