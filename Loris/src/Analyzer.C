@@ -60,15 +60,92 @@ namespace Loris {
 //	internal analysis helper declarations
 // ---------------------------------------------------------------------------
 
+struct AnalyzerState;
+static void extractPeaks( AnalyzerState & state );
+static void thinPeaks( AnalyzerState & state );
+static void formPartials( AnalyzerState & state );
+
+// ---------------------------------------------------------------------------
+//	AnalyzerState definition
+// ---------------------------------------------------------------------------
+//	Definition of a structure representing the state of a single analysis.
+//	Encapsulates all the stuff that has to be passed around to the 
+//	various helper functions, declared above.
+//
 typedef std::vector< std::pair< double, Breakpoint > > FRAME;
 
-static void extractPeaks( FRAME & frame, double frameTime, 
-						  Analyzer & analyzer, ReassignedSpectrum & spectrum,
-						  AssociateBandwidth & bwAssociation, 
-						  double sampleRate );
-static void thinPeaks( FRAME & frame, double freqResolution, AssociateBandwidth & bwAssociation );
-static void formPartials( FRAME & frame, PartialPtrs & eligiblePartials,
-						  double freqDrift, PartialList & partials );
+struct AnalyzerState
+{
+//	-- analysis state variables --
+	//	reassigned short-time spectrum:
+	std::auto_ptr< ReassignedSpectrum > spectrum;
+    
+    //	bandwidth association strategy:
+	std::auto_ptr< AssociateBandwidth > bwAssociation;
+		
+	//	collection of ptrs to Partials eligible for matching:
+	PartialPtrs eligiblePartials;
+    
+    //	the current frame (collection of 
+    //	reassigned spectral peaks):
+    FRAME currentFrame;
+    
+    //	reference to the Analyzer instance, for parameter
+    //	access:
+    Analyzer & analyzer;
+
+    //	the sample rate of the samples being analyzed:
+    double sampleRate;
+    
+    //	the time corresponding to the currenf frame:
+    double currentFrameTime;
+	
+//	-- construction --
+//	(use compiler-constructed destructor)
+	AnalyzerState( Analyzer & anal, double srate );
+	
+};	//	end of struct AnalyzerState
+
+
+// ---------------------------------------------------------------------------
+//	AnalyzerState constructor
+// ---------------------------------------------------------------------------
+//
+AnalyzerState::AnalyzerState( Analyzer & anal, double srate ) :
+    analyzer( anal ),
+	sampleRate( srate ),
+    currentFrameTime( 0. )
+{	
+
+	try 
+    {
+        //	analysis window parameters:
+        //	use the amplitude floor as the window attenuation 
+        double winshape = KaiserWindow::computeShape( - analyzer.ampFloor() );
+        long winlen = KaiserWindow::computeLength( analyzer.windowWidth() / sampleRate, winshape );
+        
+        //	always use odd-length windows:
+        if (! (winlen % 2)) 
+            ++winlen;
+        debugger << "Using Kaiser window of length " << winlen << endl;
+        
+        //	configure window:
+        std::vector< double > window( winlen );
+        KaiserWindow::create( window, winshape );
+		
+		//	configure spectrum:
+		spectrum.reset( new ReassignedSpectrum( window ) );
+		
+		//	configure bw association strategy, which 
+		//	needs to know about the window:
+		bwAssociation.reset( new AssociateBandwidth( analyzer.bwRegionWidth(), sampleRate ) );
+	}
+	catch ( Exception & ex ) 
+    {
+		ex.append( "couldn't initialize the Analyzer state." );
+		throw;
+	}
+}
 
 // ---------------------------------------------------------------------------
 //	Analyzer constructor - frequency resolution only
@@ -214,33 +291,9 @@ Analyzer::~Analyzer( void )
 void 
 Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate )
 {
-	//	construct state objects for this analysis:	
-	
-	//	analysis window parameters:
-	//	use the amplitude floor as the window attenuation 
-	double winshape = KaiserWindow::computeShape( - ampFloor() );
-	long winlen = KaiserWindow::computeLength( windowWidth() / srate, winshape );
-	
-	//	always use odd-length windows:
-	if (! (winlen % 2)) {
-		++winlen;
-	}
-	debugger << "Using Kaiser window of length " << winlen << endl;
-	
-	//	configure window:
-	std::vector< double > window( winlen );
-	KaiserWindow::create( window, winshape );
-	
-	//	configure spectrum:
-	ReassignedSpectrum spectrum( window );
-		
-	//	configure bw association strategy, which 
-	//	needs to know about the window:
-	AssociateBandwidth bwAssociation( bwRegionWidth(), srate );
-	
-	//	collection of ptrs to Partials eligible for matching:
-	PartialPtrs eligiblePartials;
-	
+	//	construct state object for this analysis:	
+    AnalyzerState state( *this, srate );
+
 //
 //	need to check for bogus parameters somewhere!!!!
 //
@@ -251,6 +304,7 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate 
 	//	window length is first half length + second
 	//	half length + the "center" sample (this works
 	//	for even and odd length windows):
+    const long winlen = state.spectrum->window().size();
 	const long firstHalfWinLength = winlen / 2;
 	const long secondHalfWinLength = (winlen - 1) / 2;
 		
@@ -262,19 +316,19 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate 
 			  winMiddle += hop ) 
 		{
 			//	compute the time of this analysis frame:
-			const double frameTime = long(winMiddle - bufBegin) / srate;
+			state.currentFrameTime = long(winMiddle - bufBegin) / srate;
 			 
 			//	compute reassigned spectrum:
 			//  sampsBegin is the position of the first sample to be transformed,
 			//	sampsEnd is the position after the last sample to be transformed.
 			const double * sampsBegin = std::max( winMiddle - firstHalfWinLength, bufBegin );
 			const double * sampsEnd = std::min( winMiddle + secondHalfWinLength + 1, bufEnd );
-			spectrum.transform( sampsBegin, winMiddle, sampsEnd );
+			state.spectrum->transform( sampsBegin, winMiddle, sampsEnd );
 			
 			//	extract peaks from the spectrum:
-			FRAME frame;
-			extractPeaks( frame, frameTime, *this, spectrum, bwAssociation, srate );	
-			thinPeaks( frame, freqResolution(), bwAssociation );
+			state.currentFrame.clear();
+			extractPeaks( state );	
+			thinPeaks( state );
 
 #if !defined(No_BW_Association)
 			//	perform bandwidth association:
@@ -282,24 +336,24 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate 
 			//	accumulate retained Breakpoints as sinusoids, 
 			//	thinned breakpoints are accumulated as noise:
 			//	(see also thinPeaks() and extractPeaks())
-			FRAME::iterator it;
-			for ( it = frame.begin(); it != frame.end(); ++it )
+			FRAME & frame = state.currentFrame;
+			for ( FRAME::iterator it = frame.begin(); it != frame.end(); ++it )
 			{
-				bwAssociation.accumulateSinusoid( it->second.frequency(), it->second.amplitude() );
+				state.bwAssociation->accumulateSinusoid( it->second.frequency(), it->second.amplitude() );
 			}
 			
 			//	associate bandwidth with each Breakpoint here:
-			for ( it = frame.begin(); it != frame.end(); ++it )
+			for ( FRAME::iterator it = frame.begin(); it != frame.end(); ++it )
 			{
-				bwAssociation.associate( it->second );
+				state.bwAssociation->associate( it->second );
 			}
 			
 			//	reset after association, yuk:
-			bwAssociation.reset();
+			state.bwAssociation->reset();
 #endif	//	 !defined(No_BW_Association)
 
 			//	form Partials from the extracted Breakpoints:
-			formPartials( frame, eligiblePartials, freqDrift(), partials() );
+			formPartials( state );
 
 		}	//	end of loop over short-time frames
 	}
@@ -322,16 +376,20 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate 
 //	The peaks from the reassigned spectrum are frequency-sorted (implicitly)
 //	so the frame generated here is automatically frequency-sorted.
 //
-//	This argument list is grotesque, really ought to be able to make this cleaner.
-//
-static void extractPeaks( FRAME & frame, double frameTime, 
-						  Analyzer & analyzer, ReassignedSpectrum & spectrum,
-						  AssociateBandwidth & bwAssociation, 
-						  double sampleRate )
+static void extractPeaks( AnalyzerState & state )
 {
-	const double ampFloor = analyzer.ampFloor();
-	const double freqFloor = analyzer.freqFloor();
-	const double cropTime = analyzer.cropTime();
+    //	get state objects:
+    FRAME & frame = state.currentFrame;
+    ReassignedSpectrum & spectrum = *state.spectrum;
+    AssociateBandwidth & bwAssociation = *state.bwAssociation;
+    
+    //	get analysis parameters:
+	const double ampFloor = state.analyzer.ampFloor();
+	const double freqFloor = state.analyzer.freqFloor();
+	const double cropTime = state.analyzer.cropTime();
+    
+    const double sampleRate = state.sampleRate;
+    const double frameTime = state.currentFrameTime;
 	
 	const double threshold = pow( 10., 0.05 * ampFloor );	//	absolute magnitude threshold
 	const double sampsToHz = sampleRate / spectrum.size();
@@ -426,8 +484,15 @@ struct can_mask
 		double _fmin, _fmax;
 };
 
-static void thinPeaks( FRAME & frame, double freqResolution, AssociateBandwidth & bwAssociation )
+static void thinPeaks( AnalyzerState & state )
 {
+    //	get state objects:
+    FRAME & frame = state.currentFrame;
+    AssociateBandwidth & bwAssociation = *state.bwAssociation;
+
+    //	get analysis parameters:
+	const double freqResolution = state.analyzer.freqResolution();
+
 	//	can't do anything if there's fewer than two Breakpoints:
 	if ( frame.size() < 2 )
 	{
@@ -510,9 +575,16 @@ static bool sort_frame_lesser_freq( const FRAME::value_type & lhs,
 	return lhs.second.frequency() < rhs.second.frequency(); 
 }
 
-static void formPartials( FRAME & frame, PartialPtrs & eligiblePartials,
-						  double freqDrift, PartialList & partials )
+static void formPartials( AnalyzerState & state )
 {
+    //	get state objects:
+    FRAME & frame = state.currentFrame;
+    PartialPtrs & eligiblePartials = state.eligiblePartials;
+    PartialList & partials = state.analyzer.partials();
+
+    //	get analysis parameters:
+	const double freqDrift = state.analyzer.freqDrift();
+
 	PartialPtrs newlyEligible;
 	
 	//	frequency-sort the frame:
