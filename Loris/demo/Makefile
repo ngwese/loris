@@ -35,7 +35,7 @@ demo_output = cello.dilated.aiff \
 all: demo refs
 
 demo:
-	tar zxf $(demo_source_tarball)
+	-tar zxf $(demo_source_tarball)
 	python $(demoscript)
 	
 refs: 
