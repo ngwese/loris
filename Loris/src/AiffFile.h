@@ -62,7 +62,7 @@ class AiffFile
 	int _sampSize;		//	in bits
 	double _hop;		//  hop size in seconds (for reading SPC files)
 	int _partials;		// 	number of partials (for reading SPC files)
-	int _frames;		//  frames (for reading SPC files)
+	int _enhanced;		//  badwidth-enhanced format (for reading SPC files)
 	
 	std::vector<unsigned char> _bytes;	//	buffer used for storing raw (integer) sample data
 		
@@ -111,7 +111,7 @@ public:
 	
 	//	disgusting, these should not be here at all, just for Spc import:
 	int partials( void ) const;
-	int frames( void ) const;
+	int enhanced( void ) const;
 	double hop( void ) const;
 	
 /*	Convert the integer sample data to doubles and store in on the half-open

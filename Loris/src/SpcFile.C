@@ -65,9 +65,6 @@ using namespace std;
 //	begin namespace
 namespace Loris {
 
-
-
-
 #pragma mark spc helpers
 // ---------------------------------------------------------------------------
 //	fileNumPartials
@@ -127,12 +124,12 @@ static double envExp( long intValue )
 #pragma mark -
 #pragma mark import spc
 // ---------------------------------------------------------------------------
-//	processPoint
+//	processEnhancedPoint
 // ---------------------------------------------------------------------------
-//	Add breakpoint to existing Loris partials.
+//	Add ehanced-spc breakpoint to existing Loris partials.
 //
 static void
-processPoint( const int left, const int right, 
+processEnhancedPoint( const int left, const int right, 
 				const double frameTime, 
 				Partial & par )
 {
@@ -168,6 +165,33 @@ processPoint( const int left, const int right,
 
 
 // ---------------------------------------------------------------------------
+//	processSineOnlyPoint
+// ---------------------------------------------------------------------------
+//	Add sine-only spc breakpoint to existing Loris partials.
+//
+static void
+processSineOnlyPoint( const int packed, 
+				const double frameTime, 
+				Partial & par )
+{
+//
+// Unpack values.  Counterpart to ExportSpc::packLeft() and ExportSpc::packRight().
+//
+	double freq = 		envExp( (packed >> 8)   & 0xffff ) * 22050.0;
+	double amp =		envExp( (packed >> 15)  & 0xfe00 );
+	double noise = 		0.;
+	double phase = 		0.;
+
+//
+// Create a new breakpoint and insert it.
+//	
+	Breakpoint newbp( freq, amp, noise, phase );
+	par.insert( frameTime, newbp );
+}
+
+
+
+// ---------------------------------------------------------------------------
 //	read
 // ---------------------------------------------------------------------------
 // Let exceptions propagate.
@@ -183,19 +207,18 @@ read( const char *infilename, PartialList & partialsList )
 		std::vector< double > v( f.sampleFrames() );
 		f.getSamples( v.begin(), v.end() );
 		
-		//  mono file format has number of partials doubled
-		//  stereo file format has proper number of partials
-		int frames = f.frames();
+		//  enhanced file format has number of partials doubled
+		//  sine-only file format has proper number of partials
+		int enhanced = f.enhanced();
+		int partials = enhanced ? f.partials() / 2 : f.partials();
+		int frames = ( v.end() - v.begin() ) / ( fileNumPartials( partials ) * ( enhanced ? 2 : 1 ) );
 		double hop = f.hop();
-		int partials = (f.channels() == 1) ? f.partials() / 2 : f.partials();
 		
 		//  check for valid file
 		if ( partials == 0 || f.sampleSize() != 24 )
 				Throw( FileIOException, "Not an SPC file." );
 		if ( partials < 32 || partials > largestLabel )
 				Throw( FileIOException, "Bad number of partials in SPC file." );
-		if ( fileNumPartials( partials ) * frames * 2 != v.end() - v.begin() )
-				Throw( FileIOException, "Unexpected number of samples in SPC file." );
 		
 		//  allocate partialsVector
 		std::vector< Partial > partialsVector;
@@ -207,10 +230,19 @@ read( const char *infilename, PartialList & partialsList )
 		{
 			for (int partial = 0; partial < fileNumPartials( partials ); ++partial)
 			{
-				int left = int ( LONG_MAX * *vpt++ + 0.5 );
-				int right = int ( LONG_MAX * *vpt++ + 0.5 );
-				if ( partial < partialsVector.size() )
-					processPoint( left, right, frame * hop, partialsVector[partial] );
+				if (enhanced)
+				{
+					int left = int ( LONG_MAX * *vpt++ + 0.5 );
+					int right = int ( LONG_MAX * *vpt++ + 0.5 );
+					if ( partial < partialsVector.size() )
+						processEnhancedPoint( left, right, frame * hop, partialsVector[partial] );
+				}
+				else
+				{
+					int packed = int ( LONG_MAX * *vpt++ + 0.5 );
+					if ( partial < partialsVector.size() )
+						processSineOnlyPoint( packed, frame * hop, partialsVector[partial] );
+				}
 			}
 		}
 	
@@ -281,16 +313,6 @@ struct SpcExportInfo
 
 static struct SpcExportInfo spcEI;		// spc Export information
 	
-
-// Temporary support for using old-style envelope reader for enhanced spc files in Kyma.
-// Set MONO_ENH to 1 for old-style reader compatability, 
-// set MONO_ENH to 0 for enhanced envelope reader.
-// The issues for bandwidth-enhanced spc files are:
-//		- file is mono, not stereo (despite the fact that it contain BW&phase)
-//		- file claims to have twice the number of partials
-//		- file claims to have twice the number of samples (2 mono samples = 1 stereo)
-//		- currently, SpcFile::read() only works for kludge-enhanced spc files.
-#define MONO_ENH 1
 
 
 #pragma mark chunk types
@@ -393,18 +415,19 @@ struct SosEnvelopesCk
 {
 	CkHeader header;	
 	Int_32	signature;		// For SOS, should be 'SOSe'
-	Int_32	frames;			// Total number of frames
+	Int_32	enhanced;		// 0 for sine-only, 1 for bandwidth-enhanced
 	Int_32	validPartials;	// Number of partials with data in them; the file must
-							// be padded out to the next higher 2**n partials
+							// be padded out to the next higher 2**n partials;
+							// this number is doubled for enhanced files
 #define initPhaseLth ( 4*largestLabel + 8 )
 	Int_32	initPhase[initPhaseLth]; // obsolete initial phase array; is VARIABLE LENGTH array 
 							// this is big enough for a max of 512 enhanced partials plus values below
 //	Int_32	resolution;		// frame duration in microseconds 
-	#define SOSresolution( es )   initPhase[(spcEI.enhanced && MONO_ENH) \
+	#define SOSresolution( es )   initPhase[ spcEI.enhanced \
 											? 2 * spcEI.numPartials : spcEI.numPartials]	
 							// follows the initPhase[] array
 //	Int_32	quasiHarmonic;	// how many of the partials are quasiharmonic
-	#define SOSquasiHarmonic( es )  initPhase[(spcEI.enhanced && MONO_ENH) \
+	#define SOSquasiHarmonic( es )  initPhase[ spcEI.enhanced \
 											? 2 * spcEI.numPartials + 1 : spcEI.numPartials + 1]	
 							// follows the initPhase[] array
 };  
@@ -431,7 +454,7 @@ static unsigned long sizeofCommon( void )
 	return	sizeof(Int_32) +			//	id
 			sizeof(Uint_32) +			//	size
 			sizeof(Int_16) + 			//	num channels
-			sizeof(Int_32) + 			//	num frames
+			sizeof(Int_32) + 			//	num aiff sample frames
 			sizeof(Int_16) + 			//	bits per sample
 			sizeof(IEEE::extended80);	//	sample rate
 }
@@ -445,7 +468,7 @@ static unsigned long sizeofSosEnvelopes( void )
 	return	sizeof(Int_32) +					//	id
 			sizeof(Uint_32) +					//	size
 			sizeof(Uint_32) + 					// signature
-			sizeof(Uint_32) + 					// frames
+			sizeof(Uint_32) + 					// enhanced
 			sizeof(Uint_32) + 					// validPartials
 			initPhaseLth * sizeof(Int_32);		// initPhase[] et al
 }
@@ -520,16 +543,8 @@ static void writeCommon( std::ostream & s )
 	ck.header.size = sizeofCommon() - sizeofCkHeader();
 
 	int frames = int( ( spcEI.endTime - spcEI.startTime ) / spcEI.hop ) + 1;
-	if ( spcEI.enhanced ) 			// bandwidth-enhanced spc file
-	{					
-		ck.channels = (MONO_ENH ? 1 : 2);
-		ck.sampleFrames = frames * spcEI.fileNumPartials * (MONO_ENH ? 2 : 1);
-	}
-	else							// pure sinusoidal spc file
-	{					
-		ck.channels = 1;
-		ck.sampleFrames = frames * spcEI.fileNumPartials;
-	}
+	ck.channels = 1;
+	ck.sampleFrames = frames * spcEI.fileNumPartials * ( spcEI.enhanced ? 2 : 1 );
 	
 	ck.bitsPerSample = 24;
 	// The sample rate is not directly used in SPC files.  It indicates the
@@ -663,8 +678,8 @@ static void writeMarker( std::ostream & s )
 	
 	ck.numMarkers = 1;					// one marker
 	ck.aMarker.id = 1;					// first marker 
-	ck.aMarker.position = int( spcEI.markerTime / spcEI.hop ) *  spcEI.fileNumPartials 
-							* ((spcEI.enhanced && MONO_ENH) ? 2 : 1); 
+	ck.aMarker.position = int( spcEI.markerTime / spcEI.hop ) * spcEI.fileNumPartials 
+							* ( spcEI.enhanced ? 2 : 1 ); 
 	ck.aMarker.markerName[0] = 1;		// 1 character long name
 	ck.aMarker.markerName[1] = 'a';
 
@@ -703,14 +718,17 @@ static void writeSosEnvelopesChunk( std::ostream & s )
 					
 	ck.signature = SosEnvelopesId;
 
-	ck.frames = int(( spcEI.endTime - spcEI.startTime ) / spcEI.hop) + 1;
-	ck.validPartials = spcEI.numPartials * ((spcEI.enhanced && MONO_ENH) ? 2 : 1);
+	ck.enhanced = spcEI.enhanced;
+	
+	//  the number of partials is doubled in bandwidth-enhanced spc files
+	ck.validPartials = spcEI.numPartials * ( spcEI.enhanced ? 2 : 1 );
 	
 	//	resolution in microseconds
 	ck.SOSresolution( es ) = long( 1000000.0 * spcEI.hop );
 	
 	//	all partials quasiharmonic
-	ck.SOSquasiHarmonic( es ) =  spcEI.numPartials * ((spcEI.enhanced && MONO_ENH) ? 2 : 1); 
+	//  the number of partials is doubled in bandwidth-enhanced spc files
+	ck.SOSquasiHarmonic( es ) =  spcEI.numPartials * ( spcEI.enhanced ? 2 : 1); 
 	
 	//	write it out:
 	try 
@@ -718,7 +736,7 @@ static void writeSosEnvelopesChunk( std::ostream & s )
 		BigEndian::write( s, 1, sizeof(Int_32), (char *)&ck.header.id );
 		BigEndian::write( s, 1, sizeof(Int_32), (char *)&ck.header.size );
 		BigEndian::write( s, 1, sizeof(Int_32), (char *)&ck.signature );
-		BigEndian::write( s, 1, sizeof(Int_32), (char *)&ck.frames );
+		BigEndian::write( s, 1, sizeof(Int_32), (char *)&ck.enhanced );
 		BigEndian::write( s, 1, sizeof(Int_32), (char *)&ck.validPartials );
 		
 		// The SOSresultion and SOSquasiHarmonic fields are in the phase table memory.
@@ -884,8 +902,6 @@ static const Partial * select( const PartialList & partials, int label, int firs
 	
 	return ret;
 }
-
-
 
 #pragma mark -
 #pragma mark envelope writing

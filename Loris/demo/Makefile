@@ -30,6 +30,11 @@ demo_output = cello.dilated.aiff \
 	flutello2.aiff \
 	flutinet.aiff
 
+scriptingdir = ../scripting
+
+env_run = env PYTHONPATH=$(scriptingdir):$(scriptingdir)/.libs python $(demoscript)
+noenv_run = python $(demoscript)
+
 GACK = "!!! cannot run the demos script without the sound sources !!!"
 # targets:
 
@@ -41,9 +46,12 @@ demo:
 	test -f "source/cello.source.aiff" && \
 	test -f "source/flute.source.aiff" ) || \
 	(echo $(GACK) && return 1)
-	python $(demoscript)
+	( test -d $(scriptingdir)  \
+	&& echo "using Loris distribution" \
+	&& $(env_run) ) || \
+	$(noenv_run)
 	
-
+# - test -d $(scriptingdir) && setenv PYTHONPATH $(scriptingdir):$(scriptingdir)/.libs \
 #python $(demoscript)) || echo $(GACK)
 	
 refs: 

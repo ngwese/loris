@@ -186,13 +186,13 @@ AiffFile::partials( void ) const
 }
 
 // ---------------------------------------------------------------------------
-//	frames
+//	enhanced
 // ---------------------------------------------------------------------------
 //
 int
-AiffFile::frames( void ) const
+AiffFile::enhanced( void ) const
 {
-	return _frames;
+	return _enhanced;
 }
 
 // ---------------------------------------------------------------------------
@@ -323,7 +323,7 @@ AiffFile::read( std::istream & s )
 		//	read other chunks, we are only interested in
 		//	the Common chunk, the Sound Data chunk, and SPC-specific chunk:
 		bool foundCOMM = false, foundSSND = false;
-		_hop = _partials = _frames = 0;
+		_hop = _partials = _enhanced = 0;
 		while ( ! foundCOMM || ! foundSSND )
 		{
 			if ( s.eof() )
@@ -384,20 +384,20 @@ AiffFile::readChunkHeader( std::istream & s, CkHeader & h )
 void
 AiffFile::readApplicationSpecifcData( std::istream & s, int length )
 {
-	Int_32 signature, frames, partials, resolution;
+	Int_32 signature, enhanced, partials, resolution;
 	try 
 	{
 		BigEndian::read( s, 1, sizeof(Int_32), (char *)&signature );
 		
 		if ( signature == SosEnvelopesId )
 		{
-			BigEndian::read( s, 1, sizeof(Int_32), (char *)&frames );
+			BigEndian::read( s, 1, sizeof(Int_32), (char *)&enhanced );
 			BigEndian::read( s, 1, sizeof(Int_32), (char *)&partials );
 			s.ignore( partials * sizeof(Int_32) );
 			BigEndian::read( s, 1, sizeof(Int_32), (char *)&resolution );
 			s.ignore( length - (4 + partials) * sizeof(Int_32) );
 			
-			_frames = frames;
+			_enhanced = enhanced;
 			_partials = partials;
 			_hop = resolution * 0.000001;	// resolution is in microseconds
 		}
