@@ -22,7 +22,9 @@
  *
  * PartialUtils.C
  *
- * Partial utility functions collected in namespace PartialUtils.
+ *	A group of Partial utility function objects for use with STL 
+ *	searching and sorting algorithms. PartialUtils is a namespace
+ *	within the Loris namespace.
  *
  * Kelly Fitz, 17 June 2003
  * loris@cerlsoundgroup.org
@@ -38,9 +40,11 @@
 #include "PartialUtils.h"
 
 #include "Breakpoint.h"
+#include "BreakpointEnvelope.h"
 #include "Envelope.h"
 #include "Partial.h"
 
+#include <algorithm>
 #include <cmath>
 #include <functional>
 #include <utility>
@@ -48,14 +52,162 @@
 //	begin namespace
 namespace Loris {
 
+namespace PartialUtils {
+
+
+#pragma mark -- base class --
+
 // ---------------------------------------------------------------------------
-//	crop::operator()
+//	PartialMutator constructor from double
+// ---------------------------------------------------------------------------
+PartialMutator::PartialMutator( double x ) : 
+	env( new BreakpointEnvelope( x ) ) 
+{
+}
+	
+// ---------------------------------------------------------------------------
+//	PartialMutator constructor from envelope
+// ---------------------------------------------------------------------------
+PartialMutator::PartialMutator( const Envelope & e ) : 
+	env( e.clone() ) 
+{
+}
+
+// ---------------------------------------------------------------------------
+//	PartialMutator copy constructor
+// ---------------------------------------------------------------------------
+PartialMutator::PartialMutator( const PartialMutator & rhs ) : 
+	env( rhs.env->clone() ) 
+{
+}
+
+// ---------------------------------------------------------------------------
+//	PartialMutator destructor
+// ---------------------------------------------------------------------------
+PartialMutator::~PartialMutator( void )
+{
+	delete env;
+}
+
+// ---------------------------------------------------------------------------
+//	PartialMutator assignment operator
+// ---------------------------------------------------------------------------
+PartialMutator &
+PartialMutator::operator=( const PartialMutator & rhs )
+{
+	if ( this != &rhs )
+	{	
+		delete env;
+		env = rhs.env->clone();
+	}
+	return *this;
+}
+	
+#pragma mark -- amplitude scaling --
+	
+// ---------------------------------------------------------------------------
+//	AmplitudeScaler function call operator
+// ---------------------------------------------------------------------------
+//	Scale the amplitude of the specified Partial according to
+//	an envelope representing a time-varying amplitude scale value.
+//
+void 
+AmplitudeScaler::operator()( Partial & p ) const
+{
+	for ( Partial::iterator pos = p.begin(); pos != p.end(); ++pos ) 
+	{		
+		pos.breakpoint().setAmplitude( pos.breakpoint().amplitude() * 
+									          env->valueAt( pos.time() ) );
+	}	
+}
+
+// ---------------------------------------------------------------------------
+//	BandwidthScaler function call operator
+// ---------------------------------------------------------------------------
+//	Scale the bandwidth of the specified Partial according to
+//	an envelope representing a time-varying bandwidth scale value.
+//
+void 
+BandwidthScaler::operator()( Partial & p ) const
+{
+	for ( Partial::iterator pos = p.begin(); pos != p.end(); ++pos ) 
+	{		
+		pos.breakpoint().setBandwidth( pos.breakpoint().bandwidth() * 
+									   env->valueAt( pos.time() ) );
+	}	
+}
+
+// ---------------------------------------------------------------------------
+//	FrequencyScaler function call operator
+// ---------------------------------------------------------------------------
+//	Scale the frequency of the specified Partial according to
+//	an envelope representing a time-varying frequency scale value.
+//
+void 
+FrequencyScaler::operator()( Partial & p ) const
+{
+	for ( Partial::iterator pos = p.begin(); pos != p.end(); ++pos ) 
+	{		
+		pos.breakpoint().setFrequency( pos.breakpoint().frequency() * 
+									   env->valueAt( pos.time() ) );
+	}	
+}
+
+// ---------------------------------------------------------------------------
+//	NoiseRatioScaler function call operator
+// ---------------------------------------------------------------------------
+//	Scale the relative noise content of the specified Partial according 
+//	to an envelope representing a (time-varying) noise energy 
+//	scale value.
+//
+void 
+NoiseRatioScaler::operator()( Partial & p ) const
+{
+	for ( Partial::iterator pos = p.begin(); pos != p.end(); ++pos ) 
+	{		
+		//	compute new bandwidth value:
+		double bw = pos.breakpoint().bandwidth();
+		if ( bw < 1. ) 
+		{
+			double ratio = bw  / (1. - bw);
+			ratio *= env->valueAt( pos.time() );
+			bw = ratio / ( 1. + ratio );
+		}
+		else 
+		{
+			bw = 1.;
+		}		
+		pos.breakpoint().setBandwidth( bw );
+	}	
+}
+
+// ---------------------------------------------------------------------------
+//	PitchShifter function call operator
+// ---------------------------------------------------------------------------
+//	Shift the pitch of the specified Partial according to 
+//	the given pitch envelope. The pitch envelope is assumed to have 
+//	units of cents (1/100 of a halfstep).
+//
+void 
+PitchShifter::operator()( Partial & p ) const
+{
+	for ( Partial::iterator pos = p.begin(); pos != p.end(); ++pos ) 
+	{		
+		//	compute frequency scale:
+		double scale = 
+			std::pow( 2., ( 0.01 * env->valueAt( pos.time() ) ) / 12. );				
+		pos.breakpoint().setFrequency( pos.breakpoint().frequency() * scale );
+	}	
+}
+
+// ---------------------------------------------------------------------------
+//	Cropper function call operator
 // ---------------------------------------------------------------------------
 //	Trim a Partial by removing Breakpoints outside a specified time span.
 //	Insert a Breakpoint at the boundary when cropping occurs.
 //
-void
-PartialUtils::crop::operator()( Partial & p ) const
+void 
+Cropper::operator()( Partial & p ) const
 {
 	//	crop beginning of Partial
 	Partial::iterator it = p.findAfter( minTime );
@@ -77,108 +229,16 @@ PartialUtils::crop::operator()( Partial & p ) const
 }
 
 // ---------------------------------------------------------------------------
-//	scale_amp::operator()
-// ---------------------------------------------------------------------------
-//	Scale the amplitude of the specified Partial according to
-//	an envelope representing a time-varying amplitude scale value.
-//
-void 
-PartialUtils::scale_amp::operator()( Partial & p ) const
-{
-	for ( Partial::iterator pos = p.begin(); pos != p.end(); ++pos ) 
-	{		
-		pos.breakpoint().setAmplitude( pos.breakpoint().amplitude() * 
-									   env.valueAt(pos.time()) );
-	}	
-}
-
-// ---------------------------------------------------------------------------
-//	scale_bandwidth::operator()
-// ---------------------------------------------------------------------------
-//	Scale the bandwidth of the specified Partial according to
-//	an envelope representing a time-varying bandwidth scale value.
-//
-void 
-PartialUtils::scale_bandwidth::operator()( Partial & p ) const
-{
-	for ( Partial::iterator pos = p.begin(); pos != p.end(); ++pos ) 
-	{		
-		pos.breakpoint().setBandwidth( pos.breakpoint().bandwidth() * 
-									   env.valueAt(pos.time()) );
-	}	
-}
-
-// ---------------------------------------------------------------------------
-//	scale_frequency::operator()
-// ---------------------------------------------------------------------------
-//	Scale the frequency of the specified Partial according to
-//	an envelope representing a time-varying frequency scale value.
-//
-void 
-PartialUtils::scale_frequency::operator()( Partial & p ) const
-{
-	for ( Partial::iterator pos = p.begin(); pos != p.end(); ++pos ) 
-	{		
-		pos.breakpoint().setFrequency( pos.breakpoint().frequency() * 
-									   env.valueAt(pos.time()) );
-	}	
-}
-
-// ---------------------------------------------------------------------------
-//	scale_noise_ratio::operator()
-// ---------------------------------------------------------------------------
-//	Scale the relative noise content of the specified Partial according 
-//	to an envelope representing a (time-varying) noise energy 
-//	scale value.
-//
-void 
-PartialUtils::scale_noise_ratio::operator()( Partial & p ) const
-{
-	for ( Partial::iterator pos = p.begin(); pos != p.end(); ++pos ) 
-	{		
-		//	compute new bandwidth value:
-		double bw = pos.breakpoint().bandwidth();
-		if ( bw < 1. ) 
-		{
-			double ratio = bw  / (1. - bw);
-			ratio *= env.valueAt(pos.time());
-			bw = ratio / (1. + ratio);
-		}
-		else 
-		{
-			bw = 1.;
-		}
-		
-		pos.breakpoint().setBandwidth( bw );
-	}	
-}
-
-// ---------------------------------------------------------------------------
-//	shift_pitch::operator()
-// ---------------------------------------------------------------------------
-//	Shift the pitch of the specified Partial according to 
-//	the given pitch envelope. The pitch envelope is assumed to have 
-//	units of cents (1/100 of a halfstep).
-//
-void 
-PartialUtils::shift_pitch::operator()( Partial & p ) const
-{
-	for ( Partial::iterator pos = p.begin(); pos != p.end(); ++pos ) 
-	{		
-		//	compute frequency scale:
-		double scale = std::pow(2., (0.01 * env.valueAt(pos.time())) /12.);				
-		pos.breakpoint().setFrequency( pos.breakpoint().frequency() * scale );
-	}	
-}
-
-// ---------------------------------------------------------------------------
-//	shift_time::operator()
+//	TimeShifter function call operator
 // ---------------------------------------------------------------------------
 //	Shift the time of all the Breakpoints in a Partial by a constant amount.
 //
 void 
-PartialUtils::shift_time::operator()( Partial & p ) const
+TimeShifter::operator()( Partial & p ) const
 {
+	//	Since the Breakpoint times are immutable, the only way to 
+	//	shift the Partial in time is to construct a new Partial and
+	//	assign it to the argument p.
 	Partial result;
 	result.setLabel( p.label() );
 	
@@ -188,6 +248,8 @@ PartialUtils::shift_time::operator()( Partial & p ) const
 	}	
 	p = result;
 }
+
+}	//	end of namespace PartialUtils
 
 }	//	end of namespace Loris
 

@@ -104,7 +104,7 @@ void copyLabeled( const PartialList * src, long label, PartialList * dst )
 		ThrowIfNull((PartialList *) dst);
 		
 		std::remove_copy_if( src->begin(), src->end(), std::back_inserter( *dst ),
-							 std::not1( PartialUtils::label_equals(label) ) );
+							 std::not1( PartialUtils::isLabelEqual(label) ) );
 	}
 	catch( Exception & ex ) 
 	{
@@ -135,7 +135,7 @@ void crop( PartialList * partials, double t1, double t2 )
 
 		notifier << "cropping " << partials->size() << " Partials" << endl;
 
-		std::for_each( partials->begin(), partials->end(), PartialUtils::crop( t1, t2 ) );	
+		PartialUtils::crop( partials->begin(), partials->end(), t1, t2 );	
 	}
 	catch( Exception & ex ) 
 	{
@@ -168,7 +168,7 @@ void extractLabeled( PartialList * src, long label, PartialList * dst )
 
 		std::list< Partial >::iterator it = 
 			std::stable_partition( src->begin(), src->end(), 
-								   std::not1( PartialUtils::label_equals(label) ) );
+								        std::not1( PartialUtils::isLabelEqual(label) ) );
 		dst->splice( dst->end(), *src, it, src->end() );
 	}
 	catch( Exception & ex ) 
@@ -198,7 +198,7 @@ void removeLabeled( PartialList * src, long label )
 		ThrowIfNull((PartialList *) src);
 		std::list< Partial >::iterator it = 
 			std::remove_if( src->begin(), src->end(), 
-							PartialUtils::label_equals(label) );
+							    PartialUtils::isLabelEqual( label ) );
 		src->erase( it, src->end() );
 	}
 	catch( Exception & ex ) 
@@ -231,7 +231,7 @@ void scaleAmp( PartialList * partials, BreakpointEnvelope * ampEnv )
 
 		notifier << "scaling amplitude of " << partials->size() << " Partials" << endl;
 
-		std::for_each( partials->begin(), partials->end(), PartialUtils::scale_amp( *ampEnv ) );
+		PartialUtils::scaleAmplitude( partials->begin(), partials->end(), *ampEnv );
 	}
 	catch( Exception & ex ) 
 	{
@@ -263,7 +263,7 @@ void scaleBandwidth( PartialList * partials, BreakpointEnvelope * bwEnv )
 
 		notifier << "scaling bandwidth of " << partials->size() << " Partials" << endl;
 
-		std::for_each( partials->begin(), partials->end(), PartialUtils::scale_bandwidth( *bwEnv ) );
+		PartialUtils::scaleBandwidth( partials->begin(), partials->end(), *bwEnv );
 	}
 	catch( Exception & ex ) 
 	{
@@ -295,7 +295,7 @@ void scaleFrequency( PartialList * partials, BreakpointEnvelope * freqEnv )
 
 		notifier << "scaling frequency of " << partials->size() << " Partials" << endl;
 
-		std::for_each( partials->begin(), partials->end(), PartialUtils::scale_frequency( *freqEnv ) );
+      PartialUtils::scaleFrequency( partials->begin(), partials->end(), *freqEnv );
 	}
 	catch( Exception & ex ) 
 	{
@@ -328,7 +328,7 @@ void scaleNoiseRatio( PartialList * partials, BreakpointEnvelope * noiseEnv )
 
 		notifier << "scaling noise ratio of " << partials->size() << " Partials" << endl;
 
-		std::for_each( partials->begin(), partials->end(), PartialUtils::scale_noise_ratio( *noiseEnv ) );
+		PartialUtils::scaleNoiseRatio( partials->begin(), partials->end(), *noiseEnv );
 	}
 	catch( Exception & ex ) 
 	{
@@ -361,7 +361,7 @@ void shiftPitch( PartialList * partials, BreakpointEnvelope * pitchEnv )
 
 		notifier << "shifting pitch of " << partials->size() << " Partials" << endl;
 		
-		std::for_each( partials->begin(), partials->end(), PartialUtils::shift_pitch( *pitchEnv ) );
+		PartialUtils::shiftPitch( partials->begin(), partials->end(), *pitchEnv );
 	}
 	catch( Exception & ex ) 
 	{
@@ -392,7 +392,7 @@ void shiftTime( PartialList * partials, double offset )
 
 		notifier << "shifting time of " << partials->size() << " Partials" << endl;
 		
-		std::for_each( partials->begin(), partials->end(), PartialUtils::shift_time( offset ) );
+		PartialUtils::shiftTime( partials->begin(), partials->end(), offset );
 	}
 	catch( Exception & ex ) 
 	{
@@ -418,7 +418,7 @@ void shiftTime( PartialList * partials, double offset )
 extern "C"
 void sortByLabel( PartialList * partials )
 {
-	partials->sort( PartialUtils::compare_label<>() );	
+	partials->sort( PartialUtils::compareLabelLess() );	
 }
 
 /* ---------------------------------------------------------------- */

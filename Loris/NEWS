@@ -55,6 +55,19 @@ OLD CODE.
 SDIIF, and Spc files, and another for removing markers
 (loris_mark and loris_unmark).
 
+- Overhauled PartialUtils. All functors have been renamed
+and all have corresponding functions. Names are now 
+consistent and predictable. THIS BREAKS OLD CODE, but the
+old PartialUtils were such a mess...
+
+- Dilator now can compute new times for Markers, using
+the same interface as for dilating Partials.
+
+- Added a simple command line synthesis utility for
+rendering Partials stored in a SDIF file, optionally
+with dilation and constant amplitude and frequency 
+scaling.
+
 
 -------------------------------------------------------
 changes since 1.1 release:

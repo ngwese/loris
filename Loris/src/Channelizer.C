@@ -50,14 +50,15 @@ namespace Loris {
 //	Channelizer constructor 
 // ---------------------------------------------------------------------------
 //!	Construct a new Channelizer using the specified reference
-//!	@c Envelope to represent the a numbered channel. 
+//!	Envelope to represent the a numbered channel. 
 //!	
 //!	\param 	refChanFreq is an Envelope representing the center frequency
-//!			of a channel.
+//!			   of a channel.
 //!	\param 	refChanLabel is the corresponding channel number (i.e. 1
-//!			if refChanFreq is the lowest-frequency channel, and all 
-//!			other channels are harmonics of refChanFreq, or 2 if  
-//!			refChanFreq tracks the second harmonic, etc.).
+//!			   if refChanFreq is the lowest-frequency channel, and all 
+//!			   other channels are harmonics of refChanFreq, or 2 if  
+//!			   refChanFreq tracks the second harmonic, etc.).
+//!   \throw   InvalidArgument if refChanLabel is not positive.
 //
 Channelizer::Channelizer( const Envelope & refChanFreq, int refChanLabel ) :
 	_refChannelFreq( refChanFreq.clone() ),
@@ -177,9 +178,13 @@ Channelizer::channelize( Partial & partial ) const
 	
 	int label;
 	if ( ampsum > 0. )	
+	{
 		label = (int)((weightedlabel / ampsum) + 0.5);
+	}
 	else	//	this should never happen, but just in case:
+	{
 		label = 0;
+	}
 	Assert( label >= 0 );
 			
 	//	assign label, and remember it, but

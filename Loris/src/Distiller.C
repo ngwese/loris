@@ -118,7 +118,7 @@ Distiller::distill( PartialList & partials )
 
 	//	sort the PartialList by label:
 	debugger << "Distiller sorting Partials by label..." << endl;
-	partials.sort( PartialUtils::compare_label< std::less< Partial::label_type > >() );
+	partials.sort( PartialUtils::compareLabelLess() );
 
 	// 	iterate over labels and distill each one:
 	PartialList::iterator lowerbound = partials.begin();
@@ -143,7 +143,7 @@ Distiller::distill( PartialList & partials )
 		//	having a label not equal to 'label':
 		PartialList::iterator upperbound = 
 			std::find_if( lowerbound, partials.end(), 
-						  std::not1( PartialUtils::label_equals(label) ) );
+						     std::not1( PartialUtils::isLabelEqual( label ) ) );
 		
 		//	[lowerbound, upperbound) is a range of all the
 		//	partials in dist_list labeled label.
@@ -360,7 +360,7 @@ static Partial distillOne( PartialList & partials, int label,
 	
 	//	sort Partials by duration, longer
 	//	Partials will be prefered:
-	partials.sort( PartialUtils::compare_duration< std::greater< double > >() );
+	partials.sort( PartialUtils::compareDurationGreater() );
 	
 	// keep the longest Partial:
 	PartialList::iterator it = partials.begin();

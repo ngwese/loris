@@ -1,3 +1,37 @@
+/*
+ * This is the Loris C++ Class Library, implementing analysis, 
+ * manipulation, and synthesis of digitized sounds using the Reassigned 
+ * Bandwidth-Enhanced Additive Sound Model.
+ *
+ * Loris is Copyright (c) 1999-2004 by Kelly Fitz and Lippold Haken
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY, without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *
+ * loris_analyze.C
+ *
+ * main() function for a utility program to perform Loris analysis
+ * of a sampled sound (read from an AIFF file or from standard input),
+ * and store the Partials in a SDIF file.
+ *
+ * Kelly Fitz, 20 Dec 2004
+ * loris@cerlsoundgroup.org
+ *
+ * http://www.cerlsoundgroup.org/Loris/
+ *
+ */
 #include <algorithm>
 #include <cstdio> // for scanf
 #include <cstdlib>
@@ -861,12 +895,11 @@ int main( int argc, char * argv[] )
 		if ( ! gTestFileName.empty() )
 		{
 			cout << "* exporting rendered partials to " << gTestFileName << endl;
-			Loris::PartialUtils::crop chopNegative( 0, 99999999. );
-			std::for_each( gAnalyzer->partials().begin(),
+			Loris::PartialUtils::crop( gAnalyzer->partials().begin(),
 						   gAnalyzer->partials().end(),
-						   chopNegative );
+						   0, 99999999. );
 			Loris::AiffFile testfile( gAnalyzer->partials().begin(), 
-									  gAnalyzer->partials().end(), gRate );
+						  gAnalyzer->partials().end(), gRate );
 			testfile.markers() = markers;
 			testfile.write( gTestFileName );
 		}

@@ -8,7 +8,7 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-bin_PROGRAMS  = loris_analyze loris_spewmarkers loris_mark loris_unmark
+bin_PROGRAMS  = loris_analyze loris_synthesize loris_spewmarkers loris_mark loris_unmark
 
 INCLUDES = -I$(top_srcdir)/src
 
@@ -21,6 +21,17 @@ else
 loris_analyze_LDADD = $(top_builddir)/src/libloris.la
 endif
 loris_analyze_LDFLAGS = -static
+
+# loris_synthesize: a utility program to render Partials
+# stored in a SDIF file, optionally with dilation and amplitude
+# and frequency scaling by a constant factor.
+loris_synthesize_SOURCES = loris_synthesize.C
+if DARWIN
+loris_synthesize_LDADD = $(top_builddir)/src/.libs/libloris.a
+else
+loris_synthesize_LDADD = $(top_builddir)/src/libloris.la
+endif
+loris_synthesize_LDFLAGS = -static
 
 # loris_spewmarkers: a utility program to read the
 # markers stored in a AIFF, SPC, or SDIF file and

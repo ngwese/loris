@@ -113,7 +113,7 @@ using namespace Loris;
  */
 extern "C"
 void channelize( PartialList * partials, 
-				 BreakpointEnvelope * refFreqEnvelope, int refLabel )
+				     BreakpointEnvelope * refFreqEnvelope, int refLabel )
 {
 	try 
 	{
@@ -121,12 +121,13 @@ void channelize( PartialList * partials,
 		ThrowIfNull((BreakpointEnvelope *) refFreqEnvelope);
 
 		if ( refLabel <= 0 )
+		{
 			Throw( InvalidArgument, "Channelization reference label must be positive." );
-		
+		}
 		notifier << "channelizing " << partials->size() << " Partials" << endl;
 
-		Channelizer chan( *refFreqEnvelope, refLabel );
-		chan.channelize( partials->begin(), partials->end() );		
+		Channelizer::channelize( partials->begin(), partials->end(), 
+		                         *refFreqEnvelope, refLabel );		
 	}
 	catch( Exception & ex ) 
 	{
@@ -226,12 +227,8 @@ void dilate( PartialList * partials,
 		ThrowIfNull((double *) target);
 
 		notifier << "dilating " << partials->size() << " Partials" << endl;
-		Dilator dil( initial, initial+npts, target );
-		PartialList::iterator it;
-		for ( it = partials->begin(); it != partials->end(); ++it )
-		{
-			dil.dilate( *it );
-		}
+		Dilator::dilate( partials->begin(), partials->end(),
+      		           initial, initial+npts, target );
 	}
 	catch( Exception & ex ) 
 	{

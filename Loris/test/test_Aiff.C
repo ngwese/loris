@@ -121,10 +121,10 @@ int main( int argc, char * argv[] )
 
 		cout << "analyzed, found " << clar.size() << " partials" << endl;
 		
-		Partial & fund = *(std::find_if( clar.begin(), clar.end(), PartialUtils::label_equals(1) ));
+		Partial & fund = *(std::find_if( clar.begin(), clar.end(), PartialUtils::isLabelEqual(1) ));
 		cout << "fundamental appears to be about " << fund.frequencyAt(1) << " Hz." << endl;
 		
-		Partial & second = *(std::find_if( clar.begin(), clar.end(), PartialUtils::label_equals(2) ));
+		Partial & second = *(std::find_if( clar.begin(), clar.end(), PartialUtils::isLabelEqual(2) ));
 		cout << "second harmonic appears to be about " << second.frequencyAt(1) << " Hz." << endl;
 		cout << "(they should be around 415 and 830)" << endl;
 		
@@ -142,7 +142,7 @@ int main( int argc, char * argv[] )
 		double endtime = 0.75 * 
 			PartialUtils::timeSpan( clar.begin(), clar.end() ).second;
 		cout << "cropping to " << endtime << " seconds." << endl;
-		std::for_each( clar.begin(), clar.end(), PartialUtils::crop( 0, endtime ) );
+		PartialUtils::crop( clar.begin(), clar.end(), 0, endtime );
 		
 		cout << "exporting " << clar.size() 
 			 << " cropped sinusoidal spc partials" << endl;

@@ -79,12 +79,12 @@ public:
 	//!	the initial range.
 	//!	
 	//!	\param 	ibegin is the beginning of a sequence of initial, or source,
-	//!	        time points.
+	//!	         time points.
 	//!	\param 	iend is (one-past) the end of a sequence of initial, or
-	//!	        source, time points.
+	//!	         source, time points.
 	//!	\param 	tbegin is the beginning of a sequence of target time points; 
-	//!	        this sequence must be as long as the sequence of initial time
-	//!	        point described by ibegin and iend.
+	//!	         this sequence must be as long as the sequence of initial time
+	//!	         point described by ibegin and iend.
 	//!
 	//!	If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
 	//!	only const double * arguments.
@@ -165,7 +165,7 @@ public:
 	//!
 	//!	If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
 	//!	only PartialList::const_iterator arguments. Otherwise, this member
-	//! also works for sequences of Markers.
+	//!   also works for sequences of Markers.
 	//!	
 	//!	\sa Dilator::dilate( Partial & p ) const
 	//!	\sa Dilator::dilate( Marker & m ) const
@@ -174,7 +174,7 @@ public:
 	void dilate( Iter dilate_begin, Iter dilate_end  ) const;
 #else
 	void dilate( PartialList::iterator dilate_begin, 
-				 PartialList::iterator dilate_end  ) const;
+				    PartialList::iterator dilate_end  ) const;
 #endif
 	 
 	//!	Function call operator: same as 
@@ -182,7 +182,7 @@ public:
 	//!
 	//!	If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
 	//!	only PartialList::const_iterator arguments. Otherwise, this member
-	//! also works for sequences of Markers.
+	//!   also works for sequences of Markers.
 	//!	
 	//!	\sa Dilator::dilate( Partial & p ) const
 	//!	\sa Dilator::dilate( Marker & m ) const
@@ -191,7 +191,7 @@ public:
 	void operator() ( Iter dilate_begin, Iter dilate_end  ) const;
 #else
 	void operator() ( PartialList::iterator dilate_begin, 
-					  PartialList::iterator dilate_end ) const;
+					      PartialList::iterator dilate_end ) const;
 #endif
 	 
 	//!	Return the dilated time value corresponding to the specified initial time.
@@ -199,6 +199,45 @@ public:
 	//!	\param currentTime is a pre-dilated time.
 	//! \return the dilated time corresponding to the initial time currentTime
     double warpTime( double currentTime ) const;
+
+// -- static members --
+
+   //!   Static member that constructs an instance and applies
+   //!   it to a sequence of Partials. 
+   //!   Construct a Dilator using the specified initial and 
+   //!   target times, and apply it to a sequence of Partials.
+  	//!
+	//!	\param   dilate_begin is the beginning of a sequence of Partials to dilate.
+	//!	\param   dilate_end is (one-past) the end of a sequence of Partials to dilate.
+	//!	\param 	ibegin is the beginning of a sequence of initial, or source,
+	//!	         time points.
+	//!	\param 	iend is (one-past) the end of a sequence of initial, or
+	//!	         source, time points.
+	//!	\param 	tbegin is the beginning of a sequence of target time points; 
+	//!	         this sequence must be as long as the sequence of initial time
+	//!	         point described by ibegin and iend.
+	//!
+	//!	If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
+	//!	only PartialList::const_iterator arguments. Otherwise, this member
+	//!   also works for sequences of Markers.
+	//!	If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
+	//!	only const double * arguments for the times, otherwise, any iterator
+	//!   will do..
+	//!	
+	//!	\sa Dilator::dilate( Partial & p ) const
+	//!	\sa Dilator::dilate( Marker & m ) const
+#if ! defined(NO_TEMPLATE_MEMBERS)
+	template< typename DilateIter, typename TimeIter1, typename TimeIter2 >
+	static 
+	void dilate( DilateIter dilate_begin, DilateIter dilate_end,
+	             TimeIter1 ibegin, TimeIter1 iend, TimeIter2 tbegin  );
+#else
+   static
+	void dilate( PartialList::iterator dilate_begin, 
+				    PartialList::iterator dilate_end,
+				    const double * ibegin, const double * iend, 
+				    const double * tbegin  ) const;
+#endif
 
 };	//	end of class Dilator
 
@@ -314,6 +353,48 @@ inline
 void Dilator::operator() ( Marker & m ) const
 { 
 	dilate( m ); 
+}
+
+// ---------------------------------------------------------------------------
+//	dilate (static)
+// ---------------------------------------------------------------------------
+//!   Static member that constructs an instance and applies
+//!   it to a sequence of Partials. 
+//!   Construct a Dilator using the specified initial and 
+//!   target times, and apply it to a sequence of Partials.
+//!
+//!	\param   dilate_begin is the beginning of a sequence of Partials to dilate.
+//!	\param   dilate_end is (one-past) the end of a sequence of Partials to dilate.
+//!	\param 	ibegin is the beginning of a sequence of initial, or source,
+//!	         time points.
+//!	\param 	iend is (one-past) the end of a sequence of initial, or
+//!	         source, time points.
+//!	\param 	tbegin is the beginning of a sequence of target time points; 
+//!	         this sequence must be as long as the sequence of initial time
+//!	         point described by ibegin and iend.
+//!
+//!	If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
+//!	only PartialList::const_iterator arguments. Otherwise, this member
+//!   also works for sequences of Markers.
+//!	If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
+//!	only const double * arguments for the times, otherwise, any iterator
+//!   will do..
+//!	
+//!	\sa Dilator::dilate( Partial & p ) const
+//!	\sa Dilator::dilate( Marker & m ) const
+#if ! defined(NO_TEMPLATE_MEMBERS)
+	template< typename DilateIter, typename TimeIter1, typename TimeIter2 >
+	void dilate( DilateIter dilate_begin, DilateIter dilate_end,
+	             TimeIter1 ibegin, TimeIter1 iend, TimeIter2 tbegin  )
+#else
+	void dilate( PartialList::iterator dilate_begin, 
+				    PartialList::iterator dilate_end,
+				    const double * ibegin, const double * iend, 
+				    const double * tbegin  )
+#endif
+{ 
+   Dilator instance( ibegin, iend, tbegin );
+	instance.dilate( dilate_begin, dilate_end ); 
 }
 
 }	//	end of namespace Loris
