@@ -58,7 +58,7 @@ Conclusions:
 	Analyze with 75 Hz resolution and 240 Hz window, distill at 5 Partials
 	per harmonic for meow1, and 3 Partials per harmonic for meow3.
 
-Last updated: 6 March 2003 by Kelly Fitz
+Last updated: 11 March 2003 by Kelly Fitz
 """
 
 print __doc__
@@ -83,6 +83,9 @@ loris.distill( pcollate )
 print 'synthesizing raw (collated) %s (%s)'%(name, time.ctime(time.time()))
 samples = loris.synthesize( pcollate, orate )
 loris.exportAiff( name + '.raw.aiff', samples, orate )
+loris.exportSpc( name + '.raw.s.spc', p, 36, 0 )
+loris.exportSpc( name + '.raw.e.spc', p, 36, 1 )
+loris.exportSdif( name + '.raw.sdif', p )
 
 # meow1 at 5 Partials per harmonic
 ref = loris.createFreqReference( p, 0, 1000, 100 )
@@ -90,10 +93,10 @@ loris.channelize( p, ref, 5 )
 loris.distill( p )
 print 'synthesizing distilled (5 Partials per harmonic) %s (%s)'%(name, time.ctime(time.time()))
 samples = loris.synthesize( p, orate )
-loris.exportAiff( name + '.d5.aiff', samples, orate )
-loris.exportSpc( name + '.d5.s.spc', p, 36, 0 )
-loris.exportSpc( name + '.d5.e.spc', p, 36, 1 )
-loris.exportSdif( name + '.d5.sdif', p )
+loris.exportAiff( name + '.recon.aiff', samples, orate )
+loris.exportSpc( name + '.s.spc', p, 36, 0 )
+loris.exportSpc( name + '.e.spc', p, 36, 1 )
+loris.exportSdif( name + '.sdif', p )
 
 # analyze meow3
 name = 'meow3'
