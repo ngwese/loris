@@ -1,3 +1,5 @@
+#!/bin/sh
+
 # Copyright (C) 1999-2001, Kelly Fitz and Lippold Haken <loris@cerlsoundgroup.org>
 #  
 # This file is free software; as a special exception the author gives
@@ -8,7 +10,6 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-#!/bin/sh
 rm -f config.cache
 rm -f acconfig.h
 mkdir config
