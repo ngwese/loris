@@ -61,6 +61,18 @@ public:
 	//BreakpointMap( void ) {}
 	//BreakpointMap( const BreakpointMap & ) {}
 	//~BreakpointMap( void );
+
+#if defined(__GNUC__)
+//	assignment:
+//	supposed to get this for free, gcc seems to 
+//	get it wrong.
+	BreakpointMap & operator=( const BreakpointMap & other ) 
+	{
+		if (this != &other) {
+			_breakpoints = other._breakpoints;
+		}
+	}
+#endif
 	
 //	cloning:
 //	In standard C++, an overriding member can return a type that

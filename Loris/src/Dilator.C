@@ -66,6 +66,17 @@ Dilator::Dilator( const vector< double > & init,
 Partial &
 Dilator::dilate( Partial & p ) const
 {
+/*
+	debugger << "Initial time points: ";
+	for (multiset< double >::const_iterator it = _initial.begin(); it != _initial.end(); ++it )
+		debugger << *it;
+	debugger << endl;
+
+    debugger << "Target time points: ";
+    for (multiset< double >::const_iterator it = _target.begin(); it != _target.end(); ++it )
+        debugger << *it;
+    debugger << endl;
+*/
 	//	sanity check:
 	Assert( _initial.size() == _target.size() );
 		
