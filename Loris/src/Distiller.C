@@ -14,6 +14,7 @@
 #include "notifier.h"
 #include <cmath>
 #include <list>
+#include <vector>
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace

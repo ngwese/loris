@@ -20,7 +20,7 @@
 #include "notifier.h"
 #include <set>
 #include <cmath>
-#include <functional>
+#include <algorithm>
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
@@ -127,12 +127,12 @@ Morph::morph( PartialList::const_iterator begin0,
 		//	find source Partial 0:
 		//const Partial nullPartial;
 		PartialList::const_iterator p0 = 
-			find_if( begin0, end0, std::bind2nd(PartialUtils::label_equals(), *labelIter) );
+			std::find_if( begin0, end0, std::bind2nd(PartialUtils::label_equals(), *labelIter) );
 		//const Partial & p0 = ( piter != end0 )?( *piter ):( nullPartial );
 				
 		//	find source Partial 1:
 		PartialList::const_iterator p1 = 
-			find_if( begin1, end1, std::bind2nd(PartialUtils::label_equals(), *labelIter) );
+			std::find_if( begin1, end1, std::bind2nd(PartialUtils::label_equals(), *labelIter) );
 		//const Partial & p1 = ( piter != end1 )?( *piter ):( nullPartial );
 		
 		debugger << "morphing " << ((p0 != end0)?(1):(0)) 
