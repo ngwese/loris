@@ -1,20 +1,15 @@
-#ifndef __Loris_aiff_file__
-#define __Loris_aiff_file__
-
+#ifndef INCLUDE_AIFFFILE_H
+#define INCLUDE_AIFFFILE_H
 // ===========================================================================
 //	AiffFile.h
 //	
 //	Association of a sample buffer and the necessary additional info 
 //	(sample rate, number of channels, and sample data size in bits)
-//	to completely specify an AIFF samples file. Extends the generic
-//	Loris::SamplesFile with AIFF i/o.
+//	to completely specify an AIFF samples file.
 //
 //	-kel 28 Sept 99
 //
 // ===========================================================================
-#include "LorisTypes.h"
-#include "ieee.h"
-#include "SamplesFile.h"
 #include <vector>
 #include <string>
 
@@ -31,24 +26,40 @@ struct CkHeader;
 //	The SampleBuffer must be provided by clients; it is not owned by 
 //	the AiffFile.
 //	
-class AiffFile : public SamplesFile
+class AiffFile
 {
+//	-- instance variables --
+	double _sampleRate;	//	in Hz
+	int _nChannels;		//	samples per frame, usually one (mono) in Loris
+	int _sampSize;		//	in bits
+	
+	std::vector< double > & _samples;
+	
+//	-- public interface --
 public:
 //	construction:
+//	(compiler can generate destructor, copy, and assignment)
 	AiffFile( double rate, int chans, int bits, std::vector< double > & buf );
 	AiffFile( const std::string & filename, std::vector< double > & buf );
 	AiffFile( std::istream & s, std::vector< double > & buf );
-	
-	AiffFile( const SamplesFile & other );
-	
-//	compiler-generated destructor is okay:
-	//	~AiffFile( void );
 	
 //	reading and writing:
 	void read( const std::string & filename );
 	void read( std::istream & s );
 	void write( const std::string & filename );
 	void write( std::ostream & s );
+	
+//	access/mutation:
+	double sampleRate( void ) const { return _sampleRate; }
+	int numChans( void ) const { return _nChannels; }
+	int sampleSize( void ) const { return _sampSize; }
+	
+	void setSampleRate( double x ) { _sampleRate = x; }
+	void setNumChannels( int n ) { _nChannels = n; }
+	void setSampleSize( int n ) { _sampSize = n; }
+	
+	std::vector< double > & samples( void ) { return _samples; }
+	const std::vector< double > & samples( void ) const { return _samples; }
 	
 //	-- helpers --
 private:
@@ -66,9 +77,12 @@ private:
 	void writeSamples( std::ostream & s );
 	
 	//	data sizes:
-	Uint_32 sizeofCommon( void );
-	Uint_32 sizeofCkHeader( void );
-	Uint_32 sizeofSoundData( void );
+	unsigned long sizeofCommon( void );
+	unsigned long sizeofCkHeader( void );
+	unsigned long sizeofSoundData( void );
+
+	//	parameter validation:
+	void validateParams( void );
 
 };	//	end of class AiffFile
 
@@ -76,5 +90,5 @@ private:
 }	//	end of namespace Loris
 #endif
 
-#endif //	ndef __Loris_aiff_file__
+#endif //	ndef INCLUDE_AIFFFILE_H
 

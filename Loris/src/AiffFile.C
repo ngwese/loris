@@ -16,15 +16,11 @@
 #include "Exception.h"
 #include "notifier.h"
 #include "ieee.h"
+#include "LorisTypes.h"
 #include <algorithm>
 #include <string>
 #include <fstream>
-
-#if !defined(Deprecated_cstd_headers)
 #include <climits>
-#else
-#include <limits.h>
-#endif
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
@@ -74,8 +70,12 @@ struct SoundDataCk
 // ---------------------------------------------------------------------------
 //
 AiffFile::AiffFile( double rate, int chans, int bits, std::vector< double > & buf ) :
-	SamplesFile( rate, chans, bits, buf )
+	_sampleRate( rate ),
+	_nChannels( chans ),
+	_sampSize( bits ),
+	_samples( buf )
 {
+	validateParams();
 }
 
 // ---------------------------------------------------------------------------
@@ -84,7 +84,10 @@ AiffFile::AiffFile( double rate, int chans, int bits, std::vector< double > & bu
 //	Read immediately.
 //
 AiffFile::AiffFile( std::istream & s, std::vector< double > & buf ) :
-	SamplesFile( buf )
+	_sampleRate( 1 ),
+	_nChannels( 1 ),
+	_sampSize( 1 ),
+	_samples( buf )
 {
 	read( s );
 }
@@ -95,19 +98,15 @@ AiffFile::AiffFile( std::istream & s, std::vector< double > & buf ) :
 //	Read immediately.
 //
 AiffFile::AiffFile( const std::string & filename, std::vector< double > & buf ) :
-	SamplesFile( buf )
+	_sampleRate( 1 ),
+	_nChannels( 1 ),
+	_sampSize( 1 ),
+	_samples( buf )
 {
 	read( filename );
 }
 
-// ---------------------------------------------------------------------------
-//	AiffFile copy constructor
-// ---------------------------------------------------------------------------
-//
-AiffFile::AiffFile( const SamplesFile & other ) :
-	SamplesFile( other )
-{
-}
+
 
 // ---------------------------------------------------------------------------
 //	read
@@ -171,8 +170,6 @@ AiffFile::write( std::ostream & s )
 	}
 }
 
-#pragma mark -
-#pragma mark read helpers
 // ---------------------------------------------------------------------------
 //	readChunkHeader
 // ---------------------------------------------------------------------------
@@ -382,8 +379,6 @@ AiffFile::readSamples( std::istream & s )
 	}
 }
 
-#pragma mark -
-#pragma mark write helpers
 // ---------------------------------------------------------------------------
 //	writeCommon
 // ---------------------------------------------------------------------------
@@ -583,13 +578,11 @@ AiffFile::writeSamples( std::ostream & s )
 		Throw( FileIOException, "Failed to write AIFF samples.");
 }
 
-#pragma mark -
-#pragma mark chunk sizes
 // ---------------------------------------------------------------------------
 //	sizeofCkHeader
 // ---------------------------------------------------------------------------
 //
-Uint_32
+unsigned long
 AiffFile::sizeofCkHeader( void )
 {
 	return	sizeof(Int_32) +	//	id
@@ -600,7 +593,7 @@ AiffFile::sizeofCkHeader( void )
 //	sizeofCommon
 // ---------------------------------------------------------------------------
 //
-Uint_32
+unsigned long
 AiffFile::sizeofCommon( void )
 {
 	return	sizeof(Int_32) +			//	id
@@ -617,7 +610,7 @@ AiffFile::sizeofCommon( void )
 //	No block alignment, the samples start right after the 
 //	chunk header info.
 //
-Uint_32
+unsigned long
 AiffFile::sizeofSoundData( void )
 {
 	Uint_32 dataSize = _samples.size() * ( _sampSize / 8 );
@@ -631,6 +624,27 @@ AiffFile::sizeofSoundData( void )
 			sizeof(Uint_32) + 	//	offset
 			sizeof(Uint_32) + 	//	block size
 			dataSize;			//	sample data
+}
+
+// ---------------------------------------------------------------------------
+//	validateParams
+// ---------------------------------------------------------------------------
+//	Throw InvalidObject exception if the parameters are not valid.
+//
+void
+AiffFile::validateParams( void )
+{	
+	if ( _sampleRate < 0. )
+		Throw( InvalidObject, "Bad sample rate in SamplesFile." );
+	
+	static const int validChannels[] = { 1, 2, 4 };
+	if (! std::find( validChannels, validChannels + 3, _nChannels ) )
+		Throw( InvalidObject, "Bad number of channels in SamplesFile." );
+	
+	static const int validSizes[] = { 8, 16, 24, 32 };
+	if (! std::find( validSizes, validSizes + 4, _sampSize ) )
+		Throw( InvalidObject, "Bad sample size in SamplesFile." );
+	
 }
 
 #if !defined( NO_LORIS_NAMESPACE )
