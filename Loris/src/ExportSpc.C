@@ -36,7 +36,6 @@
 #include "Partial.h"
 #include "notifier.h"
 #include "ieee.h"
-#include "pi.h"
 #include "LorisTypes.h"
 #include "PartialUtils.h"
 
@@ -53,6 +52,10 @@
 //		- file claims to have twice the number of partials
 //		- file claims to have twice the number of samples (2 mono samples = 1 stereo)
 #define MONO_ENH 1
+
+//	Pi:
+static const double Pi = M_PI;
+static const double TwoPi = 2. * M_PI;
 
 using namespace std;
 

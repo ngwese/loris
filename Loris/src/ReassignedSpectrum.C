@@ -33,13 +33,17 @@
 #include "ReassignedSpectrum.h"
 #include "notifier.h"
 #include "Exception.h"
-#include "pi.h"
 #include <algorithm>
+#include <cmath>	//	for M_PI (except on Mac)
 #include <cstdlib>	//	for std::abs()
 
 #if defined(Debug_Loris)
 #include <stdio.h>
 #endif
+
+//	Pi:
+static const double Pi = M_PI;
+static const double TwoPi = 2. * M_PI;
 
 //	there's a freakin' ton of std in here, 
 //	just import the whole namespace

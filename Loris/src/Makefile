@@ -80,7 +80,6 @@ OBJ_LORIS = AiffFile.o \
 			Morpher.o \
 			Oscillator.o \
 			Partial.o \
-			PartialView.o \
 			ReassignedSpectrum.o \
 			Synthesizer.o \
 			ieee.o \

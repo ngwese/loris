@@ -35,7 +35,6 @@
 #include "Partial.h"
 #include "Exception.h"
 #include "notifier.h"
-#include "pi.h"
 #include <cmath>
 
 extern "C" {

@@ -34,7 +34,6 @@
 #include "Exception.h"
 #include "Partial.h"
 #include "notifier.h"
-#include "pi.h"
 
 #include <vector>
 #include <stdio.h>	//	for FILE

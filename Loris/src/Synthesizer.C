@@ -35,12 +35,14 @@
 #include "Exception.h"
 #include "Oscillator.h"
 #include "Partial.h"
-#include "PartialView.h"
 #include "notifier.h"
-#include "pi.h"
 #include <algorithm>
 #include <vector>
 #include <cmath>
+
+//	Pi:
+static const double Pi = M_PI;
+static const double TwoPi = 2. * M_PI;
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
@@ -55,8 +57,7 @@ static long countem = 0;
 //
 Synthesizer::Synthesizer( std::vector< double > & buf, double srate ) :
 	_sampleRate( srate ),
-	_samples( buf ),
-	_view( new BasicPartialView() )
+	_samples( buf )
 {
 	//	check to make sure that the sample rate is valid:
 	if ( _sampleRate <= 0. ) {
@@ -74,9 +75,9 @@ Synthesizer::Synthesizer( std::vector< double > & buf, double srate ) :
 //
 Synthesizer::Synthesizer( const Synthesizer & other ) :
 	_sampleRate( other._sampleRate ),
-	_samples( other._samples ),
-	_view( other._view->clone() )
+	_samples( other._samples )
 {
+	countem = 0;
 }
 
 
@@ -112,20 +113,19 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ )
 			p.initialPhase() << " starting frequency " << 
 			p.begin()->frequency() << endl;
 */
-	view().view( p );
 	
 //	don't bother to synthesize Partials having zero duration:
-	if ( view().duration() == 0. || 
-		 view().endTime() + timeShift < 0. ||
-		 (view().startTime() + timeShift) * sampleRate() > _samples.size() )
+	if ( p.duration() == 0. || 
+		 p.endTime() + timeShift < 0. ||
+		 (p.startTime() + timeShift) * sampleRate() > _samples.size() )
 	{
 		debugger << "ignoring a partial that would generate no samples" << endl;
-		debugger << "start time is " << view().startTime() << " end time is " << view().endTime() << endl;
+		debugger << "start time is " << p.startTime() << " end time is " << p.endTime() << endl;
 		return;
 	}
 	
 //	create an iterator on the PartialView:
-	PartialViewIterator iterator = view().begin();
+	PartialConstIterator iterator = p.begin();
 	
 //	compute the initial oscillator state, assuming
 //	a prepended Breakpoint of zero amplitude:
@@ -173,7 +173,8 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ )
 	
 //	synthesize linear-frequency segments until there aren't any more
 //	segments or the segments threaten to run off the end of the buffer:
-	for ( ; ! iterator.atEnd(); iterator.advance() ) 
+	const PartialConstIterator End = p.end();
+	for ( ; iterator != End; ++iterator ) 
 	{
 		//	compute target sample index:
 		long tgtsamp = (iterator.time() + timeShift) * sampleRate();
@@ -206,7 +207,7 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ )
 //	compute the final target oscillator state assuming 
 //	an appended Breakpoint of zero amplitude:
 	double tgtradfreq, tgtamp, tgtbw;
-	if ( iterator.atEnd() ) 
+	if ( iterator == End ) 
 	{
 		tgtradfreq = osc.radianFreq();
 		tgtamp = 0.;
@@ -238,15 +239,7 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ )
 	++countem;
 }
 
-// ---------------------------------------------------------------------------
-//	setView
-// ---------------------------------------------------------------------------
-//
-void 
-Synthesizer::setView( const PartialView & v  ) 
-{
-	_view.reset( v.clone() );
-}
+
 	
 // ---------------------------------------------------------------------------
 //	radianFreq

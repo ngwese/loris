@@ -32,8 +32,11 @@
  */
 #include "KaiserWindow.h"
 #include "Exception.h"
-#include "pi.h"
 #include <cmath>
+
+//	Pi:
+static const double Pi = M_PI;
+static const double TwoPi = 2. * M_PI;
 
 using namespace std;
 

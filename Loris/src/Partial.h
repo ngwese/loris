@@ -160,6 +160,12 @@ public:
 	Breakpoint & operator * ( void ) { return _iter->second; }
 	Breakpoint * operator -> ( void ) { return &(_iter->second); }
 	
+//	Breakpoint attribute access (conveience, but maybe not great design):
+	double frequency( void ) const { return _iter->second.frequency(); }
+	double amplitude( void ) const { return _iter->second.amplitude(); }
+	double bandwidth( void ) const { return _iter->second.bandwidth(); }
+	double phase( void ) const { return _iter->second.phase(); }
+
 //	time access (not available through Breakpoint):
 	double time( void ) const { return _iter->first; }	
 
@@ -212,6 +218,12 @@ public:
 //	derference:
 	const Breakpoint & operator * ( void ) const { return _iter->second; }
 	const Breakpoint * operator -> ( void ) const { return &(_iter->second); }
+
+//	Breakpoint attribute access (conveience, but maybe not great design):
+	double frequency( void ) const { return _iter->second.frequency(); }
+	double amplitude( void ) const { return _iter->second.amplitude(); }
+	double bandwidth( void ) const { return _iter->second.bandwidth(); }
+	double phase( void ) const { return _iter->second.phase(); }
 
 //	time access (not available through Breakpoint):
 	double time( void ) const { return _iter->first; }	

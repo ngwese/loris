@@ -53,7 +53,6 @@ OBJ_LORIS = $(CLASSES)/AiffFile.o \
 			$(CLASSES)/Morpher.o \
 			$(CLASSES)/Oscillator.o \
 			$(CLASSES)/Partial.o \
-			$(CLASSES)/PartialView.o \
 			$(CLASSES)/ReassignedSpectrum.o \
 			$(CLASSES)/Synthesizer.o \
 			$(CLASSES)/ieee.o \

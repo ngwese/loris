@@ -34,10 +34,13 @@
 #include "Filter.h"
 #include "random.h"
 #include "Exception.h"
-#include "pi.h"
 #include "notifier.h"
 #include <vector>
 #include <cmath>
+
+//	Pi:
+static const double Pi = M_PI;
+static const double TwoPi = 2. * M_PI;
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace

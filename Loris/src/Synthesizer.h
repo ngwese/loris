@@ -33,9 +33,7 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-#include "PartialView.h"
 #include <vector>	
-#include <memory>	//	for auto_ptr
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
@@ -53,37 +51,26 @@ class Partial;
 //
 //	The Synthesizer does not own its sample vector, the client 
 //	is responsible for its construction and destruction. Many 
-//	Synthesizers may share a buffer.
-//	
-//	auto_ptr is used to pass some objects as arguments to make explicit
-//	the source/sink relationship between the caller and the Synthesizer.
-//	Synthesizer assumes ownership, and the client's auto_ptr
-//	will have no reference (or ownership).
+//	Synthesizers may share a buffer. (But this class is not thread-safe.)
 //
 class Synthesizer
 {
 //	-- instance variables --
 	double _sampleRate;					//	in Hz
 	std::vector< double > & _samples;	//	samples are computed and stored here
-	std::auto_ptr< PartialView > _view;	//	a view on Partials, possibly filtered
 		
 //	-- public interface --
 public:
 //	construction:
 //	(use compiler-generated destructor)
 	Synthesizer( std::vector< double > & buf, double srate );
-	~Synthesizer(void);
-
-//	copy:
-//	Create a copy of other by cloning its PartialView and sharing its
-//	sample buffer.
 	Synthesizer( const Synthesizer & other );
+	~Synthesizer(void);
 	
 //	synthesis:
 //
 //	Synthesize a bandwidth-enhanced sinusoidal Partial with the specified 
-//	timeShift (in seconds). The Partial parameter data is filtered by the 
-//	Synthesizer's PartialView. Zero-amplitude Breakpoints are inserted
+//	timeShift (in seconds). Zero-amplitude Breakpoints are inserted
 //	1 millisecond (Partial::FadeTime()) from either end of the Partial to reduce 
 //	turn-on and turn-off artifacts. The client is responsible or insuring
 //	that the buffer is long enough to hold all samples from the time-shifted
@@ -98,12 +85,6 @@ public:
 	std::vector< double > & samples( void ) { return _samples; }
 	const std::vector< double > & samples( void ) const { return _samples; }
 	
-	const PartialView & view( void ) const { return *_view; }
-	PartialView & view( void ) { return *_view; }
-	
-//	mutation:
-	void setView( const PartialView & v );
-
 //	-- private helpers --
 private:
 	inline double radianFreq( double hz ) const;
