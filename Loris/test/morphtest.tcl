@@ -56,17 +56,17 @@ puts "(looking for sources in $srcdir)"
 #	analyze clarinet tone
 #
 puts "analyzing clarinet 3G#"
-set a [ Analyzer -args 390 ]
+Analyzer a 390
 
-set cf [ AiffFile -args $srcdir/clarinet.aiff ]
-set v [ $cf samples ]
-set samplerate [ $cf sampleRate ]
+AiffFile cf $srcdir/clarinet.aiff
+set v [ cf samples ]
+set samplerate [ cf sampleRate ]
 
-set clar [ $a analyze $v $samplerate ]
+set clar [ a analyze $v $samplerate ]
 
 puts "checking SDIF export/import"
 exportSdif clarinet.tcltest.sdif $clar
-PartialList -this [ set clar [ importSdif clarinet.tcltest.sdif ] ]
+set clar  [ importSdif clarinet.tcltest.sdif ]
 
 puts "making a bogus attempt at writing an Spc file"
 if { [ catch { exportSpc bad_spc_file.tcltest.spc $clar 90 } ] } {
@@ -78,41 +78,47 @@ if { [ catch { exportSpc bad_spc_file.tcltest.spc $clar 90 } ] } {
 channelize $clar [ createFreqReference $clar 0 1000 ] 1
 distill $clar
 
+# this seems to be broken, probably I nee to 
+# reexamine my Tcl code here, and also
+# the SWIG wrapper behavior, see SWIG docs.
+puts "distilled clarinet has [ $clar size ] Partials"
+puts "finding avg frequency of fundamental" 
+
 # just for fun, print out the average 
 # frequency of the first partial in the
 # clarinet analysis:
 set f 0
 set n 0
-PartialIterator -this [ set iter [ Partial_begin [ PartialListIterator_partial [ $clar begin ] ] ] ] 
-set end [ Partial_end [ PartialListIterator_partial [ $clar begin ] ] ]
-
+set iter [[[$clar begin] partial] begin] 
+set end [[[$clar begin] partial] end]
 while { ! [ $iter equals $end ] } {
-	set f [expr $f + [ Breakpoint_frequency [ PartialIterator_breakpoint $iter ] ] ]
+	set  f [expr $f + [ [$iter breakpoint] frequency ] ]
 	incr n
-	PartialIterator -this [ set iter [ $iter next ] ]
+	set iter [$iter next]
 }
 puts "avg frequency of first distilled clarinet partial is [expr $f/$n]"
 
 puts "shifting pitch of clarinet"
-shiftPitch $clar [ BreakpointEnvelopeWithValue -600 ]
+shiftPitch $clar [ BreakpointEnvelope -600 ]
 
 # check clarinet synthesis:
-exportAiff clarOK.tcltest.aiff [ synthesize $clar $samplerate ] $samplerate 1 16
+exportAiff clarOK.tcltest.aiff [ synthesize $clar $samplerate ] $samplerate 
 
 
 #
 #	analyze flute tone (reuse Analyzer)
 #
 puts "analyzing flute 3D"
-set a [ Analyzer -args 270 ]
-set v [ [ AiffFile -args $srcdir/flute.aiff ] samples ]
-set flut [ $a analyze $v $samplerate ]
+Analyzer a 270
+AiffFile cf $srcdir/flute.aiff
+set v [ cf samples ]
+set flut [ a analyze $v $samplerate ]
 
 channelize $flut [ createFreqReference $flut 0 1000 ] 1
 distill $flut
 
 # check flute synthesis:
-exportAiff flutOK.tcltest.aiff [ synthesize $flut $samplerate ] $samplerate 1 16
+exportAiff flutOK.tcltest.aiff [ synthesize $flut $samplerate ] $samplerate
 
 #
 #	perform temporal dilation
@@ -131,11 +137,11 @@ dilate $clar $clar_times $tgt_times
 #	perform morph
 #
 puts "morphing flute and clarinet"
-set mf [BreakpointEnvelope]
-$mf insertBreakpoint 0.6 0
-$mf insertBreakpoint 2 1
-set m [ morph $clar $flut $mf $mf $mf ]
-exportAiff morph.tcltest.aiff [ synthesize $m $samplerate ] $samplerate 1 16
+BreakpointEnvelope mf
+mf insertBreakpoint 0.6 0
+mf insertBreakpoint 2 1
+set m [ morph $clar $flut mf mf mf ]
+exportAiff morph.tcltest.aiff [ synthesize $m $samplerate ] $samplerate 
 
 puts "done"
 
