@@ -742,8 +742,13 @@ convertSamplesToBytes( const std::vector< double > & samples,
 
 	typedef std::vector< Byte >::size_type size_type;
 
+	//	grow the bytes vector, must be an even number 
+	//	of bytes:
 	const int bytesPerSample = bps / 8;
-	bytes.resize( samples.size() * bytesPerSample );
+	size_type howManyBytes = samples.size() * bytesPerSample;
+	if ( howManyBytes%2 )
+		++howManyBytes;
+	bytes.resize( howManyBytes );
 
 	debugger << "converting " << samples.size() << " samples to size " 
 			 << bps << " bits" << endl;
