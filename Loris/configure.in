@@ -238,7 +238,8 @@ dnl be used (someday)
 AH_TEMPLATE([NO_TEMPLATE_MEMBERS],
             [Define for compilers that do not support template member functions.])
 
-AC_DEFINE([NO_TEMPLATE_MEMBERS])
+dnl devise a way to check this
+dnl AC_DEFINE([NO_TEMPLATE_MEMBERS])
 
 dnl restore this
 AC_LANG_RESTORE
