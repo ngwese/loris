@@ -1,0 +1,77 @@
+This is Loris.
+
+Loris is a C++ class library implementing analysis, manipulation, and
+synthesis of digitized sounds using the Reassigned Bandwidth-Enhanced
+Additive Sound Model. Loris supports modified resynthesis and
+manipulations of the model data, such as time- and frequency-scale
+modification and sound morphing. Loris includes support and wrapper
+code for building extension modules for various scripting languages
+(Python, Tcl, Perl).
+
+Loris is developed by Kelly Fitz and Lippold Haken at the CERL Sound
+Group (http://www.cerlsoundgroup.org), with contributions from Paul
+Christensen. IEEE floating point conversion code was provided by
+Malcolm Slaney and Ken Turkowski. Reference-counted "smart pointer"
+code provided by Vladimir Batov.
+
+For more information about Loris and the Reassigned Bandwidth-Enhanced
+Additive Model, contact the developers at loris@cersloundgroup.org, or
+visit them at http://www.cerlsoundgroup.org/Loris/.
+
+The primary distribution point for Loris is SourceForge
+(http://www.sourceforge.net) and its mirrors.
+
+DIRECTORIES:
+
+Loris/classes - the Loris C++ class library.
+
+Loris/demo - a simple sound morphing demonstration using a Loris
+extension module to the Python scripting language.
+
+Loris/demo/morphdemo.out - sample output from the sound morphing
+demonstration script (sanity chcek).
+
+Loris/mac - Metrowerks Codewarrior project for building Loris under MacOS.
+
+Loris/python - a Python extension module used in the initial
+development of Loris, included temporarily as part of the BETA
+distributions, and will be replaced by a more general scripting
+language interface.
+
+In order to compile and link the Loris library and scripting
+extensions, you will need the FFTW Fourier transform routines,
+available at http://www.fftw.org/, and the SDIF (Sound Description
+Interchange Format) data formatting routines, available at
+http://cnmat.CNMAT.Berkeley.EDU/SDIF/. FFTW and SDIF are covered by
+their own licenses and copyrights, and are entirely separate from
+Loris.
+
+Loris Makefiles and projects look for the FFTW distribution in a
+directory "FFTW" at the same level as the Loris directory. Loris
+Makefiles and projects look for the SDIF distribution in a directory
+"CNMAT-SDIF-alpha" at the same level as the Loris directory. For
+example:
+
+	/usr/local/Loris
+	/usr/local/FFTW/fftw-2.1.3
+	/usr/local/CNMAT-SDIF-alpha
+
+
+You may need to change your Makefiles or projects if you install these
+packages in some other configuration.
+
+PLATFORMS:
+
+Loris has been tested under Linux (Slackware) 2.2.13 and IRIX 6.5
+using gcc-2.95.2 and MacOS 9 using Metrowerks Codewarrior Pro 5 (with
+all updates). It should compile with any reasonably standard-compliant
+compiler.
+
+COPYRIGHT AND LICENSE:
+
+Loris is Copyright (c) 1999-2000 Kelly Fitz and Lippold Haken.
+
+Loris is free software, as defined by the Free Software Foundation,
+and is distributed under the terms of the GNU General Public License.
+See the COPYRIGHT and LICENSE documents.
+

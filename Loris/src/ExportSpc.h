@@ -1,15 +1,34 @@
 #ifndef INCLUDE_EXPORTSPC_H
 #define INCLUDE_EXPORTSPC_H
-// ===========================================================================
-//	SpcFile.h
-//	
-//	Association of info	(number of partials, number of frames, hop size, 
-//	and midi pitch)	to completely specify an spc file.  The spc files are 
-//	exported for real-time synthesis in Kyma.
-//
-//	-lip 6 Nov 99
-//
-// ===========================================================================
+/*
+ * Copyright (c) 1999-2000 Kelly Fitz and Lippold Haken
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY, without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *
+ * ExportSpc.h
+ *
+ * Definition of class ExportSpc, which exports spc files for
+ * real-time synthesis in Kyma.
+ *
+ * Lippold Haken, 6 Nov 1999
+ * loris@cerlsoundgroup.org
+ *
+ * http://www.cerlsoundgroup.org/Loris/
+ *
+ */
 #include "Partial.h"
 #include "Exception.h"
 #include <vector>

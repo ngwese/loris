@@ -1,16 +1,33 @@
-#ifndef __Kaiser_window_header__
-#define __Kaiser_window_header__
-// ===========================================================================
-//	KaiserWindow.h
-//	
-//	Class definition for factory class Loris::KaiserWindow.
-//	KaiserWindow can't be instantiated, the class is just
-//	a wrapper for the computation of Kaiser window samples.
-//
-//	-kel 14 Dec 99
-//
-// ===========================================================================
-
+#ifndef INCLUDE_KAISERWINDOW_H
+#define INCLUDE_KAISERWINDOW_H
+/*
+ * Copyright (c) 1999-2000 Kelly Fitz and Lippold Haken
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY, without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *
+ * KaiserWindow.h
+ *
+ * Definition of class Loris::KaiserWindow.
+ *
+ * Kelly Fitz, 14 Dec 1999
+ * loris@cerlsoundgroup.org
+ *
+ * http://www.cerlsoundgroup.org/Loris/
+ *
+ */
 #include <vector>
 
 #if !defined( NO_LORIS_NAMESPACE )
@@ -18,14 +35,14 @@
 namespace Loris {
 #endif
 
-
 // ---------------------------------------------------------------------------
 //	class KaiserWindow
 //
 //	Class KaiserWindow computes a Kaiser window function (see Kaiser and 
 //	Schafer, 1980) for windowing FFT data.
 //
-//	This _should_ _not_ be a class.
+//	This _should_ _not_ be a class. Or should it? Could be a namespace like
+//	BreakpointUtils.
 //
 class KaiserWindow
 {
@@ -46,4 +63,4 @@ private:
 }	//	end of namespace Loris
 #endif
 
-#endif 	// ndef __Kaiser_window_header__
+#endif 	// ndef INCLUDE_KAISERWINDOW_H

@@ -46,7 +46,12 @@
   *
   *	These routines assume that the the data is big endian.
   *
-  *	-kel 28 Sept 99
+  *	Changes are copyright (c) 1999-2000 Kelly Fitz and Lippold Haken, and
+  *	are distributed freely and without warranty under the terms of the GNU 
+  *	General Public License. See the COPYRIGHT and LICENSE documents.
+  *	
+  *	Kelly Fitz, 28 Sept 1999
+  *	
   */
 
 #ifndef HUGE_VAL

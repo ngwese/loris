@@ -1,4 +1,13 @@
-// ===========================================================================
+// Copyright (c) 1996-2000 by Vladimir Batov. Permission to  use,
+// copy, modify,  distribute  and  sell  this  software  and  its
+// documentation for any purpose is hereby granted  without  fee,
+// provided that the above copyright notice appear in all  copies
+// and that both that copyright notice and this permission notice
+// appear in supporting documentation. I make no  representations
+// about the suitability of this software for any purpose. It  is
+// provided "as is" without express or implied warranty.
+//
+//
 //	counted.h
 //	
 //	Adapted from Vladimir Batov's Handle class by Kelly Fitz for
@@ -12,20 +21,13 @@
 //	version, wherein Counted contains a pointer to its template argument
 //	type, is less efficient, but manages memory as expected when the last
 //	surviving Handle is a base Handle.
-//	
-//	-kel 8 Aug 00
 //
-// ===========================================================================
-
-// Copyright (c) 1996-2000 by Vladimir Batov. Permission to  use,
-// copy, modify,  distribute  and  sell  this  software  and  its
-// documentation for any purpose is hereby granted  without  fee,
-// provided that the above copyright notice appear in all  copies
-// and that both that copyright notice and this permission notice
-// appear in supporting documentation. I make no  representations
-// about the suitability of this software for any purpose. It  is
-// provided "as is" without express or implied warranty.
-
+//	Changes are copyright (c) 1999-2000 Kelly Fitz and Lippold Haken, and
+//	are distributed freely and without warranty under the terms of the GNU 
+//	General Public License. See the COPYRIGHT and LICENSE documents.
+//	
+//	Kelly Fitz, 8 Aug 2000
+//
 class Counted
 {
    public:

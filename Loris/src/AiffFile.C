@@ -1,16 +1,31 @@
-// ===========================================================================
-//	AiffFile.C
-//	
-//	Association of a sample buffer and the necessary additional info 
-//	(sample rate, number of channels, and sample data size in bits)
-//	to completely specify an AIFF samples file. Extends the generic
-//	Loris::SamplesFile with AIFF i/o.
-//
-//	-kel 28 Sept 99
-//
-//	THIS IS STILL BUSTED, WON'T WORK IF CHUNKS ARE IN A DIFFERENT ORDER!!!
-//
-// ===========================================================================
+/*
+ * Copyright (c) 1999-2000 Kelly Fitz and Lippold Haken
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY, without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *
+ * AiffFile.C
+ *
+ * Implementation of class AiffFile.
+ *
+ * Kelly Fitz, 28 Sept 99
+ * loris@cerlsoundgroup.org
+ *
+ * http://www.cerlsoundgroup.org/Loris/
+ *
+ */
 #include "AiffFile.h"
 #include "Endian.h"
 #include "Exception.h"
@@ -123,6 +138,7 @@ AiffFile::read( const std::string & filename )
 // ---------------------------------------------------------------------------
 //	read
 // ---------------------------------------------------------------------------
+//	THIS WON'T WORK IF CHUNKS ARE IN A DIFFERENT ORDER!!!
 //
 void
 AiffFile::read( std::istream & s )

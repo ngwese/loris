@@ -1,8 +1,24 @@
-#ifndef __Loris_Types__
-#define __Loris_Types__
-
-/* ===========================================================================
- *	LorisTypes.h
+#ifndef INCLUDE_LORISTYPES_H
+#define INCLUDE_LORISTYPES_H
+/*
+ * Copyright (c) 1999-2000 Kelly Fitz and Lippold Haken
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY, without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *
+ * LorisTypes.h
  *
  *	Define some commonly-used data types so that we can have some 
  *	guarantee about their sizes. Most of the time it won't matter,
@@ -12,14 +28,18 @@
  *	If it is necessary to make adjustments for other compilers or 
  *	machines, make them in here.
  *	
+ * Kelly Fitz, 28 Sept 1999
+ * loris@cerlsoundgroup.org
+ *
+ * http://www.cerlsoundgroup.org/Loris/
+ *
  */
- 
- 
+#if defined( __cplusplus ) 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
 #endif
-	/* macro does nothing under c */
+#endif	
 
 typedef short 			Int_16;
 typedef long 			Int_32;
@@ -27,26 +47,10 @@ typedef unsigned long 	Uint_32;
 typedef float			Float_32;
 typedef double			Double_64;
 
+#if defined( __cplusplus )
 #if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif		/* macro does nothing under c */
-
-/*	
- *	type checking functions 
- */
-#if defined( __cplusplus )
-	#if !defined( NO_LORIS_NAMESPACE )
-//	begin namespace
-namespace Loris {
 #endif
+#endif	
 
-		bool check_types( void );			//	C++ types
-		extern "C" int check_ctypes( void );	//	c types
-	#if !defined( NO_LORIS_NAMESPACE )
-}	//	end of namespace Loris
-#endif
-#else
-	bool check_ctypes( void );
-#endif
-
-#endif	/*	ndef __Loris_Types__ */
+#endif	/*	ndef INCLUDE_LORISTYPES_H */

@@ -1,14 +1,32 @@
-// ===========================================================================
-//	ImportLemur.C
-//	
-//	Implementation of Loris::ImportLemur, a concrete subclass of 
-//	Loris::Import for importing Partials stored in Lemur 5 alpha files.
-//
-//	-kel 10 Sept 99
-//
-//	THIS IS STILL BUSTED, WON'T WORK IF CHUNKS ARE IN A DIFFERENT ORDER!!!
-//
-// ===========================================================================
+/*
+ * Copyright (c) 1999-2000 Kelly Fitz and Lippold Haken
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY, without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *
+ * ImportLemur.C
+ *
+ * Implementation of class Loris::ImportLemur for importing Partials stored 
+ * in Lemur 5 alpha files.
+ *
+ * Kelly Fitz, 10 Sept 1999
+ * loris@cerlsoundgroup.org
+ *
+ * http://www.cerlsoundgroup.org/Loris/
+ *
+ */
 #include "ImportLemur.h"
 #include "Endian.h"
 #include "Exception.h"
@@ -131,6 +149,8 @@ ImportLemur::ImportLemur( const char * fname, double bweCutoff /* = 1000 Hz */)
 //	importPartials
 // ---------------------------------------------------------------------------
 //	Clients should be prepared to catch ImportExceptions.
+//
+//	THIS WON'T WORK IF CHUNKS ARE IN A DIFFERENT ORDER!!!
 //
 static void
 importPartials( std::istream & s, std::list<Partial> & partials, double bweCutoff )

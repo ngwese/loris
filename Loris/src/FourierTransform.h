@@ -1,11 +1,36 @@
 #ifndef INCLUDE_FOURIERTRANSFORM_H
 #define INCLUDE_FOURIERTRANSFORM_H
+/*
+ * Copyright (c) 1999-2000 Kelly Fitz and Lippold Haken
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY, without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *
+ * FourierTransform.h
+ *
+ * Definition of class Loris::FourierTransform, support for the
+ * FFTW library (www.fftw.org). Requires a compiled fttw library.
+ *
+ * Kelly Fitz, 15 Feb 2000
+ * loris@cerlsoundgroup.org
+ *
+ * http://www.cerlsoundgroup.org/Loris/
+ *
+ */
+
 // ===========================================================================
-//	FourierTransform.h
-//
-//	Class definition for Loris::FourierTransform, support for the
-//	FFTW library (www.fftw.org). Requires a compiled fttw library.
-//
 //	Make sure that fftw and this class use the same floating point
 //	data format and that fftw is compiled with int having at least 
 //	four bytes.
@@ -28,10 +53,8 @@
 //	cast back and forth between the two types. Its icky, but it 
 //	works, and its a lot faster than converting, and mor palatable
 //	than redefining all those operators.
-//
-//	-kel 15 Feb 00
-//
 // ===========================================================================
+
 #include <complex>
 #include <functional>
 

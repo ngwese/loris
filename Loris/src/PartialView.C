@@ -1,35 +1,36 @@
-// ===========================================================================
-//	PartialView.C
-//
-//	Definitions of PartialView (abstract interface class), PartialViewIterator,
-//	BasicPartialView (concrete), and PartialViewDecorator (abstract Decorator).
-//	Together these classes can be used to provide a filtered or altered view
-//	on a Partial's parameter envelope without altering the Partial itself.
-//	Moreover, the filters and alterations can be added incrementally using the
-//	Decorator pattern (GoF p. 175).
-//
-//	Custom PartialView subclasses can be derived from PartialViewDecorator
-//	and inserted in a chain of decorated views, or applied by objects that
-//	can use views for interpreting Partial parameter envelopes.
-//
-//	In the old Lemur days, this sure seemed like the most important thing in
-//	the world. It turns out not to be that useful anymore. In most applications
-//	we just copy Partials and modify them in-place. The only PartialView client
-//	is synthesizer, which can be assigned a PartialView to provide modified
-//	synthesis without altering the Partials. In practice, the default
-//	(BasicPartialView) is always used.
-//
-//	In light of this, and the fact that the encapsulation is lousy at this
-// 	point, maybe they should just be decomissioned.
-//
-//	These classes do not perform any sanity checking to make sure that
-//	they are not misused. Clients are responsible for making sure that
-//	the iterators are valid and that the views are viewing a Partial.
-//	Otherwise the results are undefined, and unlikely to be satisfying.
-//
-//	-kel 15 May 2000
-//
-// ===========================================================================
+/*
+ * Copyright (c) 1999-2000 Kelly Fitz and Lippold Haken
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY, without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *
+ * PartialView.C
+ *
+ * Implementation of PartialView (abstract interface class), PartialViewIterator,
+ * BasicPartialView (concrete), and PartialViewDecorator (abstract Decorator).
+ * Together these classes can be used to provide a filtered or altered view
+ * on a Partial's parameter envelope without altering the Partial itself.
+ * Moreover, the filters and alterations can be added incrementally using the
+ * Decorator pattern (GoF p. 175).
+ *
+ * Kelly Fitz, 15 May 2000
+ * loris@cerlsoundgroup.org
+ *
+ * http://www.cerlsoundgroup.org/Loris/
+ *
+ */
 #include "PartialView.h"
 #include "Partial.h"
 

@@ -1,16 +1,32 @@
-// ===========================================================================
-//	FourierTransform.C
-//
-//	Implementation of Loris::FourierTransform, support for the
-//	FFTW library (www.fftw.org). Requires a compiled fttw library.
-//
-//	Make sure that fftw and this class use the same floating point
-//	data format and that fftw is compiled with int having at least 
-//	four bytes.
-//
-//	-kel 14 Feb 00
-//
-// ===========================================================================
+/*
+ * Copyright (c) 1999-2000 Kelly Fitz and Lippold Haken
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY, without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *
+ * FourierTransform.C
+ *
+ * Implementation of class Loris::FourierTransform, support for the
+ * FFTW library (www.fftw.org). Requires a compiled fttw library.
+ *
+ * Kelly Fitz, 14 Feb 2000
+ * loris@cerlsoundgroup.org
+ *
+ * http://www.cerlsoundgroup.org/Loris/
+ *
+ */
 #include "FourierTransform.h"
 #include "Exception.h"
 #include "notifier.h"

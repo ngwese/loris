@@ -1,24 +1,39 @@
 #ifndef INCLUDE_OSCILLATOR_H
 #define INCLUDE_OSCILLATOR_H
-// ===========================================================================
-//	Oscillator.h
-//	
-//	Class definition for Loris::Oscillator, a Bandwidth-Enhanced Oscillator.
-//	
-//	Loris::Synthesizer uses an instance of Loris::Oscillator to synthesize
-//	bandwidth-enhanced partials obtained from Reassigned Bandwidth-Enhanced
-//	analysis data.
-//
-//	-kel 31 Aug 99
-//
-// ===========================================================================
+/*
+ * Copyright (c) 1999-2000 Kelly Fitz and Lippold Haken
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY, without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *
+ * Oscillator.h
+ *
+ * Definition of class Loris::Oscillator, a Bandwidth-Enhanced Oscillator.
+ *
+ * Kelly Fitz, 31 Aug 1999
+ * loris@cerlsoundgroup.org
+ *
+ * http://www.cerlsoundgroup.org/Loris/
+ *
+ */
 #include <vector>
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
 #endif
-
 
 class Filter;	
 
@@ -30,6 +45,10 @@ class Filter;
 // 	data. Oscillator encapsulates the oscillator state, including the instan-
 //	taneous radian frequency, amplitude, bandwidth, and phase, and a filter
 //	object used to generate the bandlimited stochastic modulator.
+//
+//	Loris::Synthesizer uses an instance of Loris::Oscillator to synthesize
+//	bandwidth-enhanced partials obtained from Reassigned Bandwidth-Enhanced
+//	analysis data.
 //
 class Oscillator
 {

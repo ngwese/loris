@@ -1,15 +1,31 @@
-// ===========================================================================
-//	Partial.C
-//
-//	Implementation of Loris::Partial.
-//	
-//	Loris Partials represent reassigned bandwidth-enhanced model components.
-//	A Partial consists of a chain of Breakpoints describing the time-varying
-//	frequency, amplitude, and bandwidth of the component.
-//
-//	-kel 16 Aug 99
-//
-// ===========================================================================
+/*
+ * Copyright (c) 1999-2000 Kelly Fitz and Lippold Haken
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY, without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *
+ * Partial.C
+ *
+ * Implementation of class Loris::Partial.
+ *
+ * Kelly Fitz, 16 Aug 1999
+ * loris@cerlsoundgroup.org
+ *
+ * http://www.cerlsoundgroup.org/Loris/
+ *
+ */
 #include "Partial.h"
 #include "Breakpoint.h"
 #include "Exception.h"
@@ -23,7 +39,7 @@
 namespace Loris {
 #endif
 
-#if Debug_Loris
+#ifdef Debug_Loris
 long Partial::DebugCounter = 0L;
 #endif
 
@@ -34,7 +50,7 @@ long Partial::DebugCounter = 0L;
 Partial::Partial( void ) :
 	_label( 0L )
 {
-#if Debug_Loris
+#ifdef Debug_Loris
 	++DebugCounter;
 #endif
 }	
@@ -47,7 +63,7 @@ Partial::Partial( const Partial & other ) :
 	_bpmap( other._bpmap ),
 	_label( other._label )
 {
-#if Debug_Loris
+#ifdef Debug_Loris
 	++DebugCounter;
 #endif
 }
@@ -58,7 +74,7 @@ Partial::Partial( const Partial & other ) :
 //
 Partial::~Partial( void )
 {
-#if Debug_Loris
+#ifdef Debug_Loris
 	--DebugCounter;
 #endif
 }	

@@ -1,12 +1,32 @@
-// ===========================================================================
-//	ExportSdif.C
-//	
-//	Association of info	to completely specify an SDIF file.  This exports the
-//	1TRC SDIF format.
-//
-//	-lip 4 Jul 00
-//
-// ===========================================================================
+/*
+ * Copyright (c) 1999-2000 Kelly Fitz and Lippold Haken
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY, without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *
+ * ExportSdif.C
+ *
+ * Implementation of class ExportSdif, which exports the
+ * 1TRC SDIF format.
+ *
+ * Lippold Haken, 4 July 2000
+ * loris@cerlsoundgroup.org
+ *
+ * http://www.cerlsoundgroup.org/Loris/
+ *
+ */
 #include "ExportSdif.h"
 #include "Partial.h"
 #include "Exception.h"

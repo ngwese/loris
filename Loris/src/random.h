@@ -1,16 +1,34 @@
 #ifndef INCLUDE_RANDOM_H
 #define INCLUDE_RANDOM_H
-// ===========================================================================
-//	random.h
-//	
-//	Inline implementations of algorithms for generating random numbers
-//	with uniform and gaussian distributions.
-//
-//	Get rid of the stupid templates sometime.
-//
-//	-kel 31 Aug 99
-//
-// ===========================================================================
+/*
+ * Copyright (c) 1999-2000 Kelly Fitz and Lippold Haken
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY, without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *
+ * random.h
+ * 	
+ * Inline implementations of algorithms for generating random numbers
+ * with uniform and gaussian distributions.
+ *
+ * Kelly Fitz, 31 Aug 1999
+ * loris@cerlsoundgroup.org
+ *
+ * http://www.cerlsoundgroup.org/Loris/
+ *
+ */
 #include <cmath>
 //	trunc() is a problem. It's not in cmath, officially, though
 //	Metrowerks has it in there. SGI has it in math.h which is
@@ -25,6 +43,8 @@ static inline double trunc( double x ) { double y; std::modf(x, &y); return y; }
 //	begin namespace
 namespace Loris {
 #endif
+
+//	Get rid of the stupid templates sometime.
 
 // ---------------------------------------------------------------------------
 //		random number generator
