@@ -56,7 +56,6 @@
 //	begin namespace
 namespace Loris {
 
-
 // ---------------------------------------------------------------------------
 //	overlap	(STATIC)
 // ---------------------------------------------------------------------------
@@ -98,9 +97,15 @@ collectEnergy( double time, Iterator begin, Iterator end )
 // ---------------------------------------------------------------------------
 //	Distiller constructor
 // ---------------------------------------------------------------------------
+//	By default, use a Partial fade time equal to 1 ms. This is the time over
+//	which a Partial that is the distillation of two non-overlapping Partials
+//	fades out at the end of one Partial, and in again at the beginning of the
+//	other.
 //
-Distiller::Distiller( void )
+Distiller::Distiller( double partialFadeTime ) :
+	_fadeTime( partialFadeTime )
 {
+	Assert( _fadeTime >= 0.0 );
 }
 
 // ---------------------------------------------------------------------------
@@ -218,7 +223,7 @@ Distiller::distill( PartialList & container,
 					//	Find the earliest position in newp after the start time
 					//	of the current Partial. If there is such a position, and
 					//	if the Breakpoint in newp after it->startTime() is a null
-					//	and is closer than Partial::FadeTime, get rid of it, its
+					//	and is closer than _fadeTime, get rid of it, its
 					//	too close:
 					//	(note: this will work even if the current Partial has only
 					//	a single Breakpoint, but only because of the overlap check
@@ -227,7 +232,7 @@ Distiller::distill( PartialList & container,
 					Partial::iterator before = after;	//	don't decrement until we are sure that
 														//	after is not newp.begin(); undefined behavior
 					if ( after != newp.end() && 
-						 after.time() < it->startTime() + Partial::FadeTime() &&
+						 after.time() < it->startTime() + _fadeTime &&
 						 after.breakpoint().amplitude() == 0. )
 					{
 						//	remove it:
@@ -235,14 +240,14 @@ Distiller::distill( PartialList & container,
 					}
 					
 					//	if the Breakpoint in newp before it->startTime() is a null
-					//	and is closer than Partial::FadeTime, get rid of it, its
+					//	and is closer than _fadeTime, get rid of it, its
 					//	too close:
 					//	(note: this will work even if the current Partial has only
 					//	a single Breakpoint, but only because of the overlap check
 					//	above)
 					//
 					if ( after != newp.begin() && 
-						 (--before).time() > it->startTime() - Partial::FadeTime() )
+						 (--before).time() > it->startTime() - _fadeTime )
 					{	 
 						//	there's a Breakpoint soon before this Partial,
 						//	if its a null, remove it:
@@ -259,7 +264,7 @@ Distiller::distill( PartialList & container,
 						//	beginning of this Partial:
 						Breakpoint zeroBp = it->begin().breakpoint();
 						zeroBp.setAmplitude( 0. );
-						newp.insert( std::max( it->startTime() - Partial::FadeTime(), 0. ), zeroBp );
+						newp.insert( std::max( it->startTime() - _fadeTime, 0. ), zeroBp );
 					}
 					
 					//	adding in this Partial:
@@ -288,7 +293,7 @@ Distiller::distill( PartialList & container,
 					//	zero-amplitude Breakpoint:
 					Partial::iterator next( lastInsert );
 					++next;
-					double tend = it->endTime() + Partial::FadeTime();
+					double tend = it->endTime() + _fadeTime;
 					if ( next != newp.end() && next.time() < tend )
 					{
 						//	the next Breakpoint after this Partial is near,

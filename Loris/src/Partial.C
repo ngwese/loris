@@ -54,6 +54,27 @@ namespace Loris {
 //long Partial::DebugCounter = 0L;
 
 // ---------------------------------------------------------------------------
+//	FadeTime (STATIC)
+// ---------------------------------------------------------------------------
+//	Static member for making sure that all algorithms
+//	that fade Partials in and outuse the same fade time.
+//	Returns 1 ms.
+//
+//	Removed this from the Partial interface, but found that
+//	it is also used internally. It makes sense as a parameter
+//	to the other classes that used it, but not as an argument 
+//	to the parameterAt() members. Need a better solution 
+//	probably.
+//	
+static double FadeTime( void )
+{
+	static const double FADE_TIME = 0.001;	//	1 ms
+	return FADE_TIME;
+}
+
+
+
+// ---------------------------------------------------------------------------
 //	Partial constructor
 // ---------------------------------------------------------------------------
 //
@@ -515,20 +536,6 @@ Partial::bandwidthAt( double time ) const
 		double alpha = (time - lotime) / (hitime - lotime);
 		return (alpha * hi.bandwidth()) + ((1. - alpha) * lo.bandwidth());
 	}
-}
-
-// ---------------------------------------------------------------------------
-//	FadeTime
-// ---------------------------------------------------------------------------
-//	Static member for making sure that all algorithms
-//	that fade Partials in and out use the same fade time.
-//	Returns 1 ms.
-//	
-double
-Partial::FadeTime( void )
-{
-	static const double FADE_TIME = 0.001;	//	1 ms
-	return FADE_TIME;
 }
 
 }	//	end of namespace Loris

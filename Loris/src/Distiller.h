@@ -63,11 +63,19 @@ namespace Loris {
 //
 class Distiller
 {
+//	-- instance variables --
+	double _fadeTime;
+	
 //	-- public interface --
 public:
 //	-- construction --
-	Distiller( void );
-	/*	Construct a new Distiller.
+	explicit Distiller( double partialFadeTime = 0.001 /* 1 ms */ );
+	/*	Construct a new Distiller using the specified fade time
+		for gaps between Partials. When two non-overlapping Partials
+		are distilled into a single Partial, the distilled Partial
+		fades out at the end of the earlier Partial and back in again
+		at the onset of the later one. The fade time is the time over
+		which these fades occur. By default, use a 1 ms fade time.
 	 */
 	 
 	~Distiller( void );

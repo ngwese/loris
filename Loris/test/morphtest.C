@@ -76,10 +76,10 @@ int main( )
 		Analyzer a(415*.8, 415*1.6);
 		AiffFile f( path + "clarinet.aiff" );
 		std::vector< double > v( f.sampleFrames() );
-		f.getSamples( v.begin(), v.end() );
+		f.getSamples( &*v.begin(), &*v.end() );
 		
 		std::list< Partial > clar;
-		a.analyze( v.begin(), v.end(), f.sampleRate() );
+		a.analyze( &*v.begin(), &*v.end(), f.sampleRate() );
 		clar.splice( clar.end(), a.partials() );
 		
 		FrequencyReference clarRef( clar.begin(), clar.end(), 0, 1000, 20 );
@@ -114,19 +114,19 @@ int main( )
 		// check clarinet synthesis:
 		std::cout << "checking clarinet synthesis" << endl;
 		std::fill( v.begin(), v.end(), 0. );
-		Synthesizer synth( f.sampleRate(), v.begin(), v.end() );
+		Synthesizer synth( f.sampleRate(), &*v.begin(), &*v.end() );
 		synth.synthesize( clar.begin(), clar.end() );
-		AiffFile::Export( "clarOK.ctest.aiff", f.sampleRate(), 1, 16, v.begin(), v.end() ); 	
+		AiffFile::Export( "clarOK.ctest.aiff", f.sampleRate(), 1, 16, &*v.begin(), &*v.end() ); 	
 		
 		//	analyze flute tone
 		std::cout << "analyzing flute 3D" << endl;
 		a = Analyzer(270);
 		f = AiffFile( path + "flute.aiff" );
 		v = std::vector< double >( f.sampleFrames() );
-		f.getSamples( v.begin(), v.end() );
+		f.getSamples( &*v.begin(), &*v.end() );
 		
 		std::list< Partial > flut;
-		a.analyze( v.begin(), v.end(), f.sampleRate() );
+		a.analyze( &*v.begin(), &*v.end(), f.sampleRate() );
 		flut.splice( flut.end(), a.partials() );
 
 		FrequencyReference flutRef( flut.begin(), flut.end(), 0, 1000, 20 );
@@ -138,9 +138,9 @@ int main( )
 		// check flute synthesis:
 		std::cout << "checking flute synthesis" << endl;
 		std::fill( v.begin(), v.end(), 0. );
-		synth = Synthesizer( f.sampleRate(), v.begin(), v.end() );
+		synth = Synthesizer( f.sampleRate(), &*v.begin(), &*v.end() );
 		synth.synthesize( flut.begin(), flut.end() );
-		AiffFile::Export( "flutOK.ctest.aiff", f.sampleRate(), 1, 16, v.begin(), v.end() ); 	
+		AiffFile::Export( "flutOK.ctest.aiff", f.sampleRate(), 1, 16, &*v.begin(), &*v.end() ); 	
 		
 			
 		// perform temporal dilation
@@ -180,10 +180,11 @@ int main( )
 		}
 		std::cout << maxtime << " seconds" << endl;
 
-		v = std::vector< double >( long( (maxtime + Partial::FadeTime()) * f.sampleRate() ) );
-		synth = Synthesizer( f.sampleRate(), v.begin(), v.end() );
+		const double fadeTime = .001; 	//	1ms
+		v = std::vector< double >( long( (maxtime + fadeTime) * f.sampleRate() ) );
+		synth = Synthesizer( f.sampleRate(), &*v.begin(), &*v.end(), fadeTime );
 		synth.synthesize(  m.partials().begin(), m.partials().end() );
-		AiffFile::Export( "morph.ctest.aiff", f.sampleRate(), 1, 16, v.begin(), v.end() ); 	
+		AiffFile::Export( "morph.ctest.aiff", f.sampleRate(), 1, 16, &*v.begin(), &*v.end() ); 	
 
 	}
 	catch( Exception & ex ) 

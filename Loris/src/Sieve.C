@@ -136,13 +136,14 @@ find_overlapping( Partial & p, double minGapTime, Iter start, Iter end)
 // ---------------------------------------------------------------------------
 //	Sieve constructor
 // ---------------------------------------------------------------------------
-//	By default, use a gap time equal to 0, i.e. use the normal definition 
-//	of overlap to deermine which Partials get sifted out.
+//	By default, use a Partial fade time equal to 1 ms, so that the 
+//	detremination of overlapping Partials includes the time needed for
+//	them to fade in and out if synthesized with a fade time of 1 ms.
 //
-Sieve::Sieve( double minGapTime ) :
-	_minGapTime( minGapTime )
+Sieve::Sieve( double partialFadeTime ) :
+	_fadeTime( partialFadeTime )
 {
-	Assert( _minGapTime >= 0.0 );
+	Assert( _fadeTime >= 0.0 );
 }
 
 // ---------------------------------------------------------------------------
@@ -164,6 +165,10 @@ Sieve::~Sieve( void )
 void 
 Sieve::sift_ptrs( PartialPtrs & ptrs  )
 {
+	//	the minimum gap between Partials is twice the 
+	//	specified fadeTime:
+	double minGapTime = _fadeTime * 2.;
+	
 	//	sort the collection of pointers to Partials:
 	//	(sort is by increasing label, then
 	//	decreasing duration)
@@ -202,7 +207,7 @@ Sieve::sift_ptrs( PartialPtrs & ptrs  )
 				//	half-open range [lowerbound, it), because all 
 				//	Partials after it are shorter, thanks to the
 				//	sorting of the sift_set:
-				if( it != find_overlapping( **it, _minGapTime, lowerbound, it ) )
+				if( it != find_overlapping( **it, minGapTime, lowerbound, it ) )
 				{
 					(*it)->setLabel(0);
 					++zapped;

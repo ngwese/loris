@@ -36,11 +36,12 @@
 	#include <config.h>
 #endif
 
-#include<Synthesizer.h>
-#include<Exception.h>
-#include<Oscillator.h>
-#include<Partial.h>
-#include<Notifier.h>
+#include <Synthesizer.h>
+#include <Exception.h>
+#include <Notifier.h>
+#include <Oscillator.h>
+#include <Partial.h>
+
 #include <algorithm>
 #include <cmath>
 
@@ -56,24 +57,45 @@ namespace Loris {
 static long countem = 0;
 
 // ---------------------------------------------------------------------------
+//	Synthesizer_imp 
+// ---------------------------------------------------------------------------
+//	Define a structure to insulate clients from the implementation
+//	details of Synthesizer.
+//
+struct Synthesizer_imp
+{
+	Oscillator osc;
+	double fadeTime;
+	double sampleRate;					//	in Hz
+	double * sampleBuffer;				//	samples are computed and stored here
+	long sampleBufferSize;				//	length of buffer in samples
+
+	double radianFreq( double hz ) { return hz * 2. * Pi / sampleRate; }
+};
+
+// ---------------------------------------------------------------------------
 //	Synthesizer constructor
 // ---------------------------------------------------------------------------
+//	The default fadeTime is 1 ms. (.001)
 //
-Synthesizer::Synthesizer( double srate, double * bufStart, double * bufEnd  ) :
-	_sampleRate( srate ),
-	_sampleBuffer( bufStart ),
-	_sampleBufferSize( bufEnd - bufStart ),
-	_osc( new Oscillator() )
+Synthesizer::Synthesizer( double srate, double * bufStart, double * bufEnd, double fadeTime  ) :
+	_imp( new Synthesizer_imp )
 {
 	//	check to make sure that the sample rate is valid:
-	if ( _sampleRate <= 0. ) {
+	if ( srate <= 0. ) {
 		Throw( InvalidObject, "Synthesizer sample rate must be positive." );
 	}
 
 	//	check to make sure that the buffer bounds are valid:
-	if ( _sampleBufferSize <= 0 ) {
+	if ( bufEnd - bufStart <= 0 ) {
 		Throw( InvalidObject, "Synthesizer buffer length must be positive." );
 	}
+	
+	//	initialize the implementation struct:
+	_imp->fadeTime = fadeTime;
+	_imp->sampleRate = srate;
+	_imp->sampleBuffer = bufStart;
+	_imp->sampleBufferSize = bufEnd - bufStart;
 
 	//countem = 0;
 }
@@ -84,12 +106,15 @@ Synthesizer::Synthesizer( double srate, double * bufStart, double * bufEnd  ) :
 //	Synthesizer copies share a sample buffer.
 //
 Synthesizer::Synthesizer( const Synthesizer & other ) :
-	_sampleRate( other._sampleRate ),
-	_sampleBuffer( other._sampleBuffer ),
-	_sampleBufferSize( other._sampleBufferSize ),
-	_osc( new Oscillator( *other._osc ) )
+	_imp( new Synthesizer_imp )
 {
 	//countem = 0;
+	
+	_imp->osc = other._imp->osc;
+	_imp->fadeTime = other._imp->fadeTime;
+	_imp->sampleRate = other._imp->sampleRate;
+	_imp->sampleBuffer = other._imp->sampleBuffer;
+	_imp->sampleBufferSize = other._imp->sampleBufferSize;
 }
 
 
@@ -113,9 +138,11 @@ Synthesizer::operator= ( const Synthesizer & other )
 {
 	if ( this != &other )
 	{
-		_sampleRate = other._sampleRate;
-		_sampleBuffer = other._sampleBuffer;
-		_sampleBufferSize = other._sampleBufferSize;
+		_imp->osc = other._imp->osc;
+		_imp->fadeTime = other._imp->fadeTime;
+		_imp->sampleRate = other._imp->sampleRate;
+		_imp->sampleBuffer = other._imp->sampleBuffer;
+		_imp->sampleBufferSize = other._imp->sampleBufferSize;
 	}
 
 	return *this;
@@ -127,7 +154,7 @@ Synthesizer::operator= ( const Synthesizer & other )
 //	Synthesize a bandwidth-enhanced sinusoidal Partial with the specified 
 //	timeShift (in seconds). The Partial parameter data is filtered by the 
 //	Synthesizer's PartialView. Zero-amplitude Breakpoints are inserted
-//	1 millisecond (Partial::FadeTime()) from either end of the Partial to reduce 
+//	1 millisecond (or fadeTime) from either end of the Partial to reduce 
 //	turn-on and turn-off artifacts. The client is responsible or insuring
 //	that the buffer is long enough to hold all samples from the time-shifted
 //	and padded Partials. Synthesizer will not generate samples outside the
@@ -137,12 +164,11 @@ Synthesizer::operator= ( const Synthesizer & other )
 void
 Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ ) const
 {
-//
-	debugger << "synthesizing Partial from " << p.startTime()*sampleRate() <<
-			" to " << p.endTime()*sampleRate() << " starting phase " <<
+	debugger << "synthesizing Partial from " << p.startTime() * sampleRate() <<
+			" to " << p.endTime() * sampleRate() << " starting phase " <<
 			p.initialPhase() << " starting frequency " << 
 			p.begin()->frequency() << endl;
-//
+
 	
 //	don't bother to synthesize Partials that will generate no samples in
 //	the samples buffer; but note that Partials having a single Breakpoint,
@@ -161,7 +187,7 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ ) const
 	
 //	compute the initial oscillator state, assuming
 //	a prepended Breakpoint of zero amplitude:
-	double itime = iterator.time() + timeShift - Partial::FadeTime();
+	double itime = iterator.time() + timeShift - _imp->fadeTime;
 	double ifreq = iterator.breakpoint().frequency();
 	double iamp = 0.;
 	double ibw = iterator.breakpoint().bandwidth();
@@ -194,10 +220,10 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ ) const
 	double dsamps = (iterator.time() + timeShift - itime) * sampleRate();
 	Assert( dsamps >= 0. );
 	double avgfreq = 0.5 * (ifreq + iterator.breakpoint().frequency());
-	double iphase = iterator.breakpoint().phase() - (radianFreq(avgfreq) * dsamps);
+	double iphase = iterator.breakpoint().phase() - (_imp->radianFreq(avgfreq) * dsamps);
 
 //	don't alias:
-	if ( radianFreq( ifreq ) > Pi )	
+	if ( _imp->radianFreq( ifreq ) > Pi )	
 	{
 		iamp = 0.;
 	}
@@ -216,10 +242,10 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ ) const
 		
 //	setup the oscillator:
 //	Remember that the oscillator only knows about radian frequency! Convert!
-	_osc->setRadianFreq( radianFreq( ifreq ) );
-	_osc->setAmplitude( iamp );
-	_osc->setBandwidth( ibw );
-	_osc->setPhase( iphase );
+	_imp->osc.setRadianFreq( _imp->radianFreq( ifreq ) );
+	_imp->osc.setAmplitude( iamp );
+	_imp->osc.setBandwidth( ibw );
+	_imp->osc.setPhase( iphase );
 	
 //	initialize sample buffer index:
 	long curSampleIdx = long(itime * sampleRate());
@@ -240,18 +266,18 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ ) const
 		//	(Could check first whether any non-zero samples
 		//	will be generated, if not, can just set target
 		//	values.)
-		_osc->generateSamples( _sampleBuffer + curSampleIdx, _sampleBuffer + tgtsamp,
-								radianFreq( iterator.breakpoint().frequency() ), 
-								iterator.breakpoint().amplitude(), 
-								iterator.breakpoint().bandwidth() );
+		_imp->osc.generateSamples( _imp->sampleBuffer + curSampleIdx, _imp->sampleBuffer + tgtsamp,
+								   _imp->radianFreq( iterator.breakpoint().frequency() ), 
+								   iterator.breakpoint().amplitude(), 
+								   iterator.breakpoint().bandwidth() );
 									  
 		//	if the current oscillator amplitude is
 		//	zero, reset the phase (note: the iterator
 		//	values are the target values, so the phase
 		//	should be set _after_ generating samples,
 		//	when the oscillator and iterator are in-sync):
-		if ( _osc->amplitude() == 0. )
-			_osc->setPhase( iterator.breakpoint().phase() );
+		if ( _imp->osc.amplitude() == 0. )
+			_imp->osc.setPhase( iterator.breakpoint().phase() );
 			
 		//	update the current sample index:
 		curSampleIdx = tgtsamp;
@@ -269,44 +295,89 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ ) const
 	double tgtradfreq, tgtamp, tgtbw;
 	if ( iterator == p.end() ) 
 	{
-		tgtradfreq = _osc->radianFreq();
+		tgtradfreq = _imp->osc.radianFreq();
 		tgtamp = 0.;
-		tgtbw = _osc->bandwidth();
+		tgtbw = _imp->osc.bandwidth();
 	}
 	else
 	{
-		tgtradfreq = radianFreq( iterator.breakpoint().frequency() );
+		tgtradfreq = _imp->radianFreq( iterator.breakpoint().frequency() );
 		tgtamp = iterator.breakpoint().amplitude();
 		tgtbw = iterator.breakpoint().bandwidth();
 	}
 	
 //	interpolate final oscillator state if the target 
 //	final sample is past the end of the buffer:
-	long finalsamp = 
-		std::min( curSampleIdx + long(Partial::FadeTime() * sampleRate()), numSamples() );
-	double alpha = 
-		(finalsamp - curSampleIdx) / (Partial::FadeTime() * sampleRate());
-	tgtradfreq = (alpha * tgtradfreq) + ((1. - alpha) * _osc->radianFreq());
-	tgtamp = (alpha * tgtamp) + ((1. - alpha) * _osc->amplitude());
-	tgtbw = (alpha * tgtbw) + ((1. - alpha) * _osc->bandwidth());
+	long finalsamp = std::min( curSampleIdx + long(_imp->fadeTime * sampleRate()), numSamples() );
+	double alpha = (finalsamp - curSampleIdx) / (_imp->fadeTime * sampleRate());
+	tgtradfreq = (alpha * tgtradfreq) + ((1. - alpha) * _imp->osc.radianFreq());
+	tgtamp = (alpha * tgtamp) + ((1. - alpha) * _imp->osc.amplitude());
+	tgtbw = (alpha * tgtbw) + ((1. - alpha) * _imp->osc.bandwidth());
 	
 //	generate samples:
 //	(buffer, beginIdx, endIdx, freq, amp, bw)
-	_osc->generateSamples( _sampleBuffer + curSampleIdx, _sampleBuffer + finalsamp,
-					   tgtradfreq, tgtamp, tgtbw );	
+	_imp->osc.generateSamples( _imp->sampleBuffer + curSampleIdx, _imp->sampleBuffer + finalsamp,
+							   tgtradfreq, tgtamp, tgtbw );	
 
 	// ++countem;
 }
 	
+#pragma mark -- access --
 // ---------------------------------------------------------------------------
-//	radianFreq
+//	fadeTime
 // ---------------------------------------------------------------------------
-//	Compute radian frequency (used by Loris::Oscillator) from frequency in Hz.
-//	
-inline double 
-Synthesizer::radianFreq( double hz ) const
+double 
+Synthesizer::fadeTime( void ) const 
 {
-	return hz * 2. * Pi / sampleRate();
+	return _imp->fadeTime;
+}
+
+// ---------------------------------------------------------------------------
+//	numSamples 
+// ---------------------------------------------------------------------------
+long
+Synthesizer::numSamples( void ) const 
+{
+	return _imp->sampleBufferSize;
+}
+
+
+// ---------------------------------------------------------------------------
+//	sampleRate
+// ---------------------------------------------------------------------------
+double 
+Synthesizer::sampleRate( void ) const 
+{
+	return _imp->sampleRate;
+}
+
+// ---------------------------------------------------------------------------
+//	samples (const)
+// ---------------------------------------------------------------------------
+const double *
+Synthesizer::samples( void ) const 
+{
+	return _imp->sampleBuffer;
+}
+
+// ---------------------------------------------------------------------------
+//	samples (non-const)
+// ---------------------------------------------------------------------------
+double *
+Synthesizer::samples( void )  
+{
+	return _imp->sampleBuffer;
+}
+
+#pragma mark -- mutation --
+// ---------------------------------------------------------------------------
+//	setFadeTime
+// ---------------------------------------------------------------------------
+void 
+Synthesizer::setFadeTime( double partialFadeTime )  
+{
+	Assert( partialFadeTime >= 0.0 );
+	_imp->fadeTime = partialFadeTime;
 }
 
 }	//	end of namespace Loris

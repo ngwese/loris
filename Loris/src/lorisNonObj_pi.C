@@ -600,7 +600,8 @@ void synthesize( const PartialList * partials,
 		//	resize the Samplevector if necessary (pad the length
 		//	to accomodate the fade-out at the end of the latest
 		//	Partial):
-		const long nsamps = long( srate * ( maxtime + Partial::FadeTime() ) );	
+		const double fadeTime = .001;
+		const long nsamps = long( srate * ( maxtime + fadeTime ) );	
 		if ( samples->size() < nsamps )
 			samples->resize( nsamps, 0. );
 		

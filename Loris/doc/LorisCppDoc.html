@@ -810,10 +810,15 @@ by a single Partial in the distillation process.
 <p>
 <h3>Member Functions</h3>
 <h4>Construction</h4>
-<p><tt><b>Distiller( void )</b></tt>
+<p><tt><b>Distiller( double partialFadeTime )</b></tt>
 <blockquote>
 <br>
-Construct a new Distiller.
+Construct a new Distiller using the specified fade time
+for gaps between Partials. When two non-overlapping Partials
+are distilled into a single Partial, the distilled Partial
+fades out at the end of the earlier Partial and back in again
+at the onset of the later one. The fade time is the time over
+which these fades occur. By default, use a 1 ms fade time.
 </blockquote>
 
 <p><tt><b>~Distiller( void )</b></tt>
@@ -1948,14 +1953,21 @@ Set the label of the shorter duration partial to zero.
 <p>
 <pre>
 //	construction:	
-	explicit Sieve( double minGapTime = 0.0 );
+	explicit Sieve( double partialFadeTime = 0.001 /* 1 ms */ );
 	~Sieve( void );
 	
 //	sift:
-	void sift( PartialList & sift_list );
-	void sift( PartialList & sift_list, 
-			   PartialList::iterator sieve_begin, 
-			   PartialList::iterator sieve_end  );
+#if ! defined(NO_TEMPLATE_MEMBERS)
+	template<typename Iter>
+	void sift( Iter sift_begin, Iter sift_end  )
+#else
+	void sift( PartialList::iterator sift_begin, PartialList::iterator sift_end  )
+#endif
+	{
+		PartialPtrs ptrs;
+		fillPartialPtrs( sift_begin, sift_end, ptrs );
+		sift_ptrs( ptrs );
+	}
 </pre>
 				
 <p><a href="#contents"><small>Contents</small></a>	
@@ -2005,14 +2017,14 @@ is responsible for its construction and destruction. Many
 Synthesizers may share a buffer. (But this class is not thread-safe.)
 <p>
 <pre>
-//	construction:
-	Synthesizer( double srate, double * bufStart, double * bufEnd );
+//	-- construction --
+	Synthesizer( double srate, double * bufStart, double * bufEnd, double fadeTime = .001 );
 	Synthesizer( const Synthesizer & other );
 	~Synthesizer(void);
 	
 	Synthesizer & operator= ( const Synthesizer & other );
 	
-//	synthesis:
+//	-- synthesis --
 //
 //	Synthesize a bandwidth-enhanced sinusoidal Partial with the specified 
 //	timeShift (in seconds). Zero-amplitude Breakpoints are inserted
@@ -2039,13 +2051,15 @@ Synthesizers may share a buffer. (But this class is not thread-safe.)
 		{ synthesize( begin_partials, end_partials, timeShift ); }
 #endif
 	
-//	access:
-	double sampleRate( void ) const { return _sampleRate; }
+//	-- access --
+	double fadeTime( void ) const;
+	long numSamples( void ) const;
+	double sampleRate( void ) const;
+	const double * samples( void ) const;
+	double * samples( void );
 	
-	double * samples( void ) { return _sampleBuffer; }
-	const double * samples( void ) const { return _sampleBuffer; }
-	
-	long numSamples( void ) const { return _sampleBufferSize; }
+//	-- mutation --
+	void setFadeTime( double partialFadeTime );
 </pre>
 				
 <p><a href="#contents"><small>Contents</small></a>	

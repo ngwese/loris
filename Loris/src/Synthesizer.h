@@ -39,7 +39,7 @@
 //	begin namespace
 namespace Loris {
 
-class Oscillator;
+class Synthesizer_imp;
 class Partial;
 
 // ---------------------------------------------------------------------------
@@ -56,21 +56,18 @@ class Partial;
 class Synthesizer
 {
 //	-- instance variables --
-	std::auto_ptr<Oscillator> _osc;
-	double _sampleRate;					//	in Hz
-	double * _sampleBuffer;				//	samples are computed and stored here
-	long _sampleBufferSize;				//	length of buffer in samples
-		
+	std::auto_ptr< Synthesizer_imp > _imp;
+
 //	-- public interface --
 public:
-//	construction:
-	Synthesizer( double srate, double * bufStart, double * bufEnd );
+//	-- construction --
+	Synthesizer( double srate, double * bufStart, double * bufEnd, double fadeTime = .001 );
 	Synthesizer( const Synthesizer & other );
 	~Synthesizer(void);
 	
 	Synthesizer & operator= ( const Synthesizer & other );
 	
-//	synthesis:
+//	-- synthesis --
 //
 //	Synthesize a bandwidth-enhanced sinusoidal Partial with the specified 
 //	timeShift (in seconds). Zero-amplitude Breakpoints are inserted
@@ -97,18 +94,16 @@ public:
 		{ synthesize( begin_partials, end_partials, timeShift ); }
 #endif
 	
-//	access:
-	double sampleRate( void ) const { return _sampleRate; }
+//	-- access --
+	double fadeTime( void ) const;
+	long numSamples( void ) const;
+	double sampleRate( void ) const;
+	const double * samples( void ) const;
+	double * samples( void );
 	
-	double * samples( void ) { return _sampleBuffer; }
-	const double * samples( void ) const { return _sampleBuffer; }
-	
-	long numSamples( void ) const { return _sampleBufferSize; }
-	
-//	-- private helpers --
-private:
-	inline double radianFreq( double hz ) const;
-	
+//	-- mutation --
+	void setFadeTime( double partialFadeTime );
+
 };	//	end of class Synthesizer
 
 }	//	end of namespace Loris

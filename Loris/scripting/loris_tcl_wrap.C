@@ -1187,7 +1187,6 @@ SampleVector *AiffFile_samples(AiffFile *self){
 		return vec;
 	}
 
-	//#include<Dilator.h>
 	#include <string>
 	#include <vector>
 	
@@ -1322,13 +1321,14 @@ SampleVector *AiffFile_samples(AiffFile *self){
 		
 		//	allocate a SampleVector to accomodate the fade-out at 
 		//	the end of the latest Partial:
-		const long nsamps = long( srate * ( maxtime + Partial::FadeTime() ) );	
+		const double fadeTime = .001; 	// 1 ms
+		const long nsamps = long( srate * ( maxtime + fadeTime ) );	
 		SampleVector * samples = new SampleVector( nsamps, 0. );
 		
 		//	synthesize:
 		try
 		{
-			Loris::Synthesizer synth( srate, samples->begin(), samples->end() );
+			Loris::Synthesizer synth( srate, &*samples->begin(), &*samples->end(), fadeTime );
 			for ( it = partials->begin(); it != partials->end(); ++it ) 
 			{
 				synth.synthesize( *it );

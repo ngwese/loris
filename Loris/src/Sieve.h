@@ -37,6 +37,7 @@
 #endif
 
 #include <PartialPtrs.h>
+#include <memory>
 
 //	begin namespace
 namespace Loris {
@@ -53,12 +54,12 @@ namespace Loris {
 class Sieve
 {
 //	-- instance variables --
-	double _minGapTime;
-
+	double _fadeTime;
+	
 //	-- public interface --
 public:
 //	construction:	
-	explicit Sieve( double minGapTime = 0.0 );
+	explicit Sieve( double partialFadeTime = 0.001 /* 1 ms */ );
 	~Sieve( void );
 	
 //	sift:

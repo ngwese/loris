@@ -223,11 +223,6 @@ public:
 		Breakpoints.
 	 */
 	 
-//	static member for making sure that all algorithms
-//	that fade Partials in and out use the same fade time:
-//	(this is on its way out!)
-	static double FadeTime( void );
-	
 };	//	end of class Partial
 
 // ---------------------------------------------------------------------------
