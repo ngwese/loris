@@ -33,6 +33,9 @@
  * and things like that.
  *
  * $Log$
+ * Revision 1.15  2001/02/16 23:03:35  kfitz
+ * Notifier.h is not yet capitialized.
+ *
  * Revision 1.14  2001/02/09 23:44:34  kfitz
  * Cleaned up the PartialIterator and ConstPartialIterator class interfaces a bit, removing the duplication of the Breakpoint interface and adding instead a breakpoint() member. Changed all uses of the iterators to use the breakpoint() accessor.
  *
@@ -746,7 +749,7 @@ PartialList * PartialListCopy_( const PartialList * other )
 	return new PartialList( *other );
 }
 
-	#include "Notifier.h"
+	#include "notifier.h"
 	using Loris::notifier;
 	
 	#include "Handle.h"

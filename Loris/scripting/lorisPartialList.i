@@ -118,7 +118,7 @@ PartialList * PartialListCopy_( const PartialList * other )
  */
  
 %{
-	#include "Notifier.h"
+	#include "notifier.h"
 	using Loris::notifier;
 	
 	#include "Handle.h"
