@@ -13,13 +13,18 @@ New_Objects = JitterySynthesizer.o NoiseGenerator.o ODonnellOscil.o
 
 CC = g++
 cc = gcc
-CC_FLAGS = -I. -I$(LORIS) -I$(LORIS)/classes -DHAVE_CONFIG_H
+CC_FLAGS = -O3 -I. -I$(LORIS) -I$(LORIS)/classes -DHAVE_CONFIG_H
 LD_FLAGS = -L/sw/lib -L/usr/local/lib -lfftw -lsdif
 
 .SUFFIXES: .c++ .o
+
+all: test_jitter jittery_synth
 	
 test_jitter: jitterMain.o $(Loris_Objects) $(New_Objects)
 	$(CC) -o $@ jitterMain.o $(Loris_Objects) $(New_Objects) $(LD_FLAGS)
+	
+jittery_synth: jitterySynth.o $(Loris_Objects) $(New_Objects)
+	$(CC) -o $@ jitterySynth.o $(Loris_Objects) $(New_Objects) $(LD_FLAGS)
 
 AiffFile.o: $(LORIS)/classes/AiffFile.c++
 	$(CC) $(CC_FLAGS) -c -o $@ $<
@@ -74,3 +79,6 @@ ieee.o: $(LORIS)/classes/ieee.c
 	
 .c++.o:
 	$(CC) $(CC_FLAGS) -c -o $@ $<
+	
+clean:
+	-rm *.o test_jitter jittery_synth

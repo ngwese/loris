@@ -1,10 +1,9 @@
-/*
- *  Copyright © 1997-2002 Metrowerks Corporation.  All Rights Reserved.
- *
- *  Questions and comments to:
- *       <mailto:support@metrowerks.com>
- *       <http://www.metrowerks.com/>
- */
+// ---------------------------------------------------------------------------
+//	jitterMain.c++
+//
+//	Tests of jittery synthesis.
+//	kel June 2003
+//
 
 #include <algorithm>
 #include <iostream>
