@@ -136,6 +136,17 @@ def harmonicSift( partials, fundamental ):
 			iter.next()
 	loris.distill( partials )
 	return partials
+	
+def buildEnvelope( TVpairs ):
+	"""usage: BPenv = buildEnvelope( TVpairList )
+	
+	Builds a BreakpointEnvelope from a list (or tuple)
+	of time,value pairs.
+	"""
+	env = loris.BreakpointEnvelope()
+	for (time,value) in TVpairs:
+		env.insertBreakpoint( time, value )
+	return env
 
 if __name__ == '__main__':
 	print __doc__
