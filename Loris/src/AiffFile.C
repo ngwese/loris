@@ -327,10 +327,6 @@ AiffFile::readSamples( std::istream & s )
 	//	read integer samples without byte swapping: 
 	BigEndian::read( s, _samples.size() * _sampSize / 8, 1, (char*)v.begin() );
 
-	//	except if there were any read errors:
-	if ( ! s.good() )
-		Throw( FileIOException, "Failed to read AIFF samples.");
-
 	//	shift sample bytes into a long integer, and scale 
 	//	to make a double:
 	static const double oneOverMax = 1. / LONG_MAX;	//	defined in climits
@@ -569,10 +565,6 @@ AiffFile::writeSamples( std::ostream & s )
 	
 	//	write integer samples without byte swapping: 
 	BigEndian::write( s, _samples.size() * _sampSize / 8, 1, (char*)v.begin() );
-
-	//	except if there were any write errors:
-	if ( ! s.good() )
-		Throw( FileIOException, "Failed to write AIFF samples.");
 }
 
 // ---------------------------------------------------------------------------

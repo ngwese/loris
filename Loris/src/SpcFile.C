@@ -8,26 +8,18 @@
 //	-lip 6 Nov 99
 //
 // ===========================================================================
-
-
 #include "SpcFile.h"
-#include "BinaryFile.h"
+#include "Endian.h"
 #include "Partial.h"
-
 #include "notifier.h"
-
 #include "ieee.h"
 #include "pi.h"
+#include "LorisTypes.h"
 
 #include <algorithm>
 #include <string>
-
-#if !defined( Deprecated_cstd_headers )
-	#include <cmath>
-#else
-	#include <math.h>
-#endif
-
+#include <cmath>
+#include <fstream>
 
 // Temporary hacks for using old-style envelope reader in Kyma.
 // Set MONOFILE to 1 for hacks, set MONOFILE to 0 for new envelope reader.
@@ -44,12 +36,126 @@ using namespace std;
 namespace Loris {
 #endif
 
+//	-- chunk types --
+enum { FileType = 'KYMs' };
+
+enum { 
+	ContainerId = 'FORM', 
+	AiffType = 'AIFF', 
+	CommonId = 'COMM',
+	SoundDataId = 'SSND',
+	ApplicationSpecificId = 'APPL',
+	SosEnvelopesId = 'SOSe',
+	InstrumentId = 'INST',
+	MarkerId = 'MARK'
+};
+
+typedef Int_32 ID;
+
+struct CkHeader {
+	Int_32 id;
+	Uint_32 size;
+};
+
+struct ContainerCk
+{
+	CkHeader header;
+	Int_32 formType;
+};
+
+struct CommonCk
+{
+	CkHeader header;
+	Int_16 channels;			// number of channels 
+	Int_32 sampleFrames;		// channel independent sample frames 
+	Int_16 bitsPerSample;		// number of bits per sample 
+	IEEE::extended80 srate;		// sampling rate IEEE 10 byte format 
+};
+
+struct SoundDataCk
+{
+	CkHeader header;	
+	Uint_32 offset;				
+	Uint_32 blockSize;	
+	//	sample frames follow
+};
+
+struct AIFFLoop {
+	Int_16 	playMode;
+	Int_16 	beginLoop;			// marker ID for beginning of loop
+	Int_16 	endLoop;			// marker ID for ending of loop
+};
+
+struct InstrumentCk {
+	CkHeader header;	
+	char 	baseFrequency;		// integer midi note number
+	char 	detune;				// negative of cents offset from midi note number
+	char 	lowFrequency;
+	char 	highFrequency;
+	char 	lowVelocity;
+	char 	highVelocity;
+	Int_16 	gain;
+	struct AIFFLoop sustainLoop;
+	struct AIFFLoop releaseLoop;
+};
+
+struct Marker3 {
+	Int_16 	id;
+	Int_32 	position;
+	char 	markerName[4];		// 3 character name plus termination
+};
+
+struct Marker9 {
+	Int_16 	id;
+	Int_32 	position;
+	char 	markerName[10];		// 9 character name plus termination
+};
+
+struct Marker7 {
+	Int_16 	id;
+	Int_32 	position;
+	char 	markerName[8];		// 8 character name plus termination
+};
+
+struct MarkerCk {
+	CkHeader header;	
+	Int_16 	numMarkers;
+	Marker3	susMarker;			// array of markers starts here
+	Marker9	loopStartMarker;	// second marker in every spc file
+	Marker7	loopEndMarker;		// third marker in every spc file
+};
+
+struct SosEnvelopesCk
+{
+	CkHeader header;	
+	Int_32	signature;		// For SOS, should be 'SOSe'
+	Int_32	frames;			// Total number of frames
+	Int_32	validPartials;	// Number of partials with data in them; the file must
+							// be padded out to the next higher 2**n partials
+	Int_32	initPhase[512]; // obsolete initial phase array; was VARIABLE LENGTH array 
+//	Int_32	resolution;		// frame duration in microseconds 
+	#define SOSresolution initPhase[MONOFILE ? 2 * _partials : _partials]	
+							// follows the initPhase[] array
+//	Int_32	quasiHarmonic;	// how many of the partials are quasiharmonic
+	#define SOSquasiHarmonic initPhase[MONOFILE ? 2 * _partials + 1 : _partials + 1]	
+							// follows the initPhase[] array
+};  
+
+//	data type for integer pcm samples of different sizes:
+typedef union {
+	//	different size samples:
+	Int_32 s32bits;						//	32 bits sample
+	struct I_24 { char data[3]; }  s24bits;	//	24 bits sample
+	Int_16 s16bits;						//	16 bits sample
+	char s8bits;						//	8 bits sample
+} pcm_sample;
+
 // ---------------------------------------------------------------------------
 //	SpcFile constructor from data in memory
 // ---------------------------------------------------------------------------
 //
 SpcFile::SpcFile( int pars, int startf, int endf, 
-				double rate, double midiPitch ) :
+				  double rate, double midiPitch ) :
 	_partials( pars ),
 	_startFrame( startf ),
 	_endFrame( endf ),
@@ -85,16 +191,10 @@ SpcFile::setMarkers( double susTime, double rlsTime )
 // The plist should be labeled and distilled before this is called.
 //
 void
-SpcFile::write( BinaryFile & file, const list<Partial> & plist, int refLabel )
+SpcFile::write( ostream & file, const list<Partial> & plist, int refLabel )
 {
 	
 	try {
-		//	rewind:
-		file.seek(0);
-		if( file.tell() != 0 )
-			Throw( FileIOException, "Couldn't rewind SPC file (bad open mode?)." );
-		file.setBigEndian();
-		
 		writeContainer( file );
 		writeCommon( file );
 		writeInstrument( file );
@@ -116,7 +216,7 @@ SpcFile::write( BinaryFile & file, const list<Partial> & plist, int refLabel )
 // ---------------------------------------------------------------------------
 //
 void
-SpcFile::writeEnvelopeData( BinaryFile & file, const list<Partial> & plist, int refLabel )
+SpcFile::writeEnvelopeData( std::ostream & s, const list<Partial> & plist, int refLabel )
 {
 	//	first build a Sound Data chunk, so that all the data sizes will 
 	//	be correct:
@@ -132,12 +232,12 @@ SpcFile::writeEnvelopeData( BinaryFile & file, const list<Partial> & plist, int 
 	
 	//	write it out:
 	try {
-		file.write( ck.header.id );
-		file.write( ck.header.size );
-		file.write( ck.offset );
-		file.write( ck.blockSize );
+		BigEndian::write( s, 1, sizeof(ID), (char *)&ck.header.id );
+		BigEndian::write( s, 1, sizeof(Int_32), (char *)&ck.header.size );
+		BigEndian::write( s, 1, sizeof(Int_32), (char *)&ck.offset );
+		BigEndian::write( s, 1, sizeof(Int_32), (char *)&ck.blockSize );
 
-		writeEnvelopes( file, plist, refLabel );
+		writeEnvelopes( s, plist, refLabel );
 	}
 	catch( FileIOException & ex ) {
 		ex.append("Failed to write SPC file SoundData chunk.");
@@ -152,7 +252,7 @@ SpcFile::writeEnvelopeData( BinaryFile & file, const list<Partial> & plist, int 
 //	The plist should be labeled and distilled before this is called.
 //
 void
-SpcFile::writeEnvelopes( BinaryFile & file, const list<Partial> & plist, int refLabel )
+SpcFile::writeEnvelopes( std::ostream & s, const list<Partial> & plist, int refLabel )
 {	
 	double freqMult;				// frequency multiplier for partial	
 	double ampMult;					// frequency multiplier for partial	
@@ -165,7 +265,7 @@ SpcFile::writeEnvelopes( BinaryFile & file, const list<Partial> & plist, int ref
 	for (long frame = _startFrame; frame <= _endFrame; ++frame ) {
 	
 		//	for each frame, write one value for every partial:
-		for (uint label = 1; label <= _partials; ++label ) {
+		for (unsigned int label = 1; label <= _partials; ++label ) {
 
 			// find partial with the correct label:
 			// if no partial is found, frequency multiply the reference partial 
@@ -187,21 +287,16 @@ SpcFile::writeEnvelopes( BinaryFile & file, const list<Partial> & plist, int ref
 			//	pack log bandwidth and phase into right:
 			right.s32bits = packRight(*pcorrect, noiseMagMult, frame * _rate);
 	
-			//	write the sample:
-			file.write( left.s24bits );
-			file.write( right.s24bits );
+			//	write integer samples without byte swapping,
+			//	they are already correctly packed: 
+			BigEndian::write( s, 3, 1, (char*)&left.s24bits );
+			BigEndian::write( s, 3, 1, (char*)&right.s24bits );
 		}
 	}
-	
-	//	except if there were any write errors:
-	//	(better to check earlier?)
-	if ( ! file.good() )
-		Throw( FileIOException, "Failed to write SPC envelopes.");
 }
 
 #pragma mark -
 #pragma mark envelope writing helpers
-
 // ---------------------------------------------------------------------------
 //	envLog( )
 // ---------------------------------------------------------------------------
@@ -291,7 +386,7 @@ SpcFile::packRight( const Partial & p, double noiseMagMult, double time )
 struct LabelIs 
 {
 	LabelIs( int l ) : _l( l ) {}
-	boolean operator()( const Partial & p ) const { return p.label() == _l; }
+	bool operator()( const Partial & p ) const { return p.label() == _l; }
 	private:
 		int _l;	//	the label to search for
 };
@@ -321,7 +416,7 @@ SpcFile::select( const list<Partial> & partials, int label )
 // ---------------------------------------------------------------------------
 //
 void
-SpcFile::writeCommon( BinaryFile & file )
+SpcFile::writeCommon( std::ostream & s )
 {
 	//	first build a Common chunk, so that all the data sizes will 
 	//	be correct:
@@ -338,12 +433,13 @@ SpcFile::writeCommon( BinaryFile & file )
 	
 	//	write it out:
 	try {
-		file.write( ck.header.id );
-		file.write( ck.header.size );
-		file.write( ck.channels );
-		file.write( ck.sampleFrames );
-		file.write( ck.bitsPerSample );
-		file.write( ck.srate );
+		BigEndian::write( s, 1, sizeof(ID), (char *)&ck.header.id );
+		BigEndian::write( s, 1, sizeof(Int_32), (char *)&ck.header.size );
+		BigEndian::write( s, 1, sizeof(Int_16), (char *)&ck.channels );
+		BigEndian::write( s, 1, sizeof(Int_32), (char *)&ck.sampleFrames );
+		BigEndian::write( s, 1, sizeof(Int_16), (char *)&ck.bitsPerSample );
+		//	don't let this get byte-reversed:
+		BigEndian::write( s, 10, sizeof(char), (char *)&ck.srate );
 	}
 	catch( FileIOException & ex ) {
 		ex.append( "Failed to write SPC file Common chunk." );
@@ -356,7 +452,7 @@ SpcFile::writeCommon( BinaryFile & file )
 // ---------------------------------------------------------------------------
 //
 void
-SpcFile::writeContainer( BinaryFile & file )
+SpcFile::writeContainer( std::ostream & s )
 {
 	//	first build a Container chunk, so that all the data sizes will 
 	//	be correct:
@@ -374,9 +470,9 @@ SpcFile::writeContainer( BinaryFile & file )
 	
 	//	write it out:
 	try {
-		file.write( ck.header.id );
-		file.write( ck.header.size );
-		file.write( ck.formType );
+		BigEndian::write( s, 1, sizeof(ID), (char *)&ck.header.id );
+		BigEndian::write( s, 1, sizeof(Int_32), (char *)&ck.header.size );
+		BigEndian::write( s, 1, sizeof(ID), (char *)&ck.formType );
 	}
 	catch( FileIOException & ex ) {
 		ex.append( "Failed to write SPC file Container chunk." );
@@ -389,7 +485,7 @@ SpcFile::writeContainer( BinaryFile & file )
 // ---------------------------------------------------------------------------
 //
 void
-SpcFile::writeInstrument( BinaryFile & file )
+SpcFile::writeInstrument( std::ostream & s )
 {
 	//	first build an Inst chunk, so that all the data sizes will 
 	//	be correct:
@@ -425,24 +521,20 @@ SpcFile::writeInstrument( BinaryFile & file )
 	
 	//	write it out:
 	try {
-		file.write( ck.header.id );
-		file.write( ck.header.size );
+		BigEndian::write( s, 1, sizeof(ID), (char *)&ck.header.id );
+		BigEndian::write( s, 1, sizeof(Int_32), (char *)&ck.header.size );
 
-		file.write( ck.baseFrequency );
-		file.write( ck.detune );
-		file.write( ck.lowFrequency );
-		file.write( ck.highFrequency );
-		file.write( ck.lowVelocity );
-		file.write( ck.highVelocity );
-		file.write( ck.gain );
+		BigEndian::write( s, 1, sizeof(char), (char *)&ck.baseFrequency );
+		BigEndian::write( s, 1, sizeof(char), (char *)&ck.detune );
+		BigEndian::write( s, 1, sizeof(char), (char *)&ck.lowFrequency );
+		BigEndian::write( s, 1, sizeof(char), (char *)&ck.highFrequency );
+		BigEndian::write( s, 1, sizeof(char), (char *)&ck.lowVelocity );
+		BigEndian::write( s, 1, sizeof(char), (char *)&ck.highVelocity );
+		BigEndian::write( s, 1, sizeof(Int_16), (char *)&ck.gain );
 
-		file.write( ck.sustainLoop.playMode );
-		file.write( ck.sustainLoop.beginLoop );
-		file.write( ck.sustainLoop.endLoop );
-
-		file.write( ck.releaseLoop.playMode );
-		file.write( ck.releaseLoop.beginLoop );
-		file.write( ck.releaseLoop.endLoop );
+		//	AIFFLoop is three Int_16s:
+		BigEndian::write( s, 3, sizeof(Int_16), (char *)&ck.sustainLoop );
+		BigEndian::write( s, 3, sizeof(Int_16), (char *)&ck.releaseLoop );
 	}
 	catch( FileIOException & ex ) {
 		ex.append( "Failed to write SPC file Instrument chunk." );
@@ -455,7 +547,7 @@ SpcFile::writeInstrument( BinaryFile & file )
 // ---------------------------------------------------------------------------
 //
 void
-SpcFile::writeMarker( BinaryFile & file )
+SpcFile::writeMarker( std::ostream & s )
 {
 	//	first build a Marker chunk, so that all the data sizes will 
 	//	be correct:
@@ -501,25 +593,25 @@ SpcFile::writeMarker( BinaryFile & file )
 
 	//	write it out:
 	try {
-		file.write( ck.header.id );
-		file.write( ck.header.size );
+		BigEndian::write( s, 1, sizeof(ID), (char *)&ck.header.id );
+		BigEndian::write( s, 1, sizeof(Int_32), (char *)&ck.header.size );
 
-		file.write( ck.numMarkers );
+		BigEndian::write( s, 1, sizeof(Int_16), (char *)&ck.numMarkers );
 
-		file.write( ck.susMarker.id );
-		file.write( ck.susMarker.position );
-		for (int i = 0; i <= ck.susMarker.markerName[0]; i++)
-			file.write( ck.susMarker.markerName[i] );
+		BigEndian::write( s, 1, sizeof(Int_16), (char *)&ck.susMarker.id );
+		BigEndian::write( s, 1, sizeof(Int_32), (char *)&ck.susMarker.position );
+		BigEndian::write( s, ck.susMarker.markerName[0] + 1, 
+						  sizeof(char), ck.susMarker.markerName );
 
-		file.write( ck.loopStartMarker.id );
-		file.write( ck.loopStartMarker.position );
-		for (int i = 0; i <= ck.loopStartMarker.markerName[0]; i++)
-			file.write( ck.loopStartMarker.markerName[i] );
-
-		file.write( ck.loopEndMarker.id );
-		file.write( ck.loopEndMarker.position );
-		for (int i = 0; i <= ck.loopEndMarker.markerName[0]; i++)
-			file.write( ck.loopEndMarker.markerName[i] );
+		BigEndian::write( s, 1, sizeof(Int_16), (char *)&ck.loopStartMarker.id );
+		BigEndian::write( s, 1, sizeof(Int_32), (char *)&ck.loopStartMarker.position );
+		BigEndian::write( s, ck.loopStartMarker.markerName[0] + 1, 
+						  sizeof(char), ck.loopStartMarker.markerName );
+						  
+		BigEndian::write( s, 1, sizeof(Int_16), (char *)&ck.loopEndMarker.id );
+		BigEndian::write( s, 1, sizeof(Int_32), (char *)&ck.loopEndMarker.position );
+		BigEndian::write( s, ck.loopEndMarker.markerName[0] + 1, 
+						  sizeof(char), ck.loopEndMarker.markerName );
 	}
 	catch( FileIOException & ex ) {
 		ex.append( "Failed to write SPC file Marker chunk." );
@@ -532,7 +624,7 @@ SpcFile::writeMarker( BinaryFile & file )
 // ---------------------------------------------------------------------------
 //
 void
-SpcFile::writeSosEnvelopesChunk( BinaryFile & file )
+SpcFile::writeSosEnvelopesChunk( std::ostream & s )
 {
 	//	first build an SOSe chunk, so that all the data sizes will 
 	//	be correct:
@@ -551,15 +643,18 @@ SpcFile::writeSosEnvelopesChunk( BinaryFile & file )
 	
 	//	write it out:
 	try {
-		file.write( ck.header.id );
-		file.write( ck.header.size );
-		file.write( ck.signature );
-		file.write( ck.frames );
-		file.write( ck.validPartials );
+		BigEndian::write( s, 1, sizeof(ID), (char *)&ck.header.id );
+		BigEndian::write( s, 1, sizeof(Int_32), (char *)&ck.header.size );
+		BigEndian::write( s, 1, sizeof(Int_32), (char *)&ck.signature );
+		BigEndian::write( s, 1, sizeof(Int_32), (char *)&ck.frames );
+		BigEndian::write( s, 1, sizeof(Int_32), (char *)&ck.validPartials );
 		
 		// The SOSresultion and SOSquasiHarmonic fields are in the phase table memory.
-		for ( int i = 0; i < sizeof( ck.initPhase ) / sizeof( ck.initPhase[0] ); i++)
-			file.write( ck.initPhase[i] );
+		//for ( int i = 0; i < sizeof( ck.initPhase ) / sizeof( ck.initPhase[0] ); i++)
+		//	file.write( ck.initPhase[i] );
+		//	is this right?
+		BigEndian::write( s, sizeof( ck.initPhase ) / sizeof( ck.initPhase[0] ), 
+						  sizeof(Int_32), (char *)&ck.initPhase );
 	}
 	catch( FileIOException & ex ) {
 		ex.append( "Failed to write SPC file SosEnvelopes chunk." );
@@ -573,7 +668,7 @@ SpcFile::writeSosEnvelopesChunk( BinaryFile & file )
 //	sizeofCkHeader
 // ---------------------------------------------------------------------------
 //
-Uint_32
+unsigned long
 SpcFile::sizeofCkHeader( void )
 {
 	return	sizeof(Int_32) +	//	id
@@ -584,7 +679,7 @@ SpcFile::sizeofCkHeader( void )
 //	sizeofCommon
 // ---------------------------------------------------------------------------
 //
-Uint_32
+unsigned long
 SpcFile::sizeofCommon( void )
 {
 	return	sizeof(Int_32) +			//	id
@@ -599,7 +694,7 @@ SpcFile::sizeofCommon( void )
 //	sizeofSOSe
 // ---------------------------------------------------------------------------
 //
-Uint_32
+unsigned long
 SpcFile::sizeofSosEnvelopes( void )
 {
 	return	sizeof(Int_32) +			//	id
@@ -614,7 +709,7 @@ SpcFile::sizeofSosEnvelopes( void )
 //	sizeofInstrument
 // ---------------------------------------------------------------------------
 //
-Uint_32
+unsigned long
 SpcFile::sizeofInstrument( void )
 {
 	return	sizeof(Int_32) +			//	id
@@ -635,7 +730,7 @@ SpcFile::sizeofInstrument( void )
 //	sizeofMarker
 // ---------------------------------------------------------------------------
 //
-Uint_32
+unsigned long
 SpcFile::sizeofMarker( void )
 {
 	return	sizeof(Int_32) +			//	id
@@ -652,10 +747,10 @@ SpcFile::sizeofMarker( void )
 //	No block alignment, the envelope samples start right after the 
 //	chunk header info.
 //
-Uint_32
+unsigned long
 SpcFile::sizeofSoundData( void )
 {
-	Uint_32 dataSize = (_endFrame - _startFrame + 1) * _partials * 2 * ( 24 / 8 );
+	unsigned long dataSize = (_endFrame - _startFrame + 1) * _partials * 2 * ( 24 / 8 );
 	
 	return	sizeof(Int_32) +	//	id
 			sizeof(Uint_32) +	//	size
