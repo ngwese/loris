@@ -904,9 +904,22 @@ SampleVector *AiffFile_samples(AiffFile *self){
 	 */
 
 
-extern "C"
-BreakpointEnvelope * 
-createFreqReference( PartialList * partials, double minFreq, double maxFreq );
+	PartialList * extract_( PartialList * partials, long label )
+	{
+        ThrowIfNull((PartialList *) partials);
+
+		PartialList * ret = new PartialList();
+		try 
+		{
+			spliceByLabel( partials, label, ret );
+		}
+		catch(...)
+		{
+			delete ret;
+			throw;
+		}
+		return ret;
+	}
 
 
 	const char * version( void )
@@ -5447,6 +5460,55 @@ XS(_wrap_channelize) {
 }
 
 
+XS(_wrap_createFreqReference) {
+    PartialList *arg1 ;
+    double arg2 ;
+    double arg3 ;
+    BreakpointEnvelope *result;
+    int argvi = 0;
+    dXSARGS;
+    
+    if ((items < 3) || (items > 3)) 
+    croak("Usage: createFreqReference(partials,minFreq,maxFreq);");
+    {
+        if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialList) < 0) {
+            croak("Type error in argument 1 of createFreqReference. Expected %s", SWIGTYPE_p_PartialList->name);
+        }
+    }
+    arg2 = (double ) SvNV(ST(1));
+    
+    arg3 = (double ) SvNV(ST(2));
+    
+    {
+        try
+        {
+            result = (BreakpointEnvelope *)createFreqReference(arg1,arg2,arg3);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            //	(these are very unlikely to come from the interface
+            //	code, and cannot escape the procedural interface to
+            //	Loris, which catches all exceptions.)
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
+        }
+    }
+    ST(argvi) = sv_newmortal();
+    SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_BreakpointEnvelope);
+    XSRETURN(argvi);
+}
+
+
 XS(_wrap_dilate) {
     PartialList *arg1 ;
     char *arg2 ;
@@ -5920,29 +5982,25 @@ XS(_wrap_sift) {
 }
 
 
-XS(_wrap_createFreqReference) {
+XS(_wrap_extractLabeled) {
     PartialList *arg1 ;
-    double arg2 ;
-    double arg3 ;
-    BreakpointEnvelope *result;
+    long arg2 ;
+    PartialList *result;
     int argvi = 0;
     dXSARGS;
     
-    if ((items < 3) || (items > 3)) 
-    croak("Usage: createFreqReference(partials,minFreq,maxFreq);");
+    if ((items < 2) || (items > 2)) 
+    croak("Usage: extractLabeled(partials,label);");
     {
         if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialList) < 0) {
-            croak("Type error in argument 1 of createFreqReference. Expected %s", SWIGTYPE_p_PartialList->name);
+            croak("Type error in argument 1 of extractLabeled. Expected %s", SWIGTYPE_p_PartialList->name);
         }
     }
-    arg2 = (double ) SvNV(ST(1));
-    
-    arg3 = (double ) SvNV(ST(2));
-    
+    arg2 = (long ) SvIV(ST(1));
     {
         try
         {
-            result = (BreakpointEnvelope *)createFreqReference(arg1,arg2,arg3);
+            result = (PartialList *)extract_(arg1,arg2);
             
         }
         catch( Loris::Exception & ex ) 
@@ -5964,7 +6022,7 @@ XS(_wrap_createFreqReference) {
         }
     }
     ST(argvi) = sv_newmortal();
-    SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_BreakpointEnvelope);
+    SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_PartialList);
     XSRETURN(argvi);
 }
 
@@ -6288,6 +6346,7 @@ static swig_command_info swig_commands[] = {
 {"loris_perl::AiffFile_sampleSize", _wrap_AiffFile_sampleSize},
 {"loris_perl::AiffFile_samples", _wrap_AiffFile_samples},
 {"loris_perl::channelize", _wrap_channelize},
+{"loris_perl::createFreqReference", _wrap_createFreqReference},
 {"loris_perl::dilate", _wrap_dilate},
 {"loris_perl::distill", _wrap_distill},
 {"loris_perl::exportAiff", _wrap_exportAiff},
@@ -6298,7 +6357,7 @@ static swig_command_info swig_commands[] = {
 {"loris_perl::morph", _wrap_morph},
 {"loris_perl::synthesize", _wrap_synthesize},
 {"loris_perl::sift", _wrap_sift},
-{"loris_perl::createFreqReference", _wrap_createFreqReference},
+{"loris_perl::extractLabeled", _wrap_extractLabeled},
 {"loris_perl::scaleAmp", _wrap_scaleAmp},
 {"loris_perl::scaleNoiseRatio", _wrap_scaleNoiseRatio},
 {"loris_perl::shiftPitch", _wrap_shiftPitch},

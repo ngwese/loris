@@ -410,6 +410,8 @@ BreakpointEnvelopeWithValue = lorisc.BreakpointEnvelopeWithValue
 
 channelize = lorisc.channelize
 
+createFreqReference = lorisc.createFreqReference
+
 dilate = lorisc.dilate
 
 distill = lorisc.distill
@@ -430,7 +432,7 @@ synthesize = lorisc.synthesize
 
 sift = lorisc.sift
 
-createFreqReference = lorisc.createFreqReference
+extractLabeled = lorisc.extractLabeled
 
 scaleAmp = lorisc.scaleAmp
 

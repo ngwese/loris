@@ -377,6 +377,9 @@ void channelize( PartialList * partials,
 	Partials are labeled, but otherwise unmodified. In particular, 
 	their frequencies are not modified in any way.
  */
+
+BreakpointEnvelope * createFreqReference( PartialList * partials, 
+										  double minFreq, double maxFreq );
 /*	Return a newly-constructed BreakpointEnvelope by sampling the 
 	frequency envelope of the longest Partial in a PartialList. 
 	Only Partials whose frequency at the Partial's loudest (highest 
@@ -502,6 +505,12 @@ void copyByLabel( const PartialList * src, long label, PartialList * dst );
 /*	Append copies of Partials in the source PartialList having the
 	specified label to the destination PartialList. The source list
 	is unmodified.
+ */
+
+void spliceByLabel( PartialList * src, long label, PartialList * dst );
+/*  Splice Partials in the source PartialList having the specified
+    label from the source list into the destination PartialList
+    (at the end). 
  */
 
 void scaleAmp( PartialList * partials, BreakpointEnvelope * ampEnv );

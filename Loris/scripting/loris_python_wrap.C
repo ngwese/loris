@@ -1083,9 +1083,22 @@ SampleVector *AiffFile_samples(AiffFile *self){
 	 */
 
 
-extern "C"
-BreakpointEnvelope * 
-createFreqReference( PartialList * partials, double minFreq, double maxFreq );
+	PartialList * extract_( PartialList * partials, long label )
+	{
+        ThrowIfNull((PartialList *) partials);
+
+		PartialList * ret = new PartialList();
+		try 
+		{
+			spliceByLabel( partials, label, ret );
+		}
+		catch(...)
+		{
+			delete ret;
+			throw;
+		}
+		return ret;
+	}
 
 
 	const char * version( void )
@@ -5013,6 +5026,45 @@ static PyObject *_wrap_channelize(PyObject *self, PyObject *args) {
 }
 
 
+static PyObject *_wrap_createFreqReference(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    PartialList *arg1 ;
+    double arg2 ;
+    double arg3 ;
+    BreakpointEnvelope *result;
+    PyObject * obj0  = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"Odd:createFreqReference",&obj0,&arg2,&arg3)) return NULL;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_PartialList,1)) == -1) return NULL;
+    {
+        try
+        {
+            result = (BreakpointEnvelope *)createFreqReference(arg1,arg2,arg3);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            //	(these are very unlikely to come from the interface
+            //	code, and cannot escape the procedural interface to
+            //	Loris, which catches all exceptions.)
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
+        }
+    }
+    resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_BreakpointEnvelope, 1);
+    return resultobj;
+}
+
+
 static PyObject *_wrap_dilate(PyObject *self, PyObject *args) {
     PyObject *resultobj;
     PartialList *arg1 ;
@@ -5397,20 +5449,19 @@ static PyObject *_wrap_sift(PyObject *self, PyObject *args) {
 }
 
 
-static PyObject *_wrap_createFreqReference(PyObject *self, PyObject *args) {
+static PyObject *_wrap_extractLabeled(PyObject *self, PyObject *args) {
     PyObject *resultobj;
     PartialList *arg1 ;
-    double arg2 ;
-    double arg3 ;
-    BreakpointEnvelope *result;
+    long arg2 ;
+    PartialList *result;
     PyObject * obj0  = 0 ;
     
-    if(!PyArg_ParseTuple(args,(char *)"Odd:createFreqReference",&obj0,&arg2,&arg3)) return NULL;
+    if(!PyArg_ParseTuple(args,(char *)"Ol:extractLabeled",&obj0,&arg2)) return NULL;
     if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_PartialList,1)) == -1) return NULL;
     {
         try
         {
-            result = (BreakpointEnvelope *)createFreqReference(arg1,arg2,arg3);
+            result = (PartialList *)extract_(arg1,arg2);
             
         }
         catch( Loris::Exception & ex ) 
@@ -5431,7 +5482,7 @@ static PyObject *_wrap_createFreqReference(PyObject *self, PyObject *args) {
             SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
         }
     }
-    resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_BreakpointEnvelope, 1);
+    resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_PartialList, 1);
     return resultobj;
 }
 
@@ -5699,6 +5750,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"AiffFile_samples", _wrap_AiffFile_samples, METH_VARARGS },
 	 { (char *)"AiffFile_swigregister", AiffFile_swigregister, METH_VARARGS },
 	 { (char *)"channelize", _wrap_channelize, METH_VARARGS },
+	 { (char *)"createFreqReference", _wrap_createFreqReference, METH_VARARGS },
 	 { (char *)"dilate", _wrap_dilate, METH_VARARGS },
 	 { (char *)"distill", _wrap_distill, METH_VARARGS },
 	 { (char *)"exportAiff", _wrap_exportAiff, METH_VARARGS },
@@ -5709,7 +5761,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"morph", _wrap_morph, METH_VARARGS },
 	 { (char *)"synthesize", _wrap_synthesize, METH_VARARGS },
 	 { (char *)"sift", _wrap_sift, METH_VARARGS },
-	 { (char *)"createFreqReference", _wrap_createFreqReference, METH_VARARGS },
+	 { (char *)"extractLabeled", _wrap_extractLabeled, METH_VARARGS },
 	 { (char *)"scaleAmp", _wrap_scaleAmp, METH_VARARGS },
 	 { (char *)"scaleNoiseRatio", _wrap_scaleNoiseRatio, METH_VARARGS },
 	 { (char *)"shiftPitch", _wrap_shiftPitch, METH_VARARGS },

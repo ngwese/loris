@@ -175,7 +175,18 @@ void channelize( PartialList * partials,
 	their frequencies are not modified in any way.
  */
  
-
+%new BreakpointEnvelope * 
+createFreqReference( PartialList * partials, double minFreq, double maxFreq );
+/*	Return a newly-constructed BreakpointEnvelope by sampling the 
+	frequency envelope of the longest Partial in a PartialList. 
+	Only Partials whose frequency at the Partial's loudest (highest 
+	amplitude) breakpoint is within the given frequency range are 
+	considered. 
+	
+	For very simple sounds, this frequency reference may be a 
+	good first approximation to a reference envelope for
+	channelization (see channelize()).
+ */
 
 //	dilate() needs to be wrapped by a function that
 //	accepts the time points as strings until a language-
@@ -477,27 +488,29 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch,
  *	These procedures are generally useful but are not yet  
  *	represented by classes in the Loris core.
  */
-
-			
 %{
-extern "C"
-BreakpointEnvelope * 
-createFreqReference( PartialList * partials, double minFreq, double maxFreq );
-%}
+	PartialList * extract_( PartialList * partials, long label )
+	{
+        ThrowIfNull((PartialList *) partials);
 
-%new BreakpointEnvelope * 
-createFreqReference( PartialList * partials, double minFreq, double maxFreq );
-/*	Return a newly-constructed BreakpointEnvelope by sampling the 
-	frequency envelope of the longest Partial in a PartialList. 
-	Only Partials whose frequency at the Partial's loudest (highest 
-	amplitude) breakpoint is within the given frequency range are 
-	considered. 
-	
-	For very simple sounds, this frequency reference may be a 
-	good first approximation to a reference envelope for
-	channelization (see channelize()).
+		PartialList * ret = new PartialList();
+		try 
+		{
+			spliceByLabel( partials, label, ret );
+		}
+		catch(...)
+		{
+			delete ret;
+			throw;
+		}
+		return ret;
+	}
+%}
+%rename(extractLabeled) extract_;
+%new PartialList * extract_( PartialList * partials, long label );
+/*  Extract Partials in the source PartialList having the specified
+    label and return them in a new PartialList.
  */
-  
 
 void scaleAmp( PartialList * partials, BreakpointEnvelope * ampEnv );
 /*	Scale the amplitude of the Partials in a PartialList according 

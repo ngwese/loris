@@ -101,13 +101,54 @@ void copyByLabel( const PartialList * src, long label, PartialList * dst )
 	}
 	catch( Exception & ex ) 
 	{
-		std::string s("Loris exception in selectPartials(): " );
+		std::string s("Loris exception in copyByLabel(): " );
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
 	catch( std::exception & ex ) 
 	{
-		std::string s("std C++ exception in selectPartials(): " );
+		std::string s("std C++ exception in copyByLabel(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+ 
+/* ---------------------------------------------------------------- */
+/*        spliceByLabel        
+/*
+/*	Splice Partials in the source PartialList having the specified
+	label from the source list into the destination PartialList
+	(at the end). 
+ */
+extern "C"
+void spliceByLabel( PartialList * src, long label, PartialList * dst )
+{
+	try 
+	{
+		std::list< Partial >::iterator it = src->begin();
+		for ( it = std::find_if( it, src->end(), 
+					std::bind2nd( PartialUtils::label_equals(), label ) );
+			  it != src->end();
+			  it = std::find_if( ++it, src->end(), 
+					std::bind2nd( PartialUtils::label_equals(), label ) ) )
+		{
+			std::list< Partial >::iterator next = it;
+			++next;
+			dst->splice( dst->end(), *src, it );
+			it = next;
+		}
+		
+		
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in spliceByLabel(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in spliceByLabel(): " );
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}

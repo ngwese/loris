@@ -1359,9 +1359,22 @@ SampleVector *AiffFile_samples(AiffFile *self){
 	 */
 
 
-extern "C"
-BreakpointEnvelope * 
-createFreqReference( PartialList * partials, double minFreq, double maxFreq );
+	PartialList * extract_( PartialList * partials, long label )
+	{
+        ThrowIfNull((PartialList *) partials);
+
+		PartialList * ret = new PartialList();
+		try 
+		{
+			spliceByLabel( partials, label, ret );
+		}
+		catch(...)
+		{
+			delete ret;
+			throw;
+		}
+		return ret;
+	}
 
 
 	const char * version( void )
@@ -5087,6 +5100,42 @@ _wrap_channelize(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *C
 }
 
 static int
+_wrap_createFreqReference(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    PartialList *arg1 ;
+    double arg2 ;
+    double arg3 ;
+    BreakpointEnvelope *result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"pdd:createFreqReference partials minFreq maxFreq ",&arg1,SWIGTYPE_p_PartialList,&arg2,&arg3) == TCL_ERROR) return TCL_ERROR;
+    {
+        try
+        {
+            result = (BreakpointEnvelope *)createFreqReference(arg1,arg2,arg3);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            //	(these are very unlikely to come from the interface
+            //	code, and cannot escape the procedural interface to
+            //	Loris, which catches all exceptions.)
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,SWIG_NewPointerObj((void *) result, SWIGTYPE_p_BreakpointEnvelope));
+    return TCL_OK;
+}
+
+static int
 _wrap_dilate(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
     PartialList *arg1 ;
     char *arg2 ;
@@ -5437,17 +5486,16 @@ _wrap_sift(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST o
 }
 
 static int
-_wrap_createFreqReference(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+_wrap_extractLabeled(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
     PartialList *arg1 ;
-    double arg2 ;
-    double arg3 ;
-    BreakpointEnvelope *result;
+    long arg2 ;
+    PartialList *result;
     
-    if (SWIG_GetArgs(interp, objc, objv,"pdd:createFreqReference partials minFreq maxFreq ",&arg1,SWIGTYPE_p_PartialList,&arg2,&arg3) == TCL_ERROR) return TCL_ERROR;
+    if (SWIG_GetArgs(interp, objc, objv,"pl:extractLabeled partials label ",&arg1,SWIGTYPE_p_PartialList,&arg2) == TCL_ERROR) return TCL_ERROR;
     {
         try
         {
-            result = (BreakpointEnvelope *)createFreqReference(arg1,arg2,arg3);
+            result = (PartialList *)extract_(arg1,arg2);
             
         }
         catch( Loris::Exception & ex ) 
@@ -5468,7 +5516,7 @@ _wrap_createFreqReference(ClientData clientData, Tcl_Interp *interp, int objc, T
             SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
         }
     }
-    Tcl_SetObjResult(interp,SWIG_NewPointerObj((void *) result, SWIGTYPE_p_BreakpointEnvelope));
+    Tcl_SetObjResult(interp,SWIG_NewPointerObj((void *) result, SWIGTYPE_p_PartialList));
     return TCL_OK;
 }
 
@@ -5720,6 +5768,7 @@ static swig_command_info swig_commands[] = {
     { SWIG_prefix "AiffFile_samples", (swig_wrapper_func) _wrap_AiffFile_samples, NULL},
     { SWIG_prefix "AiffFile", (swig_wrapper_func) SWIG_ObjectConstructor, &_wrap_class_AiffFile},
     { SWIG_prefix "channelize", (swig_wrapper_func) _wrap_channelize, NULL},
+    { SWIG_prefix "createFreqReference", (swig_wrapper_func) _wrap_createFreqReference, NULL},
     { SWIG_prefix "dilate", (swig_wrapper_func) _wrap_dilate, NULL},
     { SWIG_prefix "distill", (swig_wrapper_func) _wrap_distill, NULL},
     { SWIG_prefix "exportAiff", (swig_wrapper_func) _wrap_exportAiff, NULL},
@@ -5730,7 +5779,7 @@ static swig_command_info swig_commands[] = {
     { SWIG_prefix "morph", (swig_wrapper_func) _wrap_morph, NULL},
     { SWIG_prefix "synthesize", (swig_wrapper_func) _wrap_synthesize, NULL},
     { SWIG_prefix "sift", (swig_wrapper_func) _wrap_sift, NULL},
-    { SWIG_prefix "createFreqReference", (swig_wrapper_func) _wrap_createFreqReference, NULL},
+    { SWIG_prefix "extractLabeled", (swig_wrapper_func) _wrap_extractLabeled, NULL},
     { SWIG_prefix "scaleAmp", (swig_wrapper_func) _wrap_scaleAmp, NULL},
     { SWIG_prefix "scaleNoiseRatio", (swig_wrapper_func) _wrap_scaleNoiseRatio, NULL},
     { SWIG_prefix "shiftPitch", (swig_wrapper_func) _wrap_shiftPitch, NULL},

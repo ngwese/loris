@@ -66,6 +66,13 @@ using 95 dB. The amplitude floor still defaults to 90 dB.
 parameter as its second parameter, instead of the attenuation
 (from which it computes the shaping parameter).
 
+- Added spliceByLabel() to procedural interface, for splicing
+Partials having a specified label into a separate list.
+
+- Added extractLabeled( PartialList *, label ) to the
+scripting interface, returns Partials having the specified
+label in a new PartialList.
+
 -------------------------------------------------------
 changes since 1.0beta6 release:
 
