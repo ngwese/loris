@@ -35,13 +35,15 @@ using namespace Loris;
 //	with markers at 2s (Marker 1) and 1s (Marker 2).
 //
 static std::string make_twoMarkers( const std::string & in_fname,
-							 const std::string & fname = "twoMarkers.aiff" )
+							 const std::string & fname = "twoMarkers.ctest.aiff" )
 {
 	cout << "Reading " << in_fname << " and adding two markers to it.\n";
 	AiffFile f( in_fname );
 	f.markers().push_back( Marker( 2, "Marker 1" ) );
-	f.markers().push_back( Marker( 1, "Marker 2" ) );
-	f.write( fname, 16 );
+	f.markers().push_back( Marker( 1, "Marker2" ) );
+	if ( (f.samples().size() % 2) == 0 )
+		f.samples().push_back(0);
+	f.write( fname, 24 );
 	cout << "Done." << endl;
 	return fname;
 	
@@ -141,12 +143,12 @@ int main( int argc, char * argv[] )
 		SpcFile spc( clar.begin(), clar.end(), 68 );
 		spc.addPartial( p );
 		spc.markers() = f.markers();
-		std:sort( spc.markers().begin(), spc.markers().end(), Marker::sortByTime() );
-		spc.write( "spcSines.spc", false );
-		spc.write( "spcEnhanced.spc", true );
+		std::sort( spc.markers().begin(), spc.markers().end(), Marker::sortByTime() );
+		spc.write( "spcSines.ctest.spc", false );
+		spc.write( "spcEnhanced.ctest.spc", true );
 		
 		//	import them again
-		SpcFile reload( "spcEnhanced.spc" );
+		SpcFile reload( "spcEnhanced.ctest.spc" );
 		cout << "reloaded " << reload.partials().size() << " spc partials." 
 			 << " (should be next PO2 after " << p.label() << ")" << endl;
 		std::pair< double, double > span = 

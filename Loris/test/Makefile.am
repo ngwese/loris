@@ -58,6 +58,14 @@ else
 test_sdiffile_LDADD = $(top_builddir)/src/libloris.la
 endif
 
+# AiffFile (and SpcFile) unit tests
+test_aiff_SOURCES = test_Aiff.C
+if DARWIN
+test_aiff_LDADD = $(top_builddir)/src/.libs/libloris.a -lfftw
+else
+test_aiff_LDADD = $(top_builddir)/src/libloris.la
+endif
+
 if BUILD_PYTHON
 PYTHON_TEST = run_pytest
 $(PYTHON_TEST):
@@ -82,7 +90,7 @@ $(PERL_TEST):
 	chmod +x $@
 endif
 
-check_PROGRAMS = test_partial test_distiller test_sdiffile test_morpher test_c
+check_PROGRAMS = test_aiff test_partial test_distiller test_sdiffile test_morpher test_c
 check_SCRIPTS = $(PYTHON_TEST) $(TCL_TEST) $(PERL_TEST)
 
 TESTS = $(check_PROGRAMS) $(check_SCRIPTS) 
@@ -90,4 +98,4 @@ TESTS = $(check_PROGRAMS) $(check_SCRIPTS)
 CLEANFILES = $(PYTHON_TEST) $(TCL_TEST) $(PERL_TEST)
 
 distclean-local:
-	-rm -fr *.ctest.* *.pytest.* *.tcltest.* tmp.sdif
+	-rm -fr *.ctest.* *.pytest.* *.tcltest.* tmp.sdif 
