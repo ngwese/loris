@@ -57,23 +57,32 @@
  *
  */
  
+/*  Define this symbol to keep old-style iterator behavior,
+	even with the new iterators.
+ */
+#define LEGACY_ITERATOR_BEHAVIOR
+ 
 %include typemaps.i
 %apply double * OUTPUT { double * tmin_out, double * tmax_out };
 
-%newobject *::begin;
 %newobject *::copy;
+%newobject *::begin;
 %newobject *::end;
 %newobject *::insert;
-//%newobject *::next;	// iterators do this
-%newobject PartialListIterator::next;
-%newobject PartialIterator::next;
 %newobject NewPartialIterator::next;
 	// but not NewPlistIterator::next
-
-%newobject *::prev;	// iterators do this too
-
 %newobject *::__iter__;
 %newobject *::iterator;
+
+%newobject *::findAfter;
+%newobject *::findNearest;
+	//  these aren't actually needed yet
+	
+#ifdef LEGACY_ITERATOR_BEHAVIOR
+%newobject PartialListIterator::next;
+%newobject PartialIterator::next;
+%newobject *::prev;
+#endif
 
 /* ***************** inserted C++ code ***************** */
 %{
@@ -91,26 +100,6 @@ using Loris::Breakpoint;
 
 typedef Loris::Partial::iterator PartialIterator;
 
-/*	exception handling code
-
-	Copied from the SWIG manual. Tastes great, less filling.
-*/
-static char error_message[256];
-static int error_status = 0;
-
-void throw_exception(char *msg) {
-        strncpy(error_message,msg,256);
-        error_status = 1;
-}
-
-void clear_exception() {
-        error_status = 0;
-}
-char *check_exception() {
-        if (error_status) return error_message;
-        else return NULL;
-}
-
 /*	new iterator definitions
 
 	These are much better than the old things, more like the 
@@ -122,16 +111,17 @@ char *check_exception() {
 	into the old iterators is that the old iterators use the
 	next() method to advance and return another iterator. Duh.
 */
-class NewPlistIterator
+struct NewPlistIterator
 {
 	PartialList & subject;
 	PartialList::iterator it;
 
-public:
 	NewPlistIterator( PartialList & l ) : subject( l ), it ( l.begin() ) {}
+	NewPlistIterator( PartialList & l, PartialList::iterator i ) : subject( l ), it ( i ) {}
 	
 	bool atEnd( void ) { return it == subject.end(); }
-	
+	bool hasNext( void ) { return !atEnd(); }
+
 	Partial * next( void )
 	{
 		if ( atEnd() )
@@ -147,16 +137,16 @@ public:
 
 typedef Partial::iterator BreakpointPosition;
 
-class NewPartialIterator
+struct NewPartialIterator
 {
-public:
 	Partial & subject;
 	Partial::iterator it;
 
-public:
 	NewPartialIterator( Partial & p ) : subject( p ), it ( p.begin() ) {}
+	NewPartialIterator( Partial & p, Partial::iterator i ) : subject( p ), it ( i ) {}
 	
 	bool atEnd( void ) { return it == subject.end(); }
+	bool hasNext( void ) { return !atEnd(); }
 
 	BreakpointPosition * next( void )
 	{
@@ -173,6 +163,12 @@ public:
 
 %}
 /* ***************** end of inserted C++ code ***************** */
+
+/* *********** exception handling for new iterators *********** */
+/*	Exception handling code copied from the SWIG manual. 
+	Tastes great, less filling.
+	Defined in loris.i.
+*/
 
 %include exception.i
 %exception next
@@ -195,6 +191,33 @@ public:
     }
 }
 
+%exception PartialList::erase
+{
+    char * err;
+    clear_exception();
+    $action
+    if ((err = check_exception()))
+    {
+        SWIG_exception( SWIG_ValueError, err );
+    }
+}
+
+#ifdef LEGACY_ITERATOR_BEHAVIOR
+%exception NewPlistIterator::partial
+{
+    char * err;
+    clear_exception();
+    $action
+    if ((err = check_exception()))
+    {
+        SWIG_exception( SWIG_ValueError, err );
+    }
+}
+#endif
+/* ******** end of exception handling for new iterators ******** */
+
+/* ***************** new PartialList iterator ****************** */
+
 %nodefault NewPlistIterator;
 class NewPlistIterator
 {
@@ -215,13 +238,33 @@ public:
         }
     }
 #endif
+#ifdef LEGACY_ITERATOR_BEHAVIOR
+	%extend
+	{
+		Partial * partial( void )
+		{
+			if ( self->atEnd() )
+			{
+				throw_exception("end of PartialList");
+				return 0;
+			}			
+			Partial & current = *(self->it);
+			return &current;
+		}
+	}
+#endif
 };
+
+/* ************** end of new PartialList iterator ************** */
+
+/* ******************** new Partial iterator ******************* */
 
 %nodefault NewPartialIterator;
 class NewPartialIterator
 {
 public:
 	bool atEnd( void );
+	bool hasNext( void );
 	BreakpointPosition * next( void );
 #ifdef SIWGPYTHON
     %extend
@@ -239,6 +282,9 @@ public:
 #endif
 };
 
+/* **************** end of new Partial iterator **************** */
+
+/* ************************ PartialList ************************ */
 
 /*	PartialList
 
@@ -252,50 +298,27 @@ public:
 	Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
 	the Loris website: www.cerlsoundgroup.org/Loris/
 */
+#ifdef LEGACY_ITERATOR_BEHAVIOR
 class PartialListIterator;
+#endif
 
 class PartialList
 {
 public:
+	//	PartialList construction:
+	PartialList( void );
+	PartialList( const PartialList & rhs );
+	~PartialList( void );
+	
+	//	std::list methods:
+	void clear( void );	
+	unsigned long size( void );
+
 	%extend
 	{
-		//	construction:
-		// include these in the added methods for debugging:
-		PartialList( void )
-		{
-			debugger << "creating an empty list of Partials" << Loris::endl;
-			return new PartialList();
-		}
-		/*	Return a new empty PartialList.
-		 */
-		
-		PartialList( const PartialList & rhs )
-		{
-			debugger << "copying  a list of " << rhs.size() << " Partials" << Loris::endl;
-			return new PartialList( rhs );
-		}
-		/*	Return a new PartialList that is a copy of this 
-			PartialList (i.e. has identical Partials).
-		 */
-
-		~PartialList( void )
-		{
-			debugger << "destroying  a list of " << self->size() << " Partials" << Loris::endl;
-			delete self;
-		}
-		/*	Destroy this PartialList.
-		 */
-		
-		PartialList * copy( void )
-		{
-			return new PartialList( *self );
-		}
-		/*	Return a new PartialList that is a copy of this 
-			PartialList (i.e. has identical Partials).
-		 */
-		 
-		 
-		 //	wrapper for PartialUtils::timeSpan
+		 //	wrapper for PartialUtils::timeSpan,
+		 // Return the minimum start time and maximum end time
+		 // of all Partials in this PartialList.
 		 void timeSpan( double * tmin_out, double * tmax_out )
 		 {
 		 	std::pair<double, double> span = 
@@ -303,277 +326,180 @@ public:
 		 	*tmin_out = span.first;
 		 	*tmax_out = span.second;
 		 }
-		 /*	Return the minimum start time and maximum end time
-		 	of all Partials in this PartialList.
-		  */
 		  
-		//	new iterators
-#ifdef SWIGPYTHON
-		NewPlistIterator * __iter__( void )
-		{
-			return new NewPlistIterator(*self);
-		}
-#endif	
+		//	(new-style) iterator access:
 		NewPlistIterator * iterator( void )
 		{
 			return new NewPlistIterator(*self);
 		}
-	
-	}	//	end of added methods
-	
-	//	wrap std::list methods:
-	//
-	void clear( void );
-	/*	Remove (and destroy) all the Partials from this PartialList,
-		leaving it empty.
-	 */
-	
-	unsigned long size( void );
-	/*	Return the number of Partials in this PartialList.
-	 */
+		#ifdef SWIGPYTHON
+		NewPlistIterator * __iter__( void )
+		{
+			return new NewPlistIterator(*self);
+		}
+		#endif	
 		
+		//  append does not return position of inserted element:
+		void append( Partial * partial )
+		{
+			self->insert( self->end(), *partial );
+		}
+	
+		//  insert acts like STL insert, returning position
+		//  of inserted element:
+		NewPlistIterator * insert( NewPlistIterator * position, Partial * partial )
+		{
+			if ( self != &(position->subject) )
+				return 0;
+			return new NewPlistIterator(*self, self->insert( position->it, *partial ) );
+		}
+
+		//  implement erase using a linear search to find
+		//  the Partial that should be removed -- slow and
+		//  gross, but the only straightforward way to make
+		//  erase play nice with the new iterator paradigm
+		//  (especially in Python). Raise an exception if
+		//  the specified Partial is not in the list.
+		void erase( Partial * partial )
+		{
+			PartialList::iterator it = self->begin();
+			while ( it != self->end() )
+			{
+				if ( &(*it) == partial )	// compare addresses
+				{
+					self->erase( it );
+					return;
+				}
+				++it;
+			}
+			throw_exception( "PartialList.erase(p): p not in PartialList" );
+		}
+		 
+		//  splice at end:
+		void splice( PartialList * other )
+		{
+			self->splice( self->end(), *other );
+		}
+	}	//	end of added methods
+
+#ifdef LEGACY_ITERATOR_BEHAVIOR
+	//  old iterator behavior, keep this around to support 
+	//  old code that uses the old iterators:
 	PartialListIterator begin( void );
-	/*	Return an iterator refering to the first Partial in this PartialList.
-	 */
-
 	PartialListIterator end( void );
-	/*	Return an iterator refering to the end of this PartialList (an invalid
-		element after the last valid Partial).
-	 */
-	 
 	PartialListIterator insert( PartialListIterator position, const Partial & partial );
-	/*	Insert a copy of the given Partial into this PartialList at
-		the position indicated by the PartialListIterator position.
-		Returns a PartialListIterator refering to the position of the
-		newly-inserted Partial.
-	 */
-
+	void erase( PartialListIterator position );
+	void splice( PartialListIterator position, PartialList & list );
 	%extend
 	{
 		PartialListIterator insert( const Partial & partial )
 		{
 			return self->insert( self->end(), partial );
 		}
-		/*	Append a copy of the given Partial into this PartialList.
-			Returns a PartialListIterator refering to the position of the
-			newly-inserted Partial.
-		*/
-	}	//	end of added methods
+	}
 
-	void erase( PartialListIterator position );
-	/*	Remove the element at the position indicated by the 
-		PartialListIterator, position. After this operation,
-		the PartialListIterator position is invalid, but all
-		other iterators refering to other positions in the
-		PartialList are unaffected.
+#endif	
+	/*  Keep this around to support legacy code that
+		might use it. Plain old copy constructor works
+		now too.
 	 */
-	 
-	void splice( PartialListIterator position, PartialList & list );
-	/*	Splice all the Partials in the specified PartialList into
-		this PartialList at the position indicated by the PartialListIterator
-		position. Leaves the other PartialList empty.
-	 */
-	
-};	//	end of SWIG interface class PartialList
+	%extend
+	{		
+		PartialList * copy( void ) { return new PartialList( *self ); }
+	}
+};
 
-/*	PartialListIterator
-	
-	A PartialListIterator represents an iterator on a PartialList.
-	Its interface reflects the interface of the underlying std::list
-	iterator.
-	
-	PartialListIterators can only be obtained from their subject 
-	PartialList, through the begin and end methods of PartialList, 
-	and by copying, through the PartialListIterator copy method.
-	PartialListIterators are used to access individual elements
-	(Partials) of a PartialList.
-	
-	PartialListIterators are valid only as long as their subject
-	PartialList exists. In languages with some form of grabage 
-	collection, this means that a reference to the PartialList 
-	must be maintained in order to iterate. If that reference is
-	lost, the PartialList will be deleted, and the iterators will
-	refer to free memory. 
-	
-	PartialListIterators are also invalidated when PartialList element 
-	they reference is erased from the PartialList. Erasure does not 
-	invalidate any other PartialListIterators, refering to other 
-	elements. The validity of an iterator can be verified using the
-	isInRange method.
+/* ********************* end of PartialList ********************* */
 
- */
+/* ************************** Partial *************************** */
 
-class Partial;
-
-class PartialListIterator
-{
-public:
-
-	//	most of the pointer semantics of std C++ iterators
-	//	are inappropriate for the scripting interface (those
-	//	languages don't have pointers), so the methods in the 
-	//	interface all need to be added:
-	%extend 
-	{
-		PartialListIterator * copy( void )
-		{
-			return new PartialListIterator( *self );
-		}
-		/*	Return a new PartialListIterator that is a copy of this 
-			PartialListIterator (i.e. refers to the same position
-			in the same PartialList).
-		 */
-		 
-		PartialListIterator * next( void )
-		{
-			PartialListIterator * next = new PartialListIterator(*self);
-			++(*next);
-			return next;
-		}
-		/*  Return an iterator refering to the next position in the
-			PartialList. 
-		 */
-		 
-		PartialListIterator * prev( void )
-		{
-			PartialListIterator * prev = new PartialListIterator(*self);
-			--(*prev);
-			return prev;
-		}
-		/*	Return an iterator refering to the previous position
-			in the PartialList.
-		 */
-		 
-		Partial * partial( void )
-		{
-			Partial & current = **self;
-			return &current;
-		}
-		/*	Return (a reference to) the Partial at the position of this
-			PartialListIterator.
-		 */
-		 
-		int equals( PartialListIterator * other )
-		{
-			return *self == *other;
-		}
-		/*	Return true (1) if this PartialListIterator is equal to the
-			other. PartialListIterators are equal if they refer to the
-			same position in the same PartialList.
-		 */
-		 
-		 int isInRange( const PartialListIterator * begin, const PartialListIterator * end )
-		 {	
-		 	PartialListIterator it;
-		 	for ( it = *begin; it != *end; ++it )
-		 	{
-		 		if ( it == *self )
-		 			return true;
-		 	}
-		 	return false;
-		 }
-		 /*	Return true (1) if this iterator is within the half-open iterator
-		 	range bounded by begin and end, and false otherwise. This method
-		 	can be used to check the validity of an iterator -- call with 
-		 	begin and end methods of the PartialList as arguments.
-		  */
-
-	}	//	end of added methods
-
-};	//	end of SWIG interface class PartialListIterator
-
-
-
-/*	Partial
-		
-	A Partial represents a Reassigned Bandwidth-Enhanced model component.
-	A Partial consists of a trio of synchronous, non-uniformly-
-	sampled breakpoint envelopes representing the time-varying 
-	frequency, amplitude, and noisiness of a single bandwidth-
-	enhanced sinusoid.
-	
-	For more information about Bandwidth-Enhanced Partials and the  
-	Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
-	the Loris website: www.cerlsoundgroup.org/Loris/
- */
- 
+#ifdef LEGACY_ITERATOR_BEHAVIOR 
 class PartialIterator;
+#endif
 
 class Partial
 {
 public:
-//	construction:
-//
+	//	Partial construction:
 	Partial( void );
-	/*	Return a new, empty (no Breakpoints) Partial.
-	 */
-	
+	Partial( const Partial & );
 	~Partial( void );
-	/*	Delete this Partial reference (doesn't remove it from the PartialList).
-	 */
 	
+	//	Partial access and mutation:
+	int label( void );
+	double initialPhase( void );
+	double startTime( void );
+	double endTime( void );
+	double duration( void );
+	long numBreakpoints( void );
 	
-//	access members:
-// 
-	int label( void ) const { return _label; }
-	/* 	Return this Partial's label.
-	 */
-
-	double initialPhase( void ) const;
-	/* 	Return this Partial's starting phase.
-	 */
-	 
-	double startTime( void ) const;
-	/* 	Return this Partial's start time.
-	 */
-
-	double endTime( void ) const;
-	/* 	Return this Partial's end time.
-	 */
-	 
-	double duration( void ) const;
-	/* 	Return this Partial's duration.
-	 */
-	
-	long numBreakpoints( void ) const;
-	/* 	Return this Partial's number of Breakpoints.
-	 */
-	
-//	mutation members:
-//
 	void setLabel( int l );
-	/*	Assign a new label to this Partial.
-	 */
 		
-//	iterator generation:
-//
-	PartialIterator begin( void );
-	/*	Return a PartialIterator refering to the first Breakpoint 
-		in this Partial.
-	 */
-
-	PartialIterator end( void );
-	/*	Return a PartialIterator refering to the end of this Partial (an invalid
-		element after the last valid Breakpoint).
-	 */
+	//	partial envelope interpolation/extrapolation:
+	//	Return the interpolated value of a partial parameter at
+	//	the specified time. At times beyond the ends of the
+	//	Partial, frequency and bandwidth hold their boundary values,
+	//	amplitude is zero, and phase is computed from frequency.
+	//	There is of sensible definition for any of these for Partials
+	//	having no Breakpoints, so they except (InvalidPartial) under 
+	//	that condition.
+	double frequencyAt( double time );
+	double amplitudeAt( double time );
+	double bandwidthAt( double time );
+	double phaseAt( double time );
 
 	%extend
 	{
-		//	new iterators
-#ifdef SWIGPYTHON
-		NewPartialIterator * __iter__( void )
-		{
-			return new NewPartialIterator(*self);
-		}
-#endif	
+		//	new iterator access:
 		NewPartialIterator * iterator( void )
 		{
 			return new NewPartialIterator(*self);
 		}
+		#ifdef SWIGPYTHON
+		NewPartialIterator * __iter__( void )
+		{
+			return new NewPartialIterator(*self);
+		}
+		#endif	
+
+		//	erase works nicely with the new iterators:
+		void erase( BreakpointPosition * pos )
+		{
+			if ( *pos != self->end() )
+			{
+				*pos = self->erase( *pos );
+			}
+		}
+#if !defined( LEGACY_ITERATOR_BEHAVIOR )
+		//  cannot include these while the legacy versions
+		//  are still supported!
+		NewPartialIterator * insert( double time, const Breakpoint & bp )
+		{
+			return new NewPartialIterator(*self, self->insert( time, bp ));
+		}
+		
+		NewPartialIterator * findAfter( double time )
+		{
+			return new NewPartialIterator(*self, self->findAfter( time ));
+		}
+	
+		NewPartialIterator * findNearest( double time )
+		{
+			return new NewPartialIterator(*self, self->findNearest( time ));
+		}
+#endif
 	}
 	
-//	collection access/mutation through iterators:
-//	
+#ifdef LEGACY_ITERATOR_BEHAVIOR
+	PartialIterator begin( void );
+	PartialIterator end( void );
+
+	void erase( PartialIterator & pos );
+
+	//	Partial access/mutation through iterators:
+	//
+	//  Dunno how I am going to migrate this functionality
+	//  to the new iterators without breaking code...
 	PartialIterator insert( double time, const Breakpoint & bp );
 	/*	Make a copy of bp and insert it at time (seconds),
 		return an iterator refering to the inserted Breakpoint.
@@ -589,60 +515,15 @@ public:
 	/*	Return the insertion position for the Breakpoint nearest
 		the specified time.
 	 */
-	
-	void erase( PartialIterator & pos );
-	/* 	Erase the Breakpoint at the position of the 
-		given iterator (invalidating the iterator).
-	 */
+#endif
 
-//	make erase work with the new iterators:
+	/*  Keep this around to support legacy code that
+		might use it. Plain old copy constructor works
+		now too.
+	 */
 	%extend
 	{
-		void erase( BreakpointPosition * pos )
-		{
-			if ( *pos != self->end() )
-				*pos = self->erase( *pos );
-		}
-	}
-//	partial envelope interpolation/extrapolation:
-//	Return the interpolated value of a partial parameter at
-//	the specified time. At times beyond the ends of the
-//	Partial, frequency and bandwidth hold their boundary values,
-//	amplitude is zero, and phase is computed from frequency.
-//	There is of sensible definition for any of these for Partials
-//	having no Breakpoints, so they except (InvalidPartial) under 
-//	that condition.
-//
-	double frequencyAt( double time ) const;
-	/* 	Return this Partial's interpolated frequency at the specified time.
-	 */
-
-	double amplitudeAt( double time ) const;
-	/* 	Return this Partial's interpolated amplitude at the specified time.
-	 */
-
-	double bandwidthAt( double time ) const;
-	/* 	Return this Partial's interpolated bandwidth at the specified time.
-	 */
-
-	double phaseAt( double time ) const;
-	/* 	Return this Partial's interpolated phase at the specified time.
-	 */
-
-
-//	add methods for copy and comparison members that, in C++ have
-//	inappropriate semantics for the scripting interface:
-//
-	%extend
-	{
-		Partial * copy( void )
-		{
-			return new Partial( *self );
-		}
-		/*	Return a new Partial that is a copy of this 
-			Partial (i.e. has he same label and an identical
-			Breakpoint entvelope.
-		 */
+		Partial * copy( void ) { return new Partial( *self ); }
 		 
 		int equals( Partial * other )
 		{
@@ -654,134 +535,10 @@ public:
 		 */
 	}	//	end of added methods
 		
-};	//	end of SWIG interface class Partial
+};
+/* *********************** end of Partial *********************** */
 
-
-/*	PartialIterator
-	
-	A PartialIterator represents an iterator on a Partial.
-	
-	PartialIterators can only be obtained from their subject 
-	Partial, through the begin and end methods of Partial, 
-	and by copying, through the PartialIterator copy method.
-	PartialIterators are used to access individual Breakpoints
-	in Partial Breakpoint envelopes, and the times of those 
-	Breakpoints.
-	
-	PartialIterators are valid only as long as their subject
-	Partial exists. In languages with some form of grabage 
-	collection, this means that a reference to the Partial 
-	must be maintained in order to iterate. If that reference is
-	lost, the Partial will be deleted, and the iterators will
-	refer to free memory. By extension, if the Partial is an
-	element of a PartialList, a reference to the PartialList
-	must be maintained.
-	
-	PartialIterators are also invalidated when the Breakpoint 
-	they reference is erased from the Partial. Erasure does not 
-	invalidate any other PartialIterators, refering to other 
-	Breakpoints. The validity of an iterator can be verified using
-	the isInRange method.
-	
-
- */
-class Breakpoint;
-
-class PartialIterator
-{
-public:
-//	time and Breakpoint access:
-//
-#if 0
-	//	this doesn't swig right, returning a reference
-	//	causes the object (in Python) to wind up with
-	//	ownership, which of course it should not. Why
-	//	is this busted? Fix by adding method to return ptr.
-	//	
-	Breakpoint & breakpoint( void ) { return _iter->second; }
-	/*	Return (a reference to) the Breakpoint at the position of this
-		PartialIterator.
-	 */
-#endif
-	 
-	double time( void ) const { return _iter->first; }	
-	/*	Return the time of the Breakpoint at the position of this
-		PartialIterator.
-	 */
-
-	//	most of the pointer semantics of std C++ iterators
-	//	are inappropriate for the scripting interface (those
-	//	languages don't have pointers), so many methods in the 
-	//	interface need to be added:
-	%extend 
-	{
-		//	this doesn't seem to swig correctly, Breakpoint
-		//	winds up with ownership, try fixng it here:
-		Breakpoint * breakpoint( void ) 
-		{ 
-			return &(self->breakpoint());
-		}
-		/*  Return (a reference to) the Breakpoint at the position of this
-			PartialIterator.
-		 */
-
-
-		PartialIterator * copy( void )
-		{
-			return new PartialIterator( *self );
-		}
-		/*	Return a new PartialIterator that is a copy of this 
-			PartialIterator (i.e. refers to the same position
-			in the same Partial).
-		 */
-		 
-		PartialIterator * next( void )
-		{
-			PartialIterator * next = new PartialIterator(*self);
-			++(*next);
-			return next;
-		}
-		/*	Return an iterator refering to the next position in the Partial.
-		 */
-		 
-		PartialIterator * prev( void )
-		{
-			PartialIterator * prev = new PartialIterator(*self);
-			--(*prev);
-			return prev;
-		}
-		/*	Return an iterator refering to the previous position in the Partial.
-		 */
-		 
-		int equals( PartialIterator * other )
-		{
-			return *self == *other;
-		}
-		/*	Return true (1) if this PartialIterator is equal to the
-			other. PartialIterators are equal is they refer to the
-			same position (Breakpoint) in the same Partial.
-		 */
-
-		 int isInRange( const PartialIterator * begin, const PartialIterator * end )
-		 {	
-		 	PartialIterator it;
-		 	for ( it = *begin; it != *end; ++it )
-		 	{
-		 		if ( it == *self )
-		 			return true;
-		 	}
-		 	return false;
-		 }
-		 /*	Return true (1) is this iterator is within the half-open iterator
-		 	range bounded by begin and end, and false otherwise. This method
-		 	can be used to check the validity of an iterator -- call with 
-		 	begin and end methods of the Partial as arguments.
-		  */
-
-	}	//	end of added methods
-
-};	//	end of SWIG interface class PartialIterator
-
+/* ************************* Breakpoint ************************* */
 
 /*	Breakpoint
 	
@@ -930,3 +687,177 @@ public:
 		
 	}
 };
+
+/* ******************* legacy PartialIterator ******************* */
+#ifdef LEGACY_ITERATOR_BEHAVIOR
+/*	PartialIterator
+	
+	A PartialIterator represents an iterator on a Partial.
+ */
+class PartialIterator
+{
+public:
+//	time and Breakpoint access:
+//
+	double time( void ) const { return _iter->first; }	
+	/*	Return the time of the Breakpoint at the position of this
+		PartialIterator.
+	 */
+
+	//	most of the pointer semantics of std C++ iterators
+	//	are inappropriate for the scripting interface (those
+	//	languages don't have pointers), so many methods in the 
+	//	interface need to be added:
+	%extend 
+	{
+		//  Breakpoint & breakpoint( void )
+		//	this doesn't seem to swig correctly, Breakpoint
+		//	winds up with ownership, try fixng it here:
+		Breakpoint * breakpoint( void ) 
+		{ 
+			return &(self->breakpoint());
+		}
+		/*  Return (a reference to) the Breakpoint at the position of this
+			PartialIterator.
+		 */
+
+
+		PartialIterator * copy( void )
+		{
+			return new PartialIterator( *self );
+		}
+		/*	Return a new PartialIterator that is a copy of this 
+			PartialIterator (i.e. refers to the same position
+			in the same Partial).
+		 */
+		 
+		PartialIterator * next( void )
+		{
+			PartialIterator * next = new PartialIterator(*self);
+			++(*next);
+			return next;
+		}
+		/*	Return an iterator refering to the next position in the Partial.
+		 */
+		 
+		PartialIterator * prev( void )
+		{
+			PartialIterator * prev = new PartialIterator(*self);
+			--(*prev);
+			return prev;
+		}
+		/*	Return an iterator refering to the previous position in the Partial.
+		 */
+		 
+		int equals( PartialIterator * other )
+		{
+			return *self == *other;
+		}
+		/*	Return true (1) if this PartialIterator is equal to the
+			other. PartialIterators are equal is they refer to the
+			same position (Breakpoint) in the same Partial.
+		 */
+
+		 int isInRange( const PartialIterator * begin, const PartialIterator * end )
+		 {	
+		 	PartialIterator it;
+		 	for ( it = *begin; it != *end; ++it )
+		 	{
+		 		if ( it == *self )
+		 			return true;
+		 	}
+		 	return false;
+		 }
+		 /*	Return true (1) is this iterator is within the half-open iterator
+		 	range bounded by begin and end, and false otherwise. This method
+		 	can be used to check the validity of an iterator -- call with 
+		 	begin and end methods of the Partial as arguments.
+		  */
+
+	}	//	end of added methods
+
+};	
+#endif
+/* **************** end of legacy PartialIterator **************** */
+
+/* ***************** legacy PartialListIterator ***************** */
+#ifdef LEGACY_ITERATOR_BEHAVIOR
+/*	PartialListIterator
+	
+	A PartialListIterator represents an iterator on a PartialList.
+	Its interface reflects the interface of the underlying std::list
+	iterator.
+ */
+class PartialListIterator
+{
+public:
+	%extend 
+	{
+		PartialListIterator * copy( void )
+		{
+			return new PartialListIterator( *self );
+		}
+		/*	Return a new PartialListIterator that is a copy of this 
+			PartialListIterator (i.e. refers to the same position
+			in the same PartialList).
+		 */
+		 
+		PartialListIterator * next( void )
+		{
+			PartialListIterator * next = new PartialListIterator(*self);
+			++(*next);
+			return next;
+		}
+		/*  Return an iterator refering to the next position in the
+			PartialList. 
+		 */
+		 
+		PartialListIterator * prev( void )
+		{
+			PartialListIterator * prev = new PartialListIterator(*self);
+			--(*prev);
+			return prev;
+		}
+		/*	Return an iterator refering to the previous position
+			in the PartialList.
+		 */
+		 
+		Partial * partial( void )
+		{
+			Partial & current = **self;
+			return &current;
+		}
+		/*	Return (a reference to) the Partial at the position of this
+			PartialListIterator.
+		 */
+		 
+		int equals( PartialListIterator * other )
+		{
+			return *self == *other;
+		}
+		/*	Return true (1) if this PartialListIterator is equal to the
+			other. PartialListIterators are equal if they refer to the
+			same position in the same PartialList.
+		 */
+		 
+		 int isInRange( const PartialListIterator * begin, const PartialListIterator * end )
+		 {	
+		 	PartialListIterator it;
+		 	for ( it = *begin; it != *end; ++it )
+		 	{
+		 		if ( it == *self )
+		 			return true;
+		 	}
+		 	return false;
+		 }
+		 /*	Return true (1) if this iterator is within the half-open iterator
+		 	range bounded by begin and end, and false otherwise. This method
+		 	can be used to check the validity of an iterator -- call with 
+		 	begin and end methods of the PartialList as arguments.
+		  */
+
+	}	//	end of added methods
+
+};
+#endif
+/* ************** end of legacy PartialListIterator ************** */

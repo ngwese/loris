@@ -54,31 +54,51 @@
 //		notification and exception handlers
 //
 %{ 
-	#include <loris.h>
-	
-	//	import the entire Loris namespace, because
-	//	SWIG does not seem to like to wrap functions
-	//	with qualified names (like Loris::channelize),
-	//	they simply get ignored.
-	using namespace Loris;
+/*	exception handling code for procedural interface calls
 
-	//	notification function for Loris debugging
-	//	and notifications, installed in initialization
-	//	block below:
-	static void printf_notifier( const char * s )
-	{
-		printf("*\t%s\n", s);
-	}	
-	
-	//	exception handling for the procedural interface
-	//	(the pi catches all exceptions and handles them
-	//	by passing their string descriptions to this 
-	//	function):
-	static char EXCEPTION_THROWN[256];
-	static void exception_handler( const char * s )
-	{
-		snprintf(EXCEPTION_THROWN, 255, "%s", s);
-	}
+	Copied from the SWIG manual. Tastes great, less filling.
+*/
+static char error_message[256];
+static int error_status = 0;
+
+void throw_exception(const char *msg) {
+        strncpy(error_message,msg,256);
+        error_status = 1;
+}
+
+void clear_exception() {
+        error_status = 0;
+}
+char *check_exception() {
+        if (error_status) return error_message;
+        else return NULL;
+}
+
+#include <loris.h>
+
+//	import the entire Loris namespace, because
+//	SWIG does not seem to like to wrap functions
+//	with qualified names (like Loris::channelize),
+//	they simply get ignored.
+using namespace Loris;
+
+//	notification function for Loris debugging
+//	and notifications, installed in initialization
+//	block below:
+static void printf_notifier( const char * s )
+{
+	printf("*\t%s\n", s);
+}	
+
+//	exception handling for the procedural interface
+//	(the pi catches all exceptions and handles them
+//	by passing their string descriptions to this 
+//	function):
+/*static char EXCEPTION_THROWN[256];
+static void exception_handler( const char * s )
+{
+	snprintf(EXCEPTION_THROWN, 255, "%s", s);
+}*/
 %}
 
 //	Configure notification and debugging using a
@@ -89,7 +109,7 @@
 %init 
 %{
 	Loris::setNotifier( printf_notifier );
-	Loris::setExceptionHandler( exception_handler );
+	Loris::setExceptionHandler( throw_exception );
 %}
 
 // ----------------------------------------------------------------
@@ -191,6 +211,17 @@ static bool fill_vector( PyObject * input, vector<double> & v )
 #endif
 // end of special Python typemap
 
+%include exception.i 
+%exception 
+{
+    char * err;
+    clear_exception();
+    $action
+    if ((err = check_exception()))
+    {
+        SWIG_exception( SWIG_ValueError, err );
+    }
+}
 
 // ----------------------------------------------------------------
 //		wrap procedural interface
@@ -201,24 +232,6 @@ static bool fill_vector( PyObject * input, vector<double> & v )
 //	can do, because SWIG and the scripting langauges take care of 
 //	the memory management ambiguities.
 //
-
-//	Wrap procedural interface calls with exception checks.
-//	No exceptions are ever thrown out of the procedural interface,
-//	of course, but they are reported using the exception
-//	handler defined above, and installed when the module is
-//	loaded.
-//
-
-%include exception.i 
-%exception 
-{
-	*EXCEPTION_THROWN = '\0';
-	$action
-	if (*EXCEPTION_THROWN)
-	{
-		SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
-	}
-}
 
 void channelize( PartialList * partials, 
 				 BreakpointEnvelope * refFreqEnvelope, int refLabel );
@@ -285,7 +298,8 @@ void dilate_v( PartialList * partials, vector<double> & ivec, vector<double> & t
 
 %exception dilate_v 
 {
-	*EXCEPTION_THROWN = '\0';
+    char * err;
+    clear_exception();
 	try
 	{
 		$action
@@ -294,10 +308,10 @@ void dilate_v( PartialList * partials, vector<double> & ivec, vector<double> & t
 	{
 		SWIG_exception(SWIG_ValueError, ex.what() );
 	}
-	if (*EXCEPTION_THROWN)
-	{
-		SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
-	}
+    if ((err = check_exception()))
+    {
+        SWIG_exception( SWIG_ValueError, err );
+    }
 }
 
 #if SWIGPYTHON
@@ -394,7 +408,7 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch,
 		importSdif( path, dst );
 
 		// check for exception:
-		if (*EXCEPTION_THROWN)
+		if (check_exception())
 		{
 			destroyPartialList( dst );
 			dst = NULL;
@@ -420,7 +434,7 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch,
 		importSpc( path, dst );
 
 		// check for exception:
-		if (*EXCEPTION_THROWN)
+		if (check_exception())
 		{
 			destroyPartialList( dst );
 			dst = NULL;
@@ -443,7 +457,7 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch,
 		morph( src0, src1, ffreq, famp, fbw, dst );
 		
 		// check for exception:
-		if (*EXCEPTION_THROWN)
+		if ( check_exception() )
 		{
 			destroyPartialList( dst );
 			dst = NULL;
@@ -461,7 +475,7 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch,
 		morph( src0, src1, &ffreq, &famp, &fbw, dst );
 		
 		// check for exception:
-		if (*EXCEPTION_THROWN)
+		if ( check_exception() )
 		{
 			destroyPartialList( dst );
 			dst = NULL;
@@ -488,7 +502,7 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch,
 		synthesize( partials, dst, srate );
 				
 		// check for exception:
-		if (*EXCEPTION_THROWN)
+		if ( check_exception() )
 		{
 			destroySampleVector( dst );
 			dst = NULL;
@@ -517,7 +531,7 @@ void crop( PartialList * partials, double t1, double t2 );
 		spliceByLabel( partials, label, dst );
 		
 		// check for exception:
-		if (*EXCEPTION_THROWN)
+		if ( check_exception() )
 		{
 			destroyPartialList( dst );
 			dst = NULL;

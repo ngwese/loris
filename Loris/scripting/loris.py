@@ -236,6 +236,7 @@ class NewPlistIterator(_object):
     __getattr__ = lambda self, name: _swig_getattr(self, NewPlistIterator, name)
     def atEnd(*args): return apply(_loris.NewPlistIterator_atEnd,args)
     def next(*args): return apply(_loris.NewPlistIterator_next,args)
+    def partial(*args): return apply(_loris.NewPlistIterator_partial,args)
     def __init__(self): raise RuntimeError, "No constructor defined"
     def __repr__(self):
         return "<C NewPlistIterator instance at %s>" % (self.this,)
@@ -253,6 +254,7 @@ class NewPartialIterator(_object):
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, NewPartialIterator, name)
     def atEnd(*args): return apply(_loris.NewPartialIterator_atEnd,args)
+    def hasNext(*args): return apply(_loris.NewPartialIterator_hasNext,args)
     def next(*args): return apply(_loris.NewPartialIterator_next,args)
     def __init__(self): raise RuntimeError, "No constructor defined"
     def __repr__(self):
@@ -277,17 +279,18 @@ class PartialList(_object):
         try:
             if self.thisown: destroy(self)
         except: pass
-    def copy(*args): return apply(_loris.PartialList_copy,args)
-    def timeSpan(*args): return apply(_loris.PartialList_timeSpan,args)
-    def __iter__(*args): return apply(_loris.PartialList___iter__,args)
-    def iterator(*args): return apply(_loris.PartialList_iterator,args)
     def clear(*args): return apply(_loris.PartialList_clear,args)
     def size(*args): return apply(_loris.PartialList_size,args)
+    def timeSpan(*args): return apply(_loris.PartialList_timeSpan,args)
+    def iterator(*args): return apply(_loris.PartialList_iterator,args)
+    def __iter__(*args): return apply(_loris.PartialList___iter__,args)
+    def append(*args): return apply(_loris.PartialList_append,args)
     def begin(*args): return apply(_loris.PartialList_begin,args)
     def end(*args): return apply(_loris.PartialList_end,args)
-    def insert(*args): return apply(_loris.PartialList_insert,args)
     def erase(*args): return apply(_loris.PartialList_erase,args)
     def splice(*args): return apply(_loris.PartialList_splice,args)
+    def insert(*args): return apply(_loris.PartialList_insert,args)
+    def copy(*args): return apply(_loris.PartialList_copy,args)
     def __repr__(self):
         return "<C PartialList instance at %s>" % (self.this,)
 
@@ -297,34 +300,6 @@ class PartialListPtr(PartialList):
         if not hasattr(self,"thisown"): _swig_setattr(self, PartialList, 'thisown', 0)
         _swig_setattr(self, PartialList,self.__class__,PartialList)
 _loris.PartialList_swigregister(PartialListPtr)
-
-class PartialListIterator(_object):
-    __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, PartialListIterator, name, value)
-    __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, PartialListIterator, name)
-    def copy(*args): return apply(_loris.PartialListIterator_copy,args)
-    def next(*args): return apply(_loris.PartialListIterator_next,args)
-    def prev(*args): return apply(_loris.PartialListIterator_prev,args)
-    def partial(*args): return apply(_loris.PartialListIterator_partial,args)
-    def equals(*args): return apply(_loris.PartialListIterator_equals,args)
-    def isInRange(*args): return apply(_loris.PartialListIterator_isInRange,args)
-    def __init__(self,*args):
-        _swig_setattr(self, PartialListIterator, 'this', apply(_loris.new_PartialListIterator,args))
-        _swig_setattr(self, PartialListIterator, 'thisown', 1)
-    def __del__(self, destroy= _loris.delete_PartialListIterator):
-        try:
-            if self.thisown: destroy(self)
-        except: pass
-    def __repr__(self):
-        return "<C PartialListIterator instance at %s>" % (self.this,)
-
-class PartialListIteratorPtr(PartialListIterator):
-    def __init__(self,this):
-        _swig_setattr(self, PartialListIterator, 'this', this)
-        if not hasattr(self,"thisown"): _swig_setattr(self, PartialListIterator, 'thisown', 0)
-        _swig_setattr(self, PartialListIterator,self.__class__,PartialListIterator)
-_loris.PartialListIterator_swigregister(PartialListIteratorPtr)
 
 class Partial(_object):
     __swig_setmethods__ = {}
@@ -345,18 +320,18 @@ class Partial(_object):
     def duration(*args): return apply(_loris.Partial_duration,args)
     def numBreakpoints(*args): return apply(_loris.Partial_numBreakpoints,args)
     def setLabel(*args): return apply(_loris.Partial_setLabel,args)
-    def begin(*args): return apply(_loris.Partial_begin,args)
-    def end(*args): return apply(_loris.Partial_end,args)
-    def __iter__(*args): return apply(_loris.Partial___iter__,args)
-    def iterator(*args): return apply(_loris.Partial_iterator,args)
-    def insert(*args): return apply(_loris.Partial_insert,args)
-    def findAfter(*args): return apply(_loris.Partial_findAfter,args)
-    def findNearest(*args): return apply(_loris.Partial_findNearest,args)
-    def erase(*args): return apply(_loris.Partial_erase,args)
     def frequencyAt(*args): return apply(_loris.Partial_frequencyAt,args)
     def amplitudeAt(*args): return apply(_loris.Partial_amplitudeAt,args)
     def bandwidthAt(*args): return apply(_loris.Partial_bandwidthAt,args)
     def phaseAt(*args): return apply(_loris.Partial_phaseAt,args)
+    def iterator(*args): return apply(_loris.Partial_iterator,args)
+    def __iter__(*args): return apply(_loris.Partial___iter__,args)
+    def begin(*args): return apply(_loris.Partial_begin,args)
+    def end(*args): return apply(_loris.Partial_end,args)
+    def erase(*args): return apply(_loris.Partial_erase,args)
+    def insert(*args): return apply(_loris.Partial_insert,args)
+    def findAfter(*args): return apply(_loris.Partial_findAfter,args)
+    def findNearest(*args): return apply(_loris.Partial_findNearest,args)
     def copy(*args): return apply(_loris.Partial_copy,args)
     def equals(*args): return apply(_loris.Partial_equals,args)
     def __repr__(self):
@@ -368,35 +343,6 @@ class PartialPtr(Partial):
         if not hasattr(self,"thisown"): _swig_setattr(self, Partial, 'thisown', 0)
         _swig_setattr(self, Partial,self.__class__,Partial)
 _loris.Partial_swigregister(PartialPtr)
-
-class PartialIterator(_object):
-    __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, PartialIterator, name, value)
-    __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, PartialIterator, name)
-    def time(*args): return apply(_loris.PartialIterator_time,args)
-    def breakpoint(*args): return apply(_loris.PartialIterator_breakpoint,args)
-    def copy(*args): return apply(_loris.PartialIterator_copy,args)
-    def next(*args): return apply(_loris.PartialIterator_next,args)
-    def prev(*args): return apply(_loris.PartialIterator_prev,args)
-    def equals(*args): return apply(_loris.PartialIterator_equals,args)
-    def isInRange(*args): return apply(_loris.PartialIterator_isInRange,args)
-    def __init__(self,*args):
-        _swig_setattr(self, PartialIterator, 'this', apply(_loris.new_PartialIterator,args))
-        _swig_setattr(self, PartialIterator, 'thisown', 1)
-    def __del__(self, destroy= _loris.delete_PartialIterator):
-        try:
-            if self.thisown: destroy(self)
-        except: pass
-    def __repr__(self):
-        return "<C PartialIterator instance at %s>" % (self.this,)
-
-class PartialIteratorPtr(PartialIterator):
-    def __init__(self,this):
-        _swig_setattr(self, PartialIterator, 'this', this)
-        if not hasattr(self,"thisown"): _swig_setattr(self, PartialIterator, 'thisown', 0)
-        _swig_setattr(self, PartialIterator,self.__class__,PartialIterator)
-_loris.PartialIterator_swigregister(PartialIteratorPtr)
 
 class Breakpoint(_object):
     __swig_setmethods__ = {}
@@ -455,5 +401,62 @@ class BreakpointPositionPtr(BreakpointPosition):
         if not hasattr(self,"thisown"): _swig_setattr(self, BreakpointPosition, 'thisown', 0)
         _swig_setattr(self, BreakpointPosition,self.__class__,BreakpointPosition)
 _loris.BreakpointPosition_swigregister(BreakpointPositionPtr)
+
+class PartialIterator(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, PartialIterator, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, PartialIterator, name)
+    def time(*args): return apply(_loris.PartialIterator_time,args)
+    def breakpoint(*args): return apply(_loris.PartialIterator_breakpoint,args)
+    def copy(*args): return apply(_loris.PartialIterator_copy,args)
+    def next(*args): return apply(_loris.PartialIterator_next,args)
+    def prev(*args): return apply(_loris.PartialIterator_prev,args)
+    def equals(*args): return apply(_loris.PartialIterator_equals,args)
+    def isInRange(*args): return apply(_loris.PartialIterator_isInRange,args)
+    def __init__(self,*args):
+        _swig_setattr(self, PartialIterator, 'this', apply(_loris.new_PartialIterator,args))
+        _swig_setattr(self, PartialIterator, 'thisown', 1)
+    def __del__(self, destroy= _loris.delete_PartialIterator):
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+    def __repr__(self):
+        return "<C PartialIterator instance at %s>" % (self.this,)
+
+class PartialIteratorPtr(PartialIterator):
+    def __init__(self,this):
+        _swig_setattr(self, PartialIterator, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, PartialIterator, 'thisown', 0)
+        _swig_setattr(self, PartialIterator,self.__class__,PartialIterator)
+_loris.PartialIterator_swigregister(PartialIteratorPtr)
+
+class PartialListIterator(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, PartialListIterator, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, PartialListIterator, name)
+    def copy(*args): return apply(_loris.PartialListIterator_copy,args)
+    def next(*args): return apply(_loris.PartialListIterator_next,args)
+    def prev(*args): return apply(_loris.PartialListIterator_prev,args)
+    def partial(*args): return apply(_loris.PartialListIterator_partial,args)
+    def equals(*args): return apply(_loris.PartialListIterator_equals,args)
+    def isInRange(*args): return apply(_loris.PartialListIterator_isInRange,args)
+    def __init__(self,*args):
+        _swig_setattr(self, PartialListIterator, 'this', apply(_loris.new_PartialListIterator,args))
+        _swig_setattr(self, PartialListIterator, 'thisown', 1)
+    def __del__(self, destroy= _loris.delete_PartialListIterator):
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+    def __repr__(self):
+        return "<C PartialListIterator instance at %s>" % (self.this,)
+
+class PartialListIteratorPtr(PartialListIterator):
+    def __init__(self,this):
+        _swig_setattr(self, PartialListIterator, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, PartialListIterator, 'thisown', 0)
+        _swig_setattr(self, PartialListIterator,self.__class__,PartialListIterator)
+_loris.PartialListIterator_swigregister(PartialListIteratorPtr)
 
 

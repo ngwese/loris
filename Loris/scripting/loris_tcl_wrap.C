@@ -1042,31 +1042,51 @@ SWIGEXPORT(int) SWIG_init(Tcl_Interp *);
 
 
  
-	#include <loris.h>
-	
-	//	import the entire Loris namespace, because
-	//	SWIG does not seem to like to wrap functions
-	//	with qualified names (like Loris::channelize),
-	//	they simply get ignored.
-	using namespace Loris;
+/*	exception handling code for procedural interface calls
 
-	//	notification function for Loris debugging
-	//	and notifications, installed in initialization
-	//	block below:
-	static void printf_notifier( const char * s )
-	{
-		printf("*\t%s\n", s);
-	}	
-	
-	//	exception handling for the procedural interface
-	//	(the pi catches all exceptions and handles them
-	//	by passing their string descriptions to this 
-	//	function):
-	static char EXCEPTION_THROWN[256];
-	static void exception_handler( const char * s )
-	{
-		snprintf(EXCEPTION_THROWN, 255, "%s", s);
-	}
+	Copied from the SWIG manual. Tastes great, less filling.
+*/
+static char error_message[256];
+static int error_status = 0;
+
+void throw_exception(const char *msg) {
+        strncpy(error_message,msg,256);
+        error_status = 1;
+}
+
+void clear_exception() {
+        error_status = 0;
+}
+char *check_exception() {
+        if (error_status) return error_message;
+        else return NULL;
+}
+
+#include <loris.h>
+
+//	import the entire Loris namespace, because
+//	SWIG does not seem to like to wrap functions
+//	with qualified names (like Loris::channelize),
+//	they simply get ignored.
+using namespace Loris;
+
+//	notification function for Loris debugging
+//	and notifications, installed in initialization
+//	block below:
+static void printf_notifier( const char * s )
+{
+	printf("*\t%s\n", s);
+}	
+
+//	exception handling for the procedural interface
+//	(the pi catches all exceptions and handles them
+//	by passing their string descriptions to this 
+//	function):
+/*static char EXCEPTION_THROWN[256];
+static void exception_handler( const char * s )
+{
+	snprintf(EXCEPTION_THROWN, 255, "%s", s);
+}*/
 
 
 #include <vector>
@@ -1152,7 +1172,7 @@ void dilate_v( PartialList * partials, vector<double> & ivec, vector<double> & t
 		importSdif( path, dst );
 
 		// check for exception:
-		if (*EXCEPTION_THROWN)
+		if (check_exception())
 		{
 			destroyPartialList( dst );
 			dst = NULL;
@@ -1170,7 +1190,7 @@ void dilate_v( PartialList * partials, vector<double> & ivec, vector<double> & t
 		importSpc( path, dst );
 
 		// check for exception:
-		if (*EXCEPTION_THROWN)
+		if (check_exception())
 		{
 			destroyPartialList( dst );
 			dst = NULL;
@@ -1188,7 +1208,7 @@ void dilate_v( PartialList * partials, vector<double> & ivec, vector<double> & t
 		morph( src0, src1, ffreq, famp, fbw, dst );
 		
 		// check for exception:
-		if (*EXCEPTION_THROWN)
+		if ( check_exception() )
 		{
 			destroyPartialList( dst );
 			dst = NULL;
@@ -1206,7 +1226,7 @@ void dilate_v( PartialList * partials, vector<double> & ivec, vector<double> & t
 		morph( src0, src1, &ffreq, &famp, &fbw, dst );
 		
 		// check for exception:
-		if (*EXCEPTION_THROWN)
+		if ( check_exception() )
 		{
 			destroyPartialList( dst );
 			dst = NULL;
@@ -1221,7 +1241,7 @@ void dilate_v( PartialList * partials, vector<double> & ivec, vector<double> & t
 		synthesize( partials, dst, srate );
 				
 		// check for exception:
-		if (*EXCEPTION_THROWN)
+		if ( check_exception() )
 		{
 			destroySampleVector( dst );
 			dst = NULL;
@@ -1236,7 +1256,7 @@ void dilate_v( PartialList * partials, vector<double> & ivec, vector<double> & t
 		spliceByLabel( partials, label, dst );
 		
 		// check for exception:
-		if (*EXCEPTION_THROWN)
+		if ( check_exception() )
 		{
 			destroyPartialList( dst );
 			dst = NULL;
@@ -1393,26 +1413,6 @@ using Loris::Breakpoint;
 
 typedef Loris::Partial::iterator PartialIterator;
 
-/*	exception handling code
-
-	Copied from the SWIG manual. Tastes great, less filling.
-*/
-static char error_message[256];
-static int error_status = 0;
-
-void throw_exception(char *msg) {
-        strncpy(error_message,msg,256);
-        error_status = 1;
-}
-
-void clear_exception() {
-        error_status = 0;
-}
-char *check_exception() {
-        if (error_status) return error_message;
-        else return NULL;
-}
-
 /*	new iterator definitions
 
 	These are much better than the old things, more like the 
@@ -1424,16 +1424,17 @@ char *check_exception() {
 	into the old iterators is that the old iterators use the
 	next() method to advance and return another iterator. Duh.
 */
-class NewPlistIterator
+struct NewPlistIterator
 {
 	PartialList & subject;
 	PartialList::iterator it;
 
-public:
 	NewPlistIterator( PartialList & l ) : subject( l ), it ( l.begin() ) {}
+	NewPlistIterator( PartialList & l, PartialList::iterator i ) : subject( l ), it ( i ) {}
 	
 	bool atEnd( void ) { return it == subject.end(); }
-	
+	bool hasNext( void ) { return !atEnd(); }
+
 	Partial * next( void )
 	{
 		if ( atEnd() )
@@ -1449,16 +1450,16 @@ public:
 
 typedef Partial::iterator BreakpointPosition;
 
-class NewPartialIterator
+struct NewPartialIterator
 {
-public:
 	Partial & subject;
 	Partial::iterator it;
 
-public:
 	NewPartialIterator( Partial & p ) : subject( p ), it ( p.begin() ) {}
+	NewPartialIterator( Partial & p, Partial::iterator i ) : subject( p ), it ( i ) {}
 	
 	bool atEnd( void ) { return it == subject.end(); }
+	bool hasNext( void ) { return !atEnd(); }
 
 	BreakpointPosition * next( void )
 	{
@@ -1474,20 +1475,14 @@ public:
 };
 
 
-PartialList *new_PartialList__SWIG_0(){
-			debugger << "creating an empty list of Partials" << Loris::endl;
-			return new PartialList();
-		}
-PartialList *new_PartialList__SWIG_1(PartialList const &rhs){
-			debugger << "copying  a list of " << rhs.size() << " Partials" << Loris::endl;
-			return new PartialList( rhs );
-		}
-void delete_PartialList(PartialList *self){
-			debugger << "destroying  a list of " << self->size() << " Partials" << Loris::endl;
-			delete self;
-		}
-PartialList *PartialList_copy(PartialList *self){
-			return new PartialList( *self );
+Partial *NewPlistIterator_partial(NewPlistIterator *self){
+			if ( self->atEnd() )
+			{
+				throw_exception("end of PartialList");
+				return 0;
+			}			
+			Partial & current = *(self->it);
+			return &current;
 		}
 void PartialList_timeSpan(PartialList *self,double *tmin_out,double *tmax_out){
 		 	std::pair<double, double> span = 
@@ -1498,9 +1493,95 @@ void PartialList_timeSpan(PartialList *self,double *tmin_out,double *tmax_out){
 NewPlistIterator *PartialList_iterator(PartialList *self){
 			return new NewPlistIterator(*self);
 		}
-PartialListIterator PartialList_insert__SWIG_1(PartialList *self,Partial const &partial){
+void PartialList_append(PartialList *self,Partial *partial){
+			self->insert( self->end(), *partial );
+		}
+NewPlistIterator *PartialList_insert__SWIG_0(PartialList *self,NewPlistIterator *position,Partial *partial){
+			if ( self != &(position->subject) )
+				return 0;
+			return new NewPlistIterator(*self, self->insert( position->it, *partial ) );
+		}
+void PartialList_erase__SWIG_0(PartialList *self,Partial *partial){
+			PartialList::iterator it = self->begin();
+			while ( it != self->end() )
+			{
+				if ( &(*it) == partial )	// compare addresses
+				{
+					self->erase( it );
+					return;
+				}
+				++it;
+			}
+			throw_exception( "PartialList.erase(p): p not in PartialList" );
+		}
+void PartialList_splice__SWIG_0(PartialList *self,PartialList *other){
+			self->splice( self->end(), *other );
+		}
+PartialListIterator PartialList_insert__SWIG_2(PartialList *self,Partial const &partial){
 			return self->insert( self->end(), partial );
 		}
+PartialList *PartialList_copy(PartialList *self){ return new PartialList( *self ); }
+NewPartialIterator *Partial_iterator(Partial *self){
+			return new NewPartialIterator(*self);
+		}
+void Partial_erase__SWIG_0(Partial *self,BreakpointPosition *pos){
+			if ( *pos != self->end() )
+			{
+				*pos = self->erase( *pos );
+			}
+		}
+Partial *Partial_copy(Partial *self){ return new Partial( *self ); }
+int Partial_equals(Partial *self,Partial *other){
+			return *self == *other;
+		}
+Breakpoint *Breakpoint_copy(Breakpoint *self){
+			return new Breakpoint( *self );
+		}
+int Breakpoint_equals(Breakpoint *self,Breakpoint *other){
+			return *self == *other;
+		}
+double BreakpointPosition_time(BreakpointPosition *self){ 
+			return self->time(); 
+		}
+Breakpoint *BreakpointPosition_breakpoint(BreakpointPosition *self){ 
+			return &(self->breakpoint());
+		}
+double BreakpointPosition_frequency(BreakpointPosition *self){ return self->breakpoint().frequency(); }
+double BreakpointPosition_amplitude(BreakpointPosition *self){ return self->breakpoint().amplitude(); }
+double BreakpointPosition_bandwidth(BreakpointPosition *self){ return self->breakpoint().bandwidth(); }
+double BreakpointPosition_phase(BreakpointPosition *self){ return self->breakpoint().phase(); }
+void BreakpointPosition_setFrequency(BreakpointPosition *self,double x){ self->breakpoint().setFrequency( x ); }
+void BreakpointPosition_setAmplitude(BreakpointPosition *self,double x){ self->breakpoint().setAmplitude( x ); }
+void BreakpointPosition_setBandwidth(BreakpointPosition *self,double x){ self->breakpoint().setBandwidth( x ); }
+void BreakpointPosition_setPhase(BreakpointPosition *self,double x){ self->breakpoint().setPhase( x ); }
+Breakpoint *PartialIterator_breakpoint(PartialIterator *self){ 
+			return &(self->breakpoint());
+		}
+PartialIterator *PartialIterator_copy(PartialIterator *self){
+			return new PartialIterator( *self );
+		}
+PartialIterator *PartialIterator_next(PartialIterator *self){
+			PartialIterator * next = new PartialIterator(*self);
+			++(*next);
+			return next;
+		}
+PartialIterator *PartialIterator_prev(PartialIterator *self){
+			PartialIterator * prev = new PartialIterator(*self);
+			--(*prev);
+			return prev;
+		}
+int PartialIterator_equals(PartialIterator *self,PartialIterator *other){
+			return *self == *other;
+		}
+int PartialIterator_isInRange(PartialIterator *self,PartialIterator const *begin,PartialIterator const *end){	
+		 	PartialIterator it;
+		 	for ( it = *begin; it != *end; ++it )
+		 	{
+		 		if ( it == *self )
+		 			return true;
+		 	}
+		 	return false;
+		 }
 PartialListIterator *PartialListIterator_copy(PartialListIterator *self){
 			return new PartialListIterator( *self );
 		}
@@ -1530,67 +1611,6 @@ int PartialListIterator_isInRange(PartialListIterator *self,PartialListIterator 
 		 	}
 		 	return false;
 		 }
-NewPartialIterator *Partial_iterator(Partial *self){
-			return new NewPartialIterator(*self);
-		}
-void Partial_erase__SWIG_1(Partial *self,BreakpointPosition *pos){
-			if ( *pos != self->end() )
-				*pos = self->erase( *pos );
-		}
-Partial *Partial_copy(Partial *self){
-			return new Partial( *self );
-		}
-int Partial_equals(Partial *self,Partial *other){
-			return *self == *other;
-		}
-Breakpoint *PartialIterator_breakpoint(PartialIterator *self){ 
-			return &(self->breakpoint());
-		}
-PartialIterator *PartialIterator_copy(PartialIterator *self){
-			return new PartialIterator( *self );
-		}
-PartialIterator *PartialIterator_next(PartialIterator *self){
-			PartialIterator * next = new PartialIterator(*self);
-			++(*next);
-			return next;
-		}
-PartialIterator *PartialIterator_prev(PartialIterator *self){
-			PartialIterator * prev = new PartialIterator(*self);
-			--(*prev);
-			return prev;
-		}
-int PartialIterator_equals(PartialIterator *self,PartialIterator *other){
-			return *self == *other;
-		}
-int PartialIterator_isInRange(PartialIterator *self,PartialIterator const *begin,PartialIterator const *end){	
-		 	PartialIterator it;
-		 	for ( it = *begin; it != *end; ++it )
-		 	{
-		 		if ( it == *self )
-		 			return true;
-		 	}
-		 	return false;
-		 }
-Breakpoint *Breakpoint_copy(Breakpoint *self){
-			return new Breakpoint( *self );
-		}
-int Breakpoint_equals(Breakpoint *self,Breakpoint *other){
-			return *self == *other;
-		}
-double BreakpointPosition_time(BreakpointPosition *self){ 
-			return self->time(); 
-		}
-Breakpoint *BreakpointPosition_breakpoint(BreakpointPosition *self){ 
-			return &(self->breakpoint());
-		}
-double BreakpointPosition_frequency(BreakpointPosition *self){ return self->breakpoint().frequency(); }
-double BreakpointPosition_amplitude(BreakpointPosition *self){ return self->breakpoint().amplitude(); }
-double BreakpointPosition_bandwidth(BreakpointPosition *self){ return self->breakpoint().bandwidth(); }
-double BreakpointPosition_phase(BreakpointPosition *self){ return self->breakpoint().phase(); }
-void BreakpointPosition_setFrequency(BreakpointPosition *self,double x){ self->breakpoint().setFrequency( x ); }
-void BreakpointPosition_setAmplitude(BreakpointPosition *self,double x){ self->breakpoint().setAmplitude( x ); }
-void BreakpointPosition_setBandwidth(BreakpointPosition *self,double x){ self->breakpoint().setBandwidth( x ); }
-void BreakpointPosition_setPhase(BreakpointPosition *self,double x){ self->breakpoint().setPhase( x ); }
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -1604,12 +1624,13 @@ _wrap_channelize(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *C
     if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     if ((SWIG_ConvertPtr(interp, objv[2], (void **) &arg2, SWIGTYPE_p_BreakpointEnvelope,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     {
-        *EXCEPTION_THROWN = '\0';
+        char * err;
+        clear_exception();
         channelize(arg1,arg2,arg3);
         
-        if (*EXCEPTION_THROWN)
+        if ((err = check_exception()))
         {
-            SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+            SWIG_exception( SWIG_ValueError, err );
         }
     }
     
@@ -1630,12 +1651,13 @@ _wrap_createFreqReference(ClientData clientData, Tcl_Interp *interp, int objc, T
     if (SWIG_GetArgs(interp, objc, objv,"odd|l:createFreqReference partials minFreq maxFreq numSamps ",0,&arg2,&arg3,&arg4) == TCL_ERROR) SWIG_fail;
     if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     {
-        *EXCEPTION_THROWN = '\0';
+        char * err;
+        clear_exception();
         result = (BreakpointEnvelope *)createFreqReference(arg1,arg2,arg3,arg4);
         
-        if (*EXCEPTION_THROWN)
+        if ((err = check_exception()))
         {
-            SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+            SWIG_exception( SWIG_ValueError, err );
         }
     }
     Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_BreakpointEnvelope,0));
@@ -1654,12 +1676,13 @@ _wrap_dilate(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST
     if (SWIG_GetArgs(interp, objc, objv,"oss:dilate partials initial_times target_times ",0,&arg2,&arg3) == TCL_ERROR) SWIG_fail;
     if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     {
-        *EXCEPTION_THROWN = '\0';
+        char * err;
+        clear_exception();
         dilate_s(arg1,arg2,arg3);
         
-        if (*EXCEPTION_THROWN)
+        if ((err = check_exception()))
         {
-            SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+            SWIG_exception( SWIG_ValueError, err );
         }
     }
     
@@ -1676,12 +1699,13 @@ _wrap_distill(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONS
     if (SWIG_GetArgs(interp, objc, objv,"o:distill partials ",0) == TCL_ERROR) SWIG_fail;
     if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     {
-        *EXCEPTION_THROWN = '\0';
+        char * err;
+        clear_exception();
         distill(arg1);
         
-        if (*EXCEPTION_THROWN)
+        if ((err = check_exception()))
         {
-            SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+            SWIG_exception( SWIG_ValueError, err );
         }
     }
     
@@ -1702,12 +1726,13 @@ _wrap_exportAiff(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *C
     if (SWIG_GetArgs(interp, objc, objv,"so|dii:exportAiff path samples samplerate nchannels bitsPerSamp ",&arg1,0,&arg3,&arg4,&arg5) == TCL_ERROR) SWIG_fail;
     if ((SWIG_ConvertPtr(interp, objv[2], (void **) &arg2, SWIGTYPE_p_SampleVector,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     {
-        *EXCEPTION_THROWN = '\0';
+        char * err;
+        clear_exception();
         exportAiff((char const *)arg1,arg2,arg3,arg4,arg5);
         
-        if (*EXCEPTION_THROWN)
+        if ((err = check_exception()))
         {
-            SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+            SWIG_exception( SWIG_ValueError, err );
         }
     }
     
@@ -1725,12 +1750,13 @@ _wrap_exportSdif(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *C
     if (SWIG_GetArgs(interp, objc, objv,"so:exportSdif path partials ",&arg1,0) == TCL_ERROR) SWIG_fail;
     if ((SWIG_ConvertPtr(interp, objv[2], (void **) &arg2, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     {
-        *EXCEPTION_THROWN = '\0';
+        char * err;
+        clear_exception();
         exportSdif((char const *)arg1,arg2);
         
-        if (*EXCEPTION_THROWN)
+        if ((err = check_exception()))
         {
-            SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+            SWIG_exception( SWIG_ValueError, err );
         }
     }
     
@@ -1751,12 +1777,13 @@ _wrap_exportSpc(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CO
     if (SWIG_GetArgs(interp, objc, objv,"sod|id:exportSpc path partials midiPitch enhanced endApproachTime ",&arg1,0,&arg3,&arg4,&arg5) == TCL_ERROR) SWIG_fail;
     if ((SWIG_ConvertPtr(interp, objv[2], (void **) &arg2, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     {
-        *EXCEPTION_THROWN = '\0';
+        char * err;
+        clear_exception();
         exportSpc((char const *)arg1,arg2,arg3,arg4,arg5);
         
-        if (*EXCEPTION_THROWN)
+        if ((err = check_exception()))
         {
-            SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+            SWIG_exception( SWIG_ValueError, err );
         }
     }
     
@@ -1773,12 +1800,13 @@ _wrap_importSdif(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *C
     
     if (SWIG_GetArgs(interp, objc, objv,"s:importSdif path ",&arg1) == TCL_ERROR) SWIG_fail;
     {
-        *EXCEPTION_THROWN = '\0';
+        char * err;
+        clear_exception();
         result = (PartialList *)importSdif((char const *)arg1);
         
-        if (*EXCEPTION_THROWN)
+        if ((err = check_exception()))
         {
-            SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+            SWIG_exception( SWIG_ValueError, err );
         }
     }
     Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_PartialList,0));
@@ -1795,12 +1823,13 @@ _wrap_importSpc(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CO
     
     if (SWIG_GetArgs(interp, objc, objv,"s:importSpc path ",&arg1) == TCL_ERROR) SWIG_fail;
     {
-        *EXCEPTION_THROWN = '\0';
+        char * err;
+        clear_exception();
         result = (PartialList *)importSpc((char const *)arg1);
         
-        if (*EXCEPTION_THROWN)
+        if ((err = check_exception()))
         {
-            SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+            SWIG_exception( SWIG_ValueError, err );
         }
     }
     Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_PartialList,0));
@@ -1826,12 +1855,13 @@ _wrap_morph__SWIG_0(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj
     if ((SWIG_ConvertPtr(interp, objv[4], (void **) &arg4, SWIGTYPE_p_BreakpointEnvelope,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     if ((SWIG_ConvertPtr(interp, objv[5], (void **) &arg5, SWIGTYPE_p_BreakpointEnvelope,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     {
-        *EXCEPTION_THROWN = '\0';
+        char * err;
+        clear_exception();
         result = (PartialList *)morph((PartialList const *)arg1,(PartialList const *)arg2,(BreakpointEnvelope const *)arg3,(BreakpointEnvelope const *)arg4,(BreakpointEnvelope const *)arg5);
         
-        if (*EXCEPTION_THROWN)
+        if ((err = check_exception()))
         {
-            SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+            SWIG_exception( SWIG_ValueError, err );
         }
     }
     Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_PartialList,0));
@@ -1854,12 +1884,13 @@ _wrap_morph__SWIG_1(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj
     if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     if ((SWIG_ConvertPtr(interp, objv[2], (void **) &arg2, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     {
-        *EXCEPTION_THROWN = '\0';
+        char * err;
+        clear_exception();
         result = (PartialList *)morph((PartialList const *)arg1,(PartialList const *)arg2,arg3,arg4,arg5);
         
-        if (*EXCEPTION_THROWN)
+        if ((err = check_exception()))
         {
-            SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+            SWIG_exception( SWIG_ValueError, err );
         }
     }
     Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_PartialList,0));
@@ -1987,12 +2018,13 @@ _wrap_synthesize(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *C
     if (SWIG_GetArgs(interp, objc, objv,"o|d:synthesize partials srate ",0,&arg2) == TCL_ERROR) SWIG_fail;
     if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     {
-        *EXCEPTION_THROWN = '\0';
+        char * err;
+        clear_exception();
         result = (SampleVector *)synthesize((PartialList const *)arg1,arg2);
         
-        if (*EXCEPTION_THROWN)
+        if ((err = check_exception()))
         {
-            SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+            SWIG_exception( SWIG_ValueError, err );
         }
     }
     Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_SampleVector,0));
@@ -2011,12 +2043,13 @@ _wrap_crop(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST o
     if (SWIG_GetArgs(interp, objc, objv,"odd:crop partials t1 t2 ",0,&arg2,&arg3) == TCL_ERROR) SWIG_fail;
     if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     {
-        *EXCEPTION_THROWN = '\0';
+        char * err;
+        clear_exception();
         crop(arg1,arg2,arg3);
         
-        if (*EXCEPTION_THROWN)
+        if ((err = check_exception()))
         {
-            SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+            SWIG_exception( SWIG_ValueError, err );
         }
     }
     
@@ -2035,12 +2068,13 @@ _wrap_extractLabeled(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Ob
     if (SWIG_GetArgs(interp, objc, objv,"ol:extractLabeled partials label ",0,&arg2) == TCL_ERROR) SWIG_fail;
     if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     {
-        *EXCEPTION_THROWN = '\0';
+        char * err;
+        clear_exception();
         result = (PartialList *)extractLabeled(arg1,arg2);
         
-        if (*EXCEPTION_THROWN)
+        if ((err = check_exception()))
         {
-            SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+            SWIG_exception( SWIG_ValueError, err );
         }
     }
     Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_PartialList,0));
@@ -2059,12 +2093,13 @@ _wrap_scaleAmp__SWIG_0(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_
     if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     if ((SWIG_ConvertPtr(interp, objv[2], (void **) &arg2, SWIGTYPE_p_BreakpointEnvelope,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     {
-        *EXCEPTION_THROWN = '\0';
+        char * err;
+        clear_exception();
         scaleAmp(arg1,arg2);
         
-        if (*EXCEPTION_THROWN)
+        if ((err = check_exception()))
         {
-            SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+            SWIG_exception( SWIG_ValueError, err );
         }
     }
     
@@ -2083,12 +2118,13 @@ _wrap_scaleBandwidth__SWIG_0(ClientData clientData, Tcl_Interp *interp, int objc
     if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     if ((SWIG_ConvertPtr(interp, objv[2], (void **) &arg2, SWIGTYPE_p_BreakpointEnvelope,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     {
-        *EXCEPTION_THROWN = '\0';
+        char * err;
+        clear_exception();
         scaleBandwidth(arg1,arg2);
         
-        if (*EXCEPTION_THROWN)
+        if ((err = check_exception()))
         {
-            SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+            SWIG_exception( SWIG_ValueError, err );
         }
     }
     
@@ -2107,12 +2143,13 @@ _wrap_scaleFrequency__SWIG_0(ClientData clientData, Tcl_Interp *interp, int objc
     if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     if ((SWIG_ConvertPtr(interp, objv[2], (void **) &arg2, SWIGTYPE_p_BreakpointEnvelope,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     {
-        *EXCEPTION_THROWN = '\0';
+        char * err;
+        clear_exception();
         scaleFrequency(arg1,arg2);
         
-        if (*EXCEPTION_THROWN)
+        if ((err = check_exception()))
         {
-            SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+            SWIG_exception( SWIG_ValueError, err );
         }
     }
     
@@ -2131,12 +2168,13 @@ _wrap_scaleNoiseRatio__SWIG_0(ClientData clientData, Tcl_Interp *interp, int obj
     if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     if ((SWIG_ConvertPtr(interp, objv[2], (void **) &arg2, SWIGTYPE_p_BreakpointEnvelope,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     {
-        *EXCEPTION_THROWN = '\0';
+        char * err;
+        clear_exception();
         scaleNoiseRatio(arg1,arg2);
         
-        if (*EXCEPTION_THROWN)
+        if ((err = check_exception()))
         {
-            SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+            SWIG_exception( SWIG_ValueError, err );
         }
     }
     
@@ -2155,12 +2193,13 @@ _wrap_shiftPitch__SWIG_0(ClientData clientData, Tcl_Interp *interp, int objc, Tc
     if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     if ((SWIG_ConvertPtr(interp, objv[2], (void **) &arg2, SWIGTYPE_p_BreakpointEnvelope,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     {
-        *EXCEPTION_THROWN = '\0';
+        char * err;
+        clear_exception();
         shiftPitch(arg1,arg2);
         
-        if (*EXCEPTION_THROWN)
+        if ((err = check_exception()))
         {
-            SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+            SWIG_exception( SWIG_ValueError, err );
         }
     }
     
@@ -2178,12 +2217,13 @@ _wrap_scaleAmp__SWIG_1(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_
     if (SWIG_GetArgs(interp, objc, objv,"od:scaleAmp partials w ",0,&arg2) == TCL_ERROR) SWIG_fail;
     if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     {
-        *EXCEPTION_THROWN = '\0';
+        char * err;
+        clear_exception();
         scaleAmp(arg1,arg2);
         
-        if (*EXCEPTION_THROWN)
+        if ((err = check_exception()))
         {
-            SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+            SWIG_exception( SWIG_ValueError, err );
         }
     }
     
@@ -2256,12 +2296,13 @@ _wrap_scaleBandwidth__SWIG_1(ClientData clientData, Tcl_Interp *interp, int objc
     if (SWIG_GetArgs(interp, objc, objv,"od:scaleBandwidth partials w ",0,&arg2) == TCL_ERROR) SWIG_fail;
     if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     {
-        *EXCEPTION_THROWN = '\0';
+        char * err;
+        clear_exception();
         scaleBandwidth(arg1,arg2);
         
-        if (*EXCEPTION_THROWN)
+        if ((err = check_exception()))
         {
-            SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+            SWIG_exception( SWIG_ValueError, err );
         }
     }
     
@@ -2334,12 +2375,13 @@ _wrap_scaleFrequency__SWIG_1(ClientData clientData, Tcl_Interp *interp, int objc
     if (SWIG_GetArgs(interp, objc, objv,"od:scaleFrequency partials w ",0,&arg2) == TCL_ERROR) SWIG_fail;
     if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     {
-        *EXCEPTION_THROWN = '\0';
+        char * err;
+        clear_exception();
         scaleFrequency(arg1,arg2);
         
-        if (*EXCEPTION_THROWN)
+        if ((err = check_exception()))
         {
-            SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+            SWIG_exception( SWIG_ValueError, err );
         }
     }
     
@@ -2412,12 +2454,13 @@ _wrap_scaleNoiseRatio__SWIG_1(ClientData clientData, Tcl_Interp *interp, int obj
     if (SWIG_GetArgs(interp, objc, objv,"od:scaleNoiseRatio partials w ",0,&arg2) == TCL_ERROR) SWIG_fail;
     if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     {
-        *EXCEPTION_THROWN = '\0';
+        char * err;
+        clear_exception();
         scaleNoiseRatio(arg1,arg2);
         
-        if (*EXCEPTION_THROWN)
+        if ((err = check_exception()))
         {
-            SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+            SWIG_exception( SWIG_ValueError, err );
         }
     }
     
@@ -2490,12 +2533,13 @@ _wrap_shiftPitch__SWIG_1(ClientData clientData, Tcl_Interp *interp, int objc, Tc
     if (SWIG_GetArgs(interp, objc, objv,"od:shiftPitch partials w ",0,&arg2) == TCL_ERROR) SWIG_fail;
     if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     {
-        *EXCEPTION_THROWN = '\0';
+        char * err;
+        clear_exception();
         shiftPitch(arg1,arg2);
         
-        if (*EXCEPTION_THROWN)
+        if ((err = check_exception()))
         {
-            SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+            SWIG_exception( SWIG_ValueError, err );
         }
     }
     
@@ -2568,12 +2612,13 @@ _wrap_shiftTime(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CO
     if (SWIG_GetArgs(interp, objc, objv,"od:shiftTime partials offset ",0,&arg2) == TCL_ERROR) SWIG_fail;
     if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     {
-        *EXCEPTION_THROWN = '\0';
+        char * err;
+        clear_exception();
         shiftTime(arg1,arg2);
         
-        if (*EXCEPTION_THROWN)
+        if ((err = check_exception()))
         {
-            SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+            SWIG_exception( SWIG_ValueError, err );
         }
     }
     
@@ -2591,12 +2636,13 @@ _wrap_resample(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CON
     if (SWIG_GetArgs(interp, objc, objv,"od:resample partials interval ",0,&arg2) == TCL_ERROR) SWIG_fail;
     if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     {
-        *EXCEPTION_THROWN = '\0';
+        char * err;
+        clear_exception();
         resample(arg1,arg2);
         
-        if (*EXCEPTION_THROWN)
+        if ((err = check_exception()))
         {
-            SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+            SWIG_exception( SWIG_ValueError, err );
         }
     }
     
@@ -2613,12 +2659,13 @@ _wrap_sift(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST o
     if (SWIG_GetArgs(interp, objc, objv,"o:sift partials ",0) == TCL_ERROR) SWIG_fail;
     if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     {
-        *EXCEPTION_THROWN = '\0';
+        char * err;
+        clear_exception();
         sift(arg1);
         
-        if (*EXCEPTION_THROWN)
+        if ((err = check_exception()))
         {
-            SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+            SWIG_exception( SWIG_ValueError, err );
         }
     }
     
@@ -2634,12 +2681,13 @@ _wrap_version(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONS
     
     if (SWIG_GetArgs(interp, objc, objv,":version ") == TCL_ERROR) SWIG_fail;
     {
-        *EXCEPTION_THROWN = '\0';
+        char * err;
+        clear_exception();
         result = (char *)version();
         
-        if (*EXCEPTION_THROWN)
+        if ((err = check_exception()))
         {
-            SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+            SWIG_exception( SWIG_ValueError, err );
         }
     }
     Tcl_SetObjResult(interp,Tcl_NewStringObj(result,-1));
@@ -5233,9 +5281,34 @@ _wrap_NewPlistIterator_next(ClientData clientData, Tcl_Interp *interp, int objc,
 }
 
 
+static int
+_wrap_NewPlistIterator_partial(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    NewPlistIterator *arg1 = (NewPlistIterator *) 0 ;
+    Partial *result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"o:NewPlistIterator_partial self ",0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_NewPlistIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        char * err;
+        clear_exception();
+        result = (Partial *)NewPlistIterator_partial(arg1);
+        
+        if ((err = check_exception()))
+        {
+            SWIG_exception( SWIG_ValueError, err );
+        }
+    }
+    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_Partial,0));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
 static swig_method swig_NewPlistIterator_methods[] = {
     {"atEnd", _wrap_NewPlistIterator_atEnd}, 
     {"next", _wrap_NewPlistIterator_next}, 
+    {"partial", _wrap_NewPlistIterator_partial}, 
     {0,0}
 };
 static swig_attribute swig_NewPlistIterator_attributes[] = {
@@ -5254,6 +5327,41 @@ _wrap_NewPartialIterator_atEnd(ClientData clientData, Tcl_Interp *interp, int ob
         try
         {
             result = (bool)(arg1)->atEnd();
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,Tcl_NewIntObj((long) result));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_NewPartialIterator_hasNext(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    NewPartialIterator *arg1 = (NewPartialIterator *) 0 ;
+    bool result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"o:NewPartialIterator_hasNext self ",0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_NewPartialIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            result = (bool)(arg1)->hasNext();
             
         }
         catch( Loris::Exception & ex ) 
@@ -5305,6 +5413,7 @@ _wrap_NewPartialIterator_next(ClientData clientData, Tcl_Interp *interp, int obj
 
 static swig_method swig_NewPartialIterator_methods[] = {
     {"atEnd", _wrap_NewPartialIterator_atEnd}, 
+    {"hasNext", _wrap_NewPartialIterator_hasNext}, 
     {"next", _wrap_NewPartialIterator_next}, 
     {0,0}
 };
@@ -5321,7 +5430,7 @@ _wrap_new_PartialList__SWIG_0(ClientData clientData, Tcl_Interp *interp, int obj
     {
         try
         {
-            result = (PartialList *)new_PartialList__SWIG_0();
+            result = (PartialList *)new PartialList();
             
         }
         catch( Loris::Exception & ex ) 
@@ -5356,7 +5465,7 @@ _wrap_new_PartialList__SWIG_1(ClientData clientData, Tcl_Interp *interp, int obj
     {
         try
         {
-            result = (PartialList *)new_PartialList__SWIG_1((PartialList const &)*arg1);
+            result = (PartialList *)new PartialList((PartialList const &)*arg1);
             
         }
         catch( Loris::Exception & ex ) 
@@ -5417,7 +5526,7 @@ _wrap_delete_PartialList(ClientData clientData, Tcl_Interp *interp, int objc, Tc
     {
         try
         {
-            delete_PartialList(arg1);
+            delete arg1;
             
         }
         catch( Loris::Exception & ex ) 
@@ -5443,16 +5552,15 @@ _wrap_delete_PartialList(ClientData clientData, Tcl_Interp *interp, int objc, Tc
 
 
 static int
-_wrap_PartialList_copy(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+_wrap_PartialList_clear(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
     PartialList *arg1 = (PartialList *) 0 ;
-    PartialList *result;
     
-    if (SWIG_GetArgs(interp, objc, objv,"o:PartialList_copy self ",0) == TCL_ERROR) SWIG_fail;
+    if (SWIG_GetArgs(interp, objc, objv,"o:PartialList_clear self ",0) == TCL_ERROR) SWIG_fail;
     if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     {
         try
         {
-            result = (PartialList *)PartialList_copy(arg1);
+            (arg1)->clear();
             
         }
         catch( Loris::Exception & ex ) 
@@ -5470,7 +5578,42 @@ _wrap_PartialList_copy(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_
             SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
         }
     }
-    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_PartialList,0));
+    
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_PartialList_size(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    PartialList *arg1 = (PartialList *) 0 ;
+    unsigned long result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"o:PartialList_size self ",0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            result = (unsigned long)(arg1)->size();
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,Tcl_NewIntObj((long) result));
     return TCL_OK;
     fail:
     return TCL_ERROR;
@@ -5563,15 +5706,17 @@ _wrap_PartialList_iterator(ClientData clientData, Tcl_Interp *interp, int objc, 
 
 
 static int
-_wrap_PartialList_clear(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+_wrap_PartialList_append(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
     PartialList *arg1 = (PartialList *) 0 ;
+    Partial *arg2 = (Partial *) 0 ;
     
-    if (SWIG_GetArgs(interp, objc, objv,"o:PartialList_clear self ",0) == TCL_ERROR) SWIG_fail;
+    if (SWIG_GetArgs(interp, objc, objv,"oo:PartialList_append self partial ",0,0) == TCL_ERROR) SWIG_fail;
     if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[2], (void **) &arg2, SWIGTYPE_p_Partial,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     {
         try
         {
-            (arg1)->clear();
+            PartialList_append(arg1,arg2);
             
         }
         catch( Loris::Exception & ex ) 
@@ -5597,16 +5742,20 @@ _wrap_PartialList_clear(ClientData clientData, Tcl_Interp *interp, int objc, Tcl
 
 
 static int
-_wrap_PartialList_size(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+_wrap_PartialList_insert__SWIG_0(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
     PartialList *arg1 = (PartialList *) 0 ;
-    unsigned long result;
+    NewPlistIterator *arg2 = (NewPlistIterator *) 0 ;
+    Partial *arg3 = (Partial *) 0 ;
+    NewPlistIterator *result;
     
-    if (SWIG_GetArgs(interp, objc, objv,"o:PartialList_size self ",0) == TCL_ERROR) SWIG_fail;
+    if (SWIG_GetArgs(interp, objc, objv,"ooo:PartialList_insert self position partial ",0,0,0) == TCL_ERROR) SWIG_fail;
     if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[2], (void **) &arg2, SWIGTYPE_p_NewPlistIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[3], (void **) &arg3, SWIGTYPE_p_Partial,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     {
         try
         {
-            result = (unsigned long)(arg1)->size();
+            result = (NewPlistIterator *)PartialList_insert__SWIG_0(arg1,arg2,arg3);
             
         }
         catch( Loris::Exception & ex ) 
@@ -5624,7 +5773,68 @@ _wrap_PartialList_size(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_
             SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
         }
     }
-    Tcl_SetObjResult(interp,Tcl_NewIntObj((long) result));
+    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_NewPlistIterator,0));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_PartialList_erase__SWIG_0(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    PartialList *arg1 = (PartialList *) 0 ;
+    Partial *arg2 = (Partial *) 0 ;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"oo:PartialList_erase self partial ",0,0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[2], (void **) &arg2, SWIGTYPE_p_Partial,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        char * err;
+        clear_exception();
+        PartialList_erase__SWIG_0(arg1,arg2);
+        
+        if ((err = check_exception()))
+        {
+            SWIG_exception( SWIG_ValueError, err );
+        }
+    }
+    
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_PartialList_splice__SWIG_0(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    PartialList *arg1 = (PartialList *) 0 ;
+    PartialList *arg2 = (PartialList *) 0 ;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"oo:PartialList_splice self other ",0,0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[2], (void **) &arg2, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            PartialList_splice__SWIG_0(arg1,arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    
     return TCL_OK;
     fail:
     return TCL_ERROR;
@@ -5710,7 +5920,7 @@ _wrap_PartialList_end(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_O
 
 
 static int
-_wrap_PartialList_insert__SWIG_0(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+_wrap_PartialList_insert__SWIG_1(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
     PartialList *arg1 = (PartialList *) 0 ;
     PartialListIterator arg2 ;
     Partial *arg3 = 0 ;
@@ -5755,7 +5965,200 @@ _wrap_PartialList_insert__SWIG_0(ClientData clientData, Tcl_Interp *interp, int 
 
 
 static int
-_wrap_PartialList_insert__SWIG_1(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+_wrap_PartialList_erase__SWIG_1(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    PartialList *arg1 = (PartialList *) 0 ;
+    PartialListIterator arg2 ;
+    PartialListIterator *argp2 ;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"oo:PartialList_erase self position ",0,0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[2], (void **) &argp2, SWIGTYPE_p_PartialListIterator,SWIG_POINTER_EXCEPTION ) != TCL_OK)) SWIG_fail;
+    arg2 = *argp2; 
+    {
+        char * err;
+        clear_exception();
+        (arg1)->erase(arg2);
+        
+        if ((err = check_exception()))
+        {
+            SWIG_exception( SWIG_ValueError, err );
+        }
+    }
+    
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_PartialList_erase(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    Tcl_Obj *CONST *argv = objv+1;
+    int argc = objc-1;
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(interp, argv[0], (void **) &ptr, SWIGTYPE_p_PartialList, 0) == TCL_ERROR) {
+                _v = 0;
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *ptr;
+                if (SWIG_ConvertPtr(interp, argv[1], (void **) &ptr, SWIGTYPE_p_Partial, 0) == TCL_ERROR) {
+                    _v = 0;
+                }else {
+                    _v = 1;
+                }
+            }
+            if (_v) {
+                return _wrap_PartialList_erase__SWIG_0(clientData, interp, objc, objv);
+            }
+        }
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(interp, argv[0], (void **) &ptr, SWIGTYPE_p_PartialList, 0) == TCL_ERROR) {
+                _v = 0;
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *ptr;
+                if (SWIG_ConvertPtr(interp, argv[1], (void **) &ptr, SWIGTYPE_p_PartialListIterator, 0) == TCL_ERROR) {
+                    _v = 0;
+                }else {
+                    _v = 1;
+                }
+            }
+            if (_v) {
+                return _wrap_PartialList_erase__SWIG_1(clientData, interp, objc, objv);
+            }
+        }
+    }
+    
+    Tcl_SetResult(interp,(char *) "No matching function for overloaded 'PartialList_erase'", TCL_STATIC);
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_PartialList_splice__SWIG_1(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    PartialList *arg1 = (PartialList *) 0 ;
+    PartialListIterator arg2 ;
+    PartialList *arg3 = 0 ;
+    PartialListIterator *argp2 ;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"ooo:PartialList_splice self position list ",0,0,0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[2], (void **) &argp2, SWIGTYPE_p_PartialListIterator,SWIG_POINTER_EXCEPTION ) != TCL_OK)) SWIG_fail;
+    arg2 = *argp2; 
+    if ((SWIG_ConvertPtr(interp, objv[3], (void **) &arg3, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            (arg1)->splice(arg2,*arg3);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_PartialList_splice(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    Tcl_Obj *CONST *argv = objv+1;
+    int argc = objc-1;
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(interp, argv[0], (void **) &ptr, SWIGTYPE_p_PartialList, 0) == TCL_ERROR) {
+                _v = 0;
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *ptr;
+                if (SWIG_ConvertPtr(interp, argv[1], (void **) &ptr, SWIGTYPE_p_PartialList, 0) == TCL_ERROR) {
+                    _v = 0;
+                }else {
+                    _v = 1;
+                }
+            }
+            if (_v) {
+                return _wrap_PartialList_splice__SWIG_0(clientData, interp, objc, objv);
+            }
+        }
+    }
+    if (argc == 3) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(interp, argv[0], (void **) &ptr, SWIGTYPE_p_PartialList, 0) == TCL_ERROR) {
+                _v = 0;
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *ptr;
+                if (SWIG_ConvertPtr(interp, argv[1], (void **) &ptr, SWIGTYPE_p_PartialListIterator, 0) == TCL_ERROR) {
+                    _v = 0;
+                }else {
+                    _v = 1;
+                }
+            }
+            if (_v) {
+                {
+                    void *ptr;
+                    if (SWIG_ConvertPtr(interp, argv[2], (void **) &ptr, SWIGTYPE_p_PartialList, 0) == TCL_ERROR) {
+                        _v = 0;
+                    }else {
+                        _v = 1;
+                    }
+                }
+                if (_v) {
+                    return _wrap_PartialList_splice__SWIG_1(clientData, interp, objc, objv);
+                }
+            }
+        }
+    }
+    
+    Tcl_SetResult(interp,(char *) "No matching function for overloaded 'PartialList_splice'", TCL_STATIC);
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_PartialList_insert__SWIG_2(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
     PartialList *arg1 = (PartialList *) 0 ;
     Partial *arg2 = 0 ;
     PartialListIterator result;
@@ -5766,7 +6169,7 @@ _wrap_PartialList_insert__SWIG_1(ClientData clientData, Tcl_Interp *interp, int 
     {
         try
         {
-            result = PartialList_insert__SWIG_1(arg1,(Partial const &)*arg2);
+            result = PartialList_insert__SWIG_2(arg1,(Partial const &)*arg2);
             
         }
         catch( Loris::Exception & ex ) 
@@ -5819,7 +6222,7 @@ _wrap_PartialList_insert(ClientData clientData, Tcl_Interp *interp, int objc, Tc
                 }
             }
             if (_v) {
-                return _wrap_PartialList_insert__SWIG_1(clientData, interp, objc, objv);
+                return _wrap_PartialList_insert__SWIG_2(clientData, interp, objc, objv);
             }
         }
     }
@@ -5852,6 +6255,40 @@ _wrap_PartialList_insert(ClientData clientData, Tcl_Interp *interp, int objc, Tc
                     }
                 }
                 if (_v) {
+                    return _wrap_PartialList_insert__SWIG_1(clientData, interp, objc, objv);
+                }
+            }
+        }
+    }
+    if (argc == 3) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(interp, argv[0], (void **) &ptr, SWIGTYPE_p_PartialList, 0) == TCL_ERROR) {
+                _v = 0;
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *ptr;
+                if (SWIG_ConvertPtr(interp, argv[1], (void **) &ptr, SWIGTYPE_p_NewPlistIterator, 0) == TCL_ERROR) {
+                    _v = 0;
+                }else {
+                    _v = 1;
+                }
+            }
+            if (_v) {
+                {
+                    void *ptr;
+                    if (SWIG_ConvertPtr(interp, argv[2], (void **) &ptr, SWIGTYPE_p_Partial, 0) == TCL_ERROR) {
+                        _v = 0;
+                    }else {
+                        _v = 1;
+                    }
+                }
+                if (_v) {
                     return _wrap_PartialList_insert__SWIG_0(clientData, interp, objc, objv);
                 }
             }
@@ -5864,19 +6301,16 @@ _wrap_PartialList_insert(ClientData clientData, Tcl_Interp *interp, int objc, Tc
 
 
 static int
-_wrap_PartialList_erase(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+_wrap_PartialList_copy(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
     PartialList *arg1 = (PartialList *) 0 ;
-    PartialListIterator arg2 ;
-    PartialListIterator *argp2 ;
+    PartialList *result;
     
-    if (SWIG_GetArgs(interp, objc, objv,"oo:PartialList_erase self position ",0,0) == TCL_ERROR) SWIG_fail;
+    if (SWIG_GetArgs(interp, objc, objv,"o:PartialList_copy self ",0) == TCL_ERROR) SWIG_fail;
     if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
-    if ((SWIG_ConvertPtr(interp, objv[2], (void **) &argp2, SWIGTYPE_p_PartialListIterator,SWIG_POINTER_EXCEPTION ) != TCL_OK)) SWIG_fail;
-    arg2 = *argp2; 
     {
         try
         {
-            (arg1)->erase(arg2);
+            result = (PartialList *)PartialList_copy(arg1);
             
         }
         catch( Loris::Exception & ex ) 
@@ -5894,47 +6328,7 @@ _wrap_PartialList_erase(ClientData clientData, Tcl_Interp *interp, int objc, Tcl
             SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
         }
     }
-    
-    return TCL_OK;
-    fail:
-    return TCL_ERROR;
-}
-
-
-static int
-_wrap_PartialList_splice(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
-    PartialList *arg1 = (PartialList *) 0 ;
-    PartialListIterator arg2 ;
-    PartialList *arg3 = 0 ;
-    PartialListIterator *argp2 ;
-    
-    if (SWIG_GetArgs(interp, objc, objv,"ooo:PartialList_splice self position list ",0,0,0) == TCL_ERROR) SWIG_fail;
-    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
-    if ((SWIG_ConvertPtr(interp, objv[2], (void **) &argp2, SWIGTYPE_p_PartialListIterator,SWIG_POINTER_EXCEPTION ) != TCL_OK)) SWIG_fail;
-    arg2 = *argp2; 
-    if ((SWIG_ConvertPtr(interp, objv[3], (void **) &arg3, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
-    {
-        try
-        {
-            (arg1)->splice(arg2,*arg3);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    
+    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_PartialList,0));
     return TCL_OK;
     fail:
     return TCL_ERROR;
@@ -5943,19 +6337,20 @@ _wrap_PartialList_splice(ClientData clientData, Tcl_Interp *interp, int objc, Tc
 
 static void swig_delete_PartialList(void *obj) {
 PartialList *arg1 = (PartialList *) obj;
-delete_PartialList(arg1);
+delete arg1;
 }
 static swig_method swig_PartialList_methods[] = {
-    {"copy", _wrap_PartialList_copy}, 
-    {"timeSpan", _wrap_PartialList_timeSpan}, 
-    {"iterator", _wrap_PartialList_iterator}, 
     {"clear", _wrap_PartialList_clear}, 
     {"size", _wrap_PartialList_size}, 
+    {"timeSpan", _wrap_PartialList_timeSpan}, 
+    {"iterator", _wrap_PartialList_iterator}, 
+    {"append", _wrap_PartialList_append}, 
     {"begin", _wrap_PartialList_begin}, 
     {"end", _wrap_PartialList_end}, 
-    {"insert", _wrap_PartialList_insert}, 
     {"erase", _wrap_PartialList_erase}, 
     {"splice", _wrap_PartialList_splice}, 
+    {"insert", _wrap_PartialList_insert}, 
+    {"copy", _wrap_PartialList_copy}, 
     {0,0}
 };
 static swig_attribute swig_PartialList_attributes[] = {
@@ -5964,298 +6359,7 @@ static swig_attribute swig_PartialList_attributes[] = {
 static swig_class *swig_PartialList_bases[] = {0};
 swig_class _wrap_class_PartialList = { "PartialList", &SWIGTYPE_p_PartialList,_wrap_new_PartialList, swig_delete_PartialList, swig_PartialList_methods, swig_PartialList_attributes, swig_PartialList_bases };
 static int
-_wrap_PartialListIterator_copy(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
-    PartialListIterator *arg1 = (PartialListIterator *) 0 ;
-    PartialListIterator *result;
-    
-    if (SWIG_GetArgs(interp, objc, objv,"o:PartialListIterator_copy self ",0) == TCL_ERROR) SWIG_fail;
-    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialListIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
-    {
-        try
-        {
-            result = (PartialListIterator *)PartialListIterator_copy(arg1);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_PartialListIterator,0));
-    return TCL_OK;
-    fail:
-    return TCL_ERROR;
-}
-
-
-static int
-_wrap_PartialListIterator_next(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
-    PartialListIterator *arg1 = (PartialListIterator *) 0 ;
-    PartialListIterator *result;
-    
-    if (SWIG_GetArgs(interp, objc, objv,"o:PartialListIterator_next self ",0) == TCL_ERROR) SWIG_fail;
-    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialListIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
-    {
-        char * err;
-        clear_exception();
-        result = (PartialListIterator *)PartialListIterator_next(arg1);
-        
-        if ((err = check_exception()))
-        {
-            SWIG_exception( SWIG_ValueError, err );
-            
-        }
-    }
-    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_PartialListIterator,0));
-    return TCL_OK;
-    fail:
-    return TCL_ERROR;
-}
-
-
-static int
-_wrap_PartialListIterator_prev(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
-    PartialListIterator *arg1 = (PartialListIterator *) 0 ;
-    PartialListIterator *result;
-    
-    if (SWIG_GetArgs(interp, objc, objv,"o:PartialListIterator_prev self ",0) == TCL_ERROR) SWIG_fail;
-    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialListIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
-    {
-        try
-        {
-            result = (PartialListIterator *)PartialListIterator_prev(arg1);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_PartialListIterator,0));
-    return TCL_OK;
-    fail:
-    return TCL_ERROR;
-}
-
-
-static int
-_wrap_PartialListIterator_partial(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
-    PartialListIterator *arg1 = (PartialListIterator *) 0 ;
-    Partial *result;
-    
-    if (SWIG_GetArgs(interp, objc, objv,"o:PartialListIterator_partial self ",0) == TCL_ERROR) SWIG_fail;
-    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialListIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
-    {
-        try
-        {
-            result = (Partial *)PartialListIterator_partial(arg1);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_Partial,0));
-    return TCL_OK;
-    fail:
-    return TCL_ERROR;
-}
-
-
-static int
-_wrap_PartialListIterator_equals(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
-    PartialListIterator *arg1 = (PartialListIterator *) 0 ;
-    PartialListIterator *arg2 = (PartialListIterator *) 0 ;
-    int result;
-    
-    if (SWIG_GetArgs(interp, objc, objv,"oo:PartialListIterator_equals self other ",0,0) == TCL_ERROR) SWIG_fail;
-    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialListIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
-    if ((SWIG_ConvertPtr(interp, objv[2], (void **) &arg2, SWIGTYPE_p_PartialListIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
-    {
-        try
-        {
-            result = (int)PartialListIterator_equals(arg1,arg2);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    Tcl_SetObjResult(interp,Tcl_NewIntObj((long) result));
-    return TCL_OK;
-    fail:
-    return TCL_ERROR;
-}
-
-
-static int
-_wrap_PartialListIterator_isInRange(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
-    PartialListIterator *arg1 = (PartialListIterator *) 0 ;
-    PartialListIterator *arg2 = (PartialListIterator *) 0 ;
-    PartialListIterator *arg3 = (PartialListIterator *) 0 ;
-    int result;
-    
-    if (SWIG_GetArgs(interp, objc, objv,"ooo:PartialListIterator_isInRange self begin end ",0,0,0) == TCL_ERROR) SWIG_fail;
-    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialListIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
-    if ((SWIG_ConvertPtr(interp, objv[2], (void **) &arg2, SWIGTYPE_p_PartialListIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
-    if ((SWIG_ConvertPtr(interp, objv[3], (void **) &arg3, SWIGTYPE_p_PartialListIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
-    {
-        try
-        {
-            result = (int)PartialListIterator_isInRange(arg1,(PartialListIterator const *)arg2,(PartialListIterator const *)arg3);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    Tcl_SetObjResult(interp,Tcl_NewIntObj((long) result));
-    return TCL_OK;
-    fail:
-    return TCL_ERROR;
-}
-
-
-static int
-_wrap_new_PartialListIterator(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
-    PartialListIterator *result;
-    
-    if (SWIG_GetArgs(interp, objc, objv,":new_PartialListIterator ") == TCL_ERROR) SWIG_fail;
-    {
-        try
-        {
-            result = (PartialListIterator *)new PartialListIterator();
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_PartialListIterator,0));
-    return TCL_OK;
-    fail:
-    return TCL_ERROR;
-}
-
-
-static int
-_wrap_delete_PartialListIterator(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
-    PartialListIterator *arg1 = (PartialListIterator *) 0 ;
-    
-    if (SWIG_GetArgs(interp, objc, objv,"o:delete_PartialListIterator self ",0) == TCL_ERROR) SWIG_fail;
-    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialListIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
-    {
-        try
-        {
-            delete arg1;
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    
-    return TCL_OK;
-    fail:
-    return TCL_ERROR;
-}
-
-
-static void swig_delete_PartialListIterator(void *obj) {
-PartialListIterator *arg1 = (PartialListIterator *) obj;
-delete arg1;
-}
-static swig_method swig_PartialListIterator_methods[] = {
-    {"copy", _wrap_PartialListIterator_copy}, 
-    {"next", _wrap_PartialListIterator_next}, 
-    {"prev", _wrap_PartialListIterator_prev}, 
-    {"partial", _wrap_PartialListIterator_partial}, 
-    {"equals", _wrap_PartialListIterator_equals}, 
-    {"isInRange", _wrap_PartialListIterator_isInRange}, 
-    {0,0}
-};
-static swig_attribute swig_PartialListIterator_attributes[] = {
-    {0,0,0}
-};
-static swig_class *swig_PartialListIterator_bases[] = {0};
-swig_class _wrap_class_PartialListIterator = { "PartialListIterator", &SWIGTYPE_p_PartialListIterator,_wrap_new_PartialListIterator, swig_delete_PartialListIterator, swig_PartialListIterator_methods, swig_PartialListIterator_attributes, swig_PartialListIterator_bases };
-static int
-_wrap_new_Partial(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+_wrap_new_Partial__SWIG_0(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
     Partial *result;
     
     if (SWIG_GetArgs(interp, objc, objv,":new_Partial ") == TCL_ERROR) SWIG_fail;
@@ -6283,6 +6387,68 @@ _wrap_new_Partial(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *
     Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_Partial,0));
     return TCL_OK;
     fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_new_Partial__SWIG_1(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    Partial *arg1 = 0 ;
+    Partial *result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"o:new_Partial Partial const & ",0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_Partial,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            result = (Partial *)new Partial((Partial const &)*arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_Partial,0));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_new_Partial(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    Tcl_Obj *CONST *argv = objv+1;
+    int argc = objc-1;
+    if (argc == 0) {
+        return _wrap_new_Partial__SWIG_0(clientData, interp, objc, objv);
+    }
+    if (argc == 1) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(interp, argv[0], (void **) &ptr, SWIGTYPE_p_Partial, 0) == TCL_ERROR) {
+                _v = 0;
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            return _wrap_new_Partial__SWIG_1(clientData, interp, objc, objv);
+        }
+    }
+    
+    Tcl_SetResult(interp,(char *) "No matching function for overloaded 'new_Partial'", TCL_STATIC);
     return TCL_ERROR;
 }
 
@@ -6331,7 +6497,7 @@ _wrap_Partial_label(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj
     {
         try
         {
-            result = (int)((Partial const *)arg1)->label();
+            result = (int)(arg1)->label();
             
         }
         catch( Loris::Exception & ex ) 
@@ -6366,7 +6532,7 @@ _wrap_Partial_initialPhase(ClientData clientData, Tcl_Interp *interp, int objc, 
     {
         try
         {
-            result = (double)((Partial const *)arg1)->initialPhase();
+            result = (double)(arg1)->initialPhase();
             
         }
         catch( Loris::Exception & ex ) 
@@ -6401,7 +6567,7 @@ _wrap_Partial_startTime(ClientData clientData, Tcl_Interp *interp, int objc, Tcl
     {
         try
         {
-            result = (double)((Partial const *)arg1)->startTime();
+            result = (double)(arg1)->startTime();
             
         }
         catch( Loris::Exception & ex ) 
@@ -6436,7 +6602,7 @@ _wrap_Partial_endTime(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_O
     {
         try
         {
-            result = (double)((Partial const *)arg1)->endTime();
+            result = (double)(arg1)->endTime();
             
         }
         catch( Loris::Exception & ex ) 
@@ -6471,7 +6637,7 @@ _wrap_Partial_duration(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_
     {
         try
         {
-            result = (double)((Partial const *)arg1)->duration();
+            result = (double)(arg1)->duration();
             
         }
         catch( Loris::Exception & ex ) 
@@ -6506,7 +6672,7 @@ _wrap_Partial_numBreakpoints(ClientData clientData, Tcl_Interp *interp, int objc
     {
         try
         {
-            result = (long)((Partial const *)arg1)->numBreakpoints();
+            result = (long)(arg1)->numBreakpoints();
             
         }
         catch( Loris::Exception & ex ) 
@@ -6542,6 +6708,221 @@ _wrap_Partial_setLabel(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_
         try
         {
             (arg1)->setLabel(arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_Partial_frequencyAt(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    Partial *arg1 = (Partial *) 0 ;
+    double arg2 ;
+    double result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"od:Partial_frequencyAt self time ",0,&arg2) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_Partial,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            result = (double)(arg1)->frequencyAt(arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,Tcl_NewDoubleObj((double) result));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_Partial_amplitudeAt(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    Partial *arg1 = (Partial *) 0 ;
+    double arg2 ;
+    double result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"od:Partial_amplitudeAt self time ",0,&arg2) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_Partial,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            result = (double)(arg1)->amplitudeAt(arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,Tcl_NewDoubleObj((double) result));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_Partial_bandwidthAt(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    Partial *arg1 = (Partial *) 0 ;
+    double arg2 ;
+    double result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"od:Partial_bandwidthAt self time ",0,&arg2) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_Partial,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            result = (double)(arg1)->bandwidthAt(arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,Tcl_NewDoubleObj((double) result));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_Partial_phaseAt(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    Partial *arg1 = (Partial *) 0 ;
+    double arg2 ;
+    double result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"od:Partial_phaseAt self time ",0,&arg2) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_Partial,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            result = (double)(arg1)->phaseAt(arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,Tcl_NewDoubleObj((double) result));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_Partial_iterator(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    Partial *arg1 = (Partial *) 0 ;
+    NewPartialIterator *result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"o:Partial_iterator self ",0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_Partial,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            result = (NewPartialIterator *)Partial_iterator(arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_NewPartialIterator,0));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_Partial_erase__SWIG_0(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    Partial *arg1 = (Partial *) 0 ;
+    BreakpointPosition *arg2 = (BreakpointPosition *) 0 ;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"oo:Partial_erase self pos ",0,0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_Partial,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[2], (void **) &arg2, SWIGTYPE_p_BreakpointPosition,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            Partial_erase__SWIG_0(arg1,arg2);
             
         }
         catch( Loris::Exception & ex ) 
@@ -6645,16 +7026,17 @@ _wrap_Partial_end(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *
 
 
 static int
-_wrap_Partial_iterator(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+_wrap_Partial_erase__SWIG_1(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
     Partial *arg1 = (Partial *) 0 ;
-    NewPartialIterator *result;
+    PartialIterator *arg2 = 0 ;
     
-    if (SWIG_GetArgs(interp, objc, objv,"o:Partial_iterator self ",0) == TCL_ERROR) SWIG_fail;
+    if (SWIG_GetArgs(interp, objc, objv,"oo:Partial_erase self pos ",0,0) == TCL_ERROR) SWIG_fail;
     if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_Partial,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[2], (void **) &arg2, SWIGTYPE_p_PartialIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     {
         try
         {
-            result = (NewPartialIterator *)Partial_iterator(arg1);
+            (arg1)->erase(*arg2);
             
         }
         catch( Loris::Exception & ex ) 
@@ -6672,9 +7054,67 @@ _wrap_Partial_iterator(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_
             SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
         }
     }
-    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_NewPartialIterator,0));
+    
     return TCL_OK;
     fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_Partial_erase(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    Tcl_Obj *CONST *argv = objv+1;
+    int argc = objc-1;
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(interp, argv[0], (void **) &ptr, SWIGTYPE_p_Partial, 0) == TCL_ERROR) {
+                _v = 0;
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *ptr;
+                if (SWIG_ConvertPtr(interp, argv[1], (void **) &ptr, SWIGTYPE_p_BreakpointPosition, 0) == TCL_ERROR) {
+                    _v = 0;
+                }else {
+                    _v = 1;
+                }
+            }
+            if (_v) {
+                return _wrap_Partial_erase__SWIG_0(clientData, interp, objc, objv);
+            }
+        }
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(interp, argv[0], (void **) &ptr, SWIGTYPE_p_Partial, 0) == TCL_ERROR) {
+                _v = 0;
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *ptr;
+                if (SWIG_ConvertPtr(interp, argv[1], (void **) &ptr, SWIGTYPE_p_PartialIterator, 0) == TCL_ERROR) {
+                    _v = 0;
+                }else {
+                    _v = 1;
+                }
+            }
+            if (_v) {
+                return _wrap_Partial_erase__SWIG_1(clientData, interp, objc, objv);
+            }
+        }
+    }
+    
+    Tcl_SetResult(interp,(char *) "No matching function for overloaded 'Partial_erase'", TCL_STATIC);
     return TCL_ERROR;
 }
 
@@ -6802,280 +7242,6 @@ _wrap_Partial_findNearest(ClientData clientData, Tcl_Interp *interp, int objc, T
 
 
 static int
-_wrap_Partial_erase__SWIG_0(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
-    Partial *arg1 = (Partial *) 0 ;
-    PartialIterator *arg2 = 0 ;
-    
-    if (SWIG_GetArgs(interp, objc, objv,"oo:Partial_erase self pos ",0,0) == TCL_ERROR) SWIG_fail;
-    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_Partial,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
-    if ((SWIG_ConvertPtr(interp, objv[2], (void **) &arg2, SWIGTYPE_p_PartialIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
-    {
-        try
-        {
-            (arg1)->erase(*arg2);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    
-    return TCL_OK;
-    fail:
-    return TCL_ERROR;
-}
-
-
-static int
-_wrap_Partial_erase__SWIG_1(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
-    Partial *arg1 = (Partial *) 0 ;
-    BreakpointPosition *arg2 = (BreakpointPosition *) 0 ;
-    
-    if (SWIG_GetArgs(interp, objc, objv,"oo:Partial_erase self pos ",0,0) == TCL_ERROR) SWIG_fail;
-    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_Partial,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
-    if ((SWIG_ConvertPtr(interp, objv[2], (void **) &arg2, SWIGTYPE_p_BreakpointPosition,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
-    {
-        try
-        {
-            Partial_erase__SWIG_1(arg1,arg2);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    
-    return TCL_OK;
-    fail:
-    return TCL_ERROR;
-}
-
-
-static int
-_wrap_Partial_erase(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
-    Tcl_Obj *CONST *argv = objv+1;
-    int argc = objc-1;
-    if (argc == 2) {
-        int _v;
-        {
-            void *ptr;
-            if (SWIG_ConvertPtr(interp, argv[0], (void **) &ptr, SWIGTYPE_p_Partial, 0) == TCL_ERROR) {
-                _v = 0;
-            }else {
-                _v = 1;
-            }
-        }
-        if (_v) {
-            {
-                void *ptr;
-                if (SWIG_ConvertPtr(interp, argv[1], (void **) &ptr, SWIGTYPE_p_PartialIterator, 0) == TCL_ERROR) {
-                    _v = 0;
-                }else {
-                    _v = 1;
-                }
-            }
-            if (_v) {
-                return _wrap_Partial_erase__SWIG_0(clientData, interp, objc, objv);
-            }
-        }
-    }
-    if (argc == 2) {
-        int _v;
-        {
-            void *ptr;
-            if (SWIG_ConvertPtr(interp, argv[0], (void **) &ptr, SWIGTYPE_p_Partial, 0) == TCL_ERROR) {
-                _v = 0;
-            }else {
-                _v = 1;
-            }
-        }
-        if (_v) {
-            {
-                void *ptr;
-                if (SWIG_ConvertPtr(interp, argv[1], (void **) &ptr, SWIGTYPE_p_BreakpointPosition, 0) == TCL_ERROR) {
-                    _v = 0;
-                }else {
-                    _v = 1;
-                }
-            }
-            if (_v) {
-                return _wrap_Partial_erase__SWIG_1(clientData, interp, objc, objv);
-            }
-        }
-    }
-    
-    Tcl_SetResult(interp,(char *) "No matching function for overloaded 'Partial_erase'", TCL_STATIC);
-    return TCL_ERROR;
-}
-
-
-static int
-_wrap_Partial_frequencyAt(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
-    Partial *arg1 = (Partial *) 0 ;
-    double arg2 ;
-    double result;
-    
-    if (SWIG_GetArgs(interp, objc, objv,"od:Partial_frequencyAt self time ",0,&arg2) == TCL_ERROR) SWIG_fail;
-    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_Partial,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
-    {
-        try
-        {
-            result = (double)((Partial const *)arg1)->frequencyAt(arg2);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    Tcl_SetObjResult(interp,Tcl_NewDoubleObj((double) result));
-    return TCL_OK;
-    fail:
-    return TCL_ERROR;
-}
-
-
-static int
-_wrap_Partial_amplitudeAt(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
-    Partial *arg1 = (Partial *) 0 ;
-    double arg2 ;
-    double result;
-    
-    if (SWIG_GetArgs(interp, objc, objv,"od:Partial_amplitudeAt self time ",0,&arg2) == TCL_ERROR) SWIG_fail;
-    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_Partial,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
-    {
-        try
-        {
-            result = (double)((Partial const *)arg1)->amplitudeAt(arg2);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    Tcl_SetObjResult(interp,Tcl_NewDoubleObj((double) result));
-    return TCL_OK;
-    fail:
-    return TCL_ERROR;
-}
-
-
-static int
-_wrap_Partial_bandwidthAt(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
-    Partial *arg1 = (Partial *) 0 ;
-    double arg2 ;
-    double result;
-    
-    if (SWIG_GetArgs(interp, objc, objv,"od:Partial_bandwidthAt self time ",0,&arg2) == TCL_ERROR) SWIG_fail;
-    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_Partial,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
-    {
-        try
-        {
-            result = (double)((Partial const *)arg1)->bandwidthAt(arg2);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    Tcl_SetObjResult(interp,Tcl_NewDoubleObj((double) result));
-    return TCL_OK;
-    fail:
-    return TCL_ERROR;
-}
-
-
-static int
-_wrap_Partial_phaseAt(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
-    Partial *arg1 = (Partial *) 0 ;
-    double arg2 ;
-    double result;
-    
-    if (SWIG_GetArgs(interp, objc, objv,"od:Partial_phaseAt self time ",0,&arg2) == TCL_ERROR) SWIG_fail;
-    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_Partial,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
-    {
-        try
-        {
-            result = (double)((Partial const *)arg1)->phaseAt(arg2);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    Tcl_SetObjResult(interp,Tcl_NewDoubleObj((double) result));
-    return TCL_OK;
-    fail:
-    return TCL_ERROR;
-}
-
-
-static int
 _wrap_Partial_copy(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
     Partial *arg1 = (Partial *) 0 ;
     Partial *result;
@@ -7159,17 +7325,17 @@ static swig_method swig_Partial_methods[] = {
     {"duration", _wrap_Partial_duration}, 
     {"numBreakpoints", _wrap_Partial_numBreakpoints}, 
     {"setLabel", _wrap_Partial_setLabel}, 
-    {"begin", _wrap_Partial_begin}, 
-    {"end", _wrap_Partial_end}, 
-    {"iterator", _wrap_Partial_iterator}, 
-    {"insert", _wrap_Partial_insert}, 
-    {"findAfter", _wrap_Partial_findAfter}, 
-    {"findNearest", _wrap_Partial_findNearest}, 
-    {"erase", _wrap_Partial_erase}, 
     {"frequencyAt", _wrap_Partial_frequencyAt}, 
     {"amplitudeAt", _wrap_Partial_amplitudeAt}, 
     {"bandwidthAt", _wrap_Partial_bandwidthAt}, 
     {"phaseAt", _wrap_Partial_phaseAt}, 
+    {"iterator", _wrap_Partial_iterator}, 
+    {"begin", _wrap_Partial_begin}, 
+    {"end", _wrap_Partial_end}, 
+    {"erase", _wrap_Partial_erase}, 
+    {"insert", _wrap_Partial_insert}, 
+    {"findAfter", _wrap_Partial_findAfter}, 
+    {"findNearest", _wrap_Partial_findNearest}, 
     {"copy", _wrap_Partial_copy}, 
     {"equals", _wrap_Partial_equals}, 
     {0,0}
@@ -7179,333 +7345,6 @@ static swig_attribute swig_Partial_attributes[] = {
 };
 static swig_class *swig_Partial_bases[] = {0};
 swig_class _wrap_class_Partial = { "Partial", &SWIGTYPE_p_Partial,_wrap_new_Partial, swig_delete_Partial, swig_Partial_methods, swig_Partial_attributes, swig_Partial_bases };
-static int
-_wrap_PartialIterator_time(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
-    PartialIterator *arg1 = (PartialIterator *) 0 ;
-    double result;
-    
-    if (SWIG_GetArgs(interp, objc, objv,"o:PartialIterator_time self ",0) == TCL_ERROR) SWIG_fail;
-    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
-    {
-        try
-        {
-            result = (double)((PartialIterator const *)arg1)->time();
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    Tcl_SetObjResult(interp,Tcl_NewDoubleObj((double) result));
-    return TCL_OK;
-    fail:
-    return TCL_ERROR;
-}
-
-
-static int
-_wrap_PartialIterator_breakpoint(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
-    PartialIterator *arg1 = (PartialIterator *) 0 ;
-    Breakpoint *result;
-    
-    if (SWIG_GetArgs(interp, objc, objv,"o:PartialIterator_breakpoint self ",0) == TCL_ERROR) SWIG_fail;
-    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
-    {
-        try
-        {
-            result = (Breakpoint *)PartialIterator_breakpoint(arg1);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_Breakpoint,0));
-    return TCL_OK;
-    fail:
-    return TCL_ERROR;
-}
-
-
-static int
-_wrap_PartialIterator_copy(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
-    PartialIterator *arg1 = (PartialIterator *) 0 ;
-    PartialIterator *result;
-    
-    if (SWIG_GetArgs(interp, objc, objv,"o:PartialIterator_copy self ",0) == TCL_ERROR) SWIG_fail;
-    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
-    {
-        try
-        {
-            result = (PartialIterator *)PartialIterator_copy(arg1);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_PartialIterator,0));
-    return TCL_OK;
-    fail:
-    return TCL_ERROR;
-}
-
-
-static int
-_wrap_PartialIterator_next(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
-    PartialIterator *arg1 = (PartialIterator *) 0 ;
-    PartialIterator *result;
-    
-    if (SWIG_GetArgs(interp, objc, objv,"o:PartialIterator_next self ",0) == TCL_ERROR) SWIG_fail;
-    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
-    {
-        char * err;
-        clear_exception();
-        result = (PartialIterator *)PartialIterator_next(arg1);
-        
-        if ((err = check_exception()))
-        {
-            SWIG_exception( SWIG_ValueError, err );
-            
-        }
-    }
-    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_PartialIterator,0));
-    return TCL_OK;
-    fail:
-    return TCL_ERROR;
-}
-
-
-static int
-_wrap_PartialIterator_prev(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
-    PartialIterator *arg1 = (PartialIterator *) 0 ;
-    PartialIterator *result;
-    
-    if (SWIG_GetArgs(interp, objc, objv,"o:PartialIterator_prev self ",0) == TCL_ERROR) SWIG_fail;
-    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
-    {
-        try
-        {
-            result = (PartialIterator *)PartialIterator_prev(arg1);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_PartialIterator,0));
-    return TCL_OK;
-    fail:
-    return TCL_ERROR;
-}
-
-
-static int
-_wrap_PartialIterator_equals(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
-    PartialIterator *arg1 = (PartialIterator *) 0 ;
-    PartialIterator *arg2 = (PartialIterator *) 0 ;
-    int result;
-    
-    if (SWIG_GetArgs(interp, objc, objv,"oo:PartialIterator_equals self other ",0,0) == TCL_ERROR) SWIG_fail;
-    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
-    if ((SWIG_ConvertPtr(interp, objv[2], (void **) &arg2, SWIGTYPE_p_PartialIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
-    {
-        try
-        {
-            result = (int)PartialIterator_equals(arg1,arg2);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    Tcl_SetObjResult(interp,Tcl_NewIntObj((long) result));
-    return TCL_OK;
-    fail:
-    return TCL_ERROR;
-}
-
-
-static int
-_wrap_PartialIterator_isInRange(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
-    PartialIterator *arg1 = (PartialIterator *) 0 ;
-    PartialIterator *arg2 = (PartialIterator *) 0 ;
-    PartialIterator *arg3 = (PartialIterator *) 0 ;
-    int result;
-    
-    if (SWIG_GetArgs(interp, objc, objv,"ooo:PartialIterator_isInRange self begin end ",0,0,0) == TCL_ERROR) SWIG_fail;
-    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
-    if ((SWIG_ConvertPtr(interp, objv[2], (void **) &arg2, SWIGTYPE_p_PartialIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
-    if ((SWIG_ConvertPtr(interp, objv[3], (void **) &arg3, SWIGTYPE_p_PartialIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
-    {
-        try
-        {
-            result = (int)PartialIterator_isInRange(arg1,(PartialIterator const *)arg2,(PartialIterator const *)arg3);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    Tcl_SetObjResult(interp,Tcl_NewIntObj((long) result));
-    return TCL_OK;
-    fail:
-    return TCL_ERROR;
-}
-
-
-static int
-_wrap_new_PartialIterator(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
-    PartialIterator *result;
-    
-    if (SWIG_GetArgs(interp, objc, objv,":new_PartialIterator ") == TCL_ERROR) SWIG_fail;
-    {
-        try
-        {
-            result = (PartialIterator *)new PartialIterator();
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_PartialIterator,0));
-    return TCL_OK;
-    fail:
-    return TCL_ERROR;
-}
-
-
-static int
-_wrap_delete_PartialIterator(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
-    PartialIterator *arg1 = (PartialIterator *) 0 ;
-    
-    if (SWIG_GetArgs(interp, objc, objv,"o:delete_PartialIterator self ",0) == TCL_ERROR) SWIG_fail;
-    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
-    {
-        try
-        {
-            delete arg1;
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    
-    return TCL_OK;
-    fail:
-    return TCL_ERROR;
-}
-
-
-static void swig_delete_PartialIterator(void *obj) {
-PartialIterator *arg1 = (PartialIterator *) obj;
-delete arg1;
-}
-static swig_method swig_PartialIterator_methods[] = {
-    {"time", _wrap_PartialIterator_time}, 
-    {"breakpoint", _wrap_PartialIterator_breakpoint}, 
-    {"copy", _wrap_PartialIterator_copy}, 
-    {"next", _wrap_PartialIterator_next}, 
-    {"prev", _wrap_PartialIterator_prev}, 
-    {"equals", _wrap_PartialIterator_equals}, 
-    {"isInRange", _wrap_PartialIterator_isInRange}, 
-    {0,0}
-};
-static swig_attribute swig_PartialIterator_attributes[] = {
-    {0,0,0}
-};
-static swig_class *swig_PartialIterator_bases[] = {0};
-swig_class _wrap_class_PartialIterator = { "PartialIterator", &SWIGTYPE_p_PartialIterator,_wrap_new_PartialIterator, swig_delete_PartialIterator, swig_PartialIterator_methods, swig_PartialIterator_attributes, swig_PartialIterator_bases };
 static int
 _wrap_new_Breakpoint__SWIG_0(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
     double arg1 ;
@@ -8413,6 +8252,624 @@ static swig_attribute swig_BreakpointPosition_attributes[] = {
 };
 static swig_class *swig_BreakpointPosition_bases[] = {0};
 swig_class _wrap_class_BreakpointPosition = { "BreakpointPosition", &SWIGTYPE_p_BreakpointPosition,0,0, swig_BreakpointPosition_methods, swig_BreakpointPosition_attributes, swig_BreakpointPosition_bases };
+static int
+_wrap_PartialIterator_time(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    PartialIterator *arg1 = (PartialIterator *) 0 ;
+    double result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"o:PartialIterator_time self ",0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            result = (double)((PartialIterator const *)arg1)->time();
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,Tcl_NewDoubleObj((double) result));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_PartialIterator_breakpoint(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    PartialIterator *arg1 = (PartialIterator *) 0 ;
+    Breakpoint *result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"o:PartialIterator_breakpoint self ",0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            result = (Breakpoint *)PartialIterator_breakpoint(arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_Breakpoint,0));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_PartialIterator_copy(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    PartialIterator *arg1 = (PartialIterator *) 0 ;
+    PartialIterator *result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"o:PartialIterator_copy self ",0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            result = (PartialIterator *)PartialIterator_copy(arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_PartialIterator,0));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_PartialIterator_next(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    PartialIterator *arg1 = (PartialIterator *) 0 ;
+    PartialIterator *result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"o:PartialIterator_next self ",0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        char * err;
+        clear_exception();
+        result = (PartialIterator *)PartialIterator_next(arg1);
+        
+        if ((err = check_exception()))
+        {
+            SWIG_exception( SWIG_ValueError, err );
+            
+        }
+    }
+    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_PartialIterator,0));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_PartialIterator_prev(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    PartialIterator *arg1 = (PartialIterator *) 0 ;
+    PartialIterator *result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"o:PartialIterator_prev self ",0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            result = (PartialIterator *)PartialIterator_prev(arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_PartialIterator,0));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_PartialIterator_equals(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    PartialIterator *arg1 = (PartialIterator *) 0 ;
+    PartialIterator *arg2 = (PartialIterator *) 0 ;
+    int result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"oo:PartialIterator_equals self other ",0,0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[2], (void **) &arg2, SWIGTYPE_p_PartialIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            result = (int)PartialIterator_equals(arg1,arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,Tcl_NewIntObj((long) result));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_PartialIterator_isInRange(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    PartialIterator *arg1 = (PartialIterator *) 0 ;
+    PartialIterator *arg2 = (PartialIterator *) 0 ;
+    PartialIterator *arg3 = (PartialIterator *) 0 ;
+    int result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"ooo:PartialIterator_isInRange self begin end ",0,0,0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[2], (void **) &arg2, SWIGTYPE_p_PartialIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[3], (void **) &arg3, SWIGTYPE_p_PartialIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            result = (int)PartialIterator_isInRange(arg1,(PartialIterator const *)arg2,(PartialIterator const *)arg3);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,Tcl_NewIntObj((long) result));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_new_PartialIterator(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    PartialIterator *result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,":new_PartialIterator ") == TCL_ERROR) SWIG_fail;
+    {
+        try
+        {
+            result = (PartialIterator *)new PartialIterator();
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_PartialIterator,0));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_delete_PartialIterator(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    PartialIterator *arg1 = (PartialIterator *) 0 ;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"o:delete_PartialIterator self ",0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            delete arg1;
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static void swig_delete_PartialIterator(void *obj) {
+PartialIterator *arg1 = (PartialIterator *) obj;
+delete arg1;
+}
+static swig_method swig_PartialIterator_methods[] = {
+    {"time", _wrap_PartialIterator_time}, 
+    {"breakpoint", _wrap_PartialIterator_breakpoint}, 
+    {"copy", _wrap_PartialIterator_copy}, 
+    {"next", _wrap_PartialIterator_next}, 
+    {"prev", _wrap_PartialIterator_prev}, 
+    {"equals", _wrap_PartialIterator_equals}, 
+    {"isInRange", _wrap_PartialIterator_isInRange}, 
+    {0,0}
+};
+static swig_attribute swig_PartialIterator_attributes[] = {
+    {0,0,0}
+};
+static swig_class *swig_PartialIterator_bases[] = {0};
+swig_class _wrap_class_PartialIterator = { "PartialIterator", &SWIGTYPE_p_PartialIterator,_wrap_new_PartialIterator, swig_delete_PartialIterator, swig_PartialIterator_methods, swig_PartialIterator_attributes, swig_PartialIterator_bases };
+static int
+_wrap_PartialListIterator_copy(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    PartialListIterator *arg1 = (PartialListIterator *) 0 ;
+    PartialListIterator *result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"o:PartialListIterator_copy self ",0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialListIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            result = (PartialListIterator *)PartialListIterator_copy(arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_PartialListIterator,0));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_PartialListIterator_next(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    PartialListIterator *arg1 = (PartialListIterator *) 0 ;
+    PartialListIterator *result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"o:PartialListIterator_next self ",0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialListIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        char * err;
+        clear_exception();
+        result = (PartialListIterator *)PartialListIterator_next(arg1);
+        
+        if ((err = check_exception()))
+        {
+            SWIG_exception( SWIG_ValueError, err );
+            
+        }
+    }
+    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_PartialListIterator,0));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_PartialListIterator_prev(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    PartialListIterator *arg1 = (PartialListIterator *) 0 ;
+    PartialListIterator *result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"o:PartialListIterator_prev self ",0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialListIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            result = (PartialListIterator *)PartialListIterator_prev(arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_PartialListIterator,0));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_PartialListIterator_partial(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    PartialListIterator *arg1 = (PartialListIterator *) 0 ;
+    Partial *result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"o:PartialListIterator_partial self ",0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialListIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            result = (Partial *)PartialListIterator_partial(arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_Partial,0));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_PartialListIterator_equals(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    PartialListIterator *arg1 = (PartialListIterator *) 0 ;
+    PartialListIterator *arg2 = (PartialListIterator *) 0 ;
+    int result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"oo:PartialListIterator_equals self other ",0,0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialListIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[2], (void **) &arg2, SWIGTYPE_p_PartialListIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            result = (int)PartialListIterator_equals(arg1,arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,Tcl_NewIntObj((long) result));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_PartialListIterator_isInRange(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    PartialListIterator *arg1 = (PartialListIterator *) 0 ;
+    PartialListIterator *arg2 = (PartialListIterator *) 0 ;
+    PartialListIterator *arg3 = (PartialListIterator *) 0 ;
+    int result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"ooo:PartialListIterator_isInRange self begin end ",0,0,0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialListIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[2], (void **) &arg2, SWIGTYPE_p_PartialListIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[3], (void **) &arg3, SWIGTYPE_p_PartialListIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            result = (int)PartialListIterator_isInRange(arg1,(PartialListIterator const *)arg2,(PartialListIterator const *)arg3);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,Tcl_NewIntObj((long) result));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_new_PartialListIterator(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    PartialListIterator *result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,":new_PartialListIterator ") == TCL_ERROR) SWIG_fail;
+    {
+        try
+        {
+            result = (PartialListIterator *)new PartialListIterator();
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_PartialListIterator,0));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_delete_PartialListIterator(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    PartialListIterator *arg1 = (PartialListIterator *) 0 ;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"o:delete_PartialListIterator self ",0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialListIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            delete arg1;
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static void swig_delete_PartialListIterator(void *obj) {
+PartialListIterator *arg1 = (PartialListIterator *) obj;
+delete arg1;
+}
+static swig_method swig_PartialListIterator_methods[] = {
+    {"copy", _wrap_PartialListIterator_copy}, 
+    {"next", _wrap_PartialListIterator_next}, 
+    {"prev", _wrap_PartialListIterator_prev}, 
+    {"partial", _wrap_PartialListIterator_partial}, 
+    {"equals", _wrap_PartialListIterator_equals}, 
+    {"isInRange", _wrap_PartialListIterator_isInRange}, 
+    {0,0}
+};
+static swig_attribute swig_PartialListIterator_attributes[] = {
+    {0,0,0}
+};
+static swig_class *swig_PartialListIterator_bases[] = {0};
+swig_class _wrap_class_PartialListIterator = { "PartialListIterator", &SWIGTYPE_p_PartialListIterator,_wrap_new_PartialListIterator, swig_delete_PartialListIterator, swig_PartialListIterator_methods, swig_PartialListIterator_attributes, swig_PartialListIterator_bases };
 
 static swig_command_info swig_commands[] = {
     { SWIG_prefix "channelize", (swig_wrapper_func) _wrap_channelize, NULL},
@@ -8501,32 +8958,26 @@ static swig_command_info swig_commands[] = {
     { SWIG_prefix "SampleVector", (swig_wrapper_func) SWIG_ObjectConstructor, &_wrap_class_SampleVector},
     { SWIG_prefix "NewPlistIterator_atEnd", (swig_wrapper_func) _wrap_NewPlistIterator_atEnd, NULL},
     { SWIG_prefix "NewPlistIterator_next", (swig_wrapper_func) _wrap_NewPlistIterator_next, NULL},
+    { SWIG_prefix "NewPlistIterator_partial", (swig_wrapper_func) _wrap_NewPlistIterator_partial, NULL},
     { SWIG_prefix "NewPlistIterator", (swig_wrapper_func) SWIG_ObjectConstructor, &_wrap_class_NewPlistIterator},
     { SWIG_prefix "NewPartialIterator_atEnd", (swig_wrapper_func) _wrap_NewPartialIterator_atEnd, NULL},
+    { SWIG_prefix "NewPartialIterator_hasNext", (swig_wrapper_func) _wrap_NewPartialIterator_hasNext, NULL},
     { SWIG_prefix "NewPartialIterator_next", (swig_wrapper_func) _wrap_NewPartialIterator_next, NULL},
     { SWIG_prefix "NewPartialIterator", (swig_wrapper_func) SWIG_ObjectConstructor, &_wrap_class_NewPartialIterator},
     { SWIG_prefix "new_PartialList", (swig_wrapper_func) _wrap_new_PartialList, NULL},
     { SWIG_prefix "delete_PartialList", (swig_wrapper_func) _wrap_delete_PartialList, NULL},
-    { SWIG_prefix "PartialList_copy", (swig_wrapper_func) _wrap_PartialList_copy, NULL},
-    { SWIG_prefix "PartialList_timeSpan", (swig_wrapper_func) _wrap_PartialList_timeSpan, NULL},
-    { SWIG_prefix "PartialList_iterator", (swig_wrapper_func) _wrap_PartialList_iterator, NULL},
     { SWIG_prefix "PartialList_clear", (swig_wrapper_func) _wrap_PartialList_clear, NULL},
     { SWIG_prefix "PartialList_size", (swig_wrapper_func) _wrap_PartialList_size, NULL},
+    { SWIG_prefix "PartialList_timeSpan", (swig_wrapper_func) _wrap_PartialList_timeSpan, NULL},
+    { SWIG_prefix "PartialList_iterator", (swig_wrapper_func) _wrap_PartialList_iterator, NULL},
+    { SWIG_prefix "PartialList_append", (swig_wrapper_func) _wrap_PartialList_append, NULL},
     { SWIG_prefix "PartialList_begin", (swig_wrapper_func) _wrap_PartialList_begin, NULL},
     { SWIG_prefix "PartialList_end", (swig_wrapper_func) _wrap_PartialList_end, NULL},
-    { SWIG_prefix "PartialList_insert", (swig_wrapper_func) _wrap_PartialList_insert, NULL},
     { SWIG_prefix "PartialList_erase", (swig_wrapper_func) _wrap_PartialList_erase, NULL},
     { SWIG_prefix "PartialList_splice", (swig_wrapper_func) _wrap_PartialList_splice, NULL},
+    { SWIG_prefix "PartialList_insert", (swig_wrapper_func) _wrap_PartialList_insert, NULL},
+    { SWIG_prefix "PartialList_copy", (swig_wrapper_func) _wrap_PartialList_copy, NULL},
     { SWIG_prefix "PartialList", (swig_wrapper_func) SWIG_ObjectConstructor, &_wrap_class_PartialList},
-    { SWIG_prefix "PartialListIterator_copy", (swig_wrapper_func) _wrap_PartialListIterator_copy, NULL},
-    { SWIG_prefix "PartialListIterator_next", (swig_wrapper_func) _wrap_PartialListIterator_next, NULL},
-    { SWIG_prefix "PartialListIterator_prev", (swig_wrapper_func) _wrap_PartialListIterator_prev, NULL},
-    { SWIG_prefix "PartialListIterator_partial", (swig_wrapper_func) _wrap_PartialListIterator_partial, NULL},
-    { SWIG_prefix "PartialListIterator_equals", (swig_wrapper_func) _wrap_PartialListIterator_equals, NULL},
-    { SWIG_prefix "PartialListIterator_isInRange", (swig_wrapper_func) _wrap_PartialListIterator_isInRange, NULL},
-    { SWIG_prefix "new_PartialListIterator", (swig_wrapper_func) _wrap_new_PartialListIterator, NULL},
-    { SWIG_prefix "delete_PartialListIterator", (swig_wrapper_func) _wrap_delete_PartialListIterator, NULL},
-    { SWIG_prefix "PartialListIterator", (swig_wrapper_func) SWIG_ObjectConstructor, &_wrap_class_PartialListIterator},
     { SWIG_prefix "new_Partial", (swig_wrapper_func) _wrap_new_Partial, NULL},
     { SWIG_prefix "delete_Partial", (swig_wrapper_func) _wrap_delete_Partial, NULL},
     { SWIG_prefix "Partial_label", (swig_wrapper_func) _wrap_Partial_label, NULL},
@@ -8536,30 +8987,20 @@ static swig_command_info swig_commands[] = {
     { SWIG_prefix "Partial_duration", (swig_wrapper_func) _wrap_Partial_duration, NULL},
     { SWIG_prefix "Partial_numBreakpoints", (swig_wrapper_func) _wrap_Partial_numBreakpoints, NULL},
     { SWIG_prefix "Partial_setLabel", (swig_wrapper_func) _wrap_Partial_setLabel, NULL},
-    { SWIG_prefix "Partial_begin", (swig_wrapper_func) _wrap_Partial_begin, NULL},
-    { SWIG_prefix "Partial_end", (swig_wrapper_func) _wrap_Partial_end, NULL},
-    { SWIG_prefix "Partial_iterator", (swig_wrapper_func) _wrap_Partial_iterator, NULL},
-    { SWIG_prefix "Partial_insert", (swig_wrapper_func) _wrap_Partial_insert, NULL},
-    { SWIG_prefix "Partial_findAfter", (swig_wrapper_func) _wrap_Partial_findAfter, NULL},
-    { SWIG_prefix "Partial_findNearest", (swig_wrapper_func) _wrap_Partial_findNearest, NULL},
-    { SWIG_prefix "Partial_erase", (swig_wrapper_func) _wrap_Partial_erase, NULL},
     { SWIG_prefix "Partial_frequencyAt", (swig_wrapper_func) _wrap_Partial_frequencyAt, NULL},
     { SWIG_prefix "Partial_amplitudeAt", (swig_wrapper_func) _wrap_Partial_amplitudeAt, NULL},
     { SWIG_prefix "Partial_bandwidthAt", (swig_wrapper_func) _wrap_Partial_bandwidthAt, NULL},
     { SWIG_prefix "Partial_phaseAt", (swig_wrapper_func) _wrap_Partial_phaseAt, NULL},
+    { SWIG_prefix "Partial_iterator", (swig_wrapper_func) _wrap_Partial_iterator, NULL},
+    { SWIG_prefix "Partial_begin", (swig_wrapper_func) _wrap_Partial_begin, NULL},
+    { SWIG_prefix "Partial_end", (swig_wrapper_func) _wrap_Partial_end, NULL},
+    { SWIG_prefix "Partial_erase", (swig_wrapper_func) _wrap_Partial_erase, NULL},
+    { SWIG_prefix "Partial_insert", (swig_wrapper_func) _wrap_Partial_insert, NULL},
+    { SWIG_prefix "Partial_findAfter", (swig_wrapper_func) _wrap_Partial_findAfter, NULL},
+    { SWIG_prefix "Partial_findNearest", (swig_wrapper_func) _wrap_Partial_findNearest, NULL},
     { SWIG_prefix "Partial_copy", (swig_wrapper_func) _wrap_Partial_copy, NULL},
     { SWIG_prefix "Partial_equals", (swig_wrapper_func) _wrap_Partial_equals, NULL},
     { SWIG_prefix "Partial", (swig_wrapper_func) SWIG_ObjectConstructor, &_wrap_class_Partial},
-    { SWIG_prefix "PartialIterator_time", (swig_wrapper_func) _wrap_PartialIterator_time, NULL},
-    { SWIG_prefix "PartialIterator_breakpoint", (swig_wrapper_func) _wrap_PartialIterator_breakpoint, NULL},
-    { SWIG_prefix "PartialIterator_copy", (swig_wrapper_func) _wrap_PartialIterator_copy, NULL},
-    { SWIG_prefix "PartialIterator_next", (swig_wrapper_func) _wrap_PartialIterator_next, NULL},
-    { SWIG_prefix "PartialIterator_prev", (swig_wrapper_func) _wrap_PartialIterator_prev, NULL},
-    { SWIG_prefix "PartialIterator_equals", (swig_wrapper_func) _wrap_PartialIterator_equals, NULL},
-    { SWIG_prefix "PartialIterator_isInRange", (swig_wrapper_func) _wrap_PartialIterator_isInRange, NULL},
-    { SWIG_prefix "new_PartialIterator", (swig_wrapper_func) _wrap_new_PartialIterator, NULL},
-    { SWIG_prefix "delete_PartialIterator", (swig_wrapper_func) _wrap_delete_PartialIterator, NULL},
-    { SWIG_prefix "PartialIterator", (swig_wrapper_func) SWIG_ObjectConstructor, &_wrap_class_PartialIterator},
     { SWIG_prefix "new_Breakpoint", (swig_wrapper_func) _wrap_new_Breakpoint, NULL},
     { SWIG_prefix "delete_Breakpoint", (swig_wrapper_func) _wrap_delete_Breakpoint, NULL},
     { SWIG_prefix "Breakpoint_frequency", (swig_wrapper_func) _wrap_Breakpoint_frequency, NULL},
@@ -8584,6 +9025,25 @@ static swig_command_info swig_commands[] = {
     { SWIG_prefix "BreakpointPosition_setBandwidth", (swig_wrapper_func) _wrap_BreakpointPosition_setBandwidth, NULL},
     { SWIG_prefix "BreakpointPosition_setPhase", (swig_wrapper_func) _wrap_BreakpointPosition_setPhase, NULL},
     { SWIG_prefix "BreakpointPosition", (swig_wrapper_func) SWIG_ObjectConstructor, &_wrap_class_BreakpointPosition},
+    { SWIG_prefix "PartialIterator_time", (swig_wrapper_func) _wrap_PartialIterator_time, NULL},
+    { SWIG_prefix "PartialIterator_breakpoint", (swig_wrapper_func) _wrap_PartialIterator_breakpoint, NULL},
+    { SWIG_prefix "PartialIterator_copy", (swig_wrapper_func) _wrap_PartialIterator_copy, NULL},
+    { SWIG_prefix "PartialIterator_next", (swig_wrapper_func) _wrap_PartialIterator_next, NULL},
+    { SWIG_prefix "PartialIterator_prev", (swig_wrapper_func) _wrap_PartialIterator_prev, NULL},
+    { SWIG_prefix "PartialIterator_equals", (swig_wrapper_func) _wrap_PartialIterator_equals, NULL},
+    { SWIG_prefix "PartialIterator_isInRange", (swig_wrapper_func) _wrap_PartialIterator_isInRange, NULL},
+    { SWIG_prefix "new_PartialIterator", (swig_wrapper_func) _wrap_new_PartialIterator, NULL},
+    { SWIG_prefix "delete_PartialIterator", (swig_wrapper_func) _wrap_delete_PartialIterator, NULL},
+    { SWIG_prefix "PartialIterator", (swig_wrapper_func) SWIG_ObjectConstructor, &_wrap_class_PartialIterator},
+    { SWIG_prefix "PartialListIterator_copy", (swig_wrapper_func) _wrap_PartialListIterator_copy, NULL},
+    { SWIG_prefix "PartialListIterator_next", (swig_wrapper_func) _wrap_PartialListIterator_next, NULL},
+    { SWIG_prefix "PartialListIterator_prev", (swig_wrapper_func) _wrap_PartialListIterator_prev, NULL},
+    { SWIG_prefix "PartialListIterator_partial", (swig_wrapper_func) _wrap_PartialListIterator_partial, NULL},
+    { SWIG_prefix "PartialListIterator_equals", (swig_wrapper_func) _wrap_PartialListIterator_equals, NULL},
+    { SWIG_prefix "PartialListIterator_isInRange", (swig_wrapper_func) _wrap_PartialListIterator_isInRange, NULL},
+    { SWIG_prefix "new_PartialListIterator", (swig_wrapper_func) _wrap_new_PartialListIterator, NULL},
+    { SWIG_prefix "delete_PartialListIterator", (swig_wrapper_func) _wrap_delete_PartialListIterator, NULL},
+    { SWIG_prefix "PartialListIterator", (swig_wrapper_func) SWIG_ObjectConstructor, &_wrap_class_PartialListIterator},
     {0, 0, 0}
 };
 
@@ -8672,7 +9132,7 @@ SWIGEXPORT(int) SWIG_init(Tcl_Interp *interp) {
     
     
     Loris::setNotifier( printf_notifier );
-    Loris::setExceptionHandler( exception_handler );
+    Loris::setExceptionHandler( throw_exception );
     
     return TCL_OK;
 }

@@ -613,31 +613,51 @@ SWIGEXPORT(void) SWIG_init (CV *cv, CPerlObj *);
 		#undef list
 	
  
-	#include <loris.h>
-	
-	//	import the entire Loris namespace, because
-	//	SWIG does not seem to like to wrap functions
-	//	with qualified names (like Loris::channelize),
-	//	they simply get ignored.
-	using namespace Loris;
+/*	exception handling code for procedural interface calls
 
-	//	notification function for Loris debugging
-	//	and notifications, installed in initialization
-	//	block below:
-	static void printf_notifier( const char * s )
-	{
-		printf("*\t%s\n", s);
-	}	
-	
-	//	exception handling for the procedural interface
-	//	(the pi catches all exceptions and handles them
-	//	by passing their string descriptions to this 
-	//	function):
-	static char EXCEPTION_THROWN[256];
-	static void exception_handler( const char * s )
-	{
-		snprintf(EXCEPTION_THROWN, 255, "%s", s);
-	}
+	Copied from the SWIG manual. Tastes great, less filling.
+*/
+static char error_message[256];
+static int error_status = 0;
+
+void throw_exception(const char *msg) {
+        strncpy(error_message,msg,256);
+        error_status = 1;
+}
+
+void clear_exception() {
+        error_status = 0;
+}
+char *check_exception() {
+        if (error_status) return error_message;
+        else return NULL;
+}
+
+#include <loris.h>
+
+//	import the entire Loris namespace, because
+//	SWIG does not seem to like to wrap functions
+//	with qualified names (like Loris::channelize),
+//	they simply get ignored.
+using namespace Loris;
+
+//	notification function for Loris debugging
+//	and notifications, installed in initialization
+//	block below:
+static void printf_notifier( const char * s )
+{
+	printf("*\t%s\n", s);
+}	
+
+//	exception handling for the procedural interface
+//	(the pi catches all exceptions and handles them
+//	by passing their string descriptions to this 
+//	function):
+/*static char EXCEPTION_THROWN[256];
+static void exception_handler( const char * s )
+{
+	snprintf(EXCEPTION_THROWN, 255, "%s", s);
+}*/
 
 
 #include <vector>
@@ -723,7 +743,7 @@ void dilate_v( PartialList * partials, vector<double> & ivec, vector<double> & t
 		importSdif( path, dst );
 
 		// check for exception:
-		if (*EXCEPTION_THROWN)
+		if (check_exception())
 		{
 			destroyPartialList( dst );
 			dst = NULL;
@@ -741,7 +761,7 @@ void dilate_v( PartialList * partials, vector<double> & ivec, vector<double> & t
 		importSpc( path, dst );
 
 		// check for exception:
-		if (*EXCEPTION_THROWN)
+		if (check_exception())
 		{
 			destroyPartialList( dst );
 			dst = NULL;
@@ -759,7 +779,7 @@ void dilate_v( PartialList * partials, vector<double> & ivec, vector<double> & t
 		morph( src0, src1, ffreq, famp, fbw, dst );
 		
 		// check for exception:
-		if (*EXCEPTION_THROWN)
+		if ( check_exception() )
 		{
 			destroyPartialList( dst );
 			dst = NULL;
@@ -777,7 +797,7 @@ void dilate_v( PartialList * partials, vector<double> & ivec, vector<double> & t
 		morph( src0, src1, &ffreq, &famp, &fbw, dst );
 		
 		// check for exception:
-		if (*EXCEPTION_THROWN)
+		if ( check_exception() )
 		{
 			destroyPartialList( dst );
 			dst = NULL;
@@ -792,7 +812,7 @@ void dilate_v( PartialList * partials, vector<double> & ivec, vector<double> & t
 		synthesize( partials, dst, srate );
 				
 		// check for exception:
-		if (*EXCEPTION_THROWN)
+		if ( check_exception() )
 		{
 			destroySampleVector( dst );
 			dst = NULL;
@@ -807,7 +827,7 @@ void dilate_v( PartialList * partials, vector<double> & ivec, vector<double> & t
 		spliceByLabel( partials, label, dst );
 		
 		// check for exception:
-		if (*EXCEPTION_THROWN)
+		if ( check_exception() )
 		{
 			destroyPartialList( dst );
 			dst = NULL;
@@ -964,26 +984,6 @@ using Loris::Breakpoint;
 
 typedef Loris::Partial::iterator PartialIterator;
 
-/*	exception handling code
-
-	Copied from the SWIG manual. Tastes great, less filling.
-*/
-static char error_message[256];
-static int error_status = 0;
-
-void throw_exception(char *msg) {
-        strncpy(error_message,msg,256);
-        error_status = 1;
-}
-
-void clear_exception() {
-        error_status = 0;
-}
-char *check_exception() {
-        if (error_status) return error_message;
-        else return NULL;
-}
-
 /*	new iterator definitions
 
 	These are much better than the old things, more like the 
@@ -995,16 +995,17 @@ char *check_exception() {
 	into the old iterators is that the old iterators use the
 	next() method to advance and return another iterator. Duh.
 */
-class NewPlistIterator
+struct NewPlistIterator
 {
 	PartialList & subject;
 	PartialList::iterator it;
 
-public:
 	NewPlistIterator( PartialList & l ) : subject( l ), it ( l.begin() ) {}
+	NewPlistIterator( PartialList & l, PartialList::iterator i ) : subject( l ), it ( i ) {}
 	
 	bool atEnd( void ) { return it == subject.end(); }
-	
+	bool hasNext( void ) { return !atEnd(); }
+
 	Partial * next( void )
 	{
 		if ( atEnd() )
@@ -1020,16 +1021,16 @@ public:
 
 typedef Partial::iterator BreakpointPosition;
 
-class NewPartialIterator
+struct NewPartialIterator
 {
-public:
 	Partial & subject;
 	Partial::iterator it;
 
-public:
 	NewPartialIterator( Partial & p ) : subject( p ), it ( p.begin() ) {}
+	NewPartialIterator( Partial & p, Partial::iterator i ) : subject( p ), it ( i ) {}
 	
 	bool atEnd( void ) { return it == subject.end(); }
+	bool hasNext( void ) { return !atEnd(); }
 
 	BreakpointPosition * next( void )
 	{
@@ -1045,20 +1046,14 @@ public:
 };
 
 
-PartialList *new_PartialList__SWIG_0(){
-			debugger << "creating an empty list of Partials" << Loris::endl;
-			return new PartialList();
-		}
-PartialList *new_PartialList__SWIG_1(PartialList const &rhs){
-			debugger << "copying  a list of " << rhs.size() << " Partials" << Loris::endl;
-			return new PartialList( rhs );
-		}
-void delete_PartialList(PartialList *self){
-			debugger << "destroying  a list of " << self->size() << " Partials" << Loris::endl;
-			delete self;
-		}
-PartialList *PartialList_copy(PartialList *self){
-			return new PartialList( *self );
+Partial *NewPlistIterator_partial(NewPlistIterator *self){
+			if ( self->atEnd() )
+			{
+				throw_exception("end of PartialList");
+				return 0;
+			}			
+			Partial & current = *(self->it);
+			return &current;
 		}
 void PartialList_timeSpan(PartialList *self,double *tmin_out,double *tmax_out){
 		 	std::pair<double, double> span = 
@@ -1069,9 +1064,95 @@ void PartialList_timeSpan(PartialList *self,double *tmin_out,double *tmax_out){
 NewPlistIterator *PartialList_iterator(PartialList *self){
 			return new NewPlistIterator(*self);
 		}
-PartialListIterator PartialList_insert__SWIG_1(PartialList *self,Partial const &partial){
+void PartialList_append(PartialList *self,Partial *partial){
+			self->insert( self->end(), *partial );
+		}
+NewPlistIterator *PartialList_insert__SWIG_0(PartialList *self,NewPlistIterator *position,Partial *partial){
+			if ( self != &(position->subject) )
+				return 0;
+			return new NewPlistIterator(*self, self->insert( position->it, *partial ) );
+		}
+void PartialList_erase__SWIG_0(PartialList *self,Partial *partial){
+			PartialList::iterator it = self->begin();
+			while ( it != self->end() )
+			{
+				if ( &(*it) == partial )	// compare addresses
+				{
+					self->erase( it );
+					return;
+				}
+				++it;
+			}
+			throw_exception( "PartialList.erase(p): p not in PartialList" );
+		}
+void PartialList_splice__SWIG_0(PartialList *self,PartialList *other){
+			self->splice( self->end(), *other );
+		}
+PartialListIterator PartialList_insert__SWIG_2(PartialList *self,Partial const &partial){
 			return self->insert( self->end(), partial );
 		}
+PartialList *PartialList_copy(PartialList *self){ return new PartialList( *self ); }
+NewPartialIterator *Partial_iterator(Partial *self){
+			return new NewPartialIterator(*self);
+		}
+void Partial_erase__SWIG_0(Partial *self,BreakpointPosition *pos){
+			if ( *pos != self->end() )
+			{
+				*pos = self->erase( *pos );
+			}
+		}
+Partial *Partial_copy(Partial *self){ return new Partial( *self ); }
+int Partial_equals(Partial *self,Partial *other){
+			return *self == *other;
+		}
+Breakpoint *Breakpoint_copy(Breakpoint *self){
+			return new Breakpoint( *self );
+		}
+int Breakpoint_equals(Breakpoint *self,Breakpoint *other){
+			return *self == *other;
+		}
+double BreakpointPosition_time(BreakpointPosition *self){ 
+			return self->time(); 
+		}
+Breakpoint *BreakpointPosition_breakpoint(BreakpointPosition *self){ 
+			return &(self->breakpoint());
+		}
+double BreakpointPosition_frequency(BreakpointPosition *self){ return self->breakpoint().frequency(); }
+double BreakpointPosition_amplitude(BreakpointPosition *self){ return self->breakpoint().amplitude(); }
+double BreakpointPosition_bandwidth(BreakpointPosition *self){ return self->breakpoint().bandwidth(); }
+double BreakpointPosition_phase(BreakpointPosition *self){ return self->breakpoint().phase(); }
+void BreakpointPosition_setFrequency(BreakpointPosition *self,double x){ self->breakpoint().setFrequency( x ); }
+void BreakpointPosition_setAmplitude(BreakpointPosition *self,double x){ self->breakpoint().setAmplitude( x ); }
+void BreakpointPosition_setBandwidth(BreakpointPosition *self,double x){ self->breakpoint().setBandwidth( x ); }
+void BreakpointPosition_setPhase(BreakpointPosition *self,double x){ self->breakpoint().setPhase( x ); }
+Breakpoint *PartialIterator_breakpoint(PartialIterator *self){ 
+			return &(self->breakpoint());
+		}
+PartialIterator *PartialIterator_copy(PartialIterator *self){
+			return new PartialIterator( *self );
+		}
+PartialIterator *PartialIterator_next(PartialIterator *self){
+			PartialIterator * next = new PartialIterator(*self);
+			++(*next);
+			return next;
+		}
+PartialIterator *PartialIterator_prev(PartialIterator *self){
+			PartialIterator * prev = new PartialIterator(*self);
+			--(*prev);
+			return prev;
+		}
+int PartialIterator_equals(PartialIterator *self,PartialIterator *other){
+			return *self == *other;
+		}
+int PartialIterator_isInRange(PartialIterator *self,PartialIterator const *begin,PartialIterator const *end){	
+		 	PartialIterator it;
+		 	for ( it = *begin; it != *end; ++it )
+		 	{
+		 		if ( it == *self )
+		 			return true;
+		 	}
+		 	return false;
+		 }
 PartialListIterator *PartialListIterator_copy(PartialListIterator *self){
 			return new PartialListIterator( *self );
 		}
@@ -1101,67 +1182,6 @@ int PartialListIterator_isInRange(PartialListIterator *self,PartialListIterator 
 		 	}
 		 	return false;
 		 }
-NewPartialIterator *Partial_iterator(Partial *self){
-			return new NewPartialIterator(*self);
-		}
-void Partial_erase__SWIG_1(Partial *self,BreakpointPosition *pos){
-			if ( *pos != self->end() )
-				*pos = self->erase( *pos );
-		}
-Partial *Partial_copy(Partial *self){
-			return new Partial( *self );
-		}
-int Partial_equals(Partial *self,Partial *other){
-			return *self == *other;
-		}
-Breakpoint *PartialIterator_breakpoint(PartialIterator *self){ 
-			return &(self->breakpoint());
-		}
-PartialIterator *PartialIterator_copy(PartialIterator *self){
-			return new PartialIterator( *self );
-		}
-PartialIterator *PartialIterator_next(PartialIterator *self){
-			PartialIterator * next = new PartialIterator(*self);
-			++(*next);
-			return next;
-		}
-PartialIterator *PartialIterator_prev(PartialIterator *self){
-			PartialIterator * prev = new PartialIterator(*self);
-			--(*prev);
-			return prev;
-		}
-int PartialIterator_equals(PartialIterator *self,PartialIterator *other){
-			return *self == *other;
-		}
-int PartialIterator_isInRange(PartialIterator *self,PartialIterator const *begin,PartialIterator const *end){	
-		 	PartialIterator it;
-		 	for ( it = *begin; it != *end; ++it )
-		 	{
-		 		if ( it == *self )
-		 			return true;
-		 	}
-		 	return false;
-		 }
-Breakpoint *Breakpoint_copy(Breakpoint *self){
-			return new Breakpoint( *self );
-		}
-int Breakpoint_equals(Breakpoint *self,Breakpoint *other){
-			return *self == *other;
-		}
-double BreakpointPosition_time(BreakpointPosition *self){ 
-			return self->time(); 
-		}
-Breakpoint *BreakpointPosition_breakpoint(BreakpointPosition *self){ 
-			return &(self->breakpoint());
-		}
-double BreakpointPosition_frequency(BreakpointPosition *self){ return self->breakpoint().frequency(); }
-double BreakpointPosition_amplitude(BreakpointPosition *self){ return self->breakpoint().amplitude(); }
-double BreakpointPosition_bandwidth(BreakpointPosition *self){ return self->breakpoint().bandwidth(); }
-double BreakpointPosition_phase(BreakpointPosition *self){ return self->breakpoint().phase(); }
-void BreakpointPosition_setFrequency(BreakpointPosition *self,double x){ self->breakpoint().setFrequency( x ); }
-void BreakpointPosition_setAmplitude(BreakpointPosition *self,double x){ self->breakpoint().setAmplitude( x ); }
-void BreakpointPosition_setBandwidth(BreakpointPosition *self,double x){ self->breakpoint().setBandwidth( x ); }
-void BreakpointPosition_setPhase(BreakpointPosition *self,double x){ self->breakpoint().setPhase( x ); }
 #ifdef PERL_OBJECT
 #define MAGIC_CLASS _wrap_perLoris_var::
 class _wrap_perLoris_var : public CPerlObj {
@@ -1209,12 +1229,13 @@ XS(_wrap_channelize) {
         }
         arg3 = (int) SvIV(ST(2));
         {
-            *EXCEPTION_THROWN = '\0';
+            char * err;
+            clear_exception();
             channelize(arg1,arg2,arg3);
             
-            if (*EXCEPTION_THROWN)
+            if ((err = check_exception()))
             {
-                SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+                SWIG_exception( SWIG_ValueError, err );
             }
         }
         
@@ -1254,12 +1275,13 @@ XS(_wrap_createFreqReference) {
             arg4 = (long) SvIV(ST(3));
         }
         {
-            *EXCEPTION_THROWN = '\0';
+            char * err;
+            clear_exception();
             result = (BreakpointEnvelope *)createFreqReference(arg1,arg2,arg3,arg4);
             
-            if (*EXCEPTION_THROWN)
+            if ((err = check_exception()))
             {
-                SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+                SWIG_exception( SWIG_ValueError, err );
             }
         }
         ST(argvi) = sv_newmortal();
@@ -1295,12 +1317,13 @@ XS(_wrap_dilate) {
         if (!SvOK((SV*) ST(2))) arg3 = 0;
         else arg3 = (char *) SvPV(ST(2), PL_na);
         {
-            *EXCEPTION_THROWN = '\0';
+            char * err;
+            clear_exception();
             dilate_s(arg1,arg2,arg3);
             
-            if (*EXCEPTION_THROWN)
+            if ((err = check_exception()))
             {
-                SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+                SWIG_exception( SWIG_ValueError, err );
             }
         }
         
@@ -1329,12 +1352,13 @@ XS(_wrap_distill) {
             }
         }
         {
-            *EXCEPTION_THROWN = '\0';
+            char * err;
+            clear_exception();
             distill(arg1);
             
-            if (*EXCEPTION_THROWN)
+            if ((err = check_exception()))
             {
-                SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+                SWIG_exception( SWIG_ValueError, err );
             }
         }
         
@@ -1379,12 +1403,13 @@ XS(_wrap_exportAiff) {
             arg5 = (int) SvIV(ST(4));
         }
         {
-            *EXCEPTION_THROWN = '\0';
+            char * err;
+            clear_exception();
             exportAiff((char const *)arg1,arg2,arg3,arg4,arg5);
             
-            if (*EXCEPTION_THROWN)
+            if ((err = check_exception()))
             {
-                SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+                SWIG_exception( SWIG_ValueError, err );
             }
         }
         
@@ -1416,12 +1441,13 @@ XS(_wrap_exportSdif) {
             }
         }
         {
-            *EXCEPTION_THROWN = '\0';
+            char * err;
+            clear_exception();
             exportSdif((char const *)arg1,arg2);
             
-            if (*EXCEPTION_THROWN)
+            if ((err = check_exception()))
             {
-                SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+                SWIG_exception( SWIG_ValueError, err );
             }
         }
         
@@ -1465,12 +1491,13 @@ XS(_wrap_exportSpc) {
             
         }
         {
-            *EXCEPTION_THROWN = '\0';
+            char * err;
+            clear_exception();
             exportSpc((char const *)arg1,arg2,arg3,arg4,arg5);
             
-            if (*EXCEPTION_THROWN)
+            if ((err = check_exception()))
             {
-                SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+                SWIG_exception( SWIG_ValueError, err );
             }
         }
         
@@ -1497,12 +1524,13 @@ XS(_wrap_importSdif) {
         if (!SvOK((SV*) ST(0))) arg1 = 0;
         else arg1 = (char *) SvPV(ST(0), PL_na);
         {
-            *EXCEPTION_THROWN = '\0';
+            char * err;
+            clear_exception();
             result = (PartialList *)importSdif((char const *)arg1);
             
-            if (*EXCEPTION_THROWN)
+            if ((err = check_exception()))
             {
-                SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+                SWIG_exception( SWIG_ValueError, err );
             }
         }
         ST(argvi) = sv_newmortal();
@@ -1530,12 +1558,13 @@ XS(_wrap_importSpc) {
         if (!SvOK((SV*) ST(0))) arg1 = 0;
         else arg1 = (char *) SvPV(ST(0), PL_na);
         {
-            *EXCEPTION_THROWN = '\0';
+            char * err;
+            clear_exception();
             result = (PartialList *)importSpc((char const *)arg1);
             
-            if (*EXCEPTION_THROWN)
+            if ((err = check_exception()))
             {
-                SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+                SWIG_exception( SWIG_ValueError, err );
             }
         }
         ST(argvi) = sv_newmortal();
@@ -1590,12 +1619,13 @@ XS(_wrap_morph__SWIG_0) {
             }
         }
         {
-            *EXCEPTION_THROWN = '\0';
+            char * err;
+            clear_exception();
             result = (PartialList *)morph((PartialList const *)arg1,(PartialList const *)arg2,(BreakpointEnvelope const *)arg3,(BreakpointEnvelope const *)arg4,(BreakpointEnvelope const *)arg5);
             
-            if (*EXCEPTION_THROWN)
+            if ((err = check_exception()))
             {
-                SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+                SWIG_exception( SWIG_ValueError, err );
             }
         }
         ST(argvi) = sv_newmortal();
@@ -1641,12 +1671,13 @@ XS(_wrap_morph__SWIG_1) {
         arg5 = (double) SvNV(ST(4));
         
         {
-            *EXCEPTION_THROWN = '\0';
+            char * err;
+            clear_exception();
             result = (PartialList *)morph((PartialList const *)arg1,(PartialList const *)arg2,arg3,arg4,arg5);
             
-            if (*EXCEPTION_THROWN)
+            if ((err = check_exception()))
             {
-                SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+                SWIG_exception( SWIG_ValueError, err );
             }
         }
         ST(argvi) = sv_newmortal();
@@ -1784,12 +1815,13 @@ XS(_wrap_synthesize) {
             
         }
         {
-            *EXCEPTION_THROWN = '\0';
+            char * err;
+            clear_exception();
             result = (SampleVector *)synthesize((PartialList const *)arg1,arg2);
             
-            if (*EXCEPTION_THROWN)
+            if ((err = check_exception()))
             {
-                SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+                SWIG_exception( SWIG_ValueError, err );
             }
         }
         ST(argvi) = sv_newmortal();
@@ -1825,12 +1857,13 @@ XS(_wrap_crop) {
         arg3 = (double) SvNV(ST(2));
         
         {
-            *EXCEPTION_THROWN = '\0';
+            char * err;
+            clear_exception();
             crop(arg1,arg2,arg3);
             
-            if (*EXCEPTION_THROWN)
+            if ((err = check_exception()))
             {
-                SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+                SWIG_exception( SWIG_ValueError, err );
             }
         }
         
@@ -1862,12 +1895,13 @@ XS(_wrap_extractLabeled) {
         }
         arg2 = (long) SvIV(ST(1));
         {
-            *EXCEPTION_THROWN = '\0';
+            char * err;
+            clear_exception();
             result = (PartialList *)extractLabeled(arg1,arg2);
             
-            if (*EXCEPTION_THROWN)
+            if ((err = check_exception()))
             {
-                SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+                SWIG_exception( SWIG_ValueError, err );
             }
         }
         ST(argvi) = sv_newmortal();
@@ -1903,12 +1937,13 @@ XS(_wrap_scaleAmp__SWIG_0) {
             }
         }
         {
-            *EXCEPTION_THROWN = '\0';
+            char * err;
+            clear_exception();
             scaleAmp(arg1,arg2);
             
-            if (*EXCEPTION_THROWN)
+            if ((err = check_exception()))
             {
-                SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+                SWIG_exception( SWIG_ValueError, err );
             }
         }
         
@@ -1943,12 +1978,13 @@ XS(_wrap_scaleBandwidth__SWIG_0) {
             }
         }
         {
-            *EXCEPTION_THROWN = '\0';
+            char * err;
+            clear_exception();
             scaleBandwidth(arg1,arg2);
             
-            if (*EXCEPTION_THROWN)
+            if ((err = check_exception()))
             {
-                SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+                SWIG_exception( SWIG_ValueError, err );
             }
         }
         
@@ -1983,12 +2019,13 @@ XS(_wrap_scaleFrequency__SWIG_0) {
             }
         }
         {
-            *EXCEPTION_THROWN = '\0';
+            char * err;
+            clear_exception();
             scaleFrequency(arg1,arg2);
             
-            if (*EXCEPTION_THROWN)
+            if ((err = check_exception()))
             {
-                SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+                SWIG_exception( SWIG_ValueError, err );
             }
         }
         
@@ -2023,12 +2060,13 @@ XS(_wrap_scaleNoiseRatio__SWIG_0) {
             }
         }
         {
-            *EXCEPTION_THROWN = '\0';
+            char * err;
+            clear_exception();
             scaleNoiseRatio(arg1,arg2);
             
-            if (*EXCEPTION_THROWN)
+            if ((err = check_exception()))
             {
-                SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+                SWIG_exception( SWIG_ValueError, err );
             }
         }
         
@@ -2063,12 +2101,13 @@ XS(_wrap_shiftPitch__SWIG_0) {
             }
         }
         {
-            *EXCEPTION_THROWN = '\0';
+            char * err;
+            clear_exception();
             shiftPitch(arg1,arg2);
             
-            if (*EXCEPTION_THROWN)
+            if ((err = check_exception()))
             {
-                SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+                SWIG_exception( SWIG_ValueError, err );
             }
         }
         
@@ -2100,12 +2139,13 @@ XS(_wrap_scaleAmp__SWIG_1) {
         arg2 = (double) SvNV(ST(1));
         
         {
-            *EXCEPTION_THROWN = '\0';
+            char * err;
+            clear_exception();
             scaleAmp(arg1,arg2);
             
-            if (*EXCEPTION_THROWN)
+            if ((err = check_exception()))
             {
-                SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+                SWIG_exception( SWIG_ValueError, err );
             }
         }
         
@@ -2189,12 +2229,13 @@ XS(_wrap_scaleBandwidth__SWIG_1) {
         arg2 = (double) SvNV(ST(1));
         
         {
-            *EXCEPTION_THROWN = '\0';
+            char * err;
+            clear_exception();
             scaleBandwidth(arg1,arg2);
             
-            if (*EXCEPTION_THROWN)
+            if ((err = check_exception()))
             {
-                SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+                SWIG_exception( SWIG_ValueError, err );
             }
         }
         
@@ -2278,12 +2319,13 @@ XS(_wrap_scaleFrequency__SWIG_1) {
         arg2 = (double) SvNV(ST(1));
         
         {
-            *EXCEPTION_THROWN = '\0';
+            char * err;
+            clear_exception();
             scaleFrequency(arg1,arg2);
             
-            if (*EXCEPTION_THROWN)
+            if ((err = check_exception()))
             {
-                SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+                SWIG_exception( SWIG_ValueError, err );
             }
         }
         
@@ -2367,12 +2409,13 @@ XS(_wrap_scaleNoiseRatio__SWIG_1) {
         arg2 = (double) SvNV(ST(1));
         
         {
-            *EXCEPTION_THROWN = '\0';
+            char * err;
+            clear_exception();
             scaleNoiseRatio(arg1,arg2);
             
-            if (*EXCEPTION_THROWN)
+            if ((err = check_exception()))
             {
-                SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+                SWIG_exception( SWIG_ValueError, err );
             }
         }
         
@@ -2456,12 +2499,13 @@ XS(_wrap_shiftPitch__SWIG_1) {
         arg2 = (double) SvNV(ST(1));
         
         {
-            *EXCEPTION_THROWN = '\0';
+            char * err;
+            clear_exception();
             shiftPitch(arg1,arg2);
             
-            if (*EXCEPTION_THROWN)
+            if ((err = check_exception()))
             {
-                SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+                SWIG_exception( SWIG_ValueError, err );
             }
         }
         
@@ -2545,12 +2589,13 @@ XS(_wrap_shiftTime) {
         arg2 = (double) SvNV(ST(1));
         
         {
-            *EXCEPTION_THROWN = '\0';
+            char * err;
+            clear_exception();
             shiftTime(arg1,arg2);
             
-            if (*EXCEPTION_THROWN)
+            if ((err = check_exception()))
             {
-                SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+                SWIG_exception( SWIG_ValueError, err );
             }
         }
         
@@ -2582,12 +2627,13 @@ XS(_wrap_resample) {
         arg2 = (double) SvNV(ST(1));
         
         {
-            *EXCEPTION_THROWN = '\0';
+            char * err;
+            clear_exception();
             resample(arg1,arg2);
             
-            if (*EXCEPTION_THROWN)
+            if ((err = check_exception()))
             {
-                SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+                SWIG_exception( SWIG_ValueError, err );
             }
         }
         
@@ -2616,12 +2662,13 @@ XS(_wrap_sift) {
             }
         }
         {
-            *EXCEPTION_THROWN = '\0';
+            char * err;
+            clear_exception();
             sift(arg1);
             
-            if (*EXCEPTION_THROWN)
+            if ((err = check_exception()))
             {
-                SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+                SWIG_exception( SWIG_ValueError, err );
             }
         }
         
@@ -2645,12 +2692,13 @@ XS(_wrap_version) {
             SWIG_croak("Usage: version();");
         }
         {
-            *EXCEPTION_THROWN = '\0';
+            char * err;
+            clear_exception();
             result = (char *)version();
             
-            if (*EXCEPTION_THROWN)
+            if ((err = check_exception()))
             {
-                SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+                SWIG_exception( SWIG_ValueError, err );
             }
         }
         ST(argvi) = sv_newmortal();
@@ -6023,6 +6071,43 @@ XS(_wrap_NewPlistIterator_next) {
 }
 
 
+XS(_wrap_NewPlistIterator_partial) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        NewPlistIterator *arg1 = (NewPlistIterator *) 0 ;
+        Partial *result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 1) || (items > 1)) {
+            SWIG_croak("Usage: NewPlistIterator_partial(self);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_NewPlistIterator,0) < 0) {
+                SWIG_croak("Type error in argument 1 of NewPlistIterator_partial. Expected _p_NewPlistIterator");
+            }
+        }
+        {
+            char * err;
+            clear_exception();
+            result = (Partial *)NewPlistIterator_partial(arg1);
+            
+            if ((err = check_exception()))
+            {
+                SWIG_exception( SWIG_ValueError, err );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_Partial,0);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
 XS(_wrap_NewPartialIterator_atEnd) {
     char _swigmsg[SWIG_MAX_ERRMSG] = "";
     const char *_swigerr = _swigmsg;
@@ -6044,6 +6129,54 @@ XS(_wrap_NewPartialIterator_atEnd) {
             try
             {
                 result = (bool)(arg1)->atEnd();
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        sv_setiv(ST(argvi++), (IV) result);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_NewPartialIterator_hasNext) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        NewPartialIterator *arg1 = (NewPartialIterator *) 0 ;
+        bool result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 1) || (items > 1)) {
+            SWIG_croak("Usage: NewPartialIterator_hasNext(self);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_NewPartialIterator,0) < 0) {
+                SWIG_croak("Type error in argument 1 of NewPartialIterator_hasNext. Expected _p_NewPartialIterator");
+            }
+        }
+        {
+            try
+            {
+                result = (bool)(arg1)->hasNext();
                 
             }
             catch( Loris::Exception & ex ) 
@@ -6123,7 +6256,7 @@ XS(_wrap_new_PartialList__SWIG_0) {
         {
             try
             {
-                result = (PartialList *)new_PartialList__SWIG_0();
+                result = (PartialList *)new PartialList();
                 
             }
             catch( Loris::Exception & ex ) 
@@ -6171,7 +6304,7 @@ XS(_wrap_new_PartialList__SWIG_1) {
         {
             try
             {
-                result = (PartialList *)new_PartialList__SWIG_1((PartialList const &)*arg1);
+                result = (PartialList *)new PartialList((PartialList const &)*arg1);
                 
             }
             catch( Loris::Exception & ex ) 
@@ -6244,7 +6377,7 @@ XS(_wrap_delete_PartialList) {
         {
             try
             {
-                delete_PartialList(arg1);
+                delete arg1;
                 
             }
             catch( Loris::Exception & ex ) 
@@ -6271,27 +6404,73 @@ XS(_wrap_delete_PartialList) {
 }
 
 
-XS(_wrap_PartialList_copy) {
+XS(_wrap_PartialList_clear) {
     char _swigmsg[SWIG_MAX_ERRMSG] = "";
     const char *_swigerr = _swigmsg;
     {
         PartialList *arg1 = (PartialList *) 0 ;
-        PartialList *result;
         int argvi = 0;
         dXSARGS;
         
         if ((items < 1) || (items > 1)) {
-            SWIG_croak("Usage: PartialList_copy(self);");
+            SWIG_croak("Usage: PartialList_clear(self);");
         }
         {
             if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialList,0) < 0) {
-                SWIG_croak("Type error in argument 1 of PartialList_copy. Expected _p_PartialList");
+                SWIG_croak("Type error in argument 1 of PartialList_clear. Expected _p_PartialList");
             }
         }
         {
             try
             {
-                result = (PartialList *)PartialList_copy(arg1);
+                (arg1)->clear();
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_PartialList_size) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        PartialList *arg1 = (PartialList *) 0 ;
+        unsigned long result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 1) || (items > 1)) {
+            SWIG_croak("Usage: PartialList_size(self);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialList,0) < 0) {
+                SWIG_croak("Type error in argument 1 of PartialList_size. Expected _p_PartialList");
+            }
+        }
+        {
+            try
+            {
+                result = (unsigned long)(arg1)->size();
                 
             }
             catch( Loris::Exception & ex ) 
@@ -6310,7 +6489,7 @@ XS(_wrap_PartialList_copy) {
             }
         }
         ST(argvi) = sv_newmortal();
-        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_PartialList,0);
+        sv_setuv(ST(argvi++), (UV) result);
         XSRETURN(argvi);
         fail:
         (void) _swigerr;
@@ -6435,26 +6614,32 @@ XS(_wrap_PartialList_iterator) {
 }
 
 
-XS(_wrap_PartialList_clear) {
+XS(_wrap_PartialList_append) {
     char _swigmsg[SWIG_MAX_ERRMSG] = "";
     const char *_swigerr = _swigmsg;
     {
         PartialList *arg1 = (PartialList *) 0 ;
+        Partial *arg2 = (Partial *) 0 ;
         int argvi = 0;
         dXSARGS;
         
-        if ((items < 1) || (items > 1)) {
-            SWIG_croak("Usage: PartialList_clear(self);");
+        if ((items < 2) || (items > 2)) {
+            SWIG_croak("Usage: PartialList_append(self,partial);");
         }
         {
             if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialList,0) < 0) {
-                SWIG_croak("Type error in argument 1 of PartialList_clear. Expected _p_PartialList");
+                SWIG_croak("Type error in argument 1 of PartialList_append. Expected _p_PartialList");
+            }
+        }
+        {
+            if (SWIG_ConvertPtr(ST(1), (void **) &arg2, SWIGTYPE_p_Partial,0) < 0) {
+                SWIG_croak("Type error in argument 2 of PartialList_append. Expected _p_Partial");
             }
         }
         {
             try
             {
-                (arg1)->clear();
+                PartialList_append(arg1,arg2);
                 
             }
             catch( Loris::Exception & ex ) 
@@ -6481,27 +6666,39 @@ XS(_wrap_PartialList_clear) {
 }
 
 
-XS(_wrap_PartialList_size) {
+XS(_wrap_PartialList_insert__SWIG_0) {
     char _swigmsg[SWIG_MAX_ERRMSG] = "";
     const char *_swigerr = _swigmsg;
     {
         PartialList *arg1 = (PartialList *) 0 ;
-        unsigned long result;
+        NewPlistIterator *arg2 = (NewPlistIterator *) 0 ;
+        Partial *arg3 = (Partial *) 0 ;
+        NewPlistIterator *result;
         int argvi = 0;
         dXSARGS;
         
-        if ((items < 1) || (items > 1)) {
-            SWIG_croak("Usage: PartialList_size(self);");
+        if ((items < 3) || (items > 3)) {
+            SWIG_croak("Usage: PartialList_insert(self,position,partial);");
         }
         {
             if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialList,0) < 0) {
-                SWIG_croak("Type error in argument 1 of PartialList_size. Expected _p_PartialList");
+                SWIG_croak("Type error in argument 1 of PartialList_insert. Expected _p_PartialList");
+            }
+        }
+        {
+            if (SWIG_ConvertPtr(ST(1), (void **) &arg2, SWIGTYPE_p_NewPlistIterator,0) < 0) {
+                SWIG_croak("Type error in argument 2 of PartialList_insert. Expected _p_NewPlistIterator");
+            }
+        }
+        {
+            if (SWIG_ConvertPtr(ST(2), (void **) &arg3, SWIGTYPE_p_Partial,0) < 0) {
+                SWIG_croak("Type error in argument 3 of PartialList_insert. Expected _p_Partial");
             }
         }
         {
             try
             {
-                result = (unsigned long)(arg1)->size();
+                result = (NewPlistIterator *)PartialList_insert__SWIG_0(arg1,arg2,arg3);
                 
             }
             catch( Loris::Exception & ex ) 
@@ -6520,7 +6717,100 @@ XS(_wrap_PartialList_size) {
             }
         }
         ST(argvi) = sv_newmortal();
-        sv_setuv(ST(argvi++), (UV) result);
+        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_NewPlistIterator,0);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_PartialList_erase__SWIG_0) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        PartialList *arg1 = (PartialList *) 0 ;
+        Partial *arg2 = (Partial *) 0 ;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 2) || (items > 2)) {
+            SWIG_croak("Usage: PartialList_erase(self,partial);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialList,0) < 0) {
+                SWIG_croak("Type error in argument 1 of PartialList_erase. Expected _p_PartialList");
+            }
+        }
+        {
+            if (SWIG_ConvertPtr(ST(1), (void **) &arg2, SWIGTYPE_p_Partial,0) < 0) {
+                SWIG_croak("Type error in argument 2 of PartialList_erase. Expected _p_Partial");
+            }
+        }
+        {
+            char * err;
+            clear_exception();
+            PartialList_erase__SWIG_0(arg1,arg2);
+            
+            if ((err = check_exception()))
+            {
+                SWIG_exception( SWIG_ValueError, err );
+            }
+        }
+        
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_PartialList_splice__SWIG_0) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        PartialList *arg1 = (PartialList *) 0 ;
+        PartialList *arg2 = (PartialList *) 0 ;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 2) || (items > 2)) {
+            SWIG_croak("Usage: PartialList_splice(self,other);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialList,0) < 0) {
+                SWIG_croak("Type error in argument 1 of PartialList_splice. Expected _p_PartialList");
+            }
+        }
+        {
+            if (SWIG_ConvertPtr(ST(1), (void **) &arg2, SWIGTYPE_p_PartialList,0) < 0) {
+                SWIG_croak("Type error in argument 2 of PartialList_splice. Expected _p_PartialList");
+            }
+        }
+        {
+            try
+            {
+                PartialList_splice__SWIG_0(arg1,arg2);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        
         XSRETURN(argvi);
         fail:
         (void) _swigerr;
@@ -6631,7 +6921,7 @@ XS(_wrap_PartialList_end) {
 }
 
 
-XS(_wrap_PartialList_insert__SWIG_0) {
+XS(_wrap_PartialList_insert__SWIG_1) {
     char _swigmsg[SWIG_MAX_ERRMSG] = "";
     const char *_swigerr = _swigmsg;
     {
@@ -6696,131 +6986,7 @@ XS(_wrap_PartialList_insert__SWIG_0) {
 }
 
 
-XS(_wrap_PartialList_insert__SWIG_1) {
-    char _swigmsg[SWIG_MAX_ERRMSG] = "";
-    const char *_swigerr = _swigmsg;
-    {
-        PartialList *arg1 = (PartialList *) 0 ;
-        Partial *arg2 = 0 ;
-        PartialListIterator result;
-        int argvi = 0;
-        dXSARGS;
-        
-        if ((items < 2) || (items > 2)) {
-            SWIG_croak("Usage: PartialList_insert(self,partial);");
-        }
-        {
-            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialList,0) < 0) {
-                SWIG_croak("Type error in argument 1 of PartialList_insert. Expected _p_PartialList");
-            }
-        }
-        {
-            if (SWIG_ConvertPtr(ST(1), (void **) &arg2, SWIGTYPE_p_Partial,0) < 0) {
-                SWIG_croak("Type error in argument 2 of PartialList_insert. Expected _p_Partial");
-            }
-        }
-        {
-            try
-            {
-                result = PartialList_insert__SWIG_1(arg1,(Partial const &)*arg2);
-                
-            }
-            catch( Loris::Exception & ex ) 
-            {
-                //	catch Loris::Exceptions:
-                std::string s("Loris exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-            catch( std::exception & ex ) 
-            {
-                //	catch std::exceptions:
-                std::string s("std C++ exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-        }
-        {
-            PartialListIterator * resultobj = new PartialListIterator((PartialListIterator &)result);
-            ST(argvi) = sv_newmortal();
-            SWIG_MakePtr(ST(argvi++), (void *) resultobj, SWIGTYPE_p_PartialListIterator,0);
-        }
-        XSRETURN(argvi);
-        fail:
-        (void) _swigerr;
-    }
-    croak(_swigerr);
-}
-
-
-XS(_wrap_PartialList_insert) {
-    dXSARGS;
-    
-    if (items == 2) {
-        int _v;
-        {
-            void *tmp;
-            if (SWIG_ConvertPtr(ST(0), (void **) &tmp, SWIGTYPE_p_PartialList, 0) == -1) {
-                _v = 0;
-            }else {
-                _v = 1;
-            }
-        }
-        if (_v) {
-            {
-                void *tmp;
-                if (SWIG_ConvertPtr(ST(1), (void **) &tmp, SWIGTYPE_p_Partial, 0) == -1) {
-                    _v = 0;
-                }else {
-                    _v = 1;
-                }
-            }
-            if (_v) {
-                (*PL_markstack_ptr++);SWIG_CALLXS(_wrap_PartialList_insert__SWIG_1); return;
-            }
-        }
-    }
-    if (items == 3) {
-        int _v;
-        {
-            void *tmp;
-            if (SWIG_ConvertPtr(ST(0), (void **) &tmp, SWIGTYPE_p_PartialList, 0) == -1) {
-                _v = 0;
-            }else {
-                _v = 1;
-            }
-        }
-        if (_v) {
-            {
-                void *tmp;
-                if (SWIG_ConvertPtr(ST(1), (void **) &tmp, SWIGTYPE_p_PartialListIterator, 0) == -1) {
-                    _v = 0;
-                }else {
-                    _v = 1;
-                }
-            }
-            if (_v) {
-                {
-                    void *tmp;
-                    if (SWIG_ConvertPtr(ST(2), (void **) &tmp, SWIGTYPE_p_Partial, 0) == -1) {
-                        _v = 0;
-                    }else {
-                        _v = 1;
-                    }
-                }
-                if (_v) {
-                    (*PL_markstack_ptr++);SWIG_CALLXS(_wrap_PartialList_insert__SWIG_0); return;
-                }
-            }
-        }
-    }
-    
-    croak("No matching function for overloaded 'PartialList_insert'");
-    XSRETURN(0);
-}
-
-
-XS(_wrap_PartialList_erase) {
+XS(_wrap_PartialList_erase__SWIG_1) {
     char _swigmsg[SWIG_MAX_ERRMSG] = "";
     const char *_swigerr = _swigmsg;
     {
@@ -6845,24 +7011,13 @@ XS(_wrap_PartialList_erase) {
             arg2 = *argp;
         }
         {
-            try
+            char * err;
+            clear_exception();
+            (arg1)->erase(arg2);
+            
+            if ((err = check_exception()))
             {
-                (arg1)->erase(arg2);
-                
-            }
-            catch( Loris::Exception & ex ) 
-            {
-                //	catch Loris::Exceptions:
-                std::string s("Loris exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-            catch( std::exception & ex ) 
-            {
-                //	catch std::exceptions:
-                std::string s("std C++ exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+                SWIG_exception( SWIG_ValueError, err );
             }
         }
         
@@ -6874,7 +7029,64 @@ XS(_wrap_PartialList_erase) {
 }
 
 
-XS(_wrap_PartialList_splice) {
+XS(_wrap_PartialList_erase) {
+    dXSARGS;
+    
+    if (items == 2) {
+        int _v;
+        {
+            void *tmp;
+            if (SWIG_ConvertPtr(ST(0), (void **) &tmp, SWIGTYPE_p_PartialList, 0) == -1) {
+                _v = 0;
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *tmp;
+                if (SWIG_ConvertPtr(ST(1), (void **) &tmp, SWIGTYPE_p_Partial, 0) == -1) {
+                    _v = 0;
+                }else {
+                    _v = 1;
+                }
+            }
+            if (_v) {
+                (*PL_markstack_ptr++);SWIG_CALLXS(_wrap_PartialList_erase__SWIG_0); return;
+            }
+        }
+    }
+    if (items == 2) {
+        int _v;
+        {
+            void *tmp;
+            if (SWIG_ConvertPtr(ST(0), (void **) &tmp, SWIGTYPE_p_PartialList, 0) == -1) {
+                _v = 0;
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *tmp;
+                if (SWIG_ConvertPtr(ST(1), (void **) &tmp, SWIGTYPE_p_PartialListIterator, 0) == -1) {
+                    _v = 0;
+                }else {
+                    _v = 1;
+                }
+            }
+            if (_v) {
+                (*PL_markstack_ptr++);SWIG_CALLXS(_wrap_PartialList_erase__SWIG_1); return;
+            }
+        }
+    }
+    
+    croak("No matching function for overloaded 'PartialList_erase'");
+    XSRETURN(0);
+}
+
+
+XS(_wrap_PartialList_splice__SWIG_1) {
     char _swigmsg[SWIG_MAX_ERRMSG] = "";
     const char *_swigerr = _swigmsg;
     {
@@ -6934,215 +7146,100 @@ XS(_wrap_PartialList_splice) {
 }
 
 
-XS(_wrap_PartialListIterator_copy) {
-    char _swigmsg[SWIG_MAX_ERRMSG] = "";
-    const char *_swigerr = _swigmsg;
-    {
-        PartialListIterator *arg1 = (PartialListIterator *) 0 ;
-        PartialListIterator *result;
-        int argvi = 0;
-        dXSARGS;
-        
-        if ((items < 1) || (items > 1)) {
-            SWIG_croak("Usage: PartialListIterator_copy(self);");
-        }
+XS(_wrap_PartialList_splice) {
+    dXSARGS;
+    
+    if (items == 2) {
+        int _v;
         {
-            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialListIterator,0) < 0) {
-                SWIG_croak("Type error in argument 1 of PartialListIterator_copy. Expected _p_PartialListIterator");
+            void *tmp;
+            if (SWIG_ConvertPtr(ST(0), (void **) &tmp, SWIGTYPE_p_PartialList, 0) == -1) {
+                _v = 0;
+            }else {
+                _v = 1;
             }
         }
-        {
-            try
+        if (_v) {
             {
-                result = (PartialListIterator *)PartialListIterator_copy(arg1);
-                
+                void *tmp;
+                if (SWIG_ConvertPtr(ST(1), (void **) &tmp, SWIGTYPE_p_PartialList, 0) == -1) {
+                    _v = 0;
+                }else {
+                    _v = 1;
+                }
             }
-            catch( Loris::Exception & ex ) 
-            {
-                //	catch Loris::Exceptions:
-                std::string s("Loris exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-            catch( std::exception & ex ) 
-            {
-                //	catch std::exceptions:
-                std::string s("std C++ exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            if (_v) {
+                (*PL_markstack_ptr++);SWIG_CALLXS(_wrap_PartialList_splice__SWIG_0); return;
             }
         }
-        ST(argvi) = sv_newmortal();
-        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_PartialListIterator,0);
-        XSRETURN(argvi);
-        fail:
-        (void) _swigerr;
     }
-    croak(_swigerr);
+    if (items == 3) {
+        int _v;
+        {
+            void *tmp;
+            if (SWIG_ConvertPtr(ST(0), (void **) &tmp, SWIGTYPE_p_PartialList, 0) == -1) {
+                _v = 0;
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *tmp;
+                if (SWIG_ConvertPtr(ST(1), (void **) &tmp, SWIGTYPE_p_PartialListIterator, 0) == -1) {
+                    _v = 0;
+                }else {
+                    _v = 1;
+                }
+            }
+            if (_v) {
+                {
+                    void *tmp;
+                    if (SWIG_ConvertPtr(ST(2), (void **) &tmp, SWIGTYPE_p_PartialList, 0) == -1) {
+                        _v = 0;
+                    }else {
+                        _v = 1;
+                    }
+                }
+                if (_v) {
+                    (*PL_markstack_ptr++);SWIG_CALLXS(_wrap_PartialList_splice__SWIG_1); return;
+                }
+            }
+        }
+    }
+    
+    croak("No matching function for overloaded 'PartialList_splice'");
+    XSRETURN(0);
 }
 
 
-XS(_wrap_PartialListIterator_next) {
+XS(_wrap_PartialList_insert__SWIG_2) {
     char _swigmsg[SWIG_MAX_ERRMSG] = "";
     const char *_swigerr = _swigmsg;
     {
-        PartialListIterator *arg1 = (PartialListIterator *) 0 ;
-        PartialListIterator *result;
-        int argvi = 0;
-        dXSARGS;
-        
-        if ((items < 1) || (items > 1)) {
-            SWIG_croak("Usage: PartialListIterator_next(self);");
-        }
-        {
-            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialListIterator,0) < 0) {
-                SWIG_croak("Type error in argument 1 of PartialListIterator_next. Expected _p_PartialListIterator");
-            }
-        }
-        {
-            char * err;
-            clear_exception();
-            result = (PartialListIterator *)PartialListIterator_next(arg1);
-            
-            if ((err = check_exception()))
-            {
-                SWIG_exception( SWIG_ValueError, err );
-                
-            }
-        }
-        ST(argvi) = sv_newmortal();
-        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_PartialListIterator,0);
-        XSRETURN(argvi);
-        fail:
-        (void) _swigerr;
-    }
-    croak(_swigerr);
-}
-
-
-XS(_wrap_PartialListIterator_prev) {
-    char _swigmsg[SWIG_MAX_ERRMSG] = "";
-    const char *_swigerr = _swigmsg;
-    {
-        PartialListIterator *arg1 = (PartialListIterator *) 0 ;
-        PartialListIterator *result;
-        int argvi = 0;
-        dXSARGS;
-        
-        if ((items < 1) || (items > 1)) {
-            SWIG_croak("Usage: PartialListIterator_prev(self);");
-        }
-        {
-            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialListIterator,0) < 0) {
-                SWIG_croak("Type error in argument 1 of PartialListIterator_prev. Expected _p_PartialListIterator");
-            }
-        }
-        {
-            try
-            {
-                result = (PartialListIterator *)PartialListIterator_prev(arg1);
-                
-            }
-            catch( Loris::Exception & ex ) 
-            {
-                //	catch Loris::Exceptions:
-                std::string s("Loris exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-            catch( std::exception & ex ) 
-            {
-                //	catch std::exceptions:
-                std::string s("std C++ exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-        }
-        ST(argvi) = sv_newmortal();
-        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_PartialListIterator,0);
-        XSRETURN(argvi);
-        fail:
-        (void) _swigerr;
-    }
-    croak(_swigerr);
-}
-
-
-XS(_wrap_PartialListIterator_partial) {
-    char _swigmsg[SWIG_MAX_ERRMSG] = "";
-    const char *_swigerr = _swigmsg;
-    {
-        PartialListIterator *arg1 = (PartialListIterator *) 0 ;
-        Partial *result;
-        int argvi = 0;
-        dXSARGS;
-        
-        if ((items < 1) || (items > 1)) {
-            SWIG_croak("Usage: PartialListIterator_partial(self);");
-        }
-        {
-            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialListIterator,0) < 0) {
-                SWIG_croak("Type error in argument 1 of PartialListIterator_partial. Expected _p_PartialListIterator");
-            }
-        }
-        {
-            try
-            {
-                result = (Partial *)PartialListIterator_partial(arg1);
-                
-            }
-            catch( Loris::Exception & ex ) 
-            {
-                //	catch Loris::Exceptions:
-                std::string s("Loris exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-            catch( std::exception & ex ) 
-            {
-                //	catch std::exceptions:
-                std::string s("std C++ exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-        }
-        ST(argvi) = sv_newmortal();
-        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_Partial,0);
-        XSRETURN(argvi);
-        fail:
-        (void) _swigerr;
-    }
-    croak(_swigerr);
-}
-
-
-XS(_wrap_PartialListIterator_equals) {
-    char _swigmsg[SWIG_MAX_ERRMSG] = "";
-    const char *_swigerr = _swigmsg;
-    {
-        PartialListIterator *arg1 = (PartialListIterator *) 0 ;
-        PartialListIterator *arg2 = (PartialListIterator *) 0 ;
-        int result;
+        PartialList *arg1 = (PartialList *) 0 ;
+        Partial *arg2 = 0 ;
+        PartialListIterator result;
         int argvi = 0;
         dXSARGS;
         
         if ((items < 2) || (items > 2)) {
-            SWIG_croak("Usage: PartialListIterator_equals(self,other);");
+            SWIG_croak("Usage: PartialList_insert(self,partial);");
         }
         {
-            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialListIterator,0) < 0) {
-                SWIG_croak("Type error in argument 1 of PartialListIterator_equals. Expected _p_PartialListIterator");
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialList,0) < 0) {
+                SWIG_croak("Type error in argument 1 of PartialList_insert. Expected _p_PartialList");
             }
         }
         {
-            if (SWIG_ConvertPtr(ST(1), (void **) &arg2, SWIGTYPE_p_PartialListIterator,0) < 0) {
-                SWIG_croak("Type error in argument 2 of PartialListIterator_equals. Expected _p_PartialListIterator");
+            if (SWIG_ConvertPtr(ST(1), (void **) &arg2, SWIGTYPE_p_Partial,0) < 0) {
+                SWIG_croak("Type error in argument 2 of PartialList_insert. Expected _p_Partial");
             }
         }
         {
             try
             {
-                result = (int)PartialListIterator_equals(arg1,arg2);
+                result = PartialList_insert__SWIG_2(arg1,(Partial const &)*arg2);
                 
             }
             catch( Loris::Exception & ex ) 
@@ -7160,8 +7257,11 @@ XS(_wrap_PartialListIterator_equals) {
                 SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
             }
         }
-        ST(argvi) = sv_newmortal();
-        sv_setiv(ST(argvi++), (IV) result);
+        {
+            PartialListIterator * resultobj = new PartialListIterator((PartialListIterator &)result);
+            ST(argvi) = sv_newmortal();
+            SWIG_MakePtr(ST(argvi++), (void *) resultobj, SWIGTYPE_p_PartialListIterator,0);
+        }
         XSRETURN(argvi);
         fail:
         (void) _swigerr;
@@ -7170,128 +7270,128 @@ XS(_wrap_PartialListIterator_equals) {
 }
 
 
-XS(_wrap_PartialListIterator_isInRange) {
-    char _swigmsg[SWIG_MAX_ERRMSG] = "";
-    const char *_swigerr = _swigmsg;
-    {
-        PartialListIterator *arg1 = (PartialListIterator *) 0 ;
-        PartialListIterator *arg2 = (PartialListIterator *) 0 ;
-        PartialListIterator *arg3 = (PartialListIterator *) 0 ;
-        int result;
-        int argvi = 0;
-        dXSARGS;
-        
-        if ((items < 3) || (items > 3)) {
-            SWIG_croak("Usage: PartialListIterator_isInRange(self,begin,end);");
-        }
+XS(_wrap_PartialList_insert) {
+    dXSARGS;
+    
+    if (items == 2) {
+        int _v;
         {
-            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialListIterator,0) < 0) {
-                SWIG_croak("Type error in argument 1 of PartialListIterator_isInRange. Expected _p_PartialListIterator");
+            void *tmp;
+            if (SWIG_ConvertPtr(ST(0), (void **) &tmp, SWIGTYPE_p_PartialList, 0) == -1) {
+                _v = 0;
+            }else {
+                _v = 1;
             }
         }
-        {
-            if (SWIG_ConvertPtr(ST(1), (void **) &arg2, SWIGTYPE_p_PartialListIterator,0) < 0) {
-                SWIG_croak("Type error in argument 2 of PartialListIterator_isInRange. Expected _p_PartialListIterator");
-            }
-        }
-        {
-            if (SWIG_ConvertPtr(ST(2), (void **) &arg3, SWIGTYPE_p_PartialListIterator,0) < 0) {
-                SWIG_croak("Type error in argument 3 of PartialListIterator_isInRange. Expected _p_PartialListIterator");
-            }
-        }
-        {
-            try
+        if (_v) {
             {
-                result = (int)PartialListIterator_isInRange(arg1,(PartialListIterator const *)arg2,(PartialListIterator const *)arg3);
-                
+                void *tmp;
+                if (SWIG_ConvertPtr(ST(1), (void **) &tmp, SWIGTYPE_p_Partial, 0) == -1) {
+                    _v = 0;
+                }else {
+                    _v = 1;
+                }
             }
-            catch( Loris::Exception & ex ) 
-            {
-                //	catch Loris::Exceptions:
-                std::string s("Loris exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-            catch( std::exception & ex ) 
-            {
-                //	catch std::exceptions:
-                std::string s("std C++ exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            if (_v) {
+                (*PL_markstack_ptr++);SWIG_CALLXS(_wrap_PartialList_insert__SWIG_2); return;
             }
         }
-        ST(argvi) = sv_newmortal();
-        sv_setiv(ST(argvi++), (IV) result);
-        XSRETURN(argvi);
-        fail:
-        (void) _swigerr;
     }
-    croak(_swigerr);
+    if (items == 3) {
+        int _v;
+        {
+            void *tmp;
+            if (SWIG_ConvertPtr(ST(0), (void **) &tmp, SWIGTYPE_p_PartialList, 0) == -1) {
+                _v = 0;
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *tmp;
+                if (SWIG_ConvertPtr(ST(1), (void **) &tmp, SWIGTYPE_p_PartialListIterator, 0) == -1) {
+                    _v = 0;
+                }else {
+                    _v = 1;
+                }
+            }
+            if (_v) {
+                {
+                    void *tmp;
+                    if (SWIG_ConvertPtr(ST(2), (void **) &tmp, SWIGTYPE_p_Partial, 0) == -1) {
+                        _v = 0;
+                    }else {
+                        _v = 1;
+                    }
+                }
+                if (_v) {
+                    (*PL_markstack_ptr++);SWIG_CALLXS(_wrap_PartialList_insert__SWIG_1); return;
+                }
+            }
+        }
+    }
+    if (items == 3) {
+        int _v;
+        {
+            void *tmp;
+            if (SWIG_ConvertPtr(ST(0), (void **) &tmp, SWIGTYPE_p_PartialList, 0) == -1) {
+                _v = 0;
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *tmp;
+                if (SWIG_ConvertPtr(ST(1), (void **) &tmp, SWIGTYPE_p_NewPlistIterator, 0) == -1) {
+                    _v = 0;
+                }else {
+                    _v = 1;
+                }
+            }
+            if (_v) {
+                {
+                    void *tmp;
+                    if (SWIG_ConvertPtr(ST(2), (void **) &tmp, SWIGTYPE_p_Partial, 0) == -1) {
+                        _v = 0;
+                    }else {
+                        _v = 1;
+                    }
+                }
+                if (_v) {
+                    (*PL_markstack_ptr++);SWIG_CALLXS(_wrap_PartialList_insert__SWIG_0); return;
+                }
+            }
+        }
+    }
+    
+    croak("No matching function for overloaded 'PartialList_insert'");
+    XSRETURN(0);
 }
 
 
-XS(_wrap_new_PartialListIterator) {
+XS(_wrap_PartialList_copy) {
     char _swigmsg[SWIG_MAX_ERRMSG] = "";
     const char *_swigerr = _swigmsg;
     {
-        PartialListIterator *result;
-        int argvi = 0;
-        dXSARGS;
-        
-        if ((items < 0) || (items > 0)) {
-            SWIG_croak("Usage: new_PartialListIterator();");
-        }
-        {
-            try
-            {
-                result = (PartialListIterator *)new PartialListIterator();
-                
-            }
-            catch( Loris::Exception & ex ) 
-            {
-                //	catch Loris::Exceptions:
-                std::string s("Loris exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-            catch( std::exception & ex ) 
-            {
-                //	catch std::exceptions:
-                std::string s("std C++ exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-        }
-        ST(argvi) = sv_newmortal();
-        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_PartialListIterator,0);
-        XSRETURN(argvi);
-        fail:
-        (void) _swigerr;
-    }
-    croak(_swigerr);
-}
-
-
-XS(_wrap_delete_PartialListIterator) {
-    char _swigmsg[SWIG_MAX_ERRMSG] = "";
-    const char *_swigerr = _swigmsg;
-    {
-        PartialListIterator *arg1 = (PartialListIterator *) 0 ;
+        PartialList *arg1 = (PartialList *) 0 ;
+        PartialList *result;
         int argvi = 0;
         dXSARGS;
         
         if ((items < 1) || (items > 1)) {
-            SWIG_croak("Usage: delete_PartialListIterator(self);");
+            SWIG_croak("Usage: PartialList_copy(self);");
         }
         {
-            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialListIterator,0) < 0) {
-                SWIG_croak("Type error in argument 1 of delete_PartialListIterator. Expected _p_PartialListIterator");
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialList,0) < 0) {
+                SWIG_croak("Type error in argument 1 of PartialList_copy. Expected _p_PartialList");
             }
         }
         {
             try
             {
-                delete arg1;
+                result = (PartialList *)PartialList_copy(arg1);
                 
             }
             catch( Loris::Exception & ex ) 
@@ -7309,7 +7409,8 @@ XS(_wrap_delete_PartialListIterator) {
                 SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
             }
         }
-        
+        ST(argvi) = sv_newmortal();
+        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_PartialList,0);
         XSRETURN(argvi);
         fail:
         (void) _swigerr;
@@ -7318,7 +7419,7 @@ XS(_wrap_delete_PartialListIterator) {
 }
 
 
-XS(_wrap_new_Partial) {
+XS(_wrap_new_Partial__SWIG_0) {
     char _swigmsg[SWIG_MAX_ERRMSG] = "";
     const char *_swigerr = _swigmsg;
     {
@@ -7357,6 +7458,80 @@ XS(_wrap_new_Partial) {
         (void) _swigerr;
     }
     croak(_swigerr);
+}
+
+
+XS(_wrap_new_Partial__SWIG_1) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        Partial *arg1 = 0 ;
+        Partial *result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 1) || (items > 1)) {
+            SWIG_croak("Usage: new_Partial(Partial const &);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_Partial,0) < 0) {
+                SWIG_croak("Type error in argument 1 of new_Partial. Expected _p_Partial");
+            }
+        }
+        {
+            try
+            {
+                result = (Partial *)new Partial((Partial const &)*arg1);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_Partial,0);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_new_Partial) {
+    dXSARGS;
+    
+    if (items == 0) {
+        (*PL_markstack_ptr++);SWIG_CALLXS(_wrap_new_Partial__SWIG_0); return;
+    }
+    if (items == 1) {
+        int _v;
+        {
+            void *tmp;
+            if (SWIG_ConvertPtr(ST(0), (void **) &tmp, SWIGTYPE_p_Partial, 0) == -1) {
+                _v = 0;
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            (*PL_markstack_ptr++);SWIG_CALLXS(_wrap_new_Partial__SWIG_1); return;
+        }
+    }
+    
+    croak("No matching function for overloaded 'new_Partial'");
+    XSRETURN(0);
 }
 
 
@@ -7426,7 +7601,7 @@ XS(_wrap_Partial_label) {
         {
             try
             {
-                result = (int)((Partial const *)arg1)->label();
+                result = (int)(arg1)->label();
                 
             }
             catch( Loris::Exception & ex ) 
@@ -7474,7 +7649,7 @@ XS(_wrap_Partial_initialPhase) {
         {
             try
             {
-                result = (double)((Partial const *)arg1)->initialPhase();
+                result = (double)(arg1)->initialPhase();
                 
             }
             catch( Loris::Exception & ex ) 
@@ -7522,7 +7697,7 @@ XS(_wrap_Partial_startTime) {
         {
             try
             {
-                result = (double)((Partial const *)arg1)->startTime();
+                result = (double)(arg1)->startTime();
                 
             }
             catch( Loris::Exception & ex ) 
@@ -7570,7 +7745,7 @@ XS(_wrap_Partial_endTime) {
         {
             try
             {
-                result = (double)((Partial const *)arg1)->endTime();
+                result = (double)(arg1)->endTime();
                 
             }
             catch( Loris::Exception & ex ) 
@@ -7618,7 +7793,7 @@ XS(_wrap_Partial_duration) {
         {
             try
             {
-                result = (double)((Partial const *)arg1)->duration();
+                result = (double)(arg1)->duration();
                 
             }
             catch( Loris::Exception & ex ) 
@@ -7666,7 +7841,7 @@ XS(_wrap_Partial_numBreakpoints) {
         {
             try
             {
-                result = (long)((Partial const *)arg1)->numBreakpoints();
+                result = (long)(arg1)->numBreakpoints();
                 
             }
             catch( Loris::Exception & ex ) 
@@ -7716,6 +7891,310 @@ XS(_wrap_Partial_setLabel) {
             try
             {
                 (arg1)->setLabel(arg2);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_Partial_frequencyAt) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        Partial *arg1 = (Partial *) 0 ;
+        double arg2 ;
+        double result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 2) || (items > 2)) {
+            SWIG_croak("Usage: Partial_frequencyAt(self,time);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_Partial,0) < 0) {
+                SWIG_croak("Type error in argument 1 of Partial_frequencyAt. Expected _p_Partial");
+            }
+        }
+        arg2 = (double) SvNV(ST(1));
+        
+        {
+            try
+            {
+                result = (double)(arg1)->frequencyAt(arg2);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        sv_setnv(ST(argvi++), (double) result);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_Partial_amplitudeAt) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        Partial *arg1 = (Partial *) 0 ;
+        double arg2 ;
+        double result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 2) || (items > 2)) {
+            SWIG_croak("Usage: Partial_amplitudeAt(self,time);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_Partial,0) < 0) {
+                SWIG_croak("Type error in argument 1 of Partial_amplitudeAt. Expected _p_Partial");
+            }
+        }
+        arg2 = (double) SvNV(ST(1));
+        
+        {
+            try
+            {
+                result = (double)(arg1)->amplitudeAt(arg2);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        sv_setnv(ST(argvi++), (double) result);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_Partial_bandwidthAt) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        Partial *arg1 = (Partial *) 0 ;
+        double arg2 ;
+        double result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 2) || (items > 2)) {
+            SWIG_croak("Usage: Partial_bandwidthAt(self,time);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_Partial,0) < 0) {
+                SWIG_croak("Type error in argument 1 of Partial_bandwidthAt. Expected _p_Partial");
+            }
+        }
+        arg2 = (double) SvNV(ST(1));
+        
+        {
+            try
+            {
+                result = (double)(arg1)->bandwidthAt(arg2);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        sv_setnv(ST(argvi++), (double) result);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_Partial_phaseAt) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        Partial *arg1 = (Partial *) 0 ;
+        double arg2 ;
+        double result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 2) || (items > 2)) {
+            SWIG_croak("Usage: Partial_phaseAt(self,time);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_Partial,0) < 0) {
+                SWIG_croak("Type error in argument 1 of Partial_phaseAt. Expected _p_Partial");
+            }
+        }
+        arg2 = (double) SvNV(ST(1));
+        
+        {
+            try
+            {
+                result = (double)(arg1)->phaseAt(arg2);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        sv_setnv(ST(argvi++), (double) result);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_Partial_iterator) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        Partial *arg1 = (Partial *) 0 ;
+        NewPartialIterator *result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 1) || (items > 1)) {
+            SWIG_croak("Usage: Partial_iterator(self);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_Partial,0) < 0) {
+                SWIG_croak("Type error in argument 1 of Partial_iterator. Expected _p_Partial");
+            }
+        }
+        {
+            try
+            {
+                result = (NewPartialIterator *)Partial_iterator(arg1);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_NewPartialIterator,0);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_Partial_erase__SWIG_0) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        Partial *arg1 = (Partial *) 0 ;
+        BreakpointPosition *arg2 = (BreakpointPosition *) 0 ;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 2) || (items > 2)) {
+            SWIG_croak("Usage: Partial_erase(self,pos);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_Partial,0) < 0) {
+                SWIG_croak("Type error in argument 1 of Partial_erase. Expected _p_Partial");
+            }
+        }
+        {
+            if (SWIG_ConvertPtr(ST(1), (void **) &arg2, SWIGTYPE_p_BreakpointPosition,0) < 0) {
+                SWIG_croak("Type error in argument 2 of Partial_erase. Expected _p_BreakpointPosition");
+            }
+        }
+        {
+            try
+            {
+                Partial_erase__SWIG_0(arg1,arg2);
                 
             }
             catch( Loris::Exception & ex ) 
@@ -7844,27 +8323,32 @@ XS(_wrap_Partial_end) {
 }
 
 
-XS(_wrap_Partial_iterator) {
+XS(_wrap_Partial_erase__SWIG_1) {
     char _swigmsg[SWIG_MAX_ERRMSG] = "";
     const char *_swigerr = _swigmsg;
     {
         Partial *arg1 = (Partial *) 0 ;
-        NewPartialIterator *result;
+        PartialIterator *arg2 = 0 ;
         int argvi = 0;
         dXSARGS;
         
-        if ((items < 1) || (items > 1)) {
-            SWIG_croak("Usage: Partial_iterator(self);");
+        if ((items < 2) || (items > 2)) {
+            SWIG_croak("Usage: Partial_erase(self,pos);");
         }
         {
             if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_Partial,0) < 0) {
-                SWIG_croak("Type error in argument 1 of Partial_iterator. Expected _p_Partial");
+                SWIG_croak("Type error in argument 1 of Partial_erase. Expected _p_Partial");
+            }
+        }
+        {
+            if (SWIG_ConvertPtr(ST(1), (void **) &arg2, SWIGTYPE_p_PartialIterator,0) < 0) {
+                SWIG_croak("Type error in argument 2 of Partial_erase. Expected _p_PartialIterator");
             }
         }
         {
             try
             {
-                result = (NewPartialIterator *)Partial_iterator(arg1);
+                (arg1)->erase(*arg2);
                 
             }
             catch( Loris::Exception & ex ) 
@@ -7882,13 +8366,69 @@ XS(_wrap_Partial_iterator) {
                 SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
             }
         }
-        ST(argvi) = sv_newmortal();
-        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_NewPartialIterator,0);
+        
         XSRETURN(argvi);
         fail:
         (void) _swigerr;
     }
     croak(_swigerr);
+}
+
+
+XS(_wrap_Partial_erase) {
+    dXSARGS;
+    
+    if (items == 2) {
+        int _v;
+        {
+            void *tmp;
+            if (SWIG_ConvertPtr(ST(0), (void **) &tmp, SWIGTYPE_p_Partial, 0) == -1) {
+                _v = 0;
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *tmp;
+                if (SWIG_ConvertPtr(ST(1), (void **) &tmp, SWIGTYPE_p_BreakpointPosition, 0) == -1) {
+                    _v = 0;
+                }else {
+                    _v = 1;
+                }
+            }
+            if (_v) {
+                (*PL_markstack_ptr++);SWIG_CALLXS(_wrap_Partial_erase__SWIG_0); return;
+            }
+        }
+    }
+    if (items == 2) {
+        int _v;
+        {
+            void *tmp;
+            if (SWIG_ConvertPtr(ST(0), (void **) &tmp, SWIGTYPE_p_Partial, 0) == -1) {
+                _v = 0;
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *tmp;
+                if (SWIG_ConvertPtr(ST(1), (void **) &tmp, SWIGTYPE_p_PartialIterator, 0) == -1) {
+                    _v = 0;
+                }else {
+                    _v = 1;
+                }
+            }
+            if (_v) {
+                (*PL_markstack_ptr++);SWIG_CALLXS(_wrap_Partial_erase__SWIG_1); return;
+            }
+        }
+    }
+    
+    croak("No matching function for overloaded 'Partial_erase'");
+    XSRETURN(0);
 }
 
 
@@ -8060,371 +8600,6 @@ XS(_wrap_Partial_findNearest) {
 }
 
 
-XS(_wrap_Partial_erase__SWIG_0) {
-    char _swigmsg[SWIG_MAX_ERRMSG] = "";
-    const char *_swigerr = _swigmsg;
-    {
-        Partial *arg1 = (Partial *) 0 ;
-        PartialIterator *arg2 = 0 ;
-        int argvi = 0;
-        dXSARGS;
-        
-        if ((items < 2) || (items > 2)) {
-            SWIG_croak("Usage: Partial_erase(self,pos);");
-        }
-        {
-            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_Partial,0) < 0) {
-                SWIG_croak("Type error in argument 1 of Partial_erase. Expected _p_Partial");
-            }
-        }
-        {
-            if (SWIG_ConvertPtr(ST(1), (void **) &arg2, SWIGTYPE_p_PartialIterator,0) < 0) {
-                SWIG_croak("Type error in argument 2 of Partial_erase. Expected _p_PartialIterator");
-            }
-        }
-        {
-            try
-            {
-                (arg1)->erase(*arg2);
-                
-            }
-            catch( Loris::Exception & ex ) 
-            {
-                //	catch Loris::Exceptions:
-                std::string s("Loris exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-            catch( std::exception & ex ) 
-            {
-                //	catch std::exceptions:
-                std::string s("std C++ exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-        }
-        
-        XSRETURN(argvi);
-        fail:
-        (void) _swigerr;
-    }
-    croak(_swigerr);
-}
-
-
-XS(_wrap_Partial_erase__SWIG_1) {
-    char _swigmsg[SWIG_MAX_ERRMSG] = "";
-    const char *_swigerr = _swigmsg;
-    {
-        Partial *arg1 = (Partial *) 0 ;
-        BreakpointPosition *arg2 = (BreakpointPosition *) 0 ;
-        int argvi = 0;
-        dXSARGS;
-        
-        if ((items < 2) || (items > 2)) {
-            SWIG_croak("Usage: Partial_erase(self,pos);");
-        }
-        {
-            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_Partial,0) < 0) {
-                SWIG_croak("Type error in argument 1 of Partial_erase. Expected _p_Partial");
-            }
-        }
-        {
-            if (SWIG_ConvertPtr(ST(1), (void **) &arg2, SWIGTYPE_p_BreakpointPosition,0) < 0) {
-                SWIG_croak("Type error in argument 2 of Partial_erase. Expected _p_BreakpointPosition");
-            }
-        }
-        {
-            try
-            {
-                Partial_erase__SWIG_1(arg1,arg2);
-                
-            }
-            catch( Loris::Exception & ex ) 
-            {
-                //	catch Loris::Exceptions:
-                std::string s("Loris exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-            catch( std::exception & ex ) 
-            {
-                //	catch std::exceptions:
-                std::string s("std C++ exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-        }
-        
-        XSRETURN(argvi);
-        fail:
-        (void) _swigerr;
-    }
-    croak(_swigerr);
-}
-
-
-XS(_wrap_Partial_erase) {
-    dXSARGS;
-    
-    if (items == 2) {
-        int _v;
-        {
-            void *tmp;
-            if (SWIG_ConvertPtr(ST(0), (void **) &tmp, SWIGTYPE_p_Partial, 0) == -1) {
-                _v = 0;
-            }else {
-                _v = 1;
-            }
-        }
-        if (_v) {
-            {
-                void *tmp;
-                if (SWIG_ConvertPtr(ST(1), (void **) &tmp, SWIGTYPE_p_PartialIterator, 0) == -1) {
-                    _v = 0;
-                }else {
-                    _v = 1;
-                }
-            }
-            if (_v) {
-                (*PL_markstack_ptr++);SWIG_CALLXS(_wrap_Partial_erase__SWIG_0); return;
-            }
-        }
-    }
-    if (items == 2) {
-        int _v;
-        {
-            void *tmp;
-            if (SWIG_ConvertPtr(ST(0), (void **) &tmp, SWIGTYPE_p_Partial, 0) == -1) {
-                _v = 0;
-            }else {
-                _v = 1;
-            }
-        }
-        if (_v) {
-            {
-                void *tmp;
-                if (SWIG_ConvertPtr(ST(1), (void **) &tmp, SWIGTYPE_p_BreakpointPosition, 0) == -1) {
-                    _v = 0;
-                }else {
-                    _v = 1;
-                }
-            }
-            if (_v) {
-                (*PL_markstack_ptr++);SWIG_CALLXS(_wrap_Partial_erase__SWIG_1); return;
-            }
-        }
-    }
-    
-    croak("No matching function for overloaded 'Partial_erase'");
-    XSRETURN(0);
-}
-
-
-XS(_wrap_Partial_frequencyAt) {
-    char _swigmsg[SWIG_MAX_ERRMSG] = "";
-    const char *_swigerr = _swigmsg;
-    {
-        Partial *arg1 = (Partial *) 0 ;
-        double arg2 ;
-        double result;
-        int argvi = 0;
-        dXSARGS;
-        
-        if ((items < 2) || (items > 2)) {
-            SWIG_croak("Usage: Partial_frequencyAt(self,time);");
-        }
-        {
-            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_Partial,0) < 0) {
-                SWIG_croak("Type error in argument 1 of Partial_frequencyAt. Expected _p_Partial");
-            }
-        }
-        arg2 = (double) SvNV(ST(1));
-        
-        {
-            try
-            {
-                result = (double)((Partial const *)arg1)->frequencyAt(arg2);
-                
-            }
-            catch( Loris::Exception & ex ) 
-            {
-                //	catch Loris::Exceptions:
-                std::string s("Loris exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-            catch( std::exception & ex ) 
-            {
-                //	catch std::exceptions:
-                std::string s("std C++ exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-        }
-        ST(argvi) = sv_newmortal();
-        sv_setnv(ST(argvi++), (double) result);
-        XSRETURN(argvi);
-        fail:
-        (void) _swigerr;
-    }
-    croak(_swigerr);
-}
-
-
-XS(_wrap_Partial_amplitudeAt) {
-    char _swigmsg[SWIG_MAX_ERRMSG] = "";
-    const char *_swigerr = _swigmsg;
-    {
-        Partial *arg1 = (Partial *) 0 ;
-        double arg2 ;
-        double result;
-        int argvi = 0;
-        dXSARGS;
-        
-        if ((items < 2) || (items > 2)) {
-            SWIG_croak("Usage: Partial_amplitudeAt(self,time);");
-        }
-        {
-            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_Partial,0) < 0) {
-                SWIG_croak("Type error in argument 1 of Partial_amplitudeAt. Expected _p_Partial");
-            }
-        }
-        arg2 = (double) SvNV(ST(1));
-        
-        {
-            try
-            {
-                result = (double)((Partial const *)arg1)->amplitudeAt(arg2);
-                
-            }
-            catch( Loris::Exception & ex ) 
-            {
-                //	catch Loris::Exceptions:
-                std::string s("Loris exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-            catch( std::exception & ex ) 
-            {
-                //	catch std::exceptions:
-                std::string s("std C++ exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-        }
-        ST(argvi) = sv_newmortal();
-        sv_setnv(ST(argvi++), (double) result);
-        XSRETURN(argvi);
-        fail:
-        (void) _swigerr;
-    }
-    croak(_swigerr);
-}
-
-
-XS(_wrap_Partial_bandwidthAt) {
-    char _swigmsg[SWIG_MAX_ERRMSG] = "";
-    const char *_swigerr = _swigmsg;
-    {
-        Partial *arg1 = (Partial *) 0 ;
-        double arg2 ;
-        double result;
-        int argvi = 0;
-        dXSARGS;
-        
-        if ((items < 2) || (items > 2)) {
-            SWIG_croak("Usage: Partial_bandwidthAt(self,time);");
-        }
-        {
-            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_Partial,0) < 0) {
-                SWIG_croak("Type error in argument 1 of Partial_bandwidthAt. Expected _p_Partial");
-            }
-        }
-        arg2 = (double) SvNV(ST(1));
-        
-        {
-            try
-            {
-                result = (double)((Partial const *)arg1)->bandwidthAt(arg2);
-                
-            }
-            catch( Loris::Exception & ex ) 
-            {
-                //	catch Loris::Exceptions:
-                std::string s("Loris exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-            catch( std::exception & ex ) 
-            {
-                //	catch std::exceptions:
-                std::string s("std C++ exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-        }
-        ST(argvi) = sv_newmortal();
-        sv_setnv(ST(argvi++), (double) result);
-        XSRETURN(argvi);
-        fail:
-        (void) _swigerr;
-    }
-    croak(_swigerr);
-}
-
-
-XS(_wrap_Partial_phaseAt) {
-    char _swigmsg[SWIG_MAX_ERRMSG] = "";
-    const char *_swigerr = _swigmsg;
-    {
-        Partial *arg1 = (Partial *) 0 ;
-        double arg2 ;
-        double result;
-        int argvi = 0;
-        dXSARGS;
-        
-        if ((items < 2) || (items > 2)) {
-            SWIG_croak("Usage: Partial_phaseAt(self,time);");
-        }
-        {
-            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_Partial,0) < 0) {
-                SWIG_croak("Type error in argument 1 of Partial_phaseAt. Expected _p_Partial");
-            }
-        }
-        arg2 = (double) SvNV(ST(1));
-        
-        {
-            try
-            {
-                result = (double)((Partial const *)arg1)->phaseAt(arg2);
-                
-            }
-            catch( Loris::Exception & ex ) 
-            {
-                //	catch Loris::Exceptions:
-                std::string s("Loris exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-            catch( std::exception & ex ) 
-            {
-                //	catch std::exceptions:
-                std::string s("std C++ exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-        }
-        ST(argvi) = sv_newmortal();
-        sv_setnv(ST(argvi++), (double) result);
-        XSRETURN(argvi);
-        fail:
-        (void) _swigerr;
-    }
-    croak(_swigerr);
-}
-
-
 XS(_wrap_Partial_copy) {
     char _swigmsg[SWIG_MAX_ERRMSG] = "";
     const char *_swigerr = _swigmsg;
@@ -8519,438 +8694,6 @@ XS(_wrap_Partial_equals) {
         }
         ST(argvi) = sv_newmortal();
         sv_setiv(ST(argvi++), (IV) result);
-        XSRETURN(argvi);
-        fail:
-        (void) _swigerr;
-    }
-    croak(_swigerr);
-}
-
-
-XS(_wrap_PartialIterator_time) {
-    char _swigmsg[SWIG_MAX_ERRMSG] = "";
-    const char *_swigerr = _swigmsg;
-    {
-        PartialIterator *arg1 = (PartialIterator *) 0 ;
-        double result;
-        int argvi = 0;
-        dXSARGS;
-        
-        if ((items < 1) || (items > 1)) {
-            SWIG_croak("Usage: PartialIterator_time(self);");
-        }
-        {
-            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialIterator,0) < 0) {
-                SWIG_croak("Type error in argument 1 of PartialIterator_time. Expected _p_PartialIterator");
-            }
-        }
-        {
-            try
-            {
-                result = (double)((PartialIterator const *)arg1)->time();
-                
-            }
-            catch( Loris::Exception & ex ) 
-            {
-                //	catch Loris::Exceptions:
-                std::string s("Loris exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-            catch( std::exception & ex ) 
-            {
-                //	catch std::exceptions:
-                std::string s("std C++ exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-        }
-        ST(argvi) = sv_newmortal();
-        sv_setnv(ST(argvi++), (double) result);
-        XSRETURN(argvi);
-        fail:
-        (void) _swigerr;
-    }
-    croak(_swigerr);
-}
-
-
-XS(_wrap_PartialIterator_breakpoint) {
-    char _swigmsg[SWIG_MAX_ERRMSG] = "";
-    const char *_swigerr = _swigmsg;
-    {
-        PartialIterator *arg1 = (PartialIterator *) 0 ;
-        Breakpoint *result;
-        int argvi = 0;
-        dXSARGS;
-        
-        if ((items < 1) || (items > 1)) {
-            SWIG_croak("Usage: PartialIterator_breakpoint(self);");
-        }
-        {
-            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialIterator,0) < 0) {
-                SWIG_croak("Type error in argument 1 of PartialIterator_breakpoint. Expected _p_PartialIterator");
-            }
-        }
-        {
-            try
-            {
-                result = (Breakpoint *)PartialIterator_breakpoint(arg1);
-                
-            }
-            catch( Loris::Exception & ex ) 
-            {
-                //	catch Loris::Exceptions:
-                std::string s("Loris exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-            catch( std::exception & ex ) 
-            {
-                //	catch std::exceptions:
-                std::string s("std C++ exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-        }
-        ST(argvi) = sv_newmortal();
-        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_Breakpoint,0);
-        XSRETURN(argvi);
-        fail:
-        (void) _swigerr;
-    }
-    croak(_swigerr);
-}
-
-
-XS(_wrap_PartialIterator_copy) {
-    char _swigmsg[SWIG_MAX_ERRMSG] = "";
-    const char *_swigerr = _swigmsg;
-    {
-        PartialIterator *arg1 = (PartialIterator *) 0 ;
-        PartialIterator *result;
-        int argvi = 0;
-        dXSARGS;
-        
-        if ((items < 1) || (items > 1)) {
-            SWIG_croak("Usage: PartialIterator_copy(self);");
-        }
-        {
-            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialIterator,0) < 0) {
-                SWIG_croak("Type error in argument 1 of PartialIterator_copy. Expected _p_PartialIterator");
-            }
-        }
-        {
-            try
-            {
-                result = (PartialIterator *)PartialIterator_copy(arg1);
-                
-            }
-            catch( Loris::Exception & ex ) 
-            {
-                //	catch Loris::Exceptions:
-                std::string s("Loris exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-            catch( std::exception & ex ) 
-            {
-                //	catch std::exceptions:
-                std::string s("std C++ exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-        }
-        ST(argvi) = sv_newmortal();
-        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_PartialIterator,0);
-        XSRETURN(argvi);
-        fail:
-        (void) _swigerr;
-    }
-    croak(_swigerr);
-}
-
-
-XS(_wrap_PartialIterator_next) {
-    char _swigmsg[SWIG_MAX_ERRMSG] = "";
-    const char *_swigerr = _swigmsg;
-    {
-        PartialIterator *arg1 = (PartialIterator *) 0 ;
-        PartialIterator *result;
-        int argvi = 0;
-        dXSARGS;
-        
-        if ((items < 1) || (items > 1)) {
-            SWIG_croak("Usage: PartialIterator_next(self);");
-        }
-        {
-            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialIterator,0) < 0) {
-                SWIG_croak("Type error in argument 1 of PartialIterator_next. Expected _p_PartialIterator");
-            }
-        }
-        {
-            char * err;
-            clear_exception();
-            result = (PartialIterator *)PartialIterator_next(arg1);
-            
-            if ((err = check_exception()))
-            {
-                SWIG_exception( SWIG_ValueError, err );
-                
-            }
-        }
-        ST(argvi) = sv_newmortal();
-        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_PartialIterator,0);
-        XSRETURN(argvi);
-        fail:
-        (void) _swigerr;
-    }
-    croak(_swigerr);
-}
-
-
-XS(_wrap_PartialIterator_prev) {
-    char _swigmsg[SWIG_MAX_ERRMSG] = "";
-    const char *_swigerr = _swigmsg;
-    {
-        PartialIterator *arg1 = (PartialIterator *) 0 ;
-        PartialIterator *result;
-        int argvi = 0;
-        dXSARGS;
-        
-        if ((items < 1) || (items > 1)) {
-            SWIG_croak("Usage: PartialIterator_prev(self);");
-        }
-        {
-            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialIterator,0) < 0) {
-                SWIG_croak("Type error in argument 1 of PartialIterator_prev. Expected _p_PartialIterator");
-            }
-        }
-        {
-            try
-            {
-                result = (PartialIterator *)PartialIterator_prev(arg1);
-                
-            }
-            catch( Loris::Exception & ex ) 
-            {
-                //	catch Loris::Exceptions:
-                std::string s("Loris exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-            catch( std::exception & ex ) 
-            {
-                //	catch std::exceptions:
-                std::string s("std C++ exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-        }
-        ST(argvi) = sv_newmortal();
-        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_PartialIterator,0);
-        XSRETURN(argvi);
-        fail:
-        (void) _swigerr;
-    }
-    croak(_swigerr);
-}
-
-
-XS(_wrap_PartialIterator_equals) {
-    char _swigmsg[SWIG_MAX_ERRMSG] = "";
-    const char *_swigerr = _swigmsg;
-    {
-        PartialIterator *arg1 = (PartialIterator *) 0 ;
-        PartialIterator *arg2 = (PartialIterator *) 0 ;
-        int result;
-        int argvi = 0;
-        dXSARGS;
-        
-        if ((items < 2) || (items > 2)) {
-            SWIG_croak("Usage: PartialIterator_equals(self,other);");
-        }
-        {
-            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialIterator,0) < 0) {
-                SWIG_croak("Type error in argument 1 of PartialIterator_equals. Expected _p_PartialIterator");
-            }
-        }
-        {
-            if (SWIG_ConvertPtr(ST(1), (void **) &arg2, SWIGTYPE_p_PartialIterator,0) < 0) {
-                SWIG_croak("Type error in argument 2 of PartialIterator_equals. Expected _p_PartialIterator");
-            }
-        }
-        {
-            try
-            {
-                result = (int)PartialIterator_equals(arg1,arg2);
-                
-            }
-            catch( Loris::Exception & ex ) 
-            {
-                //	catch Loris::Exceptions:
-                std::string s("Loris exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-            catch( std::exception & ex ) 
-            {
-                //	catch std::exceptions:
-                std::string s("std C++ exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-        }
-        ST(argvi) = sv_newmortal();
-        sv_setiv(ST(argvi++), (IV) result);
-        XSRETURN(argvi);
-        fail:
-        (void) _swigerr;
-    }
-    croak(_swigerr);
-}
-
-
-XS(_wrap_PartialIterator_isInRange) {
-    char _swigmsg[SWIG_MAX_ERRMSG] = "";
-    const char *_swigerr = _swigmsg;
-    {
-        PartialIterator *arg1 = (PartialIterator *) 0 ;
-        PartialIterator *arg2 = (PartialIterator *) 0 ;
-        PartialIterator *arg3 = (PartialIterator *) 0 ;
-        int result;
-        int argvi = 0;
-        dXSARGS;
-        
-        if ((items < 3) || (items > 3)) {
-            SWIG_croak("Usage: PartialIterator_isInRange(self,begin,end);");
-        }
-        {
-            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialIterator,0) < 0) {
-                SWIG_croak("Type error in argument 1 of PartialIterator_isInRange. Expected _p_PartialIterator");
-            }
-        }
-        {
-            if (SWIG_ConvertPtr(ST(1), (void **) &arg2, SWIGTYPE_p_PartialIterator,0) < 0) {
-                SWIG_croak("Type error in argument 2 of PartialIterator_isInRange. Expected _p_PartialIterator");
-            }
-        }
-        {
-            if (SWIG_ConvertPtr(ST(2), (void **) &arg3, SWIGTYPE_p_PartialIterator,0) < 0) {
-                SWIG_croak("Type error in argument 3 of PartialIterator_isInRange. Expected _p_PartialIterator");
-            }
-        }
-        {
-            try
-            {
-                result = (int)PartialIterator_isInRange(arg1,(PartialIterator const *)arg2,(PartialIterator const *)arg3);
-                
-            }
-            catch( Loris::Exception & ex ) 
-            {
-                //	catch Loris::Exceptions:
-                std::string s("Loris exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-            catch( std::exception & ex ) 
-            {
-                //	catch std::exceptions:
-                std::string s("std C++ exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-        }
-        ST(argvi) = sv_newmortal();
-        sv_setiv(ST(argvi++), (IV) result);
-        XSRETURN(argvi);
-        fail:
-        (void) _swigerr;
-    }
-    croak(_swigerr);
-}
-
-
-XS(_wrap_new_PartialIterator) {
-    char _swigmsg[SWIG_MAX_ERRMSG] = "";
-    const char *_swigerr = _swigmsg;
-    {
-        PartialIterator *result;
-        int argvi = 0;
-        dXSARGS;
-        
-        if ((items < 0) || (items > 0)) {
-            SWIG_croak("Usage: new_PartialIterator();");
-        }
-        {
-            try
-            {
-                result = (PartialIterator *)new PartialIterator();
-                
-            }
-            catch( Loris::Exception & ex ) 
-            {
-                //	catch Loris::Exceptions:
-                std::string s("Loris exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-            catch( std::exception & ex ) 
-            {
-                //	catch std::exceptions:
-                std::string s("std C++ exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-        }
-        ST(argvi) = sv_newmortal();
-        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_PartialIterator,0);
-        XSRETURN(argvi);
-        fail:
-        (void) _swigerr;
-    }
-    croak(_swigerr);
-}
-
-
-XS(_wrap_delete_PartialIterator) {
-    char _swigmsg[SWIG_MAX_ERRMSG] = "";
-    const char *_swigerr = _swigmsg;
-    {
-        PartialIterator *arg1 = (PartialIterator *) 0 ;
-        int argvi = 0;
-        dXSARGS;
-        
-        if ((items < 1) || (items > 1)) {
-            SWIG_croak("Usage: delete_PartialIterator(self);");
-        }
-        {
-            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialIterator,0) < 0) {
-                SWIG_croak("Type error in argument 1 of delete_PartialIterator. Expected _p_PartialIterator");
-            }
-        }
-        {
-            try
-            {
-                delete arg1;
-                
-            }
-            catch( Loris::Exception & ex ) 
-            {
-                //	catch Loris::Exceptions:
-                std::string s("Loris exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-            catch( std::exception & ex ) 
-            {
-                //	catch std::exceptions:
-                std::string s("std C++ exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-        }
-        
         XSRETURN(argvi);
         fail:
         (void) _swigerr;
@@ -10133,6 +9876,822 @@ XS(_wrap_BreakpointPosition_setPhase) {
 }
 
 
+XS(_wrap_PartialIterator_time) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        PartialIterator *arg1 = (PartialIterator *) 0 ;
+        double result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 1) || (items > 1)) {
+            SWIG_croak("Usage: PartialIterator_time(self);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialIterator,0) < 0) {
+                SWIG_croak("Type error in argument 1 of PartialIterator_time. Expected _p_PartialIterator");
+            }
+        }
+        {
+            try
+            {
+                result = (double)((PartialIterator const *)arg1)->time();
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        sv_setnv(ST(argvi++), (double) result);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_PartialIterator_breakpoint) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        PartialIterator *arg1 = (PartialIterator *) 0 ;
+        Breakpoint *result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 1) || (items > 1)) {
+            SWIG_croak("Usage: PartialIterator_breakpoint(self);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialIterator,0) < 0) {
+                SWIG_croak("Type error in argument 1 of PartialIterator_breakpoint. Expected _p_PartialIterator");
+            }
+        }
+        {
+            try
+            {
+                result = (Breakpoint *)PartialIterator_breakpoint(arg1);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_Breakpoint,0);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_PartialIterator_copy) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        PartialIterator *arg1 = (PartialIterator *) 0 ;
+        PartialIterator *result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 1) || (items > 1)) {
+            SWIG_croak("Usage: PartialIterator_copy(self);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialIterator,0) < 0) {
+                SWIG_croak("Type error in argument 1 of PartialIterator_copy. Expected _p_PartialIterator");
+            }
+        }
+        {
+            try
+            {
+                result = (PartialIterator *)PartialIterator_copy(arg1);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_PartialIterator,0);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_PartialIterator_next) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        PartialIterator *arg1 = (PartialIterator *) 0 ;
+        PartialIterator *result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 1) || (items > 1)) {
+            SWIG_croak("Usage: PartialIterator_next(self);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialIterator,0) < 0) {
+                SWIG_croak("Type error in argument 1 of PartialIterator_next. Expected _p_PartialIterator");
+            }
+        }
+        {
+            char * err;
+            clear_exception();
+            result = (PartialIterator *)PartialIterator_next(arg1);
+            
+            if ((err = check_exception()))
+            {
+                SWIG_exception( SWIG_ValueError, err );
+                
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_PartialIterator,0);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_PartialIterator_prev) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        PartialIterator *arg1 = (PartialIterator *) 0 ;
+        PartialIterator *result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 1) || (items > 1)) {
+            SWIG_croak("Usage: PartialIterator_prev(self);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialIterator,0) < 0) {
+                SWIG_croak("Type error in argument 1 of PartialIterator_prev. Expected _p_PartialIterator");
+            }
+        }
+        {
+            try
+            {
+                result = (PartialIterator *)PartialIterator_prev(arg1);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_PartialIterator,0);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_PartialIterator_equals) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        PartialIterator *arg1 = (PartialIterator *) 0 ;
+        PartialIterator *arg2 = (PartialIterator *) 0 ;
+        int result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 2) || (items > 2)) {
+            SWIG_croak("Usage: PartialIterator_equals(self,other);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialIterator,0) < 0) {
+                SWIG_croak("Type error in argument 1 of PartialIterator_equals. Expected _p_PartialIterator");
+            }
+        }
+        {
+            if (SWIG_ConvertPtr(ST(1), (void **) &arg2, SWIGTYPE_p_PartialIterator,0) < 0) {
+                SWIG_croak("Type error in argument 2 of PartialIterator_equals. Expected _p_PartialIterator");
+            }
+        }
+        {
+            try
+            {
+                result = (int)PartialIterator_equals(arg1,arg2);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        sv_setiv(ST(argvi++), (IV) result);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_PartialIterator_isInRange) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        PartialIterator *arg1 = (PartialIterator *) 0 ;
+        PartialIterator *arg2 = (PartialIterator *) 0 ;
+        PartialIterator *arg3 = (PartialIterator *) 0 ;
+        int result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 3) || (items > 3)) {
+            SWIG_croak("Usage: PartialIterator_isInRange(self,begin,end);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialIterator,0) < 0) {
+                SWIG_croak("Type error in argument 1 of PartialIterator_isInRange. Expected _p_PartialIterator");
+            }
+        }
+        {
+            if (SWIG_ConvertPtr(ST(1), (void **) &arg2, SWIGTYPE_p_PartialIterator,0) < 0) {
+                SWIG_croak("Type error in argument 2 of PartialIterator_isInRange. Expected _p_PartialIterator");
+            }
+        }
+        {
+            if (SWIG_ConvertPtr(ST(2), (void **) &arg3, SWIGTYPE_p_PartialIterator,0) < 0) {
+                SWIG_croak("Type error in argument 3 of PartialIterator_isInRange. Expected _p_PartialIterator");
+            }
+        }
+        {
+            try
+            {
+                result = (int)PartialIterator_isInRange(arg1,(PartialIterator const *)arg2,(PartialIterator const *)arg3);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        sv_setiv(ST(argvi++), (IV) result);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_new_PartialIterator) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        PartialIterator *result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 0) || (items > 0)) {
+            SWIG_croak("Usage: new_PartialIterator();");
+        }
+        {
+            try
+            {
+                result = (PartialIterator *)new PartialIterator();
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_PartialIterator,0);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_delete_PartialIterator) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        PartialIterator *arg1 = (PartialIterator *) 0 ;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 1) || (items > 1)) {
+            SWIG_croak("Usage: delete_PartialIterator(self);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialIterator,0) < 0) {
+                SWIG_croak("Type error in argument 1 of delete_PartialIterator. Expected _p_PartialIterator");
+            }
+        }
+        {
+            try
+            {
+                delete arg1;
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_PartialListIterator_copy) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        PartialListIterator *arg1 = (PartialListIterator *) 0 ;
+        PartialListIterator *result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 1) || (items > 1)) {
+            SWIG_croak("Usage: PartialListIterator_copy(self);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialListIterator,0) < 0) {
+                SWIG_croak("Type error in argument 1 of PartialListIterator_copy. Expected _p_PartialListIterator");
+            }
+        }
+        {
+            try
+            {
+                result = (PartialListIterator *)PartialListIterator_copy(arg1);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_PartialListIterator,0);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_PartialListIterator_next) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        PartialListIterator *arg1 = (PartialListIterator *) 0 ;
+        PartialListIterator *result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 1) || (items > 1)) {
+            SWIG_croak("Usage: PartialListIterator_next(self);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialListIterator,0) < 0) {
+                SWIG_croak("Type error in argument 1 of PartialListIterator_next. Expected _p_PartialListIterator");
+            }
+        }
+        {
+            char * err;
+            clear_exception();
+            result = (PartialListIterator *)PartialListIterator_next(arg1);
+            
+            if ((err = check_exception()))
+            {
+                SWIG_exception( SWIG_ValueError, err );
+                
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_PartialListIterator,0);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_PartialListIterator_prev) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        PartialListIterator *arg1 = (PartialListIterator *) 0 ;
+        PartialListIterator *result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 1) || (items > 1)) {
+            SWIG_croak("Usage: PartialListIterator_prev(self);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialListIterator,0) < 0) {
+                SWIG_croak("Type error in argument 1 of PartialListIterator_prev. Expected _p_PartialListIterator");
+            }
+        }
+        {
+            try
+            {
+                result = (PartialListIterator *)PartialListIterator_prev(arg1);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_PartialListIterator,0);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_PartialListIterator_partial) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        PartialListIterator *arg1 = (PartialListIterator *) 0 ;
+        Partial *result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 1) || (items > 1)) {
+            SWIG_croak("Usage: PartialListIterator_partial(self);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialListIterator,0) < 0) {
+                SWIG_croak("Type error in argument 1 of PartialListIterator_partial. Expected _p_PartialListIterator");
+            }
+        }
+        {
+            try
+            {
+                result = (Partial *)PartialListIterator_partial(arg1);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_Partial,0);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_PartialListIterator_equals) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        PartialListIterator *arg1 = (PartialListIterator *) 0 ;
+        PartialListIterator *arg2 = (PartialListIterator *) 0 ;
+        int result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 2) || (items > 2)) {
+            SWIG_croak("Usage: PartialListIterator_equals(self,other);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialListIterator,0) < 0) {
+                SWIG_croak("Type error in argument 1 of PartialListIterator_equals. Expected _p_PartialListIterator");
+            }
+        }
+        {
+            if (SWIG_ConvertPtr(ST(1), (void **) &arg2, SWIGTYPE_p_PartialListIterator,0) < 0) {
+                SWIG_croak("Type error in argument 2 of PartialListIterator_equals. Expected _p_PartialListIterator");
+            }
+        }
+        {
+            try
+            {
+                result = (int)PartialListIterator_equals(arg1,arg2);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        sv_setiv(ST(argvi++), (IV) result);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_PartialListIterator_isInRange) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        PartialListIterator *arg1 = (PartialListIterator *) 0 ;
+        PartialListIterator *arg2 = (PartialListIterator *) 0 ;
+        PartialListIterator *arg3 = (PartialListIterator *) 0 ;
+        int result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 3) || (items > 3)) {
+            SWIG_croak("Usage: PartialListIterator_isInRange(self,begin,end);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialListIterator,0) < 0) {
+                SWIG_croak("Type error in argument 1 of PartialListIterator_isInRange. Expected _p_PartialListIterator");
+            }
+        }
+        {
+            if (SWIG_ConvertPtr(ST(1), (void **) &arg2, SWIGTYPE_p_PartialListIterator,0) < 0) {
+                SWIG_croak("Type error in argument 2 of PartialListIterator_isInRange. Expected _p_PartialListIterator");
+            }
+        }
+        {
+            if (SWIG_ConvertPtr(ST(2), (void **) &arg3, SWIGTYPE_p_PartialListIterator,0) < 0) {
+                SWIG_croak("Type error in argument 3 of PartialListIterator_isInRange. Expected _p_PartialListIterator");
+            }
+        }
+        {
+            try
+            {
+                result = (int)PartialListIterator_isInRange(arg1,(PartialListIterator const *)arg2,(PartialListIterator const *)arg3);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        sv_setiv(ST(argvi++), (IV) result);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_new_PartialListIterator) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        PartialListIterator *result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 0) || (items > 0)) {
+            SWIG_croak("Usage: new_PartialListIterator();");
+        }
+        {
+            try
+            {
+                result = (PartialListIterator *)new PartialListIterator();
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_PartialListIterator,0);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_delete_PartialListIterator) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        PartialListIterator *arg1 = (PartialListIterator *) 0 ;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 1) || (items > 1)) {
+            SWIG_croak("Usage: delete_PartialListIterator(self);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialListIterator,0) < 0) {
+                SWIG_croak("Type error in argument 1 of delete_PartialListIterator. Expected _p_PartialListIterator");
+            }
+        }
+        {
+            try
+            {
+                delete arg1;
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
 
 /* -------- TYPE CONVERSION AND EQUIVALENCE RULES (BEGIN) -------- */
 
@@ -10265,28 +10824,23 @@ static swig_command_info swig_commands[] = {
 {"perLoris::SampleVector_setAt", _wrap_SampleVector_setAt},
 {"perLoris::NewPlistIterator_atEnd", _wrap_NewPlistIterator_atEnd},
 {"perLoris::NewPlistIterator_next", _wrap_NewPlistIterator_next},
+{"perLoris::NewPlistIterator_partial", _wrap_NewPlistIterator_partial},
 {"perLoris::NewPartialIterator_atEnd", _wrap_NewPartialIterator_atEnd},
+{"perLoris::NewPartialIterator_hasNext", _wrap_NewPartialIterator_hasNext},
 {"perLoris::NewPartialIterator_next", _wrap_NewPartialIterator_next},
 {"perLoris::new_PartialList", _wrap_new_PartialList},
 {"perLoris::delete_PartialList", _wrap_delete_PartialList},
-{"perLoris::PartialList_copy", _wrap_PartialList_copy},
-{"perLoris::PartialList_timeSpan", _wrap_PartialList_timeSpan},
-{"perLoris::PartialList_iterator", _wrap_PartialList_iterator},
 {"perLoris::PartialList_clear", _wrap_PartialList_clear},
 {"perLoris::PartialList_size", _wrap_PartialList_size},
+{"perLoris::PartialList_timeSpan", _wrap_PartialList_timeSpan},
+{"perLoris::PartialList_iterator", _wrap_PartialList_iterator},
+{"perLoris::PartialList_append", _wrap_PartialList_append},
 {"perLoris::PartialList_begin", _wrap_PartialList_begin},
 {"perLoris::PartialList_end", _wrap_PartialList_end},
-{"perLoris::PartialList_insert", _wrap_PartialList_insert},
 {"perLoris::PartialList_erase", _wrap_PartialList_erase},
 {"perLoris::PartialList_splice", _wrap_PartialList_splice},
-{"perLoris::PartialListIterator_copy", _wrap_PartialListIterator_copy},
-{"perLoris::PartialListIterator_next", _wrap_PartialListIterator_next},
-{"perLoris::PartialListIterator_prev", _wrap_PartialListIterator_prev},
-{"perLoris::PartialListIterator_partial", _wrap_PartialListIterator_partial},
-{"perLoris::PartialListIterator_equals", _wrap_PartialListIterator_equals},
-{"perLoris::PartialListIterator_isInRange", _wrap_PartialListIterator_isInRange},
-{"perLoris::new_PartialListIterator", _wrap_new_PartialListIterator},
-{"perLoris::delete_PartialListIterator", _wrap_delete_PartialListIterator},
+{"perLoris::PartialList_insert", _wrap_PartialList_insert},
+{"perLoris::PartialList_copy", _wrap_PartialList_copy},
 {"perLoris::new_Partial", _wrap_new_Partial},
 {"perLoris::delete_Partial", _wrap_delete_Partial},
 {"perLoris::Partial_label", _wrap_Partial_label},
@@ -10296,28 +10850,19 @@ static swig_command_info swig_commands[] = {
 {"perLoris::Partial_duration", _wrap_Partial_duration},
 {"perLoris::Partial_numBreakpoints", _wrap_Partial_numBreakpoints},
 {"perLoris::Partial_setLabel", _wrap_Partial_setLabel},
-{"perLoris::Partial_begin", _wrap_Partial_begin},
-{"perLoris::Partial_end", _wrap_Partial_end},
-{"perLoris::Partial_iterator", _wrap_Partial_iterator},
-{"perLoris::Partial_insert", _wrap_Partial_insert},
-{"perLoris::Partial_findAfter", _wrap_Partial_findAfter},
-{"perLoris::Partial_findNearest", _wrap_Partial_findNearest},
-{"perLoris::Partial_erase", _wrap_Partial_erase},
 {"perLoris::Partial_frequencyAt", _wrap_Partial_frequencyAt},
 {"perLoris::Partial_amplitudeAt", _wrap_Partial_amplitudeAt},
 {"perLoris::Partial_bandwidthAt", _wrap_Partial_bandwidthAt},
 {"perLoris::Partial_phaseAt", _wrap_Partial_phaseAt},
+{"perLoris::Partial_iterator", _wrap_Partial_iterator},
+{"perLoris::Partial_begin", _wrap_Partial_begin},
+{"perLoris::Partial_end", _wrap_Partial_end},
+{"perLoris::Partial_erase", _wrap_Partial_erase},
+{"perLoris::Partial_insert", _wrap_Partial_insert},
+{"perLoris::Partial_findAfter", _wrap_Partial_findAfter},
+{"perLoris::Partial_findNearest", _wrap_Partial_findNearest},
 {"perLoris::Partial_copy", _wrap_Partial_copy},
 {"perLoris::Partial_equals", _wrap_Partial_equals},
-{"perLoris::PartialIterator_time", _wrap_PartialIterator_time},
-{"perLoris::PartialIterator_breakpoint", _wrap_PartialIterator_breakpoint},
-{"perLoris::PartialIterator_copy", _wrap_PartialIterator_copy},
-{"perLoris::PartialIterator_next", _wrap_PartialIterator_next},
-{"perLoris::PartialIterator_prev", _wrap_PartialIterator_prev},
-{"perLoris::PartialIterator_equals", _wrap_PartialIterator_equals},
-{"perLoris::PartialIterator_isInRange", _wrap_PartialIterator_isInRange},
-{"perLoris::new_PartialIterator", _wrap_new_PartialIterator},
-{"perLoris::delete_PartialIterator", _wrap_delete_PartialIterator},
 {"perLoris::new_Breakpoint", _wrap_new_Breakpoint},
 {"perLoris::delete_Breakpoint", _wrap_delete_Breakpoint},
 {"perLoris::Breakpoint_frequency", _wrap_Breakpoint_frequency},
@@ -10340,6 +10885,23 @@ static swig_command_info swig_commands[] = {
 {"perLoris::BreakpointPosition_setAmplitude", _wrap_BreakpointPosition_setAmplitude},
 {"perLoris::BreakpointPosition_setBandwidth", _wrap_BreakpointPosition_setBandwidth},
 {"perLoris::BreakpointPosition_setPhase", _wrap_BreakpointPosition_setPhase},
+{"perLoris::PartialIterator_time", _wrap_PartialIterator_time},
+{"perLoris::PartialIterator_breakpoint", _wrap_PartialIterator_breakpoint},
+{"perLoris::PartialIterator_copy", _wrap_PartialIterator_copy},
+{"perLoris::PartialIterator_next", _wrap_PartialIterator_next},
+{"perLoris::PartialIterator_prev", _wrap_PartialIterator_prev},
+{"perLoris::PartialIterator_equals", _wrap_PartialIterator_equals},
+{"perLoris::PartialIterator_isInRange", _wrap_PartialIterator_isInRange},
+{"perLoris::new_PartialIterator", _wrap_new_PartialIterator},
+{"perLoris::delete_PartialIterator", _wrap_delete_PartialIterator},
+{"perLoris::PartialListIterator_copy", _wrap_PartialListIterator_copy},
+{"perLoris::PartialListIterator_next", _wrap_PartialListIterator_next},
+{"perLoris::PartialListIterator_prev", _wrap_PartialListIterator_prev},
+{"perLoris::PartialListIterator_partial", _wrap_PartialListIterator_partial},
+{"perLoris::PartialListIterator_equals", _wrap_PartialListIterator_equals},
+{"perLoris::PartialListIterator_isInRange", _wrap_PartialListIterator_isInRange},
+{"perLoris::new_PartialListIterator", _wrap_new_PartialListIterator},
+{"perLoris::delete_PartialListIterator", _wrap_delete_PartialListIterator},
 {0,0}
 };
 
@@ -10403,7 +10965,7 @@ XS(SWIG_init) {
     
     
     Loris::setNotifier( printf_notifier );
-    Loris::setExceptionHandler( exception_handler );
+    Loris::setExceptionHandler( throw_exception );
     
     ST(0) = &PL_sv_yes;
     XSRETURN(1);
