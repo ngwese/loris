@@ -448,18 +448,21 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch,
 		SampleVector * samples = new SampleVector( nsamps, 0. );
 		
 		//	synthesize:
-		try
+		if ( ! samples->empty() )
 		{
-			Loris::Synthesizer synth( srate, &*samples->begin(), &*samples->end(), fadeTime );
-			for ( it = partials->begin(); it != partials->end(); ++it ) 
+			try
 			{
-				synth.synthesize( *it );
+				Loris::Synthesizer synth( srate, &((*samples)[0]), &((*samples)[samples->size()]), fadeTime );
+				for ( it = partials->begin(); it != partials->end(); ++it ) 
+				{
+					synth.synthesize( *it );
+				}
 			}
-		}
-		catch(...)
-		{
-			delete samples;
-			throw;
+			catch(...)
+			{
+				delete samples;
+				throw;
+			}
 		}
 		
 		return samples;

@@ -102,7 +102,8 @@ public:
 	PartialList * analyze( const SampleVector * vec, double srate )
 	{
 		PartialList * partials = new PartialList();
-		self->analyze( vec->begin(), vec->end(), srate );
+		if ( ! vec->empty() )
+			self->analyze( &((*vec)[0]), &((*vec)[vec->size()]), srate );
 		partials->splice( partials->end(), self->partials() );
 		return partials;
 	}

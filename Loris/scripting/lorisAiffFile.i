@@ -104,7 +104,8 @@ public:
 	%new SampleVector * samples( void )
 	{
 		SampleVector * vec = new SampleVector( self->sampleFrames(), 0. );
-		self->getSamples( vec->begin(), vec->end() );
+		if ( ! vec->empty() )
+			self->getSamples( &((*vec)[0]), &((*vec)[vec->size()]) );
 		return vec;
 	}
 	/*	Return a SampleVector containing the AIFF samples from this AIFF 

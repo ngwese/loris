@@ -24,9 +24,9 @@ class PartialList:
     def __init__(self,*args):
         self.this = apply(lorisc.new_PartialList,args)
         self.thisown = 1
-    def __del__(self,lorisc=lorisc):
+    def __del__(self, destroy= lorisc.delete_PartialList):
         if getattr(self,'thisown',0):
-            lorisc.delete_PartialList(self)
+            destroy(self)
     def copy(*args): return apply(lorisc.PartialList_copy,args)
     def timeSpan(*args): return apply(lorisc.PartialList_timeSpan,args)
     def clear(*args): return apply(lorisc.PartialList_clear,args)
@@ -75,9 +75,9 @@ class PartialListIterator:
     def __init__(self,*args):
         self.this = apply(lorisc.new_PartialListIterator,args)
         self.thisown = 1
-    def __del__(self,lorisc=lorisc):
+    def __del__(self, destroy= lorisc.delete_PartialListIterator):
         if getattr(self,'thisown',0):
-            lorisc.delete_PartialListIterator(self)
+            destroy(self)
     def __repr__(self):
         return "<C PartialListIterator instance at %s>" % (self.this,)
 
@@ -111,9 +111,9 @@ class Partial:
     def __init__(self,*args):
         self.this = apply(lorisc.new_Partial,args)
         self.thisown = 1
-    def __del__(self,lorisc=lorisc):
+    def __del__(self, destroy= lorisc.delete_Partial):
         if getattr(self,'thisown',0):
-            lorisc.delete_Partial(self)
+            destroy(self)
     def label(*args): return apply(lorisc.Partial_label,args)
     def initialPhase(*args): return apply(lorisc.Partial_initialPhase,args)
     def startTime(*args): return apply(lorisc.Partial_startTime,args)
@@ -173,9 +173,9 @@ class PartialIterator:
     def __init__(self,*args):
         self.this = apply(lorisc.new_PartialIterator,args)
         self.thisown = 1
-    def __del__(self,lorisc=lorisc):
+    def __del__(self, destroy= lorisc.delete_PartialIterator):
         if getattr(self,'thisown',0):
-            lorisc.delete_PartialIterator(self)
+            destroy(self)
     def __repr__(self):
         return "<C PartialIterator instance at %s>" % (self.this,)
 
@@ -209,9 +209,9 @@ class Breakpoint:
     def __init__(self,*args):
         self.this = apply(lorisc.new_Breakpoint,args)
         self.thisown = 1
-    def __del__(self,lorisc=lorisc):
+    def __del__(self, destroy= lorisc.delete_Breakpoint):
         if getattr(self,'thisown',0):
-            lorisc.delete_Breakpoint(self)
+            destroy(self)
     def frequency(*args): return apply(lorisc.Breakpoint_frequency,args)
     def amplitude(*args): return apply(lorisc.Breakpoint_amplitude,args)
     def bandwidth(*args): return apply(lorisc.Breakpoint_bandwidth,args)
@@ -255,9 +255,9 @@ class SampleVector:
     def __init__(self,*args):
         self.this = apply(lorisc.new_SampleVector,args)
         self.thisown = 1
-    def __del__(self,lorisc=lorisc):
+    def __del__(self, destroy= lorisc.delete_SampleVector):
         if getattr(self,'thisown',0):
-            lorisc.delete_SampleVector(self)
+            destroy(self)
     def size(*args): return apply(lorisc.SampleVector_size,args)
     def resize(*args): return apply(lorisc.SampleVector_resize,args)
     def clear(*args): return apply(lorisc.SampleVector_clear,args)
@@ -294,9 +294,9 @@ class Analyzer:
         if method: return method(self)
         raise AttributeError,name
 
-    def __del__(self,lorisc=lorisc):
+    def __del__(self, destroy= lorisc.delete_Analyzer):
         if getattr(self,'thisown',0):
-            lorisc.delete_Analyzer(self)
+            destroy(self)
     def __init__(self,*args):
         self.this = apply(lorisc.new_Analyzer,args)
         self.thisown = 1
@@ -351,9 +351,9 @@ class BreakpointEnvelope:
     def __init__(self,*args):
         self.this = apply(lorisc.new_BreakpointEnvelope,args)
         self.thisown = 1
-    def __del__(self,lorisc=lorisc):
+    def __del__(self, destroy= lorisc.delete_BreakpointEnvelope):
         if getattr(self,'thisown',0):
-            lorisc.delete_BreakpointEnvelope(self)
+            destroy(self)
     def copy(*args): return apply(lorisc.BreakpointEnvelope_copy,args)
     def valueAt(*args): return apply(lorisc.BreakpointEnvelope_valueAt,args)
     def insertBreakpoint(*args): return apply(lorisc.BreakpointEnvelope_insertBreakpoint,args)
@@ -390,9 +390,9 @@ class AiffFile:
     def __init__(self,*args):
         self.this = apply(lorisc.new_AiffFile,args)
         self.thisown = 1
-    def __del__(self,lorisc=lorisc):
+    def __del__(self, destroy= lorisc.delete_AiffFile):
         if getattr(self,'thisown',0):
-            lorisc.delete_AiffFile(self)
+            destroy(self)
     def channels(*args): return apply(lorisc.AiffFile_channels,args)
     def sampleFrames(*args): return apply(lorisc.AiffFile_sampleFrames,args)
     def sampleRate(*args): return apply(lorisc.AiffFile_sampleRate,args)
