@@ -198,7 +198,7 @@ Synthesizer::synthesize( const Partial & p )
 	for ( Partial::const_iterator it = p.begin(); it != p.end(); ++it )
 	{
 		index_type tgtSamp = index_type( it.time() * srate );
-		Assert( tgtSamp > currentSamp );
+		Assert( tgtSamp >= currentSamp );
 		
 		osc.oscillate( &(sampleBuffer[currentSamp]), &(sampleBuffer[tgtSamp]),
 					   it.breakpoint(), srate,

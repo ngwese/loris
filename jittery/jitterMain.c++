@@ -24,13 +24,14 @@
 #include <SdifFile.h>
 #include <SpcFile.h>
 
-#if __ide_target("Jittery")
+#if defined(__MWERKS__) && __ide_target("Original")
+	#include <Synthesizer.h>
+#else
 	#define JITTER
 	#include <ODonnellOscil.h>
-	#include <JitterySynthesizer.h>
-#elif __ide_target("Original")
-	#include <Synthesizer.h>
+	#include <JitterySynthesizer.h> 
 #endif
+
 
 using namespace std;
 using namespace Loris;	
@@ -47,7 +48,7 @@ static void doCello( void )
 	const double Resolution = 123;
 	const double MLW = 154;
 
-	cout << "Analyzing " << IFName << endl;
+	cout << "Importing " << IFName << endl;
 	cout << "Generating aiff and spc files " << OFName << endl;
 
 	// import the Partials
@@ -84,6 +85,7 @@ static void doCello( void )
 //	testNoise
 static void testNoise( void )
 {
+#ifdef JITTER
 	NoiseGenerator gen;
 	
 	std::vector< double > v1( SRATE ), v2( SRATE );
@@ -133,6 +135,9 @@ static void testNoise( void )
 	cout << "exporting " << v1.size() << " really filtered samples." << endl;
 	AiffFile::Export( "cheby.aiff", SRATE, 1, 24, 
 					  &(v1[0]), &(v1[0])+v1.size() );
+#else
+	cout << "cannot run testNoise with the new NoiseGenerator (wrong target), skipping." << endl;
+#endif
 }
 
 // ---------------------------------------------------------------------------
@@ -225,7 +230,7 @@ static void testSines( void )
 	synth( partials.begin(), partials.end() );
 	
 	cout << "exporting " << output.size() << " samples." << endl;
-	AiffFile::Export( "coherent.aiff", SRATE, 1, 24, 
+	AiffFile::Export( "coherentsines.aiff", SRATE, 1, 24, 
 					  &(output[0]), &(output[0])+output.size() );
 	
 	std::fill( output.begin(), output.end(), 0 );
@@ -234,7 +239,7 @@ static void testSines( void )
 	synth.configureJitter( jitter, coherence, 0 );
 	synth( partials.begin(), partials.end() );
 	cout << "exporting " << output.size() << " samples." << endl;
-	AiffFile::Export( "incoherent.aiff", SRATE, 1, 24, 
+	AiffFile::Export( "incoherentsines.aiff", SRATE, 1, 24, 
 					  &(output[0]), &(output[0])+output.size() );
 #else
 	synth( partials.begin(), partials.end() );
@@ -242,9 +247,68 @@ static void testSines( void )
 	AiffFile::Export( "harmonics.aiff", SRATE, 1, 24, 
 					  &(output[0]), &(output[0])+output.size() );
 #endif
+}
 
+// ---------------------------------------------------------------------------
+//	testBland
+
+static void testBland( void )
+{
+#ifdef JITTER
+	const double J = 1;		// jitter amount
+	BreakpointEnvelope jitter( J );
+	const double A = 1.0; 		// strength of attractor
+	BreakpointEnvelope coherence( A );
+#endif
+
+	string infiles[] = { "blandmeow", "blandbell", "blandcello" };
+	
+	for ( int i = 0; i < 3; ++i )
+	{
+		string IFName = infiles[i] + ".sdif";
+		string OFName = infiles[i];
+		
+		cout << "Importing " << IFName << endl;
+		cout << "Generating aiff files " << OFName + ".xxx.aiff" << endl;
+
+		// import the Partials
+		SdifFile f( IFName );
+		PartialList & partials = f.partials();
+		pair<double,double> span = PartialUtils::timeSpan( partials.begin(), partials.end() );
+		cout << "imported " << partials.size() << " partials spanning " 
+			 << span.second << " seconds." << endl;
+		
+		vector< double > output( span.second * SRATE );
+		Synthesizer synth( SRATE, output );
+#ifdef JITTER
+		cout << "rendering " << partials.size() << " partials with coherent modulation." << endl;
+		synth.configureJitter( jitter, coherence, 500 );
+		synth( partials.begin(), partials.end() );
+		
+		cout << "exporting " << output.size() << " samples." << endl;
+		AiffFile::Export( OFName + ".coherent.aiff", SRATE, 1, 24, 
+						  &( output[0] ), &( output[output.size() ]) );
+		
+		cout << "rendering " << partials.size() << " partials with incoherent modulation." << endl;
+		synth.configureJitter( jitter, coherence, 0 );
+		std::fill( output.begin(), output.end(), 0 );
+		synth( partials.begin(), partials.end() );
+		
+		cout << "exporting " << output.size() << " samples." << endl;
+		AiffFile::Export( OFName + ".incoherent.aiff", SRATE, 1, 24, 
+						  &( output[0] ), &( output[output.size() ]) );
+#else
+		cout << "rendering " << partials.size() << " partials without modulation." << endl;
+		synth( partials.begin(), partials.end() );
+		
+		cout << "exporting " << output.size() << " samples." << endl;
+		AiffFile::Export( OFName + ".noPM.aiff", SRATE, 1, 24, 
+						  &( output[0] ), &( output[output.size() ]) );
+#endif		
+	}
 
 }
+
 
 // ---------------------------------------------------------------------------
 //	main
@@ -261,6 +325,7 @@ int main()
 		testNoise();
 		// testSines();
 		testOscil();
+		testBland();
 	}
 	catch( exception & ex )
 	{
