@@ -63,6 +63,39 @@ class DoubleVectorPtr(DoubleVector):
         _swig_setattr(self, DoubleVector,self.__class__,DoubleVector)
 _loris.DoubleVector_swigregister(DoubleVectorPtr)
 
+class MarkerVector(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, MarkerVector, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, MarkerVector, name)
+    def __repr__(self):
+        return "<C std::vector<(Marker)> instance at %s>" % (self.this,)
+    def __init__(self, *args):
+        _swig_setattr(self, MarkerVector, 'this', _loris.new_MarkerVector(*args))
+        _swig_setattr(self, MarkerVector, 'thisown', 1)
+    def __len__(*args): return _loris.MarkerVector___len__(*args)
+    def clear(*args): return _loris.MarkerVector_clear(*args)
+    def append(*args): return _loris.MarkerVector_append(*args)
+    def __nonzero__(*args): return _loris.MarkerVector___nonzero__(*args)
+    def pop(*args): return _loris.MarkerVector_pop(*args)
+    def __getitem__(*args): return _loris.MarkerVector___getitem__(*args)
+    def __getslice__(*args): return _loris.MarkerVector___getslice__(*args)
+    def __setitem__(*args): return _loris.MarkerVector___setitem__(*args)
+    def __setslice__(*args): return _loris.MarkerVector___setslice__(*args)
+    def __delitem__(*args): return _loris.MarkerVector___delitem__(*args)
+    def __delslice__(*args): return _loris.MarkerVector___delslice__(*args)
+    def __del__(self, destroy=_loris.delete_MarkerVector):
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+class MarkerVectorPtr(MarkerVector):
+    def __init__(self, this):
+        _swig_setattr(self, MarkerVector, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, MarkerVector, 'thisown', 0)
+        _swig_setattr(self, MarkerVector,self.__class__,MarkerVector)
+_loris.MarkerVector_swigregister(MarkerVectorPtr)
+
 SampleVector = DoubleVector
 
 
@@ -169,16 +202,8 @@ class AiffFile(_object):
     def removeMarker(*args): return _loris.AiffFile_removeMarker(*args)
     def addMarker(*args): return _loris.AiffFile_addMarker(*args)
     def clearMarkers(*args): return _loris.AiffFile_clearMarkers(*args)
-    def getMarkers( self ):
-    	markers = []
-    	for i in range( self.numMarkers() ):
-    		markers.append( self.getMarker(i) )
-    	return markers
-
-    def addMarkers( self, markers ):
-    	for m in markers:
-    		self.addMarker( m )
-
+    def markers(*args): return _loris.AiffFile_markers(*args)
+    def addMarkers(*args): return _loris.AiffFile_addMarkers(*args)
 
 class AiffFilePtr(AiffFile):
     def __init__(self, this):
@@ -279,16 +304,8 @@ class SdifFile(_object):
     def removeMarker(*args): return _loris.SdifFile_removeMarker(*args)
     def addMarker(*args): return _loris.SdifFile_addMarker(*args)
     def clearMarkers(*args): return _loris.SdifFile_clearMarkers(*args)
-    def getMarkers( self ):
-    	markers = []
-    	for i in range( self.numMarkers() ):
-    		markers.append( self.getMarker(i) )
-    	return markers
-
-    def addMarkers( self, markers ):
-    	for m in markers:
-    		self.addMarker( m )
-
+    def markers(*args): return _loris.SdifFile_markers(*args)
+    def addMarkers(*args): return _loris.SdifFile_addMarkers(*args)
 
 class SdifFilePtr(SdifFile):
     def __init__(self, this):
@@ -324,16 +341,8 @@ class SpcFile(_object):
     def removeMarker(*args): return _loris.SpcFile_removeMarker(*args)
     def addMarker(*args): return _loris.SpcFile_addMarker(*args)
     def clearMarkers(*args): return _loris.SpcFile_clearMarkers(*args)
-    def getMarkers( self ):
-    	markers = []
-    	for i in range( self.numMarkers() ):
-    		markers.append( self.getMarker(i) )
-    	return markers
-
-    def addMarkers( self, markers ):
-    	for m in markers:
-    		self.addMarker( m )
-
+    def markers(*args): return _loris.SpcFile_markers(*args)
+    def addMarkers(*args): return _loris.SpcFile_addMarkers(*args)
 
 class SpcFilePtr(SpcFile):
     def __init__(self, this):

@@ -111,8 +111,13 @@ static void printf_notifier( const char * s )
 
 %include "std_vector.i"
 
+%{
+	#include <loris/Marker.h>	// for defining a vector of Markers
+%}
+
 namespace std {
-   %template(DoubleVector) vector<double>;
+   %template(DoubleVector) vector< double >;
+   %template(MarkerVector) vector< Marker >;
 };
 
 %pythoncode 
@@ -783,50 +788,51 @@ public:
 			samples. 
 		 */
 		 
-		 //	add members to access Markers
-		 int numMarkers( void ) { return self->markers().size(); }
-		 
-		 Marker * getMarker( int i )
-		 {
-		 	if ( i < 0 || i >= self->markers().size() )
-		 	{
-		 		Throw( InvalidArgument, "Marker index out of range." );
-		 	}
-		 	return new Marker( self->markers()[i] );
-		 }
-		 
-		 void removeMarker( int i )
-		 {
-		 	if ( i < 0 || i >= self->markers().size() )
-		 	{
-		 		Throw( InvalidArgument, "Marker index out of range." );
-		 	}
-		 	self->markers().erase( self->markers().begin() + i );
-		 }
-		 
-		 void addMarker( Marker m )
-		 {
-		 	self->markers().push_back( m );
-		 }
-
-		 void clearMarkers( void )
-		 {
-		 	self->markers().clear();
-		 }
-	}	
-		 
-	%pythoncode 
-	%{
-		def getMarkers( self ):
-			markers = []
-			for i in range( self.numMarkers() ):
-				markers.append( self.getMarker(i) )
-			return markers
+		//	add members to access Markers
+		// 	now much improved to take advantage of 
+		// 	SWIG support for std::vector.
 		
-		def addMarkers( self, markers ):
-			for m in markers:
-				self.addMarker( m )
-	%}
+		int numMarkers( void ) { return self->markers().size(); }
+		
+		Marker * getMarker( int i )
+		{
+			if ( i < 0 || i >= self->markers().size() )
+			{
+				Throw( InvalidArgument, "Marker index out of range." );
+			}
+			return new Marker( self->markers()[i] );
+		}
+		
+		void removeMarker( int i )
+		{
+			if ( i < 0 || i >= self->markers().size() )
+			{
+				Throw( InvalidArgument, "Marker index out of range." );
+			}
+			self->markers().erase( self->markers().begin() + i );
+		}
+		
+		void addMarker( Marker m )
+		{
+			self->markers().push_back( m );
+		}
+		
+		void clearMarkers( void )
+		{
+			self->markers().clear();
+		}
+		
+		std::vector< Marker > markers( void )
+		{
+			return self->markers();
+		}
+		
+		void addMarkers( const std::vector< Marker > & markers )
+		{
+			self->markers().insert( self->markers().end(), 
+									markers.begin(), markers.end() );
+		}
+	}
 };
 
 // ---------------------------------------------------------------------------
@@ -1068,51 +1074,52 @@ public:
 			self->addPartials( l->begin(), l->end() );
 		}
 		 
-		 //	add members to access Markers
-		 int numMarkers( void ) { return self->markers().size(); }
-		 
-		 Marker * getMarker( int i )
-		 {
-		 	if ( i < 0 || i >= self->markers().size() )
-		 	{
-		 		Throw( InvalidArgument, "Marker index out of range." );
-		 	}
-		 	return new Marker( self->markers()[i] );
-		 }
-		 
-		 void removeMarker( int i )
-		 {
-		 	if ( i < 0 || i >= self->markers().size() )
-		 	{
-		 		Throw( InvalidArgument, "Marker index out of range." );
-		 	}
-		 	self->markers().erase( self->markers().begin() + i );
-		 }
-		 
-		 void addMarker( Marker m )
-		 {
-		 	self->markers().push_back( m );
-		 }
-	
+		//	add members to access Markers
+		// 	now much improved to take advantage of 
+		// 	SWIG support for std::vector.
+		
+		int numMarkers( void ) { return self->markers().size(); }
+		
+		Marker * getMarker( int i )
+		{
+			if ( i < 0 || i >= self->markers().size() )
+			{
+				Throw( InvalidArgument, "Marker index out of range." );
+			}
+			return new Marker( self->markers()[i] );
+		}
+		
+		void removeMarker( int i )
+		{
+			if ( i < 0 || i >= self->markers().size() )
+			{
+				Throw( InvalidArgument, "Marker index out of range." );
+			}
+			self->markers().erase( self->markers().begin() + i );
+		}
+		
+		void addMarker( Marker m )
+		{
+			self->markers().push_back( m );
+		}
+		
 		void clearMarkers( void )
-		 {
-		 	self->markers().clear();
-		 }
-		 
+		{
+			self->markers().clear();
+		}
+		
+		std::vector< Marker > markers( void )
+		{
+			return self->markers();
+		}
+		
+		void addMarkers( const std::vector< Marker > & markers )
+		{
+			self->markers().insert( self->markers().end(), 
+									markers.begin(), markers.end() );
+		}
 	}	
 		 
-	%pythoncode 
-	%{
-		def getMarkers( self ):
-			markers = []
-			for i in range( self.numMarkers() ):
-				markers.append( self.getMarker(i) )
-			return markers
-		
-		def addMarkers( self, markers ):
-			for m in markers:
-				self.addMarker( m )
-	%}
 };	//	end of class SdifFile
 
 // ---------------------------------------------------------------------------
@@ -1265,50 +1272,52 @@ public:
 			allowable maximum.
 		 */
 		 
-		 //	add members to access Markers
-		 int numMarkers( void ) { return self->markers().size(); }
-		 
-		 Marker * getMarker( int i )
-		 {
-		 	if ( i < 0 || i >= self->markers().size() )
-		 	{
-		 		Throw( InvalidArgument, "Marker index out of range." );
-		 	}
-		 	return new Marker( self->markers()[i] );
-		 }
-		 
-		 void removeMarker( int i )
-		 {
-		 	if ( i < 0 || i >= self->markers().size() )
-		 	{
-		 		Throw( InvalidArgument, "Marker index out of range." );
-		 	}
-		 	self->markers().erase( self->markers().begin() + i );
-		 }
-		 
-		 void addMarker( Marker m )
-		 {
-		 	self->markers().push_back( m );
-		 }
-		 
-		 void clearMarkers( void )
-		 {
-		 	self->markers().clear();
-		 }
-	}	
-		 
-	%pythoncode 
-	%{
-		def getMarkers( self ):
-			markers = []
-			for i in range( self.numMarkers() ):
-				markers.append( self.getMarker(i) )
-			return markers
+		//	add members to access Markers
+		// 	now much improved to take advantage of 
+		// 	SWIG support for std::vector.
 		
-		def addMarkers( self, markers ):
-			for m in markers:
-				self.addMarker( m )
-	%}
+		int numMarkers( void ) { return self->markers().size(); }
+		
+		Marker * getMarker( int i )
+		{
+			if ( i < 0 || i >= self->markers().size() )
+			{
+				Throw( InvalidArgument, "Marker index out of range." );
+			}
+			return new Marker( self->markers()[i] );
+		}
+		
+		void removeMarker( int i )
+		{
+			if ( i < 0 || i >= self->markers().size() )
+			{
+				Throw( InvalidArgument, "Marker index out of range." );
+			}
+			self->markers().erase( self->markers().begin() + i );
+		}
+		
+		void addMarker( Marker m )
+		{
+			self->markers().push_back( m );
+		}
+		
+		void clearMarkers( void )
+		{
+			self->markers().clear();
+		}
+		
+		std::vector< Marker > markers( void )
+		{
+			return self->markers();
+		}
+		
+		void addMarkers( const std::vector< Marker > & markers )
+		{
+			self->markers().insert( self->markers().end(), 
+									markers.begin(), markers.end() );
+		}
+	}
+	
 };	//	end of class SpcFile
 
 // ----------------------------------------------------------------

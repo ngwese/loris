@@ -711,13 +711,14 @@ SWIG_Python_InstallConstants(PyObject *d, swig_const_info constants[]) {
 #define  SWIGTYPE_p_BreakpointEnvelope swig_types[8] 
 #define  SWIGTYPE_p_BreakpointPosition swig_types[9] 
 #define  SWIGTYPE_p_AiffFile swig_types[10] 
-#define  SWIGTYPE_p_SdifFile swig_types[11] 
-#define  SWIGTYPE_p_NewPartialIterator swig_types[12] 
-#define  SWIGTYPE_p_NewPlistIterator swig_types[13] 
-#define  SWIGTYPE_p_Marker swig_types[14] 
-#define  SWIGTYPE_p_PartialListIterator swig_types[15] 
-#define  SWIGTYPE_p_PartialIterator swig_types[16] 
-static swig_type_info *swig_types[18];
+#define  SWIGTYPE_p_std__vectorTMarker_t swig_types[11] 
+#define  SWIGTYPE_p_SdifFile swig_types[12] 
+#define  SWIGTYPE_p_NewPartialIterator swig_types[13] 
+#define  SWIGTYPE_p_NewPlistIterator swig_types[14] 
+#define  SWIGTYPE_p_Marker swig_types[15] 
+#define  SWIGTYPE_p_PartialListIterator swig_types[16] 
+#define  SWIGTYPE_p_PartialIterator swig_types[17] 
+static swig_type_info *swig_types[19];
 
 /* -------- TYPES TABLE (END) -------- */
 
@@ -848,6 +849,9 @@ static void SWIG_exception_(int code, const char *msg) {
 #include <algorithm>
 #include <stdexcept>
 
+
+	#include <loris/Marker.h>	// for defining a vector of Markers
+
 double std_vectorldouble_g_pop___(std::vector<double > *self){
                 if (self->size() == 0)
                     throw std::out_of_range("pop from empty vector");
@@ -906,6 +910,76 @@ void std_vectorldouble_g___delitem_____(std::vector<double > *self,int i){
                     throw std::out_of_range("vector index out of range");
             }
 void std_vectorldouble_g___delslice_____(std::vector<double > *self,int i,int j){
+                int size = int(self->size());
+                if (i<0) i = size+i;
+                if (j<0) j = size+j;
+                if (i<0) i = 0;
+                if (j>size) j = size;
+                self->erase(self->begin()+i,self->begin()+j);
+            }
+bool std_vectorlMarker_g___nonzero_____(std::vector<Marker > *self){
+                return !(self->empty());
+            }
+Marker std_vectorlMarker_g_pop___(std::vector<Marker > *self){
+                if (self->size() == 0)
+                    throw std::out_of_range("pop from empty vector");
+                Marker x = self->back();
+                self->pop_back();
+                return x;
+            }
+Marker &std_vectorlMarker_g___getitem_____(std::vector<Marker > *self,int i){
+                int size = int(self->size());
+                if (i<0) i += size;
+                if (i>=0 && i<size)
+                    return (*self)[i];
+                else
+                    throw std::out_of_range("vector index out of range");
+            }
+std::vector<Marker > std_vectorlMarker_g___getslice_____(std::vector<Marker > *self,int i,int j){
+                int size = int(self->size());
+                if (i<0) i = size+i;
+                if (j<0) j = size+j;
+                if (i<0) i = 0;
+                if (j>size) j = size;
+                std::vector<Marker > tmp;
+                tmp.reserve(j-i);
+                tmp.insert(tmp.begin(),self->begin()+i,self->begin()+j);
+                return tmp;
+            }
+void std_vectorlMarker_g___setitem_____(std::vector<Marker > *self,int i,Marker const &x){
+                int size = int(self->size());
+                if (i<0) i+= size;
+                if (i>=0 && i<size)
+                    (*self)[i] = x;
+                else
+                    throw std::out_of_range("vector index out of range");
+            }
+void std_vectorlMarker_g___setslice_____(std::vector<Marker > *self,int i,int j,std::vector<Marker > const &v){
+                int size = int(self->size());
+                if (i<0) i = size+i;
+                if (j<0) j = size+j;
+                if (i<0) i = 0;
+                if (j>size) j = size;
+                if (int(v.size()) == j-i) {
+                    std::copy(v.begin(),v.end(),self->begin()+i);
+                } else {
+                    self->erase(self->begin()+i,self->begin()+j);
+                    if (i+1 <= int(self->size())) {
+                        self->insert(self->begin()+i,v.begin(),v.end());
+                    } else {
+                        self->insert(self->end(),v.begin(),v.end());
+                    }
+                }
+            }
+void std_vectorlMarker_g___delitem_____(std::vector<Marker > *self,int i){
+                int size = int(self->size());
+                if (i<0) i+= size;
+                if (i>=0 && i<size)
+                    self->erase(self->begin()+i);
+                else
+                    throw std::out_of_range("vector index out of range");
+            }
+void std_vectorlMarker_g___delslice_____(std::vector<Marker > *self,int i,int j){
                 int size = int(self->size());
                 if (i<0) i = size+i;
                 if (j<0) j = size+j;
@@ -1116,25 +1190,32 @@ void AiffFile_addPartials(AiffFile *self,PartialList *l,double fadeTime){
 		}
 int AiffFile_numMarkers(AiffFile *self){ return self->markers().size(); }
 Marker *AiffFile_getMarker(AiffFile *self,int i){
-		 	if ( i < 0 || i >= self->markers().size() )
-		 	{
-		 		Throw( InvalidArgument, "Marker index out of range." );
-		 	}
-		 	return new Marker( self->markers()[i] );
-		 }
+			if ( i < 0 || i >= self->markers().size() )
+			{
+				Throw( InvalidArgument, "Marker index out of range." );
+			}
+			return new Marker( self->markers()[i] );
+		}
 void AiffFile_removeMarker(AiffFile *self,int i){
-		 	if ( i < 0 || i >= self->markers().size() )
-		 	{
-		 		Throw( InvalidArgument, "Marker index out of range." );
-		 	}
-		 	self->markers().erase( self->markers().begin() + i );
-		 }
+			if ( i < 0 || i >= self->markers().size() )
+			{
+				Throw( InvalidArgument, "Marker index out of range." );
+			}
+			self->markers().erase( self->markers().begin() + i );
+		}
 void AiffFile_addMarker(AiffFile *self,Marker m){
-		 	self->markers().push_back( m );
-		 }
+			self->markers().push_back( m );
+		}
 void AiffFile_clearMarkers(AiffFile *self){
-		 	self->markers().clear();
-		 }
+			self->markers().clear();
+		}
+std::vector<Marker > AiffFile_markers(AiffFile *self){
+			return self->markers();
+		}
+void AiffFile_addMarkers(AiffFile *self,std::vector<Marker > const &markers){
+			self->markers().insert( self->markers().end(), 
+									markers.begin(), markers.end() );
+		}
 
 	#include<Analyzer.h>
 	#include<Partial.h>
@@ -1193,25 +1274,32 @@ void SdifFile_addPartials(SdifFile *self,PartialList *l){
 		}
 int SdifFile_numMarkers(SdifFile *self){ return self->markers().size(); }
 Marker *SdifFile_getMarker(SdifFile *self,int i){
-		 	if ( i < 0 || i >= self->markers().size() )
-		 	{
-		 		Throw( InvalidArgument, "Marker index out of range." );
-		 	}
-		 	return new Marker( self->markers()[i] );
-		 }
+			if ( i < 0 || i >= self->markers().size() )
+			{
+				Throw( InvalidArgument, "Marker index out of range." );
+			}
+			return new Marker( self->markers()[i] );
+		}
 void SdifFile_removeMarker(SdifFile *self,int i){
-		 	if ( i < 0 || i >= self->markers().size() )
-		 	{
-		 		Throw( InvalidArgument, "Marker index out of range." );
-		 	}
-		 	self->markers().erase( self->markers().begin() + i );
-		 }
+			if ( i < 0 || i >= self->markers().size() )
+			{
+				Throw( InvalidArgument, "Marker index out of range." );
+			}
+			self->markers().erase( self->markers().begin() + i );
+		}
 void SdifFile_addMarker(SdifFile *self,Marker m){
-		 	self->markers().push_back( m );
-		 }
+			self->markers().push_back( m );
+		}
 void SdifFile_clearMarkers(SdifFile *self){
-		 	self->markers().clear();
-		 }
+			self->markers().clear();
+		}
+std::vector<Marker > SdifFile_markers(SdifFile *self){
+			return self->markers();
+		}
+void SdifFile_addMarkers(SdifFile *self,std::vector<Marker > const &markers){
+			self->markers().insert( self->markers().end(), 
+									markers.begin(), markers.end() );
+		}
 
 	#include<SpcFile.h>
 
@@ -1227,25 +1315,32 @@ void SpcFile_addPartials(SpcFile *self,PartialList *l){
 		}
 int SpcFile_numMarkers(SpcFile *self){ return self->markers().size(); }
 Marker *SpcFile_getMarker(SpcFile *self,int i){
-		 	if ( i < 0 || i >= self->markers().size() )
-		 	{
-		 		Throw( InvalidArgument, "Marker index out of range." );
-		 	}
-		 	return new Marker( self->markers()[i] );
-		 }
+			if ( i < 0 || i >= self->markers().size() )
+			{
+				Throw( InvalidArgument, "Marker index out of range." );
+			}
+			return new Marker( self->markers()[i] );
+		}
 void SpcFile_removeMarker(SpcFile *self,int i){
-		 	if ( i < 0 || i >= self->markers().size() )
-		 	{
-		 		Throw( InvalidArgument, "Marker index out of range." );
-		 	}
-		 	self->markers().erase( self->markers().begin() + i );
-		 }
+			if ( i < 0 || i >= self->markers().size() )
+			{
+				Throw( InvalidArgument, "Marker index out of range." );
+			}
+			self->markers().erase( self->markers().begin() + i );
+		}
 void SpcFile_addMarker(SpcFile *self,Marker m){
-		 	self->markers().push_back( m );
-		 }
+			self->markers().push_back( m );
+		}
 void SpcFile_clearMarkers(SpcFile *self){
-		 	self->markers().clear();
-		 }
+			self->markers().clear();
+		}
+std::vector<Marker > SpcFile_markers(SpcFile *self){
+			return self->markers();
+		}
+void SpcFile_addMarkers(SpcFile *self,std::vector<Marker > const &markers){
+			self->markers().insert( self->markers().end(), 
+									markers.begin(), markers.end() );
+		}
 
 #include<Partial.h>
 #include<PartialList.h>
@@ -2031,6 +2126,507 @@ static PyObject * DoubleVector_swigregister(PyObject *self, PyObject *args) {
     PyObject *obj;
     if (!PyArg_ParseTuple(args,(char*)"O", &obj)) return NULL;
     SWIG_TypeClientData(SWIGTYPE_p_std__vectorTdouble_t, obj);
+    Py_INCREF(obj);
+    return Py_BuildValue((char *)"");
+}
+static PyObject *_wrap_new_MarkerVector__SWIG_0(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    unsigned int arg1 = (unsigned int) 0 ;
+    std::vector<Marker > *result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"|O:new_MarkerVector",&obj0)) goto fail;
+    if (obj0) {
+        arg1 = (unsigned int) PyInt_AsLong(obj0);
+        if (PyErr_Occurred()) SWIG_fail;
+    }
+    result = (std::vector<Marker > *)new std::vector<Marker >(arg1);
+    
+    resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_std__vectorTMarker_t, 1);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_new_MarkerVector__SWIG_1(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    unsigned int arg1 ;
+    Marker *arg2 = 0 ;
+    std::vector<Marker > *result;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:new_MarkerVector",&obj0,&obj1)) goto fail;
+    arg1 = (unsigned int) PyInt_AsLong(obj0);
+    if (PyErr_Occurred()) SWIG_fail;
+    if ((SWIG_ConvertPtr(obj1,(void **) &arg2, SWIGTYPE_p_Marker,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    if (arg2 == NULL) {
+        PyErr_SetString(PyExc_TypeError,"null reference"); SWIG_fail; 
+    }
+    result = (std::vector<Marker > *)new std::vector<Marker >(arg1,(Marker const &)*arg2);
+    
+    resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_std__vectorTMarker_t, 1);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_new_MarkerVector__SWIG_2(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    std::vector<Marker > *arg1 = 0 ;
+    std::vector<Marker > *result;
+    std::vector<Marker > temp1 ;
+    std::vector<Marker > *v1 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:new_MarkerVector",&obj0)) goto fail;
+    {
+        if (PyTuple_Check(obj0) || PyList_Check(obj0)) {
+            unsigned int size = (PyTuple_Check(obj0) ?
+            PyTuple_Size(obj0) :
+            PyList_Size(obj0));
+            temp1.reserve(size);
+            arg1 = &temp1;
+            for (unsigned int i=0; i<size; i++) {
+                Marker* x;
+                PyObject* o = PySequence_GetItem(obj0,i);
+                if ((SWIG_ConvertPtr(o,(void **) &x, 
+                SWIGTYPE_p_Marker,0)) != -1) {
+                    temp1.push_back(*x);
+                    Py_DECREF(o);
+                } else {
+                    Py_DECREF(o);
+                    PyErr_SetString(PyExc_TypeError,
+                    "vector<" "Marker" "> expected");
+                    SWIG_fail;
+                }
+            }
+        } else if (SWIG_ConvertPtr(obj0,(void **) &v1, 
+        SWIGTYPE_p_std__vectorTMarker_t,0) != -1) {
+            arg1 = v1;
+        } else {
+            PyErr_SetString(PyExc_TypeError,"vector<" "Marker" "> expected");
+            SWIG_fail;
+        }
+    }
+    result = (std::vector<Marker > *)new std::vector<Marker >((std::vector<Marker > const &)*arg1);
+    
+    resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_std__vectorTMarker_t, 1);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_new_MarkerVector(PyObject *self, PyObject *args) {
+    int argc;
+    PyObject *argv[3];
+    int ii;
+    
+    argc = PyObject_Length(args);
+    for (ii = 0; (ii < argc) && (ii < 2); ii++) {
+        argv[ii] = PyTuple_GetItem(args,ii);
+    }
+    if ((argc >= 0) && (argc <= 1)) {
+        int _v;
+        if (argc <= 0) {
+            return _wrap_new_MarkerVector__SWIG_0(self,args);
+        }
+        {
+            _v = (PyInt_Check(argv[0]) || PyLong_Check(argv[0])) ? 1 : 0;
+        }
+        if (_v) {
+            return _wrap_new_MarkerVector__SWIG_0(self,args);
+        }
+    }
+    if (argc == 1) {
+        int _v;
+        {
+            /* native sequence? */
+            if (PyTuple_Check(argv[0]) || PyList_Check(argv[0])) {
+                unsigned int size = (PyTuple_Check(argv[0]) ?
+                PyTuple_Size(argv[0]) :
+                PyList_Size(argv[0]));
+                if (size == 0) {
+                    /* an empty sequence can be of any type */
+                    _v = 1;
+                } else {
+                    /* check the first element only */
+                    Marker* x;
+                    PyObject* o = PySequence_GetItem(argv[0],0);
+                    if ((SWIG_ConvertPtr(o,(void **) &x, 
+                    SWIGTYPE_p_Marker,0)) != -1)
+                    _v = 1;
+                    else
+                    _v = 0;
+                    Py_DECREF(o);
+                }
+            } else {
+                /* wrapped vector? */
+                std::vector<Marker >* v;
+                if (SWIG_ConvertPtr(argv[0],(void **) &v, 
+                SWIGTYPE_p_std__vectorTMarker_t,0) != -1)
+                _v = 1;
+                else
+                _v = 0;
+            }
+        }
+        if (_v) {
+            return _wrap_new_MarkerVector__SWIG_2(self,args);
+        }
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            _v = (PyInt_Check(argv[0]) || PyLong_Check(argv[0])) ? 1 : 0;
+        }
+        if (_v) {
+            {
+                void *ptr;
+                if (SWIG_ConvertPtr(argv[1], (void **) &ptr, SWIGTYPE_p_Marker, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                } else {
+                    _v = 1;
+                }
+            }
+            if (_v) {
+                return _wrap_new_MarkerVector__SWIG_1(self,args);
+            }
+        }
+    }
+    
+    PyErr_SetString(PyExc_TypeError,"No matching function for overloaded 'new_MarkerVector'");
+    return NULL;
+}
+
+
+static PyObject *_wrap_MarkerVector___len__(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    std::vector<Marker > *arg1 = (std::vector<Marker > *) 0 ;
+    unsigned int result;
+    std::vector<Marker > temp1 ;
+    std::vector<Marker > *v1 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:MarkerVector___len__",&obj0)) goto fail;
+    {
+        if (PyTuple_Check(obj0) || PyList_Check(obj0)) {
+            unsigned int size = (PyTuple_Check(obj0) ?
+            PyTuple_Size(obj0) :
+            PyList_Size(obj0));
+            temp1.reserve(size);
+            arg1 = &temp1;
+            for (unsigned int i=0; i<size; i++) {
+                Marker* x;
+                PyObject* o = PySequence_GetItem(obj0,i);
+                if ((SWIG_ConvertPtr(o,(void **) &x, 
+                SWIGTYPE_p_Marker,0)) != -1) {
+                    temp1.push_back(*x);
+                    Py_DECREF(o);
+                } else {
+                    Py_DECREF(o);
+                    PyErr_SetString(PyExc_TypeError,
+                    "vector<" "Marker" "> expected");
+                    SWIG_fail;
+                }
+            }
+        } else if (SWIG_ConvertPtr(obj0,(void **) &v1, 
+        SWIGTYPE_p_std__vectorTMarker_t,0) != -1) {
+            arg1 = v1;
+        } else {
+            PyErr_SetString(PyExc_TypeError,"vector<" "Marker" "> expected");
+            SWIG_fail;
+        }
+    }
+    result = (unsigned int)((std::vector<Marker > const *)arg1)->size();
+    
+    resultobj = PyInt_FromLong((long)result);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_MarkerVector_clear(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    std::vector<Marker > *arg1 = (std::vector<Marker > *) 0 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:MarkerVector_clear",&obj0)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_std__vectorTMarker_t,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    (arg1)->clear();
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_MarkerVector_append(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    std::vector<Marker > *arg1 = (std::vector<Marker > *) 0 ;
+    Marker *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:MarkerVector_append",&obj0,&obj1)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_std__vectorTMarker_t,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    if ((SWIG_ConvertPtr(obj1,(void **) &arg2, SWIGTYPE_p_Marker,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    if (arg2 == NULL) {
+        PyErr_SetString(PyExc_TypeError,"null reference"); SWIG_fail; 
+    }
+    (arg1)->push_back((Marker const &)*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_MarkerVector___nonzero__(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    std::vector<Marker > *arg1 = (std::vector<Marker > *) 0 ;
+    bool result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:MarkerVector___nonzero__",&obj0)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_std__vectorTMarker_t,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    result = (bool)std_vectorlMarker_g___nonzero_____(arg1);
+    
+    resultobj = PyInt_FromLong((long)result);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_MarkerVector_pop(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    std::vector<Marker > *arg1 = (std::vector<Marker > *) 0 ;
+    Marker result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:MarkerVector_pop",&obj0)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_std__vectorTMarker_t,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        try {
+            result = std_vectorlMarker_g_pop___(arg1);
+            
+        } catch (std::out_of_range& e) {
+            SWIG_exception(SWIG_IndexError,const_cast<char*>(e.what()));
+        }
+    }
+    {
+        Marker * resultptr;
+        resultptr = new Marker((Marker &) result);
+        resultobj = SWIG_NewPointerObj((void *) resultptr, SWIGTYPE_p_Marker, 1);
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_MarkerVector___getitem__(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    std::vector<Marker > *arg1 = (std::vector<Marker > *) 0 ;
+    int arg2 ;
+    Marker *result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"Oi:MarkerVector___getitem__",&obj0,&arg2)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_std__vectorTMarker_t,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        try {
+            {
+                Marker &_result_ref = std_vectorlMarker_g___getitem_____(arg1,arg2);
+                result = (Marker *) &_result_ref;
+            }
+            
+        } catch (std::out_of_range& e) {
+            SWIG_exception(SWIG_IndexError,const_cast<char*>(e.what()));
+        }
+    }
+    resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_Marker, 0);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_MarkerVector___getslice__(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    std::vector<Marker > *arg1 = (std::vector<Marker > *) 0 ;
+    int arg2 ;
+    int arg3 ;
+    std::vector<Marker > result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"Oii:MarkerVector___getslice__",&obj0,&arg2,&arg3)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_std__vectorTMarker_t,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    result = std_vectorlMarker_g___getslice_____(arg1,arg2,arg3);
+    
+    {
+        resultobj = PyTuple_New((&result)->size());
+        for (unsigned int i=0; i<(&result)->size(); i++) {
+            Marker* ptr = new Marker(((std::vector<Marker > &)result)[i]);
+            PyTuple_SetItem(resultobj,i,
+            SWIG_NewPointerObj((void *) ptr, 
+            SWIGTYPE_p_Marker, 1));
+        }
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_MarkerVector___setitem__(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    std::vector<Marker > *arg1 = (std::vector<Marker > *) 0 ;
+    int arg2 ;
+    Marker *arg3 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj2 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OiO:MarkerVector___setitem__",&obj0,&arg2,&obj2)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_std__vectorTMarker_t,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    if ((SWIG_ConvertPtr(obj2,(void **) &arg3, SWIGTYPE_p_Marker,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    if (arg3 == NULL) {
+        PyErr_SetString(PyExc_TypeError,"null reference"); SWIG_fail; 
+    }
+    {
+        try {
+            std_vectorlMarker_g___setitem_____(arg1,arg2,(Marker const &)*arg3);
+            
+        } catch (std::out_of_range& e) {
+            SWIG_exception(SWIG_IndexError,const_cast<char*>(e.what()));
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_MarkerVector___setslice__(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    std::vector<Marker > *arg1 = (std::vector<Marker > *) 0 ;
+    int arg2 ;
+    int arg3 ;
+    std::vector<Marker > *arg4 = 0 ;
+    std::vector<Marker > temp4 ;
+    std::vector<Marker > *v4 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj3 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OiiO:MarkerVector___setslice__",&obj0,&arg2,&arg3,&obj3)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_std__vectorTMarker_t,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        if (PyTuple_Check(obj3) || PyList_Check(obj3)) {
+            unsigned int size = (PyTuple_Check(obj3) ?
+            PyTuple_Size(obj3) :
+            PyList_Size(obj3));
+            temp4.reserve(size);
+            arg4 = &temp4;
+            for (unsigned int i=0; i<size; i++) {
+                Marker* x;
+                PyObject* o = PySequence_GetItem(obj3,i);
+                if ((SWIG_ConvertPtr(o,(void **) &x, 
+                SWIGTYPE_p_Marker,0)) != -1) {
+                    temp4.push_back(*x);
+                    Py_DECREF(o);
+                } else {
+                    Py_DECREF(o);
+                    PyErr_SetString(PyExc_TypeError,
+                    "vector<" "Marker" "> expected");
+                    SWIG_fail;
+                }
+            }
+        } else if (SWIG_ConvertPtr(obj3,(void **) &v4, 
+        SWIGTYPE_p_std__vectorTMarker_t,0) != -1) {
+            arg4 = v4;
+        } else {
+            PyErr_SetString(PyExc_TypeError,"vector<" "Marker" "> expected");
+            SWIG_fail;
+        }
+    }
+    std_vectorlMarker_g___setslice_____(arg1,arg2,arg3,(std::vector<Marker > const &)*arg4);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_MarkerVector___delitem__(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    std::vector<Marker > *arg1 = (std::vector<Marker > *) 0 ;
+    int arg2 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"Oi:MarkerVector___delitem__",&obj0,&arg2)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_std__vectorTMarker_t,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        try {
+            std_vectorlMarker_g___delitem_____(arg1,arg2);
+            
+        } catch (std::out_of_range& e) {
+            SWIG_exception(SWIG_IndexError,const_cast<char*>(e.what()));
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_MarkerVector___delslice__(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    std::vector<Marker > *arg1 = (std::vector<Marker > *) 0 ;
+    int arg2 ;
+    int arg3 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"Oii:MarkerVector___delslice__",&obj0,&arg2,&arg3)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_std__vectorTMarker_t,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    std_vectorlMarker_g___delslice_____(arg1,arg2,arg3);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_delete_MarkerVector(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    std::vector<Marker > *arg1 = (std::vector<Marker > *) 0 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:delete_MarkerVector",&obj0)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_std__vectorTMarker_t,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    delete arg1;
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject * MarkerVector_swigregister(PyObject *self, PyObject *args) {
+    PyObject *obj;
+    if (!PyArg_ParseTuple(args,(char*)"O", &obj)) return NULL;
+    SWIG_TypeClientData(SWIGTYPE_p_std__vectorTMarker_t, obj);
     Py_INCREF(obj);
     return Py_BuildValue((char *)"");
 }
@@ -4485,6 +5081,118 @@ static PyObject *_wrap_AiffFile_clearMarkers(PyObject *self, PyObject *args) {
 }
 
 
+static PyObject *_wrap_AiffFile_markers(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    AiffFile *arg1 = (AiffFile *) 0 ;
+    std::vector<Marker > result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:AiffFile_markers",&obj0)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_AiffFile,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        try
+        {
+            result = AiffFile_markers(arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    {
+        resultobj = PyTuple_New((&result)->size());
+        for (unsigned int i=0; i<(&result)->size(); i++) {
+            Marker* ptr = new Marker(((std::vector<Marker > &)result)[i]);
+            PyTuple_SetItem(resultobj,i,
+            SWIG_NewPointerObj((void *) ptr, 
+            SWIGTYPE_p_Marker, 1));
+        }
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_AiffFile_addMarkers(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    AiffFile *arg1 = (AiffFile *) 0 ;
+    std::vector<Marker > *arg2 = 0 ;
+    std::vector<Marker > temp2 ;
+    std::vector<Marker > *v2 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:AiffFile_addMarkers",&obj0,&obj1)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_AiffFile,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        if (PyTuple_Check(obj1) || PyList_Check(obj1)) {
+            unsigned int size = (PyTuple_Check(obj1) ?
+            PyTuple_Size(obj1) :
+            PyList_Size(obj1));
+            temp2.reserve(size);
+            arg2 = &temp2;
+            for (unsigned int i=0; i<size; i++) {
+                Marker* x;
+                PyObject* o = PySequence_GetItem(obj1,i);
+                if ((SWIG_ConvertPtr(o,(void **) &x, 
+                SWIGTYPE_p_Marker,0)) != -1) {
+                    temp2.push_back(*x);
+                    Py_DECREF(o);
+                } else {
+                    Py_DECREF(o);
+                    PyErr_SetString(PyExc_TypeError,
+                    "vector<" "Marker" "> expected");
+                    SWIG_fail;
+                }
+            }
+        } else if (SWIG_ConvertPtr(obj1,(void **) &v2, 
+        SWIGTYPE_p_std__vectorTMarker_t,0) != -1) {
+            arg2 = v2;
+        } else {
+            PyErr_SetString(PyExc_TypeError,"vector<" "Marker" "> expected");
+            SWIG_fail;
+        }
+    }
+    {
+        try
+        {
+            AiffFile_addMarkers(arg1,(std::vector<Marker > const &)*arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
 static PyObject * AiffFile_swigregister(PyObject *self, PyObject *args) {
     PyObject *obj;
     if (!PyArg_ParseTuple(args,(char*)"O", &obj)) return NULL;
@@ -6290,6 +6998,118 @@ static PyObject *_wrap_SdifFile_clearMarkers(PyObject *self, PyObject *args) {
 }
 
 
+static PyObject *_wrap_SdifFile_markers(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    SdifFile *arg1 = (SdifFile *) 0 ;
+    std::vector<Marker > result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:SdifFile_markers",&obj0)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_SdifFile,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        try
+        {
+            result = SdifFile_markers(arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    {
+        resultobj = PyTuple_New((&result)->size());
+        for (unsigned int i=0; i<(&result)->size(); i++) {
+            Marker* ptr = new Marker(((std::vector<Marker > &)result)[i]);
+            PyTuple_SetItem(resultobj,i,
+            SWIG_NewPointerObj((void *) ptr, 
+            SWIGTYPE_p_Marker, 1));
+        }
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_SdifFile_addMarkers(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    SdifFile *arg1 = (SdifFile *) 0 ;
+    std::vector<Marker > *arg2 = 0 ;
+    std::vector<Marker > temp2 ;
+    std::vector<Marker > *v2 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:SdifFile_addMarkers",&obj0,&obj1)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_SdifFile,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        if (PyTuple_Check(obj1) || PyList_Check(obj1)) {
+            unsigned int size = (PyTuple_Check(obj1) ?
+            PyTuple_Size(obj1) :
+            PyList_Size(obj1));
+            temp2.reserve(size);
+            arg2 = &temp2;
+            for (unsigned int i=0; i<size; i++) {
+                Marker* x;
+                PyObject* o = PySequence_GetItem(obj1,i);
+                if ((SWIG_ConvertPtr(o,(void **) &x, 
+                SWIGTYPE_p_Marker,0)) != -1) {
+                    temp2.push_back(*x);
+                    Py_DECREF(o);
+                } else {
+                    Py_DECREF(o);
+                    PyErr_SetString(PyExc_TypeError,
+                    "vector<" "Marker" "> expected");
+                    SWIG_fail;
+                }
+            }
+        } else if (SWIG_ConvertPtr(obj1,(void **) &v2, 
+        SWIGTYPE_p_std__vectorTMarker_t,0) != -1) {
+            arg2 = v2;
+        } else {
+            PyErr_SetString(PyExc_TypeError,"vector<" "Marker" "> expected");
+            SWIG_fail;
+        }
+    }
+    {
+        try
+        {
+            SdifFile_addMarkers(arg1,(std::vector<Marker > const &)*arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
 static PyObject * SdifFile_swigregister(PyObject *self, PyObject *args) {
     PyObject *obj;
     if (!PyArg_ParseTuple(args,(char*)"O", &obj)) return NULL;
@@ -7052,6 +7872,118 @@ static PyObject *_wrap_SpcFile_clearMarkers(PyObject *self, PyObject *args) {
         try
         {
             SpcFile_clearMarkers(arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_SpcFile_markers(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    SpcFile *arg1 = (SpcFile *) 0 ;
+    std::vector<Marker > result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:SpcFile_markers",&obj0)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_SpcFile,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        try
+        {
+            result = SpcFile_markers(arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    {
+        resultobj = PyTuple_New((&result)->size());
+        for (unsigned int i=0; i<(&result)->size(); i++) {
+            Marker* ptr = new Marker(((std::vector<Marker > &)result)[i]);
+            PyTuple_SetItem(resultobj,i,
+            SWIG_NewPointerObj((void *) ptr, 
+            SWIGTYPE_p_Marker, 1));
+        }
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_SpcFile_addMarkers(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    SpcFile *arg1 = (SpcFile *) 0 ;
+    std::vector<Marker > *arg2 = 0 ;
+    std::vector<Marker > temp2 ;
+    std::vector<Marker > *v2 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:SpcFile_addMarkers",&obj0,&obj1)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_SpcFile,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        if (PyTuple_Check(obj1) || PyList_Check(obj1)) {
+            unsigned int size = (PyTuple_Check(obj1) ?
+            PyTuple_Size(obj1) :
+            PyList_Size(obj1));
+            temp2.reserve(size);
+            arg2 = &temp2;
+            for (unsigned int i=0; i<size; i++) {
+                Marker* x;
+                PyObject* o = PySequence_GetItem(obj1,i);
+                if ((SWIG_ConvertPtr(o,(void **) &x, 
+                SWIGTYPE_p_Marker,0)) != -1) {
+                    temp2.push_back(*x);
+                    Py_DECREF(o);
+                } else {
+                    Py_DECREF(o);
+                    PyErr_SetString(PyExc_TypeError,
+                    "vector<" "Marker" "> expected");
+                    SWIG_fail;
+                }
+            }
+        } else if (SWIG_ConvertPtr(obj1,(void **) &v2, 
+        SWIGTYPE_p_std__vectorTMarker_t,0) != -1) {
+            arg2 = v2;
+        } else {
+            PyErr_SetString(PyExc_TypeError,"vector<" "Marker" "> expected");
+            SWIG_fail;
+        }
+    }
+    {
+        try
+        {
+            SpcFile_addMarkers(arg1,(std::vector<Marker > const &)*arg2);
             
         }
         catch( Loris::Exception & ex ) 
@@ -11071,6 +12003,20 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"DoubleVector___delslice__", _wrap_DoubleVector___delslice__, METH_VARARGS },
 	 { (char *)"delete_DoubleVector", _wrap_delete_DoubleVector, METH_VARARGS },
 	 { (char *)"DoubleVector_swigregister", DoubleVector_swigregister, METH_VARARGS },
+	 { (char *)"new_MarkerVector", _wrap_new_MarkerVector, METH_VARARGS },
+	 { (char *)"MarkerVector___len__", _wrap_MarkerVector___len__, METH_VARARGS },
+	 { (char *)"MarkerVector_clear", _wrap_MarkerVector_clear, METH_VARARGS },
+	 { (char *)"MarkerVector_append", _wrap_MarkerVector_append, METH_VARARGS },
+	 { (char *)"MarkerVector___nonzero__", _wrap_MarkerVector___nonzero__, METH_VARARGS },
+	 { (char *)"MarkerVector_pop", _wrap_MarkerVector_pop, METH_VARARGS },
+	 { (char *)"MarkerVector___getitem__", _wrap_MarkerVector___getitem__, METH_VARARGS },
+	 { (char *)"MarkerVector___getslice__", _wrap_MarkerVector___getslice__, METH_VARARGS },
+	 { (char *)"MarkerVector___setitem__", _wrap_MarkerVector___setitem__, METH_VARARGS },
+	 { (char *)"MarkerVector___setslice__", _wrap_MarkerVector___setslice__, METH_VARARGS },
+	 { (char *)"MarkerVector___delitem__", _wrap_MarkerVector___delitem__, METH_VARARGS },
+	 { (char *)"MarkerVector___delslice__", _wrap_MarkerVector___delslice__, METH_VARARGS },
+	 { (char *)"delete_MarkerVector", _wrap_delete_MarkerVector, METH_VARARGS },
+	 { (char *)"MarkerVector_swigregister", MarkerVector_swigregister, METH_VARARGS },
 	 { (char *)"channelize", _wrap_channelize, METH_VARARGS },
 	 { (char *)"createFreqReference", _wrap_createFreqReference, METH_VARARGS },
 	 { (char *)"dilate", _wrap_dilate, METH_VARARGS },
@@ -11119,6 +12065,8 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"AiffFile_removeMarker", _wrap_AiffFile_removeMarker, METH_VARARGS },
 	 { (char *)"AiffFile_addMarker", _wrap_AiffFile_addMarker, METH_VARARGS },
 	 { (char *)"AiffFile_clearMarkers", _wrap_AiffFile_clearMarkers, METH_VARARGS },
+	 { (char *)"AiffFile_markers", _wrap_AiffFile_markers, METH_VARARGS },
+	 { (char *)"AiffFile_addMarkers", _wrap_AiffFile_addMarkers, METH_VARARGS },
 	 { (char *)"AiffFile_swigregister", AiffFile_swigregister, METH_VARARGS },
 	 { (char *)"new_Analyzer", _wrap_new_Analyzer, METH_VARARGS },
 	 { (char *)"Analyzer_copy", _wrap_Analyzer_copy, METH_VARARGS },
@@ -11161,6 +12109,8 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"SdifFile_removeMarker", _wrap_SdifFile_removeMarker, METH_VARARGS },
 	 { (char *)"SdifFile_addMarker", _wrap_SdifFile_addMarker, METH_VARARGS },
 	 { (char *)"SdifFile_clearMarkers", _wrap_SdifFile_clearMarkers, METH_VARARGS },
+	 { (char *)"SdifFile_markers", _wrap_SdifFile_markers, METH_VARARGS },
+	 { (char *)"SdifFile_addMarkers", _wrap_SdifFile_addMarkers, METH_VARARGS },
 	 { (char *)"SdifFile_swigregister", SdifFile_swigregister, METH_VARARGS },
 	 { (char *)"delete_SpcFile", _wrap_delete_SpcFile, METH_VARARGS },
 	 { (char *)"SpcFile_sampleRate", _wrap_SpcFile_sampleRate, METH_VARARGS },
@@ -11177,6 +12127,8 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"SpcFile_removeMarker", _wrap_SpcFile_removeMarker, METH_VARARGS },
 	 { (char *)"SpcFile_addMarker", _wrap_SpcFile_addMarker, METH_VARARGS },
 	 { (char *)"SpcFile_clearMarkers", _wrap_SpcFile_clearMarkers, METH_VARARGS },
+	 { (char *)"SpcFile_markers", _wrap_SpcFile_markers, METH_VARARGS },
+	 { (char *)"SpcFile_addMarkers", _wrap_SpcFile_addMarkers, METH_VARARGS },
 	 { (char *)"SpcFile_swigregister", SpcFile_swigregister, METH_VARARGS },
 	 { (char *)"NewPlistIterator_atEnd", _wrap_NewPlistIterator_atEnd, METH_VARARGS },
 	 { (char *)"NewPlistIterator_next", _wrap_NewPlistIterator_next, METH_VARARGS },
@@ -11289,6 +12241,7 @@ static swig_type_info _swigt__p_std__vectorTdouble_t[] = {{"_p_std__vectorTdoubl
 static swig_type_info _swigt__p_BreakpointEnvelope[] = {{"_p_BreakpointEnvelope", 0, "BreakpointEnvelope *", 0},{"_p_BreakpointEnvelope"},{0}};
 static swig_type_info _swigt__p_BreakpointPosition[] = {{"_p_BreakpointPosition", 0, "BreakpointPosition *", 0},{"_p_BreakpointPosition"},{0}};
 static swig_type_info _swigt__p_AiffFile[] = {{"_p_AiffFile", 0, "AiffFile *", 0},{"_p_AiffFile"},{0}};
+static swig_type_info _swigt__p_std__vectorTMarker_t[] = {{"_p_std__vectorTMarker_t", 0, "std::vector<Marker > *", 0},{"_p_std__vectorTMarker_t"},{0}};
 static swig_type_info _swigt__p_SdifFile[] = {{"_p_SdifFile", 0, "SdifFile *", 0},{"_p_SdifFile"},{0}};
 static swig_type_info _swigt__p_NewPartialIterator[] = {{"_p_NewPartialIterator", 0, "NewPartialIterator *", 0},{"_p_NewPartialIterator"},{0}};
 static swig_type_info _swigt__p_NewPlistIterator[] = {{"_p_NewPlistIterator", 0, "NewPlistIterator *", 0},{"_p_NewPlistIterator"},{0}};
@@ -11308,6 +12261,7 @@ _swigt__p_std__vectorTdouble_t,
 _swigt__p_BreakpointEnvelope, 
 _swigt__p_BreakpointPosition, 
 _swigt__p_AiffFile, 
+_swigt__p_std__vectorTMarker_t, 
 _swigt__p_SdifFile, 
 _swigt__p_NewPartialIterator, 
 _swigt__p_NewPlistIterator, 
