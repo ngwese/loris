@@ -192,7 +192,7 @@ readLorisMatrices( SdifFileT *file, std::vector< Partial > & partialsVector )
 						// Fill a rowData structure.
 						RowOfLorisData rowData = { 0.0 };
 						SdifFloat8 *rowDataPtr = &rowData.index;
-						for (int col = 1; col <= min(ncols, lorisRowMaxElements); col++)
+						for (int col = 1; col <= std::min(ncols, lorisRowMaxElements); col++)
 							*(rowDataPtr++) = SdifFCurrOneRowCol(file, col);
 						
 						// Add rowData as a new breakpoint in a partial, or,
