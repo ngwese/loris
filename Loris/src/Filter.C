@@ -37,6 +37,8 @@
 
 #include <Filter.h>
 
+#include <algorithm>
+
 //	begin namespace
 namespace Loris {
 
@@ -47,7 +49,7 @@ namespace Loris {
 Filter::Filter( void ) :
 	_maCoefs( 1, 1.0 ),
 	_arCoefs( 1, 1.0 ),
-	_delayline( 0 ),
+	_delayline( 1, 0 ),
 	_gain( 1.0 )
 {
 }
@@ -92,7 +94,7 @@ Filter::operator=( const Filter & rhs )
 void
 Filter::clear( void )
 {
-	_delayline.clear();
+	std::fill( _delayline.begin(), _delayline.end(), 0 );
 }
 
 // ---------------------------------------------------------------------------
