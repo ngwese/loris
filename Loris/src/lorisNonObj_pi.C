@@ -62,6 +62,7 @@
 #include <Dilator.h>
 #include <Distiller.h>
 #include <Exception.h>
+#include <FrequencyReference.h>
 #include <ImportLemur.h>
 #include <Morpher.h>
 #include <Notifier.h>
@@ -334,6 +335,52 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch,
 		handleException( s.c_str() );
 	}
 
+}
+
+/* ---------------------------------------------------------------- */
+/*        createFreqReference        
+/*
+/*	Return a newly-constructed BreakpointEnvelope by sampling the 
+	frequency envelope of the longest Partial in a PartialList. 
+	Only Partials whose frequency at the Partial's loudest (highest 
+	amplitude) breakpoint is within the given frequency range are 
+	considered. 
+	
+	For very simple sounds, this frequency reference may be a 
+	good first approximation to a reference envelope for
+	channelization (see channelize()).
+	
+	Clients are responsible for disposing of the newly-constructed 
+	BreakpointEnvelope.
+ */
+extern "C"
+BreakpointEnvelope * 
+createFreqReference( PartialList * partials, double minFreq, double maxFreq )
+{
+	try 
+	{
+		ThrowIfNull((PartialList *) partials);
+		
+		//	use auto_ptr to manage memory in case 
+		//	an exception is generated (hard to imagine):
+		std::auto_ptr< BreakpointEnvelope > env_ptr( new BreakpointEnvelope( 
+			FrequencyReference( partials->begin(), partials->end(), minFreq, maxFreq ).envelope() ) );
+
+		return env_ptr.release();
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in createFreqReference(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in createFreqReference(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	return NULL;
 }
 
 /* ---------------------------------------------------------------- */

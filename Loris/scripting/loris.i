@@ -525,13 +525,11 @@ void distill( PartialList * partials )
 		Loris::Sieve sieve( 0.0001 );
 		sieve.sift( *partials );
 	}
-	/*	Lippold's wacky experimental sifting thingie: 
-		If any two partials with same label overlap in time,
-		keep only the longer of the two partials.
+	/*	Eliminate overlapping Partials having the same label 
+		(except zero). If any two partials with same label 
+		overlap in time, keep only the longer of the two.
 		Set the label of the shorter duration partial to zero.
 		
-		This used to be "experimental," and is now just 
-		"transitional."
 	 */
 %}
 
@@ -545,105 +543,42 @@ void distill( PartialList * partials )
 	represented by classes in the Loris core.
 %}
 
-/*
-	This isn't needed so badly anymore, since we now
-	have iterators and list mutation support.
-	
-void copyByLabel( const PartialList * src, long label, PartialList * dst );
-/*	Append copies of Partials in the source PartialList having the
-	specified label to the destination PartialList. The source list
-	is unmodified.
- */
- 
-//	This needs to be reconsidered!
-//	&&&&&&&&&&
-//
 %{
-	#include <memory> 	//	 for auto_ptr
-	
-	BreakpointEnvelope * 
-	createFreqReference( PartialList * partials, int numSamples,
-						 double minFreq, double maxFreq )
-	{
-		ThrowIfNull((PartialList *) partials);
-		
-		if ( numSamples <= 0 )
-			Throw( Loris::InvalidArgument, "number of samples in frequency reference must be positive." );
-		
-		if ( maxFreq < minFreq )
-			std::swap( minFreq, maxFreq );
-			
-		//	find the longest Partial in the given frequency range:
-		PartialList::iterator longest = partials->end();
-		for ( PartialList::iterator it = partials->begin(); 
-			  it != partials->end(); 
-			  ++it ) 
-		{
-			//	evaluate the Partial's frequency at its loudest
-			//	(highest sinusoidal amplitude) Breakpoint:
-			Partial::const_iterator partialIter = it->begin();
-			double maxAmp = 
-				partialIter.breakpoint().amplitude() * std::sqrt( 1. - partialIter.breakpoint().bandwidth() );
-			double time = partialIter.time();
-			
-			for ( ++partialIter; partialIter != it->end(); ++partialIter ) 
-			{
-				double a = partialIter.breakpoint().amplitude() * 
-							std::sqrt( 1. - partialIter.breakpoint().bandwidth() );
-				if ( a > maxAmp ) 
-				{
-					maxAmp = a;
-					time = partialIter.time();
-				}
-			}			
-			double compareFreq = it->frequencyAt( time );
-			
-			
-			if ( compareFreq < minFreq || compareFreq > maxFreq )
-				continue;
-				
-			if ( longest == partials->end() || it->duration() > longest->duration() ) 
-			{
-				longest = it;
-			}
-		}	
-		
-		if ( longest == partials->end() ) 
-		{
-			Throw( Loris::InvalidArgument, "no partials found in the specified frequency range" );
-		}
-	
-		//	use auto_ptr to manage memory in case 
-		//	an exception is generated (hard to imagine):
-		std::auto_ptr< BreakpointEnvelope > env_ptr( new BreakpointEnvelope() );
-
-		//	find n samples, ignoring the end points:
-		double dt = longest->duration() / (numSamples + 1.);
-		for ( int i = 0; i < numSamples; ++i ) 
-		{
-			double t = longest->startTime() + ((i+1) * dt);
-			double f = longest->frequencyAt(t);
-			env_ptr->insertBreakpoint( t, f );
-		}
-		
-		return env_ptr.release();
-	}
+	#include <loris.h>
 %}
 
 %new BreakpointEnvelope * 
-createFreqReference( PartialList * partials, int numSamples,
-					 double minFreq, double maxFreq );
-/*	Return a newly-constructed BreakpointEnvelope comprising the
-	specified number of samples of the frequency envelope of the
-	longest Partial in a PartialList. Only Partials whose frequency
-	at the Partial's loudest (highest amplitude) breakpoint is
-	within the given frequency range are considered. 
+createFreqReference( PartialList * partials, double minFreq, double maxFreq );
+/*	Return a newly-constructed BreakpointEnvelope by sampling the 
+	frequency envelope of the longest Partial in a PartialList. 
+	Only Partials whose frequency at the Partial's loudest (highest 
+	amplitude) breakpoint is within the given frequency range are 
+	considered. 
 	
 	For very simple sounds, this frequency reference may be a 
 	good first approximation to a reference envelope for
 	channelization (see channelize()).
  */
- 
+  
+
+void scaleAmp( PartialList * partials, BreakpointEnvelope * ampEnv );
+/*	Scale the amplitude of the Partials in a PartialList according 
+	to an envelope representing a time-varying amplitude scale value.
+ */
+				 
+void scaleNoiseRatio( PartialList * partials, BreakpointEnvelope * noiseEnv );
+/*	Scale the relative noise content of the Partials in a PartialList 
+	according to an envelope representing a (time-varying) noise energy 
+	scale value.
+ */
+
+void shiftPitch( PartialList * partials, BreakpointEnvelope * pitchEnv );
+/*	Shift the pitch of all Partials in a PartialList according to 
+	the given pitch envelope. The pitch envelope is assumed to have 
+	units of cents (1/100 of a halfstep).
+ */
+
+#if 0
 %{
 	#include <cmath>
 %}
@@ -735,6 +670,7 @@ createFreqReference( PartialList * partials, int numSamples,
 	 */
 %} 
  
+#endif
 
 			
 			

@@ -359,6 +359,22 @@ void channelize( PartialList * partials,
 	their frequencies are not modified in any way.
  */
 
+BreakpointEnvelope * 
+createFreqReference( PartialList * partials, double minFreq, double maxFreq );
+/*	Return a newly-constructed BreakpointEnvelope by sampling the 
+	frequency envelope of the longest Partial in a PartialList. 
+	Only Partials whose frequency at the Partial's loudest (highest 
+	amplitude) breakpoint is within the given frequency range are 
+	considered. 
+	
+	For very simple sounds, this frequency reference may be a 
+	good first approximation to a reference envelope for
+	channelization (see channelize()).
+	
+	Clients are responsible for disposing of the newly-constructed 
+	BreakpointEnvelope.
+ */
+ 
 void dilate( PartialList * partials, 
 			 double * initial, double * target, int npts );
 /*	Dilate Partials in a PartialList according to the given 
@@ -472,23 +488,6 @@ void copyByLabel( const PartialList * src, long label, PartialList * dst );
 	is unmodified.
  */
 
-BreakpointEnvelope * 
-createFreqReference( PartialList * partials, int numSamples,
-					 double minFreq, double maxFreq );
-/*	Return a newly-constructed BreakpointEnvelope comprising the
-	specified number of samples of the frequency envelope of the
-	longest Partial in a PartialList. Only Partials whose frequency
-	at the Partial's loudest (highest amplitude) breakpoint is
-	within the given frequency range are considered. 
-	
-	For very simple sounds, this frequency reference may be a 
-	good first approximation to a reference envelope for
-	channelization (see channelize()).
-	
-	Clients are responsible for disposing of the newly-constructed 
-	BreakpointEnvelope.
- */
- 
 void scaleAmp( PartialList * partials, BreakpointEnvelope * ampEnv );
 /*	Scale the amplitude of the Partials in a PartialList according 
 	to an envelope representing a time-varying amplitude scale value.

@@ -32,6 +32,7 @@ pkginclude_HEADERS = AiffFile.h	\
 				Exception.h	\
 				Filter.h	\
 				FourierTransform.h	\
+				Frequencyreference.h \
 				ImportLemur.h	\
 				KaiserWindow.h	\
 				Morpher.h	\
@@ -75,6 +76,8 @@ libclasses_la_SOURCES = AiffFile.C \
 		Filter.h \
 		FourierTransform.C \
 		FourierTransform.h \
+		Frequencyreference.C \
+		Frequencyreference.h \
 		ieee.c \
 		ieee.h \
 		ImportLemur.C \
