@@ -216,43 +216,6 @@ Analyzer::extractPeaks( Frame & frame )
 	const double threshold = pow( 10., 0.05 * noiseFloor() );	//	absolute magnitude threshold
 	const double sampsToHz = sampleRate() / _spectrum->size();
 	
-	#ifdef __THUMP__
-	//	HEY!
-	double magSum = _spectrum->magnitude( 0 );
-	double eSum = _spectrum->magnitude( 0 ) * _spectrum->magnitude( 0 );
-	
-	vector< double > hey, ho, letsogo;
-	hey.push_back( _spectrum->magnitude( 0 ) );
-	ho.push_back( _spectrum->reassignedFrequency( 0 ) );
-	letsogo.push_back( _spectrum->reassignedTime( 0 ) );
-	
-	for ( int k = 1; _spectrum->magnitude( k ) < _spectrum->magnitude( k-1 ); ++k ) {
-		magSum += 2. * _spectrum->magnitude( k );
-		eSum += 2.* (_spectrum->magnitude( k ) * _spectrum->magnitude( k ));
-		hey.push_back( _spectrum->magnitude( k ) );
-		ho.push_back( _spectrum->reassignedFrequency( k ) );
-		letsogo.push_back( _spectrum->reassignedTime( k ) );
-	}
-	
-	//	keep a DC peak:
-	double DCmag = _spectrum->magnitude( 0 );
-	if ( DCmag > _spectrum->magnitude( 1 ) &&
-		 DCmag > threshold ) {
-		double timeCorrection = _spectrum->reassignedTime( 0 );
-		if ( abs(timeCorrection) <= hopSize() ) {
-			double time = frameTime()/* + ( timeCorrection / sampleRate() ) */;
-			frame.push_back( Peak( 0, DCmag, 0., 0., time ) );
-		}
-	}
-	
-	if ( frame.size() > 0 ) {
-		Peak & peak = frame.front();
-		debugger << "frame has peak at frequency " << peak.frequency() <<
-		 			 " amplitude " << peak.amplitude() <<
-		 			 " and time " << peak.time() << endl;
-	}
-	#endif
-	
 	//	look for magnitude peaks in the spectrum:
 	for ( int j = 1; j < (_spectrum->size() / 2) - 1; ++j ) {
 		if ( abs((*_spectrum)[j]) > abs((*_spectrum)[j-1]) && 
@@ -434,29 +397,37 @@ Analyzer::spawnPartial( double time, const Breakpoint & bp )
 // ---------------------------------------------------------------------------
 //	pruneBogusPartials
 // ---------------------------------------------------------------------------
-//	Discovered that we have many Partials of zero duration, no sense
+//	Analysis may yield many Partials of zero duration, no sense
 //	in retaining those.
 //
 void
 Analyzer::pruneBogusPartials( void )
 {
-	long countem = 0;
+	//	collect the very short Partials:
+	list<Partial> veryshortones;
 	for ( partial_iterator it = partials().begin(); 
 		  it != partials().end(); 
 		  /* ++it */ ) {
 		//	need to be careful with the iterator update, 
-		//	because erasure will invalidate it:
+		//	because erasure or splice will invalidate it:
 		partial_iterator next = it;
 		++next;
 		if ( it->duration() == 0. ) {
-			distributeEnergy( *it, partials().begin(), partials().end() );
-			partials().erase( it );
-			++countem;
+			veryshortones.splice( veryshortones.end(), partials(), it );
 		}
 		it = next;
 	}
-	debugger << "Analyzer removed " << countem << " zero-duration Partials." << endl;
+	
+	//	distribute their energy:
+	for ( list<Partial>::iterator it = veryshortones.begin();
+		  it != veryshortones.end();
+		  ++it ) {
+		distributeEnergy( *it, partials().begin(), partials().end() );
+	}
+
+	debugger << "Analyzer pruned " << veryshortones.size() << " zero-duration Partials." << endl;
 }
+
 
 
 End_Namespace( Loris )

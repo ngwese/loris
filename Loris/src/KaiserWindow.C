@@ -25,6 +25,9 @@ static double zeroethOrderBessel( double );
 //	p. 452 for further explanation of the Kaiser window. Also, see Kaiser 
 //	and Schafer, 1980.
 //
+//	This could be a template function taking iterators in place of 
+//	the vector.
+//
 void
 KaiserWindow::create( vector< double > & samples, double shape )
 {   
@@ -33,7 +36,8 @@ KaiserWindow::create( vector< double > & samples, double shape )
  		return;
  	
 //	Compute the window bounds:
-	double offset;		
+	double offset = -0.5 * (length - 1);
+	/*		
 	if (length % 2)	{
 		// odd length
 		offset = - (length - 1) / 2;
@@ -42,7 +46,7 @@ KaiserWindow::create( vector< double > & samples, double shape )
 		//	even length
 		offset = (- length / 2) + 0.5;
 	}
-	
+	*/
 //	Pre-compute the denominator in the kaiser equation.	
 	double denom = zeroethOrderBessel( shape );
 	

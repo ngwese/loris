@@ -57,6 +57,7 @@ public:
 //	iterator access:
 //	(is this good?)
 //	what did I need this for?
+//	for STL algorithms, that's what for.
 	//typedef std::vector< std::complex< double > >::iterator iterator;
 	typedef std::complex< double > * iterator;
 	iterator begin( void ){ return _z; } //.begin(); }

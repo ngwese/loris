@@ -33,7 +33,6 @@ public:
 	template< class Iter >
 	void distribute( const Partial & p, Iter begin, Iter end ) const
 	{
-		return;
 		//	loop over Breakpoints in p:
 		Partial::const_iterator envIter;
 		double tUpperBound = p.startTime();	// initialize:

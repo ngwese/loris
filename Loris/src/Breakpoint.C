@@ -11,7 +11,6 @@
 //
 // ===========================================================================
 #include "LorisLib.h"
-#include "Partial.h"
 #include "Breakpoint.h"
 #include "Exception.h"
 #include "Notifier.h"

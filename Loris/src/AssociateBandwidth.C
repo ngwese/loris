@@ -269,6 +269,8 @@ AssociateBandwidth::accumulateSinusoid( double f, double a )
 	long offset = round( WinSpecOversample * (intBinNumber - fracBinNum) );
 	
 	//	compute the more accurate peak amplitude:
+	//	(main lobe spectrum has been normalized so
+	//	that the zeroeth sample is 1.0)
 	double correctAmp = a / _mainlobe[abs(offset)];
 	
 	//	find the best rate to step through the 
@@ -353,6 +355,19 @@ AssociateBandwidth::accumulateSinusoid( double f, double a )
 		}	//	end for step
 	}	//	end if we didn't like a smaller step
 	
+	//	try computing a new correct amplitude
+	//	from the optimal step, then using that
+	//	amplitude and a step of WinSpecOversample:
+	#define HERE_WE_GO_AGAIN
+	#ifdef HERE_WE_GO_AGAIN
+	//	compute a better amplitude estimate 
+	//	from the step and the window function:
+	//	(I pulled this outta my butt)
+	double ampRatio = 1. - (0.5 * (1. - ((double)step / WinSpecOversample)));
+	correctAmp /= ampRatio;	
+	step = WinSpecOversample;
+	#endif
+	
 	//	distribute the peak amplitude: 
 	//	If I decide to keep this yoyo stuff, I can probably
 	//	condense the above loops with the one below.
@@ -405,11 +420,12 @@ AssociateBandwidth::accumulateSinusoid( double f, double a )
 	#ifdef YOYO
 	distribute( f, YO, _sinusoidalEnergy  );
 	#endif
-	
-	//	compute a better amplitude estimate 
-	//	from the step and the window function:
-	double ampRatio = 1. - (0.5 * (1. - ((double)step / WinSpecOversample)));
+
+	#ifdef HERE_WE_GO_AGAIN
+	return correctAmp;
+	#else	
 	return correctAmp / ampRatio;
+	#endif
 }
 
 // ---------------------------------------------------------------------------

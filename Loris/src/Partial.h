@@ -37,7 +37,7 @@ public:
 	Partial( void );
 	
 //	destructor is not virtual, this is not a base 
-//	class, let compiler generate it:
+//	class, let the compiler generate it:
 	//~Partial( void );
 
 //	copy and assignment can be compiler-generated:
@@ -90,6 +90,10 @@ public:
 //	linkage to neighboring Breakpoints. For most applications, the 
 //	proxy-iterator class PartialIterator should be used instead of
 //	using the Partial::iterators directly.
+//
+//	Is it possible to deny this access to everyone except the
+//	PartialIterator (EnvelopeView) class?
+//
 	typedef std::map< double, Breakpoint >::iterator iterator;
 	typedef std::map< double, Breakpoint >::const_iterator const_iterator;
 	

@@ -22,6 +22,8 @@ Begin_Namespace( Loris )
 //	Class KaiserWindow computes a Kaiser window function (see Kaiser and 
 //	Schafer, 1980) for windowing FFT data.
 //
+//	This _should_ _not_ be a class.
+//
 class KaiserWindow
 {
 //	-- public interface --
