@@ -47,8 +47,8 @@ PERL_MODULE = loris.so
 TCL_WRAPPER = loris_tcl_wrap.C
 TCL_MODULE = loris.so
 
-PY_VERSION = 1.5
-PYTHON_PREFIX = /usr
+PY_VERSION = 2.1
+PYTHON_PREFIX = /usr/local
 PYTHON_INCLUDE = ${PYTHON_PREFIX}/include/python${PY_VERSION}
 # PYTHON_LIB = ${PYTHON_PREFIX}/lib/python${PY_VERSION}/config
 
@@ -57,8 +57,8 @@ PERL_INCLUDE = /usr/lib/perl5/5.005/i386-linux/CORE/
 
 TCL_INCLUDE = /usr/include
 
-CC = gcc
-CFLAGS = -O2 -I${CLASSES} -Wno-multichar -xc++
+CC = g++
+CFLAGS = -O2 -I${CLASSES} -Wno-multichar 
 
 python: classes $(PY_WRAPPER:c++=o)
 	${CC} -shared $(PY_WRAPPER:c++=o) $(OBJ_LORIS) ${LIB_LORIS} -o $(OUTPUT)/$(PY_MODULE)
