@@ -182,7 +182,7 @@ Distiller::fixGaps( Partial & dest,
 	{	
 		segments.push_back( std::make_pair( p->startTime(), p->endTime() ) );
 	}
-	debugger << "found " << segments.size() << " segments." << endl;
+	//debugger << "found " << segments.size() << " segments." << endl;
 	
 	//	sort the list and collapse overlapping segments
 	//	to leave a list of non-overlapping segments:
@@ -193,8 +193,11 @@ Distiller::fixGaps( Partial & dest,
 		//	curseg absorbs all succeeding segments that
 		//	begin before it ends:
 		std::list< std::pair<double, double> >::iterator nextseg = curseg;
-		while ( (++nextseg)->first < curseg->second )
+		for ( ++nextseg; nextseg != segments.end(); ++nextseg ) 
 		{
+			if ( nextseg->first > curseg->second )
+				break;
+			//	else absorb:
 			curseg->second = std::max( curseg->second, nextseg->second );
 		}
 		
@@ -207,7 +210,7 @@ Distiller::fixGaps( Partial & dest,
 		++del;
 		segments.erase( del, nextseg );
 	}
-	debugger << "collapsed to " << segments.size() << " segments" << endl;
+	//debugger << "collapsed to " << segments.size() << " segments" << endl;
 	
 	//	fill in gaps between segments:
 	if ( segments.size() > 1 )
