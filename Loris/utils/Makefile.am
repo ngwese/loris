@@ -8,7 +8,7 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-bin_PROGRAMS  = loris_analyze loris_spewmarkers
+bin_PROGRAMS  = loris_analyze loris_spewmarkers loris_mark loris_unmark
 
 INCLUDES = -I$(top_srcdir)/src
 
@@ -32,6 +32,28 @@ else
 loris_spewmarkers_LDADD = $(top_builddir)/src/libloris.la
 endif
 loris_spewmarkers_LDFLAGS = -static
+
+# loris_mark: a utility program to add a
+# marker to a AIFF, SPC, or SDIF file.
+loris_mark_SOURCES = loris_mark.C
+if DARWIN
+loris_mark_LDADD = $(top_builddir)/src/.libs/libloris.a
+else
+loris_mark_LDADD = $(top_builddir)/src/libloris.la
+endif
+loris_mark_LDFLAGS = -static
+
+
+# loris_mark: a utility program to remove a
+# marker or markers from a AIFF, SPC, or SDIF file.
+loris_unmark_SOURCES = loris_unmark.C
+if DARWIN
+loris_unmark_LDADD = $(top_builddir)/src/.libs/libloris.a
+else
+loris_unmark_LDADD = $(top_builddir)/src/libloris.la
+endif
+loris_unmark_LDFLAGS = -static
+
 
 MAINTAINERCLEANFILES = 	Makefile.in
 

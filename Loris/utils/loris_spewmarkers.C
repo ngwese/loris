@@ -122,7 +122,7 @@ int main( int argc, char* argv[] )
 		std::vector< Marker >::iterator it;
 		for ( it = markers.begin(); it != markers.end(); ++it )
 		{
-			cout << it->time() << "\t" << it->name() << "\n";
+			cout << it->time() << "\t\"" << it->name() << "\"\n";
 		}
 	}
 	

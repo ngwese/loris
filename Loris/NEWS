@@ -51,6 +51,11 @@ OLD CODE.
 
 - improved phase accuracy of synthesis.
 
+- Added a command line utility for adding markers to AIFF, 
+SDIIF, and Spc files, and another for removing markers
+(loris_mark and loris_unmark).
+
+
 -------------------------------------------------------
 changes since 1.1 release:
 
