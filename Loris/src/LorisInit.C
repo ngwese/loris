@@ -18,7 +18,7 @@
 #include "LorisInit.h"
 #include "Exception.h"
 #include "LorisTypes.h"
-#include "LowMem.h"
+#include "lowMem.h"
 #include "notify.h"
 
 #include <string>
