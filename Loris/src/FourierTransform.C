@@ -102,7 +102,7 @@ static bool Check_Types( void )
 
 static bool CHECKED_TYPES = Check_Types();
 
-#ifndef USE_COMPILE_TIME_ASSERTIONS
+#if !defined(NO_COMPILE_TIME_ASSERTIONS) && defined(USE_COMPILE_TIME_ASSERTIONS)
 // ---------------------------------------------------------------------------
 //  Compile_Time_Assertions
 // ---------------------------------------------------------------------------
