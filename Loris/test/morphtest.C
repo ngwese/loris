@@ -59,9 +59,6 @@ static void getFreqReference( const std::list< Partial > & partials, int numSamp
 
 int main( )
 {
-	std::cout << "This doesn't work yet, don't use it." << endl << endl;
-	//return 1;
-
 	std::cout << "Welcome to the very simple Loris morphing demo!" << endl;
 	std::cout << "Kelly Fitz 2000" << endl << endl;
 	std::cout << "Generates a simple linear morph between a " << endl;
@@ -81,11 +78,9 @@ int main( )
 		clar.splice( clar.end(), a.partials() );
 
 		Handle< BreakpointEnvelope > clarRef;
-		typedef Handle< Envelope > DamThing;
 		getFreqReference( clar, 20, 0, 1000, clarRef );
 							  
-		DamThing dtclar( clarRef );
-		Channelizer ch( dtclar, 1 );
+		Channelizer ch( ( Handle< Envelope >( clarRef ) ), 1 );
 		ch.channelize( clar.begin(), clar.end() );
 		
 		Distiller still;
@@ -130,8 +125,7 @@ int main( )
 		Handle< BreakpointEnvelope > flutRef;
 		getFreqReference( flut, 20, 0, 1000, flutRef );
 							  
-		DamThing dtf( flutRef );
-		ch = Channelizer( dtf, 1 );
+		ch = Channelizer( ( Handle< Envelope >( flutRef ) ), 1 );
 		ch.channelize( flut.begin(), flut.end() );
 
 		still.distill( flut );
@@ -188,8 +182,8 @@ int main( )
 
 		v = std::vector< double >( (maxtime + Partial::FadeTime()) * f.sampleRate() );
 		synth = Synthesizer( f.sampleRate(), v.begin(), v.end() );
-		for ( std::list< Partial >::iterator pIter = flut.begin(); 
-			  pIter != flut.end(); 
+		for ( std::list< Partial >::iterator pIter = m.partials().begin(); 
+			  pIter != m.partials().end(); 
 			  ++pIter ) 
 		{
 			synth.synthesize( *pIter );
