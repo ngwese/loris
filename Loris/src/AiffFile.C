@@ -461,7 +461,7 @@ AiffFile::writeSampleData( BinaryFile & file )
 	ck.header.size = sizeofSoundData() - sizeofCkHeader();
 				
 	//	no block alignment:	
-	ck.offset = 0.;
+	ck.offset = 0;
 	ck.blockSize = 0;
 	
 /*
@@ -585,6 +585,10 @@ Uint_32
 AiffFile::sizeofSoundData( void )
 {
 	Uint_32 dataSize = _samples.size() * ( _sampSize / 8 );
+	//	must be an even number of bytes:
+	if ( dataSize % 2 ) {
+		++dataSize;
+	}
 	
 	return	sizeof(Int_32) +	//	id
 			sizeof(Uint_32) +	//	size

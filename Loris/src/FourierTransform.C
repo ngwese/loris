@@ -181,7 +181,9 @@ FourierTransform::decimationStep( long span )
 	long i;
 	double angle;
 	for ( i = 0, angle = 0.0;  i < span;  ++i, angle += dangle ) {
-		complex< double > W = polar( 1., -angle );
+		//	should angle be positive or negative?
+		//	it looks better when positive...
+		complex< double > W = polar( 1., angle );
 		
 		for ( long j = i;  j < size();  j += twospan ) {	
 			complex< double > temp( _z[j + span] * W );				
