@@ -10,7 +10,7 @@
 
 INCLUDES = $(PYINCLUDE) $(TCLINCLUDE) $(PERLINCLUDE) -I$(top_srcdir)/src -I$(top_builddir)/pi
 
-EXTRA_DIST = loris.py loris.pm loris.i lorisPartialList.i 
+EXTRA_DIST = loris.py perLoris.pm loris.i lorisPartialList.i 
 
 CLEANFILES = loris.pyo loris.pyc $(PYTHON_CMODULE) $(TCL_MODULE)
 MAINTAINERCLEANFILES = Makefile.in
@@ -98,12 +98,11 @@ endif
 
 #----------------------------------------------------------------
 # If the user insists, build the Perl module. It is untested.
-# Do not install it.
 #
 if BUILD_PERL
-
-noinst_LTLIBRARIES = perLoris.la
-noinst_SCRIPTS = perLoris.pm
+perlsitepkgdir = $(exec_prefix)/lib/$(SITEPERL)
+perlsitepkg_LTLIBRARIES = perLoris.la
+perlsitepkg_SCRIPTS = perLoris.pm
 
 perLoris_la_SOURCES = $(PERL_WRAPPER)
 perLoris_la_LDFLAGS = -module -avoid-version

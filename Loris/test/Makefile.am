@@ -29,27 +29,33 @@ endif
 if BUILD_PYTHON
 PYTHON_TEST = run_pytest
 $(PYTHON_TEST):
-	echo "$(PYTHON) $(top_srcdir)/test/morphtest.py" >> $@
+	echo "env PYTHONPATH=$(top_srcdir)/scripting:$(top_builddir)/scripting/.libs \
+			$(PYTHON) $(top_srcdir)/test/morphtest.py" >> $@
 	chmod +x $@
 endif
 
 if BUILD_TCL
 TCL_TEST = run_tcltest
 $(TCL_TEST):
-	echo "$(TCLSH) $(top_srcdir)/test/morphtest.tcl" >> $@
+	echo "env srcdir=$(srcdir) top_builddir=$(top_builddir) \
+		$(TCLSH) $(top_srcdir)/test/morphtest.tcl" >> $@
+	chmod +x $@
+endif
+
+if BUILD_PERL
+PERL_TEST = run_perltest
+$(PERL_TEST):
+	echo "$(PERL) -I$(top_srcdir)/scripting:$(top_builddir)/scripting/.libs \
+			 -e 'use perLoris; print perLoris::version, \"\n\";'" >> $@
 	chmod +x $@
 endif
 
 check_PROGRAMS = test_morpher test_c
-check_SCRIPTS = $(PYTHON_TEST) $(TCL_TEST)
+check_SCRIPTS = $(PYTHON_TEST) $(TCL_TEST) $(PERL_TEST)
 
 TESTS = $(check_PROGRAMS) $(check_SCRIPTS) 
 
-TESTS_ENVIRONMENT = PYTHON=$(PYTHON) \
-					PYTHONPATH=$(top_srcdir)/scripting:$(top_builddir)/scripting/.libs \
-					top_builddir=$(top_builddir)
-
-CLEANFILES = $(PYTHON_TEST) $(TCL_TEST)
+CLEANFILES = $(PYTHON_TEST) $(TCL_TEST) $(PERL_TEST)
 
 distclean-local:
 	-rm -fr *.ctest.* *.pytest.* *.tcltest.*
