@@ -54,8 +54,13 @@ namespace Loris {
 //	leaving at most a single Partial per frequency channel and label.
 //	Channels that contain no Partials are not represented in the distilled
 //	data. Partials that are not labeled, that is, Partials having label 0,
-//	are unaffected by the distillation process. All unlabeled Partials
-//	remain unlabeled and unmodified in the distilled partial set.
+//	are are "collated " into groups of non-overlapping (in time)
+// 	Partials, assigned an unused label (greater than the label associated
+// 	with any frequency channel), and fused into a single Partial per
+// 	group. "Collating" is a bit like "sifting" but non-overlapping
+// 	Partials are grouped without regard to frequency proximity. This
+// 	algorithm produces the smallest-possible number of collated Partials.
+// 	Thanks to Ulrike Axen for providing this optimal algorithm.
 //	
 //	Distillation modifies the Partial container (a PartialList). All
 //	Partials in the distilled range having a common label are replaced by
@@ -83,14 +88,28 @@ public:
 	 */
 	
 //	-- distillation --
-	void distill( PartialList & container, PartialList::iterator dist_begin, 
-				  PartialList::iterator dist_end );
-	/*	Distill Partial on the specified half-open (STL-style) range in the
-		specified container (PartialList). 
-	 */
-	 
 	void distill( PartialList & container );
 	/*	Distill all Partials in the specified container (PartialList).
+	 */
+
+	void operator() ( PartialList & container )
+		{ distill( container ); }
+	/*	Function call operator: same as distill( PartialList & container ).
+	 */
+
+// -- deprecated distill-range members, don't use! --
+	void distill( PartialList & container, PartialList::iterator dist_begin, 
+				  PartialList::iterator dist_end )
+		{ 
+			// These are deprecated, don't use them! 
+			// I am getting rid of them soon!
+			PartialList l( dist_begin, dist_end );
+			distill( l );
+			container.erase( dist_begin, dist_end );
+			container.splice( dist_end, l );
+		} 
+	/*	Distill Partial on the specified half-open (STL-style) range in the
+		specified container (PartialList). 
 	 */
 
 	void operator() ( PartialList & container, PartialList::iterator dist_begin, 

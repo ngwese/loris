@@ -15,7 +15,18 @@ wimpy compilers
 - added check for template member support to configure.in
 
 - changed name of (Python) loriscmodule to _loris, to
-kkep up with changes to SWIG
+keep up with changes to SWIG
+
+- added "collating" of unlabeled Partials to the
+distillation operation. This combines unlabeled Partials
+into groups of non-overlapping (in time) Partials, assigned
+an unused label (greater than the label associated with any
+frequency channel), and fused into a single Partial per
+group. "Collating" is a bit like "sifting" but
+non-overlapping Partials are grouped without regard to
+frequency proximity. This algorithm produces the
+smallest-possible number of collated Partials. Thanks to
+Ulrike Axen for providing this optimal algorithm.
 
 -------------------------------------------------------
 changes since 1.0 release:

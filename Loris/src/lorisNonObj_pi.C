@@ -191,8 +191,11 @@ void dilate( PartialList * partials,
 /*	Distill labeled (channelized)  Partials in a PartialList into a 
 	PartialList containing a single (labeled) Partial per label. 
 	The distilled PartialList will contain as many Partials as
-	there were non-zero labels in the original PartialList. Unlabeled 
-	(label 0) Partials are eliminated.
+	there were non-zero labels (non-empty channels)
+	in the original PartialList. Additionally, unlabeled (label 0) Partials are 
+	"collated" into groups of temporally non-overlapping Partials,
+	assigned an unused label, and fused into a single Partial per
+	group.
  */
 extern "C"
 void distill( PartialList * partials )

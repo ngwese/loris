@@ -55,7 +55,7 @@ else
 libloris_la_LIBADD = $(top_builddir)/classes/libclasses.la
 endif
 
-libloris_la_LDFLAGS = -version-info 3:3:1 $(EXTRA_LD_FLAGS)
+libloris_la_LDFLAGS = -version-info 3:4:1 $(EXTRA_LD_FLAGS)
 
 nodist_include_HEADERS = loris.h
 
