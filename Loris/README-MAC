@@ -26,7 +26,7 @@ from Loris.
 The CodeWarrior project for MacOS links the FFTW routines as a shared
 library, FFTW.PPC.shlb. This library can be built from a CodeWarrior
 project imported from the file FFTW.mcp.xml. You may wish to adjust the
-PPC Processor settings to build a library optimized for your processor.
+Code Generation settings to build a library optimized for your processor.
 You will also need to drag a copy of the shared library to the
 Extensions folder so that it can be found at runtime.
 
@@ -45,9 +45,10 @@ project.
 IRCAM's SDIF library is provided in binary form for MacOS (Classic), and
 can be installed by simply putting the library in the Extensions folder,
 and the header somewhere that CodeWarrior can find it. The CodeWarrior
-project assumes that the SDIF binary distribution folder at the same
+project searches for the SDIF 3.4 binary distribution folder at the same
 level as the Codewarrior folder. If you put it somewhere else, you will
-have to change the Access Paths for your project.
+have to change the Access Paths for your project. Please use version 3.4
+or later of IRCAM's SDIF library.
 
 Darwin/MacOS X:
 
