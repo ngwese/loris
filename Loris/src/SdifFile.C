@@ -35,7 +35,7 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
- 
+
 /*
 
 Portions of this code are from the CNMAT SDIF library.
@@ -336,17 +336,19 @@ static SDIFresult SDIF_Write4(const void *block, size_t n, FILE *f) {
    const char *q = (const char *)block;
     int i, m = 4*n;
 
-    if ((n << 2) > BUFSIZE) {
-	int num = BUFSIZE >> 2;
-	if (r = SDIF_Write4(block, num, f)) return r;
-	return SDIF_Write4(((char *) block) + num, n-num, f);
+    if ((n << 2) > BUFSIZE) 
+    {
+		int num = BUFSIZE >> 2;
+		if (r = SDIF_Write4(block, num, f)) return r;
+		return SDIF_Write4(((char *) block) + num, n-num, f);
     }
 
-    for (i = 0; i < m; i += 4) {
-	p[i] = q[i+3];
-	p[i+3] = q[i];
-	p[i+1] = q[i+2];
-	p[i+2] = q[i+1];
+    for (i = 0; i < m; i += 4) 
+    {
+		p[i] = q[i+3];
+		p[i+3] = q[i];
+		p[i+1] = q[i+2];
+		p[i+2] = q[i+1];
     }
 
     return (fwrite(p,4,n,f) == n) ? ESDIF_SUCCESS : ESDIF_WRITE_FAILED;
@@ -733,40 +735,6 @@ static SDIFresult SDIF_SkipMatrix(const SDIF_MatrixHeader *head, FILE *f) {
 }
 
 
-static SDIFresult SDIF_ReadMatrixData(void *putItHere, FILE *f, const SDIF_MatrixHeader *head) {
-    size_t datumSize = (size_t) SDIF_GetMatrixDataTypeSize(head->matrixDataType);
-    size_t numItems = (size_t) (head->rowCount * head->columnCount);
-    int paddingBytes;
-    char paddingBuffer[8];  /* Most padding any matrix could have. */
-    SDIFresult r;
-    
-#if !defined(WORDS_BIGENDIAN)
-    switch (datumSize) {
-        case 1:
-            if (r = SDIF_Read1(putItHere, numItems, f)) return r;
-        case 2:
-            if (r = SDIF_Read2(putItHere, numItems, f)) return r;
-        case 4:
-            if (r = SDIF_Read4(putItHere, numItems, f)) return r;
-        case 8:
-            if (r = SDIF_Read8(putItHere, numItems, f)) return r;
-        default:
-            return ESDIF_BAD_MATRIX_DATA_TYPE;
-    }
-#else
-    if (fread(putItHere, datumSize, numItems, f) != numItems) {
-	return ESDIF_READ_FAILED;
-    }
-#endif
-
-    /* Handle padding */
-    paddingBytes = SDIF_PaddingRequired(head);
-    if ((r = SDIF_Read1(paddingBuffer, paddingBytes, f))) return r;
-
-    return ESDIF_SUCCESS;
-}
-
-
 static SDIFresult SDIF_WriteMatrixPadding(FILE *f, const SDIF_MatrixHeader *head) {
     int paddingBytes;
     sdif_int32 paddingBuffer[2] = {0,0};
@@ -788,12 +756,16 @@ static SDIFresult SDIF_WriteMatrixData(FILE *f, const SDIF_MatrixHeader *head, v
     switch (datumSize) {
         case 1:
             if (r = SDIF_Write1(data, numItems, f)) return r;
+            break;
         case 2:
             if (r = SDIF_Write2(data, numItems, f)) return r;
+            break;
         case 4:
             if (r = SDIF_Write4(data, numItems, f)) return r;
+            break;
         case 8:
             if (r = SDIF_Write8(data, numItems, f)) return r;
+            break;
         default:
             return ESDIF_BAD_MATRIX_DATA_TYPE;
     }
@@ -1827,7 +1799,7 @@ writeEnvelopeData( FILE * out,
 					// size of matrix header
 					+ sizeof(SDIF_MatrixHeader) 							
 					// size of matrix data plus any padding
-					+ 8*((partialsVector.size() * cols * sizeof(sdif_int32) + 7)/8);	
+					+ 8*((numTracks * cols * sizeof(sdif_int32) + 7)/8);	
 			fh.streamID = streamID;
 			fh.time = frameTime;
 			fh.matrixCount = 1;
