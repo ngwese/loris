@@ -155,7 +155,7 @@ int main( void )
 		m.morph( clar.begin(), clar.end(), flut.begin(), flut.end() );
 
 		// synthesize and export samples
-		cout << "synthesizing " << m.partials().size() << "morphed partials" << endl;
+		cout << "synthesizing " << m.partials().size() << " morphed partials" << endl;
 		AiffFile morphout( m.partials().begin(), m.partials().end(), f.sampleRate() );
 		morphout.write( "morph.ctest.aiff" );
 

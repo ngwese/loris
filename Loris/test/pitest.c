@@ -125,7 +125,7 @@ int main( void )
       sprintf( filename, "flute.aiff" );
    }
    printf( "importing flute samples\n" );
-   N = importAiff( "flute.aiff", samples, BUFSZ, &srate );
+   N = importAiff( filename, samples, BUFSZ, &srate );
    
     /* analyze the flute */
    printf( "analyzing flute 4D\n" );
