@@ -57,42 +57,42 @@ PERL_INCLUDE = /usr/lib/perl5/5.005/i386-linux/CORE/
 
 TCL_INCLUDE = /usr/include
 
-CC = c++
+CC = gcc
 CFLAGS = -O2 -I${CLASSES} -Wno-multichar -xc++
 
-python: classes pywrap
+python: classes $(PY_WRAPPER:c++=o)
 	${CC} -shared $(PY_WRAPPER:c++=o) $(OBJ_LORIS) ${LIB_LORIS} -o $(OUTPUT)/$(PY_MODULE)
-	-mv loris.py $(OUTPUT)/loris.py
 
-perl: classes perlwrap
+perl: classes $(PERL_WRAPPER:c++=o)
 	${CC} -shared $(PERL_WRAPPER:c++=o) $(OBJ_LORIS) ${LIB_LORIS} -o $(OUTPUT)/$(PERL_MODULE)
 	-mv loris.pm $(OUTPUT)/loris.pm
 
-tcl: classes tclwrap
+tcl: classes $(TCL_WRAPPER:c++=o)
 	${CC} -shared $(TCL_WRAPPER:c++=o) $(OBJ_LORIS) ${LIB_LORIS} -o $(OUTPUT)/$(TCL_MODULE)
-
-pywrap: $(PY_WRAPPER:c++=o)
 
 $(PY_WRAPPER:c++=o): $(PY_WRAPPER)
 	$(CC) $(CFLAGS) -I$(PYTHON_INCLUDE) -c $(PY_WRAPPER)
 
-$(PY_WRAPPER): $(SWIG_INTERFACE) $(SUB_INTERFACES)
-	$(SWIG) -python -shadow -c++ -o $(PY_WRAPPER) $(SWIG_INTERFACE)
+pyall: pywrap python
 
-perlwrap: $(PERL_WRAPPER:c++=o)
+pywrap: $(SWIG_INTERFACE) $(SUB_INTERFACES)
+	$(SWIG) -python -shadow -c++ -o $(PY_WRAPPER) $(SWIG_INTERFACE)
+	-mv loris.py $(OUTPUT)/loris.py
 
 $(PERL_WRAPPER:c++=o): $(PERL_WRAPPER)
 	$(CC) $(CFLAGS) -I$(PERL_INCLUDE) -c $(PERL_WRAPPER)
 
-$(PERL_WRAPPER): $(SWIG_INTERFACE) $(SUB_INTERFACES)
+perlall: perlwrap perl
+
+perlwrap: $(SWIG_INTERFACE) $(SUB_INTERFACES)
 	$(SWIG) -perl5 -c++ -o $(PERL_WRAPPER) $(SWIG_INTERFACE)
 	
-tclwrap: $(TCL_WRAPPER:c++=o)
-
 $(TCL_WRAPPER:c++=o): $(TCL_WRAPPER)
 	$(CC) $(CFLAGS) -I$(TCL_INCLUDE) -c $(TCL_WRAPPER)
 
-$(TCL_WRAPPER): $(SWIG_INTERFACE) $(SUB_INTERFACES)
+tclall: tclwrap tcl
+
+tclwrap: $(SWIG_INTERFACE) $(SUB_INTERFACES)
 	$(SWIG) -tcl -c++ -o $(TCL_WRAPPER) $(SWIG_INTERFACE)
 
 classes:
