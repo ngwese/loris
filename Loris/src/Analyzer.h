@@ -33,14 +33,10 @@
  *
  */
 
-#include<PartialList.h>
-#include <vector>
+#include <PartialList.h>
 
 //	begin namespace
 namespace Loris {
-
-class Breakpoint;
-class AnalyzerState;
 
 // ---------------------------------------------------------------------------
 //	class Analyzer
@@ -225,17 +221,6 @@ public:
 	/*	Return an immutable (const) reference to this Analyzer's 
 		list of analyzed Partials. 
 	 */
-
-//	-- internal helpers --
-//	Should these be completely hidden? They all only access public 
-//	members of Analyzer, so they could be redefined static to 
-//	the implementation file and accept the Analyzer as an argument.
-private:
-	typedef std::vector< Breakpoint > FRAME;
-	void extractPeaks( FRAME & frame, double frameTime, AnalyzerState & state );
-	void formPartials( FRAME & frame, double frameTime, AnalyzerState & state );
-	void thinPeaks(FRAME & frame, AnalyzerState & state );
-	void spawnPartial( double time, const Breakpoint & bp );
 	
 };	//	end of class Analyzer
 

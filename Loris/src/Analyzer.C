@@ -37,19 +37,18 @@
 
 #include <Analyzer.h>
 #include <AssociateBandwidth.h>
-#include <BreakpointUtils.h>
+#include <Breakpoint.h>
 #include <Exception.h>
 #include <KaiserWindow.h>
 #include <Notifier.h>
 #include <Partial.h>
+#include <PartialPtrs.h>
 #include <ReassignedSpectrum.h>
 
 #include <algorithm>
 #include <cmath>
-#include <list>
-#include <map>
 #include <memory>
-#include <set>
+#include <utility>
 #include <vector>
 
 using namespace std;
@@ -58,83 +57,21 @@ using namespace std;
 namespace Loris {
 
 // ---------------------------------------------------------------------------
-//	AnalyzerState definition
+//	internal analysis helper declarations
 // ---------------------------------------------------------------------------
-//	Definition of a class representing the state of a single analysis.
-//	Encapsulates the spectrum analyzer, the bandwidth association strategy, 
-//	the energy distribution strategy, and the kludgey peak time cache.
-//
-class AnalyzerState
-{
-	//	state variables:
-	std::auto_ptr< ReassignedSpectrum > _spectrum;
-	std::auto_ptr< AssociateBandwidth > _bw;
-	
-	std::map< double, double > _peakTimeCache;	//	yuck
 
-	double _sampleRate;
-	
-	std::vector< Partial * > _eligiblePartials;		//	yuck?
-	
-public:
-//	construction:
-//	(use compiler-constructed destructor)
-	AnalyzerState( const Analyzer & anal, double srate );
-	
-//	accessors:
-	ReassignedSpectrum & spectrum(void) { return *_spectrum; }
-	AssociateBandwidth & bwAssociation(void) { return *_bw; }
-	
-	std::map< double, double > & peakTimeCache(void) { return _peakTimeCache; }
-	
-	double sampleRate(void) { return _sampleRate; }
+typedef std::vector< std::pair< double, Breakpoint > > FRAME;
 
-	std::vector< Partial * > & eligiblePartials(void) { return _eligiblePartials; }
-	
-};	//	end of class AnalyzerState
-
+static void extractPeaks( FRAME & frame, double frameTime, 
+						  Analyzer & analyzer, ReassignedSpectrum & spectrum,
+						  AssociateBandwidth & bwAssociation, 
+						  double sampleRate );
+static void thinPeaks( FRAME & frame, double freqResolution, AssociateBandwidth & bwAssociation );
+static void formPartials( FRAME & frame, PartialPtrs & eligiblePartials,
+						  double freqDrift, PartialList & partials );
 
 // ---------------------------------------------------------------------------
-//	AnalyzerState constructor
-// ---------------------------------------------------------------------------
-//
-AnalyzerState::AnalyzerState( const Analyzer & anal, double srate ) :
-	_sampleRate( srate )
-{	
-
-	try {
-		//	window parameters:
-		// const double Window_Attenuation = 95.;	//	always
-		//	use the amplitude floor as the window attenuation 
-		double winshape = KaiserWindow::computeShape( - anal.ampFloor() );
-		long winlen = 
-			KaiserWindow::computeLength( anal.windowWidth() / srate, winshape );
-		
-		//	always use odd-length windows:
-		if (! (winlen % 2)) {
-			++winlen;
-		}
-		debugger << "Using Kaiser window of length " << winlen << endl;
-		
-		//	configure window:
-		std::vector< double > v( winlen );
-		KaiserWindow::create( v, winshape );
-		
-		//	configure spectrum:
-		_spectrum.reset( new ReassignedSpectrum( v ) );
-		
-		//	configure bw association strategy, which 
-		//	needs to know about the window:
-		_bw.reset( new AssociateBandwidth( anal.bwRegionWidth(), srate ) );
-	}
-	catch ( Exception & ex ) {
-		ex.append( "couldn't create a ReassignedSpectrum." );
-		throw;
-	}
-}
-
-// ---------------------------------------------------------------------------
-//	Analyzer constructor - freqiuency resolution only
+//	Analyzer constructor - frequency resolution only
 // ---------------------------------------------------------------------------
 //	The core analysis parameter is the frequency resolution, the minimum
 //	instantaneous frequency spacing between partials. Configure all other
@@ -277,22 +214,49 @@ Analyzer::~Analyzer( void )
 void 
 Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate )
 {
-//	construct a state object for this analysis:	
-	AnalyzerState state( *this, srate );
+	//	construct state objects for this analysis:	
 	
-//	loop over short-time analysis frames:
+	//	analysis window parameters:
+	//	use the amplitude floor as the window attenuation 
+	double winshape = KaiserWindow::computeShape( - ampFloor() );
+	long winlen = KaiserWindow::computeLength( windowWidth() / srate, winshape );
+	
+	//	always use odd-length windows:
+	if (! (winlen % 2)) {
+		++winlen;
+	}
+	debugger << "Using Kaiser window of length " << winlen << endl;
+	
+	//	configure window:
+	std::vector< double > window( winlen );
+	KaiserWindow::create( window, winshape );
+	
+	//	configure spectrum:
+	ReassignedSpectrum spectrum( window );
+		
+	//	configure bw association strategy, which 
+	//	needs to know about the window:
+	AssociateBandwidth bwAssociation( bwRegionWidth(), srate );
+	
+	//	collection of ptrs to Partials eligible for matching:
+	PartialPtrs eligiblePartials;
+	
 //
-//	need to check for bogus parameters somewhere.
+//	need to check for bogus parameters somewhere!!!!
 //
+
+	//	compute hop time in samples:
 	const long hop = long( hopTime() * srate );	//	truncate
 	
 	//	window length is first half length + second
 	//	half length + the "center" sample (this works
 	//	for even and odd length windows):
-	const long firstHalfWinLength = state.spectrum().window().size() / 2;
-	const long secondHalfWinLength = (state.spectrum().window().size() - 1) / 2;
+	const long firstHalfWinLength = winlen / 2;
+	const long secondHalfWinLength = (winlen - 1) / 2;
 		
-	try { 
+	//	loop over short-time analysis frames:
+	try 
+	{ 
 		for ( const double * winMiddle = bufBegin; 
 			  winMiddle < bufEnd;
 			  winMiddle += hop ) 
@@ -305,12 +269,12 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate 
 			//	sampsEnd is the position after the last sample to be transformed.
 			const double * sampsBegin = std::max( winMiddle - firstHalfWinLength, bufBegin );
 			const double * sampsEnd = std::min( winMiddle + secondHalfWinLength + 1, bufEnd );
-			state.spectrum().transform( sampsBegin, winMiddle, sampsEnd );
+			spectrum.transform( sampsBegin, winMiddle, sampsEnd );
 			
 			//	extract peaks from the spectrum:
 			FRAME frame;
-			extractPeaks( frame, frameTime, state );	
-			thinPeaks( frame, state );
+			extractPeaks( frame, frameTime, *this, spectrum, bwAssociation, srate );	
+			thinPeaks( frame, freqResolution(), bwAssociation );
 
 #if !defined(No_BW_Association)
 			//	perform bandwidth association:
@@ -321,22 +285,21 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate 
 			FRAME::iterator it;
 			for ( it = frame.begin(); it != frame.end(); ++it )
 			{
-				state.bwAssociation().accumulateSinusoid( it->frequency(), it->amplitude() );
+				bwAssociation.accumulateSinusoid( it->second.frequency(), it->second.amplitude() );
 			}
 			
-			//	associate bandwidth with 
-			//	each Breakpoint here:
+			//	associate bandwidth with each Breakpoint here:
 			for ( it = frame.begin(); it != frame.end(); ++it )
 			{
-				state.bwAssociation().associate( *it );
+				bwAssociation.associate( it->second );
 			}
 			
 			//	reset after association, yuk:
-			state.bwAssociation().reset();
+			bwAssociation.reset();
 #endif	//	 !defined(No_BW_Association)
 
 			//	form Partials from the extracted Breakpoints:
-			formPartials( frame, frameTime, state );
+			formPartials( frame, eligiblePartials, freqDrift(), partials() );
 
 		}	//	end of loop over short-time frames
 	}
@@ -346,6 +309,8 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate 
 		throw;
 	}
 }
+
+#pragma mark -- internal analysis helpers --
 
 // ---------------------------------------------------------------------------
 //	extractPeaks
@@ -357,66 +322,65 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate 
 //	The peaks from the reassigned spectrum are frequency-sorted (implicitly)
 //	so the frame generated here is automatically frequency-sorted.
 //
-void 
-Analyzer::extractPeaks( FRAME & frame, double frameTime, 
-						AnalyzerState & state )
+//	This argument list is grotesque, really ought to be able to make this cleaner.
+//
+static void extractPeaks( FRAME & frame, double frameTime, 
+						  Analyzer & analyzer, ReassignedSpectrum & spectrum,
+						  AssociateBandwidth & bwAssociation, 
+						  double sampleRate )
 {
-	const double threshold = pow( 10., 0.05 * ampFloor() );	//	absolute magnitude threshold
-	const double sampsToHz = state.sampleRate() / state.spectrum().size();
+	const double ampFloor = analyzer.ampFloor();
+	const double freqFloor = analyzer.freqFloor();
+	const double cropTime = analyzer.cropTime();
 	
-	//	cache corrected times for the extracted breakpoints, so 
-	//	that they don't hafta be computed over and over again:
-	state.peakTimeCache().clear();
-		
+	const double threshold = pow( 10., 0.05 * ampFloor );	//	absolute magnitude threshold
+	const double sampsToHz = sampleRate / spectrum.size();
+	
 	//	look for magnitude peaks in the spectrum:
-	for ( int j = 1; j < (state.spectrum().size() / 2) - 1; ++j ) 
+	for ( int j = 1; j < (spectrum.size() / 2) - 1; ++j ) 
 	{
-		if ( abs(state.spectrum()[j]) > abs(state.spectrum()[j-1]) && 
-			 abs(state.spectrum()[j]) > abs(state.spectrum()[j+1])) 
+		if ( abs(spectrum[j]) > abs(spectrum[j-1]) && 
+			 abs(spectrum[j]) > abs(spectrum[j+1])) 
 		{				
 			//	compute the fractional frequency sample
 			//	and the frequency:
-			double fsample = state.spectrum().reassignedFrequency( j );	//	fractional sample
+			double fsample = spectrum.reassignedFrequency( j );	//	fractional sample
 			double fHz = fsample * sampsToHz;
 			
 			//	ignore peaks below our frequency and amplitude floors:
-			if ( fHz < freqFloor() )
+			if ( fHz < freqFloor )
 				continue;
 				
 			//	find the time correction (in samples!) for this peak:
-			double timeCorrectionSamps = state.spectrum().reassignedTime( j );
+			double timeCorrectionSamps = spectrum.reassignedTime( j );
 			
 			//	ignore peaks with large time corrections:
 			//	if I do this, then off-center peaks are not part of
 			//	association, not part of thinning, and the cropping/breaking
 			//	check in formPartials() is unnecessary (large time corrections
 			//	will already have been removed).
-			if ( fabs(timeCorrectionSamps) > cropTime() * state.sampleRate() )
+			if ( fabs(timeCorrectionSamps) > cropTime * sampleRate )
 				continue;
 				
 			//	breakpoints are extracted and thinned and the survivors are
 			//	accumulated as sinusoids in the association process.
-			double mag = state.spectrum().reassignedMagnitude( fsample, j );
-			
-			//	the second part is a sinusoidality measure (?)
-			if ( mag < threshold ) // || std::fabs( fsample - j ) > 1. ) 
+			double mag = spectrum.reassignedMagnitude( fsample, j );
+			if ( mag < threshold )
 			{
-				state.bwAssociation().accumulateNoise( fHz, mag );
+				bwAssociation.accumulateNoise( fHz, mag );
 				continue;
 			}
 											
 			//	retain a spectral peak corresponding to this sample:
 			//	(reassignedPhase() must be called with time correction 
 			//	in samples!)
-			double phase = state.spectrum().reassignedPhase( j, fsample, timeCorrectionSamps );
-			frame.push_back( Breakpoint( fHz, mag, 0., phase ) );
+			double phase = spectrum.reassignedPhase( j, fsample, timeCorrectionSamps );
 			
-			//	cache the peak time, won't have j available when
-			//	ready to insert it into a Partial (convert time 
-			//	correction to seconds):
-			double time = frameTime + (timeCorrectionSamps / state.sampleRate());
-			state.peakTimeCache()[ fHz ] = time;
-			
+			//	also store the corrected peak time in seconds, won't
+			//	be able to compute it later:
+			double time = frameTime + (timeCorrectionSamps / sampleRate);
+			frame.push_back( std::make_pair( time, Breakpoint( fHz, mag, 0., phase ) ) );
+						
 		}	//	end if itsa peak
 	}
 }
@@ -428,24 +392,28 @@ Analyzer::extractPeaks( FRAME & frame, double frameTime,
 //	sort the by magnitude and thin them according
 //	to the specified partial density.
 //
-//	HEY!!!! A cheaper way to do this, I am certain, is to use
-//	a vector of Breakpoints( instead of a list) and to set the
-//	amplitudes of thinned Breakpoints to zero, then use remove_if
-//	and erase to get rid of them at the end.
-//
 
-static bool has_zero_amp( const Breakpoint & bp ) { return bp.amplitude() == 0.; } 
+static bool sort_frame_greater_amplitude( const FRAME::value_type & lhs, 
+										  const FRAME::value_type & rhs )
+{ 
+	return lhs.second.amplitude() > rhs.second.amplitude(); 
+}
+
+static bool has_zero_amp( const FRAME::value_type & v ) 
+{ 
+	return v.second.amplitude() == 0.; 
+} 
 
 /*	a Breakpoint can mask if it is within a specified frequency
 	range and has non-zero amplitude
  */
 struct can_mask
 {
-	bool operator()( const Breakpoint & b )  const
+	bool operator()( const FRAME::value_type & v )  const
 	{ 
-		return	(b.amplitude() > 0.) &&
-				(b.frequency() > _fmin) && 
-				(b.frequency() < _fmax); 
+		return	(v.second.amplitude() > 0.) &&
+				(v.second.frequency() > _fmin) && 
+				(v.second.frequency() < _fmax); 
 	}
 		
 	//	constructor:
@@ -458,8 +426,7 @@ struct can_mask
 		double _fmin, _fmax;
 };
 
-void 
-Analyzer::thinPeaks( FRAME & frame, AnalyzerState & state )
+static void thinPeaks( FRAME & frame, double freqResolution, AssociateBandwidth & bwAssociation )
 {
 	//	can't do anything if there's fewer than two Breakpoints:
 	if ( frame.size() < 2 )
@@ -467,7 +434,7 @@ Analyzer::thinPeaks( FRAME & frame, AnalyzerState & state )
 		return;
 	}
 	
-	std::sort( frame.begin(), frame.end(), BreakpointUtils::greater_amplitude() );
+	std::sort( frame.begin(), frame.end(), sort_frame_greater_amplitude );
 	
 	//	nothing can mask the loudest peak, so I can start with the
 	//	second one, _and_ I can safely decrement the iterator when 
@@ -475,18 +442,19 @@ Analyzer::thinPeaks( FRAME & frame, AnalyzerState & state )
 	FRAME::iterator it = frame.begin();
 	for ( ++it; it != frame.end(); ++it ) 
 	{
+		Breakpoint & bp = it->second;
+		
 		//	search all louder peaks for one that is too near
 		//	in frequency:
-		double lower = it->frequency() - freqResolution();
-		double upper = it->frequency() + freqResolution();
+		double lower = bp.frequency() - freqResolution;
+		double upper = bp.frequency() + freqResolution;
 		if ( it != find_if( frame.begin(), it, can_mask(lower, upper) ) )
-							// BreakpointUtils::frequency_between(lower, upper) ) ) 
 		{
 			//	find_if returns the end of the range (it) if it finds nothing; 
 			//	if it found something else, accumulate *it as noise, and
 			//	remove *it from the frame:
-			state.bwAssociation().accumulateNoise( it->frequency(), it->amplitude() );
-			it->setAmplitude(0.0);
+			bwAssociation.accumulateNoise( bp.frequency(), bp.amplitude() );
+			bp.setAmplitude(0.0);
 		}
 	}
 	
@@ -504,10 +472,30 @@ Analyzer::thinPeaks( FRAME & frame, AnalyzerState & state )
 static inline double distance( const Partial & partial, 
 							   const Breakpoint & bp )
 {
-	//	need a more efficient way to check for invalid Partials!
-	Assert(partial.begin() != partial.end());
 	return fabs( (--partial.end()).breakpoint().frequency() - bp.frequency() );
 }
+
+struct less_freq_difference
+{
+	double freq;
+	
+	less_freq_difference( double f ) : freq( f )  {}
+	
+	bool operator() (const Partial * lhs, const Partial * rhs) const
+	{
+		return 	fabs( (--(lhs->end())).breakpoint().frequency() - freq ) < 
+		 		fabs( (--(rhs->end())).breakpoint().frequency() - freq );
+				
+		//	in the (extremely) unlikely event of a Partial with no 
+		//	Breakpoints, decrementing the iterator would yield undefined 
+		//	behavior. This version, at least, will throw an exception, but
+		//	it is _much_ slower, and since we know that there are no empty
+		//	Partials around, be don't have to be so careful:
+		//
+		//	return	fabs( lhs->frequencyAt( lhs->endTime() ) - freq ) < 
+		//			fabs( rhs->frequencyAt( rhs->endTime() ) - freq );
+	}
+};
 
 // ---------------------------------------------------------------------------
 //	formPartials
@@ -515,41 +503,39 @@ static inline double distance( const Partial & partial,
 //	Append the Breakpoints to existing Partials, if appropriate, or else 
 //	give birth to new Partials.
 //
-void 
-Analyzer::formPartials( FRAME & frame, double /* frameTime */, 
-						AnalyzerState & state )
+
+static bool sort_frame_lesser_freq( const FRAME::value_type & lhs, 
+									const FRAME::value_type & rhs )
+{ 
+	return lhs.second.frequency() < rhs.second.frequency(); 
+}
+
+static void formPartials( FRAME & frame, PartialPtrs & eligiblePartials,
+						  double freqDrift, PartialList & partials )
 {
-	std::vector< Partial * > newlyEligible;
+	PartialPtrs newlyEligible;
 	
 	//	frequency-sort the frame:
-	std::sort( frame.begin(), frame.end(), BreakpointUtils::less_frequency() );
+	std::sort( frame.begin(), frame.end(), sort_frame_lesser_freq );
 	
-	//	loop over short-time peaks:
+	//	loop over short-time spectral peaks:
 	FRAME::iterator bpIter;
 	for( bpIter = frame.begin(); bpIter != frame.end(); ++bpIter ) 
 	{
-		const Breakpoint & peak = *bpIter;
-		const double peakTime = state.peakTimeCache()[ peak.frequency() ];
+		const Breakpoint & bp = bpIter->second;
+		const double peakTime = bpIter->first;
 		
-		//	loop over all eligible Partials, find the Partial
-		//	that is nearest in frequency to the Peak:
+		// 	find the Partial that is nearest in frequency to the Peak:
 		Partial * nearest = NULL;
-		std::vector< Partial * >::iterator candidate;
-		for ( candidate = state.eligiblePartials().begin();
-			  candidate != state.eligiblePartials().end();
-			  ++candidate )
+		if ( ! eligiblePartials.empty() )
 		{
-			//	remember this Partial if it is nearer in frequency 
-			//	to the Breakpoint than every other Partial:
-			if ( ! nearest || distance( **candidate, peak ) < distance( *nearest, peak ) ) 
-			{
-				nearest = *candidate;
-			}
-		}			
+			nearest = * min_element( eligiblePartials.begin(), eligiblePartials.end(),
+									 less_freq_difference( bp.frequency() ) );
+		}
 		
 		//	(now have nearest Partial)
 		//	Create a new Partial with this Breakpoint if:
-		//	- no candidate (nearest) Partial was found (1)
+		//	- no candidate (nearest) Partial was found (no eligible Partials) (1)
 		//	- the nearest Partial is still too far away (2)
 		//	- the next Breakpoint in the Frame exists and is
 		//		closer to the nearest Partial (3)
@@ -557,41 +543,31 @@ Analyzer::formPartials( FRAME & frame, double /* frameTime */,
 		//		closer to the nearest Partial (4)
 		//
 		//	Otherwise, add this Breakpoint to the nearest Partial.
-		double thisdist = (nearest != NULL) ? (distance(*nearest, peak)) : (0.);
-		FRAME::iterator next = bpIter;
-		++next;
-		FRAME::iterator prev = bpIter;
-		--prev;
+		double thisdist = (nearest != NULL) ? (distance(*nearest, bp)) : (0.);
+		FRAME::iterator next = bpIter+1;
+		// FRAME::iterator prev = bpIter-1;
+		// --prev;	//	hey, how do we know we can do _this_? What if bpIter is the first one?
+					//	This might give undefined results, even though we make sure not to use it.
 		if ( nearest == NULL /* (1) */ || 
-			 thisdist > freqDrift() /* (2) */ ||
-			 ( next != frame.end() && thisdist > distance( *nearest, *next ) ) /* (3) */ ||
-			 ( bpIter != frame.begin() && thisdist > distance( *nearest, *prev ) ) /* (4) */ ) 
+			 thisdist > freqDrift /* (2) */ ||
+			 ( next != frame.end() && thisdist > distance( *nearest, next->second ) ) /* (3) */ ||
+			 ( bpIter != frame.begin() && thisdist > distance( *nearest, (bpIter-1)->second ) ) /* (4) */ ) 
 		{
-			spawnPartial( peakTime, peak );
-			newlyEligible.push_back( & partials().back() );
+			//	create a new Partial, beginning with this Breakpoint at
+			//	the specified time, and add it to the collection:
+			Partial p;
+			p.insert( peakTime, bp );
+			partials.push_back( p );
+			newlyEligible.push_back( & partials.back() );
 		}
 		else 
 		{
-			nearest->insert( peakTime, peak );
+			nearest->insert( peakTime, bp );
 			newlyEligible.push_back( &(*nearest) );
 		}
 	}			 
 	 	
-	state.eligiblePartials() = newlyEligible;
-}
-
-// ---------------------------------------------------------------------------
-//	spawnPartial
-// ---------------------------------------------------------------------------
-//	Create a new Partial, beginning with the specified Breakpoint at
-//	the specified time, and add it to the collection.
-//
-void 
-Analyzer::spawnPartial( double time, const Breakpoint & bp )
-{
-	Partial p;
-	p.insert( time, bp );
-	partials().push_back( p );
+	eligiblePartials = newlyEligible;
 }
 
 }	//	end of namespace Loris
