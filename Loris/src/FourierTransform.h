@@ -1,5 +1,5 @@
-#ifndef __fftw_wrapper__
-#define __fftw_wrapper__
+#ifndef INCLUDE_FOURIERTRANSFORM_H
+#define INCLUDE_FOURIERTRANSFORM_H
 // ===========================================================================
 //	FourierTransform.h
 //
@@ -10,20 +10,40 @@
 //	data format and that fftw is compiled with int having at least 
 //	four bytes.
 //
+//	Also contains inline template transform loading free functions.
+//
+//	about complex math functions for fftw_complex:
+//
+//	These functions are all defined as templates in <complex>.
+//	Regrettably, they are all implemented using real() and 
+//	imag() _member_ functions of the template argument, T. 
+//	If they had instead been implemented in terms of the real()
+//	and imag() (template) free functions, then I could ust specialize
+//	those two for the fftw complex data type, and the other template
+//	functions would work. Instead, I have to specialize _all_ of
+//	those functions that I want to use. I hope this was a learning 
+//	experience for someone... In the mean time, the alternative I 
+//	have is to take advantage of the fact that fftw_complex and 
+//	std::complex<double> have the same footprint, so I can just
+//	cast back and forth between the two types. Its icky, but it 
+//	works, and its a lot faster than converting, and mor palatable
+//	than redefining all those operators.
+//
 //	-kel 15 Feb 00
 //
 // ===========================================================================
 #include <complex>
 #include <functional>
 
-//	declare the fftw plan struct type:
-struct fftw_plan_struct; 
+//	fftw.h defines the type fftw_real, which will 
+//	help ensure that fftw_complex has the same memory 
+//	footprint as the complex<> type:
+#include "fftw.h"
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
 #endif
-
 
 // ---------------------------------------------------------------------------
 //	class FourierTransform
@@ -59,17 +79,17 @@ public:
 	long size( void ) const { return _size; }
 	
 //	spectrum access:
-	std::complex< double > & operator[] ( unsigned long index )
+	std::complex< fftw_real > & operator[] ( unsigned long index )
 		{ return _buffer[index]; }
-	const std::complex< double > & operator[] ( unsigned long index ) const
+	const std::complex< fftw_real > & operator[] ( unsigned long index ) const
 		{ return _buffer[index]; }
 		
 //	iterator access, for STL algorithms:
-	typedef std::complex< double > * iterator;
+	typedef std::complex< fftw_real > * iterator;
 	iterator begin( void ){ return _buffer; }
 	iterator end( void ) { return _buffer + _size; }
 		
-	typedef const std::complex< double > * const_iterator;
+	typedef const std::complex< fftw_real > * const_iterator;
 	const_iterator begin( void ) const { return _buffer; }
 	const_iterator end( void ) const { return _buffer + _size; }
 		
@@ -82,12 +102,16 @@ public:
 //	-- instance variables --
 private:
 	const long _size;
-	std::complex< double > * _buffer;
+	std::complex< fftw_real > * _buffer;
 	
 	//	fftw planning structure:
 	fftw_plan_struct * _plan;
 	
 };	//	end of class FourierTransform
+
+//
+//	template loading functions:
+//
 
 // ---------------------------------------------------------------------------
 //	load
@@ -156,4 +180,4 @@ load( FourierTransform & t, Iterator1 begin, Iterator1 center, Iterator1 end, It
 }	//	end of namespace Loris
 #endif
 
-#endif // ndef __fftw_wrapper__
+#endif // ndef INCLUDE_FOURIERTRANSFORM_H

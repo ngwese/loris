@@ -88,7 +88,6 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ )
 			p.initialPhase() << " starting frequency " << 
 			p.begin()->frequency() << endl;
 */
-
 	view().view( p );
 	
 //	don't bother to synthesize Partials having zero duration:

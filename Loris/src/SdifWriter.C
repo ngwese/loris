@@ -31,7 +31,6 @@ typedef struct {
     sdif_float32 index, freq, amp, phase, noise, label, timeOffset, discardable;
 } RowOfLorisData;
 
-
 // ---------------------------------------------------------------------------
 //	SdifWriter constructor from data in memory
 // ---------------------------------------------------------------------------

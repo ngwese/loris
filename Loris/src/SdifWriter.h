@@ -18,8 +18,6 @@
 namespace Loris {
 #endif
 
-
-
 // ---------------------------------------------------------------------------
 //	BreakpointTime
 //
@@ -30,7 +28,6 @@ struct BreakpointTime
 	int index;			// index identifying which partial has the breakpoint
 	float time;			// time of the breakpoint
 };
-
 
 // ---------------------------------------------------------------------------
 //	class SdifWriter

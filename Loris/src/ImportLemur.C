@@ -19,6 +19,7 @@
 #include "LorisTypes.h"
 #include <algorithm>
 #include <cmath>
+#include <fstream>
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
@@ -95,16 +96,35 @@ struct PeakOnDisk
 	Double_64	ttn;
 };
 
+//	prototypes for import helpers:
+static void importPartials( std::istream & s, std::list<Partial> & partials, double bweCutoff );
+static void getPartial( std::istream & s, std::list<Partial> & partials, double bweCutoff );	
+static void readChunkHeader( std::istream & s, CkHeader & ck );
+static void readContainer( std::istream & s );
+static void readParamsChunk( std::istream & s );
+static long readTracksChunk( std::istream & s );
+static void readTrackHeader( std::istream & s, TrackOnDisk & t );
+static void readPeakData( std::istream & s, PeakOnDisk & p );
+
 // ---------------------------------------------------------------------------
 //	ImportLemur constructor
 // ---------------------------------------------------------------------------
 //	Imports immediately.
+//	bweCutoff defaults to 1kHz, the default cutoff in Lemur.
 //	Clients should be prepared to catch ImportErrors.
 //
-ImportLemur::ImportLemur( std::istream & s, double bweCutoff /* = 1000 Hz */) : 
-	_bweCutoff( bweCutoff )	//	default cutoff in Lemur
+ImportLemur::ImportLemur( const char * fname, double bweCutoff /* = 1000 Hz */)
 {
-	importPartials( s );
+	std::fstream fs;
+	try
+	{
+		fs.open( fname, std::ios::in | std::ios::binary );
+	}
+	catch( std::exception & ex )
+	{
+		Throw( ImportException, ex.what() );
+	}
+	importPartials( fs, _partials, bweCutoff );
 }
 
 // ---------------------------------------------------------------------------
@@ -112,8 +132,8 @@ ImportLemur::ImportLemur( std::istream & s, double bweCutoff /* = 1000 Hz */) :
 // ---------------------------------------------------------------------------
 //	Clients should be prepared to catch ImportExceptions.
 //
-void
-ImportLemur::importPartials( std::istream & s )
+static void
+importPartials( std::istream & s, std::list<Partial> & partials, double bweCutoff )
 {
 	try 
 	{
@@ -143,7 +163,7 @@ ImportLemur::importPartials( std::istream & s )
 				//	read Partials:
 				for ( long counter = readTracksChunk( s ); counter > 0; --counter ) 
 				{
-					getPartial(s);
+					getPartial(s, partials, bweCutoff);
 				}
 				foundTracks = true;
 			}
@@ -170,8 +190,8 @@ ImportLemur::importPartials( std::istream & s )
 //	readContainer
 // ---------------------------------------------------------------------------
 //
-void
-ImportLemur::readContainer( std::istream & s )
+static void
+readContainer( std::istream & s )
 {
 	ContainerCk ck;		
 	try 
@@ -203,8 +223,8 @@ ImportLemur::readContainer( std::istream & s )
 //	Convert any FileIOExceptions into ImportExceptions, so that clients can 
 //	reasonably expect to catch only ImportExceptions.
 //
-void
-ImportLemur::getPartial( std::istream & s )
+static void
+getPartial( std::istream & s, std::list<Partial> & partials, double bweCutoff )
 {
 	try 
 	{
@@ -241,7 +261,7 @@ ImportLemur::getPartial( std::istream & s )
 			//	Lemur used a cutoff frequency, below which 
 			//	bandwidth was ignored; Loris does not, so 
 			//	toss out that bogus bandwidth.
-			if ( frequency < _bweCutoff ) {
+			if ( frequency < bweCutoff ) {
 				amplitude *= std::sqrt(1. - bandwidth);
 				bandwidth = 0.;
 			}
@@ -272,7 +292,7 @@ ImportLemur::getPartial( std::istream & s )
 		}
 
 		if ( p.duration() > 0. ) {
-			partials().push_back( p );
+			partials.push_back( p );
 		}
 		/*
 		else {
@@ -282,7 +302,8 @@ ImportLemur::getPartial( std::istream & s )
 		*/
 	}
 	catch( FileIOException & ex ) {
-		Throw( ImportException, ex.str() + "Failed to import a partial from a Lemur file." );
+		ex.append(  "Failed to import a partial from a Lemur file." );
+		throw;
 	}
 	
 }	
@@ -292,8 +313,8 @@ ImportLemur::getPartial( std::istream & s )
 // ---------------------------------------------------------------------------
 //	Read the id and chunk size from the current file position.
 //
-void
-ImportLemur::readChunkHeader( std::istream & s, CkHeader & h )
+static void
+readChunkHeader( std::istream & s, CkHeader & h )
 {
 	BigEndian::read( s, 1, sizeof(ID), (char *)&h.id );
 	BigEndian::read( s, 1, sizeof(Int_32), (char *)&h.size );
@@ -308,8 +329,8 @@ ImportLemur::readChunkHeader( std::istream & s, CkHeader & h )
 //	header has been read.
 //	Returns the number of tracks to read.
 //
-long 
-ImportLemur::readTracksChunk( std::istream & s )
+static long 
+readTracksChunk( std::istream & s )
 {
 	TrackDataCk ck;
 	try 
@@ -318,8 +339,10 @@ ImportLemur::readTracksChunk( std::istream & s )
 		BigEndian::read( s, 1, sizeof(Uint_32), (char *)&ck.numberOfTracks );
 		BigEndian::read( s, 1, sizeof(Int_32), (char *)&ck.trackOrder );
 	}
-	catch( FileIOException & ex ) {
-		Throw( ImportException, ex.str() + "Failed to read badly-formatted Lemur file (bad Track Data chunk)." );
+	catch( FileIOException & ex ) 
+	{
+		ex.append( "Failed to read badly-formatted Lemur file (bad Track Data chunk)." );
+		throw;
 	}
 	
 	return ck.numberOfTracks;
@@ -332,8 +355,8 @@ ImportLemur::readTracksChunk( std::istream & s )
 //	Assumes that the stream is correctly positioned and that the chunk 
 //	header has been read.
 //
-void
-ImportLemur::readParamsChunk( std::istream & s )
+static void
+readParamsChunk( std::istream & s )
 {
 	AnalysisParamsCk ck;
 	try 
@@ -355,12 +378,13 @@ ImportLemur::readParamsChunk( std::istream & s )
 	}
 	catch( FileIOException & ex ) 
 	{
-		Throw( ImportException, ex.str() + "Failed to read badly-formatted Lemur file (bad Parameters chunk)." );
+		ex.append( "Failed to read badly-formatted Lemur file (bad Parameters chunk)." );
+		throw;
 	}
 	
 	if ( ck.formatNumber != FormatNumber ) 
 	{
-		Throw( ImportException, "File has wrong Lemur format for Lemur 5 import." );
+		Throw( FileIOException, "File has wrong Lemur format for Lemur 5 import." );
 	}
 }
 
@@ -369,8 +393,8 @@ ImportLemur::readParamsChunk( std::istream & s )
 // ---------------------------------------------------------------------------
 //	Read from current position.
 //
-void 
-ImportLemur::readTrackHeader( std::istream & s, TrackOnDisk & t )
+static void 
+readTrackHeader( std::istream & s, TrackOnDisk & t )
 {
 	try 
 	{
@@ -391,8 +415,8 @@ ImportLemur::readTrackHeader( std::istream & s, TrackOnDisk & t )
 // ---------------------------------------------------------------------------
 //	Read from current position.
 //
-void 
-ImportLemur::readPeakData( std::istream & s, PeakOnDisk & p )
+static void 
+readPeakData( std::istream & s, PeakOnDisk & p )
 {
 	try 
 	{

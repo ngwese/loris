@@ -12,18 +12,53 @@
 #include "notifier.h"
 #include "pi.h"
 
+#include <vector>
+#include <stdio.h>	//	for FILE
+
+extern "C" {
+#include "sdif.h"
+#include "sdif-types.h"
+}
+
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
 #endif
 
+//	Row of matrix data in SDIF 1TRC format.
+//	Loris exports both a 6-column (resampled) and 8-column (exact times) format.
+//  The 6 column format excludes timeOffset and discardable.
+typedef struct {
+    sdif_float32 index, freq, amp, phase, noise, label, timeOffset, discardable;
+} RowOfLorisData32;
+
+typedef struct {
+    sdif_float64 index, freq, amp, phase, noise, label, timeOffset, discardable;
+} RowOfLorisData64;
+
+//	prototypes for helpers:
+static void read( const char *infilename, std::list<Partial> & partials );
+static void readEnvelopeData( FILE *in, std::vector< Partial * > & partialsVector );
+static void readMatrixData( FILE *in, const SDIF_MatrixHeader & mh, 
+							const double frameTime, 
+							std::vector< Partial * > & partialsVector );
+static void readRowData( FILE *in, const SDIF_MatrixHeader & mh, 
+						 RowOfLorisData64 & trackData );
+static void readRow32( FILE *in, const SDIF_MatrixHeader & mh, 
+					   RowOfLorisData32 & trackData );
+static void readRow64( FILE *in, const SDIF_MatrixHeader & mh, 
+					   RowOfLorisData64 & trackData );
+static void addRowToPartials( const RowOfLorisData64 & trackData, 
+							  const double frameTime, 
+							  std::vector< Partial * > & partialsVector );
 
 // ---------------------------------------------------------------------------
 //	SdifReader constructor from data in memory
 // ---------------------------------------------------------------------------
 //
-SdifReader::SdifReader(  ) 
+SdifReader::SdifReader( const char *infilename ) 
 {
+	read( infilename, _partials );
 }
 
 // ---------------------------------------------------------------------------
@@ -31,8 +66,8 @@ SdifReader::SdifReader(  )
 // ---------------------------------------------------------------------------
 // Let exceptions propagate.
 //
-void
-SdifReader::read( const char *infilename, std::list<Partial> & partials )
+static void
+read( const char *infilename, std::list<Partial> & partials )
 {
 	FILE *in;
 
@@ -71,7 +106,6 @@ SdifReader::read( const char *infilename, std::list<Partial> & partials )
 	SDIF_CloseWrite(in);
 }
 
-
 #pragma mark -
 #pragma mark envelope reading
 // ---------------------------------------------------------------------------
@@ -79,8 +113,8 @@ SdifReader::read( const char *infilename, std::list<Partial> & partials )
 // ---------------------------------------------------------------------------
 // Let exceptions propagate.
 //
-void
-SdifReader::readEnvelopeData( FILE *in, std::vector< Partial * > & partialsVector )
+static void
+readEnvelopeData( FILE *in, std::vector< Partial * > & partialsVector )
 {
 	SDIF_FrameHeader fh;
 	SDIF_MatrixHeader mh;
@@ -123,9 +157,9 @@ SdifReader::readEnvelopeData( FILE *in, std::vector< Partial * > & partialsVecto
 //  Read all rows in this frame's matrix.
 //	Add to existing Loris partials, or create new Loris partials for this data.
 //
-void
-SdifReader::readMatrixData( FILE *in, const SDIF_MatrixHeader & mh, 
-							const double time, std::vector< Partial * > & partialsVector )
+static void
+readMatrixData( FILE *in, const SDIF_MatrixHeader & mh, 
+				const double time, std::vector< Partial * > & partialsVector )
 {	
 //
 // We must have a 1TRC matrix with at least index, frequency, and amplitude in the matrix data.
@@ -167,8 +201,8 @@ SdifReader::readMatrixData( FILE *in, const SDIF_MatrixHeader & mh,
 //  Read row in this frame's matrix.
 //	Add to existing Loris partials, or create new Loris partials for this data.
 //
-void
-SdifReader::readRowData( FILE *in, const SDIF_MatrixHeader & mh, RowOfLorisData64 & trackData )
+static void
+readRowData( FILE *in, const SDIF_MatrixHeader & mh, RowOfLorisData64 & trackData )
 {
 	
 //
@@ -203,8 +237,8 @@ SdifReader::readRowData( FILE *in, const SDIF_MatrixHeader & mh, RowOfLorisData6
 // ---------------------------------------------------------------------------
 //  Read 32-bit row in this frame's matrix.
 //
-void
-SdifReader::readRow32( FILE *in, const SDIF_MatrixHeader & mh, RowOfLorisData32 & trackData )
+static void
+readRow32( FILE *in, const SDIF_MatrixHeader & mh, RowOfLorisData32 & trackData )
 {
 	SDIFresult r;	
 	
@@ -236,8 +270,8 @@ SdifReader::readRow32( FILE *in, const SDIF_MatrixHeader & mh, RowOfLorisData32 
 // ---------------------------------------------------------------------------
 //  Read 64-bit row in this frame's matrix.
 //
-void
-SdifReader::readRow64( FILE *in, const SDIF_MatrixHeader & mh, RowOfLorisData64 & trackData )
+static void
+readRow64( FILE *in, const SDIF_MatrixHeader & mh, RowOfLorisData64 & trackData )
 {
 	SDIFresult r;	
 	
@@ -269,9 +303,9 @@ SdifReader::readRow64( FILE *in, const SDIF_MatrixHeader & mh, RowOfLorisData64 
 // ---------------------------------------------------------------------------
 //	Add to existing Loris partials, or create new Loris partials for this data.
 //
-void
-SdifReader::addRowToPartials( const RowOfLorisData64 & trackData, const double frameTime, 
-								std::vector< Partial * > & partialsVector )
+static void
+addRowToPartials( const RowOfLorisData64 & trackData, const double frameTime, 
+				  std::vector< Partial * > & partialsVector )
 {	
 
 //
@@ -313,7 +347,6 @@ SdifReader::addRowToPartials( const RowOfLorisData64 & trackData, const double f
 		oldpar->insert( frameTime + trackData.timeOffset, newbp );
 	}
 }
-
 
 
 #if !defined( NO_LORIS_NAMESPACE )
