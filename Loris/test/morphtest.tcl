@@ -87,3 +87,45 @@ shiftPitch $clar [ BreakpointEnvelopeWithValue -600 ]
 
 # check clarinet synthesis:
 exportAiff clarOK.aiff [ synthesize $clar $samplerate ] $samplerate 1 16
+
+
+#
+#	analyze flute tone (reuse Analyzer)
+#
+puts "analyzing flute 3D"
+$a configure 270
+set v [ [ AiffFile -args flute.aiff ] samples ]
+set flut [ $a analyze $v $samplerate ]
+
+channelize $flut [ createFreqReference $flut 20 0 1000 ] 1
+distill $flut
+
+# check flute synthesis:
+exportAiff flutOK.aiff [ synthesize $flut $samplerate ] $samplerate 1 16
+
+#
+#	perform temporal dilation
+#
+set flute_times "0.4, 1."
+set clar_times  "0.2, 1."
+set tgt_times  "0.3, 1.2"
+
+puts "dilating sounds to match $tgt_times"
+puts "flute times: $flute_times"
+dilate $flut $flute_times $tgt_times
+puts "clarinet times: $clar_times"
+dilate $clar $clar_times $tgt_times
+
+#
+#	perform morph
+#
+puts "morphing flute and clarinet"
+set mf [BreakpointEnvelope]
+$mf insertBreakpoint 0.6 0
+$mf insertBreakpoint 2 1
+set m [ morph $clar $flut $mf $mf $mf ]
+exportAiff morph.test.aiff [ synthesize $m $samplerate ] $samplerate 1 16
+
+puts "done"
+
+
