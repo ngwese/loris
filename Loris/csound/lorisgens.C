@@ -39,7 +39,9 @@
 #include "string.h"
 
 #include <Breakpoint.h>
+#include <Envelope.h>
 #include <Exception.h>
+#include <Morpher.h>
 #include <Oscillator.h>
 #include <Partial.h>
 #include <SdifFile.h>
@@ -49,6 +51,7 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <utility>
 #include <vector>
 
 using namespace Loris;
@@ -204,6 +207,59 @@ static inline double radianFreq( double hz )
 {
 	return hz * tpidsr;
 }
+
+// ---------------------------------------------------------------------------
+//	accum_samples
+// ---------------------------------------------------------------------------
+//	helper
+//
+static void accum_samples( Oscillator & oscil, Breakpoint & bp, double * bufbegin )
+{
+	if( bp.amplitude() > 0 || oscil.amplitude() > 0 ) 
+	{
+		double radfreq = radianFreq( bp.frequency() );
+		double amp = bp.amplitude();
+		double bw = bp.bandwidth();
+		
+		//	initialize the oscillator if it is changing from zero
+		//	to non-zero amplitude in this  control block:
+		if ( oscil.amplitude() == 0. )
+		{
+			//	don't initialize with bogus values, Oscillator
+			//	only guards against out-of-range target values
+			//	in generateSamples(), parameter mutators are 
+			//	dangerous:
+			
+			if ( radfreq > PI )	//	don't alias
+				amp = 0.;
+
+			if ( bw > 1. )		//	clamp bandwidth
+				bw = 1.;
+			else if ( bw < 0. )
+				bw = 0.;
+		
+			/*
+			std::cerr << "initializing oscillator " << std::endl;
+			
+			std::cerr << "parameters: " << bp.frequency() << "  ";
+			std::cerr << amp << "  " << bw << std::endl;
+			*/
+						
+			//	initialize frequency, amplitude, and bandwidth to 
+			//	their target values:
+			oscil.setRadianFreq( radfreq );
+			oscil.setAmplitude( amp );
+			oscil.setBandwidth( bw );
+			
+			//	roll back the phase:
+			oscil.setPhase( bp.phase() - ( radfreq * ksmps ) );
+		}	
+		
+		//	accumulate samples into buffer:
+		oscil.generateSamples( bufbegin, bufbegin + ksmps, radfreq, amp, bw );
+	}
+}
+
 
 #pragma mark -- LorisReader --
 
@@ -406,6 +462,7 @@ void lorisread_cleanup(void * p)
 	delete tp->priv;
 }
 
+#pragma mark -- Lorisplay_priv --
 
 // ---------------------------------------------------------------------------
 //	Lorisplay_priv definition
@@ -468,7 +525,7 @@ void lorisplay( LORISPLAY * p )
 	//	now accumulate samples into the buffer:
 	double * bufbegin =  &(player.dblbuffer[0]);
 	long numOscils = player.oscils.size();
-	for( long i = 0; i < numOscils; i++)  
+	for( long i = 0; i < numOscils; ++i )  
 	{
 		const Breakpoint & bp = envPts[i];
 
@@ -546,6 +603,8 @@ void lorisplay_cleanup(void * p)
 	delete tp->priv;
 }
 
+#pragma mark -- Lorismorph_priv --
+
 // ---------------------------------------------------------------------------
 //	Lorismorph_priv definition
 // ---------------------------------------------------------------------------
@@ -553,15 +612,92 @@ void lorisplay_cleanup(void * p)
 //
 struct Lorismorph_priv
 {
-	OSCILS oscp;
-	
-	PARTIALS src_part_labeled, tgt_part_labeled;
-	PARTIALS src_part_unlabeled, tgt_part_unlabeled;
+	Morpher morpher;
+	LorisReader & src_reader;
+	LorisReader & tgt_reader;
+	OSCILS oscils;
+		
+	typedef std::map< long, std::pair< long, long > > LabelMap;
+	LabelMap labelMap;
+	std::vector< long > src_unlabeled, tgt_unlabeled;
 	
 	std::vector< double > dblbuffer;
 	
+	double time;
+	
 	Lorismorph_priv( LORISMORPH * params );
-	~Lorismorph_priv( void );
+	~Lorismorph_priv( void ) {}
+	
+	//
+	//	Define Envelope classes that can access the 
+	//	morphing functions defined in the orchestra 
+	//	at the control rate:
+	struct GetFreqFunc : public Envelope
+	{
+		LORISMORPH * params;
+		GetFreqFunc( LORISMORPH * p ) : params(p) {}
+		GetFreqFunc( const GetFreqFunc & other ) : params( other.params ) {}
+		~GetFreqFunc( void ) {}
+		
+		//	Envelope interface:
+		GetFreqFunc * clone( void ) const { return new GetFreqFunc( *this ); }
+		
+		double valueAt( double /* time */ ) const
+		{
+			//	ignore time, can only access the current value:
+			double val = *params->freqenv;
+			if ( val > 1 )
+				val = 1;
+			else if ( val < 0 )
+				val = 0; 
+			return val;
+		}
+	};
+	
+	struct GetAmpFunc : public Envelope
+	{
+		LORISMORPH * params;
+		GetAmpFunc( LORISMORPH * p ) : params(p) {}
+		GetAmpFunc( const GetAmpFunc & other ) : params( other.params ) {}
+		~GetAmpFunc( void ) {}
+		
+		//	Envelope interface:
+		GetAmpFunc * clone( void ) const { return new GetAmpFunc( *this ); }
+		
+		double valueAt( double /* time */ ) const
+		{
+			//	ignore time, can only access the current value:
+			double val = *params->ampenv;
+			if ( val > 1 )
+				val = 1;
+			else if ( val < 0 )
+				val = 0; 
+			return val;
+		}
+	};
+
+	struct GetBwFunc : public Envelope
+	{
+		LORISMORPH * params;
+		GetBwFunc( LORISMORPH * p ) : params(p) {}
+		GetBwFunc( const GetBwFunc & other ) : params( other.params ) {}
+		~GetBwFunc( void ) {}
+		
+		//	Envelope interface:
+		GetBwFunc * clone( void ) const { return new GetBwFunc( *this ); }
+		
+		double valueAt( double /* time */ ) const
+		{
+			//	ignore time, can only access the current value:
+			double val = *params->bwenv;
+			if ( val > 1 )
+				val = 1;
+			else if ( val < 0 )
+				val = 0; 
+			return val;
+		}
+	};
+
 }; 
 
 // ---------------------------------------------------------------------------
@@ -569,19 +705,191 @@ struct Lorismorph_priv
 // ---------------------------------------------------------------------------
 //
 Lorismorph_priv::Lorismorph_priv( LORISMORPH * params ) :
-	dblbuffer( ksmps, 0. )
+	morpher( GetFreqFunc( params ), GetAmpFunc( params ), GetBwFunc( params ) ),
+	src_reader( LorisReader::GetByIndex( *(params->srcidx) ) ),
+	tgt_reader( LorisReader::GetByIndex( *(params->tgtidx) ) ),
+	dblbuffer( ksmps, 0. ),
+	time( 0. )
 {
+	//	build Partial pointer maps:
+	const PARTIALS & srcPartials = src_reader.partials();
+	const PARTIALS &tgtPartials = tgt_reader.partials();
+	
+	//	allocate some memory -- this could be more memory-efficient:
+	src_unlabeled.reserve( srcPartials.size() );
+	tgt_unlabeled.reserve( tgtPartials.size() );
+	
+	//	map source Partial indices:
+	//	(make a note of the largest label we see)
+	long maxsrclabel = 0;
+	for ( long i = 0; i < srcPartials.size(); ++i )
+	{
+		const Partial & part = srcPartials[i];
+		if ( part.label() != 0 )
+			labelMap[ part.label() ] = std::make_pair(i, long(-1));
+		else
+			src_unlabeled.push_back( i );
+			
+		if ( part.label() > maxsrclabel )
+			maxsrclabel = part.label();
+	}
+	// std::cerr << "** Largest source label is " << maxsrclabel << std::endl;
+	
+	//	map target Partial indices:
+	//	(make a note of the largest label we see)
+	long maxtgtlabel = 0;
+	for ( long i = 0; i < tgtPartials.size(); ++i )
+	{
+		const Partial & part = tgtPartials[i];
+		if ( part.label() != 0 )
+		{
+			if ( labelMap.count( part.label() ) > 0 )
+				labelMap[part.label()].second = i;
+			else
+				labelMap[part.label()] = std::make_pair(long(-1), i);
+		}
+		else
+			tgt_unlabeled.push_back( i );
+			
+		if ( part.label() > maxtgtlabel )
+			maxtgtlabel = part.label();
+	}
+	// std::cerr << "** Largest target label is " << maxtgtlabel << std::endl;
+	
+	std::cerr << "** Morph will use " << labelMap.size() << " labeled Partials, ";
+	std::cerr << src_unlabeled.size() << " unlabeled source Partials, and ";
+	std::cerr << tgt_unlabeled.size() << " unlabeled target Partials." << std::endl;
+	
+	//	allocate Oscillators:
+	oscils.resize( labelMap.size() + src_unlabeled.size() + tgt_unlabeled.size() );
 }
 
-/*
-	Yuck. It appears that there's NO WAY to specify two string arguments at all.
+
+#pragma mark -- lorismorph generator functions --
+
+static void lorismorph_cleanup(void * p);
+
+// ---------------------------------------------------------------------------
+//	lorismorph_setup
+// ---------------------------------------------------------------------------
+//	Runs at initialization time for lorismorph.
+//
+extern "C"
+void lorismorph_setup( LORISMORPH * p )
+{
+	p->priv = new Lorismorph_priv( p );
+	p->h.dopadr = lorismorph_cleanup;  // set lorismorph_cleanup as cleanup routine
+}
+
+// ---------------------------------------------------------------------------
+//	lorismorph
+// ---------------------------------------------------------------------------
+//	Audio-rate generator function.
+//
+extern "C"
+void lorismorph( LORISMORPH * p )
+{
+	Lorismorph_priv & imp = *(p->priv);
+	const BREAKPOINTS & srcEnvPts = imp.src_reader.envelopePoints();
+	const BREAKPOINTS & tgtEnvPts = imp.tgt_reader.envelopePoints();
+	OSCILS & oscils = imp.oscils;
 	
-	I think that the way to do this is going to be: implement a reader in the
-	fashion of lpread, and give it a way to specify an index number, something 
-	like lpslot, that can be used to refer to that data later. Then, use this
-	preloaded data in lorismorph, and maybe optionally lorisplay too.
+	//	clear the buffer first!
+	std::fill( imp.dblbuffer.begin(), imp.dblbuffer.end(), 0. );
 	
-	The nice thing about a reader is that it could allow is to do temporal
-	feature alignment in Csound too, as in the lp case, where the reader
-	has a time index.
-*/
+	//	now accumulate samples into the buffer:
+	double * bufbegin =  &(imp.dblbuffer[0]);
+	
+	//	first render all the labeled (morphed) Partials:
+	// std::cerr << "** Morphing Partials labeled " << imp.labelMap.begin()->first;
+	// std::cerr << " to " << (--imp.labelMap.end())->first << std::endl;
+	
+	Breakpoint bp;
+	Partial dummy;
+	long oscidx = 0;
+	Lorismorph_priv::LabelMap::iterator it;
+	for( it = imp.labelMap.begin(); it != imp.labelMap.end(); ++it, ++oscidx )
+	{
+		long label = it->first;
+		std::pair<long, long> & indices = it->second;
+		
+		long isrc = indices.first;
+		long itgt = indices.second;
+		
+		//	this should not happen:
+		if ( itgt < 0 && isrc < 0 )
+		{
+			std::cerr << "HEY!!!! The labelMap had a pair of bogus indices in it at pos " << oscidx << std::endl;
+			continue;
+		}
+		
+		if ( itgt < 0 )
+		{
+			//	morph from the source to a dummy:
+			// std::cerr << "** Morphing source to dummy " << oscidx << std::endl;
+			imp.morpher.morphParameters( srcEnvPts[isrc], dummy, imp.time, bp );
+		}
+		else if ( isrc < 0 )
+		{
+			//	morph from a dummy to the target:
+			// std::cerr << "** Morphing dummy to target " << oscidx << std::endl;
+			imp.morpher.morphParameters( dummy, tgtEnvPts[itgt], imp.time, bp );
+		}
+		else 
+		{
+			//	morph from the source to the target:
+			// std::cerr << "** Morphing source to target " << oscidx << std::endl;
+			imp.morpher.morphParameters( srcEnvPts[isrc], tgtEnvPts[itgt], imp.time, bp );
+		}	
+		
+		accum_samples( oscils[oscidx], bp, bufbegin );
+	} 
+	
+	//	render unlabeled source Partials:
+	// std::cerr << "** Crossfading " << imp.src_unlabeled.size();
+	// std::cerr << " unlabeled source Partials" << std::endl;
+	for( long i = 0; i < imp.src_unlabeled.size(); ++i, ++oscidx )  
+	{
+		//	morph from the source to a dummy:
+		imp.morpher.morphParameters( srcEnvPts[ imp.src_unlabeled[i] ], dummy, imp.time, bp );
+		accum_samples( oscils[oscidx], bp, bufbegin );
+	}
+	
+	
+	//	render unlabeled target Partials:
+	// std::cerr << "** Crossfading " << imp.tgt_unlabeled.size();
+	// std::cerr << " unlabeled target Partials" << std::endl;
+	for( long i = 0; i < imp.tgt_unlabeled.size(); ++i, ++oscidx )  
+	{
+		//	morph from a dummy to the target:
+		imp.morpher.morphParameters( dummy, tgtEnvPts[ imp.tgt_unlabeled[i] ], imp.time, bp );
+		accum_samples( oscils[oscidx], bp, bufbegin );
+	}	
+	
+	//	transfer samples into the result buffer:
+	float *answer = p->result;
+	double * buf = &(imp.dblbuffer[0]);
+    int nn = ksmps;
+	do 
+	{
+		// 	scale Loris sample amplitudes (+/- 1.0) to 
+		//	csound sample amplitudes (+/- 32k):
+		*answer++ = (*buf++) * 32767.;  
+	} while(--nn);
+	
+	//	update time:
+	imp.time += ksmps / esr;
+	 
+}
+
+// ---------------------------------------------------------------------------
+//	lorismorph_cleanup
+// ---------------------------------------------------------------------------
+//	Cleans up after lorismorph.
+//
+static
+void lorismorph_cleanup(void * p)
+{
+	LORISMORPH * tp = (LORISMORPH *)p;
+	delete tp->priv;
+}

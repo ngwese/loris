@@ -25,7 +25,8 @@
  *	lorisgens.h
  *
  *	Header file containing structure definitions for Csound unit generators
- *	supporting bandwidth-enhanced synthesis using the Loris library.
+ *	supporting bandwidth-enhanced synthesis and sound morphing using the 
+ *	Loris library.
  *
  *	The lorisplay module was originally written by Corbin Champion, 2002.
  *
@@ -84,10 +85,10 @@ typedef struct
 	float *result;
 	
 	/* unit generator parameters/arguments */
-	float *time, *srcfilnam, *tgtfilnam, *freqenv, *ampenv, *bwenv, *fadetime;    
+	float *srcidx, *tgtidx, *freqenv, *ampenv, *bwenv;    
 
 	/* private internal data, used by generator */
-	Lorismorph_priv *privstore;
+	Lorismorph_priv *priv;
 } LORISMORPH;
 
 
