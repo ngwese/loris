@@ -35,8 +35,8 @@
 #include <cmath>
 
 extern "C" {
-#include "sdif.h"
-#include "sdif-types.h"
+#include <sdif.h>
+#include <sdif-types.h>
 }
 
 #if !defined( NO_LORIS_NAMESPACE )

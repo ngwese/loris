@@ -61,7 +61,7 @@
 //	fftw.h defines the type fftw_real, which will 
 //	help ensure that fftw_complex has the same memory 
 //	footprint as the complex<> type:
-#include "fftw.h"
+#include <fftw.h>
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
