@@ -223,12 +223,16 @@ readLorisMatrices( SdifFileT *file, std::vector< Partial > & partialsVector )
 			"Error reading SDIF file: Undefined martrix type. "
 			"Is the SdifTypes.STYP file accessible to Loris, and does it include the 1LBL definition?");
 		}
+#if defined(SDIF_VERSION_MINOR) && (SDIF_VERSION_MINOR < 4)
+		//	this error tag vanished between versions 3.2.2 and 3.4 
+		//	of IRCAM's SDIF library. The version macros appeared.
 		else if ( errPtr->Tag == eBadNbData )
 		{
 			Throw(FileIOException, 
 			"Error reading SDIF file: bad martrix data. "
 			"Does the SdifTypes.STYP file include the bandwidth-enhanced 1TRC definition?");
 		}
+#endif
 		else
 		{			
 			Throw(FileIOException, "Error reading SDIF file.");
