@@ -65,6 +65,8 @@ Filter::Filter( const Filter & other ) :
 	_arCoefs( other._arCoefs ),
 	_gain( other._gain )
 {
+	Assert( _delayline.size() >= _maCoefs.size() - 1 );
+	Assert( _delayline.size() >= _arCoefs.size() - 1 );
 }
 
 // ---------------------------------------------------------------------------
@@ -78,10 +80,13 @@ Filter::operator=( const Filter & rhs )
 	if ( &rhs != this )
 	{
 		_delayline.resize( rhs._delayline.size() );
-		_delayline.clear();
+		std::fill( _delayline.begin(), _delayline.end(), 0 );
 		_maCoefs = rhs._maCoefs;
 		_arCoefs = rhs._arCoefs;
 		_gain = rhs._gain;
+
+		Assert( _delayline.size() >= _maCoefs.size() - 1 );
+		Assert( _delayline.size() >= _arCoefs.size() - 1 );
 	}
 	return *this;
 }
@@ -95,6 +100,8 @@ void
 Filter::clear( void )
 {
 	std::fill( _delayline.begin(), _delayline.end(), 0 );
+	Assert( _delayline.size() >= _maCoefs.size() - 1 );
+	Assert( _delayline.size() >= _arCoefs.size() - 1 );
 }
 
 // ---------------------------------------------------------------------------
