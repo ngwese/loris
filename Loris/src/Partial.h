@@ -16,6 +16,8 @@
 
 #include "LorisLib.h"
 #include "Exception.h"
+#include "Breakpoint.h"
+#include <map>
 
 Begin_Namespace( Loris )
 
@@ -36,19 +38,15 @@ class Partial
 public:
 //	construction:
 	Partial( void );
-	~Partial( void );
+	
+//	destructor is not virtual, this is not a base 
+//	class, let compiler generate it:
+	//~Partial( void );
 
-//	copy and assignment perform deep copy:
-	Partial( const Partial & other );
-	Partial & operator =( const Partial & other );
+//	copy and assignment can be compiler-generated:
+	//Partial( const Partial & other );
+	//Partial & operator =( const Partial & other );
 		
-//	Breakpoint envelope access (const and non-const):
-	const Breakpoint * head( void ) const { return _head; }
-	const Breakpoint * tail( void ) const { return _tail; }
-	
-	Breakpoint * head( void ) { return _head; }
-	Breakpoint * tail( void ) { return _tail; }
-	
 //	label access/mutation:
 	int label( void ) const { return _label; }
 	void setLabel( int l ) { _label = l; }
@@ -69,20 +67,13 @@ public:
 //	shortening the envelope by (end-start) seconds.
 //	Return a pointer to the Breakpoint immediately preceding the 
 //	removed time (will be Null if beginning of Partial is removed).
-	Breakpoint * remove( double start, double end );
-	
-//	Breakpoint find:
-//	Return a pointer to the Breakpoint immediately preceding
-//	the specified time (will be Null if time < startTime).
-//	(const and non-const versions)
-	const Breakpoint * find( double time ) const;
-	Breakpoint * find( double time );
+	Breakpoint * remove( double tstart, double tend );
 	
 //	partial envelope interpolation/extrapolation:
 //	Return the interpolated value of a partial parameter at
 //	the specified time. At times beyond the ends of the
 //	Partial, frequency and bandwidth hold their boundary values,
-//	amplitude is zerom and phase is computed from frequency.
+//	amplitude is zero, and phase is computed from frequency.
 //	There is of sensible definition for any of these for Partials
 //	having no Breakpoints, so they except (InvalidObject) under 
 //	that condition.
@@ -91,23 +82,35 @@ public:
 	double bandwidthAt( double time ) const;
 	double phaseAt( double time ) const;
 	
-//	debugging:
-	void checkEnvelope( void ) const;
+//	iterator access:
+//	Breakpoints are stored in a map, keyed by the time (in seconds).
+//	The only safe way to access the collection diirectly is through
+//	iterators on that map: pointers to members of the collection are
+//	too dangerous, and references don't allow the possibility of
+//	indicating and out-of-bounds value. Moreover, although the 
+//	iterators are somewhat inconvenient, one cannot step through the
+//	envelope using raw Breakpoints, as they store neither time nor
+//	linkage to neighboring Breakpoints. For most applications, the 
+//	proxy-iterator class PartialIterator should be used instead of
+//	using the Partial::iterators directly.
+	typedef std::map< double, Breakpoint >::iterator iterator;
+	typedef std::map< double, Breakpoint >::const_iterator const_iterator;
 	
-//	-- private implementation --
-private:
-//	envelope manipulation helpers:
-	void copyEnvelope( const Breakpoint * h );
-	void deleteEnvelope( void );
-	void insertAtHead( double time, Breakpoint * bp );
-	void insertAtTail( double time, Breakpoint * bp );
-	void insertBefore( Breakpoint * beforeMe, double time, Breakpoint * bp );
-	void scoot( Breakpoint * start, Breakpoint * end, double scootBy );
+	iterator begin( void ) { return _bpmap.begin(); }
+	iterator end( void ) { return _bpmap.end(); }
+	const_iterator begin( void ) const { return _bpmap.begin(); }
+	const_iterator end( void ) const { return _bpmap.end(); }
 	
+//	Return the insertion position for a Breakpoint at
+//	the specified time (that is, the position of the first
+//	Breakpoint at a time later than the specified time).
+	iterator findPos( double time );
+	const_iterator findPos( double time ) const;
+		
 //	-- instance variables --
+private:
 //	envelope:
-	Breakpoint * _head;
-	Breakpoint * _tail;
+	std::map< double, Breakpoint > _bpmap;
 	
 //	label:
 	int _label;
@@ -125,6 +128,14 @@ class InvalidPartial : public InvalidObject
 public: 
 	InvalidPartial( const std::string & str, const std::string & where = "" ) : 
 		InvalidObject( std::string("Invalid Partial -- ").append( str ), where ) {}
+		
+#if defined(__sgi) && ! defined(__GNUC__)
+//	copying:
+//	(exception objects are copied once when caught by reference,
+//	or twice when caught by value)
+//	This should be generated automatically by the compiler.
+	InvalidPartial( const InvalidPartial & other ) : InvalidObject( other ) {}
+#endif // lame compiler
 		
 };	//	end of class InvalidPartial
 

@@ -97,10 +97,10 @@ NotifierBuf::post( boolean block )
 // ---------------------------------------------------------------------------
 //	Assign a new buffer to the stream.
 //
-auto_ptr< NotifierBuf > 
-NotifierStream::setbuffer( auto_ptr< NotifierBuf > b )
+NotifierBufPtr 
+NotifierStream::setbuffer( NotifierBufPtr b )
 {
-	auto_ptr< NotifierBuf > ret = _note;
+	NotifierBufPtr ret = _note;
 	_note = b;
 	ostream::init( _note.get() );
 	return ret;
@@ -116,7 +116,7 @@ DebuggerStream::DebuggerStream( void )
 	setbuffer();
 #else
 	//	initialize the buffer to a dummy if not debugging:
-	_note = auto_ptr< NotifierBuf >( new dummybuf() );
+	_note = NotifierBufPtr( new dummybuf() );
 	ostream::init( _note.get() );
 #endif
 }
@@ -126,11 +126,11 @@ DebuggerStream::DebuggerStream( void )
 // ---------------------------------------------------------------------------
 //	Assign a new buffer to the stream, or ignore if not debugging.
 //
-auto_ptr< NotifierBuf > 
-DebuggerStream::setbuffer( auto_ptr< NotifierBuf > b )
+NotifierBufPtr
+DebuggerStream::setbuffer( NotifierBufPtr b )
 {
 #if defined( Debug_Loris )
-	auto_ptr< NotifierBuf > ret = _note;
+	NotifierBufPtr ret = _note;
 	_note = b;
 	ostream::init( _note.get() );
 	return ret;

@@ -23,6 +23,18 @@ Begin_Namespace( Loris )
 #pragma mark construction
 
 // ---------------------------------------------------------------------------
+//	Breakpoint default constructor
+// ---------------------------------------------------------------------------
+//
+Breakpoint::Breakpoint( void ) :
+	_frequency( 0. ),
+	_amplitude( 0. ),
+	_bandwidth( 0. ),
+	_phase( 0. )
+{
+}
+
+// ---------------------------------------------------------------------------
 //	Breakpoint constructor
 // ---------------------------------------------------------------------------
 //	Instantaneous phase (p) defaults to 0.
@@ -32,21 +44,16 @@ Breakpoint::Breakpoint( double f, double a, double b, double p ) :
 	_frequency( f ),
 	_amplitude( a ),
 	_bandwidth( b ),
-	_phase( p ),
-	_time( 0 ),
-	_prevBreakpoint( Null ),
-	_nextBreakpoint( Null )
+	_phase( p )
 {
 }
-	
+/*
 // ---------------------------------------------------------------------------
 //	Breakpoint destructor
 // ---------------------------------------------------------------------------
-//	Set pointers to Null, so that dangling references aren't linked.
 //
 Breakpoint::~Breakpoint( void )
 {
-	_prevBreakpoint = _nextBreakpoint = Null;
 }	
 
 // ---------------------------------------------------------------------------
@@ -59,31 +66,11 @@ Breakpoint::Breakpoint( const Breakpoint & other ) :
 	_frequency( other.frequency() ),
 	_amplitude( other.amplitude() ),
 	_bandwidth( other.bandwidth() ),
-	_phase( other.phase() ),
-	_time( 0 ),
-	_prevBreakpoint( Null ),
-	_nextBreakpoint( Null )
+	_phase( other.phase() )
 {
 }
-	
-// ---------------------------------------------------------------------------
-//	operator= (assignment)
-// ---------------------------------------------------------------------------
-//	Copy parameters only from another Breakpoint.
-//	Is this too wierd?
-//
-Breakpoint &
-Breakpoint::operator=( const Breakpoint & other )
-{
-	if ( this != &other ) {
-		_frequency = other.frequency();
-		_amplitude = other.amplitude();
-		_bandwidth = other.bandwidth();
-		_phase = other.phase();
-	}
-	
-	return *this;
-}
+*/	
+
 
 End_Namespace( Loris )
 

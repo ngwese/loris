@@ -25,7 +25,7 @@ Begin_Namespace( Loris )
 //
 PartialIterator::PartialIterator( const Partial & pin ) : 
 	_p( & pin ), 
-	_cur( pin.head() ) 
+	_cur( pin.begin() ) 
 {
 }
 
@@ -34,8 +34,7 @@ PartialIterator::PartialIterator( const Partial & pin ) :
 // ---------------------------------------------------------------------------
 //
 PartialIterator::PartialIterator( void ) : 
-	_p( Null ), 
-	_cur( Null ) 
+	_p( Null )
 {
 }
 
@@ -46,8 +45,8 @@ PartialIterator::PartialIterator( void ) :
 void
 PartialIterator::advance( void )
 {
-	if ( _cur != Null ) 
-		_cur = _cur->next();
+	if ( ! atEnd() ) 
+		++_cur;
 }
 
 // ---------------------------------------------------------------------------
@@ -58,7 +57,7 @@ void
 PartialIterator::reset( const Partial & p )
 {
 	_p = & p;
-	_cur = _p->head();
+	_cur = _p->begin();
 }
 
 // ---------------------------------------------------------------------------
@@ -68,7 +67,7 @@ PartialIterator::reset( const Partial & p )
 void
 PartialIterator::rewind( void )
 {
-	_cur = subject().head();
+	_cur = _p->begin();
 }
 
 // ---------------------------------------------------------------------------
@@ -78,7 +77,7 @@ PartialIterator::rewind( void )
 boolean
 PartialIterator::atEnd( void ) const
 {
-	return _cur == Null;
+	return _cur == _p->end();
 }
 
 // ---------------------------------------------------------------------------
@@ -88,7 +87,7 @@ PartialIterator::atEnd( void ) const
 boolean
 PartialIterator::isHead( void ) const
 {
-	return _cur->prev() == Null;
+	return _cur == _p->begin();
 }
 
 // ---------------------------------------------------------------------------
@@ -98,7 +97,7 @@ PartialIterator::isHead( void ) const
 boolean
 PartialIterator::isTail( void ) const
 {
-	return _cur->next() == Null;
+	return _cur == -- _p->end();
 }
 
 // ---------------------------------------------------------------------------
@@ -108,10 +107,10 @@ PartialIterator::isTail( void ) const
 const Breakpoint &
 PartialIterator::current( void ) const
 {
-	if ( _cur == Null )
+	if ( atEnd() )
 		Throw( InvalidIterator, "Tried to dereference an invalid PartialIterator (current)." );
 
-	return *_cur;
+	return _cur->second;
 }
 
 // ---------------------------------------------------------------------------
@@ -228,7 +227,7 @@ PartialIterator::phase( void ) const
 double
 PartialIterator::time( void ) const
 {
-	return current().time();
+	return _cur->first;
 }
 
 End_Namespace( Loris )

@@ -35,62 +35,9 @@ Begin_Namespace( Loris )
 // ---------------------------------------------------------------------------
 //
 Partial::Partial( void ) :
-	_head( Null ),
-	_tail( Null ),
 	_label( 0L )
 {
-}
-
-// ---------------------------------------------------------------------------
-//	Partial destructor
-// ---------------------------------------------------------------------------
-//	Partial is responsible for its Breakpoint envelope, and deletes all of
-//	its breakpoints when destroyed. 
-//
-Partial::~Partial( void )
-{
-	deleteEnvelope();
-}
-
-// ---------------------------------------------------------------------------
-//	Partial copy constructor
-// ---------------------------------------------------------------------------
-//	Make a deep copy (i.e. copy the envelope). 
-//
-//	The envelope copy could except, copyEnvelope() will 
-//	delete the envelope if it catches an exception, so 
-//	exceptions can just propogate up.
-//
-Partial::Partial( const Partial & other ) :
-	_head( Null ),
-	_tail( Null ),
-	_label( other._label )
-{
-	copyEnvelope( other._head );
-}
-
-// ---------------------------------------------------------------------------
-//	operator = (assignment)
-// ---------------------------------------------------------------------------
-//	Make a deep copy (i.e. copy the envelope). 
-//
-//	The envelope copy could except, copyEnvelope() will 
-//	delete the envelope if it catches an exception, so 
-//	exceptions can just propogate up.
-//
-Partial & 
-Partial::operator=( const Partial & other )
-{
-	//	don't assign self to self
-	if ( &other != this ) {	
-		deleteEnvelope();
-		copyEnvelope( other.head() );	//	cleans up after itself on exception
-		setLabel( other.label() );
-	}
-		
-	return *this;
-}
-	
+}	
 
 #pragma mark -
 #pragma mark envelope parameter shortcuts
@@ -102,8 +49,10 @@ Partial::operator=( const Partial & other )
 double
 Partial::initialPhase( void ) const
 {
-	if ( head() != Null )
-		return head()->phase();
+	if ( _bpmap.size() > 0 )
+		//	map iterator is a pair: first is time, 
+		//	second is Breakpoint.
+		return _bpmap.begin()->second.phase();
 	else
 		return 0.;
 }
@@ -116,8 +65,10 @@ Partial::initialPhase( void ) const
 double
 Partial::startTime( void ) const
 {
-	if ( head() != Null )
-		return head()->time();
+	if ( _bpmap.size() > 0 )
+		//	map iterator is a pair: first is time, 
+		//	second is Breakpoint.
+		return  _bpmap.begin()->first;
 	else
 		return 0.;
 }
@@ -130,8 +81,10 @@ Partial::startTime( void ) const
 double
 Partial::endTime( void ) const
 {
-	if ( tail() != Null )
-		return tail()->time();
+	if ( _bpmap.size() > 0 )
+		//	map iterator is a pair: first is time, 
+		//	second is Breakpoint.
+		return (--_bpmap.end())->first;
 	else
 		return 0.;
 }
@@ -152,42 +105,9 @@ Partial::endTime( void ) const
 Breakpoint *
 Partial::insert( double time, const Breakpoint & bp )
 {
-	Breakpoint * pos = find( time );
-	
-	if ( pos != Null && pos->time() == time ) {
-		//	replace:
-		*pos = bp;
-		return pos;
-	}
-	else {
-		//	insert copy:
-		Breakpoint * newp = new Breakpoint( bp );
-		if ( pos == Null ) {
-			//	insert at head:
-			newp->linkTo( head() );
-			_head = newp;
-			newp->setTime( time );	
-			
-			//	if this is the only Breakpoint, 
-			//	fix the tail pointer too:
-			if ( tail() == Null )
-				_tail = newp;
-		}
-		else {
-			//	insert after pos:
-			newp->linkTo( pos->next() );
-			pos->linkTo( newp );
-			newp->setTime( time );	
-			
-			//	check to see if insert was after tail:
-			if ( pos == tail() )	//	pointer comparison
-				_tail = newp;
-		}
-		
-		checkEnvelope();
-		
-		return newp;
-	}
+	Breakpoint & pos = _bpmap[ time ];
+	pos = bp;
+	return & pos;
 }
 
 // ---------------------------------------------------------------------------
@@ -201,115 +121,76 @@ Partial::insert( double time, const Breakpoint & bp )
 //	This could remove all Breakpoints in the Partial without warning!
 //	Caller should check for non-zero duration after time removal.
 //
-//	This could except if things get screwed up, and the scooting 
-//	generates a InvalidPartial exception. In this case, the Partial is probably
-//	garbage, so the exception should be passed up to the caller. 
+//	What kind of return value should this have? I don't want the caller
+//	deleting the pointer I return.
+//
 //
 Breakpoint * 
-Partial::remove( double start, double end )
+Partial::remove( double tstart, double tend )
 {
 //	get the order right:
-	if ( start > end )
-		std::swap( start, end );
+	if ( tstart > tend )
+		std::swap( tstart, tend );
 		
-//	maybe we can do no work:
-	if ( start > endTime() )
-		return tail();
-
-//	find the beginning and end of the removal:
-	Breakpoint * beforeStart = find( start );	//	could be Null, but not tail
-	Assert( beforeStart != tail() );
-	
-	Breakpoint * afterStart = 
-		( beforeStart == Null ) ? ( head() ) : ( beforeStart->next() );//	cannot be Null
-	Assert( afterStart != Null );
-	
-	Breakpoint * beforeEnd = find( end );		//	cannot be Null
-	Assert( beforeEnd != Null );
-	
-	Breakpoint * afterEnd = beforeEnd->next(); 	//	could be Null
-	
-	double timeRemoved = end - start;
-	
-//	remove and delete Breakpoints:
-	while( afterStart != beforeEnd ) {
-		afterStart = afterStart->next();
-		delete afterStart->prev();
-	}
-	delete afterStart;
-
-//	link across the gap, checking ends:
-	if ( beforeStart != Null ) 
-		beforeStart->linkTo( afterEnd );
-	else {
-		_head = afterEnd;
-		if ( _head != Null )
-			_head->setPrev( Null );
-	}
-
-//	scoot Breakpoints to fill gap, if necessary:	
-	if ( afterEnd != Null ) {
-		try {
-			scoot( afterEnd, Null, - timeRemoved );
-		}
-		catch ( InvalidPartial & ex ) {
-			ex.append( "Partial envelope is probably bogus." );
-			throw;
-		}
-	
-	}
-	else {
-		_tail = beforeStart;
-		if ( _tail != Null )
-			_tail->setNext( Null );
+//	get iterator bounds:
+//	lower_bound returns a reference to the lowest
+//	position that would be higher than an element
+//	having key equal to time:
+	std::map< double, Breakpoint >::iterator begin = 
+		_bpmap.lower_bound( tstart );
+	std::map< double, Breakpoint >::iterator end = 
+		_bpmap.lower_bound( tend );
+				
+//	remember the Breakpoint before the gap, or Null:
+	Breakpoint * ret = Null;
+	if ( begin != _bpmap.begin() ) {
+		std::map< double, Breakpoint >::iterator it = begin;
+		--it;
+		ret = & it->second;
 	}
 	
-	checkEnvelope();
+//	remove Breakpoints on the range [begin, end):
+	_bpmap.erase( begin, end );
 	
-	return beforeStart;
+//	all Breakpoints later than tend, that is, at positions
+//	starting at end, have to be shifted in time to close 
+//	the gap:
+	double gap = tend - tstart;
+	while ( end != _bpmap.end() ) {
+		//	insert a copy of this Breakpoint at the new time:
+		_bpmap[ end->first - gap ] = end->second;
+		
+		//	remove this Breakpoint, and incr. iterator:
+		_bpmap.erase( end++ );
+	}
 	
+	return ret;
 }
 
 // ---------------------------------------------------------------------------
-//	find (const version)
+//	findPos (const version)
 // ---------------------------------------------------------------------------
-//	Return a pointer to the Breakpoint immediately preceding
-//	the specified time (will be Null if time < startTime).
+//	Return the insertion position for a Breakpoint at
+//	the specified time (that is, the position of the first
+//	Breakpoint at a time later than the specified time).
 //
-const Breakpoint * 
-Partial::find( double time ) const
+Partial::const_iterator
+Partial::findPos( double time ) const
 {
-//	check the easy case first:
-	if ( time >= endTime() )
-		return tail();
-		
-	const Breakpoint * p = head();
-	while ( p->time() <= time ) {
-		p = p->next();
-		Assert( p != Null );	//	checked for this case already
-	}
-	return p->prev(); 	//	may be Null
+	return _bpmap.lower_bound( time );
 }
 
 // ---------------------------------------------------------------------------
-//	find (non-const version)
+//	findPos (non-const version)
 // ---------------------------------------------------------------------------
-//	Return a pointer to the Breakpoint immediately preceding
-//	the specified time (will be Null if time < startTime).
+//	Return the insertion position for a Breakpoint at
+//	the specified time (that is, the position of the first
+//	Breakpoint at a time later than the specified time).
 //
-Breakpoint * 
-Partial::find( double time )
+Partial::iterator
+Partial::findPos( double time )
 {
-//	check the easy case first:
-	if ( time >= endTime() )
-		return tail();
-		
-	Breakpoint * p = head();
-	while ( p->time() <= time ) {
-		p = p->next();
-		Assert( p != Null );	//	checked for this case already
-	}
-	return p->prev(); 	//	may be Null
+	return _bpmap.lower_bound( time );
 }
 
 #pragma mark -
@@ -321,22 +202,31 @@ Partial::find( double time )
 double
 Partial::frequencyAt( double time ) const
 {
-	if ( _head == Null )
-		Throw( InvalidObject, "Tried to interpolate a Partial with no Breakpoints." );
+	if ( _bpmap.size() == 0 )
+		Throw( InvalidPartial, "Tried to interpolate a Partial with no Breakpoints." );
 
- 	const Breakpoint * bp = find(time);
-	if ( !bp ) {
+	//	lower_bound returns a reference to the lowest
+	//	position that would be higher than an element
+	//	having key equal to time:
+	std::map< double, Breakpoint >::const_iterator it = findPos( time );
+		
+	if ( it == _bpmap.begin() ) {
 	//	time is before the onset of the Partial:
-		return head()->frequency();
+		return it->second.frequency();
 	}
-	else if (! bp->next() ){
+	else if ( it == _bpmap.end() ) {
 	//	time is past the end of the Partial:
-		return bp->frequency();
+		return (--it)->second.frequency();
 	}
 	else {
-	//	interpolate between bp and its successor:
-		double alpha = (time - bp->time()) / (bp->next()->time() - bp->time());
-		return (alpha * bp->next()->frequency()) + ((1. - alpha) * bp->frequency());
+	//	interpolate between it and its predeccessor
+	//	(we checked already that it is not begin):
+		const Breakpoint & hi = it->second;
+		double hitime = it->first;
+		const Breakpoint & lo = (--it)->second;
+		double lotime = it->first;
+		double alpha = (time - lotime) / (hitime - lotime);
+		return (alpha * hi.frequency()) + ((1. - alpha) * lo.frequency());
 	}
 }
 
@@ -347,22 +237,31 @@ Partial::frequencyAt( double time ) const
 double
 Partial::amplitudeAt( double time ) const
 {
-	if ( _head == Null )
-		Throw( InvalidObject, "Tried to interpolate a Partial with no Breakpoints." );
+	if ( _bpmap.size() == 0 )
+		Throw( InvalidPartial, "Tried to interpolate a Partial with no Breakpoints." );
 
-	const Breakpoint * bp = find(time);
-	if ( !bp ) {
+	//	lower_bound returns a reference to the lowest
+	//	position that would be higher than an element
+	//	having key equal to time:
+	std::map< double, Breakpoint >::const_iterator it = findPos( time );
+		
+	if ( it == _bpmap.begin() ) {
 	//	time is before the onset of the Partial:
 		return 0.;
 	}
-	else if (! bp->next() ){
+	else if (it == _bpmap.end() ) {
 	//	time is past the end of the Partial:
 		return 0.;
 	}
 	else {
-	//	interpolate between bp and its successor:
-		double alpha = (time - bp->time()) / (bp->next()->time() - bp->time());
-		return (alpha * bp->next()->amplitude()) + ((1. - alpha) * bp->amplitude());
+	//	interpolate between it and its predeccessor
+	//	(we checked already that it is not begin):
+		const Breakpoint & hi = it->second;
+		double hitime = it->first;
+		const Breakpoint & lo = (--it)->second;
+		double lotime = it->first;
+		double alpha = (time - lotime) / (hitime - lotime);
+		return (alpha * hi.amplitude()) + ((1. - alpha) * lo.amplitude());
 	}
 }
 // ---------------------------------------------------------------------------
@@ -372,30 +271,44 @@ Partial::amplitudeAt( double time ) const
 double
 Partial::phaseAt( double time ) const
 {
-	if ( _head == Null )
-		Throw( InvalidObject, "Tried to interpolate a Partial with no Breakpoints." );
+	if ( _bpmap.size() == 0 )
+		Throw( InvalidPartial, "Tried to interpolate a Partial with no Breakpoints." );
 	
-	const Breakpoint * bp = find(time);
-	if ( !bp ) {
+	//	lower_bound returns a reference to the lowest
+	//	position that would be higher than an element
+	//	having key equal to time:
+	std::map< double, Breakpoint >::const_iterator it = findPos( time );
+		
+	//	compute phase:
+	//	map iterator is a pair: first is time, 
+	//	second is Breakpoint.
+	if ( it == _bpmap.begin() ) {
 	//	time is before the onset of the Partial:
-		double dp = TwoPi * (head()->time() - time) * head()->frequency();
-		return fmod( head()->phase() - dp, TwoPi);
+		double dp = TwoPi * (it->first - time) * it->second.frequency();
+		return fmod( it->second.phase() - dp, TwoPi);
+
 	}
-	else if (! bp->next() ){
+	else if (it == _bpmap.end() ) {
 	//	time is past the end of the Partial:
-		double dp = TwoPi * (time - bp->time()) * bp->frequency();
-		return fmod( bp->phase() + dp, TwoPi );
+	//	( first decrement iterator to get the tail Breakpoint)
+		--it;
+		
+		double dp = TwoPi * (time - it->first) * it->second.frequency();
+		return fmod( it->second.phase() + dp, TwoPi );
 	}
 	else {
-	//	interpolate between bp and its successor:
-	//	(compute the frequency halfway between bp and time,
-	//	and use that average frequency to compute the phase
-	//	travel from bp to time)
-		double alpha = (time - bp->time()) / (bp->next()->time() - bp->time());
-		double favg = (0.5 * alpha * bp->next()->frequency()) + 
-						((1. - (0.5 * alpha)) * bp->frequency());
-		double dp = TwoPi * (time - bp->time()) * favg;
-		return fmod( bp->phase() + dp, TwoPi );
+	//	interpolate between it and its predeccessor
+	//	(we checked already that it is not begin):
+		const Breakpoint & hi = it->second;
+		double hitime = it->first;
+		const Breakpoint & lo = (--it)->second;
+		double lotime = it->first;
+		double alpha = (time - lotime) / (hitime - lotime);
+		double favg = (0.5 * alpha * hi.frequency()) + 
+						((1. - (0.5 * alpha)) * lo.frequency());
+		double dp = TwoPi * (time - lotime) * favg;
+		return fmod( lo.phase() + dp, TwoPi );
+
 	}
 }
 
@@ -406,169 +319,33 @@ Partial::phaseAt( double time ) const
 double
 Partial::bandwidthAt( double time ) const
 {
-	if ( _head == Null )
-		Throw( InvalidObject, "Tried to interpolate a Partial with no Breakpoints." );
+	if ( _bpmap.size() == 0 )
+		Throw( InvalidPartial, "Tried to interpolate a Partial with no Breakpoints." );
 	
-	const Breakpoint * bp = find(time);
-	if ( !bp ) {
+	//	lower_bound returns a reference to the lowest
+	//	position that would be higher than an element
+	//	having key equal to time:
+	std::map< double, Breakpoint >::const_iterator it = findPos( time );
+		
+	if ( it == _bpmap.begin() ) {
 	//	time is before the onset of the Partial:
-		return head()->bandwidth();
+		return it->second.bandwidth();
 	}
-	else if (! bp->next() ){
+	else if (it == _bpmap.end() ) {
 	//	time is past the end of the Partial:
-		return bp->bandwidth();
+		return (--it)->second.bandwidth();
 	}
 	else {
-	//	interpolate between bp and its successor:
-		double alpha = (time - bp->time()) / (bp->next()->time() - bp->time());
-		return (alpha * bp->next()->bandwidth()) + ((1. - alpha) * bp->bandwidth());
+	//	interpolate between it and its predeccessor
+	//	(we checked already that it is not begin):
+		const Breakpoint & hi = it->second;
+		double hitime = it->first;
+		const Breakpoint & lo = (--it)->second;
+		double lotime = it->first;
+		double alpha = (time - lotime) / (hitime - lotime);
+		return (alpha * hi.bandwidth()) + ((1. - alpha) * lo.bandwidth());
 	}
 }
 
-#pragma mark -
-#pragma mark envelope manipulation helpers
-// ---------------------------------------------------------------------------
-//	copyEnvelope
-// ---------------------------------------------------------------------------
-//	This could except, callers should be prepared to handle exceptions
-//	like memory allocation failures. If an exception is caught, the 
-//	bogus envelope will be deleted.
-//
-void
-Partial::copyEnvelope( const Breakpoint * h ) 
-{
-	deleteEnvelope();	//	just in case 
-	
-	try {
-		//insertAtHead( h->time(), Breakpoint::Clone( * h ) );
-		//insertAtTail( h->time(), head() );
-		
-		for ( ; h != Null; h = h->next() )
-			insert( h->time(), *h );
-		
-	}
-	catch( LowMemException & ) {	//	catch a memory error exception here
-		//	the envelope is bogus, delete it and pass the
-		//	exception up to the caller
-		deleteEnvelope();
-		throw;
-	}
-}
-
-// ---------------------------------------------------------------------------
-//	deleteEnvelope
-// ---------------------------------------------------------------------------
-//	Delete all Breakpoints in the envelope and set the head to NULL.
-//
-void
-Partial::deleteEnvelope( void ) 
-{
-	Breakpoint * bp = head();
-	if ( bp == Null )
-		return;
-		
-	while( bp->next() != Null ) {
-		bp = bp->next();
-		delete bp->prev();
-	}
-	delete bp;
-
-	_head = _tail = Null;
-}
-
-// ---------------------------------------------------------------------------
-//	insertAtHead
-// ---------------------------------------------------------------------------
-//
-void
-Partial::insertAtHead( double time, Breakpoint * bp )
-{
-	//	sanity check:
-	Assert( head() == Null || time < head()->time() );
-	
-	bp->linkTo( head() );
-	_head = bp;
-	bp->setTime( time );	
-	
-	//	if this is the only Breakpoint, 
-	//	fix the tail pointer too:
-	if ( tail() == Null )
-		_tail = bp;
-}
-
-// ---------------------------------------------------------------------------
-//	insertAtTail
-// ---------------------------------------------------------------------------
-//
-void
-Partial::insertAtTail( double time, Breakpoint * bp )
-{
-	//	sanity check:
-	Assert( _tail == Null || time > _tail->time() );
-	
-	if ( _tail != Null )
-		_tail->linkTo( bp );
-	_tail = bp;	
-	bp->setTime( time );	
-}
-
-// ---------------------------------------------------------------------------
-//	insertBefore
-// ---------------------------------------------------------------------------
-//
-void
-Partial::insertBefore( Breakpoint * beforeMe, double time, Breakpoint * bp )
-{
-	//	sanity check:
-	Assert( time < beforeMe->time() );	//	else not before me
-	Assert( beforeMe->prev() != Null );	//	else should insertAtHead()
-	
-	beforeMe->prev()->linkTo( bp );
-	bp->linkTo( beforeMe );
-	bp->setTime( time );	
-}
-
-// ---------------------------------------------------------------------------
-//	scoot
-// ---------------------------------------------------------------------------
-//	Scoot all Breakpoints in [start, end) by scootBy seconds.
-//
-//	Excepts if the scooting violates the time order of the Breakpoints.
-//	Does _not_ mess up the envelope in this case, so this is a 
-//	recoverable condition, unless the envelope is goofed up already.
-//
-void 
-Partial::scoot( Breakpoint * start, Breakpoint * end, double scootBy )
-{
-	while( start != end ) {
-		Assert( start != Null );
-		
-		//	check for Breakpoint order violation before changing anything:
-		if ( start->prev() != Null && start->time() + scootBy < start->prev()->time() )
-			Throw( InvalidPartial, "Breakpoint time order violated in Partial::scoot()." );
-	
-		//	okay to scoot:
-		start->setTime( start->time() + scootBy );
-		start = start->next();
-	}
-}
-
-#pragma mark -
-#pragma mark debugging
-// ---------------------------------------------------------------------------
-//	checkEnvelope
-// ---------------------------------------------------------------------------
-//
-void 
-Partial::checkEnvelope( void  ) const
-{
-	for ( const Breakpoint * p  = head(); p != tail(); p = p->next() ) {
-		Assert( p->next() != Null );
-		Assert( p->time() < p->next()->time() );
-		Assert( p->next()->prev() == p );
-	}
-	Assert( head()->prev() == Null );
-	Assert( tail()->next() == Null );
-}
 
 End_Namespace( Loris )

@@ -12,13 +12,10 @@
 //	-kel 7 Oct 99
 //
 // ===========================================================================
-
 #include "LorisLib.h"
+#include "Partial.h"
 
 Begin_Namespace( Loris )
-
-class Partial;
-class Breakpoint;
 
 // ---------------------------------------------------------------------------
 //	class PartialIterator
@@ -80,7 +77,7 @@ public:
 
 private:	
 	const Partial * _p;
-	const Breakpoint * _cur;
+	Partial::const_iterator _cur;
 	
 };	//	end of class PartialIterator
 

@@ -19,23 +19,12 @@
 #include "Breakpoint.h"
 #include "Distiller.h"
 #include "Map.h"
+#include "Notifier.h"
 
 #if !defined( Deprecated_cstd_headers )
 	#include <cmath>
 #else
 	#include <math.h>
-#endif
-
-#if !defined( Deprecated_iostream_headers)
-	#include <iostream>
-#else
-	#include <iostream.h>
-#endif
-
-#if !defined( Deprecated_cstd_headers )
-	#include <cstdio>
-#else
-	#include <stdio.h>
 #endif
 
 using namespace std;
@@ -318,7 +307,7 @@ Morph::morph( const list<Partial> & plist1, const list<Partial> & plist2 )
 				continue;
 			}
 			
-			cout << "morphing " << sublist1.size() << " and "
+			notifier << "morphing " << sublist1.size() << " and "
 				<< sublist2.size() << " partials with label " << label << endl;
 			
 			//	distill and morph:	
@@ -394,7 +383,7 @@ Morph::morphPartial( const Partial & p1, const Partial & p2 )
 		
 	//	add the new partial to the collection,
 	//	if it is valid:
-	if ( newp.head() ) {
+	if ( newp.begin() != newp.end() ) {
 		_partials.push_back( newp );
 	}
 

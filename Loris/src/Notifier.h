@@ -85,6 +85,8 @@ protected:
 	
 };	//	end of class NotifierBuf
 
+typedef std::auto_ptr< NotifierBuf > NotifierBufPtr;
+
 // ---------------------------------------------------------------------------
 //	class NotifierStream
 //
@@ -101,11 +103,11 @@ public:
 	void confirm( void ) { _note->post( true ); }
 	
 	//	assign a new buffer to the stream:
-	std::auto_ptr< NotifierBuf > 
-	setbuffer( std::auto_ptr< NotifierBuf > b = std::auto_ptr< NotifierBuf >(new NotifierBuf()) );
+	NotifierBufPtr
+	setbuffer( NotifierBufPtr b = NotifierBufPtr( new NotifierBuf() ) );
 
 private:	
-	std::auto_ptr< NotifierBuf > _note;
+	NotifierBufPtr _note;
 	
 };	//	end of class NotifierStream
 	
@@ -126,11 +128,11 @@ public:
 	DebuggerStream( void );
 	
 	//	assign a new buffer to the stream:
-	std::auto_ptr< NotifierBuf > 
+	NotifierBufPtr
 #if defined( Debug_Loris )
-	setbuffer( std::auto_ptr< NotifierBuf > b = std::auto_ptr< NotifierBuf >(new NotifierBuf()) );
+	setbuffer( NotifierBufPtr b = NotifierBufPtr(new NotifierBuf()) );
 #else
-	setbuffer( std::auto_ptr< NotifierBuf > b = std::auto_ptr< NotifierBuf >() );
+	setbuffer( NotifierBufPtr b = NotifierBufPtr() );
 #endif		
 	
 private:
@@ -143,7 +145,7 @@ private:
 #endif
 
 	//	the buffer:
-	std::auto_ptr< NotifierBuf > _note;
+	NotifierBufPtr _note;
 
 };	//	end of class DebuggerStream
 
