@@ -37,6 +37,19 @@ notes from trial 3:
 	again with smoothed reference envelopes. Also try more parameters, since
 	none of these survived that well.
 
+notes from trial 4:
+	- the 400 Hz window analyses, sifted with two Partials per harmonic
+	seem to be usable. It would be nice if I had Markers working in Loris,
+	but I don't, yet, so here are the feature points to use for morphing:
+
+	feature     funny1 time (ms)   funny2 time (ms)
+	"f"              202                 238
+	"un"             386                 496
+	"ny"             598                 697
+	"pee"            902                 989
+	"puhl"          1173                1241
+	(end of "puhl") 1495                1521
+
 Last updated: 10 June 2002 by Kelly Fitz
 """
 print __doc__
