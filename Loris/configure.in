@@ -25,7 +25,7 @@ AC_PATH_PROG(SWIG, swig)
 AM_CONDITIONAL(HAVE_SWIG, test -n "$SWIG")
 
 
-# This needs to do something reasonable
+# Check for a definition of M_PI in cmath, if not use our own.
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
 AC_MSG_CHECKING(for M_PI defined in cmath)
@@ -42,6 +42,7 @@ fi
 
 # restore this
 AC_LANG_RESTORE
+
 
 #----------------------------------------------------------------
 # Look for IRCAM's SDIF package
@@ -334,6 +335,22 @@ if test -n "$PERLINCLUDE" ; then
 	PERLINCLUDE="-I$PERLINCLUDE"
 fi
 AC_SUBST(PERLINCLUDE)
+
+#----------------------------------------------------------------
+# Check for Loris debugging flag
+#----------------------------------------------------------------
+AC_ARG_ENABLE(debugloris, [  --enable-debugloris      Enable internal Loris debugging code (not recommended)],[
+	DEBUG_LORIS="$enableval" ], [DEBUG_LORIS=] )
+
+if test -n "$DEBUG_LORIS"; then
+	if test "$DEBUG_LORIS"="yes"; then
+		DEBUG_LORIS="-DDebug_Loris"
+	else
+		DEBUG_LORIS="-DDebug_Loris=$DEBUG_LORIS"
+	fi
+	AC_SUBST(DEBUG_LORIS)
+	AC_MSG_RESULT(enabling debugging code (defining Debug_Loris to $DEBUG_LORIS))
+fi
 
 #----------------------------------------------------------------
 # Generate Makefiles
