@@ -38,6 +38,7 @@ pkginclude_HEADERS = AiffFile.h	\
 				Notifier.h	\
 				Oscillator.h	\
 				Partial.h	\
+				PartialList.h	\
 				PartialUtils.h	\
 				ReassignedSpectrum.h	\
 				SdifFile.h	\
@@ -90,6 +91,7 @@ libclasses_la_SOURCES = AiffFile.C \
 		Oscillator.h \
 		Partial.C \
 		Partial.h \
+		PartialList.h \
 		PartialUtils.h \
 		random.h \
 		ReassignedSpectrum.C \
