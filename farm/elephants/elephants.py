@@ -84,8 +84,29 @@ notes from trial 3:
 	than in the 100 Hz windows, esp. 30.80.
 	- not much difference between 20 and 30 Hz resolution in general.
 
+notes from trial 4:
+	Tried making spc files and doing some real time synthesis:
+	- elephant1 is fine at 40.130 harmonically-distilled at 40 Hz. 
+	- elephant3 is best at 30.80 harmonically distilled at 30 Hz, 
+	but there is a little bit of crunch in it.
+	- made a nice Continuum-controlled version of elephant1, noticed
+	that there's nothing much at all going on above Partial 320.
+	- in elephant3, there's nothing going on above Partial 240.
+	- in elephant1, there isn't really a fundamental to track, but
+	the Partial labeled 16 looks as though it could serve as a reference.
+	- in elephant3, there doesn't appear to be anything that could 
+	serve as a reference Partial.
+	
+	Try more distillations. Try sifting elephant3.
+	
+notes from trial 5:
+	- sifting helps elephant3, no more crunch.
+	- distilling at 45 and 60 Hz degrade the reconstruction of elephant3
+	only a little, in fact, they are hard to distinguish from 30 Hz.
+	- distilling elephant1 at 80 Hz (or 60) is almost indistinguishible 
+	from a 40 Hz distillation.
 
-Last updated: 6 May 2002 by Kelly Fitz
+Last updated: 30 Aug 2002 by Kelly Fitz
 """
 
 print __doc__
@@ -95,7 +116,7 @@ from trials import *
 
 # use this trial counter to skip over
 # eariler trials
-trial = 3
+trial = 5
 
 print "running trial number", trial, time.ctime(time.time())
 
@@ -157,3 +178,83 @@ if trial == 3:
 			p = timescale( p, 2. )
 			ofile = '%s.%i.%i.T2.aiff'%(source[:-5], r, w)
 			synthesize( ofile, p )
+			
+			
+if trial == 4:
+	# elephant1.aiff
+	source = sources[0]  
+	r = 40
+	w = 130
+	p = analyze( source, r, w )
+	ofilebase = '%s.%i.%i'%(source[:-5], r, w)
+	synthesize( ofilebase + '.aiff', p )
+	harmonicDistill( p, r )
+	pruneByLabel( p, range(1,511) )
+	ofilebase = ofilebase + '.d%i'%r
+	loris.exportSpc( ofilebase + '.s.spc', p, 60, 0 ) 
+	loris.exportSpc( ofilebase + '.e.spc', p, 60, 1 ) 
+	loris.exportSdif( ofilebase + '.sdif', p )
+	synthesize( ofilebase + '.aiff', p )
+	
+			
+	# elephant3.aiff
+	source = sources[2]  
+	r = 30
+	widths = ( 80, 100 )
+	for w in widths:
+		p = analyze( source, r, w )
+		ofilebase = '%s.%i.%i'%(source[:-5], r, w)
+		synthesize( ofilebase + '.aiff', p )
+		harmonicDistill( p, r )
+		pruneByLabel( p, range(1,511) )
+		ofilebase = ofilebase + '.d%i'%r
+		loris.exportSpc( ofilebase + '.s.spc', p, 60, 0 ) 
+		loris.exportSpc( ofilebase + '.e.spc', p, 60, 1 ) 
+		loris.exportSdif( ofilebase + '.sdif', p )
+		synthesize( ofilebase + '.aiff', p )
+	
+if trial == 5:
+	# elephant1.aiff
+	source = sources[0]  
+	r = 40
+	w = 130
+	p = analyze( source, r, w )
+	ofilebase = '%s.%i.%i'%(source[:-5], r, w)
+	synthesize( ofilebase + '.aiff', p )
+	for f in ( r, r*1.5, r*2 ):
+		pcopy = p.copy()
+		harmonicDistill( pcopy, f )
+		pruneByLabel( pcopy, range(1,511) )
+		ofilebase = '%s.%i.%i.d%i'%(source[:-5], r, w, f)
+		loris.exportSpc( ofilebase + '.s.spc', pcopy, 60, 0 ) 
+		loris.exportSpc( ofilebase + '.e.spc', pcopy, 60, 1 ) 
+		loris.exportSdif( ofilebase + '.sdif', pcopy )
+		synthesize( ofilebase + '.aiff', pcopy )
+	
+			
+	# elephant3.aiff
+	source = sources[2]  
+	r = 30
+	w = 80
+	p = analyze( source, r, w )
+	ofilebase = '%s.%i.%i'%(source[:-5], r, w)
+	synthesize( ofilebase + '.aiff', p )
+	for f in ( r, r*1.5, r*2 ):
+		pcopy = p.copy()
+		harmonicDistill( pcopy, f )
+		pruneByLabel( pcopy, range(1,511) )
+		ofilebase = '%s.%i.%i.d%i'%(source[:-5], r, w, f)
+		loris.exportSpc( ofilebase + '.s.spc', pcopy, 60, 0 ) 
+		loris.exportSpc( ofilebase + '.e.spc', pcopy, 60, 1 ) 
+		loris.exportSdif( ofilebase + '.sdif', pcopy )
+		synthesize( ofilebase + '.aiff', pcopy )
+		
+		pcopy = p.copy()
+		harmonicSift( pcopy, f )
+		pruneByLabel( pcopy, range(1,511) )
+		ofilebase = '%s.%i.%i.s%i'%(source[:-5], r, w, f)
+		loris.exportSpc( ofilebase + '.s.spc', pcopy, 60, 0 ) 
+		loris.exportSpc( ofilebase + '.e.spc', pcopy, 60, 1 ) 
+		loris.exportSdif( ofilebase + '.sdif', pcopy )
+		synthesize( ofilebase + '.aiff', pcopy )
+	
