@@ -74,6 +74,6 @@ endin
 i 1    0      3
 i 1    +      1
 i 1    +      6
-
+s
 e
 </CsScore>   </CsoundSynthesizer>

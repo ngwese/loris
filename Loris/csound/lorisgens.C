@@ -33,7 +33,7 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-
+ 
 #include "cs.h"
 #include "lorisgens.h"
 #include "string.h"
@@ -63,6 +63,9 @@ using namespace std;
 typedef std::vector< Partial > PARTIALS;
 typedef std::vector< Oscillator > OSCILS;
 
+//	debugging flag
+// #define DEBUG_LORISGENS
+
 #pragma mark -- static helpers --
 
 // ---------------------------------------------------------------------------
@@ -77,7 +80,7 @@ static void import_partials( const std::string & sdiffilname, PARTIALS & part )
 		part.clear();
 		
 		//	import:
-		std::cerr << "** importing SDIF file " << sdiffilname << std::endl;		  
+
 		SdifFile f( sdiffilname );
 
 		//	copy the Partials into the vector:
@@ -211,10 +214,11 @@ static void accum_samples( Oscillator & oscil, Breakpoint & bp, double * bufbegi
 				bw = 0.;
 		
 			/*
+#ifdef DEBUG_LORISGENS
 			std::cerr << "initializing oscillator " << std::endl;
-			
 			std::cerr << "parameters: " << bp.frequency() << "  ";
 			std::cerr << amp << "  " << bw << std::endl;
+#endif
 			*/
 						
 			//	initialize frequency, amplitude, and bandwidth to 
@@ -324,12 +328,17 @@ EnvelopeReader::Find( INSDS * owner, int idx )
 	TagMap::iterator it = readers.find( Tag( owner, idx ) );
 	if ( it != readers.end() )
 	{
-		std::cerr << "** found EnvelopeReader with owner " << owner << " and index " << idx << std::endl; 
+#ifdef DEBUG_LORISGENS
+		std::cerr << "** found EnvelopeReader with owner " << owner << " and index " << idx;
+		std::cerr << " having " << it->second->size() << " envelopes." << std::endl; 
+#endif
 		return it->second;
 	}
 	else
 	{
+#ifdef DEBUG_LORISGENS
 		std::cerr << "** could not find EnvelopeReader with owner " << owner << " and index " << idx << std::endl; 
+#endif
 		return NULL;
 	}
 }
@@ -404,6 +413,9 @@ ImportedPartials::GetPartials( const string & sdiffilname, double fadetime )
 		try 
 		{
 			//	import Partials and apply fadetime:
+#ifdef DEBUG_LORISGENS
+			std::cerr << "** importing SDIF file " << sdiffilname << std::endl;		  
+#endif
 			import_partials( sdiffilname, it->_partials );
 			apply_fadetime( it->_partials, fadetime );
 		}
@@ -422,7 +434,9 @@ ImportedPartials::GetPartials( const string & sdiffilname, double fadetime )
 	}
 	else 
 	{
+#ifdef DEBUG_LORISGENS
 		std::cerr << "** reusing SDIF file " << sdiffilname << std::endl;		  
+#endif
 	}
 	
 	return *it;
@@ -469,6 +483,10 @@ LorisReader::LorisReader( const string & fname, double fadetime, INSDS * owner, 
 	}
 	
 	//	tag these envelopes:
+#ifdef DEBUG_LORISGENS
+	std::cerr << "** constructed new EnvelopeReader with owner " << owner << " and index " << idx;
+	std::cerr << " having " << _envelopes.size() << " envelopes." << std::endl; 
+#endif
 	EnvelopeReader::Tags()[ _tag ] = &_envelopes;
 }
 
@@ -482,9 +500,17 @@ LorisReader::~LorisReader( void )
 	//	remove them:
 	EnvelopeReader::TagMap & tags = EnvelopeReader::Tags();
 	EnvelopeReader::TagMap::iterator it = tags.find( _tag );
-	
+
+#ifdef DEBUG_LORISGENS	
+	std::cerr << "** destroying EnvelopeReader with owner " << _tag.first << " and index " << _tag.second;
+	std::cerr << " having " << _envelopes.size() << " envelopes." << std::endl; 
+#endif
+
 	if ( it != tags.end() && it->second == &_envelopes )
 	{
+#ifdef DEBUG_LORISGENS
+		std::cerr << "(Removing from Tag map.)" << std::endl; 
+#endif
 		tags.erase(it);
 	}
 }
@@ -532,6 +558,10 @@ static void lorisread_cleanup(void * p);
 extern "C"
 void lorisread_setup( LORISREAD * params )
 {
+#ifdef DEBUG_LORISGENS
+	std::cerr << "** Setting up lorisread (owner " << params->h.insdshead << ")" << std::endl;
+#endif
+
 	std::string sdiffilname;
 
 	//	determine the name of the SDIF file to use:
@@ -581,6 +611,9 @@ static
 void lorisread_cleanup(void * p)
 {
 	LORISREAD * tp = (LORISREAD *)p;
+#ifdef DEBUG_LORISGENS
+	std::cerr << "** Cleaning up lorisread (owner " << tp->h.insdshead << ")" << std::endl;
+#endif
 	delete tp->imp;
 }
 
@@ -628,6 +661,9 @@ static void lorisplay_cleanup(void * p);
 extern "C"
 void lorisplay_setup( LORISPLAY * p )
 {
+#ifdef DEBUG_LORISGENS
+	std::cerr << "** Setting up lorisplay (owner " << p->h.insdshead << ")" << std::endl;
+#endif
 	p->imp = new LorisPlayer( p );
 	p->h.dopadr = lorisplay_cleanup;  // set lorisplay_cleanup as cleanup routine
 }
@@ -672,6 +708,9 @@ static
 void lorisplay_cleanup(void * p)
 {
 	LORISPLAY * tp = (LORISPLAY *)p;
+#ifdef DEBUG_LORISGENS
+	std::cerr << "** Cleaning up lorisplay (owner " << tp->h.insdshead << ")" << std::endl;
+#endif
 	delete tp->imp;
 }
 
@@ -808,7 +847,9 @@ LorisMorpher::LorisMorpher( LORISMORPH * params ) :
 			if ( label > maxsrclabel )
 				maxsrclabel = label;
 		}
+#ifdef DEBUG_LORISGENS
 		std::cerr << "** Largest source label is " << maxsrclabel << std::endl;
+#endif
 	}
 	else
 	{
@@ -837,16 +878,20 @@ LorisMorpher::LorisMorpher( LORISMORPH * params ) :
 			if ( label > maxtgtlabel )
 				maxtgtlabel = label;
 		}
+#ifdef DEBUG_LORISGENS
 		std::cerr << "** Largest target label is " << maxtgtlabel << std::endl;
+#endif
 	}
 	else
 	{
 		std::cerr << "** Could not find lorismorph target with index " << (int)*(params->tgtidx) << std::endl;
 	}
-		
+
+#ifdef DEBUG_LORISGENS		
 	std::cerr << "** Morph will use " << labelMap.size() << " labeled Partials, ";
 	std::cerr << src_unlabeled.size() << " unlabeled source Partials, and ";
 	std::cerr << tgt_unlabeled.size() << " unlabeled target Partials." << std::endl;
+#endif
 	
 	
 	//	allocate and set the labels for the morphed envelopes:
@@ -907,7 +952,9 @@ LorisMorpher::updateEnvelopes( void )
 		//	this should not happen:
 		if ( itgt < 0 && isrc < 0 )
 		{
+#ifdef DEBUG_LORISGENS
 			std::cerr << "HEY!!!! The labelMap had a pair of bogus indices in it at pos " << envidx << std::endl;
+#endif
 			continue;
 		}
 		
@@ -965,7 +1012,6 @@ LorisMorpher::updateEnvelopes( void )
 #pragma mark -- lorismorph generator functions --
 
 static void lorismorph_cleanup(void * p);
-
 // ---------------------------------------------------------------------------
 //	lorismorph_setup
 // ---------------------------------------------------------------------------
@@ -974,6 +1020,9 @@ static void lorismorph_cleanup(void * p);
 extern "C"
 void lorismorph_setup( LORISMORPH * p )
 {
+#ifdef DEBUG_LORISGENS
+	std::cerr << "** Setting up lorismorph (owner " << p->h.insdshead << ")" << std::endl;
+#endif
 	p->imp = new LorisMorpher( p );
 	p->h.dopadr = lorismorph_cleanup;  // set lorismorph_cleanup as cleanup routine
 }
@@ -998,5 +1047,9 @@ static
 void lorismorph_cleanup(void * p)
 {
 	LORISMORPH * tp = (LORISMORPH *)p;
+#ifdef DEBUG_LORISGENS
+	std::cerr << "** Cleaning up lorismorph (owner " << tp->h.insdshead << ")" << std::endl;
+#endif
 	delete tp->imp;
 }
+
