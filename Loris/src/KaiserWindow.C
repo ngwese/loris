@@ -47,10 +47,8 @@
 
 using namespace std;
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 //	prototypes for static helpers, defined below
 static double factorial( double );
@@ -185,7 +183,5 @@ KaiserWindow::computeLength( double width, double alpha )
 	return long(1.0 + (2. * sqrt((Pi*Pi) + (alpha*alpha)) / (Pi * width)) /* + 0.5 */);
 }
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif
 

@@ -62,10 +62,8 @@
 //	just import the whole namespace
 using namespace std;
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 // 	static function for building fancy reassignment window:
 template < typename RealWinIter, typename CplxWinIter >
@@ -606,6 +604,4 @@ buildReassignmentWindow( RealWinIter winbegin, RealWinIter winend,
 					rawinbegin, make_complex< double >() );	
 }
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif

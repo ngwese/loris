@@ -22,10 +22,8 @@
 #include <algorithm>
 #include <list>
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 // ---------------------------------------------------------------------------
 //	sieve_aux STATIC
@@ -143,7 +141,5 @@ Sieve::sift( std::list<Partial> & l )
 	std::cout  << "sifted out " << zapped << " of " << l.size() << endl;
 }
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif
 

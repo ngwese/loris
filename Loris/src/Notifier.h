@@ -55,10 +55,8 @@
 
 #include <iostream>
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 std::ostream & getNotifierStream(void);
 std::ostream & getDebuggerStream(void);
@@ -71,9 +69,7 @@ static std::ostream & debugger = getDebuggerStream();
 using std::endl;
 using std::ends;
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif
 
 #endif	/* def __cplusplus */
 

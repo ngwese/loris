@@ -33,20 +33,21 @@
  *
  */
 
-#include<Partial.h>
+#include <Partial.h>
 #include <functional>
+#include <utility>
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
+
+using std::pair;
 
 // ---------------------------------------------------------------------------
 //	class/namespace PartialUtils
 //	
 //	A group of Partial utility function objects for use with STL 
 //	searching and sorting algorithms. PartialUtils is a namespace
-//	within the Loris namespace, unless compiled with NO_LORIS_NAMESPACE,
+//	within the Loris namespace, unless compiled with NO_NESTED_NAMESPACE,
 //	in which case it is a class.
 //
 //	Lakos suggests protecting utility functions like this in a class 
@@ -54,7 +55,7 @@ namespace Loris {
 //	what is being constructed.
 //
 //
-#if !defined( NO_LORIS_NAMESPACE )
+#if !defined( NO_NESTED_NAMESPACE )
 //	PartialUtils is a namespace:
 namespace PartialUtils {
 #else
@@ -92,15 +93,38 @@ public:
 			{ return lhs.duration() > rhs.duration(); }
 	};
 	
+//	functions on ranges of Partials:
+	template <typename Iterator>
+#if defined( NO_NESTED_NAMESPACE )
+	static
+#endif
+	inline 
+	pair<double,double>
+	timeSpan( Iterator begin, Iterator end ) 
+	{
+		double tmin = 0., tmax = 0.;
+		if ( begin != end )
+		{
+			Iterator it = begin;
+			tmin = it->startTime();
+			tmax = it->endTime();
+			while( it != end )
+			{
+				tmin = std::min( tmin, it->startTime() );
+				tmax = std::max( tmax, it->endTime() );
+				++it;
+			}
+		}
+		return std::make_pair(tmin, tmax);
+	}
+	
 
-#if !defined( NO_LORIS_NAMESPACE )
+#if !defined( NO_NESTED_NAMESPACE )
 }	//	end of namespace PartialUtils
 #else
 };	//	end of class PartialUtils
 #endif
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif
 
 #endif /* ndef INCLUDE_PARTIALUTILS_H */

@@ -39,10 +39,8 @@
 #include <list>
 #include <string>
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 // ---------------------------------------------------------------------------
 //	class SdifFile
@@ -74,8 +72,6 @@ private:
 
 };	//	end of class SdifFile
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif
 
 #endif //	ndef INCLUDE_SDIFFILE_H

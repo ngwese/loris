@@ -37,10 +37,8 @@
 #include <vector>
 #include <list>
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 // ---------------------------------------------------------------------------
 //	class Dilator
@@ -75,8 +73,6 @@ private:
 	
 };	//	end of class Dilator
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif
 
 #endif /* ndef INCLUDE_DILATOR_H */

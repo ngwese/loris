@@ -44,10 +44,8 @@
 //	as double's mantissa, see below.
 static inline double trunc( double x ) { double y; std::modf(x, &y); return y; }
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 //	Get rid of the stupid templates sometime.
 
@@ -171,8 +169,6 @@ gaussian_normal( void )
 	return box_muller();
 }
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif
 
 #endif /* ndef INCLUDE_RANDOM_H */

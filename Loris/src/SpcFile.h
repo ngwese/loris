@@ -37,10 +37,8 @@
 #include<Partial.h>
 #include <list>
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 // ---------------------------------------------------------------------------
 //	class SpcFile
@@ -83,8 +81,6 @@ private:
 
 };	//	end of class SpcFile
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif
 
 #endif //	ndef INCLUDE_SPCFILE_H

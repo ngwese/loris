@@ -43,10 +43,8 @@
 
 #include <algorithm>
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 
 //	forward declarations for helpers, defined below:
@@ -210,6 +208,4 @@ findLongestPartialInFreqRange( std::list<Partial>::const_iterator begin,
 	return longest;
 }
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif

@@ -44,10 +44,8 @@
 //	GNU, however, can handle it. Maybe in the new CW?
 #endif
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 class Channelizer_imp;
 class Envelope;
@@ -87,8 +85,6 @@ public:
 	
 };	//	end of class Channelizer
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif
 
 #endif /* ndef INCLUDE_CHANNELIZER_H */

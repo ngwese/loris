@@ -38,10 +38,8 @@
 #include<BreakpointEnvelope.h>
 #include<Notifier.h>
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 // ---------------------------------------------------------------------------
 //	constructor
@@ -148,6 +146,4 @@ BreakpointEnvelope::valueAt( double x ) const
 	}
 }
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif

@@ -48,10 +48,8 @@
 	const double Pi = 3.14159265358979324;
 #endif
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 //long Partial::DebugCounter = 0L;
 
@@ -533,6 +531,4 @@ Partial::FadeTime( void )
 	return FADE_TIME;
 }
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif

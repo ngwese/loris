@@ -71,27 +71,6 @@
 	through this interface. Loris types and classes are all in the 
 	C++ namespace Loris. Collections from the standard namespace 
 	(namespace std) are also used.
-	
-	The C++ version is needed if this header is included in a 
-	source file that also includes other Loris headers (where 
-	those classes are defined). If only the procedural interface 
-	is used, do not include the other Loris headers. If the Loris
-	class interfaces are also used, then define the symbol 
-	LORIS_OPAQUE_POINTERS to be false in the source file before
-	including this header.
- 
-	Actually, I cannot remember why this extra junk was
-	ever needed. I can compile an link C and C++ programs
-	using this header and interface, with (C++ only) and
-	without (both) also using class headers (Analyzer.h)
-	without having any of this opaque ptrs junk in here.
-	I am getting rid of it.
-
-#ifndef LORIS_OPAQUE_POINTERS
-#define LORIS_OPAQUE_POINTERS 1
-#endif
-#if defined(__cplusplus) && ! LORIS_OPAQUE_POINTERS
-
  */
 #if defined(__cplusplus)
 	//	declare Loris classes:

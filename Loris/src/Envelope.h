@@ -33,10 +33,8 @@
  *
  */
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 // ---------------------------------------------------------------------------
 //	class Envelope
@@ -70,8 +68,6 @@ protected:
 
 };	//	end of abstract class Envelope
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif
 
 #endif /* ndef INCLUDE_ENVELOPE_H */

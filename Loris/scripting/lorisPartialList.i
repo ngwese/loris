@@ -56,14 +56,19 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
+ 
+%include typemaps.i
+%apply double * OUTPUT { double * tmin_out, double * tmax_out };
 
 %{
 #include<Partial.h>
+#include<PartialUtils.h>
 #include<Notifier.h>
 #include <list>
 
 using Loris::debugger;
 using Loris::Partial;
+using Loris::PartialUtils;
 using Loris::Breakpoint;
 
 //	define the names of the classes that are 
@@ -122,6 +127,19 @@ public:
 		/*	Return a new PartialList that is a copy of this 
 			PartialList (i.e. has identical Partials).
 		 */
+		 
+		 
+		 //	wrapper for PartialUtils::timeSpan
+		 void timeSpan( double * tmin_out, double * tmax_out )
+		 {
+		 	std::pair<double, double> span = 
+		 		PartialUtils::timeSpan( self->begin(), self->end() );
+		 	*tmin_out = span.first;
+		 	*tmax_out = span.second;
+		 }
+		 /*	Return the minimum start time and maximum end time
+		 	off all Partials in this PartialList.
+		  */
 	
 	}	//	end of added methods
 	

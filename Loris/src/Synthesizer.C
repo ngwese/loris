@@ -50,10 +50,8 @@
 	const double Pi = 3.14159265358979324;
 #endif
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 static long countem = 0;
 
@@ -311,6 +309,4 @@ Synthesizer::radianFreq( double hz ) const
 	return hz * 2. * Pi / sampleRate();
 }
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif

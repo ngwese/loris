@@ -36,10 +36,8 @@
 #include<Envelope.h>
 #include <map>
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 // ---------------------------------------------------------------------------
 //	class BreakpointEnvelope
@@ -121,8 +119,6 @@ public:
 
 };	//	end of class BreakpointEnvelope
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif
 
 #endif /* ndef INCLUDE_BREAKPOINTENVELOPE_H */

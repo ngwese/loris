@@ -38,10 +38,8 @@
 #include <string>
 #include <iosfwd>
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 struct CkHeader;
 
@@ -123,8 +121,6 @@ private:
 
 };	//	end of class AiffFile
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif
 
 #endif /* ndef INCLUDE_AIFFFILE_H */

@@ -36,10 +36,8 @@
 #include <memory>
 #include <vector>
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 class Filter;	
 
@@ -109,8 +107,6 @@ private:
 		
 };	//	end of class Oscillator
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif
 
 #endif /* ndef INCLUDE_OSCILLATOR_H */

@@ -39,10 +39,8 @@
 #include <list>
 #include <string>
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 // ---------------------------------------------------------------------------
 //	class ImportLemur
@@ -82,8 +80,6 @@ public:
 		Exception( std::string("Import Error -- ").append( str ), where ) {}		
 };
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif
 
 #endif /* ndef INCLUDE_IMPORTLEMUR_H */

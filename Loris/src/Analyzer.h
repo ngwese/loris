@@ -36,10 +36,8 @@
 #include<Partial.h>
 #include <list>
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 class Breakpoint;
 class AnalyzerState;
@@ -228,8 +226,6 @@ private:
 	
 };	//	end of class Analyzer
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif
 
 #endif /* ndef INCLUDE_ANALYZER_H */

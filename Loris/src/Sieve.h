@@ -13,10 +13,8 @@
 
 #include <list>
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 class Partial;
 
@@ -50,8 +48,6 @@ private:
 	
 };	//	end of class Sieve
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif
 
 #endif /* ndef INCLUDE_SIEVE_H */

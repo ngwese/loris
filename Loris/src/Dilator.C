@@ -42,10 +42,8 @@
 #include<Notifier.h>
 #include <algorithm>
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 
 // ---------------------------------------------------------------------------
@@ -174,6 +172,4 @@ Dilator::dilate( std::list< Partial >::iterator begin, std::list< Partial >::ite
 		dilate( *(begin++) );
 }
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif

@@ -54,10 +54,8 @@
 	const double Pi = 3.14159265358979324;
 #endif		
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 //	-- types and ids --
 enum { 
@@ -469,6 +467,4 @@ readPeakData( std::istream & s, PeakOnDisk & p )
 		throw;
 	}
 }
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif

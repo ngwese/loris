@@ -72,10 +72,8 @@
 //	forward declare this type from fftw.h:
 struct fftw_plan_struct;
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 // ---------------------------------------------------------------------------
 //	class FourierTransform
@@ -218,8 +216,6 @@ load( FourierTransform & t, Iterator1 begin, Iterator1 center, Iterator1 end, It
 }
 #endif
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif
 
 #endif /* ndef INCLUDE_FOURIERTRANSFORM_H */

@@ -61,10 +61,8 @@
 
 using namespace std;
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 
 
@@ -1148,8 +1146,6 @@ SpcFile::Export( std::ostream & file, const std::list<Partial> & plist, double m
 }
 
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif
 
 

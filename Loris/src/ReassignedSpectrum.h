@@ -36,10 +36,8 @@
 #include<FourierTransform.h>
 #include <vector>
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 
 // ---------------------------------------------------------------------------
@@ -106,8 +104,6 @@ private:
 
 };	//	end of class ReassignedSpectrum
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif
 
 #endif /* ndef INCLUDE_REASSIGNEDSPECTRUM_H */

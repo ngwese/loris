@@ -44,10 +44,8 @@
 #include <numeric>
 #endif
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 
 // ---------------------------------------------------------------------------
@@ -129,8 +127,6 @@ public:
 	
 };	//	end of class Filter
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif
 
 #endif /* ndef INCLUDE_FILTER_H */

@@ -51,10 +51,8 @@
 	const double Pi = 3.14159265358979324;
 #endif
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 
 // ---------------------------------------------------------------------------
@@ -330,6 +328,4 @@ Distiller::distill( std::list<Partial> & container, std::list< Partial >::iterat
 	debugger << "distilled " << container.size() << " Partials from " << howmanywerethere << endl;
 }
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif

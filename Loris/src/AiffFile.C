@@ -46,10 +46,8 @@
 #include <fstream>
 #include <climits>
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 //	-- chunk types --
 enum { 
@@ -839,6 +837,4 @@ AiffFile::validateParams( void )
 	
 }
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif

@@ -36,10 +36,8 @@
 #include<Breakpoint.h>
 #include <functional>
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 // ---------------------------------------------------------------------------
 //	class/namespace BreakpointUtils
@@ -111,8 +109,6 @@ public:
 };	//	end of class BreakpointUtils
 #endif
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif
 
 #endif /* ndef INCLUDE_BREAKPOINTUTILS_H */

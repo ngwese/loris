@@ -38,10 +38,8 @@
 #include<Exception.h>
 #include <string>
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 
 #pragma mark -
@@ -70,6 +68,4 @@ Exception::append( const std::string & str )
 	return *this;
 }
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif

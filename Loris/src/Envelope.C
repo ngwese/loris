@@ -40,10 +40,8 @@
 //	Since Envelope is just an interface, there's nothing interesting in 
 //	the implementation file.
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 // ---------------------------------------------------------------------------
 //	constructor
@@ -69,6 +67,4 @@ Envelope::~Envelope(void)
 {
 }
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif

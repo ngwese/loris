@@ -36,10 +36,8 @@
 
 #include <string>
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 // ---------------------------------------------------------------------------
 //	class Exception
@@ -153,8 +151,6 @@ public:
 	} while (false)
 
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif
 
 #endif /* ndef INCLUDE_EXCEPTION_H */

@@ -39,10 +39,8 @@
 #include<Exception.h>
 #include <cmath>
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 
 #pragma mark -
@@ -125,9 +123,7 @@ Breakpoint::addNoise( double noise )
 	}
 }
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif
 
 
 

@@ -53,10 +53,8 @@
 
 using namespace std;
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 
 // ---------------------------------------------------------------------------
@@ -205,7 +203,5 @@ setDebuggerHandler( NotificationHandler fn )
 #endif
 }
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif
 

@@ -41,10 +41,8 @@
 
 
 #if defined( __cplusplus ) 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 #endif	
 
 typedef short 			Int_16;
@@ -54,9 +52,7 @@ typedef float			Float_32;
 typedef double			Double_64;
 
 #if defined( __cplusplus )
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif
 #endif	
 
 #endif /* ndef INCLUDE_LORIS_TYPES_H */

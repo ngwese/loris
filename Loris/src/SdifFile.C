@@ -58,10 +58,8 @@ extern "C" {
 #include <sdif.h>
 }
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 
 //	Row of matrix data in SDIF RBEP, 1TRC, or 1LBL format.
@@ -803,8 +801,6 @@ SdifFile::Export( const std::string & filename, const std::list<Partial> & parti
 	SdifGenKill();
 }
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif
 
 

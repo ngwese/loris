@@ -48,10 +48,8 @@
 #include <set>
 #endif
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 
 // ---------------------------------------------------------------------------
@@ -295,6 +293,4 @@ Channelizer::channelize( std::list< Partial >::iterator begin, std::list< Partia
 	_imp->channelize( begin, end );
 }
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif

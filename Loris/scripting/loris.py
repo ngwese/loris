@@ -28,6 +28,7 @@ class PartialList:
         if getattr(self,'thisown',0):
             lorisc.delete_PartialList(self)
     def copy(*args): return apply(lorisc.PartialList_copy,args)
+    def timeSpan(*args): return apply(lorisc.PartialList_timeSpan,args)
     def clear(*args): return apply(lorisc.PartialList_clear,args)
     def size(*args): return apply(lorisc.PartialList_size,args)
     def begin(*args): return apply(lorisc.PartialList_begin,args)

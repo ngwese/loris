@@ -73,6 +73,20 @@ Partials having a specified label into a separate list.
 scripting interface, returns Partials having the specified
 label in a new PartialList.
 
+- Added PartialUtils::timeSpan(iterator, iterator) to 
+find the time spanned by all Partials in an iterator
+range. Used this to implement a timeSpan method for
+PartialList in the scripting interface.
+
+- Removed all the preprocessor scaffolding involving 
+NO_LORIS_NAMESPACE, since it offered only a false sense
+of security. There's no reason to believe that Loris will
+build with a compiler that is not namespace-savvy.
+
+- Added default values for sample rate (44100) in synthesize
+and exportAiff, and for number of channels (1) and 
+sample size (16 bits) in exportAiff in scripting interface.
+
 -------------------------------------------------------
 changes since 1.0beta6 release:
 

@@ -36,10 +36,8 @@
 #include <list>
 #include <memory>
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 class BreakpointEnvelope;
 class Partial; 
@@ -75,8 +73,6 @@ public:
 
 };	// end of class FrequencyReference
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif
 
 #endif	// ndef INCLUDE_FREQUENCYREFERENCE_H

@@ -281,12 +281,15 @@ void distill( PartialList * partials );
 
 void exportAiff( const char * path,
 				 SampleVector * samples,
-				 double samplerate, int nchannels, int bitsPerSamp );
+				 double samplerate = 44100.0, int nchannels = 1, int bitsPerSamp = 16 );
 /*	Export audio samples stored in a SampleVector to an AIFF file
 	having the specified number of channels and sample rate at the 
 	given file path (or name). The floating point samples in the 
 	SampleVector are clamped to the range (-1.,1.) and converted 
-	to integers having bitsPerSamp bits.
+	to integers having bitsPerSamp bits. The default values for the
+	sample rate, number of channels, and sample size, if unspecified,
+	are 44100 Hz (CD quality), 1 channel, and 16 bits per sample, 
+	respectively.
  */
 
 
@@ -409,7 +412,7 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch,
 
 %{
 	#include<Synthesizer.h>
-	SampleVector * synthesize_( const PartialList * partials, double srate )
+	SampleVector * synthesize_( const PartialList * partials, double srate = 44100.0 )
 	{
 		ThrowIfNull((PartialList *) partials);
 
@@ -450,11 +453,13 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch,
 	}
 %}
 %rename(synthesize) synthesize_;
-%new SampleVector * synthesize_( const PartialList * partials, double srate );
+%new SampleVector * synthesize_( const PartialList * partials, double srate = 44100.0 );
 /*	Synthesize Partials in a PartialList at the given sample
 	rate, and return the (floating point) samples in a SampleVector.
 	The SampleVector is sized to hold as many samples as are needed 
 	for the complete synthesis of all the Partials in the PartialList. 
+	If the sample rate is unspecified, the deault value of 44100 Hz 
+	(CD quality) is used.
  */
 
 

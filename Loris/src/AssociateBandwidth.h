@@ -35,10 +35,8 @@
 
 #include <vector>
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 class Breakpoint;
 
@@ -94,8 +92,6 @@ private:
 	
 };	// end of class AssociateBandwidth
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif
 
 #endif /* ndef INCLUDE_ASSOCIATEBANDWIDTH_H */

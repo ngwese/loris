@@ -45,10 +45,8 @@
 #include <numeric>
 #endif
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 #if defined(NO_TEMPLATE_MEMBERS)
 // ---------------------------------------------------------------------------
@@ -111,6 +109,4 @@ Filter::sample( double input )
 	return output * _gain;
 }
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif

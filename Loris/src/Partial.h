@@ -37,10 +37,8 @@
 #include<Breakpoint.h>
 #include <map>
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 //	declare iterator types for class Partial:
 class PartialIterator;
@@ -263,8 +261,6 @@ public:
 		
 };	//	end of class InvalidPartial
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif
 
 #endif /* ndef INCLUDE_PARTIAL_H */

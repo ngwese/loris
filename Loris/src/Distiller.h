@@ -35,10 +35,8 @@
 
 #include <list>
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 class Partial;
 
@@ -75,8 +73,6 @@ private:
 	
 };	//	end of class Distiller
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif
 
 #endif /* ndef INCLUDE_DISTILLER_H */

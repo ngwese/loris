@@ -36,10 +36,8 @@
 
 #include <memory>
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 class Oscillator;
 class Partial;
@@ -113,8 +111,6 @@ private:
 	
 };	//	end of class Synthesizer
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif
 
 #endif /* ndef INCLUDE_SYNTHESIZER_H */

@@ -49,10 +49,8 @@
 #include <set>
 #include <algorithm>
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 // ---------------------------------------------------------------------------
 //	AnalyzerState definition
@@ -552,6 +550,4 @@ Analyzer::spawnPartial( double time, const Breakpoint & bp )
 	partials().push_back( p );
 }
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif

@@ -47,10 +47,8 @@
 #include <memory>
 #include <set>
 
-#if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
-#endif
 
 // ---------------------------------------------------------------------------
 //	class Morpher_imp
@@ -480,6 +478,4 @@ Morpher::partials( void ) const
 	return _imp->_partials; 
 }
 
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif
