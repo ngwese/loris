@@ -89,5 +89,4 @@ SWIG = swig
 SWIG_INTERFACE = loris.i
 
 wrapper: 
-	mv $(PYTHON_WRAPPER) $(PYTHON_WRAPPER).bak
 	$(SWIG) -python -c++ -module loris -o $(PYTHON_WRAPPER) $(SWIG_INTERFACE)

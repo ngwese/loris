@@ -39,22 +39,22 @@ namespace Loris {
 
 // ---------------------------------------------------------------------------
 //	class Breakpoint
-//
-//	Class Breakpoint represents a single breakpoint in the
-//	Partial parameter (frequency, amplitude, bandwidth) envelope.
-//	Instantaneous phase is also stored, but is only used at the onset of 
-//	a partial, or when it makes a transition from zero to nonzero amplitude.
-//	
-//	Loris Partials represent reassigned bandwidth-enhanced model components.
-//	A Partial consists of a chain of Breakpoints describing the time-varying
-//	frequency, amplitude, and bandwidth (noisiness) of the component.
-//	For more information about Reassigned Bandwidth-Enhanced 
-//	Analysis and the Reassigned Bandwidth-Enhanced Additive Sound 
-//	Model, refer to the Loris website: 
-//	www.cerlsoundgroup.org/Loris/.
-//	
-//	Breakpoint is a leaf class, do not subclass.
-//
+// ---------------------------------------------------------------------------
+/**	Class Breakpoint represents a single breakpoint in the
+ *	Partial parameter (frequency, amplitude, bandwidth) envelope.
+ *	Instantaneous phase is also stored, but is only used at the onset of 
+ *	a partial, or when it makes a transition from zero to nonzero amplitude.
+ *	
+ *	Loris Partials represent reassigned bandwidth-enhanced model components.
+ *	A Partial consists of a chain of Breakpoints describing the time-varying
+ *	frequency, amplitude, and bandwidth (noisiness) of the component.
+ *	For more information about Reassigned Bandwidth-Enhanced 
+ *	Analysis and the Reassigned Bandwidth-Enhanced Additive Sound 
+ *	Model, refer to the Loris website: 
+ *	www.cerlsoundgroup.org/Loris/.
+ *	
+ *	Breakpoint is a leaf class, do not subclass.
+ */
 class Breakpoint
 {
 //	-- instance variables --
@@ -66,57 +66,77 @@ class Breakpoint
 //	-- public Breakpoint interface --
 public:
 //	-- construction --
-//	(use compiler-generated destructor, copy, and assign)
- 	Breakpoint( void );	//	needed for STL containability
-	/*	Construct a new Breakpoint with all parameters initialized to 0.
+	/**	Construct a new Breakpoint with all parameters initialized to 0.
 	 */
- 	Breakpoint( double f, double a, double b, double p = 0. );
-	/*	Construct a new Breakpoint with frequency, amplitude, and bandwidth
+ 	Breakpoint( void );	//	needed for STL containability
+
+	/**	Construct a new Breakpoint with frequency, amplitude, and bandwidth
 		initialized to f, a, and b, respectively, and phase initialized to
 		p, if specified, or 0 otherwise.
+		\param f is the intial frequency.
+		\param a is the initial amplitude.
+		\param b is the initial bandwidth.
+		\param p is the initial phase, if specified (if unspecified, 0 
+		is assumed).
 	 */
+ 	Breakpoint( double f, double a, double b, double p = 0. );
+
+	//	(use compiler-generated destructor, copy, and assign)
 	
 //	-- comparison --
- 	bool operator==( const Breakpoint & rhs ) const;
-	/*	Comparison operator: return true if the frequency, amplitude, 
+	/**	Comparison operator: return true if the frequency, amplitude, 
 		bandwidth, and phase of this Breakpoint are equal to those of
 		the Breakpoint rhs. Otherwise, return false.
+		\param rhs is the Breakpoint to compare
 	 */
+ 	bool operator==( const Breakpoint & rhs ) const;
 
 //	-- attribute access --
+	/**	Return the amplitude of this Breakpoint.
+	 */
  	double amplitude( void ) const { return _amplitude; }
-	/*	Return the amplitude of this Breakpoint.
+
+	/**	Return the bandwidth (noisiness) coefficient of this Breakpoint.
 	 */
  	double bandwidth( void ) const { return _bandwidth; }
-	/*	Return the bandwidth (noisiness) coefficient of this Breakpoint.
+
+	/**	Return the frequency of this Breakpoint.
 	 */
- 	double frequency( void ) const { return _frequency; }
-	/*	Return the frequency of this Breakpoint.
+  	double frequency( void ) const { return _frequency; }
+
+	/**	Return the phase of this Breakpoint.
 	 */
- 	double phase( void ) const { return _phase; }
-	/*	Return the phase of this Breakpoint.
-	 */
+	double phase( void ) const { return _phase; }
 	
 //	-- attribute mutation --
+	/**	Set the amplitude of this Breakpoint.
+	 	\param x is the new amplitude
+	 */
  	void setAmplitude( double x ) { _amplitude = x; }
-	/*	Set the amplitude of this Breakpoint.
+
+	/**	Set the bandwidth (noisiness) coefficient of this Breakpoint.
+	 	\param x is the new bandwidth
 	 */
  	void setBandwidth( double x ) { _bandwidth = x; }
-	/*	Set the bandwidth (noisiness) coefficient of this Breakpoint.
+
+	/*	Set the frequency of this Breakpoint.
+	 	\param x is the new frequency.
 	 */
  	void setFrequency( double x ) { _frequency = x; }
-	/*	Set the frequency of this Breakpoint.
+
+	/*	Set the phase of this Breakpoint.
+	 	\param x is the new phase.
 	 */
  	void setPhase( double x ) { _phase = x; }
-	/*	Set the phase of this Breakpoint.
-	 */
 	 
-	void addNoiseEnergy( double enoise );
-	/*	Add noise (bandwidth) energy to this Breakpoint by computing new 
+	/**	Add noise (bandwidth) energy to this Breakpoint by computing new 
 		amplitude and bandwidth values. enoise may be negative, but 
 		noise energy cannot be removed (negative energy added) in excess 
 		of the current noise energy.
+		\param enoise is the amount of noise energy to add to
+		this Breakpoint.
 	 */
+	void addNoiseEnergy( double enoise );
 	
 };	//	end of class Breakpoint
 

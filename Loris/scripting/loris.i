@@ -349,7 +349,6 @@ void dilate_v( PartialList * partials, vector<double> & ivec, vector<double> & t
  */
 
 
-
 void distill( PartialList * partials );
 /*	Distill labeled (channelized)  Partials in a PartialList into a 
 	PartialList containing a single (labeled) Partial per label. 
