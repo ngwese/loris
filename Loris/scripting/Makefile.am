@@ -174,7 +174,7 @@ if HAVE_SWIG
 SWIG_INTERFACE = loris.i
 
 wrappers: 
-	$(SWIG) -python -c++ -o $(PYTHON_WRAPPER) $(SWIG_INTERFACE)
-	$(SWIG) -tcl -c++ -o $(TCL_WRAPPER) $(SWIG_INTERFACE)
-	$(SWIG) -perl -c++ -o $(PERL_WRAPPER) $(SWIG_INTERFACE)
+	$(SWIG) -python -c++ -module loris -o $(PYTHON_WRAPPER) $(SWIG_INTERFACE)
+	$(SWIG) -tcl -c++ -module tcLoris -o $(TCL_WRAPPER) $(SWIG_INTERFACE)
+	$(SWIG) -perl -c++ -module perLoris -o $(PERL_WRAPPER) $(SWIG_INTERFACE)
 endif

@@ -42,17 +42,6 @@
  *
  */
  
-
-#if defined (SWIGPYTHON)
-	%module loris
-#elif defined (SWIGTCL)
-	%module tcLoris
-#elif defined (SWIGPERL)
-	%module perLoris
-#else
-	%module loris
-#endif
-
 //	perl defines list and screws us up,
 //	undefine it so that we can use std::list
 #if defined (SWIGPERL)
@@ -64,8 +53,8 @@
 // ----------------------------------------------------------------
 //		notification and exception handlers
 //
-%{
-	#include<loris.h>
+%{ 
+	#include <loris.h>
 	
 	//	import the entire Loris namespace, because
 	//	SWIG does not seem to like to wrap functions
@@ -88,7 +77,7 @@
 	static char EXCEPTION_THROWN[256];
 	static void exception_handler( const char * s )
 	{
-		sprintf(EXCEPTION_THROWN, "%255s\0", s);
+		snprintf(EXCEPTION_THROWN, 255, "s", s);
 	}
 %}
 
@@ -283,14 +272,33 @@ void dilate_v( PartialList * partials, vector<double> & ivec, vector<double> & t
 					<< tvec.size() << " target points" << Loris::endl;
 					
 	if ( ivec.size() != tvec.size() )
-		Throw( Loris::InvalidArgument, "Invalid arguments to dilate(): there must be as many target points as initial points" );
-
+	{
+		Throw( InvalidArgument, "Invalid arguments to dilate(): there must be as many target points as initial points" );
+	}
+	
 	double * initial = &(ivec[0]);
 	double * target = &(tvec[0]);
 	int npts = ivec.size();
 	dilate( partials, initial, target, npts );
 }
 %}
+
+%exception dilate_v 
+{
+	*EXCEPTION_THROWN = '\0';
+	try
+	{
+		$action
+	}
+	catch ( InvalidArgument & ex )
+	{
+		SWIG_exception(SWIG_ValueError, ex.what() );
+	}
+	if (*EXCEPTION_THROWN)
+	{
+		SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+	}
+}
 
 #if SWIGPYTHON
 // ------------ Python accepts string or sequence --------------
@@ -666,6 +674,84 @@ void sift( PartialList * partials );
 //
 %newobject *::copy;
 
+// ---------------------------------------------------------------------------
+//	class Marker
+//
+//	Class Marker represents a labeled time point in a set of Partials
+//	or a vector of samples. Collections of Markers (see the MarkerContainer
+//	definition below) are held by the File I/O classes in Loris (AiffFile,
+//	SdifFile, and SpcFile) to identify temporal features in imported
+//	and exported data.
+//
+%{
+	#include<Marker.h>
+%}
+
+class Marker
+{
+public:
+//	-- construction --
+	Marker( void );
+	/*	Default constructor - initialize a Marker at time zero with no label.
+	 */
+	 
+	Marker( double t, const char * s );
+	/*	Initialize a Marker with the specified time (in seconds) and name.
+	 */
+	 
+	Marker( const Marker & other );
+	/*	Initialize a Marker that is an exact copy of another Marker, that is,
+		having the same time and name.
+	 */
+		 
+//	-- access --
+	%extend 
+	{
+		const char * name( void ) { return self->name().c_str(); }
+	}
+	/*	Return a reference (or const reference) to the name string
+		for this Marker.
+	 */
+	 
+	double time( void );
+	/*	Return the time (in seconds) associated with this Marker.
+	 */
+	 
+//	-- mutation --
+	void setName( const char * s );
+	/*	Set the name of the Marker.
+	 */
+	 
+	void setTime( double t );
+	/* 	Set the time (in seconds) associated with this Marker.
+	 */
+
+	
+};	//	end of class Marker
+
+
+%exception AiffFile::getMarker
+{
+	try
+	{
+		$action
+	}
+	catch ( InvalidArgument & ex )
+	{
+		SWIG_exception(SWIG_ValueError, ex.what() );
+	}
+}
+%exception AiffFile::removeMarker
+{
+	try
+	{
+		$action
+	}
+	catch ( InvalidArgument & ex )
+	{
+		SWIG_exception(SWIG_ValueError, ex.what() );
+	}
+}
 
 // ---------------------------------------------------------------------------
 //	class AiffFile
@@ -745,7 +831,7 @@ public:
 		 */
 		 
 		//	Loris only deals in mono AiffFiles
-		int channels( void ) const { return 1; }
+		int channels( void ) { return 1; }
 
 		//	add a PartialList of Partials:
 		void addPartials( PartialList * l, double fadeTime = 0.001/* 1ms */ )
@@ -757,6 +843,32 @@ public:
 			for an examplanation of fade time), and accumulate the resulting 
 			samples. 
 		 */
+		 
+		 //	add members to access Markers
+		 int numMarkers( void ) { return self->markers().size(); }
+		 
+		 Marker & getMarker( int i )
+		 {
+		 	if ( i < 0 || i >= self->markers().size() )
+		 	{
+		 		Throw( InvalidArgument, "Marker index out of range." );
+		 	}
+		 	return self->markers()[i];
+		 }
+		 
+		 void removeMarker( int i )
+		 {
+		 	if ( i < 0 || i >= self->markers().size() )
+		 	{
+		 		Throw( InvalidArgument, "Marker index out of range." );
+		 	}
+		 	self->markers().erase( self->markers().begin() + i );
+		 }
+		 
+		 void addMarker( Marker m )
+		 {
+		 	self->markers().push_back( m );
+		 }
 	}	
 };
 

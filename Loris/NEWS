@@ -11,7 +11,14 @@ changes since 1.1 release:
 
 - added rewritten AiffFile and SpcFile classes, with 
 interfaces that allow Partials to be added directly
-and automatically rendered.
+and automatically rendered, and that include access
+to Aiff-style Markers (time-string pairs, represented
+by the new class Marker).
+
+- Tcl module is no longer built by default, only the 
+Python module.
+
+- added AiffFile Marker access to scripting module.
 
 -------------------------------------------------------
 changes since 1.0.2 release:

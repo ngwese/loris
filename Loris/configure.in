@@ -294,7 +294,7 @@ AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
 
 AC_CHECK_HEADER(fftw.h, :, AC_MSG_ERROR(cannot find FFTW header))
-AC_CHECK_LIB(fftw, fftw_create_plan, :, AC_MSG_ERROR(cannot use FFTW, library), -lm)
+AC_CHECK_LIB(fftw, fftw_create_plan, :, AC_MSG_ERROR(cannot use FFTW library), -lm)
 
 if test -n "$FFTWINCLUDE" ; then
 	FFTWINCLUDE="-I$FFTWINCLUDE"
@@ -465,8 +465,8 @@ dnl or --with-tcl=no is specified, don't use tcl at all.
 
 AC_ARG_WITH(tcl,
 	AC_HELP_STRING( [--with-tcl@<:@=path@:>@],
-					[build Tcl module (default is YES) (optionally specify prefix of Tcl package)] ),
-	[USETCL="$withval"], [USETCL="yes"])
+					[build Tcl module (default is NO) (optionally specify prefix of Tcl package)] ),
+	[USETCL="$withval"], [USETCL="no"])
 	
 TCLINCLUDE=
 AC_ARG_WITH(tclincl,
