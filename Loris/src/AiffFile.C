@@ -495,7 +495,7 @@ AiffFile::writeSampleData( BinaryFile & file )
 void
 AiffFile::writeSamples( BinaryFile & file )
 {	
-	// debugger << "writing " << _samples.size() << " samples of size " << _sampSize << endl;
+	debugger << "writing " << _samples.size() << " samples of size " << _sampSize << endl;
 
 	pcm_sample z;
 

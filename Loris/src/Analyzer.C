@@ -206,8 +206,8 @@ Analyzer::extractBreakpoints( void )
 
 		//	if the time correction for this peak is large,
 		//	forget it, go on to the next one:
-		double peakTimeOffset = _spectrum->reassignedTime( it->frequency() ) / sampleRate();
-		if ( abs(peakTimeOffset) > hopSize() ) {
+		double peakSampleOffset = _spectrum->reassignedTime( it->frequency() );
+		if ( abs(peakSampleOffset) > hopSize() ) {
 			continue;	//	loop over short-time peaks
 		} 
 		
@@ -229,10 +229,10 @@ Analyzer::extractBreakpoints( void )
 		//	create a Breakpoint corresponding to the
 		//	short-time reassigned spectral peak:
 		Breakpoint bp( peakfreq, it->magnitude(), 0. /* bandwidth */, 
-					   _spectrum->reassignedPhase( it->frequency(), peakTimeOffset ) );
+					   _spectrum->reassignedPhase( it->frequency(), peakSampleOffset ) );
 	
 		//	add it to the frame:
-		frame.push_back( make_pair( bp, frameTime() + (peakTimeOffset  / sampleRate()) ) );
+		frame.push_back( make_pair( bp, frameTime() + (peakSampleOffset / sampleRate()) ) );
 	}
 	/*
 	if ( peaks.size() != frame.size() ) {

@@ -131,6 +131,12 @@ Synthesizer::operator=( const Synthesizer & other )
 void
 Synthesizer::synthesize( const Partial & p )
 {
+//
+	debugger << "synthesizing Partial from " << p.startTime() <<
+			" to " << p.endTime() << " starting phase " <<
+			p.initialPhase() << " starting frequency " << 
+			p.begin()->second.frequency() << endl;
+//
 //	don't synthesize Partials having zero duration:
 	if ( p.duration() == 0. )
 		return;
@@ -182,7 +188,7 @@ Synthesizer::synthesize( const Partial & p )
 //	Synthesize a Partial envelope segment.
 //	Return the new currentSampleOffset.
 //
-inline long
+long
 Synthesizer::synthesizeEnvelopeSegment( long currentSampleOffset )
 {
 	if ( currentSampleOffset < _samples.size() ) {

@@ -138,6 +138,7 @@ Oscillator::generateSamples( vector< double > & buffer, long howMany, long offse
 		double x = modulate( _bandwidth ) * _amplitude * oscillate( _phase );
 		if ( offset + i >= 0 ) 	
 			buffer[ offset + i ] += x;
+			//buffer.at( offset + i ) += x;
 			
 //	update the oscillator state:
 		_phase += _frequency;	//	_frequency is radians per sample
