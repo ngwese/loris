@@ -91,25 +91,25 @@ class FossaWindow:public QMainWindow{
   void manual();
         
  private:
-  FossaFrame* fossaFrame;
-  PartialsList* partialsList;
-  ImportDialog* importDialog;
-  ChannelizeDialog* channelizeDialog;
-  NewNameDialog* newNameDialog;
-  MorphDialog* morphDialog;
-  ExportDialog* exportDialog;
+  FossaFrame        *fossaFrame;
+  PartialsList      *partialsList;
+  ImportDialog      *importDialog;
+  ChannelizeDialog  *channelizeDialog;
+  NewNameDialog     *newNameDialog;
+  MorphDialog       *morphDialog;
+  ExportDialog      *exportDialog;
   
-  QGridLayout* fossaLayout; 
-  QStatusBar* statusbar;
+  QGridLayout       *fossaLayout; 
+  QStatusBar        *statusbar;
+  
+  QMenuBar     *menubar;         // top menu
+  QPopupMenu   *fileMenu;        // in menubar
+  QPopupMenu   *importMenu;      // in fileMenu
+  QPopupMenu   *exportMenu;      // in fileMenu
+  QPopupMenu   *manipulateMenu;
+  QPopupMenu   *editMenu;        // in menubar
+  QPopupMenu   *helpMenu;        // in menubar
   //QToolBar* toolbar; //later versions might want a toolbar   
-  QMenuBar* menubar;         // top menu
-  QPopupMenu* fileMenu;      // in menubar
-  QPopupMenu* importMenu;       // in fileMenu
-  QPopupMenu* exportMenu;       // in fileMenu
-  QPopupMenu* manipulateMenu;
-  QPopupMenu* editMenu;      // in menubar
-  QPopupMenu* helpMenu;      // in menubar
-
   int distillID;
   int channelizeID;
   int morphID;
