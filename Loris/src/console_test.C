@@ -16,42 +16,29 @@
 	#include <iostream.h>
 #endif
 
-#include <sstream>
-
-#include "Synthesizer.h"
-#include "Breakpoint.h"
-#include "Partial.h"
-#include "Exception.h"
-#include "LowMem.h"
-#include "Notifier.h"
-
-#include "SampleVector.h"
-
-#include "AiffFile.h"
-
-#include "BinaryFile.h"
-#include "ImportLemur5.h"
-
-
 #if !defined( Deprecated_cstd_headers )
 	#include <cstdio>
 #else
 	#include <stdio.h>
 #endif
 
-#include "ieee.h"
-
+#include "Synthesizer.h"
+#include "Exception.h"
+#include "Notifier.h"
+#include "SampleVector.h"
+#include "AiffFile.h"
+#include "BinaryFile.h"
+#include "ImportLemur5.h"
 #include "LoFreqBweKludger.h"
 
 using namespace std;
 using namespace Loris;
 
-
 int main()
 {	
 	try {		
 		//	import flute partials:
-		string name("Berenice:Loris:try these:flute3.lemr");
+		string name(":test:flute3.lemr");
 		BinaryFile f;
 		f.view(name);
 		ImportLemur5 imp(f);
@@ -91,7 +78,7 @@ int main()
 		//	write out samples:
 		cout << "writing newflute.aiff" << endl;
 		AiffFile sfout( srate, 1, 16, buf );
-		sfout.write( BinaryFile( "Berenice:Loris:try these:newflute.aiff" ) );
+		sfout.write( BinaryFile( ":test:newflute.aiff" ) );
 		
 		cout << "done." << endl;
 	}
@@ -99,253 +86,6 @@ int main()
 		cout << ex;
 	}
 
-	/*
-	try {
-		Notifier n("Here's a notification.");
-		n.post();
-		
-		n << " Here it is again.";
-		n.post(true);
-		
-		fatalError("Here's a fatal error.");
-	}
-	catch (Exception & ex ) {
-		cout << "Exception: " << ex;
-	}
-	
-	cout << "posting debug...";
-	
-	Debugger d("Here's some debugging stuff.");
-	d << " And here's some more.";
-	d.post();
-	
-	fatalError("Another fatal error.");
-	*/
-	/*
-	try {		
-		string name("Berenice:Loris:try these:few");
-		BinaryFile f;
-		f.view(name);
-		ImportLemur5 imp(f);
-		
-		cout << "importing partials from " << name << "..." << endl;
-		
-		imp.importPartials();
-		list< Partial > l;
-		l.splice( l.begin(), imp.partials() );
-		
-		cout << "done" << endl;
-		
-		//	find the longest:
-		double t = 0.;
-		for (list< Partial >::iterator it = l.begin(); it != l.end(); ++it ) {
-			if ( (*it).endTime() > t )
-				t = (*it).endTime();
-			//cout << "\tpartial: " << (*it).startTime() << " to " << (*it).endTime() << endl;
-		}
-				
-		cout << "found " << l.size() << " partials, total duration is " << t << endl;
-		
-		
-		const int srate = 44100;
-		const int nsamps = srate * t;
-		SampleVector buf( nsamps );
-		
-		cout << "synthesizing" << endl;
-		Synthesizer synth( buf, srate );
-		synth.useIterator( new LoFreqBweKludger(1000.) );
-		int c = 0;
-		for (list< Partial >::iterator it = l.begin(); it != l.end(); ++it ) {
-			synth.synthesizePartial( *it );
-			if ( ++c % 100 == 0  )
-				cout << "\t" << c << " partials..." << endl;
-		}
-			
-		cout << "writing..." << endl;
-		
-		for ( int z = 1; z < 4; ++z ) {
-			int ssize = z * 8;
-			
-			stringstream s;
-			s << "Berenice:Loris:try these:few." << ssize << ".aiff";
-		
-			cout << s.str() << "...";
-			
-			AiffFile sf( srate, 1, ssize, buf );
-			sf.write( BinaryFile( s.str() ) );
-		
-			cout << "done." << endl;
-		}
-		
-		cout << "reading in few.24.aiff" << endl;
-		SampleVector boogerBuf;
-		AiffFile sfin( BinaryFile("Berenice:Loris:try these:few.24.aiff"), boogerBuf );
-		
-		cout << "reversing samples." << endl;
-		reverse( boogerBuf.begin(), boogerBuf.end() );
-		
-		cout << "writing few.reverse.aiff" << endl;
-		AiffFile sfout( srate, 1, 16, boogerBuf );
-		sfout.write( BinaryFile( "Berenice:Loris:try these:few.reverse.aiff" ) );
-		
-		cout << "done." << endl;
-	}
-	catch ( Exception & ex ) {
-		cout << ex;
-	}
-	*/
-	/*
-	fstream f;	
-	try {
-		File f("foo", LittleEndian );
-		
-		cout << "opening file 'foo'" << endl;
-		f.openWrite();
-		
-		short x = 1;
-		long y = 2;
-		short z = 3;
-		
-		cout << "packing: " << x << " " << y << " " << z << endl;
-		f.write( x );
-		f.write( y );
-		f.write( z );
-		
-		cout << "closing file 'foo'" << endl;
-		f.close();
-		
-		cout << "opening file 'foo'" << endl;
-		f.open();
-		
-		f.read( x );
-		f.read( y );
-		f.read( z );
-		
-		cout << "unpacking: " << x << " " << y << " " << z << endl;
-		
-		cout << "closing file 'foo'" << endl;
-		f.close();
-	}
-	catch ( Exception & ex ) {
-		ex.streamOn( cout );
-	}
-	*/
-	/*
-	try {		
-		const int srate = 44100;
-		const double duration = 3.;
-		
-		Breakpoint bp( 100, 0.5, 0. );
-		Partial p;
-		p.insert( 0.1, bp );
-		p.insert( 0.5 * duration, bp );
-		
-		bp.setBandwidth( 0.5 );
-		bp.setAmplitude( 0.2 );
-		p.insert( duration, bp );
-		
-		const int nsamps = srate * duration;
-		double * samps = new double[nsamps];
-		for ( int k = 0; k < nsamps; ++k )
-			samps[k] = 0.;
-		SimpleSampleBuffer buf( samps, nsamps );
-		
-		Synthesizer synth( buf, srate );
-		synth.synthesizePartial( p );
-		
-		FSSpec spec = { 0, 0, "\pfoo.aiff" };
-		FSpCreate( &spec, 'LEMR', 'AIFF', 0 );
-		
-		AIFFfile f( spec, srate, 1, 16 );
-		f.setSamples( samps, nsamps );
-		f.write();
-		f.setSamples( Null, 0 );
-			
-	}
-	catch( Exception & ex ) {
-		ex.streamOn( cout );
-	}
-	*/
-	/*
-	FILE * fp = fopen( "Berenice:foo", "r" );
-	if ( fp == Null ) {
-		cout << "fopen() returned Null." << endl;
-		exit(0);
-	}
-	char c[32];
-	int numread = fread( c, sizeof(char), 31, fp );
-	c[numread] = '\n';
-	cout << "read: " << c << endl;
-	fclose( fp );
-
-	exit(0);
-	*/
-	
-	/* new handler test
-	reserveSpace( );
-	
-	notify( "Here we go!" );
-
-	int * goober = Null;
-	try {
-		goober = new int[10000000];
-	}
-	catch ( LowMemException & ex ) {
-		Notifier n;
-		n << ex << "\n";
-		n << "goober is " << (void *)goober << "\n";
-		n.report();
-	}
-	*/
-	
-	/* partial copying test
-	try {
-		cout << "constructing 3 Breakpoints (on stack)." << endl;
-		Breakpoint p1( 100, 0.5, 0. );
-		cout << "p1 frequency is " << p1.frequency() << endl;
-		Breakpoint p2( 200, 0.4, 0.5 );
-		cout << "p2 frequency is " << p2.frequency() << endl;
-		Breakpoint p3( 100, 0.5, 0. );
-		cout << "p3 frequency is " << p3.frequency() << endl;
-		
-		cout << "constructing a Partial...";
-		Partial dehr;
-		cout << "inserting three Breakpoints." << endl;
-		dehr.insert( 0., p1 );
-		dehr.insert( 1., p2 );
-		dehr.insert( 2., p3 );
-		
-		cout << "copying a Partial." << endl;
-		Partial * duh = new Partial( dehr );
-		
-		Breakpoint * p;
-		for ( p = dehr.head(); p != NULL; p = p->next() )
-			p->setFrequency( p->frequency() * 2. );
-			
-		cout << "unmodified partial (duh):" << endl;
-		for ( p = duh->head(); p != NULL; p = p->next() )
-			cout << "\t" << p->frequency() << " at "<< p->time() << endl;
-		cout << endl;
-		
-		cout << "modified partial (dehr):" << endl;
-		for ( p = dehr.head(); p != NULL; p = p->next() )
-			cout << "\t" << p->frequency() << " at " << p->time() << endl;
-		cout << endl;
-		
-		cout << "duration is " << dehr.duration() << endl;
-		cout << "removing 0.75 to 1.25" << endl;
-		dehr.remove( 0.75, 1.25 );
-		for ( p = dehr.head(); p != NULL; p = p->next() )
-			cout << "\t" << p->frequency() << " at " << p->time() << endl;
-		cout << endl;
-		cout << "duration is " << dehr.duration() << endl;
-		
-	}
-	catch ( Exception & ex ) {
-		ex.streamOn( cout );
-	}
-	*/
-	
 	return 0;
 }
 
