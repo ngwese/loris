@@ -3,15 +3,17 @@
 // ===========================================================================
 //  LorisInit.h
 //
-//  Definition of Loris::Init_.
-//  This class does nothing, except initialize the Loris library in its
-//  constructor (private, called only by instance) and finalize it in
-//  its destructor.
+//	Implementation of members of Loris::Init_.
+//	This class does nothing, except initialize the Loris library in its
+//	constructor and finalize it in its destructor. It is not thread safe,
+//	perhaps, but it is re-entrant.
 //
-//  A static const Init_ reference is created in every compilation that
-//  includes LorisLib.h, and it is initialized with this static member.
-//  No other instance of Init_ is possible, and Init_ has no functional
-//  members.
+//	In particular, initLib() checks data sizes and reserves some memory
+//	for recovery in low memory situations. 
+//
+//	Init__ can be a base class for systems that need more elaborate 
+//	intialization or finalization. Derived classes can override initLib()
+//	and/or finalLib() as necessary. 
 //
 //  -kel 4 Oct 99
 //
@@ -27,27 +29,28 @@ Begin_Namespace( Loris )
 //	This should probably be usable as a base class
 //	to provide for different initializations on 
 //	difference systems, but its not there now.
-//	Right now, the singleton is declared and constructed
-//	in instance().
 //
-//	Make the instance a pointer static to some file,
-//	the constructor assigns this to the that pointer, 
-//	then the construction of a derived class will also
-//	initialize the Singleton.
+//	
 //
 class Init_
 {
-//	construction is protected:
-protected:
+public:
+//	construction/initialization:
 	Init_( void );
 
-public:
-	~Init_( void );
-	
-//	Singleton access:
-public:
-	static const Init_ & instance( void );
+//	destruction/finalization:
+//	(virtual to allow subclassing)
+	virtual ~Init_( void );
+		
+private:
+//	counter to prevent initialization and finalization
+//	from happening more than once:
+	static int _init_count;
 
+//	library initialization/finalization:
+	virtual void initLib( void ) throw();
+	virtual void finalLib( void ) throw();
+	
 };	//	end of class Init_	
 		
 End_Namespace( Loris )

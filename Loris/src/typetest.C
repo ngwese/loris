@@ -9,18 +9,14 @@
 
 #include "LorisLib.h"
 #include "LorisTypes.h"
-#include "notify.h"
-
-#if !defined( Deprecated_cstd_headers )
-	#include <cstdio>
-#else
-	#include <stdio.h>
-#endif
-
-using namespace std;
+#include "Notifier.h"
 
 Begin_Namespace( Loris )
 
+// ---------------------------------------------------------------------------
+//	check_types
+// ---------------------------------------------------------------------------
+//
 boolean
 check_types( void )
 {
@@ -28,41 +24,36 @@ check_types( void )
 	
 	if ( sizeof( Int_16 ) != 2 )
 	{
-		char cstr[256];
-		sprintf( cstr, "Size of 16 bit int is %d, should be 2!", sizeof(Int_16) );
-		notify( cstr );
+		notifier << "Size of 16 bit int is " << sizeof(Int_16) << ", should be 2!";
+		notifier.post();
 		ret = false;
 	}
 
 	if ( sizeof( Int_32 ) != 4 )
 	{
-		char cstr[256];
-		sprintf( cstr, "Size of 32 bit int is %d, should be 4!", sizeof(Int_32) );
-		notify( cstr );
+		notifier << "Size of 32 bit int is " << sizeof(Int_32) << ", should be 4!";
+		notifier.post();
 		ret = false;
 	}
 
 	if ( sizeof( Uint_32 ) != 4 )
 	{
-		char cstr[256];
-		sprintf( cstr, "Size of unsigned 32 bit int is %d, should be 4!", sizeof(Uint_32) );
-		notify( cstr );
+		notifier << "Size of unsigned 32 bit int is " << sizeof(Uint_32) << ", should be 4!";
+		notifier.post();
 		ret = false;
 	}
 
 	if ( sizeof( Float_32 ) != 4 )
 	{
-		char cstr[256];
-		sprintf( cstr, "Size of 32 bit float is %d, should be 4!", sizeof(Float_32) );
-		notify( cstr );
+		notifier << "Size of 32 bit float is " << sizeof(Float_32) << ", should be 4!";
+		notifier.post();
 		ret = false;
 	}
 
 	if ( sizeof( Double_64 ) != 8 )
 	{
-		char cstr[256];
-		sprintf( cstr, "Size of 64 bit double is %d, should be 8!", sizeof(Double_64) );
-		notify( cstr );
+		notifier << "Size of 64 bit double is " << sizeof(Double_64) << ", should be 8!";
+		notifier.post();
 		ret = false;
 	}
 

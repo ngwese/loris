@@ -7,7 +7,7 @@
 //	Function for handling low memory situtations gracefully. Sort of.
 //	One cannot, apparently, rely on the low-memory behavior of new().
 //
-//	reserveSpace() allocates some memory that can be freed up in an 
+//	initLowMem() allocates some memory that can be freed up in an 
 //	emergency, and installs a new handler that does so (frees up that
 //	memory in an emergency, that is). If that new handler is called
 //	again before more emergency space has been allocated (by another
@@ -28,7 +28,7 @@
 
 Begin_Namespace( Loris )
 
-void reserveSpace( int howManyBytes = 16000 );
+void initLowMem( int howManyBytes = 16000 );
 
 End_Namespace( Loris )
 

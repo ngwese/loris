@@ -10,19 +10,11 @@
 #include "LorisLib.h"
 #include "Notifier.h"
 #include "Exception.h"
-#include "notify.h"
-#include "cnotify.h"
 
 #if !defined( Deprecated_iostream_headers )
 	#include <iostream>
 #else
 	#include <iostream.h>
-#endif
-
-#if !defined( Deprecated_cstd_headers )
-	#include <cstdio>
-#else
-	#include <stdio.h>
 #endif
 
 //	MIPSPro is especially lame:
@@ -90,87 +82,5 @@ Notifier::post( boolean block )
 	}
 }
 
-// ---------------------------------------------------------------------------
-//	notify
-// ---------------------------------------------------------------------------
-//	One-shot notification.
-//
-void
-notify( const string & s )
-{
-	//Notifier n(s);
-	notifier << s;
-	notifier.post();
-}
-
-// ---------------------------------------------------------------------------
-//	debug
-// ---------------------------------------------------------------------------
-//	One-shot debug notification.
-//
-void
-debug( const string & s )
-{
-	//Debugger d(s);
-	debugger << s;
-	debugger.post();
-}
-
-// ---------------------------------------------------------------------------
-//	fatalError
-// ---------------------------------------------------------------------------
-//	One-shot error notification that displays even if the app terminates 
-//	immediately. For console apps this is nothing special, for gui apps,
-//	a blocking alert dialog is needed.
-//
-void
-fatalError( const string & s )
-{
-	try {
-		Notifier n(s);
-		n << " (aborting)";
-		n.post( true ); // block until confirmed
-	}
-	catch (...) {
-	}
-	abort();
-}
-
 End_Namespace( Loris )
-
-// ---------------------------------------------------------------------------
-//	notify
-// ---------------------------------------------------------------------------
-//	One-shot c-callable notification, not in namespace.
-//	Prototype in cnotify.h.
-//
-extern "C" void
-notify( const char * cstr )
-{
-	Loris::notify( string(cstr) );
-}
-
-// ---------------------------------------------------------------------------
-//	debug
-// ---------------------------------------------------------------------------
-//	One-shot c-callable debug notification, not in namespace.
-//	Prototype in cnotify.h.
-//
-extern "C" void
-debug( const char * cstr )
-{
-	Loris::debug( string(cstr) );
-}
-
-// ---------------------------------------------------------------------------
-//	fatalError
-// ---------------------------------------------------------------------------
-//	One-shot c-callable error notification, not in namespace.
-//	Prototype in cnotify.h.
-//
-extern "C" void
-fatalError( const char * cstr )
-{
-	Loris::fatalError( string(cstr) );
-}
 

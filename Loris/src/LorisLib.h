@@ -106,31 +106,4 @@ static const double TwoPi = 2.L * 3.1415926535897932384626433L;
 
 End_Namespace( Loris )
 
-#ifdef __cplusplus
-#if 0
-// ---------------------------------------------------------------------------
-//	Loris initialization class.
-//
-//	Linking any C++ file in Loris will cause this class to be
-//	instantiated. Its a Singleton, because we only need one of
-//	them. Its sole purpose is to force initialization of the 
-//	Loris library. See LorisInit.C for the initialization.
-//
-class Init_
-{
-//	only instance can instantiate:
-	Init_( void );
-	~Init_( void );
-public:	
-	static const Init_ & instance( void );
-};	
-#endif
-#include "LorisInit.h"
-	
-//	reference to the sole istance:	
-static const Loris::Init_ & _loris_lib_initializer = Loris::Init_::instance();
-
-#endif
-
-
 #endif	/*  ndef __Loris_library_prefix__ */

@@ -7,8 +7,14 @@
 //	objects with a default implementation that uses the console for 
 //	reporting.
 //
+//	In most cases, clients should just use the global notifier and debugger 
+//	objects, as they would cout and cerr. One should rarely need to create
+//	another Notifier or Debugger.
+//
 //	The interface is about right here, but the class heirarchy might 
 //	need to be altered to make it more flexible for subclassing.
+//
+//	C++ notification functions and streams in Loris namespace defined at bottom.
 //
 //	-kel 9 Sept 99
 //
@@ -109,6 +115,24 @@ class Debugger
 		dummybuf dumb;
 	};
 #endif	//	Debug_Loris	
+
+// ---------------------------------------------------------------------------
+//	prototype for a one-shot notifiers:
+//
+void notify( const std::string & s );
+void debug( const std::string & s );
+
+// ---------------------------------------------------------------------------
+//	prototype for a one-shot error notifier:
+//	This one displays its message and aborts.
+//
+void fatalError( const std::string & s );
+
+// ---------------------------------------------------------------------------
+//	streams for notification, declared in Notifier.C.
+//
+extern Notifier notifier;
+extern Debugger debugger;
 
 End_Namespace( Loris )
 
