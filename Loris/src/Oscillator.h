@@ -1,14 +1,13 @@
-#ifndef __Loris_oscillator__
-#define __Loris_oscillator__
+#ifndef INCLUDE_OSCILLATOR_H
+#define INCLUDE_OSCILLATOR_H
 // ===========================================================================
 //	Oscillator.h
 //	
-//	Class definition for Loris::Oscillator.
+//	Class definition for Loris::Oscillator, a Bandwidth-Enhanced Oscillator.
 //	
-//	Loris synthesis generates a buffer of samples from a 
-//	collection of Partials. The Loris Synthesizer uses an Oscillator
-//	to generate samples according to parameters interpolated from
-//	pairs of Breakpoints.
+//	Loris::Synthesizer uses an instance of Loris::Oscillator to synthesize
+//	bandwidth-enhanced partials obtained from Reassigned Bandwidth-Enhanced
+//	analysis data.
 //
 //	-kel 31 Aug 99
 //
@@ -18,12 +17,16 @@
 
 Begin_Namespace( Loris )
 
-class Filter;
+class Filter;	
 
 // ---------------------------------------------------------------------------
 //	class Oscillator
 //
-//	Hey, any comment?
+//	Oscillator represents a single bandwidth-enhanced sinusoidal oscillator
+//	used for synthesizing sounds from Reassigned Bandwidth-Enhanced analysis
+// 	data. Oscillator encapsulates the oscillator state, including the instan-
+//	taneous radian frequency, amplitude, bandwidth, and phase, and a filter
+//	object used to generate the bandlimited stochastic modulator.
 //
 class Oscillator
 {
@@ -39,28 +42,39 @@ class Oscillator
 
 //	-- public interface --
 public:
-//	construction:
-	Oscillator( double radf, double a, double bw, double ph = 0. );
+//	construction (with initial state):
+	Oscillator( double radf, double a, double bw, double ph );
 	~Oscillator( void );
 		
-//	state access/mutation:
+//	state access:
 	double radianFreq( void ) const { return _frequency; }
 	double amplitude( void ) const { return _amplitude; }
 	double bandwidth( void ) const { return _bandwidth; }
 	double phase( void ) const { return _phase; }
-	
+
+//	state mutation:	
 	void setRadianFreq( double x ) { _frequency = x; }
 	void setAmplitude( double x ) { _amplitude = x; }
 	void setBandwidth( double x ) { _bandwidth = x; }
 	void setPhase( double x ) { _phase = x; }
 
 //	sample generation:	
-	void generateSamples( std::vector< double > & buffer, long howMany, long offset,
+//	Accumulate bandwidth-enhanced sinusoidal samples modulating the 
+//	oscillator state from its current values of radian frequency,
+//	amplitude, and bandwidth to the specified target values, starting
+//	at beginIdx and ending at (before) endIdx (no sample is accumulated
+//	at endIdx). The indices are positions in the specified buffer.
+//
+//	The caller must insure that the indices are valid. Target frequency
+//	and bandwidth are checked to prevent aliasing and bogus bandwidth
+//	enhancement.
+	void generateSamples( std::vector< double > & buffer, long beginIdx, long endIdx,
 						  double targetFreq, double targetAmp, double targetBw );
 	
 private:
 //	-- unimplemented --
 //	not implemented until proven useful:
+	Oscillator( void );
 	Oscillator( const Oscillator & other );
 	Oscillator & operator= ( const Oscillator & other );
 		
@@ -68,4 +82,4 @@ private:
 
 End_Namespace( Loris )
 
-#endif	// ndef __Loris_oscillator__
+#endif	// ndef INCLUDE_OSCILLATOR_H

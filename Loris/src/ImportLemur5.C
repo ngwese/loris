@@ -153,7 +153,11 @@ ImportLemur5::getPartial( void )
 		
 		//	keep running phase and time for Breakpoint construction:
 		double phase = tkHeader.initialPhase;
-		double time = tkHeader.startTime * 0.001;	//	convert to seconds
+		
+		//	convert time to seconds and offset by a millisecond to 
+		//	allow for implied onset (Lemur analysis data was shifted
+		//	such that the earliest Partial starts at 0).
+		double time = tkHeader.startTime * 0.001;	
 		
 		//	use this to compute phases:
 		double prevTtnSec = 0.;

@@ -1,17 +1,15 @@
 // ===========================================================================
 //	Oscillator.C
 //	
-//	Implementation of Loris::Oscillator.
+//	Implementation of Loris::Oscillator, a Bandwidth-Enhanced Oscillator.
 //	
-//	Loris synthesis generates a buffer of samples from a 
-//	collection of Partials. The Loris Synthesizer uses an Oscillator
-//	to generate samples according to parameters interpolated from
-//	pairs of Breakpoints.
+//	Loris::Synthesizer uses an instance of Loris::Oscillator to synthesize
+//	bandwidth-enhanced partials obtained from Reassigned Bandwidth-Enhanced
+//	analysis data.
 //
 //	-kel 31 Aug 99
 //
 // ===========================================================================
-#include "LorisLib.h"
 #include "Oscillator.h"
 #include "Filter.h"
 #include "random.h"
@@ -24,14 +22,16 @@
 	#include <math.h>
 #endif
 
-using namespace std;
-
 Begin_Namespace( Loris )
 
 // ---------------------------------------------------------------------------
 //	Oscillator construction
 // ---------------------------------------------------------------------------
-//	Initialize state.
+//	Initialize state and construct a Filter. The only potential failure in 
+//	this constructor is a failure in the Filter constructor. In that instance,
+//	the Filter is not constructed. In all other instances, the Oscillator is
+//	successfully constructed, so there is no potential to leak the Filter's
+//	memory.
 //
 Oscillator::Oscillator( double radf, double a, double bw, double ph /* = 0. */ ) :
 	_frequency( radf ),	//	radians per sample
@@ -56,8 +56,6 @@ Oscillator::Oscillator( double radf, double a, double bw, double ph /* = 0. */ )
 		_amplitude = 0.;
 }
 
-
-
 // ---------------------------------------------------------------------------
 //	Oscillator destruction
 // ---------------------------------------------------------------------------
@@ -70,23 +68,32 @@ Oscillator::~Oscillator( void )
 // ---------------------------------------------------------------------------
 //	generateSamples
 // ---------------------------------------------------------------------------
-//	Compute howMany samples and sum them into buffer starting at offset.
-//	Modulate BW-enhanced partial parameters from their current values to
-//	the specified new values.
+//	Accumulate bandwidth-enhanced sinusoidal samples modulating the 
+//	oscillator state from its current values of radian frequency,
+//	amplitude, and bandwidth to the specified target values, starting
+//	at beginIdx and ending at (before) endIdx (no sample is accumulated
+//	at endIdx). The indices are positions in the specified buffer.
 //
-//	In Lemur, we used to synthesize at zero amplitude above the Nyquist 
-//	rate, could stick that in here sometime, except that the Oscillator
-//	has no knowledge of sample rate... Should be handled by the Synthesizer.
+//	The caller must insure that the indices are valid. Target frequency
+//	and bandwidth are checked to prevent aliasing and bogus bandwidth
+//	enhancement.
 //
 void
-Oscillator::generateSamples( vector< double > & buffer, long howMany, long offset,
+Oscillator::generateSamples( std::vector< double > & buffer, 
+							 long beginIdx, long endIdx,
 							 double targetFreq, double targetAmp, double targetBw )
 {
+//	use math functions in namespace std:
+	using namespace std;
+	
 //	caller is responsible for making sure that
-//	the sample buffer indices are valid:
-	Assert( offset > 0 );
-	Assert( offset + howMany < buffer.size() );
-	Assert( howMany >= 0 );
+//	the sample buffer indices are valid, only
+//	check sanity when debugging:
+#ifdef Debug_Loris
+	Assert( beginIdx > 0 );
+	Assert( endIdx <= buffer.size() );
+	Assert( endIdx >= beginIdx );
+#endif
 	
 //	clamp bandwidth:
 	if ( targetBw > 1. )
@@ -101,6 +108,7 @@ Oscillator::generateSamples( vector< double > & buffer, long howMany, long offse
 //	generate and accumulate samples:
 //	(if no samples are generated, the oscillator state 
 //	will be set below to the target values anyway):
+	long howMany = endIdx - beginIdx;
 	if ( howMany > 0 )
 	{
 	//	compute trajectories:
@@ -131,7 +139,7 @@ Oscillator::generateSamples( vector< double > & buffer, long howMany, long offse
 			
 			//	compute a sample and add it into the buffer:
 			samp = mod * a * osc;
-			buffer[ offset + i ] += samp;
+			buffer[ beginIdx + i ] += samp;
 				
 			//	update the oscillator state:
 			p += f;	//	frequency is radians per sample
@@ -156,7 +164,6 @@ Oscillator::generateSamples( vector< double > & buffer, long howMany, long offse
 	_frequency = targetFreq;
 	_amplitude = targetAmp;
 	_bandwidth = targetBw;
-
 }
 
 End_Namespace( Loris )

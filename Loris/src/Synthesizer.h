@@ -1,12 +1,10 @@
-#ifndef __Loris_synthesizer__
-#define __Loris_synthesizer__
+#ifndef INCLUDE_SYNTHESIZER_H
+#define INCLUDE_SYNTHESIZER_H
 // ===========================================================================
 //	Synthesizer.h
 //	
-//	Class definition for Loris::Synthesizer.
-//	
-//	Loris synthesis generates a buffer of samples from a 
-//	collection of Partials. 
+//	Class definition for Loris::Synthesizer, a synthesizer of 
+//	bandwidth-enhanced Partials.
 //
 //	-kel 16 Aug 99
 //
@@ -22,18 +20,14 @@ class Partial;
 // ---------------------------------------------------------------------------
 //	class Synthesizer
 //	
-//	Definition of class of synthesizers of reassigned bandwidth-enhanced
-//	partials. A Synthesizer generates samples for one partial at a time
-//	at a specified sample rate into a specified sample buffer using an
-//	Oscillator.
+//	Definition of class of synthesizers of (reassigned) bandwidth-enhanced
+//	partials. Synthesizer accumulates samples for one partial at a time
+//	at a specified sample rate into a specified sample buffer.
 //
 //	The Synthesizer does not own its sample vector, the client 
-//	is responsible for its construction and destruction. 
-//
-//	Non-standard Oscillator and PartialIterator may be assigned,
-// 	and are then owned by the Synthesizer, that is, they will be 
-//	destroyed with the Synthesizer.
-//
+//	is responsible for its construction and destruction. Many 
+//	Synthesizers may share a buffer.
+//	
 //	auto_ptr is used to pass some objects as arguments to make explicit
 //	the source/sink relationship between the caller and the Synthesizer.
 //	Synthesizer assumes ownership, and the client's auto_ptr
@@ -51,11 +45,25 @@ class Synthesizer
 public:
 //	construction:
 	Synthesizer( std::vector< double > & buf, double srate );
+
+//	copy:
+//	Create a copy of other by cloning its PartialIterator and sharing its
+//	sample buffer.
 	Synthesizer( const Synthesizer & other );
 	
 	//~Synthesizer( void );	//	use compiler-generated destructor
 
 //	synthesis:
+//
+//	Synthesize a bandwidth-enhanced sinusoidal Partial with the specified 
+//	timeShift (in seconds). The Partial parameter data is filtered by the 
+//	Synthesizer's PartialIterator. Zero-amplitude Breakpoints are inserted
+//	1 millisecond (FADE_TIME) from either end of the Partial to reduce 
+//	turn-on and turn-off artifacts. The client is responsible or insuring
+//	that the buffer is long enough to hold all samples from the time-shifted
+//	and padded Partials. Synthesizer will not generate samples outside the
+//	buffer, but neither will any attempt be made to eliminate clicks at the
+//	buffer boundaries.  
 	void synthesize( const Partial & p, double timeShift = 0. );	
 	
 //	access:
@@ -71,69 +79,12 @@ public:
 private:
 	inline double radianFreq( double hz ) const;
 
+//	-- not impemented --
 //	 not impemented until proven useful:	
-	Synthesizer & operator= ( const Synthesizer & other );	//	 get rid of?
+	Synthesizer & operator= ( const Synthesizer & other );
+	
 };	//	end of class Synthesizer
-
-// ---------------------------------------------------------------------------
-//	class SynthesisIterator
-//
-//	For best synthesis results, low-frequency Partials are synthesized without
-//	their bandwidth energy, and Partials above the Nyquist frequency are
-//	synthesized at zero amplitude. This iterator (the default iterator for
-//	Synthesizer) makes both of these adjustments.
-//
-class SynthesisIterator : public PartialDecorIterator
-{
-public:
-	SynthesisIterator( double fNyquist, double flow = 0. ) :
-		_nyquistfreq( fNyquist ),
-		_bwecutoff( flow )  {}
-		
-	SynthesisIterator( const SynthesisIterator & other ) :
-		_nyquistfreq( other._nyquistfreq ), 
-		_bwecutoff( other._bwecutoff ), 
-		PartialDecorIterator( other ) {}
-	
-	//	cloning:
-	//	In standard C++, an overriding member can return a type that
-	//	is derived from the return type of the overidden member.
-	//	But not in MIPSPro C++.
-#if defined(__sgi) && ! defined(__GNUC__)
-	PartialIterator * 
-#else
-	SynthesisIterator *	
-#endif
-		clone( void ) const { return new SynthesisIterator( *this ); }
-
-	//	synthesize at zero amplitude above the Nyquist
-	//	frequency, and without bandwidth enhancement below
-	//	the specified cutoff frequency:
-	double amplitude( void ) const;
-
-	//	synthesize without bandwidth enhancement below
-	//	the specified cutoff frequency, also clamp
-	//	partial bandwidths to reasonable values:
-	double bandwidth( void ) const;
-	
-private:
-	//	helper
-	static double bwclamp( double bw )
-	{
-		if( bw > 1. )
-			return 1.;
-		else if ( bw < 0. )
-			return 0.;
-		else
-			return bw;
-	}
-
-	//	instance variables:
-	double _nyquistfreq;
-	double _bwecutoff;
-	
-};	//	end of class SynthesisIterator
 
 End_Namespace( Loris )
 
-#endif	// ndef __Loris_synthesizer__
+#endif	// ndef INCLUDE_SYNTHESIZER_H
