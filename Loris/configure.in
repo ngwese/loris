@@ -99,17 +99,46 @@ dnl If csound is available, then a message will be printed
 dnl refering to the README in the csound directory.
 dnl----------------------------------------------------------------
 
-AC_PATH_PROG(CSOUND, csound)
-AM_CONDITIONAL(HAVE_CSOUND, test -n "$CSOUND")
+CSINCLUDE=
+AC_ARG_WITH(csound,
+	AC_HELP_STRING( [--with-csound=Csound_src_path],
+					[specify path of the Csound source code] ),
+	[CSINCLUDE="$withval"], [CSINCLUDE=])
 
-if test -n "$CSOUND"; then
+AC_PATH_PROG(CSOUND, csound)
+AM_CONDITIONAL(HAVE_CSOUND, test -n "$CSINCLUDE")
+
+if test -n "$CSOUND" && test -z "$CSINCLUDE"; then
+	dnl if Csound is found, but no path to the source is
+	dnl specified, print a message about building the 
+	dnl dynamically-loaded module.
 	AC_MSG_RESULT(-----------------------------------------)
-	AC_MSG_RESULT(You have Csound installed. See the)
-	AC_MSG_RESULT(README file in the csound directory)
-	AC_MSG_RESULT(for information about building the)
-	AC_MSG_RESULT(Loris csound modules.)
+	AC_MSG_RESULT(You have Csound installed but you did)
+	AC_MSG_RESULT(not specify a path to the Csound source)
+	AC_MSG_RESULT(so the Loris Csound module cannot be)
+	AC_MSG_RESULT(built. Specify a path to the Csound)
+	AC_MSG_RESULT(source using configure --with-csound)
+	AC_MSG_RESULT(or see the README file in the csound)
+	AC_MSG_RESULT(directory for information about building)
+	AC_MSG_RESULT(the Loris Csound modules.)
 	AC_MSG_RESULT(-----------------------------------------)
 fi
+
+if test  "$CSINCLUDE" == "yes"; then
+	dnl report that this flag requires a path
+	AC_MSG_ERROR(please specify a path to the Csound source when using --with-csound)
+fi
+
+if test -n "$CSINCLUDE"; then
+	dnl verify that the header cs.h can be found in 
+	dnl the specified directory
+	AC_MSG_CHECKING(for cs.h header file)
+	if test ! -f "$CSINCLUDE/cs.h" ; then
+		AC_MSG_ERROR(cannot find cs.h in $CSINCLUDE)
+	fi
+fi
+
+AC_SUBST(CSINCLUDE)
 
 dnl----------------------------------------------------------------
 dnl Checks for compiler features.

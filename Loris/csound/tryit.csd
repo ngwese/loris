@@ -1,16 +1,14 @@
+<MacOptions>
+Version: 1
+Render: File
+Ask: Yes
+Options: -b64 -W -oBuddha:Loris:csound:dehr.wav -s -m7 -d --opcode -lib=foo 
+</MacOptions>
+<MacGUI>
+ioView nobackground {65535, 65535, 65535}
+ioListing {10, 10} {400, 500}
+</MacGUI>
 <CsoundSynthesizer>
-; tryit.csd - a Csound structured data file 
-; for testing the Loris unit generators
-
-<CsOptions>
--W -W -d -o tryitnow.wav
-</CsOptions>
-
-<CsVersion> ;optional section
-After 4.17  ; the Loris generators can't possibly work 
-            ; with Csound before version 4.18
-</CsVersion>
-
 <CsInstruments>
 ; originally tryit.orc
 sr = 44100
@@ -98,8 +96,7 @@ endin
 ;;   
 ;;   
 
-</CsInstruments>   
-
+</CsInstruments>
 <CsScore>
 ; originally tryit.sco
 ; make sinusoid in table 1
@@ -130,4 +127,6 @@ s
 ;; 
 
 e
-</CsScore>   </CsoundSynthesizer>
+</CsScore>
+
+</CsoundSynthesizer>
