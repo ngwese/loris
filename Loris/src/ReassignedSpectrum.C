@@ -10,16 +10,14 @@
 #include "notifier.h"
 #include "Exception.h"
 #include "pi.h"
-#include <functional>
 #include <algorithm>
-
-using namespace std;
+#include <cstdlib>	//	for std::abs()
+using std::abs;		//	used everywhere
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
 #endif
-
 
 // ---------------------------------------------------------------------------
 //	ReassignedSpectrum constructor
@@ -169,7 +167,7 @@ ReassignedSpectrum::applyFreqRamp( vector< double > & w )
 	//
 	//	seems that I want the imaginary part of the index-reversed
 	//	transform scaled by the size of the transform:
-	reverse( temp.begin() + 1, temp.end() );
+	std::reverse( temp.begin() + 1, temp.end() );
 	for ( int i = 0; i < w.size(); ++i ) {
 		w[i] = - imag( temp[i] ) / temp.size();
 	}
@@ -387,13 +385,14 @@ ReassignedSpectrum::reassignedMagnitude( double fracBinNum, long peakBinNumber )
 	double a = magnitudeScale() * abs( _transform[ peakBinNumber ] );
 	
 	//	compute the offset in the oversampled window spectrum:
-	long offset = round( OVERSAMPLE_WINDOW_SPECTRUM * (peakBinNumber - fracBinNum) );
+	//	(cheapo rounding)
+	long offset = ( OVERSAMPLE_WINDOW_SPECTRUM * (peakBinNumber - fracBinNum) ) + 0.5;
 	
 	//	if the offset is very large, corresponding to 
 	//	a very large frequency correction (larger than,
 	//	say, half the main lobe width), clamp the 
 	//	amplitude rather than letting it get huge:
-	if ( std::abs(offset) >= _mainlobe.size() * 0.5 )
+	if ( abs(offset) >= _mainlobe.size() * 0.5 )
 	{
 		return a / _mainlobe[_mainlobe.size() / 2];
 	}
@@ -402,7 +401,7 @@ ReassignedSpectrum::reassignedMagnitude( double fracBinNum, long peakBinNumber )
 	//	samples of the window's main lobe:
 	//	(main lobe spectrum has been normalized so
 	//	that the zeroeth sample is 1.0)
-	double correctAmp = a / _mainlobe[std::abs(offset)];
+	double correctAmp = a / _mainlobe[abs(offset)];
 	
 	//	estimate main lobe stretching by finding the step 
 	//	rate that gives the best match (least residue) for 
@@ -411,7 +410,7 @@ ReassignedSpectrum::reassignedMagnitude( double fracBinNum, long peakBinNumber )
 	//
 	//	(this only makes sense when the offset (and frequency
 	//	correction) are small)
-	if ( std::abs(offset) > OVERSAMPLE_WINDOW_SPECTRUM )
+	if ( abs(offset) > OVERSAMPLE_WINDOW_SPECTRUM )
 	{
 		return correctAmp;
 	}

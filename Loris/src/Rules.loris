@@ -1,0 +1,41 @@
+#	Rules.loris
+#
+#	Loris objects definition
+#
+OBJ_LORIS = AiffFile.o \
+			Analyzer.o \
+			AssociateBandwidth.o \
+			BinaryFile.o \
+			Breakpoint.o \
+			Dilator.o \
+			Distiller.o \
+			DistributeEnergy.o \
+			Exception.o \
+			Filter.o \
+			FourierTransform.o \
+			ImportPartials.o \
+			ImportLemur5.o \
+			KaiserWindow.o \
+			Map.o \
+			Morph.o \
+			Oscillator.o \
+			Partial.o \
+			ReassignedSpectrum.o \
+			SamplesFile.o \
+			Synthesizer.o \
+			endian.o \
+			ieee.o \
+			notifier.o \
+#			SpcFile.o \	FIX ME
+#			FloatingThreshold.o \
+
+#
+#	fftw:
+#
+fftw_prefix = /usr/people/kfitz/FFTW
+
+#
+#	flags:
+#
+INC_LORIS = -I${fftw_prefix}/include
+#DEBUG_LORIS = -DDebug_Loris

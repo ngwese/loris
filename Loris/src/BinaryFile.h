@@ -8,37 +8,13 @@
 //	-kel 5 Oct 99
 //
 // ===========================================================================
-
-
 #include <string>
-
-//	use macros for non-compliant libraries:
-#if !defined( Deprecated_iostream_headers)
-	#include <istream>
-	#include <fstream>
-	#define STDiostream std::iostream
-	#define STDios std::ios
-	#define STDfilebuf std::filebuf
-	#define STDstreampos std::streampos
-#else
-	#include <istream.h>
-	#include <fstream.h>
-	#define STDiostream iostream
-	#define STDios ios
-	#define STDfilebuf filebuf
-	#define STDstreampos streampos
-#endif
-
-//	this is wrong in MIPSPro, kludged alreday in egcs.
-#if defined(__sgi) && ! defined(__GNUC__)
-	#define seekdir seek_dir
-#endif	
+#include <iostream>
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
 #endif
-
 
 // ---------------------------------------------------------------------------
 //	class BinaryFile
@@ -53,7 +29,7 @@ namespace Loris {
 //	Note: no check is made on positioning the stream pointer, behavior
 //	is "undefined" when streams are positioned out of bounds. 
 //
-class BinaryFile : private STDiostream
+class BinaryFile : private std::iostream
 {
 //	-- public interface --
 public:
@@ -66,7 +42,7 @@ public:
 	//	For now, just use filebuf, but to have buffering, need to 
 	//	derived our own file buffer class. The built-in filebuf
 	//	class does no buffering, and doesn't support it.
-	typedef STDfilebuf buffer_type;
+	typedef std::filebuf buffer_type;
 	
 	//	file stream association:
 	void append( const std::string & path );	//	append, create if nec.
@@ -108,18 +84,18 @@ public:
 	//	absolute file stream position:
 	//	(note: streampos is _not_ an integral type)
 	//	(that is to say, it _should not_ be)
-	STDstreampos tell( void );
-	void seek( STDstreampos x );
+	std::streampos tell( void );
+	void seek( std::streampos x );
 	
 	//	relative file stream position:
 	//	(note: position offsets _are_ signed integral types)
-	void offset( long x, STDios::seekdir whence = STDios::cur );
+	void offset( long x, std::ios::seekdir whence = std::ios::cur );
 	
 	//	import status access:	
-	using STDiostream::clear;
-	using STDiostream::eof;
-	using STDiostream::fail;
-	using STDiostream::good;
+	using std::iostream::clear;
+	using std::iostream::eof;
+	using std::iostream::fail;
+	using std::iostream::good;
 	
 	//	endian-ness:
 	void setBigEndian( void );
@@ -140,7 +116,7 @@ private:
 	enum { op_wr, op_rd, op_seek } _prevOp;	//	was the previous operation read or write?
 	
 	bool _swapBytes;		//	should we swap the byte order of objects read/written?
-	STDfilebuf _buf;		//	associated file buffer 
+	std::filebuf _buf;		//	associated file buffer 
 
 };	//	end of class BinaryFile
 

@@ -16,12 +16,7 @@
 #include "pi.h"
 #include <algorithm>
 #include <vector>
-
-#if !defined( Deprecated_cstd_headers )
-	#include <cmath>
-#else
-	#include <math.h>
-#endif
+#include <cmath>
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
