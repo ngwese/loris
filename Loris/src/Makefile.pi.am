@@ -56,7 +56,7 @@ libloris_la_LDFLAGS = -version-info 1:0:0
 
 include_HEADERS = loris.h
 
-loris.h: loris.h.in
+loris.h: loris.h.in Makefile
 	sed "s/LORIS_MAJOR_VERSION/LORIS_MAJOR_VERSION $(LORIS_MAJOR_VERSION)/g" < loris.h.in | \
 	sed "s/LORIS_MINOR_VERSION/LORIS_MINOR_VERSION $(LORIS_MINOR_VERSION)/g" | \
 	sed "s/LORIS_SUBMINOR_VERSION/LORIS_SUBMINOR_VERSION $(LORIS_SUBMINOR_VERSION)/g" | \
