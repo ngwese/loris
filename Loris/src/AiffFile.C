@@ -15,6 +15,7 @@
 #include "Exception.h"
 #include "notifier.h"
 #include "ieee.h"
+#include "endian.h"
 #include <algorithm>
 #include <string>
 #include <iostream>
@@ -340,12 +341,9 @@ AiffFile::readSamples( std::istream & s )
 	//	use a vector for automatic temporary storage:
 	std::vector<char> v( _samples.size() * (_sampSize / 8) );
 
-	//	read integer samples in without byte-swapping:
+	//	read integer samples: 
 	notifier << "reading " << v.size() << " bytes " << _samples.size() << " samples" << endl;
-	BigEndian::read( s, v.size(), 1, v.begin() );
-	for ( long k = 0; k < v.size(); k += 100 )
-		notifier << short(v[k]) << " ";
-	notifier << endl;
+	BigEndian::read( s, _samples.size(), _sampSize / 8, v.begin() );
 
 	//	except if there were any read errors:
 	if ( ! s.good() )
@@ -377,9 +375,13 @@ AiffFile::readSamples( std::istream & s )
 */
 		case 16:
 		{
+			long shift = 0;
+			if (!bigEndianSystem())
+				shift = 16;
 			for (long i = 0; i < v.size(); i += 2 ) 
 			{
-				Int_32 samp = (long(v[i]) << 24) + (long(v[i+1]) << 16);
+				pcm_sample * sptr = (pcm_sample *)&v[i];
+				Int_32 samp = sptr->s32bits << shift;
 				_samples[i/2] = oneOverMax * samp; 
 
 				if (i < 100 )
