@@ -86,4 +86,4 @@ TESTS = $(check_PROGRAMS) $(check_SCRIPTS)
 CLEANFILES = $(PYTHON_TEST) $(TCL_TEST) $(PERL_TEST)
 
 distclean-local:
-	-rm -fr *.ctest.* *.pytest.* *.tcltest.*
+	-rm -fr *.ctest.* *.pytest.* *.tcltest.* tmp.sdif
