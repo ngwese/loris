@@ -89,7 +89,7 @@ SDIF spec: http://www.cnmat.berkeley.edu/SDIF/
 #include <string>
 #include <vector>
 
-#if defined(HAVE_M_PI) && (HAVE_M_PI)
+#if HAVE_M_PI
 	const double Pi = M_PI;
 #else
 	const double Pi = 3.14159265358979324;
@@ -293,6 +293,14 @@ static char *error_string_array[] = {
 //	WORDS_BIGENDIAN is defined (or not) in config.h, determined 
 //	at configure-time, changed from test of LITTLE_ENDIAN
 //	which might be erroneously defined in some standard header.
+
+//  If we didn't run configure, try to make a good guess.
+#if !(HAVE_CONFIG_H)
+    #ifndef _MSC_VER
+    #define WORDS_BIGENDIAN
+    #endif
+#endif
+
 #if !defined(WORDS_BIGENDIAN)
 #define BUFSIZE 4096
 static	char	p[BUFSIZE];
