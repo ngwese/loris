@@ -20,7 +20,9 @@ farm = {
 	'choir': 'webernchoir.py', 
 	'elephants': 'elephants.py', 
 	'flute': 'flute.py', 
+	'french': 'french.py',
 	'gong': 'gong.py',
+	'moses': 'moses.py',
 	'sax': 'saxriff.py' 
 }
 	
