@@ -73,7 +73,7 @@ public:
 	~ReassignedSpectrum( void );
 
 //	spectrum computation:	
-	void transform( const double * bufBegin, const double * pos, const double * bufEnd );
+	void transform( const double * sampsBegin, const double * pos, const double * sampsEnd );
 
 //	length of the three Fourier transforms:
 	long size( void ) const { return _transform.size(); }

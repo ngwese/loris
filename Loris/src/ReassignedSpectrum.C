@@ -100,63 +100,40 @@ ReassignedSpectrum::~ReassignedSpectrum( void )
 // ---------------------------------------------------------------------------
 //	transform
 // ---------------------------------------------------------------------------
-//	idxCenter is the index in buf with which the center of the analysis window
-//	should be aligned. It may be outside the extent of the buffer (that is, 
-//	negative or greater than the size of the buffer).
+//	Compute the reassigned Fourier transform of the samples on the half open
+//	range [sampsBegin, sampsEnd), aligning sampCenter with the center of
+//	the analysis window.
 //
-//	The offset computation is confusing. boffset and eoffset are indices into
-//	the sample buffer, woffset is an index into the window. The window and 
-//	temporary transform buffer must have the same offset because the center 
-//	of the window must always be at the center of the transform buffer (the
-//	FourierTransform's loadAndRotate() assumes this).
-//
-//	I don't like the temporary buffer. I think that FT needs an interface that
-//	does what I am using std::transform() to do. I also need to get rid of that
-//	name collision (transform).
-//
-//	To make Analyzer slightly friendlier, I am changing the arg list here to
-//	have three double pointers, buffer begin, window position, and buffer end.
-//	These pointers act like STL iterators (that is, bufEnd is one past the
-//	end of the buffer).
+//	Clients must ensure that the samples beyond the window boundaries are not 
+//	requested. Note that it is not sufficient to check that sampsEnd - sampsBegin
+//	is no greater than the window length, since sampCenter might not be in the
+//	center of that range.
 //
 void
-ReassignedSpectrum::transform( const double * bufBegin, const double * pos, const double * bufEnd )
+ReassignedSpectrum::transform( const double * sampsBegin, const double * sampCenter, const double * sampsEnd )
 {
-	Assert( pos >= bufBegin );
-	Assert( pos < bufEnd );
-	
-	//	window length is first half length + second
-	//	half length + the "center" sample (this works
-	//	for even and odd length windows):
-	const long firstHalfWinLength = _window.size() / 2;
-	const long secondHalfWinLength = (_window.size() - 1) / 2;
-	
+#ifdef Debug_Loris
+	Assert( sampCenter >= sampsBegin );
+	Assert( sampCenter < sampsEnd );
+	const long firstHalfWinLength = window().size() / 2;
+	const long secondHalfWinLength = (window().size() - 1) / 2;
+	Assert( sampCenter - sampsBegin <= firstHalfWinLength );
+	Assert( sampsEnd - sampCenter <= secondHalfWinLength + 1 );
+#endif
+		
 	//	we will skip the beginning of the window
 	//	only if pos is too close to the start of 
 	//	the buffer:
 	long winBeginOffset = 0; 
-	
-	//	compute the sample bounds, sampsBegin and sampsEnd:
-	const double * sampsBegin;
-	if ( pos - bufBegin < firstHalfWinLength )
+	if ( sampCenter - sampsBegin < (window().size() / 2) )
 	{
-		sampsBegin = bufBegin;
-		winBeginOffset = firstHalfWinLength - ( pos - bufBegin );
+		winBeginOffset = (window().size() / 2) - ( sampCenter - sampsBegin );
 	}
-	else
-	{
-		sampsBegin = pos - firstHalfWinLength;
-	}
-		
-	const double * sampsEnd;
-	if ( bufEnd - pos > secondHalfWinLength )
-		sampsEnd = pos + secondHalfWinLength + 1;
-	else
-		sampsEnd = bufEnd;
+			
 		
 	//	to get phase right, we will rotate the Fourier transform 
 	//	input by pos - sampsBegin samples:
-	long rotateBy = pos - sampsBegin;
+	long rotateBy = sampCenter - sampsBegin;
 		
 	//	window and rotate input and compute normal transform:
 	//	window the samples into the FT buffer:

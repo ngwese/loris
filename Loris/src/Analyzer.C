@@ -288,6 +288,12 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate 
 //	need to check for bogus parameters somewhere.
 //
 	const long hop = long( hopTime() * srate );	//	truncate
+	
+	//	window length is first half length + second
+	//	half length + the "center" sample (this works
+	//	for even and odd length windows):
+	const long firstHalfWinLength = state.spectrum().window().size() / 2;
+	const long secondHalfWinLength = (state.spectrum().window().size() - 1) / 2;
 		
 	try { 
 		for ( const double * winMiddle = bufBegin; 
@@ -298,13 +304,16 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate 
 			const double frameTime = long(winMiddle - bufBegin) / srate;
 			 
 			//	compute reassigned spectrum:
-			//	make this better!
-			state.spectrum().transform( bufBegin, winMiddle, bufEnd );
+			//  sampsBegin is the position of the first sample to be transformed,
+			//	sampsEnd is the position after the last sample to be transformed.
+			const double * sampsBegin = std::max( winMiddle - firstHalfWinLength, bufBegin );
+			const double * sampsEnd = std::min( winMiddle + secondHalfWinLength + 1, bufEnd );
+			state.spectrum().transform( sampsBegin, winMiddle, sampsEnd );
 			
 			//	extract peaks from the spectrum:
-			std::list< Breakpoint > f;
-			extractPeaks( f, frameTime, state );	
-			thinPeaks( f, state );
+			std::list< Breakpoint > frame;
+			extractPeaks( frame, frameTime, state );	
+			thinPeaks( frame, state );
 
 #if !defined(No_BW_Association)
 			//	perform bandwidth association:
@@ -313,14 +322,14 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate 
 			//	thinned breakpoints are accumulated as noise:
 			//	(see also thinPeaks() and extractPeaks())
 			std::list< Breakpoint >::iterator it;
-			for ( it = f.begin(); it != f.end(); ++it )
+			for ( it = frame.begin(); it != frame.end(); ++it )
 			{
 				state.bwAssociation().accumulateSinusoid( it->frequency(), it->amplitude() );
 			}
 			
 			//	associate bandwidth with 
 			//	each Breakpoint here:
-			for ( it = f.begin(); it != f.end(); ++it )
+			for ( it = frame.begin(); it != frame.end(); ++it )
 			{
 				state.bwAssociation().associate( *it );
 			}
@@ -330,7 +339,7 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate 
 #endif	//	 !defined(No_BW_Association)
 
 			//	form Partials from the extracted Breakpoints:
-			formPartials( f, frameTime, state );
+			formPartials( frame, frameTime, state );
 
 		}	//	end of loop over short-time frames
 		
