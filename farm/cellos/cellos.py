@@ -45,7 +45,7 @@ cello69.MF
 	- region width doesn't make any difference
 	- sifting and distilling don't seem to make these any worse
 
-Last updated: 29 May 2001 by Kelly Fitz
+Last updated: 4 Oct 2001 by Kelly Fitz
 """
 print __doc__
 
@@ -58,7 +58,11 @@ trial = 2
 
 print "running trial number", trial, time.ctime(time.time())
 
+# this is a dumb way to do this
 sourcedict = { 'cello154.F.aiff':154, 'cello69.F.aiff':69, 'cello69.MF.aiff':69 }
+
+# this is better:
+sources = ( ('cello154.F.aiff', 154), ('cello69.F.aiff', 69), ('cello69.MF.aiff',69) )
 
 if trial == 1:
 	for source in sourcedict.keys():
@@ -84,17 +88,16 @@ if trial == 1:
 						synthesize( ofile, p2 )
 						
 if trial == 2:
-	source = 'cello154.F.aiff'
-	resolutions = (46, 77)
-	winds = (115, 154, 225, 300)
-	bw = 2000
-	for r in resolutions:
-		for w in winds:
-			p = analyze( source, r, w, bw )
-			ofile = '%s.%i.%i.aiff'%(source[:-5], r, w)
-			synthesize( ofile, p )
-			for f in (77, 154):
-				p2 = p.copy()
-				harmonicDistill( p2, f )
-				ofile = '%s.%i.%i.d%i.aiff'%(source[:-5], r, w, f)
-				synthesize( ofile, p2 )
+	for (source,fund) in sources:
+		resolutions = ( .3*fund, .5*fund )
+		winds = (.9*fund, 1.2*fund, 2.0*fund)
+		for r in resolutions:
+			for w in winds:
+				p = analyze( source, r, w )
+				ofile = '%s.%i.%i.aiff'%(source[:-5], r, w)
+				synthesize( ofile, p )
+				for f in (.3*fund, .5*fund, fund):
+					p2 = p.copy()
+					harmonicDistill( p2, f )
+					ofile = '%s.%i.%i.d%i.aiff'%(source[:-5], r, w, f)
+					synthesize( ofile, p2 )

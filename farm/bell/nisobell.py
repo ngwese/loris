@@ -29,9 +29,15 @@ first pass notes 4 May 2001:
 
 Second trial attempted distillations.
 Third trial added some even wider windows (since the widest,
-200 Hz, always sounded best).
+200 Hz, always sounded best). 
 
-Last updated: 4 May 2001 by Kelly Fitz
+note: distillation doesn't seem to have a deliterious effect
+
+Fourth trial is similar to trial three, but with the new sifting
+Distiller, fewer resolutions (since they are almost indistinguishible),
+and te standard Bw regions width (2k).
+
+Last updated: 4 Oct 2001 by Kelly Fitz
 """
 print __doc__
 
@@ -40,7 +46,7 @@ from trials import *
 
 # use this trial counter to skip over
 # eariler trials
-trial = 3
+trial = 4
 
 print "running trial number", trial, time.ctime(time.time())
 
@@ -93,3 +99,20 @@ if trial == 3:
 					harmonicDistill( p, f )
 					ofile = 'bell.%i.%i.%ik.d%i.aiff'%(r, w, bw/1000, f)
 					synthesize( ofile, p )
+
+
+if trial == 4:
+	resolutions = (40, 70, 95)
+	widths = ( 100, 200, 300 )
+	bw = 2000
+	funds = (30, 60, 90, 120)
+	for r in resolutions:
+		for w in widths:
+			p = analyze( source, r, w, bw )
+			ofile = 'bell.%i.%i.aiff'%(r, w)
+			synthesize( ofile, p )
+			for f in funds:
+				p2 = p.copy()
+				harmonicDistill( p2, f )
+				ofile = 'bell.%i.%i.d%i.aiff'%(r, w, f)
+				synthesize( ofile, p2 )

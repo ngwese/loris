@@ -25,7 +25,7 @@ First pass notes 4 May 2001:
 	res 65, 75, 90 Hz
 	window 200 Hz
 
-Last updated: 4 May 2001 by Kelly Fitz
+Last updated: 4 Oct 2001 by Kelly Fitz
 """
 print __doc__
 
@@ -40,15 +40,27 @@ print "running trial number", trial, time.ctime(time.time())
 
 source = 'saxriff.aiff'
 
-resolutions = (65, 75, 90, 100, 110, 125)
-widths = ( 0, 90, 140, 200 )
-bws = (2000, 4000)
+if trials == 1:
+	resolutions = (65, 75, 90, 100, 110, 125)
+	widths = ( 0, 90, 140, 200 )
+	bws = (2000, 4000)
+	for r in resolutions:
+		for w in widths:
+			if w == 0:
+				w = r
+			for bw in bws:
+				p = analyze( source, r, w, bw )
+				ofile = 'sax.%i.%i.%ik.aiff'%(r, w, bw/1000)
+				synthesize( ofile, p )
 
-for r in resolutions:
-	for w in widths:
-		if w == 0:
-			w = r
-		for bw in bws:
-			p = analyze( source, r, w, bw )
-			ofile = 'sax.%i.%i.%ik.aiff'%(r, w, bw/1000)
+
+if trial == 2:
+	resolutions = (65, 75, 90)
+	widths = ( 140, 170, 200, 250 )
+	for r in resolutions:
+		for w in widths:
+			p = analyze( source, r, w )
+			ofile = 'sax.%i.%i.aiff'%(r, w)
 			synthesize( ofile, p )
+
+	
