@@ -6,4 +6,4 @@ TESTS = $(check_PROGRAMS)
 INCLUDES = -I$(top_srcdir)/src
 
 test1_SOURCES = morphtest.C
-test1_LDADD = $(top_builddir)/src/pi/libloris.la
+test1_LDADD = $(top_builddir)/pi/libloris.la

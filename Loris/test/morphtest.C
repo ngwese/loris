@@ -32,23 +32,25 @@
  *
  */
 
-#include <loris/AiffFile.h>
-#include <loris/Analyzer.h>
-#include <loris/BreakpointEnvelope.h>
-#include <loris/Channelizer.h>
-#include <loris/Dilator.h>
-#include <loris/Distiller.h>
-#include <loris/Exception.h>
-#include <loris/Morpher.h>
-#include <loris/Partial.h>
-#include <loris/SdifFile.h>
-#include <loris/Synthesizer.h>
-#include <loris/notifier.h>
+#include <AiffFile.h>
+#include <Analyzer.h>
+#include <BreakpointEnvelope.h>
+#include <Channelizer.h>
+#include <Dilator.h>
+#include <Distiller.h>
+#include <Exception.h>
+#include <Morpher.h>
+#include <Notifier.h>
+#include <Partial.h>
+#include <SdifFile.h>
+#include <Synthesizer.h>
 
 #include <iostream>
 #include <vector>
 #include <list>
 #include <cmath>
+#include <cstdlib>
+#include <string>
 
 using namespace Loris;
 
@@ -64,12 +66,14 @@ int main( )
 	std::cout << "Generates a simple linear morph between a " << endl;
 	std::cout << "clarinet and a flute." << endl << endl;
 	
+	std::string path( std::getenv("srcdir") );
+
 	try 
 	{
 		//	analyze clarinet tone
 		std::cout << "analyzing clarinet 3G#" << endl;
 		Analyzer a(390);
-		AiffFile f( "clarinet.aiff" );
+		AiffFile f( path + "/clarinet.aiff" );
 		std::vector< double > v( f.sampleFrames() );
 		f.getSamples( v.begin(), v.end() );
 		
@@ -123,7 +127,7 @@ int main( )
 		//	analyze flute tone
 		std::cout << "analyzing flute 3D" << endl;
 		a.configure(270);
-		f = AiffFile( "flute.aiff" );
+		f = AiffFile( path + "/flute.aiff" );
 		v = std::vector< double >( f.sampleFrames() );
 		f.getSamples( v.begin(), v.end() );
 		

@@ -10,17 +10,13 @@
 
 AC_INIT(reconf)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(loris,0.1)
-#LF_LINK_HEADERS(src, loris)
-# LF_LINK_HEADERS(pi) 
-LF_SET_INCLUDES
+AM_INIT_AUTOMAKE(loris,1.0beta5)
 LF_CONFIGURE_CC
 LF_CONFIGURE_CXX
 LF_HOST_TYPE
 LF_SET_WARNINGS
 
 AM_PROG_LIBTOOL
-
 AC_PATH_PROG(SWIG, swig)
 AM_CONDITIONAL(HAVE_SWIG, test -n "$SWIG")
 
@@ -216,7 +212,7 @@ if test -z "$PYINCLUDE" ; then
 		pack="/usr/local /usr"
 	fi
 	for path in $pack ; do
-		AC_MSG_CHECKING(for Python distribution with prefix $path)
+		# AC_MSG_CHECKING(for Python distribution with prefix $path)
 		dist="python2.1 python2.0 python1.6 python1.5"
 		for d in $dist ; do
 			if test -f "$path/include/$d/Python.h" ; then
@@ -256,7 +252,7 @@ if test -z "$PYSITE" ; then
 		pack="/usr/local /usr"
 	fi
 	for path in $pack ; do
-		AC_MSG_CHECKING(for Python site packages with prefix $path)
+		# AC_MSG_CHECKING(for Python site packages with prefix $path)
 		# make sure not to accidentally find a different package
 		# for site packages and the Python header; pythondist is
 		# set above when searching for Python.h

@@ -8,7 +8,6 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-# INCLUDES = $(default_includes)
 INCLUDES = -I$(top_srcdir)/classes
 
 lib_LTLIBRARIES = libloris.la
@@ -18,7 +17,6 @@ libloris_la_SOURCES = lorisAnalyzer_pi.C lorisBpEnvelope_pi.C \
  loris.h
 
 libloris_la_LIBADD = $(top_builddir)/classes/libclasses.la
+libloris_la_LDFLAGS = -version-info 0:0:0
 
-#library_includedir = $(includedir)
-#library_include_HEADERS = loris.h
 include_HEADERS = loris.h
