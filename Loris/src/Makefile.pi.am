@@ -19,7 +19,7 @@ libloris_la_SOURCES = lorisAnalyzer_pi.C lorisBpEnvelope_pi.C \
 
 # convenience libraries don't work under Darwin:
 if DARWIN
-	libloris_la_LIBADD = \
+libloris_la_LIBADD = \
 		$(top_builddir)/classes/AiffFile.lo \
 		$(top_builddir)/classes/Analyzer.lo \
 		$(top_builddir)/classes/AssociateBandwidth.lo \
@@ -48,11 +48,9 @@ if DARWIN
 		$(top_builddir)/classes/Synthesizer.lo \
 		-lfftw -lsdif
 else
-	why isn't this working?
-	libloris_la_LIBADD = $(top_builddir)/classes/libclasses.la
+libloris_la_LIBADD = $(top_builddir)/classes/libclasses.la
 endif
 
-libloris_la_LIBADD = $(top_builddir)/classes/libclasses.la
 libloris_la_LDFLAGS = -version-info 0:0:0
 
 
