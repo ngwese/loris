@@ -143,6 +143,50 @@ SpcFile::SpcFile( double midiNoteNum ) :
 // ---------------------------------------------------------------------------
 //	write 
 // ---------------------------------------------------------------------------
+//	Export the phase-correct bandwidth-enhanced envelope parameter 
+//	streams represented by this SpcFile to the file having the specified 
+//	filename or path. 
+//	
+//	A nonzero endApproachTime indicates that the Partials do not include a
+//	release or decay, but rather end in a static spectrum corresponding to the
+//	final Breakpoint values of the partials. The endApproachTime specifies how
+//	long before the end of the sound the amplitude, frequency, and bandwidth
+//	values are to be modified to make a gradual transition to the static spectrum.
+//	
+//	If the endApproachTime is not specified, it is assumed to be zero, 
+//	corresponding to Partials that decay or release normally.
+//
+void 
+SpcFile::write( const std::string & filename, double endApproachTime )
+{
+	write( filename, true, endApproachTime );
+}
+
+// ---------------------------------------------------------------------------
+//	write 
+// ---------------------------------------------------------------------------
+//	Export the pure sinsoidal (omitting phase and bandwidth data) envelope 
+//	parameter streams represented by this SpcFile to the file having the 
+//	specified filename or path. 
+//	
+//	A nonzero endApproachTime indicates that the Partials do not include a
+//	release or decay, but rather end in a static spectrum corresponding to the
+//	final Breakpoint values of the partials. The endApproachTime specifies how
+//	long before the end of the sound the amplitude, frequency, and bandwidth
+//	values are to be modified to make a gradual transition to the static spectrum.
+//	
+//	If the endApproachTime is not specified, it is assumed to be zero, 
+//	corresponding to Partials that decay or release normally.
+//
+void 
+SpcFile::writeSinusoidal( const std::string & filename, double endApproachTime )
+{
+	write( filename, false, endApproachTime );
+}
+
+// ---------------------------------------------------------------------------
+//	write 
+// ---------------------------------------------------------------------------
 //	Export the envelope parameter streams represented by this SpcFile to
 //	the file having the specified filename or path. Export phase-correct 
 //	bandwidth-enhanced envelope parameter streams if enhanced is true 
@@ -157,6 +201,9 @@ SpcFile::SpcFile( double midiNoteNum ) :
 //	
 //	If the endApproachTime is not specified, it is assumed to be zero, 
 //	corresponding to Partials that decay or release normally.
+//
+//	This version of write is deprecated, but is handy for internal use,
+//	called by the above write and writeSiunsoidal members.
 //
 void
 SpcFile::write( const std::string & filename, bool enhanced, double endApproachTime )

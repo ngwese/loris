@@ -183,7 +183,37 @@ public:
 	*/
 	 	
 //	-- export --
-	void write( const std::string & filename, bool enhanced = true,
+	void write( const std::string & filename, double endApproachTime = 0 );
+	/*	Export the phase-correct bandwidth-enhanced envelope parameter 
+		streams represented by this SpcFile to the file having the specified 
+		filename or path. 
+		
+		A nonzero endApproachTime indicates that the Partials do not include a
+		release or decay, but rather end in a static spectrum corresponding to the
+		final Breakpoint values of the partials. The endApproachTime specifies how
+		long before the end of the sound the amplitude, frequency, and bandwidth
+		values are to be modified to make a gradual transition to the static spectrum.
+		
+		If the endApproachTime is not specified, it is assumed to be zero, 
+		corresponding to Partials that decay or release normally.
+	*/
+
+	void writeSinusoidal( const std::string & filename, double endApproachTime = 0 );
+	/*	Export the pure sinsoidal (omitting phase and bandwidth data) envelope 
+		parameter streams represented by this SpcFile to the file having the 
+		specified filename or path. 
+		
+		A nonzero endApproachTime indicates that the Partials do not include a
+		release or decay, but rather end in a static spectrum corresponding to the
+		final Breakpoint values of the partials. The endApproachTime specifies how
+		long before the end of the sound the amplitude, frequency, and bandwidth
+		values are to be modified to make a gradual transition to the static spectrum.
+		
+		If the endApproachTime is not specified, it is assumed to be zero, 
+		corresponding to Partials that decay or release normally.
+	*/
+
+	void write( const std::string & filename, bool enhanced,
 				double endApproachTime = 0 );
 	/*	Export the envelope parameter streams represented by this SpcFile to
 		the file having the specified filename or path. Export phase-correct 
@@ -198,6 +228,9 @@ public:
 		
 		If the endApproachTime is not specified, it is assumed to be zero, 
 		corresponding to Partials that decay or release normally.
+		
+		This version of write is deprecated, use the two-argument
+		versions write and writeSinusoidal. 
 	*/
 
 private:

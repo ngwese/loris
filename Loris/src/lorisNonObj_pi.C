@@ -395,8 +395,10 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch,
 
 		notifier << "exporting Spc partial data to " << path << Loris::endl;
 		SpcFile fout( partials->begin(), partials->end(), midiPitch );
-		fout.write( path, (bool) enhanced, endApproachTime );
-
+		if ( enhanced == 0 )
+			fout.writeSinusoidal( path, endApproachTime );
+		else
+			fout.write( path, endApproachTime );
 	}
 	catch( Exception & ex ) 
 	{
