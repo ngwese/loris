@@ -63,21 +63,21 @@ public:
 #endif
 	{
 		//	find label range:
-		set< int > labels;
+		std::set< int > labels;
 		collectLabels( begin0, end0, labels );
 		collectLabels( begin1, end1, labels );
 		
 		//	loop over lots of labels:
 		//for ( int label = _minlabel; label < _maxlabel; ++label ) {
-		for ( set< int >::iterator it = labels.begin(); it != labels.end(); ++it ) {
+		for ( std::set< int >::iterator it = labels.begin(); it != labels.end(); ++it ) {
 			int label = *it;
 			
 			//	collect Partials in plist1:
-			list<Partial> sublist1;
+			std::list<Partial> sublist1;
 			collectByLabel( begin0, end0, sublist1, label );
 
 			//	collect Partials in plist2:
-			list<Partial> sublist2;
+			std::list<Partial> sublist2;
 			collectByLabel( begin1, end1, sublist2, label );
 			
 			if ( label == _crossfadelabel ) {

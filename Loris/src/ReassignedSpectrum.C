@@ -41,7 +41,8 @@ ReassignedSpectrum::ReassignedSpectrum( const vector< double > & window ) :
 	}
 	_magScale = 2. / winsum;
 	
-	notifier << "RA: ft length is " << _transform.size() << " mag scale is " << _magScale << endl;
+	debugger << "ReassignedSpectrum: length is " << _transform.size() << 
+				" mag scale is " << _magScale << endl;
 }
 
 // ---------------------------------------------------------------------------
