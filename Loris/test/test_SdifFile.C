@@ -49,7 +49,7 @@ const double Pi = 3.14159265358979324;
 // --- macros ---
 
 //	define this to see pages and pages of spew
-#define VERBOSE
+// #define VERBOSE
 #ifdef VERBOSE									
 	#define TEST(invariant)									\
 		do {													\
