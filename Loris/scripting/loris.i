@@ -506,8 +506,80 @@ void copyByLabel( const PartialList * src, long label, PartialList * dst );
 	is unmodified.
  */
  
-/*
-	Temporarily removed.
+//	This needs to be reconsidered!
+//	&&&&&&&&&&
+//
+%{
+	#include <memory> 	//	 for auto_ptr
+	
+	BreakpointEnvelope * 
+	createFreqReference( PartialList * partials, int numSamples,
+						 double minFreq, double maxFreq )
+	{
+		ThrowIfNull((PartialList *) partials);
+		
+		if ( numSamples <= 0 )
+			Throw( Loris::InvalidArgument, "number of samples in frequency reference must be positive." );
+		
+		if ( maxFreq < minFreq )
+			std::swap( minFreq, maxFreq );
+			
+		//	find the longest Partial in the given frequency range:
+		PartialList::iterator longest = partials->end();
+		for ( PartialList::iterator it = partials->begin(); 
+			  it != partials->end(); 
+			  ++it ) 
+		{
+			//	evaluate the Partial's frequency at its loudest
+			//	(highest sinusoidal amplitude) Breakpoint:
+			Partial::const_iterator partialIter = it->begin();
+			double maxAmp = 
+				partialIter.breakpoint().amplitude() * std::sqrt( 1. - partialIter.breakpoint().bandwidth() );
+			double time = partialIter.time();
+			
+			for ( ++partialIter; partialIter != it->end(); ++partialIter ) 
+			{
+				double a = partialIter.breakpoint().amplitude() * 
+							std::sqrt( 1. - partialIter.breakpoint().bandwidth() );
+				if ( a > maxAmp ) 
+				{
+					maxAmp = a;
+					time = partialIter.time();
+				}
+			}			
+			double compareFreq = it->frequencyAt( time );
+			
+			
+			if ( compareFreq < minFreq || compareFreq > maxFreq )
+				continue;
+				
+			if ( longest == partials->end() || it->duration() > longest->duration() ) 
+			{
+				longest = it;
+			}
+		}	
+		
+		if ( longest == partials->end() ) 
+		{
+			Throw( Loris::InvalidArgument, "no partials found in the specified frequency range" );
+		}
+	
+		//	use auto_ptr to manage memory in case 
+		//	an exception is generated (hard to imagine):
+		std::auto_ptr< BreakpointEnvelope > env_ptr( new BreakpointEnvelope() );
+
+		//	find n samples, ignoring the end points:
+		double dt = longest->duration() / (numSamples + 1.);
+		for ( int i = 0; i < numSamples; ++i ) 
+		{
+			double t = longest->startTime() + ((i+1) * dt);
+			double f = longest->frequencyAt(t);
+			env_ptr->insertBreakpoint( t, f );
+		}
+		
+		return env_ptr.release();
+	}
+%}
 
 %new BreakpointEnvelope * 
 createFreqReference( PartialList * partials, int numSamples,
