@@ -112,12 +112,7 @@ def harmonicSift( partials, fundamental ):
 	
 	Before distilling, the partials are sifted, and partials
 	rejected by the Sieve (those labeled 0) are removed.
-	
-	
-	DON'T USE - SIFT HAS BEEN REMOVED
 	"""
-	raise 'sift has been removed from Loris'
-	
 	env = loris.BreakpointEnvelopeWithValue( fundamental )
 	loris.channelize( partials, env, 1 )
 	# do sifting and removal of sifted-out partials:
@@ -162,7 +157,25 @@ def pruneByLabel( partials, labels ):
 			partials.erase(iter)
 		iter = next
 	return partials
+
+def setAllBandwidth( partials, bw ):
+	"""usage: setAllBandwidth( partialList, bwValue )
 	
+	Set the bandwidth (noisiness) coefficient of all Breakpoints
+	in all Partials in partialList to the specified bwValue.
+	"""
+	print 'setting bandwidth of %i partials to %f (%s)'%(partials.size(), bw, time.ctime(time.time()))
+	iter = partials.begin()
+	end = partials.end()
+	while not iter.equals(end):
+		part = iter.partial()
+		biter = part.begin()
+		bend = part.end()
+		while not biter.equals(bend):
+			biter.breakpoint().setBandwidth( bw )
+			biter = biter.next()
+		iter = iter.next()
+	return partials	
 
 if __name__ == '__main__':
 	print __doc__

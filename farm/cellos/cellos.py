@@ -90,7 +90,7 @@ cello69.F:
 	harmonic doesn't seem to affect them adversely, one partial per harm
 	has the same noise metallic artifacts introduced in the other resolution 
 	analyses.
-	- summary use 20 Hz resolution, diistill at two partiials per harmonic (34),
+	- summary use 20 Hz resolution, diistill at two partials per harmonic (34),
 	either window seems too work.
 
 cello69.MF:
@@ -121,8 +121,27 @@ notes from trial 6 (Spc files in Kyma):
 	- NOTE: sifting solves this problem, no longer muffled, but
 	it does not seem to be a phase problem, since setting all
 	Breakpoint phases to zero does not cause muffling.
+	
+conclusion: 154 Hz tone sounds good with 123 Hz resolution and 154 Hz window
+width. Can distill using a flat 154 Hz envelope (although tracking the third
+partial has got to work at least as well, probably better for high partials).
+Distill using one partial per harmonic.
 
-Last updated: 20 May 2002 by Kelly Fitz
+The 69 Hz F tone sounds good at 20 Hz resolution with a 69 Hz window width.
+Distill using the third partial as a reference with two partials per harmonic
+to preserve the grunty attack. Sifting seems to make this one a little worse.
+
+The 69 Hz MF tone sounds best, it seems, when analyzed using a high-gain version
+of the sound. Analyses using 34 (or 20) Hz resolution and 138 Hz window width
+work well. Distillations, using the third harmonic partial as a reference,
+are only usable if they are sifted first, otherwise they sound like they are 
+under a pillow. Distill with two partials per harmonic to preserve the grunty
+attack.
+
+These are not excellent, and would never pass same-difference tests, particularly
+the low tones, but they are usable.
+
+Last updated: 21 May 2002 by Kelly Fitz
 """
 print __doc__
 
@@ -131,7 +150,7 @@ from trials import *
 
 # use this trial counter to skip over
 # eariler trials
-trial = 6
+trial = 7
 
 print "running trial number", trial, time.ctime(time.time())
 
@@ -411,3 +430,121 @@ if trial == 6:
 	loris.exportSpc( ofilebase + '.s.spc', p, 37, 0 ) 
 	loris.exportSpc( ofilebase + '.e.spc', p, 37, 1 ) 
 
+if trial == 7:	# final trial?
+	#
+	# 154.F tone
+	#
+	source = 'cello154.F.aiff'
+	r = 123
+	w = 154
+	p = analyze( source, r, w )
+	f = 154
+	ref = loris.createFreqReference( p, 154*2.5, 154*3.5, 100 )
+	loris.channelize( p, ref, 3 )
+	loris.distill( p )
+	ofilebase = 'cello154.F.%i.%i.d3rd'%(r, w)
+	loris.exportSdif( ofilebase + '.sdif', p )
+	synthesize( ofilebase + '.aiff', p )
+	pruneByLabel( p, range(1,512) )
+	loris.exportSpc( ofilebase + '.s.spc', p, 51, 0 ) 
+	loris.exportSpc( ofilebase + '.e.spc', p, 51, 1 ) 
+	
+	#
+	# 69.F tone	
+	#
+	source = 'cello69.F.aiff'
+	r = 20
+	w = 69
+	p = analyze( source, r, w )
+	ref = loris.createFreqReference( p, 69*2.75, 69*3.25 )
+	
+	# distill with one partial per harmonic and two partials per harmonic
+	p1 = p
+	p2 = p.copy()
+	loris.channelize( p1, ref, 3 )
+	loris.channelize( p2, ref, 6 )
+	
+	# distill at one partial per harmonic
+	p = p1
+	siftme = p.copy()
+	loris.distill( p )
+	ofilebase = 'cello69.F.%i.%i.d3rd1'%(r, w)
+	loris.exportSdif( ofilebase + '.sdif', p )
+	synthesize( ofilebase + '.aiff', p )
+	pruneByLabel( p, range(1,512) )
+	loris.exportSpc( ofilebase + '.s.spc', p, 37, 0 ) 
+	loris.exportSpc( ofilebase + '.e.spc', p, 37, 1 ) 
+	
+	# try sifting (one partial per harmonic):
+	p = siftme
+	loris.sift( p )
+	zeros = loris.extractLabeled( p, 0 )
+	loris.distill( p )
+	ofilebase = 'cello69.F.%i.%i.s3rd1'%(r, w)
+	loris.exportSdif( ofilebase + '.sdif', p )
+	synthesize( ofilebase + '.aiff', p )
+	pruneByLabel( p, range(1,512) )
+	loris.exportSpc( ofilebase + '.s.spc', p, 37, 0 ) 
+	loris.exportSpc( ofilebase + '.e.spc', p, 37, 1 ) 
+
+	# distill at two partials per harmonic
+	p = p2
+	siftme = p.copy()
+	loris.distill( p )
+	ofilebase = 'cello69.F.%i.%i.d3rd2'%(r, w)
+	loris.exportSdif( ofilebase + '.sdif', p )
+	synthesize( ofilebase + '.aiff', p )
+	pruneByLabel( p, range(1,512) )
+	loris.exportSpc( ofilebase + '.s.spc', p, 37, 0 ) 
+	loris.exportSpc( ofilebase + '.e.spc', p, 37, 1 ) 
+	
+	# try sifting (two partials per harmonic):
+	p = siftme
+	loris.sift( p )
+	zeros = loris.extractLabeled( p, 0 )
+	loris.distill( p )
+	ofilebase = 'cello69.F.%i.%i.s3rd2'%(r, w)
+	loris.exportSdif( ofilebase + '.sdif', p )
+	synthesize( ofilebase + '.aiff', p )
+	pruneByLabel( p, range(1,512) )
+	loris.exportSpc( ofilebase + '.s.spc', p, 37, 0 ) 
+	loris.exportSpc( ofilebase + '.e.spc', p, 37, 1 ) 
+
+	#
+	# 69.MF tone	
+	#
+	source = 'cello69.MF.loud.aiff'
+	r = 34
+	w = 138
+	p = analyze( source, r, w )
+	ref = loris.createFreqReference( p, 69*2.75, 69*3.25 )
+
+	# distill with one partial per harmonic and two partials per harmonic
+	p1 = p
+	p2 = p.copy()
+	loris.channelize( p1, ref, 3 )
+	loris.channelize( p2, ref, 6 )
+
+	# distill at one partial per harmonic
+	p = p1
+	loris.sift( p )
+	zeros = loris.extractLabeled( p, 0 )
+	loris.distill( p )
+	ofilebase = 'cello69.MF.%i.%i.s3rd1'%(r, w)
+	loris.exportSdif( ofilebase + '.sdif', p )
+	synthesize( ofilebase + '.aiff', p )
+	pruneByLabel( p, range(1,512) )
+	loris.exportSpc( ofilebase + '.s.spc', p, 37, 0 ) 
+	loris.exportSpc( ofilebase + '.e.spc', p, 37, 1 ) 
+
+	# distill at two partials per harmonic
+	p = p2
+	loris.sift( p )
+	zeros = loris.extractLabeled( p, 0 )
+	loris.distill( p )
+	ofilebase = 'cello69.MF.%i.%i.s3rd2'%(r, w)
+	loris.exportSdif( ofilebase + '.sdif', p )
+	synthesize( ofilebase + '.aiff', p )
+	pruneByLabel( p, range(1,512) )
+	loris.exportSpc( ofilebase + '.s.spc', p, 37, 0 ) 
+	loris.exportSpc( ofilebase + '.e.spc', p, 37, 1 ) 

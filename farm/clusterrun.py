@@ -14,12 +14,14 @@ date = '%i.%i.%i'%(ttup[2], ttup[1],ttup[0])
 
 # farm is a dictionary of directory,scriptname pairs
 farm = { 
-	'angrycat': 'angrycat.py', 
 	'bell': 'nisobell.py', 
+	'cats': 'angrycat.py', 
+	'cats': 'meows.py', 
 	'cellos': 'cellos.py', 
 	'choir': 'webernchoir.py', 
 	'elephants': 'elephants.py', 
-	'flute': 'flute.py', 
+	'flutes': 'flute.py', 
+	'flutes': 'flutter.py', 
 	'french': 'french.py',
 	'gong': 'gong.py',
 	'moses': 'moses.py',
@@ -41,7 +43,7 @@ def nodename(nodenum):
 shellcmd = 'rsh -n'
 inbkgrnd = '&'
 
-farmdir = '/cluster/kfitz/farm'
+farmdir = '/net/magoo/users/kfitz/farm'
 def changedir(dir):
 	return 'cd %s/%s'%(farmdir,dir)
 	

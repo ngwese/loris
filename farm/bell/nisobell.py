@@ -75,11 +75,19 @@ notes from trial 8:
 	just removed the background wormy hiss
 	- this trivial pruning mechanism leaves some pretty big holes, 
 	but they don't seem to be audible
-	- filenames too long!
+	- spc filenames too long! (fixed, I think)
 	- partials seem to wander less, though I think that the distillation
 	process introduces some of that
+	- these sets of parameters all yield about the same results, these
+	all sound pretty much identical
+	- the partials are sufficiently stable, that any of these harmonic
+	distillations seems to work fine.
+	
+conclusion: 95 Hz resolution with a 200 Hz window works well, can be 
+harmonically distilled at fundamentals up to 150, can also have lots of
+little noisy partials pruned out.
 
-Last updated: 10 May 2002 by Kelly Fitz
+Last updated: 21 May 2002 by Kelly Fitz
 """
 print __doc__
 
@@ -88,7 +96,7 @@ from trials import *
 
 # use this trial counter to skip over
 # eariler trials
-trial = 8
+trial = 9
 
 print "running trial number", trial, time.ctime(time.time())
 
@@ -231,8 +239,8 @@ def trial8run( sfile, r, w, f ):
 	psave = p.copy()
 	harmonicDistill( p, f )
 	ofilebase = 'bell.fd2.%i.%i.d%i'%(r, w, f)
-	loris.exportSpc( ofilebase + '.sine.spc', p, 36, 0 ) 
-	loris.exportSpc( ofilebase + '.bwe.spc', p, 36, 1 ) 
+	loris.exportSpc( ofilebase + '.s.spc', p, 36, 0 ) 
+	loris.exportSpc( ofilebase + '.e.spc', p, 36, 1 ) 
 	synthesize( ofilebase + '.aiff', p )
 	
 	# trim version
@@ -247,9 +255,9 @@ def trial8run( sfile, r, w, f ):
 			p.erase(it)
 		it = nxt
 	harmonicDistill( p, f )
-	ofilebase = 'bell.fd2.trim.%i.%i.d%i'%(r, w, f)
-	loris.exportSpc( ofilebase + '.sine.spc', p, 36, 0 ) 
-	loris.exportSpc( ofilebase + '.bwe.spc', p, 36, 1 ) 
+	ofilebase = 'bell.fd2tr.%i.%i.d%i'%(r, w, f)
+	loris.exportSpc( ofilebase + '.s.spc', p, 36, 0 ) 
+	loris.exportSpc( ofilebase + '.e.spc', p, 36, 1 ) 
 	synthesize( ofilebase + '.aiff', p )
 
 if trial == 8:
@@ -273,5 +281,39 @@ if trial == 8:
 	
 	
 	
+if trial == 9: 	# final trial
+	r = 95		# resolution
+	w = 200		# window width
+	f = 110		# harmonic distillation fundamental, use the lowest partial in the bell sound
+	sfile = loris.AiffFile( source )
+	print 'analyzing %s (%s)'%(source, time.ctime(time.time()))
+	a = loris.Analyzer( r, w )
+	a.setFreqDrift( .2*r )
+	p = a.analyze( sfile.samples(), sfile.sampleRate() )
+	ptrim = p.copy()
 	
+	# raw
+	harmonicDistill( p, f )
+	ofilebase = 'bell.fd2.%i.%i.d%i'%(r, w, f)
+	loris.exportSpc( ofilebase + '.s.spc', p, 45, 0 ) 
+	loris.exportSpc( ofilebase + '.e.spc', p, 45, 1 ) 
+	loris.exportSdif( ofilebase + '.sdif', p )
+	synthesize( ofilebase + '.aiff', p )
 	
+	# pruned
+	print 'pruning very short partials before .2 and after .5 seconds'
+	p = ptrim
+	it = p.begin()
+	end = p.end()
+	while not it.equals(end):
+		nxt = it.next()
+		part = it.partial()
+		if (part.duration() < .2) and ((part.startTime() > .5) or (part.endTime() < .2)):
+			p.erase(it)
+		it = nxt
+	harmonicDistill( p, f )
+	ofilebase = 'bell.fd2tr.%i.%i.d%i'%(r, w, f)
+	loris.exportSpc( ofilebase + '.s.spc', p, 45, 0 ) 
+	loris.exportSpc( ofilebase + '.e.spc', p, 45, 1 ) 
+	loris.exportSdif( ofilebase + '.sdif', p )
+	synthesize( ofilebase + '.aiff', p )
