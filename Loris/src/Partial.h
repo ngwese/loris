@@ -171,9 +171,11 @@ public:
 		For const Partials, returns a PartialConstIterator.
 	 */
 	 
-	void erase( iterator pos );
+	iterator erase( iterator pos );
 	/*	Breakpoint removal: erase the Breakpoint at the position of the given
-		PartialIterator (invalidating the PartialIterator).
+		PartialIterator (invalidating the PartialIterator). Return a 
+		PartialIterator referring to the next valid position, or to
+		the end of the Partial if the last Breakpoint is removed.
 	 */
 	 
 	iterator findAfter( double time );

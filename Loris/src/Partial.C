@@ -263,11 +263,19 @@ Partial::insert( double time, const Breakpoint & bp )
 //	erase
 // ---------------------------------------------------------------------------
 //	Erase the Breakpoint at the position of the 
-//	given iterator (invalidating the iterator).
-void 
+//	given iterator (invalidating the iterator), and
+//	return an iterator referring to the next position,
+//	or end if pos is the last Breakpoint in the Partial.
+PartialIterator 
 Partial::erase( PartialIterator pos )
 {
-	_bpmap.erase( pos._iter );
+	PartialIterator ret = pos;
+	if ( pos._iter != _bpmap.end() )
+	{
+		++ret;
+		_bpmap.erase( pos._iter );
+	}
+	return ret;
 }
 
 // ---------------------------------------------------------------------------

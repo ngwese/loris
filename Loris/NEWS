@@ -16,7 +16,17 @@ Analyzer by setting bwRegionWidth to 0.
 
 - softened amplitude floor in Analyzer, now amplitudes 
 near (within 10dB) of the amplitude floor are faded out,
-instead of suddenly being eliminated at the threshold
+instead of suddenly being eliminated at the threshold.
+
+- added split member function to Partial, for breaking
+a Partial at a specified position (iterator).
+
+- added absorb member function to Partial, for absorbing
+another Partial's energy as noise (bandwidth).
+
+- changed Partial::erase to return an iterator refering
+to the position after the erasure, or end if the last
+Breakpoint it erased.
 
 -------------------------------------------------------
 changes since 1.0.1 release:
