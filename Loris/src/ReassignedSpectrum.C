@@ -200,7 +200,9 @@ ReassignedSpectrum::frequencyCorrection( long idx ) const
 	
 	double magSquared = std::norm( _transform[idx] );
 
-	return - num / magSquared;
+	//	need to scale by the oversampling factor?
+	double oversampling = (double)_ratransform.size() / _rawindow.size();
+	return - oversampling * num / magSquared;
 }
 
 // ---------------------------------------------------------------------------
@@ -237,6 +239,9 @@ ReassignedSpectrum::timeCorrection( long idx ) const
 		  		 _transform[idx].imag() * tra_part.imag();
 	double magSquared = norm( _transform[idx] );
 	
+	//	need to scale by the oversampling factor?
+	//	No, seems to sound bad, why?
+	double oversampling = (double)_ratransform.size() / _rawindow.size();
 	return num / magSquared;
 }
 
@@ -391,7 +396,7 @@ static inline void applyFreqRamp( vector< double > & w, long transformSize  )
 	//	and has to be scaled by the ratio of the 
 	//	transform lengths, so that k spans the length
 	//	of the padded transforms, N)
-	double lenRatio = (double)transformSize / temp.size();
+	double lenRatio = 1.0; //(double)transformSize / temp.size();
 	for ( int k = 0 ; k < temp.size(); ++k ) {
 		if ( k < temp.size() / 2 ) {
 			temp[ k ] *= k * lenRatio;
