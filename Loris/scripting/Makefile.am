@@ -8,7 +8,7 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-INCLUDES =  $(PYINCLUDE) $(TCLINCLUDE) $(PERLINCLUDE) -I$(top_srcdir)/src -I$(top_srcdir)/pi
+INCLUDES =  $(PYINCLUDE) $(TCLINCLUDE) $(PERLINCLUDE) -I$(top_srcdir)/src -I$(top_builddir)/pi
 
 EXTRA_DIST = loris.py loris.pm loris.i lorisAiffFile.i lorisAnalyzer.i lorisBpEnvelope.i lorisPartialList.i lorisSampleVector.i
 
