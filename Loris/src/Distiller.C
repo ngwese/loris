@@ -7,7 +7,6 @@
 //	-kel 20 Oct 99
 //
 // ===========================================================================
-
 #include "Distiller.h"
 #include "Partial.h"
 #include "PartialIterator.h"
@@ -19,39 +18,10 @@
 	#include <math.h>
 #endif
 
-#include <algorithm>
-
-using namespace std;
-
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
 #endif
-
-
-
-
-// ---------------------------------------------------------------------------
-//	Distiller copy constructor
-// ---------------------------------------------------------------------------
-//
-Distiller::Distiller( const Distiller & other ) : 
-	PartialCollector( other )
-{
-}
-
-// ---------------------------------------------------------------------------
-//	Distiller assignment operator 
-// ---------------------------------------------------------------------------
-//
-Distiller &
-Distiller::operator= ( const Distiller & other )
-{
-	if ( &other != this ) {
-		partials() = other.partials();
-	}
-	return *this;
-}
 
 // ---------------------------------------------------------------------------
 //	distill
@@ -62,8 +32,8 @@ Distiller::operator= ( const Distiller & other )
 //	(start, end) _must_ be a valid range in a list< Partial >...or else!
 //
 const Partial & 
-Distiller::distill( const list<Partial>::const_iterator start,
-				 	const list<Partial>::const_iterator end, 
+Distiller::distill( PartialList::const_iterator start,
+				 	PartialList::const_iterator end, 
 				 	int assignLabel /* default = 0 */ )
 {
 	//	create the resulting distilled partial:
@@ -71,7 +41,8 @@ Distiller::distill( const list<Partial>::const_iterator start,
 	newp.setLabel( assignLabel );
 	
 	//	iterate over range:
-	for ( list<Partial>::const_iterator it = start; it != end; ++it ) {
+	for ( PartialList::const_iterator it = start; it != end; ++it )
+	{
 		distillOne( *it, newp, start, end );
 	}
 
@@ -104,9 +75,10 @@ Distiller::distill( const list<Partial>::const_iterator start,
 //	(start, end) _must_ be a valid range in a list< Partial >...or else!
 //	
 void
-Distiller::distillOne( const Partial & src, Partial & dest, 
-					   const list<Partial>::const_iterator start,
-					   const list<Partial>::const_iterator end  )
+Distiller::distillOne( const Partial & src, 
+					   Partial & dest, 
+					   PartialList::const_iterator start,
+					   PartialList::const_iterator end  )
 {
 	const double FADE_TIME = 0.001;	//	1 ms
 	
@@ -116,7 +88,7 @@ Distiller::distillOne( const Partial & src, Partial & dest,
 		//	bandwidth energy contribution at the time of bp
 		//	due to all the other Partials:
 		double xse = 0.;
-		list<Partial>::const_iterator it;
+		PartialList::const_iterator it;
 		for ( it = start; it != end; ++it ) {
 			//	skip the source Partial:
 			//	(identity test: compare addresses)
@@ -159,7 +131,7 @@ Distiller::distillOne( const Partial & src, Partial & dest,
 				bw = 0.;
 			
 			//	create and insert the new Breakpoint:
-			Breakpoint newBp( pIter.frequency(), sqrt( etot ), bw, pIter.phase() );
+			Breakpoint newBp( pIter.frequency(), std::sqrt( etot ), bw, pIter.phase() );
 			dest.insert( pIter.time(), newBp );
 			
 			//	if there is a gap after this Breakpoint, 
@@ -193,8 +165,8 @@ Distiller::distillOne( const Partial & src, Partial & dest,
 //
 bool 
 Distiller::gapAt( double time, 
-				  list<Partial>::const_iterator start,
-				  list<Partial>::const_iterator end ) const
+				  PartialList::const_iterator start,
+				  PartialList::const_iterator end ) const
 {
 	while ( start != end ) {
 		if ( (*start).amplitudeAt( time ) > 0. ) {

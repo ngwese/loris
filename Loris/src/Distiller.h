@@ -28,24 +28,30 @@ class Distiller : public PartialCollector
 {
 //	-- public interface --
 public:
-//	copying and assignment:	
+//	construction:	
 //	(allow compiler to generate destructor)
 	Distiller( void ) {}
-	Distiller( const Distiller & other );
-	Distiller & operator= ( const Distiller & other );
 	
 //	distillation:
-	const Partial & distill( const std::list<Partial>::const_iterator start,
-							 const std::list<Partial>::const_iterator end, 
+	const Partial & distill( PartialList::const_iterator start,
+							 PartialList::const_iterator end, 
 							 int assignLabel = 0 );
 
 //	-- helpers --
 protected:
-	void distillOne( const Partial & src, Partial & dest, 
-					 const std::list<Partial>::const_iterator start,
-					 const std::list<Partial>::const_iterator end );
-	bool gapAt( double time, std::list<Partial>::const_iterator start,
-				   std::list<Partial>::const_iterator end ) const;
+	void distillOne( const Partial & src, 
+					 Partial & dest, 
+					 PartialList::const_iterator start,
+					 PartialList::const_iterator end );
+	bool gapAt( double time, 
+				PartialList::const_iterator start,
+				PartialList::const_iterator end ) const;
+				   
+//	-- unimplemented --
+private:
+	Distiller( const Distiller & other );
+	Distiller & operator= ( const Distiller & other );
+	
 };	//	end of class Distiller
 
 #if !defined( NO_LORIS_NAMESPACE )
