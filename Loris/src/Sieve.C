@@ -37,7 +37,6 @@
 
 #include <Sieve.h>
 #include <Partial.h>
-#include <PartialList.h>
 #include <Breakpoint.h>
 #include <Exception.h>
 #include <PartialUtils.h>
@@ -59,10 +58,10 @@ namespace Loris {
 //  return 1 if we remove the partial, else return zero.
 //	
 static int sieve_aux( Partial &src, double minGapTime,
-				   	  PartialList::const_iterator start,
-				   	  PartialList::const_iterator end)
+				   	  std::list< Partial >::const_iterator start,
+				   	  std::list< Partial >::const_iterator end)
 {
-	PartialList::const_iterator it;
+	std::list< Partial >::const_iterator it;
 	for ( it = start; it != end; ++it ) 
 	{
 		//	skip if other partial is already sifted out.
@@ -143,7 +142,7 @@ Sieve::~Sieve( void )
 //	If iterator bounds aren't specified, then the whole list is processed.
 //
 void 
-Sieve::sift( PartialList & container )
+Sieve::sift( std::list<Partial> & container )
 {
 	sift( container, container.begin(), container.end() );
 }
@@ -172,31 +171,31 @@ Sieve::sift( PartialList & container )
 //	So we are stuck requiring the list reference.
 //
 void 
-Sieve::sift( PartialList & container, 
-			 PartialList::iterator sift_begin, 
-			 PartialList::iterator sift_end  )
+Sieve::sift( std::list<Partial> & container, 
+			 std::list< Partial >::iterator sift_begin, 
+			 std::list< Partial >::iterator sift_end  )
 {
 	int zapped = 0;
 
 	//	make a new temporary list that can be sorted and
 	//	distilled, since it isn't possible to sort a select
 	//	range of position in a list:
-	PartialList sift_list;
+	std::list<Partial> sift_list;
 	sift_list.splice( sift_list.begin(), container, sift_begin, sift_end );
 	
-	//	sort the PartialList by length and label:
+	//	sort the std::list< Partial > by length and label:
 	sift_list.sort( PartialUtils::duration_greater() );
 	sift_list.sort( PartialUtils::label_less() );
 	
 	// 	iterate over labels and sift each one:
-	PartialList::iterator lowerbound = sift_list.begin();
+	std::list<Partial>::iterator lowerbound = sift_list.begin();
 	while ( lowerbound != sift_list.end() )
 	{
 		int label = lowerbound->label();
 		
 		//	first the first element in l after sieve_begin
 		//	having a label not equal to 'label':
-		PartialList::iterator upperbound = 
+		std::list<Partial>::iterator upperbound = 
 			std::find_if( lowerbound, sift_list.end(), 
 						  std::not1( std::bind2nd( PartialUtils::label_equals(), label ) ) );
 
@@ -210,7 +209,7 @@ Sieve::sift( PartialList & container,
 		//	label is 0:
 		if ( label != 0 )
 		{
-			PartialList::iterator it;
+			std::list< Partial >::iterator it;
 			for ( it = lowerbound; it != upperbound; ++it ) 
 			{
 				//	sieve_aux only needs to consider Partials on the
