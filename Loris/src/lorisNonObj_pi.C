@@ -330,7 +330,7 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch,
 	catch( std::exception & ex ) 
 	{
 		std::string s("std C++ exception in exportSdif(): " );
-		s.append( ex.what() );exportSpc
+		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
 
