@@ -40,6 +40,9 @@ Kelly Fitz 2002
 Generates several morphs between a clarinet, 
 a flute, and a cello. The results can be compared
 to those in the "reference" directory.
+
+In order to run this demo, the Loris module (loris.py 
+and loriscmodule.la) must be in your PYTHONPATH.
 """
 print __doc__
 

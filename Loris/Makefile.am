@@ -8,7 +8,7 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = doc src mac pi scripting test demo
+SUBDIRS = doc src mac pi scripting test
 
 # used to have ltconfig in here too, but newer versions
 # of libtool (>1.4) don't use that.
