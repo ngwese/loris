@@ -3,19 +3,19 @@
 <TITLE>
 Loris procedural interface</TITLE>
 <BODY BGCOLOR="#ffffff">
-<H1>Loris procedural interface - version 1.0beta2</H1>
+<H1>Loris procedural interface - version 1.0</H1>
 
 This document describes the functions in the 
 C-linkable procedural interface for Loris. 
 
 <HR><H1> Contents </H1>
 <UL><LI> <A HREF="#s1_">1. Analyzer object interface</A>
-<LI> <A HREF="#s2_">2. PartialList object interface</A>
+<LI> <A HREF="#s2_">2. BreakpointEnvelope object interface</A>
 <LI> <A HREF="#s3_">3. PartialList object interface</A>
 <LI> <A HREF="#s4_">4. SampleVector object interface</A>
-<LI> <A HREF="#s5_">5. Non-object-based procedures</A>
-<LI> <A HREF="#s6_">6. Utility functions</A>
-<LI> <A HREF="#s7_">7. Notification and exception handlers</A>
+<LI> <A HREF="#s5_">5. Non-object-based procedures and utility functions</A>
+<LI> <A HREF="#s7_">6. Notification and exception handlers</A>
+<LI> <A HREF="#s8_">7. Version macros</A>
 </UL>
 
 <A name="s1_">
@@ -27,23 +27,23 @@ C-linkable procedural interface for Loris.
 	of Partials, each having a trio of synchronous, non-uniformly-
 	sampled breakpoint envelopes representing the time-varying 
 	frequency, amplitude, and noisiness of a single bandwidth-
-	enhanced sinusoid. 
+	enhanced sinusoid. <p>
 
 	For more information about Reassigned Bandwidth-Enhanced 
 	Analysis and the Reassigned Bandwidth-Enhanced Additive Sound 
 	Model, refer to the Loris website: 
 	<a href="http://www.cerlsoundgroup.org/Loris/" 
-	name="Loris web site">www.cerlsoundgroup.org/Loris/</a>
+	name="Loris web site">www.cerlsoundgroup.org/Loris/</a><p>
 	
 	In C++, Analyzer is Loris::Analyzer, defined in Analyzer.h.
 	
-<P><TT><B>createAnalyzer( double resolution )</B></TT>
+<P><TT><B>createAnalyzer( double resolution, double windowWidth )</B></TT>
 <BLOCKQUOTE>[ returns Analyzer *  ]
 <BR>  	Construct and return a new Analyzer configured with the given	
 	frequency resolution (minimum instantaneous frequency	
-	difference between Partials). All other Analyzer parameters 	
-	are computed from the specified frequency resolution. 			
-   
+	difference between Partials) and analysis window main 
+	lobe width (between zeros). All other Analyzer parameters 	
+	are computed from the specified  resolution and window width.   
 </BLOCKQUOTE>
 
 <P><TT><B>destroyAnalyzer( Analyzer * ptr_this )</B></TT>
@@ -62,30 +62,6 @@ C-linkable procedural interface for Loris.
    
 </BLOCKQUOTE>
 
-<P><TT><B>analyzer_configure( Analyzer * ptr_this, double resolution )</B></TT>
-<BLOCKQUOTE>[ returns void  ]
-<BR>  	Configure this Analyzer with the given frequency resolution 
-	(minimum instantaneous frequency difference between Partials). 
-	All other Analyzer parameters are (re-)computed from the 
-	frequency resolution. 		
-   
-</BLOCKQUOTE>
-
-<P><TT><B>analyzer_getFreqResolution( const Analyzer * ptr_this )</B></TT>
-<BLOCKQUOTE>[ returns double  ]
-<BR>  	Return the frequency resolution (minimum instantaneous frequency  		
-	difference between Partials) for this Analyzer. 	
-   
-</BLOCKQUOTE>
-
-<P><TT><B>analyzer_setFreqResolution( Analyzer * ptr_this, double x )</B></TT>
-<BLOCKQUOTE>[ returns void  ]
-<BR>  	Set the frequency resolution (minimum instantaneous frequency  		
-	difference between Partials) for this Analyzer. (Does not cause 	
-	other parameters to be recomputed.) 									
-   
-</BLOCKQUOTE>
-
 <P><TT><B>analyzer_getAmpFloor( const Analyzer * ptr_this )</B></TT>
 <BLOCKQUOTE>[ returns double  ]
 <BR>  	Return the amplitude floor (lowest detected spectral amplitude),  			
@@ -93,38 +69,25 @@ C-linkable procedural interface for Loris.
    
 </BLOCKQUOTE>
 
-<P><TT><B>analyzer_setAmpFloor( Analyzer * ptr_this, double x )</B></TT>
-<BLOCKQUOTE>[ returns void  ]
-<BR>  	Set the amplitude floor (lowest detected spectral amplitude), in  			
-	(negative) dB, for this Analyzer. 				
-   
-</BLOCKQUOTE>
-
-<P><TT><B>analyzer_getWindowWidth( const Analyzer * ptr_this )</B></TT>
+<P><TT><B>analyzer_getBwRegionWidth( const Analyzer * ptr_this )</B></TT>
 <BLOCKQUOTE>[ returns double  ]
-<BR>  	Return the frequency-domain main lobe width (measured between 
-	zero-crossings) of the analysis window used by this Analyzer. 				
+<BR>  	Return the width (in Hz) of the Bandwidth Association regions
+	used by this Analyzer.<p>
+	
+	This parameter is deprecated and not generally useful. It will be
+	removed in a future release.
    
 </BLOCKQUOTE>
 
-<P><TT><B>analyzer_setWindowWidth( Analyzer * ptr_this, double x )</B></TT>
-<BLOCKQUOTE>[ returns void  ]
-<BR>  	Set the frequency-domain main lobe width (measured between 
-	zero-crossings) of the analysis window used by this Analyzer. 				
-   
-</BLOCKQUOTE>
-
-<P><TT><B>analyzer_getFreqFloor( const Analyzer * ptr_this )</B></TT>
+<P><TT><B>analyzer_getCropTime( const Analyzer * ptr_this )</B></TT>
 <BLOCKQUOTE>[ returns double  ]
-<BR>  	Return the frequency floor (minimum instantaneous Partial  				
-	frequency), in Hz, for this Analyzer. 				
-   
-</BLOCKQUOTE>
-
-<P><TT><B>analyzer_setFreqFloor( Analyzer * ptr_this, double x )</B></TT>
-<BLOCKQUOTE>[ returns void  ]
-<BR>  	Set the amplitude floor (minimum instantaneous Partial  				
-	frequency), in Hz, for this Analyzer.
+<BR>  	Return the crop time (maximum temporal displacement of a time-
+	frequency data point from the time-domain center of the analysis
+	window, beyond which data points are considered &quot;unreliable&quot;)
+	for this Analyzer.<p>
+	
+	This parameter is deprecated and not generally useful. It will be
+	removed in a future release.
    
 </BLOCKQUOTE>
 
@@ -135,10 +98,17 @@ C-linkable procedural interface for Loris.
    
 </BLOCKQUOTE>
 
-<P><TT><B>analyzer_setFreqDrift( Analyzer * ptr_this, double x )</B></TT>
-<BLOCKQUOTE>[ returns void  ]
-<BR>  	Set the maximum allowable frequency difference between 					
-	consecutive Breakpoints in a Partial envelope for this Analyzer. 				
+<P><TT><B>analyzer_getFreqFloor( const Analyzer * ptr_this )</B></TT>
+<BLOCKQUOTE>[ returns double  ]
+<BR>  	Return the frequency floor (minimum instantaneous Partial  				
+	frequency), in Hz, for this Analyzer. 				
+   
+</BLOCKQUOTE>
+
+<P><TT><B>analyzer_getFreqResolution( const Analyzer * ptr_this )</B></TT>
+<BLOCKQUOTE>[ returns double  ]
+<BR>  	Return the frequency resolution (minimum instantaneous frequency  		
+	difference between Partials) for this Analyzer. 	
    
 </BLOCKQUOTE>
 
@@ -150,19 +120,27 @@ C-linkable procedural interface for Loris.
    
 </BLOCKQUOTE>
 
-<P><TT><B>analyzer_setHopTime( Analyzer * ptr_this, double x )</B></TT>
-<BLOCKQUOTE>[ returns void  ]
-<BR>  	Set the hop time (which corresponds approximately to the average
-	density of Partial envelope Breakpoint data) for this Analyzer.
+<P><TT><B>analyzer_getWindowWidth( const Analyzer * ptr_this )</B></TT>
+<BLOCKQUOTE>[ returns double  ]
+<BR>  	Return the frequency-domain main lobe width (measured between 
+	zero-crossings) of the analysis window used by this Analyzer. 				
    
 </BLOCKQUOTE>
 
-<P><TT><B>analyzer_getCropTime( const Analyzer * ptr_this )</B></TT>
-<BLOCKQUOTE>[ returns double  ]
-<BR>  	Return the crop time (maximum temporal displacement of a time-
-	frequency data point from the time-domain center of the analysis
-	window, beyond which data points are considered &quot;unreliable&quot;)
-	for this Analyzer.
+<P><TT><B>analyzer_setAmpFloor( Analyzer * ptr_this, double x )</B></TT>
+<BLOCKQUOTE>[ returns void  ]
+<BR>  	Set the amplitude floor (lowest detected spectral amplitude), in  			
+	(negative) dB, for this Analyzer. 				
+   
+</BLOCKQUOTE>
+
+<P><TT><B>analyzer_setBwRegionWidth( Analyzer * ptr_this, double x )</B></TT>
+<BLOCKQUOTE>[ returns void  ]
+<BR>  	Set the width (in Hz) of the Bandwidth Association regions
+	used by this Analyzer.<p>
+	
+	This parameter is deprecated and not generally useful. It will be
+	removed in a future release.
    
 </BLOCKQUOTE>
 
@@ -171,23 +149,49 @@ C-linkable procedural interface for Loris.
 <BR>  	Set the crop time (maximum temporal displacement of a time-
 	frequency data point from the time-domain center of the analysis
 	window, beyond which data points are considered &quot;unreliable&quot;)
-	for this Analyzer.
+	for this Analyzer.<p>
+	
+	This parameter is deprecated and not generally useful. It will be
+	removed in a future release.
    
 </BLOCKQUOTE>
 
-<P><TT><B>analyzer_getBwRegionWidth( const Analyzer * ptr_this )</B></TT>
-<BLOCKQUOTE>[ returns double  ]
-<BR>  	Return the width (in Hz) of the Bandwidth Association regions
-	used by this Analyzer.
-   
-</BLOCKQUOTE>
-
-<P><TT><B>analyzer_setBwRegionWidth( Analyzer * ptr_this, double x )</B></TT>
+<P><TT><B>analyzer_setFreqDrift( Analyzer * ptr_this, double x )</B></TT>
 <BLOCKQUOTE>[ returns void  ]
-<BR>  	Set the width (in Hz) of the Bandwidth Association regions
-	used by this Analyzer.
+<BR>  	Set the maximum allowable frequency difference between 					
+	consecutive Breakpoints in a Partial envelope for this Analyzer. 				
    
 </BLOCKQUOTE>
+
+<P><TT><B>analyzer_setFreqFloor( Analyzer * ptr_this, double x )</B></TT>
+<BLOCKQUOTE>[ returns void  ]
+<BR>  	Set the amplitude floor (minimum instantaneous Partial  				
+	frequency), in Hz, for this Analyzer.
+   
+</BLOCKQUOTE>
+
+<P><TT><B>analyzer_setHopTime( Analyzer * ptr_this, double x )</B></TT>
+<BLOCKQUOTE>[ returns void  ]
+<BR>  	Set the hop time (which corresponds approximately to the average
+	density of Partial envelope Breakpoint data) for this Analyzer.
+   
+</BLOCKQUOTE>
+
+<P><TT><B>analyzer_setFreqResolution( Analyzer * ptr_this, double x )</B></TT>
+<BLOCKQUOTE>[ returns void  ]
+<BR>  	Set the frequency resolution (minimum instantaneous frequency  		
+	difference between Partials) for this Analyzer. (Does not cause 	
+	other parameters to be recomputed.) 									
+   
+</BLOCKQUOTE>
+
+<P><TT><B>analyzer_setWindowWidth( Analyzer * ptr_this, double x )</B></TT>
+<BLOCKQUOTE>[ returns void  ]
+<BR>  	Set the frequency-domain main lobe width (measured between 
+	zero-crossings) of the analysis window used by this Analyzer. 				
+   
+</BLOCKQUOTE>
+
 
 <A name="s2_">
 <HR><H2>2. BreakpointEnvelope object interface</H2></A>
@@ -195,7 +199,7 @@ C-linkable procedural interface for Loris.
 	A BreakpointEnvelope represents a linear segment breakpoint 
 	function with infinite extension at each end (that is, the 
 	values past either end of the breakpoint function have the 
-	values at the nearest end).
+	values at the nearest end).<p>
 
 	In C++, a BreakpointEnvelope is a Loris::BreakpointEnvelope.
 <P><TT><B>createBreakpointEnvelope()</B></TT>
@@ -236,13 +240,13 @@ C-linkable procedural interface for Loris.
 	Partials, each having a trio of synchronous, non-uniformly-
 	sampled breakpoint envelopes representing the time-varying 
 	frequency, amplitude, and noisiness of a single bandwidth-
-	enhanced sinusoid.
+	enhanced sinusoid.<p>
 
 	For more information about Bandwidth-Enhanced Partials and the  
 	Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
 	the Loris website:  
 	<a href="http://www.cerlsoundgroup.org/Loris/" 
-	name="Loris web site">www.cerlsoundgroup.org/Loris/</a>
+	name="Loris web site">www.cerlsoundgroup.org/Loris/</a><p>
 
 	In C++, a PartialList is a std::list< Loris::Partial >.
 <P><TT><B>createPartialList()</B></TT>
@@ -328,16 +332,16 @@ C-linkable procedural interface for Loris.
    
 </BLOCKQUOTE>
 
+<P><TT><B>sampleVector_getLength( const SampleVector * ptr_this )</B></TT>
+<BLOCKQUOTE>[ returns unsigned long  ]
+<BR>  	Return the number of samples represented by this SampleVector.
+   
+</BLOCKQUOTE>
+
 <P><TT><B>sampleVector_setAt( SampleVector * ptr_this, unsigned long idx, double x )</B></TT>
 <BLOCKQUOTE>[ returns void  ]
 <BR>  	Set the value of the sample at the given position (index) in
 	this SampleVector.
-   
-</BLOCKQUOTE>
-
-<P><TT><B>sampleVector_getLength( const SampleVector * ptr_this )</B></TT>
-<BLOCKQUOTE>[ returns unsigned long  ]
-<BR>  	Return the number of samples represented by this SampleVector.
    
 </BLOCKQUOTE>
 
@@ -351,7 +355,7 @@ C-linkable procedural interface for Loris.
 </BLOCKQUOTE>
 
 <A name="s5_">
-<HR><H2>5. Non-object-based procedures</H2></A>
+<HR><H2>5. Non-object-based procedures and utility functions.</H2></A>
 <P>
 	Operations in Loris that need not be accessed though object
 	interfaces are represented as simple functions.
@@ -377,6 +381,37 @@ C-linkable procedural interface for Loris.
    
 </BLOCKQUOTE>
 
+<P><TT><B>copyByLabel( const PartialList * src, long label, PartialList * dst )</B></TT>
+<BLOCKQUOTE>[ returns void  ]
+<BR>  	Append copies of Partials in the source PartialList having the
+	specified label to the destination PartialList. The source list
+	is unmodified.
+   
+</BLOCKQUOTE>
+
+<P><TT><B>createFreqReference( PartialList * partials, 
+							   double minFreq, double maxFreq, 
+							   long numSamps )</B></TT>
+<BLOCKQUOTE>[ returns BreakpointEnvelope *  ]
+<BR>  Return a newly-constructed BreakpointEnvelope by sampling the 
+	frequency envelope of the longest Partial in a PartialList. 
+	Only Partials whose frequency at the Partial's loudest (highest 
+	amplitude) breakpoint is within the given frequency range are 
+	considered. The envelope will have the specified number of samples.
+	If the specified number of samples is 0, then the
+	longest Partial's frequency envelope is sampled every 30 ms
+	(No fewer than 10 samples are used, so the sampling maybe more
+	dense for very short Partials.) <p>
+	
+	For very simple sounds, this frequency reference may be a 
+	good first approximation to a reference envelope for
+	channelization (see channelize()).<p>
+	
+	Clients are responsible for disposing of the newly-constructed 
+	BreakpointEnvelope.
+   
+</BLOCKQUOTE>
+
 <P><TT><B>dilate( PartialList * partials, 
 			 double * initial, double * target, int npts )</B></TT>
 <BLOCKQUOTE>[ returns void  ]
@@ -387,7 +422,7 @@ C-linkable procedural interface for Loris.
 	points. Time points are sorted, so Partial envelopes are 
 	are only stretched and compressed, but breakpoints are not
 	reordered. Duplicate time points are allowed. There must be
-	the same number of initial and target time points.
+	the same number of initial and target time points.<p>
 	
 	The time points are passed as strings; convert any native
 	collection to a string representation, numerical elements
@@ -419,21 +454,26 @@ C-linkable procedural interface for Loris.
 <P><TT><B>exportSdif( const char * path, PartialList * partials, double hop )</B></TT>
 <BLOCKQUOTE>[ returns void  ]
 <BR>  	Export Partials in a PartialList to a SDIF file at the specified
-	file path (or name). SDIF data is written in the 1TRC format.  
-	For more information about SDIF, see the SDIF website at:
-		<a href="http://www.ircam.fr/equipes/analyse-synthese/sdif/" 
-		name="IRCAM SDIF web site">www.ircam.fr/equipes/analyse-synthese/sdif/</a>  
-<BR>		
-		
-	The hop parameter is currently used to specify a time-domain 
-	resampling of the Partial envelopes. This parameter is 
-	deprecated, and will be removed in future versions, which 
-	will have explicit resampling functionality. If hop is 0., 
-	Partial envelopes will not be resampled, and all Partial 
-	envelope data will be stored.
-	
-	If unspecified, hop defaults to 0.
+	file path (or name). SDIF data is described by RBEM and RBEL 
+	matrices. 
+	For more information about SDIF, see the SDIF web site at:
+		www.ircam.fr/equipes/analyse-synthese/sdif/ 
    
+</BLOCKQUOTE>
+
+<P><TT><B>exportSpc( const char * path, PartialList * partials, double midiPitch, 
+				int enhanced, double endApproachTime )</B></TT>
+<BLOCKQUOTE>[ returns void  ]
+<BR>  	Export Partials in a PartialList to a Spc file at the specified file
+	path (or name). The fractional MIDI pitch must be specified. The 
+	enhanced parameter defaults to true (for bandwidth-enhanced spc files), 
+	but an be specified false for pure-sines spc files. The endApproachTime 
+	parameter is in seconds. A nonzero endApproachTime indicates that the plist does 
+	not include a release, but rather ends in a static spectrum corresponding 
+	to the final breakpoint values of the partials. The endApproachTime
+	specifies how long before the end of the sound the amplitude, frequency, 
+	and bandwidth values are to be modified to make a gradual transition to 
+	the static spectrum.   
 </BLOCKQUOTE>
 
 <P><TT><B>importAiff( const char * path, SampleVector * vec, 
@@ -461,6 +501,12 @@ C-linkable procedural interface for Loris.
    
 </BLOCKQUOTE>
 
+<P><TT><B>importSpc( const char * path, PartialList * partials )</B></TT>
+<BLOCKQUOTE>[ returns void  ]
+<BR>  	Import Partials from an Spc file at the given file path (or 
+	name), and return them in a PartialList.   
+</BLOCKQUOTE>
+
 <P><TT><B>morph( const PartialList * src0, const PartialList * src1, 
 			const BreakpointEnvelope * ffreq, 
 			const BreakpointEnvelope * famp, 
@@ -476,51 +522,6 @@ C-linkable procedural interface for Loris.
 	morphing algorithm, see the Loris website: 
 	<a href="http://www.cerlsoundgroup.org/Loris/" 
 	name="Loris web site">www.cerlsoundgroup.org/Loris/</a>
-   
-</BLOCKQUOTE>
-
-<P><TT><B>synthesize( const PartialList * partials,
-				 SampleVector * samples,  
-				 double srate )</B></TT>
-<BLOCKQUOTE>[ returns void  ]
-<BR>  	Synthesize Partials in a PartialList at the given sample
-	rate, and store the (floating point) samples in a SampleVector.
-	The SampleVector is resized, if necessary, to hold as many
-	samples as are needed for the complete synthesis of all the
-	Partials in the PartialList. The SampleVector is not 
-	cleared before synthesis, so newly synthesized samples are
-	added to any previously computed samples in the SampleVector.
-   
-</BLOCKQUOTE>
-
-<A name="s6_">
-<HR><H2>6. Utility functions</H2></A>
-<P>
-	These procedures are generally useful but are not yet  
-	represented by classes in the Loris core.
-<P><TT><B>copyByLabel( const PartialList * src, long label, PartialList * dst )</B></TT>
-<BLOCKQUOTE>[ returns void  ]
-<BR>  	Append copies of Partials in the source PartialList having the
-	specified label to the destination PartialList. The source list
-	is unmodified.
-   
-</BLOCKQUOTE>
-
-<P><TT><B>createFreqReference( PartialList * partials, int numSamples,
-					 double minFreq, double maxFreq )</B></TT>
-<BLOCKQUOTE>[ returns BreakpointEnvelope *  ]
-<BR>  	Return a newly-constructed BreakpointEnvelope comprising the
-	specified number of samples of the frequency envelope of the
-	longest Partial in a PartialList. Only Partials whose frequency
-	at the Partial's loudest (highest amplitude) breakpoint is
-	within the given frequency range are considered. 
-	
-	For very simple sounds, this frequency reference may be a 
-	good first approximation to a reference envelope for
-	channelization (see channelize()).
-	
-	Clients are responsible for disposing of the newly-constructed 
-	BreakpointEnvelope.
    
 </BLOCKQUOTE>
 
@@ -547,8 +548,22 @@ C-linkable procedural interface for Loris.
    
 </BLOCKQUOTE>
 
+<P><TT><B>synthesize( const PartialList * partials,
+				 SampleVector * samples,  
+				 double srate )</B></TT>
+<BLOCKQUOTE>[ returns void  ]
+<BR>  	Synthesize Partials in a PartialList at the given sample
+	rate, and store the (floating point) samples in a SampleVector.
+	The SampleVector is resized, if necessary, to hold as many
+	samples as are needed for the complete synthesis of all the
+	Partials in the PartialList. The SampleVector is not 
+	cleared before synthesis, so newly synthesized samples are
+	added to any previously computed samples in the SampleVector.
+   
+</BLOCKQUOTE>
+
 <A name="s7_">
-<HR><H2>7. Notification and exception handlers</H2></A>
+<HR><H2>6. Notification and exception handlers</H2></A>
 <P>
 	An exception handler and a notifier may be specified. Both 
 	are functions taking a const char * argument and returning
@@ -566,6 +581,30 @@ C-linkable procedural interface for Loris.
 	const char * argument, and returns void.
    
 </BLOCKQUOTE>
+
+<A name="s8_">
+<HR><H2>7. Version macros</H2></A>
+<P>
+	The following macros, defined in <tt>loris.h</tt>, specify major,
+	minor, and subminor version numbers for the Loris library.
+
+<ul>
+	<li><tt>LORIS_MAJOR_VERSION</tt> </li>
+	<li><tt>LORIS_MINOR_VERSION</tt> </li>
+	<li><tt>LORIS_SUBMINOR_VERSION</tt> </li>
+</ul>
+
+Additionally, the macro
+<tt>LORIS_VERSION_STR</tt> is a character string describing the Loris release.<p>
+
+For example, in the ninth beta release of Loris 1.0 (subminor version 0), the 
+macros have the definitions:
+<ul>
+	<li><tt>LORIS_MAJOR_VERSION</tt> &nbsp;&nbsp;1 </li>
+	<li><tt>LORIS_MINOR_VERSION</tt> &nbsp;&nbsp;0 </li>
+	<li><tt>LORIS_SUBMINOR_VERSION</tt> &nbsp;&nbsp;0 </li>
+	<li><tt>LORIS_VERSION_STR</tt> &nbsp;&nbsp;"1.0beta9" </li>
+</ul>
 
 
 </BODY>

@@ -3,7 +3,11 @@
 <TITLE>
 Python module: loris</TITLE>
 <BODY BGCOLOR="#ffffff">
-<H1>Python module: loris</H1>
+<H1>Python module: loris - version 1.0</H1>
+
+This document describes the functions and classes in the 
+Python module <tt>loris</tt>. 
+
 
 <HR><H1> Contents </H1>
 <UL><LI> <A HREF="#s1_">1. Loris class interfaces</A>
@@ -75,7 +79,7 @@ Python module: loris</TITLE>
 	of Partials, each having a trio of synchronous, non-uniformly-
 	sampled breakpoint envelopes representing the time-varying 
 	frequency, amplitude, and noisiness of a single bandwidth-
-	enhanced sinusoid. <br>
+	enhanced sinusoid. <p>
 
 	For more information about Reassigned Bandwidth-Enhanced 
 	Analysis and the Reassigned Bandwidth-Enhanced Additive Sound 
@@ -110,7 +114,7 @@ Python module: loris</TITLE>
 
 <P><TT><B>bwRegionWidth()</B></TT>
 <BLOCKQUOTE>  	Return the width (in Hz) of the Bandwidth Association regions
-		used by this Analyzer.<br>
+		used by this Analyzer.<p>
 	   
 	   	This parameter is deprecated, and not generally useful. It will be
 	   	removed in a future Loris release.
@@ -126,7 +130,7 @@ Python module: loris</TITLE>
 <BLOCKQUOTE>  	Return the crop time (maximum temporal displacement of a time-
 		frequency data point from the time-domain center of the analysis
 		window, beyond which data points are considered &quot;unreliable&quot;)
-		for this Analyzer.<br>
+		for this Analyzer.<p>
 	   
 	   	This parameter is deprecated, and not generally useful. It will be
 	   	removed in a future Loris release.
@@ -172,7 +176,7 @@ Python module: loris</TITLE>
 
 <P><TT><B>setBwRegionWidth(x)</B></TT>
 <BLOCKQUOTE>  	Set the width (in Hz) of the Bandwidth Association regions
-		used by this Analyzer.<br>
+		used by this Analyzer.<p>
 	   
 	   	This parameter is deprecated, and not generally useful. It will be
 	   	removed in a future Loris release.
@@ -183,7 +187,7 @@ Python module: loris</TITLE>
 <BLOCKQUOTE>  	Set the crop time (maximum temporal displacement of a time-
 		frequency data point from the time-domain center of the analysis
 		window, beyond which data points are considered &quot;unreliable&quot;)
-		for this Analyzer.<br>
+		for this Analyzer.<p>
 	   
 	   	This parameter is deprecated, and not generally useful. It will be
 	   	removed in a future Loris release.
@@ -225,10 +229,10 @@ Python module: loris</TITLE>
 <H3>1.3. class Breakpoint</H3></A>
 	A Breakpoint represents a single breakpoint in the time-varying
 	frequency, amplitude, and bandwidth envelope of a Reassigned 
-	Bandwidth-Enhanced Partial.<br>
+	Bandwidth-Enhanced Partial.<p>
 	
 	Instantaneous phase is also stored, but is only used at the onset of 
-	a partial, or when it makes a transition from zero to nonzero amplitude.<br>
+	a partial, or when it makes a transition from zero to nonzero amplitude.<p>
 
 	A Partial represents a Reassigned Bandwidth-Enhanced model component.
 	For more information about Bandwidth-Enhanced Partials and the  
@@ -350,7 +354,7 @@ Python module: loris</TITLE>
 	A Partial consists of a trio of synchronous, non-uniformly-
 	sampled breakpoint envelopes representing the time-varying 
 	frequency, amplitude, and noisiness of a single bandwidth-
-	enhanced sinusoid.<br>
+	enhanced sinusoid.<p>
 	
 	For more information about Bandwidth-Enhanced Partials and the  
 	Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
@@ -473,14 +477,14 @@ Python module: loris</TITLE>
 
 <A name="s1_4_">
 <H3>1.6. class PartialIterator</H3></A>
-	A PartialIterator represents an iterator on a Partial.<br>
+	A PartialIterator represents an iterator on a Partial.<p>
 	
 	PartialIterators can only be obtained from their subject 
 	Partial, through the begin and end methods of Partial, 
 	and by copying, through the PartialIterator copy method.
 	PartialIterators are used to access individual Breakpoints
 	in Partial Breakpoint envelopes, and the times of those 
-	Breakpoints.<br>
+	Breakpoints.<p>
 	
 	PartialIterators are valid only as long as their subject
 	Partial exists. In languages with some form of grabage 
@@ -489,7 +493,7 @@ Python module: loris</TITLE>
 	lost, the Partial will be deleted, and the iterators will
 	refer to free memory. By extension, if the Partial is an
 	element of a PartialList, a reference to the PartialList
-	must be maintained.<br>
+	must be maintained.<p>
 	
 	PartialIterators are also invalidated when the Breakpoint 
 	they reference is erased from the Partial. Erasure does not 
@@ -552,7 +556,7 @@ Python module: loris</TITLE>
 	Partials, each having a trio of synchronous, non-uniformly-
 	sampled breakpoint envelopes representing the time-varying 
 	frequency, amplitude, and noisiness of a single bandwidth-
-	enhanced sinusoid.<br>
+	enhanced sinusoid.<p>
 
 	For more information about Bandwidth-Enhanced Partials and the  
 	Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
@@ -629,20 +633,20 @@ Python module: loris</TITLE>
 <H3>1.8. class PartialListIterator</H3></A>
 	A PartialListIterator represents an iterator on a PartialList.
 	Its interface reflects the interface of the underlying std::list
-	iterator.<br>
+	iterator.<p>
 	
 	PartialListIterators can only be obtained from their subject 
 	PartialList, through the begin and end methods of PartialList, 
 	and by copying, through the PartialListIterator copy method.
 	PartialListIterators are used to access individual elements
-	(Partials) of a PartialList.<br>
+	(Partials) of a PartialList.<p>
 	
 	PartialListIterators are valid only as long as their subject
 	PartialList exists. In languages with some form of grabage 
 	collection, this means that a reference to the PartialList 
 	must be maintained in order to iterate. If that reference is
 	lost, the PartialList will be deleted, and the iterators will
-	refer to free memory. <br>
+	refer to free memory. <p>
 	
 	PartialListIterators are also invalidated when PartialList element 
 	they reference is erased from the PartialList. Erasure does not 
@@ -704,7 +708,7 @@ Python module: loris</TITLE>
 	checked). 
 <P><TT><B>SampleVector(size)</B></TT>
 <BLOCKQUOTE>  	Return a new SampleVector having the specified number of samples,
-		all of whose value is 0. <br>
+		all of whose value is 0. <p>
 		
 		If no size is specified, 0 is assumed.
 	   
@@ -785,12 +789,12 @@ Python module: loris</TITLE>
 	frequency envelope of the longest Partial in a PartialList. 
 	Only Partials whose frequency at the Partial's loudest (highest 
 	amplitude) breakpoint is within the given frequency range are 
-	considered. <br>
+	considered. <p>
 	
 	If the number of sample points is not specified, then the
 	longest Partial's frequency envelope is sampled every 30 ms
 	(No fewer than 10 samples are used, so the sampling maybe more
-	dense for very short Partials.) <br>
+	dense for very short Partials.) <p>
 	
 	For very simple sounds, this frequency reference may be a 
 	good first approximation to a reference envelope for
@@ -806,7 +810,7 @@ Python module: loris</TITLE>
 		points. Time points are sorted, so Partial envelopes are 
 		are only stretched and compressed, but breakpoints are not
 		reordered. Duplicate time points are allowed. There must be
-		the same number of initial and target time points.<br>
+		the same number of initial and target time points.<p>
 		
 		The time points are passed as strings; convert any native
 		collection to a string representation, numerical elements
@@ -919,6 +923,16 @@ Python module: loris</TITLE>
 	   
 </BLOCKQUOTE>
 
+<hr align="Center" size="3">    
+<table cellspacing="0" cellpadding="1" width="100%">
+  <tbody>
+	<tr>
+	  <td valign="Top">Last updated on 3 May 2002
+	  </td>
+	  <td align="Right" valign="Top"><a href="http://www.cerlsoundgroup.org/Loris/">www.cerlsoundgroup.org/Loris/</a>
+	  </td>
+	</tr>       
+  </tbody>    
 
 </BODY>
 </HTML>
