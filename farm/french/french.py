@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 """
 french.py
 
@@ -21,27 +19,53 @@ notes from trial 1:
 	- 60,200 is a little noisy, as is 40,200
 	- 60,300 sounds a little hoarse, as does 40,300
 	- 60,100 is unusable
+	
+notes from trial 2:
+	- turned off BW association
+	- all of these sound kind of hoarse, 250 are also a little crunchy (?),
+	150 windows are better.
 
-Last updated: 4 Feb 2002 by Kelly Fitz
+Last updated: 27 May 2003 by Kelly Fitz
 """
 print __doc__
 
 import loris, time
-from trials import *
+#from trials import *
 
 # use this trial counter to skip over
 # eariler trials
-trial = 1
+trial = 2
 
 print "running trial number", trial, time.ctime(time.time())
 
 source = 'french.aiff'
+file = loris.AiffFile( source )
+samples = file.samples()
+rate = file.sampleRate()
 
-if trial == 1:
-	resolutions = (40,60,80)
-	widths = ( 100,200,300 )
+
+# if trial == 1:
+# 	resolutions = (40,60,80)
+# 	widths = ( 100,200,300 )
+# 	for r in resolutions:
+# 		for w in widths:
+# 			p = analyze( source, r, w )
+# 			ofile = 'french.%i.%i.aiff'%(r, w)
+# 			synthesize( ofile, p )
+# 
+if trial == 2:
+	resolutions = ( 40,60 )
+	widths = ( 150,250 )
 	for r in resolutions:
 		for w in widths:
-			p = analyze( source, r, w )
-			ofile = 'french.%i.%i.aiff'%(r, w)
-			synthesize( ofile, p )
+			a = loris.Analyzer( r, w )
+			# turn off BW association for now
+			a.setBwRegionWidth( 0 )
+			p = a.analyze( samples, rate )
+			ofile = 'french.%i.%i.raw'%(r, w)
+			# collate
+			loris.distill( p )
+			# export
+			loris.exportAiff( ofile + '.aiff', loris.synthesize( p, rate ), rate, 1, 16 )
+			loris.exportSpc( ofile + '.s.spc', p, 60, 0 ) 
+			loris.exportSpc( ofile + '.e.spc', p, 60, 1 ) 

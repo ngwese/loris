@@ -58,8 +58,44 @@ notes from trial 5:
 	in Kyma to see why they sound so different when I start distilling them.
 	- still seems like finer resolution is better, and probably the narrower
 	windows are better, but not by much, in the case of raw syntheses
+	- even without BW association, distillation introduces some noise, 
+	need to remove noise after distilling if I really want no noise.
+	- trying this one again with increased gain...
+	
+	funnyloud1:
+	- raw syntheses all sound good
+	- distilling with one partial per harmonic introduces too much noise
+	- sifting 85.300 looses some fundamental. 
+	- distilling with two partials per harmonic is a bit noisy, except 155.400
+	sounds pretty good that way.
+	- sifting 400 wide windows at two partials per harmonic sound very good.
+	- sifting at one partial per harmonic sounds glassy.
+	- none of these sound very good in Kyma, using sine-only spc.
+	
+	- so: 400 Hz windows are best,  sifting at 2 partials per harmonic is safe, 
+	distilling at two partials per harmonic is nearly as good with the resolution
+	at 155 Hz, but introduces artifacts at 85 Hz resolution.
+	
+	funnyLoud2:
+	- raw syntheses are all quite good
+	- sifting with one partial per harmonic sounds funny
+	- distilling at one partial per harmonic is way too noisy and crunchy
+	- distilling at two partials per harmonic is better, but still not usable
+	(if you _had_ to use one, 170.400.d2 is best)
+	- sifting with two partials per harmonic is pretty good, best with 400 Hz windows
+	
+	- so: 400 Hz windows are best, sifting at 2 partials per harmonic is not
+	too damaging.
+	
+	- listening to the loud (gian-normalized) sources, it sounds like some of
+	the noisiness in syntheses is similar to the ambient echo in the recording.
+	
+	- tried a couple morphs and also looked in Kyma, and found that the tracking
+	of harmonics is still not very good above the first few. Morphs sound bad 
+	because partials that should correspond don't.
+	
 
-Last updated: 14 April 2003 by Kelly Fitz
+Last updated: 19 May 2003 by Kelly Fitz
 """
 print __doc__
 
@@ -278,7 +314,8 @@ if trial == 4:
 				loris.exportSpc( ofilebases + '.e.spc', ps, 60, 1 ) 
 
 if trial == 5:
-	source = 'funnyPeeple1.aiff'
+	#source = 'funnyPeeple1.aiff'
+	source = 'funnyLoud1.aiff'
 	pref = loris.importSpc('funnyPeeple1.fund.smooth.qharm')
 	ref = loris.createFreqReference( pref, 50, 1000 )
 	resolutions = ( 85, 155 )
@@ -294,7 +331,9 @@ if trial == 5:
 			pcollate = p.copy()
 			loris.distill( pcollate )
 			synthesize( ofilebase + '.raw.aiff', pcollate )
-			loris.exportSdif( ofilebase + '.sdif', p )
+			loris.exportSdif( ofilebase + '.raw.sdif', pcollate )
+			pruneByLabel( pcollate, range(1,512) )
+			loris.exportSpc( ofilebase + '.raw.s.spc', pcollate, 60, 0 )
 			for h in (1,2):
 				loris.channelize(p, ref, h)
 				# distilled version
@@ -320,7 +359,8 @@ if trial == 5:
 				loris.exportSpc( ofilebases + '.e.spc', ps, 60, 1 ) 
 
 
-	source = 'funnyPeeple2.aiff'
+	#source = 'funnyPeeple2.aiff'
+	source = 'funnyLoud2.aiff'
 	pref = loris.importSpc('funnyPeeple2.fund.smooth.qharm')
 	ref = loris.createFreqReference( pref, 50, 1000 )
 	resolutions = ( 100, 170 )
@@ -336,7 +376,9 @@ if trial == 5:
 			pcollate = p.copy()
 			loris.distill( pcollate )
 			synthesize( ofilebase + '.raw.aiff', pcollate )
-			loris.exportSdif( ofilebase + 'raw.sdif', p )
+			loris.exportSdif( ofilebase + '.raw.sdif', pcollate )
+			pruneByLabel( pcollate, range(1,512) )
+			loris.exportSpc( ofilebase + '.raw.s.spc', pcollate, 60, 0 )
 			for h in (1,2):
 				loris.channelize(p, ref, h)
 				# distilled version
