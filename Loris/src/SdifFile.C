@@ -1811,25 +1811,25 @@ writeMarkers( FILE * out, const SdifFile::markers_type &markers )
 //							
 // Write out frame with two marker matrices.
 //
-	// Write the frame header.
-	int cols = 1;
-	{
-		SDIF_FrameHeader fh;
-		SDIF_Copy4Bytes( fh.frameType, lorisMarkersSignature );
-		fh.size = 
-				// size of remaining frame header
-				  sizeof( sdif_float64 ) + 2 * sizeof( sdif_int32 ) 		
-				// size of matrix headers
-				+ 2 * sizeof( SDIF_MatrixHeader ) 
-				// size of numeric (time) matrix data plus padding
-				+ 8 * ( ( markerTimes.size() * sizeof( sdif_int32 ) + 7 )/8 )	
-				// size of marker names numeric data plus padding
-				+ 8 * ( ( markerNames.size() + 7 ) / 8 );	
-		fh.time = frameTime;
-		fh.streamID = streamID;
-		fh.matrixCount = 2;
-		SDIFresult ret = SDIF_WriteFrameHeader(&fh, out);
-	}
+    // Write the frame header.
+    int cols = 1;
+    {
+            SDIF_FrameHeader fh;
+            SDIF_Copy4Bytes( fh.frameType, lorisMarkersSignature );
+            fh.size =
+                            // size of remaining frame header
+                              sizeof( sdif_float64 ) + 2 * sizeof( sdif_int32 )
+                            // size of matrix headers
+                            + 2 * sizeof( SDIF_MatrixHeader )
+                            // size of numeric (time) matrix data
+                            + markerTimes.size() * sizeof( sdif_float64 )
+                            // size of marker names data plus padding
+                            + 8 * ( ( markerNames.size() + 7 ) / 8 );
+            fh.time = frameTime;
+            fh.streamID = streamID;
+            fh.matrixCount = 2;
+            SDIFresult ret = SDIF_WriteFrameHeader(&fh, out);
+    }
 	
 	// Write the numeric (marker times) matrix.
 	{
