@@ -49,7 +49,7 @@ endif
 # SdifFile unit tests
 test_sdiffile_SOURCES = test_SdifFile.C
 if DARWIN
-test_sdiffile_LDADD = $(top_builddir)/pi/.libs/libloris.a
+test_sdiffile_LDADD = $(top_builddir)/pi/.libs/libloris.a -lsdif
 else
 test_sdiffile_LDADD = $(top_builddir)/pi/libloris.la
 endif

@@ -115,11 +115,14 @@ public:
 		{ synthesize( p, timeShift ) ; }
 	/*	Function call operator: same as synthesize( p, timeShift ).
 	 */
-	 
-#if !defined(NO_TEMPLATE_MEMBERS)
+
+#if ! defined(NO_TEMPLATE_MEMBERS)
 	template<typename Iter>
-	void synthesize( Iter begin_partials, Iter end_partials, double timeShift = 0. ) const
-		{ while ( begin_partials != end_partials ) synthesize( *(begin_partials++), timeShift ); }
+	void synthesize( Iter begin_partials, Iter end_partials, double timeShift = 0. ) const;
+#else
+	void synthesize( PartialList::iterator begin_partials, PartialList::iterator end_partials, 
+					 double timeShift = 0. ) const;	
+#endif
 	/*	Synthesize all Partials on the specified half-open (STL-style) range
 		with the (optionally) specified timeShift (in seconds). Zero-amplitude
 		Breakpoints are inserted at either end of the Partial to reduce
@@ -129,21 +132,18 @@ public:
 		Synthesizer will not generate samples outside the buffer, but neither
 		will any attempt be made to eliminate clicks at the buffer boundaries.
 		If the time shift is unspecified, no time shift is used.
-		
-		If compiled with NO_TEMPLATE_MEMBERS defined, this member is not
-		defined.
 	 */
 	 
+#if ! defined(NO_TEMPLATE_MEMBERS)
 	template<typename Iter>
-	void operator() ( Iter begin_partials, Iter end_partials, double timeShift = 0. ) const
-		{ synthesize( begin_partials, end_partials, timeShift ); }
+	void operator() ( Iter begin_partials, Iter end_partials, double timeShift = 0. ) const;
+#else
+	void operator() ( PartialList::iterator begin_partials, PartialList::iterator end_partials, 
+					  double timeShift = 0. ) const;
+#endif
 	/*	Function call operator: same as 
 		synthesize( begin_partials, end_partials, timeShift ).
-		
-		If compiled with NO_TEMPLATE_MEMBERS defined, this member
-		is not defined.
 	 */
-#endif
 	
 //	-- access --
 	double fadeTime( void ) const;
@@ -174,6 +174,56 @@ public:
 	 */
 	 
 };	//	end of class Synthesizer
+
+// ---------------------------------------------------------------------------
+//	synthesize 
+// ---------------------------------------------------------------------------
+//	Synthesize all Partials on the specified half-open (STL-style) range
+//	with the (optionally) specified timeShift (in seconds). Zero-amplitude
+//	Breakpoints are inserted at either end of the Partial to reduce
+//	turn-on and turn-off artifacts, as described above. The client is
+//	responsible or insuring that this Synthesizer's buffer is long enough
+//	to hold all samples from the time-shifted and padded Partials.
+//	Synthesizer will not generate samples outside the buffer, but neither
+//	will any attempt be made to eliminate clicks at the buffer boundaries.
+//	If the time shift is unspecified, no time shift is used.
+//
+#if ! defined(NO_TEMPLATE_MEMBERS)
+template<typename Iter>
+void 
+Synthesizer::synthesize( Iter begin_partials, Iter end_partials, 
+						 double timeShift ) const
+#else
+inline void 
+Synthesizer::synthesize( PartialList::iterator begin_partials, 
+						 PartialList::iterator end_partials, 
+						 double timeShift ) const
+#endif
+{ 
+	while ( begin_partials != end_partials ) 
+		synthesize( *(begin_partials++), timeShift ); 
+}
+
+// ---------------------------------------------------------------------------
+//	operator() 
+// ---------------------------------------------------------------------------
+//	Function call operator: same as 
+//		synthesize( begin_partials, end_partials, timeShift ).
+//
+#if ! defined(NO_TEMPLATE_MEMBERS)
+template<typename Iter>
+void
+Synthesizer::operator() ( Iter begin_partials, Iter end_partials, 
+						  double timeShift ) const
+#else
+inline void
+Synthesizer::operator() ( PartialList::iterator begin_partials, 
+						  PartialList::iterator end_partials, 
+						  double timeShift ) const
+#endif
+{ 
+	synthesize( begin_partials, end_partials, timeShift ); 
+}
 
 }	//	end of namespace Loris
 

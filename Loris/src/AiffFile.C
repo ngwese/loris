@@ -123,15 +123,14 @@ AiffFile::AiffFile( const std::string & filename )
 // ---------------------------------------------------------------------------
 //	AiffFile constructor from data in memory
 // ---------------------------------------------------------------------------
-//	Called only by static export members, write immediately.
+//	Called only by static export members, write immediately after constructing
+//	this way.
 //
-AiffFile::AiffFile( std::ostream & s, double rate, int chans, int bits, 
-					const double * bufBegin, const double * bufEnd ) :
+AiffFile::AiffFile( double rate, int chans, int bits ) :
 	_sampleRate( rate ),
 	_nChannels( chans ),
 	_sampSize( bits )
 {
-	write( s, bufBegin, bufEnd );
 }
 
 // ---------------------------------------------------------------------------
@@ -279,33 +278,6 @@ AiffFile::getSamples( double * bufBegin, double * bufEnd )
 			break;
 		}
 	}
-}
-
-// ---------------------------------------------------------------------------
-//	Export 
-// ---------------------------------------------------------------------------
-//	Static member for exporting AIFF data to a named file.
-//
-void
-AiffFile::Export( const std::string & filename, double rate, int chans, int bits, 
-				  const double * bufBegin, const double * bufEnd )
-{
-	std::ofstream s;
-	s.open( filename.c_str(), std::ios::out | std::ios::binary ); 
-	Export(s, rate, chans, bits, bufBegin, bufEnd);
-}
-
-// ---------------------------------------------------------------------------
-//	Export 
-// ---------------------------------------------------------------------------
-//	Static member for exporting AIFF data on a stream.
-//
-void
-AiffFile::Export( std::ostream & s, double rate, int chans, int bits, 
-				  const double * bufBegin, const double * bufEnd )
-{
-	//	writes immediately:
-	AiffFile f( s, rate, chans, bits, bufBegin, bufEnd );
 }
 
 // ---------------------------------------------------------------------------
@@ -516,6 +488,18 @@ AiffFile::readSamples( std::istream & s )
 
 	//	read integer samples without byte swapping: 
 	BigEndian::read( s, _bytes.size(), 1, (char*)(&_bytes[0]) );
+}
+
+// ---------------------------------------------------------------------------
+//	write
+// ---------------------------------------------------------------------------
+//
+void
+AiffFile::write( const std::string & filename, const double * bufBegin, const double * bufEnd )
+{
+	std::ofstream s;
+	s.open( filename.c_str(), std::ios::out | std::ios::binary ); 
+	write( s, bufBegin, bufEnd );
 }
 
 // ---------------------------------------------------------------------------

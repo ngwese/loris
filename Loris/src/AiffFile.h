@@ -128,36 +128,40 @@ public:
 	to a AIFF samples file having the specified file name or path, using the 
 	specified sample rate (in Hz), number of channels, and sample size (in bits).
 	bufEnd represents a position after the last valid position in the buffer, no 
-	sample is read from *bufEnd.
+	sample is read from *bufEnd. The samples to export must be stored in contiguous
+	memory.
 
  */
- 	static void Export( const std::string & filename, double rate, int chans, int bits, 
-						const double * bufBegin, const double * bufEnd );
-
 #if ! defined(NO_TEMPLATE_MEMBERS)
 	template < class Iter >
  	static void Export( const std::string & filename, double rate, int chans, int bits, 
-						Iter bufBegin, Iter bufEnd )
-	{
-		Export( filename, rate, chans, bits, &(*bufBegin ), &(*bufEnd) );
-	}
+						Iter bufBegin, Iter bufEnd );
+#else
+ 	static void Export( const std::string & filename, double rate, int chans, int bits, 
+						const double * bufBegin, const double * bufEnd );
 #endif
 
 /*	Export the sample data on the half-open (STL-style) range [bufBegin, bufEnd)
 	in the format of a AIFF samples file on the specified ostream, using the 
 	specified sample rate (in Hz), number of channels, and sample size (in bits).
 	bufEnd represents a position after the last valid position in the buffer, no 
-	sample is read from *bufEnd.
+	sample is read from *bufEnd. The samples to export must be stored in contiguous
+	memory.
 
  */
+#if ! defined(NO_TEMPLATE_MEMBERS)
+	template < class Iter >
+ 	static void Export( std::ostream & s, double rate, int chans, int bits, 
+						Iter bufBegin, Iter bufEnd );
+#else
  	static void Export( std::ostream & s, double rate, int chans, int bits, 
 						const double * bufBegin, const double * bufEnd );
-	
+#endif
+
 //	-- helpers --
 private:
-	//	construct from data in memory and write (export):
-	AiffFile( std::ostream & s, double rate, int chans, int bits, 
-			  const double * bufBegin, const double * bufEnd );
+	//	construct from data in memory for export:
+	AiffFile( double rate, int chans, int bits );
 	
 	//	reading:
 	void read( std::istream & s );
@@ -168,6 +172,7 @@ private:
 	void readSampleData( std::istream & s, unsigned long chunkSize );
 	void readSamples( std::istream & s );
 	//	writing:
+	void write( const std::string & filename, const double * bufBegin, const double * bufEnd );
 	void write( std::ostream & s, const double * bufBegin, const double * bufEnd );
 	void writeCommon( std::ostream & s );
 	void writeContainer( std::ostream & s );
@@ -183,6 +188,46 @@ private:
 	void validateParams( void );
 
 };	//	end of class AiffFile
+
+// ---------------------------------------------------------------------------
+//	Export 
+// ---------------------------------------------------------------------------
+//	Static member for exporting AIFF data to a named file.
+//
+#if !defined(NO_TEMPLATE_MEMBERS)
+template < class Iter >
+void 
+AiffFile::Export( const std::string & filename, double rate, int chans, int bits, 
+				  Iter bufBegin, Iter bufEnd )
+#else
+inline void
+AiffFile::Export( const std::string & filename, double rate, int chans, int bits, 
+				  const double * bufBegin, const double * bufEnd )
+#endif
+{
+	AiffFile f( rate, chans, bits );
+	f.write( filename, &(*bufBegin ), &(*bufEnd) );
+}
+
+// ---------------------------------------------------------------------------
+//	Export 
+// ---------------------------------------------------------------------------
+//	Static member for exporting AIFF data on a stream.
+//
+#if ! defined(NO_TEMPLATE_MEMBERS)
+template < class Iter >
+void 
+AiffFile::Export( std::ostream & s, double rate, int chans, int bits, 
+				  Iter bufBegin, Iter bufEnd )
+#else
+inline void
+AiffFile::Export( std::ostream & s, double rate, int chans, int bits, 
+				  const double * bufBegin, const double * bufEnd )
+#endif
+{
+	AiffFile f( rate, chans, bits );
+	f.write( s, bufBegin, bufEnd );
+}
 
 }	//	end of namespace Loris
 
