@@ -134,7 +134,7 @@ public:
 		 	*tmax_out = span.second;
 		 }
 		 /*	Return the minimum start time and maximum end time
-		 	off all Partials in this PartialList.
+		 	of all Partials in this PartialList.
 		  */
 	
 	}	//	end of added methods
@@ -247,7 +247,7 @@ public:
 			return prev;
 		}
 		/*	Return an iterator refering to the previous position
-			in the PartialList,
+			in the PartialList.
 		 */
 		 
 		Partial * partial( void )
@@ -264,7 +264,7 @@ public:
 			return *self == *other;
 		}
 		/*	Return true (1) if this PartialListIterator is equal to the
-			other. PartialListIterators are equal is they refer to the
+			other. PartialListIterators are equal if they refer to the
 			same position in the same PartialList.
 		 */
 		 
@@ -278,7 +278,7 @@ public:
 		 	}
 		 	return false;
 		 }
-		 /*	Return true (1) is this iterator is within the half-open iterator
+		 /*	Return true (1) if this iterator is within the half-open iterator
 		 	range bounded by begin and end, and false otherwise. This method
 		 	can be used to check the validity of an iterator -- call with 
 		 	begin and end methods of the PartialList as arguments.
