@@ -129,7 +129,7 @@ protected:
 	
 private:	
 	const Partial * _p;
-	Partial::const_iterator _cur;
+	JacksonConst _cur;
 	
 };	//	end of class BasicPartialIterator
 

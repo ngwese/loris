@@ -64,14 +64,14 @@ DistributeEnergy::addNoiseEnergy( double energy, Partial & p,
 	}
 	
 	//	loop over Breakpoints in p in the range (lower,upper):
-	for ( Partial::iterator it = p.findPos( lower ); 
-		  it != p.end() && it->first < upper;
+	for ( Jackson it = p.findPos( lower ); 
+		  it != p.end() && it.time() < upper;
 		  ++it ) {
 		//	don't transfer noise energy to 
 		//	zero-amplitude breakpoints, 
 		//	sounds bad?
-		if ( it->second.amplitude() > 0. )
-			it->second.addNoise( energy );
+		if ( it->amplitude() > 0. )
+			it->addNoise( energy );
 	}
 }
 

@@ -22,6 +22,104 @@
 namespace Loris {
 #endif
 
+// ---------------------------------------------------------------------------
+//	class Jackson
+//
+//	This will be called PartialIterator when the other thing called 
+//	PartialIterator is renamed and reimplemented as PartialView or
+//	EnvelopeView.
+//	
+//	This is pretty much just a wrapper for the nasty-looking map<>
+//	iterators
+//
+class Jackson
+{
+//	-- instance variables --
+	std::map< double, Breakpoint >::iterator _iter;
+	
+//	-- public interface --
+public:
+//	construction:
+//	(allow compiler to generate copy, assignment, and destruction):
+	Jackson( void ) {}
+	
+	//	allow compiler to generate:
+	// Jackson( const Jackson & other );
+	// Jackson & operator = ( const Jackson & rhs );
+	// ~Jackson( void ) {}
+	
+//	iteration:
+	Jackson& operator ++ () { ++_iter; return *this; }
+	Jackson operator ++ ( int ) { Jackson temp(*this); ++(*this); return temp; }
+	Jackson& operator -- () { --_iter; return *this; }
+	Jackson operator -- ( int ) { Jackson temp(*this); --(*this); return temp; }
+	void advance( void ) { ++(*this); }
+	
+//	derference:
+	const Breakpoint & operator * ( void ) const { return _iter->second; }
+	const Breakpoint * operator -> ( void ) const { return &(_iter->second); }
+	Breakpoint & operator * ( void ) { return _iter->second; }
+	Breakpoint * operator -> ( void ) { return &(_iter->second); }
+	
+//	time access (not available through Breakpoint):
+	double time( void ) const { return _iter->first; }	
+
+//	comparison:
+	friend bool operator == ( const Jackson & lhs, const Jackson & rhs )
+		{ return lhs._iter == rhs._iter; }
+	friend bool operator != ( const Jackson & lhs, const Jackson & rhs )
+		{ return lhs._iter != rhs._iter; }
+	
+//	-- private implementation --
+private:
+	//	construction by Partial from a map<> iterator:
+	Jackson( const std::map< double, Breakpoint >::iterator & it ) :
+		_iter(it) {}
+
+	friend class Partial;
+	
+};	//	end of class Jackson
+
+class JacksonConst
+{
+//	-- instance variables --
+	std::map< double, Breakpoint >::const_iterator _iter;
+	
+//	-- public interface --
+public:
+//	construction:
+//	(allow compiler to generate copy, assignment, and destruction):
+	JacksonConst( void ) {}
+	
+//	iteration:
+	JacksonConst& operator ++ () { ++_iter; return *this; }
+	JacksonConst operator ++ ( int ) { JacksonConst temp(*this); ++(*this); return temp; }
+	JacksonConst& operator -- () { --_iter; return *this; }
+	JacksonConst operator -- ( int ) { JacksonConst temp(*this); --(*this); return temp; }
+	void advance( void ) { ++(*this); }
+	
+//	derference:
+	const Breakpoint & operator * ( void ) const { return _iter->second; }
+	const Breakpoint * operator -> ( void ) const { return &(_iter->second); }
+
+//	time access (not available through Breakpoint):
+	double time( void ) const { return _iter->first; }	
+
+//	comparison:
+	friend bool operator == ( const JacksonConst & lhs, const JacksonConst & rhs )
+		{ return lhs._iter == rhs._iter; }
+	friend bool operator != ( const JacksonConst & lhs, const JacksonConst & rhs )
+		{ return lhs._iter != rhs._iter; }
+	
+//	-- private implementation --
+private:
+	//	construction by Partial from a map<> iterator:
+	JacksonConst( const std::map< double, Breakpoint >::const_iterator & it ) :
+		_iter(it) {}
+
+	friend class Partial;
+	
+};	//	end of class JacksonConst
 
 // ---------------------------------------------------------------------------
 //	class Partial
@@ -34,6 +132,14 @@ namespace Loris {
 //
 class Partial
 {
+//	-- instance variables --
+private:
+//	Breakpoint envelope:
+	std::map< double, Breakpoint > _bpmap;
+	
+//	label:
+	int _label;
+
 //	-- public interface --
 public:
 //	construction:
@@ -97,32 +203,24 @@ public:
 //	Is it possible to deny this access to everyone except the
 //	PartialIterator (EnvelopeView) class?
 //
-	typedef std::map< double, Breakpoint >::iterator iterator;
-	typedef std::map< double, Breakpoint >::const_iterator const_iterator;
+	typedef JacksonConst const_iterator;
+	typedef Jackson iterator;
 	
-	iterator begin( void ) { return _bpmap.begin(); }
-	iterator end( void ) { return _bpmap.end(); }
-	const_iterator begin( void ) const { return _bpmap.begin(); }
-	const_iterator end( void ) const { return _bpmap.end(); }
+	Jackson begin( void ) { return Jackson( _bpmap.begin() ); }
+	Jackson end( void ) { return Jackson( _bpmap.end() ); }
+	JacksonConst begin( void ) const { return JacksonConst( _bpmap.begin() ); }
+	JacksonConst end( void ) const { return  JacksonConst( _bpmap.end() ); }
 	
 //	Return the insertion position for a Breakpoint at
 //	the specified time (that is, the position of the first
 //	Breakpoint at a time later than the specified time).
-	iterator findPos( double time );
-	const_iterator findPos( double time ) const;
+	Jackson findPos( double time );
+	JacksonConst findPos( double time ) const;
 	
 //	Its nice to be able to find out how many Breakpoints
 //	there are:
 	long countBreakpoints( void ) const { return _bpmap.size(); }
 		
-//	-- instance variables --
-private:
-//	envelope:
-	std::map< double, Breakpoint > _bpmap;
-	
-//	label:
-	int _label;
-
 };	//	end of class Partial
 
 // ---------------------------------------------------------------------------
@@ -135,7 +233,7 @@ class InvalidPartial : public InvalidObject
 {
 public: 
 	InvalidPartial( const std::string & str, const std::string & where = "" ) : 
-		InvalidObject( std::string("Invalid Partial -- ").append( str ), where ) {}
+	InvalidObject( std::string("Invalid Partial -- ").append( str ), where ) {}
 		
 #if defined(__sgi) && ! defined(__GNUC__)
 //	copying:

@@ -177,10 +177,10 @@ Partial::remove( double tstart, double tend )
 //	the specified time (that is, the position of the first
 //	Breakpoint at a time later than the specified time).
 //
-Partial::const_iterator
+JacksonConst
 Partial::findPos( double time ) const
 {
-	return _bpmap.lower_bound( time );
+	return JacksonConst( _bpmap.lower_bound( time ) );
 }
 
 // ---------------------------------------------------------------------------
@@ -190,11 +190,11 @@ Partial::findPos( double time ) const
 //	the specified time (that is, the position of the first
 //	Breakpoint at a time later than the specified time).
 //
-Partial::iterator
+Jackson
 Partial::findPos( double time )
 {
 	return _bpmap.lower_bound( time );
-}
+} 
 
 #pragma mark -
 #pragma mark envelope interpolation/extrapolation
@@ -211,23 +211,23 @@ Partial::frequencyAt( double time ) const
 	//	lower_bound returns a reference to the lowest
 	//	position that would be higher than an element
 	//	having key equal to time:
-	std::map< double, Breakpoint >::const_iterator it = findPos( time );
+	JacksonConst it = findPos( time );
 		
 	if ( it == _bpmap.begin() ) {
 	//	time is before the onset of the Partial:
-		return it->second.frequency();
+		return it->frequency();
 	}
 	else if ( it == _bpmap.end() ) {
 	//	time is past the end of the Partial:
-		return (--it)->second.frequency();
+		return (--it)->frequency();
 	}
 	else {
 	//	interpolate between it and its predeccessor
 	//	(we checked already that it is not begin):
-		const Breakpoint & hi = it->second;
-		double hitime = it->first;
-		const Breakpoint & lo = (--it)->second;
-		double lotime = it->first;
+		const Breakpoint & hi = *it;
+		double hitime = it.time();
+		const Breakpoint & lo = *(--it);
+		double lotime = it.time();
 		double alpha = (time - lotime) / (hitime - lotime);
 		return (alpha * hi.frequency()) + ((1. - alpha) * lo.frequency());
 	}
@@ -246,7 +246,7 @@ Partial::amplitudeAt( double time ) const
 	//	lower_bound returns a reference to the lowest
 	//	position that would be higher than an element
 	//	having key equal to time:
-	std::map< double, Breakpoint >::const_iterator it = findPos( time );
+	JacksonConst it = findPos( time );
 		
 	if ( it == _bpmap.begin() ) {
 	//	time is before the onset of the Partial:
@@ -259,10 +259,10 @@ Partial::amplitudeAt( double time ) const
 	else {
 	//	interpolate between it and its predeccessor
 	//	(we checked already that it is not begin):
-		const Breakpoint & hi = it->second;
-		double hitime = it->first;
-		const Breakpoint & lo = (--it)->second;
-		double lotime = it->first;
+		const Breakpoint & hi = *it;
+		double hitime = it.time();
+		const Breakpoint & lo = *(--it);
+		double lotime = it.time();
 		double alpha = (time - lotime) / (hitime - lotime);
 		return (alpha * hi.amplitude()) + ((1. - alpha) * lo.amplitude());
 	}
@@ -280,15 +280,15 @@ Partial::phaseAt( double time ) const
 	//	lower_bound returns a reference to the lowest
 	//	position that would be higher than an element
 	//	having key equal to time:
-	std::map< double, Breakpoint >::const_iterator it = findPos( time );
+	JacksonConst it = findPos( time );
 		
 	//	compute phase:
 	//	map iterator is a pair: first is time, 
 	//	second is Breakpoint.
 	if ( it == _bpmap.begin() ) {
 	//	time is before the onset of the Partial:
-		double dp = TwoPi * (it->first - time) * it->second.frequency();
-		return fmod( it->second.phase() - dp, TwoPi);
+		double dp = TwoPi * (it.time() - time) * it->frequency();
+		return fmod( it->phase() - dp, TwoPi);
 
 	}
 	else if (it == _bpmap.end() ) {
@@ -296,16 +296,16 @@ Partial::phaseAt( double time ) const
 	//	( first decrement iterator to get the tail Breakpoint)
 		--it;
 		
-		double dp = TwoPi * (time - it->first) * it->second.frequency();
-		return fmod( it->second.phase() + dp, TwoPi );
+		double dp = TwoPi * (time - it.time()) * it->frequency();
+		return fmod( it->phase() + dp, TwoPi );
 	}
 	else {
 	//	interpolate between it and its predeccessor
 	//	(we checked already that it is not begin):
-		const Breakpoint & hi = it->second;
-		double hitime = it->first;
-		const Breakpoint & lo = (--it)->second;
-		double lotime = it->first;
+		const Breakpoint & hi = *it;
+		double hitime = it.time();
+		const Breakpoint & lo = *(--it);
+		double lotime = it.time();
 		double alpha = (time - lotime) / (hitime - lotime);
 		double favg = (0.5 * alpha * hi.frequency()) + 
 						((1. - (0.5 * alpha)) * lo.frequency());
@@ -328,23 +328,23 @@ Partial::bandwidthAt( double time ) const
 	//	lower_bound returns a reference to the lowest
 	//	position that would be higher than an element
 	//	having key equal to time:
-	std::map< double, Breakpoint >::const_iterator it = findPos( time );
+	JacksonConst it = findPos( time );
 		
 	if ( it == _bpmap.begin() ) {
 	//	time is before the onset of the Partial:
-		return it->second.bandwidth();
+		return it-> bandwidth();
 	}
 	else if (it == _bpmap.end() ) {
 	//	time is past the end of the Partial:
-		return (--it)->second.bandwidth();
+		return (--it)->bandwidth();
 	}
 	else {
 	//	interpolate between it and its predeccessor
 	//	(we checked already that it is not begin):
-		const Breakpoint & hi = it->second;
-		double hitime = it->first;
-		const Breakpoint & lo = (--it)->second;
-		double lotime = it->first;
+		const Breakpoint & hi = *it;
+		double hitime = it.time();
+		const Breakpoint & lo = *(--it);
+		double lotime = it.time();
 		double alpha = (time - lotime) / (hitime - lotime);
 		return (alpha * hi.bandwidth()) + ((1. - alpha) * lo.bandwidth());
 	}

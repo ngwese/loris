@@ -91,7 +91,7 @@ BasicPartialIterator::current( void ) const
 	if ( atEnd() )
 		Throw( InvalidIterator, "Tried to dereference an invalid BasicPartialIterator (current)." );
 
-	return _cur->second;
+	return *_cur;
 }
 
 // ---------------------------------------------------------------------------
@@ -208,7 +208,7 @@ BasicPartialIterator::phase( void ) const
 double
 BasicPartialIterator::time( void ) const
 {
-	return _cur->first;
+	return _cur.time();
 }
 
 #if !defined( NO_LORIS_NAMESPACE )

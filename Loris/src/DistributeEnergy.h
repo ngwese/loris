@@ -43,11 +43,11 @@ public:
 	void distribute( const Partial & p, Iter begin, Iter end ) const
 	{
 		//	loop over Breakpoints in p:
-		Partial::const_iterator envIter;
+		JacksonConst envIter;
 		double tUpperBound = p.startTime();	// initialize:
 		for ( envIter = p.begin(); envIter != p.end(); ++envIter ) {
-			double time = envIter->first;
-			const Breakpoint & bp = envIter->second;
+			double time = envIter.time();
+			const Breakpoint & bp = * envIter;
 			
 			//	find nearest Partial in (begin,end) above
 			//	and below (in frequency) to bp at time:
@@ -90,9 +90,9 @@ public:
 			//	compute time bounds for energy distribution:
 			//	(halfway between this breakpoint and its neighbors)
 			double tLowerBound = tUpperBound;
-			Partial::const_iterator next( envIter );
+			JacksonConst next( envIter );
 			if ( ++next != p.end() ) {
-				tUpperBound = ( next->first + time ) * 0.5;
+				tUpperBound = ( next.time() + time ) * 0.5;
 			}
 			else {
 				tUpperBound = time;

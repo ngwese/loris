@@ -95,7 +95,7 @@ Oscillator::generateSamples( std::vector< double > & buffer,
 //	the sample buffer indices are valid, only
 //	check sanity when debugging:
 #ifdef Debug_Loris
-	Assert( beginIdx > 0 );
+	Assert( beginIdx >= 0 );
 	Assert( endIdx <= buffer.size() );
 	Assert( endIdx >= beginIdx );
 #endif
@@ -109,11 +109,18 @@ Oscillator::generateSamples( std::vector< double > & buffer,
 //	don't alias:
 	if ( targetFreq > Pi )	//	radian Nyquist rate
 		targetAmp = 0.;
+
+//	determine the number of samples to generate
+//	(none if the amplitude will be zero throughout):	
+	long howMany = 0;
+	if ( targetAmp > 0. || _amplitude > 0. ) 
+	{
+		howMany = endIdx - beginIdx;
+	}
 	
 //	generate and accumulate samples:
 //	(if no samples are generated, the oscillator state 
 //	will be set below to the target values anyway):
-	long howMany = endIdx - beginIdx;
 	if ( howMany > 0 )
 	{
 	//	compute trajectories:
