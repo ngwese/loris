@@ -37,12 +37,12 @@ inbkgrnd = '&'
 
 farmdir = os.getcwd()  #'/net/magoo/users/kfitz/farm'
 def changedir(dir):
-	return 'cd %s/%s'%(farmdir,dir)
+	return 'cd "%s/%s"'%(farmdir,dir)
 	
 if 'PYTHONPATH' in os.environ.keys():
-	runpython = 'env PYTHONPATH=%s:%s python'%(farmdir,os.environ['PYTHONPATH'])
+	runpython = 'env PYTHONPATH="%s":"%s" python'%(farmdir,os.environ['PYTHONPATH'])
 else:
-	runpython = 'env PYTHONPATH=%s python'%farmdir
+	runpython = 'env PYTHONPATH="%s" python'%farmdir
 
 
 

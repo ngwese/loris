@@ -24,7 +24,17 @@ notes from trial 1 (using 1.0beta8):
 	- with 200 and 300 windows and res 70,80,or 90 Hz, all sound pretty
 	much the same, and very usable
 
-Last updated: 25 Feb 2002 by Kelly Fitz
+more recent notes, still trial 1, but Loris 1.0.1beta1:
+	- 100 Hz window is too narrow, 200 Hz window is better than
+	300 Hz.
+	- resoultion 90 and 100 are too wide, 70 and 80 are slightly
+	different, maybe, but its hard to pick one as better.
+	- these notes pertain to a batch run with a modification to the 
+	analyzer, such that spectral peaks below the noise floor are 
+	_not_ accumulated as noise energy. Verify the above with the
+	unmodified Analyzer.
+	
+Last updated: 26 June 2002 by Kelly Fitz
 """
 print __doc__
 
