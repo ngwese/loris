@@ -400,6 +400,9 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch,
 		www.ircam.fr/equipes/analyse-synthese/sdif/
  */
 
+%{
+	#include<BreakpointEnvelope.h>
+%}
 
 %newobject importSpc;
 %inline %{
@@ -430,6 +433,24 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch,
 	{
 		PartialList * dst = createPartialList();
 		morph( src0, src1, ffreq, famp, fbw, dst );
+		
+		// check for exception:
+		if (*EXCEPTION_THROWN)
+		{
+			destroyPartialList( dst );
+			dst = NULL;
+		}
+		return dst;
+	}
+	PartialList * morph( const PartialList * src0, const PartialList * src1, 
+						 double freqweight, 
+						 double ampweight, 
+						 double bwweight )
+	{
+		BreakpointEnvelope ffreq( freqweight ), famp( ampweight ), fbw( bwweight );
+		
+		PartialList * dst = createPartialList();
+		morph( src0, src1, &ffreq, &famp, &fbw, dst );
 		
 		// check for exception:
 		if (*EXCEPTION_THROWN)
@@ -526,6 +547,44 @@ void shiftPitch( PartialList * partials, BreakpointEnvelope * pitchEnv );
 	the given pitch envelope. The pitch envelope is assumed to have 
 	units of cents (1/100 of a halfstep).
  */
+
+%inline %{	
+	void scaleAmp( PartialList * partials, double w )
+	{
+		BreakpointEnvelope e( w );
+		scaleAmp( partials, &e );
+	}
+	
+	
+	void scaleBandwidth( PartialList * partials, double w )
+	{
+		BreakpointEnvelope e( w );
+		scaleBandwidth( partials, &e );
+	}
+	
+	
+	void scaleFrequency( PartialList * partials, double w )
+	{
+		BreakpointEnvelope e( w );
+		scaleFrequency( partials, &e );
+	}
+	
+	
+	void scaleNoiseRatio( PartialList * partials, double w )
+	{
+		BreakpointEnvelope e( w );
+		scaleNoiseRatio( partials, &e );
+	}
+	
+	
+	void shiftPitch( PartialList * partials, double w )
+	{
+		BreakpointEnvelope e( w );
+		shiftPitch( partials, &e );
+	}
+%}	
+	
+
 
 void shiftTime( PartialList * partials, double offset );
 /*	Shift the time of all the Breakpoints in a Partial by a 
@@ -654,6 +713,13 @@ public:
 		If the sound has no definable pitch, use note number 60.0 (the default).
 	 */
 		 
+	void write( const char * filename, unsigned int bps = 16 );
+	/*	Export the sample data represented by this AiffFile to
+		the file having the specified filename or path. Export
+		signed integer samples of the specified size, in bits
+		(8, 16, 24, or 32).
+	*/
+	
 	%extend 
 	{
 		AiffFile( PartialList * l, double sampleRate, double fadeTime = .001 ) 
@@ -712,7 +778,6 @@ public:
 
 %{
 	#include<Analyzer.h>
-	#include<BreakpointEnvelope.h>
 	#include<Partial.h>
 %}
 

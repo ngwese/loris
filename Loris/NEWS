@@ -5,6 +5,14 @@ Loris is Copyright (C) 1999-2001 by Kelly Fitz and Lippold Haken
 See the end for copying conditions.
 
 Please send Loris bug reports to loris@cerlsoundgroup.org.
+
+-------------------------------------------------------
+changes since 1.1 release:
+
+- added rewritten AiffFile and SpcFile classes, with 
+interfaces that allow Partials to be added directly
+and automatically rendered.
+
 -------------------------------------------------------
 changes since 1.0.2 release:
 
