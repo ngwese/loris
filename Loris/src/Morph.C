@@ -38,115 +38,6 @@ using namespace std;
 
 Begin_Namespace( Loris )
 
-
-#pragma mark -
-#pragma mark value at time 
-// ---------------------------------------------------------------------------
-//	amplitudeAtTime
-// ---------------------------------------------------------------------------
-//	
-double
-amplitudeAtTime( const Partial & p, double time )
-{
-	Assert( p.head() != Null );
-	
-	const Breakpoint * bp = p.find(time);
-	if ( !bp ) {
-	//	time is before the onset of the Partial:
-		return 0.;
-	}
-	else if (! bp->next() ){
-	//	time is past the end of the Partial:
-		return 0.;
-	}
-	else {
-	//	interpolate between bp and its successor:
-		double alpha = (time - bp->time()) / (bp->next()->time() - bp->time());
-		return (alpha * bp->next()->amplitude()) + ((1. - alpha) * bp->amplitude());
-	}
-}
-// ---------------------------------------------------------------------------
-//	frequencyAtTime
-// ---------------------------------------------------------------------------
-//	
-double
-frequencyAtTime( const Partial & p, double time )
-{
-	Assert( p.head() != Null );
-	
-	const Breakpoint * bp = p.find(time);
-	if ( !bp ) {
-	//	time is before the onset of the Partial:
-		return p.head()->frequency();
-	}
-	else if (! bp->next() ){
-	//	time is past the end of the Partial:
-		return bp->frequency();
-	}
-	else {
-	//	interpolate between bp and its successor:
-		double alpha = (time - bp->time()) / (bp->next()->time() - bp->time());
-		return (alpha * bp->next()->frequency()) + ((1. - alpha) * bp->frequency());
-	}
-}
-// ---------------------------------------------------------------------------
-//	phaseAtTime
-// ---------------------------------------------------------------------------
-//	
-double
-phaseAtTime( const Partial & p, double time )
-{
-	Assert( p.head() != Null );
-	
-	const Breakpoint * bp = p.find(time);
-	if ( !bp ) {
-	//	time is before the onset of the Partial:
-		double dp = TwoPi * (p.head()->time() - time) * p.head()->frequency();
-		return fmod( p.head()->phase() - dp, TwoPi);
-	}
-	else if (! bp->next() ){
-	//	time is past the end of the Partial:
-		double dp = TwoPi * (time - bp->time()) * bp->frequency();
-		return fmod( bp->phase() + dp, TwoPi );
-	}
-	else {
-	//	interpolate between bp and its successor:
-	//	(compute the frequency halfway between bp and time,
-	//	and use that average frequency to compute the phase
-	//	travel from bp to time)
-		double alpha = (time - bp->time()) / (bp->next()->time() - bp->time());
-		double favg = (0.5 * alpha * bp->next()->frequency()) + 
-						((1. - (0.5 * alpha)) * bp->frequency());
-		double dp = TwoPi * (time - bp->time()) * favg;
-		return fmod( bp->phase() + dp, TwoPi );
-	}
-}
-// ---------------------------------------------------------------------------
-//	bandwidthAtTime
-// ---------------------------------------------------------------------------
-//	
-double
-bandwidthAtTime( const Partial & p, double time )
-{
-	Assert( p.head() != Null );
-	
-	const Breakpoint * bp = p.find(time);
-	if ( !bp ) {
-	//	time is before the onset of the Partial:
-		return p.head()->bandwidth();
-	}
-	else if (! bp->next() ){
-	//	time is past the end of the Partial:
-		return bp->bandwidth();
-	}
-	else {
-	//	interpolate between bp and its successor:
-		double alpha = (time - bp->time()) / (bp->next()->time() - bp->time());
-		return (alpha * bp->next()->bandwidth()) + ((1. - alpha) * bp->bandwidth());
-	}
-}
-
-
 #pragma mark -
 #pragma mark stuff
 
@@ -347,15 +238,14 @@ Morph::setBwFunction( const WeightFunction & f )
 void
 Morph::doit( const list<Partial> & plist1, const list<Partial> & plist2 )
 {
+	Distiller distill1, distill2;
 	//	loop over lots of labels:
 	for ( int label = 1; label < 300; ++label ) {
-		cout << "morphing partials with label " << label << endl;;
-		
 		// find partials with the correct label:
 		list<Partial> sublist1 = select( plist1, label );
 		list<Partial> sublist2 = select( plist2, label );
 		
-		cout << sublist1.size() << " and " << sublist2.size() << "partials" << endl;
+		//cout << sublist1.size() << " and " << sublist2.size() << "partials" << endl;
 
 		// sublist1.splice( sublist1.begin(), select( plist1, label ) );
 		// sublist2.splice( sublist2.begin(), select( plist2, label ) );
@@ -365,10 +255,12 @@ Morph::doit( const list<Partial> & plist1, const list<Partial> & plist2 )
 		}
 		
 		//	distill the sublists into single partials:
-		Partial p1 = _distiller->distill( sublist1 );
-		Partial p2 = _distiller->distill( sublist2 );
+		//const Partial & p1 = distill1.distill( sublist1.begin(), sublist1.end(), label );
+		//const Partial & p2 = distill2.distill( sublist2.begin(), sublist2.end(), label );
 		
-		morphPartial( p1, p2 );
+		cout << "morphing partials with label " << label << endl;
+		morphPartial( distill1.distill( sublist1.begin(), sublist1.end(), label ), 
+					  distill2.distill( sublist2.begin(), sublist2.end(), label ) );
 	}
 }
 
@@ -414,16 +306,19 @@ Morph::bwWeight(void) const
 // ---------------------------------------------------------------------------
 //	morphPartial
 // ---------------------------------------------------------------------------
-//	assume that the Morph object has a list of Partials that it is building
-//	and access to three morphing functions, for frequency, amplitude, and
-//	bandwidth.
+//	Basic morphing operation: either Partial may be a dummy with no 
+//	Breakpoints. Partials with no duration don't contribute to the
+//	morph, except to cause their opposite to fade out. The morphed
+//	Partial has Breakpoints at times corresponding to every Breakpoint 
+//	in both source Partials.
+//
+//	This should use PartialIterators instead of directly using Breakpoints.
 //
 void 
 Morph::morphPartial( const Partial & p1, const Partial & p2 )
 {
 	//	make a new Partial:
-	_partials.push_back( Partial() );
-	Partial & newp = _partials.back();
+	Partial newp;
 	
 	//	loop over Breakpoints in first partial:
 	for ( const Breakpoint * bp1 = p1.head(); bp1 != Null; bp1 = bp1->next() ) {
@@ -431,14 +326,14 @@ Morph::morphPartial( const Partial & p1, const Partial & p2 )
 		double alphaA = ampWeight().weightAtTime( bp1->time() );
 		double alphaBW = bwWeight().weightAtTime( bp1->time() );
 		
-		double amp2 = ( p2.duration() > 0.) ? 
-			amplitudeAtTime( p2, bp1->time() ) : 0.;
-		double freq2 = ( p2.duration() > 0.) ? 
-			frequencyAtTime( p2, bp1->time() ) : bp1->frequency();
-		double bw2 = ( p2.duration() > 0.) ? 
-			bandwidthAtTime( p2, bp1->time() ) : bp1->bandwidth();
-		double theta2 = ( p2.duration() > 0.) ? 
-			phaseAtTime( p2, bp1->time() ) : bp1->phase();
+		double amp2 = ( p2.duration() > 0. ) ? 
+			p2.amplitudeAt( bp1->time() ) : 0.;
+		double freq2 = ( p2.duration() > 0. ) ? 
+			p2.frequencyAt( bp1->time() ) : bp1->frequency();
+		double bw2 = ( p2.duration() > 0. ) ? 
+			p2.bandwidthAt( bp1->time() ) : bp1->bandwidth();
+		double theta2 = ( p2.duration() > 0. ) ? 
+			p2.phaseAt( bp1->time() ) : bp1->phase();
 			
 		Breakpoint newbp( (alphaF * freq2) + ((1.-alphaF) * bp1->frequency()),
 						   (alphaA * amp2) + ((1.-alphaA) * bp1->amplitude()),
@@ -454,14 +349,14 @@ Morph::morphPartial( const Partial & p1, const Partial & p2 )
 		double alphaA = 1. - ampWeight().weightAtTime( bp2->time() );
 		double alphaBW = 1. - bwWeight().weightAtTime( bp2->time() );
 		
-		double amp1 = ( p1.duration() > 0.) ? 
-			amplitudeAtTime( p1, bp2->time() ) : 0.;
-		double freq1 = ( p1.duration() > 0.) ? 
-			frequencyAtTime( p1, bp2->time() ) : bp2->frequency();
-		double bw1 = ( p1.duration() > 0.) ? 
-			bandwidthAtTime( p1, bp2->time() ) : bp2->bandwidth();
-		double theta1 = ( p1.duration() > 0.) ? 
-			phaseAtTime( p1, bp2->time() ) : bp2->phase();
+		double amp1 = ( p1.duration() > 0. ) ? 
+			p1.amplitudeAt( bp2->time() ) : 0.;
+		double freq1 = ( p1.duration() > 0. ) ? 
+			p1.frequencyAt( bp2->time() ) : bp2->frequency();
+		double bw1 = ( p1.duration() > 0. ) ? 
+			p1.bandwidthAt( bp2->time() ) : bp2->bandwidth();
+		double theta1 = ( p1.duration() > 0. ) ? 
+			p1.phaseAt( bp2->time() ) : bp2->phase();
 			
 		Breakpoint newbp( (alphaF * freq1) + ((1.-alphaF) * bp2->frequency()),
 						   (alphaA * amp1) + ((1.-alphaA) * bp2->amplitude()),
@@ -471,7 +366,13 @@ Morph::morphPartial( const Partial & p1, const Partial & p2 )
 		newp.insert( bp2->time(), newbp );
 	}
 	
-	
+		
+	//	add the new partial to the collection,
+	//	if it is valid:
+	if ( newp.head() ) {
+		_partials.push_back( newp );
+	}
+
 }
 
 

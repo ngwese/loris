@@ -41,7 +41,7 @@ public:
 //	copy and assignment perform deep copy:
 	Partial( const Partial & other );
 	Partial & operator =( const Partial & other );
-	
+		
 //	Breakpoint envelope access (const and non-const):
 	const Breakpoint * head( void ) const { return _head; }
 	const Breakpoint * tail( void ) const { return _tail; }
@@ -78,6 +78,18 @@ public:
 	const Breakpoint * find( double time ) const;
 	Breakpoint * find( double time );
 	
+//	partial envelope interpolation/extrapolation:
+//	Return the interpolated value of a partial parameter at
+//	the specified time. At times beyond the ends of the
+//	Partial, frequency and bandwidth hold their boundary values,
+//	amplitude is zerom and phase is computed from frequency.
+//	There is of sensible definition for any of these for Partials
+//	having no Breakpoints, so they except (InvalidObject) under 
+//	that condition.
+	double frequencyAt( double time ) const;
+	double amplitudeAt( double time ) const;
+	double bandwidthAt( double time ) const;
+	double phaseAt( double time ) const;
 	
 //	debugging:
 	void checkEnvelope( void ) const;

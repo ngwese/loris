@@ -98,11 +98,6 @@ std::list< Partial > select( const std::list<Partial> & all, int label );
 Partial dilate( const Partial & p, const std::vector< double > & current, 
 				const std::vector< double > & desired );
 
-double amplitudeAtTime( const Partial & p, double time );
-double frequencyAtTime( const Partial & p, double time );
-double bandwidthAtTime( const Partial & p, double time );
-double phaseAtTime( const Partial & p, double time );
-
 End_Namespace( Loris )
 
 #endif	// ndef __Loris_morph__

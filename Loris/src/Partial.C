@@ -11,12 +11,19 @@
 //
 // ===========================================================================
 #include "LorisLib.h"
-
 #include "Partial.h"
 #include "Breakpoint.h"
 #include "Exception.h"
 
 #include <algorithm>
+
+#if !defined( Deprecated_cstd_headers )
+	#include <cmath>
+#else
+	#include <math.h>
+#endif
+
+using namespace std;
 
 Begin_Namespace( Loris )
 
@@ -303,6 +310,119 @@ Partial::find( double time )
 		Assert( p != Null );	//	checked for this case already
 	}
 	return p->prev(); 	//	may be Null
+}
+
+#pragma mark -
+#pragma mark envelope interpolation/extrapolation
+// ---------------------------------------------------------------------------
+//	frequencyAt
+// ---------------------------------------------------------------------------
+//	
+double
+Partial::frequencyAt( double time ) const
+{
+	if ( _head == Null )
+		Throw( InvalidObject, "Tried to interpolate a Partial with no Breakpoints." );
+
+ 	const Breakpoint * bp = find(time);
+	if ( !bp ) {
+	//	time is before the onset of the Partial:
+		return head()->frequency();
+	}
+	else if (! bp->next() ){
+	//	time is past the end of the Partial:
+		return bp->frequency();
+	}
+	else {
+	//	interpolate between bp and its successor:
+		double alpha = (time - bp->time()) / (bp->next()->time() - bp->time());
+		return (alpha * bp->next()->frequency()) + ((1. - alpha) * bp->frequency());
+	}
+}
+
+// ---------------------------------------------------------------------------
+//	amplitudeAt
+// ---------------------------------------------------------------------------
+//	
+double
+Partial::amplitudeAt( double time ) const
+{
+	if ( _head == Null )
+		Throw( InvalidObject, "Tried to interpolate a Partial with no Breakpoints." );
+
+	const Breakpoint * bp = find(time);
+	if ( !bp ) {
+	//	time is before the onset of the Partial:
+		return 0.;
+	}
+	else if (! bp->next() ){
+	//	time is past the end of the Partial:
+		return 0.;
+	}
+	else {
+	//	interpolate between bp and its successor:
+		double alpha = (time - bp->time()) / (bp->next()->time() - bp->time());
+		return (alpha * bp->next()->amplitude()) + ((1. - alpha) * bp->amplitude());
+	}
+}
+// ---------------------------------------------------------------------------
+//	phaseAt
+// ---------------------------------------------------------------------------
+//	
+double
+Partial::phaseAt( double time ) const
+{
+	if ( _head == Null )
+		Throw( InvalidObject, "Tried to interpolate a Partial with no Breakpoints." );
+	
+	const Breakpoint * bp = find(time);
+	if ( !bp ) {
+	//	time is before the onset of the Partial:
+		double dp = TwoPi * (head()->time() - time) * head()->frequency();
+		return fmod( head()->phase() - dp, TwoPi);
+	}
+	else if (! bp->next() ){
+	//	time is past the end of the Partial:
+		double dp = TwoPi * (time - bp->time()) * bp->frequency();
+		return fmod( bp->phase() + dp, TwoPi );
+	}
+	else {
+	//	interpolate between bp and its successor:
+	//	(compute the frequency halfway between bp and time,
+	//	and use that average frequency to compute the phase
+	//	travel from bp to time)
+		double alpha = (time - bp->time()) / (bp->next()->time() - bp->time());
+		double favg = (0.5 * alpha * bp->next()->frequency()) + 
+						((1. - (0.5 * alpha)) * bp->frequency());
+		double dp = TwoPi * (time - bp->time()) * favg;
+		return fmod( bp->phase() + dp, TwoPi );
+	}
+}
+
+// ---------------------------------------------------------------------------
+//	bandwidthAt
+// ---------------------------------------------------------------------------
+//	
+double
+Partial::bandwidthAt( double time ) const
+{
+	if ( _head == Null )
+		Throw( InvalidObject, "Tried to interpolate a Partial with no Breakpoints." );
+	
+	const Breakpoint * bp = find(time);
+	if ( !bp ) {
+	//	time is before the onset of the Partial:
+		return head()->bandwidth();
+	}
+	else if (! bp->next() ){
+	//	time is past the end of the Partial:
+		return bp->bandwidth();
+	}
+	else {
+	//	interpolate between bp and its successor:
+		double alpha = (time - bp->time()) / (bp->next()->time() - bp->time());
+		return (alpha * bp->next()->bandwidth()) + ((1. - alpha) * bp->bandwidth());
+	}
 }
 
 #pragma mark -

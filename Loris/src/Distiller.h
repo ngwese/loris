@@ -18,6 +18,8 @@
 
 Begin_Namespace( Loris )
 
+class PartialPredicate;
+
 // ---------------------------------------------------------------------------
 //	class Distiller
 //
@@ -26,17 +28,35 @@ class Distiller
 //	-- public interface --
 public:
 //	construction:
-	Distiller( void ) {}
+	Distiller( double x = 0.001 ) : _fadeTime( x ) {}
 	
 	//	let the compiler generate these:
 	//Distiller( void );
 	//~Distiller( void );
 	
 //	distillation:
-	Partial distill( const std::list<Partial> & all ) const;
+	const Partial & distill( const std::list<Partial>::const_iterator & start,
+							 const std::list<Partial>::const_iterator & end, 
+							 int assignLabel = 0 );
+
+//	access:
+	std::list< Partial > & partials(void) { return _partials; }
+	
+	double fadeTime( void ) const { return _fadeTime; }
+	void setFadeTime( double x ) { if ( x > 0. ) _fadeTime = x; } 
+	
+//	-- helpers --
+protected:
+	void distillOne( const Partial & src, Partial & dest, 
+					 const std::list<Partial>::const_iterator & start,
+					 const std::list<Partial>::const_iterator & end );
+	boolean gapAt( double time, std::list<Partial>::const_iterator start,
+				   std::list<Partial>::const_iterator end ) const;
 
 //	-- instance variables --
 private:
+	std::list< Partial > _partials;
+	double _fadeTime;	//	in seconds
 
 };	//	end of class Distiller
 

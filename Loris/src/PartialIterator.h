@@ -45,6 +45,8 @@ public:
 	virtual void rewind( void );			//	may be overridden
 	
 	boolean atEnd( void ) const;
+	boolean isHead( void ) const;
+	boolean isTail( void ) const;
 	
 	const Breakpoint & current( void ) const;
 	const Partial & subject( void ) const;

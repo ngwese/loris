@@ -45,7 +45,7 @@ int main()
 {	
 	try {	
 		//	import 4A partials:
-		string name = ":::ncsa morph:carhorn1.lemr";
+		string name = ":::morphing:ncsa morph:carhorn1.lemr";
 		BinaryFile f2;
 		f2.view(name);
 		ImportLemur5 imp2(f2);
@@ -70,7 +70,7 @@ int main()
 
 
 		//	import 4Bb partials:
-		name = ":::ncsa morph:elephant3.lemr";
+		name = ":::morphing:ncsa morph:elephant3.lemr";
 		BinaryFile f;
 		f.view(name);
 		ImportLemur5 imp(f);
@@ -124,8 +124,8 @@ int main()
 		
 		Morph m;
 		m.setFreqFunction( w );
-		m.setAmpFunction( flat );
-		m.setBwFunction( flat );
+		m.setAmpFunction( w );
+		m.setBwFunction( w );
 
 	
 		cout << "morphine..." << endl;
@@ -151,7 +151,7 @@ int main()
 		}
 		
 		//	write out samples:
-		string newname(":::ncsa morph:elecar9.aiff");
+		string newname(":::morphing:ncsa morph:newelecar.aiff");
 		cout << "writing " << newname << endl;
 		AiffFile sfout( srate, 1, 16, buf );
 		sfout.write( BinaryFile( newname ) );
