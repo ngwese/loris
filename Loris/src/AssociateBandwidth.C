@@ -13,6 +13,15 @@
 #include "ReassignedSpectrum.h"
 #include <algorithm>
 
+//	would you believe all this for a round() function?
+#if !defined( __GNUC__ )
+	#include <cmath>
+	using std::round;
+#else
+	#define round(x) ((x)>0.)?(trunc((x)+0.5)):(trunc((x)-0.5))
+#endif
+
+
 using namespace std;
 using namespace Loris;
 
@@ -266,7 +275,7 @@ AssociateBandwidth::accumulateSinusoid( double f, double a )
 	//	compute the offset in the oversampled window spectrum:
 	double fracBinNum = f / _hzPerSamp;
 	long intBinNumber = round(fracBinNum);
-	long offset = round( WinSpecOversample * (intBinNumber - fracBinNum) );
+	int offset = round( WinSpecOversample * (intBinNumber - fracBinNum) );
 	
 	//	compute the more accurate peak amplitude:
 	//	(main lobe spectrum has been normalized so

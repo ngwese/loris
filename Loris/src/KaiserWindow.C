@@ -8,6 +8,11 @@
 // ===========================================================================
 #include "KaiserWindow.h"
 #include "Exception.h"
+#if !defined( Deprecated_cstd_headers )
+	#include <cmath>
+#else
+	#include <math.h>
+#endif
 
 using namespace std;
 

@@ -12,6 +12,7 @@
 #include "notifier.h"
 #include "AssociateBandwidth.h"
 #include "DistributeEnergy.h"
+#include <algorithm>
 
 using namespace std;
 
@@ -144,7 +145,7 @@ Analyzer::createSpectrum( double srate )
 	//	Don't include zero padding in the computation of width (i.e. use window
 	//	length instead of transform length).
 	const double mlw_samp = _windowWidth * (winlen / srate);
-	_hop = round( winlen / mlw_samp );
+	_hop = floor( winlen / mlw_samp );	//	gcc using floor, can't find round
 	
 	//	lower frequency bound for Breakpoint extraction,
 	//	require at least two (no, three!) periods in the window:

@@ -40,6 +40,8 @@ FourierTransform::FourierTransform( long len ) :
 	_buffer( new complex< double >[ len ] ),
 	_plan( Null )
 {
+	//	this is insane, too yucky, just use the fftw_complex
+	//	struct everywhere. sigh.
 	//	-- sanity --
 	//	check to make sure that std::complex< double >
 	//	and fftw_complex are really identical:
@@ -52,20 +54,25 @@ FourierTransform::FourierTransform( long len ) :
 				   "FourierTransform found fftw_real is not the same size as double." );
 		}
 		
-		//	check that storage for the two complex types is
+		#if 0
+		/*	check that storage for the two complex types is
 		//	the same:
 		union {
 			std::complex< double > _std;
 			fftw_complex _fftw;
 		} u;
 		u._std = std::complex<double>(1234.5678, 9876.5432);
-		if ( c_re( u._fftw ) != u._std.real() ||
-			 c_im( u._fftw ) != u._std.imag() ) {
+		*/
+		std::complex<double> cplxstd(1234.5678, 9876.5432);
+		fftw_complex cplxfftw = (fftw_complex)cplxstd;
+		if ( c_re( cplxfftw ) != cplxstd.real() ||
+			 c_im( cplxfftw ) != cplxstd.imag() ) {
 			Throw( InvalidObject, 
 				   "FourierTransform found std::complex< double > and fftw_complex to be different." );
 		}
+		#endif
 	}	//	end of sanity check
-	
+
 	//	zero:
 	fill( _buffer, _buffer + len, 0. );
 }

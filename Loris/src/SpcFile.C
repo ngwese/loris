@@ -22,6 +22,13 @@
 #include <algorithm>
 #include <string>
 
+#if !defined( Deprecated_cstd_headers )
+	#include <cmath>
+#else
+	#include <math.h>
+#endif
+
+
 // Temporary hacks for using old-style envelope reader in Kyma.
 // Set MONOFILE to 1 for hacks, set MONOFILE to 0 for new envelope reader.
 // The hacks include:

@@ -10,6 +10,7 @@
 #include "notifier.h"
 #include "Exception.h"
 #include <functional>
+#include <algorithm>
 
 using namespace std;
 
@@ -85,7 +86,7 @@ ReassignedSpectrum::transform( const vector< double > & buf, long idxCenter )
 		woffset = -boffset;
 		boffset = 0;
 	}
-	long eoffset = min( buf.size(), boffset - woffset + _window.size() );
+	long eoffset = min( (long)buf.size(), boffset - woffset + (long)_window.size() );
 	if ( eoffset < boffset ) {
 		eoffset = boffset;
 	}

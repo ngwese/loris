@@ -15,6 +15,7 @@
 // ===========================================================================
 #include "LorisLib.h"
 #include <complex>
+#include <functional>
 
 //	declare the fftw plan struct type:
 struct fftw_plan_struct; 
