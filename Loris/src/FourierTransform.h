@@ -47,7 +47,7 @@
 //	Regrettably, they are all implemented using real() and 
 //	imag() _member_ functions of the template argument, T. 
 //	If they had instead been implemented in terms of the real()
-//	and imag() (template) free functions, then I could ust specialize
+//	and imag() (template) free functions, then I could just specialize
 //	those two for the fftw complex data type, and the other template
 //	functions would work. Instead, I have to specialize _all_ of
 //	those functions that I want to use. I hope this was a learning 
@@ -55,17 +55,20 @@
 //	have is to take advantage of the fact that fftw_complex and 
 //	std::complex<double> have the same footprint, so I can just
 //	cast back and forth between the two types. Its icky, but it 
-//	works, and its a lot faster than converting, and mor palatable
+//	works, and its a lot faster than converting, and more palatable
 //	than redefining all those operators.
+//
+//	On the subject of brilliant designs, fftw_complex is defined as
+//	a typedef of an anonymous struct, as in typedef struct {...} fftw_complex,
+//	so I cannot forward-declare that type.
+//
 // ===========================================================================
 
 #include <complex>
 #include <functional>
 
-//	fftw.h defines the type fftw_real, which will 
-//	help ensure that fftw_complex has the same memory 
-//	footprint as the complex<> type:
-#include <fftw.h>
+//	forward declare this type from fftw.h:
+struct fftw_plan_struct;
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
@@ -83,6 +86,11 @@ namespace Loris {
 //	a shared temporary output buffer (making this class not at all 
 //	thread-safe). 
 //
+//	This class assumes (and REQUIRES) that fftw_real (defined in fftw.h) 
+//	is type double, AND MOREOVER, that the memory layout of fftw_complex
+//	is the same as std::complex< double >. Some attempt is made to verify
+//	this condition in the constructor.
+//
 //	Does not (yet) support the use of "wisdom" in fftw for greater
 //	optimization. Uses the fftw complex transform (as opposed to
 //	the real transform, rfftw).
@@ -93,7 +101,7 @@ class FourierTransform
 {
 //	-- instance variables --
 	const long _size;
-	std::complex< fftw_real > * _buffer;
+	std::complex< double > * _buffer;
 	
 	//	fftw planning structure:
 	fftw_plan_struct * _plan;
@@ -103,35 +111,40 @@ public:
 //	construction:
 	FourierTransform( long len );
 	~FourierTransform( void );	
-	
-//	copy and assignment:
-	//	use compiler-generated:
-	// FourierTransform( const FourierTransform & );
-	// FourierTransform & operator= ( const FourierTransform & );
 		
 //	transform length access:
 	long size( void ) const { return _size; }
 	
 //	spectrum access:
-	std::complex< fftw_real > & operator[] ( unsigned long index )
+//	(inline for efficiency)
+	std::complex< double > & operator[] ( unsigned long index )
 		{ return _buffer[index]; }
-	const std::complex< fftw_real > & operator[] ( unsigned long index ) const
+	const std::complex< double > & operator[] ( unsigned long index ) const
 		{ return _buffer[index]; }
 		
 //	iterator access, for STL algorithms:
-	typedef std::complex< fftw_real > * iterator;
-	iterator begin( void ){ return _buffer; }
-	iterator end( void ) { return _buffer + _size; }
+//	(inline for efficiency)
+	typedef std::complex< double > * iterator;
+	iterator begin( void )	{ return _buffer; }
+	iterator end( void )	{ return _buffer + _size; }
 		
-	typedef const std::complex< fftw_real > * const_iterator;
-	const_iterator begin( void ) const { return _buffer; }
-	const_iterator end( void ) const { return _buffer + _size; }
+	typedef const std::complex< double > * const_iterator;
+	const_iterator begin( void ) const	{ return _buffer; }
+	const_iterator end( void ) const 	{ return _buffer + _size; }
 		
 //	spectrum computation:
 	void transform( void );
 	
 //	planning:
+//	(probably only called internally)
 	void makePlan( void );
+	
+private:	
+//	copy and assignment unimplemented:
+//	(this class has pointers, cannot use compiler-generated
+//	copy and assignment)
+	FourierTransform( const FourierTransform & );
+	FourierTransform & operator= ( const FourierTransform & );
 
 };	//	end of class FourierTransform
 

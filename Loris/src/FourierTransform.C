@@ -56,7 +56,8 @@ static fftw_complex * sharedBuffer = NULL;
 //
 FourierTransform::FourierTransform( long len ) :
 	_size( len ),
-	_buffer( new complex< double >[ len ] ),
+	//_buffer( new std::complex< double >[ len ] ),
+	_buffer( (complex< double > *)(new fftw_complex[ len ]) ),	//	CW6 hack!
 	_plan( NULL )
 {
 	//	this is insane, too yucky, just use the fftw_complex
@@ -73,6 +74,12 @@ FourierTransform::FourierTransform( long len ) :
 		{
 			Throw( InvalidObject, 
 				   "FourierTransform found fftw_real is not the same size as double." );
+		}
+		
+		if ( sizeof( fftw_complex ) != sizeof( std::complex<double> ) ) 
+		{
+			Throw( InvalidObject, 
+				   "FourierTransform found fftw_complex is not the same size as std::complex<double>." );
 		}
 		
 		#if 1
@@ -100,8 +107,10 @@ FourierTransform::FourierTransform( long len ) :
 //
 FourierTransform::~FourierTransform( void )
 {
-	delete[] _buffer;
-	if ( _plan != NULL ) {
+	// delete [] _buffer;
+	delete [] (fftw_complex *)_buffer;		//	CW6 hack!
+	if ( _plan != NULL ) 
+	{
 		fftw_destroy_plan( _plan );
 		release( size() );
 	}
@@ -117,9 +126,8 @@ void
 FourierTransform::transform( void )
 {
 //	make a plan, if necessary:
-	if ( _plan == NULL ) {
+	if ( _plan == NULL ) 
 		makePlan();
-	}
 	
 //	sanity:
 	Assert( _plan != NULL );
@@ -130,18 +138,15 @@ FourierTransform::transform( void )
 	fftw_one( _plan, (fftw_complex *)_buffer, sharedBuffer );
 	
 //	copy output into (private) complex buffer:
-//	(could probably use memcpy to speed this up)
-	for ( long i = 0; i < size(); ++i ) 
-	{
-		_buffer[i] = complex< double >( sharedBuffer[i].re, sharedBuffer[i].im );
-	}
+//	(fftw_complex and std::complex< double > had better be the same!)
+	memcpy( _buffer, sharedBuffer, size() * sizeof( fftw_complex ) );
 }
 
 // ---------------------------------------------------------------------------
 //	makePlan
 // ---------------------------------------------------------------------------
 //	Ensure that the shared buffer is large enough for this transform, then
-//	create a plan specifid to this transform's length and input buffer, and
+//	create a plan specific to this transform's length and input buffer, and
 //	the current shared output buffer. This member is invoked automatically
 //	the first time transform() is called, but clients wanting to make sure 
 //	that the plan is optimal may invoke it at other times (if they suspect
@@ -164,7 +169,8 @@ FourierTransform::makePlan( void )
 	reserve( size() );
 	
 	//	check for an existing plan:
-	if ( _plan != NULL ) {
+	if ( _plan != NULL ) 
+	{
 		fftw_destroy_plan( _plan );
 		release( size() );
 	}
@@ -178,9 +184,8 @@ FourierTransform::makePlan( void )
 									   sharedBuffer, 
 									   1); 
 	//	verify:
-	if ( _plan == NULL ) {
+	if ( _plan == NULL )
 		Throw( InvalidObject, "FourierTransform could not make a (fftw) plan." );
-	}
 }
 
 // ---------------------------------------------------------------------------
@@ -206,7 +211,8 @@ static multiset< long, greater<long> > & reservations( void )
 static void reserve( long len )
 {
 	//	allocate a bigger shared buffer if necessary:
-	if ( reservations().empty() || * reservations().begin() < len ) {
+	if ( reservations().empty() || * reservations().begin() < len )
+	{
 		debugger << "Allocating shared buffer of size " << len << endl;
 		delete[] sharedBuffer;
 		sharedBuffer = NULL;	//	to prevent deleting again
@@ -224,7 +230,8 @@ static void release( long len )
 {
 	//	find a reservation for this length:
 	multiset< long, greater<long> >::iterator pos = reservations().find( len );
-	if ( pos == reservations().end() ) {
+	if ( pos == reservations().end() ) 
+	{
 		debugger << "wierd, couldn't find a reservation for a transform of length " << len << endl;
 		return;
 	}
@@ -239,7 +246,8 @@ static void release( long len )
 		delete[] sharedBuffer;
 		sharedBuffer = NULL;
 		
-		if ( ! reservations().empty() ) {
+		if ( ! reservations().empty() ) 
+		{
 			debugger << "Allocating shared buffer of size " << * reservations().begin() << endl;
 			sharedBuffer = new fftw_complex[ * reservations().begin() ];
 		}
