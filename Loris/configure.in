@@ -106,7 +106,7 @@ dnl the SDIF library
 AC_MSG_CHECKING(SDIF release version (must be at least 3.4))
 dnl should actually try running this, but these things weren't defined
 dnl in earlier versions, so maybe it isn't worth the trouble
-AC_TRY_COMPILE( [ dnlinclude<$SDIF_H> ], [
+AC_TRY_COMPILE( [ #include<$SDIF_H> ], [
 		assert( SDIF_VERSION_MAJOR >= 3 && SDIF_VERSION_MINOR >= 4 ); ],[ 
 		AC_MSG_RESULT(ok)
 		], [
@@ -163,7 +163,7 @@ dnl Check for a definition of M_PI in cmath, if not use our own.
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
 AC_MSG_CHECKING(for M_PI defined in cmath)
-AC_TRY_COMPILE([ dnlinclude <cmath>;], [double pi = M_PI;], [
+AC_TRY_COMPILE([ #include <cmath>;], [double pi = M_PI;], [
 	HAVE_M_PI=true ], [
 	HAVE_M_PI=false ] )
 
@@ -298,14 +298,14 @@ fi
 	
 AC_MSG_CHECKING(for Tcl header file)
 if test -z "$TCLINCLUDE"; then
-	AC_TRY_CPP([dnlinclude <tcl.h>], [
+	AC_TRY_CPP([#include <tcl.h>], [
 		AC_MSG_RESULT(found it)
 		HAVE_TCL_H=true ], [
 		HAVE_TCL_H=false ] )
 fi
 
 if test -n "$TCLINCLUDE" ; then
-	AC_TRY_CPP([dnlinclude <$TCLINCLUDE/tcl.h>], [
+	AC_TRY_CPP([#include <$TCLINCLUDE/tcl.h>], [
 		AC_MSG_RESULT($TCLINCLUDE)
 		HAVE_TCL_H=true ], [
 		AC_MSG_RESULT(cannot find tcl.h in $TCLINCLUDE)
