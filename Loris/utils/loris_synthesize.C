@@ -227,3 +227,4 @@ void printUsage( const char * programName )
 	cout << "than one, the specified time is used as the overall duration" << endl;
 	cout << "of the uniformly-dilated synthesis." << endl;
 }
+
