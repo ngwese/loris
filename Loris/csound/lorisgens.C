@@ -51,6 +51,8 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <memory>
+#include <set>
 #include <utility>
 #include <vector>
 
@@ -64,66 +66,33 @@ typedef std::vector< Oscillator > OSCILS;
 #pragma mark -- static helpers --
 
 // ---------------------------------------------------------------------------
-//	sdif_openfile
-// ---------------------------------------------------------------------------
-//	Import Partials from the named SDIF file if they have not already 
-//	been imported. Return a pointer to the SdifFile object containing the
-//	Partials. 
-//
-//	This function could be used by several generators, so that they could
-//	all share the pool of reassigned bandwidth-enhanced partials imported
-//	from SDIF files.
-//
-static SdifFile * sdif_openfile( const std::string & filename )
-{
-	static std::map< std::string, SdifFile * > filenamemap;
-	
-	std::map< std::string, SdifFile * >::iterator it = filenamemap.find( filename );
-		
-	if ( it != filenamemap.end() )
-	{
-		std::cerr << "** re-using SDIF file " << filename << std::endl;		  
-		return it->second;
-	}
-	else
-	{	
-		try 
-		{
-			std::cerr << "** importing SDIF file " << filename << std::endl;		  
-			SdifFile * f = new SdifFile(filename);
-			filenamemap[filename] = f;
-			return f;
-		}
-		catch(Exception ex)
-		{
-			std::cerr << "\nERROR importing SDIF file: " << ex.what() << std::endl;		  
-			return NULL;
-		}
-		catch(std::exception ex)
-		{
-			std::cerr << "\nERROR importing SDIF file: " << ex.what() << std::endl;		  
-			return NULL;
-		}
-	}
-}
-
-// ---------------------------------------------------------------------------
 //	import_partials
 // ---------------------------------------------------------------------------
-//	Import the Partials, if necessary, and make a private copy of them,
-//	and allocate Oscillators for each Partial.
 //
 static void import_partials( const std::string & sdiffilname, PARTIALS & part )
 {
-	SdifFile * f = sdif_openfile( sdiffilname );
-	if ( f == NULL )
-		return;
+	try 
+	{
+		//	clear the dstination:
+		part.clear();
 		
-	//	copy the Partials into the vector in bwestore:
-	//	NOTE - cannot (trivially) share Partials between generators, because
-	//	fadetimes might be different!
-	part.reserve( f->partials().size() );
-	part.insert( part.begin(), f->partials().begin(), f->partials().end() );
+		//	import:
+		std::cerr << "** importing SDIF file " << sdiffilname << std::endl;		  
+		SdifFile f( sdiffilname );
+
+		//	copy the Partials into the vector:
+		part.reserve( f.partials().size() );
+		part.insert( part.begin(), f.partials().begin(), f.partials().end() );
+	}
+	catch(Exception ex)
+	{
+		std::cerr << "\nERROR importing SDIF file: " << ex.what() << std::endl;		  
+	}
+	catch(std::exception ex)
+	{
+		std::cerr << "\nERROR importing SDIF file: " << ex.what() << std::endl;		  
+	}
+
 }
 
 // ---------------------------------------------------------------------------
@@ -213,7 +182,7 @@ static inline double radianFreq( double hz )
 // ---------------------------------------------------------------------------
 //	helper
 //
-static void accum_samples( Oscillator & oscil, Breakpoint & bp, double * bufbegin )
+static void accum_samples( Oscillator & oscil, Breakpoint & bp, double * bufbegin, int nsamps )
 {
 	if( bp.amplitude() > 0 || oscil.amplitude() > 0 ) 
 	{
@@ -252,13 +221,132 @@ static void accum_samples( Oscillator & oscil, Breakpoint & bp, double * bufbegi
 			oscil.setBandwidth( bw );
 			
 			//	roll back the phase:
-			oscil.setPhase( bp.phase() - ( radfreq * ksmps ) );
+			oscil.setPhase( bp.phase() - ( radfreq * nsamps ) );
 		}	
 		
 		//	accumulate samples into buffer:
-		oscil.generateSamples( bufbegin, bufbegin + ksmps, radfreq, amp, bw );
+		oscil.generateSamples( bufbegin, bufbegin + nsamps, radfreq, amp, bw );
 	}
 }
+
+// ---------------------------------------------------------------------------
+//	clear_buffer
+// ---------------------------------------------------------------------------
+//	helper
+//
+static inline void clear_buffer( double * buf, int nsamps )
+{
+	std::fill( buf, buf + nsamps, 0. );
+}
+
+// ---------------------------------------------------------------------------
+//	convert_samples
+// ---------------------------------------------------------------------------
+//	helper
+//
+static inline void convert_samples( const double * src, float * tgt, int nn )
+{
+	do 
+	{
+		// 	scale Loris sample amplitudes (+/- 1.0) to 
+		//	csound sample amplitudes (+/- 32k):
+		*tgt++ = (*src++) * 32767.;  
+	} while(--nn);
+}
+
+#pragma mark -- LorisPartials --
+
+// ---------------------------------------------------------------------------
+//	LorisPartials definition
+// ---------------------------------------------------------------------------
+//	LorisPartials keeps track of a collection of imported Partials and the
+//	fadetime, if any, that is applied to them, and the name of the file from
+//	which they were imported. LorisPartials instances can be compared using
+//	equivalence so that they can be stored in an associative container. 
+//	LorisPartials are stored in a std::set accessed by the static member
+//	GetPartials(), so that Partials from a particular file and using a 
+//	particular fade time can be imported just once and reused.
+//
+//	The PARTIALS member is mutable, since it is not involve in the equivalence
+//	test. Only const access to Partials is provided to clients, but the 
+//	GetPartials() member needs to be able to import the Partials into a 
+//	LorisPartials that is already part of a std::set (and is thus immutable).
+//	(The alternative is to copy, which is wasteful.)
+//
+class LorisPartials
+{
+	mutable PARTIALS _partials;
+	double _fadetime;
+	std::string _fname;
+	
+public:
+	//	construction:
+	LorisPartials( void ) {}
+	LorisPartials( const string & path, double fadetime ) :
+		_fadetime( fadetime ), _fname( path ) {}
+	~LorisPartials( void ) {}
+	
+	//	access:
+	const Partial & operator [] ( long idx ) const { return _partials[idx]; }
+	
+	long size( void ) const { return _partials.size(); }
+	
+	//	comparison:
+	friend bool operator < ( const LorisPartials & lhs, const LorisPartials & rhs )
+	{
+		return (lhs._fadetime < rhs._fadetime) || (lhs._fname < rhs._fname);
+	}
+
+	// 	static member for managing a permanent collection:
+	static const LorisPartials & GetPartials( const string & sdiffilname, double fadetime );
+};
+
+// ---------------------------------------------------------------------------
+//	GetPartials
+// ---------------------------------------------------------------------------
+//	Return a reference to a collection of Partials from the specified file
+//	with the specified fadetime applied. Import if necessary, reuse previously
+//	imported Partials if possible. Store imported Partials in a permanent
+//	set of imported Partials.
+//
+const LorisPartials & 
+LorisPartials::GetPartials( const string & sdiffilname, double fadetime )
+{
+	static std::set< LorisPartials > AllPartials;
+	
+	LorisPartials empty( sdiffilname, fadetime );
+	std::set< LorisPartials >::iterator it = AllPartials.find( empty );
+		
+	if ( it == AllPartials.end() )
+	{
+		it = AllPartials.insert( empty ).first;
+		
+		try 
+		{
+			//	import Partials and apply fadetime:
+			import_partials( sdiffilname, it->_partials );
+			apply_fadetime( it->_partials, fadetime );
+		}
+		catch( Exception & ex )
+	    {
+	        std::string s("Loris exception in LorisPartials::GetPartials(): " );
+	        s.append( ex.what() );
+	        std::cerr << s << std::endl;
+	    }
+	    catch( std::exception & ex )
+	    {
+	        std::string s("std C++ exception in LorisPartials::GetPartials(): " );
+	        s.append( ex.what() );
+	        std::cerr << s << std::endl;
+	    }
+	}
+	else 
+	{
+		std::cerr << "** reusing SDIF file " << sdiffilname << std::endl;		  
+	}
+	
+	return *it;
+}		
 
 
 #pragma mark -- LorisReader --
@@ -266,70 +354,53 @@ static void accum_samples( Oscillator & oscil, Breakpoint & bp, double * bufbegi
 // ---------------------------------------------------------------------------
 //	LorisReader definition
 // ---------------------------------------------------------------------------
+//	LorisReader samples a LorisPartials instance at a given time, updated by
+//	calls to updateEnvelopePoints(). 
+//
+//	A static map of LorisReaders is maintained that allows LorisReaders to be
+//	found by index and Csound owner-instrument. A LorisReader can be added to 
+//	this map, by is parent Lorisread_priv (below), and subsequently found by
+//	other generators having the same owner instrument. This is how lorisplay
+//	and lorismorph access the data read by a LorisReader.
 //
 class LorisReader
 {
-	PARTIALS _partials;
+	const LorisPartials & _partials;
 	BREAKPOINTS _breakpoints;
 	double _time;
 	
 public:	
 	//	construction:
-	LorisReader( void ) : _time(0) {}	// initializes an empty reader
+	LorisReader( const string & fname, double fadetime );
 	~LorisReader( void ) {}
-	
-	//	Partial loading:
-	//	(returns the number of Partials loaded);
-	long loadPartials( const std::string & sdiffilname, double fadetime );
 	
 	//	envelope parameter computation:
 	//	(returns number of active Partials)
-	long updateEnvelopePoints( double time );
+	long updateEnvelopePoints( double time, double fscale, double ascale, double bwscale );
 	
 	//	access:
-	const PARTIALS & partials( void ) const { return _partials; }
+	const LorisPartials & partials( void ) const { return _partials; }
 	const BREAKPOINTS & envelopePoints( void ) const { return _breakpoints; }
 	double time( void ) const { return _time; }
 	
-	//	access a particular LorisReader by index:
-	static LorisReader & GetByIndex( int index );
+	//	access a particular LorisReader by owner instrument and index:
+	static void AssignOwnerAndIndex( INSDS * owner, int index, LorisReader & reader );
+	static LorisReader * GetByOwnerAndIndex( INSDS * owner, int index );
+	
+private:
+	typedef std::pair< INSDS *, int > OwnerAndIndex;
+	static std::map<OwnerAndIndex, LorisReader *> & OwnerAndIndexMap( void );
 }; 
 
 // ---------------------------------------------------------------------------
-//	LorisReader loadPartials
+//	LorisReader construction
 // ---------------------------------------------------------------------------
-//	Return the number of Partials loaded.
 //
-long
-LorisReader::loadPartials( const std::string & sdiffilname, double fadetime )
+LorisReader::LorisReader( const string & fname, double fadetime ) :
+	_partials( LorisPartials::GetPartials( fname, fadetime ) ),
+	_time( 0. )
 {
-	try 
-	{
-		//	initialize:
-		_partials.clear();
-		std::fill( _breakpoints.begin(), _breakpoints.end(), Breakpoint() );
-		
-		//	import Partials and apply fadetime:
-		import_partials( sdiffilname, _partials );
-		apply_fadetime( _partials, fadetime );
-		
-		//	allocate (initialize) Breakpoints:
-		_breakpoints.resize( _partials.size() );
-	}
-	catch( Exception & ex )
-    {
-        std::string s("Loris exception in LorisReader::loadPartials(): " );
-        s.append( ex.what() );
-        std::cerr << s << std::endl;
-    }
-    catch( std::exception & ex )
-    {
-        std::string s("std C++ exception in LorisReader::loadPartials(): " );
-        s.append( ex.what() );
-        std::cerr << s << std::endl;
-    }
-	
-	return _partials.size();
+	_breakpoints.resize( _partials.size() );
 }
 
 // ---------------------------------------------------------------------------
@@ -337,7 +408,7 @@ LorisReader::loadPartials( const std::string & sdiffilname, double fadetime )
 // ---------------------------------------------------------------------------
 //
 long 
-LorisReader::updateEnvelopePoints( double time )
+LorisReader::updateEnvelopePoints( double time, double fscale, double ascale, double bwscale )
 {
 	// update time;
 	_time = time;
@@ -346,13 +417,13 @@ LorisReader::updateEnvelopePoints( double time )
 	
 	for (long i = 0; i < _partials.size(); ++i )
 	{
-		Partial & p = _partials[i];
+		const Partial & p = _partials[i];
 		Breakpoint & bp = _breakpoints[i];
 		
 		//	update envelope paramters for this Partial:
-	 	bp.setFrequency( p.frequencyAt( time ) );
-		bp.setAmplitude( p.amplitudeAt( time ) );
-		bp.setBandwidth( p.bandwidthAt( time ) );
+	 	bp.setFrequency( fscale * p.frequencyAt( time ) );
+		bp.setAmplitude( ascale * p.amplitudeAt( time ) );
+		bp.setBandwidth( bwscale * p.bandwidthAt( time ) );
 		bp.setPhase( p.phaseAt( time ) );
 	
 		//	update counter:
@@ -364,15 +435,37 @@ LorisReader::updateEnvelopePoints( double time )
 }
 
 // ---------------------------------------------------------------------------
-//	LorisReader GetByIndex
+//	LorisReader AssignOwnerAndIndex
 // ---------------------------------------------------------------------------
-//	May return an empty reader.
 //
-LorisReader & 
-LorisReader::GetByIndex( int index )
+void 
+LorisReader::AssignOwnerAndIndex( INSDS * owner, int index, LorisReader & reader )
 {
-	static std::map<int, LorisReader> readers;
-	return readers[index];
+	OwnerAndIndexMap()[ std::make_pair( owner, index ) ] = &reader;
+}
+
+// ---------------------------------------------------------------------------
+//	LorisReader GetByOwnerAndIndex
+// ---------------------------------------------------------------------------
+//	May return NULL.
+//
+LorisReader * 
+LorisReader::GetByOwnerAndIndex( INSDS * owner, int index )
+{
+	return OwnerAndIndexMap()[ std::make_pair( owner, index ) ];
+}
+
+// ---------------------------------------------------------------------------
+//	LorisReader OwnerAndIndexMap
+// ---------------------------------------------------------------------------
+//	Protect this map inside a function, because Csound has a C main() function,
+//	and global C++ objects cannot be guaranteed to be instantiated properly.
+//
+std::map< LorisReader::OwnerAndIndex, LorisReader * > & 
+LorisReader::OwnerAndIndexMap( void )
+{
+	static std::map< OwnerAndIndex, LorisReader * > readers;
+	return readers;
 }
 
 #pragma mark -- Lorisread_priv --
@@ -384,7 +477,7 @@ LorisReader::GetByIndex( int index )
 //
 struct Lorisread_priv
 {
-	LorisReader & reader;
+	std::auto_ptr< LorisReader > reader;
 
 	Lorisread_priv( LORISREAD * params );
 	~Lorisread_priv( void ) {}
@@ -394,8 +487,7 @@ struct Lorisread_priv
 //	Lorisread_priv contructor
 // ---------------------------------------------------------------------------
 //
-Lorisread_priv::Lorisread_priv( LORISREAD * params ) :
-	reader( LorisReader::GetByIndex( (int)*(params->readerIdx) ) )
+Lorisread_priv::Lorisread_priv( LORISREAD * params )
 {
 	std::string sdiffilname;
 
@@ -419,7 +511,8 @@ Lorisread_priv::Lorisread_priv( LORISREAD * params ) :
 	}
 	
 	//	load the reader:
-	reader.loadPartials( sdiffilname, *(params->fadetime) );
+	reader.reset( new LorisReader( sdiffilname, *(params->fadetime) ) );
+	LorisReader::AssignOwnerAndIndex( params->h.insdshead, *(params->readerIdx), *reader );
 }
 
 #pragma mark -- lorisread generator functions --
@@ -446,8 +539,10 @@ void lorisread_setup( LORISREAD * p )
 extern "C"
 void lorisread( LORISREAD * p )
 {
-	*(p->result) = 
-		(MYFLT) p->priv->reader.updateEnvelopePoints( *(p->time) );
+	*(p->result) = p->priv->reader->updateEnvelopePoints( *p->time, 
+														  *p->freqenv, 
+														  *p->ampenv,
+														  *p->bwenv );
 }
 
 // ---------------------------------------------------------------------------
@@ -471,7 +566,7 @@ void lorisread_cleanup(void * p)
 //
 struct Lorisplay_priv
 {
-	LorisReader & reader;
+	LorisReader * reader;
 	OSCILS oscils;
 	
 	std::vector< double > dblbuffer;
@@ -485,10 +580,10 @@ struct Lorisplay_priv
 // ---------------------------------------------------------------------------
 //
 Lorisplay_priv::Lorisplay_priv( LORISPLAY * params ) :
-	reader( LorisReader::GetByIndex( *(params->readerIdx) ) ),
+	reader( LorisReader::GetByOwnerAndIndex( params->h.insdshead, *(params->readerIdx) ) ),
 	dblbuffer( ksmps, 0. )
 {
-	oscils.resize( reader.envelopePoints().size() );
+	oscils.resize( reader->envelopePoints().size() );
 }
 
 #pragma mark -- lorisplay generator functions --
@@ -516,79 +611,27 @@ extern "C"
 void lorisplay( LORISPLAY * p )
 {
 	Lorisplay_priv & player = *(p->priv);
-	const BREAKPOINTS & envPts = player.reader.envelopePoints();
+	const BREAKPOINTS & envPts = player.reader->envelopePoints();
 	OSCILS & oscils = player.oscils;
 	
 	//	clear the buffer first!
-	std::fill( player.dblbuffer.begin(), player.dblbuffer.end(), 0. );
+	double * bufbegin =  &(player.dblbuffer[0]);
+	clear_buffer( bufbegin, ksmps );
 	
 	//	now accumulate samples into the buffer:
-	double * bufbegin =  &(player.dblbuffer[0]);
 	long numOscils = player.oscils.size();
 	for( long i = 0; i < numOscils; ++i )  
 	{
 		const Breakpoint & bp = envPts[i];
-
-		//	do nothing if the amplitude is zero over the
-		//	duration of the control block:
-		if( bp.amplitude() > 0 || oscils[i].amplitude() > 0 ) 
-		{
-			double radfreq = radianFreq( (*p->freqenv) * bp.frequency() );
-			double amp = (*p->ampenv) * bp.amplitude();
-			double bw = (*p->bwenv) * bp.bandwidth();
-			
-			//	initialize the oscillator if it is changing from zero
-			//	to non-zero amplitude in this  control block:
-			if ( oscils[i].amplitude() == 0. )
-			{
-				//	don't initialize with bogus values, Oscillator
-				//	only guards against out-of-range target values
-				//	in generateSamples(), parameter mutators are 
-				//	dangerous:
-				
-				if ( radfreq > PI )	//	don't alias
-					amp = 0.;
-
-				if ( bw > 1. )		//	clamp bandwidth
-					bw = 1.;
-				else if ( bw < 0. )
-					bw = 0.;
-			
-				/*
-				std::cerr << "initializing oscillator " << i << " at time ";
-				std::cerr << player.reader.time() << " for Partial beginning at time ";
-				std::cerr << (player.reader.partials())[i].startTime() << std::endl;
-				
-				std::cerr << "parameters: " << (*p->freqenv) * bp.frequency() << "  ";
-				std::cerr << amp << "  " << bw << std::endl;
-				*/
-							
-				//	initialize frequency, amplitude, and bandwidth to 
-				//	their target values:
-				oscils[i].setRadianFreq( radfreq );
-				oscils[i].setAmplitude( amp );
-				oscils[i].setBandwidth( bw );
-				
-				//	roll back the phase:
-				oscils[i].setPhase( bp.phase() - ( radfreq * ksmps ) );
-			}	
-			
-			//	accumulate samples into buffer:
-			oscils[i].generateSamples( bufbegin, bufbegin + ksmps, radfreq, amp, bw );
-		}
+		Breakpoint modifiedBp(  (*p->freqenv) * bp.frequency(),
+								(*p->ampenv) * bp.amplitude(),
+								(*p->bwenv) * bp.bandwidth(),
+								bp.phase() );
+		accum_samples( oscils[i], modifiedBp, bufbegin, ksmps );
 	} 
 	
 	//	transfer samples into the result buffer:
-	float *answer = p->result;
-	double * buf = &(player.dblbuffer[0]);
-    int nn = ksmps;
-	do 
-	{
-		// 	scale Loris sample amplitudes (+/- 1.0) to 
-		//	csound sample amplitudes (+/- 32k):
-		*answer++ = (*buf++) * 32767.;  
-	} while(--nn);
-	 
+	convert_samples( bufbegin, p->result, ksmps );
 }
 
 // ---------------------------------------------------------------------------
@@ -613,8 +656,8 @@ void lorisplay_cleanup(void * p)
 struct Lorismorph_priv
 {
 	Morpher morpher;
-	LorisReader & src_reader;
-	LorisReader & tgt_reader;
+	LorisReader * src_reader;
+	LorisReader * tgt_reader;
 	OSCILS oscils;
 		
 	typedef std::map< long, std::pair< long, long > > LabelMap;
@@ -623,7 +666,7 @@ struct Lorismorph_priv
 	
 	std::vector< double > dblbuffer;
 	
-	double time;
+	//double time;
 	
 	Lorismorph_priv( LORISMORPH * params );
 	~Lorismorph_priv( void ) {}
@@ -703,17 +746,22 @@ struct Lorismorph_priv
 // ---------------------------------------------------------------------------
 //	Lorismorph_priv contructor
 // ---------------------------------------------------------------------------
+//	This is a very ugly piece of code to set up an index map that makes it
+//	fast to associate the Breakpoints in the source and target readers with
+//	the correct Oscillator. There should be a nicer way to do this, but
+//	we cannot count on anything like unique labeling (though the results 
+//	will be unpredictable if the labeling is not unique), so it seems
+//	like an index map is the most efficient way.
 //
 Lorismorph_priv::Lorismorph_priv( LORISMORPH * params ) :
 	morpher( GetFreqFunc( params ), GetAmpFunc( params ), GetBwFunc( params ) ),
-	src_reader( LorisReader::GetByIndex( *(params->srcidx) ) ),
-	tgt_reader( LorisReader::GetByIndex( *(params->tgtidx) ) ),
-	dblbuffer( ksmps, 0. ),
-	time( 0. )
+	src_reader( LorisReader::GetByOwnerAndIndex( params->h.insdshead, *(params->srcidx) ) ),
+	tgt_reader( LorisReader::GetByOwnerAndIndex( params->h.insdshead, *(params->tgtidx) ) ),
+	dblbuffer( ksmps, 0. )
 {
 	//	build Partial pointer maps:
-	const PARTIALS & srcPartials = src_reader.partials();
-	const PARTIALS &tgtPartials = tgt_reader.partials();
+	const LorisPartials & srcPartials = src_reader->partials();
+	const LorisPartials &tgtPartials = tgt_reader->partials();
 	
 	//	allocate some memory -- this could be more memory-efficient:
 	src_unlabeled.reserve( srcPartials.size() );
@@ -790,15 +838,15 @@ extern "C"
 void lorismorph( LORISMORPH * p )
 {
 	Lorismorph_priv & imp = *(p->priv);
-	const BREAKPOINTS & srcEnvPts = imp.src_reader.envelopePoints();
-	const BREAKPOINTS & tgtEnvPts = imp.tgt_reader.envelopePoints();
+	const BREAKPOINTS & srcEnvPts = imp.src_reader->envelopePoints();
+	const BREAKPOINTS & tgtEnvPts = imp.tgt_reader->envelopePoints();
 	OSCILS & oscils = imp.oscils;
 	
 	//	clear the buffer first!
-	std::fill( imp.dblbuffer.begin(), imp.dblbuffer.end(), 0. );
+	double * bufbegin =  &(imp.dblbuffer[0]);
+	clear_buffer( bufbegin, ksmps );
 	
 	//	now accumulate samples into the buffer:
-	double * bufbegin =  &(imp.dblbuffer[0]);
 	
 	//	first render all the labeled (morphed) Partials:
 	// std::cerr << "** Morphing Partials labeled " << imp.labelMap.begin()->first;
@@ -823,26 +871,30 @@ void lorismorph( LORISMORPH * p )
 			continue;
 		}
 		
+		//	note: the time argument for all these morphParameters calls
+		//	is irrelevant, since it is only used to index the morphing
+		//	functions, which, as defined above, do not use the time
+		//	argument, they can only return their current value.
 		if ( itgt < 0 )
 		{
 			//	morph from the source to a dummy:
 			// std::cerr << "** Morphing source to dummy " << oscidx << std::endl;
-			imp.morpher.morphParameters( srcEnvPts[isrc], dummy, imp.time, bp );
+			imp.morpher.morphParameters( srcEnvPts[isrc], dummy, 0, bp );
 		}
 		else if ( isrc < 0 )
 		{
 			//	morph from a dummy to the target:
 			// std::cerr << "** Morphing dummy to target " << oscidx << std::endl;
-			imp.morpher.morphParameters( dummy, tgtEnvPts[itgt], imp.time, bp );
+			imp.morpher.morphParameters( dummy, tgtEnvPts[itgt], 0, bp );
 		}
 		else 
 		{
 			//	morph from the source to the target:
 			// std::cerr << "** Morphing source to target " << oscidx << std::endl;
-			imp.morpher.morphParameters( srcEnvPts[isrc], tgtEnvPts[itgt], imp.time, bp );
+			imp.morpher.morphParameters( srcEnvPts[isrc], tgtEnvPts[itgt], 0, bp );
 		}	
 		
-		accum_samples( oscils[oscidx], bp, bufbegin );
+		accum_samples( oscils[oscidx], bp, bufbegin,ksmps );
 	} 
 	
 	//	render unlabeled source Partials:
@@ -851,8 +903,8 @@ void lorismorph( LORISMORPH * p )
 	for( long i = 0; i < imp.src_unlabeled.size(); ++i, ++oscidx )  
 	{
 		//	morph from the source to a dummy:
-		imp.morpher.morphParameters( srcEnvPts[ imp.src_unlabeled[i] ], dummy, imp.time, bp );
-		accum_samples( oscils[oscidx], bp, bufbegin );
+		imp.morpher.morphParameters( srcEnvPts[ imp.src_unlabeled[i] ], dummy, 0, bp );
+		accum_samples( oscils[oscidx], bp, bufbegin, ksmps );
 	}
 	
 	
@@ -862,23 +914,15 @@ void lorismorph( LORISMORPH * p )
 	for( long i = 0; i < imp.tgt_unlabeled.size(); ++i, ++oscidx )  
 	{
 		//	morph from a dummy to the target:
-		imp.morpher.morphParameters( dummy, tgtEnvPts[ imp.tgt_unlabeled[i] ], imp.time, bp );
-		accum_samples( oscils[oscidx], bp, bufbegin );
+		imp.morpher.morphParameters( dummy, tgtEnvPts[ imp.tgt_unlabeled[i] ], 0, bp );
+		accum_samples( oscils[oscidx], bp, bufbegin, ksmps );
 	}	
 	
 	//	transfer samples into the result buffer:
-	float *answer = p->result;
-	double * buf = &(imp.dblbuffer[0]);
-    int nn = ksmps;
-	do 
-	{
-		// 	scale Loris sample amplitudes (+/- 1.0) to 
-		//	csound sample amplitudes (+/- 32k):
-		*answer++ = (*buf++) * 32767.;  
-	} while(--nn);
-	
+	convert_samples( bufbegin, p->result, ksmps );
+
 	//	update time:
-	imp.time += ksmps / esr;
+	//imp.time += ksmps / esr;
 	 
 }
 

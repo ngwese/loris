@@ -53,7 +53,7 @@ typedef struct
 	float *result;
 	
 	/* unit generator parameters/arguments */
-	float *time, *ifilnam, *readerIdx, *fadetime;    
+	float *time, *ifilnam, *readerIdx, *freqenv, *ampenv, *bwenv, *fadetime;    
 
 	/* private internal data, used by generator */
 	Lorisread_priv *priv;
