@@ -73,7 +73,7 @@ public:
 	const BreakpointEnvelope & envelope( void ) const { return *_env; }
 
 
-};// end of class FrequencyReference
+};	// end of class FrequencyReference
 
 #if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris

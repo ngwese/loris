@@ -37,7 +37,6 @@
 
 #include<Analyzer.h>
 #include<AssociateBandwidth.h>
-#include<DistributeEnergy.h>
 #include<Exception.h>
 #include<KaiserWindow.h>
 #include<ReassignedSpectrum.h>
@@ -49,10 +48,6 @@
 #include <map>
 #include <set>
 #include <algorithm>
-
-#if defined(Debug_Loris) 
-	#include <cstdio>
-#endif
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
@@ -71,7 +66,6 @@ class AnalyzerState
 	//	state variables:
 	std::auto_ptr< ReassignedSpectrum > _spectrum;
 	std::auto_ptr< AssociateBandwidth > _bw;
-	std::auto_ptr< DistributeEnergy > _energy;
 	
 	std::map< double, double > _peakTimeCache;	//	yuck
 
@@ -87,7 +81,6 @@ public:
 //	accessors:
 	ReassignedSpectrum & spectrum(void) { return *_spectrum; }
 	AssociateBandwidth & bwAssociation(void) { return *_bw; }
-	DistributeEnergy & eDistribution(void) { return *_energy; }
 	
 	std::map< double, double > & peakTimeCache(void) { return _peakTimeCache; }
 	
@@ -129,9 +122,6 @@ AnalyzerState::AnalyzerState( const Analyzer & anal, double srate ) :
 		//	configure bw association strategy, which 
 		//	needs to know about the window:
 		_bw.reset( new AssociateBandwidth( anal.bwRegionWidth(), srate ) );
-		
-		//	configure the energy distribution strategy:
-		_energy.reset( new DistributeEnergy( 0.5 * anal.bwRegionWidth() ) );
 	}
 	catch ( Exception & ex ) {
 		ex.append( "couldn't create a ReassignedSpectrum." );
@@ -329,8 +319,6 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate 
 			formPartials( frame, frameTime, state );
 
 		}	//	end of loop over short-time frames
-		
-		pruneBogusPartials( state );
 	}
 	catch ( Exception & ex ) 
 	{
@@ -360,26 +348,12 @@ Analyzer::extractPeaks( std::list< Breakpoint > & frame, double frameTime,
 	//	that they don't hafta be computed over and over again:
 	state.peakTimeCache().clear();
 		
-#if defined(Debug_Loris)	
-	bool spit = false;
-	std::FILE * spitfile;
-	if ( spit )
-	{
-		spitfile = std::fopen( "peaks", "w" );
-	}
-#endif
-
 	//	look for magnitude peaks in the spectrum:
 	for ( int j = 1; j < (state.spectrum().size() / 2) - 1; ++j ) 
 	{
 		if ( abs(state.spectrum()[j]) > abs(state.spectrum()[j-1]) && 
 			 abs(state.spectrum()[j]) > abs(state.spectrum()[j+1])) 
-		{
-#if defined(Debug_Loris)	
-			if (spit)
-				fprintf( spitfile, "found peak at sample %ld\n", j );
-#endif
-				
+		{				
 			//	compute the fractional frequency sample
 			//	and the frequency:
 			double fsample = state.spectrum().reassignedFrequency( j );	//	fractional sample
@@ -410,20 +384,6 @@ Analyzer::extractPeaks( std::list< Breakpoint > & frame, double frameTime,
 				state.bwAssociation().accumulateNoise( fHz, mag );
 				continue;
 			}
-			else
-			{
-				//state.bwAssociation().accumulateSinusoid( fHz, mag );			
-			}
-
-#if 0	//	this seems wrong defined(Like_Lemur)
-			double correctionAbove = state.spectrum().reassignedTime( std::ceil( fsample ) );
-			double correctionBelow = state.spectrum().reassignedTime( std::floor( fsample ) );
-
-			//	compute weighted average time correction, assign:
-			double alpha =  fsample - std::floor( fsample );
-			timeCorrectionSamps = ( alpha * correctionAbove ) + 
-								(( 1. - alpha ) * correctionBelow );
-#endif
 											
 			//	retain a spectral peak corresponding to this sample:
 			//	(reassignedPhase() must be called with time correction 
@@ -437,19 +397,8 @@ Analyzer::extractPeaks( std::list< Breakpoint > & frame, double frameTime,
 			double time = frameTime + (timeCorrectionSamps / state.sampleRate());
 			state.peakTimeCache()[ fHz ] = time;
 			
-#if defined(Debug_Loris)	
-			if (spit)
-				fprintf( spitfile, "kept breakpoint with freq %lf, amp %lf, time %lf\n", 
-							fHz, mag, time );
-#endif
-			
 		}	//	end if itsa peak
 	}
-	
-#if defined(Debug_Loris)	
-	if ( spit )
-		fclose( spitfile );
-#endif
 }
 
 // ---------------------------------------------------------------------------
@@ -539,7 +488,7 @@ Analyzer::formPartials( std::list< Breakpoint > & frame, double /* frameTime */ 
 		//	higher in frequency than peak, if such a Partial
 		//	exists in eligiblePartials:
 		//
-		//	(this initializer could probably be outside this loop)
+		//	(use the freakin' STL! std::lower_bound())
 		std::vector< Partial * >::iterator candidate = state.eligiblePartials().begin();
 		while ( candidate != state.eligiblePartials().end() &&
 				(*candidate)->frequencyAt(peakTime) < peak.frequency() )
@@ -681,7 +630,9 @@ Analyzer::formPartials( std::list< Breakpoint > & frame, double /* frameTime */ 
 	 state.eligiblePartials() = newlyEligible;
 }
 
-#else //	not def sucks
+#else 	//	not def sucks
+		//	this less-boroque version doesn't work yet???
+		//	why is sucks (above) still around if we are using this one?
 void 
 Analyzer::formPartials( std::list< Breakpoint > & frame, double /* frameTime */, 
 						AnalyzerState & state )
@@ -761,56 +712,6 @@ Analyzer::spawnPartial( double time, const Breakpoint & bp )
 	Partial p;
 	p.insert( time, bp );
 	partials().push_back( p );
-}
-
-// ---------------------------------------------------------------------------
-//	pruneBogusPartials
-// ---------------------------------------------------------------------------
-//	Analysis may yield many Partials of zero duration, no sense
-//	in retaining those.
-//
-//	Maybe there should be some other notion of a too-short Partial.
-//	Should it be a parameter?
-//
-//	Actually, maybe the energy in these Partials is important for very 
-//	impulsive sounds?
-//
-void
-Analyzer::pruneBogusPartials( AnalyzerState & state )
-{
-#define DONT_PRUNE
-#if defined(DONT_PRUNE)
-	debugger << "Analyzer not pruning zero-duration Partials." << endl;
-	return;
-#endif
-
-	//	collect the very short Partials:
-	std::list<Partial> veryshortones;
-	for ( std::list< Partial >::iterator it = partials().begin(); 
-		  it != partials().end(); 
-		  /* ++it */ ) 
-	{
-		//	need to be careful with the iterator update, 
-		//	because erasure or splice will invalidate it:
-		std::list< Partial >::iterator next = it;
-		++next;
-		if ( it->duration() == 0. ) {
-			veryshortones.splice( veryshortones.end(), partials(), it );
-		}
-		it = next;
-	}
-	
-	//	distribute their energy:
-	for ( std::list<Partial>::iterator it = veryshortones.begin();
-		  it != veryshortones.end();
-		  ++it ) 
-	{
-#if !defined(No_BW_Association)
-		state.eDistribution().distribute( *it, partials().begin(), partials().end() );
-#endif
-	}
-
-	debugger << "Analyzer pruned " << veryshortones.size() << " zero-duration Partials." << endl;
 }
 
 #if !defined( NO_LORIS_NAMESPACE )

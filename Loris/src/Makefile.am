@@ -26,7 +26,6 @@ pkginclude_HEADERS = AiffFile.h	\
 				Channelizer.h	\
 				Dilator.h	\
 				Distiller.h	\
-				DistributeEnergy.h	\
 				Endian.h	\
 				Envelope.h	\
 				Exception.h	\
@@ -64,8 +63,6 @@ libclasses_la_SOURCES = AiffFile.C \
 		Dilator.h \
 		Distiller.C \
 		Distiller.h \
-		DistributeEnergy.C \
-		DistributeEnergy.h \
 		Endian.C \
 		Endian.h \
 		Envelope.C \
