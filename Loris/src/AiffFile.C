@@ -15,7 +15,6 @@
 #include "Exception.h"
 #include "notifier.h"
 #include "ieee.h"
-#include "endian.h"
 #include <algorithm>
 #include <string>
 #include <iostream>
@@ -68,17 +67,6 @@ struct SoundDataCk
 	Uint_32 blockSize;	
 	//	sample frames follow
 };
-
-//	data type for integer pcm samples of different sizes:
-struct I_24 { char data[3]; };
-typedef union 
-{
-	//	different size samples:
-	Int_32 s32bits;						//	32 bits sample
-	I_24  s24bits;						//	24 bits sample
-	Int_16 s16bits;						//	16 bits sample
-	char s8bits;						//	8 bits sample
-} pcm_sample;
 
 // ---------------------------------------------------------------------------
 //	AiffFile constructor from data in memory
@@ -342,53 +330,51 @@ AiffFile::readSamples( std::istream & s )
 	std::vector<unsigned char> v( _samples.size() * (_sampSize / 8) );
 
 	//	read integer samples without byte swapping: 
-	notifier << "reading " << v.size() << " bytes " << _samples.size() << " samples" << endl;
 	BigEndian::read( s, _samples.size() * _sampSize / 8, 1, (char*)v.begin() );
 
 	//	except if there were any read errors:
 	if ( ! s.good() )
 		Throw( FileIOException, "Failed to read AIFF samples.");
 
+	//	shift sample bytes into a long integer, and scale 
+	//	to make a double:
 	static const double oneOverMax = 1. / LONG_MAX;	//	defined in climits
-	
-	switch ( _sampSize ) {
+	long samp;
+	switch ( _sampSize ) 
+	{
 		case 32:
 		{	
-			Int_32 * z = (Int_32 *)&v[0];
-			for (unsigned long i = 0; i < _samples.size(); ++i ) 
+			for (long i = 0; i < v.size(); i += 4 ) 
 			{
-				_samples[i] = oneOverMax * z[i];
+				samp = (v[i] << 24) + (v[i+1] << 16) + (v[i+2] << 8) + v[i+3];
+				_samples[i/4] = oneOverMax * samp; 
 			}
 			break;
 		}
-/*
 		case 24:
 		{
-			I_24 * z = (I_24 *)&v[0];
-			for (unsigned long i = 0; i < _samples.size(); ++i ) 
+			for (long i = 0; i < v.size(); i += 3 ) 
 			{
-				Int_32 samp = (Int_32)v[i*_sampSize]
-				_samples[i] = oneOverMax * samp;
+				samp = (v[i] << 24) + (v[i+1] << 16) + (v[i+2] << 8);
+				_samples[i/3] = oneOverMax * samp; 
 			}
 			break;
 		}
-*/
 		case 16:
 		{
 			for (long i = 0; i < v.size(); i += 2 ) 
 			{
-				Int_32 samp = (v[i] << 24) + (v[i+1] << 16);
+				samp = (v[i] << 24) + (v[i+1] << 16);
 				_samples[i/2] = oneOverMax * samp; 
 			}
 			break;
 		}
 		case 8:
 		{
-			unsigned char * z = &v[0];
-			for (unsigned long i = 0; i < _samples.size(); ++i ) 
+			for (long i = 0; i < v.size(); ++i ) 
 			{
-				Int_32 samp = 0L | z[i];
-				_samples[i] = oneOverMax * (samp << 24);
+				samp = (v[i] << 24);
+				_samples[i] = oneOverMax * samp; 
 			}
 			break;
 		}
@@ -536,49 +522,62 @@ AiffFile::writeSamples( std::ostream & s )
 {	
 	debugger << "writing " << _samples.size() << " samples of size " << _sampSize << endl;
 
-	pcm_sample z;
+	//	use a vector for automatic temporary storage:
+	std::vector<unsigned char> v( _samples.size() * (_sampSize / 8) );
 
-	switch ( _sampSize ) {
+	//	convert doubles to long integers, and 
+	//	then into big endian integer samples:
+	long samp;
+	switch ( _sampSize ) 
+	{
 		case 32:
-			for (unsigned long i = 0; i < _samples.size(); ++i ) {
-				//	convert to integer (clip instead of wrapping):
-				z.s32bits = LONG_MAX * std::min( 1.0, std::max(-1.0, _samples[i]) );
-			
-				//	write the sample:
-				BigEndian::write( s, 1, sizeof(Int_32), (char *)&z.s32bits );
+		{	
+			for (long i = 0; i < v.size(); i += 4 ) 
+			{
+				samp = LONG_MAX * std::min( 1.0, std::max(-1.0, _samples[i/4]) );
+				v[i] = (samp >> 24) & 0xFF;		//	msb
+				v[i+1] = (samp >> 16) & 0xFF;
+				v[i+2] = (samp >> 8) & 0xFF;
+				v[i+3] = samp & 0xFF;			//	lsb
 			}
 			break;
+		}
 		case 24:
-			for (unsigned long i = 0; i < _samples.size(); ++i ) {
-				//	convert to integer (clip instead of wrapping):
-				z.s32bits = LONG_MAX * std::min( 1.0, std::max(-1.0, _samples[i]) );
-			
-				//	write the sample:
-				BigEndian::write( s, 1, sizeof(I_24), (char *)&z.s24bits );
+		{	
+			for (long i = 0; i < v.size(); i += 3 ) 
+			{
+				samp = LONG_MAX * std::min( 1.0, std::max(-1.0, _samples[i/3]) );
+				v[i] = (samp >> 24) & 0xFF;		//	msb
+				v[i+1] = (samp >> 16) & 0xFF;
+				v[i+2] = (samp >> 8) & 0xFF;	//	lsb
 			}
 			break;
+		}
 		case 16:
-			for (unsigned long i = 0; i < _samples.size(); ++i ) {
-				//	convert to integer (clip instead of wrapping):
-				z.s32bits = LONG_MAX * std::min( 1.0, std::max(-1.0, _samples[i]) );
-			
-				//	write the sample:
-				BigEndian::write( s, 1, sizeof(Int_16), (char *)&z.s16bits );
+		{	
+			for (long i = 0; i < v.size(); i += 2 ) 
+			{
+				samp = LONG_MAX * std::min( 1.0, std::max(-1.0, _samples[i/2]) );
+				v[i] = (samp >> 24) & 0xFF;		//	msb
+				v[i+1] = (samp >> 16) & 0xFF;	//	lsb
 			}
 			break;
+		}
 		case 8:
-			for (unsigned long i = 0; i < _samples.size(); ++i ) {
-				//	convert to integer (clip instead of wrapping):
-				z.s32bits = LONG_MAX * std::min( 1.0, std::max(-1.0, _samples[i]) );
-			
-				//	write the sample:
-				BigEndian::write( s, 1, sizeof(char), (char *)&z.s8bits );
+		{	
+			for (long i = 0; i < v.size(); ++i ) 
+			{
+				samp = LONG_MAX * std::min( 1.0, std::max(-1.0, _samples[i]) );
+				v[i] = (samp >> 24) & 0xFF;		//	msb
 			}
 			break;
+		}
 	}
 	
-	//	except if there were any read errors:
-	//	(better to check earlier?)
+	//	write integer samples without byte swapping: 
+	BigEndian::write( s, _samples.size() * _sampSize / 8, 1, (char*)v.begin() );
+
+	//	except if there were any write errors:
 	if ( ! s.good() )
 		Throw( FileIOException, "Failed to write AIFF samples.");
 }
