@@ -420,7 +420,7 @@ int main( )
 {
 	std::cout << "Unit test for Distiller class." << endl;
 	std::cout << "Relies on Breakpoint and Partial." << endl << endl;
-	std::cout << "Run: " << __DATE__ << endl << endl;
+	std::cout << "Built: " << __DATE__ << endl << endl;
 	
 	try 
 	{

@@ -74,7 +74,7 @@ int main( )
 {
 	std::cout << "Unit test for Morpher class." << endl;
 	std::cout << "Relies on Partial, Breakpoint, and BreakpointEnvelope." << endl << endl;
-	std::cout << "Run: " << __DATE__ << endl << endl;
+	std::cout << "Built: " << __DATE__ << endl << endl;
 
 	try 
 	{

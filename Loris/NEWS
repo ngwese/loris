@@ -28,6 +28,9 @@ another Partial's energy as noise (bandwidth).
 to the position after the erasure, or end if the last
 Breakpoint it erased.
 
+- added Partial constructor from a half-open range
+delimited by PartialConstIterators (documented too).
+
 -------------------------------------------------------
 changes since 1.0.1 release:
 

@@ -243,7 +243,7 @@ int main( )
 {
 	std::cout << "Unit test for Partial class." << endl;
 	std::cout << "Relies on Breakpoint and Partial::iterator." << endl << endl;
-	std::cout << "Run: " << __DATE__ << endl << endl;
+	std::cout << "Built: " << __DATE__ << endl << endl;
 	
 	try 
 	{

@@ -35,6 +35,7 @@
 
 #include <Exception.h>
 #include <Breakpoint.h>
+#include <iterator>
 #include <map>
 
 //	begin namespace
@@ -73,9 +74,20 @@ class Partial
 {
 //	-- public interface --
 public:
+//	-- types --
+	typedef PartialIterator iterator;
+	typedef PartialConstIterator const_iterator;
+	typedef std::map< double, Breakpoint >::size_type size_type;
+	typedef int label_type;	// should verify that this is a 32 bit type.
+	
 //	-- construction --
 	Partial( void );
 	/* 	Retun a new empty (no Breakpoints) Partial.
+	 */
+	 
+	Partial( const_iterator beg, const_iterator end );
+	/* 	Retun a new Partial from a half-open (const) iterator range 
+		of time, Breakpoint pairs.
 	 */
 	 
 	Partial( const Partial & other );
@@ -116,17 +128,12 @@ public:
 		synthesized phase will differ, depending on the fade time used
 		to synthesize this Partial (see class Synthesizer).
 	 */
-	 
-	typedef int label_type;
-	/*	Define label type, should verify that it is
-		a 32 bit type.
-	 */
-	 
+	 	 
 	label_type label( void ) const { return _label; }
 	/*	Return the 32-bit label for this Partial as an integer.
 	 */
 	 
-	long numBreakpoints( void ) const { return _bpmap.size(); }
+	size_type numBreakpoints( void ) const { return _bpmap.size(); }
 	/*	Return the number of Breakpoints in this Partial.
 	 */
 	
@@ -150,9 +157,6 @@ public:
 	 */
 	
 //	-- iterator access --
-	typedef PartialIterator iterator;
-	typedef PartialConstIterator const_iterator;
-	
 	iterator begin( void );
 	const_iterator begin( void ) const;
 	/*	Return a PartialIterator refering to the position of the first
@@ -265,6 +269,12 @@ class PartialIterator
 //	-- public interface --
 public:
 //	-- bidirectional iterator interface --
+      typedef std::bidirectional_iterator_tag	iterator_category;
+      typedef Breakpoint     					value_type;
+      typedef std::map< double, Breakpoint >::difference_type  difference_type;
+      typedef Breakpoint *			pointer;
+      typedef Breakpoint &			reference;
+
 //	construction:
 //	(allow compiler to generate copy, assignment, and destruction):
 	PartialIterator( void ) {}
@@ -323,6 +333,12 @@ class PartialConstIterator
 //	-- public interface --
 public:
 //	-- bidirectional iterator interface --
+      typedef std::bidirectional_iterator_tag	iterator_category;
+      typedef Breakpoint     					value_type;
+      typedef std::map< double, Breakpoint >::difference_type  difference_type;
+      typedef const Breakpoint *			pointer;
+      typedef const Breakpoint &			reference;
+
 //	construction:
 //	(allow compiler to generate copy, assignment, and destruction):
 	PartialConstIterator( void ) {}

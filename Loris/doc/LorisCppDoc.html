@@ -51,14 +51,14 @@ the sample data. The static Export() members export samples
 <h3>Member Functions</h3>
 <h4>Construction</h4>
 
-<p><tt><b>AiffFile( const std::string & filename )</b></tt>
+<p><tt><b>AiffFile( const std::string &amp;filename )</b></tt>
 <blockquote>
 <br>
 Initialize an instance of AiffFile by importing data from
 the file having the specified filename or path.
 </blockquote>
 
-<p><tt><b>AiffFile( std::istream & s )</b></tt>
+<p><tt><b>AiffFile( std::istream &amp;s )</b></tt>
 <blockquote>
 <br>
 Initialize an instance of AiffFile by importing data from
@@ -107,7 +107,7 @@ To convert ten samples into a buffer, use <br>
 </blockquote>
 
 <h4>Export (static)</h4>
-<p><tt><b>Export( const std::string & filename, double rate, int chans, int bits,
+<p><tt><b>Export( const std::string &amp;filename, double rate, int chans, int bits,
 					const double * bufBegin, const double * bufEnd )</b></tt>
 <blockquote>[ returns void  ]
 <br>
@@ -118,7 +118,7 @@ bufEnd represents a position after the last valid position in the buffer, no
 sample is read from *bufEnd.
 </blockquote>
 
-<p><tt><b>static Export( std::ostream & s, double rate, int chans, int bits, <br>
+<p><tt><b>static Export( std::ostream &amp;s, double rate, int chans, int bits, <br>
 					const double * bufBegin, const double * bufEnd )</b></tt>
 <blockquote>[ returns void  ]
 <br>
@@ -171,7 +171,7 @@ are computed from the specified resolution and window width.
 </blockquote>
 
 
-<p><tt><b>Analyzer( const Analyzer & other )
+<p><tt><b>Analyzer( const Analyzer &amp;other )
 </b></tt>
 <blockquote>
 <br>
@@ -187,9 +187,9 @@ Destroy this Analyzer.
 </blockquote>
 
 <h4>Configuration</h4>
-<p><tt><b>operator= ( const Analyzer & rhs )
+<p><tt><b>operator= ( const Analyzer &amp;rhs )
 </b></tt>
-<blockquote>[ returns Analyzer &  ]
+<blockquote>[ returns Analyzer &amp;  ]
 <br>
 Assignment operator:
 change this Analyzer's parameter configuration to 
@@ -376,12 +376,12 @@ zero-crossings) of the analysis window used by this Analyzer.
 
 <h4>PartialList Access</h4>
 <p><tt><b> partials( void )</b></tt>
-<blockquote>[ returns PartialList & ]
+<blockquote>[ returns PartialList &amp;]
 <br>
 Return a reference to this Analyzer's list of 
 analyzed Partials, or, for const Analyzers, a
 const reference to this Analyzer's 
-list of analyzed Partials (const PartialList &). 
+list of analyzed Partials (const PartialList &amp;). 
 </blockquote>
 
 
@@ -422,7 +422,7 @@ p, if specified, or 0 otherwise.
 </blockquote>
 
 <h4>Comparison</h4>
-<p><tt><b> operator== ( const Breakpoint & rhs ) const</b></tt>
+<p><tt><b> operator== ( const Breakpoint &amp;rhs ) const</b></tt>
 <blockquote>[ returns bool ]
 <br>
 Comparison operator: return true if the frequency, amplitude, 
@@ -480,7 +480,15 @@ Set the frequency of this Breakpoint.
 Set the phase of this Breakpoint.
 </blockquote>
 
-				
+<p><tt><b> addNoiseEnergy( double enoise )</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Add noise (bandwidth) energy to this Breakpoint by computing new 
+amplitude and bandwidth values. enoise may be negative, but 
+noise energy cannot be removed (negative energy added) in excess 
+of the current noise energy.
+</blockquote>
+			
 <p><a href="#contents"><small>Contents</small></a>	
 
 <a name="BreakpointEnvelope">
@@ -511,7 +519,7 @@ single breakpoint at 0. (and an implicit value everywhere)
 of initialValue.
 </blockquote>		
 
-<p><tt><b>BreakpointEnvelope( const BreakpointEnvelope & other )</b></tt>
+<p><tt><b>BreakpointEnvelope( const BreakpointEnvelope &amp;other )</b></tt>
 <blockquote>
 <br>
 Construct and return a new BreakpointEnvelope that is
@@ -566,7 +574,7 @@ in which case it is a class (having only static members and private
 constructors).
 <p>
 <h4>Free Functions</h4>
-<p><tt><b> addNoiseEnergy( Breakpoint & bp, double enoise )</b></tt>
+<p><tt><b> addNoiseEnergy( Breakpoint &amp;bp, double enoise )</b></tt>
 <blockquote>[ returns void  ]
 <br>
 Add noise (bandwidth) energy to a Breakpoint by computing new 
@@ -642,7 +650,7 @@ Channelizer is a leaf class, do not subclass.
 <p>
 <h3>Member Functions</h3>
 <h4>Construction</h4>
-<p><tt><b>Channelizer( const Envelope & refChanFreq, int refChanLabel )
+<p><tt><b>Channelizer( const Envelope &amp;refChanFreq, int refChanLabel )
 </b></tt>
 <blockquote>
 <br>
@@ -650,7 +658,7 @@ Construct a new Channelizer using the specified reference frequency
 Envelope to represent the channel numbered refChanLabel.
 </blockquote>	
 
-<p><tt><b>Channelizer( const Channelizer & other )
+<p><tt><b>Channelizer( const Channelizer &amp;other )
 </b></tt>
 <blockquote>
 <br>
@@ -666,9 +674,9 @@ channel).
 Destroy this Channelizer.
 </blockquote>	
 
-<p><tt><b> operator= ( const Channelizer & rhs )
+<p><tt><b> operator= ( const Channelizer &amp;rhs )
 </b></tt>
-<blockquote>[ returns Channelizer &  ]
+<blockquote>[ returns Channelizer &amp;  ]
 <br>
 Assignment operator: make this Channelizer an exact copy of rhs 
 (use the same set of frequency channels).
@@ -751,7 +759,7 @@ analyzed sound.
 </blockquote>	
 
 <h4>Dilation</h4>
-<p><tt><b> dilate( Partial & p )
+<p><tt><b> dilate( Partial &amp;p )
 </b></tt>
 <blockquote>[ returns void  ]
 <br>
@@ -760,11 +768,11 @@ specified Partial according to this Dilator's stored initial and
 target (desired) times.
 </blockquote>	
 
-<p><tt><b> operator() ( Partial & p )
+<p><tt><b> operator() ( Partial &amp;p )
 </b></tt>
 <blockquote>[ returns void  ]
 <br>
-Function call operator: same as dilate( Partial & p ).
+Function call operator: same as dilate( Partial &amp;p ).
 </blockquote>	
 
 		
@@ -858,17 +866,17 @@ Destroy this Distiller.
 	
 <h4>Distillation</h4>
 
-<p><tt><b> distill( PartialList & container )</b></tt>
+<p><tt><b> distill( PartialList &amp;container )</b></tt>
 <blockquote>[ returns void  ]
 <br>
 Distill all Partials in the specified container (PartialList).
 </blockquote>
 
-<p><tt><b> operator() ( PartialList & container )
+<p><tt><b> operator() ( PartialList &amp;container )
 </b></tt>
 <blockquote>[ returns void  ]
 <br>
-Function call operator: same as distill( PartialList & container ). 
+Function call operator: same as distill( PartialList &amp;container ). 
 </blockquote>
 	
 <p><a href="#contents"><small>Contents</small></a>	
@@ -937,7 +945,7 @@ in Loris:
 <p>
 <h3>Member Functions</h3>
 <h4>Construction</h4>
-<p><tt><b>Exception( const std::string & desc, const std::string & where = "" )</b></tt>
+<p><tt><b>Exception( const std::string &amp;desc, const std::string &amp;where = "" )</b></tt>
 <blockquote>
 <br>
 Construct a new Exception with the specified description and, optionally
@@ -961,15 +969,15 @@ C-style string (char pointer).
 </blockquote>
 	
 <h4>Description String Access</h4>
-<p><tt><b> append( const std::string & str )</b></tt>
-<blockquote>[ returns Exception &  ]
+<p><tt><b> append( const std::string &amp;str )</b></tt>
+<blockquote>[ returns Exception &amp;  ]
 <br>
 Append the specified string to this Exception's description,
 and return a reference to this Exception.
 </blockquote>
 
 <p><tt><b> str( void ) const</b></tt>
-<blockquote>[ returns const std::string &  ]
+<blockquote>[ returns const std::string &amp;  ]
 <br>
 Return a refernce to this Exception's description string.
 </blockquote>
@@ -1014,7 +1022,7 @@ within the speficied average frequency range. Sample that longest
 Partial at every Breakpoint to construct the reference envelope.
 </blockquote>		
 				
-<p><tt><b>FrequencyReference( const FrequencyReference & other )</b></tt>
+<p><tt><b>FrequencyReference( const FrequencyReference &amp;other )</b></tt>
 <blockquote>
 <br>
 Construct a new FrequencyReference that is an exact copy of the
@@ -1027,8 +1035,8 @@ specified FrequencyReference.
 Destroy this FrequencyReference.
 </blockquote>
 
-<p><tt><b> operator= ( const FrequencyReference & other )</b></tt>
-<blockquote>[ returns FrequencyReference &  ]
+<p><tt><b> operator= ( const FrequencyReference &amp;other )</b></tt>
+<blockquote>[ returns FrequencyReference &amp;  ]
 <br>
 Assignment operator: make this FrequencyReference an exact copy 
 of the specified FrequencyReference.
@@ -1084,14 +1092,14 @@ Morpher is a leaf class, do not subclass.
 <p>
 <h3>Member Functions</h3>
 <h4>Construction</h4>
-<p><tt><b>Morpher( const Envelope & f )
+<p><tt><b>Morpher( const Envelope &amp;f )
 </b></tt>
 <blockquote>
 <br>
 Construct a new Morpher using the same morphing envelope for 
 frequency, amplitude, and bandwidth (noisiness).
 </blockquote>	
-<p><tt><b>Morpher( const Envelope & ff, const Envelope & af, const Envelope & bwf )
+<p><tt><b>Morpher( const Envelope &amp;ff, const Envelope &amp;af, const Envelope &amp;bwf )
 </b></tt>
 <blockquote>
 <br>
@@ -1109,8 +1117,8 @@ Destroy this Morpher.
 	
 <h4>Morphed Parameter Computation</h4>
 
-<p><tt><b> morphParameters( const Breakpoint & srcBkpt, const Breakpoint & tgtBkpt, 
-					  double time, Breakpoint & retBkpt )
+<p><tt><b> morphParameters( const Breakpoint &amp;srcBkpt, const Breakpoint &amp;tgtBkpt, 
+					  double time, Breakpoint &amp;retBkpt )
 </b></tt>
 <blockquote>[ returns void  ]
 <br>
@@ -1123,8 +1131,8 @@ specified return Breakpoint.
 
 					  
 
-<p><tt><b> morphParameters( const Breakpoint & srcBkpt, const Partial & tgtPartial, 
-					  double time, Breakpoint & retBkpt )
+<p><tt><b> morphParameters( const Breakpoint &amp;srcBkpt, const Partial &amp;tgtPartial, 
+					  double time, Breakpoint &amp;retBkpt )
 </b></tt>
 <blockquote>[ returns void  ]
 <br>
@@ -1140,8 +1148,8 @@ The target Partial may be a dummy Partial (no Breakpoints).
 
 					  
 
-<p><tt><b> morphParameters( const Partial & srcPartial, const Breakpoint & tgtBkpt, 
-					  double time, Breakpoint & retBkpt )
+<p><tt><b> morphParameters( const Partial &amp;srcPartial, const Breakpoint &amp;tgtBkpt, 
+					  double time, Breakpoint &amp;retBkpt )
 </b></tt>
 <blockquote>[ returns void  ]
 <br>
@@ -1157,8 +1165,8 @@ The source Partial may be a dummy Partial (no Breakpoints).
 
 					  
 
-<p><tt><b> morphParameters( const Partial & srcPartial, const Partial & tgtPartial, 
-					  double time, Breakpoint & retBkpt )
+<p><tt><b> morphParameters( const Partial &amp;srcPartial, const Partial &amp;tgtPartial, 
+					  double time, Breakpoint &amp;retBkpt )
 </b></tt>
 <blockquote>[ returns void  ]
 <br>
@@ -1176,9 +1184,9 @@ Partial (no Breakpoints), but not both.
 
 <h4>Partial morphing</h4>
 
-<p><tt><b> morphPartial( const Partial & src, const Partial & tgt, int assignLabel )
+<p><tt><b> morphPartial( const Partial &amp;src, const Partial &amp;tgt, int assignLabel )
 </b></tt>
-<blockquote>[ returns Partial &  ]
+<blockquote>[ returns Partial &amp;  ]
 <br>
 Morph a pair of Partials to yield a new morphed Partial. 
 Dummy Partials (having no Breakpoints) don't contribute to the
@@ -1238,21 +1246,21 @@ The crossfaded Partials are stored in the Morpher's PartialList.
 
 <h4>Morphing Function Access/Mutation</h4>
 
-<p><tt><b> setFrequencyFunction( const Envelope & f )
+<p><tt><b> setFrequencyFunction( const Envelope &amp;f )
 </b></tt>
 <blockquote>[ returns void  ]
 <br>
 Assign a new frequency morphing envelope to this Morpher.
 </blockquote>	
 
-<p><tt><b> setAmplitudeFunction( const Envelope & f )
+<p><tt><b> setAmplitudeFunction( const Envelope &amp;f )
 </b></tt>
 <blockquote>[ returns void  ]
 <br>
 Assign a new amplitude morphing envelope to this Morpher.
 </blockquote>	
 
-<p><tt><b> setBandwidthFunction( const Envelope & f )
+<p><tt><b> setBandwidthFunction( const Envelope &amp;f )
 </b></tt>
 <blockquote>[ returns void  ]
 <br>
@@ -1262,21 +1270,21 @@ Assign a new bandwidth morphing envelope to this Morpher.
 
 <p><tt><b> frequencyFunction( void ) const
 </b></tt>
-<blockquote>[ returns const Envelope &  ]
+<blockquote>[ returns const Envelope &amp;  ]
 <br>
 Return a reference to this Morpher's frequency morphing envelope.
 </blockquote>	
 
 <p><tt><b> amplitudeFunction( void ) const
 </b></tt>
-<blockquote>[ returns const Envelope &  ]
+<blockquote>[ returns const Envelope &amp;  ]
 <br>
 Return a reference to this Morpher's amplitude morphing envelope.
 </blockquote>	
 
 <p><tt><b> bandwidthFunction( void ) const
 </b></tt>
-<blockquote>[ returns const Envelope &  ]
+<blockquote>[ returns const Envelope &amp;  ]
 <br>
 Return a reference to this Morpher's bandwidth morphing envelope.
 </blockquote>	
@@ -1286,7 +1294,7 @@ Return a reference to this Morpher's bandwidth morphing envelope.
 
 <p><tt><b> partials( void )
 </b></tt>
-<blockquote>[ returns PartialList &  ]
+<blockquote>[ returns PartialList &amp;  ]
 <br>
 Return a reference to this Morpher's list of morphed Partials.
 </blockquote>	
@@ -1294,7 +1302,7 @@ Return a reference to this Morpher's list of morphed Partials.
 
 <p><tt><b> partials( void ) const
 </b></tt>
-<blockquote>[ returns const PartialList &  ]
+<blockquote>[ returns const PartialList &amp;  ]
 <br>
 Return a const reference to this Morpher's list of morphed Partials.
 </blockquote>	
@@ -1323,7 +1331,7 @@ Notifier.h may be included in c files. The stream declarations
 are omitted, but the notification handler routines are accessible.
 <p>
 
-<p><tt><b>static std::ostream & notifier
+<p><tt><b>static std::ostream &amp;notifier
 </b></tt>
 <blockquote>
 <br>
@@ -1334,7 +1342,7 @@ of the stream are flushed to the current notification handler (stderr,
 by default).
 </blockquote>	
 
-<p><tt><b>static std::ostream & debugger
+<p><tt><b>static std::ostream &amp;debugger
 </b></tt>
 <blockquote>
 <br>
@@ -1405,7 +1413,7 @@ Construct a new Oscillator with all state parameters initialized
 to 0.
 </blockquote>	
 
-<p><tt><b>Oscillator( const Oscillator & other )
+<p><tt><b>Oscillator( const Oscillator &amp;other )
 </b></tt>
 <blockquote>
 <br>
@@ -1424,9 +1432,9 @@ Destroy this Oscillator.
 </blockquote>	
 
 		
-<p><tt><b> operator= ( const Oscillator & other )
+<p><tt><b> operator= ( const Oscillator &amp;other )
 </b></tt>
-<blockquote>[ returns Oscillator &  ]
+<blockquote>[ returns Oscillator &amp;  ]
 <br>
 Assignment operator: make this Oscillator an exact copy of
 another Oscillator. The filter used by this Oscillator
@@ -1553,10 +1561,18 @@ Partial is a leaf class, do not subclass.
 </b></tt>
 <blockquote>
 <br>
-Retun a new empty (no Breakpoints) Partial.
+Return a new empty (no Breakpoints) Partial.
 </blockquote>	
 
-<p><tt><b>Partial( const Partial & other )
+<p><tt><b>Partial( PartialConstIterator beg, PartialConstIterator end )
+</b></tt>
+<blockquote>
+<br>
+Return a new Partial from a half-open (const) iterator range 
+of time, Breakpoint pairs.
+</blockquote>	
+
+<p><tt><b>Partial( const Partial &amp;other )
 </b></tt>
 <blockquote>
 <br>
@@ -1573,7 +1589,7 @@ Destroy this Partial.
 </blockquote>	
 
 <h4>Comparison</h4>
-<p><tt><b> operator== ( const Partial & rhs ) const
+<p><tt><b> operator== ( const Partial &amp;rhs ) const
 </b></tt>
 <blockquote>[ returns bool  ]
 <br>
@@ -1638,6 +1654,16 @@ href="#Synthesizer">Synthesizer</a>).
 </blockquote>	
 
 <h4>Mutation</h4>
+<p><tt><b> absorb( const Partial &amp;other )
+</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Absorb another Partial's energy as noise (bandwidth), 
+by accumulating the other's energy as noise energy
+in the portion of this Partial's envelope that overlaps
+(in time) with the other Partial's envelope.
+</blockquote>	
+
 <p><tt><b> setLabel( int l )
 </b></tt>
 <blockquote>[ returns void  ]
@@ -1671,7 +1697,7 @@ For const Partials, returns a PartialConstIterator.
 </blockquote>	
 
 
-<p><tt><b> erase( PartialIterator & pos )
+<p><tt><b> erase( PartialIterator pos )
 </b></tt>
 <blockquote>[ returns void  ]
 <br>
@@ -1701,7 +1727,7 @@ For const Partials, returns a PartialConstIterator.
 </blockquote>	
 
 	
-<p><tt><b> insert( double time, const Breakpoint & bp )
+<p><tt><b> insert( double time, const Breakpoint &amp;bp )
 </b></tt>
 <blockquote>[ returns PartialIterator  ]
 <br>
@@ -1710,7 +1736,17 @@ parameter envelope at time (seconds), and return a PartialIterator
 refering to the position of the inserted Breakpoint.
 </blockquote>	
 
-	
+<p><tt><b> split( PartialIterator pos )
+</b></tt>
+<blockquote>[ returns Partial ]
+<br>
+Break this Partial at the specified position (iterator).
+The Breakpoint at the specified position becomes the first
+Breakpoint in a new Partial. Breakpoints at the specified
+position and subsequent positions are removed from this
+Partial and added to the new Partial, which is returned.
+</blockquote>	
+
 <h4>Parameter Interpolation/Extrapolation</h4>
 
 <p><tt><b> amplitudeAt( double time ) const
@@ -1793,7 +1829,7 @@ file.
 
 
 <p><tt><b>template &lt;typename Iter&gt;<br>
- fillPartialPtrs( Iter begin, Iter end, PartialPtrs & fillme )</b></tt>
+ fillPartialPtrs( Iter begin, Iter end, PartialPtrs &amp;fillme )</b></tt>
 <blockquote>[ returns void  ]
 <br>
 Fill the specified PartialPtrs with pointers to the Partials n the
@@ -1924,7 +1960,7 @@ that are unable to interpret RBEP frames.
 <p>
 <h3>Member Functions</h3>
 <h4>Construction</h4>
-<p><tt><b>SdifFile( const std::string & infilename )
+<p><tt><b>SdifFile( const std::string &amp;infilename )
 </b></tt>
 <blockquote>
 <br>
@@ -1936,18 +1972,18 @@ the file having the specified filename.
 <h4>Partial Access</h4>
 <p><tt><b>partials( void )
 </b></tt>
-<blockquote>[ returns PartialList &   ]
+<blockquote>[ returns PartialList &amp;]
 <br>
 Return a reference to this SdifFile's list of Partials, or, for const
 SdifFiles, a const reference to this SdifFile's list of Partials (const
-PartialList &).
+PartialList &amp;).
 </blockquote>	
 
 
 <h4>Export (static)</h4>
 	
-<p><tt><b> Export( const std::string & filename, 
-const PartialList & plist, const bool enhanced = true)
+<p><tt><b> Export( const std::string &amp;filename, 
+const PartialList &amp;plist, const bool enhanced = true)
 </b></tt>
 <blockquote>[ returns void  ]
 <br>
@@ -2040,7 +2076,7 @@ href="http://www.cerlsoundgroup.org/Loris/">www.cerlsoundgroup.org/Loris/</a>.
 <p>
 <h3>Member Functions</h3>
 <h4>Construction</h4>
-<p><tt><b>SpcFile( const std::string & filename )
+<p><tt><b>SpcFile( const std::string &amp;filename )
 </b></tt>
 <blockquote>
 <br>
@@ -2048,7 +2084,7 @@ Initialize an instance of AiffFile by importing Partial parameter
 stream data from the file having the specified filename or path.
 </blockquote>	
 
-<p><tt><b>SpcFile( std::istream & s )</b></tt>
+<p><tt><b>SpcFile( std::istream &amp;s )</b></tt>
 <blockquote>
 <br>
 Initialize an instance of AiffFile by importing Partial parameter
@@ -2058,16 +2094,16 @@ stream data from the file having the specified stream.
 		
 <h4>PartialList Access</h4>
 <p><tt><b> partials( void )</b></tt>
-<blockquote>[ returns PartialList & ]
+<blockquote>[ returns PartialList &amp;]
 <br>
 Return a reference to this SpcFile's list of imported Partials,
 or, for const SpcFiles, a const reference to this SpcFile's list
-of imported Partials (const <a href="#PartialList">PartialList</a> &). 
+of imported Partials (const <a href="#PartialList">PartialList</a> &amp;). 
 </blockquote>
 
 <h4>Export (static)</h4>
 
-<p><tt><b>Export( const std::string & filename, const PartialList & plist, double midiPitch, 
+<p><tt><b>Export( const std::string &amp;filename, const PartialList &amp;plist, double midiPitch, 
 int enhanced, double endApproachTime )</b></tt>
 <blockquote>[ returns void  ]
 <br>
@@ -2092,7 +2128,7 @@ modified to make a gradual transition to the static spectrum.
 </blockquote>
 
 
-<p><tt><b>Export( std::ostream & file, const PartialList & plist, double midiPitch, 
+<p><tt><b>Export( std::ostream &amp;file, const PartialList &amp;plist, double midiPitch, 
 int enhanced, double endApproachTime )
 </b></tt>
 <blockquote>[ returns void  ]
@@ -2134,7 +2170,7 @@ turn-on and turn-off artifacts. If the fade time is unspecified, the
 default value of one millisecond (0.001 seconds) is used.
 </blockquote>
 
-<p><tt><b>Synthesizer( const Synthesizer & other )</b></tt>
+<p><tt><b>Synthesizer( const Synthesizer &amp;other )</b></tt>
 <blockquote>
 <br>
 Construct a Synthesizer that is an exact copy of another Synthesizer,
@@ -2147,8 +2183,8 @@ that is, uses the same sample buffer, sampling rate, and fade time.
 Destroy this Synthesizer. (Does not destroy the sample buffer.)
 </blockquote>
 	
-<p><tt><b> operator= ( const Synthesizer & rhs )</b></tt>
-<blockquote>[ returns Synthesizer &  ]
+<p><tt><b> operator= ( const Synthesizer &amp;rhs )</b></tt>
+<blockquote>[ returns Synthesizer &amp;  ]
 <br>
 Assignment operator: change this synthesizer to be an exact copy of
 the specified Synthesizer, <code>rhs</code>, that is, using the same
@@ -2158,7 +2194,7 @@ sample buffer, sampling rate, and fade time.
 
 <h4>Synthesis</h4>
 
-<p><tt><b> synthesize( const Partial & p, double timeShift ) const</b></tt>
+<p><tt><b> synthesize( const Partial &amp;p, double timeShift ) const</b></tt>
 <blockquote>[ returns void  ]
 <br>
 Synthesize a bandwidth-enhanced sinusoidal Partial with the
@@ -2172,7 +2208,7 @@ will any attempt be made to eliminate clicks at the buffer boundaries.
 If the time shift is unspecified, no time shift is used.
 </blockquote>
 	
-<p><tt><b> operator() ( const Partial & p, double timeShift ) const</b></tt>
+<p><tt><b> operator() ( const Partial &amp;p, double timeShift ) const</b></tt>
 <blockquote>[ returns void  ]
 <br>
 Function call operator: same as <code>synthesize( p, timeShift )</code>.

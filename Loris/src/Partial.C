@@ -35,10 +35,10 @@
 	#include <config.h>
 #endif
 
-#include<Partial.h>
-#include<Breakpoint.h>
-#include<Exception.h>
-#include<Notifier.h>
+#include <Partial.h>
+#include <Breakpoint.h>
+#include <Exception.h>
+#include <Notifier.h>
 
 #include <cmath>
 
@@ -77,7 +77,18 @@ static double FadeTime( void )
 // ---------------------------------------------------------------------------
 //
 Partial::Partial( void ) :
-	_label( 0L )
+	_label( 0 )
+{
+//	++DebugCounter;
+}	
+
+// ---------------------------------------------------------------------------
+//	Partial initialized constructor
+// ---------------------------------------------------------------------------
+//
+Partial::Partial( const_iterator beg, const_iterator end ) :
+	_bpmap( beg._iter, end._iter ),
+	_label( 0 )
 {
 //	++DebugCounter;
 }	
