@@ -7,6 +7,7 @@
  *       <http://www.metrowerks.com/>
  */
 
+//	Hey I am just adding this comment here, see.
 
 #include "LorisLib.h"
 
