@@ -30,12 +30,16 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-#include <Loris_prefix.h>
-#include "Oscillator.h"
-#include "Filter.h"
+
+#if HAVE_CONFIG_H
+	#include <config.h>
+#endif
+
+#include<Oscillator.h>
+#include<Filter.h>
 #include "random.h"
-#include "Exception.h"
-#include "notifier.h"
+#include<Exception.h>
+#include<Notifier.h>
 #include <vector>
 #include <cmath>
 

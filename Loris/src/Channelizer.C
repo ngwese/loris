@@ -30,11 +30,15 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-#include <Loris_prefix.h>
-#include "Channelizer.h"
-#include "Envelope.h"
-#include "Partial.h"
-#include "notifier.h"
+
+#if HAVE_CONFIG_H
+	#include <config.h>
+#endif
+
+#include<Channelizer.h>
+#include<Envelope.h>
+#include<Partial.h>
+#include<Notifier.h>
 #include <memory>
 
 //	for debugging

@@ -30,10 +30,14 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-#include <Loris_prefix.h>
-#include "DistributeEnergy.h"
-#include "Partial.h"
-#include "Breakpoint.h"
+
+#if HAVE_CONFIG_H
+	#include <config.h>
+#endif
+
+#include<DistributeEnergy.h>
+#include<Partial.h>
+#include<Breakpoint.h>
 #include <algorithm>
 
 #if !defined( NO_LORIS_NAMESPACE )

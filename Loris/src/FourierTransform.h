@@ -33,7 +33,7 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-#include <Loris_prefix.h>
+
 
 // ===========================================================================
 //	Make sure that fftw and this class use the same floating point

@@ -32,9 +32,9 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-#include <Loris_prefix.h>
-#include "Exception.h"
-#include "Breakpoint.h"
+
+#include<Exception.h>
+#include<Breakpoint.h>
 #include <map>
 
 #if !defined( NO_LORIS_NAMESPACE )

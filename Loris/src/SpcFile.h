@@ -34,7 +34,7 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-#include "Partial.h"
+#include<Partial.h>
 #include <list>
 
 #if !defined( NO_LORIS_NAMESPACE )

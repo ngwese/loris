@@ -1,5 +1,5 @@
-#ifndef INCLUDE_KAISERWINDOW_H
-#define INCLUDE_KAISERWINDOW_H
+#ifndef INCLUDE_SDIFFILE_H
+#define INCLUDE_SDIFFILE_H
 /*
  * This is the Loris C++ Class Library, implementing analysis, 
  * manipulation, and synthesis of digitized sounds using the Reassigned 
@@ -22,18 +22,19 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *
- * KaiserWindow.h
+ * SdifFile.h
  *
- * Definition of class Loris::KaiserWindow.
+ * Definition of class SdifFile, which reads and writes SDIF files.
  *
- * Kelly Fitz, 14 Dec 1999
+ * Lippold Haken, 4 July 2000
+ * Lippold Haken, 20 October 2000, using IRCAM SDIF library
  * loris@cerlsoundgroup.org
  *
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-
-#include <vector>
+#include<Partial.h>
+#include <list>
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
@@ -41,31 +42,35 @@ namespace Loris {
 #endif
 
 // ---------------------------------------------------------------------------
-//	class KaiserWindow
-//
-//	Class KaiserWindow computes a Kaiser window function (see Kaiser and 
-//	Schafer, 1980) for windowing FFT data.
-//
-//	This _should_ _not_ be a class. Or should it? Could be a namespace like
-//	BreakpointUtils.
-//
-class KaiserWindow
+//	class SdifFile
+//	
+class SdifFile
 {
+//	-- instance variables --
+	std::list<Partial> _partials;	//	collect Partials for reading here
+
 //	-- public interface --
 public:
-	static void create( std::vector< double > & samples, double shape );
-	
-	static double computeShape( double atten );
-	static long computeLength( double width, double atten );
+//	construction (import):
+//	(let compiler generate destructor)
+	SdifFile( const char *infilename );
+		
+//	std::list< Partial > access:
+	std::list<Partial> & partials( void ) { return _partials; }
+	const std::list<Partial> & partials( void ) const { return _partials; }
 
-//	construction is not allowed:
-private:
-	KaiserWindow( void );
+//	export:
+	static void Export( const char * filename, const std::list<Partial> & plist );
 	
-};	// end of class KaiserWindow
+//	-- private interface --
+private:
+	SdifFile( const SdifFile & other );
+	SdifFile  & operator = ( const SdifFile & rhs );
+
+};	//	end of class SdifFile
 
 #if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
 #endif
 
-#endif /* ndef INCLUDE_KAISERWINDOW_H */
+#endif //	ndef INCLUDE_SDIFFILE_H

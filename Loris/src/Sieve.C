@@ -8,13 +8,17 @@
  * Lippold Haken, 20 Jan 2001
  *
  */
-#include <Loris_prefix.h>
-#include "Sieve.h"
-#include "Partial.h"
-#include "Breakpoint.h"
-#include "Exception.h"
-#include "PartialUtils.h"
-#include "notifier.h"
+
+#if HAVE_CONFIG_H
+	#include <config.h>
+#endif
+
+#include<Sieve.h>
+#include<Partial.h>
+#include<Breakpoint.h>
+#include<Exception.h>
+#include<PartialUtils.h>
+#include<Notifier.h>
 #include <algorithm>
 #include <list>
 

@@ -30,8 +30,12 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-#include <Loris_prefix.h>
-#include "Envelope.h"
+
+#if HAVE_CONFIG_H
+	#include <config.h>
+#endif
+
+#include<Envelope.h>
 
 //	Since Envelope is just an interface, there's nothing interesting in 
 //	the implementation file.

@@ -33,7 +33,7 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-#include <Loris_prefix.h>
+
 #include <cmath>
 //	trunc() is a problem. It's not in cmath, officially, though
 //	Metrowerks has it in there. SGI has it in math.h which is

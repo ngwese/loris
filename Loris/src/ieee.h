@@ -32,7 +32,7 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-#include <Loris_prefix.h>
+
 
 #ifdef __cplusplus
 namespace IEEE {

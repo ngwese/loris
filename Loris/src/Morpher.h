@@ -32,11 +32,11 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-#include <Loris_prefix.h>
+
 #include <list>
 
 #if defined(__MWERKS__)
-#include "Partial.h"
+#include<Partial.h>
 //	On Mac, can't get around including Partial.h unless make a 
 //	class out of std::list< Partial > and its iterators that I can
 //	forward-declare. CW seems not to be able to handle 

@@ -32,8 +32,8 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-#include <Loris_prefix.h>
-#include "Envelope.h"
+
+#include<Envelope.h>
 #include <map>
 
 #if !defined( NO_LORIS_NAMESPACE )

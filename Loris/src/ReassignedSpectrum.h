@@ -32,8 +32,8 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-#include <Loris_prefix.h>
-#include "FourierTransform.h"
+
+#include<FourierTransform.h>
 #include <vector>
 
 #if !defined( NO_LORIS_NAMESPACE )

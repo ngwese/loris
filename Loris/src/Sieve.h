@@ -10,7 +10,7 @@
  * Lippold Haken, 20 Jan 2001
  *
  */
-#include <Loris_prefix.h>
+
 #include <list>
 
 #if !defined( NO_LORIS_NAMESPACE )

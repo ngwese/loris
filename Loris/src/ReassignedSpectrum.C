@@ -30,10 +30,14 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-#include <Loris_prefix.h>
-#include "ReassignedSpectrum.h"
-#include "notifier.h"
-#include "Exception.h"
+
+#if HAVE_CONFIG_H
+	#include <config.h>
+#endif
+
+#include<ReassignedSpectrum.h>
+#include<Notifier.h>
+#include<Exception.h>
 #include <algorithm>
 #include <cmath>	//	for M_PI (except on Mac)
 #include <cstdlib>	//	for std::abs()

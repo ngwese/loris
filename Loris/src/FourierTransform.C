@@ -31,10 +31,14 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-#include <Loris_prefix.h>
-#include "FourierTransform.h"
-#include "Exception.h"
-#include "notifier.h"
+
+#if HAVE_CONFIG_H
+	#include <config.h>
+#endif
+
+#include<FourierTransform.h>
+#include<Exception.h>
+#include<Notifier.h>
 #include "fftw.h"
 #include <set>
 

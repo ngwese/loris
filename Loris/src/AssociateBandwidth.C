@@ -30,11 +30,15 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-#include <Loris_prefix.h>
-#include "AssociateBandwidth.h"
-#include "Exception.h"
-#include "notifier.h"
-#include "Breakpoint.h"
+
+#if HAVE_CONFIG_H
+	#include <config.h>
+#endif
+
+#include<AssociateBandwidth.h>
+#include<Exception.h>
+#include<Notifier.h>
+#include<Breakpoint.h>
 #include <algorithm>
 #include <cmath>
 

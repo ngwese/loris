@@ -31,12 +31,16 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-#include <Loris_prefix.h>
-#include "Synthesizer.h"
-#include "Exception.h"
-#include "Oscillator.h"
-#include "Partial.h"
-#include "notifier.h"
+
+#if HAVE_CONFIG_H
+	#include <config.h>
+#endif
+
+#include<Synthesizer.h>
+#include<Exception.h>
+#include<Oscillator.h>
+#include<Partial.h>
+#include<Notifier.h>
 #include <algorithm>
 #include <cmath>
 

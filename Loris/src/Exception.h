@@ -33,7 +33,7 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-#include <Loris_prefix.h>
+
 #include <string>
 
 #if !defined( NO_LORIS_NAMESPACE )

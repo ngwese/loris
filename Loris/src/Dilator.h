@@ -32,8 +32,8 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-#include <Loris_prefix.h>
-#include "Partial.h"
+
+#include<Partial.h>
 #include <vector>
 #include <list>
 

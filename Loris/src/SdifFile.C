@@ -33,11 +33,15 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-#include <Loris_prefix.h>
-#include "Sdiff.h"
-#include "Exception.h"
-#include "notifier.h"
-#include "Partial.h"
+
+#if HAVE_CONFIG_H
+	#include <config.h>
+#endif
+
+#include<SdifFile.h>
+#include<Exception.h>
+#include<Notifier.h>
+#include<Partial.h>
 #include <list>
 #include <vector>
 #include <cmath>
@@ -66,21 +70,14 @@ typedef struct {
 
 //  SDIF signature used by Loris.
 //	The macro SdifSignatureConst is defined differently in different
-//	versions of the SDIF library, and there is no way to determine
-//	from the header which version of the library is being used. So 
-//	Loris has to have its own flag to identify the Sdif version.
-#ifndef SDIF_VERSION
-#define SDIF_VERSION 322
-#endif
-
-#if (SDIF_VERSION == 322)
+//	versions of the SDIF library. If HAVE_MODERN_SDIF_H is not defined
+//	(in config.h) then assume the old version.
+#ifdef HAVE_MODERN_SDIF_H
 static SdifSignature lorisSignature = SdifSignatureConst('1','T','R','C');
 static SdifSignature lorisLabels = SdifSignatureConst('1','L','B','L');
-#elif (SDIF_VERSION == 320)
+#else
 static SdifSignature lorisSignature = SdifSignatureConst('1TRC');
 static SdifSignature lorisLabels = SdifSignatureConst('1LBL');
-#else
-#error "Unknown SDIF library version."
 #endif
 
 // Pi

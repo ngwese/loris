@@ -30,15 +30,19 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-#include <Loris_prefix.h>
-#include "Analyzer.h"
-#include "AssociateBandwidth.h"
-#include "DistributeEnergy.h"
-#include "Exception.h"
-#include "KaiserWindow.h"
-#include "ReassignedSpectrum.h"
-#include "BreakpointUtils.h"
-#include "notifier.h"
+
+#if HAVE_CONFIG_H
+	#include <config.h>
+#endif
+
+#include<Analyzer.h>
+#include<AssociateBandwidth.h>
+#include<DistributeEnergy.h>
+#include<Exception.h>
+#include<KaiserWindow.h>
+#include<ReassignedSpectrum.h>
+#include<BreakpointUtils.h>
+#include<Notifier.h>
 #include <list>
 #include <vector>
 #include <memory>

@@ -30,12 +30,17 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-#include <Loris_prefix.h>
-#include "AiffFile.h"
-#include "Endian.h"
-#include "Exception.h"
-#include "notifier.h"
+
+#if HAVE_CONFIG_H
+	#include <config.h>
+#endif
+
+#include<AiffFile.h>
+#include<Endian.h>
+#include<Exception.h>
+#include<Notifier.h>
 #include "ieee.h"
+#include "Loris_types.h"
 #include <algorithm>
 #include <string>
 #include <fstream>

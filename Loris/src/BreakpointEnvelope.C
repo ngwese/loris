@@ -30,9 +30,13 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-#include <Loris_prefix.h>
-#include "BreakpointEnvelope.h"
-#include "notifier.h"
+
+#if HAVE_CONFIG_H
+	#include <config.h>
+#endif
+
+#include<BreakpointEnvelope.h>
+#include<Notifier.h>
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
