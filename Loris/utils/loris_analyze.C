@@ -47,6 +47,77 @@ bool gVerbose = false;
 double gRate = 44100;
 
 // ----------------------------------------------------------------
+//	command-line options string
+// ----------------------------------------------------------------
+string gOptions = "\n\
+	If no input filename is specified, samples are read from standard\n\
+	input, and the sample rate must be specified using the -rate flag.\n\
+\n\
+options:\n\
+	-o,-out,-ofile,-outfile : set the name of the output (SDIF) file.\n\
+		Requires a file name.\n\
+	\n\
+	-render,-synth : render the Partials to a new (AIFF) samples file.\n\
+		Optionally specify the name of the file, otherwise test.aiff\n\
+		is used.\n\
+	\n\
+	-collate : collate the Partials to reduce their number without 	\n\
+		assuming any harmonic structure (cannot distill later!)\n\
+	\n\
+	-distill,-dist : distill the Partials assuming a harmonic structure\n\
+		with the specified approximate fundamental frequency. Requires \n\
+		a positive numeric parameter.\n\
+	\n\
+	-resample,-resamp : resample the Partials at a regular interval\n\
+		(in seconds). Requires a positive numeric parameter.\n\
+	\n\
+	-hop,-hoptime : set the hop time paremeter for the Analyzer.\n\
+		Requires a positive numeric parameter. Default is the \n\
+		inverse of the analysis window width.\n\
+	\n\
+	-crop,-croptime : set the cropping time parameter for the Analyzer.\n\
+		Requires a positive numeric parameter. Default is the \n\
+		inverse of the analysis window width.\n\
+	\n\
+	-bw,-bwregionwidth : set the bandwidth association region width \n\
+		parameter for the Analyzer. Requires a non-negative numeric \n\
+		parameter, 0 indicates disable bandwidth association. \n\
+		Default is 2 kHz.\n\
+		\n\
+	-drift,-freqdrift : set the frequency drift parameter for the \n\
+		Analyzer. Requires a positive numeric parameter.\n\
+		Default is half the frequency resolution.\n\
+	\n\
+	-ampfloor : set the amplitude floor parameter for the Analyzer.\n\
+		Requires a NEGATIVE numeric parameter, relative to 0 dB full \n\
+		amplitude sine wave. Default is -90 dB.\n\
+	\n\
+	-freqfloor : set the frequency floor parameter for the Analyzer.\n\
+		Requires a positive numeric parameter.\n\
+	\n\
+	-sidelobes,-attenuation,-sidelobelevel : set the sidelobe attenuation\n\
+		(in positive dB) for the analysis window used by the Analyzer \n\
+		(default is 90 dB). Requires a positive numeric parameter.\n\
+		\n\
+	-rate,-samplerate,-sr : set the sample rate for the test render\n\
+		(no effect if not used with -render or -synth, default rate\n\
+		is same as input file). Also sets the sample rate for samples\n\
+		read from standard input (default is 44.1 kHz). Requires a \n\
+		positive numeric parameter.\n\
+		\n\
+	-resolution,-res,-freqres,-freqresolution : set the frequency \n\
+		resolution parameter for the Analyzer (after configuring \n\
+		other parameters). Requires a positive numeric parameter.\n\
+		\n\
+	-width,--winwidth,-windwowidth : set the main lobe width of the \n\
+		the analysis window used by the Analyzer (default is twice \n\
+		the frequency resolution). Requires a positive numeric parameter.\n\
+		\n\
+		\n\
+	-v,-verbose : print lots of information before analyzing\n\
+";
+
+// ----------------------------------------------------------------
 //	argument parsing
 // ----------------------------------------------------------------
 static bool argIsNumber( const string & s, double * ret= 0 )
@@ -689,7 +760,8 @@ int main( int argc, char * argv[] )
 	{
 		cout << "Error parsing arguments: \n\t" << ex.what() << endl;
 		cout << "usage: " << argv[0] << " resolution ";
-		cout << "[windowWidth] [infilename.aiff] [flags]" << endl;
+		cout << "[windowWidth] [infilename.aiff] [options]" << endl;
+		cout << gOptions << endl;
 		return 1;
 	}
 	
