@@ -33,8 +33,9 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-#include<Partial.h>
+#include <Partial.h>
 #include <list>
+#include <string>
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
@@ -53,14 +54,14 @@ class SdifFile
 public:
 //	construction (import):
 //	(let compiler generate destructor)
-	SdifFile( const char *infilename );
+	SdifFile( const std::string & infilename );
 		
 //	std::list< Partial > access:
 	std::list<Partial> & partials( void ) { return _partials; }
 	const std::list<Partial> & partials( void ) const { return _partials; }
 
 //	export:
-	static void Export( const char * filename, const std::list<Partial> & plist );
+	static void Export( const std::string & filename, const std::list<Partial> & plist );
 	
 //	-- private interface --
 private:

@@ -101,6 +101,23 @@ public:
 		breakpoint at the specified time, it will be replaced with 
 		the new breakpoint.
 	 */
+	 
+//
+//	iterator access:
+//	(hack, need to make this pretty)
+	typedef std::map< double, double >::iterator iterator;
+	typedef std::map< double, double >::const_iterator const_iterator;
+	
+	iterator begin( void ) { return _breakpoints.begin(); }
+	const_iterator begin( void ) const { return _breakpoints.begin(); }
+	
+	iterator end( void ) { return _breakpoints.end(); }
+	const_iterator end( void ) const { return _breakpoints.end(); }
+	
+	unsigned long size( void ) const { return _breakpoints.size(); }
+	bool empty( void ) const { return _breakpoints.empty(); }
+	
+	
 
 };	//	end of class BreakpointEnvelope
 

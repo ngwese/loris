@@ -149,6 +149,7 @@ private:
 
 };	//	end of class FourierTransform
 
+#if 0
 //
 //	template loading functions:
 //
@@ -215,6 +216,7 @@ load( FourierTransform & t, Iterator1 begin, Iterator1 center, Iterator1 end, It
 	std::rotate( t.begin(), tmiddle, t.end() );
 	return t;
 }
+#endif
 
 #if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris

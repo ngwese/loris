@@ -34,9 +34,10 @@
  *
  */
 
-#include<Partial.h>
-#include<Exception.h>
+#include <Partial.h>
+#include <Exception.h>
 #include <list>
+#include <string>
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
@@ -55,7 +56,7 @@ class ImportLemur
 public:
 //	construction:
 //	(compiler can generate destructor)
-	ImportLemur( const char * fname, double bweCutoff = 1000 );
+	ImportLemur( const std::string & fname, double bweCutoff = 1000 );
 
 //	std::list< Partial > access:
 	std::list< Partial > & partials( void ) { return _partials; }

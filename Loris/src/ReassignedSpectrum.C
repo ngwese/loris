@@ -187,7 +187,9 @@ ReassignedSpectrum::computeWindowSpectrum( const vector< double > & v )
 	debugger << "AssociateBandwidth oversampling window spectrum by " << OVERSAMPLE_WINDOW_SPECTRUM << endl;
 	
 	FourierTransform ft( size() * OVERSAMPLE_WINDOW_SPECTRUM );
-	load( ft, v.begin(), v.end() );
+	FourierTransform::iterator it = 
+		std::copy( v.begin(), v.end(), ft.begin() );
+	std::fill( it, ft.end(), 0. );
 	ft.transform();	
 
 	double peakScale = 1. / abs( ft[0] );
@@ -528,7 +530,9 @@ static inline void applyFreqRamp( vector< double > & w, long transformSize  )
 	//	Use a transform exactly as long as the window.
 	//	load, w/out rotation, and transform.
 	FourierTransform temp( w.size() );
-	load( temp, w.begin(), w.end() );
+	FourierTransform::iterator it = 
+		std::copy( w.begin(), w.end(), temp.begin() );
+	std::fill( it, temp.end(), 0. );
 	temp.transform();
 	
 	//	extract complex transform and multiply by

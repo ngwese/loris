@@ -521,7 +521,7 @@ static inline double distance( const Partial & partial,
 //	give birth to new Partials.
 //
 // #define sucks
-#ifdef sucks
+#ifdef sucks	//	 what the heck is this?
 void 
 Analyzer::formPartials( std::list< Breakpoint > & frame, double /* frameTime */ , 
 						AnalyzerState & state )

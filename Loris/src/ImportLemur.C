@@ -46,6 +46,7 @@
 #include <algorithm>
 #include <cmath>
 #include <fstream>
+#include <string>
 
 #if HAVE_M_PI
 	const double Pi = M_PI;
@@ -145,12 +146,12 @@ static void readPeakData( std::istream & s, PeakOnDisk & p );
 //	bweCutoff defaults to 1kHz, the default cutoff in Lemur.
 //	Clients should be prepared to catch ImportErrors.
 //
-ImportLemur::ImportLemur( const char * fname, double bweCutoff /* = 1000 Hz */)
+ImportLemur::ImportLemur( const std::string & fname, double bweCutoff /* = 1000 Hz */)
 {
 	std::fstream fs;
 	try
 	{
-		fs.open( fname, std::ios::in | std::ios::binary );
+		fs.open( fname.c_str(), std::ios::in | std::ios::binary );
 	}
 	catch( std::exception & ex )
 	{

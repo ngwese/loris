@@ -45,6 +45,7 @@
 #include <list>
 #include <vector>
 #include <cmath>
+#include <string>
 
 #if HAVE_M_PI
 	const double Pi = M_PI;
@@ -319,9 +320,9 @@ read( const char *infilename, std::list<Partial> & partials )
 //	SdifFile constructor from data in memory (import)
 // ---------------------------------------------------------------------------
 //
-SdifFile::SdifFile( const char *infilename ) 
+SdifFile::SdifFile( const std::string & infilename ) 
 {
-	read( infilename, _partials );
+	read( infilename.c_str(), _partials );
 }
 
 
@@ -662,7 +663,7 @@ writeEnvelopeData( SdifFileT * out,
 // Export SDIF file.
 //
 void
-SdifFile::Export( const char * filename, const std::list<Partial> & partials )
+SdifFile::Export( const std::string & filename, const std::list<Partial> & partials )
 {
 
 // 
@@ -673,7 +674,7 @@ SdifFile::Export( const char * filename, const std::list<Partial> & partials )
 //
 // Open SDIF file for writing.
 //
-	SdifFileT *out = SdifFOpen(filename, eWriteFile);
+	SdifFileT *out = SdifFOpen(filename.c_str(), eWriteFile);
 	if (!out)
 		Throw( FileIOException, "Could not open SDIF file for writing." );
 
