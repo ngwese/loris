@@ -110,7 +110,7 @@ Analyzer::createSpectrum( double srate )
 	
 	//	window parameters:
 	long winlen = KaiserWindow::computeLength( _windowWidth / srate, _windowAtten );
-	if (winlen % 2) {
+	if (! winlen % 2) {
 		++winlen;
 	}
 	double winshape = KaiserWindow::computeShape( _windowAtten );
@@ -206,8 +206,8 @@ Analyzer::extractBreakpoints( void )
 
 		//	if the time correction for this peak is large,
 		//	forget it, go on to the next one:
-		double peakSampleOffset = _spectrum->reassignedTime( it->frequency() );
-		if ( abs(peakSampleOffset) > hopSize() * 0.5 ) {
+		double timeCorrection = _spectrum->reassignedTime( it->frequency() );
+		if ( abs(timeCorrection) > hopSize() * 0.99995 ) {
 			continue;	//	loop over short-time peaks
 		} 
 		
@@ -229,10 +229,10 @@ Analyzer::extractBreakpoints( void )
 		//	create a Breakpoint corresponding to the
 		//	short-time reassigned spectral peak:
 		Breakpoint bp( peakfreq, it->magnitude(), 0. /* bandwidth */, 
-					   _spectrum->reassignedPhase( it->frequency(), peakSampleOffset ) );
+					   _spectrum->reassignedPhase( it->frequency(), timeCorrection ) );
 	
 		//	add it to the frame:
-		frame.push_back( make_pair( bp, frameTime() + (peakSampleOffset / sampleRate()) ) );
+		frame.push_back( make_pair( bp, frameTime() + (timeCorrection / sampleRate()) ) );
 	}
 	/*
 	if ( peaks.size() != frame.size() ) {
@@ -306,7 +306,9 @@ Analyzer::formPartials( const Frame & frame )
 		//		closer to the nearest Partial (4)
 		//
 		//	Otherwise, add this Breakpoint to the nearest Partial.
-		double thisdist = (nearest != partials().end()) ? (distance(*nearest, bp, peakTime)) : (0.);
+		double thisdist = (nearest != partials().end()) ? 
+							(distance(*nearest, bp, peakTime)) : 
+							(0.);
 		if ( nearest == partials().end() /* (1) */ || 
 			 thisdist > captureRange() /* (2) */ ||
 			 ( bpIter+1 != frame.end() && 

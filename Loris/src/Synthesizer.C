@@ -131,12 +131,12 @@ Synthesizer::operator=( const Synthesizer & other )
 void
 Synthesizer::synthesize( const Partial & p )
 {
-//
+/*
 	debugger << "synthesizing Partial from " << p.startTime() <<
 			" to " << p.endTime() << " starting phase " <<
 			p.initialPhase() << " starting frequency " << 
 			p.begin()->second.frequency() << endl;
-//
+*/
 //	don't synthesize Partials having zero duration:
 	if ( p.duration() == 0. )
 		return;
@@ -157,8 +157,10 @@ Synthesizer::synthesize( const Partial & p )
 //	reset the oscillator:
 //	Remember that the oscillator only knows about radian frequency! Convert!
 	iterator()->reset( p );
-	_oscillator->reset( radianFreq( iterator()->frequency() ), iterator()->amplitude(), 
-						iterator()->bandwidth(), iterator()->phase() );
+	_oscillator->reset( radianFreq( iterator()->frequency() ), 
+						iterator()->amplitude(), 
+						iterator()->bandwidth(), 
+						iterator()->phase() );
 
 //	initialize sample offset:
 	long bpSampleOffset = (iterator()->time() + offset()) * sampleRate();
@@ -198,7 +200,8 @@ Synthesizer::synthesizeEnvelopeSegment( long currentSampleOffset )
 		//	between consecutive envelope breakpoints) we
 		//	obviate the running fractional sample total we
 		//	used to need.
-		long nsamps = ((iterator()->time() + offset()) * sampleRate()) - currentSampleOffset;
+		long nsamps = 
+			((iterator()->time() + offset()) * sampleRate()) - currentSampleOffset;
 		
 		//	Don't synthesize samples past the end of the buffer.
 		nsamps = min( nsamps, long(_samples.size()) - currentSampleOffset );
@@ -212,7 +215,8 @@ Synthesizer::synthesizeEnvelopeSegment( long currentSampleOffset )
 		//	bandwidth of the current Breakpoint:
 		_oscillator->generateSamples( _samples, nsamps, currentSampleOffset,
 									  radianFreq( iterator()->frequency() ), 
-									  iterator()->amplitude(), iterator()->bandwidth() );
+									  iterator()->amplitude(), 
+									  iterator()->bandwidth() );
 
 		//	update the offset:	
 		currentSampleOffset += nsamps;

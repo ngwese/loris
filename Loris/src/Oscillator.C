@@ -136,6 +136,7 @@ Oscillator::generateSamples( vector< double > & buffer, long howMany, long offse
 		//	compute the sample anyway, because the oscillator and
 		//	modulator might have state that need to be updated:
 		double x = modulate( _bandwidth ) * _amplitude * oscillate( _phase );
+				//fmod( _phase * 0.1, 1.0 );
 		if ( offset + i >= 0 ) 	
 			buffer[ offset + i ] += x;
 			//buffer.at( offset + i ) += x;

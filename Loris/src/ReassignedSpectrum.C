@@ -56,6 +56,16 @@ ReassignedSpectrum::~ReassignedSpectrum( void )
 //	should be aligned. It may be outside the extent of the buffer (that is, 
 //	negative or greater than the size of the buffer).
 //
+//	The offset computation is confusing. boffset and eoffset are indices into
+//	the sample buffer, woffset is an index into the window. The window and 
+//	temporary transform buffer must have the same offset because the center 
+//	of the window must always be at the center of the transform buffer (the
+//	FourierTransform's loadAndRotate() assumes this).
+//
+//	I don't like the tempoarary buffer. I think that FT needs an interface that
+//	does what I am using std::transform() to do. I also need to get rid of that
+//	name collision (transform).
+//
 void
 ReassignedSpectrum::transform( const vector< double > & buf, long idxCenter )
 {
@@ -71,15 +81,14 @@ ReassignedSpectrum::transform( const vector< double > & buf, long idxCenter )
 		boffset = 0;
 	}
 	long eoffset = min( buf.size(), boffset - woffset + _window.size() );
+	if ( eoffset < boffset ) {
+		eoffset = boffset;
+	}
 	
 //	window and rotate input and compute normal transform:
 	std::transform( buf.begin() + boffset, buf.begin() + eoffset, 
 					_window.begin() + woffset, 
-					tmp.begin(), multiplies< double >() );
-/*
-	AiffFile a( 44100., 1, 16, tmp );
-	a.write("ra thingie.aiff");
-*/
+					tmp.begin() + woffset, multiplies< double >() );
 	_transform.loadAndRotate( tmp );
 	_transform.transform();
 
@@ -87,7 +96,7 @@ ReassignedSpectrum::transform( const vector< double > & buf, long idxCenter )
 //	and compute frequency correction transform:
 	std::transform( buf.begin() + boffset, buf.begin() + eoffset, 
 					_winfreqramp.begin() + woffset, 
-					tmp.begin(), multiplies< double >() );
+					tmp.begin() + woffset, multiplies< double >() );
 	_tfreqramp.loadAndRotate( tmp );
 	_tfreqramp.transform();
 
@@ -95,7 +104,7 @@ ReassignedSpectrum::transform( const vector< double > & buf, long idxCenter )
 //	compute time correction transform:
 	std::transform( buf.begin() + boffset, buf.begin() + eoffset, 
 					_wintimeramp.begin() + woffset, 
-					tmp.begin(), multiplies< double >() );
+					tmp.begin() + woffset, multiplies< double >() );
 	_ttimeramp.loadAndRotate( tmp );
 	_ttimeramp.transform();
 }
@@ -118,18 +127,19 @@ ReassignedSpectrum::findPeaks( double threshold_dB ) const
 			//	itsa magnitude peak:
 			double f = j + frequencyCorrection( j );	//	fractional sample
 			//double m = reassignedMagnitude( f );		//	from fractional sample
-			 double m = _magScale * abs(_transform[j]);
+			double m = _magScale * abs(_transform[j]);
 			 
 			//	only retain data above the magnitude threshold:
 			if ( m > threshold ) {
 				peaks.insert( Peak( f, m ) );
 				
-				//	Hopefully, this doesn't happen much.
-				if ( 0 && abs(f-j) > 1 ) {
+				/*	Hopefully, this doesn't happen much.
+				if ( abs(f-j) > 1 ) {
 					debugger << "\Found frequency correction of " << abs(f-j) <<
 								" for frequency sample " << j << 
 								" having magnitude " << 20. * log10(m) << endl;
 				}
+				*/
 			}
 		}
 	}
@@ -223,18 +233,22 @@ ReassignedSpectrum::applyTimeRamp( vector< double > & w )
 //	sample is the frequency sample index, the nominal component 
 //	frequency in samples. 
 //
+//	Parabolic interpolation can be tried too, but it appears to give
+//	slightly worse results for the square wave.
+//
 double
 ReassignedSpectrum::frequencyCorrection( long sample ) const
 {
-//
+//#define __parab
+#ifndef __parab
 	double num = _transform[sample].real() * _tfreqramp[sample].imag() -
 					_transform[sample].imag() * _tfreqramp[sample].real();
-	double magSquared = abs( _transform[sample] ) * abs( _transform[sample] );
+	double magSquared = norm( _transform[sample] );
 						
 	return - num / magSquared;
-//	
 
-/*
+#else
+
 //	use parabolic interpolation until
 //	we figure out why (whether?) freq reassignment sucks:
 	double dbLeft = 20. * log10( abs( _transform[sample-1] ) );
@@ -242,8 +256,10 @@ ReassignedSpectrum::frequencyCorrection( long sample ) const
 	double dbRight = 20. * log10( abs( _transform[sample+1] ) );
 
 	return	0.5 * (dbLeft - dbRight) /
-			(dbLeft - 2.0 * dbCandidate + dbRight);
-*/
+			(dbLeft - (2. * dbCandidate) + dbRight);
+
+#endif
+
 }
 
 // ---------------------------------------------------------------------------
@@ -341,7 +357,7 @@ ReassignedSpectrum::reassignedPhase( double fracFreqSample,
 									 double timeCorrection ) const
 {
 	//	compute (interpolate) the phase at the reassigned frequency:
-	double alpha =  fracFreqSample - floor( fracFreqSample );
+	double alpha = fracFreqSample - floor( fracFreqSample );
 
 	double phaseBelow = arg( _transform[ floor( fracFreqSample ) ] );
 	double phaseAbove = arg( _transform[ ceil( fracFreqSample ) ] );
@@ -361,7 +377,7 @@ ReassignedSpectrum::reassignedPhase( double fracFreqSample,
 	double phase = ( alpha * phaseAbove ) + (( 1. - alpha ) * phaseBelow );
 				
 	//	correct for time offset:
-	phase += ( timeCorrection * fracFreqSample * TwoPi / _transform.size() );
+	phase += timeCorrection * fracFreqSample * TwoPi / _transform.size();
 	
 	return fmod( phase, TwoPi );
 }

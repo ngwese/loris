@@ -62,7 +62,7 @@ FourierTransform::transform( void )
 	} 
 	
 //	do decimation-in-time butterfly steps:
-	for ( long span = 1;  span < size();  span = span << 1 ) {
+	for ( long span = 1;  span < size();  span = span * 2 ) {
 		decimationStep( span );
 	}
 }
@@ -175,7 +175,7 @@ FourierTransform::fillReverseBinaryTable( void )
 void
 FourierTransform::decimationStep( long span )
 {
-	const long twospan	= span << 1;
+	const long twospan	= span * 2;
 	const double dangle = Pi / span;
 	
 	long i;
@@ -183,7 +183,7 @@ FourierTransform::decimationStep( long span )
 	for ( i = 0, angle = 0.0;  i < span;  ++i, angle += dangle ) {
 		//	negative angle agrees with the O&S definition 
 		//	of the complex exponential W.
-		//	(also it appear to give the right results)
+		//	(also it appears to give the right results)
 		complex< double > W = polar( 1., - angle );
 		
 		for ( long j = i;  j < size();  j += twospan ) {	
