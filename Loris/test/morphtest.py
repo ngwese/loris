@@ -102,7 +102,7 @@ loris.exportAiff( 'clarOK.pytest.aiff', loris.synthesize( clar, samplerate ), sa
 #	analyze flute tone (reuse Analyzer)
 #
 print 'analyzing flute 3D (%s)' % time.ctime(time.time())
-a.configure( 270 )		# reconfigure Analyzer
+a = loris.Analyzer( 270 )		# reconfigure Analyzer
 v = loris.AiffFile( os.path.join(path, 'flute.aiff') ).samples()
 flut = a.analyze( v, samplerate )
 

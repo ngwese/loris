@@ -139,6 +139,9 @@ static double zeroethOrderBessel( double val )
 double
 KaiserWindow::computeShape( double atten )
 {
+	if ( atten < 0. )
+		Throw( InvalidArgument, "Kaiser window shape must be computed from positive (> 0dB) sidelobe attenuation. (receied attenuation < 0)" );
+
 	double alpha;
 	
 	if ( atten > 60.0 )
@@ -171,9 +174,9 @@ KaiserWindow::computeShape( double atten )
 //	that is, it is a fraction of the sample rate.
 //
 long
-KaiserWindow::computeLength( double width, double atten )
+KaiserWindow::computeLength( double width, double alpha )
 {
-	double alpha = computeShape( atten );
+	//double alpha = computeShape( atten );
 
 	//	The last 0.5 is cheap rounding.
 	//	But I think I don't need cheap rounding because the equation 

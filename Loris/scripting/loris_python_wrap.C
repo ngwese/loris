@@ -856,6 +856,11 @@ void SampleVector_setAt(SampleVector *self,unsigned long idx,double x){
 
 using Loris::Analyzer;
 
+Analyzer *new_Analyzer(double resolutionHz,double windowWidthHz){
+		if ( windowWidthHz == 0. )
+			windowWidthHz = resolutionHz;
+		return new Analyzer( resolutionHz, windowWidthHz );
+	}
 Analyzer *Analyzer_copy(Analyzer *self){
 		return new Analyzer( self->freqResolution() );
 	}
@@ -3731,41 +3736,6 @@ static PyObject * SampleVector_swigregister(PyObject *self, PyObject *args) {
     Py_INCREF(obj);
     return Py_BuildValue((char *)"");
 }
-static PyObject *_wrap_new_Analyzer(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    double arg1 ;
-    Analyzer *result;
-    
-    if(!PyArg_ParseTuple(args,(char *)"d:new_Analyzer",&arg1)) return NULL;
-    {
-        try
-        {
-            result = (Analyzer *)new Analyzer(arg1);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            //	(these are very unlikely to come from the interface
-            //	code, and cannot escape the procedural interface to
-            //	Loris, which catches all exceptions.)
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-    }
-    resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_Analyzer, 1);
-    return resultobj;
-}
-
-
 static PyObject *_wrap_delete_Analyzer(PyObject *self, PyObject *args) {
     PyObject *resultobj;
     Analyzer *arg1 ;
@@ -3798,6 +3768,42 @@ static PyObject *_wrap_delete_Analyzer(PyObject *self, PyObject *args) {
         }
     }
     Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+}
+
+
+static PyObject *_wrap_new_Analyzer(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    double arg1 ;
+    double arg2 = 0. ;
+    Analyzer *result;
+    
+    if(!PyArg_ParseTuple(args,(char *)"d|d:new_Analyzer",&arg1,&arg2)) return NULL;
+    {
+        try
+        {
+            result = (Analyzer *)new_Analyzer(arg1,arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            //	(these are very unlikely to come from the interface
+            //	code, and cannot escape the procedural interface to
+            //	Loris, which catches all exceptions.)
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
+        }
+    }
+    resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_Analyzer, 1);
     return resultobj;
 }
 
@@ -3876,43 +3882,6 @@ static PyObject *_wrap_Analyzer_analyze(PyObject *self, PyObject *args) {
         }
     }
     resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_PartialList, 1);
-    return resultobj;
-}
-
-
-static PyObject *_wrap_Analyzer_configure(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    Analyzer *arg1 ;
-    double arg2 ;
-    PyObject * obj0  = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"Od:Analyzer_configure",&obj0,&arg2)) return NULL;
-    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_Analyzer,1)) == -1) return NULL;
-    {
-        try
-        {
-            (arg1)->configure(arg2);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            //	(these are very unlikely to come from the interface
-            //	code, and cannot escape the procedural interface to
-            //	Loris, which catches all exceptions.)
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-    }
-    Py_INCREF(Py_None); resultobj = Py_None;
     return resultobj;
 }
 
@@ -5693,11 +5662,10 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"SampleVector_getAt", _wrap_SampleVector_getAt, METH_VARARGS },
 	 { (char *)"SampleVector_setAt", _wrap_SampleVector_setAt, METH_VARARGS },
 	 { (char *)"SampleVector_swigregister", SampleVector_swigregister, METH_VARARGS },
-	 { (char *)"new_Analyzer", _wrap_new_Analyzer, METH_VARARGS },
 	 { (char *)"delete_Analyzer", _wrap_delete_Analyzer, METH_VARARGS },
+	 { (char *)"new_Analyzer", _wrap_new_Analyzer, METH_VARARGS },
 	 { (char *)"Analyzer_copy", _wrap_Analyzer_copy, METH_VARARGS },
 	 { (char *)"Analyzer_analyze", _wrap_Analyzer_analyze, METH_VARARGS },
-	 { (char *)"Analyzer_configure", _wrap_Analyzer_configure, METH_VARARGS },
 	 { (char *)"Analyzer_freqResolution", _wrap_Analyzer_freqResolution, METH_VARARGS },
 	 { (char *)"Analyzer_ampFloor", _wrap_Analyzer_ampFloor, METH_VARARGS },
 	 { (char *)"Analyzer_windowWidth", _wrap_Analyzer_windowWidth, METH_VARARGS },

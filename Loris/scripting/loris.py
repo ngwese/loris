@@ -293,15 +293,14 @@ class Analyzer:
         if method: return method(self)
         raise AttributeError,name
 
-    def __init__(self,*args):
-        self.this = apply(lorisc.new_Analyzer,args)
-        self.thisown = 1
     def __del__(self,lorisc=lorisc):
         if getattr(self,'thisown',0):
             lorisc.delete_Analyzer(self)
+    def __init__(self,*args):
+        self.this = apply(lorisc.new_Analyzer,args)
+        self.thisown = 1
     def copy(*args): return apply(lorisc.Analyzer_copy,args)
     def analyze(*args): return apply(lorisc.Analyzer_analyze,args)
-    def configure(*args): return apply(lorisc.Analyzer_configure,args)
     def freqResolution(*args): return apply(lorisc.Analyzer_freqResolution,args)
     def ampFloor(*args): return apply(lorisc.Analyzer_ampFloor,args)
     def windowWidth(*args): return apply(lorisc.Analyzer_windowWidth,args)

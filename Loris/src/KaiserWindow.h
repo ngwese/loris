@@ -56,7 +56,7 @@ public:
 	static void create( std::vector< double > & samples, double shape );
 	
 	static double computeShape( double atten );
-	static long computeLength( double width, double atten );
+	static long computeLength( double width, double alpha );
 
 //	construction is not allowed:
 private:

@@ -139,11 +139,12 @@
 	
 	In C++, Analyzer is Loris::Analyzer, defined in Analyzer.h.
  */
-Analyzer * createAnalyzer( double resolution );
+Analyzer * createAnalyzer( double resolution, double windowWidth );
 /*	Construct and return a new Analyzer configured with the given	
 	frequency resolution (minimum instantaneous frequency	
-	difference between Partials). All other Analyzer parameters 	
-	are computed from the specified frequency resolution. 			
+	difference between Partials) and analysis window main 
+	lobe width (between zeros). All other Analyzer parameters 	
+	are computed from the specified  resolution and window width.
  */
 void destroyAnalyzer( Analyzer * ptr_this );
 /*	Destroy this Analyzer. 								
@@ -154,13 +155,6 @@ void analyzer_analyze( Analyzer * ptr_this,
 /*	Analyze a vector of (mono) samples at the given sample rate 	  	
 	(in Hz) and append the extracted Partials to the given 
 	PartialList. 												
- */
-	
-void analyzer_configure( Analyzer * ptr_this, double resolution );
-/*	Configure this Analyzer with the given frequency resolution 
-	(minimum instantaneous frequency difference between Partials). 
-	All other Analyzer parameters are (re-)computed from the 
-	frequency resolution. 		
  */
 double analyzer_getFreqResolution( const Analyzer * ptr_this );
 /*	Return the frequency resolution (minimum instantaneous frequency  		

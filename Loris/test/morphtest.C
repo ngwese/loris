@@ -128,7 +128,7 @@ int main( )
 		
 		//	analyze flute tone
 		std::cout << "analyzing flute 3D" << endl;
-		a.configure(270);
+		a = Analyzer(270);
 		f = AiffFile( path + "flute.aiff" );
 		v = std::vector< double >( f.sampleFrames() );
 		f.getSamples( v.begin(), v.end() );

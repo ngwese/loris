@@ -65,20 +65,29 @@ class SampleVector;
 class Analyzer
 {
 public:
-//	construction:
-	Analyzer( double resolutionHz );
-	/*	Construct and return a new Analyzer configured with the given	
-		frequency resolution (minimum instantaneous frequency	
-		difference between Partials). All other Analyzer parameters 	
-		are computed from the specified frequency resolution. 			
-	 */
-		 
+//	destruction:		 
 	~Analyzer( void );
 	/*	Destroy this Analyzer. 								
 	 */	
 	 
 %addmethods 
 {
+//	construction:
+	Analyzer( double resolutionHz, double windowWidthHz = 0. )
+	{
+		if ( windowWidthHz == 0. )
+			windowWidthHz = resolutionHz;
+		return new Analyzer( resolutionHz, windowWidthHz );
+	}
+	/*	Construct and return a new Analyzer configured with the given	
+		frequency resolution (minimum instantaneous frequency	
+		difference between Partials) and analysis window main 
+		lobe width (between zeros). All other Analyzer parameters 	
+		are computed from the specified resolution and window
+		width. If the window width is not specified, or is 0,
+		then it is assumed to be equal to the resolution. 			
+	 */
+
 //	copying:
 	%new Analyzer * copy( void )
 	{
@@ -101,14 +110,6 @@ public:
 		(in Hz) and return the resulting Partials in a PartialList. 												
 	 */
 }
-	
-//	configuration:
-	void configure( double resolutionHz );
-	/*	Configure this Analyzer with the given frequency resolution 
-		(minimum instantaneous frequency difference between Partials). 
-		All other Analyzer parameters are (re-)computed from the 
-		frequency resolution. 		
-	 */
 	
 //	parameter access:
 	double freqResolution( void ) const { return _resolution; }

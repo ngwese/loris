@@ -85,12 +85,12 @@ using namespace Loris;
 	are computed from the specified frequency resolution. 			
  */
 extern "C"
-Analyzer * createAnalyzer( double resolution )
+Analyzer * createAnalyzer( double resolution, double windowWidth )
 {
 	try 
 	{
 		debugger << "creating Analyzer" << endl;
-		return new Analyzer( resolution );
+		return new Analyzer( resolution, windowWidth );
 	}
 	catch( Exception & ex ) 
 	{
@@ -172,36 +172,6 @@ void analyzer_analyze( Analyzer * ptr_this,
 	catch( std::exception & ex ) 
 	{
 		std::string s("std C++ exception in analyzer_analyze(): " );
-		s.append( ex.what() );
-		handleException( s.c_str() );
-	}
-}
-
-/* ---------------------------------------------------------------- */
-/*        analyzer_configure        
-/*
-/*	Configure this Analyzer with the given frequency resolution 
-	(minimum instantaneous frequency difference between Partials). 
-	All other Analyzer parameters are (re-)computed from the 
-	frequency resolution. 		
- */
-extern "C"
-void analyzer_configure( Analyzer * ptr_this, double resolution )
-{
-	try  
-	{
-		ThrowIfNull((Analyzer *) ptr_this);
-		ptr_this->configure( resolution );
-	}
-	catch( Exception & ex )  
-	{
-		std::string s("Loris exception in analyzer_configure(): " );
-		s.append( ex.what() );
-		handleException( s.c_str() );
-	}
-	catch( std::exception & ex )  
-	{
-		std::string s("std C++ exception in analyzer_configure(): " );
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}

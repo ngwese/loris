@@ -1132,6 +1132,11 @@ void SampleVector_setAt(SampleVector *self,unsigned long idx,double x){
 
 using Loris::Analyzer;
 
+Analyzer *new_Analyzer(double resolutionHz,double windowWidthHz){
+		if ( windowWidthHz == 0. )
+			windowWidthHz = resolutionHz;
+		return new Analyzer( resolutionHz, windowWidthHz );
+	}
 Analyzer *Analyzer_copy(Analyzer *self){
 		return new Analyzer( self->freqResolution() );
 	}
@@ -3862,40 +3867,6 @@ static swig_attribute swig_SampleVector_attributes[] = {
 static swig_class *swig_SampleVector_bases[] = {0};
 swig_class _wrap_class_SampleVector = { "SampleVector", &SWIGTYPE_p_SampleVector,_wrap_new_SampleVector, swig_delete_SampleVector, swig_SampleVector_methods, swig_SampleVector_attributes, swig_SampleVector_bases };
 static int
-_wrap_new_Analyzer(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
-    double arg1 ;
-    Analyzer *result;
-    
-    if (SWIG_GetArgs(interp, objc, objv,"d:new_Analyzer resolutionHz ",&arg1) == TCL_ERROR) return TCL_ERROR;
-    {
-        try
-        {
-            result = (Analyzer *)new Analyzer(arg1);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            //	(these are very unlikely to come from the interface
-            //	code, and cannot escape the procedural interface to
-            //	Loris, which catches all exceptions.)
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-    }
-    Tcl_SetObjResult(interp,SWIG_NewPointerObj((void *) result, SWIGTYPE_p_Analyzer));
-    return TCL_OK;
-}
-
-static int
 _wrap_delete_Analyzer(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
     Analyzer *arg1 ;
     
@@ -3925,6 +3896,41 @@ _wrap_delete_Analyzer(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_O
         }
     }
     
+    return TCL_OK;
+}
+
+static int
+_wrap_new_Analyzer(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    double arg1 ;
+    double arg2 = 0. ;
+    Analyzer *result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"d|d:new_Analyzer resolutionHz windowWidthHz ",&arg1,&arg2) == TCL_ERROR) return TCL_ERROR;
+    {
+        try
+        {
+            result = (Analyzer *)new_Analyzer(arg1,arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            //	(these are very unlikely to come from the interface
+            //	code, and cannot escape the procedural interface to
+            //	Loris, which catches all exceptions.)
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,SWIG_NewPointerObj((void *) result, SWIGTYPE_p_Analyzer));
     return TCL_OK;
 }
 
@@ -3995,40 +4001,6 @@ _wrap_Analyzer_analyze(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_
         }
     }
     Tcl_SetObjResult(interp,SWIG_NewPointerObj((void *) result, SWIGTYPE_p_PartialList));
-    return TCL_OK;
-}
-
-static int
-_wrap_Analyzer_configure(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
-    Analyzer *arg1 ;
-    double arg2 ;
-    
-    if (SWIG_GetArgs(interp, objc, objv,"pd:Analyzer_configure self resolutionHz ",&arg1,SWIGTYPE_p_Analyzer,&arg2) == TCL_ERROR) return TCL_ERROR;
-    {
-        try
-        {
-            (arg1)->configure(arg2);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            //	(these are very unlikely to come from the interface
-            //	code, and cannot escape the procedural interface to
-            //	Loris, which catches all exceptions.)
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-    }
-    
     return TCL_OK;
 }
 
@@ -4583,7 +4555,6 @@ delete arg1;
 static swig_method swig_Analyzer_methods[] = {
     {"copy", _wrap_Analyzer_copy}, 
     {"analyze", _wrap_Analyzer_analyze}, 
-    {"configure", _wrap_Analyzer_configure}, 
     {"freqResolution", _wrap_Analyzer_freqResolution}, 
     {"ampFloor", _wrap_Analyzer_ampFloor}, 
     {"windowWidth", _wrap_Analyzer_windowWidth}, 
@@ -5712,11 +5683,10 @@ static swig_command_info swig_commands[] = {
     { SWIG_prefix "SampleVector_getAt", (swig_wrapper_func) _wrap_SampleVector_getAt, NULL},
     { SWIG_prefix "SampleVector_setAt", (swig_wrapper_func) _wrap_SampleVector_setAt, NULL},
     { SWIG_prefix "SampleVector", (swig_wrapper_func) SWIG_ObjectConstructor, &_wrap_class_SampleVector},
-    { SWIG_prefix "new_Analyzer", (swig_wrapper_func) _wrap_new_Analyzer, NULL},
     { SWIG_prefix "delete_Analyzer", (swig_wrapper_func) _wrap_delete_Analyzer, NULL},
+    { SWIG_prefix "new_Analyzer", (swig_wrapper_func) _wrap_new_Analyzer, NULL},
     { SWIG_prefix "Analyzer_copy", (swig_wrapper_func) _wrap_Analyzer_copy, NULL},
     { SWIG_prefix "Analyzer_analyze", (swig_wrapper_func) _wrap_Analyzer_analyze, NULL},
-    { SWIG_prefix "Analyzer_configure", (swig_wrapper_func) _wrap_Analyzer_configure, NULL},
     { SWIG_prefix "Analyzer_freqResolution", (swig_wrapper_func) _wrap_Analyzer_freqResolution, NULL},
     { SWIG_prefix "Analyzer_ampFloor", (swig_wrapper_func) _wrap_Analyzer_ampFloor, NULL},
     { SWIG_prefix "Analyzer_windowWidth", (swig_wrapper_func) _wrap_Analyzer_windowWidth, NULL},

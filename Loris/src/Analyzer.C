@@ -101,10 +101,11 @@ AnalyzerState::AnalyzerState( const Analyzer & anal, double srate ) :
 
 	try {
 		//	window parameters:
-		const double Window_Attenuation = 95.;	//	always
-		double winshape = KaiserWindow::computeShape( Window_Attenuation );
+		// const double Window_Attenuation = 95.;	//	always
+		//	use the amplitude floor as the window attenuation 
+		double winshape = KaiserWindow::computeShape( - anal.ampFloor() );
 		long winlen = 
-			KaiserWindow::computeLength( anal.windowWidth() / srate, Window_Attenuation );
+			KaiserWindow::computeLength( anal.windowWidth() / srate, winshape );
 		
 		//	always use odd-length windows:
 		if (! (winlen % 2)) {
@@ -130,7 +131,7 @@ AnalyzerState::AnalyzerState( const Analyzer & anal, double srate ) :
 }
 
 // ---------------------------------------------------------------------------
-//	Analyzer constructor
+//	Analyzer constructor - freqiuency resolution only
 // ---------------------------------------------------------------------------
 //	The core analysis parameter is the frequency resolution, the minimum
 //	instantaneous frequency spacing between partials. Configure all other
@@ -139,7 +140,23 @@ AnalyzerState::AnalyzerState( const Analyzer & anal, double srate ) :
 //
 Analyzer::Analyzer( double resolutionHz )
 {
-	configure( resolutionHz );
+	configure( resolutionHz, resolutionHz );
+}
+
+// ---------------------------------------------------------------------------
+//	Analyzer constructor
+// ---------------------------------------------------------------------------
+//	The core analysis parameter is the frequency resolution, the minimum
+//	instantaneous frequency spacing between partials, but most of the time
+//	we configure the short-time analysis using a window that is approximately
+//	twice as wide as the frequency resolution. Configure the analyzer 
+//	parameters according to independently specified frequency resolution
+//	and analysis window width (both in Hz), subsequent parameter mutations
+//	will be independent.
+//
+Analyzer::Analyzer( double resolutionHz, double windowWidthHz )
+{
+	configure( resolutionHz, windowWidthHz );
 }
 
 // ---------------------------------------------------------------------------
@@ -187,8 +204,8 @@ Analyzer::operator =( const Analyzer & rhs )
 // ---------------------------------------------------------------------------
 //	configure
 // ---------------------------------------------------------------------------
-//	Compute default values for analysis parameters from the single core
-//	parameter, the frequency resolution.
+//	Compute default values for analysis parameters from the two core
+//	parameters, the frequency resolution and the analysis window width.
 //
 //	There are basically three classes of analysis parameters:
 //	- the resolution, and params that are usually related to (or
@@ -198,7 +215,7 @@ Analyzer::operator =( const Analyzer & rhs )
 //	- indepenendent parameters (bw region width and amp floor)
 //
 void
-Analyzer::configure( double resolutionHz )
+Analyzer::configure( double resolutionHz, double windowWidthHz )
 {
 	_resolution = resolutionHz;
 	
@@ -208,7 +225,7 @@ Analyzer::configure( double resolutionHz )
 	//	window width should generally be approximately 
 	//	equal to, and never more than twice the 
 	//	frequency resolution:
-	_windowWidth = _resolution;
+	_windowWidth = windowWidthHz;
 	
 	//	for the minimum frequency, below which no data is kept,
 	//	use the frequency resolution by default (this makes 

@@ -41,6 +41,31 @@ LORIS_OPAQUE_POINTERS symbol, whose purpose is a mystery.
 developments in SWIG (like the elimination of the documentation
 facility).
 
+- Analyzer can be constructed and configured with two 
+parameters now, the frequency resolution and the width
+of the analysis window. It seems that most commonly,
+those parameters need to be set independently, and
+other parameters derived from them. The single-argument
+version of configure() no longer exists, but can be
+simulated by calling configure() with two identical 
+arguments.
+
+- The configure method in the Analyzer scripting interface
+has been removed (just create a new Analyzer when you need
+to reconfigure). analyzer_configure() has been removed from 
+the procedural interface, as has the single-argument version
+of createAnalyzer(). In the scripting interface, the Analyzer
+constructor can be called with a single argument, and the
+window width will be set equal to the specified resolution.
+
+- Analysis configures the analysis window to have sidelobe
+attenuation equal to the amplitude floor, instead of always
+using 95 dB. The amplitude floor still defaults to 90 dB.
+
+- KaiserWindow::computeLength() now takes the Kaiser shaping
+parameter as its second parameter, instead of the attenuation
+(from which it computes the shaping parameter).
+
 -------------------------------------------------------
 changes since 1.0beta6 release:
 

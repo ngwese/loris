@@ -95,6 +95,13 @@ public:
 		difference between Partials). All other Analyzer parameters 	
 		are computed from the specified frequency resolution. 			
 	 */
+	Analyzer( double resolutionHz, double windowWidthHz );
+	/*	Construct and return a new Analyzer configured with the given	
+		frequency resolution (minimum instantaneous frequency	
+		difference between Partials) and analysis window width
+		(main lobe, zero-to-zero). All other Analyzer parameters 	
+		are computed from the specified resolution and window width. 			
+	 */
 	Analyzer( const Analyzer & other );
 	/*	Construct and return a new Analyzer having identical
 		parameter configuration to another Analyzer. The list of 
@@ -117,11 +124,12 @@ public:
 	 */
 	
 //	configuration:
-	void configure( double resolutionHz );
+	void configure( double resolutionHz, double windowWidthHz );
 	/*	Configure this Analyzer with the given frequency resolution 
-		(minimum instantaneous frequency difference between Partials). 
+		(minimum instantaneous frequency difference between Partials)
+		and analysis window width (main lobe, zero-to-zero, in Hz). 
 		All other Analyzer parameters are (re-)computed from the 
-		frequency resolution. 		
+		frequency resolution and window width. 		
 	 */
 
 //	parameter access:

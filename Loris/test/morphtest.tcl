@@ -104,7 +104,7 @@ exportAiff clarOK.tcltest.aiff [ synthesize $clar $samplerate ] $samplerate 1 16
 #	analyze flute tone (reuse Analyzer)
 #
 puts "analyzing flute 3D"
-$a configure 270
+set a [ Analyzer -args 270 ]
 set v [ [ AiffFile -args $srcdir/flute.aiff ] samples ]
 set flut [ $a analyze $v $samplerate ]
 

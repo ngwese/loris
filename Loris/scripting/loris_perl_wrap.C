@@ -677,6 +677,11 @@ void SampleVector_setAt(SampleVector *self,unsigned long idx,double x){
 
 using Loris::Analyzer;
 
+Analyzer *new_Analyzer(double resolutionHz,double windowWidthHz){
+		if ( windowWidthHz == 0. )
+			windowWidthHz = resolutionHz;
+		return new Analyzer( resolutionHz, windowWidthHz );
+	}
 Analyzer *Analyzer_copy(Analyzer *self){
 		return new Analyzer( self->freqResolution() );
 	}
@@ -3966,46 +3971,6 @@ XS(_wrap_SampleVector_setAt) {
 }
 
 
-XS(_wrap_new_Analyzer) {
-    double arg1 ;
-    Analyzer *result;
-    int argvi = 0;
-    dXSARGS;
-    
-    if ((items < 1) || (items > 1)) 
-    croak("Usage: new_Analyzer(resolutionHz);");
-    arg1 = (double ) SvNV(ST(0));
-    
-    {
-        try
-        {
-            result = (Analyzer *)new Analyzer(arg1);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            //	(these are very unlikely to come from the interface
-            //	code, and cannot escape the procedural interface to
-            //	Loris, which catches all exceptions.)
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-    }
-    ST(argvi) = sv_newmortal();
-    SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_Analyzer);
-    XSRETURN(argvi);
-}
-
-
 XS(_wrap_delete_Analyzer) {
     Analyzer *arg1 ;
     int argvi = 0;
@@ -4043,6 +4008,51 @@ XS(_wrap_delete_Analyzer) {
         }
     }
     
+    XSRETURN(argvi);
+}
+
+
+XS(_wrap_new_Analyzer) {
+    double arg1 ;
+    double arg2 = 0. ;
+    Analyzer *result;
+    int argvi = 0;
+    dXSARGS;
+    
+    if ((items < 1) || (items > 2)) 
+    croak("Usage: new_Analyzer(resolutionHz,windowWidthHz);");
+    arg1 = (double ) SvNV(ST(0));
+    
+    if (items > 1) {
+        arg2 = (double ) SvNV(ST(1));
+        
+    }
+    {
+        try
+        {
+            result = (Analyzer *)new_Analyzer(arg1,arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            //	(these are very unlikely to come from the interface
+            //	code, and cannot escape the procedural interface to
+            //	Loris, which catches all exceptions.)
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
+        }
+    }
+    ST(argvi) = sv_newmortal();
+    SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_Analyzer);
     XSRETURN(argvi);
 }
 
@@ -4138,50 +4148,6 @@ XS(_wrap_Analyzer_analyze) {
     }
     ST(argvi) = sv_newmortal();
     SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_PartialList);
-    XSRETURN(argvi);
-}
-
-
-XS(_wrap_Analyzer_configure) {
-    Analyzer *arg1 ;
-    double arg2 ;
-    int argvi = 0;
-    dXSARGS;
-    
-    if ((items < 2) || (items > 2)) 
-    croak("Usage: Analyzer_configure(self,resolutionHz);");
-    {
-        if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_Analyzer) < 0) {
-            croak("Type error in argument 1 of Analyzer_configure. Expected %s", SWIGTYPE_p_Analyzer->name);
-        }
-    }
-    arg2 = (double ) SvNV(ST(1));
-    
-    {
-        try
-        {
-            (arg1)->configure(arg2);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            //	(these are very unlikely to come from the interface
-            //	code, and cannot escape the procedural interface to
-            //	Loris, which catches all exceptions.)
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-    }
-    
     XSRETURN(argvi);
 }
 
@@ -6288,11 +6254,10 @@ static swig_command_info swig_commands[] = {
 {"loris_perl::SampleVector_copy", _wrap_SampleVector_copy},
 {"loris_perl::SampleVector_getAt", _wrap_SampleVector_getAt},
 {"loris_perl::SampleVector_setAt", _wrap_SampleVector_setAt},
-{"loris_perl::new_Analyzer", _wrap_new_Analyzer},
 {"loris_perl::delete_Analyzer", _wrap_delete_Analyzer},
+{"loris_perl::new_Analyzer", _wrap_new_Analyzer},
 {"loris_perl::Analyzer_copy", _wrap_Analyzer_copy},
 {"loris_perl::Analyzer_analyze", _wrap_Analyzer_analyze},
-{"loris_perl::Analyzer_configure", _wrap_Analyzer_configure},
 {"loris_perl::Analyzer_freqResolution", _wrap_Analyzer_freqResolution},
 {"loris_perl::Analyzer_ampFloor", _wrap_Analyzer_ampFloor},
 {"loris_perl::Analyzer_windowWidth", _wrap_Analyzer_windowWidth},
