@@ -75,10 +75,6 @@ SDIF spec: http://www.cnmat.berkeley.edu/SDIF/
 	#include <config.h>
 #endif
 
-#ifdef LITTLE_ENDIAN
-#error "why is this defined? FIXME!"
-#endif
-
 #include <SdifFile.h>
 #include <Exception.h>
 #include <Notifier.h>
@@ -94,6 +90,12 @@ SDIF spec: http://www.cnmat.berkeley.edu/SDIF/
 	const double Pi = M_PI;
 #else
 	const double Pi = 3.14159265358979324;
+#endif
+
+#if !defined(WORDS_BIGENDIAN) && !defined(LITTLE_ENDIAN)
+	//	WORDS_BIGENDIAN is defined in config.h, determined 
+	//	at configure-time
+	#define LITTLE_ENDIAN 1
 #endif
 
 extern "C" {
