@@ -26,7 +26,6 @@
 namespace Loris {
 #endif
 
-
 // ---------------------------------------------------------------------------
 //	AnalyzerState definition
 // ---------------------------------------------------------------------------
@@ -211,9 +210,10 @@ Analyzer::analyze( const std::vector< double > & buf, double srate, double offse
 //
 //	Also, need to check for bogus parameters somewhere.
 //
-	const long hop = long( hopTime() * srate );	//	truncate
+	const long hop = long( hopTime() * srate )/* + 1 KLUDGE*/;	//	truncate
+		
 	try { 
-		for ( long winMiddleIdx = 0; 
+		for ( long winMiddleIdx = 0; // 52 KLUDGE; 
 			  winMiddleIdx < buf.size();
 			  winMiddleIdx += hop ) {
 			//	compute the time of this analysis frame:
@@ -229,9 +229,9 @@ Analyzer::analyze( const std::vector< double > & buf, double srate, double offse
 			thinPeaks( f );
 
 			//	perform bandwidth association:
-#if !defined(DeugLoris)
+#if !defined(No_BW_Association)
 			state.bwAssociation().associate( f.begin(), f.end() );
-#endif			
+#endif
 			//	form Partials from the extracted Breakpoints:
 			formPartials( f, frameTime, state );
 
@@ -344,18 +344,29 @@ Analyzer::extractPeaks( std::list< Breakpoint > & frame, double frameTime,
 			if ( mag < threshold )
 				continue;
 			
-			//	if the time correction for this peak is large,
-			//	reject it:
-			double timeCorrection = 
-				state.spectrum().reassignedTime( j ) / state.sampleRate();
-			
+			//	find the time correction (in samples!) for this peak:
+			double timeCorrectionSamps = state.spectrum().reassignedTime( j );
+				
+#if 0	//	this seems wrong defined(Like_Lemur)
+			double correctionAbove = state.spectrum().reassignedTime( std::ceil( fsample ) );
+			double correctionBelow = state.spectrum().reassignedTime( std::floor( fsample ) );
+
+			//	compute weighted average time correction, assign:
+			double alpha =  fsample - std::floor( fsample );
+			timeCorrectionSamps = ( alpha * correctionAbove ) + 
+								(( 1. - alpha ) * correctionBelow );
+#endif
+											
 			//	retain a spectral peak corresponding to this sample:
-			double phase = state.spectrum().reassignedPhase( j, fsample, timeCorrection );
+			//	(reassignedPhase() must be called with time correction 
+			//	in samples!)
+			double phase = state.spectrum().reassignedPhase( j, fsample, timeCorrectionSamps );
 			frame.push_back( Breakpoint( fHz, mag, 0., phase ) );
 			
 			//	cache the peak time, won't have j available when
-			//	ready to insert it into a Partial:
-			double time = frameTime + timeCorrection;
+			//	ready to insert it into a Partial (convert time 
+			//	correction to seconds):
+			double time = frameTime + (timeCorrectionSamps / state.sampleRate());
 			state.peakTimeCache()[ fHz ] = time;
 			
 #if defined(Debug_Loris)	
@@ -459,7 +470,7 @@ static std::set< Partial * > oldgoobers;
 			}
 		}
 	}
-#endif
+#endif	//	debug
 	
 	//	loop over short-time peaks:
 	std::list< Breakpoint >::iterator bpIter;
@@ -469,49 +480,30 @@ static std::set< Partial * > oldgoobers;
 		
 		//	check the time correction for off-center components:
 		double tcabs = std::abs( peakTime - frameTime );
-		
 #if !defined(Like_Lemur)
 		//	this may still be what we want... but its 
 		//	different from Lemur's cropping and breaking:
 		if ( tcabs > cropTime() )
 			continue;	//	don't use peaks with large time corrections
-#endif
+#endif	//	like Lemur
 
-/*
-	NOT USED
-		//	compute the time after which a Partial
-		//	must have Breakpoints in order to be 
-		//	eligible to receive this Breakpoint:
-		//	The earliest Breakpoint we could have kept 
-		//	from the previous frame:
-		double tooEarly = frameTime - hopTime() - cropTime();
-		
-		//	compute the time before which a Partial
-		//	must end in order to be eligible to receive
-		//	this Breakpoint, in case the Analyzer is used
-		//	for more than a single input buffer.
-		double tooLate = std::min( frameTime, peakTime );
-*/
-		
 		//	loop over all Partials, find the eligible Partial
 		//	that is nearest in frequency to the Peak:
 		PartialList::iterator nearest = partials().end();
-		for ( PartialList::iterator pIter = partials().begin(); pIter != partials().end(); ++pIter ) {
-/*	NOT USED
-			//	check end time for eligibility:
-			if ( pIter->endTime() < tooEarly || pIter->endTime() >= tooLate ) {
-				continue;	//	loop over all Partials
-			}
-			*/
-			if ( oldgoobers.count( &(*pIter) ) == 0 )
+		for ( PartialList::iterator candidate = partials().begin(); 
+			  candidate != partials().end(); 
+			  ++candidate ) 
+		{
+			if ( oldgoobers.count( &(*candidate) ) == 0 )
 				continue;
 				
 			//	remember this Partial if it is nearer in frequency 
 			//	to the Breakpoint than every other Partial:
 			if ( nearest == partials().end() || 
-				 distance( *pIter, peak, peakTime ) < distance( *nearest, peak, peakTime ) ) {
+				 distance( *candidate, peak, peakTime ) < distance( *nearest, peak, peakTime ) ) 
+			{
 				//	this Partial is nearest (so far):
-				nearest = pIter;
+				nearest = candidate;
 			}
 		}
 		
@@ -544,18 +536,25 @@ static std::set< Partial * > oldgoobers;
 			 			 " and time " << peakTime << endl;
 			*/
 #if defined(Like_Lemur)
-			if ( 1 ) //tcabs < cropTime() )	//	cropping Lemur-style
+//#define No_Cropping_Lemur 1
+#if defined(No_Cropping_Lemur)
+			//	No cropping:
+			if ( 1 ) 
+#else
+			//	Cropping Lemur-style:
+			if ( tcabs < cropTime() )	
+#endif	//	no cropping
 			{
-#endif
+#endif	//	like Lemur
 				spawnPartial( peakTime, peak );
 				newgoobers.insert( & partials().back() );
 #if defined(Like_Lemur)
 			}
-#endif
+#endif	//	like Lemur
 #if defined(Debug_Loris)						 
 			if (spit) 
 			 	fprintf( spitfile, "new partial at freq %lf\n", peak.frequency() );
-#endif
+#endif	//	debug
 		}
 		else {
 			/*debugger << "matching a partial at frequency " << peak.frequency() <<
@@ -563,11 +562,17 @@ static std::set< Partial * > oldgoobers;
 			 			" and time " << peakTime << endl;
 			*/
 #if defined(Like_Lemur)
+//#define No_Breaking_Lemur 1
+#if defined(No_Breaking_Lemur)
+			//	No Partial breaking:
+			if ( 1 ) 
+#else
 			//	Partial breaking Lemur-style:
-			if ( 1 ) //tcabs < cropTime() ||
-				 //std::abs( nearest->endTime() - (frameTime - hopTime()) ) < cropTime() )
-			{
-#endif
+			if ( tcabs < cropTime() ||
+				 std::abs( nearest->endTime() - (frameTime - hopTime()) ) < cropTime() )
+#endif	//	no breaking
+		{
+#endif	//	like Lemur
 				nearest->insert( peakTime, peak );
 				newgoobers.insert( &(*nearest) );
 #if defined(Like_Lemur)
@@ -578,18 +583,18 @@ static std::set< Partial * > oldgoobers;
 				//	last Breakpoint
 				(--nearest->end())->setAmplitude( 0. );
 			}			
-#endif
+#endif	//	like Lemur
 #if defined(Debug_Loris)						 
 			if (spit) 
 			 	fprintf( spitfile, "connecting partial at freq %lf to freq %lf\n", 
 			 						nearest->frequencyAt(frameTime), peak.frequency() );
-#endif
+#endif	//	debug
 		}
 	}			 
 #if defined(Debug_Loris)						 
 	 if (spit) 
 	 	fclose( spitfile );
-#endif
+#endif	//	debug
 	 	
 	 oldgoobers = newgoobers;
 }
@@ -638,7 +643,7 @@ Analyzer::pruneBogusPartials( AnalyzerState & state )
 		  it != veryshortones.end();
 		  ++it ) 
 	{
-#if !defined(Debug_Loris)
+#if !defined(No_BW_Association)
 		state.eDistribution().distribute( *it, partials().begin(), partials().end() );
 #endif
 	}

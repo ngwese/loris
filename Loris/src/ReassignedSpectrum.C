@@ -199,6 +199,20 @@ ReassignedSpectrum::applyFreqRamp( vector< double > & w )
 void
 ReassignedSpectrum::applyTimeRamp( vector< double > & w )
 {
+	/* MOOOOOOOO! MOOOOOOOO!
+	const double winLenMs = 1000. * w.size() / 44100.;
+	
+	double x = - 0.5 * winLenMs;
+	double dx = winLenMs / double( w.size() );
+	
+	//	compute the ramped window function:
+	for ( int i = 0; i < w.size(); ++i, x += dx )
+		w[ i ]  *= x;
+
+	return;
+	//	MOOOOOOOOOOO!
+	*/
+	
 	//	the very center of the window should be scaled by 0.,
 	//	need a fractional value for even-length windows, a
 	//	whole number for odd-length windows:
@@ -308,9 +322,11 @@ ReassignedSpectrum::timeCorrection( long sample ) const
 double
 ReassignedSpectrum::reassignedFrequency( unsigned long idx ) const
 {
+#if defined(Like_Lemur)
 #define SMITHS_BRILLIANT_PARABOLAS
-#if ! defined(SMITHS_BRILLIANT_PARABOLAS)
+#endif
 
+#if ! defined(SMITHS_BRILLIANT_PARABOLAS)
 	return double(idx) + frequencyCorrection( idx );
 	
 #else // defined(SMITHS_BRILLIANT_PARABOLAS)
@@ -373,7 +389,10 @@ ReassignedSpectrum::reassignedMagnitude( double fracBinNum, long peakBinNumber )
 
 	Assert( fracBinNum >= 0. );
 
+#if defined(Like_Lemur)
 #define SMITHS_INGENEOUS_PARABOLAS
+#endif
+
 #if ! defined(SMITHS_INGENEOUS_PARABOLAS)
 	
 	//	compute the nominal spectral amplitude by scaling
@@ -501,10 +520,31 @@ ReassignedSpectrum::reassignedPhase( long idx,
 									 double fracFreqSample, 
 									 double timeCorrection ) const
 {
+#if 0 //	this seems wrong defined(Like_Lemur)
+	Assert( std::ceil(fracFreqSample) == idx || std::floor(fracFreqSample) == idx );
+	double phaseAbove = arg( _transform[ std::ceil(fracFreqSample) ] );
+	double phaseBelow = arg( _transform[ std::floor(fracFreqSample) ] );
+
+	if ( std::abs(phaseAbove - phaseBelow) > Pi )
+	{
+		if (phaseAbove > phaseBelow)
+			phaseBelow += TwoPi;
+		else
+			phaseBelow -= TwoPi;
+	}
+	double alpha = std::ceil(fracFreqSample) - fracFreqSample;
+	double phase = (phaseAbove * (1. - alpha)) + (phaseBelow * alpha);
+
+	phase += timeCorrection * fracFreqSample * TwoPi / _transform.size();
+
+	return fmod( phase, TwoPi );
+
+#else	
 	double phase = arg( _transform[ idx ] );
 	phase += timeCorrection * fracFreqSample * TwoPi / _transform.size();
 	
 	return fmod( phase, TwoPi );
+#endif
 }
 
 
