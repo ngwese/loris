@@ -14,7 +14,8 @@ INCLUDES = $(FFTWINCLUDE) $(SDIFINCLUDE) $(default_includes)
 
 EXTRA_DIST = loris.h.in
 
-pkginclude_HEADERS = AiffFile.h	\
+pkginclude_HEADERS = AiffData.h	\
+				AiffFile.h		\
 				Analyzer.h		\
 				BreakpointEnvelope.h	\
 				Breakpoint.h	\
@@ -29,6 +30,7 @@ pkginclude_HEADERS = AiffFile.h	\
 				FrequencyReference.h \
 				ImportLemur.h	\
 				KaiserWindow.h	\
+				Marker.h	\
 				Morpher.h	\
 				Notifier.h	\
 				Oscillator.h	\
@@ -48,7 +50,9 @@ pkginclude_HEADERS = AiffFile.h	\
 
 #noinst_LTLIBRARIES = libclasses.la
 #libclasses_la_SOURCES 
-Loris_Classes = AiffFile.C \
+Loris_Classes = AiffData.C	\
+		AiffData..h \
+		AiffFile.C \
 		AiffFile.h \
 		Analyzer.C \
 		Analyzer.h \
@@ -84,6 +88,8 @@ Loris_Classes = AiffFile.C \
 		ImportLemur.h \
 		KaiserWindow.C \
 		KaiserWindow.h \
+		Marker.C	\
+		Marker.h	\
 		Morpher.C \
 		Morpher.h \
 		Notifier.C \

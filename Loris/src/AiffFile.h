@@ -1,5 +1,3 @@
-#ifndef INCLUDE_AIFFFILE_H
-#define INCLUDE_AIFFFILE_H
 /*
  * This is the Loris C++ Class Library, implementing analysis, 
  * manipulation, and synthesis of digitized sounds using the Reassigned 
@@ -24,211 +22,237 @@
  *
  * AiffFile.h
  *
- * Definition of class AiffFile, used for importing and exporting 
- * sound sample data from AIFF-format files.
+ * Definition of AiffFile class for sample import and export in Loris.
  *
- * Kelly Fitz, 28 Sept 99
+ * Kelly Fitz, 8 Jan 2003 
  * loris@cerlsoundgroup.org
  *
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
+#include <Marker.h>
+#include <Synthesizer.h>
 
-#include <vector>
+#if defined(NO_TEMPLATE_MEMBERS)
+#include <PartialList.h>
+#endif
+
+#include <memory>
 #include <string>
-#include <iosfwd>
+#include <vector>
 
 //	begin namespace
 namespace Loris {
 
-struct CkHeader;
+class Partial;
 
 // ---------------------------------------------------------------------------
 //	class AiffFile
 //
-//	Class AiffFile represents a AIFF-format samples file, and
-//	manages file I/O and sample conversion. Construction of an 
-//	AiffFile from a stream or filename automatically imports 
-//	the sample data. The static Export() members export samples 
-//	(doubles) to a AIFF file using the specified stream or filename.
-//
-//	This class could be made more insulating at some point.
+//	Class AiffFile represents sample data in a AIFF-format samples 
+//	file, and manages file I/O and sample conversion. Since the sound
+//	analysis and synthesis algorithms in Loris and the reassigned
+//	bandwidth-enhanced representation are monaural, AiffFile manages
+//	only monaural (single channel) AIFF-format samples files.
 //	
 class AiffFile
 {
-//	-- instance variables --
-	double _sampleRate;	//	in Hz
-	int _nChannels;		//	samples per frame, usually one (mono) in Loris
-	int _sampSize;		//	in bits
-	double _hop;		//  hop size in seconds (for reading SPC files)
-	int _partials;		// 	number of partials (for reading SPC files)
-	int _enhanced;		//  badwidth-enhanced format (for reading SPC files)
-	
-	std::vector<unsigned char> _bytes;	//	buffer used for storing raw (integer) sample data
-		
 //	-- public interface --
 public:
-	//	construction (and import):
-	//	(compiler can generate destructor, copy, and assignment)
 
-/*	Initialize an instance of AiffFile by importing data from
-	the file having the specified filename or path.
+//	-- types --
+	typedef std::vector< double > samples_type;
+	typedef samples_type::size_type size_type;
+	typedef std::vector< Marker > markers_type;
 
- */
- 	AiffFile( const std::string & filename );
 
-/*	Initialize an instance of AiffFile by importing data from
-	the specified istream.
+//	-- construction --
+ 	explicit AiffFile( const std::string & filename );
+	/*	Initialize an instance of AiffFile by importing sample data from
+		the file having the specified filename or path.
+	*/
 
- */
- 	AiffFile( std::istream & s );
+#if !defined(NO_TEMPLATE_MEMBERS)
+	template<typename Iter>
+	AiffFile( Iter begin_partials, Iter end_partials, 
+			  double samplerate, double fadeTime = .001 ); // default fade is 1ms
+#else
+	AiffFile( PartialList::const_iterator begin_partials, 
+			  PartialList::const_iterator end_partials,
+			  double samplerate, double fadeTime = .001 ); // default fade is 1ms
+#endif
+	/*	Initialize an instance of AiffFile having the specified sample 
+		rate, accumulating samples rendered at that sample rate from
+		all Partials on the specified half-open (STL-style) range with
+		the (optionally) specified Partial fade time (see Synthesizer.h
+		for an examplanation of fade time). 
+
+		If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
+		only PartialList::const_iterator arguments.
+	*/
+
+	explicit AiffFile( double samplerate, size_type numFrames = 0 );
+	/*	Initialize an instance of AiffFile having the specified sample 
+		rate, preallocating numFrames samples, initialized to zero.
+	 */
 	
-	//	access:
-/*	Return the number of channels of sample data represented in this
-	AiffFile (e.g. 1 for mono, 2 for stereo, etc).
+	AiffFile( const double * buffer, size_type bufferlength, double samplerate );
+	/*	Initialize an instance of AiffFile from a buffer of sample
+		data, with the specified sample rate.
+	 */
+	 
+	AiffFile( const std::vector< double > & vec, double samplerate );
+	/*	Initialize an instance of AiffFile from a vector of sample
+		data, with the specified sample rate.
+	 */
+	 
+	AiffFile( const AiffFile & other );
+	/*	Initialize this and AiffFile that is an exact copy, having
+		all the same sample data, as another AiffFile.
+	 */
+	 
+	AiffFile & operator= ( const AiffFile & rhs );
+	/*	Assignment operator: change this AiffFile to be an exact copy
+		of the specified AiffFile, rhs, that is, having the same sample
+		data.
+	 */	 
 
- */
- 	int channels( void ) const;
+//	-- access --
+	markers_type & markers( void );
+	const markers_type & markers( void ) const;
+	/*	Return a reference to the Marker (see Marker.h) container 
+		for this AiffFile. 
+	 */
+	 
+	double midiNoteNumber( void ) const;
+	/*	Return the fractional MIDI note number assigned to this AiffFile. 
+		If the sound has no definable pitch, note number 60.0 is used.
+	 */
 
-/*	Return the number of sample frames represented in this AiffFile.
-	A sample frame contains one sample per channel for a single sample
-	interval (e.g. mono and stereo samples files having a sample rate of
-	44100 Hz both have 44100 sample frames per second of audio samples).
+ 	size_type numFrames( void ) const;
+	/*	Return the number of sample frames represented in this AiffFile.
+		A sample frame contains one sample per channel for a single sample
+		interval (e.g. mono and stereo samples files having a sample rate of
+		44100 Hz both have 44100 sample frames per second of audio samples).
+	*/
 
- */
- 	unsigned long sampleFrames( void ) const;
-
-/*	Return the sampling freqency in Hz for the sample data in this
-	AiffFile.
-
- */
  	double sampleRate( void ) const;
-
-/*	Return the size in bits of a single, integer audio sample in this AiffFile.
-
- */
- 	int sampleSize( void ) const;
+	/*	Return the sampling freqency in Hz for the sample data in this
+		AiffFile.
+	*/
 	
-	//	disgusting, these should not be here at all, just for Spc import:
-	int partials( void ) const;
-	int enhanced( void ) const;
-	double hop( void ) const;
-	
-/*	Convert the integer sample data to doubles and store in on the half-open
-	(STL-style) range [bufBegin, bufEnd). bufEnd represents a position after
-	the last valid position in the buffer, no sample is written at bufEnd.
-	To convert ten samples into a buffer, use
-		myAiffFile.getSamples(myBuf, myBuf+10);
+	samples_type & samples( void );
+	const samples_type & samples( void ) const;
+	/*	Return a reference (or const reference) to the vector containing
+		the floating-point sample data for this AiffFile.
+	 */
 
- */
- 	void getSamples( double * bufBegin, double * bufEnd );	//	from raw data to doubles
-
-	//	export:
-/*	Export the sample data on the half-open (STL-style) range [bufBegin, bufEnd)
-	to a AIFF samples file having the specified file name or path, using the 
-	specified sample rate (in Hz), number of channels, and sample size (in bits).
-	bufEnd represents a position after the last valid position in the buffer, no 
-	sample is read from *bufEnd. The samples to export must be stored in contiguous
-	memory.
-
- */
-#if ! defined(NO_TEMPLATE_MEMBERS)
-	template < class Iter >
- 	static void Export( const std::string & filename, double rate, int chans, int bits, 
-						Iter bufBegin, Iter bufEnd );
+//	-- mutation --
+	void addPartial( const Loris::Partial & p, double fadeTime = .001 /* 1 ms */ );
+	/*	Render the specified Partial using the (optionally) specified
+		Partial fade time, and accumulate the resulting samples into
+		the sample vector for this AiffFile.
+	 */
+	 
+#if !defined(NO_TEMPLATE_MEMBERS)
+	template<typename Iter>
+	void addPartials( Iter begin_partials, Iter end_partials, double fadeTime = .001 /* 1 ms */  );
 #else
- 	static void Export( const std::string & filename, double rate, int chans, int bits, 
-						const double * bufBegin, const double * bufEnd );
+	void addPartials( PartialList::const_iterator begin_partials, 
+					  PartialList::const_iterator end_partials,
+					  double fadeTime = .001 /* 1 ms */  );
 #endif
+	/*	Render all Partials on the specified half-open (STL-style) range
+		with the (optionally) specified Partial fade time (see Synthesizer.h
+		for an examplanation of fade time), and accumulate the resulting 
+		samples. 
+		
+		If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
+		only PartialList::const_iterator arguments.
+	 */
 
-/*	Export the sample data on the half-open (STL-style) range [bufBegin, bufEnd)
-	in the format of a AIFF samples file on the specified ostream, using the 
-	specified sample rate (in Hz), number of channels, and sample size (in bits).
-	bufEnd represents a position after the last valid position in the buffer, no 
-	sample is read from *bufEnd. The samples to export must be stored in contiguous
-	memory.
+	void setMidiNoteNumber( double nn );
+	/*	Set the fractional MIDI note number assigned to this AiffFile. 
+		If the sound has no definable pitch, use note number 60.0 (the default).
+	 */
+	 
+//	-- export --
+	void write( const std::string & filename, unsigned int bps = 16 );
+	/*	Export the sample data represented by this AiffFile to
+		the file having the specified filename or path. Export
+		signed integer samples of the specified size, in bits
+		(8, 16, 24, or 32).
+	*/
 
- */
-#if ! defined(NO_TEMPLATE_MEMBERS)
-	template < class Iter >
- 	static void Export( std::ostream & s, double rate, int chans, int bits, 
-						Iter bufBegin, Iter bufEnd );
-#else
- 	static void Export( std::ostream & s, double rate, int chans, int bits, 
-						const double * bufBegin, const double * bufEnd );
-#endif
+private:
+//	-- implementation --
+	double notenum_, rate_;		// MIDI note number and sample rate
+	markers_type markers_;		// AIFF Markers
+	samples_type samples_;		// floating point samples [-1.0, 1.0]
+
+	std::auto_ptr< Synthesizer > psynth_;	//	Synthesizer for rendering Partials,
+											//	lazy-initialized (not until needed)
 
 //	-- helpers --
-private:
-	//	construct from data in memory for export:
-	AiffFile( double rate, int chans, int bits );
-	
-	//	reading:
-	void read( std::istream & s );
-	void readChunkHeader( std::istream & s, CkHeader & h );
-	void readContainer( std::istream & s );
-	void readCommonData( std::istream & s );
-	void readApplicationSpecifcData( std::istream & s, int length );
-	void readSampleData( std::istream & s, unsigned long chunkSize );
-	void readSamples( std::istream & s );
-	//	writing:
-	void write( const std::string & filename, const double * bufBegin, const double * bufEnd );
-	void write( std::ostream & s, const double * bufBegin, const double * bufEnd );
-	void writeCommon( std::ostream & s );
-	void writeContainer( std::ostream & s );
-	void writeSampleData( std::ostream & s, const double * bufBegin, const double * bufEnd );
-	void writeSamples( std::ostream & s, const double * bufBegin, const double * bufEnd );
-	
-	//	data sizes:
-	unsigned long sizeofCommon( void );
-	unsigned long sizeofCkHeader( void );
-	unsigned long sizeofSoundData( void );
-
-	//	parameter validation:
-	void validateParams( void );
+	void configureSynthesizer( double fadeTime );
+	void readAiffData( const std::string & filename );
 
 };	//	end of class AiffFile
 
+#pragma mark -- template members --
+
 // ---------------------------------------------------------------------------
-//	Export 
+//	constructor from Partial range
 // ---------------------------------------------------------------------------
-//	Static member for exporting AIFF data to a named file.
+//	Initialize an instance of AiffFile having the specified sample 
+//	rate, accumulating samples rendered at that sample rate from
+//	all Partials on the specified half-open (STL-style) range with
+//	the (optionally) specified Partial fade time (see Synthesizer.h
+//	for an examplanation of fade time). 
+//
+//	If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
+//	only PartialList::const_iterator arguments.
 //
 #if !defined(NO_TEMPLATE_MEMBERS)
-template < class Iter >
-void 
-AiffFile::Export( const std::string & filename, double rate, int chans, int bits, 
-				  Iter bufBegin, Iter bufEnd )
+template< typename Iter >
+ AiffFile::AiffFile( Iter begin_partials, Iter end_partials, 
+					 double samplerate, double fadeTime ) : // default fade is 1ms
 #else
-inline void
-AiffFile::Export( const std::string & filename, double rate, int chans, int bits, 
-				  const double * bufBegin, const double * bufEnd )
+ AiffFile::AiffFile( PartialList::const_iterator begin_partials, 
+					 PartialList::const_iterator end_partials,
+					 double samplerate, double fadeTime ) : // default fade is 1ms
 #endif
+//	initializers:
+	notenum_( 60 ),
+	rate_( samplerate )
 {
-	AiffFile f( rate, chans, bits );
-	f.write( filename, &(*bufBegin ), &(*bufEnd) );
+	addPartials( begin_partials, end_partials, fadeTime );
 }
 
 // ---------------------------------------------------------------------------
-//	Export 
+//	addPartials 
 // ---------------------------------------------------------------------------
-//	Static member for exporting AIFF data on a stream.
+//	Render all Partials on the specified half-open (STL-style) range
+//	with the (optionally) specified Partial fade time (see Synthesizer.h
+//	for an examplanation of fade time), and accumulate the resulting 
+//	samples. 
+//	
+//	If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
+//	only PartialList::const_iterator arguments.
 //
-#if ! defined(NO_TEMPLATE_MEMBERS)
-template < class Iter >
+#if !defined(NO_TEMPLATE_MEMBERS)
+template< typename Iter >
 void 
-AiffFile::Export( std::ostream & s, double rate, int chans, int bits, 
-				  Iter bufBegin, Iter bufEnd )
+ AiffFile::addPartials( Iter begin_partials, Iter end_partials, double fadeTime /*= .001  1 ms */  )
 #else
-inline void
-AiffFile::Export( std::ostream & s, double rate, int chans, int bits, 
-				  const double * bufBegin, const double * bufEnd )
+void 
+ AiffFile::addPartials( PartialList::const_iterator begin_partials, 
+						PartialList::const_iterator end_partials,
+						double fadeTime /* = .001 1 ms */  )
 #endif
-{
-	AiffFile f( rate, chans, bits );
-	f.write( s, bufBegin, bufEnd );
-}
+{ 
+	configureSynthesizer( fadeTime );
+	psynth_->synthesize( begin_partials, end_partials );
+} 
 
 }	//	end of namespace Loris
-
-#endif /* ndef INCLUDE_AIFFFILE_H */

@@ -301,6 +301,8 @@ void exportAiff( const char * path, const SampleVector * vec,
 	try 
 	{
 		ThrowIfNull((SampleVector *) vec);
+		if ( nchannels != 1 )
+			Throw( InvalidArgument,"Loris only exports single-channel AIFF files." );
 	
 		// do nothing if there are no samples:
 		if ( vec->empty() )
@@ -311,8 +313,8 @@ void exportAiff( const char * path, const SampleVector * vec,
 
 		//	write out samples:
 		notifier << "writing " << vec->size() << " samples to " << path << endl;
-		AiffFile::Export( path, samplerate, nchannels, bitsPerSamp, 
-						  &((*vec)[0]), &((*vec)[vec->size()]) );
+		AiffFile fout( *vec, samplerate );
+		fout.write( path, bitsPerSamp );
 	}
 	catch( Exception & ex ) 
 	{
@@ -391,8 +393,10 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch,
 		if ( partials->size() == 0 )
 			Throw( Loris::InvalidObject, "No Partials in PartialList to export to Spc file." );
 
-		Loris::notifier << "exporting Spc partial data to " << path << Loris::endl;
-		Loris::SpcFile::Export( path, *partials, midiPitch, enhanced, endApproachTime );
+		notifier << "exporting Spc partial data to " << path << Loris::endl;
+		SpcFile fout( partials->begin(), partials->end(), midiPitch );
+		fout.write( path, (bool) enhanced, endApproachTime );
+
 	}
 	catch( Exception & ex ) 
 	{
@@ -423,28 +427,27 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch,
 	of channels of audio data represented by the AIFF samples.
  */
 extern "C"
-void importAiff( const char * path, SampleVector * ptr_this, 
+void importAiff( const char * path, SampleVector * samps, 
 				 double * samplerate, int * nchannels )
 {
 	try 
 	{
-		ThrowIfNull((SampleVector *) ptr_this);
+		ThrowIfNull((SampleVector *) samps);
 
 		//	read samples:
 		notifier << "reading samples from " << path << endl;
 		AiffFile f( path );
-		ptr_this->resize( f.sampleFrames(), 0. );
-		if ( !ptr_this->empty() )
-			f.getSamples( &((*ptr_this)[0]), &((*ptr_this)[ptr_this->size()]) );
+		samps->resize( f.samples().size(), 0. );
+		if ( !samps->empty() )
+			samps->assign( f.samples().begin(), f.samples().end() );
 		
-		notifier << "read " << f.sampleFrames() << " frames of " 
-				 << f.channels() << " channel data at " 
+		notifier << "read " << f.samples().size() << " frames at " 
 				 << f.sampleRate() << " Hz" << endl;
 		
 		if ( samplerate )
 			*samplerate = f.sampleRate();
 		if ( nchannels )
-			*nchannels = f.channels();
+			*nchannels = 1;
 	}
 	catch( Exception & ex ) 
 	{
@@ -507,7 +510,7 @@ void importSpc( const char * path, PartialList * partials )
 	{
 		Loris::notifier << "importing Partials from " << path << Loris::endl;
 		Loris::SpcFile imp( path );
-		partials->splice( partials->end(), imp.partials() );
+		partials->insert( partials->end(), imp.partials().begin(), imp.partials().end() );
 
 	}
 	catch( Exception & ex ) 
