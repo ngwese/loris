@@ -81,6 +81,7 @@ OBJ_LORIS = AiffFile.o \
 			Oscillator.o \
 			Partial.o \
 			ReassignedSpectrum.o \
+			Sieve.o \
 			Synthesizer.o \
 			ieee.o \
 			notifier.o
