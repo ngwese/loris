@@ -121,12 +121,7 @@ int main( )
 		std::cout << "checking clarinet synthesis" << endl;
 		std::fill( v.begin(), v.end(), 0. );
 		Synthesizer synth( f.sampleRate(), v.begin(), v.end() );
-		for ( std::list< Partial >::iterator pIter = clar.begin(); 
-			  pIter != clar.end(); 
-			  ++pIter ) 
-		{
-			synth.synthesize( *pIter );
-		}
+		synth.synthesize( clar.begin(), clar.end() );
 		AiffFile::Export( "clarOK.ctest.aiff", f.sampleRate(), 1, 16, v.begin(), v.end() ); 	
 		
 		//	analyze flute tone
@@ -152,12 +147,7 @@ int main( )
 		std::cout << "checking flute synthesis" << endl;
 		std::fill( v.begin(), v.end(), 0. );
 		synth = Synthesizer( f.sampleRate(), v.begin(), v.end() );
-		for ( std::list< Partial >::iterator pIter = flut.begin(); 
-			  pIter != flut.end(); 
-			  ++pIter ) 
-		{
-			synth.synthesize( *pIter );
-		}
+		synth.synthesize( flut.begin(), flut.end() );
 		AiffFile::Export( "flutOK.ctest.aiff", f.sampleRate(), 1, 16, v.begin(), v.end() ); 	
 		
 			
@@ -200,12 +190,7 @@ int main( )
 
 		v = std::vector< double >( (maxtime + Partial::FadeTime()) * f.sampleRate() );
 		synth = Synthesizer( f.sampleRate(), v.begin(), v.end() );
-		for ( std::list< Partial >::iterator pIter = m.partials().begin(); 
-			  pIter != m.partials().end(); 
-			  ++pIter ) 
-		{
-			synth.synthesize( *pIter );
-		}
+		synth.synthesize(  m.partials().begin(), m.partials().end() );
 		AiffFile::Export( "morph.ctest.aiff", f.sampleRate(), 1, 16, v.begin(), v.end() ); 	
 
 	}

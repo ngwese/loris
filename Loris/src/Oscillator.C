@@ -111,6 +111,32 @@ Oscillator::Oscillator( double radf, double a, double bw, double ph /* = 0. */ )
 }
 
 // ---------------------------------------------------------------------------
+//	Oscillator construction
+// ---------------------------------------------------------------------------
+//	Initialize state (to zero) and construct a Filter.
+Oscillator::Oscillator( void ) :
+	_frequency( 0. ),	//	radians per sample
+	_amplitude( 0. ),	//	absolute
+	_bandwidth( 0 ),	//	bandwidth coefficient (noise energy / total energy)
+	_phase( 0 ),		//	radians
+	_filter( new Filter( prototype_filter() ) )
+{
+}
+
+// ---------------------------------------------------------------------------
+//	Oscillator copy construction
+// ---------------------------------------------------------------------------
+//	Initialize state (to zero) and construct a Filter.
+Oscillator::Oscillator( const Oscillator & other ) :
+	_frequency( other._frequency ),	//	radians per sample
+	_amplitude( other._amplitude ),	//	absolute
+	_bandwidth( other._bandwidth ),	//	bandwidth coefficient (noise energy / total energy)
+	_phase( other._phase ),		//	radians
+	_filter( new Filter( * (other._filter) ) )
+{
+}
+
+// ---------------------------------------------------------------------------
 //	Oscillator destruction
 // ---------------------------------------------------------------------------
 //

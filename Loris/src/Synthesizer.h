@@ -34,12 +34,14 @@
  *
  */
 
+#include <memory>
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
 #endif
 
+class Oscillator;
 class Partial;
 
 // ---------------------------------------------------------------------------
@@ -56,6 +58,7 @@ class Partial;
 class Synthesizer
 {
 //	-- instance variables --
+	std::auto_ptr<Oscillator> _osc;
 	double _sampleRate;					//	in Hz
 	double * _sampleBuffer;				//	samples are computed and stored here
 	long _sampleBufferSize;				//	length of buffer in samples
@@ -79,10 +82,22 @@ public:
 //	and padded Partials. Synthesizer will not generate samples outside the
 //	buffer, but neither will any attempt be made to eliminate clicks at the
 //	buffer boundaries.  
-	void synthesize( const Partial & p, double timeShift = 0. );	
+	void synthesize( const Partial & p, double timeShift = 0. ) const;	
 	
 //	function-call operator, for use as a functor:
-//	void operator() ( const Partial & p ) { synthesize( p ) ; }
+	void operator() ( const Partial & p, double timeShift = 0. ) const
+		{ synthesize( p, timeShift ) ; }
+
+#if !defined(NO_TEMPLATE_MEMBERS)
+//	Partial range operations:
+	template<typename Iter>
+	void synthesize( Iter begin_partials, Iter end_partials, double timeShift = 0. ) const
+		{ while ( begin_partials != end_partials ) synthesize( *(begin_partials++), timeShift ); }
+
+	template<typename Iter>
+	void operator() ( Iter begin_partials, Iter end_partials, double timeShift = 0. ) const
+		{ synthesize( begin_partials, end_partials, timeShift ); }
+#endif
 	
 //	access:
 	double sampleRate( void ) const { return _sampleRate; }

@@ -64,7 +64,8 @@ static long countem = 0;
 Synthesizer::Synthesizer( double srate, double * bufStart, double * bufEnd  ) :
 	_sampleRate( srate ),
 	_sampleBuffer( bufStart ),
-	_sampleBufferSize( bufEnd - bufStart )
+	_sampleBufferSize( bufEnd - bufStart ),
+	_osc( new Oscillator() )
 {
 	//	check to make sure that the sample rate is valid:
 	if ( _sampleRate <= 0. ) {
@@ -87,7 +88,8 @@ Synthesizer::Synthesizer( double srate, double * bufStart, double * bufEnd  ) :
 Synthesizer::Synthesizer( const Synthesizer & other ) :
 	_sampleRate( other._sampleRate ),
 	_sampleBuffer( other._sampleBuffer ),
-	_sampleBufferSize( other._sampleBufferSize )
+	_sampleBufferSize( other._sampleBufferSize ),
+	_osc( new Oscillator( *other._osc ) )
 {
 	//countem = 0;
 }
@@ -135,22 +137,21 @@ Synthesizer::operator= ( const Synthesizer & other )
 //	buffer boundaries.  
 //	
 void
-Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ )
+Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ ) const
 {
-/*
+//
 	debugger << "synthesizing Partial from " << p.startTime()*sampleRate() <<
 			" to " << p.endTime()*sampleRate() << " starting phase " <<
 			p.initialPhase() << " starting frequency " << 
 			p.begin()->frequency() << endl;
-*/
+//
 	
 //	don't bother to synthesize Partials that will generate no samples in
 //	the samples buffer; but note that Partials having a single Breakpoint,
 //	while officially of duration "0.", will generate samples due to ramping
 //	in and out:
-	if ( /* p.duration() == 0. || */
-		 p.endTime() + timeShift < 0. ||
-		 (p.startTime() + timeShift) * sampleRate() > numSamples() )
+	if ( p.endTime() + timeShift < 0. ||
+		(p.startTime() + timeShift) * sampleRate() > numSamples() )
 	{
 		debugger << "ignoring a partial that would generate no samples" << endl;
 		debugger << "start time is " << p.startTime() << " end time is " << p.endTime() << endl;
@@ -196,21 +197,43 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ )
 	Assert( dsamps >= 0. );
 	double avgfreq = 0.5 * (ifreq + iterator.breakpoint().frequency());
 	double iphase = iterator.breakpoint().phase() - (radianFreq(avgfreq) * dsamps);
+
+//	don't alias:
+	if ( radianFreq( ifreq ) > Pi )	
+	{
+		iamp = 0.;
+	}
+
+//	clamp bandwidth:
+	if ( ibw > 1. )
+	{
+		debugger << "clamping bandwidth at 1." << endl;
+		ibw = 1.;
+	}
+	else if ( ibw < 0. )
+	{ 
+		debugger << "clamping bandwidth at 0." << endl;
+		ibw = 0.;
+	}
 		
 //	setup the oscillator:
 //	Remember that the oscillator only knows about radian frequency! Convert!
-	Oscillator osc( radianFreq( ifreq ), iamp, ibw, iphase );
+	_osc->setRadianFreq( radianFreq( ifreq ) );
+	_osc->setAmplitude( iamp );
+	_osc->setBandwidth( ibw );
+	_osc->setPhase( iphase );
 	
 //	initialize sample buffer index:
-	long curSampleIdx = itime * sampleRate();
+	long curSampleIdx = long(itime * sampleRate());
 	
 //	synthesize linear-frequency segments until there aren't any more
 //	segments or the segments threaten to run off the end of the buffer:
-	const PartialConstIterator End = p.end();
-	for ( ; iterator != End; ++iterator ) 
+	//const PartialConstIterator End = p.end();
+	//for ( ; iterator != End; ++iterator ) 
+	while ( iterator != p.end() )
 	{
 		//	compute target sample index:
-		long tgtsamp = (iterator.time() + timeShift) * sampleRate();
+		long tgtsamp = long( (iterator.time() + timeShift) * sampleRate() );
 		if ( tgtsamp >= numSamples() )
 			break;
 			
@@ -219,22 +242,24 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ )
 		//	(Could check first whether any non-zero samples
 		//	will be generated, if not, can just set target
 		//	values.)
-		osc.generateSamples( //_samples, curSampleIdx, tgtsamp, 
-							 _sampleBuffer + curSampleIdx, _sampleBuffer + tgtsamp,
-							 radianFreq( iterator.breakpoint().frequency() ), 
-							 iterator.breakpoint().amplitude(), 
-							 iterator.breakpoint().bandwidth() );
+		_osc->generateSamples( _sampleBuffer + curSampleIdx, _sampleBuffer + tgtsamp,
+								radianFreq( iterator.breakpoint().frequency() ), 
+								iterator.breakpoint().amplitude(), 
+								iterator.breakpoint().bandwidth() );
 									  
 		//	if the current oscillator amplitude is
 		//	zero, reset the phase (note: the iterator
 		//	values are the target values, so the phase
 		//	should be set _after_ generating samples,
 		//	when the oscillator and iterator are in-sync):
-		if ( osc.amplitude() == 0. )
-			osc.setPhase( iterator.breakpoint().phase() );
+		if ( _osc->amplitude() == 0. )
+			_osc->setPhase( iterator.breakpoint().phase() );
 			
 		//	update the current sample index:
 		curSampleIdx = tgtsamp;
+
+		//	advance iterator:
+		++iterator;
 	}
 
 	// debugger << "out of loop at target samp " << curSampleIdx << endl;
@@ -244,11 +269,11 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ )
 //	compute the final target oscillator state assuming 
 //	an appended Breakpoint of zero amplitude:
 	double tgtradfreq, tgtamp, tgtbw;
-	if ( iterator == End ) 
+	if ( iterator == p.end() ) 
 	{
-		tgtradfreq = osc.radianFreq();
+		tgtradfreq = _osc->radianFreq();
 		tgtamp = 0.;
-		tgtbw = osc.bandwidth();
+		tgtbw = _osc->bandwidth();
 	}
 	else
 	{
@@ -263,15 +288,14 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ )
 		std::min( curSampleIdx + long(Partial::FadeTime() * sampleRate()), numSamples() );
 	double alpha = 
 		(finalsamp - curSampleIdx) / (Partial::FadeTime() * sampleRate());
-	tgtradfreq = (alpha * tgtradfreq) + ((1. - alpha) * osc.radianFreq());
-	tgtamp = (alpha * tgtamp) + ((1. - alpha) * osc.amplitude());
-	tgtbw = (alpha * tgtbw) + ((1. - alpha) * osc.bandwidth());
+	tgtradfreq = (alpha * tgtradfreq) + ((1. - alpha) * _osc->radianFreq());
+	tgtamp = (alpha * tgtamp) + ((1. - alpha) * _osc->amplitude());
+	tgtbw = (alpha * tgtbw) + ((1. - alpha) * _osc->bandwidth());
 	
 //	generate samples:
 //	(buffer, beginIdx, endIdx, freq, amp, bw)
-	osc.generateSamples( //_samples, curSampleIdx, finalsamp, 
-						 _sampleBuffer + curSampleIdx, _sampleBuffer + finalsamp,
-						 tgtradfreq, tgtamp, tgtbw );	
+	_osc->generateSamples( _sampleBuffer + curSampleIdx, _sampleBuffer + finalsamp,
+					   tgtradfreq, tgtamp, tgtbw );	
 
 	// ++countem;
 }
