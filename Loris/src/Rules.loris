@@ -8,6 +8,7 @@ OBJ_LORIS = $(CLASSES)/AiffFile.o \
 			$(CLASSES)/AssociateBandwidth.o \
 			$(CLASSES)/Breakpoint.o \
 			$(CLASSES)/BreakpointEnvelope.o \
+			$(CLASSES)/Channelizer.o \
 			$(CLASSES)/Dilator.o \
 			$(CLASSES)/Distiller.o \
 			$(CLASSES)/DistributeEnergy.o \
@@ -49,5 +50,5 @@ OBJ_SDIF = $(CLASSES)/sdif.o $(CLASSES)/sdif-types.o
 #	flags:
 #
 INC_LORIS = -I${FFTW}/include -I$(CLASSES) -I$(SDIF)
-# DEBUG_LORIS = -DDebug_Loris
+DEBUG_LORIS = -DDebug_Loris
 LIB_LORIS = -L${FFTW}/lib -lfftw

@@ -9,17 +9,21 @@
 //	The Morpher object collects morphed Partials in a list<Partial>, that can
 //	be accessed by clients.
 //
+//	The Morpher interface is fully insulating, the implementation is 
+//	defined entirely inthe Morpher_imp class in Morpher.C.
+//	Morpher is a leaf class, do not subclass.
+//
 //	-kel 15 Oct 99
 //
 // ===========================================================================
 #include "Partial.h"	//	needed only for PartialList definition
-#include "Handle.h"	 	//	Batov's template Handle class	
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
 #endif
 
+template <class T> class Handle;	//	Batov's Handle<> tempalte, in Handle.h
 class Envelope;
 class Morpher_imp;
 
@@ -32,7 +36,7 @@ class Morpher_imp;
 //
 class Morpher
 {
-//	-- instance variable --
+//	-- insulating implementation --
 	Morpher_imp * _imp;
 
 //	-- public interface --

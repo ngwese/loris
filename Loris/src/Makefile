@@ -35,6 +35,7 @@ OBJ_LORIS = AiffFile.o \
 			AssociateBandwidth.o \
 			Breakpoint.o \
 			BreakpointEnvelope.o \
+			Channelizer.o \
 			Dilator.o \
 			Distiller.o \
 			DistributeEnergy.o \

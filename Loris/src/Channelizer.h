@@ -13,14 +13,16 @@
 //	-kel 21 July 2000
 //
 // ===========================================================================
-#include <memory>	//	auto_ptr<>
+#include "Partial.h"	//	needed only for PartialList definition
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
 #endif
 
-class Channelizer_Imp;
+class Channelizer_imp;
+template <class T> class Handle;	//	Batov's Handle<> tempalte, in Handle.h
+class Envelope;
 
 // ---------------------------------------------------------------------------
 //	class Channelizer
@@ -28,12 +30,15 @@ class Channelizer_Imp;
 class Channelizer
 {
 //	-- insulating implementaion --
-	std::auto_ptr<Channelizer_Imp> _imp;
+	Channelizer_imp * _imp;
 	
 //	-- public interface --
 public:
-	Channelizer( void );
+	Channelizer( Handle<Envelope> refChanFreq, int refChanLabel );
 	~Channelizer( void );
+
+	//	channelizing:
+	void channelize( PartialList::iterator begin, PartialList::iterator end );
 	
 };	//	end of class Channelizer
 
