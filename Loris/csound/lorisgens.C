@@ -357,7 +357,7 @@ EnvelopeReader::Tags( void )
 }
 
 // ---------------------------------------------------------------------------
-//	EnvelopeReader Tags
+//	EnvelopeReader Find
 // ---------------------------------------------------------------------------
 //	May return NULL if no reader with the specified owner and index
 //	is found.
@@ -983,7 +983,6 @@ LorisMorpher::updateEnvelopes( void )
 	// std::cerr << "** Morphing Partials labeled " << labelMap.begin()->first;
 	// std::cerr << " to " << (--labelMap.end())->first << std::endl;
 	
-	Partial dummy;
 	long envidx = 0;
 	LabelMap::iterator it;
 	for( it = labelMap.begin(); it != labelMap.end(); ++it, ++envidx )
@@ -1011,20 +1010,20 @@ LorisMorpher::updateEnvelopes( void )
 		if ( itgt < 0 )
 		{
 			//	morph from the source to a dummy:
-			// std::cerr << "** Morphing source to dummy " << envidx << std::endl;
-			morpher.morphParameters( src_reader->valueAt(isrc), dummy, 0, bp );
+			// std::cerr << "** Fading from source " << envidx << std::endl;
+            bp = morpher.fadeSrcBreakpoint( src_reader->valueAt(isrc), 0 );
 		}
 		else if ( isrc < 0 )
 		{
 			//	morph from a dummy to the target:
-			// std::cerr << "** Morphing dummy to target " << envidx << std::endl;
-			morpher.morphParameters( dummy, tgt_reader->valueAt(itgt), 0, bp );
+			// std::cerr << "** Fading to target " << envidx << std::endl;
+            bp = morpher.fadeTgtBreakpoint( tgt_reader->valueAt(itgt), 0 );
 		}
 		else 
 		{
 			//	morph from the source to the target:
 			// std::cerr << "** Morphing source to target " << envidx << std::endl;
-			morpher.morphParameters( src_reader->valueAt(isrc), tgt_reader->valueAt(itgt), 0, bp );
+            bp = morpher.morphBreakpoints( src_reader->valueAt(isrc), tgt_reader->valueAt(itgt), 0 );
 		}	
 	} 
 	
@@ -1033,9 +1032,9 @@ LorisMorpher::updateEnvelopes( void )
 	// std::cerr << " unlabeled source Partials" << std::endl;
 	for( long i = 0; i < src_unlabeled.size(); ++i, ++envidx )  
 	{
-		//	morph from the source to a dummy:
+		//	fade from the source:
 		Breakpoint & bp = morphed_envelopes.valueAt(envidx);
-		morpher.morphParameters( src_reader->valueAt( src_unlabeled[i] ), dummy, 0, bp );
+        bp = morpher.fadeSrcBreakpoint( src_reader->valueAt( src_unlabeled[i] ), 0 );
 	}
 	
 	
@@ -1044,9 +1043,9 @@ LorisMorpher::updateEnvelopes( void )
 	// std::cerr << " unlabeled target Partials" << std::endl;
 	for( long i = 0; i < tgt_unlabeled.size(); ++i, ++envidx )  
 	{
-		//	morph from a dummy to the target:
+		//	fade to the target:
 		Breakpoint & bp = morphed_envelopes.valueAt(envidx);
-		morpher.morphParameters( dummy, tgt_reader->valueAt( tgt_unlabeled[i] ), 0, bp );
+        bp = morpher.fadeTgtBreakpoint( tgt_reader->valueAt( tgt_unlabeled[i] ), 0 );
 	}	
 	
 	//	tag these envelopes:

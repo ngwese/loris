@@ -214,6 +214,23 @@ public:
 					PartialList::const_iterator endTgt,
 					Partial::label_type label = 0 );
 
+
+    //!    Compute morphed parameter values at the specified time, using
+    //!    the source and target Breakpoints (assumed to correspond exactly
+    //!    to the specified time).
+    //!
+    //!    \param  srcBkpt is the Breakpoint corresponding to a morph function
+    //!            value of 0.
+    //!    \param  tgtBkpt is the Breakpoint corresponding to a morph function
+    //!            value of 1.
+    //!    \param  time is the time corresponding to srcBkpt (used
+    //!            to evaluate the morphing functions and tgtPartial).
+    //!    \return the morphed Breakpoint
+    //
+    Breakpoint
+    morphBreakpoints( const Breakpoint & srcBkpt, const Breakpoint & tgtBkpt, 
+                      double time  ) const;
+                               
     //!	Compute morphed parameter values at the specified time, using
     //!	the source Breakpoint (assumed to correspond exactly to the
     //!	specified time) and the target Partial (whose parameters are

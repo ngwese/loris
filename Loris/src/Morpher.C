@@ -60,7 +60,7 @@ namespace Loris {
 
 
 static const Partial::label_type DefaultReferenceLabel = 0;    
-                                                 //    by default, don't use reference Partial
+                                                 //  by default, don't use reference Partial
                                                  // (this is the traditional behavior or Loris)
 
 static const double DefaultFixThreshold = -90;   // dB, very low by default
@@ -432,6 +432,33 @@ Morpher::morph( PartialList::const_iterator beginSrc,
     crossfade( beginSrc, endSrc, beginTgt, endTgt );
 }
 
+// ---------------------------------------------------------------------------
+//    morphBreakpoints
+// ---------------------------------------------------------------------------
+//!    Compute morphed parameter values at the specified time, using
+//!    the source and target Breakpoints (assumed to correspond exactly
+//!    to the specified time).
+//!
+//!    \param  srcBkpt is the Breakpoint corresponding to a morph function
+//!            value of 0.
+//!    \param  tgtBkpt is the Breakpoint corresponding to a morph function
+//!            value of 1.
+//!    \param  time is the time corresponding to srcBkpt (used
+//!            to evaluate the morphing functions and tgtPartial).
+//!    \return the morphed Breakpoint
+//
+Breakpoint
+Morpher::morphBreakpoints( const Breakpoint & srcBkpt, const Breakpoint & tgtBkpt, 
+                           double time  ) const
+{
+    double fweight = _freqFunction->valueAt( time );
+    double aweight = _ampFunction->valueAt( time );
+    double bweight = _bwFunction->valueAt( time );
+    
+    // compute interpolated Breakpoint parameters:
+    return interpolateParameters( srcBkpt, tgtBkpt, fweight, 
+                                  aweight, _ampMorphShape, bweight );
+}
 
 // ---------------------------------------------------------------------------
 //    morphSrcBreakpoint
@@ -460,15 +487,9 @@ Morpher::morphSrcBreakpoint( const Breakpoint & srcBkpt, const Partial & tgtPart
         Throw( InvalidArgument, "morphSrcBreakpoint cannot morph with empty Partial" );
     }
     
-    double fweight = _freqFunction->valueAt( time );
-    double aweight = _ampFunction->valueAt( time );
-    double bweight = _bwFunction->valueAt( time );
-    
     Breakpoint tgtBkpt = tgtPartial.parametersAt( time );
     
-    // compute interpolated Breakpoint parameters:
-    return interpolateParameters( srcBkpt, tgtBkpt, fweight, 
-                                  aweight, _ampMorphShape, bweight );
+    return morphBreakpoints( srcBkpt, tgtBkpt, time );
 }
 
 // ---------------------------------------------------------------------------
@@ -498,15 +519,9 @@ Morpher::morphTgtBreakpoint( const Breakpoint & tgtBkpt, const Partial & srcPart
         Throw( InvalidArgument, "morphTgtBreakpoint cannot morph with empty Partial" );
     }
     
-    double fweight = _freqFunction->valueAt( time );
-    double aweight = _ampFunction->valueAt( time );
-    double bweight = _bwFunction->valueAt( time );
-    
     Breakpoint srcBkpt = srcPartial.parametersAt( time );
    
-    // compute interpolated Breakpoint parameters:           
-    return interpolateParameters( srcBkpt, tgtBkpt, fweight, 
-                                  aweight, _ampMorphShape, bweight );
+    return morphBreakpoints( srcBkpt, tgtBkpt, time );
 }
 
 // ---------------------------------------------------------------------------
