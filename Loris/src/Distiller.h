@@ -88,11 +88,21 @@ public:
 	 */
 	
 //	-- distillation --
-	void distill( PartialList & container );
-	/*	Distill all Partials in the specified container (PartialList).
+	PartialList::iterator distill( PartialList & container );
+	/*	Distill the Partials in a PartialList into a list containing a single 
+		Partial per non-zero label. The distilled list will contain as many 
+		Partials as there were non-zero labels in the original list.
+
+		Unlabeled (zero-labeled) Partials are collated into the smallest-possible 
+		number of Partials that does not combine any overlapping Partials.
+		Collated Partials assigned labels higher than any label in the original 
+		list, and appear at the end of the distilled PartialList.
+	
+		Return an iterator refering to the position of the first collated Partial,
+		of the end of the distilled list if there are no collated Partials.
 	 */
 
-	void operator() ( PartialList & container )
+	PartialList::iterator operator() ( PartialList & container )
 		{ distill( container ); }
 	/*	Function call operator: same as distill( PartialList & container ).
 	 */

@@ -53,11 +53,11 @@ using namespace std;
 		std::cout << " PASS" << endl << endl;			\
 	} while (false)
 
-#define TEST_VALUE( expr, val )									\
-	do {														\
-		std::cout << "TEST: " << #expr << "==" << (val) << endl;\
-		Assert( (expr) == (val) );								\
-		std::cout << "  PASS" << endl << endl;					\
+#define TEST_VALUE( expr, val )														\
+	do {																			\
+		std::cout << "TEST: " << #expr << " (" << expr << ") == " << (val) << endl;	\
+		Assert( (expr) == (val) );													\
+		std::cout << "  PASS" << endl << endl;										\
 	} while (false)
 	
 	
@@ -187,6 +187,12 @@ static void test_distill_nonoverlapping( void )
 	PartialList::iterator it = l.begin();
 	TEST( *it == p4 );
 	++it;
+	
+	for ( Partial::iterator distit = it->begin(); distit != it->end(); ++distit )
+	{
+		cout << distit.time() << " " << distit.breakpoint().frequency() << endl;
+	}
+	
 	TEST( it->numBreakpoints() == compare.numBreakpoints() );
 	// TEST( *it == compare );
 	
@@ -235,18 +241,32 @@ static void test_distill_overlapping2( void )
 	//	Fabricate the Partial that the distillation should 
 	//	produce.
 	Partial compare;
+	
+	//	first Breakpoint from p1
 	compare.insert( 0, Breakpoint( 100, 0.4, 0, 0 ) );
+	
+	// 	null Breakpoint at 0+fade
 	double t = 0 + fade;
 	compare.insert( t, Breakpoint( p1.frequencyAt(t), 0, 
 								   p1.bandwidthAt(t), p1.phaseAt(t) ) );
-	// bandwidth introduced in the overlap region:
-	// 0.4^2 / (0.3^2 + 0.4^2) = 0.64
-	// amp = sqrt(0.3^2 + 0.4^2) = .5
+
+	// 	interpolated Breakpoint at .18 (.2 - 2*fade)
+	//double t = 0.2 - (2*fade);
+	//compare.insert( t, p1.parametersAt( t ) );
+	
+	// 	null Breakpoint at .19 (.2-fade)
+	//	bandwidth introduced in the overlap region:
+	// 	0.4^2 / (0.3^2 + 0.4^2) = 0.64
+	// 	amp = sqrt(0.3^2 + 0.4^2) = .5
 	t = 0.2 - fade;
 	compare.insert( t, Breakpoint( p2.frequencyAt(t), 0, 
 								   0.64, 
 								   p2.phaseAt(t) ) );
+								   
+	//	first Breakpoint from p2:
 	compare.insert( 0.2, Breakpoint( 200, 0.5, 0.64, 0 ) );
+	
+	//	second Breakpoint from p2
 	compare.insert( 0.35, Breakpoint( 210, 0.3, 0.2, .1 ) );
 	compare.setLabel( 12 );
 
@@ -255,7 +275,6 @@ static void test_distill_overlapping2( void )
 	TEST( l.size() == 1 );
 	TEST( l.begin()->numBreakpoints() == compare.numBreakpoints() );
 	TEST( l.begin()->label() == compare.label() );
-	// TEST( *l.begin() == compare );
 	
 	Partial::iterator distit = l.begin()->begin();
 	Partial::iterator compareit = compare.begin();
@@ -295,6 +314,7 @@ static void test_distill_overlapping3( void )
 	Partial p3;
 	p3.insert( 0.32, Breakpoint( 300, 0.3, 0, 0 ) );
 	p3.insert( 0.4, Breakpoint( 310, 0.3, 0.2, .1 ) );
+	p3.insert( 0.7, Breakpoint( 310, 0.3, 0.2, .1 ) );
 	p3.setLabel( 123 );
 
 	PartialList l;
@@ -302,42 +322,63 @@ static void test_distill_overlapping3( void )
 	l.push_back( p1 );
 	l.push_back( p2 );
 
-	const double fade = .01; // 10 ms
+	const double fade = .008; // 8 ms
 	Distiller d( fade );
 	d.distill( l );
 	
 	//	Fabricate the Partial that the distillation should 
 	//	produce.
 	Partial compare;
+	
+	//	first Breakpoint from p1
 	compare.insert( 0, Breakpoint( 100, 0.4, 0, 0 ) );
+
+	// 	null Breakpoint at 0+fade
 	double t = 0 + fade;
 	compare.insert( t, Breakpoint( p1.frequencyAt(t), 0, 
 								   p1.bandwidthAt(t), p1.phaseAt(t) ) );
-	// bandwidth introduced in the overlap region:
-	// (0.4^2 + 0.2*0.3^2) / (0.3^2 + 0.4^2)) = 0.712
-	// amp = sqrt(0.3^2 + 0.4^2) = .5
+	// 	interpolated Breakpoint at .18 (.2 - 2*fade)
+	//double t = 0.2 - (2*fade);
+	//compare.insert( t, p1.parametersAt( t ) );
+
+	// 	null Breakpoint at .19 (.2-fade)
+	// 	bandwidth introduced in the overlap region:
+	// 	(0.4^2 + 0.2*0.3^2) / (0.3^2 + 0.4^2)) = 0.712
+	// 	amp = sqrt(0.3^2 + 0.4^2) = .5
 	t = 0.2 - fade;
 	compare.insert( t, Breakpoint( p2.frequencyAt(t), 0, 
 								   0.712, p2.phaseAt(t) ) );
+								   
+	//	first Breakpoint from p2:
 	compare.insert( 0.2, Breakpoint( 200, 0.5, 0.712, 0 ) );
+								   
+	//	second Breakpoint from p2:
 	compare.insert( 0.29, Breakpoint( 200, 0.3, 0.2, 0.1 ) );
+
+	// 	null Breakpoint at .29 + fade
 	t = 0.29 + fade;
 	compare.insert( t, Breakpoint( p2.frequencyAt(t), 0, 
-								   0.2, p2.phaseAt(t) ) );
-	// bandwidth introduced in the overlap region:
-	// (0.3^2 + 0.2*0.3^2) / (0.3^2 + 0.3^2) = 0.5
-	// amp = sqrt(0.3^2 + 0.3^2) = .424264
+								   p2.bandwidthAt(t), p2.phaseAt(t) ) );
+
+	// 	null Breakpoint at .31 (.32-fade)
 	t = 0.32 - fade;
 	compare.insert( t, Breakpoint( p3.frequencyAt(t), 0, 
-								   0.5, p3.phaseAt(t) ) );
+								   0, p3.phaseAt(t) ) );
+
+	//	first Breakpoint from p3 (with bandwidth):
 	compare.insert( 0.32, Breakpoint( 300, std::sqrt(0.18), 0.5, 0 ) );
+								   
+	//	second Breakpoint from p3:
 	compare.insert( 0.4, Breakpoint( 310, 0.3, 0.2, .1 ) );
+								   
+	//	third Breakpoint from p3:
+	compare.insert( 0.7, Breakpoint( 310, 0.3, 0.2, .1 ) );
 	compare.setLabel( 123 );
 
 	//	compare Partials (distilled Partials
 	//	should be in label order):
-	TEST( l.size() == 1 );
-	TEST( l.begin()->numBreakpoints() == compare.numBreakpoints() );
+	TEST_VALUE( l.size(), 1 );
+	TEST_VALUE( l.begin()->numBreakpoints(), compare.numBreakpoints() );
 	// TEST( *l.begin() == compare );
 	
 	Partial::iterator distit = l.begin()->begin();

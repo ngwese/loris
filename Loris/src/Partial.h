@@ -182,6 +182,12 @@ public:
 		the end of the Partial if the last Breakpoint is removed.
 	 */
 	 
+	iterator erase( iterator beg, iterator end );
+	/*	Breakpoint removal: erase the Breakpoints in the specified range,
+		and return an iterator referring to the position after the,
+		erased range.
+	 */
+	 
 	iterator findAfter( double time );
 	const_iterator findAfter( double time ) const;
 	/*	Return a PartialIterator refering to the insertion position for a

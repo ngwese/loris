@@ -169,14 +169,20 @@ Partial::endTime( void ) const
 void 
 Partial::absorb( const Partial & other )
 {
-	Partial::iterator it = findNearest( other.startTime() );
+	Partial::iterator it = findAfter( other.startTime() );
 	while ( it != end() && !(it.time() > other.endTime()) )
 	{
-		// absorb energy from other at the time
-		// of this Breakpoint:
-		double a = other.amplitudeAt( it.time() );
-		it->addNoiseEnergy( a * a );
-		
+		//	only non-null (non-zero-amplitude) Breakpoints
+		//	abosrb noise energym because null Breakpoints
+		//	are used especially to reset the Partial phase,
+		//	and are not part of the normal analyasis data:
+		if ( it->amplitude() > 0 )
+		{
+			// absorb energy from other at the time
+			// of this Breakpoint:
+			double a = other.amplitudeAt( it.time() );
+			it->addNoiseEnergy( a * a );
+		}	
 		++it;
 	}
 }
@@ -287,6 +293,22 @@ Partial::erase( PartialIterator pos )
 		_bpmap.erase( pos._iter );
 	}
 	return ret;
+}
+
+// ---------------------------------------------------------------------------
+//	erase
+// ---------------------------------------------------------------------------
+//	Erase the Breakpoints in the specified range of positions,
+//	and return an iterator referring to the position after the,
+//	erased range.
+PartialIterator 
+Partial::erase( PartialIterator beg, PartialIterator end )
+{
+	while ( beg._iter != end._iter )
+	{
+		_bpmap.erase( beg._iter++ );
+	}
+	return beg;
 }
 
 // ---------------------------------------------------------------------------
