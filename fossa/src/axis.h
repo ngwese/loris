@@ -33,7 +33,7 @@
  */
 
 #include <qcanvas.h>
-#include <iostream.h>
+#include <iostream>
 
 class VerticalAxis;
 class HorizontalAxis;

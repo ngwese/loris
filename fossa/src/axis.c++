@@ -43,7 +43,7 @@
 #include "axis.h"
 #include <qpen.h> 
 #include <math.h>
-
+#include <qpainter.h>
 
 // ---------------------------------------------------------------------------
 //      Axis constructor
