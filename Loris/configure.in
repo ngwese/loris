@@ -242,12 +242,11 @@ AC_ARG_WITH(fftw,
 	AC_HELP_STRING( [--with-fftw=path],
 					[specify the prefix of the FFTW  package] ),
 	[FFTWPACKAGE="$withval"], [FFTWPACKAGE=])
+	
 
 dnl save the state of the CPPFLAGS and LIBS
 SAVE_CPP_FLAGS="$CPPFLAGS"
 SAVE_LIBS="$LIBS"
-AC_LANG_SAVE
-AC_LANG_CPLUSPLUS
 
 if test -n "$FFTWPACKAGE" ; then
 dnl	search the specified FFTW package path for
@@ -304,7 +303,7 @@ dnl find one in the default path
 		AC_CHECK_HEADERS([fftw.h], [
 			FFTW_LIB="fftw"
 			AC_MSG_RESULT(using $FFTW_LIB (version 2)) 
-				AC_CHECK_LIB("$FFTW_LIB", fftw_create_plan_specific, :, AC_MSG_ERROR(cannot use FFTW library), -lm)
+			AC_CHECK_LIB("$FFTW_LIB", fftw_create_plan_specific, :, AC_MSG_ERROR(cannot use FFTW library), -lm)
 			] , [
 			AC_MSG_ERROR(cannot find any FFTW header) 
 			] ) 
@@ -331,6 +330,8 @@ dnl std::complex<double> are the same size and have the same memory layout.
 dnl Try to do that at compile-time, much better than doing it at runtime.
 dnl Actually, best of all is at configure-time. Only do this if the compiler
 dnl can handle compile-time assertions (checked above).
+AC_LANG_SAVE
+AC_LANG_CPLUSPLUS
 if test -n "$NO_COMPILE_TIME_ASSERTIONS"; then
 	dnl compiler supports compile-time assertions
 	AC_MSG_CHECKING(whether std::complex<double> is same as fftw_complex)
