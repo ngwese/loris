@@ -24,6 +24,15 @@ AC_PATH_PROG(SWIG, swig)
 AM_CONDITIONAL(HAVE_SWIG, test -n "$SWIG")
 
 
+# This needs to do something reasonable
+AC_MSG_CHECKING(for M_PI defined in cmath)
+AC_TRY_CPP([#include <cmath>; assert(M_PI);], [
+	AC_MSG_RESULT(ok)
+	HAVE_M_PI=true ], [
+	AC_MSG_RESULT(nope, using local definition of pi)
+	HAVE_M_PI=false ] )
+
+
 #----------------------------------------------------------------
 # Look for IRCAM's SDIF package
 #

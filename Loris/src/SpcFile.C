@@ -53,6 +53,12 @@
 #include <algorithm>
 #include <fstream>
 
+#if HAVE_M_PI
+	const double Pi = M_PI;
+#else
+	const double Pi = 3.14159265358979324;
+#endif
+
 using namespace std;
 
 #if !defined( NO_LORIS_NAMESPACE )
@@ -137,7 +143,7 @@ processPoint( const int left, const int right,
 	double freq = 		envExp( (left >> 8)   & 0xffff ) * 22050.0;
 	double sineMag =	envExp( (left >> 15)  & 0xfe00 );
 	double noiseMag =	envExp( (right >> 15) & 0xfe00 ) / 64.;
-	double phase = 			  ( (right >> 8)  & 0xffff ) * ( 2. * pi / 0xffff );
+	double phase = 			  ( (right >> 8)  & 0xffff ) * ( 2. * Pi / 0xffff );
 	
 	double total = sineMag * sineMag + noiseMag * noiseMag;
 
@@ -149,9 +155,9 @@ processPoint( const int left, const int right,
 	if (noise > 1.)
 		noise = 1.;
 	
-	phase -= pi / 2.;
+	phase -= Pi / 2.;
 	if (phase < 0.)
-		phase += 2. * pi;
+		phase += 2. * Pi;
 
 //
 // Create a new breakpoint and insert it.
@@ -787,7 +793,7 @@ static void afbp( const Partial & p, double time, double phaseRefTime,
 		amp = 0.;
 		freq = freqMult * p.frequencyAt( phaseRefTime );
 		bw = 0.;
-		phase = p.phaseAt( phaseRefTime ) - 2. * pi * (phaseRefTime - time) * freq;
+		phase = p.phaseAt( phaseRefTime ) - 2. * Pi * (phaseRefTime - time) * freq;
 	}
 	
 // Use envelope values at "time".
@@ -819,14 +825,14 @@ static void pack( double amp, double freq, double bw, double phase,
 
 // Set phase for one hop earlier, so that Kyma synthesis target phase is correct.
 // Add offset to phase for difference between Kyma and Loris representation.
-	phase -= 2. * pi * spcEI.hop * freq; 
-	phase += pi / 2;
+	phase -= 2. * Pi * spcEI.hop * freq; 
+	phase += Pi / 2;
 
 // Make phase into range 0..1.	
-	phase = std::fmod( phase, 2. * pi );
+	phase = std::fmod( phase, 2. * Pi );
 	if ( phase < 0. )
-		phase += 2. * pi; 
-	double zeroToOnePhase = phase / 2. * pi;
+		phase += 2. * Pi; 
+	double zeroToOnePhase = phase / 2. * Pi;
 
 // Make frequency into range 0..1.
 	double zeroToOneFreq = freq / 22050.0;		// 0..1 , 1 is 22.050 kHz

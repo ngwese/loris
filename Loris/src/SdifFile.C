@@ -46,6 +46,12 @@
 #include <vector>
 #include <cmath>
 
+#if HAVE_M_PI
+	const double Pi = M_PI;
+#else
+	const double Pi = 3.14159265358979324;
+#endif
+
 extern "C" {
 #include <sdif.h>
 }
@@ -554,10 +560,10 @@ assembleMatrixData( SdifFloat4 *data,
 		else 
 			resampledFlag = 1.0;	// no breakpoint in frame; fabricated this data point
 		
-		// 1TRC must have phase between 0 and 2*pi.
+		// 1TRC must have phase between 0 and 2*Pi.
 		double phas = par->phaseAt( tim );
 		if (phas < 0)
-			phas += 2. * pi; 
+			phas += 2. * Pi; 
 		
 		// Fill in values for this row of matrix data.
 		*rowDataPtr++ = index;							// first row of matrix   (standard)

@@ -47,6 +47,12 @@
 #include <cmath>
 #include <fstream>
 
+#if HAVE_M_PI
+	const double Pi = M_PI;
+#else
+	const double Pi = 3.14159265358979324;
+#endif		
+
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
@@ -307,8 +313,8 @@ getPartial( std::istream & s, std::list<Partial> & partials, double bweCutoff )
 			}
 
 			//	update phase based on _this_ pkData's interpolated freq:
-			phase +=2. * pi * prevTtnSec * pkData.interpolatedFrequency;
-			phase = std::fmod( phase, 2. * pi );
+			phase +=2. * Pi * prevTtnSec * pkData.interpolatedFrequency;
+			phase = std::fmod( phase, 2. * Pi );
 			
 			//	create Breakpoint:	
 			Breakpoint bp( frequency, amplitude, bandwidth, phase );

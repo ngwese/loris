@@ -39,8 +39,20 @@
 #include<Notifier.h>
 #include<Exception.h>
 #include <algorithm>
-// #include <cmath>	//	for M_PI (except on Mac)
 #include <cstdlib>	//	for std::abs()
+
+
+#if HAVE_M_PI
+	#include <cmath>	//	for M_PI (except on Mac)
+	const double Pi = M_PI;
+#else
+	const double Pi = 3.14159265358979324;
+#endif
+
+#if defined(Debug_Loris)
+#include <stdio.h>
+#endif
+
 
 #if defined(Debug_Loris)
 #include <stdio.h>
@@ -500,9 +512,9 @@ ReassignedSpectrum::reassignedPhase( long idx,
 									 double timeCorrection ) const
 {
 	double phase = arg( _transform[ idx ] );
-	phase += timeCorrection * fracFreqSample * 2. * pi / _transform.size();
+	phase += timeCorrection * fracFreqSample * 2. * Pi / _transform.size();
 	
-	return fmod( phase, 2. * pi );
+	return fmod( phase, 2. * Pi );
 }
 
 

@@ -43,6 +43,12 @@
 #include <vector>
 #include <cmath>
 
+#if HAVE_M_PI
+	const double Pi = M_PI;
+#else
+	const double Pi = 3.14159265358979324;
+#endif
+
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
@@ -89,7 +95,7 @@ Oscillator::Oscillator( double radf, double a, double bw, double ph /* = 0. */ )
 	}
 
 //	don't alias:
-	if ( _frequency > pi )
+	if ( _frequency > Pi )
 		_amplitude = 0.;
 }
 
@@ -147,7 +153,7 @@ Oscillator::generateSamples( //std::vector< double > & buffer,
 	}
 		
 //	don't alias:
-	if ( targetFreq > pi )	//	radian Nyquist rate
+	if ( targetFreq > Pi )	//	radian Nyquist rate
 	{
 		debugger << "ramping out Partial above Nyquist rate" << endl;
 		targetAmp = 0.;
@@ -169,7 +175,7 @@ Oscillator::generateSamples( //std::vector< double > & buffer,
 		//	will reset phase after this call if the
 		//	amplitude goes to zero):
 		_phase += (0.5 * (_frequency + targetFreq)) * howMany;
-		_phase = fmod( _phase, 2. * pi );
+		_phase = fmod( _phase, 2. * Pi );
 		howMany = 0;
 	}
 
@@ -227,7 +233,7 @@ Oscillator::generateSamples( //std::vector< double > & buffer,
 		//	high oscillation frequencies:
 		//	(Doesn't really matter much exactly what fmod does, 
 		//	as long as it brings the phase nearer to zero.)
-		_phase = fmod( p, 2. * pi );
+		_phase = fmod( p, 2. * Pi );
 	}
 	
 //	set the state variables to their target values,

@@ -23,7 +23,7 @@ AUX_DIST_EXTRA =
 MAINTAINERCLEANFILES = 	Makefile.in aclocal.m4 configure config.h.in \
 						stamp-h.in $(AUX_DIST)
 
-EXTRA_DIST = reconf
+EXTRA_DIST = reconf README-MAC
 
 
 dist-hook:
