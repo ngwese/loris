@@ -38,7 +38,7 @@ int main()
 {	
 	try {		
 		//	import flute partials:
-		string name(":test:flute3.lemr");
+		string name(":::sample_sounds:swell.lemr");
 		BinaryFile f;
 		f.view(name);
 		ImportLemur5 imp(f);
@@ -76,9 +76,10 @@ int main()
 		}
 		
 		//	write out samples:
-		cout << "writing newflute.aiff" << endl;
+		string newname(":::sample_sounds:swell.aiff");
+		cout << "writing " << newname << endl;
 		AiffFile sfout( srate, 1, 16, buf );
-		sfout.write( BinaryFile( ":test:newflute.aiff" ) );
+		sfout.write( BinaryFile( newname ) );
 		
 		cout << "done." << endl;
 	}
