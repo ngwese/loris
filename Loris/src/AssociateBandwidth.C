@@ -92,7 +92,7 @@ AssociateBandwidth::computeNoiseEnergy( double freqHz )
 	//	Have to check for alpha == 0, because 
 	//	the weights will be zero (see computeAlpha()):
 	//	(ignore zeroeth region?)
-	const int LowestRegion = 4;
+	const int LowestRegion = 2;
 	if ( posAbove < _surplus.size() && alpha != 0. && posAbove >= LowestRegion )
 		noise += _surplus[posAbove] * alpha / _weights[posAbove];
 	

@@ -173,7 +173,7 @@ Analyzer::configure( double resolutionHz )
 	//	bandwidth association region width 
 	//	defaults to 2 kHz, corresponding to 
 	//	1 kHz region center spacing:
-	_bwRegionWidth = 1000; //2000.;
+	_bwRegionWidth = 2000.;
 }
 
 // ---------------------------------------------------------------------------
