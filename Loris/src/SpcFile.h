@@ -302,7 +302,9 @@ void SpcFile::addPartials( PartialList::const_iterator begin_partials,
 #endif
 {
 	while ( begin_partials != end_partials )
+	{
 		addPartial( *(begin_partials++) );
+	}
 }
 
 }	//	end of namespace Loris

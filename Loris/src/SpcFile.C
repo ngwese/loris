@@ -85,7 +85,7 @@ namespace Loris {
 //	can't we change this? Seems like we could, but 
 //	its part of the size of the magic junk in the 
 //	Sose chunk.
-const int LargestLabel = 256;	// max number of partials for SPC file
+const int LargestLabel = 512;	// max number of partials for SPC file
 
     //  1 Mar 05
     //  Found that this cannot actually be 512 for enhanced
@@ -394,7 +394,7 @@ SpcFile::addPartial( const Partial & p, int label  )
 	}
 	if ( label > LargestLabel )
     {
-		Throw( InvalidArgument, "Spc Partial label is too large, cannot have more than 256." );
+		Throw( InvalidArgument, "Spc Partial label is too large, cannot have more than 512." );
 	}
 
 	if ( label > partials_.size() )
@@ -1029,7 +1029,7 @@ configureExportStruct( const SpcFile::partials_type & plist, double midipitch,
 
 	// Max number of partials is due to (arbitrary) size of initPhase[].
 	if ( spcEI.numPartials < 1 || spcEI.numPartials > LargestLabel )
-		Throw( FileIOException, "Partials must be distilled and labeled between 1 and 256." );
+		Throw( FileIOException, "Partials must be distilled and labeled between 1 and 512." );
 
 	debugger << "startTime = " << spcEI.startTime << " endTime = " << spcEI.endTime 
 			 << " hop = " << spcEI.hop << " partials = " << spcEI.numPartials << endl;
