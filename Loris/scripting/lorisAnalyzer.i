@@ -91,12 +91,11 @@ public:
 
 //	analysis:
 	%new 
-	PartialListHandle * analyze( const SampleVector * vec, double srate )
+	PartialList * analyze( const SampleVector * vec, double srate )
 	{
-		PartialListHandle * partials = new PartialListHandle();
+		PartialList * partials = new PartialList();
 		self->analyze( vec->begin(), vec->end(), srate );
-		(*partials)->splice( (*partials)->end(), self->partials() );
-		//analyzer_analyze( self, vec, srate, *partials );
+		partials->splice( partials->end(), self->partials() );
 		return partials;
 	}
 	/*	Analyze a SampleVector of (mono) samples at the given sample rate 	  	

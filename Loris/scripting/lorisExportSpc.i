@@ -89,7 +89,7 @@ public:
 	 */
 	 
 //	writing:
-	void write( const char * filename, const PartialListHandle * partials )
+	void write( const char * filename, const PartialList * partials )
 	{
 		self->write( filename, *partials );
 	}

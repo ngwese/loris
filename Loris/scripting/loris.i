@@ -202,15 +202,7 @@ static void throw_string( const char * s )
 	interfaces are represented as simple functions.
 %}
 
-%{
-	void channelize_( PartialListHandle * partials, 
-					 BreakpointEnvelope * refFreqEnvelope, int refLabel )
-	{
-		channelize( *partials, refFreqEnvelope, refLabel );
-	}
-%}
-				 
-%name(channelize) void channelize_( PartialListHandle * partials, 
+void channelize( PartialList * partials, 
 				 BreakpointEnvelope * refFreqEnvelope, int refLabel );
 /*	Label Partials in a PartialList with the integer nearest to
 	the amplitude-weighted average ratio of their frequency envelope
@@ -237,7 +229,7 @@ static void throw_string( const char * s )
 //	defined above to convert two strings into vectors
 //	of time points:
 %{
-void dilate_str( PartialListHandle * partials, 
+void dilate_str( PartialList * partials, 
 			 	 char * initial, char * target )
 {
 	std::vector<double> ivec = strtovec( initial );
@@ -254,10 +246,10 @@ void dilate_str( PartialListHandle * partials,
 		throw s;
 	}
 			
-	dilate( *partials, ivec.begin(), tvec.begin(), ivec.size() );
+	dilate( partials, ivec.begin(), tvec.begin(), ivec.size() );
 }
 %}
-%name(dilate) void dilate_str( PartialListHandle * partials, 
+%name(dilate) void dilate_str( PartialList * partials, 
 			 				   char * initial_times, char * target_times );
 /*	Dilate Partials in a PartialList according to the given 
 	initial and target time points. Partial envelopes are 
@@ -273,14 +265,7 @@ void dilate_str( PartialListHandle * partials,
 	will be extracted, other characters will be ignored.
  */
 
-%{
-	void distill_( PartialListHandle * partials )
-	{
-		distill( *partials );
-	}
-%}
-
-%name(distill) void distill_( PartialListHandle * partials );
+void distill( PartialList * partials );
 /*	Distill labeled (channelized)  Partials in a PartialList into a 
 	PartialList containing a single (labeled) Partial per label. 
 	The distilled PartialList will contain as many Partials as
@@ -312,14 +297,7 @@ using Loris::AiffFile;
 				 
 %}
 
-//	wrapper for exportSdif():
-%{
-	void exportSdif_( const char * path, PartialListHandle * partials, double hop )
-	{
-		exportSdif( path, *partials, hop );
-	}
-%}
-%name( exportSdif ) void exportSdif_( const char * path, PartialListHandle * partials, double hop = 0. );
+void exportSdif( const char * path, PartialList * partials, double hop = 0. );
 /*	Export Partials in a PartialList to a SDIF file at the specified
 	file path (or name). SDIF data is written in the 1TRC format.  
 	For more information about SDIF, see the SDIF website at:
@@ -335,6 +313,7 @@ using Loris::AiffFile;
 	If unspecified, hop defaults to 0.
  */
 
+#if 0
 //void importAiff( const char * path, SampleVector * vec, 
 //				 double * samplerate, int * nchannels );
 //
@@ -392,17 +371,18 @@ using Loris::AiffFile;
 		using importAiff( path ). 
 	 */
 %}
+#endif
 
 //	wrapper for importSdif() to return a PartialList:
 %{
-	PartialListHandle * importSdif_( const char * path )
+	PartialList * importSdif_( const char * path )
 	{
-		PartialListHandle * partials = new PartialListHandle();
-		importSdif( path, *partials );
+		PartialList * partials = new PartialList();
+		importSdif( path, partials );
 		return partials;
 	}
 %}
-%name( importSdif ) %new PartialListHandle * importSdif_( const char * path );
+%name( importSdif ) %new PartialList * importSdif_( const char * path );
 /*	Import Partials from an SDIF file at the given file path (or 
 	name), and return them in a PartialList.
 	For more information about SDIF, see the SDIF website at:
@@ -411,20 +391,21 @@ using Loris::AiffFile;
 
 //	wrapper for morph() to return a PartialList:
 %{
-	PartialListHandle * morph_( const PartialListHandle * src0, const PartialListHandle * src1, 
+	PartialList * morph_( const PartialList * src0, const PartialList * src1, 
 						  const BreakpointEnvelope * ffreq, 
 						  const BreakpointEnvelope * famp, 
 						  const BreakpointEnvelope * fbw )
 	{
 		
-		PartialListHandle * partials = new PartialListHandle();
-		morph( *src0, *src1, ffreq, famp, fbw, *partials );
+		PartialList * partials = new PartialList();
+		morph( src0, src1, ffreq, famp, fbw, partials );
 		return partials;
 	}
 %}
 				
-%name( morph ) %new PartialListHandle *  
-	morph_( const PartialListHandle * src0, const PartialListHandle * src1, 
+%name( morph ) 
+%new PartialList *  
+morph_( const PartialList * src0, const PartialList * src1, 
 			const BreakpointEnvelope * ffreq, 
 			const BreakpointEnvelope * famp, 
 			const BreakpointEnvelope * fbw );
@@ -440,15 +421,16 @@ using Loris::AiffFile;
 
 //	wrapper for synthesize to return a SampleVector:
 %{
-	SampleVector * synthesize_( const PartialListHandle * partials, double srate )
+	SampleVector * synthesize_( const PartialList * partials, double srate )
 	{
 		SampleVector * samples = new SampleVector();
-		synthesize( *partials, samples, srate );
+		synthesize( partials, samples, srate );
 		return samples;
 	}
 %}
-%name( synthesize ) %new SampleVector *
-	synthesize_( const PartialListHandle * partials, double srate );
+%name( synthesize ) 
+%new SampleVector *
+synthesize_( const PartialList * partials, double srate );
 /*	Synthesize Partials in a PartialList at the given sample
 	rate, and return the (floating point) samples in a SampleVector.
 	The SampleVector is sized to hold as many samples as are needed 
@@ -465,30 +447,14 @@ using Loris::AiffFile;
 	represented by classes in the Loris core.
 %}
 
-%{
-	void copyByLabel_( const PartialListHandle * src, long label, PartialListHandle * dst )
-	{
-		copyByLabel( *src, label, *dst );
-	}
-%} 
-%name (copyByLabel) 
-void copyByLabel_( const PartialListHandle * src, long label, PartialListHandle * dst );
+void copyByLabel( const PartialList * src, long label, PartialList * dst );
 /*	Append copies of Partials in the source PartialList having the
 	specified label to the destination PartialList. The source list
 	is unmodified.
  */
  
-%{
-	BreakpointEnvelope *
-	createFreqReference_( PartialListHandle * partials, int numSamples,
-					 double minFreq, double maxFreq )
-	{
-		return createFreqReference( *partials, numSamples, minFreq, maxFreq );
-	}
-%}
-
-%name(createFreqReference) %new BreakpointEnvelope * 
-createFreqReference_( PartialListHandle * partials, int numSamples,
+%new BreakpointEnvelope * 
+createFreqReference( PartialList * partials, int numSamples,
 					 double minFreq, double maxFreq );
 /*	Return a newly-constructed BreakpointEnvelope comprising the
 	specified number of samples of the frequency envelope of the
@@ -501,39 +467,18 @@ createFreqReference_( PartialListHandle * partials, int numSamples,
 	channelization (see channelize()).
  */
  
-%{
-	void scaleAmp_( PartialListHandle * partials, BreakpointEnvelope * ampEnv )
-	{
-		scaleAmp( *partials, ampEnv );
-	}
-%}
-
-%name(scaleAmp) void scaleAmp_( PartialListHandle * partials, BreakpointEnvelope * ampEnv );
+void scaleAmp( PartialList * partials, BreakpointEnvelope * ampEnv );
 /*	Scale the amplitude of the Partials in a PartialList according 
 	to an envelope representing a time-varying amplitude scale value.
  */
 				 
-%{
-	void scaleNoiseRatio_( PartialListHandle * partials, BreakpointEnvelope * ampEnv )
-	{
-		scaleNoiseRatio( *partials, ampEnv );
-	}
-%}
-
-%name(scaleNoiseRatio) void scaleNoiseRatio_( PartialListHandle * partials, BreakpointEnvelope * noiseEnv );
+void scaleNoiseRatio( PartialList * partials, BreakpointEnvelope * noiseEnv );
 /*	Scale the relative noise content of the Partials in a PartialList 
 	according to an envelope representing a (time-varying) noise energy 
 	scale value.
  */
 
-%{
-	void shiftPitch_( PartialListHandle * partials, BreakpointEnvelope * ampEnv )
-	{
-		shiftPitch( *partials, ampEnv );
-	}
-%}
-
-%name(shiftPitch) void shiftPitch_( PartialListHandle * partials, BreakpointEnvelope * pitchEnv );
+void shiftPitch( PartialList * partials, BreakpointEnvelope * pitchEnv );
 /*	Shift the pitch of all Partials in a PartialList according to 
 	the given pitch envelope. The pitch envelope is assumed to have 
 	units of cents (1/100 of a halfstep).
@@ -550,10 +495,10 @@ createFreqReference_( PartialListHandle * partials, int numSamples,
 	
 %inline 
 %{
-	void sift( PartialListHandle * partials )
+	void sift( PartialList * partials )
 	{		
 		char s[256];
-		sprintf(s, "sifting %d Partials", (*partials)->size() );
+		sprintf(s, "sifting %d Partials", partials->size() );
 		printf_notifier( s );
 		
 		Loris::Sieve sieve( 0.0001 );

@@ -52,20 +52,24 @@
  */
 
 %{
-#include "Handle.h"
 #include "Partial.h"
 #include "notifier.h"
 #include <list>
 
 using Loris::debugger;
-using Loris::endl;
+using Loris::Partial;
+using Loris::Breakpoint;
 
-typedef Loris::Handle< std::list< Loris::Partial > > PartialListHandle;
+//	define the names of the classes that are 
+//	wrapped by this interface file:
+//	(additionally Partial and Breakpoint)
+typedef std::list< Loris::Partial > PartialList;
+typedef std::list< Loris::Partial >::iterator PartialListIterator;
+typedef Loris::Partial::iterator PartialIterator;
 
 %}
 
-%name(PartialList)
-class PartialListHandle
+class PartialList
 /*	A PartialList represents a collection of Bandwidth-Enhanced 
 	Partials, each having a trio of synchronous, non-uniformly-
 	sampled breakpoint envelopes representing the time-varying 
@@ -76,92 +80,87 @@ class PartialListHandle
 	Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
 	the Loris website: www.cerlsoundgroup.org/Loris/
 */
-/*
-	PartialList by handle:
- */
 {
 public:
+	//	construction:
+#if 0
+	// include these in the added methods for debugging:
+	PartialList( void );
+	/*	Return a new empty PartialList.
+	 */
+	
+	~PartialList( void );
+	/*	Destroy this PartialList.
+	 */
+	
+#endif	
+	
+	//	wrap std::list methods:
+	void clear( void );
+	/*	Remove (and destroy) all the Partials from this PartialList,
+		leaving it empty.
+	 */
+	
+	unsigned long size( void );
+	/*	Return the number of Partials in this PartialList.
+	 */
+		
+	%new
+	PartialListIterator begin( void );
+	/*	Return an iterator refering to the first Partial in this PartialList.
+	 */
+
+	%new
+	PartialListIterator end( void );
+	/*	Return an iterator refering to the end of this PartialList (an invalid
+		element after the last valid Partial).
+	 */
+	 
+	%new
+	PartialListIterator insert( PartialListIterator position, const Partial & partial );
+	/*	Insert a copy of the given Partial into this PartialList at
+		the position indicated by the PartialListIterator position.
+		Returns a PartialListIterator refering to the position of the
+		newly-inserted Partial.
+	 */
+	 
+	void splice( PartialListIterator position, PartialList & list );
+	/*	Splice all the Partials in the specified PartialList into
+		this PartialList at the position indicated by the PartialListIterator
+		position. Leaves the other PartialList empty.
+	 */
+	
 %addmethods
 {
-	PartialListHandle( void )
+	PartialList( void )
 	{
-		debugger << "creating an empty list of Partials" << endl;
-		return new PartialListHandle();
+		debugger << "creating an empty list of Partials" << std::endl;
+		return new PartialList();
 	}
 	/*	Return a new empty PartialList.
 	 */
 	
-	~PartialListHandle( void )
+	~PartialList( void )
 	{
-		debugger << "destroying reference to a list of " << (*self)->size() << " Partials" << endl;
+		debugger << "destroying  a list of " << self->size() << " Partials" << std::endl;
 		delete self;
 	}
 	/*	Destroy this PartialList.
 	 */
 	
-	void clear( void ) 
+	//	copy constructor:
+	%new PartialList * copy( void )
 	{
-		(*self)->clear();
-	}
-	/*	Remove (and destroy) all the Partials from this PartialList,
-		leaving it empty.
-	 */
-	
-	%new PartialListHandle * copy( void )
-	{
-		return new PartialListHandle( (*self)->begin(), (*self)->end() );
+		return new PartialList( *self );
 	}
 	/*	Return a new PartialList that is a copy of this 
 		PartialList (i.e. has identical Partials).
 	 */
-	
-	unsigned long size( void )
-	{
-		return (*self)->size();
-	}
-	/*	Return the number of Partials in this PartialList.
-	 */
-		
-	%new
-	PartialListHandleIteratorHandle * first( void )
-	{
-		return new PartialListHandleIteratorHandle( *self, (*self)->begin() );
-	}
-	/*	Return an iterator refering to the first Partial in this PartialList.
-	 */
 
-	%new
-	PartialListHandleIteratorHandle * last( void )
-	{
-		return new PartialListHandleIteratorHandle( *self, --(*self)->end() );
-	}
-	/*	Return an iterator refering to the last Partial in this PartialList.
-	 */
-	
-	void append( PartialListHandleIteratorHandle * iter )
-	{
-		(*self)->push_back( (*iter)->current() );
-	}
-	/*	Append a copy of the Partial referenced by the specified iterator
-		to the end of this PartialList.
-	 */
-	 
-	void splice( PartialListHandle * otherPartials )
-	{
-		if ( self == otherPartials )
-		{
-			std::string s( "Cannot splice a PartialList onto itself!" );
-			throw s;
-		}
-		(*self)->splice( (*self)->end(), *otherPartials );
-	}
-	/*	Splice all the Partials in the other PartialList onto the end of
-		this PartialList, leaving the other empty.
-	 */
 }
-};	//	end of SWIG interface class PartialListHandle
+};	//	end of SWIG interface class PartialList
 
-
+#if 0
 %{
 /*
 	PartialListHandleIterator
@@ -182,14 +181,14 @@ public:
 			_list( hlist ),
 			_iter( pos )
 		{
-			debugger << "created an iterator on a list of " << _list->size() << " Partials" << std::endl;
+			debugger << "created an iterator on a list of " << _list->size() << " Partials" << std::std::endl;
 		}
 		
 		PartialListHandleIterator( const PartialListHandleIterator & rhs ) :
 			_list( rhs._list ),
 			_iter( rhs._iter )
 		{
-			debugger << "copied an iterator on a list of " << _list->size() << " Partials" << std::endl;
+			debugger << "copied an iterator on a list of " << _list->size() << " Partials" << std::std::endl;
 		}
 		
 		PartialListHandleIterator & operator= ( const PartialListHandleIterator & rhs )
@@ -199,14 +198,14 @@ public:
 				_list = rhs._list;
 				_iter = rhs._iter;
 			}
-			debugger << "assigned an iterator on a list of " << _list->size() << " Partials" << std::endl;
+			debugger << "assigned an iterator on a list of " << _list->size() << " Partials" << std::std::endl;
 			
 			return *this;
 		}
 			
 		~PartialListHandleIterator( void )
 		{
-			debugger << "destroyed an iterator on a list of " << _list->size() << " Partials" << std::endl;
+			debugger << "destroyed an iterator on a list of " << _list->size() << " Partials" << std::std::endl;
 		}
 		
 		//	Iterator pattern:
@@ -299,7 +298,7 @@ public:
 	/* 	Return this Partial's duration.
 	 */
 
-	long numBreakpoints( void ) const { return (*self)->current().numBreakpoints(); }
+	long countBreakpoints( void ) const { return (*self)->current().countBreakpoints(); }
 	/* 	Return this Partial's number of Breakpoints.
 	 */
 	
@@ -373,14 +372,14 @@ public:
 			_partialH( subject ),
 			_iter( pos )
 		{
-			debugger << "created an iterator on a partial having " << _partialH->current().numBreakpoints()
-					 << " breakpoints" << std::endl;
+			debugger << "created an iterator on a partial having " << _partialH->current().countBreakpoints()
+					 << " breakpoints" << std::std::endl;
 		}
 		
 		~BreakpointHandle( void )
 		{
-			debugger << "destroyed an iterator on a partial having " << _partialH->current().numBreakpoints()
-					 << " breakpoints" << std::endl;
+			debugger << "destroyed an iterator on a partial having " << _partialH->current().countBreakpoints()
+					 << " breakpoints" << std::std::endl;
 		}
 		
 		//	attribute access:
@@ -484,3 +483,5 @@ class BreakpointHandle
 	 */
 
 };	//	end of class BreakpointHandle
+
+#endif	//	REMOVED

@@ -51,8 +51,16 @@ python: lorislib ${OBJ_BRIDGE}
 
 lorislib: 
 	cd $(PI); $(MAKE) lib
+	
+pywrap: 
+	swig -python -shadow -c++ -o loris_python_wrap.C loris.i
+	cc $(CFLAGS) -c loris_python_wrap.C
 
-
+perlwrap:
+	swig -perl5 -c++ -o loris_perl_wrap.C loris.i
+	cc $(CFLAGS) -I/System/Library/Perl/darwin/CORE/ -c loris_perl_wrap.C
+	
+	
 #
 #   dependencies:
 #   need the sed thing because g++ doesn't recognize c++ suffix,
