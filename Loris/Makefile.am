@@ -24,7 +24,7 @@ AUX_DIST_EXTRA =
 MAINTAINERCLEANFILES = 	Makefile.in aclocal.m4 configure config.h.in \
 						stamp-h.in $(AUX_DIST)
 
-EXTRA_DIST = reconf README-MAC
+EXTRA_DIST = reconf
 
 DEMO_DIST_FILES =	Loris/demo/Makefile \
 					Loris/demo/README \
@@ -33,7 +33,7 @@ DEMO_DIST_FILES =	Loris/demo/Makefile \
 					Loris/demo/reference
 
 dist-hook:
-	(cd $(distdir) && mkdir $(ac_aux_dir))
+	(cd $(distdir) && (mkdir $(ac_aux_dir) || touch $(ac_aux_dir)))
 	for file in $(AUX_DIST) $(AUX_DIST_EXTRA); do \
 		cp $$file $(distdir)/$$file; \
 	done
