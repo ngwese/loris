@@ -44,7 +44,12 @@ $(PYTHON_CMODULE): loris_python_wrap.o $(top_builddir)/pi/.libs/libloris.a
 	cp $@ .libs/$@
 
 install_python_module:
-	$(INSTALL) _loris.so $(pythonsitepkgdir)/_loris.so
+	$(mkinstalldirs) $(pythonsitepkgdir)
+	$(INSTALL) $(PYTHON_CMODULE) $(pythonsitepkgdir)/$(PYTHON_CMODULE)
+
+# don't seem to need this, libtool works correctly, even 
+# under Darwin
+#	$(INSTALL) $(pyexec_PYTHON) $(pythonsitepkgdir)/$(pyexec_PYTHON)
 	
 else
 #
@@ -64,7 +69,9 @@ endif
 # installing the Tcl module
 #
 if BUILD_TCL
-tclsitepkgdir = $(pkglibdir)/tcl
+# tclsitepkgdir = $(pkglibdir)/tcl
+# I have no idea where I am supposed to put this.
+tclsitepkgdir = $(exec_prefix)/lib/tcl
 
 #----------------------------------------------------------------
 # Darwin is special, libtool doesn't work right.
@@ -82,7 +89,8 @@ $(TCL_MODULE): loris_tcl_wrap.o $(top_builddir)/pi/.libs/libloris.a
 	cp $@ .libs/$@
 
 install_tcl_module:
-	$(INSTALL) tcLoris.so $(tclsitepkgdir)/$(TCL_MODULE)
+	$(mkinstalldirs) $(tclsitepkgdir)
+	$(INSTALL) $(TCL_MODULE) $(tclsitepkgdir)/$(TCL_MODULE)
 
 else
 #
@@ -119,7 +127,12 @@ $(PERL_MODULE): loris_perl_wrap.o $(top_builddir)/pi/.libs/libloris.a
 	cp $@ .libs/$@
 
 install_perl_module:
-	$(INSTALL) perLoris.so $(perlsitepkgdir)/$(PERL_MODULE)
+	$(mkinstalldirs) $(perlsitepkgdir)
+	$(INSTALL) $(PERL_MODULE) $(perlsitepkgdir)/$(PERL_MODULE)
+
+# don't seem to need this, libtool works correctly, even 
+# under Darwin
+#	$(INSTALL) $(perlsitepkg_SCRIPTS) $(perlsitepkgdir)/$(perlsitepkg_SCRIPTS)
 
 else
 #
