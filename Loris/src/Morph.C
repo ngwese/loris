@@ -38,7 +38,7 @@ Begin_Namespace( Loris )
 // ---------------------------------------------------------------------------
 //
 Morph::Morph( const Map & f ) :
-_freqFunction( f.clone() ),
+	_freqFunction( f.clone() ),
 	_ampFunction( f.clone() ),
 	_bwFunction( f.clone() ),
 	_crossfadelabel( 0 )
@@ -73,7 +73,6 @@ Morph::Morph( const Map & ff, const Map & af, const Map & bwf ) :
 // ---------------------------------------------------------------------------
 //
 Morph::Morph( const Morph & other ) :
-	//_partials( other._partials ),
 	_freqFunction( other.frequencyFunction().clone() ),
 	_ampFunction( other.amplitudeFunction().clone() ),
 	_bwFunction( other.bandwidthFunction().clone() ),
@@ -177,6 +176,11 @@ Morph::morphPartial( const Partial & p0, const Partial & p1, int assignLabel /* 
 						   (alphaBW * bw2) + ((1.-alphaBW) * iter.bandwidth()),
 						   (alphaF * theta2) + ((1.-alphaF) * iter.phase()) );
 		
+		/*
+		debugger << "time " << iter.time() << ":" << newbp.frequency() << "," <<
+					newbp.amplitude() << "," << newbp.bandwidth() << "," << 
+					newbp.phase() << endl;
+		*/
 		newp.insert( iter.time(), newbp );
 	}
 	
@@ -199,7 +203,11 @@ Morph::morphPartial( const Partial & p0, const Partial & p1, int assignLabel /* 
 						   (alphaA * amp1) + ((1.-alphaA) * iter.amplitude()),
 						   (alphaBW * bw1) + ((1.-alphaBW) * iter.bandwidth()),
 						   (alphaF * theta1) + ((1.-alphaF) * iter.phase()) );
-		
+		/*
+		debugger << "time " << iter.time() << ":" << newbp.frequency() << "," <<
+					newbp.amplitude() << "," << newbp.bandwidth() << "," << 
+					newbp.phase() << endl;
+		*/
 		newp.insert( iter.time(), newbp );
 	}
 	

@@ -167,6 +167,11 @@ ImportLemur5::getPartial( void )
 			//	update phase based on _this_ pkData's interpolated freq:
 			phase +=TwoPi * prevTtnSec * pkData.interpolatedFrequency;
 			phase = fmod( phase, TwoPi );
+			
+			if ( ! (pkData.bandwidth <= 1.) ) {
+				debugger << "Import found bogus bandwidth: " << pkData.bandwidth << endl;
+				pkData.bandwidth = 0.;
+			}
 
 			//	create Breakpoint:	
 			Breakpoint bp( pkData.frequency, pkData.magnitude, pkData.bandwidth, phase );

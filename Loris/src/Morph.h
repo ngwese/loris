@@ -88,7 +88,7 @@ public:
 				debugger << "morphing " << sublist1.size() << " and "
 						 << sublist2.size() << " partials with label " << label << endl;
 						 
-				morphLists( sublist1, sublist2 );
+				morphLists( sublist1, sublist2, label );
 			}
 		}
 	}

@@ -53,19 +53,8 @@ Distiller &
 Distiller::operator= ( const Distiller & other )
 {
 	if ( &other != this ) {
-		//
-		//	remove LowMemException
-		//
-		//try {
-			//	first try duplicating the list of 
-			//	Partials in the base class:
-			_partials = other._partials;
-			_fadeTime = other._fadeTime;
-		//}
-		//catch( LowMemException & ex ) {
-		//	ex.append( "failed to assign Distiller" );
-		//	throw;
-		//}
+		_partials = other._partials;
+		_fadeTime = other._fadeTime;
 	}
 	return *this;
 }
@@ -167,9 +156,14 @@ Distiller::distillOne( const Partial & src, Partial & dest,
 			//	add some bandwith energy:
 			etot += xse;
 			ebw += xse;
+			double bw;
+			if ( etot > 0. ) 
+				bw = ebw / etot;
+			else 
+				bw = 0.;
 			
 			//	create and insert the new Breakpoint:
-			Breakpoint newBp( pIter.frequency(), sqrt( etot ), ebw / etot, pIter.phase() );
+			Breakpoint newBp( pIter.frequency(), sqrt( etot ), bw, pIter.phase() );
 			dest.insert( pIter.time(), newBp );
 			
 			//	if there is a gap after this Breakpoint, 
