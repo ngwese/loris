@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cstdio> // for scanf
 #include <cstdlib>
 #include <iostream>
 #include <map>
@@ -9,7 +10,10 @@
 
 #include <AiffFile.h>
 #include <Analyzer.h>
+#include <Channelizer.h>
 #include <Distiller.h>
+#include <FrequencyReference.h>
+#include <Resampler.h>
 #include <SdifFile.h>
 
 using std::cout;
@@ -37,6 +41,9 @@ public:
 string gInFileName, gOutFileName = "partials.sdif", gTestFileName;
 Loris::Analyzer * gAnalyzer = 0;
 bool gCollate = false;
+double gDistill = 0;
+double gResample = 0;
+bool gVerbose = false;
 double gRate = 44100;
 
 // ----------------------------------------------------------------
@@ -150,6 +157,80 @@ public:
 	{
 		gCollate = true;
 		cout << "* will collate partials" << endl;
+
+		//	collation overrides distillation
+		if ( gCollate )
+		{
+			cout << "* collate specification overrides "
+			        "distillation specification" << endl;			       
+			gDistill = 0;
+		}
+	}
+};
+
+class DistillCommand : public Command
+{
+public:
+	//	set the global flag indicating that the
+	//	Partials should be distilled before export
+	void execute( Arguments & args ) const 
+	{
+		//	requires a numeric parameter
+		double x;
+		if ( args.empty() || !argIsNumber( args.top(), &x ) )
+		{
+			throw std::invalid_argument("distillation specification "
+									   "requires a number");
+		}
+		
+		if ( x <= 0 )
+		{
+			throw std::invalid_argument("distillation specification "
+									   "must be positive");
+		}
+
+		gDistill = x;
+		cout << "* will distill partials assuming a fundamental of approximately " 
+			 << gDistill << " Hz" << endl;
+		
+		args.pop();
+
+		//	distillation overrides collation
+		if ( gCollate )
+		{
+			cout << "* distillation specification overrides "
+			        "collation specification" << endl;			       
+			gCollate = false;
+		}
+	}
+};
+
+class ResampleCommand : public Command
+{
+public:
+	//	set the global flag indicating that the
+	//	Partials should be resampled before export
+	void execute( Arguments & args ) const 
+	{
+		//	requires a numeric parameter
+		double x;
+		if ( args.empty() || !argIsNumber( args.top(), &x ) )
+		{
+			throw std::invalid_argument("resample specification "
+									   "requires a number");
+		}
+		
+		if ( x <= 0 )
+		{
+			throw std::invalid_argument("resample specification "
+									   "must be positive");
+		}
+
+		gResample = x;
+		cout << "* will resample partials every " 
+			 << gResample << " s" << endl;
+
+		args.pop();
 	}
 };
 
@@ -356,6 +437,64 @@ public:
 	}
 };
 
+class SetResolutionCommand : public Command
+{
+public:
+	//	set the frequency resolution parameter of the global
+	//	Loris Analyzer (after configuring)
+	void execute( Arguments & args ) const 
+	{
+		//	requires a numeric parameter
+		double x;
+		if ( args.empty() || !argIsNumber( args.top(), &x ) )
+		{
+			throw std::invalid_argument("frequency resolution specification "
+									   "requires a number");
+		}
+		
+		if ( x <= 0 )
+		{
+			throw std::invalid_argument("frequency resolution specification "
+									  "must be positive");
+		}
+		
+		gAnalyzer->setFreqResolution( x );
+		cout << "* setting analysis frequency resolution to: "; 
+		cout << gAnalyzer->freqResolution() << " Hz" << endl;
+
+		args.pop();
+	}
+};
+
+class SetWindowCommand : public Command
+{
+public:
+	//	set the window width parameter of the global
+	//	Loris Analyzer (after configuring)
+	void execute( Arguments & args ) const 
+	{
+		//	requires a numeric parameter
+		double x;
+		if ( args.empty() || !argIsNumber( args.top(), &x ) )
+		{
+			throw std::invalid_argument("window width specification "
+									   "requires a number");
+		}
+		
+		if ( x <= 0 )
+		{
+			throw std::invalid_argument("window width specification "
+									  "must be positive");
+		}
+		
+		gAnalyzer->setWindowWidth( x );
+		cout << "* setting analysis window width to: "; 
+		cout << gAnalyzer->windowWidth() << " Hz" << endl;
+
+		args.pop();
+	}
+};
+
 class SetSampleRateCommand : public Command
 {
 public:
@@ -385,6 +524,16 @@ public:
 	}
 };
 		
+class VerboseCommand : public Command
+{
+public:
+	//	set the verbosity flag to spew out more information.
+	void execute( Arguments & args ) const 
+	{
+		gVerbose = true;
+		cout << "* being even more verbose than usual" << endl;
+	}
+};
 
 // ----------------------------------------------------------------
 //	parseArguments
@@ -460,6 +609,38 @@ static void parseArguments( Arguments & args, const CmdDictionary & commands )
 }
 
 // ----------------------------------------------------------------
+//	fill_buffer
+// ----------------------------------------------------------------
+//	Read samples from standard input into a buffer, return the number
+//	of samples successfully read into the buffer (should be equal to
+//	howmany unless the read fails). 
+//
+static int fill_buffer( double * buffer, int howmany )
+{
+	using std::scanf;
+	
+	//	invariant:
+	//	j samples have been read into the buffer from
+	//	satndard input.
+	int j = 0;
+	while ( j < howmany && scanf("%lf", buffer+j ) == 1 )
+	{
+		++j;
+	}
+
+	//	invariant:
+	//	k samples in the buffer have been overwritten
+	//	with either samples from standard input, or
+	//	with zeros.
+	for ( int k = j; k < howmany; ++k )
+    {
+		buffer[k] = 0.;
+	}
+
+	return  j;
+}
+
+// ----------------------------------------------------------------
 //	main
 // ----------------------------------------------------------------
 
@@ -473,6 +654,8 @@ int main( int argc, char * argv[] )
 		new OutfileCommand();
 	commands["-render"] = commands["-synth"] = new TestfileCommand();
 	commands["-collate"] = new CollateCommand();
+	commands["-distill"] = commands["-dist"] = new DistillCommand();
+	commands["-resample"] = commands["-resamp"] = new ResampleCommand();
 	commands["-hop"] = commands["-hoptime"] = new SetHopTimeCommand();
 	commands["-crop"] = commands["-croptime"] = new SetCropTimeCommand();
 	commands["-bw"] = commands["-bwregionwidth"] = new SetRegionWidthCommand();
@@ -483,11 +666,15 @@ int main( int argc, char * argv[] )
 		new SetAttenuationCommand();
 	commands["-rate"] = commands["-samplerate"] = commands["-sr"] = 
 		new SetSampleRateCommand();
-		
+	commands["-resolution"] = commands["-res"] = commands["-freqres"] = 
+		commands["-freqresolution"] = new SetResolutionCommand();
+	commands["-width"] = commands["-winwidth"] = commands["-windowwidth"] = 
+		new SetWindowCommand();
+	commands["-v"] = commands["-verbose"] = new VerboseCommand();
 	
 	// 	build an argument stack, pushing the arguments
 	//	in reverse order.
-	//	invariant: argc command line arguments remain to be enqueued
+	//	invariant: argc command line arguments remain to be pushed
 	Arguments args;
 	while (argc-- > 0)
 	{
@@ -506,10 +693,30 @@ int main( int argc, char * argv[] )
 		return 1;
 	}
 	
+	//	if verbose, spew out the Analyzer state:
+	if ( gVerbose )
+	{
+		cout << "* Loris Analyzer configuration:" << endl;
+		cout << "*\tfrequency resolution: " << gAnalyzer->freqResolution() << " Hz\n";
+		cout << "*\tanalysis window width: " << gAnalyzer->windowWidth() << " Hz\n";
+		cout << "*\tanalysis window sidelobe attenuation: "
+			 << gAnalyzer->sidelobeLevel() << " dB\n";
+		cout << "*\tspectral amplitude floor: " << gAnalyzer->ampFloor() << " dB\n";
+		cout << "*\tminimum partial frequecy: " << gAnalyzer->freqFloor() << " Hz\n";
+		cout << "*\thop time: " << 1000*gAnalyzer->hopTime() << " ms\n";
+		cout << "*\tmaximum partial frequency drift: " << gAnalyzer->freqDrift() 
+			 << " Hz\n";
+		cout << "*\tcrop time: " << 1000*gAnalyzer->cropTime() << " ms\n";
+		cout << "*\tbandwidth association region width: " 
+			 << gAnalyzer->bwRegionWidth() << " Hz\n";
+		cout << endl;
+	}
+	
 	//	run the analysis
 	try
 	{
 		Loris::AiffFile::samples_type samples;
+		Loris::AiffFile::markers_type markers;
 		double analysisRate = gRate;
 		if ( !gInFileName.empty() )
 		{
@@ -517,29 +724,66 @@ int main( int argc, char * argv[] )
 			Loris::AiffFile infile( gInFileName );
 			samples = infile.samples();
 			analysisRate = infile.sampleRate();
+			markers = infile.markers();
 		}
 		else
 		{
-			cout << "cannot yet read samples from standard input!" << endl;
-			return 1;
+			cout << "reading samples from standard input at " 
+				 << gRate << " Hz sample rate" << endl;
+			analysisRate = gRate;
+			const int bufsize = 1024;
+			double buffer[ bufsize ];
+			int sampsread = 0;
+			do
+			{
+				sampsread = fill_buffer( buffer, bufsize );
+				samples.insert( samples.end(), buffer, buffer + sampsread );
+			} while ( sampsread == bufsize );
+			cout << "read " << samples.size() << " samples" << endl;
 		}
-				
+		
 		cout << "* performing analysis" << endl;
 		gAnalyzer->analyze( samples, analysisRate );
 		cout << "* analysis complete" << endl;	
 		
-		if ( gCollate )
+		if ( gDistill > 0 )
+		{
+			cout << "* extracting frequency reference envelope" << endl;
+			Loris::FrequencyReference ref( gAnalyzer->partials().begin(), 
+										 gAnalyzer->partials().end(),
+										 0.8 * gDistill, 1.2 * gDistill );
+			Loris::Channelizer chan( ref, 1 );
+			cout << "* channelizing " << gAnalyzer->partials().size() 
+				 << " partials" << endl;
+			chan.channelize( gAnalyzer->partials().begin(), 
+							gAnalyzer->partials().end() );
+			Loris::Distiller dist;
+			cout << "* distilling " << gAnalyzer->partials().size() 
+				 << " partials" << endl;
+			dist.distill( gAnalyzer->partials() );
+		}
+		else if ( gCollate )
 		{
 			cout << "* collating " << gAnalyzer->partials().size();
 			cout << " partials" << endl;
 			Loris::Distiller dist;
 			dist.distill( gAnalyzer->partials() );
 		}
+		
+		if ( gResample > 0 )
+		{
+			Loris::Resampler resamp( gResample );
+			cout << "* resampling " << gAnalyzer->partials().size() 
+				 << " partials at " << 1000*gResample << " ms intervals" << endl;
+			resamp.resample( gAnalyzer->partials().begin(), 
+							gAnalyzer->partials().end() );
+		}
 			
 		cout << "* exporting " << gAnalyzer->partials().size(); 
 		cout << " partials to " << gOutFileName << endl;
 		Loris::SdifFile outfile( gAnalyzer->partials().begin(), 
 								gAnalyzer->partials().end() );
+		outfile.markers() = markers;
 		outfile.write( gOutFileName );
 		
 		if ( ! gTestFileName.empty() )
@@ -547,6 +791,7 @@ int main( int argc, char * argv[] )
 			cout << "* exporting rendered partials to " << gTestFileName << endl;
 			Loris::AiffFile testfile( gAnalyzer->partials().begin(), 
 									gAnalyzer->partials().end(), gRate );
+			testfile.markers() = markers;
 			testfile.write( gTestFileName );
 		}
 		
