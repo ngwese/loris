@@ -50,6 +50,22 @@ namespace Loris {
 //	
 class ReassignedSpectrum
 {
+//	-- instance variables --
+private:
+	//	transforms:
+	FourierTransform _transform, _ratransform;
+	
+	//	windows:
+	std::vector< double > _window;
+	std::vector< std::complex< double > > _rawindow;
+	
+	//	oversampled window spectrum for correcting magnitudes:
+	std::vector< double > _mainlobe;
+
+	//	scale factors for correcting magnitudes:
+	double _windowMagnitudeScale;	
+	double _windowEnergyScale;	
+	
 //	-- public interface --
 public:
 //	construction:
@@ -84,29 +100,10 @@ public:
 	
 //	-- internal helpers --
 private:
-	//	make the special window functions needed for
-	//	frequency and time reassignment:
-	void applyFreqRamp( std::vector< double > & w );
-	void applyTimeRamp( std::vector< double > & w );
-	
 	//	compute the window spectrum used to correct
 	//	spectral component magnitudes:
 	void computeWindowSpectrum( const std::vector< double > & v );
 
-//	-- instance variables --
-private:
-	//	transforms:
-	FourierTransform _transform, _tfreqramp, _ttimeramp;
-	
-	//	windows:
-	std::vector< double > _window, _winfreqramp, _wintimeramp;
-	
-	//	oversampled window spectrum for correcting magnitudes:
-	std::vector< double > _mainlobe;
-
-	//	scale factors for correcting magnitudes:
-	double _windowMagnitudeScale;	
-	double _windowEnergyScale;	
 };	//	end of class ReassignedSpectrum
 
 #if !defined( NO_LORIS_NAMESPACE )
