@@ -15,6 +15,12 @@
 #include "Handle.h"
 #include "Envelope.h"
 #include "Partial.h"
+#include "notifier.h"
+
+//	for debugging
+#ifdef Debug_Loris
+#include <set>
+#endif
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
@@ -103,6 +109,10 @@ static double loudestAt( const Partial & p )
 void
 Channelizer_imp::channelize( PartialList::iterator begin, PartialList::iterator end )
 {
+#ifdef Debug_Loris
+	std::set<int> labelsfound;
+#endif
+
 	for ( PartialList::iterator it = begin; it != end; ++it ) 
 	{
 		#define FANCY
@@ -154,7 +164,16 @@ Channelizer_imp::channelize( PartialList::iterator begin, PartialList::iterator 
 		//	only if it is a valid (positive) 
 		//	distillation label:
 		it->setLabel( label );
+
+#ifdef Debug_Loris
+		if (label > 0)
+			labelsfound.insert(label);
+#endif
 	}
+
+#ifdef Debug_Loris
+	debugger << "found " << labelsfound.size() << " non-empty channels" << endl;	
+#endif
 }
 
 // ---------------------------------------------------------------------------

@@ -9,52 +9,40 @@
 //	-kel 20 Oct 99
 //
 // ===========================================================================
-#include "Partial.h"
-#include "Exception.h"
+#include "Partial.h"	//	needed only for PartalList definition
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
 #endif
 
+class Distiller_imp;
+
 // ---------------------------------------------------------------------------
 //	class Distiller
 //
-//	Make this interface more like other function objects in Loris.
 //
 class Distiller
 {
-//	-- instance variables --
-	PartialList _partials;	//	collect Partials here
+//	-- insulating implementation --
+	Distiller_imp * _imp;	
 			
 //	-- public interface --
 public:
 //	construction:	
 	Distiller( void );
-	// ~Distiller( void );
+	~Distiller( void );
 	
 //	distillation:
 	void distill( PartialList::const_iterator start,
 				  PartialList::const_iterator end,
 				  int assignLabel );
+	void distillAll( PartialList::const_iterator start,
+			 		 PartialList::const_iterator end );
 
 //	PartialList access:
-	PartialList & partials( void ) { return _partials; }
-	const PartialList & partials( void ) const { return _partials; }
-	
-//	-- helpers --
-protected:
-	void distillOne( const Partial & src, 
-					 Partial & dest, 
-					 PartialList::const_iterator start,
-					 PartialList::const_iterator end );
-/*	bool gapAt( double time, 
-				PartialList::const_iterator start,
-				PartialList::const_iterator end ) const;
-*/				
-	void fixGaps( Partial & dest, 
-				  PartialList::const_iterator start,
-				  PartialList::const_iterator end );
+	PartialList & partials( void );
+	const PartialList & partials( void ) const;
 				   
 //	-- unimplemented --
 private:

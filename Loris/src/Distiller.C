@@ -10,10 +10,14 @@
 #include "Distiller.h"
 #include "Partial.h"
 #include "Breakpoint.h"
+#include "Exception.h"
+#include "PartialUtils.h"
 #include "notifier.h"
 #include <cmath>
 #include <list>
 #include <vector>
+#include <set>
+#include <algorithm>
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
@@ -21,15 +25,93 @@ namespace Loris {
 #endif
 
 // ---------------------------------------------------------------------------
-//	Distiller constructor
-// ---------------------------------------------------------------------------
+//	class Distiller_imp
 //
-Distiller::Distiller( void )
+//	Implementation class for the fully-insulating interface Distiller.
+//
+struct Distiller_imp
 {
+//	-- instance variables --
+	PartialList _partials;	//	collect Partials here
+			
+//	-- "public" interface --
+//	construction:	
+	Distiller_imp( void ) {}
+	~Distiller_imp( void ) {}
+	
+//	distillation:
+	void distill_all( PartialList::const_iterator start,
+		 			  PartialList::const_iterator end );
+	void distill_one( PartialList::const_iterator start,
+		 			  PartialList::const_iterator end,
+		  			  int assignLabel );
+
+//	-- helpers --
+	void distill_aux( const Partial & src, 
+				 	  Partial & dest, 
+				 	  PartialList::const_iterator start,
+				 	  PartialList::const_iterator end );
+
+	void fixGaps( Partial & dest, 
+				  PartialList::const_iterator start,
+				  PartialList::const_iterator end );
+				   
+};	//	end of class Distiller_imp
+
+// ---------------------------------------------------------------------------
+//	Distiller_imp distill_all
+// ---------------------------------------------------------------------------
+//	Distill all the Partials in the half open range start,end by label.
+//	Unlabeled (label 0) Partials are ignored.
+//
+void 
+Distiller_imp::distill_all( PartialList::const_iterator start,
+	 						PartialList::const_iterator end )
+{
+	std::set<int> ignorelabels;
+	ignorelabels.insert(0);
+
+	//	set pos to first Partial with non-zero label:
+	PartialList::const_iterator pos = 
+		std::find_if( start, end, 
+					  std::not1( std::bind2nd( PartialUtils::label_equals(), 0 ) ) );
+
+	//	it and pos are stupid variable names!
+	while ( pos != end )
+	{
+		int label = pos->label();
+		debugger << "distilling Partials labeled " << label << endl;
+		ignorelabels.insert(label);
+		
+		PartialList::const_iterator it = pos;
+		PartialList dothese;
+		/*
+		std::copy_if( pos, end, 
+					  	   std::bind2nd( PartialUtils::label_equals(), label ),
+						   dothese.begin() );
+		*/
+		dothese.push_back( *pos );
+		while( ++it != end )
+		{
+			if ( it->label() == label )
+			{
+				dothese.push_back( *it );
+			}
+		}
+		debugger << "distilled " << dothese.size() << " Partials labeled " << label << endl;
+		distill_one( dothese.begin(), dothese.end(), label );
+
+		//	advance pos until a new non-zero label is found:
+		while( ++pos != end )
+		{
+			if ( ignorelabels.find(pos->label()) == ignorelabels.end() )
+				break;
+		} 
+	}
 }
 
 // ---------------------------------------------------------------------------
-//	distill
+//	Distiller_imp distill_one
 // ---------------------------------------------------------------------------
 //	Distill the Partials in a range into a single Partial, 
 //	add the result to the collection of distilled Partials.
@@ -37,9 +119,9 @@ Distiller::Distiller( void )
 //	(start, end) _must_ be a valid range in a list< Partial >...or else!
 //
 void 
-Distiller::distill( PartialList::const_iterator start,
-				 	PartialList::const_iterator end, 
-				 	int assignLabel )
+Distiller_imp::distill_one( PartialList::const_iterator start,
+	 						PartialList::const_iterator end, 
+	 						int assignLabel )
 {
 	if ( assignLabel <= 0 )
 		Throw( InvalidArgument, "distillation label must be positive" );
@@ -51,20 +133,18 @@ Distiller::distill( PartialList::const_iterator start,
 	//	iterate over range:
 	for ( PartialList::const_iterator it = start; it != end; ++it )
 	{
-		distillOne( *it, newp, start, end );
+		distill_aux( *it, newp, start, end );
 	}
 	
 	//	fill in gaps:
 	fixGaps( newp, start, end );
 
 	//	add the newly-distilled partial to the collection:
-	partials().push_back( newp );
+	_partials.push_back( newp );
 }
 
-#pragma mark -
-#pragma mark helpers
 // ---------------------------------------------------------------------------
-//	distillOne
+//	Distiller_imp distill_aux
 // ---------------------------------------------------------------------------
 //	Mother of all helper functions, distillation core: 
 //	Distill a single source Partial into the destination Partial, 
@@ -85,7 +165,7 @@ Distiller::distill( PartialList::const_iterator start,
 //	(start, end) _must_ be a valid range in a list< Partial >...or else!
 //	
 void
-Distiller::distillOne( const Partial & src, 
+Distiller_imp::distill_aux( const Partial & src, 
 					   Partial & dest, 
 					   PartialList::const_iterator start,
 					   PartialList::const_iterator end  )
@@ -138,38 +218,15 @@ Distiller::distillOne( const Partial & src,
 	}	//	end iteration over source Partial
 }
 
-
-/*
 // ---------------------------------------------------------------------------
-//	gapAt
-// ---------------------------------------------------------------------------
-//	Return true if none of the Partials in the range has any energy at time, 
-//	otherwise return false.
-//
-bool 
-Distiller::gapAt( double time, 
-				  PartialList::const_iterator start,
-				  PartialList::const_iterator end ) const
-{
-	while ( start != end ) {
-		if ( (*start).amplitudeAt( time ) > 0. ) {
-			return false;
-		}
-		++start;
-	}
-	return true;
-}
-*/
-
-// ---------------------------------------------------------------------------
-//	fixGaps
+//	Distiller_imp fixGaps
 // ---------------------------------------------------------------------------
 //	Look for gaps between Partials in the half-open interval [start,end)
 //	and make sure that the new distilled Partial (dest) ramps to zero
 //	amplitude during those gaps.
 //
 void 
-Distiller::fixGaps( Partial & dest, 
+Distiller_imp::fixGaps( Partial & dest, 
 				  	PartialList::const_iterator start,
 				  	PartialList::const_iterator end )
 {
@@ -263,6 +320,75 @@ Distiller::fixGaps( Partial & dest,
 		double phase = dest.phaseAt(time);
 		dest.insert( time, Breakpoint( freq, 0., 0., phase ) );		
 	}
+}
+
+// ---------------------------------------------------------------------------
+//	Distiller constructor
+// ---------------------------------------------------------------------------
+//
+Distiller::Distiller( void ):
+	_imp( new Distiller_imp() )
+{
+}
+
+// ---------------------------------------------------------------------------
+//	Distiller destructor
+// ---------------------------------------------------------------------------
+//
+Distiller::~Distiller( void )
+{
+	delete _imp;
+}
+
+// ---------------------------------------------------------------------------
+//	distill
+// ---------------------------------------------------------------------------
+//	Distill the Partials in a range into a single Partial, 
+//	add the result to the collection of distilled Partials.
+//
+//	(start, end) _must_ be a valid range in a list< Partial >...or else!
+//
+void 
+Distiller::distill( PartialList::const_iterator start,
+	 				PartialList::const_iterator end, 
+	 				int assignLabel )
+{
+	_imp->distill_one( start, end, assignLabel );
+}
+
+// ---------------------------------------------------------------------------
+//	distillAll
+// ---------------------------------------------------------------------------
+//	Distill the Partials in a range into a single Partial, 
+//	add the result to the collection of distilled Partials.
+//
+//	(start, end) _must_ be a valid range in a list< Partial >...or else!
+//
+void 
+Distiller::distillAll( PartialList::const_iterator start,
+	 				   PartialList::const_iterator end )
+{
+	_imp->distill_all( start, end );
+}
+
+// ---------------------------------------------------------------------------
+//	partials
+// ---------------------------------------------------------------------------
+//
+PartialList & 
+Distiller::partials( void )
+{ 
+	return _imp->_partials; 
+}
+
+// ---------------------------------------------------------------------------
+//	partials
+// ---------------------------------------------------------------------------
+//
+const PartialList & 
+Distiller::partials( void ) const 
+{ 
+	return _imp->_partials; 
 }
 
 #if !defined( NO_LORIS_NAMESPACE )
