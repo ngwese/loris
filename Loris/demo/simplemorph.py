@@ -67,10 +67,8 @@ clar_times = [0.2, 1.]
 tgt_times = [0.3, 1.2]
 
 print 'dilating sounds to match', tgt_times, '(%s)' % time.ctime(time.time())
-# save_flut = flut.copy()
 print 'flute times:', flute_times
 loris.dilate( flute_times, tgt_times, flut )
-# save_clar = clar.copy()
 print 'clarinet times:', clar_times
 loris.dilate( clar_times, tgt_times, clar )
 

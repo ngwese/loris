@@ -153,22 +153,3 @@ double ConvertFromIeeeExtended(extended80 x)
 		f = 0;
 	else {
 		if (expon == 0x7FFF)	/* Infinity or NaN */
-			f = HUGE_VAL;
-		else {
-			expon -= 16383;
-			f = ldexp(UnsignedToFloat(hiMant), expon -= 31);
-			f += ldexp(UnsignedToFloat(loMant), expon -= 32);
-		}
-	}
-
-	if (bytes[0] & 0x80)
-		return -f;
-	else
-		return f;
-}
-
-#ifdef __cplusplus
-}	//	end extern "C"
-}	//	end namespace
-#endif
-

@@ -24,7 +24,8 @@
  *
  * AiffFile.h
  *
- * Definition of class AiffFile.
+ * Definition of class AiffFile, used for importing and exporting 
+ * sound sample data from AIFF-format files.
  *
  * Kelly Fitz, 28 Sept 99
  * loris@cerlsoundgroup.org
@@ -46,9 +47,13 @@ struct CkHeader;
 // ---------------------------------------------------------------------------
 //	class AiffFile
 //
-//	The sample vector must be provided by clients; it is not owned by 
-//	the AiffFile. Streams passed to AIFFfiles also remain the responsibility
-//	of the client.
+//	AiffFile manages a buffer of raw (integer sample data). Creating an 
+//	AiffFile from a stream or filename automatically reads the sample data, 
+//	which can then be converted and accessed using getSamples(). Use the 
+//	static members Export() to export samples (doubles) to a AIFF file 
+//	using the specified stream or filename.
+//
+//	This class could be made more insulating at some point.
 //	
 class AiffFile
 {
@@ -57,48 +62,48 @@ class AiffFile
 	int _nChannels;		//	samples per frame, usually one (mono) in Loris
 	int _sampSize;		//	in bits
 	
-	std::vector< double > & _samples;
+	std::vector<unsigned char> _bytes;	//	buffer used for storing raw (integer) sample data
 		
 //	-- public interface --
 public:
 //	construction (import):
 //	(compiler can generate destructor, copy, and assignment)
-	AiffFile( const std::string & filename, std::vector< double > & buf );
-	AiffFile( std::istream & s, std::vector< double > & buf );
+	AiffFile( const std::string & filename );
+	AiffFile( std::istream & s );
 	
 //	export:
-	static void Export( std::ostream & s, double rate, int chans, int bits, std::vector< double > & buf );
-	static void Export( const std::string & filename, double rate, int chans, int bits, std::vector< double > & buf );
+	static void Export( std::ostream & s, double rate, int chans, int bits, 
+						const double * bufBegin, const double * bufEnd );
+	static void Export( const std::string & filename, double rate, int chans, int bits, 
+						const double * bufBegin, const double * bufEnd );
 	
 //	access:
-	double sampleRate( void ) const { return _sampleRate; }
-	int numChans( void ) const { return _nChannels; }
-	int sampleSize( void ) const { return _sampSize; }
+	int channels( void ) const;
+	unsigned long sampleFrames( void ) const;
+	double sampleRate( void ) const;
+	int sampleSize( void ) const;
 	
-	std::vector< double > & samples( void ) { return _samples; }
-	const std::vector< double > & samples( void ) const { return _samples; }
-	
+	void getSamples( double * bufBegin, double * bufEnd );	//	from raw data to doubles
+
 //	-- helpers --
 private:
 	//	construct from data in memory and write (export):
-	AiffFile( std::ostream & s, double rate, int chans, int bits, std::vector< double > & buf );
+	AiffFile( std::ostream & s, double rate, int chans, int bits, 
+			  const double * bufBegin, const double * bufEnd );
 	
 	//	reading:
-	void read( const std::string & filename );
 	void read( std::istream & s );
 	void readChunkHeader( std::istream & s, CkHeader & h );
 	void readContainer( std::istream & s );
 	void readCommonData( std::istream & s );
-	void readSampleData( std::istream & s, unsigned long chunkSize, std::vector< unsigned char > & bytes );
-	void readSamples( std::istream & s, unsigned long howManyBytes, std::vector< unsigned char > & bytes );
-	void convertSamples( std::vector< unsigned char > & bytes );	//	from raw data to doubles
-
+	void readSampleData( std::istream & s, unsigned long chunkSize );
+	void readSamples( std::istream & s );
 	//	writing:
-	void write( std::ostream & s );
+	void write( std::ostream & s, const double * bufBegin, const double * bufEnd );
 	void writeCommon( std::ostream & s );
 	void writeContainer( std::ostream & s );
-	void writeSampleData( std::ostream & s );
-	void writeSamples( std::ostream & s );
+	void writeSampleData( std::ostream & s, const double * bufBegin, const double * bufEnd );
+	void writeSamples( std::ostream & s, const double * bufBegin, const double * bufEnd );
 	
 	//	data sizes:
 	unsigned long sizeofCommon( void );
