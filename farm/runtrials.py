@@ -15,17 +15,23 @@ date = '%i.%i.%i'%(ttup[2], ttup[1],ttup[0])
 
 # farm is a dictionary of directory,scriptnames pairs
 farm = { 
+	'alienthreat': ('alienthreat.py',),
 	'bell': ('nisobell.py',), 
+	'bongo': ('bongo.py',),
 	'cats': ('angrycat.py', 'meows.py'), 
 	'cellos': ('cellos.py',),  
 	'choir': ('webernchoir.py',), 
+	'density': ('density.py',),
+	'derbari': ('derbari.py',),
 	'elephants': ('elephants.py', ),
 	'flutes': ('flute.py', 'flutter.py', ),
 	'french': ('french.py',),
 	'funny': ('funny.py',),
 	'gong': ('gong.py',),
 	'moses': ('moses.py',),
+	'pianosax': ('pianosax.py',),
 	'sax': ('saxriff.py', ),
+	'shaku': ('shaku.py', ),
 	'trombone': ('tbnflutter.py', )
 }
 	
