@@ -34,6 +34,7 @@
  *
  */
 
+#include <exception>
 #include <string>
 
 //	begin namespace
@@ -42,29 +43,59 @@ namespace Loris {
 // ---------------------------------------------------------------------------
 //	class Exception
 //
-//	Generic exception class for reporting exceptional circumstances.
-//	Can be a base class for more specific exception classes in Loris.
+//	Class Exception is a generic exception class for reporting exceptional 
+//	circumstances in Loris. Exception is derived from std:exception, 
+//	and is the base for a hierarchy of derived exception classes
+//	in Loris:
 //
-class Exception
+//	class Exception
+//	
+//		class AssertionFailure (thrown by the Assert(invariant) macro)
+//		class IndexOutOfBounds
+//		class FileIOException
+//		class InvalidObject
+//		
+//			class InvalidIterator
+//			class InvalidArgument
+//			class InvalidPartial (defined in Partial.h)
+//		
+//
+class Exception : public std::exception
 {
+//	-- instance variable --
+protected:
+	std::string _sbuf;	//	string for storing the exception description
+	
 //	-- public interface --
 public:
-//	construction:
+//	-- construction --
 	Exception( const std::string & str, const std::string & where = "" );
-
-//	virtual destructor so it Exception can be subclassed:
+	/*	Construct a new Exception with the specified description and, optionally
+		a string identifying the location at which the exception as thrown. The
+		Throw( Exception_Class, description_string ) macro generates a location
+		string automatically using __FILE__ and __LINE__.
+	 */
+	 
 	virtual ~Exception( void ) {}
-	
-//	access:
-	const std::string & str( void ) const { return _sbuf; }
-	const char * what( void ) const { return _sbuf.c_str(); }
-	
-	Exception & append( const std::string & str );
+	/* 	Destroy this Exception.
+	 */
 
-//	-- instance variable - the string --
-protected:
-	std::string _sbuf;
-	
+//	-- std::exception interface --
+	const char * what( void ) const { return _sbuf.c_str(); }
+	/*	Return a description of this Exception in the form of a
+		C-style string (char pointer).
+	 */
+	 
+//	-- description string access --
+	Exception & append( const std::string & str );
+	/*	Append the specified string to this Exception's description,
+		and return a reference to this Exception.
+	 */
+	 
+	const std::string & str( void ) const { return _sbuf; }
+	/* 	Return a refernce to this Exception's description string.
+	 */
+
 };	//	end of class Exception
 
 // ---------------------------------------------------------------------------

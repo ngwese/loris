@@ -48,6 +48,7 @@ the sample data. The static Export() members export samples
 (doubles) to a AIFF file using the specified stream or filename.
 <p>
 <h3>Member Functions</h3>
+<h4>Construction</h4>
 
 <p><tt><b>AiffFile( const std::string & filename )</b></tt>
 <blockquote>
@@ -63,6 +64,7 @@ Initialize an instance of AiffFile by importing data from
 the specified istream.
 </blockquote>
 
+<h4>Header Access</h4>
 <p><tt><b>channels( void ) const</b></tt>
 <blockquote>[ returns int  ]
 <br>
@@ -92,6 +94,7 @@ AiffFile.
 Return the size in bits of a single, integer audio sample in this AiffFile.
 </blockquote>
 
+<h4>Sample Access</h4>
 <p><tt><b>getSamples( double * bufBegin, double * bufEnd )</b></tt>
 <blockquote>[ returns void  ]
 <br>
@@ -102,7 +105,7 @@ To convert ten samples into a buffer, use <br>
 <tt>myAiffFile.getSamples(myBuf, myBuf+10);</tt><br>
 </blockquote>
 
-<h3>Static Member Functions</h3>
+<h4>Export (static)</h4>
 <p><tt><b>static Export( const std::string & filename, double rate, int chans, int bits, <br>
 					const double * bufBegin, const double * bufEnd )</b></tt>
 <blockquote>[ returns void  ]
@@ -555,7 +558,7 @@ of the current noise energy.
 
 <h4>Predicates</h4>
 	<p><tt><b>struct frequency_between : 
-		public std::unary_function< const Breakpoint, bool ></b></tt>
+		public std::unary_function&lt; const Breakpoint, bool &gt;</b></tt>
 <blockquote>[ returns bool  ]
 <br>
 Predicate functor returning true if its Breakpoint argument 
@@ -568,7 +571,7 @@ Loris::BreakpointUtils::frequency_between( double lowerbound, double upperbound 
 <h4>Comparitors</h4>
 
 <p><tt><b>struct less_frequency : 
-public std::binary_function< const Breakpoint, const Breakpoint, bool >
+public std::binary_function&lt; const Breakpoint, const Breakpoint, bool &gt;
 </b></tt>
 <blockquote>[ returns bool  ]
 <br>
@@ -579,7 +582,7 @@ and false otherwise.
 
 
 <p><tt><b>struct greater_amplitude : 
-public std::binary_function< const Breakpoint, const Breakpoint, bool >
+public std::binary_function&lt; const Breakpoint, const Breakpoint, bool &gt;
 </b></tt>
 <blockquote>[ returns bool  ]
 <br>
@@ -853,94 +856,187 @@ PartialList::iterator dist_end ).
 <a name="Envelope">
 <hr><h2>Envelope</h2></a>
 <p>
-Abstract base class, specifying interface ( valueAt() and clone() ).
-Derived classes must implement valueAt() and clone(), the latter to 
-support the Prototype pattern.
-
-Clients of Envelope, like Morpher, use the Prototype pattern to safely
-take ownership of their Envelopes. Formerly, Handle<>s were used for this
-purpose, but using them polymorphically seemed to trigger random and 
-diverse compiler problems. Handle<>s are no longer part of Loris.
-
-Envelope is an abstract base class representing a generic real (double) 
-function of one real (double) argument. 
+Class Envelope is an abstract base class, specifying interface for
+prototypable (clonable) objects representing generic, real-valued
+(double) functions of one real-valued (double) time argument. Derived
+classes (like <a href="#BreakpointEnvelope">BreakpointEnvelope</a>)
+must implement valueAt() and clone(), the latter to support the
+Prototype pattern. Clients of Envelope, like <a
+href="#Morpher">Morpher</a> and <a href="#Distiller">Distiller</a>,
+can use prototype Envelopes to make their own private Envelopes.
 <p>
-<pre>
-	virtual double valueAt( double x ) const = 0;	
-	virtual ~Envelope( void );
-	
-	virtual Envelope * clone( void ) const = 0;
-</pre>
+<h3>Member Functions</h3>
+<h4>Construction</h4>
+<p><tt><b>~Envelope( void )</b></tt>
+<blockquote>
+<br>
+Destroy this Envelope (virtual to allow subclassing). 								
+</blockquote>
+
+
+<h4>Envelope Interface</h4>
+<p><tt><b> clone( void ) const</b></tt>
+<blockquote>[ returns Envelope *  ]
+<br>
+Return an exact copy of this Envelope
+(following the Prototype pattern). (abstract)
+</blockquote>
+
+
+<p><tt><b> valueAt( double x ) const</b></tt>
+<blockquote>[ returns double  ]
+<br>
+Return the value of this Envelope at the specified time.	
+(abstract)						
+</blockquote>
+
 				
 <p><a href="#contents"><small>Contents</small></a>	
 
 <a name="Exception">
 <hr><h2>Exception</h2></a>
 <p>
-Generic exception class for reporting exceptional circumstances.
-Can be a base class for more specific exception classes in Loris.
+Class Exception is a generic exception class for reporting exceptional 
+circumstances in Loris. Exception is derived from std:exception, 
+and is the base for a hierarchy of derived exception classes
+in Loris:
+<ul>
+	<li>class Exception</li>
+	<ul>
+		<li>class AssertionFailure (thrown by the Assert(invariant) macro)</li>
+		<li>class IndexOutOfBounds</li>
+		<li>class FileIOException</li>
+		<li>class InvalidObject</li>
+		<ul>
+			<li>class InvalidIterator</li>
+			<li>class InvalidArgument</li>
+			<li>class InvalidPartial (defined in Partial.h)</li>
+		</ul>
+	</ul>
+</ul>
 <p>
-<pre>
-//	construction:
-	Exception( const std::string & str, const std::string & where = "" );
+<h3>Member Functions</h3>
+<h4>Construction</h4>
+<p><tt><b>Exception( const std::string & desc, const std::string & where = "" )</b></tt>
+<blockquote>
+<br>
+Construct a new Exception with the specified description and, optionally
+a string identifying the location at which the exception as thrown. The
+Throw( Exception_Class, description_string ) macro generates a location
+string automatically using __FILE__ and __LINE__.
+</blockquote>
+    
+<p><tt><b> ~Exception( void )</b></tt>
+<blockquote>
+<br>
+Destroy this Exception.
+</blockquote>
 
-//	virtual destructor so it Exception can be subclassed:
-	virtual ~Exception( void ) {}
+<h4>std::exception Interface</h4>
+<p><tt><b> what( void ) const</b></tt>
+<blockquote>[ returns const char *  ]
+<br>
+Return a description of this Exception in the form of a
+C-style string (char pointer).
+</blockquote>
 	
-//	access:
-	const std::string & str( void ) const { return _sbuf; }
-	const char * what( void ) const { return _sbuf.c_str(); }
-	
-	Exception & append( const std::string & str );
-	
-class AssertionFailure : public Exception
-class IndexOutOfBounds : public Exception
-class FileIOException : public Exception
-class InvalidObject : public Exception
-class InvalidIterator : public InvalidObject
-class InvalidArgument : public Exception
-class InvalidPartial : public InvalidObject (in Partial.h)
+<h4>Description String Access</h4>
+<p><tt><b> append( const std::string & str )</b></tt>
+<blockquote>[ returns Exception &  ]
+<br>
+Append the specified string to this Exception's description,
+and return a reference to this Exception.
+</blockquote>
 
-Throw( exType, report )	
-Assert(test)
-</pre>
+<p><tt><b> str( void ) const</b></tt>
+<blockquote>[ returns const std::string &  ]
+<br>
+Return a refernce to this Exception's description string.
+</blockquote>
 				
 <p><a href="#contents"><small>Contents</small></a>	
 
 <a name="FrequencyReference">
 <hr><h2>FrequencyReference</h2></a>
 <p>
-A functor class that creates a reference frequency envelope from
-the longest Partial found in a given iterator range and in a 
-specified frequency range. This class implements the Envelope
-interface.
+Class FrequencyReference represents a reference frequency envelope
+derived from the longest Partial found in a given range of Partials,
+and in a specified (average) frequency range. This reference envelope
+can be used for channelizing the Partials in preparation for morphing
+(see <a href="#Channelizer">Channelizer</a>).
 <p>
-<pre>
-	//	construction: 
-	FrequencyReference( PartialList::const_iterator begin, 
-						PartialList::const_iterator end, 
-						double minFreq, double maxFreq, long numSamps );
-	FrequencyReference( PartialList::const_iterator begin, 
-						PartialList::const_iterator end, 
-						double minFreq, double maxFreq );
-	FrequencyReference( const FrequencyReference & other );
-	FrequencyReference & operator= ( const FrequencyReference & other );
-	~FrequencyReference();
+FrequencyReference implements the Envelope interface (see
+<a href="#Envelope">Envelope</a>).
+<p>
+<h3>Member Functions</h3>
+<h4>Construction</h4>
+<p><tt><b>FrequencyReference( PartialList::const_iterator begin, 
+PartialList::const_iterator end, 
+double minFreq, double maxFreq, long numSamps )
+</b></tt>
+<blockquote>
+<br>
+Construct a new FrequencyReference derived from the longest Partial
+in the specified half-open (STL-style) range of Partials that lies
+within the speficied average frequency range. Sample that longest
+Partial at numSamps points to construct the reference envelope.
+</blockquote>						
+						
+<p><tt><b>FrequencyReference( PartialList::const_iterator begin, 
+PartialList::const_iterator end, 
+double minFreq, double maxFreq )
+</b></tt>
+<blockquote>
+<br>
+Construct a new FrequencyReference derived from the longest Partial
+in the specified half-open (STL-style) range of Partials that lies
+within the speficied average frequency range. Sample that longest
+Partial at every Breakpoint to construct the reference envelope.
+</blockquote>		
+				
+<p><tt><b>FrequencyReference( const FrequencyReference & other )</b></tt>
+<blockquote>
+<br>
+Construct a new FrequencyReference that is an exact copy of the
+specified FrequencyReference.
+</blockquote>
 
-	//	BreakpointEnvelope access:
-	const BreakpointEnvelope & envelope( void ) const { return *_env; }
+<p><tt><b>~FrequencyReference()</b></tt>
+<blockquote>
+<br>
+Destroy this FrequencyReference.
+</blockquote>
 
-//	Envelope interface:
-	virtual FrequencyReference * clone( void ) const;
-	/*	Return an exact copy of this FrequencyReference.
-		(Prototype pattern)
-	 */
+<p><tt><b> operator= ( const FrequencyReference & other )</b></tt>
+<blockquote>[ returns FrequencyReference &  ]
+<br>
+Assignment operator: make this FrequencyReference an exact copy 
+of the specified FrequencyReference.
+</blockquote>
+
+<h4>Conversion to BreakpointEnvelope</h4>
+<p><tt><b> envelope( void ) const</b></tt>
+<blockquote>[ returns BreakpointEnvelope  ]
+<br>
+Return a BreakpointEnvelope that evaluates indentically to this
+FrequencyReference at all time.
+</blockquote>
+
+<h4>Envelope Interface</h4>
+<p><tt><b> clone( void ) const</b></tt>
+<blockquote>[ returns FrequencyReference *  ]
+<br>
+Return an exact copy of this FrequencyReference (following the
+Prototype pattern).
+</blockquote>
 	
-	virtual double valueAt( double x ) const;	
-	/*	Return the interpolated value of this FrequencyReference at 
-		the specified time.							
-	 */
-</pre>
+<p><tt><b> valueAt( double x ) const</b></tt>
+<blockquote>[ returns double  ]
+<br>
+Return the frequency value (in Hz) of this FrequencyReference at the
+specified time.
+</blockquote>
+
 				
 <p><a href="#contents"><small>Contents</small></a>	
 
@@ -1188,19 +1284,7 @@ Return a const reference to this Morpher's list of morphed Partials.
 <a name="Notifier">
 <hr><h2>Notifier</h2></a>
 <p>
-Fully-insulating class encapsulating manipulations involving 
-linear interpolation of Partial parameter envelopes. The implementation
-is entirely defined in the Morpher_imp class, in Morpher.C.
-
-The Morpher object performs sound morphing (cite Lip's papers, and the book)
-by interpolating Partial parmeter envelopes of corresponding Partials in
-a pair of source sounds. The correspondences are established by labeling.
-The Morpher object collects morphed Partials in a list<Partial>, that can
-be accessed by clients.
-
-The Morpher interface is fully insulating, the implementation is 
-defined entirely inthe Morpher_imp class in Morpher.C.
-Morpher is a leaf class, do not subclass.
+Dehr?
 <p>
 <pre>
 std::ostream & getNotifierStream(void);

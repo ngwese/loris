@@ -192,6 +192,18 @@ FrequencyReference::valueAt( double x ) const
 }
 
 // ---------------------------------------------------------------------------
+//	envelope
+// ---------------------------------------------------------------------------
+//	Conversion to BreakpointEnvelope return a BreakpointEnvelope that 
+//	evaluates indentically to this FrequencyReference at all time.
+//
+BreakpointEnvelope 
+FrequencyReference::envelope( void ) const 
+{ 
+    return *_env; 
+}
+
+// ---------------------------------------------------------------------------
 //	timeOfPeakEnergy (static helper function)
 // ---------------------------------------------------------------------------
 //	Return the time at which the given Partial attains its

@@ -39,30 +39,36 @@ namespace Loris {
 // ---------------------------------------------------------------------------
 //	class Envelope
 //
-//	Abstract base class, specifying interface ( valueAt() and clone() ).
-//	Derived classes must implement valueAt() and clone(), the latter to 
-//	support the Prototype pattern.
-//
-//	Clients of Envelope, like Morpher, use the Prototype pattern to safely
-//	take ownership of their Envelopes. Formerly, Handle<>s were used for this
-//	purpose, but using them polymorphically seemed to trigger random and 
-//	diverse compiler problems. Handle<>s are no longer part of Loris.
-//
-//	Envelope is an abstract base class representing a generic real (double) 
-//	function of one real (double) argument. 
+//	Class Envelope is an abstract base class, specifying interface for
+//	prototypable (clonable) objects representing generic, real-valued
+//	(double) functions of one real-valued (double) time argument. Derived
+//	classes (like BreakpointEnvelope) must implement valueAt() and
+//	clone(), the latter to support the Prototype pattern. Clients of
+//	Envelope, like Morpher and Distiller, can use prototype Envelopes to
+//	make their own private Envelopes.
 //
 class Envelope
 {
 //	-- public interface --
 public:
-	virtual double valueAt( double x ) const = 0;	
+//	-- construction --
 	virtual ~Envelope( void );
-	
+	/* 	Destroy this Envelope (virtual to allow subclassing).
+	 */
+
+//	-- Envelope interface --
 	virtual Envelope * clone( void ) const = 0;
+	/*	Return an exact copy of this Envelope (following the Prototype
+		pattern).
+	 */
+	 
+	virtual double valueAt( double x ) const = 0;	
+	/*	Return the value of this Envelope at the specified time. 
+	 */
 	
 //	-- protected interface --
 protected:
-	//	protect construction:
+//	-- construction --
 	Envelope( void );
 	Envelope( const Envelope & );
 
