@@ -171,7 +171,15 @@ void channelize( PartialList * partials,
 %newobject createFreqReference;
 BreakpointEnvelope * 
 createFreqReference( PartialList * partials, 
-					 double minFreq, double maxFreq, long numSamps = 0 );
+					 double minFreq, double maxFreq, long numSamps );
+%inline %{
+BreakpointEnvelope * 
+createFreqReference( PartialList * partials, 
+					 double minFreq, double maxFreq )
+{
+	createFreqReference( partials, minFreq, maxFreq, 0 );
+}
+%}
 /*	Return a newly-constructed BreakpointEnvelope by sampling the 
 	frequency envelope of the longest Partial in a PartialList. 
 	Only Partials whose frequency at the Partial's loudest (highest 
@@ -286,7 +294,20 @@ void exportSdif( const char * path, PartialList * partials );
 
 
 void exportSpc( const char * path, PartialList * partials, double midiPitch, 
-				int enhanced = true, double endApproachTime = 0. );
+				int enhanced, double endApproachTime );
+%inline %{
+void exportSpc( const char * path, PartialList * partials, double midiPitch,
+			    int enhanced )
+{
+	exportSpc( path, partials, midiPitch, enhanced, 0. );
+}
+%}
+%inline %{
+void exportSpc( const char * path, PartialList * partials, double midiPitch )
+{
+	exportSpc( path, partials, midiPitch, true, 0. );
+}
+%}
 /*	Export Partials in a PartialList to a Spc file at the specified file
 	path (or name). The fractional MIDI pitch must be specified. The optional
 	enhanced parameter defaults to true (for bandwidth-enhanced spc files), 
@@ -716,7 +737,7 @@ class AiffFile
 {
 public:
 	AiffFile( const char * filename );
-	AiffFile( const std::vector< double > & vec, double samplerate = 44100 );
+	AiffFile( const std::vector< double > & vec, double samplerate );
 
 	~AiffFile( void );
 	
