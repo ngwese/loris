@@ -100,7 +100,7 @@ Partial::endTime( void ) const
 //	bp to it (copying parameters).
 //
 //	Could except:
-//	allocation of a new Breakpoint could fail, throwing a LowMemException.
+//	allocation of a new Breakpoint could fail, throwing a std::bad__alloc.
 //
 Breakpoint *
 Partial::insert( double time, const Breakpoint & bp )

@@ -151,18 +151,6 @@ private:
 
 extern DebuggerStream debugger;	//	local in Notifier.C
 
-// ---------------------------------------------------------------------------
-//	prototype for a one-shot notifiers:
-//
-void notify( const std::string & s );
-void debug( const std::string & s );
-
-// ---------------------------------------------------------------------------
-//	prototype for a one-shot error notifier:
-//	This one displays its message and aborts.
-//
-void fatalError( const std::string & s );
-
 End_Namespace( Loris )
 
 #endif	// ndef __Loris_notifier__

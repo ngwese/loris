@@ -14,7 +14,6 @@
 //	-kel 9 Sept 99
 //
 // ===========================================================================
-
 #include "LorisLib.h"
 #include "Notifier.h"
 #include "Exception.h"

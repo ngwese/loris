@@ -5,22 +5,17 @@
 //	
 //	Class definition for Loris::Exception, a generic exception class.
 //
+//	This could be derived from std::logic_error for greater ease of
+//	handling, but that would make it difficult (impossible?) to add
+//	to the notification string, and this feature is used in many places,
+//	for better or worse.
+//
 //	-kel 17 Aug 99
 //
 // ===========================================================================
-
 #include "LorisLib.h"
 #include "StringBuffer.h"
 #include <string>
-
-//  (need the ostream macro for non-compliant libraries)
-#if !defined( Deprecated_iostream_headers )
-	#include <iostream>
-	#define STDostream std::ostream
-#else
-	#include <iostream.h>
-	#define STDostream ostream
-#endif
 
 Begin_Namespace( Loris )
 
@@ -29,8 +24,6 @@ Begin_Namespace( Loris )
 //
 //	Generic exception class for reporting exceptional circumstances.
 //	Can be a base class for more specific exception classes in Loris.
-//	Inherits streaming capability from ostream, uses its own string
-//	buffer (defined below) as a buffer. 
 //
 class Exception
 {
@@ -64,12 +57,6 @@ protected:
 };	//	end of class Exception
 
 // ---------------------------------------------------------------------------
-//	streaming operator for Exceptions:
-//	(defined in Exception.C)
-//
-STDostream & operator << ( STDostream & str, const Exception & ex );	
-
-// ---------------------------------------------------------------------------
 //	class AssertionFailure
 //
 class AssertionFailure : public Exception
@@ -88,6 +75,12 @@ public:
 		
 };	//	end of class AssertionFailure
 
+/*
+//
+//	remove this class, we no longer install a new handler that
+//	would cause this exception to be thrown in place of std::bad_alloc.
+//	We never did anything with this except pass it on anyway.
+//
 // ---------------------------------------------------------------------------
 //	class LowMemException
 //
@@ -106,6 +99,7 @@ public:
 #endif // lame compiler
 		
 };	//	end of class LowMemException
+*/
 
 // ---------------------------------------------------------------------------
 //	class IndexOutOfBounds

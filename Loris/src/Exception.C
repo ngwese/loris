@@ -70,15 +70,4 @@ Exception::append( const string & str )
 	return *this;
 }
 
-// ---------------------------------------------------------------------------
-//	operator << 
-// ---------------------------------------------------------------------------
-//	Not a member function of Exception.
-//
-ostream & 
-operator << ( ostream & ostr, const Exception & ex )
-{
-	return ostr << ex.str();
-}
-
 End_Namespace( Loris )

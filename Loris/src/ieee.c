@@ -1,6 +1,5 @@
 #include <math.h>
 #include "ieee.h"
-#include "endian.h"
 
 /*
  * C O N V E R T   T O   I E E E   E X T E N D E D
@@ -45,8 +44,7 @@
   * routines. ConvertToIeeeExtended() should take a double arg, not 
   * an int. 
   *
-  *	Later, added endian check, because these routines assume that
-  * the the data is big endian.
+  *	These routines assume that the the data is big endian.
   *
   *	-kel 28 Sept 99
   */
@@ -117,10 +115,7 @@ void ConvertToIeeeExtended(double num, extended80 * x)
 	bytes[8] = loMant >> 8;
 	bytes[9] = loMant;
 	
-	if ( ! bigEndianSystem() )
-		swapByteOrder( bytes, 10 );
 }
-
 
 #ifndef HUGE_VAL
 # define HUGE_VAL HUGE
@@ -138,9 +133,6 @@ double ConvertFromIeeeExtended(extended80 x)
 	int expon;
 	int hiMant, loMant;
 	char * bytes = x.data;
-
-	if ( ! bigEndianSystem() )
-		swapByteOrder( bytes, 10 );
 
 	expon = ((bytes[0] & 0x7F) << 8) | (bytes[1] & 0xFF);
 	hiMant = ((int)(bytes[2] & 0xFF) << 24)
@@ -169,7 +161,6 @@ double ConvertFromIeeeExtended(extended80 x)
 	else
 		return f;
 }
-
 
 #ifdef __cplusplus
 }	//	end extern "C"

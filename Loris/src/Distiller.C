@@ -53,16 +53,19 @@ Distiller &
 Distiller::operator= ( const Distiller & other )
 {
 	if ( &other != this ) {
-		try {
+		//
+		//	remove LowMemException
+		//
+		//try {
 			//	first try duplicating the list of 
 			//	Partials in the base class:
 			_partials = other._partials;
 			_fadeTime = other._fadeTime;
-		}
-		catch( LowMemException & ex ) {
-			ex.append( "failed to assign Distiller" );
-			throw;
-		}
+		//}
+		//catch( LowMemException & ex ) {
+		//	ex.append( "failed to assign Distiller" );
+		//	throw;
+		//}
 	}
 	return *this;
 }

@@ -215,15 +215,18 @@ AiffFile::readCommon( BinaryFile & file )
 	//	buffer if it is big enough:
 	long n = ck.sampleFrames * ck.channels;
 	if ( n > _samples.size() ) {
-		try {
-			debugger << "found " << n << " samples" << endl;
+		//	
+		//	remove LowMemException
+		//
+		//try {
+			// debugger << "found " << n << " samples" << endl;
 			_samples.resize( n, 0. );
-			debugger << "grew buffer to size " << n << endl;
-		}
-		catch( LowMemException & ex ) {
-			ex.append( "Couldn't allocate buffer for AIFF samples." );
-			throw;
-		}
+			// debugger << "grew buffer to size " << n << endl;
+		//}
+		//catch( LowMemException & ex ) {
+		//	ex.append( "Couldn't allocate buffer for AIFF samples." );
+		//	throw;
+		//}
 	}
 	
 	_nChannels = ck.channels;
