@@ -51,7 +51,7 @@ else
 libloris_la_LIBADD = $(top_builddir)/classes/libclasses.la
 endif
 
-libloris_la_LDFLAGS = -version-info 0:0:0
+libloris_la_LDFLAGS = -version-info 1:0:0
 
 
 include_HEADERS = loris.h
