@@ -49,8 +49,8 @@ typedef struct
 	/*	standard structure holding csound global data (esr, ksmps, etc.) */
 	OPDS h;  	
 	
-	/* output */
-	float *result;
+	/* no output 
+	float *result; */
 	
 	/* unit generator parameters/arguments */
 	float *time, *ifilnam, *readerIdx, *freqenv, *ampenv, *bwenv, *fadetime;    
@@ -81,8 +81,9 @@ typedef struct
 	/*	standard structure holding csound global data (esr, ksmps, etc.) */
 	OPDS h;  	
 	
-	/* output */
-	float *result;
+	/* no output 
+	float *result; */
+
 	
 	/* unit generator parameters/arguments */
 	float *srcidx, *tgtidx, *morphedidx, *freqenv, *ampenv, *bwenv;    

@@ -26,7 +26,7 @@ nchnls = 1
 ;
 instr 1
     ktime    linseg      0, p3, 3.0    ; linear time function from 0 to 3 seconds
-    kduh     lorisread   ktime, "clarinet.sdif", 1, 1, 1, 1, .001
+             lorisread   ktime, "clarinet.sdif", 1, 1, 1, 1, .001
     asig     lorisplay   1, 1, 1, 1
              out         asig
 endin
@@ -51,9 +51,8 @@ instr 2
     kvib     oscil       kvenv, 4, 1   ; table 1, sinusoid
 
     kbwenv   linseg      1, p3/6, 1, p3/6, 2, 2*p3/3, 2
-    kduh     lorisread   ktime, "clarinet.sdif", 1, 1, 1, 1, .001
+             lorisread   ktime, "clarinet.sdif", 1, 1, 1, 1, .001
     a1       lorisplay   1, ifscale+kvib, 2, kbwenv  
-;    a1       lorisplay   1, ifscale+kvib, 2, kbwenv  
     a2       atone       a1, 1000      ; highpass filter, cutoff 1000 Hz
              out         a2
 endin
@@ -73,7 +72,7 @@ instr 3
 	kvenv linseg	0, idur/6, 0, idur/2, .02, idur/3, 0
 	kvib oscil		kvenv, 4, 1		; table 1, sinusoid
 
-    kduh     lorisread   ktime, "clarinet.sdif", 1, 1, 1, 1, ifadetime
+             lorisread   ktime, "clarinet.sdif", 1, 1, 1, 1, ifadetime
 	a1 lorisplay 1, ifscale+kvib, 2, 1  
 
 	a2 atone a1, 1000  

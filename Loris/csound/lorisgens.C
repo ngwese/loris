@@ -598,7 +598,8 @@ void lorisread_setup( LORISREAD * params )
 extern "C"
 void lorisread( LORISREAD * p )
 {
-	*(p->result) = p->imp->updateEnvelopePoints( *p->time, *p->freqenv, 
+	//*(p->result) = 
+	p->imp->updateEnvelopePoints( *p->time, *p->freqenv, 
 												 *p->ampenv, *p->bwenv );
 }
 
@@ -1035,7 +1036,8 @@ void lorismorph_setup( LORISMORPH * p )
 extern "C"
 void lorismorph( LORISMORPH * p )
 {
-	*p->result = p->imp->updateEnvelopes();
+	//*p->result = 
+	p->imp->updateEnvelopes();
 }
 
 // ---------------------------------------------------------------------------
