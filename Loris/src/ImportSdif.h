@@ -27,12 +27,17 @@
  * Definition of class ImportSdif, which reads an SDIF file.
  *
  * Lippold Haken, 4 July 2000
+ * Lippold Haken, 20 October 2000, using IRCAM SDIF library
  * loris@cerlsoundgroup.org
  *
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
 #include "Partial.h"
+
+extern "C" {
+#include <sdif.h>
+}
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
@@ -57,7 +62,7 @@ public:
 	PartialList & partials( void ) { return _partials; }
 	const PartialList & partials( void ) const { return _partials; }
 	
-//	-- unimplemented --
+//	-- private interface --
 private:
 	ImportSdif( const ImportSdif & other );
 	ImportSdif  & operator = ( const ImportSdif & rhs );

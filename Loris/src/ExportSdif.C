@@ -26,20 +26,19 @@
  * 1TRC SDIF format.
  *
  * Lippold Haken, 4 July 2000
+ * Lippold Haken, 20 October 2000, using IRCAM SDIF library
  * loris@cerlsoundgroup.org
  *
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
 #include "ExportSdif.h"
-#include "Partial.h"
 #include "Exception.h"
 #include "notifier.h"
 #include <cmath>
 
 extern "C" {
 #include <sdif.h>
-#include <sdif-types.h>
 }
 
 #if !defined( NO_LORIS_NAMESPACE )
@@ -47,13 +46,38 @@ extern "C" {
 namespace Loris {
 #endif
 
-//	Row of matrix data in SDIF 1TRC format.
-//	Loris exports both a 6-column (resampled) and 8-column (exact times) format.
-//  The 6 column format excludes timeOffset and discardable; they will be assumed
-//  0.0 by the reader.
-typedef struct {
-    sdif_float32 index, freq, amp, phase, noise, label, timeOffset, discardable;
-} RowOfLorisData;
+//  SDIF signature used by Loris.
+static SdifSignature lorisSignature = SdifSignatureConst('1TRC');
+
+//  sorted BreakpointTimes are used in finding frame start times in non-resampled SDIF writing.
+struct BreakpointTime
+{
+	int index;			// index identifying which partial has the breakpoint
+	float time;			// time of the breakpoint
+};
+
+//	prototypes for envelope writing helpers:
+static void writeEnvelopeData( SdifFileT *out, const double hop,
+							const std::vector< Partial * > & partialsVector );
+static void assembleMatrixData( SdifFloat4 *data, 
+							const std::vector< Partial * > & partialsVector, 
+							const int useExactTiming,
+							const std::vector< int > & activeIndices, 
+							const double frameTime, const double nextFrameTime );
+static void indexPartials( const PartialList & partials, std::vector< Partial * > & partialsVector );
+static int collectActiveIndices( const std::vector< Partial * > & partialsVector, 
+							const double hop,
+							const double frameTime, const double nextFrameTime,
+							std::vector< int > & activeIndices );
+
+//	prototypes for envelope frame time helpers:
+static void makeSortedBreakpointTimes( const std::vector< Partial * > & partialsVector,
+							const int useExactTiming, 
+							std::list< BreakpointTime > & allBreakpoints);
+static double getNextFrameTime( const double frameTime,
+							std::list< BreakpointTime > & allBreakpoints,
+							std::list< BreakpointTime >::iterator & bpTimeIter);
+
 
 // ---------------------------------------------------------------------------
 //	ExportSdif constructor from data in memory
@@ -75,15 +99,24 @@ ExportSdif::ExportSdif( const double hop ) :
 void
 ExportSdif::write( const char *outfilename, const list<Partial> & partials )
 {
-	FILE *out;
-
+// 
+// Initialize SDIF library.
+//
+	SdifGenInit("");
+	
 //
 // Open SDIF file for writing.
 //
-	SDIFresult r = SDIF_OpenWrite(outfilename, &out);
-	if (r)
+	SdifFileT *out = SdifFOpen(outfilename, eWriteFile);
+	if (!out)
 		Throw( FileIOException, "Could not open SDIF file for writing." );
 
+	// Write file header information 
+	SdifFWriteGeneralHeader( out );    
+	
+	// Write ASCII header information 
+	SdifFWriteAllASCIIChunks( out );    
+	
 //
 // Write SDIF data.
 //	
@@ -94,138 +127,126 @@ ExportSdif::write( const char *outfilename, const list<Partial> & partials )
 		indexPartials( partials, partialsVector );
 		
 		// Write partials to SDIF file.
-		writeEnvelopeData( out, partialsVector );
+		writeEnvelopeData( out, _hop, partialsVector );
 	}
 	catch ( Exception & ex ) 
 	{
 		ex.append("Failed to write SDIF file.");
-		SDIF_CloseWrite(out);
+		SdifFClose(out);
+		SdifGenKill();
 		throw;
 	}
 
 //
-// Close SDIF output file.
+// Close SDIF input file.
 //
-	SDIF_CloseWrite(out);
+	SdifFClose(out);
+
+// 
+// Done with SDIF library.
+//
+	SdifGenKill();
 }
 
 #pragma mark -
-#pragma mark envelope writing
+#pragma mark envelope writing helpers
 // ---------------------------------------------------------------------------
 //	writeEnvelopeData
 // ---------------------------------------------------------------------------
 //
 void
-ExportSdif::writeEnvelopeData( FILE * out, const std::vector< Partial * > & partialsVector )
+writeEnvelopeData( SdifFileT * out, const double hop,
+				const std::vector< Partial * > & partialsVector )
 {
 //
 // Export SDIF file from Loris data.
 // Let exceptions propagate.
 //
 
-	int streamID = 1; // one stream id for all frames
+	int streamID = 1; 						// one stream id for all frames
+	int useExactTiming = (hop == 0.0);		// hop is nonzero if we are resampling data
 
 //
 // Make a sorted list of all breakpoints in all partials, and initialize the list iterater.
 // This stuff does nothing if we are writing a resampled SDIF file.
 //
 	std::list< BreakpointTime > allBreakpoints;
-	makeSortedBreakpointTimes( partialsVector, allBreakpoints);
+	makeSortedBreakpointTimes( partialsVector, useExactTiming, allBreakpoints );
 	std::list< BreakpointTime >::iterator bpTimeIter = allBreakpoints.begin();
 
 //
 // Output Loris data in SDIF frame format.
 // First frame starts at millisecond of first breakpoint, for exact timing SDIF files.
 //
-	double frameTime = (_hop == 0.0) ? std::floor( 1000.0 * bpTimeIter->time - 0.001 ) / 1000.0 : 0.0;
-	double nextFrameTime = getNextFrameTime( frameTime, allBreakpoints, bpTimeIter );
+	double nextFrameTime	= useExactTiming 
+							? std::floor( 1000.0 * bpTimeIter->time - 0.001 ) / 1000.0 
+							: 0.0;
+
+	double frameTime; 
 	int endOfAll;
 	do 
 	{
 
 //
+// Go to next frame.
+//
+		frameTime = nextFrameTime;
+		nextFrameTime = useExactTiming 
+							? getNextFrameTime( frameTime, allBreakpoints, bpTimeIter )
+							: frameTime + hop;
+
+//
 // Make a vector of partial indices that includes all partials active at this time.
 //
 		std::vector< int > activeIndices;
-		endOfAll = collectActiveIndices( partialsVector, frameTime, nextFrameTime, activeIndices );
+		endOfAll = collectActiveIndices( partialsVector, hop,
+									frameTime, nextFrameTime, activeIndices );
 
 //
 // Write frame header, matrix header, and matrix data.
 // We always have one matrix per frame.
 // The matrix size depends on the number of partials active at this time.
 //
-		if (activeIndices.size() > 0) 
+		int numTracks = activeIndices.size();
+		if (numTracks > 0) 
 		{
-			writeFrameHeader( out, streamID, activeIndices.size(), frameTime );
-			writeMatrixHeader( out, activeIndices.size() );
-			writeMatrixData( out, partialsVector, activeIndices, frameTime, nextFrameTime );
+		
+			// Allocate matrix data.
+			int cols = useExactTiming ? 8 : 6;
+			SdifFloat4 *data = new SdifFloat4[numTracks * cols];
+
+			// Fill in matrix data.
+			assembleMatrixData( data, partialsVector, useExactTiming, 
+								activeIndices, frameTime, nextFrameTime );
+								
+			// Write out matrix data.
+			SdifFWriteFrameAndOneMatrix( out, 
+					lorisSignature, streamID, frameTime, 				// frame header
+					lorisSignature, eFloat4, numTracks, cols, data);	// matrix 
+			
+			// Free matrix space.
+			delete [] data;
 		}
-//
-// Go to next frame.
-//
-		frameTime = nextFrameTime;
-		nextFrameTime = getNextFrameTime( frameTime, allBreakpoints, bpTimeIter );
-	} 
+	}
 	while (!endOfAll);
 }
 
-// ---------------------------------------------------------------------------
-//	writeFrameHeader
-// ---------------------------------------------------------------------------
-//
-void
-ExportSdif::writeFrameHeader( FILE *out, const int streamID, 
-							const int numTracks, const double frameTime )
-{	
-	SDIF_FrameHeader frame_head;
-
-	SDIF_Copy4Bytes(frame_head.frameType, "1TRC");
-
-	frame_head.size = sizeof( frame_head.time ) 
-					+ sizeof( frame_head.streamID )
-					+ sizeof( frame_head.matrixCount ) 
-					+ ( numTracks * sizeof( RowOfLorisData ) );	  // matrix data always multiple of 8 bytes
-					
-	frame_head.time = (sdif_float64) frameTime;
-	frame_head.streamID = streamID;
-	frame_head.matrixCount = 1;
-
-	SDIFresult r = SDIF_WriteFrameHeader(&frame_head, out);
-	if ( r )
-		Throw( FileIOException, std::string("Error writing SDIF frame header: ") + std::string( SDIF_GetErrorString(r)) );
-}
 
 // ---------------------------------------------------------------------------
-//	writeMatrixHeader
-// ---------------------------------------------------------------------------
-//
-void
-ExportSdif::writeMatrixHeader( FILE *out, const int numTracks )
-{	
-	SDIF_MatrixHeader matrix_head;
-
-	SDIF_Copy4Bytes(matrix_head.matrixType, "1TRC");
-	matrix_head.matrixDataType = SDIF_FLOAT32;
-	matrix_head.rowCount = numTracks;
-	matrix_head.columnCount = (_hop == 0.0) ? 8 : 6;
-
-	SDIFresult r = SDIF_WriteMatrixHeader(&matrix_head, out);
-	if ( r ) 
-		Throw( FileIOException, std::string("Error writing SDIF matrix header: ") + std::string(SDIF_GetErrorString(r)) );
-}
-
-// ---------------------------------------------------------------------------
-//	writeMatrixData
+//	assembleMatrixData
 // ---------------------------------------------------------------------------
 //	The activeIndices vector contains indices for partials that have data at this time.
-//	Write SDIF matrix data for these partials.
+//	Assemble SDIF matrix data for these partials.
 //
 void
-ExportSdif::writeMatrixData( FILE *out, const std::vector< Partial * > & partialsVector, 
+assembleMatrixData( SdifFloat4 *data, 
+								const std::vector< Partial * > & partialsVector, 
+								const int useExactTiming,
 								const std::vector< int > & activeIndices, 
 								const double frameTime, const double nextFrameTime )
 {	
-	RowOfLorisData trackData;
+	// The array matrix data is row-major order at "data".
+	SdifFloat4 *trackDataPtr = data;
 	
 	for ( int i = 0; i < activeIndices.size(); i++ ) 
 	{
@@ -237,7 +258,7 @@ ExportSdif::writeMatrixData( FILE *out, const std::vector< Partial * > & partial
 		// Use data at breakpoint if one is in frame, else fabricate data at frameTime.
 		double tim = frameTime;
 		double discardable = 0.0;
-		if (_hop == 0.0) 				// not resampling; doing exact timing
+		if (useExactTiming) 			// not resampling; doing exact timing
 		{
 			PartialIterator it = par->findPos(frameTime);
 			if (it != par->end() && it.time() < nextFrameTime) 
@@ -247,29 +268,20 @@ ExportSdif::writeMatrixData( FILE *out, const std::vector< Partial * > & partial
 		}
 		
 		// Fill in values for this row of matrix data.
-		trackData.index	= index;						// first row of matrix   (standard)
-		trackData.freq	= par->frequencyAt( tim );		// second row of matrix  (standard)
-		trackData.phase = par->phaseAt( tim );			// third row of matrix   (standard)
-		trackData.amp	= par->amplitudeAt( tim );		// fourth row of matrix  (standard)
-		trackData.noise = par->bandwidthAt( tim );		// fifth row of matrix   (loris)
-		trackData.label	= par->label();					// sixth row of matrix   (loris)
-		trackData.timeOffset  = tim - frameTime;		// seventh row of matrix (loris optional)
-		trackData.discardable = discardable;			// eighth row of matrix  (loris optional)
-
-		trackData.phase = WrapPhase32(trackData.phase);
-
-		// Write the row of matrix data.
-		// Write 6 columns if we are resampling envelope data.
-		// Write 8 columns if we are not resampling and doing exact timing.
-		SDIFresult r = SDIF_Write4( &trackData, ((_hop == 0.0) ? 8 : 6), out);
-		if ( r ) 
-			Throw( FileIOException, std::string("Error writing SDIF matrix data: ") + std::string(SDIF_GetErrorString(r)) );
+		*trackDataPtr++ = index;							// first row of matrix   (standard)
+		*trackDataPtr++	= par->frequencyAt( tim );			// second row of matrix  (standard)
+		*trackDataPtr++ = par->phaseAt( tim );				// third row of matrix   (standard)
+		*trackDataPtr++	= par->amplitudeAt( tim );			// fourth row of matrix  (standard)
+		*trackDataPtr++ = par->bandwidthAt( tim );			// fifth row of matrix   (loris)
+		*trackDataPtr++	= par->label();						// sixth row of matrix   (loris)
+		if (useExactTiming) 
+		{
+			*trackDataPtr++  = tim - frameTime;			// seventh row of matrix (loris optional)
+			*trackDataPtr++ = discardable;				// eighth row of matrix  (loris optional)
+		}
 	}
 }
 
-
-#pragma mark -
-#pragma mark envelope writing helpers
 
 // ---------------------------------------------------------------------------
 //	indexPartials
@@ -278,7 +290,7 @@ ExportSdif::writeMatrixData( FILE *out, const std::vector< Partial * > & partial
 //  The vector index will be the sdif 1TRC index for the partial. 
 //
 void
-ExportSdif::indexPartials( const PartialList & partials, std::vector< Partial * > & partialsVector )
+indexPartials( const PartialList & partials, std::vector< Partial * > & partialsVector )
 {
 	for (PartialList::const_iterator it = partials.begin(); it != partials.end(); ++it)
 		if (it->begin() != it->end())
@@ -296,7 +308,8 @@ ExportSdif::indexPartials( const PartialList & partials, std::vector< Partial * 
 //  Return true if time is beyond end of all the partials.
 //
 int
-ExportSdif::collectActiveIndices( const std::vector< Partial * > & partialsVector, 
+collectActiveIndices( const std::vector< Partial * > & partialsVector, 
+								const double hop,
 								const double frameTime, const double nextFrameTime,
 								std::vector< int > & activeIndices )
 {
@@ -307,12 +320,12 @@ ExportSdif::collectActiveIndices( const std::vector< Partial * > & partialsVecto
 		// Is there a breakpoint within the frame?
 		// if there is no breakpoint and zero amplitude, skip the partial.
 		// Resampled partials are included if the next frame (or previous frame) had a breakpoint.
-		PartialIterator it = partialsVector[i]->findPos(frameTime - _hop);
-		if ((it != partialsVector[i]->end() && it.time() < nextFrameTime + _hop) 
+		PartialIterator it = partialsVector[i]->findPos(frameTime - hop);
+		if ((it != partialsVector[i]->end() && it.time() < nextFrameTime + hop) 
 					|| partialsVector[i]->amplitudeAt(frameTime) != 0.0) 
 			activeIndices.push_back(i);	
 
-		if (partialsVector[i]->endTime() > frameTime + _hop)
+		if (partialsVector[i]->endTime() > frameTime + hop)
 			endOfAll = false;
 	}
 	return endOfAll;
@@ -338,12 +351,13 @@ struct earlier_time
 };
 
 void
-ExportSdif::makeSortedBreakpointTimes( const std::vector< Partial * > & partialsVector, 
-									   std::list< BreakpointTime > & allBreakpoints ) 
+makeSortedBreakpointTimes( const std::vector< Partial * > & partialsVector, 
+						   const int useExactTiming, 
+						   std::list< BreakpointTime > & allBreakpoints ) 
 {
 
 // If we are resampling envelopes, we don't need the sorted list; just return.
-	if (_hop > 0.0)
+	if (!useExactTiming)
 		return;
 
 // Make list of all breakpoint times from all partials.
@@ -367,21 +381,18 @@ ExportSdif::makeSortedBreakpointTimes( const std::vector< Partial * > & partials
 // ---------------------------------------------------------------------------
 //	getNextFrameTime
 // ---------------------------------------------------------------------------
-//	Get time of next frame. 
+//	Get time of next frame.
+//  This is called only when writing SDIF files with exact timing (envelopes not resampled).
 //  This uses the previously sorted allBreakpoints list.
 //
 //	all Breakpoints should be const, but for some reason, gcc (on SGI at 
 //	least) makes trouble converting and comparing iterators and const_iterators.
 //
 double
-ExportSdif::getNextFrameTime( const double frameTime, std::list< BreakpointTime > & allBreakpoints,
-							  std::list< BreakpointTime >::iterator & bpTimeIter)
+getNextFrameTime( const double frameTime,
+							std::list< BreakpointTime > & allBreakpoints,
+							std::list< BreakpointTime >::iterator & bpTimeIter)
 {
-//
-// If we are resampling envelopes, increment by _hop time and return.
-//
-	if (_hop > 0.0)
-		return frameTime + _hop;
 //
 // Build up vector of partials that have a breakpoint in this frame, update the vector
 // as we increase the frame duration.  Return when a partial gets a second breakpoint.
@@ -411,7 +422,7 @@ ExportSdif::getNextFrameTime( const double frameTime, std::list< BreakpointTime 
 		//	Avoid floating point comparison problems by selecting a frame time before
 		//	the time of te first breakpoint in the frame.
 		if ( it != allBreakpoints.end() &&
-				(it->time > bpTimeIter->time + 0.0001 || partialsWithBreakpointsInFrame.size() == 1) )
+				(it->time > bpTimeIter->time + 0.0001 || partialsWithBreakpointsInFrame.size() == 1))
 		{
 			//	Try rounding to nearest millisecond, use tenth millisecond if necessary.
 			nextFrameTime = std::floor( 1000. * it->time - .001 ) / 1000.0;

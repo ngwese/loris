@@ -24,7 +24,8 @@
  *
  * Implementation of class ImportSdif, which reads an SDIF file.
  *
- * Lippold Haken, 4 July 2000
+ * Lippold Haken, 4 July 2000, using CNMAT SDIF library
+ * Lippold Haken, 20 October 2000, using IRCAM SDIF library (tutorial by Diemo Schwarz)
  * loris@cerlsoundgroup.org
  *
  * http://www.cerlsoundgroup.org/Loris/
@@ -32,16 +33,9 @@
  */
 #include "ImportSdif.h"
 #include "Exception.h"
-#include "Partial.h"
 #include "notifier.h"
 
 #include <vector>
-#include <stdio.h>	//	for FILE
-
-extern "C" {
-#include <sdif.h>
-#include <sdif-types.h>
-}
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
@@ -51,27 +45,18 @@ namespace Loris {
 //	Row of matrix data in SDIF 1TRC format.
 //	Loris exports both a 6-column (resampled) and 8-column (exact times) format.
 //  The 6 column format excludes timeOffset and discardable.
+int lorisRowElements = 8;
 typedef struct {
-    sdif_float32 index, freq, amp, phase, noise, label, timeOffset, discardable;
-} RowOfLorisData32;
+    SdifFloat8 index, freq, amp, phase, noise, label, timeOffset, discardable;
+} RowOfLorisData;
 
-typedef struct {
-    sdif_float64 index, freq, amp, phase, noise, label, timeOffset, discardable;
-} RowOfLorisData64;
+//  SDIF signature used by Loris.
+static SdifSignature lorisSignature = SdifSignatureConst('1TRC');
 
 //	prototypes for helpers:
 static void read( const char *infilename, std::list<Partial> & partials );
-static void readEnvelopeData( FILE *in, std::vector< Partial > & partialsVector );
-static void readMatrixData( FILE *in, const SDIF_MatrixHeader & mh, 
-							const double frameTime, 
-							std::vector< Partial > & partialsVector );
-static void readRowData( FILE *in, const SDIF_MatrixHeader & mh, 
-						 RowOfLorisData64 & trackData );
-static void readRow32( FILE *in, const SDIF_MatrixHeader & mh, 
-					   RowOfLorisData32 & trackData );
-static void readRow64( FILE *in, const SDIF_MatrixHeader & mh, 
-					   RowOfLorisData64 & trackData );
-static void addRowToPartials( const RowOfLorisData64 & trackData, 
+static void readEnvelopeData( SdifFileT *in, std::vector< Partial > & partialsVector );
+static void addRowToPartials( const RowOfLorisData & trackData, 
 							  const double frameTime, 
 							  std::vector< Partial > & partialsVector );
 
@@ -92,14 +77,22 @@ ImportSdif::ImportSdif( const char *infilename )
 static void
 read( const char *infilename, std::list<Partial> & partials )
 {
-	FILE *in;
 
+// 
+// Initialize SDIF library.
+//
+	SdifGenInit("");
+	
 //
 // Open SDIF file for reading.
+// Note: Currently we do not specify any selection criterion in this call.
 //
-	SDIFresult r = SDIF_OpenRead(infilename, &in);
-	if (r)
+	SdifFileT *in = SdifFOpen(infilename, eReadFile);
+	if (!in)
 		Throw( FileIOException, "Could not open SDIF file for reading." );
+
+	SdifFReadGeneralHeader(in);		// read file header
+	SdifFReadAllASCIIChunks(in);	// read ascii header info, such as name-value tables
 
 //
 // Read SDIF data.
@@ -123,14 +116,21 @@ read( const char *infilename, std::list<Partial> & partials )
 	catch ( Exception & ex ) 
 	{
 		ex.append("Failed to read SDIF file.");
-		SDIF_CloseWrite(in);
+		SdifFClose(in);
+		SdifGenKill();
 		throw;
 	}
 
 //
 // Close SDIF input file.
 //
-	SDIF_CloseWrite(in);
+	SdifFClose(in);
+
+// 
+// Done with SDIF library.
+//
+	SdifGenKill();
+	
 }
 
 #pragma mark -
@@ -141,189 +141,87 @@ read( const char *infilename, std::list<Partial> & partials )
 // Let exceptions propagate.
 //
 static void
-readEnvelopeData( FILE *in, std::vector< Partial > & partialsVector )
+readEnvelopeData( SdifFileT *file, std::vector< Partial > & partialsVector )
 {
-	SDIF_FrameHeader fh;
-	SDIF_MatrixHeader mh;
-	SDIFresult r;
+	size_t bytesread = 0;
+	int eof = false;
 
-	// Loop through frames until end of file.
-	while (true) 
+//
+// Read al frames matching the file selection.
+//
+	while (!eof && !SdifFLastError(file))
 	{
-
-		// Read the next frame.  Exit if end of data.
-		r = SDIF_ReadFrameHeader(&fh, in);
-		if (r == ESDIF_END_OF_DATA) 
-			return;
-		else if (r)
-			Throw( FileIOException, std::string("Could not open SDIF file for reading: ") + std::string(SDIF_GetErrorString(r)) );
-
-		// Make sure frame is legal.
-		if (fh.size < 16)
-			Throw(FileIOException, "SDIF frame size too small.");
-		if ((fh.size & 7) != 0)
-			Throw(FileIOException, "SDIF frame size not a multiple of 8.");
-
-		for (int j = 0; j < fh.matrixCount; j++) 
+		bytesread += SdifFReadFrameHeader(file);
+		
+		// Skip frames until we find one we are interested in.
+		while (!SdifFCurrFrameIsSelected(file) 
+				|| SdifFCurrSignature(file) != lorisSignature)
 		{
+			SdifSkipFrameData(file);
+			eof = (SdifFGetSignature(file, &bytesread) == eEof);
+			if (eof)
+				break;		// eof
+			bytesread += SdifFReadFrameHeader(file);
+		}
 		
-			// Read matrix header.
-    		r = SDIF_ReadMatrixHeader(&mh,in);
-			if (r)
-				Throw( FileIOException, std::string("Could not read SDIF matrix header: ") + std::string(SDIF_GetErrorString(r)) );
+		if (!eof)
+		{
 
-			// Read matrix data and build partials.
-    		readMatrixData(in, mh, fh.time, partialsVector);
-    	}
-    } 
-}
+			// Access frame header information.
+			SdifFloat8 time = SdifFCurrTime(file);
+			SdifSignature fsig = SdifFCurrFrameSignature(file);
+			SdifUInt4 streamid = SdifFCurrID(file);
+			SdifUInt4 nmatrix = SdifFCurrNbMatrix(file);
+			
+			// Read all matrices in this frame matching the selection.
+			for (int m = 0; m < nmatrix; m++)
+			{
+				bytesread += SdifFReadMatrixHeader(file);
+				
+				if (SdifFCurrMatrixIsSelected(file))
+				{
+				
+					// Access matrix header information.
+					SdifSignature msig = SdifFCurrMatrixSignature(file);
+					SdifInt4 nrows = SdifFCurrNbRow(file);
+					SdifInt4 ncols = SdifFCurrNbCol(file);
+					SdifDataTypeET type = SdifFCurrDataType(file);
+					
+					// Read each row of matrix data.
+					for (int row = 0; row < nrows; row++)
+					{
+						bytesread += SdifFReadOneRow(file);
 
-// ---------------------------------------------------------------------------
-//	readMatrixData
-// ---------------------------------------------------------------------------
-//  Read all rows in this frame's matrix.
-//	Add to existing Loris partials, or create new Loris partials for this data.
-//
-static void
-readMatrixData( FILE *in, const SDIF_MatrixHeader & mh, 
-				const double time, std::vector< Partial > & partialsVector )
-{	
-//
-// We must have a 1TRC matrix with at least index, frequency, and amplitude in the matrix data.
-//
-	if (strcmp(mh.matrixType, "1TRC") && strcmp(mh.matrixType, "1trc"))
-	{
-		char str[256];
-		sprintf(str, "Cannot import this type of SDIF matrix yet: %c%c%c%c  ",
-			mh.matrixType[0], mh.matrixType[1], mh.matrixType[2], mh.matrixType[3]);
-		Throw( FileIOException, str);
+						// Fill a trackData structure.
+						RowOfLorisData trackData = { 0.0 };
+						SdifFloat8 *trackDataPtr = &trackData.index;
+						for (int col = 1; col <= min(ncols, lorisRowElements); col++)
+							*(trackDataPtr++) = SdifFCurrOneRowCol(file, col);
+						
+						// Add trackData as a new breakpoint in a partial.
+						addRowToPartials(trackData, time, partialsVector);
+					}
+				}
+				else
+				{
+					bytesread += SdifSkipMatrixData(file);
+				}
+				
+				bytesread += SdifFReadPadding(file, SdifFPaddingCalculate(file->Stream, bytesread));
+			}
+			
+			// read next signature
+			eof = (SdifFGetSignature(file, &bytesread) == eEof);
+		}
 	} 
-	else if (mh.columnCount < 3) 
+	
+	SdifErrorT* errPtr = SdifFLastError (file);
+	if (errPtr)
 	{
-		Throw( FileIOException, "Cannot import SDIF matrices with less than 3 columns!");
-	}
-//
-// Read all rows of matrix, and add them to partials.
-//
-	for (int j = 0; j < mh.rowCount; ++j) {
-		RowOfLorisData64 trackData;
-		readRowData(in, mh, trackData);
-		addRowToPartials(trackData, time, partialsVector);
-	}
-//
-// Skip pad word; SDIF writers always pad to a multiple of 8 bytes.
-//
-	if (mh.matrixDataType == SDIF_FLOAT32 && (mh.rowCount * mh.columnCount) & 0x1) 
-	{
-		sdif_float32 pad;
-		SDIFresult r = SDIF_Read4(&pad,1,in);
-		if ( r )
-			Throw( FileIOException, std::string("Error reading SDIF pad: ") + std::string(SDIF_GetErrorString(r)) );
+		Throw(FileIOException, "Error reading SDIF file.");
 	}
 }
 
-// ---------------------------------------------------------------------------
-//	readRowData
-// ---------------------------------------------------------------------------
-//  Read row in this frame's matrix.
-//	Add to existing Loris partials, or create new Loris partials for this data.
-//
-static void
-readRowData( FILE *in, const SDIF_MatrixHeader & mh, RowOfLorisData64 & trackData )
-{
-	
-//
-// Read row with 32-bit or 64-bit floating point data.
-// We cannot read any other data types.
-//
-	if (mh.matrixDataType == SDIF_FLOAT64)
-	{
-		readRow64( in, mh, trackData );
-	}
-	else if (mh.matrixDataType == SDIF_FLOAT32) 
-	{
-		RowOfLorisData32 trackData32;
-		readRow32( in, mh, trackData32 );
-		
-		// Convert 32-bit data to 64-bit data.
-		trackData.index			= trackData32.index;
-		trackData.freq			= trackData32.freq;
-		trackData.amp			= trackData32.amp;
-		trackData.phase			= trackData32.phase;
-		trackData.noise			= trackData32.noise;
-		trackData.label			= trackData32.label;
-		trackData.timeOffset	= trackData32.timeOffset;
-		trackData.discardable	= trackData32.discardable;
-	}
-	else 
-		Throw( FileIOException, "Cannot import non-floating SDIF data types. ");
-}
-
-// ---------------------------------------------------------------------------
-//	readRow32
-// ---------------------------------------------------------------------------
-//  Read 32-bit row in this frame's matrix.
-//
-static void
-readRow32( FILE *in, const SDIF_MatrixHeader & mh, RowOfLorisData32 & trackData )
-{
-	SDIFresult r;	
-	
-	// Set phase and noise to default values, in case there are no columns for them.
-	trackData.phase = 0.0;
-	trackData.noise = 0.0;
-	trackData.label = 0.0;
-	trackData.timeOffset = 0.0;
-	trackData.discardable = 0;
-	
-	// Read matrix data.
-	r = SDIF_Read4(&trackData, min((int)mh.columnCount, 8), in);
-	if ( r )
-		Throw( FileIOException, std::string("Error reading 32-bit SDIF row: ") + std::string(SDIF_GetErrorString(r)) );
-	
-	// If there are more than 8 columns, discard the rest.
-	for (int k = 8; k < mh.columnCount; k++) 
-	{
-		sdif_float32 data32;
-		r = SDIF_Read4(&data32, 1, in);
-		if ( r )
-			Throw( FileIOException, std::string("Error skipping 32-bit SDIF columns: ") + std::string(SDIF_GetErrorString(r)) );
-	}
-}
-
-
-// ---------------------------------------------------------------------------
-//	readRow64
-// ---------------------------------------------------------------------------
-//  Read 64-bit row in this frame's matrix.
-//
-static void
-readRow64( FILE *in, const SDIF_MatrixHeader & mh, RowOfLorisData64 & trackData )
-{
-	SDIFresult r;	
-	
-	// Set optional fields to default values, in case there are no columns for them.
-	trackData.phase = 0.0;
-	trackData.noise = 0.0;
-	trackData.label = 0.0;
-	trackData.timeOffset = 0.0;
-	trackData.discardable = 0;
-
-	// Read matrix data.
-	r = SDIF_Read8(&trackData, min((int)mh.columnCount, 8), in);
-	if ( r )
-		Throw( FileIOException, std::string("Error reading 64-bit SDIF row: ") + std::string(SDIF_GetErrorString(r)) );
-	
-	// If there are more than 8 columns, discard the rest.
-	for (int k = 8; k < mh.columnCount; k++) 
-	{
-		sdif_float64 data64;
-		r = SDIF_Read8(&data64, 1, in);
-		if ( r )
-			Throw( FileIOException, std::string("Error skipping 64-bit SDIF columns: ") + std::string(SDIF_GetErrorString(r)) );
-	}
-}
-		
 
 // ---------------------------------------------------------------------------
 //	addRowToPartials
@@ -331,7 +229,7 @@ readRow64( FILE *in, const SDIF_MatrixHeader & mh, RowOfLorisData64 & trackData 
 //	Add to existing Loris partials, or create new Loris partials for this data.
 //
 static void
-addRowToPartials( const RowOfLorisData64 & trackData, const double frameTime, 
+addRowToPartials( const RowOfLorisData & trackData, const double frameTime, 
 				  std::vector< Partial > & partialsVector )
 {	
 

@@ -64,6 +64,38 @@ using namespace std;
 namespace Loris {
 #endif
 
+//	envelope writing
+void writeEnvelopeData( std::ostream & s, const list<Partial> & plist, int refLabel,
+				int startFrame, int endFrame, int partials, int enhanced,
+				int endApproachFrames, double hop, double startFreqTime);
+void writeEnvelopes( std::ostream & s, const list<Partial> & plist, int refLabel,
+				int startFrame, int endFrame, int partials, int enhanced,
+				int endApproachFrames, double hop, double startFreqTime);
+
+// 	envelope writing helpers
+unsigned long packLeft( const Partial & p, double freqMult, double ampMult, 
+						double time1, double weightFactor, double time2, double startFreqTime );
+unsigned long packRight( const Partial & p, double noiseMagMult, double time1,
+						double weightFactor, double time2 );
+unsigned long envLog( double floatingValue );
+const Partial * select( const PartialList & partials, int label, int firstFrame = false );
+double crop( const PartialList & partials, int endFrame, double hop, double threshold );
+
+//	chunk wiriting helpers
+void writeCommon( std::ostream & s, int startFrame, int endFrame, int partials, int enhanced );
+void writeContainer( std::ostream & s, int startFrame, int endFrame, int partials, int enhanced, int markerFrame );
+void writeInstrument( std::ostream & s, int midiPitch );
+void writeMarker( std::ostream & s, int partials, int enhanced, int markerFrame );
+void writeSosEnvelopesChunk( std::ostream & s, int startFrame, int endFrame, int partials, int enhanced, double hop );
+
+//	chunk size helpers
+unsigned long sizeofCkHeader( void );
+unsigned long sizeofCommon( void );
+unsigned long sizeofSosEnvelopes( void );
+unsigned long sizeofInstrument( void );
+unsigned long sizeofMarker( void );
+unsigned long sizeofSoundData( int startFrame, int endFrame, int partials, int enhanced );
+
 
 //	-- chunk types --
 enum 
@@ -168,10 +200,10 @@ struct SosEnvelopesCk
 	Int_32	initPhase[initPhaseLth]; // obsolete initial phase array; was VARIABLE LENGTH array 
 							// this is big enough for a max of 512 partials plus values below
 //	Int_32	resolution;		// frame duration in microseconds 
-	#define SOSresolution initPhase[(_enhanced && MONO_ENH) ? 2 * _partials : _partials]	
+	#define SOSresolution(enh, pars)   initPhase[(enh && MONO_ENH) ? 2 * pars : pars]	
 							// follows the initPhase[] array
 //	Int_32	quasiHarmonic;	// how many of the partials are quasiharmonic
-	#define SOSquasiHarmonic initPhase[(_enhanced && MONO_ENH) ? 2 * _partials + 1 : _partials + 1]	
+	#define SOSquasiHarmonic(enh, pars)  initPhase[(enh && MONO_ENH) ? 2 * pars + 1 : pars + 1]	
 							// follows the initPhase[] array
 };  
 
@@ -182,8 +214,8 @@ struct SosEnvelopesCk
 //	ExportSpc constructor from data in memory
 // ---------------------------------------------------------------------------
 //
-ExportSpc::ExportSpc( int pars, double hop, double midiPitch,
-				double thresh, double endt, double markert, double approacht) :
+ExportSpc::ExportSpc( int pars, double hop, double midiPitch, double thresh, double endt, 
+				double markert, double startFreqTime, double endApproachTime) :
 	_partials( pars ),
 	_hop( abs(hop) ),
 	_enhanced( hop > 0.0 ),
@@ -191,7 +223,8 @@ ExportSpc::ExportSpc( int pars, double hop, double midiPitch,
 	_threshold( thresh ),
 	_endFrame( endt / abs(hop) + 1 ),
 	_markerFrame( markert / abs(hop) + 1 ),
-	_endApproachFrames( approacht / abs(hop) + 1 )
+	_startFreqTime( startFreqTime ),
+	_endApproachFrames( endApproachTime / abs(hop) + 1 )
 {
 	// Max number of partials is due to (arbitrary) size of initPhase[].
 	Assert( pars == 32 || pars == 64 || pars == 128 || pars == 256 
@@ -211,11 +244,8 @@ ExportSpc::write( ostream & file, const list<Partial> & plist, int refLabel )
 {
 	
 	// Find starting frame after cropping.
-	_startFrame = crop( plist ) / _hop + 1;
-	/*
-	printf("_startFrame = %d _endFrame = %d hop = %f threshold = %f refLabel = %d\n", 
-			_startFrame, _endFrame, _hop, _threshold, refLabel); // TEMPORARY
-	*/
+	_startFrame = crop( plist, _endFrame, _hop, _threshold ) / _hop + 1;
+
 	debugger << "startFrame = " << _startFrame << " endFrame = " << _endFrame 
 			 << " hop = " << _hop << " threshold = " << _threshold 
 			 << " ref label = " << refLabel << endl;
@@ -223,13 +253,14 @@ ExportSpc::write( ostream & file, const list<Partial> & plist, int refLabel )
 	// Write out all the chunks.
 	try 
 	{
-		writeContainer( file );
-		writeCommon( file );
-		writeInstrument( file );
+		writeContainer( file, _startFrame, _endFrame, _partials, _enhanced, _markerFrame );
+		writeCommon( file, _startFrame, _endFrame, _partials, _enhanced );
+		writeInstrument( file, _midiPitch );
 		if (_markerFrame)
-			writeMarker( file );
-		writeSosEnvelopesChunk( file );
-		writeEnvelopeData( file, plist, refLabel );
+			writeMarker( file, _partials, _enhanced, _markerFrame );
+		writeSosEnvelopesChunk( file, _startFrame, _endFrame, _partials, _enhanced, _hop );
+		writeEnvelopeData( file, plist, refLabel, _startFrame, _endFrame, _partials, _enhanced,
+				_endApproachFrames, _hop, _startFreqTime );
 	}
 	catch ( Exception & ex ) 
 	{
@@ -244,8 +275,9 @@ ExportSpc::write( ostream & file, const list<Partial> & plist, int refLabel )
 //	writeEnvelopeData
 // ---------------------------------------------------------------------------
 //
-void
-ExportSpc::writeEnvelopeData( std::ostream & s, const list<Partial> & plist, int refLabel )
+void writeEnvelopeData( std::ostream & s, const list<Partial> & plist, int refLabel,
+				int startFrame, int endFrame, int partials, int enhanced,
+				int endApproachFrames, double hop, double startFreqTime)
 {
 	//	first build a Sound Data chunk, so that all the data sizes will 
 	//	be correct:
@@ -253,7 +285,7 @@ ExportSpc::writeEnvelopeData( std::ostream & s, const list<Partial> & plist, int
 	ck.header.id = SoundDataId;
 	
 	//	size is everything after the header:
-	ck.header.size = sizeofSoundData() - sizeofCkHeader();
+	ck.header.size = sizeofSoundData( startFrame, endFrame, partials, enhanced ) - sizeofCkHeader();
 				
 	//	no block alignment:	
 	ck.offset = 0.;
@@ -267,7 +299,9 @@ ExportSpc::writeEnvelopeData( std::ostream & s, const list<Partial> & plist, int
 		BigEndian::write( s, 1, sizeof(Int_32), (char *)&ck.offset );
 		BigEndian::write( s, 1, sizeof(Int_32), (char *)&ck.blockSize );
 
-		writeEnvelopes( s, plist, refLabel );
+	 	writeEnvelopes( s, plist, refLabel,
+				startFrame, endFrame, partials, enhanced,
+				endApproachFrames, hop, startFreqTime);
 	}
 	catch( FileIOException & ex ) 
 	{
@@ -282,35 +316,44 @@ ExportSpc::writeEnvelopeData( std::ostream & s, const list<Partial> & plist, int
 //	Let exceptions propogate.
 //	The plist should be labeled and distilled before this is called.
 //
-void
-ExportSpc::writeEnvelopes( std::ostream & s, const list<Partial> & plist, int refLabel )
+void writeEnvelopes( std::ostream & s, const list<Partial> & plist, int refLabel,
+				int startFrame, int endFrame, int partials, int enhanced,
+				int endApproachFrames, double hop, double startFreqTime)
 {	
 	double freqMult;				// frequency multiplier for partial	
 	double magMult;					// magnitude multiplier for partial	
 	unsigned long left,right;		// packed 24-bit value for left, right channel in spc file
 	
-	Assert( refLabel != 0 );
+	// the label for the reference partial must be non-zero:
+	if( refLabel == 0 )
+		Throw( FileIOException, "Label for reference partial is zero." );
+	
+	// make sure the reference partial is there:
+	const Partial * refPar = select( plist, refLabel );
+	if ( refPar == NULL )
+		Throw( FileIOException, "No partial has the reference partial label!" );
+	if ( refPar->begin() == refPar->end() )
+		Throw( FileIOException, "Reference partial has zero length." );
 
 	// write out one frame at a time:
-	for (long frame = _startFrame; frame <= _endFrame; ++frame ) 
+	for (long frame = startFrame; frame <= endFrame; ++frame ) 
 	{
 	
 		//	for each frame, write one value for every partial:
-		for (unsigned int label = 1; label <= _partials; ++label ) 
+		for (unsigned int label = 1; label <= partials; ++label ) 
 		{
 
 			// find partial with the correct label:
 			// if no partial is found, frequency multiply the reference partial 
-			const Partial * pcorrect = select( plist, label );
+			const Partial * pcorrect = select( plist, label, frame == startFrame );
 		
 			if ( pcorrect == NULL || pcorrect->begin() == pcorrect->end() ) 
 			{
-				pcorrect = select( plist, refLabel );
+				pcorrect = refPar;
 				freqMult = (double) label / (double) refLabel; 
 				magMult = 0.0;
-				Assert( pcorrect != NULL && pcorrect->begin() != pcorrect->end());
 			} 
-			else if (!_endApproachFrames && frame == _endFrame) 
+			else if (!endApproachFrames && frame == endFrame) 
 			{
 				freqMult = 1.0;
 				magMult = 0.0;	// last frame has zero amp, if not ending at static spectrum
@@ -324,20 +367,21 @@ ExportSpc::writeEnvelopes( std::ostream & s, const list<Partial> & plist, int re
 			//	Check for special processing for approach to static spectrum at end.
 			//	Compute weighting factor between "normal" envelope point and static point.
 			double weightFactor = 1.0;
-			if (_endApproachFrames && frame > _endFrame - _endApproachFrames)
-				weightFactor = (_endFrame - frame) / (double) _endApproachFrames;
+			if (endApproachFrames && frame > endFrame - endApproachFrames)
+				weightFactor = (endFrame - frame) / (double) endApproachFrames;
 
 			//	pack log amplitude and log frequency into 24-bit left:
 			//  The log frequency value sticks at the release frame's frequency value.
-			left = packLeft(*pcorrect, freqMult, magMult, frame * _hop, weightFactor, _endFrame * _hop);
+			left = packLeft(*pcorrect, freqMult, magMult, frame * hop, 
+								weightFactor, endFrame * hop, startFreqTime);
 
 			//	pack log bandwidth and phase into 24-bit right:
-			right = packRight(*pcorrect, magMult, frame * _hop, weightFactor, _endFrame * _hop);
+			right = packRight(*pcorrect, magMult, frame * hop, weightFactor, endFrame * hop);
 	
 			//	write integer samples without byte swapping,
 			//	they are already correctly packed: 
 			BigEndian::write( s, 3, 1, (char*)&left );
-			if (_enhanced)
+			if (enhanced)
 				BigEndian::write( s, 3, 1, (char*)&right );
 		}
 	}
@@ -350,8 +394,7 @@ ExportSpc::writeEnvelopes( std::ostream & s, const list<Partial> & plist, int re
 // ---------------------------------------------------------------------------
 //	For a range 0 to 1, this returns a log value, 0x0000 to 0xFFFF.
 //
-unsigned long
-ExportSpc::envLog( double floatingValue ) const
+unsigned long envLog( double floatingValue )
 {
 	static double coeff = 65535.0 / log( 32768. );
 
@@ -366,14 +409,17 @@ ExportSpc::envLog( double floatingValue ) const
 //	in Kyma.  The log of the sine magnitude occupies the top 8 bits, the log of the
 //	frequency occupies the bottom 16 bits.
 //
-unsigned long
-ExportSpc::packLeft( const Partial & p, double freqMult, double ampMult, 
-						double time1, double weightFactor, double time2 )
+unsigned long packLeft( const Partial & p, double freqMult, double ampMult, 
+						double time1, double weightFactor, double time2, double startFreqTime )
 {	
+
+// Find amp, freq, and bw at time1.
 	double amp = ampMult * p.amplitudeAt( time1 );
 	double freq = freqMult * p.frequencyAt( time1 );
 	double bw = p.bandwidthAt( time1 );
-	
+
+// Approach amp, freq, and bw values at time2, if necessary.	
+// This avoids a sudden transition when using stick-at-end-frame sustains.
 	if (weightFactor != 1.0) 
 	{
 		double amp2 = ampMult * p.amplitudeAt( time2 );
@@ -384,16 +430,20 @@ ExportSpc::packLeft( const Partial & p, double freqMult, double ampMult,
 		bw = (bw * weightFactor + bw2 * (1.0 - weightFactor));
 	}
 
-	unsigned long	theOutput;
-
-	double normalizedFreq	= freq / 22050.0;		// 0..1 , 1 is 22.050 kHz
-	
-	double theSineMag = amp * sqrt( 1. - bw );
+// Approach frequency values at _startFreqTime, if necessary.	
+	if (startFreqTime && time1 < startFreqTime)
+	{
+		double freq3 = freqMult * p.frequencyAt( startFreqTime );
+		double fweight = (time1 < 0.0 ? 0.0 : time1 / startFreqTime);
+		freq = (freq * fweight + freq3 * (1.0 - fweight));
+	}
 	
 // 7 bits of log-sine-amplitude with 24 bits of zero to right.
-	theOutput	= ( envLog( theSineMag ) & 0xFE00 ) << 15;
+	double theSineMag = amp * sqrt( 1. - bw );
+	unsigned long theOutput	= ( envLog( theSineMag ) & 0xFE00 ) << 15;
 	
 // 16 bits of log-frequency with 8 bits of zero to right.
+	double normalizedFreq	= freq / 22050.0;		// 0..1 , 1 is 22.050 kHz
 	theOutput  |= ( envLog( normalizedFreq ) & 0xFFFF ) << 8;
 	
 // Our 24 bits are in the top of a 32-bit word.
@@ -407,8 +457,7 @@ ExportSpc::packLeft( const Partial & p, double freqMult, double ampMult,
 //	in Kyma.  The log of the noise magnitude occupies the top 8 bits, the scaled
 //	linear phase occupies the bottom 16 bits.  
 //
-unsigned long
-ExportSpc::packRight( const Partial & p, double noiseMagMult, double time1,
+unsigned long packRight( const Partial & p, double noiseMagMult, double time1,
 						double weightFactor, double time2 )
 {	
 	double amp = p.amplitudeAt( time1 );
@@ -451,8 +500,7 @@ ExportSpc::packRight( const Partial & p, double noiseMagMult, double time1,
 //	having the specified label, or NULL if there is not such Partial
 //	in the list. 
 //
-const Partial *
-ExportSpc::select( const PartialList & partials, int label )
+const Partial * select( const PartialList & partials, int label, int firstFrame )
 {
 	const Partial * ret = NULL;
 	list< Partial >::const_iterator it = 
@@ -462,11 +510,14 @@ ExportSpc::select( const PartialList & partials, int label )
 	if ( it != partials.end() ) 
 	{
 		ret = &(*it);
-		#if Debug_Loris
-		//	there should only be one of such Partial:
-		Assert( 0 == std::count_if( ++it, partials.end(), 
-									std::bind2nd(PartialUtils::label_equals(), label) ) );
-		#endif
+
+		//	there should only be one of such Partial, verify this on first frame:
+		if ( firstFrame )
+		{
+			if ( std::count_if( ++it, partials.end(), 
+										std::bind2nd(PartialUtils::label_equals(), label) ) != 0)
+				Throw( FileIOException, "Partials are not distilled." );
+		}
 	}
 	
 	return ret;
@@ -477,14 +528,13 @@ ExportSpc::select( const PartialList & partials, int label )
 // ---------------------------------------------------------------------------
 //	Find first frame at which amplitude sum reaches a certain percentage of the
 //	peak amplitude sum.
-double
-ExportSpc::crop( const PartialList & partials )
+double crop( const PartialList & partials, int endFrame, double hop, double threshold )
 {
 	
 	// Find max amp sum.
 	double tim, ampsum;
 	double maxampsum = 0.0;
-	for ( tim = 0.0; tim < _endFrame * _hop; tim += _hop ) 
+	for ( tim = 0.0; tim < endFrame * hop; tim += hop ) 
 	{
 	
 		// Compute sum of amp of all partials at this time.
@@ -502,7 +552,7 @@ ExportSpc::crop( const PartialList & partials )
 
 	// Find first time we get some percentage of the max amp.
 	// This will be used to crop the attack.
-	for (tim = 0.0; tim < _endFrame * _hop; tim += _hop) 
+	for (tim = 0.0; tim < endFrame * hop; tim += hop) 
 	{
 
 		// Compute sum of amp of all partials at this time.
@@ -514,7 +564,7 @@ ExportSpc::crop( const PartialList & partials )
 		}
 		
 		// If we hit the amp level, we will crop to here; exit.
-		if (ampsum > _threshold * maxampsum)
+		if (ampsum > threshold * maxampsum)
 			return tim;
 	}
 	
@@ -527,8 +577,7 @@ ExportSpc::crop( const PartialList & partials )
 //	writeCommon
 // ---------------------------------------------------------------------------
 //
-void
-ExportSpc::writeCommon( std::ostream & s )
+void writeCommon( std::ostream & s, int startFrame, int endFrame, int partials, int enhanced )
 {
 	//	first build a Common chunk, so that all the data sizes will 
 	//	be correct:
@@ -538,15 +587,15 @@ ExportSpc::writeCommon( std::ostream & s )
 	//	size is everything after the header:
 	ck.header.size = sizeofCommon() - sizeofCkHeader();
 
-	if (_enhanced) 			// bandwidth-enhanced spc file
+	if (enhanced) 			// bandwidth-enhanced spc file
 	{					
 		ck.channels = MONO_ENH ? 1 : 2;
-		ck.sampleFrames = (_endFrame - _startFrame + 1) * _partials * (MONO_ENH ? 2 : 1);
+		ck.sampleFrames = (endFrame - startFrame + 1) * partials * (MONO_ENH ? 2 : 1);
 	}
 	else					// pure sinusoidal spc file
 	{					
 		ck.channels = 1;
-		ck.sampleFrames = (_endFrame - _startFrame + 1) * _partials;
+		ck.sampleFrames = (endFrame - startFrame + 1) * partials;
 	}
 	
 	ck.bitsPerSample = 24;
@@ -573,8 +622,7 @@ ExportSpc::writeCommon( std::ostream & s )
 //	writeContainer
 // ---------------------------------------------------------------------------
 //
-void
-ExportSpc::writeContainer( std::ostream & s )
+void writeContainer( std::ostream & s, int startFrame, int endFrame, int partials, int enhanced, int markerFrame )
 {
 	//	first build a Container chunk, so that all the data sizes will 
 	//	be correct:
@@ -584,9 +632,9 @@ ExportSpc::writeContainer( std::ostream & s )
 	//	size is everything after the header:
 	ck.header.size = sizeof(Int_32) + sizeofCommon() 
 				+ sizeofInstrument() 
-				+ (_markerFrame ? sizeofMarker() : 0)
+				+ (markerFrame ? sizeofMarker() : 0)
 				+ sizeofSosEnvelopes()
-				+ sizeofSoundData();
+				+ sizeofSoundData( startFrame, endFrame, partials, enhanced );
 	
 	ck.formType = AiffType;
 	
@@ -608,8 +656,7 @@ ExportSpc::writeContainer( std::ostream & s )
 //	writeInstrument
 // ---------------------------------------------------------------------------
 //
-void
-ExportSpc::writeInstrument( std::ostream & s )
+void writeInstrument( std::ostream & s, int midiPitch )
 {
 	//	first build an Inst chunk, so that all the data sizes will 
 	//	be correct:
@@ -619,8 +666,8 @@ ExportSpc::writeInstrument( std::ostream & s )
 	//	size is everything after the header:
 	ck.header.size = sizeofInstrument() - sizeofCkHeader();
 	
-	ck.baseFrequency = long( _midiPitch );
-	ck.detune = ((long)(100 * _midiPitch)) % 100;
+	ck.baseFrequency = long( midiPitch );
+	ck.detune = ((long)(100 * midiPitch)) % 100;
 	if (ck.detune > 50)
 	{
 		ck.baseFrequency++;
@@ -669,8 +716,7 @@ ExportSpc::writeInstrument( std::ostream & s )
 //	writeMarker
 // ---------------------------------------------------------------------------
 //
-void
-ExportSpc::writeMarker( std::ostream & s )
+void writeMarker( std::ostream & s, int partials, int enhanced, int markerFrame )
 {
 	//	first build a Marker chunk, so that all the data sizes will 
 	//	be correct:
@@ -682,7 +728,7 @@ ExportSpc::writeMarker( std::ostream & s )
 	
 	ck.numMarkers = 1;					// one marker
 	ck.aMarker.id = 1;					// first marker 
-	ck.aMarker.position = _markerFrame * _partials * ((_enhanced && MONO_ENH) ? 2 : 1); 
+	ck.aMarker.position = markerFrame * partials * ((enhanced && MONO_ENH) ? 2 : 1); 
 	ck.aMarker.markerName[0] = 1;		// 1 character long name
 	ck.aMarker.markerName[1] = 'a';
 
@@ -709,8 +755,7 @@ ExportSpc::writeMarker( std::ostream & s )
 //	writeSosEnvelopesChunk
 // ---------------------------------------------------------------------------
 //
-void
-ExportSpc::writeSosEnvelopesChunk( std::ostream & s )
+void writeSosEnvelopesChunk( std::ostream & s, int startFrame, int endFrame, int partials, int enhanced, double hop )
 {
 	//	first build an SOSe chunk, so that all the data sizes will 
 	//	be correct:
@@ -721,11 +766,11 @@ ExportSpc::writeSosEnvelopesChunk( std::ostream & s )
 	ck.header.size = sizeofSosEnvelopes() - sizeofCkHeader();
 					
 	ck.signature = SosEnvelopesId;
-	ck.frames = _endFrame - _startFrame + 1;
-	ck.validPartials = _partials * ((_enhanced && MONO_ENH) ? 2 : 1);
+	ck.frames = endFrame - startFrame + 1;
+	ck.validPartials = partials * ((enhanced && MONO_ENH) ? 2 : 1);
 	
-	ck.SOSresolution = 1000000.0 * _hop;				 // convert secs to microsecs
-	ck.SOSquasiHarmonic = _partials * ((_enhanced && MONO_ENH) ? 2 : 1);// all our partials quasiharmonic
+	ck.SOSresolution(enhanced,partials) = 1000000.0 * hop;				 // convert secs to microsecs
+	ck.SOSquasiHarmonic(enhanced,partials) = partials * ((enhanced && MONO_ENH) ? 2 : 1); // all our partials quasiharmonic
 	
 	//	write it out:
 	try 
@@ -752,8 +797,7 @@ ExportSpc::writeSosEnvelopesChunk( std::ostream & s )
 //	sizeofCkHeader
 // ---------------------------------------------------------------------------
 //
-unsigned long
-ExportSpc::sizeofCkHeader( void )
+unsigned long sizeofCkHeader( void )
 {
 	return	sizeof(Int_32) +	//	id
 			sizeof(Uint_32);	//	size
@@ -763,8 +807,7 @@ ExportSpc::sizeofCkHeader( void )
 //	sizeofCommon
 // ---------------------------------------------------------------------------
 //
-unsigned long
-ExportSpc::sizeofCommon( void )
+unsigned long sizeofCommon( void )
 {
 	return	sizeof(Int_32) +			//	id
 			sizeof(Uint_32) +			//	size
@@ -778,8 +821,7 @@ ExportSpc::sizeofCommon( void )
 //	sizeofSOSe
 // ---------------------------------------------------------------------------
 //
-unsigned long
-ExportSpc::sizeofSosEnvelopes( void )
+unsigned long sizeofSosEnvelopes( void )
 {
 	return	sizeof(Int_32) +					//	id
 			sizeof(Uint_32) +					//	size
@@ -793,8 +835,7 @@ ExportSpc::sizeofSosEnvelopes( void )
 //	sizeofInstrument
 // ---------------------------------------------------------------------------
 //
-unsigned long
-ExportSpc::sizeofInstrument( void )
+unsigned long sizeofInstrument( void )
 {
 	return	sizeof(Int_32) +			//	id
 			sizeof(Uint_32) +			//	size
@@ -814,8 +855,7 @@ ExportSpc::sizeofInstrument( void )
 //	sizeofMarker
 // ---------------------------------------------------------------------------
 //
-unsigned long
-ExportSpc::sizeofMarker( void )
+unsigned long sizeofMarker( void )
 {
 	return	sizeof(Int_32) +			//	id
 			sizeof(Uint_32) +			//	size
@@ -831,11 +871,10 @@ ExportSpc::sizeofMarker( void )
 //	No block alignment, the envelope samples start right after the 
 //	chunk header info.
 //
-unsigned long
-ExportSpc::sizeofSoundData( void )
+unsigned long sizeofSoundData( int startFrame, int endFrame, int partials, int enhanced )
 {
-	unsigned long dataSize = (_endFrame - _startFrame + 1) * _partials * ( 24 / 8 )
-							 * (_enhanced ? 2: 1);
+	unsigned long dataSize = (endFrame - startFrame + 1) * partials * ( 24 / 8 )
+							 * (enhanced ? 2 : 1);
 	
 	return	sizeof(Int_32) +	//	id
 			sizeof(Uint_32) +	//	size
