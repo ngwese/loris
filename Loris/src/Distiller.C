@@ -426,11 +426,12 @@ static void mergeNonOverlapping( const Partial & src, Partial & dst, double fade
 	}
 }
 
-// ----------- makeNullBefore -----------
-//
+// ---------------------------------------------------------------------------
+//	makeNullBefore	(STATIC)
+// ---------------------------------------------------------------------------
 // return a null (zero-amplitude) Breakpoint
 // to preceed the specified Breakpoint
-Breakpoint makeNullBefore( const Breakpoint & bp, double fadeTime )
+static Breakpoint makeNullBefore( const Breakpoint & bp, double fadeTime )
 {
 	Breakpoint ret( bp );
 	// adjust phase
@@ -441,11 +442,12 @@ Breakpoint makeNullBefore( const Breakpoint & bp, double fadeTime )
 	return ret;
 }
 
-// ----------- makeNullAfter -----------
-//
+// ---------------------------------------------------------------------------
+//	makeNullAfter	(STATIC)
+// ---------------------------------------------------------------------------
 // return a null (zero-amplitude) Breakpoint
 // to succeed the specified Breakpoint
-Breakpoint makeNullAfter( const Breakpoint & bp, double fadeTime )
+static Breakpoint makeNullAfter( const Breakpoint & bp, double fadeTime )
 {
 	Breakpoint ret( bp );
 	// adjust phase
@@ -456,6 +458,13 @@ Breakpoint makeNullAfter( const Breakpoint & bp, double fadeTime )
 	return ret;
 }
 
+// ---------------------------------------------------------------------------
+//	mergeNonOverlapping	(STATIC)
+// ---------------------------------------------------------------------------
+//	Merge the src Partial into the dst Partial, by adding its Breakpoints.
+//	src is assumed _not_ to overlap any part of the dst Partial having
+//	non-zero amplitude.
+//
 static void mergeNonOverlapping2( const Partial & src, Partial & distilled, double fadeTime )
 {
 	Partial::const_iterator cont_beg = src.begin();
@@ -532,17 +541,21 @@ findContribution( Partial & pshort, const Partial & plong, double fadeTime )
 	
 	Partial::iterator cend = cbeg;
 	
-	// if a gap is found, then include the 
-	// onset of the Partial:
-	if ( cbeg != pshort.end() )
-	{
-		cbeg = pshort.begin();
-	}
-	
+	// if a gap is found, find the end of the
+	// range of Breakpoints that fit in that
+	// gap:
 	while ( cend != pshort.end() &&
 			plong.amplitudeAt( cend.time() + (2*fadeTime) ) == 0 )
 	{
 		++cend;
+	}
+
+	// if a gap is found, and it is big enough for at
+	// least one Breakpoint, then include the 
+	// onset of the Partial:
+	if ( cbeg != cend  )
+	{
+		cbeg = pshort.begin();
 	}
 	
 	return std::make_pair( cbeg, cend );
@@ -588,12 +601,14 @@ static void distill_aux( PartialList & partials, int label,
 		// abosrb non-contributing ends of shorter:
 		if ( cb != it->begin() )
 		{
-			newp.absorb( Partial( it->begin(), cb ) );
+			Partial absorbMe( it->begin(), cb );
+			newp.absorb( absorbMe );
 		}
 		
 		if ( ce != it->end() )
 		{
-			newp.absorb( Partial( ce, it->end() ) );
+			Partial absorbMe( ce, it->end()  );
+			newp.absorb( absorbMe );
 		}
 		
 
