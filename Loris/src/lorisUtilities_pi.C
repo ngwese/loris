@@ -97,8 +97,6 @@ void copyByLabel( const PartialList * src, long label, PartialList * dst )
 		{
 			 dst->push_back( *it );
 		}
-		
-		
 	}
 	catch( Exception & ex ) 
 	{
@@ -114,6 +112,37 @@ void copyByLabel( const PartialList * src, long label, PartialList * dst )
 	}
 }
  
+/* ---------------------------------------------------------------- */
+/*        crop        
+/*
+/*	Trim Partials by removing Breakpoints outside a specified time span.
+	Insert a Breakpoint at the boundary when cropping occurs.
+ */
+extern "C"
+void crop( PartialList * partials, double t1, double t2 )
+{
+	try
+	{
+		ThrowIfNull((PartialList *) partials);
+
+		notifier << "cropping " << partials->size() << " Partials" << endl;
+
+		PartialUtils::cropAll( partials->begin(), partials->end(), t1, t2 );
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in crop(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in crop(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+
 /* ---------------------------------------------------------------- */
 /*        spliceByLabel        
 /*
@@ -137,8 +166,6 @@ void spliceByLabel( PartialList * src, long label, PartialList * dst )
 			std::list< Partial >::iterator remove_me = it++;
 			dst->splice( dst->end(), *src, remove_me );
 		}
-		
-		
 	}
 	catch( Exception & ex ) 
 	{
@@ -251,4 +278,36 @@ void shiftPitch( PartialList * partials, BreakpointEnvelope * pitchEnv )
 		handleException( s.c_str() );
 	}
 }
+
+/* ---------------------------------------------------------------- */
+/*        shiftTime       
+/*
+/*	Shift the time of all the Breakpoints in all Partials in a 
+	PartialList by a constant amount.
+ */
+extern "C"
+void shiftTime( PartialList * partials, double offset )
+{
+	try 
+	{
+		ThrowIfNull((PartialList *) partials);
+
+		notifier << "shifting time of " << partials->size() << " Partials" << endl;
+		
+		PartialUtils::shiftTime( partials->begin(), partials->end(), offset );
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in shiftTime(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in shiftTime(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+
 

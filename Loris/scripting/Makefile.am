@@ -7,17 +7,23 @@
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-
-INCLUDES = $(PYINCLUDE) $(TCLINCLUDE) $(PERLINCLUDE) -I$(top_srcdir)/src -I$(top_builddir)/pi
-
 EXTRA_DIST = loris.py perLoris.pm loris.i lorisPartialList.i 
 
-CLEANFILES = loris.pyo loris.pyc $(PYTHON_CMODULE) $(TCL_MODULE)
+CLEANFILES = loris.pyo loris.pyc $(PYTHON_CMODULE) $(TCL_MODULE) $(PERL_MODULE)
 MAINTAINERCLEANFILES = Makefile.in
 
 PYTHON_WRAPPER = loris_python_wrap.C
 TCL_WRAPPER = loris_tcl_wrap.C
 PERL_WRAPPER = loris_perl_wrap.C
+
+#----------------------------------------------------------------
+# Darwin is special, libtool doesn't work right.
+#
+if DARWIN
+INCLUDES = -I$(top_srcdir)/src -I$(top_builddir)/pi $(PYINCLUDE) $(TCLINCLUDE) $(PERLINCLUDE)
+else
+INCLUDES = -I$(top_srcdir)/src -I$(top_builddir)/pi
+endif
 
 #----------------------------------------------------------------
 # If Python is available, define a target for building and
@@ -57,6 +63,7 @@ else
 #
 pythonsitepkg_LTLIBRARIES = _loris.la
 _loris_la_SOURCES = $(PYTHON_WRAPPER)
+_loris_la_CXXFLAGS = $(AM_CXXFLAGS) $(PYINCLUDE) 
 _loris_la_LDFLAGS = -module -avoid-version
 _loris_la_LIBADD = $(top_builddir)/pi/libloris.la -lstdc++
 endif
@@ -98,6 +105,7 @@ else
 #
 tclsitepkg_LTLIBRARIES = tcLoris.la
 tcLoris_la_SOURCES = $(TCL_WRAPPER)
+tcLoris_la_CXXFLAGS = $(AM_CXXFLAGS) $(TCLINCLUDE) 
 tcLoris_la_LDFLAGS = -module -avoid-version
 tcLoris_la_LIBADD = $(top_builddir)/pi/libloris.la -lstdc++
 endif
@@ -140,6 +148,7 @@ else
 #
 perlsitepkg_LTLIBRARIES = perLoris.la
 perLoris_la_SOURCES = $(PERL_WRAPPER)
+perLoris_la_CXXFLAGS = $(AM_CXXFLAGS) $(PERLINCLUDE) 
 perLoris_la_LDFLAGS = -module -avoid-version
 perLoris_la_LIBADD = $(top_builddir)/pi/libloris.la -lstdc++
 endif

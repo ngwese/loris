@@ -514,6 +514,11 @@ void copyByLabel( const PartialList * src, long label, PartialList * dst );
 	is unmodified.
  */
 
+void crop( PartialList * partials, double t1, double t2 );
+/*	Trim Partials by removing Breakpoints outside a specified time span.
+	Insert a Breakpoint at the boundary when cropping occurs.
+ */
+
 void spliceByLabel( PartialList * src, long label, PartialList * dst );
 /*  Splice Partials in the source PartialList having the specified
     label from the source list into the destination PartialList
@@ -536,6 +541,12 @@ void shiftPitch( PartialList * partials, BreakpointEnvelope * pitchEnv );
 	the given pitch envelope. The pitch envelope is assumed to have 
 	units of cents (1/100 of a halfstep).
  */
+
+void shiftTime( PartialList * partials, double offset );
+/*	Shift the time of all the Breakpoints in a Partial by a 
+	constant amount.
+ */
+
 
 /* ---------------------------------------------------------------- */
 /*		Notification and exception handlers							

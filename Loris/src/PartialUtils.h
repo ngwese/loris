@@ -34,6 +34,8 @@
  */
 
 #include <Partial.h>
+
+#include <algorithm>
 #include <functional>
 #include <utility>
 
@@ -65,6 +67,33 @@ class PartialUtils
 public:
 #endif
 //	-- free functions --
+
+	/* 	Trim a Partial by removing Breakpoints outside a specified time span.
+		Insert a Breakpoint at the boundary when cropping occurs.
+	 */
+	struct crop : public std::unary_function< Partial, void >
+	{
+		double minTime, maxTime;
+		crop( double x, double y ) : minTime( x ), maxTime( y ) 
+		{
+			if ( minTime > maxTime )
+				std::swap( minTime, maxTime );
+		}
+		
+		void operator()( Partial & p ) const;	// see PartialUtils.C
+	};
+
+	/*	Apply crop to all partials in a half-open range.
+	 */
+	template <typename Iterator>
+	#if defined( NO_NESTED_NAMESPACE )
+	static
+	#endif
+	inline 
+	void cropAll( Iterator begin, Iterator end, double t1, double t2 )
+	{
+		std::for_each( begin, end, crop( t1, t2 ) );	
+	}
 
 	/*	Scale the amplitude of the specified Partial according to
 		an envelope representing a time-varying amplitude scale value.
@@ -135,6 +164,30 @@ public:
 	void shiftPitch( Iterator begin, Iterator end, Envelope & e )
 	{
 		std::for_each( begin, end, shift_pitch( e ) );	
+	}
+	
+	
+	/*	Shift the time of all the Breakpoints in a Partial by a 
+		constant amount.
+	 */
+	struct shift_time : public std::unary_function< Partial, void >
+	{
+		double offset;
+		shift_time( double x ) : offset(x) {}
+		
+		void operator()( Partial & p ) const;	// see PartialUtils.C
+	};
+
+	/*	Apply shift_time to all partials in a half-open range.
+	 */
+	template <typename Iterator>
+	#if defined( NO_NESTED_NAMESPACE )
+	static
+	#endif
+	inline 
+	void shiftTime( Iterator begin, Iterator end, double offset )
+	{
+		std::for_each( begin, end, shift_time( offset ) );	
 	}
 	
 	

@@ -60,10 +60,22 @@
 %include typemaps.i
 %apply double * OUTPUT { double * tmin_out, double * tmax_out };
 
+%newobject *::begin;
 %newobject *::copy;
-%newobject *::next;	// iterators do this
+%newobject *::end;
+%newobject *::insert;
+//%newobject *::next;	// iterators do this
+%newobject PartialListIterator::next;
+%newobject PartialIterator::next;
+%newobject NewPartialIterator::next;
+	// but not NewPlistIterator::next
+
 %newobject *::prev;	// iterators do this too
 
+%newobject *::__iter__;
+%newobject *::iterator;
+
+/* ***************** inserted C++ code ***************** */
 %{
 #include<Partial.h>
 #include<PartialList.h>
@@ -78,7 +90,155 @@ using Loris::PartialListIterator;
 using Loris::Breakpoint;
 
 typedef Loris::Partial::iterator PartialIterator;
+
+/*	exception handling code
+
+	Copied from the SWIG manual. Tastes great, less filling.
+*/
+static char error_message[256];
+static int error_status = 0;
+
+void throw_exception(char *msg) {
+        strncpy(error_message,msg,256);
+        error_status = 1;
+}
+
+void clear_exception() {
+        error_status = 0;
+}
+char *check_exception() {
+        if (error_status) return error_message;
+        else return NULL;
+}
+
+/*	new iterator definitions
+
+	These are much better than the old things, more like the 
+	iterators in Python 2.2 and later, very much simpler.
+	The old iterators will be replaced entirely by the new
+	kind soon, very soon.
+	
+	Note: the only reason I cannot merge the new functionality 
+	into the old iterators is that the old iterators use the
+	next() method to advance and return another iterator. Duh.
+*/
+class NewPlistIterator
+{
+	PartialList & subject;
+	PartialList::iterator it;
+
+public:
+	NewPlistIterator( PartialList & l ) : subject( l ), it ( l.begin() ) {}
+	
+	bool atEnd( void ) { return it == subject.end(); }
+	
+	Partial * next( void )
+	{
+		if ( atEnd() )
+		{
+			throw_exception("end of PartialList");
+			return 0;
+		}
+		Partial * ret = &(*it);
+		++it;
+		return ret;
+	}
+};
+
+typedef Partial::iterator Dingus;
+
+class NewPartialIterator
+{
+	Partial & subject;
+	Partial::iterator it;
+
+public:
+	NewPartialIterator( Partial & p ) : subject( p ), it ( p.begin() ) {}
+	
+	bool atEnd( void ) { return it == subject.end(); }
+
+	Dingus * next( void )
+	{
+		if ( atEnd() )
+		{
+			throw_exception("end of Partial");
+			return 0;
+		}
+		Dingus * ret = new Dingus(it);
+		++it;
+		return ret;
+	}
+};
+
 %}
+/* ***************** end of inserted C++ code ***************** */
+
+%include exception.i
+%exception next
+{
+    char * err;
+    clear_exception();
+    $action
+    if ((err = check_exception()))
+    {
+#if defined(SWIGPYTHON)
+		%#ifndef PYTHON_NOITERATORS
+        PyErr_SetString( PyExc_StopIteration, err );
+		%#else
+		//	this is not really the right exception type
+		PyErr_SetString( PyExc_IndexError, err );
+		%#endif
+		return NULL;
+#else
+        SWIG_exception( SWIG_RangeError, err );
+#endif
+    }
+}
+
+%nodefault NewPlistIterator;
+class NewPlistIterator
+{
+public:
+	bool atEnd( void );
+	Partial * next( void );
+#ifdef SIWGPYTHON
+    %extend
+    {
+        NewPlistIterator * __iter__( void )
+        {
+            return self;
+        }
+
+        NewPlistIterator * iterator( void )
+        {
+            return self;
+        }
+    }
+#endif
+};
+
+%nodefault NewPartialIterator;
+class NewPartialIterator
+{
+public:
+	bool atEnd( void );
+	Dingus * next( void );
+#ifdef SIWGPYTHON
+    %extend
+    {
+        NewPartialIterator * __iter__( void )
+        {
+            return self;
+        }
+
+        NewPartialIterator * iterator( void )
+        {
+            return self;
+        }
+    }
+#endif
+};
+
 
 /*	PartialList
 
@@ -109,6 +269,15 @@ public:
 		/*	Return a new empty PartialList.
 		 */
 		
+		PartialList( const PartialList & rhs )
+		{
+			debugger << "copying  a list of " << rhs.size() << " Partials" << Loris::endl;
+			return new PartialList( rhs );
+		}
+		/*	Return a new PartialList that is a copy of this 
+			PartialList (i.e. has identical Partials).
+		 */
+
 		~PartialList( void )
 		{
 			debugger << "destroying  a list of " << self->size() << " Partials" << Loris::endl;
@@ -117,9 +286,6 @@ public:
 		/*	Destroy this PartialList.
 		 */
 		
-		//	C++ copy constructor has the wrong semantics 
-		//	for the scripting interface, define a copy 
-		//	member:
 		PartialList * copy( void )
 		{
 			return new PartialList( *self );
@@ -140,6 +306,18 @@ public:
 		 /*	Return the minimum start time and maximum end time
 		 	of all Partials in this PartialList.
 		  */
+		  
+		//	new iterators
+#ifdef SWIGPYTHON
+		NewPlistIterator * __iter__( void )
+		{
+			return new NewPlistIterator(*self);
+		}
+#endif	
+		NewPlistIterator * iterator( void )
+		{
+			return new NewPlistIterator(*self);
+		}
 	
 	}	//	end of added methods
 	
@@ -169,6 +347,18 @@ public:
 		Returns a PartialListIterator refering to the position of the
 		newly-inserted Partial.
 	 */
+
+	%extend
+	{
+		PartialListIterator insert( const Partial & partial )
+		{
+			return self->insert( self->end(), partial );
+		}
+		/*	Append a copy of the given Partial into this PartialList.
+			Returns a PartialListIterator refering to the position of the
+			newly-inserted Partial.
+		*/
+	}	//	end of added methods
 
 	void erase( PartialListIterator position );
 	/*	Remove the element at the position indicated by the 
@@ -367,6 +557,21 @@ public:
 		element after the last valid Breakpoint).
 	 */
 
+	%extend
+	{
+		//	new iterators
+#ifdef SWIGPYTHON
+		NewPartialIterator * __iter__( void )
+		{
+			return new NewPartialIterator(*self);
+		}
+#endif	
+		NewPartialIterator * iterator( void )
+		{
+			return new NewPartialIterator(*self);
+		}
+	}
+	
 //	collection access/mutation through iterators:
 //	
 	PartialIterator insert( double time, const Breakpoint & bp );
@@ -659,3 +864,21 @@ public:
 	}	//	end of added methods
 	
 };	//	//	end of SWIG interface class Breakpoint
+
+
+%nodefault Dingus;
+class Dingus
+{
+public:
+	%extend
+	{
+		double time( void ) 
+		{ 
+			return self->time(); 
+		}
+		Breakpoint * breakpoint( void ) 
+		{ 
+			return &(self->breakpoint());
+		}
+	}
+};

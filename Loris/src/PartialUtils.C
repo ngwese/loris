@@ -37,6 +37,7 @@
 
 #include <PartialUtils.h>
 
+#include <Breakpoint.h>
 #include <Envelope.h>
 #include <Partial.h>
 
@@ -46,6 +47,34 @@
 
 //	begin namespace
 namespace Loris {
+
+// ---------------------------------------------------------------------------
+//	crop::operator()
+// ---------------------------------------------------------------------------
+//	Trim a Partial by removing Breakpoints outside a specified time span.
+//	Insert a Breakpoint at the boundary when cropping occurs.
+//
+void
+PartialUtils::crop::operator()( Partial & p ) const
+{
+	//	crop beginning of Partial
+	Partial::iterator it = p.findAfter( minTime );
+	if ( it != p.begin() )
+	{
+		Breakpoint bp = p.parametersAt( minTime );
+		it = p.insert( minTime, bp );
+		it = p.erase( p.begin(), it );
+	}
+	
+	//	crop end of Partial
+	it = p.findAfter( maxTime );
+	if ( it != p.end() )
+	{
+		Breakpoint bp = p.parametersAt( maxTime );
+		it = p.insert( maxTime, bp );
+		it = p.erase( ++it, p.end() );
+	}
+}
 
 // ---------------------------------------------------------------------------
 //	scale_amp::operator()
@@ -108,6 +137,24 @@ PartialUtils::shift_pitch::operator()( Partial & p ) const
 		double scale = std::pow(2., (0.01 * env.valueAt(pos.time())) /12.);				
 		pos.breakpoint().setFrequency( pos.breakpoint().frequency() * scale );
 	}	
+}
+
+// ---------------------------------------------------------------------------
+//	shift_time::operator()
+// ---------------------------------------------------------------------------
+//	Shift the time of all the Breakpoints in a Partial by a constant amount.
+//
+void 
+PartialUtils::shift_time::operator()( Partial & p ) const
+{
+	Partial result;
+	result.setLabel( p.label() );
+	
+	for ( Partial::iterator pos = p.begin(); pos != p.end(); ++pos ) 
+	{		
+		result.insert( pos.time() + offset, pos.breakpoint() );
+	}	
+	p = result;
 }
 
 }	//	end of namespace Loris

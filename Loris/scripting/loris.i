@@ -488,6 +488,11 @@ void sift( PartialList * partials );
  */
 
 
+void crop( PartialList * partials, double t1, double t2 );
+/*	Trim Partials by removing Breakpoints outside a specified time span.
+	Insert a Breakpoint at the boundary when cropping occurs.
+ */
+
 %newobject extractLabeled;
 %inline %{
 	PartialList * extractLabeled( PartialList * partials, long label )
@@ -525,6 +530,10 @@ void shiftPitch( PartialList * partials, BreakpointEnvelope * pitchEnv );
 	units of cents (1/100 of a halfstep).
  */
 
+void shiftTime( PartialList * partials, double offset );
+/*	Shift the time of all the Breakpoints in a Partial by a 
+	constant amount.
+ */
 
 %inline %{
 	const char * version( void )

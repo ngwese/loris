@@ -406,7 +406,14 @@ if test  "$USEPY" != "no"; then
 		fi
 	fi
 	AC_MSG_RESULT(found in $PYINCLUDE)
-	PYINCLUDE="-I$PYINCLUDE"
+	
+	dnl check whether this version of Python supports
+	dnl the new style of iterators
+	if "$PYTHON_VERSION" < 2.2; then
+		PYINCLUDE="-I$PYINCLUDE -DPYTHON_NOITERATORS"
+	else
+		PYINCLUDE="-I$PYINCLUDE"
+	fi
 fi
 
 
