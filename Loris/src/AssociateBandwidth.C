@@ -276,7 +276,7 @@ AssociateBandwidth::accumulateSinusoid( double f, double a )
 	long step = WinSpecOversample;
 	const long minStep = 1;
 	double leastRes = -1.;
-	const long Q = 1;// 4;
+	const long Q = 4;
 	for ( ; step > minStep; --step ) {
 		//	compute the residue at this step:
 		//	(use offset here because we are comparing
@@ -354,6 +354,8 @@ AssociateBandwidth::accumulateSinusoid( double f, double a )
 	}	//	end if we didn't like a smaller step
 	
 	//	distribute the peak amplitude: 
+	//	If I decide to keep this yoyo stuff, I can probably
+	//	condense the above loops with the one below.
 	double z = correctAmp;
 	#define YOYO
 	#ifndef YOYO

@@ -37,12 +37,17 @@
 using namespace std;
 using namespace Loris;
 
+static void reserve( long len );
+static void release( long len );
+
 // ---------------------------------------------------------------------------
 //	FourierTransform constructor
 // ---------------------------------------------------------------------------
+//	The private buffer _z has to be allocated immediately, so that it can be 
+//	accessed for loading. The shared output buffer for FFTW can be allocated
+//	later, in transform(), using reserve().
 //
 FourierTransform::FourierTransform( long len ) :
-	//_z( len, complex<double>(0.,0.) )
 	_size( len ),
 	_z( new complex< double >[ len ] ),
 	_plan( Null )
@@ -72,105 +77,107 @@ FourierTransform::FourierTransform( long len ) :
 		}
 	}
 	
+	//	zero:
 	fill( _z, _z + len, 0. );
 }
 
 // ---------------------------------------------------------------------------
 //	FourierTransform destructor
 // ---------------------------------------------------------------------------
+//	Release the plan and the shared buffer.
 //
 FourierTransform::~FourierTransform( void )
 {
-	//	anybody's guess whether this handles Null pointers,
-	//	check first:
 	if ( _plan != Null ) {
 		fftw_destroy_plan( _plan );
+		release( size() );
 	}
 }
 
 // ---------------------------------------------------------------------------
 //	transform
 // ---------------------------------------------------------------------------
-//	Compute the Fourier transform of the specified buffer. 
-//	The caller should window the buffer if desired. 
-//	The buffer will be zero-padded or truncated if it
-//	is the wrong size. The input will also be rotated to
-//	align its phase reference with the middle of the buffer.
-/*
-void
-FourierTransform::transform( const vector< double > & buf )
-{
-	loadAndRotate( buf );
-	transform();
-}
-*/
-// ---------------------------------------------------------------------------
-//	transform
-// ---------------------------------------------------------------------------
 //	Compute a Fourier transform of the current contents of the transform
 //	buffer.
 //
+static fftw_complex * sharedBuffer = Null;
 void
 FourierTransform::transform( void )
 {
-//	setup fft buffers:
-	static long bufsize = 0;
-	//static fftw_complex * fftwIn = Null;
-	static fftw_complex * fftwOut = Null;
-	//static fftw_plan plan = Null;	//	this is stupidity, fftw_plan is a pointer type
-									// 	unknown whether you can destroy an uninitialized
-									//	plan, seems unlikely.
-		
-	//	this is inefficient, a big transform leaves
-	//	this huge turd (fftwOut) lying around forever:
-	if ( bufsize < size() ) {
-		try {
-			debugger << "FFTW allocating static buffer for size " << size() << endl;
-			//delete[] fftwIn;
-			//fftwIn = Null;	//	to prevent deleting again
-			delete[] fftwOut;
-			fftwOut = Null;	//	to prevent deleting again
-			bufsize = 0;
-			//fftwIn = new fftw_complex[ size() ];
-			fftwOut = new fftw_complex[ size() ];
-			bufsize = size();
-		}
-		catch( LowMemException & ex ) {
-			bufsize = 0;
-			//delete[] fftwIn;
-			//fftwIn = Null;	//	to prevent deleting again
-			delete[] fftwOut;
-			fftwOut = Null;	//	to prevent deleting again
-			ex.append( "couldn't prepare FourierTransform." );
-			throw;
-		}
-	}
-	
 	//	make a plan, if necessary:
-	Assert( _z != Null );
-	Assert( fftwOut != Null );
 	if ( _plan == Null ) {
-		_plan = fftw_create_plan_specific( bufsize, FFTW_FORWARD,
+		//	try to reserve space for a shared buffer,
+		//	might except:
+		reserve( size() );
+		_plan = fftw_create_plan_specific( size(), FFTW_FORWARD,
 										  FFTW_ESTIMATE,
 										  (fftw_complex *)_z, 1,
-										  fftwOut, 1); 
+										  sharedBuffer, 1); 
+		Assert( _plan != Null );								  
 	}
 	
-/*	copy input into fftw buffers:
-	for ( long i = 0; i < size(); ++i ) {
-		fftwIn[i].re = _z[i].real();
-		fftwIn[i].im = _z[i].imag();
-	}
-*/	
+	//	sanity:
+	Assert( _z != Null );
+	Assert( sharedBuffer != Null );
+
 //	cruch:	
-	fftw_one( _plan, (fftw_complex *)_z, fftwOut );
+	fftw_one( _plan, (fftw_complex *)_z, sharedBuffer );
 	
 //	copy output into (private) complex buffer:
 	for ( long i = 0; i < size(); ++i ) {
-		_z[i] = complex< double >( fftwOut[i].re, fftwOut[i].im );
+		_z[i] = complex< double >( sharedBuffer[i].re, sharedBuffer[i].im );
 	}
 	
 }
+
+// ---------------------------------------------------------------------------
+//	reserve
+// ---------------------------------------------------------------------------
+//	Might throw a low memory exception.
+//
+static multiset< long, greater<long> > reservations;
+static void reserve( long len )
+{
+	//	allocate a bigger shared buffer if necessary:
+	if ( reservations.empty() || * reservations.begin() < len ) {
+		debugger << "Allocating shared buffer of size " << len << endl;
+		delete[] sharedBuffer;
+		sharedBuffer = Null;	//	to prevent deleting again
+		sharedBuffer = new fftw_complex[ len ];
+	}
+	
+	reservations.insert( len );
+}
+
+// ---------------------------------------------------------------------------
+//	release
+// ---------------------------------------------------------------------------
+//
+static void release( long len )
+{
+	//	find a reservation for this length:
+	multiset< long, greater<long> >::iterator pos = reservations.find( len );
+	if ( pos == reservations.end() ) {
+		debugger << "wierd, couldn't find a reservation for a transform of length " << len << endl;
+		return;
+	}
+	
+	//	erase it:
+	reservations.erase( pos );
+	
+	//	shrink the shared buffer if possible:
+	if ( reservations.empty() || * reservations.begin() < len ) {
+		debugger << "Releasing shared buffer of size " << len << endl;
+		delete[] sharedBuffer;
+		sharedBuffer = Null;
+		
+		if ( ! reservations.empty() ) {
+			debugger << "Allocating shared buffer of size " << * reservations.begin() << endl;
+			sharedBuffer = new fftw_complex[ * reservations.begin() ];
+		}
+	}
+}
+
 /*
 // ---------------------------------------------------------------------------
 //	load

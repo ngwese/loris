@@ -80,7 +80,7 @@ public:
 private:
 	//std::vector< std::complex< double > > _z;
 	const long _size;
-	std::complex< double > * _z, * _out;
+	std::complex< double > * _z;
 	
 	fftw_plan_struct * _plan;
 	
