@@ -37,16 +37,20 @@
  */
 
 #if defined (SWIGPYTHON)
+	%module loris
 	%title "Python module: loris", noinfo
 #elif defined (SWIGTCL)
+	%module loris
 	%title "Tcl module: loris", noinfo
 #elif defined (SWIGPERL)
+	%module loris_perl
 	%title "Perl module: loris", noinfo
 #else
+	%module loris
 	%title "Loris scripting interface", noinfo
 #endif
 
-%module loris 
+// %module loris 
 
 //	perl defines list and screws us up,
 //	undefine it so that we can use std::list

@@ -363,10 +363,10 @@ static swig_type_info *swig_types[10];
 
 /* -------- TYPES TABLE (END) -------- */
 
-#define SWIG_init    boot_loris
+#define SWIG_init    boot_loris_perl
 
-#define SWIG_name   "loris::boot_loris"
-#define SWIG_varinit "loris::var_loris_init();"
+#define SWIG_name   "loris_perl::boot_loris_perl"
+#define SWIG_varinit "loris_perl::var_loris_perl_init();"
 #ifdef __cplusplus
 extern "C"
 #endif
@@ -907,8 +907,8 @@ void distill( PartialList * partials )
 		units of cents (1/100 of a halfstep).
 	 */
 #ifdef PERL_OBJECT
-#define MAGIC_CLASS _wrap_loris_var::
-class _wrap_loris_var : public CPerlObj {
+#define MAGIC_CLASS _wrap_loris_perl_var::
+class _wrap_loris_perl_var : public CPerlObj {
 public:
 #else
 #define MAGIC_CLASS
@@ -5902,7 +5902,7 @@ _swigt__p_BreakpointEnvelope,
 
 /* -------- TYPE CONVERSION AND EQUIVALENCE RULES (END) -------- */
 
-XS(_wrap_perl5_loris_var_init) {
+XS(_wrap_perl5_loris_perl_var_init) {
     dXSARGS;
     SV *sv;
     XSRETURN(1);
@@ -5917,123 +5917,123 @@ XS(SWIG_init) {
     for (i = 0; swig_types_initial[i]; i++) {
         swig_types[i] = SWIG_TypeRegister(swig_types_initial[i]);
     }
-    newXS("loris::var_loris_init", _wrap_perl5_loris_var_init, file);
+    newXS("loris_perl::var_loris_perl_init", _wrap_perl5_loris_perl_var_init, file);
     
     Loris::setNotifierHandler( printf_notifier );
     Loris::setDebuggerHandler( printf_notifier );
-    newXS("loris::BreakpointEnvelopeWithValue", _wrap_BreakpointEnvelopeWithValue, file);
-    newXS("loris::channelize", _wrap_channelize, file);
-    newXS("loris::dilate", _wrap_dilate, file);
-    newXS("loris::distill", _wrap_distill, file);
-    newXS("loris::exportAiff", _wrap_exportAiff, file);
-    newXS("loris::exportSdif", _wrap_exportSdif, file);
-    newXS("loris::exportSpc", _wrap_exportSpc, file);
-    newXS("loris::importSdif", _wrap_importSdif, file);
-    newXS("loris::importSpc", _wrap_importSpc, file);
-    newXS("loris::morph", _wrap_morph, file);
-    newXS("loris::synthesize", _wrap_synthesize, file);
-    newXS("loris::sift", _wrap_sift, file);
-    newXS("loris::createFreqReference", _wrap_createFreqReference, file);
-    newXS("loris::scaleAmp", _wrap_scaleAmp, file);
-    newXS("loris::scaleNoiseRatio", _wrap_scaleNoiseRatio, file);
-    newXS("loris::shiftPitch", _wrap_shiftPitch, file);
-    newXS("loris::PartialList_copy", _wrap_PartialList_copy, file);
-    newXS("loris::new_PartialList", _wrap_new_PartialList, file);
-    newXS("loris::delete_PartialList", _wrap_delete_PartialList, file);
-    newXS("loris::PartialList_clear", _wrap_PartialList_clear, file);
-    newXS("loris::PartialList_size", _wrap_PartialList_size, file);
-    newXS("loris::PartialList_begin", _wrap_PartialList_begin, file);
-    newXS("loris::PartialList_end", _wrap_PartialList_end, file);
-    newXS("loris::PartialList_insert", _wrap_PartialList_insert, file);
-    newXS("loris::PartialList_erase", _wrap_PartialList_erase, file);
-    newXS("loris::PartialList_splice", _wrap_PartialList_splice, file);
-    newXS("loris::PartialListIterator_copy", _wrap_PartialListIterator_copy, file);
-    newXS("loris::PartialListIterator_next", _wrap_PartialListIterator_next, file);
-    newXS("loris::PartialListIterator_prev", _wrap_PartialListIterator_prev, file);
-    newXS("loris::PartialListIterator_partial", _wrap_PartialListIterator_partial, file);
-    newXS("loris::PartialListIterator_equals", _wrap_PartialListIterator_equals, file);
-    newXS("loris::PartialListIterator_isInRange", _wrap_PartialListIterator_isInRange, file);
-    newXS("loris::new_Partial", _wrap_new_Partial, file);
-    newXS("loris::delete_Partial", _wrap_delete_Partial, file);
-    newXS("loris::Partial_label", _wrap_Partial_label, file);
-    newXS("loris::Partial_initialPhase", _wrap_Partial_initialPhase, file);
-    newXS("loris::Partial_startTime", _wrap_Partial_startTime, file);
-    newXS("loris::Partial_endTime", _wrap_Partial_endTime, file);
-    newXS("loris::Partial_duration", _wrap_Partial_duration, file);
-    newXS("loris::Partial_numBreakpoints", _wrap_Partial_numBreakpoints, file);
-    newXS("loris::Partial_setLabel", _wrap_Partial_setLabel, file);
-    newXS("loris::Partial_begin", _wrap_Partial_begin, file);
-    newXS("loris::Partial_end", _wrap_Partial_end, file);
-    newXS("loris::Partial_insert", _wrap_Partial_insert, file);
-    newXS("loris::Partial_findAfter", _wrap_Partial_findAfter, file);
-    newXS("loris::Partial_findNearest", _wrap_Partial_findNearest, file);
-    newXS("loris::Partial_erase", _wrap_Partial_erase, file);
-    newXS("loris::Partial_frequencyAt", _wrap_Partial_frequencyAt, file);
-    newXS("loris::Partial_amplitudeAt", _wrap_Partial_amplitudeAt, file);
-    newXS("loris::Partial_bandwidthAt", _wrap_Partial_bandwidthAt, file);
-    newXS("loris::Partial_phaseAt", _wrap_Partial_phaseAt, file);
-    newXS("loris::Partial_copy", _wrap_Partial_copy, file);
-    newXS("loris::Partial_equals", _wrap_Partial_equals, file);
-    newXS("loris::PartialIterator_time", _wrap_PartialIterator_time, file);
-    newXS("loris::PartialIterator_breakpoint", _wrap_PartialIterator_breakpoint, file);
-    newXS("loris::PartialIterator_copy", _wrap_PartialIterator_copy, file);
-    newXS("loris::PartialIterator_next", _wrap_PartialIterator_next, file);
-    newXS("loris::PartialIterator_prev", _wrap_PartialIterator_prev, file);
-    newXS("loris::PartialIterator_equals", _wrap_PartialIterator_equals, file);
-    newXS("loris::PartialIterator_isInRange", _wrap_PartialIterator_isInRange, file);
-    newXS("loris::new_Breakpoint", _wrap_new_Breakpoint, file);
-    newXS("loris::delete_Breakpoint", _wrap_delete_Breakpoint, file);
-    newXS("loris::Breakpoint_frequency", _wrap_Breakpoint_frequency, file);
-    newXS("loris::Breakpoint_amplitude", _wrap_Breakpoint_amplitude, file);
-    newXS("loris::Breakpoint_bandwidth", _wrap_Breakpoint_bandwidth, file);
-    newXS("loris::Breakpoint_phase", _wrap_Breakpoint_phase, file);
-    newXS("loris::Breakpoint_setFrequency", _wrap_Breakpoint_setFrequency, file);
-    newXS("loris::Breakpoint_setAmplitude", _wrap_Breakpoint_setAmplitude, file);
-    newXS("loris::Breakpoint_setBandwidth", _wrap_Breakpoint_setBandwidth, file);
-    newXS("loris::Breakpoint_setPhase", _wrap_Breakpoint_setPhase, file);
-    newXS("loris::Breakpoint_copy", _wrap_Breakpoint_copy, file);
-    newXS("loris::Breakpoint_equals", _wrap_Breakpoint_equals, file);
-    newXS("loris::new_Analyzer", _wrap_new_Analyzer, file);
-    newXS("loris::delete_Analyzer", _wrap_delete_Analyzer, file);
-    newXS("loris::Analyzer_copy", _wrap_Analyzer_copy, file);
-    newXS("loris::Analyzer_analyze", _wrap_Analyzer_analyze, file);
-    newXS("loris::Analyzer_configure", _wrap_Analyzer_configure, file);
-    newXS("loris::Analyzer_freqResolution", _wrap_Analyzer_freqResolution, file);
-    newXS("loris::Analyzer_ampFloor", _wrap_Analyzer_ampFloor, file);
-    newXS("loris::Analyzer_windowWidth", _wrap_Analyzer_windowWidth, file);
-    newXS("loris::Analyzer_freqFloor", _wrap_Analyzer_freqFloor, file);
-    newXS("loris::Analyzer_hopTime", _wrap_Analyzer_hopTime, file);
-    newXS("loris::Analyzer_freqDrift", _wrap_Analyzer_freqDrift, file);
-    newXS("loris::Analyzer_cropTime", _wrap_Analyzer_cropTime, file);
-    newXS("loris::Analyzer_bwRegionWidth", _wrap_Analyzer_bwRegionWidth, file);
-    newXS("loris::Analyzer_setFreqResolution", _wrap_Analyzer_setFreqResolution, file);
-    newXS("loris::Analyzer_setAmpFloor", _wrap_Analyzer_setAmpFloor, file);
-    newXS("loris::Analyzer_setWindowWidth", _wrap_Analyzer_setWindowWidth, file);
-    newXS("loris::Analyzer_setFreqFloor", _wrap_Analyzer_setFreqFloor, file);
-    newXS("loris::Analyzer_setFreqDrift", _wrap_Analyzer_setFreqDrift, file);
-    newXS("loris::Analyzer_setHopTime", _wrap_Analyzer_setHopTime, file);
-    newXS("loris::Analyzer_setCropTime", _wrap_Analyzer_setCropTime, file);
-    newXS("loris::Analyzer_setBwRegionWidth", _wrap_Analyzer_setBwRegionWidth, file);
-    newXS("loris::new_BreakpointEnvelope", _wrap_new_BreakpointEnvelope, file);
-    newXS("loris::delete_BreakpointEnvelope", _wrap_delete_BreakpointEnvelope, file);
-    newXS("loris::BreakpointEnvelope_copy", _wrap_BreakpointEnvelope_copy, file);
-    newXS("loris::BreakpointEnvelope_valueAt", _wrap_BreakpointEnvelope_valueAt, file);
-    newXS("loris::BreakpointEnvelope_insertBreakpoint", _wrap_BreakpointEnvelope_insertBreakpoint, file);
-    newXS("loris::new_SampleVector", _wrap_new_SampleVector, file);
-    newXS("loris::delete_SampleVector", _wrap_delete_SampleVector, file);
-    newXS("loris::SampleVector_size", _wrap_SampleVector_size, file);
-    newXS("loris::SampleVector_resize", _wrap_SampleVector_resize, file);
-    newXS("loris::SampleVector_clear", _wrap_SampleVector_clear, file);
-    newXS("loris::SampleVector_copy", _wrap_SampleVector_copy, file);
-    newXS("loris::SampleVector_getAt", _wrap_SampleVector_getAt, file);
-    newXS("loris::SampleVector_setAt", _wrap_SampleVector_setAt, file);
-    newXS("loris::new_AiffFile", _wrap_new_AiffFile, file);
-    newXS("loris::delete_AiffFile", _wrap_delete_AiffFile, file);
-    newXS("loris::AiffFile_channels", _wrap_AiffFile_channels, file);
-    newXS("loris::AiffFile_sampleFrames", _wrap_AiffFile_sampleFrames, file);
-    newXS("loris::AiffFile_sampleRate", _wrap_AiffFile_sampleRate, file);
-    newXS("loris::AiffFile_sampleSize", _wrap_AiffFile_sampleSize, file);
-    newXS("loris::AiffFile_samples", _wrap_AiffFile_samples, file);
+    newXS("loris_perl::BreakpointEnvelopeWithValue", _wrap_BreakpointEnvelopeWithValue, file);
+    newXS("loris_perl::channelize", _wrap_channelize, file);
+    newXS("loris_perl::dilate", _wrap_dilate, file);
+    newXS("loris_perl::distill", _wrap_distill, file);
+    newXS("loris_perl::exportAiff", _wrap_exportAiff, file);
+    newXS("loris_perl::exportSdif", _wrap_exportSdif, file);
+    newXS("loris_perl::exportSpc", _wrap_exportSpc, file);
+    newXS("loris_perl::importSdif", _wrap_importSdif, file);
+    newXS("loris_perl::importSpc", _wrap_importSpc, file);
+    newXS("loris_perl::morph", _wrap_morph, file);
+    newXS("loris_perl::synthesize", _wrap_synthesize, file);
+    newXS("loris_perl::sift", _wrap_sift, file);
+    newXS("loris_perl::createFreqReference", _wrap_createFreqReference, file);
+    newXS("loris_perl::scaleAmp", _wrap_scaleAmp, file);
+    newXS("loris_perl::scaleNoiseRatio", _wrap_scaleNoiseRatio, file);
+    newXS("loris_perl::shiftPitch", _wrap_shiftPitch, file);
+    newXS("loris_perl::PartialList_copy", _wrap_PartialList_copy, file);
+    newXS("loris_perl::new_PartialList", _wrap_new_PartialList, file);
+    newXS("loris_perl::delete_PartialList", _wrap_delete_PartialList, file);
+    newXS("loris_perl::PartialList_clear", _wrap_PartialList_clear, file);
+    newXS("loris_perl::PartialList_size", _wrap_PartialList_size, file);
+    newXS("loris_perl::PartialList_begin", _wrap_PartialList_begin, file);
+    newXS("loris_perl::PartialList_end", _wrap_PartialList_end, file);
+    newXS("loris_perl::PartialList_insert", _wrap_PartialList_insert, file);
+    newXS("loris_perl::PartialList_erase", _wrap_PartialList_erase, file);
+    newXS("loris_perl::PartialList_splice", _wrap_PartialList_splice, file);
+    newXS("loris_perl::PartialListIterator_copy", _wrap_PartialListIterator_copy, file);
+    newXS("loris_perl::PartialListIterator_next", _wrap_PartialListIterator_next, file);
+    newXS("loris_perl::PartialListIterator_prev", _wrap_PartialListIterator_prev, file);
+    newXS("loris_perl::PartialListIterator_partial", _wrap_PartialListIterator_partial, file);
+    newXS("loris_perl::PartialListIterator_equals", _wrap_PartialListIterator_equals, file);
+    newXS("loris_perl::PartialListIterator_isInRange", _wrap_PartialListIterator_isInRange, file);
+    newXS("loris_perl::new_Partial", _wrap_new_Partial, file);
+    newXS("loris_perl::delete_Partial", _wrap_delete_Partial, file);
+    newXS("loris_perl::Partial_label", _wrap_Partial_label, file);
+    newXS("loris_perl::Partial_initialPhase", _wrap_Partial_initialPhase, file);
+    newXS("loris_perl::Partial_startTime", _wrap_Partial_startTime, file);
+    newXS("loris_perl::Partial_endTime", _wrap_Partial_endTime, file);
+    newXS("loris_perl::Partial_duration", _wrap_Partial_duration, file);
+    newXS("loris_perl::Partial_numBreakpoints", _wrap_Partial_numBreakpoints, file);
+    newXS("loris_perl::Partial_setLabel", _wrap_Partial_setLabel, file);
+    newXS("loris_perl::Partial_begin", _wrap_Partial_begin, file);
+    newXS("loris_perl::Partial_end", _wrap_Partial_end, file);
+    newXS("loris_perl::Partial_insert", _wrap_Partial_insert, file);
+    newXS("loris_perl::Partial_findAfter", _wrap_Partial_findAfter, file);
+    newXS("loris_perl::Partial_findNearest", _wrap_Partial_findNearest, file);
+    newXS("loris_perl::Partial_erase", _wrap_Partial_erase, file);
+    newXS("loris_perl::Partial_frequencyAt", _wrap_Partial_frequencyAt, file);
+    newXS("loris_perl::Partial_amplitudeAt", _wrap_Partial_amplitudeAt, file);
+    newXS("loris_perl::Partial_bandwidthAt", _wrap_Partial_bandwidthAt, file);
+    newXS("loris_perl::Partial_phaseAt", _wrap_Partial_phaseAt, file);
+    newXS("loris_perl::Partial_copy", _wrap_Partial_copy, file);
+    newXS("loris_perl::Partial_equals", _wrap_Partial_equals, file);
+    newXS("loris_perl::PartialIterator_time", _wrap_PartialIterator_time, file);
+    newXS("loris_perl::PartialIterator_breakpoint", _wrap_PartialIterator_breakpoint, file);
+    newXS("loris_perl::PartialIterator_copy", _wrap_PartialIterator_copy, file);
+    newXS("loris_perl::PartialIterator_next", _wrap_PartialIterator_next, file);
+    newXS("loris_perl::PartialIterator_prev", _wrap_PartialIterator_prev, file);
+    newXS("loris_perl::PartialIterator_equals", _wrap_PartialIterator_equals, file);
+    newXS("loris_perl::PartialIterator_isInRange", _wrap_PartialIterator_isInRange, file);
+    newXS("loris_perl::new_Breakpoint", _wrap_new_Breakpoint, file);
+    newXS("loris_perl::delete_Breakpoint", _wrap_delete_Breakpoint, file);
+    newXS("loris_perl::Breakpoint_frequency", _wrap_Breakpoint_frequency, file);
+    newXS("loris_perl::Breakpoint_amplitude", _wrap_Breakpoint_amplitude, file);
+    newXS("loris_perl::Breakpoint_bandwidth", _wrap_Breakpoint_bandwidth, file);
+    newXS("loris_perl::Breakpoint_phase", _wrap_Breakpoint_phase, file);
+    newXS("loris_perl::Breakpoint_setFrequency", _wrap_Breakpoint_setFrequency, file);
+    newXS("loris_perl::Breakpoint_setAmplitude", _wrap_Breakpoint_setAmplitude, file);
+    newXS("loris_perl::Breakpoint_setBandwidth", _wrap_Breakpoint_setBandwidth, file);
+    newXS("loris_perl::Breakpoint_setPhase", _wrap_Breakpoint_setPhase, file);
+    newXS("loris_perl::Breakpoint_copy", _wrap_Breakpoint_copy, file);
+    newXS("loris_perl::Breakpoint_equals", _wrap_Breakpoint_equals, file);
+    newXS("loris_perl::new_Analyzer", _wrap_new_Analyzer, file);
+    newXS("loris_perl::delete_Analyzer", _wrap_delete_Analyzer, file);
+    newXS("loris_perl::Analyzer_copy", _wrap_Analyzer_copy, file);
+    newXS("loris_perl::Analyzer_analyze", _wrap_Analyzer_analyze, file);
+    newXS("loris_perl::Analyzer_configure", _wrap_Analyzer_configure, file);
+    newXS("loris_perl::Analyzer_freqResolution", _wrap_Analyzer_freqResolution, file);
+    newXS("loris_perl::Analyzer_ampFloor", _wrap_Analyzer_ampFloor, file);
+    newXS("loris_perl::Analyzer_windowWidth", _wrap_Analyzer_windowWidth, file);
+    newXS("loris_perl::Analyzer_freqFloor", _wrap_Analyzer_freqFloor, file);
+    newXS("loris_perl::Analyzer_hopTime", _wrap_Analyzer_hopTime, file);
+    newXS("loris_perl::Analyzer_freqDrift", _wrap_Analyzer_freqDrift, file);
+    newXS("loris_perl::Analyzer_cropTime", _wrap_Analyzer_cropTime, file);
+    newXS("loris_perl::Analyzer_bwRegionWidth", _wrap_Analyzer_bwRegionWidth, file);
+    newXS("loris_perl::Analyzer_setFreqResolution", _wrap_Analyzer_setFreqResolution, file);
+    newXS("loris_perl::Analyzer_setAmpFloor", _wrap_Analyzer_setAmpFloor, file);
+    newXS("loris_perl::Analyzer_setWindowWidth", _wrap_Analyzer_setWindowWidth, file);
+    newXS("loris_perl::Analyzer_setFreqFloor", _wrap_Analyzer_setFreqFloor, file);
+    newXS("loris_perl::Analyzer_setFreqDrift", _wrap_Analyzer_setFreqDrift, file);
+    newXS("loris_perl::Analyzer_setHopTime", _wrap_Analyzer_setHopTime, file);
+    newXS("loris_perl::Analyzer_setCropTime", _wrap_Analyzer_setCropTime, file);
+    newXS("loris_perl::Analyzer_setBwRegionWidth", _wrap_Analyzer_setBwRegionWidth, file);
+    newXS("loris_perl::new_BreakpointEnvelope", _wrap_new_BreakpointEnvelope, file);
+    newXS("loris_perl::delete_BreakpointEnvelope", _wrap_delete_BreakpointEnvelope, file);
+    newXS("loris_perl::BreakpointEnvelope_copy", _wrap_BreakpointEnvelope_copy, file);
+    newXS("loris_perl::BreakpointEnvelope_valueAt", _wrap_BreakpointEnvelope_valueAt, file);
+    newXS("loris_perl::BreakpointEnvelope_insertBreakpoint", _wrap_BreakpointEnvelope_insertBreakpoint, file);
+    newXS("loris_perl::new_SampleVector", _wrap_new_SampleVector, file);
+    newXS("loris_perl::delete_SampleVector", _wrap_delete_SampleVector, file);
+    newXS("loris_perl::SampleVector_size", _wrap_SampleVector_size, file);
+    newXS("loris_perl::SampleVector_resize", _wrap_SampleVector_resize, file);
+    newXS("loris_perl::SampleVector_clear", _wrap_SampleVector_clear, file);
+    newXS("loris_perl::SampleVector_copy", _wrap_SampleVector_copy, file);
+    newXS("loris_perl::SampleVector_getAt", _wrap_SampleVector_getAt, file);
+    newXS("loris_perl::SampleVector_setAt", _wrap_SampleVector_setAt, file);
+    newXS("loris_perl::new_AiffFile", _wrap_new_AiffFile, file);
+    newXS("loris_perl::delete_AiffFile", _wrap_delete_AiffFile, file);
+    newXS("loris_perl::AiffFile_channels", _wrap_AiffFile_channels, file);
+    newXS("loris_perl::AiffFile_sampleFrames", _wrap_AiffFile_sampleFrames, file);
+    newXS("loris_perl::AiffFile_sampleRate", _wrap_AiffFile_sampleRate, file);
+    newXS("loris_perl::AiffFile_sampleSize", _wrap_AiffFile_sampleSize, file);
+    newXS("loris_perl::AiffFile_samples", _wrap_AiffFile_samples, file);
     ST(0) = &PL_sv_yes;
     XSRETURN(1);
 }
