@@ -76,9 +76,8 @@ ImportLemur5::verifySource( void )
 			Throw( FileIOException, "Cannot read file in Lemur 5 import.");	
 		
 		if ( ids[0] != FORM_ID || ids[1] != LEMR_ID ) {
-			Debugger dbg("Bad file ids: ");
-			dbg << string((char *)&ids[0], 4) << " and " << string((char *)&ids[1], 4);
-			dbg.post();
+			debugger << "Bad file ids: ";
+			debugger << string((char *)&ids[0], 4) << " and " << string((char *)&ids[1], 4);
 			
 			Throw( ImportException, "File is not formatted correctly for Lemur 5 import." );
 		}

@@ -1,7 +1,14 @@
 // ===========================================================================
 //	Notifier.C
 //	
-//	Implementation of Loris::Notifier.
+//	Implementation of Loris::NotifierBuf, a base class for notification
+//	buffers with a default implementation that uses the console for 
+//	reporting.
+//
+//	Stream classes for notification and debugging are also implemented here,
+//	they are just streams that use NotifierBufs.
+//
+//	C++ notification functions and streams in Loris namespace defined at bottom.
 //
 //	-kel 9 Sept 99
 //
@@ -29,21 +36,19 @@ using namespace std;
 Begin_Namespace( Loris )
 
 // ---------------------------------------------------------------------------
-//	notification streams
+//	stream instances
 // ---------------------------------------------------------------------------
-//	These are declared extern in Notifier.h, so they can be used
-//	anywhere.
-//
-Notifier notifier;
-Debugger debugger;
+//	declared extern in Notifier.h
+NotifierStream & notifier = NotifierStream::instance();
+DebuggerStream & debugger = DebuggerStream::instance();
+
 
 // ---------------------------------------------------------------------------
-//	Notifier constructor
+//	NotifierBuf constructor
 // ---------------------------------------------------------------------------
 //
-Notifier::Notifier( const string & s ) :
-	_sbuf( s ),
-	ostream( & _sbuf )
+NotifierBuf::NotifierBuf( const string & s ) :
+	StringBuffer( s )
 {
 }
 
@@ -55,22 +60,25 @@ Notifier::Notifier( const string & s ) :
 //
 //	If block is true, post() should not return until the
 //	user confirms receipt of the notification. The logistics
-//	of this confirmation can also be overridden by derived classes. 
+//	of this interaction can also be overridden by derived classes.
+//
+//	post(true) is called by NotifierStream::confirm(), which is 
+//	in turn called by fatalError() (see below). 
 //
 void 
-Notifier::post( boolean block )
+NotifierBuf::post( boolean block )
 {	
-	cout << _sbuf.str() << endl;
-	_sbuf.erase();
+	cout << str() << endl;
+	erase();
 	
 	if ( block ) {
 		string resp;
 		cout << "confirm (or type 'throw' to take exception): ";
 		IOSfmtflags oldflags = cin.flags();
 
-		// cin >> noskipws >> resp;
+		 //cin >> noskipws >> resp;
 		//	is this the same? MIPSPro doesn't have noskipws
-		cin.unsetf( skipws );
+		cin.unsetf( ios::skipws );
 		cin >> resp;
 
 		cin.flags( oldflags );
@@ -81,6 +89,30 @@ Notifier::post( boolean block )
 		}
 	}
 }
+
+// ---------------------------------------------------------------------------
+//	NotifierStream instance
+// ---------------------------------------------------------------------------
+//
+NotifierStream &
+NotifierStream::instance( void )
+{
+	static NotifierStream _s;
+	return _s;
+}
+
+
+// ---------------------------------------------------------------------------
+//	DebuggerStream instance
+// ---------------------------------------------------------------------------
+//
+DebuggerStream &
+DebuggerStream::instance( void )
+{
+	static DebuggerStream _s;
+	return _s;
+}
+
 
 End_Namespace( Loris )
 

@@ -29,8 +29,7 @@ Begin_Namespace( Loris )
 void
 notify( const string & s )
 {
-	notifier << s;
-	notifier.post();
+	notifier << s << endl;
 }
 
 // ---------------------------------------------------------------------------
@@ -41,8 +40,7 @@ notify( const string & s )
 void
 debug( const string & s )
 {
-	debugger << s;
-	debugger.post();
+	debugger << s << endl;
 }
 
 // ---------------------------------------------------------------------------
@@ -57,7 +55,7 @@ fatalError( const string & s )
 {
 	try {
 		notifier << s << " (aborting)";
-		notifier.post( true ); // block until confirmed
+		notifier.confirm(); // block until confirmed
 	}
 	catch (...) {
 	}

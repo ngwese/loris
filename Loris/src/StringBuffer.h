@@ -59,8 +59,9 @@ protected:
 	virtual int_type overflow( int_type c ) 
 	{
 		if ( c != EOF ) {
-			//_str.push_back(c);
-			_str += static_cast<char>(c);
+			char ch(c);
+			_str += ch;
+			//_str += static_cast<char>(c);
 		}
 		return c;
 	}

@@ -56,8 +56,7 @@ Init_::~Init_( void )
 void
 Init_::initLib( void ) throw()
 {
-	debugger << "Initializing Loris library.";
-	debugger.post();
+	debugger << "Initializing Loris library." << endl;
 	
 	try {
 	 	//	check type sizes:
@@ -87,9 +86,7 @@ Init_::initLib( void ) throw()
 void
 Init_::finalLib( void ) throw()
 {
-	debugger << "Finalizing Loris library.";
-	debugger.post();
-	
+	debugger << "Finalizing Loris library." << endl;	
 }
 
 End_Namespace( Loris )
