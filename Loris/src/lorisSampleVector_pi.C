@@ -174,7 +174,8 @@ double sampleVector_getAt( const SampleVector * ptr_this, unsigned long idx )
 	try 
 	{
 		ThrowIfNull((SampleVector *) ptr_this);
-		return ptr_this->at(idx);
+		// return ptr_this->at(idx);
+		return (*ptr_this)[idx];	//	g++ doesn't have at()?
 	}
 	catch( Exception & ex ) 
 	{
@@ -203,7 +204,8 @@ void sampleVector_setAt( SampleVector * ptr_this, unsigned long idx, double x )
 	try 
 	{
 		ThrowIfNull((SampleVector *) ptr_this);
-		ptr_this->at(idx) = x;
+		//ptr_this->at(idx) = x;
+		(*ptr_this)[idx] = x;	//	g++ doesn't implement at()?
 	}
 	catch( Exception & ex ) 
 	{

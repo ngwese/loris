@@ -44,10 +44,10 @@ PYTHON_LIB = ${PYTHON_PREFIX}/lib/python${PY_VERSION}/config
 INC_PY = -DHAVE_CONFIG_H -I${PYTHON_INCLUDE} -I${PYTHON_LIB}
 
 CC = g++
-CFLAGS = -O2 ${INC_PY} -I${PI}
+CFLAGS = -O2 ${INC_PY} -I${PI} -I${CLASSES}
 
 python: lorislib ${OBJ_BRIDGE}
-	${CC} -shared $(OUTPUT)/libloris.so ${OBJ_BRIDGE} -o $(OUTPUT)/loriscmodule.so
+	${CC} -shared ${OBJ_BRIDGE} $(OUTPUT)/libloris.so -o $(OUTPUT)/loriscmodule.so
 
 lorislib: 
 	cd $(PI); $(MAKE) lib

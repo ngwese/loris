@@ -63,6 +63,7 @@
 #include "PartialUtils.h"
 
 #include <algorithm>
+#include <cmath>
 #include <list>
 #include <memory>
 

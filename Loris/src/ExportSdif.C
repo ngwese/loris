@@ -37,6 +37,7 @@
 #include "notifier.h"
 #include "Partial.h"
 #include <list>
+#include <vector>
 #include <cmath>
 #include <sdif.h>
 
