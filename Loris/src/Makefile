@@ -101,7 +101,6 @@ classes: ${OBJ_LORIS}
 depend: 
 	${CC} -MM $(CFLAGS) *.C | sed 's/c++\.o/\o/g' > dependfile
 	${cc} -MM $(cFLAGS) *.c >> dependfile
-	${cc} -MM $(cFLAGS) $(SDIF)/sdif.c $(SDIF)/sdif-types.c >> dependfile
 
 include dependfile
 
