@@ -70,6 +70,20 @@ Breakpoint::Breakpoint( double f, double a, double b, double p ) :
 }
 
 // ---------------------------------------------------------------------------
+//	operator==
+// ---------------------------------------------------------------------------
+bool 
+Breakpoint::operator==( const Breakpoint & rhs ) const
+{
+	return _frequency == rhs._frequency &&
+			_amplitude == rhs._amplitude &&
+			_bandwidth == rhs._bandwidth &&
+			_phase == rhs._phase;
+}
+
+
+
+// ---------------------------------------------------------------------------
 //	addNoise
 // ---------------------------------------------------------------------------
 //	Compute new amplitude and bandwidth values. Don't remove (add negative)  

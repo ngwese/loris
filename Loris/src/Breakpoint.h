@@ -67,6 +67,9 @@ public:
 	Breakpoint( void );	//	needed for STL containability
 	Breakpoint( double f, double a, double b, double p = 0. );
 	
+//	comparison:
+	bool operator==( const Breakpoint & rhs ) const;
+
 //	attribute access:
 	double frequency( void ) const { return _frequency; }
 	double amplitude( void ) const { return _amplitude; }

@@ -277,7 +277,7 @@ read( const char *infilename, std::list<Partial> & partials )
 		// Copy partialsVector to partials list.
 		for (int i = 0; i < partialsVector.size(); ++i)
 		{
-			if (partialsVector[i].countBreakpoints() > 0)
+			if (partialsVector[i].numBreakpoints() > 0)
 			{
 				partials.push_back( partialsVector[i] );
 			}

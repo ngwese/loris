@@ -139,6 +139,18 @@ Partial::duration( void ) const
 }
 
 // ---------------------------------------------------------------------------
+//	operator==
+// ---------------------------------------------------------------------------
+//	Return true if this Partial has the same label and Breakpoint map 
+//	as rhs, and false otherwise.
+//
+bool
+Partial::operator==( const Partial & rhs ) const
+{
+	return (label() == rhs.label()) && (_bpmap == rhs._bpmap);
+}
+
+// ---------------------------------------------------------------------------
 //	begin (non-const)
 // ---------------------------------------------------------------------------
 //	Iterator generation.
@@ -201,7 +213,18 @@ Partial::insert( double time, const Breakpoint & bp )
 }
 
 // ---------------------------------------------------------------------------
-//	findPos (const version)
+//	erase
+// ---------------------------------------------------------------------------
+//	Erase the Breakpoint at the position of the 
+//	given iterator (invalidating the iterator).
+void 
+Partial::erase( PartialIterator & pos )
+{
+	_bpmap.erase( pos._iter );
+}
+
+// ---------------------------------------------------------------------------
+//	findAfter (const version)
 // ---------------------------------------------------------------------------
 //	Return the insertion position for a Breakpoint at
 //	the specified time (that is, the position of the first
@@ -209,13 +232,13 @@ Partial::insert( double time, const Breakpoint & bp )
 //	time).
 //
 PartialConstIterator
-Partial::findPos( double time ) const
+Partial::findAfter( double time ) const
 {
 	return PartialConstIterator( _bpmap.lower_bound( time ) );
 }
 
 // ---------------------------------------------------------------------------
-//	findPos (non-const version)
+//	findAfter (non-const version)
 // ---------------------------------------------------------------------------
 //	Return the insertion position for a Breakpoint at
 //	the specified time (that is, the position of the first
@@ -223,9 +246,73 @@ Partial::findPos( double time ) const
 //	time).
 //
 PartialIterator
-Partial::findPos( double time )
+Partial::findAfter( double time )
 {
 	return PartialIterator( _bpmap.lower_bound( time ) );
+} 
+
+// ---------------------------------------------------------------------------
+//	findNearest (const version)
+// ---------------------------------------------------------------------------
+//	Return the insertion position for the Breakpoint nearest
+//	the specified time. Always returns a valid iterator (the
+//	position of the nearest-in-time Breakpoint) unless there
+//	are no Breakpoints.
+//
+PartialConstIterator
+Partial::findNearest( double time ) const
+{
+	//	if there are no Breakpoints, return end:
+	if ( numBreakpoints() == 0 )
+		return end();
+			
+	//	get the position of the first Breakpoint after time:
+	PartialConstIterator pos( _bpmap.lower_bound( time ) );
+	
+	//	if there is an earlier Breakpoint that is closer in
+	//	time, prefer that one:
+	if ( pos != begin() )
+	{
+		PartialConstIterator prev = pos;
+		--prev;
+		if ( pos == end() || pos.time() - time > time - prev.time() )
+			return prev;
+	}
+
+	//	failing all else:	
+	return pos;
+} 
+
+// ---------------------------------------------------------------------------
+//	findNearest (non-const version)
+// ---------------------------------------------------------------------------
+//	Return the insertion position for the Breakpoint nearest
+//	the specified time. Always returns a valid iterator (the
+//	position of the nearest-in-time Breakpoint) unless there
+//	are no Breakpoints.
+//
+PartialIterator
+Partial::findNearest( double time )
+{
+	//	if there are no Breakpoints, return end:
+	if ( numBreakpoints() == 0 )
+		return end();
+			
+	//	get the position of the first Breakpoint after time:
+	PartialIterator pos( _bpmap.lower_bound( time ) );
+	
+	//	if there is an earlier Breakpoint that is closer in
+	//	time, prefer that one:
+	if ( pos != begin() )
+	{
+		PartialIterator prev = pos;
+		--prev;
+		if ( pos == end() || pos.time() - time > time - prev.time() )
+			return prev;
+	}
+
+	//	failing all else:	
+	return pos;
 } 
 
 // ---------------------------------------------------------------------------
@@ -241,7 +328,7 @@ Partial::frequencyAt( double time ) const
 	//	lower_bound returns a reference to the lowest
 	//	position that would be higher than an element
 	//	having key equal to time:
-	PartialConstIterator it = findPos( time );
+	PartialConstIterator it = findAfter( time );
 		
 	if ( it == _bpmap.begin() ) 
 	{
@@ -279,7 +366,7 @@ Partial::amplitudeAt( double time ) const
 	//	lower_bound returns a reference to the lowest
 	//	position that would be higher than an element
 	//	having key equal to time:
-	PartialConstIterator it = findPos( time );
+	PartialConstIterator it = findAfter( time );
 		
 	if ( it == _bpmap.begin() ) 
 	{
@@ -338,7 +425,7 @@ Partial::phaseAt( double time ) const
 	//	lower_bound returns a reference to the lowest
 	//	position that would be higher than an element
 	//	having key equal to time:
-	PartialConstIterator it = findPos( time );
+	PartialConstIterator it = findAfter( time );
 		
 	//	compute phase:
 	//	map iterator is a pair: first is time, 
@@ -400,7 +487,7 @@ Partial::bandwidthAt( double time ) const
 	//	lower_bound returns a reference to the lowest
 	//	position that would be higher than an element
 	//	having key equal to time:
-	PartialConstIterator it = findPos( time );
+	PartialConstIterator it = findAfter( time );
 		
 	if ( it == _bpmap.begin() ) 
 	{

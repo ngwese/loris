@@ -90,7 +90,7 @@ Dilator::~Dilator(void)
 void
 Dilator::dilate( Partial & p )
 {
-	debugger << "dilating Partial having " << p.countBreakpoints() 
+	debugger << "dilating Partial having " << p.numBreakpoints() 
 			 << " Breakpoints" << endl;
 
 	//	sanity check:

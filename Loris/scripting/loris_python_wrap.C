@@ -769,13 +769,13 @@ typedef Loris::Handle< std::list< Loris::Partial > > PartialListHandle;
 			_partialH( subject ),
 			_iter( pos )
 		{
-			debugger << "created an iterator on a partial having " << _partialH->current().countBreakpoints()
+			debugger << "created an iterator on a partial having " << _partialH->current().numBreakpoints()
 					 << " breakpoints" << std::endl;
 		}
 		
 		~BreakpointHandle( void )
 		{
-			debugger << "destroyed an iterator on a partial having " << _partialH->current().countBreakpoints()
+			debugger << "destroyed an iterator on a partial having " << _partialH->current().numBreakpoints()
 					 << " breakpoints" << std::endl;
 		}
 		
@@ -3079,7 +3079,7 @@ static PyObject *_wrap_Partial_duration(PyObject *self, PyObject *args) {
 
 long  PartialListHandleIteratorHandle_countBreakpoints(PartialListHandleIteratorHandle *self) {
     {
-        return (*self)->current().countBreakpoints(); 
+        return (*self)->current().numBreakpoints(); 
     }
 }
 

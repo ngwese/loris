@@ -81,6 +81,24 @@ public:
 //	mutation:
 	void setLabel( int l ) { _label = l; }
 	
+//	STL-like container implementation:
+/*
+	iterators, const_iterators, begin and end
+	
+	op ==
+	empty?
+	size - better name?
+	
+	iterator insert( time, bp )
+	void erase(iterator)
+	
+	find( time )	??? nearest? before? after?
+	upper/lower_bound	???
+*/
+
+//	comparison:
+	bool operator== ( const Partial & rhs ) const;
+	
 //	iterator generation:
 	PartialIterator begin( void );
 	PartialIterator end( void );
@@ -95,12 +113,22 @@ public:
 //	Return the insertion position for a Breakpoint at
 //	the specified time (that is, the position of the first
 //	Breakpoint at a time later than the specified time).
-	PartialIterator findPos( double time );
-	PartialConstIterator findPos( double time ) const;
+	PartialIterator findAfter( double time );
+	PartialConstIterator findAfter( double time ) const;
+	
+//	Return the insertion position for the Breakpoint nearest
+//	the specified time..
+	PartialIterator findNearest( double time );
+	PartialConstIterator findNearest( double time ) const;
 	
 //	Its nice to be able to find out how many Breakpoints
 //	there are:
-	long countBreakpoints( void ) const { return _bpmap.size(); }
+	long numBreakpoints( void ) const { return _bpmap.size(); }
+	
+//	Breakpoint removal:
+//	Erase the Breakpoint at the position of the 
+//	given iterator (invalidating the iterator).
+	void erase( PartialIterator & pos );
 	
 //	partial envelope interpolation/extrapolation:
 //	Return the interpolated value of a partial parameter at

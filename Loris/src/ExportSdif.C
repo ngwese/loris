@@ -264,7 +264,7 @@ assembleMatrixData( SdifFloat4 *data,
 		double resampledFlag = 0.0;
 		if (useExactTiming) 			// 7-column 1TRC format; doing exact timing
 		{
-			PartialIterator it = par->findPos(frameTime);
+			PartialIterator it = par->findAfter(frameTime);
 			if (it != par->end() && it.time() < nextFrameTime) 
 				tim = it.time();		// use data at breakpoint time
 			else 
@@ -330,7 +330,7 @@ collectActiveIndices( const std::vector< Partial * > & partialsVector,
 		// Is there a breakpoint within the frame?
 		// if there is no breakpoint and zero amplitude, skip the partial.
 		// Partials are included in 5-column 1TRC if the next frame (or previous frame) had a breakpoint.
-		PartialIterator it = partialsVector[i]->findPos(frameTime - hop);
+		PartialIterator it = partialsVector[i]->findAfter(frameTime - hop);
 		if ((it != partialsVector[i]->end() && it.time() < nextFrameTime + hop) 
 					|| partialsVector[i]->amplitudeAt(frameTime) != 0.0) 
 			activeIndices.push_back(i);	

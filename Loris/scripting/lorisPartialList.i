@@ -299,7 +299,7 @@ public:
 	/* 	Return this Partial's duration.
 	 */
 
-	long countBreakpoints( void ) const { return (*self)->current().countBreakpoints(); }
+	long numBreakpoints( void ) const { return (*self)->current().numBreakpoints(); }
 	/* 	Return this Partial's number of Breakpoints.
 	 */
 	
@@ -373,13 +373,13 @@ public:
 			_partialH( subject ),
 			_iter( pos )
 		{
-			debugger << "created an iterator on a partial having " << _partialH->current().countBreakpoints()
+			debugger << "created an iterator on a partial having " << _partialH->current().numBreakpoints()
 					 << " breakpoints" << std::endl;
 		}
 		
 		~BreakpointHandle( void )
 		{
-			debugger << "destroyed an iterator on a partial having " << _partialH->current().countBreakpoints()
+			debugger << "destroyed an iterator on a partial having " << _partialH->current().numBreakpoints()
 					 << " breakpoints" << std::endl;
 		}
 		

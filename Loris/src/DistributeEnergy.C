@@ -106,7 +106,7 @@ static void addNoiseEnergy( double energy, Partial & p,
 	}
 	
 	//	loop over Breakpoints in p in the range (lower,upper):
-	for ( PartialIterator it = p.findPos( lower ); 
+	for ( PartialIterator it = p.findAfter( lower ); 
 		  it != p.end() && it.time() < upper;
 		  ++it ) 
 	{
