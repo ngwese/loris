@@ -33,6 +33,6 @@ m = 0:N-1;
 dphase_p = theta + m.*(p*fundn);
 cjphase_p = cjphase( p, jn, an, fn0 );
 ijphase_p = ijphase( p, jn, an, fnp );
-x = mod( dphase_p + cjphase_p + ijphase_p, 2*pi );
+x = m2pi( dphase_p + cjphase_p + ijphase_p );
 endfunction
 

@@ -27,22 +27,8 @@ function x = ijphase( p, jn, an, fnp )
 N = length(jn);
 a_inv = sqrt(1 - an.^2);
 x = zeros(1, N);
-ph = mod( jn(1) * p * fnp(1), 2*pi);
-% jump
-if ph > pi
-	ph = ph - (2*pi);
-elseif ph < -pi
-	ph = ph + (2*pi);
-end
-x(1) = a_inv(1) * ph;
+x(1) = a_inv(1) * m2pi( jn(1) * p * fnp(1) );
 for j = 2:N
-	ph = mod( x(j-1) + (jn(j) * p * fnp(j)), 2*pi);
-	% jump
-	if ph > pi
-		ph = ph - (2*pi);
-	elseif ph < -pi
-		ph = ph + (2*pi);
-	end
-	x(j) = a_inv(j) * ph;
+	x(j) = a_inv(j) * m2pi( x(j-1) + (jn(j) * p * fnp(j)));
 end
 endfunction 

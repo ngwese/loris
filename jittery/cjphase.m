@@ -20,10 +20,6 @@ function x = cjphase( p, jn, an, fn0 )
 % cjphase_p(n) = cjphase_p(n-1) + j(n) * p * a(n) * fn_0(n) mod 2pi
 %
 N = length(jn);
-x = zeros(1, N);
-x(1) = jn(1) * p * an(1) * fn0(1);
-for j = 2:N
-	x(j) = x(j-1) + (jn(j) * p * an(j) * fn0(j));
-end
-x = mod(x, 2*pi);
+x = cumsum(p * jn  .* an .* fn0);
+x = m2pi(x);
 endfunction 
