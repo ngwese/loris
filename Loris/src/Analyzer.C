@@ -51,8 +51,14 @@
 #include <utility>
 #include <vector>
 
-#define No_BW_Association
-#define Noise_Partials
+//	Need to do something to reduce the number of noise
+//	Partials (and their density) before this can make 
+//	any sense at all. Should apply the frequency resolution
+//	constraint again, and combine near-in-frequency spectral 
+//	peaks somehow into a single peak that forms a Breakpoint.
+//
+//#define No_BW_Association
+//#define Noise_Partials
 
 using namespace std;
 
@@ -70,6 +76,43 @@ static void formPartials( AnalyzerState & state );
 #if defined(Noise_Partials)
 static void formNoisePartials( AnalyzerState & state );
 #endif
+
+// ---------------------------------------------------------------------------
+//	Analyzer_imp definition
+// ---------------------------------------------------------------------------
+//	Definition of an implementation class that insulates clients from
+//	the implementation and representation details of Analyzer parameters.
+//
+struct Analyzer_imp
+{
+	double freqResolution;	//	in Hz, minimum instantaneous frequency distance;
+							//	this is the core parameter, others are, by default,
+							//	computed from this one
+	double ampFloor;	//	dB, relative to full amplitude sine wave, absolute
+						//	amplitude threshold
+	double windowWidth;	//	in Hz, width of main lobe; this might be more
+						//	conveniently presented as window length, but
+						//	the main lobe width more explicitly highlights
+						//	the critical interaction with resolution
+	double freqFloor;	//	lowest frequency (Hz) component extracted
+						//	in spectral analysis
+	double freqDrift;	//	the maximum frequency (Hz) difference between two 
+						//	consecutive Breakpoints that will be linked to
+						//	form a Partial
+	double hopTime;		//	in seconds, time between analysis windows in
+						//	successive spectral analyses
+	double cropTime;	//	in seconds, maximum time correction for a spectral
+						//	component to be considered reliable, and to be eligible
+						//	for extraction and for Breakpoint formation
+	double bwRegionWidth;	//	width in Hz of overlapping bandwidth 
+							//	association regions
+                            
+    bool assocBW;		//	if true, perform bandwidth association, otherwise 
+                        //	collect noise energy in noise Partials labeled -1.
+							
+	PartialList partials;	//	collect Partials here
+
+};
 
 // ---------------------------------------------------------------------------
 //	AnalyzerState definition
@@ -99,7 +142,7 @@ struct AnalyzerState
     FRAME currentFrame;
     //	reference to the Analyzer instance, for parameter
     //	access:
-    Analyzer & analyzer;
+    Analyzer_imp & params;
 
     //	the sample rate of the samples being analyzed:
     double sampleRate;
@@ -115,7 +158,7 @@ struct AnalyzerState
 	
 //	-- construction --
 //	(use compiler-constructed destructor)
-	AnalyzerState( Analyzer & anal, double srate );
+	AnalyzerState( Analyzer_imp & imp, double srate );
 	
 };	//	end of struct AnalyzerState
 
@@ -124,8 +167,8 @@ struct AnalyzerState
 //	AnalyzerState constructor
 // ---------------------------------------------------------------------------
 //
-AnalyzerState::AnalyzerState( Analyzer & anal, double srate ) :
-    analyzer( anal ),
+AnalyzerState::AnalyzerState( Analyzer_imp & imp, double srate ) :
+    params( imp ),
 	sampleRate( srate ),
     currentFrameTime( 0. )
 {	
@@ -134,8 +177,8 @@ AnalyzerState::AnalyzerState( Analyzer & anal, double srate ) :
     {
         //	analysis window parameters:
         //	use the amplitude floor as the window attenuation 
-        double winshape = KaiserWindow::computeShape( - analyzer.ampFloor() );
-        long winlen = KaiserWindow::computeLength( analyzer.windowWidth() / sampleRate, winshape );
+        double winshape = KaiserWindow::computeShape( - params.ampFloor );
+        long winlen = KaiserWindow::computeLength( params.windowWidth / sampleRate, winshape );
         
         //	always use odd-length windows:
         if (! (winlen % 2)) 
@@ -149,10 +192,9 @@ AnalyzerState::AnalyzerState( Analyzer & anal, double srate ) :
 		//	configure spectrum:
 		spectrum.reset( new ReassignedSpectrum( window ) );
 		
-		//	configure bw association strategy, which 
-		//	needs to know about the window:
+		//	configure bw association strategy:
 #if !defined(No_BW_Association)
-		bwAssociation.reset( new AssociateBandwidth( analyzer.bwRegionWidth(), sampleRate ) );
+		bwAssociation.reset( new AssociateBandwidth( params.bwRegionWidth, sampleRate ) );
 #endif
 	}
 	catch ( Exception & ex ) 
@@ -170,7 +212,8 @@ AnalyzerState::AnalyzerState( Analyzer & anal, double srate ) :
 //	parameters according to this parameter, subsequent parameter mutations
 //	will be independent.
 //
-Analyzer::Analyzer( double resolutionHz )
+Analyzer::Analyzer( double resolutionHz ) :
+	_imp( NULL )
 {
 	configure( resolutionHz, resolutionHz );
 }
@@ -186,7 +229,8 @@ Analyzer::Analyzer( double resolutionHz )
 //	and analysis window width (both in Hz), subsequent parameter mutations
 //	will be independent.
 //
-Analyzer::Analyzer( double resolutionHz, double windowWidthHz )
+Analyzer::Analyzer( double resolutionHz, double windowWidthHz ) :
+	_imp( NULL )
 {
 	configure( resolutionHz, windowWidthHz );
 }
@@ -198,14 +242,7 @@ Analyzer::Analyzer( double resolutionHz, double windowWidthHz )
 //	the collected Partials.
 //
 Analyzer::Analyzer( const Analyzer & other ) :
-	_resolution( other._resolution ),
-	_floor( other._floor ),
-	_windowWidth( other._windowWidth ),
-	_minFrequency( other._minFrequency ),
-	_drift( other._drift ),
-	_hop( other._hop ),
-	_cropTime( other._cropTime ),
-	_bwRegionWidth( other._bwRegionWidth )
+	_imp( new Analyzer_imp( *other._imp ) )
 {
 }
 
@@ -221,14 +258,7 @@ Analyzer::operator =( const Analyzer & rhs )
 {
 	if ( this != & rhs ) 
 	{
-		_resolution = rhs._resolution;
-		_floor = rhs._floor;
-		_windowWidth = rhs._windowWidth;
-		_minFrequency = rhs._minFrequency;
-		_drift = rhs._drift;
-		_hop = rhs._hop;
-		_cropTime = rhs._cropTime;
-		_bwRegionWidth = rhs._bwRegionWidth;
+		*_imp = *rhs._imp;
 	}
 	return *this;
 }
@@ -239,6 +269,7 @@ Analyzer::operator =( const Analyzer & rhs )
 //
 Analyzer::~Analyzer( void )
 {
+	delete _imp;
 }
 
 #pragma mark -- configuration --
@@ -259,49 +290,53 @@ Analyzer::~Analyzer( void )
 void
 Analyzer::configure( double resolutionHz, double windowWidthHz )
 {
-	_resolution = resolutionHz;
+	if ( _imp == NULL )
+		_imp = new Analyzer_imp;
+		
+	//	use specified resolution:
+	_imp->freqResolution = resolutionHz;
 	
 	//	floor defaults to -90 dB:
-	_floor = -90.;
+	_imp->ampFloor = -90.;
 	
 	//	window width should generally be approximately 
 	//	equal to, and never more than twice the 
 	//	frequency resolution:
-	_windowWidth = windowWidthHz;
+	_imp->windowWidth = windowWidthHz;
 	
 	//	for the minimum frequency, below which no data is kept,
 	//	use the frequency resolution by default (this makes 
 	//	Lip happy, and is always safe?) and allow the client 
 	//	to change it to anything at all.
-	_minFrequency = _resolution;
+	_imp->freqFloor = _imp->freqResolution;
 	
 	//	frequency drift in Hz is the maximum difference
 	//	in frequency between consecutive Breakpoints in
 	//	a Partial, by default, make it equal to one half
 	//	the frequency resolution:
-	_drift = .5 * _resolution;
+	_imp->freqDrift = .5 * _imp->freqResolution;
 	
 	//	hop time (in seconds) is the inverse of the
 	//	window width....really. Smith and Serra (1990) cite 
 	//	Allen (1977) saying: a good choice of hop is the window 
 	//	length divided by the main lobe width in frequency samples,
 	//	which turns out to be just the inverse of the width.
-	_hop = 1. / _windowWidth;
+	_imp->hopTime = 1. / _imp->windowWidth;
 	
 	//	crop time (in seconds) is the maximum allowable time
 	//	correction, beyond which a reassigned spectral component
 	//	is considered unreliable, and not considered eligible for
 	//	Breakpoint formation in extractPeaks(). By default, use
 	//	the hop time (should it be half that?):
-	_cropTime = _hop;
+	_imp->cropTime = _imp->hopTime;
 	
 	//	bandwidth association region width 
 	//	defaults to 2 kHz, corresponding to 
 	//	1 kHz region center spacing:
-	_bwRegionWidth = 2000.;
+	_imp->bwRegionWidth = 2000.;
     
     //	peform bandwidth association bu default:
-    _assocBW = true;
+    _imp->assocBW = true;
 }
 
 #pragma mark -- analysis --
@@ -314,14 +349,14 @@ void
 Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate )
 {
 	//	construct state object for this analysis:	
-    AnalyzerState state( *this, srate );
+    AnalyzerState state( *_imp, srate );
 
 //
 //	need to check for bogus parameters somewhere!!!!
 //
 
 	//	compute hop time in samples:
-	const long hop = long( hopTime() * srate );	//	truncate
+	const long hop = long( _imp->hopTime * srate );	//	truncate
 	
 	//	window length is first half length + second
 	//	half length + the "center" sample (this works
@@ -403,7 +438,7 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate 
 double 
 Analyzer::ampFloor( void ) const 
 { 
-    return _floor; 
+    return _imp->ampFloor; 
 }
 
 // ---------------------------------------------------------------------------
@@ -417,7 +452,7 @@ Analyzer::ampFloor( void ) const
 bool 
 Analyzer::associateBandwith( void ) const 
 { 
-    return _assocBW; 
+    return _imp->assocBW; 
 }
 
 // ---------------------------------------------------------------------------
@@ -433,7 +468,7 @@ double
 Analyzer::bwRegionWidth( void ) const
 { 
     debugger << "Analyzer::bwRegionWidth() is a deprecated member, and will be removed in a future Loris release." << endl;
-    return _bwRegionWidth; 
+    return _imp->bwRegionWidth; 
 }
 
 // ---------------------------------------------------------------------------
@@ -451,7 +486,7 @@ double
 Analyzer::cropTime( void ) const 
 { 
     debugger << "Analyzer::cropTime() is a deprecated member, and will be removed in a future Loris release." << endl;
-    return _cropTime; 
+    return _imp->cropTime; 
 }
 
 // ---------------------------------------------------------------------------
@@ -461,7 +496,10 @@ Analyzer::cropTime( void ) const
 //	consecutive Breakpoints in a Partial envelope for this Analyzer. 				
 //
 double 
-Analyzer::freqDrift( void ) const { return _drift;}
+Analyzer::freqDrift( void ) const 
+{ 
+	return _imp->freqDrift;
+}
 
 // ---------------------------------------------------------------------------
 //	freqFloor
@@ -470,7 +508,10 @@ Analyzer::freqDrift( void ) const { return _drift;}
 //	frequency), in Hz, for this Analyzer. 				
 //
 double 
-Analyzer::freqFloor( void ) const { return _minFrequency; }
+Analyzer::freqFloor( void ) const 
+{ 
+	return _imp->freqFloor; 
+}
 
 // ---------------------------------------------------------------------------
 //	freqResolution
@@ -479,7 +520,10 @@ Analyzer::freqFloor( void ) const { return _minFrequency; }
 //	difference between Partials) for this Analyzer.
 //
 double 
-Analyzer::freqResolution( void ) const { return _resolution; }
+Analyzer::freqResolution( void ) const 
+{ 
+	return _imp->freqResolution; 
+}
 
 // ---------------------------------------------------------------------------
 //	hopTime
@@ -489,7 +533,10 @@ Analyzer::freqResolution( void ) const { return _resolution; }
 //	Analyzer.
 //
 double 
-Analyzer::hopTime( void ) const { return _hop; }
+Analyzer::hopTime( void ) const 
+{ 
+	return _imp->hopTime; 
+}
 
 // ---------------------------------------------------------------------------
 //	windowWidth
@@ -498,7 +545,10 @@ Analyzer::hopTime( void ) const { return _hop; }
 //	zero-crossings) of the analysis window used by this Analyzer. 				
 //
 double 
-Analyzer::windowWidth( void ) const { return _windowWidth; }
+Analyzer::windowWidth( void ) const 
+{ 
+	return _imp->windowWidth; 
+}
 
 #pragma mark -- parameter mutation --
 
@@ -509,7 +559,10 @@ Analyzer::windowWidth( void ) const { return _windowWidth; }
 //	(negative) dB, for this Analyzer. 				
 //
 void 
-Analyzer::setAmpFloor( double x ) { _floor = x; }
+Analyzer::setAmpFloor( double x ) 
+{ 
+	_imp->ampFloor = x; 
+}
 
 // ---------------------------------------------------------------------------
 //	setAssociateBandwidth
@@ -522,7 +575,7 @@ Analyzer::setAmpFloor( double x ) { _floor = x; }
 void 
 Analyzer::setAssociateBandwidth( bool b )
 {
-    _assocBW = b;
+    _imp->assocBW = b;
 }
 
 // ---------------------------------------------------------------------------
@@ -538,7 +591,7 @@ void
 Analyzer::setBwRegionWidth( double x ) 
 { 
     debugger << "Analyzer::setBwRegionWidth() is a deprecated member, and will be removed in a future Loris release." << endl;
-    _bwRegionWidth = x; 
+    _imp->bwRegionWidth = x; 
 }	
 
 // ---------------------------------------------------------------------------
@@ -556,7 +609,7 @@ void
 Analyzer::setCropTime( double x ) 
 { 
     debugger << "Analyzer::setCropTime() is a deprecated member, and will be removed in a future Loris release." << endl;
-    _cropTime = x; 
+    _imp->cropTime = x; 
 }
 
 // ---------------------------------------------------------------------------
@@ -566,7 +619,10 @@ Analyzer::setCropTime( double x )
 //	consecutive Breakpoints in a Partial envelope for this Analyzer. 				
 //
 void 
-Analyzer::setFreqDrift( double x ) { _drift = x; }
+Analyzer::setFreqDrift( double x ) 
+{ 
+	_imp->freqDrift = x; 
+}
 
 // ---------------------------------------------------------------------------
 //	setFreqFloor
@@ -575,7 +631,10 @@ Analyzer::setFreqDrift( double x ) { _drift = x; }
 //	frequency), in Hz, for this Analyzer. 				
 //
 void 
-Analyzer::setFreqFloor( double x ) { _minFrequency = x; }
+Analyzer::setFreqFloor( double x ) 
+{ 
+	_imp->freqFloor = x; 
+}
 
 // ---------------------------------------------------------------------------
 //	setFreqResolution
@@ -585,7 +644,10 @@ Analyzer::setFreqFloor( double x ) { _minFrequency = x; }
 //	other parameters to be recomputed.) 									
 //
 void 
-Analyzer::setFreqResolution( double x ) { _resolution = x; }
+Analyzer::setFreqResolution( double x ) 
+{ 
+	_imp->freqResolution = x; 
+}
 
 // ---------------------------------------------------------------------------
 //	setHopTime
@@ -594,7 +656,10 @@ Analyzer::setFreqResolution( double x ) { _resolution = x; }
 //	density of Partial envelope Breakpoint data) for this Analyzer.
 //
 void 
-Analyzer::setHopTime( double x ) { _hop = x; }
+Analyzer::setHopTime( double x ) 
+{ 
+	_imp->hopTime = x; 
+}
 
 // ---------------------------------------------------------------------------
 //	setWindowWidth
@@ -603,7 +668,10 @@ Analyzer::setHopTime( double x ) { _hop = x; }
 //	zero-crossings) of the analysis window used by this Analyzer.
 //
 void 
-Analyzer::setWindowWidth( double x ) { _windowWidth = x; }
+Analyzer::setWindowWidth( double x ) 
+{ 
+	_imp->windowWidth = x; 
+}
 
 #pragma mark -- PartialList access --
 
@@ -614,7 +682,7 @@ Analyzer::setWindowWidth( double x ) { _windowWidth = x; }
 //	analyzed Partials. 
 //
 PartialList & 
-Analyzer::partials( void ) { return _partials; }
+Analyzer::partials( void ) { return _imp->partials; }
 
 // ---------------------------------------------------------------------------
 //	partials
@@ -623,7 +691,7 @@ Analyzer::partials( void ) { return _partials; }
 //	list of analyzed Partials. 
 //
 const PartialList & 
-Analyzer::partials( void ) const { return _partials; }
+Analyzer::partials( void ) const { return _imp->partials; }
 
 #pragma mark -- internal analysis helpers --
 
@@ -647,9 +715,9 @@ static void extractPeaks( AnalyzerState & state )
 #endif
 
     //	get analysis parameters:
-	const double ampFloor = state.analyzer.ampFloor();
-	const double freqFloor = state.analyzer.freqFloor();
-	const double cropTime = state.analyzer.cropTime();
+	const double ampFloor = state.params.ampFloor;
+	const double freqFloor = state.params.freqFloor;
+	const double cropTime = state.params.cropTime;
     
     const double sampleRate = state.sampleRate;
     const double frameTime = state.currentFrameTime;
@@ -763,7 +831,7 @@ static void thinPeaks( AnalyzerState & state )
 #endif
 
     //	get analysis parameters:
-	const double freqResolution = state.analyzer.freqResolution();
+	const double freqResolution = state.params.freqResolution;
 
 	//	can't do anything if there's fewer than two Breakpoints:
 	if ( frame.size() < 2 )
@@ -858,10 +926,10 @@ static void formPartials( AnalyzerState & state )
     //	get state objects:
     FRAME & frame = state.currentFrame;
     PartialPtrs & eligiblePartials = state.eligiblePartials;
-    PartialList & partials = state.analyzer.partials();
+    PartialList & partials = state.params.partials;
 
     //	get analysis parameters:
-	const double freqDrift = state.analyzer.freqDrift();
+	const double freqDrift = state.params.freqDrift;
 
 	PartialPtrs newlyEligible;
 	
@@ -923,15 +991,15 @@ static void formPartials( AnalyzerState & state )
 #if defined(Noise_Partials)
 static void formNoisePartials( AnalyzerState & state )
 {
-    std::cout << "forming noise Partials" << endl;
+    debugger << "forming noise Partials" << endl;
     
     //	get state objects:
     FRAME & frame = state.currentNoiseFrame;
     PartialPtrs & eligiblePartials = state.eligibleNoisePartials;
-    PartialList & partials = state.analyzer.partials();
+    PartialList & partials = state.params.partials;
 
     //	get analysis parameters:
-	const double freqDrift = state.analyzer.freqDrift();
+	const double freqDrift = state.params.freqDrift;
 
 	PartialPtrs newlyEligible;
 	
@@ -990,7 +1058,7 @@ static void formNoisePartials( AnalyzerState & state )
 	 	
 	eligiblePartials = newlyEligible;
     
-    std::cout << "there are now " << eligiblePartials.size() << " eligible noise Partials" << endl;
+    debugger << "there are now " << eligiblePartials.size() << " eligible noise Partials" << endl;
 }
 
 #endif

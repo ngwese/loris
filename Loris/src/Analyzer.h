@@ -38,6 +38,8 @@
 //	begin namespace
 namespace Loris {
 
+class Analyzer_imp;
+
 // ---------------------------------------------------------------------------
 //	class Analyzer
 //	
@@ -56,33 +58,8 @@ namespace Loris {
 class Analyzer
 {
 //	-- instance variables --
-	double _resolution;	//	in Hz, minimum instantaneous frequency distance;
-						//	this is the core parameter, others are, by default,
-						//	computed from this one
-	double _floor;		//	dB, relative to full amplitude sine wave, absolute
-						//	amplitude threshold
-	double _windowWidth;//	in Hz, width of main lobe; this might be more
-						//	conveniently presented as window length, but
-						//	the main lobe width more explicitly highlights
-						//	the critical interaction with _resolution
-	double _minFrequency;	//	lowest frequency (Hz) component extracted
-							//	in spectral analysis
-	double _drift;		//	the maximum frequency (Hz) difference between two 
-						//	consecutive Breakpoints that will be linked to
-						//	form a Partial
-	double _hop;		//	in seconds, time between analysis windows in
-						//	successive spectral analyses
-	double _cropTime;	//	in seconds, maximum time correction for a spectral
-						//	component to be considered reliable, and to be eligible
-						//	for extraction and for Breakpoint formation
-	double _bwRegionWidth;	//	width in Hz of overlapping bandwidth 
-							//	association regions
-                            
-    bool 	_assocBW;	//	if true, perform bandwidth association, otherwise 
-                        //	collect noise energy in noise Partials labeled -1.
-							
-	PartialList _partials;	//	collect Partials here
-			
+	Analyzer_imp * _imp; 	//	insulating implementation class
+				
 //	-- public interface --
 public:
 //	-- construction --

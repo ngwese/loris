@@ -48,7 +48,7 @@ print '(in %s)' % path
 try:	
 	path = os.environ['srcdir']
 except:
-	path = os.pardir + 'test'
+	path = os.path.join(os.pardir, 'test')
 print '(looking for sources in %s)' % path
 
 #

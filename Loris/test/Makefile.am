@@ -15,6 +15,9 @@ INCLUDES = -I$(top_srcdir)/src
 test_c_SOURCES = morphtest.C
 test_c_LDADD = $(top_builddir)/pi/libloris.la
 
+test_morpher_SOURCES = test_Morpher.C
+test_morpher_LDADD = $(top_builddir)/pi/libloris.la
+
 if BUILD_PYTHON
 PYTHON_TEST = run_pytest
 $(PYTHON_TEST):
@@ -29,7 +32,7 @@ $(TCL_TEST):
 	chmod +x $@
 endif
 
-check_PROGRAMS = test_c
+check_PROGRAMS = test_morpher test_c
 check_SCRIPTS = $(PYTHON_TEST) $(TCL_TEST)
 
 TESTS = $(check_PROGRAMS) $(check_SCRIPTS) 
