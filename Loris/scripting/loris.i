@@ -47,9 +47,9 @@
 %module loris 
 
 #if defined (SWIGPYTHON)
-	const char __version__[] =  "Loris 1.0beta1 ";
+	const char __version__[] =  "Loris 1.0beta2 ";
 #else
-	const char version[] =  "Loris 1.0beta1 ";
+	const char version[] =  "Loris 1.0beta2 ";
 #endif
 
 %{
