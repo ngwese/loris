@@ -9,6 +9,9 @@
 //	BreakpointMap is a simple subclass of Map, specifying a linear 
 //	segment breakpoint function. 
 //
+//	This is an unfortunate name collision -- Loris::Map has little 
+//	to do with std::map.
+//
 //	-kel 26 Oct 99
 //
 // ===========================================================================
@@ -62,7 +65,11 @@ public:
 	//~BreakpointMap( void );
 	
 //	cloning:
-	BreakpointMap * clone( void ) const { return new BreakpointMap( *this ); }
+//	HEY do somthing better, some lousy compilers
+//	don't allow overridden members to return dervied
+//	types.
+	// BreakpointMap * clone( void ) const { return new BreakpointMap( *this ); }
+	Map * clone( void ) const { return new BreakpointMap( *this ); }
 
 //	adding breakpoints:
 	void insertBreakpoint( double x, double y ); 

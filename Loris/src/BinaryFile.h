@@ -13,6 +13,7 @@
 
 #include <string>
 
+//	probably should use macros to do this:
 #if !defined( Deprecated_iostream_headers)
 	#include <iostream>
 	#include <fstream>
@@ -23,6 +24,7 @@
 #else
 	#include <iostream.h>
 	#include <fstream.h>
+	#define seekdir seek_dir
 #endif
 
 Begin_Namespace( Loris )
@@ -94,6 +96,7 @@ public:
 	
 	//	absolute file stream position:
 	//	(note: streampos is _not_ an integral type)
+	//	(that is to say, it _should not_ be)
 	streampos tell( void );
 	void seek( streampos x );
 	

@@ -15,8 +15,10 @@
 
 #if !defined( Deprecated_iostream_headers )
 	#include <iostream>
+	#define IOSfmtflags ios::fmtflags
 #else
-	#include <ostream.h>
+	#include <iostream.h>
+	#define IOSfmtflags int
 #endif
 
 #if !defined( Deprecated_cstd_headers )
@@ -69,8 +71,13 @@ Notifier::post( boolean block )
 	if ( block ) {
 		string resp;
 		cout << "confirm (or type 'throw' to take exception): ";
-		ios::fmtflags oldflags = cin.flags();
-		cin >> noskipws >> resp;
+		IOSfmtflags oldflags = cin.flags();
+
+		// cin >> noskipws >> resp;
+		//	is this the same? MIPSPro doesn't have noskipws
+		cin.unsetf( skipws );
+		cin >> resp;
+
 		cin.flags( oldflags );
 		cin.clear();
 		

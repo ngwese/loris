@@ -39,7 +39,9 @@ public:
 	//LoFreqBweKludger( const LoFreqBweKludger & other );
 	
 //	cloning:
-	LoFreqBweKludger * clone( void ) const { return new LoFreqBweKludger( *this ); }
+//	HEY this is screwed up under MIPSPro
+	// LoFreqBweKludger * clone( void ) const { return new LoFreqBweKludger( *this ); }
+	PartialIterator * clone( void ) const { return new LoFreqBweKludger( *this ); }
 
 	//	override these two:
 	double amplitude( void ) const;

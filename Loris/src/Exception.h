@@ -15,11 +15,13 @@
 //	use standard library strings and streams
 #include <string>
 
+//  (need the ostream macro for non-compliant libraries)
 #if !defined( Deprecated_iostream_headers )
-	#include <ostream>
-	using std::ostream;
+	#include <iostream>
+	#define STDostream std::ostream
 #else
-	#include <ostream.h>
+	#include <iostream.h>
+	#define STDostream ostream
 #endif
 
 Begin_Namespace( Loris )
@@ -32,7 +34,7 @@ Begin_Namespace( Loris )
 //	Inherits streaming capability from ostream, uses its own string
 //	buffer (defined below) as a buffer. 
 //
-class Exception : public ostream
+class Exception : public STDostream
 {
 //	-- public interface --
 public:
@@ -46,17 +48,22 @@ public:
 	const std::string & str( void ) const;
 	const char * what( void ) const;
 	
-//	-- instance variable - the string buffer --
+//	copying:
+//	(exception objects are copied once when caught by reference,
+//	or twice when caught by value)
 protected:
-	StringBuffer _sbuf;
+	Exception( const Exception & other );
 	
+//	-- instance variable - the string buffer --
+	StringBuffer _sbuf;
+
 };	//	end of class Exception
 
 // ---------------------------------------------------------------------------
 //	streaming operator for Exceptions:
 //	(defined in Exception.C)
 //
-ostream & operator << ( ostream & str, const Exception & ex );	
+STDostream & operator << ( STDostream & str, const Exception & ex );	
 
 // ---------------------------------------------------------------------------
 //	class AssertionFailure
@@ -66,6 +73,7 @@ class AssertionFailure : public Exception
 public: 
 	AssertionFailure( const std::string & str, const std::string & where = "" ) : 
 		Exception( std::string("Assertion failed -- ").append( str ), where ) {}
+	AssertionFailure( const AssertionFailure & other ) : Exception( other ) {}
 		
 };	//	end of class AssertionFailure
 
@@ -77,6 +85,7 @@ class LowMemException : public Exception
 public: 
 	LowMemException( const std::string & str, const std::string & where = "" ) : 
 		Exception( std::string("Low Memory Exception -- ").append( str ), where ) {}
+	LowMemException( const LowMemException & other ) : Exception( other ) {}
 		
 };	//	end of class LowMemException
 
@@ -88,6 +97,7 @@ class IndexOutOfBounds : public Exception
 public: 
 	IndexOutOfBounds( const std::string & str, const std::string & where = "" ) : 
 		Exception( std::string("Index out of bounds -- ").append( str ), where ) {}
+	IndexOutOfBounds( const IndexOutOfBounds & other ) : Exception( other ) {}
 		
 };	//	end of class LowMemException
 
@@ -99,6 +109,7 @@ class FileIOException : public Exception
 public: 
 	FileIOException( const std::string & str, const std::string & where = "" ) : 
 		Exception( std::string("File i/o error -- ").append( str ), where ) {}
+	FileIOException( const FileIOException & other ) : Exception( other ) {}
 		
 };	//	end of class FileAccessError
 
@@ -110,6 +121,7 @@ class InvalidObject : public Exception
 public: 
 	InvalidObject( const std::string & str, const std::string & where = "" ) : 
 		Exception( std::string("Invalid configuration or object -- ").append( str ), where ) {}
+	InvalidObject( const InvalidObject & other ) : Exception( other ) {}
 		
 };
 
@@ -124,6 +136,7 @@ class InvalidIterator : public InvalidObject
 public: 
 	InvalidIterator( const std::string & str, const std::string & where = "" ) : 
 		InvalidObject( std::string("Invalid Iterator -- ").append( str ), where ) {}
+	InvalidIterator( const InvalidIterator & other ) : InvalidObject( other ) {}
 		
 };	//	end of class InvalidObject
 

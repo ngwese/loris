@@ -97,9 +97,12 @@ typedef unsigned char 	uchar;
  *	Constants:
  */
 static const double Pi = 3.1415926535897932384626433L;
-static const double TwoPi = 2.L * Pi;
+static const double TwoPi = 2.L * 3.1415926535897932384626433L;
+
+End_Namespace( Loris )
 
 #ifdef __cplusplus
+#if 0
 // ---------------------------------------------------------------------------
 //	Loris initialization class.
 //
@@ -116,12 +119,13 @@ class Init_
 public:	
 	static const Init_ & instance( void );
 };	
+#endif
+#include "LorisInit.h"
 	
 //	reference to the sole istance:	
-static const Init_ & _loris_lib_initializer = Init_::instance();
+static const Loris::Init_ & _loris_lib_initializer = Loris::Init_::instance();
 
 #endif
 
-End_Namespace( Loris )
 
 #endif	/*  ndef __Loris_library_prefix__ */

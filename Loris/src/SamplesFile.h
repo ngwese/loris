@@ -66,7 +66,7 @@ protected:
 	typedef union {
 		//	different size samples:
 		Int_32 s32bits;						//	32 bits sample
-		struct { char data[3]; }  s24bits;	//	24 bits sample
+		struct I_24 { char data[3]; }  s24bits;	//	24 bits sample
 		Int_16 s16bits;						//	16 bits sample
 		char s8bits;						//	8 bits sample
 	} pcm_sample;

@@ -15,14 +15,17 @@
 #include "endian.h"
 
 #include <string>
-using std::string;
 
 #if !defined( Deprecated_iostream_headers)
 	#include <iostream>
-	using std::ios;
+	#define IOSbinary std::ios::binary
 #else
 	#include <iostream.h>
+	//	this probably has nothing to do with iostream
+	#define IOSbinary 0
 #endif
+
+using namespace std;
 
 Begin_Namespace( Loris )
 
@@ -33,7 +36,7 @@ Begin_Namespace( Loris )
 BinaryFile::BinaryFile( void ) :
 	_prevOp( op_seek ),
 	_swapBytes( false ),
-	std::iostream( & _buf )
+	iostream( & _buf )
 {
 }
 
@@ -46,7 +49,7 @@ BinaryFile::BinaryFile( void ) :
 BinaryFile::BinaryFile( const string & path ) :
 	_prevOp( op_seek ),
 	_swapBytes( false ),
-	std::iostream( & _buf )
+	iostream( & _buf )
 {
 	//	wow, is this ever ugly...
 	try {
@@ -79,7 +82,7 @@ BinaryFile::BinaryFile( const string & path ) :
 void
 BinaryFile::append( const string & path )
 {
-	buffer().open( path.c_str(), ios::out | ios::app | ios::binary );
+	buffer().open( path.c_str(), ios::out | ios::app | IOSbinary );
 		
 	if ( ! buffer().is_open() ) {
 		string s( "Couldn't open BinaryFile: " );
@@ -97,7 +100,7 @@ BinaryFile::append( const string & path )
 void
 BinaryFile::create( const string & path )
 {
-	buffer().open( path.c_str(), ios::in | ios::out | ios::trunc | ios::binary );
+	buffer().open( path.c_str(), ios::in | ios::out | ios::trunc | IOSbinary );
 		
 	if ( ! buffer().is_open() ) {
 		string s( "Couldn't open BinaryFile: " );
@@ -115,7 +118,7 @@ BinaryFile::create( const string & path )
 void
 BinaryFile::edit( const string & path )
 {
-	buffer().open( path.c_str(), ios::in | ios::out | ios::binary );
+	buffer().open( path.c_str(), ios::in | ios::out | IOSbinary );
 		
 	if ( ! buffer().is_open() ) {
 		string s( "Couldn't open BinaryFile: " );
@@ -133,7 +136,7 @@ BinaryFile::edit( const string & path )
 void
 BinaryFile::view( const string & path )
 {
-	buffer().open( path.c_str(), ios::in | ios::binary );
+	buffer().open( path.c_str(), ios::in | IOSbinary );
 		
 	if ( ! buffer().is_open() ) {
 		string s( "Couldn't open BinaryFile: " );
@@ -162,7 +165,7 @@ BinaryFile::close( void )
 //	position
 // ---------------------------------------------------------------------------
 //
-std::streampos
+streampos
 BinaryFile::tell( void )
 {
 	return tellp();
@@ -173,7 +176,7 @@ BinaryFile::tell( void )
 // ---------------------------------------------------------------------------
 //
 void
-BinaryFile::seek( std::streampos x )
+BinaryFile::seek( streampos x )
 {
 	//if ( eof() )	//	this makes sense, I think, 
 	//	clear();	//	but not consistent with standard lib
@@ -231,7 +234,7 @@ BinaryFile::readBytes( char * data, int howmany, boolean swap )
 	_prevOp = op_rd;
 
 	//	read the bytes into data:
-	std::iostream::read( data, howmany );
+	iostream::read( data, howmany );
 	
 	//	check stream state:
 	if ( ! good() )
@@ -259,7 +262,7 @@ BinaryFile::writeBytes( char * data, int howmany, boolean swap )
 		swapByteOrder( data, howmany );
 
 	//	write the bytes from data:
-	std::iostream::write( data, howmany );
+	iostream::write( data, howmany );
 	
 	//	check stream state:
 	if ( ! good() )

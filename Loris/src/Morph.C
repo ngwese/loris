@@ -63,12 +63,19 @@ Morph::Morph( auto_ptr< Map > f ) :
 	if ( ! f.get() ) {
 		//	need to do this here, because clone() can't
 		//	be called on a Null (auto) pointer:
-		f = defaultMap();
+		// f = defaultMap();
+		//	since the argument to operator= is non-const, 
+		//	defaultMap() can't, strictly speaking, be 
+		//	used as the argument, because temporaries
+		//	are not lvalues, and only lvalues can initialize
+		//	non-const references.
+		//	At least, some compilers see it that way.
+		f.reset( defaultMap().release() );
 	}
 		
 	setFrequencyFunction( auto_ptr< Map >( f->clone() ) );
 	setAmplitudeFunction( auto_ptr< Map >( f->clone() ) );
-	setBandwidthFunction( auto_ptr< Map >( f->clone() ) );
+	setBandwidthFunction( auto_ptr< Map >( f ) );
 }
 
 // ---------------------------------------------------------------------------
@@ -157,7 +164,7 @@ void
 Morph::setFrequencyFunction(  auto_ptr< Map > f )
 {
 	if ( ! f.get() ) 
-		f = defaultMap();
+		f.reset( defaultMap().release() );
 
 	_freqFunction = f;
 }
@@ -177,7 +184,7 @@ void
 Morph::setAmplitudeFunction(  auto_ptr< Map > f )
 {
 	if ( ! f.get() ) 
-		f = defaultMap();
+		f.reset( defaultMap().release() );
 
 	_ampFunction = f;
 }
@@ -197,7 +204,7 @@ void
 Morph::setBandwidthFunction(  auto_ptr< Map > f )
 {
 	if ( ! f.get() ) 
-		f = defaultMap();
+		f.reset( defaultMap().release() );
 
 	_bwFunction = f;
 }
@@ -362,22 +369,24 @@ Morph::morphPartial( const Partial & p1, const Partial & p2 )
 //	into collector. It would be more efficient to splice the element from
 //	the original list, but those lists are immutable, so just copy it.
 //
+//  function object for selecting by label:
+//	(this should be local to collectByLabel, but MIPSPro
+//	doesn't allow template args to reference local types)
+struct LabelIs
+{
+	int _x;
+	LabelIs( int x ) : _x(x) {}
+	boolean operator() (const Partial & p) const {
+		return p.label() == _x;
+	}
+};
+
 int
 Morph::collectByLabel( const list<Partial>::const_iterator & start, 
 					   const list<Partial>::const_iterator & end, 
 					   list<Partial> & collector, 
 					   int label ) const
 {
-	//	function object for selecting by label:
-	struct LabelIs
-	{
-		int _x;
-		LabelIs( int x ) : _x(x) {}
-		boolean operator() (const Partial & p) const {
-			return p.label() == _x;
-		}
-	};
-		
 	int n = 0;
 	for ( list< Partial >::const_iterator it = find_if( start, end, LabelIs( label ) );
 			  it != end; 

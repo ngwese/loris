@@ -13,11 +13,12 @@
 #include <string>
 
 #if !defined( Deprecated_iostream_headers )
-	#include <ostream>
-	using std::ostream;
+	#include <iostream>
 #else
-	#include <ostream.h>
+	#include <iostream.h>
 #endif
+
+using namespace std;
 
 Begin_Namespace( Loris )
 
@@ -29,7 +30,7 @@ Begin_Namespace( Loris )
 // ---------------------------------------------------------------------------
 //	where defaults to empty.
 //
-Exception::Exception( const std::string & str, const std::string & where ) :
+Exception::Exception( const string & str, const string & where ) :
 	_sbuf( str ),
 	ostream( & _sbuf )
 {
@@ -37,6 +38,17 @@ Exception::Exception( const std::string & str, const std::string & where ) :
 	_sbuf.append(" ");
 }
 	
+// ---------------------------------------------------------------------------
+//	Exception copy constructor
+// ---------------------------------------------------------------------------
+//	Exception objects are copied when caught by reference or value.
+//
+Exception::Exception( const Exception & other ) :
+	_sbuf( other._sbuf ),
+	ostream( & _sbuf )
+{
+}
+
 // ---------------------------------------------------------------------------
 //	Exception destructor
 // ---------------------------------------------------------------------------
@@ -49,7 +61,7 @@ Exception::~Exception( void )
 //	str
 // ---------------------------------------------------------------------------
 //
-const std::string &
+const string &
 Exception::str( void ) const
 {
 	return _sbuf.str();

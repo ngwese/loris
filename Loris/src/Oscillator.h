@@ -16,13 +16,11 @@
 // ===========================================================================
 
 #include "LorisLib.h"
-
+#include "Filter.h"
 #include <vector>
 #include <memory>	//	for auto_ptr
 
 Begin_Namespace( Loris )
-
-class Filter;
 
 // ---------------------------------------------------------------------------
 //	class Oscillator

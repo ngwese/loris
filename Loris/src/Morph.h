@@ -15,12 +15,11 @@
 
 #include "LorisLib.h"
 #include "Partial.h"
+#include "Map.h"
 #include <list>
 #include <memory>	//	for auto_ptr
 
 Begin_Namespace( Loris )
-
-class Map;
 
 // ---------------------------------------------------------------------------
 //	class Morph
@@ -120,11 +119,13 @@ protected:
 
 };	//	end of class Morph
 
+/*
 //	prototypes for things that aren't classes or
 //	member functions yet:
 #include <vector>
 Partial dilate( const Partial & p, const std::vector< double > & current, 
 				const std::vector< double > & desired );
+*/
 
 End_Namespace( Loris )
 

@@ -87,6 +87,7 @@ class ImportException : public Exception
 public: 
 	ImportException( const std::string & str, const std::string & where = "" ) : 
 		Exception( std::string("Import Error -- ").append( str ), where ) {}
+	ImportException( const ImportException & other ) : Exception( other ) {}
 		
 };	//	end of class ImportException
 

@@ -18,10 +18,16 @@
 
 #include <algorithm>
 #include <string>
-#include <limits>
+
+#if !defined( Lacks_numeric_limits )
+	#include <limits>
+	static const double Maximum_Long = std::numeric_limits<Loris::Int_32>::max();
+#else
+	#include <limits.h>
+	static const double Maximum_Long = LONG_MAX;
+#endif
 
 using namespace std;
-
 
 Begin_Namespace( Loris )
 
@@ -141,9 +147,6 @@ AiffFile::readCommon( BinaryFile & file )
 		for ( readChunkHeader( file, ck.header ); 
 			  ck.header.id != CommonId; 
 			  readChunkHeader( file, ck.header ) ) {
-			//	make sure the chunk looks valid:
-			if( ck.header.size < 0 )
-				Throw( FileIOException, "Found bogus chunk size." );
 							
 			if ( ck.header.id == ContainerId )
 				file.offset( sizeof(Int_32) );
@@ -235,9 +238,6 @@ AiffFile::readSampleData( BinaryFile & file )
 		for ( readChunkHeader( file, ck.header ); 
 			  ck.header.id != SoundDataId; 
 			  readChunkHeader( file, ck.header ) ) {
-			//	make sure the chunk looks valid:
-			if( ck.header.size < 0 )
-				Throw( FileIOException, "Found bogus chunk size." );
 				
 			//	make sure we didn't run off the edge of the earth:
 			if ( ! file.good() )
@@ -272,7 +272,7 @@ AiffFile::readSampleData( BinaryFile & file )
 void
 AiffFile::readSamples( BinaryFile & file )
 {	
-	static const double oneOverMax = 1. / numeric_limits<Int_32>::max();
+	static const double oneOverMax = 1. / Maximum_Long;	//	defined at top
 	
 	pcm_sample z;
 
@@ -429,8 +429,6 @@ AiffFile::writeSampleData( BinaryFile & file )
 void
 AiffFile::writeSamples( BinaryFile & file )
 {	
-	static const double Maximum_Long = numeric_limits<Int_32>::max();
-	
 	pcm_sample z;
 
 	switch ( _sampSize ) {

@@ -18,15 +18,17 @@
 #include "StringBuffer.h"
 
 #include <string>
-using std::string; 
 
 #if !defined( Deprecated_iostream_headers )
-	#include <ostream>
-	using std::ostream;
-	using std::streambuf;
-	using std::streamsize;
+	#include <iostream>
+	#define STDostream std::ostream
+	#define STDstreambuf std::streambuf
+	#define STDstreamsize std::streamsize
 #else
-	#include <ostream.h>
+	#include <iostream.h>
+	#define STDostream ostream
+	#define STDstreambuf streambuf
+	#define STDstreamsize int
 #endif
 
 Begin_Namespace( Loris )
@@ -40,16 +42,16 @@ Begin_Namespace( Loris )
 //	interface. 
 //	Inherits streaming from ostream.
 //
-class Notifier : public ostream
+class Notifier : public STDostream
 {
 //	-- public interface --
 public:
 //	construction:
 	Notifier( const std::string & s = "" );
-	Notifier( streambuf & buf, const string & s = "" );
+	Notifier( STDstreambuf & buf, const std::string & s = "" );
 	
 //	virtual destructor so Notifier can be subclassed:
-//	(use compiler generated, ostream has virtual destructor)
+//	(use compiler generated, STDostream has virtual destructor)
 	//virtual ~Notifier( void );	
 	
 //	posting:
@@ -80,28 +82,28 @@ class Debugger
 	: public Notifier
 	{
 	public:
-		Debugger( const string s = "" ) : Notifier( s ) {}
+		Debugger( const std::string s = "" ) : Notifier( s ) {}
 	};
 #else
 	//	do nothing at all:
-	 : public ostream
+	 : public STDostream
 	{
 	public:
-		Debugger( void ) : ostream( & dumb ) {}
-		Debugger( const string ) : ostream( & dumb ) {}
+		Debugger( void ) : STDostream( & dumb ) {}
+		Debugger( const std::string ) : STDostream( & dumb ) {}
 		
 		//	post does nothing at all:
 		virtual void post( boolean = false ) {}
 		
 		//	to do nothing at all, need a dummy streambuf:
-		class dummybuf : public streambuf
+		class dummybuf : public STDstreambuf
 		{
 		protected:
 			//	called every time a character is written:
 			virtual int_type overflow( int_type c ) { return c; }
 			
 			//	called when lots of characters are written:
-			virtual streamsize xsputn( const char *, streamsize n ) { return n; }
+			virtual STDstreamsize xsputn( const char *, STDstreamsize n ) { return n; }
 		};	//	end of class dummybuf
 		
 	private:

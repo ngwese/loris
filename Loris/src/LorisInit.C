@@ -16,6 +16,7 @@
 // ===========================================================================
 
 #include "LorisLib.h"
+#include "LorisInit.h"
 #include "Exception.h"
 #include "LorisTypes.h"
 #include "LowMem.h"

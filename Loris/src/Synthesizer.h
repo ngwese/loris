@@ -14,14 +14,14 @@
 // ===========================================================================
 
 #include "LorisLib.h"
+#include "Oscillator.h"
+#include "PartialIterator.h"
 #include <vector>
 #include <memory> 	//	for auto_ptr
 
 Begin_Namespace( Loris )
 
 class Partial;
-class Oscillator;
-class PartialIterator;
 
 // ---------------------------------------------------------------------------
 //	class Synthesizer

@@ -18,11 +18,15 @@
 #include <string>
 
 //	use std::streambuf as base class:
-#if !defined(USE_DEPRECATED_HEADERS)
+//	(need this macro for non-compliant libraries)
+#if !defined(Deprecated_iostream_headers)
 	#include <iosfwd>
 	#include <streambuf>
+	#define STDstreambuf std::streambuf
 #else
-	#include <ostream.h>
+	#include <iostream.h>
+	#define int_type int
+	#define STDstreambuf streambuf
 #endif
 
 Begin_Namespace( Loris )
@@ -36,11 +40,12 @@ Begin_Namespace( Loris )
 //	and MIPSPro doesn't seem to implement it at all, so
 //	its easier for now to implement the simple thing.
 //
-class StringBuffer : public std::streambuf
+class StringBuffer : public STDstreambuf
 {
 public:
 	//	construction:
 	StringBuffer( const std::string & s = "" ) : _str(s) {}
+	StringBuffer( const StringBuffer & other ) : _str( other._str ) {}
 	
 	//	string access:
 	std::string & str( void ) { return _str; }
@@ -58,7 +63,8 @@ protected:
 	virtual int_type overflow( int_type c ) 
 	{
 		if ( c != EOF ) {
-			_str.push_back(c);
+			//_str.push_back(c);
+			_str += static_cast<char>(c);
 		}
 		return c;
 	}
