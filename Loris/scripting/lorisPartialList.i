@@ -112,3 +112,277 @@ PartialList * PartialListCopy_( const PartialList * other )
 /*	Return a new PartialList that is a copy of this 
 	PartialList (i.e. has identical Partials).
  */
+ 
+/*
+	EXPERIMENTAL JUNK:
+ */
+ 
+%{
+	#include "Notifier.h"
+	using Loris::notifier;
+	
+	#include "Handle.h"
+	typedef Loris::Handle< PartialList > PartialListH;
+	
+	class PartialListHIter_
+	{
+		PartialListH _list;
+		PartialList::iterator _iter;
+		
+		//	no default constructor:
+		PartialListHIter_( void );
+		
+		public:
+		//	construction:
+		PartialListHIter_( PartialListH hlist ) :
+			_list( hlist ),
+			_iter( hlist->begin() )
+		{
+			notifier << "created an iterator on a list of " << _list->size() << " Partials" << endl;
+		}
+		
+		//	better be careful that pos is an iterator of *hlist!
+		PartialListHIter_( PartialListH hlist, PartialList::iterator pos ) :
+			_list( hlist ),
+			_iter( pos )
+		{
+			notifier << "created a risky iterator on a list of " << _list->size() << " Partials" << endl;
+		}
+		
+		PartialListHIter_( const PartialListHIter_ & rhs ) :
+			_list( rhs._list ),
+			_iter( rhs._iter )
+		{
+			notifier << "copied an iterator on a list of " << _list->size() << " Partials" << endl;
+		}
+		
+		PartialListHIter_ & operator= ( const PartialListHIter_ & rhs )
+		{
+			if ( &rhs != this )
+			{
+				_list = rhs._list;
+				_iter = rhs._iter;
+			}
+			notifier << "assigned an iterator on a list of " << _list->size() << " Partials" << endl;
+			
+			return *this;
+		}
+			
+		~PartialListHIter_( void )
+		{
+			notifier << "destroyed an iterator on a list of " << _list->size() << " Partials" << endl;
+		}
+		
+		//	Iterator pattern:
+		//	(except current(), which isn't useful here)
+		void next( void )
+		{
+			if ( ! atEnd() )
+				++_iter;
+		}
+		
+		bool atEnd( void )
+		{
+			return _iter == _list->end();
+		}
+		
+		//	Partial access:
+		int label( void ) const 			{ return _iter->label(); }
+		double initialPhase( void ) const	{ return _iter->initialPhase(); }
+		double startTime( void ) const 		{ return _iter->startTime(); }
+		double endTime( void ) const		{ return _iter->endTime(); }
+		double duration( void ) const		{ return _iter->duration(); }
+		
+		long countBreakpoints( void ) const { return _iter->countBreakpoints(); }
+		
+		double frequencyAt( double time ) const	{ return _iter->frequencyAt( time ); }
+		double amplitudeAt( double time ) const	{ return _iter->amplitudeAt( time ); }
+		double bandwidthAt( double time ) const	{ return _iter->bandwidthAt( time ); }
+		double phaseAt( double time ) const		{ return _iter->phaseAt( time ); }
+	
+		//	mutation:
+		void setLabel( int l ) { _iter->setLabel( l ); }
+		
+		Loris::Partial & partial( void ) { return *_iter; }
+	
+	};	//	end of class PartialListHIter
+	
+	typedef Loris::Handle< PartialListHIter_ > PartialListHIter;
+%}
+class PartialListH
+/*
+	PartialList by handle:
+ */
+{
+public:
+%addmethods
+{
+	PartialListH( const PartialList * pl )
+	{
+		notifier << "creating a list of " << pl->size() << " Partials" << endl;
+		return new PartialListH( pl->begin(), pl->end() );
+	}
+	
+	~PartialListH( void )
+	{
+		notifier << "destroying a list of " << (*self)->size() << " Partials" << endl;
+		delete self;
+	}
+	
+	void clear( void ) 
+	{
+		(*self)->clear();
+	}
+	
+	unsigned long size( void )
+	{
+		return (*self)->size();
+	}
+	
+	%new
+	PartialList * list( void )
+	{
+		return new PartialList( (*self)->begin(), (*self)->end() );
+	}
+	
+	%new
+	PartialListHIter * first( void )
+	{
+		return new PartialListHIter( *self, (*self)->begin() );
+	}
+	%new
+	PartialListHIter * last( void )
+	{
+		return new PartialListHIter( *self, --(*self)->end() );
+	}
+}
+};	//	end of SWIG interface class PartialListH
+
+class PartialListHIter
+{
+public:
+%addmethods
+{
+	//	construction:
+	//PartialListHIter( PartialListH hlist );
+	//	PartialListHIter( const PartialListHIter & rhs );
+	~PartialListHIter( void )
+	{
+		delete self;
+	}
+	
+	//	Iterator pattern:
+	void next( void )	{ (*self)->next(); }
+	bool atEnd( void )	{ return (*self)->atEnd(); }
+
+	//	Partial access:
+	int label( void ) const 			{ return (*self)->atEnd(); }
+	double initialPhase( void ) const	{ return (*self)->initialPhase(); }
+	double startTime( void ) const 		{ return (*self)->startTime(); }
+	double endTime( void ) const		{ return (*self)->endTime(); }
+	double duration( void ) const		{ return (*self)->duration(); }
+	
+	long countBreakpoints( void ) const { return (*self)->atEnd(); }
+	
+	double frequencyAt( double time ) const	{ return (*self)->frequencyAt( time ); }
+	double amplitudeAt( double time ) const	{ return (*self)->amplitudeAt( time ); }
+	double bandwidthAt( double time ) const	{ return (*self)->bandwidthAt( time ); }
+	double phaseAt( double time ) const		{ return (*self)->phaseAt( time ); }
+
+	//	mutation:
+	void setLabel( int l ) {  (*self)->setLabel( l ); }
+	
+	//	BP access:
+	%new
+	BP * first( void )
+	{
+		return new BP( *self, (*self)->partial().begin() );
+	}
+	%new
+	BP * last( void )
+	{
+		return new BP( *self, --( (*self)->partial().end() ) );
+	}
+	
+}
+	
+};	//	end of SWIG interface class PartialListHIter
+
+%{	
+	class BP
+	{
+		PartialListHIter _partialH;
+		Loris::PartialIterator _iter;
+		
+		public:
+		//	construction:
+		BP( PartialListHIter subject, Loris::PartialIterator pos ) :
+			_partialH( subject ),
+			_iter( pos )
+		{
+			notifier << "created an iterator on a partial having " << _partialH->countBreakpoints()
+					 << " breakpoints" << endl;
+		}
+		
+		~BP( void )
+		{
+			notifier << "destroyed an iterator on a partial having " << _partialH->countBreakpoints()
+					 << " breakpoints" << endl;
+		}
+		
+		//	attribute access:
+		double frequency( void ) const { return _iter->frequency(); }
+		double amplitude( void ) const { return _iter->amplitude(); }
+		double bandwidth( void ) const { return _iter->bandwidth(); }
+		double phase( void ) const { return _iter->phase(); }
+		
+		//	attribute mutation:
+		void setFrequency( double x ) { _iter->setFrequency(x); }
+		void setAmplitude( double x ) { _iter->setAmplitude(x); }
+		void setBandwidth( double x ) { _iter->setBandwidth(x); }
+		void setPhase( double x ) { _iter->setPhase(x); }
+
+		//	time:
+		double time( void ) const { return _iter.time(); }
+		
+		//	iterator behavior:
+		void next( void )
+		{
+			if ( ! atEnd() )
+				++_iter;
+		}
+		
+		bool atEnd( void )
+		{
+			return _iter == _partialH->partial().end();
+		}
+		
+	};	//	end of class BP
+	
+%}
+
+class BP
+{
+	public:	
+	~BP( void );
+
+	//	attribute access:
+	double frequency( void );
+	double amplitude( void );
+	double bandwidth( void );
+	double phase( void );
+	
+	//	attribute mutation:
+	void setFrequency( double x );
+	void setAmplitude( double x );
+	void setBandwidth( double x );
+	void setPhase( double x );
+
+	//	time:
+	double time( void );
+	
+	//	iterator behavior:
+	void next( void );
+	bool atEnd( void );
+
+};	//	end of class BP
