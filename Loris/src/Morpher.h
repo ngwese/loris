@@ -71,6 +71,11 @@ class Morpher
 	std::auto_ptr< Envelope > _bwFunction;		//	bandwidth morphing function
 	
 	PartialList _partials;						//	collect Partials here
+	
+	Partial::label_type _refLabel0, _refLabel1;	//	labels of the reference Partials
+												//	for source and target sounds when 
+												//	morphing sequences of labeled Partials,
+												//	default 0 implies no reference Partial
 
 //	-- public interface --
 public:
@@ -192,6 +197,48 @@ public:
 	
 	//	Return a reference to this Morpher's bandwidth morphing envelope.
 	const Envelope & bandwidthFunction( void ) const;
+
+//	-- reference Partial label access/mutation --
+	
+	// 	Return the label of the Partial to be used as a reference
+	//	Partial for the source sequence in a morph of two Partial
+	//	sequences. The reference partial is used to compute 
+	//	frequencies for very low-amplitude Partials whose frequency
+	//	estimates are not considered reliable. The reference Partial
+	//	is considered to have good frequency estimates throughout.
+	//	The default label of 0 indicates that no reference Partial
+	//	should be used for the source sequence.
+	Partial::label_type sourceReferenceLabel( void ) const;
+	
+	// 	Return the label of the Partial to be used as a reference
+	//	Partial for the target sequence in a morph of two Partial
+	//	sequences. The reference partial is used to compute 
+	//	frequencies for very low-amplitude Partials whose frequency
+	//	estimates are not considered reliable. The reference Partial
+	//	is considered to have good frequency estimates throughout.
+	//	The default label of 0 indicates that no reference Partial
+	//	should be used for the target sequence.
+	Partial::label_type targetReferenceLabel( void ) const;
+	
+	// 	Set the label of the Partial to be used as a reference
+	//	Partial for the source sequence in a morph of two Partial
+	//	sequences. The reference partial is used to compute 
+	//	frequencies for very low-amplitude Partials whose frequency
+	//	estimates are not considered reliable. The reference Partial
+	//	is considered to have good frequency estimates throughout.
+	//	Setting the reference label to 0 indicates that no reference 
+	//	Partial should be used for the source sequence.
+	void setSourceReferenceLabel( Partial::label_type l );
+	
+	// 	Set the label of the Partial to be used as a reference
+	//	Partial for the target sequence in a morph of two Partial
+	//	sequences. The reference partial is used to compute 
+	//	frequencies for very low-amplitude Partials whose frequency
+	//	estimates are not considered reliable. The reference Partial
+	//	is considered to have good frequency estimates throughout.
+	//	Setting the reference label to 0 indicates that no reference 
+	//	Partial should be used for the target sequence.
+	void setTargetReferenceLabel( Partial::label_type l );
 	
 //	-- PartialList access --
 	//	Return a reference to this Morpher's list of morphed Partials.
@@ -204,6 +251,28 @@ public:
 private:
 	Morpher( const Morpher & other );
 	Morpher & operator= ( const Morpher & other );
+	
+//	-- helper --
+
+	//	PartialCorrespondence represents a map from non-zero Partial 
+	//	labels to pairs of pointers to Partials that should be morphed 
+	//	into a single Partial that is assigned that label. 
+	//	PartialPtrPair is a pair of pointers to Partials that are
+	//	initialized to zero, and it is the element type for the
+	//	PartialCorrespondence map.
+	struct PartialPtrPair
+	{
+		const Partial * first;
+		const Partial * second;
+		PartialPtrPair( void ) : first(0), second(0) {}
+	
+	};
+	typedef std::map< Partial::label_type, PartialPtrPair > PartialCorrespondence;
+	
+	//	Helper function that performs the morph between corresponding pairs
+	//	of Partials identified in a PartialCorrespondence. Called by the
+	//	morph() implementation accepting two sequences of Partials.
+	void morph_aux( PartialCorrespondence & correspondence );
 
 };	//	end of class Morpher
 

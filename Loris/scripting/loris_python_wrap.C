@@ -1596,7 +1596,7 @@ static PyObject *_wrap_dilate(PyObject *self, PyObject *args) {
         }
         catch ( InvalidArgument & ex )
         {
-            SWIG_exception(SWIG_ValueError, ex.what() );
+            SWIG_exception(SWIG_ValueError, (char *)ex.what() );
         }
         if ((err = check_exception()))
         {
@@ -3712,7 +3712,7 @@ static PyObject *_wrap_AiffFile_getMarker(PyObject *self, PyObject *args) {
         }
         catch ( InvalidArgument & ex )
         {
-            SWIG_exception(SWIG_ValueError, ex.what() );
+            SWIG_exception(SWIG_ValueError, (char *)ex.what() );
         }
     }
     resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_Marker, 0);
@@ -3738,7 +3738,7 @@ static PyObject *_wrap_AiffFile_removeMarker(PyObject *self, PyObject *args) {
         }
         catch ( InvalidArgument & ex )
         {
-            SWIG_exception(SWIG_ValueError, ex.what() );
+            SWIG_exception(SWIG_ValueError, (char *)ex.what() );
         }
     }
     Py_INCREF(Py_None); resultobj = Py_None;
@@ -5696,7 +5696,7 @@ static PyObject *_wrap_SdifFile_getMarker(PyObject *self, PyObject *args) {
         }
         catch ( InvalidArgument & ex )
         {
-            SWIG_exception(SWIG_ValueError, ex.what() );
+            SWIG_exception(SWIG_ValueError, (char *)ex.what() );
         }
     }
     resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_Marker, 0);
@@ -5722,7 +5722,7 @@ static PyObject *_wrap_SdifFile_removeMarker(PyObject *self, PyObject *args) {
         }
         catch ( InvalidArgument & ex )
         {
-            SWIG_exception(SWIG_ValueError, ex.what() );
+            SWIG_exception(SWIG_ValueError, (char *)ex.what() );
         }
     }
     Py_INCREF(Py_None); resultobj = Py_None;
@@ -6450,7 +6450,7 @@ static PyObject *_wrap_SpcFile_getMarker(PyObject *self, PyObject *args) {
         }
         catch ( InvalidArgument & ex )
         {
-            SWIG_exception(SWIG_ValueError, ex.what() );
+            SWIG_exception(SWIG_ValueError, (char *)ex.what() );
         }
     }
     resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_Marker, 0);
@@ -6476,7 +6476,7 @@ static PyObject *_wrap_SpcFile_removeMarker(PyObject *self, PyObject *args) {
         }
         catch ( InvalidArgument & ex )
         {
-            SWIG_exception(SWIG_ValueError, ex.what() );
+            SWIG_exception(SWIG_ValueError, (char *)ex.what() );
         }
     }
     Py_INCREF(Py_None); resultobj = Py_None;
