@@ -99,19 +99,19 @@ struct InstrumentCk {
 	struct AIFFLoop releaseLoop;
 };
 
-struct Marker3 {
+struct Marker1 {
 	Int_16 	id;
 	Int_32 	position;
-	char 	markerName[4];		// 3 character name plus termination
+	char 	markerName[2];		// 1 character name plus termination
 };
 
-struct Marker9 {
+struct Marker9 { 				// for loopstart marker
 	Int_16 	id;
 	Int_32 	position;
 	char 	markerName[10];		// 9 character name plus termination
 };
 
-struct Marker7 {
+struct Marker7 { 				// for loopend marker
 	Int_16 	id;
 	Int_32 	position;
 	char 	markerName[8];		// 8 character name plus termination
@@ -120,9 +120,7 @@ struct Marker7 {
 struct MarkerCk {
 	CkHeader header;	
 	Int_16 	numMarkers;
-	Marker3	susMarker;			// array of markers starts here
-	Marker9	loopStartMarker;	// second marker in every spc file
-	Marker7	loopEndMarker;		// third marker in every spc file
+	Marker1	aMarker;			// array of markers starts here
 };
 
 struct SosEnvelopesCk
@@ -154,35 +152,18 @@ typedef union {
 //	SpcFile constructor from data in memory
 // ---------------------------------------------------------------------------
 //
-SpcFile::SpcFile( int pars, int startf, int endf, 
-				  double rate, double midiPitch ) :
+SpcFile::SpcFile( int pars, double rate, double midiPitch,
+				double thresh, double endt, double markert, double approacht) :
 	_partials( pars ),
-	_startFrame( startf ),
-	_endFrame( endf ),
 	_rate( rate ),
 	_midiPitch( midiPitch ),
-	_susFrame( 0 ),
-	_rlsFrame( 0 )
+	_threshold( thresh ),
+	_endFrame( endt / rate + 1 ),
+	_markerFrame( markert / rate + 1 ),
+	_endApproachFrames( approacht / rate + 1 )
 {
 	Assert( pars == 32 || pars == 64 || pars == 128 );
-	Assert( _endFrame > _startFrame);
 	Assert( rate > 0.0 );
-}
-
-// ---------------------------------------------------------------------------
-//	setMarkers
-// ---------------------------------------------------------------------------
-//
-void
-SpcFile::setMarkers( double susTime, double rlsTime )
-{
-	_susFrame = (int) (susTime / _rate + 0.5);
-	_rlsFrame = (int) (rlsTime / _rate + 0.5);
-	
-	if( _susFrame < 1 )
-		_susFrame = 1;
-	if( _rlsFrame < 5 )
-		_rlsFrame = 5;
 }
 
 // ---------------------------------------------------------------------------
@@ -198,7 +179,7 @@ SpcFile::write( ostream & file, const list<Partial> & plist, int refLabel )
 		writeContainer( file );
 		writeCommon( file );
 		writeInstrument( file );
-		if (_susFrame && _rlsFrame)
+		if (_markerFrame)
 			writeMarker( file );
 		writeSosEnvelopesChunk( file );
 		writeEnvelopeData( file, plist, refLabel );
@@ -255,9 +236,11 @@ void
 SpcFile::writeEnvelopes( std::ostream & s, const list<Partial> & plist, int refLabel )
 {	
 	double freqMult;				// frequency multiplier for partial	
-	double ampMult;					// frequency multiplier for partial	
-	double noiseMagMult;			// noise magnitude multiplier for partial
+	double magMult;					// magnitude multiplier for partial	
 	pcm_sample left,right;			// packed value for left, right channel in spc file
+	
+	// Do start frame croppig.
+	_startFrame = crop( plist );
 	
 	Assert( refLabel != 0 );
 
@@ -274,18 +257,28 @@ SpcFile::writeEnvelopes( std::ostream & s, const list<Partial> & plist, int refL
 			if ( pcorrect == NULL || pcorrect->begin() == pcorrect->end() ) {
 				pcorrect = select( plist, refLabel );
 				freqMult = (double) label / (double) refLabel; 
-				ampMult = 0;
-				noiseMagMult = 1.0;
+				magMult = 0.0;
 				Assert( pcorrect != NULL && pcorrect->begin() != pcorrect->end());
+			} else if (!_endApproachFrames && frame == _endFrame) {
+				freqMult = 1.0;
+				magMult = 0.0;	// last frame has zero amp, if not ending at static spectrum
 			} else {
-				freqMult = ampMult = noiseMagMult = 1.0;
+				freqMult = 1.0;
+				magMult = 1.0;
 			}
+			
+			//	Check for special processing for approach to static spectrum at end.
+			//	Compute weighting factor between "normal" envelope point and static point.
+			double weightFactor = 1.0;
+			if (_endApproachFrames && frame > _endFrame - _endApproachFrames)
+				weightFactor = (_endFrame - frame) / (double) _endApproachFrames;
 
 			//	pack log amplitude and log frequency into left:
-			left.s32bits = packLeft(*pcorrect, freqMult, ampMult, frame * _rate);
+			//  The log frequency value sticks at the release frame's frequency value.
+			left.s32bits = packLeft(*pcorrect, freqMult, magMult, frame * _rate, weightFactor, _endFrame * _rate);
 
 			//	pack log bandwidth and phase into right:
-			right.s32bits = packRight(*pcorrect, noiseMagMult, frame * _rate);
+			right.s32bits = packRight(*pcorrect, magMult, frame * _rate, weightFactor, _endFrame * _rate);
 	
 			//	write integer samples without byte swapping,
 			//	they are already correctly packed: 
@@ -319,11 +312,21 @@ SpcFile::envLog( double floatingValue ) const
 //	frequency occupies the bottom 16 bits.
 //
 unsigned long
-SpcFile::packLeft( const Partial & p, double freqMult, double ampMult, double time )
+SpcFile::packLeft( const Partial & p, double freqMult, double ampMult, 
+						double time1, double weightFactor, double time2 )
 {	
-	double amp = ampMult * p.amplitudeAt( time );
-	double freq = freqMult * p.frequencyAt( time );
-	double bw = p.bandwidthAt( time );
+	double amp = ampMult * p.amplitudeAt( time1 );
+	double freq = freqMult * p.frequencyAt( time1 );
+	double bw = p.bandwidthAt( time1 );
+	
+	if (weightFactor != 1.0) {
+		double amp2 = ampMult * p.amplitudeAt( time2 );
+		double freq2 = freqMult * p.frequencyAt( time2 );
+		double bw2 = p.bandwidthAt( time2 );
+		amp = (amp * weightFactor + amp2 * (1.0 - weightFactor));
+		freq = (freq * weightFactor + freq2 * (1.0 - weightFactor));
+		bw = (bw * weightFactor + bw2 * (1.0 - weightFactor));
+	}
 
 	unsigned long	theOutput;
 
@@ -349,11 +352,19 @@ SpcFile::packLeft( const Partial & p, double freqMult, double ampMult, double ti
 //	linear phase occupies the bottom 16 bits.  
 //
 unsigned long
-SpcFile::packRight( const Partial & p, double noiseMagMult, double time )
+SpcFile::packRight( const Partial & p, double noiseMagMult, double time1,
+						double weightFactor, double time2 )
 {	
-	double amp = p.amplitudeAt( time );
-	double phase = p.phaseAt( time );
-	double bw = p.bandwidthAt( time );
+	double amp = p.amplitudeAt( time1 );
+	double phase = p.phaseAt( time1 );
+	double bw = p.bandwidthAt( time1 );
+	
+	if (weightFactor != 1.0) {
+		double amp2 = p.amplitudeAt( time2 );
+		double bw2 = p.bandwidthAt( time2 );
+		amp = (amp * weightFactor + amp2 * (1.0 - weightFactor));
+		bw = (bw * weightFactor + bw2 * (1.0 - weightFactor));
+	}
 
 	unsigned long	theOutput;
 	
@@ -392,7 +403,7 @@ struct LabelIs
 };
 	
 const Partial *
-SpcFile::select( const list<Partial> & partials, int label )
+SpcFile::select( const PartialList & partials, int label )
 {
 	const Partial * ret = NULL;
 	list< Partial >::const_iterator it = 
@@ -407,6 +418,46 @@ SpcFile::select( const list<Partial> & partials, int label )
 	}
 	
 	return ret;
+}
+
+double
+SpcFile::crop( const PartialList & partials )
+{
+	
+	// Find max amp sum.
+	double tim, ampsum;
+	double maxampsum = 0.0;
+	for ( tim = 0.0; tim < _endFrame * _rate; tim += _rate ) {
+	
+		// Compute sum of amp of all partials at this time.
+		ampsum = 0.0;
+		for ( PartialList::const_iterator it = partials.begin(); it != partials.end(); ++it ) {
+			if ( it->begin() != it->end() )
+				ampsum += it->amplitudeAt( tim );
+		}
+		
+		// Keep maximum of amp  values
+		if (ampsum > maxampsum)
+			maxampsum = ampsum;
+	}
+
+	// Find first time we get some percentage of the max amp.
+	// This will be used to crop the attack.
+	for (tim = 0.0; tim < _endFrame * _rate; tim += _rate) {
+
+		// Compute sum of amp of all partials at this time.
+		ampsum = 0.0;
+		for ( PartialList::const_iterator it = partials.begin(); it != partials.end(); ++it ) {
+			if ( it->begin() != it->end() )
+				ampsum += it->amplitudeAt( tim );
+		}
+		
+		// If we hit the amp level, we will crop to here; exit.
+		if (ampsum > _threshold * maxampsum)
+			return tim;
+	}
+	
+	return 0.;
 }
 
 #pragma mark -
@@ -462,7 +513,7 @@ SpcFile::writeContainer( std::ostream & s )
 	//	size is everything after the header:
 	ck.header.size = sizeof(Int_32) + sizeofCommon() 
 				+ sizeofInstrument() 
-				+ ((_susFrame && _rlsFrame) ? sizeofMarker() : 0)
+				+ (_markerFrame ? sizeofMarker() : 0)
 				+ sizeofSosEnvelopes()
 				+ sizeofSoundData();
 	
@@ -557,39 +608,11 @@ SpcFile::writeMarker( std::ostream & s )
 	//	size is everything after the header:
 	ck.header.size = sizeofMarker() - sizeofCkHeader();
 	
-	//	we have two markers, one for sustain start, two for the loop:
-	ck.numMarkers = 3;
-
-	ck.susMarker.id = 1;				// sustain marker 
-	ck.susMarker.position = _susFrame * _partials * (MONOFILE ? 2 : 1); 
-	ck.susMarker.markerName[0] = 3;	// 3 character long name
-	ck.susMarker.markerName[1] = 's';
-	ck.susMarker.markerName[2] = 'u';
-	ck.susMarker.markerName[3] = 's';
-
-	ck.loopStartMarker.id = 2;				// loopStart marker 
-	ck.loopStartMarker.position = (_rlsFrame - 1) * _partials * (MONOFILE ? 2 : 1); 
-	ck.loopStartMarker.markerName[0] = 9;	// 9 character long name
-	ck.loopStartMarker.markerName[1] = 'l';
-	ck.loopStartMarker.markerName[2] = 'o';
-	ck.loopStartMarker.markerName[3] = 'o';
-	ck.loopStartMarker.markerName[4] = 'p';
-	ck.loopStartMarker.markerName[5] = 'S';
-	ck.loopStartMarker.markerName[6] = 't';
-	ck.loopStartMarker.markerName[7] = 'a';
-	ck.loopStartMarker.markerName[8] = 'r';
-	ck.loopStartMarker.markerName[9] = 't';
-
-	ck.loopEndMarker.id = 3;				// loopEnd marker 
-	ck.loopEndMarker.position = _rlsFrame * _partials * (MONOFILE ? 2 : 1); 
-	ck.loopEndMarker.markerName[0] = 7;		// 7 character long name
-	ck.loopEndMarker.markerName[1] = 'l';
-	ck.loopEndMarker.markerName[2] = 'o';
-	ck.loopEndMarker.markerName[3] = 'o';
-	ck.loopEndMarker.markerName[4] = 'p';
-	ck.loopEndMarker.markerName[5] = 'E';
-	ck.loopEndMarker.markerName[6] = 'n';
-	ck.loopEndMarker.markerName[7] = 'd';
+	ck.numMarkers = 1;			// one marker
+	ck.aMarker.id = 1;			// first marker 
+	ck.aMarker.position = _markerFrame * _partials * (MONOFILE ? 2 : 1); 
+	ck.aMarker.markerName[0] = 1;	// 1 character long name
+	ck.aMarker.markerName[1] = 'a';
 
 	//	write it out:
 	try {
@@ -598,20 +621,10 @@ SpcFile::writeMarker( std::ostream & s )
 
 		BigEndian::write( s, 1, sizeof(Int_16), (char *)&ck.numMarkers );
 
-		BigEndian::write( s, 1, sizeof(Int_16), (char *)&ck.susMarker.id );
-		BigEndian::write( s, 1, sizeof(Int_32), (char *)&ck.susMarker.position );
-		BigEndian::write( s, ck.susMarker.markerName[0] + 1, 
-						  sizeof(char), ck.susMarker.markerName );
-
-		BigEndian::write( s, 1, sizeof(Int_16), (char *)&ck.loopStartMarker.id );
-		BigEndian::write( s, 1, sizeof(Int_32), (char *)&ck.loopStartMarker.position );
-		BigEndian::write( s, ck.loopStartMarker.markerName[0] + 1, 
-						  sizeof(char), ck.loopStartMarker.markerName );
-						  
-		BigEndian::write( s, 1, sizeof(Int_16), (char *)&ck.loopEndMarker.id );
-		BigEndian::write( s, 1, sizeof(Int_32), (char *)&ck.loopEndMarker.position );
-		BigEndian::write( s, ck.loopEndMarker.markerName[0] + 1, 
-						  sizeof(char), ck.loopEndMarker.markerName );
+		BigEndian::write( s, 1, sizeof(Int_16), (char *)&ck.aMarker.id );
+		BigEndian::write( s, 1, sizeof(Int_32), (char *)&ck.aMarker.position );
+		BigEndian::write( s, ck.aMarker.markerName[0] + 1, 
+						  sizeof(char), ck.aMarker.markerName );
 	}
 	catch( FileIOException & ex ) {
 		ex.append( "Failed to write SPC file Marker chunk." );
@@ -736,9 +749,9 @@ SpcFile::sizeofMarker( void )
 	return	sizeof(Int_32) +			//	id
 			sizeof(Uint_32) +			//	size
 			sizeof(Int_16) +			// numMarkers
-			3 * sizeof(Int_16) +		// id for 3 standard markers
-			3 * sizeof(Int_32) +		// position for 3 standard markers
-			22 * sizeof(char);			// characters in names for 3 markers
+			sizeof(Int_16) +			// id for 1 standard marker
+			sizeof(Int_32) +			// position for 1 standard marker
+			4 * sizeof(char);			// characters in names for 1 marker
 }
 
 // ---------------------------------------------------------------------------

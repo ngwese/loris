@@ -13,7 +13,6 @@
 #include "Partial.h"
 #include "Exception.h"
 #include <vector>
-#include <list>
 #include <iosfwd>
 
 #if !defined( NO_LORIS_NAMESPACE )
@@ -28,19 +27,19 @@ class SpcFile
 {
 //	-- instance variables --
 	int _partials;					// number of partials
-	int _startFrame;				// first frame number to write to file
-	int _endFrame;					// last frame number to write to file
 	double _rate;					// frame rate in seconds
 	double _midiPitch;				// midi note number
-	int _susFrame, _rlsFrame;		// frame numbers for sustain and release start
-
+	double _threshold;				// attack threshold (0.0 to keep all of attack)
+	int _startFrame;				// first frame to keep (after _threshold crop)
+	int _endFrame;					// last frame number to write to file
+	int _markerFrame;				// frame number for a marker
+	int _endApproachFrames;			// ease into final final spectrum over this many frames,
+									// or 0 to disable this function (if final is quiet)
 public:
 //	construction:
 //	(let compiler generate destructor)
-	SpcFile( int pars, int startFrame, int endFrame, double rate, double tuning );
-
-//	markers:
-	void setMarkers( double susTime, double releaseTime );
+	SpcFile( int pars, double rate, double tuning, double thresh,
+					double endt, double markert, double approacht);
 	
 //	writing:
 	void write( std::ostream & file,  const std::list<Partial> & plist, int refLabel );
@@ -53,10 +52,13 @@ private:
 	
 	//	envelope writing helpers:
 	int findRefPartial( const std::list<Partial> & plist );
-	unsigned long packLeft( const Partial & p, double freqMult, double ampMult, double time );
-	unsigned long packRight( const Partial & p, double noiseMagMult, double time );
+	unsigned long packLeft( const Partial & p, double freqMult, double ampMult, 
+				double time1, double weightFactor, double time2 );
+	unsigned long packRight( const Partial & p, double noiseMagMult,
+				double time1, double weightFactor, double time2 );
 	unsigned long envLog( double ) const;
-	const Partial * select( const std::list<Partial> & partials, int label );
+	const Partial * select( const PartialList & partials, int label );
+	double crop( const PartialList & partials );
 	
 	//	chunk writing:
 	void writeCommon( std::ostream & s );
