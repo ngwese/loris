@@ -14,6 +14,9 @@ wimpy compilers
 
 - added check for template member support to configure.in
 
+- changed name of (Python) loriscmodule to _loris, to
+kkep up with changes to SWIG
+
 -------------------------------------------------------
 changes since 1.0 release:
 

@@ -63,11 +63,60 @@ static void fftw_die_Loris(const char * s)
 // ---------------------------------------------------------------------------
 //  Check_Types
 // ---------------------------------------------------------------------------
+//	Attempt to verify that std::complex< double >
+//	and fftw_complex are really identical, that is, 
+//	they are the same size and have the same memory
+//	layout.
+//
+//	Some of this is performed using compile-time assertions
+//	(see below), that are part of the configure script.
+//	The only thing that I haven't already verified at
+//	compile-time is that the two complex types store
+//	their real and imaginary parts in the same order; 
+//	hard to see how we can do this at compile-time, 
+//	since the implementation of std::complex is private.
+//
+//	In an ideal world, we wouldn't rely on these types
+//	being identical, but in this world, relaxing that 
+// 	assuption would cost us (in copying)...
+//
+static bool Check_Types( void )
+{
+	debugger << "checking memory layout of std::complex<double> and fftw_complex" << endl;
+	static bool checked = false;
+	if ( ! checked ) 
+	{
+		std::complex<double> cplxstd(1234.5678, 9876.5432);
+		fftw_complex * cplxfftw = (fftw_complex *)&cplxstd;
+		if ( c_re( *cplxfftw ) != cplxstd.real() ||
+			 c_im( *cplxfftw ) != cplxstd.imag() ) 
+		{
+			Throw( InvalidObject, 
+				   "FourierTransform found std::complex< double > and fftw_complex to be different." );
+		}
+	}
+	
+	debugger << "found them to be identical" << endl;
+	return true;
+}
+
+static bool CHECKED_TYPES = Check_Types();
+
+#ifndef USE_COMPILE_TIME_ASSERTIONS
+// ---------------------------------------------------------------------------
+//  Compile_Time_Assertions
+// ---------------------------------------------------------------------------
 //	Gnarly code adopted from Alexandrescu (Modern C++ Design) for compile-time
 //	checking of type information. Need to make sure that fftw_complex and 
 //	std::complex<double> are the same size and have the same memory layout.
-//	Try to do that at compile-time, much better than doing it at runtime.
-//	Actually, best of all would be at configure-time...
+//	
+//	All of this has been migrated to configure-time. Removing it from
+//	the Loris source allows our sources to compile with wimpy compilers
+//	that cannot support these checks. (e.g. .NET)
+//
+//	USE_COMPILE_TIME_ASSERTIONS is not defined anywhere, but if configure
+//	determines that the compiler cannot support compile-time assertions, 
+//	then NO_COMPILE_TIME_ASSERTIONS is defined in config.h.
 //
 template<int> struct CompileTimeError;
 template<> struct CompileTimeError<true> {};
@@ -77,11 +126,8 @@ template<> struct CompileTimeError<true> {};
 template <class T, class U> struct CompareTypes { enum { same = 0 }; };
 template<class T> struct CompareTypes<T, T> { enum { same = 1 }; };
 
-static void Check_Types( void )
+static void Compile_Time_Assertions( void )
 {
-	//	check to make sure that std::complex< double >
-	//	and fftw_complex are really identical:
-
 	//	if this won't compile, fftw_real is not defined to be double,
 	//	and this class won't work under those conditions:
 	STATIC_CHECK((CompareTypes<double, fftw_real>::same!=0), fftw_real_IS_NOT_DOUBLE);
@@ -97,25 +143,8 @@ static void Check_Types( void )
 	//	of the complex types is trivial:
 	STATIC_CHECK( sizeof(fftw_complex) == sizeof(double) + sizeof(double),
 				  fftw_complex_LAYOUT_IS_NONTRIVIAL );
-
-	static bool checked = false;
-	if ( ! checked ) 
-	{
-		//	the only thing that I haven't already verified at
-		//	compile-time is that the two complex types store
-		//	their real and imaginary parts in the same order; 
-		//	hard to see how we can do this at compile-time, 
-		//	since the implementation of std::complex is private:
-		std::complex<double> cplxstd(1234.5678, 9876.5432);
-		fftw_complex * cplxfftw = (fftw_complex *)&cplxstd;
-		if ( c_re( *cplxfftw ) != cplxstd.real() ||
-			 c_im( *cplxfftw ) != cplxstd.imag() ) 
-		{
-			Throw( InvalidObject, 
-				   "FourierTransform found std::complex< double > and fftw_complex to be different." );
-		}
-	}
 }
+#endif
 
 // ---------------------------------------------------------------------------
 //	FourierTransform constructor
@@ -134,9 +163,6 @@ FourierTransform::FourierTransform( long len ) :
 	//	and exiting, using the function defined above.
 	fftw_die_hook = fftw_die_Loris;
 	
-	//	perform type checks, mostly compile-time:
-	Check_Types();
-
 	//	zero:
 	fill( _buffer.begin(), _buffer.end(), 0. );
 }

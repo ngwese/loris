@@ -10,7 +10,7 @@ dnl implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 
 dnl initialization
-AC_INIT(Loris, 1.0.1, loris@cerlsoundgroup.org, loris)
+AC_INIT(Loris, 1.0.2, loris@cerlsoundgroup.org, loris)
 
 AC_CONFIG_AUX_DIR(config)
 AC_SUBST(ac_aux_dir)
@@ -31,7 +31,7 @@ dnl Make sure these are consistent with the version number
 dnl in AC_INIT above!
 LORIS_MAJOR_VERSION=1
 LORIS_MINOR_VERSION=0
-LORIS_SUBMINOR_VERSION=1
+LORIS_SUBMINOR_VERSION=2
 LORIS_PRERELEASE_STR=
 LORIS_VERSION_STR="$PACKAGE_STRING$LORIS_PRERELEASE_STR"
 AC_SUBST(LORIS_MAJOR_VERSION)
@@ -112,200 +112,22 @@ if test -n "$HAVE_CSOUND"; then
 fi
 
 dnl----------------------------------------------------------------
-dnl Check for librairies
-dnl----------------------------------------------------------------
-
-AC_MSG_RESULT(----- Library Checks -----)
-
-dnl----------------------------------------------------------------
-dnl Look for IRCAM's SDIF package
-dnl
-dnl Allow args to configure for specifying the location of the
-dnl SDIF package, since there are more than one such package in
-dnl and we need specifically IRCAM's.
-dnl----------------------------------------------------------------
-
-SDIFINCLUDE=
-SDIFLIB=
-SDIFPACKAGE=
- 
-AC_ARG_WITH(sdif,[  --with-sdif=path        Set prefix of SDIF package],[
-		SDIFPACKAGE="$withval"], [SDIFPACKAGE=])
-AC_ARG_WITH(sdifincl,[  --with-sdifincl=path    Set path of SDIF include file],[
-		SDIFINCLUDE="$withval"], [SDIFINCLUDE=])
-AC_ARG_WITH(sdiflib,[  --with-sdiflib=path     Set path of SDIF library],[
-		SDIFLIB="$withval"], [SDIFLIB=])
-
-if test -z "$SDIFINCLUDE"; then
-   if test -n "$SDIFPACKAGE"; then
-        SDIFINCLUDE="$SDIFPACKAGE/include"
-   fi
-fi
-
-if test -z "$SDIFLIB"; then
-   if test -n "$SDIFPACKAGE"; then
-        SDIFLIB="$SDIFPACKAGE/lib"
-   fi
-fi
-
-dnl look for SDIF header in specified or standard locations
-SDIF_H=sdif.h
-if test -n "$SDIFINCLUDE"; then
-	AC_MSG_CHECKING(for SDIF header file in $SDIFINCLUDE)
-	if test -f "$SDIFINCLUDE/$SDIF_H" ; then
-		AC_MSG_RESULT(found)
-		SDIF_H="$SDIFINCLUDE/$SDIF_H"
-	else
-		AC_MSG_ERROR(cannot find SDIF header in $SDIFINCLUDE)
-	fi
-else
-	AC_CHECK_HEADER($SDIF_H, :, AC_MSG_ERROR(cannot find SDIF header))
-fi
-
-dnl look for the SDIF library
-if test -n "$SDIFLIB" ; then
-	LIBS="$LIBS -L$SDIFLIB"
-fi
-AC_CHECK_LIB(sdif, SdifGenInit, :, AC_MSG_ERROR(cannot use SDIF library))
-
-dnl make sure that we can figure out how to use
-dnl the SDIF library
-AC_MSG_CHECKING(SDIF release version (must be at least 3.4))
-dnl should actually try running this, but these things weren't defined
-dnl in earlier versions, so maybe it isn't worth the trouble
-AC_TRY_COMPILE( [ #include<$SDIF_H> ], [
-		assert( SDIF_VERSION_MAJOR >= 3 && SDIF_VERSION_MINOR >= 4 ); ],[ 
-		AC_MSG_RESULT(ok)
-		], [
-		AC_MSG_ERROR(failed, please use at least SDIF-3.4) ] )
-
-if test -n "$SDIFINCLUDE" ; then
-	SDIFINCLUDE="-I$SDIFINCLUDE"
-fi
-AC_SUBST(SDIFINCLUDE)
-
-dnl
-dnl end of SDIF check
-dnl----------------------------------------------------------------
-
-
-dnl----------------------------------------------------------------
-dnl Look for FFTW
-dnl
-dnl Remember that fftw library won't link without -lm.
-dnl Allow an argument to specify the prefix of a non-installed
-dnl FFTW package
-dnl----------------------------------------------------------------
-
-FFTWPACKAGE=
-FFTWINCLUDE=
-FFTW_H=fftw.h
-
-AC_ARG_WITH(fftw,[  --with-fftw=path        Set prefix of (non-installed) FFTW  package],[
-		FFTWPACKAGE="$withval"], [FFTWPACKAGE=])
-
-if test -n "$FFTWPACKAGE" ; then
-	FFTWINCLUDE="$FFTWPACKAGE/include"
-	CPPFLAGS="-I$FFTWINCLUDE $CXXFLAGS"
-	LIBS="-L$FFTWPACKAGE/lib $LIBS"
-fi
-
-AC_LANG_SAVE
-AC_LANG_CPLUSPLUS
-
-AC_CHECK_HEADER($FFTW_H, :, AC_MSG_ERROR(cannot find FFTW header))
-AC_CHECK_LIB(fftw, fftw_create_plan, :, AC_MSG_ERROR(cannot use FFTW, library), -lm)
-
-if test -n "$FFTWINCLUDE" ; then
-	FFTWINCLUDE="-I$FFTWINCLUDE"
-fi
-AC_SUBST(FFTWINCLUDE)
-
-dnl Gnarly code adopted from Alexandrescu (Modern C++ Design) for compile-time
-dnl checking of type information. Need to make sure that fftw_complex and 
-dnl std::complex<double> are the same size and have the same memory layout.
-dnl Try to do that at compile-time, much better than doing it at runtime.
-dnl Actually, best of all is at configure-time.
-
-AC_MSG_CHECKING(whether std::complex<double> is same as fftw_complex)
-
-AC_COMPILE_IFELSE( 
-	AC_LANG_SOURCE([[
-		#include <complex>
-		#include "$FFTW_H"
-		//	Gnarly code adopted from Alexandrescu (Modern C++ Design) for compile-time
-		//	checking of type information. Need to make sure that fftw_complex and 
-		//	std::complex<double> are the same size and have the same memory layout.
-		//
-		template<int> struct CompileTimeError;
-		template<> struct CompileTimeError<true> {};
-		#define STATIC_CHECK(expr, msg) \
-			{ CompileTimeError<((expr) != 0)> ERROR_##msg; (void)ERROR_##msg; }
-		
-		template <class T, class U> struct CompareTypes { enum { same = 0 }; };
-		template<class T> struct CompareTypes<T, T> { enum { same = 1 }; };
-		
-		static void Check_Types( void )
-		{
-			//	check to make sure that std::complex< double >
-			//	and fftw_complex are really identical:
-		
-			//	if this won't compile, fftw_real is not defined to be double,
-			//	and this class won't work under those conditions:
-			STATIC_CHECK((CompareTypes<double, fftw_real>::same!=0), fftw_real_IS_NOT_DOUBLE);
-		
-			//	if this won't compile, then the two complex types have 
-			//	different sizes, and therefore don't have the same memory 
-			//	layout, and this FourierTransform class won't work:
-			STATIC_CHECK( sizeof(std::complex<double>) == sizeof(fftw_complex), 
-						  fftw_complex_DIFFERENT_SIZE_FROM_std_complex_double );
-						  
-			//	if this doesn't compile, then probably the previous one didn't
-			//	compile either, but it doesn't hurt to verify that the layout
-			//	of the complex types is trivial:
-			STATIC_CHECK( sizeof(fftw_complex) == sizeof(double) + sizeof(double),
-						  fftw_complex_LAYOUT_IS_NONTRIVIAL );
-		}
-		
-  ]]),[
-  AC_MSG_RESULT(ok) ], [
-  AC_MSG_WARN(failed)
-  AC_MSG_RESULT(-----------------------------------------)
-  AC_MSG_RESULT(Compile-time type checks failed. This)
-  AC_MSG_RESULT(may mean that std::complex<double> and)
-  AC_MSG_RESULT(and fftw_complex do not have the same)
-  AC_MSG_RESULT(size and memory layout. Or it may mean)
-  AC_MSG_RESULT(that your compiler cannot handle fancy)
-  AC_MSG_RESULT(template programming. Check the log.)
-  AC_MSG_RESULT(-----------------------------------------)
-  ] )
-
-dnl restore this
-AC_LANG_RESTORE
-
-dnl
-dnl end of FFTW check
-dnl----------------------------------------------------------------
-
-dnl----------------------------------------------------------------
 dnl Checks for compiler features.
 
 AC_MSG_RESULT(----- Compiler Feature Checks -----)
-dnl Check for a definition of M_PI in cmath, if not use our own.
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
+
+dnl Check for a definition of M_PI in cmath, if not use our own.
+AH_TEMPLATE([HAVE_M_PI],
+            [Define 1 if M_PI defined in cmath, 0 otherwise.])
 AC_MSG_CHECKING(for M_PI defined in cmath)
 AC_TRY_COMPILE([ #include <cmath>;], [double pi = M_PI;], [
-	HAVE_M_PI=true ], [
-	HAVE_M_PI=false ] )
-
-if "$HAVE_M_PI"; then
 	AC_MSG_RESULT(yep)
-	AC_DEFINE([HAVE_M_PI], 1, [Define 1 if M_PI defined in cmath, 0 otherwise.])
-else
+	AC_DEFINE([HAVE_M_PI], 1) ], [
 	AC_MSG_RESULT(nope using local definition of pi)
-	AC_DEFINE([HAVE_M_PI], 0, [Define 1 if M_PI defined in cmath, 0 otherwise.])
-fi
+	AC_DEFINE([HAVE_M_PI], 0) ] )
+
 
 dnl check whether template member functions should
 dnl be used
@@ -329,8 +151,193 @@ AC_COMPILE_IFELSE([
 	AC_MSG_RESULT(no, not using template members)
 	AC_DEFINE([NO_TEMPLATE_MEMBERS])])
 
+dnl check whether the compiler can handle Alexandrescu's compile-time
+dnl assertions, which we use later to make sure that std::complex<double>
+dnl and fftw_complex are identical:
+AH_TEMPLATE([NO_COMPILE_TIME_ASSERTIONS],
+            [Define for compilers that do not support compile-time assertions.])
+AC_MSG_CHECKING(whether compiler supports compile-time assertions)
+
+AC_COMPILE_IFELSE( 
+	AC_LANG_SOURCE([[
+		//	Gnarly code adopted from Alexandrescu (Modern C++ Design) for compile-time
+		//	checking of type information. 
+		template<int> struct CompileTimeError;
+		template<> struct CompileTimeError<true> {};
+		#define STATIC_CHECK(expr, msg) \
+			{ CompileTimeError<((expr) != 0)> ERROR_##msg; (void)ERROR_##msg; }
+		
+		template <class T, class U> struct CompareTypes { enum { same = 0 }; };
+		template<class T> struct CompareTypes<T, T> { enum { same = 1 }; };
+		typedef int INT;
+		void f(void)
+		{
+			STATIC_CHECK((CompareTypes<int, INT>::same!=0), COMPILE_TIME_ASSERTIONS_FAIL);
+			STATIC_CHECK((CompareTypes<int, float>::same==0), COMPILE_TIME_ASSERTIONS_FAIL);
+		}
+  ]]),[
+  NO_COMPILE_TIME_ASSERTIONS=false
+  AC_MSG_RESULT(yes) ], [
+  NO_COMPILE_TIME_ASSERTIONS=true
+  AC_MSG_RESULT(no)
+  AC_DEFINE([NO_COMPILE_TIME_ASSERTIONS])
+  ] )
+
 dnl restore this
 AC_LANG_RESTORE
+
+dnl----------------------------------------------------------------
+dnl Check for librairies
+dnl----------------------------------------------------------------
+
+AC_MSG_RESULT(----- Library Checks -----)
+
+dnl----------------------------------------------------------------
+dnl Look for IRCAM's SDIF package
+dnl
+dnl Allow an argument to specify the prefix of a non-installed
+dnl SDIF package, since there are more than one such package in
+dnl and we need specifically IRCAM's.
+dnl----------------------------------------------------------------
+
+SDIFPACKAGE=
+SDIFINCLUDE=
+ 
+AC_ARG_WITH(sdif,[  --with-sdif=path        Set prefix of SDIF package],[
+		SDIFPACKAGE="$withval"], [SDIFPACKAGE=])
+
+if test -n "$SDIFPACKAGE" ; then
+	AC_MSG_RESULT([prepending $SDIFPACKAGE/include to include search path and $SDIFPACKAGE/lib to library search path (sdif package)])
+	SDIFINCLUDE="$SDIFPACKAGE/include"
+	CPPFLAGS="-I$SDIFINCLUDE $CPPFLAGS"
+	LIBS="-L$SDIFPACKAGE/lib $LIBS"
+fi
+
+AC_CHECK_HEADER(sdif.h, :, AC_MSG_ERROR(cannot find SDIF header))
+AC_CHECK_LIB(sdif, SdifGenInit, :, AC_MSG_ERROR(cannot use SDIF library))
+
+dnl make sure that we can figure out how to use
+dnl the SDIF library
+AC_MSG_CHECKING(SDIF release version (must be at least 3.4))
+dnl should actually try running this, but these things weren't defined
+dnl in earlier versions, so probably it isn't worth the trouble
+AC_TRY_COMPILE( [ #include<sdif.h> ], [
+		assert( SDIF_VERSION_MAJOR >= 3 && SDIF_VERSION_MINOR >= 4 ); ],[ 
+		AC_MSG_RESULT(ok)
+		], [
+		AC_MSG_ERROR(failed -- please use at least SDIF-3.4) ] )
+
+if test -n "$SDIFINCLUDE" ; then
+	SDIFINCLUDE="-I$SDIFINCLUDE"
+fi
+AC_SUBST(SDIFINCLUDE)
+
+dnl
+dnl end of SDIF check
+dnl----------------------------------------------------------------
+
+
+dnl----------------------------------------------------------------
+dnl Look for FFTW
+dnl
+dnl Remember that fftw library won't link without -lm.
+dnl Allow an argument to specify the prefix of a non-installed
+dnl FFTW package
+dnl----------------------------------------------------------------
+
+FFTWPACKAGE=
+FFTWINCLUDE=
+
+AC_ARG_WITH(fftw,[  --with-fftw=path        Set prefix of (non-installed) FFTW  package],[
+		FFTWPACKAGE="$withval"], [FFTWPACKAGE=])
+
+if test -n "$FFTWPACKAGE" ; then
+	AC_MSG_RESULT([prepending $FFTWPACKAGE/include to include search path and $FFTWPACKAGE/lib to library search path (fftw package)])
+	FFTWINCLUDE="$FFTWPACKAGE/include"
+	CPPFLAGS="-I$FFTWINCLUDE $CPPFLAGS"
+	LIBS="-L$FFTWPACKAGE/lib $LIBS"
+fi
+
+AC_LANG_SAVE
+AC_LANG_CPLUSPLUS
+
+AC_CHECK_HEADER(fftw.h, :, AC_MSG_ERROR(cannot find FFTW header))
+AC_CHECK_LIB(fftw, fftw_create_plan, :, AC_MSG_ERROR(cannot use FFTW, library), -lm)
+
+if test -n "$FFTWINCLUDE" ; then
+	FFTWINCLUDE="-I$FFTWINCLUDE"
+fi
+AC_SUBST(FFTWINCLUDE)
+
+dnl Gnarly code adopted from Alexandrescu (Modern C++ Design) for compile-time
+dnl checking of type information. Need to make sure that fftw_complex and 
+dnl std::complex<double> are the same size and have the same memory layout.
+dnl Try to do that at compile-time, much better than doing it at runtime.
+dnl Actually, best of all is at configure-time. Only do this if the compiler
+dnl can handle compile-time assertions (checked above).
+if test -n "$NO_COMPILE_TIME_ASSERTIONS"; then
+	dnl compiler supports compile-time assertions
+	AC_MSG_CHECKING(whether std::complex<double> is same as fftw_complex)
+	AC_COMPILE_IFELSE( 
+		AC_LANG_SOURCE([[
+			#include <complex>
+			#include <fftw.h>
+			//	Gnarly code adopted from Alexandrescu (Modern C++ Design) for compile-time
+			//	checking of type information. Need to make sure that fftw_complex and 
+			//	std::complex<double> are the same size and have the same memory layout.
+			//
+			template<int> struct CompileTimeError;
+			template<> struct CompileTimeError<true> {};
+			#define STATIC_CHECK(expr, msg) \
+				{ CompileTimeError<((expr) != 0)> ERROR_##msg; (void)ERROR_##msg; }
+			
+			template <class T, class U> struct CompareTypes { enum { same = 0 }; };
+			template<class T> struct CompareTypes<T, T> { enum { same = 1 }; };
+			
+			void f(void)
+			{
+				//	if this won't compile, fftw_real is not defined to be double,
+				//	and this class won't work under those conditions:
+				STATIC_CHECK((CompareTypes<double, fftw_real>::same!=0), fftw_real_IS_NOT_DOUBLE);
+			
+				//	if this won't compile, then the two complex types have 
+				//	different sizes, and therefore don't have the same memory 
+				//	layout, and this FourierTransform class won't work:
+				STATIC_CHECK( sizeof(std::complex<double>) == sizeof(fftw_complex), 
+							  fftw_complex_DIFFERENT_SIZE_FROM_std_complex_double );
+							  
+				//	if this doesn't compile, then probably the previous one didn't
+				//	compile either, but it doesn't hurt to verify that the layout
+				//	of the complex types is trivial:
+				STATIC_CHECK( sizeof(fftw_complex) == sizeof(double) + sizeof(double),
+							  fftw_complex_LAYOUT_IS_NONTRIVIAL );
+			}
+	  ]]),[
+	  AC_MSG_RESULT(seems so) ], [
+	  AC_MSG_RESULT(failed!)
+	  AC_MSG_RESULT(-------------------------------------------)
+	  AC_MSG_RESULT(Compile-time type checks failed!!!!)
+	  AC_MSG_RESULT(This suggests that std::complex<double> and)
+	  AC_MSG_RESULT(and fftw_complex do not have the same)
+	  AC_MSG_RESULT(size and memory layout, so Loris analysis)
+	  AC_MSG_RESULT(will not work!!!)
+	  AC_MSG_RESULT(Check config.log, and send email to)
+	  AC_MSG_RESULT($PACKAGE_BUGREPORT)
+	  AC_MSG_RESULT(if you think this message is an error.)
+	  AC_MSG_RESULT(-------------------------------------------)
+	  AC_MSG_ERROR(Compile-time type checks failed!!!!)
+	  ] )
+else
+	AC_MSG_RESULT(cannot use compile-time checks to compare std::complex<double> to fftw_complex)
+fi
+
+
+dnl restore this
+AC_LANG_RESTORE
+
+dnl
+dnl end of FFTW check
+dnl----------------------------------------------------------------
 
 dnl----------------------------------------------------------------
 dnl Check for scripting languages
