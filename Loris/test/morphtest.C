@@ -32,18 +32,18 @@
  *
  */
 
-#include "AiffFile.h"
-#include "Analyzer.h"
-#include "BreakpointEnvelope.h"
-#include "Channelizer.h"
-#include "Dilator.h"
-#include "Distiller.h"
-#include "Exception.h"
-#include "Morpher.h"
-#include "Partial.h"
-#include "Sdiff.h"
-#include "Synthesizer.h"
-#include "notifier.h"
+#include <loris/AiffFile.h>
+#include <loris/Analyzer.h>
+#include <loris/BreakpointEnvelope.h>
+#include <loris/Channelizer.h>
+#include <loris/Dilator.h>
+#include <loris/Distiller.h>
+#include <loris/Exception.h>
+#include <loris/Morpher.h>
+#include <loris/Partial.h>
+#include <loris/SdifFile.h>
+#include <loris/Synthesizer.h>
+#include <loris/notifier.h>
 
 #include <iostream>
 #include <vector>
