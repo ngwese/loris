@@ -12,6 +12,13 @@
 #include <numeric>
 #include <complex>
 
+#if !defined( Deprecated_cstd_headers )
+	#include <cmath>
+	using std::sqrt;
+#else
+	#include <math.h>
+#endif
+
 //#include "Notifier.h"
 
 Begin_Namespace( Loris )
@@ -106,10 +113,11 @@ public:
 			
 			//	compute noise to add:
 			double noise = computeNoiseEnergy( freq, surplus );
+			b->addNoise( noise );
 			
 			//	compute new amplitude and bandwidth values:
-			b->setBandwidth( noise / ( e + noise ) );
-			b->setAmplitude( sqrt( e + noise ) );
+			//b->setBandwidth( noise / ( e + noise ) );
+			//b->setAmplitude( sqrt( e + noise ) );
 			
 			//	next:
 			++b;

@@ -59,6 +59,9 @@ public:
 	void setBandwidth( double x ) { _bandwidth = x; }
 	void setPhase( double x ) { _phase = x; }
 	
+//	add noise (bandwidth) energy:
+	void addNoise( double x );
+	
 private:
 //	-- instance variables --
 //	envelope parameters:

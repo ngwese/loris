@@ -9,6 +9,7 @@
 #include "AssociateBandwidth.h"
 #include "Exception.h"
 #include "Notifier.h"
+#include "bark.h"
 #include <algorithm>
 
 using namespace std;
@@ -70,8 +71,6 @@ AssociateBandwidth::computeSurplusEnergy( vector<double> & surplus )
 		surplus[i] = diff * diff * diff;	//	cheaper than pow()
 	}
 }
-
-static inline double bark( const double freq ); //	helper, defined at bottom
 
 // ---------------------------------------------------------------------------
 //	computeNoiseEnergy
@@ -196,19 +195,6 @@ AssociateBandwidth::reset( void )
 	fill( _spectralEnergy.begin(), _spectralEnergy.end(), 0. );
 	fill( _sinusoidalEnergy.begin(), _sinusoidalEnergy.end(), 0. );
 	fill( _weights.begin(), _weights.end(), 0. );
-}
-
-// ---------------------------------------------------------------------------
-//	bark
-// ---------------------------------------------------------------------------
-//	Compute Bark frequency from Hertz.
-//	Got this formula for Bark frequency from Sciarraba's thesis.
-//	Someday, this could be a table lookup.
-//
-static inline double bark( const double freq )
-{
-	double tmp = atan( ( 0.001 / 7.5 ) * freq );
-	return  13. * atan( 0.76 * 0.001 * freq ) + 3.5 * ( tmp * tmp );
 }
 
 End_Namespace( Loris )

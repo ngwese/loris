@@ -10,12 +10,17 @@
 //	-kel 16 Aug 99
 //
 // ===========================================================================
-
 #include "LorisLib.h"
-
 #include "Partial.h"
 #include "Breakpoint.h"
 #include "Exception.h"
+
+#if !defined( Deprecated_cstd_headers )
+	#include <cmath>
+	using std::sqrt;
+#else
+	#include <math.h>
+#endif
 
 Begin_Namespace( Loris )
 
@@ -47,30 +52,19 @@ Breakpoint::Breakpoint( double f, double a, double b, double p ) :
 	_phase( p )
 {
 }
-/*
-// ---------------------------------------------------------------------------
-//	Breakpoint destructor
-// ---------------------------------------------------------------------------
-//
-Breakpoint::~Breakpoint( void )
-{
-}	
 
 // ---------------------------------------------------------------------------
-//	Breakpoint copy constructor
+//	Breakpoint constructor
 // ---------------------------------------------------------------------------
-//	Copy parameters only from another Breakpoint.
-//	Is this too wierd?
+//	Compute new amplitude and bandwidth values.
 //
-Breakpoint::Breakpoint( const Breakpoint & other ) :
-	_frequency( other.frequency() ),
-	_amplitude( other.amplitude() ),
-	_bandwidth( other.bandwidth() ),
-	_phase( other.phase() )
+void 
+Breakpoint::addNoise( double noise )
 {
+	double e = _amplitude * _amplitude;
+	setBandwidth( noise / ( e + noise ) );
+	setAmplitude( sqrt( e + noise ) );
 }
-*/	
-
 
 End_Namespace( Loris )
 

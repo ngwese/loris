@@ -11,13 +11,10 @@
 //	-kel 31 Aug 99
 //
 // ===========================================================================
-
-
 #include "LorisLib.h"
 #include "Oscillator.h"
 #include "Filter.h"
 #include "random.h"
-
 #include <vector>
 
 #if !defined( Deprecated_cstd_headers )
