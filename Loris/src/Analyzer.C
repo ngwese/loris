@@ -187,6 +187,7 @@ struct frequency_first_near
 Analyzer::Frame 
 Analyzer::extractBreakpoints( void )
 {
+	//	pass this as an argument
 	Frame frame;	//	empty frame
 	
 	//	collect short-time peaks, and sort them by 
@@ -207,15 +208,15 @@ Analyzer::extractBreakpoints( void )
 		//	if the time correction for this peak is large,
 		//	forget it, go on to the next one:
 		double timeCorrection = _spectrum->reassignedTime( it->frequency() );
-		if ( abs(timeCorrection) > hopSize() * 0.99995 ) {
+		if ( abs(timeCorrection) > hopSize() ) {
 			continue;	//	loop over short-time peaks
 		} 
 		
 		//	make sure its not too close to any louder 
 		//	Breakpoints, already retained:
 		Frame::const_iterator masker = 
-		find_if( frame.begin(), frame.end(), 
-				 frequency_first_near< Frame::value_type >( peakfreq, captureRange() ) );
+			find_if( frame.begin(), frame.end(), 
+				 frequency_first_near< Frame::value_type >( peakfreq, partialSeparation() ) );
 		if ( masker	!= frame.end() ) {
 		/*
 			debugger << "rejecting Breakpoint at " << peakfreq << " magnitude " <<

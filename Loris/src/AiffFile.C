@@ -23,6 +23,10 @@
 //	define a local floating point constant representing the
 //	biggest 32 bit sample (can't rely on numeric_limits in
 //	under-compliant libraries):
+//
+//	This is silly, since I know how big the thing is (32 bits),
+//	I can trivially stick a constant in here, 0x7FFF, right? or 2147483647L
+//
 #if !defined( Lacks_numeric_limits )
 	#include <limits>
 	static const double Maximum_Long = std::numeric_limits<Loris::Int_32>::max();
