@@ -30,19 +30,23 @@ Begin_Namespace( Loris )
 // ---------------------------------------------------------------------------
 //	Synthesizer constructor
 // ---------------------------------------------------------------------------
-//	If no Oscillator (or a Null Oscillator) is specified, create a default
-//	Oscillator. Or what?
-//
 //	Default offset and fade are 1ms, so that Partials beginning at time 
 //	zero (like all Lemur 5 analyses) have time to ramp in.
 //
-Synthesizer::Synthesizer( SampleBuffer & buf, double srate ) :
+//	Default osc is an auto_ptr with no reference, indicating that a default 
+//	Oscillator should be creted and used.
+//
+//	auto_ptr is used to submit the Oscillator argument to make explicit the
+//	source/sink relationship between the caller and the Synthesizer. After
+//	the call, the Synthesizer will own the Oscillator, and the client's auto_ptr
+//	will have no reference (or ownership).
+//
+Synthesizer::Synthesizer( SampleBuffer & buf, double srate, 
+						  auto_ptr< Oscillator > osc ) :
 	_sampleRate( srate ),
 	_offset( 0.001 ),
 	_fadeTime( 0.001 ),
-	_samples( buf ),
-	_oscillator( Null ),
-	_iterator( Null )
+	_samples( buf )
 {
 	//	check to make sure that the sample rate is valid:
 	if ( _sampleRate <= 0. ) {
@@ -50,49 +54,98 @@ Synthesizer::Synthesizer( SampleBuffer & buf, double srate ) :
 	}
 	
 	//	initialize these:
-	setOscillator();
+	setOscillator( osc );
 	setIterator();
 }
 
 // ---------------------------------------------------------------------------
-//	Synthesizer destructor
+//	Synthesizer copy constructor
 // ---------------------------------------------------------------------------
+//	This will need to be changed is Oscillator ever becomes a base class.
 //
-Synthesizer::~Synthesizer( void )
+Synthesizer::Synthesizer( const Synthesizer & other ) :
+	_sampleRate( other._sampleRate ),
+	_offset( other._offset ),
+	_fadeTime( other._fadeTime ),
+	_samples( other._samples ),
+	_oscillator( new Oscillator( * other._oscillator ) ),
+	_iterator( other._iterator->clone() )
 {
-	delete _oscillator;
-	delete _iterator;
 }
 
+/*
+	This will work when the SampleBuffer class is replaced with
+	plain ol' copiable vectors.
+	
 // ---------------------------------------------------------------------------
-//	setIterator
+//	assignment operator
 // ---------------------------------------------------------------------------
-//	Default osc is Null, indicating that the default oscillator should be 
-//	used.
+//	For best behavior, if any part of assignment fails, the object
+//	should be unmodified. To that end, the iterator is cloned 
+//	first, since that could potentially generate a low memory
+//	exception, then all the assignments are made, and they cannot 
+//	generate exceptions.
+//
+Synthesizer & 
+Synthesizer::operator=( const Synthesizer & other )
+{
+	//	do nothing if assigning to self:
+	if ( &other != this ) {	
+		//	first do cloning:
+		auto_ptr< Oscillator > osc( new Oscillator( * other._oscillator ) );
+		auto_ptr< PartialIterator > it( other._iterator->clone() );
+		
+		_sampleRate = other._sampleRate;
+		_offset = other._offset;
+		_fadeTime = other._fadeTime;
+		_samples = other._samples;
+		_sampleRate = other._sampleRate;
+		_oscillator = osc;
+		_iterator = it;
+		
+	}
+	
+	return *this;
+}
+*/
+// ---------------------------------------------------------------------------
+//	setOscillator
+// ---------------------------------------------------------------------------
+//	Default osc is an auto_ptr with no reference, indicating that a default 
+//	Oscillator should be created and used.
+//
+//	auto_ptr is used to submit the Oscillator argument to make explicit
+//	the source/sink relationship between the caller and the Synthesizer. After
+//	the call, the Synthesizer will own the Oscillator, and the client's 
+//	auto_ptr will have no reference (or ownership).
+//
 //
 void
-Synthesizer::setOscillator( Oscillator * osc )
+Synthesizer::setOscillator( auto_ptr< Oscillator > osc )
 {	
-	if ( osc == Null )
-		osc = new Oscillator();
+	if ( ! osc.get() )
+		osc.reset( new Oscillator() );
 
-	delete _oscillator;
 	_oscillator = osc;
 }	
 
 // ---------------------------------------------------------------------------
 //	setIterator
 // ---------------------------------------------------------------------------
-//	Default iter is Null, indicating that the default iterator should be 
-//	used.
+//	Default iter is an auto_ptr with no reference, indicating that a default 
+//	PartialIterator should be created and used.
+//
+//	auto_ptr is used to submit the PartialIterator argument to make explicit
+//	the source/sink relationship between the caller and the Synthesizer. After
+//	the call, the Synthesizer will own the PartialIterator, and the client's 
+//	auto_ptr will have no reference (or ownership).
 //
 void
-Synthesizer::setIterator( PartialIterator * iter )
+Synthesizer::setIterator( auto_ptr< PartialIterator > iter )
 {	
-	if ( iter == Null )
-		iter = new PartialIterator();
-
-	delete _iterator;
+	if ( ! iter.get() )
+		iter.reset( new PartialIterator() );
+	
 	_iterator = iter;
 }	
 

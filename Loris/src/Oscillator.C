@@ -37,25 +37,56 @@ Begin_Namespace( Loris )
 // ---------------------------------------------------------------------------
 //	Initialize state to something, like zeros.
 //
-Oscillator::Oscillator( void ) :
+//	Default f is an auto_ptr with no reference, indicating that a default 
+//	filter should be creted and used.
+//
+//	auto_ptr is used to submit the Filter argument to make explicit the
+//	source/sink relationship between the caller and the Oscillator. After
+//	the call, the Oscillator will own the Filter, and the client's auto_ptr
+//	will have no reference (or ownership).
+//
+Oscillator::Oscillator( std::auto_ptr< Filter > f ) :
 	_frequency( 0. ),	//	radians per sample
 	_amplitude( 0. ),	//	absolute
 	_bandwidth( 0. ),	//	bandwidth coefficient (noise energy / total energy)
-	_phase( 0. ),		//	radians
-	_filter( Null  )
+	_phase( 0. )		//	radians
 {
 	//	initialize the filter:
 	setFilter( f );
 }
 
 // ---------------------------------------------------------------------------
-//	Oscillator destruction
+//	Oscillator copy construction
 // ---------------------------------------------------------------------------
-//	Initialize state to something, like zeros.
+//	This will have to be modified if Filter ever becomes a base class.
 //
-Oscillator::~Oscillator( void )
+Oscillator::Oscillator( const Oscillator & other ) :
+	_frequency( other._frequency ),
+	_amplitude( other._amplitude ),
+	_bandwidth( other._bandwidth ),
+	_phase( other._phase ),
+	_filter( new Filter( *other._filter ) )
 {
-	delete _filter;
+}	
+
+// ---------------------------------------------------------------------------
+//	assignment
+// ---------------------------------------------------------------------------
+//	This will have to be modified if Filter ever becomes a base class.
+//
+Oscillator &
+Oscillator::operator= (const Oscillator & other )
+{
+	//	do nothing if assigning to self:
+	if ( &other != this ) {	
+		_frequency = other._frequency;
+		_amplitude = other._amplitude;
+		_bandwidth = other._bandwidth;
+		_phase = other._phase;
+		_filter.reset( new Filter( *other._filter ) );
+	}
+	
+	return *this;
 }
 
 #pragma mark -
@@ -76,16 +107,20 @@ Oscillator::reset( double radf, double amp, double bw, double ph )
 // ---------------------------------------------------------------------------
 //	setFilter
 // ---------------------------------------------------------------------------
-//	Default f is Null, indicating that the default filter should be 
-//	used.
+//	Default f is an auto_ptr with no reference, indicating that a default 
+//	filter should be created and used.
+//
+//	auto_ptr is used to submit the Filter argument to make explicit the
+//	source/sink relationship between the caller and the Oscillator. After
+//	the call, the Oscillator will own the Filter, and the client's auto_ptr
+//	will have no reference (or ownership).
 //
 void
-Oscillator::setFilter( Filter * f )
+Oscillator::setFilter( std::auto_ptr< Filter > f )
 {	
-	if ( f == Null )
-		f = new Filter( Filter::NormalCoefs().first, Filter::NormalCoefs().second );
-
-	delete _filter;
+	if ( ! f.get() )
+		f.reset( new Filter( Filter::NormalCoefs().first, Filter::NormalCoefs().second ) );
+	
 	_filter = f;
 }	
 

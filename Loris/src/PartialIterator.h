@@ -32,12 +32,25 @@ class Breakpoint;
 //	Partials, and also allow the iterator to be configured and referenced
 //	before applying it to a particular Partial.
 //
+//	Dervied classes must provide a clone() member so that objects
+//	composed of PartialIterators can be copied.
+//
 class PartialIterator
 {
 public:
 	PartialIterator( void );
 	PartialIterator( const Partial & pin );
+	
+	//	compiler-generated copy constructor is adequate:
+	//PartialIterator( const PartialIterator & other );
+	
+	//	need to make this virtual as a base class:
 	virtual ~PartialIterator( void ) {}
+	
+	//	HEY make this pure virtual when PartialIterator 
+	//	becomes an abstract class:
+	virtual PartialIterator * clone( void ) const 
+			{ return new PartialIterator( *this ); }
 	
 	//	iterator interface:
 	virtual void advance( void );			//	may be overridden

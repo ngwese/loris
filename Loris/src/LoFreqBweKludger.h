@@ -35,6 +35,12 @@ public:
 	LoFreqBweKludger( double f );
 	LoFreqBweKludger( const Partial & pin, double f );
 	
+	//	compiler-generated copy constructor is adequate:
+	//LoFreqBweKludger( const LoFreqBweKludger & other );
+	
+//	cloning:
+	LoFreqBweKludger * clone( void ) const { return new LoFreqBweKludger( *this ); }
+
 	//	override these two:
 	double amplitude( void ) const;
 	double bandwidth( void ) const;

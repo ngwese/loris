@@ -15,8 +15,9 @@
 //
 // ===========================================================================
 
-
 #include "LorisLib.h"
+
+#include <memory>	//	for auto_ptr
 
 Begin_Namespace( Loris )
 
@@ -28,14 +29,25 @@ class Filter;
 //
 //	Oscillator is designed as a leaf class, and needs some modifications
 //	if it is to serve as a base class for other kinds of oscillators.
+//	Its not yet clear what a useful level of abstraction would be.
 //	
+//	auto_ptr is used to pass Filter arguments to make explicit the
+//	source/sink relationship between the caller and the Oscillator.
+//	Oscillator assumes ownership, and the client's auto_ptr
+//	will have no reference (or ownership).
+//
+//
 class Oscillator
 {
 //	-- public interface --
 public:
 //	construction:
-	Oscillator( Filter * f = Null );
-	~Oscillator( void );
+	Oscillator( std::auto_ptr< Filter > f = std::auto_ptr< Filter >() );
+	Oscillator( const Oscillator & other );
+	
+	// ~Oscillator( void );	//	use compiler-generated
+
+	Oscillator & operator= ( const Oscillator & other );
 		
 //	state access/mutation:
 	double radianFreq( void ) const { return _frequency; }
@@ -48,17 +60,17 @@ public:
 	void setBandwidth( double x ) { _bandwidth = x; }
 	void setPhase( double x ) { _phase = x; }
 
+//	filter access/specification:
+	Filter & filter( void ) { return *_filter; }
+	const Filter & filter( void ) const { return *_filter; }
+	void setFilter( std::auto_ptr< Filter > f = std::auto_ptr< Filter >() );
+	
 //	reset the whole state at once:
 	void reset( double radf, double amp, double bw, double ph );
 
 //	sample generation:	
 	void generateSamples( SampleBuffer & buffer, long howMany, long offset,
 						  double targetFreq, double targetAmp, double targetBw );
-	
-//	filter access/specification:
-	Filter & filter( void ) { return *_filter; }
-	const Filter & filter( void ) const { return *_filter; }
-	void setFilter( Filter * f = Null );
 	
 //	-- private helpers --
 private:
@@ -73,7 +85,7 @@ private:
 	double _phase;		//	radians
 
 //	filter for stochastic modulation:
-	Filter * _filter;
+	std::auto_ptr< Filter > _filter;
 
 };	//	end of class Oscillator
 

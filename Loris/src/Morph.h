@@ -16,6 +16,7 @@
 #include "LorisLib.h"
 #include "Partial.h"
 #include <list>
+#include <memory>	//	for auto_ptr
 
 Begin_Namespace( Loris )
 
@@ -24,17 +25,37 @@ class Map;
 // ---------------------------------------------------------------------------
 //	class Morph
 //
+//	auto_ptr is used to pass Map arguments to make explicit the
+//	source/sink relationship between the caller and the Morph.
+//	Morph assumes ownership, and the client's auto_ptr
+//	will have no reference (or ownership).
+//
+//	This also frees the abstract class Map from requiring a clone()
+//	member to be defined by subclasses. This is kind of inconvenient, 
+//	though, because, it is not possible to have a single-argument 
+//	constructor that assigns the same function to all three parameters,
+//	nor can the caller create a single Map and pass it three times as
+//	an argument. The client is responsible for making three dynamic
+//	allocations. Finally, it is impossible to have a copy constructor
+//	for Morph, because there is no way to copy the (abstract) Maps 
+//	without a cloning operation. A solution is to leave the pure 
+//	virtual clone()	member in the Map class, and take advantage of 
+//	it in the single-argument and copy constructors.
+//
 class Morph
 {
 //	-- public interface --
 public:
 //	construction:
-	Morph( const Map & f );
-	Morph( const Map & ff, 
-		   const Map & af, 
-		   const Map & bwf );
+	Morph( std::auto_ptr< Map > f );
+	Morph( std::auto_ptr< Map > ff, 
+		   std::auto_ptr< Map > af, 
+		   std::auto_ptr< Map > bwf );
 	Morph( const Morph & other );
-	~Morph( void );
+	
+	//~Morph( void );	//	use compiler-generated destructor
+	
+	Morph & operator= ( const Morph & other );
 
 //	morph two sounds (lists of Partials labeled to indicate
 //	correspondences) into a single one:
@@ -51,14 +72,18 @@ public:
 							const std::list<Partial> & plist2, 
 							int label = 0);
 
-//	specify morphing functions:	
-	void setFrequencyFunction( const Map & f );
-	void setAmplitudeFunction( const Map & f );
-	void setBandwidthFunction( const Map & f );
+//	morphing functions access/mutation:	
+	void setFrequencyFunction( std::auto_ptr< Map > f = std::auto_ptr< Map >() );
+	void setAmplitudeFunction( std::auto_ptr< Map > f = std::auto_ptr< Map >() );
+	void setBandwidthFunction( std::auto_ptr< Map > f = std::auto_ptr< Map >() );
 
-	inline const Map & frequencyFunction( void ) const;
-	inline const Map & amplitudeFunction( void ) const;
-	inline const Map & bandwidthFunction( void ) const;
+	const Map & frequencyFunction( void ) const { return * _freqFunction; }
+	const Map & amplitudeFunction( void ) const { return * _ampFunction; }
+	const Map & bandwidthFunction( void ) const { return * _bwFunction; }
+	
+	Map & frequencyFunction( void ) { return * _freqFunction; }
+	Map & amplitudeFunction( void ) { return * _ampFunction; }
+	Map & bandwidthFunction( void ) { return * _bwFunction; }
 	
 //	label range access:
 	std::pair< int, int > range( void ) const { return std::make_pair( _minlabel, _maxlabel ); }
@@ -72,15 +97,17 @@ protected:
 	int collectByLabel( const std::list<Partial>::const_iterator & start, 
 						const std::list<Partial>::const_iterator & end, 
 						std::list<Partial> & collector, int label) const;
+						
+	static std::auto_ptr< Map > defaultMap( void );
 
 //	-- instance variables --
 	//	morphed partials:
 	std::list< Partial > _partials;
 	
 	//	morphing functions:
-	Map * _freqFunction;
-	Map * _ampFunction;
-	Map * _bwFunction;
+	std::auto_ptr< Map > _freqFunction;
+	std::auto_ptr< Map > _ampFunction;
+	std::auto_ptr< Map > _bwFunction;
 	
 	//	range of labels for morphing:
 	int _minlabel, _maxlabel;

@@ -45,171 +45,161 @@ Begin_Namespace( Loris )
 // ---------------------------------------------------------------------------
 //	Morph constructor (single morph function)
 // ---------------------------------------------------------------------------
-//	Use auto_ptrs instead to clean up this obscene mess.
+//	Default f is an auto_ptr with no reference, indicating that a default 
+//	Map should be created and used.
 //
-Morph::Morph( const Map & f ) :
-	_freqFunction( Null ),
-	_ampFunction( Null ),
-	_bwFunction( Null ),
+//	auto_ptr is used to submit the Map argument to make explicit the
+//	source/sink relationship between the caller and the Morph. After
+//	the call, the Morph will own the Map, and the client's auto_ptr
+//	will have no reference (or ownership).
+//
+//
+Morph::Morph( auto_ptr< Map > f ) :
 	_minlabel( 0 ),
 	_maxlabel( 200 ),
 	_crossfadelabel( 0 )
 {
-	try {
-		setFrequencyFunction( f );
-		setAmplitudeFunction( f );
-		setBandwidthFunction( f );
+	//	initialize morphing functions:
+	if ( ! f.get() ) {
+		//	need to do this here, because clone() can't
+		//	be called on a Null (auto) pointer:
+		f = defaultMap();
 	}
-	catch (...) {
-		delete _freqFunction;
-		delete _ampFunction;
-		delete _bwFunction;
-		throw;
-	}
+		
+	setFrequencyFunction( auto_ptr< Map >( f->clone() ) );
+	setAmplitudeFunction( auto_ptr< Map >( f->clone() ) );
+	setBandwidthFunction( auto_ptr< Map >( f->clone() ) );
 }
 
 // ---------------------------------------------------------------------------
 //	Morph constructor (distinct morph functions)
 // ---------------------------------------------------------------------------
-//	Use auto_ptrs instead to clean up this obscene mess.
+//	auto_ptr is used to submit the Map argument to make explicit the
+//	source/sink relationship between the caller and the Morph. After
+//	the call, the Morph will own the Map, and the client's auto_ptr
+//	will have no reference (or ownership).
 //
-Morph::Morph( const Map & ff, 
-			  const Map & af, 
-			  const Map & bwf ) :
-	_freqFunction( Null ),
-	_ampFunction( Null ),
-	_bwFunction( Null ),
+Morph::Morph( auto_ptr< Map > ff, 
+			  auto_ptr< Map > af, 
+			  auto_ptr< Map > bwf ) :
 	_minlabel( 0 ),
 	_maxlabel( 200 ),
 	_crossfadelabel( 0 )
 {
-	try {
-		setFrequencyFunction( ff );
-		setAmplitudeFunction( af );
-		setBandwidthFunction( bwf );
-	}
-	catch (...) {
-		delete _freqFunction;
-		delete _ampFunction;
-		delete _bwFunction;
-		throw;
-	}
+	//	initialize morphing functions:
+	setFrequencyFunction( ff );
+	setAmplitudeFunction( af );
+	setBandwidthFunction( bwf );
 }
 
 // ---------------------------------------------------------------------------
 //	Morph copy constructor
 // ---------------------------------------------------------------------------
-//	Use auto_ptrs instead to clean up this obscene mess.
 //
 Morph::Morph( const Morph & other ) :
 	_partials( other._partials ),
-	_freqFunction( Null ),
-	_ampFunction( Null ),
-	_bwFunction( Null ),
+	_freqFunction( other.frequencyFunction().clone() ),
+	_ampFunction( other.amplitudeFunction().clone() ),
+	_bwFunction( other.bandwidthFunction().clone() ),
 	_minlabel( other._minlabel ),
 	_maxlabel( other._maxlabel ),
 	_crossfadelabel( other._crossfadelabel )
 {
-	try {
-		setFrequencyFunction( other.frequencyFunction() );
-		setAmplitudeFunction( other.amplitudeFunction() );
-		setBandwidthFunction( other.bandwidthFunction() );
-	}
-	catch (...) {
-		delete _freqFunction;
-		delete _ampFunction;
-		delete _bwFunction;
-		throw;
-	}
 }
 
+
+
 // ---------------------------------------------------------------------------
-//	Morph destructor
+//	assignment operator
 // ---------------------------------------------------------------------------
+//	For best behavior, if any part of assignment fails, the object
+//	should be unmodified. To that end, the morphing functions are 
+//	cloned first, since that could potentially generate a low memory
+//	exception, then the partials list is copied, which could also
+//	generate an exception, finally all the other assignments are made, 
+//	and they cannot generate exceptions.
 //
-Morph::~Morph( void )
+Morph & 
+Morph::operator=( const Morph & other )
 {
-	delete _freqFunction;
-	delete _ampFunction;
-	delete _bwFunction;
+	//	do nothing if assigning to self:
+	if ( &other != this ) {	
+		//	first do cloning:
+		auto_ptr< Map > ff( other.frequencyFunction().clone() );
+		auto_ptr< Map > af( other.amplitudeFunction().clone() );
+		auto_ptr< Map > bwf( other.bandwidthFunction().clone() );
+		
+		_partials = other._partials;
+		_freqFunction = ff;
+		_ampFunction = af;
+		_bwFunction = bwf;
+		_minlabel = other._minlabel;
+		_maxlabel = other._maxlabel;
+		_crossfadelabel = other._crossfadelabel;
+	}
+	
+	return *this;
 }
 
 // ---------------------------------------------------------------------------
 //	setFrequencyFunction
 // ---------------------------------------------------------------------------
+//	Default f is an auto_ptr with no reference, indicating that a default 
+//	Map should be created and used.
+//
+//	auto_ptr is used to submit the Map argument to make explicit the
+//	source/sink relationship between the caller and the Morph. After
+//	the call, the Morph will own the Map, and the client's auto_ptr
+//	will have no reference (or ownership).
+//
 //
 void
-Morph::setFrequencyFunction( const Map & f )
+Morph::setFrequencyFunction(  auto_ptr< Map > f )
 {
-	if ( _freqFunction != &f ) {
-		delete _freqFunction;
-		_freqFunction = f.clone();
-	}
+	if ( ! f.get() ) 
+		f = defaultMap();
+
+	_freqFunction = f;
 }
 
 // ---------------------------------------------------------------------------
 //	setAmplitudeFunction
 // ---------------------------------------------------------------------------
+//	Default f is an auto_ptr with no reference, indicating that a default 
+//	Map should be created and used.
+//
+//	auto_ptr is used to submit the Map argument to make explicit the
+//	source/sink relationship between the caller and the Morph. After
+//	the call, the Morph will own the Map, and the client's auto_ptr
+//	will have no reference (or ownership).
 //
 void
-Morph::setAmplitudeFunction( const Map & f )
+Morph::setAmplitudeFunction(  auto_ptr< Map > f )
 {
-	if ( _ampFunction != &f ) {
-		delete _ampFunction;
-		_ampFunction = f.clone();
-	}
+	if ( ! f.get() ) 
+		f = defaultMap();
+
+	_ampFunction = f;
 }
 
 // ---------------------------------------------------------------------------
 //	setBandwidthFunction
 // ---------------------------------------------------------------------------
+//	Default f is an auto_ptr with no reference, indicating that a default 
+//	Map should be created and used.
+//
+//	auto_ptr is used to submit the Map argument to make explicit the
+//	source/sink relationship between the caller and the Morph. After
+//	the call, the Morph will own the Map, and the client's auto_ptr
+//	will have no reference (or ownership).
 //
 void
-Morph::setBandwidthFunction( const Map & f )
+Morph::setBandwidthFunction(  auto_ptr< Map > f )
 {
-	if ( _bwFunction != &f ) {
-		delete _bwFunction;
-		_bwFunction = f.clone();
-	}
-}
+	if ( ! f.get() ) 
+		f = defaultMap();
 
-// ---------------------------------------------------------------------------
-//	frequencyFunction
-// ---------------------------------------------------------------------------
-//
-inline const Map & 
-Morph::frequencyFunction(void) const 
-{ 
-//	make sure the morphing function has been specified:
-	Assert( _freqFunction != Null );
-	
-	return * _freqFunction; 
-}
-
-// ---------------------------------------------------------------------------
-//	amplitudeFunction
-// ---------------------------------------------------------------------------
-//
-inline const Map & 
-Morph::amplitudeFunction(void) const
-{ 
-//	make sure the morphing function has been specified:
-	Assert( _ampFunction != Null );
-	
-	return * _ampFunction; 
-}
-
-// ---------------------------------------------------------------------------
-//	bandwidthFunction
-// ---------------------------------------------------------------------------
-//
-inline const Map & 
-Morph::bandwidthFunction(void) const
-{ 
-//	make sure the morphing function has been specified:
-	Assert( _bwFunction != Null );
-	
-	return * _bwFunction; 
+	_bwFunction = f;
 }
 
 // ---------------------------------------------------------------------------
@@ -401,5 +391,21 @@ Morph::collectByLabel( const list<Partial>::const_iterator & start,
 	//cout << "found " << n << " partials labeled " << label << endl;
 	return n;
 }
+
+// ---------------------------------------------------------------------------
+//	defaultMap
+// ---------------------------------------------------------------------------
+//	Static member for creating a default morphing function. By default,
+//	use a BreakpointMap that makes a constant 50% morph.
+//
+auto_ptr< Map > 
+Morph::defaultMap( void )
+{
+	BreakpointMap * m = new BreakpointMap();
+	m->insertBreakpoint( 0., 0.5 );
+	return auto_ptr< Map >( m );
+}
+
+
 
 End_Namespace( Loris )

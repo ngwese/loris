@@ -15,6 +15,8 @@
 
 #include "LorisLib.h"
 
+#include <memory> 	//	for auto_ptr
+
 Begin_Namespace( Loris )
 
 class Partial;
@@ -42,13 +44,23 @@ class PartialIterator;
 //	be changed on the fly: the buffer, the sample rate. Others, like
 //	the oscillator, the iterator, the offset, can usefully be modified.
 //
+//	auto_ptr is used to pass some objects as arguments to make explicit
+//	the source/sink relationship between the caller and the Synthesizer.
+//	Synthesizer assumes ownership, and the client's auto_ptr
+//	will have no reference (or ownership).
+//
 class Synthesizer
 {
 //	-- public interface --
 public:
 //	construction:
-	Synthesizer( SampleBuffer & buf, double srate );
-	~Synthesizer( void );
+	Synthesizer( SampleBuffer & buf, double srate, 
+				 std::auto_ptr< Oscillator > osc = std::auto_ptr< Oscillator >() );
+	Synthesizer( const Synthesizer & other );
+	
+	//~Synthesizer( void );	//	use compiler-generated destructor
+	
+	Synthesizer & operator= ( const Synthesizer & other );
 
 //	access:
 	double sampleRate( void ) const { return _sampleRate; }
@@ -61,11 +73,11 @@ public:
 	
 	Oscillator & oscillator( void ) { return *_oscillator; }
 	const Oscillator & oscillator( void ) const { return *_oscillator; }
-	void setOscillator( Oscillator * osc = Null );
+	void setOscillator( std::auto_ptr< Oscillator > osc = std::auto_ptr< Oscillator >() );
 	
 	PartialIterator & iterator( void ) { return *_iterator; }
 	const PartialIterator & iterator( void ) const { return *_iterator; }
-	void setIterator( PartialIterator * iter = Null );
+	void setIterator( std::auto_ptr< PartialIterator > iter = std::auto_ptr< PartialIterator >() );
 	
 //	synthesis:
 	void synthesizePartial( const Partial & p );	
@@ -98,8 +110,9 @@ private:
 	double _fadeTime;		//	default (maximum) fade in/out time for Partials, in seconds
 	
 	SampleBuffer & _samples;
-	Oscillator * _oscillator;
-	PartialIterator * _iterator;	//	possibly does transformation
+	
+	std::auto_ptr< Oscillator > _oscillator;
+	std::auto_ptr< PartialIterator > _iterator;	//	possibly does transformation
 	
 };	//	end of class Synthesizer
 

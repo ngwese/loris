@@ -25,6 +25,9 @@ Begin_Namespace( Loris )
 //	Abstract base class, specifying interface ( valueAt and operator() ).
 //	Derived classes must implement valueAt() and clone().
 //
+//	Dervied classes must provide a clone() member so that objects
+//	composed of Maps can be copied.
+//
 class Map
 {
 //	evaluation:
