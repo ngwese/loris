@@ -12,23 +12,23 @@ SUBDIRS = doc src scripting csound test
 
 MAINTAINERCLEANFILES = 	Makefile.in aclocal.m4 configure config.h.in \
 						stamp-h.in \
- 			$(ac_aux_dir)/config.guess \
-            $(ac_aux_dir)/config.sub \
-            $(ac_aux_dir)/install-sh \
-            $(ac_aux_dir)/ltmain.sh \
-            $(ac_aux_dir)/missing \
-            $(ac_aux_dir)/mkinstalldirs \
-            $(ac_aux_dir)/depcomp
+ 			$(top_srcdir)/$(ac_aux_dir)/config.guess \
+            $(top_srcdir)/$(ac_aux_dir)/config.sub \
+            $(top_srcdir)/$(ac_aux_dir)/install-sh \
+            $(top_srcdir)/$(ac_aux_dir)/ltmain.sh \
+            $(top_srcdir)/$(ac_aux_dir)/missing \
+            $(top_srcdir)/$(ac_aux_dir)/mkinstalldirs \
+            $(top_srcdir)/$(ac_aux_dir)/depcomp
 
 DISTCLEANFILES =
 
 EXTRA_DIST = reconf \
-			$(ac_aux_dir)/config.guess \
-            $(ac_aux_dir)/config.sub \
-            $(ac_aux_dir)/install-sh \
-            $(ac_aux_dir)/ltmain.sh \
-            $(ac_aux_dir)/missing \
-            $(ac_aux_dir)/mkinstalldirs
+			$(top_srcdir)/$(ac_aux_dir)/config.guess \
+            $(top_srcdir)/$(ac_aux_dir)/config.sub \
+            $(top_srcdir)/$(ac_aux_dir)/install-sh \
+            $(top_srcdir)/$(ac_aux_dir)/ltmain.sh \
+            $(top_srcdir)/$(ac_aux_dir)/missing \
+            $(top_srcdir)/$(ac_aux_dir)/mkinstalldirs
 
 DEMO_DIST_FILES =	Loris/demo/Makefile \
 					Loris/demo/README \

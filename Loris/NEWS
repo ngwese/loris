@@ -20,6 +20,9 @@ Python module.
 
 - added AiffFile Marker access to scripting module.
 
+- added sampleVector_fill to procedural interface, and
+to its documentation.
+
 -------------------------------------------------------
 changes since 1.0.2 release:
 

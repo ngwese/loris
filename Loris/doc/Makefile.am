@@ -8,7 +8,9 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-EXTRA_DIST = LorisCDoc.html LorisPerlDoc.html LorisPythonDoc.html LorisTclDoc.html index.html
+EXTRA_DIST = LorisCDoc.html LorisCppDoc.html \
+			 LorisPerlDoc.html LorisPythonDoc.html \
+			 LorisTclDoc.html index.html
 
 MAINTAINERCLEANFILES = 	Makefile.in
 

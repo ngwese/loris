@@ -35,6 +35,13 @@ SDIF 1TRC format that is not handled correctly by versions
 of IRCAM's SDIF library earlier than 3.4. Please download 
 release 3.4 or later.
 
+NEW: Loris does not (yet) work with FFTW version 3, nor does it 
+work with versions of the IRCAM SDIF library newer than 3.7.1
+The next release of Loris will be compatible with FFTW3, and
+will have no dependency on the IRCAM SDIF library. Meanwhile,
+please install version 2 of the FFTW library and any version
+of the IRCAM SDIF library earlier than (but not including) 3.8.
+
 MacOS INSTALLATION:
 
 Loris can be built using the standard GNU tools from a Terminal window
