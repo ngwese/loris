@@ -2,7 +2,8 @@
 #
 #	Loris objects definition
 #
-CLASSES = $(TOP)/Loris/classes
+# CLASSES = $(TOP)/Loris/classes
+CLASSES = .
 OBJ_LORIS = $(CLASSES)/AiffFile.o \
 			$(CLASSES)/Analyzer.o \
 			$(CLASSES)/AssociateBandwidth.o \

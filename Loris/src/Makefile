@@ -31,8 +31,8 @@ classes: ${OBJ_LORIS}
 #	so it does the wrong thing with the file names (.C.o)
 #
 depend: 
-	${CC} -MM $(CFLAGS) *.C > dependfile
-	${cc} -MM $(cFLAGS) *.c >> dependfile
+	${CC} -MM $(CFLAGS) $(CLASSES)/*.C > dependfile
+	${cc} -MM $(cFLAGS) $(CLASSES)/*.c >> dependfile
 
 include dependfile
 

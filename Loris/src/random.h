@@ -1,6 +1,5 @@
-#ifndef __random_number_generators__
-#define __random_number_generators__
-
+#ifndef INCLUDE_RANDOM_H
+#define INCLUDE_RANDOM_H
 // ===========================================================================
 //	random.h
 //	
@@ -10,27 +9,19 @@
 //	-kel 31 Aug 99
 //
 // ===========================================================================
-
-#if !defined( Deprecated_cstd_headers )
-	#include <cmath>
-	#define STDsqrt std::sqrt
-	#define STDlog std::log
-	#define STDtrunc std::trunc
-#else
-	#include <math.h>
-	#define STDsqrt sqrt
-	#define STDlog log
-	#define STDtrunc trunc
-#endif
+#include <cmath>
+//	no standard trunc() function for
+//	floating point, have to defined one.
+//	DON'T use integer conversion, because
+//	long int ins't as long as double's
+//	mantissa, see below.
+static inline double trunc( double x ) { double y; std::modf(x, &y); return y; }
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
 #endif
 
-
-#pragma mark -
-#pragma mark === uniform distribution ===
 // ---------------------------------------------------------------------------
 //		random number generator
 // ---------------------------------------------------------------------------
@@ -53,32 +44,19 @@ namespace Loris {
 //
 //	-kel 7 Nov 1997.
 //
-typedef long double ldouble;
-
-static ldouble __ranseed = 1.0L;
-
-inline ldouble
+inline double
 uniform( void )
 {
-static const ldouble a = 16807.L;
-static const ldouble m = 2147483647.L;	// == LONG_MAX
-static const ldouble oneOverM = 1.L / m;
+static const double a = 16807.L;
+static const double m = 2147483647.L;	// == LONG_MAX
+static const double oneOverM = 1.L / m;
+static double seed = 1.0L;
 
-	ldouble temp = a * __ranseed;
-	// __ranseed = temp - m * STDtrunc( temp / m );
-	__ranseed = temp - m * STDtrunc( temp * oneOverM );
-	// return __ranseed / m;
-	return __ranseed * oneOverM;
-}
-
-// ---------------------------------------------------------------------------
-//	seed_random
-// ---------------------------------------------------------------------------
-//
-inline void
-seed_random( ldouble s )
-{
-	__ranseed = s;
+	double temp = a * seed;
+	// seed = temp - m * trunc( temp / m );
+	seed = temp - m * trunc( temp * oneOverM );
+	// return seed / m;
+	return seed * oneOverM;
 }
 
 // ---------------------------------------------------------------------------
@@ -107,13 +85,13 @@ uniform( T min, T max )
 //	This is slightly different than the thing I got off the web, I (have to)
 //	assume (for now) that I knew what I was doing when I altered it.
 //
-inline ldouble
+inline double
 box_muller( void )
 {
 static int iset = 0;	//	boolean really, 
-static ldouble gset;
+static double gset;
 
-	ldouble r = 1., fac, v1, v2;
+	double r = 1., fac, v1, v2;
 	
 	if ( ! iset )
 	{
@@ -128,7 +106,7 @@ static ldouble gset;
 			r = v1*v1 + v2*v2;
 		}
 
-		fac = STDsqrt( -2. * STDlog(r) / r );
+		fac = std::sqrt( -2. * std::log(r) / r );
 		gset = v1 * fac;
 		iset = 1;
 		return v2 * fac;
@@ -158,7 +136,7 @@ gaussian_normal( T mean, T std_deviation )
 // ---------------------------------------------------------------------------
 //	Return a normally distributed r.v. with zero mean and standard deviation 1.
 //
-inline ldouble
+inline double
 gaussian_normal( void )
 {
 	return box_muller();
@@ -168,4 +146,4 @@ gaussian_normal( void )
 }	//	end of namespace Loris
 #endif
 
-#endif	// ndef __random_number_generators__
+#endif	// ndef INCLUDE_RANDOM_H
