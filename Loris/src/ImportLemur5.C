@@ -148,8 +148,7 @@ ImportLemur5::getPartial( void )
 		readTrackHeader( tkHeader );
 		
 		//	create a Partial:
-		mPartials.push_back( Partial() );
-		Partial & p = mPartials.back();
+		Partial p;
 		p.setLabel( tkHeader.label );
 		
 		//	keep running phase and time for Breakpoint construction:
@@ -178,6 +177,14 @@ ImportLemur5::getPartial( void )
 			//	update time:
 			prevTtnSec = pkData.ttn * 0.001;
 			time += prevTtnSec;
+		}
+
+		if ( p.duration() > 0. ) {
+			mPartials.push_back( p );
+		}
+		else {
+			debugger << "import rejecting a Partial of zero duration (" 
+					<< tkHeader.numPeaks << " peaks read)" << endl;
 		}
 	}
 	catch( FileIOException & ex ) {

@@ -14,6 +14,7 @@
 #include "PartialIterator.h"
 #include "Breakpoint.h"
 #include "Exception.h"
+#include "Notifier.h"
 
 using namespace std;
 
@@ -22,8 +23,8 @@ Begin_Namespace( Loris )
 // ---------------------------------------------------------------------------
 //	constructor
 // ---------------------------------------------------------------------------
-Dilator::Dilator( const std::vector< double > & init, 
-				  const std::vector< double > & tgt )
+Dilator::Dilator( const vector< double > & init, 
+				  const vector< double > & tgt )
 {
 	setTimePoints( init, tgt );
 }
@@ -41,8 +42,8 @@ Dilator::Dilator( const std::vector< double > & init,
 //	if that should ever be necessary.
 // 
 void
-Dilator::setTimePoints( const std::vector< double > & init, 
-						const std::vector< double > & tgt ) 
+Dilator::setTimePoints( const vector< double > & init, 
+						const vector< double > & tgt ) 
 {
 	//	time point vectors have to be the same size:
 	if ( init.size() != tgt.size() ) {
@@ -55,6 +56,18 @@ Dilator::setTimePoints( const std::vector< double > & init,
 	sort( _initial.begin(), _initial.end() );
 	_target = tgt;
 	sort( _target.begin(), _target.end() ); 
+
+/*
+	debugger << "Dilator got initial time points: ";
+	for ( vector< double >::iterator it = _initial.begin(); it != _initial.end(); ++it )
+		debugger << *it << " ";
+	debugger << endl;
+
+   debugger << "Dilator got target time points: ";
+    for ( vector< double >::iterator it = _target.begin(); it != _target.end(); ++it )
+        debugger << *it << " ";
+    debugger << endl;
+*/
 }
 
 // ---------------------------------------------------------------------------
@@ -97,6 +110,8 @@ Dilator::dilate( Partial & p ) const
 	//	create the new Partial:
 	Partial newp;
 	newp.setLabel( p.label() );
+
+	//debugger << "created new Partial with label " << newp.label() << endl;
 	
 	int index = 0;
 	for ( PartialIterator pIter(p); ! pIter.atEnd(); pIter.advance() ) {
@@ -137,6 +152,12 @@ Dilator::dilate( Partial & p ) const
 										  pIter.bandwidth(), pIter.phase() ) );
 	}
 	
+/*
+	debugger << "old Partial spanned: " << p.startTime() << " to " << p.endTime() << endl;
+	debugger << "new Partial spans: " << newp.startTime() << " to " << newp.endTime() << endl;
+	debugger << "assigning." << endl;
+*/
+
 	//	assign the new Partial:
 	p = newp;
 	return p;

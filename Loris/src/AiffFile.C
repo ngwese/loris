@@ -14,6 +14,7 @@
 #include "AiffFile.h"
 #include "BinaryFile.h"
 #include "Exception.h"
+#include "Notifier.h"
 #include "ieee.h"
 
 #include <algorithm>
@@ -345,6 +346,16 @@ AiffFile::writeCommon( BinaryFile & file )
 	ck.sampleFrames = _samples.size() / _nChannels;
 	ck.bitsPerSample = _sampSize;
 	IEEE::ConvertToIeeeExtended( _sampleRate, & ck.srate );
+
+/*
+	debugger << "writing common chunk: " << endl;
+	debugger << "header id: " << ck.header.id << endl;
+	debugger << "size: " << ck.header.size << endl;
+	debugger << "channels: " << ck.channels << endl;
+	debugger << "sample frames: " << ck.sampleFrames << endl;
+	debugger << "bits per sample: " << ck.bitsPerSample << endl;
+	debugger << "rate: " << _sampleRate << "?" << endl;
+*/
 	
 	//	write it out:
 	try {
@@ -377,6 +388,13 @@ AiffFile::writeContainer( BinaryFile & file )
 	ck.header.size = sizeof(Int_32) + sizeofCommon() + sizeofSoundData();
 	
 	ck.formType = AiffType;
+
+/*
+	debugger << "writing container: " << endl;
+	debugger << "header id: " << ck.header.id << endl;
+	debugger << "size: " << ck.header.size << endl;
+	debugger << "type: " << ck.formType << endl;
+*/
 	
 	//	write it out:
 	try {
@@ -409,6 +427,14 @@ AiffFile::writeSampleData( BinaryFile & file )
 	ck.offset = 0.;
 	ck.blockSize = 0;
 	
+/*
+	debugger << "writing sample data: " << endl;
+	debugger << "header id: " << ck.header.id << endl;
+	debugger << "size: " << ck.header.size << endl;
+	debugger << "offset: " << ck.offset << endl;
+	debugger << "block size: " << ck.blockSize << endl;
+*/
+
 	//	write it out:
 	try {
 		file.write( ck.header.id );
@@ -432,6 +458,8 @@ AiffFile::writeSampleData( BinaryFile & file )
 void
 AiffFile::writeSamples( BinaryFile & file )
 {	
+	// debugger << "writing " << _samples.size() << " samples of size " << _sampSize << endl;
+
 	pcm_sample z;
 
 	switch ( _sampSize ) {
@@ -459,7 +487,10 @@ AiffFile::writeSamples( BinaryFile & file )
 				z.s32bits = Maximum_Long * min( 1.0, max(-1.0, _samples[i]) );
 			
 				//	write the sample:
-				file.write( z.s16bits );
+				// file.write( z.s16bits );
+				//	this cast shouldn't matter, does it?
+				//	??????
+				file.write( Int_16(z.s16bits) );
 			}
 			break;
 		case 8:

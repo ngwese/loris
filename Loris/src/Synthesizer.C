@@ -17,6 +17,7 @@
 #include "Oscillator.h"
 #include "Partial.h"
 #include "PartialIterator.h"
+#include "Notifier.h"
 
 #include <algorithm>
 #include <vector>
@@ -34,7 +35,7 @@ Begin_Namespace( Loris )
 //	zero (like all Lemur 5 analyses) have time to ramp in.
 //
 //	Default osc is an auto_ptr with no reference, indicating that a default 
-//	Oscillator should be creted and used.
+//	Oscillator should be created and used.
 //
 //	auto_ptr is used to submit the Oscillator argument to make explicit the
 //	source/sink relationship between the caller and the Synthesizer. After
@@ -167,6 +168,14 @@ Synthesizer::synthesizePartial( const Partial & p )
 //	don't synthesize Partials having zero duration:
 	if ( p.duration() == 0. )
 		return;
+
+//	HEY do something better about this.
+	//Assert( p.endTime() < _samples.size() / sampleRate() );
+	if ( p.endTime() > _samples.size() / sampleRate() ) {
+		debugger << "found Partial ending at " << p.endTime() 
+					<< " but I only have a buffer of length " << _samples.size() << endl;
+		return;
+	}
 		
 //	reset the oscillator:
 //	Remember that the oscillator only knows about radian frequency! Convert!
