@@ -83,11 +83,11 @@ using namespace Loris;
 	is unmodified.
  */
 extern "C"
-void copyByLabel( const PartialList_Ptr src, long label, PartialList_Ptr dst )
+void copyByLabel( const PartialList * src, long label, PartialList * dst )
 {
 	try 
 	{
-		std::list< Partial >::iterator it = src->begin();
+		std::list< Partial >::const_iterator it = src->begin();
 		for ( it = std::find_if( it, src->end(), 
 					std::bind2nd( PartialUtils::label_equals(), label ) );
 			  it != src->end();
@@ -130,13 +130,13 @@ void copyByLabel( const PartialList_Ptr src, long label, PartialList_Ptr dst )
 	BreakpointEnvelope.
  */
 extern "C"
-BreakpointEnvelope_Ptr 
-createFreqReference( PartialList_Ptr partials, int numSamples,
+BreakpointEnvelope * 
+createFreqReference( PartialList * partials, int numSamples,
 					 double minFreq, double maxFreq )
 {
 	try 
 	{
-		ThrowIfNull((PartialList_Ptr) partials);
+		ThrowIfNull((PartialList *) partials);
 		
 		if ( numSamples <= 0 )
 			Throw( InvalidArgument, "number of samples in frequency reference must be positive." );
@@ -221,12 +221,12 @@ createFreqReference( PartialList_Ptr partials, int numSamples,
 	to an envelope representing a time-varying amplitude scale value.
  */
 extern "C"
-void scaleAmp( PartialList_Ptr partials, BreakpointEnvelope_Ptr ampEnv )
+void scaleAmp( PartialList * partials, BreakpointEnvelope * ampEnv )
 {
 	try
 	{
-		ThrowIfNull((PartialList_Ptr) partials);
-		ThrowIfNull((BreakpointEnvelope_Ptr) ampEnv);
+		ThrowIfNull((PartialList *) partials);
+		ThrowIfNull((BreakpointEnvelope *) ampEnv);
 
 		notifier << "scaling amplitude of " << partials->size() << " Partials" << endl;
 
@@ -262,12 +262,12 @@ void scaleAmp( PartialList_Ptr partials, BreakpointEnvelope_Ptr ampEnv )
 	scale value.
  */
 extern "C"
-void scaleNoiseRatio( PartialList_Ptr partials, BreakpointEnvelope_Ptr noiseEnv )
+void scaleNoiseRatio( PartialList * partials, BreakpointEnvelope * noiseEnv )
 {
 	try 
 	{
-		ThrowIfNull((PartialList_Ptr) partials);
-		ThrowIfNull((BreakpointEnvelope_Ptr) noiseEnv);
+		ThrowIfNull((PartialList *) partials);
+		ThrowIfNull((BreakpointEnvelope *) noiseEnv);
 
 		notifier << "scaling noise ratio of " << partials->size() << " Partials" << endl;
 
@@ -316,12 +316,12 @@ void scaleNoiseRatio( PartialList_Ptr partials, BreakpointEnvelope_Ptr noiseEnv 
 	units of cents (1/100 of a halfstep).
  */
 extern "C"
-void shiftPitch( PartialList_Ptr partials, BreakpointEnvelope_Ptr pitchEnv )
+void shiftPitch( PartialList * partials, BreakpointEnvelope * pitchEnv )
 {
 	try 
 	{
-		ThrowIfNull((PartialList_Ptr) partials);
-		ThrowIfNull((BreakpointEnvelope_Ptr) pitchEnv);
+		ThrowIfNull((PartialList *) partials);
+		ThrowIfNull((BreakpointEnvelope *) pitchEnv);
 
 		notifier << "shifting pitch of " << partials->size() << " Partials" << endl;
 		

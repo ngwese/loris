@@ -65,27 +65,24 @@ FourierTransform::FourierTransform( long len ) :
 	//	check to make sure that std::complex< double >
 	//	and fftw_complex are really identical:
 	static bool checked = false;
-	if ( ! checked ) {
+	if ( ! checked ) 
+	{
 		//	check that fftw_real is a double in the version
 		//	of the FFTW library that we linked:
-		if ( fftw_sizeof_fftw_real() != sizeof( double ) ) {
+		if ( fftw_sizeof_fftw_real() != sizeof( double ) ) 
+		{
 			Throw( InvalidObject, 
 				   "FourierTransform found fftw_real is not the same size as double." );
 		}
 		
-		#if 0
-		/*	check that storage for the two complex types is
+		#if 1
+		//	check that storage for the two complex types is
 		//	the same:
-		union {
-			std::complex< double > _std;
-			fftw_complex _fftw;
-		} u;
-		u._std = std::complex<double>(1234.5678, 9876.5432);
-		*/
 		std::complex<double> cplxstd(1234.5678, 9876.5432);
-		fftw_complex cplxfftw = (fftw_complex)cplxstd;
-		if ( c_re( cplxfftw ) != cplxstd.real() ||
-			 c_im( cplxfftw ) != cplxstd.imag() ) {
+		fftw_complex * cplxfftw = (fftw_complex *)&cplxstd;
+		if ( c_re( *cplxfftw ) != cplxstd.real() ||
+			 c_im( *cplxfftw ) != cplxstd.imag() ) 
+		{
 			Throw( InvalidObject, 
 				   "FourierTransform found std::complex< double > and fftw_complex to be different." );
 		}
@@ -133,6 +130,7 @@ FourierTransform::transform( void )
 	fftw_one( _plan, (fftw_complex *)_buffer, sharedBuffer );
 	
 //	copy output into (private) complex buffer:
+//	(could probably use memcpy to speed this up)
 	for ( long i = 0; i < size(); ++i ) 
 	{
 		_buffer[i] = complex< double >( sharedBuffer[i].re, sharedBuffer[i].im );

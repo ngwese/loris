@@ -1,5 +1,3 @@
-#ifndef INCLUDE_ANALYZER_H
-#define INCLUDE_ANALYZER_H
 /*
  * This is the Loris C++ Class Library, implementing analysis, 
  * manipulation, and synthesis of digitized sounds using the Reassigned 
@@ -22,73 +20,52 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *
- * Analyzer.h
+ *	lorisAnalyzer.i
  *
- * Definition of class Loris::Analyzer.
+ *	SWIG interface file describing the Loris::Analyzer class.
+ *	Include this file in loris.i to include the Analyzer class
+ *	interface in the scripting module. (Can be used with the 
+ *	-shadow option to SWIG to build an Analyzer class in the 
+ *	Python interface.) This file does not support exactly the 
+ *	public interface of the C++ class, but has been modified to
+ *	better support SWIG and scripting languages.
  *
- * Kelly Fitz, 5 Dec 99
+ *
+ * Kelly Fitz, 17 Nov 2000
  * loris@cerlsoundgroup.org
  *
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
+%{
+#include "Analyzer.h"
 #include "Partial.h"
 #include <list>
+typedef std::list< Loris::Partial > PartialList;
+using Loris::Analyzer;
+%}
 
-#if !defined( NO_LORIS_NAMESPACE )
-//	begin namespace
-namespace Loris {
-#endif
-
-class Breakpoint;
-class AnalyzerState;
 
 // ---------------------------------------------------------------------------
 //	class Analyzer
 //	
-//	An Analyzer represents a configuration of parameters for
-//	performing Reassigned Bandwidth-Enhanced Additive Analysis
-//	of sampled waveforms. This analysis process yields a collection 
-//	of Partials, each having a trio of synchronous, non-uniformly-
-//	sampled breakpoint envelopes representing the time-varying 
-//	frequency, amplitude, and noisiness of a single bandwidth-
-//	enhanced sinusoid. 
-//
-//	For more information about Reassigned Bandwidth-Enhanced 
-//	Analysis and the Reassigned Bandwidth-Enhanced Additive Sound 
-//	Model, refer to the Loris website: www.cerlsoundgroup.org/Loris/.
-//
+/*	An Analyzer represents a configuration of parameters for
+	performing Reassigned Bandwidth-Enhanced Additive Analysis
+	of sampled waveforms. This analysis process yields a collection 
+	of Partials, each having a trio of synchronous, non-uniformly-
+	sampled breakpoint envelopes representing the time-varying 
+	frequency, amplitude, and noisiness of a single bandwidth-
+	enhanced sinusoid. 
+
+	For more information about Reassigned Bandwidth-Enhanced 
+	Analysis and the Reassigned Bandwidth-Enhanced Additive Sound 
+	Model, refer to the Loris website: www.cerlsoundgroup.org/Loris/
+*/
 class Analyzer
 {
-//	-- analysis parameters --
-	double _resolution;	//	in Hz, minimum instantaneous frequency distance;
-						//	this is the core parameter, others are, by default,
-						//	computed from this one
-	double _floor;		//	dB, relative to full amplitude sine wave, absolute
-						//	amplitude threshold
-	double _windowWidth;//	in Hz, width of main lobe; this might be more
-						//	conveniently presented as window length, but
-						//	the main lobe width more explicitly highlights
-						//	the critical interaction with _resolution
-	double _minFrequency;	//	lowest frequency (Hz) component extracted
-							//	in spectral analysis
-	double _drift;		//	the maximum frequency (Hz) difference between two 
-						//	consecutive Breakpoints that will be linked to
-						//	form a Partial
-	double _hop;		//	in seconds, time between analysis windows in
-						//	successive spectral analyses
-	double _cropTime;	//	in seconds, maximum time correction for a spectral
-						//	component to be considered reliable, and to be eligible
-						//	for extraction and for Breakpoint formation
-	double _bwRegionWidth;	//	width in Hz of overlapping bandwidth 
-							//	association regions
-							
-	std::list< Partial > _partials;	//	collect Partials here
-			
-//	-- public interface --
 public:
 //	construction:
-	explicit Analyzer( double resolutionHz );
+	Analyzer( double resolutionHz );
 	/*	Construct and return a new Analyzer configured with the given	
 		frequency resolution (minimum instantaneous frequency	
 		difference between Partials). All other Analyzer parameters 	
@@ -100,11 +77,20 @@ public:
 	 */
 
 //	analysis:
-	void analyze( const double * bufBegin, const double * bufEnd, double srate );
+%addmethods 
+{
+	%new 
+	PartialList * analyze( const SampleVector * vec, double srate )
+	{
+		PartialList * partials = new PartialList();
+		self->analyze( vec->begin(), vec->end(), srate );
+		partials->splice( partials->end(), self->partials() );
+		return partials;
+	}
 	/*	Analyze a range of (mono) samples at the given sample rate 	  	
-		(in Hz) and append the extracted Partials to Analyzer's 
-		std::list of Partials. 												
+		(in Hz) and return the resulting Partials in a PartialList. 												
 	 */
+}
 	
 //	configuration:
 	void configure( double resolutionHz );
@@ -188,34 +174,4 @@ public:
 		used by this Analyzer.
 	 */
 
-//	Partial list access:
-	std::list< Partial > & partials( void ) { return _partials; }
-	/*	Return a mutable reference to this Analyzer's list of 
-		analyzed Partials. 
-	 */
-	const std::list< Partial > & partials( void ) const { return _partials; }
-	/*	Return an immutable (const) reference to this Analyzer's 
-		list of analyzed Partials. 
-	 */
-
-//	-- internal helpers --
-//	Should these be completely hidden? They all only access public 
-//	members of Analyzer, so they could be redefined static to 
-//	the implementation file and accept the Analyzer as an argument.
-private:
-	void extractPeaks( std::list< Breakpoint > & frame, double frameTime, AnalyzerState & state );
-	void formPartials( std::list< Breakpoint > & frame, double frameTime, AnalyzerState & state );
-	void thinPeaks( std::list< Breakpoint > & frame, AnalyzerState & state );
-	void pruneBogusPartials( AnalyzerState & state );
-	void spawnPartial( double time, const Breakpoint & bp );
-	
-//	-- unimplemented --
-	Analyzer( const Analyzer & other );
-	Analyzer  & operator = ( const Analyzer & rhs );
 };	//	end of class Analyzer
-
-#if !defined( NO_LORIS_NAMESPACE )
-}	//	end of namespace Loris
-#endif
-
-#endif	// ndef INCLUDE_ANALYZER_H

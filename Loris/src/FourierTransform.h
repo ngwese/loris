@@ -91,6 +91,13 @@ namespace Loris {
 //
 class FourierTransform 
 {
+//	-- instance variables --
+	const long _size;
+	std::complex< fftw_real > * _buffer;
+	
+	//	fftw planning structure:
+	fftw_plan_struct * _plan;
+	
 //	-- public interface --
 public:
 //	construction:
@@ -126,14 +133,6 @@ public:
 //	planning:
 	void makePlan( void );
 
-//	-- instance variables --
-private:
-	const long _size;
-	std::complex< fftw_real > * _buffer;
-	
-	//	fftw planning structure:
-	fftw_plan_struct * _plan;
-	
 };	//	end of class FourierTransform
 
 //

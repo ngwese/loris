@@ -82,15 +82,15 @@
 	#include <list>
 	#include <vector>
 	//	define types used in procedural interface:
-	typedef Loris::Analyzer * Analyzer_Ptr;
-	typedef Loris::BreakpointEnvelope * BreakpointEnvelope_Ptr;
-	typedef std::list< Loris::Partial > * PartialList_Ptr;
-	typedef std::vector< double > * SampleVector_Ptr;
+	using Loris::Analyzer;
+	using Loris::BreakpointEnvelope;
+	typedef std::list< Loris::Partial > PartialList;
+	typedef std::vector< double > SampleVector;
 #else /* no classes, just opaque C pointers */
-	typedef struct Analyzer * Analyzer_Ptr;
-	typedef struct BreakpointEnvelope * BreakpointEnvelope_Ptr;
-	typedef struct PartialList * PartialList_Ptr;
-	typedef struct SampleVector * SampleVector_Ptr;
+	typedef struct Analyzer Analyzer;
+	typedef struct BreakpointEnvelope BreakpointEnvelope;
+	typedef struct PartialList PartialList;
+	typedef struct SampleVector SampleVector;
 #endif
 
 #ifdef __cplusplus
@@ -111,99 +111,97 @@
 	For more information about Reassigned Bandwidth-Enhanced 
 	Analysis and the Reassigned Bandwidth-Enhanced Additive Sound 
 	Model, refer to the Loris website: www.cerlsoundgroup.org/Loris/.
-
-	In C++, an Analyzer_Ptr is a Loris::Analyzer *.
  */
-Analyzer_Ptr createAnalyzer( double resolution );
+Analyzer * createAnalyzer( double resolution );
 /*	Construct and return a new Analyzer configured with the given	
 	frequency resolution (minimum instantaneous frequency	
 	difference between Partials). All other Analyzer parameters 	
 	are computed from the specified frequency resolution. 			
  */
-void destroyAnalyzer( Analyzer_Ptr ptr_this );
+void destroyAnalyzer( Analyzer * ptr_this );
 /*	Destroy this Analyzer. 								
  */
-void analyzer_analyze( Analyzer_Ptr ptr_this, 
-					   const SampleVector_Ptr vec, double srate,
-					   PartialList_Ptr partials );
+void analyzer_analyze( Analyzer * ptr_this, 
+					   const SampleVector * vec, double srate,
+					   PartialList * partials );
 /*	Analyze a vector of (mono) samples at the given sample rate 	  	
 	(in Hz) and append the extracted Partials to the given 
 	PartialList. 												
  */
 	
-void analyzer_configure( Analyzer_Ptr ptr_this, double resolution );
+void analyzer_configure( Analyzer * ptr_this, double resolution );
 /*	Configure this Analyzer with the given frequency resolution 
 	(minimum instantaneous frequency difference between Partials). 
 	All other Analyzer parameters are (re-)computed from the 
 	frequency resolution. 		
  */
-double analyzer_getFreqResolution( const Analyzer_Ptr ptr_this );
+double analyzer_getFreqResolution( const Analyzer * ptr_this );
 /*	Return the frequency resolution (minimum instantaneous frequency  		
 	difference between Partials) for this Analyzer. 	
  */
-void analyzer_setFreqResolution( Analyzer_Ptr ptr_this, double x );
+void analyzer_setFreqResolution( Analyzer * ptr_this, double x );
 /*	Set the frequency resolution (minimum instantaneous frequency  		
 	difference between Partials) for this Analyzer. (Does not cause 	
 	other parameters to be recomputed.) 									
  */
-double analyzer_getAmpFloor( const Analyzer_Ptr ptr_this );
+double analyzer_getAmpFloor( const Analyzer * ptr_this );
 /*	Return the amplitude floor (lowest detected spectral amplitude),  			
 	in (negative) dB, for this Analyzer. 				
  */
-void analyzer_setAmpFloor( Analyzer_Ptr ptr_this, double x );
+void analyzer_setAmpFloor( Analyzer * ptr_this, double x );
 /*	Set the amplitude floor (lowest detected spectral amplitude), in  			
 	(negative) dB, for this Analyzer. 				
  */
-double analyzer_getWindowWidth( const Analyzer_Ptr ptr_this );
+double analyzer_getWindowWidth( const Analyzer * ptr_this );
 /*	Return the frequency-domain main lobe width (measured between 
 	zero-crossings) of the analysis window used by this Analyzer. 				
  */
-void analyzer_setWindowWidth( Analyzer_Ptr ptr_this, double x );
+void analyzer_setWindowWidth( Analyzer * ptr_this, double x );
 /*	Set the frequency-domain main lobe width (measured between 
 	zero-crossings) of the analysis window used by this Analyzer. 				
  */
-double analyzer_getFreqFloor( const Analyzer_Ptr ptr_this );
+double analyzer_getFreqFloor( const Analyzer * ptr_this );
 /*	Return the frequency floor (minimum instantaneous Partial  				
 	frequency), in Hz, for this Analyzer. 				
  */
-void analyzer_setFreqFloor( Analyzer_Ptr ptr_this, double x );
+void analyzer_setFreqFloor( Analyzer * ptr_this, double x );
 /*	Set the amplitude floor (minimum instantaneous Partial  				
 	frequency), in Hz, for this Analyzer.
  */
-double analyzer_getFreqDrift( const Analyzer_Ptr ptr_this );
+double analyzer_getFreqDrift( const Analyzer * ptr_this );
 /*	Return the maximum allowable frequency difference between 					
 	consecutive Breakpoints in a Partial envelope for this Analyzer. 				
  */
-void analyzer_setFreqDrift( Analyzer_Ptr ptr_this, double x );
+void analyzer_setFreqDrift( Analyzer * ptr_this, double x );
 /*	Set the maximum allowable frequency difference between 					
 	consecutive Breakpoints in a Partial envelope for this Analyzer. 				
  */
-double analyzer_getHopTime( const Analyzer_Ptr ptr_this );
+double analyzer_getHopTime( const Analyzer * ptr_this );
 /*	Return the hop time (which corresponds approximately to the 
 	average density of Partial envelope Breakpoint data) for this 
 	Analyzer.
  */
-void analyzer_setHopTime( Analyzer_Ptr ptr_this, double x );
+void analyzer_setHopTime( Analyzer * ptr_this, double x );
 /*	Set the hop time (which corresponds approximately to the average
 	density of Partial envelope Breakpoint data) for this Analyzer.
  */
-double analyzer_getCropTime( const Analyzer_Ptr ptr_this );
+double analyzer_getCropTime( const Analyzer * ptr_this );
 /*	Return the crop time (maximum temporal displacement of a time-
 	frequency data point from the time-domain center of the analysis
 	window, beyond which data points are considered "unreliable")
 	for this Analyzer.
  */
-void analyzer_setCropTime( Analyzer_Ptr ptr_this, double x );
+void analyzer_setCropTime( Analyzer * ptr_this, double x );
 /*	Set the crop time (maximum temporal displacement of a time-
 	frequency data point from the time-domain center of the analysis
 	window, beyond which data points are considered "unreliable")
 	for this Analyzer.
  */
-double analyzer_getBwRegionWidth( const Analyzer_Ptr ptr_this );
+double analyzer_getBwRegionWidth( const Analyzer * ptr_this );
 /*	Return the width (in Hz) of the Bandwidth Association regions
 	used by this Analyzer.
  */
-void analyzer_setBwRegionWidth( Analyzer_Ptr ptr_this, double x );
+void analyzer_setBwRegionWidth( Analyzer * ptr_this, double x );
 /*	Set the width (in Hz) of the Bandwidth Association regions
 	used by this Analyzer.
  */
@@ -216,19 +214,20 @@ void analyzer_setBwRegionWidth( Analyzer_Ptr ptr_this, double x );
 	values past either end of the breakpoint function have the 
 	values at the nearest end).
 
-	In C++, a BreakpointEnvelope_Ptr is a Loris::BreakpointEnvelope *.
+	In C++, a BreakpointEnvelope * is a Loris::BreakpointEnvelope *.
  */
  
-BreakpointEnvelope_Ptr createBreakpointEnvelope( void );
+BreakpointEnvelope * createBreakpointEnvelope( void );
 /*	Construct and return a new BreakpointEnvelope having no 
-	breakpoints (and an implicit value of 0. everywhere).			
+	breakpoints and an implicit value of 0. everywhere, 
+	until the first breakpoint is inserted.			
  */
 
-void destroyBreakpointEnvelope( BreakpointEnvelope_Ptr ptr_this );
+void destroyBreakpointEnvelope( BreakpointEnvelope * ptr_this );
 /*	Destroy this BreakpointEnvelope. 								
  */
  
-void breakpointEnvelope_insertBreakpoint( BreakpointEnvelope_Ptr ptr_this,
+void breakpointEnvelope_insertBreakpoint( BreakpointEnvelope * ptr_this,
 					double time, double val );
 /*	Insert a breakpoint representing the specified (time, value) 
 	pair into this BreakpointEnvelope. If there is already a 
@@ -236,7 +235,7 @@ void breakpointEnvelope_insertBreakpoint( BreakpointEnvelope_Ptr ptr_this,
 	the new breakpoint.
  */
 
-double breakpointEnvelope_valueAt( BreakpointEnvelope_Ptr ptr_this, 
+double breakpointEnvelope_valueAt( BreakpointEnvelope * ptr_this, 
 								   double time );
 /*	Return the interpolated value of this BreakpointEnvelope at the 
 	specified time.							
@@ -255,29 +254,29 @@ double breakpointEnvelope_valueAt( BreakpointEnvelope_Ptr ptr_this,
 	Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
 	the Loris website: www.cerlsoundgroup.org/Loris/.
 
-	In C++, a PartialList_Ptr is a std::list< Loris::Partial > *.
+	In C++, a PartialList * is a std::list< Loris::Partial > *.
  */ 
-PartialList_Ptr createPartialList( void );
+PartialList * createPartialList( void );
 /*	Return a new empty PartialList.
  */
-void destroyPartialList( PartialList_Ptr ptr_this );
+void destroyPartialList( PartialList * ptr_this );
 /*	Destroy this PartialList.
  */
-void partialList_clear( const PartialList_Ptr ptr_this );
+void partialList_clear( PartialList * ptr_this );
 /*	Remove (and destroy) all the Partials from this PartialList,
 	leaving it empty.
  */
-void partialList_copy( PartialList_Ptr ptr_this, 
-					   const PartialList_Ptr src );
+void partialList_copy( PartialList * ptr_this, 
+					   const PartialList * src );
 /*	Make this PartialList a copy of the source PartialList by making
 	copies of all of the Partials in the source and adding them to 
 	this PartialList.
  */
-unsigned long partialList_size( const PartialList_Ptr ptr_this );
+unsigned long partialList_size( const PartialList * ptr_this );
 /*	Return the number of Partials in this PartialList.
  */
-void partialList_splice( PartialList_Ptr ptr_this, 
-						 const PartialList_Ptr src );
+void partialList_splice( PartialList * ptr_this, 
+						 PartialList * src );
 /*	Splice all the Partials in the source PartialList onto the end of
 	this PartialList, leaving the source empty.
  */
@@ -290,35 +289,35 @@ void partialList_splice( PartialList_Ptr ptr_this,
 	values on the range (-1., 1.) (though this is not enforced or 
 	checked). 
 
-	In C++, a SampleVector_Ptr is a std::vector< double > *.
+	In C++, a SampleVector * is a std::vector< double > *.
  */
  
-SampleVector_Ptr createSampleVector( unsigned long size );
+SampleVector * createSampleVector( unsigned long size );
 /*	Return a new SampleVector having the specified number of samples,
 	all of whose value is 0.
  */
-void destroySampleVector( SampleVector_Ptr ptr_this );
+void destroySampleVector( SampleVector * ptr_this );
 /*	Destroy this SampleVector.
  */
-void sampleVector_copy( SampleVector_Ptr ptr_this, 
-						const SampleVector_Ptr src );
+void sampleVector_copy( SampleVector * ptr_this, 
+						const SampleVector * src );
 /*	Make this SampleVector a copy of the source SampleVector, having 
 	the same number of samples, and samples at every position in this
 	SampleVector having the same value as the corresponding sample in
 	the source.
  */
-double sampleVector_getAt( const SampleVector_Ptr ptr_this, unsigned long idx );
+double sampleVector_getAt( const SampleVector * ptr_this, unsigned long idx );
 /*	Return the value of the sample at the given position (index) in
 	this SampleVector.
  */
-void sampleVector_setAt( SampleVector_Ptr ptr_this, unsigned long idx, double x );
+void sampleVector_setAt( SampleVector * ptr_this, unsigned long idx, double x );
 /*	Set the value of the sample at the given position (index) in
 	this SampleVector.
  */
-unsigned long sampleVector_getLength( const SampleVector_Ptr ptr_this );
+unsigned long sampleVector_getLength( const SampleVector * ptr_this );
 /*	Return the number of samples represented by this SampleVector.
  */
-void sampleVector_setLength( SampleVector_Ptr ptr_this, unsigned long size );
+void sampleVector_setLength( SampleVector * ptr_this, unsigned long size );
 /*	Change the number of samples represented by this SampleVector. If
 	the given size is greater than the current size, all new samples 
 	will have value 0. If the given size is less than the current 
@@ -332,8 +331,8 @@ void sampleVector_setLength( SampleVector_Ptr ptr_this, unsigned long size );
 	interfaces are represented as simple functions.
  */
 
-void channelize( PartialList_Ptr partials, 
-				 BreakpointEnvelope_Ptr refFreqEnvelope, int refLabel );
+void channelize( PartialList * partials, 
+				 BreakpointEnvelope * refFreqEnvelope, int refLabel );
 /*	Label Partials in a PartialList with the integer nearest to
 	the amplitude-weighted average ratio of their frequency envelope
 	to a reference frequency envelope. The frequency spectrum is 
@@ -352,7 +351,7 @@ void channelize( PartialList_Ptr partials,
 	their frequencies are not modified in any way.
  */
 
-void dilate( PartialList_Ptr partials, 
+void dilate( PartialList * partials, 
 			 double * initial, double * target, int npts );
 /*	Dilate Partials in a PartialList according to the given 
 	initial and target time points. Partial envelopes are 
@@ -364,7 +363,7 @@ void dilate( PartialList_Ptr partials,
 	the same number of initial and target time points.
  */
 
-void distill( PartialList_Ptr partials );
+void distill( PartialList * partials );
 /*	Distill labeled (channelized)  Partials in a PartialList into a 
 	PartialList containing a single (labeled) Partial per label. 
 	The distilled PartialList will contain as many Partials as
@@ -372,7 +371,7 @@ void distill( PartialList_Ptr partials );
 	(label 0) Partials are eliminated.
  */
 
-void exportAiff( const char * path, const SampleVector_Ptr vec, 
+void exportAiff( const char * path, const SampleVector * vec, 
 				 double samplerate, int nchannels, int bitsPerSamp );
 /*	Export audio samples stored in a SampleVector to an AIFF file
 	having the specified number of channels and sample rate at the 
@@ -381,7 +380,7 @@ void exportAiff( const char * path, const SampleVector_Ptr vec,
 	to integers having bitsPerSamp bits.
  */
 				 
-void exportSdif( const char * path, PartialList_Ptr partials, double hop );
+void exportSdif( const char * path, PartialList * partials, double hop );
 /*	Export Partials in a PartialList to a SDIF file at the specified
 	file path (or name). SDIF data is written in the 1TRC format.  
 	For more information about SDIF, see the SDIF web site at:
@@ -395,7 +394,16 @@ void exportSdif( const char * path, PartialList_Ptr partials, double hop );
 	envelope data will be stored.
  */
 
-void importAiff( const char * path, SampleVector_Ptr vec, 
+void exportSpc( const char * path, PartialList * partials,
+				int numSpcPars, int refParNum, double frameRate, 
+				double midiPitch, double thresh, double endtime, 
+				double markertime, double approachtime );
+/*	Export Partials in a PartialList to an SPC file, for use with
+	the Kyma system. Waiting on a real doc string for this one.  
+		
+ */
+				
+void importAiff( const char * path, SampleVector * vec, 
 				 double * samplerate, int * nchannels );
 /*	Import audio samples stored in an AIFF file at the given file
 	path (or name). The samples are converted to floating point 
@@ -408,16 +416,16 @@ void importAiff( const char * path, SampleVector_Ptr vec,
 	of channels of audio data represented by the AIFF samples.
  */
 
-void importSdif( const char * path, PartialList_Ptr partials );
+void importSdif( const char * path, PartialList * partials );
 /*	Import Partials from an SDIF file at the given file path (or 
 	name), and append them to a PartialList.
  */	
 
-void morph( const PartialList_Ptr src0, const PartialList_Ptr src1, 
-			const BreakpointEnvelope_Ptr ffreq, 
-			const BreakpointEnvelope_Ptr famp, 
-			const BreakpointEnvelope_Ptr fbw, 
-			PartialList_Ptr dst );
+void morph( const PartialList * src0, const PartialList * src1, 
+			const BreakpointEnvelope * ffreq, 
+			const BreakpointEnvelope * famp, 
+			const BreakpointEnvelope * fbw, 
+			PartialList * dst );
 /*	Morph labeled Partials in two PartialLists according to the
 	given frequency, amplitude, and bandwidth (noisiness) morphing
 	envelopes, and append the morphed Partials to the destination 
@@ -428,8 +436,8 @@ void morph( const PartialList_Ptr src0, const PartialList_Ptr src1,
 	www.cerlsoundgroup.org/Loris/
  */
 
-void synthesize( const PartialList_Ptr partials,
-				 SampleVector_Ptr samples,  
+void synthesize( const PartialList * partials,
+				 SampleVector * samples,  
 				 double srate );
 /*	Synthesize Partials in a PartialList at the given sample
 	rate, and store the (floating point) samples in a SampleVector.
@@ -447,14 +455,14 @@ void synthesize( const PartialList_Ptr partials,
 	represented by classes in the Loris core.
  */
  
-void copyByLabel( const PartialList_Ptr src, long label, PartialList_Ptr dst );
+void copyByLabel( const PartialList * src, long label, PartialList * dst );
 /*	Append copies of Partials in the source PartialList having the
 	specified label to the destination PartialList. The source list
 	is unmodified.
  */
 
-BreakpointEnvelope_Ptr 
-createFreqReference( PartialList_Ptr partials, int numSamples,
+BreakpointEnvelope * 
+createFreqReference( PartialList * partials, int numSamples,
 					 double minFreq, double maxFreq );
 /*	Return a newly-constructed BreakpointEnvelope comprising the
 	specified number of samples of the frequency envelope of the
@@ -470,18 +478,18 @@ createFreqReference( PartialList_Ptr partials, int numSamples,
 	BreakpointEnvelope.
  */
  
-void scaleAmp( PartialList_Ptr partials, BreakpointEnvelope_Ptr ampEnv );
+void scaleAmp( PartialList * partials, BreakpointEnvelope * ampEnv );
 /*	Scale the amplitude of the Partials in a PartialList according 
 	to an envelope representing a time-varying amplitude scale value.
  */
 				 
-void scaleNoiseRatio( PartialList_Ptr partials, BreakpointEnvelope_Ptr noiseEnv );
+void scaleNoiseRatio( PartialList * partials, BreakpointEnvelope * noiseEnv );
 /*	Scale the relative noise content of the Partials in a PartialList 
 	according to an envelope representing a (time-varying) noise energy 
 	scale value.
  */
 
-void shiftPitch( PartialList_Ptr partials, BreakpointEnvelope_Ptr pitchEnv );
+void shiftPitch( PartialList * partials, BreakpointEnvelope * pitchEnv );
 /*	Shift the pitch of all Partials in a PartialList according to 
 	the given pitch envelope. The pitch envelope is assumed to have 
 	units of cents (1/100 of a halfstep).

@@ -76,7 +76,7 @@ using namespace Loris;
 	Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
 	the Loris website: www.cerlsoundgroup.org/Loris/.
 
-	In C++, a PartialList_Ptr is a std::list< Loris::Partial > *.
+	In C++, a PartialList * is a std::list< Loris::Partial > *.
  */ 
 
 /* ---------------------------------------------------------------- */
@@ -85,7 +85,7 @@ using namespace Loris;
 /*	Return a new empty PartialList.
  */
 extern "C"
-PartialList_Ptr createPartialList( void )
+PartialList * createPartialList( void )
 {
 	try 
 	{
@@ -113,11 +113,11 @@ PartialList_Ptr createPartialList( void )
 /*	Destroy this PartialList.
  */
 extern "C"
-void destroyPartialList( PartialList_Ptr ptr_this )
+void destroyPartialList( PartialList * ptr_this )
 {
 	try 
 	{
-		ThrowIfNull((PartialList_Ptr) ptr_this);
+		ThrowIfNull((PartialList *) ptr_this);
 
 		debugger << "deleting PartialList containing " << ptr_this->size() << " Partials" << endl;
 		delete ptr_this;
@@ -143,11 +143,11 @@ void destroyPartialList( PartialList_Ptr ptr_this )
 	leaving it empty.
  */
 extern "C"
-void partialList_clear( const PartialList_Ptr ptr_this )
+void partialList_clear( PartialList * ptr_this )
 {
 	try 
 	{
-		ThrowIfNull((PartialList_Ptr) ptr_this);
+		ThrowIfNull((PartialList *) ptr_this);
 		ptr_this->clear();
 	}
 	catch( Exception & ex ) 
@@ -172,12 +172,12 @@ void partialList_clear( const PartialList_Ptr ptr_this )
 	this PartialList.
  */
 extern "C"
-void partialList_copy( PartialList_Ptr dst, const PartialList_Ptr src )
+void partialList_copy( PartialList * dst, const PartialList * src )
 {
 	try 
 	{
-		ThrowIfNull((PartialList_Ptr) dst);
-		ThrowIfNull((PartialList_Ptr) src);
+		ThrowIfNull((PartialList *) dst);
+		ThrowIfNull((PartialList *) src);
 
 		debugger << "copying PartialList containing " << src->size() << " Partials" << endl;
 		*dst = *src;
@@ -202,11 +202,11 @@ void partialList_copy( PartialList_Ptr dst, const PartialList_Ptr src )
 /*	Return the number of Partials in this PartialList.
  */
 extern "C"
-unsigned long partialList_size( const PartialList_Ptr ptr_this )
+unsigned long partialList_size( const PartialList * ptr_this )
 {
 	try 
 	{
-		ThrowIfNull((PartialList_Ptr) ptr_this);
+		ThrowIfNull((PartialList *) ptr_this);
 		return ptr_this->size();
 	}
 	catch( Exception & ex ) 
@@ -231,12 +231,12 @@ unsigned long partialList_size( const PartialList_Ptr ptr_this )
 	this PartialList, leaving the source empty.
  */
 extern "C"
-void partialList_splice( PartialList_Ptr dst, const PartialList_Ptr src )
+void partialList_splice( PartialList * dst, PartialList * src )
 {
 	try 
 	{
-		ThrowIfNull((PartialList_Ptr) dst);
-		ThrowIfNull((PartialList_Ptr) src);
+		ThrowIfNull((PartialList *) dst);
+		ThrowIfNull((PartialList *) src);
 
 		debugger << "splicing PartialList containing " << src->size() << " Partials" 
 				 << " into PartialList containing " << dst->size() << " Partials"<< endl;

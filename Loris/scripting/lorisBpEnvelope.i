@@ -1,5 +1,3 @@
-#ifndef INCLUDE_BREAKPOINTENVELOPE_H
-#define INCLUDE_BREAKPOINTENVELOPE_H
 /*
  * This is the Loris C++ Class Library, implementing analysis, 
  * manipulation, and synthesis of digitized sounds using the Reassigned 
@@ -22,60 +20,54 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *
- * BreakpointEnvelope.h
+ *	lorisBpEnvelope.i
  *
- * Definition of class BreakpointEnvelope.
+ *	SWIG interface file describing the Loris::BreakpointEnvelope class.
+ *	Include this file in loris.i to include the BreakpointEnvelope class
+ *	interface in the scripting module. (Can be used with the -shadow 
+ *	option to SWIG to build a BreakpointEnvelope class in the Python 
+ *	interface.) This file does not support exactly the public interface 
+ *	of the C++ class, but has been modified to	better support SWIG 
+ *	and scripting languages.
  *
- * Kelly Fitz, 21 July 2000
+ * Kelly Fitz, 17 Nov 2000
  * loris@cerlsoundgroup.org
  *
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-#include "Envelope.h"
-#include <map>
-
-#if !defined( NO_LORIS_NAMESPACE )
-//	begin namespace
-namespace Loris {
-#endif
+%{
+#include "BreakpointEnvelope.h"
+using Loris::BreakpointEnvelope;
+%}
 
 // ---------------------------------------------------------------------------
 //	class BreakpointEnvelope
 //
-//	A BreakpointEnvelope represents a linear segment breakpoint 
-//	function with infinite extension at each end (that is, the 
-//	values past either end of the breakpoint function have the 
-//	values at the nearest end).
-//	
-//	Implements the Envelope interface. 
-//
-//	This class isn't insulating, clients that should be protected from 
-//	the details should use the EnvelopeInterface.
-//
-class BreakpointEnvelope : public Envelope
+class BreakpointEnvelope
+/*	A BreakpointEnvelope represents a linear segment breakpoint 
+	function with infinite extension at each end (that is, the 
+	values past either end of the breakpoint function have the 
+	values at the nearest end).
+*/
 {
-//	-- instance variables --
-	std::map< double, double > _breakpoints;
-
-//	-- public interface --
 public:
 //	construction:
 	BreakpointEnvelope( void );
 	/*	Construct and return a new BreakpointEnvelope having no 
-		breakpoints (and an implicit value of 0. everywhere).			
+		breakpoints and an implicit value of 0. everywhere, 
+		until the first breakpoint is inserted.			
 	 */
-	explicit BreakpointEnvelope( double initialValue );
+	%name( BreakpointEnvelopeWithValue ) BreakpointEnvelope( double initialValue );
 	/*	Construct and return a new BreakpointEnvelope having a 
-		single breakpoint at 0. (and an implicit value everywhere)
-		of initialValue.			
+		single breakpoint at 0. having the specified initialValue.
 	 */
-	BreakpointEnvelope( const BreakpointEnvelope & other );
+	%name( BreakpointEnvelopeCopy ) BreakpointEnvelope( const BreakpointEnvelope & other );
 	/*	Construct and return a new BreakpointEnvelope that is
 		a copy of this BreapointEnvelope (has the same value
 		as this BreakpointEnvelope everywhere).			
 	 */
-	virtual ~BreakpointEnvelope( void );
+	~BreakpointEnvelope( void );
 	/*	Destroy this BreakpointEnvelope. 								
 	 */
 	
@@ -85,9 +77,6 @@ public:
 		the specified time.							
 	 */
 	
-//	compiler-generated assignment is okay
-	//	BreakpointEnvelope & operator= ( const BreakpointEnvelope & );
-
 //	envelope composition:
 	void insertBreakpoint( double time, double value );
 	/*	Insert a breakpoint representing the specified (time, value) 
@@ -95,11 +84,19 @@ public:
 		breakpoint at the specified time, it will be replaced with 
 		the new breakpoint.
 	 */
+	 
+/*
+%addmethods
+{
+	%new BreakpointEnvelope * copy( void )
+	{
+		return new BreakpointEnvelope( *self );
+	}
+	/*	Construct and return a new BreakpointEnvelope that is
+		a copy of this BreapointEnvelope (has the same value
+		as this BreakpointEnvelope everywhere).			
+	 * /
 
-};	//	end of class BreakpointEnvelope
-
-#if !defined( NO_LORIS_NAMESPACE )
-}	//	end of namespace Loris
-#endif
-
-#endif	// ndef INCLUDE_BREAKPOINTENVELOPE_H
+}
+*/
+};	//	end of abstract class BreakpointEnvelope

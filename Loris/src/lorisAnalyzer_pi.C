@@ -74,19 +74,19 @@ using namespace Loris;
 	Analysis and the Reassigned Bandwidth-Enhanced Additive Sound 
 	Model, refer to the Loris website: www.cerlsoundgroup.org/Loris/.
 
-	In C++, an Analyzer_Ptr is a Loris::Analyzer *.
+	In C++, an Analyzer * is a Loris::Analyzer *.
  */
 
 /* ---------------------------------------------------------------- */
 /*        createAnalyzer
 /*
-	Construct and return a new Analyzer configured with the given	
+/*	Construct and return a new Analyzer configured with the given	
 	frequency resolution (minimum instantaneous frequency	
 	difference between Partials). All other Analyzer parameters 	
 	are computed from the specified frequency resolution. 			
  */
 extern "C"
-Analyzer_Ptr createAnalyzer( double resolution )
+Analyzer * createAnalyzer( double resolution )
 {
 	try 
 	{
@@ -114,11 +114,11 @@ Analyzer_Ptr createAnalyzer( double resolution )
 /*	Destroy this Analyzer. 								
  */
 extern "C"
-void destroyAnalyzer( Analyzer_Ptr ptr_this )
+void destroyAnalyzer( Analyzer * ptr_this )
 {
 	try 
 	{
-		ThrowIfNull((Analyzer_Ptr) ptr_this);
+		ThrowIfNull((Analyzer *) ptr_this);
 		
 		debugger << "deleting Analyzer" << endl;
 		delete ptr_this;
@@ -145,7 +145,7 @@ void destroyAnalyzer( Analyzer_Ptr ptr_this )
  */ 
 /*
 extern "C"
-void Analyzer_copy( Analyzer_Ptr dst, const Analyzer_Ptr src )
+void Analyzer_copy( Analyzer * dst, const Analyzer * src )
 {
 	try 
 	{
@@ -174,15 +174,15 @@ void Analyzer_copy( Analyzer_Ptr dst, const Analyzer_Ptr src )
 	PartialList. 												
  */
 extern "C"
-void analyzer_analyze( Analyzer_Ptr ptr_this, 
-					   const SampleVector_Ptr vec, double srate,
-					   PartialList_Ptr partials )
+void analyzer_analyze( Analyzer * ptr_this, 
+					   const SampleVector * vec, double srate,
+					   PartialList * partials )
 {
 	try 
 	{
-		ThrowIfNull((Analyzer_Ptr) ptr_this);
-		ThrowIfNull((SampleVector_Ptr) vec);
-		ThrowIfNull((PartialList_Ptr) partials);
+		ThrowIfNull((Analyzer *) ptr_this);
+		ThrowIfNull((SampleVector *) vec);
+		ThrowIfNull((PartialList *) partials);
 		
 		//	perform analysis:
 		notifier << "analyzing " << vec->size() << " samples at " <<
@@ -216,11 +216,11 @@ void analyzer_analyze( Analyzer_Ptr ptr_this,
 	frequency resolution. 		
  */
 extern "C"
-void analyzer_configure( Analyzer_Ptr ptr_this, double resolution )
+void analyzer_configure( Analyzer * ptr_this, double resolution )
 {
 	try  
 	{
-		ThrowIfNull((Analyzer_Ptr) ptr_this);
+		ThrowIfNull((Analyzer *) ptr_this);
 		ptr_this->configure( resolution );
 	}
 	catch( Exception & ex )  
@@ -244,11 +244,11 @@ void analyzer_configure( Analyzer_Ptr ptr_this, double resolution )
 	difference between Partials) for this Analyzer. 	
  */
 extern "C"
-double analyzer_getFreqResolution( const Analyzer_Ptr ptr_this )
+double analyzer_getFreqResolution( const Analyzer * ptr_this )
 {
 	try  
 	{
-		ThrowIfNull((Analyzer_Ptr) ptr_this);
+		ThrowIfNull((Analyzer *) ptr_this);
 		return ptr_this->freqResolution();
 	}
 	catch( Exception & ex )  
@@ -274,11 +274,11 @@ double analyzer_getFreqResolution( const Analyzer_Ptr ptr_this )
 	other parameters to be recomputed.) 									
  */
 extern "C"
-void analyzer_setFreqResolution( Analyzer_Ptr ptr_this, double x )
+void analyzer_setFreqResolution( Analyzer * ptr_this, double x )
 {
 	try  
 	{
-		ThrowIfNull((Analyzer_Ptr) ptr_this);
+		ThrowIfNull((Analyzer *) ptr_this);
 		ptr_this->setFreqResolution( x );
 	}
 	catch( Exception & ex )  
@@ -302,11 +302,11 @@ void analyzer_setFreqResolution( Analyzer_Ptr ptr_this, double x )
 	in (negative) dB, for this Analyzer. 				
  */
 extern "C"
-double analyzer_getAmpFloor( const Analyzer_Ptr ptr_this )
+double analyzer_getAmpFloor( const Analyzer * ptr_this )
 {
 	try  
 	{
-		ThrowIfNull((Analyzer_Ptr) ptr_this);
+		ThrowIfNull((Analyzer *) ptr_this);
 		return ptr_this->ampFloor();
 	}
 	catch( Exception & ex )  
@@ -331,11 +331,11 @@ double analyzer_getAmpFloor( const Analyzer_Ptr ptr_this )
 	(negative) dB, for this Analyzer. 				
  */
 extern "C"
-void analyzer_setAmpFloor( Analyzer_Ptr ptr_this, double x )
+void analyzer_setAmpFloor( Analyzer * ptr_this, double x )
 {
 	try  
 	{
-		ThrowIfNull((Analyzer_Ptr) ptr_this);
+		ThrowIfNull((Analyzer *) ptr_this);
 		ptr_this->setAmpFloor( x );
 	}
 	catch( Exception & ex )  
@@ -359,11 +359,11 @@ void analyzer_setAmpFloor( Analyzer_Ptr ptr_this, double x )
 	zero-crossings) of the analysis window used by this Analyzer. 				
  */
 extern "C"
-double analyzer_getWindowWidth( const Analyzer_Ptr ptr_this )
+double analyzer_getWindowWidth( const Analyzer * ptr_this )
 {
 	try  
 	{
-		ThrowIfNull((Analyzer_Ptr) ptr_this);
+		ThrowIfNull((Analyzer *) ptr_this);
 		return ptr_this->windowWidth();
 	}
 	catch( Exception & ex )  
@@ -388,11 +388,11 @@ double analyzer_getWindowWidth( const Analyzer_Ptr ptr_this )
 	zero-crossings) of the analysis window used by this Analyzer. 				
  */
 extern "C"
-void analyzer_setWindowWidth( Analyzer_Ptr ptr_this, double x )
+void analyzer_setWindowWidth( Analyzer * ptr_this, double x )
 {
 	try  
 	{
-		ThrowIfNull((Analyzer_Ptr) ptr_this);
+		ThrowIfNull((Analyzer *) ptr_this);
 		ptr_this->setWindowWidth( x );
 	}
 	catch( Exception & ex )  
@@ -416,11 +416,11 @@ void analyzer_setWindowWidth( Analyzer_Ptr ptr_this, double x )
 	frequency), in Hz, for this Analyzer. 				
  */
 extern "C"
-double analyzer_getFreqFloor( const Analyzer_Ptr ptr_this )
+double analyzer_getFreqFloor( const Analyzer * ptr_this )
 {
 	try  
 	{
-		ThrowIfNull((Analyzer_Ptr) ptr_this);
+		ThrowIfNull((Analyzer *) ptr_this);
 		return ptr_this->freqFloor();
 	}
 	catch( Exception & ex )  
@@ -445,11 +445,11 @@ double analyzer_getFreqFloor( const Analyzer_Ptr ptr_this )
 	frequency), in Hz, for this Analyzer.
  */
 extern "C"
-void analyzer_setFreqFloor( Analyzer_Ptr ptr_this, double x )
+void analyzer_setFreqFloor( Analyzer * ptr_this, double x )
 {
 	try  
 	{
-		ThrowIfNull((Analyzer_Ptr) ptr_this);
+		ThrowIfNull((Analyzer *) ptr_this);
 		ptr_this->setFreqFloor( x );
 	}
 	catch( Exception & ex )  
@@ -473,11 +473,11 @@ void analyzer_setFreqFloor( Analyzer_Ptr ptr_this, double x )
 	consecutive Breakpoints in a Partial envelope for this Analyzer. 				
  */
 extern "C"
-double analyzer_getFreqDrift( const Analyzer_Ptr ptr_this )
+double analyzer_getFreqDrift( const Analyzer * ptr_this )
 {
 	try  
 	{
-		ThrowIfNull((Analyzer_Ptr) ptr_this);
+		ThrowIfNull((Analyzer *) ptr_this);
 		return ptr_this->freqDrift();
 	}
 	catch( Exception & ex )  
@@ -502,11 +502,11 @@ double analyzer_getFreqDrift( const Analyzer_Ptr ptr_this )
 	consecutive Breakpoints in a Partial envelope for this Analyzer. 				
  */
 extern "C"
-void analyzer_setFreqDrift( Analyzer_Ptr ptr_this, double x )
+void analyzer_setFreqDrift( Analyzer * ptr_this, double x )
 {
 	try  
 	{
-		ThrowIfNull((Analyzer_Ptr) ptr_this);
+		ThrowIfNull((Analyzer *) ptr_this);
 		ptr_this->setFreqDrift( x );
 	}
 	catch( Exception & ex )  
@@ -531,11 +531,11 @@ void analyzer_setFreqDrift( Analyzer_Ptr ptr_this, double x )
 	Analyzer.
  */
 extern "C"
-double analyzer_getHopTime( const Analyzer_Ptr ptr_this )
+double analyzer_getHopTime( const Analyzer * ptr_this )
 {
 	try  
 	{
-		ThrowIfNull((Analyzer_Ptr) ptr_this);
+		ThrowIfNull((Analyzer *) ptr_this);
 		return ptr_this->hopTime();
 	}
 	catch( Exception & ex )  
@@ -561,11 +561,11 @@ double analyzer_getHopTime( const Analyzer_Ptr ptr_this )
 	density of Partial envelope Breakpoint data) for this Analyzer.
  */
 extern "C"
-void analyzer_setHopTime( Analyzer_Ptr ptr_this, double x )
+void analyzer_setHopTime( Analyzer * ptr_this, double x )
 {
 	try 
 	{
-		ThrowIfNull((Analyzer_Ptr) ptr_this);
+		ThrowIfNull((Analyzer *) ptr_this);
 		ptr_this->setHopTime( x );
 	}
 	catch( Exception & ex ) 
@@ -590,11 +590,11 @@ void analyzer_setHopTime( Analyzer_Ptr ptr_this, double x )
 	for this Analyzer.
  */
 extern "C"
-double analyzer_getCropTime( const Analyzer_Ptr ptr_this )
+double analyzer_getCropTime( const Analyzer * ptr_this )
 {
 	try 
 	{
-		ThrowIfNull((Analyzer_Ptr) ptr_this);
+		ThrowIfNull((Analyzer *) ptr_this);
 		return ptr_this->cropTime();
 	}
 	catch( Exception & ex ) 
@@ -621,11 +621,11 @@ double analyzer_getCropTime( const Analyzer_Ptr ptr_this )
 	for this Analyzer.
  */
 extern "C"
-void analyzer_setCropTime( Analyzer_Ptr ptr_this, double x )
+void analyzer_setCropTime( Analyzer * ptr_this, double x )
 {
 	try 
 	{
-		ThrowIfNull((Analyzer_Ptr) ptr_this);
+		ThrowIfNull((Analyzer *) ptr_this);
 		ptr_this->setCropTime( x );
 	}
 	catch( Exception & ex ) 
@@ -651,11 +651,11 @@ void analyzer_setCropTime( Analyzer_Ptr ptr_this, double x )
 	used by this Analyzer.
  */
 extern "C"
-double analyzer_getBwRegionWidth( const Analyzer_Ptr ptr_this )
+double analyzer_getBwRegionWidth( const Analyzer * ptr_this )
 {
 	try 
 	{
-		ThrowIfNull((Analyzer_Ptr) ptr_this);
+		ThrowIfNull((Analyzer *) ptr_this);
 		return ptr_this->bwRegionWidth();
 	}
 	catch( Exception & ex ) 
@@ -680,11 +680,11 @@ double analyzer_getBwRegionWidth( const Analyzer_Ptr ptr_this )
 	used by this Analyzer.
  */
 extern "C"
-void analyzer_setBwRegionWidth( Analyzer_Ptr ptr_this, double x )
+void analyzer_setBwRegionWidth( Analyzer * ptr_this, double x )
 {
 	try 
 	{
-		ThrowIfNull((Analyzer_Ptr) ptr_this);
+		ThrowIfNull((Analyzer *) ptr_this);
 		ptr_this->setBwRegionWidth( x );
 	}
 	catch( Exception & ex ) 

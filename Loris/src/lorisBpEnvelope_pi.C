@@ -74,10 +74,11 @@ using namespace Loris;
 /*        createBreakpointEnvelope
 /*
 /*	Construct and return a new BreakpointEnvelope having no 
-	breakpoints (and an implicit value of 0. everywhere).			
+	breakpoints and an implicit value of 0. everywhere, 
+	until the first breakpoint is inserted.			
  */
 extern "C"
-BreakpointEnvelope_Ptr createBreakpointEnvelope( void )
+BreakpointEnvelope * createBreakpointEnvelope( void )
 {
 	try 
 	{
@@ -105,11 +106,11 @@ BreakpointEnvelope_Ptr createBreakpointEnvelope( void )
 /*	Destroy this BreakpointEnvelope. 								
  */
 extern "C"
-void destroyBreakpointEnvelope( BreakpointEnvelope_Ptr ptr_this )
+void destroyBreakpointEnvelope( BreakpointEnvelope * ptr_this )
 {
 	try 
 	{
-		ThrowIfNull((BreakpointEnvelope_Ptr) ptr_this);
+		ThrowIfNull((BreakpointEnvelope *) ptr_this);
 		
 		debugger << "deleting BreakpointEnvelope" << endl;
 		delete ptr_this;
@@ -137,12 +138,12 @@ void destroyBreakpointEnvelope( BreakpointEnvelope_Ptr ptr_this )
 	the new breakpoint.
  */
 extern "C"
-void breakpointEnvelope_insertBreakpoint( BreakpointEnvelope_Ptr ptr_this,
+void breakpointEnvelope_insertBreakpoint( BreakpointEnvelope * ptr_this,
 					double time, double val )
 {
 	try 
 	{
-		ThrowIfNull((BreakpointEnvelope_Ptr) ptr_this);
+		ThrowIfNull((BreakpointEnvelope *) ptr_this);
 		
 		debugger << "inserting point (" << time << ", " << val 
 				 << ") into BreakpointEnvelope" << endl;
@@ -169,12 +170,12 @@ void breakpointEnvelope_insertBreakpoint( BreakpointEnvelope_Ptr ptr_this,
 	specified time.							
  */
 extern "C"
-double breakpointEnvelope_valueAt( BreakpointEnvelope_Ptr ptr_this, 
+double breakpointEnvelope_valueAt( BreakpointEnvelope * ptr_this, 
 								   double time )
 {
 	try 
 	{
-		ThrowIfNull((BreakpointEnvelope_Ptr) ptr_this);
+		ThrowIfNull((BreakpointEnvelope *) ptr_this);
 		return ptr_this->valueAt(time);
 	}
 	catch( Exception & ex ) 

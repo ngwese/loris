@@ -90,7 +90,10 @@ read( const char *infilename, std::list<Partial> & partials )
 //
 	SdifFileT *in = SdifFOpen(infilename, eReadFile);
 	if (!in)
+	{
+		SdifGenKill();
 		Throw( FileIOException, "Could not open SDIF file for reading." );
+	}
 
 	SdifFReadGeneralHeader(in);		// read file header
 	SdifFReadAllASCIIChunks(in);	// read ascii header info, such as name-value tables
@@ -116,6 +119,7 @@ read( const char *infilename, std::list<Partial> & partials )
 	}
 	catch ( Exception & ex ) 
 	{
+		partials.clear();
 		ex.append("Failed to read SDIF file.");
 		SdifFClose(in);
 		SdifGenKill();
@@ -148,7 +152,7 @@ readEnvelopeData( SdifFileT *file, std::vector< Partial > & partialsVector )
 	int eof = false;
 
 //
-// Read al frames matching the file selection.
+// Read all frames matching the file selection.
 //
 	while (!eof && !SdifFLastError(file))
 	{
@@ -220,7 +224,20 @@ readEnvelopeData( SdifFileT *file, std::vector< Partial > & partialsVector )
 	if (errPtr)
 	{
 		debugger << "SDIF error number " << (int)errPtr->Tag << endl;
-		Throw(FileIOException, "Error reading SDIF file.");
+		if ( errPtr->Tag == eUnDefined )
+		{
+			Throw(FileIOException, 
+			"Error reading SDIF file: undefined martrix type. Is the SdifTypes.STYP file accessible?");
+		}
+		else if ( errPtr->Tag == eBadNbData )
+		{
+			Throw(FileIOException, 
+			"Error reading SDIF file: undefined martrix type. Is the Loris SdifTypes.STYP file accessible?");
+		}
+		else
+		{			
+			Throw(FileIOException, "Error reading SDIF file.");
+		}
 	}
 }
 

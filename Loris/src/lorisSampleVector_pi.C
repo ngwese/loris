@@ -69,7 +69,7 @@ using namespace Loris;
 	values on the range (-1., 1.) (though this is not enforced or 
 	checked). 
 
-	In C++, a SampleVector_Ptr is a std::vector< double > *.
+	In C++, a SampleVector * is a std::vector< double > *.
  */
 
 /* ---------------------------------------------------------------- */
@@ -79,7 +79,7 @@ using namespace Loris;
 	all of whose value is 0.
  */
 extern "C"
-SampleVector_Ptr createSampleVector( unsigned long size )
+SampleVector * createSampleVector( unsigned long size )
 {
 	try 
 	{
@@ -107,11 +107,11 @@ SampleVector_Ptr createSampleVector( unsigned long size )
 /*	Destroy this SampleVector.
  */
 extern "C"
-void destroySampleVector( SampleVector_Ptr ptr_this )
+void destroySampleVector( SampleVector * ptr_this )
 {
 	try 
 	{
-		ThrowIfNull((SampleVector_Ptr) ptr_this);
+		ThrowIfNull((SampleVector *) ptr_this);
 		debugger << "deleting SampleVector" << endl;
 		delete ptr_this;
 	}
@@ -138,12 +138,12 @@ void destroySampleVector( SampleVector_Ptr ptr_this )
 	the source.
  */
 extern "C"
-void sampleVector_copy( SampleVector_Ptr dst, const SampleVector_Ptr src )
+void sampleVector_copy( SampleVector * dst, const SampleVector * src )
 {
 	try 
 	{
-		ThrowIfNull((SampleVector_Ptr) dst);
-		ThrowIfNull((SampleVector_Ptr) src);
+		ThrowIfNull((SampleVector *) dst);
+		ThrowIfNull((SampleVector *) src);
 
 		debugger << "copying SampleVector of size " << src->size() << endl;
 		*dst = *src;
@@ -169,11 +169,11 @@ void sampleVector_copy( SampleVector_Ptr dst, const SampleVector_Ptr src )
 	this SampleVector.
  */
 extern "C"
-double sampleVector_getAt( const SampleVector_Ptr ptr_this, unsigned long idx )
+double sampleVector_getAt( const SampleVector * ptr_this, unsigned long idx )
 {
 	try 
 	{
-		ThrowIfNull((SampleVector_Ptr) ptr_this);
+		ThrowIfNull((SampleVector *) ptr_this);
 		return ptr_this->at(idx);
 	}
 	catch( Exception & ex ) 
@@ -198,11 +198,11 @@ double sampleVector_getAt( const SampleVector_Ptr ptr_this, unsigned long idx )
 	this SampleVector.
  */
 extern "C"
-void sampleVector_setAt( SampleVector_Ptr ptr_this, unsigned long idx, double x )
+void sampleVector_setAt( SampleVector * ptr_this, unsigned long idx, double x )
 {
 	try 
 	{
-		ThrowIfNull((SampleVector_Ptr) ptr_this);
+		ThrowIfNull((SampleVector *) ptr_this);
 		ptr_this->at(idx) = x;
 	}
 	catch( Exception & ex ) 
@@ -225,11 +225,11 @@ void sampleVector_setAt( SampleVector_Ptr ptr_this, unsigned long idx, double x 
 /*	Return the number of samples represented by this SampleVector.
  */
 extern "C"
-unsigned long sampleVector_getLength( const SampleVector_Ptr ptr_this )
+unsigned long sampleVector_getLength( const SampleVector * ptr_this )
 {
 	try 
 	{
-		ThrowIfNull((SampleVector_Ptr) ptr_this);
+		ThrowIfNull((SampleVector *) ptr_this);
 		return ptr_this->size();
 	}
 	catch( Exception & ex ) 
@@ -256,11 +256,11 @@ unsigned long sampleVector_getLength( const SampleVector_Ptr ptr_this )
 	size, then samples in excess of the given size are removed.
  */
 extern "C"
-void sampleVector_setLength( SampleVector_Ptr ptr_this, unsigned long size )
+void sampleVector_setLength( SampleVector * ptr_this, unsigned long size )
 {
 	try 
 	{
-		ThrowIfNull((SampleVector_Ptr) ptr_this);
+		ThrowIfNull((SampleVector *) ptr_this);
 		debugger << "resizing SampleVector to size " << size << endl;
 		ptr_this->resize(size, 0.);
 	}

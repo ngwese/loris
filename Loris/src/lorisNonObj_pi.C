@@ -111,13 +111,13 @@ using namespace Loris;
 	their frequencies are not modified in any way.
  */
 extern "C"
-void channelize( PartialList_Ptr partials, 
-				 BreakpointEnvelope_Ptr refFreqEnvelope, int refLabel )
+void channelize( PartialList * partials, 
+				 BreakpointEnvelope * refFreqEnvelope, int refLabel )
 {
 	try 
 	{
-		ThrowIfNull((PartialList_Ptr) partials);
-		ThrowIfNull((BreakpointEnvelope_Ptr) refFreqEnvelope);
+		ThrowIfNull((PartialList *) partials);
+		ThrowIfNull((BreakpointEnvelope *) refFreqEnvelope);
 
 		if ( refLabel <= 0 )
 			Throw( InvalidArgument, "Channelization reference label must be positive." );
@@ -161,12 +161,12 @@ void channelize( PartialList_Ptr partials,
 	the same number of initial and target time points.
  */
 extern "C"
-void dilate( PartialList_Ptr partials, 
+void dilate( PartialList * partials, 
 			 double * initial, double * target, int npts )
 {
 	try 
 	{
-		ThrowIfNull((PartialList_Ptr) partials);
+		ThrowIfNull((PartialList *) partials);
 		ThrowIfNull((double *) initial);
 		ThrowIfNull((double *) target);
 
@@ -202,11 +202,11 @@ void dilate( PartialList_Ptr partials,
 	(label 0) Partials are eliminated.
  */
 extern "C"
-void distill( PartialList_Ptr partials )
+void distill( PartialList * partials )
 {
 	try 
 	{
-		ThrowIfNull((PartialList_Ptr) partials);
+		ThrowIfNull((PartialList *) partials);
 
 		notifier << "distilling " << partials->size() << " Partials" << endl;
 		Distiller still;
@@ -237,12 +237,12 @@ void distill( PartialList_Ptr partials )
 	to integers having bitsPerSamp bits.
  */
 extern "C"
-void exportAiff( const char * path, const SampleVector_Ptr vec, 
+void exportAiff( const char * path, const SampleVector * vec, 
 				 double samplerate, int nchannels, int bitsPerSamp )
 {
 	try 
 	{
-		ThrowIfNull((SampleVector_Ptr) vec);
+		ThrowIfNull((SampleVector *) vec);
 
 		//	write out samples:
 		notifier << "writing " << vec->size() << " samples to " << path << endl;
@@ -280,7 +280,7 @@ void exportAiff( const char * path, const SampleVector_Ptr vec,
 	envelope data will be stored.
  */
 extern "C"
-void exportSdif( const char * path, PartialList_Ptr partials, double hop )
+void exportSdif( const char * path, PartialList * partials, double hop )
 {
 	if ( partials->size() == 0 ) 
 	{
@@ -290,7 +290,7 @@ void exportSdif( const char * path, PartialList_Ptr partials, double hop )
 	
 	try 
 	{
-		ThrowIfNull((PartialList_Ptr) partials);
+		ThrowIfNull((PartialList *) partials);
 
 		notifier << "exporting sdif partial data to " << path << endl;		
 		ExportSdif efout( hop );
@@ -313,31 +313,94 @@ void exportSdif( const char * path, PartialList_Ptr partials, double hop )
 }
 
 /* ---------------------------------------------------------------- */
+/*        exportSdif        
+/*
+/*	Export Partials in a PartialList to an SPC file, for use with
+	the Kyma system. Waiting on a real doc string for this one.  
+		
+ */
+extern "C"
+void exportSpc( const char *fname, PartialList * partials,
+				int numSpcPars, int refParNum, double frameRate, double midiPitch, 
+				double thresh, double endtime, double markertime, double approachtime )
+{
+	if ( partials->size() == 0 ) 
+	{
+		notifier << "no partials to export!" << endl;
+		return;
+	}
+	
+	try 
+	{
+		notifier << "exporting spc partial data to " << fname << endl;
+		std::fstream fs;
+		fs.open( fname, std::ios::out | std::ios::binary );
+		
+		if ( endtime == 0. )
+		{
+				//	compute the time span:
+			debugger << "computing time span..." << endl;
+			double mintime = 999999., maxtime = 0.;
+			for ( PartialList::const_iterator it = partials->begin(); 
+				  it != partials->end(); 
+				  ++it ) 
+			{
+				mintime = std::min( mintime, it->endTime() );
+				maxtime = std::max( maxtime, it->endTime() );
+			}
+			debugger << "(" << mintime << " , " << maxtime << ") seconds" << endl;
+			endtime = maxtime;
+		}
+		
+		ExportSpc efout( numSpcPars, frameRate, midiPitch, thresh, 
+						 endtime, markertime, approachtime  );
+		efout.write( fs, *partials, refParNum );
+		
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in exportSpc(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in exportSpc(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+
+}
+
+/* ---------------------------------------------------------------- */
 /*        importAiff        
 /*
 /*	Import audio samples stored in an AIFF file at the given file
 	path (or name). The samples are converted to floating point 
 	values on the range (-1.,1.) and stored in the given 
 	SampleVector, which is resized to (exactly) accomodate all the 
-	samples from in the file. If samplerate is not a NULL pointer, 
+	samples from the file. If samplerate is not a NULL pointer, 
 	then, on return, it points to the value of the sample rate (in
 	Hz) of the AIFF samples. Similarly, if nchannels is not a NULL
 	pointer, then, on return, it points to the value of the number
 	of channels of audio data represented by the AIFF samples.
  */
 extern "C"
-void importAiff( const char * path, SampleVector_Ptr ptr_this, 
+void importAiff( const char * path, SampleVector * ptr_this, 
 				 double * samplerate, int * nchannels )
 {
 	try 
 	{
-		ThrowIfNull((SampleVector_Ptr) ptr_this);
+		ThrowIfNull((SampleVector *) ptr_this);
 
 		//	read samples:
 		notifier << "reading samples from " << path << endl;
 		AiffFile f( path );
 		ptr_this->resize( f.sampleFrames(), 0. );
 		f.getSamples( ptr_this->begin(), ptr_this->end() );
+		notifier << "read " << f.sampleFrames() << " frames of " 
+				 << f.channels() << " channel data at " 
+				 << f.sampleRate() << " Hz" << endl;
 		
 		if ( samplerate )
 			*samplerate = f.sampleRate();
@@ -368,11 +431,11 @@ void importAiff( const char * path, SampleVector_Ptr ptr_this,
 		www.ircam.fr/equipes/analyse-synthese/sdif/ 
  */	
 extern "C"
-void importSdif( const char * path, PartialList_Ptr partials )
+void importSdif( const char * path, PartialList * partials )
 {
 	try 
 	{
-		ThrowIfNull((PartialList_Ptr) partials);
+		ThrowIfNull((PartialList *) partials);
 
 		notifier << "importing Partials from " << path << endl;
 		ImportSdif imp( path );
@@ -405,20 +468,20 @@ void importSdif( const char * path, PartialList_Ptr partials )
 	www.cerlsoundgroup.org/Loris/
  */
 extern "C"
-void morph( const PartialList_Ptr src0, const PartialList_Ptr src1, 
-			const BreakpointEnvelope_Ptr ffreq, 
-			const BreakpointEnvelope_Ptr famp, 
-			const BreakpointEnvelope_Ptr fbw, 
-			PartialList_Ptr dst )
+void morph( const PartialList * src0, const PartialList * src1, 
+			const BreakpointEnvelope * ffreq, 
+			const BreakpointEnvelope * famp, 
+			const BreakpointEnvelope * fbw, 
+			PartialList * dst )
 {
 	try 
 	{
-		ThrowIfNull((PartialList_Ptr) src0);
-		ThrowIfNull((PartialList_Ptr) src1);
-		ThrowIfNull((PartialList_Ptr) dst);
-		ThrowIfNull((BreakpointEnvelope_Ptr) ffreq);
-		ThrowIfNull((BreakpointEnvelope_Ptr) famp);
-		ThrowIfNull((BreakpointEnvelope_Ptr) fbw);
+		ThrowIfNull((PartialList *) src0);
+		ThrowIfNull((PartialList *) src1);
+		ThrowIfNull((PartialList *) dst);
+		ThrowIfNull((BreakpointEnvelope *) ffreq);
+		ThrowIfNull((BreakpointEnvelope *) famp);
+		ThrowIfNull((BreakpointEnvelope *) fbw);
 
 		notifier << "morphing " << src0->size() << " Partials with " <<
 					src1->size() << " Partials" << endl;
@@ -468,14 +531,14 @@ void morph( const PartialList_Ptr src0, const PartialList_Ptr src1,
 	added to any previously computed samples in the SampleVector.
  */
 extern "C"
-void synthesize( const PartialList_Ptr partials, 
-				 SampleVector_Ptr samples,  
+void synthesize( const PartialList * partials, 
+				 SampleVector * samples,  
 				 double srate )
 {
 	try 
 	{
-		ThrowIfNull((PartialList_Ptr) partials);
-		ThrowIfNull((SampleVector_Ptr) samples);
+		ThrowIfNull((PartialList *) partials);
+		ThrowIfNull((SampleVector *) samples);
 
 		notifier << "synthesizing " << partials->size() 
 				 << " Partials at " << srate << " Hz" << endl;
