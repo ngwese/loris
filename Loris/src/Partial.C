@@ -42,10 +42,6 @@
 
 #include <cmath>
 
-//	Pi:
-static const double Pi = M_PI;
-static const double TwoPi = 2. * M_PI;
-
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
@@ -438,8 +434,8 @@ Partial::phaseAt( double time ) const
 	if ( it == _bpmap.begin() ) 
 	{
 	//	time is before the onset of the Partial:
-		double dp = TwoPi * (it.time() - time) * it.breakpoint().frequency();
-		return std::fmod( it.breakpoint().phase() - dp, TwoPi);
+		double dp = 2. * pi * (it.time() - time) * it.breakpoint().frequency();
+		return std::fmod( it.breakpoint().phase() - dp, 2. * pi);
 	}
 	else if (it == _bpmap.end() ) 
 	{
@@ -447,8 +443,8 @@ Partial::phaseAt( double time ) const
 	//	( first decrement iterator to get the tail Breakpoint)
 		--it;
 		
-		double dp = TwoPi * (time - it.time()) * it.breakpoint().frequency();
-		return std::fmod( it.breakpoint().phase() + dp, TwoPi );
+		double dp = 2. * pi * (time - it.time()) * it.breakpoint().frequency();
+		return std::fmod( it.breakpoint().phase() + dp, 2. * pi );
 	}
 	else 
 	{
@@ -467,13 +463,13 @@ Partial::phaseAt( double time ) const
 		//	on it:
 		if ( alpha < 0.5 )
 		{
-			double dp = TwoPi * (time - lotime) * favg;
-			return std::fmod( lo.phase() + dp, TwoPi );
+			double dp = 2. * pi * (time - lotime) * favg;
+			return std::fmod( lo.phase() + dp, 2. * pi );
 		}
 		else
 		{
-			double dp = TwoPi * (hitime - time) * favg;
-			return std::fmod( hi.phase() - dp, TwoPi );
+			double dp = 2. * pi * (hitime - time) * favg;
+			return std::fmod( hi.phase() - dp, 2. * pi );
 		}
 
 	}

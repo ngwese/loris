@@ -50,17 +50,10 @@
 #include <cmath>
 #include <vector>
 #include <list>
-//#include <string>
-//#include <iosfwd>
 #include <algorithm>
 #include <fstream>
 
-//	Pi:
-static const double Pi = M_PI;
-static const double TwoPi = 2. * M_PI;
-
 using namespace std;
-
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
@@ -144,7 +137,7 @@ processPoint( const int left, const int right,
 	double freq = 		envExp( (left >> 8)   & 0xffff ) * 22050.0;
 	double sineMag =	envExp( (left >> 15)  & 0xfe00 );
 	double noiseMag =	envExp( (right >> 15) & 0xfe00 ) / 64.;
-	double phase = 			  ( (right >> 8)  & 0xffff ) * ( TwoPi / 0xffff );
+	double phase = 			  ( (right >> 8)  & 0xffff ) * ( 2. * pi / 0xffff );
 	
 	double total = sineMag * sineMag + noiseMag * noiseMag;
 
@@ -156,9 +149,9 @@ processPoint( const int left, const int right,
 	if (noise > 1.)
 		noise = 1.;
 	
-	phase -= Pi / 2.;
+	phase -= pi / 2.;
 	if (phase < 0.)
-		phase += TwoPi;
+		phase += 2. * pi;
 
 //
 // Create a new breakpoint and insert it.
@@ -261,7 +254,7 @@ SpcFile::SpcFile( const char *infilename )
 //  structure for export information
 struct SpcExportInfo
 {
-	double midiPitch;		//	note number (69.00 = A440) for spc file;
+	double midipitch;		//	note number (69.00 = A440) for spc file;
 							//	this is the core parameter, others are, by default,
 							//	computed from this one
 	double endApproachTime;	//	in seconds, this indicates how long before the end of the sound the
@@ -602,8 +595,8 @@ static void writeInstrument( std::ostream & s )
 	//	size is everything after the header:
 	ck.header.size = sizeofInstrument() - sizeofCkHeader();
 	
-	ck.baseFrequency = long( spcEI.midiPitch );
-	ck.detune = long( 100 * spcEI.midiPitch ) % 100;
+	ck.baseFrequency = long( spcEI.midipitch );
+	ck.detune = long( 100 * spcEI.midipitch ) % 100;
 	if (ck.detune > 50)
 	{
 		ck.baseFrequency++;
@@ -794,7 +787,7 @@ static void afbp( const Partial & p, double time, double phaseRefTime,
 		amp = 0.;
 		freq = freqMult * p.frequencyAt( phaseRefTime );
 		bw = 0.;
-		phase = p.phaseAt( phaseRefTime ) - TwoPi * (phaseRefTime - time) * freq;
+		phase = p.phaseAt( phaseRefTime ) - 2. * pi * (phaseRefTime - time) * freq;
 	}
 	
 // Use envelope values at "time".
@@ -826,14 +819,14 @@ static void pack( double amp, double freq, double bw, double phase,
 
 // Set phase for one hop earlier, so that Kyma synthesis target phase is correct.
 // Add offset to phase for difference between Kyma and Loris representation.
-	phase -= TwoPi * spcEI.hop * freq; 
-	phase += Pi / 2;
+	phase -= 2. * pi * spcEI.hop * freq; 
+	phase += pi / 2;
 
 // Make phase into range 0..1.	
-	phase = std::fmod( phase, TwoPi );
+	phase = std::fmod( phase, 2. * pi );
 	if ( phase < 0. )
-		phase += TwoPi; 
-	double zeroToOnePhase = phase / TwoPi;
+		phase += 2. * pi; 
+	double zeroToOnePhase = phase / 2. * pi;
 
 // Make frequency into range 0..1.
 	double zeroToOneFreq = freq / 22050.0;		// 0..1 , 1 is 22.050 kHz
@@ -1065,13 +1058,13 @@ static double numPartials( const std::list<Partial> & pars )
 // default value (and not specified by the caller).
 //
 void
-SpcFile::Export( const std::string & filename, const std::list<Partial> & plist, double midiPitch, 
+SpcFile::Export( const std::string & filename, const std::list<Partial> & plist, double midipitch, 
 					int enhanced, double endApproachTime )
 {
 	std::ofstream s;
 	s.open( filename.c_str(), std::ios::out | std::ios::binary ); 
 	
-	Export( s, plist, midiPitch, enhanced, endApproachTime );
+	Export( s, plist, midipitch, enhanced, endApproachTime );
 }
 
 // ---------------------------------------------------------------------------
@@ -1083,11 +1076,11 @@ SpcFile::Export( const std::string & filename, const std::list<Partial> & plist,
 // default value (and not specified by the caller).
 //
 void
-SpcFile::Export( std::ostream & file, const std::list<Partial> & plist, double midiPitch, 
+SpcFile::Export( std::ostream & file, const std::list<Partial> & plist, double midipitch, 
 						int enhanced, double endApproachTime )
 {	
 	//	note number (69.00 = A440) for spc file
-	spcEI.midiPitch = midiPitch;
+	spcEI.midipitch = midipitch;
 	
 	//	enhanced indicates a bandwidth-enhanced spc file; by default it is true.
 	//	if enhanced is false, no bandwidth or noise information is exported.

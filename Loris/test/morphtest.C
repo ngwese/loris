@@ -66,14 +66,19 @@ int main( )
 	std::cout << "Generates a simple linear morph between a " << endl;
 	std::cout << "clarinet and a flute." << endl << endl;
 	
+#if !defined(__MWERKS__)
 	std::string path( std::getenv("srcdir") );
+	path = path + "/";
+#else
+	std::string path("");
+#endif
 
 	try 
 	{
 		//	analyze clarinet tone
 		std::cout << "analyzing clarinet 3G#" << endl;
 		Analyzer a(390);
-		AiffFile f( path + "/clarinet.aiff" );
+		AiffFile f( path + "clarinet.aiff" );
 		std::vector< double > v( f.sampleFrames() );
 		f.getSamples( v.begin(), v.end() );
 		
@@ -127,7 +132,7 @@ int main( )
 		//	analyze flute tone
 		std::cout << "analyzing flute 3D" << endl;
 		a.configure(270);
-		f = AiffFile( path + "/flute.aiff" );
+		f = AiffFile( path + "flute.aiff" );
 		v = std::vector< double >( f.sampleFrames() );
 		f.getSamples( v.begin(), v.end() );
 		

@@ -35,13 +35,9 @@
 	#include <config.h>
 #endif
 
-#include<KaiserWindow.h>
-#include<Exception.h>
+#include <KaiserWindow.h>
+#include <Exception.h>
 #include <cmath>
-
-//	Pi:
-static const double Pi = M_PI;
-static const double TwoPi = 2. * M_PI;
 
 using namespace std;
 
@@ -173,7 +169,7 @@ KaiserWindow::computeLength( double width, double atten )
 	double alpha = computeShape( atten );
 
 	//	The last 0.5 is cheap rounding.
-	return long(1.0 + (2. * sqrt((Pi*Pi) + (alpha*alpha)) / (Pi * width)) + 0.5);
+	return long(1.0 + (2. * sqrt((pi*pi) + (alpha*alpha)) / (pi * width)) + 0.5);
 }
 
 #if !defined( NO_LORIS_NAMESPACE )

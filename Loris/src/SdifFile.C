@@ -69,20 +69,8 @@ typedef struct {
 } RowOfLorisData;
 
 //  SDIF signature used by Loris.
-//	The macro SdifSignatureConst is defined differently in different
-//	versions of the SDIF library. If HAVE_MODERN_SDIF_H is not defined
-//	(in config.h) then assume the old version.
-#ifdef HAVE_MODERN_SDIF_H
 static SdifSignature lorisSignature = SdifSignatureConst('1','T','R','C');
 static SdifSignature lorisLabels = SdifSignatureConst('1','L','B','L');
-#else
-static SdifSignature lorisSignature = SdifSignatureConst('1TRC');
-static SdifSignature lorisLabels = SdifSignatureConst('1LBL');
-#endif
-
-// Pi
-static const double TwoPi = 2. * M_PI;
-
 
 #pragma mark envelope reading helpers
 // ---------------------------------------------------------------------------
@@ -569,7 +557,7 @@ assembleMatrixData( SdifFloat4 *data,
 		// 1TRC must have phase between 0 and 2*pi.
 		double phas = par->phaseAt( tim );
 		if (phas < 0)
-			phas += TwoPi; 
+			phas += 2. * pi; 
 		
 		// Fill in values for this row of matrix data.
 		*rowDataPtr++ = index;							// first row of matrix   (standard)

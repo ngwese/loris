@@ -34,7 +34,6 @@ AM_CONDITIONAL(HAVE_SWIG, test -n "$SWIG")
 
 SDIFINCLUDE=
 SDIFLIB=
-SDIFTYPES=
 SDIFPACKAGE=
  
 AC_ARG_WITH(sdif,[  --with-sdif=path        Set prefix of SDIF package],[
@@ -43,8 +42,6 @@ AC_ARG_WITH(sdifincl,[  --with-sdifincl=path    Set path of SDIF include file],[
 		SDIFINCLUDE="$withval"], [SDIFINCLUDE=])
 AC_ARG_WITH(sdiflib,[  --with-sdiflib=path     Set path of SDIF library],[
 		SDIFLIB="$withval"], [SDIFLIB=])
-AC_ARG_WITH(sdiftypes,[  --with-sdiftypes=path   Set path of SDIF types file],[
-		SDIFTYPES="$withval"], [SDIFTYPES=])
 
 if test -z "$SDIFINCLUDE"; then
    if test -n "$SDIFPACKAGE"; then
@@ -57,13 +54,6 @@ if test -z "$SDIFLIB"; then
         SDIFLIB="$SDIFPACKAGE/lib"
    fi
 fi
-
-if test -z "$SDIFTYPES"; then
-   if test -n "$SDIFPACKAGE"; then
-        SDIFTYPES="$SDIFPACKAGE/share/SdifTypes.STYP"
-   fi
-fi
-
 
 # look for SDIF header in specified or standard locations
 SDIF_H=sdif.h
@@ -87,51 +77,17 @@ AC_CHECK_LIB(sdif, SdifGenInit, :, AC_MSG_ERROR(cannot use SDIF library))
 
 # make sure that we can figure out how to use
 # the SDIF library
-AC_MSG_CHECKING(for modern SdifSignatureConst macro definition)
-AC_TRY_COMPILE( [ #include<$SDIF_H> ], [ 
-		SdifSignature s = SdifSignatureConst('1','T','R','C'); ],[
+AC_MSG_CHECKING(SDIF release version (must be at least 3.4))
+AC_TRY_RUN( [ #include<$SDIF_H> ], [
+		assert( SDIF_VERSION_MAJOR >= 3 && SDIF_VERSION_MINOR >= 4 ); ],[ 
 		AC_MSG_RESULT(ok)
-		AC_DEFINE(HAVE_MODERN_SDIF_H)
 		], [
-		AC_MSG_RESULT(failed, cannot use four char args) 
-		AC_MSG_CHECKING(for old mutli-char constant version of SdifSignatureConst)
-		AC_TRY_COMPILE( [ #include<sdif.h> ], [
-				SdifSignature s = SdifSignatureConst('1TRC'); ],[
-				AC_MSG_RESULT(ok) ], [ 
-				AC_MSG_RESULT(failed)
-				AC_MSG_ERROR(cannot determine how to invoke SdifSignatureConst macro) ] ) ] )
-
-# look for the SDIF types file, in case we need to fix it
-AC_MSG_CHECKING(for Sdif types file)
-if test -z "$SDIFTYPES" ; then
-	if test -n "$SDIFINCLUDE" ; then
-		SDIFTYPES="$SDIFINCLUDE/../share/SdifTypes.STYP"
-	else
-		dirs="/usr/local/share /usr/share"
-		for d in $dirs ; do
-			if test -f "$d/SdifTypes.STYP" ; then
-				SDIFTYPES="$d/SdifTypes.STYP"
-				break
-			fi
-		done
-	fi
-else
-	if test -d "$SDIFTYPES" ; then
-		SDIFTYPES="$SDIFTYPES/SdifTypes.STYP"
-	fi
-fi
-if test -f "$SDIFTYPES" ; then
-	AC_MSG_RESULT(found it)
-else
-	AC_MSG_RESULT(cannot find Sdif types file)
-fi
+		AC_MSG_ERROR(failed, please use at least SDIF-3.4) ] )
 
 if test -n "$SDIFINCLUDE" ; then
 	SDIFINCLUDE="-I$SDIFINCLUDE"
 fi
 AC_SUBST(SDIFINCLUDE)
-AC_SUBST(SDIFTYPES)
-
 
 #----------------------------------------------------------------
 # Look for FFTW

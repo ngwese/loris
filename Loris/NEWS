@@ -19,6 +19,13 @@ it encountered.
 the GNU autotools to configure Loris for Unix and Linux (and
 windows?) builds.
 
+- Loris and FFTW are now separate CodeWarrior projects for Mac 
+build. Both are distributed as XML exports.
+
+- Loris now requires release 3.4 or later of the SDIF library 
+from IRCAM. Earlier versions had problems that prevented Loris
+from using them as intended.
+
 
 -------------------------------------------------------
 changes since 1.0beta3 release:

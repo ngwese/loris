@@ -35,17 +35,13 @@
 	#include <config.h>
 #endif
 
-#include<Oscillator.h>
-#include<Filter.h>
+#include <Oscillator.h>
+#include <Filter.h>
 #include "random.h"
-#include<Exception.h>
-#include<Notifier.h>
+#include <Exception.h>
+#include <Notifier.h>
 #include <vector>
 #include <cmath>
-
-//	Pi:
-static const double Pi = M_PI;
-static const double TwoPi = 2. * M_PI;
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
@@ -93,7 +89,7 @@ Oscillator::Oscillator( double radf, double a, double bw, double ph /* = 0. */ )
 	}
 
 //	don't alias:
-	if ( _frequency > Pi )
+	if ( _frequency > pi )
 		_amplitude = 0.;
 }
 
@@ -151,7 +147,7 @@ Oscillator::generateSamples( //std::vector< double > & buffer,
 	}
 		
 //	don't alias:
-	if ( targetFreq > Pi )	//	radian Nyquist rate
+	if ( targetFreq > pi )	//	radian Nyquist rate
 	{
 		debugger << "ramping out Partial above Nyquist rate" << endl;
 		targetAmp = 0.;
@@ -173,7 +169,7 @@ Oscillator::generateSamples( //std::vector< double > & buffer,
 		//	will reset phase after this call if the
 		//	amplitude goes to zero):
 		_phase += (0.5 * (_frequency + targetFreq)) * howMany;
-		_phase = fmod( _phase, TwoPi );
+		_phase = fmod( _phase, 2. * pi );
 		howMany = 0;
 	}
 
@@ -231,7 +227,7 @@ Oscillator::generateSamples( //std::vector< double > & buffer,
 		//	high oscillation frequencies:
 		//	(Doesn't really matter much exactly what fmod does, 
 		//	as long as it brings the phase nearer to zero.)
-		_phase = fmod( p, TwoPi );
+		_phase = fmod( p, 2. * pi );
 	}
 	
 //	set the state variables to their target values,

@@ -36,10 +36,10 @@
 	#include <config.h>
 #endif
 
-#include<FourierTransform.h>
-#include<Exception.h>
-#include<Notifier.h>
-#include "fftw.h"
+#include <FourierTransform.h>
+#include <Exception.h>
+#include <Notifier.h>
+#include <fftw.h>
 #include <set>
 
 using namespace std;
@@ -52,6 +52,14 @@ static void reserve( long len );
 static void release( long len );
 static fftw_complex * sharedBuffer = NULL;
 
+//	"die hook" for FFTW, which otherwise try to write to a
+//	non-existent console.
+static void fftw_die_Loris(const char * s)
+{
+	notifier << "The FFTW library used by Loris has encountered a fatal error: " << s << endl;
+	exit(EXIT_FAILURE);
+}
+
 // ---------------------------------------------------------------------------
 //	FourierTransform constructor
 // ---------------------------------------------------------------------------
@@ -63,8 +71,12 @@ FourierTransform::FourierTransform( long len ) :
 	_buffer( len ),
 	_plan( NULL )
 {
-	//	this is insane, too yucky, just use the fftw_complex
-	//	struct everywhere. sigh.
+	//	FFTW calls fprintf a lot, which may be a problem in
+	//	non-console-enabled applications. Catch fftw_die()
+	//	calls by routing the error message to our own Notifier
+	//	and exiting, using the function defined above.
+	fftw_die_hook = fftw_die_Loris;
+	
 	//	-- sanity --
 	//	check to make sure that std::complex< double >
 	//	and fftw_complex are really identical:

@@ -44,10 +44,6 @@
 #include <algorithm>
 #include <cmath>
 
-//	Pi:
-static const double Pi = M_PI;
-static const double TwoPi = 2. * M_PI;
-
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
@@ -282,7 +278,7 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ )
 inline double 
 Synthesizer::radianFreq( double hz ) const
 {
-	return hz * TwoPi / sampleRate();
+	return hz * 2. * pi / sampleRate();
 }
 
 #if !defined( NO_LORIS_NAMESPACE )

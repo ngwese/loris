@@ -47,11 +47,6 @@
 #include <cmath>
 #include <fstream>
 
-//	Pi:
-static const double Pi = M_PI;
-static const double TwoPi = 2. * M_PI;
-
-
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
@@ -312,8 +307,8 @@ getPartial( std::istream & s, std::list<Partial> & partials, double bweCutoff )
 			}
 
 			//	update phase based on _this_ pkData's interpolated freq:
-			phase +=TwoPi * prevTtnSec * pkData.interpolatedFrequency;
-			phase = std::fmod( phase, TwoPi );
+			phase +=2. * pi * prevTtnSec * pkData.interpolatedFrequency;
+			phase = std::fmod( phase, 2. * pi );
 			
 			//	create Breakpoint:	
 			Breakpoint bp( frequency, amplitude, bandwidth, phase );

@@ -45,10 +45,6 @@
 #include <cmath>
 #include <list>
 
-//	Pi:
-static const double Pi = M_PI;
-static const double TwoPi = 2. * M_PI;
-
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
@@ -195,13 +191,13 @@ static void fixGaps( Partial & dest,
 				//
 				double time = seg->second + Partial::FadeTime();
 				double freq = dest.frequencyAt( seg->second );
-				double phase = dest.phaseAt(seg->second) +  (TwoPi * freq * Partial::FadeTime()); 
+				double phase = dest.phaseAt(seg->second) +  (2. * pi * freq * Partial::FadeTime()); 
 				double bw = dest.bandwidthAt( seg->second );
 				dest.insert( time, Breakpoint( freq, 0., bw, phase ) );
 				
 				time = nextseg->first - Partial::FadeTime();
 				freq = dest.frequencyAt( nextseg->first );
-				phase = dest.phaseAt(nextseg->first) - (TwoPi * freq * Partial::FadeTime());
+				phase = dest.phaseAt(nextseg->first) - (2. * pi * freq * Partial::FadeTime());
 				bw = dest.bandwidthAt( nextseg->first );
 				dest.insert( time, Breakpoint( freq, 0., bw, phase ) );
 			} 

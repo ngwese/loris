@@ -39,16 +39,12 @@
 #include<Notifier.h>
 #include<Exception.h>
 #include <algorithm>
-#include <cmath>	//	for M_PI (except on Mac)
+// #include <cmath>	//	for M_PI (except on Mac)
 #include <cstdlib>	//	for std::abs()
 
 #if defined(Debug_Loris)
 #include <stdio.h>
 #endif
-
-//	Pi:
-static const double Pi = M_PI;
-static const double TwoPi = 2. * M_PI;
 
 //	there's a freakin' ton of std in here, 
 //	just import the whole namespace
@@ -571,25 +567,25 @@ ReassignedSpectrum::reassignedPhase( long idx,
 	double phaseAbove = arg( _transform[ std::ceil(fracFreqSample) ] );
 	double phaseBelow = arg( _transform[ std::floor(fracFreqSample) ] );
 
-	if ( std::abs(phaseAbove - phaseBelow) > Pi )
+	if ( std::abs(phaseAbove - phaseBelow) > pi )
 	{
 		if (phaseAbove > phaseBelow)
-			phaseBelow += TwoPi;
+			phaseBelow += 2. * pi;
 		else
-			phaseBelow -= TwoPi;
+			phaseBelow -= 2. * pi;
 	}
 	double alpha = std::ceil(fracFreqSample) - fracFreqSample;
 	double phase = (phaseAbove * (1. - alpha)) + (phaseBelow * alpha);
 
-	phase += timeCorrection * fracFreqSample * TwoPi / _transform.size();
+	phase += timeCorrection * fracFreqSample * 2. * pi / _transform.size();
 
-	return fmod( phase, TwoPi );
+	return fmod( phase, 2. * pi );
 
 #else	
 	double phase = arg( _transform[ idx ] );
-	phase += timeCorrection * fracFreqSample * TwoPi / _transform.size();
+	phase += timeCorrection * fracFreqSample * 2. * pi / _transform.size();
 	
-	return fmod( phase, TwoPi );
+	return fmod( phase, 2. * pi );
 #endif
 }
 
