@@ -30,13 +30,21 @@ demo_output = cello.dilated.aiff \
 	flutello2.aiff \
 	flutinet.aiff
 
+GACK = "!!! cannot run the demos script without the sound sources !!!"
 # targets:
 
 all: demo refs
 
 demo:
-	-tar zxf $(demo_source_tarball)
+	-test -f $(demo_source_tarball) && tar zxf $(demo_source_tarball)
+	(test -f "source/clarinet.source.aiff" && \
+	test -f "source/cello.source.aiff" && \
+	test -f "source/flute.source.aiff" ) || \
+	(echo $(GACK) && return 1)
 	python $(demoscript)
+	
+
+#python $(demoscript)) || echo $(GACK)
 	
 refs: 
 	tar zxf $(demo_refs_tarball)
