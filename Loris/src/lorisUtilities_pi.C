@@ -63,6 +63,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <functional>
+#include <iterator>
 #include <list>
 #include <memory>
 
@@ -78,18 +80,30 @@ using namespace Loris;
 /* ---------------------------------------------------------------- */
 /*        copyByLabel        
 /*
+/*	Old name for copyLabeled.
+ */
+extern "C"
+void copyByLabel( const PartialList * src, long label, PartialList * dst )
+{
+	copyLabeled( src, label, dst );
+}
+
+/* ---------------------------------------------------------------- */
+/*        copyLabeled        
+/*
 /*	Append copies of Partials in the source PartialList having the
 	specified label to the destination PartialList. The source list
 	is unmodified.
  */
 extern "C"
-void copyByLabel( const PartialList * src, long label, PartialList * dst )
+void copyLabeled( const PartialList * src, long label, PartialList * dst )
 {
 	try 
 	{
 		ThrowIfNull((PartialList *) src);
 		ThrowIfNull((PartialList *) dst);
-
+		
+		/*
 		std::list< Partial >::const_iterator it = src->begin();
 		for ( it = std::find_if( it, src->end(), PartialUtils::label_equals(label) );
 			  it != src->end();
@@ -97,16 +111,19 @@ void copyByLabel( const PartialList * src, long label, PartialList * dst )
 		{
 			 dst->push_back( *it );
 		}
+		*/
+		std::remove_copy_if( src->begin(), src->end(), std::back_inserter( *dst ),
+							 std::not1( PartialUtils::label_equals(label) ) );
 	}
 	catch( Exception & ex ) 
 	{
-		std::string s("Loris exception in copyByLabel(): " );
+		std::string s("Loris exception in copyLabeled(): " );
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
 	catch( std::exception & ex ) 
 	{
-		std::string s("std C++ exception in copyByLabel(): " );
+		std::string s("std C++ exception in copyLabeled(): " );
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
@@ -144,20 +161,21 @@ void crop( PartialList * partials, double t1, double t2 )
 }
 
 /* ---------------------------------------------------------------- */
-/*        spliceByLabel        
+/*        extractLabeled        
 /*
-/*	Splice Partials in the source PartialList having the specified
-	label from the source list into the destination PartialList
-	(at the end). 
+/*	Remove Partials in the source PartialList having the specified
+    label from the source list and append them to the destination 
+    PartialList.
  */
 extern "C"
-void spliceByLabel( PartialList * src, long label, PartialList * dst )
+void extractLabeled( PartialList * src, long label, PartialList * dst )
 {
 	try 
 	{
 		ThrowIfNull((PartialList *) src);
 		ThrowIfNull((PartialList *) dst);
 
+		/*
 		std::list< Partial >::iterator it = src->begin();
 		for ( it = std::find_if( it, src->end(), PartialUtils::label_equals(label) );
 			  it != src->end();
@@ -166,19 +184,66 @@ void spliceByLabel( PartialList * src, long label, PartialList * dst )
 			std::list< Partial >::iterator remove_me = it++;
 			dst->splice( dst->end(), *src, remove_me );
 		}
+		*/
+		std::list< Partial >::iterator it = 
+			std::stable_partition( src->begin(), src->end(), 
+								   std::not1( PartialUtils::label_equals(label) ) );
+		dst->splice( dst->end(), *src, it, src->end() );
 	}
 	catch( Exception & ex ) 
 	{
-		std::string s("Loris exception in spliceByLabel(): " );
+		std::string s("Loris exception in extractLabeled(): " );
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
 	catch( std::exception & ex ) 
 	{
-		std::string s("std C++ exception in spliceByLabel(): " );
+		std::string s("std C++ exception in extractLabeled(): " );
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
+}
+
+/* ---------------------------------------------------------------- */
+/*        removeLabeled        
+/*
+/*	Remove from a PartialList Partials having the specified label. 
+ */
+extern "C"
+void removeLabeled( PartialList * src, long label )
+{
+	try 
+	{
+		ThrowIfNull((PartialList *) src);
+		std::list< Partial >::iterator it = 
+			std::remove_if( src->begin(), src->end(), 
+							PartialUtils::label_equals(label) );
+		src->erase( it, src->end() );
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in removeLabeled(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in removeLabeled(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+
+
+/* ---------------------------------------------------------------- */
+/*        spliceByLabel        
+/*
+/*	Old name for extractLabeled. 
+ */
+extern "C"
+void spliceByLabel( PartialList * src, long label, PartialList * dst )
+{
+	extractLabeled( src, label, dst );
 }
 
 /* ---------------------------------------------------------------- */

@@ -535,8 +535,12 @@ void synthesize( const PartialList * partials,
 /*	These procedures are generally useful but are not   
 	represented by classes in the Loris core.
  */
- 
+
 void copyByLabel( const PartialList * src, long label, PartialList * dst );
+/*	Old name for copyLabeled.
+ */
+ 
+void copyLabeled( const PartialList * src, long label, PartialList * dst );
 /*	Append copies of Partials in the source PartialList having the
 	specified label to the destination PartialList. The source list
 	is unmodified.
@@ -547,10 +551,18 @@ void crop( PartialList * partials, double t1, double t2 );
 	Insert a Breakpoint at the boundary when cropping occurs.
  */
 
+void extractLabeled( PartialList * src, long label, PartialList * dst );
+/*  Remove Partials in the source PartialList having the specified
+    label from the source list and append them to the destination 
+    PartialList. 
+ */
+
+void removeLabeled( PartialList * src, long label );
+/*  Remove from a PartialList Partials having the specified label.
+ */
+
 void spliceByLabel( PartialList * src, long label, PartialList * dst );
-/*  Splice Partials in the source PartialList having the specified
-    label from the source list into the destination PartialList
-    (at the end). 
+/*  Old name for extractLabeled. 
  */
 
 void scaleAmp( PartialList * partials, BreakpointEnvelope * ampEnv );

@@ -30,7 +30,7 @@ public:
  *
  * Author : David Beazley (beazley@cs.uchicago.edu)
  *
- * Copyright (c) 1999-2004, The University of Chicago
+ * Copyright (c) 1999-2000, The University of Chicago
  * 
  * This file may be freely redistributed without license or fee provided
  * this copyright message remains intact.
@@ -1250,10 +1250,25 @@ void dilate_v( PartialList * partials, vector<double> & ivec, vector<double> & t
 	}
 
 
+	PartialList * copyLabeled( PartialList * partials, long label )
+	{
+		PartialList * dst = createPartialList();
+		copyLabeled( partials, label, dst );
+		
+		// check for exception:
+		if ( check_exception() )
+		{
+			destroyPartialList( dst );
+			dst = NULL;
+		}
+		return dst;
+	}
+
+
 	PartialList * extractLabeled( PartialList * partials, long label )
 	{
 		PartialList * dst = createPartialList();
-		spliceByLabel( partials, label, dst );
+		extractLabeled( partials, label, dst );
 		
 		// check for exception:
 		if ( check_exception() )
@@ -2060,6 +2075,31 @@ _wrap_crop(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST o
 
 
 static int
+_wrap_copyLabeled(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    PartialList *arg1 = (PartialList *) 0 ;
+    long arg2 ;
+    PartialList *result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"ol:copyLabeled partials label ",0,&arg2) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        char * err;
+        clear_exception();
+        result = (PartialList *)copyLabeled(arg1,arg2);
+        
+        if ((err = check_exception()))
+        {
+            SWIG_exception( SWIG_ValueError, err );
+        }
+    }
+    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_PartialList,0));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
 _wrap_extractLabeled(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
     PartialList *arg1 = (PartialList *) 0 ;
     long arg2 ;
@@ -2078,6 +2118,30 @@ _wrap_extractLabeled(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Ob
         }
     }
     Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_PartialList,0));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_removeLabeled(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    PartialList *arg1 = (PartialList *) 0 ;
+    long arg2 ;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"ol:removeLabeled partials label ",0,&arg2) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        char * err;
+        clear_exception();
+        removeLabeled(arg1,arg2);
+        
+        if ((err = check_exception()))
+        {
+            SWIG_exception( SWIG_ValueError, err );
+        }
+    }
+    
     return TCL_OK;
     fail:
     return TCL_ERROR;
@@ -8884,7 +8948,9 @@ static swig_command_info swig_commands[] = {
     { SWIG_prefix "morph", (swig_wrapper_func) _wrap_morph, NULL},
     { SWIG_prefix "synthesize", (swig_wrapper_func) _wrap_synthesize, NULL},
     { SWIG_prefix "crop", (swig_wrapper_func) _wrap_crop, NULL},
+    { SWIG_prefix "copyLabeled", (swig_wrapper_func) _wrap_copyLabeled, NULL},
     { SWIG_prefix "extractLabeled", (swig_wrapper_func) _wrap_extractLabeled, NULL},
+    { SWIG_prefix "removeLabeled", (swig_wrapper_func) _wrap_removeLabeled, NULL},
     { SWIG_prefix "scaleAmp", (swig_wrapper_func) _wrap_scaleAmp, NULL},
     { SWIG_prefix "scaleBandwidth", (swig_wrapper_func) _wrap_scaleBandwidth, NULL},
     { SWIG_prefix "scaleFrequency", (swig_wrapper_func) _wrap_scaleFrequency, NULL},

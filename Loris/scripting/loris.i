@@ -523,12 +523,33 @@ void crop( PartialList * partials, double t1, double t2 );
 	Insert a Breakpoint at the boundary when cropping occurs.
  */
 
+%newobject copyLabeled;
+%inline %{
+	PartialList * copyLabeled( PartialList * partials, long label )
+	{
+		PartialList * dst = createPartialList();
+		copyLabeled( partials, label, dst );
+		
+		// check for exception:
+		if ( check_exception() )
+		{
+			destroyPartialList( dst );
+			dst = NULL;
+		}
+		return dst;
+	}
+%}
+/*  Copy Partials in the source PartialList having the specified
+    label into a new PartialList. The source PartialList is
+    unmodified.
+ */
+
 %newobject extractLabeled;
 %inline %{
 	PartialList * extractLabeled( PartialList * partials, long label )
 	{
 		PartialList * dst = createPartialList();
-		spliceByLabel( partials, label, dst );
+		extractLabeled( partials, label, dst );
 		
 		// check for exception:
 		if ( check_exception() )
@@ -543,6 +564,10 @@ void crop( PartialList * partials, double t1, double t2 );
     label and return them in a new PartialList.
  */
 
+void removeLabeled( PartialList * partials, long label );
+/*  Remove from a PartialList Partials having the specified label.
+ */
+ 
 void scaleAmp( PartialList * partials, BreakpointEnvelope * ampEnv );
 /*	Scale the amplitude of the Partials in a PartialList according 
 	to an envelope representing a time-varying amplitude scale value.

@@ -49,7 +49,11 @@ synthesize = _loris.synthesize
 
 crop = _loris.crop
 
+copyLabeled = _loris.copyLabeled
+
 extractLabeled = _loris.extractLabeled
+
+removeLabeled = _loris.removeLabeled
 
 shiftTime = _loris.shiftTime
 

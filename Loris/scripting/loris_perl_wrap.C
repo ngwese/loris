@@ -30,7 +30,7 @@ public:
  *
  * Author : David Beazley (beazley@cs.uchicago.edu)
  *
- * Copyright (c) 1999-2004, The University of Chicago
+ * Copyright (c) 1999-2000, The University of Chicago
  * 
  * This file may be freely redistributed without license or fee provided
  * this copyright message remains intact.
@@ -821,10 +821,25 @@ void dilate_v( PartialList * partials, vector<double> & ivec, vector<double> & t
 	}
 
 
+	PartialList * copyLabeled( PartialList * partials, long label )
+	{
+		PartialList * dst = createPartialList();
+		copyLabeled( partials, label, dst );
+		
+		// check for exception:
+		if ( check_exception() )
+		{
+			destroyPartialList( dst );
+			dst = NULL;
+		}
+		return dst;
+	}
+
+
 	PartialList * extractLabeled( PartialList * partials, long label )
 	{
 		PartialList * dst = createPartialList();
-		spliceByLabel( partials, label, dst );
+		extractLabeled( partials, label, dst );
 		
 		// check for exception:
 		if ( check_exception() )
@@ -1875,6 +1890,45 @@ XS(_wrap_crop) {
 }
 
 
+XS(_wrap_copyLabeled) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        PartialList *arg1 = (PartialList *) 0 ;
+        long arg2 ;
+        PartialList *result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 2) || (items > 2)) {
+            SWIG_croak("Usage: copyLabeled(partials,label);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialList,0) < 0) {
+                SWIG_croak("Type error in argument 1 of copyLabeled. Expected _p_PartialList");
+            }
+        }
+        arg2 = (long) SvIV(ST(1));
+        {
+            char * err;
+            clear_exception();
+            result = (PartialList *)copyLabeled(arg1,arg2);
+            
+            if ((err = check_exception()))
+            {
+                SWIG_exception( SWIG_ValueError, err );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_PartialList,0);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
 XS(_wrap_extractLabeled) {
     char _swigmsg[SWIG_MAX_ERRMSG] = "";
     const char *_swigerr = _swigmsg;
@@ -1906,6 +1960,43 @@ XS(_wrap_extractLabeled) {
         }
         ST(argvi) = sv_newmortal();
         SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_PartialList,0);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_removeLabeled) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        PartialList *arg1 = (PartialList *) 0 ;
+        long arg2 ;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 2) || (items > 2)) {
+            SWIG_croak("Usage: removeLabeled(partials,label);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialList,0) < 0) {
+                SWIG_croak("Type error in argument 1 of removeLabeled. Expected _p_PartialList");
+            }
+        }
+        arg2 = (long) SvIV(ST(1));
+        {
+            char * err;
+            clear_exception();
+            removeLabeled(arg1,arg2);
+            
+            if ((err = check_exception()))
+            {
+                SWIG_exception( SWIG_ValueError, err );
+            }
+        }
+        
         XSRETURN(argvi);
         fail:
         (void) _swigerr;
@@ -10755,7 +10846,9 @@ static swig_command_info swig_commands[] = {
 {"perLoris::morph", _wrap_morph},
 {"perLoris::synthesize", _wrap_synthesize},
 {"perLoris::crop", _wrap_crop},
+{"perLoris::copyLabeled", _wrap_copyLabeled},
 {"perLoris::extractLabeled", _wrap_extractLabeled},
+{"perLoris::removeLabeled", _wrap_removeLabeled},
 {"perLoris::scaleAmp", _wrap_scaleAmp},
 {"perLoris::scaleBandwidth", _wrap_scaleBandwidth},
 {"perLoris::scaleFrequency", _wrap_scaleFrequency},

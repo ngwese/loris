@@ -34,7 +34,7 @@ public:
  *
  * Author : David Beazley (beazley@cs.uchicago.edu)
  *
- * Copyright (c) 1999-2004, The University of Chicago
+ * Copyright (c) 1999-2000, The University of Chicago
  * 
  * This file may be freely redistributed without license or fee provided
  * this copyright message remains intact.
@@ -949,10 +949,25 @@ void dilate_v( PartialList * partials, vector<double> & ivec, vector<double> & t
 	}
 
 
+	PartialList * copyLabeled( PartialList * partials, long label )
+	{
+		PartialList * dst = createPartialList();
+		copyLabeled( partials, label, dst );
+		
+		// check for exception:
+		if ( check_exception() )
+		{
+			destroyPartialList( dst );
+			dst = NULL;
+		}
+		return dst;
+	}
+
+
 	PartialList * extractLabeled( PartialList * partials, long label )
 	{
 		PartialList * dst = createPartialList();
-		spliceByLabel( partials, label, dst );
+		extractLabeled( partials, label, dst );
 		
 		// check for exception:
 		if ( check_exception() )
@@ -1871,6 +1886,32 @@ static PyObject *_wrap_crop(PyObject *self, PyObject *args) {
 }
 
 
+static PyObject *_wrap_copyLabeled(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    PartialList *arg1 = (PartialList *) 0 ;
+    long arg2 ;
+    PartialList *result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"Ol:copyLabeled",&obj0,&arg2)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        char * err;
+        clear_exception();
+        result = (PartialList *)copyLabeled(arg1,arg2);
+        
+        if ((err = check_exception()))
+        {
+            SWIG_exception( SWIG_ValueError, err );
+        }
+    }
+    resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_PartialList, 1);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
 static PyObject *_wrap_extractLabeled(PyObject *self, PyObject *args) {
     PyObject *resultobj;
     PartialList *arg1 = (PartialList *) 0 ;
@@ -1891,6 +1932,31 @@ static PyObject *_wrap_extractLabeled(PyObject *self, PyObject *args) {
         }
     }
     resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_PartialList, 1);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_removeLabeled(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    PartialList *arg1 = (PartialList *) 0 ;
+    long arg2 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"Ol:removeLabeled",&obj0,&arg2)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        char * err;
+        clear_exception();
+        removeLabeled(arg1,arg2);
+        
+        if ((err = check_exception()))
+        {
+            SWIG_exception( SWIG_ValueError, err );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
     return resultobj;
     fail:
     return NULL;
@@ -8956,7 +9022,9 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"morph", _wrap_morph, METH_VARARGS },
 	 { (char *)"synthesize", _wrap_synthesize, METH_VARARGS },
 	 { (char *)"crop", _wrap_crop, METH_VARARGS },
+	 { (char *)"copyLabeled", _wrap_copyLabeled, METH_VARARGS },
 	 { (char *)"extractLabeled", _wrap_extractLabeled, METH_VARARGS },
+	 { (char *)"removeLabeled", _wrap_removeLabeled, METH_VARARGS },
 	 { (char *)"scaleAmp", _wrap_scaleAmp, METH_VARARGS },
 	 { (char *)"scaleBandwidth", _wrap_scaleBandwidth, METH_VARARGS },
 	 { (char *)"scaleFrequency", _wrap_scaleFrequency, METH_VARARGS },
