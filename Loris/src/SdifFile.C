@@ -1166,11 +1166,11 @@ readMarkers( FILE * file, SDIF_FrameHeader fh, SdifFile::markers_type & markersV
 				{
 					Throw( FileIOException, "Markers frame has bad format." );
 				}
-				markerName.clear();
+				markerName.erase();
 			}
 			else
 			{
-				markerName.push_back(ch);
+				markerName += ch;
 			}
 		}
 			
