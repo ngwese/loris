@@ -9,7 +9,6 @@
 //	-kel 23 Jan 2000
 //
 // ===========================================================================
-#include "LorisLib.h"
 #include "FloatingThreshold.h"
 
 #if !defined( Deprecated_cstd_headers )

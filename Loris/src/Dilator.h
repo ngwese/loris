@@ -9,11 +9,14 @@
 //	-kel 26 Oct 99
 //
 // ===========================================================================
-#include "LorisLib.h"
 #include "Partial.h"
 #include <vector>
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
 
 // ---------------------------------------------------------------------------
 //	class Dilator
@@ -55,6 +58,8 @@ private:
 };	//	end of class Dilator
 
 
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif
 
 #endif	// ndef __INCLUDE_DILATOR_H__

@@ -18,7 +18,11 @@
 //#include "Exception.h"	//	need this if an Exception is thrown in the
 							//	constructor for an invalid AR[0] coefficient
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
 
 // ---------------------------------------------------------------------------
 //	Filter constructor
@@ -96,4 +100,6 @@ Filter::sample( double input )
 	return output;
 }
 
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif

@@ -10,11 +10,14 @@
 //	-kel 20 Oct 99
 //
 // ===========================================================================
-#include "LorisLib.h"
 #include "Partial.h"
 #include <list>
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
 
 // ---------------------------------------------------------------------------
 //	class Distiller
@@ -50,7 +53,7 @@ protected:
 	void distillOne( const Partial & src, Partial & dest, 
 					 const std::list<Partial>::const_iterator start,
 					 const std::list<Partial>::const_iterator end );
-	boolean gapAt( double time, std::list<Partial>::const_iterator start,
+	bool gapAt( double time, std::list<Partial>::const_iterator start,
 				   std::list<Partial>::const_iterator end ) const;
 
 //	-- instance variables --
@@ -59,6 +62,8 @@ private:
 
 };	//	end of class Distiller
 
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif
 
 #endif	// ndef __Loris_distiller__

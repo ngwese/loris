@@ -10,7 +10,6 @@
 //	-kel 10 Sept 99
 //
 // ===========================================================================
-#include "LorisLib.h"
 #include "LorisTypes.h"
 #include "ImportPartials.h"
 
@@ -20,7 +19,11 @@ using std::list;
 #include <string>
 using std::string;
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
 
 class BinaryFile;
 
@@ -50,7 +53,7 @@ public:
 	
 	//	derived classes must provide a mean of determining
 	//	when the import loop should terminate:
-	virtual boolean done( void );
+	virtual bool done( void );
 	
 	//	derived classes must provide a means of reading 
 	//	in a Partial and adding it to the list mPartials.
@@ -141,7 +144,9 @@ private:
 	int _counter;		//	counts tracks to detect completion
 };	//	end of class ImportLemur5
 
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif
 
 #endif	// ndef __Loris_import_Lemur5__
 

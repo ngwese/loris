@@ -9,7 +9,6 @@
 //
 // ===========================================================================
 
-#include "LorisLib.h"
 
 #include <string>
 
@@ -35,7 +34,11 @@
 	#define seekdir seek_dir
 #endif	
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
 
 // ---------------------------------------------------------------------------
 //	class BinaryFile
@@ -125,22 +128,24 @@ public:
 //	-- helpers --
 protected:
 	//	instance variable access:
-	boolean swapBytes( void ) const { return _swapBytes; }
+	bool swapBytes( void ) const { return _swapBytes; }
 	buffer_type & buffer( void ) { return _buf; }
 
 	//	low level file i/o:
-	void readBytes( char * bytes, int howmany, boolean swap );
-	void writeBytes( char * bytes, int howmany, boolean swap );
+	void readBytes( char * bytes, int howmany, bool swap );
+	void writeBytes( char * bytes, int howmany, bool swap );
 	
 //	-- instance variables --
 private:
 	enum { op_wr, op_rd, op_seek } _prevOp;	//	was the previous operation read or write?
 	
-	boolean _swapBytes;		//	should we swap the byte order of objects read/written?
+	bool _swapBytes;		//	should we swap the byte order of objects read/written?
 	STDfilebuf _buf;		//	associated file buffer 
 
 };	//	end of class BinaryFile
 
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif
 
 #endif	// ndef __Loris_basic_file__

@@ -15,10 +15,13 @@
 //	-kel 26 Oct 99
 //
 // ===========================================================================
-#include "LorisLib.h"
 #include <map>
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
 
 // ---------------------------------------------------------------------------
 //	class Map
@@ -96,6 +99,8 @@ private:
 
 };	//	end of class BreakpointMap
 
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif
 
 #endif	// ndef __Loris_abstract_map__

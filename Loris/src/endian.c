@@ -6,10 +6,12 @@
  *	-kel 6 Oct 99
  */
 
-#include "LorisLib.h"
 #include "endian.h"
 
-Begin_Namespace( Loris )	/*	does nothing in c */
+#if defined( __cplusplus ) && !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -21,7 +23,7 @@ extern "C" {
  *	Return true is this is a big-endian system, false otherwise.
  *
  */
-boolean bigEndianSystem( void )
+int bigEndianSystem( void )
 {
 	union {
 		int s ;
@@ -53,4 +55,6 @@ void swapByteOrder( char * bytes, int n )
 }	//	end extern "C"
 #endif
 
-End_Namespace( Loris )	/*	does nothing in c */
+#if defined( __cplusplus ) && !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif	/*	does nothing in c */

@@ -12,12 +12,15 @@
 //	-kel 7 Oct 99
 //
 // ===========================================================================
-#include "LorisLib.h"
 #include "Partial.h"
 
 #include <memory>
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
 
 // ---------------------------------------------------------------------------
 //	class PartialIterator
@@ -54,7 +57,7 @@ public:
 	
 	//	iterator interface:
 	virtual void advance( void ) = 0;
-	virtual boolean atEnd( void ) const = 0;
+	virtual bool atEnd( void ) const = 0;
 	
 	//	Partial access:
 	virtual double duration( void ) const = 0;
@@ -104,7 +107,7 @@ virtual
 	
 	//	iterator interface:
 	virtual void advance( void );
-	virtual boolean atEnd( void ) const;
+	virtual bool atEnd( void ) const;
 	
 	//	Partial access:
 	virtual double duration( void ) const;
@@ -160,7 +163,7 @@ public:
 	
 	//	iterator interface:
 	virtual void advance( void ) { iterator()->advance(); }
-	virtual boolean atEnd( void ) const { return iterator()->atEnd(); }
+	virtual bool atEnd( void ) const { return iterator()->atEnd(); }
 	
 	//	Partial access:
 	virtual double duration( void ) const	{ return iterator()->duration(); }
@@ -228,6 +231,8 @@ private:
 		
 };	//	end of mixin class PartialIteratorOwner
 */
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif
 
 #endif	// ndef __Loris_partial_iterator__

@@ -13,6 +13,7 @@
 #include "Partial.h"
 #include "PartialIterator.h"
 #include "notifier.h"
+#include "pi.h"
 #include <algorithm>
 #include <vector>
 
@@ -22,7 +23,11 @@
 	#include <math.h>
 #endif
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
 
 // ---------------------------------------------------------------------------
 //	Synthesizer constructor
@@ -207,4 +212,6 @@ Synthesizer::radianFreq( double hz ) const
 	return hz * TwoPi / sampleRate();
 }
 
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif

@@ -12,10 +12,13 @@
 //	-kel 31 Aug 99
 //
 // ===========================================================================
-#include "LorisLib.h"
 #include <vector>
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
 
 class Filter;	
 
@@ -80,6 +83,8 @@ private:
 		
 };	//	end of class Oscillator
 
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif
 
 #endif	// ndef INCLUDE_OSCILLATOR_H

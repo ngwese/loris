@@ -12,14 +12,17 @@
 //	-kel 15 Oct 99
 //
 // ===========================================================================
-#include "LorisLib.h"
 #include "Partial.h"
 #include "Map.h"
 #include <list>
 #include <set>
 #include <memory>	//	for auto_ptr
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
 
 // ---------------------------------------------------------------------------
 //	class Morph
@@ -229,6 +232,8 @@ protected:
 		
 };	//	end of class Morph
 
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif
 
 #endif	// ndef __Loris_morph__

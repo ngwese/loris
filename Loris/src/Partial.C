@@ -10,10 +10,10 @@
 //	-kel 16 Aug 99
 //
 // ===========================================================================
-#include "LorisLib.h"
 #include "Partial.h"
 #include "Breakpoint.h"
 #include "Exception.h"
+#include "pi.h"
 #include <algorithm>
 
 #if !defined( Deprecated_cstd_headers )
@@ -24,7 +24,11 @@
 
 using namespace std;
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
 
 #pragma mark -
 #pragma mark construction
@@ -115,7 +119,7 @@ Partial::insert( double time, const Breakpoint & bp )
 //	Remove and delete all Breakpoints between start and end (seconds, inclusive),
 //	shortening the envelope by (end-start) seconds.
 //	Return a pointer to the Breakpoint immediately preceding the 
-//	removed time (will be Null if beginning of Partial is removed).
+//	removed time (will be NULL if beginning of Partial is removed).
 //
 //	This could remove all Breakpoints in the Partial without warning!
 //	Caller should check for non-zero duration after time removal.
@@ -140,8 +144,8 @@ Partial::remove( double tstart, double tend )
 	std::map< double, Breakpoint >::iterator end = 
 		_bpmap.lower_bound( tend );
 				
-//	remember the Breakpoint before the gap, or Null:
-	Breakpoint * ret = Null;
+//	remember the Breakpoint before the gap, or NULL:
+	Breakpoint * ret = NULL;
 	if ( begin != _bpmap.begin() ) {
 		std::map< double, Breakpoint >::iterator it = begin;
 		--it;
@@ -347,4 +351,6 @@ Partial::bandwidthAt( double time ) const
 }
 
 
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif

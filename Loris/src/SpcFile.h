@@ -12,7 +12,6 @@
 //
 // ===========================================================================
 
-#include "LorisLib.h"
 #include "Partial.h"
 
 #include "LorisTypes.h"
@@ -22,7 +21,10 @@
 #include <vector>
 #include <list>
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
 
 class BinaryFile;
 
@@ -165,9 +167,9 @@ private:
 	
 	//	envelope writing helpers:
 	int findRefPartial( const std::list<Partial> & plist );
-	ulong packLeft( const Partial & p, double freqMult, double ampMult, double time );
-	ulong packRight( const Partial & p, double noiseMagMult, double time );
-	ulong envLog( double ) const;
+	unsigned long packLeft( const Partial & p, double freqMult, double ampMult, double time );
+	unsigned long packRight( const Partial & p, double noiseMagMult, double time );
+	unsigned long envLog( double ) const;
 	const Partial * select( const std::list<Partial> & partials, int label );
 	
 	//	chunk writing:
@@ -195,6 +197,8 @@ private:
 
 };	//	end of class SosFile
 
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif
 
 #endif //	ndef __Loris_spc_file__

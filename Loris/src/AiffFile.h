@@ -13,14 +13,17 @@
 //
 // ===========================================================================
 
-#include "LorisLib.h"
 #include "LorisTypes.h"
 #include "ieee.h"
 #include "SamplesFile.h"
 #include <vector>
 #include <string>
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
 
 class BinaryFile;
 
@@ -107,7 +110,9 @@ private:
 
 };	//	end of class AiffFile
 
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif
 
 #endif //	ndef __Loris_aiff_file__
 

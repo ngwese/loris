@@ -8,11 +8,14 @@
 //	-kel 17 Aug 99
 //
 // ===========================================================================
-#include "LorisLib.h"
 #include "Exception.h"
 #include <string>
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
 
 #pragma mark -
 #pragma mark construction
@@ -40,4 +43,6 @@ Exception::append( const std::string & str )
 	return *this;
 }
 
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif

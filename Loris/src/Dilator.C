@@ -15,7 +15,11 @@
 #include "notifier.h"
 #include <algorithm>
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
 
 // ---------------------------------------------------------------------------
 //	constructor
@@ -125,4 +129,6 @@ Dilator::dilate( Partial & p )
 	_partials.push_back( newp );
 }
 
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif

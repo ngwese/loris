@@ -11,7 +11,6 @@
 //	-kel 14 Feb 00
 //
 // ===========================================================================
-#include "LorisLib.h"
 #include "FourierTransform.h"
 #include "Exception.h"
 #include "notifier.h"
@@ -26,7 +25,7 @@ using namespace Loris;
 //	transform computations:
 static void reserve( long len );
 static void release( long len );
-static fftw_complex * sharedBuffer = Null;
+static fftw_complex * sharedBuffer = NULL;
 
 // ---------------------------------------------------------------------------
 //	FourierTransform constructor
@@ -38,14 +37,14 @@ static fftw_complex * sharedBuffer = Null;
 FourierTransform::FourierTransform( long len ) :
 	_size( len ),
 	_buffer( new complex< double >[ len ] ),
-	_plan( Null )
+	_plan( NULL )
 {
 	//	this is insane, too yucky, just use the fftw_complex
 	//	struct everywhere. sigh.
 	//	-- sanity --
 	//	check to make sure that std::complex< double >
 	//	and fftw_complex are really identical:
-	static boolean checked = false;
+	static bool checked = false;
 	if ( ! checked ) {
 		//	check that fftw_real is a double in the version
 		//	of the FFTW library that we linked:
@@ -85,7 +84,7 @@ FourierTransform::FourierTransform( long len ) :
 FourierTransform::~FourierTransform( void )
 {
 	delete[] _buffer;
-	if ( _plan != Null ) {
+	if ( _plan != NULL ) {
 		fftw_destroy_plan( _plan );
 		release( size() );
 	}
@@ -101,14 +100,14 @@ void
 FourierTransform::transform( void )
 {
 //	make a plan, if necessary:
-	if ( _plan == Null ) {
+	if ( _plan == NULL ) {
 		makePlan();
 	}
 	
 //	sanity:
-	Assert( _plan != Null );
-	Assert( _buffer != Null );
-	Assert( sharedBuffer != Null );
+	Assert( _plan != NULL );
+	Assert( _buffer != NULL );
+	Assert( sharedBuffer != NULL );
 
 //	crunch:	
 	fftw_one( _plan, (fftw_complex *)_buffer, sharedBuffer );
@@ -146,7 +145,7 @@ FourierTransform::makePlan( void )
 	reserve( size() );
 	
 	//	check for an existing plan:
-	if ( _plan != Null ) {
+	if ( _plan != NULL ) {
 		fftw_destroy_plan( _plan );
 		release( size() );
 	}
@@ -160,7 +159,7 @@ FourierTransform::makePlan( void )
 									   sharedBuffer, 
 									   1); 
 	//	verify:
-	if ( _plan == Null ) {
+	if ( _plan == NULL ) {
 		Throw( InvalidObject, "FourierTransform could not make a (fftw) plan." );
 	}
 }
@@ -191,7 +190,7 @@ static void reserve( long len )
 	if ( reservations().empty() || * reservations().begin() < len ) {
 		debugger << "Allocating shared buffer of size " << len << endl;
 		delete[] sharedBuffer;
-		sharedBuffer = Null;	//	to prevent deleting again
+		sharedBuffer = NULL;	//	to prevent deleting again
 		sharedBuffer = new fftw_complex[ len ];
 	}
 	
@@ -218,7 +217,7 @@ static void release( long len )
 	if ( reservations().empty() || * reservations().begin() < len ) {
 		debugger << "Releasing shared buffer of size " << len << endl;
 		delete[] sharedBuffer;
-		sharedBuffer = Null;
+		sharedBuffer = NULL;
 		
 		if ( ! reservations().empty() ) {
 			debugger << "Allocating shared buffer of size " << * reservations().begin() << endl;

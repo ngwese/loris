@@ -12,7 +12,6 @@
 //
 // ===========================================================================
 
-#include "LorisLib.h"
 #include "SamplesFile.h"
 #include "BinaryFile.h"
 #include "Exception.h"
@@ -23,7 +22,11 @@
 
 using namespace std;
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
 
 // ---------------------------------------------------------------------------
 //	SamplesFile constructor from data in memory
@@ -87,4 +90,6 @@ SamplesFile::validateParams( void )
 	
 }
 
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif

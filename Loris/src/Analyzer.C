@@ -19,7 +19,11 @@
 #include <map>
 #include <algorithm>
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
 
 // ---------------------------------------------------------------------------
 //	AnalyzerState definition
@@ -228,14 +232,14 @@ Analyzer::analyze( const std::vector< double > & buf, double srate, double offse
 template<class T>
 struct less_frequency
 {
-	boolean operator()( const T & lhs, const T & rhs ) const
+	bool operator()( const T & lhs, const T & rhs ) const
 		{ return lhs.frequency() < rhs.frequency(); }
 };
 
 template<class T>
 struct greater_amplitude
 {
-	boolean operator()( const T & lhs, const T & rhs ) const
+	bool operator()( const T & lhs, const T & rhs ) const
 		{ return lhs.amplitude() > rhs.amplitude(); }
 };	
 
@@ -245,7 +249,7 @@ struct frequency_between
 	frequency_between( double x, double y ) : 
 		_fmin( x ), _fmax( y ) 
 		{ if (x>y) std::swap(x,y); }
-	boolean operator()( const T & t )  const
+	bool operator()( const T & t )  const
 		{ 
 			return (t.frequency() > _fmin) && 
 				   (t.frequency() < _fmax); 
@@ -502,4 +506,6 @@ Analyzer::pruneBogusPartials( AnalyzerState & state )
 
 
 
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif

@@ -13,14 +13,17 @@
 //	-kel 15 Feb 00
 //
 // ===========================================================================
-#include "LorisLib.h"
 #include <complex>
 #include <functional>
 
 //	declare the fftw plan struct type:
 struct fftw_plan_struct; 
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
 
 // ---------------------------------------------------------------------------
 //	class FourierTransform
@@ -149,6 +152,8 @@ load( FourierTransform & t, Iterator1 begin, Iterator1 center, Iterator1 end, It
 	return t;
 }
 
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif
 
 #endif // ndef __fftw_wrapper__

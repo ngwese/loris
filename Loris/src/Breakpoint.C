@@ -10,7 +10,6 @@
 //	-kel 16 Aug 99
 //
 // ===========================================================================
-#include "LorisLib.h"
 #include "Breakpoint.h"
 #include "Exception.h"
 
@@ -21,7 +20,11 @@
 	#include <math.h>
 #endif
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
 
 #pragma mark -
 #pragma mark construction
@@ -84,7 +87,9 @@ Breakpoint::addNoise( double noise )
 	}
 }
 
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif
 
 
 

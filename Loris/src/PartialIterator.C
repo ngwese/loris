@@ -9,11 +9,14 @@
 //	-kel 7 Oct 99
 //
 // ===========================================================================
-#include "LorisLib.h"
 #include "PartialIterator.h"
 #include "Partial.h"
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
 
 #pragma mark -
 #pragma mark public iterator interface:
@@ -32,7 +35,7 @@ BasicPartialIterator::BasicPartialIterator( const Partial & pin ) :
 // ---------------------------------------------------------------------------
 //
 BasicPartialIterator::BasicPartialIterator( void ) : 
-	_p( Null )
+	_p( NULL )
 {
 }
 
@@ -72,7 +75,7 @@ BasicPartialIterator::reset( const Partial & p )
 //	atEnd
 // ---------------------------------------------------------------------------
 //
-boolean
+bool
 BasicPartialIterator::atEnd( void ) const
 {
 	return _cur == _p->end();
@@ -98,7 +101,7 @@ BasicPartialIterator::current( void ) const
 const Partial &
 BasicPartialIterator::subject( void ) const
 {
-	if ( _p == Null )
+	if ( _p == NULL )
 		Throw( InvalidIterator, "Tried to dereference an invalid BasicPartialIterator (subject)." );
 
 	return *_p;
@@ -208,4 +211,6 @@ BasicPartialIterator::time( void ) const
 	return _cur->first;
 }
 
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif

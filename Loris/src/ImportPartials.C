@@ -9,12 +9,15 @@
 //	-kel 10 Sept 99
 //
 // ===========================================================================
-#include "LorisLib.h"
 #include "ImportPartials.h"
 #include "Partial.h"
 #include "Exception.h"
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
 
 #pragma mark -
 #pragma mark construction
@@ -34,7 +37,7 @@ Import::Import( void )
 //
 //		void verifySource( void )	(default is noop)
 //		void beginImport( void )	(default is noop)
-//		boolean done( void )
+//		bool done( void )
 //		void getPartial( void )
 //		void endImport( void )		(default is noop)
 //
@@ -84,5 +87,7 @@ Import::importPartials( void )
 	}
 }
 
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif
 

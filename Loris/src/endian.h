@@ -8,21 +8,25 @@
  *	-kel 6 Oct 99
  */
 
-#include "LorisLib.h"
 
-Begin_Namespace( Loris )
+#if defined( __cplusplus ) && !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-boolean bigEndianSystem( void );
+int bigEndianSystem( void );
 void swapByteOrder( char * bytes, int n );
 
 #ifdef __cplusplus
 }	//	end extern "C"
 #endif
 
-End_Namespace( Loris )
+#if defined( __cplusplus ) && !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif
 
 #endif 	/* ndef __endian_h__ */

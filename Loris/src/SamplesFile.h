@@ -12,12 +12,15 @@
 //
 // ===========================================================================
 
-#include "LorisLib.h"
 #include "LorisTypes.h"
 
 #include <vector>
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
 
 class BinaryFile;
 
@@ -81,6 +84,8 @@ protected:
 	
 };	//	end of class SamplesFile
 
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif
 
 #endif //	ndef __Loris_samples_file__

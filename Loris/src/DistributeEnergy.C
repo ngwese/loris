@@ -7,13 +7,16 @@
 //	-kel 23 Jan 2000
 //
 // ===========================================================================
-#include "LorisLib.h"
 #include "DistributeEnergy.h"
 #include "Partial.h"
 #include "Breakpoint.h"
 #include <algorithm>
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
 
 // ---------------------------------------------------------------------------
 //	computeAlpha
@@ -72,4 +75,6 @@ DistributeEnergy::addNoiseEnergy( double energy, Partial & p,
 	}
 }
 
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif

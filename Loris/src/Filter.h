@@ -16,10 +16,13 @@
 //	-kel 1 Sep 99
 //
 // ===========================================================================
-#include "LorisLib.h"
 #include <vector>
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
 
 // ---------------------------------------------------------------------------
 //	class Filter
@@ -67,6 +70,8 @@ private:
 
 };	//	end of class Filter
 
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif
 
 #endif	// ndef __INCLUDE_FILTER_H__

@@ -8,11 +8,14 @@
 //	-kel 5 Dec 99
 //
 // ===========================================================================
-#include "LorisLib.h"
 #include "Partial.h"	//	for base class
 #include <vector>
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
 
 class Breakpoint;
 class AnalyzerState;
@@ -80,6 +83,8 @@ private:
 	
 };	//	end of class Analyzer
 
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif
 
 #endif	// ndef __Loris_analyzer__

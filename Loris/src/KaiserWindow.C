@@ -8,6 +8,7 @@
 // ===========================================================================
 #include "KaiserWindow.h"
 #include "Exception.h"
+#include "pi.h"
 #if !defined( Deprecated_cstd_headers )
 	#include <cmath>
 #else
@@ -16,7 +17,11 @@
 
 using namespace std;
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
 
 //	prototypes for static helpers, defined below
 static double factorial( double );
@@ -153,5 +158,7 @@ KaiserWindow::computeLength( double width, double atten )
 	return long(1.0 + (2. * sqrt((Pi*Pi) + (alpha*alpha)) / (Pi * width)) + 0.5);
 }
 
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif
 

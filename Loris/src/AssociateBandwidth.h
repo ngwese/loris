@@ -8,7 +8,6 @@
 //	-kel 20 Jan 2000
 //
 // ===========================================================================
-#include "LorisLib.h"
 #include <vector>
 
 #if !defined( Deprecated_cstd_headers )
@@ -17,7 +16,11 @@
 	#include <math.h>
 #endif
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
 
 class ReassignedSpectrum;
 
@@ -99,6 +102,8 @@ private:
 	double _hzPerSamp;
 };	// end of class AssociateBandwidth
 
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif
 
 #endif 	// ndef __bandwidth_association_header__

@@ -8,11 +8,14 @@
 //	-kel 7 Dec 99
 //
 // ===========================================================================
-#include "LorisLib.h"
 #include "FourierTransform.h"
 #include <vector>
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
 
 // ---------------------------------------------------------------------------
 //	class ReassignedSpectrum
@@ -81,6 +84,8 @@ private:
 	double _windowEnergyScale;	
 };	//	end of class ReassignedSpectrum
 
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif
 
 #endif	// ndef __reassigned_spectrum_analyzer__

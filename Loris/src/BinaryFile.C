@@ -6,7 +6,6 @@
 //	-kel 5 Oct 99
 //
 // ===========================================================================
-#include "LorisLib.h"
 #include "Exception.h"
 #include "notifier.h"
 #include "BinaryFile.h"
@@ -22,7 +21,11 @@
 
 using namespace std;
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
 
 // ---------------------------------------------------------------------------
 //	BinaryFile constructor
@@ -220,7 +223,7 @@ BinaryFile::setLittleEndian( void )
 // ---------------------------------------------------------------------------
 //
 void
-BinaryFile::readBytes( char * data, int howmany, boolean swap )
+BinaryFile::readBytes( char * data, int howmany, bool swap )
 {
 	//	need to seek when changing between read and write:
 	if ( _prevOp == op_wr )
@@ -244,7 +247,7 @@ BinaryFile::readBytes( char * data, int howmany, boolean swap )
 // ---------------------------------------------------------------------------
 //
 void
-BinaryFile::writeBytes( char * data, int howmany, boolean swap )
+BinaryFile::writeBytes( char * data, int howmany, bool swap )
 {
 	//	need to seek when changing between read and write:
 	if ( _prevOp == op_rd )
@@ -264,6 +267,8 @@ BinaryFile::writeBytes( char * data, int howmany, boolean swap )
 	
 	}
 	
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif
 
 

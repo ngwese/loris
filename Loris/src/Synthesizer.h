@@ -9,11 +9,13 @@
 //	-kel 16 Aug 99
 //
 // ===========================================================================
-#include "LorisLib.h"
 #include "PartialIterator.h"
 #include <vector>
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
 
 class Partial;
 
@@ -85,6 +87,8 @@ private:
 	
 };	//	end of class Synthesizer
 
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif
 
 #endif	// ndef INCLUDE_SYNTHESIZER_H

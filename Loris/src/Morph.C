@@ -10,7 +10,6 @@
 //	-kel 15 Oct 99
 //
 // ===========================================================================
-#include "LorisLib.h"
 #include "Morph.h"
 #include "Synthesizer.h"
 #include "Exception.h"
@@ -31,7 +30,11 @@
 
 using namespace std;
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
 
 // ---------------------------------------------------------------------------
 //	Morph constructor (single morph function)
@@ -234,7 +237,7 @@ struct LabelIs
 {
 	int _x;
 	LabelIs( int x ) : _x(x) {}
-	boolean operator() (const Partial & p) const {
+	bool operator() (const Partial & p) const {
 		return p.label() == _x;
 	}
 };
@@ -287,4 +290,6 @@ Morph::crossfadeLists( const list<Partial> & fromlist, const list<Partial> & tol
 	crossfadeToPartials( tolist.begin(), tolist.end() );
 }
 
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif

@@ -14,6 +14,7 @@
 #include "Filter.h"
 #include "random.h"
 #include "Exception.h"
+#include "pi.h"
 #include <vector>
 
 #if !defined( Deprecated_cstd_headers )
@@ -22,7 +23,11 @@
 	#include <math.h>
 #endif
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
 
 // ---------------------------------------------------------------------------
 //	Oscillator construction
@@ -38,7 +43,7 @@ Oscillator::Oscillator( double radf, double a, double bw, double ph /* = 0. */ )
 	_amplitude( a ),	//	absolute
 	_bandwidth( bw ),	//	bandwidth coefficient (noise energy / total energy)
 	_phase( ph ),		//	radians
-	_filter( Null )
+	_filter( NULL )
 {
 	//	make a Filter:
 	//	Chebychev order 3, cutoff 500, ripple -1.
@@ -166,4 +171,6 @@ Oscillator::generateSamples( std::vector< double > & buffer,
 	_bandwidth = targetBw;
 }
 
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif

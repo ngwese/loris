@@ -12,13 +12,16 @@
 //	-kel 16 Aug 99
 //
 // ===========================================================================
-#include "LorisLib.h"
 #include "Exception.h"
 #include "Breakpoint.h"
 #include <map>
 #include <list>
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
 
 // ---------------------------------------------------------------------------
 //	class Partial
@@ -63,7 +66,7 @@ public:
 //	Remove and delete all Breakpoints between start and end (seconds, inclusive),
 //	shortening the envelope by (end-start) seconds.
 //	Return a pointer to the Breakpoint immediately preceding the 
-//	removed time (will be Null if beginning of Partial is removed).
+//	removed time (will be NULL if beginning of Partial is removed).
 	Breakpoint * remove( double tstart, double tend );
 	
 //	partial envelope interpolation/extrapolation:
@@ -191,6 +194,8 @@ protected:
 			
 };	//	end of mixin class PartialCollector
 
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif
 
 #endif	// ndef __Loris_partial__

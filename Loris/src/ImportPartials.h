@@ -10,13 +10,16 @@
 //	-kel 10 Sept 99
 //
 // ===========================================================================
-#include "LorisLib.h"
 #include "Partial.h"
 #include "Exception.h"
 
 #include <list>
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
 
 // ---------------------------------------------------------------------------
 //	class Import
@@ -44,7 +47,7 @@ public:
 	
 	//	derived classes must provide a mean of determining
 	//	when the import loop should terminate:
-	virtual boolean done( void ) = 0;
+	virtual bool done( void ) = 0;
 	
 	//	derived classes must provide a means of reading 
 	//	in a Partial and adding it to the list mPartials.
@@ -81,7 +84,9 @@ public:
 };	//	end of class ImportException
 
 
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif
 
 #endif	// ndef __Loris_import__
 

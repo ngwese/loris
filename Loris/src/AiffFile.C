@@ -10,40 +10,30 @@
 //
 // ===========================================================================
 
-#include "LorisLib.h"
 #include "AiffFile.h"
 #include "BinaryFile.h"
 #include "Exception.h"
 #include "notifier.h"
 #include "ieee.h"
-
 #include <algorithm>
 #include <string>
 
-//	define a local floating point constant representing the
-//	biggest 32 bit sample (can't rely on numeric_limits in
-//	under-compliant libraries):
-//
-//	This is silly, since I know how big the thing is (32 bits),
-//	I can trivially stick a constant in here, 0x7FFF, right? or 2147483647L
-//
-#if !defined( Lacks_numeric_limits )
-	#include <limits>
-	static const double Maximum_Long = std::numeric_limits<Loris::Int_32>::max();
+#if !defined(Deprecated_cstd_headers)
+#include <climits>
 #else
-	#include <limits.h>
-	static const double Maximum_Long = LONG_MAX;
+#include <limits.h>
 #endif
 
-using namespace std;
-
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
 
 // ---------------------------------------------------------------------------
 //	AiffFile constructor from data in memory
 // ---------------------------------------------------------------------------
 //
-AiffFile::AiffFile( double rate, int chans, int bits, vector< double > & buf ) :
+AiffFile::AiffFile( double rate, int chans, int bits, std::vector< double > & buf ) :
 	SamplesFile( rate, chans, bits, buf )
 {
 }
@@ -53,7 +43,7 @@ AiffFile::AiffFile( double rate, int chans, int bits, vector< double > & buf ) :
 // ---------------------------------------------------------------------------
 //	Read immediately.
 //
-AiffFile::AiffFile( BinaryFile & file, vector< double > & buf ) :
+AiffFile::AiffFile( BinaryFile & file, std::vector< double > & buf ) :
 	SamplesFile( buf )
 {
 	read( file );
@@ -64,7 +54,7 @@ AiffFile::AiffFile( BinaryFile & file, vector< double > & buf ) :
 // ---------------------------------------------------------------------------
 //	Read immediately.
 //
-AiffFile::AiffFile( const std::string & filename, vector< double > & buf ) :
+AiffFile::AiffFile( const std::string & filename, std::vector< double > & buf ) :
 	SamplesFile( buf )
 {
 	read( filename );
@@ -84,7 +74,7 @@ AiffFile::AiffFile( const SamplesFile & other ) :
 // ---------------------------------------------------------------------------
 //
 void
-AiffFile::read( const string & filename )
+AiffFile::read( const std::string & filename )
 {
 	BinaryFile f;
 	f.setBigEndian();
@@ -121,7 +111,7 @@ AiffFile::read( BinaryFile & file )
 // ---------------------------------------------------------------------------
 //
 void
-AiffFile::write( const string & filename )
+AiffFile::write( const std::string & filename )
 {
 	BinaryFile f;
 	f.setBigEndian();
@@ -264,7 +254,7 @@ AiffFile::readContainer( BinaryFile & file )
 
 	//	make sure its really AIFF:
 	if ( ck.formType != AiffType )
-		Throw( FileIOException, string("Bad form type in AIFF file: ") + string( ck.formType, 4 ) );
+		Throw( FileIOException, std::string("Bad form type in AIFF file: ") + std::string( ck.formType, 4 ) );
 }	
 
 // ---------------------------------------------------------------------------
@@ -324,13 +314,13 @@ AiffFile::readSampleData( BinaryFile & file )
 void
 AiffFile::readSamples( BinaryFile & file )
 {	
-	static const double oneOverMax = 1. / Maximum_Long;	//	defined at top
+	static const double oneOverMax = 1. / LONG_MAX;	//	defined in climits
 	
 	pcm_sample z;
 
 	switch ( _sampSize ) {
 		case 32:
-			for (ulong i = 0; i < _samples.size(); ++i ) {
+			for (unsigned long i = 0; i < _samples.size(); ++i ) {
 				//	read the sample:
 				z.s32bits = 0;
 				file.read( z.s32bits );
@@ -340,7 +330,7 @@ AiffFile::readSamples( BinaryFile & file )
 			}
 			break;
 		case 24:
-			for (ulong i = 0; i < _samples.size(); ++i ) {
+			for (unsigned long i = 0; i < _samples.size(); ++i ) {
 				//	read the sample:
 				z.s32bits = 0;
 				file.read( z.s24bits );
@@ -350,7 +340,7 @@ AiffFile::readSamples( BinaryFile & file )
 			}
 			break;
 		case 16:
-			for (ulong i = 0; i < _samples.size(); ++i ) {
+			for (unsigned long i = 0; i < _samples.size(); ++i ) {
 				//	read the sample:
 				z.s32bits = 0;
 				file.read( z.s16bits );
@@ -360,7 +350,7 @@ AiffFile::readSamples( BinaryFile & file )
 			}
 			break;
 		case 8:
-			for (ulong i = 0; i < _samples.size(); ++i ) {
+			for (unsigned long i = 0; i < _samples.size(); ++i ) {
 				//	read the sample:
 				z.s32bits = 0;
 				file.read( z.s8bits );
@@ -516,27 +506,27 @@ AiffFile::writeSamples( BinaryFile & file )
 
 	switch ( _sampSize ) {
 		case 32:
-			for (ulong i = 0; i < _samples.size(); ++i ) {
+			for (unsigned long i = 0; i < _samples.size(); ++i ) {
 				//	convert to integer (clip instead of wrapping):
-				z.s32bits = Maximum_Long * min( 1.0, max(-1.0, _samples[i]) );
+				z.s32bits = LONG_MAX * std::min( 1.0, std::max(-1.0, _samples[i]) );
 			
 				//	write the sample:
 				file.write( z.s32bits );
 			}
 			break;
 		case 24:
-			for (ulong i = 0; i < _samples.size(); ++i ) {
+			for (unsigned long i = 0; i < _samples.size(); ++i ) {
 				//	convert to integer (clip instead of wrapping):
-				z.s32bits = Maximum_Long * min( 1.0, max(-1.0, _samples[i]) );
+				z.s32bits = LONG_MAX * std::min( 1.0, std::max(-1.0, _samples[i]) );
 			
 				//	write the sample:
 				file.write( z.s24bits );
 			}
 			break;
 		case 16:
-			for (ulong i = 0; i < _samples.size(); ++i ) {
+			for (unsigned long i = 0; i < _samples.size(); ++i ) {
 				//	convert to integer (clip instead of wrapping):
-				z.s32bits = Maximum_Long * min( 1.0, max(-1.0, _samples[i]) );
+				z.s32bits = LONG_MAX * std::min( 1.0, std::max(-1.0, _samples[i]) );
 			
 				//	write the sample:
 				// file.write( z.s16bits );
@@ -546,9 +536,9 @@ AiffFile::writeSamples( BinaryFile & file )
 			}
 			break;
 		case 8:
-			for (ulong i = 0; i < _samples.size(); ++i ) {
+			for (unsigned long i = 0; i < _samples.size(); ++i ) {
 				//	convert to integer (clip instead of wrapping):
-				z.s32bits = Maximum_Long * min( 1.0, max(-1.0, _samples[i]) );
+				z.s32bits = LONG_MAX * std::min( 1.0, std::max(-1.0, _samples[i]) );
 			
 				//	write the sample:
 				file.write( z.s8bits );
@@ -612,4 +602,6 @@ AiffFile::sizeofSoundData( void )
 			dataSize;			//	sample data
 }
 
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif

@@ -8,13 +8,16 @@
 //	-kel 23 Jan 2000
 //
 // ===========================================================================
-#include "LorisLib.h"
 #include "Partial.h"
 #include "Breakpoint.h"
 #include "notifier.h"
 #include "bark.h"
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
 
 // ---------------------------------------------------------------------------
 //	class DistributeEnergy
@@ -137,6 +140,8 @@ private:
 };	// end of class DistributeEnergy
 
 
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif
 
 #endif 	// ndef __energy_distribution_header__

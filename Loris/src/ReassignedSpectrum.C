@@ -9,12 +9,17 @@
 #include "ReassignedSpectrum.h"
 #include "notifier.h"
 #include "Exception.h"
+#include "pi.h"
 #include <functional>
 #include <algorithm>
 
 using namespace std;
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
 
 // ---------------------------------------------------------------------------
 //	ReassignedSpectrum constructor
@@ -527,4 +532,6 @@ ReassignedSpectrum::reassignedPhase( double fracFreqSample,
 }
 
 
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif

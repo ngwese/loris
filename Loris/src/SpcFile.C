@@ -9,7 +9,6 @@
 //
 // ===========================================================================
 
-#include "LorisLib.h"
 
 #include "SpcFile.h"
 #include "BinaryFile.h"
@@ -18,6 +17,7 @@
 #include "notifier.h"
 
 #include "ieee.h"
+#include "pi.h"
 
 #include <algorithm>
 #include <string>
@@ -39,7 +39,10 @@
 
 using namespace std;
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
 
 // ---------------------------------------------------------------------------
 //	SpcFile constructor from data in memory
@@ -168,12 +171,12 @@ SpcFile::writeEnvelopes( BinaryFile & file, const list<Partial> & plist, int ref
 			// if no partial is found, frequency multiply the reference partial 
 			const Partial * pcorrect = select( plist, label );
 		
-			if ( pcorrect == Null || pcorrect->begin() == pcorrect->end() ) {
+			if ( pcorrect == NULL || pcorrect->begin() == pcorrect->end() ) {
 				pcorrect = select( plist, refLabel );
 				freqMult = (double) label / (double) refLabel; 
 				ampMult = 0;
 				noiseMagMult = 1.0;
-				Assert( pcorrect != Null && pcorrect->begin() != pcorrect->end());
+				Assert( pcorrect != NULL && pcorrect->begin() != pcorrect->end());
 			} else {
 				freqMult = ampMult = noiseMagMult = 1.0;
 			}
@@ -204,7 +207,7 @@ SpcFile::writeEnvelopes( BinaryFile & file, const list<Partial> & plist, int ref
 // ---------------------------------------------------------------------------
 //	For a range 0 to 1, this returns a log value, 0x0000 to 0xFFFF.
 //
-ulong
+unsigned long
 SpcFile::envLog( double floatingValue ) const
 {
 	static double coeff = 65535.0 / log( 32768. );
@@ -220,14 +223,14 @@ SpcFile::envLog( double floatingValue ) const
 //	in Kyma.  The log of the sine magnitude occupies the top 8 bits, the log of the
 //	frequency occupies the bottom 16 bits.
 //
-ulong
+unsigned long
 SpcFile::packLeft( const Partial & p, double freqMult, double ampMult, double time )
 {	
 	double amp = ampMult * p.amplitudeAt( time );
 	double freq = freqMult * p.frequencyAt( time );
 	double bw = p.bandwidthAt( time );
 
-	ulong	theOutput;
+	unsigned long	theOutput;
 
 	double normalizedFreq	= freq / 22050.0;		// 0..1 , 1 is 22.050 kHz
 	
@@ -250,14 +253,14 @@ SpcFile::packLeft( const Partial & p, double freqMult, double ampMult, double ti
 //	in Kyma.  The log of the noise magnitude occupies the top 8 bits, the scaled
 //	linear phase occupies the bottom 16 bits.  
 //
-ulong
+unsigned long
 SpcFile::packRight( const Partial & p, double noiseMagMult, double time )
 {	
 	double amp = p.amplitudeAt( time );
 	double phase = p.phaseAt( time );
 	double bw = p.bandwidthAt( time );
 
-	ulong	theOutput;
+	unsigned long	theOutput;
 	
 	phase = fmod( phase, TwoPi );
 	if ( phase < 0. )
@@ -272,7 +275,7 @@ SpcFile::packRight( const Partial & p, double noiseMagMult, double time )
 	theOutput	= ( envLog( theNoiseMag ) & 0xFE00 ) << 15;
 	
 // 16 bits of phase with 8 bits of zero to right.
-	theOutput  |= ( (ulong) ( zeroToOnePhase * 0xFFFF ) ) << 8;
+	theOutput  |= ( (unsigned long) ( zeroToOnePhase * 0xFFFF ) ) << 8;
 	
 // Our 24 bits are in the top of a 32-bit word.
 	return theOutput;
@@ -282,7 +285,7 @@ SpcFile::packRight( const Partial & p, double noiseMagMult, double time )
 //	select
 // ---------------------------------------------------------------------------
 //	Special select function that returns a pointer to the Partial
-//	having the specified label, or Null if there is not such Partial
+//	having the specified label, or NULL if there is not such Partial
 //	in the list. 
 //
 struct LabelIs 
@@ -296,7 +299,7 @@ struct LabelIs
 const Partial *
 SpcFile::select( const list<Partial> & partials, int label )
 {
-	const Partial * ret = Null;
+	const Partial * ret = NULL;
 	list< Partial >::const_iterator it = 
 		find_if( partials.begin(), partials.end(), LabelIs( label ) );
 		
@@ -661,4 +664,6 @@ SpcFile::sizeofSoundData( void )
 			dataSize;			//	envelope sample data
 }
 
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif

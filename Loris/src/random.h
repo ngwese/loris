@@ -23,7 +23,11 @@
 	#define STDtrunc trunc
 #endif
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
 
 #pragma mark -
 #pragma mark === uniform distribution ===
@@ -160,6 +164,8 @@ gaussian_normal( void )
 	return box_muller();
 }
 
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif
 
 #endif	// ndef __random_number_generators__

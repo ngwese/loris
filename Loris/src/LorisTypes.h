@@ -14,9 +14,12 @@
  *	
  */
  
-#include "LorisLib.h"
  
-Begin_Namespace( Loris )	/* macro does nothing under c */
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+	/* macro does nothing under c */
 
 typedef short 			Int_16;
 typedef long 			Int_32;
@@ -24,18 +27,26 @@ typedef unsigned long 	Uint_32;
 typedef float			Float_32;
 typedef double			Double_64;
 
-End_Namespace( Loris )		/* macro does nothing under c */
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif		/* macro does nothing under c */
 
 /*	
  *	type checking functions 
  */
 #if defined( __cplusplus )
-	Begin_Namespace( Loris )
-		boolean check_types( void );			//	C++ types
+	#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
+		bool check_types( void );			//	C++ types
 		extern "C" int check_ctypes( void );	//	c types
-	End_Namespace( Loris )
+	#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif
 #else
-	boolean check_ctypes( void );
+	bool check_ctypes( void );
 #endif
 
 #endif	/*	ndef __Loris_Types__ */

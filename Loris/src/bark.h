@@ -9,7 +9,6 @@
  *
  * ===========================================================================
 */
-#include "LorisLib.h"
 
 #if defined( __cplusplus ) && !defined( Deprecated_cstd_headers )
 	#include <cmath>
@@ -18,7 +17,11 @@
 	#include <math.h>
 #endif
 
-Begin_Namespace( Loris )
+#if defined( __cplusplus ) && !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
 
 /* ---------------------------------------------------------------------------
  *	bark
@@ -33,6 +36,8 @@ inline double bark( const double freq )
 	return  13. * atan( 0.76 * 0.001 * freq ) + 3.5 * ( tmp * tmp );
 }
 
-End_Namespace( Loris )
+#if defined( __cplusplus ) && !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif
 
 #endif	//	ndef __bark_frequency__

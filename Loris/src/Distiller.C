@@ -8,7 +8,6 @@
 //
 // ===========================================================================
 
-#include "LorisLib.h"
 #include "Distiller.h"
 #include "Partial.h"
 #include "PartialIterator.h"
@@ -24,7 +23,11 @@
 
 using namespace std;
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
 
 // ---------------------------------------------------------------------------
 //	Distiller constructor
@@ -195,7 +198,7 @@ Distiller::distillOne( const Partial & src, Partial & dest,
 //	Return true if none of the Partials in l has any energy at time, 
 //	otherwise return false.
 //
-boolean 
+bool 
 Distiller::gapAt( double time, 
 				  list<Partial>::const_iterator start,
 				  list<Partial>::const_iterator end ) const
@@ -210,4 +213,6 @@ Distiller::gapAt( double time,
 }
 
 
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif

@@ -10,13 +10,16 @@
 //	-kel 26 Oct 99
 //
 // ===========================================================================
-#include "LorisLib.h"
 #include "Map.h"
 
 #include <vector>
 using namespace std;
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
 
 // ---------------------------------------------------------------------------
 //	insertBreakpoint
@@ -73,4 +76,6 @@ BreakpointMap::valueAt( double x ) const
 
 }
 
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif

@@ -7,13 +7,13 @@
 //	-kel 10 Sept 99
 //
 // ===========================================================================
-#include "LorisLib.h"
 #include "ImportLemur5.h"
 #include "BinaryFile.h"
 #include "Exception.h"
 #include "Partial.h"
 #include "Breakpoint.h"
 #include "notifier.h"
+#include "pi.h"
 #include <algorithm>
 
 #if !defined( Deprecated_cstd_headers )
@@ -25,7 +25,11 @@
 #endif
 
 
-Begin_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
 
 #pragma mark -
 #pragma mark construction
@@ -121,7 +125,7 @@ ImportLemur5::beginImport( void )
 //	Return true if the number of Partials read equals the number of
 //	Partials in the Lemur file.
 //
-boolean
+bool
 ImportLemur5::done( void )
 {
 	Assert( _counter >= 0 );
@@ -370,4 +374,6 @@ ImportLemur5::readPeakData( PeakOnDisk & p )
 		throw;
 	}
 }
-End_Namespace( Loris )
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif
