@@ -35,8 +35,11 @@
 #include "Exception.h"
 #include "notifier.h"
 
-#include <sdif.h>
 #include <vector>
+
+extern "C" {
+#include <sdif.h>
+}
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace

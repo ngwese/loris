@@ -39,7 +39,10 @@
 #include <list>
 #include <vector>
 #include <cmath>
+
+extern "C" {
 #include <sdif.h>
+}
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
