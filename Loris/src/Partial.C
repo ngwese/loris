@@ -53,6 +53,8 @@ namespace Loris {
 
 //long Partial::DebugCounter = 0L;
 
+#pragma mark -- construction --
+
 // ---------------------------------------------------------------------------
 //	Partial constructor
 // ---------------------------------------------------------------------------
@@ -68,7 +70,7 @@ Partial::Partial( void ) :
 // ---------------------------------------------------------------------------
 //
 Partial::Partial( const_iterator beg, const_iterator end ) :
-	Partial::BreakpointContainerPolicy( beg, end ),
+	_bpmap( beg._iter, end._iter ),
 	_label( 0 )
 {
 //	++DebugCounter;
@@ -79,7 +81,7 @@ Partial::Partial( const_iterator beg, const_iterator end ) :
 // ---------------------------------------------------------------------------
 //
 Partial::Partial( const Partial & other ) :
-	Partial::BreakpointContainerPolicy( other ),
+	_bpmap( other._bpmap ),
 	_label( other._label )
 {
 //	++DebugCounter;
@@ -106,11 +108,13 @@ Partial::operator=( const Partial & rhs )
 {
 	if ( this != &rhs )
 	{
-		BreakpointContainerPolicy::operator=( rhs );
+		_bpmap = rhs._bpmap;
 		_label = rhs._label;
 	}
 	return *this;
 }
+
+#pragma mark -- container-dependent implementation --
 
 // ---------------------------------------------------------------------------
 //	operator==
@@ -121,9 +125,113 @@ Partial::operator=( const Partial & rhs )
 bool
 Partial::operator==( const Partial & rhs ) const
 {
-	return (label() == rhs.label()) && 
-			BreakpointContainerPolicy::operator==( rhs );
+	return (_label == rhs._label) && (_bpmap == rhs._bpmap);
 }
+
+// ---------------------------------------------------------------------------
+//	begin
+// ---------------------------------------------------------------------------
+//	Return an iterator refering to the position of the first
+//	Breakpoint in this Partial's envelope.
+//		
+//	For const Partials, returns a const_iterator.
+//
+Partial::const_iterator Partial::begin( void ) const 
+{ 
+	return _bpmap.begin(); 
+}
+
+Partial::iterator Partial::begin( void ) 
+{ 
+	return _bpmap.begin(); 
+}
+
+// ---------------------------------------------------------------------------
+//	end
+// ---------------------------------------------------------------------------
+//	Return an iterator refering to the position past the last
+//	Breakpoint in this Partial's envelope. The iterator returned by
+//	end() (like the iterator returned by the end() member of any STL
+//	container) does not refer to a valid Breakpoint. 	
+//
+//	For const Partials, returns a const_iterator.
+//
+Partial::const_iterator 
+Partial::end( void ) const 
+{ 
+	return _bpmap.end(); 
+}
+
+Partial::iterator 
+Partial::end( void ) 
+{ 
+	return _bpmap.end(); 
+}
+
+// ---------------------------------------------------------------------------
+//	erase
+// ---------------------------------------------------------------------------
+//	Breakpoint removal: erase the Breakpoints in the specified range,
+//	and return an iterator referring to the position after the,
+//	erased range.
+//
+Partial::iterator 
+Partial::erase( Partial::iterator beg, Partial::iterator end )
+{
+	_bpmap.erase( beg._iter, end._iter );
+	return end;
+}
+
+// ---------------------------------------------------------------------------
+//	findAfter
+// ---------------------------------------------------------------------------
+//	Return an iterator refering to the insertion position for a
+//	Breakpoint at the specified time (that is, the position of the first
+//	Breakpoint at a time later than the specified time).
+//	
+//	For const Partials, returns a const_iterator.
+//
+Partial::const_iterator 
+Partial::findAfter( double time ) const
+{
+	return _bpmap.lower_bound( time );
+}
+
+Partial::iterator 
+Partial::findAfter( double time ) 
+{
+	return _bpmap.lower_bound( time );
+}
+
+// ---------------------------------------------------------------------------
+//	insert
+// ---------------------------------------------------------------------------
+//	Breakpoint insertion: insert a copy of the specified Breakpoint in the
+//	parameter envelope at time (seconds), and return an iterator
+//	refering to the position of the inserted Breakpoint.
+//
+Partial::iterator 
+Partial::insert( double time, const Breakpoint & bp )
+{
+	std::pair< container_type::iterator, bool > result = 
+		_bpmap.insert( container_type::value_type(time, bp) );
+	if ( ! result.second )
+		result.first->second = bp;
+	return result.first;
+}
+
+// ---------------------------------------------------------------------------
+//	size
+// ---------------------------------------------------------------------------
+//	Return the number of Breakpoints in this Partial.
+//
+Partial::size_type 
+Partial::size( void ) const 
+{ 	
+	return _bpmap.size(); 
+}
+
+#pragma mark -- container-independent implementation --
 
 // ---------------------------------------------------------------------------
 //	first

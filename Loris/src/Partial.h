@@ -24,28 +24,10 @@
  *
  * Partial.h
  *
- * Definition of class Loris::Partial. The policy for storing Breakpoints has
- * been abstracted out of the Partial class itself. Partial inherits from a 
- * BreakpointContainer class, which specifies the storage implementation, and
- * the operations that are specific to that implementation. All other operations
- * are implemented in terms of a few BreakpointContainer pollicy operations. 
- * Ideally, Partial would be a template class (as shown in Alexandrescu, Modern
- * C++ Design, but that would necessitate implementing Partial entirely in the 
- * header, which is unacceptable. Ideally, the necessary operations for a 
- * Breakpoint container policy would be pure virtual members of an abstract 
- * interface class, but that would necessitate virtual functions, which is 
- * unacceptable overhead. The current implementation is all statically bound
- * so there is no performance penalty for factoring out the Breakpoint container
- * policy. There is no need for even a vitual destructor, because destruction is
- * protected in the base policy classes (a trick I learned from Alexandrescu).
- *
- * The no frills policy is basically the same as the old implementation, based on
- * std::map. the reference counted policy uses a reference counted pointer class
- * to manage a pointer to the std::map, and implements copy-on-write semantics. 
- * I thought this would speed things up by eliminating some copying of big 
- * Breakpoint maps, but in fact, it slowed things down! Must be that indirection
- * isn't free! So the no frills policy is the one we use. The reference 
- * counted one has been moved out to RefCountedBreakpointContainer.h.
+ * Definition of class Loris::Partial, and definitions and implementations of
+ * classes of const and non-const iterators over Partials, and the exception
+ * class InvalidPartial, thrown by some Partial members when invoked on a 
+ * degenerate Partial having no Breakpoints.
  *
  * Kelly Fitz, 16 Aug 1999
  * loris@cerlsoundgroup.org
@@ -54,96 +36,16 @@
  *
  */
 
-#include <Exception.h>
 #include <Breakpoint.h>
-#include <GenericPartialIterator.h>
+#include <Exception.h>
+
 #include <map>
 
 //	begin namespace
 namespace Loris {
 
-// ---------------------------------------------------------------------------
-//	Breakpoint container policy
-//
-//	responsibilities:
-//		default construction
-//		copy (construction)
-//		operator= (assign)
-//		operator== (equivalence)
-//		size
-//		insert( pos, Breakpoint )
-//		erase( b, e )
-//		findAfter( time )
-//		begin (const and non-const)
-//		end (const and non-const)
-//		iterator and const_iterator types, and size_type
-//		
-class NoFrillsBreakpointContainer : public GenericBreakpointContainer
-{
-//	-- public interface --
-public:
-//	-- types --
-	typedef std::map< double, Breakpoint > container_type;
-	typedef GenericPartialIterator< NoFrillsBreakpointContainer > iterator;
-	typedef GenericPartialConstIterator< NoFrillsBreakpointContainer > const_iterator;
-	typedef container_type::size_type size_type;
-
-//	-- construction --
-	NoFrillsBreakpointContainer( void ) {}
-	
-//	-- compare --
-	bool operator==( const NoFrillsBreakpointContainer & rhs ) const
-		{ return _bpmap == rhs._bpmap; }
-
-//	-- access opertions --
-	const_iterator begin( void ) const { return makeIterator<const_iterator>( _bpmap.begin() ); }
-	iterator begin( void ) { return makeIterator<iterator>( _bpmap.begin() ); }
-	const_iterator end( void ) const { return makeIterator<const_iterator>( _bpmap.end() ); }
-	iterator end( void ) { return makeIterator<iterator>( _bpmap.end() ); }
-	size_type size( void ) const { 	return _bpmap.size(); }
-	
-	const_iterator findAfter( double time ) const
-	{
-		return makeIterator<const_iterator>( _bpmap.lower_bound( time ) );
-	}
-	iterator findAfter( double time ) 
-	{
-		return makeIterator<iterator>( _bpmap.lower_bound( time ) );
-	}
-
-//	-- mutating operations --
-	iterator insert( double time, const Breakpoint & bp )
-	{
-		std::pair< container_type::iterator, bool > result = 
-			_bpmap.insert( container_type::value_type(time, bp) );
-		if ( ! result.second )
-			result.first->second = bp;
-		return makeIterator<iterator>( result.first );
-	}
- 
-	iterator erase( iterator beg, iterator end )
-	{
-		//	This relies on the unsavory conversion from const_iterator 
-		//	to container_type::const_iterator.
-		_bpmap.erase( baseIterator(beg), baseIterator(end) );
-		return end;
-	}
-
-protected:
-	//	protect destruction
-	~NoFrillsBreakpointContainer( void ) {}
-
-	//	icky constructor for Partial to use:
-	//	This relies on the unsavory conversion from const_iterator 
-	//	to container_type::const_iterator.
-	NoFrillsBreakpointContainer( const_iterator beg, const_iterator end ) 
-		: _bpmap( baseIterator(beg), baseIterator(end) ) {}
-
-//	-- implementation core --
-private:
-	container_type _bpmap;	//	Breakpoint envelope
-	
-};
+class Partial_Iterator;
+class Partial_ConstIterator;
 
 // ---------------------------------------------------------------------------
 //	class Partial
@@ -158,8 +60,7 @@ private:
 //	website: www.cerlsoundgroup.org/Loris/.
 //	
 //	The constituent time-tagged Breakpoints are accessible through
-//	Partial:iterator and Partial::const_iterator interfaces, which are
-//	types inherited from the BreakpointContainerPolicy.
+//	Partial:iterator and Partial::const_iterator interfaces.
 //	These iterator classes implement the interface for bidirectional
 //	iterators in the STL, including pre and post-increment and decrement,
 //	and dereferencing. Dereferencing a Partial::itertator or
@@ -170,51 +71,77 @@ private:
 //	
 //	Partial is a leaf class, do not subclass.
 //
-class Partial : public NoFrillsBreakpointContainer
+//	Most of the implementation of Partial delegates to a few
+//	container-dependent members. The following members are
+//	container-dependent, the other members are implemented in 
+//	terms of these:
+//		default construction
+//		copy (construction)
+//		operator= (assign)
+//		operator== (equivalence)
+//		size
+//		insert( pos, Breakpoint )
+//		erase( b, e )
+//		findAfter( time )
+//		begin (const and non-const)
+//		end (const and non-const)
+//
+class Partial
 {
-	typedef NoFrillsBreakpointContainer BreakpointContainerPolicy;
-
 //	-- public interface --
 public:
-//	-- inherited from BreakpointContainerPolicy --
-	using BreakpointContainerPolicy::begin;
+//	-- types --
+	typedef int label_type;	// should verify that this is a 32 bit type.
+	
+	typedef std::map< double, Breakpoint > container_type;
+	typedef Partial_Iterator iterator;
+	typedef Partial_ConstIterator const_iterator;
+	typedef container_type::size_type size_type;
+
+//	-- container-dependent implementation --
+	const_iterator begin( void ) const;
+	iterator begin( void );
 	/*	Return an iterator refering to the position of the first
 		Breakpoint in this Partial's envelope.
 		
-		For const Partials, returns a GenericPartialConstIterator.
+		For const Partials, returns a const_iterator.
 	 */
-	using BreakpointContainerPolicy::end;
+	 
+	const_iterator end( void ) const;
+	iterator end( void );
 	/*	Return an iterator refering to the position past the last
 		Breakpoint in this Partial's envelope. The iterator returned by
 		end() (like the iterator returned by the end() member of any STL
 		container) does not refer to a valid Breakpoint. 	
 
-		For const Partials, returns a GenericPartialConstIterator.
+		For const Partials, returns a const_iterator.
 	 */
-	using BreakpointContainerPolicy::erase;
+
+	iterator erase( iterator beg, iterator end );
 	/*	Breakpoint removal: erase the Breakpoints in the specified range,
 		and return an iterator referring to the position after the,
 		erased range.
 	 */
-	using BreakpointContainerPolicy::findAfter;
+
+	const_iterator findAfter( double time ) const;
+	iterator findAfter( double time );
 	/*	Return an iterator refering to the insertion position for a
 		Breakpoint at the specified time (that is, the position of the first
 		Breakpoint at a time later than the specified time).
 		
-		For const Partials, returns a GenericPartialConstIterator.
+		For const Partials, returns a const_iterator.
 	 */
-	using BreakpointContainerPolicy::insert;
+
+	iterator insert( double time, const Breakpoint & bp );
 	/*	Breakpoint insertion: insert a copy of the specified Breakpoint in the
 		parameter envelope at time (seconds), and return an iterator
 		refering to the position of the inserted Breakpoint.
 	 */
-	using BreakpointContainerPolicy::size;
+
+	size_type size( void ) const;
 	/*	Return the number of Breakpoints in this Partial.
 	 */
 	
-//	-- types --
-	typedef int label_type;	// should verify that this is a 32 bit type.
-
 //	-- construction --
 	Partial( void );
 	/* 	Retun a new empty (no Breakpoints) Partial.
@@ -324,7 +251,7 @@ public:
 	/*	Return an iterator refering to the position of the
 		Breakpoint in this Partial nearest the specified time.
 		
-		For const Partials, returns a GenericPartialConstIterator.
+		For const Partials, returns a const_iterator.
 	 */
 	 
 	Partial split( iterator pos );
@@ -392,8 +319,151 @@ public:
 //	-- implementation --
 private:
 	label_type _label;
+	container_type _bpmap;	//	Breakpoint envelope
 	 
 };	//	end of class Partial
+
+// ---------------------------------------------------------------------------
+//	class Partial_Iterator
+//
+//	Non-const iterator for the Loris::Partial Breakpoint map. Wraps
+//	the non-const iterator for std::map< double, Breakpoint >. Implements
+//	a bidirectional iterator interface, and additionally offers time
+//	and Breakpoint (reference) access through time() and breakpoint()
+//	memebrs.
+//
+class Partial_Iterator
+{
+//	-- instance variables --
+	typedef std::map< double, Breakpoint > BaseContainer;
+	typedef BaseContainer::iterator BaseIterator;
+	BaseIterator _iter;
+	
+//	-- public interface --
+public:
+//	-- bidirectional iterator interface --
+	typedef BaseIterator::iterator_category	iterator_category;
+	typedef Breakpoint     								value_type;
+	typedef BaseIterator::difference_type  	difference_type;
+	typedef Breakpoint *								pointer;
+	typedef Breakpoint &								reference;
+
+//	construction:
+//	(allow compiler to generate copy, assignment, and destruction):
+	Partial_Iterator( void ) {}
+	
+//	pre-increment/decrement:
+	Partial_Iterator& operator ++ () { ++_iter; return *this; }
+	Partial_Iterator& operator -- () { --_iter; return *this; }
+
+//	post-increment/decrement:
+	Partial_Iterator operator ++ ( int ) { return Partial_Iterator( _iter++ ); } 
+	Partial_Iterator operator -- ( int ) { return Partial_Iterator( _iter-- ); } 
+	
+//	dereference (for treating Partial like a 
+//	STL collection of Breakpoints):
+	const Breakpoint & operator * ( void ) const { return breakpoint(); }
+	Breakpoint & operator * ( void ) { return breakpoint(); }
+	const Breakpoint * operator -> ( void ) const  { return & breakpoint(); }
+	Breakpoint * operator -> ( void )  { return & breakpoint(); }
+		
+//	comparison:
+	friend bool operator == ( const Partial_Iterator & lhs, 
+							  const Partial_Iterator & rhs )
+		{ return lhs._iter == rhs._iter; }
+	friend bool operator != ( const Partial_Iterator & lhs, 
+							  const Partial_Iterator & rhs )
+		{ return lhs._iter != rhs._iter; }
+	
+//	-- time and Breakpoint access --
+	const Breakpoint & breakpoint( void ) const 
+		{ return _iter->second; }
+	Breakpoint & breakpoint( void ) 
+		{ return _iter->second; }
+	double time( void ) const  
+		{ return _iter->first; }
+
+//	-- BaseIterator conversions --
+private:
+	//	construction by GenericBreakpointContainer from a BaseIterator:
+	Partial_Iterator( const BaseIterator & it ) :
+		_iter(it) {}
+
+	friend class Partial;
+	
+	//	befriend  Partial_ConstIterator, 
+	//	for const construction from non-const:
+	friend class Partial_ConstIterator;	
+	
+};	//	end of class Partial_Iterator
+
+// ---------------------------------------------------------------------------
+//	class Partial_ConstIterator
+//
+//	Const iterator for the Loris::Partial Breakpoint map. Wraps
+//	the const iterator for std::map< double, Breakpoint >. Implements
+//	a bidirectional iterator interface, and additionally offers time
+//	and Breakpoint (reference) access through time() and breakpoint()
+//	memebrs.
+//
+class Partial_ConstIterator
+{
+//	-- instance variables --
+	typedef std::map< double, Breakpoint > BaseContainer;
+	typedef BaseContainer::const_iterator BaseIterator;
+	BaseIterator _iter;
+	
+//	-- public interface --
+public:
+//	-- bidirectional iterator interface --
+	typedef BaseIterator::iterator_category	iterator_category;
+	typedef Breakpoint     								value_type;
+	typedef BaseIterator::difference_type  	difference_type;
+	typedef const Breakpoint *							pointer;
+	typedef const Breakpoint &							reference;
+
+//	construction:
+//	(allow compiler to generate copy, assignment, and destruction):
+	Partial_ConstIterator( void ) {}
+	Partial_ConstIterator( const Partial_Iterator & other ) :
+		_iter( other._iter ) {}
+	
+//	pre-increment/decrement:
+	Partial_ConstIterator& operator ++ () { ++_iter; return *this; }
+	Partial_ConstIterator& operator -- () { --_iter; return *this; }
+
+//	post-increment/decrement:
+	Partial_ConstIterator operator ++ ( int ) { return Partial_ConstIterator( _iter++ ); } 
+	Partial_ConstIterator operator -- ( int ) { return Partial_ConstIterator( _iter-- ); } 
+	
+//	dereference (for treating Partial like a 
+//	STL collection of Breakpoints):
+	const Breakpoint & operator * ( void ) const { return breakpoint(); }
+	const Breakpoint * operator -> ( void ) const { return & breakpoint(); }
+	
+//	comparison:
+	friend bool operator == ( const Partial_ConstIterator & lhs, 
+							  const Partial_ConstIterator & rhs )
+		{ return lhs._iter == rhs._iter; }
+	friend bool operator != ( const Partial_ConstIterator & lhs, 
+							  const Partial_ConstIterator & rhs )
+		{ return lhs._iter != rhs._iter; }
+	
+//	-- time and Breakpoint access --
+	const Breakpoint & breakpoint( void ) const 
+		{ return _iter->second; }
+	double time( void ) const  
+		{ return _iter->first; }
+	
+//	-- BaseIterator conversions --
+private:
+	//	construction by GenericBreakpointContainer from a BaseIterator:
+	Partial_ConstIterator( BaseIterator it ) :
+		_iter(it) {}
+	
+	friend class Partial;
+
+};	//	end of class Partial_ConstIterator
 
 // ---------------------------------------------------------------------------
 //	class InvalidPartial

@@ -47,7 +47,7 @@ class Partial;
 // ---------------------------------------------------------------------------
 //	class Dilator
 //
-//	Class Dilator represents an algorithm for for non-uniformly expanding
+//	Class Dilator represents an algorithm for non-uniformly expanding
 //	and contracting the Partial parameter envelopes according to the initial
 //	and target (desired) times of temporal features.
 //	

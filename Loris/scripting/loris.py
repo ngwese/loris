@@ -71,8 +71,8 @@ class AiffFile(_object):
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, AiffFile, name)
     def __init__(self,*args):
-        _swig_setattr(self, AiffFile, 'this', apply(_loris.new_AiffFile,args))
-        _swig_setattr(self, AiffFile, 'thisown', 1)
+        self.this = apply(_loris.new_AiffFile,args)
+        self.thisown = 1
     def __del__(self, destroy= _loris.delete_AiffFile):
         try:
             if self.thisown: destroy(self)
@@ -87,9 +87,9 @@ class AiffFile(_object):
 
 class AiffFilePtr(AiffFile):
     def __init__(self,this):
-        _swig_setattr(self, AiffFile, 'this', this)
-        if not hasattr(self,"thisown"): _swig_setattr(self, AiffFile, 'thisown', 0)
-        _swig_setattr(self, AiffFile,self.__class__,AiffFile)
+        self.this = this
+        if not hasattr(self,"thisown"): self.thisown = 0
+        self.__class__ = AiffFile
 _loris.AiffFile_swigregister(AiffFilePtr)
 
 class Analyzer(_object):
@@ -98,8 +98,8 @@ class Analyzer(_object):
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, Analyzer, name)
     def __init__(self,*args):
-        _swig_setattr(self, Analyzer, 'this', apply(_loris.new_Analyzer,args))
-        _swig_setattr(self, Analyzer, 'thisown', 1)
+        self.this = apply(_loris.new_Analyzer,args)
+        self.thisown = 1
     def copy(*args): return apply(_loris.Analyzer_copy,args)
     def analyze(*args): return apply(_loris.Analyzer_analyze,args)
     def freqResolution(*args): return apply(_loris.Analyzer_freqResolution,args)
@@ -129,9 +129,9 @@ class Analyzer(_object):
 
 class AnalyzerPtr(Analyzer):
     def __init__(self,this):
-        _swig_setattr(self, Analyzer, 'this', this)
-        if not hasattr(self,"thisown"): _swig_setattr(self, Analyzer, 'thisown', 0)
-        _swig_setattr(self, Analyzer,self.__class__,Analyzer)
+        self.this = this
+        if not hasattr(self,"thisown"): self.thisown = 0
+        self.__class__ = Analyzer
 _loris.Analyzer_swigregister(AnalyzerPtr)
 
 class BreakpointEnvelope(_object):
@@ -140,8 +140,8 @@ class BreakpointEnvelope(_object):
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, BreakpointEnvelope, name)
     def __init__(self,*args):
-        _swig_setattr(self, BreakpointEnvelope, 'this', apply(_loris.new_BreakpointEnvelope,args))
-        _swig_setattr(self, BreakpointEnvelope, 'thisown', 1)
+        self.this = apply(_loris.new_BreakpointEnvelope,args)
+        self.thisown = 1
     def __del__(self, destroy= _loris.delete_BreakpointEnvelope):
         try:
             if self.thisown: destroy(self)
@@ -154,9 +154,9 @@ class BreakpointEnvelope(_object):
 
 class BreakpointEnvelopePtr(BreakpointEnvelope):
     def __init__(self,this):
-        _swig_setattr(self, BreakpointEnvelope, 'this', this)
-        if not hasattr(self,"thisown"): _swig_setattr(self, BreakpointEnvelope, 'thisown', 0)
-        _swig_setattr(self, BreakpointEnvelope,self.__class__,BreakpointEnvelope)
+        self.this = this
+        if not hasattr(self,"thisown"): self.thisown = 0
+        self.__class__ = BreakpointEnvelope
 _loris.BreakpointEnvelope_swigregister(BreakpointEnvelopePtr)
 
 BreakpointEnvelopeWithValue = _loris.BreakpointEnvelopeWithValue
@@ -167,8 +167,8 @@ class SampleVector(_object):
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, SampleVector, name)
     def __init__(self,*args):
-        _swig_setattr(self, SampleVector, 'this', apply(_loris.new_SampleVector,args))
-        _swig_setattr(self, SampleVector, 'thisown', 1)
+        self.this = apply(_loris.new_SampleVector,args)
+        self.thisown = 1
     def __del__(self, destroy= _loris.delete_SampleVector):
         try:
             if self.thisown: destroy(self)
@@ -184,9 +184,9 @@ class SampleVector(_object):
 
 class SampleVectorPtr(SampleVector):
     def __init__(self,this):
-        _swig_setattr(self, SampleVector, 'this', this)
-        if not hasattr(self,"thisown"): _swig_setattr(self, SampleVector, 'thisown', 0)
-        _swig_setattr(self, SampleVector,self.__class__,SampleVector)
+        self.this = this
+        if not hasattr(self,"thisown"): self.thisown = 0
+        self.__class__ = SampleVector
 _loris.SampleVector_swigregister(SampleVectorPtr)
 
 class NewPlistIterator(_object):
@@ -202,9 +202,9 @@ class NewPlistIterator(_object):
 
 class NewPlistIteratorPtr(NewPlistIterator):
     def __init__(self,this):
-        _swig_setattr(self, NewPlistIterator, 'this', this)
-        if not hasattr(self,"thisown"): _swig_setattr(self, NewPlistIterator, 'thisown', 0)
-        _swig_setattr(self, NewPlistIterator,self.__class__,NewPlistIterator)
+        self.this = this
+        if not hasattr(self,"thisown"): self.thisown = 0
+        self.__class__ = NewPlistIterator
 _loris.NewPlistIterator_swigregister(NewPlistIteratorPtr)
 
 class NewPartialIterator(_object):
@@ -220,9 +220,9 @@ class NewPartialIterator(_object):
 
 class NewPartialIteratorPtr(NewPartialIterator):
     def __init__(self,this):
-        _swig_setattr(self, NewPartialIterator, 'this', this)
-        if not hasattr(self,"thisown"): _swig_setattr(self, NewPartialIterator, 'thisown', 0)
-        _swig_setattr(self, NewPartialIterator,self.__class__,NewPartialIterator)
+        self.this = this
+        if not hasattr(self,"thisown"): self.thisown = 0
+        self.__class__ = NewPartialIterator
 _loris.NewPartialIterator_swigregister(NewPartialIteratorPtr)
 
 class PartialList(_object):
@@ -231,8 +231,8 @@ class PartialList(_object):
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, PartialList, name)
     def __init__(self,*args):
-        _swig_setattr(self, PartialList, 'this', apply(_loris.new_PartialList,args))
-        _swig_setattr(self, PartialList, 'thisown', 1)
+        self.this = apply(_loris.new_PartialList,args)
+        self.thisown = 1
     def __del__(self, destroy= _loris.delete_PartialList):
         try:
             if self.thisown: destroy(self)
@@ -253,9 +253,9 @@ class PartialList(_object):
 
 class PartialListPtr(PartialList):
     def __init__(self,this):
-        _swig_setattr(self, PartialList, 'this', this)
-        if not hasattr(self,"thisown"): _swig_setattr(self, PartialList, 'thisown', 0)
-        _swig_setattr(self, PartialList,self.__class__,PartialList)
+        self.this = this
+        if not hasattr(self,"thisown"): self.thisown = 0
+        self.__class__ = PartialList
 _loris.PartialList_swigregister(PartialListPtr)
 
 class PartialListIterator(_object):
@@ -270,8 +270,8 @@ class PartialListIterator(_object):
     def equals(*args): return apply(_loris.PartialListIterator_equals,args)
     def isInRange(*args): return apply(_loris.PartialListIterator_isInRange,args)
     def __init__(self,*args):
-        _swig_setattr(self, PartialListIterator, 'this', apply(_loris.new_PartialListIterator,args))
-        _swig_setattr(self, PartialListIterator, 'thisown', 1)
+        self.this = apply(_loris.new_PartialListIterator,args)
+        self.thisown = 1
     def __del__(self, destroy= _loris.delete_PartialListIterator):
         try:
             if self.thisown: destroy(self)
@@ -281,9 +281,9 @@ class PartialListIterator(_object):
 
 class PartialListIteratorPtr(PartialListIterator):
     def __init__(self,this):
-        _swig_setattr(self, PartialListIterator, 'this', this)
-        if not hasattr(self,"thisown"): _swig_setattr(self, PartialListIterator, 'thisown', 0)
-        _swig_setattr(self, PartialListIterator,self.__class__,PartialListIterator)
+        self.this = this
+        if not hasattr(self,"thisown"): self.thisown = 0
+        self.__class__ = PartialListIterator
 _loris.PartialListIterator_swigregister(PartialListIteratorPtr)
 
 class Partial(_object):
@@ -292,8 +292,8 @@ class Partial(_object):
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, Partial, name)
     def __init__(self,*args):
-        _swig_setattr(self, Partial, 'this', apply(_loris.new_Partial,args))
-        _swig_setattr(self, Partial, 'thisown', 1)
+        self.this = apply(_loris.new_Partial,args)
+        self.thisown = 1
     def __del__(self, destroy= _loris.delete_Partial):
         try:
             if self.thisown: destroy(self)
@@ -324,9 +324,9 @@ class Partial(_object):
 
 class PartialPtr(Partial):
     def __init__(self,this):
-        _swig_setattr(self, Partial, 'this', this)
-        if not hasattr(self,"thisown"): _swig_setattr(self, Partial, 'thisown', 0)
-        _swig_setattr(self, Partial,self.__class__,Partial)
+        self.this = this
+        if not hasattr(self,"thisown"): self.thisown = 0
+        self.__class__ = Partial
 _loris.Partial_swigregister(PartialPtr)
 
 class PartialIterator(_object):
@@ -342,8 +342,8 @@ class PartialIterator(_object):
     def equals(*args): return apply(_loris.PartialIterator_equals,args)
     def isInRange(*args): return apply(_loris.PartialIterator_isInRange,args)
     def __init__(self,*args):
-        _swig_setattr(self, PartialIterator, 'this', apply(_loris.new_PartialIterator,args))
-        _swig_setattr(self, PartialIterator, 'thisown', 1)
+        self.this = apply(_loris.new_PartialIterator,args)
+        self.thisown = 1
     def __del__(self, destroy= _loris.delete_PartialIterator):
         try:
             if self.thisown: destroy(self)
@@ -353,9 +353,9 @@ class PartialIterator(_object):
 
 class PartialIteratorPtr(PartialIterator):
     def __init__(self,this):
-        _swig_setattr(self, PartialIterator, 'this', this)
-        if not hasattr(self,"thisown"): _swig_setattr(self, PartialIterator, 'thisown', 0)
-        _swig_setattr(self, PartialIterator,self.__class__,PartialIterator)
+        self.this = this
+        if not hasattr(self,"thisown"): self.thisown = 0
+        self.__class__ = PartialIterator
 _loris.PartialIterator_swigregister(PartialIteratorPtr)
 
 class Breakpoint(_object):
@@ -364,8 +364,8 @@ class Breakpoint(_object):
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, Breakpoint, name)
     def __init__(self,*args):
-        _swig_setattr(self, Breakpoint, 'this', apply(_loris.new_Breakpoint,args))
-        _swig_setattr(self, Breakpoint, 'thisown', 1)
+        self.this = apply(_loris.new_Breakpoint,args)
+        self.thisown = 1
     def __del__(self, destroy= _loris.delete_Breakpoint):
         try:
             if self.thisown: destroy(self)
@@ -385,9 +385,9 @@ class Breakpoint(_object):
 
 class BreakpointPtr(Breakpoint):
     def __init__(self,this):
-        _swig_setattr(self, Breakpoint, 'this', this)
-        if not hasattr(self,"thisown"): _swig_setattr(self, Breakpoint, 'thisown', 0)
-        _swig_setattr(self, Breakpoint,self.__class__,Breakpoint)
+        self.this = this
+        if not hasattr(self,"thisown"): self.thisown = 0
+        self.__class__ = Breakpoint
 _loris.Breakpoint_swigregister(BreakpointPtr)
 
 class BreakpointPosition(_object):
@@ -411,9 +411,9 @@ class BreakpointPosition(_object):
 
 class BreakpointPositionPtr(BreakpointPosition):
     def __init__(self,this):
-        _swig_setattr(self, BreakpointPosition, 'this', this)
-        if not hasattr(self,"thisown"): _swig_setattr(self, BreakpointPosition, 'thisown', 0)
-        _swig_setattr(self, BreakpointPosition,self.__class__,BreakpointPosition)
+        self.this = this
+        if not hasattr(self,"thisown"): self.thisown = 0
+        self.__class__ = BreakpointPosition
 _loris.BreakpointPosition_swigregister(BreakpointPositionPtr)
 
 

@@ -57,17 +57,6 @@ Dilator::Dilator( void )
 }
 
 // ---------------------------------------------------------------------------
-//	constructor
-// ---------------------------------------------------------------------------
-//	Construct from initial and target time points.
-/*
-Dilator::Dilator( const double * ibegin, const double * iend, const double * tbegin )
-{
-	while ( ibegin != iend )
-		insert( *ibegin++, *tbegin++ );
-}
-*/
-// ---------------------------------------------------------------------------
 //	destructor
 // ---------------------------------------------------------------------------
 //
@@ -190,12 +179,6 @@ Dilator::dilate( Partial & p )
 		//	find the first initial time point later 
 		//	than the currentTime:
 		double currentTime = iter.time();
-        /*
-		while ( idx < _initial.size() && currentTime > _initial[idx] )
-		{
-			++idx;
-		}
-        */
         idx = std::distance( _initial.begin(), 
                              std::lower_bound( _initial.begin(), _initial.end(), currentTime ) );
         Assert( idx == _initial.size() || currentTime <= _initial[idx] );
@@ -236,8 +219,6 @@ Dilator::dilate( Partial & p )
 		}
 		
 		//	add a Breakpoint at the computed time:
-		//newp.insert( newtime, Breakpoint( iter.breakpoint().frequency(), iter.breakpoint().amplitude(), 
-		//								  iter.breakpoint().bandwidth(), iter.breakpoint().phase() ) );
 		newp.insert( newtime, iter.breakpoint() );
 	}
 	
