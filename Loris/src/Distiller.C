@@ -82,7 +82,7 @@ Distiller::distillOne( const Partial & src,
 	const double FADE_TIME = 0.001;	//	1 ms
 	
 	//	iterate over the source Partial:
-	for ( JacksonConst pIter = src.begin(); pIter != src.end(); ++pIter )
+	for ( PartialConstIterator pIter = src.begin(); pIter != src.end(); ++pIter )
 	{
 		//	iterate over all Partials in the range and compute the
 		//	bandwidth energy contribution at the time of bp

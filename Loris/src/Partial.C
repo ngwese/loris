@@ -102,10 +102,10 @@ Partial::duration( void ) const
 // ---------------------------------------------------------------------------
 //	Iterator generation.
 //
-Jackson 
+PartialIterator 
 Partial::begin( void )
 { 
-	return Jackson( _bpmap.begin() ); 
+	return PartialIterator( _bpmap.begin() ); 
 }
 
 // ---------------------------------------------------------------------------
@@ -113,10 +113,10 @@ Partial::begin( void )
 // ---------------------------------------------------------------------------
 //	Iterator generation.
 //
-Jackson 
+PartialIterator 
 Partial::end( void )
 { 
-	return Jackson( _bpmap.end() ); 
+	return PartialIterator( _bpmap.end() ); 
 }
 
 // ---------------------------------------------------------------------------
@@ -124,10 +124,10 @@ Partial::end( void )
 // ---------------------------------------------------------------------------
 //	Const iterator generation.
 //
-JacksonConst 
+PartialConstIterator 
 Partial::begin( void ) const
 { 
-	return JacksonConst( _bpmap.begin() ); 
+	return PartialConstIterator( _bpmap.begin() ); 
 }
 
 // ---------------------------------------------------------------------------
@@ -135,10 +135,10 @@ Partial::begin( void ) const
 // ---------------------------------------------------------------------------
 //	Iterator generation.
 //
-JacksonConst 
+PartialConstIterator 
 Partial::end( void ) const
 { 
-	return JacksonConst( _bpmap.end() ); 
+	return PartialConstIterator( _bpmap.end() ); 
 }
 
 // ---------------------------------------------------------------------------
@@ -152,11 +152,11 @@ Partial::end( void ) const
 //	Could except:
 //	allocation of a new Breakpoint could fail, throwing a std::bad__alloc.
 //
-Jackson
+PartialIterator
 Partial::insert( double time, const Breakpoint & bp )
 {
 	_bpmap[ time ] = bp;
-	return Jackson( _bpmap.find(time) );
+	return PartialIterator( _bpmap.find(time) );
 }
 
 // ---------------------------------------------------------------------------
@@ -167,10 +167,10 @@ Partial::insert( double time, const Breakpoint & bp )
 //	Breakpoint at a time later than or equal to the specified 
 //	time).
 //
-JacksonConst
+PartialConstIterator
 Partial::findPos( double time ) const
 {
-	return JacksonConst( _bpmap.lower_bound( time ) );
+	return PartialConstIterator( _bpmap.lower_bound( time ) );
 }
 
 // ---------------------------------------------------------------------------
@@ -181,10 +181,10 @@ Partial::findPos( double time ) const
 //	Breakpoint at a time later than or equal to the specified 
 //	time).
 //
-Jackson
+PartialIterator
 Partial::findPos( double time )
 {
-	return Jackson( _bpmap.lower_bound( time ) );
+	return PartialIterator( _bpmap.lower_bound( time ) );
 } 
 
 // ---------------------------------------------------------------------------
@@ -200,7 +200,7 @@ Partial::frequencyAt( double time ) const
 	//	lower_bound returns a reference to the lowest
 	//	position that would be higher than an element
 	//	having key equal to time:
-	JacksonConst it = findPos( time );
+	PartialConstIterator it = findPos( time );
 		
 	if ( it == _bpmap.begin() ) {
 	//	time is before the onset of the Partial:
@@ -235,7 +235,7 @@ Partial::amplitudeAt( double time ) const
 	//	lower_bound returns a reference to the lowest
 	//	position that would be higher than an element
 	//	having key equal to time:
-	JacksonConst it = findPos( time );
+	PartialConstIterator it = findPos( time );
 		
 	if ( it == _bpmap.begin() ) {
 	//	time is before the onset of the Partial:
@@ -269,7 +269,7 @@ Partial::phaseAt( double time ) const
 	//	lower_bound returns a reference to the lowest
 	//	position that would be higher than an element
 	//	having key equal to time:
-	JacksonConst it = findPos( time );
+	PartialConstIterator it = findPos( time );
 		
 	//	compute phase:
 	//	map iterator is a pair: first is time, 
@@ -317,7 +317,7 @@ Partial::bandwidthAt( double time ) const
 	//	lower_bound returns a reference to the lowest
 	//	position that would be higher than an element
 	//	having key equal to time:
-	JacksonConst it = findPos( time );
+	PartialConstIterator it = findPos( time );
 		
 	if ( it == _bpmap.begin() ) {
 	//	time is before the onset of the Partial:

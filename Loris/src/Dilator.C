@@ -77,7 +77,7 @@ Dilator::dilate( Partial & p )
 	
 	//	timepoint index:
 	int idx = 0;
-	for ( JacksonConst iter = p.begin(); iter != p.end(); ++iter )
+	for ( PartialConstIterator iter = p.begin(); iter != p.end(); ++iter )
 	{
 		//	find the first initial time point later 
 		//	than the currentTime:

@@ -43,7 +43,7 @@ public:
 	void distribute( const Partial & p, Iter begin, Iter end ) const
 	{
 		//	loop over Breakpoints in p:
-		JacksonConst envIter;
+		PartialConstIterator envIter;
 		double tUpperBound = p.startTime();	// initialize:
 		for ( envIter = p.begin(); envIter != p.end(); ++envIter ) {
 			double time = envIter.time();
@@ -90,7 +90,7 @@ public:
 			//	compute time bounds for energy distribution:
 			//	(halfway between this breakpoint and its neighbors)
 			double tLowerBound = tUpperBound;
-			JacksonConst next( envIter );
+			PartialConstIterator next( envIter );
 			if ( ++next != p.end() ) {
 				tUpperBound = ( next.time() + time ) * 0.5;
 			}

@@ -22,8 +22,8 @@
 namespace Loris {
 #endif
 
-class Jackson;
-class JacksonConst;
+class PartialIterator;
+class PartialConstIterator;
 
 // ---------------------------------------------------------------------------
 //	class Partial
@@ -61,21 +61,21 @@ public:
 	void setLabel( int l ) { _label = l; }
 	
 //	iterator generation:
-	Jackson begin( void );
-	Jackson end( void );
-	JacksonConst begin( void ) const;
-	JacksonConst end( void ) const;
+	PartialIterator begin( void );
+	PartialIterator end( void );
+	PartialConstIterator begin( void ) const;
+	PartialConstIterator end( void ) const;
 	
 //	Breakpoint insertion:
 //	Make a copy of bp and insert it at time (seconds),
 //	return a pointer to the inserted Breakpoint.
-	Jackson insert( double time, const Breakpoint & bp );
+	PartialIterator insert( double time, const Breakpoint & bp );
 
 //	Return the insertion position for a Breakpoint at
 //	the specified time (that is, the position of the first
 //	Breakpoint at a time later than the specified time).
-	Jackson findPos( double time );
-	JacksonConst findPos( double time ) const;
+	PartialIterator findPos( double time );
+	PartialConstIterator findPos( double time ) const;
 	
 //	Its nice to be able to find out how many Breakpoints
 //	there are:
@@ -97,7 +97,7 @@ public:
 };	//	end of class Partial
 
 // ---------------------------------------------------------------------------
-//	class Jackson
+//	class PartialIterator
 //
 //	This will be called PartialIterator when the other thing called 
 //	PartialIterator is renamed and reimplemented as PartialView or
@@ -109,7 +109,7 @@ public:
 //	Non-const iterator for the Loris::Partial Breakpoint map. Wraps
 //	the non-const iterator for std::map< double, Breakpoint >.
 //
-class Jackson
+class PartialIterator
 {
 //	-- instance variables --
 	std::map< double, Breakpoint >::iterator _iter;
@@ -118,13 +118,13 @@ class Jackson
 public:
 //	construction:
 //	(allow compiler to generate copy, assignment, and destruction):
-	Jackson( void ) {}
+	PartialIterator( void ) {}
 	
 //	iteration:
-	Jackson& operator ++ () { ++_iter; return *this; }
-	Jackson operator ++ ( int ) { Jackson temp(*this); ++(*this); return temp; }
-	Jackson& operator -- () { --_iter; return *this; }
-	Jackson operator -- ( int ) { Jackson temp(*this); --(*this); return temp; }
+	PartialIterator& operator ++ () { ++_iter; return *this; }
+	PartialIterator operator ++ ( int ) { PartialIterator temp(*this); ++(*this); return temp; }
+	PartialIterator& operator -- () { --_iter; return *this; }
+	PartialIterator operator -- ( int ) { PartialIterator temp(*this); --(*this); return temp; }
 	
 //	derference:
 	const Breakpoint & operator * ( void ) const { return _iter->second; }
@@ -136,24 +136,24 @@ public:
 	double time( void ) const { return _iter->first; }	
 
 //	comparison:
-	friend bool operator == ( const Jackson & lhs, const Jackson & rhs )
+	friend bool operator == ( const PartialIterator & lhs, const PartialIterator & rhs )
 		{ return lhs._iter == rhs._iter; }
-	friend bool operator != ( const Jackson & lhs, const Jackson & rhs )
+	friend bool operator != ( const PartialIterator & lhs, const PartialIterator & rhs )
 		{ return lhs._iter != rhs._iter; }
 	
 //	-- private implementation --
 private:
 	//	construction by Partial from a map<> iterator:
-	Jackson( const std::map< double, Breakpoint >::iterator & it ) :
+	PartialIterator( const std::map< double, Breakpoint >::iterator & it ) :
 		_iter(it) {}
 
 	friend class Partial;
-	friend class JacksonConst;	//	for const construction from non-const
+	friend class PartialConstIterator;	//	for const construction from non-const
 	
-};	//	end of class Jackson
+};	//	end of class PartialIterator
 
 // ---------------------------------------------------------------------------
-//	class JacksonConst
+//	class PartialConstIterator
 //
 //	Const iterator for the Loris::Partial Breakpoint map. Wraps
 //	the const iterator for std::map< double, Breakpoint >.
@@ -162,7 +162,7 @@ private:
 //	can't get rid of derference, but could implement Breakpoint interface
 //	so that parameter access would be uniform.
 //
-class JacksonConst
+class PartialConstIterator
 {
 //	-- instance variables --
 	std::map< double, Breakpoint >::const_iterator _iter;
@@ -171,14 +171,14 @@ class JacksonConst
 public:
 //	construction:
 //	(allow compiler to generate copy, assignment, and destruction):
-	JacksonConst( void ) {}
-	JacksonConst( const Jackson & other ) : _iter( other._iter ) {}
+	PartialConstIterator( void ) {}
+	PartialConstIterator( const PartialIterator & other ) : _iter( other._iter ) {}
 	
 //	iteration:
-	JacksonConst& operator ++ () { ++_iter; return *this; }
-	JacksonConst operator ++ ( int ) { JacksonConst temp(*this); ++(*this); return temp; }
-	JacksonConst& operator -- () { --_iter; return *this; }
-	JacksonConst operator -- ( int ) { JacksonConst temp(*this); --(*this); return temp; }
+	PartialConstIterator& operator ++ () { ++_iter; return *this; }
+	PartialConstIterator operator ++ ( int ) { PartialConstIterator temp(*this); ++(*this); return temp; }
+	PartialConstIterator& operator -- () { --_iter; return *this; }
+	PartialConstIterator operator -- ( int ) { PartialConstIterator temp(*this); --(*this); return temp; }
 	void advance( void ) { ++(*this); }
 	
 //	derference:
@@ -189,20 +189,20 @@ public:
 	double time( void ) const { return _iter->first; }	
 
 //	comparison:
-	friend bool operator == ( const JacksonConst & lhs, const JacksonConst & rhs )
+	friend bool operator == ( const PartialConstIterator & lhs, const PartialConstIterator & rhs )
 		{ return lhs._iter == rhs._iter; }
-	friend bool operator != ( const JacksonConst & lhs, const JacksonConst & rhs )
+	friend bool operator != ( const PartialConstIterator & lhs, const PartialConstIterator & rhs )
 		{ return lhs._iter != rhs._iter; }
 	
 //	-- private implementation --
 private:
 	//	construction by Partial from a map<> iterator:
-	JacksonConst( const std::map< double, Breakpoint >::const_iterator & it ) :
+	PartialConstIterator( const std::map< double, Breakpoint >::const_iterator & it ) :
 		_iter(it) {}
 
 	friend class Partial;
 	
-};	//	end of class JacksonConst
+};	//	end of class PartialConstIterator
 
 // ---------------------------------------------------------------------------
 //	class InvalidPartial

@@ -186,7 +186,7 @@ Morph::morphPartial( const Partial & p0, const Partial & p1, int assignLabel /* 
 	newp.setLabel( assignLabel );
 	
 	//	loop over Breakpoints in first partial:
-	for ( JacksonConst iter = p0.begin(); iter != p0.end(); ++iter )
+	for ( PartialConstIterator iter = p0.begin(); iter != p0.end(); ++iter )
 	{
 		double alphaF = frequencyFunction().valueAt( iter.time() );
 		double alphaA = amplitudeFunction().valueAt( iter.time() );
@@ -215,7 +215,7 @@ Morph::morphPartial( const Partial & p0, const Partial & p1, int assignLabel /* 
 	}
 	
 	//	now do it for the other Partial:
-	for ( JacksonConst iter = p1.begin(); iter != p1.end(); ++iter )
+	for ( PartialConstIterator iter = p1.begin(); iter != p1.end(); ++iter )
 	{
 		double alphaF = 1. - frequencyFunction().valueAt( iter.time() );
 		double alphaA = 1. - amplitudeFunction().valueAt( iter.time() );
