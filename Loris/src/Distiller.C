@@ -190,9 +190,11 @@ Distiller::distill( PartialList & partials )
 	partials.erase( enddistilled, partials.end() );
 
 	//	collate unlabeled (zero-labeled) Partials:
-	collate_aux( savezeros, std::max(label+1, 1), _fadeTime );
-	partials.splice( partials.end(), savezeros );
-
+	if ( savezeros.size() > 0 )
+	{
+		collate_aux( savezeros, std::max(label+1, 1), _fadeTime );
+		partials.splice( partials.end(), savezeros );
+	}
 	debugger << "distilled " << partials.size() << " Partials from " << howmanywerethere << endl;
 }
 
@@ -290,7 +292,7 @@ static void mergeNonOverlapping( const Partial & src, Partial & dst, double fade
 				(--it).time() > src.startTime() - fadeTime &&
 				it.breakpoint().amplitude() == 0. )
 		{
-			// debugger << "removing null Breakpoint before src" << endl;
+			debugger << "removing null Breakpoint before src" << endl;
 			it = dst.erase( it );
 		}
 	}
@@ -310,7 +312,7 @@ static void mergeNonOverlapping( const Partial & src, Partial & dst, double fade
 			Throw( InvalidArgument, 
 				   "mergeNonOverlapping src Partial must not overlap non-empty part of dst Partial");
 		}
-		// debugger << "removing null Breakpoint during src" << endl;
+		debugger << "removing null Breakpoint during src" << endl;
 		after = dst.erase( after );
 	}
 	
@@ -328,7 +330,7 @@ static void mergeNonOverlapping( const Partial & src, Partial & dst, double fade
 		//	after is a null (zero-amplitude) Breakpoint in
 		// 	dst that is nearer than fadeTime to the endTime
 		//	of src, remove it:
-		// debugger << "removing null Breakpoint after src" << endl;
+		debugger << "removing null Breakpoint after src" << endl;
 		after = dst.erase( after );
 	}
 
@@ -351,20 +353,24 @@ static void mergeNonOverlapping( const Partial & src, Partial & dst, double fade
 		//	a null before the start of src:
 		if ( before.time() <  src.startTime() - fadeTime )
 		{
-			// debugger << "inserting null Breakpoint before src" << endl;
 			double t = std::max( src.startTime() - fadeTime, 0. );
+			debugger << "inserting null Breakpoint before src, time = " << t << endl;
 			Breakpoint zeroBp( src.frequencyAt(t), 0., src.bandwidthAt(t), src.phaseAt(t) );			
 			dst.insert( t, zeroBp );
 		}
 		
 		//	if the Breakpoint in dst before the startTime
-		//	of src is earlier by more than 2*fadeTime, insert
+		//	of src is earlier by more than 2*fadeTime, and
+		//	before is not a null Breakpoint, insert
 		//	another null after that Breakpoint:
-		if ( before.time() <  src.startTime() - (2 * fadeTime) )
+		if ( before.breakpoint().amplitude() > 0 &&
+			 before.time() <  src.startTime() - (2 * fadeTime) )
 		{
-			// debugger << "inserting null Breakpoint before src" << endl;
 			double t = before.time() + fadeTime;
-			Breakpoint zeroBp( dst.frequencyAt(t), 0., dst.bandwidthAt(t), dst.phaseAt(t) );			
+			debugger << "inserting null Breakpoint before src, time = " << t << endl;
+			// freq and bw should be those of before, phase needs to be computed:
+			double ph = std::fmod( before->phase() + (2. * Pi * fadeTime * before->frequency()), 2. * Pi );
+			Breakpoint zeroBp( before->frequency(), 0., before->bandwidth(), ph );			
 			dst.insert( t, zeroBp );
 		}
 	}	
@@ -386,20 +392,24 @@ static void mergeNonOverlapping( const Partial & src, Partial & dst, double fade
 		//	a null after the end of src:
 		if ( after.time() >  src.endTime() + fadeTime )
 		{
-			// debugger << "inserting null Breakpoint after src" << endl;
 			double t = src.endTime() + fadeTime;
+			debugger << "inserting null Breakpoint after src, time = " << t << endl;
 			Breakpoint zeroBp( src.frequencyAt(t), 0., src.bandwidthAt(t), src.phaseAt(t) );			
 			dst.insert( t, zeroBp );
 		}
 		
 		//	if the Breakpoint in dst after the endTime
-		//	of src is later by more than 2*fadeTime, insert
+		//	of src is later by more than 2*fadeTime, and
+		//	after is not a null Breakpoint, insert
 		//	another null before that Breakpoint:
-		if ( after.time() >  src.endTime() + (2 * fadeTime) )
+		if ( after.breakpoint().amplitude() > 0 &&
+			 after.time() >  src.endTime() + (2 * fadeTime) )
 		{
-			// debugger << "inserting null Breakpoint after src" << endl;
 			double t = after.time() - fadeTime;
-			Breakpoint zeroBp( dst.frequencyAt(t), 0., dst.bandwidthAt(t), dst.phaseAt(t) );			
+			debugger << "inserting null Breakpoint after src, time = " << t << endl;
+			// freq and bw should be those of after, phase needs to be computed:
+			double ph = std::fmod( after->phase() - (2. * Pi * fadeTime * after->frequency()), 2. * Pi );
+			Breakpoint zeroBp( after->frequency(), 0., after->bandwidth(), ph );			
 			dst.insert( t, zeroBp );
 		}
 	}	
@@ -407,7 +417,7 @@ static void mergeNonOverlapping( const Partial & src, Partial & dst, double fade
 	//	finally, copy Breakpoints from src into dst:
 	for ( Partial::const_iterator envpos = src.begin(); envpos != src.end(); ++envpos )
 	{
-		// debugger << "copying Breakpoint from src" << endl;
+		debugger << "copying Breakpoint from src, time = " << envpos.time() << endl;
 		dst.insert( envpos.time(), envpos.breakpoint() );
 	}
 }
@@ -427,11 +437,10 @@ static void distill_aux( PartialList & partials, int label,
 	
 	// keep the longest Partial:
 	PartialList::iterator it = partials.begin();
-	newp = *it;
-	newp.setLabel( label );
+	newp = Partial();
 	
 	//	iterate over remaining partials:
-	for ( ++it; it != partials.end(); ++it )
+	for ( it = partials.begin(); it != partials.end(); ++it )
 	{
 		//	skip this Partial if it overlaps with any longer Partial:
 		//	Need only consider earlier Partials in the list, because
@@ -440,12 +449,26 @@ static void distill_aux( PartialList & partials, int label,
 		{
 			//	absorb all shorter partials' energy as noise,
 			//	add a copy of this partial to the new partial
+			//	(note: energy will be absorbed only from 
+			//	overlapping shorter Partials, which are never
+			//	going to be considered inside this loop, so 
+			//	`it' is never going to be a Partial whose
+			//	energy was already absorbed. Moreover, no two
+			//	Partials will absorb the same energy, because
+			//	they would have to overlap.)
 			PartialList::iterator nextp( it );
 			while ( ++nextp != partials.end() )
-				it->absorb( *nextp );
+			{	
+				if ( overlap(*it, *nextp) )
+				{
+					debugger << "absorbing energy in Partial starting at time " << nextp->startTime() << endl;
+					it->absorb( *nextp );
+				}
+			}
 			mergeNonOverlapping( *it, newp, fadeTime );			
 		}		
 	}
+	newp.setLabel( label );
 }
 
 // ---------------------------------------------------------------------------
@@ -520,16 +543,16 @@ static void collate_aux( PartialList & partials, int startlabel, double fadeTime
 			//	insert a null at the (current) end
 			//	of collated:
 			double nulltime1 = collated.endTime() + fadeTime;
-			Breakpoint null1 = (--(collated.end())).breakpoint();
-			null1.setAmplitude( 0. );
+			Breakpoint null1( collated.frequencyAt(nulltime1), 0., 
+							  collated.bandwidthAt(nulltime1), collated.phaseAt(nulltime1) );			
 			collated.insert( nulltime1, null1 );
 
 			//	insert a null at the beginning of
 			//	of the current Partial:
 			double nulltime2 = addme.startTime() - fadeTime;
 			Assert( nulltime2 >= nulltime1 );
-			Breakpoint null2 = addme.begin().breakpoint();
-			null2.setAmplitude( 0. );
+			Breakpoint null2( addme.frequencyAt(nulltime2), 0., 
+							  addme.bandwidthAt(nulltime2), addme.phaseAt(nulltime2) );			
 			collated.insert( nulltime2, null2 );
 	
 			//	insert all the Breakpoints in addme 

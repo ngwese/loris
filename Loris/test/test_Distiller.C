@@ -128,32 +128,195 @@ static void test_distill_nonoverlapping( void )
 	//	them all the same label, and distill them. Also
 	//	add a fourth Partial with a different label, verify
 	//	that it remains unaffacted.
+	Partial p1;
+	p1.insert( 0, Breakpoint( 100, 0.1, 0, 0 ) );
+	p1.insert( .1, Breakpoint( 110, 0.2, 0.2, .1 ) );
+	p1.setLabel( 123 );
 	
+	Partial p2;
+	p2.insert( 0.2, Breakpoint( 200, 0.1, 0, 0 ) );
+	p2.insert( 0.3, Breakpoint( 210, 0.2, 0.2, .1 ) );
+	p2.setLabel( 123 );
 	
+	Partial p3;
+	p3.insert( 0.4, Breakpoint( 300, 0.1, 0, 0 ) );
+	p3.insert( 0.5, Breakpoint( 310, 0.2, 0.2, .1 ) );
+	p3.setLabel( 123 );
+	
+	Partial p4;
+	p4.insert( 0, Breakpoint( 400, 0.1, 0, 0 ) );
+	p4.insert( 0.5, Breakpoint( 410, 0.2, 0.2, .1 ) );
+	p4.setLabel( 4 );
+	
+	PartialList l;
+	l.push_back( p1 );
+	l.push_back( p3 );
+	l.push_back( p4 );
+	l.push_back( p2 );
+	
+	const double fade = .01; // 10 ms
+	Distiller d( fade );
+	d.distill( l );
+	
+	//	Fabricate the Partial that the distillation should 
+	//	produce.
+	Partial compare;
+	compare.insert( 0, Breakpoint( 100, 0.1, 0, 0 ) );
+	compare.insert( 0.1, Breakpoint( 110, 0.2, 0.2, .1 ) );
+	double t = 0.1 + fade;
+	compare.insert( t, Breakpoint( p1.frequencyAt(t), 0, 
+								   p1.bandwidthAt(t), p1.phaseAt(t) ) );
+	t = 0.2 - fade;
+	compare.insert( t, Breakpoint( p2.frequencyAt(t), 0, 
+								   p2.bandwidthAt(t), p2.phaseAt(t) ) );
+	compare.insert( 0.2, Breakpoint( 200, 0.1, 0, 0 ) );
+	compare.insert( 0.3, Breakpoint( 210, 0.2, 0.2, .1 ) );
+	t = 0.3 + fade;
+	compare.insert( t, Breakpoint( p2.frequencyAt(t), 0, 
+								   p2.bandwidthAt(t), p2.phaseAt(t) ) );
+	t = 0.4 - fade;
+	compare.insert( t, Breakpoint( p3.frequencyAt(t), 0, 
+								   p3.bandwidthAt(t), p3.phaseAt(t) ) );	
+	compare.insert( 0.4, Breakpoint( 300, 0.1, 0, 0 ) );
+	compare.insert( 0.5, Breakpoint( 310, 0.2, 0.2, .1 ) );
+	compare.setLabel( 123 );
+	
+	//	compare Partials (distilled Partials
+	//	should be in label order):
+	TEST( l.size() == 2 );
+	PartialList::iterator it = l.begin();
+	TEST( *it == p4 );
+	++it;
+	TEST( it->numBreakpoints() == compare.numBreakpoints() );
+	// TEST( *it == compare );
+	
+	Partial::iterator distit = it->begin();
+	Partial::iterator compareit = compare.begin();
+	while ( compareit != compare.end() )
+	{
+		SAME_PARAM_VALUES( distit.time(), compareit.time() );
+		SAME_PARAM_VALUES( distit->frequency(), compareit->frequency() );
+		SAME_PARAM_VALUES( distit->amplitude(), compareit->amplitude() );
+		SAME_PARAM_VALUES( distit->bandwidth(), compareit->bandwidth() );
+		SAME_PARAM_VALUES( distit->phase(), compareit->phase() );
+		
+		++compareit;
+		++distit;
+	}
 }
 
 // ----------- test_distill_overlapping2 -----------
 //
-static void test_distill_nonoverlapping2( void )
+static void test_distill_overlapping2( void )
 {
 	std::cout << "\t--- testing distill on two "
 				 "temporally-overlapping Partials... ---\n\n";
 
 	//	Fabricate two Partials, overlapping temporally, give
 	//	them the same label, and distill them.
+	Partial p1;
+	p1.insert( 0, Breakpoint( 100, 0.4, 0, 0 ) );
+	p1.insert( 0.3, Breakpoint( 110, 0.4, 0, .1 ) );
+	p1.setLabel( 12 );
 	
+	Partial p2;
+	p2.insert( 0.2, Breakpoint( 200, 0.3, 0, 0 ) );
+	p2.insert( 0.35, Breakpoint( 210, 0.3, 0.2, .1 ) );
+	p2.setLabel( 12 );
+
+	PartialList l;
+	l.push_back( p1 );
+	l.push_back( p2 );
+
+	const double fade = .01; // 10 ms
+	Distiller d( fade );
+	d.distill( l );
+	
+	//	Fabricate the Partial that the distillation should 
+	//	produce.
+	Partial compare;
+	compare.insert( 0, Breakpoint( 100, 0.4, 0, 0 ) );
+	compare.insert( 0.3, Breakpoint( 110, 0.5, 9./25., .1 ) );
+
+	//	compare Partials (distilled Partials
+	//	should be in label order):
+	TEST( l.size() == 1 );
+	TEST( l.begin()->numBreakpoints() == compare.numBreakpoints() );
+	// TEST( *l.begin() == compare );
+	
+	Partial::iterator distit = l.begin()->begin();
+	Partial::iterator compareit = compare.begin();
+	while ( compareit != compare.end() )
+	{
+		SAME_PARAM_VALUES( distit.time(), compareit.time() );
+		SAME_PARAM_VALUES( distit->frequency(), compareit->frequency() );
+		SAME_PARAM_VALUES( distit->amplitude(), compareit->amplitude() );
+		SAME_PARAM_VALUES( distit->bandwidth(), compareit->bandwidth() );
+		SAME_PARAM_VALUES( distit->phase(), compareit->phase() );
+		
+		++compareit;
+		++distit;
+	}
 }
 
 // ----------- test_distill_overlapping3 -----------
 //
-static void test_distill_nonoverlapping3( void )
+static void test_distill_overlapping3( void )
 {
 	std::cout << "\t--- testing distill on three "
 				 "temporally-overlapping Partials... ---\n\n";
 
 	//	Fabricate three Partials, overlapping temporally, give
 	//	them the same label, and distill them.
+	Partial p1;
+	p1.insert( 0, Breakpoint( 100, 0.4, 0, 0 ) );
+	p1.insert( 0.3, Breakpoint( 110, 0.4, 0, .1 ) );
+	p1.setLabel( 123 );
 	
+	Partial p2;
+	p2.insert( 0.2, Breakpoint( 200, 0.3, 0, 0 ) );
+	p2.insert( 0.35, Breakpoint( 210, 0.3, 0.2, .1 ) );
+	p2.setLabel( 123 );
+
+	Partial p3;
+	p3.insert( 0.32, Breakpoint( 300, 0.3, 0, 0 ) );
+	p3.insert( 0.4, Breakpoint( 310, 0.3, 0.2, .1 ) );
+	p3.setLabel( 123 );
+
+	PartialList l;
+	l.push_back( p3 );
+	l.push_back( p1 );
+	l.push_back( p2 );
+
+	const double fade = .01; // 10 ms
+	Distiller d( fade );
+	d.distill( l );
+	
+	//	Fabricate the Partial that the distillation should 
+	//	produce.
+	Partial compare;
+	compare.insert( 0, Breakpoint( 100, 0.4, 0, 0 ) );
+	compare.insert( 0.3, Breakpoint( 110, 0.5, 9./25., .1 ) );
+
+	//	compare Partials (distilled Partials
+	//	should be in label order):
+	TEST( l.size() == 1 );
+	TEST( l.begin()->numBreakpoints() == compare.numBreakpoints() );
+	// TEST( *l.begin() == compare );
+	
+	Partial::iterator distit = l.begin()->begin();
+	Partial::iterator compareit = compare.begin();
+	while ( compareit != compare.end() )
+	{
+		SAME_PARAM_VALUES( distit.time(), compareit.time() );
+		SAME_PARAM_VALUES( distit->frequency(), compareit->frequency() );
+		SAME_PARAM_VALUES( distit->amplitude(), compareit->amplitude() );
+		SAME_PARAM_VALUES( distit->bandwidth(), compareit->bandwidth() );
+		SAME_PARAM_VALUES( distit->phase(), compareit->phase() );
+		
+		++compareit;
+		++distit;
+	}
 }
 
 // ----------- test_collate -----------
@@ -165,7 +328,89 @@ static void test_collate( void )
 
 	//	Fabricate three Partials, overlapping temporally, 
 	//	leave them unlabeled, and distill (collate) them.
+	Partial p1;
+	p1.insert( 0, Breakpoint( 100, 0.4, 0, 0 ) );
+	p1.insert( 0.3, Breakpoint( 110, 0.4, 0, .1 ) );
+	p1.setLabel( 0 );
 	
+	Partial p2;
+	p2.insert( 0.2, Breakpoint( 200, 0.3, 0, 0 ) );
+	p2.insert( 0.35, Breakpoint( 210, 0.3, 0.2, .1 ) );
+	p2.setLabel( 0 );
+
+	Partial p3;
+	p3.insert( 0.33, Breakpoint( 300, 0.3, 0, 0 ) );
+	p3.insert( 0.4, Breakpoint( 310, 0.3, 0.2, .1 ) );
+	p3.setLabel( 0 );
+
+	PartialList l;
+	l.push_back( p3 );
+	l.push_back( p1 );
+	l.push_back( p2 );
+
+	const double fade = .01; // 10 ms
+	Distiller d( fade );
+	d.distill( l );
+
+	//	Fabricate the Partials that the distillation should 
+	//	produce.
+	Partial compare1;
+	compare1.insert( 0, Breakpoint( 100, 0.4, 0, 0 ) );
+	compare1.insert( 0.3, Breakpoint( 110, 0.4, 0, .1 ) );
+	double t = 0.3 + fade;
+	compare1.insert( t, Breakpoint( p1.frequencyAt(t), 0, 
+									p1.bandwidthAt(t), p1.phaseAt(t) ) );
+	t = 0.33 - fade;
+	compare1.insert( t, Breakpoint( p3.frequencyAt(t), 0, 
+									p3.bandwidthAt(t), p3.phaseAt(t) ) );
+	compare1.insert( 0.33, Breakpoint( 300, 0.3, 0, 0 ) );
+	compare1.insert( 0.4, Breakpoint( 310, 0.3, 0.2, .1 ) );
+	compare1.setLabel(1);
+
+	Partial compare2 = p2;
+	compare2.setLabel(2);
+	
+	//	compare Partials, the first one will be
+	//	the one that was constructed from the 
+	//	Partial with the earliest end (p1):
+	TEST( l.size() == 2 );
+	PartialList::iterator it = l.begin();
+	TEST( it->label() == compare1.label() );
+	TEST( it->numBreakpoints() == compare1.numBreakpoints() );
+	
+	Partial::iterator distit = it->begin();
+	Partial::iterator compareit = compare1.begin();
+	while ( compareit != compare1.end() )
+	{
+		SAME_PARAM_VALUES( distit.time(), compareit.time() );
+		SAME_PARAM_VALUES( distit->frequency(), compareit->frequency() );
+		SAME_PARAM_VALUES( distit->amplitude(), compareit->amplitude() );
+		SAME_PARAM_VALUES( distit->bandwidth(), compareit->bandwidth() );
+		SAME_PARAM_VALUES( distit->phase(), compareit->phase() );
+		
+		++compareit;
+		++distit;
+	}
+	
+	++it;
+	TEST( *it == compare2 );
+	/*
+	TEST( it->numBreakpoints() == compare2.numBreakpoints() );
+	TEST( it->label() == compare2.label() );
+	distit = it->begin();
+	compareit = compare2.begin();
+	while ( compareit != compare2.end() )
+	{
+		SAME_PARAM_VALUES( distit.time(), compareit.time() );
+		SAME_PARAM_VALUES( distit->frequency(), compareit->frequency() );
+		SAME_PARAM_VALUES( distit->amplitude(), compareit->amplitude() );
+		SAME_PARAM_VALUES( distit->bandwidth(), compareit->bandwidth() );
+		SAME_PARAM_VALUES( distit->phase(), compareit->phase() );
+		
+		++compareit;
+		++distit;
+	}
+	*/
 }
 
 
@@ -181,8 +426,8 @@ int main( )
 	{
 		test_distill_manylabels();
 		test_distill_nonoverlapping();
-		test_distill_nonoverlapping2();
-		test_distill_nonoverlapping3();
+		test_distill_overlapping2();
+		test_distill_overlapping3();
 		test_collate();
 	}
 	catch( Exception & ex ) 

@@ -565,7 +565,7 @@ Partial::bandwidthAt( double time ) const
 	if ( it == _bpmap.begin() ) 
 	{
 	//	time is before the onset of the Partial:
-		return it.breakpoint(). bandwidth();
+		return it.breakpoint().bandwidth();
 	}
 	else if (it == _bpmap.end() ) 
 	{
