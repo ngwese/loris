@@ -145,7 +145,7 @@ Distiller::distill( PartialList & container  )
 //
 //	sort partials by length
 //	stable_sort by label (preserve length sorting for partials
-//		of same label, can I do this? Is list::sort() stable?)
+//		of same label, can I do this? Is list::sort() stable? yes.)
 //	for each label:
 //		initialize new partial
 //		for each partial having this label:
@@ -166,11 +166,12 @@ Distiller::distill( PartialList & container,
 					PartialList::iterator dist_begin, 
 					PartialList::iterator dist_end )
 {
+	// save this information for debugging:
 	int howmanywerethere = container.size();
 
 	//	make a new temporary list that can be sorted and
 	//	distilled, since it isn't possible to sort a select
-	//	range of position in a list:
+	//	range in a std::list:
 	PartialList dist_list;
 	dist_list.splice( dist_list.begin(), container, dist_begin, dist_end );
 	
@@ -182,7 +183,14 @@ Distiller::distill( PartialList & container,
 
 	// 	iterate over labels and distill each one:
 	PartialList::iterator lowerbound = dist_list.begin();
-					  
+
+	// 	invariant:
+	// 	Partials on the range [dist_list.begin(), lowerbound)
+	// 	have been distilled already, so lowerbound is either
+	// 	the end of the list (dist_list.end()) or it is the
+	// 	position of the first Partial in the list having a
+	// 	label corresponding to a channel that has not yet 
+	//	 been distilled.					  
 	while ( lowerbound != dist_list.end() )
 	{
 		int label = lowerbound->label();
@@ -199,7 +207,10 @@ Distiller::distill( PartialList & container,
 					" Partials labeled " << label << endl;
 #endif
 		
-		//	distill label, unless label is 0
+		//	[lowerbound, upperbound) is a range of all the
+		//	partials in dist_list labeled label.
+		//
+		//	distill labeled channel, unless label is 0
 		//	(zero-labeled Partials will remain where they
 		//	are, and wind up at the front of the list):	
 		if ( label != 0 )
@@ -212,6 +223,8 @@ Distiller::distill( PartialList & container,
 			for ( PartialList::iterator it = lowerbound; it != upperbound; ++it )
 			{
 				//	skip this Partial if it overlaps with any longer Partial:
+				//	Need only consider earlier Partials in the list, because
+				// 	the list is sorted by Partial duration.
 				if ( ! overlap( it, lowerbound, it ) )
 				{
 					//	look for null Breakpoints in newp that may need
@@ -223,20 +236,24 @@ Distiller::distill( PartialList & container,
 					//	Find the earliest position in newp after the start time
 					//	of the current Partial. If there is such a position, and
 					//	if the Breakpoint in newp after it->startTime() is a null
-					//	and is closer than _fadeTime, get rid of it, its
-					//	too close:
+					//	and is closer to it->endTime() than _fadeTime, get rid of it,
+					//	it is too close:
 					//	(note: this will work even if the current Partial has only
 					//	a single Breakpoint, but only because of the overlap check
 					//	above)
 					Partial::iterator after = newp.findAfter( it->startTime() );
-					Partial::iterator before = after;	//	don't decrement until we are sure that
-														//	after is not newp.begin(); undefined behavior
 					if ( after != newp.end() && 
 						 after.time() < it->startTime() + _fadeTime &&
 						 after.breakpoint().amplitude() == 0. )
 					{
 						//	remove it:
-						newp.erase( after );
+						//	post-increment so that after is still
+						//	valid and is still the position of the
+						//	first Breakpoint after it->startTime();
+						//	always safe because list erasure only 
+						//	invalidates the erased position, and 
+						//	because after is not newp.end().
+						newp.erase( after++ );
 					}
 					
 					//	if the Breakpoint in newp before it->startTime() is a null
@@ -246,11 +263,14 @@ Distiller::distill( PartialList & container,
 					//	a single Breakpoint, but only because of the overlap check
 					//	above)
 					//
+					Partial::iterator before = after;	//	don't decrement until we are sure that
+														//	after is not newp.begin(); undefined behavior
 					if ( after != newp.begin() && 
-						 (--before).time() > it->startTime() - _fadeTime )
+					     (--before).time() > it->startTime() - _fadeTime )
 					{	 
 						//	there's a Breakpoint soon before this Partial,
 						//	if its a null, remove it:
+						// 	before is no longer valid after this!
 						if ( before.breakpoint().amplitude() == 0. )
 						{
 							newp.erase( before );

@@ -163,7 +163,7 @@ public:
 		For const Partials, returns a PartialConstIterator.
 	 */
 	 
-	void erase( iterator & pos );
+	void erase( iterator pos );
 	/*	Breakpoint removal: erase the Breakpoint at the position of the given
 		PartialIterator (invalidating the PartialIterator).
 	 */

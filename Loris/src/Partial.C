@@ -244,7 +244,7 @@ Partial::insert( double time, const Breakpoint & bp )
 //	Erase the Breakpoint at the position of the 
 //	given iterator (invalidating the iterator).
 void 
-Partial::erase( PartialIterator & pos )
+Partial::erase( PartialIterator pos )
 {
 	_bpmap.erase( pos._iter );
 }
