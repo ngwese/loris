@@ -38,8 +38,19 @@ trial 2:
 	add artifacts (really not usable in this case)
 	- in neither case did the resolution (50 or 75 Hz) seem to matter
 	- maybe sifting would help?
+	
+trial 3:
+	- actually, these all seem quite usable. Sifting doesn't seem to help much,
+	but even the pure distillations seem okay at 5 partials per harmonic. Maybe ought
+	to try smaller numbers again.
+	- in meow3, Partials starting after 3.17 seconds could be elimintated to clean
+	up the release.
+	
+trial 4: 
+	- it seems like 5 partials per harmonic might be the lower limit for meow1,
+	maybe can use 2 or 3 for meow3.
 
-Last updated: 21 May 2002 by Kelly Fitz
+Last updated: 7 June 2002 by Kelly Fitz
 """
 
 print __doc__
@@ -49,7 +60,7 @@ from trials import *
 
 # use this trial counter to skip over
 # eariler trials
-trial = 3
+trial = 4
 
 print "running trial number", trial, time.ctime(time.time())
 
@@ -123,4 +134,38 @@ if trial == 3:
 			loris.exportSpc( ofilebase + '.s.spc', p, 36, 0 )
 			loris.exportSpc( ofilebase + '.e.spc', p, 36, 1 )
 			
+	
+if trial == 4:
+	r = 75
+	w = 240
+	for source in sources:
+		p = analyze( source, r, w )
+		ofilebase = '%s.%i.%i'%(source[:-5], r, w)
+		
+		# distill at 1,2,3,5 partials per harmonic
+		ref = loris.createFreqReference( p, 0, 1000, 100 )
+		psave = p
+		for n in (1,2,3,5):
+			p = psave.copy()
+			loris.channelize( p, ref, n )
+			ps = p.copy()
+			
+			# distilled
+			loris.distill( p )
+			ofilebase = '%s.%i.%i.d%i'%(source[:-5], r, w, n)
+			synthesize( ofilebase + '.aiff', p )
+			loris.exportSpc( ofilebase + '.s.spc', p, 36, 0 )
+			loris.exportSpc( ofilebase + '.e.spc', p, 36, 1 )
+			loris.exportSdif( ofilebase + '.sdif', p )
+					
+			# sifted
+			p = ps
+			loris.sift( p )
+			loris.distill( p )
+			ofilebase = '%s.%i.%i.s%i'%(source[:-5], r, w, n)
+			synthesize( ofilebase + '.aiff', p )
+			loris.exportSpc( ofilebase + '.s.spc', p, 36, 0 )
+			loris.exportSpc( ofilebase + '.e.spc', p, 36, 1 )
+			loris.exportSdif( ofilebase + '.sdif', p )
+					
 	
