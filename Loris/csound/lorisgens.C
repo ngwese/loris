@@ -34,8 +34,19 @@
  *
  */
  
-#include "cs.h"
+#include <cmath>
+/* why is this here, you ask? Well, Csound's prototyp.h, as of
+   version 4.21, declares modf, and does so differently from
+   the math header. 
+
+   double modf(double, double *);  /* not included in math.h * /
+
+   The difference is in the throw() specification. Including
+   cmath here seems to suppress the compiler errors that
+   are the result of this bad idea.
+ */
 #include "lorisgens.h"
+#include "cs.h"
 #include "string.h"
 
 #include <Breakpoint.h>
@@ -223,16 +234,20 @@ static void accum_samples( Oscillator & oscil, Breakpoint & bp, double * bufbegi
 						
 			//	initialize frequency, amplitude, and bandwidth to 
 			//	their target values:
+			/*
 			oscil.setRadianFreq( radfreq );
 			oscil.setAmplitude( amp );
 			oscil.setBandwidth( bw );
+			*/
+			oscil.resetEnvelopes( bp, esr );
 			
 			//	roll back the phase:
-			oscil.setPhase( bp.phase() - ( radfreq * nsamps ) );
+			oscil.resetPhase( bp.phase() - ( radfreq * nsamps ) );
 		}	
 		
 		//	accumulate samples into buffer:
-		oscil.generateSamples( bufbegin, bufbegin + nsamps, radfreq, amp, bw );
+		// oscil.generateSamples( bufbegin, bufbegin + nsamps, radfreq, amp, bw );
+		oscil.oscillate( bufbegin, bufbegin + nsamps, bp, esr );
 	}
 }
 

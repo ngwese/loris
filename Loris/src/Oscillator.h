@@ -112,6 +112,16 @@ public:
 		insure that the indices are valid. Target frequency and bandwidth are
 		checked to prevent aliasing and bogus bandwidth enhancement.
 	 */
+
+	/*	Access parameters of the Oscillator
+		(why were these removed?)
+	 */
+	double amplitude( void ) const { return i_amplitude; }
+	double bandwidth( void ) const { return i_bandwidth; }
+	double phase( void ) const { return determ_phase; }
+	double radianFreq( void ) const { return i_frequency; }
+
+	/*	Used to allow state mutation too, why not anymore? */
 	 
 };	//	end of class Oscillator
 

@@ -138,7 +138,7 @@ EXTRA_LD_FLAGS = -prebind
 endif
 
 libloris_la_LIBADD = -lfftw -lsdif
-libloris_la_LDFLAGS = -version-info 3:6:3 $(EXTRA_LD_FLAGS)
+libloris_la_LDFLAGS = -version-info 4:0:4 $(EXTRA_LD_FLAGS)
 
 nodist_include_HEADERS = loris.h
 

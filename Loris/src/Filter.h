@@ -136,7 +136,6 @@ Filter::Filter( const double * ma_begin, const double * ma_end, //	feed-forward 
 	debugger << " feed-forward coefficients and " << _arCoefs.size();
 	debugger << " feedback coefficients, with a delay lines of length ";
 	debugger << _delayline.size() << std::endl;
-
 	if ( *ar_begin != 1. )
 	{
 		//	scale all filter coefficients by a[0]:
@@ -146,7 +145,6 @@ Filter::Filter( const double * ma_begin, const double * ma_end, //	feed-forward 
 						std::bind2nd( std::divides<double>(), *ar_begin ) );
 		_arCoefs[0] = 1.;
 	}
-
 	debugger << _maCoefs[0] << " " << _maCoefs[1] << " " << _maCoefs[2] << " " << _maCoefs[3] << " " << std::endl;
 	debugger << _arCoefs[0] << " " << _arCoefs[2] << " " << _arCoefs[2] << " " << _arCoefs[3] << " " << std::endl;
 }
