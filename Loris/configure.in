@@ -409,13 +409,17 @@ if test  "$USEPY" != "no"; then
 	
 	dnl check whether this version of Python supports
 	dnl the new style of iterators
-	if "$PYTHON_VERSION" < 2.2; then
-		PYINCLUDE="-I$PYINCLUDE -DPYTHON_NOITERATORS"
-	else
-		PYINCLUDE="-I$PYINCLUDE"
-	fi
+	AC_MSG_CHECKING(for PyExc_StopIteration defined in Python.h)
+	AC_TRY_COMPILE(	[ #include <$PYINCLUDE/Python.h>;], 
+					[ PyErr_SetString( PyExc_StopIteration, ""); ], 
+		[
+	    	AC_MSG_RESULT(yep)
+			PYINCLUDE="-I$PYINCLUDE"	
+	    ], [
+	    	AC_MSG_RESULT(nope)
+			PYINCLUDE="-I$PYINCLUDE -DNO_PYTHON_EXC_STOPITER"
+	    ] )
 fi
-
 
 AM_CONDITIONAL(BUILD_PYTHON, test "$USEPY" != "no")
 AC_SUBST(PYINCLUDE)

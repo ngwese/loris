@@ -147,7 +147,7 @@ static bool fill_vector( PyObject * input, vector<double> & v )
 		return false;
 	}
 	// loop over elements of sequence, adding to vector
-	int size = PySequence_Size(input);
+	int size = PySequence_Length(input);
 	for ( int i = 0; i < size; ++i ) 
 	{
 		PyObject *o = PySequence_GetItem(input,i);

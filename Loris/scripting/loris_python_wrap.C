@@ -746,7 +746,7 @@ static bool fill_vector( PyObject * input, vector<double> & v )
 		return false;
 	}
 	// loop over elements of sequence, adding to vector
-	int size = PySequence_Size(input);
+	int size = PySequence_Length(input);
 	for ( int i = 0; i < size; ++i ) 
 	{
 		PyObject *o = PySequence_GetItem(input,i);
@@ -3584,13 +3584,12 @@ static PyObject *_wrap_NewPlistIterator_next(PyObject *self, PyObject *args) {
         
         if ((err = check_exception()))
         {
-            #ifndef PYTHON_NOITERATORS
+            #ifndef NO_PYTHON_EXC_STOPITER
             PyErr_SetString( PyExc_StopIteration, err );
-            #else
-            //	this is not really the right exception type
-            PyErr_SetString( PyExc_IndexError, err );
-            #endif
             return NULL;
+            #else
+            SWIG_exception( SWIG_ValueError, err );
+            #endif
             
             
             
@@ -3661,13 +3660,12 @@ static PyObject *_wrap_NewPartialIterator_next(PyObject *self, PyObject *args) {
         
         if ((err = check_exception()))
         {
-            #ifndef PYTHON_NOITERATORS
+            #ifndef NO_PYTHON_EXC_STOPITER
             PyErr_SetString( PyExc_StopIteration, err );
-            #else
-            //	this is not really the right exception type
-            PyErr_SetString( PyExc_IndexError, err );
-            #endif
             return NULL;
+            #else
+            SWIG_exception( SWIG_ValueError, err );
+            #endif
             
             
             
@@ -4454,13 +4452,12 @@ static PyObject *_wrap_PartialListIterator_next(PyObject *self, PyObject *args) 
         
         if ((err = check_exception()))
         {
-            #ifndef PYTHON_NOITERATORS
+            #ifndef NO_PYTHON_EXC_STOPITER
             PyErr_SetString( PyExc_StopIteration, err );
-            #else
-            //	this is not really the right exception type
-            PyErr_SetString( PyExc_IndexError, err );
-            #endif
             return NULL;
+            #else
+            SWIG_exception( SWIG_ValueError, err );
+            #endif
             
             
             
@@ -5696,13 +5693,12 @@ static PyObject *_wrap_PartialIterator_next(PyObject *self, PyObject *args) {
         
         if ((err = check_exception()))
         {
-            #ifndef PYTHON_NOITERATORS
+            #ifndef NO_PYTHON_EXC_STOPITER
             PyErr_SetString( PyExc_StopIteration, err );
-            #else
-            //	this is not really the right exception type
-            PyErr_SetString( PyExc_IndexError, err );
-            #endif
             return NULL;
+            #else
+            SWIG_exception( SWIG_ValueError, err );
+            #endif
             
             
             

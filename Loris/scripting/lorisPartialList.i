@@ -182,15 +182,14 @@ public:
     if ((err = check_exception()))
     {
 #if defined(SWIGPYTHON)
-		%#ifndef PYTHON_NOITERATORS
-        PyErr_SetString( PyExc_StopIteration, err );
-		%#else
-		//	this is not really the right exception type
-		PyErr_SetString( PyExc_IndexError, err );
-		%#endif
+		%#ifndef NO_PYTHON_EXC_STOPITER
+		PyErr_SetString( PyExc_StopIteration, err );
 		return NULL;
+		%#else
+		SWIG_exception( SWIG_ValueError, err );
+		%#endif
 #else
-        SWIG_exception( SWIG_RangeError, err );
+        SWIG_exception( SWIG_ValueError, err );
 #endif
     }
 }

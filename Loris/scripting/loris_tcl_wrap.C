@@ -3765,7 +3765,7 @@ _wrap_NewPlistIterator_next(ClientData clientData, Tcl_Interp *interp, int objc,
         
         if ((err = check_exception()))
         {
-            SWIG_exception( SWIG_RangeError, err );
+            SWIG_exception( SWIG_ValueError, err );
             
         }
     }
@@ -3835,7 +3835,7 @@ _wrap_NewPartialIterator_next(ClientData clientData, Tcl_Interp *interp, int obj
         
         if ((err = check_exception()))
         {
-            SWIG_exception( SWIG_RangeError, err );
+            SWIG_exception( SWIG_ValueError, err );
             
         }
     }
@@ -4555,7 +4555,7 @@ _wrap_PartialListIterator_next(ClientData clientData, Tcl_Interp *interp, int ob
         
         if ((err = check_exception()))
         {
-            SWIG_exception( SWIG_RangeError, err );
+            SWIG_exception( SWIG_ValueError, err );
             
         }
     }
@@ -5747,7 +5747,7 @@ _wrap_PartialIterator_next(ClientData clientData, Tcl_Interp *interp, int objc, 
         
         if ((err = check_exception()))
         {
-            SWIG_exception( SWIG_RangeError, err );
+            SWIG_exception( SWIG_ValueError, err );
             
         }
     }

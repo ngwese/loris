@@ -4203,7 +4203,7 @@ XS(_wrap_NewPlistIterator_next) {
             
             if ((err = check_exception()))
             {
-                SWIG_exception( SWIG_RangeError, err );
+                SWIG_exception( SWIG_ValueError, err );
                 
             }
         }
@@ -4289,7 +4289,7 @@ XS(_wrap_NewPartialIterator_next) {
             
             if ((err = check_exception()))
             {
-                SWIG_exception( SWIG_RangeError, err );
+                SWIG_exception( SWIG_ValueError, err );
                 
             }
         }
@@ -5200,7 +5200,7 @@ XS(_wrap_PartialListIterator_next) {
             
             if ((err = check_exception()))
             {
-                SWIG_exception( SWIG_RangeError, err );
+                SWIG_exception( SWIG_ValueError, err );
                 
             }
         }
@@ -6780,7 +6780,7 @@ XS(_wrap_PartialIterator_next) {
             
             if ((err = check_exception()))
             {
-                SWIG_exception( SWIG_RangeError, err );
+                SWIG_exception( SWIG_ValueError, err );
                 
             }
         }
