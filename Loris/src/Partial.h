@@ -173,6 +173,10 @@ public:
 	//	access:
 	std::list< Partial > & partials( void ) { return _partials; }
 	const std::list< Partial > & partials( void ) const { return _partials; }
+	
+	//	iterator types:
+	typedef std::list< Partial >::iterator partial_iterator;
+	typedef std::list< Partial >::const_iterator const_partial_iterator;
 
 //	-- instance variables --
 //	(should be private)

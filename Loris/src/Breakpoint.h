@@ -35,7 +35,7 @@ class Breakpoint
 //	-- public Breakpoint interface --
 public:
 //	construction:
-	explicit Breakpoint( void );	//	needed for STL containability
+	Breakpoint( void );	//	needed for STL containability
 	Breakpoint( double f, double a, double b, double p = 0. );
 	
 //	destructor is not virtual, this is not a base class,

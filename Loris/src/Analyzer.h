@@ -10,10 +10,10 @@
 // ===========================================================================
 #include "LorisLib.h"
 #include "Partial.h"
-
 #include "ReassignedSpectrum.h"
 
 #include <vector>
+#include <memory>
 
 Begin_Namespace( Loris )
 
@@ -31,9 +31,14 @@ public:
 //	analysis:
 	void analyze( std::vector< double > & buf, double srate );
 	
+	void formPartials( double frameTime );
+	void spawnPartial( double time, const Breakpoint & bp );
+	
+	double hopSize( void ) const;	//	return seconds
+	
 //	-- instance variables --
 private:
-
+	std::auto_ptr< ReassignedSpectrum > _spectrum;
 };	//	end of class Analyzer
 
 End_Namespace( Loris )

@@ -9,7 +9,10 @@
 #include "FourierTransform.h"
 #include "Exception.h"
 
+using namespace std;
+
 Begin_Namespace( Loris )
+
 // ---------------------------------------------------------------------------
 //	FourierTransform constructor
 // ---------------------------------------------------------------------------
@@ -26,14 +29,30 @@ FourierTransform::FourierTransform( unsigned long len ) :
 // ---------------------------------------------------------------------------
 //	transform
 // ---------------------------------------------------------------------------
+//	Compute the Fourier transform of the specified buffer. 
+//	The caller should window the buffer if desired. 
+//	The buffer will be zero-padded or truncated if it
+//	is the wrong size. The input will also be rotated to
+//	align its phase reference with the middle of the buffer.
+//
 void
-FourierTransform::transform( const std::vector< double > & buf )
+FourierTransform::transform( const vector< double > & buf )
 {
-//	load input:
-//	¥¥¥¥¥¥¥¥¥¥
-	
+	loadAndRotate( buf );
+	transform();
+}
+
+// ---------------------------------------------------------------------------
+//	transform
+// ---------------------------------------------------------------------------
+//	Compute a Fourier transform of the current contents of the transform
+//	buffer.
+//
+void
+FourierTransform::transform( void )
+{
 //	permute input to reverse binary order:
-	for ( long i = 0; i < length(); ++i ) {
+	for ( long i = 0; i < size(); ++i ) {
 		//	only swap once:
 		if ( _revBinaryTable[i] > i ) {	
 			swap( _z[i], _z[ _revBinaryTable[i] ] );
@@ -41,8 +60,62 @@ FourierTransform::transform( const std::vector< double > & buf )
 	} 
 	
 //	do decimation-in-time butterfly steps:
-	for ( long span = 1;  span < length();  span = span << 1 ) {
+	for ( long span = 1;  span < size();  span = span << 1 ) {
 		decimationStep( span );
+	}
+}
+
+// ---------------------------------------------------------------------------
+//	load
+// ---------------------------------------------------------------------------
+//	Load samples from the specified buffer into the transform
+//	buffer, truncating or zero-padding if the lengths differ.
+//
+void
+FourierTransform::load( const vector< double > & buf )
+{
+	if ( buf.size() < _z.size() ) {
+		copy( buf.begin(), buf.end(), _z.begin() );
+		//	zero the rest:
+		fill( _z.begin() + buf.size(), _z.end(), 0. );
+	}
+	else {
+		copy( buf.begin(), buf.begin() + _z.size(), _z.begin() );
+	}
+}
+
+// ---------------------------------------------------------------------------
+//	loadAndRotate
+// ---------------------------------------------------------------------------
+//	Load samples from the specified buffer into the transform buffer, 
+//	rotating so that the transform's phase is referenced to the middle
+//	sample of the input buffer. The buffer is zero-padded or truncated
+//	as necessary. Truncation occurs at both ends, so that the phase
+//	reference is always the middle sample of the input buffer, which is
+//	usually desired for windowed transform input. If not, use load().
+//
+void
+FourierTransform::loadAndRotate( const vector< double > & buf )
+{
+	if ( buf.size() < _z.size() ) {
+		//	pre-zero:
+		fill( _z.begin(), _z.end(), 0. );
+		//	copy second half of buf into beginning of _z:
+		copy( buf.begin() + buf.size() / 2, buf.end(), _z.begin() );
+		//	copy second half of buf into end of _z:
+		copy( buf.begin(), buf.begin() + buf.size() / 2, _z.end() - buf.size() / 2 );
+	}
+	else {
+		//	copy _z.size()/2 samples starting at middle of
+		//	buf into first half of _z:
+		copy( buf.begin() + buf.size() / 2, 
+			  buf.begin() + (buf.size() / 2) + (_z.size() / 2), 
+			  _z.begin() );
+		//	copy _z.size()/2 samples ending at middle of
+		//	buf into second half of _z:
+		copy( buf.begin(), 
+			  buf.begin() + (_z.size() / 2),
+			  _z.begin() + (_z.size() / 2) );
 	}
 }
 
@@ -96,7 +169,7 @@ FourierTransform::decimationStep( long span )
 		double sine = sin( angle );
 		double cosine = cos( angle );
 		
-		for (long j = i;  j < length();  j += twospan)
+		for (long j = i;  j < size();  j += twospan)
 		{	
 			complex< double > 
 				temp( cosine * _z[j + span].real() + sine * _z[j + span].imag(),
