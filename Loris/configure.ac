@@ -10,7 +10,7 @@ dnl implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 
 dnl initialization
-AC_INIT(Loris, 2.0.0, loris@cerlsoundgroup.org, loris)
+AC_INIT(Loris, 1.3.0beta, loris@cerlsoundgroup.org, loris)
 
 AC_CONFIG_AUX_DIR(config)
 AC_SUBST(ac_aux_dir)
@@ -30,10 +30,10 @@ dnl values of the version macros.
 dnl Make sure these are consistent with the version number
 dnl in AC_INIT above, and make sure to check them before 
 dnl each release!!!!!
-LORIS_MAJOR_VERSION=2
-LORIS_MINOR_VERSION=0
+LORIS_MAJOR_VERSION=1
+LORIS_MINOR_VERSION=3
 LORIS_SUBMINOR_VERSION=0
-LORIS_PRERELEASE_STR="beta1"
+LORIS_PRERELEASE_STR="beta2"
 LORIS_VERSION_STR="$PACKAGE_STRING$LORIS_PRERELEASE_STR"
 AC_SUBST(LORIS_MAJOR_VERSION)
 AC_SUBST(LORIS_MINOR_VERSION)
@@ -85,55 +85,6 @@ esac
 KELLYS_GREAT_DARWIN_FIX
 
 AM_CONDITIONAL(DARWIN, test "$DARWIN")
-
-dnl----------------------------------------------------------------
-dnl Look for csound.
-dnl
-dnl If csound is available, then a message will be printed
-dnl refering to the README in the csound directory.
-dnl----------------------------------------------------------------
-
-CSINCLUDE=
-AC_ARG_WITH(csound,
-	AC_HELP_STRING( [--with-csound=Csound_src_path],
-					[specify path of the Csound source code] ),
-	[CSINCLUDE="$withval"], [CSINCLUDE=])
-
-AC_PATH_PROG(CSOUND, csound)
-AM_CONDITIONAL(HAVE_CSOUND, test -n "$CSINCLUDE")
-
-if test -n "$CSOUND" && test -z "$CSINCLUDE"; then
-	dnl if Csound is found, but no path to the source is
-	dnl specified, print a message about building the 
-	dnl dynamically-loaded module.
-	AC_MSG_RESULT(-----------------------------------------)
-	AC_MSG_RESULT(You have Csound installed but you did)
-	AC_MSG_RESULT(not specify a path to the Csound source)
-	AC_MSG_RESULT(so the Loris Csound module cannot be)
-	AC_MSG_RESULT(built. Specify a path to the Csound)
-	AC_MSG_RESULT(source using configure --with-csound)
-	AC_MSG_RESULT(or see the README file in the csound)
-	AC_MSG_RESULT(directory for information about building)
-	AC_MSG_RESULT(the Loris Csound modules.)
-	AC_MSG_RESULT(-----------------------------------------)
-fi
-
-if test  "$CSINCLUDE" == "yes"; then
-	dnl report that this flag requires a path
-	AC_MSG_ERROR(please specify a path to the Csound source when using --with-csound)
-fi
-
-if test -n "$CSINCLUDE"; then
-	dnl verify that the header cs.h can be found in 
-	dnl the specified directory
-	AC_MSG_CHECKING(for cs.h header file)
-	if test ! -f "$CSINCLUDE/cs.h" ; then
-		AC_MSG_ERROR(cannot find cs.h in $CSINCLUDE)
-	fi
-	AC_MSG_RESULT(found $CSINCLUDE/cs.h)
-fi
-
-AC_SUBST(CSINCLUDE)
 
 dnl----------------------------------------------------------------
 dnl Checks for compiler features.
@@ -256,111 +207,31 @@ dnl----------------------------------------------------------------
 dnl Look for FFTW
 dnl
 dnl Remember that fftw library won't link without -lm.
-dnl Allow an argument to specify the prefix of a non-installed
-dnl FFTW package
 dnl----------------------------------------------------------------
 
-FFTWPACKAGE=
-FFTWINCLUDEDIR=
-FFTWLIBDIR=
+AC_SEARCH_LIBS([sin], [m])
 
-FFTW_HEADER=
-FFTW_LIB=
+AC_CHECK_LIB([fftw3], [fftw_execute], [ 
+		FFTW_VERSION=3
+		FFTW_HDR="fftw3.h"
+		LINK_FFTW=-lfftw3
+	],
+	AC_CHECK_LIB([fftw], [fftw_create_plan_specific],[
+			FFTW_VERSION=2
+			FFTW_HDR="fftw.h"
+			LINK_FFTW=-lfftw
+		],
+		AC_MSG_ERROR([Cannot find the FFTW library.  Add something to LDFLAGS.])))
 
-AC_ARG_WITH(fftw,
-	AC_HELP_STRING( [--with-fftw=path],
-					[specify the prefix of the FFTW  package] ),
-	[FFTWPACKAGE="$withval"], [FFTWPACKAGE=])
-	
+dnl AC_CHECK_HEADERS([fftw3.h],,
+dnl		AC_MSG_ERROR([Cannot find FFTW headers.  Add something to CPPFLAGS.]))
 
-dnl save the state of the CPPFLAGS and LIBS
-SAVE_CPP_FLAGS="$CPPFLAGS"
-SAVE_LIBS="$LIBS"
 
-if test -n "$FFTWPACKAGE" ; then
-dnl	search the specified FFTW package path for
-dnl	a usable FFTW header and library
+AC_CHECK_HEADERS("$FFTW_HDR",,
+	 AC_MSG_ERROR([Cannot find FFTW headers.  Add something to CPPFLAGS.]))
 
-	dnl identify include directory
-	if test -d "$FFTWPACKAGE/include" ; then
-		FFTWINCLUDEDIR="$FFTWPACKAGE/include"
-	else
-		FFTWINCLUDEDIR="$FFTWPACKAGE"
-	fi
-
-	dnl identify lib directory
-	if test -d "$FFTWPACKAGE/lib" ; then
-		FFTWLIBDIR="$FFTWPACKAGE/lib"
-	else
-		FFTWLIBDIR="$FFTWPACKAGE"
-	fi
-	
-	dnl look in include directory for one of the FFTW headers
-	if test -f "$FFTWINCLUDEDIR/fftw3.h" ; then
-		FFTW_HEADER="fftw3.h"
-		FFTW_LIB="fftw3"
-		FFTW_MAKE_PLAN="fftw_plan_dft_1d"
-	else
-		if 	test -f "$FFTWINCLUDEDIR/fftw.h" ; then
-			FFTW_HEADER="fftw.h"
-			FFTW_LIB="fftw"
-			FFTW_MAKE_PLAN="fftw_create_plan_specific"
-		else
-			AC_MSG_ERROR(cannot find any FFTW header in $FFTWINCLUDEDIR)
-		fi
-	fi
-	AC_MSG_RESULT(using $FFTW_HEADER found in $FFTWINCLUDEDIR)
-	
-	dnl check the usability of the header and library found
-	CPPFLAGS="-I$FFTWINCLUDEDIR $CPPFLAGS"
-	LIBS="-L$FFTWLIBDIR $LIBS"
-	AC_CHECK_HEADERS([$FFTW_HEADER], [
-		AC_CHECK_LIB($FFTW_LIB, $FFTW_MAKE_PLAN, :, AC_MSG_ERROR(cannot use $FFTW_LIB library), -lm)
-		],[
-		AC_MSG_ERROR(cannot use $FFTW_HEADER header)
-		] )
-		
-else
-dnl no FFTW package directory was specified, so try to 
-dnl find one in the default path
-
-	AC_CHECK_HEADERS([fftw3.h], [
-		FFTW_LIB="fftw3"
-		AC_MSG_RESULT(using $FFTW_LIB) 
-		AC_CHECK_LIB("$FFTW_LIB", fftw_plan_dft_1d, :, AC_MSG_ERROR(cannot use FFTW3 library), -lm)
-		],[
-		AC_CHECK_HEADERS([fftw.h], [
-			FFTW_LIB="fftw"
-			AC_MSG_RESULT(using $FFTW_LIB (version 2)) 
-			AC_CHECK_LIB("$FFTW_LIB", fftw_create_plan_specific, :, AC_MSG_ERROR(cannot use FFTW library), -lm)
-			] , [
-			AC_MSG_ERROR(cannot find any FFTW header) 
-			] ) 
-		] )
-		
-fi
-
-INCLUDE_FFTW=
-if test -n "$FFTWINCLUDEDIR" ; then
-	INCLUDE_FFTW="-I$FFTWINCLUDEDIR"
-fi
-AC_SUBST(INCLUDE_FFTW)
-
-if test -n "$FFTWLIBDIR" ; then
-	LINK_FFTW="-L$FFTWLIBDIR -l$FFTW_LIB"
-else
-	LINK_FFTW="-l$FFTW_LIB"
-fi
 AC_SUBST(LINK_FFTW)
-
-
-dnl restore this
-CPPFLAGS="$SAVE_CPP_FLAGS"
-LIBS="$SAVE_LIBS"
-
-dnl
-dnl end of FFTW check
-dnl----------------------------------------------------------------
+AC_MSG_RESULT(using FFTW version $FFTW_VERSION)
 
 dnl----------------------------------------------------------------
 dnl Check for scripting languages
@@ -371,60 +242,29 @@ AC_MSG_RESULT(----- Language Checks -----)
 dnl----------------------------------------------------------------
 dnl Look for Python
 dnl----------------------------------------------------------------
-dnl By default, look for a python binary, and use the header in the
-dnl same path. If --with-python is specified, then if the argument is
-dnl a file, set the PYTHON environment variable to that value before
-dnl searching, otherwise, if the argument is a directory, assume that
-dnl it is the prefix for the python installation, and add /bin/python
-dnl to it to set the PYTHON environment variable. If --without-python
-dnl or --with-python=no is specified, don't use python at all.
+dnl This new way is not as flexible as the old way, but it much 
+dnl easier to maintain. Thanks to John Ramsdell for helping to
+dnl clean this up.
 
 AC_ARG_WITH(python,
-	AC_HELP_STRING( [--with-python@<:@=path@:>@],
-					[build Python module (default is YES) (optionally specify prefix of Python package)] ),
+	AC_HELP_STRING( [--with-python],
+					[build Python module (default is YES)] ),
 	[USEPY="$withval"], [USEPY="yes"])
 
-PYINCLUDE=
-AC_ARG_WITH(pyincl,
-	AC_HELP_STRING( [--with-pyincl=path],
-					[specify path of the Python.h header] ),
-	[PYINCLUDE="$withval"], [PYINCLUDE=])
-
-if test  "$USEPY" != "no"; then
-	if test -f "$USEPY"; then
-		dnl assume that the python binary was specified
-		PYTHON="$USEPY"
-	fi
-	if test -d "$USEPY"; then
-		dnl assume that the python prefix was specified
-		PYTHON="$USEPY/bin/python"
-	fi
+if test  "$USEPY" == "no"; then
+	USEPY=
+else
 	dnl use automake tools for finding python, set 
 	dnl installation directory for extension modules
 	AM_PATH_PYTHON(1.5)
-	AC_MSG_RESULT(installing Python extension modules in $pyexecdir)
 	
 	dnl look for the header Python.h
+	PYBINDIR="`AS_DIRNAME([$PYTHON])`"
+	PYPREFDIR="`AS_DIRNAME([$PYBINDIR])`"
+	PYINCLUDE="$PYPREFDIR/include/python$PYTHON_VERSION"  
 	AC_MSG_CHECKING(for Python.h header file)
-	if test -n "$PYINCLUDE" ; then 
-		dnl if the header path has been specified, verify 
-		dnl that it exists and is a directory
-		if test -f "$PYINCLUDE" ; then 
-			dnl remove the filename
-			PYINCLUDE="`AS_DIRNAME(["$PYINCLUDE"])`"
-		fi
-		if test ! -f "$PYINCLUDE/Python.h" ; then
-			AC_MSG_ERROR(cannot find Python.h in $PYINCLUDE)
-		fi
-	else
-		dnl if the header path was not specified, try
-		dnl to infer it from the python binary
-		PYINCLUDE="`AS_DIRNAME(["$PYTHON"])`/../include/python$PYTHON_VERSION"  
-		if test ! -f "$PYINCLUDE/Python.h" ; then
-			AC_MSG_ERROR(cannot find Python.h in $PYINCLUDE please use --with-pyincl=path)
-		fi
-	fi
-	AC_MSG_RESULT(found in $PYINCLUDE)
+	AC_CHECK_HEADERS([$PYINCLUDE/Python.h],,
+	AC_MSG_ERROR([Cannot find Python headers.  Add something to CPPFLAGS.]))
 	
 	dnl check whether this version of Python supports
 	dnl the new style of iterators
@@ -433,15 +273,67 @@ if test  "$USEPY" != "no"; then
 					[ PyErr_SetString( PyExc_StopIteration, ""); ], 
 		[
 	    	AC_MSG_RESULT(yep)
-			PYINCLUDE="-I$PYINCLUDE"	
+			PYFLAGS="-I$PYINCLUDE"	
 	    ], [
 	    	AC_MSG_RESULT(nope)
-			PYINCLUDE="-I$PYINCLUDE -DNO_PYTHON_EXC_STOPITER"
+			PYFLAGS="-I$PYINCLUDE -DNO_PYTHON_EXC_STOPITER"
 	    ] )
 fi
 
-AM_CONDITIONAL(BUILD_PYTHON, test "$USEPY" != "no")
-AC_SUBST(PYINCLUDE)
+AM_CONDITIONAL(BUILD_PYTHON, test -n "$USEPY")
+AC_SUBST(PYFLAGS)
+
+dnl----------------------------------------------------------------
+dnl Look for csound.
+dnl
+dnl If csound is available, then prepare to build the csound 
+dnl opcodes. This configure code, parts provided by John Ramsdell,
+dnl works for Csound GBS versions 4.23f12gbs.10 or later.
+dnl----------------------------------------------------------------
+
+AC_ARG_VAR([CSOUND_CONFIG], 
+	   [Path to the Csound configuration script when available])
+AC_PATH_PROG([CSOUND_CONFIG], [csound-config])
+
+FOUND_CSOUND="$CSOUND_CONFIG"
+if test -n "$FOUND_CSOUND" ; then
+	AC_CHECK_PROG([FOUND_CSOUND], [csound], ["yes"])
+fi
+
+AC_ARG_WITH(csound,
+	AC_HELP_STRING( [--with-csound],
+					[build Csound 4 opcodes (default is YES)] ),
+	[USECSOUND="$withval"], [USECSOUND="yes"])
+
+if test "$USECSOUND" == "no"; then
+	USECSOUND=
+else
+	dnl try to use csound config to get build flags
+	dnl for the csound opcodes
+	if test -n "$CSOUND_CONFIG"; then
+		USECSOUND="yes"
+		CSOUND_CXXFLAGS="`$CSOUND_CONFIG --cflags`"
+		
+		dnl I don't think I need these next two, those are
+		dnl for linking csound binaries, not opcodes.
+		CSOUND_LDFLAGS="`$CSOUND_CONFIG --ldflags`"
+		CSOUND_LIBS="`$CSOUND_CONFIG --libs`"
+		
+		CSOUND_PREFIX="`$CSOUND_CONFIG --prefix`"  	
+	else
+		AC_CHECK_HEADERS([csound/cs.h],,[
+			AC_MSG_RESULT([Cannot find Csound headers. Disabling csound.])
+			USECSOUND=
+			])
+	fi
+
+	AC_SUBST([CSOUND_CXXFLAGS])
+	AC_SUBST([CSOUND_LDFLAGS])
+	AC_SUBST([CSOUND_LIBS])
+	AC_SUBST([CSOUND_PREFIX])
+fi
+
+AM_CONDITIONAL([HAVE_CSOUND], [test -n "$USECSOUND"])
 
 dnl----------------------------------------------------------------
 dnl Check for Loris debugging flag
@@ -473,5 +365,23 @@ AC_MSG_RESULT(----- Creating Output Files -----)
 AC_OUTPUT(Makefile doc/Makefile src/Makefile \
 scripting/Makefile csound/Makefile test/Makefile \
 utils/Makefile )
+
+AC_MSG_RESULT(----- Configuration Summary -----)
+if test -n "$USEPY" ; then
+	echo Python support: Enabled.
+	echo Installing Python extension modules in $pyexecdir.
+else
+	echo Python support: Disabled.
+	echo Add something to CPPFLAGS to enable.  See "./configure --help".
+fi
+
+if test -n "$CSOUND_CXXFLAGS" ; then
+	echo Csound support: Enabled.
+	echo Installing opcodes in $CSOUND_PREFIX/lib/csound
+else
+	echo Csound support: Disabled.
+	echo Define CSOUND_CONFIG or add something to CPPFLAGS to enable.  
+	echo See "./configure --help".
+fi
 
 AC_MSG_RESULT(----- End Of Configuration -----)

@@ -50,7 +50,7 @@
    are the result of this bad idea.
  */
 #include "lorisgens.h"
-#include "cs.h"
+#include <csound/cs.h>
 #include "string.h"
 
 #include "Breakpoint.h"

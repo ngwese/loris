@@ -36,7 +36,7 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-#include "cs.h"
+#include <csound/cs.h>
 
 /* declare structures holding private internal data */
 typedef struct LorisReader LorisReader;
