@@ -137,12 +137,12 @@ void ConvertToIeeeExtended(double num, extended80 * x)
  * Extended precision IEEE floating-point conversion routine.
  ****************************************************************/
 
-double ConvertFromIeeeExtended(extended80 x)
+double ConvertFromIeeeExtended(const extended80 * x)
 {								/* LCN */ /* ? */
 	double f;
 	int expon;
 	int hiMant, loMant;
-	char * bytes = x.data;
+	const char * bytes = x->data;
 
 	expon = ((bytes[0] & 0x7F) << 8) | (bytes[1] & 0xFF);
 	hiMant = ((int)(bytes[2] & 0xFF) << 24)

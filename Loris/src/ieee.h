@@ -48,7 +48,7 @@ struct extended80;
 
 /*	conversion functions				*/
 extern void ConvertToIeeeExtended(double num, extended80 * x) ;
-extern double ConvertFromIeeeExtended(extended80 x) ;
+extern double ConvertFromIeeeExtended(const extended80 * x) ;
 
 /*	struct extended80 definition, with 
 	constructors and conversion to 
@@ -59,7 +59,7 @@ struct extended80 {
 	
 #ifdef __cplusplus
 	extended80( double x = 0. ) { ConvertToIeeeExtended( x, this ); }
-	operator double( void ) const { return ConvertFromIeeeExtended( *this ); }
+	operator double( void ) const { return ConvertFromIeeeExtended( this ); }
 #endif
 	
 };
