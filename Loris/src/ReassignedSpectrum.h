@@ -34,6 +34,9 @@ public:
 //	length of the three Fourier transforms:
 	long size( void ) const { return _transform.size(); }
 	
+//	peers may need to know about the analysis window:
+	const std::vector< double > & window( void ) const { return _window; }
+	
 //	reassigned spectral data access:		
 	double magnitude( unsigned long idx ) const;
 	double reassignedFrequency( unsigned long idx ) const;

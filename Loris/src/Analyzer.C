@@ -85,18 +85,16 @@ Analyzer::analyze( const vector< double > & buf, double srate )
 			thinPeaks( f );
 
 			//	perform bandwidth association:
-			_bw.accumulateSpectrum( *_spectrum, sampleRate() );
-			_bw.accumulateSinusoids( f.begin(), f.end() );
-			_bw.associate( f.begin(), f.end() );
+			_bw->associate( f.begin(), f.end() );
 
 			/*	I wonder if I can possibly get away with
 				requiring the transform window center to 
 				be a valid iterator on buf...
 				
-			if ( _winMiddleIdx <= 0 || _winMiddleIdx >= buf.size() ) {
-				debugger << "kept " << f.size() << " peaks." << endl;
-			}
 			*/
+			if ( _winMiddleIdx < 0 || _winMiddleIdx >= buf.size() ) {
+				debugger << "kept " << f.size() << " peaks at index " << _winMiddleIdx << endl;
+			}
 			
 			//	form Partials from the extracted Breakpoints:
 			formPartials( f );
@@ -155,7 +153,7 @@ Analyzer::createSpectrum( double srate )
 		
 		//	configure bw association strategy, which 
 		//	needs to know about the window:
-		_bw.setWindow( v.begin(), v.end(), _spectrum->size() );
+		_bw.reset( new AssociateBandwidth( *_spectrum, srate ) );
 	}
 	catch ( Exception & ex ) {
 		ex.append( "couldn't create a ReassignedSpectrum." );

@@ -93,7 +93,7 @@ private:
 //	-- instance variables --
 private:
 	std::auto_ptr< ReassignedSpectrum > _spectrum;
-	AssociateBandwidth _bw;
+	std::auto_ptr< AssociateBandwidth > _bw;
 	
 	//	parameters (from Lemur):
 	double _freqResolution;		//	minimum frequency distance (Hz) between Partials

@@ -12,24 +12,29 @@
 #include "bark.h"
 #include <algorithm>
 #include "FourierTransform.h"
-
+#include "ReassignedSpectrum.h"
 
 using namespace std;
-
-Begin_Namespace( Loris )
-
-#define HEY 64
+using namespace Loris;
 
 // ---------------------------------------------------------------------------
 //	AssociateBandwidth constructor
 // ---------------------------------------------------------------------------
+//	Association regions are centered on all integer bin frequencies, there 
+//	are numBins of them, starting at bin frequency 1. The lowest frequency
+//	region is always ignored, its surplus energy is set to zero.
 //
-AssociateBandwidth::AssociateBandwidth( void ) :
-	_spectralEnergy( 24 ),
-	_sinusoidalEnergy( 24 ),
-	_weights( 24 ),
-	_windowFactor( 1. )
+AssociateBandwidth::AssociateBandwidth( const ReassignedSpectrum & spec, 
+										double srate,
+										int numBins /* = 24 */ ) :
+	_spectrum( spec ),
+	_spectralEnergy( numBins ),
+	_sinusoidalEnergy( numBins ),
+	_weights( numBins ),
+	_surplus( numBins ),
+	_hzPerSamp( srate / spec.size() )
 {
+	computeWindowSpectrum( _spectrum.window() );
 }	
 
 // ---------------------------------------------------------------------------
@@ -52,74 +57,49 @@ AssociateBandwidth::~AssociateBandwidth( void )
 //	doesn't matter at all...
 //
 void
-AssociateBandwidth::computeSurplusEnergy( vector<double> & surplus )
+AssociateBandwidth::computeSurplusEnergy( void )
 {
-#if 1
-	for ( int i = 0; i < surplus.size(); ++i ) {
-	#if 0
-		//	use loudness, proportional to cube root of energy:
-		double spec = pow( _spectralEnergy[i] / _windowFactor, 1. / 3. );
-		double sin = pow( _sinusoidalEnergy[i] / _windowFactor, 1. / 3. );
-		
-		//	excess cannot be negative:
-		double diff = max( 0., spec - sin );
-		/*
-		double diff = spec - sin;
-		if ( diff < 0. ) {
-			debugger << "clamping surplus energy at zero in region " << i << endl;
-			diff = 0.;
-		}
-		else {
-			debugger << "surplus energy " << diff << " in region " << i << endl;
-		}
-		//*/
-		surplus[i] = diff * diff * diff;	//	cheaper than pow()
-	#else
-		surplus[i] = max( 0., _spectralEnergy[i] - _sinusoidalEnergy[i] ) / _windowFactor;
-	#endif
+	//	the lowest-frequency region (0) is always ignored, 
+	//	DC should never show up as noise: 
+	for ( int i = 1; i < _surplus.size(); ++i ) {
+		_surplus[i] = 
+			max(0., _spectralEnergy[i]-_sinusoidalEnergy[i]) / _windowFactor;
 	}
-#else
-	//_specCopy = _sinSpec;
-	for ( long j = 0; j < _specCopy.size() / 2; ++j ) {
-		//if ( j > 80 )
-		//	_specCopy[j] += 0.01 / 80.;
-		double espec = _specCopy[j] * _specCopy[j];
-		double esin = _sinSpec[j] * _sinSpec[j];
-		double diff = max( 0., espec - esin ) / _windowFactor;
-		distribute( j * _hzPerSamp, diff, surplus );
-	}
-	
-#endif
-	//	throw out low frequency stuff:
-	surplus[0] = 0.;
 }
 
 // ---------------------------------------------------------------------------
 //	computeNoiseEnergy
 // ---------------------------------------------------------------------------
 //	Return the noise energy to be associated with a component at freqHz.
-//	surplus contains the surplus spectral energy in each region, which is,
+//	_surplus contains the surplus spectral energy in each region, which is,
 //	by defintion, non-negative.
 //
 double 
-AssociateBandwidth::computeNoiseEnergy( double freqHz, 
-										const vector<double> & surplus )
+AssociateBandwidth::computeNoiseEnergy( double freqHz )
 {
-	double barks = binFreq( freqHz );
+	//	don't mess with negative frequencies:
+	if ( freqHz < 0. )
+		return 0.;
+	
+	//	compute the fractional bin frequency 
+	//	corresponding to freqHz:
+	double bin = binFrequency( freqHz );
 	
 	//	contribute x to two regions having center
 	//	frequencies less and greater than freqHz:
-	int posBelow = findRegionBelow( barks );
+	int posBelow = findRegionBelow( bin );
 	int posAbove = posBelow + 1;
 
-	double alpha = computeAlpha( barks );
+	double alpha = computeAlpha( bin );
 
 	double noise = 0.;
-	if ( posAbove < surplus.size() )					
-		noise += surplus[posAbove] * alpha / _weights[posAbove];
+	//	have to check for alpha == 0, because 
+	//	the weights will be zero:
+	if ( posAbove < _surplus.size() && alpha > 0. )
+		noise += _surplus[posAbove] * alpha / _weights[posAbove];
 	
 	if ( posBelow >= 0 )
-		noise += surplus[posBelow] * (1. - alpha) / _weights[posBelow];
+		noise += _surplus[posBelow] * (1. - alpha) / _weights[posBelow];
 				
 	return noise;
 }
@@ -131,19 +111,22 @@ AssociateBandwidth::computeNoiseEnergy( double freqHz,
 void 
 AssociateBandwidth::distribute( double freqHz, double x, vector<double> & regions )
 {
+	//	don't mess with negative frequencies:
 	if ( freqHz < 0. )
 		return;
-		
-	double barks = binFreq( freqHz );
+	
+	//	compute the warped, fractional bin frequency
+	//	corresponding to freqHz:	
+	double bin = binFrequency( freqHz );
 	
 	//	contribute x to two regions having center
 	//	frequencies less and greater than freqHz:
-	int posBelow = findRegionBelow( barks );
+	int posBelow = findRegionBelow( bin );
 	int posAbove = posBelow + 1;
 	
-	double alpha = computeAlpha( barks );
+	double alpha = computeAlpha( bin );
 	
-	if ( posAbove < regions.size() )					
+	if ( posAbove < regions.size() )
 		regions[posAbove] += alpha * x;
 	
 	if ( posBelow >= 0 )
@@ -154,65 +137,38 @@ AssociateBandwidth::distribute( double freqHz, double x, vector<double> & region
 //	findRegionBelow
 // ---------------------------------------------------------------------------
 //	Return the index of the last region having center frequency less than
-//	or equal to barks, or -1 if no region is low enough. 
-//
-//	This will be different when regions are not all centered on 
-//	every integer bark frequency.
+//	or equal to freq, or -1 if no region is low enough. 
 //
 int 
-AssociateBandwidth::findRegionBelow( double barks )
+AssociateBandwidth::findRegionBelow( double binfreq )
 {
-	//	sanity check:
-	Assert( barks >= 0. );
-	
-	//	the lowest region is centered at 1 bark:
-	const double lowest_bark = 1.;
-	if ( barks < lowest_bark ) {
+	if ( binfreq < 1. ) {
 		return -1;
 	}
 	else {
-		return min( (int)(floor( barks ) - lowest_bark), 
-					(int)_spectralEnergy.size() - 1 );
+		return min( floor(binfreq - 1.), _spectralEnergy.size() - 1. );
 	}
 }
 
 // ---------------------------------------------------------------------------
 //	computeAlpha
 // ---------------------------------------------------------------------------
-//	Return the relative contribution of a component at barks to the
-//	surrounding regions. Return 0. if barks is equal to a region frequency,
-//	0.5 if it is halfway between center frequencies, almost 1 if it is
-//	almost equal to the next higher center frequency.
-//
-//	In other words, as used, return 0 if barks is equal to the center
-//	frequency of the region indexed by the return value of findRegionBelow(),
-//	1 if it is equal to 1 more than that.
-//
-//	What about boundaries?
-//	barks should be non-negative, so that boundary just tapers off to zero,
-//	which is good, because we don't want DC to show up as noise.
-//	If barks is greater than the center freqeuency of the highest region,
-//	then we probably want to lump it in with the highest region, which 
-//	is the last region centered at or below barks, so return 0.
-//	
+//	binfreq is a warped, fractional bin frequency, and bin frequencies 
+//	are integers. Return the relative contribution of a component at
+//	binfreq to the bins (bw association regions) below and above
+//	binfreq. 
 //
 double
-AssociateBandwidth::computeAlpha( double barks )
+AssociateBandwidth::computeAlpha( double binfreq )
 {
-	//	sanity check:
-	Assert( barks >= 0. );
-	
-	const double maxfreq = _spectralEnergy.size();
-	if ( barks > maxfreq ) {
+	//	everything above the center of the highest
+	//	bin is lumped into that bin; i.e it does
+	//	not taper off at higher frequencies:	
+	if ( binfreq > _spectralEnergy.size() ) {
 		return 0.;
 	}
-	/*
-	else if ( barks < 4. ) {
-		return 0.;
-	}
-	*/
 	else {
-		return barks - floor(barks);
+		return binfreq - floor( binfreq );
 	}
 }
 
@@ -227,80 +183,129 @@ AssociateBandwidth::reset( void )
 	fill( _spectralEnergy.begin(), _spectralEnergy.end(), 0. );
 	fill( _sinusoidalEnergy.begin(), _sinusoidalEnergy.end(), 0. );
 	fill( _weights.begin(), _weights.end(), 0. );
+	fill( _surplus.begin(), _surplus.end(), 0. );
 }
 
 // ---------------------------------------------------------------------------
 //	computeWindowSpectrum
 // ---------------------------------------------------------------------------
 //	
+#define WinSpecOversample 16
 void
-AssociateBandwidth::computeWindowSpectrum( vector< double > & v, long len )
+AssociateBandwidth::computeWindowSpectrum( const vector< double > & v )
 {
-	FourierTransform ft( len * HEY );
+	FourierTransform ft( _spectrum.size() * WinSpecOversample );
 	ft( v );
 	
-	//double scale = 2. / accumulate( v.begin(), v.end(), 0. );
-	// same as?:
-	_moreshit = 1. / abs( ft[0] );
-	for( long i = 0; i < len; ++i ) {
-		double x = _moreshit * abs( ft[i] );
+	double peakScale = 1. / abs( ft[0] );
+	for( long i = 0; i < ft.size(); ++i ) {
+		double x = peakScale * abs( ft[i] );
 		if ( i > 0 && x > _winspec[i-1] ) {
 			break;
 		}
 		_winspec.push_back( x );
 	}
 
-	//	KLUDGE: need actual sample rate
-	_hzPerSamp = 44100. / len;
-	
 	//	compute the window scale:
 	_windowFactor = _winspec[0] * _winspec[0];
-	for ( long j = HEY; j < _winspec.size(); j += HEY ) {
+	for ( long j = WinSpecOversample; j < _winspec.size(); j += WinSpecOversample ) {
 		_windowFactor += 2. * _winspec[j] * _winspec[j];
 	}
 }
 
 // ---------------------------------------------------------------------------
-//	ohBaby
+//	accumulateSpectrum
 // ---------------------------------------------------------------------------
+//	Spectral energy accumulation.
+//
+void 
+AssociateBandwidth::accumulateSpectrum( void )
+{
+	const int max_idx = _spectrum.size() / 2;
+	for ( int i = 0; i < max_idx; ++i ) {
+		double m = _spectrum.magnitude(i);
+		distribute( i * _hzPerSamp, m * m, _spectralEnergy );
+	}
+	
+#ifdef Debug_Loris
+	_specCopy = std::vector<double>( _spectrum.size(), 0. );
+	_sinSpec = std::vector<double>( _spectrum.size(), 0. );
+	for ( int j = 0; j < _spectrum.size(); ++j ) {
+		_specCopy[j] = _spectrum.magnitude(j);
+	}
+	_residue = _specCopy;
+#endif
+}
+
+// ---------------------------------------------------------------------------
+//	accumulateSinusoid
+// ---------------------------------------------------------------------------
+//	Accumulate sinusoidal energy at frequency f and (nominal) amplitude a.
+//	First need to compute a more accurate amplitude, and use that to 
+//	scale the window spectrum when distributing energy.
 //	
 void
-AssociateBandwidth::ohBaby( double f, double a )
+AssociateBandwidth::accumulateSinusoid( double f, double a )
 {
+	//	don't mess with negative frequencies:
+	if ( f < 0. )
+		return;
+
+	//	distribute weight at the peak frequency:
+	distribute( f, 1., _weights );
+	
+	//	compute the offset in the oversampled window spectrum:
 	double fracBinNum = f / _hzPerSamp;
 	long intBinNumber = round(fracBinNum);
 	long offset = 
-		- (( ((int)(HEY * (fracBinNum - intBinNumber)) + (HEY / 2)) % HEY ) - (HEY / 2));
+		- (( ((int)(WinSpecOversample * (fracBinNum - intBinNumber)) + (WinSpecOversample / 2)) % WinSpecOversample ) - (WinSpecOversample / 2));
 	
+	//	compute the more accurate peak amplitude:
 	double correctAmp = a / _winspec[abs(offset)];
+	
+	//	distribute the peak amplitude: 
 	double z = correctAmp * _winspec[abs(offset)];
 	distribute( intBinNumber * _hzPerSamp, z * z, _sinusoidalEnergy  );
-	distribute( f, 1., _weights );
+
+#ifdef Debug_Loris
 	_sinSpec[ intBinNumber ] += z;
 	_residue[ intBinNumber ] -= z;
-	
-	for ( int i = 1; (HEY * i) + abs(offset) < _winspec.size(); ++i ) {
-		z = correctAmp * _winspec[(HEY * i) + offset];
+#endif
+
+	//	distribute samples of the oversampled window spectrum:
+	for ( int i = 1; (WinSpecOversample * i) + abs(offset) < _winspec.size(); ++i ) {
+		z = correctAmp * _winspec[(WinSpecOversample * i) + offset];
 		distribute( (intBinNumber + i) * _hzPerSamp, z * z, _sinusoidalEnergy  );
+#ifdef Debug_Loris
 		_sinSpec[ intBinNumber + i ] += z;
 		_residue[ intBinNumber + i ] -= z;
+#endif
+		
+		//	don't index bins below 0:
 		if ( intBinNumber >= i ) {
-			z = correctAmp * _winspec[(HEY * i) - offset];
+			z = correctAmp * _winspec[(WinSpecOversample * i) - offset];
 			distribute( (intBinNumber - i) * _hzPerSamp, z * z, _sinusoidalEnergy  );
+#ifdef Debug_Loris
 			_sinSpec[ intBinNumber - i ] += z;
 			_residue[ intBinNumber - i ] -= z;
+#endif
 		}
 	}
 }
 
 // ---------------------------------------------------------------------------
-//	binFreq
+//	binFrequency
 // ---------------------------------------------------------------------------
+//	Compute the warped fractional bin/region frequency corresponding to 
+//	freqHz.
 //	
 inline double
-AssociateBandwidth::binFreq( double freq )
+AssociateBandwidth::binFrequency( double freqHz )
 {
-	return freq * 0.001;
+	return freqHz * 0.001;
+/*
+	double b = bark( freqHz ) - 9.;
+	return max( b, 0. );
+*/
 }
-End_Namespace( Loris )
 
