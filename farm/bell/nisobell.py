@@ -7,86 +7,13 @@ Python script for analyzing and reconstructing one of a variety
 of sounds used to test the analysis/modification/synthesis routines 
 in Loris.
 
-This script pertains to the temple bell from Niso (Japan?). It
-is a noisy field recording, truncatd at the end, with some audible
-squeaking of the bell suspension, and lots of hiss. It has an 
-interesting attack though, and a nice bell timbre, which is simple
-but not harmonic.
-
-The parameters we once liked for this are resolution 60 and
-window width 105 Hz, and bandwidth region width 2400 Hz.
-
-first pass notes 4 May 2001:
-- the lowest tone in the bell is below 110 Hz, so resolutions
-	greater than that loose a big part of the sound, unless the
-	freq floor is lowered.
-- hiss in the source makes artifacts in reconstruction, less 
-	objectionable, maybe, in wider windows (200 Hz)
-- windows 140 and 200 Hz are best, 100 and less are unacceptible
-- bandwidth region width doesn't have much effect
-- with a 200 Hz wide window, resolutions 30, 40, 50, 60, 70, 80, 95
-	are hard to distinguish
-
-Second trial attempted distillations.
-Third trial added some even wider windows (since the widest,
-200 Hz, always sounded best). 
-
-note: distillation doesn't seem to have a deliterious effect
-
-Fourth trial is similar to trial three, but with the new sifting
-Distiller, fewer resolutions (since they are almost indistinguishible),
-and te standard Bw regions width (2k).
-
-notes from trial 4:
-	- the choice of resolution doesn't seem to affect the quality of 
-	the bell sound, only the background noise sounds different with
-	different resolutions
-	- narrower windows increase the noisiness (sounds like a noise burst)
-	in the attack, most evident with larger resolutions. 
-	- can use 70 or 95 Hz resolution with wider windows and get good results
-	- distillation works well for all values tried (up to 120, try larger)
-
-notes from trial 5 (using 1.0beta8):
-	- 300 Hz windows seem to get a little crunchy after about 3 s, don't use
-	- 200 Hz windows undistilled reconstructions are pretty good
-	- distillation at 180 is unusable, total crunch
-	- 70.200.d120 and 70.200.d150 have noisiness problems
-	- 70.200.d90 is fine, as are distillations of 95.200
-	- very high level of background hiss in original makes all of them 
-	kind of wormy
 	
-notes from trial 6 (using 1.0beta9):
-	- confirmed above: disllations of 95.200 are all pretty good, 
-	as is 70.200.d90, all are wormy.
-	- need to make some SDIF and Spc files to look at and figure out
-	what kind of partials are being retained. Maybe there are lots of
-	short ones that can be converted to noise, or removed. 
-	
-notes from trial 7 (Spc files in Kyma):
-	- lots of tiny little partials all over the spectrum, could eliminate
-	- looks like it might be worth trying to restrict the frequency drift
-	in these analyses, some of these partials wander quite a lot.
-	- also short stuff before .2 seconds looks like it could go
-	- should also try converting all those short things to noise
-	
-notes from trial 8:
-	- trimming and restricting frequency drift does not seem
-	to have adversely affected the quality of the reconstructions,
-	just removed the background wormy hiss
-	- this trivial pruning mechanism leaves some pretty big holes, 
-	but they don't seem to be audible
-	- spc filenames too long! (fixed, I think)
-	- partials seem to wander less, though I think that the distillation
-	process introduces some of that
-	- these sets of parameters all yield about the same results, these
-	all sound pretty much identical
-	- the partials are sufficiently stable, that any of these harmonic
-	distillations seems to work fine.
-	
-conclusion: 95 Hz resolution with a 200 Hz window works well, can be 
-harmonically distilled at fundamentals up to 150, can also have lots of
-little noisy partials pruned out. Prominent partials in this tone are 
-approximately 105 Hz (1), 271 Hz (2), 398 Hz (4), 541 Hz (5), 689 Hz (6).
+Niso bell: 
+	95 Hz resolution with a 200 Hz window works well, can be
+	harmonically distilled at fundamentals up to 150, can also have lots
+	of little noisy partials pruned out. Prominent partials in this tone
+	are approximately 105 Hz (1), 271 Hz (2), 398 Hz (4), 541 Hz (5),
+	689 Hz (6).
 
 Last updated: 11 march 2003 by Kelly Fitz
 """
@@ -113,6 +40,19 @@ loris.distill( pcollate )
 print 'synthesizing raw (collated) %s (%s)'%(name, time.ctime(time.time()))
 samples = loris.synthesize( pcollate, orate )
 loris.exportAiff( name + '.raw.aiff', samples, orate )
+loris.exportSdif( name + '.raw.sdif', pcollate )
+
+# remove any Partials labeled greater than 512
+iter = pcollate.begin()
+end = pcollate.end()
+while not iter.equals(end):
+	next = iter.next()
+	if iter.partial().label() > 512:
+		pcollate.erase(iter)
+	iter = next
+
+loris.exportSpc( name + '.raw.s.spc', pcollate, 36, 0 )
+loris.exportSpc( name + '.raw.e.spc', pcollate, 36, 1 )
 
 print 'pruning very short partials before .2 and after .5 seconds'
 it = p.begin()
@@ -136,6 +76,87 @@ loris.exportSpc( name + '.e.spc', p, 45, 1 )
 loris.exportSdif( name + '.sdif', p )
 
 
+# This script pertains to the temple bell from Niso (Japan?). It
+# is a noisy field recording, truncatd at the end, with some audible
+# squeaking of the bell suspension, and lots of hiss. It has an 
+# interesting attack though, and a nice bell timbre, which is simple
+# but not harmonic.
+# 
+# The parameters we once liked for this are resolution 60 and
+# window width 105 Hz, and bandwidth region width 2400 Hz.
+# 
+# first pass notes 4 May 2001:
+# - the lowest tone in the bell is below 110 Hz, so resolutions
+# 	greater than that loose a big part of the sound, unless the
+# 	freq floor is lowered.
+# - hiss in the source makes artifacts in reconstruction, less 
+# 	objectionable, maybe, in wider windows (200 Hz)
+# - windows 140 and 200 Hz are best, 100 and less are unacceptible
+# - bandwidth region width doesn't have much effect
+# - with a 200 Hz wide window, resolutions 30, 40, 50, 60, 70, 80, 95
+# 	are hard to distinguish
+# 
+# Second trial attempted distillations.
+# Third trial added some even wider windows (since the widest,
+# 200 Hz, always sounded best). 
+# 
+# note: distillation doesn't seem to have a deliterious effect
+# 
+# Fourth trial is similar to trial three, but with the new sifting
+# Distiller, fewer resolutions (since they are almost indistinguishible),
+# and te standard Bw regions width (2k).
+# 
+# notes from trial 4:
+# 	- the choice of resolution doesn't seem to affect the quality of 
+# 	the bell sound, only the background noise sounds different with
+# 	different resolutions
+# 	- narrower windows increase the noisiness (sounds like a noise burst)
+# 	in the attack, most evident with larger resolutions. 
+# 	- can use 70 or 95 Hz resolution with wider windows and get good results
+# 	- distillation works well for all values tried (up to 120, try larger)
+# 
+# notes from trial 5 (using 1.0beta8):
+# 	- 300 Hz windows seem to get a little crunchy after about 3 s, don't use
+# 	- 200 Hz windows undistilled reconstructions are pretty good
+# 	- distillation at 180 is unusable, total crunch
+# 	- 70.200.d120 and 70.200.d150 have noisiness problems
+# 	- 70.200.d90 is fine, as are distillations of 95.200
+# 	- very high level of background hiss in original makes all of them 
+# 	kind of wormy
+# 	
+# notes from trial 6 (using 1.0beta9):
+# 	- confirmed above: disllations of 95.200 are all pretty good, 
+# 	as is 70.200.d90, all are wormy.
+# 	- need to make some SDIF and Spc files to look at and figure out
+# 	what kind of partials are being retained. Maybe there are lots of
+# 	short ones that can be converted to noise, or removed. 
+# 	
+# notes from trial 7 (Spc files in Kyma):
+# 	- lots of tiny little partials all over the spectrum, could eliminate
+# 	- looks like it might be worth trying to restrict the frequency drift
+# 	in these analyses, some of these partials wander quite a lot.
+# 	- also short stuff before .2 seconds looks like it could go
+# 	- should also try converting all those short things to noise
+# 	
+# notes from trial 8:
+# 	- trimming and restricting frequency drift does not seem
+# 	to have adversely affected the quality of the reconstructions,
+# 	just removed the background wormy hiss
+# 	- this trivial pruning mechanism leaves some pretty big holes, 
+# 	but they don't seem to be audible
+# 	- spc filenames too long! (fixed, I think)
+# 	- partials seem to wander less, though I think that the distillation
+# 	process introduces some of that
+# 	- these sets of parameters all yield about the same results, these
+# 	all sound pretty much identical
+# 	- the partials are sufficiently stable, that any of these harmonic
+# 	distillations seems to work fine.
+# 	
+# conclusion: 95 Hz resolution with a 200 Hz window works well, can be 
+# harmonically distilled at fundamentals up to 150, can also have lots of
+# little noisy partials pruned out. Prominent partials in this tone are 
+# approximately 105 Hz (1), 271 Hz (2), 398 Hz (4), 541 Hz (5), 689 Hz (6).
+# 
 # from trials import *
 # 
 # # use this trial counter to skip over
