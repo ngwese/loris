@@ -236,11 +236,18 @@ void exportAiff( const char * path, const SampleVector * vec,
 	try 
 	{
 		ThrowIfNull((SampleVector *) vec);
+	
+		// do nothing if there are no samples:
+		if ( vec->empty() )
+		{
+			notifier << "no samples to write to " << path << endl;
+			return;
+		}
 
 		//	write out samples:
 		notifier << "writing " << vec->size() << " samples to " << path << endl;
 		AiffFile::Export( path, samplerate, nchannels, bitsPerSamp, 
-						  vec->begin(), vec->end() );
+						  &((*vec)[0]), &((*vec)[vec->size()]) );
 	}
 	catch( Exception & ex ) 
 	{
@@ -423,7 +430,9 @@ void importAiff( const char * path, SampleVector * ptr_this,
 		notifier << "reading samples from " << path << endl;
 		AiffFile f( path );
 		ptr_this->resize( f.sampleFrames(), 0. );
-		f.getSamples( ptr_this->begin(), ptr_this->end() );
+		if ( !ptr_this->empty() )
+			f.getSamples( &((*ptr_this)[0]), &((*ptr_this)[ptr_this->size()]) );
+		
 		notifier << "read " << f.sampleFrames() << " frames of " 
 				 << f.channels() << " channel data at " 
 				 << f.sampleRate() << " Hz" << endl;
@@ -602,11 +611,16 @@ void synthesize( const PartialList * partials,
 		//	Partial):
 		const double fadeTime = .001;
 		const long nsamps = long( srate * ( maxtime + fadeTime ) );	
+		if ( nsamps == 0 )
+		{
+			notifier << "no samples to synthesize" << endl;
+			return;
+		} 
 		if ( samples->size() < nsamps )
 			samples->resize( nsamps, 0. );
 		
 		//	synthesize:
-		Synthesizer synth( srate, samples->begin(), samples->end() );
+		Synthesizer synth( srate, &((*samples)[0]), &((*samples)[samples->size()]) );
 		for ( it = partials->begin(); it != partials->end(); ++it ) 
 		{
 			synth.synthesize( *it );

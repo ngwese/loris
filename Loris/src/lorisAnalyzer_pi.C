@@ -158,10 +158,13 @@ void analyzer_analyze( Analyzer * ptr_this,
 		notifier << "analyzing " << vec->size() << " samples at " <<
 					srate << " Hz with frequency resolution " <<
 					ptr_this->freqResolution() << endl;
-		ptr_this->analyze( vec->begin(), vec->end(), srate );
+		if ( !vec->empty())
+		{
+			ptr_this->analyze( &((*vec)[0]), &((*vec)[vec->size()]), srate );
 		
-		//	splice the Partials into the destination list:
-		partials->splice( partials->end(), ptr_this->partials() );
+			//	splice the Partials into the destination list:
+			partials->splice( partials->end(), ptr_this->partials() );
+		}
 	}
 	catch( Exception & ex ) 
 	{

@@ -76,12 +76,12 @@ public:
 		string automatically using __FILE__ and __LINE__.
 	 */
 	 
-	virtual ~Exception( void ) {}
+	virtual ~Exception( void ) throw() {}
 	/* 	Destroy this Exception.
 	 */
 
 //	-- std::exception interface --
-	const char * what( void ) const { return _sbuf.c_str(); }
+	const char * what( void ) const throw() { return _sbuf.c_str(); }
 	/*	Return a description of this Exception in the form of a
 		C-style string (char pointer).
 	 */

@@ -78,8 +78,8 @@ buildReassignmentWindow( RealWinIter winbegin, RealWinIter winend,
 //	window length. The noise floor is specified in dB (negative).
 //
 ReassignedSpectrum::ReassignedSpectrum( const std::vector< double > & window ) :
-	_transform( 1 << long( 1 + ceil( log(window.size()) / log(2.)) ) ),
-	_ratransform( 1 << long( 1 + ceil( log(window.size()) / log(2.)) ) ),
+	_transform( 1 << long( 1 + ceil( log((double)window.size()) / log(2.)) ) ),
+	_ratransform( 1 << long( 1 + ceil( log((double)window.size()) / log(2.)) ) ),
 	_window( window ),
 	_rawindow( window.size(), 0. )
 {

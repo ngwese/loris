@@ -8,6 +8,21 @@ This file contains specific information for building and installing
 Loris for the Macintosh. Please read the file README for general
 information about Loris.
 
+Darwin/MacOS X:
+
+Loris can be built using the standard GNU tools from a Terminal window
+under OS X, follow the instructions for the standard distribution. All
+compatibility issues that caused poor performance or failure of the 
+standard configuration and build tools under Darwin have (long since)
+been resolved.
+
+The remainder of this file applies only to users who want to build 
+Loris without using standard *nix-style tools.
+
+Loris can be built using CodeWarrior for Mac OS (X or 9), and the
+distrubuted project builds a (carbonized) module for the carbonized 
+version of Python 2.1.1. 
+
 INSTALLATION:
 
 A Metrowerks Codewarrior project for building Loris under MacOS is
@@ -80,19 +95,6 @@ level as the Codewarrior folder. If you put it somewhere else, you will
 have to change the Access Paths for your project. Please use version 3.4
 or later of IRCAM's SDIF library, problems in earlier versions of the
 library prevented Loris from working correctly.
-
-Darwin/MacOS X:
-
-Loris does not perform well under Darwin/MacOS X. For unknown reasons,
-the FFTW library runs very slowly under Darwin. Also, dynamically loaded
-libraries (like the scripting modules) are different and incompatible
-under Darwin, and libtool does not appear to work correctly under
-Darwin. 
-
-However, Loris can be built using CodeWarrior under Mac OS X, and the
-distrubuted project builds a (carbonized) module for the carbonized 
-version of Python 2.1.1. It still runs slowly though, for reasons 
-unknown.
 
 COPYRIGHT AND LICENSE:
 
