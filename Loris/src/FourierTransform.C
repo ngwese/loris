@@ -159,26 +159,36 @@ FourierTransform::makePlan( void )
 }
 
 // ---------------------------------------------------------------------------
-//	reserve
+//	reservations
 // ---------------------------------------------------------------------------
-//	Might throw a low memory exception.
-//
-//	reservations stores the lengths of all existing FourierTransform
+//	Access a multiset of the lengths of all existing FourierTransform
 //	instances. It is sorted with greater<> so that the first element
 //	is the length of the largest existing transform.
+//	 
+static multiset< long, greater<long> > & reservations( void ) 
+{
+	static multiset< long, greater<long> > _mset;
+	return _mset;
+}
+
+// ---------------------------------------------------------------------------
+//	reserve
+// ---------------------------------------------------------------------------
+//	Register a new transform by adding its length to the reservations.
+//	Reallocate the shared buffer if necessary.
+//	Might throw a low memory exception.
 //
-static multiset< long, greater<long> > reservations;
 static void reserve( long len )
 {
 	//	allocate a bigger shared buffer if necessary:
-	if ( reservations.empty() || * reservations.begin() < len ) {
+	if ( reservations().empty() || * reservations().begin() < len ) {
 		debugger << "Allocating shared buffer of size " << len << endl;
 		delete[] sharedBuffer;
 		sharedBuffer = Null;	//	to prevent deleting again
 		sharedBuffer = new fftw_complex[ len ];
 	}
 	
-	reservations.insert( len );
+	reservations().insert( len );
 }
 
 // ---------------------------------------------------------------------------
@@ -188,24 +198,24 @@ static void reserve( long len )
 static void release( long len )
 {
 	//	find a reservation for this length:
-	multiset< long, greater<long> >::iterator pos = reservations.find( len );
-	if ( pos == reservations.end() ) {
+	multiset< long, greater<long> >::iterator pos = reservations().find( len );
+	if ( pos == reservations().end() ) {
 		debugger << "wierd, couldn't find a reservation for a transform of length " << len << endl;
 		return;
 	}
 	
 	//	erase it:
-	reservations.erase( pos );
+	reservations().erase( pos );
 	
 	//	shrink the shared buffer if possible:
-	if ( reservations.empty() || * reservations.begin() < len ) {
+	if ( reservations().empty() || * reservations().begin() < len ) {
 		debugger << "Releasing shared buffer of size " << len << endl;
 		delete[] sharedBuffer;
 		sharedBuffer = Null;
 		
-		if ( ! reservations.empty() ) {
-			debugger << "Allocating shared buffer of size " << * reservations.begin() << endl;
-			sharedBuffer = new fftw_complex[ * reservations.begin() ];
+		if ( ! reservations().empty() ) {
+			debugger << "Allocating shared buffer of size " << * reservations().begin() << endl;
+			sharedBuffer = new fftw_complex[ * reservations().begin() ];
 		}
 	}
 }
