@@ -15,8 +15,8 @@
 
 #include "LorisLib.h"
 #include "Oscillator.h"
-#include "Noise.h"
 #include "Filter.h"
+#include "random.h"
 
 #include <vector>
 

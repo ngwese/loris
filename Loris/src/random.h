@@ -1,8 +1,8 @@
-#ifndef __noise_generators__
-#define __noise_generators__
+#ifndef __random_number_generators__
+#define __random_number_generators__
 
 // ===========================================================================
-//	noise.h
+//	random.h
 //	
 //	Inline implementations of algorithms for generating random numbers
 //	with uniform and gaussian distributions.
@@ -13,11 +13,14 @@
 
 #if !defined( Deprecated_cstd_headers )
 	#include <cmath>
-	using std::sqrt;
-	using std::log;
-	using std::trunc;
+	#define STDsqrt std::sqrt
+	#define STDlog std::log
+	#define STDtrunc std::trunc
 #else
 	#include <math.h>
+	#define STDsqrt sqrt
+	#define STDlog log
+	#define STDtrunc trunc
 #endif
 
 Begin_Namespace( Loris )
@@ -48,31 +51,30 @@ Begin_Namespace( Loris )
 //
 typedef long double ldouble;
 
-static ldouble seed = 1.0L;
+static ldouble __ranseed = 1.0L;
 
-//static 
 inline ldouble
-uniform(void)
+uniform( void )
 {
 static const ldouble a = 16807.L;
 static const ldouble m = 2147483647.L;	// == LONG_MAX
 static const ldouble oneOverM = 1.L / m;
 
-	ldouble temp = a * seed;
-	// seed = temp - m * trunc( temp / m );
-	seed = temp - m * trunc( temp * oneOverM );
-	// return seed / m;
-	return seed * oneOverM;
+	ldouble temp = a * __ranseed;
+	// __ranseed = temp - m * STDtrunc( temp / m );
+	__ranseed = temp - m * STDtrunc( temp * oneOverM );
+	// return __ranseed / m;
+	return __ranseed * oneOverM;
 }
 
 // ---------------------------------------------------------------------------
-//	SeedRdm
+//	seed_random
 // ---------------------------------------------------------------------------
 //
 inline void
-seed_random(ldouble s)
+seed_random( ldouble s )
 {
-	seed = s;
+	__ranseed = s;
 }
 
 // ---------------------------------------------------------------------------
@@ -122,7 +124,7 @@ static ldouble gset;
 			r = v1*v1 + v2*v2;
 		}
 
-		fac = sqrt( -2. * log(r) / r );
+		fac = STDsqrt( -2. * STDlog(r) / r );
 		gset = v1 * fac;
 		iset = 1;
 		return v2 * fac;
@@ -160,4 +162,4 @@ gaussian_normal( void )
 
 End_Namespace( Loris )
 
-#endif	// ndef __noise_generators__
+#endif	// ndef __random_number_generators__
