@@ -188,7 +188,7 @@ private:
 //	class PartialIteratorOwner
 //
 //	Mixin class.
-//
+/*
 class PartialIteratorOwner
 {
 //	protected construction 
@@ -227,7 +227,7 @@ private:
 	PartialIteratorPtr _iter;
 		
 };	//	end of mixin class PartialIteratorOwner
-
+*/
 End_Namespace( Loris )
 
 #endif	// ndef __Loris_partial_iterator__

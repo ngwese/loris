@@ -1,6 +1,5 @@
 #ifndef __Loris_synthesizer__
 #define __Loris_synthesizer__
-
 // ===========================================================================
 //	Synthesizer.h
 //	
@@ -12,12 +11,9 @@
 //	-kel 16 Aug 99
 //
 // ===========================================================================
-
 #include "LorisLib.h"
-//#include "Oscillator.h"
 #include "PartialIterator.h"
 #include <vector>
-//#include <memory> 	//	for auto_ptr
 
 Begin_Namespace( Loris )
 
@@ -43,8 +39,14 @@ class Partial;
 //	Synthesizer assumes ownership, and the client's auto_ptr
 //	will have no reference (or ownership).
 //
-class Synthesizer : public PartialIteratorOwner
+class Synthesizer
 {
+//	-- instance variables --
+	double _sampleRate;					//	in Hz
+	std::vector< double > & _samples;	//	samples are computed and stored here
+		
+	PartialIteratorPtr _iter;			//	should be EnvelopeView or something
+		
 //	-- public interface --
 public:
 //	construction:
@@ -52,80 +54,25 @@ public:
 	Synthesizer( const Synthesizer & other );
 	
 	//~Synthesizer( void );	//	use compiler-generated destructor
-	
-	Synthesizer & operator= ( const Synthesizer & other );	//	 get rid of?
 
+//	synthesis:
+	void synthesize( const Partial & p, double timeShift = 0. );	
+	
 //	access:
 	double sampleRate( void ) const { return _sampleRate; }
-	/*
-	double offset( void ) const { return _offset; }
-	void setOffset( double x ) { _offset = x; }
-	
-	double fadeTime( void ) const { return _fadeTime; }
-	void setFadeTime( double x ) { if (x >= 0.) _fadeTime = x; }
-	*/
 	std::vector< double > & samples( void ) { return _samples; }
 	const std::vector< double > & samples( void ) const { return _samples; }
-	//void setSampleBuffer( std::vector< double > & buf ) { _samples = buf; }
-
-//	provide Oscillator access like iterator 
-/*	access provided by PartialIteratorOwner:	
-	const std::auto_ptr< Oscillator > & oscillator( void ) const { return _oscillator; }
-	std::auto_ptr< Oscillator > 
-	setOscillator( std::auto_ptr< Oscillator > osc = 
-					std::auto_ptr< Oscillator >( new Oscillator() ) ) ;
-*/
-//	synthesis:
-	void synthesize( const Partial & p );	
 	
-//	-- template member functions for synthesis --
-//
-//	Strictly speaking, we can do without these if necessary.
-//
-//	Either remove this or make it more like others, by allowing 
-//	list<Partial> iterators if No_template_members.
-//
-//	Without these, one might use 
-//		for_each( partials.begin(), partials.end(), synth );
-//	to synthesize a collection of Partials, but note that this
-//	makes two copies of the Synthesizer, one on the call to for_each,
-//	and one for its return value. Using references doesn't seem to
-//	get around that problem. It still works, because all the copies
-//	share the same sample buffer (Synthesizer only has a reference
-//	to its buffer), but if its too expensive or if the copying is
-//	otherwise unacceptable, you'd have to write your own loop.
-//
-//	Should I write an extension to the STL that does the thing
-//	we want? You'd think there'd be something, but there isn't.
-//	Call it apply_to_each<InIter, Func>(InIter, InIter, Func &)?
-//	
-//
-#if !defined(No_template_members)
-	template < class Iterator >
-	void synthesize( Iterator begin, Iterator end )
-	{
-		while( begin != end ) {
-			synthesize( *(begin++) );
-		}
-	}
-#endif 	//	template members allowed
+//	iterator access and mutation:
+	const PartialIteratorPtr & iterator( void ) const { return _iter; }
+	PartialIteratorPtr setIterator( PartialIteratorPtr inIter );
 
 //	-- private helpers --
 private:
-	//inline long synthesizeEnvelopeSegment( long currentSampleOffset );
-	//inline long synthesizeFadeIn( long currentSampleOffset );
-	//inline long synthesizeFadeOut( long currentSampleOffset );
 	inline double radianFreq( double hz ) const;
 
-//	-- instance variables --
-	double _sampleRate;		//	in Hz
-	//double _offset;			//	time offset for synthesized Partials, in seconds
-	//double _fadeTime;		//	default (maximum) fade in/out time for Partials, in seconds
-	
-	std::vector< double > & _samples;	//	samples are computed and stored here
-	
-	//std::auto_ptr< Oscillator > _oscillator;	//	performs the sample computation
-	
+//	 not impemented until proven useful:	
+	Synthesizer & operator= ( const Synthesizer & other );	//	 get rid of?
 };	//	end of class Synthesizer
 
 // ---------------------------------------------------------------------------

@@ -1,6 +1,5 @@
 #ifndef __Loris_oscillator__
 #define __Loris_oscillator__
-
 // ===========================================================================
 //	Oscillator.h
 //	
@@ -14,11 +13,8 @@
 //	-kel 31 Aug 99
 //
 // ===========================================================================
-
 #include "LorisLib.h"
-//#include "Filter.h"
 #include <vector>
-//#include <memory>	//	for auto_ptr
 
 Begin_Namespace( Loris )
 
@@ -27,29 +23,25 @@ class Filter;
 // ---------------------------------------------------------------------------
 //	class Oscillator
 //
-//	Oscillator is designed as a leaf class, and needs some modifications
-//	if it is to serve as a base class for other kinds of oscillators.
-//	Its not yet clear what a useful level of abstraction would be.
-//	
-//	auto_ptr is used to pass Filter arguments to make explicit the
-//	source/sink relationship between the caller and the Oscillator.
-//	Oscillator assumes ownership, and the client's auto_ptr
-//	will have no reference (or ownership).
-//
+//	Hey, any comment?
 //
 class Oscillator
 {
+//	-- instance variables --
+//	internal state:
+	double _frequency;	//	radians per sample
+	double _amplitude;	//	absolute
+	double _bandwidth;	//	bandwidth coefficient (noise energy / total energy)
+	double _phase;		//	radians
+
+//	filter for stochastic modulation:
+	Filter * _filter;
+
 //	-- public interface --
 public:
 //	construction:
-	Oscillator( void );
 	Oscillator( double radf, double a, double bw, double ph = 0. );
-	~Oscillator( void );	//	use compiler-generated
-
-//	reset the whole state at once:
-//	(get rid of this)
-	void reset( double radf, double amp, double bw, double ph );
-
+	~Oscillator( void );
 		
 //	state access/mutation:
 	double radianFreq( void ) const { return _frequency; }
@@ -72,17 +64,6 @@ private:
 	Oscillator( const Oscillator & other );
 	Oscillator & operator= ( const Oscillator & other );
 		
-//	-- instance variables --
-//	internal state:
-	double _frequency;	//	radians per sample
-	double _amplitude;	//	absolute
-	double _bandwidth;	//	bandwidth coefficient (noise energy / total energy)
-	double _phase;		//	radians
-
-//	filter for stochastic modulation:
-	//std::auto_ptr< Filter > _filter;
-	Filter * _filter;
-
 };	//	end of class Oscillator
 
 End_Namespace( Loris )

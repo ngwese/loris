@@ -40,6 +40,7 @@ Oscillator::Oscillator( double radf, double a, double bw, double ph /* = 0. */ )
 	_phase( ph ),		//	radians
 	_filter( Null )
 {
+	//	make a Filter:
 	//	Chebychev order 3, cutoff 500, ripple -1.
 	static const double filter_gain = 4.663939184e+04;
 	static const double extraScaling = 4.5;	//	was 6.
@@ -49,25 +50,13 @@ Oscillator::Oscillator( double radf, double a, double bw, double ph /* = 0. */ )
 	_filter = new Filter( maCoefs, maCoefs + 4, 
 						  arCoefs, arCoefs + 4,
 						  extraScaling / filter_gain );
+						  
+	//	don't alias:
+	if ( _frequency > Pi )
+		_amplitude = 0.;
 }
 
-Oscillator::Oscillator( void ) :
-	_frequency( 0 ),	//	radians per sample
-	_amplitude( 0 ),	//	absolute
-	_bandwidth( 0 ),	//	bandwidth coefficient (noise energy / total energy)
-	_phase( 0 ),		//	radians
-	_filter( Null )
-{
-	//	Chebychev order 3, cutoff 500, ripple -1.
-	static const double filter_gain = 4.663939184e+04;
-	static const double extraScaling = 4.5;	//	was 6.
-	static const double maCoefs[] = { 1., 3., 3., 1. }; 
-	static const double arCoefs[] = { 0., 2.9258684252, -2.8580608586, 0.9320209046 };
-						   
-	_filter = new Filter( maCoefs, maCoefs + 4, 
-						  arCoefs, arCoefs + 4,
-						  extraScaling / filter_gain );
-}
+
 
 // ---------------------------------------------------------------------------
 //	Oscillator destruction
@@ -76,19 +65,6 @@ Oscillator::Oscillator( void ) :
 Oscillator::~Oscillator( void )
 {
 	delete _filter;
-}
-
-// ---------------------------------------------------------------------------
-//	reset
-// ---------------------------------------------------------------------------
-//
-void
-Oscillator::reset( double radf, double amp, double bw, double ph )
-{
-	setRadianFreq( radf );
-	setAmplitude( amp );
-	setBandwidth( bw );
-	setPhase( ph );
 }
 
 // ---------------------------------------------------------------------------
@@ -117,6 +93,10 @@ Oscillator::generateSamples( vector< double > & buffer, long howMany, long offse
 		targetBw = 1.;
 	else if ( targetBw < 0. )
 		targetBw = 0.;
+		
+//	don't alias:
+	if ( targetFreq > Pi )	//	radian Nyquist rate
+		targetAmp = 0.;
 	
 //	generate and accumulate samples:
 //	(if no samples are generated, the oscillator state 
