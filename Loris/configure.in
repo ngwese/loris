@@ -546,15 +546,17 @@ AC_ARG_ENABLE(debugloris,
 					[enable internal Loris debugging code (not recommended)] ),
 	[DEBUG_LORIS="$enableval" ], [DEBUG_LORIS=] )
 
+AH_TEMPLATE([Debug_Loris],
+            [Define to enable internal Loris debugging code (not recommended).])
+
 if test -n "$DEBUG_LORIS"; then
 	if test "$DEBUG_LORIS"="yes"; then
 		AC_MSG_RESULT(enabling debugging code (defining Debug_Loris))
-		DEBUG_LORIS="-DDebug_Loris"
+		AC_DEFINE([Debug_Loris])
 	else
 		AC_MSG_RESULT(enabling debugging code (defining Debug_Loris to $DEBUG_LORIS))
-		DEBUG_LORIS="-DDebug_Loris=$DEBUG_LORIS"
+		AC_DEFINE([Debug_Loris], "$DEBUG_LORIS")
 	fi
-	AC_SUBST(DEBUG_LORIS)
 fi
 
 dnl----------------------------------------------------------------

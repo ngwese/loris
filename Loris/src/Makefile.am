@@ -12,10 +12,6 @@ MAINTAINERCLEANFILES = Makefile.in
 
 INCLUDES = $(FFTWINCLUDE) $(SDIFINCLUDE) $(default_includes)
 
-AM_CFLAGS = $(DEBUG_LORIS)
-AM_CXXFLAGS = $(DEBUG_LORIS)
-
-
 pkginclude_HEADERS = AiffFile.h	\
 				Analyzer.h		\
 				BreakpointEnvelope.h	\
