@@ -1,0 +1,443 @@
+// ===========================================================================
+//	Morpher.C
+//	
+//	The Morpher object performs sound morphing (cite Lip's papers, and the book)
+//	by interpolating Partial parmeter envelopes of corresponding Partials in
+//	a pair of source sounds. The correspondences are established by labeling.
+//	The Morpher object collects morphed Partials in a PartialList, that can
+//	be accessed by clients.
+//
+//	-kel 15 Oct 99
+//
+// ===========================================================================
+#include "Morpher.h"
+#include "Exception.h"
+#include "Partial.h"
+#include "Breakpoint.h"
+#include "Envelope.h"
+#include "PartialUtils.h"
+#include "notifier.h"
+#include <set>
+#include <cmath>
+#include <algorithm>
+
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
+// ---------------------------------------------------------------------------
+//	Morpher constructor (single morph function)
+// ---------------------------------------------------------------------------
+//
+Morpher::Morpher( Handle< Envelope > f ) :
+	_freqFunction( f ),
+	_ampFunction( f ),
+	_bwFunction( f )
+{
+}
+
+// ---------------------------------------------------------------------------
+//	Morpher constructor (distinct morph functions)
+// ---------------------------------------------------------------------------
+//
+Morpher::Morpher( Handle< Envelope > ff, Handle< Envelope > af, Handle< Envelope > bwf ) :
+	_freqFunction( ff ),
+	_ampFunction( af ),
+	_bwFunction( bwf )
+{
+}
+
+// ---------------------------------------------------------------------------
+//	Morpher destructor
+// ---------------------------------------------------------------------------
+//
+Morpher::~Morpher( void )
+{
+}
+
+// ---------------------------------------------------------------------------
+//	morph
+// ---------------------------------------------------------------------------
+//	Morph two sounds (collections of Partials labeled to indicate
+//	correspondences) into a single labeled collection of Partials.
+//
+void 
+Morpher::morph( PartialList::const_iterator begin0, 
+			  PartialList::const_iterator end0,
+			  PartialList::const_iterator begin1, 
+			  PartialList::const_iterator end1 )
+{
+	//	collect the labels in the two Partial ranges, 
+	//	object if the Partials have not been distilled,
+	//	that is, if they contain multiple Partials having 
+	//	the same non-zero label:
+	std::set< int > labels, moreLabels;
+	for ( PartialList::const_iterator it = begin0; it != end0; ++it ) 
+	{
+		//	don't add the crossfade label to the set:
+		if ( it->label() != 0 )
+		{
+			//	set::insert() returns a pair, the second element
+			//	of which is false if the insertion failed because
+			//	the set already contained the insertee:
+			if ( ! labels.insert(it->label()).second )
+				Throw( InvalidObject, "Partials must be distilled before morphing." );
+		}
+	}
+	for ( PartialList::const_iterator it = begin1; it != end1; ++it ) 
+	{
+		//	don't add the non-label, 0, to the set:
+		if ( it->label() != 0 )
+		{
+			//	as above:
+			if ( ! moreLabels.insert(it->label()).second )
+				Throw( InvalidObject, "Partials must be distilled before morphing." );
+		}
+	}
+	
+	//	combine the label sets
+	labels.insert( moreLabels.begin(), moreLabels.end() );
+		
+	//	loop over lots of labels and morph Partials
+	//	having corresponding labels:
+	std::set< int >::iterator labelIter;
+	for ( labelIter = labels.begin(); labelIter != labels.end(); ++labelIter ) 
+	{
+		Assert( *labelIter != 0 );
+		
+		//	find source Partial 0:
+		PartialList::const_iterator p0 = 
+			std::find_if( begin0, end0, 
+						  std::bind2nd(PartialUtils::label_equals(), *labelIter) );
+				
+		//	find source Partial 1:
+		PartialList::const_iterator p1 = 
+			std::find_if( begin1, end1, 
+						  std::bind2nd(PartialUtils::label_equals(), *labelIter) );
+		
+		debugger << "morphing " << ((p0 != end0)?(1):(0)) 
+				 << " and " << ((p1 != end1)?(1):(0)) 
+				 <<	" partials with label " <<	*labelIter << endl;
+				 
+		if ( p0 == end0 )
+		{
+			Assert( p1 != end1 );
+			morphPartial( Partial(), *p1, *labelIter );
+		}
+		else if ( p1 == end1 )
+		{
+			Assert( p0 != end0 );
+			morphPartial( *p0, Partial(), *labelIter );
+		}
+		else
+		{			 
+			morphPartial( *p0, *p1, *labelIter );
+		}
+		
+	}	//	end loop over labels
+	
+	//	crossfade the remaining unlabeled Partials:
+	crossfade( begin0, end0, begin1, end1 );
+}
+
+// ---------------------------------------------------------------------------
+//	setFrequencyFunction
+// ---------------------------------------------------------------------------
+//
+void
+Morpher::setFrequencyFunction( Handle< Envelope > f )
+{
+	_freqFunction = f;
+}
+
+// ---------------------------------------------------------------------------
+//	setAmplitudeFunction
+// ---------------------------------------------------------------------------
+//
+void
+Morpher::setAmplitudeFunction( Handle< Envelope > f )
+{
+	_ampFunction = f;
+}
+
+// ---------------------------------------------------------------------------
+//	setBandwidthFunction
+// ---------------------------------------------------------------------------
+//
+void
+Morpher::setBandwidthFunction( Handle< Envelope > f )
+{
+	_bwFunction = f;
+}
+
+// ---------------------------------------------------------------------------
+//	frequencyFunction
+// ---------------------------------------------------------------------------
+//
+Handle< Envelope >
+Morpher::frequencyFunction( void )
+{
+	return _freqFunction;
+}
+
+// ---------------------------------------------------------------------------
+//	amplitudeFunction
+// ---------------------------------------------------------------------------
+//
+Handle< Envelope >
+Morpher::amplitudeFunction( void )
+{
+	return _ampFunction;
+}
+
+// ---------------------------------------------------------------------------
+//	bandwidthFunction
+// ---------------------------------------------------------------------------
+//
+Handle< Envelope >
+Morpher::bandwidthFunction( void )
+{
+	return _bwFunction;
+}
+
+// ---------------------------------------------------------------------------
+//	frequencyFunction
+// ---------------------------------------------------------------------------
+//
+Handle< const Envelope >
+Morpher::frequencyFunction( void ) const 
+{
+	return _freqFunction;
+}
+
+// ---------------------------------------------------------------------------
+//	amplitudeFunction
+// ---------------------------------------------------------------------------
+//
+Handle< const Envelope >
+Morpher::amplitudeFunction( void ) const 
+{
+	return _ampFunction;
+}
+
+// ---------------------------------------------------------------------------
+//	bandwidthFunction
+// ---------------------------------------------------------------------------
+//
+Handle< const Envelope >
+Morpher::bandwidthFunction( void ) const 
+{
+	return _bwFunction;
+}
+
+// ---------------------------------------------------------------------------
+//	morphPartial
+// ---------------------------------------------------------------------------
+//	Basic morphing operation: either Partial may be a dummy with no 
+//	Breakpoints. Partials with no duration don't contribute to the
+//	morph, except to cause their opposite to fade out. The morphed
+//	Partial has Breakpoints at times corresponding to every Breakpoint 
+//	in both source Partials.
+//
+void 
+Morpher::morphPartial( const Partial & p0, const Partial & p1, int assignLabel )
+{
+	//	make a new Partial:
+	Partial newp;
+	newp.setLabel( assignLabel );
+	
+	//	loop over Breakpoints in first partial:
+	for ( PartialConstIterator iter = p0.begin(); iter != p0.end(); ++iter )
+	{
+		//	amplitude weight is always used:
+		double alphaA = _ampFunction->valueAt( iter.time() );
+		
+		//	if p1 is a valid Partial, compute a weighted average 
+		//	Breakpoint and insert it, otherwise just fade p0:
+		if ( p1.duration() > 0. )
+		{
+			//	compute parameter weights:
+			double alphaF = _freqFunction->valueAt( iter.time() );
+			double alphaBW = _bwFunction->valueAt( iter.time() );
+			
+			//	compute interpolated values for p1:
+			double amp1 = p1.amplitudeAt( iter.time() );
+			double freq1 = p1.frequencyAt( iter.time() );
+			double bw1 = p1.bandwidthAt( iter.time() );
+			double theta1 = p1.phaseAt( iter.time() );
+			
+			//	create a new weighted average Breakpoint:	
+			Breakpoint newbp( (alphaF * freq1) + ((1.-alphaF) * iter->frequency()),
+							   (alphaA * amp1) + ((1.-alphaA) * iter->amplitude()),
+							   (alphaBW * bw1) + ((1.-alphaBW) * iter->bandwidth()),
+							   (alphaF * theta1) + ((1.-alphaF) * iter->phase()) );
+			
+			//	insert the new Breakpoint in the morphed Partial:
+			newp.insert( iter.time(), newbp );
+		}
+		else
+		{
+			//	create a new scaled-amplitude Breakpoint:	
+			Breakpoint newbp( iter->frequency(),
+							  (1.-alphaA) * iter->amplitude(),
+							  iter->bandwidth(),
+							  iter->phase() );
+		
+			//	insert the new Breakpoint in the morphed Partial:
+			newp.insert( iter.time(), newbp );
+		}
+	}
+	
+	//	now do it for the other Partial:
+	for ( PartialConstIterator iter = p1.begin(); iter != p1.end(); ++iter )
+	{
+		//	amplitude weight is always used:
+		double alphaA = 1. - _ampFunction->valueAt( iter.time() );
+		
+		//	if p0 is a valid Partial, compute a weighted average 
+		//	Breakpoint and insert it, otherwise just fade p1:
+		if ( p0.duration() > 0. )
+		{
+			//	compute parameter weights:
+			double alphaF = 1. - _freqFunction->valueAt( iter.time() );
+			double alphaBW = 1. - _bwFunction->valueAt( iter.time() );
+			
+			//	compute interpolated values for p1:
+			double amp0 = p0.amplitudeAt( iter.time() );
+			double freq0 = p0.frequencyAt( iter.time() );
+			double bw0 = p0.bandwidthAt( iter.time() );
+			double theta0 = p0.phaseAt( iter.time() );
+			
+			//	create a new weighted average Breakpoint:	
+			Breakpoint newbp( (alphaF * freq0) + ((1.-alphaF) * iter->frequency()),
+							   (alphaA * amp0) + ((1.-alphaA) * iter->amplitude()),
+							   (alphaBW * bw0) + ((1.-alphaBW) * iter->bandwidth()),
+							   (alphaF * theta0) + ((1.-alphaF) * iter->phase()) );
+			
+			//	insert the new Breakpoint in the morphed Partial:
+			newp.insert( iter.time(), newbp );
+		}
+		else
+		{
+			//	create a new scaled-amplitude Breakpoint:	
+			Breakpoint newbp( iter->frequency(),
+							  (1.-alphaA) * iter->amplitude(),
+							  iter->bandwidth(),
+							  iter->phase() );
+		
+			//	insert the new Breakpoint in the morphed Partial:
+			newp.insert( iter.time(), newbp );
+		}
+	}
+	
+		
+	//	add the new partial to the collection,
+	//	if it is valid:
+	if ( newp.begin() != newp.end() ) 
+	{
+		partials().push_back( newp );
+	}
+
+}
+
+// ---------------------------------------------------------------------------
+//	crossfade
+// ---------------------------------------------------------------------------
+//	Crossfade Partials with no correspondences.
+//
+//	Unlabeled Partials (having label 0) are considered to 
+//	have no correspondences, so they are just faded out, and not 
+//	actually morphed. This is the same as morphing each with an 
+//	empty Partial. 
+//
+//	The Partials in the first range are treated as components of the 
+//	sound corresponding to a morph function of 0, those in the second
+//	are treated as components of the sound corresponding to a 
+//	morph function of 1.
+//
+void 
+Morpher::crossfade( PartialList::const_iterator begin0, 
+				  PartialList::const_iterator end0,
+				  PartialList::const_iterator begin1, 
+				  PartialList::const_iterator end1 )
+{
+	Partial nullPartial;
+	debugger << "crossfading unlabeled (labeled 0) Partials" << endl;
+
+	//	crossfade Partials corresponding to a morph weight of 0:
+	PartialList::const_iterator it;
+	for ( it = begin0; it != end0; ++it )
+	{
+		if ( it->label() == 0 )
+			morphPartial( *it, nullPartial, 0 );	
+	}
+
+	//	crossfade Partials corresponding to a morph weight of 1:
+	for ( it = begin1; it != end1; ++it )
+	{
+		if ( it->label() == 0 )
+			morphPartial( nullPartial, *it, 0 );
+	}
+}
+/*
+// ---------------------------------------------------------------------------
+//	crossfadeLists
+// ---------------------------------------------------------------------------
+//	Crossfade Partials with no correspondences.
+//
+//	The Partials in the specified range are considered to have 
+//	no correspondences, so they are just faded out, and not 
+//	actually morphed. This is the same as morphing each with an 
+//	empty Partial. 
+//
+//	The Partials in fromlist are treated as components of the 
+//	sound corresponding to a morph function of 0, those in tolist
+//	are treated as components of the sound corresponding to a 
+//	morph function of 1.
+//
+void
+Morpher::crossfadeLists( const PartialList & fromlist, 
+					   const PartialList & tolist )
+{
+	//	crossfade Partials corresponding to a morph weight of 0:
+	for ( PartialList::const_iterator it = fromlist.begin();
+		  it != fromlist.end();
+		  ++it )
+	{
+		morphPartial( *it, Partial() );	
+	}
+
+	//	crossfade Partials corresponding to a morph weight of 1:
+	for ( PartialList::const_iterator it = tolist.begin();
+		  it != tolist.end();
+		  ++it )
+	{
+		morphPartial( Partial(), *it );
+	}
+}
+
+// ---------------------------------------------------------------------------
+//	collectByLabel
+// ---------------------------------------------------------------------------
+//	Static member for accessing the label for 
+//	crossfaded Partials (0):
+//
+static void collectByLabel( PartialList::const_iterator start, 
+							PartialList::const_iterator end, 
+							PartialList & collector, 
+							int label )
+{
+	while ( start != end ) {
+		if ( start->label() == label ) {
+			collector.push_back( *start );
+		}
+		++start;
+	}
+}
+
+*/
+
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif
