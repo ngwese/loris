@@ -245,6 +245,15 @@ public:
 		Breakpoints.
 	 */
 
+	Breakpoint parametersAt( double time ) const;
+	/*	Return the interpolated parameters of this Partial at
+		the specified time, same as building a Breakpoint from
+		the results of frequencyAt, ampitudeAt, bandwidthAt, and
+		phaseAt, but performs only one Breakpoint envelope search.
+		Throw an InvalidPartial exception if this Partial has no
+		Breakpoints.
+	 */
+
 //	-- implementation --
 private:
 	std::map< double, Breakpoint > _bpmap;	//	Breakpoint envelope

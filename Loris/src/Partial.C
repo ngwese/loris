@@ -596,4 +596,80 @@ Partial::bandwidthAt( double time ) const
 	}
 }
 
+// ---------------------------------------------------------------------------
+//	parametersAt
+// ---------------------------------------------------------------------------
+//	Return a Breakpoint representing the state of all four envelopes
+//	at the specified time. This saves having to search four times when 
+//	all four parameters are needed.
+//
+Breakpoint
+Partial::parametersAt( double time ) const 
+{
+	if ( _bpmap.size() == 0 )
+		Throw( InvalidPartial, "Tried to interpolate a Partial with no Breakpoints." );
+	
+	//	lower_bound returns a reference to the lowest
+	//	position that would be higher than an element
+	//	having key equal to time:
+	PartialConstIterator it = findAfter( time );
+		
+	if ( it == _bpmap.begin() ) 
+	{
+	//	time is before the onset of the Partial:
+	//	frequency is starting frequency, 
+	//	amplitude is 0, bandwidth is starting 
+	//	bandwidth, and phase is rolled back.
+		double dp = 2. * Pi * (it.time() - time) * it.breakpoint().frequency();
+		double ph = std::fmod( it.breakpoint().phase() - dp, 2. * Pi);
+		return Breakpoint( it.breakpoint().frequency(), 0., 
+						   it.breakpoint().bandwidth(), ph );
+	}
+	else if (it == _bpmap.end() ) 
+	{
+	//	time is past the end of the Partial:
+	//	frequency is ending frequency, 
+	//	amplitude is 0, bandwidth is ending 
+	//	bandwidth, and phase is rolled forward.
+		--it; 
+		double dp = 2. * Pi * (time - it.time()) * it.breakpoint().frequency();
+		double ph = std::fmod( it.breakpoint().phase() + dp, 2. * Pi );
+		return Breakpoint( it.breakpoint().frequency(), 0., 
+						   it.breakpoint().bandwidth(), ph );
+	}
+	else 
+	{
+	//	interpolate between it and its predeccessor
+	//	(we checked already that it is not begin):
+		const Breakpoint & hi = it.breakpoint();
+		double hitime = it.time();
+		const Breakpoint & lo = (--it).breakpoint();
+		double lotime = it.time();
+		double alpha = (time - lotime) / (hitime - lotime);
+
+		double favg = (0.5 * alpha * hi.frequency()) + 
+						((1. - (0.5 * alpha)) * lo.frequency());
+
+		//	need to keep fmod in here because other stuff 
+		//	(Spc export and sdif export, for example) rely 
+		//	on it:
+		double ph = 0;
+		if ( alpha < 0.5 )
+		{
+			double dp = 2. * Pi * (time - lotime) * favg;
+			ph = std::fmod( lo.phase() + dp, 2. * Pi );
+		}
+		else
+		{
+			double dp = 2. * Pi * (hitime - time) * favg;
+			ph = std::fmod( hi.phase() - dp, 2. * Pi );
+		}
+
+		Breakpoint ret( (alpha * hi.frequency()) + ((1. - alpha) * lo.frequency()),
+						(alpha * hi.amplitude()) + ((1. - alpha) * lo.amplitude()),
+						(alpha * hi.bandwidth()) + ((1. - alpha) * lo.bandwidth()),
+						ph );
+	}
+}
+
 }	//	end of namespace Loris

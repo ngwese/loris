@@ -528,6 +528,11 @@ static void mergeNonOverlapping2( const Partial & src, Partial & distilled, doub
 // ---------------------------------------------------------------------------
 //	findContribution		(STATIC)
 // ---------------------------------------------------------------------------
+//	Find and return an iterator range delimiting the portion of pshort that
+// 	should be spliced into the distilled Partial plong. If any part of pshort
+//	overlaps a zero-amplitude region of plong, then pshort should contribute,
+//	and its onset should be retained. Therefore, if cbeg is not equal to cend, 
+//	then cbeg is pshort.begin().
 //
 std::pair< Partial::iterator, Partial::iterator >
 findContribution( Partial & pshort, const Partial & plong, double fadeTime )
@@ -595,13 +600,39 @@ static void distill_aux( PartialList & partials, int label,
 		
 		if ( cb != ce )
 		{
-			mergeNonOverlapping2( Partial(cb, ce), newp, fadeTime );	
+			Assert( cb == it->begin() );  // sanity
+			
+			//	insert a Breakpoint at the end of the gap?
+			
+			//	absorb the non-contributing part:
+			if ( ce != it->end() )
+			{
+				Partial absorbMe = it->split( ce );
+				//Partial::iterator includeMeToo = --Partial::iterator(ce);
+				//absorbMe.insert( includeMeToo.time(), includeMeToo.breakpoint() );
+				newp.absorb( absorbMe );
+			}
+			
+			// 	abosrb any part of the distilled Partial that
+			//	is being replaced by the contributing part:
+			// 	(the non-contributing part has already been 
+			//	removed from *it)
+			it->absorb( newp );
+			
+			// merge the contributing part:
+			mergeNonOverlapping2( *it, newp, fadeTime );	
+		}
+		else
+		{
+			//	no contribution, abosrb the whole thing:
+			newp.absorb( *it );
 		}
 		
-		// abosrb non-contributing ends of shorter:
+/*		// abosrb non-contributing ends of shorter:
 		if ( cb != it->begin() )
 		{
 			Partial absorbMe( it->begin(), cb );
+			
 			newp.absorb( absorbMe );
 		}
 		

@@ -239,10 +239,14 @@ static void test_distill_overlapping2( void )
 	double t = 0 + fade;
 	compare.insert( t, Breakpoint( p1.frequencyAt(t), 0, 
 								   p1.bandwidthAt(t), p1.phaseAt(t) ) );
+	// bandwidth introduced in the overlap region:
+	// 0.4^2 / (0.3^2 + 0.4^2) = 0.64
+	// amp = sqrt(0.3^2 + 0.4^2) = .5
 	t = 0.2 - fade;
 	compare.insert( t, Breakpoint( p2.frequencyAt(t), 0, 
-								   p2.bandwidthAt(t), p2.phaseAt(t) ) );
-	compare.insert( 0.2, Breakpoint( 200, 0.3, 0, 0 ) );
+								   0.64, 
+								   p2.phaseAt(t) ) );
+	compare.insert( 0.2, Breakpoint( 200, 0.5, 0.64, 0 ) );
 	compare.insert( 0.35, Breakpoint( 210, 0.3, 0.2, .1 ) );
 	compare.setLabel( 12 );
 
@@ -279,11 +283,12 @@ static void test_distill_overlapping3( void )
 	//	them the same label, and distill them.
 	Partial p1;
 	p1.insert( 0, Breakpoint( 100, 0.4, 0, 0 ) );
-	p1.insert( 0.3, Breakpoint( 100, 0.4, 0, .1 ) );
+	p1.insert( 0.28, Breakpoint( 100, 0.4, 0, .1 ) );
 	p1.setLabel( 123 );
 	
 	Partial p2;
 	p2.insert( 0.2, Breakpoint( 200, 0.3, 0.2, 0 ) );
+	p2.insert( 0.29, Breakpoint( 200, 0.3, 0.2, .1 ) );
 	p2.insert( 0.35, Breakpoint( 200, 0.3, 0.2, .1 ) );
 	p2.setLabel( 123 );
 
@@ -308,17 +313,24 @@ static void test_distill_overlapping3( void )
 	double t = 0 + fade;
 	compare.insert( t, Breakpoint( p1.frequencyAt(t), 0, 
 								   p1.bandwidthAt(t), p1.phaseAt(t) ) );
+	// bandwidth introduced in the overlap region:
+	// (0.4^2 + 0.2*0.3^2) / (0.3^2 + 0.4^2)) = 0.712
+	// amp = sqrt(0.3^2 + 0.4^2) = .5
 	t = 0.2 - fade;
 	compare.insert( t, Breakpoint( p2.frequencyAt(t), 0, 
-								   p2.bandwidthAt(t), p2.phaseAt(t) ) );
-	compare.insert( 0.2, Breakpoint( 200, 0.3, 0.2, 0 ) );
-	t = 0.2 + fade;
+								   0.712, p2.phaseAt(t) ) );
+	compare.insert( 0.2, Breakpoint( 200, 0.5, 0.712, 0 ) );
+	compare.insert( 0.29, Breakpoint( 200, 0.3, 0.2, 0.1 ) );
+	t = 0.29 + fade;
 	compare.insert( t, Breakpoint( p2.frequencyAt(t), 0, 
-								   p2.bandwidthAt(t), p2.phaseAt(t) ) );
+								   0.2, p2.phaseAt(t) ) );
+	// bandwidth introduced in the overlap region:
+	// (0.3^2 + 0.2*0.3^2) / (0.3^2 + 0.3^2) = 0.5
+	// amp = sqrt(0.3^2 + 0.3^2) = .424264
 	t = 0.32 - fade;
 	compare.insert( t, Breakpoint( p3.frequencyAt(t), 0, 
-								   p3.bandwidthAt(t), p3.phaseAt(t) ) );
-	compare.insert( 0.32, Breakpoint( 300, 0.3, 0, 0 ) );
+								   0.5, p3.phaseAt(t) ) );
+	compare.insert( 0.32, Breakpoint( 300, std::sqrt(0.18), 0.5, 0 ) );
 	compare.insert( 0.4, Breakpoint( 310, 0.3, 0.2, .1 ) );
 	compare.setLabel( 123 );
 
