@@ -323,46 +323,38 @@ AssociateBandwidth::accumulateSinusoid( double f, double a )
 #endif
 	
 	//	distribute the peak amplitude: 
-//#define WAITAMINIT
-#ifdef WAITAMINIT
 	double z = correctAmp;
 	distribute( f, z * z, _sinusoidalEnergy  );
-#else
-	double z = correctAmp * _winspec[abs(offset)];
-	distribute( intBinNumber * _hzPerSamp, z * z, _sinusoidalEnergy  );
-#endif
+	// distribute( intBinNumber * _hzPerSamp, z * z, _sinusoidalEnergy  );
 
 #ifdef Debug_Loris
-	_sinSpec[ intBinNumber ] += z;
-	_residue[ intBinNumber ] -= z;
+	double zz = correctAmp * _winspec[abs(offset)];
+	_sinSpec[ intBinNumber ] += zz;
+	_residue[ intBinNumber ] -= zz;
 #endif
 
 	//	distribute samples of the oversampled window spectrum:
 	for ( int i = 1; (step * i) + abs(offset) < _winspec.size(); ++i ) {
-#ifdef WAITAMINIT
 		z = correctAmp * _winspec[step * i];
 		distribute( f + (i * _hzPerSamp), z * z, _sinusoidalEnergy  );
-#else
-		z = correctAmp * _winspec[(step * i) + offset];
-		distribute( (intBinNumber + i) * _hzPerSamp, z * z, _sinusoidalEnergy  );
-#endif
+		// distribute( (intBinNumber + i) * _hzPerSamp, z * z, _sinusoidalEnergy  );
+
 #ifdef Debug_Loris
-		_sinSpec[ intBinNumber + i ] += z;
-		_residue[ intBinNumber + i ] -= z;
+		zz = correctAmp * _winspec[(step * i) + offset];
+		_sinSpec[ intBinNumber + i ] += zz;
+		_residue[ intBinNumber + i ] -= zz;
 #endif
 		
 		//	don't index bins below 0:
 		if ( intBinNumber >= i ) {
-#ifdef WAITAMINIT
 			z = correctAmp * _winspec[step * i];
 			distribute( f - (i * _hzPerSamp), z * z, _sinusoidalEnergy  );
-#else
-			z = correctAmp * _winspec[(step * i) - offset];
-			distribute( (intBinNumber - i) * _hzPerSamp, z * z, _sinusoidalEnergy  );
-#endif
+			// distribute( (intBinNumber - i) * _hzPerSamp, z * z, _sinusoidalEnergy  );
+
 #ifdef Debug_Loris
-			_sinSpec[ intBinNumber - i ] += z;
-			_residue[ intBinNumber - i ] -= z;
+			zz = correctAmp * _winspec[(step * i) - offset];
+			_sinSpec[ intBinNumber - i ] += zz;
+			_residue[ intBinNumber - i ] -= zz;
 #endif
 		}
 	}
