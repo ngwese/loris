@@ -14,9 +14,9 @@ MAINTAINERCLEANFILES = 	Makefile.in
 
 if HAVE_CSOUND
 csoundlibdir = $(libdir)/csound
-csoundlib_LTLIBRARIES = lorisopcodes.la
-lorisopcodes_la_SOURCES = lorisgens.C
-lorisopcodes_la_CXXFLAGS = $(CSOUND_CXXFLAGS) $(AM_CXXFLAGS) -I$(top_srcdir)/src
-lorisopcodes_la_LDFLAGS = -module -avoid-version -no-undefined
-lorisopcodes_la_LIBADD = $(top_builddir)/src/libloris.la
+csoundlib_LTLIBRARIES = lorisops.la
+lorisops_la_SOURCES = lorisgens.C
+lorisops_CXXFLAGS = $(CSOUND_CXXFLAGS) $(AM_CXXFLAGS) -I$(top_srcdir)/src
+lorisops_la_LDFLAGS = -module -avoid-version -no-undefined
+lorisops_la_LIBADD = $(top_builddir)/src/libloris.la
 endif
