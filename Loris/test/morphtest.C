@@ -60,7 +60,7 @@ static void getFreqReference( const std::list< Partial > & partials, int numSamp
 int main( )
 {
 	std::cout << "This doesn't work yet, don't use it." << endl << endl;
-	return 1;
+	//return 1;
 
 	std::cout << "Welcome to the very simple Loris morphing demo!" << endl;
 	std::cout << "Kelly Fitz 2000" << endl << endl;
@@ -87,7 +87,7 @@ int main( )
 		DamThing dtclar( clarRef );
 		Channelizer ch( dtclar, 1 );
 		ch.channelize( clar.begin(), clar.end() );
-
+		
 		Distiller still;
 		still.distill( clar );
 
@@ -106,6 +106,7 @@ int main( )
 
 		// check clarinet synthesis:
 		std::cout << "checking clarinet synthesis" << endl;
+		std::fill( v.begin(), v.end(), 0. );
 		Synthesizer synth( f.sampleRate(), v.begin(), v.end() );
 		for ( std::list< Partial >::iterator pIter = clar.begin(); 
 			  pIter != clar.end(); 
@@ -137,6 +138,7 @@ int main( )
 
 		// check flute synthesis:
 		std::cout << "checking flute synthesis" << endl;
+		std::fill( v.begin(), v.end(), 0. );
 		synth = Synthesizer( f.sampleRate(), v.begin(), v.end() );
 		for ( std::list< Partial >::iterator pIter = flut.begin(); 
 			  pIter != flut.end(); 
@@ -165,7 +167,7 @@ int main( )
 		dil2.dilate( clar.begin(), clar.end() );
 		
 		
-		// perform morph
+		// perform morph:
 		std::cout << "morphing flute and clarinet" << endl;
 		Handle< BreakpointEnvelope > mf;
 		Morpher m( (Handle< Envelope >( mf )) );
