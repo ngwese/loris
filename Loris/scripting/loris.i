@@ -307,8 +307,6 @@
 		if ( ivec.size() != tvec.size() )
 			Throw( Loris::InvalidArgument, "Invalid arguments to dilate(): there must be as many target points as initial points" );
 				
-		dilate( partials, ivec.begin(), tvec.begin(), ivec.size() );
-	
 		double * initial = ivec.begin();
 		double * target = tvec.begin();
 		int npts = ivec.size();
@@ -566,6 +564,9 @@ void copyByLabel( const PartialList * src, long label, PartialList * dst );
 	is unmodified.
  */
  
+/*
+	Temporarily removed.
+
 %new BreakpointEnvelope * 
 createFreqReference( PartialList * partials, int numSamples,
 					 double minFreq, double maxFreq );
@@ -580,6 +581,10 @@ createFreqReference( PartialList * partials, int numSamples,
 	channelization (see channelize()).
  */
  
+%{
+	#include <cmath>
+%}
+
 %inline %{
 	void scaleAmp( PartialList * partials, BreakpointEnvelope * ampEnv )
 	{

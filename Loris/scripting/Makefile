@@ -43,8 +43,8 @@ PY_MODULE = loriscmodule.so
 
 PERL_WRAPPER = loris_perl_wrap.C
 
-PY_VERSION = 2.1
-PYTHON_PREFIX = /usr/local
+PY_VERSION = 1.5
+PYTHON_PREFIX = /usr
 PYTHON_INCLUDE = ${PYTHON_PREFIX}/include/python${PY_VERSION}
 PYTHON_LIB = ${PYTHON_PREFIX}/lib/python${PY_VERSION}/config
 INC_PY = -DHAVE_CONFIG_H -I${PYTHON_INCLUDE} -I${PYTHON_LIB}
@@ -56,8 +56,8 @@ CFLAGS = -O2 ${INC_PY} -I${PI} -I${CLASSES} -Wno-multichar -xc++
 
 python: $(PY_MODULE)
 
-$(PY_MODULE): lorislib pywrap
-	${CC} -shared $(PY_WRAPPER:c++=o) $(OUTPUT)/libloris.a ${LIB_LORIS} -o $(OUTPUT)/loriscmodule.so
+$(PY_MODULE): pywrap
+	${CC} -shared $(PY_WRAPPER:c++=o) $(OBJ_LORIS) ${LIB_LORIS} -o $(OUTPUT)/loriscmodule.so
 	-mv loris.py $(OUTPUT)/loris.py
 
 lorislib: 
