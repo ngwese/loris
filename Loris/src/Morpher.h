@@ -32,7 +32,16 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-#include "Partial.h"	//	needed only for PartialList definition
+#include <list>
+
+#if defined(__MWERKS__)
+#include "Partial.h"
+//	On Mac, can't get around including Partial.h unless make a 
+//	class out of std::list< Partial > and its iterators that I can
+//	forward-declare. CW seems not to be able to handle 
+//	list<Partial>::iterator without the definition of Partial.
+//	GNU, however, can handle it. Maybe in the new CW?
+#endif
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
@@ -41,6 +50,7 @@ namespace Loris {
 
 template <class T> class Handle;	//	Batov's Handle<> template, in Handle.h
 class Envelope;
+class Partial;
 class Morpher_imp;
 
 // ---------------------------------------------------------------------------
@@ -75,10 +85,10 @@ public:
 //	morphing:
 //	Morph two sounds (collections of Partials labeled to indicate
 //	correspondences) into a single labeled collection of Partials.
-	void morph( PartialList::const_iterator begin0, 
-				PartialList::const_iterator end0,
-				PartialList::const_iterator begin1, 
-				PartialList::const_iterator end1 );
+	void morph( std::list< Partial >::const_iterator begin0, 
+				std::list< Partial >::const_iterator end0,
+				std::list< Partial >::const_iterator begin1, 
+				std::list< Partial >::const_iterator end1 );
 
 //	morphing functions access/mutation:	
 	void setFrequencyFunction( Handle< Envelope > f );
@@ -95,9 +105,9 @@ public:
 	Handle< const Envelope > bandwidthFunction( void ) const;
 	
 	
-//	PartialList access:
-	PartialList & partials( void ); 
-	const PartialList & partials( void ) const; 
+//	std::list< Partial > access:
+	std::list< Partial > & partials( void ); 
+	const std::list< Partial > & partials( void ) const; 
 
 //	-- unimplemented until useful --
 private:

@@ -55,7 +55,7 @@ namespace Loris {
 //	The Morpher object performs sound morphing (cite Lip's papers, and the book)
 //	by interpolating Partial parmeter envelopes of corresponding Partials in
 //	a pair of source sounds. The correspondences are established by labeling.
-//	The Morpher object collects morphed Partials in a PartialList, that can
+//	The Morpher object collects morphed Partials in a std::list< Partial >, that can
 //	be accessed by clients.
 //
 class Morpher_imp
@@ -70,7 +70,7 @@ public:
 	Handle< Envelope > _ampFunction;	//	amplitude morphing function
 	Handle< Envelope > _bwFunction;		//	bandwidth morphing function
 	
-	PartialList _partials;	//	collect Partials here
+	std::list< Partial > _partials;	//	collect Partials here
 			
 //	construction:
 	Morpher_imp( Handle< Envelope > ff, Handle< Envelope > af, Handle< Envelope > bwf );
@@ -82,10 +82,10 @@ public:
 //	Currently, Morpher::morph() calls the helper members of the 
 //	implementation class.
 /*
-	void morph( PartialList::const_iterator begin0, 
-				PartialList::const_iterator end0,
-				PartialList::const_iterator begin1, 
-				PartialList::const_iterator end1 );
+	void morph( std::list< Partial >::const_iterator begin0, 
+				std::list< Partial >::const_iterator end0,
+				std::list< Partial >::const_iterator begin1, 
+				std::list< Partial >::const_iterator end1 );
 */
 
 //	-- helpers --
@@ -96,10 +96,10 @@ public:
 //	crossfade Partials with no correspondences:
 //	(crossfaded Partials are unlabeled, or assigned the 
 //	default label, 0)
-	void crossfade( PartialList::const_iterator begin0, 
-					PartialList::const_iterator end0,
-					PartialList::const_iterator begin1, 
-					PartialList::const_iterator end1 );
+	void crossfade( std::list< Partial >::const_iterator begin0, 
+					std::list< Partial >::const_iterator end0,
+					std::list< Partial >::const_iterator begin1, 
+					std::list< Partial >::const_iterator end1 );
 
 };	//	end of class Morpher_imp
 
@@ -248,16 +248,16 @@ Morpher_imp::morphPartial( const Partial & p0, const Partial & p1, int assignLab
 //	morph function of 1.
 //
 void 
-Morpher_imp::crossfade( PartialList::const_iterator begin0, 
-				  PartialList::const_iterator end0,
-				  PartialList::const_iterator begin1, 
-				  PartialList::const_iterator end1 )
+Morpher_imp::crossfade( std::list< Partial >::const_iterator begin0, 
+				  std::list< Partial >::const_iterator end0,
+				  std::list< Partial >::const_iterator begin1, 
+				  std::list< Partial >::const_iterator end1 )
 {
 	Partial nullPartial;
 	debugger << "crossfading unlabeled (labeled 0) Partials" << endl;
 
 	//	crossfade Partials corresponding to a morph weight of 0:
-	PartialList::const_iterator it;
+	std::list< Partial >::const_iterator it;
 	for ( it = begin0; it != end0; ++it )
 	{
 		if ( it->label() == 0 )
@@ -318,17 +318,17 @@ Morpher::~Morpher( void )
 //	correspondences) into a single labeled collection of Partials.
 //
 void 
-Morpher::morph( PartialList::const_iterator begin0, 
-			  PartialList::const_iterator end0,
-			  PartialList::const_iterator begin1, 
-			  PartialList::const_iterator end1 )
+Morpher::morph( std::list< Partial >::const_iterator begin0, 
+			  std::list< Partial >::const_iterator end0,
+			  std::list< Partial >::const_iterator begin1, 
+			  std::list< Partial >::const_iterator end1 )
 {
 	//	collect the labels in the two Partial ranges, 
 	//	object if the Partials have not been distilled,
 	//	that is, if they contain multiple Partials having 
 	//	the same non-zero label:
 	std::set< int > labels, moreLabels;
-	for ( PartialList::const_iterator it = begin0; it != end0; ++it ) 
+	for ( std::list< Partial >::const_iterator it = begin0; it != end0; ++it ) 
 	{
 		//	don't add the crossfade label to the set:
 		if ( it->label() != 0 )
@@ -340,7 +340,7 @@ Morpher::morph( PartialList::const_iterator begin0,
 				Throw( InvalidObject, "Partials must be distilled before morphing." );
 		}
 	}
-	for ( PartialList::const_iterator it = begin1; it != end1; ++it ) 
+	for ( std::list< Partial >::const_iterator it = begin1; it != end1; ++it ) 
 	{
 		//	don't add the non-label, 0, to the set:
 		if ( it->label() != 0 )
@@ -362,12 +362,12 @@ Morpher::morph( PartialList::const_iterator begin0,
 		Assert( *labelIter != 0 );
 		
 		//	find source Partial 0:
-		PartialList::const_iterator p0 = 
+		std::list< Partial >::const_iterator p0 = 
 			std::find_if( begin0, end0, 
 						  std::bind2nd(PartialUtils::label_equals(), *labelIter) );
 				
 		//	find source Partial 1:
-		PartialList::const_iterator p1 = 
+		std::list< Partial >::const_iterator p1 = 
 			std::find_if( begin1, end1, 
 						  std::bind2nd(PartialUtils::label_equals(), *labelIter) );
 		
@@ -490,7 +490,7 @@ Morpher::bandwidthFunction( void ) const
 //	partials
 // ---------------------------------------------------------------------------
 //
-PartialList & 
+std::list< Partial > & 
 Morpher::partials( void )
 { 
 	return _imp->_partials; 
@@ -500,7 +500,7 @@ Morpher::partials( void )
 //	partials
 // ---------------------------------------------------------------------------
 //
-const PartialList & 
+const std::list< Partial > & 
 Morpher::partials( void ) const 
 { 
 	return _imp->_partials; 

@@ -55,7 +55,7 @@ public:
 //	(let compiler generate destructor)
 	ImportSdif( const char *infilename );
 		
-//	PartialList access:
+//	std::list< Partial > access:
 	std::list<Partial> & partials( void ) { return _partials; }
 	const std::list<Partial> & partials( void ) const { return _partials; }
 	

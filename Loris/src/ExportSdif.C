@@ -63,7 +63,7 @@ static void assembleMatrixData( SdifFloat4 *data,
 							const int useExactTiming,
 							const std::vector< int > & activeIndices, 
 							const double frameTime, const double nextFrameTime );
-static void indexPartials( const PartialList & partials, std::vector< Partial * > & partialsVector );
+static void indexPartials( const std::list< Partial > & partials, std::vector< Partial * > & partialsVector );
 static int collectActiveIndices( const std::vector< Partial * > & partialsVector, 
 							const double hop,
 							const double frameTime, const double nextFrameTime,
@@ -289,9 +289,9 @@ assembleMatrixData( SdifFloat4 *data,
 //  The vector index will be the sdif 1TRC index for the partial. 
 //
 void
-indexPartials( const PartialList & partials, std::vector< Partial * > & partialsVector )
+indexPartials( const std::list< Partial > & partials, std::vector< Partial * > & partialsVector )
 {
-	for (PartialList::const_iterator it = partials.begin(); it != partials.end(); ++it)
+	for (std::list< Partial >::const_iterator it = partials.begin(); it != partials.end(); ++it)
 		if (it->begin() != it->end())
 			partialsVector.push_back((Partial *)&(*it));	
 }

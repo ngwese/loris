@@ -32,7 +32,16 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-#include "Partial.h"	//	needed only for PartialList definition
+#include <list>
+
+#if defined(__MWERKS__)
+#include "Partial.h"
+//	On Mac, can't get around including Partial.h unless make a 
+//	class out of std::list< Partial > and its iterators that I can
+//	forward-declare. CW seems not to be able to handle 
+//	list<Partial>::iterator without the definition of Partial.
+//	GNU, however, can handle it. Maybe in the new CW?
+#endif
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
@@ -42,11 +51,12 @@ namespace Loris {
 class Channelizer_imp;
 template <class T> class Handle;	//	Batov's Handle<> template, in Handle.h
 class Envelope;
+class Partial;
 
 // ---------------------------------------------------------------------------
 //	class Channelizer
 //
-//	Definition of a class for labeling Partials in a PartialList
+//	Definition of a class for labeling Partials in a std::list< Partial >
 //	according to a set of linearly-spaced, variable-frequency
 //	channels (like a time-varying harmonic frequency relationship).
 //
@@ -64,7 +74,7 @@ public:
 	~Channelizer( void );
 
 	//	channelizing:
-	void channelize( PartialList::iterator begin, PartialList::iterator end );
+	void channelize( std::list< Partial >::iterator begin, std::list< Partial >::iterator end );
 	
 };	//	end of class Channelizer
 

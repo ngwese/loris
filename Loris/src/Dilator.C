@@ -163,7 +163,7 @@ Dilator::dilate( Partial & p )
 //	dilate() each Partial in the specified half-open range.
 //
 void 
-Dilator::dilate( PartialList::iterator begin, PartialList::iterator end )
+Dilator::dilate( std::list< Partial >::iterator begin, std::list< Partial >::iterator end )
 {
 	while ( begin != end )
 		dilate( *(begin++) );

@@ -60,7 +60,7 @@ public:
 	Channelizer_imp( Handle<Envelope> env, int label );
 	~Channelizer_imp( void );
 	
-	void channelize( PartialList::iterator begin, PartialList::iterator end );
+	void channelize( std::list< Partial >::iterator begin, std::list< Partial >::iterator end );
 
 };	//	end of class Channelizer_imp
 
@@ -127,13 +127,13 @@ static double loudestAt( const Partial & p )
 //	envelopes which badly match the Partials to be channelized.
 //	
 void
-Channelizer_imp::channelize( PartialList::iterator begin, PartialList::iterator end )
+Channelizer_imp::channelize( std::list< Partial >::iterator begin, std::list< Partial >::iterator end )
 {
 #ifdef Debug_Loris
 	std::set<int> labelsfound;
 #endif
 
-	for ( PartialList::iterator it = begin; it != end; ++it ) 
+	for ( std::list< Partial >::iterator it = begin; it != end; ++it ) 
 	{
 		#define FANCY
 		#ifdef FANCY
@@ -226,7 +226,7 @@ Channelizer::~Channelizer( void )
 //	Delegate to implementation.
 //	
 void
-Channelizer::channelize( PartialList::iterator begin, PartialList::iterator end )
+Channelizer::channelize( std::list< Partial >::iterator begin, std::list< Partial >::iterator end )
 {
 	_imp->channelize( begin, end );
 }

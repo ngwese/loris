@@ -781,13 +781,13 @@ Analyzer::pruneBogusPartials( AnalyzerState & state )
 
 	//	collect the very short Partials:
 	std::list<Partial> veryshortones;
-	for ( PartialList::iterator it = partials().begin(); 
+	for ( std::list< Partial >::iterator it = partials().begin(); 
 		  it != partials().end(); 
 		  /* ++it */ ) 
 	{
 		//	need to be careful with the iterator update, 
 		//	because erasure or splice will invalidate it:
-		PartialList::iterator next = it;
+		std::list< Partial >::iterator next = it;
 		++next;
 		if ( it->duration() == 0. ) {
 			veryshortones.splice( veryshortones.end(), partials(), it );

@@ -67,8 +67,8 @@ namespace Loris {
 //	
 static void distill_aux( const Partial & src, 
 			   			 Partial & dest, 
-				   		 PartialList::const_iterator start,
-				   		 PartialList::const_iterator end  )
+				   		 std::list< Partial >::const_iterator start,
+				   		 std::list< Partial >::const_iterator end  )
 {
 	//	iterate over the source Partial:
 	for ( PartialConstIterator pIter = src.begin(); pIter != src.end(); ++pIter )
@@ -77,7 +77,7 @@ static void distill_aux( const Partial & src,
 		//	bandwidth energy contribution at the time of bp
 		//	due to all the other Partials:
 		double xse = 0.;
-		PartialList::const_iterator it;
+		std::list< Partial >::const_iterator it;
 		for ( it = start; it != end; ++it ) 
 		{
 			//	skip the source Partial:
@@ -126,12 +126,12 @@ static void distill_aux( const Partial & src,
 //	amplitude during those gaps.
 //
 static void fixGaps( Partial & dest, 
-		  			 PartialList::const_iterator start,
-		  			 PartialList::const_iterator end )
+		  			 std::list< Partial >::const_iterator start,
+		  			 std::list< Partial >::const_iterator end )
 {
 	//	make a list of segments:
 	std::list< std::pair<double, double> > segments;
-	for ( PartialList::const_iterator p = start; p != end; ++p )
+	for ( std::list< Partial >::const_iterator p = start; p != end; ++p )
 	{	
 		segments.push_back( std::make_pair( p->startTime(), p->endTime() ) );
 	}
@@ -250,7 +250,7 @@ Distiller::distill( std::list<Partial> & l )
 {
 	int howmanywerethere = l.size();
 
-	//	sort the PartialList by label:
+	//	sort the std::list< Partial > by label:
 	debugger << "Distiller sorting Partials by label..." << endl;
 	l.sort( PartialUtils::label_less() );
 	
@@ -285,7 +285,7 @@ Distiller::distill( std::list<Partial> & l )
 			newp.setLabel( label );
 			
 			//	iterate over range:
-			for ( PartialList::const_iterator it = dist_begin; it != dist_end; ++it )
+			for ( std::list< Partial >::const_iterator it = dist_begin; it != dist_end; ++it )
 			{
 				distill_aux( *it, newp, dist_begin, dist_end );
 			}

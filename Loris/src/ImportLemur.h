@@ -35,6 +35,7 @@
  */
 #include "Partial.h"
 #include "Exception.h"
+#include <list>
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
@@ -47,7 +48,7 @@ namespace Loris {
 class ImportLemur
 {
 //	-- instance variables --
-	PartialList _partials;	//	collect Partials here
+	std::list< Partial > _partials;	//	collect Partials here
 
 //	-- public interface --
 public:
@@ -55,9 +56,9 @@ public:
 //	(compiler can generate destructor)
 	ImportLemur( const char * fname, double bweCutoff = 1000 );
 
-//	PartialList access:
-	PartialList & partials( void ) { return _partials; }
-	const PartialList & partials( void ) const { return _partials; }
+//	std::list< Partial > access:
+	std::list< Partial > & partials( void ) { return _partials; }
+	const std::list< Partial > & partials( void ) const { return _partials; }
 	
 //	-- unimplemented --
 private:

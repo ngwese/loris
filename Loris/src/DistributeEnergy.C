@@ -124,8 +124,8 @@ static void addNoiseEnergy( double energy, Partial & p,
 //
 void 
 DistributeEnergy::distribute( const Partial & p,
-							  PartialList::iterator begin, 
-							  PartialList::iterator end ) const
+							  std::list< Partial >::iterator begin, 
+							  std::list< Partial >::iterator end ) const
 {	
 	//	loop over Breakpoints in p:
 	PartialConstIterator envIter;
@@ -136,9 +136,9 @@ DistributeEnergy::distribute( const Partial & p,
 		
 		//	find nearest Partial in (begin,end) above
 		//	and below (in frequency) to bp at time:
-		PartialList::iterator above = end, below = end;
+		std::list< Partial >::iterator above = end, below = end;
 		double freqAbove = 0., freqBelow = 0.;
-		for ( PartialList::iterator it = begin; it != end; ++it ) {
+		for ( std::list< Partial >::iterator it = begin; it != end; ++it ) {
 			//	cannot distribute energy to a Partial
 			//	that does not exist at time:
 			if ( it->startTime() > time || it->endTime() < time ) {

@@ -78,8 +78,8 @@ unsigned long packLeft( const Partial & p, double freqMult, double ampMult,
 unsigned long packRight( const Partial & p, double noiseMagMult, double time1,
 						double weightFactor, double time2 );
 unsigned long envLog( double floatingValue );
-const Partial * select( const PartialList & partials, int label, int firstFrame = false );
-double crop( const PartialList & partials, int endFrame, double hop, double threshold );
+const Partial * select( const std::list< Partial > & partials, int label, int firstFrame = false );
+double crop( const std::list< Partial > & partials, int endFrame, double hop, double threshold );
 
 //	chunk wiriting helpers
 void writeCommon( std::ostream & s, int startFrame, int endFrame, int partials, int enhanced );
@@ -500,7 +500,7 @@ unsigned long packRight( const Partial & p, double noiseMagMult, double time1,
 //	having the specified label, or NULL if there is not such Partial
 //	in the list. 
 //
-const Partial * select( const PartialList & partials, int label, int firstFrame )
+const Partial * select( const std::list< Partial > & partials, int label, int firstFrame )
 {
 	const Partial * ret = NULL;
 	list< Partial >::const_iterator it = 
@@ -528,7 +528,7 @@ const Partial * select( const PartialList & partials, int label, int firstFrame 
 // ---------------------------------------------------------------------------
 //	Find first frame at which amplitude sum reaches a certain percentage of the
 //	peak amplitude sum.
-double crop( const PartialList & partials, int endFrame, double hop, double threshold )
+double crop( const std::list< Partial > & partials, int endFrame, double hop, double threshold )
 {
 	
 	// Find max amp sum.
@@ -539,7 +539,7 @@ double crop( const PartialList & partials, int endFrame, double hop, double thre
 	
 		// Compute sum of amp of all partials at this time.
 		ampsum = 0.0;
-		for ( PartialList::const_iterator it = partials.begin(); it != partials.end(); ++it ) 
+		for ( std::list< Partial >::const_iterator it = partials.begin(); it != partials.end(); ++it ) 
 		{
 			if ( it->begin() != it->end() )
 				ampsum += it->amplitudeAt( tim );
@@ -557,7 +557,7 @@ double crop( const PartialList & partials, int endFrame, double hop, double thre
 
 		// Compute sum of amp of all partials at this time.
 		ampsum = 0.0;
-		for ( PartialList::const_iterator it = partials.begin(); it != partials.end(); ++it ) 
+		for ( std::list< Partial >::const_iterator it = partials.begin(); it != partials.end(); ++it ) 
 		{
 			if ( it->begin() != it->end() )
 				ampsum += it->amplitudeAt( tim );

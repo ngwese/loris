@@ -34,6 +34,7 @@
  */
 #include "Partial.h"
 #include <vector>
+#include <list>
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
@@ -59,7 +60,7 @@ public:
 	
 //	dilation:
 	void dilate( Partial & p );
-	void dilate( PartialList::iterator begin, PartialList::iterator end );
+	void dilate( std::list< Partial >::iterator begin, std::list< Partial >::iterator end );
 	
 //	-- unimplemented until useful --
 private:

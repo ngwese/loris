@@ -35,7 +35,7 @@
 #include "Exception.h"
 #include "Breakpoint.h"
 #include <map>
-#include <list>
+//#include <list>
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
@@ -256,13 +256,6 @@ public:
 	InvalidObject( std::string("Invalid Partial -- ").append( str ), where ) {}
 		
 };	//	end of class InvalidPartial
-
-// ---------------------------------------------------------------------------
-//	PartialList
-//
-//	Standard container for Partials in Loris.
-//
-typedef std::list< Partial > PartialList;
 
 #if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris

@@ -36,6 +36,7 @@
 #include "Partial.h"
 #include "Exception.h"
 #include <vector>
+#include <list>
 #include <iosfwd>
 
 #if !defined( NO_LORIS_NAMESPACE )
