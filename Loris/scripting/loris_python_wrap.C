@@ -1064,6 +1064,7 @@ typedef Partial::iterator BreakpointPosition;
 
 class NewPartialIterator
 {
+public:
 	Partial & subject;
 	Partial::iterator it;
 
@@ -1177,6 +1178,10 @@ NewPartialIterator *Partial___iter__(Partial *self){
 		}
 NewPartialIterator *Partial_iterator(Partial *self){
 			return new NewPartialIterator(*self);
+		}
+void Partial_erase__SWIG_1(Partial *self,BreakpointPosition *pos){
+			if ( *pos != self->end() )
+				*pos = self->erase( *pos );
 		}
 Partial *Partial_copy(Partial *self){
 			return new Partial( *self );
@@ -5383,7 +5388,7 @@ static PyObject *_wrap_Partial_findNearest(PyObject *self, PyObject *args) {
 }
 
 
-static PyObject *_wrap_Partial_erase(PyObject *self, PyObject *args) {
+static PyObject *_wrap_Partial_erase__SWIG_0(PyObject *self, PyObject *args) {
     PyObject *resultobj;
     Partial *arg1 = (Partial *) 0 ;
     PartialIterator *arg2 = 0 ;
@@ -5420,6 +5425,111 @@ static PyObject *_wrap_Partial_erase(PyObject *self, PyObject *args) {
     Py_INCREF(Py_None); resultobj = Py_None;
     return resultobj;
     fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Partial_erase__SWIG_1(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    Partial *arg1 = (Partial *) 0 ;
+    BreakpointPosition *arg2 = (BreakpointPosition *) 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Partial_erase",&obj0,&obj1)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_Partial,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    if ((SWIG_ConvertPtr(obj1,(void **) &arg2, SWIGTYPE_p_BreakpointPosition,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        try
+        {
+            Partial_erase__SWIG_1(arg1,arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Partial_erase(PyObject *self, PyObject *args) {
+    int argc;
+    PyObject *argv[3];
+    int ii;
+    
+    argc = PyObject_Length(args);
+    for (ii = 0; (ii < argc) && (ii < 2); ii++) {
+        argv[ii] = PyTuple_GetItem(args,ii);
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(argv[0], (void **) &ptr, SWIGTYPE_p_Partial, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *ptr;
+                if (SWIG_ConvertPtr(argv[1], (void **) &ptr, SWIGTYPE_p_PartialIterator, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                }else {
+                    _v = 1;
+                }
+            }
+            if (_v) {
+                return _wrap_Partial_erase__SWIG_0(self,args);
+            }
+        }
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(argv[0], (void **) &ptr, SWIGTYPE_p_Partial, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *ptr;
+                if (SWIG_ConvertPtr(argv[1], (void **) &ptr, SWIGTYPE_p_BreakpointPosition, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                }else {
+                    _v = 1;
+                }
+            }
+            if (_v) {
+                return _wrap_Partial_erase__SWIG_1(self,args);
+            }
+        }
+    }
+    
+    PyErr_SetString(PyExc_TypeError,"No matching function for overloaded 'Partial_erase'");
     return NULL;
 }
 

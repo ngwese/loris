@@ -149,6 +149,7 @@ typedef Partial::iterator BreakpointPosition;
 
 class NewPartialIterator
 {
+public:
 	Partial & subject;
 	Partial::iterator it;
 
@@ -593,7 +594,16 @@ public:
 	/* 	Erase the Breakpoint at the position of the 
 		given iterator (invalidating the iterator).
 	 */
-	
+
+//	make erase work with the new iterators:
+	%extend
+	{
+		void erase( BreakpointPosition * pos )
+		{
+			if ( *pos != self->end() )
+				*pos = self->erase( *pos );
+		}
+	}
 //	partial envelope interpolation/extrapolation:
 //	Return the interpolated value of a partial parameter at
 //	the specified time. At times beyond the ends of the

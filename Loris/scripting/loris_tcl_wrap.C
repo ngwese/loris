@@ -1365,6 +1365,7 @@ typedef Partial::iterator BreakpointPosition;
 
 class NewPartialIterator
 {
+public:
 	Partial & subject;
 	Partial::iterator it;
 
@@ -1445,6 +1446,10 @@ int PartialListIterator_isInRange(PartialListIterator *self,PartialListIterator 
 		 }
 NewPartialIterator *Partial_iterator(Partial *self){
 			return new NewPartialIterator(*self);
+		}
+void Partial_erase__SWIG_1(Partial *self,BreakpointPosition *pos){
+			if ( *pos != self->end() )
+				*pos = self->erase( *pos );
 		}
 Partial *Partial_copy(Partial *self){
 			return new Partial( *self );
@@ -5424,7 +5429,7 @@ _wrap_Partial_findNearest(ClientData clientData, Tcl_Interp *interp, int objc, T
 
 
 static int
-_wrap_Partial_erase(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+_wrap_Partial_erase__SWIG_0(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
     Partial *arg1 = (Partial *) 0 ;
     PartialIterator *arg2 = 0 ;
     
@@ -5455,6 +5460,100 @@ _wrap_Partial_erase(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj
     
     return TCL_OK;
     fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_Partial_erase__SWIG_1(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    Partial *arg1 = (Partial *) 0 ;
+    BreakpointPosition *arg2 = (BreakpointPosition *) 0 ;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"oo:Partial_erase self pos ",0,0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_Partial,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[2], (void **) &arg2, SWIGTYPE_p_BreakpointPosition,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            Partial_erase__SWIG_1(arg1,arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_Partial_erase(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    Tcl_Obj *CONST *argv = objv+1;
+    int argc = objc-1;
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(interp, argv[0], (void **) &ptr, SWIGTYPE_p_Partial, 0) == TCL_ERROR) {
+                _v = 0;
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *ptr;
+                if (SWIG_ConvertPtr(interp, argv[1], (void **) &ptr, SWIGTYPE_p_PartialIterator, 0) == TCL_ERROR) {
+                    _v = 0;
+                }else {
+                    _v = 1;
+                }
+            }
+            if (_v) {
+                return _wrap_Partial_erase__SWIG_0(clientData, interp, objc, objv);
+            }
+        }
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(interp, argv[0], (void **) &ptr, SWIGTYPE_p_Partial, 0) == TCL_ERROR) {
+                _v = 0;
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *ptr;
+                if (SWIG_ConvertPtr(interp, argv[1], (void **) &ptr, SWIGTYPE_p_BreakpointPosition, 0) == TCL_ERROR) {
+                    _v = 0;
+                }else {
+                    _v = 1;
+                }
+            }
+            if (_v) {
+                return _wrap_Partial_erase__SWIG_1(clientData, interp, objc, objv);
+            }
+        }
+    }
+    
+    Tcl_SetResult(interp,(char *) "No matching function for overloaded 'Partial_erase'", TCL_STATIC);
     return TCL_ERROR;
 }
 

@@ -936,6 +936,7 @@ typedef Partial::iterator BreakpointPosition;
 
 class NewPartialIterator
 {
+public:
 	Partial & subject;
 	Partial::iterator it;
 
@@ -1016,6 +1017,10 @@ int PartialListIterator_isInRange(PartialListIterator *self,PartialListIterator 
 		 }
 NewPartialIterator *Partial_iterator(Partial *self){
 			return new NewPartialIterator(*self);
+		}
+void Partial_erase__SWIG_1(Partial *self,BreakpointPosition *pos){
+			if ( *pos != self->end() )
+				*pos = self->erase( *pos );
 		}
 Partial *Partial_copy(Partial *self){
 			return new Partial( *self );
@@ -6379,7 +6384,7 @@ XS(_wrap_Partial_findNearest) {
 }
 
 
-XS(_wrap_Partial_erase) {
+XS(_wrap_Partial_erase__SWIG_0) {
     char _swigmsg[SWIG_MAX_ERRMSG] = "";
     const char *_swigerr = _swigmsg;
     {
@@ -6428,6 +6433,115 @@ XS(_wrap_Partial_erase) {
         (void) _swigerr;
     }
     croak(_swigerr);
+}
+
+
+XS(_wrap_Partial_erase__SWIG_1) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        Partial *arg1 = (Partial *) 0 ;
+        BreakpointPosition *arg2 = (BreakpointPosition *) 0 ;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 2) || (items > 2)) {
+            SWIG_croak("Usage: Partial_erase(self,pos);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_Partial,0) < 0) {
+                SWIG_croak("Type error in argument 1 of Partial_erase. Expected _p_Partial");
+            }
+        }
+        {
+            if (SWIG_ConvertPtr(ST(1), (void **) &arg2, SWIGTYPE_p_BreakpointPosition,0) < 0) {
+                SWIG_croak("Type error in argument 2 of Partial_erase. Expected _p_BreakpointPosition");
+            }
+        }
+        {
+            try
+            {
+                Partial_erase__SWIG_1(arg1,arg2);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_Partial_erase) {
+    dXSARGS;
+    
+    if (items == 2) {
+        int _v;
+        {
+            void *tmp;
+            if (SWIG_ConvertPtr(ST(0), (void **) &tmp, SWIGTYPE_p_Partial, 0) == -1) {
+                _v = 0;
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *tmp;
+                if (SWIG_ConvertPtr(ST(1), (void **) &tmp, SWIGTYPE_p_PartialIterator, 0) == -1) {
+                    _v = 0;
+                }else {
+                    _v = 1;
+                }
+            }
+            if (_v) {
+                (*PL_markstack_ptr++);SWIG_CALLXS(_wrap_Partial_erase__SWIG_0); return;
+            }
+        }
+    }
+    if (items == 2) {
+        int _v;
+        {
+            void *tmp;
+            if (SWIG_ConvertPtr(ST(0), (void **) &tmp, SWIGTYPE_p_Partial, 0) == -1) {
+                _v = 0;
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *tmp;
+                if (SWIG_ConvertPtr(ST(1), (void **) &tmp, SWIGTYPE_p_BreakpointPosition, 0) == -1) {
+                    _v = 0;
+                }else {
+                    _v = 1;
+                }
+            }
+            if (_v) {
+                (*PL_markstack_ptr++);SWIG_CALLXS(_wrap_Partial_erase__SWIG_1); return;
+            }
+        }
+    }
+    
+    croak("No matching function for overloaded 'Partial_erase'");
+    XSRETURN(0);
 }
 
 
