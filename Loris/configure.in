@@ -229,39 +229,40 @@ dnl SDIF package, since there are more than one such package in
 dnl and we need specifically IRCAM's.
 dnl----------------------------------------------------------------
 
-SDIFPACKAGE=
-SDIFINCLUDE=
- 
-AC_ARG_WITH(sdif,
-	AC_HELP_STRING( [--with-sdif=path],
-					[specify the prefix of the SDIF package] ),
-	[SDIFPACKAGE="$withval"], [SDIFPACKAGE=])
+dnl SDIFPACKAGE=
+dnl SDIFINCLUDE=
+dnl  
+dnl AC_ARG_WITH(sdif,
+dnl 	AC_HELP_STRING( [--with-sdif=path],
+dnl 					[specify the prefix of the SDIF package] ),
+dnl 	[SDIFPACKAGE="$withval"], [SDIFPACKAGE=])
+dnl 
+dnl if test -n "$SDIFPACKAGE" ; then
+dnl 	AC_MSG_RESULT([prepending $SDIFPACKAGE/include to include search path and $SDIFPACKAGE/lib to library search path (sdif package)])
+dnl 	SDIFINCLUDE="$SDIFPACKAGE/include"
+dnl 	CPPFLAGS="-I$SDIFINCLUDE $CPPFLAGS"
+dnl 	LIBS="-L$SDIFPACKAGE/lib $LIBS"
+dnl fi
 
-if test -n "$SDIFPACKAGE" ; then
-	AC_MSG_RESULT([prepending $SDIFPACKAGE/include to include search path and $SDIFPACKAGE/lib to library search path (sdif package)])
-	SDIFINCLUDE="$SDIFPACKAGE/include"
-	CPPFLAGS="-I$SDIFINCLUDE $CPPFLAGS"
-	LIBS="-L$SDIFPACKAGE/lib $LIBS"
-fi
+dnl AC_CHECK_HEADER(sdif.h, :, AC_MSG_ERROR(cannot find SDIF header))
+dnl AC_CHECK_LIB(sdif, SdifGenInit, :, AC_MSG_ERROR(cannot use SDIF library))
 
-AC_CHECK_HEADER(sdif.h, :, AC_MSG_ERROR(cannot find SDIF header))
-AC_CHECK_LIB(sdif, SdifGenInit, :, AC_MSG_ERROR(cannot use SDIF library))
-
-dnl make sure that we can figure out how to use
-dnl the SDIF library
-AC_MSG_CHECKING(SDIF release version (must be at least 3.4 but prior to 3.8))
-dnl should actually try running this, but these things weren't defined
-dnl in earlier versions, so probably it isn't worth the trouble
-AC_TRY_COMPILE( [ #include<sdif.h> ], [
-		assert( SDIF_VERSION_MAJOR >= 3 && SDIF_VERSION_MINOR >= 4 && SDIF_VERSION_MINOR < 8 ); ],[ 
-		AC_MSG_RESULT(ok)
-		], [
-		AC_MSG_ERROR(failed -- please use at least SDIF-3.4, and not later than SDIF-3.7.4) ] )
-
-if test -n "$SDIFINCLUDE" ; then
-	SDIFINCLUDE="-I$SDIFINCLUDE"
-fi
-AC_SUBST(SDIFINCLUDE)
+dnl dnl make sure that we can figure out how to use
+dnl dnl the SDIF library
+dnl AC_MSG_CHECKING(SDIF release version (must be at least 3.4 but prior to 3.8))
+dnl dnl should actually try running this, but these things weren't defined
+dnl dnl in earlier versions, so probably it isn't worth the trouble
+dnl AC_TRY_COMPILE( [ #include<sdif.h> ], [
+dnl 		assert( SDIF_VERSION_MAJOR >= 3 && SDIF_VERSION_MINOR >= 4 && SDIF_VERSION_MINOR < 8 ); ],[ 
+dnl 		AC_MSG_RESULT(ok)
+dnl 		], [
+dnl 		AC_MSG_ERROR(failed -- please use at least SDIF-3.4, and not later than SDIF-3.7.4) ] )
+dnl 
+dnl if test -n "$SDIFINCLUDE" ; then
+dnl 	SDIFINCLUDE="-I$SDIFINCLUDE"
+dnl fi
+dnl AC_SUBST(SDIFINCLUDE)
+dnl 
 
 dnl
 dnl end of SDIF check

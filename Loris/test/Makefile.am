@@ -17,7 +17,7 @@ INCLUDES = -I$(top_srcdir)/src
 # simple morphing test
 test_c_SOURCES = morphtest.C
 if DARWIN
-test_c_LDADD = $(top_builddir)/src/.libs/libloris.a -lsdif -lfftw
+test_c_LDADD = $(top_builddir)/src/.libs/libloris.a -lfftw
 else
 test_c_LDADD = $(top_builddir)/src/libloris.la
 endif
@@ -53,7 +53,7 @@ endif
 # SdifFile unit tests
 test_sdiffile_SOURCES = test_SdifFile.C
 if DARWIN
-test_sdiffile_LDADD = $(top_builddir)/src/.libs/libloris.a -lsdif
+test_sdiffile_LDADD = $(top_builddir)/src/.libs/libloris.a
 else
 test_sdiffile_LDADD = $(top_builddir)/src/libloris.la
 endif

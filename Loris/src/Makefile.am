@@ -123,7 +123,6 @@ Loris_Classes = AiffData.C	\
 		Synthesizer.C \
 		Synthesizer.h
 
-# libclasses_la_LIBADD = -lfftw -lsdif
 lib_LTLIBRARIES = libloris.la
 libloris_la_SOURCES = loris.h lorisAnalyzer_pi.C lorisBpEnvelope_pi.C \
  lorisException_pi.C lorisException_pi.h lorisNonObj_pi.C \
@@ -137,7 +136,7 @@ if DARWIN
 EXTRA_LD_FLAGS = -prebind
 endif
 
-libloris_la_LIBADD = -lfftw -lsdif
+libloris_la_LIBADD = -lfftw
 libloris_la_LDFLAGS = -version-info 4:0:4 $(EXTRA_LD_FLAGS)
 
 nodist_include_HEADERS = loris.h
