@@ -43,14 +43,12 @@ namespace Loris {
 //	class BreakpointEnvelope
 //
 //	A BreakpointEnvelope represents a linear segment breakpoint 
-//	function with infinite extension at each end (that is, the 
-//	values past either end of the breakpoint function have the 
-//	values at the nearest end).
-//	
-//	Implements the Envelope interface. 
+//	function with infinite extension at each end (that is, evalutaing 
+//	the envelope past either end of the breakpoint function yields the 
+//	value at the nearest end point).
 //
-//	This class isn't insulating, clients that should be protected from 
-//	the details should use the EnvelopeInterface.
+//	BreakpointEnvelope implements the Envelope interface, described
+//	by the abstract class <a href="#Envelope">Envelope</a>. 
 //
 class BreakpointEnvelope : public Envelope
 {
@@ -59,7 +57,7 @@ class BreakpointEnvelope : public Envelope
 
 //	-- public interface --
 public:
-//	construction:
+//	-- construction --
 	BreakpointEnvelope( void );
 	/*	Construct and return a new BreakpointEnvelope having no 
 		breakpoints (and an implicit value of 0. everywhere).			
@@ -78,21 +76,22 @@ public:
 	/*	Destroy this BreakpointEnvelope. 								
 	 */
 
-	virtual BreakpointEnvelope * clone( void ) const;
-	/*	Return an exact copy of this BreakpointEnvelope.
-		(Prototype pattern)
-	 */
+	//	compiler-generated assignment is okay
+	//	BreakpointEnvelope & operator= ( const BreakpointEnvelope & );
+
 	
-//	Envelope interface:
+//	-- Envelope interface --
+	virtual BreakpointEnvelope * clone( void ) const;
+	/*	Return an exact copy of this BreakpointEnvelope
+		(following the Prototype pattern).
+	 */
+
 	virtual double valueAt( double x ) const;	
-	/*	Return the interpolated value of this BreakpointEnvelope at 
+	/*	Return the linearly-interpolated value of this BreakpointEnvelope at 
 		the specified time.							
 	 */
 	
-//	compiler-generated assignment is okay
-	//	BreakpointEnvelope & operator= ( const BreakpointEnvelope & );
-
-//	envelope composition:
+//	-- envelope composition --
 	void insertBreakpoint( double time, double value );
 	/*	Insert a breakpoint representing the specified (time, value) 
 		pair into this BreakpointEnvelope. If there is already a 
@@ -102,7 +101,7 @@ public:
 	 
 //
 //	iterator access:
-//	(hack, need to make this pretty)
+/*	this ugly hack is unused as far as I can tell.
 	typedef std::map< double, double >::iterator iterator;
 	typedef std::map< double, double >::const_iterator const_iterator;
 	
@@ -114,7 +113,7 @@ public:
 	
 	unsigned long size( void ) const { return _breakpoints.size(); }
 	bool empty( void ) const { return _breakpoints.empty(); }
-	
+*/	
 	
 
 };	//	end of class BreakpointEnvelope

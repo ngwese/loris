@@ -43,10 +43,12 @@ namespace Loris {
 // ---------------------------------------------------------------------------
 //	class/namespace BreakpointUtils
 //	
-//	A group of Breakpoint utility function objects for use with STL 
-//	searching and sorting algorithms. BreakpointUtils is a namespace
+//	BreakpointUtils represents a collection of utility functions and 
+//	function objects for applying STL searching and sorting algorithms 
+//	to collections of Loris Breakpoints. BreakpointUtils is a namespace
 //	within the Loris namespace, unless compiled with NO_LORIS_NAMESPACE,
-//	in which case it is a class.
+//	in which case it is a class (having only static members and private
+//	constructors).
 //
 //	Lakos suggests protecting utility functions like this in a class 
 //	definition, but I think a namespace is better, since that is really
@@ -69,10 +71,11 @@ public:
 #endif
 
 //	-- free functions --
-//	Add noise (bandwidth) energy to a Breakpoint by computing new 
-//	amplitude and bandwidth values. enoise may be negative, but 
-//	noise energy cannot be removed (negative energy added) in excess 
-//	of the current noise energy.
+	/*	Add noise (bandwidth) energy to a Breakpoint by computing new 
+		amplitude and bandwidth values. enoise may be negative, but 
+		noise energy cannot be removed (negative energy added) in excess 
+		of the current noise energy.
+	 */
 #if defined( NO_NESTED_NAMESPACE )
 	static
 #endif
@@ -80,6 +83,9 @@ public:
 	
 
 //	-- predicates --
+	/*	Predicate functor returning true if its Breakpoint argument 
+		has frequency between specified bounds, and false otherwise.
+	 */
 	struct frequency_between : 
 		public std::unary_function< const Breakpoint, bool >
 	{
@@ -100,6 +106,10 @@ public:
 	};
 
 //	-- comparitors --
+	/*	Comparitor (binary) functor returning true if its first Breakpoint
+		argument has frequency less than that of its second Breakpoint argument,
+		and false otherwise.
+	 */
 	struct less_frequency : 
 		public std::binary_function< const Breakpoint, const Breakpoint, bool >
 	{
@@ -107,6 +117,10 @@ public:
 			{ return lhs.frequency() < rhs.frequency(); }
 	};
 
+	/*	Comparitor (binary) functor returning true if its first Breakpoint
+		argument has amplitude greater than that of its second Breakpoint argument,
+		and false otherwise.
+	 */
 	struct greater_amplitude : 
 		public std::binary_function< const Breakpoint, const Breakpoint, bool >
 	{

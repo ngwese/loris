@@ -144,7 +144,7 @@ Model, refer to the Loris website:
 <a href="http://www.cerlsoundgroup.org/Loris/">www.cerlsoundgroup.org/Loris/</a>.
 <p>
 <h3>Member Functions</h3>
-<h4 align="center">Construction</h4>
+<h4>Construction</h4>
 <p><tt><b>Analyzer( double resolutionHz )</b></tt>
 <blockquote>
 <br>
@@ -182,7 +182,7 @@ collected Partials is not copied.
 Destroy this Analyzer.
 </blockquote>
 
-<h4 align="center">Configuration</h4>
+<h4>Configuration</h4>
 <p><tt><b>operator = ( const Analyzer & rhs )
 </b></tt>
 <blockquote>[ returns Analyzer &  ]
@@ -203,7 +203,7 @@ All other Analyzer parameters are (re-)computed from the
 frequency resolution and window width.
 </blockquote>
 
-<h4 align="center">Analysis</h4>
+<h4>Analysis</h4>
 <p><tt><b>analyze( const double * bufBegin, const double * bufEnd, double srate )</b></tt>
 <blockquote>[ returns void ]
 <br>
@@ -212,7 +212,7 @@ Analyze a range of (mono) samples at the given sample rate
 PartialList. 												
 </blockquote>
 
-<h4 align="center">Parameter Access</h4>
+<h4>Parameter Access</h4>
 <p><tt><b> ampFloor( void ) const</b></tt>
 <blockquote>[ returns double ]
 <br>
@@ -279,7 +279,7 @@ Return the frequency-domain main lobe width (measured between
 zero-crossings) of the analysis window used by this Analyzer. 				
 </blockquote>
 
-<h4 align="center">Parameter Mutation</h4>
+<h4>Parameter Mutation</h4>
 
 <p><tt><b> setAmpFloor( double x ) </b></tt>
 <blockquote>[ returns void ]
@@ -465,123 +465,128 @@ Set the phase of this Breakpoint.
 <hr><h2>BreakpointEnvelope</h2></a>
 <p>
 A BreakpointEnvelope represents a linear segment breakpoint 
-function with infinite extension at each end (that is, the 
-values past either end of the breakpoint function have the 
-values at the nearest end).
-
-Implements the Envelope interface. 
-
-This class isn't insulating, clients that should be protected from 
-the details should use the EnvelopeInterface.
+function with infinite extension at each end (that is, evalutaing 
+the envelope past either end of the breakpoint function yields the 
+value at the nearest end point).
 <p>
-<pre>
-//	construction:
-	BreakpointEnvelope( void );
-	/*	Construct and return a new BreakpointEnvelope having no 
-		breakpoints (and an implicit value of 0. everywhere).			
-	 */
-	explicit BreakpointEnvelope( double initialValue );
-	/*	Construct and return a new BreakpointEnvelope having a 
-		single breakpoint at 0. (and an implicit value everywhere)
-		of initialValue.			
-	 */
-	BreakpointEnvelope( const BreakpointEnvelope & other );
-	/*	Construct and return a new BreakpointEnvelope that is
-		a copy of this BreapointEnvelope (has the same value
-		as this BreakpointEnvelope everywhere).			
-	 */
-	virtual ~BreakpointEnvelope( void );
-	/*	Destroy this BreakpointEnvelope. 								
-	 */
+BreakpointEnvelope implements the Envelope interface, described
+by the abstract class <a href="#Envelope">Envelope</a>. 
+<p>
+<h3>Member Functions</h3>
+<h4>Construction</h4>
+<p><tt><b>BreakpointEnvelope( void )</b></tt>
+<blockquote>
+<br>
+Construct and return a new BreakpointEnvelope having no 
+breakpoints (and an implicit value of 0. everywhere).
+</blockquote>
 
-	virtual BreakpointEnvelope * clone( void ) const;
-	/*	Return an exact copy of this BreakpointEnvelope.
-		(Prototype pattern)
-	 */
-	
-//	Envelope interface:
-	virtual double valueAt( double x ) const;	
-	/*	Return the interpolated value of this BreakpointEnvelope at 
-		the specified time.							
-	 */
-	
-//	compiler-generated assignment is okay
-	//	BreakpointEnvelope & operator= ( const BreakpointEnvelope & );
+<p><tt><b>BreakpointEnvelope( double initialValue )</b></tt>
+<blockquote>
+<br>
+Construct and return a new BreakpointEnvelope having a 
+single breakpoint at 0. (and an implicit value everywhere)
+of initialValue.
+</blockquote>		
 
-//	envelope composition:
-	void insertBreakpoint( double time, double value );
-	/*	Insert a breakpoint representing the specified (time, value) 
-		pair into this BreakpointEnvelope. If there is already a 
-		breakpoint at the specified time, it will be replaced with 
-		the new breakpoint.
-	 */
-	 
-//
-//	iterator access:
-//	(hack, need to make this pretty)
-	typedef std::map< double, double >::iterator iterator;
-	typedef std::map< double, double >::const_iterator const_iterator;
-	
-	iterator begin( void ) { return _breakpoints.begin(); }
-	const_iterator begin( void ) const { return _breakpoints.begin(); }
-	
-	iterator end( void ) { return _breakpoints.end(); }
-	const_iterator end( void ) const { return _breakpoints.end(); }
-	
-	unsigned long size( void ) const { return _breakpoints.size(); }
-	bool empty( void ) const { return _breakpoints.empty(); }
-</pre>
+<p><tt><b>BreakpointEnvelope( const BreakpointEnvelope & other )</b></tt>
+<blockquote>
+<br>
+Construct and return a new BreakpointEnvelope that is
+a copy of this BreapointEnvelope (has the same value
+as this BreakpointEnvelope everywhere).			
+</blockquote>
+
+<p><tt><b>~BreakpointEnvelope( void )</b></tt>
+<blockquote>
+<br>
+Destroy this BreakpointEnvelope. 								
+</blockquote>
+
+
+<h4>Envelope Interface</h4>
+<p><tt><b> clone( void ) const</b></tt>
+<blockquote>[ returns BreakpointEnvelope *  ]
+<br>
+Return an exact copy of this BreakpointEnvelope
+(following the Prototype pattern).
+</blockquote>
+
+
+<p><tt><b> valueAt( double x ) const</b></tt>
+<blockquote>[ returns double  ]
+<br>
+Return the linearly-interpolated value of this BreakpointEnvelope at 
+the specified time.							
+</blockquote>
+
+
+<h4>Envelope Composition</h4>
+<p><tt><b> insertBreakpoint( double time, double value )</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Insert a breakpoint representing the specified (time, value) 
+pair into this BreakpointEnvelope. If there is already a 
+breakpoint at the specified time, it will be replaced with 
+the new breakpoint.
+</blockquote>
 				
 <p><a href="#contents"><small>Contents</small></a>	
 
 <a name="BreakpointUtils">
 <hr><h2>BreakpointUtils</h2></a>
 <p>
-A group of Breakpoint utility function objects for use with STL 
-searching and sorting algorithms. BreakpointUtils is a namespace
+BreakpointUtils represents a collection of utility functions and 
+function objects for applying STL searching and sorting algorithms 
+to collections of Loris Breakpoints. BreakpointUtils is a namespace
 within the Loris namespace, unless compiled with NO_LORIS_NAMESPACE,
-in which case it is a class.
-
-Lakos suggests protecting utility functions like this in a class 
-definition, but I think a namespace is better, since that is really
-what is being constructed.
+in which case it is a class (having only static members and private
+constructors).
 <p>
+<h4>Free Functions</h4>
+<p><tt><b> addNoiseEnergy( Breakpoint & bp, double enoise )</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Add noise (bandwidth) energy to a Breakpoint by computing new 
+amplitude and bandwidth values. enoise may be negative, but 
+noise energy cannot be removed (negative energy added) in excess 
+of the current noise energy.
+</blockquote>
+
+<h4>Predicates</h4>
+	<p><tt><b>struct frequency_between : 
+		public std::unary_function< const Breakpoint, bool ></b></tt>
+<blockquote>[ returns bool  ]
+<br>
+Predicate functor returning true if its Breakpoint argument 
+has frequency between specified bounds, and false otherwise, constructed
 <pre>
-//	predicates:
-	struct frequency_between : 
-		public std::unary_function< const Breakpoint, bool >
-	{
-		bool operator()( const Breakpoint & b )  const
-			{ 
-				return (b.frequency() > _fmin) && 
-					   (b.frequency() < _fmax); 
-			}
-			
-		//	constructor:
-		frequency_between( double x, double y ) : 
-			_fmin( x ), _fmax( y ) 
-			{ if (x>y) std::swap(x,y); }
-			
-		//	bounds:
-		private:
-			double _fmin, _fmax;
-	};
-
-//	comparitors:
-	struct less_frequency : 
-		public std::binary_function< const Breakpoint, const Breakpoint, bool >
-	{
-		bool operator()( const Breakpoint & lhs, const Breakpoint & rhs ) const
-			{ return lhs.frequency() < rhs.frequency(); }
-	};
-
-	struct greater_amplitude : 
-		public std::binary_function< const Breakpoint, const Breakpoint, bool >
-	{
-		bool operator()( const Breakpoint & lhs, const Breakpoint & rhs ) const
-			{ return lhs.amplitude() > rhs.amplitude(); }
-	};	
+Loris::BreakpointUtils::frequency_between( double lowerbound, double upperbound )
 </pre>
+</blockquote>
+
+<h4>Comparitors</h4>
+
+<p><tt><b>struct less_frequency : 
+public std::binary_function< const Breakpoint, const Breakpoint, bool >
+</b></tt>
+<blockquote>[ returns bool  ]
+<br>
+Comparitor (binary) functor returning true if its first Breakpoint
+argument has frequency less than that of its second Breakpoint argument,
+and false otherwise.
+</blockquote>	
+
+
+<p><tt><b>struct greater_amplitude : 
+public std::binary_function< const Breakpoint, const Breakpoint, bool >
+</b></tt>
+<blockquote>[ returns bool  ]
+<br>
+Comparitor (binary) functor returning true if its first Breakpoint
+argument has amplitude greater than that of its second Breakpoint argument,
+and false otherwise.
+</blockquote>
 				
 <p><a href="#contents"><small>Contents</small></a>	
 
