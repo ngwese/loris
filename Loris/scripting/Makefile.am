@@ -24,23 +24,16 @@ PERL_WRAPPER = loris_perl_wrap.C
 # installing the Python module
 #
 if BUILD_PYTHON
-
 if HAVE_SITEPY
 pythonsitepkgdir = $(SITEPY)
 else
 pythonsitepkgdir = $(pkglibdir)/python
 endif
 # Darwin is special, see below
-if ! DARWIN
+if DARWIN
+else
 pythonsitepkg_SCRIPTS = loris.py loris.pyo
 pythonsitepkg_LTLIBRARIES = loriscmodule.la
-endif
-
-# Darwin is special, see below
-if ! DARWIN
-loriscmodule_la_SOURCES = $(PYTHON_WRAPPER)
-loriscmodule_la_LDFLAGS = -module -avoid-version
-loriscmodule_la_LIBADD = $(top_builddir)/pi/libloris.la -lstdc++ 
 endif
 
 # This should be an install hook, but on my machine, the
@@ -52,26 +45,32 @@ loris.pyo: loris.py
 	
 endif
 
+# old versions of automake don't like these things
+# defined conditionally:
+loriscmodule_la_SOURCES = $(PYTHON_WRAPPER)
+loriscmodule_la_LDFLAGS = -module -avoid-version
+loriscmodule_la_LIBADD = $(top_builddir)/pi/libloris.la -lstdc++ 
+
+
 #----------------------------------------------------------------
 # If Tcl is available, define a target for building and
 # installing the PythonTcl module
 #
 if BUILD_TCL
-
 tclsitepkgdir = $(pkglibdir)/tcl
 # Darwin is special, see below
-if ! DARWIN
+if DARWIN
+else
 tclsitepkg_LTLIBRARIES = tcLoris.la
 endif
+endif
 
-# Darwin is special, see below
-if ! DARWIN
+# old versions of automake don't like these things
+# defined conditionally:
 tcLoris_la_SOURCES = $(TCL_WRAPPER)
 tcLoris_la_LDFLAGS = -module -avoid-version
 tcLoris_la_LIBADD = $(top_builddir)/pi/libloris.la -lstdc++
-endif
 
-endif
 
 #----------------------------------------------------------------
 # Don't build or install the Perl module, it is untested.
