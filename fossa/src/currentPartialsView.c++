@@ -227,8 +227,8 @@ void Tab::setGui(){
   shiftText = new QLabel( infoBox, "shiftText" );
   QFont shiftText_font(  shiftText->font() );
   shiftText->setFont( shiftText_font ); 
-  shiftText->setMinimumSize(100,25);
-  shiftText->setMaximumSize(100,25);
+  //shiftText->setMinimumSize(100,25); I don't reall think these are needed
+  //shiftText->setMaximumSize(100,25); (CDS 5/9/03)
   
   infoBoxLayout->addWidget( shiftText, 1, 3 );
 
@@ -254,8 +254,8 @@ void Tab::setGui(){
   maxText = new QLabel(infoBox, "maxText");
   QFont maxText_font(maxText->font());
   maxText->setFont(maxText_font); 
-  maxText->setMinimumSize(82,25); 
-  maxText->setMaximumSize(82,25); 
+  //maxText->setMinimumSize(82,25); I don't really think these are needed 
+  //maxText->setMaximumSize(82,25); (CDS 5/9/03)
 
   infoBoxLayout->addWidget(maxText, 1, 0 );
 
