@@ -75,7 +75,7 @@ if { [ catch { exportSpc bad_spc_file.tcltest.spc $clar 90 } ] } {
 	puts "Error Code: $errorCode"
 }
 
-channelize $clar [ createFreqReference $clar 20 0 1000 ] 1
+channelize $clar [ createFreqReference $clar 0 1000 ] 1
 distill $clar
 
 # just for fun, print out the average 
@@ -108,7 +108,7 @@ $a configure 270
 set v [ [ AiffFile -args $srcdir/flute.aiff ] samples ]
 set flut [ $a analyze $v $samplerate ]
 
-channelize $flut [ createFreqReference $flut 20 0 1000 ] 1
+channelize $flut [ createFreqReference $flut 0 1000 ] 1
 distill $flut
 
 # check flute synthesis:

@@ -8,7 +8,7 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-INCLUDES =  $(PYINCLUDE) $(TCLINCLUDE) $(PERLINCLUDE) -I$(top_srcdir)/src
+INCLUDES =  $(PYINCLUDE) $(TCLINCLUDE) $(PERLINCLUDE) -I$(top_srcdir)/src -I$(top_srcdir)/pi
 
 EXTRA_DIST = loris.py loris.pm loris.i lorisAiffFile.i lorisAnalyzer.i lorisBpEnvelope.i lorisPartialList.i lorisSampleVector.i
 
@@ -34,7 +34,8 @@ endif
 
 loriscmodule_la_SOURCES = $(PYTHON_WRAPPER)
 loriscmodule_la_LDFLAGS = -module -avoid-version
-loriscmodule_la_LIBADD = $(top_builddir)/src/libclasses.la -lstdc++ 
+#loriscmodule_la_LIBADD = $(top_builddir)/src/libclasses.la -lstdc++ 
+loriscmodule_la_LIBADD = $(top_builddir)/pi/libloris.la -lstdc++ 
 
 
 # This should be an install hook, but on my machine, the
@@ -56,7 +57,8 @@ endif
 
 tcLoris_la_SOURCES = $(TCL_WRAPPER)
 tcLoris_la_LDFLAGS = -module -avoid-version
-tcLoris_la_LIBADD = $(top_builddir)/src/libclasses.la -lstdc++
+#tcLoris_la_LIBADD = $(top_builddir)/src/libclasses.la -lstdc++
+tcLoris_la_LIBADD = $(top_builddir)/pi/libloris.la -lstdc++
 
 #----------------------------------------------------------------
 # Don't install the Perl module, it is untested.
@@ -66,7 +68,8 @@ noinst_SCRIPTS = loris.pm
 
 loris_perl_la_SOURCES = $(PERL_WRAPPER)
 loris_perl_la_LDFLAGS = -module -avoid-version
-loris_perl_la_LIBADD = $(top_builddir)/src/libclasses.la -lstdc++
+#loris_perl_la_LIBADD = $(top_builddir)/src/libclasses.la -lstdc++
+loris_perl_la_LIBADD = $(top_builddir)/pi/libloris.la -lstdc++
 
 
 #----------------------------------------------------------------

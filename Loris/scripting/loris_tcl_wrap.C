@@ -1080,85 +1080,20 @@ void distill( PartialList * partials )
 		Loris::Sieve sieve( 0.0001 );
 		sieve.sift( *partials );
 	}
-	/*	Lippold's wacky experimental sifting thingie: 
-		If any two partials with same label overlap in time,
-		keep only the longer of the two partials.
+	/*	Eliminate overlapping Partials having the same label 
+		(except zero). If any two partials with same label 
+		overlap in time, keep only the longer of the two.
 		Set the label of the shorter duration partial to zero.
 		
-		This used to be "experimental," and is now just 
-		"transitional."
 	 */
 
 
-	#include <memory> 	//	 for auto_ptr
-	
-	BreakpointEnvelope * 
-	createFreqReference( PartialList * partials, int numSamples,
-						 double minFreq, double maxFreq )
-	{
-		ThrowIfNull((PartialList *) partials);
-		
-		if ( numSamples <= 0 )
-			Throw( Loris::InvalidArgument, "number of samples in frequency reference must be positive." );
-		
-		if ( maxFreq < minFreq )
-			std::swap( minFreq, maxFreq );
-			
-		//	find the longest Partial in the given frequency range:
-		PartialList::iterator longest = partials->end();
-		for ( PartialList::iterator it = partials->begin(); 
-			  it != partials->end(); 
-			  ++it ) 
-		{
-			//	evaluate the Partial's frequency at its loudest
-			//	(highest sinusoidal amplitude) Breakpoint:
-			Partial::const_iterator partialIter = it->begin();
-			double maxAmp = 
-				partialIter.breakpoint().amplitude() * std::sqrt( 1. - partialIter.breakpoint().bandwidth() );
-			double time = partialIter.time();
-			
-			for ( ++partialIter; partialIter != it->end(); ++partialIter ) 
-			{
-				double a = partialIter.breakpoint().amplitude() * 
-							std::sqrt( 1. - partialIter.breakpoint().bandwidth() );
-				if ( a > maxAmp ) 
-				{
-					maxAmp = a;
-					time = partialIter.time();
-				}
-			}			
-			double compareFreq = it->frequencyAt( time );
-			
-			
-			if ( compareFreq < minFreq || compareFreq > maxFreq )
-				continue;
-				
-			if ( longest == partials->end() || it->duration() > longest->duration() ) 
-			{
-				longest = it;
-			}
-		}	
-		
-		if ( longest == partials->end() ) 
-		{
-			Throw( Loris::InvalidArgument, "no partials found in the specified frequency range" );
-		}
-	
-		//	use auto_ptr to manage memory in case 
-		//	an exception is generated (hard to imagine):
-		std::auto_ptr< BreakpointEnvelope > env_ptr( new BreakpointEnvelope() );
+	//#define LORIS_OPAQUE_POINTERS 0
+	//#include <loris.h>
 
-		//	find n samples, ignoring the end points:
-		double dt = longest->duration() / (numSamples + 1.);
-		for ( int i = 0; i < numSamples; ++i ) 
-		{
-			double t = longest->startTime() + ((i+1) * dt);
-			double f = longest->frequencyAt(t);
-			env_ptr->insertBreakpoint( t, f );
-		}
-		
-		return env_ptr.release();
-	}
+extern "C"
+BreakpointEnvelope * 
+createFreqReference( PartialList * partials, double minFreq, double maxFreq );
 
 
 	#include <cmath>
@@ -5358,16 +5293,15 @@ _wrap_sift(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST o
 static int
 _wrap_createFreqReference(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
     PartialList *arg0 ;
-    int arg1 ;
+    double arg1 ;
     double arg2 ;
-    double arg3 ;
     BreakpointEnvelope *result ;
     
-    if (SWIG_GetArgs(interp, objc, objv,"pidd:createFreqReference partials numSamples minFreq maxFreq ",&arg0, SWIGTYPE_p_PartialList,&arg1,&arg2,&arg3) == TCL_ERROR) return TCL_ERROR;
+    if (SWIG_GetArgs(interp, objc, objv,"pdd:createFreqReference partials minFreq maxFreq ",&arg0, SWIGTYPE_p_PartialList,&arg1,&arg2) == TCL_ERROR) return TCL_ERROR;
     {
         try
         {
-            result = (BreakpointEnvelope *)createFreqReference(arg0,arg1,arg2,arg3);
+            result = (BreakpointEnvelope *)createFreqReference(arg0,arg1,arg2);
             
         }
         catch( Loris::Exception & ex ) 

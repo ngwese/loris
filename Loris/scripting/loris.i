@@ -1,4 +1,3 @@
-
 /*
  * This is the Loris C++ Class Library, implementing analysis, 
  * manipulation, and synthesis of digitized sounds using the Reassigned 
@@ -544,7 +543,12 @@ void distill( PartialList * partials )
 %}
 
 %{
-	#include <loris.h>
+	//#define LORIS_OPAQUE_POINTERS 0
+	//#include <loris.h>
+
+extern "C"
+BreakpointEnvelope * 
+createFreqReference( PartialList * partials, double minFreq, double maxFreq );
 %}
 
 %new BreakpointEnvelope * 
@@ -560,6 +564,7 @@ createFreqReference( PartialList * partials, double minFreq, double maxFreq );
 	channelization (see channelize()).
  */
   
+#if 0
 
 void scaleAmp( PartialList * partials, BreakpointEnvelope * ampEnv );
 /*	Scale the amplitude of the Partials in a PartialList according 
@@ -578,7 +583,9 @@ void shiftPitch( PartialList * partials, BreakpointEnvelope * pitchEnv );
 	units of cents (1/100 of a halfstep).
  */
 
-#if 0
+#endif
+
+#if 1
 %{
 	#include <cmath>
 %}

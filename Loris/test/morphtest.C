@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *
- *	simplemorph.C
+ *	morphtest.C
  *
  *	Very simple Loris instrument tone morphing demonstration using 
  *	the C++ interface to Loris.
@@ -39,6 +39,7 @@
 #include <Dilator.h>
 #include <Distiller.h>
 #include <Exception.h>
+#include <FrequencyReference.h>
 #include <Morpher.h>
 #include <Notifier.h>
 #include <Partial.h>
@@ -61,7 +62,7 @@ static void getFreqReference( const std::list< Partial > & partials, int numSamp
 
 int main( )
 {
-	std::cout << "Welcome to the very simple Loris morphing demo!" << endl;
+	std::cout << "Welcome to the very simple Loris C++ morphing demo!" << endl;
 	std::cout << "Kelly Fitz 2000" << endl << endl;
 	std::cout << "Generates a simple linear morph between a " << endl;
 	std::cout << "clarinet and a flute using the C++ library." << endl << endl;
@@ -95,8 +96,9 @@ int main( )
 		clar.splice( clar.end(), ip.partials() );
 		std::cout << "that was fun." << endl;
 		
-		BreakpointEnvelope clarRef;
-		getFreqReference( clar, 20, 0, 1000, &clarRef );
+		FrequencyReference fr( clar.begin(), clar.end(), 0, 1000 );
+		BreakpointEnvelope clarRef( fr.envelope() );
+		//getFreqReference( clar, 20, 0, 1000, &clarRef );
 							  
 		Channelizer ch( clarRef, 1 );
 		ch.channelize( clar.begin(), clar.end() );
@@ -188,7 +190,7 @@ int main( )
 		}
 		std::cout << maxtime << " seconds" << endl;
 
-		v = std::vector< double >( (maxtime + Partial::FadeTime()) * f.sampleRate() );
+		v = std::vector< double >( long( (maxtime + Partial::FadeTime()) * f.sampleRate() ) );
 		synth = Synthesizer( f.sampleRate(), v.begin(), v.end() );
 		synth.synthesize(  m.partials().begin(), m.partials().end() );
 		AiffFile::Export( "morph.ctest.aiff", f.sampleRate(), 1, 16, v.begin(), v.end() ); 	

@@ -75,7 +75,7 @@ except:
 	import sys
 	print 'caught:', sys.exc_type, sys.exc_value
 
-loris.channelize( clar, loris.createFreqReference( clar, 20, 0, 1000 ), 1 )
+loris.channelize( clar, loris.createFreqReference( clar, 0, 1000 ), 1 )
 loris.distill( clar )
 
 # just for fun, print out the average 
@@ -106,7 +106,7 @@ a.configure( 270 )		# reconfigure Analyzer
 v = loris.AiffFile( os.path.join(path, 'flute.aiff') ).samples()
 flut = a.analyze( v, samplerate )
 
-loris.channelize( flut, loris.createFreqReference( flut, 20, 0, 1000 ), 1 )
+loris.channelize( flut, loris.createFreqReference( flut, 0, 1000 ), 1 )
 loris.distill( flut )
 
 # check flute synthesis:

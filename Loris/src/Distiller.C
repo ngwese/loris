@@ -222,8 +222,10 @@ Distiller::distill( std::list<Partial> & container, std::list< Partial >::iterat
 					//	to be removed. No Partial in the distillation range
 					//	overlaps this one (it), so nulls will be either
 					//	the Breakpoint right before or right after the
-					//	start time for this Partial:
+					//	start time for this Partial (or both?):
 					//
+					//	Find the earliest position in newp after the start time
+					//	of the current Partial. If there is such a position, and
 					//	if the Breakpoint in newp after it->startTime() is a null
 					//	and is closer than Partial::FadeTime, get rid of it, its
 					//	too close:
@@ -231,6 +233,8 @@ Distiller::distill( std::list<Partial> & container, std::list< Partial >::iterat
 					//	a single Breakpoint, but only because of the overlap check
 					//	above)
 					Partial::iterator after = newp.findAfter( it->startTime() );
+					Partial::iterator before = after;	//	don't decrement until we are sure that
+														//	after is not newp.begin(); undefined behavior
 					if ( after != newp.end() && 
 						 after.time() < it->startTime() + Partial::FadeTime() &&
 						 after.breakpoint().amplitude() == 0. )
@@ -246,11 +250,8 @@ Distiller::distill( std::list<Partial> & container, std::list< Partial >::iterat
 					//	a single Breakpoint, but only because of the overlap check
 					//	above)
 					//
-					Partial::iterator before = after;
-					--before;
-					double tbegin = it->startTime() - Partial::FadeTime();
 					if ( after != newp.begin() && 
-						 before.time() > it->startTime() - Partial::FadeTime() )
+						 (--before).time() > it->startTime() - Partial::FadeTime() )
 					{	 
 						//	there's a Breakpoint soon before this Partial,
 						//	if its a null, remove it:
@@ -267,7 +268,7 @@ Distiller::distill( std::list<Partial> & container, std::list< Partial >::iterat
 						//	beginning of this Partial:
 						Breakpoint zeroBp = it->begin().breakpoint();
 						zeroBp.setAmplitude( 0. );
-						newp.insert( std::max( tbegin, 0. ), zeroBp );
+						newp.insert( std::max( it->startTime() - Partial::FadeTime(), 0. ), zeroBp );
 					}
 					
 					//	adding in this Partial:
@@ -289,8 +290,8 @@ Distiller::distill( std::list<Partial> & container, std::list< Partial >::iterat
 						bp.addNoise( xse );
 						lastInsert = newp.insert( time, bp );
 					}
-
-				//	the last Breakpoint inserted is at position lastInsert, 
+			
+					//	the last Breakpoint inserted is at position lastInsert, 
 					//	if the next Breakpoint in newp is == newp.end, or
 					//	is more than Partial:FadeTime() away, then insert a 
 					//	zero-amplitude Breakpoint:
