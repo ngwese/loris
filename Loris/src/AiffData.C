@@ -453,8 +453,17 @@ configureMarkerCk( MarkerCk & ck, const std::vector< Marker > & markers, double 
 			m.markerName.resize( MAX_PSTRING_CHARS );
 		
 		//	the size of a pascal string is the number of 
-		//	characters plus the size byte, plus the terminal '\0':
-		dataSize += sizeof(Uint_16) + sizeof(Uint_32) + (m.markerName.size() + 2);
+		//	characters plus the size byte, plus the terminal '\0'.
+		//	
+		//	Actualy, at least one web source indicates that Pascal
+		//	strings are not null-terminated, but that they _are_
+		//	padded with an extra (not part of the count) byte
+		//	if necessary to ensure that the total length (including
+		//	count) is even, and this seems to work better with other
+		//	programs (e.g. Kyma)
+		if ( m.markerName.size()%2 == 0 )
+				m.markerName.push_back( '\0' );
+		dataSize += sizeof(Uint_16) + sizeof(Uint_32) + (m.markerName.size() + 1);
 	}
 
 	//	must be an even number of bytes
@@ -620,7 +629,13 @@ writeMarkerData( std::ostream & s, const MarkerCk & ck )
 			
 			//	the size of a pascal string is the number of 
 			//	characters plus the size byte, plus the terminal '\0':
-			Uint_32 bytesToWrite = (m.markerName.size() + 2) * sizeof(char);
+			//	Actualy, at least one web source indicates that Pascal
+			//	strings are not null-terminated, but that they _are_
+			//	padded with an extra (not part of the count) byte
+			//	if necessary to ensure that the total length (including
+			//	count) is even, and this seems to work better with other
+			//	programs (e.g. Kyma)
+			Uint_32 bytesToWrite = (m.markerName.size() + 1) * sizeof(char);
 
 			// format pascal string:
 			static char tmpChars[256];
