@@ -213,26 +213,23 @@ AiffFile::readCommon( BinaryFile & file )
 						
 	//	allocate space for the samples, but don't shrink the
 	//	buffer if it is big enough:
+	//	actually, _do_ always resize the buffer to hold exactly
+	//	as many samples as the file represents, otherwise we
+	//	don't know how many to read, and resizing here is less
+	//	likely to explode than adding a separate member to keep
+	//	track of the number of samples in the file when it is 
+	//	different from the length of the buffer. 
+	//
+	//	REDO THIS ANYWAY. IT SUCKS.
+	//
 	long n = ck.sampleFrames * ck.channels;
-	if ( n > _samples.size() ) {
-		//	
-		//	remove LowMemException
-		//
-		//try {
-			// debugger << "found " << n << " samples" << endl;
-			_samples.resize( n, 0. );
-			// debugger << "grew buffer to size " << n << endl;
-		//}
-		//catch( LowMemException & ex ) {
-		//	ex.append( "Couldn't allocate buffer for AIFF samples." );
-		//	throw;
-		//}
+	if ( n != _samples.size() ) {
+		_samples.resize( n, 0. );
 	}
 	
 	_nChannels = ck.channels;
 	_sampSize = ck.bitsPerSample;
 	_sampleRate = IEEE::ConvertFromIeeeExtended( ck.srate );
-	
 }
 
 // ---------------------------------------------------------------------------
