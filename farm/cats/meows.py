@@ -54,122 +54,182 @@ side note: contour boundaries, for morphing with something pitched, are at times
 (approximately) 1.5 s, 2.25 s, 3 s, and the total duration is 3.413 s. Some 
 fudamental frequencies are 436 Hz at 2 s and 480 Hz at 2.5 s.
 
-Last updated: 7 June 2002 by Kelly Fitz
+Conclusions: 
+	Analyze with 75 Hz resolution and 240 Hz window, distill at 5 Partials
+	per harmonic for meow1, and 3 Partials per harmonic for meow3.
+
+Last updated: 6 March 2003 by Kelly Fitz
 """
 
 print __doc__
 
 import loris, time
-from trials import *
+print """
+Using Loris version %s
+"""%loris.version()
 
-# use this trial counter to skip over
-# eariler trials
-trial = 4
+anal = loris.Analyzer( 75, 240 )
+orate = 44100
 
-print "running trial number", trial, time.ctime(time.time())
+# analyze meow1
+name = 'meow1'
+f = loris.AiffFile( name + '.aiff' )
+print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
+p = anal.analyze( f.samples(), f.sampleRate() )
 
-sources = ('meow1.aiff', 'meow3.aiff')
-meow1 = sources[0]
-meow3 = sources[1]
+# meow1 collated
+pcollate = p.copy()
+loris.distill( pcollate )
+print 'synthesizing raw (collated) %s (%s)'%(name, time.ctime(time.time()))
+samples = loris.synthesize( pcollate, orate )
+loris.exportAiff( name + '.raw.aiff', samples, orate )
 
-if trial == 1:
-	resolutions = ( 40, 50, 75 )
-	widths = ( 120, 240, 360 )
-	for source in sources:
-		for r in resolutions:
-			for w in widths:
-				p = analyze( source, r, w )
-				ofilebase = '%s.%i.%i'%(source[:-5], r, w)
-				synthesize( ofilebase + '.aiff', p )
-				loris.exportSdif( ofilebase + '.sdif', p )
-	
-if trial == 2:
-	resolutions = ( 50, 75 )
-	widths = ( 240, 360 )
-	for source in sources:
-		for r in resolutions:
-			for w in widths:
-				p = analyze( source, r, w )
-				ofilebase = '%s.%i.%i'%(source[:-5], r, w)
-				synthesize( ofilebase + '.aiff', p )
-				loris.exportSdif( ofilebase + '.sdif', p )
-				
-				# distill at 1, 3, 5 partials per harmonic
-				ref = loris.createFreqReference( p, 0, 1000, 100 )
-				psave = p
-				for n in (1,3,5):
-					p = psave.copy()
-					ofilebase = '%s.%i.%i.d%i'%(source[:-5], r, w, n)
-					loris.channelize( p, ref, n )
-					loris.distill( p )
-					synthesize( ofilebase + '.aiff', p )
-					loris.exportSdif( ofilebase + '.sdif', p )
-					loris.exportSpc( ofilebase + '.s.spc', p, 36, 0 )
-					loris.exportSpc( ofilebase + '.e.spc', p, 36, 1 )
-				
-if trial == 3:
-	r = 75
-	w = 240
-	for source in sources:
-		p = analyze( source, r, w )
-		ofilebase = '%s.%i.%i'%(source[:-5], r, w)
-		
-		# distill at 5, 8, 11 partials per harmonic
-		ref = loris.createFreqReference( p, 0, 1000, 100 )
-		psave = p
-		for n in (5, 8, 11):
-			p = psave.copy()
-			loris.channelize( p, ref, n )
-			ps = p.copy()
-			
-			# distilled
-			loris.distill( p )
-			ofilebase = '%s.%i.%i.d%i'%(source[:-5], r, w, n)
-			synthesize( ofilebase + '.aiff', p )
-			loris.exportSpc( ofilebase + '.s.spc', p, 36, 0 )
-			loris.exportSpc( ofilebase + '.e.spc', p, 36, 1 )
-			
-			# sifted
-			p = ps
-			loris.sift( p )
-			loris.distill( p )
-			ofilebase = '%s.%i.%i.s%i'%(source[:-5], r, w, n)
-			synthesize( ofilebase + '.aiff', p )
-			loris.exportSpc( ofilebase + '.s.spc', p, 36, 0 )
-			loris.exportSpc( ofilebase + '.e.spc', p, 36, 1 )
-			
-	
-if trial == 4:
-	r = 75
-	w = 240
-	for source in sources:
-		p = analyze( source, r, w )
-		ofilebase = '%s.%i.%i'%(source[:-5], r, w)
-		
-		# distill at 1,2,3,5 partials per harmonic
-		ref = loris.createFreqReference( p, 0, 1000, 100 )
-		psave = p
-		for n in (1,2,3,5):
-			p = psave.copy()
-			loris.channelize( p, ref, n )
-			ps = p.copy()
-			
-			# distilled
-			loris.distill( p )
-			ofilebase = '%s.%i.%i.d%i'%(source[:-5], r, w, n)
-			synthesize( ofilebase + '.aiff', p )
-			loris.exportSpc( ofilebase + '.s.spc', p, 36, 0 )
-			loris.exportSpc( ofilebase + '.e.spc', p, 36, 1 )
-			loris.exportSdif( ofilebase + '.sdif', p )
-					
-			# sifted
-			p = ps
-			loris.sift( p )
-			loris.distill( p )
-			ofilebase = '%s.%i.%i.s%i'%(source[:-5], r, w, n)
-			synthesize( ofilebase + '.aiff', p )
-			loris.exportSpc( ofilebase + '.s.spc', p, 36, 0 )
-			loris.exportSpc( ofilebase + '.e.spc', p, 36, 1 )
-			loris.exportSdif( ofilebase + '.sdif', p )
-					
-	
+# meow1 at 5 Partials per harmonic
+ref = loris.createFreqReference( p, 0, 1000, 100 )
+loris.channelize( p, ref, 5 )
+loris.distill( p )
+print 'synthesizing distilled (5 Partials per harmonic) %s (%s)'%(name, time.ctime(time.time()))
+samples = loris.synthesize( p, orate )
+loris.exportAiff( name + '.d5.aiff', samples, orate )
+loris.exportSpc( name + '.d5.s.spc', p, 36, 0 )
+loris.exportSpc( name + '.d5.e.spc', p, 36, 1 )
+loris.exportSdif( name + '.d5.sdif', p )
+
+# analyze meow3
+name = 'meow3'
+f = loris.AiffFile( name + '.aiff' )
+print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
+p = anal.analyze( f.samples(), f.sampleRate() )
+
+# meow3 collated
+pcollate = p.copy()
+loris.distill( pcollate )
+print 'synthesizing raw (collated) %s (%s)'%(name, time.ctime(time.time()))
+samples = loris.synthesize( pcollate, orate )
+loris.exportAiff( name + '.raw.aiff', samples, orate )
+
+# meow3 at 3 Partials per harmonic
+ref = loris.createFreqReference( p, 0, 1000, 100 )
+loris.channelize( p, ref, 3 )
+loris.distill( p )
+print 'synthesizing distilled (3 Partials per harmonic) %s (%s)'%(name, time.ctime(time.time()))
+samples = loris.synthesize( p, orate )
+loris.exportAiff( name + '.d3.aiff', samples, orate )
+loris.exportSpc( name + '.d3.s.spc', p, 36, 0 )
+loris.exportSpc( name + '.d3.e.spc', p, 36, 1 )
+loris.exportSdif( name + '.d3.sdif', p )
+
+
+# from trials import *
+# 
+# # use this trial counter to skip over
+# # eariler trials
+# trial = 4
+# 
+# print "running trial number", trial, time.ctime(time.time())
+# 
+# sources = ('meow1.aiff', 'meow3.aiff')
+# meow1 = sources[0]
+# meow3 = sources[1]
+# 
+# if trial == 1:
+# 	resolutions = ( 40, 50, 75 )
+# 	widths = ( 120, 240, 360 )
+# 	for source in sources:
+# 		for r in resolutions:
+# 			for w in widths:
+# 				p = analyze( source, r, w )
+# 				ofilebase = '%s.%i.%i'%(source[:-5], r, w)
+# 				synthesize( ofilebase + '.aiff', p )
+# 				loris.exportSdif( ofilebase + '.sdif', p )
+# 	
+# if trial == 2:
+# 	resolutions = ( 50, 75 )
+# 	widths = ( 240, 360 )
+# 	for source in sources:
+# 		for r in resolutions:
+# 			for w in widths:
+# 				p = analyze( source, r, w )
+# 				ofilebase = '%s.%i.%i'%(source[:-5], r, w)
+# 				synthesize( ofilebase + '.aiff', p )
+# 				loris.exportSdif( ofilebase + '.sdif', p )
+# 				
+# 				# distill at 1, 3, 5 partials per harmonic
+# 				ref = loris.createFreqReference( p, 0, 1000, 100 )
+# 				psave = p
+# 				for n in (1,3,5):
+# 					p = psave.copy()
+# 					ofilebase = '%s.%i.%i.d%i'%(source[:-5], r, w, n)
+# 					loris.channelize( p, ref, n )
+# 					loris.distill( p )
+# 					synthesize( ofilebase + '.aiff', p )
+# 					loris.exportSdif( ofilebase + '.sdif', p )
+# 					loris.exportSpc( ofilebase + '.s.spc', p, 36, 0 )
+# 					loris.exportSpc( ofilebase + '.e.spc', p, 36, 1 )
+# 				
+# if trial == 3:
+# 	r = 75
+# 	w = 240
+# 	for source in sources:
+# 		p = analyze( source, r, w )
+# 		ofilebase = '%s.%i.%i'%(source[:-5], r, w)
+# 		
+# 		# distill at 5, 8, 11 partials per harmonic
+# 		ref = loris.createFreqReference( p, 0, 1000, 100 )
+# 		psave = p
+# 		for n in (5, 8, 11):
+# 			p = psave.copy()
+# 			loris.channelize( p, ref, n )
+# 			ps = p.copy()
+# 			
+# 			# distilled
+# 			loris.distill( p )
+# 			ofilebase = '%s.%i.%i.d%i'%(source[:-5], r, w, n)
+# 			synthesize( ofilebase + '.aiff', p )
+# 			loris.exportSpc( ofilebase + '.s.spc', p, 36, 0 )
+# 			loris.exportSpc( ofilebase + '.e.spc', p, 36, 1 )
+# 			
+# 			# sifted
+# 			p = ps
+# 			loris.sift( p )
+# 			loris.distill( p )
+# 			ofilebase = '%s.%i.%i.s%i'%(source[:-5], r, w, n)
+# 			synthesize( ofilebase + '.aiff', p )
+# 			loris.exportSpc( ofilebase + '.s.spc', p, 36, 0 )
+# 			loris.exportSpc( ofilebase + '.e.spc', p, 36, 1 )
+# 			
+# 	
+# if trial == 4:
+# 	r = 75
+# 	w = 240
+# 	for source in sources:
+# 		p = analyze( source, r, w )
+# 		ofilebase = '%s.%i.%i'%(source[:-5], r, w)
+# 		
+# 		# distill at 1,2,3,5 partials per harmonic
+# 		ref = loris.createFreqReference( p, 0, 1000, 100 )
+# 		psave = p
+# 		for n in (1,2,3,5):
+# 			p = psave.copy()
+# 			loris.channelize( p, ref, n )
+# 			ps = p.copy()
+# 			
+# 			# distilled
+# 			loris.distill( p )
+# 			ofilebase = '%s.%i.%i.d%i'%(source[:-5], r, w, n)
+# 			synthesize( ofilebase + '.aiff', p )
+# 			loris.exportSpc( ofilebase + '.s.spc', p, 36, 0 )
+# 			loris.exportSpc( ofilebase + '.e.spc', p, 36, 1 )
+# 			loris.exportSdif( ofilebase + '.sdif', p )
+# 					
+# 			# sifted
+# 			p = ps
+# 			loris.sift( p )
+# 			loris.distill( p )
+# 			ofilebase = '%s.%i.%i.s%i'%(source[:-5], r, w, n)
+# 			synthesize( ofilebase + '.aiff', p )
+# 			loris.exportSpc( ofilebase + '.s.spc', p, 36, 0 )
+# 			loris.exportSpc( ofilebase + '.e.spc', p, 36, 1 )
+# 			loris.exportSdif( ofilebase + '.sdif', p )
+# 					
+# 	
