@@ -1125,7 +1125,14 @@ SpcFile::readSpcData( const std::string & filename )
 					readMarkerData( s, markerChunk, h.size );
 					break;
 				case ApplicationSpecificId:
-					readApplicationSpecifcData( s, soseChunk, h.size );
+					if ( soseChunk.signature != SosEnvelopesId )
+					{
+						//	don't overwrite it if we already
+						//	found the SOS chunk, probably should 
+						//	check the signature here, before the 
+						//	call.
+						readApplicationSpecifcData( s, soseChunk, h.size );
+					}
 					break;
 				default:
 					s.ignore( h.size );
