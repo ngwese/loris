@@ -1,56 +1,62 @@
-# Copyright (C) 1999-2001, Kelly Fitz and Lippold Haken <loris@cerlsoundgroup.org>
-#  
-# This file is free software; as a special exception the author gives
-# unlimited permission to copy and/or distribute it, with or without 
-# modifications, as long as this notice is preserved.
-# 
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
-# implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+dnl Copyright (C) 1999-2001, Kelly Fitz and Lippold Haken <loris@cerlsoundgroup.org>
+dnl  
+dnl This file is free software; as a special exception the author gives
+dnl unlimited permission to copy and/or distribute it, with or without 
+dnl modifications, as long as this notice is preserved.
+dnl 
+dnl This program is distributed in the hope that it will be useful, but
+dnl WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
+dnl implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-AC_INIT(reconf)
+AC_INIT(pi/loris.h)
+
 AC_CONFIG_AUX_DIR(config)
-AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(loris,1.0beta7)
-# LF_CONFIGURE_CC
-# LF_CONFIGURE_CXX
-# LF_HOST_TYPE
-# LF_SET_WARNINGS
-AC_PROG_CXX
-
 AC_SUBST(ac_aux_dir)
 
+dnl----------------------------------------------------------------
+dnl Package Name And Version
+dnl----------------------------------------------------------------
+
+AC_MSG_RESULT(----- Package Name And Version -----)
+PACKAGE=loris
+LORIS_MAJOR_VERSION=1
+LORIS_MINOR_VERSION=0
+LORIS_PRERELEASE_VERSION=beta7
+VERSION="$LORIS_MAJOR_VERSION"."$LORIS_MINOR_VERSION""$LORIS_PRERELEASE_VERSION"
+AM_INIT_AUTOMAKE("$PACKAGE","$VERSION")
+AC_MSG_RESULT(this is $PACKAGE$VERSION)
+
+AM_CONFIG_HEADER(config.h)
+
+dnl----------------------------------------------------------------
+dnl Checks for programs.
+dnl----------------------------------------------------------------
+
+AC_MSG_RESULT(----- Program Checks -----)
+dnl LF_CONFIGURE_CC
+dnl LF_CONFIGURE_CXX
+dnl LF_HOST_TYPE
+dnl LF_SET_WARNINGS
+AC_PROG_CXX
+
 AM_PROG_LIBTOOL
+
 AC_PATH_PROG(SWIG, swig)
 AM_CONDITIONAL(HAVE_SWIG, test -n "$SWIG")
 
+dnl----------------------------------------------------------------
+dnl Check for librairies
+dnl----------------------------------------------------------------
 
-# Check for a definition of M_PI in cmath, if not use our own.
-AC_LANG_SAVE
-AC_LANG_CPLUSPLUS
-AC_MSG_CHECKING(for M_PI defined in cmath)
-AC_TRY_COMPILE([ #include <cmath>;], [double pi = M_PI;], [
-	HAVE_M_PI=true ], [
-	HAVE_M_PI=false ] )
+AC_MSG_RESULT(----- Library Checks -----)
 
-if "$HAVE_M_PI"; then
-	AC_MSG_RESULT(yep)
-	AC_DEFINE(HAVE_M_PI)
-else
-	AC_MSG_RESULT(nope using local definition of pi)
-fi
-
-# restore this
-AC_LANG_RESTORE
-
-
-#----------------------------------------------------------------
-# Look for IRCAM's SDIF package
-#
-# Allow args to configure for specifying the location of the
-# SDIF package, since there are more than one such package in
-# and we need specifically IRCAM's.
-#----------------------------------------------------------------
+dnl----------------------------------------------------------------
+dnl Look for IRCAM's SDIF package
+dnl
+dnl Allow args to configure for specifying the location of the
+dnl SDIF package, since there are more than one such package in
+dnl and we need specifically IRCAM's.
+dnl----------------------------------------------------------------
 
 SDIFINCLUDE=
 SDIFLIB=
@@ -75,7 +81,7 @@ if test -z "$SDIFLIB"; then
    fi
 fi
 
-# look for SDIF header in specified or standard locations
+dnl look for SDIF header in specified or standard locations
 SDIF_H=sdif.h
 if test -n "$SDIFINCLUDE"; then
 	AC_MSG_CHECKING(for SDIF header file in $SDIFINCLUDE)
@@ -89,18 +95,18 @@ else
 	AC_CHECK_HEADER($SDIF_H, :, AC_MSG_ERROR(cannot find SDIF header))
 fi
 
-# look for the SDIF library
+dnl look for the SDIF library
 if test -n "$SDIFLIB" ; then
 	LIBS="$LIBS -L$SDIFLIB"
 fi
 AC_CHECK_LIB(sdif, SdifGenInit, :, AC_MSG_ERROR(cannot use SDIF library))
 
-# make sure that we can figure out how to use
-# the SDIF library
+dnl make sure that we can figure out how to use
+dnl the SDIF library
 AC_MSG_CHECKING(SDIF release version (must be at least 3.4))
-# should actually try running this, but these things weren't defined
-# in earlier versions, so maybe it isn't worth the trouble
-AC_TRY_COMPILE( [ #include<$SDIF_H> ], [
+dnl should actually try running this, but these things weren't defined
+dnl in earlier versions, so maybe it isn't worth the trouble
+AC_TRY_COMPILE( [ dnlinclude<$SDIF_H> ], [
 		assert( SDIF_VERSION_MAJOR >= 3 && SDIF_VERSION_MINOR >= 4 ); ],[ 
 		AC_MSG_RESULT(ok)
 		], [
@@ -111,13 +117,18 @@ if test -n "$SDIFINCLUDE" ; then
 fi
 AC_SUBST(SDIFINCLUDE)
 
-#----------------------------------------------------------------
-# Look for FFTW
-#
-# Remember that fftw library won't link without -lm.
-# Allow an argument to specify the prefix of a non-installed
-# FFTW package
-#----------------------------------------------------------------
+dnl
+dnl end of SDIF check
+dnl----------------------------------------------------------------
+
+
+dnl----------------------------------------------------------------
+dnl Look for FFTW
+dnl
+dnl Remember that fftw library won't link without -lm.
+dnl Allow an argument to specify the prefix of a non-installed
+dnl FFTW package
+dnl----------------------------------------------------------------
 
 FFTWPACKAGE=
 FFTWINCLUDE=
@@ -140,9 +151,41 @@ if test -n "$FFTWINCLUDE" ; then
 fi
 AC_SUBST(FFTWINCLUDE)
 
-#----------------------------------------------------------------
-# Look for Python
-#----------------------------------------------------------------
+dnl
+dnl end of FFTW check
+dnl----------------------------------------------------------------
+
+dnl----------------------------------------------------------------
+dnl Checks for compiler features.
+
+AC_MSG_RESULT(----- Compiler Feature Checks -----)
+dnl Check for a definition of M_PI in cmath, if not use our own.
+AC_LANG_SAVE
+AC_LANG_CPLUSPLUS
+AC_MSG_CHECKING(for M_PI defined in cmath)
+AC_TRY_COMPILE([ dnlinclude <cmath>;], [double pi = M_PI;], [
+	HAVE_M_PI=true ], [
+	HAVE_M_PI=false ] )
+
+if "$HAVE_M_PI"; then
+	AC_MSG_RESULT(yep)
+	AC_DEFINE(HAVE_M_PI)
+else
+	AC_MSG_RESULT(nope using local definition of pi)
+fi
+
+dnl restore this
+AC_LANG_RESTORE
+
+dnl----------------------------------------------------------------
+dnl Check for scripting languages
+dnl----------------------------------------------------------------
+
+AC_MSG_RESULT(----- Language Checks -----)
+
+dnl----------------------------------------------------------------
+dnl Look for Python
+dnl----------------------------------------------------------------
 
 PYINCLUDE=
 PYPACKAGE=
@@ -155,11 +198,11 @@ AC_ARG_WITH(pyincl,[  --with-pyincl=path      Set path to Python header (Python.
 
 AC_MSG_CHECKING(for Python header files)
 
-# if the header path has been specified, verify that it exists
+dnl if the header path has been specified, verify that it exists
 if test -n "$PYINCLUDE" ; then
 	if test -f "$PYINCLUDE" ; then 
-		# this is really dumb, I cannot figure out
-		# how to remove the filename from the string!
+		dnl this is really dumb, I cannot figure out
+		dnl how to remove the filename from the string!
 		AC_MSG_ERROR(please specify the directory containing Python.h)
 	fi
 	if test -d "$PYINCLUDE" ; then
@@ -169,9 +212,9 @@ if test -n "$PYINCLUDE" ; then
 	fi
 fi
 
-# if no path was specified for the Python header, look
-# for one in likely places, including a package path, if
-# one was specified
+dnl if no path was specified for the Python header, look
+dnl for one in likely places, including a package path, if
+dnl one was specified
 pythondist=
 if test -z "$PYINCLUDE" ; then
 	if test -n "$PYPACKAGE" ; then :
@@ -180,7 +223,7 @@ if test -z "$PYINCLUDE" ; then
 		pack="/usr/local /usr"
 	fi
 	for path in $pack ; do
-		# AC_MSG_CHECKING(for Python distribution with prefix $path)
+		dnl AC_MSG_CHECKING(for Python distribution with prefix $path)
 		dist="python2.1 python2.0 python1.6 python1.5"
 		for d in $dist ; do
 			if test -f "$path/include/$d/Python.h" ; then
@@ -229,9 +272,9 @@ fi
 AC_SUBST(PYINCLUDE)
 AC_SUBST(SITEPY)
 
-#--------------------------------------------------------------------
-#	Try to locate the Tcl package
-#--------------------------------------------------------------------
+dnl--------------------------------------------------------------------
+dnl	Try to locate the Tcl package
+dnl--------------------------------------------------------------------
 
 TCLINCLUDE==
 TCLPACKAGE=
@@ -248,21 +291,21 @@ if test -z "$TCLINCLUDE"; then
 fi
 
 if test -f "$TCLINCLUDE" ; then
-	# this is really dumb, I cannot figure out
-	# how to remove the filename from the string!
+	dnl this is really dumb, I cannot figure out
+	dnl how to remove the filename from the string!
 	AC_MSG_ERROR($TCLINCLUDE: please specify the directory containing tcl.h)
 fi
 	
 AC_MSG_CHECKING(for Tcl header file)
 if test -z "$TCLINCLUDE"; then
-	AC_TRY_CPP([#include <tcl.h>], [
+	AC_TRY_CPP([dnlinclude <tcl.h>], [
 		AC_MSG_RESULT(found it)
 		HAVE_TCL_H=true ], [
 		HAVE_TCL_H=false ] )
 fi
 
 if test -n "$TCLINCLUDE" ; then
-	AC_TRY_CPP([#include <$TCLINCLUDE/tcl.h>], [
+	AC_TRY_CPP([dnlinclude <$TCLINCLUDE/tcl.h>], [
 		AC_MSG_RESULT($TCLINCLUDE)
 		HAVE_TCL_H=true ], [
 		AC_MSG_RESULT(cannot find tcl.h in $TCLINCLUDE)
@@ -285,9 +328,9 @@ if test -n "$TCLINCLUDE" ; then
 fi
 AC_SUBST(TCLINCLUDE)
 
-#----------------------------------------------------------------
-# Look for Perl5
-#----------------------------------------------------------------
+dnl----------------------------------------------------------------
+dnl Look for Perl5
+dnl----------------------------------------------------------------
 
 PERLBIN=
 PERLINCLUDE=
@@ -295,7 +338,7 @@ PERLINCLUDE=
 AC_ARG_WITH(perl5,[  --with-perl5=path       Set location of Perl5 executable],[ 
 	PERLBIN="$withval"], [PERLBIN=])
 
-# First figure out what the name of Perl5 is
+dnl First figure out what the name of Perl5 is
 if test -f "$PERLBIN" ; then
 	PERL="$PERLBIN"
 else
@@ -336,9 +379,9 @@ if test -n "$PERLINCLUDE" ; then
 fi
 AC_SUBST(PERLINCLUDE)
 
-#----------------------------------------------------------------
-# Check for Loris debugging flag
-#----------------------------------------------------------------
+dnl----------------------------------------------------------------
+dnl Check for Loris debugging flag
+dnl----------------------------------------------------------------
 AC_ARG_ENABLE(debugloris, [  --enable-debugloris      Enable internal Loris debugging code (not recommended)],[
 	DEBUG_LORIS="$enableval" ], [DEBUG_LORIS=] )
 
@@ -353,8 +396,13 @@ if test -n "$DEBUG_LORIS"; then
 	AC_SUBST(DEBUG_LORIS)
 fi
 
-#----------------------------------------------------------------
-# Generate Makefiles
-#----------------------------------------------------------------
+dnl----------------------------------------------------------------
+dnl Generate Makefiles
+dnl----------------------------------------------------------------
+
+AC_MSG_RESULT(----- Creating Output Files -----)
+
 AC_OUTPUT(Makefile doc/Makefile Makefile src/Makefile \
 mac/Makefile pi/Makefile scripting/Makefile test/Makefile)
+
+AC_MSG_RESULT(----- End Of Configuration -----)
