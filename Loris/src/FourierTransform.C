@@ -55,9 +55,7 @@ static fftw_complex * sharedBuffer = NULL;
 //	later, in makePlan(), using reserve().
 //
 FourierTransform::FourierTransform( long len ) :
-	_size( len ),
-	//_buffer( new std::complex< double >[ len ] ),
-	_buffer( (complex< double > *)(new fftw_complex[ len ]) ),	//	CW6 hack!
+	_buffer( len ),
 	_plan( NULL )
 {
 	//	this is insane, too yucky, just use the fftw_complex
@@ -97,18 +95,17 @@ FourierTransform::FourierTransform( long len ) :
 	}	//	end of sanity check
 
 	//	zero:
-	fill( _buffer, _buffer + len, 0. );
+	fill( _buffer.begin(), _buffer.end(), 0. );
 }
 
 // ---------------------------------------------------------------------------
 //	FourierTransform destructor
 // ---------------------------------------------------------------------------
-//	Release the plan and the shared buffer.
+//	Release the plan and the shared buffer. The instance vector will clean
+//	up itself.
 //
 FourierTransform::~FourierTransform( void )
 {
-	// delete [] _buffer;
-	delete [] (fftw_complex *)_buffer;		//	CW6 hack!
 	if ( _plan != NULL ) 
 	{
 		fftw_destroy_plan( _plan );
@@ -131,15 +128,14 @@ FourierTransform::transform( void )
 	
 //	sanity:
 	Assert( _plan != NULL );
-	Assert( _buffer != NULL );
 	Assert( sharedBuffer != NULL );
 
 //	crunch:	
-	fftw_one( _plan, (fftw_complex *)_buffer, sharedBuffer );
+	fftw_one( _plan, (fftw_complex *)(_buffer.begin()), sharedBuffer );
 	
 //	copy output into (private) complex buffer:
 //	(fftw_complex and std::complex< double > had better be the same!)
-	memcpy( _buffer, sharedBuffer, size() * sizeof( fftw_complex ) );
+	std::copy( sharedBuffer, sharedBuffer + size(), (fftw_complex *)_buffer.begin() );
 }
 
 // ---------------------------------------------------------------------------
@@ -179,7 +175,7 @@ FourierTransform::makePlan( void )
 	_plan = fftw_create_plan_specific( size(), 
 									   FFTW_FORWARD,
 									   FFTW_ESTIMATE,
-									   (fftw_complex *)_buffer, 
+									   (fftw_complex *)_buffer.begin(), 
 									   1,
 									   sharedBuffer, 
 									   1); 

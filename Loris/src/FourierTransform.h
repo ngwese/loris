@@ -66,6 +66,7 @@
 
 #include <complex>
 #include <functional>
+#include <vector>
 
 //	forward declare this type from fftw.h:
 struct fftw_plan_struct;
@@ -100,8 +101,7 @@ namespace Loris {
 class FourierTransform 
 {
 //	-- instance variables --
-	const long _size;
-	std::complex< double > * _buffer;
+	std::vector< std::complex< double > > _buffer;
 	
 	//	fftw planning structure:
 	fftw_plan_struct * _plan;
@@ -113,7 +113,7 @@ public:
 	~FourierTransform( void );	
 		
 //	transform length access:
-	long size( void ) const { return _size; }
+	long size( void ) const { return _buffer.size(); }
 	
 //	spectrum access:
 //	(inline for efficiency)
@@ -125,12 +125,12 @@ public:
 //	iterator access, for STL algorithms:
 //	(inline for efficiency)
 	typedef std::complex< double > * iterator;
-	iterator begin( void )	{ return _buffer; }
-	iterator end( void )	{ return _buffer + _size; }
+	iterator begin( void )	{ return _buffer.begin(); }
+	iterator end( void )	{ return _buffer.end(); }
 		
 	typedef const std::complex< double > * const_iterator;
-	const_iterator begin( void ) const	{ return _buffer; }
-	const_iterator end( void ) const 	{ return _buffer + _size; }
+	const_iterator begin( void ) const	{ return _buffer.begin(); }
+	const_iterator end( void ) const 	{ return _buffer.end(); }
 		
 //	spectrum computation:
 	void transform( void );
