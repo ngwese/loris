@@ -46,69 +46,51 @@
 
 %module loris 
 
-//#if defined (SWIGPYTHON)
-//	const char __version__[] =  "Loris 1.0beta2 ";
-//#else
-	//const char version[] =  "Loris 1.0beta3 ";
-	%constant( char * ) version = "Loris 1.0beta3";
-//#endif
+//	version string
+//	(this won't work with SWIG 1.1, %constant is new)
+//
+//	&&&&& do better than this!!!!!!
+//
+%constant( char * ) version = "Loris 1.0beta3";
 
 %{
-#define LORIS_OPAQUE_POINTERS 0
-#include "loris.h"
-
-#include <string>
-#include <vector>
-
-//	convert a string into a vector of doubles,
-//	ignore any extraneous characters:
-static std::vector<double> strtovec( const std::string & s )
-{
-    std::vector<double> v;
-    std::string::size_type beg, end;
-    //const string delims(" \t,[](){}");
-    const std::string numparts("1234567890+-.");
-    beg = s.find_first_of( numparts );
-    while ( beg != std::string::npos )
-    {
-        end = s.find_first_not_of( numparts, beg );
-        if ( end == std::string::npos )
-            end = s.length();
-
-        double x = atof( s.c_str() + beg );
-        v.push_back(x);
-
-        beg = s.find_first_of( numparts, end );
-    }
-    return v;
-}
-
-//	notification function for Loris exceptions
-//	and notifications, installed in initialization
-//	block below:
-static void printf_notifier( const char * s )
-{
-	printf("*\t%s\n", s);
-}
-
-//	Exceptions absolutely cannot be thrown out of a shared
-//	library on the Macintosh, so instead of rethrowing, 
-//	store the error string from internal Loris exceptions
-//	and catch it in the SWIG exception handler below:
-//
-//	Loris is no longer a shared library on the Mac, since
-//	those are too fragile. Exceptions caught in the procedural
-//	interface are still handled with this mechanism, but 
-//	when the procedural interface is not used, then bona
-//	fide C++ exceptions may make it out to the wrapper code,
-//	so Loris::Exceptions and std::exceptions still need to be
-//	handled below.
-//
-static std::string LorisErrorString;
-static void throw_string( const char * s )
-{
-	LorisErrorString = s;
-}
+	#define LORIS_OPAQUE_POINTERS 0
+	#include "loris.h"
+	
+	//	notification function for Loris debugging
+	//	and notifications, installed in initialization
+	//	block below:
+	static void printf_notifier( const char * s )
+	{
+		printf("*\t%s\n", s);
+	}
+	
+	//	Exceptions absolutely cannot be thrown out of a shared
+	//	library on the Macintosh, so instead of rethrowing, 
+	//	store the error string from internal Loris exceptions
+	//	and catch it in the SWIG exception handler below:
+	//
+	//	Loris is no longer a shared library on the Mac, since
+	//	those are too fragile. Exceptions caught in the procedural
+	//	interface are still handled with this mechanism, but 
+	//	when the procedural interface is not used, then bona
+	//	fide C++ exceptions may make it out to the wrapper code,
+	//	so Loris::Exceptions and std::exceptions still need to be
+	//	handled below.
+	//
+	//	Get rid of the procedural interface calls in here, and we
+	//	can also get rid of the silly string-based exceptions.
+	//	&&&&&&&
+	//
+	#include <string>
+	static std::string LorisErrorString;
+	static void throw_string( const char * s )
+	{
+		LorisErrorString = s;
+	}
+	
+	#include "notifier.h"
+	#include "Exception.h"
 %}
 
 //	Initialization:
@@ -116,7 +98,11 @@ static void throw_string( const char * s )
 //	Install a notification function using a
 //	in a SWIG initialization block.
 %init %{
-	setNotifier( printf_notifier );
+	Loris::setNotifierHandler( printf_notifier );
+	Loris::setDebuggerHandler( printf_notifier );
+
+	//	this is only needed as long as we are
+	//	using the procedural interface:
 	setExceptionHandler( throw_string );
 %}
 
@@ -169,8 +155,34 @@ static void throw_string( const char * s )
 	
 }
 
+//	Null pointer exceptions:
+//
+//	This is copied from lorisException_pi.h. It could be in Loris,
+//	but probably was never needed because Loris doesn't make much 
+//	use of pointers.
+//
+%{
+	#include "Exception.h"
+	#include <string>
+	
+	/* ---------------------------------------------------------------- */
+	/*		class NullPointer
+	/*
+	/*	Exception subclass for catching NULL pointers:
+	 */
+	class NullPointer : public Loris::Exception
+	{
+	public: 
+		NullPointer( const std::string & str, const std::string & where = "" ) : 
+			Exception( std::string("NULL pointer exception -- ").append( str ), where ) {}
+	};	//	end of class NullPointer
+	
+	#define ThrowIfNull(ptr) if ((ptr)==NULL) Throw( NullPointer, #ptr );	
+%}
+
+
 //	grab the standard typemaps:
-%include typemaps.i
+//%include typemaps.i
 
 %section "Loris class interfaces"
 
@@ -202,25 +214,45 @@ static void throw_string( const char * s )
 	interfaces are represented as simple functions.
 %}
 
-void channelize( PartialList * partials, 
-				 BreakpointEnvelope * refFreqEnvelope, int refLabel );
-/*	Label Partials in a PartialList with the integer nearest to
-	the amplitude-weighted average ratio of their frequency envelope
-	to a reference frequency envelope. The frequency spectrum is 
-	partitioned into non-overlapping channels whose time-varying 
-	center frequencies track the reference frequency envelope. 
-	The reference label indicates which channel's center frequency
-	is exactly equal to the reference envelope frequency, and other
-	channels' center frequencies are multiples of the reference 
-	envelope frequency divided by the reference label. Each Partial 
-	in the PartialList is labeled with the number of the channel
-	that best fits its frequency envelope. The quality of the fit
-	is evaluated at the breakpoints in the Partial envelope and
-	weighted by the amplitude at each breakpoint, so that high-
-	amplitude breakpoints contribute more to the channel decision.
-	Partials are labeled, but otherwise unmodified. In particular, 
-	their frequencies are not modified in any way.
- */
+%{
+	#include "Channelizer.h"
+	#include "Exception.h"
+%}
+
+%inline %{
+	void channelize( PartialList * partials, 
+					 BreakpointEnvelope * refFreqEnvelope, int refLabel )
+	{
+		ThrowIfNull((PartialList *) partials);
+		ThrowIfNull((BreakpointEnvelope *) refFreqEnvelope);
+	
+		if ( refLabel <= 0 )
+			Throw( Loris::InvalidArgument, "Channelization reference label must be positive." );
+		
+		Loris::notifier << "channelizing " << partials->size() << " Partials" << endl;
+	
+		Loris::Channelizer chan( *refFreqEnvelope, refLabel );
+		chan.channelize( partials->begin(), partials->end() );		
+	
+	}
+	/*	Label Partials in a PartialList with the integer nearest to
+		the amplitude-weighted average ratio of their frequency envelope
+		to a reference frequency envelope. The frequency spectrum is 
+		partitioned into non-overlapping channels whose time-varying 
+		center frequencies track the reference frequency envelope. 
+		The reference label indicates which channel's center frequency
+		is exactly equal to the reference envelope frequency, and other
+		channels' center frequencies are multiples of the reference 
+		envelope frequency divided by the reference label. Each Partial 
+		in the PartialList is labeled with the number of the channel
+		that best fits its frequency envelope. The quality of the fit
+		is evaluated at the breakpoints in the Partial envelope and
+		weighted by the amplitude at each breakpoint, so that high-
+		amplitude breakpoints contribute more to the channel decision.
+		Partials are labeled, but otherwise unmodified. In particular, 
+		their frequencies are not modified in any way.
+	 */
+%}
 
 //	dilate() needs to be wrapped by a function that
 //	accepts the time points as strings until a language-
@@ -229,28 +261,63 @@ void channelize( PartialList * partials,
 //	defined above to convert two strings into vectors
 //	of time points:
 %{
-void dilate_str( PartialList * partials, 
-			 	 char * initial, char * target )
-{
-	std::vector<double> ivec = strtovec( initial );
-	std::vector<double> tvec = strtovec( target );
+	#include "Dilator.h"	
+	#include <string>
+	#include <vector>
 	
-	char s[256];
-	sprintf(s, "%d initial points, %d target points",
-				(int)ivec.size(), (int)tvec.size() );
-	printf_notifier( s );
-		
-	if ( ivec.size() != tvec.size() )
+	//	Helper function for dilate: 
+	//
+	//	convert a string into a vector of doubles,
+	//	ignore any extraneous characters:
+	static std::vector<double> strtovec( const std::string & s )
 	{
-		std::string s( "Invalid arguments to dilate(): there must be as many target points as initial points" );
-		throw s;
+		std::vector<double> v;
+		std::string::size_type beg, end;
+		const std::string numparts("1234567890+-.");
+		beg = s.find_first_of( numparts );
+		while ( beg != std::string::npos )
+		{
+			end = s.find_first_not_of( numparts, beg );
+			if ( end == std::string::npos )
+				end = s.length();
+	
+			double x = atof( s.c_str() + beg );
+			v.push_back(x);
+	
+			beg = s.find_first_of( numparts, end );
+		}
+		return v;
 	}
-			
-	dilate( partials, ivec.begin(), tvec.begin(), ivec.size() );
-}
 %}
-%name(dilate) void dilate_str( PartialList * partials, 
-			 				   char * initial_times, char * target_times );
+
+%inline %{
+	void dilate( PartialList * partials, 
+				 char * initial_times, char * target_times )
+	{
+		std::vector<double> ivec = strtovec( initial_times );
+		std::vector<double> tvec = strtovec( target_times );
+		
+		Loris::debugger << ivec.size() << " initial points, " 
+						<< tvec.size() << " target points" << endl;
+			
+		if ( ivec.size() != tvec.size() )
+			Throw( Loris::InvalidArgument, "Invalid arguments to dilate(): there must be as many target points as initial points" );
+				
+		dilate( partials, ivec.begin(), tvec.begin(), ivec.size() );
+	
+		double * initial = ivec.begin();
+		double * target = tvec.begin();
+		int npts = ivec.size();
+	
+		ThrowIfNull((PartialList *) partials);
+		ThrowIfNull((double *) initial);
+		ThrowIfNull((double *) target);
+	
+		Loris::notifier << "dilating " << partials->size() << " Partials" << endl;
+		Loris::Dilator dil( initial, target, npts );
+		dil.dilate( partials->begin(), partials->end() );
+	}
+%}
 /*	Dilate Partials in a PartialList according to the given 
 	initial and target time points. Partial envelopes are 
 	stretched and compressed so that temporal features at
@@ -265,28 +332,40 @@ void dilate_str( PartialList * partials,
 	will be extracted, other characters will be ignored.
  */
 
-void distill( PartialList * partials );
-/*	Distill labeled (channelized)  Partials in a PartialList into a 
-	PartialList containing a single (labeled) Partial per label. 
-	The distilled PartialList will contain as many Partials as
-	there were non-zero labels in the original PartialList. Unlabeled 
-	(label 0) Partials are eliminated.
- */
-				 
 %{
-#include "AiffFile.h"
-using Loris::AiffFile;
+	#include "Distiller.h"
 %}
 
-%inline 
+%inline %{
+void distill( PartialList * partials )
+	{
+		ThrowIfNull((PartialList *) partials);
+	
+		Loris::notifier << "distilling " << partials->size() << " Partials" << endl;
+		Loris::Distiller still;
+		still.distill( *partials );
+		
+	}
+	/*	Distill labeled (channelized)  Partials in a PartialList into a 
+		PartialList containing a single (labeled) Partial per label. 
+		The distilled PartialList will contain as many Partials as
+		there were non-zero labels in the original PartialList. Unlabeled 
+		(label 0) Partials are eliminated.
+	 */
+%}
+				 
 %{
-//	AIFF export:
+	#include "AiffFile.h"
+%}
+
+%inline %{
+	//	AIFF export:
 	void exportAiff( const char * path,
 					 SampleVector * samples,
 					 double samplerate, int nchannels, int bitsPerSamp )
 	{		
-		AiffFile::Export( path, samplerate, nchannels, bitsPerSamp, 
-						 samples->begin(), samples->end() );
+		Loris::AiffFile::Export( path, samplerate, nchannels, bitsPerSamp, 
+								 samples->begin(), samples->end() );
 	}
 	/*	Export audio samples stored in a SampleVector to an AIFF file
 		having the specified number of channels and sample rate at the 
@@ -313,65 +392,6 @@ void exportSdif( const char * path, PartialList * partials, double hop = 0. );
 	If unspecified, hop defaults to 0.
  */
 
-#if 0
-//void importAiff( const char * path, SampleVector * vec, 
-//				 double * samplerate, int * nchannels );
-//
-//	It turns out that while SWIG can return a tuple containing
-//	the SampleVector pointer, the sample rate, and the number
-//	of channels, and it can return an instance of a SampleVector
-//	class, it cannot do both at once. That is, it doesn't generate
-//	code in the scripting language that converts the first element
-//	of the tuple into a class instance.
-//
-//	That's why there are two functions here, instead of one.
-//	
-//	Also, this combination of %new and %inline causes the %new
-//	to be overlooked, which causes the returned reference to leak.
-//%name( importAiff ) %new %inline 
-%{
-	SampleVector * importAiff_( const char * path )
-	{
-		double samplerate;
-		int nchannels;
-		SampleVector * vec = new SampleVector();
-		importAiff( path, vec, &samplerate, &nchannels );
-		return vec;
-	}
-%}
-%name( importAiff ) %new SampleVector * importAiff_( const char * path );
-/*	Import audio samples stored in an AIFF file at the given file
-	path (or name). The samples are converted to floating point 
-	values on the range (-1.,1.) and returned in a SampleVector, 
-	which is sized to (exactly) accomodate all the samples 
-	in the file. Use infoAiff( path ) to get the sample rate
-	and the number of channels.
- */
-
-//	use a typemap to get the samplerate and number of
-//	channels out of infoAiff():
-%apply double * OUTPUT { double * samplerate }
-%apply int * OUTPUT { int * nchannels }
-
-%inline 
-%{
-	unsigned long infoAiff( const char * path, double * samplerate, int * nchannels )
-	{		
-		char s[256];
-		sprintf(s, "getting info for %s", path );
-		printf_notifier( s );
-		
-		SampleVector * vec = new SampleVector();
-		importAiff( path, vec, samplerate, nchannels );
-		return vec->size() / *nchannels;
-	}
-	/*	Return the number of sample frames, sample rate, and number 
-		of channels of audio samples stored in an AIFF file at the 
-		given file path (or name). The samples themselves are obtained 
-		using importAiff( path ). 
-	 */
-%}
-#endif
 
 //	wrapper for importSdif() to return a PartialList:
 %{

@@ -71,12 +71,13 @@ public:
 	Partial( const Partial & other );
 	~Partial( void );
 	
-//	access:
+//	access/query:
 	int label( void ) const { return _label; }
 	double initialPhase( void ) const;
 	double startTime( void ) const;
 	double endTime( void ) const;
 	double duration( void ) const;
+	long numBreakpoints( void ) const { return _bpmap.size(); }
 	
 //	mutation:
 	void setLabel( int l ) { _label = l; }
@@ -94,7 +95,7 @@ public:
 	
 //	Breakpoint insertion:
 //	Make a copy of bp and insert it at time (seconds),
-//	return a pointer to the inserted Breakpoint.
+//	return an iterator refering to the inserted Breakpoint.
 	iterator insert( double time, const Breakpoint & bp );
 
 //	Return the insertion position for a Breakpoint at
@@ -104,13 +105,9 @@ public:
 	const_iterator findAfter( double time ) const;
 	
 //	Return the insertion position for the Breakpoint nearest
-//	the specified time..
+//	the specified time.
 	iterator findNearest( double time );
 	const_iterator findNearest( double time ) const;
-	
-//	Its nice to be able to find out how many Breakpoints
-//	there are:
-	long numBreakpoints( void ) const { return _bpmap.size(); }
 	
 //	Breakpoint removal:
 //	Erase the Breakpoint at the position of the 
@@ -125,6 +122,7 @@ public:
 //	There is of sensible definition for any of these for Partials
 //	having no Breakpoints, so they except (InvalidPartial) under 
 //	that condition.
+//
 	double frequencyAt( double time ) const;
 	double amplitudeAt( double time ) const;
 	double bandwidthAt( double time ) const;

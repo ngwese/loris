@@ -509,61 +509,43 @@ static swig_type_info *swig_types[11];
 
 #define SWIG_name    "lorisc"
 
-#define LORIS_OPAQUE_POINTERS 0
-#include "loris.h"
-
-#include <string>
-#include <vector>
-
-//	convert a string into a vector of doubles,
-//	ignore any extraneous characters:
-static std::vector<double> strtovec( const std::string & s )
-{
-    std::vector<double> v;
-    std::string::size_type beg, end;
-    //const string delims(" \t,[](){}");
-    const std::string numparts("1234567890+-.");
-    beg = s.find_first_of( numparts );
-    while ( beg != std::string::npos )
-    {
-        end = s.find_first_not_of( numparts, beg );
-        if ( end == std::string::npos )
-            end = s.length();
-
-        double x = atof( s.c_str() + beg );
-        v.push_back(x);
-
-        beg = s.find_first_of( numparts, end );
-    }
-    return v;
-}
-
-//	notification function for Loris exceptions
-//	and notifications, installed in initialization
-//	block below:
-static void printf_notifier( const char * s )
-{
-	printf("*\t%s\n", s);
-}
-
-//	Exceptions absolutely cannot be thrown out of a shared
-//	library on the Macintosh, so instead of rethrowing, 
-//	store the error string from internal Loris exceptions
-//	and catch it in the SWIG exception handler below:
-//
-//	Loris is no longer a shared library on the Mac, since
-//	those are too fragile. Exceptions caught in the procedural
-//	interface are still handled with this mechanism, but 
-//	when the procedural interface is not used, then bona
-//	fide C++ exceptions may make it out to the wrapper code,
-//	so Loris::Exceptions and std::exceptions still need to be
-//	handled below.
-//
-static std::string LorisErrorString;
-static void throw_string( const char * s )
-{
-	LorisErrorString = s;
-}
+	#define LORIS_OPAQUE_POINTERS 0
+	#include "loris.h"
+	
+	//	notification function for Loris debugging
+	//	and notifications, installed in initialization
+	//	block below:
+	static void printf_notifier( const char * s )
+	{
+		printf("*\t%s\n", s);
+	}
+	
+	//	Exceptions absolutely cannot be thrown out of a shared
+	//	library on the Macintosh, so instead of rethrowing, 
+	//	store the error string from internal Loris exceptions
+	//	and catch it in the SWIG exception handler below:
+	//
+	//	Loris is no longer a shared library on the Mac, since
+	//	those are too fragile. Exceptions caught in the procedural
+	//	interface are still handled with this mechanism, but 
+	//	when the procedural interface is not used, then bona
+	//	fide C++ exceptions may make it out to the wrapper code,
+	//	so Loris::Exceptions and std::exceptions still need to be
+	//	handled below.
+	//
+	//	Get rid of the procedural interface calls in here, and we
+	//	can also get rid of the silly string-based exceptions.
+	//	&&&&&&&
+	//
+	#include <string>
+	static std::string LorisErrorString;
+	static void throw_string( const char * s )
+	{
+		LorisErrorString = s;
+	}
+	
+	#include "notifier.h"
+	#include "Exception.h"
 
 #define  SWIG_MemoryError    1
 #define  SWIG_IOError        2
@@ -617,51 +599,22 @@ static void _SWIG_exception(int code, char *msg) {
 
 #define SWIG_exception(a,b) { _SWIG_exception(a,b); return NULL; }
 
-static PyObject* l_output_helper(PyObject* target, PyObject* o) {
-    PyObject*   o2;
-    if (!target) {                   
-        target = o;
-    } else if (target == Py_None) {  
-        Py_DECREF(Py_None);
-        target = o;
-    } else {                         
-        if (!PyList_Check(target)) {
-            o2 = target;
-            target = PyList_New(0);
-            PyList_Append(target, o2);
-	    Py_XDECREF(o2);
-        }
-        PyList_Append(target,o);
-	Py_XDECREF(o);
-    }
-    return target;
-}
-
-static PyObject* t_output_helper(PyObject* target, PyObject* o) {
-    PyObject*   o2;
-    PyObject*   o3;
-
-    if (!target) {                   
-        target = o;
-    } else if (target == Py_None) {  
-        Py_DECREF(Py_None);
-        target = o;
-    } else {                         
-        if (!PyTuple_Check(target)) {
-            o2 = target;
-            target = PyTuple_New(1);
-            PyTuple_SetItem(target, 0, o2);
-        }
-        o3 = PyTuple_New(1);            
-        PyTuple_SetItem(o3, 0, o);      
-
-        o2 = target;
-        target = PySequence_Concat(o2, o3); 
-        Py_DECREF(o2);                      
-        Py_DECREF(o3);
-    }
-    return target;
-}
+	#include "Exception.h"
+	#include <string>
+	
+	/* ---------------------------------------------------------------- */
+	/*		class NullPointer
+	/*
+	/*	Exception subclass for catching NULL pointers:
+	 */
+	class NullPointer : public Loris::Exception
+	{
+	public: 
+		NullPointer( const std::string & str, const std::string & where = "" ) : 
+			Exception( std::string("NULL pointer exception -- ").append( str ), where ) {}
+	};	//	end of class NullPointer
+	
+	#define ThrowIfNull(ptr) if ((ptr)==NULL) Throw( NullPointer, #ptr );	
 
 #include "Partial.h"
 #include "notifier.h"
@@ -710,36 +663,124 @@ typedef std::vector< double > SampleVector;
 #include "AiffFile.h"
 using Loris::AiffFile;
 
-void dilate_str( PartialList * partials, 
-			 	 char * initial, char * target )
-{
-	std::vector<double> ivec = strtovec( initial );
-	std::vector<double> tvec = strtovec( target );
-	
-	char s[256];
-	sprintf(s, "%d initial points, %d target points",
-				(int)ivec.size(), (int)tvec.size() );
-	printf_notifier( s );
-		
-	if ( ivec.size() != tvec.size() )
+	#include "Channelizer.h"
+	#include "Exception.h"
+
+	void channelize( PartialList * partials, 
+					 BreakpointEnvelope * refFreqEnvelope, int refLabel )
 	{
-		std::string s( "Invalid arguments to dilate(): there must be as many target points as initial points" );
-		throw s;
+		ThrowIfNull((PartialList *) partials);
+		ThrowIfNull((BreakpointEnvelope *) refFreqEnvelope);
+	
+		if ( refLabel <= 0 )
+			Throw( Loris::InvalidArgument, "Channelization reference label must be positive." );
+		
+		Loris::notifier << "channelizing " << partials->size() << " Partials" << endl;
+	
+		Loris::Channelizer chan( *refFreqEnvelope, refLabel );
+		chan.channelize( partials->begin(), partials->end() );		
+	
 	}
+	/*	Label Partials in a PartialList with the integer nearest to
+		the amplitude-weighted average ratio of their frequency envelope
+		to a reference frequency envelope. The frequency spectrum is 
+		partitioned into non-overlapping channels whose time-varying 
+		center frequencies track the reference frequency envelope. 
+		The reference label indicates which channel's center frequency
+		is exactly equal to the reference envelope frequency, and other
+		channels' center frequencies are multiples of the reference 
+		envelope frequency divided by the reference label. Each Partial 
+		in the PartialList is labeled with the number of the channel
+		that best fits its frequency envelope. The quality of the fit
+		is evaluated at the breakpoints in the Partial envelope and
+		weighted by the amplitude at each breakpoint, so that high-
+		amplitude breakpoints contribute more to the channel decision.
+		Partials are labeled, but otherwise unmodified. In particular, 
+		their frequencies are not modified in any way.
+	 */
+
+	#include "Dilator.h"	
+	#include <string>
+	#include <vector>
+	
+	//	Helper function for dilate: 
+	//
+	//	convert a string into a vector of doubles,
+	//	ignore any extraneous characters:
+	static std::vector<double> strtovec( const std::string & s )
+	{
+		std::vector<double> v;
+		std::string::size_type beg, end;
+		const std::string numparts("1234567890+-.");
+		beg = s.find_first_of( numparts );
+		while ( beg != std::string::npos )
+		{
+			end = s.find_first_not_of( numparts, beg );
+			if ( end == std::string::npos )
+				end = s.length();
+	
+			double x = atof( s.c_str() + beg );
+			v.push_back(x);
+	
+			beg = s.find_first_of( numparts, end );
+		}
+		return v;
+	}
+
+	void dilate( PartialList * partials, 
+				 char * initial_times, char * target_times )
+	{
+		std::vector<double> ivec = strtovec( initial_times );
+		std::vector<double> tvec = strtovec( target_times );
+		
+		Loris::debugger << ivec.size() << " initial points, " 
+						<< tvec.size() << " target points" << endl;
 			
-	dilate( partials, ivec.begin(), tvec.begin(), ivec.size() );
-}
+		if ( ivec.size() != tvec.size() )
+			Throw( Loris::InvalidArgument, "Invalid arguments to dilate(): there must be as many target points as initial points" );
+				
+		dilate( partials, ivec.begin(), tvec.begin(), ivec.size() );
+	
+		double * initial = ivec.begin();
+		double * target = tvec.begin();
+		int npts = ivec.size();
+	
+		ThrowIfNull((PartialList *) partials);
+		ThrowIfNull((double *) initial);
+		ThrowIfNull((double *) target);
+	
+		Loris::notifier << "dilating " << partials->size() << " Partials" << endl;
+		Loris::Dilator dil( initial, target, npts );
+		dil.dilate( partials->begin(), partials->end() );
+	}
 
-#include "AiffFile.h"
-using Loris::AiffFile;
+	#include "Distiller.h"
 
-//	AIFF export:
+void distill( PartialList * partials )
+	{
+		ThrowIfNull((PartialList *) partials);
+	
+		Loris::notifier << "distilling " << partials->size() << " Partials" << endl;
+		Loris::Distiller still;
+		still.distill( *partials );
+		
+	}
+	/*	Distill labeled (channelized)  Partials in a PartialList into a 
+		PartialList containing a single (labeled) Partial per label. 
+		The distilled PartialList will contain as many Partials as
+		there were non-zero labels in the original PartialList. Unlabeled 
+		(label 0) Partials are eliminated.
+	 */
+
+	#include "AiffFile.h"
+
+	//	AIFF export:
 	void exportAiff( const char * path,
 					 SampleVector * samples,
 					 double samplerate, int nchannels, int bitsPerSamp )
 	{		
-		AiffFile::Export( path, samplerate, nchannels, bitsPerSamp, 
-						 samples->begin(), samples->end() );
+		Loris::AiffFile::Export( path, samplerate, nchannels, bitsPerSamp, 
+								 samples->begin(), samples->end() );
 	}
 	/*	Export audio samples stored in a SampleVector to an AIFF file
 		having the specified number of channels and sample rate at the 
@@ -921,7 +962,7 @@ static PyObject *_wrap_dilate(PyObject *self, PyObject *args) {
         {
             // LorisErrorString.clear();
             LorisErrorString = "";
-            dilate_str(arg0,arg1,arg2);
+            dilate(arg0,arg1,arg2);
             
             
             //	catch exceptions in the procedural interface, 
@@ -8879,7 +8920,11 @@ SWIGEXPORT(void) initlorisc(void) {
         swig_types[i] = SWIG_TypeRegister(swig_types_initial[i]);
     }
     
-    setNotifier( printf_notifier );
+    Loris::setNotifierHandler( printf_notifier );
+    Loris::setDebuggerHandler( printf_notifier );
+    
+    //	this is only needed as long as we are
+    //	using the procedural interface:
     setExceptionHandler( throw_string );
     SWIG_InstallConstants(d,swig_const_table);
 }

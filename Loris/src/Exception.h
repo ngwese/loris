@@ -148,7 +148,7 @@ public:
 
 #define Assert(test)														\
 	do {																	\
-		if (!(test)) Throw( AssertionFailure, #test );						\
+		if (!(test)) Throw( Loris::AssertionFailure, #test );				\
 	} while (false)
 
 
