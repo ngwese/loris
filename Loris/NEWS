@@ -13,6 +13,14 @@ changes since 1.0 release:
 is compatible with std::compelx<double>, in 
 FourierTransform.C.
 
+- fixed sloppy coding (bad use of vector iterators to get
+pointers) that caused compile errors under new versions
+of CodeWarrior and gcc (3).
+
+- added prebinding to Darwin build, though it won't
+do anything until prebound versions of SDIF and FFTW
+are available.
+
 -------------------------------------------------------
 changes since 1.0beta9 release:
 

@@ -12,10 +12,9 @@ INCLUDES = -I$(top_srcdir)/classes
 EXTRA_DIST = loris.h.in
 
 lib_LTLIBRARIES = libloris.la
-libloris_la_SOURCES = lorisAnalyzer_pi.C lorisBpEnvelope_pi.C \
- lorisException_pi.C lorisException_pi.h loris.h lorisNonObj_pi.C \
- lorisPartialList_pi.C lorisSampleVector_pi.C lorisUtilities_pi.C \
- loris.h
+libloris_la_SOURCES = loris.h lorisAnalyzer_pi.C lorisBpEnvelope_pi.C \
+ lorisException_pi.C lorisException_pi.h lorisNonObj_pi.C \
+ lorisPartialList_pi.C lorisSampleVector_pi.C lorisUtilities_pi.C 
 
 # convenience libraries don't work under Darwin:
 if DARWIN
@@ -48,13 +47,15 @@ libloris_la_LIBADD = \
 		$(top_builddir)/classes/SpcFile.lo \
 		$(top_builddir)/classes/Synthesizer.lo \
 		-lfftw -lsdif
-libloris_la_LDFLAGS = -version-info 3:1:0 -prebind
+# libloris_la_LDFLAGS = -version-info 3:1:0 -prebind
+# automake doesn't like the conditional definition of 
+# LDFLAGS, so use this to add Darwin-specific flags:
+EXTRA_LD_FLAGS = -prebind
 else
 libloris_la_LIBADD = $(top_builddir)/classes/libclasses.la
-libloris_la_LDFLAGS = -version-info 3:1:0
 endif
 
-
+libloris_la_LDFLAGS = -version-info 3:1:0 $(EXTRA_LD_FLAGS)
 
 include_HEADERS = loris.h
 
