@@ -315,7 +315,7 @@ dnl	a usable FFTW header and library
 	CPPFLAGS="-I$FFTWINCLUDEDIR $CPPFLAGS"
 	LIBS="-L$FFTWLIBDIR $LIBS"
 	AC_CHECK_HEADERS([$FFTW_HEADER], [
-		AC_CHECK_LIB("$FFTW_LIB", $FFTW_MAKE_PLAN, :, AC_MSG_ERROR(cannot use $FFTW_LIB library), -lm)
+		AC_CHECK_LIB($FFTW_LIB, $FFTW_MAKE_PLAN, :, AC_MSG_ERROR(cannot use $FFTW_LIB library), -lm)
 		],[
 		AC_MSG_ERROR(cannot use $FFTW_HEADER header)
 		] )

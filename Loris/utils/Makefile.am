@@ -18,7 +18,7 @@ loris_analyze_SOURCES = loris_analyze.C
 if DARWIN
 loris_analyze_LDADD = $(top_builddir)/src/.libs/libloris.a $(LINK_FFTW)
 else
-loris_analyze_LDADD = $(top_builddir)/src/libloris.la
+loris_analyze_LDADD = $(top_builddir)/src/libloris.la $(LINK_FFTW)
 endif
 loris_analyze_LDFLAGS = -static
 
