@@ -62,6 +62,9 @@ class AiffFile
 	double _sampleRate;	//	in Hz
 	int _nChannels;		//	samples per frame, usually one (mono) in Loris
 	int _sampSize;		//	in bits
+	double _hop;		//  hop size in seconds (for reading SPC files)
+	int _partials;		// 	number of partials (for reading SPC files)
+	int _frames;		//  frames (for reading SPC files)
 	
 	std::vector<unsigned char> _bytes;	//	buffer used for storing raw (integer) sample data
 		
@@ -83,6 +86,9 @@ public:
 	unsigned long sampleFrames( void ) const;
 	double sampleRate( void ) const;
 	int sampleSize( void ) const;
+	int partials( void ) const;
+	int frames( void ) const;
+	double hop( void ) const;
 	
 	void getSamples( double * bufBegin, double * bufEnd );	//	from raw data to doubles
 
@@ -97,6 +103,7 @@ private:
 	void readChunkHeader( std::istream & s, CkHeader & h );
 	void readContainer( std::istream & s );
 	void readCommonData( std::istream & s );
+	void readApplicationSpecifcData( std::istream & s, int length );
 	void readSampleData( std::istream & s, unsigned long chunkSize );
 	void readSamples( std::istream & s );
 	//	writing:
