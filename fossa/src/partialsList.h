@@ -41,7 +41,7 @@
 #include <Partial.h>
 #include <Exception.h>
 
-#include <list.h>
+#include <list>
 
 using namespace Loris;
 

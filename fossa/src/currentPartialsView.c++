@@ -41,6 +41,8 @@
 #include <config.h>
 #endif
 
+#include <iostream>
+
 #include "currentPartialsView.h"
 #include "partialsList.h"
 
@@ -57,6 +59,7 @@
 #include <qlineedit.h> 
 #include <qstring.h>
 
+using std::cout;
 
 // ---------------------------------------------------------------------------
 //	CurrentPartialsView constructor
@@ -328,7 +331,7 @@ void AmplitudeTab::update(){
 // shift the amplitude values of current partials in partialsList.
 
 void AmplitudeTab::shiftValues(){
-  partialsList->shiftCurrentAmplitude((shiftValue->text()).toDouble());
+  partialsList->shiftCurrentAmplitude((int)(shiftValue->text()).toDouble());
 }
 
 /************************************************************************************/
@@ -364,7 +367,7 @@ void FrequencyTab::update(){
 // shift the frequency values of current partials in partialsList.
 
 void FrequencyTab::shiftValues(){
-  partialsList->shiftCurrentFrequency((shiftValue->text()).toDouble());
+  partialsList->shiftCurrentFrequency((int)(shiftValue->text()).toDouble());
 }
 
 /************************************************************************************/
@@ -385,7 +388,7 @@ NoiseTab::NoiseTab(QWidget* parent, char* name, PartialsList* partialsList):Tab(
 // shift the noise values of current partials in partialsList.
 
 void NoiseTab::shiftValues(){
-  partialsList->shiftCurrentNoise((shiftValue->text()).toDouble());
+  partialsList->shiftCurrentNoise((int)(shiftValue->text()).toDouble());
 }
 
 // ---------------------------------------------------------------------------

@@ -36,7 +36,7 @@
 
 #include <Partial.h>
 
-#include <list.h>
+#include <list>
 #include <math.h> 
 
 class AmplitudePixmap;

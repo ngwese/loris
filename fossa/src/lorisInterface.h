@@ -44,9 +44,10 @@
 #include <Notifier.h>
 #include <Exception.h>
 #include <FrequencyReference.h>
+#include <list>
 
 using namespace Loris;
-
+using std::list;
 // ---------------------------------------------------------------------------
 // class LorisInterface
 // The class handles operations requiring communication with the loris c++ 

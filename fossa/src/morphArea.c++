@@ -40,9 +40,11 @@
 #include <config.h>  // #define directives are placed in config.h by autoconf
 #endif
 
+#include <iostream>
 #include "morphArea.h"
-using namespace Loris;
 
+using namespace Loris;
+using std::cout;
 // ---------------------------------------------------------------------------
 //      MorphArea constructor
 // ---------------------------------------------------------------------------
@@ -515,8 +517,8 @@ void MorphArea::fillEnvelope(QSortedList<PointWithText>& list, BreakpointEnvelop
  
   for(PointWithText* point = list.first(); point != 0 ; point = list.next()){
     count++;
-    time    = toXAxisValue(point->x());
-    percent = 1-toYAxisValue(point->y())/100.0;  // percent index relates to second sound
+    time    = toXAxisValue((int)point->x());
+    percent = 1-toYAxisValue((int)point->y())/100.0;  // percent index relates to second sound
     env.insertBreakpoint(time, percent);
   }
 }
