@@ -1,12 +1,12 @@
 This is Loris.
 
-Loris is a C++ class library implementing analysis, manipulation, and
-synthesis of digitized sounds using the Reassigned Bandwidth-Enhanced
-Additive Sound Model. Loris supports modified resynthesis and
-manipulations of the model data, such as time- and frequency-scale
-modification and sound morphing. Loris includes support and wrapper
-code for building extension modules for various scripting languages
-(Python, Tcl, Perl).
+Loris is an Open Source C++ class library implementing analysis,
+manipulation, and synthesis of digitized sounds using the Reassigned
+Bandwidth-Enhanced Additive Sound Model. Loris supports modified
+resynthesis and manipulations of the model data, such as time- and
+frequency-scale modification and sound morphing. Loris includes
+support and wrapper code for building extension modules for various
+scripting languages (Python, Tcl, Perl).
 
 Loris is developed by Kelly Fitz and Lippold Haken at the CERL Sound
 Group (http://www.cerlsoundgroup.org), with contributions from Paul

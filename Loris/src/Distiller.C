@@ -250,15 +250,14 @@ Distiller::distill( PartialList & l )
 	debugger << "Distiller sorting Partials by label..." << endl;
 	l.sort( PartialUtils::label_less() );
 	
-	//	skip over unlabeled Partials:
-	//	(all Partials were labeled above, there can 
-	//	be no Partials with labels less than 0)
-	PartialList::iterator dist_begin = 
-		std::find_if( l.begin(), l.end(), 
-					  std::not1( std::bind2nd( PartialUtils::label_equals(), 0 ) ) ); 
-
+	
 	// 	iterate over labels and distill each one:
 	Distiller still;
+	PartialList::iterator dist_begin = l.begin();
+	/*
+		std::find_if( l.begin(), l.end(), 
+					  std::not1( std::bind2nd( PartialUtils::label_equals(), 0 ) ) ); 
+	*/
 	while ( dist_begin != l.end() )
 	{
 		int label = dist_begin->label();
