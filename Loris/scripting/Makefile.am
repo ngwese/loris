@@ -91,13 +91,15 @@ tcLoris_la_LIBADD = $(top_builddir)/pi/libloris.la -lstdc++
 #
 if DARWIN
 
+LD_DARWINBUNDLE_FLAGS = -bundle -flat_namespace -undefined suppress
+
 if BUILD_PYTHON
 PYTHON_CMODULE = loriscmodule.so
 PYTHON_MODULE = $(PYTHON_CMODULE) loris.pyo
 INSTALL_PYTHON_MODULE = install_python_module
 
 $(PYTHON_CMODULE): loris_python_wrap.o $(top_builddir)/pi/.libs/libloris.a
-	$(CXXLD) -bundle -flat_namespace -undefined suppress -o $@ loris_python_wrap.o $(top_builddir)/pi/.libs/libloris.a -lsdif -lfftw -lstdc++
+	$(CXXLD) $(LD_DARWINBUNDLE_FLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ loris_python_wrap.o $(top_builddir)/pi/.libs/libloris.a -lsdif -lfftw -lstdc++ $(LIBS)
 
 install_python_module:
 	$(INSTALL) loriscmodule.so $(pythonsitepkgdir)/loriscmodule.so
@@ -111,7 +113,7 @@ TCL_MODULE = tcLoris.so
 INSTALL_TCL_MODULE = install_tcl_module
 
 $(TCL_MODULE): loris_tcl_wrap.o $(top_builddir)/pi/.libs/libloris.a
-	$(CXXLD) -bundle -flat_namespace -undefined suppress -o $@ loris_tcl_wrap.o $(top_builddir)/pi/.libs/libloris.a -lsdif -lfftw -lstdc++
+	$(CXXLD) $(LD_DARWINBUNDLE_FLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ loris_tcl_wrap.o $(top_builddir)/pi/.libs/libloris.a -lsdif -lfftw -lstdc++ $(LIBS)
 
 install_tcl_module:
 	$(INSTALL) tcLoris.so $(tclsitepkgdir)/$(TCL_MODULE)
