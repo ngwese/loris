@@ -76,24 +76,41 @@ using namespace Loris;
 	Analysis and the Reassigned Bandwidth-Enhanced Additive Sound 
 	Model, refer to the Loris website: www.cerlsoundgroup.org/Loris/.
 
-	In C++, an Analyzer * is a Loris::Analyzer *.
+	In the procedural interface, there is only one Analyzer. 
+   It must be configured by calling analyzer_configure before
+   any of the other analyzer operations can be performed.
  */
+static Analyzer * ptr_instance = 0;
 
 /* ---------------------------------------------------------------- */
-/*        createAnalyzer
+/*        analyzer_configure
 /*
-/*	Construct and return a new Analyzer configured with the given	
+/*	Configure the sole Analyzer instance with the specified
 	frequency resolution (minimum instantaneous frequency	
 	difference between Partials). All other Analyzer parameters 	
-	are computed from the specified frequency resolution. 			
+	are computed from the specified frequency resolution. 
+   
+   Construct the Analyzer instance if necessary.
+   
+	In the procedural interface, there is only one Analyzer. 
+   It must be configured by calling analyzer_configure before
+   any of the other analyzer operations can be performed.   
  */
 extern "C"
-Analyzer * createAnalyzer( double resolution, double windowWidth )
+void analyzer_configure( double resolution, double windowWidth )
 {
 	try 
 	{
-		debugger << "creating Analyzer" << endl;
-		return new Analyzer( resolution, windowWidth );
+      if ( 0 == ptr_instance )
+      {
+         debugger << "creating Analyzer" << endl;         
+         ptr_instance = new Analyzer( resolution, windowWidth );
+      }
+      else
+      {
+         debugger << "configuring Analyzer" << endl;         
+         ptr_instance->configure( resolution, windowWidth );
+      }
 	}
 	catch( Exception & ex ) 
 	{
@@ -107,77 +124,54 @@ Analyzer * createAnalyzer( double resolution, double windowWidth )
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
-	return NULL;
 }
 
 /* ---------------------------------------------------------------- */
-/*        destroyAnalyzer        
-/*
-/*	Destroy this Analyzer. 								
- */
-extern "C"
-void destroyAnalyzer( Analyzer * ptr_this )
-{
-	try 
-	{
-		ThrowIfNull((Analyzer *) ptr_this);
-		
-		debugger << "deleting Analyzer" << endl;
-		delete ptr_this;
-	}
-	catch( Exception & ex ) 
-	{
-		std::string s("Loris exception in destroyAnalyzer(): " );
-		s.append( ex.what() );
-		handleException( s.c_str() );
-	}
-	catch( std::exception & ex ) 
-	{
-		std::string s("std C++ exception in destroyAnalyzer(): " );
-		s.append( ex.what() );
-		handleException( s.c_str() );
-	}
-}
-
-/* ---------------------------------------------------------------- */
-/*        analyzer_analyze        
+/*        analyze        
 /*
 /*	Analyze an array of bufferSize (mono) samples at the given 
 	sample rate (in Hz) and append the extracted Partials to the 
-	given PartialList. 												
+	given PartialList. 							
+   
+   analyzer_configure must be called before any other analyzer 
+   function.
  */
 extern "C"
-void analyzer_analyze( Analyzer * ptr_this, 
-					   const double * buffer, unsigned int bufferSize, 
-					   double srate, Loris::PartialList * partials )
+void analyze( const double * buffer, unsigned int bufferSize, 
+              double srate, PartialList * partials )
 {
+   if ( 0 == ptr_instance )
+   {
+      handleException( "analyzer_configure must be called before any other analyzer function." );
+      return;
+   }
+
 	try 
 	{
-		ThrowIfNull((Analyzer *) ptr_this);
 		ThrowIfNull((double *) buffer);
-		ThrowIfNull((Loris::PartialList *) partials);
+		ThrowIfNull((PartialList *) partials);
 		
 		//	perform analysis:
 		notifier << "analyzing " << bufferSize << " samples at " <<
 					srate << " Hz with frequency resolution " <<
-					ptr_this->freqResolution() << endl;
+					ptr_instance->freqResolution() << endl;
 		if ( bufferSize > 0 )
 		{
-			ptr_this->analyze( buffer, buffer + bufferSize, srate );
+			ptr_instance->analyze( buffer, buffer + bufferSize, srate );
 		
 			//	splice the Partials into the destination list:
-			partials->splice( partials->end(), ptr_this->partials() );
+			partials->splice( partials->end(), ptr_instance->partials() );
 		}
 	}
 	catch( Exception & ex ) 
 	{
-		std::string s("Loris exception in analyzer_analyze(): " );
+		std::string s("Loris exception in analyze(): " );
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
 	catch( std::exception & ex ) 
 	{
-		std::string s("std C++ exception in analyzer_analyze(): " );
+		std::string s("std C++ exception in analyze(): " );
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
@@ -188,14 +182,22 @@ void analyzer_analyze( Analyzer * ptr_this,
 /*
 /*	Return the frequency resolution (minimum instantaneous frequency  		
 	difference between Partials) for this Analyzer. 	
+
+   analyzer_configure must be called before any other analyzer 
+   function.
  */
 extern "C"
-double analyzer_getFreqResolution( const Analyzer * ptr_this )
+double analyzer_getFreqResolution( void )
 {
+   if ( 0 == ptr_instance )
+   {
+      handleException( "analyzer_configure must be called before any other analyzer function." );
+      return 0;
+   }
+
 	try  
 	{
-		ThrowIfNull((Analyzer *) ptr_this);
-		return ptr_this->freqResolution();
+		return ptr_instance->freqResolution();
 	}
 	catch( Exception & ex )  
 	{
@@ -218,14 +220,22 @@ double analyzer_getFreqResolution( const Analyzer * ptr_this )
 /*	Set the frequency resolution (minimum instantaneous frequency  		
 	difference between Partials) for this Analyzer. (Does not cause 	
 	other parameters to be recomputed.) 									
+
+   analyzer_configure must be called before any other analyzer 
+   function.
  */
 extern "C"
-void analyzer_setFreqResolution( Analyzer * ptr_this, double x )
+void analyzer_setFreqResolution( double x )
 {
+   if ( 0 == ptr_instance )
+   {
+      handleException( "analyzer_configure must be called before any other analyzer function." );
+      return;
+   }
+
 	try  
 	{
-		ThrowIfNull((Analyzer *) ptr_this);
-		ptr_this->setFreqResolution( x );
+		ptr_instance->setFreqResolution( x );
 	}
 	catch( Exception & ex )  
 	{
@@ -246,14 +256,22 @@ void analyzer_setFreqResolution( Analyzer * ptr_this, double x )
 /*
 /*	Return the amplitude floor (lowest detected spectral amplitude),  			
 	in (negative) dB, for this Analyzer. 				
+
+   analyzer_configure must be called before any other analyzer 
+   function.
  */
 extern "C"
-double analyzer_getAmpFloor( const Analyzer * ptr_this )
+double analyzer_getAmpFloor( void )
 {
+   if ( 0 == ptr_instance )
+   {
+      handleException( "analyzer_configure must be called before any other analyzer function." );
+      return 0;
+   }
+
 	try  
 	{
-		ThrowIfNull((Analyzer *) ptr_this);
-		return ptr_this->ampFloor();
+		return ptr_instance->ampFloor();
 	}
 	catch( Exception & ex )  
 	{
@@ -275,14 +293,22 @@ double analyzer_getAmpFloor( const Analyzer * ptr_this )
 /*
 /*	Set the amplitude floor (lowest detected spectral amplitude), in  			
 	(negative) dB, for this Analyzer. 				
+
+   analyzer_configure must be called before any other analyzer 
+   function.
  */
 extern "C"
-void analyzer_setAmpFloor( Analyzer * ptr_this, double x )
+void analyzer_setAmpFloor( double x )
 {
+   if ( 0 == ptr_instance )
+   {
+      handleException( "analyzer_configure must be called before any other analyzer function." );
+      return;
+   }
+
 	try  
 	{
-		ThrowIfNull((Analyzer *) ptr_this);
-		ptr_this->setAmpFloor( x );
+		ptr_instance->setAmpFloor( x );
 	}
 	catch( Exception & ex )  
 	{
@@ -303,14 +329,22 @@ void analyzer_setAmpFloor( Analyzer * ptr_this, double x )
 /*
 /*	Return the frequency-domain main lobe width (measured between 
 	zero-crossings) of the analysis window used by this Analyzer. 				
+
+   analyzer_configure must be called before any other analyzer 
+   function.
  */
 extern "C"
-double analyzer_getWindowWidth( const Analyzer * ptr_this )
+double analyzer_getWindowWidth( void )
 {
+   if ( 0 == ptr_instance )
+   {
+      handleException( "analyzer_configure must be called before any other analyzer function." );
+      return 0;
+   }
+
 	try  
 	{
-		ThrowIfNull((Analyzer *) ptr_this);
-		return ptr_this->windowWidth();
+		return ptr_instance->windowWidth();
 	}
 	catch( Exception & ex )  
 	{
@@ -332,14 +366,22 @@ double analyzer_getWindowWidth( const Analyzer * ptr_this )
 /*
 /*	Set the frequency-domain main lobe width (measured between 
 	zero-crossings) of the analysis window used by this Analyzer. 				
+
+   analyzer_configure must be called before any other analyzer 
+   function.
  */
 extern "C"
-void analyzer_setWindowWidth( Analyzer * ptr_this, double x )
+void analyzer_setWindowWidth( double x )
 {
+   if ( 0 == ptr_instance )
+   {
+      handleException( "analyzer_configure must be called before any other analyzer function." );
+      return;
+   }
+
 	try  
 	{
-		ThrowIfNull((Analyzer *) ptr_this);
-		ptr_this->setWindowWidth( x );
+		ptr_instance->setWindowWidth( x );
 	}
 	catch( Exception & ex )  
 	{
@@ -364,14 +406,22 @@ void analyzer_setWindowWidth( Analyzer * ptr_this, double x )
 	numbers raise the level of the sidelobes, increasing the liklihood
 	of frequency-domain interference, but allow the window to be shorter
 	in time.
+
+   analyzer_configure must be called before any other analyzer 
+   function.
  */
 extern "C"
-double analyzer_getSidelobeLevel( const Analyzer * ptr_this )
+double analyzer_getSidelobeLevel( void )
 {
+   if ( 0 == ptr_instance )
+   {
+      handleException( "analyzer_configure must be called before any other analyzer function." );
+      return 0;
+   }
+
 	try  
 	{
-		ThrowIfNull((Analyzer *) ptr_this);
-		return ptr_this->sidelobeLevel();
+		return ptr_instance->sidelobeLevel();
 	}
 	catch( Exception & ex )  
 	{
@@ -397,14 +447,22 @@ double analyzer_getSidelobeLevel( const Analyzer * ptr_this )
 	numbers raise the level of the sidelobes, increasing the liklihood
 	of frequency-domain interference, but allow the window to be shorter
 	in time.
+
+   analyzer_configure must be called before any other analyzer 
+   function.
  */
 extern "C"
-void analyzer_setSidelobeLevel( Analyzer * ptr_this, double x )
+void analyzer_setSidelobeLevel( double x )
 {
+   if ( 0 == ptr_instance )
+   {
+      handleException( "analyzer_configure must be called before any other analyzer function." );
+      return;
+   }
+
 	try  
 	{
-		ThrowIfNull((Analyzer *) ptr_this);
-		ptr_this->setSidelobeLevel( x );
+		ptr_instance->setSidelobeLevel( x );
 	}
 	catch( Exception & ex )  
 	{
@@ -425,14 +483,22 @@ void analyzer_setSidelobeLevel( Analyzer * ptr_this, double x )
 /*
 /*	Return the frequency floor (minimum instantaneous Partial  				
 	frequency), in Hz, for this Analyzer. 				
+   
+   analyzer_configure must be called before any other analyzer 
+   function.
  */
 extern "C"
-double analyzer_getFreqFloor( const Analyzer * ptr_this )
+double analyzer_getFreqFloor( void )
 {
+   if ( 0 == ptr_instance )
+   {
+      handleException( "analyzer_configure must be called before any other analyzer function." );
+      return 0;
+   }
+
 	try  
 	{
-		ThrowIfNull((Analyzer *) ptr_this);
-		return ptr_this->freqFloor();
+      return ptr_instance->freqFloor();
 	}
 	catch( Exception & ex )  
 	{
@@ -454,14 +520,22 @@ double analyzer_getFreqFloor( const Analyzer * ptr_this )
 /*
 /*	Set the amplitude floor (minimum instantaneous Partial  				
 	frequency), in Hz, for this Analyzer.
+   
+   analyzer_configure must be called before any other analyzer 
+   function.
  */
 extern "C"
-void analyzer_setFreqFloor( Analyzer * ptr_this, double x )
+void analyzer_setFreqFloor( double x )
 {
+   if ( 0 == ptr_instance )
+   {
+      handleException( "analyzer_configure must be called before any other analyzer function." );
+      return;
+   }
+
 	try  
 	{
-		ThrowIfNull((Analyzer *) ptr_this);
-		ptr_this->setFreqFloor( x );
+		ptr_instance->setFreqFloor( x );
 	}
 	catch( Exception & ex )  
 	{
@@ -482,14 +556,22 @@ void analyzer_setFreqFloor( Analyzer * ptr_this, double x )
 /*
 /*	Return the maximum allowable frequency difference between 					
 	consecutive Breakpoints in a Partial envelope for this Analyzer. 				
+   
+   analyzer_configure must be called before any other analyzer 
+   function.
  */
 extern "C"
-double analyzer_getFreqDrift( const Analyzer * ptr_this )
+double analyzer_getFreqDrift( void )
 {
+   if ( 0 == ptr_instance )
+   {
+      handleException( "analyzer_configure must be called before any other analyzer function." );
+      return 0;
+   }
+
 	try  
 	{
-		ThrowIfNull((Analyzer *) ptr_this);
-		return ptr_this->freqDrift();
+		return ptr_instance->freqDrift();
 	}
 	catch( Exception & ex )  
 	{
@@ -511,14 +593,22 @@ double analyzer_getFreqDrift( const Analyzer * ptr_this )
 /*
 /*	Set the maximum allowable frequency difference between 					
 	consecutive Breakpoints in a Partial envelope for this Analyzer. 				
+   
+   analyzer_configure must be called before any other analyzer 
+   function.
  */
 extern "C"
-void analyzer_setFreqDrift( Analyzer * ptr_this, double x )
+void analyzer_setFreqDrift( Analyzer * ptr_instance, double x )
 {
+   if ( 0 == ptr_instance )
+   {
+      handleException( "analyzer_configure must be called before any other analyzer function." );
+      return;
+   }
+
 	try  
 	{
-		ThrowIfNull((Analyzer *) ptr_this);
-		ptr_this->setFreqDrift( x );
+		ptr_instance->setFreqDrift( x );
 	}
 	catch( Exception & ex )  
 	{
@@ -540,14 +630,22 @@ void analyzer_setFreqDrift( Analyzer * ptr_this, double x )
 /*	Return the hop time (which corresponds approximately to the 
 	average density of Partial envelope Breakpoint data) for this 
 	Analyzer.
+   
+   analyzer_configure must be called before any other analyzer 
+   function.
  */
 extern "C"
-double analyzer_getHopTime( const Analyzer * ptr_this )
+double analyzer_getHopTime( void )
 {
+   if ( 0 == ptr_instance )
+   {
+      handleException( "analyzer_configure must be called before any other analyzer function." );
+      return 0;
+   }
+
 	try  
 	{
-		ThrowIfNull((Analyzer *) ptr_this);
-		return ptr_this->hopTime();
+		return ptr_instance->hopTime();
 	}
 	catch( Exception & ex )  
 	{
@@ -570,14 +668,22 @@ double analyzer_getHopTime( const Analyzer * ptr_this )
 /*
 /*	Set the hop time (which corresponds approximately to the average
 	density of Partial envelope Breakpoint data) for this Analyzer.
+   
+   analyzer_configure must be called before any other analyzer 
+   function.
  */
 extern "C"
-void analyzer_setHopTime( Analyzer * ptr_this, double x )
+void analyzer_setHopTime( double x )
 {
+   if ( 0 == ptr_instance )
+   {
+      handleException( "analyzer_configure must be called before any other analyzer function." );
+      return;
+   }
+
 	try 
 	{
-		ThrowIfNull((Analyzer *) ptr_this);
-		ptr_this->setHopTime( x );
+		ptr_instance->setHopTime( x );
 	}
 	catch( Exception & ex ) 
 	{
@@ -599,14 +705,22 @@ void analyzer_setHopTime( Analyzer * ptr_this, double x )
 	frequency data point from the time-domain center of the analysis
 	window, beyond which data points are considered "unreliable")
 	for this Analyzer.
+   
+   analyzer_configure must be called before any other analyzer 
+   function.
  */
 extern "C"
-double analyzer_getCropTime( const Analyzer * ptr_this )
+double analyzer_getCropTime( void )
 {
+   if ( 0 == ptr_instance )
+   {
+      handleException( "analyzer_configure must be called before any other analyzer function." );
+      return 0;
+   }
+
 	try 
 	{
-		ThrowIfNull((Analyzer *) ptr_this);
-		return ptr_this->cropTime();
+		return ptr_instance->cropTime();
 	}
 	catch( Exception & ex ) 
 	{
@@ -630,14 +744,22 @@ double analyzer_getCropTime( const Analyzer * ptr_this )
 	frequency data point from the time-domain center of the analysis
 	window, beyond which data points are considered "unreliable")
 	for this Analyzer.
+   
+   analyzer_configure must be called before any other analyzer 
+   function.
  */
 extern "C"
-void analyzer_setCropTime( Analyzer * ptr_this, double x )
+void analyzer_setCropTime( double x )
 {
+   if ( 0 == ptr_instance )
+   {
+      handleException( "analyzer_configure must be called before any other analyzer function." );
+      return;
+   }
+
 	try 
 	{
-		ThrowIfNull((Analyzer *) ptr_this);
-		ptr_this->setCropTime( x );
+		ptr_instance->setCropTime( x );
 	}
 	catch( Exception & ex ) 
 	{
@@ -653,21 +775,27 @@ void analyzer_setCropTime( Analyzer * ptr_this, double x )
 	}
 }
 
-
-
 /* ---------------------------------------------------------------- */
 /*        analyzer_getBwRegionWidth        
 /*
 /*	Return the width (in Hz) of the Bandwidth Association regions
 	used by this Analyzer.
+
+   analyzer_configure must be called before any other analyzer 
+   function.
  */
 extern "C"
-double analyzer_getBwRegionWidth( const Analyzer * ptr_this )
+double analyzer_getBwRegionWidth( void )
 {
+   if ( 0 == ptr_instance )
+   {
+      handleException( "analyzer_configure must be called before any other analyzer function." );
+      return 0;
+   }
+
 	try 
 	{
-		ThrowIfNull((Analyzer *) ptr_this);
-		return ptr_this->bwRegionWidth();
+		return ptr_instance->bwRegionWidth();
 	}
 	catch( Exception & ex ) 
 	{
@@ -689,14 +817,22 @@ double analyzer_getBwRegionWidth( const Analyzer * ptr_this )
 /*
 /*	Set the width (in Hz) of the Bandwidth Association regions
 	used by this Analyzer.
+
+   analyzer_configure must be called before any other analyzer 
+   function.
  */
 extern "C"
-void analyzer_setBwRegionWidth( Analyzer * ptr_this, double x )
+void analyzer_setBwRegionWidth( double x )
 {
+   if ( 0 == ptr_instance )
+   {
+      handleException( "analyzer_configure must be called before any other analyzer function." );
+      return;
+   }
+
 	try 
 	{
-		ThrowIfNull((Analyzer *) ptr_this);
-		ptr_this->setBwRegionWidth( x );
+		ptr_instance->setBwRegionWidth( x );
 	}
 	catch( Exception & ex ) 
 	{

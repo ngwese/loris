@@ -362,7 +362,7 @@ Morpher::morphPartial( const Partial & src, const Partial & tgt, int assignLabel
 	Partial newp;
 	newp.setLabel( assignLabel );
 
-#if 0	
+#if 1	
 	//	loop over Breakpoints in first partial:
 	Breakpoint tmpBkpt;
 	for ( Partial::const_iterator iter = src.begin(); iter != src.end(); ++iter )

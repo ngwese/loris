@@ -10,16 +10,26 @@
 
 EXTRA_DIST = clarinet.aiff flute.aiff fromKyma.spc morphtest.py
 
-MAINTAINERCLEANFILES = 	Makefile.in
+MAINTAINERCLEANFILES = Makefile.in
 
 INCLUDES = -I$(top_srcdir)/src
 
 # simple morphing test
-test_c_SOURCES = morphtest.C
+test_cpp_SOURCES = morphtest.C
 if DARWIN
-test_c_LDADD = $(top_builddir)/src/.libs/libloris.a $(LINK_FFTW)
+test_cpp_LDADD = $(top_builddir)/src/.libs/libloris.a $(LINK_FFTW)
 else
-test_c_LDADD = $(top_builddir)/src/libloris.la
+test_cpp_LDADD = $(top_builddir)/src/libloris.la
+endif
+
+# procedural interface test
+test_pi_SOURCES = pitest.c
+# Darwin is special, dynamic linking sometimes seems to fail 
+# on this test, can't figure it out.
+if DARWIN
+test_pi_LDADD = $(top_builddir)/src/.libs/libloris.a $(LINK_FFTW) -lstdc++
+else
+test_pi_LDADD = $(top_builddir)/src/libloris.la
 endif
 
 # Morpher unit tests
@@ -74,7 +84,6 @@ else
 test_identity_LDADD = $(top_builddir)/src/libloris.la
 endif
 
-
 if BUILD_PYTHON
 PYTHON_TEST = run_pytest
 $(PYTHON_TEST):
@@ -83,7 +92,8 @@ $(PYTHON_TEST):
 	chmod +x $@
 endif
 
-check_PROGRAMS = test_aiff test_partial test_distiller test_sdiffile test_morpher test_c test_identity
+check_PROGRAMS = test_cpp test_pi test_aiff test_partial test_distiller \
+                 test_sdiffile test_morpher test_identity
 check_SCRIPTS = $(PYTHON_TEST)
 
 TESTS = $(check_PROGRAMS) $(check_SCRIPTS) 
@@ -91,4 +101,4 @@ TESTS = $(check_PROGRAMS) $(check_SCRIPTS)
 CLEANFILES = $(PYTHON_TEST) 
 
 distclean-local:
-	-rm -fr *.ctest.* *.pytest.* tmp.sdif 
+	-rm -fr *.ctest.* *.pytest.* *.pi.* tmp.sdif 

@@ -43,25 +43,27 @@
 #include "Morpher.h"
 #include "Notifier.h"
 #include "Partial.h"
+#include "PartialList.h"
+#include "PartialUtils.h"
 #include "SdifFile.h"
-#include "Synthesizer.h"
 
 #include <iostream>
-#include <vector>
 #include <list>
-#include <cmath>
 #include <cstdlib>
 #include <string>
 #include <stdexcept>
 
+using std::cout;
+using std::endl;
+
 using namespace Loris;
 
-int main( )
+int main( void )
 {
-	std::cout << "Welcome to the very simple Loris C++ morphing demo!" << endl;
-	std::cout << "Kelly Fitz 2000" << endl << endl;
-	std::cout << "Generates a simple linear morph between a " << endl;
-	std::cout << "clarinet and a flute using the C++ library." << endl << endl;
+	cout << "Loris C++ API test" << endl;
+	cout << "Kelly Fitz 2000" << endl << endl;
+	cout << "Generates a simple linear morph between a " << endl;
+	cout << "clarinet and a flute using the C++ library." << endl << endl;
 	
 	std::string path(""); 
 	if ( std::getenv("srcdir") ) 
@@ -73,130 +75,102 @@ int main( )
 	try 
 	{
 		//	analyze clarinet tone
-		std::cout << "analyzing clarinet 4G#" << endl;
-		Analyzer a(415*.8, 415*1.6);
+      cout << "importing clarinet samples" << endl;
+		Analyzer a( 415*.8, 415*1.6 );
 		AiffFile f( path + "clarinet.aiff" );
-		std::vector< double > v = f.samples(); 
 		
-		std::list< Partial > clar;
-		a.analyze( &*v.begin(), &*v.end(), f.sampleRate() );
-		clar.splice( clar.end(), a.partials() );
+      // analyze the clarinet 
+		cout << "analyzing clarinet 4G#" << endl;
+		a.analyze( f.samples(), f.sampleRate() );
+		PartialList clar = a.partials();
 		
+      // channelize and distill
+      cout << "distilling" << endl;
 		FrequencyReference clarRef( clar.begin(), clar.end(), 0, 1000, 20 );
-		Channelizer ch( clarRef.envelope() , 1 );
-		ch.channelize( clar.begin(), clar.end() );
-		
-		Distiller still;
-		still.distill( clar );
+		Channelizer::channelize( clar.begin(), clar.end(), clarRef , 1 );		
+		Distiller::distill( clar, 0.001 );
 
-		//	make sure that SDIF I/O is working:
-		std::cout << "exporting " << clar.size() << " partials to sdif" << endl;
+		//	test SDIF import and export
+		cout << "exporting " << clar.size() << " partials to SDIF file" << endl;
 		SdifFile::Export( "clarinet.ctest.sdif", clar );
-		std::cout << "importing sdif" << endl;
+		cout << "importing from SDIF file" << endl;
 		SdifFile ip("clarinet.ctest.sdif");
 		if ( clar.size() != ip.partials().size() )
 		{
 			throw std::runtime_error( "SDIF import yields a different number of partials than were exported!" );
 		}
-		clar.clear();
-		clar.splice( clar.end(), ip.partials() );
-		std::cout << "imported " << clar.size() << " partials, that was fun." << endl;
+		clar = ip.partials();
 		
-		std::cout << "shifting pitch of " << clar.size() << " Partials by 600 cents" << endl;
-		double pscale = std::pow(2., (0.01 * -600) /12.);
-		for ( std::list< Partial >::iterator pIter = clar.begin(); 
-			  pIter != clar.end(); 
-			  ++pIter ) 
-		{
-			for ( Partial::iterator jack = pIter->begin(); jack != pIter->end(); ++jack ) 
-			{		
-				jack->setFrequency( jack->frequency() * pscale );
-			}
-		}	
+      // shift pitch of clarinet partials
+		cout << "shifting pitch of " << clar.size() << " Partials by 600 cents" << endl;
+      PartialUtils::shiftPitch( clar.begin(), clar.end(), -600 );
 
-
-		// check clarinet synthesis:
-		std::cout << "checking clarinet synthesis" << endl;
-		std::fill( v.begin(), v.end(), 0. );
-		Synthesizer synth( f.sampleRate(), v );
-		synth.synthesize( clar.begin(), clar.end() );
-		AiffFile clarout( v, f.sampleRate() );
-		clarout.write( "clarOK.ctest.aiff", 16 );
+		// check clarinet synthesis
+		cout << "checking clarinet synthesis" << endl;
+		AiffFile clarout( clar.begin(), clar.end(), f.sampleRate() );
+		clarout.write( "clarOK.ctest.aiff" );
 		
 		//	analyze flute tone
-		std::cout << "analyzing flute 4D" << endl;
-		a = Analyzer(270);
+      cout << "importing flute samples" << endl;
 		f = AiffFile( path + "flute.aiff" );
-		v = f.samples();
 		
-		std::list< Partial > flut;
-		a.analyze( &*v.begin(), &*v.end(), f.sampleRate() );
-		flut.splice( flut.end(), a.partials() );
+      // analyze the flute
+		cout << "analyzing flute 4D" << endl;
+		a = Analyzer( 270 );
+		a.analyze( f.samples(), f.sampleRate() );
+		PartialList flut = a.partials();
 
+      // channelize and distill
+      cout << "distilling" << endl;
 		FrequencyReference flutRef( flut.begin(), flut.end(), 0, 1000, 20 );
-		ch = Channelizer( flutRef.envelope(), 1 );
-		ch.channelize( flut.begin(), flut.end() );
-
-		still.distill( flut );
+		Channelizer::channelize( flut.begin(), flut.end(), flutRef.envelope(), 1 );
+		Distiller::distill( flut, 0.001 );
 
 		// check flute synthesis:
-		std::cout << "checking flute synthesis" << endl;
+		cout << "checking flute synthesis" << endl;
 		AiffFile flutout( flut.begin(), flut.end(), f.sampleRate() );
-		flutout.write( 	"flutOK.ctest.aiff" );
+		flutout.write( "flutOK.ctest.aiff" );
 			
 		// perform temporal dilation
-		double flute_times[] = {0.4, 1.};
-		double clar_times[] = {0.2, 1.};
-		double tgt_times[] = {0.3, 1.2};
+		double flute_times[] = { 0.4, 1. };
+		double clar_times[] = { 0.2, 1. };
+		double tgt_times[] = { 0.3, 1.2 };
 
-		std::cout << "dilating sounds to match (" << tgt_times[0] << ", " 
-				  << tgt_times[1] << ")" << endl;
-		std::cout << "flute times: (" << flute_times[0] << ", " 
-				  << flute_times[1] << ")" << endl;
-		Dilator dil( flute_times, flute_times+2, tgt_times );
-		dil.dilate( flut.begin(), flut.end() );
+		cout << "dilating sounds to match (" << tgt_times[0] << ", " 
+           << tgt_times[1] << ")" << endl;
+		cout << "flute times: (" << flute_times[0] << ", " 
+           << flute_times[1] << ")" << endl;
+		Dilator::dilate(  flut.begin(), flut.end() , flute_times, flute_times+2, tgt_times );
 		
-		std::cout << "clarinet times: (" << clar_times[0] << ", " 
-				  << clar_times[1] << ")" << endl;
-		Dilator dil2( clar_times, clar_times+2, tgt_times );	//	 no assignment operator yet
-		dil2.dilate( clar.begin(), clar.end() );
+		cout << "clarinet times: (" << clar_times[0] << ", " 
+           << clar_times[1] << ")" << endl;
+		Dilator::dilate(  clar.begin(), clar.end(), clar_times, clar_times+2, tgt_times );			
 		
-		
-		// perform morph:
-		std::cout << "morphing flute and clarinet" << endl;
+		// perform morph
+		cout << "morphing flute and clarinet" << endl;
 		BreakpointEnvelope mf;
 		mf.insertBreakpoint( 0.6, 0 );
 		mf.insertBreakpoint( 2, 1 );
 		Morpher m( mf );
 		m.morph( clar.begin(), clar.end(), flut.begin(), flut.end() );
 
-		// check flute synthesis:
-		std::cout << "synthesizing morph" << endl;
-		std::cout << "computing duration..." << endl;
-		double maxtime = 0.;
-		std::list< Partial >::const_iterator it;
-		for ( it = m.partials().begin(); it != m.partials().end(); ++it ) 
-		{
-			maxtime = std::max( maxtime, it->endTime() );
-		}
-		std::cout << maxtime << " seconds" << endl;
-
-		const double fadeTime = .001; 	//	1ms
-		AiffFile morphout( m.partials().begin(), m.partials().end(), f.sampleRate(), fadeTime );
+		// synthesize and export samples
+		cout << "synthesizing " << m.partials().size() << "morphed partials" << endl;
+		AiffFile morphout( m.partials().begin(), m.partials().end(), f.sampleRate() );
 		morphout.write( "morph.ctest.aiff" );
 
 	}
 	catch( Exception & ex ) 
 	{
-		std::cout << "Caught Loris exception: " << ex.what() << endl;
+		cout << "Caught Loris exception: " << ex.what() << endl;
 		return 1;
 	}
 	catch( std::exception & ex ) 
 	{
-		std::cout << "Caught std C++ exception: " << ex.what() << endl;
+		cout << "Caught std C++ exception: " << ex.what() << endl;
 		return 1;
 	}
 
-	std::cout << "bye" << endl;
+	cout << "Done, bye." << endl;
 	return 0;
 }

@@ -78,7 +78,6 @@
 	//	declare Loris classes in Loris namespace:
 	namespace Loris
 	{
-		class Analyzer;
 		class Breakpoint;
 		class BreakpointEnvelope;
 		class Partial;
@@ -87,7 +86,6 @@
 	}
 #else 
 	/* no classes, just opaque C pointers */
-	typedef struct Analyzer Analyzer;
 	typedef struct Breakpoint Breakpoint;
 	typedef struct BreakpointEnvelope BreakpointEnvelope;
 	typedef struct PartialList PartialList;
@@ -119,51 +117,62 @@
 	Analysis and the Reassigned Bandwidth-Enhanced Additive Sound 
 	Model, refer to the Loris website: www.cerlsoundgroup.org/Loris/.
 	
-	In C++, Analyzer is Loris::Analyzer, defined in Analyzer.h.
+	In the procedural interface, there is only one Analyzer. 
+   It must be configured by calling analyzer_configure before
+   any of the other analyzer operations can be performed.
  */
-Analyzer * createAnalyzer( double resolution, double windowWidth );
-/*	Construct and return a new Analyzer configured with the given	
+
+/*	Configure the sole Analyzer instance with the specified
 	frequency resolution (minimum instantaneous frequency	
-	difference between Partials) and analysis window main 
-	lobe width (between zeros). All other Analyzer parameters 	
-	are computed from the specified  resolution and window width.
+	difference between Partials). All other Analyzer parameters 	
+	are computed from the specified frequency resolution. 
+   
+   Construct the Analyzer instance if necessary.
+   
+	In the procedural interface, there is only one Analyzer. 
+   It must be configured by calling analyzer_configure before
+   any of the other analyzer operations can be performed.   
  */
-void destroyAnalyzer( Analyzer * ptr_this );
-/*	Destroy this Analyzer. 								
- */
-void analyzer_analyze( Analyzer * ptr_this, 
-					   const double * buffer, unsigned int bufferSize, 
-					   double srate, PartialList * partials );
+void analyzer_configure( double resolution, double windowWidth );
+
 /*	Analyze an array of bufferSize (mono) samples at the given sample rate 	  	
 	(in Hz) and append the extracted Partials to the given 
 	PartialList. 												
  */
-double analyzer_getFreqResolution( const Analyzer * ptr_this );
+void analyze( const double * buffer, unsigned int bufferSize, 
+              double srate, PartialList * partials );
+                       
 /*	Return the frequency resolution (minimum instantaneous frequency  		
 	difference between Partials) for this Analyzer. 	
  */
-void analyzer_setFreqResolution( Analyzer * ptr_this, double x );
+double analyzer_getFreqResolution( void );
+
 /*	Set the frequency resolution (minimum instantaneous frequency  		
 	difference between Partials) for this Analyzer. (Does not cause 	
 	other parameters to be recomputed.) 									
  */
-double analyzer_getAmpFloor( const Analyzer * ptr_this );
+void analyzer_setFreqResolution( double x );
+
 /*	Return the amplitude floor (lowest detected spectral amplitude),  			
 	in (negative) dB, for this Analyzer. 				
  */
-void analyzer_setAmpFloor( Analyzer * ptr_this, double x );
+double analyzer_getAmpFloor( void );
+
 /*	Set the amplitude floor (lowest detected spectral amplitude), in  			
 	(negative) dB, for this Analyzer. 				
  */
-double analyzer_getWindowWidth( const Analyzer * ptr_this );
+void analyzer_setAmpFloor( double x );
+
 /*	Return the frequency-domain main lobe width (measured between 
 	zero-crossings) of the analysis window used by this Analyzer. 				
  */
-void analyzer_setWindowWidth( Analyzer * ptr_this, double x );
+double analyzer_getWindowWidth( void );
+
 /*	Set the frequency-domain main lobe width (measured between 
 	zero-crossings) of the analysis window used by this Analyzer. 				
  */
-double analyzer_getSidelobeLevel( const Analyzer * ptr_this );
+void analyzer_setWindowWidth( double x );
+
 /*	Return the sidelobe attenutation level for the Kaiser analysis window in
 	positive dB. More negative numbers (e.g. -90) give very good sidelobe 
 	rejection but cause the window to be longer in time. Less negative 
@@ -171,7 +180,8 @@ double analyzer_getSidelobeLevel( const Analyzer * ptr_this );
 	of frequency-domain interference, but allow the window to be shorter
 	in time.
  */
-void analyzer_setSidelobeLevel( Analyzer * ptr_this, double x );
+double analyzer_getSidelobeLevel( void );
+
 /*	Set the sidelobe attenutation level for the Kaiser analysis window in
 	positive dB. More negative numbers (e.g. -90) give very good sidelobe 
 	rejection but cause the window to be longer in time. Less negative 
@@ -179,51 +189,62 @@ void analyzer_setSidelobeLevel( Analyzer * ptr_this, double x );
 	of frequency-domain interference, but allow the window to be shorter
 	in time.
  */
-double analyzer_getFreqFloor( const Analyzer * ptr_this );
+void analyzer_setSidelobeLevel( double x );
+
 /*	Return the frequency floor (minimum instantaneous Partial  				
 	frequency), in Hz, for this Analyzer. 				
  */
-void analyzer_setFreqFloor( Analyzer * ptr_this, double x );
+double analyzer_getFreqFloor( void );
+
 /*	Set the amplitude floor (minimum instantaneous Partial  				
 	frequency), in Hz, for this Analyzer.
  */
-double analyzer_getFreqDrift( const Analyzer * ptr_this );
+void analyzer_setFreqFloor( double x );
+
 /*	Return the maximum allowable frequency difference between 					
 	consecutive Breakpoints in a Partial envelope for this Analyzer. 				
  */
-void analyzer_setFreqDrift( Analyzer * ptr_this, double x );
+double analyzer_getFreqDrift( void );
+
 /*	Set the maximum allowable frequency difference between 					
 	consecutive Breakpoints in a Partial envelope for this Analyzer. 				
  */
-double analyzer_getHopTime( const Analyzer * ptr_this );
+void analyzer_setFreqDrift( double x );
+
 /*	Return the hop time (which corresponds approximately to the 
 	average density of Partial envelope Breakpoint data) for this 
 	Analyzer.
  */
-void analyzer_setHopTime( Analyzer * ptr_this, double x );
+double analyzer_getHopTime( void );
+
 /*	Set the hop time (which corresponds approximately to the average
 	density of Partial envelope Breakpoint data) for this Analyzer.
  */
-double analyzer_getCropTime( const Analyzer * ptr_this );
+void analyzer_setHopTime( double x );
+
 /*	Return the crop time (maximum temporal displacement of a time-
 	frequency data point from the time-domain center of the analysis
 	window, beyond which data points are considered "unreliable")
 	for this Analyzer.
  */
-void analyzer_setCropTime( Analyzer * ptr_this, double x );
+double analyzer_getCropTime( void );
+
 /*	Set the crop time (maximum temporal displacement of a time-
 	frequency data point from the time-domain center of the analysis
 	window, beyond which data points are considered "unreliable")
 	for this Analyzer.
  */
-double analyzer_getBwRegionWidth( const Analyzer * ptr_this );
+void analyzer_setCropTime( double x );
+
 /*	Return the width (in Hz) of the Bandwidth Association regions
 	used by this Analyzer.
  */
-void analyzer_setBwRegionWidth( Analyzer * ptr_this, double x );
+double analyzer_getBwRegionWidth( void );
+
 /*	Set the width (in Hz) of the Bandwidth Association regions
 	used by this Analyzer.
  */
+void analyzer_setBwRegionWidth( double x );
 
 /* ---------------------------------------------------------------- */
 /*		BreakpointEnvelope object interface								
@@ -429,7 +450,7 @@ void breakpoint_setPhase( Breakpoint * bp, double phi );
  */
 
 void channelize( PartialList * partials, 
-				 BreakpointEnvelope * refFreqEnvelope, int refLabel );
+				     BreakpointEnvelope * refFreqEnvelope, int refLabel );
 /*	Label Partials in a PartialList with the integer nearest to
 	the amplitude-weighted average ratio of their frequency envelope
 	to a reference frequency envelope. The frequency spectrum is 
@@ -448,9 +469,9 @@ void channelize( PartialList * partials,
 	their frequencies are not modified in any way.
  */
 
-BreakpointEnvelope * createFreqReference( PartialList * partials, 
-										  double minFreq, double maxFreq, 
-										  long numSamps );
+BreakpointEnvelope * 
+createFreqReference( PartialList * partials, 
+                     double minFreq, double maxFreq, long numSamps );
 /*	Return a newly-constructed BreakpointEnvelope by sampling the 
 	frequency envelope of the longest Partial in a PartialList. 
 	Only Partials whose frequency at the Partial's loudest (highest 
@@ -470,7 +491,7 @@ BreakpointEnvelope * createFreqReference( PartialList * partials,
  */
  
 void dilate( PartialList * partials, 
-			 const double * initial, const double * target, int npts );
+			    const double * initial, const double * target, int npts );
 /*	Dilate Partials in a PartialList according to the given 
 	initial and target time points. Partial envelopes are 
 	stretched and compressed so that temporal features at
@@ -490,7 +511,7 @@ void distill( PartialList * partials );
  */
 
 void exportAiff( const char * path, const double * buffer, 
-				 unsigned int bufferSize, double samplerate, int bitsPerSamp );
+				     unsigned int bufferSize, double samplerate, int bitsPerSamp );
 /*	Export mono audio samples stored in an array of size bufferSize to 
 	an AIFF file having the specified sample rate at the given file path 
 	(or name). The floating point samples in the buffer are clamped to the 
@@ -520,7 +541,7 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch,
  */
  
 unsigned int importAiff( const char * path, double * buffer, unsigned int bufferSize, 
-						 double * samplerate );
+						       double * samplerate );
 /*	Import audio samples stored in an AIFF file at the given file
 	path (or name). The samples are converted to floating point 
 	values on the range (-1.,1.) and stored in an array of doubles. 
@@ -543,10 +564,10 @@ void importSpc( const char * path, PartialList * partials );
  */	
 
 void morph( const PartialList * src0, const PartialList * src1, 
-			const BreakpointEnvelope * ffreq, 
-			const BreakpointEnvelope * famp, 
-			const BreakpointEnvelope * fbw, 
-			PartialList * dst );
+			   const BreakpointEnvelope * ffreq, 
+			   const BreakpointEnvelope * famp, 
+			   const BreakpointEnvelope * fbw, 
+			   PartialList * dst );
 /*	Morph labeled Partials in two PartialLists according to the
 	given frequency, amplitude, and bandwidth (noisiness) morphing
 	envelopes, and append the morphed Partials to the destination 
@@ -578,8 +599,8 @@ void sift( PartialList * partials );
  */ 
 
 void synthesize( const PartialList * partials,
-				 double * buffer, unsigned int bufferSize,
-				 double srate );
+				     double * buffer, unsigned int bufferSize,
+				     double srate );
 /*	Synthesize Partials in a PartialList at the given sample
 	rate, and store the (floating point) samples in a buffer of
 	size bufferSize. The buffer is neither resized nor 
@@ -596,7 +617,7 @@ void synthesize( const PartialList * partials,
  */
  
 void copyIf( const PartialList * src, PartialList * dst, 
-			 bool ( * predicate )( const Partial * p, void * data ),
+			 int ( * predicate )( const Partial * p, void * data ),
 			 void * data );
 /*	Append copies of Partials in the source PartialList satisfying the
 	specified predicate to the destination PartialList. The source list
@@ -617,7 +638,7 @@ void crop( PartialList * partials, double t1, double t2 );
  */
 
 void extractIf( PartialList * src, PartialList * dst, 
-			 	bool ( * predicate )( const Partial * p, void * data ),
+			 	int ( * predicate )( const Partial * p, void * data ),
 			 	void * data );
 /*	Remove Partials in the source PartialList satisfying the
 	specified predicate from the source list and append them to
@@ -663,12 +684,12 @@ int forEachPartial( PartialList * src,
  */
 
 void removeIf( PartialList * src, 
-			   bool ( * predicate )( const Partial * p, void * data ),
+			   int ( * predicate )( const Partial * p, void * data ),
 			   void * data );
 /*	Remove from a PartialList all Partials satisfying the
 	specified predicate. The data parameter can be used to 
-    supply extra user-defined data to the function. Pass 0 if no 
-    additional data is needed.
+   supply extra user-defined data to the function. Pass 0 if no 
+   additional data is needed.
  */
 
 void removeLabeled( PartialList * src, long label );
