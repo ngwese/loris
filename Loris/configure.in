@@ -10,7 +10,7 @@ dnl implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 
 dnl initialization
-AC_INIT(Loris, 1.2.0, loris@cerlsoundgroup.org, loris)
+AC_INIT(Loris, 1.3.0, loris@cerlsoundgroup.org, loris)
 
 AC_CONFIG_AUX_DIR(config)
 AC_SUBST(ac_aux_dir)
@@ -28,11 +28,12 @@ AC_MSG_RESULT(this is $PACKAGE_STRING)
 dnl Create loris.h from loris.h.in, subsituting the 
 dnl values of the version macros.
 dnl Make sure these are consistent with the version number
-dnl in AC_INIT above!
+dnl in AC_INIT above, and make sure to check them before 
+dnl each release!!!!!
 LORIS_MAJOR_VERSION=1
-LORIS_MINOR_VERSION=2
+LORIS_MINOR_VERSION=3
 LORIS_SUBMINOR_VERSION=0
-LORIS_PRERELEASE_STR="beta5"
+LORIS_PRERELEASE_STR="beta1"
 LORIS_VERSION_STR="$PACKAGE_STRING$LORIS_PRERELEASE_STR"
 AC_SUBST(LORIS_MAJOR_VERSION)
 AC_SUBST(LORIS_MINOR_VERSION)
@@ -57,7 +58,7 @@ AC_DEFUN([PATCH_LIBTOOL_ON_DARWIN_ZSH_OVERQUOTING],
 case "$host_os" in
   darwin*)
     if grep "1.920" libtool ; then
-AC_MSG_RESULT(patching libtool on .so-sharedlib creation (zsh overquoting))
+      AC_MSG_RESULT(patching libtool on .so-sharedlib creation (zsh overquoting))
       test -f libtool.old || (mv libtool libtool.old && cp libtool.old libtool)
       sed -e '/archive_cmds=/s:\\\\":\\":g' libtool > libtool.new
       mv libtool.new libtool
@@ -68,17 +69,21 @@ esac
 ])
 PATCH_LIBTOOL_ON_DARWIN_ZSH_OVERQUOTING
 
-AC_DEFUN([KELLYS_GREAT_DARWIN_FIX],
-[# libtool just won't build the scripting modules under Darwin, do it by hand
-case "$host_os" in
-  *darwin*)
-	AC_MSG_RESULT(Using Darwin-specific kludges to avoid broken libtool.)
-	DARWIN=true
-	;;
-esac
-])
+dnl don't seem to need this anymore
+dnl
+dnl AC_DEFUN([KELLYS_GREAT_DARWIN_FIX],
+dnl [# libtool just won't build the scripting modules under Darwin, do it by hand
+dnl case "$host_os" in
+dnl   *darwin*)
+dnl 	AC_MSG_RESULT(Using Darwin-specific kludges to avoid broken libtool.)
+dnl 	DARWIN=true
+dnl 	;;
+dnl esac
+dnl ])
+dnl 
+dnl KELLYS_GREAT_DARWIN_FIX
 
-KELLYS_GREAT_DARWIN_FIX
+DARWIN=false
 AM_CONDITIONAL(DARWIN, test "$DARWIN")
 
 dnl----------------------------------------------------------------
@@ -132,6 +137,7 @@ AC_SUBST(CSINCLUDE)
 
 dnl----------------------------------------------------------------
 dnl Checks for compiler features.
+dnl----------------------------------------------------------------
 
 AC_MSG_RESULT(----- Compiler Feature Checks -----)
 AC_LANG_SAVE

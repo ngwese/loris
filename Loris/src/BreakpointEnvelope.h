@@ -39,82 +39,68 @@
 //	begin namespace
 namespace Loris {
 
-/** \class BreakpointEnvelope BreakpointEnvelope.h loris/BreakpointEnvelope.h
- */
-
 // ---------------------------------------------------------------------------
 //	class BreakpointEnvelope
-// ---------------------------------------------------------------------------
-/**	\class BreakpointEnvelope BreakpointEnvelope.h loris/BreakpointEnvelope.h
- *	
- *	A BreakpointEnvelope represents a linear segment breakpoint 
- *	function with infinite extension at each end (that is, evalutaing 
- *	the envelope past either end of the breakpoint function yields the 
- *	value at the nearest end point).
- *
- *	BreakpointEnvelope implements the Envelope interface, described
- *	by the abstract class Envelope. 
- *
- *	BreakpointEnvelope inherits the types
- *		\li \c size_type
- *		\li \c value_type
- *		\li \c iterator
- *		\li \c const_iterator
- *
- *	and the member functions
- *		\li <tt>size_type size( void ) const</tt>
- *		\li <tt>bool empty( void ) const</tt>
- *		\li <tt>iterator begin( void )</tt>
- *		\li <tt>const_iterator begin( void ) const</tt>
- *		\li <tt>iterator end( void )</tt>
- *		\li <tt>const_iterator end( void ) const</tt>
- *
- *	from <tt>std::map< double, double ></tt>.
- */
+//
+//	A BreakpointEnvelope represents a linear segment breakpoint 
+//	function with infinite extension at each end (that is, evalutaing 
+//	the envelope past either end of the breakpoint function yields the 
+//	value at the nearest end point).
+//
+//	BreakpointEnvelope implements the Envelope interface, described
+//	by the abstract class Envelope. 
+//
 class BreakpointEnvelope : public Envelope, private std::map< double, double >
 {
 //	-- public interface --
 public:
 //	-- construction --
-	/**	Construct a new BreakpointEnvelope having no 
-		breakpoints (and an implicit value of 0 everywhere).			
-	 */
+
+	//	Construct a new BreakpointEnvelope having no 
+	//	breakpoints (and an implicit value of 0 everywhere).			
 	BreakpointEnvelope( void );
 
-	/**	Construct and return a new BreakpointEnvelope having a 
-		single breakpoint at 0 (and an implicit value everywhere)
-		of initialValue.		
-		\param initialValue is the value of this BreakpointEnvelope
-		at time 0.	
-	 */
+	//	Construct and return a new BreakpointEnvelope having a 
+	//	single breakpoint at 0 (and an implicit value everywhere)
+	//	of initialValue.		
+	//	
+	//	initialValue is the value of this BreakpointEnvelope
+	//	at time 0.	
 	explicit BreakpointEnvelope( double initialValue );
 
 	//	compiler-generated copy, assignment, and destruction are OK.
 	
 //	-- Envelope interface --
-	/**	Return an exact copy of this BreakpointEnvelope
-		(polymorphic copy, following the Prototype pattern).
-	 */
+
+	//	Return an exact copy of this BreakpointEnvelope
+	//	(polymorphic copy, following the Prototype pattern).
 	virtual BreakpointEnvelope * clone( void ) const;
 
-	/**	Return the linearly-interpolated value of this BreakpointEnvelope at 
-		the specified time.
-		\param t is the time at which to evaluate this 
-		BreakpointEnvelope.							
-	 */
+	//	Return the linearly-interpolated value of this BreakpointEnvelope at 
+	//	the specified time.
+	//	
+	//	t is the time at which to evaluate this 
+	//	BreakpointEnvelope.							
 	virtual double valueAt( double t ) const;	
 	
 //	-- envelope composition --
-	/**	Insert a breakpoint representing the specified (time, value) 
-		pair into this BreakpointEnvelope. If there is already a 
-		breakpoint at the specified time, it will be replaced with 
-		the new breakpoint.
-		\param time is the time at which to insert a new breakpoint
-		\param value is the value of the new breakpoint
-	 */
-	void insertBreakpoint( double time, double value );
+
+	//	Insert a breakpoint representing the specified (time, value) 
+	//	pair into this BreakpointEnvelope. If there is already a 
+	//	breakpoint at the specified time, it will be replaced with 
+	//	the new breakpoint.
+	//	
+	//	time is the time at which to insert a new breakpoint
+	//	value is the value of the new breakpoint
+	void insert( double time, double value );
+	
+	//	Insert a breakpoint representing the specified (time, value) 
+	//	pair into this BreakpointEnvelope. Same as insert, retained
+	//	for backwards-compatibility.
+	void insertBreakpoint( double time, double value ) { insert( time, value ); }
 	 
 //	-- interface inherited from std::map --
+
 	using std::map< double, double >::size;
 	using std::map< double, double >::empty;
 	using std::map< double, double >::begin;

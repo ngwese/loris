@@ -59,20 +59,20 @@ class Partial;
 class Dilator
 {
 //	-- instance variables --
+
 	std::vector< double > _initial, _target;	//	time points
 	
 //	-- public interface --
 public:
 //	-- construction --
-	/*	Construct a new Dilator with no time points.
-	 */
+
+	//	Construct a new Dilator with no time points.
 	Dilator( void );
 	 	
-	/*	Construct a new Dilator using a range of initial time points
-		and a range of target (desired) time points. The client must
-		ensure that the target range has at least as many elements as
-		the initial range.
-	 */
+	//	Construct a new Dilator using a range of initial time points
+	//	and a range of target (desired) time points. The client must
+	//	ensure that the target range has at least as many elements as
+	//	the initial range.
 #if ! defined(NO_TEMPLATE_MEMBERS)
 	template<typename Iter1, typename Iter2>
 	Dilator( Iter1 ibegin, Iter1 iend, Iter2 tbegin );
@@ -80,62 +80,58 @@ public:
 	Dilator( const double * ibegin, const double * iend, const double * tbegin );
 #endif
 
-	/*	Destroy this Dilator.
-	 */
+	//	Destroy this Dilator.
 	~Dilator( void );
 	
-	/*	Insert a pair of initial and target time points. 
-	
-		Specify a pair of initial and target time points to be used
-		by this Dilator, corresponding, for example, to the initial
-		and desired time of a particular temporal feature in an
-		analyzed sound.
-		
-		i is an initial, or source, time point
-		t is a target time point
-		
-		The time points will be sorted before they are used.
-		If, in the sequences of initial and target time points, there are
-		exactly the same number of initial time points preceding i as
-		target time points preceding t, then time i will be warped to 
-		time t in the dilation process.
-	 */
+	//	Insert a pair of initial and target time points. 
+	//	
+	//	Specify a pair of initial and target time points to be used
+	//	by this Dilator, corresponding, for example, to the initial
+	//	and desired time of a particular temporal feature in an
+	//	analyzed sound.
+	//	
+	//	i is an initial, or source, time point
+	//	t is a target time point
+	//	
+	//	The time points will be sorted before they are used.
+	//	If, in the sequences of initial and target time points, there are
+	//	exactly the same number of initial time points preceding i as
+	//	target time points preceding t, then time i will be warped to 
+	//	time t in the dilation process.	
 	void insert( double i, double t );
 	
 //	-- dilation --
-	/*	Replace the Partial envelope with a new envelope having the
-		same Breakpoints at times computed to align temporal features
-		in the sorted sequence of initial time points with their 
-		counterparts the sorted sequence of target time points.
-	
-		Depending on the specification of initial and target time 
-		points, the dilated Partial may have Breakpoints at times
-		less than 0, even if the original Partial did not.
-	
-		It is possible to have duplicate time points in either sequence.
-		Duplicate initial time points result in very localized stretching.
-		Duplicate target time points result in very localized compression.
-	
-		If all initial time points are greater than 0, then an implicit
-		time point at 0 is assumed in both initial and target sequences, 
-		so the onset of a sound can be stretched without explcitly specifying a 
-		zero point in each vector. (This seems most intuitive, and only looks
-		like an inconsistency if clients are using negative time points in 
-		their Dilator, or Partials having Breakpoints before time 0, both 
-		of which are probably unusual circumstances.)
-	
-		p is the Partial to dilate.
-	 */
+
+	//	Replace the Partial envelope with a new envelope having the
+	//	same Breakpoints at times computed to align temporal features
+	//	in the sorted sequence of initial time points with their 
+	//	counterparts the sorted sequence of target time points.
+	//
+	//	Depending on the specification of initial and target time 
+	//	points, the dilated Partial may have Breakpoints at times
+	//	less than 0, even if the original Partial did not.
+	//
+	//	It is possible to have duplicate time points in either sequence.
+	//	Duplicate initial time points result in very localized stretching.
+	//	Duplicate target time points result in very localized compression.
+	//
+	//	If all initial time points are greater than 0, then an implicit
+	//	time point at 0 is assumed in both initial and target sequences, 
+	//	so the onset of a sound can be stretched without explcitly specifying a 
+	//	zero point in each vector. (This seems most intuitive, and only looks
+	//	like an inconsistency if clients are using negative time points in 
+	//	their Dilator, or Partials having Breakpoints before time 0, both 
+	//	of which are probably unusual circumstances.)
+	//
+	//	p is the Partial to dilate.
 	void dilate( Partial & p ) const;
 	 
-	/*	Function call operator: same as dilate( Partial & p ).
-	 */
+	//	Function call operator: same as dilate( Partial & p ).
 	void operator() ( Partial & p ) const;
 	 
-	/*	Non-uniformly expand and contract the parameter envelopes of the each
-		Partial in the specified half-open range according to this Dilator's
-		stored initial and target (desired) times.
-	 */
+	//	Non-uniformly expand and contract the parameter envelopes of the each
+	//	Partial in the specified half-open range according to this Dilator's
+	//	stored initial and target (desired) times.
 #if ! defined(NO_TEMPLATE_MEMBERS)
 	template<typename Iter>
 	void dilate( Iter dilate_begin, Iter dilate_end  ) const;
@@ -144,8 +140,7 @@ public:
 				 PartialList::iterator dilate_end  ) const;
 #endif
 	 
-	/*	Function call operator: same as dilate( Iter dilate_begin, Iter dilate_end )
-	 */
+	//	Function call operator: same as dilate( Iter dilate_begin, Iter dilate_end )
 #if ! defined(NO_TEMPLATE_MEMBERS)
 	template<typename Iter>
 	void operator() ( Iter dilate_begin, Iter dilate_end  ) const;
@@ -154,9 +149,8 @@ public:
 					  PartialList::iterator dilate_end ) const;
 #endif
 	 
-    /*	Return the dilated time value corresponding to the specified 
-        initial time.
-     */
+	//	Return the dilated time value corresponding to the specified 
+	//	initial time.
     double warpTime( double currentTime );
 
 //	-- unimplemented until useful --
@@ -170,22 +164,22 @@ private:
 // ---------------------------------------------------------------------------
 //	constructor (sequences of time points)
 // ---------------------------------------------------------------------------
-/**	Construct a new Dilator using a range of initial time points
-	and a range of target (desired) time points. The client must
-	ensure that the target range has at least as many elements as
-	the initial range.
-	
-	\param ibegin is the beginning of a sequence of initial, or source,
-	time points.
-	\param iend is (one-past) the end of a sequence of initial, or
-	source, time points.
-	\param tbegin is the beginning of a sequence of target time points; 
-	this sequence must be as long as the sequence of initial time points
-	described by \p ibegin and \p iend.
-
-	If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
-	only <tt>const double *</tt> arguments.
- */
+//!	Construct a new Dilator using a range of initial time points
+//!	and a range of target (desired) time points. The client must
+//!	ensure that the target range has at least as many elements as
+//!	the initial range.
+//!	
+//!	@param ibegin is the beginning of a sequence of initial, or source,
+//!	time points.
+//!	@param iend is (one-past) the end of a sequence of initial, or
+//!	source, time points.
+//!	@param tbegin is the beginning of a sequence of target time points; 
+//!	this sequence must be as long as the sequence of initial time points
+//!	described by @p ibegin and @p iend.
+//!
+//!	If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
+//!	only <tt>const double *</tt> arguments.
+//
 #if ! defined(NO_TEMPLATE_MEMBERS)
 template<typename Iter1, typename Iter2>
 Dilator::Dilator( Iter1 ibegin, Iter1 iend, Iter2 tbegin )
@@ -202,18 +196,18 @@ Dilator::Dilator( const double * ibegin, const double * iend, const double * tbe
 // ---------------------------------------------------------------------------
 //	dilate (sequence of Partials)
 // ---------------------------------------------------------------------------
-/**	Non-uniformly expand and contract the parameter envelopes of the each
-	Partial in the specified half-open range according to this Dilator's
-	stored initial and target (desired) times. 
-
-	\param dilate_begin is the beginning of a sequence of Partials to dilate.
-	\param dilate_end is (one-past) the end of a sequence of Partials to dilate.
-
-	If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
-	only \c PartialList::const_iterator arguments.
-	
-	\sa Dilator::dilate( Partial & p ) const
- */
+//!	Non-uniformly expand and contract the parameter envelopes of the each
+//!	Partial in the specified half-open range according to this Dilator's
+//!	stored initial and target (desired) times. 
+//!
+//!	@param dilate_begin is the beginning of a sequence of Partials to dilate.
+//!	@param dilate_end is (one-past) the end of a sequence of Partials to dilate.
+//!
+//!	If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
+//!	only @c PartialList::const_iterator arguments.
+//!	
+//!	@sa Dilator::dilate( Partial & p ) const
+//
 #if ! defined(NO_TEMPLATE_MEMBERS)
 template<typename Iter>
 void Dilator::dilate( Iter dilate_begin, Iter dilate_end  ) const
@@ -231,14 +225,14 @@ void Dilator::dilate( PartialList::iterator dilate_begin,
 // ---------------------------------------------------------------------------
 //	Function call operator (sequence of Partials)
 // ---------------------------------------------------------------------------
-/**	Function call operator: same as 
-	<tt>dilate( Iter dilate_begin, Iter dilate_end )</tt>
-
-	If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
-	only \c PartialList::const_iterator arguments.
-	
-	\sa Dilator::dilate( Partial & p ) const
- */	 
+//!	Function call operator: same as 
+//!	<tt>dilate( Iter dilate_begin, Iter dilate_end )</tt>
+//!
+//!	If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
+//!	only @c PartialList::const_iterator arguments.
+//!	
+//!	@sa Dilator::dilate( Partial & p ) const
+//	 
 #if ! defined(NO_TEMPLATE_MEMBERS)
 template<typename Iter>
 void Dilator::operator() ( Iter dilate_begin, Iter dilate_end  ) const
@@ -253,10 +247,10 @@ void Dilator::operator() ( PartialList::iterator dilate_begin,
 // ---------------------------------------------------------------------------
 //	Function call operator (single Partial)
 // ---------------------------------------------------------------------------
-/**	Function call operator: same as <tt>dilate( Partial & p )</tt>.
-	
-	\sa Dilator::dilate( Partial & p ) const
- */
+//!	Function call operator: same as <tt>dilate( Partial & p )</tt>.
+//!	
+//!	@sa Dilator::dilate( Partial & p ) const
+//
 inline 
 void Dilator::operator() ( Partial & p ) const
 { 

@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *
- * AiffFile.cc
+ * AiffFile.C
  *
  * Implementation of AiffFile class for sample import and export in Loris.
  *
@@ -50,13 +50,26 @@
 //	begin namespace
 namespace Loris {
 
+// ---------------------------------------------------------------------------
+//	class AiffFile
+//
+//!	@class AiffFile AiffFile.h loris/AiffFile.h
+//!	
+//!	Class AiffFile represents sample data in a AIFF-format samples 
+//!	file, and manages file I/O and sample conversion. Since the sound
+//!	analysis and synthesis algorithms in Loris and the reassigned
+//!	bandwidth-enhanced representation are monaural, AiffFile manages
+//!	only monaural (single channel) AIFF-format samples files.
+
 #pragma mark -- construction --
 
 // ---------------------------------------------------------------------------
 //	AiffFile constructor from filename
 // ---------------------------------------------------------------------------
-//	Initialize an instance of AiffFile by importing sample data from
-//	the file having the specified filename or path.
+//!	Initialize an instance of AiffFile by importing sample data from
+//!	the file having the specified filename or path.
+//!
+//!	@param filename is the name or path of an AIFF samples file
 //
 AiffFile::AiffFile( const std::string & filename ) :
 	notenum_( 60 ),
@@ -68,8 +81,12 @@ AiffFile::AiffFile( const std::string & filename ) :
 // ---------------------------------------------------------------------------
 //	AiffFile constructor from parameters, no samples.
 // ---------------------------------------------------------------------------
-//	Initialize an instance of AiffFile having the specified sample 
-//	rate, preallocating numFrames samples, initialized to zero.
+//!	Initialize an instance of AiffFile having the specified sample 
+//!	rate, preallocating numFrames samples, initialized to zero.
+//!
+//!	@param samplerate is the rate at which Partials are rendered
+//!	@param numFrames is the initial number of (zero) samples. If
+//!	unspecified, no samples are preallocated.
 //
 AiffFile::AiffFile( double samplerate, size_type numFrames /* = 0 */ ) :
 	notenum_( 60 ),
@@ -81,8 +98,12 @@ AiffFile::AiffFile( double samplerate, size_type numFrames /* = 0 */ ) :
 // ---------------------------------------------------------------------------
 //	AiffFile constructor from sample data
 // ---------------------------------------------------------------------------
-//	Initialize an instance of AiffFile from a buffer of sample
-//	data, with the specified sample rate.
+//!	Initialize an instance of AiffFile from a buffer of sample
+//!	data, with the specified sample rate.
+//!
+//!	@param buffer is a pointer to a buffer of floating point samples.
+//!	@param bufferlength is the number of samples in the buffer.
+//!	@param samplerate is the sample rate of the samples in the buffer.
 //
 AiffFile::AiffFile( const double * buffer, size_type bufferlength, double samplerate ) :
 	notenum_( 60 ),
@@ -95,8 +116,11 @@ AiffFile::AiffFile( const double * buffer, size_type bufferlength, double sample
 // ---------------------------------------------------------------------------
 //	AiffFile constructor from sample data
 // ---------------------------------------------------------------------------
-//	Initialize an instance of AiffFile from a buffer of sample
-//	data, with the specified sample rate.
+//!	Initialize an instance of AiffFile from a vector of sample
+//!	data, with the specified sample rate.
+//!
+//!	@param vec is a vector of floating point samples.
+//!	@param samplerate is the sample rate of the samples in the vector.
 //
 AiffFile::AiffFile( const std::vector< double > & vec, double samplerate ) :
 	notenum_( 60 ),
@@ -108,8 +132,10 @@ AiffFile::AiffFile( const std::vector< double > & vec, double samplerate ) :
 // ---------------------------------------------------------------------------
 //	AiffFile copy constructor 
 // ---------------------------------------------------------------------------
-//	Initialize this and AiffFile that is an exact copy, having
-//	all the same sample data, as another AiffFile.
+//!	Initialize this and AiffFile that is an exact copy, having
+//!	all the same sample data, as another AiffFile.
+//!
+//!	@param other is the AiffFile to copy
 //
 AiffFile::AiffFile( const AiffFile & other ) :
 	notenum_( other.notenum_ ),
@@ -122,9 +148,11 @@ AiffFile::AiffFile( const AiffFile & other ) :
 // ---------------------------------------------------------------------------
 //	AiffFile assignment operator 
 // ---------------------------------------------------------------------------
-//	Assignment operator: change this AiffFile to be an exact copy
-//	of the specified AiffFile, rhs, that is, having the same sample
-//	data.
+//!	Assignment operator: change this AiffFile to be an exact copy
+//!	of the specified AiffFile, rhs, that is, having the same sample
+//!	data.
+//!
+//!	@param rhs is the AiffFile to replicate
 //
 AiffFile & 
 AiffFile::operator= ( const AiffFile & rhs )
@@ -150,11 +178,21 @@ AiffFile::operator= ( const AiffFile & rhs )
 	return *this;
 }
 
+#pragma mark -- export --
+
 // ---------------------------------------------------------------------------
 //	write 
 // ---------------------------------------------------------------------------
-//	Export the samples represented by this AiffFile to a file having
-//	the specified filename or path, using bps bits per sample.
+//!	Export the sample data represented by this AiffFile to
+//!	the file having the specified filename or path. Export
+//!	signed integer samples of the specified size, in bits
+//!	(8, 16, 24, or 32).
+//!
+//!	@param filename is the name or path of the AIFF samples file
+//!	to be created or overwritten.
+//!	@param bps is the number of bits per sample to store in the
+//!	samples file (8, 16, 24, or 32).If unspeicified, 16 bits
+//!	is assumed.
 //
 void
 AiffFile::write( const std::string & filename, unsigned int bps )
@@ -221,8 +259,8 @@ AiffFile::write( const std::string & filename, unsigned int bps )
 // ---------------------------------------------------------------------------
 //	markers 
 // ---------------------------------------------------------------------------
-//	Return a reference to the Marker (see Marker.h) container 
-//	for this AiffFile. 
+//!	Return a reference to the Marker (see Marker.h) container 
+//!	for this AiffFile. 
 //
 AiffFile::markers_type & 
 AiffFile::markers( void )
@@ -230,6 +268,9 @@ AiffFile::markers( void )
 	return markers_;
 }
 
+//!	Return a const reference to the Marker (see Marker.h) container 
+//!	for this AiffFile. 
+//
 const AiffFile::markers_type & 
 AiffFile::markers( void ) const
 {
@@ -239,8 +280,8 @@ AiffFile::markers( void ) const
 // ---------------------------------------------------------------------------
 //	midiNoteNumber 
 // ---------------------------------------------------------------------------
-//	Return the fractional MIDI note number assigned to this AiffFile. 
-//	If the sound has no definable pitch, note number 60.0 is used.
+//!	Return the fractional MIDI note number assigned to this AiffFile. 
+//!	If the sound has no definable pitch, note number 60.0 is used.
 //
 double 
 AiffFile::midiNoteNumber( void ) const
@@ -251,10 +292,10 @@ AiffFile::midiNoteNumber( void ) const
 // ---------------------------------------------------------------------------
 //	numFrames 
 // ---------------------------------------------------------------------------
-//	Return the number of sample frames represented in this AiffFile.
-//	A sample frame contains one sample per channel for a single sample
-//	interval (e.g. mono and stereo samples files having a sample rate of
-//	44100 Hz both have 44100 sample frames per second of audio samples).
+//!	Return the number of sample frames represented in this AiffFile.
+//!	A sample frame contains one sample per channel for a single sample
+//!	interval (e.g. mono and stereo samples files having a sample rate of
+//!	44100 Hz both have 44100 sample frames per second of audio samples).
 //
  AiffFile::size_type  
  AiffFile::numFrames( void ) const
@@ -265,8 +306,8 @@ AiffFile::midiNoteNumber( void ) const
 // ---------------------------------------------------------------------------
 //	sampleRate 
 // ---------------------------------------------------------------------------
-//	Return the sampling freqency in Hz for the sample data in this
-//	AiffFile.
+//!	Return the sampling freqency in Hz for the sample data in this
+//!	AiffFile.
 //
 double  
 AiffFile::sampleRate( void ) const
@@ -277,8 +318,8 @@ AiffFile::sampleRate( void ) const
 // ---------------------------------------------------------------------------
 //	samples 
 // ---------------------------------------------------------------------------
-//	Return a reference (or const reference) to the vector containing
-//	the floating-point sample data for this AiffFile.
+//!	Return a reference (or const reference) to the vector containing
+//!	the floating-point sample data for this AiffFile.
 //
 AiffFile::samples_type & 
 AiffFile::samples( void )
@@ -286,6 +327,9 @@ AiffFile::samples( void )
 	return samples_;
 }
 
+//!	Return a const reference (or const reference) to the vector containing
+//!	the floating-point sample data for this AiffFile.
+//
 const AiffFile::samples_type & 
 AiffFile::samples( void ) const
 {
@@ -297,11 +341,14 @@ AiffFile::samples( void ) const
 // ---------------------------------------------------------------------------
 //	addPartial 
 // ---------------------------------------------------------------------------
-//	Render the specified Partial using the (optionally) specified
-//	Partial fade time, and accumulate the resulting samples into
-//	the sample vector for this AiffFile.
-//	
-//	The default fade time is 1 ms.
+//!	Render the specified Partial using the (optionally) specified
+//!	Partial fade time, and accumulate the resulting samples into
+//!	the sample vector for this AiffFile.
+//!
+//!	@param p is the partial to render into this AiffFile
+//!	@param fadeTime is the Partial fade time for rendering
+//!	the Partials on the specified range. If unspecified, the
+//!	default fade time is 1 ms.
 //
 void 
 AiffFile::addPartial( const Loris::Partial & p, double fadeTime )
@@ -313,14 +360,18 @@ AiffFile::addPartial( const Loris::Partial & p, double fadeTime )
 // ---------------------------------------------------------------------------
 //	setMidiNoteNumber 
 // ---------------------------------------------------------------------------
-//	Set the fractional MIDI note number assigned to this AiffFile. 
-//	If the sound has no definable pitch, use note number 60.0 (the default).
+//!	Set the fractional MIDI note number assigned to this AiffFile. 
+//!	If the sound has no definable pitch, use note number 60.0 (the default).
+//!
+//!	@param nn is a fractional MIDI note number, 60 is middle C.
 //
 void 
 AiffFile::setMidiNoteNumber( double nn )
 {
 	if ( nn < 0 || nn > 128 )
+	{
 		Throw( InvalidArgument, "MIDI note number outside of the valid range [1,128]" );
+	}
 	notenum_ = nn;
 }
 

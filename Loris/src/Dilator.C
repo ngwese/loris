@@ -47,23 +47,26 @@
 //	begin namespace
 namespace Loris {
 
-/**	\class Dilator Dilator.h loris/Dilator.h
-	
-	Class Dilator represents an algorithm for non-uniformly expanding
-	and contracting the Partial parameter envelopes according to the initial
-	and target (desired) times of temporal features.
-	
-	It is frequently necessary to redistribute temporal events in this way
-	in preparation for a sound morph. For example, when morphing instrument
-	tones, it is common to align the attack, sustain, and release portions
-	of the source sounds by dilating or contracting those temporal regions.
- */
+// ---------------------------------------------------------------------------
+//	class Dilator
+//
+//!	@class Dilator Dilator.h loris/Dilator.h
+//!	
+//!	Class Dilator represents an algorithm for non-uniformly expanding
+//!	and contracting the Partial parameter envelopes according to the initial
+//!	and target (desired) times of temporal features.
+//!	
+//!	It is frequently necessary to redistribute temporal events in this way
+//!	in preparation for a sound morph. For example, when morphing instrument
+//!	tones, it is common to align the attack, sustain, and release portions
+//!	of the source sounds by dilating or contracting those temporal regions.
+
 
 // ---------------------------------------------------------------------------
 //	constructor
 // ---------------------------------------------------------------------------
-/**	Construct a new Dilator with no time points.
- */
+//!	Construct a new Dilator with 
+//!	no time points.
 Dilator::Dilator( void )
 {
 }
@@ -71,8 +74,9 @@ Dilator::Dilator( void )
 // ---------------------------------------------------------------------------
 //	destructor
 // ---------------------------------------------------------------------------
-/**	Destroy this Dilator.
- */
+//!
+//!	Destroy this Dilator.
+//!
 Dilator::~Dilator(void)
 {
 }
@@ -80,22 +84,22 @@ Dilator::~Dilator(void)
 // ---------------------------------------------------------------------------
 //	insert
 // ---------------------------------------------------------------------------
-/**	Insert a pair of initial and target time points. 
-	
-	Specify a pair of initial and target time points to be used
-	by this Dilator, corresponding, for example, to the initial
-	and desired time of a particular temporal feature in an
-	analyzed sound.
-	
-	\param i is an initial, or source, time point
-	\param t is a target time point
-	
-	The time points will be sorted before they are used.
-	\e If, in the sequences of initial and target time points, there are
-	exactly the same number of initial time points preceding \p i as
-	target time points preceding \p t, then time \p i will be warped to 
-	time \p t in the dilation process.
- */
+//!	Insert a pair of initial and target time points. 
+//!	
+//!	Specify a pair of initial and target time points to be used
+//!	by this Dilator, corresponding, for example, to the initial
+//!	and desired time of a particular temporal feature in an
+//!	analyzed sound.
+//!	
+//!	@param i is an initial, or source, time point
+//!	@param t is a target time point
+//!	
+//!	The time points will be sorted before they are used.
+//!	@e If, in the sequences of initial and target time points, there are
+//!	exactly the same number of initial time points preceding @p i as
+//!	target time points preceding @p t, then time @p i will be warped to 
+//!	time @p t in the dilation process.
+//
 void
 Dilator::insert( double i, double t )
 {
@@ -110,10 +114,10 @@ Dilator::insert( double i, double t )
 // ---------------------------------------------------------------------------
 //	warpTime
 // ---------------------------------------------------------------------------
-/**	Return the dilated time value corresponding to the specified initial time.
-	\param currentTime is a pre-dilated time.
- 	\return the dilated time corresponding to the initial time \p currentTime
- */
+//!	Return the dilated time value corresponding to the specified initial time.
+//!	@param currentTime is a pre-dilated time.
+//! @return the dilated time corresponding to the initial time @p currentTime
+//
 double
 Dilator::warpTime( double currentTime )
 {
@@ -162,29 +166,29 @@ Dilator::warpTime( double currentTime )
 // ---------------------------------------------------------------------------
 //	dilate
 // ---------------------------------------------------------------------------
-/**	Replace the Partial envelope with a new envelope having the
-	same Breakpoints at times computed to align temporal features
-	in the sorted sequence of initial time points with their 
-	counterparts the sorted sequence of target time points.
-
-	Depending on the specification of initial and target time 
-	points, the dilated Partial may have Breakpoints at times
-	less than 0, even if the original Partial did not.
-
-	It is possible to have duplicate time points in either sequence.
-	Duplicate initial time points result in very localized stretching.
-	Duplicate target time points result in very localized compression.
-
-	If all initial time points are greater than 0, then an implicit
-	time point at 0 is assumed in both initial and target sequences, 
-	so the onset of a sound can be stretched without explcitly specifying a 
-	zero point in each vector. (This seems most intuitive, and only looks
-	like an inconsistency if clients are using negative time points in 
-	their Dilator, or Partials having Breakpoints before time 0, both 
-	of which are probably unusual circumstances.)
-
-	\param p is the Partial to dilate.
- */	
+//!	Replace the Partial envelope with a new envelope having the
+//!	same Breakpoints at times computed to align temporal features
+//!	in the sorted sequence of initial time points with their 
+//!	counterparts the sorted sequence of target time points.
+//!
+//!	Depending on the specification of initial and target time 
+//!	points, the dilated Partial may have Breakpoints at times
+//!	less than 0, even if the original Partial did not.
+//!
+//!	It is possible to have duplicate time points in either sequence.
+//!	Duplicate initial time points result in very localized stretching.
+//!	Duplicate target time points result in very localized compression.
+//!
+//!	If all initial time points are greater than 0, then an implicit
+//!	time point at 0 is assumed in both initial and target sequences, 
+//!	so the onset of a sound can be stretched without explcitly specifying a 
+//!	zero point in each vector. (This seems most intuitive, and only looks
+//!	like an inconsistency if clients are using negative time points in 
+//!	their Dilator, or Partials having Breakpoints before time 0, both 
+//!	of which are probably unusual circumstances.)
+//!
+//!	@param p is the Partial to dilate.
+//	
 void
 Dilator::dilate( Partial & p ) const
 {

@@ -47,33 +47,31 @@ class Partial;
 
 // ---------------------------------------------------------------------------
 //	Channelizer
-// ---------------------------------------------------------------------------
-/**	\class Channelizer Channelizer.h loris/Channelizer.h
- *	
- *	Class Channelizer represents an algorithm for automatic labeling of
- *	a sequence of Partials. Partials must be labeled in
- *	preparation for morphing (see Morpher) to establish correspondences
- *	between Partials in the morph source and target sounds. 
- *	
- *	Channelized partials are labeled according to their adherence to a
- *	harmonic frequency structure with a time-varying fundamental
- *	frequency. The frequency spectrum is partitioned into
- *	non-overlapping channels having time-varying center frequencies that
- *	are harmonic (integer) multiples of a specified reference frequency
- *	envelope, and each channel is identified by a unique label equal to
- *	its harmonic number. Each Partial is assigned the label
- *	corresponding to the channel containing the greatest portion of its
- *	(the Partial's) energy. 
- *	
- *	A reference frequency Envelope for channelization and the channel
- *	number to which it corresponds (1 for an Envelope that tracks the
- *	Partial at the fundamental frequency) must be specified. The
- *	reference Envelope can be constructed explcitly, point by point
- *	(using, for example, the BreakpointEnvelope class), or constructed
- *	automatically using the FrequencyReference class. 
- *	
- *	Channelizer is a leaf class, do not subclass.
- */
+//	
+//	Class Channelizer represents an algorithm for automatic labeling of
+//	a sequence of Partials. Partials must be labeled in
+//	preparation for morphing (see Morpher) to establish correspondences
+//	between Partials in the morph source and target sounds. 
+//	
+//	Channelized partials are labeled according to their adherence to a
+//	harmonic frequency structure with a time-varying fundamental
+//	frequency. The frequency spectrum is partitioned into
+//	non-overlapping channels having time-varying center frequencies that
+//	are harmonic (integer) multiples of a specified reference frequency
+//	envelope, and each channel is identified by a unique label equal to
+//	its harmonic number. Each Partial is assigned the label
+//	corresponding to the channel containing the greatest portion of its
+//	(the Partial's) energy. 
+//	
+//	A reference frequency Envelope for channelization and the channel
+//	number to which it corresponds (1 for an Envelope that tracks the
+//	Partial at the fundamental frequency) must be specified. The
+//	reference Envelope can be constructed explcitly, point by point
+//	(using, for example, the BreakpointEnvelope class), or constructed
+//	automatically using the FrequencyReference class. 
+//	
+//	Channelizer is a leaf class, do not subclass.
+//
 class Channelizer
 {
 //	-- implementaion --
@@ -83,52 +81,52 @@ class Channelizer
 //	-- public interface --
 public:
 //	-- construction --
-	/**	Construct a new Channelizer using the specified reference
-		\c Envelope to represent the a numbered channel. 
-		\param refChanFreq is an Envelope representing the center frequency
-		of a channel.
-		\param refChanLabel is the corresponding channel number (i.e. 1
-		if \a refChanFreq is the lowest-frequency channel, and all other channels
-		are harmonics of \a refChanFreq, or 2 if \a refChanFreq tracks the second
-		harmonic, etc.).
-	 */
+
+	//	Construct a new Channelizer using the specified reference
+	//	Envelope to represent the a numbered channel. 
+	//	
+	//	refChanFreq is an Envelope representing the center frequency
+	//	of a channel.
+	//	refChanLabel is the corresponding channel number (i.e. 1
+	//	if refChanFreq is the lowest-frequency channel, and all other channels
+	//	are harmonics of refChanFreq, or 2 if refChanFreq tracks the second
+	//	harmonic, etc.).
 	Channelizer( const Envelope & refChanFreq, int refChanLabel );
 	 
-	/**	Construct a new Channelizer that is an exact copy of another.
-		The copy represents the same set of frequency channels, constructed
-		from the same reference Envelope and channel number.
-		\param other is the Channelizer to copy
-	 */
+	//	Construct a new Channelizer that is an exact copy of another.
+	//	The copy represents the same set of frequency channels, constructed
+	//	from the same reference Envelope and channel number.
+	//	
+	//	other is the Channelizer to copy
 	Channelizer( const Channelizer & other );
 	 
-	/**	Assignment operator: make this Channelizer an exact copy of another. 
-		This Channelizer is made to represent the same set of frequency channels, 
-		constructed from the same reference Envelope and channel number as \a rhs.
-		\param rhs is the Channelizer to copy
-	 */
+	//	Assignment operator: make this Channelizer an exact copy of another. 
+	//	This Channelizer is made to represent the same set of frequency channels, 
+	//	constructed from the same reference Envelope and channel number as rhs.
+	//	
+	//	rhs is the Channelizer to copy
 	Channelizer & operator=( const Channelizer & rhs );
 	 
-	/**	Destroy this Channelizer.
-	 */
+	//	Destroy this Channelizer.
 	~Channelizer( void );
 	 
 //	-- channelizing --
-	/**	Label a Partial with the number of the frequency channel containing
-		the greatest portion of its (the Partial's) energy.
-		\param partial is the Partial to label.
-	 */
+	//	Label a Partial with the number of the frequency channel containing
+	//	the greatest portion of its (the Partial's) energy.
+	//	
+	//	partial is the Partial to label.
 	void channelize( Partial & partial ) const;
 
-	/**	Assign each Partial in the specified half-open (STL-style) range
-		the label corresponding to the frequency channel containing the
-		greatest portion of its (the Partial's) energy.
-		\param begin is the beginning of the range of Partials to channelize
-		\param end is (one-past) the end of the range of Partials o channelize
-		
-		If compiled with \c NO_TEMPLATE_MEMBERS defined, then \a begin and \a end
-		must be \c PartialList::iterators, otherwise they can be any type
-		of iterators over a sequence of Partials.
-	 */
+	//	Assign each Partial in the specified half-open (STL-style) range
+	//	the label corresponding to the frequency channel containing the
+	//	greatest portion of its (the Partial's) energy.
+	//	
+	//	begin is the beginning of the range of Partials to channelize
+	//	end is (one-past) the end of the range of Partials o channelize
+	//	
+	//	If compiled with NO_TEMPLATE_MEMBERS defined, then begin and end
+	//	must be PartialList::iterators, otherwise they can be any type
+	//	of iterators over a sequence of Partials.
 #if ! defined(NO_TEMPLATE_MEMBERS)
 	template<typename Iter>
 	void channelize( Iter begin, Iter end ) const;
@@ -136,8 +134,7 @@ public:
 	void channelize( PartialList::iterator begin, PartialList::iterator end ) const;
 #endif	 
 
-	/**	Function call operator: same as \c channelize().
-	 */
+	//!	Function call operator: same as @c channelize().
 #if ! defined(NO_TEMPLATE_MEMBERS)
 	template<typename Iter>
 	void operator() ( Iter begin, Iter end ) const
@@ -151,9 +148,16 @@ public:
 // ---------------------------------------------------------------------------
 //	channelize (sequence of Partials)
 // ---------------------------------------------------------------------------
-//	Assign each Partial in the specified half-open (STL-style) range
-//	the label corresponding to the frequency channel containing the
-//	greatest portion of its (the Partial's) energy.
+//!	Assign each Partial in the specified half-open (STL-style) range
+//!	the label corresponding to the frequency channel containing the
+//!	greatest portion of its (the Partial's) energy.
+//!	
+//!	@param begin is the beginning of the range of Partials to channelize
+//!	@param end is (one-past) the end of the range of Partials o channelize
+//!	
+//!	If compiled with @c NO_TEMPLATE_MEMBERS defined, then @a begin and @a end
+//!	must be @c PartialList::iterators, otherwise they can be any type
+//!	of iterators over a sequence of Partials.
 //
 #if ! defined(NO_TEMPLATE_MEMBERS)
 template<typename Iter>

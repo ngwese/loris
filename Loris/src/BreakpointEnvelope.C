@@ -42,8 +42,40 @@
 namespace Loris {
 
 // ---------------------------------------------------------------------------
+//	class BreakpointEnvelope
+//
+//!	@class BreakpointEnvelope BreakpointEnvelope.h loris/BreakpointEnvelope.h
+//!	
+//!	A BreakpointEnvelope represents a linear segment breakpoint 
+//!	function with infinite extension at each end (that is, evalutaing 
+//!	the envelope past either end of the breakpoint function yields the 
+//!	value at the nearest end point).
+//!
+//!	BreakpointEnvelope implements the Envelope interface, described
+//!	by the abstract class Envelope. 
+//!
+//!	BreakpointEnvelope inherits the types
+//!		@li @c size_type
+//!		@li @c value_type
+//!		@li @c iterator
+//!		@li @c const_iterator
+//!
+//!	and the member functions
+//!		@li <tt>size_type size( void ) const</tt>
+//!		@li <tt>bool empty( void ) const</tt>
+//!		@li <tt>iterator begin( void )</tt>
+//!		@li <tt>const_iterator begin( void ) const</tt>
+//!		@li <tt>iterator end( void )</tt>
+//!		@li <tt>const_iterator end( void ) const</tt>
+//!
+//!	from <tt>std::map< double, double ></tt>.
+//
+
+// ---------------------------------------------------------------------------
 //	constructor
 // ---------------------------------------------------------------------------
+//!	Construct a new BreakpointEnvelope having no 
+//!	breakpoints (and an implicit value of 0 everywhere).		
 //
 BreakpointEnvelope::BreakpointEnvelope(void)
 {
@@ -52,6 +84,12 @@ BreakpointEnvelope::BreakpointEnvelope(void)
 // ---------------------------------------------------------------------------
 //	constructor with initial (or constant) value
 // ---------------------------------------------------------------------------
+//!	Construct and return a new BreakpointEnvelope having a 
+//!	single breakpoint at 0 (and an implicit value everywhere)
+//!	of initialValue.		
+//!	
+//!	@param initialValue is the value of this BreakpointEnvelope
+//!	at time 0.	
 //
 BreakpointEnvelope::BreakpointEnvelope( double initialValue )
 {
@@ -61,6 +99,8 @@ BreakpointEnvelope::BreakpointEnvelope( double initialValue )
 // ---------------------------------------------------------------------------
 //	clone
 // ---------------------------------------------------------------------------
+//!	Return an exact copy of this BreakpointEnvelope
+//!	(polymorphic copy, following the Prototype pattern).
 //
 BreakpointEnvelope * 
 BreakpointEnvelope::clone( void ) const
@@ -69,24 +109,33 @@ BreakpointEnvelope::clone( void ) const
 }
 
 // ---------------------------------------------------------------------------
-//	insertBreakpoint
+//	insert
 // ---------------------------------------------------------------------------
-//	Insert or replace a breakpoint at x.
+//!	Insert a breakpoint representing the specified (time, value) 
+//!	pair into this BreakpointEnvelope. If there is already a 
+//!	breakpoint at the specified time, it will be replaced with 
+//!	the new breakpoint.
+//!	
+//!	@param time is the time at which to insert a new breakpoint
+//!	@param value is the value of the new breakpoint
 //	
 void
-BreakpointEnvelope::insertBreakpoint( double x, double y )
+BreakpointEnvelope::insert( double time, double value )
 {
-	(*this)[x] = y;
+	(*this)[time] = value;
 }
 
 // ---------------------------------------------------------------------------
 //	valueAt
 // ---------------------------------------------------------------------------
-//	BreakpointEnvelope isa map<double, double>, so iterators are references to
-//	key/value pairs.
+//!	Return the linearly-interpolated value of this BreakpointEnvelope at 
+//!	the specified time.
+//!	
+//!	@param t is the time at which to evaluate this 
+//!	BreakpointEnvelope.
 //
 double
-BreakpointEnvelope::valueAt( double x ) const
+BreakpointEnvelope::valueAt( double t ) const
 {
 	//	return zero if no breakpoints have been specified:
 	if ( size() == 0 ) 
@@ -94,16 +143,16 @@ BreakpointEnvelope::valueAt( double x ) const
 		return 0.;
 	}
 
-	const_iterator it = lower_bound( x );
+	const_iterator it = lower_bound( t );
 
 	if ( it == begin() ) 
 	{
-		//	x is less than the first breakpoint, extend:
+		//	t is less than the first breakpoint, extend:
 		return it->second;
 	}
 	else if ( it == end() ) 
 	{
-		//	x is greater than the last breakpoint, extend:
+		//	t is greater than the last breakpoint, extend:
 		// 	(no direct way to access the last element of a map)
 		return (--it)->second;
 	}
@@ -116,7 +165,7 @@ BreakpointEnvelope::valueAt( double x ) const
 		double xless = it->first;
 		double yless = it->second;
 		
-		double alpha = (x -  xless) / (xgreater - xless);
+		double alpha = (t -  xless) / (xgreater - xless);
 		return ( alpha * ygreater ) + ( (1. - alpha) * yless );
 	}
 }
