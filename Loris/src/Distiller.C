@@ -13,11 +13,8 @@
 #include "Exception.h"
 #include "PartialUtils.h"
 #include "notifier.h"
-#include <cmath>
-#include <list>
-#include <vector>
-#include <set>
 #include <algorithm>
+#include <list>
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
@@ -25,126 +22,7 @@ namespace Loris {
 #endif
 
 // ---------------------------------------------------------------------------
-//	class Distiller_imp
-//
-//	Implementation class for the fully-insulating interface Distiller.
-//
-struct Distiller_imp
-{
-//	-- instance variables --
-	PartialList _partials;	//	collect Partials here
-			
-//	-- "public" interface --
-//	construction:	
-	Distiller_imp( void ) {}
-	~Distiller_imp( void ) {}
-	
-//	distillation:
-	void distill_all( PartialList::const_iterator start,
-		 			  PartialList::const_iterator end );
-	void distill_one( PartialList::const_iterator start,
-		 			  PartialList::const_iterator end,
-		  			  int assignLabel );
-
-//	-- helpers --
-	void distill_aux( const Partial & src, 
-				 	  Partial & dest, 
-				 	  PartialList::const_iterator start,
-				 	  PartialList::const_iterator end );
-
-	void fixGaps( Partial & dest, 
-				  PartialList::const_iterator start,
-				  PartialList::const_iterator end );
-				   
-};	//	end of class Distiller_imp
-
-// ---------------------------------------------------------------------------
-//	Distiller_imp distill_all
-// ---------------------------------------------------------------------------
-//	Distill all the Partials in the half open range start,end by label.
-//	Unlabeled (label 0) Partials are ignored.
-//
-void 
-Distiller_imp::distill_all( PartialList::const_iterator start,
-	 						PartialList::const_iterator end )
-{
-	std::set<int> ignorelabels;
-	ignorelabels.insert(0);
-
-	//	set pos to first Partial with non-zero label:
-	PartialList::const_iterator pos = 
-		std::find_if( start, end, 
-					  std::not1( std::bind2nd( PartialUtils::label_equals(), 0 ) ) );
-
-	//	it and pos are stupid variable names!
-	while ( pos != end )
-	{
-		int label = pos->label();
-		debugger << "distilling Partials labeled " << label << endl;
-		ignorelabels.insert(label);
-		
-		PartialList::const_iterator it = pos;
-		PartialList dothese;
-		/*
-		std::copy_if( pos, end, 
-					  	   std::bind2nd( PartialUtils::label_equals(), label ),
-						   dothese.begin() );
-		*/
-		dothese.push_back( *pos );
-		while( ++it != end )
-		{
-			if ( it->label() == label )
-			{
-				dothese.push_back( *it );
-			}
-		}
-		debugger << "distilled " << dothese.size() << " Partials labeled " << label << endl;
-		distill_one( dothese.begin(), dothese.end(), label );
-
-		//	advance pos until a new non-zero label is found:
-		while( ++pos != end )
-		{
-			if ( ignorelabels.find(pos->label()) == ignorelabels.end() )
-				break;
-		} 
-	}
-}
-
-// ---------------------------------------------------------------------------
-//	Distiller_imp distill_one
-// ---------------------------------------------------------------------------
-//	Distill the Partials in a range into a single Partial, 
-//	add the result to the collection of distilled Partials.
-//
-//	(start, end) _must_ be a valid range in a list< Partial >...or else!
-//
-void 
-Distiller_imp::distill_one( PartialList::const_iterator start,
-	 						PartialList::const_iterator end, 
-	 						int assignLabel )
-{
-	if ( assignLabel <= 0 )
-		Throw( InvalidArgument, "distillation label must be positive" );
-
-	//	create the resulting distilled partial:
-	Partial newp;
-	newp.setLabel( assignLabel );
-	
-	//	iterate over range:
-	for ( PartialList::const_iterator it = start; it != end; ++it )
-	{
-		distill_aux( *it, newp, start, end );
-	}
-	
-	//	fill in gaps:
-	fixGaps( newp, start, end );
-
-	//	add the newly-distilled partial to the collection:
-	_partials.push_back( newp );
-}
-
-// ---------------------------------------------------------------------------
-//	Distiller_imp distill_aux
+//	distill_aux STATIC
 // ---------------------------------------------------------------------------
 //	Mother of all helper functions, distillation core: 
 //	Distill a single source Partial into the destination Partial, 
@@ -164,11 +42,10 @@ Distiller_imp::distill_one( PartialList::const_iterator start,
 //
 //	(start, end) _must_ be a valid range in a list< Partial >...or else!
 //	
-void
-Distiller_imp::distill_aux( const Partial & src, 
-					   Partial & dest, 
-					   PartialList::const_iterator start,
-					   PartialList::const_iterator end  )
+static void distill_aux( const Partial & src, 
+			   			 Partial & dest, 
+				   		 PartialList::const_iterator start,
+				   		 PartialList::const_iterator end  )
 {
 	//	iterate over the source Partial:
 	for ( PartialConstIterator pIter = src.begin(); pIter != src.end(); ++pIter )
@@ -219,16 +96,15 @@ Distiller_imp::distill_aux( const Partial & src,
 }
 
 // ---------------------------------------------------------------------------
-//	Distiller_imp fixGaps
+//	fixGaps STATIC
 // ---------------------------------------------------------------------------
 //	Look for gaps between Partials in the half-open interval [start,end)
 //	and make sure that the new distilled Partial (dest) ramps to zero
 //	amplitude during those gaps.
 //
-void 
-Distiller_imp::fixGaps( Partial & dest, 
-				  	PartialList::const_iterator start,
-				  	PartialList::const_iterator end )
+static void fixGaps( Partial & dest, 
+		  			 PartialList::const_iterator start,
+		  			 PartialList::const_iterator end )
 {
 	//	make a list of segments:
 	std::list< std::pair<double, double> > segments;
@@ -326,8 +202,7 @@ Distiller_imp::fixGaps( Partial & dest,
 //	Distiller constructor
 // ---------------------------------------------------------------------------
 //
-Distiller::Distiller( void ):
-	_imp( new Distiller_imp() )
+Distiller::Distiller( void )
 {
 }
 
@@ -337,58 +212,78 @@ Distiller::Distiller( void ):
 //
 Distiller::~Distiller( void )
 {
-	delete _imp;
 }
 
 // ---------------------------------------------------------------------------
 //	distill
 // ---------------------------------------------------------------------------
-//	Distill the Partials in a range into a single Partial, 
-//	add the result to the collection of distilled Partials.
-//
-//	(start, end) _must_ be a valid range in a list< Partial >...or else!
-//
-void 
-Distiller::distill( PartialList::const_iterator start,
-	 				PartialList::const_iterator end, 
-	 				int assignLabel )
-{
-	_imp->distill_one( start, end, assignLabel );
-}
-
-// ---------------------------------------------------------------------------
-//	distillAll
-// ---------------------------------------------------------------------------
-//	Distill the Partials in a range into a single Partial, 
-//	add the result to the collection of distilled Partials.
-//
-//	(start, end) _must_ be a valid range in a list< Partial >...or else!
+//	Distill the labeled Partials in a list into a list containing a  single 
+//	Partial per label. The distilled list will contain as many Partials as
+//	there were non-zero labels in the original list. Unlabeled (label 0)
+//	Partials are eliminated.
 //
 void 
-Distiller::distillAll( PartialList::const_iterator start,
-	 				   PartialList::const_iterator end )
+Distiller::distill( PartialList & l )
 {
-	_imp->distill_all( start, end );
-}
+	int howmanywerethere = l.size();
 
-// ---------------------------------------------------------------------------
-//	partials
-// ---------------------------------------------------------------------------
-//
-PartialList & 
-Distiller::partials( void )
-{ 
-	return _imp->_partials; 
-}
+	//	sort the PartialList by label:
+	debugger << "Distiller sorting Partials by label..." << endl;
+	l.sort( PartialUtils::label_less() );
+	
+	//	skip over unlabeled Partials:
+	//	(all Partials were labeled above, there can 
+	//	be no Partials with labels less than 0)
+	PartialList::iterator dist_begin = 
+		std::find_if( l.begin(), l.end(), 
+					  std::not1( std::bind2nd( PartialUtils::label_equals(), 0 ) ) ); 
 
-// ---------------------------------------------------------------------------
-//	partials
-// ---------------------------------------------------------------------------
-//
-const PartialList & 
-Distiller::partials( void ) const 
-{ 
-	return _imp->_partials; 
+	// 	iterate over labels and distill each one:
+	Distiller still;
+	while ( dist_begin != l.end() )
+	{
+		int label = dist_begin->label();
+		debugger << "distilling Partials labeled " << label << endl;
+		
+		//	first the first element in l after beginp
+		//	having a label not equal to 'label':
+		PartialList::iterator dist_end = 
+			std::find_if( dist_begin, l.end(), 
+						  std::not1( std::bind2nd( PartialUtils::label_equals(), label ) ) );
+#ifdef Debug_Loris
+		debugger << "Distiller found " << std::distance( dist_begin, dist_end ) << 
+					" Partials labeled " << label << endl;
+#endif
+		
+		//	distill label, unless label is 0:	
+		if ( label != 0 )
+		{
+			//	create the resulting distilled partial:
+			Partial newp;
+			newp.setLabel( label );
+			
+			//	iterate over range:
+			for ( PartialList::const_iterator it = dist_begin; it != dist_end; ++it )
+			{
+				distill_aux( *it, newp, dist_begin, dist_end );
+			}
+			
+			//	fill in gaps:
+			fixGaps( newp, dist_begin, dist_end );
+		
+			//	replace the first Partial in the range,
+			//	the rest of the range will be erased:
+			*(dist_begin++) = newp;
+		}
+
+		//	erase the non-distilled Partials:
+		l.erase( dist_begin, dist_end );
+		
+		//	advance Partial list iterator:
+		dist_begin = dist_end;
+	}
+
+	debugger << "distilled " << l.size() << " Partials from " << howmanywerethere << endl;
 }
 
 #if !defined( NO_LORIS_NAMESPACE )

@@ -6,17 +6,17 @@
 //	A group of Partials that logically represent a single component
 //	can be distilled into a single Partial using a Distiller. 
 //
+//	UPDATE THIS COMMENT
+//
 //	-kel 20 Oct 99
 //
 // ===========================================================================
-#include "Partial.h"	//	needed only for PartalList definition
+#include "Partial.h" 	//	only needed for PartialList definition, duh.
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
 #endif
-
-class Distiller_imp;
 
 // ---------------------------------------------------------------------------
 //	class Distiller
@@ -24,9 +24,6 @@ class Distiller_imp;
 //
 class Distiller
 {
-//	-- insulating implementation --
-	Distiller_imp * _imp;	
-			
 //	-- public interface --
 public:
 //	construction:	
@@ -34,16 +31,8 @@ public:
 	~Distiller( void );
 	
 //	distillation:
-	void distill( PartialList::const_iterator start,
-				  PartialList::const_iterator end,
-				  int assignLabel );
-	void distillAll( PartialList::const_iterator start,
-			 		 PartialList::const_iterator end );
+	void distill( PartialList & l );
 
-//	PartialList access:
-	PartialList & partials( void );
-	const PartialList & partials( void ) const;
-				   
 //	-- unimplemented --
 private:
 	Distiller( const Distiller & other );
