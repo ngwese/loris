@@ -19,32 +19,32 @@ libloris_la_SOURCES = lorisAnalyzer_pi.C lorisBpEnvelope_pi.C \
 # convenience libraries don't work under Darwin:
 # libloris_la_LIBADD = $(top_builddir)/classes/libclasses.la
 libloris_la_LIBADD = \
-		$(top_builddir)/classes/AiffFile.o \
-		$(top_builddir)/classes/Analyzer.o \
-		$(top_builddir)/classes/AssociateBandwidth.o \
-		$(top_builddir)/classes/BreakpointEnvelope.o \
-		$(top_builddir)/classes/Breakpoint.o \
-		$(top_builddir)/classes/Channelizer.o \
-		$(top_builddir)/classes/Dilator.o \
-		$(top_builddir)/classes/Distiller.o \
-		$(top_builddir)/classes/Endian.o \
-		$(top_builddir)/classes/Envelope.o \
-		$(top_builddir)/classes/Exception.o \
-		$(top_builddir)/classes/Filter.o \
-		$(top_builddir)/classes/FourierTransform.o \
-		$(top_builddir)/classes/FrequencyReference.o \
-		$(top_builddir)/classes/ieee.o \
-		$(top_builddir)/classes/ImportLemur.o \
-		$(top_builddir)/classes/KaiserWindow.o \
-		$(top_builddir)/classes/Morpher.o \
-		$(top_builddir)/classes/Notifier.o \
-		$(top_builddir)/classes/Oscillator.o \
-		$(top_builddir)/classes/Partial.o \
-		$(top_builddir)/classes/ReassignedSpectrum.o \
-		$(top_builddir)/classes/SdifFile.o \
-		$(top_builddir)/classes/Sieve.o \
-		$(top_builddir)/classes/SpcFile.o \
-		$(top_builddir)/classes/Synthesizer.o \
+		$(top_builddir)/classes/AiffFile.lo \
+		$(top_builddir)/classes/Analyzer.lo \
+		$(top_builddir)/classes/AssociateBandwidth.lo \
+		$(top_builddir)/classes/BreakpointEnvelope.lo \
+		$(top_builddir)/classes/Breakpoint.lo \
+		$(top_builddir)/classes/Channelizer.lo \
+		$(top_builddir)/classes/Dilator.lo \
+		$(top_builddir)/classes/Distiller.lo \
+		$(top_builddir)/classes/Endian.lo \
+		$(top_builddir)/classes/Envelope.lo \
+		$(top_builddir)/classes/Exception.lo \
+		$(top_builddir)/classes/Filter.lo \
+		$(top_builddir)/classes/FourierTransform.lo \
+		$(top_builddir)/classes/FrequencyReference.lo \
+		$(top_builddir)/classes/ieee.lo \
+		$(top_builddir)/classes/ImportLemur.lo \
+		$(top_builddir)/classes/KaiserWindow.lo \
+		$(top_builddir)/classes/Morpher.lo \
+		$(top_builddir)/classes/Notifier.lo \
+		$(top_builddir)/classes/Oscillator.lo \
+		$(top_builddir)/classes/Partial.lo \
+		$(top_builddir)/classes/ReassignedSpectrum.lo \
+		$(top_builddir)/classes/SdifFile.lo \
+		$(top_builddir)/classes/Sieve.lo \
+		$(top_builddir)/classes/SpcFile.lo \
+		$(top_builddir)/classes/Synthesizer.lo \
 		-lfftw -lsdif
 
 libloris_la_LDFLAGS = -version-info 0:0:0

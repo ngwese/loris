@@ -12,6 +12,7 @@ INCLUDES =  $(PYINCLUDE) $(TCLINCLUDE) $(PERLINCLUDE) -I$(top_srcdir)/src -I$(to
 
 EXTRA_DIST = loris.py loris.pm loris.i lorisAiffFile.i lorisAnalyzer.i lorisBpEnvelope.i lorisPartialList.i lorisSampleVector.i
 
+CLEANFILES = loris.pyo loris.pyc
 MAINTAINERCLEANFILES = Makefile.in
 
 PYTHON_WRAPPER = loris_python_wrap.C
@@ -22,21 +23,25 @@ PERL_WRAPPER = loris_perl_wrap.C
 # If Python is available, define a target for building and
 # installing the Python module
 #
-if HAVE_PYTHON_H
+if BUILD_PYTHON
+
 if HAVE_SITEPY
 pythonsitepkgdir = $(SITEPY)
 else
 pythonsitepkgdir = $(pkglibdir)/python
 endif
+# Darwin is special, see below
+if ! DARWIN
 pythonsitepkg_SCRIPTS = loris.py loris.pyo
 pythonsitepkg_LTLIBRARIES = loriscmodule.la
 endif
 
+# Darwin is special, see below
+if ! DARWIN
 loriscmodule_la_SOURCES = $(PYTHON_WRAPPER)
 loriscmodule_la_LDFLAGS = -module -avoid-version
-#loriscmodule_la_LIBADD = $(top_builddir)/src/libclasses.la -lstdc++ 
 loriscmodule_la_LIBADD = $(top_builddir)/pi/libloris.la -lstdc++ 
-
+endif
 
 # This should be an install hook, but on my machine, the
 # install hook does not execute _after_ everything is 
@@ -44,33 +49,80 @@ loriscmodule_la_LIBADD = $(top_builddir)/pi/libloris.la -lstdc++
 # loris.py and loriscmodule.a are installed, and thus fails.
 loris.pyo: loris.py
 	env PYTHONPATH=$(srcdir):.libs $(PYTHON) -O -c "import loris"
-
+	
+endif
 
 #----------------------------------------------------------------
 # If Tcl is available, define a target for building and
 # installing the PythonTcl module
 #
-if HAVE_TCL_H
+if BUILD_TCL
+
 tclsitepkgdir = $(pkglibdir)/tcl
+# Darwin is special, see below
+if ! DARWIN
 tclsitepkg_LTLIBRARIES = tcLoris.la
 endif
 
+# Darwin is special, see below
+if ! DARWIN
 tcLoris_la_SOURCES = $(TCL_WRAPPER)
 tcLoris_la_LDFLAGS = -module -avoid-version
-#tcLoris_la_LIBADD = $(top_builddir)/src/libclasses.la -lstdc++
 tcLoris_la_LIBADD = $(top_builddir)/pi/libloris.la -lstdc++
+endif
+
+endif
 
 #----------------------------------------------------------------
-# Don't install the Perl module, it is untested.
+# Don't build or install the Perl module, it is untested.
 #
-noinst_LTLIBRARIES = loris_perl.la
-noinst_SCRIPTS = loris.pm
+#if BUILD_PERL
+#
+#noinst_LTLIBRARIES = loris_perl.la
+#noinst_SCRIPTS = loris.pm
+#
+#loris_perl_la_SOURCES = $(PERL_WRAPPER)
+#loris_perl_la_LDFLAGS = -module -avoid-version
+#loris_perl_la_LIBADD = $(top_builddir)/pi/libloris.la -lstdc++
+#
+#endif
 
-loris_perl_la_SOURCES = $(PERL_WRAPPER)
-loris_perl_la_LDFLAGS = -module -avoid-version
-#loris_perl_la_LIBADD = $(top_builddir)/src/libclasses.la -lstdc++
-loris_perl_la_LIBADD = $(top_builddir)/pi/libloris.la -lstdc++
+#----------------------------------------------------------------
+# Special build rules for Darwin, because libtool doesn't work.
+#
+if DARWIN
 
+if BUILD_PYTHON
+PYTHON_CMODULE = loriscmodule.so
+PYTHON_MODULE = $(PYTHON_CMODULE) loris.pyo
+INSTALL_PYTHON_MODULE = install_python_module
+
+$(PYTHON_CMODULE): loris_python_wrap.o $(top_builddir)/pi/.libs/libloris.a
+	$(CXXLD) -bundle -flat_namespace -undefined suppress -o $@ loris_python_wrap.o $(top_builddir)/pi/.libs/libloris.a -lsdif -lfftw -lstdc++
+
+install_python_module:
+	$(INSTALL) loriscmodule.so $(pythonsitepkgdir)/loriscmodule.so
+	$(INSTALL_SCRIPT) loris.py $(pythonsitepkgdir)/loris.py
+	$(INSTALL_SCRIPT) loris.pyo $(pythonsitepkgdir)/loris.pyo
+
+endif
+
+if BUILD_TCL
+TCL_MODULE = tcLoris.so
+INSTALL_TCL_MODULE = install_tcl_module
+
+$(TCL_MODULE): loris_tcl_wrap.o $(top_builddir)/pi/.libs/libloris.a
+	$(CXXLD) -bundle -flat_namespace -undefined suppress -o $@ loris_tcl_wrap.o $(top_builddir)/pi/.libs/libloris.a -lsdif -lfftw -lstdc++
+
+install_tcl_module:
+	$(INSTALL) tcLoris.so $(tclsitepkgdir)/$(TCL_MODULE)
+endif
+
+all-local: $(PYTHON_MODULE) $(TCL_MODULE)
+
+install-exec-local: $(INSTALL_PYTHON_MODULE) $(INSTALL_TCL_MODULE)
+
+endif 
 
 #----------------------------------------------------------------
 # If swig is available, define a target for building the

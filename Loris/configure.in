@@ -40,6 +40,34 @@ dnl LF_SET_WARNINGS
 AC_PROG_CXX
 
 AM_PROG_LIBTOOL
+AC_DEFUN([PATCH_LIBTOOL_ON_DARWIN_ZSH_OVERQUOTING],
+[# libtool-1.4 specific, on zsh target the final requoting does one too much
+case "$host_os" in
+  darwin*)
+    if grep "1.920" libtool ; then
+AC_MSG_RESULT(patching libtool on .so-sharedlib creation (zsh overquoting))
+      test -f libtool.old || (mv libtool libtool.old && cp libtool.old libtool)
+      sed -e '/archive_cmds=/s:\\\\":\\":g' libtool > libtool.new
+      mv libtool.new libtool
+      test -f libtool || (test -f libtool.old && mv libtool.old libtool)
+    fi
+  ;;
+esac
+])
+PATCH_LIBTOOL_ON_DARWIN_ZSH_OVERQUOTING
+
+AC_DEFUN([KELLYS_GREAT_DARWIN_FIX],
+[# libtool just won't build the scripting modules under Darwin, do it by hand
+case "$host_os" in
+  *darwin*)
+	AC_MSG_RESULT(Using Darwin-specific kludges to avoid broken libtool.)
+	DARWIN=true
+	;;
+esac
+])
+
+KELLYS_GREAT_DARWIN_FIX
+AM_CONDITIONAL(DARWIN, test "$DARWIN")
 
 AC_PATH_PROG(SWIG, swig)
 AM_CONDITIONAL(HAVE_SWIG, test -n "$SWIG")
@@ -224,7 +252,7 @@ if test -z "$PYINCLUDE" ; then
 	fi
 	for path in $pack ; do
 		dnl AC_MSG_CHECKING(for Python distribution with prefix $path)
-		dist="python2.1 python2.0 python1.6 python1.5"
+		dist="python2.2 python2.1 python2.0 python1.6 python1.5"
 		for d in $dist ; do
 			if test -f "$path/include/$d/Python.h" ; then
 				PYINCLUDE="$path/include/$d"
@@ -248,9 +276,10 @@ if test -z "$PYPACKAGE"; then
 	fi
 fi
 
-AC_PATH_PROGS(PYTHON, python python2.1 python2.0 python1.6 python1.5, :, $PYPACKAGE/bin:$PATH)
+AC_PATH_PROGS(PYTHON, python python2.2 python2.1 python2.0 python1.6 python1.5, :, $PYPACKAGE/bin:$PATH)
 
 AC_MSG_CHECKING(for where to install Python site packages)
+# this is still far from perfect
 AC_ARG_WITH(sitepy,[  --with-sitepy=path      Set path to install Python site packages],[
 	SITEPY="$withval"
 	if test "$SITEPY" == "yes" ; then
@@ -263,7 +292,7 @@ AC_ARG_WITH(sitepy,[  --with-sitepy=path      Set path to install Python site pa
 	SITEPY=
 	AC_MSG_RESULT(do not use site packages directory) ])
 
-AM_CONDITIONAL(HAVE_PYTHON_H, test -n "$PYINCLUDE")
+AM_CONDITIONAL(BUILD_PYTHON, test -n "$PYINCLUDE")
 AM_CONDITIONAL(HAVE_SITEPY, test -n "$SITEPY")
 
 if test -n "$PYINCLUDE" ; then
@@ -276,108 +305,116 @@ dnl--------------------------------------------------------------------
 dnl	Try to locate the Tcl package
 dnl--------------------------------------------------------------------
 
-TCLINCLUDE==
+TCLINCLUDE=
 TCLPACKAGE=
+FOUND_TCL_H=false
 
 AC_ARG_WITH(tcl,[  --with-tcl=path         Set location of Tcl package],[
 	TCLPACKAGE="$withval"], [TCLPACKAGE=])
 AC_ARG_WITH(tclincl,[  --with-tclincl=path     Set location of Tcl include directory],[
 	TCLINCLUDE="$withval"], [TCLINCLUDE=])
-
-if test -z "$TCLINCLUDE"; then
-   if test -n "$TCLPACKAGE"; then
-	TCLINCLUDE="$TCLPACKAGE/include"
-   fi
-fi
-
-if test -f "$TCLINCLUDE" ; then
-	dnl this is really dumb, I cannot figure out
-	dnl how to remove the filename from the string!
-	AC_MSG_ERROR($TCLINCLUDE: please specify the directory containing tcl.h)
-fi
 	
-AC_MSG_CHECKING(for Tcl header file)
-if test -z "$TCLINCLUDE"; then
-	AC_TRY_CPP([#include <tcl.h>], [
-		AC_MSG_RESULT(found it)
-		HAVE_TCL_H=true ], [
-		HAVE_TCL_H=false ] )
-fi
-
-if test -n "$TCLINCLUDE" ; then
-	AC_TRY_CPP([#include <$TCLINCLUDE/tcl.h>], [
-		AC_MSG_RESULT($TCLINCLUDE)
-		HAVE_TCL_H=true ], [
-		AC_MSG_RESULT(cannot find tcl.h in $TCLINCLUDE)
-		TCLINCLUDE=""
-		HAVE_TCL_H=false ] )
-fi
-
-if test -z "$TCLPACKAGE"; then
+if "$DARWIN"; then 
+	AC_MSG_RESULT(Cannot build Tcl module under Darwin yet.)
+else
+	if test -z "$TCLINCLUDE"; then
+	   if test -n "$TCLPACKAGE"; then
+		TCLINCLUDE="$TCLPACKAGE/include"
+	   fi
+	fi
+	
+	if test -f "$TCLINCLUDE" ; then
+		dnl this is really dumb, I cannot figure out
+		dnl how to remove the filename from the string!
+		AC_MSG_ERROR($TCLINCLUDE: please specify the directory containing tcl.h)
+	fi
+		
+	AC_MSG_CHECKING(for Tcl header file)
+	if test -z "$TCLINCLUDE"; then
+		AC_TRY_CPP([#include <tcl.h>], [
+			AC_MSG_RESULT(found it in default include path)
+			FOUND_TCL_H=true ], [
+			AC_MSG_RESULT(cannot find tcl.h in default include path, not building Tcl module)
+			FOUND_TCL_H=false ] )
+	fi
+	
 	if test -n "$TCLINCLUDE" ; then
-		TCLPACKAGE="$TCLINCLUDE/.."
+		AC_TRY_CPP([#include <$TCLINCLUDE/tcl.h>], [
+			AC_MSG_RESULT(found it in $TCLINCLUDE)
+			FOUND_TCL_H=true ], [
+			AC_MSG_RESULT(cannot find tcl.h in $TCLINCLUDE, not building Tcl module)
+			TCLINCLUDE=""
+			FOUND_TCL_H=false ] )
+	fi
+	
+	if test -z "$TCLPACKAGE"; then
+		if test -n "$TCLINCLUDE" ; then
+			TCLPACKAGE="$TCLINCLUDE/.."
+		fi
 	fi
 fi
 
-AC_PATH_PROGS(TCL, tclsh tclsh8.3 tclsh8.2, :, $TCLPACKAGE/bin:$PATH)
+AM_CONDITIONAL(BUILD_TCL, test "$FOUND_TCL_H" = true)
 
-AM_CONDITIONAL(HAVE_TCL_H, test "$HAVE_TCL_H")
-
-if test -n "$TCLINCLUDE" ; then
-	TCLINCLUDE="-I$TCLINCLUDE"
+if "$FOUND_TCL_H"; then
+	AC_PATH_PROGS(TCL, tclsh tclsh8.3 tclsh8.2, :, $TCLPACKAGE/bin:$PATH)
+	if test -n "$TCLINCLUDE" ; then
+		TCLINCLUDE="-I$TCLINCLUDE"
+	fi
+	AC_SUBST(TCLINCLUDE)
 fi
-AC_SUBST(TCLINCLUDE)
 
 dnl----------------------------------------------------------------
 dnl Look for Perl5
 dnl----------------------------------------------------------------
-
-PERLBIN=
-PERLINCLUDE=
-
-AC_ARG_WITH(perl5,[  --with-perl5=path       Set location of Perl5 executable],[ 
-	PERLBIN="$withval"], [PERLBIN=])
-
-dnl First figure out what the name of Perl5 is
-if test -f "$PERLBIN" ; then
-	PERL="$PERLBIN"
-else
-	if test -n "$PERLBIN" ; then
-		AC_CHECK_PROGS(PERL, perl5.006 perl5.005 perl5.004 perl5.003 perl5.002 perl5.001 perl5 perl, ,$PERLBIN:$PERLBIN/bin)
-	else
-		AC_CHECK_PROGS(PERL, perl5.006 perl5.005 perl5.004 perl5.003 perl5.002 perl5.001 perl5 perl)	
-	fi
-fi
-
-if test -z "$PERL" ; then
-	AC_MSG_WARN(could not figure out how to run perl5)
-	PERLINCLUDE=
-fi 
-
-if test -n "$PERL"; then
-	AC_MSG_CHECKING(for Perl5 header files)
-	PERL5DIR=`($PERL -e 'use Config; print $Config{archlib};') 2>/dev/null`
-	if test -n "$PERL5DIR" ; then
-		dirs="$PERL5DIR $PERL5DIR/CORE"
-		for i in $dirs; do
-			if test -f $i/perl.h; then
-				AC_MSG_RESULT($i)
-				PERLINCLUDE="$i"
-				break;
-			fi
-		done
-		if test -z "$PERLINCLUDE" ; then
-			AC_MSG_RESULT(could not locate perl.h.)
-		fi
-	else
-		AC_MSG_RESULT(unable to determine perl5 configuration)
-	fi
-fi
-
-if test -n "$PERLINCLUDE" ; then
-	PERLINCLUDE="-I$PERLINCLUDE"
-fi
-AC_SUBST(PERLINCLUDE)
+dnl 
+dnl 	Don't bother with the Perl module, it is untested.
+dnl PERLBIN=
+dnl PERLINCLUDE=
+dnl 
+dnl AC_ARG_WITH(perl5,[  --with-perl5=path       Set location of Perl5 executable],[ 
+dnl 	PERLBIN="$withval"], [PERLBIN=])
+dnl 
+dnl dnl First figure out what the name of Perl5 is
+dnl if test -f "$PERLBIN" ; then
+dnl 	PERL="$PERLBIN"
+dnl else
+dnl 	if test -n "$PERLBIN" ; then
+dnl 		AC_CHECK_PROGS(PERL, perl5.006 perl5.005 perl5.004 perl5.003 perl5.002 perl5.001 perl5 perl, ,$PERLBIN:$PERLBIN/bin)
+dnl 	else
+dnl 		AC_CHECK_PROGS(PERL, perl5.006 perl5.005 perl5.004 perl5.003 perl5.002 perl5.001 perl5 perl)	
+dnl 	fi
+dnl fi
+dnl 
+dnl if test -z "$PERL" ; then
+dnl 	AC_MSG_WARN(could not figure out how to run perl5)
+dnl 	PERLINCLUDE=
+dnl fi 
+dnl 
+dnl if test -n "$PERL"; then
+dnl 	AC_MSG_CHECKING(for Perl5 header files)
+dnl 	PERL5DIR=`($PERL -e 'use Config; print $Config{archlib};') 2>/dev/null`
+dnl 	if test -n "$PERL5DIR" ; then
+dnl 		dirs="$PERL5DIR $PERL5DIR/CORE"
+dnl 		for i in $dirs; do
+dnl 			if test -f $i/perl.h; then
+dnl 				AC_MSG_RESULT($i)
+dnl 				PERLINCLUDE="$i"
+dnl 				break;
+dnl 			fi
+dnl 		done
+dnl 		if test -z "$PERLINCLUDE" ; then
+dnl 			AC_MSG_RESULT(could not locate perl.h.)
+dnl 		fi
+dnl 	else
+dnl 		AC_MSG_RESULT(unable to determine perl5 configuration)
+dnl 	fi
+dnl fi
+dnl 
+dnl if test -n "$PERLINCLUDE" ; then
+dnl 	PERLINCLUDE="-I$PERLINCLUDE"
+dnl fi
+dnl AC_SUBST(PERLINCLUDE)
 
 dnl----------------------------------------------------------------
 dnl Check for Loris debugging flag
