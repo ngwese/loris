@@ -729,18 +729,22 @@ private:
 // ---------------------------------------------------------------------------
 //	class InvalidPartial
 //
-//!	Class of exceptions thrown when a Partial is found to be badly configured
-//!	or otherwise invalid.
+//! Class of exceptions thrown when a Partial is found to be badly configured
+//! or otherwise invalid.
 //
 class InvalidPartial : public InvalidObject
 {
 public: 
-	//!	Initialize a new exception object with the specified error
-	//!	message and location strings.
-	//!
-	//!	\param	str a string describing the error condition.
-	//!	\param	where a string identifying the line of code that
-	//!			generated the exception.
+
+	//! Construct a new instance with the specified description and, optionally
+	//! a string identifying the location at which the exception as thrown. The
+	//! Throw( Exception_Class, description_string ) macro generates a location
+   //! string automatically using __FILE__ and __LINE__.
+   //!
+   //! \param  str is a string describing the exceptional condition
+   //! \param  where is an option string describing the location in
+   //!         the source code from which the exception was thrown
+   //!         (generated automatically byt he Throw macro).
 	InvalidPartial( const std::string & str, const std::string & where = "" ) : 
 		InvalidObject( std::string("Invalid Partial -- ").append( str ), where ) {}
 		
