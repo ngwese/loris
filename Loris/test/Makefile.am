@@ -36,7 +36,7 @@ endif
 if BUILD_TCL
 TCL_TEST = run_tcltest
 $(TCL_TEST):
-	echo "$(TCL) $(top_srcdir)/test/morphtest.tcl" >> $@
+	echo "$(TCLSH) $(top_srcdir)/test/morphtest.tcl" >> $@
 	chmod +x $@
 endif
 
