@@ -18,6 +18,7 @@ pkginclude_HEADERS = AiffFile.h	\
 				Breakpoint.h	\
 				BreakpointUtils.h	\
 				Channelizer.h	\
+				COWPtr.h	\
 				Dilator.h	\
 				Distiller.h	\
 				Envelope.h	\
@@ -25,6 +26,7 @@ pkginclude_HEADERS = AiffFile.h	\
 				Filter.h	\
 				FourierTransform.h	\
 				FrequencyReference.h \
+				GenericPartialIterator.h \
 				ImportLemur.h	\
 				KaiserWindow.h	\
 				Morpher.h	\
@@ -54,6 +56,7 @@ libclasses_la_SOURCES = AiffFile.C \
 		BreakpointUtils.h \
 		Channelizer.C \
 		Channelizer.h \
+		COWPtr.h	\
 		Dilator.C \
 		Dilator.h \
 		Distiller.C \
@@ -70,6 +73,7 @@ libclasses_la_SOURCES = AiffFile.C \
 		FourierTransform.h \
 		FrequencyReference.C \
 		FrequencyReference.h \
+		GenericPartialIterator.h \
 		ieee.c \
 		ieee.h \
 		ImportLemur.C \

@@ -87,7 +87,7 @@ Partial::Partial( void ) :
 // ---------------------------------------------------------------------------
 //
 Partial::Partial( const_iterator beg, const_iterator end ) :
-	_bpmap( beg._iter, end._iter ),
+	Partial::BreakpointContainerPolicy( beg, end ),
 	_label( 0 )
 {
 //	++DebugCounter;
@@ -98,7 +98,7 @@ Partial::Partial( const_iterator beg, const_iterator end ) :
 // ---------------------------------------------------------------------------
 //
 Partial::Partial( const Partial & other ) :
-	_bpmap( other._bpmap ),
+	Partial::BreakpointContainerPolicy( other ),
 	_label( other._label )
 {
 //	++DebugCounter;
@@ -112,6 +112,37 @@ Partial::~Partial( void )
 {
 //	--DebugCounter;
 }	
+
+// ---------------------------------------------------------------------------
+//	operator=
+// ---------------------------------------------------------------------------
+//	Make this Partial an exact copy (has an identical set of 
+//	Breakpoints, at identical times, and the same label) of another 
+//	Partial.
+//
+Partial & 
+Partial::operator=( const Partial & rhs )
+{
+	if ( this != &rhs )
+	{
+		BreakpointContainerPolicy::operator=( rhs );
+		_label = rhs._label;
+	}
+	return *this;
+}
+
+// ---------------------------------------------------------------------------
+//	operator==
+// ---------------------------------------------------------------------------
+//	Return true if this Partial has the same label and Breakpoint map 
+//	as rhs, and false otherwise.
+//
+bool
+Partial::operator==( const Partial & rhs ) const
+{
+	return (label() == rhs.label()) && 
+			BreakpointContainerPolicy::operator==( rhs );
+}
 
 // ---------------------------------------------------------------------------
 //	initialPhase
@@ -203,80 +234,6 @@ Partial::duration( void ) const
 }
 
 // ---------------------------------------------------------------------------
-//	operator==
-// ---------------------------------------------------------------------------
-//	Return true if this Partial has the same label and Breakpoint map 
-//	as rhs, and false otherwise.
-//
-bool
-Partial::operator==( const Partial & rhs ) const
-{
-	return (label() == rhs.label()) && (_bpmap == rhs._bpmap);
-}
-
-// ---------------------------------------------------------------------------
-//	begin (non-const)
-// ---------------------------------------------------------------------------
-//	Iterator generation.
-//
-Partial::iterator 
-Partial::begin( void )
-{ 
-	return Partial::iterator( _bpmap.begin() ); 
-}
-
-// ---------------------------------------------------------------------------
-//	end (non-const)
-// ---------------------------------------------------------------------------
-//	Iterator generation.
-//
-Partial::iterator 
-Partial::end( void )
-{ 
-	return Partial::iterator( _bpmap.end() ); 
-}
-
-// ---------------------------------------------------------------------------
-//	begin (const)
-// ---------------------------------------------------------------------------
-//	Const iterator generation.
-//
-Partial::const_iterator 
-Partial::begin( void ) const
-{ 
-	return Partial::const_iterator( _bpmap.begin() ); 
-}
-
-// ---------------------------------------------------------------------------
-//	end (const)
-// ---------------------------------------------------------------------------
-//	Iterator generation.
-//
-Partial::const_iterator 
-Partial::end( void ) const
-{ 
-	return Partial::const_iterator( _bpmap.end() ); 
-}
-
-// ---------------------------------------------------------------------------
-//	insert
-// ---------------------------------------------------------------------------
-//	Insert a copy of the specified Breakpoint at time (seconds),
-//	return position (iterator) of the inserted Breakpoint.
-//	If there is already a Breakpoint at time, assign
-//	bp to it (copying parameters).
-//
-//	Could except:
-//	allocation of a new Breakpoint could fail, throwing a std::bad__alloc.
-//
-Partial::iterator
-Partial::insert( double time, const Breakpoint & bp )
-{
-	_bpmap[ time ] = bp;
-	return Partial::iterator( _bpmap.find(time) );
-}
-
-// ---------------------------------------------------------------------------
 //	erase
 // ---------------------------------------------------------------------------
 //	Erase the Breakpoint at the position of the 
@@ -291,22 +248,6 @@ Partial::erase( Partial::iterator pos )
 		pos = erase( pos, ++pos );
 	}
 	return pos;
-}
-
-// ---------------------------------------------------------------------------
-//	erase
-// ---------------------------------------------------------------------------
-//	Erase the Breakpoints in the specified range of positions,
-//	and return an iterator referring to the position after the,
-//	erased range.
-Partial::iterator 
-Partial::erase( Partial::iterator beg, Partial::iterator end )
-{
-	while ( beg._iter != end._iter )
-	{
-		_bpmap.erase( beg._iter++ );
-	}
-	return beg;
 }
 
 // ---------------------------------------------------------------------------
@@ -325,34 +266,6 @@ Partial::split( iterator pos )
 	erase( pos, end() );
 	return res;
 }
-
-// ---------------------------------------------------------------------------
-//	findAfter (const version)
-// ---------------------------------------------------------------------------
-//	Return the insertion position for a Breakpoint at
-//	the specified time (that is, the position of the first
-//	Breakpoint at a time later than or equal to the specified 
-//	time).
-//
-Partial::const_iterator
-Partial::findAfter( double time ) const
-{
-	return Partial::const_iterator( _bpmap.lower_bound( time ) );
-}
-
-// ---------------------------------------------------------------------------
-//	findAfter (non-const version)
-// ---------------------------------------------------------------------------
-//	Return the insertion position for a Breakpoint at
-//	the specified time (that is, the position of the first
-//	Breakpoint at a time later than or equal to the specified 
-//	time).
-//
-Partial::iterator
-Partial::findAfter( double time )
-{
-	return Partial::iterator( _bpmap.lower_bound( time ) );
-} 
 
 // ---------------------------------------------------------------------------
 //	findNearest (const version)
