@@ -38,6 +38,7 @@
 #include "Dilator.h"
 #include "Breakpoint.h"
 #include "Exception.h"
+#include "Marker.h"
 #include "Notifier.h"
 #include "Partial.h"
 #include "PartialList.h"
@@ -48,36 +49,11 @@
 namespace Loris {
 
 // ---------------------------------------------------------------------------
-//	class Dilator
-//
-//!	@class Dilator Dilator.h loris/Dilator.h
-//!	
-//!	Class Dilator represents an algorithm for non-uniformly expanding
-//!	and contracting the Partial parameter envelopes according to the initial
-//!	and target (desired) times of temporal features.
-//!	
-//!	It is frequently necessary to redistribute temporal events in this way
-//!	in preparation for a sound morph. For example, when morphing instrument
-//!	tones, it is common to align the attack, sustain, and release portions
-//!	of the source sounds by dilating or contracting those temporal regions.
-
-
-// ---------------------------------------------------------------------------
 //	constructor
 // ---------------------------------------------------------------------------
 //!	Construct a new Dilator with 
 //!	no time points.
 Dilator::Dilator( void )
-{
-}
-
-// ---------------------------------------------------------------------------
-//	destructor
-// ---------------------------------------------------------------------------
-//!
-//!	Destroy this Dilator.
-//!
-Dilator::~Dilator(void)
 {
 }
 
@@ -91,14 +67,14 @@ Dilator::~Dilator(void)
 //!	and desired time of a particular temporal feature in an
 //!	analyzed sound.
 //!	
-//!	@param i is an initial, or source, time point
-//!	@param t is a target time point
+//!	\param i is an initial, or source, time point
+//!	\param t is a target time point
 //!	
 //!	The time points will be sorted before they are used.
-//!	@e If, in the sequences of initial and target time points, there are
-//!	exactly the same number of initial time points preceding @p i as
-//!	target time points preceding @p t, then time @p i will be warped to 
-//!	time @p t in the dilation process.
+//!	If, in the sequences of initial and target time points, there are
+//!	exactly the same number of initial time points preceding i as
+//!	target time points preceding t, then time i will be warped to 
+//!	time t in the dilation process.
 //
 void
 Dilator::insert( double i, double t )
@@ -113,13 +89,14 @@ Dilator::insert( double i, double t )
 
 // ---------------------------------------------------------------------------
 //	warpTime
-// ---------------------------------------------------------------------------
-//!	Return the dilated time value corresponding to the specified initial time.
-//!	@param currentTime is a pre-dilated time.
-//! @return the dilated time corresponding to the initial time @p currentTime
+// --------------------------------------------------------------------------
+//! Return the dilated time value corresponding to the specified initial time.
+//! 
+//! \param currentTime is a pre-dilated time.
+//! \return the dilated time corresponding to the initial time currentTime
 //
 double
-Dilator::warpTime( double currentTime )
+Dilator::warpTime( double currentTime ) const
 {
     int idx = std::distance( _initial.begin(), 
                              std::lower_bound( _initial.begin(), _initial.end(), currentTime ) );
@@ -187,7 +164,7 @@ Dilator::warpTime( double currentTime )
 //!	their Dilator, or Partials having Breakpoints before time 0, both 
 //!	of which are probably unusual circumstances.)
 //!
-//!	@param p is the Partial to dilate.
+//!	\param p is the Partial to dilate.
 //	
 void
 Dilator::dilate( Partial & p ) const
@@ -276,6 +253,23 @@ Dilator::dilate( Partial & p ) const
 	
 	//	store the new Partial:
 	p = newp;
+}
+
+
+// ---------------------------------------------------------------------------
+//	dilate
+// ---------------------------------------------------------------------------
+//!	Compute a new time for the specified Marker using
+//!	warpTime(), exactly as Partial Breakpoint times are
+//!	recomputed. This can be used to dilate the Markers
+//!	corresponding to a collection of Partials. 
+//!
+//!	\param	m is the Marker whose time should be recomputed.
+//
+void
+Dilator::dilate( Marker & m ) const
+{
+	m.setTime( warpTime( m.time() ) );
 }
 
 }	//	end of namespace Loris
