@@ -89,17 +89,6 @@ OBJ_LORIS = AiffFile.o \
 classes: ${OBJ_LORIS}
 
 #
-#	dependencies:
-#	need the sed thing because g++ doesn't recognize c++ suffix,
-#	so it does the wrong thing with the file names (.C.o)
-#
-depend: 
-	${CC} -MM $(CFLAGS) *.C | sed 's/c++\.o/\o/g' > dependfile
-	${cc} -MM $(cFLAGS) *.c >> dependfile
-
-include dependfile
-
-#
 #	admin:
 #
 clean:

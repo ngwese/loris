@@ -128,17 +128,6 @@
 	}
 }
 
-%section "Version"
-
-
-//	version string
-//	(this won't work with SWIG 1.1, %constant is new)
-//
-//	&&&&& do better than this!!!!!!
-//
-%constant( char * ) version = "Loris 1.0beta3";
-
-
 %section "Loris class interfaces"
 
 //	include the PartialList class interface:
@@ -149,9 +138,6 @@
 
 //	include the BreakpointEnvelope class interface:
 %include lorisBpEnvelope.i
-
-//	include the ExportSpc class interface:
-// %include lorisExportSpc.i
 
 //	include the SampleVector class interface:
 %include lorisSampleVector.i
@@ -374,7 +360,7 @@ void distill( PartialList * partials )
 		endApproachTime parameter is in seconds; its default value is zero (and 
 		has no effect). A nonzero endApproachTime indicates that the plist does 
 		not include a release, but rather ends in a static spectrum corresponding 
-		to the final breakpoint values of the partials.  the endApproachTime
+		to the final breakpoint values of the partials. The endApproachTime
 		specifies how long before the end of the sound the amplitude, frequency, 
 		and bandwidth values are to be modified to make a gradual transition to 
 		the static spectrum.
@@ -743,3 +729,35 @@ createFreqReference( PartialList * partials, int numSamples,
 	 */
 %} 
  
+
+%inline %{
+	const char * versionString( void )
+	{
+		int vmajor = (LORIS_VERSION & 0xF000) >> 24;
+		int vminor = (LORIS_VERSION & 0x0F00) >> 16;
+		int vpre = (LORIS_VERSION & 0x00F0) >> 8;
+		int vprenum = (LORIS_VERSION & 0x000F);
+		
+		static char str[24];
+		if ( vpre != 0 )
+		{
+			char * spre;
+			if ( vpre == 'B' )
+				spre = "beta";
+			else if ( vpre == 'A' )
+				spre = "alpha";
+			else
+				spre = "???";
+				
+			sprintf( str, "%d.%d %s %d", vmajor, vminor, spre, vprenum );
+		}
+		else
+			sprintf( str, "%d.%d", vmajor, vminor );
+			
+		return str;
+	}
+	/*	Return a (constant) string specifying the Loris version number.
+	 */
+%}
+			
+			

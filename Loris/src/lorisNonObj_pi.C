@@ -62,14 +62,13 @@
 #include "Dilator.h"
 #include "Distiller.h"
 #include "Exception.h"
-#include "ExportSdif.h"
-#include "ExportSpc.h"
 #include "ImportLemur.h"
-#include "ImportSdif.h"
 #include "Morpher.h"
 #include "notifier.h"
 #include "Partial.h"
 #include "PartialUtils.h"
+#include "Sdiff.h"
+#include "SpcFile.h"
 #include "Synthesizer.h"
 
 #include <cmath>
@@ -273,14 +272,10 @@ void exportSdif( const char * path, PartialList * partials )
 		ThrowIfNull((PartialList *) partials);
 
 		if ( partials->size() == 0 ) 
-		{
-			notifier << "no partials to export!" << endl;
-			return;
-		}
-		
-		notifier << "exporting sdif partial data to " << path << endl;		
-		ExportSdif efout;
-		efout.write( path, *partials );
+			Throw( Loris::InvalidObject, "No Partials in PartialList to export to sdif file." );
+	
+		Loris::notifier << "exporting sdif partial data to " << path << Loris::endl;		
+		Loris::SdifFile::Export( path, *partials );
 		
 	}
 	catch( Exception & ex ) 
@@ -293,6 +288,49 @@ void exportSdif( const char * path, PartialList * partials )
 	{
 		std::string s("std C++ exception in exportSdif(): " );
 		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+
+}
+
+/* ---------------------------------------------------------------- */
+/*        exportSpc        
+/*
+/*	Export Partials in a PartialList to a Spc file at the specified file
+	path (or name). The fractional MIDI pitch must be specified. The 
+	enhanced parameter defaults to true (for bandwidth-enhanced spc files), 
+	but an be specified false for pure-sines spc files. The endApproachTime 
+	parameter is in seconds. A nonzero endApproachTime indicates that the plist does 
+	not include a release, but rather ends in a static spectrum corresponding 
+	to the final breakpoint values of the partials. The endApproachTime
+	specifies how long before the end of the sound the amplitude, frequency, 
+	and bandwidth values are to be modified to make a gradual transition to 
+	the static spectrum.
+ */
+extern "C"
+void exportSpc( const char * path, PartialList * partials, double midiPitch, 
+				int enhanced, double endApproachTime )
+{
+	try 
+	{
+		ThrowIfNull((PartialList *) partials);
+
+		if ( partials->size() == 0 )
+			Throw( Loris::InvalidObject, "No Partials in PartialList to export to Spc file." );
+
+		Loris::notifier << "exporting Spc partial data to " << path << Loris::endl;
+		Loris::SpcFile::Export( path, *partials, midiPitch, enhanced, endApproachTime );
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in exportSpc(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in exportSdif(): " );
+		s.append( ex.what() );exportSpc
 		handleException( s.c_str() );
 	}
 
@@ -364,7 +402,7 @@ void importSdif( const char * path, PartialList * partials )
 		ThrowIfNull((PartialList *) partials);
 
 		notifier << "importing Partials from " << path << endl;
-		ImportSdif imp( path );
+		SdifFile imp( path );
 		partials->splice( partials->end(), imp.partials() );
 	}
 	catch( Exception & ex ) 
@@ -376,6 +414,36 @@ void importSdif( const char * path, PartialList * partials )
 	catch( std::exception & ex ) 
 	{
 		std::string s("std C++ exception in importSdif(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+
+/* ---------------------------------------------------------------- */
+/*        importSpc 
+/*       
+/*	Import Partials from an Spc file at the given file path (or 
+	name), and return them in a PartialList.
+ */	
+extern "C"
+void importSpc( const char * path, PartialList * partials )
+{
+	try 
+	{
+		Loris::notifier << "importing Partials from " << path << Loris::endl;
+		Loris::SpcFile imp( path );
+		partials->splice( partials->end(), imp.partials() );
+
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in importSpc(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in importSpc(): " );
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
