@@ -25,22 +25,10 @@ the file INSTALL.
 
 In order to compile and link the Loris library and scripting
 extensions, you will need the FFTW Fourier transform routines,
-available at www.fftw.org, and IRCAM's SDIF (Sound Description
-Interchange Format) data formatting routines, available at
-www.ircam.fr/sdif. FFTW and SDIF are covered by their own 
-licenses and copyrights, and are entirely separate from Loris.
+available at www.fftw.org. FFTW is covered by its own 
+license and copyright, and is entirely separate from Loris.
 
-Loris supports a reassigned bandwidth-enhanced version of the 
-SDIF 1TRC format that is not handled correctly by versions 
-of IRCAM's SDIF library earlier than 3.4. Please download 
-release 3.4 or later.
-
-NEW: Loris does not (yet) work with FFTW version 3, nor does it 
-work with versions of the IRCAM SDIF library newer than 3.7.1
-The next release of Loris will be compatible with FFTW3, and
-will have no dependency on the IRCAM SDIF library. Meanwhile,
-please install version 2 of the FFTW library and any version
-of the IRCAM SDIF library earlier than (but not including) 3.8.
+Loris no longer has any dependency on the IRCAM SDIF library.
 
 MacOS INSTALLATION:
 

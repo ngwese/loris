@@ -1,13 +1,32 @@
 This document outlines the steps necessary to add Loris unit generators
 to Csound. You will need, in addition to Loris and the libraries on
-which it depends (FFTW and SDIF), a copy of the Csound source code,
-available at, for example
+which it depends (FFTW), a copy of the Csound source code, available at, 
+for example
 
   ftp://ftp.maths.bath.ac.uk/pub/dream
 
 or
 
   ftp://ftp.musique.umontreal.ca/pub/mirrors/dream
+
+Some versions of Csound (on some platforms) support dynamically-
+loaded modules, using the --opcode-lib command line flag. On these 
+platforms, Loris can be configured to automatically build a 
+dynamically-loadable module by using the --with-csound flag with
+the configure script to specify a path to the csound source code.
+For example:
+
+  ./configure  --with-csound=/usr/local/src/Csound-4.23
+
+Since the lorisgens code needs to include a header that is part
+of the Csound source code, you must have the Csound source code,
+and you must specify its location using the --with-csound flag
+when configuring Loris. Otherwise, the lorisgens module is not
+built. 
+
+The remainder of this document describes the method for adding 
+the Loris generators to Csound by rebuilding the Csound program
+from source code. 
 
 The Loris unit generators make use of some recent improvements to the
 Csound extension API (such as deinitialization routines and support for
@@ -16,7 +35,6 @@ version of the Csound source is newer than version 4.17. Version 4.18
 seems to work fine. Also, of course, make sure that you can build csound
 from your copy of the source before you attempt to add the new Loris
 modules.
-
 
 Adding lorisgens to Csound:
 

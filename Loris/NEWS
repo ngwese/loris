@@ -30,6 +30,13 @@ to its documentation.
 
 - removed depdendency on the IRCAM SDIF library.
 
+- added capability to build the Loris Csound generators
+as a dynamically-loaded module, on platforms that support
+them. (Cannot seem to get them to work under OS X.)
+
+- added FFTW3 compatibilty, version detected at configure 
+time.
+
 -------------------------------------------------------
 changes since 1.0.2 release:
 
