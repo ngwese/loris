@@ -24,24 +24,24 @@
 	[[/tr]]
 [[/table]]
 -->
-Signal Generators: Bandwidth-Enhanced Additive Resynthesis
+Signal Generators: Bandwidth-Enhanced Additive Resynthesis, Sound Morphing
 
 <hr size="1" color="#A9A9A9" noshade>
 
 <h2>lorisplay</h2>
 <pre>
-  ar      <strong>lorisplay</strong>       ktimpnt, ifilcod, kfreqenv, kampenv, kbwenv[, ifadetime]
+  ar  <strong>lorismorph</strong>   ktimpnt, ifilcod0, ifilcod1, kfreqmorphenv, kampmorphenv, kbwmorphenv[, ifadetime]
 </pre>
 <hr size="2" color="#A9A9A9" noshade>
 
 <h3>Description</h3>
 
-<p>Output of <strong>lorisplay</strong> is a <em>Bandwidth-Enhanced</em>
-additive reconstruction of a sound specified by a set of partials
-obtained from a <em>Reassigned Bandwidth-Enhanced Analysis</em>
-performed using the <strong>Loris</strong> software. The partials are
-imported from a SDIF-format data file, and rendered with control-rate
-frequency, amplitude, and bandwidth scaling.
+<p>Output of <strong>lorismorph</strong> is a sum of a set of individualy
+specified bandwidth enhanced partials that have their amplitude,
+frequency, bandwidth and phase specified over time.  These parameters
+are specified in a SDIF file, that will be read in, at specific points
+in time, breakpoints, and the parameters are interpolated between
+breakpoints.
 </p>
 <p>For more information about
 <em>Bandwidth-Enhanced Additive Synthesis</em>, <em>Reassigned
@@ -210,7 +210,7 @@ Last update: 13 May 2002
 	[[/tr]]
 [[/table]]
 -->
-Signal Generators: Bandwidth-Enhanced Additive Resynthesis
+Signal Generators: Bandwidth-Enhanced Additive Resynthesis, Sound Morphing
 </body>
 
 </html>
