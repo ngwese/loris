@@ -456,183 +456,6 @@ static inline double distance( const Partial & partial,
 //	Append the Breakpoints to existing Partials, if appropriate, or else 
 //	give birth to new Partials.
 //
-// #define sucks
-#ifdef sucks	//	 what the heck is this?
-void 
-Analyzer::formPartials( std::list< Breakpoint > & frame, double /* frameTime */ , 
-						AnalyzerState & state )
-{
-	std::vector< Partial * > newlyEligible;
-	
-	//	frequency-sort the frame:
-	frame.sort( BreakpointUtils::less_frequency() );
-	
-	//	loop over short-time peaks:
-	std::list< Breakpoint >::iterator bpIter;
-	for( bpIter = frame.begin(); bpIter != frame.end(); ++bpIter ) 
-	{
-		const Breakpoint & peak = *bpIter;
-		const double peakTime = state.peakTimeCache()[ peak.frequency() ];
-
-		//	Loop over all eligible Partials 
-		//	find the candidate Partials  nearest in frequency 
-		//	to peak.
-		//
-		//	Since we build the eligiblePartials collection in the
-		//	order that we process Breakpoints in the frame, 
-		//	increasing-frequency order, the eligiblePartials will also
-		//	be sorted in order of increasing frequency of the
-		//	last Breakpoint.)
-		//
-		//	Find the lowest end-frequency Partial that is
-		//	higher in frequency than peak, if such a Partial
-		//	exists in eligiblePartials:
-		//
-		//	(use the freakin' STL! std::lower_bound())
-		std::vector< Partial * >::iterator candidate = state.eligiblePartials().begin();
-		while ( candidate != state.eligiblePartials().end() &&
-				(*candidate)->frequencyAt(peakTime) < peak.frequency() )
-		{
-			++candidate;			
-		}
-		
-		//	now candidate points to the end or to 
-		//	the lowest-frequency Partial above this
-		//	peak's frequency, remember this Partial,
-		//	and its predecessor in eligiblePartials, the highest
-		//	end-frequency Partial lower in frequency 
-		//	than peak, if such a Partial exists in 
-		//	eligiblePartials:
-		Partial * firstChoice = NULL, * secondChoice = NULL;
-		if ( candidate != state.eligiblePartials().end() )
-		{
-			secondChoice = *candidate;
-		}
-		
-		if ( candidate != state.eligiblePartials().begin() )
-		{
-			--candidate;
-			firstChoice = *candidate;
-		}
-		
-		//	it may be that the candidate below ("firstChoice")
-		//	has already been matched to a peak in this frame,
-		//	in which case firstChoice is the last element of
-		//	newlyEligible and we should set firstChoice to secondChoice
-		//	and secondChoice to NULL:
-		if ( newlyEligible.size() > 0 && newlyEligible.back() == firstChoice )
-		{
-			firstChoice = secondChoice;
-			secondChoice = NULL;
-		}
-		
-		//	if secondChoice is nearer than firstChoice, and
-		//	both exist, swap:
-		if ( firstChoice != NULL && secondChoice != NULL )
-		{
-			if ( distance( *secondChoice, peak ) < distance( *firstChoice, peak ) )
-			{
-				std::swap( firstChoice, secondChoice );
-			}
-		}
-		
-		//	Now have first and seconc choice candidate Partials.
-		//	We will create a new Partial with this Breakpoint if:
-		//	- no candidate (firstChoice) Partial was found (1)
-		//	- the firstChoice Partial is still too far away (2)
-		//	- the next Breakpoint in the Frame exists and is
-		//		closer to the firstChoice Partial (3)
-		//	- the previous Breakpoint in the Frame exists and is
-		//		closer to the firstChoice Partial (4)
-		//
-		//	if there is no firstChoice Partial, or the firstChoice is
-		//	too distant, spawn a new Partial:
-		if ( firstChoice == NULL /* (1) */ ||
-			 distance(*firstChoice, peak) > freqDrift() )
-		{
-			spawnPartial( peakTime, peak );
-			newlyEligible.push_back( & partials().back() );
-			continue;
-		}
-		
-		//	otherwise, try to match with firstChoice:
-		Breakpoint * peakAbove = NULL;
-		std::list< Breakpoint >::iterator next = bpIter;
-		++next;
-		if ( next != frame.end() )
-		{
-			peakAbove = &(*next);
-		}
-		
-		Breakpoint * peakBelow = NULL;
-		if ( bpIter != frame.begin() )
-		{
-			std::list< Breakpoint >::iterator prev = bpIter;
-			--prev;
-			peakBelow = &(*prev);
-		}
-		
-		double thisdist = distance(*firstChoice, peak);
-		
-		if ( thisdist < distance( *firstChoice, *peakAbove ) /* (3) */ &&
-			 thisdist <= distance( *firstChoice, *peakBelow ) /* (4) */ ) 
-		{
-			firstChoice->insert( peakTime, peak );
-			newlyEligible.push_back( &(*firstChoice) );
-			continue;
-		}
-	
-		//	if firstChoice match fails because an adjacent Breakpoint
-		//	in the frame is closer, then try to match with the
-		//	secondChoice:
-		//
-		//	if there is no secondChoice Partial, or the secondChoice is
-		//	too distant, spawn a new Partial:
-		if ( secondChoice == NULL /* (1) */ ||
-			 distance(*secondChoice, peak) > freqDrift() )
-		{
-			spawnPartial( peakTime, peak );
-			newlyEligible.push_back( & partials().back() );
-			continue;
-		}
-		
-		//	determine which other Breakpoint might be a better
-		//	match for secondChoice, if such a Breakpoint exists
-		//	in this frame:
-		double endFreq = secondChoice->frequencyAt( peakTime );
-		Breakpoint * other;
-		if ( endFreq > peak.frequency() )
-		{
-			other = peakAbove;
-		}
-		else
-		{
-			other = peakBelow;
-		}
-		
-		//	if there is no other potential match, or this peak is 
-		//	nearer than the other potential match, then match:
-		if ( other == NULL || 
-			 distance( *secondChoice, peak ) < distance( *secondChoice, *other ) )
-		{
-			secondChoice->insert( peakTime, peak );
-			newlyEligible.push_back( &(*secondChoice) );
-		}
-		else //	oh well, spawn another
-		{
-			spawnPartial( peakTime, peak );
-			newlyEligible.push_back( & partials().back() );
-		}
-		
-		//	done.		
-	}			 
-	 	
-	 state.eligiblePartials() = newlyEligible;
-}
-
-#else 	//	not def sucks
-		//	this less-boroque version doesn't work yet???
-		//	why is sucks (above) still around if we are using this one?
 void 
 Analyzer::formPartials( std::list< Breakpoint > & frame, double /* frameTime */, 
 						AnalyzerState & state )
@@ -690,15 +513,13 @@ Analyzer::formPartials( std::list< Breakpoint > & frame, double /* frameTime */,
 		}
 		else 
 		{
-				nearest->insert( peakTime, peak );
-				newlyEligible.push_back( &(*nearest) );
+			nearest->insert( peakTime, peak );
+			newlyEligible.push_back( &(*nearest) );
 		}
 	}			 
 	 	
 	 state.eligiblePartials() = newlyEligible;
 }
-
-#endif	//	def sucks
 
 // ---------------------------------------------------------------------------
 //	spawnPartial
