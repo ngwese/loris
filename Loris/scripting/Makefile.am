@@ -41,10 +41,10 @@ PYTHON_CMODULE = _loris.so
 PYTHON_MODULE = $(PYTHON_CMODULE) 
 INSTALL_PYTHON_MODULE = install_python_module
 
-$(PYTHON_CMODULE): loris_python_wrap.o $(top_builddir)/pi/.libs/libloris.a
+$(PYTHON_CMODULE): loris_python_wrap.o $(top_builddir)/src/.libs/libloris.a
 	$(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(LDFLAGS) \
 		-bundle -flat_namespace -undefined suppress \
-		-o $@ loris_python_wrap.o $(top_builddir)/pi/.libs/libloris.a \
+		-o $@ loris_python_wrap.o $(top_builddir)/src/.libs/libloris.a \
 		-lsdif -lfftw $(LIBS)
 	-mkdir .libs
 	cp $@ .libs/$@
@@ -87,10 +87,10 @@ if DARWIN
 TCL_MODULE = tcLoris.so
 INSTALL_TCL_MODULE = install_tcl_module
 
-$(TCL_MODULE): loris_tcl_wrap.o $(top_builddir)/pi/.libs/libloris.a
+$(TCL_MODULE): loris_tcl_wrap.o $(top_builddir)/src/.libs/libloris.a
 	$(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(LDFLAGS) \
 		-dynamiclib -flat_namespace -undefined suppress \
-		-o $@ loris_tcl_wrap.o $(top_builddir)/pi/.libs/libloris.a \
+		-o $@ loris_tcl_wrap.o $(top_builddir)/src/.libs/libloris.a \
 		-lsdif -lfftw $(LIBS)
 	-mkdir .libs
 	cp $@ .libs/$@
@@ -126,10 +126,10 @@ if DARWIN
 PERL_MODULE = perLoris.bundle
 INSTALL_PERL_MODULE = install_perl_module
 
-$(PERL_MODULE): loris_perl_wrap.o $(top_builddir)/pi/.libs/libloris.a
+$(PERL_MODULE): loris_perl_wrap.o $(top_builddir)/src/.libs/libloris.a
 	$(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(LDFLAGS) \
 		-bundle -flat_namespace -undefined suppress \
-		-o $@ loris_perl_wrap.o $(top_builddir)/pi/.libs/libloris.a \
+		-o $@ loris_perl_wrap.o $(top_builddir)/src/.libs/libloris.a \
 		-lsdif -lfftw $(LIBS)
 	-mkdir .libs
 	cp $@ .libs/$@
