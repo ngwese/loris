@@ -18,6 +18,10 @@ containers of them can be used
 the Envelope interface, restricted access to its 
 BreakpointEnvelope to const.
 
+- made FrequencyReference use all Breakpoints in the 
+reference Partial when the number of samples is not
+specified.
+
 -------------------------------------------------------
 changes since 1.0beta8 release:
 
