@@ -39,7 +39,9 @@
 #include<Envelope.h>
 #include<Partial.h>
 #include<Notifier.h>
+#include <list>
 #include <memory>
+
 
 //	for debugging
 #ifdef Debug_Loris
@@ -50,6 +52,7 @@
 //	begin namespace
 namespace Loris {
 #endif
+
 
 // ---------------------------------------------------------------------------
 //	class Channelizer_imp
@@ -269,7 +272,7 @@ Channelizer::~Channelizer( void )
 //	Delegate to implementation.
 //	
 void
-Channelizer::channelize( std::list< Partial >::iterator begin, std::list< Partial >::iterator end )
+Channelizer::channelize( std::list< Partial >::iterator begin, std::list< Partial >::iterator end ) const
 {
 	_imp->channelize( begin, end );
 }

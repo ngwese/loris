@@ -79,7 +79,11 @@ public:
 	Channelizer & operator=( const Channelizer & rhs );
 
 	//	channelizing:
-	void channelize( std::list< Partial >::iterator begin, std::list< Partial >::iterator end );
+	void channelize( std::list< Partial >::iterator begin, std::list< Partial >::iterator end ) const;
+
+	//	function call operator:
+	void operator() ( std::list< Partial >::iterator begin, std::list< Partial >::iterator end ) const
+		{ channelize( begin, end ); }
 	
 };	//	end of class Channelizer
 

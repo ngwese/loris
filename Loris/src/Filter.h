@@ -58,6 +58,9 @@ namespace Loris {
 //	reversed.
 //
 //	Filter is a leaf class, do not subclass.
+//
+//	FIX THIS PIECE OF CRAP!
+//	Two delay lines?! Come on!
 //	
 class Filter
 {
@@ -68,7 +71,7 @@ class Filter
 	//	ARMA coefficients:
 	std::vector< double > _maCoefs, _arCoefs;	
 	
-	//	filter gain (gain applied to input samples)
+	//	filter gain (gain applied to output)
 	double _gain;		
 	
 	//	circular delay buffer indices, 

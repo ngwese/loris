@@ -58,7 +58,15 @@ public:
 	~Distiller( void );
 	
 //	distillation:
-	void distill( std::list<Partial> & l );
+	void distill( std::list<Partial> & container, std::list< Partial >::iterator dist_begin, 
+				  std::list< Partial >::iterator dist_end );
+	void distill( std::list<Partial> & container );
+
+//	function call operator:
+	void operator() ( std::list<Partial> & container, std::list< Partial >::iterator dist_begin, 
+					  std::list< Partial >::iterator dist_end )
+		{ distill( container, dist_begin, dist_end ); }
+
 
 //	-- unimplemented --
 private:

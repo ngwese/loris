@@ -54,6 +54,11 @@
 namespace Loris {
 #endif
 
+//	Chebychev order 3, cutoff 500, ripple -1.
+static const double Gain = 4.663939184e+04;
+static const double ExtraScaling = 6.;
+static const double MaCoefs[] = { 1., 3., 3., 1. }; 
+static const double ArCoefs[] = { 0., 2.9258684252, -2.8580608586, 0.9320209046 };
 
 // ---------------------------------------------------------------------------
 //	Oscillator construction
@@ -69,19 +74,10 @@ Oscillator::Oscillator( double radf, double a, double bw, double ph /* = 0. */ )
 	_amplitude( a ),	//	absolute
 	_bandwidth( bw ),	//	bandwidth coefficient (noise energy / total energy)
 	_phase( ph ),		//	radians
-	_filter( NULL )
+	_filter( new Filter( MaCoefs, MaCoefs + 4, 
+						 ArCoefs, ArCoefs + 4,
+						 ExtraScaling / Gain ) )
 {
-//	make a Filter:
-//	Chebychev order 3, cutoff 500, ripple -1.
-	const double filter_gain = 4.663939184e+04;
-	const double extraScaling = 6.;
-	const double maCoefs[] = { 1., 3., 3., 1. }; 
-	const double arCoefs[] = { 0., 2.9258684252, -2.8580608586, 0.9320209046 };
-						   
-	_filter = new Filter( maCoefs, maCoefs + 4, 
-						  arCoefs, arCoefs + 4,
-						  extraScaling / filter_gain );
-						  
 //	clamp bandwidth:
 	if ( _bandwidth > 1. )
 	{
@@ -105,7 +101,6 @@ Oscillator::Oscillator( double radf, double a, double bw, double ph /* = 0. */ )
 //
 Oscillator::~Oscillator( void )
 {
-	delete _filter;
 }
 
 // ---------------------------------------------------------------------------

@@ -33,6 +33,7 @@
  *
  */
 
+#include <memory>
 #include <vector>
 
 #if !defined( NO_LORIS_NAMESPACE )
@@ -65,7 +66,7 @@ class Oscillator
 	double _phase;		//	radians
 
 //	filter for stochastic modulation:
-	Filter * _filter;
+	std::auto_ptr< Filter > _filter;
 
 //	-- public interface --
 public:

@@ -63,6 +63,11 @@ public:
 	void dilate( Partial & p );
 	void dilate( std::list< Partial >::iterator begin, std::list< Partial >::iterator end );
 	
+//	function call operator:
+//	(should this be for a single Partial, or the range?)
+	void operator() ( std::list< Partial >::iterator begin, std::list< Partial >::iterator end )
+		{ dilate( begin, end ); }
+	
 //	-- unimplemented until useful --
 private:
 	Dilator( const Dilator & );

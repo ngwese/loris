@@ -95,13 +95,17 @@ Filter::Filter( const double * vcx_begin, const double * vcx_end,
 //	holds the AR coeffs. The coefficient vectors and delay lines are ordered
 //	by increasing age.
 //
+//	This is so lame. How about use a deque for the delay line, 
+//	or else a queue based on a deque, and use some STL algorithms
+//	for doing these dumb looops.
+//
 double
 Filter::sample( double input )
 { 
 	double output = 0.;
 	
 	//	moving average:
-	_xv[_idxX] = input * _gain;
+	_xv[_idxX] = input;
 	
 	for ( int i = 0; i < _maCoefs.size() - _idxX; ++i )
 		output += _maCoefs[i] * _xv[i+_idxX];
@@ -126,7 +130,7 @@ Filter::sample( double input )
 	else
 		--_idxY;
 		
-	return output;
+	return output * _gain;
 }
 
 #if !defined( NO_LORIS_NAMESPACE )
