@@ -56,39 +56,27 @@ print 'checking SDIF export/import'
 loris.exportSdif( 'clarinet.sdif', clar )
 clar = loris.importSdif( 'clarinet.sdif' )
 
-# loris.ExportSpc( 90 ).write( 'bad_spc_file.spc', clar )
+try:
+	print 'making a bogus attempt at writing an Spc file'
+	loris.ExportSpc( 90 ).write( 'bad_spc_file.spc', clar )
+except:
+	import sys
+	print 'caught:', sys.exc_type, sys.exc_value
 
 loris.channelize( clar, loris.createFreqReference( clar, 20, 0, 1000 ), 1 )
 loris.distill( clar )
 
-print "there's temporary junk in here!"
-Usetemporaryjunk = 0
-if Usetemporaryjunk:
-	print "using temporary junk!"
-
-	print 'clar is', clar
-
-	l = loris.PartialListH( clar )
-	print 'l is', l
-
-	it = l.first()
-	print 'it is', it
-
-	while not it.atEnd():
-		middle = it.startTime() + (it.duration() / 2.)
-		print 'frequency at middle:', it.frequencyAt(middle)
-		it.next()
-		
-	f = 0
-	n = 0
-	bp = l.first().first()
-	while not bp.atEnd():
-		f = f + bp.frequency()
-		n = n + 1
-		bp.next()
-	print "avg frequency of first partial is", f/n
-	
-	raise "temporary junk stopping everything!"
+# just for fun, print out the average 
+# frequency of the first partial in the
+# clarinet analysis:
+f = 0
+n = 0
+bp = clar.first().first()
+while not bp.atEnd():
+	f = f + bp.frequency()
+	n = n + 1
+	bp.next()
+print "avg frequency of first distilled clarinet partial is", f/n
 
 loris.shiftPitch( clar, loris.BreakpointEnvelopeWithValue( -600 ) )
 

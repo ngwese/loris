@@ -163,7 +163,7 @@ loris.exportAiff( 'flutinet.aiff',
 
 print 'morphing flute and cello (%s)' % time.ctime(time.time())
 print 'shifting flute pitch down by eleven half steps'
-flut_low = loris.PartialListCopy( flut )
+flut_low = flut.copy()
 loris.shiftPitch( flut_low, loris.BreakpointEnvelopeWithValue( -1100 ) )
 loris.exportAiff( 'cellute.aiff', 
 				  loris.synthesize( loris.morph( cel, flut_low, mf, mf, mf ), samplerate ), 
@@ -189,3 +189,4 @@ loris.exportAiff( 'flutello2.aiff',
 
 # 	all done
 print 'hey, I\'m spent. (%s)' % time.ctime(time.time())
+

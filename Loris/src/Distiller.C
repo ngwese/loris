@@ -305,8 +305,12 @@ Distiller::distill( std::list<Partial> & l )
 			//	insert the new Partial at the beginning of
 			//	the list, and erase the Partials in the
 			//	distilled range:
+			//	(note that insertion doesn't invalidate
+			//	or change any iterators on a std::list,
+			//	so dist_end is still the first list element
+			//	after the inserted Partial)
 			l.erase( dist_begin, dist_end );
-			l.insert( l.begin(), newp );
+			l.insert( dist_end, newp );
 		}
 
 		//	advance Partial list iterator:

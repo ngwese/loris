@@ -131,10 +131,6 @@ static double loudestAt( const Partial & p )
 void
 Channelizer_imp::channelize( std::list< Partial >::iterator begin, std::list< Partial >::iterator end )
 {
-	debugger << "hey, is this thing valid?" << endl;
-	_refChannelFreq->valueAt( 1.0 );
-	debugger << "yes" << endl;
-	
 #ifdef Debug_Loris
 	std::set<int> labelsfound;
 #endif
