@@ -21,17 +21,17 @@
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #  
 #  
-#	simplemorph.py
+#	morphtest.py
 #
 #	Very simple Loris instrument tone morphing demonstration.
 #
-#   Kelly Fitz, 19 Nov 2000
+#   Kelly Fitz, 13 Dec 2000
 #   loris@cerlsoundgroup.org
 #  
 #   http://www.cerlsoundgroup.org/Loris/
 #
 """
-Welcome to the very simple Loris morphing demo!
+Welcome to the very simple Loris morphing test!
 Kelly Fitz 2000
 
 Generates a simple linear morph between a 
@@ -46,7 +46,7 @@ print '(in %s)' % os.getcwd()
 #	analyze clarinet tone
 #
 print 'analyzing clarinet 3G# (%s)' % time.ctime(time.time())
-a = loris.Analyzer(270)
+a = loris.Analyzer( 390 )
 v = loris.importAiff( 'clarinet.aiff' )
 (n, samplerate, nchans) = loris.infoAiff( 'clarinet.aiff' )
 
@@ -58,13 +58,13 @@ loris.distill( clar )
 loris.shiftPitch( clar, loris.BreakpointEnvelopeWithValue( -600 ) )
 
 # check clarinet synthesis:
-# loris.exportAiff( 'clarOK.aiff', loris.synthesize( clar, samplerate ), samplerate, 1, 16 )
+loris.exportAiff( 'clarOK.aiff', loris.synthesize( clar, samplerate ), samplerate, 1, 16 )
 
 #
 #	analyze flute tone (reuse Analyzer)
 #
 print 'analyzing flute 3D (%s)' % time.ctime(time.time())
-# reuse: a = loris.Analyzer(270)
+a.configure( 270 )		# reconfigure Analyzer
 v = loris.importAiff( 'flute.aiff' )
 (n, samplerate, nchans) = loris.infoAiff( 'flute.aiff' )
 
@@ -74,7 +74,7 @@ loris.channelize( flut, loris.createFreqReference( flut, 20, 0, 1000 ), 1 )
 loris.distill( flut )
 
 # check flute synthesis:
-# loris.exportAiff( 'flutOK.aiff', loris.synthesize( flut, samplerate ), samplerate, 1, 16 )
+loris.exportAiff( 'flutOK.aiff', loris.synthesize( flut, samplerate ), samplerate, 1, 16 )
 
 #
 #	perform temporal dilation
@@ -97,6 +97,6 @@ mf = loris.BreakpointEnvelope()
 mf.insertBreakpoint( 0.6, 0 )
 mf.insertBreakpoint( 2, 1 )
 m = loris.morph( clar, flut, mf, mf, mf )
-loris.exportAiff( 'simple_morph.aiff', 
+loris.exportAiff( 'morph.test.aiff', 
 				  loris.synthesize( m, samplerate ), 
 				  samplerate, 1, 16 )

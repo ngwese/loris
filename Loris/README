@@ -83,9 +83,10 @@ been built using Cygwin, a gcc port for Windows
 (http://sources.redhat.com/cygwin/). It should compile with any
 reasonably standard-compliant compiler.
 
-The Loris module for Python has been tested using Python 1.5.2, and 
-is also reported to work with Python 1.6. It has not yet been tested
-using Python 2.0.
+The Loris module for Python has been tested using Python 1.5.2 and 2.0,
+and is also reported to work with Python 1.6. Loris is configured to 
+build a Python 2.0 module, for other Python releases, the Makefile (or 
+MacOS Codewarrior project) will need slight modifications.
 
 The CodeWarrior project for MacOS requires version 5.3 (5.0 plus all
 updates). It has not been verified to work with version 6.0.

@@ -80,6 +80,7 @@ loris.exportSdif( fname, flut )
 #	analyze clarinet tone
 #
 print 'analyzing clarinet 3G# (%s)' % time.ctime(time.time())
+a.configure(390)
 v = loris.importAiff( 'clarinet.aiff' )
 (n, samplerate, nchans) = loris.infoAiff( 'clarinet.aiff' )
 clar = a.analyze( v, samplerate )
@@ -103,7 +104,7 @@ loris.exportSdif( fname, clar )
 #
 print 'analyzing cello 2D# (%s)' % time.ctime(time.time())
 a.configure(135)
-a.setFreqFloor(100)		# eliminate some subharmonic garbage
+# a.setFreqFloor(100) not necessary, right?		# eliminate some subharmonic garbage
 v = loris.importAiff( 'cello.aiff' )
 (n, samplerate, nchans) = loris.infoAiff( 'cello.aiff' )
 cel = a.analyze( v, samplerate )

@@ -62,10 +62,11 @@ class Synthesizer
 //	-- public interface --
 public:
 //	construction:
-//	(use compiler-generated destructor)
 	Synthesizer( double srate, double * bufStart, double * bufEnd );
 	Synthesizer( const Synthesizer & other );
 	~Synthesizer(void);
+	
+	Synthesizer & operator= ( const Synthesizer & other );
 	
 //	synthesis:
 //
@@ -93,10 +94,6 @@ public:
 //	-- private helpers --
 private:
 	inline double radianFreq( double hz ) const;
-
-//	-- not impemented --
-//	 not impemented until proven useful:	
-	Synthesizer & operator= ( const Synthesizer & other );
 	
 };	//	end of class Synthesizer
 

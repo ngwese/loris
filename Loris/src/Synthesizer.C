@@ -69,7 +69,7 @@ Synthesizer::Synthesizer( double srate, double * bufStart, double * bufEnd  ) :
 		Throw( InvalidObject, "Synthesizer buffer length must be positive." );
 	}
 
-	countem = 0;
+	//countem = 0;
 }
 
 // ---------------------------------------------------------------------------
@@ -82,7 +82,7 @@ Synthesizer::Synthesizer( const Synthesizer & other ) :
 	_sampleBuffer( other._sampleBuffer ),
 	_sampleBufferSize( other._sampleBufferSize )
 {
-	countem = 0;
+	//countem = 0;
 }
 
 
@@ -92,8 +92,26 @@ Synthesizer::Synthesizer( const Synthesizer & other ) :
 //
 Synthesizer::~Synthesizer(void)
 {
-	debugger << "synthesized " << countem << " partials, bye." << endl;
-	countem = 0;
+	//debugger << "synthesized " << countem << " partials, bye." << endl;
+	//countem = 0;
+}
+
+// ---------------------------------------------------------------------------
+//	Synthesizer assignment
+// ---------------------------------------------------------------------------
+//	Synthesizer copies share a sample buffer.
+//
+Synthesizer & 
+Synthesizer::operator= ( const Synthesizer & other )
+{
+	if ( this != &other )
+	{
+		_sampleRate = other._sampleRate;
+		_sampleBuffer = other._sampleBuffer;
+		_sampleBufferSize = other._sampleBufferSize;
+	}
+
+	return *this;
 }
 
 // ---------------------------------------------------------------------------
@@ -248,10 +266,8 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ )
 						 _sampleBuffer + curSampleIdx, _sampleBuffer + finalsamp,
 						 tgtradfreq, tgtamp, tgtbw );	
 
-	++countem;
+	// ++countem;
 }
-
-
 	
 // ---------------------------------------------------------------------------
 //	radianFreq
