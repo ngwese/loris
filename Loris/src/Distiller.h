@@ -10,20 +10,17 @@
 //	-kel 20 Oct 99
 //
 // ===========================================================================
-
 #include "LorisLib.h"
-
+#include "PartialIterator.h"
 #include "Partial.h"
 #include <list>
 
 Begin_Namespace( Loris )
 
-class PartialPredicate;
-
 // ---------------------------------------------------------------------------
 //	class Distiller
 //
-class Distiller
+class Distiller : public PartialIteratorOwner
 {
 //	-- public interface --
 public:

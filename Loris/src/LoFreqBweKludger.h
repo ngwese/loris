@@ -29,14 +29,13 @@ class Breakpoint;
 // ---------------------------------------------------------------------------
 //	class LoFreqBweKludger
 //
-class LoFreqBweKludger : public PartialIterator
+class LoFreqBweKludger : public PartialDecorIterator
 {
 public:
 	LoFreqBweKludger( double f );
 	LoFreqBweKludger( const Partial & pin, double f );
-	
-	//	compiler-generated copy constructor is adequate:
-	//LoFreqBweKludger( const LoFreqBweKludger & other );
+	LoFreqBweKludger( const LoFreqBweKludger & other ) :
+		_cutoff( other._cutoff ), PartialDecorIterator( other ) {}
 	
 //	cloning:
 //	In standard C++, an overriding member can return a type that

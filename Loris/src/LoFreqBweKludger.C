@@ -34,7 +34,7 @@ Begin_Namespace( Loris )
 //
 LoFreqBweKludger::LoFreqBweKludger( const Partial & pin, double f ) :
 	 _cutoff( f ), 
-	 PartialIterator( pin )
+	 PartialDecorIterator( pin )
 {
 }
 
@@ -44,7 +44,7 @@ LoFreqBweKludger::LoFreqBweKludger( const Partial & pin, double f ) :
 //
 LoFreqBweKludger::LoFreqBweKludger( double f ) : 
 	_cutoff( f ), 
-	PartialIterator() 
+	PartialDecorIterator() 
 {
 }
 
@@ -55,10 +55,10 @@ LoFreqBweKludger::LoFreqBweKludger( double f ) :
 double
 LoFreqBweKludger::amplitude( void ) const
 {
-	if ( current().frequency() > _cutoff )
-		return current().amplitude();
+	if ( iterator()->frequency() > _cutoff )
+		return iterator()->amplitude();
 	else
-		return current().amplitude() * sqrt(1. - bwclamp( current().bandwidth() ) );
+		return iterator()->amplitude() * sqrt(1. - bwclamp( iterator()->bandwidth() ) );
 }
 
 // ---------------------------------------------------------------------------
@@ -68,8 +68,8 @@ LoFreqBweKludger::amplitude( void ) const
 double
 LoFreqBweKludger::bandwidth( void ) const
 {
-	if ( current().frequency() > _cutoff )
-		return bwclamp( current().bandwidth() );
+	if ( iterator()->frequency() > _cutoff )
+		return bwclamp( iterator()->bandwidth() );
 	else
 		return 0.;
 }

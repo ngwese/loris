@@ -10,6 +10,7 @@
 //
 // ===========================================================================
 #include "LorisLib.h"
+#include "PartialIterator.h"
 
 #include <vector>
 #include <set>
@@ -23,7 +24,7 @@ class Partial;
 //
 //	HEY provide access to the PartialIterator, like others.
 //
-class Dilator
+class Dilator : public PartialIteratorOwner
 {
 //	-- construction --
 public:

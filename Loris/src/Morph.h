@@ -12,7 +12,6 @@
 //	-kel 15 Oct 99
 //
 // ===========================================================================
-
 #include "LorisLib.h"
 #include "Partial.h"
 #include "Map.h"
@@ -24,34 +23,20 @@ Begin_Namespace( Loris )
 // ---------------------------------------------------------------------------
 //	class Morph
 //
-//	auto_ptr is used to pass Map arguments to make explicit the
-//	source/sink relationship between the caller and the Morph.
-//	Morph assumes ownership, and the client's auto_ptr
-//	will have no reference (or ownership).
-//
-//	This also frees the abstract class Map from requiring a clone()
-//	member to be defined by subclasses. This is kind of inconvenient, 
-//	though, because, it is not possible to have a single-argument 
-//	constructor that assigns the same function to all three parameters,
-//	nor can the caller create a single Map and pass it three times as
-//	an argument. The client is responsible for making three dynamic
-//	allocations. Finally, it is impossible to have a copy constructor
-//	for Morph, because there is no way to copy the (abstract) Maps 
-//	without a cloning operation. A solution is to leave the pure 
-//	virtual clone()	member in the Map class, and take advantage of 
-//	it in the single-argument and copy constructors.
-//
-//	update: this is WAY too much of a nuisance, need another solution.
+//	This class does not own PartialIterators or implement the 
+//	PartialIteratorOwner interface. There's a good reason for this:
+//	the morphing process needs  to query the Partials directly using 
+//	parameterAt() members, which are not available through the
+//	PartialIterator interface. 
 //
 class Morph
 {
 //	-- public interface --
 public:
 //	construction:
-	Morph( std::auto_ptr< Map > f = std::auto_ptr< Map >() );
-	Morph( std::auto_ptr< Map > ff, 
-		   std::auto_ptr< Map > af, 
-		   std::auto_ptr< Map > bwf );
+	Morph( void );
+	Morph( const Map & f );
+	Morph( const Map & ff, const Map & af, const Map & bwf );
 	Morph( const Morph & other );
 	
 	//~Morph( void );	//	use compiler-generated destructor
@@ -74,9 +59,9 @@ public:
 							int label = 0);
 
 //	morphing functions access/mutation:	
-	void setFrequencyFunction( std::auto_ptr< Map > f = std::auto_ptr< Map >() );
-	void setAmplitudeFunction( std::auto_ptr< Map > f = std::auto_ptr< Map >() );
-	void setBandwidthFunction( std::auto_ptr< Map > f = std::auto_ptr< Map >() );
+	void setFrequencyFunction( const Map & f );
+	void setAmplitudeFunction( const Map & f );
+	void setBandwidthFunction( const Map & f );
 
 	const Map & frequencyFunction( void ) const { return * _freqFunction; }
 	const Map & amplitudeFunction( void ) const { return * _ampFunction; }
@@ -99,8 +84,6 @@ protected:
 						const std::list<Partial>::const_iterator & end, 
 						std::list<Partial> & collector, int label) const;
 						
-	static std::auto_ptr< Map > defaultMap( void );
-
 //	-- instance variables --
 	//	morphed partials:
 	std::list< Partial > _partials;
@@ -116,7 +99,7 @@ protected:
 	//	label for partials that should be crossfaded,
 	//	instead of morphing:
 	int _crossfadelabel;
-
+		
 };	//	end of class Morph
 
 End_Namespace( Loris )

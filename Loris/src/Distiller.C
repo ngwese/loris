@@ -82,7 +82,7 @@ Distiller::distillOne( const Partial & src, Partial & dest,
 					   const list<Partial>::const_iterator & end  )
 {
 	//	iterate over the source Partial:
-	for ( PartialIterator pIter( src ); ! pIter.atEnd(); pIter.advance() ) {
+	for ( iterator()->reset( src ); ! iterator()->atEnd(); iterator()->advance() ) { 
 		//	iterate over all Partials in the range and compute the
 		//	bandwidth energy contribution at the time of bp
 		//	due to all the other Partials:
@@ -101,8 +101,8 @@ Distiller::distillOne( const Partial & src, Partial & dest,
 			//	by bp at the time of bp, then break out of
 			//	this loop, this Breakpoint will not be part of 
 			//	the distilled Partial.
-			double a = (*start).amplitudeAt( pIter.time() );
-			if ( a > pIter.amplitude() ) {
+			double a = (*start).amplitudeAt( iterator()->time() );
+			if ( a > iterator()->amplitude() ) {
 				break;	
 			}
 			else {
@@ -117,32 +117,35 @@ Distiller::distillOne( const Partial & src, Partial & dest,
 		//	Create a new Breakpoint and add it to dest:
 		if ( it == end ) {
 			//	compute the original Breakpoint energy:
-			double etot = pIter.amplitude() * pIter.amplitude();
-			double ebw = etot * pIter.bandwidth();
+			double etot = iterator()->amplitude() * iterator()->amplitude();
+			double ebw = etot * iterator()->bandwidth();
 			
 			//	add some bandwith energy:
 			etot += xse;
 			ebw += xse;
 			
 			//	create and insert the new Breakpoint:
-			Breakpoint newBp( pIter.frequency(), sqrt( etot ), ebw / etot, pIter.phase() );
-			dest.insert( pIter.time(), newBp );
+			Breakpoint newBp( iterator()->frequency(), sqrt( etot ), ebw / etot, iterator()->phase() );
+			dest.insert( iterator()->time(), newBp );
 			
 			//	if there is a gap after this Breakpoint, 
 			//	fade out:
-			if ( pIter.isTail() && gapAt( pIter.time() + _fadeTime, start, end ) ) {
-				Breakpoint zeroPt( pIter.frequency(), 0., pIter.bandwidth(), 
-								   src.phaseAt( pIter.time() + _fadeTime ) );
-				dest.insert( pIter.time() + _fadeTime, zeroPt );
+			if ( iterator()->time() == iterator()->endTime() && 
+				 gapAt( iterator()->time() + _fadeTime, start, end ) ) {
+				Breakpoint zeroPt( iterator()->frequency(), 0., iterator()->bandwidth(), 
+								   src.phaseAt( iterator()->time() + _fadeTime ) );
+				dest.insert( iterator()->time() + _fadeTime, zeroPt );
 			}
 			
 			//	if there is a gap before this Breakpoint,
 			//	fade in, but don't insert Breakpoints at
 			//	times before zero:
-			if ( pIter.isHead() && pIter.time() > 0.001 && gapAt( pIter.time() - _fadeTime, start, end ) ) {
-				Breakpoint zeroPt( pIter.frequency(), 0., pIter.bandwidth(), 
-								   src.phaseAt( pIter.time() - _fadeTime ) );
-				dest.insert( pIter.time() - _fadeTime, zeroPt );
+			if ( iterator()->time() == iterator()->startTime() && 
+				 iterator()->time() > 0.001 && 
+				 gapAt( iterator()->time() - _fadeTime, start, end ) ) {
+				Breakpoint zeroPt( iterator()->frequency(), 0., iterator()->bandwidth(), 
+								   src.phaseAt( iterator()->time() - _fadeTime ) );
+				dest.insert( iterator()->time() - _fadeTime, zeroPt );
 			}
 		}	//	end if all other Partials are quieter at time of pIter
 	}	//	end iteration over source Partial

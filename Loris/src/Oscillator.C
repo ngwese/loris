@@ -38,22 +38,13 @@ Begin_Namespace( Loris )
 // ---------------------------------------------------------------------------
 //	Initialize state to something, like zeros.
 //
-//	Default f is an auto_ptr with no reference, indicating that a default 
-//	filter should be creted and used.
-//
-//	auto_ptr is used to submit the Filter argument to make explicit the
-//	source/sink relationship between the caller and the Oscillator. After
-//	the call, the Oscillator will own the Filter, and the client's auto_ptr
-//	will have no reference (or ownership).
-//
-Oscillator::Oscillator( auto_ptr< Filter > f ) :
+Oscillator::Oscillator( void ) :
 	_frequency( 0. ),	//	radians per sample
 	_amplitude( 0. ),	//	absolute
 	_bandwidth( 0. ),	//	bandwidth coefficient (noise energy / total energy)
-	_phase( 0. )		//	radians
+	_phase( 0. ),		//	radians
+	_filter( new Filter( Filter::NormalCoefs().first, Filter::NormalCoefs().second ) )
 {
-	//	initialize the filter:
-	setFilter( f );
 }
 
 // ---------------------------------------------------------------------------
@@ -80,11 +71,13 @@ Oscillator::operator= (const Oscillator & other )
 {
 	//	do nothing if assigning to self:
 	if ( &other != this ) {	
+	//	do cloning first:
+		setFilter( auto_ptr< Filter >( new Filter( * other._filter ) ) );
+			
 		_frequency = other._frequency;
 		_amplitude = other._amplitude;
 		_bandwidth = other._bandwidth;
 		_phase = other._phase;
-		_filter.reset( new Filter( *other._filter ) );
 	}
 	
 	return *this;
@@ -105,29 +98,8 @@ Oscillator::reset( double radf, double amp, double bw, double ph )
 	setPhase( ph );
 }
 
-// ---------------------------------------------------------------------------
-//	setFilter
-// ---------------------------------------------------------------------------
-//	Default f is an auto_ptr with no reference, indicating that a default 
-//	filter should be created and used.
-//
-//	auto_ptr is used to submit the Filter argument to make explicit the
-//	source/sink relationship between the caller and the Oscillator. After
-//	the call, the Oscillator will own the Filter, and the client's auto_ptr
-//	will have no reference (or ownership).
-//
-void
-Oscillator::setFilter( auto_ptr< Filter > f )
-{	
-	if ( ! f.get() )
-		f.reset( new Filter( Filter::NormalCoefs().first, Filter::NormalCoefs().second ) );
-	
-	_filter = f;
-}	
-
 #pragma mark -
 #pragma mark sample generation
-
 // ---------------------------------------------------------------------------
 //	generateSamples
 // ---------------------------------------------------------------------------

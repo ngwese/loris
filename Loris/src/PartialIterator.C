@@ -10,10 +10,8 @@
 //
 // ===========================================================================
 #include "LorisLib.h"
-
-#include "Partial.h"
 #include "PartialIterator.h"
-#include "Breakpoint.h"
+#include "Partial.h"
 
 Begin_Namespace( Loris )
 
@@ -23,7 +21,7 @@ Begin_Namespace( Loris )
 //	construction
 // ---------------------------------------------------------------------------
 //
-PartialIterator::PartialIterator( const Partial & pin ) : 
+BasicPartialIterator::BasicPartialIterator( const Partial & pin ) : 
 	_p( & pin ), 
 	_cur( pin.begin() ) 
 {
@@ -33,8 +31,18 @@ PartialIterator::PartialIterator( const Partial & pin ) :
 //	default constructor
 // ---------------------------------------------------------------------------
 //
-PartialIterator::PartialIterator( void ) : 
+BasicPartialIterator::BasicPartialIterator( void ) : 
 	_p( Null )
+{
+}
+
+// ---------------------------------------------------------------------------
+//	copy constructor
+// ---------------------------------------------------------------------------
+//
+BasicPartialIterator::BasicPartialIterator( const BasicPartialIterator & other ) : 
+	_p( other._p ),
+	PartialIterator( other )
 {
 }
 
@@ -43,7 +51,7 @@ PartialIterator::PartialIterator( void ) :
 // ---------------------------------------------------------------------------
 //
 void
-PartialIterator::advance( void )
+BasicPartialIterator::advance( void )
 {
 	if ( ! atEnd() ) 
 		++_cur;
@@ -54,19 +62,9 @@ PartialIterator::advance( void )
 // ---------------------------------------------------------------------------
 //
 void
-PartialIterator::reset( const Partial & p )
+BasicPartialIterator::reset( const Partial & p )
 {
 	_p = & p;
-	_cur = _p->begin();
-}
-
-// ---------------------------------------------------------------------------
-//	rewind
-// ---------------------------------------------------------------------------
-//
-void
-PartialIterator::rewind( void )
-{
 	_cur = _p->begin();
 }
 
@@ -75,29 +73,9 @@ PartialIterator::rewind( void )
 // ---------------------------------------------------------------------------
 //
 boolean
-PartialIterator::atEnd( void ) const
+BasicPartialIterator::atEnd( void ) const
 {
 	return _cur == _p->end();
-}
-
-// ---------------------------------------------------------------------------
-//	isHead
-// ---------------------------------------------------------------------------
-//
-boolean
-PartialIterator::isHead( void ) const
-{
-	return _cur == _p->begin();
-}
-
-// ---------------------------------------------------------------------------
-//	isTail
-// ---------------------------------------------------------------------------
-//
-boolean
-PartialIterator::isTail( void ) const
-{
-	return _cur == -- _p->end();
 }
 
 // ---------------------------------------------------------------------------
@@ -105,10 +83,10 @@ PartialIterator::isTail( void ) const
 // ---------------------------------------------------------------------------
 //
 const Breakpoint &
-PartialIterator::current( void ) const
+BasicPartialIterator::current( void ) const
 {
 	if ( atEnd() )
-		Throw( InvalidIterator, "Tried to dereference an invalid PartialIterator (current)." );
+		Throw( InvalidIterator, "Tried to dereference an invalid BasicPartialIterator (current)." );
 
 	return _cur->second;
 }
@@ -118,10 +96,10 @@ PartialIterator::current( void ) const
 // ---------------------------------------------------------------------------
 //
 const Partial &
-PartialIterator::subject( void ) const
+BasicPartialIterator::subject( void ) const
 {
 	if ( _p == Null )
-		Throw( InvalidIterator, "Tried to dereference an invalid PartialIterator (subject)." );
+		Throw( InvalidIterator, "Tried to dereference an invalid BasicPartialIterator (subject)." );
 
 	return *_p;
 }
@@ -133,7 +111,7 @@ PartialIterator::subject( void ) const
 // ---------------------------------------------------------------------------
 //
 double
-PartialIterator::duration( void ) const
+BasicPartialIterator::duration( void ) const
 {
 	return subject().duration();
 }
@@ -143,7 +121,7 @@ PartialIterator::duration( void ) const
 // ---------------------------------------------------------------------------
 //
 double
-PartialIterator::startTime( void ) const
+BasicPartialIterator::startTime( void ) const
 {
 	return subject().startTime();
 }
@@ -153,7 +131,7 @@ PartialIterator::startTime( void ) const
 // ---------------------------------------------------------------------------
 //
 double
-PartialIterator::endTime( void ) const
+BasicPartialIterator::endTime( void ) const
 {
 	return subject().endTime();
 }
@@ -163,7 +141,7 @@ PartialIterator::endTime( void ) const
 // ---------------------------------------------------------------------------
 //
 double
-PartialIterator::initialPhase( void ) const
+BasicPartialIterator::initialPhase( void ) const
 {
 	return subject().initialPhase();
 }
@@ -173,7 +151,7 @@ PartialIterator::initialPhase( void ) const
 // ---------------------------------------------------------------------------
 //
 int
-PartialIterator::label( void ) const
+BasicPartialIterator::label( void ) const
 {
 	return subject().label();
 }
@@ -185,7 +163,7 @@ PartialIterator::label( void ) const
 // ---------------------------------------------------------------------------
 //
 double
-PartialIterator::frequency( void ) const
+BasicPartialIterator::frequency( void ) const
 {
 	return current().frequency();
 }
@@ -195,7 +173,7 @@ PartialIterator::frequency( void ) const
 // ---------------------------------------------------------------------------
 //
 double
-PartialIterator::amplitude( void ) const
+BasicPartialIterator::amplitude( void ) const
 {
 	return current().amplitude();
 }
@@ -205,7 +183,7 @@ PartialIterator::amplitude( void ) const
 // ---------------------------------------------------------------------------
 //
 double
-PartialIterator::bandwidth( void ) const
+BasicPartialIterator::bandwidth( void ) const
 {
 	return current().bandwidth();
 }
@@ -215,7 +193,7 @@ PartialIterator::bandwidth( void ) const
 // ---------------------------------------------------------------------------
 //
 double
-PartialIterator::phase( void ) const
+BasicPartialIterator::phase( void ) const
 {
 	return current().phase();
 }
@@ -225,7 +203,7 @@ PartialIterator::phase( void ) const
 // ---------------------------------------------------------------------------
 //
 double
-PartialIterator::time( void ) const
+BasicPartialIterator::time( void ) const
 {
 	return _cur->first;
 }

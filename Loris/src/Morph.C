@@ -36,60 +36,42 @@ Begin_Namespace( Loris )
 // ---------------------------------------------------------------------------
 //	Morph constructor (single morph function)
 // ---------------------------------------------------------------------------
-//	Default f is an auto_ptr with no reference, indicating that a default 
-//	Map should be created and used.
 //
-//	auto_ptr is used to submit the Map argument to make explicit the
-//	source/sink relationship between the caller and the Morph. After
-//	the call, the Morph will own the Map, and the client's auto_ptr
-//	will have no reference (or ownership).
-//
-//
-Morph::Morph( auto_ptr< Map > f ) :
+Morph::Morph( const Map & f ) :
+_freqFunction( f.clone() ),
+	_ampFunction( f.clone() ),
+	_bwFunction( f.clone() ),
 	_minlabel( 0 ),
 	_maxlabel( 200 ),
 	_crossfadelabel( 0 )
 {
-	//	initialize morphing functions:
-	if ( ! f.get() ) {
-#if defined(__sgi) 
-		//	Since the argument to operator= is non-const, 
-		//	defaultMap() can't, strictly speaking, be 
-		//	used as the argument, because temporaries
-		//	are not lvalues, and only lvalues can initialize
-		//	non-const references.
-		//	At least, some compilers see it that way.
-		f.reset( defaultMap().release() );
-#else
-		//	Fortunately, others do not see it that way.
-		f = defaultMap();
-#endif
-	}
-		
-	setFrequencyFunction( auto_ptr< Map >( f->clone() ) );
-	setAmplitudeFunction( auto_ptr< Map >( f->clone() ) );
-	setBandwidthFunction( auto_ptr< Map >( f ) );
 }
 
 // ---------------------------------------------------------------------------
-//	Morph constructor (distinct morph functions)
+//	Morph default constructor
 // ---------------------------------------------------------------------------
-//	auto_ptr is used to submit the Map argument to make explicit the
-//	source/sink relationship between the caller and the Morph. After
-//	the call, the Morph will own the Map, and the client's auto_ptr
-//	will have no reference (or ownership).
 //
-Morph::Morph( auto_ptr< Map > ff, 
-			  auto_ptr< Map > af, 
-			  auto_ptr< Map > bwf ) :
+Morph::Morph( void ) :
+	_freqFunction( new BreakpointMap() ),
+	_ampFunction( new BreakpointMap() ),
+	_bwFunction( new BreakpointMap() ),
 	_minlabel( 0 ),
 	_maxlabel( 200 ),
 	_crossfadelabel( 0 )
 {
-	//	initialize morphing functions:
-	setFrequencyFunction( ff );
-	setAmplitudeFunction( af );
-	setBandwidthFunction( bwf );
+}
+// ---------------------------------------------------------------------------
+//	Morph constructor (distinct morph functions)
+// ---------------------------------------------------------------------------
+//
+Morph::Morph( const Map & ff, const Map & af, const Map & bwf ) :
+	_freqFunction( ff.clone() ),
+	_ampFunction( af.clone() ),
+	_bwFunction( bwf.clone() ),
+	_minlabel( 0 ),
+	_maxlabel( 200 ),
+	_crossfadelabel( 0 )
+{
 }
 
 // ---------------------------------------------------------------------------
@@ -144,98 +126,31 @@ Morph::operator=( const Morph & other )
 // ---------------------------------------------------------------------------
 //	setFrequencyFunction
 // ---------------------------------------------------------------------------
-//	Default f is an auto_ptr with no reference, indicating that a default 
-//	Map should be created and used.
-//
-//	auto_ptr is used to submit the Map argument to make explicit the
-//	source/sink relationship between the caller and the Morph. After
-//	the call, the Morph will own the Map, and the client's auto_ptr
-//	will have no reference (or ownership).
-//
 //
 void
-Morph::setFrequencyFunction(  auto_ptr< Map > f )
+Morph::setFrequencyFunction( const Map & f )
 {
-	if ( ! f.get() ) {
-#if defined(__sgi) 
-		//	Since the argument to operator= is non-const, 
-		//	defaultMap() can't, strictly speaking, be 
-		//	used as the argument, because temporaries
-		//	are not lvalues, and only lvalues can initialize
-		//	non-const references.
-		//	At least, some compilers see it that way.
-		f.reset( defaultMap().release() );
-#else
-		//	Fortunately, others do not see it that way.
-		f = defaultMap();
-#endif
-	}
-
-	_freqFunction = f;
+	_freqFunction.reset( f.clone() );
 }
 
 // ---------------------------------------------------------------------------
 //	setAmplitudeFunction
 // ---------------------------------------------------------------------------
-//	Default f is an auto_ptr with no reference, indicating that a default 
-//	Map should be created and used.
-//
-//	auto_ptr is used to submit the Map argument to make explicit the
-//	source/sink relationship between the caller and the Morph. After
-//	the call, the Morph will own the Map, and the client's auto_ptr
-//	will have no reference (or ownership).
 //
 void
-Morph::setAmplitudeFunction(  auto_ptr< Map > f )
+Morph::setAmplitudeFunction( const Map & f )
 {
-	if ( ! f.get() ) {
-#if defined(__sgi) 
-		//	Since the argument to operator= is non-const, 
-		//	defaultMap() can't, strictly speaking, be 
-		//	used as the argument, because temporaries
-		//	are not lvalues, and only lvalues can initialize
-		//	non-const references.
-		//	At least, some compilers see it that way.
-		f.reset( defaultMap().release() );
-#else
-		//	Fortunately, others do not see it that way.
-		f = defaultMap();
-#endif
-	}
-
-	_ampFunction = f;
+	_ampFunction.reset( f.clone() );
 }
 
 // ---------------------------------------------------------------------------
 //	setBandwidthFunction
 // ---------------------------------------------------------------------------
-//	Default f is an auto_ptr with no reference, indicating that a default 
-//	Map should be created and used.
-//
-//	auto_ptr is used to submit the Map argument to make explicit the
-//	source/sink relationship between the caller and the Morph. After
-//	the call, the Morph will own the Map, and the client's auto_ptr
-//	will have no reference (or ownership).
 //
 void
-Morph::setBandwidthFunction(  auto_ptr< Map > f )
+Morph::setBandwidthFunction( const Map & f )
 {
-	if ( ! f.get() ) {
-#if defined(__sgi) 
-		//	Since the argument to operator= is non-const, 
-		//	defaultMap() can't, strictly speaking, be 
-		//	used as the argument, because temporaries
-		//	are not lvalues, and only lvalues can initialize
-		//	non-const references.
-		//	At least, some compilers see it that way.
-		f.reset( defaultMap().release() );
-#else
-		//	Fortunately, others do not see it that way.
-		f = defaultMap();
-#endif
-	}
-
-	_bwFunction = f;
+	_bwFunction.reset( f.clone() );
 }
 
 // ---------------------------------------------------------------------------
@@ -333,55 +248,55 @@ Morph::morph( const list<Partial> & plist1, const list<Partial> & plist2 )
 //	in both source Partials.
 //
 void 
-Morph::morphPartial( const Partial & p1, const Partial & p2 )
+Morph::morphPartial( const Partial & p0, const Partial & p1 )
 {
 	//	make a new Partial:
 	Partial newp;
 	
 	//	loop over Breakpoints in first partial:
-	for ( PartialIterator it(p1); !it.atEnd(); it.advance() ) {
-		double alphaF = frequencyFunction().valueAt( it.time() );
-		double alphaA = amplitudeFunction().valueAt( it.time() );
-		double alphaBW = bandwidthFunction().valueAt( it.time() );
+	for ( BasicPartialIterator iter(p0); ! iter.atEnd(); iter.advance() ) {
+		double alphaF = frequencyFunction().valueAt( iter.time() );
+		double alphaA = amplitudeFunction().valueAt( iter.time() );
+		double alphaBW = bandwidthFunction().valueAt( iter.time() );
 		
-		double amp2 = ( p2.duration() > 0. ) ? 
-			p2.amplitudeAt( it.time() ) : 0.;
-		double freq2 = ( p2.duration() > 0. ) ? 
-			p2.frequencyAt( it.time() ) : it.frequency();
-		double bw2 = ( p2.duration() > 0. ) ? 
-			p2.bandwidthAt( it.time() ) : it.bandwidth();
-		double theta2 = ( p2.duration() > 0. ) ? 
-			p2.phaseAt( it.time() ) : it.phase();
+		double amp2 = ( p1.duration() > 0. ) ? 
+			p1.amplitudeAt( iter.time() ) : 0.;
+		double freq2 = ( p1.duration() > 0. ) ? 
+			p1.frequencyAt( iter.time() ) : iter.frequency();
+		double bw2 = ( p1.duration() > 0. ) ? 
+			p1.bandwidthAt( iter.time() ) : iter.bandwidth();
+		double theta2 = ( p1.duration() > 0. ) ? 
+			p1.phaseAt( iter.time() ) : iter.phase();
 			
-		Breakpoint newbp( (alphaF * freq2) + ((1.-alphaF) * it.frequency()),
-						   (alphaA * amp2) + ((1.-alphaA) * it.amplitude()),
-						   (alphaBW * bw2) + ((1.-alphaBW) * it.bandwidth()),
-						   (alphaF * theta2) + ((1.-alphaF) * it.phase()) );
+		Breakpoint newbp( (alphaF * freq2) + ((1.-alphaF) * iter.frequency()),
+						   (alphaA * amp2) + ((1.-alphaA) * iter.amplitude()),
+						   (alphaBW * bw2) + ((1.-alphaBW) * iter.bandwidth()),
+						   (alphaF * theta2) + ((1.-alphaF) * iter.phase()) );
 		
-		newp.insert( it.time(), newbp );
+		newp.insert( iter.time(), newbp );
 	}
 	
 	//	now do it for the other Partial:
-	for ( PartialIterator it(p2); !it.atEnd(); it.advance() ) {
-		double alphaF = 1. - frequencyFunction().valueAt( it.time() );
-		double alphaA = 1. - amplitudeFunction().valueAt( it.time() );
-		double alphaBW = 1. - bandwidthFunction().valueAt( it.time() );
+	for ( BasicPartialIterator iter(p1); ! iter.atEnd(); iter.advance() ) {
+		double alphaF = 1. - frequencyFunction().valueAt( iter.time() );
+		double alphaA = 1. - amplitudeFunction().valueAt( iter.time() );
+		double alphaBW = 1. - bandwidthFunction().valueAt( iter.time() );
 		
-		double amp1 = ( p1.duration() > 0. ) ? 
-			p1.amplitudeAt( it.time() ) : 0.;
-		double freq1 = ( p1.duration() > 0. ) ? 
-			p1.frequencyAt( it.time() ) : it.frequency();
-		double bw1 = ( p1.duration() > 0. ) ? 
-			p1.bandwidthAt( it.time() ) : it.bandwidth();
-		double theta1 = ( p1.duration() > 0. ) ? 
-			p1.phaseAt( it.time() ) : it.phase();
+		double amp1 = ( p0.duration() > 0. ) ? 
+			p0.amplitudeAt( iter.time() ) : 0.;
+		double freq1 = ( p0.duration() > 0. ) ? 
+			p0.frequencyAt( iter.time() ) : iter.frequency();
+		double bw1 = ( p0.duration() > 0. ) ? 
+			p0.bandwidthAt( iter.time() ) : iter.bandwidth();
+		double theta1 = ( p0.duration() > 0. ) ? 
+			p0.phaseAt( iter.time() ) : iter.phase();
 			
-		Breakpoint newbp( (alphaF * freq1) + ((1.-alphaF) * it.frequency()),
-						   (alphaA * amp1) + ((1.-alphaA) * it.amplitude()),
-						   (alphaBW * bw1) + ((1.-alphaBW) * it.bandwidth()),
-						   (alphaF * theta1) + ((1.-alphaF) * it.phase()) );
+		Breakpoint newbp( (alphaF * freq1) + ((1.-alphaF) * iter.frequency()),
+						   (alphaA * amp1) + ((1.-alphaA) * iter.amplitude()),
+						   (alphaBW * bw1) + ((1.-alphaBW) * iter.bandwidth()),
+						   (alphaF * theta1) + ((1.-alphaF) * iter.phase()) );
 		
-		newp.insert( it.time(), newbp );
+		newp.insert( iter.time(), newbp );
 	}
 	
 		
@@ -430,18 +345,6 @@ Morph::collectByLabel( const list<Partial>::const_iterator & start,
 	return n;
 }
 
-// ---------------------------------------------------------------------------
-//	defaultMap
-// ---------------------------------------------------------------------------
-//	Static member for creating a default morphing function.
-//	May want a different default sometime.
-//
-auto_ptr< Map > 
-Morph::defaultMap( void )
-{
-	BreakpointMap * m = new BreakpointMap();
-	//m->insertBreakpoint( 0., 0.5 );
-	return auto_ptr< Map >( m );
-}
+
 
 End_Namespace( Loris )

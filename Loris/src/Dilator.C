@@ -69,62 +69,65 @@ Dilator::dilate( Partial & p ) const
 	//	sanity check:
 	Assert( _initial.size() == _target.size() );
 		
-	//	Nothing to do if there are no time points:
-	if ( _initial.size() == 0 )
-		return p;
-	
 	//	create the new Partial:
 	Partial newp;
 	newp.setLabel( p.label() );
 	
-	//	use iterators here instead of index, so that the algorithm
-	//	is independent of the kind of container I choose for the time
-	//	points:
-	typedef multiset< double >::const_iterator IterType;
-	IterType iterInit( _initial.begin() ), iterTgt( _target.begin() );
+	//	create iterators on the timepoint collections:
+	typedef multiset< double >::const_iterator TimepointIterator;
+	TimepointIterator iterInit( _initial.begin() ), iterTgt( _target.begin() );
 	
-	for ( PartialIterator pIter(p); ! pIter.atEnd(); pIter.advance() ) {
+	for ( iterator()->reset(p); ! iterator()->atEnd(); iterator()->advance() ) {
 		//	find the first initial time point later than pIter:
-		while ( iterInit != _initial.end() && pIter.time() > *iterInit ) {
+		while ( iterInit != _initial.end() && iterator()->time() > *iterInit ) {
 			++iterInit;
 			++iterTgt;
 		}
 	
 		//	compute a new time for the Breakpoint at pIter:
 		double newtime = 0;
-		if ( iterInit == _initial.begin() ) {
+		if ( _initial.size() == 0 ) {
+			//	need to traverse the Partial, even if there's
+			//	no dilating going on, because the caller may
+			//	be relying on a side effect of the PartialIterator:
+				newtime = iterator()->time();
+		}
+		else if ( iterInit == _initial.begin() ) {
 			//	all time points in _initial are later than 
 			//	the time of pIter; stretch if no zero time 
 			//	point has been specified, otherwise, shift:
 			if ( *iterInit != 0. )
-				newtime = pIter.time() * (*iterTgt) / (*iterInit);
+				newtime = iterator()->time() * (*iterTgt) / (*iterInit);
 			else
-				newtime = (*iterTgt) + ( pIter.time() - (*iterInit) );
+				newtime = (*iterTgt) + ( iterator()->time() - (*iterInit) );
 		}
 		else if ( iterInit == _initial.end() ) {
 			//	all time points in _initial are earlier than 
 			//	the time of pIter; shift:
-			IterType prevTgt = iterTgt; --prevTgt;
-			IterType prevInit = iterInit; --prevInit;
-			newtime = *prevTgt + ( pIter.time() - (*prevInit) );
+			//TimepointIterator prevTgt = iterTgt; --prevTgt;
+			//TimepointIterator prevInit = iterInit; --prevInit;
+			//newtime = *prevTgt + ( iterator()->time() - (*prevInit) );
+			//	or:
+			newtime = * --(TimepointIterator(iterTgt)) + 
+						( iterator()->time() - * --(TimepointIterator(iterInit)) );
 		}
 		else {
-			IterType prevTgt = iterTgt; --prevTgt;
-			IterType prevInit = iterInit; --prevInit;
+			TimepointIterator prevTgt = iterTgt; --prevTgt;
+			TimepointIterator prevInit = iterInit; --prevInit;
 			
 			//	pIter is between the time points at index and
 			//	index-1 in _initial; shift and stretch: 
 			Assert( *iterInit > *prevInit );	//	pIter can't wind up 
 												//	between two equal times
 			newtime = *prevTgt + 
-					  ( (pIter.time() - (*prevInit)) * 
+					  ( (iterator()->time() - (*prevInit)) * 
 						( (*iterTgt) - (*prevTgt) ) /
 						( (*iterInit) - (*prevInit) ) );
 		}
 		
 		//	add a Breakpoint at the computed time:
-		newp.insert( newtime, Breakpoint( pIter.frequency(), pIter.amplitude(), 
-										  pIter.bandwidth(), pIter.phase() ) );
+		newp.insert( newtime, Breakpoint( iterator()->frequency(), iterator()->amplitude(), 
+										  iterator()->bandwidth(), iterator()->phase() ) );
 	}
 	
 	//	assign the new Partial:

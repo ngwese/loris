@@ -15,6 +15,8 @@
 #include "LorisLib.h"
 #include "Partial.h"
 
+#include <memory>
+
 Begin_Namespace( Loris )
 
 // ---------------------------------------------------------------------------
@@ -34,32 +36,75 @@ Begin_Namespace( Loris )
 //
 class PartialIterator
 {
+//	protected construction 
+//	(base class only, cannot instantiate)
+protected:
+	PartialIterator( void ) {}
+	PartialIterator( const PartialIterator & ) {}
+	
 public:
-	PartialIterator( void );
-	PartialIterator( const Partial & pin );
-	
-	//	compiler-generated copy constructor is adequate:
-	//PartialIterator( const PartialIterator & other );
-	
 	//	need to make this virtual as a base class:
 	virtual ~PartialIterator( void ) {}
 	
-	//	HEY make this pure virtual when PartialIterator 
-	//	becomes an abstract class:
-	virtual PartialIterator * clone( void ) const 
-			{ return new PartialIterator( *this ); }
+	//	derived classes must provide a virtual constructor:
+	virtual PartialIterator * clone( void ) const = 0;
+	
+	//	reset applies the Iterator to a new Partial: 
+	virtual void reset( const Partial & p ) = 0;
 	
 	//	iterator interface:
-	virtual void advance( void );			//	may be overridden
-	virtual void reset( const Partial & p );//	may be overridden
-	virtual void rewind( void );			//	may be overridden
+	virtual void advance( void ) = 0;
+	virtual boolean atEnd( void ) const = 0;
 	
-	boolean atEnd( void ) const;
-	boolean isHead( void ) const;
-	boolean isTail( void ) const;
+	//	Partial access:
+	virtual double duration( void ) const = 0;
+	virtual double startTime( void ) const = 0;
+	virtual double endTime( void ) const = 0;
+	virtual double initialPhase( void ) const = 0;
+	virtual int label( void ) const = 0;
 	
-	const Breakpoint & current( void ) const;
-	const Partial & subject( void ) const;
+	//	Breakpoint access:
+	virtual double frequency( void ) const = 0;
+	virtual double amplitude( void ) const = 0;
+	virtual double bandwidth( void ) const = 0;
+	virtual double phase( void ) const = 0;
+	virtual double time( void ) const = 0;
+
+};	//	end of abstract base class PartialIterator
+
+//	definition of auto-ptr type:
+typedef std::auto_ptr< PartialIterator > PartialIteratorPtr;
+
+// ---------------------------------------------------------------------------
+//	class BasicPartialIterator
+//
+class BasicPartialIterator : public PartialIterator
+{
+public:
+	BasicPartialIterator( void );
+	BasicPartialIterator( const Partial & pin );
+	BasicPartialIterator( const BasicPartialIterator & other );
+	
+	virtual ~BasicPartialIterator( void ) {}
+	
+	//	derived classes must provide a virtual constructor:
+	//	In standard C++, an overriding member can return a type that
+	//	is derived from the return type of the overidden member.
+	//	But not in MIPSPro C++.
+virtual
+#if defined(__sgi) && ! defined(__GNUC__)
+	PartialIterator * 
+#else
+	BasicPartialIterator *	
+#endif
+		clone( void ) const { return new BasicPartialIterator( *this ); }
+	
+	//	reset applies the Iterator to a new Partial: 
+	virtual void reset( const Partial & p );
+	
+	//	iterator interface:
+	virtual void advance( void );
+	virtual boolean atEnd( void ) const;
 	
 	//	Partial access:
 	virtual double duration( void ) const;
@@ -74,13 +119,126 @@ public:
 	virtual double bandwidth( void ) const;
 	virtual double phase( void ) const;
 	virtual double time( void ) const;
-
+	
+protected:
+	const Breakpoint & current( void ) const;
+	const Partial & subject( void ) const;
+	
 private:	
 	const Partial * _p;
 	Partial::const_iterator _cur;
 	
-};	//	end of class PartialIterator
+};	//	end of class BasicPartialIterator
 
+// ---------------------------------------------------------------------------
+//	class PartialDecorIterator
+//
+class PartialDecorIterator : public PartialIterator
+{
+//	protected construction 
+//	(base class only, cannot instantiate)
+protected:
+	PartialDecorIterator( void ) : 
+		_iter( new BasicPartialIterator() ) {}
+	PartialDecorIterator( const Partial & pin ) : 
+		_iter( new BasicPartialIterator(pin) ) {}
+	PartialDecorIterator( PartialIteratorPtr iter ) : 
+		_iter( iter ) {}
+		
+	//	compiler-generated copy constructor is not adequate
+	//	in this case, because auto_ptrs (the _iter member)
+	//	cannot be copied directly:
+	PartialDecorIterator( const PartialDecorIterator & other ) : 
+		_iter( other._iter->clone() ),
+		PartialIterator( other ) {}
+	
+public:
+	virtual ~PartialDecorIterator( void ) {}
+	
+/*
+	Don't need this in this class, this one is also an
+	abstract base.
+	
+	//	derived classes must provide a virtual constructor:
+	//	In standard C++, an overriding member can return a type that
+	//	is derived from the return type of the overidden member.
+	//	But not in MIPSPro C++.
+virtual
+#if defined(__sgi) && ! defined(__GNUC__)
+	PartialIterator * 
+#else
+	PartialDecorIterator *	
+#endif
+		clone( void ) const { return new PartialDecorIterator( *this ); }
+*/	
+	//	reset applies the Iterator to a new Partial: 
+	virtual void reset( const Partial & p ) { iterator()->reset( p ); }
+	
+	//	iterator interface:
+	virtual void advance( void ) { iterator()->advance(); }
+	virtual boolean atEnd( void ) const { return iterator()->atEnd(); }
+	
+	//	Partial access:
+	virtual double duration( void ) const	{ return iterator()->duration(); }
+	virtual double startTime( void ) const	{ return iterator()->startTime(); }
+	virtual double endTime( void ) const	{ return iterator()->endTime(); }
+	virtual double initialPhase( void ) const { return iterator()->initialPhase(); }
+	virtual int label( void ) const			{ return iterator()->label(); }
+	
+	//	Breakpoint access:
+	virtual double frequency( void ) const	{ return iterator()->frequency(); }
+	virtual double amplitude( void ) const	{ return iterator()->amplitude(); }
+	virtual double bandwidth( void ) const	{ return iterator()->bandwidth(); }
+	virtual double phase( void ) const 		{ return iterator()->phase(); }
+	virtual double time( void ) const		{ return iterator()->time(); }
+	
+protected:
+	const PartialIteratorPtr & iterator( void ) const	{ return _iter; }
+	
+private:	
+	PartialIteratorPtr _iter;
+	
+};	//	end of abstract base class PartialDecorIterator
+
+// ---------------------------------------------------------------------------
+//	class PartialIteratorOwner
+//
+//	Mixin class.
+//
+class PartialIteratorOwner
+{
+//	protected construction 
+//	(base class only, cannot instantiate)
+protected:
+	PartialIteratorOwner( void ) : 
+		_iter( new BasicPartialIterator() ) {}
+	PartialIteratorOwner( PartialIteratorPtr iter ) : 
+		_iter( iter ) {}
+		
+	//	compiler-generated copy constructor is not adequate
+	//	in this case, because auto_ptrs (the _iter member)
+	//	cannot be copied directly:
+	PartialIteratorOwner( const PartialIteratorOwner & other ) : 
+		_iter( other._iter->clone() ) {}
+	
+public:
+	virtual ~PartialIteratorOwner( void ) {}
+
+	//	iterator access and mutation:
+	const PartialIteratorPtr & iterator( void ) const { return _iter; }
+
+	PartialIteratorPtr 
+	setIterator( PartialIteratorPtr inIter = PartialIteratorPtr( new BasicPartialIterator() ) ) 
+	{
+		PartialIteratorPtr ret( _iter );
+		_iter = inIter;
+		return ret;
+	}
+
+private:	
+	PartialIteratorPtr _iter;
+		
+};	//	end of mixin class PartialIteratorOwner
 
 End_Namespace( Loris )
 

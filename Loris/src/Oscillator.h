@@ -40,7 +40,7 @@ class Oscillator
 //	-- public interface --
 public:
 //	construction:
-	Oscillator( std::auto_ptr< Filter > f = std::auto_ptr< Filter >() );
+	Oscillator( void );
 	Oscillator( const Oscillator & other );
 	
 	// ~Oscillator( void );	//	use compiler-generated
@@ -58,11 +58,18 @@ public:
 	void setBandwidth( double x ) { _bandwidth = x; }
 	void setPhase( double x ) { _phase = x; }
 
-//	filter access/specification:
-	Filter & filter( void ) { return *_filter; }
-	const Filter & filter( void ) const { return *_filter; }
-	void setFilter( std::auto_ptr< Filter > f = std::auto_ptr< Filter >() );
-	
+//	provide Filter access like iterator 
+//	access provided by PartialIteratorOwner:	
+	const std::auto_ptr< Filter > & filter( void ) const { return _filter; }
+	std::auto_ptr< Filter > 
+	setFilter( std::auto_ptr< Filter > f = std::auto_ptr< Filter >( 
+		new Filter( Filter::NormalCoefs().first, Filter::NormalCoefs().second ) ) ) 
+	{
+		std::auto_ptr< Filter > ret( _filter );
+		_filter = f;
+		return ret;
+	}
+
 //	reset the whole state at once:
 	void reset( double radf, double amp, double bw, double ph );
 

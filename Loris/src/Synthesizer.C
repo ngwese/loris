@@ -9,9 +9,7 @@
 //	-kel 16 Aug 99
 //
 // ===========================================================================
-
 #include "LorisLib.h"
-
 #include "Synthesizer.h"
 #include "Exception.h"
 #include "Oscillator.h"
@@ -21,6 +19,13 @@
 
 #include <algorithm>
 #include <vector>
+
+#if !defined( Deprecated_cstd_headers )
+	#include <cmath>
+#else
+	#include <math.h>
+#endif
+
 using namespace std;
 
 Begin_Namespace( Loris )
@@ -42,21 +47,18 @@ Begin_Namespace( Loris )
 //	the call, the Synthesizer will own the Oscillator, and the client's auto_ptr
 //	will have no reference (or ownership).
 //
-Synthesizer::Synthesizer( vector< double > & buf, double srate, 
-						  auto_ptr< Oscillator > osc ) :
+Synthesizer::Synthesizer( vector< double > & buf, double srate ) :
 	_sampleRate( srate ),
 	_offset( 0.001 ),
 	_fadeTime( 0.001 ),
-	_samples( buf )
+	_oscillator( new Oscillator() ),
+	_samples( buf ),
+	PartialIteratorOwner( PartialIteratorPtr( new SynthesisIterator( srate * 0.5, 1000. ) ) )
 {
 	//	check to make sure that the sample rate is valid:
 	if ( _sampleRate <= 0. ) {
 		Throw( InvalidObject, "Synthesizer sample rate must be positive." );
 	}
-	
-	//	initialize these:
-	setOscillator( osc );
-	setIterator();
 }
 
 // ---------------------------------------------------------------------------
@@ -68,9 +70,9 @@ Synthesizer::Synthesizer( const Synthesizer & other ) :
 	_sampleRate( other._sampleRate ),
 	_offset( other._offset ),
 	_fadeTime( other._fadeTime ),
-	_samples( other._samples ),
 	_oscillator( new Oscillator( * other._oscillator ) ),
-	_iterator( other._iterator->clone() )
+	_samples( other._samples ),
+	PartialIteratorOwner( other )
 {
 }
 
@@ -88,66 +90,27 @@ Synthesizer::operator=( const Synthesizer & other )
 {
 	//	do nothing if assigning to self:
 	if ( &other != this ) {	
-		//	first do cloning:
-		auto_ptr< Oscillator > osc( new Oscillator( * other._oscillator ) );
-		auto_ptr< PartialIterator > it( other._iterator->clone() );
-
 		//	try to reserve enough space to copy the 
 		//	sample vector before attempting the copy:
 		_samples.reserve( other._samples.size() );
-				
+		
+		//	do cloning:
+		auto_ptr< Oscillator > osc( new Oscillator( * other._oscillator ) );
+		PartialIteratorPtr iter( other.iterator()->clone() );
+		
 		_sampleRate = other._sampleRate;
 		_offset = other._offset;
 		_fadeTime = other._fadeTime;
 		_samples = other._samples;
-		_oscillator = osc;
-		_iterator = it;
 		
+		setOscillator( osc );
+		setIterator( iter );
 	}
 	
 	return *this;
 }
 
-// ---------------------------------------------------------------------------
-//	setOscillator
-// ---------------------------------------------------------------------------
-//	Default osc is an auto_ptr with no reference, indicating that a default 
-//	Oscillator should be created and used.
-//
-//	auto_ptr is used to submit the Oscillator argument to make explicit
-//	the source/sink relationship between the caller and the Synthesizer. After
-//	the call, the Synthesizer will own the Oscillator, and the client's 
-//	auto_ptr will have no reference (or ownership).
-//
-//
-void
-Synthesizer::setOscillator( auto_ptr< Oscillator > osc )
-{	
-	if ( ! osc.get() )
-		osc.reset( new Oscillator() );
-
-	_oscillator = osc;
-}	
-
-// ---------------------------------------------------------------------------
-//	setIterator
-// ---------------------------------------------------------------------------
-//	Default iter is an auto_ptr with no reference, indicating that a default 
-//	PartialIterator should be created and used.
-//
-//	auto_ptr is used to submit the PartialIterator argument to make explicit
-//	the source/sink relationship between the caller and the Synthesizer. After
-//	the call, the Synthesizer will own the PartialIterator, and the client's 
-//	auto_ptr will have no reference (or ownership).
-//
-void
-Synthesizer::setIterator( auto_ptr< PartialIterator > iter )
-{	
-	if ( ! iter.get() )
-		iter.reset( new PartialIterator() );
 	
-	_iterator = iter;
-}	
 
 #pragma mark -
 #pragma mark synthesis
@@ -175,6 +138,8 @@ Synthesizer::synthesizePartial( const Partial & p )
 
 /*
 //	HEY do something better about this.
+	Can't figure out whether this is still a problem...
+
 	//Assert( p.endTime() < _samples.size() / sampleRate() );
 	if ( p.endTime() > _samples.size() / sampleRate() ) {
 		debugger << "found Partial ending at " << p.endTime() 
@@ -186,20 +151,20 @@ Synthesizer::synthesizePartial( const Partial & p )
 		
 //	reset the oscillator:
 //	Remember that the oscillator only knows about radian frequency! Convert!
-	iterator().reset( p );
-	_oscillator->reset( radianFreq( iterator().frequency() ), iterator().amplitude(), 
-						iterator().bandwidth(), iterator().phase() );
+	iterator()->reset( p );
+	_oscillator->reset( radianFreq( iterator()->frequency() ), iterator()->amplitude(), 
+						iterator()->bandwidth(), iterator()->phase() );
 
 //	initialize sample offset:
-	long bpSampleOffset = (iterator().time() + offset()) * sampleRate();
+	long bpSampleOffset = (iterator()->time() + offset()) * sampleRate();
 
 //	synthesize Partial turn-on if necessary and possible;
-	if ( iterator().amplitude() > 0. ) {
+	if ( iterator()->amplitude() > 0. ) {
 		synthesizeFadeIn( bpSampleOffset );
 	}
 
 //	synthesize linear-frequency segments until there aren't any more:
-	for ( iterator().advance(); ! iterator().atEnd(); iterator().advance() ) {
+	for ( iterator()->advance(); ! iterator()->atEnd(); iterator()->advance() ) {
 		bpSampleOffset = synthesizeEnvelopeSegment( bpSampleOffset );
 		
 		if ( bpSampleOffset >= _samples.size() )
@@ -228,7 +193,7 @@ Synthesizer::synthesizeEnvelopeSegment( long currentSampleOffset )
 		//	between consecutive envelope breakpoints) we
 		//	obviate the running fractional sample total we
 		//	used to need.
-		long nsamps = ((iterator().time() + offset()) * sampleRate()) - currentSampleOffset;
+		long nsamps = ((iterator()->time() + offset()) * sampleRate()) - currentSampleOffset;
 		
 		//	Don't synthesize samples past the end of the buffer.
 		nsamps = min( nsamps, long(_samples.size()) - currentSampleOffset );
@@ -241,8 +206,8 @@ Synthesizer::synthesizeEnvelopeSegment( long currentSampleOffset )
 		//	targeting the radian frequency, amplitude, and 
 		//	bandwidth of the current Breakpoint:
 		_oscillator->generateSamples( _samples, nsamps, currentSampleOffset,
-									  radianFreq( iterator().frequency() ), 
-									  iterator().amplitude(), iterator().bandwidth() );
+									  radianFreq( iterator()->frequency() ), 
+									  iterator()->amplitude(), iterator()->bandwidth() );
 
 		//	update the offset:	
 		currentSampleOffset += nsamps;
@@ -267,7 +232,7 @@ Synthesizer::synthesizeFadeIn( long currentSampleOffset )
 		long rampStart = max( currentSampleOffset - rampLen, 0L );
 		
 		//	Remember that the oscillator only knows about radian frequency! Convert!
-		double rads = radianFreq( iterator().frequency() );
+		double rads = radianFreq( iterator()->frequency() );
 		
 		//	roll back the phase so that it is correct
 		//	at the time of the first real Breakpoint
@@ -287,8 +252,8 @@ Synthesizer::synthesizeFadeIn( long currentSampleOffset )
 		//	these same values already, the amplitude to 
 		//	zero):
 		_oscillator->generateSamples( _samples, currentSampleOffset - rampStart, 
-										rampStart, rads, iterator().amplitude(), 
-										iterator().bandwidth() );
+										rampStart, rads, iterator()->amplitude(), 
+										iterator()->bandwidth() );
 	}
 	
 	return currentSampleOffset;
@@ -333,5 +298,41 @@ Synthesizer::radianFreq( double hz ) const
 {
 	return hz * TwoPi / sampleRate();
 }
+
+// ---------------------------------------------------------------------------
+//	SynthesisIterator amplitude
+// ---------------------------------------------------------------------------
+//	Synthesize at zero amplitude above the Nyquist
+//	frequency, and without bandwidth enhancement below
+//	the specified cutoff frequency.
+//
+double 
+SynthesisIterator::amplitude( void ) const
+{
+	if ( iterator()->frequency() > _nyquistfreq )
+		return 0.;
+	else if ( iterator()->frequency() < _bwecutoff )
+		return iterator()->amplitude() * sqrt(1. - bwclamp( iterator()->bandwidth() ) );
+	else
+		return iterator()->amplitude();
+}
+
+// ---------------------------------------------------------------------------
+//	SynthesisIterator amplitude
+// ---------------------------------------------------------------------------
+//	Synthesize without bandwidth enhancement below
+//	the specified cutoff frequency, also clamp
+//	partial bandwidths to reasonable values.
+//
+double 
+SynthesisIterator::bandwidth( void ) const
+{
+	if ( iterator()->frequency() > _bwecutoff )
+		return bwclamp( iterator()->bandwidth() );
+	else
+		return 0.;
+}
+	
+
 
 End_Namespace( Loris )
