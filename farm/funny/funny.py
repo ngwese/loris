@@ -87,15 +87,28 @@ notes from trial 5:
 	- so: 400 Hz windows are best, sifting at 2 partials per harmonic is not
 	too damaging.
 	
-	- listening to the loud (gian-normalized) sources, it sounds like some of
+	- listening to the loud (gain-normalized) sources, it sounds like some of
 	the noisiness in syntheses is similar to the ambient echo in the recording.
 	
 	- tried a couple morphs and also looked in Kyma, and found that the tracking
 	of harmonics is still not very good above the first few. Morphs sound bad 
 	because partials that should correspond don't.
 	
+	- just noticed (6 June) that in trial 5 I was channelizing the same Partials
+	twice, first at one partial per harmonic, then at two. Duh.
+	
+	- used these sounds to develop the tracking analyzer, which helps get
+	harmonics connected correctly across phoneme boundaries
+	
+notes from trial 6:
+	- two partial per harmonic sifts are hard to distinguish from raw reconstructions
+	- morph is still not great, but its getting better
+	
+notes from trial 7:
+	- halving the hop time (with or without halving the crop time) doesn't
+	seem to make any difference
 
-Last updated: 19 May 2003 by Kelly Fitz
+Last updated: 11 June 2003 by Kelly Fitz
 """
 print __doc__
 
@@ -108,7 +121,7 @@ Using Loris version %s
 
 # use this trial counter to skip over
 # eariler trials
-trial = 5
+trial = 7
 
 print "running trial number", trial, time.ctime(time.time())
 
@@ -402,3 +415,130 @@ if trial == 5:
 				pruneByLabel( ps, range(1,512) )
 				loris.exportSpc( ofilebases + '.s.spc', ps, 60, 0 ) 
 				loris.exportSpc( ofilebases + '.e.spc', ps, 60, 1 ) 
+				
+if trial == 6:
+	source = 'funnyLoud1.aiff'
+	pref = loris.importSpc('trythis1.qharm')
+	ref = loris.createFreqReference( pref, 50, 1000 )
+	r = 155
+	w = 400
+	sfile = loris.AiffFile( source )
+	print 'analyzing %s (%s)'%(source, time.ctime(time.time()))
+	a = loris.Analyzer( r, w )
+	a.setBwRegionWidth( 0 ) # disable BW assoication
+	p = a.analyze( sfile.samples(), sfile.sampleRate(), ref )
+	ofilebase = 'funny1.%i.%i'%(r, w)
+	pcollate = p.copy()
+	loris.distill( pcollate )
+	synthesize( ofilebase + '.raw.aiff', pcollate )
+	loris.exportSdif( ofilebase + '.raw.sdif', pcollate )
+	pruneByLabel( pcollate, range(1,512) )
+	loris.exportSpc( ofilebase + '.raw.s.spc', pcollate, 60, 0 )
+	h = 2
+	loris.channelize(p, ref, h)
+	ps = p.copy()
+	loris.sift( ps )
+	zeros = loris.extractLabeled( ps, 0 )
+	loris.distill( ps )
+	ofilebases = ofilebase + '.s%i'%h
+	loris.exportSdif( ofilebases + '.sdif', ps )
+	synthesize( ofilebases + '.aiff', ps )
+	pruneByLabel( ps, range(1,512) )
+	loris.exportSpc( ofilebases + '.s.spc', ps, 60, 0 ) 
+	loris.exportSpc( ofilebases + '.e.spc', ps, 60, 1 ) 
+
+	source = 'funnyLoud2.aiff'
+	pref = loris.importSpc('trythis2.qharm')
+	ref = loris.createFreqReference( pref, 50, 1000 )
+	r = 170
+	w = 400
+	sfile = loris.AiffFile( source )
+	print 'analyzing %s (%s)'%(source, time.ctime(time.time()))
+	a = loris.Analyzer( r, w )
+	a.setBwRegionWidth( 0 ) # disable BW assoication
+	p = a.analyze( sfile.samples(), sfile.sampleRate(), ref )
+	ofilebase = 'funny2.%i.%i'%(r, w)
+	pcollate = p.copy()
+	loris.distill( pcollate )
+	synthesize( ofilebase + '.raw.aiff', pcollate )
+	loris.exportSdif( ofilebase + '.raw.sdif', pcollate )
+	pruneByLabel( pcollate, range(1,512) )
+	loris.exportSpc( ofilebase + '.raw.s.spc', pcollate, 60, 0 )
+	h = 2
+	loris.channelize(p, ref, h)
+	ps = p.copy()
+	loris.sift( ps )
+	zeros = loris.extractLabeled( ps, 0 )
+	loris.distill( ps )
+	ofilebases = ofilebase + '.s%i'%h
+	loris.exportSdif( ofilebases + '.sdif', ps )
+	synthesize( ofilebases + '.aiff', ps )
+	pruneByLabel( ps, range(1,512) )
+	loris.exportSpc( ofilebases + '.s.spc', ps, 60, 0 ) 
+	loris.exportSpc( ofilebases + '.e.spc', ps, 60, 1 ) 
+
+if trial == 7:
+	source = 'funnyLoud1.aiff'
+	pref = loris.importSpc('trythis1.qharm')
+	ref = loris.createFreqReference( pref, 50, 1000 )
+	r = 155
+	w = 400
+	sfile = loris.AiffFile( source )
+	print 'analyzing %s (%s)'%(source, time.ctime(time.time()))
+	a = loris.Analyzer( r, w )
+	a.setBwRegionWidth( 0 ) # disable BW assoication
+	a.setHopTime( a.hopTime() * 0.5 )
+	# a.setCropTime( a.cropTime() * 0.5 )
+	p = a.analyze( sfile.samples(), sfile.sampleRate(), ref )
+	ofilebase = 'funny1.hires.%i.%i'%(r, w)
+	pcollate = p.copy()
+	loris.distill( pcollate )
+	synthesize( ofilebase + '.raw.aiff', pcollate )
+	loris.exportSdif( ofilebase + '.raw.sdif', pcollate )
+	pruneByLabel( pcollate, range(1,512) )
+	loris.exportSpc( ofilebase + '.raw.s.spc', pcollate, 60, 0 )
+	h = 2
+	loris.channelize(p, ref, h)
+	ps = p.copy()
+	loris.sift( ps )
+	zeros = loris.extractLabeled( ps, 0 )
+	loris.distill( ps )
+	ofilebases = ofilebase + '.s%i'%h
+	loris.exportSdif( ofilebases + '.sdif', ps )
+	synthesize( ofilebases + '.aiff', ps )
+	pruneByLabel( ps, range(1,512) )
+	loris.exportSpc( ofilebases + '.s.spc', ps, 60, 0 ) 
+	loris.exportSpc( ofilebases + '.e.spc', ps, 60, 1 ) 
+
+	source = 'funnyLoud2.aiff'
+	pref = loris.importSpc('trythis2.qharm')
+	ref = loris.createFreqReference( pref, 50, 1000 )
+	r = 170
+	w = 400
+	sfile = loris.AiffFile( source )
+	print 'analyzing %s (%s)'%(source, time.ctime(time.time()))
+	a = loris.Analyzer( r, w )
+	a.setBwRegionWidth( 0 ) # disable BW assoication
+	a.setHopTime( a.hopTime() * 0.5 )
+	#a.setCropTime( a.cropTime() * 0.5 )
+	p = a.analyze( sfile.samples(), sfile.sampleRate(), ref )
+	ofilebase = 'funny2.hires.%i.%i'%(r, w)
+	pcollate = p.copy()
+	loris.distill( pcollate )
+	synthesize( ofilebase + '.raw.aiff', pcollate )
+	loris.exportSdif( ofilebase + '.raw.sdif', pcollate )
+	pruneByLabel( pcollate, range(1,512) )
+	loris.exportSpc( ofilebase + '.raw.s.spc', pcollate, 60, 0 )
+	h = 2
+	loris.channelize(p, ref, h)
+	ps = p.copy()
+	loris.sift( ps )
+	zeros = loris.extractLabeled( ps, 0 )
+	loris.distill( ps )
+	ofilebases = ofilebase + '.s%i'%h
+	loris.exportSdif( ofilebases + '.sdif', ps )
+	synthesize( ofilebases + '.aiff', ps )
+	pruneByLabel( ps, range(1,512) )
+	loris.exportSpc( ofilebases + '.s.spc', ps, 60, 0 ) 
+	loris.exportSpc( ofilebases + '.e.spc', ps, 60, 1 ) 
+
