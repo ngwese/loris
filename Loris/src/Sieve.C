@@ -58,6 +58,15 @@ static int sieve_aux( Partial &src, double minGapTime,
 			continue;
 		
 		//  we overlap wth something longer; remove us from this label.
+		/*
+		debugger << "Partial starting " << src.startTime() << ", " 
+				 << src.frequencyAt( src.startTime() ) << " ending " 
+				 << src.endTime()  << ", " << src.frequencyAt( src.endTime() ) 
+				 << " zapped by Partial starting " 
+				 << it->startTime() << ", " << it->frequencyAt( it->startTime() )
+				 << " ending " << it->endTime() << ", " 
+				 << it->frequencyAt( it->endTime() ) << endl;
+		*/
 		src.setLabel( 0 );
 		return 1;
 	}	//	end iteration over Partial range

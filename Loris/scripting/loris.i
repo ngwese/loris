@@ -541,7 +541,7 @@ createFreqReference_( PartialListHandle * partials, int numSamples,
 		sprintf(s, "sifting %d Partials", (*partials)->size() );
 		printf_notifier( s );
 		
-		Loris::Sieve sieve( 0.001 );
+		Loris::Sieve sieve( 0.0001 );
 		sieve.sift( *partials );
 	}
 	/*	Lippold's wacky experimental sifting thingie: 
