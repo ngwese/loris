@@ -7,6 +7,13 @@ See the end for copying conditions.
 Please send Loris bug reports to loris@cerlsoundgroup.org.
 
 -------------------------------------------------------
+changes since 1.0 release:
+
+- added compile-time checks to ensure that fftw_complex
+is compatible with std::compelx<double>, in 
+FourierTransform.C.
+
+-------------------------------------------------------
 changes since 1.0beta9 release:
 
 - Updated documentation (finally) including C++

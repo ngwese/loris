@@ -48,11 +48,12 @@ libloris_la_LIBADD = \
 		$(top_builddir)/classes/SpcFile.lo \
 		$(top_builddir)/classes/Synthesizer.lo \
 		-lfftw -lsdif
+libloris_la_LDFLAGS = -version-info 3:1:0 -prebind
 else
 libloris_la_LIBADD = $(top_builddir)/classes/libclasses.la
+libloris_la_LDFLAGS = -version-info 3:1:0
 endif
 
-libloris_la_LDFLAGS = -version-info 3:1:0
 
 
 include_HEADERS = loris.h

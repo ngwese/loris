@@ -61,12 +61,13 @@ static void fftw_die_Loris(const char * s)
 }
 
 // ---------------------------------------------------------------------------
-//  CompileTimeError
+//  Check_Types
 // ---------------------------------------------------------------------------
 //	Gnarly code adopted from Alexandrescu (Modern C++ Design) for compile-time
 //	checking of type information. Need to make sure that fftw_complex and 
 //	std::complex<double> are the same size and have the same memory layout.
-//	Try to do that at compile-time;
+//	Try to do that at compile-time, much better than doing it at runtime.
+//	Actually, best of all would be at configure-time...
 //
 template<int> struct CompileTimeError;
 template<> struct CompileTimeError<true> {};
@@ -75,6 +76,46 @@ template<> struct CompileTimeError<true> {};
 
 template <class T, class U> struct CompareTypes { enum { same = 0 }; };
 template<class T> struct CompareTypes<T, T> { enum { same = 1 }; };
+
+static void Check_Types( void )
+{
+	//	check to make sure that std::complex< double >
+	//	and fftw_complex are really identical:
+
+	//	if this won't compile, fftw_real is not defined to be double,
+	//	and this class won't work under those conditions:
+	STATIC_CHECK((CompareTypes<double, fftw_real>::same!=0), fftw_real_IS_NOT_DOUBLE);
+
+	//	if this won't compile, then the two complex types have 
+	//	different sizes, and therefore don't have the same memory 
+	//	layout, and this FourierTransform class won't work:
+	STATIC_CHECK( sizeof(std::complex<double>) == sizeof(fftw_complex), 
+				  fftw_complex_DIFFERENT_SIZE_FROM_std_complex_double );
+				  
+	//	if this doesn't compile, then probably the previous one didn't
+	//	compile either, but it doesn't hurt to verify that the layout
+	//	of the complex types is trivial:
+	STATIC_CHECK( sizeof(fftw_complex) == sizeof(double) + sizeof(double),
+				  fftw_complex_LAYOUT_IS_NONTRIVIAL );
+
+	static bool checked = false;
+	if ( ! checked ) 
+	{
+		//	the only thing that I haven't already verified at
+		//	compile-time is that the two complex types store
+		//	their real and imaginary parts in the same order; 
+		//	hard to see how we can do this at compile-time, 
+		//	since the implementation of std::complex is private:
+		std::complex<double> cplxstd(1234.5678, 9876.5432);
+		fftw_complex * cplxfftw = (fftw_complex *)&cplxstd;
+		if ( c_re( *cplxfftw ) != cplxstd.real() ||
+			 c_im( *cplxfftw ) != cplxstd.imag() ) 
+		{
+			Throw( InvalidObject, 
+				   "FourierTransform found std::complex< double > and fftw_complex to be different." );
+		}
+	}
+}
 
 // ---------------------------------------------------------------------------
 //	FourierTransform constructor
@@ -93,47 +134,8 @@ FourierTransform::FourierTransform( long len ) :
 	//	and exiting, using the function defined above.
 	fftw_die_hook = fftw_die_Loris;
 	
-	//	-- sanity --
-	//	check to make sure that std::complex< double >
-	//	and fftw_complex are really identical:
-
-	//	if this won't compile, fftw_real is not defined to be double,
-	//	and this class won't work under those conditions:
-	STATIC_CHECK((CompareTypes<double, fftw_real>::same!=0), fftw_real_IS_NOT_DOUBLE);
-
-	STATIC_CHECK( sizeof(std::complex<double>) == sizeof(fftw_complex), 
-				  fftw_complex_DIFFERENT_SIZE_FROM_std_complex_double );
-
-	static bool checked = false;
-	if ( ! checked ) 
-	{
-		//	check that fftw_real is a double in the version
-		//	of the FFTW library that we linked:
-		if ( fftw_sizeof_fftw_real() != sizeof( double ) ) 
-		{
-			Throw( InvalidObject, 
-				   "FourierTransform found fftw_real is not the same size as double." );
-		}
-		
-		if ( sizeof( fftw_complex ) != sizeof( std::complex<double> ) ) 
-		{
-			Throw( InvalidObject, 
-				   "FourierTransform found fftw_complex is not the same size as std::complex<double>." );
-		}
-		
-		#if 1
-		//	check that storage for the two complex types is
-		//	the same:
-		std::complex<double> cplxstd(1234.5678, 9876.5432);
-		fftw_complex * cplxfftw = (fftw_complex *)&cplxstd;
-		if ( c_re( *cplxfftw ) != cplxstd.real() ||
-			 c_im( *cplxfftw ) != cplxstd.imag() ) 
-		{
-			Throw( InvalidObject, 
-				   "FourierTransform found std::complex< double > and fftw_complex to be different." );
-		}
-		#endif
-	}	//	end of sanity check
+	//	perform type checks, mostly compile-time:
+	Check_Types();
 
 	//	zero:
 	fill( _buffer.begin(), _buffer.end(), 0. );
