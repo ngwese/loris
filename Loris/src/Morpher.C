@@ -125,7 +125,20 @@ Morpher::morphParameters( const Breakpoint & srcBkpt, const Breakpoint & tgtBkpt
 	//	compute weighted average parameters for 
 	//	the return Breakpoint:	
 	retBkpt.setFrequency( (alphaF * tgtBkpt.frequency()) + ((1.-alphaF) * srcBkpt.frequency()) );
+
+#if !defined(LOG_AMP_MORPHING)
 	retBkpt.setAmplitude( (alphaA * tgtBkpt.amplitude()) + ((1.-alphaA) * srcBkpt.amplitude()) );
+#else	
+	//	log-amplitude morphing:
+	//	it is essential to add in a small Epsilon, so that 
+	//	occasional zero amplitudes do not introduce artifacts
+	//	(if amp is zero, then even if alpha is very small
+	//	the effect is to multiply by zero, because 0^x = 0).
+	using std::pow;
+	static const double Epsilon = 1E-12;
+	retBkpt.setAmplitude( pow(tgtBkpt.amplitude()+Epsilon, alphaA) * pow(srcBkpt.amplitude()+Epsilon, (1.-alphaA)) );
+#endif	
+	
 	retBkpt.setBandwidth( (alphaBW * tgtBkpt.bandwidth()) + ((1.-alphaBW) * srcBkpt.bandwidth()) );
 	retBkpt.setPhase( (alphaF * tgtBkpt.phase()) + ((1.-alphaF) * srcBkpt.phase()) );
 }
