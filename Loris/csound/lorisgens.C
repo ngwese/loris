@@ -26,6 +26,10 @@
  *	synthesis using the Loris library.
  *
  *	This lorisplay module was originally written by Corbin Champion, 2002.
+ *	
+ *	The Loris generator code has been modified such that it can also
+ *  be built as a dynamically loaded module. Thanks to Michael Gogins
+ *	for telling me how to do this!
  *
  * Kelly Fitz, 9 May 2002
  * loris@cerlsoundgroup.org
@@ -71,6 +75,10 @@
 using namespace Loris;
 using namespace std;
 
+#if !defined(__WIN32__) || !defined(_WINDOWS)
+#define PUBLIC 
+#endif
+
 typedef std::vector< Partial > PARTIALS;
 typedef std::vector< Oscillator > OSCILS;
 
@@ -78,11 +86,23 @@ typedef std::vector< Oscillator > OSCILS;
 // #define DEBUG_LORISGENS
 
 //	globals:
-static double Lorisgens_Srate = 1;
-static double Lorisgens_Krate = 1;
-static int Lorisgens_Ksamps = 1;
+static double Lorisgens_Srate = 0;
+static double Lorisgens_Krate = 0;
+static int Lorisgens_Ksamps = 0;
 
 #pragma mark -- static helpers --
+
+// ---------------------------------------------------------------------------
+//	setup_globals
+// ---------------------------------------------------------------------------
+static void setup_globals( GLOBALS * csound )
+{
+	Lorisgens_Srate = csound->GetSr( csound );
+	Lorisgens_Krate = csound->GetKr( csound );
+	Lorisgens_Ksamps = csound->GetKsmps( csound );
+	// std::cerr << "*** sample rate is " << Lorisgens_Srate << std::endl;
+	// std::cerr << "*** control rate is " << Lorisgens_Krate << std::endl;
+}
 
 // ---------------------------------------------------------------------------
 //	import_partials
@@ -579,6 +599,8 @@ static void lorisread_cleanup(void * p);
 extern "C"
 void lorisread_setup( LORISREAD * params )
 {
+	if (!Lorisgens_Srate)
+		setup_globals( params->h.insdshead->csound );
 #ifdef DEBUG_LORISGENS
 	std::cerr << "** Setting up lorisread (owner " << params->h.insdshead << ")" << std::endl;
 #endif
@@ -683,6 +705,8 @@ static void lorisplay_cleanup(void * p);
 extern "C"
 void lorisplay_setup( LORISPLAY * p )
 {
+	if (!Lorisgens_Srate)
+		setup_globals( p->h.insdshead->csound );
 #ifdef DEBUG_LORISGENS
 	std::cerr << "** Setting up lorisplay (owner " << p->h.insdshead << ")" << std::endl;
 #endif
@@ -1042,6 +1066,8 @@ static void lorismorph_cleanup(void * p);
 extern "C"
 void lorismorph_setup( LORISMORPH * p )
 {
+	if (!Lorisgens_Srate)
+		setup_globals( p->h.insdshead->csound );
 #ifdef DEBUG_LORISGENS
 	std::cerr << "** Setting up lorismorph (owner " << p->h.insdshead << ")" << std::endl;
 #endif
@@ -1097,7 +1123,7 @@ extern "C"
 	 * the table of OENTRY structures defined in this shared library.
 	 */
 
-	/* PUBLIC */ int opcode_size()
+	PUBLIC int opcode_size()
 	{
 		return sizeof(OENTRY) * 3;
 	}
@@ -1107,38 +1133,38 @@ extern "C"
 	 * the table of OENTRY structures defined in this shared library.
 	 */
 
-	/* PUBLIC */ OENTRY *opcode_init(GLOBALS *csound)
+	PUBLIC OENTRY *opcode_init(GLOBALS *csound)
 	{
 		//	seems like I ought to be able to take this
 		//	opportunity to initialize the global sample
 		//	rate and k-rate:
+		//
+		//	This would be a good place to do this
+		//	kind of initialization, but sadly, Csound
+		//	calls this function when it loads the module,
+		//	and _before_ it has read the orchestra, so
+		//	the sample and control rates have not been
+		//	set yet.
+		/*
 		Lorisgens_Srate = csound->GetSr( csound );
 		Lorisgens_Krate = csound->GetKr( csound );
 		Lorisgens_Ksamps = csound->GetKsmps( csound );
 		std::cerr << "*** sample rate is " << Lorisgens_Srate << std::endl;
 		std::cerr << "*** control rate is " << Lorisgens_Krate << std::endl;
+		*/
 		
 		return lorisOentry;
 	}
 };
 
 /*
- * 	seems like I am close to getting this to work, but still cannot load the plugin:
- * 
- * /bin/sh ../libtool --mode=compile g++ -DHAVE_CONFIG_H -I. -I. -I.. 
- * 		-I../src -I/usr/local/src/Csound-4.23 -g -O2 -c -o lorisgens.lo 
- * 		lorisgens.C
- * 
- * gcc -shared lorisgens.lo -Wl,--rpath 
- * 		-Wl,/net/zeus/facstaff/kfitz/Loris/csound/.libs -Wl,--rpath 
- * 		-Wl,/usr/local/lib ../src/.libs/libloris.so -lstdc++ -Wl,-soname 
- * 		-Wl,lorisgens.so -o .libs/lorisgens.so
+This works:
+ 
+../libtool --mode=compile g++ -DHAVE_CONFIG_H -I.. -I../src -I/usr/local/src/Csound-4.23 -g -O2 -c -o lorisgens.lo lorisgens.C
 
+../libtool --mode=link g++ -o lorisgens.la -rpath /usr/local/lib -module -avoid-version lorisgens.lo ../src/libloris.la -lstdc++
+
+ 
  csound --opcode-lib=.libs/lorisgens.so tryit.csd
- 
- Loading libraries .libs/lorisgens.so
- Failed to load .libs/lorisgens.so for .libs/lorisgens.so: undefined symbol: _ZN5Loris8SdifFile8partialsEv.
- 
- 
  */
  
