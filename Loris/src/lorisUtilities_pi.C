@@ -429,7 +429,7 @@ void sortByLabel( PartialList * partials )
 extern "C"
 void spliceByLabel( PartialList * src, long label, PartialList * dst )
 {
-	extractLabeled( src, label, dst );
+	::extractLabeled( src, label, dst );
 }
 
 
