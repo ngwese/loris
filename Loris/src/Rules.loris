@@ -15,8 +15,7 @@ OBJ_LORIS = $(CLASSES)/AiffFile.o \
 			$(CLASSES)/Exception.o \
 			$(CLASSES)/Filter.o \
 			$(CLASSES)/FourierTransform.o \
-			$(CLASSES)/ImportPartials.o \
-			$(CLASSES)/ImportLemur5.o \
+			$(CLASSES)/ImportLemur.o \
 			$(CLASSES)/KaiserWindow.o \
 			$(CLASSES)/Map.o \
 			$(CLASSES)/Morph.o \
