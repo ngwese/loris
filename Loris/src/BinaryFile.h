@@ -125,8 +125,8 @@ private:
 class BigEndian
 {
 public:
-	static void read( std::istream & s, int size, long howmany, char * putemHere );
-	static void write( std::ostream & s, int size, long howmany, const char * stuff );
+	static void read( std::istream & s, long howmany, int size, char * putemHere );
+	static void write( std::ostream & s, long howmany, int size, const char * stuff );
 	
 };	//	end of class BigEndian
 

@@ -226,7 +226,8 @@ AiffFile::readCommon( std::istream & s )
 		BigEndian::read( s, 1, sizeof(Int_16), (char *)&ck.channels );
 		BigEndian::read( s, 1, sizeof(Int_32), (char *)&ck.sampleFrames );
 		BigEndian::read( s, 1, sizeof(Int_16), (char *)&ck.bitsPerSample );
-		BigEndian::read( s, 1, sizeof(IEEE::extended80), (char *)&ck.srate );
+		//	don't let this get byte-reversed:
+		BigEndian::read( s, 10, sizeof(char), (char *)&ck.srate );
 	}
 	catch( FileIOException & ex ) {
 		ex.append( "Failed to read badly-formatted AIFF file (bad Common chunk)." );
@@ -254,7 +255,7 @@ AiffFile::readContainer( std::istream & s )
 {
 	//	first build a Container chunk, so that all the data sizes will 
 	//	be correct:
-	ContainerCk ck;
+	ContainerCk ck;		
 	
 	try {
 		// Container is always first:

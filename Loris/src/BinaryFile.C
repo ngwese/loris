@@ -24,7 +24,7 @@ namespace Loris {
 // ---------------------------------------------------------------------------
 //
 void
-BigEndian::read( istream & s, int size, long howmany, char * putemHere )
+BigEndian::read( istream & s, long howmany, int size, char * putemHere )
 {
 	//	read the bytes into data:
 	s.read( putemHere, howmany*size );
@@ -37,7 +37,7 @@ BigEndian::read( istream & s, int size, long howmany, char * putemHere )
 	//	swap byte order if nec.
 	if ( ! bigEndianSystem() && size > 1 ) 
 	{
-		for ( long i = 0; i < howmany; +i )
+		for ( long i = 0; i < howmany; ++i )
 		{
 			swapByteOrder( putemHere + (i*size), size );
 		}

@@ -41,7 +41,7 @@ int bigEndianSystem( void )
 void swapByteOrder( char * bytes, int n )
 {
 	char * beg = bytes, * end = bytes + n - 1;
-	while ( beg > end ) {
+	while ( beg < end ) {
 		char tmp = *end;
 		*end = *beg;
 		*beg = tmp;
