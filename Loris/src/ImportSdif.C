@@ -61,8 +61,8 @@ typedef struct {
 } RowOfLorisData;
 
 //  SDIF signature used by Loris.
-static SdifSignature lorisSignature = SdifSignatureConst('1TRC');
-static SdifSignature lorisLabels = SdifSignatureConst('1LBL');
+static SdifSignature lorisSignature = SdifSignatureConst('1','T','R','C');
+static SdifSignature lorisLabels = SdifSignatureConst('1','L','B','L');
 
 
 #pragma mark envelope reading helpers
