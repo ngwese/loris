@@ -55,15 +55,33 @@ Breakpoint::Breakpoint( double f, double a, double b, double p ) :
 // ---------------------------------------------------------------------------
 //	Breakpoint constructor
 // ---------------------------------------------------------------------------
-//	Compute new amplitude and bandwidth values.
+//	Compute new amplitude and bandwidth values. Don't remove (add negative)  
+//	noise energy in excess of the current noise energy.
 //
 void 
 Breakpoint::addNoise( double noise )
 {
 	double e = amplitude() * amplitude();	//	current total energy
 	double n = e * bandwidth();			//	current noise energy
-	setBandwidth( ( n + noise ) / ( e + noise ) );
-	setAmplitude( sqrt( e + noise ) );
+	
+	if ( n < noise ) {
+		n = 0;
+		e -= n;
+	}
+	else {
+		n += noise;
+		e += noise;
+	}
+	
+	//	guard against divide-by-zero:
+	if ( e > 0. ) {
+		setBandwidth( ( n + noise ) / ( e + noise ) );
+		setAmplitude( sqrt( e + noise ) );
+	}
+	else {
+		setBandwidth( 0. );
+		setAmplitude( 0. );
+	}
 }
 
 End_Namespace( Loris )
