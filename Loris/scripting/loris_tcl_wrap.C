@@ -1011,12 +1011,13 @@ typedef struct {
 #define  SWIGTYPE_p_BreakpointPosition swig_types[7] 
 #define  SWIGTYPE_p_AiffFile swig_types[8] 
 #define  SWIGTYPE_p_SampleVector swig_types[9] 
-#define  SWIGTYPE_p_PartialIterator swig_types[10] 
+#define  SWIGTYPE_p_SdifFile swig_types[10] 
 #define  SWIGTYPE_p_PartialListIterator swig_types[11] 
 #define  SWIGTYPE_p_NewPartialIterator swig_types[12] 
 #define  SWIGTYPE_p_NewPlistIterator swig_types[13] 
 #define  SWIGTYPE_p_Marker swig_types[14] 
-static swig_type_info *swig_types[16];
+#define  SWIGTYPE_p_PartialIterator swig_types[15] 
+static swig_type_info *swig_types[17];
 
 /* -------- TYPES TABLE (END) -------- */
 
@@ -1413,6 +1414,37 @@ void SampleVector_setAt(SampleVector *self,unsigned long idx,double x){
 				throw std::out_of_range("SampleVector::setAt index out of range");
 			(*self)[idx] = x;
 		}
+
+	#include<SdifFile.h>
+
+SdifFile *new_SdifFile__SWIG_2(PartialList *l){
+			return new SdifFile( l->begin(), l->end() );
+		}
+PartialList *SdifFile_partials(SdifFile *self){
+			PartialList * plist = new PartialList( self->partials() );
+			return plist;
+		}
+void SdifFile_addPartials(SdifFile *self,PartialList *l){
+			self->addPartials( l->begin(), l->end() );
+		}
+int SdifFile_numMarkers(SdifFile *self){ return self->markers().size(); }
+Marker &SdifFile_getMarker(SdifFile *self,int i){
+		 	if ( i < 0 || i >= self->markers().size() )
+		 	{
+		 		Throw( InvalidArgument, "Marker index out of range." );
+		 	}
+		 	return self->markers()[i];
+		 }
+void SdifFile_removeMarker(SdifFile *self,int i){
+		 	if ( i < 0 || i >= self->markers().size() )
+		 	{
+		 		Throw( InvalidArgument, "Marker index out of range." );
+		 	}
+		 	self->markers().erase( self->markers().begin() + i );
+		 }
+void SdifFile_addMarker(SdifFile *self,Marker m){
+		 	self->markers().push_back( m );
+		 }
 
 #include<Partial.h>
 #include<PartialList.h>
@@ -5286,6 +5318,466 @@ static swig_attribute swig_SampleVector_attributes[] = {
 static swig_class *swig_SampleVector_bases[] = {0};
 swig_class _wrap_class_SampleVector = { "SampleVector", &SWIGTYPE_p_SampleVector,_wrap_new_SampleVector, swig_delete_SampleVector, swig_SampleVector_methods, swig_SampleVector_attributes, swig_SampleVector_bases };
 static int
+_wrap_new_SdifFile__SWIG_0(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    char *arg1 ;
+    SdifFile *result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"s:new_SdifFile filename ",&arg1) == TCL_ERROR) SWIG_fail;
+    {
+        try
+        {
+            result = (SdifFile *)new SdifFile((char const *)arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_SdifFile,0));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_new_SdifFile__SWIG_1(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    SdifFile *result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,":new_SdifFile ") == TCL_ERROR) SWIG_fail;
+    {
+        try
+        {
+            result = (SdifFile *)new SdifFile();
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_SdifFile,0));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_delete_SdifFile(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    SdifFile *arg1 = (SdifFile *) 0 ;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"o:delete_SdifFile self ",0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_SdifFile,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            delete arg1;
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_SdifFile_write(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    SdifFile *arg1 = (SdifFile *) 0 ;
+    char *arg2 ;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"os:SdifFile_write self path ",0,&arg2) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_SdifFile,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            (arg1)->write((char const *)arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_SdifFile_write1TRC(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    SdifFile *arg1 = (SdifFile *) 0 ;
+    char *arg2 ;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"os:SdifFile_write1TRC self path ",0,&arg2) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_SdifFile,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            (arg1)->write1TRC((char const *)arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_new_SdifFile__SWIG_2(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    PartialList *arg1 = (PartialList *) 0 ;
+    SdifFile *result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"o:new_SdifFile l ",0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            result = (SdifFile *)new_SdifFile__SWIG_2(arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_SdifFile,0));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_new_SdifFile(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    Tcl_Obj *CONST *argv = objv+1;
+    int argc = objc-1;
+    if (argc == 0) {
+        return _wrap_new_SdifFile__SWIG_1(clientData, interp, objc, objv);
+    }
+    if (argc == 1) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(interp, argv[0], (void **) &ptr, SWIGTYPE_p_PartialList, 0) == TCL_ERROR) {
+                _v = 0;
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            return _wrap_new_SdifFile__SWIG_2(clientData, interp, objc, objv);
+        }
+    }
+    if (argc == 1) {
+        int _v;
+        {
+            _v = 1;
+        }
+        if (_v) {
+            return _wrap_new_SdifFile__SWIG_0(clientData, interp, objc, objv);
+        }
+    }
+    
+    Tcl_SetResult(interp,(char *) "No matching function for overloaded 'new_SdifFile'", TCL_STATIC);
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_SdifFile_partials(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    SdifFile *arg1 = (SdifFile *) 0 ;
+    PartialList *result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"o:SdifFile_partials self ",0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_SdifFile,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            result = (PartialList *)SdifFile_partials(arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_PartialList,0));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_SdifFile_addPartials(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    SdifFile *arg1 = (SdifFile *) 0 ;
+    PartialList *arg2 = (PartialList *) 0 ;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"oo:SdifFile_addPartials self l ",0,0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_SdifFile,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[2], (void **) &arg2, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            SdifFile_addPartials(arg1,arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_SdifFile_numMarkers(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    SdifFile *arg1 = (SdifFile *) 0 ;
+    int result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"o:SdifFile_numMarkers self ",0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_SdifFile,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            result = (int)SdifFile_numMarkers(arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,Tcl_NewIntObj((long) result));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_SdifFile_getMarker(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    SdifFile *arg1 = (SdifFile *) 0 ;
+    int arg2 ;
+    Marker *result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"oi:SdifFile_getMarker self i ",0,&arg2) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_SdifFile,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            {
+                Marker &_result_ref = SdifFile_getMarker(arg1,arg2);
+                result = (Marker *) &_result_ref;
+            }
+            
+        }
+        catch ( InvalidArgument & ex )
+        {
+            SWIG_exception(SWIG_ValueError, ex.what() );
+        }
+    }
+    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_Marker,0));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_SdifFile_removeMarker(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    SdifFile *arg1 = (SdifFile *) 0 ;
+    int arg2 ;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"oi:SdifFile_removeMarker self i ",0,&arg2) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_SdifFile,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            SdifFile_removeMarker(arg1,arg2);
+            
+        }
+        catch ( InvalidArgument & ex )
+        {
+            SWIG_exception(SWIG_ValueError, ex.what() );
+        }
+    }
+    
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_SdifFile_addMarker(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    SdifFile *arg1 = (SdifFile *) 0 ;
+    Marker arg2 ;
+    Marker *argp2 ;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"oo:SdifFile_addMarker self m ",0,0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_SdifFile,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[2], (void **) &argp2, SWIGTYPE_p_Marker,SWIG_POINTER_EXCEPTION ) != TCL_OK)) SWIG_fail;
+    arg2 = *argp2; 
+    {
+        try
+        {
+            SdifFile_addMarker(arg1,arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static void swig_delete_SdifFile(void *obj) {
+SdifFile *arg1 = (SdifFile *) obj;
+delete arg1;
+}
+static swig_method swig_SdifFile_methods[] = {
+    {"write", _wrap_SdifFile_write}, 
+    {"write1TRC", _wrap_SdifFile_write1TRC}, 
+    {"partials", _wrap_SdifFile_partials}, 
+    {"addPartials", _wrap_SdifFile_addPartials}, 
+    {"numMarkers", _wrap_SdifFile_numMarkers}, 
+    {"getMarker", _wrap_SdifFile_getMarker}, 
+    {"removeMarker", _wrap_SdifFile_removeMarker}, 
+    {"addMarker", _wrap_SdifFile_addMarker}, 
+    {0,0}
+};
+static swig_attribute swig_SdifFile_attributes[] = {
+    {0,0,0}
+};
+static swig_class *swig_SdifFile_bases[] = {0};
+swig_class _wrap_class_SdifFile = { "SdifFile", &SWIGTYPE_p_SdifFile,_wrap_new_SdifFile, swig_delete_SdifFile, swig_SdifFile_methods, swig_SdifFile_attributes, swig_SdifFile_bases };
+static int
 _wrap_NewPlistIterator_atEnd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
     NewPlistIterator *arg1 = (NewPlistIterator *) 0 ;
     bool result;
@@ -9022,6 +9514,17 @@ static swig_command_info swig_commands[] = {
     { SWIG_prefix "SampleVector_getAt", (swig_wrapper_func) _wrap_SampleVector_getAt, NULL},
     { SWIG_prefix "SampleVector_setAt", (swig_wrapper_func) _wrap_SampleVector_setAt, NULL},
     { SWIG_prefix "SampleVector", (swig_wrapper_func) SWIG_ObjectConstructor, &_wrap_class_SampleVector},
+    { SWIG_prefix "delete_SdifFile", (swig_wrapper_func) _wrap_delete_SdifFile, NULL},
+    { SWIG_prefix "SdifFile_write", (swig_wrapper_func) _wrap_SdifFile_write, NULL},
+    { SWIG_prefix "SdifFile_write1TRC", (swig_wrapper_func) _wrap_SdifFile_write1TRC, NULL},
+    { SWIG_prefix "new_SdifFile", (swig_wrapper_func) _wrap_new_SdifFile, NULL},
+    { SWIG_prefix "SdifFile_partials", (swig_wrapper_func) _wrap_SdifFile_partials, NULL},
+    { SWIG_prefix "SdifFile_addPartials", (swig_wrapper_func) _wrap_SdifFile_addPartials, NULL},
+    { SWIG_prefix "SdifFile_numMarkers", (swig_wrapper_func) _wrap_SdifFile_numMarkers, NULL},
+    { SWIG_prefix "SdifFile_getMarker", (swig_wrapper_func) _wrap_SdifFile_getMarker, NULL},
+    { SWIG_prefix "SdifFile_removeMarker", (swig_wrapper_func) _wrap_SdifFile_removeMarker, NULL},
+    { SWIG_prefix "SdifFile_addMarker", (swig_wrapper_func) _wrap_SdifFile_addMarker, NULL},
+    { SWIG_prefix "SdifFile", (swig_wrapper_func) SWIG_ObjectConstructor, &_wrap_class_SdifFile},
     { SWIG_prefix "NewPlistIterator_atEnd", (swig_wrapper_func) _wrap_NewPlistIterator_atEnd, NULL},
     { SWIG_prefix "NewPlistIterator_next", (swig_wrapper_func) _wrap_NewPlistIterator_next, NULL},
     { SWIG_prefix "NewPlistIterator_partial", (swig_wrapper_func) _wrap_NewPlistIterator_partial, NULL},
@@ -9133,11 +9636,12 @@ static swig_type_info _swigt__p_BreakpointEnvelope[] = {{"_p_BreakpointEnvelope"
 static swig_type_info _swigt__p_BreakpointPosition[] = {{"_p_BreakpointPosition", 0, "BreakpointPosition *", &_wrap_class_BreakpointPosition},{"_p_BreakpointPosition"},{0}};
 static swig_type_info _swigt__p_AiffFile[] = {{"_p_AiffFile", 0, "AiffFile *", &_wrap_class_AiffFile},{"_p_AiffFile"},{0}};
 static swig_type_info _swigt__p_SampleVector[] = {{"_p_SampleVector", 0, "SampleVector *", &_wrap_class_SampleVector},{"_p_SampleVector"},{0}};
-static swig_type_info _swigt__p_PartialIterator[] = {{"_p_PartialIterator", 0, "PartialIterator *", &_wrap_class_PartialIterator},{"_p_PartialIterator"},{0}};
+static swig_type_info _swigt__p_SdifFile[] = {{"_p_SdifFile", 0, "SdifFile *", &_wrap_class_SdifFile},{"_p_SdifFile"},{0}};
 static swig_type_info _swigt__p_PartialListIterator[] = {{"_p_PartialListIterator", 0, "PartialListIterator *", &_wrap_class_PartialListIterator},{"_p_PartialListIterator"},{0}};
 static swig_type_info _swigt__p_NewPartialIterator[] = {{"_p_NewPartialIterator", 0, "NewPartialIterator *", &_wrap_class_NewPartialIterator},{"_p_NewPartialIterator"},{0}};
 static swig_type_info _swigt__p_NewPlistIterator[] = {{"_p_NewPlistIterator", 0, "NewPlistIterator *", &_wrap_class_NewPlistIterator},{"_p_NewPlistIterator"},{0}};
 static swig_type_info _swigt__p_Marker[] = {{"_p_Marker", 0, "Marker *", &_wrap_class_Marker},{"_p_Marker"},{0}};
+static swig_type_info _swigt__p_PartialIterator[] = {{"_p_PartialIterator", 0, "PartialIterator *", &_wrap_class_PartialIterator},{"_p_PartialIterator"},{0}};
 
 static swig_type_info *swig_types_initial[] = {
 _swigt__p_PartialList, 
@@ -9150,11 +9654,12 @@ _swigt__p_BreakpointEnvelope,
 _swigt__p_BreakpointPosition, 
 _swigt__p_AiffFile, 
 _swigt__p_SampleVector, 
-_swigt__p_PartialIterator, 
+_swigt__p_SdifFile, 
 _swigt__p_PartialListIterator, 
 _swigt__p_NewPartialIterator, 
 _swigt__p_NewPlistIterator, 
 _swigt__p_Marker, 
+_swigt__p_PartialIterator, 
 0
 };
 

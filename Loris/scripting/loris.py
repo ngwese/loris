@@ -233,6 +233,36 @@ class SampleVectorPtr(SampleVector):
         _swig_setattr(self, SampleVector,self.__class__,SampleVector)
 _loris.SampleVector_swigregister(SampleVectorPtr)
 
+class SdifFile(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, SdifFile, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, SdifFile, name)
+    def __del__(self, destroy= _loris.delete_SdifFile):
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+    def write(*args): return apply(_loris.SdifFile_write,args)
+    def write1TRC(*args): return apply(_loris.SdifFile_write1TRC,args)
+    def __init__(self,*args):
+        _swig_setattr(self, SdifFile, 'this', apply(_loris.new_SdifFile,args))
+        _swig_setattr(self, SdifFile, 'thisown', 1)
+    def partials(*args): return apply(_loris.SdifFile_partials,args)
+    def addPartials(*args): return apply(_loris.SdifFile_addPartials,args)
+    def numMarkers(*args): return apply(_loris.SdifFile_numMarkers,args)
+    def getMarker(*args): return apply(_loris.SdifFile_getMarker,args)
+    def removeMarker(*args): return apply(_loris.SdifFile_removeMarker,args)
+    def addMarker(*args): return apply(_loris.SdifFile_addMarker,args)
+    def __repr__(self):
+        return "<C SdifFile instance at %s>" % (self.this,)
+
+class SdifFilePtr(SdifFile):
+    def __init__(self,this):
+        _swig_setattr(self, SdifFile, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, SdifFile, 'thisown', 0)
+        _swig_setattr(self, SdifFile,self.__class__,SdifFile)
+_loris.SdifFile_swigregister(SdifFilePtr)
+
 class NewPlistIterator(_object):
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, NewPlistIterator, name, value)

@@ -768,7 +768,20 @@ public:
 	
 };	//	end of class Marker
 
+// ---------------------------------------------------------------------------
+//	class AiffFile
+//	
+//	An AiffFile represents a sample file (on disk) in the Audio Interchange
+//	File Format. The file is read from disk and the samples stored in memory
+//	upon construction of an AiffFile instance. The samples are accessed by 
+//	the samples() method, which converts them to double precision floats and
+//	returns them in a SampleVector.
+//
+%{
+	#include<AiffFile.h>
+%}
 
+%newobject AiffFile::samples;
 %exception AiffFile::getMarker
 {
 	try
@@ -792,20 +805,6 @@ public:
 	}
 }
 
-// ---------------------------------------------------------------------------
-//	class AiffFile
-//	
-//	An AiffFile represents a sample file (on disk) in the Audio Interchange
-//	File Format. The file is read from disk and the samples stored in memory
-//	upon construction of an AiffFile instance. The samples are accessed by 
-//	the samples() method, which converts them to double precision floats and
-//	returns them in a SampleVector.
-//
-%{
-	#include<AiffFile.h>
-%}
-
-%newobject AiffFile::samples;
 
 class AiffFile
 {
@@ -1117,6 +1116,119 @@ public:
 	}
 
 };	//	end of class SampleVector
+
+// ---------------------------------------------------------------------------
+//	class SdifFile
+//
+//	Class SdifFile represents reassigned bandwidth-enhanced Partial 
+//	data in a SDIF-format data file. Construction of an SdifFile 
+//	from a stream or filename automatically imports the Partial
+//	data. 
+%{
+	#include<SdifFile.h>
+%}
+
+
+%newobject SdifFile::partials;
+%exception SdifFile::getMarker
+{
+	try
+	{
+		$action
+	}
+	catch ( InvalidArgument & ex )
+	{
+		SWIG_exception(SWIG_ValueError, ex.what() );
+	}
+}
+%exception SdifFile::removeMarker
+{
+	try
+	{
+		$action
+	}
+	catch ( InvalidArgument & ex )
+	{
+		SWIG_exception(SWIG_ValueError, ex.what() );
+	}
+}
+
+class SdifFile
+{
+public:
+ 	SdifFile( const char * filename );
+	/*	Initialize an instance of SdifFile by importing Partial data from
+		the file having the specified filename or path.
+	*/
+  
+	SdifFile( void );
+	/*	Initialize an empty instance of SdifFile having no Partials.
+	 */
+	 
+	 ~SdifFile( void );
+		
+	void write( const char * path );
+	/*	Export the envelope Partials represented by this SdifFile to
+		the file having the specified filename or path.
+	*/
+
+	void write1TRC( const char * path );
+	/*	Export the envelope Partials represented by this SdifFile to
+		the file having the specified filename or path in the 1TRC
+		format, resampled, and without phase or bandwidth information.
+	*/
+	
+	%extend 
+	{
+		SdifFile( PartialList * l ) 
+		{
+			return new SdifFile( l->begin(), l->end() );
+		}
+	
+		//	return a copy of the Partials represented by this SdifFile.
+		PartialList * partials( void )
+		{
+			PartialList * plist = new PartialList( self->partials() );
+			return plist;
+		}
+		/*	Return a SampleVector containing the AIFF samples from this AIFF 
+			file as double precision floats on the range -1,1.
+		 */
+		 
+		//	add a PartialList of Partials:
+		void addPartials( PartialList * l )
+		{
+			self->addPartials( l->begin(), l->end() );
+		}
+		 
+		 //	add members to access Markers
+		 int numMarkers( void ) { return self->markers().size(); }
+		 
+		 Marker & getMarker( int i )
+		 {
+		 	if ( i < 0 || i >= self->markers().size() )
+		 	{
+		 		Throw( InvalidArgument, "Marker index out of range." );
+		 	}
+		 	return self->markers()[i];
+		 }
+		 
+		 void removeMarker( int i )
+		 {
+		 	if ( i < 0 || i >= self->markers().size() )
+		 	{
+		 		Throw( InvalidArgument, "Marker index out of range." );
+		 	}
+		 	self->markers().erase( self->markers().begin() + i );
+		 }
+		 
+		 void addMarker( Marker m )
+		 {
+		 	self->markers().push_back( m );
+		 }
+	}	
+};	//	end of class SdifFile
+
 
 // ----------------------------------------------------------------
 //		wrap PartialList classes
