@@ -1065,7 +1065,7 @@ SWIGEXPORT(int) SWIG_init(Tcl_Interp *);
 	static char EXCEPTION_THROWN[256];
 	static void exception_handler( const char * s )
 	{
-		snprintf(EXCEPTION_THROWN, 255, "s", s);
+		snprintf(EXCEPTION_THROWN, 255, "%s", s);
 	}
 
 
