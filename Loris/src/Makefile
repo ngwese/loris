@@ -72,7 +72,6 @@ OBJ_LORIS = AiffFile.o \
 			Filter.o \
 			FourierTransform.o \
 			ImportLemur.o \
-			ImportSdif.o \
 			KaiserWindow.o \
 			Morpher.o \
 			Oscillator.o \

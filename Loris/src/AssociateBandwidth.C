@@ -207,7 +207,7 @@ AssociateBandwidth::accumulateSinusoid( double freq, double amp )
 		return;
 
 	//	distribute weight at the peak frequency:
-	//distribute( freq, 1., _weights );\
+	//distribute( freq, 1., _weights );
 	//	new idea: weight Partials by amplitude:
 	distribute( freq, amp, _weights );
 }

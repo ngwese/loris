@@ -20,12 +20,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *
- *	lorisExportSpc.i
+ *	lorisSpcFile.i
  *
- *	SWIG interface file describing the Loris::ExportSpc class.
- *	Include this file in loris.i to include the ExportSpc class
+ *	SWIG interface file describing the Loris::SpcFile class.
+ *	Include this file in loris.i to include the SpcFile class
  *	interface in the scripting module. (Can be used with the 
- *	-shadow option to SWIG to build an ExportSpc class in the 
+ *	-shadow option to SWIG to build an SpcFile class in the 
  *	Python interface.) This file does not support exactly the 
  *	public interface of the C++ class, but has been modified to
  *	better support SWIG and scripting languages.
@@ -38,35 +38,35 @@
  *
  */
 %{
-	#include "ExportSpc.h"
-	using Loris::ExportSpc;
+	#include "SpcFile.h"
+	using Loris::SpcFile;
 %}
 
 // ---------------------------------------------------------------------------
-//	class ExportSpc
+//	class SpcFile
 //	
-/*	An ExportSpc represents a configuration of parameters for
+/*	An SpcFile represents a configuration of parameters for
 	exporting a collection of Bandwidth-Enhanced partials to 
 	an spc-format file for use with the Symbolic Sound Kyma
 	System.
  */
-class ExportSpc
+class SpcFile
 {
 public:
 //	construction:
-	ExportSpc( double midiPitch );
-	/*	Construct a new ExportSpc instance configured from the 
-		given MIDI note number. All other ExportSpc parameters
-		are computed fromthe specified note number.
+	SpcFile( double midiPitch );
+	/*	Construct a new SpcFile instance configured from the 
+		given MIDI note number. All other SpcFile parameters
+		are computed from the specified note number.
 	 */
-	~ExportSpc( void );
-	/*	Destroy this ExportSpc instance.
+	~SpcFile( void );
+	/*	Destroy this SpcFile instance.
 	 */
 
 	void write( const char * filename, const PartialList & partials );
 	/*	Export the given list of Partials to an spc file having the
 		specified path (or name) according to the current configuration 
-		of this ExportSpc instance.
+		of this SpcFile instance.
 	 */
 /*	 
 %addmethods 
@@ -78,7 +78,7 @@ public:
 	}
 	/*	Export the given list of Partials to an spc file having the
 		specified path (or name) according to the current configuration 
-		of this ExportSpc instance.
+		of this SpcFile instance.
 	 * /
 }
 */
@@ -97,7 +97,7 @@ public:
 		be 32, 64, 128, or 256.
 	 */
 	int refLabel( void ) const;
-	/*	Return the label of the reference partial for this ExportSpc
+	/*	Return the label of the reference partial for this SpcFile
 		instance. A reference label of 1 indicates the fundamental.
 		The reference label is used for filling in frequencies during 
 		time gaps in other partials. 
@@ -151,7 +151,7 @@ public:
 		be 32, 64, 128, or 256.
 	 */
 	void setRefLabel( int x );
-	/*	Set the label of the reference partial for this ExportSpc
+	/*	Set the label of the reference partial for this SpcFile
 		instance. A reference label of 1 indicates the fundamental.
 		The reference partial is used for filling in frequencies 
 		during time gaps in other partials. 
@@ -196,4 +196,4 @@ public:
 		be inserted at the time specified with setMarkerTime().  
 		Specify 0.0 to avoid inserting a marker into the spc file.
 	 */
-};	//	end of class ExportSpc
+};	//	end of class SpcFile

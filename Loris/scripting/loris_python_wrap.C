@@ -488,16 +488,15 @@ SWIG_InstallConstants(PyObject *d, swig_const_info constants[]) {
 /* -------- TYPES TABLE (BEGIN) -------- */
 
 #define  SWIGTYPE_p_Partial swig_types[0] 
-#define  SWIGTYPE_p_ExportSpc swig_types[1] 
-#define  SWIGTYPE_p_PartialList swig_types[2] 
-#define  SWIGTYPE_p_SampleVector swig_types[3] 
-#define  SWIGTYPE_p_AiffFile swig_types[4] 
-#define  SWIGTYPE_p_Analyzer swig_types[5] 
-#define  SWIGTYPE_p_PartialListIterator swig_types[6] 
-#define  SWIGTYPE_p_PartialIterator swig_types[7] 
-#define  SWIGTYPE_p_Breakpoint swig_types[8] 
-#define  SWIGTYPE_p_BreakpointEnvelope swig_types[9] 
-static swig_type_info *swig_types[11];
+#define  SWIGTYPE_p_PartialList swig_types[1] 
+#define  SWIGTYPE_p_SampleVector swig_types[2] 
+#define  SWIGTYPE_p_AiffFile swig_types[3] 
+#define  SWIGTYPE_p_Analyzer swig_types[4] 
+#define  SWIGTYPE_p_PartialListIterator swig_types[5] 
+#define  SWIGTYPE_p_PartialIterator swig_types[6] 
+#define  SWIGTYPE_p_Breakpoint swig_types[7] 
+#define  SWIGTYPE_p_BreakpointEnvelope swig_types[8] 
+static swig_type_info *swig_types[10];
 
 /* -------- TYPES TABLE (END) -------- */
 
@@ -618,9 +617,6 @@ BreakpointEnvelope * BreakpointEnvelopeWithValue_( double initialValue )
 {
 	return new BreakpointEnvelope( initialValue );
 }
-
-	#include "ExportSpc.h"
-	using Loris::ExportSpc;
 
 #include <stdexcept>
 #include <vector>
@@ -752,7 +748,8 @@ void distill( PartialList * partials )
 	 */
 				 
 
-	#include "ExportSdif.h"
+	//	stupid name for sdif file header, name collision
+	#include "Sdiff.h"
 
 	void exportSdif( const char * path, PartialList * partials )
 	{
@@ -762,8 +759,7 @@ void distill( PartialList * partials )
 			Throw( Loris::InvalidObject, "No Partials in PartialList to export to sdif file." );
 	
 		Loris::notifier << "exporting sdif partial data to " << path << Loris::endl;		
-		Loris::ExportSdif efout;
-		efout.write( path, *partials );
+		Loris::SdifFile::Export( path, *partials );
 		
 	}
 	/*	Export Partials in a PartialList to a SDIF file at the specified
@@ -772,11 +768,50 @@ void distill( PartialList * partials )
 			www.ircam.fr/equipes/analyse-synthese/sdif/  
 	 */
 
-	#include "ImportSdif.h"
+	#include "SpcFile.h"
+
+	void exportSpc( const char * path, PartialList * partials, double midiPitch, 
+					int enhanced = true, double endApproachTime = 0. )
+	{
+		ThrowIfNull((PartialList *) partials);
+
+		if ( partials->size() == 0 )
+			Throw( Loris::InvalidObject, "No Partials in PartialList to export to Spc file." );
+
+		Loris::notifier << "exporting Spc partial data to " << path << Loris::endl;
+		Loris::SpcFile::Export( path, *partials, midiPitch, enhanced, endApproachTime );
+	}
+	/*	Export Partials in a PartialList to a Spc file at the specified file
+		path (or name). The fractional MIDI pitch must be specified. The optional
+		enhanced parameter defaults to true (for bandwidth-enhanced spc files), 
+		but an be specified false for pure-sines spc files. The optional 
+		endApproachTime parameter is in seconds; its default value is zero (and 
+		has no effect). A nonzero endApproachTime indicates that the plist does 
+		not include a release, but rather ends in a static spectrum corresponding 
+		to the final breakpoint values of the partials.  the endApproachTime
+		specifies how long before the end of the sound the amplitude, frequency, 
+		and bandwidth values are to be modified to make a gradual transition to 
+		the static spectrum.
+	 */
+
+	#include "Sdiff.h"
 	PartialList * importSdif( const char * path )
 	{
 		Loris::notifier << "importing Partials from " << path << Loris::endl;
-		Loris::ImportSdif imp( path );
+		Loris::SdifFile imp( path );
+
+		PartialList * partials = new PartialList();
+		//	splice() can't throw, can it???
+		partials->splice( partials->end(), imp.partials() );
+
+		return partials;
+	}
+
+	#include "SpcFile.h"
+	PartialList * importSpc( const char * path )
+	{
+		Loris::notifier << "importing Partials from " << path << Loris::endl;
+		Loris::SpcFile imp( path );
 
 		PartialList * partials = new PartialList();
 		//	splice() can't throw, can it???
@@ -1253,6 +1288,46 @@ static PyObject *_wrap_exportSdif(PyObject *self, PyObject *args) {
 }
 
 
+static PyObject *_wrap_exportSpc(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    char *arg0 ;
+    PartialList *arg1 ;
+    double arg2 ;
+    int arg3 = true ;
+    double arg4 = 0. ;
+    PyObject * argo1 =0 ;
+    
+    if(!PyArg_ParseTuple(args,"sOd|id:exportSpc",&arg0,&argo1,&arg2,&arg3,&arg4)) return NULL;
+    if ((SWIG_ConvertPtr(argo1,(void **) &arg1,SWIGTYPE_p_PartialList,1)) == -1) return NULL;
+    {
+        try
+        {
+            exportSpc((char const *)arg0,arg1,arg2,arg3,arg4);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            //	(these are very unlikely to come from the interface
+            //	code, and cannot escape the procedural interface to
+            //	Loris, which catches all exceptions.)
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
+        }
+    }Py_INCREF(Py_None);
+    resultobj = Py_None;
+    return resultobj;
+}
+
+
 static PyObject *_wrap_importSdif(PyObject *self, PyObject *args) {
     PyObject *resultobj;
     char *arg0 ;
@@ -1263,6 +1338,40 @@ static PyObject *_wrap_importSdif(PyObject *self, PyObject *args) {
         try
         {
             result = (PartialList *)importSdif((char const *)arg0);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            //	(these are very unlikely to come from the interface
+            //	code, and cannot escape the procedural interface to
+            //	Loris, which catches all exceptions.)
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
+        }
+    }resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_PartialList);
+    return resultobj;
+}
+
+
+static PyObject *_wrap_importSpc(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    char *arg0 ;
+    PartialList *result ;
+    
+    if(!PyArg_ParseTuple(args,"s:importSpc",&arg0)) return NULL;
+    {
+        try
+        {
+            result = (PartialList *)importSpc((char const *)arg0);
             
         }
         catch( Loris::Exception & ex ) 
@@ -4747,883 +4856,6 @@ static PyObject *_wrap_BreakpointEnvelope_insertBreakpoint(PyObject *self, PyObj
 }
 
 
-static PyObject *_wrap_new_ExportSpc(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    double arg0 ;
-    ExportSpc *result ;
-    
-    if(!PyArg_ParseTuple(args,"d:new_ExportSpc",&arg0)) return NULL;
-    {
-        try
-        {
-            result = (ExportSpc *)new ExportSpc(arg0);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            //	(these are very unlikely to come from the interface
-            //	code, and cannot escape the procedural interface to
-            //	Loris, which catches all exceptions.)
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-    }resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_ExportSpc);
-    return resultobj;
-}
-
-
-static PyObject *_wrap_delete_ExportSpc(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    ExportSpc *arg0 ;
-    PyObject * argo0 =0 ;
-    
-    if(!PyArg_ParseTuple(args,"O:delete_ExportSpc",&argo0)) return NULL;
-    if ((SWIG_ConvertPtr(argo0,(void **) &arg0,SWIGTYPE_p_ExportSpc,1)) == -1) return NULL;
-    {
-        try
-        {
-            delete arg0;
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            //	(these are very unlikely to come from the interface
-            //	code, and cannot escape the procedural interface to
-            //	Loris, which catches all exceptions.)
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-    }Py_INCREF(Py_None);
-    resultobj = Py_None;
-    return resultobj;
-}
-
-
-static PyObject *_wrap_ExportSpc_write(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    ExportSpc *arg0 ;
-    char *arg1 ;
-    PartialList *arg2 ;
-    PyObject * argo0 =0 ;
-    PyObject * argo2 =0 ;
-    
-    if(!PyArg_ParseTuple(args,"OsO:ExportSpc_write",&argo0,&arg1,&argo2)) return NULL;
-    if ((SWIG_ConvertPtr(argo0,(void **) &arg0,SWIGTYPE_p_ExportSpc,1)) == -1) return NULL;
-    if ((SWIG_ConvertPtr(argo2,(void **) &arg2,SWIGTYPE_p_PartialList,1)) == -1) return NULL;
-    {
-        try
-        {
-            arg0->write((char const *)arg1,(PartialList const &)*arg2);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            //	(these are very unlikely to come from the interface
-            //	code, and cannot escape the procedural interface to
-            //	Loris, which catches all exceptions.)
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-    }Py_INCREF(Py_None);
-    resultobj = Py_None;
-    return resultobj;
-}
-
-
-static PyObject *_wrap_ExportSpc_configure(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    ExportSpc *arg0 ;
-    double arg1 ;
-    PyObject * argo0 =0 ;
-    
-    if(!PyArg_ParseTuple(args,"Od:ExportSpc_configure",&argo0,&arg1)) return NULL;
-    if ((SWIG_ConvertPtr(argo0,(void **) &arg0,SWIGTYPE_p_ExportSpc,1)) == -1) return NULL;
-    {
-        try
-        {
-            arg0->configure(arg1);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            //	(these are very unlikely to come from the interface
-            //	code, and cannot escape the procedural interface to
-            //	Loris, which catches all exceptions.)
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-    }Py_INCREF(Py_None);
-    resultobj = Py_None;
-    return resultobj;
-}
-
-
-static PyObject *_wrap_ExportSpc_midiPitch(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    ExportSpc *arg0 ;
-    PyObject * argo0 =0 ;
-    double result ;
-    
-    if(!PyArg_ParseTuple(args,"O:ExportSpc_midiPitch",&argo0)) return NULL;
-    if ((SWIG_ConvertPtr(argo0,(void **) &arg0,SWIGTYPE_p_ExportSpc,1)) == -1) return NULL;
-    {
-        try
-        {
-            result = (double )arg0->midiPitch();
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            //	(these are very unlikely to come from the interface
-            //	code, and cannot escape the procedural interface to
-            //	Loris, which catches all exceptions.)
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-    }resultobj = PyFloat_FromDouble(result);
-    return resultobj;
-}
-
-
-static PyObject *_wrap_ExportSpc_numPartials(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    ExportSpc *arg0 ;
-    PyObject * argo0 =0 ;
-    int result ;
-    
-    if(!PyArg_ParseTuple(args,"O:ExportSpc_numPartials",&argo0)) return NULL;
-    if ((SWIG_ConvertPtr(argo0,(void **) &arg0,SWIGTYPE_p_ExportSpc,1)) == -1) return NULL;
-    {
-        try
-        {
-            result = (int )arg0->numPartials();
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            //	(these are very unlikely to come from the interface
-            //	code, and cannot escape the procedural interface to
-            //	Loris, which catches all exceptions.)
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-    }resultobj = PyInt_FromLong((long)result);
-    return resultobj;
-}
-
-
-static PyObject *_wrap_ExportSpc_refLabel(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    ExportSpc *arg0 ;
-    PyObject * argo0 =0 ;
-    int result ;
-    
-    if(!PyArg_ParseTuple(args,"O:ExportSpc_refLabel",&argo0)) return NULL;
-    if ((SWIG_ConvertPtr(argo0,(void **) &arg0,SWIGTYPE_p_ExportSpc,1)) == -1) return NULL;
-    {
-        try
-        {
-            result = (int )arg0->refLabel();
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            //	(these are very unlikely to come from the interface
-            //	code, and cannot escape the procedural interface to
-            //	Loris, which catches all exceptions.)
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-    }resultobj = PyInt_FromLong((long)result);
-    return resultobj;
-}
-
-
-static PyObject *_wrap_ExportSpc_enhanced(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    ExportSpc *arg0 ;
-    PyObject * argo0 =0 ;
-    int result ;
-    
-    if(!PyArg_ParseTuple(args,"O:ExportSpc_enhanced",&argo0)) return NULL;
-    if ((SWIG_ConvertPtr(argo0,(void **) &arg0,SWIGTYPE_p_ExportSpc,1)) == -1) return NULL;
-    {
-        try
-        {
-            result = (int )arg0->enhanced();
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            //	(these are very unlikely to come from the interface
-            //	code, and cannot escape the procedural interface to
-            //	Loris, which catches all exceptions.)
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-    }resultobj = PyInt_FromLong((long)result);
-    return resultobj;
-}
-
-
-static PyObject *_wrap_ExportSpc_hop(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    ExportSpc *arg0 ;
-    PyObject * argo0 =0 ;
-    double result ;
-    
-    if(!PyArg_ParseTuple(args,"O:ExportSpc_hop",&argo0)) return NULL;
-    if ((SWIG_ConvertPtr(argo0,(void **) &arg0,SWIGTYPE_p_ExportSpc,1)) == -1) return NULL;
-    {
-        try
-        {
-            result = (double )arg0->hop();
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            //	(these are very unlikely to come from the interface
-            //	code, and cannot escape the procedural interface to
-            //	Loris, which catches all exceptions.)
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-    }resultobj = PyFloat_FromDouble(result);
-    return resultobj;
-}
-
-
-static PyObject *_wrap_ExportSpc_attackThreshold(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    ExportSpc *arg0 ;
-    PyObject * argo0 =0 ;
-    double result ;
-    
-    if(!PyArg_ParseTuple(args,"O:ExportSpc_attackThreshold",&argo0)) return NULL;
-    if ((SWIG_ConvertPtr(argo0,(void **) &arg0,SWIGTYPE_p_ExportSpc,1)) == -1) return NULL;
-    {
-        try
-        {
-            result = (double )arg0->attackThreshold();
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            //	(these are very unlikely to come from the interface
-            //	code, and cannot escape the procedural interface to
-            //	Loris, which catches all exceptions.)
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-    }resultobj = PyFloat_FromDouble(result);
-    return resultobj;
-}
-
-
-static PyObject *_wrap_ExportSpc_startFreqTime(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    ExportSpc *arg0 ;
-    PyObject * argo0 =0 ;
-    double result ;
-    
-    if(!PyArg_ParseTuple(args,"O:ExportSpc_startFreqTime",&argo0)) return NULL;
-    if ((SWIG_ConvertPtr(argo0,(void **) &arg0,SWIGTYPE_p_ExportSpc,1)) == -1) return NULL;
-    {
-        try
-        {
-            result = (double )arg0->startFreqTime();
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            //	(these are very unlikely to come from the interface
-            //	code, and cannot escape the procedural interface to
-            //	Loris, which catches all exceptions.)
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-    }resultobj = PyFloat_FromDouble(result);
-    return resultobj;
-}
-
-
-static PyObject *_wrap_ExportSpc_endTime(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    ExportSpc *arg0 ;
-    PyObject * argo0 =0 ;
-    double result ;
-    
-    if(!PyArg_ParseTuple(args,"O:ExportSpc_endTime",&argo0)) return NULL;
-    if ((SWIG_ConvertPtr(argo0,(void **) &arg0,SWIGTYPE_p_ExportSpc,1)) == -1) return NULL;
-    {
-        try
-        {
-            result = (double )arg0->endTime();
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            //	(these are very unlikely to come from the interface
-            //	code, and cannot escape the procedural interface to
-            //	Loris, which catches all exceptions.)
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-    }resultobj = PyFloat_FromDouble(result);
-    return resultobj;
-}
-
-
-static PyObject *_wrap_ExportSpc_endApproachTime(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    ExportSpc *arg0 ;
-    PyObject * argo0 =0 ;
-    double result ;
-    
-    if(!PyArg_ParseTuple(args,"O:ExportSpc_endApproachTime",&argo0)) return NULL;
-    if ((SWIG_ConvertPtr(argo0,(void **) &arg0,SWIGTYPE_p_ExportSpc,1)) == -1) return NULL;
-    {
-        try
-        {
-            result = (double )arg0->endApproachTime();
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            //	(these are very unlikely to come from the interface
-            //	code, and cannot escape the procedural interface to
-            //	Loris, which catches all exceptions.)
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-    }resultobj = PyFloat_FromDouble(result);
-    return resultobj;
-}
-
-
-static PyObject *_wrap_ExportSpc_markerTime(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    ExportSpc *arg0 ;
-    PyObject * argo0 =0 ;
-    double result ;
-    
-    if(!PyArg_ParseTuple(args,"O:ExportSpc_markerTime",&argo0)) return NULL;
-    if ((SWIG_ConvertPtr(argo0,(void **) &arg0,SWIGTYPE_p_ExportSpc,1)) == -1) return NULL;
-    {
-        try
-        {
-            result = (double )arg0->markerTime();
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            //	(these are very unlikely to come from the interface
-            //	code, and cannot escape the procedural interface to
-            //	Loris, which catches all exceptions.)
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-    }resultobj = PyFloat_FromDouble(result);
-    return resultobj;
-}
-
-
-static PyObject *_wrap_ExportSpc_setMidiPitch(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    ExportSpc *arg0 ;
-    double arg1 ;
-    PyObject * argo0 =0 ;
-    
-    if(!PyArg_ParseTuple(args,"Od:ExportSpc_setMidiPitch",&argo0,&arg1)) return NULL;
-    if ((SWIG_ConvertPtr(argo0,(void **) &arg0,SWIGTYPE_p_ExportSpc,1)) == -1) return NULL;
-    {
-        try
-        {
-            arg0->setMidiPitch(arg1);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            //	(these are very unlikely to come from the interface
-            //	code, and cannot escape the procedural interface to
-            //	Loris, which catches all exceptions.)
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-    }Py_INCREF(Py_None);
-    resultobj = Py_None;
-    return resultobj;
-}
-
-
-static PyObject *_wrap_ExportSpc_setNumPartials(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    ExportSpc *arg0 ;
-    int arg1 ;
-    PyObject * argo0 =0 ;
-    
-    if(!PyArg_ParseTuple(args,"Oi:ExportSpc_setNumPartials",&argo0,&arg1)) return NULL;
-    if ((SWIG_ConvertPtr(argo0,(void **) &arg0,SWIGTYPE_p_ExportSpc,1)) == -1) return NULL;
-    {
-        try
-        {
-            arg0->setNumPartials(arg1);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            //	(these are very unlikely to come from the interface
-            //	code, and cannot escape the procedural interface to
-            //	Loris, which catches all exceptions.)
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-    }Py_INCREF(Py_None);
-    resultobj = Py_None;
-    return resultobj;
-}
-
-
-static PyObject *_wrap_ExportSpc_setRefLabel(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    ExportSpc *arg0 ;
-    int arg1 ;
-    PyObject * argo0 =0 ;
-    
-    if(!PyArg_ParseTuple(args,"Oi:ExportSpc_setRefLabel",&argo0,&arg1)) return NULL;
-    if ((SWIG_ConvertPtr(argo0,(void **) &arg0,SWIGTYPE_p_ExportSpc,1)) == -1) return NULL;
-    {
-        try
-        {
-            arg0->setRefLabel(arg1);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            //	(these are very unlikely to come from the interface
-            //	code, and cannot escape the procedural interface to
-            //	Loris, which catches all exceptions.)
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-    }Py_INCREF(Py_None);
-    resultobj = Py_None;
-    return resultobj;
-}
-
-
-static PyObject *_wrap_ExportSpc_setEnhanced(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    ExportSpc *arg0 ;
-    int arg1 ;
-    PyObject * argo0 =0 ;
-    
-    if(!PyArg_ParseTuple(args,"Oi:ExportSpc_setEnhanced",&argo0,&arg1)) return NULL;
-    if ((SWIG_ConvertPtr(argo0,(void **) &arg0,SWIGTYPE_p_ExportSpc,1)) == -1) return NULL;
-    {
-        try
-        {
-            arg0->setEnhanced(arg1);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            //	(these are very unlikely to come from the interface
-            //	code, and cannot escape the procedural interface to
-            //	Loris, which catches all exceptions.)
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-    }Py_INCREF(Py_None);
-    resultobj = Py_None;
-    return resultobj;
-}
-
-
-static PyObject *_wrap_ExportSpc_setHop(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    ExportSpc *arg0 ;
-    double arg1 ;
-    PyObject * argo0 =0 ;
-    
-    if(!PyArg_ParseTuple(args,"Od:ExportSpc_setHop",&argo0,&arg1)) return NULL;
-    if ((SWIG_ConvertPtr(argo0,(void **) &arg0,SWIGTYPE_p_ExportSpc,1)) == -1) return NULL;
-    {
-        try
-        {
-            arg0->setHop(arg1);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            //	(these are very unlikely to come from the interface
-            //	code, and cannot escape the procedural interface to
-            //	Loris, which catches all exceptions.)
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-    }Py_INCREF(Py_None);
-    resultobj = Py_None;
-    return resultobj;
-}
-
-
-static PyObject *_wrap_ExportSpc_setAttackThreshold(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    ExportSpc *arg0 ;
-    double arg1 ;
-    PyObject * argo0 =0 ;
-    
-    if(!PyArg_ParseTuple(args,"Od:ExportSpc_setAttackThreshold",&argo0,&arg1)) return NULL;
-    if ((SWIG_ConvertPtr(argo0,(void **) &arg0,SWIGTYPE_p_ExportSpc,1)) == -1) return NULL;
-    {
-        try
-        {
-            arg0->setAttackThreshold(arg1);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            //	(these are very unlikely to come from the interface
-            //	code, and cannot escape the procedural interface to
-            //	Loris, which catches all exceptions.)
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-    }Py_INCREF(Py_None);
-    resultobj = Py_None;
-    return resultobj;
-}
-
-
-static PyObject *_wrap_ExportSpc_setStartFreqTime(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    ExportSpc *arg0 ;
-    double arg1 ;
-    PyObject * argo0 =0 ;
-    
-    if(!PyArg_ParseTuple(args,"Od:ExportSpc_setStartFreqTime",&argo0,&arg1)) return NULL;
-    if ((SWIG_ConvertPtr(argo0,(void **) &arg0,SWIGTYPE_p_ExportSpc,1)) == -1) return NULL;
-    {
-        try
-        {
-            arg0->setStartFreqTime(arg1);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            //	(these are very unlikely to come from the interface
-            //	code, and cannot escape the procedural interface to
-            //	Loris, which catches all exceptions.)
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-    }Py_INCREF(Py_None);
-    resultobj = Py_None;
-    return resultobj;
-}
-
-
-static PyObject *_wrap_ExportSpc_setEndTime(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    ExportSpc *arg0 ;
-    double arg1 ;
-    PyObject * argo0 =0 ;
-    
-    if(!PyArg_ParseTuple(args,"Od:ExportSpc_setEndTime",&argo0,&arg1)) return NULL;
-    if ((SWIG_ConvertPtr(argo0,(void **) &arg0,SWIGTYPE_p_ExportSpc,1)) == -1) return NULL;
-    {
-        try
-        {
-            arg0->setEndTime(arg1);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            //	(these are very unlikely to come from the interface
-            //	code, and cannot escape the procedural interface to
-            //	Loris, which catches all exceptions.)
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-    }Py_INCREF(Py_None);
-    resultobj = Py_None;
-    return resultobj;
-}
-
-
-static PyObject *_wrap_ExportSpc_setEndApproachTime(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    ExportSpc *arg0 ;
-    double arg1 ;
-    PyObject * argo0 =0 ;
-    
-    if(!PyArg_ParseTuple(args,"Od:ExportSpc_setEndApproachTime",&argo0,&arg1)) return NULL;
-    if ((SWIG_ConvertPtr(argo0,(void **) &arg0,SWIGTYPE_p_ExportSpc,1)) == -1) return NULL;
-    {
-        try
-        {
-            arg0->setEndApproachTime(arg1);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            //	(these are very unlikely to come from the interface
-            //	code, and cannot escape the procedural interface to
-            //	Loris, which catches all exceptions.)
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-    }Py_INCREF(Py_None);
-    resultobj = Py_None;
-    return resultobj;
-}
-
-
-static PyObject *_wrap_ExportSpc_setMarkerTime(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    ExportSpc *arg0 ;
-    double arg1 ;
-    PyObject * argo0 =0 ;
-    
-    if(!PyArg_ParseTuple(args,"Od:ExportSpc_setMarkerTime",&argo0,&arg1)) return NULL;
-    if ((SWIG_ConvertPtr(argo0,(void **) &arg0,SWIGTYPE_p_ExportSpc,1)) == -1) return NULL;
-    {
-        try
-        {
-            arg0->setMarkerTime(arg1);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            //	(these are very unlikely to come from the interface
-            //	code, and cannot escape the procedural interface to
-            //	Loris, which catches all exceptions.)
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-    }Py_INCREF(Py_None);
-    resultobj = Py_None;
-    return resultobj;
-}
-
-
 static PyObject *_wrap_new_SampleVector(PyObject *self, PyObject *args) {
     PyObject *resultobj;
     unsigned long arg0 = 0 ;
@@ -6207,7 +5439,9 @@ static PyMethodDef loriscMethods[] = {
 	 { "distill", _wrap_distill, METH_VARARGS },
 	 { "exportAiff", _wrap_exportAiff, METH_VARARGS },
 	 { "exportSdif", _wrap_exportSdif, METH_VARARGS },
+	 { "exportSpc", _wrap_exportSpc, METH_VARARGS },
 	 { "importSdif", _wrap_importSdif, METH_VARARGS },
+	 { "importSpc", _wrap_importSpc, METH_VARARGS },
 	 { "morph", _wrap_morph, METH_VARARGS },
 	 { "synthesize", _wrap_synthesize, METH_VARARGS },
 	 { "sift", _wrap_sift, METH_VARARGS },
@@ -6297,30 +5531,6 @@ static PyMethodDef loriscMethods[] = {
 	 { "BreakpointEnvelope_copy", _wrap_BreakpointEnvelope_copy, METH_VARARGS },
 	 { "BreakpointEnvelope_valueAt", _wrap_BreakpointEnvelope_valueAt, METH_VARARGS },
 	 { "BreakpointEnvelope_insertBreakpoint", _wrap_BreakpointEnvelope_insertBreakpoint, METH_VARARGS },
-	 { "new_ExportSpc", _wrap_new_ExportSpc, METH_VARARGS },
-	 { "delete_ExportSpc", _wrap_delete_ExportSpc, METH_VARARGS },
-	 { "ExportSpc_write", _wrap_ExportSpc_write, METH_VARARGS },
-	 { "ExportSpc_configure", _wrap_ExportSpc_configure, METH_VARARGS },
-	 { "ExportSpc_midiPitch", _wrap_ExportSpc_midiPitch, METH_VARARGS },
-	 { "ExportSpc_numPartials", _wrap_ExportSpc_numPartials, METH_VARARGS },
-	 { "ExportSpc_refLabel", _wrap_ExportSpc_refLabel, METH_VARARGS },
-	 { "ExportSpc_enhanced", _wrap_ExportSpc_enhanced, METH_VARARGS },
-	 { "ExportSpc_hop", _wrap_ExportSpc_hop, METH_VARARGS },
-	 { "ExportSpc_attackThreshold", _wrap_ExportSpc_attackThreshold, METH_VARARGS },
-	 { "ExportSpc_startFreqTime", _wrap_ExportSpc_startFreqTime, METH_VARARGS },
-	 { "ExportSpc_endTime", _wrap_ExportSpc_endTime, METH_VARARGS },
-	 { "ExportSpc_endApproachTime", _wrap_ExportSpc_endApproachTime, METH_VARARGS },
-	 { "ExportSpc_markerTime", _wrap_ExportSpc_markerTime, METH_VARARGS },
-	 { "ExportSpc_setMidiPitch", _wrap_ExportSpc_setMidiPitch, METH_VARARGS },
-	 { "ExportSpc_setNumPartials", _wrap_ExportSpc_setNumPartials, METH_VARARGS },
-	 { "ExportSpc_setRefLabel", _wrap_ExportSpc_setRefLabel, METH_VARARGS },
-	 { "ExportSpc_setEnhanced", _wrap_ExportSpc_setEnhanced, METH_VARARGS },
-	 { "ExportSpc_setHop", _wrap_ExportSpc_setHop, METH_VARARGS },
-	 { "ExportSpc_setAttackThreshold", _wrap_ExportSpc_setAttackThreshold, METH_VARARGS },
-	 { "ExportSpc_setStartFreqTime", _wrap_ExportSpc_setStartFreqTime, METH_VARARGS },
-	 { "ExportSpc_setEndTime", _wrap_ExportSpc_setEndTime, METH_VARARGS },
-	 { "ExportSpc_setEndApproachTime", _wrap_ExportSpc_setEndApproachTime, METH_VARARGS },
-	 { "ExportSpc_setMarkerTime", _wrap_ExportSpc_setMarkerTime, METH_VARARGS },
 	 { "new_SampleVector", _wrap_new_SampleVector, METH_VARARGS },
 	 { "delete_SampleVector", _wrap_delete_SampleVector, METH_VARARGS },
 	 { "SampleVector_size", _wrap_SampleVector_size, METH_VARARGS },
@@ -6346,7 +5556,6 @@ static PyMethodDef loriscMethods[] = {
 /* -------- TYPE CONVERSION AND EQUIVALENCE RULES (BEGIN) -------- */
 
 static swig_type_info _swigt__p_Partial[] = {{"_p_Partial", 0, "Partial *"},{"_p_Partial"},{0}};
-static swig_type_info _swigt__p_ExportSpc[] = {{"_p_ExportSpc", 0, "ExportSpc *"},{"_p_ExportSpc"},{0}};
 static swig_type_info _swigt__p_PartialList[] = {{"_p_PartialList", 0, "PartialList *"},{"_p_PartialList"},{0}};
 static swig_type_info _swigt__p_SampleVector[] = {{"_p_SampleVector", 0, "SampleVector *"},{"_p_SampleVector"},{0}};
 static swig_type_info _swigt__p_AiffFile[] = {{"_p_AiffFile", 0, "AiffFile *"},{"_p_AiffFile"},{0}};
@@ -6358,7 +5567,6 @@ static swig_type_info _swigt__p_BreakpointEnvelope[] = {{"_p_BreakpointEnvelope"
 
 static swig_type_info *swig_types_initial[] = {
 _swigt__p_Partial, 
-_swigt__p_ExportSpc, 
 _swigt__p_PartialList, 
 _swigt__p_SampleVector, 
 _swigt__p_AiffFile, 

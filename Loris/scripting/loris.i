@@ -151,7 +151,7 @@
 %include lorisBpEnvelope.i
 
 //	include the ExportSpc class interface:
-%include lorisExportSpc.i
+// %include lorisExportSpc.i
 
 //	include the SampleVector class interface:
 %include lorisSampleVector.i
@@ -328,7 +328,8 @@ void distill( PartialList * partials )
 %}
 
 %{
-	#include "ExportSdif.h"
+	//	stupid name for sdif file header, name collision
+	#include "Sdiff.h"
 %}
 
 %inline %{
@@ -340,8 +341,7 @@ void distill( PartialList * partials )
 			Throw( Loris::InvalidObject, "No Partials in PartialList to export to sdif file." );
 	
 		Loris::notifier << "exporting sdif partial data to " << path << Loris::endl;		
-		Loris::ExportSdif efout;
-		efout.write( path, *partials );
+		Loris::SdifFile::Export( path, *partials );
 		
 	}
 	/*	Export Partials in a PartialList to a SDIF file at the specified
@@ -351,18 +351,48 @@ void distill( PartialList * partials )
 	 */
 %}
 
+%{
+	#include "SpcFile.h"
+%}
+
+%inline %{
+	void exportSpc( const char * path, PartialList * partials, double midiPitch, 
+					int enhanced = true, double endApproachTime = 0. )
+	{
+		ThrowIfNull((PartialList *) partials);
+
+		if ( partials->size() == 0 )
+			Throw( Loris::InvalidObject, "No Partials in PartialList to export to Spc file." );
+
+		Loris::notifier << "exporting Spc partial data to " << path << Loris::endl;
+		Loris::SpcFile::Export( path, *partials, midiPitch, enhanced, endApproachTime );
+	}
+	/*	Export Partials in a PartialList to a Spc file at the specified file
+		path (or name). The fractional MIDI pitch must be specified. The optional
+		enhanced parameter defaults to true (for bandwidth-enhanced spc files), 
+		but an be specified false for pure-sines spc files. The optional 
+		endApproachTime parameter is in seconds; its default value is zero (and 
+		has no effect). A nonzero endApproachTime indicates that the plist does 
+		not include a release, but rather ends in a static spectrum corresponding 
+		to the final breakpoint values of the partials.  the endApproachTime
+		specifies how long before the end of the sound the amplitude, frequency, 
+		and bandwidth values are to be modified to make a gradual transition to 
+		the static spectrum.
+	 */
+%}
+
 //	SWIG problem:
 //	%new and %inline don't play nice together, so if I %inline
-//	these next three functions, then their return objects don't
+//	these next four functions, then their return objects don't
 //	get ownership on the scripting side. So cannot use the 
 //	%inline shortcut when the return value is %new.
 //
 %{
-	#include "ImportSdif.h"
+	#include "Sdiff.h"
 	PartialList * importSdif( const char * path )
 	{
 		Loris::notifier << "importing Partials from " << path << Loris::endl;
-		Loris::ImportSdif imp( path );
+		Loris::SdifFile imp( path );
 
 		PartialList * partials = new PartialList();
 		//	splice() can't throw, can it???
@@ -376,6 +406,25 @@ void distill( PartialList * partials )
 	name), and return them in a PartialList.
 	For more information about SDIF, see the SDIF website at:
 		www.ircam.fr/equipes/analyse-synthese/sdif/  
+ */	
+
+%{
+	#include "SpcFile.h"
+	PartialList * importSpc( const char * path )
+	{
+		Loris::notifier << "importing Partials from " << path << Loris::endl;
+		Loris::SpcFile imp( path );
+
+		PartialList * partials = new PartialList();
+		//	splice() can't throw, can it???
+		partials->splice( partials->end(), imp.partials() );
+
+		return partials;
+	}
+%}
+%new PartialList * importSpc( const char * path );
+/*	Import Partials from an Spc file at the given file path (or 
+	name), and return them in a PartialList.
  */	
 
 %{

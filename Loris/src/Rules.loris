@@ -44,18 +44,17 @@ OBJ_LORIS = $(CLASSES)/AiffFile.o \
 			$(CLASSES)/Endian.o \
 			$(CLASSES)/Envelope.o \
 			$(CLASSES)/Exception.o \
-			$(CLASSES)/ExportSdif.o \
-			$(CLASSES)/ExportSpc.o \
 			$(CLASSES)/Filter.o \
 			$(CLASSES)/FourierTransform.o \
 			$(CLASSES)/ImportLemur.o \
-			$(CLASSES)/ImportSdif.o \
 			$(CLASSES)/KaiserWindow.o \
 			$(CLASSES)/Morpher.o \
 			$(CLASSES)/Oscillator.o \
 			$(CLASSES)/Partial.o \
 			$(CLASSES)/ReassignedSpectrum.o \
+			$(CLASSES)/SdifFile.o \
 			$(CLASSES)/Sieve.o \
+			$(CLASSES)/SpcFile.o \
 			$(CLASSES)/Synthesizer.o \
 			$(CLASSES)/ieee.o \
 			$(CLASSES)/notifier.o
