@@ -306,7 +306,7 @@ void dilate_v( PartialList * partials, vector<double> & ivec, vector<double> & t
 	}
 	catch ( InvalidArgument & ex )
 	{
-		SWIG_exception(SWIG_ValueError, ex.what() );
+		SWIG_exception(SWIG_ValueError, (char *)ex.what() );
 	}
     if ((err = check_exception()))
     {
@@ -796,7 +796,7 @@ public:
 	}
 	catch ( InvalidArgument & ex )
 	{
-		SWIG_exception(SWIG_ValueError, ex.what() );
+		SWIG_exception(SWIG_ValueError, (char *)ex.what() );
 	}
 }
 %exception AiffFile::removeMarker
@@ -807,7 +807,7 @@ public:
 	}
 	catch ( InvalidArgument & ex )
 	{
-		SWIG_exception(SWIG_ValueError, ex.what() );
+		SWIG_exception(SWIG_ValueError, (char *)ex.what() );
 	}
 }
 
@@ -1144,7 +1144,7 @@ public:
 	}
 	catch ( InvalidArgument & ex )
 	{
-		SWIG_exception(SWIG_ValueError, ex.what() );
+		SWIG_exception(SWIG_ValueError, (char *)ex.what() );
 	}
 }
 %exception SdifFile::removeMarker
@@ -1155,7 +1155,7 @@ public:
 	}
 	catch ( InvalidArgument & ex )
 	{
-		SWIG_exception(SWIG_ValueError, ex.what() );
+		SWIG_exception(SWIG_ValueError, (char *)ex.what() );
 	}
 }
 
@@ -1254,7 +1254,7 @@ public:
 	}
 	catch ( InvalidArgument & ex )
 	{
-		SWIG_exception(SWIG_ValueError, ex.what() );
+		SWIG_exception(SWIG_ValueError, (char *)ex.what() );
 	}
 }
 %exception SpcFile::removeMarker
@@ -1265,7 +1265,7 @@ public:
 	}
 	catch ( InvalidArgument & ex )
 	{
-		SWIG_exception(SWIG_ValueError, ex.what() );
+		SWIG_exception(SWIG_ValueError, (char *)ex.what() );
 	}
 }
 
