@@ -94,3 +94,4 @@ typedef struct
 
 
 #endif	/* nef INCLUDE_LORISGENS_H */
+

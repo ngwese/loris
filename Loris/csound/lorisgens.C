@@ -88,7 +88,7 @@ static void import_partials( const std::string & sdiffilname, PARTIALS & part )
 		part.insert( part.begin(), f.partials().begin(), f.partials().end() );
 		
 		//	just for grins, sort the vector:
-		std::sort( part.begin(), part.end(), PartialUtils::compare_label<>() );
+		// std::sort( part.begin(), part.end(), PartialUtils::compare_label<>() );
 	}
 	catch(Exception ex)
 	{
@@ -584,7 +584,7 @@ void lorisread_setup( LORISREAD * params )
 	}
 	
 	//	construct the implementation object:
-	params->imp = new LorisReader( sdiffilname, *params->fadetime, params->h.insdshead, *params->readerIdx );
+	params->imp = new LorisReader( sdiffilname, *params->fadetime, params->h.insdshead, int(*params->readerIdx) );
 	
 	// set lorisplay_cleanup as cleanup routine:
 	params->h.dopadr = lorisread_cleanup;  
@@ -641,7 +641,7 @@ struct LorisPlayer
 // ---------------------------------------------------------------------------
 //
 LorisPlayer::LorisPlayer( LORISPLAY * params ) :
-	reader( EnvelopeReader::Find( params->h.insdshead, *(params->readerIdx) ) ),
+	reader( EnvelopeReader::Find( params->h.insdshead, (int)*(params->readerIdx) ) ),
 	dblbuffer( ksmps, 0. )
 {
 	if ( reader != NULL )
@@ -827,9 +827,9 @@ public:
 //
 LorisMorpher::LorisMorpher( LORISMORPH * params ) :
 	morpher( GetFreqFunc( params ), GetAmpFunc( params ), GetBwFunc( params ) ),
-	src_reader( EnvelopeReader::Find( params->h.insdshead, *(params->srcidx) ) ),
-	tgt_reader( EnvelopeReader::Find( params->h.insdshead, *(params->tgtidx) ) ),
-	tag( params->h.insdshead, *(params->morphedidx) )
+	src_reader( EnvelopeReader::Find( params->h.insdshead, (int)*(params->srcidx) ) ),
+	tgt_reader( EnvelopeReader::Find( params->h.insdshead, (int)*(params->tgtidx) ) ),
+	tag( params->h.insdshead, (int)*(params->morphedidx) )
 {
 	if ( src_reader != NULL ) 
 	{
