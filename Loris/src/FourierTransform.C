@@ -1,34 +1,17 @@
 // ===========================================================================
 //	FourierTransform.C
 //
-//	Implementation of Loris::FourierTransform.
+//	Implementation of Loris::FourierTransform, support for the
+//	FFTW library (www.fftw.org). Requires a compiled fttw library.
 //
-//	how about these:
-//
-//		load( iter begin, iter center, iter end )
-//		load( iter begin, iter center, iter end, iter windowBegin )
-//		load( iter begin, iter end, long offset )
-//		load( iter begin, iter end, iter windowBegin, long offset )
-//
-//	rotation is so boring that we sould either make it automatic (probaly not)
-//	or just make a rotate() member. We always rotate to center the window, so
-//	really the center iterator is a thing to align with the beginning of the
-//	transform, right? It never makes sense not to align a windowed transform, so 
-//	we can get rid of #4. So, when do we need that offset? Maybe never. Certainly
-//	we don't need to rotate if we are using offset, so just build rotation into the
-//	first two, and blow off the third, or don't do rotation there.
-//
-//	Oh, I know, need to handle the case when we have only a few samples in the 
-//	beginning of the window, but we still want to center the window. Then we probably
-//	need an offset or rotate argument. If we support padding at one end (i.e. 
-//	samples in just the beginning of the window), it would be nice to support it
-//	it at both ends (i.e. samples just at the end of the window).
-//
-//	HEY this fftw stuff uses int for transform size, better hope its four bytes!
+//	Make sure that fftw and this class use the same floating point
+//	data format and that fftw is compiled with int having at least 
+//	four bytes.
 //
 //	-kel 14 Feb 00
 //
 // ===========================================================================
+#include "LorisLib.h"
 #include "FourierTransform.h"
 #include "Exception.h"
 #include "notifier.h"
@@ -38,21 +21,26 @@
 using namespace std;
 using namespace Loris;
 
+//	prototypes for local (file-scope) functions that 
+//	manage the shared buffer, used for out-of-place
+//	transform computations:
 static void reserve( long len );
 static void release( long len );
+static fftw_complex * sharedBuffer = Null;
 
 // ---------------------------------------------------------------------------
 //	FourierTransform constructor
 // ---------------------------------------------------------------------------
-//	The private buffer _z has to be allocated immediately, so that it can be 
+//	The private buffer _buffer has to be allocated immediately, so that it can be 
 //	accessed for loading. The shared output buffer for FFTW can be allocated
-//	later, in transform(), using reserve().
+//	later, in makePlan(), using reserve().
 //
 FourierTransform::FourierTransform( long len ) :
 	_size( len ),
-	_z( new complex< double >[ len ] ),
+	_buffer( new complex< double >[ len ] ),
 	_plan( Null )
 {
+	//	-- sanity --
 	//	check to make sure that std::complex< double >
 	//	and fftw_complex are really identical:
 	static boolean checked = false;
@@ -76,10 +64,10 @@ FourierTransform::FourierTransform( long len ) :
 			Throw( InvalidObject, 
 				   "FourierTransform found std::complex< double > and fftw_complex to be different." );
 		}
-	}
+	}	//	end of sanity check
 	
 	//	zero:
-	fill( _z, _z + len, 0. );
+	fill( _buffer, _buffer + len, 0. );
 }
 
 // ---------------------------------------------------------------------------
@@ -89,7 +77,7 @@ FourierTransform::FourierTransform( long len ) :
 //
 FourierTransform::~FourierTransform( void )
 {
-	delete[] _z;
+	delete[] _buffer;
 	if ( _plan != Null ) {
 		fftw_destroy_plan( _plan );
 		release( size() );
@@ -102,32 +90,71 @@ FourierTransform::~FourierTransform( void )
 //	Compute a Fourier transform of the current contents of the transform
 //	buffer.
 //
-static fftw_complex * sharedBuffer = Null;
 void
 FourierTransform::transform( void )
 {
-	//	make a plan, if necessary:
+//	make a plan, if necessary:
 	if ( _plan == Null ) {
-		//	try to reserve space for a shared buffer,
-		//	might except:
-		reserve( size() );
-		_plan = fftw_create_plan_specific( size(), FFTW_FORWARD,
-										  FFTW_ESTIMATE,
-										  (fftw_complex *)_z, 1,
-										  sharedBuffer, 1); 
-		Assert( _plan != Null );								  
+		makePlan();
 	}
 	
-	//	sanity:
-	Assert( _z != Null );
+//	sanity:
+	Assert( _plan != Null );
+	Assert( _buffer != Null );
 	Assert( sharedBuffer != Null );
 
-//	cruch:	
-	fftw_one( _plan, (fftw_complex *)_z, sharedBuffer );
+//	crunch:	
+	fftw_one( _plan, (fftw_complex *)_buffer, sharedBuffer );
 	
 //	copy output into (private) complex buffer:
 	for ( long i = 0; i < size(); ++i ) {
-		_z[i] = complex< double >( sharedBuffer[i].re, sharedBuffer[i].im );
+		_buffer[i] = complex< double >( sharedBuffer[i].re, sharedBuffer[i].im );
+	}
+}
+
+// ---------------------------------------------------------------------------
+//	makePlan
+// ---------------------------------------------------------------------------
+//	Ensure that the shared buffer is large enough for this transform, then
+//	create a plan specifid to this transform's length and input buffer, and
+//	the current shared output buffer. This member is invoked automatically
+//	the first time transform() is called, but clients wanting to make sure 
+//	that the plan is optimal may invoke it at other times (if they suspect
+//	that the shared buffer has been reallocated, for example).
+//
+//	May throw an allocation exception if the shared buffer cannot be allocated.
+//	Throws InvalidObject if the plan cannot be created.
+//
+void
+FourierTransform::makePlan( void )
+{
+	//	reserve the shared buffer:
+	//	(Do this first, so that, when release is called
+	//	below, to decrement the instance count for this
+	//	transform size, the shared buffer is not deallocated
+	//	and shrunk, only to be immediately grown again.
+	//	In this way, no buffer reallocation will occur if
+	//	the shared buffer is already big enough for this
+	//	transform.)
+	reserve( size() );
+	
+	//	check for an existing plan:
+	if ( _plan != Null ) {
+		fftw_destroy_plan( _plan );
+		release( size() );
+	}
+	
+	//	create a plan:
+	_plan = fftw_create_plan_specific( size(), 
+									   FFTW_FORWARD,
+									   FFTW_ESTIMATE,
+									   (fftw_complex *)_buffer, 
+									   1,
+									   sharedBuffer, 
+									   1); 
+	//	verify:
+	if ( _plan == Null ) {
+		Throw( InvalidObject, "FourierTransform could not make a (fftw) plan." );
 	}
 }
 
@@ -135,6 +162,10 @@ FourierTransform::transform( void )
 //	reserve
 // ---------------------------------------------------------------------------
 //	Might throw a low memory exception.
+//
+//	reservations stores the lengths of all existing FourierTransform
+//	instances. It is sorted with greater<> so that the first element
+//	is the length of the largest existing transform.
 //
 static multiset< long, greater<long> > reservations;
 static void reserve( long len )
@@ -178,66 +209,3 @@ static void release( long len )
 		}
 	}
 }
-
-/*
-// ---------------------------------------------------------------------------
-//	load
-// ---------------------------------------------------------------------------
-//	Load samples from the specified buffer into the transform
-//	buffer, truncating or zero-padding if the lengths differ.
-//
-void
-FourierTransform::load( const vector< double > & buf )
-{
-	if ( buf.size() < size() ) {
-		copy( buf.begin(), buf.end(), begin() );
-		//	zero the rest:
-		fill( begin() + buf.size(), end(), 0. );
-	}
-	else {
-		copy( buf.begin(), buf.begin() + size(), begin() );
-	}
-}
-
-// ---------------------------------------------------------------------------
-//	loadAndRotate
-// ---------------------------------------------------------------------------
-//	Load samples from the specified buffer into the transform buffer, 
-//	rotating so that the transform's phase is referenced to the middle
-//	sample of the input buffer. The buffer is zero-padded or truncated
-//	as necessary. Truncation occurs at both ends, so that the phase
-//	reference is always the middle sample of the input buffer, which is
-//	usually desired for windowed transform input. If not, use load().
-//
-//	If the buffer is even-length, then it has no center sample to align
-//	with the beginning of the transform buffer. (That's why odd-length
-//	windows are preferred in this business.) In this case, the rotation
-//	is half a sample too far (the other choice is half a sample not
-//	far enough), with the second half of the buffer at the beginning
-//	of the transform buffer.
-//
-void
-FourierTransform::loadAndRotate( const vector< double > & buf )
-{
-	if ( buf.size() < size() ) {
-		//	pre-zero:
-		fill( begin(), end(), 0. );
-		//	copy second half of buf into beginning of _z:
-		copy( buf.begin() + buf.size() / 2, buf.end(), begin() );
-		//	copy second half of buf into end of _z:
-		copy( buf.begin(), buf.begin() + buf.size() / 2, end() - buf.size() / 2 );
-	}
-	else {
-		//	copy _z.size()/2 samples starting at middle of
-		//	buf into first half of _z:
-		copy( buf.begin() + buf.size() / 2, 
-			  buf.begin() + (buf.size() / 2) + (size() / 2), 
-			  begin() );
-		//	copy _z.size()/2 samples ending at middle of
-		//	buf into second half of _z:
-		copy( buf.begin(), 
-			  buf.begin() + (size() / 2),
-			  begin() + (size() / 2) );
-	}
-}
-*/

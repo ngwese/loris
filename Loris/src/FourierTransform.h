@@ -3,19 +3,17 @@
 // ===========================================================================
 //	FourierTransform.h
 //
-//	Class definition for Loris::FourierTransform.
-//	Uses the FFTW library to perform efficient transforms of arbitrary
-//	length. Clients store and access the in-place transform data as a
-//	vector of complex<double>. Internally, the transform is computed 
-//	out-of-place using two c-arrays of FFTW's complex type.
+//	Class definition for Loris::FourierTransform, support for the
+//	FFTW library (www.fftw.org). Requires a compiled fttw library.
 //
-//	Still needs some work on the implementation to make it efficient.
+//	Make sure that fftw and this class use the same floating point
+//	data format and that fftw is compiled with int having at least 
+//	four bytes.
 //
 //	-kel 15 Feb 00
 //
 // ===========================================================================
 #include "LorisLib.h"
-#include <vector>
 #include <complex>
 
 //	declare the fftw plan struct type:
@@ -26,11 +24,19 @@ Begin_Namespace( Loris )
 // ---------------------------------------------------------------------------
 //	class FourierTransform
 //
-//	No-frills FFT object.
+//	FourierTransform is a class wrapper for the FFTW library (www.fftw.org).
+//	Uses the FFTW library to perform efficient transforms of arbitrary
+//	length. Clients store and access the in-place transform data as a
+//	c-array of complex<double>. Internally, the transform is computed 
+//	out-of-place using two c-arrays of FFTW's complex type, including 
+//	a shared temporary output buffer (making this class not at all 
+//	thread-safe). 
 //
-//	For greatest flexibility, load and transform are separate
-//	operations. 
+//	Does not (yet) support the use of "wisdom" in fftw for greater
+//	optimization. Uses the fftw complex transform (as opposed to
+//	the real transform, rfftw).
 //
+//	Loading functions (non-member templates) are defined after the class.
 //
 class FourierTransform 
 {
@@ -46,43 +52,35 @@ public:
 	// FourierTransform & operator= ( const FourierTransform & );
 		
 //	transform length access:
-	long size( void ) const { return _size; } //_z.size(); }
+	long size( void ) const { return _size; }
 	
 //	spectrum access:
 	std::complex< double > & operator[] ( unsigned long index )
-		{ return _z[index]; }
+		{ return _buffer[index]; }
 	const std::complex< double > & operator[] ( unsigned long index ) const
-		{ return _z[index]; }
+		{ return _buffer[index]; }
 		
-//	iterator access:
-//	(is this good?)
-//	what did I need this for?
-//	for STL algorithms, that's what for.
-	//typedef std::vector< std::complex< double > >::iterator iterator;
+//	iterator access, for STL algorithms:
 	typedef std::complex< double > * iterator;
-	iterator begin( void ){ return _z; } //.begin(); }
-	iterator end( void ) { return _z + _size; } //.end(); }
+	iterator begin( void ){ return _buffer; }
+	iterator end( void ) { return _buffer + _size; }
 		
-	//typedef std::vector< std::complex< double > >::const_iterator const_iterator;
 	typedef const std::complex< double > * const_iterator;
-	const_iterator begin( void ) const { return _z; } //.begin(); }
-	const_iterator end( void ) const { return _z + _size; } //.end(); }
+	const_iterator begin( void ) const { return _buffer; }
+	const_iterator end( void ) const { return _buffer + _size; }
 		
-//	input:
-	//void load( const std::vector< double > & buf );
-	//void loadAndRotate( const std::vector< double > & buf );
-
 //	spectrum computation:
 	void transform( void );
-	//void transform( const std::vector< double > & buf );
-	//void operator() ( const std::vector< double > & buf ) { transform( buf ); }
 	
+//	planning:
+	void makePlan( void );
+
 //	-- instance variables --
 private:
-	//std::vector< std::complex< double > > _z;
 	const long _size;
-	std::complex< double > * _z;
+	std::complex< double > * _buffer;
 	
+	//	fftw planning structure:
 	fftw_plan_struct * _plan;
 	
 };	//	end of class FourierTransform
@@ -149,7 +147,6 @@ load( FourierTransform & t, Iterator1 begin, Iterator1 center, Iterator1 end, It
 	std::rotate( t.begin(), tmiddle, t.end() );
 	return t;
 }
-
 
 End_Namespace( Loris )
 
