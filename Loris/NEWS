@@ -26,6 +26,15 @@ specified.
 longer needs the list itself as an argument to sift(),
 can pass just iterators.
 
+- Greatly improved the Sieve interface, made it generic
+(container-type independent).
+
+- Morpher interface radically improved to expose much 
+more morphing functionality. 
+
+- Added PartialPtrs class, a container of pointers to 
+Partials, used internally to make algorithms more generic.
+
 -------------------------------------------------------
 changes since 1.0beta8 release:
 

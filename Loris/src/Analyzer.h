@@ -58,7 +58,7 @@ class AnalyzerState;
 //
 class Analyzer
 {
-//	-- analysis parameters --
+//	-- instance variables --
 	double _resolution;	//	in Hz, minimum instantaneous frequency distance;
 						//	this is the core parameter, others are, by default,
 						//	computed from this one
@@ -85,7 +85,7 @@ class Analyzer
 			
 //	-- public interface --
 public:
-//	construction:
+//	-- construction --
 	explicit Analyzer( double resolutionHz );
 	/*	Construct and return a new Analyzer configured with the given	
 		frequency resolution (minimum instantaneous frequency	
@@ -113,14 +113,7 @@ public:
 	/*	Destroy this Analyzer. 								
 	 */
 
-//	analysis:
-	void analyze( const double * bufBegin, const double * bufEnd, double srate );
-	/*	Analyze a range of (mono) samples at the given sample rate 	  	
-		(in Hz) and append the extracted Partials to Analyzer's 
-		PartialList (std::list of Partials).	
-	 */
-	
-//	configuration:
+//	-- configuration --
 	void configure( double resolutionHz, double windowWidthHz );
 	/*	Configure this Analyzer with the given frequency resolution 
 		(minimum instantaneous frequency difference between Partials)
@@ -129,7 +122,14 @@ public:
 		frequency resolution and window width. 		
 	 */
 
-//	parameter access:
+//	-- analysis --
+	void analyze( const double * bufBegin, const double * bufEnd, double srate );
+	/*	Analyze a range of (mono) samples at the given sample rate 	  	
+		(in Hz) and append the extracted Partials to Analyzer's 
+		PartialList (std::list of Partials).	
+	 */
+	
+//	-- parameter access --
 	double ampFloor( void ) const { return _floor; }
 	/*	Return the amplitude floor (lowest detected spectral amplitude),  			
 		in (negative) dB, for this Analyzer. 				
@@ -172,7 +172,7 @@ public:
 		zero-crossings) of the analysis window used by this Analyzer. 				
 	 */
 	 
-//	parameter mutation:
+//	-- parameter mutation --
  	void setAmpFloor( double x ) { _floor = x; }
 	/*	Set the amplitude floor (lowest detected spectral amplitude), in  			
 		(negative) dB, for this Analyzer. 				
@@ -215,7 +215,7 @@ public:
 		zero-crossings) of the analysis window used by this Analyzer. 				
 	 */
 
-//	Partial list access:
+//	-- PartialList access --
 	PartialList & partials( void ) { return _partials; }
 	/*	Return a mutable reference to this Analyzer's list of 
 		analyzed Partials. 

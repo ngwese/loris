@@ -32,12 +32,14 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-
+#if defined(NO_TEMPLATE_MEMBERS)
 #include <PartialList.h>
+#endif
+
+#include <PartialPtrs.h>
 
 //	begin namespace
 namespace Loris {
-
 
 // ---------------------------------------------------------------------------
 //	class Sieve
@@ -60,13 +62,23 @@ public:
 	~Sieve( void );
 	
 //	sift:
-	void sift( PartialList & sift_list );
-	void sift( PartialList & sift_list, 
-			   PartialList::iterator sieve_begin, 
-			   PartialList::iterator sieve_end  );
+#if ! defined(NO_TEMPLATE_MEMBERS)
+	template<typename Iter>
+	void sift( Iter sift_begin, Iter sift_end  )
+#else
+	void sift( PartialList::iterator sift_begin, PartialList::iterator sift_end  )
+#endif
+	{
+		PartialPtrs ptrs;
+		fillPartialPtrs( sift_begin, sift_end, ptrs );
+		sift_ptrs( ptrs );
+	}
+	
+private:
+//	-- implementation --
+	void sift_ptrs( PartialPtrs & ptrs );
 
 //	-- unimplemented --
-private:
 	Sieve( const Sieve & other );
 	Sieve & operator= ( const Sieve & other );
 	

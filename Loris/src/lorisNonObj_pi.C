@@ -643,7 +643,7 @@ void sift( PartialList * partials )
         Loris::notifier << "sifting " << partials->size() << " Partials" << Loris::endl;
 
         Loris::Sieve sieve( 0.0001 );
-        sieve.sift( *partials );
+        sieve.sift( partials->begin(), partials->end() );
 	}
 	catch( Exception & ex )
     {

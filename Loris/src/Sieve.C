@@ -36,15 +36,14 @@
 #endif
 
 #include <Sieve.h>
-#include <Partial.h>
-#include <PartialList.h>
 #include <Breakpoint.h>
 #include <Exception.h>
-#include <PartialUtils.h>
 #include <Notifier.h>
+#include <Partial.h>
+#include <PartialList.h>
+#include <PartialUtils.h>
+
 #include <algorithm>
-#include <list>
-#include <set>
 
 //	begin namespace
 namespace Loris {
@@ -64,12 +63,6 @@ struct SortPartialPtrs :
 					( lhs->duration() > rhs->duration() );
 		}
 };
-
-//	Definition of a collection sorted by that comparitor.
-//	This has to be a multiset, because the seemingly unlikely
-//	event of two Partials testing equivalent by SortPartialPtrs
-//	_does_ occur, and causes Partials to be lost!
-typedef std::multiset< Partial *, SortPartialPtrs > PartialPtrsSet;
 
 //	Definition of predicate for finding the end of a Patial *
 //	range having a common label.
@@ -167,74 +160,30 @@ Sieve::~Sieve( void )
 //  If any two partials with same label overlap in time,
 //  keep only the longer of the two partials.
 //  Set the label of the shorter duration partial to zero.
-//	This operation does not preserve the sort order or the list!
-//
-//	If iterator bounds aren't specified, then the whole list is processed.
 //
 void 
-Sieve::sift( std::list<Partial> & container )
+Sieve::sift_ptrs( PartialPtrs & ptrs  )
 {
-	sift( container, container.begin(), container.end() );
-}
-
-// ---------------------------------------------------------------------------
-//	sift
-// ---------------------------------------------------------------------------
-//	Sift labeled Partials: 
-//  If any two partials with same label overlap in time,
-//  keep only the longer of the two partials.
-//  Set the label of the shorter duration partial to zero.
-//	This operation does not preserve the sort order or the list!
-//
-//	By sorting the Partials by duration first, we can speed
-//	this algorithm up by reducing the number of Partials that
-//	need to be scanned by sieve_aux() (see below) and more 
-//	importantly, we can make its behavior consistent regardless
-//	of the prior sorting of the Partials (previously, long 
-//	Partials could cause others to get sifted out, only to be
-//	themselves sifted out by an even longer Partial).
-//
-//	It is ugly to pass in the list itself, instead of the iterator
-//	range only, but we cannot sort the Partials without having the
-//	list, nor can we splice the range into a temporary list, and
-//	copying (twice) would be too expensive for large data sets.
-//	So we are stuck requiring the list reference.
-//
-//	The only other alternative would be to make a collection
-//	(could be a set, which automatically sorts itself) of
-//	pointers to Partials. This wouldn't be as expensive, and
-//	but would require some new definitions, like the comparitor.
-//
-
-
-void 
-Sieve::sift( std::list<Partial> & container, 
-			 std::list< Partial >::iterator sift_begin, 
-			 std::list< Partial >::iterator sift_end  )
-{
-	int zapped = 0;
-	
-	//	make a sorted collection of pointers to 
-	//	Partials in the range to sift:
+	//	sort the collection of pointers to Partials:
 	//	(sort is by increasing label, then
 	//	decreasing duration)
-	PartialPtrsSet sift_set;
-	while ( sift_begin != sift_end )
-	{
-		sift_set.insert( &(*sift_begin) );
-		++sift_begin;
-	}
+	std::sort( ptrs.begin(), ptrs.end(), SortPartialPtrs() );
+	
+	PartialPtrs::iterator sift_begin = ptrs.begin();
+	PartialPtrs::iterator sift_end = ptrs.end();
+
+	int zapped = 0;
 	
 	// 	iterate over labels and sift each one:
-	PartialPtrsSet::iterator lowerbound = sift_set.begin();
-	while ( lowerbound != sift_set.end() )
+	PartialPtrs::iterator lowerbound = sift_begin;
+	while ( lowerbound != sift_end )
 	{
 		int label = (*lowerbound)->label();
 		
 		//	first the first element in l after sieve_begin
 		//	having a label not equal to 'label':
-		PartialPtrsSet::iterator upperbound = 
-			std::find_if( lowerbound, sift_set.end(), PartialPtrLabelNE(label) );
+		PartialPtrs::iterator upperbound = 
+			std::find_if( lowerbound, sift_end, PartialPtrLabelNE(label) );
 
 #ifdef Debug_Loris
 		//	don't want to compute this iterator distance unless debugging:
@@ -246,7 +195,7 @@ Sieve::sift( std::list<Partial> & container,
 		//	label is 0:
 		if ( label != 0 )
 		{
-			PartialPtrsSet::iterator it;
+			PartialPtrs::iterator it;
 			for ( it = lowerbound; it != upperbound; ++it ) 
 			{
 				//	find_overlapping only needs to consider Partials on the
@@ -266,7 +215,7 @@ Sieve::sift( std::list<Partial> & container,
 	}
 
 #ifdef Debug_Loris
-	debugger << "Sifted out (relabeled) " << zapped << " of " << sift_set.size() << "." << endl;
+	debugger << "Sifted out (relabeled) " << zapped << " of " << ptrs.size() << "." << endl;
 #endif
 }
 
