@@ -91,7 +91,7 @@ Distiller::distillOne( const Partial & src, Partial & dest,
 		for ( it = start; it != end; ++it ) {
 			//	skip the source Partial:
 			//	(identity test: compare addresses)
-			if ( &(*start) == &src )
+			if ( &(*it) == &src )
 				continue;
 
 			//	accumulate energy to be added as bandwidth:

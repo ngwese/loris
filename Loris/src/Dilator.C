@@ -23,21 +23,6 @@ using namespace std;
 Begin_Namespace( Loris )
 
 // ---------------------------------------------------------------------------
-//	constructor
-// ---------------------------------------------------------------------------
-Dilator::Dilator( const vector< double > & init, 
-				  const vector< double > & tgt )
-{
-	//	time point vectors have to be the same size:
-	if ( init.size() != tgt.size() ) {
-		Throw( InvalidObject, 
-				"Dilator must have the same number of initial and target time points." );
-	}
-
-	setTimePoints( init.begin(), tgt.begin(), init.size() );
-}
-
-// ---------------------------------------------------------------------------
 //	dilate
 // ---------------------------------------------------------------------------
 //	Dilate a Partial in-place, and return a reference to it.

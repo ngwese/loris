@@ -29,8 +29,7 @@ class Dilator : public PartialIteratorOwner
 //	-- construction --
 public:
 	Dilator( void ) {}
-	Dilator( const std::vector< double > & init, const std::vector< double > & tgt );
-
+	
 //	constructor from iterators:
 //	If template members aren't available, accept only vector iterators.
 #if !defined(No_template_members)

@@ -138,6 +138,7 @@ private:
 	ulong packLeft( const Partial & p, double freqMult, double ampMult, double time );
 	ulong packRight( const Partial & p, double freqMult, double ampMult, double time );
 	ulong envLog( double ) const;
+	const Partial * select( const std::list<Partial> & partials, int label );
 	
 	//	chunk writing:
 	void writeCommon( BinaryFile & file );

@@ -20,6 +20,8 @@ Begin_Namespace( Loris )
 // ---------------------------------------------------------------------------
 //	class Distiller
 //
+//	Make this interface more like other function objects in Loris.
+//
 class Distiller : public PartialIteratorOwner
 {
 //	-- public interface --

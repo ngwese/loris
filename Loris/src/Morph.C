@@ -236,10 +236,6 @@ Morph::collectByLabel( list<Partial>::const_iterator start,
 					   list<Partial> & collector, 
 					   int label )
 {
-	//for ( list< Partial >::const_iterator it = find_if( start, end, LabelIs( label ) );
-	//		  it != end; 
-	//		  it = find_if( ++it, end, LabelIs( label ) ) ) {
-			  
 	while ( start != end ) {
 		if ( start->label() == label ) {
 			collector.push_back( *start );

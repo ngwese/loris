@@ -140,17 +140,16 @@ SpcFile::writeEnvelopes( BinaryFile & file, const list<Partial> & plist )
 
 			// find partial with the correct label:
 			// if no partial is found, frequency multiply the reference partial 
-			list<Partial> sublist = select( plist, label );
-			assert( sublist.size() <= 1 );
+			const Partial * pcorrect = select( plist, label );
 		
-			if (sublist.size() == 0 || sublist.begin()->head() == NULL) {
-				sublist = select( plist, refLabel );
+			if ( pcorrect == Null || pcorrect->begin() == pcorrect->end() ) {
+				pcorrect = select( plist, refLabel );
 				freqMult = (double) label / (double) refLabel; 
 				ampMult = 0;
 			} else {
 				freqMult = ampMult = 1.0;
 			}
-			const Partial & p = *sublist.begin();
+			const Partial & p = *pcorrect;
 
 			//	pack log amplitude and log frequency into left:
 			left.s32bits = packLeft(p, freqMult, ampMult, frame * _rate);
@@ -186,9 +185,9 @@ SpcFile::findRefPartial( const list<Partial> & plist )
 {	
 	for (uint label = 1; label <= _partials; ++label ) {
 		// return if we can find a partial with this label:
-		list<Partial> sublist = select( plist, label );
-		if (sublist.size() == 1)
+		if ( select( plist, label ) )
 			return label;
+		
 	}
 	return 0;		// no labaled partial was found
 }
@@ -217,9 +216,9 @@ SpcFile::envLog( double floatingValue ) const
 ulong
 SpcFile::packLeft( const Partial & p, double freqMult, double ampMult, double time )
 {	
-	double amp = ampMult * amplitudeAtTime( p, time );
-	double freq = freqMult * frequencyAtTime( p, time );
-	double bw = bandwidthAtTime( p, time );
+	double amp = ampMult * p.amplitudeAt( time );
+	double freq = freqMult * p.frequencyAt( time );
+	double bw = p.bandwidthAt( time );
 
 	ulong	theOutput;
 
@@ -247,10 +246,10 @@ SpcFile::packLeft( const Partial & p, double freqMult, double ampMult, double ti
 ulong
 SpcFile::packRight( const Partial & p, double freqMult, double ampMult, double time )
 {	
-	double amp = ampMult * amplitudeAtTime( p, time );
-	double freq = freqMult * frequencyAtTime( p, time );
-//	double phase = phaseAtTime( p, time );
-	double bw = bandwidthAtTime( p, time );
+	double amp = ampMult * p.amplitudeAt( time );
+	double freq = freqMult * p.frequencyAt( time );
+//	double phase = p.phaseAt( time );
+	double bw = p.bandwidthAt( time );
 
 	static double phase = 0;  phase += TwoPi / 4;  // TEMPORARY phase test
 
@@ -282,6 +281,38 @@ SpcFile::packRight( const Partial & p, double freqMult, double ampMult, double t
 	return theOutput;
 }
 
+// ---------------------------------------------------------------------------
+//	select
+// ---------------------------------------------------------------------------
+//	Special select function that returns a pointer to the Partial
+//	having the specified label, or Null if there is not such Partial
+//	in the list. 
+//
+static struct LabelIs 
+{
+	LabelIs( int l ) : _l( l ) {}
+	Boolean operator()( const Partial & p ) const { return p.label() == _l; }
+	private:
+		int _l;	//	the label to search for
+};
+	
+const Partial *
+SpcFile::select( const list<Partial> & partials, int label )
+{
+	const Partial * ret = Null;
+	list< Partial >::const_iterator it = 
+		find_if( partials.begin(), partials.end(), LabelIs( label ) );
+		
+	if ( it != partials.end() ) {
+		ret = &(*it);
+		#if Debug_Loris
+		//	there should only be one of such Partial:
+		Assert( find_if( ++it, partials.end(), LabelIs( label ) ) == partials.end() );
+		#endif
+	}
+	
+	return ret;
+}
 
 #pragma mark -
 #pragma mark chunk writing helpers
@@ -315,7 +346,7 @@ SpcFile::writeCommon( BinaryFile & file )
 		file.write( ck.srate );
 	}
 	catch( FileIOException & ex ) {
-		ex << "Failed to write SPC file Common chunk.";
+		ex.append( "Failed to write SPC file Common chunk." );
 		throw;
 	}
 }
@@ -345,7 +376,7 @@ SpcFile::writeContainer( BinaryFile & file )
 		file.write( ck.formType );
 	}
 	catch( FileIOException & ex ) {
-		ex << "Failed to write SPC file Container chunk.";
+		ex.append( "Failed to write SPC file Container chunk." );
 		throw;
 	}
 }	
@@ -411,7 +442,7 @@ SpcFile::writeInstrument( BinaryFile & file )
 		file.write( ck.releaseLoop.endLoop );
 	}
 	catch( FileIOException & ex ) {
-		ex << "Failed to write SPC file Instrument chunk.";
+		ex.append( "Failed to write SPC file Instrument chunk." );
 		throw;
 	}
 }
@@ -451,7 +482,7 @@ SpcFile::writeSosEnvelopesChunk( BinaryFile & file )
 			file.write( ck.initPhase[i] );
 	}
 	catch( FileIOException & ex ) {
-		ex << "Failed to write SPC file SosEnvelopes chunk.";
+		ex.append( "Failed to write SPC file SosEnvelopes chunk." );
 		throw;
 	}
 }
