@@ -91,14 +91,16 @@ public:
 {
 	double getAt( unsigned long idx )
 	{
-		return self->at(idx);
+		// return self->at(idx);	//	g++ doesn't implement at()?
+		return (*self)[idx];
 	}
 	/*	Return the value of the sample at the given position (index) in
 		this SampleVector.
 	 */
 	void setAt( unsigned long idx, double x )
 	{
-		self->at(idx) = x;
+		// self->at(idx) = x;	//	g++ doesn't implement at()?
+		(*self)[idx] = x;
 	}
 	/*	Set the value of the sample at the given position (index) in
 		this SampleVector.

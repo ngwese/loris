@@ -118,7 +118,8 @@ static void throw_string( const char * s )
 %except {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		$function
 		if ( ! LorisErrorString.empty() )
 		{

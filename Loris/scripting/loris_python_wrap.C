@@ -33,8 +33,8 @@
  * and things like that.
  *
  * $Log$
- * Revision 1.2  2000/11/20 08:56:41  kfitz
- * Nearly ready to go. (?)
+ * Revision 1.3  2000/11/20 09:54:40  kfitz
+ * g++ is lacking!
  *
  ************************************************************************/
 
@@ -802,7 +802,8 @@ static PyObject *_wrap_channelize(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    channelize(_arg0,_arg1,_arg2);
 
 		if ( ! LorisErrorString.empty() )
@@ -852,7 +853,8 @@ static PyObject *_wrap_dilate(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    dilate_str(_arg0,_arg1,_arg2);
 
 		if ( ! LorisErrorString.empty() )
@@ -900,7 +902,8 @@ static PyObject *_wrap_distill(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    distill(_arg0);
 
 		if ( ! LorisErrorString.empty() )
@@ -952,7 +955,8 @@ static PyObject *_wrap_exportAiff(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    exportAiff(_arg0,_arg1,_arg2,_arg3,_arg4);
 
 		if ( ! LorisErrorString.empty() )
@@ -1002,7 +1006,8 @@ static PyObject *_wrap_exportSdif(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    exportSdif(_arg0,_arg1,_arg2);
 
 		if ( ! LorisErrorString.empty() )
@@ -1045,7 +1050,8 @@ static PyObject *_wrap_importAiff(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    _result = (SampleVector *)importAiff_(_arg0);
 
 		if ( ! LorisErrorString.empty() )
@@ -1097,7 +1103,8 @@ static PyObject *_wrap_infoAiff(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    _result = (unsigned long )infoAiff(_arg0,_arg1,_arg2);
 
 		if ( ! LorisErrorString.empty() )
@@ -1177,7 +1184,8 @@ static PyObject *_wrap_importSdif(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    _result = (PartialList *)importSdif_(_arg0);
 
 		if ( ! LorisErrorString.empty() )
@@ -1259,7 +1267,8 @@ static PyObject *_wrap_morph(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    _result = (PartialList *)morph_(_arg0,_arg1,_arg2,_arg3,_arg4);
 
 		if ( ! LorisErrorString.empty() )
@@ -1310,7 +1319,8 @@ static PyObject *_wrap_synthesize(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    _result = (SampleVector *)synthesize_(_arg0,_arg1);
 
 		if ( ! LorisErrorString.empty() )
@@ -1367,7 +1377,8 @@ static PyObject *_wrap_copyByLabel(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    copyByLabel(_arg0,_arg1,_arg2);
 
 		if ( ! LorisErrorString.empty() )
@@ -1420,7 +1431,8 @@ static PyObject *_wrap_createFreqReference(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    _result = (BreakpointEnvelope *)createFreqReference(_arg0,_arg1,_arg2,_arg3);
 
 		if ( ! LorisErrorString.empty() )
@@ -1476,7 +1488,8 @@ static PyObject *_wrap_scaleAmp(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    scaleAmp(_arg0,_arg1);
 
 		if ( ! LorisErrorString.empty() )
@@ -1532,7 +1545,8 @@ static PyObject *_wrap_scaleNoiseRatio(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    scaleNoiseRatio(_arg0,_arg1);
 
 		if ( ! LorisErrorString.empty() )
@@ -1588,7 +1602,8 @@ static PyObject *_wrap_shiftPitch(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    shiftPitch(_arg0,_arg1);
 
 		if ( ! LorisErrorString.empty() )
@@ -1635,7 +1650,8 @@ static PyObject *_wrap_new_Analyzer(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    _result = (Analyzer *)new_Analyzer(_arg0);
 
 		if ( ! LorisErrorString.empty() )
@@ -1691,7 +1707,8 @@ static PyObject *_wrap_new_AnalyzerCopy(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    _result = (Analyzer *)new_Analyzer(_arg0);
 
 		if ( ! LorisErrorString.empty() )
@@ -1742,7 +1759,8 @@ static PyObject *_wrap_delete_Analyzer(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    delete_Analyzer(_arg0);
 
 		if ( ! LorisErrorString.empty() )
@@ -1808,7 +1826,8 @@ static PyObject *_wrap_Analyzer_analyze(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    _result = (PartialList *)Analyzer_analyze(_arg0,_arg1,_arg2);
 
 		if ( ! LorisErrorString.empty() )
@@ -1860,7 +1879,8 @@ static PyObject *_wrap_Analyzer_configure(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    Analyzer_configure(_arg0,_arg1);
 
 		if ( ! LorisErrorString.empty() )
@@ -1913,7 +1933,8 @@ static PyObject *_wrap_Analyzer_freqResolution(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    _result = (double )Analyzer_freqResolution(_arg0);
 
 		if ( ! LorisErrorString.empty() )
@@ -1965,7 +1986,8 @@ static PyObject *_wrap_Analyzer_ampFloor(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    _result = (double )Analyzer_ampFloor(_arg0);
 
 		if ( ! LorisErrorString.empty() )
@@ -2017,7 +2039,8 @@ static PyObject *_wrap_Analyzer_windowWidth(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    _result = (double )Analyzer_windowWidth(_arg0);
 
 		if ( ! LorisErrorString.empty() )
@@ -2069,7 +2092,8 @@ static PyObject *_wrap_Analyzer_freqFloor(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    _result = (double )Analyzer_freqFloor(_arg0);
 
 		if ( ! LorisErrorString.empty() )
@@ -2121,7 +2145,8 @@ static PyObject *_wrap_Analyzer_hopTime(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    _result = (double )Analyzer_hopTime(_arg0);
 
 		if ( ! LorisErrorString.empty() )
@@ -2173,7 +2198,8 @@ static PyObject *_wrap_Analyzer_freqDrift(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    _result = (double )Analyzer_freqDrift(_arg0);
 
 		if ( ! LorisErrorString.empty() )
@@ -2225,7 +2251,8 @@ static PyObject *_wrap_Analyzer_cropTime(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    _result = (double )Analyzer_cropTime(_arg0);
 
 		if ( ! LorisErrorString.empty() )
@@ -2277,7 +2304,8 @@ static PyObject *_wrap_Analyzer_bwRegionWidth(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    _result = (double )Analyzer_bwRegionWidth(_arg0);
 
 		if ( ! LorisErrorString.empty() )
@@ -2328,7 +2356,8 @@ static PyObject *_wrap_Analyzer_setFreqResolution(PyObject *self, PyObject *args
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    Analyzer_setFreqResolution(_arg0,_arg1);
 
 		if ( ! LorisErrorString.empty() )
@@ -2380,7 +2409,8 @@ static PyObject *_wrap_Analyzer_setAmpFloor(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    Analyzer_setAmpFloor(_arg0,_arg1);
 
 		if ( ! LorisErrorString.empty() )
@@ -2432,7 +2462,8 @@ static PyObject *_wrap_Analyzer_setWindowWidth(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    Analyzer_setWindowWidth(_arg0,_arg1);
 
 		if ( ! LorisErrorString.empty() )
@@ -2484,7 +2515,8 @@ static PyObject *_wrap_Analyzer_setFreqFloor(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    Analyzer_setFreqFloor(_arg0,_arg1);
 
 		if ( ! LorisErrorString.empty() )
@@ -2536,7 +2568,8 @@ static PyObject *_wrap_Analyzer_setFreqDrift(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    Analyzer_setFreqDrift(_arg0,_arg1);
 
 		if ( ! LorisErrorString.empty() )
@@ -2588,7 +2621,8 @@ static PyObject *_wrap_Analyzer_setHopTime(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    Analyzer_setHopTime(_arg0,_arg1);
 
 		if ( ! LorisErrorString.empty() )
@@ -2640,7 +2674,8 @@ static PyObject *_wrap_Analyzer_setCropTime(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    Analyzer_setCropTime(_arg0,_arg1);
 
 		if ( ! LorisErrorString.empty() )
@@ -2692,7 +2727,8 @@ static PyObject *_wrap_Analyzer_setBwRegionWidth(PyObject *self, PyObject *args)
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    Analyzer_setBwRegionWidth(_arg0,_arg1);
 
 		if ( ! LorisErrorString.empty() )
@@ -2738,7 +2774,8 @@ static PyObject *_wrap_new_BreakpointEnvelope(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    _result = (BreakpointEnvelope *)new_BreakpointEnvelope();
 
 		if ( ! LorisErrorString.empty() )
@@ -2787,7 +2824,8 @@ static PyObject *_wrap_new_BreakpointEnvelopeWithValue(PyObject *self, PyObject 
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    _result = (BreakpointEnvelope *)new_BreakpointEnvelope(_arg0);
 
 		if ( ! LorisErrorString.empty() )
@@ -2843,7 +2881,8 @@ static PyObject *_wrap_new_BreakpointEnvelopeCopy(PyObject *self, PyObject *args
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    _result = (BreakpointEnvelope *)new_BreakpointEnvelope(_arg0);
 
 		if ( ! LorisErrorString.empty() )
@@ -2894,7 +2933,8 @@ static PyObject *_wrap_delete_BreakpointEnvelope(PyObject *self, PyObject *args)
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    delete_BreakpointEnvelope(_arg0);
 
 		if ( ! LorisErrorString.empty() )
@@ -2948,7 +2988,8 @@ static PyObject *_wrap_BreakpointEnvelope_valueAt(PyObject *self, PyObject *args
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    _result = (double )BreakpointEnvelope_valueAt(_arg0,_arg1);
 
 		if ( ! LorisErrorString.empty() )
@@ -3000,7 +3041,8 @@ static PyObject *_wrap_BreakpointEnvelope_insertBreakpoint(PyObject *self, PyObj
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    BreakpointEnvelope_insertBreakpoint(_arg0,_arg1,_arg2);
 
 		if ( ! LorisErrorString.empty() )
@@ -3045,7 +3087,8 @@ static PyObject *_wrap_new_PartialList(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    _result = (PartialList *)new_PartialList();
 
 		if ( ! LorisErrorString.empty() )
@@ -3098,7 +3141,8 @@ static PyObject *_wrap_new_PartialListCopy(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    _result = (PartialList *)new_PartialList(_arg0);
 
 		if ( ! LorisErrorString.empty() )
@@ -3149,7 +3193,8 @@ static PyObject *_wrap_delete_PartialList(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    delete_PartialList(_arg0);
 
 		if ( ! LorisErrorString.empty() )
@@ -3200,7 +3245,8 @@ static PyObject *_wrap_PartialList_clear(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    PartialList_clear(_arg0);
 
 		if ( ! LorisErrorString.empty() )
@@ -3253,7 +3299,8 @@ static PyObject *_wrap_PartialList_size(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    _result = (unsigned long )PartialList_size(_arg0);
 
 		if ( ! LorisErrorString.empty() )
@@ -3316,7 +3363,8 @@ static PyObject *_wrap_PartialList_splice(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    PartialList_splice(_arg0,*_arg1);
 
 		if ( ! LorisErrorString.empty() )
@@ -3362,7 +3410,8 @@ static PyObject *_wrap_new_SampleVector(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    _result = (SampleVector *)new_SampleVector(_arg0);
 
 		if ( ! LorisErrorString.empty() )
@@ -3415,7 +3464,8 @@ static PyObject *_wrap_new_SampleVectorCopy(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    _result = (SampleVector *)new_SampleVector(_arg0);
 
 		if ( ! LorisErrorString.empty() )
@@ -3466,7 +3516,8 @@ static PyObject *_wrap_delete_SampleVector(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    delete_SampleVector(_arg0);
 
 		if ( ! LorisErrorString.empty() )
@@ -3519,7 +3570,8 @@ static PyObject *_wrap_SampleVector_size(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    _result = (unsigned long )SampleVector_size(_arg0);
 
 		if ( ! LorisErrorString.empty() )
@@ -3570,7 +3622,8 @@ static PyObject *_wrap_SampleVector_resize(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    SampleVector_resize(_arg0,_arg1);
 
 		if ( ! LorisErrorString.empty() )
@@ -3621,7 +3674,8 @@ static PyObject *_wrap_SampleVector_clear(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    SampleVector_clear(_arg0);
 
 		if ( ! LorisErrorString.empty() )
@@ -3674,7 +3728,8 @@ static PyObject *_wrap_SampleVector_getAt(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    _result = (double )SampleVector_getAt(_arg0,_arg1);
 
 		if ( ! LorisErrorString.empty() )
@@ -3726,7 +3781,8 @@ static PyObject *_wrap_SampleVector_setAt(PyObject *self, PyObject *args) {
 {
 	try
 	{	
-		LorisErrorString.clear();
+		// LorisErrorString.clear();
+		LorisErrorString = "";
 		    SampleVector_setAt(_arg0,_arg1,_arg2);
 
 		if ( ! LorisErrorString.empty() )
