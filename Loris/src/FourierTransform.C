@@ -181,9 +181,10 @@ FourierTransform::decimationStep( long span )
 	long i;
 	double angle;
 	for ( i = 0, angle = 0.0;  i < span;  ++i, angle += dangle ) {
-		//	should angle be positive or negative?
-		//	it looks better when positive...
-		complex< double > W = polar( 1., angle );
+		//	negative angle agrees with the O&S definition 
+		//	of the complex exponential W.
+		//	(also it appear to give the right results)
+		complex< double > W = polar( 1., - angle );
 		
 		for ( long j = i;  j < size();  j += twospan ) {	
 			complex< double > temp( _z[j + span] * W );				

@@ -60,7 +60,7 @@ Analyzer::analyze( const vector< double > & buf, double srate )
 //	and use it in formPartials().
 
 //	loop over short-time analysis frames:
-//	Arbitrarily, the fiirst window is centered hop
+//	Arbitrarily, the first window is centered hop
 //	samples before the beginning of the buffer, and 
 //	the last window is the first one centered more than
 //	hop samples past the end of the buffer.
@@ -207,7 +207,7 @@ Analyzer::extractBreakpoints( void )
 		//	if the time correction for this peak is large,
 		//	forget it, go on to the next one:
 		double peakSampleOffset = _spectrum->reassignedTime( it->frequency() );
-		if ( abs(peakSampleOffset) > hopSize() ) {
+		if ( abs(peakSampleOffset) > hopSize() * 0.5 ) {
 			continue;	//	loop over short-time peaks
 		} 
 		
