@@ -62,7 +62,22 @@ notes from trial 6:
 	- virtually no difference between sifted version and raw synthesis
 	- try tossing out sifted partials
 	
-Last updated: 21 May 2002 by Kelly Fitz
+notes from trial 7:
+	- seems not to matter whether the sifted out partials are tossed or
+	not (so they might as well be tossed), no perceptible difference.
+	- aside: used csound to render the crunchy (unsifted, distilled)
+	flutter with different fade times, and it seems to have no effect.
+	It is still possible though that the Distiller is using the fast
+	fade time and introducing the artifact. Can't easily test that without
+	changing Loris code.
+
+conclusion: This sound is is well-represented using 250 Hz resolution and
+a 300 Hz window. The reference envelope can be derived from the fundamental
+partial (around 330 Hz) and used to distill at one partial per harmonic. 
+However, the partials need to be sifted before distilling to avoid a noise
+artiact at 2.45 s. 
+
+Last updated: 22 May 2002 by Kelly Fitz
 """
 print __doc__
 
@@ -235,14 +250,33 @@ if trial == 7:
 	loris.distill( p )
 	ofilebase = 'flutter.%i.%i.ssav'%(r, w)
 	synthesize( ofilebase + '.aiff', p )
-	loris.exportSpc( ofilebase + 's.spc', p, 64, 0 )			
-	loris.exportSpc( ofilebase + 'e.spc', p, 64, 1 )
+	loris.exportSpc( ofilebase + '.s.spc', p, 64, 0 )			
+	loris.exportSpc( ofilebase + '.e.spc', p, 64, 1 )
 	
 	# sifted version with sifted partials removed
 	zeros = loris.extractLabeled( p, 0 )
 	ofilebase = 'flutter.%i.%i.sift'%(r, w)
 	synthesize( ofilebase + '.aiff', p )
-	loris.exportSpc( ofilebase + 's.spc', p, 64, 0 )			
-	loris.exportSpc( ofilebase + 'e.spc', p, 64, 1 )
+	loris.exportSpc( ofilebase + '.s.spc', p, 64, 0 )			
+	loris.exportSpc( ofilebase + '.e.spc', p, 64, 1 )
 		
-			
+if trial == 8:	# final trial
+	r = 250
+	w = 300
+	p = analyze( source, r, w )
+	ofilebase = 'flutter.%i.%i'%(r, w)
+	loris.exportSdif( ofilebase + '.raw.sdif', p )
+	ref = loris.createFreqReference( p, 330*.75, 330*1.5, 100 )
+	loris.channelize( p, ref, 1 )
+	
+	# sift
+	loris.sift( p )	
+	loris.distill( p )
+	zeros = loris.extractLabeled( p, 0 )
+	ofilebase = 'flutter.%i.%i.sft'%(r, w)
+	synthesize( ofilebase + '.aiff', p )
+	loris.exportSdif( ofilebase + 'sdif', p )
+	loris.exportSpc( ofilebase + '.s.spc', p, 64, 0 )			
+	loris.exportSpc( ofilebase + '.e.spc', p, 64, 1 )
+		
+						

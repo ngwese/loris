@@ -34,11 +34,23 @@ notes from trial 2:
 	
 notes from trial 3 (using 1.0beta8):
 	- these all sound about the same, maybe a little worse with
-	the 95 Hz resolution, none are that pretty, but there aren't
+	the 95 (90?) Hz resolution, none are that pretty, but there aren't
 	many really objectionable artifacts.
 
+Try using a fundamental extracted in Kyma to channelize and distill.
 
-Last updated: 8 Oct 2001 by Kelly Fitz
+note from trial 4:
+	- these are all unusable, the harmonic tracking seems to be 
+	terrible, even for the fundamental, so even with the good reference
+	envelope, distillations (including sifting) are a total loss, 
+	with big chunks of even the fundamental partial missing.
+	- hypothesis: the notes ring so much (from the reverb) that
+	the next note, if shorter, is distilled or sifted away, so 
+	that instead of followng the reference channel, partials follow
+	the reverb tails?
+	
+
+Last updated: 31 May 2002 by Kelly Fitz
 """
 print __doc__
 
@@ -47,7 +59,7 @@ from trials import *
 
 # use this trial counter to skip over
 # eariler trials
-trial = 3
+trial = 4
 
 print "running trial number", trial, time.ctime(time.time())
 
@@ -88,3 +100,40 @@ if trial == 3:
 			synthesize( ofile, p )
 
 	
+if trial == 4:
+	pref = loris.importSpc('saxriff.fund.qharm')
+	ref = loris.createFreqReference( pref, 50, 500 )
+	resolutions = (65, 75, 90)
+	widths = ( 170, 200, 250 )
+	for r in resolutions:
+		for w in widths:
+			p = analyze( source, r, w )
+			ofilebase = 'sax.%i.%i'%(r,w)
+			loris.exportSdif( ofilebase + '.sdif', p )
+			synthesize( ofilebase + '.aiff', p )
+			for h in (1,2):
+				loris.channelize(p, ref, h)
+				# distilled version
+				pd = p.copy()
+				loris.distill( pd )
+				ofilebased = ofilebase + '.d%i'%h
+				loris.exportSdif( ofilebased + '.sdif', pd )
+				synthesize( ofilebased + '.aiff', pd )
+				pruneByLabel( pd, range(1,512) )
+				loris.exportSpc( ofilebased + '.s.spc', pd, 70, 0 ) 
+				loris.exportSpc( ofilebased + '.e.spc', pd, 70, 1 ) 
+
+				# sifted version
+				ps = p.copy()
+				loris.sift( ps )
+				zeros = loris.extractLabeled( ps, 0 )
+				loris.distill( ps )
+				ofilebases = ofilebase + '.s%i'%h
+				loris.exportSdif( ofilebases + '.sdif', ps )
+				synthesize( ofilebases + '.aiff', ps )
+				pruneByLabel( ps, range(1,512) )
+				loris.exportSpc( ofilebases + '.s.spc', ps, 70, 0 ) 
+				loris.exportSpc( ofilebases + '.e.spc', ps, 70, 1 ) 
+
+
+
