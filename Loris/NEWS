@@ -11,6 +11,9 @@ changes since 1.0beta9 release:
 
 - Updated documentation (finally).
 
+- added assignment operator to Oscillator so that STL
+containers of them can be used
+
 -------------------------------------------------------
 changes since 1.0beta8 release:
 
