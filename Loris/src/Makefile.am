@@ -1,4 +1,4 @@
-# Copyright (C) 2001 Kelly Fitz <kfitz@cerlsoundgroup.org>
+# Copyright (C) 1999-2004, Kelly Fitz and Lippold Haken <loris@cerlsoundgroup.org>
 #  
 # This file is free software; as a special exception the author gives
 # unlimited permission to copy and/or distribute it, with or without 
@@ -10,7 +10,7 @@
 
 MAINTAINERCLEANFILES = Makefile.in
 
-INCLUDES = $(FFTWINCLUDE) $(SDIFINCLUDE) $(default_includes)
+INCLUDES = $(INCLUDE_FFTW) $(default_includes)
 
 EXTRA_DIST = loris.h.in
 
@@ -136,7 +136,7 @@ if DARWIN
 EXTRA_LD_FLAGS = -prebind
 endif
 
-libloris_la_LIBADD = -lfftw
+libloris_la_LIBADD = $(LINK_FFTW)
 libloris_la_LDFLAGS = -version-info 4:0:4 $(EXTRA_LD_FLAGS)
 
 nodist_include_HEADERS = loris.h

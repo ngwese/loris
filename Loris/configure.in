@@ -1,4 +1,4 @@
-dnl Copyright (C) 1999-2001, Kelly Fitz and Lippold Haken <loris@cerlsoundgroup.org>
+dnl Copyright (C) 1999-2004, Kelly Fitz and Lippold Haken <loris@cerlsoundgroup.org>
 dnl  
 dnl This file is free software; as a special exception the author gives
 dnl unlimited permission to copy and/or distribute it, with or without 
@@ -224,54 +224,6 @@ dnl----------------------------------------------------------------
 AC_MSG_RESULT(----- Library Checks -----)
 
 dnl----------------------------------------------------------------
-dnl Look for IRCAM's SDIF package
-dnl
-dnl Allow an argument to specify the prefix of a non-installed
-dnl SDIF package, since there are more than one such package in
-dnl and we need specifically IRCAM's.
-dnl----------------------------------------------------------------
-
-dnl SDIFPACKAGE=
-dnl SDIFINCLUDE=
-dnl  
-dnl AC_ARG_WITH(sdif,
-dnl 	AC_HELP_STRING( [--with-sdif=path],
-dnl 					[specify the prefix of the SDIF package] ),
-dnl 	[SDIFPACKAGE="$withval"], [SDIFPACKAGE=])
-dnl 
-dnl if test -n "$SDIFPACKAGE" ; then
-dnl 	AC_MSG_RESULT([prepending $SDIFPACKAGE/include to include search path and $SDIFPACKAGE/lib to library search path (sdif package)])
-dnl 	SDIFINCLUDE="$SDIFPACKAGE/include"
-dnl 	CPPFLAGS="-I$SDIFINCLUDE $CPPFLAGS"
-dnl 	LIBS="-L$SDIFPACKAGE/lib $LIBS"
-dnl fi
-
-dnl AC_CHECK_HEADER(sdif.h, :, AC_MSG_ERROR(cannot find SDIF header))
-dnl AC_CHECK_LIB(sdif, SdifGenInit, :, AC_MSG_ERROR(cannot use SDIF library))
-
-dnl dnl make sure that we can figure out how to use
-dnl dnl the SDIF library
-dnl AC_MSG_CHECKING(SDIF release version (must be at least 3.4 but prior to 3.8))
-dnl dnl should actually try running this, but these things weren't defined
-dnl dnl in earlier versions, so probably it isn't worth the trouble
-dnl AC_TRY_COMPILE( [ #include<sdif.h> ], [
-dnl 		assert( SDIF_VERSION_MAJOR >= 3 && SDIF_VERSION_MINOR >= 4 && SDIF_VERSION_MINOR < 8 ); ],[ 
-dnl 		AC_MSG_RESULT(ok)
-dnl 		], [
-dnl 		AC_MSG_ERROR(failed -- please use at least SDIF-3.4, and not later than SDIF-3.7.4) ] )
-dnl 
-dnl if test -n "$SDIFINCLUDE" ; then
-dnl 	SDIFINCLUDE="-I$SDIFINCLUDE"
-dnl fi
-dnl AC_SUBST(SDIFINCLUDE)
-dnl 
-
-dnl
-dnl end of SDIF check
-dnl----------------------------------------------------------------
-
-
-dnl----------------------------------------------------------------
 dnl Look for FFTW
 dnl
 dnl Remember that fftw library won't link without -lm.
@@ -280,46 +232,104 @@ dnl FFTW package
 dnl----------------------------------------------------------------
 
 FFTWPACKAGE=
-FFTWINCLUDE=
+FFTWINCLUDEDIR=
+FFTWLIBDIR=
+
+FFTW_HEADER=
+FFTW_LIB=
 
 AC_ARG_WITH(fftw,
 	AC_HELP_STRING( [--with-fftw=path],
 					[specify the prefix of the FFTW  package] ),
 	[FFTWPACKAGE="$withval"], [FFTWPACKAGE=])
 
-if test -n "$FFTWPACKAGE" ; then
-	AC_MSG_RESULT([prepending $FFTWPACKAGE/include to include search path and $FFTWPACKAGE/lib to library search path (fftw package)])
-	FFTWINCLUDE="$FFTWPACKAGE/include"
-	CPPFLAGS="-I$FFTWINCLUDE $CPPFLAGS"
-	LIBS="-L$FFTWPACKAGE/lib $LIBS"
-fi
-
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
 
-FFTWLIB=
-AC_CHECK_HEADERS(fftw3.h, [
-	FFTWLIB="fftw3"
-	AC_MSG_RESULT(using fftw3) 
-	],[
-	AC_CHECK_HEADERS(fftw.h, [
-		FFTWLIB="fftw"
-		AC_MSG_RESULT(using fftw version 2) 
-		] , [
-		AC_MSG_ERROR(cannot find any FFTW header) ]) ])
+if test -n "$FFTWPACKAGE" ; then
+dnl	search the specified FFTW package path for
+dnl	a usable FFTW header and library
 
+dnl	AC_MSG_RESULT([prepending $FFTWPACKAGE/include to include search path (fftw package)])
+dnl	FFTWINCLUDEDIR="$FFTWPACKAGE/include/"
+dnl	CPPFLAGS="-I$FFTWINCLUDEDIR $CPPFLAGS"
+dnl	FFTWLIBDIR="-L$FFTWPACKAGE/lib/"
+	
+	dnl identify include directory
+	if test -d "$FFTWPACKAGE/include" ; then
+		FFTWINCLUDEDIR="$FFTWPACKAGE/include"
+	else
+		FFTWINCLUDEDIR="$FFTWPACKAGE"
+	fi
 
-if test -z "$FFTWLIB" ; then
-	AC_MSG_ERROR(cannot find any FFTW header)
+	dnl identify lib directory
+	if test -d "$FFTWPACKAGE/lib" ; then
+		FFTWLIBDIR="$FFTWPACKAGE/lib"
+	else
+		FFTWLIBDIR="$FFTWPACKAGE"
+	fi
+	
+	dnl look in include directory for one of the FFTW headers
+	if test -f "$FFTWINCLUDEDIR/fftw3.h" ; then
+		FFTW_HEADER="fftw3.h"
+		FFTW_LIB="fftw3"
+		FFTW_MAKE_PLAN="fftw_plan_dft_1d"
+	else
+		if 	test -f "$FFTWINCLUDEDIR/fftw.h" ; then
+			FFTW_HEADER="fftw.h"
+			FFTW_LIB="fftw"
+			FFTW_MAKE_PLAN="fftw_create_plan_specific"
+		else
+			AC_MSG_ERROR(cannot find any FFTW header in $FFTWINCLUDEDIR)
+		fi
+	fi
+	AC_MSG_RESULT(using $FFTW_HEADER found in $FFTWINCLUDEDIR)
+	
+	dnl check the usability of the header and library found
+	SAVE_FLAGS="$CPPFLAGS"
+	CPPFLAGS="-I$FFTWINCLUDEDIR $CPPFLAGS"
+	SAVE_LIBS="$LIBS"
+	LIBS="-L$FFTWLIBDIR $LIBS"
+	AC_CHECK_HEADERS([$FFTW_HEADER], [
+		AC_CHECK_LIB("$FFTW_LIB", $FFTW_MAKE_PLAN, :, AC_MSG_ERROR(cannot use $FFTW_LIB library), -lm)
+		],[
+		AC_MSG_ERROR(cannot use $FFTW_HEADER header)
+		] )
+	CPPFLAGS="$SAVE_FLAGS"
+	LIBS="$SAVE_LIBS"
+		
+else
+dnl no FFTW package directory was specified, so try to 
+dnl find one in the default path
+
+	AC_CHECK_HEADERS([fftw3.h], [
+		FFTW_LIB="fftw3"
+		AC_MSG_RESULT(using $FFTW_LIB) 
+		AC_CHECK_LIB("$FFTW_LIB", fftw_plan_dft_1d, :, AC_MSG_ERROR(cannot use FFTW3 library), -lm)
+		],[
+		AC_CHECK_HEADERS([fftw.h], [
+			FFTW_LIB="fftw"
+			AC_MSG_RESULT(using $FFTW_LIB (version 2)) 
+				AC_CHECK_LIB("$FFTW_LIB", fftw_create_plan_specific, :, AC_MSG_ERROR(cannot use FFTW library), -lm)
+			] , [
+			AC_MSG_ERROR(cannot find any FFTW header) 
+			] ) 
+		] )
+		
 fi
 
-AC_CHECK_LIB("$FFTWLIB", fftw_create_plan, :, AC_MSG_ERROR(cannot use FFTW library), -lm)
-
-if test -n "$FFTWINCLUDE" ; then
-	FFTWINCLUDE="-I$FFTWINCLUDE"
+INCLUDE_FFTW=
+if test -n "$FFTWINCLUDEDIR" ; then
+	INCLUDE_FFTW="-I$FFTWINCLUDEDIR"
 fi
-AC_SUBST(FFTWINCLUDE)
-AC_SUBST(FFTWLIB)
+AC_SUBST(INCLUDE_FFTW)
+
+if test -n "$FFTWLIBDIR" ; then
+	LINK_FFTW="-L$FFTWLIBDIR -l$FFTW_LIB"
+else
+	LINK_FFTW="-l$FFTW_LIB"
+fi
+AC_SUBST(LINK_FFTW)
 
 dnl Gnarly code adopted from Alexandrescu (Modern C++ Design) for compile-time
 dnl checking of type information. Need to make sure that fftw_complex and 

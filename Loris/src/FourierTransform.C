@@ -3,7 +3,7 @@
  * manipulation, and synthesis of digitized sounds using the Reassigned 
  * Bandwidth-Enhanced Additive Sound Model.
  *
- * Loris is Copyright (c) 1999-2000 by Kelly Fitz and Lippold Haken
+ * Loris is Copyright (c) 1999-2004 by Kelly Fitz and Lippold Haken
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,10 +44,11 @@
 
 #if defined(HAVE_FFTW3_H)
 	#include <fftw3.h>
-	//	#include <bench-user.h> ???? whatsis? from gogins
 #else
 	#include <fftw.h>
 #endif
+
+#define PLAN(_p) (static_cast<fftw_plan>(_p))
 
 using namespace std;
 using namespace Loris;
@@ -95,6 +96,10 @@ static void fftw_die_Loris(const char * s)
 //
 static bool Check_Types( void )
 {
+#if defined(HAVE_FFTW3_H)
+#define c_re(c) ((c)[0])
+#define c_im(c) ((c)[1])
+#endif
 	debugger << "checking memory layout of std::complex<double> and fftw_complex" << endl;
 	static bool checked = false;
 	if ( ! checked ) 
@@ -150,7 +155,7 @@ FourierTransform::~FourierTransform( void )
 {
 	if ( _plan != NULL ) 
 	{
-		fftw_destroy_plan( _plan );
+		fftw_destroy_plan( PLAN(_plan) );
 		release( size() );
 	}
 }
@@ -174,9 +179,9 @@ FourierTransform::transform( void )
 
 //	crunch:	
 #if defined(HAVE_FFTW3_H)
-	fftw_execute( _plan ); 	// repeat as needed
+	fftw_execute( PLAN(_plan) ); 	// repeat as needed
 #else
-	fftw_one( _plan, reinterpret_cast<fftw_complex*>(&_buffer[0]), sharedBuffer );
+	fftw_one( PLAN(_plan), reinterpret_cast<fftw_complex*>(&_buffer[0]), sharedBuffer );
 #endif
 
 //	copy output into (private) complex buffer:
@@ -217,7 +222,7 @@ FourierTransform::makePlan( void )
 	//	check for an existing plan:
 	if ( _plan != NULL ) 
 	{
-		fftw_destroy_plan( _plan );
+		fftw_destroy_plan( PLAN(_plan) );
 		release( size() );
 	}
 	

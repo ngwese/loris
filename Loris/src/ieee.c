@@ -51,7 +51,7 @@
   *
   *	These routines assume that the the data is big endian.
   *
-  *	Changes are copyright (c) 1999-2000 Kelly Fitz and Lippold Haken, and
+  *	Changes are copyright (c) 1999-2004 Kelly Fitz and Lippold Haken, and
   *	are distributed freely and without warranty under the terms of the GNU 
   *	General Public License. See the COPYRIGHT and LICENSE documents.
   *	

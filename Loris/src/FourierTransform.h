@@ -5,7 +5,7 @@
  * manipulation, and synthesis of digitized sounds using the Reassigned 
  * Bandwidth-Enhanced Additive Sound Model.
  *
- * Loris is Copyright (c) 1999-2000 by Kelly Fitz and Lippold Haken
+ * Loris is Copyright (c) 1999-2004 by Kelly Fitz and Lippold Haken
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -70,7 +70,7 @@
 #include <vector>
 
 //	forward declare this type from fftw.h:
-struct fftw_plan_struct;
+//struct fftw_plan;
 
 //	begin namespace
 namespace Loris {
@@ -99,10 +99,17 @@ class FourierTransform
 {
 //	-- instance variables --
 	typedef std::vector< std::complex< double > > VecComplex;
-	 VecComplex _buffer;
+	VecComplex _buffer;
 	
 	//	fftw planning structure:
-	fftw_plan_struct * _plan;
+	//	This is disgusting, but the name of the planning
+	//	structure in FFTW3 changed from fftw_plan_struct to
+	//	fftw_plan_s, and I am having a hard time figuring
+	//	out how to support both versions (2 and 3) without
+	//	including the fftw header in here, where it definitely
+	//	should not be.
+	//fftw_plan_struct * _plan;
+	void * _plan;
 	
 //	-- public interface --
 public:

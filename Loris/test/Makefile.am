@@ -1,4 +1,4 @@
-# Copyright (C) 1999-2001, Kelly Fitz and Lippold Haken <loris@cerlsoundgroup.org>
+# Copyright (C) 1999-2004, Kelly Fitz and Lippold Haken <loris@cerlsoundgroup.org>
 #  
 # This file is free software; as a special exception the author gives
 # unlimited permission to copy and/or distribute it, with or without 
@@ -17,7 +17,7 @@ INCLUDES = -I$(top_srcdir)/src
 # simple morphing test
 test_c_SOURCES = morphtest.C
 if DARWIN
-test_c_LDADD = $(top_builddir)/src/.libs/libloris.a -lfftw
+test_c_LDADD = $(top_builddir)/src/.libs/libloris.a $(LINK_FFTW)
 else
 test_c_LDADD = $(top_builddir)/src/libloris.la
 endif
@@ -61,7 +61,7 @@ endif
 # AiffFile (and SpcFile) unit tests
 test_aiff_SOURCES = test_Aiff.C
 if DARWIN
-test_aiff_LDADD = $(top_builddir)/src/.libs/libloris.a -lfftw
+test_aiff_LDADD = $(top_builddir)/src/.libs/libloris.a $(LINK_FFTW)
 else
 test_aiff_LDADD = $(top_builddir)/src/libloris.la
 endif

@@ -30,7 +30,7 @@ public:
  *
  * Author : David Beazley (beazley@cs.uchicago.edu)
  *
- * Copyright (c) 1999-2000, The University of Chicago
+ * Copyright (c) 1999-2004, The University of Chicago
  * 
  * This file may be freely redistributed without license or fee provided
  * this copyright message remains intact.

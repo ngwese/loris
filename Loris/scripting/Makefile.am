@@ -1,4 +1,4 @@
-# Copyright (C) 1999-2001, Kelly Fitz and Lippold Haken <loris@cerlsoundgroup.org>
+# Copyright (C) 1999-2004, Kelly Fitz and Lippold Haken <loris@cerlsoundgroup.org>
 #  
 # This file is free software; as a special exception the author gives
 # unlimited permission to copy and/or distribute it, with or without 
@@ -7,6 +7,7 @@
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
 EXTRA_DIST = loris.py perLoris.pm loris.i lorisPartialList.i 
 
 CLEANFILES = loris.pyo loris.pyc $(PYTHON_CMODULE) $(TCL_MODULE) $(PERL_MODULE)
@@ -45,7 +46,7 @@ $(PYTHON_CMODULE): loris_python_wrap.o $(top_builddir)/src/.libs/libloris.a
 	$(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(LDFLAGS) \
 		-bundle -flat_namespace -undefined suppress \
 		-o $@ loris_python_wrap.o $(top_builddir)/src/.libs/libloris.a \
-		-lsdif -lfftw $(LIBS)
+		$(LINK_FFTW) $(LIBS)
 	-mkdir .libs
 	cp $@ .libs/$@
 
@@ -91,7 +92,7 @@ $(TCL_MODULE): loris_tcl_wrap.o $(top_builddir)/src/.libs/libloris.a
 	$(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(LDFLAGS) \
 		-dynamiclib -flat_namespace -undefined suppress \
 		-o $@ loris_tcl_wrap.o $(top_builddir)/src/.libs/libloris.a \
-		-lsdif -lfftw $(LIBS)
+		$(LINK_FFTW) $(LIBS)
 	-mkdir .libs
 	cp $@ .libs/$@
 
@@ -130,7 +131,7 @@ $(PERL_MODULE): loris_perl_wrap.o $(top_builddir)/src/.libs/libloris.a
 	$(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(LDFLAGS) \
 		-bundle -flat_namespace -undefined suppress \
 		-o $@ loris_perl_wrap.o $(top_builddir)/src/.libs/libloris.a \
-		-lsdif -lfftw $(LIBS)
+		$(LINK_FFTW) $(LIBS)
 	-mkdir .libs
 	cp $@ .libs/$@
 
