@@ -25,7 +25,6 @@ pkginclude_HEADERS = AiffFile.h	\
 				Filter.h	\
 				FourierTransform.h	\
 				FrequencyReference.h \
-				GenericPartialIterator.h \
 				ImportLemur.h	\
 				KaiserWindow.h	\
 				Morpher.h	\
@@ -76,7 +75,6 @@ libclasses_la_SOURCES = AiffFile.C \
 		FourierTransform.h \
 		FrequencyReference.C \
 		FrequencyReference.h \
-		GenericPartialIterator.h \
 		ieee.c \
 		ieee.h \
 		ImportLemur.C \
