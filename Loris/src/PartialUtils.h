@@ -72,10 +72,24 @@ public:
 
 //	predicates:
 	struct label_equals : 
-		public std::binary_function< const Partial, int, bool >
+		public std::unary_function< const Partial, bool >
 	{
-		bool operator()( const Partial & p, int label ) const 
+		int label;
+		label_equals( int l ) : label(l) {}
+		
+		bool operator()( const Partial & p ) const 
 			{ return p.label() == label; }
+	};
+	
+	template<typename Predicate>
+	struct deref_predicate :
+		public std::unary_function< const Partial *, bool >
+	{
+		Predicate pred;
+		deref_predicate( Predicate p = Predicate() ) : pred(p) {}
+		
+		bool operator()( const Partial * p ) const 
+			{ return pred(*p); }
 	};
 	
 //	comparitors:
@@ -93,6 +107,17 @@ public:
 			{ return lhs.duration() > rhs.duration(); }
 	};
 	
+	template<typename Comparitor>
+	struct deref_comparitor :
+		public std::binary_function< const Partial *, const Partial *, bool >
+	{
+		Comparitor comp;
+		deref_comparitor( Comparitor c = Comparitor() ) : comp(c) {}
+		
+		bool operator()( const Partial * lhs, const Partial * rhs ) const 
+			{ return comp(*lhs, *rhs); }
+	};
+
 //	functions on ranges of Partials:
 	template <typename Iterator>
 #if defined( NO_NESTED_NAMESPACE )

@@ -366,13 +366,11 @@ Morpher::morph( PartialList::const_iterator begin0,
 		
 		//	find source Partial 0:
 		PartialList::const_iterator p0 = 
-			std::find_if( begin0, end0, 
-						  std::bind2nd(PartialUtils::label_equals(), *labelIter) );
+			std::find_if( begin0, end0, PartialUtils::label_equals(*labelIter) );
 				
 		//	find source Partial 1:
 		PartialList::const_iterator p1 = 
-			std::find_if( begin1, end1, 
-						  std::bind2nd(PartialUtils::label_equals(), *labelIter) );
+			std::find_if( begin1, end1, PartialUtils::label_equals(*labelIter) );
 		
 		debugger << "morphing " << ((p0 != end0)?(1):(0)) 
 				 << " and " << ((p1 != end1)?(1):(0)) 

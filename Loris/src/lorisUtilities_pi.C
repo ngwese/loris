@@ -88,11 +88,9 @@ void copyByLabel( const PartialList * src, long label, PartialList * dst )
 	try 
 	{
 		std::list< Partial >::const_iterator it = src->begin();
-		for ( it = std::find_if( it, src->end(), 
-					std::bind2nd( PartialUtils::label_equals(), label ) );
+		for ( it = std::find_if( it, src->end(), PartialUtils::label_equals(label) );
 			  it != src->end();
-			  it = std::find_if( ++it, src->end(), 
-					std::bind2nd( PartialUtils::label_equals(), label ) ) )
+			  it = std::find_if( ++it, src->end(), PartialUtils::label_equals(label) ) )
 		{
 			 dst->push_back( *it );
 		}
@@ -126,11 +124,9 @@ void spliceByLabel( PartialList * src, long label, PartialList * dst )
 	try 
 	{
 		std::list< Partial >::iterator it = src->begin();
-		for ( it = std::find_if( it, src->end(), 
-					std::bind2nd( PartialUtils::label_equals(), label ) );
+		for ( it = std::find_if( it, src->end(), PartialUtils::label_equals(label) );
 			  it != src->end();
-			  it = std::find_if( it, src->end(), 
-					std::bind2nd( PartialUtils::label_equals(), label ) ) )
+			  it = std::find_if( it, src->end(), PartialUtils::label_equals(label) ) )
 		{
 			std::list< Partial >::iterator remove_me = it++;
 			dst->splice( dst->end(), *src, remove_me );

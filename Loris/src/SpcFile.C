@@ -867,8 +867,7 @@ static const Partial * select( const PartialList & partials, int label, int firs
 {
 	const Partial * ret = NULL;
 	list< Partial >::const_iterator it = 
-		std::find_if( partials.begin(), partials.end(), 
-				 std::bind2nd(PartialUtils::label_equals(), label) );
+		std::find_if( partials.begin(), partials.end(), PartialUtils::label_equals(label) );
 		
 	if ( it != partials.end() ) 
 	{
@@ -877,8 +876,7 @@ static const Partial * select( const PartialList & partials, int label, int firs
 		//	there should only be one of such Partial, verify this on first frame:
 		if ( firstFrameFlag )
 		{
-			if ( std::count_if( ++it, partials.end(), 
-										std::bind2nd(PartialUtils::label_equals(), label) ) != 0)
+			if ( std::count_if( ++it, partials.end(), PartialUtils::label_equals(label)) != 0)
 				Throw( FileIOException, "Partials are not distilled." );
 		}
 	}

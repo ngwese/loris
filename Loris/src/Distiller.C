@@ -184,7 +184,7 @@ Distiller::distill( PartialList & container,
 		//	having a label not equal to 'label':
 		PartialList::iterator upperbound = 
 			std::find_if( lowerbound, dist_list.end(), 
-						  std::not1( std::bind2nd( PartialUtils::label_equals(), label ) ) );
+						  std::not1( PartialUtils::label_equals(label) ) );
 #ifdef Debug_Loris
 		//	don't want to compute this iterator distance unless debugging:
 		debugger << "distilling Partials labeled " << label << endl;
