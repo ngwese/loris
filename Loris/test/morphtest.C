@@ -39,7 +39,9 @@
 #include "Dilator.h"
 #include "Distiller.h"
 #include "Exception.h"
+#include "ExportSdif.h"
 #include "Handle.h"
+#include "ImportSdif.h"
 #include "Morpher.h"
 #include "Partial.h"
 #include "Synthesizer.h"
@@ -76,6 +78,17 @@ int main( )
 		std::list< Partial > clar;
 		a.analyze( v.begin(), v.end(), f.sampleRate() );
 		clar.splice( clar.end(), a.partials() );
+		
+		/***/
+		std::cout << "exporting sdif" << endl;
+		ExportSdif xp( 0 );
+		xp.write( "clar.sdif", clar );
+		std::cout << "importing sdif" << endl;
+		ImportSdif ip("clar.sdif");
+		clar.clear();
+		clar.splice( clar.end(), ip.partials() );
+		std::cout << "that was fun." << endl;
+		/***/
 
 		Handle< BreakpointEnvelope > clarRef;
 		getFreqReference( clar, 20, 0, 1000, clarRef );
