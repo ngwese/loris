@@ -49,42 +49,51 @@ AC_MSG_RESULT(----- Program Checks -----)
 AC_PROG_CXX
 AM_PROG_LIBTOOL
 
+AC_ARG_VAR([DOXYGEN], 
+	   [Path to doxygen when available])
+AC_PATH_PROG([DOXYGEN], [doxygen])
+
+AC_ARG_VAR([SWIG], 
+	   [Path to swig when available])
+AC_PATH_PROG([SWIG], [swig])
+
+
 dnl----------------------------------------------------------------
 dnl Perform special libtool checks under Darwin.
 dnl----------------------------------------------------------------
 
-AC_DEFUN([PATCH_LIBTOOL_ON_DARWIN_ZSH_OVERQUOTING],
-[# libtool-1.4 specific, on zsh target the final requoting does one too much
-case "$host_os" in
-  darwin*)
-    if grep "1.920" libtool ; then
-      AC_MSG_RESULT(patching libtool on .so-sharedlib creation (zsh overquoting))
-      test -f libtool.old || (mv libtool libtool.old && cp libtool.old libtool)
-      sed -e '/archive_cmds=/s:\\\\":\\":g' libtool > libtool.new
-      mv libtool.new libtool
-      test -f libtool || (test -f libtool.old && mv libtool.old libtool)
-    fi
-  ;;
-esac
-])
-PATCH_LIBTOOL_ON_DARWIN_ZSH_OVERQUOTING
-
-dnl don't seem to need this anymore
-dnl scratch that, I think we do still need it
-dnl
-AC_DEFUN([KELLYS_GREAT_DARWIN_FIX],
-[# libtool just won't build the scripting modules under Darwin, do it by hand
-case "$host_os" in
-	*darwin*)
-		AC_MSG_RESULT(Using Darwin-specific kludges to avoid broken libtool.)
-		DARWIN=true
-	;;
-esac
-])
-
-KELLYS_GREAT_DARWIN_FIX
-
-AM_CONDITIONAL(DARWIN, test "$DARWIN")
+dnl  AC_DEFUN([PATCH_LIBTOOL_ON_DARWIN_ZSH_OVERQUOTING],
+dnl  [# libtool-1.4 specific, on zsh target the final requoting does one too much
+dnl  case "$host_os" in
+dnl    darwin*)
+dnl      if grep "1.920" libtool ; then
+dnl        AC_MSG_RESULT(patching libtool on .so-sharedlib creation (zsh overquoting))
+dnl        test -f libtool.old || (mv libtool libtool.old && cp libtool.old libtool)
+dnl        sed -e '/archive_cmds=/s:\\\\":\\":g' libtool > libtool.new
+dnl        mv libtool.new libtool
+dnl        test -f libtool || (test -f libtool.old && mv libtool.old libtool)
+dnl      fi
+dnl    ;;
+dnl  esac
+dnl  ])
+dnl  PATCH_LIBTOOL_ON_DARWIN_ZSH_OVERQUOTING
+dnl  
+dnl  dnl don't seem to need this anymore
+dnl  dnl scratch that, I think we do still need it
+dnl  dnl
+dnl  AC_DEFUN([KELLYS_GREAT_DARWIN_FIX],
+dnl  [# libtool just won't build the scripting modules under Darwin, do it by hand
+dnl  case "$host_os" in
+dnl  	*darwin*)
+dnl  		AC_MSG_RESULT(Using Darwin-specific kludges to avoid broken libtool.)
+dnl  		DARWIN=true
+dnl  	;;
+dnl  esac
+dnl  ])
+dnl  
+dnl  KELLYS_GREAT_DARWIN_FIX
+dnl  
+AM_CONDITIONAL(DARWIN, test -n "$DARWIN")
 
 dnl----------------------------------------------------------------
 dnl Checks for compiler features.
@@ -223,15 +232,18 @@ AC_CHECK_LIB([fftw3], [fftw_execute], [
 		],
 		AC_MSG_ERROR([Cannot find the FFTW library.  Add something to LDFLAGS.])))
 
-dnl AC_CHECK_HEADERS([fftw3.h],,
-dnl		AC_MSG_ERROR([Cannot find FFTW headers.  Add something to CPPFLAGS.]))
+if test "$FFTW_VERSION" == "3"; then
+	AC_CHECK_HEADERS([fftw3.h],,
+		AC_MSG_ERROR([Cannot find FFTW headers.  Add something to CPPFLAGS.]))
+else
+	AC_CHECK_HEADERS([fftw.h],,
+		AC_MSG_ERROR([Cannot find FFTW headers.  Add something to CPPFLAGS.]))
+fi
 
-
-AC_CHECK_HEADERS("$FFTW_HDR",,
-	 AC_MSG_ERROR([Cannot find FFTW headers.  Add something to CPPFLAGS.]))
+dnl AC_CHECK_HEADERS("$FFTW_HDR",,
+dnl	 AC_MSG_ERROR([Cannot find FFTW headers.  Add something to CPPFLAGS.]))
 
 AC_SUBST(LINK_FFTW)
-AC_MSG_RESULT(using FFTW version $FFTW_VERSION)
 
 dnl----------------------------------------------------------------
 dnl Check for scripting languages
@@ -246,41 +258,50 @@ dnl This new way is not as flexible as the old way, but it much
 dnl easier to maintain. Thanks to John Ramsdell for helping to
 dnl clean this up.
 
+AC_ARG_VAR([PYTHON], 
+	   [Path to python when available])
+
 AC_ARG_WITH(python,
 	AC_HELP_STRING( [--with-python],
 					[build Python module (default is YES)] ),
-	[USEPY="$withval"], [USEPY="yes"])
+	[USEPYTHON="$withval"], [USEPYTHON="yes"])
 
-if test  "$USEPY" == "no"; then
-	USEPY=
-else
-	dnl use automake tools for finding python, set 
-	dnl installation directory for extension modules
-	AM_PATH_PYTHON(1.5)
+if test "$USEPYTHON" == "yes" ; then
+	AC_PATH_PROG([PYTHON], [python])
 	
-	dnl look for the header Python.h
-	PYBINDIR="`AS_DIRNAME([$PYTHON])`"
-	PYPREFDIR="`AS_DIRNAME([$PYBINDIR])`"
-	PYINCLUDE="$PYPREFDIR/include/python$PYTHON_VERSION"  
-	AC_MSG_CHECKING(for Python.h header file)
-	AC_CHECK_HEADERS([$PYINCLUDE/Python.h],,
-	AC_MSG_ERROR([Cannot find Python headers.  Add something to CPPFLAGS.]))
-	
-	dnl check whether this version of Python supports
-	dnl the new style of iterators
-	AC_MSG_CHECKING(for PyExc_StopIteration defined in Python.h)
-	AC_TRY_COMPILE(	[ #include <$PYINCLUDE/Python.h>;], 
-					[ PyErr_SetString( PyExc_StopIteration, ""); ], 
-		[
-	    	AC_MSG_RESULT(yep)
-			PYFLAGS="-I$PYINCLUDE"	
-	    ], [
-	    	AC_MSG_RESULT(nope)
-			PYFLAGS="-I$PYINCLUDE -DNO_PYTHON_EXC_STOPITER"
-	    ] )
+	if test -n "$PYTHON" ; then
+		dnl use automake tools for finding python, set 
+		dnl installation directory for extension modules
+		AM_PATH_PYTHON(1.5)
+		
+		dnl look for the header Python.h
+		PYBINDIR="`AS_DIRNAME([$PYTHON])`"
+		PYPREFDIR="`AS_DIRNAME([$PYBINDIR])`"
+		PYINCLUDE="$PYPREFDIR/include/python$PYTHON_VERSION"  
+		AC_MSG_CHECKING(for Python.h header file)
+		AC_CHECK_HEADERS([$PYINCLUDE/Python.h],[
+			dnl check whether this version of Python supports
+			dnl the new style of iterators
+			AC_MSG_CHECKING(for PyExc_StopIteration defined in Python.h)
+			AC_TRY_COMPILE(	[ #include <$PYINCLUDE/Python.h>;], 
+							[ PyErr_SetString( PyExc_StopIteration, ""); ], 
+				[
+					AC_MSG_RESULT(yep)
+					PYFLAGS="-I$PYINCLUDE"	
+				], [
+					AC_MSG_RESULT(nope)
+					PYFLAGS="-I$PYINCLUDE -DNO_PYTHON_EXC_STOPITER"
+				] )		
+		],[
+			AC_MSG_WARN([Cannot find Python headers. Python support disabled.])
+			PYTHON=
+		])
+	else
+		AC_MSG_WARN([Cannot find Python. Python support disabled.])
+	fi
 fi
 
-AM_CONDITIONAL(BUILD_PYTHON, test -n "$USEPY")
+AM_CONDITIONAL(BUILD_PYTHON, test -n "$PYTHON")
 AC_SUBST(PYFLAGS)
 
 dnl----------------------------------------------------------------
@@ -293,25 +314,19 @@ dnl----------------------------------------------------------------
 
 AC_ARG_VAR([CSOUND_CONFIG], 
 	   [Path to the Csound configuration script when available])
-AC_PATH_PROG([CSOUND_CONFIG], [csound-config])
-
-FOUND_CSOUND="$CSOUND_CONFIG"
-if test -n "$FOUND_CSOUND" ; then
-	AC_CHECK_PROG([FOUND_CSOUND], [csound], ["yes"])
-fi
 
 AC_ARG_WITH(csound,
 	AC_HELP_STRING( [--with-csound],
 					[build Csound 4 opcodes (default is YES)] ),
 	[USECSOUND="$withval"], [USECSOUND="yes"])
 
-if test "$USECSOUND" == "no"; then
-	USECSOUND=
-else
+if test "$USECSOUND" == "yes" ; then
+	AC_PATH_PROG([CSOUND_CONFIG], [csound-config])
+	FOUND_CSOUND="$CSOUND_CONFIG"
+
 	dnl try to use csound config to get build flags
 	dnl for the csound opcodes
 	if test -n "$CSOUND_CONFIG"; then
-		USECSOUND="yes"
 		CSOUND_CXXFLAGS="`$CSOUND_CONFIG --cflags`"
 		
 		dnl I don't think I need these next two, those are
@@ -321,19 +336,17 @@ else
 		
 		CSOUND_PREFIX="`$CSOUND_CONFIG --prefix`"  	
 	else
-		AC_CHECK_HEADERS([csound/cs.h],,[
-			AC_MSG_RESULT([Cannot find Csound headers. Disabling csound.])
-			USECSOUND=
-			])
+		AC_CHECK_HEADERS([csound/cs.h],
+			FOUND_CSOUND="yes",
+			AC_MSG_WARN([Cannot find Csound headers. Csound support disabled.]))
 	fi
-
-	AC_SUBST([CSOUND_CXXFLAGS])
-	AC_SUBST([CSOUND_LDFLAGS])
-	AC_SUBST([CSOUND_LIBS])
-	AC_SUBST([CSOUND_PREFIX])
 fi
+AC_SUBST([CSOUND_CXXFLAGS])
+AC_SUBST([CSOUND_LDFLAGS])
+AC_SUBST([CSOUND_LIBS])
+AC_SUBST([CSOUND_PREFIX])
 
-AM_CONDITIONAL([HAVE_CSOUND], [test -n "$USECSOUND"])
+AM_CONDITIONAL([HAVE_CSOUND], [test -n "$FOUND_CSOUND"])
 
 dnl----------------------------------------------------------------
 dnl Check for Loris debugging flag
@@ -367,15 +380,19 @@ scripting/Makefile csound/Makefile test/Makefile \
 utils/Makefile )
 
 AC_MSG_RESULT(----- Configuration Summary -----)
-if test -n "$USEPY" ; then
+
+echo Using FFTW version $FFTW_VERSION.
+
+if test -n "$PYTHON" ; then
 	echo Python support: Enabled.
 	echo Installing Python extension modules in $pyexecdir.
 else
 	echo Python support: Disabled.
-	echo Add something to CPPFLAGS to enable.  See "./configure --help".
+	echo Define PYTHON or add something to CPPFLAGS to enable.  
+	echo See "./configure --help".
 fi
 
-if test -n "$CSOUND_CXXFLAGS" ; then
+if test -n "$FOUND_CSOUND" ; then
 	echo Csound support: Enabled.
 	echo Installing opcodes in $CSOUND_PREFIX/lib/csound
 else

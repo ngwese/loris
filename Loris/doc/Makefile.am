@@ -10,7 +10,10 @@
 
 EXTRA_DIST = LorisCDoc.html LorisCppDoc.html \
 			 LorisPerlDoc.html LorisPythonDoc.html \
-			 LorisTclDoc.html index.html
+			 LorisTclDoc.html index.html \
+			 Doxyfile
+			 
+# add something to build docs using doxygen, if it is present
 
 MAINTAINERCLEANFILES = 	Makefile.in
 
