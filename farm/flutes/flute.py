@@ -35,8 +35,11 @@ notes from trial 3:
 	- all these dilated things sound okay, retaining their noisiness
 	- the smoothest (not necessarily best) sounding noise is from the
 	longer (narrower) windows
+	
+trial 4: 
+	- sifting has no discernable effect
 
-Last updated: 25 Feb 2002 by Kelly Fitz
+Last updated: 21 May 2002 by Kelly Fitz
 """
 print __doc__
 
@@ -45,7 +48,7 @@ from trials import *
 
 # use this trial counter to skip over
 # eariler trials
-trial = 3
+trial = 4
 
 print "running trial number", trial, time.ctime(time.time())
 
@@ -103,3 +106,35 @@ if trial == 3:
 				harmonicDistill( p2, f )
 				ofile = 'flute.%i.%i.d%i.T2.aiff'%(r, w, f)
 				synthesize( ofile, p2 )
+				
+if trial == 4:
+	r = 240
+	w = 291
+	f = 291
+	a = loris.Analyzer( r, w )
+	sfile = loris.AiffFile( source )
+	p = a.analyze( sfile.samples(), sfile.sampleRate() )
+	ref = loris.createFreqReference( p, f*.5, f*1.5, 100 )
+	loris.channelize( p, ref, 1 )
+	siftme = p.copy()
+	loris.distill( p )
+	ofilebase = 'flute.%i.%i.dst'%(r, w)
+	synthesize( ofilebase + '.aiff', p )
+	loris.exportSdif( ofilebase + '.sdif', p )
+	loris.exportSpc( ofilebase + '.s.spc', p, 62, 0 )
+	loris.exportSpc( ofilebase + '.e.spc', p, 62, 1 )
+	p = timescale( p, 2.0 )
+	synthesize( ofilebase + '.T2.aiff', p )
+	
+	# do a sifted version
+	p = siftme
+	loris.sift( p )
+	loris.distill( p )
+	ofilebase = 'flute.%i.%i.sft'%(r, w)
+	synthesize( ofilebase + '.aiff', p )
+	loris.exportSdif( ofilebase + '.sdif', p )
+	loris.exportSpc( ofilebase + '.s.spc', p, 62, 0 )
+	loris.exportSpc( ofilebase + '.e.spc', p, 62, 1 )
+	p = timescale( p, 2.0 )
+	synthesize( ofilebase + '.T2.aiff', p )
+	

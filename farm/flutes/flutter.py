@@ -47,8 +47,22 @@ notes from trial 5:
 	just be a distiller thing. Look at spc files in Kyma, also
 	try sifting, after the sieve is restored.
 	- WIERD the artifact doesn't make it into the Spc files...
+	Lip thinks this is definitely a case of having too-fast Partial
+	turnons, and will be ameliorated by lengthening the turnon time
+	to 5 ms (from 1 ms)
 
-Last updated: 13 May 2002 by Kelly Fitz
+notes from trial 6:
+	- Lip may or may not be right about the turnon times, but sifting
+	(forgot to remove the sifted-out partials) definitely eliminated
+	the crunch problem
+	- no apparent advantage (or difference) to using two partials per harmonic
+	- no apparent difference between 125 Hz and 250 Hz freq floor, 50 Hz
+	retains some thumping, but I think that makes it less useful, and doesn't
+	really improve the perceived fidelity.
+	- virtually no difference between sifted version and raw synthesis
+	- try tossing out sifted partials
+	
+Last updated: 21 May 2002 by Kelly Fitz
 """
 print __doc__
 
@@ -57,7 +71,7 @@ from trials import *
 
 # use this trial counter to skip over
 # eariler trials
-trial = 5
+trial = 7
 
 print "running trial number", trial, time.ctime(time.time())
 
@@ -168,3 +182,67 @@ if trial == 5:
 			synthesize( ofilebase + '.aiff', pd )
 			loris.exportSpc(ofilebase + 's.spc', pd, 64, 0)			
 			loris.exportSpc(ofilebase + 'e.spc', pd, 64, 1)
+			
+if trial == 6:
+	r = 250
+	w = 300
+	a = loris.Analyzer( r, w )
+	f = loris.AiffFile( source )
+	samples = f.samples()
+	rate = f.sampleRate()
+	
+	refnums = ( 1, 2 )
+	floors = ( 250, 125, 50 )
+	
+	for fl in floors:
+		a.setFreqFloor( fl )
+		p = a.analyze( samples, rate )
+		ofilebase = 'flutter.%i.%i.%i'%(r, w, fl)
+		synthesize( ofilebase + '.aiff', p )
+		loris.exportSdif( ofilebase + '.sdif', p )
+		ref = loris.createFreqReference( p, 330*.75, 330*1.5, 100 )
+		for n in refnums:
+			pd = p.copy()
+			loris.channelize( pd, ref, n )
+			ps = pd.copy()
+
+			# distilled
+			loris.distill( pd )
+			ofilebase = 'flutter.%i.%i.%i.d%i'%(r, w, fl, n)
+			synthesize( ofilebase + '.aiff', pd )
+			loris.exportSpc(ofilebase + 's.spc', pd, 64, 0)			
+			loris.exportSpc(ofilebase + 'e.spc', pd, 64, 1)
+
+			# sifted
+			loris.sift( ps )
+			loris.distill( ps )
+			ofilebase = 'flutter.%i.%i.%i.s%i'%(r, w, fl, n)
+			synthesize( ofilebase + '.aiff', ps )
+			loris.exportSpc(ofilebase + 's.spc', ps, 64, 0)			
+			loris.exportSpc(ofilebase + 'e.spc', ps, 64, 1)
+			
+if trial == 7:
+	r = 250
+	w = 300
+	p = analyze( source, r, w )
+	ofilebase = 'flutter.%i.%i'%(r, w)
+	loris.exportSdif( ofilebase + '.raw.sdif', p )
+	ref = loris.createFreqReference( p, 330*.75, 330*1.5, 100 )
+	loris.channelize( p, ref, 1 )
+	
+	# sifted version
+	loris.sift( p )	
+	loris.distill( p )
+	ofilebase = 'flutter.%i.%i.ssav'%(r, w)
+	synthesize( ofilebase + '.aiff', ps )
+	loris.exportSpc( ofilebase + 's.spc', ps, 64, 0 )			
+	loris.exportSpc( ofilebase + 'e.spc', ps, 64, 1 )
+	
+	# sifted version with sifted partials removed
+	zeros = loris.extractLabeled( p, 0 )
+	ofilebase = 'flutter.%i.%i.sift'%(r, w)
+	synthesize( ofilebase + '.aiff', ps )
+	loris.exportSpc( ofilebase + 's.spc', ps, 64, 0 )			
+	loris.exportSpc( ofilebase + 'e.spc', ps, 64, 1 )
+		
+			
