@@ -16,7 +16,11 @@ INCLUDES = -I$(top_srcdir)/src
 
 # simple morphing test
 test_c_SOURCES = morphtest.C
+if DARWIN
+test_c_LDADD = $(top_builddir)/pi/.libs/libloris.a -lsdif -lfftw
+else
 test_c_LDADD = $(top_builddir)/pi/libloris.la
+endif
 
 # Morpher unit tests
 test_morpher_SOURCES = test_Morpher.C
