@@ -33,8 +33,8 @@
  * and things like that.
  *
  * $Log$
- * Revision 1.5  2000/12/07 05:33:57  kfitz
- * Added ExportSpc class to scripting interface, including new implementation by Lip.
+ * Revision 1.6  2000/12/08 06:36:59  kfitz
+ * Found that static libraries are a lot easier to work with on Mac, don't have limitiations like no throwing exceptions out, and don't seem to introduce instability in Python module (with memory management). So I am probably going to revert to a static Loris library, in place of the DLL. Also, began writing a C++ simplemorph demo.
  *
  ************************************************************************/
 
@@ -704,22 +704,26 @@ using Loris::BreakpointEnvelope;
 
 //	for procedural interface construction and 
 //	destruction, see comment below:
-#define LORIS_OPAQUE_POINTERS 0
-#include "loris.h"
+//#define LORIS_OPAQUE_POINTERS 0
+//#include "loris.h"
 
 BreakpointEnvelope * BreakpointEnvelopeCopy_( const BreakpointEnvelope * other )
 {
-	//BreakpointEnvelope * env = createBreakpointEnvelope();
-	//*env = *other;
-	return copyBreakpointEnvelope( other );
+	BreakpointEnvelope * env = createBreakpointEnvelope();
+	*env = *other;
+	return new BreakpointEnvelope( *other );
+	//return copyBreakpointEnvelope( other );
 }
 
 BreakpointEnvelope * BreakpointEnvelopeWithValue_( double initialValue )
 {
+	/*
 	BreakpointEnvelope * env = createBreakpointEnvelope();
 	env->insertBreakpoint( 0., initialValue );
 	//breakpointEnvelope_insertBreakpoint( env, 0., initialValue );
 	return env;
+	*/
+	return new BreakpointEnvelope( initialValue );
 }
 
 #include "ExportSpc.h"
@@ -2994,9 +2998,8 @@ static PyObject *_wrap_Analyzer_setBwRegionWidth(PyObject *self, PyObject *args)
 }
 
 static BreakpointEnvelope *new_BreakpointEnvelope() {
-		return createBreakpointEnvelope();
-	}
-
+    return new BreakpointEnvelope();
+}
 static PyObject *_wrap_new_BreakpointEnvelope(PyObject *self, PyObject *args) {
     PyObject * _resultobj;
     BreakpointEnvelope * _result;
@@ -3040,9 +3043,9 @@ static PyObject *_wrap_new_BreakpointEnvelope(PyObject *self, PyObject *args) {
     return _resultobj;
 }
 
-static void delete_BreakpointEnvelope(BreakpointEnvelope *self) {
-		destroyBreakpointEnvelope( self );
-	}
+static void delete_BreakpointEnvelope(BreakpointEnvelope *obj) {
+    delete obj;
+}
 static PyObject *_wrap_delete_BreakpointEnvelope(PyObject *self, PyObject *args) {
     PyObject * _resultobj;
     BreakpointEnvelope * _arg0;

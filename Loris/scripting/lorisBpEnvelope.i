@@ -42,8 +42,8 @@ using Loris::BreakpointEnvelope;
 
 //	for procedural interface construction and 
 //	destruction, see comment below:
-#define LORIS_OPAQUE_POINTERS 0
-#include "loris.h"
+//#define LORIS_OPAQUE_POINTERS 0
+//#include "loris.h"
 %}
 
 // ---------------------------------------------------------------------------
@@ -73,24 +73,19 @@ public:
 //	assignment operator too. Don't let's use that here either. Other
 //	member functions don't seem to cause instability.
 //	
-%addmethods
-{
-	BreakpointEnvelope( void )
-	{
-		return createBreakpointEnvelope();
-	}
+
+//%addmethods
+//{
+	BreakpointEnvelope( void );	// { return createBreakpointEnvelope(); }
 	/*	Construct and return a new BreakpointEnvelope having no 
 		breakpoints and an implicit value of 0. everywhere, 
 		until the first breakpoint is inserted.			
 	 */
 	 	 
-	~BreakpointEnvelope( void )
-	{
-		destroyBreakpointEnvelope( self );
-	}
+	~BreakpointEnvelope( void );	// { destroyBreakpointEnvelope( self ); }
 	/*	Destroy this BreakpointEnvelope. 								
 	 */
-}
+//}
 	
 //	Envelope interface:
 	virtual double valueAt( double x ) const;	
@@ -115,9 +110,10 @@ public:
 %{
 BreakpointEnvelope * BreakpointEnvelopeCopy_( const BreakpointEnvelope * other )
 {
-	//BreakpointEnvelope * env = createBreakpointEnvelope();
-	//*env = *other;
-	return copyBreakpointEnvelope( other );
+	BreakpointEnvelope * env = createBreakpointEnvelope();
+	*env = *other;
+	return new BreakpointEnvelope( *other );
+	//return copyBreakpointEnvelope( other );
 }
 %}
 
@@ -135,10 +131,13 @@ BreakpointEnvelope * BreakpointEnvelopeCopy_( const BreakpointEnvelope * other )
 %{
 BreakpointEnvelope * BreakpointEnvelopeWithValue_( double initialValue )
 {
+	/*
 	BreakpointEnvelope * env = createBreakpointEnvelope();
 	env->insertBreakpoint( 0., initialValue );
 	//breakpointEnvelope_insertBreakpoint( env, 0., initialValue );
 	return env;
+	*/
+	return new BreakpointEnvelope( initialValue );
 }
 %}
 
