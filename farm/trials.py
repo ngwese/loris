@@ -121,17 +121,7 @@ def harmonicSift( partials, fundamental ):
 	loris.channelize( partials, env, 1 )
 	# do sifting and removal of sifted-out partials:
 	loris.sift( partials )
-	iter = partials.begin()
-	end = partials.end()
-	while not iter.equals( end ):
-		p = iter.partial()
-		if p.label() == 0:
-			next = iter.copy()
-			next.next()
-			partials.erase( iter )
-			iter = next
-		else:
-			iter.next()
+	zeros = loris.extractLabeled( partials, 0 )
 	loris.distill( partials )
 	return partials
 	
