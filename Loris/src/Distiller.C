@@ -291,15 +291,23 @@ Distiller::fixGaps( Partial & dest,
 			{
 				// debugger << "filling in a gap of duration " << gap << endl;
 				double time = seg->second + Partial::FadeTime();
+				/*
 				double freq = _referenceEnv->valueAt(time) * freqRatio;
 				double phase = dest.phaseAt(seg->second) +
 					(0.5 * (freq+dest.frequencyAt(seg->second))) * Partial::FadeTime();
+				*/
+				double freq = dest.frequencyAt( seg->second );
+				double phase = dest.phaseAt(seg->second) +  (freq * Partial::FadeTime()); 
 				dest.insert( time, Breakpoint( freq, 0., 0., phase ) );
 				
 				time = nextseg->first - Partial::FadeTime();
+				/*
 				freq = _referenceEnv->valueAt(time) * freqRatio;
 				phase = dest.phaseAt(nextseg->first) -
 					(0.5 * (freq+dest.frequencyAt(nextseg->first))) * Partial::FadeTime();
+				*/
+				freq = dest.frequencyAt( nextseg->first );
+				phase = dest.phaseAt(nextseg->first) - (freq * Partial::FadeTime());
 				dest.insert( time, Breakpoint( freq, 0., 0., phase ) );
 			} 
 			
