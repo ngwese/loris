@@ -24,7 +24,7 @@
 namespace Loris {
 #endif
 
-
+struct CkHeader;
 class BinaryFile;
 
 // ---------------------------------------------------------------------------
@@ -39,7 +39,7 @@ public:
 //	construction:
 	AiffFile( double rate, int chans, int bits, std::vector< double > & buf );
 	AiffFile( const std::string & filename, std::vector< double > & buf );
-	AiffFile( BinaryFile & file, std::vector< double > & buf );
+	AiffFile( std::istream & s, std::vector< double > & buf );
 	
 	AiffFile( const SamplesFile & other );
 	
@@ -48,54 +48,18 @@ public:
 	
 //	reading and writing:
 	void read( const std::string & filename );
-	void read( BinaryFile & file );
+	void read( std::istream & s );
 	void write( const std::string & filename );
 	void write( BinaryFile & file );
 	
-//	-- chunk types --
-private:
-	enum { 
-		ContainerId = 'FORM', 
-		AiffType = 'AIFF', 
-		CommonId = 'COMM',
-		SoundDataId = 'SSND'
-	};
-	
-	struct CkHeader {
-		Int_32 id;
-		Uint_32 size;
-	};
-	
-	struct ContainerCk
-	{
-		CkHeader header;
-		Int_32 formType;
-	};
-	
-	struct CommonCk
-	{
-		CkHeader header;
-		Int_16 channels;			// number of channels 
-		Int_32 sampleFrames;		// channel independent sample frames 
-		Int_16 bitsPerSample;		// number of bits per sample 
-		IEEE::extended80 srate;		// sampling rate IEEE 10 byte format 
-	};
-	
-	struct SoundDataCk
-	{
-		CkHeader header;	
-		Uint_32 offset;				
-		Uint_32 blockSize;	
-		//	sample frames follow
-	};
-
 //	-- helpers --
+private:
 	//	reading:
-	void readChunkHeader( BinaryFile & file, CkHeader & h );
-	void readCommon( BinaryFile & file );
-	void readContainer( BinaryFile & file );
-	void readSampleData( BinaryFile & file );
-	void readSamples( BinaryFile & file );
+	void readChunkHeader( std::istream & s, CkHeader & h );
+	void readCommon( std::istream & s );
+	void readContainer( std::istream & s );
+	void readSampleData( std::istream & s );
+	void readSamples( std::istream & s );
 
 	//	writing:
 	void writeCommon( BinaryFile & file );

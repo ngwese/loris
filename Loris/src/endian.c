@@ -47,7 +47,7 @@ void swapByteOrder( char * bytes, int n )
 		*beg = tmp;
 		
 		++beg;
-		++end;
+		--end;
 	}
 }
 

@@ -12,7 +12,10 @@
 #include "pi.h"
 #include <algorithm>
 #include <cstdlib>	//	for std::abs()
-using std::abs;		//	used everywhere
+
+//	there's a freakin' ton of std in here, 
+//	just import the whole namespace
+using namespace std;
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
@@ -25,7 +28,7 @@ namespace Loris {
 //	Transform lengths are the smallest power of two greater than twice the
 //	window length. The noise floor is specified in dB (negative).
 //
-ReassignedSpectrum::ReassignedSpectrum( const vector< double > & window ) :
+ReassignedSpectrum::ReassignedSpectrum( const std::vector< double > & window ) :
 	_transform( 1 << long( 1 + ceil( log(window.size()) / log(2.)) ) ),
 	_tfreqramp( 1 << long( 1 + ceil( log(window.size()) / log(2.)) ) ),
 	_ttimeramp( 1 << long( 1 + ceil( log(window.size()) / log(2.)) ) ),

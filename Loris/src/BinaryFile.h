@@ -10,6 +10,7 @@
 // ===========================================================================
 #include <string>
 #include <iostream>
+#include <fstream>
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
@@ -119,6 +120,15 @@ private:
 	std::filebuf _buf;		//	associated file buffer 
 
 };	//	end of class BinaryFile
+
+
+class BigEndian
+{
+public:
+	static void read( std::istream & s, int size, long howmany, char * putemHere );
+	static void write( std::ostream & s, int size, long howmany, const char * stuff );
+	
+};	//	end of class BigEndian
 
 #if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris

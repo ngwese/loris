@@ -12,19 +12,37 @@
 #include "endian.h"
 #include <string>
 
-//	MIPSPro specific kludge, they're so lame:
-#if defined(__sgi) && ! defined(__GNUC__)
-	#define IOSbinary 0
-#else
-	#define IOSbinary std::ios::binary
-#endif	
-
 using namespace std;
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
 #endif
+
+// ---------------------------------------------------------------------------
+//	BigEndian read
+// ---------------------------------------------------------------------------
+//
+void
+BigEndian::read( istream & s, int size, long howmany, char * putemHere )
+{
+	//	read the bytes into data:
+	s.read( putemHere, howmany*size );
+	
+	//	check stream state:
+	if ( ! s.good() )
+		Throw( FileIOException, "Binary File read failed." );
+	Assert( s.gcount() == howmany*size );
+	
+	//	swap byte order if nec.
+	if ( ! bigEndianSystem() && size > 1 ) 
+	{
+		for ( long i = 0; i < howmany; +i )
+		{
+			swapByteOrder( putemHere + (i*size), size );
+		}
+	}
+}
 
 
 // ---------------------------------------------------------------------------
@@ -79,7 +97,7 @@ BinaryFile::BinaryFile( const string & path ) :
 void
 BinaryFile::append( const string & path )
 {
-	buffer().open( path.c_str(), ios::out | ios::app | IOSbinary );
+	buffer().open( path.c_str(), ios::out | ios::app | ios::binary );
 		
 	if ( ! buffer().is_open() ) {
 		string s( "Couldn't open BinaryFile: " );
@@ -97,7 +115,7 @@ BinaryFile::append( const string & path )
 void
 BinaryFile::create( const string & path )
 {
-	buffer().open( path.c_str(), ios::in | ios::out | ios::trunc | IOSbinary );
+	buffer().open( path.c_str(), ios::in | ios::out | ios::trunc | ios::binary );
 		
 	if ( ! buffer().is_open() ) {
 		string s( "Couldn't open BinaryFile: " );
@@ -115,7 +133,7 @@ BinaryFile::create( const string & path )
 void
 BinaryFile::edit( const string & path )
 {
-	buffer().open( path.c_str(), ios::in | ios::out | IOSbinary );
+	buffer().open( path.c_str(), ios::in | ios::out | ios::binary );
 		
 	if ( ! buffer().is_open() ) {
 		string s( "Couldn't open BinaryFile: " );
@@ -133,7 +151,7 @@ BinaryFile::edit( const string & path )
 void
 BinaryFile::view( const string & path )
 {
-	buffer().open( path.c_str(), ios::in | IOSbinary );
+	buffer().open( path.c_str(), ios::in | ios::binary );
 		
 	if ( ! buffer().is_open() ) {
 		string s( "Couldn't open BinaryFile: " );

@@ -331,8 +331,8 @@ Analyzer::extractPeaks( std::list< Breakpoint > & frame, double frameTime,
 			//	if the time correction for this peak is large,
 			//	reject it:
 			double timeCorrection = state.spectrum().reassignedTime( fsample );
-			if ( std::abs(timeCorrection) > maxCorrection )
-				continue;
+			//if ( std::abs(timeCorrection) > maxCorrection )
+			//	continue;
 				
 			//	retain a spectral peak corresponding to this sample:
 			double phase = state.spectrum().reassignedPhase( fsample, timeCorrection );
@@ -413,7 +413,7 @@ Analyzer::formPartials( std::list< Breakpoint > & frame, double frameTime, Analy
 		//	eligible to receive this Breakpoint:
 		//	The earliest Breakpoint we could have kept 
 		//	from the previous frame:
-		double tooEarly = frameTime - (2. * hopTime());
+		double tooEarly = frameTime - (2. * cropTime());
 		
 		//	compute the time before which a Partial
 		//	must end in order to be eligible to receive

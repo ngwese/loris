@@ -17,6 +17,7 @@
 #include "ieee.h"
 #include <algorithm>
 #include <string>
+#include <iostream>
 
 #if !defined(Deprecated_cstd_headers)
 #include <climits>
@@ -28,6 +29,43 @@
 //	begin namespace
 namespace Loris {
 #endif
+
+//	-- chunk types --
+enum { 
+	ContainerId = 'FORM', 
+	AiffType = 'AIFF', 
+	CommonId = 'COMM',
+	SoundDataId = 'SSND'
+};
+
+struct CkHeader {
+	Int_32 id;
+	Uint_32 size;
+};
+
+struct ContainerCk
+{
+	CkHeader header;
+	Int_32 formType;
+};
+
+struct CommonCk
+{
+	CkHeader header;
+	Int_16 channels;			// number of channels 
+	Int_32 sampleFrames;		// channel independent sample frames 
+	Int_16 bitsPerSample;		// number of bits per sample 
+	IEEE::extended80 srate;		// sampling rate IEEE 10 byte format 
+};
+
+struct SoundDataCk
+{
+	CkHeader header;	
+	Uint_32 offset;				
+	Uint_32 blockSize;	
+	//	sample frames follow
+};
+
 
 // ---------------------------------------------------------------------------
 //	AiffFile constructor from data in memory
@@ -43,10 +81,10 @@ AiffFile::AiffFile( double rate, int chans, int bits, std::vector< double > & bu
 // ---------------------------------------------------------------------------
 //	Read immediately.
 //
-AiffFile::AiffFile( BinaryFile & file, std::vector< double > & buf ) :
+AiffFile::AiffFile( std::istream & s, std::vector< double > & buf ) :
 	SamplesFile( buf )
 {
-	read( file );
+	read( s );
 }
 
 // ---------------------------------------------------------------------------
@@ -76,10 +114,9 @@ AiffFile::AiffFile( const SamplesFile & other ) :
 void
 AiffFile::read( const std::string & filename )
 {
-	BinaryFile f;
-	f.setBigEndian();
-	f.view( filename );
-	read(f);
+	std::ifstream s;
+	s.open( filename.c_str(), std::ios::in | std::ios::binary ); 
+	read(s);
 }
 
 // ---------------------------------------------------------------------------
@@ -87,18 +124,12 @@ AiffFile::read( const std::string & filename )
 // ---------------------------------------------------------------------------
 //
 void
-AiffFile::read( BinaryFile & file )
+AiffFile::read( std::istream & s )
 {
 	try {
-		//	rewind:
-		file.seek(0);
-		if( file.tell() != 0 )
-			Throw( FileIOException, "Couldn't rewind AIFF file (bad open mode?)." );
-		file.setBigEndian();
-		
-		readContainer( file );
-		readCommon( file );
-		readSampleData( file );
+		readContainer( s );
+		readCommon( s );
+		readSampleData( s );
 	}
 	catch ( Exception & ex ) {
 		ex.append( "Failed to read AIFF file." );
@@ -154,66 +185,58 @@ AiffFile::write( BinaryFile & file )
 //	Let exceptions propogate.
 //
 void
-AiffFile::readChunkHeader( BinaryFile & file, CkHeader & h )
+AiffFile::readChunkHeader( std::istream & s, CkHeader & h )
 {
-	file.read( h.id );
-	file.read( h.size );
+	BigEndian::read( s, 4, sizeof(char), (char *)&h.id );
+	BigEndian::read( s, 1, sizeof(Uint_32), (char *)&h.size );
 }
 
 // ---------------------------------------------------------------------------
 //	readCommon
 // ---------------------------------------------------------------------------
+//	YUCK this only works if the stream isn't already past the COMM chunk, no 
+//	way to rewind a istream!
 //
 void
-AiffFile::readCommon( BinaryFile & file )
+AiffFile::readCommon( std::istream & s )
 {
 	//	first build a Common chunk, so that all the data sizes will 
 	//	be correct:
 	CommonCk ck;
 	
 	try {
-		//	rewind:
-		file.seek(0);
-		if( file.tell() != 0 )
-			Throw( FileIOException, "Couldn't rewind AIFF file (bad open mode?)." );
-		
 		//	find the chunk:
 		//	read a chunk header, if it isn't the one we want, skip over it.
-		for ( readChunkHeader( file, ck.header ); 
+		for ( readChunkHeader( s, ck.header ); 
 			  ck.header.id != CommonId; 
-			  readChunkHeader( file, ck.header ) ) {
-							
+			  readChunkHeader( s, ck.header ) ) 
+		{
 			if ( ck.header.id == ContainerId )
-				file.offset( sizeof(Int_32) );
+			{
+				s.ignore( 4 * sizeof(char) );
+			}
 			else
-				file.offset( ck.header.size );
+			{
+				s.ignore( ck.header.size );
+			}
 		}
 
 		//	found it.
 		//	read in the chunk data:
-		file.read( ck.channels );
-		file.read( ck.sampleFrames );
-		file.read( ck.bitsPerSample );
-		file.read( ck.srate );
+		BigEndian::read( s, 1, sizeof(Int_16), (char *)&ck.channels );
+		BigEndian::read( s, 1, sizeof(Int_32), (char *)&ck.sampleFrames );
+		BigEndian::read( s, 1, sizeof(Int_16), (char *)&ck.bitsPerSample );
+		BigEndian::read( s, 1, sizeof(IEEE::extended80), (char *)&ck.srate );
 	}
 	catch( FileIOException & ex ) {
 		ex.append( "Failed to read badly-formatted AIFF file (bad Common chunk)." );
 		throw;
 	}
 						
-	//	allocate space for the samples, but don't shrink the
-	//	buffer if it is big enough:
-	//	actually, _do_ always resize the buffer to hold exactly
-	//	as many samples as the file represents, otherwise we
-	//	don't know how many to read, and resizing here is less
-	//	likely to explode than adding a separate member to keep
-	//	track of the number of samples in the file when it is 
-	//	different from the length of the buffer. 
-	//
-	//	REDO THIS ANYWAY. IT SUCKS.
-	//
+	//	allocate space for the samples:
 	long n = ck.sampleFrames * ck.channels;
-	if ( n != _samples.size() ) {
+	if ( n != _samples.size() ) 
+	{
 		_samples.resize( n, 0. );
 	}
 	
@@ -227,25 +250,20 @@ AiffFile::readCommon( BinaryFile & file )
 // ---------------------------------------------------------------------------
 //
 void
-AiffFile::readContainer( BinaryFile & file )
+AiffFile::readContainer( std::istream & s )
 {
 	//	first build a Container chunk, so that all the data sizes will 
 	//	be correct:
 	ContainerCk ck;
 	
 	try {
-		//	rewind:
-		file.seek(0);
-		if( file.tell() != 0 )
-			Throw( FileIOException, "Couldn't rewind AIFF file (bad open mode?)." );
-			
 		// Container is always first:
-		readChunkHeader( file, ck.header );
+		readChunkHeader( s, ck.header );
 		if( ck.header.id != ContainerId )
 			Throw( FileIOException, "Found no Container chunk." );
 			
 		//	read in the chunk data:
-		file.read( ck.formType );
+		BigEndian::read( s, 4, sizeof(char), (char *)&ck.formType );
 	}
 	catch( FileIOException & ex ) {
 		ex.append( "Failed to read badly-formatted AIFF file (bad Container chunk)." );
@@ -261,44 +279,42 @@ AiffFile::readContainer( BinaryFile & file )
 //	readSampleData
 // ---------------------------------------------------------------------------
 //	Read from the current position, assume the header has already been read:
+//	YUCK this only works if the stream isn't already past the SSND chunk, no 
+//	way to rewind a istream!
 //
 void
-AiffFile::readSampleData( BinaryFile & file )
+AiffFile::readSampleData( std::istream & s )
 {
 	//	first build a Sound Data chunk, so that all the data sizes will 
 	//	be correct:
 	SoundDataCk ck;
 
 	try {
-		//	rewind:
-		file.seek(0);
-		if( file.tell() != 0 )
-			Throw( FileIOException, "Couldn't rewind AIFF file (bad open mode?)." );
-		
 		//	find the chunk:
 		//	read a chunk header, if it isn't the one we want, skip over it.
-		for ( readChunkHeader( file, ck.header ); 
+		for ( readChunkHeader( s, ck.header ); 
 			  ck.header.id != SoundDataId; 
-			  readChunkHeader( file, ck.header ) ) {
+			  readChunkHeader( s, ck.header ) ) 
+		{
 				
 			//	make sure we didn't run off the edge of the earth:
-			if ( ! file.good() )
+			if ( ! s.good() )
 				Throw( FileIOException, "Failed to read badly-formatted AIFF file (no Sound Data chunk)." );
 			
 			if ( ck.header.id == ContainerId )
-				file.offset( sizeof(Int_32) );
+				s.ignore( sizeof(Int_32) );
 			else
-				file.offset( ck.header.size );
+				s.ignore( ck.header.size );
 		}
 
 		//	found it.
 		//	read in the chunk data:
-		file.read( ck.offset );
-		file.read( ck.blockSize );
+		BigEndian::read( s, 1, sizeof(Uint_32), (char *)&ck.offset );
+		BigEndian::read( s, 1, sizeof(Uint_32), (char *)&ck.blockSize );
 
 		//	skip ahead to the samples and read them:
-		file.offset( ck.offset );
-		readSamples( file );
+		s.ignore( ck.offset );
+		readSamples( s );
 	}
 	catch( FileIOException & ex ) {
 		ex.append( "Failed to read badly-formatted AIFF file (bad Sound Data chunk)." );
@@ -310,9 +326,10 @@ AiffFile::readSampleData( BinaryFile & file )
 //	readSamples
 // ---------------------------------------------------------------------------
 //	Let exceptions propogate.
+//	Can do lots better by reading all the samples into a buffer at once.
 //
 void
-AiffFile::readSamples( BinaryFile & file )
+AiffFile::readSamples( std::istream & s )
 {	
 	static const double oneOverMax = 1. / LONG_MAX;	//	defined in climits
 	
@@ -323,7 +340,7 @@ AiffFile::readSamples( BinaryFile & file )
 			for (unsigned long i = 0; i < _samples.size(); ++i ) {
 				//	read the sample:
 				z.s32bits = 0;
-				file.read( z.s32bits );
+				BigEndian::read( s, 1, _sampSize / 8, (char *)&z.s32bits );
 				
 				//	convert to double:
 				_samples[i] = oneOverMax * z.s32bits;
@@ -333,7 +350,7 @@ AiffFile::readSamples( BinaryFile & file )
 			for (unsigned long i = 0; i < _samples.size(); ++i ) {
 				//	read the sample:
 				z.s32bits = 0;
-				file.read( z.s24bits );
+				BigEndian::read( s, 1, _sampSize / 8, (char *)&z.s24bits );
 				
 				//	convert to double:
 				_samples[i] = oneOverMax * z.s32bits;
@@ -343,7 +360,7 @@ AiffFile::readSamples( BinaryFile & file )
 			for (unsigned long i = 0; i < _samples.size(); ++i ) {
 				//	read the sample:
 				z.s32bits = 0;
-				file.read( z.s16bits );
+				BigEndian::read( s, 1, _sampSize / 8, (char *)&z.s16bits );
 				
 				//	convert to double:
 				_samples[i] = oneOverMax * z.s32bits;
@@ -353,7 +370,7 @@ AiffFile::readSamples( BinaryFile & file )
 			for (unsigned long i = 0; i < _samples.size(); ++i ) {
 				//	read the sample:
 				z.s32bits = 0;
-				file.read( z.s8bits );
+				BigEndian::read( s, 1, _sampSize / 8, (char *)&z.s8bits );
 				
 				//	convert to double:
 				_samples[i] = oneOverMax * z.s32bits;
@@ -363,7 +380,7 @@ AiffFile::readSamples( BinaryFile & file )
 	
 	//	except if there were any read errors:
 	//	(better to check earlier?)
-	if ( ! file.good() )
+	if ( ! s.good() )
 		Throw( FileIOException, "Failed to read AIFF samples.");
 }
 

@@ -58,7 +58,7 @@ public:
 	const std::vector< double > & samples( void ) const { return _samples; }
 	
 //	reading and writing:
-	virtual void read( BinaryFile & file ) = 0;
+	virtual void read( std::istream & s ) = 0;
 	virtual void write( BinaryFile & file ) = 0;
 	
 //	parameter validation:
