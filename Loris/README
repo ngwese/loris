@@ -1,4 +1,4 @@
-This is Loris 1.0beta1.
+This is Loris 1.0beta3.
 
 Loris is an Open Source C++ class library implementing analysis,
 manipulation, and synthesis of digitized sounds using the Reassigned
@@ -20,6 +20,9 @@ visit them at http://www.cerlsoundgroup.org/Loris/.
 
 The primary distribution point for Loris is SourceForge
 (http://loris.sourceforge.net) and its mirrors.
+
+See the bottom of this document for a list of major changes orgrnized 
+by release number.
 
 DIRECTORIES:
 
@@ -73,13 +76,21 @@ matrix format becomes part of the SDIF standard (real soon now), it
 is necessary to replace the SdifTypes.STYP file in the standard 
 distribution with the file in Loris/lib, or to set the SDIFTYPES 
 environment variable, as described in the tutorial material on the
-IRCAM SDIF website (www.ircam.fr/sdif).
+IRCAM SDIF website (www.ircam.fr/sdif). 
+
+Loris currently uses version 3.2.2 of the SDIF library. This version 
+is incompatible with the version 3.2.0 (used by previous releases of 
+Loris), and there is no way to detect at compile-time which version 
+of the SDIF library (and header, sdif.h) is being included. Loris, 
+therefore, assumes that version 3.2.2 is being used unless the flag
+SDIF_VERSION is set to 320, in which case version 3.2.0 is assumed. 
+We anticipate a better solution in the near future.
 
 COMPATIBILITY:
 
 Loris has been tested on various UNIX systems using gcc-2.95.2 and
-MacOS 9 using Metrowerks Codewarrior Pro 5.3. It has also reportedly
-been built using Cygwin, a gcc port for Windows
+MacOS 9.x using Metrowerks Codewarrior Pro 5.3 and 6.0. It has also
+reportedly been built using Cygwin, a gcc port for Windows
 (http://sources.redhat.com/cygwin/). It should compile with any
 reasonably standard-compliant compiler.
 
@@ -89,7 +100,7 @@ build a Python 2.0 module, for other Python releases, the Makefile (or
 MacOS Codewarrior project) will need slight modifications.
 
 The CodeWarrior project for MacOS requires version 5.3 (5.0 plus all
-updates). It has not been verified to work with version 6.0.
+updates). It has also been verified to work with version 6.0.
 
 COPYRIGHT AND LICENSE:
 
@@ -99,3 +110,82 @@ Loris is free software, as defined by the Free Software Foundation,
 and is distributed under the terms of the GNU General Public License.
 See the COPYRIGHT and LICENSE documents.
 
+MAJOR CHANGES:
+
+change since 1.0beta2 release:
+
+- preliminary implementation of PartialList iteration and access to
+individual Partials in a PartialList in the scripting interface. This
+implementation is incomplete and experimental, and should be expected
+to change.
+
+- AiffFile class added to scripting interface, so there is no longer a
+separate function (and disk access) for querying the sample rate, bit
+depth, and number of channels in a samples file. These parameters are
+now obtained from an AiffFile object that also provides access to the
+SampleVector.
+
+- Sieve class has been added to Loris class library, invoked through
+sift() function in the scripting interface. The sifting operation is
+an experimental process that sometimes improves the fidelity of morphs
+and syntheses from distilled PartialLists. Sifting is performed after
+channelization and before distillation, and has the effect of
+relabeling some Partials to zero (0). These Partials are left behind
+unmodified by the distillation process, and can be removed from the
+PartialList, or retained and synthesized. (Partials labeled zero do
+not participate in morphing, they are instead faded in and out.) This
+implementation is experimental and should be expected to change.
+
+- errors in test and demo scripts have been fixed.
+
+- Python interface documentation has been updated and improved.
+
+- updated to use the version 3.2.2 of the SDIF library from IRCAM,
+obtain from the IRCAM SDIF website (www.ircam.fr/sdif). This version
+is incompatible with version 3.2.0, used in by earlier Loris releases.
+Update to version 3.2.2, or compile with the flag SDIF_VERSION defined
+to have the value 320 to use version 3.2.0 of the SDIF library. See
+the README file or more information.
+
+- SWIG 1.3a5 is being used to generate the Python wrappers now, so
+anyone wishing to try generating wrappers for other languages can now
+choose from Java, Guile, Ruby, and others, in addition to Tcl and Perl.
+
+- other minor changes in the scripting interface, see the demo and
+test scripts for examples. 
+
+change since 1.0beta1 release:
+
+- added .spc file support for real-time bandwidth-enhanced additive
+synthesis and sound morphing using the Symbolic Sound Kyma System.
+Documentation updated accordingly (though not very extensive).
+
+- Loris module tested and verified with Python 2.0, now the default
+build (to build or another Python release, change the Makefile, or,
+in the MacOS Codewarrior project, the Access Path, to reflect the 
+correct version number).
+
+- static library target added to Codewarrior project for MacOS.
+
+- MacOS Python module now uses a static library instead of a shared 
+libarary (DLL), since static libraries seem much more stable and are
+less restrictive. (This should alleviate some instability related to
+memory management across library boundaries.)
+
+- test directory has been added with the simple morph test, distinct
+from the longer test in the demo directory (and package).
+
+changes since 1.0alpha release:
+
+- the core Loris library is mostly unchanged from the alpha release,
+but the scripting interface has been completely rewritten to provide
+a generic interface to a variety of scriping languages using SWIG
+(www.swig.org) At this time, only the Python module has been
+tested, and only with Python 1.5.2, though Loris is also reported to
+work with Python 1.6.
+
+- a c-linkable procedural interface has been implemented.
+
+- a first-cut of (html) documentation for the procedural interface and
+for the Python module is included, and posted to SourceForge
+(sourceforge.net/projects/loris).
