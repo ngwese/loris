@@ -52,61 +52,21 @@
 namespace Loris {
 
 // ---------------------------------------------------------------------------
-//	class Morpher_imp
+//	Morpher constructor (single morph function)
+// ---------------------------------------------------------------------------
 //
-//	Implementation class for Morpher.
-//
-//	The Morpher object performs sound morphing (cite Lip's papers, and the book)
-//	by interpolating Partial parmeter envelopes of corresponding Partials in
-//	a pair of source sounds. The correspondences are established by labeling.
-//	The Morpher object collects morphed Partials in a PartialList, that can
-//	be accessed by clients.
-//
-class Morpher_imp
+Morpher::Morpher( const Envelope & f ) :
+	_freqFunction( f.clone() ),
+	_ampFunction( f.clone() ),
+	_bwFunction( f.clone() )
 {
-public:
-//	-- instance variables --
-	//	reference-counted smart pointers from Batov:
-	//	(these Envelopes will never be modified by the Morpher_imp
-	//	class, but Morpher should be able to grant non-const
-	//	access to them (?), so they are not const)
-	std::auto_ptr< Envelope > _freqFunction;	//	frequency morphing function
-	std::auto_ptr< Envelope > _ampFunction;		//	amplitude morphing function
-	std::auto_ptr< Envelope > _bwFunction;		//	bandwidth morphing function
-	
-	PartialList _partials;	//	collect Partials here
-			
-//	construction:
-	Morpher_imp( const Envelope & ff, const Envelope & af, const Envelope & bwf );
-	~Morpher_imp( void );
-	
-//	single Partial morph:
-//	(core morphing operation, called by morph() and crossfade())
-	void morphPartial( const Partial & p1, const Partial & p2, int assignLabel );
-	
-//	crossfade Partials with no correspondences:
-//	(crossfaded Partials are unlabeled, or assigned the 
-//	default label, 0)
-	void crossfade( PartialList::const_iterator begin0, 
-					PartialList::const_iterator end0,
-					PartialList::const_iterator begin1, 
-					PartialList::const_iterator end1 );
-					
-//	helpers: these expose the morphing functionality to other clients:
-	void morphParameters( const Breakpoint & srcBkpt, const Partial & tgtPartial, 
-						  double time, Breakpoint & retBkpt );
-	void morphParameters( const Partial & srcPartial, const Breakpoint & tgtBkpt, 
-						  double time, Breakpoint & retBkpt );
-	void morphParameters( const Partial & srcPartial, const Partial & tgtPartial, 
-						  double time, Breakpoint & retBkpt );
-
-};	//	end of class Morpher_imp
+}
 
 // ---------------------------------------------------------------------------
-//	Morpher_imp constructor 
+//	Morpher constructor (distinct morph functions)
 // ---------------------------------------------------------------------------
 //
-Morpher_imp::Morpher_imp( const Envelope & ff, const Envelope & af, const Envelope & bwf ) :
+Morpher::Morpher( const Envelope & ff, const Envelope & af, const Envelope & bwf ) :
 	_freqFunction( ff.clone() ),
 	_ampFunction( af.clone() ),
 	_bwFunction( bwf.clone() )
@@ -114,10 +74,10 @@ Morpher_imp::Morpher_imp( const Envelope & ff, const Envelope & af, const Envelo
 }
 
 // ---------------------------------------------------------------------------
-//	Morpher_imp destructor
+//	Morpher destructor
 // ---------------------------------------------------------------------------
 //
-Morpher_imp::~Morpher_imp( void )
+Morpher::~Morpher( void )
 {
 }
 
@@ -132,7 +92,7 @@ Morpher_imp::~Morpher_imp( void )
 //	Need to check for tgtPartial being a dummy Partial.
 //
 void
-Morpher_imp::morphParameters( const Breakpoint & srcBkpt, const Partial & tgtPartial, 
+Morpher::morphParameters( const Breakpoint & srcBkpt, const Partial & tgtPartial, 
 							  double time, Breakpoint & retBkpt )
 {
 	double alphaA = _ampFunction->valueAt( time );
@@ -179,7 +139,7 @@ Morpher_imp::morphParameters( const Breakpoint & srcBkpt, const Partial & tgtPar
 //	Need to check for srcPartial being a dummy Partial.
 //
 void
-Morpher_imp::morphParameters( const Partial & srcPartial, const Breakpoint & tgtBkpt, 
+Morpher::morphParameters( const Partial & srcPartial, const Breakpoint & tgtBkpt, 
 							  double time, Breakpoint & retBkpt )
 {
 	double alphaA = 1. - _ampFunction->valueAt( time );
@@ -225,12 +185,72 @@ Morpher_imp::morphParameters( const Partial & srcPartial, const Breakpoint & tgt
 //	Need to check for srcPartial or tgtPartial being a dummy Partial.
 //
 void
-Morpher_imp::morphParameters( const Partial & srcPartial, const Partial & tgtPartial, 
+Morpher::morphParameters( const Partial & srcPartial, const Partial & tgtPartial, 
 							  double time, Breakpoint & retBkpt )
 {
 	if ( srcPartial.numBreakpoints() == 0 && tgtPartial.numBreakpoints() == 0 )
 		Throw( InvalidArgument, "Cannot morph a pair of dummy (empty) Partials." );
 		
+	double srcamp = 0, srcfreq = 0, srcbw = 0, srcph = 0;	//	computed below, if valid
+	double tgtamp = 0, tgtfreq = 0, tgtbw = 0, tgtph = 0;	//	computed below, if valid
+	
+	//	compute parameter weights:
+	double alphaA = _ampFunction->valueAt( time );
+	double alphaF = _freqFunction->valueAt( time );
+	double alphaBW = _bwFunction->valueAt( time );
+	
+	// 	if the source Partial is valid, compute source parameters,
+	//	otherwise compute target Partial parameters at the specified
+	//	time, and scale the amplitude:
+	if ( srcPartial.numBreakpoints() > 0 )
+	{
+		//	compute interpolated values for srcPartial:
+		srcamp = srcPartial.amplitudeAt( time );
+		srcfreq = srcPartial.frequencyAt( time );
+		srcbw = srcPartial.bandwidthAt( time );
+		srcph = srcPartial.phaseAt( time );
+	}
+	else
+	{
+		//	srcPartial is a dummy Partial, just fade (amplitude scale)
+		//	the target Partial:
+		retBkpt.setFrequency( tgtPartial.frequencyAt( time ) );
+		retBkpt.setAmplitude( alphaA * tgtPartial.amplitudeAt( time ) );
+		retBkpt.setBandwidth( tgtPartial.bandwidthAt( time ) );
+		retBkpt.setPhase( tgtPartial.phaseAt( time ) );
+		
+		return;
+	}
+	
+	//	if the target Partial is valid, compute target parameters,
+	//	otherwise use the source parameter values, and scale the
+	//	amplitude:
+	if ( tgtPartial.numBreakpoints() > 0 )
+	{
+		//	compute interpolated values for tgtPartial:
+		double tgtamp = tgtPartial.amplitudeAt( time );
+		double tgtfreq = tgtPartial.frequencyAt( time );
+		double tgtbw = tgtPartial.bandwidthAt( time );
+		double tgtph = tgtPartial.phaseAt( time );
+	}
+	else
+	{
+		//	tgtPartial is a dummy Partial, just fade (amplitude scale)
+		//	the source Partial:
+		retBkpt.setFrequency( srcPartial.frequencyAt( time ) );
+		retBkpt.setAmplitude( (1.-alphaA) * srcPartial.amplitudeAt( time ) );
+		retBkpt.setBandwidth( srcPartial.bandwidthAt( time ) );
+		retBkpt.setPhase( srcPartial.phaseAt( time ) );
+		
+		return;
+	}
+			
+	//	both Partials were valid, compute weighted average parametersfor 
+	//	the return Breakpoint:	
+	retBkpt.setFrequency( (alphaF * tgtfreq) + ((1.-alphaF) * srcfreq) );
+	retBkpt.setAmplitude( (alphaA * tgtamp) + ((1.-alphaA) * srcamp) );
+	retBkpt.setBandwidth( (alphaBW * tgtbw) + ((1.-alphaBW) * srcbw) );
+	retBkpt.setPhase( (alphaF * tgtph) + ((1.-alphaF) * srcph) );
 	
 }
 
@@ -243,9 +263,12 @@ Morpher_imp::morphParameters( const Partial & srcPartial, const Partial & tgtPar
 //	Partial has Breakpoints at times corresponding to every Breakpoint 
 //	in both source Partials.
 //
-void 
-Morpher_imp::morphPartial( const Partial & p0, const Partial & p1, int assignLabel )
+Partial &
+Morpher::morphPartial( const Partial & p0, const Partial & p1, int assignLabel )
 {
+	if ( (p0.numBreakpoints() == 0) && (p1.numBreakpoints() == 0) )
+		Throw( InvalidArgument, "Cannot morph two empty Partials," );
+		
 	//	make a new Partial:
 	Partial newp;
 	newp.setLabel( assignLabel );
@@ -256,46 +279,6 @@ Morpher_imp::morphPartial( const Partial & p0, const Partial & p1, int assignLab
 	{	
 		morphParameters( iter.breakpoint(), p1, iter.time(), tmpBkpt );
 		newp.insert( iter.time(), tmpBkpt );
-		
-		/*
-		//	amplitude weight is always used:
-		double alphaA = _ampFunction->valueAt( iter.time() );
-		
-		//	if p1 is a valid Partial, compute a weighted average 
-		//	Breakpoint and insert it, otherwise just fade p0:
-		if ( p1.duration() > 0. )
-		{
-			//	compute parameter weights:
-			double alphaF = _freqFunction->valueAt( iter.time() );
-			double alphaBW = _bwFunction->valueAt( iter.time() );
-			
-			//	compute interpolated values for p1:
-			double amp1 = p1.amplitudeAt( iter.time() );
-			double freq1 = p1.frequencyAt( iter.time() );
-			double bw1 = p1.bandwidthAt( iter.time() );
-			double theta1 = p1.phaseAt( iter.time() );
-			
-			//	create a new weighted average Breakpoint:	
-			Breakpoint newbp( (alphaF * freq1) + ((1.-alphaF) * iter.breakpoint().frequency()),
-							   (alphaA * amp1) + ((1.-alphaA) * iter.breakpoint().amplitude()),
-							   (alphaBW * bw1) + ((1.-alphaBW) * iter.breakpoint().bandwidth()),
-							   (alphaF * theta1) + ((1.-alphaF) * iter.breakpoint().phase()) );
-			
-			//	insert the new Breakpoint in the morphed Partial:
-			newp.insert( iter.time(), newbp );
-		}
-		else
-		{
-			//	create a new scaled-amplitude Breakpoint:	
-			Breakpoint newbp( iter.breakpoint().frequency(),
-							  (1.-alphaA) * iter.breakpoint().amplitude(),
-							  iter.breakpoint().bandwidth(),
-							  iter.breakpoint().phase() );
-		
-			//	insert the new Breakpoint in the morphed Partial:
-			newp.insert( iter.time(), newbp );
-		}
-		*/
 	}
 	
 	//	now do it for the other Partial:
@@ -303,56 +286,14 @@ Morpher_imp::morphPartial( const Partial & p0, const Partial & p1, int assignLab
 	{
 		morphParameters( p0, iter.breakpoint(), iter.time(), tmpBkpt );
 		newp.insert( iter.time(), tmpBkpt );
-		
-		/*
-		//	amplitude weight is always used:
-		double alphaA = 1. - _ampFunction->valueAt( iter.time() );
-		
-		//	if p0 is a valid Partial, compute a weighted average 
-		//	Breakpoint and insert it, otherwise just fade p1:
-		if ( p0.duration() > 0. )
-		{
-			//	compute parameter weights:
-			double alphaF = 1. - _freqFunction->valueAt( iter.time() );
-			double alphaBW = 1. - _bwFunction->valueAt( iter.time() );
-			
-			//	compute interpolated values for p1:
-			double amp0 = p0.amplitudeAt( iter.time() );
-			double freq0 = p0.frequencyAt( iter.time() );
-			double bw0 = p0.bandwidthAt( iter.time() );
-			double theta0 = p0.phaseAt( iter.time() );
-			
-			//	create a new weighted average Breakpoint:	
-			Breakpoint newbp( (alphaF * freq0) + ((1.-alphaF) * iter.breakpoint().frequency()),
-							   (alphaA * amp0) + ((1.-alphaA) * iter.breakpoint().amplitude()),
-							   (alphaBW * bw0) + ((1.-alphaBW) * iter.breakpoint().bandwidth()),
-							   (alphaF * theta0) + ((1.-alphaF) * iter.breakpoint().phase()) );
-			
-			//	insert the new Breakpoint in the morphed Partial:
-			newp.insert( iter.time(), newbp );
-		}
-		else
-		{
-			//	create a new scaled-amplitude Breakpoint:	
-			Breakpoint newbp( iter.breakpoint().frequency(),
-							  (1.-alphaA) * iter.breakpoint().amplitude(),
-							  iter.breakpoint().bandwidth(),
-							  iter.breakpoint().phase() );
-		
-			//	insert the new Breakpoint in the morphed Partial:
-			newp.insert( iter.time(), newbp );
-		}
-		*/
 	}
-	
 		
 	//	add the new partial to the collection,
-	//	if it is valid:
-	if ( newp.numBreakpoints() > 0 ) 
-	{
-		_partials.push_back( newp );
-	}
-
+	//	if it is valid, and it must be, unless two 
+	//	dummy Partials were morphed:
+	Assert( newp.numBreakpoints() > 0 );
+	_partials.push_back( newp );
+	return _partials.back();
 }
 
 // ---------------------------------------------------------------------------
@@ -371,7 +312,7 @@ Morpher_imp::morphPartial( const Partial & p0, const Partial & p1, int assignLab
 //	morph function of 1.
 //
 void 
-Morpher_imp::crossfade( PartialList::const_iterator begin0, 
+Morpher::crossfade( PartialList::const_iterator begin0, 
 						PartialList::const_iterator end0,
 						PartialList::const_iterator begin1, 
 						PartialList::const_iterator end1 )
@@ -405,45 +346,6 @@ Morpher_imp::crossfade( PartialList::const_iterator begin0,
 		}
 	}
 	debugger << "there were " << debugCounter << " in sound 2" << endl;
-}
-
-// ---------------------------------------------------------------------------
-//	Morpher constructor (single morph function)
-// ---------------------------------------------------------------------------
-//	In fully-insulating interface constructors, with no subclassing (fully-
-//	insulating interfaces have no virtual members), can safely initialize the
-//	imp pointer this way because only that constructor could generate an 
-//	exception, and in that case the associated memory would be released 
-//	automatically. So there's no risk of a memory leak associated with this
-//	pointer initialization.
-//
-Morpher::Morpher( const Envelope & f ) :
-	_imp( new Morpher_imp( f, f, f ) )
-{
-}
-
-// ---------------------------------------------------------------------------
-//	Morpher constructor (distinct morph functions)
-// ---------------------------------------------------------------------------
-//	In fully-insulating interface constructors, with no subclassing (fully-
-//	insulating interfaces have no virtual members), can safely initialize the
-//	imp pointer this way because only that constructor could generate an 
-//	exception, and in that case the associated memory would be released 
-//	automatically. So there's no risk of a memory leak associated with this
-//	pointer initialization.
-//
-Morpher::Morpher( const Envelope & ff, const Envelope & af, const Envelope & bwf ) :
-	_imp( new Morpher_imp( ff, af, bwf ) )
-{
-}
-
-// ---------------------------------------------------------------------------
-//	Morpher destructor
-// ---------------------------------------------------------------------------
-//
-Morpher::~Morpher( void )
-{
-	delete _imp;
 }
 
 // ---------------------------------------------------------------------------
@@ -507,26 +409,26 @@ Morpher::morph( PartialList::const_iterator begin0,
 		debugger << "morphing " << ((p0 != end0)?(1):(0)) 
 				 << " and " << ((p1 != end1)?(1):(0)) 
 				 <<	" partials with label " <<	*labelIter << endl;
-				 
+		
 		if ( p0 == end0 )
 		{
 			Assert( p1 != end1 );
-			_imp->morphPartial( Partial(), *p1, *labelIter );
+			morphPartial( Partial(), *p1, *labelIter );
 		}
 		else if ( p1 == end1 )
 		{
 			Assert( p0 != end0 );
-			_imp->morphPartial( *p0, Partial(), *labelIter );
+			morphPartial( *p0, Partial(), *labelIter );
 		}
 		else
 		{			 
-			_imp->morphPartial( *p0, *p1, *labelIter );
-		}
-		
+			morphPartial( *p0, *p1, *labelIter );
+		}					
+			
 	}	//	end loop over labels
 	
 	//	crossfade the remaining unlabeled Partials:
-	_imp->crossfade( begin0, end0, begin1, end1 );
+	crossfade( begin0, end0, begin1, end1 );
 }
 
 // ---------------------------------------------------------------------------
@@ -536,7 +438,7 @@ Morpher::morph( PartialList::const_iterator begin0,
 void
 Morpher::setFrequencyFunction( const Envelope & f )
 {
-	_imp->_freqFunction.reset( f.clone() );
+	_freqFunction.reset( f.clone() );
 }
 
 // ---------------------------------------------------------------------------
@@ -546,7 +448,7 @@ Morpher::setFrequencyFunction( const Envelope & f )
 void
 Morpher::setAmplitudeFunction( const Envelope & f )
 {
-	_imp->_ampFunction.reset( f.clone() );
+	_ampFunction.reset( f.clone() );
 }
 
 // ---------------------------------------------------------------------------
@@ -556,7 +458,7 @@ Morpher::setAmplitudeFunction( const Envelope & f )
 void
 Morpher::setBandwidthFunction( const Envelope & f )
 {
-	_imp->_bwFunction.reset( f.clone() );
+	_bwFunction.reset( f.clone() );
 }
 
 // ---------------------------------------------------------------------------
@@ -566,7 +468,7 @@ Morpher::setBandwidthFunction( const Envelope & f )
 const Envelope &
 Morpher::frequencyFunction( void ) const 
 {
-	return * _imp->_freqFunction;
+	return * _freqFunction;
 }
 
 // ---------------------------------------------------------------------------
@@ -576,7 +478,7 @@ Morpher::frequencyFunction( void ) const
 const Envelope &
 Morpher::amplitudeFunction( void ) const 
 {
-	return * _imp->_ampFunction;
+	return * _ampFunction;
 }
 
 // ---------------------------------------------------------------------------
@@ -586,7 +488,7 @@ Morpher::amplitudeFunction( void ) const
 const Envelope &
 Morpher::bandwidthFunction( void ) const 
 {
-	return * _imp->_bwFunction;
+	return * _bwFunction;
 }
 
 // ---------------------------------------------------------------------------
@@ -596,7 +498,7 @@ Morpher::bandwidthFunction( void ) const
 PartialList & 
 Morpher::partials( void )
 { 
-	return _imp->_partials; 
+	return _partials; 
 }
 
 // ---------------------------------------------------------------------------
@@ -606,7 +508,7 @@ Morpher::partials( void )
 const PartialList & 
 Morpher::partials( void ) const 
 { 
-	return _imp->_partials; 
+	return _partials; 
 }
 
 }	//	end of namespace Loris

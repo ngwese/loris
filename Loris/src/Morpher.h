@@ -34,20 +34,19 @@
  */
 
 #include<PartialList.h>
+#include <memory>
 
 //	begin namespace
 namespace Loris {
 
 class Envelope;
 class Partial;
-class Morpher_imp;
 
 // ---------------------------------------------------------------------------
 //	class Morpher
 //
-//	Fully-insulating class encapsulating manipulations involving 
-//	linear interpolation of Partial parameter envelopes. The implementation
-//	is entirely defined in the Morpher_imp class, in Morpher.C.
+//	Encapsulates manipulations involving 
+//	linear interpolation of Partial parameter envelopes. 
 //
 //	The Morpher object performs sound morphing (cite Lip's papers, and the book)
 //	by interpolating Partial parmeter envelopes of corresponding Partials in
@@ -55,14 +54,16 @@ class Morpher_imp;
 //	The Morpher object collects morphed Partials in a list<Partial>, that can
 //	be accessed by clients.
 //
-//	The Morpher interface is fully insulating, the implementation is 
-//	defined entirely inthe Morpher_imp class in Morpher.C.
 //	Morpher is a leaf class, do not subclass.
 //
 class Morpher
 {
-//	-- insulating implementation --
-	Morpher_imp * _imp;
+//	-- instance variables --
+	std::auto_ptr< Envelope > _freqFunction;	//	frequency morphing function
+	std::auto_ptr< Envelope > _ampFunction;		//	amplitude morphing function
+	std::auto_ptr< Envelope > _bwFunction;		//	bandwidth morphing function
+	
+	PartialList _partials;						//	collect Partials here
 
 //	-- public interface --
 public:
@@ -79,6 +80,9 @@ public:
 				PartialList::const_iterator begin1, 
 				PartialList::const_iterator end1 );
 
+//	single Partial morph:
+	Partial & morphPartial( const Partial & p1, const Partial & p2, int assignLabel );
+
 //	morphing functions access/mutation:	
 	void setFrequencyFunction( const Envelope & f );
 	void setAmplitudeFunction( const Envelope & f );
@@ -88,10 +92,25 @@ public:
 	const Envelope & amplitudeFunction( void ) const;
 	const Envelope & bandwidthFunction( void ) const;
 	
-	
 //	Partial list access:
 	PartialList & partials( void ); 
 	const PartialList & partials( void ) const; 
+
+//	crossfade Partials with no correspondences:
+//	(crossfaded Partials are unlabeled, or assigned the 
+//	default label, 0)
+	void crossfade( PartialList::const_iterator begin0, 
+					PartialList::const_iterator end0,
+					PartialList::const_iterator begin1, 
+					PartialList::const_iterator end1 );
+					
+//	helpers: these expose the morphing functionality to other clients:
+	void morphParameters( const Breakpoint & srcBkpt, const Partial & tgtPartial, 
+						  double time, Breakpoint & retBkpt );
+	void morphParameters( const Partial & srcPartial, const Breakpoint & tgtBkpt, 
+						  double time, Breakpoint & retBkpt );
+	void morphParameters( const Partial & srcPartial, const Partial & tgtPartial, 
+						  double time, Breakpoint & retBkpt );
 
 //	-- unimplemented until useful --
 private:
