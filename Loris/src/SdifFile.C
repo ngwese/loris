@@ -1357,7 +1357,7 @@ static void import_sdif( const std::string &infilename,
 //
 struct BreakpointTime
 {
-	int index;			// index identifying which partial has the breakpoint
+	long index;			// index identifying which partial has the breakpoint
 	float time;			// time of the breakpoint
 };
 
@@ -1400,32 +1400,42 @@ makeSortedBreakpointTimes( const ConstPartialPtrs & partialsVector,
 //	All Breakpoints should be const, but for some reason, gcc (on SGI at 
 //	least) makes trouble converting and comparing iterators and const_iterators.
 //
-static double
-getNextFrameTime( const double frameTime,
-							std::list< BreakpointTime > & allBreakpoints,
-							std::list< BreakpointTime >::iterator & bpTimeIter)
+static double getNextFrameTime( const double frameTime,
+								std::list< BreakpointTime > & allBreakpoints,
+								std::list< BreakpointTime >::iterator & bpTimeIter)
 {
 //
 // Build up vector of partials that have a breakpoint in this frame, update the vector
 // as we increase the frame duration.  Return when a partial gets a second breakpoint.
 //
+// This vector is only used locally. We search this vector of indices to determine
+// whether or not a Partial has already contributed a Breakpoint to the current 
+// frame.
+//
 	double nextFrameTime = frameTime;
-	std::vector< int > partialsWithBreakpointsInFrame;
+	std::vector< long > partialsWithBreakpointsInFrame;
+	
+	const std::list< BreakpointTime >::iterator & first = bpTimeIter;
+	
+	//	invariant:
+	//	Breakpoints in allBreakpoints before the position
+	//	of bpTimeIter have be added to a SDIF frame, either
+	//	the current one or an earlier one. If it is not
+	//	equal to bpTimeIter, then all Breakpoints between
+	// 	those two positions have the same time.
 	std::list< BreakpointTime >::iterator it = bpTimeIter;
-	while ( it != allBreakpoints.end() ) 
-	{
-		// Return if next breakpoint's partial already in this frame.
-		for (int i = 0; i < partialsWithBreakpointsInFrame.size(); i++) 
-		{
-			if ( it->index == partialsWithBreakpointsInFrame[i] )
-				return  nextFrameTime;
-		}
-		
+	while ( it != allBreakpoints.end() && 
+			( std::find( partialsWithBreakpointsInFrame.begin(),
+		                 partialsWithBreakpointsInFrame.end(),
+		                 it->index ) == 
+              partialsWithBreakpointsInFrame.end() ) )
+	{		
 		// Add breakpoint to list of potential breakpoints for frame, 
 		// then iterate to soonest breakpoint on any partial.  The final decision
-		// to add this breakpoint to the frame is made below, if bpTimeIter is updated.
+		// to add this breakpoint to the frame is made below, if bpTimeIter is 
+		// updated.
 		partialsWithBreakpointsInFrame.push_back( it->index );
-		it++;
+		
 		
 		//  If the new breakpoint is at a new time, it could potentially be the
 		//	first breakpoint in the next frame. If there are several breakpoints at
@@ -1433,28 +1443,87 @@ getNextFrameTime( const double frameTime,
 		//	file or from resampled envelopes), always start the frame at the first
 		//  of these.  Set bpTimeIter if this is a good start of a new frame.
 		//
-		//	Compute a rounded SDIF frame time for the potential new frame.
-		//	Avoid floating point comparison problems by selecting a frame time before
-		//	the time of te first breakpoint in the frame.
-		if ( it != allBreakpoints.end() &&
-				(it->time > bpTimeIter->time + 0.0001 || partialsWithBreakpointsInFrame.size() == 1))
+		//	Don't want to increment bpTimeIter until we are certain that all 
+		//	coincident Breakpoints can be added to the current frame (that is,
+		//	that none of them are from Partials that already have a Breakpoint
+		//	in this frame).
+		++it;
+		if ( ( it == allBreakpoints.end() ) || ( it->time > ( bpTimeIter->time ) ) )
 		{
-			//	Round frame time to most recent millisecond multiple.
-			nextFrameTime = it->time;
-			if (1000. * nextFrameTime - int( 1000. * nextFrameTime ) != 0 )
-				nextFrameTime = std::floor( 1000. * nextFrameTime - .001 ) / 1000.0;
-				
-			// If rounding frame time to most recent millisecond put frame time before
-			// previous breakpoint time, use tenth millisecond rounding.
-			if (nextFrameTime < bpTimeIter->time + 0.00001)
-				nextFrameTime = std::floor( 10000.0 * it->time - 0.01 ) / 10000.0;
 			bpTimeIter = it;
 		}
 	}
 
-	//	We are at the end of the sound; no "next frame" there.
-	bpTimeIter = allBreakpoints.end();
-	return frameTime + 100.0;
+	if ( bpTimeIter == allBreakpoints.end() )
+	{
+		//	We are at the end of the sound; no "next frame" there,
+		//	set the next frame time to something later than the last
+		//	Breakpoint and the current frame time (the current frame
+		//	might be empty, so have to check both).
+		nextFrameTime = std::max( (double)allBreakpoints.back().time, frameTime ) + 1;
+	}
+	else
+	{
+		Assert( bpTimeIter != allBreakpoints.begin() );
+		
+		//	Compute the next frame time:
+		//	If possible, round it to the nearest millisecond before
+		//	the first Breakpoint in the next frame, otherwise just
+		//	pick a time between the last Breakpoint in the current
+		//	frame and the first Breakpoint in the next.
+		std::list< BreakpointTime >::iterator prev = bpTimeIter;
+		--prev;
+
+		//	prev and bpTimeIter cannot have the same time, because
+		//	if there are several Breakpoints at the same time, bpTimeIter
+		//	will be the first of them in the list:
+		Assert( bpTimeIter->time > prev->time );
+		
+		//	This seems to be sensitive to floating point error,
+		//	probably because times are stored in 32 bit floats.
+		//	We need the error to round toward the later time.
+		nextFrameTime = bpTimeIter->time - ( 0.5 * ( bpTimeIter->time - prev->time ) );
+		Assert( bpTimeIter->time >= nextFrameTime );
+		Assert( nextFrameTime > prev->time );
+		
+		//	Try to make frame times whole milliseconds.
+		//	MUST use 32-bit floats for time, or else floating
+		//	point rounding errors cause us to drop breakpoints!
+		float nextFramePrevRnd = 0.001 * std::floor( 1000. * nextFrameTime );
+		if ( ( nextFramePrevRnd < nextFrameTime ) && ( nextFramePrevRnd > prev->time ) )
+		{
+			nextFrameTime = nextFramePrevRnd;
+		}
+		else
+		{
+			//	Try tenth-milliseconds, otherwise give up.
+			nextFramePrevRnd = 0.0001 * std::floor( 10000. * nextFrameTime );
+			if ( ( nextFramePrevRnd < nextFrameTime ) && ( nextFramePrevRnd > prev->time ) )
+			{
+				nextFrameTime = nextFramePrevRnd;
+			}
+		}			
+	}
+
+#if Debug_Loris		
+	if ( ! ( nextFrameTime > frameTime ) )
+	{
+		if ( bpTimeIter != allBreakpoints.end() )
+		{
+			std::cout << bpTimeIter->time << std::endl;
+		}
+		else
+		{
+			std::cout << "end" << std::endl;
+		}
+		std::cout << first->time << std::endl;
+		std::cout << nextFrameTime << std::endl;
+		std::cout << frameTime << std::endl;
+		std::cout << partialsWithBreakpointsInFrame.size() << std::endl;
+	}	
+	Assert( nextFrameTime > frameTime );
+#endif
+	return nextFrameTime;
 }		
 
 
@@ -1467,9 +1536,13 @@ getNextFrameTime( const double frameTime,
 static void
 indexPartials( const PartialList & partials, ConstPartialPtrs & partialsVector )
 {
-	for ( PartialList::const_iterator it = partials.begin(); it != partials.end(); ++it)
+	for ( PartialList::const_iterator it = partials.begin(); it != partials.end(); ++it )
+	{
 		if ( it->size() != 0 )
+		{
 			partialsVector.push_back( &(*it) );	
+		}
+	}
 }
 
 
@@ -1478,28 +1551,68 @@ indexPartials( const PartialList & partials, ConstPartialPtrs & partialsVector )
 // ---------------------------------------------------------------------------
 //	Collect all partials active in a particular frame. 
 //
-//  Return true if time is beyond end of all the partials.
+//  Return true if frameTime is beyond end of all the partials.
 //
-static int
-collectActiveIndices( const ConstPartialPtrs & partialsVector, const bool enhanced,
-								const double frameTime, const double nextFrameTime,
-								std::vector< int > & activeIndices )
+static bool
+collectActiveIndices( const ConstPartialPtrs & partialsVector, 
+                      const bool enhanced,
+                      const double frameTime, 
+                      const double nextFrameTime,
+                      std::vector< int > & activeIndices )
 {
-	int endOfAll = true;
+	Assert( nextFrameTime > frameTime );
 	
-	for (int i = 0; i < partialsVector.size(); i++) 
+	bool endOfAll = true;
+	
+	for ( int i = 0; i < partialsVector.size(); i++ ) 
 	{
+		Assert( partialsVector[ i ] != 0 );
+		
+		const Partial & mightBeActive = *( partialsVector[ i ] );
+		
 		// Is there a breakpoint within the frame?
 		// Skip the partial if there is no breakpoint and either:
 		//		(1) we are writing enhanced format, 
 		// 	 or (2) the partial has zero amplitude.
-		Partial::const_iterator it = partialsVector[i]->findAfter( frameTime );
-		if ( ( it != partialsVector[i]->end() && it.time() < nextFrameTime ) 
-					|| (!enhanced && partialsVector[i]->amplitudeAt( frameTime ) != 0.0 ) ) 
-			activeIndices.push_back(i);	
-
-		if (partialsVector[i]->endTime() > frameTime )
+		//
+		//	Include this Partial if:
+		//	(1) it has a Breakpoint in the frame, or 
+		//	(2A) we are not writing enhanced data, and
+		//	(2B) the Partial has non-zero amplitude at the time of
+		//		 this frame.
+		//
+		Partial::const_iterator it = mightBeActive.findAfter( frameTime );
+		if ( it != mightBeActive.end() )
+		{
+			//	mightBeActive ends later than this frame, so this
+			//	frame is not past the end of all Partials.
 			endOfAll = false;
+			
+#if Debug_Loris
+			//	DEBUGGING
+			//	if this one is in this frame, then 
+			//	the one before it had better be in the previous frame!
+			if ( ( it != mightBeActive.begin() ) && ( it.time() < nextFrameTime ) )
+			{
+				Partial::const_iterator prev = it;
+				--prev;
+				Assert( prev.time() < frameTime );
+			}
+			Assert( it != mightBeActive.end() );
+#endif			
+			
+			//	mightBeActive is active in this frame if the Breakpoint
+			//	at it is earlier than the next frame time.
+			//
+			//	1TRC (non-enhanced) contains data for every non-silent
+			//	active Partial at the time of the frame.
+			if ( ( it.time() < nextFrameTime ) ||
+				 ( !enhanced && mightBeActive.amplitudeAt( frameTime ) != 0.0 ) ) 
+			{
+				activeIndices.push_back( i );	
+			}			
+		}
+
 	}
 	return endOfAll;
 }
@@ -1524,7 +1637,7 @@ writeEnvelopeLabels( FILE * out, const ConstPartialPtrs & partialsVector )
 // Allocate RBEL matrix data.
 //
 	int cols = 2;
-	sdif_float32 *data = new sdif_float32[partialsVector.size() * cols];
+	sdif_float32 *data = new sdif_float32[ partialsVector.size() * cols ];
 
 //
 // For each partial index, specify the partial label.
@@ -1582,7 +1695,7 @@ writeEnvelopeLabels( FILE * out, const ConstPartialPtrs & partialsVector )
 // ---------------------------------------------------------------------------
 //
 static void
-writeMarkers( FILE * out, const SdifFile::markers_type &markers)
+writeMarkers( FILE * out, const SdifFile::markers_type &markers )
 {
 //
 // Write Loris markers to SDIF file in a RBEM frame.
@@ -1593,7 +1706,7 @@ writeMarkers( FILE * out, const SdifFile::markers_type &markers)
 //
 // Exit if there are no markers.
 //
-	if (markers.size() == 0)
+	if ( markers.empty() )
 	{
 		return;
 	}
@@ -1623,16 +1736,16 @@ writeMarkers( FILE * out, const SdifFile::markers_type &markers)
 	int cols = 1;
 	{
 		SDIF_FrameHeader fh;
-		SDIF_Copy4Bytes(fh.frameType, lorisMarkersSignature);
+		SDIF_Copy4Bytes( fh.frameType, lorisMarkersSignature );
 		fh.size = 
 				// size of remaining frame header
-				  sizeof(sdif_float64) + 2 * sizeof(sdif_int32) 		
+				  sizeof( sdif_float64 ) + 2 * sizeof( sdif_int32 ) 		
 				// size of matrix headers
-				+ 2 * sizeof(SDIF_MatrixHeader) 
+				+ 2 * sizeof( SDIF_MatrixHeader ) 
 				// size of numeric (time) matrix data plus padding
-				+ 8*((markerTimes.size() * sizeof(sdif_int32) + 7)/8)	
+				+ 8 * ( ( markerTimes.size() * sizeof( sdif_int32 ) + 7 )/8 )	
 				// size of marker names numeric data plus padding
-				+ 8*((markerNames.size() + 7) / 8);	
+				+ 8 * ( ( markerNames.size() + 7 ) / 8 );	
 		fh.time = frameTime;
 		fh.streamID = streamID;
 		fh.matrixCount = 2;
@@ -1643,28 +1756,28 @@ writeMarkers( FILE * out, const SdifFile::markers_type &markers)
 	{
 		// Write the numeric (time) matrix header.
 		SDIF_MatrixHeader mh;
-		SDIF_Copy4Bytes(mh.matrixType, lorisMarkersSignature);
+		SDIF_Copy4Bytes( mh.matrixType, lorisMarkersSignature );
 		mh.matrixDataType = SDIF_FLOAT32;
 		mh.rowCount = markerTimes.size();
 		mh.columnCount = cols;
-		SDIFresult ret = SDIF_WriteMatrixHeader(&mh, out);
+		SDIFresult ret = SDIF_WriteMatrixHeader( &mh, out );
 		
 		// Write the numeric (time) matrix data, and any necessary padding.
-		ret = SDIF_WriteMatrixData(out, &mh, &markerTimes[0]);
+		ret = SDIF_WriteMatrixData( out, &mh, &markerTimes[0] );
 	}
 	
 	// Write the string (marker names) matrix.
 	{
 		// Write the string (names) matrix header.
 		SDIF_MatrixHeader mh;
-		SDIF_Copy4Bytes(mh.matrixType, lorisMarkersSignature);
+		SDIF_Copy4Bytes( mh.matrixType, lorisMarkersSignature );
 		mh.matrixDataType = SDIF_UTF8;
 		mh.rowCount = markerNames.size();
 		mh.columnCount = cols;
-		SDIFresult ret = SDIF_WriteMatrixHeader(&mh, out);
+		SDIFresult ret = SDIF_WriteMatrixHeader( &mh, out );
 		
 		// Write the string (names) matrix data, and any necessary padding.
-		ret = SDIF_WriteMatrixData(out, &mh, &markerNames[0]);
+		ret = SDIF_WriteMatrixData( out, &mh, &markerNames[0] );
 	}
 }
 
@@ -1687,19 +1800,21 @@ assembleMatrixData( sdif_float32 *data, const bool enhanced,
 	for ( int i = 0; i < activeIndices.size(); i++ ) 
 	{
 		
-		int index = activeIndices[i];
-		const Partial * par = partialsVector[index];
+		int index = activeIndices[ i ];
+		const Partial * par = partialsVector[ index ];
 		
 		// For enhanced format we use exact timing; the activeIndices only includes
 		// partials that have breakpoints in this frame.
 		// For sine-only format we resample at frame times.
 		Assert( par->endTime() >= frameTime );
-		double tim = enhanced ? par->findAfter(frameTime).time() : frameTime;
+		double tim = enhanced ? par->findAfter( frameTime ).time() : frameTime;
 		
 		// Must have phase between 0 and 2*Pi.
 		double phas = par->phaseAt( tim );
 		if (phas < 0)
+		{
 			phas += 2. * Pi; 
+		}
 		
 		// Fill in values for this row of matrix data.
 		*rowDataPtr++ = index;							// first row of matrix   (standard)
@@ -1738,32 +1853,40 @@ writeEnvelopeData( FILE * out,
 	std::list< BreakpointTime > allBreakpoints;
 	makeSortedBreakpointTimes( partialsVector, allBreakpoints );
 	std::list< BreakpointTime >::iterator bpTimeIter = allBreakpoints.begin();
+	
+#if Debug_Loris	
+	const std::list< BreakpointTime >::size_type DEBUG_allBreakpointsSize = allBreakpoints.size();
+	std::list< BreakpointTime >::size_type DEBUG_cumNumTracks = 0;
+#endif
 
 //
 // Output Loris envelope data in SDIF frame format.
 // First frame starts at millisecond of first breakpoint.
 //
-	double nextFrameTime = bpTimeIter->time;
-	if (1000. * nextFrameTime - int( 1000. * nextFrameTime ) != 0.)
+	double nextFrameTime = allBreakpoints.front().time;
+	if ( 1000. * nextFrameTime - int( 1000. * nextFrameTime ) != 0. )
+	{
+		// HEY! Looks like this could give negative frame times, 
+		// is that allowed?
 		nextFrameTime = std::floor( 1000. * nextFrameTime - .001 ) / 1000.0;
-
-	double frameTime; 
-	int endOfAll;
+	}
+	
+	bool endOfAll = false;
 	do 
 	{
 
 //
 // Go to next frame.
 //
-		frameTime = nextFrameTime;
+		double frameTime = nextFrameTime;
 		nextFrameTime = getNextFrameTime( frameTime, allBreakpoints, bpTimeIter );
 
 //
 // Make a vector of partial indices that includes all partials active at this time.
 //
 		std::vector< int > activeIndices;
-		endOfAll = collectActiveIndices( partialsVector, enhanced,
-									frameTime, nextFrameTime, activeIndices );
+		endOfAll = collectActiveIndices( partialsVector, enhanced, frameTime, 
+										 nextFrameTime, activeIndices );
 
 //
 // Write frame header, matrix header, and matrix data.
@@ -1771,11 +1894,16 @@ writeEnvelopeData( FILE * out,
 // The matrix size depends on the number of partials active at this time.
 //
 		int numTracks = activeIndices.size();
-		if (numTracks > 0) 
+		
+#if Debug_Loris	
+		DEBUG_cumNumTracks += numTracks;
+#endif
+		
+		if ( numTracks > 0 ) 	//	could activeIndices ever be empty?
 		{
 		
 			// Allocate matrix data.
-			int cols = (enhanced ? lorisRowEnhancedElements : lorisRowSineOnlyElements);
+			int cols = ( enhanced ? lorisRowEnhancedElements : lorisRowSineOnlyElements );
 
 			//	I think this will go a lot faster if we aren't doing so much
 			//	dynamic memory allocation for each frame. if I use a vector, 
@@ -1788,12 +1916,12 @@ writeEnvelopeData( FILE * out,
 			dataVector.resize( numTracks * cols );
 
 			// Fill in matrix data.
-			sdif_float32 *data = &dataVector[0];
+			sdif_float32 *data = &dataVector[ 0 ];
 			assembleMatrixData( data, enhanced, partialsVector, activeIndices, frameTime );
 					
 			// Write the frame header.
 			SDIF_FrameHeader fh;
-			SDIF_Copy4Bytes(fh.frameType, enhanced ? lorisEnhancedSignature : lorisSineOnlySignature);
+			SDIF_Copy4Bytes( fh.frameType, enhanced ? lorisEnhancedSignature : lorisSineOnlySignature );
 			fh.size = 		
 					// size of remaining frame header
 					  sizeof(sdif_float64) + 2 * sizeof(sdif_int32) 
@@ -1808,14 +1936,14 @@ writeEnvelopeData( FILE * out,
 			
 			// Write the matrix header.
 			SDIF_MatrixHeader mh;
-			SDIF_Copy4Bytes(mh.matrixType, enhanced ? lorisEnhancedSignature : lorisSineOnlySignature);
+			SDIF_Copy4Bytes( mh.matrixType, enhanced ? lorisEnhancedSignature : lorisSineOnlySignature );
 			mh.matrixDataType = SDIF_FLOAT32;
 			mh.rowCount = numTracks;
 			mh.columnCount = cols;
-			ret = SDIF_WriteMatrixHeader(&mh, out);
+			ret = SDIF_WriteMatrixHeader( &mh, out );
 			
 			// Write the matrix data, and any necessary padding.
-			ret = SDIF_WriteMatrixData(out, &mh, data);
+			ret = SDIF_WriteMatrixData( out, &mh, data );
 			
 			// Free matrix space.
 			// delete [] data;
@@ -1825,6 +1953,11 @@ writeEnvelopeData( FILE * out,
 		}
 	}
 	while (!endOfAll);
+	
+#if Debug_Loris	
+	std::cout << "SDIF export found " << DEBUG_allBreakpointsSize << " Breakpoints" << std::endl;
+	std::cout << "and exported " << DEBUG_cumNumTracks << std::endl;
+#endif
 }
 
 // ---------------------------------------------------------------------------
@@ -1909,15 +2042,15 @@ static void export_sdif( const std::string & filename,
 	}
 	catch ( Exception & ex ) 
 	{
-		ex.append(" Failed to write SDIF file.");
-		SDIF_CloseWrite(out);
+		ex.append( " Failed to write SDIF file." );
+		SDIF_CloseWrite( out );
 		throw;
 	}
 
 //
 // Close SDIF input file.
 //
-	SDIF_CloseWrite(out);
+	SDIF_CloseWrite( out );
 }
 
 // ---------------------------------------------------------------------------

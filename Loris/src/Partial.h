@@ -140,7 +140,7 @@ public:
 
 	//	Return an iterator refering to the insertion position for a
 	//	Breakpoint at the specified time (that is, the position of the first
-	//	Breakpoint at a time later than the specified time).
+	//	Breakpoint at a time not earlier than the specified time).
 	//	
 	//	For const Partials, returns a const_iterator.
 	const_iterator findAfter( double time ) const;
