@@ -18,7 +18,21 @@ parenthesis.
 - improved error handling and reporting in SDIF reading
 
 - autobuilding of Loris library and the Python module 
-under Darwin isbcware now possible
+under Darwin is now possible
+
+- added version symbols in loris.h (automatically generated
+by automake) and a version() function in the scripting interface
+(returns a version string)
+
+- Totally new SDIF file format -- we now define our own 
+matrix types so that we can read and write our partials,
+even if we label them (!), which was not previously possible
+due to silliness with the SDIF library. Optionally, 1TRC
+files can still be exported, but they are the sine-only 
+ones that are described by the SdifTypes.STYP file. Our 
+matrices contain irregularly-spaced bandwidth-enhanced
+data, but no interpolated (bogus) data, so a frame may 
+not contain breakpoints for all active Partials.
 
 -------------------------------------------------------
 changes since 1.0beta6 release:
