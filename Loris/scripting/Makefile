@@ -47,7 +47,7 @@ CC = g++
 CFLAGS = -O2 ${INC_PY} -I${PI} -I${CLASSES}
 
 python: lorislib ${OBJ_BRIDGE}
-	${CC} -shared ${OBJ_BRIDGE} $(OUTPUT)/libloris.so -o $(OUTPUT)/loriscmodule.so
+	${CC} -shared ${OBJ_BRIDGE} $(OUTPUT)/libloris.a ${LIB_LORIS} -o $(OUTPUT)/loriscmodule.so
 
 lorislib: 
 	cd $(PI); $(MAKE) lib
@@ -64,7 +64,7 @@ depend:
 include dependfile
 
 clean:
-	-rm ./*.o ./lorismodule.so
+	-rm ./*.o $(OUTPUT)/loriscmodule.so
 
 veryclean: clean
 	cd $(CLASSES); $(MAKE) clean

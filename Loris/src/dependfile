@@ -1,0 +1,48 @@
+AiffFile.o: AiffFile.C AiffFile.h Endian.h Exception.h \
+ notifier.h ieee.h LorisTypes.h
+Analyzer.o: Analyzer.C Analyzer.h Partial.h Exception.h \
+ Breakpoint.h AssociateBandwidth.h DistributeEnergy.h KaiserWindow.h \
+ ReassignedSpectrum.h FourierTransform.h BreakpointUtils.h notifier.h
+AssociateBandwidth.o: AssociateBandwidth.C AssociateBandwidth.h \
+ Exception.h notifier.h Breakpoint.h
+Breakpoint.o: Breakpoint.C Breakpoint.h Exception.h
+BreakpointEnvelope.o: BreakpointEnvelope.C BreakpointEnvelope.h \
+ Envelope.h notifier.h
+Channelizer.o: Channelizer.C Channelizer.h Handle.h counted.h \
+ create.h unofficial.h Envelope.h Partial.h Exception.h Breakpoint.h \
+ notifier.h
+Dilator.o: Dilator.C Dilator.h Partial.h Exception.h \
+ Breakpoint.h notifier.h
+Distiller.o: Distiller.C Distiller.h Partial.h Exception.h \
+ Breakpoint.h PartialUtils.h notifier.h
+DistributeEnergy.o: DistributeEnergy.C DistributeEnergy.h \
+ Partial.h Exception.h Breakpoint.h
+Endian.o: Endian.C Endian.h Exception.h
+Envelope.o: Envelope.C Envelope.h
+Exception.o: Exception.C Exception.h
+ExportSdif.o: ExportSdif.C ExportSdif.h Exception.h notifier.h \
+ Partial.h Breakpoint.h
+ExportSpc.o: ExportSpc.C ExportSpc.h Partial.h Exception.h \
+ Breakpoint.h Endian.h notifier.h ieee.h LorisTypes.h PartialUtils.h
+Filter.o: Filter.C Filter.h
+FourierTransform.o: FourierTransform.C FourierTransform.h \
+ Exception.h notifier.h
+Handle.o: Handle.C Handle.h counted.h create.h unofficial.h
+ImportLemur.o: ImportLemur.C ImportLemur.h Partial.h Exception.h \
+ Breakpoint.h Endian.h notifier.h LorisTypes.h
+ImportSdif.o: ImportSdif.C ImportSdif.h Partial.h Exception.h \
+ Breakpoint.h notifier.h
+KaiserWindow.o: KaiserWindow.C KaiserWindow.h Exception.h
+Morpher.o: Morpher.C Morpher.h Exception.h Partial.h \
+ Breakpoint.h Envelope.h Handle.h counted.h create.h unofficial.h \
+ PartialUtils.h notifier.h
+Oscillator.o: Oscillator.C Oscillator.h Filter.h random.h \
+ Exception.h notifier.h
+Partial.o: Partial.C Partial.h Exception.h Breakpoint.h \
+ notifier.h
+ReassignedSpectrum.o: ReassignedSpectrum.C ReassignedSpectrum.h \
+ FourierTransform.h notifier.h Exception.h
+Synthesizer.o: Synthesizer.C Synthesizer.h Exception.h \
+ Oscillator.h Partial.h Breakpoint.h notifier.h
+notifier.o: notifier.C notifier.h
+ieee.o: ieee.c ieee.h
