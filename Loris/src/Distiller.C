@@ -135,33 +135,28 @@ Distiller::distill( std::list<Partial> & container  )
 //
 //	Formerly, zero-labeled Partials are eliminated. Now they remain at
 //	the end of the list.
-/*
-	new way:
-
-	sort partials by length
-	stable_sort by label (preserve length sorting for partials
-		of same label, can I do this? Is list::sort() stable?)
-	for each label:
-		initialize new partial
-		for each partial having this label:
-			if this partial overlaps with any longer partial:
-				skip
-			else
-				insert a zero-amplitude breakpoint before the first breakpoint
-				for each breakpoint in this partial:
-					add up all energy in shorter partials at the time
-						of this breakpoint
-					absorb all that energy as noise
-					add a copy of this breakpoint to the new partial
-				insert a zero-amplitude breakpoint after the last breakpoint
-				
-				
-	initial implementation doesn't seem to screw anything up, but
-	right now, overlap includes the fade-in/out Breakpoints, fix that
-*/
+//
+//	sort partials by length
+//	stable_sort by label (preserve length sorting for partials
+//		of same label, can I do this? Is list::sort() stable?)
+//	for each label:
+//		initialize new partial
+//		for each partial having this label:
+//			if this partial overlaps with any longer partial:
+//				skip
+//			else
+//				insert a zero-amplitude breakpoint before the first breakpoint
+//				for each breakpoint in this partial:
+//					add up all energy in shorter partials at the time
+//						of this breakpoint
+//					absorb all that energy as noise
+//					add a copy of this breakpoint to the new partial
+//				insert a zero-amplitude breakpoint after the last breakpoint
+//							
 //
 void 
-Distiller::distill( std::list<Partial> & container, std::list< Partial >::iterator dist_begin, 
+Distiller::distill( std::list<Partial> & container, 
+					std::list< Partial >::iterator dist_begin, 
 					std::list< Partial >::iterator dist_end )
 {
 	int howmanywerethere = container.size();
@@ -184,7 +179,6 @@ Distiller::distill( std::list<Partial> & container, std::list< Partial >::iterat
 	while ( lowerbound != dist_list.end() )
 	{
 		int label = lowerbound->label();
-		debugger << "distilling Partials labeled " << label << endl;
 		
 		//	find the first element in l after lowerbound
 		//	having a label not equal to 'label':
@@ -193,6 +187,7 @@ Distiller::distill( std::list<Partial> & container, std::list< Partial >::iterat
 						  std::not1( std::bind2nd( PartialUtils::label_equals(), label ) ) );
 #ifdef Debug_Loris
 		//	don't want to compute this iterator distance unless debugging:
+		debugger << "distilling Partials labeled " << label << endl;
 		debugger << "Distiller found " << std::distance( lowerbound, upperbound ) << 
 					" Partials labeled " << label << endl;
 #endif
@@ -317,8 +312,14 @@ Distiller::distill( std::list<Partial> & container, std::list< Partial >::iterat
 			
 			//	insert the new Partial at the end of the
 			//	specified distillation range in the original
-			//	container:			//putEmHere = container.insert( putEmHere, newp );
+			//	container:			
+			//putEmHere = container.insert( putEmHere, newp );
 			container.insert( dist_end, newp );
+		}
+		else	//	label == 0
+		{
+			//	splice zero-labeled Partials back in the original list:
+			container.splice( dist_end, dist_list, lowerbound, upperbound );
 		}
 
 		//	advance Partial list iterator:

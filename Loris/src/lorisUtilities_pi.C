@@ -129,13 +129,11 @@ void spliceByLabel( PartialList * src, long label, PartialList * dst )
 		for ( it = std::find_if( it, src->end(), 
 					std::bind2nd( PartialUtils::label_equals(), label ) );
 			  it != src->end();
-			  it = std::find_if( ++it, src->end(), 
+			  it = std::find_if( it, src->end(), 
 					std::bind2nd( PartialUtils::label_equals(), label ) ) )
 		{
-			std::list< Partial >::iterator next = it;
-			++next;
-			dst->splice( dst->end(), *src, it );
-			it = next;
+			std::list< Partial >::iterator remove_me = it++;
+			dst->splice( dst->end(), *src, remove_me );
 		}
 		
 		

@@ -87,6 +87,11 @@ build with a compiler that is not namespace-savvy.
 and exportAiff, and for number of channels (1) and 
 sample size (16 bits) in exportAiff in scripting interface.
 
+- Fixed Distiller to correctly preserve Partials with label 0.
+
+- Improved efficiency and consistency of Sieve and sifting operation,
+and added default gap equal to 0.
+
 -------------------------------------------------------
 changes since 1.0beta6 release:
 
