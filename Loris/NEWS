@@ -14,6 +14,10 @@ changes since 1.0beta9 release:
 - added assignment operator to Oscillator so that STL
 containers of them can be used
 
+- made FrequencyReference a subclass (implementor) of 
+the Envelope interface, restricted access to its 
+BreakpointEnvelope to const.
+
 -------------------------------------------------------
 changes since 1.0beta8 release:
 
