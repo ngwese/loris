@@ -17,9 +17,9 @@ INCLUDES = -I$(top_srcdir)/src
 # simple morphing test
 test_c_SOURCES = morphtest.C
 if DARWIN
-test_c_LDADD = $(top_builddir)/pi/.libs/libloris.a -lsdif -lfftw
+test_c_LDADD = $(top_builddir)/src/.libs/libloris.a -lsdif -lfftw
 else
-test_c_LDADD = $(top_builddir)/pi/libloris.la
+test_c_LDADD = $(top_builddir)/src/libloris.la
 endif
 
 # Morpher unit tests
@@ -27,9 +27,9 @@ test_morpher_SOURCES = test_Morpher.C
 # Darwin is special, dynamic linking sometimes seems to fail 
 # on this test, can't figure it out.
 if DARWIN
-test_morpher_LDADD = $(top_builddir)/pi/.libs/libloris.a
+test_morpher_LDADD = $(top_builddir)/src/.libs/libloris.a
 else
-test_morpher_LDADD = $(top_builddir)/pi/libloris.la
+test_morpher_LDADD = $(top_builddir)/src/libloris.la
 endif
 
 # Partial unit tests
@@ -37,25 +37,25 @@ test_partial_SOURCES = test_Partial.C
 # Darwin is special, dynamic linking sometimes seems to fail 
 # on this test, can't figure it out.
 if DARWIN
-test_partial_LDADD = $(top_builddir)/pi/.libs/libloris.a
+test_partial_LDADD = $(top_builddir)/src/.libs/libloris.a
 else
-test_partial_LDADD = $(top_builddir)/pi/libloris.la
+test_partial_LDADD = $(top_builddir)/src/libloris.la
 endif
 
 # Distiller unit tests
 test_distiller_SOURCES = test_Distiller.C
 if DARWIN
-test_distiller_LDADD = $(top_builddir)/pi/.libs/libloris.a
+test_distiller_LDADD = $(top_builddir)/src/.libs/libloris.a
 else
-test_distiller_LDADD = $(top_builddir)/pi/libloris.la
+test_distiller_LDADD = $(top_builddir)/src/libloris.la
 endif
 
 # SdifFile unit tests
 test_sdiffile_SOURCES = test_SdifFile.C
 if DARWIN
-test_sdiffile_LDADD = $(top_builddir)/pi/.libs/libloris.a -lsdif
+test_sdiffile_LDADD = $(top_builddir)/src/.libs/libloris.a -lsdif
 else
-test_sdiffile_LDADD = $(top_builddir)/pi/libloris.la
+test_sdiffile_LDADD = $(top_builddir)/src/libloris.la
 endif
 
 if BUILD_PYTHON
