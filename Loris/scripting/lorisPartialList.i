@@ -40,15 +40,20 @@
  */
 
 %{
+#include "Handle.h"
 #include "Partial.h"
+#include "notifier.h"
 #include <list>
-typedef std::list< Loris::Partial > PartialList;
+
+using Loris::debugger;
+using Loris::endl;
+
+typedef Loris::Handle< std::list< Loris::Partial > > PartialListHandle;
+
 %}
 
-// ---------------------------------------------------------------------------
-//	class PartialList
-//	
-class PartialList
+%name(PartialList)
+class PartialListHandle
 /*	A PartialList represents a collection of Bandwidth-Enhanced 
 	Partials, each having a trio of synchronous, non-uniformly-
 	sampled breakpoint envelopes representing the time-varying 
@@ -59,118 +64,143 @@ class PartialList
 	Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
 	the Loris website: www.cerlsoundgroup.org/Loris/
 */
+/*
+	PartialList by handle:
+ */
 {
 public:
-	PartialList( void );
+%addmethods
+{
+//	PartialListHandle( const PartialList * pl )
+	PartialListHandle( void )
+	{
+		// debugger << "creating a list of " << pl->size() << " Partials" << std::endl;
+		debugger << "creating an empty list of Partials" << endl;
+		return new PartialListHandle();
+	}
 	/*	Return a new empty PartialList.
 	 */
-
-	~PartialList( void );
+	
+	~PartialListHandle( void )
+	{
+		debugger << "destroying reference to a list of " << (*self)->size() << " Partials" << endl;
+		delete self;
+	}
 	/*	Destroy this PartialList.
 	 */
-
-	void clear( void );
+	
+	void clear( void ) 
+	{
+		(*self)->clear();
+	}
 	/*	Remove (and destroy) all the Partials from this PartialList,
 		leaving it empty.
 	 */
 	
-	unsigned long size( void );
-	/*	Return the number of Partials in this PartialList.
+	%new PartialListHandle * copy( void )
+	{
+		return new PartialListHandle( (*self)->begin(), (*self)->end() );
+	}
+	/*	Return a new PartialList that is a copy of this 
+		PartialList (i.e. has identical Partials).
 	 */
 	
-%addmethods
-{
-	void splice( PartialList & other )
+	unsigned long size( void )
 	{
-		if ( self == &other )
+		return (*self)->size();
+	}
+	/*	Return the number of Partials in this PartialList.
+	 */
+		
+	%new
+	PartialListHandleIteratorHandle * first( void )
+	{
+		return new PartialListHandleIteratorHandle( *self, (*self)->begin() );
+	}
+	/*	Return an iterator refering to the first Partial in this PartialList.
+	 */
+
+	%new
+	PartialListHandleIteratorHandle * last( void )
+	{
+		return new PartialListHandleIteratorHandle( *self, --(*self)->end() );
+	}
+	/*	Return an iterator refering to the last Partial in this PartialList.
+	 */
+	
+	//	insertion of new Partials:
+	void append( PartialListHandleIteratorHandle * iter )
+	{
+		(*self)->push_back( (*iter)->partial() );
+	}
+	/*	Append a copy of the Partial referenced by the specified iterator
+		to the end of this PartialList.
+	 */
+
+	void splice( PartialListHandle * otherPartials )
+	{
+		if ( self == otherPartials )
 		{
 			std::string s( "Cannot splice a PartialList onto itself!" );
 			throw s;
 		}
-		self->splice( self->end(), other );
+		(*self)->splice( (*self)->end(), *otherPartials );
 	}
 	/*	Splice all the Partials in the other PartialList onto the end of
 		this PartialList, leaving the other empty.
 	 */
 }
+};	//	end of SWIG interface class PartialListHandle
 
-};	//	end of (SWIG) class PartialList
 
-//	define a copy constructor:
-//	(this should give the right documentation, the 
-//	right ownership, the right function name in the
-//	module, etc.)
 %{
-PartialList * PartialListCopy_( const PartialList * other )
-{
-	return new PartialList( *other );
-}
-%}
-
-%name( PartialListCopy )  
-%new PartialList * PartialListCopy_( const PartialList * other );
-/*	Return a new PartialList that is a copy of this 
-	PartialList (i.e. has identical Partials).
- */
- 
-/*
-	EXPERIMENTAL JUNK:
- */
- 
-%{
-	#include "notifier.h"
-	using Loris::notifier;
-	
-	#include "Handle.h"
-	typedef Loris::Handle< PartialList > PartialListH;
-	
-	class PartialListHIter_
+	class PartialListHandleIterator
 	{
-		PartialListH _list;
-		PartialList::iterator _iter;
+		PartialListHandle _list;
+		std::list< Loris::Partial >::iterator _iter;
 		
 		//	no default constructor:
-		PartialListHIter_( void );
+		PartialListHandleIterator( void );
 		
 		public:
 		//	construction:
-		PartialListHIter_( PartialListH hlist ) :
+		PartialListHandleIterator( PartialListHandle hlist ) :
 			_list( hlist ),
 			_iter( hlist->begin() )
 		{
-			notifier << "created an iterator on a list of " << _list->size() << " Partials" << std::endl;
+			debugger << "created an iterator on a list of " << _list->size() << " Partials" << std::endl;
 		}
 		
 		//	better be careful that pos is an iterator of *hlist!
-		PartialListHIter_( PartialListH hlist, PartialList::iterator pos ) :
+		PartialListHandleIterator( PartialListHandle hlist, std::list< Loris::Partial >::iterator pos ) :
 			_list( hlist ),
 			_iter( pos )
 		{
-			notifier << "created a risky iterator on a list of " << _list->size() << " Partials" << std::endl;
+			debugger << "created a risky iterator on a list of " << _list->size() << " Partials" << std::endl;
 		}
 		
-		PartialListHIter_( const PartialListHIter_ & rhs ) :
+		PartialListHandleIterator( const PartialListHandleIterator & rhs ) :
 			_list( rhs._list ),
 			_iter( rhs._iter )
 		{
-			notifier << "copied an iterator on a list of " << _list->size() << " Partials" << std::endl;
+			debugger << "copied an iterator on a list of " << _list->size() << " Partials" << std::endl;
 		}
 		
-		PartialListHIter_ & operator= ( const PartialListHIter_ & rhs )
+		PartialListHandleIterator & operator= ( const PartialListHandleIterator & rhs )
 		{
 			if ( &rhs != this )
 			{
 				_list = rhs._list;
 				_iter = rhs._iter;
 			}
-			notifier << "assigned an iterator on a list of " << _list->size() << " Partials" << std::endl;
+			debugger << "assigned an iterator on a list of " << _list->size() << " Partials" << std::endl;
 			
 			return *this;
 		}
 			
-		~PartialListHIter_( void )
+		~PartialListHandleIterator( void )
 		{
-			notifier << "destroyed an iterator on a list of " << _list->size() << " Partials" << std::endl;
+			debugger << "destroyed an iterator on a list of " << _list->size() << " Partials" << std::endl;
 		}
 		
 		//	Iterator pattern:
@@ -205,74 +235,21 @@ PartialList * PartialListCopy_( const PartialList * other )
 		
 		Loris::Partial & partial( void ) { return *_iter; }
 	
-	};	//	end of class PartialListHIter
+	};	//	end of class PartialListHandleIteratorHandle
 	
-	typedef Loris::Handle< PartialListHIter_ > PartialListHIter;
+	typedef Loris::Handle< PartialListHandleIterator > PartialListHandleIteratorHandle;
 %}
-class PartialListH
-/*
-	PartialList by handle:
- */
-{
-public:
-%addmethods
-{
-	PartialListH( const PartialList * pl )
-	{
-		notifier << "creating a list of " << pl->size() << " Partials" << std::endl;
-		return new PartialListH( pl->begin(), pl->end() );
-	}
-	
-	~PartialListH( void )
-	{
-		notifier << "destroying a list of " << (*self)->size() << " Partials" << std::endl;
-		delete self;
-	}
-	
-	void clear( void ) 
-	{
-		(*self)->clear();
-	}
-	
-	unsigned long size( void )
-	{
-		return (*self)->size();
-	}
-	
-	%new
-	PartialList * list( void )
-	{
-		return new PartialList( (*self)->begin(), (*self)->end() );
-	}
-	
-	%new
-	PartialListHIter * first( void )
-	{
-		return new PartialListHIter( *self, (*self)->begin() );
-	}
-	%new
-	PartialListHIter * last( void )
-	{
-		return new PartialListHIter( *self, --(*self)->end() );
-	}
-	
-	//	insertion of new Partials:
-	void append( PartialListHIter * ph )
-	{
-		(*self)->push_back( (*ph)->partial() );
-	}
-}
-};	//	end of SWIG interface class PartialListH
 
-class PartialListHIter
+%name( Partial )
+class PartialListHandleIteratorHandle
 {
 public:
 %addmethods
 {
 	//	construction:
-	//PartialListHIter( PartialListH hlist );
-	//	PartialListHIter( const PartialListHIter & rhs );
-	~PartialListHIter( void )
+	//PartialListHandleIteratorHandle( PartialListHandle hlist );
+	//	PartialListHandleIteratorHandle( const PartialListHandleIteratorHandle & rhs );
+	~PartialListHandleIteratorHandle( void )
 	{
 		delete self;
 	}
@@ -298,41 +275,41 @@ public:
 	//	mutation:
 	void setLabel( int l ) {  (*self)->setLabel( l ); }
 	
-	//	BP access:
+	//	BreakpointHandle access:
 	%new
-	BP * first( void )
+	BreakpointHandle * first( void )
 	{
-		return new BP( *self, (*self)->partial().begin() );
+		return new BreakpointHandle( *self, (*self)->partial().begin() );
 	}
 	%new
-	BP * last( void )
+	BreakpointHandle * last( void )
 	{
-		return new BP( *self, --( (*self)->partial().end() ) );
+		return new BreakpointHandle( *self, --( (*self)->partial().end() ) );
 	}
 	
 }
 	
-};	//	end of SWIG interface class PartialListHIter
+};	//	end of SWIG interface class PartialListHandleIteratorHandle
 
 %{	
-	class BP
+	class BreakpointHandle
 	{
-		PartialListHIter _partialH;
+		PartialListHandleIteratorHandle _partialH;
 		Loris::PartialIterator _iter;
 		
 		public:
 		//	construction:
-		BP( PartialListHIter subject, Loris::PartialIterator pos ) :
+		BreakpointHandle( PartialListHandleIteratorHandle subject, Loris::PartialIterator pos ) :
 			_partialH( subject ),
 			_iter( pos )
 		{
-			notifier << "created an iterator on a partial having " << _partialH->countBreakpoints()
+			debugger << "created an iterator on a partial having " << _partialH->countBreakpoints()
 					 << " breakpoints" << std::endl;
 		}
 		
-		~BP( void )
+		~BreakpointHandle( void )
 		{
-			notifier << "destroyed an iterator on a partial having " << _partialH->countBreakpoints()
+			debugger << "destroyed an iterator on a partial having " << _partialH->countBreakpoints()
 					 << " breakpoints" << std::endl;
 		}
 		
@@ -363,14 +340,15 @@ public:
 			return _iter == _partialH->partial().end();
 		}
 		
-	};	//	end of class BP
+	};	//	end of class BreakpointHandle
 	
 %}
 
-class BP
+%name(Breakpoint)
+class BreakpointHandle
 {
 	public:	
-	~BP( void );
+	~BreakpointHandle( void );
 
 	//	attribute access:
 	double frequency( void );
@@ -391,4 +369,4 @@ class BP
 	void next( void );
 	bool atEnd( void );
 
-};	//	end of class BP
+};	//	end of class BreakpointHandle

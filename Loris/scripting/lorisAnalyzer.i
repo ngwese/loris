@@ -40,9 +40,6 @@
 %{
 #include "Analyzer.h"
 #include "Partial.h"
-//#include <list>
-//typedef std::list< Loris::Partial > PartialList;
-//using Loris::Analyzer;
 
 //	for procedural interface construction and 
 //	destruction, see comment below:
@@ -109,12 +106,12 @@ public:
 	
 //	analysis:
 	%new 
-	PartialList * analyze( const SampleVector * vec, double srate )
+	PartialListHandle * analyze( const SampleVector * vec, double srate )
 	{
-		PartialList * partials = new PartialList();
+		PartialListHandle * partials = new PartialListHandle();
 		//self->analyze( vec->begin(), vec->end(), srate );
 		//partials->splice( partials->end(), self->partials() );
-		analyzer_analyze( self, vec, srate, partials );
+		analyzer_analyze( self, vec, srate, *partials );
 		return partials;
 	}
 	/*	Analyze a SampleVector of (mono) samples at the given sample rate 	  	

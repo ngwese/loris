@@ -39,9 +39,6 @@
  */
 %{
 #include "ExportSpc.h"
-//#include "Partial.h"
-//#include <list>
-//typedef std::list< Loris::Partial > PartialList;
 using Loris::ExportSpc;
 
 //	for procedural interface construction and 
@@ -90,15 +87,19 @@ public:
 	}
 	/*	Destroy this ExportSpc instance.
 	 */
-}
-
+	 
 //	writing:
-	void write( const char * filename, const PartialList & partials );
+	void write( const char * filename, const PartialListHandle * partials )
+	{
+		self->write( filename, *partials );
+	}
 	/*	Export the given list of Partials to an spc file having the
 		specified path (or name) according to the current configuration 
 		of this ExportSpc instance.
 	 */
 		
+}
+
 //	configuration:
 	void configure( double midiPitch );
 	/*	Set the MIDI note number (69.00 = A440) for this spc file,

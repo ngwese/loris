@@ -52,6 +52,12 @@ v = loris.importAiff( 'clarinet.aiff' )
 
 clar = a.analyze( v, samplerate )
 
+print 'checking SDIF export/import'
+loris.exportSdif( 'clarinet.sdif', clar )
+clar = loris.importSdif( 'clarinet.sdif' )
+
+# loris.ExportSpc( 90 ).write( 'bad_spc_file.spc', clar )
+
 loris.channelize( clar, loris.createFreqReference( clar, 20, 0, 1000 ), 1 )
 loris.distill( clar )
 

@@ -40,6 +40,7 @@
 #include "Distiller.h"
 #include "Exception.h"
 #include "ExportSdif.h"
+#include "ExportSpc.h"
 #include "Handle.h"
 #include "ImportSdif.h"
 #include "Morpher.h"
@@ -79,16 +80,19 @@ int main( )
 		a.analyze( v.begin(), v.end(), f.sampleRate() );
 		clar.splice( clar.end(), a.partials() );
 		
-		/***/
+		//	make sure that SDIF I/O is working:
 		std::cout << "exporting sdif" << endl;
 		ExportSdif xp( 0 );
 		xp.write( "clar.sdif", clar );
 		std::cout << "importing sdif" << endl;
-		ImportSdif ip("clar.sdif");
+		ImportSdif ip("clarinet.sdif");
 		clar.clear();
 		clar.splice( clar.end(), ip.partials() );
 		std::cout << "that was fun." << endl;
-		/***/
+		
+		//	spc?
+		ExportSpc dehr( 90 );
+		dehr.write( "dehr.spc", clar );
 
 		Handle< BreakpointEnvelope > clarRef;
 		getFreqReference( clar, 20, 0, 1000, clarRef );
