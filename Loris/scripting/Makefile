@@ -100,8 +100,8 @@ classes:
 	
 clean:
 	-rm ./*.o 
-	-rm $(OUTPUT)/$(PY_MODULE) $(OUTPUT)/loris.py
-	-rm $(OUTPUT)/$(PERL_MODULE) $(OUTPUT)/loris.pm
+	-rm $(OUTPUT)/$(PY_MODULE) 
+	-rm $(OUTPUT)/$(PERL_MODULE) 
 	-rm $(OUTPUT)/$(TCL_MODULE)
 
 veryclean: clean
