@@ -861,8 +861,12 @@ int main( int argc, char * argv[] )
 		if ( ! gTestFileName.empty() )
 		{
 			cout << "* exporting rendered partials to " << gTestFileName << endl;
+			Loris::PartialUtils::crop chopNegative( 0, 99999999. );
+			std::for_each( gAnalyzer->partials().begin(),
+						   gAnalyzer->partials().end(),
+						   chopNegative );
 			Loris::AiffFile testfile( gAnalyzer->partials().begin(), 
-									gAnalyzer->partials().end(), gRate );
+									  gAnalyzer->partials().end(), gRate );
 			testfile.markers() = markers;
 			testfile.write( gTestFileName );
 		}
