@@ -1,6 +1,5 @@
 #ifndef __Loris_import__
 #define __Loris_import__
-
 // ===========================================================================
 //	Import.h
 //	
@@ -11,8 +10,6 @@
 //	-kel 10 Sept 99
 //
 // ===========================================================================
-
-
 #include "LorisLib.h"
 #include "Partial.h"
 #include "Exception.h"

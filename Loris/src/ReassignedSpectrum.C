@@ -9,6 +9,7 @@
 #include "ReassignedSpectrum.h"
 #include "Notifier.h"
 #include "Exception.h"
+#include <functional>
 
 using namespace std;
 

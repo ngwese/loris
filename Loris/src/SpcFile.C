@@ -278,10 +278,10 @@ SpcFile::packRight( const Partial & p, double noiseMagMult, double time )
 //	having the specified label, or Null if there is not such Partial
 //	in the list. 
 //
-static struct LabelIs 
+struct LabelIs 
 {
 	LabelIs( int l ) : _l( l ) {}
-	Boolean operator()( const Partial & p ) const { return p.label() == _l; }
+	boolean operator()( const Partial & p ) const { return p.label() == _l; }
 	private:
 		int _l;	//	the label to search for
 };

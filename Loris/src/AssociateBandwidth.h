@@ -9,12 +9,10 @@
 //
 // ===========================================================================
 #include "LorisLib.h"
-//#include <numeric>
-//#include <complex>
+#include <vector>
 
 #if !defined( Deprecated_cstd_headers )
 	#include <cmath>
-	//using std::sqrt;
 #else
 	#include <math.h>
 #endif

@@ -33,6 +33,7 @@
 #include "Exception.h"
 #include "Notifier.h"
 #include "fftw.h"
+#include <set>
 
 using namespace std;
 using namespace Loris;

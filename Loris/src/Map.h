@@ -44,7 +44,7 @@ public:
 protected:
 	Map( void ) {}
 	Map( const Map & ) {}
-	Map & operator= ( const Map & );	//	not defined
+	Map & operator= ( const Map & ) { return *this; }	//	need this?
 
 };	//	end of abstract class Map
 

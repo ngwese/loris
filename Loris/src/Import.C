@@ -9,8 +9,6 @@
 //	-kel 10 Sept 99
 //
 // ===========================================================================
-
-
 #include "LorisLib.h"
 #include "Import.h"
 #include "Partial.h"
@@ -28,11 +26,6 @@ Import::Import( void )
 {
 }
 
-
-
-
-#pragma mark -
-#pragma mark Template Method
 // ---------------------------------------------------------------------------
 //	importPartials
 // ---------------------------------------------------------------------------
@@ -90,7 +83,6 @@ Import::importPartials( void )
 		throw;
 	}
 }
-
 
 End_Namespace( Loris )
 
