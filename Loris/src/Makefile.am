@@ -37,6 +37,7 @@ pkginclude_HEADERS = AiffFile.h	\
 				PartialPtrs.h	\
 				PartialUtils.h	\
 				ReassignedSpectrum.h	\
+				Resampler.h \
 				SdifFile.h	\
 				Sieve.h	\
 				SpcFile.h	\
@@ -100,6 +101,8 @@ libclasses_la_SOURCES = AiffFile.C \
 		random.h \
 		ReassignedSpectrum.C \
 		ReassignedSpectrum.h \
+		Resampler.C \
+		Resampler.h \
 		SdifFile.h \
 		SdifFile.C \
 		Sieve.h \

@@ -337,13 +337,21 @@ public:
 	 
 //	-- parameter interpolation/extrapolation --
 
-	double amplitudeAt( double time, double fadeTime = 0. ) const;
+	static const double ShortestSafeFadeTime;	//	1 nanosecond, see Partial.C
+	/*	Define the default fade time for computing amplitude at the ends
+		of a Partial. Floating point round-off errors make fadeTime == 0.0
+		dangerous and unpredictable. 1 ns is short enough to prevent rounding
+		errors in the least significant bit of a 48-bit mantissa for times
+		up to ten hours.
+	 */
+
+	double amplitudeAt( double time, double fadeTime = ShortestSafeFadeTime ) const;
 	/*	Return the interpolated amplitude of this Partial at the
-		specified time. At times beyond the ends of the Partial, return
-		zero. Throw an InvalidPartial exception if this Partial has no
-		Breakpoints. If non-zero fadeTime is specified, then the
-		amplitude at the ends of the Partial is coomputed using a 
-		linear fade.
+		specified time. Throw an InvalidPartial exception if this 
+		Partial has no Breakpoints. If non-zero fadeTime is specified, 
+		then the amplitude at the ends of the Partial is coomputed using
+		a linear fade. The default fadeTime is ShortestSafeFadeTime,
+		see the definition of ShortestSafeFadeTime, above.
 	 */
 
 	double bandwidthAt( double time ) const;
@@ -370,7 +378,7 @@ public:
 		Breakpoints.
 	 */
 
-	Breakpoint parametersAt( double time, double fadeTime = 0. ) const;
+	Breakpoint parametersAt( double time, double fadeTime = ShortestSafeFadeTime ) const;
 	/*	Return the interpolated parameters of this Partial at
 		the specified time, same as building a Breakpoint from
 		the results of frequencyAt, ampitudeAt, bandwidthAt, and
@@ -378,7 +386,7 @@ public:
 		Throw an InvalidPartial exception if this Partial has no
 		Breakpoints. If non-zero fadeTime is specified, then the
 		amplitude at the ends of the Partial is coomputed using a 
-		linear fade.
+		linear fade. The default fadeTime is ShortestSafeFadeTime.
 	 */
 
 //	-- implementation --

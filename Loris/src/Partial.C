@@ -411,11 +411,24 @@ Partial::frequencyAt( double time ) const
 }
 
 // ---------------------------------------------------------------------------
+//	ShortestSafeFadeTime
+// ---------------------------------------------------------------------------
+//	Define the default fade time for computing amplitude at the ends
+//	of a Partial. Floating point round-off errors make fadeTime == 0.0
+//	dangerous and unpredictable. 1 ns is short enough to prevent rounding
+//	errors in the least significant bit of a 48-bit mantissa for times
+//	up to ten hours.
+//
+const double Partial::ShortestSafeFadeTime = 1.0E-9;
+
+// ---------------------------------------------------------------------------
 //	amplitudeAt
 // ---------------------------------------------------------------------------
+//	The default fadeTime is ShortestSafeFadeTime.
+//
 //	
 double
-Partial::amplitudeAt( double time, double fadeTime /* = 0. */ ) const
+Partial::amplitudeAt( double time, double fadeTime ) const
 {
 	if ( numBreakpoints() == 0 )
 		Throw( InvalidPartial, "Tried to interpolate a Partial with no Breakpoints." );
@@ -566,8 +579,10 @@ Partial::bandwidthAt( double time ) const
 //	at the specified time. This saves having to search four times when 
 //	all four parameters are needed.
 //
+//	The default fadeTime is ShortestSafeFadeTime.
+//
 Breakpoint
-Partial::parametersAt( double time, double fadeTime /* = 0. */ ) const 
+Partial::parametersAt( double time, double fadeTime ) const 
 {
 	if ( numBreakpoints() == 0 )
 		Throw( InvalidPartial, "Tried to interpolate a Partial with no Breakpoints." );

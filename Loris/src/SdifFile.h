@@ -121,7 +121,7 @@ public:
 		six-column RBEP format. Otherwise, the Partial data is exported as
 		resampled sinusoidal analysis data in the 1TRC format.
 	 */
-	 
+	
 //	-- private interface --
 private:
 	SdifFile( const SdifFile & other );

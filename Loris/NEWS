@@ -35,8 +35,12 @@ delimited by Partial::const_iterators (documented too).
 scripting interface. Eventually these will replace the
 old STL-style ones, but for now they coexist.
 
-- added some new functores to PartialUtils and 
+- added some new functors to PartialUtils and 
 BreakpointUtils.
+
+- added Resampler class for sampling Partial data at a 
+uniform rate, making it easier to use with real-time
+rendering systems.
 
 -------------------------------------------------------
 changes since 1.0.1 release:

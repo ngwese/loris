@@ -425,14 +425,17 @@ getNextFrameTime( const double frameTime,
 				return  nextFrameTime;
 		}
 		
-		// Add breakpoint to frame, iterate to soonest breakpoint on any partial.
+		// Add breakpoint to list of potential breakpoints for frame, 
+		// then iterate to soonest breakpoint on any partial.  The final decision
+		// to add this breakpoint to the frame is made below, if bpTimeIter is updated.
 		partialsWithBreakpointsInFrame.push_back( it->index );
 		it++;
 		
 		//  If the new breakpoint is at a new time, it could potentially be the
 		//	first breakpoint in the next frame. If there are several breakpoints at
 		//	the exact same time (could happen if these envelopes came from a spc
-		//	file), always start the frame at the first of these.
+		//	file or from resampled envelopes), always start the frame at the first
+		//  of these.  Set bpTimeIter if this is a good start of a new frame.
 		//
 		//	Compute a rounded SDIF frame time for the potential new frame.
 		//	Avoid floating point comparison problems by selecting a frame time before
@@ -478,8 +481,8 @@ indexPartials( const PartialList & partials, std::vector< Partial * > & partials
 //
 static int
 collectActiveIndices( const std::vector< Partial * > & partialsVector, const bool enhanced,
-					  const double frameTime, const double nextFrameTime,
-					  std::vector< int > & activeIndices )
+								const double frameTime, const double nextFrameTime,
+								std::vector< int > & activeIndices )
 {
 	int endOfAll = true;
 	
@@ -578,8 +581,13 @@ assembleMatrixData( SdifFloat4 *data, const bool enhanced,
 		// For enhanced format we use exact timing; the activeIndices only includes
 		// partials that have breakpoints in this frame.
 		// For sine-only format we resample at frame times.
-		double tim = ( enhanced && (par->endTime() < frameTime) ) ? 
-						par->findAfter(frameTime).time() : frameTime;
+
+		// @@@ Kelly, what is this endTime() condition for?  Its causing problems.
+		//	double tim = ( enhanced && (par->endTime() < frameTime) ) ? 
+		//					par->findAfter(frameTime).time() : frameTime;
+		
+		Assert( par->endTime() > frameTime );
+		double tim = enhanced ? par->findAfter(frameTime).time() : frameTime;
 		
 		// Must have phase between 0 and 2*Pi.
 		double phas = par->phaseAt( tim );
@@ -587,7 +595,6 @@ assembleMatrixData( SdifFloat4 *data, const bool enhanced,
 			phas += 2. * Pi; 
 		
 		// Fill in values for this row of matrix data.
-		// Should amplitude be evaluated with a fade?
 		*rowDataPtr++ = index;							// first row of matrix   (standard)
 		*rowDataPtr++ = par->frequencyAt( tim );		// second row of matrix  (standard)
 		*rowDataPtr++ = par->amplitudeAt( tim );		// third row of matrix   (standard)
@@ -660,9 +667,19 @@ writeEnvelopeData( SdifFileT * out,
 		
 			// Allocate matrix data.
 			int cols = (enhanced ? lorisRowEnhancedElements : lorisRowSineOnlyElements);
-			SdifFloat4 *data = new SdifFloat4[numTracks * cols];
+
+			//	I think this will go a lot faster if we aren't doing so much
+			//	dynamic memory allocation for each frame. if I use a vector, 
+			//	then we only need to allocate more memory when a frame has more
+			//	columns than any previous frame. Construct the vector once,
+			//	resize it for each frame, and clear it when done (doesn't 
+			//	deallocate memory).
+			// SdifFloat4 *data = new SdifFloat4[numTracks * cols];
+			static std::vector< SdifFloat4 > dataVector;
+			dataVector.resize( numTracks * cols );
 
 			// Fill in matrix data.
+			SdifFloat4 *data = &dataVector[0];
 			assembleMatrixData( data, enhanced, partialsVector, activeIndices, frameTime );
 								
 			// Write out matrix data.
@@ -672,7 +689,10 @@ writeEnvelopeData( SdifFileT * out,
 					sig, eFloat4, numTracks, cols, data);		// matrix 
 			
 			// Free matrix space.
-			delete [] data;
+			// delete [] data;
+			//	Instead of deallocating, just clear the static 
+			//	vector, setting its logical size to zero.
+			dataVector.clear();
 		}
 	}
 	while (!endOfAll);
