@@ -440,7 +440,7 @@ AiffFile::readContainer( std::istream & s )
 
 	//	make sure its really AIFF:
 	if ( ck.formType != AiffType )
-		Throw( FileIOException, std::string("Bad form type in AIFF file: ") + std::string( ck.formType, 4 ) );
+		Throw( FileIOException, std::string("Bad form type in AIFF file: ") + std::string( (long)ck.formType, 4 ) );
 }	
 
 // ---------------------------------------------------------------------------

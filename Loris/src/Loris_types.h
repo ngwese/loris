@@ -46,8 +46,8 @@ namespace Loris {
 #endif	
 
 typedef short 			Int_16;
-typedef long 			Int_32;
-typedef unsigned long 	Uint_32;
+typedef int 			Int_32;
+typedef unsigned int 	Uint_32;
 typedef float			Float_32;
 typedef double			Double_64;
 
