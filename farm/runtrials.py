@@ -53,4 +53,4 @@ for dir in dirs:
 		continue
 	cmd = '%s; %s %s %s'%(changedir(dir), runpython, script, inbkgrnd)
 	print cmd
-	# os.system(cmd)
+	os.system(cmd)
