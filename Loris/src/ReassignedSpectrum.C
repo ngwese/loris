@@ -9,6 +9,8 @@
 #include "ReassignedSpectrum.h"
 #include "Notifier.h"
 
+#include "AiffFile.h"	//	for debugging only
+
 Begin_Namespace( Loris )
 
 // ---------------------------------------------------------------------------
@@ -17,14 +19,13 @@ Begin_Namespace( Loris )
 //	Transform lengths are the smallest power of two greater than twice the
 //	window length. The noise floor is specified in dB (negative).
 //
-ReassignedSpectrum::ReassignedSpectrum( const vector< double > & window, double noiseFloor ) :
+ReassignedSpectrum::ReassignedSpectrum( const vector< double > & window ) :
 	_transform( 1 << long( 1 + ceil( log(window.size()) / log(2.)) ) ),
 	_tfreqramp( 1 << long( 1 + ceil( log(window.size()) / log(2.)) ) ),
 	_ttimeramp( 1 << long( 1 + ceil( log(window.size()) / log(2.)) ) ),
 	_window( window ),
 	_winfreqramp( window ),
-	_wintimeramp( window ),
-	_threshold( pow(10., 0.05 * noiseFloor) )
+	_wintimeramp( window )
 {
 	applyFreqRamp( _winfreqramp );
 	applyTimeRamp( _wintimeramp );
@@ -49,52 +50,66 @@ ReassignedSpectrum::~ReassignedSpectrum( void )
 // ---------------------------------------------------------------------------
 //	transform
 // ---------------------------------------------------------------------------
-//	Use three iterators: begin, end, and middle, align middle with the 
-//	center of the window. Can I do this? It limits the way I can lay 
-//	windows over a buffer, because I can't position the center of the 
-//	window outside the buffer, but maybe that's okay?
+//	idxCenter is the index in buf with which the center of the analysis window
+//	should be aligned. It may be outside the extent of the buffer (that is, 
+//	negative or greater than the size of the buffer).
 //
 void
-ReassignedSpectrum::transform( const vector< double > & buf )
+ReassignedSpectrum::transform( const vector< double > & buf, long idxCenter )
 {
-//	clear the ridge data collection:
-	_ridges.clear();
-	
 //	allocate a temporary sample buffer:
-	vector< double > tmp( buf.size() );
+	vector< double > tmp( _window.size(), 0. );
+	
+//	determine sample boundaries from center index, 
+//	buffer length, and window length:
+	long boffset = idxCenter - ( _window.size() / 2 );
+	long woffset = 0;
+	if ( boffset < 0 ) {
+		woffset = -boffset;
+		boffset = 0;
+	}
+	long eoffset = min( buf.size(), boffset - woffset + _window.size() );
 	
 //	window and rotate input and compute normal transform:
-	std::transform( buf.begin(), buf.end(), _window.begin(), 
+	std::transform( buf.begin() + boffset, buf.begin() + eoffset, 
+					_window.begin() + woffset, 
 					tmp.begin(), multiplies< double >() );
+/*
+	AiffFile a( 44100., 1, 16, tmp );
+	a.write("normal windowed.aiff");
+*/
 	_transform.loadAndRotate( tmp );
 	_transform.transform();
 
 //	window and rotate input using frequency-ramped window
 //	and compute frequency correction transform:
-	std::transform( buf.begin(), buf.end(), _winfreqramp.begin(), 
+	std::transform( buf.begin() + boffset, buf.begin() + eoffset, 
+					_winfreqramp.begin() + woffset, 
 					tmp.begin(), multiplies< double >() );
 	_tfreqramp.loadAndRotate( tmp );
 	_tfreqramp.transform();
 
 //	window and rotate input using time-ramped window and
 //	compute time correction transform:
-	std::transform( buf.begin(), buf.end(), _wintimeramp.begin(), 
+	std::transform( buf.begin() + boffset, buf.begin() + eoffset, 
+					_wintimeramp.begin() + woffset, 
 					tmp.begin(), multiplies< double >() );
 	_ttimeramp.loadAndRotate( tmp );
 	_ttimeramp.transform();
-
-//	detect and collect time-frequency ridges:
-	detectRidges();
 }
 
 // ---------------------------------------------------------------------------
-//	detectRidges
+//	findPeaks
 // ---------------------------------------------------------------------------
-//	Detect and collect peaks in this short-time time-frequency spectrum.
+//	Detect and collect peaks in this short-time time-frequency spectrum
+//	that exceed a specified magnitude threshold (defaults to -240 dB).
 //
-void
-ReassignedSpectrum::detectRidges( void )
+ReassignedSpectrum::Peaks
+ReassignedSpectrum::findPeaks( double threshold_dB ) const
 {
+	double threshold = pow( 10., 0.05 * threshold_dB );	//	absolute magnitude threshold
+	Peaks peaks;	//	empty collection
+	
 	for ( int j = 1; j < _transform.size() / 2; ++j ) {
 		double mag = abs(_transform[j]); 
 		if ( mag > abs(_transform[j-1]) && mag > abs(_transform[j+1])) {
@@ -103,12 +118,11 @@ ReassignedSpectrum::detectRidges( void )
 			double m = reassignedMagnitude( f );		//	from fractional sample
 			 
 			//	only retain data above the magnitude threshold:
-			if ( m > _threshold ) {
-				//_ridges.push_back( Datum( t, f, m, p ) ); 
-				_ridges.push_back( f );
+			if ( m > threshold ) {
+				peaks.insert( Peak( f, m ) );
 				
 				//	Hopefully, this doesn't happen much.
-				if ( abs(f-j) > 0.5 ) {
+				if ( 0 && abs(f-j) > 1 ) {
 					debugger << "\Found frequency correction of " << abs(f-j) <<
 								" for frequency sample " << j << 
 								" having magnitude " << 20. * log10(m) << endl;
@@ -116,6 +130,8 @@ ReassignedSpectrum::detectRidges( void )
 			}
 		}
 	}
+	
+	return peaks;
 }
 
 // ---------------------------------------------------------------------------
@@ -207,11 +223,24 @@ ReassignedSpectrum::applyTimeRamp( vector< double > & w )
 double
 ReassignedSpectrum::frequencyCorrection( long sample ) const
 {
+//
 	double num = _transform[sample].real() * _tfreqramp[sample].imag() -
 					_transform[sample].imag() * _tfreqramp[sample].real();
 	double magSquared = abs( _transform[sample] ) * abs( _transform[sample] );
 						
 	return - num / magSquared;
+//	
+
+/*
+//	use parabolic interpolation until
+//	we figure out why (whether?) freq reassignment sucks:
+	double dbLeft = 20. * log10( abs( _transform[sample-1] ) );
+	double dbCandidate = 20. * log10( abs( _transform[sample] ) );
+	double dbRight = 20. * log10( abs( _transform[sample+1] ) );
+
+	return	0.5 * (dbLeft - dbRight) /
+			(dbLeft - 2.0 * dbCandidate + dbRight);
+*/
 }
 
 // ---------------------------------------------------------------------------
@@ -292,6 +321,8 @@ double
 ReassignedSpectrum::reassignedPhase( double fracFreqSample, 
 									 double timeCorrection ) const
 {
+	//return arg( _transform[ round( fracFreqSample ) ] );
+	
 	//	compute (interpolate) the phase at the reassigned frequency:
 	double alpha =  fracFreqSample - floor( fracFreqSample );
 
@@ -311,7 +342,8 @@ ReassignedSpectrum::reassignedPhase( double fracFreqSample,
 	}
 
 	double phase = ( alpha * phaseAbove ) + (( 1. - alpha ) * phaseBelow );
-
+				//arg( _transform[ round( fracFreqSample ) ] );
+				
 	//	correct for time offset:
 	phase += ( timeCorrection * fracFreqSample * TwoPi / _transform.size() );
 	

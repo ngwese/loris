@@ -10,10 +10,13 @@
 // ===========================================================================
 #include "LorisLib.h"
 #include "Partial.h"
+//#include "Breakpoint.h"
 #include "ReassignedSpectrum.h"
 
 #include <vector>
 #include <memory>
+
+class Breakpoint;
 
 Begin_Namespace( Loris )
 
@@ -29,16 +32,54 @@ public:
 	~Analyzer( void );
 
 //	analysis:
-	void analyze( std::vector< double > & buf, double srate );
+	void analyze( const std::vector< double > & buf, double srate );
 	
-	void formPartials( double frameTime );
+
+//	parameter specfication:
+	void setPartialSeparation( double x ) { _freqResolution = x; }
+	void setNoiseFloor( double x ) { _noiseFloor = x; }
+
+	long hopSize( void ) const			//	samples
+		{ return _hop; }
+	double frameLength( void ) const	//	seconds
+		{ return _hop * _srate; }
+	double sampleRate( void ) const
+		{ return _srate; }
+	double partialSeparation( void ) const
+		{ return _freqResolution; }
+	double noiseFloor( void ) const	//	(negative) dB
+		{ return _noiseFloor; }
+	double captureRange( void ) const	//	Hz
+		{ return 0.5 * _freqResolution; }
+	double frameTime( void ) const  				//	the time in seconds corresponding to the 
+		{ return _winMiddleIdx	/ _srate; }	//	center of the current analysis window
+
+//	-- internal helpers --
+private:
+	//	construct spectrum analyzer and analysis window:
+	void createSpectrum( double srate );
+	
+	//	frequency-sorted Breakpoint collection:	
+	typedef std::vector< std::pair< Breakpoint, double > > Frame;
+	Frame extractBreakpoints( void );
+	
+	//	Partial construction:
+	void formPartials( const Frame & frame );
 	void spawnPartial( double time, const Breakpoint & bp );
-	
-	double hopSize( void ) const;	//	return seconds
 	
 //	-- instance variables --
 private:
 	std::auto_ptr< ReassignedSpectrum > _spectrum;
+	
+	//	parameters:
+	double _freqResolution;		//	minimum frequency distance (Hz) between Partials
+	double _noiseFloor;			//	magnitude-spectral peak detection threshold
+	
+	//	state variables:
+	double _srate;
+	double _minfreq;	//	lowest frequency the fits two periods in the analysis window
+	long _hop;			//	in samples
+	long _winMiddleIdx;
 };	//	end of class Analyzer
 
 End_Namespace( Loris )

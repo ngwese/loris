@@ -9,6 +9,8 @@
 #include "FourierTransform.h"
 #include "Exception.h"
 
+#include "AiffFile.h"	//	for debugging only
+
 using namespace std;
 
 Begin_Namespace( Loris )
@@ -94,6 +96,13 @@ FourierTransform::load( const vector< double > & buf )
 //	reference is always the middle sample of the input buffer, which is
 //	usually desired for windowed transform input. If not, use load().
 //
+//	If the buffer is even-length, then it has no center sample to align
+//	with the beginning of the transform buffer. (That's why odd-length
+//	windows are preferred in this business.) In this case, the rotation
+//	is half a sample too far (the other choice is half a sample not
+//	far enough), with the second half of the buffer at the beginning
+//	of the transform buffer.
+//
 void
 FourierTransform::loadAndRotate( const vector< double > & buf )
 {
@@ -117,6 +126,15 @@ FourierTransform::loadAndRotate( const vector< double > & buf )
 			  buf.begin() + (_z.size() / 2),
 			  _z.begin() + (_z.size() / 2) );
 	}
+/*
+	vector< double > v( _z.size() );
+	struct dick {
+		double operator()( const complex<double> & c ) { return c.real(); }
+	};
+	std::transform( _z.begin(), _z.end(), v.begin(), dick() );
+	AiffFile a( 44100., 1, 16, v );
+	a.write("ftbuffer.aiff");
+*/
 }
 
 // ---------------------------------------------------------------------------
@@ -152,29 +170,21 @@ FourierTransform::fillReverseBinaryTable( void )
 // ---------------------------------------------------------------------------
 //	Perform one step of the decimation-in-time butterfly algorithm
 //	for length a power of 2. The input is assumed to be permuted
-//	to reverse binary order, so the cosine and sine factors can
-//	be generated and used in normal order.
+//	to reverse binary order.
 //
 void
 FourierTransform::decimationStep( long span )
 {
-	const long twospan	= span << 1;	// for loop termination
+	const long twospan	= span << 1;
 	const double dangle = Pi / span;
 	
-	//	loop variables:
 	long i;
-	double angle;	// for last step, this is 2pi/n
-	
+	double angle;
 	for ( i = 0, angle = 0.0;  i < span;  ++i, angle += dangle ) {
-		double sine = sin( angle );
-		double cosine = cos( angle );
+		complex< double > W = polar( 1., -angle );
 		
-		for (long j = i;  j < size();  j += twospan)
-		{	
-			complex< double > 
-				temp( cosine * _z[j + span].real() + sine * _z[j + span].imag(),
-					  - sine * _z[j + span].real() + cosine * _z[j + span].imag() );
-				
+		for ( long j = i;  j < size();  j += twospan ) {	
+			complex< double > temp( _z[j + span] * W );				
 			_z[j + span] = _z[j] - temp;
 			_z[j] += temp;
 		}
