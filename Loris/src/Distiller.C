@@ -245,9 +245,12 @@ Distiller::~Distiller( void )
 //	distill
 // ---------------------------------------------------------------------------
 //	Distill the labeled Partials in a list into a list containing a  single 
-//	Partial per label. The distilled list will contain as many Partials as
-//	there were non-zero labels in the original list. Unlabeled (label 0)
-//	Partials are eliminated.
+//	Partial per non-zero label. The distilled list will contain as many 
+//	Partials as there were non-zero labels in the original list, plus the
+//	zero-labeled Partials. 
+//
+//	Formerly, zero-labeled Partials are eliminated. Now they remain at
+//	the end of the list.
 //
 void 
 Distiller::distill( std::list<Partial> & l )
@@ -261,10 +264,7 @@ Distiller::distill( std::list<Partial> & l )
 	
 	// 	iterate over labels and distill each one:
 	std::list<Partial>::iterator dist_begin = l.begin();
-	/*
-		std::find_if( l.begin(), l.end(), 
-					  std::not1( std::bind2nd( PartialUtils::label_equals(), 0 ) ) ); 
-	*/
+					  
 	while ( dist_begin != l.end() )
 	{
 		int label = dist_begin->label();
@@ -276,11 +276,14 @@ Distiller::distill( std::list<Partial> & l )
 			std::find_if( dist_begin, l.end(), 
 						  std::not1( std::bind2nd( PartialUtils::label_equals(), label ) ) );
 #ifdef Debug_Loris
+		//	don't want to compute this iterator distance unless debugging:
 		debugger << "Distiller found " << std::distance( dist_begin, dist_end ) << 
 					" Partials labeled " << label << endl;
 #endif
 		
-		//	distill label, unless label is 0:	
+		//	distill label, unless label is 0
+		//	(zero-labeled Partials will remain where they
+		//	are, and wind up at the end of the list):	
 		if ( label != 0 )
 		{
 			//	create the resulting distilled partial:
@@ -295,15 +298,14 @@ Distiller::distill( std::list<Partial> & l )
 			
 			//	fill in gaps:
 			fixGaps( newp, dist_begin, dist_end );
-		
-			//	replace the first Partial in the range,
-			//	the rest of the range will be erased:
-			*(dist_begin++) = newp;
+			
+			//	insert the new Partial at the beginning of
+			//	the list, and erase the Partials in the
+			//	distilled range:
+			l.erase( dist_begin, dist_end );
+			l.insert( l.begin(), newp );
 		}
 
-		//	erase the non-distilled Partials:
-		l.erase( dist_begin, dist_end );
-		
 		//	advance Partial list iterator:
 		dist_begin = dist_end;
 	}

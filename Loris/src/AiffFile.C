@@ -189,9 +189,9 @@ AiffFile::getSamples( double * bufBegin, double * bufEnd )
 			while( bufBegin < bufEnd )
 			{
 				samp = (_bytes[bytesIdx++] << 24);
-				samp = (_bytes[bytesIdx++] << 16); 
-				samp = (_bytes[bytesIdx++] << 8); 
-				samp = _bytes[bytesIdx++];
+				samp += (_bytes[bytesIdx++] << 16); 
+				samp += (_bytes[bytesIdx++] << 8); 
+				samp += _bytes[bytesIdx++];
 				*bufBegin = oneOverMax * samp; 
 				
 				++bufBegin;
@@ -203,8 +203,8 @@ AiffFile::getSamples( double * bufBegin, double * bufEnd )
 			while( bufBegin < bufEnd )
 			{
 				samp = (_bytes[bytesIdx++] << 24);
-				samp = (_bytes[bytesIdx++] << 16); 
-				samp = (_bytes[bytesIdx++] << 8); 
+				samp += (_bytes[bytesIdx++] << 16); 
+				samp += (_bytes[bytesIdx++] << 8); 
 				*bufBegin = oneOverMax * samp; 
 				
 				++bufBegin;
