@@ -92,32 +92,10 @@ class PartialListIterator;
 class PartialList
 {
 public:
-	//	construction:
-#if 0
-	// include these in the added methods for debugging:
-	PartialList( void );
-	/*	Return a new empty PartialList.
-	 */
-	
-	~PartialList( void );
-	/*	Destroy this PartialList.
-	 */
-	
-#endif	
-	
-	//	C++ copy constructor has the wrong semantics 
-	//	for the scripting interface, define a copy 
-	//	member:
 	%addmethods
 	{
-		%new PartialList * copy( void )
-		{
-			return new PartialList( *self );
-		}
-		/*	Return a new PartialList that is a copy of this 
-			PartialList (i.e. has identical Partials).
-		 */
-	
+		//	construction:
+		// include these in the added methods for debugging:
 		PartialList( void )
 		{
 			debugger << "creating an empty list of Partials" << Loris::endl;
@@ -134,6 +112,17 @@ public:
 		/*	Destroy this PartialList.
 		 */
 		
+		//	C++ copy constructor has the wrong semantics 
+		//	for the scripting interface, define a copy 
+		//	member:
+		%new PartialList * copy( void )
+		{
+			return new PartialList( *self );
+		}
+		/*	Return a new PartialList that is a copy of this 
+			PartialList (i.e. has identical Partials).
+		 */
+	
 	}	//	end of added methods
 	
 	//	wrap std::list methods:
@@ -147,18 +136,15 @@ public:
 	/*	Return the number of Partials in this PartialList.
 	 */
 		
-	%new
 	PartialListIterator begin( void );
 	/*	Return an iterator refering to the first Partial in this PartialList.
 	 */
 
-	%new
 	PartialListIterator end( void );
 	/*	Return an iterator refering to the end of this PartialList (an invalid
 		element after the last valid Partial).
 	 */
 	 
-	%new
 	PartialListIterator insert( PartialListIterator position, const Partial & partial );
 	/*	Insert a copy of the given Partial into this PartialList at
 		the position indicated by the PartialListIterator position.
@@ -353,13 +339,11 @@ public:
 		
 //	iterator generation:
 //
-	%new
 	PartialIterator begin( void );
 	/*	Return a PartialIterator refering to the first Breakpoint 
 		in this Partial.
 	 */
 
-	%new
 	PartialIterator end( void );
 	/*	Return a PartialIterator refering to the end of this Partial (an invalid
 		element after the last valid Breakpoint).
@@ -367,20 +351,17 @@ public:
 
 //	collection access/mutation through iterators:
 //	
-	%new
 	PartialIterator insert( double time, const Breakpoint & bp );
 	/*	Make a copy of bp and insert it at time (seconds),
 		return an iterator refering to the inserted Breakpoint.
 	 */
 
-	%new
 	PartialIterator findAfter( double time );
 	/*	Return the insertion position for a Breakpoint at
 		the specified time (that is, the position of the first
 		Breakpoint at a time later than the specified time).
 	 */
 	 
-	%new
 	PartialIterator findNearest( double time );
 	/*	Return the insertion position for the Breakpoint nearest
 		the specified time.

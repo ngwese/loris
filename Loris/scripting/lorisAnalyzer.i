@@ -44,6 +44,8 @@
 using Loris::Analyzer;
 %}
 
+class PartialList;
+class SampleVector;
 
 // ---------------------------------------------------------------------------
 //	class Analyzer

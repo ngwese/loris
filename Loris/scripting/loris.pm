@@ -5,7 +5,6 @@ require DynaLoader;
 @ISA = qw(Exporter DynaLoader);
 package loris_perl;
 bootstrap loris_perl;
-var_loris_perl_init();
 package loris_perl;
 @EXPORT = qw( );
 1;
