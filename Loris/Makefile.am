@@ -26,9 +26,18 @@ MAINTAINERCLEANFILES = 	Makefile.in aclocal.m4 configure config.h.in \
 
 EXTRA_DIST = reconf README-MAC
 
+DEMO_DIST_FILES =	Loris/demo/Makefile \
+					Loris/demo/README \
+					Loris/demo/morphdemo.py \
+					Loris/demo/source \
+					Loris/demo/reference
 
 dist-hook:
 	(cd $(distdir) && mkdir $(ac_aux_dir))
 	for file in $(AUX_DIST) $(AUX_DIST_EXTRA); do \
 		cp $$file $(distdir)/$$file; \
 	done
+
+dist-demo:
+	cd $(top_srcdir)/demo; tar zxf morphsources.tgz; tar zxf morphreference.tgz
+	cd $(top_srcdir)/..; tar zcf Loris/$(PACKAGE)-demo-$(VERSION_STR).tgz $(DEMO_DIST_FILES)

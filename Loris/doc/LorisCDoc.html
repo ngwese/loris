@@ -46,13 +46,13 @@ C-linkable procedural interface for Loris.
 	are computed from the specified  resolution and window width.   
 </BLOCKQUOTE>
 
-<P><TT><B>destroyAnalyzer( Analyzer * ptr_this )</B></TT>
+<P><TT><B>destroyAnalyzer( Analyzer * a )</B></TT>
 <BLOCKQUOTE>[ returns void  ]
 <BR>  	Destroy this Analyzer. 								
    
 </BLOCKQUOTE>
 
-<P><TT><B>analyzer_analyze( Analyzer * ptr_this, 
+<P><TT><B>analyzer_analyze( Analyzer * a, 
 					   const SampleVector * vec, double srate,
 					   PartialList * partials )</B></TT>
 <BLOCKQUOTE>[ returns void  ]
@@ -62,14 +62,14 @@ C-linkable procedural interface for Loris.
    
 </BLOCKQUOTE>
 
-<P><TT><B>analyzer_getAmpFloor( const Analyzer * ptr_this )</B></TT>
+<P><TT><B>analyzer_getAmpFloor( const Analyzer * a )</B></TT>
 <BLOCKQUOTE>[ returns double  ]
 <BR>  	Return the amplitude floor (lowest detected spectral amplitude),  			
 	in (negative) dB, for this Analyzer. 				
    
 </BLOCKQUOTE>
 
-<P><TT><B>analyzer_getBwRegionWidth( const Analyzer * ptr_this )</B></TT>
+<P><TT><B>analyzer_getBwRegionWidth( const Analyzer * a )</B></TT>
 <BLOCKQUOTE>[ returns double  ]
 <BR>  	Return the width (in Hz) of the Bandwidth Association regions
 	used by this Analyzer.<p>
@@ -79,7 +79,7 @@ C-linkable procedural interface for Loris.
    
 </BLOCKQUOTE>
 
-<P><TT><B>analyzer_getCropTime( const Analyzer * ptr_this )</B></TT>
+<P><TT><B>analyzer_getCropTime( const Analyzer * a )</B></TT>
 <BLOCKQUOTE>[ returns double  ]
 <BR>  	Return the crop time (maximum temporal displacement of a time-
 	frequency data point from the time-domain center of the analysis
@@ -91,28 +91,28 @@ C-linkable procedural interface for Loris.
    
 </BLOCKQUOTE>
 
-<P><TT><B>analyzer_getFreqDrift( const Analyzer * ptr_this )</B></TT>
+<P><TT><B>analyzer_getFreqDrift( const Analyzer * a )</B></TT>
 <BLOCKQUOTE>[ returns double  ]
 <BR>  	Return the maximum allowable frequency difference between 					
 	consecutive Breakpoints in a Partial envelope for this Analyzer. 				
    
 </BLOCKQUOTE>
 
-<P><TT><B>analyzer_getFreqFloor( const Analyzer * ptr_this )</B></TT>
+<P><TT><B>analyzer_getFreqFloor( const Analyzer * a )</B></TT>
 <BLOCKQUOTE>[ returns double  ]
 <BR>  	Return the frequency floor (minimum instantaneous Partial  				
 	frequency), in Hz, for this Analyzer. 				
    
 </BLOCKQUOTE>
 
-<P><TT><B>analyzer_getFreqResolution( const Analyzer * ptr_this )</B></TT>
+<P><TT><B>analyzer_getFreqResolution( const Analyzer * a )</B></TT>
 <BLOCKQUOTE>[ returns double  ]
 <BR>  	Return the frequency resolution (minimum instantaneous frequency  		
 	difference between Partials) for this Analyzer. 	
    
 </BLOCKQUOTE>
 
-<P><TT><B>analyzer_getHopTime( const Analyzer * ptr_this )</B></TT>
+<P><TT><B>analyzer_getHopTime( const Analyzer * a )</B></TT>
 <BLOCKQUOTE>[ returns double  ]
 <BR>  	Return the hop time (which corresponds approximately to the 
 	average density of Partial envelope Breakpoint data) for this 
@@ -120,21 +120,21 @@ C-linkable procedural interface for Loris.
    
 </BLOCKQUOTE>
 
-<P><TT><B>analyzer_getWindowWidth( const Analyzer * ptr_this )</B></TT>
+<P><TT><B>analyzer_getWindowWidth( const Analyzer * a )</B></TT>
 <BLOCKQUOTE>[ returns double  ]
 <BR>  	Return the frequency-domain main lobe width (measured between 
 	zero-crossings) of the analysis window used by this Analyzer. 				
    
 </BLOCKQUOTE>
 
-<P><TT><B>analyzer_setAmpFloor( Analyzer * ptr_this, double x )</B></TT>
+<P><TT><B>analyzer_setAmpFloor( Analyzer * a, double x )</B></TT>
 <BLOCKQUOTE>[ returns void  ]
 <BR>  	Set the amplitude floor (lowest detected spectral amplitude), in  			
 	(negative) dB, for this Analyzer. 				
    
 </BLOCKQUOTE>
 
-<P><TT><B>analyzer_setBwRegionWidth( Analyzer * ptr_this, double x )</B></TT>
+<P><TT><B>analyzer_setBwRegionWidth( Analyzer * a, double x )</B></TT>
 <BLOCKQUOTE>[ returns void  ]
 <BR>  	Set the width (in Hz) of the Bandwidth Association regions
 	used by this Analyzer.<p>
@@ -144,7 +144,7 @@ C-linkable procedural interface for Loris.
    
 </BLOCKQUOTE>
 
-<P><TT><B>analyzer_setCropTime( Analyzer * ptr_this, double x )</B></TT>
+<P><TT><B>analyzer_setCropTime( Analyzer * a, double x )</B></TT>
 <BLOCKQUOTE>[ returns void  ]
 <BR>  	Set the crop time (maximum temporal displacement of a time-
 	frequency data point from the time-domain center of the analysis
@@ -156,28 +156,28 @@ C-linkable procedural interface for Loris.
    
 </BLOCKQUOTE>
 
-<P><TT><B>analyzer_setFreqDrift( Analyzer * ptr_this, double x )</B></TT>
+<P><TT><B>analyzer_setFreqDrift( Analyzer * a, double x )</B></TT>
 <BLOCKQUOTE>[ returns void  ]
 <BR>  	Set the maximum allowable frequency difference between 					
 	consecutive Breakpoints in a Partial envelope for this Analyzer. 				
    
 </BLOCKQUOTE>
 
-<P><TT><B>analyzer_setFreqFloor( Analyzer * ptr_this, double x )</B></TT>
+<P><TT><B>analyzer_setFreqFloor( Analyzer * a, double x )</B></TT>
 <BLOCKQUOTE>[ returns void  ]
 <BR>  	Set the amplitude floor (minimum instantaneous Partial  				
 	frequency), in Hz, for this Analyzer.
    
 </BLOCKQUOTE>
 
-<P><TT><B>analyzer_setHopTime( Analyzer * ptr_this, double x )</B></TT>
+<P><TT><B>analyzer_setHopTime( Analyzer * a, double x )</B></TT>
 <BLOCKQUOTE>[ returns void  ]
 <BR>  	Set the hop time (which corresponds approximately to the average
 	density of Partial envelope Breakpoint data) for this Analyzer.
    
 </BLOCKQUOTE>
 
-<P><TT><B>analyzer_setFreqResolution( Analyzer * ptr_this, double x )</B></TT>
+<P><TT><B>analyzer_setFreqResolution( Analyzer * a, double x )</B></TT>
 <BLOCKQUOTE>[ returns void  ]
 <BR>  	Set the frequency resolution (minimum instantaneous frequency  		
 	difference between Partials) for this Analyzer. (Does not cause 	
@@ -185,7 +185,7 @@ C-linkable procedural interface for Loris.
    
 </BLOCKQUOTE>
 
-<P><TT><B>analyzer_setWindowWidth( Analyzer * ptr_this, double x )</B></TT>
+<P><TT><B>analyzer_setWindowWidth( Analyzer * a, double x )</B></TT>
 <BLOCKQUOTE>[ returns void  ]
 <BR>  	Set the frequency-domain main lobe width (measured between 
 	zero-crossings) of the analysis window used by this Analyzer. 				
@@ -209,13 +209,13 @@ C-linkable procedural interface for Loris.
    
 </BLOCKQUOTE>
 
-<P><TT><B>destroyBreakpointEnvelope( BreakpointEnvelope * ptr_this )</B></TT>
+<P><TT><B>destroyBreakpointEnvelope( BreakpointEnvelope * env )</B></TT>
 <BLOCKQUOTE>[ returns void  ]
 <BR>  	Destroy this BreakpointEnvelope. 								
    
 </BLOCKQUOTE>
 
-<P><TT><B>breakpointEnvelope_insertBreakpoint( BreakpointEnvelope * ptr_this,
+<P><TT><B>breakpointEnvelope_insertBreakpoint( BreakpointEnvelope * env,
 					double time, double val )</B></TT>
 <BLOCKQUOTE>[ returns void  ]
 <BR>  	Insert a breakpoint representing the specified (time, value) 
@@ -225,7 +225,7 @@ C-linkable procedural interface for Loris.
    
 </BLOCKQUOTE>
 
-<P><TT><B>breakpointEnvelope_valueAt( BreakpointEnvelope * ptr_this, 
+<P><TT><B>breakpointEnvelope_valueAt( BreakpointEnvelope * env, 
 								   double time )</B></TT>
 <BLOCKQUOTE>[ returns double  ]
 <BR>  	Return the interpolated value of this BreakpointEnvelope at the 
@@ -255,20 +255,20 @@ C-linkable procedural interface for Loris.
    
 </BLOCKQUOTE>
 
-<P><TT><B>destroyPartialList( PartialList * ptr_this )</B></TT>
+<P><TT><B>destroyPartialList( PartialList * plist )</B></TT>
 <BLOCKQUOTE>[ returns void  ]
 <BR>  	Destroy this PartialList.
    
 </BLOCKQUOTE>
 
-<P><TT><B>partialList_clear( PartialList * ptr_this )</B></TT>
+<P><TT><B>partialList_clear( PartialList * plist )</B></TT>
 <BLOCKQUOTE>[ returns void  ]
 <BR>  	Remove (and destroy) all the Partials from this PartialList,
 	leaving it empty.
    
 </BLOCKQUOTE>
 
-<P><TT><B>partialList_copy( PartialList * ptr_this, 
+<P><TT><B>partialList_copy( PartialList * plist, 
 					   const PartialList * src )</B></TT>
 <BLOCKQUOTE>[ returns void  ]
 <BR>  	Make this PartialList a copy of the source PartialList by making
@@ -277,13 +277,13 @@ C-linkable procedural interface for Loris.
    
 </BLOCKQUOTE>
 
-<P><TT><B>partialList_size( const PartialList * ptr_this )</B></TT>
+<P><TT><B>partialList_size( const PartialList * plist )</B></TT>
 <BLOCKQUOTE>[ returns unsigned long  ]
 <BR>  	Return the number of Partials in this PartialList.
    
 </BLOCKQUOTE>
 
-<P><TT><B>partialList_splice( PartialList * ptr_this, 
+<P><TT><B>partialList_splice( PartialList * plist, 
 						 PartialList * src )</B></TT>
 <BLOCKQUOTE>[ returns void  ]
 <BR>  	Splice all the Partials in the source PartialList onto the end of
@@ -309,13 +309,13 @@ C-linkable procedural interface for Loris.
    
 </BLOCKQUOTE>
 
-<P><TT><B>destroySampleVector( SampleVector * ptr_this )</B></TT>
+<P><TT><B>destroySampleVector( SampleVector * vec )</B></TT>
 <BLOCKQUOTE>[ returns void  ]
 <BR>  	Destroy this SampleVector.
    
 </BLOCKQUOTE>
 
-<P><TT><B>sampleVector_copy( SampleVector * ptr_this, 
+<P><TT><B>sampleVector_copy( SampleVector * vec, 
 						const SampleVector * src )</B></TT>
 <BLOCKQUOTE>[ returns void  ]
 <BR>  	Make this SampleVector a copy of the source SampleVector, having 
@@ -325,27 +325,27 @@ C-linkable procedural interface for Loris.
    
 </BLOCKQUOTE>
 
-<P><TT><B>sampleVector_getAt( const SampleVector * ptr_this, unsigned long idx )</B></TT>
+<P><TT><B>sampleVector_getAt( const SampleVector * vec, unsigned long idx )</B></TT>
 <BLOCKQUOTE>[ returns double  ]
 <BR>  	Return the value of the sample at the given position (index) in
 	this SampleVector.
    
 </BLOCKQUOTE>
 
-<P><TT><B>sampleVector_getLength( const SampleVector * ptr_this )</B></TT>
+<P><TT><B>sampleVector_getLength( const SampleVector * vec )</B></TT>
 <BLOCKQUOTE>[ returns unsigned long  ]
 <BR>  	Return the number of samples represented by this SampleVector.
    
 </BLOCKQUOTE>
 
-<P><TT><B>sampleVector_setAt( SampleVector * ptr_this, unsigned long idx, double x )</B></TT>
+<P><TT><B>sampleVector_setAt( SampleVector * vec, unsigned long idx, double x )</B></TT>
 <BLOCKQUOTE>[ returns void  ]
 <BR>  	Set the value of the sample at the given position (index) in
 	this SampleVector.
    
 </BLOCKQUOTE>
 
-<P><TT><B>sampleVector_setLength( SampleVector * ptr_this, unsigned long size )</B></TT>
+<P><TT><B>sampleVector_setLength( SampleVector * vec, unsigned long size )</B></TT>
 <BLOCKQUOTE>[ returns void  ]
 <BR>  	Change the number of samples represented by this SampleVector. If
 	the given size is greater than the current size, all new samples 
@@ -451,7 +451,7 @@ C-linkable procedural interface for Loris.
    
 </BLOCKQUOTE>
 
-<P><TT><B>exportSdif( const char * path, PartialList * partials, double hop )</B></TT>
+<P><TT><B>exportSdif( const char * path, PartialList * partials )</B></TT>
 <BLOCKQUOTE>[ returns void  ]
 <BR>  	Export Partials in a PartialList to a SDIF file at the specified
 	file path (or name). SDIF data is described by RBEM and RBEL 
