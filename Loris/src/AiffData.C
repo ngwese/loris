@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *
- * AiffData.cc
+ * AiffData.C
  *
  * Implementation of import and export functions.
  *
