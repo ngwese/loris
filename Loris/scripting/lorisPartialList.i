@@ -31,6 +31,7 @@
  *	public interface of the C++ std::list class, but has been 
  *	modified to better support SWIG and scripting languages.
  *
+ *	--- CHANGES ---
  *	This interface has been modified (March 2001) to wrap the list
  *	access with Loris::Handles, and to include iterators on the lists,
  *	called Partial in the interface, and iterators on the Partials, 
@@ -43,6 +44,11 @@
  *	references in the interpreter to iterators have to be deleted 
  *	before the collection is finally released.
  *
+ *	(April 2001) Guaranteeing the safety and validity of all these 
+ *	iterators and collections is so costly and complicated that it
+ *	cannot be worth the headaches and performance penalty. So for now,
+ *	they come with no guarantees, and clients just have o be responsible,
+ *	as in the C++ STL, with the added excitement of garbage collection. (!)
  *
  * Kelly Fitz, 17 Nov 2000
  * loris@cerlsoundgroup.org
@@ -69,8 +75,9 @@ typedef Loris::Partial::iterator PartialIterator;
 
 %}
 
-class PartialList
-/*	A PartialList represents a collection of Bandwidth-Enhanced 
+/*	PartialList
+
+	A PartialList represents a collection of Bandwidth-Enhanced 
 	Partials, each having a trio of synchronous, non-uniformly-
 	sampled breakpoint envelopes representing the time-varying 
 	frequency, amplitude, and noisiness of a single bandwidth-
@@ -80,6 +87,7 @@ class PartialList
 	Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
 	the Loris website: www.cerlsoundgroup.org/Loris/
 */
+class PartialList
 {
 public:
 	//	construction:
@@ -95,7 +103,39 @@ public:
 	
 #endif	
 	
+	//	C++ copy constructor has the wrong semantics 
+	//	for the scripting interface, define a copy 
+	//	member:
+	%addmethods
+	{
+		%new PartialList * copy( void )
+		{
+			return new PartialList( *self );
+		}
+		/*	Return a new PartialList that is a copy of this 
+			PartialList (i.e. has identical Partials).
+		 */
+	
+		PartialList( void )
+		{
+			debugger << "creating an empty list of Partials" << std::endl;
+			return new PartialList();
+		}
+		/*	Return a new empty PartialList.
+		 */
+		
+		~PartialList( void )
+		{
+			debugger << "destroying  a list of " << self->size() << " Partials" << std::endl;
+			delete self;
+		}
+		/*	Destroy this PartialList.
+		 */
+		
+	}	//	end of added methods
+	
 	//	wrap std::list methods:
+	//
 	void clear( void );
 	/*	Remove (and destroy) all the Partials from this PartialList,
 		leaving it empty.
@@ -130,309 +170,364 @@ public:
 		position. Leaves the other PartialList empty.
 	 */
 	
-%addmethods
-{
-	PartialList( void )
-	{
-		debugger << "creating an empty list of Partials" << std::endl;
-		return new PartialList();
-	}
-	/*	Return a new empty PartialList.
-	 */
-	
-	~PartialList( void )
-	{
-		debugger << "destroying  a list of " << self->size() << " Partials" << std::endl;
-		delete self;
-	}
-	/*	Destroy this PartialList.
-	 */
-	
-	//	copy constructor:
-	%new PartialList * copy( void )
-	{
-		return new PartialList( *self );
-	}
-	/*	Return a new PartialList that is a copy of this 
-		PartialList (i.e. has identical Partials).
-	 */
-
-}
 };	//	end of SWIG interface class PartialList
 
-#if 0
-%{
-/*
-	PartialListHandleIterator
+/*	PartialListIterator
 	
-	A class representing an iterator on a PartialList, composed of an iterator
-	on a std::list of Partials and a Handle to the std::list itself. Even if the
-	last reference (by handle, above) to the Partial list itself is lost, the 
-	list will not be deleted as long as there are surviving iterators. 
- */
-	class PartialListHandleIterator
-	{
-		PartialListHandle _list;
-		std::list< Loris::Partial >::iterator _iter;
-		
-		public:
-		//	construction:
-		PartialListHandleIterator( PartialListHandle hlist, std::list< Loris::Partial >::iterator pos ) :
-			_list( hlist ),
-			_iter( pos )
-		{
-			debugger << "created an iterator on a list of " << _list->size() << " Partials" << std::std::endl;
-		}
-		
-		PartialListHandleIterator( const PartialListHandleIterator & rhs ) :
-			_list( rhs._list ),
-			_iter( rhs._iter )
-		{
-			debugger << "copied an iterator on a list of " << _list->size() << " Partials" << std::std::endl;
-		}
-		
-		PartialListHandleIterator & operator= ( const PartialListHandleIterator & rhs )
-		{
-			if ( &rhs != this )
-			{
-				_list = rhs._list;
-				_iter = rhs._iter;
-			}
-			debugger << "assigned an iterator on a list of " << _list->size() << " Partials" << std::std::endl;
-			
-			return *this;
-		}
-			
-		~PartialListHandleIterator( void )
-		{
-			debugger << "destroyed an iterator on a list of " << _list->size() << " Partials" << std::std::endl;
-		}
-		
-		//	Iterator pattern:
-		//	(except current(), which isn't useful here)
-		void next( void )
-		{
-			if ( ! atEnd() )
-				++_iter;
-		}
-		
-		bool atEnd( void )
-		{
-			return _iter == _list->end();
-		}
-		
-		Loris::Partial & current( void ) 
-		{
-			return *_iter;
-		}
-		
-		//	easiest place to implement removal is in this class,
-		//	not sure its the most logical place in the interface:
-		//	Advances iterator, so this iterator is still valid,
-		//	though it may be atEnd(), after removal.
-		void removeFromList( void )
-		{
-			_iter = _list->erase( _iter );
-		}
-		
-	};	//	end of class PartialListHandleIteratorHandle
+	A PartialListIterator represents an iterator on a PartialList.
+	Its interface reflects the interface of the underlying std::list
+	iterator.
 	
-	typedef Loris::Handle< PartialListHandleIterator > PartialListHandleIteratorHandle;
-%}
+	PartialListIterators can only be obtained from their subject 
+	PartialList, through the begin and end methods of PartialList, 
+	and by copying, through the PartialListIterator copy method.
+	PartialListIterators are used to access individual elements
+	(Partials) of a PartialList.
+	
+	PartialListIterators are valid only as long as their subject
+	PartialList exists. In languages with some form of grabage 
+	collection, this means that a reference to the PartialList 
+	must be maintained in order to iterate. If that reference is
+	lost, the PartialList will be deleted, and the iterators will
+	refer to free memory. 
+	
+	PartialListIterators are also invalidated when PartialList element 
+	they reference is erased from the PartialList. Erasure does not 
+	invalidate any other PartialListIterators, refering to other 
+	elements.
+	
+	&&&& define a method for checking iterator validity!!!
 
-/*
-	Partial
-	
-	The Partial class in the Loris scripting interface represents both
-	a Loris::Partial and an iterator on a list of Partials, so its interface
-	includes access and mutation of Partials and iterator behavior, like
-	next() and atEnd().
-	
-	Partials (iterators on PartialLists) can only be created using the 
-	PartialList members first() and last() (a temporary condition, probably).
  */
-%name( Partial )
-class PartialListHandleIteratorHandle
+class PartialListIterator
 {
 public:
-%addmethods
-{
-	//	construction:
-	//	only construct from PartialList.	
-	~PartialListHandleIteratorHandle( void )
+
+	//	most of the pointer semantics of std C++ iterators
+	//	are inappropriate for the scripting interface (those
+	//	languages don't have pointers), so the methods in the 
+	//	interface all need to be added:
+	%addmethods 
 	{
-		delete self;
-	}
+		%new PartialListIterator * copy( void )
+		{
+			return new PartialListIterator( *self );
+		}
+		/*	Return a new PartialListIterator that is a copy of this 
+			PartialListIterator (i.e. refers to the same position
+			in the same PartialList).
+		 */
+		 
+		PartialListIterator * next( void )
+		{
+			++(*self);
+			return self;
+		}
+		/*	Increment (advance) this PartialListIterator. Return self.
+		 */
+		 
+		PartialListIterator * prev( void )
+		{
+			--(*self);
+			return self;
+		}
+		/*	Decrement (advance by -1) this PartialListIterator. Return self.
+		 */
+		 
+		Partial * partial( void )
+		{
+			Partial & current = **self;
+			return &current;
+		}
+		/*	Return (a reference to) the Partial at the position of this
+			PartialListIterator.
+		 */
+		 
+		int equals( PartialListIterator * other )
+		{
+			return *self == *other;
+		}
+		/*	Return true (1) if this PartialListIterator is equal to the
+			other. PartialListIterators are equal is they refer to the
+			same position in the same PartialList.
+		 */
+
+	}	//	end of added methods
+
+};	//	end of SWIG interface class PartialListIterator
+
+
+
+/*	Partial
+		
+	A Partial represents a Reassigned Bandwidth-Enhanced model component.
+	A Partial consists of a trio of synchronous, non-uniformly-
+	sampled breakpoint envelopes representing the time-varying 
+	frequency, amplitude, and noisiness of a single bandwidth-
+	enhanced sinusoid.
+	
+	For more information about Bandwidth-Enhanced Partials and the  
+	Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
+	the Loris website: www.cerlsoundgroup.org/Loris/
+ */
+class Partial
+{
+public:
+//	construction:
+//
+	Partial( void );
+	/*	Return a new, empty (no Breakpoints) Partial.
+	 */
+	
+	~Partial( void );
 	/*	Delete this Partial reference (doesn't remove it from the PartialList).
 	 */
 	
-	//	Iterator pattern:
-	void next( void )	{ (*self)->next(); }
-	/*	Advance this PartialList iterator to the next position in the list.
-	 */
-	 
-	bool atEnd( void )	{ return (*self)->atEnd(); }
-	/*	Return true if this PartialList iterator refers to a position past
-		the end of the list (does not refer to a valid Partial). Otherwise
-		return false.
-	 */
-
-	//	Partial access:
-	int label( void ) const 			{ return (*self)->current().label(); }
+	
+//	access members:
+// 
+	int label( void ) const { return _label; }
 	/* 	Return this Partial's label.
 	 */
-	 
-	double initialPhase( void ) const	{ return (*self)->current().initialPhase(); }
+
+	double initialPhase( void ) const;
 	/* 	Return this Partial's starting phase.
 	 */
 	 
-	double startTime( void ) const 		{ return (*self)->current().startTime(); }
+	double startTime( void ) const;
 	/* 	Return this Partial's start time.
 	 */
 
-	double endTime( void ) const		{ return (*self)->current().endTime(); }
+	double endTime( void ) const;
 	/* 	Return this Partial's end time.
 	 */
 	 
-	double duration( void ) const		{ return (*self)->current().duration(); }
+	double duration( void ) const;
 	/* 	Return this Partial's duration.
 	 */
-
-	long countBreakpoints( void ) const { return (*self)->current().countBreakpoints(); }
+	
+	long numBreakpoints( void ) const { return _bpmap.size(); }
 	/* 	Return this Partial's number of Breakpoints.
 	 */
 	
-	double frequencyAt( double time ) const	{ return (*self)->current().frequencyAt( time ); }
+//	mutation members:
+//
+	void setLabel( int l ) { _label = l; }
+	/*	Assign a new label to this Partial.
+	 */
+		
+//	iterator generation:
+//
+	%new
+	PartialIterator begin( void );
+	/*	Return a PartialIterator refering to the first Breakpoint 
+		in this Partial.
+	 */
+
+	%new
+	PartialIterator end( void );
+	/*	Return a PartialIterator refering to the end of this Partial (an invalid
+		element after the last valid Breakpoint).
+	 */
+
+//	collection access/mutation through iterators:
+//	
+	%new
+	PartialIterator insert( double time, const Breakpoint & bp );
+	/*	Make a copy of bp and insert it at time (seconds),
+		return an iterator refering to the inserted Breakpoint.
+	 */
+
+	%new
+	PartialIterator findAfter( double time );
+	/*	Return the insertion position for a Breakpoint at
+		the specified time (that is, the position of the first
+		Breakpoint at a time later than the specified time).
+	 */
+	 
+	%new
+	PartialIterator findNearest( double time );
+	/*	Return the insertion position for the Breakpoint nearest
+		the specified time.
+	 */
+	
+	void erase( PartialIterator & pos );
+	/* 	Erase the Breakpoint at the position of the 
+		given iterator (invalidating the iterator).
+	 */
+	
+//	partial envelope interpolation/extrapolation:
+//	Return the interpolated value of a partial parameter at
+//	the specified time. At times beyond the ends of the
+//	Partial, frequency and bandwidth hold their boundary values,
+//	amplitude is zero, and phase is computed from frequency.
+//	There is of sensible definition for any of these for Partials
+//	having no Breakpoints, so they except (InvalidPartial) under 
+//	that condition.
+//
+	double frequencyAt( double time ) const;
 	/* 	Return this Partial's interpolated frequency at the specified time.
 	 */
 
-	double amplitudeAt( double time ) const	{ return (*self)->current().amplitudeAt( time ); }
+	double amplitudeAt( double time ) const;
 	/* 	Return this Partial's interpolated amplitude at the specified time.
 	 */
 
-	double bandwidthAt( double time ) const	{ return (*self)->current().bandwidthAt( time ); }
+	double bandwidthAt( double time ) const;
 	/* 	Return this Partial's interpolated bandwidth at the specified time.
 	 */
 
-	double phaseAt( double time ) const		{ return (*self)->current().phaseAt( time ); }
+	double phaseAt( double time ) const;
 	/* 	Return this Partial's interpolated phase at the specified time.
 	 */
 
 
-	//	mutation:
-	void setLabel( int l ) {  (*self)->current().setLabel( l ); }
-	/*	Assign a new label to this Partial.
-	 */
-	
-	//	removal from list:
-	void removeFromList( void ) {  (*self)->removeFromList(); }
-	/*	Remove this Partial from its PartialList, and advance the
-		iterator, so that the iterator is still valid (represents
-		a valid list position, though it may be atEnd) but refers 
-		to the next Partial in the list, or is atEnd.
-	 */
-	
-	//	BreakpointHandle access:
-	%new
-	BreakpointHandle * first( void )
+//	add methods for copy and comparison members that, in C++ have
+//	inappropriate semantics for the scripting interface:
+//
+	%addmethods
 	{
-		return new BreakpointHandle( *self, (*self)->current().begin() );
-	}
-	/*	Return the first Breakpoint in this Partial.
-	 */
-	%new
-	BreakpointHandle * last( void )
-	{
-		return new BreakpointHandle( *self, --( (*self)->current().end() ) );
-	}
-	/*	Return the last Breakpoint in this Partial.
-	 */
-}
-	
-};	//	end of SWIG interface class PartialListHandleIteratorHandle
+		%new Partial * copy( void )
+		{
+			return new Partial( *self );
+		}
+		/*	Return a new Partial that is a copy of this 
+			Partial (i.e. has he same label and an identical
+			Breakpoint entvelope.
+		 */
+		 
+		int equals( Partial * other )
+		{
+			return *self == *other;
+		}
+		/*	Return true (1) if this Partial is equal to the other. 
+			Partials are equal is they have the same label and the
+			same Breakpoint envelope.
+		 */
+	}	//	end of added methods
+		
+};	//	end of SWIG interface class Partial
 
-%{	
-/*
-	BreakpointHandle
+
+/*	PartialIterator
 	
-	A class representing an iterator on a Partial, composed of an iterator on a 
-	Partial and a Handle to a PartialListHandleIterator, defined above. Even if 
-	the last reference (by handle, above) to the Partial (PartialList iterator) 
-	itself or even to the PartialList itself, is lost, the PartialList will not be 
-	deleted as long as there are surviving Breakpoints. 
+	A PartialIterator represents an iterator on a Partial.
+	
+	PartialIterators can only be obtained from their subject 
+	Partial, through the begin and end methods of Partial, 
+	and by copying, through the PartialIterator copy method.
+	PartialIterators are used to access individual Breakpoints
+	in Partial Breakpoint envelopes, and the times of those 
+	Breakpoints.
+	
+	PartialIterators are valid only as long as their subject
+	Partial exists. In languages with some form of grabage 
+	collection, this means that a reference to the Partial 
+	must be maintained in order to iterate. If that reference is
+	lost, the Partial will be deleted, and the iterators will
+	refer to free memory. By extension, if the Partial is an
+	element of a PartialList, a reference to the PartialList
+	must be maintained.
+	
+	PartialIterators are also invalidated when the Breakpoint 
+	they reference is erased from the Partial. Erasure does not 
+	invalidate any other PartialIterators, refering to other 
+	Breakpoints.
+	
+	&&&& define a method for checking iterator validity!!!
+
  */
-	class BreakpointHandle
-	{
-		PartialListHandleIteratorHandle _partialH;
-		Loris::PartialIterator _iter;
-		
-		public:
-		//	construction:
-		BreakpointHandle( PartialListHandleIteratorHandle subject, Loris::PartialIterator pos ) :
-			_partialH( subject ),
-			_iter( pos )
-		{
-			debugger << "created an iterator on a partial having " << _partialH->current().countBreakpoints()
-					 << " breakpoints" << std::std::endl;
-		}
-		
-		~BreakpointHandle( void )
-		{
-			debugger << "destroyed an iterator on a partial having " << _partialH->current().countBreakpoints()
-					 << " breakpoints" << std::std::endl;
-		}
-		
-		//	attribute access:
-		double frequency( void ) const { return _iter.breakpoint().frequency(); }
-		double amplitude( void ) const { return _iter.breakpoint().amplitude(); }
-		double bandwidth( void ) const { return _iter.breakpoint().bandwidth(); }
-		double phase( void ) const { return _iter.breakpoint().phase(); }
-		
-		//	attribute mutation:
-		void setFrequency( double x ) { _iter.breakpoint().setFrequency(x); }
-		void setAmplitude( double x ) { _iter.breakpoint().setAmplitude(x); }
-		void setBandwidth( double x ) { _iter.breakpoint().setBandwidth(x); }
-		void setPhase( double x ) { _iter.breakpoint().setPhase(x); }
-
-		//	time:
-		double time( void ) const { return _iter.time(); }
-		
-		//	iterator behavior:
-		void next( void )
-		{
-			if ( ! atEnd() )
-				++_iter;
-		}
-		
-		bool atEnd( void )
-		{
-			return _iter == _partialH->current().end();
-		}
-		
-	};	//	end of class BreakpointHandle
-	
-%}
-
-/*
-	Breakpoint
-	
-	The Breakpoint class in the Loris scripting interface represents both
-	a Loris::Breakpoint and an iterator on a Loris Partial, so its interface
-	includes access and mutation of Breakpoint data and iterator behavior, like
-	next() and atEnd().
-	
-	Breakpoints (iterators on PartialLists) can only be created using the 
-	Partial members first() and last().
- */
-%name(Breakpoint)
-class BreakpointHandle
+class PartialIterator
 {
-	public:	
-	~BreakpointHandle( void );
-	/*	Delete this Breakpoint reference (does not remove from the Partial).
+public:
+//	time and Breakpoint access:
+//
+	Breakpoint & breakpoint( void ) { return _iter->second; }
+	/*	Return (a reference to) the Breakpoint at the position of this
+		PartialIterator.
+	 */
+	 
+	double time( void ) const { return _iter->first; }	
+	/*	Return the time of the Breakpoint at the position of this
+		PartialIterator.
 	 */
 
-	//	attribute access:
+	//	most of the pointer semantics of std C++ iterators
+	//	are inappropriate for the scripting interface (those
+	//	languages don't have pointers), so many methods in the 
+	//	interface all need to be added:
+	%addmethods 
+	{
+		%new PartialIterator * copy( void )
+		{
+			return new PartialIterator( *self );
+		}
+		/*	Return a new PartialIterator that is a copy of this 
+			PartialIterator (i.e. refers to the same position
+			in the same Partial).
+		 */
+		 
+		PartialIterator * next( void )
+		{
+			++(*self);
+			return self;
+		}
+		/*	Increment (advance) this PartialIterator. Return self.
+		 */
+		 
+		PartialIterator * prev( void )
+		{
+			--(*self);
+			return self;
+		}
+		/*	Decrement (advance by -1) this PartialIterator. Return self.
+		 */
+		 
+		int equals( PartialIterator * other )
+		{
+			return *self == *other;
+		}
+		/*	Return true (1) if this PartialIterator is equal to the
+			other. PartialIterators are equal is they refer to the
+			same position (Breakpoint) in the same Partial.
+		 */
+
+	}	//	end of added methods
+
+};	//	end of SWIG interface class PartialIterator
+
+
+/*	Breakpoint
+	
+	A Breakpoint represents a single breakpoint in the time-varying
+	frequency, amplitude, and bandwidth envelope of a Reassigned 
+	Bandwidth-Enhanced Partial.
+	
+	Instantaneous phase is also stored, but is only used at the onset of 
+	a partial, or when it makes a transition from zero to nonzero amplitude.
+
+	A Partial represents a Reassigned Bandwidth-Enhanced model component.
+	For more information about Bandwidth-Enhanced Partials and the  
+	Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
+	the Loris website: www.cerlsoundgroup.org/Loris/
+ */
+class Breakpoint
+{
+public:	
+//	construction:
+//
+	Breakpoint( double f, double a, double b, double p = 0. );
+	/*	Return a new Breakpoint having the specified frequency
+		amplitude, bandwidth, and (optionally, defaults to zero)
+		phase.
+	 */
+
+	~BreakpointHandle( void );
+	/*	Delete this Breakpoint.
+	 */
+
+//	attribute access:
+//
 	double frequency( void );
 	/*	Return the frequency of this Breakpoint. 
 	 */
@@ -449,7 +544,8 @@ class BreakpointHandle
 	/*	Return the phase of this Breakpoint. 
 	 */
 	 	
-	//	attribute mutation:
+//	attribute mutation:
+//
 	void setFrequency( double x );
 	/*	Assign the frequency of this Breakpoint. 
 	 */
@@ -466,22 +562,28 @@ class BreakpointHandle
 	/*	Assign the phase of this Breakpoint. 
 	 */
 	 
-	//	time:
-	double time( void );
-	/*	Return the time of this Breakpoint (not mutable).
-	 */
+	//	C++ copy constructor has the wrong semantics 
+	//	for the scripting interface, define a copy 
+	//	member:
+	%addmethods
+	{
+		%new Breakpoint * copy( void )
+		{
+			return new Breakpoint( *self );
+		}
+		/*	Return a new Breakpoint that is a copy of this 
+			Breakpoint (i.e. has identical parameter values).
+		 */
+		 
+		int equals( Breakpoint * other )
+		{
+			return *self == *other;
+		}
+		/*	Return true (1) if this Breakpoint is equal to the
+			other. Breakpoints are equal is they have identical 
+			parameter values.
+		 */
+
+	}	//	end of added methods
 	
-	//	iterator behavior:
-	void next( void );
-	/*	Advance this iterator to the next position (Breakpoint)
-		in the Partial. 
-	 */
-	bool atEnd( void );
-	/*	Return true if this iterator refers to a position past the end 
-		of the Partial's envelope (does not refer to a valid Breakpoint).
-		Otherwise return false.
-	 */
-
-};	//	end of class BreakpointHandle
-
-#endif	//	REMOVED
+};	//	//	end of SWIG interface class Breakpoint
