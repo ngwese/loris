@@ -57,7 +57,7 @@ namespace Loris {
 //	FadeTime (STATIC)
 // ---------------------------------------------------------------------------
 //	Static member for making sure that all algorithms
-//	that fade Partials in and outuse the same fade time.
+//	that fade Partials in and out use the same fade time.
 //	Returns 1 ms.
 //
 //	Removed this from the Partial interface, but found that
@@ -456,6 +456,9 @@ Partial::amplitudeAt( double time ) const
 	{
 	//	time is before the onset of the Partial:
 	//	fade in ampltude
+		double alpha = std::min(1., (it.time() - time) / FadeTime() );
+		return (1. - alpha) * it.breakpoint().amplitude();
+		/*
 		if ( time < it.time() - FadeTime() )
 		{
 			return 0.;
@@ -465,6 +468,7 @@ Partial::amplitudeAt( double time ) const
 			double alpha = (it.time() - time) / FadeTime();
 			return (1. - alpha) * it.breakpoint().amplitude();
 		}
+		*/
 	}
 	else if (it == _bpmap.end() ) 
 	{
@@ -473,6 +477,9 @@ Partial::amplitudeAt( double time ) const
 	//	( first decrement iterator to get the tail Breakpoint)
 		--it;
 		
+		double alpha = std::min(1., (time - it.time()) / FadeTime() );
+		return (1. - alpha) * it.breakpoint().amplitude();
+		/*
 		if ( time > it.time() + FadeTime() )
 		{
 			return 0.;
@@ -482,6 +489,7 @@ Partial::amplitudeAt( double time ) const
 			double alpha = (time - it.time()) / FadeTime();
 			return (1. - alpha) * it.breakpoint().amplitude();
 		}
+		*/
 	}
 	else 
 	{
@@ -538,8 +546,8 @@ Partial::phaseAt( double time ) const
 		const Breakpoint & lo = (--it).breakpoint();
 		double lotime = it.time();
 		double alpha = (time - lotime) / (hitime - lotime);
-		double favg = (0.5 * alpha * hi.frequency()) + 
-						((1. - (0.5 * alpha)) * lo.frequency());
+		double favg = (alpha * hi.frequency()) + 
+						((1. - alpha) * lo.frequency());
 
 		//	need to keep fmod in here because other stuff 
 		//	(Spc export and sdif export, for example) rely 
@@ -618,23 +626,32 @@ Partial::parametersAt( double time ) const
 	{
 	//	time is before the onset of the Partial:
 	//	frequency is starting frequency, 
-	//	amplitude is 0, bandwidth is starting 
+	//	amplitude is 0 (or fading), bandwidth is starting 
 	//	bandwidth, and phase is rolled back.
+		double alpha = std::min(1., (it.time() - time) / FadeTime() );
+		double amp = (1. - alpha) * it.breakpoint().amplitude();
+
 		double dp = 2. * Pi * (it.time() - time) * it.breakpoint().frequency();
 		double ph = std::fmod( it.breakpoint().phase() - dp, 2. * Pi);
-		return Breakpoint( it.breakpoint().frequency(), 0., 
+		
+		return Breakpoint( it.breakpoint().frequency(), amp, 
 						   it.breakpoint().bandwidth(), ph );
 	}
 	else if (it == _bpmap.end() ) 
 	{
 	//	time is past the end of the Partial:
 	//	frequency is ending frequency, 
-	//	amplitude is 0, bandwidth is ending 
+	//	amplitude is 0 (or fading), bandwidth is ending 
 	//	bandwidth, and phase is rolled forward.
 		--it; 
+		
 		double dp = 2. * Pi * (time - it.time()) * it.breakpoint().frequency();
 		double ph = std::fmod( it.breakpoint().phase() + dp, 2. * Pi );
-		return Breakpoint( it.breakpoint().frequency(), 0., 
+
+		double alpha = std::min(1., (time - it.time()) / FadeTime() );
+		double amp = (1. - alpha) * it.breakpoint().amplitude();
+
+		return Breakpoint( it.breakpoint().frequency(), amp, 
 						   it.breakpoint().bandwidth(), ph );
 	}
 	else 
@@ -647,8 +664,8 @@ Partial::parametersAt( double time ) const
 		double lotime = it.time();
 		double alpha = (time - lotime) / (hitime - lotime);
 
-		double favg = (0.5 * alpha * hi.frequency()) + 
-						((1. - (0.5 * alpha)) * lo.frequency());
+		double favg = (alpha * hi.frequency()) + 
+						((1. - alpha) * lo.frequency());
 
 		//	need to keep fmod in here because other stuff 
 		//	(Spc export and sdif export, for example) rely 
@@ -665,10 +682,11 @@ Partial::parametersAt( double time ) const
 			ph = std::fmod( hi.phase() - dp, 2. * Pi );
 		}
 
-		Breakpoint ret( (alpha * hi.frequency()) + ((1. - alpha) * lo.frequency()),
-						(alpha * hi.amplitude()) + ((1. - alpha) * lo.amplitude()),
-						(alpha * hi.bandwidth()) + ((1. - alpha) * lo.bandwidth()),
-						ph );
+		return Breakpoint( (alpha * hi.frequency()) + ((1. - alpha) * lo.frequency()),
+						   (alpha * hi.amplitude()) + ((1. - alpha) * lo.amplitude()),
+						   (alpha * hi.bandwidth()) + ((1. - alpha) * lo.bandwidth()),
+						   ph );
+				
 	}
 }
 
