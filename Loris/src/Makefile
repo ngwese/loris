@@ -44,7 +44,7 @@ CC = g++
 Includes = $(INC_LORIS)
 Debugging = $(DEBUG_LORIS)
 
-CFLAGS	:= 	-O2 $(Includes) $(Debugging) 
+CFLAGS	:= 	-O2 $(Includes) $(Debugging) -Wno-multichar
 cFLAGS	:=	$(CFLAGS)
 
 #

@@ -34,6 +34,7 @@
  *
  */
 #include <list>
+#include <string>
 #include <iosfwd>
 
 #if !defined( NO_LORIS_NAMESPACE )

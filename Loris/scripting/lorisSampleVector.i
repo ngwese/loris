@@ -39,6 +39,7 @@
  *
  */
 %{
+#include <stdexcept>
 #include <vector>
 typedef std::vector< double > SampleVector;
 %}

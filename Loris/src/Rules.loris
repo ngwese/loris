@@ -75,4 +75,4 @@ SDIF_PREFIX = /usr/local
 #
 INC_LORIS = -I$(CLASSES) -I${SDIF_PREFIX}/include -I${FFTW_PREFIX}/include 
 LIB_LORIS = -L${FFTW_PREFIX}/lib -lfftw -L${SDIF_PREFIX}/lib -lsdif
-# DEBUG_LORIS = -DDebug_Loris
+# DEBUG_LORIS = -DDebug_Loris 

@@ -37,14 +37,14 @@ include $(TOP)/Loris/classes/Rules.loris
 
 OBJ_BRIDGE = loris_python_wrap.o
 
-PY_VERSION = 1.5
+PY_VERSION = 2.0
 PYTHON_PREFIX = /usr/local
 PYTHON_INCLUDE = ${PYTHON_PREFIX}/include/python${PY_VERSION}
 PYTHON_LIB = ${PYTHON_PREFIX}/lib/python${PY_VERSION}/config
 INC_PY = -DHAVE_CONFIG_H -I${PYTHON_INCLUDE} -I${PYTHON_LIB}
 
 CC = g++
-CFLAGS = -O2 ${INC_PY} -I${PI} -I${CLASSES}
+CFLAGS 	:= -O2 ${INC_PY} -I${PI} -I${CLASSES} -Wno-multichar
 
 python: lorislib ${OBJ_BRIDGE}
 	${CC} -shared ${OBJ_BRIDGE} $(OUTPUT)/libloris.a ${LIB_LORIS} -o $(OUTPUT)/loriscmodule.so
