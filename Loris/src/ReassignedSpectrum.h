@@ -79,8 +79,6 @@ public:
 //	peers may need to know about the analysis window
 //	or about the scale factors in introduces:
 	const std::vector< double > & window( void ) const { return _window; }
-	double magnitudeScale(void) const { return _windowMagnitudeScale; }
-	double energyScale(void) const { return _windowEnergyScale; }
 	
 //	reassigned spectral data access:		
 	double reassignedFrequency( unsigned long idx ) const;
@@ -98,6 +96,8 @@ public:
 	
 //	-- internal helpers --
 private:
+	double magnitudeScale(void) const { return _windowMagnitudeScale; }
+	/// double energyScale(void) const { return _windowEnergyScale; }
 	//	compute the window spectrum used to correct
 	//	spectral component magnitudes:
 	void computeWindowSpectrum( const std::vector< double > & v );

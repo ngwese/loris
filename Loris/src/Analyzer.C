@@ -308,7 +308,7 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate 
 			state.spectrum().transform( sampsBegin, winMiddle, sampsEnd );
 			
 			//	extract peaks from the spectrum:
-			std::list< Breakpoint > frame;
+			FRAME frame;
 			extractPeaks( frame, frameTime, state );	
 			thinPeaks( frame, state );
 
@@ -318,7 +318,7 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate 
 			//	accumulate retained Breakpoints as sinusoids, 
 			//	thinned breakpoints are accumulated as noise:
 			//	(see also thinPeaks() and extractPeaks())
-			std::list< Breakpoint >::iterator it;
+			FRAME::iterator it;
 			for ( it = frame.begin(); it != frame.end(); ++it )
 			{
 				state.bwAssociation().accumulateSinusoid( it->frequency(), it->amplitude() );
@@ -358,7 +358,7 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate 
 //	so the frame generated here is automatically frequency-sorted.
 //
 void 
-Analyzer::extractPeaks( std::list< Breakpoint > & frame, double frameTime, 
+Analyzer::extractPeaks( FRAME & frame, double frameTime, 
 						AnalyzerState & state )
 {
 	const double threshold = pow( 10., 0.05 * ampFloor() );	//	absolute magnitude threshold
@@ -428,35 +428,70 @@ Analyzer::extractPeaks( std::list< Breakpoint > & frame, double frameTime,
 //	sort the by magnitude and thin them according
 //	to the specified partial density.
 //
+//	HEY!!!! A cheaper way to do this, I am certain, is to use
+//	a vector of Breakpoints( instead of a list) and to set the
+//	amplitudes of thinned Breakpoints to zero, then use remove_if
+//	and erase to get rid of them at the end.
+//
+
+static bool has_zero_amp( const Breakpoint & bp ) { return bp.amplitude() == 0.; } 
+
+/*	a Breakpoint can mask if it is within a specified frequency
+	range and has non-zero amplitude
+ */
+struct can_mask
+{
+	bool operator()( const Breakpoint & b )  const
+	{ 
+		return	(b.amplitude() > 0.) &&
+				(b.frequency() > _fmin) && 
+				(b.frequency() < _fmax); 
+	}
+		
+	//	constructor:
+	can_mask( double x, double y ) : 
+		_fmin( x ), _fmax( y ) 
+		{ if (x>y) std::swap(x,y); }
+		
+	//	bounds:
+	private:
+		double _fmin, _fmax;
+};
+
 void 
-Analyzer::thinPeaks( std::list< Breakpoint > & frame, AnalyzerState & state )
+Analyzer::thinPeaks( FRAME & frame, AnalyzerState & state )
 {
 	//	can't do anything if there's fewer than two Breakpoints:
 	if ( frame.size() < 2 )
+	{
 		return;
-
-	frame.sort( BreakpointUtils::greater_amplitude() );
+	}
+	
+	std::sort( frame.begin(), frame.end(), BreakpointUtils::greater_amplitude() );
 	
 	//	nothing can mask the loudest peak, so I can start with the
 	//	second one, _and_ I can safely decrement the iterator when 
 	//	I need to remove the element at its postion:
-	std::list< Breakpoint >::iterator it = frame.begin();
+	FRAME::iterator it = frame.begin();
 	for ( ++it; it != frame.end(); ++it ) 
 	{
 		//	search all louder peaks for one that is too near
 		//	in frequency:
 		double lower = it->frequency() - freqResolution();
 		double upper = it->frequency() + freqResolution();
-		if ( it != find_if( frame.begin(), it, 
-							BreakpointUtils::frequency_between(lower, upper) ) ) 
+		if ( it != find_if( frame.begin(), it, can_mask(lower, upper) ) )
+							// BreakpointUtils::frequency_between(lower, upper) ) ) 
 		{
 			//	find_if returns the end of the range (it) if it finds nothing; 
 			//	if it found something else, accumulate *it as noise, and
 			//	remove *it from the frame:
 			state.bwAssociation().accumulateNoise( it->frequency(), it->amplitude() );
-			frame.erase( it-- );
+			it->setAmplitude(0.0);
 		}
 	}
+	
+	//	remove all Breakpoints whose amplitudes were set to zero:
+	frame.erase( std::remove_if( frame.begin(), frame.end(), has_zero_amp ), frame.end() );
 }
 
 // ---------------------------------------------------------------------------
@@ -481,16 +516,16 @@ static inline double distance( const Partial & partial,
 //	give birth to new Partials.
 //
 void 
-Analyzer::formPartials( std::list< Breakpoint > & frame, double /* frameTime */, 
+Analyzer::formPartials( FRAME & frame, double /* frameTime */, 
 						AnalyzerState & state )
 {
 	std::vector< Partial * > newlyEligible;
 	
 	//	frequency-sort the frame:
-	frame.sort( BreakpointUtils::less_frequency() );
+	std::sort( frame.begin(), frame.end(), BreakpointUtils::less_frequency() );
 	
 	//	loop over short-time peaks:
-	std::list< Breakpoint >::iterator bpIter;
+	FRAME::iterator bpIter;
 	for( bpIter = frame.begin(); bpIter != frame.end(); ++bpIter ) 
 	{
 		const Breakpoint & peak = *bpIter;
@@ -523,9 +558,9 @@ Analyzer::formPartials( std::list< Breakpoint > & frame, double /* frameTime */,
 		//
 		//	Otherwise, add this Breakpoint to the nearest Partial.
 		double thisdist = (nearest != NULL) ? (distance(*nearest, peak)) : (0.);
-		std::list< Breakpoint >::iterator next = bpIter;
+		FRAME::iterator next = bpIter;
 		++next;
-		std::list< Breakpoint >::iterator prev = bpIter;
+		FRAME::iterator prev = bpIter;
 		--prev;
 		if ( nearest == NULL /* (1) */ || 
 			 thisdist > freqDrift() /* (2) */ ||
@@ -542,7 +577,7 @@ Analyzer::formPartials( std::list< Breakpoint > & frame, double /* frameTime */,
 		}
 	}			 
 	 	
-	 state.eligiblePartials() = newlyEligible;
+	state.eligiblePartials() = newlyEligible;
 }
 
 // ---------------------------------------------------------------------------

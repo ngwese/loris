@@ -34,6 +34,7 @@
  */
 
 #include<PartialList.h>
+#include <vector>
 
 //	begin namespace
 namespace Loris {
@@ -230,9 +231,10 @@ public:
 //	members of Analyzer, so they could be redefined static to 
 //	the implementation file and accept the Analyzer as an argument.
 private:
-	void extractPeaks( std::list< Breakpoint > & frame, double frameTime, AnalyzerState & state );
-	void formPartials( std::list< Breakpoint > & frame, double frameTime, AnalyzerState & state );
-	void thinPeaks( std::list< Breakpoint > & frame, AnalyzerState & state );
+	typedef std::vector< Breakpoint > FRAME;
+	void extractPeaks( FRAME & frame, double frameTime, AnalyzerState & state );
+	void formPartials( FRAME & frame, double frameTime, AnalyzerState & state );
+	void thinPeaks(FRAME & frame, AnalyzerState & state );
 	void spawnPartial( double time, const Breakpoint & bp );
 	
 };	//	end of class Analyzer
