@@ -71,15 +71,17 @@ public:
 #endif
 
 //	-- free functions --
+#if defined( NO_NESTED_NAMESPACE )
+	static
+#endif
+	inline void addNoiseEnergy( Breakpoint & bp, double enoise ) { bp.addNoiseEnergy(enoise); }
 	/*	Add noise (bandwidth) energy to a Breakpoint by computing new 
 		amplitude and bandwidth values. enoise may be negative, but 
 		noise energy cannot be removed (negative energy added) in excess 
 		of the current noise energy.
+		
+		This operation is now part of the Breakpoint interface.
 	 */
-#if defined( NO_NESTED_NAMESPACE )
-	static
-#endif
-	void addNoiseEnergy( Breakpoint & bp, double enoise );
 	
 
 //	-- predicates --

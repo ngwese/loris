@@ -84,6 +84,45 @@ Breakpoint::operator==( const Breakpoint & rhs ) const
 			_phase == rhs._phase;
 }
 
+// ---------------------------------------------------------------------------
+//	addNoiseEnergy
+// ---------------------------------------------------------------------------
+//	Add noise (bandwidth) energy to this Breakpoint by computing new 
+//	amplitude and bandwidth values. enoise may be negative, but 
+//	noise energy cannot be removed (negative energy added) in excess 
+//	of the current noise energy.
+//
+void 
+Breakpoint::addNoiseEnergy( double enoise )
+{
+	//	compute current energies:
+	double e = amplitude() * amplitude();	//	current total energy
+	double n = e * bandwidth();				//	current noise energy
+	
+	//	Assert( e >= n );
+	//	could complain, but its recoverable, just fix it:
+	if ( e < n )
+		e = n;
+	
+	//	guard against divide-by-zero, and don't allow
+	//	the sinusoidal energy to decrease:
+	if ( n + enoise > 0. ) 
+	{
+		//	if new noise energy is positive, total
+		//	energy must also be positive:
+		//	Assert( e + enoise > 0 );
+		setBandwidth( (n + enoise) / (e + enoise) );
+		setAmplitude( std::sqrt(e + enoise) );
+	}
+	else 
+	{
+		//	if new noise energy is negative, leave 
+		//	all sinusoidal energy:
+		setBandwidth( 0. );
+		setAmplitude( std::sqrt( e - n ) );
+	}
+}
+
 }	//	end of namespace Loris
 
 

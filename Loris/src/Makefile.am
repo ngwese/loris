@@ -55,7 +55,6 @@ libclasses_la_SOURCES = AiffFile.C \
 		BreakpointEnvelope.C \
 		BreakpointEnvelope.h \
 		Breakpoint.h \
-		BreakpointUtils.C \
 		BreakpointUtils.h \
 		Channelizer.C \
 		Channelizer.h \

@@ -234,7 +234,7 @@ collectEnergy( double time, Iterator begin, Iterator end )
 }
 
 // ---------------------------------------------------------------------------
-//	distill_aux
+//	distill_aux		(STATIC)
 // ---------------------------------------------------------------------------
 //	Helper function for distilling Partials having a common label
 // 	into a single Partial with that label.

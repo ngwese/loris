@@ -71,10 +71,6 @@ class PartialConstIterator;
 //
 class Partial
 {
-//	-- instance variables --
-	std::map< double, Breakpoint > _bpmap;	//	Breakpoint envelope
-	int _label;								//	label
-
 //	-- public interface --
 public:
 //	-- construction --
@@ -121,7 +117,12 @@ public:
 		to synthesize this Partial (see class Synthesizer).
 	 */
 	 
-	int label( void ) const { return _label; }
+	typedef int label_type;
+	/*	Define label type, should verify that it is
+		a 32 bit type.
+	 */
+	 
+	label_type label( void ) const { return _label; }
 	/*	Return the 32-bit label for this Partial as an integer.
 	 */
 	 
@@ -137,7 +138,14 @@ public:
 	 */
 	 
 //	-- mutation --
-	void setLabel( int l ) { _label = l; }
+	void absorb( const Partial & other );
+	/*	Absorb another Partial's energy as noise (bandwidth), 
+		by accumulating the other's energy as noise energy
+		in the portion of this Partial's envelope that overlaps
+		(in time) with the other Partial's envelope.
+	 */
+
+	void setLabel( label_type l ) { _label = l; }
 	/*	Set the label for this Partial to the specified 32-bit value.
 	 */
 	
@@ -222,6 +230,11 @@ public:
 		Throw an InvalidPartial exception if this Partial has no
 		Breakpoints.
 	 */
+
+//	-- implementation --
+private:
+	std::map< double, Breakpoint > _bpmap;	//	Breakpoint envelope
+	label_type _label;						//	label
 	 
 };	//	end of class Partial
 

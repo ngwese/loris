@@ -72,8 +72,6 @@ static double FadeTime( void )
 	return FADE_TIME;
 }
 
-
-
 // ---------------------------------------------------------------------------
 //	Partial constructor
 // ---------------------------------------------------------------------------
@@ -147,6 +145,29 @@ Partial::endTime( void ) const
 		Throw( InvalidPartial, "Tried find end time of a Partial with no Breakpoints." );
 
 	return (--end()).time();
+}
+
+// ---------------------------------------------------------------------------
+//	absorb
+// ---------------------------------------------------------------------------
+//	Absorb another Partial's energy as noise (bandwidth), 
+//	by accumulating the other's energy as noise energy
+//	in the portion of this Partial's envelope that overlaps
+//	(in time) with the other Partial's envelope.
+//
+void 
+Partial::absorb( const Partial & other )
+{
+	Partial::iterator it = findNearest( other.startTime() );
+	while ( it != end() && !(it.time() > other.endTime()) )
+	{
+		// absorb energy from other at the time
+		// of this Breakpoint:
+		double a = other.amplitudeAt( it.time() );
+		it->addNoiseEnergy( a * a );
+		
+		++it;
+	}
 }
 
 // ---------------------------------------------------------------------------
