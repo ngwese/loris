@@ -8,4 +8,4 @@ echo "- autoheader."
 autoheader
 echo "- automake."
 automake --foreign --add-missing
-
+exit
