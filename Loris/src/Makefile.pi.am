@@ -11,6 +11,8 @@
 INCLUDES = -I$(top_srcdir)/classes
 EXTRA_DIST = loris.h.in
 
+MAINTAINERCLEANFILES = 	Makefile.in
+
 lib_LTLIBRARIES = libloris.la
 libloris_la_SOURCES = loris.h lorisAnalyzer_pi.C lorisBpEnvelope_pi.C \
  lorisException_pi.C lorisException_pi.h lorisNonObj_pi.C \

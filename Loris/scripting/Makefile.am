@@ -8,7 +8,7 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-INCLUDES =  $(PYINCLUDE) $(TCLINCLUDE) $(PERLINCLUDE) -I$(top_srcdir)/src -I$(top_builddir)/pi
+INCLUDES = $(PYINCLUDE) $(TCLINCLUDE) $(PERLINCLUDE) -I$(top_srcdir)/src -I$(top_builddir)/pi
 
 EXTRA_DIST = loris.py loris.pm loris.i lorisPartialList.i 
 
@@ -24,26 +24,17 @@ PERL_WRAPPER = loris_perl_wrap.C
 # installing the Python module
 #
 if BUILD_PYTHON
-if HAVE_SITEPY
-pythonsitepkgdir = $(SITEPY)
-else
-pythonsitepkgdir = $(pkglibdir)/python
-endif
+pythonsitepkgdir = $(pyexecdir)
+pyexec_PYTHON = loris.py
+
 # Darwin is special, see below
 if DARWIN
 else
-pythonsitepkg_SCRIPTS = loris.py 
+#pythonsitepkg_SCRIPTS = loris.py 
 #loris.pyo
 pythonsitepkg_LTLIBRARIES = _loris.la
 endif
 
-# This should be an install hook, but on my machine, the
-# install hook does not execute _after_ everything is 
-# installed, as it is documented to do, it executes before
-# loris.py and _loris.a are installed, and thus fails.
-# loris.pyo: loris.py
-# 	env PYTHONPATH=$(srcdir):$(top_builddir)/scripting/.libs $(PYTHON) -O -c "import loris"
-# 	
 endif
 
 # old versions of automake don't like these things
@@ -55,7 +46,7 @@ _loris_la_LIBADD = $(top_builddir)/pi/libloris.la -lstdc++
 
 #----------------------------------------------------------------
 # If Tcl is available, define a target for building and
-# installing the PythonTcl module
+# installing the Tcl module
 #
 if BUILD_TCL
 tclsitepkgdir = $(pkglibdir)/tcl
@@ -97,7 +88,6 @@ LD_DARWINBUNDLE_FLAGS = -bundle -flat_namespace -undefined suppress
 if BUILD_PYTHON
 PYTHON_CMODULE = _loris.so
 PYTHON_MODULE = $(PYTHON_CMODULE) 
-#loris.pyo
 INSTALL_PYTHON_MODULE = install_python_module
 
 $(PYTHON_CMODULE): loris_python_wrap.o $(top_builddir)/pi/.libs/libloris.a
@@ -107,10 +97,7 @@ $(PYTHON_CMODULE): loris_python_wrap.o $(top_builddir)/pi/.libs/libloris.a
 
 install_python_module:
 	$(INSTALL) _loris.so $(pythonsitepkgdir)/_loris.so
-	$(INSTALL_SCRIPT) loris.py $(pythonsitepkgdir)/loris.py
-
-#	$(INSTALL_SCRIPT) loris.pyo $(pythonsitepkgdir)/loris.pyo
-
+	
 endif
 
 if BUILD_TCL

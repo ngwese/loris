@@ -12,12 +12,14 @@ SUBDIRS = doc src pi scripting csound test
 
 MAINTAINERCLEANFILES = 	Makefile.in aclocal.m4 configure config.h.in \
 						stamp-h.in 
+						
 DISTCLEANFILES = $(ac_aux_dir)/config.guess \
             $(ac_aux_dir)/config.sub \
             $(ac_aux_dir)/install-sh \
             $(ac_aux_dir)/ltmain.sh \
             $(ac_aux_dir)/missing \
-            $(ac_aux_dir)/mkinstalldirs
+            $(ac_aux_dir)/mkinstalldirs \
+            $(ac_aux_dir)/depcomp
 
 EXTRA_DIST = reconf \
 			$(ac_aux_dir)/config.guess \

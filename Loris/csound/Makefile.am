@@ -10,3 +10,5 @@
 
 EXTRA_DIST = lorisgens.C lorisgens.h tryit.csd trymorph.csd flute.sdif trombone.sdif meow.sdif
 
+MAINTAINERCLEANFILES = 	Makefile.in
+

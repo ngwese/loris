@@ -10,6 +10,8 @@
 
 EXTRA_DIST = clarinet.aiff flute.aiff morphtest.py morphtest.tcl
 
+MAINTAINERCLEANFILES = 	Makefile.in
+
 INCLUDES = -I$(top_srcdir)/src
 
 test_c_SOURCES = morphtest.C

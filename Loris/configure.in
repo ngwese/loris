@@ -14,6 +14,8 @@ AC_INIT(Loris, 1.0.2, loris@cerlsoundgroup.org, loris)
 
 AC_CONFIG_AUX_DIR(config)
 AC_SUBST(ac_aux_dir)
+AM_INIT_AUTOMAKE(1.6)
+AM_CONFIG_HEADER(config.h)
 
 dnl----------------------------------------------------------------
 dnl Package Name And Version
@@ -21,9 +23,7 @@ dnl----------------------------------------------------------------
 
 AC_MSG_RESULT(----- Package Name And Version -----)
 
-AM_INIT_AUTOMAKE("$PACKAGE_TARNAME","$PACKAGE_VERSION")
 AC_MSG_RESULT(this is $PACKAGE_STRING)
-AM_CONFIG_HEADER(config.h)
 
 dnl Create loris.h from loris.h.in, subsituting the 
 dnl values of the version macros.
@@ -203,8 +203,10 @@ dnl----------------------------------------------------------------
 SDIFPACKAGE=
 SDIFINCLUDE=
  
-AC_ARG_WITH(sdif,[  --with-sdif=path        Set prefix of SDIF package],[
-		SDIFPACKAGE="$withval"], [SDIFPACKAGE=])
+AC_ARG_WITH(sdif,
+	AC_HELP_STRING( [--with-sdif=path],
+					[specify the prefix of the SDIF package] ),
+	[SDIFPACKAGE="$withval"], [SDIFPACKAGE=])
 
 if test -n "$SDIFPACKAGE" ; then
 	AC_MSG_RESULT([prepending $SDIFPACKAGE/include to include search path and $SDIFPACKAGE/lib to library search path (sdif package)])
@@ -248,8 +250,10 @@ dnl----------------------------------------------------------------
 FFTWPACKAGE=
 FFTWINCLUDE=
 
-AC_ARG_WITH(fftw,[  --with-fftw=path        Set prefix of (non-installed) FFTW  package],[
-		FFTWPACKAGE="$withval"], [FFTWPACKAGE=])
+AC_ARG_WITH(fftw,
+	AC_HELP_STRING( [--with-fftw=path],
+					[specify the prefix of the FFTW  package] ),
+	[FFTWPACKAGE="$withval"], [FFTWPACKAGE=])
 
 if test -n "$FFTWPACKAGE" ; then
 	AC_MSG_RESULT([prepending $FFTWPACKAGE/include to include search path and $FFTWPACKAGE/lib to library search path (fftw package)])
@@ -348,209 +352,140 @@ AC_MSG_RESULT(----- Language Checks -----)
 dnl----------------------------------------------------------------
 dnl Look for Python
 dnl----------------------------------------------------------------
+dnl By default, look for a python binary, and use the header in the
+dnl same path. If --with-python is specified, then if the argument is
+dnl a file, set the PYTHON environment variable to that value before
+dnl searching, otherwise, if the argument is a directory, assume that
+dnl it is the prefix for the python installation, and add /bin/python
+dnl to it to set the PYTHON environment variable. If --without-python
+dnl or --with-python=no is specified, don't use python at all.
+
+AC_ARG_WITH(python,
+	AC_HELP_STRING( [--with-python@<:@=path@:>@],
+					[build Python module (default is YES) (optionally specify prefix of Python package)] ),
+	[USEPY="$withval"], [USEPY="yes"])
 
 PYINCLUDE=
-PYPACKAGE=
-SITEPY=
+AC_ARG_WITH(pyincl,
+	AC_HELP_STRING( [--with-pyincl=path],
+					[specify path of the Python.h header] ),
+	[PYINCLUDE="$withval"], [PYINCLUDE=])
 
-AC_ARG_WITH(py,[  --with-py=path          Set prefix of Python installation],[
-	PYPACKAGE="$withval"], [PYPACKAGE=])
-AC_ARG_WITH(pyincl,[  --with-pyincl=path      Set path to Python header (Python.h)],[
-	PYINCLUDE="$withval"], [PYINCLUDE=])
-
-AC_MSG_CHECKING(for Python header files)
-
-dnl if the header path has been specified, verify that it exists
-if test -n "$PYINCLUDE" ; then
-	if test -f "$PYINCLUDE" ; then 
-		dnl this is really dumb, I cannot figure out
-		dnl how to remove the filename from the string!
-		AC_MSG_ERROR(please specify the directory containing Python.h)
+if test  "$USEPY" != "no"; then
+	if test -f "$USEPY"; then
+		dnl assume that the python binary was specified
+		PYTHON="$USEPY"
 	fi
-	if test -d "$PYINCLUDE" ; then
-		AC_MSG_RESULT($PYINCLUDE)
-	else
-		AC_MSG_ERROR(cannot find specified Python header $PYINCLUDE)
+	if test -d "$USEPY"; then
+		dnl assume that the python prefix was specified
+		PYTHON="$USEPY/bin/python"
 	fi
-fi
-
-dnl if no path was specified for the Python header, look
-dnl for one in likely places, including a package path, if
-dnl one was specified
-pythondist=
-if test -z "$PYINCLUDE" ; then
-	if test -n "$PYPACKAGE" ; then :
-		pack="$PYPACKAGE"
-	else
-		pack="/usr/local /usr"
-	fi
-	for path in $pack ; do
-		dnl AC_MSG_CHECKING(for Python distribution with prefix $path)
-		dist="python2.2 python2.1 python2.0 python1.6 python1.5"
-		for d in $dist ; do
-			if test -f "$path/include/$d/Python.h" ; then
-				PYINCLUDE="$path/include/$d"
-				AC_MSG_RESULT($PYINCLUDE)
-				pythondist=$d
-				break
-			fi
-		done
-		if test -n "$PYINCLUDE" ; then
-			break
+	dnl use automake tools for finding python, set 
+	dnl installation directory for extension modules
+	AM_PATH_PYTHON(1.5)
+	AC_MSG_RESULT(installing Python extension modules in $pyexecdir)
+	
+	dnl look for the header Python.h
+	AC_MSG_CHECKING(for Python.h header file)
+	if test -n "$PYINCLUDE" ; then 
+		dnl if the header path has been specified, verify 
+		dnl that it exists and is a directory
+		if test -f "$PYINCLUDE" ; then 
+			dnl remove the filename
+			PYINCLUDE="`AS_DIRNAME(["$PYINCLUDE"])`"
 		fi
-	done
-	if test -z "$PYINCLUDE" ; then
-		AC_MSG_ERROR(cannot find any of $dist in $pack)
-	fi	
-fi
-
-if test -z "$PYPACKAGE"; then
-	if test -n "$PYINCLUDE" ; then
-		PYPACKAGE="$PYINCLUDE/.."
+		if test ! -f "$PYINCLUDE/Python.h" ; then
+			AC_MSG_ERROR(cannot find Python.h in $PYINCLUDE)
+		fi
+	else
+		dnl if the header path was not specified, try
+		dnl to infer it from the python binary
+		PYINCLUDE="`AS_DIRNAME(["$PYTHON"])`/../include/python$PYTHON_VERSION"  
+		if test ! -f "$PYINCLUDE/Python.h" ; then
+			AC_MSG_ERROR(cannot find Python.h in $PYINCLUDE please use --with-pyincl=path)
+		fi
 	fi
-fi
-
-AC_PATH_PROGS(PYTHON, python python2.2 python2.1 python2.0 python1.6 python1.5, :, $PYPACKAGE/bin:$PATH)
-
-AC_MSG_CHECKING(for where to install Python site packages)
-# this is still far from perfect
-AC_ARG_WITH(sitepy,[  --with-sitepy=path      Set path to install Python site packages],[
-	SITEPY="$withval"
-	if test "$SITEPY" == "yes" ; then
-		SITEPY=`$PYTHON -c "import sys,string; s=string.join(sys.path,'\n'); print s" | grep site-`
-	fi
-	if test -z "$SITEPY" ; then
-		AC_MSG_ERROR(cannot determine where to put Python site packages)
-	fi 
-	AC_MSG_RESULT($SITEPY) ], [
-	SITEPY=
-	AC_MSG_RESULT(do not use site packages directory) ])
-
-AM_CONDITIONAL(BUILD_PYTHON, test -n "$PYINCLUDE")
-AM_CONDITIONAL(HAVE_SITEPY, test -n "$SITEPY")
-
-if test -n "$PYINCLUDE" ; then
+	AC_MSG_RESULT(found in $PYINCLUDE)
 	PYINCLUDE="-I$PYINCLUDE"
 fi
+
+
+AM_CONDITIONAL(BUILD_PYTHON, test "$USEPY" != "no")
 AC_SUBST(PYINCLUDE)
-AC_SUBST(SITEPY)
+
 
 dnl--------------------------------------------------------------------
 dnl	Try to locate the Tcl package
 dnl--------------------------------------------------------------------
+dnl By default, look for a tclsh binary, and use the header in the same
+dnl path. It --with-tcl is specified, then if the argument is
+dnl a file, look first in the directory cotnaining that file, otherwise
+dnl if the argument is a directory, assume that it is the prefix for the 
+dnl tcl installation, and look first in that directory/bin. If --without-tcl
+dnl or --with-tcl=no is specified, don't use tcl at all.
 
+AC_ARG_WITH(tcl,
+	AC_HELP_STRING( [--with-tcl@<:@=path@:>@],
+					[build Tcl module (default is YES) (optionally specify prefix of Tcl package)] ),
+	[USETCL="$withval"], [USETCL="yes"])
+	
 TCLINCLUDE=
-TCLPACKAGE=
-FOUND_TCL_H=false
-
-AC_ARG_WITH(tcl,[  --with-tcl=path         Set location of Tcl package],[
-	TCLPACKAGE="$withval"], [TCLPACKAGE=])
-AC_ARG_WITH(tclincl,[  --with-tclincl=path     Set location of Tcl include directory],[
-	TCLINCLUDE="$withval"], [TCLINCLUDE=])
+AC_ARG_WITH(tclincl,
+	AC_HELP_STRING( [--with-tclincl=path],
+					[specify path of the tcl.h header] ),
+	[TCLINCLUDE="$withval"], [TCLINCLUDE=])
 	
-if test -z "$TCLINCLUDE"; then
-   if test -n "$TCLPACKAGE"; then
-	TCLINCLUDE="$TCLPACKAGE/include"
-   fi
-fi
-
-if test -f "$TCLINCLUDE" ; then
-	dnl this is really dumb, I cannot figure out
-	dnl how to remove the filename from the string!
-	AC_MSG_ERROR($TCLINCLUDE: please specify the directory containing tcl.h)
-fi
-	
-AC_MSG_CHECKING(for Tcl header file)
-if test -z "$TCLINCLUDE"; then
-	AC_TRY_CPP([#include <tcl.h>], [
-		AC_MSG_RESULT(found it in default include path)
-		FOUND_TCL_H=true ], [
-		AC_MSG_RESULT(cannot find tcl.h in default include path, not building Tcl module)
-		FOUND_TCL_H=false ] )
-fi
-
-if test -n "$TCLINCLUDE" ; then
-	AC_TRY_CPP([#include <$TCLINCLUDE/tcl.h>], [
-		AC_MSG_RESULT(found it in $TCLINCLUDE)
-		FOUND_TCL_H=true ], [
-		AC_MSG_RESULT(cannot find tcl.h in $TCLINCLUDE, not building Tcl module)
-		TCLINCLUDE=""
-		FOUND_TCL_H=false ] )
-fi
-
-if test -z "$TCLPACKAGE"; then
-	if test -n "$TCLINCLUDE" ; then
-		TCLPACKAGE="$TCLINCLUDE/.."
+if test  "$USETCL" != "no"; then
+	if test -f "$USETCL"; then
+		dnl assume that the tclsh binary was specified
+		TCLPREFIX="`AS_DIRNAME(["$USETCL"])`/.."
 	fi
-fi
-
-AM_CONDITIONAL(BUILD_TCL, test "$FOUND_TCL_H" = true)
-
-if "$FOUND_TCL_H"; then
-	AC_PATH_PROGS(TCL, tclsh tclsh8.3 tclsh8.2, :, $TCLPACKAGE/bin:$PATH)
-	if test -n "$TCLINCLUDE" ; then
-		TCLINCLUDE="-I$TCLINCLUDE"
+	if test -d "$USETCL"; then
+		dnl assume that the tclsh prefix was specified
+		TCLPREFIX="$USETCL"
 	fi
-	AC_SUBST(TCLINCLUDE)
+	dnl if TCLPREFIX still has not been set, then try to
+	dnl use automake tools for finding a program (tclsh)
+	AC_PATH_PROG(TCLSH, tclsh, [], [$TCLPREFIX/bin$PATH_SEPARATOR$PATH])
+	if test -z "$TCLSH"; then
+		AC_MSG_ERROR(cannot find tclsh in $TCLPREFIX/bin$PATH_SEPARATOR$PATH)
+	fi
+		
+	dnl look for the header tcl.h
+	AC_MSG_CHECKING(for tcl.h header file)
+	if test -n "$TCLINCLUDE" ; then 
+		dnl if the header path has been specified, verify 
+		dnl that it exists and is a directory
+		if test -f "$TCLINCLUDE" ; then 
+			dnl remove the filename
+			TCLINCLUDE="`AS_DIRNAME(["$TCLINCLUDE"])`"
+		fi
+		if test ! -f "$TCLINCLUDE/tcl.h" ; then
+			AC_MSG_ERROR(cannot find tcl.h in $TCLINCLUDE)
+		fi
+	else
+		dnl if the header path was not specified, try
+		dnl to infer it from the tclsh binary
+		TCLINCLUDE="`AS_DIRNAME(["$TCLSH"])`/../include"  
+		if test ! -f "$TCLINCLUDE/tcl.h" ; then
+			AC_MSG_ERROR(cannot find tcl.h in $TCLINCLUDE please use --with-tclincl=path)
+		fi
+	fi
+	AC_MSG_RESULT(found in $TCLINCLUDE)
+	TCLINCLUDE="-I$TCLINCLUDE"
 fi
 
-dnl----------------------------------------------------------------
-dnl Look for Perl5
-dnl----------------------------------------------------------------
-dnl 
-dnl 	Don't bother with the Perl module, it is untested.
-dnl PERLBIN=
-dnl PERLINCLUDE=
-dnl 
-dnl AC_ARG_WITH(perl5,[  --with-perl5=path       Set location of Perl5 executable],[ 
-dnl 	PERLBIN="$withval"], [PERLBIN=])
-dnl 
-dnl dnl First figure out what the name of Perl5 is
-dnl if test -f "$PERLBIN" ; then
-dnl 	PERL="$PERLBIN"
-dnl else
-dnl 	if test -n "$PERLBIN" ; then
-dnl 		AC_CHECK_PROGS(PERL, perl5.006 perl5.005 perl5.004 perl5.003 perl5.002 perl5.001 perl5 perl, ,$PERLBIN:$PERLBIN/bin)
-dnl 	else
-dnl 		AC_CHECK_PROGS(PERL, perl5.006 perl5.005 perl5.004 perl5.003 perl5.002 perl5.001 perl5 perl)	
-dnl 	fi
-dnl fi
-dnl 
-dnl if test -z "$PERL" ; then
-dnl 	AC_MSG_WARN(could not figure out how to run perl5)
-dnl 	PERLINCLUDE=
-dnl fi 
-dnl 
-dnl if test -n "$PERL"; then
-dnl 	AC_MSG_CHECKING(for Perl5 header files)
-dnl 	PERL5DIR=`($PERL -e 'use Config; print $Config{archlib};') 2>/dev/null`
-dnl 	if test -n "$PERL5DIR" ; then
-dnl 		dirs="$PERL5DIR $PERL5DIR/CORE"
-dnl 		for i in $dirs; do
-dnl 			if test -f $i/perl.h; then
-dnl 				AC_MSG_RESULT($i)
-dnl 				PERLINCLUDE="$i"
-dnl 				break;
-dnl 			fi
-dnl 		done
-dnl 		if test -z "$PERLINCLUDE" ; then
-dnl 			AC_MSG_RESULT(could not locate perl.h.)
-dnl 		fi
-dnl 	else
-dnl 		AC_MSG_RESULT(unable to determine perl5 configuration)
-dnl 	fi
-dnl fi
-dnl 
-dnl if test -n "$PERLINCLUDE" ; then
-dnl 	PERLINCLUDE="-I$PERLINCLUDE"
-dnl fi
-dnl AC_SUBST(PERLINCLUDE)
+AM_CONDITIONAL(BUILD_TCL, test "$USETCL" != "no")
+AC_SUBST(TCLINCLUDE)
+
 
 dnl----------------------------------------------------------------
 dnl Check for Loris debugging flag
 dnl----------------------------------------------------------------
-AC_ARG_ENABLE(debugloris, [  --enable-debugloris      Enable internal Loris debugging code (not recommended)],[
-	DEBUG_LORIS="$enableval" ], [DEBUG_LORIS=] )
+AC_ARG_ENABLE(debugloris,
+	AC_HELP_STRING( [--enable-debugloris],
+					[enable internal Loris debugging code (not recommended)] ),
+	[DEBUG_LORIS="$enableval" ], [DEBUG_LORIS=] )
 
 if test -n "$DEBUG_LORIS"; then
 	if test "$DEBUG_LORIS"="yes"; then
