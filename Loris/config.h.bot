@@ -1,0 +1,3 @@
+//	special templates are declared in config.h.bot
+#undef HAVE_MODERN_SDIF_H
+

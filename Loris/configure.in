@@ -1,0 +1,404 @@
+# Copyright (C) 2001 Kelly Fitz <kfitz@cerlsoundgroup.org>
+#  
+# This file is free software; as a special exception the author gives
+# unlimited permission to copy and/or distribute it, with or without 
+# modifications, as long as this notice is preserved.
+# 
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
+# implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+AC_INIT(reconf)
+AM_CONFIG_HEADER(config.h)
+AM_INIT_AUTOMAKE(loris,0.1)
+#LF_LINK_HEADERS(src, loris)
+# LF_LINK_HEADERS(pi) 
+LF_SET_INCLUDES
+LF_CONFIGURE_CC
+LF_CONFIGURE_CXX
+LF_HOST_TYPE
+LF_SET_WARNINGS
+
+AM_PROG_LIBTOOL
+
+AC_PATH_PROG(SWIG, swig)
+AM_CONDITIONAL(HAVE_SWIG, test -n "$SWIG")
+
+
+#----------------------------------------------------------------
+# Look for IRCAM's SDIF package
+#
+# Allow args to configure for specifying the location of the
+# SDIF package, since there are more than one such package in
+# and we need specifically IRCAM's.
+#----------------------------------------------------------------
+
+SDIFINCLUDE=
+SDIFLIB=
+SDIFTYPES=
+SDIFPACKAGE=
+ 
+AC_ARG_WITH(sdif,[  --with-sdif=path        Set prefix of SDIF package],[
+		SDIFPACKAGE="$withval"], [SDIFPACKAGE=])
+AC_ARG_WITH(sdifincl,[  --with-sdifincl=path    Set path of SDIF include file],[
+		SDIFINCLUDE="$withval"], [SDIFINCLUDE=])
+AC_ARG_WITH(sdiflib,[  --with-sdiflib=path     Set path of SDIF library],[
+		SDIFLIB="$withval"], [SDIFLIB=])
+AC_ARG_WITH(sdiftypes,[  --with-sdiftypes=path   Set path of SDIF types file],[
+		SDIFTYPES="$withval"], [SDIFTYPES=])
+
+if test -z "$SDIFINCLUDE"; then
+   if test -n "$SDIFPACKAGE"; then
+        SDIFINCLUDE="$SDIFPACKAGE/include"
+   fi
+fi
+
+if test -z "$SDIFLIB"; then
+   if test -n "$SDIFPACKAGE"; then
+        SDIFLIB="$SDIFPACKAGE/lib"
+   fi
+fi
+
+if test -z "$SDIFTYPES"; then
+   if test -n "$SDIFPACKAGE"; then
+        SDIFTYPES="$SDIFPACKAGE/share/SdifTypes.STYP"
+   fi
+fi
+
+
+# look for SDIF header in specified or standard locations
+SDIF_H=sdif.h
+if test -n "$SDIFINCLUDE"; then
+	AC_MSG_CHECKING(for SDIF header file in $SDIFINCLUDE)
+	if test -f "$SDIFINCLUDE/$SDIF_H" ; then
+		AC_MSG_RESULT(found)
+		SDIF_H="$SDIFINCLUDE/$SDIF_H"
+	else
+		AC_MSG_ERROR(cannot find SDIF header in $SDIFINCLUDE)
+	fi
+else
+	AC_CHECK_HEADER($SDIF_H, :, AC_MSG_ERROR(cannot find SDIF header))
+fi
+
+# look for the SDIF library
+if test -n "$SDIFLIB" ; then
+	LIBS="$LIBS -L$SDIFLIB"
+fi
+AC_CHECK_LIB(sdif, SdifGenInit, :, AC_MSG_ERROR(cannot use SDIF library))
+
+# make sure that we can figure out how to use
+# the SDIF library
+AC_MSG_CHECKING(for modern SdifSignatureConst macro definition)
+AC_TRY_COMPILE( [ #include<$SDIF_H> ], [ 
+		SdifSignature s = SdifSignatureConst('1','T','R','C'); ],[
+		AC_MSG_RESULT(ok)
+		AC_DEFINE(HAVE_MODERN_SDIF_H)
+		], [
+		AC_MSG_RESULT(failed, cannot use four char args) 
+		AC_MSG_CHECKING(for old mutli-char constant version of SdifSignatureConst)
+		AC_TRY_COMPILE( [ #include<sdif.h> ], [
+				SdifSignature s = SdifSignatureConst('1TRC'); ],[
+				AC_MSG_RESULT(ok) ], [ 
+				AC_MSG_RESULT(failed)
+				AC_MSG_ERROR(cannot determine how to invoke SdifSignatureConst macro) ] ) ] )
+
+# look for the SDIF types file, in case we need to fix it
+AC_MSG_CHECKING(for Sdif types file)
+if test -z "$SDIFTYPES" ; then
+	if test -n "$SDIFINCLUDE" ; then
+		SDIFTYPES="$SDIFINCLUDE/../share/SdifTypes.STYP"
+	else
+		dirs="/usr/local/share /usr/share"
+		for d in $dirs ; do
+			if test -f "$d/SdifTypes.STYP" ; then
+				SDIFTYPES="$d/SdifTypes.STYP"
+				break
+			fi
+		done
+	fi
+else
+	if test -d "$SDIFTYPES" ; then
+		SDIFTYPES="$SDIFTYPES/SdifTypes.STYP"
+	fi
+fi
+if test -f "$SDIFTYPES" ; then
+	AC_MSG_RESULT(found it)
+else
+	AC_MSG_RESULT(cannot find Sdif types file)
+fi
+
+if test -n "$SDIFINCLUDE" ; then
+	SDIFINCLUDE="-I$SDIFINCLUDE"
+fi
+AC_SUBST(SDIFINCLUDE)
+AC_SUBST(SDIFTYPES)
+
+
+#----------------------------------------------------------------
+# Look for FFTW
+#
+# Remember that fftw library won't link without -lm.
+# Allow an argument to specify the prefix of a non-installed
+# FFTW package
+#----------------------------------------------------------------
+
+FFTWPACKAGE=
+FFTWINCLUDE=
+FFTW_H=fftw.h
+
+AC_ARG_WITH(fftw,[  --with-fftw=path        Set prefix of (non-installed) FFTW  package],[
+		FFTWPACKAGE="$withval"], [FFTWPACKAGE=])
+
+if test -n "$FFTWPACKAGE" ; then
+	FFTWINCLUDE="$FFTWPACKAGE/include"
+	FFTW_H="$FFTWINCLUDE/fftw.h"
+	LIBS="-L$FFTWPACKAGE/lib $LIBS"
+fi
+
+AC_CHECK_HEADER($FFTW_H, :, AC_MSG_ERROR(cannot find FFTW header))
+AC_CHECK_LIB(fftw, fftw_create_plan, :, AC_MSG_ERROR(cannot use FFTW, library), -lm)
+
+if test -n "$FFTWINCLUDE" ; then
+	FFTWINCLUDE="-I$FFTWINCLUDE"
+fi
+AC_SUBST(FFTWINCLUDE)
+
+#----------------------------------------------------------------
+# Look for Python
+#----------------------------------------------------------------
+
+PYINCLUDE=
+PYSITE=
+PYPACKAGE=
+
+AC_ARG_WITH(py,[  --with-py=path          Set prefix of Python installation],[
+	PYPACKAGE="$withval"], [PYPACKAGE=])
+AC_ARG_WITH(pyincl,[  --with-pyincl=path      Set path to Python header (Python.h)],[
+	PYINCLUDE="$withval"], [PYINCLUDE=])
+AC_ARG_WITH(pysite,[  --with-pysite=path      Set path to Python site packages],[
+	PYSITE="$withval"], [PYSITE=])
+
+AC_MSG_CHECKING(for Python header files)
+
+# if the header path was specified and the site packages path
+# was not, complain because we are unlikely to find the correct
+# location for the site 
+if test -n "$PYINCLUDE" ; then
+	if test -z "$PYSITE" ; then
+		AC_MSG_ERROR(if you specify the location of the Python header \
+you must also specify the location of the Python site packages)
+	fi
+fi 
+
+
+# if the header path has been specified, verify that it exists
+if test -n "$PYINCLUDE" ; then
+	if test -f "$PYINCLUDE" ; then 
+		# this is really dumb, I cannot figure out
+		# how to remove the filename from the string!
+		AC_MSG_ERROR(please specify the directory containing Python.h)
+	fi
+	if test -d "$PYINCLUDE" ; then
+		AC_MSG_RESULT($PYINCLUDE)
+	else
+		AC_MSG_ERROR(cannot find specified Python header $PYINCLUDE)
+	fi
+fi
+
+# if no path was specified for the Python header, look
+# for one in likely places, including a package path, if
+# one was specified
+pythondist=
+if test -z "$PYINCLUDE" ; then
+	if test -n "$PYPACKAGE" ; then :
+		pack="$PYPACKAGE"
+	else
+		pack="/usr/local /usr"
+	fi
+	for path in $pack ; do
+		AC_MSG_CHECKING(for Python distribution with prefix $path)
+		dist="python2.1 python2.0 python1.6 python1.5"
+		for d in $dist ; do
+			if test -f "$path/include/$d/Python.h" ; then
+				PYINCLUDE="$path/include/$d"
+				AC_MSG_RESULT($PYINCLUDE)
+				pythondist=$d
+				break
+			fi
+		done
+		if test -n "$PYINCLUDE" ; then
+			break
+		fi
+	done
+	if test -z "$PYINCLUDE" ; then
+		AC_MSG_ERROR(cannot find any of $dist in $pack)
+	fi	
+fi
+
+AC_MSG_CHECKING(for Python site packages)
+# if a path for the site packages has been specified, verify 
+# that it is a directory
+if test -n "$PYSITE" ; then
+	if test -d $PYSITE ; then
+		AC_MSG_RESULT($PYSITE)
+	else
+		AC_MSG_ERROR(the specified location for Python site package is not a directory)
+	fi
+fi 
+
+# if no path was specified for the Python site packages, look
+# look for one in likely places, including a package path, if
+# one was specified
+if test -z "$PYSITE" ; then
+	if test -n "$PYPACKAGE" ; then :
+		pack="$PYPACKAGE"
+	else
+		pack="/usr/local /usr"
+	fi
+	for path in $pack ; do
+		AC_MSG_CHECKING(for Python site packages with prefix $path)
+		# make sure not to accidentally find a different package
+		# for site packages and the Python header; pythondist is
+		# set above when searching for Python.h
+		if test -z "$pythondist" ; then
+			dist="python2.1 python2.0 python1.6 python1.5"
+		else
+			dist=$pythondist
+		fi
+		for d in $dist ; do
+			if test -d "$path/lib/$d/site-packages" ; then
+				PYSITE="$path/lib/$d/site-packages"
+				AC_MSG_RESULT($PYSITE)
+				break
+			fi
+		done
+		if test -n "$PYSITE" ; then
+			break
+		fi
+	done
+	if test -z "$PYSITE" ; then
+		AC_MSG_WARN(cannot find any place to install Python site-packages in $pack \
+the Python module will not be installed)
+	fi	
+fi
+
+if test -z "$PYPACKAGE"; then
+	if test -n "$PYINCLUDE" ; then
+		PYPACKAGE="$PYINCLUDE/.."
+	fi
+fi
+AC_PATH_PROG(PYTHON, python, :, $PYPACKAGE/bin:$PATH)
+
+
+AM_CONDITIONAL(HAVE_PYTHON_H, test -n "$PYINCLUDE")
+AM_CONDITIONAL(HAVE_PYTHON_SITE, test -n "$PYSITE")
+
+if test -n "$PYINCLUDE" ; then
+	PYINCLUDE="-I$PYINCLUDE"
+fi
+AC_SUBST(PYINCLUDE)
+AC_SUBST(PYSITE)
+
+#--------------------------------------------------------------------
+#	Try to locate the Tcl package
+#--------------------------------------------------------------------
+
+TCLINCLUDE==
+TCLPACKAGE=
+
+AC_ARG_WITH(tcl,[  --with-tcl=path         Set location of Tcl package],[
+	TCLPACKAGE="$withval"], [TCLPACKAGE=])
+AC_ARG_WITH(tclincl,[  --with-tclincl=path     Set location of Tcl include directory],[
+	TCLINCLUDE="$withval"], [TCLINCLUDE=])
+
+if test -z "$TCLINCLUDE"; then
+   if test -n "$TCLPACKAGE"; then
+	TCLINCLUDE="$TCLPACKAGE/include"
+   fi
+fi
+
+if test -f "$TCLINCLUDE" ; then
+	# this is really dumb, I cannot figure out
+	# how to remove the filename from the string!
+	AC_MSG_ERROR($TCLINCLUDE: please specify the directory containing tcl.h)
+fi
+	
+AC_MSG_CHECKING(for Tcl header file)
+if test -z "$TCLINCLUDE"; then
+	AC_TRY_CPP([#include <tcl.h>], [
+		AC_MSG_RESULT(found it)
+		HAVE_TCL=true ], [
+		HAVE_TCL=false ] )
+fi
+
+if test -n "$TCLINCLUDE" ; then
+	AC_TRY_CPP([#include <$TCLINCLUDE/tcl.h>], [
+		AC_MSG_RESULT($TCLINCLUDE)
+		HAVE_TCL=true ], [
+		AC_MSG_RESULT(cannot find tcl.h in $TCLINCLUDE)
+		TCLINCLUDE=""
+		HAVE_TCL=false ] )
+fi
+
+if test -n "$TCLINCLUDE" ; then
+	TCLINCLUDE="-I$TCLINCLUDE"
+fi
+AC_SUBST(TCLINCLUDE)
+# AC_SUBST(HAVE_TCL)
+
+#----------------------------------------------------------------
+# Look for Perl5
+#----------------------------------------------------------------
+
+PERLBIN=
+PERLINCLUDE=
+
+AC_ARG_WITH(perl5,[  --with-perl5=path       Set location of Perl5 executable],[ 
+	PERLBIN="$withval"], [PERLBIN=])
+
+# First figure out what the name of Perl5 is
+if test -f "$PERLBIN" ; then
+	PERL="$PERLBIN"
+else
+	if test -n "$PERLBIN" ; then
+		AC_CHECK_PROGS(PERL, perl5.004 perl5.003 perl5.002 perl5.001 perl5 perl, ,$PERLBIN:$PERLBIN/bin)
+	else
+		AC_CHECK_PROGS(PERL, perl5.004 perl5.003 perl5.002 perl5.001 perl5 perl)	
+	fi
+fi
+
+if test -z "$PERL" ; then
+	AC_MSG_WARN(could not figure out how to run perl5)
+	PERLINCLUDE=
+fi 
+
+if test -n "$PERL"; then
+	AC_MSG_CHECKING(for Perl5 header files)
+	PERL5DIR=`($PERL -e 'use Config; print $Config{archlib};') 2>/dev/null`
+	if test -n "$PERL5DIR" ; then
+		dirs="$PERL5DIR $PERL5DIR/CORE"
+		for i in $dirs; do
+			if test -f $i/perl.h; then
+				AC_MSG_RESULT($i)
+				PERLINCLUDE="$i"
+				break;
+			fi
+		done
+		if test -z "$PERLINCLUDE" ; then
+			AC_MSG_RESULT(could not locate perl.h.)
+		fi
+	else
+		AC_MSG_RESULT(unable to determine perl5 configuration)
+	fi
+fi
+
+if test -n "$PERLINCLUDE" ; then
+	PERLINCLUDE="-I$PERLINCLUDE"
+fi
+AC_SUBST(PERLINCLUDE)
+
+#----------------------------------------------------------------
+# Generate Makefiles
+#----------------------------------------------------------------
+AC_OUTPUT(Makefile doc/Makefile m4/Makefile Makefile src/Makefile \
+pi/Makefile scripting/Makefile test/Makefile)
