@@ -7,6 +7,17 @@ See the end for copying conditions.
 Please send Loris bug reports to loris@cerlsoundgroup.org.
 
 -------------------------------------------------------
+changes since 1.0beta5 release:
+
+- The ReassignedSpectrum class has been modified to compute
+the reassignment data using fewer transforms, and thus to 
+run faster. 
+
+- The files used by the GNU autotools to generate distribution
+tarballs have been modified to include Mac OS-specific files in
+the full source distribution.
+
+-------------------------------------------------------
 changes since 1.0beta4 release:
 
 - The Distiller now incorporates the formerly-experimental sifting
