@@ -659,16 +659,17 @@ SWIG_InstallConstants(PyObject *d, swig_const_info constants[]) {
 #define  SWIGTYPE_p_Analyzer swig_types[2] 
 #define  SWIGTYPE_p_double swig_types[3] 
 #define  SWIGTYPE_p_Partial swig_types[4] 
-#define  SWIGTYPE_p_vectorTdouble_t swig_types[5] 
-#define  SWIGTYPE_p_BreakpointEnvelope swig_types[6] 
-#define  SWIGTYPE_p_BreakpointPosition swig_types[7] 
-#define  SWIGTYPE_p_AiffFile swig_types[8] 
-#define  SWIGTYPE_p_SampleVector swig_types[9] 
-#define  SWIGTYPE_p_PartialIterator swig_types[10] 
-#define  SWIGTYPE_p_PartialListIterator swig_types[11] 
-#define  SWIGTYPE_p_NewPartialIterator swig_types[12] 
-#define  SWIGTYPE_p_NewPlistIterator swig_types[13] 
-static swig_type_info *swig_types[15];
+#define  SWIGTYPE_p_Loris__Partial swig_types[5] 
+#define  SWIGTYPE_p_vectorTdouble_t swig_types[6] 
+#define  SWIGTYPE_p_BreakpointEnvelope swig_types[7] 
+#define  SWIGTYPE_p_BreakpointPosition swig_types[8] 
+#define  SWIGTYPE_p_AiffFile swig_types[9] 
+#define  SWIGTYPE_p_SampleVector swig_types[10] 
+#define  SWIGTYPE_p_PartialIterator swig_types[11] 
+#define  SWIGTYPE_p_PartialListIterator swig_types[12] 
+#define  SWIGTYPE_p_NewPartialIterator swig_types[13] 
+#define  SWIGTYPE_p_NewPlistIterator swig_types[14] 
+static swig_type_info *swig_types[16];
 
 /* -------- TYPES TABLE (END) -------- */
 
@@ -932,11 +933,16 @@ void dilate_v( PartialList * partials, vector<double> & ivec, vector<double> & t
 
 	#include<AiffFile.h>
 
+AiffFile *new_AiffFile__SWIG_2(PartialList *l,double sampleRate,double fadeTime){
+			return new AiffFile( l->begin(), l->end(), sampleRate, fadeTime );
+		}
 SampleVector *AiffFile_samples(AiffFile *self){
-			SampleVector * vec = new SampleVector( self->sampleFrames() );
-			if ( ! vec->empty() )
-				self->getSamples( &((*vec)[0]), &((*vec)[vec->size()]) );
+			SampleVector * vec = new SampleVector( self->samples() );
 			return vec;
+		}
+int AiffFile_channels(AiffFile const *self){ return 1; }
+void AiffFile_addPartials(AiffFile *self,PartialList *l,double fadeTime){
+			self->addPartials( l->begin(), l->end(), fadeTime );
 		}
 
 	#include<Analyzer.h>
@@ -1847,7 +1853,7 @@ static PyObject *_wrap_version(PyObject *self, PyObject *args) {
 }
 
 
-static PyObject *_wrap_new_AiffFile(PyObject *self, PyObject *args) {
+static PyObject *_wrap_new_AiffFile__SWIG_0(PyObject *self, PyObject *args) {
     PyObject *resultobj;
     char *arg1 ;
     AiffFile *result;
@@ -1857,6 +1863,46 @@ static PyObject *_wrap_new_AiffFile(PyObject *self, PyObject *args) {
         try
         {
             result = (AiffFile *)new AiffFile((char const *)arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_AiffFile, 1);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_new_AiffFile__SWIG_1(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    SampleVector *arg1 = 0 ;
+    double arg2 ;
+    AiffFile *result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"Od:new_AiffFile",&obj0,&arg2)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_SampleVector,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    if (arg1 == NULL) {
+        PyErr_SetString(PyExc_TypeError,"null reference"); SWIG_fail; 
+    }
+    {
+        try
+        {
+            result = (AiffFile *)new AiffFile(*arg1,arg2);
             
         }
         catch( Loris::Exception & ex ) 
@@ -1916,78 +1962,6 @@ static PyObject *_wrap_delete_AiffFile(PyObject *self, PyObject *args) {
 }
 
 
-static PyObject *_wrap_AiffFile_channels(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    AiffFile *arg1 = (AiffFile *) 0 ;
-    int result;
-    PyObject * obj0 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"O:AiffFile_channels",&obj0)) goto fail;
-    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_AiffFile,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
-    {
-        try
-        {
-            result = (int)((AiffFile const *)arg1)->channels();
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    resultobj = PyInt_FromLong((long)result);
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_AiffFile_sampleFrames(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    AiffFile *arg1 = (AiffFile *) 0 ;
-    unsigned long result;
-    PyObject * obj0 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"O:AiffFile_sampleFrames",&obj0)) goto fail;
-    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_AiffFile,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
-    {
-        try
-        {
-            result = (unsigned long)((AiffFile const *)arg1)->sampleFrames();
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    resultobj = PyInt_FromLong((long)result);
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
 static PyObject *_wrap_AiffFile_sampleRate(PyObject *self, PyObject *args) {
     PyObject *resultobj;
     AiffFile *arg1 = (AiffFile *) 0 ;
@@ -2024,18 +1998,54 @@ static PyObject *_wrap_AiffFile_sampleRate(PyObject *self, PyObject *args) {
 }
 
 
-static PyObject *_wrap_AiffFile_sampleSize(PyObject *self, PyObject *args) {
+static PyObject *_wrap_AiffFile_midiNoteNumber(PyObject *self, PyObject *args) {
     PyObject *resultobj;
     AiffFile *arg1 = (AiffFile *) 0 ;
-    int result;
+    double result;
     PyObject * obj0 = 0 ;
     
-    if(!PyArg_ParseTuple(args,(char *)"O:AiffFile_sampleSize",&obj0)) goto fail;
+    if(!PyArg_ParseTuple(args,(char *)"O:AiffFile_midiNoteNumber",&obj0)) goto fail;
     if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_AiffFile,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
     {
         try
         {
-            result = (int)((AiffFile const *)arg1)->sampleSize();
+            result = (double)((AiffFile const *)arg1)->midiNoteNumber();
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    resultobj = PyFloat_FromDouble(result);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_AiffFile_sampleFrames(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    AiffFile *arg1 = (AiffFile *) 0 ;
+    unsigned long result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:AiffFile_sampleFrames",&obj0)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_AiffFile,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        try
+        {
+            result = (unsigned long)((AiffFile const *)arg1)->numFrames();
             
         }
         catch( Loris::Exception & ex ) 
@@ -2056,6 +2066,194 @@ static PyObject *_wrap_AiffFile_sampleSize(PyObject *self, PyObject *args) {
     resultobj = PyInt_FromLong((long)result);
     return resultobj;
     fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_AiffFile_addPartial(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    AiffFile *arg1 = (AiffFile *) 0 ;
+    Loris::Partial *arg2 = 0 ;
+    double arg3 = (double) .001 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO|d:AiffFile_addPartial",&obj0,&obj1,&arg3)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_AiffFile,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    if ((SWIG_ConvertPtr(obj1,(void **) &arg2, SWIGTYPE_p_Loris__Partial,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    if (arg2 == NULL) {
+        PyErr_SetString(PyExc_TypeError,"null reference"); SWIG_fail; 
+    }
+    {
+        try
+        {
+            (arg1)->addPartial((Loris::Partial const &)*arg2,arg3);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_AiffFile_setMidiNoteNumber(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    AiffFile *arg1 = (AiffFile *) 0 ;
+    double arg2 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"Od:AiffFile_setMidiNoteNumber",&obj0,&arg2)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_AiffFile,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        try
+        {
+            (arg1)->setMidiNoteNumber(arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_new_AiffFile__SWIG_2(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    PartialList *arg1 = (PartialList *) 0 ;
+    double arg2 ;
+    double arg3 = (double) .001 ;
+    AiffFile *result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"Od|d:new_AiffFile",&obj0,&arg2,&arg3)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        try
+        {
+            result = (AiffFile *)new_AiffFile__SWIG_2(arg1,arg2,arg3);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_AiffFile, 1);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_new_AiffFile(PyObject *self, PyObject *args) {
+    int argc;
+    PyObject *argv[4];
+    int ii;
+    
+    argc = PyObject_Length(args);
+    for (ii = 0; (ii < argc) && (ii < 3); ii++) {
+        argv[ii] = PyTuple_GetItem(args,ii);
+    }
+    if (argc == 1) {
+        int _v;
+        {
+            _v = PyString_Check(argv[0]) ? 1 : 0;
+        }
+        if (_v) {
+            return _wrap_new_AiffFile__SWIG_0(self,args);
+        }
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(argv[0], (void **) &ptr, SWIGTYPE_p_SampleVector, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                _v = (PyFloat_Check(argv[1]) || PyInt_Check(argv[1]) || PyLong_Check(argv[1])) ? 1 : 0;
+            }
+            if (_v) {
+                return _wrap_new_AiffFile__SWIG_1(self,args);
+            }
+        }
+    }
+    if ((argc >= 2) && (argc <= 3)) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(argv[0], (void **) &ptr, SWIGTYPE_p_PartialList, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                _v = (PyFloat_Check(argv[1]) || PyInt_Check(argv[1]) || PyLong_Check(argv[1])) ? 1 : 0;
+            }
+            if (_v) {
+                if (argc <= 2) {
+                    return _wrap_new_AiffFile__SWIG_2(self,args);
+                }
+                {
+                    _v = (PyFloat_Check(argv[2]) || PyInt_Check(argv[2]) || PyLong_Check(argv[2])) ? 1 : 0;
+                }
+                if (_v) {
+                    return _wrap_new_AiffFile__SWIG_2(self,args);
+                }
+            }
+        }
+    }
+    
+    PyErr_SetString(PyExc_TypeError,"No matching function for overloaded 'new_AiffFile'");
     return NULL;
 }
 
@@ -2090,6 +2288,81 @@ static PyObject *_wrap_AiffFile_samples(PyObject *self, PyObject *args) {
         }
     }
     resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_SampleVector, 1);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_AiffFile_channels(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    AiffFile *arg1 = (AiffFile *) 0 ;
+    int result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:AiffFile_channels",&obj0)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_AiffFile,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        try
+        {
+            result = (int)AiffFile_channels((AiffFile const *)arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    resultobj = PyInt_FromLong((long)result);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_AiffFile_addPartials(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    AiffFile *arg1 = (AiffFile *) 0 ;
+    PartialList *arg2 = (PartialList *) 0 ;
+    double arg3 = (double) 0.001 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO|d:AiffFile_addPartials",&obj0,&obj1,&arg3)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_AiffFile,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    if ((SWIG_ConvertPtr(obj1,(void **) &arg2, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        try
+        {
+            AiffFile_addPartials(arg1,arg2,arg3);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
     return resultobj;
     fail:
     return NULL;
@@ -7025,13 +7298,16 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"resample", _wrap_resample, METH_VARARGS },
 	 { (char *)"sift", _wrap_sift, METH_VARARGS },
 	 { (char *)"version", _wrap_version, METH_VARARGS },
-	 { (char *)"new_AiffFile", _wrap_new_AiffFile, METH_VARARGS },
 	 { (char *)"delete_AiffFile", _wrap_delete_AiffFile, METH_VARARGS },
-	 { (char *)"AiffFile_channels", _wrap_AiffFile_channels, METH_VARARGS },
-	 { (char *)"AiffFile_sampleFrames", _wrap_AiffFile_sampleFrames, METH_VARARGS },
 	 { (char *)"AiffFile_sampleRate", _wrap_AiffFile_sampleRate, METH_VARARGS },
-	 { (char *)"AiffFile_sampleSize", _wrap_AiffFile_sampleSize, METH_VARARGS },
+	 { (char *)"AiffFile_midiNoteNumber", _wrap_AiffFile_midiNoteNumber, METH_VARARGS },
+	 { (char *)"AiffFile_sampleFrames", _wrap_AiffFile_sampleFrames, METH_VARARGS },
+	 { (char *)"AiffFile_addPartial", _wrap_AiffFile_addPartial, METH_VARARGS },
+	 { (char *)"AiffFile_setMidiNoteNumber", _wrap_AiffFile_setMidiNoteNumber, METH_VARARGS },
+	 { (char *)"new_AiffFile", _wrap_new_AiffFile, METH_VARARGS },
 	 { (char *)"AiffFile_samples", _wrap_AiffFile_samples, METH_VARARGS },
+	 { (char *)"AiffFile_channels", _wrap_AiffFile_channels, METH_VARARGS },
+	 { (char *)"AiffFile_addPartials", _wrap_AiffFile_addPartials, METH_VARARGS },
 	 { (char *)"AiffFile_swigregister", AiffFile_swigregister, METH_VARARGS },
 	 { (char *)"new_Analyzer", _wrap_new_Analyzer, METH_VARARGS },
 	 { (char *)"Analyzer_copy", _wrap_Analyzer_copy, METH_VARARGS },
@@ -7170,6 +7446,7 @@ static swig_type_info _swigt__p_Breakpoint[] = {{"_p_Breakpoint", 0, "Breakpoint
 static swig_type_info _swigt__p_Analyzer[] = {{"_p_Analyzer", 0, "Analyzer *", 0},{"_p_Analyzer"},{0}};
 static swig_type_info _swigt__p_double[] = {{"_p_double", 0, "double *", 0},{"_p_double"},{0}};
 static swig_type_info _swigt__p_Partial[] = {{"_p_Partial", 0, "Partial *", 0},{"_p_Partial"},{0}};
+static swig_type_info _swigt__p_Loris__Partial[] = {{"_p_Loris__Partial", 0, "Loris::Partial *", 0},{"_p_Loris__Partial"},{0}};
 static swig_type_info _swigt__p_vectorTdouble_t[] = {{"_p_vectorTdouble_t", 0, "vector<double > *", 0},{"_p_vectorTdouble_t"},{0}};
 static swig_type_info _swigt__p_BreakpointEnvelope[] = {{"_p_BreakpointEnvelope", 0, "BreakpointEnvelope *", 0},{"_p_BreakpointEnvelope"},{0}};
 static swig_type_info _swigt__p_BreakpointPosition[] = {{"_p_BreakpointPosition", 0, "BreakpointPosition *", 0},{"_p_BreakpointPosition"},{0}};
@@ -7186,6 +7463,7 @@ _swigt__p_Breakpoint,
 _swigt__p_Analyzer, 
 _swigt__p_double, 
 _swigt__p_Partial, 
+_swigt__p_Loris__Partial, 
 _swigt__p_vectorTdouble_t, 
 _swigt__p_BreakpointEnvelope, 
 _swigt__p_BreakpointPosition, 

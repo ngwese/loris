@@ -3,7 +3,7 @@
 ; for testing the Loris unit generators
 
 <CsOptions>
--A -d -o tryitnow.aiff
+-W -W -d -o tryitnow.wav
 </CsOptions>
 
 <CsVersion> ;optional section

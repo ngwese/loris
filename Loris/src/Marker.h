@@ -34,7 +34,8 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
- 
+
+#include <functional>
 #include <string>
 #include <vector>
 

@@ -76,18 +76,21 @@ class AiffFile(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, AiffFile, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, AiffFile, name)
-    def __init__(self,*args):
-        _swig_setattr(self, AiffFile, 'this', apply(_loris.new_AiffFile,args))
-        _swig_setattr(self, AiffFile, 'thisown', 1)
     def __del__(self, destroy= _loris.delete_AiffFile):
         try:
             if self.thisown: destroy(self)
         except: pass
-    def channels(*args): return apply(_loris.AiffFile_channels,args)
-    def sampleFrames(*args): return apply(_loris.AiffFile_sampleFrames,args)
     def sampleRate(*args): return apply(_loris.AiffFile_sampleRate,args)
-    def sampleSize(*args): return apply(_loris.AiffFile_sampleSize,args)
+    def midiNoteNumber(*args): return apply(_loris.AiffFile_midiNoteNumber,args)
+    def sampleFrames(*args): return apply(_loris.AiffFile_sampleFrames,args)
+    def addPartial(*args): return apply(_loris.AiffFile_addPartial,args)
+    def setMidiNoteNumber(*args): return apply(_loris.AiffFile_setMidiNoteNumber,args)
+    def __init__(self,*args):
+        _swig_setattr(self, AiffFile, 'this', apply(_loris.new_AiffFile,args))
+        _swig_setattr(self, AiffFile, 'thisown', 1)
     def samples(*args): return apply(_loris.AiffFile_samples,args)
+    def channels(*args): return apply(_loris.AiffFile_channels,args)
+    def addPartials(*args): return apply(_loris.AiffFile_addPartials,args)
     def __repr__(self):
         return "<C AiffFile instance at %s>" % (self.this,)
 

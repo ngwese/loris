@@ -32,6 +32,7 @@ pkginclude_HEADERS = AiffData.h	\
 				KaiserWindow.h	\
 				Marker.h	\
 				Morpher.h	\
+				NoiseGenerator.h \
 				Notifier.h	\
 				Oscillator.h	\
 				Partial.h	\
@@ -51,7 +52,7 @@ pkginclude_HEADERS = AiffData.h	\
 #noinst_LTLIBRARIES = libclasses.la
 #libclasses_la_SOURCES 
 Loris_Classes = AiffData.C	\
-		AiffData..h \
+		AiffData.h \
 		AiffFile.C \
 		AiffFile.h \
 		Analyzer.C \
@@ -92,6 +93,8 @@ Loris_Classes = AiffData.C	\
 		Marker.h	\
 		Morpher.C \
 		Morpher.h \
+		NoiseGenerator.C \
+		NoiseGenerator.h \
 		Notifier.C \
 		Notifier.h \
 		Oscillator.C \
@@ -104,7 +107,6 @@ Loris_Classes = AiffData.C	\
 		PartialPtrs.h \
 		PartialUtils.C \
 		PartialUtils.h \
-		random.h \
 		ReassignedSpectrum.C \
 		ReassignedSpectrum.h \
 		Resampler.C \

@@ -572,20 +572,21 @@ static void _swig_create_magic(CPerlObj *pPerl, SV *sv, const char *name, int (C
 
 /* -------- TYPES TABLE (BEGIN) -------- */
 
-#define  SWIGTYPE_p_Partial swig_types[0] 
-#define  SWIGTYPE_p_PartialList swig_types[1] 
-#define  SWIGTYPE_p_SampleVector swig_types[2] 
-#define  SWIGTYPE_p_AiffFile swig_types[3] 
-#define  SWIGTYPE_p_BreakpointPosition swig_types[4] 
-#define  SWIGTYPE_p_Analyzer swig_types[5] 
-#define  SWIGTYPE_p_NewPlistIterator swig_types[6] 
-#define  SWIGTYPE_p_NewPartialIterator swig_types[7] 
-#define  SWIGTYPE_p_double swig_types[8] 
-#define  SWIGTYPE_p_PartialListIterator swig_types[9] 
+#define  SWIGTYPE_p_PartialList swig_types[0] 
+#define  SWIGTYPE_p_Breakpoint swig_types[1] 
+#define  SWIGTYPE_p_Analyzer swig_types[2] 
+#define  SWIGTYPE_p_double swig_types[3] 
+#define  SWIGTYPE_p_Partial swig_types[4] 
+#define  SWIGTYPE_p_Loris__Partial swig_types[5] 
+#define  SWIGTYPE_p_BreakpointEnvelope swig_types[6] 
+#define  SWIGTYPE_p_BreakpointPosition swig_types[7] 
+#define  SWIGTYPE_p_AiffFile swig_types[8] 
+#define  SWIGTYPE_p_SampleVector swig_types[9] 
 #define  SWIGTYPE_p_PartialIterator swig_types[10] 
-#define  SWIGTYPE_p_Breakpoint swig_types[11] 
-#define  SWIGTYPE_p_BreakpointEnvelope swig_types[12] 
-static swig_type_info *swig_types[14];
+#define  SWIGTYPE_p_PartialListIterator swig_types[11] 
+#define  SWIGTYPE_p_NewPartialIterator swig_types[12] 
+#define  SWIGTYPE_p_NewPlistIterator swig_types[13] 
+static swig_type_info *swig_types[15];
 
 /* -------- TYPES TABLE (END) -------- */
 
@@ -804,11 +805,16 @@ void dilate_v( PartialList * partials, vector<double> & ivec, vector<double> & t
 
 	#include<AiffFile.h>
 
+AiffFile *new_AiffFile__SWIG_2(PartialList *l,double sampleRate,double fadeTime){
+			return new AiffFile( l->begin(), l->end(), sampleRate, fadeTime );
+		}
 SampleVector *AiffFile_samples(AiffFile *self){
-			SampleVector * vec = new SampleVector( self->sampleFrames() );
-			if ( ! vec->empty() )
-				self->getSamples( &((*vec)[0]), &((*vec)[vec->size()]) );
+			SampleVector * vec = new SampleVector( self->samples() );
 			return vec;
+		}
+int AiffFile_channels(AiffFile const *self){ return 1; }
+void AiffFile_addPartials(AiffFile *self,PartialList *l,double fadeTime){
+			self->addPartials( l->begin(), l->end(), fadeTime );
 		}
 
 	#include<Analyzer.h>
@@ -1983,7 +1989,7 @@ XS(_wrap_version) {
 }
 
 
-XS(_wrap_new_AiffFile) {
+XS(_wrap_new_AiffFile__SWIG_0) {
     char _swigmsg[SWIG_MAX_ERRMSG] = "";
     const char *_swigerr = _swigmsg;
     {
@@ -2001,6 +2007,57 @@ XS(_wrap_new_AiffFile) {
             try
             {
                 result = (AiffFile *)new AiffFile((char const *)arg1);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_AiffFile,0);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_new_AiffFile__SWIG_1) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        SampleVector *arg1 = 0 ;
+        double arg2 ;
+        AiffFile *result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 2) || (items > 2)) {
+            SWIG_croak("Usage: new_AiffFile(vec,samplerate);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_SampleVector,0) < 0) {
+                SWIG_croak("Type error in argument 1 of new_AiffFile. Expected _p_SampleVector");
+            }
+        }
+        arg2 = (double) SvNV(ST(1));
+        
+        {
+            try
+            {
+                result = (AiffFile *)new AiffFile(*arg1,arg2);
                 
             }
             catch( Loris::Exception & ex ) 
@@ -2074,102 +2131,6 @@ XS(_wrap_delete_AiffFile) {
 }
 
 
-XS(_wrap_AiffFile_channels) {
-    char _swigmsg[SWIG_MAX_ERRMSG] = "";
-    const char *_swigerr = _swigmsg;
-    {
-        AiffFile *arg1 = (AiffFile *) 0 ;
-        int result;
-        int argvi = 0;
-        dXSARGS;
-        
-        if ((items < 1) || (items > 1)) {
-            SWIG_croak("Usage: AiffFile_channels(self);");
-        }
-        {
-            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_AiffFile,0) < 0) {
-                SWIG_croak("Type error in argument 1 of AiffFile_channels. Expected _p_AiffFile");
-            }
-        }
-        {
-            try
-            {
-                result = (int)((AiffFile const *)arg1)->channels();
-                
-            }
-            catch( Loris::Exception & ex ) 
-            {
-                //	catch Loris::Exceptions:
-                std::string s("Loris exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-            catch( std::exception & ex ) 
-            {
-                //	catch std::exceptions:
-                std::string s("std C++ exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-        }
-        ST(argvi) = sv_newmortal();
-        sv_setiv(ST(argvi++), (IV) result);
-        XSRETURN(argvi);
-        fail:
-        (void) _swigerr;
-    }
-    croak(_swigerr);
-}
-
-
-XS(_wrap_AiffFile_sampleFrames) {
-    char _swigmsg[SWIG_MAX_ERRMSG] = "";
-    const char *_swigerr = _swigmsg;
-    {
-        AiffFile *arg1 = (AiffFile *) 0 ;
-        unsigned long result;
-        int argvi = 0;
-        dXSARGS;
-        
-        if ((items < 1) || (items > 1)) {
-            SWIG_croak("Usage: AiffFile_sampleFrames(self);");
-        }
-        {
-            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_AiffFile,0) < 0) {
-                SWIG_croak("Type error in argument 1 of AiffFile_sampleFrames. Expected _p_AiffFile");
-            }
-        }
-        {
-            try
-            {
-                result = (unsigned long)((AiffFile const *)arg1)->sampleFrames();
-                
-            }
-            catch( Loris::Exception & ex ) 
-            {
-                //	catch Loris::Exceptions:
-                std::string s("Loris exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-            catch( std::exception & ex ) 
-            {
-                //	catch std::exceptions:
-                std::string s("std C++ exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-        }
-        ST(argvi) = sv_newmortal();
-        sv_setuv(ST(argvi++), (UV) result);
-        XSRETURN(argvi);
-        fail:
-        (void) _swigerr;
-    }
-    croak(_swigerr);
-}
-
-
 XS(_wrap_AiffFile_sampleRate) {
     char _swigmsg[SWIG_MAX_ERRMSG] = "";
     const char *_swigerr = _swigmsg;
@@ -2218,27 +2179,27 @@ XS(_wrap_AiffFile_sampleRate) {
 }
 
 
-XS(_wrap_AiffFile_sampleSize) {
+XS(_wrap_AiffFile_midiNoteNumber) {
     char _swigmsg[SWIG_MAX_ERRMSG] = "";
     const char *_swigerr = _swigmsg;
     {
         AiffFile *arg1 = (AiffFile *) 0 ;
-        int result;
+        double result;
         int argvi = 0;
         dXSARGS;
         
         if ((items < 1) || (items > 1)) {
-            SWIG_croak("Usage: AiffFile_sampleSize(self);");
+            SWIG_croak("Usage: AiffFile_midiNoteNumber(self);");
         }
         {
             if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_AiffFile,0) < 0) {
-                SWIG_croak("Type error in argument 1 of AiffFile_sampleSize. Expected _p_AiffFile");
+                SWIG_croak("Type error in argument 1 of AiffFile_midiNoteNumber. Expected _p_AiffFile");
             }
         }
         {
             try
             {
-                result = (int)((AiffFile const *)arg1)->sampleSize();
+                result = (double)((AiffFile const *)arg1)->midiNoteNumber();
                 
             }
             catch( Loris::Exception & ex ) 
@@ -2257,12 +2218,286 @@ XS(_wrap_AiffFile_sampleSize) {
             }
         }
         ST(argvi) = sv_newmortal();
-        sv_setiv(ST(argvi++), (IV) result);
+        sv_setnv(ST(argvi++), (double) result);
         XSRETURN(argvi);
         fail:
         (void) _swigerr;
     }
     croak(_swigerr);
+}
+
+
+XS(_wrap_AiffFile_sampleFrames) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        AiffFile *arg1 = (AiffFile *) 0 ;
+        unsigned long result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 1) || (items > 1)) {
+            SWIG_croak("Usage: AiffFile_sampleFrames(self);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_AiffFile,0) < 0) {
+                SWIG_croak("Type error in argument 1 of AiffFile_sampleFrames. Expected _p_AiffFile");
+            }
+        }
+        {
+            try
+            {
+                result = (unsigned long)((AiffFile const *)arg1)->numFrames();
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        sv_setuv(ST(argvi++), (UV) result);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_AiffFile_addPartial) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        AiffFile *arg1 = (AiffFile *) 0 ;
+        Loris::Partial *arg2 = 0 ;
+        double arg3 = (double) .001 ;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 2) || (items > 3)) {
+            SWIG_croak("Usage: AiffFile_addPartial(self,p,fadeTime);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_AiffFile,0) < 0) {
+                SWIG_croak("Type error in argument 1 of AiffFile_addPartial. Expected _p_AiffFile");
+            }
+        }
+        {
+            if (SWIG_ConvertPtr(ST(1), (void **) &arg2, SWIGTYPE_p_Loris__Partial,0) < 0) {
+                SWIG_croak("Type error in argument 2 of AiffFile_addPartial. Expected _p_Loris__Partial");
+            }
+        }
+        if (items > 2) {
+            arg3 = (double) SvNV(ST(2));
+            
+        }
+        {
+            try
+            {
+                (arg1)->addPartial((Loris::Partial const &)*arg2,arg3);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_AiffFile_setMidiNoteNumber) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        AiffFile *arg1 = (AiffFile *) 0 ;
+        double arg2 ;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 2) || (items > 2)) {
+            SWIG_croak("Usage: AiffFile_setMidiNoteNumber(self,nn);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_AiffFile,0) < 0) {
+                SWIG_croak("Type error in argument 1 of AiffFile_setMidiNoteNumber. Expected _p_AiffFile");
+            }
+        }
+        arg2 = (double) SvNV(ST(1));
+        
+        {
+            try
+            {
+                (arg1)->setMidiNoteNumber(arg2);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_new_AiffFile__SWIG_2) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        PartialList *arg1 = (PartialList *) 0 ;
+        double arg2 ;
+        double arg3 = (double) .001 ;
+        AiffFile *result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 2) || (items > 3)) {
+            SWIG_croak("Usage: new_AiffFile(l,sampleRate,fadeTime);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialList,0) < 0) {
+                SWIG_croak("Type error in argument 1 of new_AiffFile. Expected _p_PartialList");
+            }
+        }
+        arg2 = (double) SvNV(ST(1));
+        
+        if (items > 2) {
+            arg3 = (double) SvNV(ST(2));
+            
+        }
+        {
+            try
+            {
+                result = (AiffFile *)new_AiffFile__SWIG_2(arg1,arg2,arg3);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_AiffFile,0);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_new_AiffFile) {
+    dXSARGS;
+    
+    if (items == 1) {
+        int _v;
+        {
+            _v = SvPOK(ST(0)) ? 1 : 0;
+        }
+        if (_v) {
+            (*PL_markstack_ptr++);SWIG_CALLXS(_wrap_new_AiffFile__SWIG_0); return;
+        }
+    }
+    if (items == 2) {
+        int _v;
+        {
+            void *tmp;
+            if (SWIG_ConvertPtr(ST(0), (void **) &tmp, SWIGTYPE_p_SampleVector, 0) == -1) {
+                _v = 0;
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                _v = SvNOK(ST(1)) ? 1 : 0;
+            }
+            if (_v) {
+                (*PL_markstack_ptr++);SWIG_CALLXS(_wrap_new_AiffFile__SWIG_1); return;
+            }
+        }
+    }
+    if ((items >= 2) && (items <= 3)) {
+        int _v;
+        {
+            void *tmp;
+            if (SWIG_ConvertPtr(ST(0), (void **) &tmp, SWIGTYPE_p_PartialList, 0) == -1) {
+                _v = 0;
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                _v = SvNOK(ST(1)) ? 1 : 0;
+            }
+            if (_v) {
+                if (items <= 2) {
+                    (*PL_markstack_ptr++);SWIG_CALLXS(_wrap_new_AiffFile__SWIG_2); return;
+                }
+                {
+                    _v = SvNOK(ST(2)) ? 1 : 0;
+                }
+                if (_v) {
+                    (*PL_markstack_ptr++);SWIG_CALLXS(_wrap_new_AiffFile__SWIG_2); return;
+                }
+            }
+        }
+    }
+    
+    croak("No matching function for overloaded 'new_AiffFile'");
+    XSRETURN(0);
 }
 
 
@@ -2306,6 +2541,111 @@ XS(_wrap_AiffFile_samples) {
         }
         ST(argvi) = sv_newmortal();
         SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_SampleVector,0);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_AiffFile_channels) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        AiffFile *arg1 = (AiffFile *) 0 ;
+        int result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 1) || (items > 1)) {
+            SWIG_croak("Usage: AiffFile_channels(self);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_AiffFile,0) < 0) {
+                SWIG_croak("Type error in argument 1 of AiffFile_channels. Expected _p_AiffFile");
+            }
+        }
+        {
+            try
+            {
+                result = (int)AiffFile_channels((AiffFile const *)arg1);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        sv_setiv(ST(argvi++), (IV) result);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_AiffFile_addPartials) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        AiffFile *arg1 = (AiffFile *) 0 ;
+        PartialList *arg2 = (PartialList *) 0 ;
+        double arg3 = (double) 0.001 ;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 2) || (items > 3)) {
+            SWIG_croak("Usage: AiffFile_addPartials(self,l,fadeTime);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_AiffFile,0) < 0) {
+                SWIG_croak("Type error in argument 1 of AiffFile_addPartials. Expected _p_AiffFile");
+            }
+        }
+        {
+            if (SWIG_ConvertPtr(ST(1), (void **) &arg2, SWIGTYPE_p_PartialList,0) < 0) {
+                SWIG_croak("Type error in argument 2 of AiffFile_addPartials. Expected _p_PartialList");
+            }
+        }
+        if (items > 2) {
+            arg3 = (double) SvNV(ST(2));
+            
+        }
+        {
+            try
+            {
+                AiffFile_addPartials(arg1,arg2,arg3);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        
         XSRETURN(argvi);
         fail:
         (void) _swigerr;
@@ -8460,34 +8800,36 @@ XS(_wrap_BreakpointPosition_setPhase) {
 
 /* -------- TYPE CONVERSION AND EQUIVALENCE RULES (BEGIN) -------- */
 
-static swig_type_info _swigt__p_Partial[] = {{"_p_Partial", 0, "Partial *", 0},{"_p_Partial"},{0}};
 static swig_type_info _swigt__p_PartialList[] = {{"_p_PartialList", 0, "PartialList *", 0},{"_p_PartialList"},{0}};
-static swig_type_info _swigt__p_SampleVector[] = {{"_p_SampleVector", 0, "SampleVector *", 0},{"_p_SampleVector"},{0}};
-static swig_type_info _swigt__p_AiffFile[] = {{"_p_AiffFile", 0, "AiffFile *", 0},{"_p_AiffFile"},{0}};
-static swig_type_info _swigt__p_BreakpointPosition[] = {{"_p_BreakpointPosition", 0, "BreakpointPosition *", 0},{"_p_BreakpointPosition"},{0}};
-static swig_type_info _swigt__p_Analyzer[] = {{"_p_Analyzer", 0, "Analyzer *", 0},{"_p_Analyzer"},{0}};
-static swig_type_info _swigt__p_NewPlistIterator[] = {{"_p_NewPlistIterator", 0, "NewPlistIterator *", 0},{"_p_NewPlistIterator"},{0}};
-static swig_type_info _swigt__p_NewPartialIterator[] = {{"_p_NewPartialIterator", 0, "NewPartialIterator *", 0},{"_p_NewPartialIterator"},{0}};
-static swig_type_info _swigt__p_double[] = {{"_p_double", 0, "double *", 0},{"_p_double"},{0}};
-static swig_type_info _swigt__p_PartialListIterator[] = {{"_p_PartialListIterator", 0, "PartialListIterator *", 0},{"_p_PartialListIterator"},{0}};
-static swig_type_info _swigt__p_PartialIterator[] = {{"_p_PartialIterator", 0, "PartialIterator *", 0},{"_p_PartialIterator"},{0}};
 static swig_type_info _swigt__p_Breakpoint[] = {{"_p_Breakpoint", 0, "Breakpoint *", 0},{"_p_Breakpoint"},{0}};
+static swig_type_info _swigt__p_Analyzer[] = {{"_p_Analyzer", 0, "Analyzer *", 0},{"_p_Analyzer"},{0}};
+static swig_type_info _swigt__p_double[] = {{"_p_double", 0, "double *", 0},{"_p_double"},{0}};
+static swig_type_info _swigt__p_Partial[] = {{"_p_Partial", 0, "Partial *", 0},{"_p_Partial"},{0}};
+static swig_type_info _swigt__p_Loris__Partial[] = {{"_p_Loris__Partial", 0, "Loris::Partial *", 0},{"_p_Loris__Partial"},{0}};
 static swig_type_info _swigt__p_BreakpointEnvelope[] = {{"_p_BreakpointEnvelope", 0, "BreakpointEnvelope *", 0},{"_p_BreakpointEnvelope"},{0}};
+static swig_type_info _swigt__p_BreakpointPosition[] = {{"_p_BreakpointPosition", 0, "BreakpointPosition *", 0},{"_p_BreakpointPosition"},{0}};
+static swig_type_info _swigt__p_AiffFile[] = {{"_p_AiffFile", 0, "AiffFile *", 0},{"_p_AiffFile"},{0}};
+static swig_type_info _swigt__p_SampleVector[] = {{"_p_SampleVector", 0, "SampleVector *", 0},{"_p_SampleVector"},{0}};
+static swig_type_info _swigt__p_PartialIterator[] = {{"_p_PartialIterator", 0, "PartialIterator *", 0},{"_p_PartialIterator"},{0}};
+static swig_type_info _swigt__p_PartialListIterator[] = {{"_p_PartialListIterator", 0, "PartialListIterator *", 0},{"_p_PartialListIterator"},{0}};
+static swig_type_info _swigt__p_NewPartialIterator[] = {{"_p_NewPartialIterator", 0, "NewPartialIterator *", 0},{"_p_NewPartialIterator"},{0}};
+static swig_type_info _swigt__p_NewPlistIterator[] = {{"_p_NewPlistIterator", 0, "NewPlistIterator *", 0},{"_p_NewPlistIterator"},{0}};
 
 static swig_type_info *swig_types_initial[] = {
-_swigt__p_Partial, 
 _swigt__p_PartialList, 
-_swigt__p_SampleVector, 
-_swigt__p_AiffFile, 
-_swigt__p_BreakpointPosition, 
-_swigt__p_Analyzer, 
-_swigt__p_NewPlistIterator, 
-_swigt__p_NewPartialIterator, 
-_swigt__p_double, 
-_swigt__p_PartialListIterator, 
-_swigt__p_PartialIterator, 
 _swigt__p_Breakpoint, 
+_swigt__p_Analyzer, 
+_swigt__p_double, 
+_swigt__p_Partial, 
+_swigt__p_Loris__Partial, 
 _swigt__p_BreakpointEnvelope, 
+_swigt__p_BreakpointPosition, 
+_swigt__p_AiffFile, 
+_swigt__p_SampleVector, 
+_swigt__p_PartialIterator, 
+_swigt__p_PartialListIterator, 
+_swigt__p_NewPartialIterator, 
+_swigt__p_NewPlistIterator, 
 0
 };
 
@@ -8526,13 +8868,16 @@ static swig_command_info swig_commands[] = {
 {"perLoris::resample", _wrap_resample},
 {"perLoris::sift", _wrap_sift},
 {"perLoris::version", _wrap_version},
-{"perLoris::new_AiffFile", _wrap_new_AiffFile},
 {"perLoris::delete_AiffFile", _wrap_delete_AiffFile},
-{"perLoris::AiffFile_channels", _wrap_AiffFile_channels},
-{"perLoris::AiffFile_sampleFrames", _wrap_AiffFile_sampleFrames},
 {"perLoris::AiffFile_sampleRate", _wrap_AiffFile_sampleRate},
-{"perLoris::AiffFile_sampleSize", _wrap_AiffFile_sampleSize},
+{"perLoris::AiffFile_midiNoteNumber", _wrap_AiffFile_midiNoteNumber},
+{"perLoris::AiffFile_sampleFrames", _wrap_AiffFile_sampleFrames},
+{"perLoris::AiffFile_addPartial", _wrap_AiffFile_addPartial},
+{"perLoris::AiffFile_setMidiNoteNumber", _wrap_AiffFile_setMidiNoteNumber},
+{"perLoris::new_AiffFile", _wrap_new_AiffFile},
 {"perLoris::AiffFile_samples", _wrap_AiffFile_samples},
+{"perLoris::AiffFile_channels", _wrap_AiffFile_channels},
+{"perLoris::AiffFile_addPartials", _wrap_AiffFile_addPartials},
 {"perLoris::new_Analyzer", _wrap_new_Analyzer},
 {"perLoris::Analyzer_copy", _wrap_Analyzer_copy},
 {"perLoris::Analyzer_analyze", _wrap_Analyzer_analyze},

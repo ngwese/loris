@@ -45,6 +45,7 @@
 #include <ieee.h>
 
 #include <climits>
+#include <cmath>
 #include <fstream>
 #include <iostream>
 

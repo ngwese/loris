@@ -33,13 +33,13 @@
  *
  */
 
-#include <memory>
+#include <NoiseGenerator.h>
 #include <vector>
 
 //	begin namespace
 namespace Loris {
 
-class Filter;	
+class Breakpoint;
 
 // ---------------------------------------------------------------------------
 //	class Oscillator
@@ -47,98 +47,63 @@ class Filter;
 //	Class Oscillator represents the state of a single bandwidth-enhanced
 //	sinusoidal oscillator used for synthesizing sounds from Reassigned
 //	Bandwidth-Enhanced analysis data. Oscillator encapsulates the oscillator
-//	state, including the instan- taneous radian frequency (radians per
-//	sample), amplitude, bandwidth coefficient, and phase, and a filter
-//	object used to generate the bandlimited stochastic modulator. Class
-//	Synthesizer uses an instance of Oscillator to synthesize
+//	state, including the instantaneous radian frequency (radians per
+//	sample), amplitude, bandwidth coefficient, and phase, and a 
+//	bandlimited stochastic modulator. 
+//
+//	Class Synthesizer uses an instance of Oscillator to synthesize
 //	bandwidth-enhanced Partials.
 //
 class Oscillator
 {
-//	-- instance variables --
-//	internal state:
-	double _frequency;	//	radians per sample
-	double _amplitude;	//	absolute
-	double _bandwidth;	//	bandwidth coefficient (noise energy / total energy)
-	double _phase;		//	radians
+//	--- implementation _--
 
-//	filter for stochastic modulation:
-	std::auto_ptr< Filter > _filter;
+	//	stochastic modulators:
+	NoiseGenerator bwModulator;
+	
+	//	instantaneous oscillator state:
+	double i_frequency;	//	radians per sample
+	double i_amplitude;	//	absolute
+	double i_bandwidth;	//	bandwidth coefficient (noise energy / total energy)
+	
+	//	accumulating phase state:
+	double determ_phase;	//	deterministic phase in radians
 
-//	-- public interface --
+//	--- interface ---
 public:
-//	-- construction --
-	Oscillator( double radf, double a, double bw, double ph );
-	/*	Construct a new Oscillator with the initial state parameters 
-		(radian frequencym amplitude, bandwidth coefficient, and phase)
-		as specified.
-	 */
-	 
+//	--- construction --_
 	Oscillator( void );
 	/*	Construct a new Oscillator with all state parameters initialized
 		to 0.
 	 */
 	 
-	Oscillator( const Oscillator & other );
-	/* 	Construct a new Oscillator that has the same state paramters
-		as another Oscillator. The filter used by the new Oscillator
-		will have the same coefficients and response as the other
-		Oscillator, but the state of the filter delay lines is not 
-		copied.
-	 */
 	 
-	~Oscillator( void );
-	/* 	Destroy this Oscillator.
-	 */
+	//	Copy, assignment, and destruction are free.
+	//
+	// 	Copied and assigned Oscillators have the duplicate state
+	//	variables and the filters have the same coefficients,
+	//	but the state of the filter delay lines is not copied.
+
+//	-- the new way --
 	 
-	Oscillator & operator= ( const Oscillator & other );
-	/*	Assignment operator: make this Oscillator an exact copy of
-		another Oscillator. The filter used by this Oscillator
-		will have the same coefficients and response as the other
-		Oscillator, but the state of the filter delay lines is not 
-		copied.
+	void resetEnvelopes( const Breakpoint & bp, double srate );
+	/*	Reset the instantaneous envelope parameters 
+	 	(frequency, amplitude, bandwidth, and phase).
+	 	The sample rate is needed to convert the 
+	 	Breakpoint frequency (Hz) to radians per sample.
+	  */
+	  
+	void resetPhase( double ph );
+	/*	Reset the phase of the Oscillator to the specified
+		value, and clear the accumulated phase modulation. (?)
+		Or not.
+		This is done when the amplitude of a Partial goes to 
+		zero, so that onsets are preserved in distilled
+		and collated Partials.
 	 */
-	 
-//	-- state access --
-	double amplitude( void ) const { return _amplitude; }
-	/* Return the current instantaneous amplitude of this Oscillator.
-	 */
-	 
-	double bandwidth( void ) const { return _bandwidth; }
-	/*	Return the current instantaneous bandwidth coefficient of this
-		Oscillator.
-	 */
-	 
-	double phase( void ) const { return _phase; }
-	/*	Return the current instantaneous phase of this Oscillator.
-	 */
-	 
-	double radianFreq( void ) const { return _frequency; }
-	/*	Return the current instantaneous frequency (in radians per sample)
-		of this Oscillator.	
-	 */
-	 
-//	-- state mutation --
-	void setAmplitude( double x ) { _amplitude = x; }
-	/* 	Set the instantaneous amplitude of this Oscillator.
-	 */
-	 
-	void setBandwidth( double x ) { _bandwidth = x; }
-	/* 	Set the instantaneous bandwidth coefficient of this Oscillator.
-	 */
-	 
-	void setPhase( double x ) { _phase = x; }
-	/*	Set the instantaneous phase of this Oscillator.
-	 */
-	 
-	void setRadianFreq( double x ) { _frequency = x; }
-	/*	Set the instantaneous frequency (in radians per sample) 
-		of this Oscillator.
-	 */
-	 
-//	-- sample generation --
-	void generateSamples( double * begin, double * end,
-						  double targetFreq, double targetAmp, double targetBw );
+
+	void oscillate( double * begin, double * end,
+					const Breakpoint & bp, double srate );
 	/*	Accumulate bandwidth-enhanced sinusoidal samples modulating the
 		oscillator state from its current values of radian frequency, amplitude,
 		and bandwidth to the specified target values. Accumulate samples into

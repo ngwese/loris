@@ -627,27 +627,71 @@ class AiffFile
 {
 public:
 	AiffFile( const char * filename );
+	AiffFile( SampleVector & vec, double samplerate );
+
 	~AiffFile( void );
 	
-	int channels( void ) const;
-	unsigned long sampleFrames( void ) const;
 	double sampleRate( void ) const;
-	int sampleSize( void ) const;
-	 
+	double midiNoteNumber( void ) const;
+
+	//	this has been renamed
+	%rename( sampleFrames ) numFrames;
+	unsigned long numFrames( void ) const;
+		
+	// int sampleSize( void ) const;
+	//	cannot implement sampleSize anymore, that
+	//	has only to do with writing, samples are
+	//	converted as they are read in now.
+
+	void addPartial( const Loris::Partial & p, double fadeTime = .001 /* 1 ms */ );
+	/*	Render the specified Partial using the (optionally) specified
+		Partial fade time, and accumulate the resulting samples into
+		the sample vector for this AiffFile.
+	 */
+
+	void setMidiNoteNumber( double nn );
+	/*	Set the fractional MIDI note number assigned to this AiffFile. 
+		If the sound has no definable pitch, use note number 60.0 (the default).
+	 */
+		 
 	%extend 
 	{
+		AiffFile( PartialList * l, double sampleRate, double fadeTime = .001 ) 
+		{
+			return new AiffFile( l->begin(), l->end(), sampleRate, fadeTime );
+		}
+		/*	Initialize an instance of AiffFile having the specified sample 
+			rate, accumulating samples rendered at that sample rate from
+			all Partials on the specified half-open (STL-style) range with
+			the (optionally) specified Partial fade time (see Synthesizer.h
+			for an examplanation of fade time). 
+		 */
+	
+		//	return a copy of the sample vector 
+		//	from this AiffFile
 		SampleVector * samples( void )
 		{
-			SampleVector * vec = new SampleVector( self->sampleFrames() );
-			if ( ! vec->empty() )
-				self->getSamples( &((*vec)[0]), &((*vec)[vec->size()]) );
+			SampleVector * vec = new SampleVector( self->samples() );
 			return vec;
 		}
+		/*	Return a SampleVector containing the AIFF samples from this AIFF 
+			file as double precision floats on the range -1,1.
+		 */
 		 
+		//	Loris only deals in mono AiffFiles
+		int channels( void ) const { return 1; }
+
+		//	add a PartialList of Partials:
+		void addPartials( PartialList * l, double fadeTime = 0.001/* 1ms */ )
+		{
+			self->addPartials( l->begin(), l->end(), fadeTime );
+		}
+		/*	Render all Partials on the specified half-open (STL-style) range
+			with the (optionally) specified Partial fade time (see Synthesizer.h
+			for an examplanation of fade time), and accumulate the resulting 
+			samples. 
+		 */
 	}	
-	/*	Return a SampleVector containing the AIFF samples from this AIFF 
-		file as double precision floats on the range -1,1.
-	 */
 };
 
 // ---------------------------------------------------------------------------

@@ -701,7 +701,7 @@ void synthesize( const PartialList * partials,
 			samples->resize( nsamps, 0. );
 		
 		//	synthesize:
-		Synthesizer synth( srate, &((*samples)[0]), &((*samples)[samples->size()]) );
+		Synthesizer synth( srate, *samples );
 		for ( it = partials->begin(); it != partials->end(); ++it ) 
 		{
 			synth.synthesize( *it );

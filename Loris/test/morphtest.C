@@ -75,8 +75,7 @@ int main( )
 		std::cout << "analyzing clarinet 3G#" << endl;
 		Analyzer a(415*.8, 415*1.6);
 		AiffFile f( path + "clarinet.aiff" );
-		std::vector< double > v( f.sampleFrames() );
-		f.getSamples( &*v.begin(), &*v.end() );
+		std::vector< double > v = f.samples(); 
 		
 		std::list< Partial > clar;
 		a.analyze( &*v.begin(), &*v.end(), f.sampleRate() );
@@ -114,16 +113,16 @@ int main( )
 		// check clarinet synthesis:
 		std::cout << "checking clarinet synthesis" << endl;
 		std::fill( v.begin(), v.end(), 0. );
-		Synthesizer synth( f.sampleRate(), &*v.begin(), &*v.end() );
+		Synthesizer synth( f.sampleRate(), v );
 		synth.synthesize( clar.begin(), clar.end() );
-		AiffFile::Export( "clarOK.ctest.aiff", f.sampleRate(), 1, 16, &*v.begin(), &*v.end() ); 	
+		AiffFile clarout( v, f.sampleRate() );
+		clarout.write( "clarOK.ctest.aiff", 16 );
 		
 		//	analyze flute tone
 		std::cout << "analyzing flute 3D" << endl;
 		a = Analyzer(270);
 		f = AiffFile( path + "flute.aiff" );
-		v = std::vector< double >( f.sampleFrames() );
-		f.getSamples( &*v.begin(), &*v.end() );
+		v = f.samples();
 		
 		std::list< Partial > flut;
 		a.analyze( &*v.begin(), &*v.end(), f.sampleRate() );
@@ -137,11 +136,8 @@ int main( )
 
 		// check flute synthesis:
 		std::cout << "checking flute synthesis" << endl;
-		std::fill( v.begin(), v.end(), 0. );
-		synth = Synthesizer( f.sampleRate(), &*v.begin(), &*v.end() );
-		synth.synthesize( flut.begin(), flut.end() );
-		AiffFile::Export( "flutOK.ctest.aiff", f.sampleRate(), 1, 16, &*v.begin(), &*v.end() ); 	
-		
+		AiffFile flutout( flut.begin(), flut.end(), f.sampleRate() );
+		flutout.write( 	"flutOK.ctest.aiff" );
 			
 		// perform temporal dilation
 		double flute_times[] = {0.4, 1.};
@@ -181,10 +177,8 @@ int main( )
 		std::cout << maxtime << " seconds" << endl;
 
 		const double fadeTime = .001; 	//	1ms
-		v = std::vector< double >( long( (maxtime + fadeTime) * f.sampleRate() ) );
-		synth = Synthesizer( f.sampleRate(), &*v.begin(), &*v.end(), fadeTime );
-		synth.synthesize(  m.partials().begin(), m.partials().end() );
-		AiffFile::Export( "morph.ctest.aiff", f.sampleRate(), 1, 16, &*v.begin(), &*v.end() ); 	
+		AiffFile morphout( m.partials().begin(), m.partials().end(), f.sampleRate(), fadeTime );
+		morphout.write( "morph.ctest.aiff" );
 
 	}
 	catch( Exception & ex ) 
