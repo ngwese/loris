@@ -46,6 +46,14 @@ else
 test_distiller_LDADD = $(top_builddir)/pi/libloris.la
 endif
 
+# SdifFile unit tests
+test_sdiffile_SOURCES = test_SdifFile.C
+if DARWIN
+test_sdiffile_LDADD = $(top_builddir)/pi/.libs/libloris.a
+else
+test_sdiffile_LDADD = $(top_builddir)/pi/libloris.la
+endif
+
 if BUILD_PYTHON
 PYTHON_TEST = run_pytest
 $(PYTHON_TEST):
@@ -70,7 +78,7 @@ $(PERL_TEST):
 	chmod +x $@
 endif
 
-check_PROGRAMS = test_morpher test_partial test_distiller test_c
+check_PROGRAMS = test_partial test_distiller test_sdiffile test_morpher test_c
 check_SCRIPTS = $(PYTHON_TEST) $(TCL_TEST) $(PERL_TEST)
 
 TESTS = $(check_PROGRAMS) $(check_SCRIPTS) 
