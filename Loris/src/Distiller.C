@@ -198,6 +198,18 @@ Distiller::distill( PartialList & partials )
 // ---------------------------------------------------------------------------
 //	overlap	(STATIC)
 // ---------------------------------------------------------------------------
+//	Return true if the specified Partials overlap temporally.
+//
+static bool
+overlap( const Partial & p1, const Partial & p2 )
+{
+	return p1.startTime() < p2.endTime() && 
+		   p1.endTime() > p2.startTime();
+}
+
+// ---------------------------------------------------------------------------
+//	overlap	(STATIC)
+// ---------------------------------------------------------------------------
 //	Return true if the specified Partial overlaps temporally with any
 //	Partial in the given iterator range.
 //
@@ -207,8 +219,7 @@ overlap( Iterator partial, Iterator begin, Iterator end )
 {
 	for ( Iterator it = begin; it != end; ++it )
 	{
-		if ( partial->startTime() < it->endTime() && 
-			 partial->endTime() > it->startTime() )
+		if ( overlap( *partial, *it ) )
 			return true;
 	}
 	return false;
@@ -234,6 +245,115 @@ collectEnergy( double time, Iterator begin, Iterator end )
 }
 
 // ---------------------------------------------------------------------------
+//	mergeNonOverlapping	(STATIC)
+// ---------------------------------------------------------------------------
+//	Merge the src Partial into the dst Partial, by adding its Breakpoints.
+//	src is assumed _not_ to overlap any part of the dst Partial having
+//	non-zero amplitude.
+//
+static void mergeNonOverlapping( const Partial & src, Partial & dst, double fadeTime )
+{
+	Assert( !overlap( src, dst ) );
+	
+	//	look for null Breakpoints in dst that may need
+	//	to be removed. No Partial in the distillation range
+	//	overlaps this one (it), so nulls will be either
+	//	the Breakpoint right before or right after the
+	//	start time for this Partial (or both?):
+	//
+	//	Find the earliest position in dst after the start time
+	//	of the current Partial. If there is such a position, and
+	//	if the Breakpoint in dst after it->startTime() is a null
+	//	and is closer to it->endTime() than _fadeTime, get rid of it,
+	//	it is too close:
+	//	(note: this will work even if the current Partial has only
+	//	a single Breakpoint, but only because of the overlap check
+	//	above)
+	Partial::iterator after = dst.findAfter( src.startTime() );
+	if ( after != dst.end() && 
+		 after.time() < src.startTime() + fadeTime &&
+		 after.breakpoint().amplitude() == 0. )
+	{
+		//	remove it:
+		//	post-increment so that after is still
+		//	valid and is still the position of the
+		//	first Breakpoint after src.startTime();
+		//	always safe because list erasure only 
+		//	invalidates the erased position, and 
+		//	because after is not dst.end().
+		dst.erase( after++ );
+	}
+	
+	//	if the Breakpoint in dst before src.startTime() is a null
+	//	and is closer than _fadeTime, get rid of it, its
+	//	too close:
+	//	(note: this will work even if the current Partial has only
+	//	a single Breakpoint, but only because of the overlap check
+	//	above)
+	//
+	Partial::iterator before = after;	//	don't decrement until we are sure that
+										//	after is not dst.begin(); undefined behavior
+	if ( after != dst.begin() && 
+		 (--before).time() > src.startTime() - fadeTime )
+	{	 
+		//	there's a Breakpoint soon before this Partial,
+		//	if its a null, remove it:
+		// 	before is no longer valid after this!
+		if ( before.breakpoint().amplitude() == 0. )
+		{
+			dst.erase( before );
+		}
+	}
+	else
+	{
+		//	nothing earlier than this Partial, or everything 
+		//	else (so far) is much earlier than this Partial,
+		//	insert a zero-amplitude Breakpoint before the
+		//	beginning of this Partial:
+		Breakpoint zeroBp = src.begin().breakpoint();
+		zeroBp.setAmplitude( 0. );
+		dst.insert( std::max( src.startTime() - fadeTime, 0. ), zeroBp );
+	}
+	
+	//	adding in the src Partial:
+	//
+	//	for each breakpoint in this partial:
+	//		add a copy of this breakpoint to the new partial
+	//
+	Partial::iterator lastInsert;
+	for ( Partial::const_iterator envpos = src.begin(); envpos != src.end(); ++envpos )
+	{
+		lastInsert = dst.insert( envpos.time(), envpos.breakpoint() );
+	}
+
+	//	the last Breakpoint inserted is at position lastInsert, 
+	//	if the next Breakpoint in dst is == dst.end, or
+	//	is more than Partial:FadeTime() away, then insert a 
+	//	zero-amplitude Breakpoint:
+	Partial::iterator next( lastInsert );
+	++next;
+	double tend = src.endTime() + fadeTime;
+	if ( next != dst.end() && next.time() < tend )
+	{
+		//	the next Breakpoint after this Partial is near,
+		//	if its a null, get rid of it:
+		if ( next.breakpoint().amplitude() == 0 )
+		{
+			dst.erase( next );
+		}
+	}
+	else
+	{
+		//	nothing after this Partial, or everything
+		//	else (so far) after this Partial is long after,
+		//	insert a null Breakpoint:
+		Breakpoint otherzeroBp = (--(src.end())).breakpoint();
+		otherzeroBp.setAmplitude( 0. );
+		lastInsert = dst.insert( tend, otherzeroBp );
+	}
+}
+
+// ---------------------------------------------------------------------------
 //	distill_aux		(STATIC)
 // ---------------------------------------------------------------------------
 //	Helper function for distilling Partials having a common label
@@ -255,112 +375,17 @@ static void distill_aux( PartialList & partials, int label,
 		// 	the list is sorted by Partial duration.
 		if ( ! overlap( it, partials.begin(), it ) )
 		{
-			//	look for null Breakpoints in newp that may need
-			//	to be removed. No Partial in the distillation range
-			//	overlaps this one (it), so nulls will be either
-			//	the Breakpoint right before or right after the
-			//	start time for this Partial (or both?):
-			//
-			//	Find the earliest position in newp after the start time
-			//	of the current Partial. If there is such a position, and
-			//	if the Breakpoint in newp after it->startTime() is a null
-			//	and is closer to it->endTime() than _fadeTime, get rid of it,
-			//	it is too close:
-			//	(note: this will work even if the current Partial has only
-			//	a single Breakpoint, but only because of the overlap check
-			//	above)
-			Partial::iterator after = newp.findAfter( it->startTime() );
-			if ( after != newp.end() && 
-				 after.time() < it->startTime() + fadeTime &&
-				 after.breakpoint().amplitude() == 0. )
-			{
-				//	remove it:
-				//	post-increment so that after is still
-				//	valid and is still the position of the
-				//	first Breakpoint after it->startTime();
-				//	always safe because list erasure only 
-				//	invalidates the erased position, and 
-				//	because after is not newp.end().
-				newp.erase( after++ );
-			}
-			
-			//	if the Breakpoint in newp before it->startTime() is a null
-			//	and is closer than _fadeTime, get rid of it, its
-			//	too close:
-			//	(note: this will work even if the current Partial has only
-			//	a single Breakpoint, but only because of the overlap check
-			//	above)
-			//
-			Partial::iterator before = after;	//	don't decrement until we are sure that
-												//	after is not newp.begin(); undefined behavior
-			if ( after != newp.begin() && 
-			     (--before).time() > it->startTime() - fadeTime )
-			{	 
-				//	there's a Breakpoint soon before this Partial,
-				//	if its a null, remove it:
-				// 	before is no longer valid after this!
-				if ( before.breakpoint().amplitude() == 0. )
-				{
-					newp.erase( before );
-				}
-			}
-			else
-			{
-				//	nothing earlier than this Partial, or everything 
-				//	else (so far) is much earlier than this Partial,
-				//	insert a zero-amplitude Breakpoint before the
-				//	beginning of this Partial:
-				Breakpoint zeroBp = it->begin().breakpoint();
-				zeroBp.setAmplitude( 0. );
-				newp.insert( std::max( it->startTime() - fadeTime, 0. ), zeroBp );
-			}
-			
 			//	adding in this Partial:
 			//
-			//	for each breakpoint in this partial:
-			//		add up all energy in shorter partials at the time
-			//			of this breakpoint
-			//		absorb all that energy as noise
-			//		add a copy of this breakpoint to the new partial
+			//	for each shorter partial:
+			//		absorb the short partial's energy as noise
+			//	add a copy of this partial to the new partial
 			//
-			Partial::iterator lastInsert;
-			for ( Partial::const_iterator envpos = it->begin(); envpos != it->end(); ++envpos )
-			{
-				Breakpoint bp = envpos.breakpoint();
-				double time = envpos.time();
-				PartialList::iterator nextp( it );
-				++nextp;
-				double xse = collectEnergy( time, nextp, partials.end() );
-				BreakpointUtils::addNoiseEnergy( bp, xse );
-				lastInsert = newp.insert( time, bp );
-			}
-	
-			//	the last Breakpoint inserted is at position lastInsert, 
-			//	if the next Breakpoint in newp is == newp.end, or
-			//	is more than Partial:FadeTime() away, then insert a 
-			//	zero-amplitude Breakpoint:
-			Partial::iterator next( lastInsert );
-			++next;
-			double tend = it->endTime() + fadeTime;
-			if ( next != newp.end() && next.time() < tend )
-			{
-				//	the next Breakpoint after this Partial is near,
-				//	if its a null, get rid of it:
-				if ( next.breakpoint().amplitude() == 0 )
-				{
-					newp.erase( next );
-				}
-			}
-			else
-			{
-				//	nothing after this Partial, or everything
-				//	else (so far) after this Partial is long after,
-				//	insert a null Breakpoint:
-				Breakpoint otherzeroBp = (--(it->end())).breakpoint();
-				otherzeroBp.setAmplitude( 0. );
-				lastInsert = newp.insert( tend, otherzeroBp );
-			}
-		
+			PartialList::iterator nextp( it );
+			while ( ++nextp != partials.end() )
+				it->absorb( *nextp );
+			mergeNonOverlapping( *it, newp, fadeTime );
+			
 		}	//	end of adding in this non-overlapping Partial
 		
 	}	//	end loop over partials to distill

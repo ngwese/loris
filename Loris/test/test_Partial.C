@@ -23,7 +23,9 @@
  *	test_Partial
  *
  *	Unit tests for Partial class. Relies on Breakpoint,
- *	Partial::iterator, and Loris Exceptions.
+ *	Partial::iterator, and Loris Exceptions. Build with
+ *	Partial.C, Breakpoint.C, Exception.C, and 
+ *	Notifier.C.
  *
  * Kelly Fitz, 15 April 2003
  * loris@cerlsoundgroup.org
@@ -42,6 +44,7 @@
 using namespace Loris;
 using namespace std;
 
+// --- macros ---
 
 #define TEST(invariant)									\
 	do {												\
@@ -68,7 +71,174 @@ static bool float_equal( double x, double y )
 		return std::fabs(x-y) < EPSILON;
 }
 
+#define SAME_PARAM_VALUES(x,y) TEST( float_equal((x),(y)) )
 
+// ----------- test_absorb -----------
+//
+static void test_absorb( void )
+{
+	std::cout << "\t--- testing Partial::absorb... ---\n\n";
+
+	//	Fabricate two Partials, and the correct result of aborbing
+	//	one into the other, verify that abosrb works: 
+	Partial p1, p2;
+	const int NUM_BPTS = 3;
+	const double P1_TIMES[] = {0, .8, 1};
+	const double P1_FREQS[] = {180, 180, 180};
+	const double P1_AMPS[] = {.2, .2, .4};
+	const double P1_BWS[] = {0, 0, .2};			
+	const double P1_PHS[] = {-.8, .8, -1.2}; 	
+		
+	for (int i = 0; i < NUM_BPTS; ++i )
+		p1.insert( P1_TIMES[i], Breakpoint( P1_FREQS[i], P1_AMPS[i], P1_BWS[i], P1_PHS[i] ) );
+		
+	const double P2_TIMES[] = {.2, .5, 1};
+	const double P2_FREQS[] = {200, 200, 200};
+	const double P2_AMPS[] = {.1, .6, .2};		
+	const double P2_BWS[] = {.9, .1, .1};		
+	const double P2_PHS[] = {0, 0, 0}; 
+	
+	for (int i = 0; i < NUM_BPTS; ++i )
+		p2.insert( P2_TIMES[i], Breakpoint( P2_FREQS[i], P2_AMPS[i], P2_BWS[i], P2_PHS[i] ) );
+		
+	//	the fused Partial should have Breakpoints at the same times
+	//	and frequencies as the absorbing Partial (p1):
+	Partial fuse_by_hand;
+	Partial::iterator it = p1.begin();
+	while ( it != p1.end() )
+	{
+		double t = it.time();
+		double f = p1.frequencyAt(t);
+		
+		double e1 = p1.amplitudeAt(t) * p1.amplitudeAt(t);
+		double e2 = p2.amplitudeAt(t) * p2.amplitudeAt(t);
+		
+		// the fused amplitude is the square root of the
+		// total energy:
+		double a = sqrt( e1 + e2 );
+		
+		// the fused bandwidth is the ratio of the noise energy
+		// to total energy, the noise energy is the noise energy
+		// in p1 added to the energy in p2:
+		double bw = ((e1 * p1.bandwidthAt(t)) + e2) / (e1 + e2);
+		
+		double ph = p1.phaseAt(t);
+		fuse_by_hand.insert( t, Breakpoint( f, a, bw, ph ) );
+		
+		++it;
+	}
+	
+	// now absorb p2 into a copy of p1:
+	Partial fused = p1;
+	fused.absorb( p2 );
+
+	//	check:
+	TEST( fused.numBreakpoints() == fuse_by_hand.numBreakpoints() );
+
+	SAME_PARAM_VALUES( fused.startTime(), fuse_by_hand.startTime() );
+	SAME_PARAM_VALUES( fused.endTime(), fuse_by_hand.endTime() );
+	SAME_PARAM_VALUES( fused.duration(), fuse_by_hand.duration() );
+	
+	SAME_PARAM_VALUES( fused.frequencyAt(0), fuse_by_hand.frequencyAt(0) );
+	SAME_PARAM_VALUES( fused.amplitudeAt(0), fuse_by_hand.amplitudeAt(0) );
+	SAME_PARAM_VALUES( fused.bandwidthAt(0), fuse_by_hand.bandwidthAt(0) );
+	SAME_PARAM_VALUES( fused.phaseAt(0), fuse_by_hand.phaseAt(0) );
+	
+	SAME_PARAM_VALUES( fused.frequencyAt(0.1), fuse_by_hand.frequencyAt(0.1) );
+	SAME_PARAM_VALUES( fused.amplitudeAt(0.1), fuse_by_hand.amplitudeAt(0.1) );
+	SAME_PARAM_VALUES( fused.bandwidthAt(0.1), fuse_by_hand.bandwidthAt(0.1) );
+	SAME_PARAM_VALUES( fused.phaseAt(0.1), fuse_by_hand.phaseAt(0.1) );
+	
+	SAME_PARAM_VALUES( fused.frequencyAt(0.3), fuse_by_hand.frequencyAt(0.3) );
+	SAME_PARAM_VALUES( fused.amplitudeAt(0.3), fuse_by_hand.amplitudeAt(0.3) );
+	SAME_PARAM_VALUES( fused.bandwidthAt(0.3), fuse_by_hand.bandwidthAt(0.3) );
+	SAME_PARAM_VALUES( fused.phaseAt(0.3), fuse_by_hand.phaseAt(0.3) );
+	
+	SAME_PARAM_VALUES( fused.frequencyAt(0.6), fuse_by_hand.frequencyAt(0.6) );
+	SAME_PARAM_VALUES( fused.amplitudeAt(0.6), fuse_by_hand.amplitudeAt(0.6) );
+	SAME_PARAM_VALUES( fused.bandwidthAt(0.6), fuse_by_hand.bandwidthAt(0.6) );
+	SAME_PARAM_VALUES( fused.phaseAt(0.6), fuse_by_hand.phaseAt(0.6) );
+	
+	SAME_PARAM_VALUES( fused.frequencyAt(0.85), fuse_by_hand.frequencyAt(0.85) );
+	SAME_PARAM_VALUES( fused.amplitudeAt(0.85), fuse_by_hand.amplitudeAt(0.85) );
+	SAME_PARAM_VALUES( fused.bandwidthAt(0.85), fuse_by_hand.bandwidthAt(0.85) );
+	SAME_PARAM_VALUES( fused.phaseAt(0.85), fuse_by_hand.phaseAt(0.85) );
+	
+	SAME_PARAM_VALUES( fused.frequencyAt(1), fuse_by_hand.frequencyAt(1) );
+	SAME_PARAM_VALUES( fused.amplitudeAt(1), fuse_by_hand.amplitudeAt(1) );
+	SAME_PARAM_VALUES( fused.bandwidthAt(1), fuse_by_hand.bandwidthAt(1) );
+	SAME_PARAM_VALUES( fused.phaseAt(1), fuse_by_hand.phaseAt(1) );
+}
+
+// ----------- test_split -----------
+//
+static void test_split( void )
+{
+	std::cout << "\t--- testing Partial::split... ---\n\n";
+
+	//	Fabricate a Partial, split it, and verify that
+	//	the two resulting Partials do not overlap, and
+	//	that they have the same Breakpoints as the original,
+	//	divided between them.
+	Partial original;
+	const int NUM_BPTS = 4;
+	const double P1_TIMES[] = {.2, .4, .7, .9};
+	const double P1_FREQS[] = {180, 150, 180, 170};
+	const double P1_AMPS[] = {.2, .25, .4, .3};
+	const double P1_BWS[] = {0, .1, .2, .3};			
+	const double P1_PHS[] = {-.8, .8, -1.2, .8}; 	
+	
+	for (int i = 0; i < NUM_BPTS; ++i )
+		original.insert( P1_TIMES[i], Breakpoint( P1_FREQS[i], P1_AMPS[i], P1_BWS[i], P1_PHS[i] ) );
+	
+	Partial p1 = original;
+	// split into two Partials, two Breakpoints each:
+	Partial p2 = p1.split( p1.findNearest( 0.6 ) ); 
+	
+	// verify the number of Breakpoints
+	TEST( p1.numBreakpoints() == 2 );
+	TEST( p2.numBreakpoints() == 2 );
+	TEST( p1.numBreakpoints() + p2.numBreakpoints() == original.numBreakpoints() );
+
+	// verify that the two do not overlap:
+	TEST( p1.endTime() < p2.startTime() );
+	
+	// verify that the Breakpoints are the same:
+	Partial::iterator it = p1.begin();
+	while ( it != p1.end() )
+	{
+		Breakpoint & p1Breakpoint = *it;
+		Partial::iterator origit = original.findNearest(it.time());
+		Breakpoint & origBreakpoint = *origit;
+		
+		SAME_PARAM_VALUES( it.time(), origit.time() );
+		SAME_PARAM_VALUES( p1Breakpoint.frequency(), origBreakpoint.frequency() );
+		SAME_PARAM_VALUES( p1Breakpoint.amplitude(), origBreakpoint.amplitude() );
+		SAME_PARAM_VALUES( p1Breakpoint.bandwidth(), origBreakpoint.bandwidth() );
+		SAME_PARAM_VALUES( p1Breakpoint.phase(), origBreakpoint.phase() );
+		
+		++it;
+	}
+	
+	it = p2.begin();
+	while ( it != p2.end() )
+	{
+		Breakpoint & p2Breakpoint = *it;
+		Partial::iterator origit = original.findNearest(it.time());
+		Breakpoint & origBreakpoint = *origit;
+		
+		SAME_PARAM_VALUES( it.time(), origit.time() );
+		SAME_PARAM_VALUES( p2Breakpoint.frequency(), origBreakpoint.frequency() );
+		SAME_PARAM_VALUES( p2Breakpoint.amplitude(), origBreakpoint.amplitude() );
+		SAME_PARAM_VALUES( p2Breakpoint.bandwidth(), origBreakpoint.bandwidth() );
+		SAME_PARAM_VALUES( p2Breakpoint.phase(), origBreakpoint.phase() );
+		
+		++it;
+	}
+}
+
+// ----------- main -----------
+//
 int main( )
 {
 	std::cout << "Unit test for Partial class." << endl;
@@ -77,97 +247,8 @@ int main( )
 	
 	try 
 	{
-		//	Fabricate two Partials, and the correct result of aborbing
-		//	one into the other, verify that abosrb works: 
-		Partial p1, p2;
-		const int NUM_BPTS = 3;
-		const double P1_TIMES[] = {0, .8, 1};
-		const double P1_FREQS[] = {180, 180, 180}; 	//	10 Hz per .1 s
-		const double P1_AMPS[] = {.2, .2, .4};
-		const double P1_BWS[] = {0, 0, .2};			//	.1 per .1 s
-		const double P1_PHS[] = {-.8, .8, -1.2}; 	//	.2 per .1 s
-		
-		for (int i = 0; i < NUM_BPTS; ++i )
-			p1.insert( P1_TIMES[i], Breakpoint( P1_FREQS[i], P1_AMPS[i], P1_BWS[i], P1_PHS[i] ) );
-			
-		const double P2_TIMES[] = {.2, .5, 1};
-		const double P2_FREQS[] = {200, 200, 200};
-		const double P2_AMPS[] = {.1, .6, .2};		//	.04 per .1 s
-		const double P2_BWS[] = {.9, .1, .1};		//	-.1 per .1 s
-		const double P2_PHS[] = {0, 0, 0}; 
-		
-		for (int i = 0; i < NUM_BPTS; ++i )
-			p2.insert( P2_TIMES[i], Breakpoint( P2_FREQS[i], P2_AMPS[i], P2_BWS[i], P2_PHS[i] ) );
-			
-		//	the fused Partial should have Breakpoints at the same times
-		//	and frequencies as the absorbing Partial (p1):
-        Partial fuse_by_hand;
-		Partial::iterator it = p1.begin();
-		while ( it != p1.end() )
-		{
-			double t = it.time();
-			double f = p1.frequencyAt(t);
-			
-			double e1 = p1.amplitudeAt(t) * p1.amplitudeAt(t);
-			double e2 = p2.amplitudeAt(t) * p2.amplitudeAt(t);
-			
-			// the fused amplitude is the square root of the
-			// total energy:
-			double a = sqrt( e1 + e2 );
-			
-			// the fused bandwidth is the ratio of the noise energy
-			// to total energy, the noise energy is the noise energy
-			// in p1 added to the energy in p2:
-			double bw = ((e1 * p1.bandwidthAt(t)) + e2) / (e1 + e2);
-			
-			double ph = p1.phaseAt(t);
-			fuse_by_hand.insert( t, Breakpoint( f, a, bw, ph ) );
-			
-			++it;
-		}
-		
-		// now absorb p2 into a copy of p1:
-		Partial fused = p1;
-		fused.absorb( p2 );
-
-		//	check:
-		TEST( fused.numBreakpoints() == fuse_by_hand.numBreakpoints() );
-
-		#define SAME_PARAM_VALUES(x,y) TEST( float_equal((x),(y)) )
-		SAME_PARAM_VALUES( fused.startTime(), fuse_by_hand.startTime() );
-		SAME_PARAM_VALUES( fused.endTime(), fuse_by_hand.endTime() );
-		SAME_PARAM_VALUES( fused.duration(), fuse_by_hand.duration() );
-		
-		SAME_PARAM_VALUES( fused.frequencyAt(0), fuse_by_hand.frequencyAt(0) );
-		SAME_PARAM_VALUES( fused.amplitudeAt(0), fuse_by_hand.amplitudeAt(0) );
-		SAME_PARAM_VALUES( fused.bandwidthAt(0), fuse_by_hand.bandwidthAt(0) );
-		SAME_PARAM_VALUES( fused.phaseAt(0), fuse_by_hand.phaseAt(0) );
-		
-		SAME_PARAM_VALUES( fused.frequencyAt(0.1), fuse_by_hand.frequencyAt(0.1) );
-		SAME_PARAM_VALUES( fused.amplitudeAt(0.1), fuse_by_hand.amplitudeAt(0.1) );
-		SAME_PARAM_VALUES( fused.bandwidthAt(0.1), fuse_by_hand.bandwidthAt(0.1) );
-		SAME_PARAM_VALUES( fused.phaseAt(0.1), fuse_by_hand.phaseAt(0.1) );
-		
-		SAME_PARAM_VALUES( fused.frequencyAt(0.3), fuse_by_hand.frequencyAt(0.3) );
-		SAME_PARAM_VALUES( fused.amplitudeAt(0.3), fuse_by_hand.amplitudeAt(0.3) );
-		SAME_PARAM_VALUES( fused.bandwidthAt(0.3), fuse_by_hand.bandwidthAt(0.3) );
-		SAME_PARAM_VALUES( fused.phaseAt(0.3), fuse_by_hand.phaseAt(0.3) );
-		
-		SAME_PARAM_VALUES( fused.frequencyAt(0.6), fuse_by_hand.frequencyAt(0.6) );
-		SAME_PARAM_VALUES( fused.amplitudeAt(0.6), fuse_by_hand.amplitudeAt(0.6) );
-		SAME_PARAM_VALUES( fused.bandwidthAt(0.6), fuse_by_hand.bandwidthAt(0.6) );
-		SAME_PARAM_VALUES( fused.phaseAt(0.6), fuse_by_hand.phaseAt(0.6) );
-		
-		SAME_PARAM_VALUES( fused.frequencyAt(0.85), fuse_by_hand.frequencyAt(0.85) );
-		SAME_PARAM_VALUES( fused.amplitudeAt(0.85), fuse_by_hand.amplitudeAt(0.85) );
-		SAME_PARAM_VALUES( fused.bandwidthAt(0.85), fuse_by_hand.bandwidthAt(0.85) );
-		SAME_PARAM_VALUES( fused.phaseAt(0.85), fuse_by_hand.phaseAt(0.85) );
-		
-		SAME_PARAM_VALUES( fused.frequencyAt(1), fuse_by_hand.frequencyAt(1) );
-		SAME_PARAM_VALUES( fused.amplitudeAt(1), fuse_by_hand.amplitudeAt(1) );
-		SAME_PARAM_VALUES( fused.bandwidthAt(1), fuse_by_hand.bandwidthAt(1) );
-		SAME_PARAM_VALUES( fused.phaseAt(1), fuse_by_hand.phaseAt(1) );
-
+		test_absorb();
+		test_split();
 	}
 	catch( Exception & ex ) 
 	{

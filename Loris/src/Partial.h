@@ -199,6 +199,14 @@ public:
 		refering to the position of the inserted Breakpoint.
 	 */
 	 
+	Partial split( iterator pos );
+	/*	Break this Partial at the specified position (iterator).
+		The Breakpoint at the specified position becomes the first
+		Breakpoint in a new Partial. Breakpoints at the specified
+		position and subsequent positions are removed from this
+		Partial and added to the new Partial, which is returned.
+	 */
+	 
 //	-- parameter interpolation/extrapolation --
 	double amplitudeAt( double time ) const;
 	/*	Return the interpolated amplitude of this Partial at the

@@ -271,6 +271,24 @@ Partial::erase( PartialIterator pos )
 }
 
 // ---------------------------------------------------------------------------
+//	split
+// ---------------------------------------------------------------------------
+//	Break this Partial at the specified position (iterator).
+//	The Breakpoint at the specified position becomes the first
+//	Breakpoint in a new Partial. Breakpoints at the specified
+//	position and subsequent positions are removed from this
+//	Partial and added to the new Partial, which is returned.
+//
+Partial 
+Partial::split( iterator pos )
+{
+	Partial res;
+	res._bpmap.insert( pos._iter, _bpmap.end() );
+	_bpmap.erase( pos._iter, _bpmap.end() );
+	return res;
+}
+
+// ---------------------------------------------------------------------------
 //	findAfter (const version)
 // ---------------------------------------------------------------------------
 //	Return the insertion position for a Breakpoint at
