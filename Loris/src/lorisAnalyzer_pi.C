@@ -138,34 +138,6 @@ void destroyAnalyzer( Analyzer * ptr_this )
 }
 
 /* ---------------------------------------------------------------- */
-/*        Analyzer_copy                                             
-/*
-/*	Not allowed yet in Analyzer interface, could implement here 
-	by copying parameters.
- */ 
-extern "C"
-void Analyzer_copy( Analyzer * dst, const Analyzer * src )
-{
-	try 
-	{
-		debugger << "copying Analyzer" << endl;
-		*dst = *src;
-	}
-	catch( Exception & ex ) 
-	{
-		std::string s("Loris exception in Analyzer_copy(): " );
-		s.append( ex.what() );
-		handleException( s.c_str() );
-	}
-	catch( std::exception & ex ) 
-	{
-		std::string s("std C++ exception in Analyzer_copy(): " );
-		s.append( ex.what() );
-		handleException( s.c_str() );
-	}
-}
-
-/* ---------------------------------------------------------------- */
 /*        analyzer_analyze        
 /*
 /*	Analyze a vector of (mono) samples at the given sample rate 	  	
