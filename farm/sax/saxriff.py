@@ -40,7 +40,7 @@ print "running trial number", trial, time.ctime(time.time())
 
 source = 'saxriff.aiff'
 
-if trials == 1:
+if trial == 1:
 	resolutions = (65, 75, 90, 100, 110, 125)
 	widths = ( 0, 90, 140, 200 )
 	bws = (2000, 4000)

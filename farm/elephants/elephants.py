@@ -91,7 +91,7 @@ if trial == 2:
 	for r in resolutions:
 		for w in widths:
 			p = analyze( source, r, w )
-			ofile = '%s.%i.%i.%ik.aiff'%(source[:-5], r, w)
+			ofile = '%s.%i.%i.aiff'%(source[:-5], r, w)
 			synthesize( ofile, p )
 	# elephant2.aiff and elephant3.aiff
 	for source in sources[1:]:
@@ -100,5 +100,5 @@ if trial == 2:
 		for r in resolutions:
 			for w in widths:
 				p = analyze( source, r, w )
-				ofile = '%s.%i.%i.%ik.aiff'%(source[:-5], r, w)
+				ofile = '%s.%i.%i.aiff'%(source[:-5], r, w)
 				synthesize( ofile, p )
