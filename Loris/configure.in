@@ -40,7 +40,6 @@ AC_SUBST(LORIS_SUBMINOR_VERSION)
 AC_SUBST(LORIS_VERSION_STR)
 AC_CONFIG_FILES([src/loris.h])
 
-
 dnl----------------------------------------------------------------
 dnl Checks for programs.
 dnl----------------------------------------------------------------
@@ -136,6 +135,7 @@ if test -n "$CSINCLUDE"; then
 	if test ! -f "$CSINCLUDE/cs.h" ; then
 		AC_MSG_ERROR(cannot find cs.h in $CSINCLUDE)
 	fi
+	AC_MSG_RESULT(found $CSINCLUDE/cs.h)
 fi
 
 AC_SUBST(CSINCLUDE)
