@@ -21,6 +21,10 @@
 #include <set>
 #include <algorithm>
 
+#if defined(Debug_Loris)
+#include <stdio.h>
+#endif
+
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {

@@ -3,7 +3,6 @@
 #	Loris objects definition
 #
 CLASSES = $(TOP)/Loris/classes
-# CLASSES = .
 OBJ_LORIS = $(CLASSES)/AiffFile.o \
 			$(CLASSES)/Analyzer.o \
 			$(CLASSES)/AssociateBandwidth.o \
@@ -27,6 +26,8 @@ OBJ_LORIS = $(CLASSES)/AiffFile.o \
 			$(CLASSES)/ieee.o \
 			$(CLASSES)/notifier.o \
 			$(CLASSES)/SpcFile.o \
+			$(CLASSES)/SdifReader.o \
+			$(CLASSES)/SdifWriter.o \
 #			$(CLASSES)/FloatingThreshold.o \
 
 #
@@ -35,8 +36,14 @@ OBJ_LORIS = $(CLASSES)/AiffFile.o \
 FFTW = $(TOP)/FFTW
 
 #
+#	sdif:
+#
+SDIF = $(TOP)/CNMAT-SDIF-alpha
+OBJ_SDIF = $(SDIF)/sdif.o $(SDIF)/sdif-types.o
+
+#
 #	flags:
 #
-INC_LORIS = -I${FFTW}/include -I$(CLASSES)
-#DEBUG_LORIS = -DDebug_Loris
+INC_LORIS = -I${FFTW}/include -I$(CLASSES) -I$(SDIF)
+DEBUG_LORIS = -DDebug_Loris
 LIB_LORIS = -L${FFTW}/lib -lfftw

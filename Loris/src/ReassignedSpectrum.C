@@ -13,6 +13,10 @@
 #include <algorithm>
 #include <cstdlib>	//	for std::abs()
 
+#if defined(Debug_Loris)
+#include <stdio.h>
+#endif
+
 //	there's a freakin' ton of std in here, 
 //	just import the whole namespace
 using namespace std;

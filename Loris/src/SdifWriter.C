@@ -341,8 +341,11 @@ SdifWriter::makeSortedBreakpointTimes( const std::vector< Partial * > & partials
 //	Get time of next frame. 
 //  This uses the previously sorted allBreakpoints list.
 //
+//	all Breakpoints should be const, but for some reason, gcc (on SGI at 
+//	least) makes trouble converting and comparing iterators and const_iterators.
+//
 double
-SdifWriter::getNextFrameTime( const double frameTime, const std::list< BreakpointTime > & allBreakpoints,
+SdifWriter::getNextFrameTime( const double frameTime, std::list< BreakpointTime > & allBreakpoints,
 							  std::list< BreakpointTime >::iterator & bpTimeIter)
 {
 //

@@ -67,7 +67,7 @@ private:
 	//	envelope frame time helpers:
 	void makeSortedBreakpointTimes( const std::vector< Partial * > & partialsVector, 
 									std::list< BreakpointTime > & allBreakpoints);
-	double getNextFrameTime( const double frameTime, const std::list< BreakpointTime > & allBreakpoints,
+	double getNextFrameTime( const double frameTime, std::list< BreakpointTime > & allBreakpoints,
 							 std::list< BreakpointTime >::iterator & bpTimeIter);
 
 };	//	end of class SdifWriter
