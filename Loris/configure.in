@@ -47,7 +47,6 @@ dnl----------------------------------------------------------------
 
 AC_MSG_RESULT(----- Program Checks -----)
 AC_PROG_CXX
-AC_C_BIGENDIAN()
 AM_PROG_LIBTOOL
 
 dnl----------------------------------------------------------------
@@ -146,6 +145,9 @@ dnl SIZEOF_FLOAT, should always be 4 I think
 AC_CHECK_SIZEOF(float)
 dnl SIZEOF_DOUBLE, should always be 8 I think
 AC_CHECK_SIZEOF(double)
+
+dnl Check for endian-ness of system.
+AC_C_BIGENDIAN()
 
 dnl Check for a definition of M_PI in cmath, if not use our own.
 AH_TEMPLATE([HAVE_M_PI],
@@ -295,13 +297,29 @@ fi
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
 
-AC_CHECK_HEADER(fftw.h, :, AC_MSG_ERROR(cannot find FFTW header))
-AC_CHECK_LIB(fftw, fftw_create_plan, :, AC_MSG_ERROR(cannot use FFTW library), -lm)
+FFTWLIB=
+AC_CHECK_HEADERS(fftw3.h, [
+	FFTWLIB="fftw3"
+	AC_MSG_RESULT(using fftw3) 
+	],[
+	AC_CHECK_HEADERS(fftw.h, [
+		FFTWLIB="fftw"
+		AC_MSG_RESULT(using fftw version 2) 
+		] , [
+		AC_MSG_ERROR(cannot find any FFTW header) ]) ])
+
+
+if test -z "$FFTWLIB" ; then
+	AC_MSG_ERROR(cannot find any FFTW header)
+fi
+
+AC_CHECK_LIB("$FFTWLIB", fftw_create_plan, :, AC_MSG_ERROR(cannot use FFTW library), -lm)
 
 if test -n "$FFTWINCLUDE" ; then
 	FFTWINCLUDE="-I$FFTWINCLUDE"
 fi
 AC_SUBST(FFTWINCLUDE)
+AC_SUBST(FFTWLIB)
 
 dnl Gnarly code adopted from Alexandrescu (Modern C++ Design) for compile-time
 dnl checking of type information. Need to make sure that fftw_complex and 
@@ -315,7 +333,11 @@ if test -n "$NO_COMPILE_TIME_ASSERTIONS"; then
 	AC_COMPILE_IFELSE( 
 		AC_LANG_SOURCE([[
 			#include <complex>
+			#if defined(HAVE_FFTW3_H)
+			#include <fftw3.h>
+			#else
 			#include <fftw.h>
+			#endif
 			//	Gnarly code adopted from Alexandrescu (Modern C++ Design) for compile-time
 			//	checking of type information. Need to make sure that fftw_complex and 
 			//	std::complex<double> are the same size and have the same memory layout.
@@ -332,8 +354,11 @@ if test -n "$NO_COMPILE_TIME_ASSERTIONS"; then
 			{
 				//	if this won't compile, fftw_real is not defined to be double,
 				//	and this class won't work under those conditions:
+				#if !defined(HAVE_FFTW3_H)
+				//	no fftw_real in FFTW3
 				STATIC_CHECK((CompareTypes<double, fftw_real>::same!=0), fftw_real_IS_NOT_DOUBLE);
-			
+				#endif
+				
 				//	if this won't compile, then the two complex types have 
 				//	different sizes, and therefore don't have the same memory 
 				//	layout, and this FourierTransform class won't work:

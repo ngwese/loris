@@ -94,9 +94,11 @@ SDIF spec: http://www.cnmat.berkeley.edu/SDIF/
 
 #if defined(WORDS_BIGENDIAN)
 	//	WORDS_BIGENDIAN is defined in config.h, determined 
-	//	at configure-time
+	//	at configure-time, LITTLE_ENDIAN might be erroneously
+	//	defined in some standard header
 	#undef LITTLE_ENDIAN	
 #elif !defined(WORDS_BIGENDIAN) && !defined(LITTLE_ENDIAN)
+	//	if no config, guess LITTLE_ENDIAN
 	#define LITTLE_ENDIAN 1
 #endif
 

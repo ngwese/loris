@@ -15,6 +15,11 @@ and automatically rendered, and that include access
 to Aiff-style Markers (time-string pairs, represented
 by the new class Marker).
 
+- added rewritten SdifFile classes that look and
+feel like the AiffFile and SpcFile classes, and
+support Markers, and no longer use the IRCAM
+SDIF library. 
+
 - Tcl module is no longer built by default, only the 
 Python module.
 
@@ -22,6 +27,8 @@ Python module.
 
 - added sampleVector_fill to procedural interface, and
 to its documentation.
+
+- removed depdendency on the IRCAM SDIF library.
 
 -------------------------------------------------------
 changes since 1.0.2 release:

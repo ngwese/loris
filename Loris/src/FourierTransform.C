@@ -39,8 +39,15 @@
 #include <FourierTransform.h>
 #include <Exception.h>
 #include <Notifier.h>
-#include <fftw.h>
+#include <cstring>	//	for memcpy
 #include <set>
+
+#if defined(HAVE_FFTW3_H)
+	#include <fftw3.h>
+	//	#include <bench-user.h> ???? whatsis? from gogins
+#else
+	#include <fftw.h>
+#endif
 
 using namespace std;
 using namespace Loris;
@@ -68,13 +75,19 @@ static void fftw_die_Loris(const char * s)
 //	they are the same size and have the same memory
 //	layout.
 //
-//	Some of this is performed using compile-time assertions
-//	(see below), that are part of the configure script.
+//	Some of this is performed using compile-time assertions,
+//	that are part of the configure script.
 //	The only thing that I haven't already verified at
-//	compile-time is that the two complex types store
+//	configure-time is that the two complex types store
 //	their real and imaginary parts in the same order; 
 //	hard to see how we can do this at compile-time, 
 //	since the implementation of std::complex is private.
+//
+//	According to the FFTW folks, the C++ folks have more or
+//	less agreed to standardize the complex<> layout to 
+//	be binary-compatible with fftw_complex, so all of
+//	the reinterpret_cast stuff in here should be OK.
+//	Doesn't hurt to check though.
 //
 //	In an ideal world, we wouldn't rely on these types
 //	being identical, but in this world, relaxing that 
@@ -87,7 +100,7 @@ static bool Check_Types( void )
 	if ( ! checked ) 
 	{
 		std::complex<double> cplxstd(1234.5678, 9876.5432);
-		fftw_complex * cplxfftw = (fftw_complex *)&cplxstd;
+		fftw_complex * cplxfftw = reinterpret_cast<fftw_complex*>(&cplxstd);
 		if ( c_re( *cplxfftw ) != cplxstd.real() ||
 			 c_im( *cplxfftw ) != cplxstd.imag() ) 
 		{
@@ -102,50 +115,6 @@ static bool Check_Types( void )
 
 static bool CHECKED_TYPES = Check_Types();
 
-#if !defined(NO_COMPILE_TIME_ASSERTIONS) && defined(USE_COMPILE_TIME_ASSERTIONS)
-// ---------------------------------------------------------------------------
-//  Compile_Time_Assertions
-// ---------------------------------------------------------------------------
-//	Gnarly code adopted from Alexandrescu (Modern C++ Design) for compile-time
-//	checking of type information. Need to make sure that fftw_complex and 
-//	std::complex<double> are the same size and have the same memory layout.
-//	
-//	All of this has been migrated to configure-time. Removing it from
-//	the Loris source allows our sources to compile with wimpy compilers
-//	that cannot support these checks. (e.g. .NET)
-//
-//	USE_COMPILE_TIME_ASSERTIONS is not defined anywhere, but if configure
-//	determines that the compiler cannot support compile-time assertions, 
-//	then NO_COMPILE_TIME_ASSERTIONS is defined in config.h.
-//
-template<int> struct CompileTimeError;
-template<> struct CompileTimeError<true> {};
-#define STATIC_CHECK(expr, msg) \
-    { CompileTimeError<((expr) != 0)> ERROR_##msg; (void)ERROR_##msg; }
-
-template <class T, class U> struct CompareTypes { enum { same = 0 }; };
-template<class T> struct CompareTypes<T, T> { enum { same = 1 }; };
-
-static void Compile_Time_Assertions( void )
-{
-	//	if this won't compile, fftw_real is not defined to be double,
-	//	and this class won't work under those conditions:
-	STATIC_CHECK((CompareTypes<double, fftw_real>::same!=0), fftw_real_IS_NOT_DOUBLE);
-
-	//	if this won't compile, then the two complex types have 
-	//	different sizes, and therefore don't have the same memory 
-	//	layout, and this FourierTransform class won't work:
-	STATIC_CHECK( sizeof(std::complex<double>) == sizeof(fftw_complex), 
-				  fftw_complex_DIFFERENT_SIZE_FROM_std_complex_double );
-				  
-	//	if this doesn't compile, then probably the previous one didn't
-	//	compile either, but it doesn't hurt to verify that the layout
-	//	of the complex types is trivial:
-	STATIC_CHECK( sizeof(fftw_complex) == sizeof(double) + sizeof(double),
-				  fftw_complex_LAYOUT_IS_NONTRIVIAL );
-}
-#endif
-
 // ---------------------------------------------------------------------------
 //	FourierTransform constructor
 // ---------------------------------------------------------------------------
@@ -157,12 +126,16 @@ FourierTransform::FourierTransform( long len ) :
 	_buffer( len ),
 	_plan( NULL )
 {
+#if !defined(HAVE_FFTW3_H)
 	//	FFTW calls fprintf a lot, which may be a problem in
 	//	non-console-enabled applications. Catch fftw_die()
 	//	calls by routing the error message to our own Notifier
 	//	and exiting, using the function defined above.
+	//
+	//	(version 2 only)
 	fftw_die_hook = fftw_die_Loris;
-	
+#endif
+
 	//	zero:
 	fill( _buffer.begin(), _buffer.end(), 0. );
 }
@@ -200,11 +173,17 @@ FourierTransform::transform( void )
 	Assert( sharedBuffer != NULL );
 
 //	crunch:	
-	fftw_one( _plan, (fftw_complex *)(&_buffer[0]), sharedBuffer );
-	
+#if defined(HAVE_FFTW3_H)
+	fftw_execute(_plan); 	// repeat as needed
+#else
+	fftw_one( _plan, reinterpret_cast<fftw_complex*>(&_buffer[0]), sharedBuffer );
+#endif
+
 //	copy output into (private) complex buffer:
 //	(fftw_complex and std::complex< double > had better be the same!)
-	std::copy( sharedBuffer, sharedBuffer + size(), (fftw_complex *)(&_buffer[0]) );
+//	std::copy( sharedBuffer, sharedBuffer + size(), 
+//			   reinterpret_cast<fftw_complex*>(&_buffer.front()) );
+	memcpy(sharedBuffer, &_buffer.front(), size() * sizeof(fftw_complex));
 }
 
 // ---------------------------------------------------------------------------
@@ -241,13 +220,19 @@ FourierTransform::makePlan( void )
 	}
 	
 	//	create a plan:
+#if defined(HAVE_FFTW3_H)
+	_plan = fftw_plan_dft_1d( size(), 
+							  reinterpret_cast<fftw_complex*>(&_buffer.front()), 
+							  sharedBuffer, FFTW_FORWARD, FFTW_ESTIMATE );
+#else
 	_plan = fftw_create_plan_specific( size(), 
 									   FFTW_FORWARD,
 									   FFTW_ESTIMATE,
-									   (fftw_complex *)(&_buffer[0]), 
+									   reinterpret_cast<fftw_complex*>(&_buffer.front()), 
 									   1,
 									   sharedBuffer, 
 									   1); 
+#endif									   
 	//	verify:
 	if ( _plan == NULL )
 		Throw( InvalidObject, "FourierTransform could not make a (fftw) plan." );
