@@ -350,8 +350,8 @@ void exportSdif( const char * path, PartialList * partials )
 			Throw( Loris::InvalidObject, "No Partials in PartialList to export to sdif file." );
 	
 		Loris::notifier << "exporting sdif partial data to " << path << Loris::endl;		
-		Loris::SdifFile::Export( path, *partials );
-		
+		SdifFile fout( partials->begin(), partials->end() );
+		fout.write( path );
 	}
 	catch( Exception & ex ) 
 	{

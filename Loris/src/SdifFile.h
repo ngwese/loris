@@ -1,5 +1,3 @@
-#ifndef INCLUDE_SDIFFILE_H
-#define INCLUDE_SDIFFILE_H
 /*
  * This is the Loris C++ Class Library, implementing analysis, 
  * manipulation, and synthesis of digitized sounds using the Reassigned 
@@ -24,32 +22,35 @@
  *
  * SdifFile.h
  *
- * Definition of class SdifFile, which reads and writes SDIF files.
+ * Definition of SdifFile class for Partial import and export in Loris.
  *
- * Lippold Haken, 4 July 2000
- * Lippold Haken, 20 October 2000, using IRCAM SDIF library
- * Lippold Haken, 27 March 2001, write only 7-column 1TRC, combine reading and writing classes
- * Lippold Haken, 31 Jan 2002, write either 4-column 1TRC or 6-column RABP
+ * Kelly Fitz, 8 Jan 2003 
  * loris@cerlsoundgroup.org
  *
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
+
+#include <Marker.h>
+//#include <Partial.h>
 #include <PartialList.h>
+ 
 #include <string>
+#include <vector>
 
 //	begin namespace
 namespace Loris {
 
+class Partial;
+
 // ---------------------------------------------------------------------------
 //	class SdifFile
-//	
-//	Class SdifFile represents Spectral Description Interchange Format (SDIF)
-//	data files, and manages file I/O and sample conversion. Construction of
-//	an SdifFile from a stream or filename automatically imports the Partial
-//	data. The static Export() members export Partials to a SDIF file using
-//	the specified filename.
-//	
+//
+//	Class SdifFile represents reassigned bandwidth-enhanced Partial 
+//	data in a SDIF-format data file. Construction of an SdifFile 
+//	from a stream or filename automatically imports the Partial
+//	data. 
+//
 //	Loris stores partials in SDIF RBEP and RBEL frames. The RBEP and RBEL
 //	frame and matrix definitions are included in the SDIF file's header.
 //	Each RBEP frame contains one RBEP matrix, and each row in a RBEP matrix
@@ -90,45 +91,142 @@ namespace Loris {
 //
 class SdifFile
 {
-//	-- instance variables --
-	PartialList _partials;	//	collect Partials for reading here
-
 //	-- public interface --
 public:
-//	-- construction (import) --
-	SdifFile( const std::string & infilename );
+
+//	-- types --
+	typedef std::vector< Marker > markers_type;
+	typedef PartialList partials_type;
+	
+//	-- construction --
+ 	explicit SdifFile( const std::string & filename );
 	/*	Initialize an instance of SdifFile by importing Partial data from
-		the file having the specified filename.
+		the file having the specified filename or path.
+	*/
+ 
+#if !defined(NO_TEMPLATE_MEMBERS)
+	template<typename Iter>
+	SdifFile( Iter begin_partials, Iter end_partials  );
+#else
+	SdifFile( PartialList::const_iterator begin_partials, 
+			  PartialList::const_iterator end_partials  );
+#endif
+	/*	Initialize an instance of SdifFile with copies of the Partials
+		on the specified half-open (STL-style) range.
+
+		If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
+		only PartialList::const_iterator arguments.
+	*/
+ 
+	SdifFile( void );
+	/*	Initialize an empty instance of SdifFile having no Partials.
+	 */
+	
+	//	copy, assign, and delete are compiler-generated
+	
+//	-- access --
+	markers_type & markers( void );
+	const markers_type & markers( void ) const;
+	/*	Return a reference to the MarkerContainer (see Marker.h) 
+	 	for this SdifFile. 
 	 */
 	 
-//	(let compiler generate destructor)
-//	~SdifFile( void ) {}
+	partials_type & partials( void );
+	const partials_type & partials( void ) const;
+	/*	Return a reference to the bandwidth-enhanced Partials represented 
+		by the envelope parameter streams in this SdifFile.
+	 */
+
+//	-- mutation --
+	void addPartial( const Loris::Partial & p );
+	/*	Add a copy of the specified Partial to this SdifFile.
+	 */
+	 
+#if !defined(NO_TEMPLATE_MEMBERS)
+	template<typename Iter>
+	void addPartials( Iter begin_partials, Iter end_partials  );
+#else
+	void addPartials( PartialList::const_iterator begin_partials, 
+					  PartialList::const_iterator end_partials  );
+#endif
+	/*	Add a copy of each Partial on the specified half-open (STL-style) 
+		range to this SdifFile.
 		
-//	-- Partial access --
-	PartialList & partials( void ) { return _partials; }
-	const PartialList & partials( void ) const { return _partials; }
-	/*	Return a reference to this SdifFile's list of Partials, or, for const
-		SdifFiles, a const reference to this SdifFile's list of Partials (const
-		PartialList &).
+		If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
+		only PartialList::const_iterator arguments.
 	 */
 	 
 //	-- export --
+	void write( const std::string & path );
+	/*	Export the envelope Partials represented by this SdifFile to
+		the file having the specified filename or path.
+	*/
+
+	void write1TRC( const std::string & path );
+	/*	Export the envelope Partials represented by this SdifFile to
+		the file having the specified filename or path in the 1TRC
+		format, resampled, and without phase or bandwidth information.
+	*/
+	
+//	-- legacy export --
 	static void Export( const std::string & filename, 
-						const PartialList & plist, const bool enhanced = true);
+						const PartialList & plist, 
+						const bool enhanced = true );
 	/*	Export the Partials in the specified PartialList to a SDIF file having
 		the specified file name or path. If enhanced is true (the default),
 		reassigned bandwidth-enhanced Partial data are exported in the
 		six-column RBEP format. Otherwise, the Partial data is exported as
 		resampled sinusoidal analysis data in the 1TRC format.
 	 */
-	
-//	-- private interface --
-private:
-	SdifFile( const SdifFile & other );
-	SdifFile  & operator = ( const SdifFile & rhs );
 
+private:
+//	-- implementation --
+	partials_type partials_;		//	Partials to store in SDIF format
+	markers_type markers_;		// 	AIFF Markers
+	
 };	//	end of class SdifFile
+
+
+// ---------------------------------------------------------------------------
+//	constructor from Partial range
+// ---------------------------------------------------------------------------
+//	Initialize an instance of SdifFile with copies of the Partials
+//	on the specified half-open (STL-style) range.
+//
+//	If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
+//	only PartialList::const_iterator arguments.
+//
+#if !defined(NO_TEMPLATE_MEMBERS)
+template< typename Iter >
+SdifFile::SdifFile( Iter begin_partials, Iter end_partials  )
+#else
+SdifFile::SdifFile( PartialList::const_iterator begin_partials, 
+					PartialList::const_iterator end_partials )
+#endif
+{
+	addPartials( begin_partials, end_partials );
+}
+
+// ---------------------------------------------------------------------------
+//	addPartials 
+// ---------------------------------------------------------------------------
+//	Add a copy of each Partial on the specified half-open (STL-style) 
+//	range to this SdifFile.
+//	
+//	If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
+//	only PartialList::const_iterator arguments.
+//
+#if !defined(NO_TEMPLATE_MEMBERS)
+template<typename Iter>
+void SdifFile::addPartials( Iter begin_partials, Iter end_partials  )
+#else
+void SdifFile::addPartials( PartialList::const_iterator begin_partials, 
+							PartialList::const_iterator end_partials  )
+#endif
+{ 
+	while ( begin_partials != end_partials ) 
+		addPartial( *(begin_partials++) ); 
+}
 
 }	//	end of namespace Loris
 
-#endif //	ndef INCLUDE_SDIFFILE_H

@@ -65,9 +65,13 @@ namespace Loris {
 //	generalizing access to the algorithm across containers without
 //	exposing the implementation in the header file.
 //
-typedef std::vector< Loris::Partial * > PartialPtrs;
-typedef std::vector< Loris::Partial * >::iterator PartialPtrsIterator;
-typedef std::vector< Loris::Partial * >::const_iterator PartialPtrsConstIterator;
+typedef std::vector< Partial * > PartialPtrs;
+typedef std::vector< Partial * >::iterator PartialPtrsIterator;
+typedef std::vector< Partial * >::const_iterator PartialPtrsConstIterator;
+
+typedef std::vector< const Partial * > ConstPartialPtrs;
+typedef std::vector< const Partial * >::iterator ConstPartialPtrsIterator;
+typedef std::vector< const Partial * >::const_iterator ConstPartialPtrsConstIterator;
 
 
 // ---------------------------------------------------------------------------
@@ -81,6 +85,15 @@ typedef std::vector< Loris::Partial * >::const_iterator PartialPtrsConstIterator
 //
 template <typename Iter>
 void fillPartialPtrs( Iter begin, Iter end, PartialPtrs & fillme )
+{
+	fillme.reserve( std::distance( begin, end ) );
+	fillme.clear();
+	while ( begin != end )
+		fillme.push_back( &(*begin++) );
+}
+
+template <typename Iter>
+void fillPartialPtrs( Iter begin, Iter end, ConstPartialPtrs & fillme )
 {
 	fillme.reserve( std::distance( begin, end ) );
 	fillme.clear();

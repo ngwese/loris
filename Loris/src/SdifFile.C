@@ -29,14 +29,54 @@
  * Lippold Haken, 22 December 2000, using 1LBL frames
  * Lippold Haken, 27 March 2001, write only 7-column 1TRC, combine reading and writing classes
  * Lippold Haken, 31 Jan 2002, write either 4-column 1TRC or 6-column RBEP
+ * Lippold Haken, 20 Apr 2004, back to using CNMAT SDIF library
  * loris@cerlsoundgroup.org
  *
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
+ 
+/*
+
+Portions of this code are from the CNMAT SDIF library.
+
+Copyright (c) 1996. 1997, 1998, 1999.  The Regents of the University of California
+(Regents). All Rights Reserved.
+
+Permission to use, copy, modify, and distribute this software and its
+documentation, without fee and without a signed licensing agreement, is hereby
+granted, provided that the above copyright notice, this paragraph and the
+following two paragraphs appear in all copies, modifications, and
+distributions.  Contact The Office of Technology Licensing, UC Berkeley, 2150
+Shattuck Avenue, Suite 510, Berkeley, CA 94720-1620, (510) 643-7201, for
+commercial licensing opportunities.
+
+Written by Matt Wright, Amar Chaudhary, and Sami Khoury, The Center for New
+Music and Audio Technologies, University of California, Berkeley.
+
+     IN NO EVENT SHALL REGENTS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
+     SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST
+     PROFITS, ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS
+     DOCUMENTATION, EVEN IF REGENTS HAS BEEN ADVISED OF THE POSSIBILITY OF
+     SUCH DAMAGE.
+
+     REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT
+     LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+     FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING
+     DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS".
+     REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
+     ENHANCEMENTS, OR MODIFICATIONS.
+
+SDIF spec: http://www.cnmat.berkeley.edu/SDIF/
+
+*/
 
 #if HAVE_CONFIG_H
 	#include <config.h>
+#endif
+
+#ifdef LITTLE_ENDIAN
+#error "why is this defined? FIXME!"
 #endif
 
 #include <SdifFile.h>
@@ -44,6 +84,7 @@
 #include <Notifier.h>
 #include <Partial.h>
 #include <PartialList.h>
+#include <PartialPtrs.h>
 #include <list>
 #include <vector>
 #include <cmath>
@@ -56,13 +97,925 @@
 #endif
 
 extern "C" {
-#include <sdif.h>
+#include <stdio.h>
 }
 
 //	begin namespace
 namespace Loris {
 
 
+#pragma mark -- CNMAT SDIF definitions --
+// ---------------------------------------------------------------------------
+//	CNMAT SDIF types
+// ---------------------------------------------------------------------------
+
+//	try to use the information gathered by configure:
+#if HAVE_CONFIG_H
+	#if SIZEOF_SHORT == 2
+    typedef unsigned short	sdif_unicode;
+    typedef short			sdif_int16;
+	#elif SIZEOF_INT == 2	
+    typedef unsigned int		sdif_unicode;
+    typedef int				sdif_int16;
+	#else
+	#error "cannot identify a two-byte integer type"
+	#endif
+	
+	#if SIZEOF_INT == 4
+    typedef int				sdif_int32;
+    typedef unsigned int		sdif_uint32;
+	#elif SIZEOF_LONG == 4	
+    typedef long				sdif_int32;
+    typedef unsigned long	sdif_uint32;
+	#else
+	#error "cannot identify a four-byte integer type"
+	#endif
+
+	#if SIZEOF_FLOAT == 4
+    typedef float			sdif_float32;
+	#else
+	#error "cannot identify a four-byte floating-point type"
+	#endif
+	
+	#if SIZEOF_DOUBLE == 8
+    typedef double			sdif_float64;
+	#else
+	#error "cannot identify a eight-byte floating-point type"
+	#endif
+#else
+#ifdef __sgi
+    typedef unsigned short	sdif_unicode;
+    typedef short		sdif_int16;
+    typedef int			sdif_int32;
+    typedef unsigned int	sdif_uint32;
+    typedef float		sdif_float32;
+    typedef double		sdif_float64;
+#elif defined(__WIN32__) || defined(_WINDOWS)
+    #ifndef _WINDOWS_
+    	#include <windows.h>
+    #endif 
+    typedef unsigned short	sdif_unicode;
+    typedef short		sdif_int16;
+    typedef int			sdif_int32;
+    typedef unsigned int	sdif_uint32;
+    typedef float		sdif_float32;
+    typedef double		sdif_float64;
+#elif defined(__LINUX__)
+    typedef unsigned short	sdif_unicode;
+    typedef short		sdif_int16;
+    typedef int			sdif_int32;
+    typedef unsigned int	sdif_uint32;
+    typedef float		sdif_float32;
+    typedef double		sdif_float64;
+#else
+
+    /* These won't necessarily be the right size on any conceivable
+       platform, so you may need to change them by hand.  The call to
+       SDIF_Init() performs a sanity check of the sizes of these types,
+       so if they're wrong you'll find out about it. */
+
+    typedef unsigned short	sdif_unicode;
+    typedef short		sdif_int16;
+    typedef long		sdif_int32;
+    typedef unsigned long	sdif_uint32;
+    typedef float		sdif_float32;
+    typedef double		sdif_float64;
+
+#endif
+#endif
+
+// ---------------------------------------------------------------------------
+//	SDIF_GlobalHeader
+// ---------------------------------------------------------------------------
+typedef struct {
+    char  SDIF[4];          /* must be 'S', 'D', 'I', 'F' */
+    sdif_int32 size;        /* size of header frame, not including SDIF or size. */
+    sdif_int32 SDIFversion;
+    sdif_int32 SDIFStandardTypesVersion;
+} SDIF_GlobalHeader;
+
+// ---------------------------------------------------------------------------
+//	SDIF_FrameHeader
+// ---------------------------------------------------------------------------
+typedef struct {
+    char         frameType[4];        /* should be a registered frame type */
+    sdif_int32   size;                /* # bytes in this frame, not including
+                                         frameType or size */
+    sdif_float64 time;                /* time corresponding to frame */
+    sdif_int32   streamID;            /* frames that go together have the same ID */
+    sdif_int32   matrixCount;         /* number of matrices in frame */
+} SDIF_FrameHeader;
+
+
+// ---------------------------------------------------------------------------
+//	SDIF_MatrixHeader
+// ---------------------------------------------------------------------------
+typedef struct {
+    char matrixType[4];
+    sdif_int32 matrixDataType;
+    sdif_int32 rowCount;
+    sdif_int32 columnCount;
+} SDIF_MatrixHeader;
+
+
+/* Version numbers for SDIF_GlobalHeader associated with this library */
+#define SDIF_SPEC_VERSION 3
+#define SDIF_LIBRARY_VERSION 1
+
+// ---------------------------------------------------------------------------
+//	Enumerations for type definitions in matrices.
+// ---------------------------------------------------------------------------
+typedef enum {
+    SDIF_FLOAT32 = 0x0004,
+    SDIF_FLOAT64 = 0x0008,
+    SDIF_INT16 = 0x0102,
+    SDIF_INT32 = 0x0104,
+    SDIF_INT64 = 0x0108,
+    SDIF_UINT32 = 0x0204,
+    SDIF_UTF8 = 0x0301,
+    SDIF_BYTE = 0x0401,
+    SDIF_NO_TYPE = -1
+} SDIF_MatrixDataType;
+
+typedef enum {
+    SDIF_FLOAT = 0,
+    SDIF_INT = 1,
+    SDIF_UINT = 2,
+    SDIF_TEXT = 3,
+    SDIF_ARBITRARY = 4
+} SDIF_MatrixDataTypeHighOrder;
+
+/* SDIF_GetMatrixDataTypeSize --
+   Find the size in bytes of the data type indicated by "d" */
+#define SDIF_GetMatrixDataTypeSize(d) ((d) & 0xff)
+
+#pragma mark -- CNMAT SDIF errors --
+// ---------------------------------------------------------------------------
+//	CNMAT SDIF error handling machinery.
+// ---------------------------------------------------------------------------
+typedef enum {
+    ESDIF_SUCCESS=0,
+    ESDIF_SEE_ERRNO=1,
+    ESDIF_BAD_SDIF_HEADER=2,
+    ESDIF_BAD_FRAME_HEADER=3,
+    ESDIF_SKIP_FAILED=4,
+    ESDIF_BAD_MATRIX_DATA_TYPE=5,
+    ESDIF_BAD_SIZEOF=6,
+    ESDIF_END_OF_DATA=7,  /* Not necessarily an error */
+    ESDIF_BAD_MATRIX_HEADER=8,
+    ESDIF_OBSOLETE_FILE_VERSION=9,
+    ESDIF_OBSOLETE_TYPES_VERSION=10,
+    ESDIF_WRITE_FAILED=11,
+    ESDIF_READ_FAILED=12,
+    ESDIF_OUT_OF_MEMORY=13,  /* Used only by sdif-mem.c */
+    ESDIF_DUPLICATE_MATRIX_TYPE_IN_FRAME=14
+} SDIFresult;
+static char *error_string_array[] = {
+    "Everything's cool",
+    "This program should display strerror(errno) instead of this string", 
+    "Bad SDIF header",
+    "Frame header's size is too low for time tag and stream ID",
+    "fseek() failed while skipping over data",
+    "Unknown matrix data type encountered in SDIF_WriteFrame().",
+    (char *) NULL,   /* this will be set by SizeofSanityCheck() */
+    "End of data",
+    "Bad SDIF matrix header",
+    "Obsolete SDIF file from an old version of SDIF",
+    "Obsolete version of the standard SDIF frame and matrix types",
+    "I/O error: couldn't write",
+    "I/O error: couldn't read",
+    "Out of memory",
+    "Frame has two matrices with the same MatrixType"
+};
+
+#pragma mark -- CNMAT SDIF endian --
+// ---------------------------------------------------------------------------
+//	CNMAT SDIF little endian machinery.
+// ---------------------------------------------------------------------------
+
+#ifdef LITTLE_ENDIAN
+#define BUFSIZE 4096
+static	char	p[BUFSIZE];
+#endif
+
+
+static SDIFresult SDIF_Write1(const void *block, size_t n, FILE *f) {
+    return (fwrite (block,1,n,f) == n) ? ESDIF_SUCCESS : ESDIF_WRITE_FAILED;
+}
+
+
+static SDIFresult SDIF_Write2(const void *block, size_t n, FILE *f) {
+#ifdef LITTLE_ENDIAN
+    SDIFresult r;
+    const char *q = (const char *)block;
+    int	i, m = 2*n;
+
+    if ((n << 1) > BUFSIZE) {
+	/* Too big for buffer */
+	int num = BUFSIZE >> 1;
+	if (r = SDIF_Write2(block, num, f)) return r;
+	return SDIF_Write2(((char *) block) + num, n-num, f);
+    }
+
+    for (i = 0; i < m; i += 2) {
+	p[i] = q[i+1];
+	p[i+1] = q[i];
+    }
+
+    return (fwrite(p,2,n,f)==n) ? ESDIF_SUCCESS : ESDIF_WRITE_FAILED;
+
+#else
+    return (fwrite (block,2,n,f) == n) ? ESDIF_SUCCESS : ESDIF_WRITE_FAILED;
+#endif
+}
+
+
+
+static SDIFresult SDIF_Write4(const void *block, size_t n, FILE *f) {
+#ifdef LITTLE_ENDIAN
+    SDIFresult r;
+   const char *q = (const char *)block;
+    int i, m = 4*n;
+
+    if ((n << 2) > BUFSIZE) {
+	int num = BUFSIZE >> 2;
+	if (r = SDIF_Write4(block, num, f)) return r;
+	return SDIF_Write4(((char *) block) + num, n-num, f);
+    }
+
+    for (i = 0; i < m; i += 4) {
+	p[i] = q[i+3];
+	p[i+3] = q[i];
+	p[i+1] = q[i+2];
+	p[i+2] = q[i+1];
+    }
+
+    return (fwrite(p,4,n,f) == n) ? ESDIF_SUCCESS : ESDIF_WRITE_FAILED;
+#else
+    return (fwrite(block,4,n,f) == n) ? ESDIF_SUCCESS : ESDIF_WRITE_FAILED;
+#endif
+}
+
+
+
+static SDIFresult SDIF_Write8(const void *block, size_t n, FILE *f) {
+#ifdef LITTLE_ENDIAN
+    SDIFresult r;
+   const char *q = (const char *)block;
+    int i, m = 8*n;
+
+    if ((n << 3) > BUFSIZE) {
+	int num = BUFSIZE >> 3;
+	if (r = SDIF_Write8(block, num, f)) return r;
+	return SDIF_Write8(((char *) block) + num, n-num, f);
+    }
+
+    for (i = 0; i < m; i += 8) {
+	p[i] = q[i+7];
+	p[i+7] = q[i];
+	p[i+1] = q[i+6];
+	p[i+6] = q[i+1];
+	p[i+2] = q[i+5];
+	p[i+5] = q[i+2];
+	p[i+3] = q[i+4];
+	p[i+4] = q[i+3];
+    }
+
+    return (fwrite(p,8,n,f) == n) ? ESDIF_SUCCESS : ESDIF_WRITE_FAILED;
+#else
+    return (fwrite(block,8,n,f) == n) ? ESDIF_SUCCESS : ESDIF_WRITE_FAILED;
+#endif
+}
+
+
+static SDIFresult SDIF_Read1(void *block, size_t n, FILE *f) {
+    return (fread (block,1,n,f) == n) ? ESDIF_SUCCESS : ESDIF_READ_FAILED;
+}
+
+
+static SDIFresult SDIF_Read2(void *block, size_t n, FILE *f) {
+
+#ifdef LITTLE_ENDIAN
+    SDIFresult r;
+    char *q = (char *)block;
+    int i, m = 2*n;
+
+    if ((n << 1) > BUFSIZE) {
+	int num = BUFSIZE >> 1;
+	if (r = SDIF_Read2(block, num, f)) return r;
+	return SDIF_Read2(((char *) block) + num, n-num, f);
+    }
+
+    if (fread(p,2,n,f) != n) return ESDIF_READ_FAILED;
+
+    for (i = 0; i < m; i += 2) {
+	q[i] = p[i+1];
+	q[i+1] = p[i];
+    }
+
+    return ESDIF_SUCCESS;
+#else
+    return (fread(block,2,n,f) == n) ? ESDIF_SUCCESS : ESDIF_READ_FAILED;
+#endif
+
+}
+
+
+static SDIFresult SDIF_Read4(void *block, size_t n, FILE *f) {
+#ifdef LITTLE_ENDIAN
+    SDIFresult r;
+    char *q = (char *)block;
+    int i, m = 4*n;
+
+    if ((n << 2) > BUFSIZE) {
+	int num = BUFSIZE >> 2;
+	if (r = SDIF_Read4(block, num, f)) return r;
+	return SDIF_Read4(((char *) block) + num, n-num, f);
+    }
+
+    if (fread(p,4,n,f) != n) return ESDIF_READ_FAILED;
+
+    for (i = 0; i < m; i += 4) {
+	q[i] = p[i+3];
+	q[i+3] = p[i];
+	q[i+1] = p[i+2];
+	q[i+2] = p[i+1];
+    }
+
+    return ESDIF_SUCCESS;
+
+#else
+    return (fread(block,4,n,f) == n) ? ESDIF_SUCCESS : ESDIF_READ_FAILED;
+#endif
+
+}
+
+
+static SDIFresult SDIF_Read8(void *block, size_t n, FILE *f) {
+#ifdef LITTLE_ENDIAN
+    SDIFresult r;
+    char *q = (char *)block;
+    int i, m = 8*n;
+
+    if ((n << 3) > BUFSIZE) {
+	int num = BUFSIZE >> 3;
+	if (r = SDIF_Read8(block, num, f)) return r;
+	return SDIF_Read8(((char *) block) + num, n-num, f);
+    }
+
+    if (fread(p,8,n,f) != n) return ESDIF_READ_FAILED;
+
+    for (i = 0; i < m; i += 8) {
+	q[i] = p[i+7];
+	q[i+7] = p[i];
+	q[i+1] = p[i+6];
+	q[i+6] = p[i+1];
+	q[i+2] = p[i+5];
+	q[i+5] = p[i+2];
+	q[i+3] = p[i+4];
+	q[i+4] = p[i+3];
+    }
+
+    return ESDIF_SUCCESS;
+
+#else
+    return (fread(block,8,n,f) == n) ? ESDIF_SUCCESS : ESDIF_READ_FAILED;
+#endif
+}
+
+#pragma mark -- CNMAT SDIF intialization --
+// ---------------------------------------------------------------------------
+//	CNMAT SDIF initialization.
+// ---------------------------------------------------------------------------
+static int SizeofSanityCheck(void) {
+    int OK = 1;
+    static char errorMessage[sizeof("sizeof(sdif_float64) is 999!!!")];
+
+    if (sizeof(sdif_int16) != 2) {
+    	sprintf(errorMessage, "sizeof(sdif_int16) is %d!", sizeof(sdif_int16));
+		OK = 0;
+    }
+
+    if (sizeof(sdif_int32) != 4) {
+    	sprintf(errorMessage, "sizeof(sdif_int32) is %d!", sizeof(sdif_int32));
+		OK = 0;
+    }
+
+    if (sizeof(sdif_float32) != 4) {
+		sprintf(errorMessage, "sizeof(sdif_float32) is %d!", sizeof(sdif_float32));
+		OK = 0;
+    }
+
+    if (sizeof(sdif_float64) != 8) {
+		sprintf(errorMessage, "sizeof(sdif_float64) is %d!", sizeof(sdif_float64));
+		OK = 0;
+    }
+
+    if (!OK) {
+        error_string_array[ESDIF_BAD_SIZEOF] = errorMessage;
+    }
+    return OK;
+}
+
+
+
+static SDIFresult SDIF_Init(void) {
+	if (!SizeofSanityCheck()) {
+		return ESDIF_BAD_SIZEOF;
+	}
+	return ESDIF_SUCCESS;
+}
+
+#pragma mark -- CNMAT SDIF frame header --
+// ---------------------------------------------------------------------------
+//	CNMAT SDIF frame headers.
+// ---------------------------------------------------------------------------
+static void SDIF_Copy4Bytes(char *target, const char *string) {
+    target[0] = string[0];
+    target[1] = string[1];
+    target[2] = string[2];
+    target[3] = string[3];
+}
+
+static int SDIF_Char4Eq(const char *ths, const char *that) {
+    return ths[0] == that[0] && ths[1] == that[1] &&
+	ths[2] == that[2] && ths[3] == that[3];
+}
+
+static void SDIF_FillGlobalHeader(SDIF_GlobalHeader *h) {
+    SDIF_Copy4Bytes(h->SDIF, "SDIF");
+    h->size = 8;
+    h->SDIFversion = SDIF_SPEC_VERSION;
+    h->SDIFStandardTypesVersion = SDIF_LIBRARY_VERSION;
+}
+
+static SDIFresult SDIF_WriteGlobalHeader(const SDIF_GlobalHeader *h, FILE *f) {
+#ifdef LITTLE_ENDIAN
+    SDIFresult r;
+    if (r = SDIF_Write1(&(h->SDIF), 4, f)) return r;
+    if (r = SDIF_Write4(&(h->size), 1, f)) return r;
+    if (r = SDIF_Write4(&(h->SDIFversion), 1, f)) return r;
+    if (r = SDIF_Write4(&(h->SDIFStandardTypesVersion), 1, f)) return r;
+    return ESDIF_SUCCESS;
+#else
+
+    return (fwrite(h, sizeof(*h), 1, f) == 1) ?ESDIF_SUCCESS:ESDIF_WRITE_FAILED;
+
+#endif
+}
+
+static SDIFresult SDIF_ReadFrameHeader(SDIF_FrameHeader *fh, FILE *f) {
+#ifdef LITTLE_ENDIAN
+    SDIFresult r;
+
+    if (SDIF_Read1(&(fh->frameType),4,f)) {
+    	if (feof(f)) {
+	    return ESDIF_END_OF_DATA;
+	}
+	return ESDIF_READ_FAILED;
+    }
+    if (r = SDIF_Read4(&(fh->size),1,f)) return r;
+    if (r = SDIF_Read8(&(fh->time),1,f)) return r;
+    if (r = SDIF_Read4(&(fh->streamID),1,f)) return r;
+    if (r = SDIF_Read4(&(fh->matrixCount),1,f)) return r;
+    return ESDIF_SUCCESS;
+#else
+    size_t amount_read;
+
+    amount_read = fread(fh, sizeof(*fh), 1, f);
+    if (amount_read == 1) return ESDIF_SUCCESS;
+    if (amount_read == 0) {
+	/* Now that fread failed, maybe we're at EOF. */
+	if (feof(f)) {
+	    return ESDIF_END_OF_DATA;
+	}
+    }
+    return ESDIF_READ_FAILED;
+#endif /* LITTLE_ENDIAN */
+}
+
+
+static SDIFresult SDIF_WriteFrameHeader(const SDIF_FrameHeader *fh, FILE *f) {
+
+#ifdef LITTLE_ENDIAN
+    SDIFresult r;
+
+    if (r = SDIF_Write1(&(fh->frameType),4,f)) return r;
+    if (r = SDIF_Write4(&(fh->size),1,f)) return r;
+    if (r = SDIF_Write8(&(fh->time),1,f)) return r;
+    if (r = SDIF_Write4(&(fh->streamID),1,f)) return r;
+    if (r = SDIF_Write4(&(fh->matrixCount),1,f)) return r;
+#ifdef __WIN32__
+    fflush(f);
+#endif
+    return ESDIF_SUCCESS;
+#else
+
+    return (fwrite(fh, sizeof(*fh), 1, f) == 1)?ESDIF_SUCCESS:ESDIF_WRITE_FAILED;
+
+#endif
+}
+
+static SDIFresult SkipBytes(FILE *f, int bytesToSkip) {
+#ifdef STREAMING
+    /* Can't fseek in a stream, so waste some time needlessly copying
+       some bytes in memory */
+    {
+#define BLOCK_SIZE 1024
+		char buf[BLOCK_SIZE];
+		while (bytesToSkip > BLOCK_SIZE) 
+		{
+		    if (fread (buf, BLOCK_SIZE, 1, f) != 1) 
+		    {
+				return ESDIF_READ_FAILED;
+		    }
+		    bytesToSkip -= BLOCK_SIZE;
+		}
+
+		if (fread (buf, bytesToSkip, 1, f) != 1) 
+		{
+		    return ESDIF_READ_FAILED;
+		}
+    }
+#else
+    /* More efficient implementation */
+    if (fseek(f, bytesToSkip, SEEK_CUR) != 0) 
+    {
+		return ESDIF_SKIP_FAILED;
+    }
+#endif
+   return ESDIF_SUCCESS;
+}
+
+static SDIFresult SDIF_SkipFrame(const SDIF_FrameHeader *head, FILE *f) {
+    /* The header's size count includes the 8-byte time tag, 4-byte
+       stream ID and 4-byte matrix count that we already read. */
+    int bytesToSkip = head->size - 16;
+
+    if (bytesToSkip < 0) {
+	return ESDIF_BAD_FRAME_HEADER;
+    }
+
+    return SkipBytes(f, bytesToSkip);
+}
+
+#pragma mark -- CNMAT SDIF matrix header --
+// ---------------------------------------------------------------------------
+//	CNMAT SDIF matrix headers.
+// ---------------------------------------------------------------------------
+static SDIFresult SDIF_ReadMatrixHeader(SDIF_MatrixHeader *m, FILE *f) {
+#ifdef LITTLE_ENDIAN
+    SDIFresult r;
+    if (r = SDIF_Read1(&(m->matrixType),4,f)) return r;
+    if (r = SDIF_Read4(&(m->matrixDataType),1,f)) return r;
+    if (r = SDIF_Read4(&(m->rowCount),1,f)) return r;
+    if (r = SDIF_Read4(&(m->columnCount),1,f)) return r;
+    return ESDIF_SUCCESS;
+#else
+    if (fread(m, sizeof(*m), 1, f) == 1) {
+	return ESDIF_SUCCESS;
+    } else {
+	return ESDIF_READ_FAILED;
+    }
+#endif
+
+}
+
+static SDIFresult SDIF_WriteMatrixHeader(const SDIF_MatrixHeader *m, FILE *f) {
+#ifdef LITTLE_ENDIAN
+    SDIFresult r;
+    if (r = SDIF_Write1(&(m->matrixType),4,f)) return r;
+    if (r = SDIF_Write4(&(m->matrixDataType),1,f)) return r;
+    if (r = SDIF_Write4(&(m->rowCount),1,f)) return r;
+    if (r = SDIF_Write4(&(m->columnCount),1,f)) return r;
+    return ESDIF_SUCCESS;
+#else
+    return (fwrite(m, sizeof(*m), 1, f) == 1) ? ESDIF_SUCCESS:ESDIF_READ_FAILED;
+#endif
+}
+
+
+static int SDIF_GetMatrixDataSize(const SDIF_MatrixHeader *m) {
+    int size;
+    size = SDIF_GetMatrixDataTypeSize(m->matrixDataType) *
+	    m->rowCount * m->columnCount;
+
+    if ((size % 8) != 0) {
+        size += (8 - (size % 8));
+    }
+
+    return size;
+}
+
+static int SDIF_PaddingRequired(const SDIF_MatrixHeader *m) {
+    int size;
+    size = SDIF_GetMatrixDataTypeSize(m->matrixDataType) *
+            m->rowCount * m->columnCount;
+
+    if ((size % 8) != 0) {
+	return (8 - (size % 8));
+    } else {
+	return 0;
+    }
+}
+
+#pragma mark -- CNMAT SDIF matrix data --
+// ---------------------------------------------------------------------------
+//	CNMAT SDIF matrix data.
+// ---------------------------------------------------------------------------
+static SDIFresult SDIF_SkipMatrix(const SDIF_MatrixHeader *head, FILE *f) {
+    int size = SDIF_GetMatrixDataSize(head);
+    
+    if (size < 0) {
+        return ESDIF_BAD_MATRIX_HEADER;
+    }
+    
+    return SkipBytes(f, size);
+}
+
+
+static SDIFresult SDIF_ReadMatrixData(void *putItHere, FILE *f, const SDIF_MatrixHeader *head) {
+    size_t datumSize = (size_t) SDIF_GetMatrixDataTypeSize(head->matrixDataType);
+    size_t numItems = (size_t) (head->rowCount * head->columnCount);
+    int paddingBytes;
+    char paddingBuffer[8];  /* Most padding any matrix could have. */
+    SDIFresult r;
+    
+#ifdef LITTLE_ENDIAN
+    switch (datumSize) {
+        case 1:
+            if (r = SDIF_Read1(putItHere, numItems, f)) return r;
+        case 2:
+            if (r = SDIF_Read2(putItHere, numItems, f)) return r;
+        case 4:
+            if (r = SDIF_Read4(putItHere, numItems, f)) return r;
+        case 8:
+            if (r = SDIF_Read8(putItHere, numItems, f)) return r;
+        default:
+            return ESDIF_BAD_MATRIX_DATA_TYPE;
+    }
+#else
+    if (fread(putItHere, datumSize, numItems, f) != numItems) {
+	return ESDIF_READ_FAILED;
+    }
+#endif
+
+    /* Handle padding */
+    paddingBytes = SDIF_PaddingRequired(head);
+    if ((r = SDIF_Read1(paddingBuffer, paddingBytes, f))) return r;
+
+    return ESDIF_SUCCESS;
+}
+
+
+static SDIFresult SDIF_WriteMatrixPadding(FILE *f, const SDIF_MatrixHeader *head) {
+    int paddingBytes;
+    sdif_int32 paddingBuffer[2] = {0,0};
+    SDIFresult r;
+
+    paddingBytes = SDIF_PaddingRequired(head);
+    if ((r = SDIF_Write1(paddingBuffer, paddingBytes, f))) return r;
+
+    return ESDIF_SUCCESS;
+}
+
+
+static SDIFresult SDIF_WriteMatrixData(FILE *f, const SDIF_MatrixHeader *head, void *data) {
+    size_t datumSize = (size_t) SDIF_GetMatrixDataTypeSize(head->matrixDataType);
+    size_t numItems = (size_t) (head->rowCount * head->columnCount);
+
+#ifdef LITTLE_ENDIAN
+	SDIFresult r;
+    switch (datumSize) {
+        case 1:
+            if (r = SDIF_Write1(data, numItems, f)) return r;
+        case 2:
+            if (r = SDIF_Write2(data, numItems, f)) return r;
+        case 4:
+            if (r = SDIF_Write4(data, numItems, f)) return r;
+        case 8:
+            if (r = SDIF_Write8(data, numItems, f)) return r;
+        default:
+            return ESDIF_BAD_MATRIX_DATA_TYPE;
+    }
+#else
+    if (fwrite(data, datumSize, numItems, f) != numItems) {
+        return ESDIF_READ_FAILED;
+    }
+#endif
+
+    /* Handle padding */
+    return SDIF_WriteMatrixPadding(f, head);
+}
+
+#pragma mark -- CNMAT SDIF open and close --
+// ---------------------------------------------------------------------------
+//	CNMAT SDIF file open and close.
+// ---------------------------------------------------------------------------
+
+static SDIFresult SDIF_BeginWrite(FILE *output) {
+    SDIF_GlobalHeader h;
+
+    SDIF_FillGlobalHeader(&h);
+    return SDIF_WriteGlobalHeader(&h, output);
+}
+
+static SDIFresult SDIF_OpenWrite(const char *filename, FILE **resultp) {
+    FILE *result;
+    SDIFresult r;
+
+    if ((result = fopen(filename, "wb")) == NULL) 
+    {
+		return ESDIF_SEE_ERRNO;
+    }
+    if ((r = SDIF_BeginWrite(result))) 
+    {
+		fclose(result);
+		return r;
+    }
+    *resultp = result;
+    return ESDIF_SUCCESS;
+}
+
+static SDIFresult SDIF_CloseWrite(FILE *f) {
+    fflush(f);
+    if (fclose(f) == 0) {
+	return ESDIF_SUCCESS;
+    } else {
+	return ESDIF_SEE_ERRNO;
+    }
+}
+
+static SDIFresult SDIF_BeginRead(FILE *input) {
+    SDIF_GlobalHeader sgh;
+    SDIFresult r;
+
+    /* make sure the header is OK. */
+    if ((r = SDIF_Read1(sgh.SDIF, 4, input))) return r;
+    if (!SDIF_Char4Eq(sgh.SDIF, "SDIF")) return ESDIF_BAD_SDIF_HEADER;
+    if ((r = SDIF_Read4(&sgh.size, 1, input))) return r;
+    if (sgh.size % 8 != 0) return ESDIF_BAD_SDIF_HEADER;
+    if (sgh.size < 8) return ESDIF_BAD_SDIF_HEADER;
+    if ((r = SDIF_Read4(&sgh.SDIFversion, 1, input))) return r;
+    if ((r = SDIF_Read4(&sgh.SDIFStandardTypesVersion, 1, input))) return r;
+
+    if (sgh.SDIFversion < 3) {
+	return ESDIF_OBSOLETE_FILE_VERSION;
+    }
+
+    if (sgh.SDIFStandardTypesVersion < 1) {
+	return ESDIF_OBSOLETE_TYPES_VERSION;
+    }
+
+    /* skip size-8 bytes.  (We already read the first two version numbers,
+       but maybe there's more data in the header frame.) */
+
+    if (sgh.size == 8) {
+	return ESDIF_SUCCESS;
+    }
+
+    if (SkipBytes(input, sgh.size-8)) {
+	return ESDIF_BAD_SDIF_HEADER;
+    }
+
+    return ESDIF_SUCCESS;
+}
+
+static SDIFresult SDIF_OpenRead(const char *filename, FILE **resultp) {
+    FILE *result = NULL;
+    SDIFresult r;
+
+    if ((result = fopen(filename, "rb")) == NULL) {
+        return ESDIF_SEE_ERRNO;
+    }
+
+    if ((r = SDIF_BeginRead(result))) {
+        fclose(result);
+        return r;
+    }
+
+    *resultp = result;
+    return ESDIF_SUCCESS;
+}
+
+static SDIFresult SDIF_CloseRead(FILE *f) {
+    if (fclose(f) == 0) {
+	return ESDIF_SUCCESS;
+    } else {
+	return ESDIF_SEE_ERRNO;
+    }
+}
+
+#pragma mark -- construction --
+						 
+// ---------------------------------------------------------------------------
+//	SdifFile construction helpers
+// ---------------------------------------------------------------------------
+
+// import_sdif reads SDIF data from the specified file path and
+// stores data in its PartialList and MarkerContainer arguments.
+static void import_sdif( const std::string &, SdifFile::partials_type &, 
+						 SdifFile::markers_type & );
+
+// export_sdif writes the data in its  PartialList and MarkerContainer 
+// arguments to a specified SDIF file path. Writes bandwidth-enhanced
+// Partials if enhanced is true, otherwise writes sinusoidal partials.
+static void export_sdif( const std::string &, const SdifFile::partials_type &, 
+						 const SdifFile::markers_type &, bool enhanced );
+						 
+// ---------------------------------------------------------------------------
+//	SdifFile constructor from filename
+// ---------------------------------------------------------------------------
+//	Initialize an instance of SdifFile by importing Partial data from 
+//	from the file having the specified filename or path.
+//
+SdifFile::SdifFile( const std::string & filename )
+{
+	import_sdif( filename, partials_, markers_ );
+}
+
+// ---------------------------------------------------------------------------
+//	SdifFile constructor, empty
+// ---------------------------------------------------------------------------
+//	Initialize an empty instance of SdifFile having no Partials. 
+//
+SdifFile::SdifFile( void )
+{
+}
+
+#pragma mark -- access --
+// ---------------------------------------------------------------------------
+//	markers
+// ---------------------------------------------------------------------------
+//	Return a reference to the MarkerContainer (see Marker.h) for this SdifFile. 
+SdifFile::markers_type & SdifFile::markers( void )
+{
+	return markers_;
+}
+
+const SdifFile::markers_type & SdifFile::markers( void ) const  
+{
+	return markers_;
+}
+
+// ---------------------------------------------------------------------------
+//	partials
+// ---------------------------------------------------------------------------
+//	Return a reference (or const reference) to the bandwidth-enhanced
+//	Partials represented by the envelope parameter streams in this SdifFile.
+SdifFile::partials_type & SdifFile::partials( void ) 
+{ 
+	return partials_; 
+}
+
+const SdifFile::partials_type & SdifFile::partials( void ) const 
+{ 
+	return partials_; 
+}
+
+#pragma mark -- mutation --
+// ---------------------------------------------------------------------------
+//	addPartial
+// ---------------------------------------------------------------------------
+//	Add a copy of the specified Partial to this SdifFile.
+//
+//	This member exists only for consistency with other File I/O
+//	classes in Loris. The same operation can be achieved by directly
+//	accessing the PartialList.
+//
+void SdifFile::addPartial( const Loris::Partial & p )
+{
+	partials_.push_back( p );
+}
+
+// ---------------------------------------------------------------------------
+//	write (to path)
+// ---------------------------------------------------------------------------
+//	Export the envelope Partials represented by this SdifFile to
+//	the file having the specified filename or path.
+//
+void SdifFile::write( const std::string & path )
+{
+	export_sdif( path, partials_, markers_, true );
+}
+
+// ---------------------------------------------------------------------------
+//	write (to path)
+// ---------------------------------------------------------------------------
+//	Export the envelope Partials represented by this SdifFile to
+//	the file having the specified filename or path in the 1TRC
+//	format, resampled, and without phase or bandwidth information.
+//
+void SdifFile::write1TRC( const std::string & path )
+{
+	export_sdif( path, partials_, markers_, false );
+}
+
+
+#pragma mark -- Loris SDIF definitions --
+// ---------------------------------------------------------------------------
+//	Loris SDIF types
+// ---------------------------------------------------------------------------
 //	Row of matrix data in SDIF RBEP, 1TRC, or RBEL format.
 //
 //  The RBEP matrices are for reassigned bandwidth enhanced partials (in 6 columns).
@@ -76,14 +1029,16 @@ int lorisRowMaxElements = 7;
 int lorisRowEnhancedElements = 6;
 int lorisRowSineOnlyElements = 4;
 typedef struct {
-    SdifFloat8 index, freqOrLabel, amp, phase, noise, timeOffset, resampledFlag;
+    sdif_float32 index, freqOrLabel, amp, phase, noise, timeOffset, resampledFlag;
 } RowOfLorisData;
 
 
 //  SDIF signatures used by Loris.
-#define lorisEnhancedSignature  SdifSignatureConst('R','B','E','P')
-#define lorisLabelsSignature    SdifSignatureConst('R','B','E','L')
-#define lorisSineOnlySignature  SdifSignatureConst('1','T','R','C')
+typedef char sdif_signature[4];
+static sdif_signature lorisEnhancedSignature = { 'R','B','E','P' };
+static sdif_signature lorisLabelsSignature = { 'R','B','E','L' };
+static sdif_signature lorisSineOnlySignature = { '1','T','R','C' };
+static sdif_signature lorisMarkersSignature = { 'R','B','E','M' };
 
 
 //	Exception class for handling errors in SDIF library:
@@ -97,28 +1052,28 @@ public:
 //	macro to check for SDIF library errors and throw exceptions when
 //	they occur, which we really ought to do after every SDIF library
 //	call:
-#define ThrowIfSdifError( getErr, report )										\
-	do {																		\
-		SdifErrorT* errPtr = (getErr);											\
+#define ThrowIfSdifError( errNum, report )										\
+	if (errNum)																	\
+	{																			\
+		char* errPtr = error_string_array[errNum];								\
 		if (errPtr)																\
 		{																		\
-	        debugger << "SDIF error number " << (int)errPtr->Tag << endl;		\
+	        debugger << "SDIF error " << errPtr << endl;						\
 			std::string s(report);												\
 			s.append(", SDIF error message: ");									\
-			s.append(errPtr->UserMess);											\
+			s.append(errPtr);													\
 			Throw( SdifLibraryError, s );										\
 		}																		\
-	} while (false)	
+	}	
 
-
-#pragma mark envelope reading helpers
+#pragma mark -- SDIF reading helpers --
 // ---------------------------------------------------------------------------
 //	processRow
 // ---------------------------------------------------------------------------
 //	Add to existing Loris partials, or create new Loris partials for this data.
 //
 static void
-processRow( const SdifSignature msig, const RowOfLorisData & rowData, const double frameTime, 
+processRow( const sdif_signature msig, const RowOfLorisData & rowData, const double frameTime, 
 				  std::vector< Partial > & partialsVector )
 {	
 
@@ -139,7 +1094,7 @@ processRow( const SdifSignature msig, const RowOfLorisData & rowData, const doub
 //
 // Create a new breakpoint and insert it.
 //	
-	if (msig == lorisEnhancedSignature || msig == lorisSineOnlySignature) 
+	if (SDIF_Char4Eq(msig, lorisEnhancedSignature) || SDIF_Char4Eq(msig, lorisSineOnlySignature)) 
 	{
 		Breakpoint newbp( rowData.freqOrLabel, rowData.amp, rowData.noise, rowData.phase );
 		partialsVector[long(rowData.index)].insert( frameTime + rowData.timeOffset, newbp );
@@ -147,13 +1102,117 @@ processRow( const SdifSignature msig, const RowOfLorisData & rowData, const doub
 //
 // Set partial label.
 //
-	else if (msig == lorisLabelsSignature) 
+	else if (SDIF_Char4Eq(msig, lorisLabelsSignature)) 
 	{
 		partialsVector[long(rowData.index)].setLabel( (int) rowData.freqOrLabel );
 	}
 		
 }
 
+// ---------------------------------------------------------------------------
+//	readMarkers
+// ---------------------------------------------------------------------------
+//
+static void
+readMarkers( FILE * file, SDIF_FrameHeader fh, SdifFile::markers_type & markersVector )
+{
+//
+// Read Loris markers from SDIF file in a RBEM frame.
+// This precedes the envelope data in the file.
+// Let exceptions propagate.
+//
+	SDIFresult ret;
+	int cols = 1;
+//
+// The frame must contain exactly two matrices.
+//
+	if (fh.matrixCount != 2)
+	{
+		Throw( FileIOException, "Markers frame has bad format." );
+	}
+
+//							
+// Read the numeric (marker times) matrix.
+//
+	{
+		SDIF_MatrixHeader mh;
+	    ret = SDIF_ReadMatrixHeader(&mh,file);
+		ThrowIfSdifError( ret, "Error reading SDIF file" );
+		
+		// Error if matrix has unexpected data type.
+		if (mh.matrixDataType != SDIF_FLOAT32 || mh.columnCount != cols) 
+		{
+			Throw( FileIOException, "Markers frame has bad format." );
+		}
+		
+		// Read each row of matrix data.
+		for (int row = 0; row < mh.rowCount; row++)
+		{
+			sdif_float32 markerTime;
+			SDIF_Read4(&markerTime,1,file);
+			markersVector.push_back(Marker(markerTime, ""));
+		}
+		
+		// Skip over padding, if any.
+		if ((mh.rowCount * mh.columnCount) & 0x1) 
+		{
+		    sdif_float32 pad;
+		    SDIF_Read4(&pad,1,file);
+		}
+	}
+	
+//							
+// Read the string (marker names) matrix.
+//
+	{
+		SDIF_MatrixHeader mh;
+	    ret = SDIF_ReadMatrixHeader(&mh,file);
+		ThrowIfSdifError( ret, "Error reading SDIF file" );
+		
+		// Error if matrix has unexpected data type.
+		if (mh.matrixDataType != SDIF_UTF8 || mh.columnCount != cols) 
+		{
+			Throw( FileIOException, "Markers frame has bad format." );
+		}
+		
+		// Read strings.
+		std::string markerName;
+		int markerNumber = 0;
+		for (int row = 0; row < mh.rowCount; row++)
+		{
+			char ch;
+			SDIF_Read1(&ch,1,file);
+			
+			// If we have reached the end of a name, assign it to a marker.
+			if (ch == '\0')
+			{
+				// Save the name of the marker.
+				markersVector[markerNumber].setName(markerName);
+				
+				// Prepare to get name of next marker.
+				markerNumber++;
+				if (markerNumber > markersVector.size()) 
+				{
+					Throw( FileIOException, "Markers frame has bad format." );
+				}
+				markerName.clear();
+			}
+			else
+			{
+				markerName.push_back(ch);
+			}
+		}
+			
+		// There should be one marker name for each marker time.
+		if (markerNumber != markersVector.size()) 
+		{
+			Throw( FileIOException, "Markers frame has bad format." );
+		}
+		
+		// Skip padding.
+		ret = SkipBytes(file, SDIF_PaddingRequired(&mh));
+	}
+}
 
 // ---------------------------------------------------------------------------
 //	readLorisMatrices
@@ -161,133 +1220,110 @@ processRow( const SdifSignature msig, const RowOfLorisData & rowData, const doub
 // Let exceptions propagate.
 //
 static void
-readLorisMatrices( SdifFileT *file, std::vector< Partial > & partialsVector )
+readLorisMatrices( FILE *file, std::vector< Partial > & partialsVector, SdifFile::markers_type & markersVector )
 {
-	size_t bytesread = 0;
-	int eof = false;
+	SDIFresult ret;
 
 //
 // Read all frames matching the file selection.
 //
-	while (!eof) // && !SdifFLastError(file))
-	{
-		bytesread += SdifFReadFrameHeader(file);
-		ThrowIfSdifError( SdifFLastError(file), "Error reading SDIF file" );
-		
-		// Skip frames until we find one we are interested in.
-		while (!SdifFCurrFrameIsSelected(file) 
-				|| (SdifFCurrSignature(file) != lorisEnhancedSignature 
-					&& SdifFCurrSignature(file) != lorisSineOnlySignature 
-					&& SdifFCurrSignature(file) != lorisLabelsSignature))
+	SDIF_FrameHeader fh;
+	while (!(ret = SDIF_ReadFrameHeader(&fh, file)))
+	{	
+
+		// Check for Loris Markers frame.
+		if (SDIF_Char4Eq(fh.frameType, lorisMarkersSignature))
 		{
-			ThrowIfSdifError( SdifFLastError(file), "Error reading SDIF file." );
-
-			SdifSkipFrameData(file);
-			eof = (SdifFGetSignature(file, &bytesread) == eEof);
-			ThrowIfSdifError( SdifFLastError(file), "Error reading SDIF file" );
-
-			if (eof)
-				break;		// eof
-			bytesread += SdifFReadFrameHeader(file);
-			ThrowIfSdifError( SdifFLastError(file), "Error reading SDIF file" );
+			readMarkers( file, fh, markersVector );
+			continue;		
+		}
+			
+		// Skip frames until we find one we are interested in.
+		if (!SDIF_Char4Eq(fh.frameType, lorisEnhancedSignature) 
+					&& !SDIF_Char4Eq(fh.frameType, lorisSineOnlySignature) 
+					&& !SDIF_Char4Eq(fh.frameType, lorisLabelsSignature))
+		{
+			ret = SDIF_SkipFrame(&fh, file);	
+			ThrowIfSdifError( ret, "Error reading SDIF file" );
+			continue;		
 		}
 		
-		if (!eof)
+
+		// Read all matrices in this frame.
+		for (int m = 0; m < fh.matrixCount; m++)
 		{
-			// Access frame header information.
-			SdifFloat8 time = SdifFCurrTime(file);
-			SdifSignature fsig = SdifFCurrFrameSignature(file);
-			SdifUInt4 streamid = SdifFCurrID(file);
-			SdifUInt4 nmatrix = SdifFCurrNbMatrix(file);
-			ThrowIfSdifError( SdifFLastError(file), "Error reading SDIF file" );
-
-			// Read all matrices in this frame matching the selection.
-			for (int m = 0; m < nmatrix; m++)
+			SDIF_MatrixHeader mh;
+		    ret = SDIF_ReadMatrixHeader(&mh,file);
+			ThrowIfSdifError( ret, "Error reading SDIF file" );
+			
+			// Skip matrix if it has unexpected data type.
+			if (mh.matrixDataType != SDIF_FLOAT32 || mh.columnCount > lorisRowMaxElements) 
 			{
-				bytesread += SdifFReadMatrixHeader(file);
-				ThrowIfSdifError( SdifFLastError(file), "Error reading SDIF file" );
-
-				if (SdifFCurrMatrixIsSelected(file))
-				{
-					ThrowIfSdifError( SdifFLastError(file), "Error reading SDIF file" );
-				
-					// Access matrix header information.
-					SdifSignature msig = SdifFCurrMatrixSignature(file);
-					SdifInt4 nrows = SdifFCurrNbRow(file);
-					SdifInt4 ncols = SdifFCurrNbCol(file);
-					SdifDataTypeET type = SdifFCurrDataType(file);
-					ThrowIfSdifError( SdifFLastError(file), "Error reading SDIF file" );
-
-					// Read each row of matrix data.
-					for (int row = 0; row < nrows; row++)
-					{
-						bytesread += SdifFReadOneRow(file);
-					ThrowIfSdifError( SdifFLastError(file), "Error reading SDIF file" );
-
-						// Fill a rowData structure.
-						RowOfLorisData rowData = { 0.0 };
-						SdifFloat8 *rowDataPtr = &rowData.index;
-						for (int col = 1; col <= std::min(ncols, lorisRowMaxElements); col++)
-						{
-							*(rowDataPtr++) = SdifFCurrOneRowCol(file, col);
-							ThrowIfSdifError( SdifFLastError(file), "Error reading SDIF file" );
-						}
-						
-						// Add rowData as a new breakpoint in a partial, or,
-						// if its a RBEL matrix, read label mapping.
-						processRow(msig, rowData, time, partialsVector);
-					}
-				}
-				else
-				{
-					bytesread += SdifSkipMatrixData(file);
-					ThrowIfSdifError( SdifFLastError(file), "Error reading SDIF file" );
-				}
-				
-				bytesread += SdifFReadPadding(file, SdifFPaddingCalculate(file->Stream, bytesread));
-				ThrowIfSdifError( SdifFLastError(file), "Error reading SDIF file" );
+				ret = SDIF_SkipMatrix(&mh, file);	
+				ThrowIfSdifError( ret, "Error reading SDIF file" );
+				continue;		
 			}
 			
-			// read next signature
-			eof = (SdifFGetSignature(file, &bytesread) == eEof);
-			ThrowIfSdifError( SdifFLastError(file), "Error reading SDIF file" );
+			// Read each row of matrix data.
+			for (int row = 0; row < mh.rowCount; row++)
+			{
+			
+				// Fill a rowData structure with one row from the matrix.
+				RowOfLorisData rowData = { 0.0 };
+				sdif_float32 *rowDataPtr = &rowData.index;
+				for (int col = 1; col <= mh.columnCount; col++)
+				{
+					SDIF_Read4(rowDataPtr++,1,file);
+				}
+				
+				// Add rowData as a new breakpoint in a partial, or,
+				// if its a RBEL matrix, read label mapping.
+				processRow(mh.matrixType, rowData, fh.time, partialsVector);
+			}
+			
+			// Skip over padding, if any.
+			if ((mh.rowCount * mh.columnCount) & 0x1) 
+			{
+			    sdif_float32 pad;
+			    SDIF_Read4(&pad,1,file);
+			}
 		}
 	} 
+	
+	// At this point, ret should be ESDIF_END_OF_DATA.
+	if (ret != ESDIF_END_OF_DATA)
+		ThrowIfSdifError( ret, "Error reading SDIF file" );
 }
 
-
-#pragma mark -
-#pragma mark import sdif
 // ---------------------------------------------------------------------------
 //	read
 // ---------------------------------------------------------------------------
 // Let exceptions propagate.
 //
-static void
-read( const char *infilename, PartialList & partials )
+static void import_sdif( const std::string &infilename, 
+						 SdifFile::partials_type & partials, 
+						 SdifFile::markers_type & markers)
 {
 
-// 
-// Initialize SDIF library.
 //
-	SdifGenInit("");
-#if !defined(Debug_Loris)
-	SdifDisableErrorOutput();
-#endif
-	
+// Initialize CNMSAT SDIF routines.
+//
+	SDIFresult ret = SDIF_Init();
+	if (ret)
+	{
+		Throw( FileIOException, "Could not initialize SDIF routines." );
+	}
+
 //
 // Open SDIF file for reading.
 // Note: Currently we do not specify any selection criterion in this call.
 //
-	SdifFileT *in = SdifFOpen(infilename, eReadFile);
-	if (!in)
+	FILE *file;
+	ret = SDIF_OpenRead(infilename.c_str(), &file);
+	if (ret)
 	{
-		SdifGenKill();
 		Throw( FileIOException, "Could not open SDIF file for reading." );
 	}
-
-	SdifFReadGeneralHeader(in);		// read file header
-	SdifFReadAllASCIIChunks(in);	// read ascii header info, such as name-value tables
 
 //
 // Read SDIF data.
@@ -297,7 +1333,8 @@ read( const char *infilename, PartialList & partials )
 	
 		// Build up partialsVector.
 		std::vector< Partial > partialsVector;
-		readLorisMatrices( in, partialsVector );
+		SdifFile::markers_type markersVector;
+		readLorisMatrices( file, partialsVector, markersVector );
 		
 		// Copy partialsVector to partials list.
 		for (int i = 0; i < partialsVector.size(); ++i)
@@ -307,25 +1344,26 @@ read( const char *infilename, PartialList & partials )
 				partials.push_back( partialsVector[i] );
 			}
 		}
+		
+		// Copy markersVector to markers list.
+		for (int i = 0; i < markersVector.size(); ++i)
+		{
+			markers.push_back( markersVector[i] );
+		}
 	}
 	catch ( Exception & ex ) 
 	{
 		partials.clear();
+		markers.clear();
 		ex.append(" Failed to read SDIF file.");
-		SdifFClose(in);
-		SdifGenKill();
+		SDIF_CloseRead(file);
 		throw;
 	}
 
 //
 // Close SDIF input file.
 //
-	SdifFClose(in);
-
-// 
-// Done with SDIF library.
-//
-	SdifGenKill();
+	SDIF_CloseRead(file);
 	
 //
 // Complain if no Partials were imported:
@@ -338,20 +1376,7 @@ read( const char *infilename, PartialList & partials )
 	
 }
 
-
-// ---------------------------------------------------------------------------
-//	SdifFile constructor from data in memory (import)
-// ---------------------------------------------------------------------------
-//
-SdifFile::SdifFile( const std::string & infilename ) 
-{
-	read( infilename.c_str(), _partials );
-}
-
-
-#pragma mark -
-#pragma mark -
-#pragma mark envelope writing helpers
+#pragma mark -- SDIF writing helpers --
 // ---------------------------------------------------------------------------
 //	makeSortedBreakpointTimes
 // ---------------------------------------------------------------------------
@@ -371,14 +1396,14 @@ struct earlier_time
 };
 
 static void
-makeSortedBreakpointTimes( const std::vector< Partial * > & partialsVector, 
+makeSortedBreakpointTimes( const ConstPartialPtrs & partialsVector, 
 						   std::list< BreakpointTime > & allBreakpoints ) 
 {
 
 // Make list of all breakpoint times from all partials.
 	for (int i = 0; i < partialsVector.size(); i++) 
 	{
-		for ( Partial::iterator it = partialsVector[i]->begin(); 
+		for ( Partial::const_iterator it = partialsVector[i]->begin(); 
 			  it != partialsVector[i]->end();
 			  ++it ) 
 		{
@@ -392,7 +1417,6 @@ makeSortedBreakpointTimes( const std::vector< Partial * > & partialsVector,
 // Sort list of all breakpoint times.
 	allBreakpoints.sort( earlier_time() );
 }
-
 
 // ---------------------------------------------------------------------------
 //	getNextFrameTime
@@ -443,8 +1467,13 @@ getNextFrameTime( const double frameTime,
 		if ( it != allBreakpoints.end() &&
 				(it->time > bpTimeIter->time + 0.0001 || partialsWithBreakpointsInFrame.size() == 1))
 		{
-			//	Try rounding to nearest millisecond, use tenth millisecond if necessary.
-			nextFrameTime = std::floor( 1000. * it->time - .001 ) / 1000.0;
+			//	Round frame time to most recent millisecond multiple.
+			nextFrameTime = it->time;
+			if (1000. * nextFrameTime - int( 1000. * nextFrameTime ) != 0 )
+				nextFrameTime = std::floor( 1000. * nextFrameTime - .001 ) / 1000.0;
+				
+			// If rounding frame time to most recent millisecond put frame time before
+			// previous breakpoint time, use tenth millisecond rounding.
 			if (nextFrameTime < bpTimeIter->time + 0.00001)
 				nextFrameTime = std::floor( 10000.0 * it->time - 0.01 ) / 10000.0;
 			bpTimeIter = it;
@@ -464,11 +1493,11 @@ getNextFrameTime( const double frameTime,
 //  The vector index will be the sdif 1TRC index for the partial. 
 //
 static void
-indexPartials( const PartialList & partials, std::vector< Partial * > & partialsVector )
+indexPartials( const PartialList & partials, ConstPartialPtrs & partialsVector )
 {
 	for ( PartialList::const_iterator it = partials.begin(); it != partials.end(); ++it)
 		if ( it->size() != 0 )
-			partialsVector.push_back((Partial *)&(*it));	
+			partialsVector.push_back( &(*it) );	
 }
 
 
@@ -480,7 +1509,7 @@ indexPartials( const PartialList & partials, std::vector< Partial * > & partials
 //  Return true if time is beyond end of all the partials.
 //
 static int
-collectActiveIndices( const std::vector< Partial * > & partialsVector, const bool enhanced,
+collectActiveIndices( const ConstPartialPtrs & partialsVector, const bool enhanced,
 								const double frameTime, const double nextFrameTime,
 								std::vector< int > & activeIndices )
 {
@@ -492,7 +1521,7 @@ collectActiveIndices( const std::vector< Partial * > & partialsVector, const boo
 		// Skip the partial if there is no breakpoint and either:
 		//		(1) we are writing enhanced format, 
 		// 	 or (2) the partial has zero amplitude.
-		Partial::iterator it = partialsVector[i]->findAfter( frameTime );
+		Partial::const_iterator it = partialsVector[i]->findAfter( frameTime );
 		if ( ( it != partialsVector[i]->end() && it.time() < nextFrameTime ) 
 					|| (!enhanced && partialsVector[i]->amplitudeAt( frameTime ) != 0.0 ) ) 
 			activeIndices.push_back(i);	
@@ -503,16 +1532,12 @@ collectActiveIndices( const std::vector< Partial * > & partialsVector, const boo
 	return endOfAll;
 }
 
-
-#pragma mark -
-#pragma mark matrix assembly helpers
 // ---------------------------------------------------------------------------
 //	writeEnvelopeLabels
 // ---------------------------------------------------------------------------
 //
 static void
-writeEnvelopeLabels( SdifFileT * out,
-				const std::vector< Partial * > & partialsVector )
+writeEnvelopeLabels( FILE * out, const ConstPartialPtrs & partialsVector )
 {
 //
 // Write Loris labels to SDIF file in a RBEL matrix.
@@ -527,12 +1552,12 @@ writeEnvelopeLabels( SdifFileT * out,
 // Allocate RBEL matrix data.
 //
 	int cols = 2;
-	SdifFloat4 *data = new SdifFloat4[partialsVector.size() * cols];
+	sdif_float32 *data = new sdif_float32[partialsVector.size() * cols];
 
 //
 // For each partial index, specify the partial label.
 //
-	SdifFloat4 *dp = data;
+	sdif_float32 *dp = data;
 	int anyLabel = false;
 	for (int i = 0; i < partialsVector.size(); i++) 
 	{
@@ -546,14 +1571,129 @@ writeEnvelopeLabels( SdifFileT * out,
 // Write out matrix data, if there were any labels.
 //
 	if (anyLabel)
-		SdifFWriteFrameAndOneMatrix( out, 
-			lorisLabelsSignature, streamID, frameTime, 							// frame header
-			lorisLabelsSignature, eFloat4, partialsVector.size(), cols, data);	// matrix 
+	{
+		// Write the frame header.
+		SDIF_FrameHeader fh;
+		SDIF_Copy4Bytes(fh.frameType, lorisLabelsSignature);
+		fh.size = 
+				// size of remaining frame header
+				  sizeof(sdif_float64) + 2 * sizeof(sdif_int32) 		
+				// size of matrix header
+				+ sizeof(SDIF_MatrixHeader) 							
+				// size of matrix data plus any padding
+				+ 8 * ((partialsVector.size() * cols * sizeof(sdif_int32) + 7) / 8);	
+		fh.time = frameTime;
+		fh.streamID = streamID;
+		fh.matrixCount = 1;
+		SDIFresult ret = SDIF_WriteFrameHeader(&fh, out);
+		
+		// Write the matrix header.
+		SDIF_MatrixHeader mh;
+		SDIF_Copy4Bytes(mh.matrixType, lorisLabelsSignature);
+		mh.matrixDataType = SDIF_FLOAT32;
+		mh.rowCount = partialsVector.size();
+		mh.columnCount = cols;
+		ret = SDIF_WriteMatrixHeader(&mh, out);
+		
+		// Write the matrix data, and any necessary padding.
+		ret = SDIF_WriteMatrixData(out, &mh, data);
+	}
 
 //	
 // Free RBEL matrix space.
 //
 	delete [] data;
+}
+
+// ---------------------------------------------------------------------------
+//	writeMarkers
+// ---------------------------------------------------------------------------
+//
+static void
+writeMarkers( FILE * out, const SdifFile::markers_type &markers)
+{
+//
+// Write Loris markers to SDIF file in a RBEM frame.
+// This precedes the envelope data in the file.
+// Let exceptions propagate.
+//
+
+//
+// Exit if there are no markers.
+//
+	if (markers.size() == 0)
+	{
+		return;
+	}
+
+	int streamID = 2; 				// stream id different from envelope's stream id
+	double frameTime = 0.0;
+
+//
+// We will need two matrices: one numeric (marker times) matrix data and character (marker names) matrix.
+//
+	std::vector<sdif_float32> markerTimes;
+	std::string markerNames;
+
+//
+// Get matrix data from each marker.
+//
+	for (int marker = 0; marker < markers.size(); marker++)
+	{
+		markerTimes.push_back( markers[marker].time() );
+		markerNames += markers[marker].name() + '\0';
+	}
+
+//							
+// Write out frame with two marker matrices.
+//
+	// Write the frame header.
+	int cols = 1;
+	{
+		SDIF_FrameHeader fh;
+		SDIF_Copy4Bytes(fh.frameType, lorisMarkersSignature);
+		fh.size = 
+				// size of remaining frame header
+				  sizeof(sdif_float64) + 2 * sizeof(sdif_int32) 		
+				// size of matrix headers
+				+ 2 * sizeof(SDIF_MatrixHeader) 
+				// size of numeric (time) matrix data plus padding
+				+ 8*((markerTimes.size() * sizeof(sdif_int32) + 7)/8)	
+				// size of marker names numeric data plus padding
+				+ 8*((markerNames.size() + 7) / 8);	
+		fh.time = frameTime;
+		fh.streamID = streamID;
+		fh.matrixCount = 2;
+		SDIFresult ret = SDIF_WriteFrameHeader(&fh, out);
+	}
+	
+	// Write the numeric (marker times) matrix.
+	{
+		// Write the numeric (time) matrix header.
+		SDIF_MatrixHeader mh;
+		SDIF_Copy4Bytes(mh.matrixType, lorisMarkersSignature);
+		mh.matrixDataType = SDIF_FLOAT32;
+		mh.rowCount = markerTimes.size();
+		mh.columnCount = cols;
+		SDIFresult ret = SDIF_WriteMatrixHeader(&mh, out);
+		
+		// Write the numeric (time) matrix data, and any necessary padding.
+		ret = SDIF_WriteMatrixData(out, &mh, &markerTimes[0]);
+	}
+	
+	// Write the string (marker names) matrix.
+	{
+		// Write the string (names) matrix header.
+		SDIF_MatrixHeader mh;
+		SDIF_Copy4Bytes(mh.matrixType, lorisMarkersSignature);
+		mh.matrixDataType = SDIF_UTF8;
+		mh.rowCount = markerNames.size();
+		mh.columnCount = cols;
+		SDIFresult ret = SDIF_WriteMatrixHeader(&mh, out);
+		
+		// Write the string (names) matrix data, and any necessary padding.
+		ret = SDIF_WriteMatrixData(out, &mh, &markerNames[0]);
+	}
 }
 
 
@@ -564,19 +1704,19 @@ writeEnvelopeLabels( SdifFileT * out,
 //	Assemble SDIF matrix data for these partials.
 //
 static void
-assembleMatrixData( SdifFloat4 *data, const bool enhanced,
-					const std::vector< Partial * > & partialsVector, 
+assembleMatrixData( sdif_float32 *data, const bool enhanced,
+					const ConstPartialPtrs & partialsVector, 
 					const std::vector< int > & activeIndices, 
 					const double frameTime )
 {	
 	// The array matrix data is row-major order at "data".
-	SdifFloat4 *rowDataPtr = data;
+	sdif_float32 *rowDataPtr = data;
 	
 	for ( int i = 0; i < activeIndices.size(); i++ ) 
 	{
 		
 		int index = activeIndices[i];
-		Partial * par = partialsVector[index];
+		const Partial * par = partialsVector[index];
 		
 		// For enhanced format we use exact timing; the activeIndices only includes
 		// partials that have breakpoints in this frame.
@@ -613,8 +1753,8 @@ assembleMatrixData( SdifFloat4 *data, const bool enhanced,
 // ---------------------------------------------------------------------------
 //
 static void
-writeEnvelopeData( SdifFileT * out,
-				   const std::vector< Partial * > & partialsVector,
+writeEnvelopeData( FILE * out,
+				   const ConstPartialPtrs & partialsVector,
 				   const bool enhanced )
 {
 //
@@ -633,10 +1773,12 @@ writeEnvelopeData( SdifFileT * out,
 	std::list< BreakpointTime >::iterator bpTimeIter = allBreakpoints.begin();
 
 //
-// Output Loris data in SDIF frame format.
-// First frame starts at millisecond of first breakpoint, for SDIF files with 7-column 1TRC matrices.
+// Output Loris envelope data in SDIF frame format.
+// First frame starts at millisecond of first breakpoint.
 //
-	double nextFrameTime	= std::floor( 1000.0 * bpTimeIter->time - 0.001 ) / 1000.0;
+	double nextFrameTime = bpTimeIter->time;
+	if (1000. * nextFrameTime - int( 1000. * nextFrameTime ) != 0.)
+		nextFrameTime = std::floor( 1000. * nextFrameTime - .001 ) / 1000.0;
 
 	double frameTime; 
 	int endOfAll;
@@ -674,19 +1816,39 @@ writeEnvelopeData( SdifFileT * out,
 			//	columns than any previous frame. Construct the vector once,
 			//	resize it for each frame, and clear it when done (doesn't 
 			//	deallocate memory).
-			// SdifFloat4 *data = new SdifFloat4[numTracks * cols];
-			static std::vector< SdifFloat4 > dataVector;
+			// sdif_float32 *data = new sdif_float32[numTracks * cols];
+			static std::vector< sdif_float32 > dataVector;
 			dataVector.resize( numTracks * cols );
 
 			// Fill in matrix data.
-			SdifFloat4 *data = &dataVector[0];
+			sdif_float32 *data = &dataVector[0];
 			assembleMatrixData( data, enhanced, partialsVector, activeIndices, frameTime );
-								
-			// Write out matrix data.
-			SdifSignature sig = (enhanced ? lorisEnhancedSignature : lorisSineOnlySignature);
-			SdifFWriteFrameAndOneMatrix( out, 
-					sig, streamID, frameTime, 					// frame header
-					sig, eFloat4, numTracks, cols, data);		// matrix 
+					
+			// Write the frame header.
+			SDIF_FrameHeader fh;
+			SDIF_Copy4Bytes(fh.frameType, enhanced ? lorisEnhancedSignature : lorisSineOnlySignature);
+			fh.size = 		
+					// size of remaining frame header
+					  sizeof(sdif_float64) + 2 * sizeof(sdif_int32) 
+					// size of matrix header
+					+ sizeof(SDIF_MatrixHeader) 							
+					// size of matrix data plus any padding
+					+ 8*((partialsVector.size() * cols * sizeof(sdif_int32) + 7)/8);	
+			fh.streamID = streamID;
+			fh.time = frameTime;
+			fh.matrixCount = 1;
+			SDIFresult ret = SDIF_WriteFrameHeader(&fh, out);
+			
+			// Write the matrix header.
+			SDIF_MatrixHeader mh;
+			SDIF_Copy4Bytes(mh.matrixType, enhanced ? lorisEnhancedSignature : lorisSineOnlySignature);
+			mh.matrixDataType = SDIF_FLOAT32;
+			mh.rowCount = numTracks;
+			mh.columnCount = cols;
+			ret = SDIF_WriteMatrixHeader(&mh, out);
+			
+			// Write the matrix data, and any necessary padding.
+			ret = SDIF_WriteMatrixData(out, &mh, data);
 			
 			// Free matrix space.
 			// delete [] data;
@@ -698,64 +1860,67 @@ writeEnvelopeData( SdifFileT * out,
 	while (!endOfAll);
 }
 
-
-#pragma mark -
-#pragma mark export sdif
-
 // ---------------------------------------------------------------------------
 //	Export
 // ---------------------------------------------------------------------------
 // Export SDIF file.
 //
-void
-SdifFile::Export( const std::string & filename, const PartialList & partials, 
-				  const bool enhanced )
+static void export_sdif( const std::string & filename, 
+						 const SdifFile::partials_type & partials, 
+						 const SdifFile::markers_type &markers, const bool enhanced )
 {
-
-// 
-// Initialize SDIF library.
 //
-	SdifGenInit("");
-	
+// Initialize CNMSAT SDIF routines.
+//
+	SDIFresult ret = SDIF_Init();
+	if (ret)
+	{
+		Throw( FileIOException, "Could not initialize SDIF routines." );
+	}
 //
 // Open SDIF file for writing.
 //
-	SdifFileT *out = SdifFOpen(filename.c_str(), eWriteFile);
-	if (!out)
-		Throw( FileIOException, "Could not open SDIF file for writing." );
-
-	// Define RBEP matrix and frame type for enhanced partials.
-	if (enhanced)
+	FILE *out;
+	ret = SDIF_OpenWrite(filename.c_str(), &out);
+	if (ret)
 	{
-		SdifMatrixTypeT *parsMatrixType = SdifCreateMatrixType(lorisEnhancedSignature,NULL);
-		SdifMatrixTypeInsertTailColumnDef(parsMatrixType,"Index");  
-		SdifMatrixTypeInsertTailColumnDef(parsMatrixType,"Frequency");  
-		SdifMatrixTypeInsertTailColumnDef(parsMatrixType,"Amplitude");  
-		SdifMatrixTypeInsertTailColumnDef(parsMatrixType,"Phase");  
-		SdifMatrixTypeInsertTailColumnDef(parsMatrixType,"Noise");  
-		SdifMatrixTypeInsertTailColumnDef(parsMatrixType,"TimeOffset");  
-		SdifPutMatrixType(out->MatrixTypesTable, parsMatrixType);
-
-		SdifFrameTypeT *parsFrameType = SdifCreateFrameType(lorisEnhancedSignature,NULL);
-		SdifFrameTypePutComponent(parsFrameType, lorisEnhancedSignature, "RABWE_Partials");
-		SdifPutFrameType(out->FrameTypesTable, parsFrameType);
+		Throw( FileIOException, "Could not open SDIF file for writing." );
 	}
-
-	// Define RBEL matrix and frame type for labels.
-	SdifMatrixTypeT *labelsMatrixType = SdifCreateMatrixType(lorisLabelsSignature,NULL);
-	SdifMatrixTypeInsertTailColumnDef(labelsMatrixType,"Index");  
-	SdifMatrixTypeInsertTailColumnDef(labelsMatrixType,"Label");  
-	SdifPutMatrixType(out->MatrixTypesTable, labelsMatrixType);
-
-	SdifFrameTypeT *labelsFrameType = SdifCreateFrameType(lorisLabelsSignature,NULL);
-	SdifFrameTypePutComponent(labelsFrameType, lorisLabelsSignature, "RABWE_Labels");
-	SdifPutFrameType(out->FrameTypesTable, labelsFrameType);
-
-	// Write file header information 
-	SdifFWriteGeneralHeader( out );    
 	
-	// Write ASCII header information 
-	SdifFWriteAllASCIIChunks( out );    
+	// We are no longer defining frame types.
+
+	//		// Define RBEP matrix and frame type for enhanced partials.
+	//		if (enhanced)
+	//		{
+	//			SdifMatrixTypeT *parsMatrixType = SdifCreateMatrixType(lorisEnhancedSignature,NULL);
+	//			SdifMatrixTypeInsertTailColumnDef(parsMatrixType,"Index");  
+	//			SdifMatrixTypeInsertTailColumnDef(parsMatrixType,"Frequency");  
+	//			SdifMatrixTypeInsertTailColumnDef(parsMatrixType,"Amplitude");  
+	//			SdifMatrixTypeInsertTailColumnDef(parsMatrixType,"Phase");  
+	//			SdifMatrixTypeInsertTailColumnDef(parsMatrixType,"Noise");  
+	//			SdifMatrixTypeInsertTailColumnDef(parsMatrixType,"TimeOffset");  
+	//			SdifPutMatrixType(out->MatrixTypesTable, parsMatrixType);//
+	//
+	//			SdifFrameTypeT *parsFrameType = SdifCreateFrameType(lorisEnhancedSignature,NULL);
+	//			SdifFrameTypePutComponent(parsFrameType, lorisEnhancedSignature, "RABWE_Partials");
+	//			SdifPutFrameType(out->FrameTypesTable, parsFrameType);
+	//		}
+	//
+	//		// Define RBEL matrix and frame type for labels.
+	//		SdifMatrixTypeT *labelsMatrixType = SdifCreateMatrixType(lorisLabelsSignature,NULL);
+	//		SdifMatrixTypeInsertTailColumnDef(labelsMatrixType,"Index");  
+	//		SdifMatrixTypeInsertTailColumnDef(labelsMatrixType,"Label");  
+	//		SdifPutMatrixType(out->MatrixTypesTable, labelsMatrixType);
+	//
+	//		SdifFrameTypeT *labelsFrameType = SdifCreateFrameType(lorisLabelsSignature,NULL);
+	//		SdifFrameTypePutComponent(labelsFrameType, lorisLabelsSignature, "RABWE_Labels");
+	//		SdifPutFrameType(out->FrameTypesTable, labelsFrameType);
+	//
+	//		// Write file header information 
+	//		SdifFWriteGeneralHeader( out );    
+	//		
+	//		// Write ASCII header information 
+	//		SdifFWriteAllASCIIChunks( out );    
 	
 //
 // Write SDIF data.
@@ -763,11 +1928,14 @@ SdifFile::Export( const std::string & filename, const PartialList & partials,
 	try 
 	{
 		// Make vector of pointers to partials.
-		std::vector< Partial * > partialsVector;
+		ConstPartialPtrs partialsVector;
 		indexPartials( partials, partialsVector );
 
 		// Write labels.
 		writeEnvelopeLabels( out, partialsVector );
+		
+		// Write markers.
+		writeMarkers(out, markers);
 		
 		// Write partials to SDIF file.
 		writeEnvelopeData( out, partialsVector, enhanced );
@@ -775,21 +1943,32 @@ SdifFile::Export( const std::string & filename, const PartialList & partials,
 	catch ( Exception & ex ) 
 	{
 		ex.append(" Failed to write SDIF file.");
-		SdifFClose(out);
-		SdifGenKill();
+		SDIF_CloseWrite(out);
 		throw;
 	}
 
 //
 // Close SDIF input file.
 //
-	SdifFClose(out);
-
-// 
-// Done with SDIF library.
-//
-	SdifGenKill();
+	SDIF_CloseWrite(out);
 }
+
+// ---------------------------------------------------------------------------
+//	Export
+// ---------------------------------------------------------------------------
+// Legacy static export member. 
+//
+void
+SdifFile::Export( const std::string & filename, const PartialList & partials, 
+				  const bool enhanced )
+{
+	SdifFile fout( partials.begin(), partials.end() );
+	if ( enhanced )
+		fout.write( filename );
+	else
+		fout.write1TRC( filename );
+}
+
 
 }	//	end of namespace Loris
 
