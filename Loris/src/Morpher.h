@@ -68,22 +68,22 @@ class Morpher
 {
 //	-- instance variables --
 
-	std::auto_ptr< Envelope > _freqFunction;	//!	frequency morphing function
-	std::auto_ptr< Envelope > _ampFunction;		//!	amplitude morphing function
-	std::auto_ptr< Envelope > _bwFunction;		//!	bandwidth morphing function
+	std::auto_ptr< Envelope > _freqFunction;  //!	frequency morphing function
+	std::auto_ptr< Envelope > _ampFunction;   //!	amplitude morphing function
+	std::auto_ptr< Envelope > _bwFunction;    //!	bandwidth morphing function
 	
-	PartialList _partials;						//!	collect Partials here
+	PartialList _partials;	                  //!	collect Partials here
 	
-	Partial::label_type _refLabel0;  			//!	labels of the reference Partials
-	Partial::label_type _refLabel1;				//!	for source and target sounds when 
+	Partial::label_type _refLabel0;  //!	labels of the reference Partials
+	Partial::label_type _refLabel1;  //!	for source and target sounds when 
 												//!	morphing sequences of labeled Partials,
 												//!	default 0 implies no reference Partial
 
-	double _freqFixThresholdDb; 				//!	amplitude threshold below which Partial
+	double _freqFixThresholdDb;      //!	amplitude threshold below which Partial
 												//!	frequencies are corrected according to
 												//!	a reference Partial, if specified.
 	
-	double _ampMorphShape;						//!	shaping parameter that controls the 
+	double _ampMorphShape;           //!	shaping parameter that controls the 
 												//!	slope of the amplitude morphing function,
 												//!	for values greater than 1, this function
 												//!	gets nearly linear (like the old amplitude
@@ -95,14 +95,14 @@ class Morpher
 												//!	of the huge jump from zero amplitude to
 												//!	very small amplitude.
 																		
-	double _minBreakpointGapSec;				//!	the minimum time gap between two Breakpoints
+	double _minBreakpointGapSec;     //!	the minimum time gap between two Breakpoints
 												//!	in the morphed Partials. Morphing two
 												//!	Partials can generate a third Partial having
 												//!	Breakpoints arbitrarily close together in time,
 												//!	and this makes morphs huge. Raising this 
 												//!	threshold limits the Breakpoint density in
 												//!	the morphed Partials. 
-												//!	Default is zero (huge morphs).
+												//!	Default is 1/10 ms.
 //	-- public interface --
 public:
 //	-- construction --
@@ -111,7 +111,7 @@ public:
 	//!	frequency, amplitude, and bandwidth (noisiness).
 	//!	
 	//!	\param 	f is the Envelope to clone for all three morphing 
-	//!			functions.
+	//!			   functions.
 	Morpher( const Envelope & f );
 
 	//!	Construct a new Morpher using the specified morphing envelopes for
@@ -130,7 +130,7 @@ public:
 	//!	Destroy this Morpher.
 	~Morpher( void );
 	
-    //! Make this Morpher a duplicate of rhs.
+   //! Make this Morpher a duplicate of rhs.
 	//!
 	//! \param  rhs is the Morpher to duplicate
 	Morpher & operator= ( const Morpher & rhs );
@@ -146,7 +146,7 @@ public:
 	//!	Partial (no Breakpoints), but not both. The morphed
 	//!	Partial has Breakpoints at times corresponding to every Breakpoint 
 	//!	in both source Partials, omitting Breakpoints that would be
-	//! closer than the minBreakpointGap to their predecessor. 
+	//!   closer than the minBreakpointGap to their predecessor. 
 	//!	The new morphed Partial is assigned the specified label and returned.
 	//!
 	//!	\param 	src is the Partial corresponding to a morph function
@@ -154,21 +154,21 @@ public:
 	//!	\param 	tgt is the Partial corresponding to a morph function
 	//!		   	value of 1, evaluated at the specified time.
 	//!	\param 	assignLabel is the label assigned to the morphed Partial
-	//! \return the morphed Partial
+	//!   \return  the morphed Partial
 	Partial morphPartial( const Partial & src, const Partial & tgt, 
                           int assignLabel );
 
-	//!	Morph two sounds (collections of Partials labeled to indicate
-	//!	correspondences) into a single labeled collection of Partials.
-	//!	Unlabeled Partials (having label 0) are crossfaded. The morphed
-	//!	and crossfaded Partials are stored in the Morpher's PartialList.
+	//!   Morph two sounds (collections of Partials labeled to indicate
+	//!   correspondences) into a single labeled collection of Partials.
+	//!   Unlabeled Partials (having label 0) are crossfaded. The morphed
+	//!   and crossfaded Partials are stored in the Morpher's PartialList.
 	//!
-	//!	The Partials in the first range are treated as components of the 
-	//!	source sound, corresponding to a morph function value of 0, and  
-	//!	those in the second are treated as components of the target sound, 
-	//!	corresponding to a morph function value of 1.
+	//!   The Partials in the first range are treated as components of the 
+	//!   source sound, corresponding to a morph function value of 0, and  
+	//!   those in the second are treated as components of the target sound, 
+	//!   corresponding to a morph function value of 1.
 	//!
-	//! \sa     crossfade, morphPartial
+	//!   \sa     crossfade, morphPartial
 	//!
 	//!	\param  beginSrc is the beginning of the sequence of Partials
 	//!			corresponding to a morph function value of 0.
@@ -188,8 +188,8 @@ public:
 	//!	Unlabeled Partials (having the specified label) are considered to 
 	//!	have no correspondences, so they are just faded out, and not 
 	//!	actually morphed. Consistent with the morphing behavior, 
-	//! crossfaded Partials are thinned, if necssary, so that no
-	//! two Breakpoints are closer in time than the minBreakpointGap.
+	//!   crossfaded Partials are thinned, if necssary, so that no
+	//!   two Breakpoints are closer in time than the minBreakpointGap.
 	//!
 	//!	The Partials in the first range are treated as components of the 
 	//!	source sound, corresponding to a morph function value of 0, and  
@@ -198,16 +198,16 @@ public:
 	//!
 	//!	The crossfaded Partials are stored in the Morpher's PartialList.
 	//!
-	//!	\param  beginSrc is the beginning of the sequence of Partials
-	//!			corresponding to a morph function value of 0.
-	//!	\param  endSrc is (one past) the end of the sequence of Partials
-	//!			corresponding to a morph function value of 0.
-	//!	\param  beginTgt is the beginning of the sequence of Partials
-	//!			corresponding to a morph function value of 1.
-	//!	\param  endTgt is (one past) the end of the sequence of Partials
-	//!			corresponding to a morph function value of 1.
-	//! \param  label is the label to associate with unlabeled
-	//!         Partials (default is 0).
+	//!   \param   beginSrc is the beginning of the sequence of Partials
+	//!			   corresponding to a morph function value of 0.
+	//!	\param   endSrc is (one past) the end of the sequence of Partials
+	//!			   corresponding to a morph function value of 0.
+	//!	\param   beginTgt is the beginning of the sequence of Partials
+	//!			   corresponding to a morph function value of 1.
+	//!	\param   endTgt is (one past) the end of the sequence of Partials
+	//!			   corresponding to a morph function value of 1.
+	//!   \param  label is the label to associate with unlabeled
+	//!            Partials (default is 0).
 	void crossfade( PartialList::const_iterator beginSrc, 
 					PartialList::const_iterator endSrc,
 					PartialList::const_iterator beginTgt, 
@@ -272,8 +272,7 @@ public:
 	//!	Breakpoints arbitrarily close together in time,
 	//!	and this makes morphs huge. Raising this 
 	//!	threshold limits the Breakpoint density in
-	//!	the morphed Partials. 
-	//!	Default is zero (huge morphs).
+	//!	the morphed Partials. Default is 1/10 ms.
 	double minBreakpointGap( void ) const;
 
 	//!	Set the minimum time gap (secs) between two Breakpoints
@@ -282,11 +281,11 @@ public:
 	//!	Breakpoints arbitrarily close together in time,
 	//!	and this makes morphs huge. Raising this 
 	//!	threshold limits the Breakpoint density in
-	//!	the morphed Partials. 
-	//!	Default is zero (huge morphs).
+	//!	the morphed Partials. Default is 1/10 ms.
 	//!
 	//!	\param 	x is the new minimum gap in seconds, it must be 
-	//!			non-negative.
+	//!			   positive
+	//!   \throw   InvalidArgument if the specified gap is not positive
 	void setMinBreakpointGap( double x );
 
 

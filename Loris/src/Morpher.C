@@ -590,8 +590,7 @@ void Morpher::setAmplitudeShape( double x )
 //	Breakpoints arbitrarily close together in time,
 //	and this makes morphs huge. Raising this 
 //	threshold limits the Breakpoint density in
-//	the morphed Partials. 
-//	Default is zero (huge morphs).
+//	the morphed Partials. Default is 1/10 ms.
 double Morpher::minBreakpointGap( void ) const
 {
 	return _minBreakpointGapSec;
@@ -606,16 +605,15 @@ double Morpher::minBreakpointGap( void ) const
 //	Breakpoints arbitrarily close together in time,
 //	and this makes morphs huge. Raising this 
 //	threshold limits the Breakpoint density in
-//	the morphed Partials. 
-//	Default is zero (huge morphs).
+//	the morphed Partials. Default is 1/10 ms.
 //
-//	x is the new minimum gap in seconds, it must be 
-//	non-negative.
+//	x is the new minimum gap in seconds, it must be positive
+//	
 void Morpher::setMinBreakpointGap( double x )
 {
-	if ( x < 0. )
+	if ( x <= 0. )
 	{
-		Throw( InvalidArgument, "the minimum Breakpoint gap must be non-negative");
+		Throw( InvalidArgument, "the minimum Breakpoint gap must be positive");
 	}
 	_minBreakpointGapSec = x;
 }
