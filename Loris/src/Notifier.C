@@ -18,6 +18,8 @@
 #include "Notifier.h"
 #include "Exception.h"
 
+#include "StringBuffer.h"
+
 #if !defined( Deprecated_iostream_headers )
 	#include <iostream>
 #else
@@ -43,6 +45,56 @@ Begin_Namespace( Loris )
 NotifierStream notifier;
 DebuggerStream debugger;
 
+// ---------------------------------------------------------------------------
+//	class NotifierBuf
+//
+//	streambuf derivative that buffers output in a std::string (this 
+//	behavior inherited from Loris::StringBuffer) and posts it as a
+//	notification when a newline is received. The default post is to 
+//	cout, derived classes may override post() to demonstrate more 
+//	enlightened behavior.
+//
+//	When post is called (explicitly, as by NotifierStream::comfirm()) 
+//	with blocking true, the notification blocks until the user confirms 
+//	or takes exception. Dervied classes override post() to implement more 
+//	sophisticated interaction with the user.
+//
+//	Collapse this class with StringBuffer (otherwise unused) and 
+//	stick it in the implementation file, along with definitions of
+//	member functions that use it. (can't use auto_ptr anymore, but
+//	also get rid of the buffer setting operations anyway.)
+//	
+//
+class NotifierBuf : public StringBuffer
+{
+//	-- public interface --
+public:
+//	construction:
+	NotifierBuf( const std::string & s = "" );
+	
+//	virtual destructor so NotifierBuf can be subclassed:
+//	(use compiler generated, StringBuffer has virtual destructor)
+	//virtual ~NotifierBuf( void );	
+	
+//	posting:
+//	Derived classes can override the reporting behavior to put the 
+//	notification somewhere other than standard-out.
+//	If block is true, post() should not return until the
+//	user confirms receipt of the notification. The logistics
+//	of this confirmation can also be overridden by derived classes. 
+	virtual void post( boolean block = false );
+		
+protected:
+	//	called every time a character is written:
+	virtual int_type overflow( int_type c ) 
+	{
+		StringBuffer::overflow( c );
+		if ( c == '\n' )
+			post();
+		return c;
+	}
+	
+};	//	end of class NotifierBuf
 
 // ---------------------------------------------------------------------------
 //	NotifierBuf constructor
@@ -92,6 +144,16 @@ NotifierBuf::post( boolean block )
 }
 
 // ---------------------------------------------------------------------------
+//	NotifierStream constructor
+// ---------------------------------------------------------------------------
+//
+NotifierStream::NotifierStream( void ) :
+	_note( new NotifierBuf() )
+{
+	ostream::init( _note );
+}
+/*
+// ---------------------------------------------------------------------------
 //	NotifierStream setbuffer
 // ---------------------------------------------------------------------------
 //	Assign a new buffer to the stream.
@@ -104,23 +166,29 @@ NotifierStream::setbuffer( NotifierBufPtr b )
 	ostream::init( _note.get() );
 	return ret;
 }
-
+*/
 // ---------------------------------------------------------------------------
 //	DebuggerStream constructor
 // ---------------------------------------------------------------------------
 //
-DebuggerStream::DebuggerStream( void )
+#if !defined( Debug_Loris )
+//	to do nothing at all, need a dummy streambuf:
+struct dummybuf : public NotifierBuf
 {
-#if defined( Debug_Loris )
-	setbuffer();
-#else
-	//	initialize the buffer to a dummy if not debugging:
-	// _note = NotifierBufPtr( new dummybuf() );
-	_note.reset( new dummybuf() );
-	ostream::init( _note.get() );
+	virtual int_type overflow( int_type c ) { return c; }
+};
 #endif
-}
 
+DebuggerStream::DebuggerStream( void ) :
+#if defined( Debug_Loris )
+		_note( new NotifierBuf() )
+#else
+		_note( new dummybuf() )
+#endif
+{
+	ostream::init( _note );
+}
+/*
 // ---------------------------------------------------------------------------
 //	DebuggerStream setbuffer
 // ---------------------------------------------------------------------------
@@ -132,12 +200,13 @@ DebuggerStream::setbuffer( NotifierBufPtr b )
 #if defined( Debug_Loris )
 	NotifierBufPtr ret = _note;
 	_note = b;
-	ostream::init( _note.get() );
+	ostream::init( _note );
 	return ret;
 #else
 	return b;
 #endif
 }
+*/
 
 End_Namespace( Loris )
 
