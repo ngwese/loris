@@ -11,6 +11,7 @@
 // ===========================================================================
 #include "LorisLib.h"
 
+#include <vector>
 #include <set>
 
 Begin_Namespace( Loris )
@@ -72,16 +73,20 @@ public:
 	
 //	-- dilation --
 	Partial & dilate( Partial & p ) const;
+	Partial & operator()( Partial & p ) const { return dilate( p ); }
 	
 //	template dilation of an iterator range:
 //	(only if template members are allowed)
 #if !defined(No_template_members)
 	template < class Iter >
-	void operator() ( Iter begin, Iter end ) const
+	void dilate( Iter begin, Iter end ) const
 	{
 		while ( begin != end )
 			dilate( *(begin++) );
 	}
+	
+	template < class Iter >
+	void operator() ( Iter begin, Iter end ) const { dilate( begin, end ); }
 #endif
 	
 //	-- instance variables --
