@@ -52,6 +52,11 @@ Begin_Namespace( Loris )
 //	with blocking true, the notification blocks until the user confirms 
 //	or takes exception. Dervied classes override post() to implement more 
 //	sophisticated interaction with the user.
+//
+//	Collapse this class with StringBuffer (otherwise unused) and 
+//	stick it in the implementation file, along with definitions of
+//	member functions that use it. (can't use auto_ptr anymore, but
+//	also get rid of the buffer setting operations anyway.)
 //	
 //
 class NotifierBuf : public StringBuffer

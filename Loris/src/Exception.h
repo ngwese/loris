@@ -14,7 +14,6 @@
 //
 // ===========================================================================
 #include "LorisLib.h"
-#include "StringBuffer.h"
 #include <string>
 
 Begin_Namespace( Loris )
@@ -36,8 +35,8 @@ public:
 	virtual ~Exception( void ) {}
 	
 //	access:
-	const std::string & str( void ) const;
-	const char * what( void ) const;
+	const std::string & str( void ) const { return _sbuf; }
+	const char * what( void ) const { return _sbuf.c_str(); }
 	
 	Exception & append( const std::string & str );
 	
@@ -50,10 +49,10 @@ protected:
 	Exception( const Exception & other ) : _sbuf( other._sbuf ) {}
 #endif // lame compiler
 	
-//	-- instance variable - the string buffer --
+//	-- instance variable - the string --
 protected:
-	StringBuffer _sbuf;
-
+	std::string _sbuf;
+	
 };	//	end of class Exception
 
 // ---------------------------------------------------------------------------

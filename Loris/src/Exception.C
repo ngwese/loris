@@ -2,23 +2,15 @@
 //	Exception.C
 //	
 //	Implementaion of Loris::Exception, a generic exception class.
+//	Probably,it would be okay if all this implementation was in the
+//	class definition.
 //
 //	-kel 17 Aug 99
 //
 // ===========================================================================
-
 #include "LorisLib.h"
 #include "Exception.h"
-
 #include <string>
-
-#if !defined( Deprecated_iostream_headers )
-	#include <iostream>
-#else
-	#include <iostream.h>
-#endif
-
-using namespace std;
 
 Begin_Namespace( Loris )
 
@@ -30,41 +22,19 @@ Begin_Namespace( Loris )
 // ---------------------------------------------------------------------------
 //	where defaults to empty.
 //
-Exception::Exception( const string & str, const string & where ) :
+Exception::Exception( const std::string & str, const std::string & where ) :
 	_sbuf( str )
-	//ostream( & _sbuf )
 {
 	_sbuf.append( where );
 	_sbuf.append(" ");
 }
 	
 // ---------------------------------------------------------------------------
-//	str
-// ---------------------------------------------------------------------------
-//
-const string &
-Exception::str( void ) const
-{
-	return _sbuf.str();
-}
-
-// ---------------------------------------------------------------------------
-//	what
-// ---------------------------------------------------------------------------
-//	std::exception interface.
-//
-const char *
-Exception::what( void ) const
-{
-	return str().c_str();
-}
-
-// ---------------------------------------------------------------------------
 //	append 
 // ---------------------------------------------------------------------------
 //
 Exception & 
-Exception::append( const string & str )
+Exception::append( const std::string & str )
 {
 	_sbuf.append(str);
 	return *this;
