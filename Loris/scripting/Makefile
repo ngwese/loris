@@ -36,7 +36,7 @@ include $(TOP)/Loris/classes/Rules.loris
 SWIG = /usr/local/bin/swig
 SWIG_INTERFACE = loris.i
 SUB_INTERFACES = lorisAiffFile.i lorisAnalyzer.i lorisBpEnvelope.i \
-				 lorisExportSpc.i lorisPartialList.i lorisSampleVector.i
+				 lorisPartialList.i lorisSampleVector.i
 
 PY_WRAPPER = loris_python_wrap.C
 PY_MODULE = loriscmodule.so
@@ -51,29 +51,25 @@ PY_VERSION = 1.5
 PYTHON_PREFIX = /usr
 PYTHON_INCLUDE = ${PYTHON_PREFIX}/include/python${PY_VERSION}
 # PYTHON_LIB = ${PYTHON_PREFIX}/lib/python${PY_VERSION}/config
-INC_PY = ${PYTHON_INCLUDE}
 
 # PERL_INCLUDE = /System/Library/Perl/darwin/CORE/
-PERL_INCLUDE = /usr/lib/perl5/5.6.0/i386-linux/CORE/
+PERL_INCLUDE = /usr/lib/perl5/5.005/i386-linux/CORE/
 
 TCL_INCLUDE = /usr/include
 
 CC = c++
 CFLAGS = -O2 -I${CLASSES} -Wno-multichar -xc++
 
-python: $(PY_MODULE)
-
-perl: $(PERL_MODULE)
-
-tcl: tclwrap
-	${CC} -shared $(TCL_WRAPPER:c++=o) $(OBJ_LORIS) ${LIB_LORIS} -o loris.so
-
-$(PY_MODULE): pywrap
-	${CC} -shared $(PY_WRAPPER:c++=o) $(OBJ_LORIS) ${LIB_LORIS} -o $(OUTPUT)/loriscmodule.so
+python: classes pywrap
+	${CC} -shared $(PY_WRAPPER:c++=o) $(OBJ_LORIS) ${LIB_LORIS} -o $(OUTPUT)/$(PY_MODULE)
 	-mv loris.py $(OUTPUT)/loris.py
 
-$(PERL_MODULE): perlwrap
-	${CC} -shared $(PERL_WRAPPER:c++=o) $(OBJ_LORIS) ${LIB_LORIS} -o loris.so
+perl: classes perlwrap
+	${CC} -shared $(PERL_WRAPPER:c++=o) $(OBJ_LORIS) ${LIB_LORIS} -o $(OUTPUT)/$(PERL_MODULE)
+	-mv loris.pm $(OUTPUT)/loris.pm
+
+tcl: classes tclwrap
+	${CC} -shared $(TCL_WRAPPER:c++=o) $(OBJ_LORIS) ${LIB_LORIS} -o $(OUTPUT)/$(TCL_MODULE)
 
 pywrap: $(PY_WRAPPER:c++=o)
 
@@ -83,17 +79,30 @@ $(PY_WRAPPER:c++=o): $(PY_WRAPPER)
 $(PY_WRAPPER): $(SWIG_INTERFACE) $(SUB_INTERFACES)
 	$(SWIG) -python -shadow -c++ -o $(PY_WRAPPER) $(SWIG_INTERFACE)
 
-perlwrap:
-	$(SWIG) -perl5 -c++ -o $(PERL_WRAPPER) $(SWIG_INTERFACE)
+perlwrap: $(PERL_WRAPPER:c++=o)
+
+$(PERL_WRAPPER:c++=o): $(PERL_WRAPPER)
 	$(CC) $(CFLAGS) -I$(PERL_INCLUDE) -c $(PERL_WRAPPER)
+
+$(PERL_WRAPPER): $(SWIG_INTERFACE) $(SUB_INTERFACES)
+	$(SWIG) -perl5 -c++ -o $(PERL_WRAPPER) $(SWIG_INTERFACE)
 	
-tclwrap:
-	$(SWIG) -tcl -c++ -o $(TCL_WRAPPER) $(SWIG_INTERFACE)
+tclwrap: $(TCL_WRAPPER:c++=o)
+
+$(TCL_WRAPPER:c++=o): $(TCL_WRAPPER)
 	$(CC) $(CFLAGS) -I$(TCL_INCLUDE) -c $(TCL_WRAPPER)
+
+$(TCL_WRAPPER): $(SWIG_INTERFACE) $(SUB_INTERFACES)
+	$(SWIG) -tcl -c++ -o $(TCL_WRAPPER) $(SWIG_INTERFACE)
+
+classes:
+	cd $(CLASSES); $(MAKE)
 	
 clean:
-	-rm ./*.o $(OUTPUT)/loriscmodule.so
-	-rm *.so
+	-rm ./*.o 
+	-rm $(OUTPUT)/$(PY_MODULE) $(OUTPUT)/loris.py
+	-rm $(OUTPUT)/$(PERL_MODULE) $(OUTPUT)/loris.pm
+	-rm $(OUTPUT)/$(TCL_MODULE)
 
 veryclean: clean
 	cd $(CLASSES); $(MAKE) clean
