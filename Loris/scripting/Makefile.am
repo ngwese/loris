@@ -32,7 +32,8 @@ endif
 # Darwin is special, see below
 if DARWIN
 else
-pythonsitepkg_SCRIPTS = loris.py loris.pyo
+pythonsitepkg_SCRIPTS = loris.py 
+#loris.pyo
 pythonsitepkg_LTLIBRARIES = _loris.la
 endif
 
@@ -40,9 +41,9 @@ endif
 # install hook does not execute _after_ everything is 
 # installed, as it is documented to do, it executes before
 # loris.py and _loris.a are installed, and thus fails.
-loris.pyo: loris.py
-	env PYTHONPATH=$(srcdir):$(top_builddir)/scripting/.libs $(PYTHON) -O -c "import loris"
-	
+# loris.pyo: loris.py
+# 	env PYTHONPATH=$(srcdir):$(top_builddir)/scripting/.libs $(PYTHON) -O -c "import loris"
+# 	
 endif
 
 # old versions of automake don't like these things
@@ -95,7 +96,8 @@ LD_DARWINBUNDLE_FLAGS = -bundle -flat_namespace -undefined suppress
 
 if BUILD_PYTHON
 PYTHON_CMODULE = _loris.so
-PYTHON_MODULE = $(PYTHON_CMODULE) loris.pyo
+PYTHON_MODULE = $(PYTHON_CMODULE) 
+#loris.pyo
 INSTALL_PYTHON_MODULE = install_python_module
 
 $(PYTHON_CMODULE): loris_python_wrap.o $(top_builddir)/pi/.libs/libloris.a
@@ -106,7 +108,8 @@ $(PYTHON_CMODULE): loris_python_wrap.o $(top_builddir)/pi/.libs/libloris.a
 install_python_module:
 	$(INSTALL) _loris.so $(pythonsitepkgdir)/_loris.so
 	$(INSTALL_SCRIPT) loris.py $(pythonsitepkgdir)/loris.py
-	$(INSTALL_SCRIPT) loris.pyo $(pythonsitepkgdir)/loris.pyo
+
+#	$(INSTALL_SCRIPT) loris.pyo $(pythonsitepkgdir)/loris.pyo
 
 endif
 

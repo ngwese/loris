@@ -11,10 +11,10 @@
 MAINTAINERCLEANFILES    = Makefile.in
 
 INCLUDES = $(FFTWINCLUDE) $(SDIFINCLUDE) $(default_includes)
-LDFLAGS = -L$(libdir)
 
 AM_CFLAGS = $(DEBUG_LORIS)
 AM_CXXFLAGS = $(DEBUG_LORIS)
+# AM_LDFLAGS = -L$(libdir)
 
 
 pkginclude_HEADERS = AiffFile.h	\
