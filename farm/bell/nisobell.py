@@ -37,6 +37,15 @@ Fourth trial is similar to trial three, but with the new sifting
 Distiller, fewer resolutions (since they are almost indistinguishible),
 and te standard Bw regions width (2k).
 
+notes from trial 4:
+	- the choice of resolution doesn't seem to affect the quality of 
+	the bell sound, only the background noise sounds different with
+	different resolutions
+	- narrower windows increase the noisiness (sounds like a noise burst)
+	in the attack, most evident with larger resolutions. 
+	- can use 70 or 95 Hz resolution with wider windows and get good results
+	- distillation works well for all values tried (up to 120, try larger)
+
 Last updated: 4 Oct 2001 by Kelly Fitz
 """
 print __doc__
@@ -46,7 +55,7 @@ from trials import *
 
 # use this trial counter to skip over
 # eariler trials
-trial = 4
+trial = 5
 
 print "running trial number", trial, time.ctime(time.time())
 
@@ -109,6 +118,21 @@ if trial == 4:
 	for r in resolutions:
 		for w in widths:
 			p = analyze( source, r, w, bw )
+			ofile = 'bell.%i.%i.aiff'%(r, w)
+			synthesize( ofile, p )
+			for f in funds:
+				p2 = p.copy()
+				harmonicDistill( p2, f )
+				ofile = 'bell.%i.%i.d%i.aiff'%(r, w, f)
+				synthesize( ofile, p2 )
+
+if trial == 5:
+	resolutions = (70, 95)
+	widths = ( 200, 300 )
+	funds = ( 90, 120, 150, 180 )
+	for r in resolutions:
+		for w in widths:
+			p = analyze( source, r, w )
 			ofile = 'bell.%i.%i.aiff'%(r, w)
 			synthesize( ofile, p )
 			for f in funds:

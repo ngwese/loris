@@ -44,6 +44,34 @@ cello69.MF
 	- 65 Hz resolution analyses are mostly yucky
 	- region width doesn't make any difference
 	- sifting and distilling don't seem to make these any worse
+	
+	
+notes from trial 2:
+cello154
+	- both resolutions (46, 77 Hz) sound pretty good with all windows tried
+	- 46 Hz resolution captures some rumble in the original that is absent
+	at 77 Hz, sounds more like the original, but not necessarily desirable
+	- distillation seems fine, even at 154 Hz for both resolutions, but buzz 
+	is less buzzy when distilled at 154, still sounds okay at 77 Hz distillation
+	or less
+
+cello69.F
+	- 20.62, 34.62, and 34.82 are unlistenable, others aren't too bad
+	- windows are wider that earlier trials, but the sounds are way better
+	- distillation at 69 Hz seems to make these a little showery or 
+	hissy, but distillation at 34 Hz seems okay
+	- 138 Hz window is probably best
+	
+cello69.MF
+	- as with F, both resolutions are okay with a 138 Hz window, but
+	the attack is weak, an the whoe thing sounds kind of whimpy, maybe we
+	need to lower the noise floor? What would happen if we increased
+	the level of the source?
+	- as above, 69 Hz distillation makes hiss out of the buzz, 34 Hz
+	does do it as much
+	- overall, buzz is not represented as well as in F, try using a
+	normalized source
+	
 
 Last updated: 4 Oct 2001 by Kelly Fitz
 """
@@ -54,7 +82,7 @@ from trials import *
 
 # use this trial counter to skip over
 # eariler trials
-trial = 2
+trial = 3
 
 print "running trial number", trial, time.ctime(time.time())
 
@@ -101,3 +129,18 @@ if trial == 2:
 					harmonicDistill( p2, f )
 					ofile = '%s.%i.%i.d%i.aiff'%(source[:-5], r, w, f)
 					synthesize( ofile, p2 )
+
+if trial == 3:
+	(source, fund) = ('cello69.MF.loud.aiff',69)
+	resolutions = ( .3*fund, .5*fund )
+	winds = (2.0*fund, 2.2*fund)
+	for r in resolutions:
+		for w in winds:
+			p = analyze( source, r, w )
+			ofile = '%s.%i.%i.aiff'%(source[:-5], r, w)
+			synthesize( ofile, p )
+			for f in (.3*fund, .5*fund):
+				p2 = p.copy()
+				harmonicDistill( p2, f )
+				ofile = '%s.%i.%i.d%i.aiff'%(source[:-5], r, w, f)
+				synthesize( ofile, p2 )

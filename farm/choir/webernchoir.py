@@ -27,6 +27,10 @@ notes from trial 1:
 		sound very similar
 	- 5 kHz regions don't sound different from 2 kHz
 		
+notes from trial 2:
+	- 90 Hz window seems about perfect, 70 and 110 don't work well
+	- 20 Hz resolution seems best, 15 Hz is no improvement, 30 Hz
+	sounds a little noisy
 
 Last updated: 4 Oct 2001 by Kelly Fitz
 """
@@ -38,7 +42,7 @@ from trials import *
 
 # use this trial counter to skip over
 # eariler trials
-trial = 2
+trial = 3
 
 print "running trial number", trial, time.ctime(time.time())
 
@@ -58,6 +62,15 @@ if trial == 1:
 if trial == 2:
 	resolutions = ( 15, 20, 30 )
 	widths = ( 70, 90, 110 )
+	for r in resolutions:
+		for w in widths:
+			p = analyze( source, r, w )
+			ofile = 'webern.%i.%i.aiff'%(r, w)
+			synthesize( ofile, p )
+
+if trial == 3:
+	resolutions = ( 18, 20, 24 )
+	widths = ( 80, 90, 100 )
 	for r in resolutions:
 		for w in widths:
 			p = analyze( source, r, w )
