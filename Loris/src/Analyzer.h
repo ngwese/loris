@@ -26,21 +26,16 @@ class Analyzer : public PartialCollector
 	double _resolution;	//	in Hz, minimum instantaneous frequency distance;
 						//	this is the core parameter, others are, by default,
 						//	computed from this one
-						//	freqResolution?
 	double _floor;		//	dB, relative to full amplitude sine wave, absolute
 						//	amplitude threshold
-						//	ampFloor?
 	double _windowWidth;//	in Hz, width of main lobe; this might be more
 						//	conveniently presented as window length, but
 						//	the main lobe width more explicitly highlights
 						//	the critical interaction with _resolution
 	double _minFrequency;	//	lowest frequency component extracted
 							//	in spectral analysis
-							//	yucky name
-							//	freqFloor?
-	double _frameLength;//	in seconds, time between analysis windows in
+	double _hop;		//	in seconds, time between analysis windows in
 						//	successive spectral analyses
-						//	hopSize? no. hop? hopTime?
 	double _bwRegionWidth;	//	width in Hz of overlapping bandwidth 
 							//	association regions
 							
@@ -57,19 +52,19 @@ public:
 	void configure( double resolutionHz );
 	
 //	parameter access:
-	double resolution( void ) const { return _resolution; }
-	double floor( void ) const { return _floor; }
+	double freqResolution( void ) const { return _resolution; }
+	double ampFloor( void ) const { return _floor; }
 	double windowWidth( void ) const { return _windowWidth; }
-	double minFrequency( void ) const { return _minFrequency; }
-	double frameLength( void ) const { return _frameLength; }
+	double freqFloor( void ) const { return _minFrequency; }
+	double hopTime( void ) const { return _hop; }
 	double bwRegionWidth( void ) const { return _bwRegionWidth; }
 	
 //	parameter mutation:
-	void setResolution( double x ) { _resolution = x; }
-	void setFloor( double x ) { _floor = x; }
+	void setFreqResolution( double x ) { _resolution = x; }
+	void setAmpFloor( double x ) { _floor = x; }
 	void setWindowWidth( double x ) { _windowWidth = x; }
-	void setMinFrequency( double x ) { _minFrequency = x; }
-	void setFrameLength( double x ) { _frameLength = x; }
+	void setFreqFloor( double x ) { _minFrequency = x; }
+	void setHopTime( double x ) { _hop = x; }
 	void setBwRegionWidth( double x ) { _bwRegionWidth = x; }	
 
 //	-- internal helpers --

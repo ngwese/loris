@@ -141,7 +141,7 @@ Analyzer::configure( double resolutionHz )
 	//	Allen (1977) saying: a good choice of hop is the window 
 	//	length divided by the main lobe width in frequency samples,
 	//	which turns out to be just the inverse of the width.
-	_frameLength = 1. / _windowWidth;
+	_hop = 1. / _windowWidth;
 	
 	//	bandwidth association region width 
 	//	defaults to 2 kHz, corresponding to 
@@ -186,7 +186,7 @@ Analyzer::analyze( const std::vector< double > & buf, double srate, double offse
 //
 //	Also, need to check for bogus parameters somewhere.
 //
-	const long hop = long( frameLength() * srate );	//	truncate
+	const long hop = long( hopTime() * srate );	//	truncate
 	try { 
 		for ( long winMiddleIdx = 0; 
 			  winMiddleIdx < buf.size();
@@ -268,15 +268,15 @@ struct frequency_between
 void 
 Analyzer::extractPeaks( std::list< Breakpoint > & frame, double frameTime, AnalyzerState & state )
 {
-	const double threshold = std::pow( 10., 0.05 * floor() );	//	absolute magnitude threshold
+	const double threshold = std::pow( 10., 0.05 * ampFloor() );	//	absolute magnitude threshold
 	const double sampsToHz = state.sampleRate() / state.spectrum().size();
-	const long hopSize = long( frameLength() * state.sampleRate() );
+	const long hopSize = long( hopTime() * state.sampleRate() );
 	
 	//	the bare minimum component frequency that should be
 	//	considered corresponds to two periods of a sine wave
 	//	in the analysis window (this is pretty minimal):
 	const double fmin = 
-		std::max( minFrequency(), 2. / (state.spectrum().window().size() / state.sampleRate()) );
+		std::max( freqFloor(), 2. / (state.spectrum().window().size() / state.sampleRate()) );
 	
 	//	cache corrected times for the extracted breakpoints, so 
 	//	that they don't hafta be computed over and over again:
@@ -286,7 +286,7 @@ Analyzer::extractPeaks( std::list< Breakpoint > & frame, double frameTime, Analy
 	for ( int j = 1; j < (state.spectrum().size() / 2) - 1; ++j ) {
 		if ( abs(state.spectrum()[j]) > abs(state.spectrum()[j-1]) && 
 			 abs(state.spectrum()[j]) > abs(state.spectrum()[j+1])) {
-			//	itsa magnitude peak, does it clear the noise floor?
+			//	itsa magnitude peak, does it clear the amplitude floor?
 			double mag = state.spectrum().magnitude( j );
 			if ( mag < threshold )
 				continue;
@@ -339,8 +339,8 @@ Analyzer::thinPeaks( std::list< Breakpoint > & frame )
 	for ( ++it; it != frame.end(); ++it ) {
 		//	search all louder peaks for one that is too near
 		//	in frequency:
-		double lower = it->frequency() - resolution();
-		double upper = it->frequency() + resolution();
+		double lower = it->frequency() - freqResolution();
+		double upper = it->frequency() + freqResolution();
 		if ( it != find_if( frame.begin(), it, frequency_between< Breakpoint >( lower, upper ) ) ) {
 			//	find_if returns the end of the range (it) if it finds nothing; 
 			//	remove *it from the frame
@@ -386,7 +386,7 @@ Analyzer::formPartials( std::list< Breakpoint > & frame, double frameTime, Analy
 		//	eligible to receive this Breakpoint:
 		//	The earliest Breakpoint we could have kept 
 		//	from the previous frame:
-		double tooEarly = frameTime - (2. * frameLength());
+		double tooEarly = frameTime - (2. * hopTime());
 		
 		//	compute the time before which a Partial
 		//	must end in order to be eligible to receive
@@ -430,7 +430,7 @@ Analyzer::formPartials( std::list< Breakpoint > & frame, double frameTime, Analy
 		std::list< Breakpoint >::iterator prev = bpIter;
 		--prev;
 		if ( nearest == partials().end() /* (1) */ || 
-			 thisdist > 0.5 * resolution() /* (2) */ ||
+			 thisdist > 0.5 * freqResolution() /* (2) */ ||
 			 ( next != frame.end() && 
 			 	thisdist > distance( *nearest, *(next), state.peakTimeCache()[ next->frequency() ] ) ) /* (3) */ ||
 			 ( bpIter != frame.begin() && 
