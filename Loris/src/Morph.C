@@ -125,15 +125,14 @@ Morph::morph( PartialList::const_iterator begin0,
 		Assert( *labelIter != 0 );
 		
 		//	find source Partial 0:
-		//const Partial nullPartial;
 		PartialList::const_iterator p0 = 
-			std::find_if( begin0, end0, std::bind2nd(PartialUtils::label_equals(), *labelIter) );
-		//const Partial & p0 = ( piter != end0 )?( *piter ):( nullPartial );
+			std::find_if( begin0, end0, 
+						  std::bind2nd(PartialUtils::label_equals(), *labelIter) );
 				
 		//	find source Partial 1:
 		PartialList::const_iterator p1 = 
-			std::find_if( begin1, end1, std::bind2nd(PartialUtils::label_equals(), *labelIter) );
-		//const Partial & p1 = ( piter != end1 )?( *piter ):( nullPartial );
+			std::find_if( begin1, end1, 
+						  std::bind2nd(PartialUtils::label_equals(), *labelIter) );
 		
 		debugger << "morphing " << ((p0 != end0)?(1):(0)) 
 				 << " and " << ((p1 != end1)?(1):(0)) 
