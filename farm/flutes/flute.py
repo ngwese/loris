@@ -38,6 +38,9 @@ notes from trial 3:
 	
 trial 4: 
 	- sifting has no discernable effect
+	
+Conclusion: use a resolution of 240 Hz and a window as wide as the fundamental
+frequency (291 Hz), annd distill at one partial per harmonic.
 
 Last updated: 21 May 2002 by Kelly Fitz
 """

@@ -49,6 +49,10 @@ trial 3:
 trial 4: 
 	- it seems like 5 partials per harmonic might be the lower limit for meow1,
 	maybe can use 2 or 3 for meow3.
+	
+side note: contour boundaries, for morphing with something pitched, are at times
+(approximately) 1.5 s, 2.25 s, 3 s, and the total duration is 3.413 s. Some 
+fudamental frequencies are 436 Hz at 2 s and 480 Hz at 2.5 s.
 
 Last updated: 7 June 2002 by Kelly Fitz
 """
