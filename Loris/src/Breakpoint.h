@@ -83,6 +83,7 @@ public:
 	
 //	add noise (bandwidth) energy:
 //	should this really be part of the interface?
+//	no, it should be in BreakpointUtils, put it there!
 	void addNoise( double x );
 
 };	//	end of class Breakpoint

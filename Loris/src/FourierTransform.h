@@ -95,8 +95,6 @@ namespace Loris {
 //	optimization. Uses the fftw complex transform (as opposed to
 //	the real transform, rfftw).
 //
-//	Loading functions (non-member templates) are defined after the class.
-//
 class FourierTransform 
 {
 //	-- instance variables --
@@ -147,74 +145,6 @@ private:
 
 };	//	end of class FourierTransform
 
-#if 0
-//
-//	template loading functions:
-//
-
-// ---------------------------------------------------------------------------
-//	load
-// ---------------------------------------------------------------------------
-//	Load a FourierTransform with the half-open range begin-end.
-//
-//	Does not check bounds.
-//
-template< class Iterator >
-FourierTransform & 
-load( FourierTransform & t, Iterator begin, Iterator end )
-{
-	FourierTransform::iterator it = 
-		std::copy( begin, end, t.begin() );
-	std::fill( it, t.end(), 0. );
-	return t;
-}
-
-// ---------------------------------------------------------------------------
-//	load
-// ---------------------------------------------------------------------------
-//	Load a FourierTransform with the half-open range begin-end, 
-//	rotating so that the first sample in the transform is center.
-//
-//	Does not check bounds.
-//
-template< class Iterator >
-FourierTransform & 
-load( FourierTransform & t, Iterator begin, Iterator center, Iterator end )
-{
-	//	my reference (Josuttis) differs from my implementations
-	//	in the return value of copy_backward (the first unmodified
-	//	element vs. the last modified element); prezeroing is
-	//	less efficient, but always safe: 
-	std::fill( t.begin(), t.end(), 0. );
-	//FourierTransform::iterator it1 = 
-		std::copy( center, end, t.begin() );
-	//FourierTransform::iterator it2 = 
-		std::copy_backward( begin, center, t.end() );
-	//std::fill( it1, ++it2, 0. );
-	return t;
-}
-
-// ---------------------------------------------------------------------------
-//	load
-// ---------------------------------------------------------------------------
-//	Load a FourierTransform with the half-open range begin-end, 
-//	multiplying by a window starting at winBegin, and
-//	rotating so that the first sample in the transform is center.
-//
-//	Does not check bounds.
-//
-template< class Iterator1, class Iterator2 >
-FourierTransform & 
-load( FourierTransform & t, Iterator1 begin, Iterator1 center, Iterator1 end, Iterator2 winBegin )
-{
-	FourierTransform::iterator tmiddle = t.begin() + std::distance( begin, center );
-	FourierTransform::iterator it = 
-		std::transform( begin, end, winBegin, t.begin(), multiplies< double >() );
-	std::fill( it, t.end(), 0. );
-	std::rotate( t.begin(), tmiddle, t.end() );
-	return t;
-}
-#endif
 
 }	//	end of namespace Loris
 

@@ -78,10 +78,8 @@ using std::ends;
  */
 
 #ifdef __cplusplus
-#if !defined( NO_LORIS_NAMESPACE )
 //  begin namespace
 namespace Loris {
-#endif	//	!defined( NO_LORIS_NAMESPACE )
 extern "C" {
 #endif	//	def __cplusplus
 
@@ -92,9 +90,7 @@ NotificationHandler setDebuggerHandler( NotificationHandler fn );
 
 #ifdef __cplusplus
 }	//	end extern "C"
-#if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
-#endif	// !defined( NO_LORIS_NAMESPACE )
 #endif	// def __cplusplus
 
 

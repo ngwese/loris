@@ -52,7 +52,7 @@ namespace Loris {
 //	what is being constructed.
 //
 //
-#if !defined( NO_LORIS_NAMESPACE )
+#if !defined( NO_NESTED_NAMESPACE )
 //	BreakpointUtils is a namespace:
 namespace BreakpointUtils {
 #else
@@ -103,7 +103,7 @@ public:
 	};	
 
 
-#if !defined( NO_LORIS_NAMESPACE )
+#if !defined( NO_NESTED_NAMESPACE )
 }	//	end of namespace BreakpointUtils
 #else
 };	//	end of class BreakpointUtils

@@ -16,6 +16,26 @@ classes in the Loris C++ class library.
 <a name="contents"><h1>Classes</h1></a>
 <ul>
 <li><a href="#AiffFile">AiffFile</a>
+<li><a href="#Analyzer">Analyzer</a>
+<li><a href="#Breakpoint">Breakpoint</a>
+<li><a href="#BreakpointEnvelope">BreakpointEnvelope</a>
+<li><a href="#BreakpointUtils">BreakpointUtils</a>
+<li><a href="#Channelizer">Channelizer</a>
+<li><a href="#Dilator">Dilator</a>
+<li><a href="#Distiller">Distiller</a>
+<li><a href="#Envelope">Envelope</a>
+<li><a href="#Exception">Exception</a>
+<li><a href="#FrequencyReference">FrequencyReference</a>
+<li><a href="#Morpher">Morpher</a>
+<li><a href="#Notifier">Notifier</a>
+<li><a href="#Oscillator">Oscillator</a>
+<li><a href="#Partial">Partial</a>
+<li><a href="#PartialList">PartialList</a>
+<li><a href="#PartialUtils">PartialUtils</a>
+<li><a href="#SdifFile">SdifFile</a>
+<li><a href="#Sieve">Sieve</a>
+<li><a href="#SpcFile">SpcFile</a>
+<li><a href="#Synthesizer">Synthesizer</a>
 </ul>
 
 <a name="AiffFile">
@@ -105,13 +125,1006 @@ bufEnd represents a position after the last valid position in the buffer, no
 sample is read from *bufEnd.
 </blockquote>
 					
-<p><a href="#contents"><small>Contents</small></a>					
+<p><a href="#contents"><small>Contents</small></a>	
+
+<a name="Analyzer">
+<hr><h2>Analyzer</h2></a>
+<p>
+An Analyzer represents a configuration of parameters for
+performing Reassigned Bandwidth-Enhanced Additive Analysis
+of sampled waveforms. This analysis process yields a collection 
+of Partials, each having a trio of synchronous, non-uniformly-
+sampled breakpoint envelopes representing the time-varying 
+frequency, amplitude, and noisiness of a single bandwidth-
+enhanced sinusoid. 
+
+For more information about Reassigned Bandwidth-Enhanced 
+Analysis and the Reassigned Bandwidth-Enhanced Additive Sound 
+Model, refer to the Loris website: www.cerlsoundgroup.org/Loris/.
+<p>
+<pre>
+//	construction:
+	explicit Analyzer( double resolutionHz );
+	/*	Construct and return a new Analyzer configured with the given	
+		frequency resolution (minimum instantaneous frequency	
+		difference between Partials). All other Analyzer parameters 	
+		are computed from the specified frequency resolution. 			
+	 */
+	Analyzer( double resolutionHz, double windowWidthHz );
+	/*	Construct and return a new Analyzer configured with the given	
+		frequency resolution (minimum instantaneous frequency	
+		difference between Partials) and analysis window width
+		(main lobe, zero-to-zero). All other Analyzer parameters 	
+		are computed from the specified resolution and window width. 			
+	 */
+	Analyzer( const Analyzer & other );
+	/*	Construct and return a new Analyzer having identical
+		parameter configuration to another Analyzer. The list of 
+		collected Partials is not copied. 			
+	 */
+	Analyzer & operator = ( const Analyzer & rhs );
+	/*	Change this Analyzer's parameter configuration to 
+		be identical to that of another Analyzer. The list of 
+		collected Partials is not copied or otherwise modified. 			
+	 */
+	~Analyzer( void );
+	/*	Destroy this Analyzer. 								
+	 */
+
+//	analysis:
+	void analyze( const double * bufBegin, const double * bufEnd, double srate );
+	/*	Analyze a range of (mono) samples at the given sample rate 	  	
+		(in Hz) and append the extracted Partials to Analyzer's 
+		std::list of Partials. 												
+	 */
+	
+//	configuration:
+	void configure( double resolutionHz, double windowWidthHz );
+	/*	Configure this Analyzer with the given frequency resolution 
+		(minimum instantaneous frequency difference between Partials)
+		and analysis window width (main lobe, zero-to-zero, in Hz). 
+		All other Analyzer parameters are (re-)computed from the 
+		frequency resolution and window width. 		
+	 */
+
+//	parameter access:
+	double freqResolution( void ) const { return _resolution; }
+	/*	Return the frequency resolution (minimum instantaneous frequency  		
+		difference between Partials) for this Analyzer. 	
+	 */
+	double ampFloor( void ) const { return _floor; }
+	/*	Return the amplitude floor (lowest detected spectral amplitude),  			
+		in (negative) dB, for this Analyzer. 				
+	 */
+ 	double windowWidth( void ) const { return _windowWidth; }
+	/*	Return the frequency-domain main lobe width (measured between 
+		zero-crossings) of the analysis window used by this Analyzer. 				
+	 */
+ 	double freqFloor( void ) const { return _minFrequency; }
+	/*	Return the frequency floor (minimum instantaneous Partial  				
+		frequency), in Hz, for this Analyzer. 				
+	 */
+	double hopTime( void ) const { return _hop; }
+	/*	Return the hop time (which corresponds approximately to the 
+		average density of Partial envelope Breakpoint data) for this 
+		Analyzer.
+	 */
+ 	double freqDrift( void ) const { return _drift;}
+	/*	Return the maximum allowable frequency difference between 					
+		consecutive Breakpoints in a Partial envelope for this Analyzer. 				
+	 */
+ 	double cropTime( void ) const { return _cropTime; }
+	/*	Return the crop time (maximum temporal displacement of a time-
+		frequency data point from the time-domain center of the analysis
+		window, beyond which data points are considered "unreliable")
+		for this Analyzer.
+	 */
+	double bwRegionWidth( void ) const { return _bwRegionWidth; }
+	/*	Return the width (in Hz) of the Bandwidth Association regions
+		used by this Analyzer.
+	 */
+	
+//	parameter mutation:
+	void setFreqResolution( double x ) { _resolution = x; }
+	/*	Set the frequency resolution (minimum instantaneous frequency  		
+		difference between Partials) for this Analyzer. (Does not cause 	
+		other parameters to be recomputed.) 									
+	 */
+	 	void setAmpFloor( double x ) { _floor = x; }
+	/*	Set the amplitude floor (lowest detected spectral amplitude), in  			
+		(negative) dB, for this Analyzer. 				
+	 */
+	void setWindowWidth( double x ) { _windowWidth = x; }
+	/*	Set the frequency-domain main lobe width (measured between 
+		zero-crossings) of the analysis window used by this Analyzer. 				
+	 */
+	void setFreqFloor( double x ) { _minFrequency = x; }
+	/*	Set the amplitude floor (minimum instantaneous Partial  				
+		frequency), in Hz, for this Analyzer.
+	 */
+	void setFreqDrift( double x ) { _drift = x; }
+	/*	Set the maximum allowable frequency difference between 					
+		consecutive Breakpoints in a Partial envelope for this Analyzer. 				
+	 */
+ 	void setHopTime( double x ) { _hop = x; }
+	/*	Set the hop time (which corresponds approximately to the average
+		density of Partial envelope Breakpoint data) for this Analyzer.
+	 */
+ 	void setCropTime( double x ) { _cropTime = x; }
+	/*	Set the crop time (maximum temporal displacement of a time-
+		frequency data point from the time-domain center of the analysis
+		window, beyond which data points are considered "unreliable")
+		for this Analyzer.
+	 */
+ 	void setBwRegionWidth( double x ) { _bwRegionWidth = x; }	
+	/*	Set the width (in Hz) of the Bandwidth Association regions
+		used by this Analyzer.
+	 */
+
+//	Partial list access:
+	PartialList & partials( void ) { return _partials; }
+	/*	Return a mutable reference to this Analyzer's list of 
+		analyzed Partials. 
+	 */
+	const PartialList & partials( void ) const { return _partials; }
+	/*	Return an immutable (const) reference to this Analyzer's 
+		list of analyzed Partials. 
+	 */
+</pre>
+				
+<p><a href="#contents"><small>Contents</small></a>	
+
+<a name="Breakpoint">
+<hr><h2>Breakpoint</h2></a>
+<p>
+Definition of class of objects representing a single breakpoint in the
+Partial parameter (frequency, amplitude, bandwidth) envelope.
+Instantaneous phase is also stored, but is only used at the onset of 
+a partial, or when it makes a transition from zero to nonzero amplitude.
+
+Loris Partials represent reassigned bandwidth-enhanced model components.
+A Partial consists of a chain of Breakpoints describing the time-varying
+frequency, amplitude, and bandwidth (noisiness) of the component.
+
+Leaf class, do not subclass.
+<p>
+<pre>
+//	construction:
+//	(use compiler-generated destructor, copy, and assign)
+	Breakpoint( void );	//	needed for STL containability
+	Breakpoint( double f, double a, double b, double p = 0. );
+	
+//	comparison:
+	bool operator==( const Breakpoint & rhs ) const;
+
+//	attribute access:
+	double frequency( void ) const { return _frequency; }
+	double amplitude( void ) const { return _amplitude; }
+	double bandwidth( void ) const { return _bandwidth; }
+	double phase( void ) const { return _phase; }
+	
+//	attribute mutation:
+	void setFrequency( double x ) { _frequency = x; }
+	void setAmplitude( double x ) { _amplitude = x; }
+	void setBandwidth( double x ) { _bandwidth = x; }
+	void setPhase( double x ) { _phase = x; }
+	
+//	add noise (bandwidth) energy:
+//	should this really be part of the interface?
+	void addNoise( double x );
+</pre>
+				
+<p><a href="#contents"><small>Contents</small></a>	
+
+<a name="BreakpointEnvelope">
+<hr><h2>BreakpointEnvelope</h2></a>
+<p>
+A BreakpointEnvelope represents a linear segment breakpoint 
+function with infinite extension at each end (that is, the 
+values past either end of the breakpoint function have the 
+values at the nearest end).
+
+Implements the Envelope interface. 
+
+This class isn't insulating, clients that should be protected from 
+the details should use the EnvelopeInterface.
+<p>
+<pre>
+//	construction:
+	BreakpointEnvelope( void );
+	/*	Construct and return a new BreakpointEnvelope having no 
+		breakpoints (and an implicit value of 0. everywhere).			
+	 */
+	explicit BreakpointEnvelope( double initialValue );
+	/*	Construct and return a new BreakpointEnvelope having a 
+		single breakpoint at 0. (and an implicit value everywhere)
+		of initialValue.			
+	 */
+	BreakpointEnvelope( const BreakpointEnvelope & other );
+	/*	Construct and return a new BreakpointEnvelope that is
+		a copy of this BreapointEnvelope (has the same value
+		as this BreakpointEnvelope everywhere).			
+	 */
+	virtual ~BreakpointEnvelope( void );
+	/*	Destroy this BreakpointEnvelope. 								
+	 */
+
+	virtual BreakpointEnvelope * clone( void ) const;
+	/*	Return an exact copy of this BreakpointEnvelope.
+		(Prototype pattern)
+	 */
+	
+//	Envelope interface:
+	virtual double valueAt( double x ) const;	
+	/*	Return the interpolated value of this BreakpointEnvelope at 
+		the specified time.							
+	 */
+	
+//	compiler-generated assignment is okay
+	//	BreakpointEnvelope & operator= ( const BreakpointEnvelope & );
+
+//	envelope composition:
+	void insertBreakpoint( double time, double value );
+	/*	Insert a breakpoint representing the specified (time, value) 
+		pair into this BreakpointEnvelope. If there is already a 
+		breakpoint at the specified time, it will be replaced with 
+		the new breakpoint.
+	 */
+	 
+//
+//	iterator access:
+//	(hack, need to make this pretty)
+	typedef std::map< double, double >::iterator iterator;
+	typedef std::map< double, double >::const_iterator const_iterator;
+	
+	iterator begin( void ) { return _breakpoints.begin(); }
+	const_iterator begin( void ) const { return _breakpoints.begin(); }
+	
+	iterator end( void ) { return _breakpoints.end(); }
+	const_iterator end( void ) const { return _breakpoints.end(); }
+	
+	unsigned long size( void ) const { return _breakpoints.size(); }
+	bool empty( void ) const { return _breakpoints.empty(); }
+</pre>
+				
+<p><a href="#contents"><small>Contents</small></a>	
+
+<a name="BreakpointUtils">
+<hr><h2>BreakpointUtils</h2></a>
+<p>
+A group of Breakpoint utility function objects for use with STL 
+searching and sorting algorithms. BreakpointUtils is a namespace
+within the Loris namespace, unless compiled with NO_LORIS_NAMESPACE,
+in which case it is a class.
+
+Lakos suggests protecting utility functions like this in a class 
+definition, but I think a namespace is better, since that is really
+what is being constructed.
+<p>
+<pre>
+//	predicates:
+	struct frequency_between : 
+		public std::unary_function< const Breakpoint, bool >
+	{
+		bool operator()( const Breakpoint & b )  const
+			{ 
+				return (b.frequency() > _fmin) && 
+					   (b.frequency() < _fmax); 
+			}
+			
+		//	constructor:
+		frequency_between( double x, double y ) : 
+			_fmin( x ), _fmax( y ) 
+			{ if (x>y) std::swap(x,y); }
+			
+		//	bounds:
+		private:
+			double _fmin, _fmax;
+	};
+
+//	comparitors:
+	struct less_frequency : 
+		public std::binary_function< const Breakpoint, const Breakpoint, bool >
+	{
+		bool operator()( const Breakpoint & lhs, const Breakpoint & rhs ) const
+			{ return lhs.frequency() < rhs.frequency(); }
+	};
+
+	struct greater_amplitude : 
+		public std::binary_function< const Breakpoint, const Breakpoint, bool >
+	{
+		bool operator()( const Breakpoint & lhs, const Breakpoint & rhs ) const
+			{ return lhs.amplitude() > rhs.amplitude(); }
+	};	
+</pre>
+				
+<p><a href="#contents"><small>Contents</small></a>	
+
+<a name="Channelizer">
+<hr><h2>Channelizer</h2></a>
+<p>
+Definition of a class for labeling Partials in a PartialList
+according to a set of linearly-spaced, variable-frequency
+channels (like a time-varying harmonic frequency relationship).
+
+This class interface is fully insulating.
+This class is a leaf class, not for subclassing (no virtual destructor). 
+<p>
+<pre>
+	//	construction:
+	Channelizer( const Envelope & refChanFreq, int refChanLabel );
+	Channelizer( const Channelizer & other );
+	~Channelizer( void );
+
+	//	assignment:
+	Channelizer & operator=( const Channelizer & rhs );
+
+	//	channelizing:
+	void channelize( PartialList::iterator begin, PartialList::iterator end ) const;
+
+	//	function call operator:
+	void operator() ( PartialList::iterator begin, PartialList::iterator end ) const
+		{ channelize( begin, end ); }
+</pre>
+				
+<p><a href="#contents"><small>Contents</small></a>	
+
+<a name="Dilator">
+<hr><h2>Dilator</h2></a>
+<p>
+Dilator is a class of objects for temporally dilating and compressing
+Partials by specifying initial and target times of temporal features.
+<p>
+<pre>
+//	construction from n time points:
+	Dilator( const double * ibegin, const double * tbegin, int n );
+	~Dilator( void );
+	
+//	dilation:
+	void dilate( Partial & p );
+	void dilate( PartialList::iterator begin, PartialList::iterator end );
+	
+//	function call operator:
+//	(should this be for a single Partial, or the range?)
+	void operator() ( PartialList::iterator begin, PartialList::iterator end )
+		{ dilate( begin, end ); }
+</pre>
+				
+<p><a href="#contents"><small>Contents</small></a>	
+
+<a name="Distiller">
+<hr><h2>Distiller</h2></a>
+<p>
+A group of Partials that logically represent a single component
+can be distilled into a single Partial using a Distiller. 
+<p>
+<pre>
+//	construction:	
+	Distiller( void );
+	~Distiller( void );
+	
+//	distillation:
+	void distill( PartialList & container, PartialList::iterator dist_begin, 
+				  PartialList::iterator dist_end );
+	void distill( PartialList & container );
+
+//	function call operator:
+	void operator() ( PartialList & container, PartialList::iterator dist_begin, 
+					  PartialList::iterator dist_end )
+		{ distill( container, dist_begin, dist_end ); }
+</pre>
+				
+<p><a href="#contents"><small>Contents</small></a>	
+
+<a name="Envelope">
+<hr><h2>Envelope</h2></a>
+<p>
+Abstract base class, specifying interface ( valueAt() and clone() ).
+Derived classes must implement valueAt() and clone(), the latter to 
+support the Prototype pattern.
+
+Clients of Envelope, like Morpher, use the Prototype pattern to safely
+take ownership of their Envelopes. Formerly, Handle<>s were used for this
+purpose, but using them polymorphically seemed to trigger random and 
+diverse compiler problems. Handle<>s are no longer part of Loris.
+
+Envelope is an abstract base class representing a generic real (double) 
+function of one real (double) argument. 
+<p>
+<pre>
+	virtual double valueAt( double x ) const = 0;	
+	virtual ~Envelope( void );
+	
+	virtual Envelope * clone( void ) const = 0;
+</pre>
+				
+<p><a href="#contents"><small>Contents</small></a>	
+
+<a name="Exception">
+<hr><h2>Exception</h2></a>
+<p>
+Generic exception class for reporting exceptional circumstances.
+Can be a base class for more specific exception classes in Loris.
+<p>
+<pre>
+//	construction:
+	Exception( const std::string & str, const std::string & where = "" );
+
+//	virtual destructor so it Exception can be subclassed:
+	virtual ~Exception( void ) {}
+	
+//	access:
+	const std::string & str( void ) const { return _sbuf; }
+	const char * what( void ) const { return _sbuf.c_str(); }
+	
+	Exception & append( const std::string & str );
+	
+class AssertionFailure : public Exception
+class IndexOutOfBounds : public Exception
+class FileIOException : public Exception
+class InvalidObject : public Exception
+class InvalidIterator : public InvalidObject
+class InvalidArgument : public Exception
+class InvalidPartial : public InvalidObject (in Partial.h)
+
+Throw( exType, report )	
+Assert(test)
+</pre>
+				
+<p><a href="#contents"><small>Contents</small></a>	
+
+<a name="FrequencyReference">
+<hr><h2>FrequencyReference</h2></a>
+<p>
+A functor class that creates a reference frequency envelope from
+the longest Partial found in a given iterator range and in a 
+specified frequency range. This class implements the Envelope
+interface.
+<p>
+<pre>
+	//	construction: 
+	FrequencyReference( PartialList::const_iterator begin, 
+						PartialList::const_iterator end, 
+						double minFreq, double maxFreq, long numSamps );
+	FrequencyReference( PartialList::const_iterator begin, 
+						PartialList::const_iterator end, 
+						double minFreq, double maxFreq );
+	FrequencyReference( const FrequencyReference & other );
+	FrequencyReference & operator= ( const FrequencyReference & other );
+	~FrequencyReference();
+
+	//	BreakpointEnvelope access:
+	const BreakpointEnvelope & envelope( void ) const { return *_env; }
+
+//	Envelope interface:
+	virtual FrequencyReference * clone( void ) const;
+	/*	Return an exact copy of this FrequencyReference.
+		(Prototype pattern)
+	 */
+	
+	virtual double valueAt( double x ) const;	
+	/*	Return the interpolated value of this FrequencyReference at 
+		the specified time.							
+	 */
+</pre>
+				
+<p><a href="#contents"><small>Contents</small></a>	
+
+<a name="Morpher">
+<hr><h2>Morpher</h2></a>
+<p>
+Fully-insulating class encapsulating manipulations involving 
+linear interpolation of Partial parameter envelopes. The implementation
+is entirely defined in the Morpher_imp class, in Morpher.C.
+
+The Morpher object performs sound morphing (cite Lip's papers, and the book)
+by interpolating Partial parmeter envelopes of corresponding Partials in
+a pair of source sounds. The correspondences are established by labeling.
+The Morpher object collects morphed Partials in a list<Partial>, that can
+be accessed by clients.
+
+The Morpher interface is fully insulating, the implementation is 
+defined entirely inthe Morpher_imp class in Morpher.C.
+Morpher is a leaf class, do not subclass.
+<p>
+<pre>
+//	construction:
+	Morpher( const Envelope & f );
+	Morpher( const Envelope & ff, const Envelope & af, const Envelope & bwf );
+	~Morpher( void );
+	
+//	morphing:
+//	Morph two sounds (collections of Partials labeled to indicate
+//	correspondences) into a single labeled collection of Partials.
+	void morph( PartialList::const_iterator begin0, 
+				PartialList::const_iterator end0,
+				PartialList::const_iterator begin1, 
+				PartialList::const_iterator end1 );
+
+//	morphing functions access/mutation:	
+	void setFrequencyFunction( const Envelope & f );
+	void setAmplitudeFunction( const Envelope & f );
+	void setBandwidthFunction( const Envelope & f );
+
+	const Envelope & frequencyFunction( void ) const;
+	const Envelope & amplitudeFunction( void ) const;
+	const Envelope & bandwidthFunction( void ) const;
+	
+	
+//	Partial list access:
+	PartialList & partials( void ); 
+	const PartialList & partials( void ) const; 
+</pre>
+				
+<p><a href="#contents"><small>Contents</small></a>	
+
+<a name="Notifier">
+<hr><h2>Notifier</h2></a>
+<p>
+Fully-insulating class encapsulating manipulations involving 
+linear interpolation of Partial parameter envelopes. The implementation
+is entirely defined in the Morpher_imp class, in Morpher.C.
+
+The Morpher object performs sound morphing (cite Lip's papers, and the book)
+by interpolating Partial parmeter envelopes of corresponding Partials in
+a pair of source sounds. The correspondences are established by labeling.
+The Morpher object collects morphed Partials in a list<Partial>, that can
+be accessed by clients.
+
+The Morpher interface is fully insulating, the implementation is 
+defined entirely inthe Morpher_imp class in Morpher.C.
+Morpher is a leaf class, do not subclass.
+<p>
+<pre>
+std::ostream & getNotifierStream(void);
+std::ostream & getDebuggerStream(void);
+
+//	declare streams:
+static std::ostream & notifier = getNotifierStream();
+static std::ostream & debugger = getDebuggerStream();
+
+These are declared extern "C" and can be called from C:
+typedef void(*NotificationHandler)(const char * s);
+NotificationHandler setNotifierHandler( NotificationHandler fn );
+NotificationHandler setDebuggerHandler( NotificationHandler fn );
+</pre>
+				
+<p><a href="#contents"><small>Contents</small></a>	
+
+<a name="Oscillator">
+<hr><h2>Oscillator</h2></a>
+<p>
+Oscillator represents a single bandwidth-enhanced sinusoidal oscillator
+used for synthesizing sounds from Reassigned Bandwidth-Enhanced analysis
+data. Oscillator encapsulates the oscillator state, including the instan-
+taneous radian frequency, amplitude, bandwidth, and phase, and a filter
+object used to generate the bandlimited stochastic modulator.
+
+Loris::Synthesizer uses an instance of Loris::Oscillator to synthesize
+bandwidth-enhanced partials obtained from Reassigned Bandwidth-Enhanced
+analysis data.
+<p>
+<pre>
+//	construction (with initial state):
+	Oscillator( double radf, double a, double bw, double ph );
+	Oscillator( void );
+	Oscillator( const Oscillator & other );
+	~Oscillator( void );
+		
+	Oscillator & operator= ( const Oscillator & other );
+
+//	state access:
+	double radianFreq( void ) const { return _frequency; }
+	double amplitude( void ) const { return _amplitude; }
+	double bandwidth( void ) const { return _bandwidth; }
+	double phase( void ) const { return _phase; }
+
+//	state mutation:	
+	void setRadianFreq( double x ) { _frequency = x; }
+	void setAmplitude( double x ) { _amplitude = x; }
+	void setBandwidth( double x ) { _bandwidth = x; }
+	void setPhase( double x ) { _phase = x; }
+
+//	sample generation:	
+//	Accumulate bandwidth-enhanced sinusoidal samples modulating the 
+//	oscillator state from its current values of radian frequency,
+//	amplitude, and bandwidth to the specified target values, starting
+//	at beginIdx and ending at (before) endIdx (no sample is accumulated
+//	at endIdx). The indices are positions in the specified buffer.
+//
+//	The caller must insure that the indices are valid. Target frequency
+//	and bandwidth are checked to prevent aliasing and bogus bandwidth
+//	enhancement.
+	void generateSamples( double * begin, double * end,
+					  double targetFreq, double targetAmp, double targetBw );
+</pre>
+				
+<p><a href="#contents"><small>Contents</small></a>	
+
+<a name="Partial">
+<hr><h2>Partial</h2></a>
+<p>
+Definition of class of objects representing reassigned bandwidth-enhanced 
+model components in Loris. Partials are described by the Partial parameter 
+(frequency, amplitude, bandwidth) envelope and a 4-byte label. 
+
+Loris Partials represent reassigned bandwidth-enhanced model components.
+A Partial consists of a chain of Breakpoints describing the time-varying
+frequency, amplitude, and bandwidth (noisiness) of the component.
+
+Leaf class, do not subclass.
+<p>
+<pre>
+//	construction:
+	Partial( void );
+	Partial( const Partial & other );
+	~Partial( void );
+	
+//	access/query:
+	int label( void ) const { return _label; }
+	double initialPhase( void ) const;
+	double startTime( void ) const;
+	double endTime( void ) const;
+	double duration( void ) const;
+	long numBreakpoints( void ) const { return _bpmap.size(); }
+	
+//	mutation:
+	void setLabel( int l ) { _label = l; }
+	
+//	comparison:
+	bool operator== ( const Partial & rhs ) const;
+	
+//	iterator generation:
+	typedef PartialIterator iterator;
+	typedef PartialConstIterator const_iterator;
+	iterator begin( void );
+	iterator end( void );
+	const_iterator begin( void ) const;
+	const_iterator end( void ) const;
+	
+//	Breakpoint insertion:
+//	Make a copy of bp and insert it at time (seconds),
+//	return an iterator refering to the inserted Breakpoint.
+	iterator insert( double time, const Breakpoint & bp );
+
+//	Return the insertion position for a Breakpoint at
+//	the specified time (that is, the position of the first
+//	Breakpoint at a time later than the specified time).
+	iterator findAfter( double time );
+	const_iterator findAfter( double time ) const;
+	
+//	Return the insertion position for the Breakpoint nearest
+//	the specified time.
+	iterator findNearest( double time );
+	const_iterator findNearest( double time ) const;
+	
+//	Breakpoint removal:
+//	Erase the Breakpoint at the position of the 
+//	given iterator (invalidating the iterator).
+	void erase( iterator & pos );
+	
+//	partial envelope interpolation/extrapolation:
+//	Return the interpolated value of a partial parameter at
+//	the specified time. At times beyond the ends of the
+//	Partial, frequency and bandwidth hold their boundary values,
+//	amplitude is zero, and phase is computed from frequency.
+//	There is of sensible definition for any of these for Partials
+//	having no Breakpoints, so they except (InvalidPartial) under 
+//	that condition.
+//
+	double frequencyAt( double time ) const;
+	double amplitudeAt( double time ) const;
+	double bandwidthAt( double time ) const;
+	double phaseAt( double time ) const;
+</pre>
+				
+<p><a href="#contents"><small>Contents</small></a>	
+
+<a name="PartialConstIterator">
+<hr><h2>PartialConstIterator</h2></a>
+<p>
+Const iterator for the Loris::Partial Breakpoint map. Wraps
+the const iterator for std::map< double, Breakpoint >.
+<p>
+<pre>
+//	construction:
+//	(allow compiler to generate copy, assignment, and destruction):
+	PartialConstIterator( void ) {}
+	PartialConstIterator( const PartialIterator & other ) : _iter( other._iter ) {}
+	
+//	pre-increment/decrement:
+	PartialConstIterator& operator ++ () { ++_iter; return *this; }
+	PartialConstIterator& operator -- () { --_iter; return *this; }
+
+//	post-increment/decrement:
+	PartialConstIterator operator ++ ( int ) { return PartialConstIterator( _iter++ ); } 
+	PartialConstIterator operator -- ( int ) { return PartialConstIterator( _iter-- ); } 
+	
+//	time and Breakpoint access:
+	const Breakpoint & breakpoint( void ) const { return _iter->second; }	
+	double time( void ) const { return _iter->first; }	
+
+//	dereference (for treating Partial like a 
+//	STL collection of Breakpoints):
+	const Breakpoint & operator * ( void ) const { return _iter->second; }
+	const Breakpoint * operator -> ( void ) const { return & _iter->second; }
+	
+//	comparison:
+	friend bool operator == ( const PartialConstIterator & lhs, const PartialConstIterator & rhs )
+		{ return lhs._iter == rhs._iter; }
+	friend bool operator != ( const PartialConstIterator & lhs, const PartialConstIterator & rhs )
+		{ return lhs._iter != rhs._iter; }
+</pre>
+				
+<p><a href="#contents"><small>Contents</small></a>	
+
+<a name="PartialIterator">
+<hr><h2>PartialIterator</h2></a>
+<p>
+This will be called PartialIterator when the other thing called 
+PartialIterator is renamed and reimplemented as PartialView or
+EnvelopeView.
+
+This is pretty much just a wrapper for the nasty-looking map<>
+iterators.
+
+Non-const iterator for the Loris::Partial Breakpoint map. Wraps
+the non-const iterator for std::map< double, Breakpoint >.
+<p>
+<pre>
+//	construction:
+//	(allow compiler to generate copy, assignment, and destruction):
+	PartialIterator( void ) {}
+	
+//	pre-increment/decrement:
+	PartialIterator& operator ++ () { ++_iter; return *this; }
+	PartialIterator& operator -- () { --_iter; return *this; }
+
+//	post-increment/decrement:
+	PartialIterator operator ++ ( int ) { return PartialIterator( _iter++ ); } 
+	PartialIterator operator -- ( int ) { return PartialIterator( _iter-- ); } 
+	
+//	time and Breakpoint access:
+	const Breakpoint & breakpoint( void ) const { return _iter->second; }
+	Breakpoint & breakpoint( void ) { return _iter->second; }
+	double time( void ) const { return _iter->first; }	
+	
+//	dereference (for treating Partial like a 
+//	STL collection of Breakpoints):
+	const Breakpoint & operator * ( void ) const { return _iter->second; }
+	Breakpoint & operator * ( void ) { return _iter->second; }
+	const Breakpoint * operator -> ( void ) const { return & _iter->second; }
+	Breakpoint * operator -> ( void ) { return & _iter->second; }
+	
+//	comparison:
+	friend bool operator == ( const PartialIterator & lhs, const PartialIterator & rhs )
+		{ return lhs._iter == rhs._iter; }
+	friend bool operator != ( const PartialIterator & lhs, const PartialIterator & rhs )
+		{ return lhs._iter != rhs._iter; }
+</pre>
+				
+<p><a href="#contents"><small>Contents</small></a>	
+
+<a name="PartialList">
+<hr><h2>PartialList</h2></a>
+<p>
+Typedefs for std lists of Partials.
+<p>
+<pre>
+typedef std::list< Loris::Partial > PartialList;
+typedef std::list< Loris::Partial >::iterator PartialListIterator;
+typedef std::list< Loris::Partial >::const_iterator PartialListConstIterator;
+</pre>
+				
+<p><a href="#contents"><small>Contents</small></a>	
+
+<a name="PartialUtils">
+<hr><h2>PartialUtils</h2></a>
+<p>
+A group of Partial utility function objects for use with STL 
+searching and sorting algorithms. PartialUtils is a namespace
+within the Loris namespace, unless compiled with NO_NESTED_NAMESPACE,
+in which case it is a class.
+
+Lakos suggests protecting utility functions like this in a class 
+definition, but I think a namespace is better, since that is really
+what is being constructed.
+<p>
+<pre>
+//	predicates:
+	struct label_equals : 
+		public std::binary_function< const Partial, int, bool >
+	{
+		bool operator()( const Partial & p, int label ) const 
+			{ return p.label() == label; }
+	};
+	
+//	comparitors:
+	struct label_less : 
+		public std::binary_function< const Partial, const Partial, bool >
+	{
+		bool operator()( const Partial & lhs, const Partial & rhs ) const 
+			{ return lhs.label() < rhs.label(); }
+	};
+	
+	struct duration_greater : 
+		public std::binary_function< const Partial, const Partial, bool >
+	{
+		bool operator()( const Partial & lhs, const Partial & rhs ) const 
+			{ return lhs.duration() > rhs.duration(); }
+	};
+	
+//	functions on ranges of Partials:
+	template <typename Iterator>
+#if defined( NO_NESTED_NAMESPACE )
+	static
+#endif
+	inline 
+	pair<double,double>
+	timeSpan( Iterator begin, Iterator end ) 
+	{
+		double tmin = 0., tmax = 0.;
+		if ( begin != end )
+		{
+			Iterator it = begin;
+			tmin = it->startTime();
+			tmax = it->endTime();
+			while( it != end )
+			{
+				tmin = std::min( tmin, it->startTime() );
+				tmax = std::max( tmax, it->endTime() );
+				++it;
+			}
+		}
+		return std::make_pair(tmin, tmax);
+	}
+</pre>
+				
+<p><a href="#contents"><small>Contents</small></a>	
+
+<a name="SdifFile">
+<hr><h2>SdifFile</h2></a>
+<p>
+Definition of class SdifFile, which reads and writes SDIF files.
+<p>
+<pre>
+//	construction (import):
+//	(let compiler generate destructor)
+	SdifFile( const std::string & infilename );
+		
+//	PartialList access:
+	PartialList & partials( void ) { return _partials; }
+	const PartialList & partials( void ) const { return _partials; }
+
+//	export:
+//	enhanced chooses between 4-column 1TRC (sine only) or 6-column RABP (reassigned and enhanced)
+	static void Export( const std::string & filename, 
+						const PartialList & plist, const bool enhanced = true);
+</pre>
+				
+<p><a href="#contents"><small>Contents</small></a>	
+
+<a name="Sieve">
+<hr><h2>Sieve</h2></a>
+<p>
+Sift labeled Partials: 
+If any two partials with same label overlap in time,
+keep only the longer of the two partials.
+Set the label of the shorter duration partial to zero.
+<p>
+<pre>
+//	construction:	
+	explicit Sieve( double minGapTime = 0.0 );
+	~Sieve( void );
+	
+//	sift:
+	void sift( PartialList & sift_list );
+	void sift( PartialList & sift_list, 
+			   PartialList::iterator sieve_begin, 
+			   PartialList::iterator sieve_end  );
+</pre>
+				
+<p><a href="#contents"><small>Contents</small></a>	
+
+<a name="SpcFile">
+<hr><h2>SpcFile</h2></a>
+<p>
+Implementation of class SpcFile, which reads and writes SPC files.
+<p>
+<pre>
+//	construction:
+//	(let compiler generate destructor)
+	SpcFile( const char *infilename );
+		
+//	PartialList access:
+	PartialList & partials( void ) { return _partialsList; }
+	const PartialList & partials( void ) const { return _partialsList; }
+
+//	export:
+//
+//  the optional enhanced parameter;s default value is true (for bandwidth-enhanced spc files); it
+//  can be specified false for pure-sines spc files.
+//
+//  it is normally left at its default 
+//	the optional endApproachTime parameter is in seconds; its default value is zero (and has no effect).
+//  a nonzero endApproachTime indicates that the plist does not include a release, but rather ends in a 
+//  static spectrum corresponding to the final breakpoint values of the partials.  the endApproachTime
+//  specifies how long before the end of the sound the amplitude, frequency, and bandwidth values are
+//  to be modified to make a gradual transition to the static spectrum.
+ 	static void Export( const std::string & filename, const PartialList & plist, double midiPitch, 
+				int enhanced = true, double endApproachTime = 0. );
+	static void Export( std::ostream & file, const PartialList & plist, double midiPitch, 
+				int enhanced = true, double endApproachTime = 0. );
+</pre>
+				
+<p><a href="#contents"><small>Contents</small></a>	
+
+<a name="Synthesizer">
+<hr><h2>Synthesizer</h2></a>
+<p>
+Definition of class of synthesizers of (reassigned) bandwidth-enhanced
+partials. Synthesizer accumulates samples for one partial at a time
+at a specified sample rate into a specified sample buffer.
+
+The Synthesizer does not own its sample buffer, the client 
+is responsible for its construction and destruction. Many 
+Synthesizers may share a buffer. (But this class is not thread-safe.)
+<p>
+<pre>
+//	construction:
+	Synthesizer( double srate, double * bufStart, double * bufEnd );
+	Synthesizer( const Synthesizer & other );
+	~Synthesizer(void);
+	
+	Synthesizer & operator= ( const Synthesizer & other );
+	
+//	synthesis:
+//
+//	Synthesize a bandwidth-enhanced sinusoidal Partial with the specified 
+//	timeShift (in seconds). Zero-amplitude Breakpoints are inserted
+//	1 millisecond (Partial::FadeTime()) from either end of the Partial to reduce 
+//	turn-on and turn-off artifacts. The client is responsible or insuring
+//	that the buffer is long enough to hold all samples from the time-shifted
+//	and padded Partials. Synthesizer will not generate samples outside the
+//	buffer, but neither will any attempt be made to eliminate clicks at the
+//	buffer boundaries.  
+	void synthesize( const Partial & p, double timeShift = 0. ) const;	
+	
+//	function-call operator, for use as a functor:
+	void operator() ( const Partial & p, double timeShift = 0. ) const
+		{ synthesize( p, timeShift ) ; }
+
+#if !defined(NO_TEMPLATE_MEMBERS)
+//	Partial range operations:
+	template<typename Iter>
+	void synthesize( Iter begin_partials, Iter end_partials, double timeShift = 0. ) const
+		{ while ( begin_partials != end_partials ) synthesize( *(begin_partials++), timeShift ); }
+
+	template<typename Iter>
+	void operator() ( Iter begin_partials, Iter end_partials, double timeShift = 0. ) const
+		{ synthesize( begin_partials, end_partials, timeShift ); }
+#endif
+	
+//	access:
+	double sampleRate( void ) const { return _sampleRate; }
+	
+	double * samples( void ) { return _sampleBuffer; }
+	const double * samples( void ) const { return _sampleBuffer; }
+	
+	long numSamples( void ) const { return _sampleBufferSize; }
+</pre>
+				
+<p><a href="#contents"><small>Contents</small></a>	
+
+
+
+
 
 <hr align="Center" size="3">    
 <table cellspacing="0" cellpadding="1" width="100%">
   <tbody>
 	<tr>
-	  <td valign="Top">Last updated on 7 May 2002
+	  <td valign="Top">Last updated on 20 May 2002
 	  </td>
 	  <td align="Right" valign="Top"><a href="http://www.cerlsoundgroup.org/Loris/">www.cerlsoundgroup.org/Loris/</a>
 	  </td>

@@ -33,8 +33,8 @@
  *
  */
 
-#include<Exception.h>
-#include<Breakpoint.h>
+#include <Exception.h>
+#include <Breakpoint.h>
 #include <map>
 
 //	begin namespace
@@ -138,10 +138,6 @@ public:
 // ---------------------------------------------------------------------------
 //	class PartialIterator
 //
-//	This will be called PartialIterator when the other thing called 
-//	PartialIterator is renamed and reimplemented as PartialView or
-//	EnvelopeView.
-//	
 //	This is pretty much just a wrapper for the nasty-looking map<>
 //	iterators.
 //
@@ -257,7 +253,7 @@ class InvalidPartial : public InvalidObject
 {
 public: 
 	InvalidPartial( const std::string & str, const std::string & where = "" ) : 
-	InvalidObject( std::string("Invalid Partial -- ").append( str ), where ) {}
+		InvalidObject( std::string("Invalid Partial -- ").append( str ), where ) {}
 		
 };	//	end of class InvalidPartial
 

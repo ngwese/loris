@@ -45,6 +45,7 @@ namespace Loris {
 
 typedef std::list< Loris::Partial > PartialList;
 typedef std::list< Loris::Partial >::iterator PartialListIterator;
+typedef std::list< Loris::Partial >::const_iterator PartialListConstIterator;
 
 }	//	end of namespace Loris
 
