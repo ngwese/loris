@@ -33,6 +33,7 @@
  *
  */
 
+#include <Envelope.h>
 #include <PartialList.h>
 #include <memory>
 
@@ -46,10 +47,10 @@ class BreakpointEnvelope;
 //
 //	A functor class that creates a reference frequency envelope from
 //  the longest Partial found in a given iterator range and in a 
-//  specified frequency range.
+//  specified frequency range. This class implements the Envelope
+//	interface.
 //
-//
-class FrequencyReference
+class FrequencyReference : public Envelope
 {
 //	-- instance variables --
 private:
@@ -69,8 +70,18 @@ public:
 	~FrequencyReference();
 
 	//	BreakpointEnvelope access:
-	BreakpointEnvelope & envelope( void ) { return *_env; }
 	const BreakpointEnvelope & envelope( void ) const { return *_env; }
+
+//	Envelope interface:
+	virtual FrequencyReference * clone( void ) const;
+	/*	Return an exact copy of this FrequencyReference.
+		(Prototype pattern)
+	 */
+	
+	virtual double valueAt( double x ) const;	
+	/*	Return the interpolated value of this FrequencyReference at 
+		the specified time.							
+	 */
 
 
 };	// end of class FrequencyReference

@@ -89,7 +89,15 @@ FrequencyReference::FrequencyReference( PartialList::const_iterator begin,
 	if ( longest == end )
 		Throw( InvalidArgument, "No Partials attain their maximum sinusoidal energy within the specified frequency range." );
 	
-	buildEnvelopeFromPartial( *_env, *longest, numSamps );
+	//	build the Envelope by sampling the longest Partial's frequency
+	//	envelope numSamps times:
+	double dt = longest->duration() / ( numSamps + 1 );
+	for ( long i = 0; i < numSamps; ++i ) 
+	{
+		double t = longest->startTime() + ((i+1) * dt);
+		double f = longest->frequencyAt(t);
+		_env->insertBreakpoint( t, f );
+	}
 }
 
 
@@ -100,8 +108,7 @@ FrequencyReference::FrequencyReference( PartialList::const_iterator begin,
 //	a given iterator range and in a specified frequency range.
 //
 //	When the number of envelope samples is not specified, sample the longest
-//	Partial's frequency envelope at 10 or more points, with a resolution
-//	of at least 30 ms.
+//	Partial's frequency envelope at every Breakpoint.
 //
 FrequencyReference::FrequencyReference( PartialList::const_iterator begin, 
 										PartialList::const_iterator end, 
@@ -125,15 +132,12 @@ FrequencyReference::FrequencyReference( PartialList::const_iterator begin,
 	if ( longest == end )
 		Throw( InvalidArgument, "No Partials attain their maximum sinusoidal energy within the specified frequency range." );
 	
-	//	construct a BreakpointEnvelope by sampling the longest
-	//	Partial at regular (small) interval, using at least 10 
-	//	points:
-	//	(omits the very first and last Breakpoints)
-	//
-	const double APPROX_DT = .030;	//	30 milliseconds
-	long numSamps = std::max( long( longest->duration() / APPROX_DT ), 10L );
-	
-	buildEnvelopeFromPartial( *_env, *longest, numSamps );
+	//	build the Envelope by sampling the longest Partial's frequency
+	//	envelope at each Breakpoint:
+	for ( Partial::const_iterator it = longest->begin(); it != longest->end(); ++it )
+	{
+		_env->insertBreakpoint( it.time(), it.breakpoint().frequency() );
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -165,6 +169,26 @@ FrequencyReference::operator = ( const FrequencyReference & rhs )
 		_env.reset( rhs._env->clone() );
 	}
 	return *this;
+}
+
+// ---------------------------------------------------------------------------
+//	clone
+// ---------------------------------------------------------------------------
+//
+FrequencyReference * 
+FrequencyReference::clone( void ) const
+{
+	return new FrequencyReference( *this );
+}
+
+// ---------------------------------------------------------------------------
+//	valueAt
+// ---------------------------------------------------------------------------
+//
+double
+FrequencyReference::valueAt( double x ) const
+{
+	return _env->valueAt(x);
 }
 
 // ---------------------------------------------------------------------------
