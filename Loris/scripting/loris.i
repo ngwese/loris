@@ -86,6 +86,11 @@
 	#define ThrowIfNull(ptr) if ((ptr)==NULL) Throw( NullPointer, #ptr );	
 %}
 
+%{
+	#include<loris.h>
+	using namespace Loris;
+%}
+
 //	Configure notification and debugging using a
 //	in a SWIG initialization block. This code is
 //	executed when the module is loaded by the 
@@ -150,10 +155,6 @@
  *	Operations in Loris that need not be accessed though object
  *	interfaces are represented as simple functions.
  */
-
-%{
-	#include<loris.h>
-%}
 
 void channelize( PartialList * partials, 
 				 BreakpointEnvelope * refFreqEnvelope, int refLabel );

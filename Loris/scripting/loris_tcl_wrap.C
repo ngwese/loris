@@ -994,6 +994,10 @@ SWIGEXPORT(int) SWIG_init(Tcl_Interp *);
 	#define ThrowIfNull(ptr) if ((ptr)==NULL) Throw( NullPointer, #ptr );	
 
 
+	#include<loris.h>
+	using namespace Loris;
+
+
 #define  SWIG_MemoryError    1
 #define  SWIG_IOError        2
 #define  SWIG_RuntimeError   3
@@ -1172,9 +1176,6 @@ SampleVector *AiffFile_samples(AiffFile *self){
 		self->getSamples( vec->begin(), vec->end() );
 		return vec;
 	}
-
-	#include<loris.h>
-
 
 	#include<Dilator.h>
 	#include <string>
