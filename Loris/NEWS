@@ -31,6 +31,13 @@ Breakpoint it erased.
 - added Partial constructor from a half-open range
 delimited by Partial::const_iterators (documented too).
 
+- added new, simpler, Python 2.2-style iterators to the
+scripting interface. Eventually these will replace the
+old STL-style ones, but for now they coexist.
+
+- added some new functores to PartialUtils and 
+BreakpointUtils.
+
 -------------------------------------------------------
 changes since 1.0.1 release:
 
