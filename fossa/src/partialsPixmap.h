@@ -46,7 +46,7 @@ class EmptyPixmap;
 class Axis;
 
 using namespace Loris;
-
+using std::list;
 // ---------------------------------------------------------------------------
 // class PartialsPixmap
 // Base class for AmplitudePixmap, FrequencyPixmap, and NoisePixmap classes.
