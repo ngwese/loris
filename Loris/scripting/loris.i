@@ -80,6 +80,8 @@ char *check_exception() {
 //	SWIG does not seem to like to wrap functions
 //	with qualified names (like Loris::channelize),
 //	they simply get ignored.
+//
+// (This has probably been fixed by now.)
 using namespace Loris;
 
 //	notification function for Loris debugging
@@ -90,15 +92,6 @@ static void printf_notifier( const char * s )
 	printf("*\t%s\n", s);
 }	
 
-//	exception handling for the procedural interface
-//	(the pi catches all exceptions and handles them
-//	by passing their string descriptions to this 
-//	function):
-/*static char EXCEPTION_THROWN[256];
-static void exception_handler( const char * s )
-{
-	snprintf(EXCEPTION_THROWN, 255, "%s", s);
-}*/
 %}
 
 //	Configure notification and debugging using a
@@ -115,101 +108,17 @@ static void exception_handler( const char * s )
 // ----------------------------------------------------------------
 //		helper functions for creating vectors of doubles
 //
+
+%include "std_vector.i"
+
+namespace std {
+   %template(DoubleVector) vector<double>;
+};
+
+%pythoncode 
 %{
-#include <vector>
-#include <string>
-using std::vector;
-using std::string;
-
-// helper function for converting a string to a
-// vector of doubles (this will work anywhere)
-static bool fill_vector( const string & s, vector<double> & v )
-{
-	std::string::size_type beg, end;
-	const std::string numparts("1234567890+-.");
-	beg = s.find_first_of( numparts );
-	while ( beg != std::string::npos )
-	{
-		end = s.find_first_not_of( numparts, beg );
-		if ( end == std::string::npos )
-			end = s.length();
-
-		double x = atof( s.c_str() + beg );
-		v.push_back(x);
-
-		beg = s.find_first_of( numparts, end );
-	}
-	return true;
-}
-
+	SampleVector = DoubleVector
 %}
-#if SWIGPYTHON
-%{
-// helper function for converting a Python sequence
-// to a vector of doubles
-static bool fill_vector( PyObject * input, vector<double> & v )
-{
-	// verify that it is a sequence:
-	if ( !PySequence_Check(input) )
-	{
-		PyErr_SetString(PyExc_TypeError,"not a sequence");
-		return false;
-	}
-	// loop over elements of sequence, adding to vector
-	int size = PySequence_Length(input);
-	for ( int i = 0; i < size; ++i ) 
-	{
-		PyObject *o = PySequence_GetItem(input,i);
-		if (PyNumber_Check(o)) 
-		{
-			v.push_back( PyFloat_AsDouble(o) );
-			Py_DECREF(o);
-		}
-		else 
-		{
-			PyErr_SetString(PyExc_TypeError,"sequence must contain numbers");
-			Py_DECREF(o);
-			return false;
-		}
-	}	
-	
-	// return successfully
-	return true;
-}
-%}
-
-// special typemap for converting Python strings or 
-// sequences into vector<double> arguments.
-%typemap(in) vector<double> & {
-	// test first if input is a string,
-	// because a string is a Python sequence,
-	// but not a sequence of numbers.
-	if (PyString_Check($input))
-	{
-		$1 = new vector<double>;
-		fill_vector( PyString_AsString($input), *$1 );
-	}
-	else if (PySequence_Check($input)) 
-	{
-		$1 = new vector<double>;
-		if (! fill_vector( $input, *$1 ) )
-		{
-			delete $1;
-			return NULL;
-		}
-	} 
-	else 
-	{
-		PyErr_SetString(PyExc_TypeError,"could not covert argument to a vector of doubles");
-		return NULL;
-	}
-}
-
-%typemap(freearg) vd {
-	delete $1;
-}
-#endif
-// end of special Python typemap
 
 %include exception.i 
 %exception 
@@ -279,24 +188,26 @@ createFreqReference( PartialList * partials,
 #include <Notifier.h>
 #include <vector>
 
-void dilate_v( PartialList * partials, vector<double> & ivec, vector<double> & tvec )
-{
-	Loris::debugger << ivec.size() << " initial points, " 
-					<< tvec.size() << " target points" << Loris::endl;
-					
-	if ( ivec.size() != tvec.size() )
+	void dilate_v( PartialList * partials, 
+		   		   const std::vector<double> & ivec, 
+				   const std::vector<double> & tvec )
 	{
-		Throw( InvalidArgument, "Invalid arguments to dilate(): there must be as many target points as initial points" );
+		Loris::debugger << ivec.size() << " initial points, " 
+						<< tvec.size() << " target points" << Loris::endl;
+						
+		if ( ivec.size() != tvec.size() )
+		{
+			Throw( InvalidArgument, "Invalid arguments to dilate(): there must be as many target points as initial points" );
+		}
+		
+		const double * initial = &(ivec[0]);
+		const double * target = &(tvec[0]);
+		int npts = ivec.size();
+		dilate( partials, initial, target, npts );
 	}
-	
-	double * initial = &(ivec[0]);
-	double * target = &(tvec[0]);
-	int npts = ivec.size();
-	dilate( partials, initial, target, npts );
-}
 %}
 
-%exception dilate_v 
+%exception dilate_v
 {
     char * err;
     clear_exception();
@@ -314,26 +225,11 @@ void dilate_v( PartialList * partials, vector<double> & ivec, vector<double> & t
     }
 }
 
-#if SWIGPYTHON
-// ------------ Python accepts string or sequence --------------
 %rename (dilate) dilate_v;
-void dilate_v( PartialList * partials, vector<double> & ivec, vector<double> & tvec );
-#else
-// ------------ others accept string only --------------
-%rename (dilate) dilate_s;
-%inline %{
-	void dilate_s( PartialList * partials, 
-				   char * initial_times, char * target_times )
-	{
-		std::vector<double> ivec;
-		fill_vector( initial_times, ivec );
-		std::vector<double> tvec;
-		fill_vector( target_times, tvec );
-		
-		dilate_v( partials, ivec, tvec );
-	}
-%}
-#endif	
+void dilate_v( PartialList * partials, 
+			   const std::vector<double> & ivec, 
+			   const std::vector<double> & tvec );
+
 /*	Dilate Partials in a PartialList according to the given 
 	initial and target time points. Partial envelopes are 
 	stretched and compressed so that temporal features at
@@ -361,8 +257,15 @@ void distill( PartialList * partials );
  */
 				 
 
-void exportAiff( const char * path, SampleVector * samples,
- 				 double samplerate = 44100.0, int nchannels = 1, int bitsPerSamp = 16 );
+%inline 
+%{
+	void exportAiff( const char * path, const std::vector< double > & samples,
+					 double samplerate = 44100.0, int nchannels = 1, 
+					 int bitsPerSamp = 16 )
+	{
+		exportAiff( path, &samples, samplerate, nchannels, bitsPerSamp );
+	}
+%}
 /*	Export audio samples stored in a SampleVector to an AIFF file
 	having the specified number of channels and sample rate at the 
 	given file path (or name). The floating point samples in the 
@@ -495,17 +398,10 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch,
 
 %newobject synthesize;
 %inline %{
-	SampleVector * synthesize( const PartialList * partials, double srate = 44100.0 )
+	std::vector<double> synthesize( const PartialList * partials, double srate = 44100.0 )
 	{
-		SampleVector * dst = createSampleVector(0);
-		synthesize( partials, dst, srate );
-				
-		// check for exception:
-		if ( check_exception() )
-		{
-			destroySampleVector( dst );
-			dst = NULL;
-		}
+		std::vector<double> dst;
+		synthesize( partials, &dst, srate );
 		return dst;
 	}
 %}
@@ -787,6 +683,7 @@ public:
 %}
 
 %newobject AiffFile::samples;
+%newobject AiffFile::getMarker;
 %exception AiffFile::getMarker
 {
 	try
@@ -815,7 +712,7 @@ class AiffFile
 {
 public:
 	AiffFile( const char * filename );
-	AiffFile( SampleVector & vec, double samplerate );
+	AiffFile( const std::vector< double > & vec, double samplerate = 44100 );
 
 	~AiffFile( void );
 	
@@ -851,7 +748,7 @@ public:
 	
 	%extend 
 	{
-		AiffFile( PartialList * l, double sampleRate, double fadeTime = .001 ) 
+		AiffFile( PartialList * l, double sampleRate = 44100, double fadeTime = .001 ) 
 		{
 			return new AiffFile( l->begin(), l->end(), sampleRate, fadeTime );
 		}
@@ -864,10 +761,9 @@ public:
 	
 		//	return a copy of the sample vector 
 		//	from this AiffFile
-		SampleVector * samples( void )
+		std::vector< double > samples( void )
 		{
-			SampleVector * vec = new SampleVector( self->samples() );
-			return vec;
+			return self->samples();
 		}
 		/*	Return a SampleVector containing the AIFF samples from this AIFF 
 			file as double precision floats on the range -1,1.
@@ -890,13 +786,13 @@ public:
 		 //	add members to access Markers
 		 int numMarkers( void ) { return self->markers().size(); }
 		 
-		 Marker & getMarker( int i )
+		 Marker * getMarker( int i )
 		 {
 		 	if ( i < 0 || i >= self->markers().size() )
 		 	{
 		 		Throw( InvalidArgument, "Marker index out of range." );
 		 	}
-		 	return self->markers()[i];
+		 	return new Marker( self->markers()[i] );
 		 }
 		 
 		 void removeMarker( int i )
@@ -912,7 +808,25 @@ public:
 		 {
 		 	self->markers().push_back( m );
 		 }
+
+		 void clearMarkers( void )
+		 {
+		 	self->markers().clear();
+		 }
 	}	
+		 
+	%pythoncode 
+	%{
+		def getMarkers( self ):
+			markers = []
+			for i in range( self.numMarkers() ):
+				markers.append( self.getMarker(i) )
+			return markers
+		
+		def addMarkers( self, markers ):
+			for m in markers:
+				self.addMarker( m )
+	%}
 };
 
 // ---------------------------------------------------------------------------
@@ -968,11 +882,13 @@ public:
 		 */
 	
 		//	analysis:
-		PartialList * analyze( const SampleVector * vec, double srate )
+		PartialList * analyze( const std::vector< double > & vec, double srate )
 		{
 			PartialList * partials = new PartialList();
-			if ( ! vec->empty() )
-				self->analyze( &((*vec)[0]), &((*vec)[vec->size()]), srate );
+			if ( ! vec.empty() )
+			{
+				self->analyze( vec, srate );
+			}
 			partials->splice( partials->end(), self->partials() );
 			return partials;
 		}
@@ -980,12 +896,14 @@ public:
 			(in Hz) and return the resulting Partials in a PartialList. 												
 		 */
 		 
-		PartialList * analyze( const SampleVector * vec, double srate, 
+		PartialList * analyze( const std::vector< double > & vec, double srate, 
 							   BreakpointEnvelope * env )
 		{
 			PartialList * partials = new PartialList();
-			if ( ! vec->empty() )
-				self->analyze( *vec, srate, *env );
+			if ( ! vec.empty() )
+			{
+				self->analyze( vec, srate, *env );
+			}
 			partials->splice( partials->end(), self->partials() );
 			return partials;
 		}
@@ -1069,60 +987,6 @@ public:
 %}
 
 // ---------------------------------------------------------------------------
-//	class SampleVector
-//	
-//	A SampleVector represents a vector of floating point samples of
-//	an audio waveform. In Loris, the samples are assumed to have 
-//	values on the range (-1., 1.) (though this is not enforced or 
-//	checked). 
-//
-class SampleVector
-{
-public:
-	SampleVector( unsigned long size = 0 );	 
-	 ~SampleVector( void );
-
-	void clear( void );
-	void resize( unsigned long size );
-	unsigned long size( void );
-	 
-	%extend
-	{
-		SampleVector * copy( void )
-		{
-			return new SampleVector( *self );
-		}
-		/*	Return a new SampleVector that is a copy of this 
-			SampleVector, having the same number of samples, 
-			and samples at every position in the copy having 
-			the same value as the corresponding sample in
-			this SampleVector.
-		 */
-		 
-		double getAt( unsigned long idx )
-		{
-			if ( idx >= self->size() )
-				throw std::out_of_range("SampleVector::getAt index out of range");
-			return (*self)[idx];
-		}
-		/*	Return the value of the sample at the given position (index) in
-			this SampleVector.
-		 */
-		 
-		void setAt( unsigned long idx, double x )
-		{
-			if ( idx >= self->size() )
-				throw std::out_of_range("SampleVector::setAt index out of range");
-			(*self)[idx] = x;
-		}
-		/*	Set the value of the sample at the given position (index) in
-			this SampleVector.
-		 */
-	}
-
-};	//	end of class SampleVector
-
-// ---------------------------------------------------------------------------
 //	class SdifFile
 //
 //	Class SdifFile represents reassigned bandwidth-enhanced Partial 
@@ -1135,6 +999,7 @@ public:
 
 
 %newobject SdifFile::partials;
+%newobject SdifFile::getMarker;
 %exception SdifFile::getMarker
 {
 	try
@@ -1206,13 +1071,13 @@ public:
 		 //	add members to access Markers
 		 int numMarkers( void ) { return self->markers().size(); }
 		 
-		 Marker & getMarker( int i )
+		 Marker * getMarker( int i )
 		 {
 		 	if ( i < 0 || i >= self->markers().size() )
 		 	{
 		 		Throw( InvalidArgument, "Marker index out of range." );
 		 	}
-		 	return self->markers()[i];
+		 	return new Marker( self->markers()[i] );
 		 }
 		 
 		 void removeMarker( int i )
@@ -1228,7 +1093,26 @@ public:
 		 {
 		 	self->markers().push_back( m );
 		 }
+	
+		void clearMarkers( void )
+		 {
+		 	self->markers().clear();
+		 }
+		 
 	}	
+		 
+	%pythoncode 
+	%{
+		def getMarkers( self ):
+			markers = []
+			for i in range( self.numMarkers() ):
+				markers.append( self.getMarker(i) )
+			return markers
+		
+		def addMarkers( self, markers ):
+			for m in markers:
+				self.addMarker( m )
+	%}
 };	//	end of class SdifFile
 
 // ---------------------------------------------------------------------------
@@ -1245,6 +1129,7 @@ public:
 %}
 
 %newobject SpcFile::partials;
+%newobject SpcFile::getMarker;
 %exception SpcFile::getMarker
 {
 	try
@@ -1383,13 +1268,13 @@ public:
 		 //	add members to access Markers
 		 int numMarkers( void ) { return self->markers().size(); }
 		 
-		 Marker & getMarker( int i )
+		 Marker * getMarker( int i )
 		 {
 		 	if ( i < 0 || i >= self->markers().size() )
 		 	{
 		 		Throw( InvalidArgument, "Marker index out of range." );
 		 	}
-		 	return self->markers()[i];
+		 	return new Marker( self->markers()[i] );
 		 }
 		 
 		 void removeMarker( int i )
@@ -1405,7 +1290,25 @@ public:
 		 {
 		 	self->markers().push_back( m );
 		 }
+		 
+		 void clearMarkers( void )
+		 {
+		 	self->markers().clear();
+		 }
 	}	
+		 
+	%pythoncode 
+	%{
+		def getMarkers( self ):
+			markers = []
+			for i in range( self.numMarkers() ):
+				markers.append( self.getMarker(i) )
+			return markers
+		
+		def addMarkers( self, markers ):
+			for m in markers:
+				self.addMarker( m )
+	%}
 };	//	end of class SpcFile
 
 // ----------------------------------------------------------------

@@ -73,8 +73,9 @@ namespace Loris {
 //	Definition of an implementation class that insulates clients from
 //	the implementation and representation details of Analyzer parameters.
 //
-struct Analyzer_imp
+class Analyzer_imp
 {
+public:
 	double freqResolution;	//	in Hz, minimum instantaneous frequency distance;
 							//	this is the core parameter, others are, by default,
 							//	computed from this one

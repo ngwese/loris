@@ -30,6 +30,7 @@
  * Lippold Haken, 27 March 2001, write only 7-column 1TRC, combine reading and writing classes
  * Lippold Haken, 31 Jan 2002, write either 4-column 1TRC or 6-column RBEP
  * Lippold Haken, 20 Apr 2004, back to using CNMAT SDIF library
+ * Lippold Haken, 06 Oct 2004, write 64-bit float files, read both 32-bit and 64-bit float
  * loris@cerlsoundgroup.org
  *
  * http://www.cerlsoundgroup.org/Loris/
@@ -98,7 +99,6 @@ using namespace std;
 
 //	begin namespace
 namespace Loris {
-
 
 #pragma mark -- CNMAT SDIF definitions --
 // ---------------------------------------------------------------------------
@@ -1000,9 +1000,14 @@ void SdifFile::write1TRC( const std::string & path )
 int lorisRowMaxElements = 7;
 int lorisRowEnhancedElements = 6;
 int lorisRowSineOnlyElements = 4;
+
+typedef struct {
+    sdif_float64 index, freqOrLabel, amp, phase, noise, timeOffset, resampledFlag;
+} RowOfLorisData64;
+
 typedef struct {
     sdif_float32 index, freqOrLabel, amp, phase, noise, timeOffset, resampledFlag;
-} RowOfLorisData;
+} RowOfLorisData32;
 
 
 //  SDIF signatures used by Loris.
@@ -1040,12 +1045,55 @@ public:
 
 #pragma mark -- SDIF reading helpers --
 // ---------------------------------------------------------------------------
-//	processRow
+//	processRow64
 // ---------------------------------------------------------------------------
 //	Add to existing Loris partials, or create new Loris partials for this data.
 //
 static void
-processRow( const sdif_signature msig, const RowOfLorisData & rowData, const double frameTime, 
+processRow64( const sdif_signature msig, const RowOfLorisData64 & rowData, const double frameTime, 
+				  std::vector< Partial > & partialsVector )
+{	
+
+//
+// Skip this if the data point is not from the original data (7-column 1TRC format).
+//
+	if (rowData.resampledFlag)
+		return;
+	
+//
+// Make sure we have enough partials for this partial's index.
+//
+	if (partialsVector.size() <= rowData.index)
+	{
+		partialsVector.resize( long(rowData.index) + 500 );
+	}
+
+//
+// Create a new breakpoint and insert it.
+//	
+	if (SDIF_Char4Eq(msig, lorisEnhancedSignature) || SDIF_Char4Eq(msig, lorisSineOnlySignature)) 
+	{
+		Breakpoint newbp( rowData.freqOrLabel, rowData.amp, rowData.noise, rowData.phase );
+		partialsVector[long(rowData.index)].insert( frameTime + rowData.timeOffset, newbp );
+	}
+//
+// Set partial label.
+//
+	else if (SDIF_Char4Eq(msig, lorisLabelsSignature)) 
+	{
+		partialsVector[long(rowData.index)].setLabel( (int) rowData.freqOrLabel );
+	}
+		
+}
+
+// ---------------------------------------------------------------------------
+//	processRow32
+// ---------------------------------------------------------------------------
+//	Add to existing Loris partials, or create new Loris partials for this data.
+//  This is for reading 32-bit float files.
+//
+static void
+processRow32( const sdif_signature msig, const RowOfLorisData32 & rowData, const double frameTime, 
 				  std::vector< Partial > & partialsVector )
 {	
 
@@ -1112,7 +1160,7 @@ readMarkers( FILE * file, SDIF_FrameHeader fh, SdifFile::markers_type & markersV
 		ThrowIfSdifError( ret, "Error reading SDIF file" );
 		
 		// Error if matrix has unexpected data type.
-		if (mh.matrixDataType != SDIF_FLOAT32 || mh.columnCount != cols) 
+		if ((mh.matrixDataType != SDIF_FLOAT32 && mh.matrixDataType != SDIF_FLOAT64) || mh.columnCount != cols) 
 		{
 			Throw( FileIOException, "Markers frame has bad format." );
 		}
@@ -1120,13 +1168,22 @@ readMarkers( FILE * file, SDIF_FrameHeader fh, SdifFile::markers_type & markersV
 		// Read each row of matrix data.
 		for (int row = 0; row < mh.rowCount; row++)
 		{
-			sdif_float32 markerTime;
-			SDIF_Read4(&markerTime,1,file);
-			markersVector.push_back(Marker(markerTime, ""));
+			if (mh.matrixDataType == SDIF_FLOAT64)
+			{
+				sdif_float32 markerTime64;
+				SDIF_Read8(&markerTime64,1,file);
+				markersVector.push_back(Marker(markerTime64, ""));
+			}
+			else
+			{
+				sdif_float32 markerTime32;
+				SDIF_Read4(&markerTime32,1,file);
+				markersVector.push_back(Marker(markerTime32, ""));
+			}
 		}
 		
 		// Skip over padding, if any.
-		if ((mh.rowCount * mh.columnCount) & 0x1) 
+		if ((mh.matrixDataType == SDIF_FLOAT32) && ((mh.rowCount * mh.columnCount) & 0x1)) 
 		{
 		    sdif_float32 pad;
 		    SDIF_Read4(&pad,1,file);
@@ -1229,7 +1286,8 @@ readLorisMatrices( FILE *file, std::vector< Partial > & partialsVector, SdifFile
 			ThrowIfSdifError( ret, "Error reading SDIF file" );
 			
 			// Skip matrix if it has unexpected data type.
-			if (mh.matrixDataType != SDIF_FLOAT32 || mh.columnCount > lorisRowMaxElements) 
+			if ((mh.matrixDataType != SDIF_FLOAT32 && mh.matrixDataType != SDIF_FLOAT64) 
+							|| mh.columnCount > lorisRowMaxElements) 
 			{
 				ret = SDIF_SkipMatrix(&mh, file);	
 				ThrowIfSdifError( ret, "Error reading SDIF file" );
@@ -1240,21 +1298,38 @@ readLorisMatrices( FILE *file, std::vector< Partial > & partialsVector, SdifFile
 			for (int row = 0; row < mh.rowCount; row++)
 			{
 			
-				// Fill a rowData structure with one row from the matrix.
-				RowOfLorisData rowData = { 0.0 };
-				sdif_float32 *rowDataPtr = &rowData.index;
-				for (int col = 1; col <= mh.columnCount; col++)
+				if (mh.matrixDataType == SDIF_FLOAT64)
 				{
-					SDIF_Read4(rowDataPtr++,1,file);
+					// Fill a rowData structure with one row from the matrix.
+					RowOfLorisData64 rowData64 = { 0.0 };
+					sdif_float64 *rowDataPtr = &rowData64.index;
+					for (int col = 1; col <= mh.columnCount; col++)
+					{
+						SDIF_Read8(rowDataPtr++,1,file);
+					}
+					
+					// Add rowData as a new breakpoint in a partial, or,
+					// if its a RBEL matrix, read label mapping.
+					processRow64(mh.matrixType, rowData64, fh.time, partialsVector);
 				}
-				
-				// Add rowData as a new breakpoint in a partial, or,
-				// if its a RBEL matrix, read label mapping.
-				processRow(mh.matrixType, rowData, fh.time, partialsVector);
+				else
+				{
+					// Fill a rowData structure with one row from the matrix.
+					RowOfLorisData32 rowData32 = { 0.0 };
+					sdif_float32 *rowDataPtr = &rowData32.index;
+					for (int col = 1; col <= mh.columnCount; col++)
+					{
+						SDIF_Read4(rowDataPtr++,1,file);
+					}
+					
+					// Add rowData as a new breakpoint in a partial, or,
+					// if its a RBEL matrix, read label mapping.
+					processRow32(mh.matrixType, rowData32, fh.time, partialsVector);
+				}
 			}
 			
 			// Skip over padding, if any.
-			if ((mh.rowCount * mh.columnCount) & 0x1) 
+			if ((mh.matrixDataType == SDIF_FLOAT32) && ((mh.rowCount * mh.columnCount) & 0x1)) 
 			{
 			    sdif_float32 pad;
 			    SDIF_Read4(&pad,1,file);
@@ -1540,7 +1615,8 @@ indexPartials( const PartialList & partials, ConstPartialPtrs & partialsVector )
 	{
 		if ( it->size() != 0 )
 		{
-			partialsVector.push_back( &(*it) );	
+			partialsVector.push_back( (Partial *)&(*it) );	//@@@ Kluge Here  (Partial *)
+	//		partialsVector.push_back( &(*it) );	
 		}
 	}
 }
@@ -1640,12 +1716,12 @@ writeEnvelopeLabels( FILE * out, const ConstPartialPtrs & partialsVector )
 // Allocate RBEL matrix data.
 //
 	int cols = 2;
-	sdif_float32 *data = new sdif_float32[ partialsVector.size() * cols ];
+	sdif_float64 *data = new sdif_float64[ partialsVector.size() * cols ];
 
 //
 // For each partial index, specify the partial label.
 //
-	sdif_float32 *dp = data;
+	sdif_float64 *dp = data;
 	int anyLabel = false;
 	for (int i = 0; i < partialsVector.size(); i++) 
 	{
@@ -1678,7 +1754,7 @@ writeEnvelopeLabels( FILE * out, const ConstPartialPtrs & partialsVector )
 		// Write the matrix header.
 		SDIF_MatrixHeader mh;
 		SDIF_Copy4Bytes(mh.matrixType, lorisLabelsSignature);
-		mh.matrixDataType = SDIF_FLOAT32;
+		mh.matrixDataType = SDIF_FLOAT64;
 		mh.rowCount = partialsVector.size();
 		mh.columnCount = cols;
 		ret = SDIF_WriteMatrixHeader(&mh, out);
@@ -1720,7 +1796,7 @@ writeMarkers( FILE * out, const SdifFile::markers_type &markers )
 //
 // We will need two matrices: one numeric (marker times) matrix data and character (marker names) matrix.
 //
-	std::vector<sdif_float32> markerTimes;
+	std::vector<sdif_float64> markerTimes;
 	std::string markerNames;
 
 //
@@ -1760,7 +1836,7 @@ writeMarkers( FILE * out, const SdifFile::markers_type &markers )
 		// Write the numeric (time) matrix header.
 		SDIF_MatrixHeader mh;
 		SDIF_Copy4Bytes( mh.matrixType, lorisMarkersSignature );
-		mh.matrixDataType = SDIF_FLOAT32;
+		mh.matrixDataType = SDIF_FLOAT64;
 		mh.rowCount = markerTimes.size();
 		mh.columnCount = cols;
 		SDIFresult ret = SDIF_WriteMatrixHeader( &mh, out );
@@ -1792,13 +1868,13 @@ writeMarkers( FILE * out, const SdifFile::markers_type &markers )
 //	Assemble SDIF matrix data for these partials.
 //
 static void
-assembleMatrixData( sdif_float32 *data, const bool enhanced,
+assembleMatrixData( sdif_float64 *data, const bool enhanced,
 					const ConstPartialPtrs & partialsVector, 
 					const std::vector< int > & activeIndices, 
 					const double frameTime )
 {	
 	// The array matrix data is row-major order at "data".
-	sdif_float32 *rowDataPtr = data;
+	sdif_float64 *rowDataPtr = data;
 	
 	for ( int i = 0; i < activeIndices.size(); i++ ) 
 	{
@@ -1913,12 +1989,12 @@ writeEnvelopeData( FILE * out,
 			//	columns than any previous frame. Construct the vector once,
 			//	resize it for each frame, and clear it when done (doesn't 
 			//	deallocate memory).
-			// sdif_float32 *data = new sdif_float32[numTracks * cols];
-			static std::vector< sdif_float32 > dataVector;
+			// sdif_float64 *data = new sdif_float64[numTracks * cols];
+			static std::vector< sdif_float64 > dataVector;
 			dataVector.resize( numTracks * cols );
 
 			// Fill in matrix data.
-			sdif_float32 *data = &dataVector[ 0 ];
+			sdif_float64 *data = &dataVector[ 0 ];
 			assembleMatrixData( data, enhanced, partialsVector, activeIndices, frameTime );
 					
 			// Write the frame header.
@@ -1939,7 +2015,7 @@ writeEnvelopeData( FILE * out,
 			// Write the matrix header.
 			SDIF_MatrixHeader mh;
 			SDIF_Copy4Bytes( mh.matrixType, enhanced ? lorisEnhancedSignature : lorisSineOnlySignature );
-			mh.matrixDataType = SDIF_FLOAT32;
+			mh.matrixDataType = SDIF_FLOAT64;
 			mh.rowCount = numTracks;
 			mh.columnCount = cols;
 			ret = SDIF_WriteMatrixHeader( &mh, out );

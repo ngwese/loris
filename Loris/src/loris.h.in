@@ -409,7 +409,7 @@ BreakpointEnvelope * createFreqReference( PartialList * partials,
  */
  
 void dilate( PartialList * partials, 
-			 double * initial, double * target, int npts );
+			 const double * initial, const double * target, int npts );
 /*	Dilate Partials in a PartialList according to the given 
 	initial and target time points. Partial envelopes are 
 	stretched and compressed so that temporal features at

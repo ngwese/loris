@@ -707,18 +707,17 @@ SWIG_Python_InstallConstants(PyObject *d, swig_const_info constants[]) {
 #define  SWIGTYPE_p_double swig_types[4] 
 #define  SWIGTYPE_p_Partial swig_types[5] 
 #define  SWIGTYPE_p_Loris__Partial swig_types[6] 
-#define  SWIGTYPE_p_vectorTdouble_t swig_types[7] 
+#define  SWIGTYPE_p_std__vectorTdouble_t swig_types[7] 
 #define  SWIGTYPE_p_BreakpointEnvelope swig_types[8] 
 #define  SWIGTYPE_p_BreakpointPosition swig_types[9] 
 #define  SWIGTYPE_p_AiffFile swig_types[10] 
-#define  SWIGTYPE_p_SampleVector swig_types[11] 
-#define  SWIGTYPE_p_SdifFile swig_types[12] 
-#define  SWIGTYPE_p_NewPartialIterator swig_types[13] 
-#define  SWIGTYPE_p_NewPlistIterator swig_types[14] 
-#define  SWIGTYPE_p_Marker swig_types[15] 
-#define  SWIGTYPE_p_PartialListIterator swig_types[16] 
-#define  SWIGTYPE_p_PartialIterator swig_types[17] 
-static swig_type_info *swig_types[19];
+#define  SWIGTYPE_p_SdifFile swig_types[11] 
+#define  SWIGTYPE_p_NewPartialIterator swig_types[12] 
+#define  SWIGTYPE_p_NewPlistIterator swig_types[13] 
+#define  SWIGTYPE_p_Marker swig_types[14] 
+#define  SWIGTYPE_p_PartialListIterator swig_types[15] 
+#define  SWIGTYPE_p_PartialIterator swig_types[16] 
+static swig_type_info *swig_types[18];
 
 /* -------- TYPES TABLE (END) -------- */
 
@@ -756,6 +755,8 @@ char *check_exception() {
 //	SWIG does not seem to like to wrap functions
 //	with qualified names (like Loris::channelize),
 //	they simply get ignored.
+//
+// (This has probably been fixed by now.)
 using namespace Loris;
 
 //	notification function for Loris debugging
@@ -766,75 +767,26 @@ static void printf_notifier( const char * s )
 	printf("*\t%s\n", s);
 }	
 
-//	exception handling for the procedural interface
-//	(the pi catches all exceptions and handles them
-//	by passing their string descriptions to this 
-//	function):
-/*static char EXCEPTION_THROWN[256];
-static void exception_handler( const char * s )
-{
-	snprintf(EXCEPTION_THROWN, 255, "%s", s);
-}*/
 
 
-#include <vector>
 #include <string>
-using std::vector;
-using std::string;
 
-// helper function for converting a string to a
-// vector of doubles (this will work anywhere)
-static bool fill_vector( const string & s, vector<double> & v )
-{
-	std::string::size_type beg, end;
-	const std::string numparts("1234567890+-.");
-	beg = s.find_first_of( numparts );
-	while ( beg != std::string::npos )
-	{
-		end = s.find_first_not_of( numparts, beg );
-		if ( end == std::string::npos )
-			end = s.length();
-
-		double x = atof( s.c_str() + beg );
-		v.push_back(x);
-
-		beg = s.find_first_of( numparts, end );
-	}
-	return true;
+PyObject* SwigInt_FromBool(bool b) {
+    return PyInt_FromLong(b ? 1L : 0L);
 }
-
-
-
-// helper function for converting a Python sequence
-// to a vector of doubles
-static bool fill_vector( PyObject * input, vector<double> & v )
-{
-	// verify that it is a sequence:
-	if ( !PySequence_Check(input) )
-	{
-		PyErr_SetString(PyExc_TypeError,"not a sequence");
-		return false;
-	}
-	// loop over elements of sequence, adding to vector
-	int size = PySequence_Length(input);
-	for ( int i = 0; i < size; ++i ) 
-	{
-		PyObject *o = PySequence_GetItem(input,i);
-		if (PyNumber_Check(o)) 
-		{
-			v.push_back( PyFloat_AsDouble(o) );
-			Py_DECREF(o);
-		}
-		else 
-		{
-			PyErr_SetString(PyExc_TypeError,"sequence must contain numbers");
-			Py_DECREF(o);
-			return false;
-		}
-	}	
-	
-	// return successfully
-	return true;
+double SwigNumber_Check(PyObject* o) {
+    return PyFloat_Check(o) || PyInt_Check(o) || PyLong_Check(o);
+}
+double SwigNumber_AsDouble(PyObject* o) {
+    return PyFloat_Check(o) ? PyFloat_AsDouble(o) 
+        : (PyInt_Check(o) ?   double(PyInt_AsLong(o))
+                            : double(PyLong_AsLong(o)));
+}
+PyObject* SwigString_FromString(const std::string& s) {
+    return PyString_FromStringAndSize(s.data(),s.size());
+}
+std::string SwigString_AsString(PyObject* o) {
+    return std::string(PyString_AsString(o));
 }
 
 
@@ -892,25 +844,105 @@ static void SWIG_exception_(int code, const char *msg) {
 #define SWIG_exception(a,b) { SWIG_exception_(a,b); SWIG_fail; }
 
 
+#include <vector>
+#include <algorithm>
+#include <stdexcept>
+
+double std_vectorldouble_g_pop___(std::vector<double > *self){
+                if (self->size() == 0)
+                    throw std::out_of_range("pop from empty vector");
+                double x = self->back();
+                self->pop_back();
+                return x;
+            }
+double std_vectorldouble_g___getitem_____(std::vector<double > *self,int i){
+                int size = int(self->size());
+                if (i<0) i += size;
+                if (i>=0 && i<size)
+                    return (*self)[i];
+                else
+                    throw std::out_of_range("vector index out of range");
+            }
+std::vector<double > std_vectorldouble_g___getslice_____(std::vector<double > *self,int i,int j){
+                int size = int(self->size());
+                if (i<0) i = size+i;
+                if (j<0) j = size+j;
+                if (i<0) i = 0;
+                if (j>size) j = size;
+                std::vector<double > tmp(j-i);
+                std::copy(self->begin()+i,self->begin()+j,tmp.begin());
+                return tmp;
+            }
+void std_vectorldouble_g___setitem_____(std::vector<double > *self,int i,double x){
+                int size = int(self->size());
+                if (i<0) i+= size;
+                if (i>=0 && i<size)
+                    (*self)[i] = x;
+                else
+                    throw std::out_of_range("vector index out of range");
+            }
+void std_vectorldouble_g___setslice_____(std::vector<double > *self,int i,int j,std::vector<double > const &v){
+                int size = int(self->size());
+                if (i<0) i = size+i;
+                if (j<0) j = size+j;
+                if (i<0) i = 0;
+                if (j>size) j = size;
+                if (int(v.size()) == j-i) {
+                    std::copy(v.begin(),v.end(),self->begin()+i);
+                } else {
+                    self->erase(self->begin()+i,self->begin()+j);
+                    if (i+1 <= int(self->size()))
+                        self->insert(self->begin()+i,v.begin(),v.end());
+                    else
+                        self->insert(self->end(),v.begin(),v.end());
+                }
+            }
+void std_vectorldouble_g___delitem_____(std::vector<double > *self,int i){
+                int size = int(self->size());
+                if (i<0) i+= size;
+                if (i>=0 && i<size)
+                    self->erase(self->begin()+i);
+                else
+                    throw std::out_of_range("vector index out of range");
+            }
+void std_vectorldouble_g___delslice_____(std::vector<double > *self,int i,int j){
+                int size = int(self->size());
+                if (i<0) i = size+i;
+                if (j<0) j = size+j;
+                if (i<0) i = 0;
+                if (j>size) j = size;
+                self->erase(self->begin()+i,self->begin()+j);
+            }
+
 #include <Exception.h>
 #include <Notifier.h>
 #include <vector>
 
-void dilate_v( PartialList * partials, vector<double> & ivec, vector<double> & tvec )
-{
-	Loris::debugger << ivec.size() << " initial points, " 
-					<< tvec.size() << " target points" << Loris::endl;
-					
-	if ( ivec.size() != tvec.size() )
+	void dilate_v( PartialList * partials, 
+		   		   const std::vector<double> & ivec, 
+				   const std::vector<double> & tvec )
 	{
-		Throw( InvalidArgument, "Invalid arguments to dilate(): there must be as many target points as initial points" );
+		Loris::debugger << ivec.size() << " initial points, " 
+						<< tvec.size() << " target points" << Loris::endl;
+						
+		if ( ivec.size() != tvec.size() )
+		{
+			Throw( InvalidArgument, "Invalid arguments to dilate(): there must be as many target points as initial points" );
+		}
+		
+		const double * initial = &(ivec[0]);
+		const double * target = &(tvec[0]);
+		int npts = ivec.size();
+		dilate( partials, initial, target, npts );
 	}
-	
-	double * initial = &(ivec[0]);
-	double * target = &(tvec[0]);
-	int npts = ivec.size();
-	dilate( partials, initial, target, npts );
-}
+
+
+	void exportAiff( const char * path, const std::vector< double > & samples,
+					 double samplerate = 44100.0, int nchannels = 1, 
+					 int bitsPerSamp = 16 )
+	{
+		exportAiff( path, &samples, samplerate, nchannels, bitsPerSamp );
+	}
 
 
 	PartialList * importSdif( const char * path )
@@ -982,17 +1014,10 @@ void dilate_v( PartialList * partials, vector<double> & ivec, vector<double> & t
 	}
 
 
-	SampleVector * synthesize( const PartialList * partials, double srate = 44100.0 )
+	std::vector<double> synthesize( const PartialList * partials, double srate = 44100.0 )
 	{
-		SampleVector * dst = createSampleVector(0);
-		synthesize( partials, dst, srate );
-				
-		// check for exception:
-		if ( check_exception() )
-		{
-			destroySampleVector( dst );
-			dst = NULL;
-		}
+		std::vector<double> dst;
+		synthesize( partials, &dst, srate );
 		return dst;
 	}
 
@@ -1082,21 +1107,20 @@ char const *Marker_name(Marker *self){ return self->name().c_str(); }
 AiffFile *new_AiffFile__SWIG_2(PartialList *l,double sampleRate,double fadeTime){
 			return new AiffFile( l->begin(), l->end(), sampleRate, fadeTime );
 		}
-SampleVector *AiffFile_samples(AiffFile *self){
-			SampleVector * vec = new SampleVector( self->samples() );
-			return vec;
+std::vector<double > AiffFile_samples(AiffFile *self){
+			return self->samples();
 		}
 int AiffFile_channels(AiffFile *self){ return 1; }
 void AiffFile_addPartials(AiffFile *self,PartialList *l,double fadeTime){
 			self->addPartials( l->begin(), l->end(), fadeTime );
 		}
 int AiffFile_numMarkers(AiffFile *self){ return self->markers().size(); }
-Marker &AiffFile_getMarker(AiffFile *self,int i){
+Marker *AiffFile_getMarker(AiffFile *self,int i){
 		 	if ( i < 0 || i >= self->markers().size() )
 		 	{
 		 		Throw( InvalidArgument, "Marker index out of range." );
 		 	}
-		 	return self->markers()[i];
+		 	return new Marker( self->markers()[i] );
 		 }
 void AiffFile_removeMarker(AiffFile *self,int i){
 		 	if ( i < 0 || i >= self->markers().size() )
@@ -1107,6 +1131,9 @@ void AiffFile_removeMarker(AiffFile *self,int i){
 		 }
 void AiffFile_addMarker(AiffFile *self,Marker m){
 		 	self->markers().push_back( m );
+		 }
+void AiffFile_clearMarkers(AiffFile *self){
+		 	self->markers().clear();
 		 }
 
 	#include<Analyzer.h>
@@ -1120,17 +1147,21 @@ Analyzer *new_Analyzer(double resolutionHz,double windowWidthHz){
 Analyzer *Analyzer_copy(Analyzer *self){
 			return new Analyzer( *self );
 		}
-PartialList *Analyzer_analyze__SWIG_0(Analyzer *self,SampleVector const *vec,double srate){
+PartialList *Analyzer_analyze__SWIG_0(Analyzer *self,std::vector<double > const &vec,double srate){
 			PartialList * partials = new PartialList();
-			if ( ! vec->empty() )
-				self->analyze( &((*vec)[0]), &((*vec)[vec->size()]), srate );
+			if ( ! vec.empty() )
+			{
+				self->analyze( vec, srate );
+			}
 			partials->splice( partials->end(), self->partials() );
 			return partials;
 		}
-PartialList *Analyzer_analyze__SWIG_1(Analyzer *self,SampleVector const *vec,double srate,BreakpointEnvelope *env){
+PartialList *Analyzer_analyze__SWIG_1(Analyzer *self,std::vector<double > const &vec,double srate,BreakpointEnvelope *env){
 			PartialList * partials = new PartialList();
-			if ( ! vec->empty() )
-				self->analyze( *vec, srate, *env );
+			if ( ! vec.empty() )
+			{
+				self->analyze( vec, srate, *env );
+			}
 			partials->splice( partials->end(), self->partials() );
 			return partials;
 		}
@@ -1147,19 +1178,6 @@ BreakpointEnvelope *BreakpointEnvelope_copy(BreakpointEnvelope *self){
 		return new BreakpointEnvelope( initialValue );
 	}
 
-SampleVector *SampleVector_copy(SampleVector *self){
-			return new SampleVector( *self );
-		}
-double SampleVector_getAt(SampleVector *self,unsigned long idx){
-			if ( idx >= self->size() )
-				throw std::out_of_range("SampleVector::getAt index out of range");
-			return (*self)[idx];
-		}
-void SampleVector_setAt(SampleVector *self,unsigned long idx,double x){
-			if ( idx >= self->size() )
-				throw std::out_of_range("SampleVector::setAt index out of range");
-			(*self)[idx] = x;
-		}
 
 	#include<SdifFile.h>
 
@@ -1174,12 +1192,12 @@ void SdifFile_addPartials(SdifFile *self,PartialList *l){
 			self->addPartials( l->begin(), l->end() );
 		}
 int SdifFile_numMarkers(SdifFile *self){ return self->markers().size(); }
-Marker &SdifFile_getMarker(SdifFile *self,int i){
+Marker *SdifFile_getMarker(SdifFile *self,int i){
 		 	if ( i < 0 || i >= self->markers().size() )
 		 	{
 		 		Throw( InvalidArgument, "Marker index out of range." );
 		 	}
-		 	return self->markers()[i];
+		 	return new Marker( self->markers()[i] );
 		 }
 void SdifFile_removeMarker(SdifFile *self,int i){
 		 	if ( i < 0 || i >= self->markers().size() )
@@ -1190,6 +1208,9 @@ void SdifFile_removeMarker(SdifFile *self,int i){
 		 }
 void SdifFile_addMarker(SdifFile *self,Marker m){
 		 	self->markers().push_back( m );
+		 }
+void SdifFile_clearMarkers(SdifFile *self){
+		 	self->markers().clear();
 		 }
 
 	#include<SpcFile.h>
@@ -1205,12 +1226,12 @@ void SpcFile_addPartials(SpcFile *self,PartialList *l){
 			self->addPartials( l->begin(), l->end() );
 		}
 int SpcFile_numMarkers(SpcFile *self){ return self->markers().size(); }
-Marker &SpcFile_getMarker(SpcFile *self,int i){
+Marker *SpcFile_getMarker(SpcFile *self,int i){
 		 	if ( i < 0 || i >= self->markers().size() )
 		 	{
 		 		Throw( InvalidArgument, "Marker index out of range." );
 		 	}
-		 	return self->markers()[i];
+		 	return new Marker( self->markers()[i] );
 		 }
 void SpcFile_removeMarker(SpcFile *self,int i){
 		 	if ( i < 0 || i >= self->markers().size() )
@@ -1221,6 +1242,9 @@ void SpcFile_removeMarker(SpcFile *self,int i){
 		 }
 void SpcFile_addMarker(SpcFile *self,Marker m){
 		 	self->markers().push_back( m );
+		 }
+void SpcFile_clearMarkers(SpcFile *self){
+		 	self->markers().clear();
 		 }
 
 #include<Partial.h>
@@ -1511,6 +1535,505 @@ int PartialListIterator_isInRange(PartialListIterator *self,PartialListIterator 
 #ifdef __cplusplus
 extern "C" {
 #endif
+static PyObject *_wrap_new_DoubleVector__SWIG_0(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    unsigned int arg1 = (unsigned int) 0 ;
+    std::vector<double > *result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"|O:new_DoubleVector",&obj0)) goto fail;
+    if (obj0) {
+        arg1 = (unsigned int) PyInt_AsLong(obj0);
+        if (PyErr_Occurred()) SWIG_fail;
+    }
+    result = (std::vector<double > *)new std::vector<double >(arg1);
+    
+    resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_std__vectorTdouble_t, 1);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_new_DoubleVector__SWIG_1(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    unsigned int arg1 ;
+    double *arg2 = 0 ;
+    std::vector<double > *result;
+    double temp2 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:new_DoubleVector",&obj0,&obj1)) goto fail;
+    arg1 = (unsigned int) PyInt_AsLong(obj0);
+    if (PyErr_Occurred()) SWIG_fail;
+    temp2 = (double) PyFloat_AsDouble(obj1);
+    if (PyErr_Occurred()) SWIG_fail;
+    arg2 = &temp2;
+    result = (std::vector<double > *)new std::vector<double >(arg1,(double const &)*arg2);
+    
+    resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_std__vectorTdouble_t, 1);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_new_DoubleVector__SWIG_2(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    std::vector<double > *arg1 = 0 ;
+    std::vector<double > *result;
+    std::vector<double > temp1 ;
+    std::vector<double > *v1 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:new_DoubleVector",&obj0)) goto fail;
+    {
+        if (PyTuple_Check(obj0) || PyList_Check(obj0)) {
+            unsigned int size = (PyTuple_Check(obj0) ?
+            PyTuple_Size(obj0) :
+            PyList_Size(obj0));
+            temp1 = std::vector<double >(size);
+            arg1 = &temp1;
+            for (unsigned int i=0; i<size; i++) {
+                PyObject* o = PySequence_GetItem(obj0,i);
+                if (SwigNumber_Check(o)) {
+                    temp1[i] = (double)(\
+                    SwigNumber_AsDouble(o));
+                    Py_DECREF(o);
+                } else {
+                    Py_DECREF(o);
+                    PyErr_SetString(PyExc_TypeError,
+                    "vector<""double" "> expected");
+                    SWIG_fail;
+                }
+            }
+        } else if (SWIG_ConvertPtr(obj0,(void **) &v1, 
+        SWIGTYPE_p_std__vectorTdouble_t,1) != -1){
+            arg1 = v1;
+        } else {
+            PyErr_SetString(PyExc_TypeError,"vector<""double" "> expected");
+            SWIG_fail;
+        }
+    }
+    result = (std::vector<double > *)new std::vector<double >((std::vector<double > const &)*arg1);
+    
+    resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_std__vectorTdouble_t, 1);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_new_DoubleVector(PyObject *self, PyObject *args) {
+    int argc;
+    PyObject *argv[3];
+    int ii;
+    
+    argc = PyObject_Length(args);
+    for (ii = 0; (ii < argc) && (ii < 2); ii++) {
+        argv[ii] = PyTuple_GetItem(args,ii);
+    }
+    if ((argc >= 0) && (argc <= 1)) {
+        int _v;
+        if (argc <= 0) {
+            return _wrap_new_DoubleVector__SWIG_0(self,args);
+        }
+        {
+            _v = (PyInt_Check(argv[0]) || PyLong_Check(argv[0])) ? 1 : 0;
+        }
+        if (_v) {
+            return _wrap_new_DoubleVector__SWIG_0(self,args);
+        }
+    }
+    if (argc == 1) {
+        int _v;
+        {
+            /* native sequence? */
+            if (PyTuple_Check(argv[0]) || PyList_Check(argv[0])) {
+                unsigned int size = (PyTuple_Check(argv[0]) ?
+                PyTuple_Size(argv[0]) :
+                PyList_Size(argv[0]));
+                if (size == 0) {
+                    /* an empty sequence can be of any type */
+                    _v = 1;
+                } else {
+                    /* check the first element only */
+                    PyObject* o = PySequence_GetItem(argv[0],0);
+                    if (SwigNumber_Check(o))
+                    _v = 1;
+                    else
+                    _v = 0;
+                    Py_DECREF(o);
+                }
+            } else {
+                /* wrapped vector? */
+                std::vector<double >* v;
+                if (SWIG_ConvertPtr(argv[0],(void **) &v, 
+                SWIGTYPE_p_std__vectorTdouble_t,0) != -1)
+                _v = 1;
+                else
+                _v = 0;
+            }
+        }
+        if (_v) {
+            return _wrap_new_DoubleVector__SWIG_2(self,args);
+        }
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            _v = (PyInt_Check(argv[0]) || PyLong_Check(argv[0])) ? 1 : 0;
+        }
+        if (_v) {
+            {
+                _v = (PyFloat_Check(argv[1]) || PyInt_Check(argv[1]) || PyLong_Check(argv[1])) ? 1 : 0;
+            }
+            if (_v) {
+                return _wrap_new_DoubleVector__SWIG_1(self,args);
+            }
+        }
+    }
+    
+    PyErr_SetString(PyExc_TypeError,"No matching function for overloaded 'new_DoubleVector'");
+    return NULL;
+}
+
+
+static PyObject *_wrap_DoubleVector___len__(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    std::vector<double > *arg1 = (std::vector<double > *) 0 ;
+    unsigned int result;
+    std::vector<double > temp1 ;
+    std::vector<double > *v1 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:DoubleVector___len__",&obj0)) goto fail;
+    {
+        if (PyTuple_Check(obj0) || PyList_Check(obj0)) {
+            unsigned int size = (PyTuple_Check(obj0) ?
+            PyTuple_Size(obj0) :
+            PyList_Size(obj0));
+            temp1 = std::vector<double >(size);
+            arg1 = &temp1;
+            for (unsigned int i=0; i<size; i++) {
+                PyObject* o = PySequence_GetItem(obj0,i);
+                if (SwigNumber_Check(o)) {
+                    temp1[i] = (double)(\
+                    SwigNumber_AsDouble(o));
+                    Py_DECREF(o);
+                } else {
+                    Py_DECREF(o);
+                    PyErr_SetString(PyExc_TypeError,
+                    "vector<""double" "> expected");
+                    SWIG_fail;
+                }
+            }
+        } else if (SWIG_ConvertPtr(obj0,(void **) &v1, 
+        SWIGTYPE_p_std__vectorTdouble_t,1) != -1){
+            arg1 = v1;
+        } else {
+            PyErr_SetString(PyExc_TypeError,"vector<""double" "> expected");
+            SWIG_fail;
+        }
+    }
+    result = (unsigned int)((std::vector<double > const *)arg1)->size();
+    
+    resultobj = PyInt_FromLong((long)result);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_DoubleVector___nonzero__(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    std::vector<double > *arg1 = (std::vector<double > *) 0 ;
+    bool result;
+    std::vector<double > temp1 ;
+    std::vector<double > *v1 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:DoubleVector___nonzero__",&obj0)) goto fail;
+    {
+        if (PyTuple_Check(obj0) || PyList_Check(obj0)) {
+            unsigned int size = (PyTuple_Check(obj0) ?
+            PyTuple_Size(obj0) :
+            PyList_Size(obj0));
+            temp1 = std::vector<double >(size);
+            arg1 = &temp1;
+            for (unsigned int i=0; i<size; i++) {
+                PyObject* o = PySequence_GetItem(obj0,i);
+                if (SwigNumber_Check(o)) {
+                    temp1[i] = (double)(\
+                    SwigNumber_AsDouble(o));
+                    Py_DECREF(o);
+                } else {
+                    Py_DECREF(o);
+                    PyErr_SetString(PyExc_TypeError,
+                    "vector<""double" "> expected");
+                    SWIG_fail;
+                }
+            }
+        } else if (SWIG_ConvertPtr(obj0,(void **) &v1, 
+        SWIGTYPE_p_std__vectorTdouble_t,1) != -1){
+            arg1 = v1;
+        } else {
+            PyErr_SetString(PyExc_TypeError,"vector<""double" "> expected");
+            SWIG_fail;
+        }
+    }
+    result = (bool)((std::vector<double > const *)arg1)->empty();
+    
+    resultobj = PyInt_FromLong((long)result);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_DoubleVector_clear(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    std::vector<double > *arg1 = (std::vector<double > *) 0 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:DoubleVector_clear",&obj0)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_std__vectorTdouble_t,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    (arg1)->clear();
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_DoubleVector_append(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    std::vector<double > *arg1 = (std::vector<double > *) 0 ;
+    double arg2 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"Od:DoubleVector_append",&obj0,&arg2)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_std__vectorTdouble_t,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    (arg1)->push_back(arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_DoubleVector_pop(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    std::vector<double > *arg1 = (std::vector<double > *) 0 ;
+    double result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:DoubleVector_pop",&obj0)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_std__vectorTdouble_t,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        try {
+            result = (double)std_vectorldouble_g_pop___(arg1);
+            
+        } catch (std::out_of_range& e) {
+            SWIG_exception(SWIG_IndexError,const_cast<char*>(e.what()));
+        }
+    }
+    resultobj = PyFloat_FromDouble(result);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_DoubleVector___getitem__(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    std::vector<double > *arg1 = (std::vector<double > *) 0 ;
+    int arg2 ;
+    double result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"Oi:DoubleVector___getitem__",&obj0,&arg2)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_std__vectorTdouble_t,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        try {
+            result = (double)std_vectorldouble_g___getitem_____(arg1,arg2);
+            
+        } catch (std::out_of_range& e) {
+            SWIG_exception(SWIG_IndexError,const_cast<char*>(e.what()));
+        }
+    }
+    resultobj = PyFloat_FromDouble(result);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_DoubleVector___getslice__(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    std::vector<double > *arg1 = (std::vector<double > *) 0 ;
+    int arg2 ;
+    int arg3 ;
+    std::vector<double > result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"Oii:DoubleVector___getslice__",&obj0,&arg2,&arg3)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_std__vectorTdouble_t,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    result = std_vectorldouble_g___getslice_____(arg1,arg2,arg3);
+    
+    {
+        resultobj = PyTuple_New((&result)->size());
+        for (unsigned int i=0; i<(&result)->size(); i++)
+        PyTuple_SetItem(resultobj,i,
+        PyFloat_FromDouble(((std::vector<double > &)result)[i]));
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_DoubleVector___setitem__(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    std::vector<double > *arg1 = (std::vector<double > *) 0 ;
+    int arg2 ;
+    double arg3 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"Oid:DoubleVector___setitem__",&obj0,&arg2,&arg3)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_std__vectorTdouble_t,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        try {
+            std_vectorldouble_g___setitem_____(arg1,arg2,arg3);
+            
+        } catch (std::out_of_range& e) {
+            SWIG_exception(SWIG_IndexError,const_cast<char*>(e.what()));
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_DoubleVector___setslice__(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    std::vector<double > *arg1 = (std::vector<double > *) 0 ;
+    int arg2 ;
+    int arg3 ;
+    std::vector<double > *arg4 = 0 ;
+    std::vector<double > temp4 ;
+    std::vector<double > *v4 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj3 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OiiO:DoubleVector___setslice__",&obj0,&arg2,&arg3,&obj3)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_std__vectorTdouble_t,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        if (PyTuple_Check(obj3) || PyList_Check(obj3)) {
+            unsigned int size = (PyTuple_Check(obj3) ?
+            PyTuple_Size(obj3) :
+            PyList_Size(obj3));
+            temp4 = std::vector<double >(size);
+            arg4 = &temp4;
+            for (unsigned int i=0; i<size; i++) {
+                PyObject* o = PySequence_GetItem(obj3,i);
+                if (SwigNumber_Check(o)) {
+                    temp4[i] = (double)(\
+                    SwigNumber_AsDouble(o));
+                    Py_DECREF(o);
+                } else {
+                    Py_DECREF(o);
+                    PyErr_SetString(PyExc_TypeError,
+                    "vector<""double" "> expected");
+                    SWIG_fail;
+                }
+            }
+        } else if (SWIG_ConvertPtr(obj3,(void **) &v4, 
+        SWIGTYPE_p_std__vectorTdouble_t,1) != -1){
+            arg4 = v4;
+        } else {
+            PyErr_SetString(PyExc_TypeError,"vector<""double" "> expected");
+            SWIG_fail;
+        }
+    }
+    std_vectorldouble_g___setslice_____(arg1,arg2,arg3,(std::vector<double > const &)*arg4);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_DoubleVector___delitem__(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    std::vector<double > *arg1 = (std::vector<double > *) 0 ;
+    int arg2 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"Oi:DoubleVector___delitem__",&obj0,&arg2)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_std__vectorTdouble_t,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        try {
+            std_vectorldouble_g___delitem_____(arg1,arg2);
+            
+        } catch (std::out_of_range& e) {
+            SWIG_exception(SWIG_IndexError,const_cast<char*>(e.what()));
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_DoubleVector___delslice__(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    std::vector<double > *arg1 = (std::vector<double > *) 0 ;
+    int arg2 ;
+    int arg3 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"Oii:DoubleVector___delslice__",&obj0,&arg2,&arg3)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_std__vectorTdouble_t,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    std_vectorldouble_g___delslice_____(arg1,arg2,arg3);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_delete_DoubleVector(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    std::vector<double > *arg1 = (std::vector<double > *) 0 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:delete_DoubleVector",&obj0)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_std__vectorTdouble_t,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    delete arg1;
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject * DoubleVector_swigregister(PyObject *self, PyObject *args) {
+    PyObject *obj;
+    if (!PyArg_ParseTuple(args,(char*)"O", &obj)) return NULL;
+    SWIG_TypeClientData(SWIGTYPE_p_std__vectorTdouble_t, obj);
+    Py_INCREF(obj);
+    return Py_BuildValue((char *)"");
+}
 static PyObject *_wrap_channelize(PyObject *self, PyObject *args) {
     PyObject *resultobj;
     PartialList *arg1 = (PartialList *) 0 ;
@@ -1570,8 +2093,12 @@ static PyObject *_wrap_createFreqReference(PyObject *self, PyObject *args) {
 static PyObject *_wrap_dilate(PyObject *self, PyObject *args) {
     PyObject *resultobj;
     PartialList *arg1 = (PartialList *) 0 ;
-    vector<double > *arg2 = 0 ;
-    vector<double > *arg3 = 0 ;
+    std::vector<double > *arg2 = 0 ;
+    std::vector<double > *arg3 = 0 ;
+    std::vector<double > temp2 ;
+    std::vector<double > *v2 ;
+    std::vector<double > temp3 ;
+    std::vector<double > *v3 ;
     PyObject * obj0 = 0 ;
     PyObject * obj1 = 0 ;
     PyObject * obj2 = 0 ;
@@ -1579,51 +2106,59 @@ static PyObject *_wrap_dilate(PyObject *self, PyObject *args) {
     if(!PyArg_ParseTuple(args,(char *)"OOO:dilate",&obj0,&obj1,&obj2)) goto fail;
     if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
     {
-        // test first if input is a string,
-        // because a string is a Python sequence,
-        // but not a sequence of numbers.
-        if (PyString_Check(obj1))
-        {
-            arg2 = new vector<double>;
-            fill_vector( PyString_AsString(obj1), *arg2 );
-        }
-        else if (PySequence_Check(obj1)) 
-        {
-            arg2 = new vector<double>;
-            if (! fill_vector( obj1, *arg2 ) )
-            {
-                delete arg2;
-                return NULL;
+        if (PyTuple_Check(obj1) || PyList_Check(obj1)) {
+            unsigned int size = (PyTuple_Check(obj1) ?
+            PyTuple_Size(obj1) :
+            PyList_Size(obj1));
+            temp2 = std::vector<double >(size);
+            arg2 = &temp2;
+            for (unsigned int i=0; i<size; i++) {
+                PyObject* o = PySequence_GetItem(obj1,i);
+                if (SwigNumber_Check(o)) {
+                    temp2[i] = (double)(\
+                    SwigNumber_AsDouble(o));
+                    Py_DECREF(o);
+                } else {
+                    Py_DECREF(o);
+                    PyErr_SetString(PyExc_TypeError,
+                    "vector<""double" "> expected");
+                    SWIG_fail;
+                }
             }
-        } 
-        else 
-        {
-            PyErr_SetString(PyExc_TypeError,"could not covert argument to a vector of doubles");
-            return NULL;
+        } else if (SWIG_ConvertPtr(obj1,(void **) &v2, 
+        SWIGTYPE_p_std__vectorTdouble_t,1) != -1){
+            arg2 = v2;
+        } else {
+            PyErr_SetString(PyExc_TypeError,"vector<""double" "> expected");
+            SWIG_fail;
         }
     }
     {
-        // test first if input is a string,
-        // because a string is a Python sequence,
-        // but not a sequence of numbers.
-        if (PyString_Check(obj2))
-        {
-            arg3 = new vector<double>;
-            fill_vector( PyString_AsString(obj2), *arg3 );
-        }
-        else if (PySequence_Check(obj2)) 
-        {
-            arg3 = new vector<double>;
-            if (! fill_vector( obj2, *arg3 ) )
-            {
-                delete arg3;
-                return NULL;
+        if (PyTuple_Check(obj2) || PyList_Check(obj2)) {
+            unsigned int size = (PyTuple_Check(obj2) ?
+            PyTuple_Size(obj2) :
+            PyList_Size(obj2));
+            temp3 = std::vector<double >(size);
+            arg3 = &temp3;
+            for (unsigned int i=0; i<size; i++) {
+                PyObject* o = PySequence_GetItem(obj2,i);
+                if (SwigNumber_Check(o)) {
+                    temp3[i] = (double)(\
+                    SwigNumber_AsDouble(o));
+                    Py_DECREF(o);
+                } else {
+                    Py_DECREF(o);
+                    PyErr_SetString(PyExc_TypeError,
+                    "vector<""double" "> expected");
+                    SWIG_fail;
+                }
             }
-        } 
-        else 
-        {
-            PyErr_SetString(PyExc_TypeError,"could not covert argument to a vector of doubles");
-            return NULL;
+        } else if (SWIG_ConvertPtr(obj2,(void **) &v3, 
+        SWIGTYPE_p_std__vectorTdouble_t,1) != -1){
+            arg3 = v3;
+        } else {
+            PyErr_SetString(PyExc_TypeError,"vector<""double" "> expected");
+            SWIG_fail;
         }
     }
     {
@@ -1631,7 +2166,7 @@ static PyObject *_wrap_dilate(PyObject *self, PyObject *args) {
         clear_exception();
         try
         {
-            dilate_v(arg1,*arg2,*arg3);
+            dilate_v(arg1,(std::vector<double > const &)*arg2,(std::vector<double > const &)*arg3);
             
         }
         catch ( InvalidArgument & ex )
@@ -1677,18 +2212,47 @@ static PyObject *_wrap_distill(PyObject *self, PyObject *args) {
 static PyObject *_wrap_exportAiff(PyObject *self, PyObject *args) {
     PyObject *resultobj;
     char *arg1 ;
-    SampleVector *arg2 = (SampleVector *) 0 ;
+    std::vector<double > *arg2 = 0 ;
     double arg3 = (double) 44100.0 ;
     int arg4 = (int) 1 ;
     int arg5 = (int) 16 ;
+    std::vector<double > temp2 ;
+    std::vector<double > *v2 ;
     PyObject * obj1 = 0 ;
     
     if(!PyArg_ParseTuple(args,(char *)"sO|dii:exportAiff",&arg1,&obj1,&arg3,&arg4,&arg5)) goto fail;
-    if ((SWIG_ConvertPtr(obj1,(void **) &arg2, SWIGTYPE_p_SampleVector,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        if (PyTuple_Check(obj1) || PyList_Check(obj1)) {
+            unsigned int size = (PyTuple_Check(obj1) ?
+            PyTuple_Size(obj1) :
+            PyList_Size(obj1));
+            temp2 = std::vector<double >(size);
+            arg2 = &temp2;
+            for (unsigned int i=0; i<size; i++) {
+                PyObject* o = PySequence_GetItem(obj1,i);
+                if (SwigNumber_Check(o)) {
+                    temp2[i] = (double)(\
+                    SwigNumber_AsDouble(o));
+                    Py_DECREF(o);
+                } else {
+                    Py_DECREF(o);
+                    PyErr_SetString(PyExc_TypeError,
+                    "vector<""double" "> expected");
+                    SWIG_fail;
+                }
+            }
+        } else if (SWIG_ConvertPtr(obj1,(void **) &v2, 
+        SWIGTYPE_p_std__vectorTdouble_t,1) != -1){
+            arg2 = v2;
+        } else {
+            PyErr_SetString(PyExc_TypeError,"vector<""double" "> expected");
+            SWIG_fail;
+        }
+    }
     {
         char * err;
         clear_exception();
-        exportAiff((char const *)arg1,arg2,arg3,arg4,arg5);
+        exportAiff((char const *)arg1,(std::vector<double > const &)*arg2,arg3,arg4,arg5);
         
         if ((err = check_exception()))
         {
@@ -1988,7 +2552,7 @@ static PyObject *_wrap_synthesize(PyObject *self, PyObject *args) {
     PyObject *resultobj;
     PartialList *arg1 = (PartialList *) 0 ;
     double arg2 = (double) 44100.0 ;
-    SampleVector *result;
+    std::vector<double > result;
     PyObject * obj0 = 0 ;
     
     if(!PyArg_ParseTuple(args,(char *)"O|d:synthesize",&obj0,&arg2)) goto fail;
@@ -1996,14 +2560,19 @@ static PyObject *_wrap_synthesize(PyObject *self, PyObject *args) {
     {
         char * err;
         clear_exception();
-        result = (SampleVector *)synthesize((PartialList const *)arg1,arg2);
+        result = synthesize((PartialList const *)arg1,arg2);
         
         if ((err = check_exception()))
         {
             SWIG_exception( SWIG_ValueError, err );
         }
     }
-    resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_SampleVector, 1);
+    {
+        resultobj = PyTuple_New((&result)->size());
+        for (unsigned int i=0; i<(&result)->size(); i++)
+        PyTuple_SetItem(resultobj,i,
+        PyFloat_FromDouble(((std::vector<double > &)result)[i]));
+    }
     return resultobj;
     fail:
     return NULL;
@@ -3174,20 +3743,46 @@ static PyObject *_wrap_new_AiffFile__SWIG_0(PyObject *self, PyObject *args) {
 
 static PyObject *_wrap_new_AiffFile__SWIG_1(PyObject *self, PyObject *args) {
     PyObject *resultobj;
-    SampleVector *arg1 = 0 ;
-    double arg2 ;
+    std::vector<double > *arg1 = 0 ;
+    double arg2 = (double) 44100 ;
     AiffFile *result;
+    std::vector<double > temp1 ;
+    std::vector<double > *v1 ;
     PyObject * obj0 = 0 ;
     
-    if(!PyArg_ParseTuple(args,(char *)"Od:new_AiffFile",&obj0,&arg2)) goto fail;
-    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_SampleVector,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
-    if (arg1 == NULL) {
-        PyErr_SetString(PyExc_TypeError,"null reference"); SWIG_fail; 
+    if(!PyArg_ParseTuple(args,(char *)"O|d:new_AiffFile",&obj0,&arg2)) goto fail;
+    {
+        if (PyTuple_Check(obj0) || PyList_Check(obj0)) {
+            unsigned int size = (PyTuple_Check(obj0) ?
+            PyTuple_Size(obj0) :
+            PyList_Size(obj0));
+            temp1 = std::vector<double >(size);
+            arg1 = &temp1;
+            for (unsigned int i=0; i<size; i++) {
+                PyObject* o = PySequence_GetItem(obj0,i);
+                if (SwigNumber_Check(o)) {
+                    temp1[i] = (double)(\
+                    SwigNumber_AsDouble(o));
+                    Py_DECREF(o);
+                } else {
+                    Py_DECREF(o);
+                    PyErr_SetString(PyExc_TypeError,
+                    "vector<""double" "> expected");
+                    SWIG_fail;
+                }
+            }
+        } else if (SWIG_ConvertPtr(obj0,(void **) &v1, 
+        SWIGTYPE_p_std__vectorTdouble_t,1) != -1){
+            arg1 = v1;
+        } else {
+            PyErr_SetString(PyExc_TypeError,"vector<""double" "> expected");
+            SWIG_fail;
+        }
     }
     {
         try
         {
-            result = (AiffFile *)new AiffFile(*arg1,arg2);
+            result = (AiffFile *)new AiffFile((std::vector<double > const &)*arg1,arg2);
             
         }
         catch( Loris::Exception & ex ) 
@@ -3478,12 +4073,12 @@ static PyObject *_wrap_AiffFile_write(PyObject *self, PyObject *args) {
 static PyObject *_wrap_new_AiffFile__SWIG_2(PyObject *self, PyObject *args) {
     PyObject *resultobj;
     PartialList *arg1 = (PartialList *) 0 ;
-    double arg2 ;
+    double arg2 = (double) 44100 ;
     double arg3 = (double) .001 ;
     AiffFile *result;
     PyObject * obj0 = 0 ;
     
-    if(!PyArg_ParseTuple(args,(char *)"Od|d:new_AiffFile",&obj0,&arg2,&arg3)) goto fail;
+    if(!PyArg_ParseTuple(args,(char *)"O|dd:new_AiffFile",&obj0,&arg2,&arg3)) goto fail;
     if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
     {
         try
@@ -3522,36 +4117,7 @@ static PyObject *_wrap_new_AiffFile(PyObject *self, PyObject *args) {
     for (ii = 0; (ii < argc) && (ii < 3); ii++) {
         argv[ii] = PyTuple_GetItem(args,ii);
     }
-    if (argc == 1) {
-        int _v;
-        {
-            _v = PyString_Check(argv[0]) ? 1 : 0;
-        }
-        if (_v) {
-            return _wrap_new_AiffFile__SWIG_0(self,args);
-        }
-    }
-    if (argc == 2) {
-        int _v;
-        {
-            void *ptr;
-            if (SWIG_ConvertPtr(argv[0], (void **) &ptr, SWIGTYPE_p_SampleVector, 0) == -1) {
-                _v = 0;
-                PyErr_Clear();
-            } else {
-                _v = 1;
-            }
-        }
-        if (_v) {
-            {
-                _v = (PyFloat_Check(argv[1]) || PyInt_Check(argv[1]) || PyLong_Check(argv[1])) ? 1 : 0;
-            }
-            if (_v) {
-                return _wrap_new_AiffFile__SWIG_1(self,args);
-            }
-        }
-    }
-    if ((argc >= 2) && (argc <= 3)) {
+    if ((argc >= 1) && (argc <= 3)) {
         int _v;
         {
             void *ptr;
@@ -3563,6 +4129,9 @@ static PyObject *_wrap_new_AiffFile(PyObject *self, PyObject *args) {
             }
         }
         if (_v) {
+            if (argc <= 1) {
+                return _wrap_new_AiffFile__SWIG_2(self,args);
+            }
             {
                 _v = (PyFloat_Check(argv[1]) || PyInt_Check(argv[1]) || PyLong_Check(argv[1])) ? 1 : 0;
             }
@@ -3579,6 +4148,57 @@ static PyObject *_wrap_new_AiffFile(PyObject *self, PyObject *args) {
             }
         }
     }
+    if (argc == 1) {
+        int _v;
+        {
+            _v = PyString_Check(argv[0]) ? 1 : 0;
+        }
+        if (_v) {
+            return _wrap_new_AiffFile__SWIG_0(self,args);
+        }
+    }
+    if ((argc >= 1) && (argc <= 2)) {
+        int _v;
+        {
+            /* native sequence? */
+            if (PyTuple_Check(argv[0]) || PyList_Check(argv[0])) {
+                unsigned int size = (PyTuple_Check(argv[0]) ?
+                PyTuple_Size(argv[0]) :
+                PyList_Size(argv[0]));
+                if (size == 0) {
+                    /* an empty sequence can be of any type */
+                    _v = 1;
+                } else {
+                    /* check the first element only */
+                    PyObject* o = PySequence_GetItem(argv[0],0);
+                    if (SwigNumber_Check(o))
+                    _v = 1;
+                    else
+                    _v = 0;
+                    Py_DECREF(o);
+                }
+            } else {
+                /* wrapped vector? */
+                std::vector<double >* v;
+                if (SWIG_ConvertPtr(argv[0],(void **) &v, 
+                SWIGTYPE_p_std__vectorTdouble_t,0) != -1)
+                _v = 1;
+                else
+                _v = 0;
+            }
+        }
+        if (_v) {
+            if (argc <= 1) {
+                return _wrap_new_AiffFile__SWIG_1(self,args);
+            }
+            {
+                _v = (PyFloat_Check(argv[1]) || PyInt_Check(argv[1]) || PyLong_Check(argv[1])) ? 1 : 0;
+            }
+            if (_v) {
+                return _wrap_new_AiffFile__SWIG_1(self,args);
+            }
+        }
+    }
     
     PyErr_SetString(PyExc_TypeError,"No matching function for overloaded 'new_AiffFile'");
     return NULL;
@@ -3588,7 +4208,7 @@ static PyObject *_wrap_new_AiffFile(PyObject *self, PyObject *args) {
 static PyObject *_wrap_AiffFile_samples(PyObject *self, PyObject *args) {
     PyObject *resultobj;
     AiffFile *arg1 = (AiffFile *) 0 ;
-    SampleVector *result;
+    std::vector<double > result;
     PyObject * obj0 = 0 ;
     
     if(!PyArg_ParseTuple(args,(char *)"O:AiffFile_samples",&obj0)) goto fail;
@@ -3596,7 +4216,7 @@ static PyObject *_wrap_AiffFile_samples(PyObject *self, PyObject *args) {
     {
         try
         {
-            result = (SampleVector *)AiffFile_samples(arg1);
+            result = AiffFile_samples(arg1);
             
         }
         catch( Loris::Exception & ex ) 
@@ -3614,7 +4234,12 @@ static PyObject *_wrap_AiffFile_samples(PyObject *self, PyObject *args) {
             SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
         }
     }
-    resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_SampleVector, 1);
+    {
+        resultobj = PyTuple_New((&result)->size());
+        for (unsigned int i=0; i<(&result)->size(); i++)
+        PyTuple_SetItem(resultobj,i,
+        PyFloat_FromDouble(((std::vector<double > &)result)[i]));
+    }
     return resultobj;
     fail:
     return NULL;
@@ -3744,10 +4369,7 @@ static PyObject *_wrap_AiffFile_getMarker(PyObject *self, PyObject *args) {
     {
         try
         {
-            {
-                Marker &_result_ref = AiffFile_getMarker(arg1,arg2);
-                result = (Marker *) &_result_ref;
-            }
+            result = (Marker *)AiffFile_getMarker(arg1,arg2);
             
         }
         catch ( InvalidArgument & ex )
@@ -3755,7 +4377,7 @@ static PyObject *_wrap_AiffFile_getMarker(PyObject *self, PyObject *args) {
             SWIG_exception(SWIG_ValueError, (char *)ex.what() );
         }
     }
-    resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_Marker, 0);
+    resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_Marker, 1);
     return resultobj;
     fail:
     return NULL;
@@ -3804,6 +4426,41 @@ static PyObject *_wrap_AiffFile_addMarker(PyObject *self, PyObject *args) {
         try
         {
             AiffFile_addMarker(arg1,arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_AiffFile_clearMarkers(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    AiffFile *arg1 = (AiffFile *) 0 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:AiffFile_clearMarkers",&obj0)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_AiffFile,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        try
+        {
+            AiffFile_clearMarkers(arg1);
             
         }
         catch( Loris::Exception & ex ) 
@@ -3909,19 +4566,48 @@ static PyObject *_wrap_Analyzer_copy(PyObject *self, PyObject *args) {
 static PyObject *_wrap_Analyzer_analyze__SWIG_0(PyObject *self, PyObject *args) {
     PyObject *resultobj;
     Analyzer *arg1 = (Analyzer *) 0 ;
-    SampleVector *arg2 = (SampleVector *) 0 ;
+    std::vector<double > *arg2 = 0 ;
     double arg3 ;
     PartialList *result;
+    std::vector<double > temp2 ;
+    std::vector<double > *v2 ;
     PyObject * obj0 = 0 ;
     PyObject * obj1 = 0 ;
     
     if(!PyArg_ParseTuple(args,(char *)"OOd:Analyzer_analyze",&obj0,&obj1,&arg3)) goto fail;
     if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_Analyzer,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
-    if ((SWIG_ConvertPtr(obj1,(void **) &arg2, SWIGTYPE_p_SampleVector,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        if (PyTuple_Check(obj1) || PyList_Check(obj1)) {
+            unsigned int size = (PyTuple_Check(obj1) ?
+            PyTuple_Size(obj1) :
+            PyList_Size(obj1));
+            temp2 = std::vector<double >(size);
+            arg2 = &temp2;
+            for (unsigned int i=0; i<size; i++) {
+                PyObject* o = PySequence_GetItem(obj1,i);
+                if (SwigNumber_Check(o)) {
+                    temp2[i] = (double)(\
+                    SwigNumber_AsDouble(o));
+                    Py_DECREF(o);
+                } else {
+                    Py_DECREF(o);
+                    PyErr_SetString(PyExc_TypeError,
+                    "vector<""double" "> expected");
+                    SWIG_fail;
+                }
+            }
+        } else if (SWIG_ConvertPtr(obj1,(void **) &v2, 
+        SWIGTYPE_p_std__vectorTdouble_t,1) != -1){
+            arg2 = v2;
+        } else {
+            PyErr_SetString(PyExc_TypeError,"vector<""double" "> expected");
+            SWIG_fail;
+        }
+    }
     {
         try
         {
-            result = (PartialList *)Analyzer_analyze__SWIG_0(arg1,(SampleVector const *)arg2,arg3);
+            result = (PartialList *)Analyzer_analyze__SWIG_0(arg1,(std::vector<double > const &)*arg2,arg3);
             
         }
         catch( Loris::Exception & ex ) 
@@ -3949,22 +4635,51 @@ static PyObject *_wrap_Analyzer_analyze__SWIG_0(PyObject *self, PyObject *args) 
 static PyObject *_wrap_Analyzer_analyze__SWIG_1(PyObject *self, PyObject *args) {
     PyObject *resultobj;
     Analyzer *arg1 = (Analyzer *) 0 ;
-    SampleVector *arg2 = (SampleVector *) 0 ;
+    std::vector<double > *arg2 = 0 ;
     double arg3 ;
     BreakpointEnvelope *arg4 = (BreakpointEnvelope *) 0 ;
     PartialList *result;
+    std::vector<double > temp2 ;
+    std::vector<double > *v2 ;
     PyObject * obj0 = 0 ;
     PyObject * obj1 = 0 ;
     PyObject * obj3 = 0 ;
     
     if(!PyArg_ParseTuple(args,(char *)"OOdO:Analyzer_analyze",&obj0,&obj1,&arg3,&obj3)) goto fail;
     if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_Analyzer,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
-    if ((SWIG_ConvertPtr(obj1,(void **) &arg2, SWIGTYPE_p_SampleVector,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        if (PyTuple_Check(obj1) || PyList_Check(obj1)) {
+            unsigned int size = (PyTuple_Check(obj1) ?
+            PyTuple_Size(obj1) :
+            PyList_Size(obj1));
+            temp2 = std::vector<double >(size);
+            arg2 = &temp2;
+            for (unsigned int i=0; i<size; i++) {
+                PyObject* o = PySequence_GetItem(obj1,i);
+                if (SwigNumber_Check(o)) {
+                    temp2[i] = (double)(\
+                    SwigNumber_AsDouble(o));
+                    Py_DECREF(o);
+                } else {
+                    Py_DECREF(o);
+                    PyErr_SetString(PyExc_TypeError,
+                    "vector<""double" "> expected");
+                    SWIG_fail;
+                }
+            }
+        } else if (SWIG_ConvertPtr(obj1,(void **) &v2, 
+        SWIGTYPE_p_std__vectorTdouble_t,1) != -1){
+            arg2 = v2;
+        } else {
+            PyErr_SetString(PyExc_TypeError,"vector<""double" "> expected");
+            SWIG_fail;
+        }
+    }
     if ((SWIG_ConvertPtr(obj3,(void **) &arg4, SWIGTYPE_p_BreakpointEnvelope,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
     {
         try
         {
-            result = (PartialList *)Analyzer_analyze__SWIG_1(arg1,(SampleVector const *)arg2,arg3,arg4);
+            result = (PartialList *)Analyzer_analyze__SWIG_1(arg1,(std::vector<double > const &)*arg2,arg3,arg4);
             
         }
         catch( Loris::Exception & ex ) 
@@ -4011,12 +4726,31 @@ static PyObject *_wrap_Analyzer_analyze(PyObject *self, PyObject *args) {
         }
         if (_v) {
             {
-                void *ptr;
-                if (SWIG_ConvertPtr(argv[1], (void **) &ptr, SWIGTYPE_p_SampleVector, 0) == -1) {
-                    _v = 0;
-                    PyErr_Clear();
+                /* native sequence? */
+                if (PyTuple_Check(argv[1]) || PyList_Check(argv[1])) {
+                    unsigned int size = (PyTuple_Check(argv[1]) ?
+                    PyTuple_Size(argv[1]) :
+                    PyList_Size(argv[1]));
+                    if (size == 0) {
+                        /* an empty sequence can be of any type */
+                        _v = 1;
+                    } else {
+                        /* check the first element only */
+                        PyObject* o = PySequence_GetItem(argv[1],0);
+                        if (SwigNumber_Check(o))
+                        _v = 1;
+                        else
+                        _v = 0;
+                        Py_DECREF(o);
+                    }
                 } else {
+                    /* wrapped vector? */
+                    std::vector<double >* v;
+                    if (SWIG_ConvertPtr(argv[1],(void **) &v, 
+                    SWIGTYPE_p_std__vectorTdouble_t,0) != -1)
                     _v = 1;
+                    else
+                    _v = 0;
                 }
             }
             if (_v) {
@@ -4042,12 +4776,31 @@ static PyObject *_wrap_Analyzer_analyze(PyObject *self, PyObject *args) {
         }
         if (_v) {
             {
-                void *ptr;
-                if (SWIG_ConvertPtr(argv[1], (void **) &ptr, SWIGTYPE_p_SampleVector, 0) == -1) {
-                    _v = 0;
-                    PyErr_Clear();
+                /* native sequence? */
+                if (PyTuple_Check(argv[1]) || PyList_Check(argv[1])) {
+                    unsigned int size = (PyTuple_Check(argv[1]) ?
+                    PyTuple_Size(argv[1]) :
+                    PyList_Size(argv[1]));
+                    if (size == 0) {
+                        /* an empty sequence can be of any type */
+                        _v = 1;
+                    } else {
+                        /* check the first element only */
+                        PyObject* o = PySequence_GetItem(argv[1],0);
+                        if (SwigNumber_Check(o))
+                        _v = 1;
+                        else
+                        _v = 0;
+                        Py_DECREF(o);
+                    }
                 } else {
+                    /* wrapped vector? */
+                    std::vector<double >* v;
+                    if (SWIG_ConvertPtr(argv[1],(void **) &v, 
+                    SWIGTYPE_p_std__vectorTdouble_t,0) != -1)
                     _v = 1;
+                    else
+                    _v = 0;
                 }
             }
             if (_v) {
@@ -5047,313 +5800,6 @@ static PyObject *_wrap_BreakpointEnvelopeWithValue(PyObject *self, PyObject *arg
 }
 
 
-static PyObject *_wrap_new_SampleVector(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    unsigned long arg1 = (unsigned long) 0 ;
-    SampleVector *result;
-    PyObject * obj0 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"|O:new_SampleVector",&obj0)) goto fail;
-    if (obj0) {
-        arg1 = (unsigned long) PyInt_AsLong(obj0);
-        if (PyErr_Occurred()) SWIG_fail;
-    }
-    {
-        try
-        {
-            result = (SampleVector *)new SampleVector(arg1);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_SampleVector, 1);
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_delete_SampleVector(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    SampleVector *arg1 = (SampleVector *) 0 ;
-    PyObject * obj0 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"O:delete_SampleVector",&obj0)) goto fail;
-    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_SampleVector,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
-    {
-        try
-        {
-            delete arg1;
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    Py_INCREF(Py_None); resultobj = Py_None;
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_SampleVector_clear(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    SampleVector *arg1 = (SampleVector *) 0 ;
-    PyObject * obj0 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"O:SampleVector_clear",&obj0)) goto fail;
-    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_SampleVector,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
-    {
-        try
-        {
-            (arg1)->clear();
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    Py_INCREF(Py_None); resultobj = Py_None;
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_SampleVector_resize(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    SampleVector *arg1 = (SampleVector *) 0 ;
-    unsigned long arg2 ;
-    PyObject * obj0 = 0 ;
-    PyObject * obj1 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"OO:SampleVector_resize",&obj0,&obj1)) goto fail;
-    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_SampleVector,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
-    arg2 = (unsigned long) PyInt_AsLong(obj1);
-    if (PyErr_Occurred()) SWIG_fail;
-    {
-        try
-        {
-            (arg1)->resize(arg2);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    Py_INCREF(Py_None); resultobj = Py_None;
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_SampleVector_size(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    SampleVector *arg1 = (SampleVector *) 0 ;
-    unsigned long result;
-    PyObject * obj0 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"O:SampleVector_size",&obj0)) goto fail;
-    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_SampleVector,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
-    {
-        try
-        {
-            result = (unsigned long)(arg1)->size();
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    resultobj = PyInt_FromLong((long)result);
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_SampleVector_copy(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    SampleVector *arg1 = (SampleVector *) 0 ;
-    SampleVector *result;
-    PyObject * obj0 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"O:SampleVector_copy",&obj0)) goto fail;
-    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_SampleVector,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
-    {
-        try
-        {
-            result = (SampleVector *)SampleVector_copy(arg1);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_SampleVector, 1);
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_SampleVector_getAt(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    SampleVector *arg1 = (SampleVector *) 0 ;
-    unsigned long arg2 ;
-    double result;
-    PyObject * obj0 = 0 ;
-    PyObject * obj1 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"OO:SampleVector_getAt",&obj0,&obj1)) goto fail;
-    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_SampleVector,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
-    arg2 = (unsigned long) PyInt_AsLong(obj1);
-    if (PyErr_Occurred()) SWIG_fail;
-    {
-        try
-        {
-            result = (double)SampleVector_getAt(arg1,arg2);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    resultobj = PyFloat_FromDouble(result);
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_SampleVector_setAt(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    SampleVector *arg1 = (SampleVector *) 0 ;
-    unsigned long arg2 ;
-    double arg3 ;
-    PyObject * obj0 = 0 ;
-    PyObject * obj1 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"OOd:SampleVector_setAt",&obj0,&obj1,&arg3)) goto fail;
-    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_SampleVector,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
-    arg2 = (unsigned long) PyInt_AsLong(obj1);
-    if (PyErr_Occurred()) SWIG_fail;
-    {
-        try
-        {
-            SampleVector_setAt(arg1,arg2,arg3);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    Py_INCREF(Py_None); resultobj = Py_None;
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject * SampleVector_swigregister(PyObject *self, PyObject *args) {
-    PyObject *obj;
-    if (!PyArg_ParseTuple(args,(char*)"O", &obj)) return NULL;
-    SWIG_TypeClientData(SWIGTYPE_p_SampleVector, obj);
-    Py_INCREF(obj);
-    return Py_BuildValue((char *)"");
-}
 static PyObject *_wrap_new_SdifFile__SWIG_0(PyObject *self, PyObject *args) {
     PyObject *resultobj;
     char *arg1 ;
@@ -5728,10 +6174,7 @@ static PyObject *_wrap_SdifFile_getMarker(PyObject *self, PyObject *args) {
     {
         try
         {
-            {
-                Marker &_result_ref = SdifFile_getMarker(arg1,arg2);
-                result = (Marker *) &_result_ref;
-            }
+            result = (Marker *)SdifFile_getMarker(arg1,arg2);
             
         }
         catch ( InvalidArgument & ex )
@@ -5739,7 +6182,7 @@ static PyObject *_wrap_SdifFile_getMarker(PyObject *self, PyObject *args) {
             SWIG_exception(SWIG_ValueError, (char *)ex.what() );
         }
     }
-    resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_Marker, 0);
+    resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_Marker, 1);
     return resultobj;
     fail:
     return NULL;
@@ -5788,6 +6231,41 @@ static PyObject *_wrap_SdifFile_addMarker(PyObject *self, PyObject *args) {
         try
         {
             SdifFile_addMarker(arg1,arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_SdifFile_clearMarkers(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    SdifFile *arg1 = (SdifFile *) 0 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:SdifFile_clearMarkers",&obj0)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_SdifFile,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        try
+        {
+            SdifFile_clearMarkers(arg1);
             
         }
         catch( Loris::Exception & ex ) 
@@ -6482,10 +6960,7 @@ static PyObject *_wrap_SpcFile_getMarker(PyObject *self, PyObject *args) {
     {
         try
         {
-            {
-                Marker &_result_ref = SpcFile_getMarker(arg1,arg2);
-                result = (Marker *) &_result_ref;
-            }
+            result = (Marker *)SpcFile_getMarker(arg1,arg2);
             
         }
         catch ( InvalidArgument & ex )
@@ -6493,7 +6968,7 @@ static PyObject *_wrap_SpcFile_getMarker(PyObject *self, PyObject *args) {
             SWIG_exception(SWIG_ValueError, (char *)ex.what() );
         }
     }
-    resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_Marker, 0);
+    resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_Marker, 1);
     return resultobj;
     fail:
     return NULL;
@@ -6542,6 +7017,41 @@ static PyObject *_wrap_SpcFile_addMarker(PyObject *self, PyObject *args) {
         try
         {
             SpcFile_addMarker(arg1,arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_SpcFile_clearMarkers(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    SpcFile *arg1 = (SpcFile *) 0 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:SpcFile_clearMarkers",&obj0)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_SpcFile,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        try
+        {
+            SpcFile_clearMarkers(arg1);
             
         }
         catch( Loris::Exception & ex ) 
@@ -10547,6 +11057,20 @@ static PyObject * PartialListIterator_swigregister(PyObject *self, PyObject *arg
     return Py_BuildValue((char *)"");
 }
 static PyMethodDef SwigMethods[] = {
+	 { (char *)"new_DoubleVector", _wrap_new_DoubleVector, METH_VARARGS },
+	 { (char *)"DoubleVector___len__", _wrap_DoubleVector___len__, METH_VARARGS },
+	 { (char *)"DoubleVector___nonzero__", _wrap_DoubleVector___nonzero__, METH_VARARGS },
+	 { (char *)"DoubleVector_clear", _wrap_DoubleVector_clear, METH_VARARGS },
+	 { (char *)"DoubleVector_append", _wrap_DoubleVector_append, METH_VARARGS },
+	 { (char *)"DoubleVector_pop", _wrap_DoubleVector_pop, METH_VARARGS },
+	 { (char *)"DoubleVector___getitem__", _wrap_DoubleVector___getitem__, METH_VARARGS },
+	 { (char *)"DoubleVector___getslice__", _wrap_DoubleVector___getslice__, METH_VARARGS },
+	 { (char *)"DoubleVector___setitem__", _wrap_DoubleVector___setitem__, METH_VARARGS },
+	 { (char *)"DoubleVector___setslice__", _wrap_DoubleVector___setslice__, METH_VARARGS },
+	 { (char *)"DoubleVector___delitem__", _wrap_DoubleVector___delitem__, METH_VARARGS },
+	 { (char *)"DoubleVector___delslice__", _wrap_DoubleVector___delslice__, METH_VARARGS },
+	 { (char *)"delete_DoubleVector", _wrap_delete_DoubleVector, METH_VARARGS },
+	 { (char *)"DoubleVector_swigregister", DoubleVector_swigregister, METH_VARARGS },
 	 { (char *)"channelize", _wrap_channelize, METH_VARARGS },
 	 { (char *)"createFreqReference", _wrap_createFreqReference, METH_VARARGS },
 	 { (char *)"dilate", _wrap_dilate, METH_VARARGS },
@@ -10594,6 +11118,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"AiffFile_getMarker", _wrap_AiffFile_getMarker, METH_VARARGS },
 	 { (char *)"AiffFile_removeMarker", _wrap_AiffFile_removeMarker, METH_VARARGS },
 	 { (char *)"AiffFile_addMarker", _wrap_AiffFile_addMarker, METH_VARARGS },
+	 { (char *)"AiffFile_clearMarkers", _wrap_AiffFile_clearMarkers, METH_VARARGS },
 	 { (char *)"AiffFile_swigregister", AiffFile_swigregister, METH_VARARGS },
 	 { (char *)"new_Analyzer", _wrap_new_Analyzer, METH_VARARGS },
 	 { (char *)"Analyzer_copy", _wrap_Analyzer_copy, METH_VARARGS },
@@ -10625,15 +11150,6 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"BreakpointEnvelope_valueAt", _wrap_BreakpointEnvelope_valueAt, METH_VARARGS },
 	 { (char *)"BreakpointEnvelope_swigregister", BreakpointEnvelope_swigregister, METH_VARARGS },
 	 { (char *)"BreakpointEnvelopeWithValue", _wrap_BreakpointEnvelopeWithValue, METH_VARARGS },
-	 { (char *)"new_SampleVector", _wrap_new_SampleVector, METH_VARARGS },
-	 { (char *)"delete_SampleVector", _wrap_delete_SampleVector, METH_VARARGS },
-	 { (char *)"SampleVector_clear", _wrap_SampleVector_clear, METH_VARARGS },
-	 { (char *)"SampleVector_resize", _wrap_SampleVector_resize, METH_VARARGS },
-	 { (char *)"SampleVector_size", _wrap_SampleVector_size, METH_VARARGS },
-	 { (char *)"SampleVector_copy", _wrap_SampleVector_copy, METH_VARARGS },
-	 { (char *)"SampleVector_getAt", _wrap_SampleVector_getAt, METH_VARARGS },
-	 { (char *)"SampleVector_setAt", _wrap_SampleVector_setAt, METH_VARARGS },
-	 { (char *)"SampleVector_swigregister", SampleVector_swigregister, METH_VARARGS },
 	 { (char *)"delete_SdifFile", _wrap_delete_SdifFile, METH_VARARGS },
 	 { (char *)"SdifFile_write", _wrap_SdifFile_write, METH_VARARGS },
 	 { (char *)"SdifFile_write1TRC", _wrap_SdifFile_write1TRC, METH_VARARGS },
@@ -10644,6 +11160,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"SdifFile_getMarker", _wrap_SdifFile_getMarker, METH_VARARGS },
 	 { (char *)"SdifFile_removeMarker", _wrap_SdifFile_removeMarker, METH_VARARGS },
 	 { (char *)"SdifFile_addMarker", _wrap_SdifFile_addMarker, METH_VARARGS },
+	 { (char *)"SdifFile_clearMarkers", _wrap_SdifFile_clearMarkers, METH_VARARGS },
 	 { (char *)"SdifFile_swigregister", SdifFile_swigregister, METH_VARARGS },
 	 { (char *)"delete_SpcFile", _wrap_delete_SpcFile, METH_VARARGS },
 	 { (char *)"SpcFile_sampleRate", _wrap_SpcFile_sampleRate, METH_VARARGS },
@@ -10659,6 +11176,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"SpcFile_getMarker", _wrap_SpcFile_getMarker, METH_VARARGS },
 	 { (char *)"SpcFile_removeMarker", _wrap_SpcFile_removeMarker, METH_VARARGS },
 	 { (char *)"SpcFile_addMarker", _wrap_SpcFile_addMarker, METH_VARARGS },
+	 { (char *)"SpcFile_clearMarkers", _wrap_SpcFile_clearMarkers, METH_VARARGS },
 	 { (char *)"SpcFile_swigregister", SpcFile_swigregister, METH_VARARGS },
 	 { (char *)"NewPlistIterator_atEnd", _wrap_NewPlistIterator_atEnd, METH_VARARGS },
 	 { (char *)"NewPlistIterator_next", _wrap_NewPlistIterator_next, METH_VARARGS },
@@ -10767,11 +11285,10 @@ static swig_type_info _swigt__p_Analyzer[] = {{"_p_Analyzer", 0, "Analyzer *", 0
 static swig_type_info _swigt__p_double[] = {{"_p_double", 0, "double *", 0},{"_p_double"},{0}};
 static swig_type_info _swigt__p_Partial[] = {{"_p_Partial", 0, "Partial *", 0},{"_p_Partial"},{0}};
 static swig_type_info _swigt__p_Loris__Partial[] = {{"_p_Loris__Partial", 0, "Loris::Partial *", 0},{"_p_Loris__Partial"},{0}};
-static swig_type_info _swigt__p_vectorTdouble_t[] = {{"_p_vectorTdouble_t", 0, "vector<double > *", 0},{"_p_vectorTdouble_t"},{0}};
+static swig_type_info _swigt__p_std__vectorTdouble_t[] = {{"_p_std__vectorTdouble_t", 0, "std::vector<double > *", 0},{"_p_std__vectorTdouble_t"},{0}};
 static swig_type_info _swigt__p_BreakpointEnvelope[] = {{"_p_BreakpointEnvelope", 0, "BreakpointEnvelope *", 0},{"_p_BreakpointEnvelope"},{0}};
 static swig_type_info _swigt__p_BreakpointPosition[] = {{"_p_BreakpointPosition", 0, "BreakpointPosition *", 0},{"_p_BreakpointPosition"},{0}};
 static swig_type_info _swigt__p_AiffFile[] = {{"_p_AiffFile", 0, "AiffFile *", 0},{"_p_AiffFile"},{0}};
-static swig_type_info _swigt__p_SampleVector[] = {{"_p_SampleVector", 0, "SampleVector *", 0},{"_p_SampleVector"},{0}};
 static swig_type_info _swigt__p_SdifFile[] = {{"_p_SdifFile", 0, "SdifFile *", 0},{"_p_SdifFile"},{0}};
 static swig_type_info _swigt__p_NewPartialIterator[] = {{"_p_NewPartialIterator", 0, "NewPartialIterator *", 0},{"_p_NewPartialIterator"},{0}};
 static swig_type_info _swigt__p_NewPlistIterator[] = {{"_p_NewPlistIterator", 0, "NewPlistIterator *", 0},{"_p_NewPlistIterator"},{0}};
@@ -10787,11 +11304,10 @@ _swigt__p_Analyzer,
 _swigt__p_double, 
 _swigt__p_Partial, 
 _swigt__p_Loris__Partial, 
-_swigt__p_vectorTdouble_t, 
+_swigt__p_std__vectorTdouble_t, 
 _swigt__p_BreakpointEnvelope, 
 _swigt__p_BreakpointPosition, 
 _swigt__p_AiffFile, 
-_swigt__p_SampleVector, 
 _swigt__p_SdifFile, 
 _swigt__p_NewPartialIterator, 
 _swigt__p_NewPlistIterator, 

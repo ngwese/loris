@@ -217,7 +217,7 @@ createFreqReference( PartialList * partials, double minFreq, double maxFreq, lon
  */
 extern "C"
 void dilate( PartialList * partials, 
-			 double * initial, double * target, int npts )
+			 const double * initial, const double * target, int npts )
 {
 	try 
 	{
