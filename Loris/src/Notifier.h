@@ -28,16 +28,16 @@
 #if !defined( Deprecated_iostream_headers )
 	#include <iostream>
 	#define STDostream std::ostream
+
+	//	import endl and ends from std:
+	using std::endl;
+	using std::ends;
 #else
 	#include <iostream.h>
 	#define STDostream ostream
 #endif
 
 Begin_Namespace( Loris )
-
-//	import endl and ends from std:
-using std::endl;
-using std::ends;
 
 // ---------------------------------------------------------------------------
 //	class NotifierBuf

@@ -12,7 +12,6 @@
 #include "Distiller.h"
 #include "Partial.h"
 #include "PartialIterator.h"
-#include "PartialPredicate.h"
 #include "Breakpoint.h"
 
 #if !defined( Deprecated_cstd_headers )
