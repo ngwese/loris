@@ -74,32 +74,17 @@ public:
 	
 //	-- helpers --
 protected:	
-//	morph two list of Partials:
-//	(distills the each list into a single partial for morphing,
-//	the morphed Partial is assigned the specified label)
-	void morphLists( const PartialList & fromlist, 
-					 const PartialList & tolist,
-					 int assignLabel = 0 );
-	
 //	single Partial morph:
 //	(core morphing operation, called by morph() and crossfade())
-	void morphPartial( const Partial & p1, const Partial & p2, int assignLabel = 0 );
+	void morphPartial( const Partial & p1, const Partial & p2, int assignLabel );
 	
 //	crossfade Partials with no correspondences:
 //	(crossfaded Partials are unlabeled, or assigned the 
 //	default label, 0)
-	void crossfadeLists( const PartialList & fromlist, 
-						 const PartialList & tolist );
-						 
 	void crossfade( PartialList::const_iterator begin0, 
 					PartialList::const_iterator end0,
 					PartialList::const_iterator begin1, 
 					PartialList::const_iterator end1 );
-
-						 
-//	static member for accessing the label for 
-//	crossfaded Partials (0):
-	static int CrossfadeLabel(void);
 
 //	-- unimplemented until useful --
 private:

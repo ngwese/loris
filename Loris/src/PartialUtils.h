@@ -50,6 +50,12 @@ public:
 	};
 	
 //	comparitors:
+	struct label_less : 
+		public std::binary_function< const Partial, const Partial, bool >
+	{
+		bool operator()( const Partial & lhs, const Partial & rhs ) const 
+			{ return lhs.label() < rhs.label(); }
+	};
 	
 
 #if !defined( NO_LORIS_NAMESPACE )

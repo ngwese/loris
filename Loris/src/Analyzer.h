@@ -54,7 +54,7 @@ public:
 	~Analyzer( void );
 
 //	analysis:
-	void analyze( const std::vector< double > & buf, double srate, double offset = 0. );
+	void analyze( const std::vector< double > & buf, double srate );
 	
 //	configuration:
 	void configure( double resolutionHz );

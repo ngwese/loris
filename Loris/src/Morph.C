@@ -11,7 +11,6 @@
 //
 // ===========================================================================
 #include "Morph.h"
-#include "Synthesizer.h"
 #include "Exception.h"
 #include "Partial.h"
 #include "Breakpoint.h"
@@ -27,12 +26,6 @@
 namespace Loris {
 #endif
 
-//	declarations of local helpers, defined at bottom:
-static void collectByLabel( PartialList::const_iterator start, 
-							PartialList::const_iterator end, 
-							PartialList & collector, 
-							int label );
-							
 // ---------------------------------------------------------------------------
 //	Morph default constructor
 // ---------------------------------------------------------------------------
@@ -199,7 +192,7 @@ Morph::setBandwidthFunction( const Map & f )
 //	in both source Partials.
 //
 void 
-Morph::morphPartial( const Partial & p0, const Partial & p1, int assignLabel /* default = 0 */ )
+Morph::morphPartial( const Partial & p0, const Partial & p1, int assignLabel )
 {
 	//	make a new Partial:
 	Partial newp;
@@ -208,10 +201,46 @@ Morph::morphPartial( const Partial & p0, const Partial & p1, int assignLabel /* 
 	//	loop over Breakpoints in first partial:
 	for ( PartialConstIterator iter = p0.begin(); iter != p0.end(); ++iter )
 	{
-		double alphaF = frequencyFunction().valueAt( iter.time() );
+		//	amplitude weight is always used:
 		double alphaA = amplitudeFunction().valueAt( iter.time() );
-		double alphaBW = bandwidthFunction().valueAt( iter.time() );
 		
+		//	if p1 is a valid Partial, compute a weighted average 
+		//	Breakpoint and insert it, otherwise just fade p0:
+		if ( p1.duration() > 0. )
+		{
+			//	compute parameter weights:
+			double alphaF = frequencyFunction().valueAt( iter.time() );
+			double alphaBW = bandwidthFunction().valueAt( iter.time() );
+			
+			//	compute interpolated values for p1:
+			double amp1 = p1.amplitudeAt( iter.time() );
+			double freq1 = p1.frequencyAt( iter.time() );
+			double bw1 = p1.bandwidthAt( iter.time() );
+			double theta1 = p1.phaseAt( iter.time() );
+			
+			//	create a new weighted average Breakpoint:	
+			Breakpoint newbp( (alphaF * freq1) + ((1.-alphaF) * iter->frequency()),
+							   (alphaA * amp1) + ((1.-alphaA) * iter->amplitude()),
+							   (alphaBW * bw1) + ((1.-alphaBW) * iter->bandwidth()),
+							   (alphaF * theta1) + ((1.-alphaF) * iter->phase()) );
+			
+			//	insert the new Breakpoint in the morphed Partial:
+			newp.insert( iter.time(), newbp );
+		}
+		else
+		{
+			//	create a new scaled-amplitude Breakpoint:	
+			Breakpoint newbp( iter->frequency(),
+							  (1.-alphaA) * iter->amplitude(),
+							  iter->bandwidth(),
+							  iter->phase() );
+		
+			//	insert the new Breakpoint in the morphed Partial:
+			newp.insert( iter.time(), newbp );
+		}
+/*		
+	Old way, the above is more clear, I think.
+	
 		double amp2 = ( p1.duration() > 0. ) ? 
 			p1.amplitudeAt( iter.time() ) : 0.;
 		double freq2 = ( p1.duration() > 0. ) ? 
@@ -230,13 +259,54 @@ Morph::morphPartial( const Partial & p0, const Partial & p1, int assignLabel /* 
 		debugger << "time " << iter.time() << ":" << newbp.frequency() << "," <<
 					newbp.amplitude() << "," << newbp.bandwidth() << "," << 
 					newbp.phase() << endl;
-		*/
+		/
 		newp.insert( iter.time(), newbp );
+*/
 	}
 	
 	//	now do it for the other Partial:
 	for ( PartialConstIterator iter = p1.begin(); iter != p1.end(); ++iter )
 	{
+		//	amplitude weight is always used:
+		double alphaA = 1. - amplitudeFunction().valueAt( iter.time() );
+		
+		//	if p0 is a valid Partial, compute a weighted average 
+		//	Breakpoint and insert it, otherwise just fade p1:
+		if ( p0.duration() > 0. )
+		{
+			//	compute parameter weights:
+			double alphaF = 1. - frequencyFunction().valueAt( iter.time() );
+			double alphaBW = 1. - bandwidthFunction().valueAt( iter.time() );
+			
+			//	compute interpolated values for p1:
+			double amp0 = p0.amplitudeAt( iter.time() );
+			double freq0 = p0.frequencyAt( iter.time() );
+			double bw0 = p0.bandwidthAt( iter.time() );
+			double theta0 = p0.phaseAt( iter.time() );
+			
+			//	create a new weighted average Breakpoint:	
+			Breakpoint newbp( (alphaF * freq0) + ((1.-alphaF) * iter->frequency()),
+							   (alphaA * amp0) + ((1.-alphaA) * iter->amplitude()),
+							   (alphaBW * bw0) + ((1.-alphaBW) * iter->bandwidth()),
+							   (alphaF * theta0) + ((1.-alphaF) * iter->phase()) );
+			
+			//	insert the new Breakpoint in the morphed Partial:
+			newp.insert( iter.time(), newbp );
+		}
+		else
+		{
+			//	create a new scaled-amplitude Breakpoint:	
+			Breakpoint newbp( iter->frequency(),
+							  (1.-alphaA) * iter->amplitude(),
+							  iter->bandwidth(),
+							  iter->phase() );
+		
+			//	insert the new Breakpoint in the morphed Partial:
+			newp.insert( iter.time(), newbp );
+		}
+/*		
+	Old way, the above is more clear, I think.
+	
 		double alphaF = 1. - frequencyFunction().valueAt( iter.time() );
 		double alphaA = 1. - amplitudeFunction().valueAt( iter.time() );
 		double alphaBW = 1. - bandwidthFunction().valueAt( iter.time() );
@@ -258,14 +328,16 @@ Morph::morphPartial( const Partial & p0, const Partial & p1, int assignLabel /* 
 		debugger << "time " << iter.time() << ":" << newbp.frequency() << "," <<
 					newbp.amplitude() << "," << newbp.bandwidth() << "," << 
 					newbp.phase() << endl;
-		*/
+		/
 		newp.insert( iter.time(), newbp );
+*/
 	}
 	
 		
 	//	add the new partial to the collection,
 	//	if it is valid:
-	if ( newp.begin() != newp.end() ) {
+	if ( newp.begin() != newp.end() ) 
+	{
 		partials().push_back( newp );
 	}
 
@@ -300,17 +372,17 @@ Morph::crossfade( PartialList::const_iterator begin0,
 	for ( it = begin0; it != end0; ++it )
 	{
 		if ( it->label() == 0 )
-			morphPartial( *it, nullPartial );	
+			morphPartial( *it, nullPartial, 0 );	
 	}
 
 	//	crossfade Partials corresponding to a morph weight of 1:
 	for ( it = begin1; it != end1; ++it )
 	{
 		if ( it->label() == 0 )
-			morphPartial( nullPartial, *it );
+			morphPartial( nullPartial, *it, 0 );
 	}
 }
-
+/*
 // ---------------------------------------------------------------------------
 //	crossfadeLists
 // ---------------------------------------------------------------------------
@@ -366,17 +438,7 @@ static void collectByLabel( PartialList::const_iterator start,
 	}
 }
 
-// ---------------------------------------------------------------------------
-//	CrossfadeLabel
-// ---------------------------------------------------------------------------
-//	Static member for accessing the label for 
-//	crossfaded Partials (0):
-int 
-Morph::CrossfadeLabel(void)
-{
-	const int CROSSFADE_LABEL = 0;
-	return CROSSFADE_LABEL;
-}
+*/
 
 #if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris

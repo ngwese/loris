@@ -190,7 +190,7 @@ Analyzer::~Analyzer( void )
 // ---------------------------------------------------------------------------
 //
 void 
-Analyzer::analyze( const std::vector< double > & buf, double srate, double offset /* = 0. */ )
+Analyzer::analyze( const std::vector< double > & buf, double srate )
 {
 //	construct a state object for this analysis:	
 	AnalyzerState state( *this, srate );
@@ -207,7 +207,7 @@ Analyzer::analyze( const std::vector< double > & buf, double srate, double offse
 			  winMiddleIdx += hop ) 
 		{
 			//	compute the time of this analysis frame:
-			const double frameTime = ( winMiddleIdx / srate ) + offset;
+			const double frameTime = ( winMiddleIdx / srate );
 			 
 			//	compute reassigned spectrum:
 			//	make this better!
@@ -276,7 +276,8 @@ Analyzer::analyze( const std::vector< double > & buf, double srate, double offse
 		
 		pruneBogusPartials( state );
 	}
-	catch ( Exception & ex ) {
+	catch ( Exception & ex ) 
+	{
 		ex.append( "analysis failed." );
 		throw;
 	}
