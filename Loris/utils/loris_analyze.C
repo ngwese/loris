@@ -37,6 +37,7 @@ public:
 string gInFileName, gOutFileName = "partials.sdif", gTestFileName;
 Loris::Analyzer * gAnalyzer = 0;
 bool gCollate = false;
+double gRate = 44100;
 
 // ----------------------------------------------------------------
 //	argument parsing
@@ -354,7 +355,36 @@ public:
 		args.pop();
 	}
 };
-	
+
+class SetSampleRateCommand : public Command
+{
+public:
+	//	set the sample rate for samples read from standard
+	//	input, and for rendering partials.
+	void execute( Arguments & args ) const 
+	{
+		//	requires a numeric parameter
+		double x;
+		if ( args.empty() || !argIsNumber( args.top(), &x ) )
+		{
+			throw std::invalid_argument("sample rate specification "
+									   "requires a number");
+		}
+		
+		if ( x <= 0 )
+		{
+			throw std::invalid_argument("sample rate specification "
+									  "must be positive");
+		}
+		
+		gRate = x;
+		cout << "* setting sample rate to: "; 
+		cout << gRate << " Hz" << endl;
+
+		args.pop();
+	}
+};
+		
 
 // ----------------------------------------------------------------
 //	parseArguments
@@ -451,6 +481,9 @@ int main( int argc, char * argv[] )
 	commands["-freqfloor"] = new SetFreqFloorCommand();
 	commands["-sidelobes"] = commands["-attenutation"] = commands["-sidelobelevel"] =
 		new SetAttenuationCommand();
+	commands["-rate"] = commands["-samplerate"] = commands["-sr"] = 
+		new SetSampleRateCommand();
+		
 	
 	// 	build an argument stack, pushing the arguments
 	//	in reverse order.
@@ -476,13 +509,23 @@ int main( int argc, char * argv[] )
 	//	run the analysis
 	try
 	{
-		cout << "* reading samples from " << gInFileName << endl;
-		Loris::AiffFile infile( gInFileName );
-		Loris::AiffFile::samples_type samples = infile.samples();
-		double rate = infile.sampleRate();
-		
+		Loris::AiffFile::samples_type samples;
+		double analysisRate = gRate;
+		if ( !gInFileName.empty() )
+		{
+			cout << "* reading samples from " << gInFileName << endl;
+			Loris::AiffFile infile( gInFileName );
+			samples = infile.samples();
+			analysisRate = infile.sampleRate();
+		}
+		else
+		{
+			cout << "cannot yet read samples from standard input!" << endl;
+			return 1;
+		}
+				
 		cout << "* performing analysis" << endl;
-		gAnalyzer->analyze( samples, rate );
+		gAnalyzer->analyze( samples, analysisRate );
 		cout << "* analysis complete" << endl;	
 		
 		if ( gCollate )
@@ -503,7 +546,7 @@ int main( int argc, char * argv[] )
 		{
 			cout << "* exporting rendered partials to " << gTestFileName << endl;
 			Loris::AiffFile testfile( gAnalyzer->partials().begin(), 
-									gAnalyzer->partials().end(), rate );
+									gAnalyzer->partials().end(), gRate );
 			testfile.write( gTestFileName );
 		}
 		
