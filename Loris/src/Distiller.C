@@ -489,7 +489,7 @@ static void mergeNonOverlapping2( const Partial & src, Partial & distilled, doub
 			Partial::iterator inserted = 
 				distilled.insert( cont_beg.time() - fadeTime, 
 								makeNullBefore( cont_beg.breakpoint(), fadeTime ) );
-			if ( (--inserted)->amplitude() > 0. )
+			if ( inserted != distilled.begin() && (--inserted)->amplitude() > 0. )
 			{
 				Assert( inserted.time() < cont_beg.time() - (2*fadeTime) );
 				distilled.insert( inserted.time() + fadeTime, makeNullAfter( inserted.breakpoint(), fadeTime ) );
@@ -502,7 +502,7 @@ static void mergeNonOverlapping2( const Partial & src, Partial & distilled, doub
 			Partial::iterator inserted = 
 				distilled.insert( endtime + fadeTime, makeNullAfter( cont_last.breakpoint(), fadeTime ) );
 			
-			if ( (++inserted)->amplitude() > 0. )
+			if ( (++inserted) != distilled.end() && inserted->amplitude() > 0. )
 			{
 				Assert( inserted.time() > endtime + (2*fadeTime) );
 				distilled.insert( inserted.time() - fadeTime, makeNullBefore( inserted.breakpoint(), fadeTime ) );
