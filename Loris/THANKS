@@ -10,6 +10,6 @@ Key parts of the development of Loris were initiated during an invited
 residency by Kelly Fitz at the Bregman Electronic Music Studio at
 Dartmouth College in 1996, graciously arranged by Larry Polansky.
 
-Thanks to Michael Gogins for .NET testing.
+Thanks to Michael Gogins for .NET testing and Csound advice.
 
 Ulrike Axen provided an optimal collating algorithm, used in the Distiller.
