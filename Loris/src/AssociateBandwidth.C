@@ -91,10 +91,11 @@ AssociateBandwidth::computeNoiseEnergy( double freqHz )
 	double noise = 0.;
 	//	Have to check for alpha == 0, because 
 	//	the weights will be zero (see computeAlpha()):
-	if ( posAbove < _surplus.size() && alpha != 0. )
+	//	(ignore zeroeth region?)
+	if ( posAbove < _surplus.size() && alpha != 0. && posAbove > 0 )
 		noise += _surplus[posAbove] * alpha / _weights[posAbove];
 	
-	if ( posBelow >= 0 )
+	if ( posBelow > 0 )
 		noise += _surplus[posBelow] * (1. - alpha) / _weights[posBelow];
 				
 	return noise;
@@ -242,13 +243,11 @@ AssociateBandwidth::accumulateSinusoid( double f, double a )
 void
 AssociateBandwidth::accumulateNoise( double freq, double amp )
 {
-	//	don't mess with negative frequencies:
-	if ( freq < 0. )
-		return;
-
 	//	compute energy contribution and distribute 
-	//	at frequency f:
-	distribute( freq, amp * amp, _surplus  );
+	//	at frequency f, don't mess with negative 
+	//	frequencies:
+	if ( freq > 0. )
+		distribute( freq, amp * amp, _surplus  );
 }
 
 // ---------------------------------------------------------------------------

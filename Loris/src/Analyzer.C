@@ -195,16 +195,8 @@ Analyzer::analyze( const std::vector< double > & buf, double srate, double offse
 	AnalyzerState state( *this, srate );
 	
 //	loop over short-time analysis frames:
-//	Arbitrarily, the first window is centered hop
-//	samples before the beginning of the buffer (though 
-//	there's no way we would ever keep something from that 
-//	frame, it would have too large a time correction), and 
-//	the last window is the first one centered more than
-//	hop samples past the end of the buffer.
-//	
-//	UPDATE THIS COMMENT
 //
-//	Also, need to check for bogus parameters somewhere.
+//	need to check for bogus parameters somewhere.
 //
 	const long hop = long( hopTime() * srate );	//	truncate
 		
@@ -243,12 +235,13 @@ Analyzer::analyze( const std::vector< double > & buf, double srate, double offse
 			//	in this case, the accumulation of sinusoids happened in 
 			//	extractPeaks() , as did the accumulation of noise.
 			//
+			//	CHANGE: try accumulating only retained Breakpoints as
+			//	sinusoids, thinned breakpoints are accumulated as noise, 
+			//	see also thinPeaks() and extractPeaks()
+			//
 #if !defined(No_BW_Association)
-#if !defined(New_Association)
-			//	accumulate spectral energy:
-			state.bwAssociation().accumulateSpectrum( state.spectrum() );
-		
 			//	accumulate sinusoids:
+			//	this was lower, in if !defined(New_Association)
 			for ( std::list< Breakpoint >::iterator it = f.begin();
 				  it != f.end(); 
 				  ++it )
@@ -256,6 +249,10 @@ Analyzer::analyze( const std::vector< double > & buf, double srate, double offse
 				state.bwAssociation().accumulateSinusoid( it->frequency(), it->amplitude() );
 			}
 			
+#if !defined(New_Association)
+			//	accumulate spectral energy:
+			state.bwAssociation().accumulateSpectrum( state.spectrum() );
+		
 			//	compute surplus spectral energy:
 			state.bwAssociation().computeSurplusEnergy();
 #endif
@@ -389,26 +386,40 @@ Analyzer::extractPeaks( std::list< Breakpoint > & frame, double frameTime,
 			//	because it is too close to a louder sinusoid is just lost,
 			//	_not_ represented as noise.
 			double mag = state.spectrum().reassignedMagnitude( fsample, j );
+			
+			//	find the time correction (in samples!) for this peak:
+			//	this was below the threshold test, but under the new strategy,
+			//	it may not be necessary to keep around off-center peaks
+			//	through the association process, might be better to get
+			//	rid of them right away. In any event, it seems bad for them
+			//	to affect the thinning of peaks (thinPeaks()).
+			double timeCorrectionSamps = state.spectrum().reassignedTime( j );
+			
 #if !defined(New_Association)
 			if ( mag < threshold ) 
 			{
 				continue;
 			}
-#else		//	new association strategy
-			if ( mag < threshold ) 
+#else		//	new association strategy:
+			//	if I do this, then off-center peaks are not part of
+			//	association, not part of thinning, and the cropping/breaking
+			//	check in formPartials() is unnecessary (large time corrections
+			//	will already have been removed).
+			if ( std::abs(timeCorrectionSamps) > cropTime() * state.sampleRate() )
+				continue;
+				
+			//	the second part is a sinusoidality measure (?)
+			if ( mag < threshold || std::abs( fsample - j ) > 1. ) 
 			{
 				state.bwAssociation().accumulateNoise( fHz, mag );
 				continue;
 			}
 			else
 			{
-				state.bwAssociation().accumulateSinusoid( fHz, mag );			
+				//state.bwAssociation().accumulateSinusoid( fHz, mag );			
 			}
 #endif
 
-			//	find the time correction (in samples!) for this peak:
-			double timeCorrectionSamps = state.spectrum().reassignedTime( j );
-				
 #if 0	//	this seems wrong defined(Like_Lemur)
 			double correctionAbove = state.spectrum().reassignedTime( std::ceil( fsample ) );
 			double correctionBelow = state.spectrum().reassignedTime( std::floor( fsample ) );
@@ -454,7 +465,7 @@ Analyzer::extractPeaks( std::list< Breakpoint > & frame, double frameTime,
 //	to the specified partial density.
 //
 void 
-Analyzer::thinPeaks( std::list< Breakpoint > & frame, AnalyzerState &  )
+Analyzer::thinPeaks( std::list< Breakpoint > & frame, AnalyzerState & state )
 {
 	frame.sort( greater_amplitude<Breakpoint>() );
 	
@@ -472,6 +483,11 @@ Analyzer::thinPeaks( std::list< Breakpoint > & frame, AnalyzerState &  )
 		{
 			//	find_if returns the end of the range (it) if it finds nothing; 
 			//	remove *it from the frame
+#if defined(New_Association)
+			//	should check for large time correction before
+			//	deciding to keep the energy:
+			state.bwAssociation().accumulateNoise( it->frequency(), it->amplitude() );
+#endif
 			frame.erase( it-- );
 		}
 	}
@@ -499,7 +515,8 @@ static inline double distance( const Partial & partial,
 //	give birth to new Partials.
 //
 void 
-Analyzer::formPartials( std::list< Breakpoint > & frame, double frameTime, AnalyzerState & state )
+Analyzer::formPartials( std::list< Breakpoint > & frame, double frameTime, 
+						AnalyzerState & state )
 {
 	std::set< Partial * > newgoobers;
 	
@@ -673,6 +690,9 @@ Analyzer::spawnPartial( double time, const Breakpoint & bp )
 // ---------------------------------------------------------------------------
 //	Analysis may yield many Partials of zero duration, no sense
 //	in retaining those.
+//
+//	Maybe there should be some other notion of a too-short Partial.
+//	Should it be a parameter?
 //
 void
 Analyzer::pruneBogusPartials( AnalyzerState & state )
