@@ -54,7 +54,14 @@ int main( int argc, char * argv[] )
 	std::string in_fname;
 	if ( argc < 2 )
 	{
-		in_fname = "clarinet.aiff";
+		std::string path(""); 
+		if ( std::getenv("srcdir") ) 
+		{
+			path = std::getenv("srcdir");
+			path = path + "/";
+		}
+
+		in_fname = path + "clarinet.aiff";
 		std::cout << "I need a filename, using " << in_fname << std::endl;
 	}
 	else
