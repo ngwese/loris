@@ -163,6 +163,14 @@ public:
 		Returns a PartialListIterator refering to the position of the
 		newly-inserted Partial.
 	 */
+
+	void erase( PartialListIterator position );
+	/*	Remove the element at the position indicated by the 
+		PartialListIterator, position. After this operation,
+		the PartialListIterator position is invalid, but all
+		other iterators refering to other positions in the
+		PartialList are unaffected.
+	 */
 	 
 	void splice( PartialListIterator position, PartialList & list );
 	/*	Splice all the Partials in the specified PartialList into
