@@ -138,7 +138,7 @@ PartialList * PartialListCopy_( const PartialList * other )
 			_list( hlist ),
 			_iter( hlist->begin() )
 		{
-			notifier << "created an iterator on a list of " << _list->size() << " Partials" << endl;
+			notifier << "created an iterator on a list of " << _list->size() << " Partials" << std::endl;
 		}
 		
 		//	better be careful that pos is an iterator of *hlist!
@@ -146,14 +146,14 @@ PartialList * PartialListCopy_( const PartialList * other )
 			_list( hlist ),
 			_iter( pos )
 		{
-			notifier << "created a risky iterator on a list of " << _list->size() << " Partials" << endl;
+			notifier << "created a risky iterator on a list of " << _list->size() << " Partials" << std::endl;
 		}
 		
 		PartialListHIter_( const PartialListHIter_ & rhs ) :
 			_list( rhs._list ),
 			_iter( rhs._iter )
 		{
-			notifier << "copied an iterator on a list of " << _list->size() << " Partials" << endl;
+			notifier << "copied an iterator on a list of " << _list->size() << " Partials" << std::endl;
 		}
 		
 		PartialListHIter_ & operator= ( const PartialListHIter_ & rhs )
@@ -163,14 +163,14 @@ PartialList * PartialListCopy_( const PartialList * other )
 				_list = rhs._list;
 				_iter = rhs._iter;
 			}
-			notifier << "assigned an iterator on a list of " << _list->size() << " Partials" << endl;
+			notifier << "assigned an iterator on a list of " << _list->size() << " Partials" << std::endl;
 			
 			return *this;
 		}
 			
 		~PartialListHIter_( void )
 		{
-			notifier << "destroyed an iterator on a list of " << _list->size() << " Partials" << endl;
+			notifier << "destroyed an iterator on a list of " << _list->size() << " Partials" << std::endl;
 		}
 		
 		//	Iterator pattern:
@@ -219,13 +219,13 @@ public:
 {
 	PartialListH( const PartialList * pl )
 	{
-		notifier << "creating a list of " << pl->size() << " Partials" << endl;
+		notifier << "creating a list of " << pl->size() << " Partials" << std::endl;
 		return new PartialListH( pl->begin(), pl->end() );
 	}
 	
 	~PartialListH( void )
 	{
-		notifier << "destroying a list of " << (*self)->size() << " Partials" << endl;
+		notifier << "destroying a list of " << (*self)->size() << " Partials" << std::endl;
 		delete self;
 	}
 	
@@ -254,6 +254,12 @@ public:
 	PartialListHIter * last( void )
 	{
 		return new PartialListHIter( *self, --(*self)->end() );
+	}
+	
+	//	insertion of new Partials:
+	void append( PartialListHIter * ph )
+	{
+		(*self)->push_back( (*ph)->partial() );
 	}
 }
 };	//	end of SWIG interface class PartialListH
@@ -321,13 +327,13 @@ public:
 			_iter( pos )
 		{
 			notifier << "created an iterator on a partial having " << _partialH->countBreakpoints()
-					 << " breakpoints" << endl;
+					 << " breakpoints" << std::endl;
 		}
 		
 		~BP( void )
 		{
 			notifier << "destroyed an iterator on a partial having " << _partialH->countBreakpoints()
-					 << " breakpoints" << endl;
+					 << " breakpoints" << std::endl;
 		}
 		
 		//	attribute access:
