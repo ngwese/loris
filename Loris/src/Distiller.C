@@ -167,59 +167,25 @@ Distiller::gapAt( double time,
 // ---------------------------------------------------------------------------
 //	fixGaps
 // ---------------------------------------------------------------------------
+//	Look for gaps between Partials in the half-open interval [start,end)
+//	and make sure that the new distilled Partial (dest) ramps to zero
+//	amplitude during those gaps.
 //
 void 
 Distiller::fixGaps( Partial & dest, 
 				  	PartialList::const_iterator start,
 				  	PartialList::const_iterator end )
 {
-	/*
-		DO THIS BETTER:
-		
-		make a list of segments, sort it, then build a collapsed
-		list, avoid the collapsing loop altogether:
-		
-		start at first segment
-			while next segment start < current segment end
-				append next to current (or absorb, may not extend)
-				advance next
-			remove all segments between current and next (not including either)
-			advance current 
-		
-	*/
 	//	make a list of segments:
 	std::list< std::pair<double, double> > segments;
 	for ( PartialList::const_iterator p = start; p != end; ++p )
 	{	
 		segments.push_back( std::make_pair( p->startTime(), p->endTime() ) );
-/*
-		std::list< std::pair<double, double> >::iterator seg;
-		for ( seg = segments.begin(); seg != segments.end(); ++seg )
-		{
-			//	try to add this Partials time span to 
-			//	this segment, check for overlap:
-			if ( seg->first > p->endTime() || seg->second < p->startTime() )
-			{
-				//	no overlap 
-				continue;
-			}
-			
-			//	otherwise they overlap, make seg the union and break:
-			seg->first = std::min( seg->first, p->startTime() );
-			seg->second = std::max( seg->second, p->endTime() );
-			break;
-		}
-		
-		//	if no overlapping segment was found, make a new one:
-		if ( seg == segments.end() )
-		{
-			segments.push_back( std::make_pair( p->startTime(), p->endTime() ) );
-		}
-*/
 	}
-	//debugger << "found " << segments.size() << " segments." << endl;
+	debugger << "found " << segments.size() << " segments." << endl;
 	
-		
+	//	sort the list and collapse overlapping segments
+	//	to leave a list of non-overlapping segments:
 	segments.sort(); 	//	uses op < ( pair<>, pair<> ), does what you think
 	std::list< std::pair<double, double> >::iterator curseg;
 	for ( curseg = segments.begin(); curseg != segments.end(); ++curseg )
@@ -241,43 +207,8 @@ Distiller::fixGaps( Partial & dest,
 		++del;
 		segments.erase( del, nextseg );
 	}
-	//debugger << "collapsed to " << segments.size() << " segments" << endl;
+	debugger << "collapsed to " << segments.size() << " segments" << endl;
 	
-	
-	/*	sort and collapse the segments:
-	//	(if I could guarantee that the Partials were in 
-	//	start time order, I wouldn't need this, right?)
-	std::vector< double > VDBG;
-	if ( segments.size() > 1 )
-	{
-		
-		segments.sort(); 	//	uses op < ( pair<>, pair<> ), does what you think
-		std::list< std::pair<double, double> >::iterator seg;
-		for ( seg = segments.begin(); seg != segments.end(); ++seg )
-		{
-			VDBG.push_back( seg->first );
-			VDBG.push_back( seg->second );
-
-			//	for each later (starting) segment, try to collapse
-			//	into seg, check for nextseg start < seg end:
-			std::list< std::pair<double, double> >::iterator nextseg = seg;
-			while ( ++nextseg != segments.end() )
-			{
-				Assert( nextseg->first >= seg->first );
-				if ( nextseg->first <= seg->second ) 
-				{
-					seg->second = std::max( seg->second, nextseg->second );
-					std::list< std::pair<double, double> >::iterator tmp = nextseg--;
-					segments.erase(tmp);
-				}
-				else 
-				{
-					break;
-				}
-			}
-		}
-	}
-	*/
 	//	fill in gaps between segments:
 	if ( segments.size() > 1 )
 	{
