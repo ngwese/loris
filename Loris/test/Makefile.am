@@ -8,7 +8,7 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-EXTRA_DIST = clarinet.aiff flute.aiff morphtest.py morphtest.tcl
+EXTRA_DIST = clarinet.aiff flute.aiff fromkyma.spc morphtest.py morphtest.tcl
 
 MAINTAINERCLEANFILES = 	Makefile.in
 
