@@ -27,7 +27,7 @@
  *	Header file containing structure definitions for Csound unit generators
  *	supporting bandwidth-enhanced synthesis using the Loris library.
  *
- *	This lorisplay module was originally written by Corbin Champion, 2002.
+ *	The lorisplay module was originally written by Corbin Champion, 2002.
  *
  * Kelly Fitz, 9 May 2002
  * loris@cerlsoundgroup.org

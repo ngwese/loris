@@ -244,36 +244,60 @@ int count = 0;
 	{
 
 		bwestore->part[count] = *iter;  //set the partial to one of the partials read in
+		Partial & partial = bwestore->part[count];
+		
+		double btime = partial.startTime();  //get start time of partial
+	    double etime = partial.endTime();  //get end time of partial
 
-		double btime = bwestore->part[count].startTime();  //get start time of partial
-	        double etime = bwestore->part[count].endTime();  //get end time of partial
-
-		//get parameters at begining and end of partial
-		double bfreq = bwestore->part[count].frequencyAt(btime);
-		double efreq = bwestore->part[count].frequencyAt(etime);
-		double bamp = bwestore->part[count].amplitudeAt(btime);
-		double eamp = bwestore->part[count].amplitudeAt(etime);
-		double bbw = bwestore->part[count].bandwidthAt(btime);
-		double ebw = bwestore->part[count].bandwidthAt(etime);
-		double bph = bwestore->part[count].phaseAt(btime);
-		double eph = bwestore->part[count].phaseAt(etime);
-		if( (bwestore->fadetime) != 0 )  //if a fadetime is specified
+		//	if a fadetime has been specified, introduce zero-amplitude
+		//	Breakpoints to fade in and out over fadetime seconds:
+		if( (bwestore->fadetime) != 0 )
+		{
+			if ( partial.amplitudeAt(btime) > 0. )
 			{
-			if( btime != 0 ) //if the partial doesn't begin at 0
-			{
-				if( (btime - (bwestore->fadetime)) < 0 )  //if the partial start time - fadetime is less that zero
+				//	only fade in if starting amplitude is non-zero:
+				if( btime > 0. ) 
 				{
-					bwestore->part[count].insert(0.0, Breakpoint(bfreq, bamp, bbw, bph)); //start fade in at 0
+					//	if the Partial begins after time 0, insert a Breakpoint
+					//	of zero amplitude at a time fadetime before the beginning, 
+					//	of the Partial, or at zero, whichever is later:
+					double t = std::max(btime - (bwestore->fadetime), 0.);
+					partial.insert( t, Breakpoint( partial.frequencyAt(t), partial.amplitudeAt(t), 
+												   partial.bandwidthAt(t), partial.phaseAt(t)));
 				}
-				else  //otherwise
+				else 
 				{
-					bwestore->part[count].insert(btime - (bwestore->fadetime), Breakpoint(bfreq, bamp, bbw, bph));  //start fade in at start time -fadetime
-				} 
-			}
-			bwestore->part[count].insert(etime + (bwestore->fadetime), Breakpoint(efreq, eamp, ebw, eph));  //add fadeout break points
-			}
+					//	if the Partial begins at time zero, insert the zero-amplitude
+					//	Breakpoint at time zero, and make sure that the next Breakpoint
+					//	in the Partial is no more than fadetime away from the beginning
+					//	of the Partial:
+					
+					//	find the first Breakpoint later than time 0:
+					Partial::iterator pit = partial.begin();
+					while (pit.time() < 0.)
+						++pit;
+					if ( pit.time() > bwestore->fadetime )
+					{
+						//	if first Breakpoint afer 0 is later than fadetime, 
+						//	insert a Breakpoint at fadetime:
+						double t = bwestore->fadetime;
+						partial.insert( t, Breakpoint( partial.frequencyAt(t), partial.amplitudeAt(t), 
+													   partial.bandwidthAt(t), partial.phaseAt(t)));
+					}
+					
+					//	insert the zero-amplitude Breakpoint at 0:
+					partial.insert( 0, Breakpoint( partial.frequencyAt(0), 0, 
+												   partial.bandwidthAt(0), partial.phaseAt(0)));
 
-		init_oscillator(&(bwestore->part[count]), &(bwestore->oscp[count]),btime);  //initialize an oscillator with the partial
+				}
+			}
+			
+			//	add fadeout Breakpoint at end:
+			double t = etime + bwestore->fadetime;
+			partial.insert( t, Breakpoint( partial.frequencyAt(t), 0, 
+										   partial.bandwidthAt(t), partial.phaseAt(t)));
+		}
+
 		++count;
 
 	}
@@ -339,13 +363,19 @@ void lorisplay(LORISPLAY *p)
 	double * bufbegin =  p->bwestore->dblbuffer.begin();
 	for(i=0; i < (p->bwestore->n); i++)  //for each oscillator
 	{
-	amp = getAmp(*(p->time), &(p->bwestore->part[i]));  //get amp at currect time
+	amp = getAmp(*(p->time), &(p->bwestore->part[i]));  //get amp at current time
 	if(amp > 0 || p->bwestore->oscp[i].amplitude() > 0)  //if current or last amplitude greater than zero
 	{
 		if (p->bwestore->oscp[i].amplitude() == 0){ //if last amplitude was zero reinitialize the oscillator
+			fprintf(stderr, "initializing oscillator %d at time %f for Partial beginning at time %f\n",
+							i, prevtime, p->bwestore->part[i].startTime() );
 			init_oscillator(&(p->bwestore->part[i]), &(p->bwestore->oscp[i]), prevtime);
 		}	
-		p->bwestore->oscp[i].generateSamples(bufbegin, bufbegin + nn, *(p->freqenv)*getFreq(*(p->time), &(p->bwestore->part[i])), *(p->ampenv)*getAmp(*(p->time), &(p->bwestore->part[i])), *(p->bwenv)*getBw(*(p->time), &(p->bwestore->part[i])));  //generate samples from oscillators
+		p->bwestore->oscp[i].generateSamples( bufbegin, bufbegin + nn, 
+											  *(p->freqenv)*getFreq(*(p->time), &(p->bwestore->part[i])), 
+											  *(p->ampenv)*getAmp(*(p->time), &(p->bwestore->part[i])), 
+											  *(p->bwenv)*getBw(*(p->time), &(p->bwestore->part[i])));  
+											  //generate samples from oscillators
 	}
 	} 
 	
