@@ -103,6 +103,23 @@ entered, this defaults to zero. Note that the fadetime may not be exact,
 since the partial parameters are updated at the control rate (krate).
 </p>
 
+<!-- As initialization arguments the module needs a the filename of the .sdif  -->
+<!-- file to be used, ifilename, and an optional arguement ifadetime.  Ifadetime  -->
+<!-- can be used if the total sounds or individual partials have sharp attacks or  -->
+<!-- decays to avoid "pops" and "clicks" that might be caused.  Specifying  -->
+<!-- ifadetime will cause partials to fade in at the begining of a partial and  -->
+<!-- fade out at the end of the partial.  This is done by adding two more  -->
+<!-- breakpoints in the partial, one before the start time of every partial and  -->
+<!-- the other after the end time of every partial.  The additional breakpoints  -->
+<!-- will be at partial start time - ifadetime and partial end time + ifadetime,  -->
+<!-- in seconds, unless the partial start time is at 0 sec, in which case there  -->
+<!-- will be no fade in, or unless start time - ifadetime < 0, in which case the  -->
+<!-- fade in breakpoint will be placed at 0 sec.  The additional breakpoints will  -->
+<!-- have the same frequency, bandwidth, and phase (WRONG!) as the start or end points  -->
+<!-- respectively, but their amplitudes will be zero.  If no value is entered for  -->
+<!-- ifadetime, it will default to zero seconds. -->
+
+
 <h3>Performance</h3>
 <p><strong>lorisplay</strong> implements signal reconstruction using
 Bandwidth-Enhanced Additive Synthesis. The control data stems from a
@@ -149,29 +166,34 @@ endin
 <pre><em>; 
 ; Play the partials in clarinet.sdif 
 ; from 0 to 3 sec with 1 ms fadetime 
-; adding vibrato, increasing the 
+; adding tuning and vibrato, increasing the 
 ; "breathiness" (noisiness) and overall
 ; amplitude, and adding a highpass filter.
 ;</em>
 instr 2
     ktime    <strong>linseg</strong>      0, p3, 3.0    <em>; linear time function from 0 to 3 seconds</em>
 
+    <em>; compute frequency scale for tuning
+    ; (original pitch was G#4)</em>
+    ifscale  <strong>=</strong>           cpspch(p4)/cpspch(8.08)
+
     <em>; make a vibrato envelope</em>
     kvenv    <strong>linseg</strong>      0, p3/6, 0, p3/6, .02, p3/3, .02, p3/6, 0, p3/6, 0
     kvib     <strong>oscil</strong>       kvenv, 4, 1   <em>; table 1, sinusoid</em>
 
     kbwenv   <strong>linseg</strong>      1, p3/6, 1, p3/6, 2, 2*p3/3, 2
-    a1       <strong>lorisplay</strong>   ktime, "clarinet.sdif", 1+kvib, 2, kbwenv, .001  
+    a1       <strong>lorisplay</strong>   ktime, "clarinet.sdif", ifscale+kvib, 2, kbwenv, .001  
     a2       <strong>atone</strong>       a1, 1000      <em>; highpass filter, cutoff 1000 Hz</em>
              <strong>out</strong>         a2
 endin
 </pre>
 <p> The instrument in Example 1 synthesizes a clarinet tone from
 beginning to end using partials derived from reassigned
-bandwidth-enhanced analysis of a three-second clarinet tone, stored in a
-file, "clarinet.sdif." The instrument in Example 2 adds vibrato to the
-clarinet tone synthesized by <code>instr 1</code>, boosts its amplitde
-and noisiness, and applies a highpass filter to the result.
+bandwidth-enhanced analysis of a three-second clarinet tone, stored in
+a file, "clarinet.sdif." The instrument in Example 2 adds tuning and
+vibrato to the clarinet tone synthesized by <code>instr 1</code>,
+boosts its amplitde and noisiness, and applies a highpass filter to
+the result.
 </p>
 
 <h3>Authors</h3>

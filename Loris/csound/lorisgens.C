@@ -367,8 +367,8 @@ void lorisplay(LORISPLAY *p)
 	if(amp > 0 || p->bwestore->oscp[i].amplitude() > 0)  //if current or last amplitude greater than zero
 	{
 		if (p->bwestore->oscp[i].amplitude() == 0){ //if last amplitude was zero reinitialize the oscillator
-			fprintf(stderr, "initializing oscillator %d at time %f for Partial beginning at time %f\n",
-							i, prevtime, p->bwestore->part[i].startTime() );
+			// fprintf(stderr, "initializing oscillator %d at time %f for Partial beginning at time %f\n",
+			//				i, prevtime, p->bwestore->part[i].startTime() );
 			init_oscillator(&(p->bwestore->part[i]), &(p->bwestore->oscp[i]), prevtime);
 		}	
 		p->bwestore->oscp[i].generateSamples( bufbegin, bufbegin + nn, 

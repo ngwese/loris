@@ -19,19 +19,23 @@ endin
 ; 
 ; Play the partials in clarinet.sdif 
 ; from 0 to 3 sec with 1 ms fadetime 
-; adding vibrato, increasing the 
+; adding tuning and vibrato, increasing the 
 ; "breathiness" (noisiness) and overall
 ; amplitude, and adding a highpass filter.
 ;
 instr 2
     ktime    linseg      0, p3, 3.0    ; linear time function from 0 to 3 seconds
+    
+    ; compute frequency scale for tuning
+    ; (original pitch was G#4)
+    ifscale  =           cpspch(p4)/cpspch(8.08)
 
     ; make a vibrato envelope
     kvenv    linseg      0, p3/6, 0, p3/6, .02, p3/3, .02, p3/6, 0, p3/6, 0
     kvib     oscil       kvenv, 4, 1   ; table 1, sinusoid
 
     kbwenv   linseg      1, p3/6, 1, p3/6, 2, 2*p3/3, 2
-    a1       lorisplay   ktime, "clarinet.sdif", 1+kvib, 2, kbwenv, .001  
+    a1       lorisplay   ktime, "clarinet.sdif", ifscale+kvib, 2, kbwenv, .001  
     a2       atone       a1, 1000      ; highpass filter, cutoff 1000 Hz
              out         a2
 endin
