@@ -83,7 +83,6 @@ dnl ])
 dnl 
 dnl KELLYS_GREAT_DARWIN_FIX
 
-DARWIN=false
 AM_CONDITIONAL(DARWIN, test "$DARWIN")
 
 dnl----------------------------------------------------------------
