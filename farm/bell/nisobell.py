@@ -46,7 +46,40 @@ notes from trial 4:
 	- can use 70 or 95 Hz resolution with wider windows and get good results
 	- distillation works well for all values tried (up to 120, try larger)
 
-Last updated: 5 Oct 2001 by Kelly Fitz
+notes from trial 5 (using 1.0beta8):
+	- 300 Hz windows seem to get a little crunchy after about 3 s, don't use
+	- 200 Hz windows undistilled reconstructions are pretty good
+	- distillation at 180 is unusable, total crunch
+	- 70.200.d120 and 70.200.d150 have noisiness problems
+	- 70.200.d90 is fine, as are distillations of 95.200
+	- very high level of background hiss in original makes all of them 
+	kind of wormy
+	
+notes from trial 6 (using 1.0beta9):
+	- confirmed above: disllations of 95.200 are all pretty good, 
+	as is 70.200.d90, all are wormy.
+	- need to make some SDIF and Spc files to look at and figure out
+	what kind of partials are being retained. Maybe there are lots of
+	short ones that can be converted to noise, or removed. 
+	
+notes from trial 7 (Spc files in Kyma):
+	- lots of tiny little partials all over the spectrum, could eliminate
+	- looks like it might be worth trying to restrict the frequency drift
+	in these analyses, some of these partials wander quite a lot.
+	- also short stuff before .2 seconds looks like it could go
+	- should also try converting all those short things to noise
+	
+notes from trial 8:
+	- trimming and restricting frequency drift does not seem
+	to have adversely affected the quality of the reconstructions,
+	just removed the background wormy hiss
+	- this trivial pruning mechanism leaves some pretty big holes, 
+	but they don't seem to be audible
+	- filenames too long!
+	- partials seem to wander less, though I think that the distillation
+	process introduces some of that
+
+Last updated: 10 May 2002 by Kelly Fitz
 """
 print __doc__
 
@@ -55,7 +88,7 @@ from trials import *
 
 # use this trial counter to skip over
 # eariler trials
-trial = 5
+trial = 8
 
 print "running trial number", trial, time.ctime(time.time())
 
@@ -140,3 +173,105 @@ if trial == 5:
 				harmonicDistill( p2, f )
 				ofile = 'bell.%i.%i.d%i.aiff'%(r, w, f)
 				synthesize( ofile, p2 )
+
+if trial == 6:
+	resolutions = (70, 95)
+	widths = ( 200, )
+	funds = ( 90, 120, 150 )
+	for r in resolutions:
+		for w in widths:
+			p = analyze( source, r, w )
+			ofile = 'bell.%i.%i.aiff'%(r, w)
+			synthesize( ofile, p )
+			for f in funds:
+				p2 = p.copy()
+				harmonicDistill( p2, f )
+				ofile = 'bell.%i.%i.d%i.aiff'%(r, w, f)
+				synthesize( ofile, p2 )
+				
+if trial == 7:
+	r = 70
+	w = 200
+	p = analyze( source, r, w )
+	ofilebase = 'bell.%i.%i'%(r, w)
+	loris.exportSdif( ofilebase + '.sdif', p )
+	f = 90
+	harmonicDistill( p, f )
+	ofilebase = 'bell.%i.%i.d%i'%(r, w, f)
+	loris.exportSdif( ofilebase + '.sdif', p )
+	loris.exportSpc( ofilebase + '.sine.spc', p, 36, 0 ) 
+	loris.exportSpc( ofilebase + '.bwe.spc', p, 36, 1 ) 
+	r = 95
+	w = 200
+	p = analyze( source, r, w )
+	p2 = p.copy()
+	ofilebase = 'bell.%i.%i'%(r, w)
+	loris.exportSdif( ofilebase + '.sdif', p )
+	f = 90
+	harmonicDistill( p, f )
+	ofilebase = 'bell.%i.%i.d%i'%(r, w, f)
+	loris.exportSdif( ofilebase + '.sdif', p )
+	loris.exportSpc( ofilebase + '.sine.spc', p, 36, 0 ) 
+	loris.exportSpc( ofilebase + '.bwe.spc', p, 36, 1 ) 
+	p = p2
+	f = 150
+	harmonicDistill( p, f )
+	ofilebase = 'bell.%i.%i.d%i'%(r, w, f)
+	loris.exportSdif( ofilebase + '.sdif', p )
+	loris.exportSpc( ofilebase + '.sine.spc', p, 36, 0 ) 
+	loris.exportSpc( ofilebase + '.bwe.spc', p, 36, 1 ) 
+	
+######## trial 8 ############
+
+def trial8run( sfile, r, w, f ):
+	print 'analyzing %s (%s)'%(source, time.ctime(time.time()))
+	a = loris.Analyzer( r, w )
+	a.setFreqDrift( .2*r )
+	p = a.analyze( sfile.samples(), sfile.sampleRate() )
+	psave = p.copy()
+	harmonicDistill( p, f )
+	ofilebase = 'bell.fd2.%i.%i.d%i'%(r, w, f)
+	loris.exportSpc( ofilebase + '.sine.spc', p, 36, 0 ) 
+	loris.exportSpc( ofilebase + '.bwe.spc', p, 36, 1 ) 
+	synthesize( ofilebase + '.aiff', p )
+	
+	# trim version
+	print 'trimming very short partials'
+	p = psave
+	it = p.begin()
+	end = p.end()
+	while not it.equals(end):
+		nxt = it.next()
+		part = it.partial()
+		if (part.duration() < .2) and (part.startTime() > .5):
+			p.erase(it)
+		it = nxt
+	harmonicDistill( p, f )
+	ofilebase = 'bell.fd2.trim.%i.%i.d%i'%(r, w, f)
+	loris.exportSpc( ofilebase + '.sine.spc', p, 36, 0 ) 
+	loris.exportSpc( ofilebase + '.bwe.spc', p, 36, 1 ) 
+	synthesize( ofilebase + '.aiff', p )
+
+if trial == 8:
+	filename = source
+	sfile = loris.AiffFile( filename )
+	
+	r = 70
+	w = 200
+	f = 90
+	trial8run( sfile, r, w, f )
+
+	r = 95
+	w = 200
+	f = 90
+	trial8run( sfile, r, w, f )
+	
+	r = 95
+	w = 200
+	f = 150
+	trial8run( sfile, r, w, f )
+	
+	
+	
+	
+	

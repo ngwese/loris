@@ -57,7 +57,7 @@ cello154
 
 cello69.F
 	- 20.62, 34.62, and 34.82 are unlistenable, others aren't too bad
-	- windows are wider that earlier trials, but the sounds are way better
+	- windows are wider than earlier trials, but the sounds are way better
 	- distillation at 69 Hz seems to make these a little showery or 
 	hissy, but distillation at 34 Hz seems okay
 	- 138 Hz window is probably best
@@ -68,12 +68,61 @@ cello69.MF
 	need to lower the noise floor? What would happen if we increased
 	the level of the source?
 	- as above, 69 Hz distillation makes hiss out of the buzz, 34 Hz
-	does do it as much
+	doesn't do it as much
 	- overall, buzz is not represented as well as in F, try using a
 	normalized source
 	
+notes from trial 3 (using 1.0beta8):
+cello69.MF
+	- using a gain-normalized source, all of these sound quite passable.
+	- the tail of all of them sounds gritty
+	- distillation at 20 and 34 Hz doesn't affect the syntheses adversely
+	- the differences between all of these are subtle, and none is really
+	clearly better than the others.
 
-Last updated: 5 Oct 2001 by Kelly Fitz
+
+notes from trial 4 (using 1.0beta9):
+cello69.F:
+	- of the undistilled versions, 20 Hz resolution seems to yield the 
+	least artifacts, though its still not quite as grunty as the original. 
+	In the others, the noise sounds a bit metallic.
+	- distilling the 20 Hz resolution analyses at two partials per
+	harmonic doesn't seem to affect them adversely, one partial per harm
+	has the same noise metallic artifacts introduced in the other resolution 
+	analyses.
+	- summary use 20 Hz resolution, diistill at two partiials per harmonic (34),
+	either window seems too work.
+
+cello69.MF:
+	- attack is squashed on all of these, need shorter (wider) windows
+	than 103 Hz I guess
+
+cello154.F:
+	- all three resolutions sound about the same, and all distillations are
+	quite good. They don't quite pass a same/difference test, but all are
+	quite usable.
+	- Doesn't seem to be any advantage to distilling at two partials per harm
+	instead of one.
+
+notes from trial 5 (Spc files in Kyma):
+	- 120 partials isn't enough for the low tones
+	- for the low tones, partial numbering get off by one for
+	partials above 26 (channelizing is two partials per harmonic),
+	maybe need to use a real reference instead of n artificial one
+	- 154 Hz tones look reasonable
+	- 69.MF.loud names were too long!
+
+notes from trial 6 (Spc files in Kyma):
+	- partials in low tones are labeled correctly now
+	- not clear that 160 partials is enough either!
+	- attacks have more grunt with the odd partials included,
+	but sustain is passable with just evens.
+	- distillations of 69.MF are still WAY muffled. Why?
+	- NOTE: sifting solves this problem, no longer muffled, but
+	it does not seem to be a phase problem, since setting all
+	Breakpoint phases to zero does not cause muffling.
+
+Last updated: 20 May 2002 by Kelly Fitz
 """
 print __doc__
 
@@ -82,7 +131,7 @@ from trials import *
 
 # use this trial counter to skip over
 # eariler trials
-trial = 3
+trial = 6
 
 print "running trial number", trial, time.ctime(time.time())
 
@@ -91,6 +140,7 @@ sourcedict = { 'cello154.F.aiff':154, 'cello69.F.aiff':69, 'cello69.MF.aiff':69 
 
 # this is better:
 sources = ( ('cello154.F.aiff', 154), ('cello69.F.aiff', 69), ('cello69.MF.aiff',69) )
+sources2 = ( ('cello154.F.aiff', 154), ('cello69.F.aiff', 69), ('cello69.MF.loud.aiff',69) )
 
 if trial == 1:
 	for source in sourcedict.keys():
@@ -144,3 +194,220 @@ if trial == 3:
 				harmonicDistill( p2, f )
 				ofile = '%s.%i.%i.d%i.aiff'%(source[:-5], r, w, f)
 				synthesize( ofile, p2 )
+
+if trial == 4:
+	for (source,fund) in sources2:
+		resolutions = ( .3*fund, .5*fund, .8*fund )
+		if fund < 100:
+			winds = (fund, 1.5*fund )
+		else:
+			winds = (fund,)
+		for r in resolutions:
+			for w in winds:
+				p = analyze( source, r, w )
+				ofile = '%s.%i.%i.aiff'%(source[:-5], r, w)
+				synthesize( ofile, p )
+				for f in (.3*fund, .5*fund, fund):
+					p2 = p.copy()
+					harmonicDistill( p2, f )
+					ofile = '%s.%i.%i.d%i.aiff'%(source[:-5], r, w, f)
+					synthesize( ofile, p2 )
+
+if trial == 5:
+	source = 'cello154.F.aiff'
+	r = 77
+	w = 154
+	p = analyze( source, r, w )
+	ofilebase = 'cello154.F.%i.%i'%(r, w)
+	loris.exportSdif( ofilebase + '.sdif', p )
+	f = 154
+	harmonicDistill( p, f )
+	pruneByLabel( p, range(1,120) )
+	ofilebase = 'cello154.F.%i.%i.d%i'%(r, w, f)
+	loris.exportSdif( ofilebase + '.sdif', p )
+	loris.exportSpc( ofilebase + '.sine.spc', p, 51, 0 ) 
+	loris.exportSpc( ofilebase + '.bwe.spc', p, 51, 1 ) 
+	r = 123
+	w = 154
+	p = analyze( source, r, w )
+	ofilebase = 'cello154.F.%i.%i'%(r, w)
+	loris.exportSdif( ofilebase + '.sdif', p )
+	f = 154
+	harmonicDistill( p, f )
+	pruneByLabel( p, range(1,120) )
+	ofilebase = 'cello154.F.%i.%i.d%i'%(r, w, f)
+	loris.exportSdif( ofilebase + '.sdif', p )
+	loris.exportSpc( ofilebase + '.sine.spc', p, 51, 0 ) 
+	loris.exportSpc( ofilebase + '.bwe.spc', p, 51, 1 ) 
+	
+	source = 'cello69.F.aiff'
+	r = 20
+	w = 69
+	p = analyze( source, r, w )
+	ofilebase = 'cello69.F.%i.%i'%(r, w)
+	loris.exportSdif( ofilebase + '.sdif', p )
+	f = 34
+	harmonicDistill( p, f )
+	pruneByLabel( p, range(1,120) )
+	ofilebase = 'cello69.F.%i.%i.d%i'%(r, w, f)
+	loris.exportSdif( ofilebase + '.sdif', p )
+	loris.exportSpc( ofilebase + '.sine.spc', p, 37, 0 ) 
+	loris.exportSpc( ofilebase + '.bwe.spc', p, 37, 1 ) 
+	w = 103
+	p = analyze( source, r, w )
+	ofilebase = 'cello69.F.%i.%i'%(r, w)
+	loris.exportSdif( ofilebase + '.sdif', p )
+	f = 34
+	harmonicDistill( p, f )
+	pruneByLabel( p, range(1,120) )
+	ofilebase = 'cello69.F.%i.%i.d%i'%(r, w, f)
+	loris.exportSdif( ofilebase + '.sdif', p )
+	loris.exportSpc( ofilebase + '.sine.spc', p, 37, 0 ) 
+	loris.exportSpc( ofilebase + '.bwe.spc', p, 37, 1 ) 
+	
+	source = 'cello69.MF.loud.aiff'
+	r = 34
+	w = 69*2
+	p = analyze( source, r, w )
+	ofilebase = 'cello69.MF.loud.%i.%i'%(r, w)
+	synthesize( ofilebase + '.aiff', p )
+	loris.exportSdif( ofilebase + '.sdif', p )
+	f = 34
+	harmonicDistill( p, f )
+	pruneByLabel( p, range(1,120) )
+	ofilebase = 'cello69.MF.loud.%i.%i.d%i'%(r, w, f)
+	synthesize( ofilebase + '.aiff', p )
+	loris.exportSdif( ofilebase + '.sdif', p )
+	loris.exportSpc( ofilebase + '.sine.spc', p, 37, 0 ) 
+	loris.exportSpc( ofilebase + '.bwe.spc', p, 37, 1 ) 
+	w = 69*2.2
+	p = analyze( source, r, w )
+	ofilebase = 'cello69.MF.loud.%i.%i'%(r, w)
+	synthesize( ofilebase + '.aiff', p )
+	loris.exportSdif( ofilebase + '.sdif', p )
+	f = 34
+	harmonicDistill( p, f )
+	pruneByLabel( p, range(1,120) )
+	ofilebase = 'cello69.MF.loud.%i.%i.d%i'%(r, w, f)
+	synthesize( ofilebase + '.aiff', p )
+	loris.exportSdif( ofilebase + '.sdif', p )
+	loris.exportSpc( ofilebase + '.sine.spc', p, 37, 0 ) 
+	loris.exportSpc( ofilebase + '.bwe.spc', p, 37, 1 ) 
+
+	r = 20
+	w = 69*2
+	p = analyze( source, r, w )
+	ofilebase = 'cello69.MF.loud.%i.%i'%(r, w)
+	synthesize( ofilebase + '.aiff', p )
+	loris.exportSdif( ofilebase + '.sdif', p )
+	f = 34
+	harmonicDistill( p, f )
+	pruneByLabel( p, range(1,120) )
+	ofilebase = 'cello69.MF.loud.%i.%i.d%i'%(r, w, f)
+	synthesize( ofilebase + '.aiff', p )
+	loris.exportSdif( ofilebase + '.sdif', p )
+	loris.exportSpc( ofilebase + '.sine.spc', p, 37, 0 ) 
+	loris.exportSpc( ofilebase + '.bwe.spc', p, 37, 1 ) 
+	w = 69*2.2
+	p = analyze( source, r, w )
+	ofilebase = 'cello69.MF.loud.%i.%i'%(r, w)
+	synthesize( ofilebase + '.aiff', p )
+	loris.exportSdif( ofilebase + '.sdif', p )
+	f = 34
+	harmonicDistill( p, f )
+	pruneByLabel( p, range(1,120) )
+	ofilebase = 'cello69.MF.loud.%i.%i.d%i'%(r, w, f)
+	synthesize( ofilebase + '.aiff', p )
+	loris.exportSdif( ofilebase + '.sdif', p )
+	loris.exportSpc( ofilebase + '.sine.spc', p, 37, 0 ) 
+	loris.exportSpc( ofilebase + '.bwe.spc', p, 37, 1 ) 
+	
+if trial == 6:
+	source = 'cello69.F.aiff'
+	r = 20
+	w = 69
+	p = analyze( source, r, w )
+	ofilebase = 'cello69.F.%i.%i'%(r, w)
+	loris.exportSdif( ofilebase + '.sdif', p )
+	ref = loris.createFreqReference( p, 69*2.75, 69*3.25 )
+	loris.channelize( p, ref, 6 )
+	loris.distill( p )
+	pruneByLabel( p, range(1,160) )
+	ofilebase = 'cello69.F.%i.%i.d3rd'%(r, w)
+	loris.exportSdif( ofilebase + '.sdif', p )
+	loris.exportSpc( ofilebase + '.s.spc', p, 37, 0 ) 
+	loris.exportSpc( ofilebase + '.e.spc', p, 37, 1 ) 
+	w = 103
+	p = analyze( source, r, w )
+	ofilebase = 'cello69.F.%i.%i'%(r, w)
+	loris.exportSdif( ofilebase + '.sdif', p )
+	ref = loris.createFreqReference( p, 69*2.75, 69*3.25 )
+	loris.channelize( p, ref, 6 )
+	loris.distill( p )
+	pruneByLabel( p, range(1,160) )
+	ofilebase = 'cello69.F.%i.%i.d3rd'%(r, w)
+	loris.exportSdif( ofilebase + '.sdif', p )
+	loris.exportSpc( ofilebase + '.s.spc', p, 37, 0 ) 
+	loris.exportSpc( ofilebase + '.e.spc', p, 37, 1 ) 
+	
+	source = 'cello69.MF.loud.aiff'
+	r = 34
+	w = 69*2
+	p = analyze( source, r, w )
+	ofilebase = 'cello69.MF.%i.%i'%(r, w)
+	synthesize( ofilebase + '.aiff', p )
+	loris.exportSdif( ofilebase + '.sdif', p )
+	ref = loris.createFreqReference( p, 69*2.75, 69*3.25 )
+	loris.channelize( p, ref, 6 )
+	loris.distill( p )
+	pruneByLabel( p, range(1,160) )
+	ofilebase = 'cello69.MF.%i.%i.d3rd'%(r, w)
+	synthesize( ofilebase + '.aiff', p )
+	loris.exportSdif( ofilebase + '.sdif', p )
+	loris.exportSpc( ofilebase + '.s.spc', p, 37, 0 ) 
+	loris.exportSpc( ofilebase + '.e.spc', p, 37, 1 ) 
+	w = 69*2.2
+	p = analyze( source, r, w )
+	ofilebase = 'cello69.MF.%i.%i'%(r, w)
+	synthesize( ofilebase + '.aiff', p )
+	loris.exportSdif( ofilebase + '.sdif', p )
+	ref = loris.createFreqReference( p, 69*2.75, 69*3.25 )
+	loris.channelize( p, ref, 6 )
+	loris.distill( p )
+	pruneByLabel( p, range(1,160) )
+	ofilebase = 'cello69.MF.%i.%i.d3rd'%(r, w)
+	synthesize( ofilebase + '.aiff', p )
+	loris.exportSdif( ofilebase + '.sdif', p )
+	loris.exportSpc( ofilebase + '.s.spc', p, 37, 0 ) 
+	loris.exportSpc( ofilebase + '.e.spc', p, 37, 1 ) 
+
+	r = 20
+	w = 69*2
+	p = analyze( source, r, w )
+	ofilebase = 'cello69.MF.%i.%i'%(r, w)
+	synthesize( ofilebase + '.aiff', p )
+	loris.exportSdif( ofilebase + '.sdif', p )
+	ref = loris.createFreqReference( p, 69*2.75, 69*3.25 )
+	loris.channelize( p, ref, 6 )
+	loris.distill( p )
+	pruneByLabel( p, range(1,160) )
+	ofilebase = 'cello69.MF.%i.%i.d3rd'%(r, w)
+	synthesize( ofilebase + '.aiff', p )
+	loris.exportSdif( ofilebase + '.sdif', p )
+	loris.exportSpc( ofilebase + '.s.spc', p, 37, 0 ) 
+	loris.exportSpc( ofilebase + '.e.spc', p, 37, 1 ) 
+	w = 69*2.2
+	p = analyze( source, r, w )
+	ofilebase = 'cello69.MF.%i.%i'%(r, w)
+	synthesize( ofilebase + '.aiff', p )
+	loris.exportSdif( ofilebase + '.sdif', p )
+	ref = loris.createFreqReference( p, 69*2.75, 69*3.25 )
+	loris.channelize( p, ref, 6 )
+	loris.distill( p )
+	pruneByLabel( p, range(1,160) )
+	ofilebase = 'cello69.MF.%i.%i.d3rd'%(r, w)
+	synthesize( ofilebase + '.aiff', p )
+	loris.exportSdif( ofilebase + '.sdif', p )
+	loris.exportSpc( ofilebase + '.s.spc', p, 37, 0 ) 
+	loris.exportSpc( ofilebase + '.e.spc', p, 37, 1 ) 
+

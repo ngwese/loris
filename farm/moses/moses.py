@@ -15,16 +15,16 @@ but the noise is pitched.
 The parameters we once liked for this are resolution 90 and
 window width 200 Hz.
 
-notes from trial 1:
+notes from trial 1 (using 1.0beta8):
 	- none of these sounds as present as the original, all are 
 	slightly reverberant
 	- maybe need a lower freq threshold?
 	- 100 Hz windows are no good
 	- 100 Hz res is marginal
 	- with 200 and 300 windows and res 70,80,or 90 Hz, all sound pretty
-	much the same
+	much the same, and very usable
 
-Last updated: 4 Feb 2002 by Kelly Fitz
+Last updated: 25 Feb 2002 by Kelly Fitz
 """
 print __doc__
 

@@ -31,6 +31,12 @@ notes from trial 2:
 	sound (only really detectable with wide windows)
 	- 200 and 250 Hz windows sounds pretty good with 65 and 75 Hz 
 	resolutions -- actually 170 is pretty good too
+	
+notes from trial 3 (using 1.0beta8):
+	- these all sound about the same, maybe a little worse with
+	the 95 Hz resolution, none are that pretty, but there aren't
+	many really objectionable artifacts.
+
 
 Last updated: 8 Oct 2001 by Kelly Fitz
 """

@@ -20,7 +20,7 @@ notes from trial 1:
 	- 80 Hz is unusable
 	- 60,200 is a little noisy, as is 40,200
 	- 60,300 sounds a little hoarse, as does 40,300
-	- 60,100 is usable
+	- 60,100 is unusable
 
 Last updated: 4 Feb 2002 by Kelly Fitz
 """

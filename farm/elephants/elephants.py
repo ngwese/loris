@@ -51,7 +51,7 @@ notes from trial 1:
 	- res 20 Hz and window 100 Hz is pretty good, and with those
 		conditions, region width doesn't have any effect
 	
-notes fro trial 2:
+notes from trial 2:
 	elephant1:	
 	- 20 and 40 Hz resolution sound pretty good with all windows, 60 hz
 	sounds okay with wider windows (like 200 hz)
@@ -64,7 +64,28 @@ notes fro trial 2:
 	
 	Next: try 1 and 3 with time dilation, dunno what to do about 2
 
-Last updated: 8 Oct 2001 by Kelly Fitz
+notes from trial 3:
+	elephant 1 stretched: 
+	- all sound pretty good (? not the right word perhaps), I can sometimes
+	imagine that 40.130 is the best of the bunch, least artifacts, and maybe
+	20.180 is the worst, but its hard to tell them apart.
+	
+	elephant 3 stretched:
+	- since this sound was very wet to begin with, the stretched versions 
+	don't sound very good. The slap-echo from hard (cemement presumably) 
+	walls in the original recording stretch to sound like a cheap spring 
+	reverberator. One should try stretching only the middle so that at 
+	least the decay won't be so noticable. 
+	- the 130 window seems to smooth out some of the fast warbling that is
+	present in the original, and evident (stretched) in other reproductions
+	with narrower windows. Seems like it is being captured by retaining 
+	partials thhat are close enough in frequency to give beating.
+	- the reverberation artifacts are more pronounced in the 80 Hz windows
+	than in the 100 Hz windows, esp. 30.80.
+	- not much difference between 20 and 30 Hz resolution in general.
+
+
+Last updated: 6 May 2002 by Kelly Fitz
 """
 
 print __doc__
@@ -124,7 +145,7 @@ if trial == 3:
 		for w in widths:
 			p = analyze( source, r, w )
 			p = timescale( p, 2. )
-			ofile = '%s.%i.%i.T2aiff'%(source[:-5], r, w)
+			ofile = '%s.%i.%i.T2.aiff'%(source[:-5], r, w)
 			synthesize( ofile, p )
 	# elephant3.aiff
 	source = sources[2]  
@@ -134,5 +155,5 @@ if trial == 3:
 		for w in widths:
 			p = analyze( source, r, w )
 			p = timescale( p, 2. )
-			ofile = '%s.%i.%i.T2aiff'%(source[:-5], r, w)
+			ofile = '%s.%i.%i.T2.aiff'%(source[:-5], r, w)
 			synthesize( ofile, p )

@@ -10,7 +10,7 @@ Python script for analyzing and reconstructing a variety
 of sounds used to test the analysis/modification/synthesis
 routines in Loris.
 
-Last updated: 8 March 2001 by Kelly Fitz
+Last updated: 7 May 2002 by Kelly Fitz
 """
 
 import loris, time
@@ -112,7 +112,12 @@ def harmonicSift( partials, fundamental ):
 	
 	Before distilling, the partials are sifted, and partials
 	rejected by the Sieve (those labeled 0) are removed.
+	
+	
+	DON'T USE - SIFT HAS BEEN REMOVED
 	"""
+	raise 'sift has been removed from Loris'
+	
 	env = loris.BreakpointEnvelopeWithValue( fundamental )
 	loris.channelize( partials, env, 1 )
 	# do sifting and removal of sifted-out partials:
@@ -141,6 +146,23 @@ def buildEnvelope( TVpairs ):
 	for (time,value) in TVpairs:
 		env.insertBreakpoint( time, value )
 	return env
+	
+def pruneByLabel( partials, labels ):
+	"""usage: pruneByLabel( partialList, collectionOfLabels )
+	
+	Remove partials in the specified PartialList 
+	having labels not in the specified collection
+	of labels.
+	"""
+	iter = partials.begin()
+	end = partials.end()
+	while not iter.equals(end):
+		next = iter.next()
+		if not iter.partial().label() in labels:
+			partials.erase(iter)
+		iter = next
+	return partials
+	
 
 if __name__ == '__main__':
 	print __doc__

@@ -20,8 +20,10 @@ notes from trial 1:
 	- 50 Hz has artifacts
 	- 200 Hz window is too wide
 	- 20,25, 30 res with 75 or 100 window are hard to distinguish
+	- distillations are very crunchy, esp at 100 and 150 Hz, even 
+	distillation at the resolution frequency introduces garbage.
 
-Last updated: 4 Feb 2002 by Kelly Fitz
+Last updated: 6 May 2002 by Kelly Fitz
 """
 print __doc__
 

@@ -32,7 +32,11 @@ notes from trial 2:
 	- 20 Hz resolution seems best, 15 Hz is no improvement, 30 Hz
 	sounds a little noisy
 
-Last updated: 5 Oct 2001 by Kelly Fitz
+notes from trial 3 (using 1.0beta8):
+	- all of these sound crunchy to me today, but otherwise pretty decent
+
+
+Last updated: 25 Feb 2002 by Kelly Fitz
 """
 
 print __doc__
