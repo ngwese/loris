@@ -16,10 +16,13 @@ Begin_Namespace( Loris )
 // ---------------------------------------------------------------------------
 //	Analyzer constructor
 // ---------------------------------------------------------------------------
+//	Choose reasonable default values. Duh.
 //
 Analyzer::Analyzer( void ) :
 	_freqResolution( 100 ),
 	_noiseFloor( -90. ),
+	_windowWidth( 200 ),
+	_windowAtten( 90 ),
 	_srate( 1. ),
 	_minfreq( 0. ),
 	_hop( 1 )
@@ -67,7 +70,7 @@ Analyzer::analyze( const vector< double > & buf, double srate )
 			  _winMiddleIdx < latestIdx; 
 			  _winMiddleIdx += hopSize() ) {
 			 
-			// debugger << "analyzing frame centered at " << _winMiddleIdx << endl; 
+			//debugger << "analyzing frame centered at " << _winMiddleIdx << endl; 
 			 
 			//	compute reassigned spectrum:
 			//	actually, need to call this with a 
@@ -106,20 +109,18 @@ Analyzer::createSpectrum( double srate )
 	_srate = srate;
 	
 	//	window parameters:
-	const double attenuation = 90;			//	always ?
-	double width = 2. * _freqResolution;	//	?
-	long winlen = KaiserWindow::computeLength( width / srate, attenuation );
+	long winlen = KaiserWindow::computeLength( _windowWidth / srate, _windowAtten );
 	if (winlen % 2) {
 		++winlen;
 	}
-	double winshape = KaiserWindow::computeShape( attenuation );
+	double winshape = KaiserWindow::computeShape( _windowAtten );
 	
 	//	compute the hop size:
 	//	Smith and Serra (1990) cite (Allen 1977) saying: a good choice of hop 
 	//	is the window length divided by the main lobe width in frequency samples.
 	//	Don't include zero padding in the computation of width (i.e. use window
 	//	length instead of transform length).
-	const double mlw_samp = width * (winlen / srate);
+	const double mlw_samp = _windowWidth * (winlen / srate);
 	_hop = round( winlen / mlw_samp );
 	
 	//	lower frequency bound for Breakpoint extraction,
@@ -138,6 +139,10 @@ Analyzer::createSpectrum( double srate )
 		ex.append( "couldn't create a ReassignedSpectrum." );
 		throw;
 	}
+	
+	debugger << "created reassigned spectrum analyzer: window length " <<
+			winlen << ", hop size " << _hop << ", minimum frequency " <<
+			_minfreq << endl; 
 }
 
 // ---------------------------------------------------------------------------
@@ -150,14 +155,48 @@ Analyzer::createSpectrum( double srate )
 //	The peaks from the reassigned spectrum are frequency-sorted (implicitly)
 //	so the frame generated here is automatically frequency-sorted.
 //
+template<class T>
+struct less_first_frequency
+{
+	boolean operator()( const T & lhs, const T & rhs ) const
+		{ return lhs.first.frequency() < rhs.first.frequency(); }
+};
+
+template<class T>
+struct greater_magnitude
+{
+	boolean operator()( const T & lhs, const T & rhs ) const
+		{ return lhs.magnitude() > rhs.magnitude(); }
+};	
+
+template<class T>
+struct frequency_first_near
+{
+	frequency_first_near( double f, double howNear ) : 
+		_fmin( f - howNear ), _fmax( f + howNear ) {}
+	boolean operator()( const T & t )  const
+		{ 
+			return (t.first.frequency() > _fmin) && 
+				   (t.first.frequency() < _fmax); 
+		}
+	private:
+		double _fmin, _fmax;
+};
+
+	
 Analyzer::Frame 
 Analyzer::extractBreakpoints( void )
 {
 	Frame frame;	//	empty frame
 	
+	//	collect short-time peaks, and sort them by 
+	//	decreasing magnitude:
+	ReassignedSpectrum::Peaks tmp = _spectrum->findPeaks( noiseFloor() );			
+	vector< ReassignedSpectrum::Peak > peaks( tmp.begin(), tmp.end() );
+	sort( peaks.begin(), peaks.end(), greater_magnitude<ReassignedSpectrum::Peak>() );
+	
 	//	loop over short-time peaks:
-	ReassignedSpectrum::Peaks peaks = _spectrum->findPeaks( noiseFloor() );
-	ReassignedSpectrum::Peaks::iterator it;
+	vector< ReassignedSpectrum::Peak >::iterator it;
 	for ( it = peaks.begin(); it != peaks.end(); ++it ) {
 		//	check against lower frequency bound:
 		double peakfreq = _spectrum->reassignedFrequency( it->frequency() ) * sampleRate();
@@ -172,7 +211,20 @@ Analyzer::extractBreakpoints( void )
 			continue;	//	loop over short-time peaks
 		} 
 		
-		//	hey!, what about the frequency density?
+		//	make sure its not too close to any louder 
+		//	Breakpoints, already retained:
+		Frame::const_iterator masker = 
+		find_if( frame.begin(), frame.end(), 
+				 frequency_first_near< Frame::value_type >( peakfreq, captureRange() ) );
+		if ( masker	!= frame.end() ) {
+		/*
+			debugger << "rejecting Breakpoint at " << peakfreq << " magnitude " <<
+					 it->magnitude() << " masked by one at " << 
+					 masker->first.frequency() << " magnitude " << 
+					 masker->first.amplitude() << endl;
+		*/
+			continue;
+		}	
 		
 		//	create a Breakpoint corresponding to the
 		//	short-time reassigned spectral peak:
@@ -182,7 +234,13 @@ Analyzer::extractBreakpoints( void )
 		//	add it to the frame:
 		frame.push_back( make_pair( bp, frameTime() + (peakTimeOffset  / sampleRate()) ) );
 	}
-		
+	/*
+	if ( peaks.size() != frame.size() ) {
+		debugger << "had " << peaks.size() << " peaks, kept " << frame.size() << " breakpoints." << endl;
+	}
+	*/
+	sort( frame.begin(), frame.end(), 
+		  less_first_frequency<Frame::value_type>() );
 	return frame;
 }
 

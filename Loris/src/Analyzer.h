@@ -35,10 +35,13 @@ public:
 	void analyze( const std::vector< double > & buf, double srate );
 	
 
-//	parameter specfication:
+//	Lemur parameter specfication:
 	void setPartialSeparation( double x ) { _freqResolution = x; }
 	void setNoiseFloor( double x ) { _noiseFloor = x; }
+	void setWindowWidth( double x ) { _windowWidth = x; }
+	void setWindowAttenuation( double x ) { _windowAtten = x; }
 
+//	parameter access, internal:
 	long hopSize( void ) const			//	samples
 		{ return _hop; }
 	double frameLength( void ) const	//	seconds
@@ -51,7 +54,7 @@ public:
 		{ return _noiseFloor; }
 	double captureRange( void ) const	//	Hz
 		{ return 0.5 * _freqResolution; }
-	double frameTime( void ) const  				//	the time in seconds corresponding to the 
+	double frameTime( void ) const  		//	the time in seconds corresponding to the 
 		{ return _winMiddleIdx	/ _srate; }	//	center of the current analysis window
 
 //	-- internal helpers --
@@ -71,9 +74,10 @@ private:
 private:
 	std::auto_ptr< ReassignedSpectrum > _spectrum;
 	
-	//	parameters:
+	//	parameters (from Lemur):
 	double _freqResolution;		//	minimum frequency distance (Hz) between Partials
 	double _noiseFloor;			//	magnitude-spectral peak detection threshold
+	double _windowWidth, _windowAtten; 	//	window parameters
 	
 	//	state variables:
 	double _srate;

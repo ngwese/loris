@@ -37,6 +37,8 @@ ReassignedSpectrum::ReassignedSpectrum( const vector< double > & window ) :
 		winsum += _window[i];
 	}
 	_magScale = 2. / winsum;
+	
+	notifier << "RA: ft length is " << _transform.size() << " mag scale is " << _magScale << endl;
 }
 
 // ---------------------------------------------------------------------------
@@ -76,7 +78,7 @@ ReassignedSpectrum::transform( const vector< double > & buf, long idxCenter )
 					tmp.begin(), multiplies< double >() );
 /*
 	AiffFile a( 44100., 1, 16, tmp );
-	a.write("normal windowed.aiff");
+	a.write("ra thingie.aiff");
 */
 	_transform.loadAndRotate( tmp );
 	_transform.transform();
@@ -110,12 +112,13 @@ ReassignedSpectrum::findPeaks( double threshold_dB ) const
 	double threshold = pow( 10., 0.05 * threshold_dB );	//	absolute magnitude threshold
 	Peaks peaks;	//	empty collection
 	
-	for ( int j = 1; j < _transform.size() / 2; ++j ) {
-		double mag = abs(_transform[j]); 
-		if ( mag > abs(_transform[j-1]) && mag > abs(_transform[j+1])) {
+	for ( int j = 1; j < (_transform.size() / 2) - 1; ++j ) {
+		if ( abs(_transform[j]) > abs(_transform[j-1]) && 
+			 abs(_transform[j]) > abs(_transform[j+1])) {
 			//	itsa magnitude peak:
 			double f = j + frequencyCorrection( j );	//	fractional sample
-			double m = reassignedMagnitude( f );		//	from fractional sample
+			//double m = reassignedMagnitude( f );		//	from fractional sample
+			 double m = _magScale * abs(_transform[j]);
 			 
 			//	only retain data above the magnitude threshold:
 			if ( m > threshold ) {
@@ -298,12 +301,28 @@ ReassignedSpectrum::reassignedTime( double fracFreqSample ) const
 // ---------------------------------------------------------------------------
 //	This algorithm assumes that the frequency correction is small, so that
 //	the magnitude spectrum is evaulated near the peak sample. This may be a bad 
-//	assumption.
+//	assumption. In fact, it is a terrible assumption. Small peaks with large
+//	frequency corrections evaulated at their corrected frequencies will 
+//	report artificially large magnitudes. This is just because frequency 
+//	reassignment is correctly reassigning the spectral samples to the 
+//	centers of spectral gravity, where the strong components are.
 //
 double
 ReassignedSpectrum::reassignedMagnitude( double fracFreqSample ) const
 {
 	return _magScale * abs( _transform[ round(fracFreqSample) ] );
+/*
+	//	parabola thing:
+	long sample = round(fracFreqSample);
+	double dbLeft = 20. * log10( abs( _transform[sample-1] ) );
+	double dbCandidate = 20. * log10( abs( _transform[sample] ) );
+	double dbRight = 20. * log10( abs( _transform[sample+1] ) );
+	
+	double polynomialPeakXOffset =	0.5 * (dbLeft - dbRight) /
+						(dbLeft - 2.0 * dbCandidate + dbRight);
+	
+	return dbCandidate - 0.25 * (dbLeft - dbRight) * polynomialPeakXOffset;
+*/
 }
 
 // ---------------------------------------------------------------------------
@@ -321,8 +340,6 @@ double
 ReassignedSpectrum::reassignedPhase( double fracFreqSample, 
 									 double timeCorrection ) const
 {
-	//return arg( _transform[ round( fracFreqSample ) ] );
-	
 	//	compute (interpolate) the phase at the reassigned frequency:
 	double alpha =  fracFreqSample - floor( fracFreqSample );
 
@@ -342,7 +359,6 @@ ReassignedSpectrum::reassignedPhase( double fracFreqSample,
 	}
 
 	double phase = ( alpha * phaseAbove ) + (( 1. - alpha ) * phaseBelow );
-				//arg( _transform[ round( fracFreqSample ) ] );
 				
 	//	correct for time offset:
 	phase += ( timeCorrection * fracFreqSample * TwoPi / _transform.size() );
