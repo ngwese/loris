@@ -158,6 +158,10 @@ private:
 //	Const iterator for the Loris::Partial Breakpoint map. Wraps
 //	the const iterator for std::map< double, Breakpoint >.
 //
+//	Get rid of advance()?
+//	can't get rid of derference, but could implement Breakpoint interface
+//	so that parameter access would be uniform.
+//
 class JacksonConst
 {
 //	-- instance variables --

@@ -9,8 +9,9 @@
 //	-kel 16 Aug 99
 //
 // ===========================================================================
-#include "PartialIterator.h"
-#include <vector>
+#include "PartialView.h"
+#include <vector>	
+#include <memory>	//	for auto_ptr
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
@@ -40,26 +41,24 @@ class Synthesizer
 //	-- instance variables --
 	double _sampleRate;					//	in Hz
 	std::vector< double > & _samples;	//	samples are computed and stored here
-		
-	PartialIteratorPtr _iter;			//	should be EnvelopeView or something
+	std::auto_ptr< PartialView > _view;	//	a view on Partials, possibly filtered
 		
 //	-- public interface --
 public:
 //	construction:
+//	(use compiler-generated destructor)
 	Synthesizer( std::vector< double > & buf, double srate );
 
 //	copy:
-//	Create a copy of other by cloning its PartialIterator and sharing its
+//	Create a copy of other by cloning its PartialView and sharing its
 //	sample buffer.
 	Synthesizer( const Synthesizer & other );
 	
-	//~Synthesizer( void );	//	use compiler-generated destructor
-
 //	synthesis:
 //
 //	Synthesize a bandwidth-enhanced sinusoidal Partial with the specified 
 //	timeShift (in seconds). The Partial parameter data is filtered by the 
-//	Synthesizer's PartialIterator. Zero-amplitude Breakpoints are inserted
+//	Synthesizer's PartialView. Zero-amplitude Breakpoints are inserted
 //	1 millisecond (FADE_TIME) from either end of the Partial to reduce 
 //	turn-on and turn-off artifacts. The client is responsible or insuring
 //	that the buffer is long enough to hold all samples from the time-shifted
@@ -70,12 +69,15 @@ public:
 	
 //	access:
 	double sampleRate( void ) const { return _sampleRate; }
+	
 	std::vector< double > & samples( void ) { return _samples; }
 	const std::vector< double > & samples( void ) const { return _samples; }
 	
-//	iterator access and mutation:
-	const PartialIteratorPtr & iterator( void ) const { return _iter; }
-	PartialIteratorPtr setIterator( PartialIteratorPtr inIter );
+	const PartialView & view( void ) const { return *_view; }
+	PartialView & view( void ) { return *_view; }
+	
+//	mutation:
+	void setView( const PartialView & v );
 
 //	-- private helpers --
 private:

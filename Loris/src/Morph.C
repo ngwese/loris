@@ -14,7 +14,6 @@
 #include "Synthesizer.h"
 #include "Exception.h"
 #include "Partial.h"
-#include "PartialIterator.h"
 #include "Breakpoint.h"
 #include "Distiller.h"
 #include "Map.h"
@@ -187,7 +186,8 @@ Morph::morphPartial( const Partial & p0, const Partial & p1, int assignLabel /* 
 	newp.setLabel( assignLabel );
 	
 	//	loop over Breakpoints in first partial:
-	for ( BasicPartialIterator iter(p0); ! iter.atEnd(); iter.advance() ) {
+	for ( JacksonConst iter = p0.begin(); iter != p0.end(); ++iter )
+	{
 		double alphaF = frequencyFunction().valueAt( iter.time() );
 		double alphaA = amplitudeFunction().valueAt( iter.time() );
 		double alphaBW = bandwidthFunction().valueAt( iter.time() );
@@ -195,16 +195,16 @@ Morph::morphPartial( const Partial & p0, const Partial & p1, int assignLabel /* 
 		double amp2 = ( p1.duration() > 0. ) ? 
 			p1.amplitudeAt( iter.time() ) : 0.;
 		double freq2 = ( p1.duration() > 0. ) ? 
-			p1.frequencyAt( iter.time() ) : iter.frequency();
+			p1.frequencyAt( iter.time() ) : iter->frequency();
 		double bw2 = ( p1.duration() > 0. ) ? 
-			p1.bandwidthAt( iter.time() ) : iter.bandwidth();
+			p1.bandwidthAt( iter.time() ) : iter->bandwidth();
 		double theta2 = ( p1.duration() > 0. ) ? 
-			p1.phaseAt( iter.time() ) : iter.phase();
+			p1.phaseAt( iter.time() ) : iter->phase();
 			
-		Breakpoint newbp( (alphaF * freq2) + ((1.-alphaF) * iter.frequency()),
-						   (alphaA * amp2) + ((1.-alphaA) * iter.amplitude()),
-						   (alphaBW * bw2) + ((1.-alphaBW) * iter.bandwidth()),
-						   (alphaF * theta2) + ((1.-alphaF) * iter.phase()) );
+		Breakpoint newbp( (alphaF * freq2) + ((1.-alphaF) * iter->frequency()),
+						   (alphaA * amp2) + ((1.-alphaA) * iter->amplitude()),
+						   (alphaBW * bw2) + ((1.-alphaBW) * iter->bandwidth()),
+						   (alphaF * theta2) + ((1.-alphaF) * iter->phase()) );
 		
 		/*
 		debugger << "time " << iter.time() << ":" << newbp.frequency() << "," <<
@@ -215,7 +215,8 @@ Morph::morphPartial( const Partial & p0, const Partial & p1, int assignLabel /* 
 	}
 	
 	//	now do it for the other Partial:
-	for ( BasicPartialIterator iter(p1); ! iter.atEnd(); iter.advance() ) {
+	for ( JacksonConst iter = p1.begin(); iter != p1.end(); ++iter )
+	{
 		double alphaF = 1. - frequencyFunction().valueAt( iter.time() );
 		double alphaA = 1. - amplitudeFunction().valueAt( iter.time() );
 		double alphaBW = 1. - bandwidthFunction().valueAt( iter.time() );
@@ -223,16 +224,16 @@ Morph::morphPartial( const Partial & p0, const Partial & p1, int assignLabel /* 
 		double amp1 = ( p0.duration() > 0. ) ? 
 			p0.amplitudeAt( iter.time() ) : 0.;
 		double freq1 = ( p0.duration() > 0. ) ? 
-			p0.frequencyAt( iter.time() ) : iter.frequency();
+			p0.frequencyAt( iter.time() ) : iter->frequency();
 		double bw1 = ( p0.duration() > 0. ) ? 
-			p0.bandwidthAt( iter.time() ) : iter.bandwidth();
+			p0.bandwidthAt( iter.time() ) : iter->bandwidth();
 		double theta1 = ( p0.duration() > 0. ) ? 
-			p0.phaseAt( iter.time() ) : iter.phase();
+			p0.phaseAt( iter.time() ) : iter->phase();
 			
-		Breakpoint newbp( (alphaF * freq1) + ((1.-alphaF) * iter.frequency()),
-						   (alphaA * amp1) + ((1.-alphaA) * iter.amplitude()),
-						   (alphaBW * bw1) + ((1.-alphaBW) * iter.bandwidth()),
-						   (alphaF * theta1) + ((1.-alphaF) * iter.phase()) );
+		Breakpoint newbp( (alphaF * freq1) + ((1.-alphaF) * iter->frequency()),
+						   (alphaA * amp1) + ((1.-alphaA) * iter->amplitude()),
+						   (alphaBW * bw1) + ((1.-alphaBW) * iter->bandwidth()),
+						   (alphaF * theta1) + ((1.-alphaF) * iter->phase()) );
 		/*
 		debugger << "time " << iter.time() << ":" << newbp.frequency() << "," <<
 					newbp.amplitude() << "," << newbp.bandwidth() << "," << 

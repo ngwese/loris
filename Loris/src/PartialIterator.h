@@ -64,7 +64,7 @@ public:
 	virtual double startTime( void ) const = 0;
 	virtual double endTime( void ) const = 0;
 	virtual double initialPhase( void ) const = 0;
-	virtual int label( void ) const = 0;
+	//virtual int label( void ) const = 0;
 	
 	//	Breakpoint access:
 	virtual double frequency( void ) const = 0;
@@ -170,7 +170,7 @@ public:
 	virtual double startTime( void ) const	{ return iterator()->startTime(); }
 	virtual double endTime( void ) const	{ return iterator()->endTime(); }
 	virtual double initialPhase( void ) const { return iterator()->initialPhase(); }
-	virtual int label( void ) const			{ return iterator()->label(); }
+	//virtual int label( void ) const			{ return iterator()->label(); }
 	
 	//	Breakpoint access:
 	virtual double frequency( void ) const	{ return iterator()->frequency(); }
@@ -187,50 +187,7 @@ private:
 	
 };	//	end of abstract base class PartialDecorIterator
 
-// ---------------------------------------------------------------------------
-//	class PartialIteratorOwner
-//
-//	Mixin class.
-/*
-class PartialIteratorOwner
-{
-//	protected construction 
-//	(base class only, cannot instantiate)
-protected:
-	PartialIteratorOwner( void ) : 
-		_iter( new BasicPartialIterator() ) {}
-	PartialIteratorOwner( PartialIteratorPtr iter ) : 
-		_iter( iter ) {}
-		
-	//	compiler-generated copy constructor is not adequate
-	//	in this case, because auto_ptrs (the _iter member)
-	//	cannot be copied directly:
-	PartialIteratorOwner( const PartialIteratorOwner & other ) : 
-		_iter( other._iter->clone() ) {}
-	
-private:
-	//	not defined:			
-	PartialIteratorOwner & operator= ( const PartialIteratorOwner & );
 
-public:
-	virtual ~PartialIteratorOwner( void ) {}
-
-	//	iterator access and mutation:
-	const PartialIteratorPtr & iterator( void ) const { return _iter; }
-
-	PartialIteratorPtr 
-	setIterator( PartialIteratorPtr inIter = PartialIteratorPtr( new BasicPartialIterator() ) ) 
-	{
-		PartialIteratorPtr ret( _iter );
-		_iter = inIter;
-		return ret;
-	}
-
-private:	
-	PartialIteratorPtr _iter;
-		
-};	//	end of mixin class PartialIteratorOwner
-*/
 #if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
 #endif

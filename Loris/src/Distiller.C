@@ -9,7 +9,6 @@
 // ===========================================================================
 #include "Distiller.h"
 #include "Partial.h"
-#include "PartialIterator.h"
 #include "Breakpoint.h"
 
 #if !defined( Deprecated_cstd_headers )
@@ -83,7 +82,8 @@ Distiller::distillOne( const Partial & src,
 	const double FADE_TIME = 0.001;	//	1 ms
 	
 	//	iterate over the source Partial:
-	for ( BasicPartialIterator pIter( src ); ! pIter.atEnd(); pIter.advance() ) { 
+	for ( JacksonConst pIter = src.begin(); pIter != src.end(); ++pIter )
+	{
 		//	iterate over all Partials in the range and compute the
 		//	bandwidth energy contribution at the time of bp
 		//	due to all the other Partials:
@@ -103,7 +103,7 @@ Distiller::distillOne( const Partial & src,
 			//	this loop, this Breakpoint will not be part of 
 			//	the distilled Partial.
 			double a = it->amplitudeAt( pIter.time() );
-			if ( a > pIter.amplitude() ) {
+			if ( a > pIter->amplitude() ) {
 				break;	
 			}
 			else {
@@ -118,8 +118,8 @@ Distiller::distillOne( const Partial & src,
 		//	Create a new Breakpoint and add it to dest:
 		if ( it == end ) {
 			//	compute the original Breakpoint energy:
-			double etot = pIter.amplitude() * pIter.amplitude();
-			double ebw = etot * pIter.bandwidth();
+			double etot = pIter->amplitude() * pIter->amplitude();
+			double ebw = etot * pIter->bandwidth();
 			
 			//	add some bandwith energy:
 			etot += xse;
@@ -131,14 +131,14 @@ Distiller::distillOne( const Partial & src,
 				bw = 0.;
 			
 			//	create and insert the new Breakpoint:
-			Breakpoint newBp( pIter.frequency(), std::sqrt( etot ), bw, pIter.phase() );
+			Breakpoint newBp( pIter->frequency(), std::sqrt( etot ), bw, pIter->phase() );
 			dest.insert( pIter.time(), newBp );
 			
 			//	if there is a gap after this Breakpoint, 
 			//	fade out:
-			if ( pIter.time() == pIter.endTime() && 
+			if ( pIter == src.end() && 
 				 gapAt( pIter.time() + FADE_TIME, start, end ) ) {
-				Breakpoint zeroPt( pIter.frequency(), 0., pIter.bandwidth(), 
+				Breakpoint zeroPt( pIter->frequency(), 0., pIter->bandwidth(), 
 								   src.phaseAt( pIter.time() + FADE_TIME ) );
 				dest.insert( pIter.time() + FADE_TIME, zeroPt );
 			}
@@ -146,10 +146,10 @@ Distiller::distillOne( const Partial & src,
 			//	if there is a gap before this Breakpoint,
 			//	fade in, but don't insert Breakpoints at
 			//	times before zero:
-			if ( pIter.time() == pIter.startTime() && 
+			if ( pIter == src.begin() && 
 				 pIter.time() > FADE_TIME && 
 				 gapAt( pIter.time() - FADE_TIME, start, end ) ) {
-				Breakpoint zeroPt( pIter.frequency(), 0., pIter.bandwidth(), 
+				Breakpoint zeroPt( pIter->frequency(), 0., pIter->bandwidth(), 
 								   src.phaseAt( pIter.time() - FADE_TIME ) );
 				dest.insert( pIter.time() - FADE_TIME, zeroPt );
 			}

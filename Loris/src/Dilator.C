@@ -9,7 +9,6 @@
 // ===========================================================================
 #include "Dilator.h"
 #include "Partial.h"
-#include "PartialIterator.h"
 #include "Breakpoint.h"
 #include "Exception.h"
 #include "notifier.h"
@@ -78,7 +77,7 @@ Dilator::dilate( Partial & p )
 	
 	//	timepoint index:
 	int idx = 0;
-	for ( BasicPartialIterator iter(p); ! iter.atEnd(); iter.advance() ) 
+	for ( JacksonConst iter = p.begin(); iter != p.end(); ++iter )
 	{
 		//	find the first initial time point later 
 		//	than the currentTime:
@@ -121,8 +120,8 @@ Dilator::dilate( Partial & p )
 		}
 		
 		//	add a Breakpoint at the computed time:
-		newp.insert( newtime, Breakpoint( iter.frequency(), iter.amplitude(), 
-										  iter.bandwidth(), iter.phase() ) );
+		newp.insert( newtime, Breakpoint( iter->frequency(), iter->amplitude(), 
+										  iter->bandwidth(), iter->phase() ) );
 	}
 	
 	//	store the new Partial:

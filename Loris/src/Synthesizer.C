@@ -11,7 +11,7 @@
 #include "Exception.h"
 #include "Oscillator.h"
 #include "Partial.h"
-#include "PartialIterator.h"
+#include "PartialView.h"
 #include "notifier.h"
 #include "pi.h"
 #include <algorithm>
@@ -36,7 +36,7 @@ namespace Loris {
 Synthesizer::Synthesizer( std::vector< double > & buf, double srate ) :
 	_sampleRate( srate ),
 	_samples( buf ),
-	_iter( new BasicPartialIterator() )
+	_view( new BasicPartialView() )
 {
 	//	check to make sure that the sample rate is valid:
 	if ( _sampleRate <= 0. ) {
@@ -47,13 +47,13 @@ Synthesizer::Synthesizer( std::vector< double > & buf, double srate ) :
 // ---------------------------------------------------------------------------
 //	Synthesizer copy constructor
 // ---------------------------------------------------------------------------
-//	Create a copy of other by cloning its PartialIterator and sharing its
+//	Create a copy of other by cloning its PartialView and sharing its
 //	sample buffer.
 //
 Synthesizer::Synthesizer( const Synthesizer & other ) :
 	_sampleRate( other._sampleRate ),
 	_samples( other._samples ),
-	_iter( other._iter->clone() )
+	_view( other._view->clone() )
 {
 }
 
@@ -62,7 +62,7 @@ Synthesizer::Synthesizer( const Synthesizer & other ) :
 // ---------------------------------------------------------------------------
 //	Synthesize a bandwidth-enhanced sinusoidal Partial with the specified 
 //	timeShift (in seconds). The Partial parameter data is filtered by the 
-//	Synthesizer's PartialIterator. Zero-amplitude Breakpoints are inserted
+//	Synthesizer's PartialView. Zero-amplitude Breakpoints are inserted
 //	1 millisecond (FADE_TIME) from either end of the Partial to reduce 
 //	turn-on and turn-off artifacts. The client is responsible or insuring
 //	that the buffer is long enough to hold all samples from the time-shifted
@@ -79,23 +79,26 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ )
 			p.initialPhase() << " starting frequency " << 
 			p.begin()->second.frequency() << endl;
 */
-	iterator()->reset( p );
+	view().view( p );
 	
 //	don't bother to synthesize Partials having zero duration:
-	if ( iterator()->duration() == 0. || 
-		 iterator()->endTime() + timeShift < 0. ||
-		 (iterator()->startTime() + timeShift) * sampleRate() > _samples.size() )
+	if ( view().duration() == 0. || 
+		 view().endTime() + timeShift < 0. ||
+		 (view().startTime() + timeShift) * sampleRate() > _samples.size() )
 	{
 		return;
 	}
 	
+//	create an iterator on the PartialView:
+	PartialViewIterator iterator = view().begin();
+	
 //	compute the initial oscillator state, assuming
 //	a prepended Breakpoint of zero amplitude:
 	const double FADE_TIME = 0.001; 	//	1 ms
-	double itime = iterator()->time() + timeShift - FADE_TIME;
-	double ifreq = iterator()->frequency();
+	double itime = iterator.time() + timeShift - FADE_TIME;
+	double ifreq = iterator.frequency();
 	double iamp = 0.;
-	double ibw = iterator()->bandwidth();
+	double ibw = iterator.bandwidth();
 
 //	interpolate the initial oscillator state if
 //	the onset time is before the start of the 
@@ -104,28 +107,28 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ )
 	{
 		//	advance the iterator until it refers
 		//	to a breakpoint past zero:
-		while (iterator()->time() + timeShift < 0.)
+		while (iterator.time() + timeShift < 0.)
 		{
-			itime = iterator()->time() + timeShift;
-			ifreq = iterator()->frequency();
-			iamp = iterator()->amplitude();
-			ibw = iterator()->bandwidth();
-			iterator()->advance();
+			itime = iterator.time() + timeShift;
+			ifreq = iterator.frequency();
+			iamp = iterator.amplitude();
+			ibw = iterator.bandwidth();
+			iterator.advance();
 		}
 		
 		//	compute interpolated initial values:
-		double alpha = - itime / (iterator()->time() + timeShift - itime);
-		ifreq = (alpha * iterator()->frequency()) + ((1.-alpha) * ifreq);
-		iamp = (alpha * iterator()->amplitude()) + ((1.-alpha) * iamp);
-		ibw = (alpha * iterator()->bandwidth()) + ((1.-alpha) * ibw);
+		double alpha = - itime / (iterator.time() + timeShift - itime);
+		ifreq = (alpha * iterator.frequency()) + ((1.-alpha) * ifreq);
+		iamp = (alpha * iterator.amplitude()) + ((1.-alpha) * iamp);
+		ibw = (alpha * iterator.bandwidth()) + ((1.-alpha) * ibw);
 		itime = 0.;
 	}
 	
 //	compute the starting phase:
-	double dsamps = (iterator()->time() + timeShift - itime) * sampleRate();
+	double dsamps = (iterator.time() + timeShift - itime) * sampleRate();
 	Assert( dsamps >= 0. );
-	double avgfreq = 0.5 * (ifreq + iterator()->frequency());
-	double iphase = iterator()->phase() - (radianFreq(avgfreq) * dsamps);
+	double avgfreq = 0.5 * (ifreq + iterator.frequency());
+	double iphase = iterator.phase() - (radianFreq(avgfreq) * dsamps);
 		
 //	setup the oscillator:
 //	Remember that the oscillator only knows about radian frequency! Convert!
@@ -136,30 +139,30 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ )
 	
 //	synthesize linear-frequency segments until there aren't any more
 //	segments or the segments threaten to run off the end of the buffer:
-	for ( ; ! iterator()->atEnd(); iterator()->advance() ) 
+	for ( ; ! iterator.atEnd(); iterator.advance() ) 
 	{
 		//	compute target sample index:
-		long tgtsamp = (iterator()->time() + timeShift) * sampleRate();
+		long tgtsamp = (iterator.time() + timeShift) * sampleRate();
 		if ( tgtsamp >= _samples.size() )
 			break;
 			
 		//	generate samples:
 		//	(buffer, beginIdx, endIdx, freq, amp, bw)
 		osc.generateSamples( _samples, curSampleIdx, tgtsamp, 
-							 radianFreq( iterator()->frequency() ), 
-							 iterator()->amplitude(), 
-							 iterator()->bandwidth() );
+							 radianFreq( iterator.frequency() ), 
+							 iterator.amplitude(), 
+							 iterator.bandwidth() );
 									  
 		//	update the current sample index:
 		curSampleIdx = tgtsamp;
 	}
 
 //	either ran out of buffer ( tgtsamp >= _sample.size() )
-//	or ran out of Breakpoints ( iterator()->atEnd() ), 
+//	or ran out of Breakpoints ( iterator.atEnd() ), 
 //	compute the final target oscillator state assuming 
 //	an appended Breakpoint of zero amplitude:
 	double tgtradfreq, tgtamp, tgtbw;
-	if ( iterator()->atEnd() ) 
+	if ( iterator.atEnd() ) 
 	{
 		tgtradfreq = osc.radianFreq();
 		tgtamp = 0.;
@@ -167,9 +170,9 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ )
 	}
 	else
 	{
-		tgtradfreq = radianFreq( iterator()->frequency() );
-		tgtamp = iterator()->amplitude();
-		tgtbw = iterator()->bandwidth();
+		tgtradfreq = radianFreq( iterator.frequency() );
+		tgtamp = iterator.amplitude();
+		tgtbw = iterator.bandwidth();
 	}
 	
 //	interpolate final oscillator state if the target 
@@ -188,17 +191,13 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ )
 }
 
 // ---------------------------------------------------------------------------
-//	setIterator
+//	setView
 // ---------------------------------------------------------------------------
-//	Assign a new PartialIterator using a memory-safe exchange implemented 
-//	using auto_ptr.
 //
-PartialIteratorPtr 
-Synthesizer::setIterator( PartialIteratorPtr inIter  ) 
+void 
+Synthesizer::setView( const PartialView & v  ) 
 {
-	PartialIteratorPtr ret( _iter );
-	_iter = inIter;
-	return ret;
+	_view.reset( v.clone() );
 }
 	
 // ---------------------------------------------------------------------------
