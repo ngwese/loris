@@ -44,6 +44,7 @@
 
 %include exception.i 
 %include "std_vector.i"
+%include "std_list.i"
 
 // ----------------------------------------------------------------
 //		docstring for the Loris module (Python)
@@ -75,8 +76,12 @@ For more information, please visit
 %{
 	#include<loris.h>
 	
+	#include <AiffFile.h>
+	#include <BreakpointEnvelope.h>
 	#include <Exception.h>
 	#include <Marker.h>
+	#include <Partial.h>
+	#include <Synthesizer.h>
 
 	//	import the entire Loris namespace, because
 	//	SWIG does not seem to like to wrap functions
@@ -86,6 +91,8 @@ For more information, please visit
 	// (This has probably been fixed by now.)
 	using namespace Loris;
 	
+	#include <list>
+	#include <stdexcept>
 	#include <vector>
 %}
 
@@ -95,6 +102,10 @@ For more information, please visit
 namespace std {
    %template(DoubleVector) vector< double >;
    %template(MarkerVector) vector< Marker >;
+
+//	try to make this work sometime, seems like
+//	its functional, but it might be very slow.
+//   %template(PartialList) list< Partial >;
 };
 
 // ----------------------------------------------------------------
@@ -176,7 +187,7 @@ namespace std {
 //	the memory management ambiguities.
 //
 
-%define doc_channelize
+%feature("docstring", 
 "Label Partials in a PartialList with the integer nearest to the
 amplitude-weighted average ratio of their frequency envelope to a
 reference frequency envelope. The frequency spectrum is
@@ -192,14 +203,12 @@ evaluated at the breakpoints in the Partial envelope and weighted
 by the amplitude at each breakpoint, so that high- amplitude
 breakpoints contribute more to the channel decision. Partials are
 labeled, but otherwise unmodified. In particular, their
-frequencies are not modified in any way."
-%enddef
-%feature("docstring", doc_channelize) channelize;
+frequencies are not modified in any way.");
 void channelize( PartialList * partials, 
 				 BreakpointEnvelope * refFreqEnvelope, int refLabel );
 
 
-%define doc_createFreqReference
+%feature("docstring",
 "Return a newly-constructed BreakpointEnvelope by sampling the
 frequency envelope of the longest Partial in a PartialList. Only
 Partials whose frequency at the Partial's loudest (highest
@@ -213,9 +222,7 @@ short Partials.)
 
 For very simple sounds, this frequency reference may be a good
 first approximation to a reference envelope for channelization
-(see channelize)."
-%enddef
-%feature("docstring", doc_createFreqReference) createFreqReference;
+(see channelize).");
 
 %newobject createFreqReference;
 BreakpointEnvelope * 
@@ -231,16 +238,14 @@ createFreqReference( PartialList * partials,
 	}
 %}
 
-%define doc_dilate
+%feature("docstring", 
 "Dilate Partials in a PartialList according to the given initial
 and target time points. Partial envelopes are stretched and
 compressed so that temporal features at the initial time points
 are aligned with the final time points. Time points are sorted, so
 Partial envelopes are are only stretched and compressed, but
 breakpoints are not reordered. Duplicate time points are allowed.
-There must be the same number of initial and target time points."
-%enddef
-%feature("docstring", doc_dilate) dilate;
+There must be the same number of initial and target time points.");
 
 //	dilate needs a contract
 %contract dilate( PartialList * partials, 
@@ -263,20 +268,26 @@ require:
 	}
 %}
 
-%define doc_distill
-"Distill labeled (channelized)  Partials in a PartialList into a 
-PartialList containing a single (labeled) Partial per label. 
-The distilled PartialList will contain as many Partials as
-there were non-zero labels (non-empty channels)
-in the original PartialList. Additionally, unlabeled (label 0) Partials are 
-\"collated\" into groups of temporally non-overlapping Partials,
-assigned an unused label, and fused into a single Partial per
-group."
-%enddef
-%feature("docstring", doc_distill) distill;
+%feature("docstring",
+"Distill labeled (channelized)  Partials in a PartialList into a
+PartialList containing a single (labeled) Partial per label. The
+distilled PartialList will contain as many Partials as there were
+non-zero labels (non-empty channels) in the original PartialList.
+Additionally, unlabeled (label 0) Partials are \"collated\" into
+groups of temporally non-overlapping Partials, assigned an unused
+label, and fused into a single Partial per group.");
 void distill( PartialList * partials );
 
-				
+
+%feature("docstring",
+"Export audio samples stored in a vector to an AIFF file having the
+specified number of channels and sample rate at the given file
+path (or name). The floating point samples in the vector are
+clamped to the range (-1.,1.) and converted to integers having
+bitsPerSamp bits. The default values for the sample rate and
+sample size, if unspecified, are 44100 Hz (CD quality) and 16 bits
+per sample, respectively.");
+
 %inline 
 %{
 	void exportAiff( const char * path, const std::vector< double > & samples,
@@ -286,25 +297,30 @@ void distill( PartialList * partials );
 					samplerate, bitsPerSamp );
 	}
 %}
-/*	Export audio samples stored in a SampleVector to an AIFF file
-	having the specified number of channels and sample rate at the 
-	given file path (or name). The floating point samples in the 
-	SampleVector are clamped to the range (-1.,1.) and converted 
-	to integers having bitsPerSamp bits. The default values for the
-	sample rate, number of channels, and sample size, if unspecified,
-	are 44100 Hz (CD quality), 1 channel, and 16 bits per sample, 
-	respectively.
- */
 
+%feature("docstring",
+"Export Partials in a PartialList to a SDIF file at the specified
+file path (or name). SDIF data is written in the Loris RBEP
+format. For more information about SDIF, see the SDIF website at:
+	www.ircam.fr/equipes/analyse-synthese/sdif/  ");
 
 void exportSdif( const char * path, PartialList * partials );
-/*	Export Partials in a PartialList to a SDIF file at the specified
-	file path (or name). SDIF data is written in the 1TRC format.  
-	For more information about SDIF, see the SDIF website at:
-		www.ircam.fr/equipes/analyse-synthese/sdif/  
- */
 
 
+
+%feature("docstring",
+"Export Partials in a PartialList to a Spc file at the specified
+file path (or name). The fractional MIDI pitch must be specified.
+The optional enhanced parameter defaults to true (for
+bandwidth-enhanced spc files), but an be specified false for
+pure-sines spc files. The optional endApproachTime parameter is in
+seconds; its default value is zero (and has no effect). A nonzero
+endApproachTime indicates that the PartialList does not include a
+release, but rather ends in a static spectrum corresponding to the
+final breakpoint values of the partials. The endApproachTime
+specifies how long before the end of the sound the amplitude,
+frequency, and bandwidth values are to be modified to make a
+gradual transition to the static spectrum.");
 
 void exportSpc( const char * path, PartialList * partials, double midiPitch, 
 				int enhanced, double endApproachTime );
@@ -321,20 +337,15 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch )
 	exportSpc( path, partials, midiPitch, true, 0. );
 }
 %}
-/*	Export Partials in a PartialList to a Spc file at the specified file
-	path (or name). The fractional MIDI pitch must be specified. The optional
-	enhanced parameter defaults to true (for bandwidth-enhanced spc files), 
-	but an be specified false for pure-sines spc files. The optional 
-	endApproachTime parameter is in seconds; its default value is zero (and 
-	has no effect). A nonzero endApproachTime indicates that the PartialList does 
-	not include a release, but rather ends in a static spectrum corresponding 
-	to the final breakpoint values of the partials. The endApproachTime
-	specifies how long before the end of the sound the amplitude, frequency, 
-	and bandwidth values are to be modified to make a gradual transition to 
-	the static spectrum.
- */
 
 
+%feature("docstring",
+"Import Partials from an SDIF file at the given file path (or
+name), and return them in a PartialList. Loris can import
+SDIF data stored in 1TRC format or in the Loris RBEP format.
+For more information about SDIF, see the SDIF website at:
+	www.ircam.fr/equipes/analyse-synthese/sdif/");
+	
 %newobject importSdif;
 %inline %{
 	PartialList * importSdif( const char * path )
@@ -351,15 +362,11 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch )
 		return dst;
 	}
 %}
-/*  Import Partials from an SDIF file at the given file path (or
-	name), and return them in a PartialList.
-	For more information about SDIF, see the SDIF website at:
-		www.ircam.fr/equipes/analyse-synthese/sdif/
- */
 
-%{
-	#include<BreakpointEnvelope.h>
-%}
+
+%feature("docstring",
+"Import Partials from an Spc file at the given file path (or
+name), and return them in a PartialList.");
 
 %newobject importSpc;
 %inline %{
@@ -377,9 +384,16 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch )
 		return dst;
 	}
 %}
-/*  Import Partials from an Spc file at the given file path (or
-	name), and return them in a PartialList.
- */
+
+%feature("docstring",
+"Morph labeled Partials in two PartialLists according to the
+given frequency, amplitude, and bandwidth (noisiness) morphing
+envelopes, and return the morphed Partials in a PartialList.
+Loris morphs Partials by interpolating frequency, amplitude,
+and bandwidth envelopes of corresponding Partials in the
+source PartialLists. For more information about the Loris
+morphing algorithm, see the Loris website:
+	www.cerlsoundgroup.org/Loris/");
 
 %newobject morph;
 %inline %{
@@ -399,6 +413,7 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch )
 		}
 		return dst;
 	}
+	
 	PartialList * morph( const PartialList * src0, const PartialList * src1, 
 						 double freqweight, 
 						 double ampweight, 
@@ -418,20 +433,14 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch )
 		return dst;
 	}
 %}
-/*  Morph labeled Partials in two PartialLists according to the
-	given frequency, amplitude, and bandwidth (noisiness) morphing
-	envelopes, and return the morphed Partials in a PartialList.
-	Loris morphs Partials by interpolating frequency, amplitude,
-	and bandwidth envelopes of corresponding Partials in the
-	source PartialLists. For more information about the Loris
-	morphing algorithm, see the Loris website:
-	www.cerlsoundgroup.org/Loris/
- */
 
-
-%{
-	#include<Synthesizer.h>
-%}
+%feature("docstring",
+"Synthesize Partials in a PartialList at the given sample rate, and
+return the (floating point) samples in a vector. The vector is
+sized to hold as many samples as are needed for the complete
+synthesis of all the Partials in the PartialList. If the sample
+rate is unspecified, the deault value of 44100 Hz (CD quality) is
+used.");
 
 %newobject synthesize;
 %inline %{
@@ -443,18 +452,17 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch )
 		return dst;
 	}
 %}
-/*  Synthesize Partials in a PartialList at the given sample
-	rate, and return the (floating point) samples in a SampleVector.
-	The SampleVector is sized to hold as many samples as are needed
-	for the complete synthesis of all the Partials in the PartialList.
-	If the sample rate is unspecified, the deault value of 44100 Hz
-	(CD quality) is used.
- */
 
+%feature("docstring",
+"Trim Partials by removing Breakpoints outside a specified time span.
+Insert a Breakpoint at the boundary when cropping occurs.
+");
 void crop( PartialList * partials, double t1, double t2 );
-/*	Trim Partials by removing Breakpoints outside a specified time span.
-	Insert a Breakpoint at the boundary when cropping occurs.
- */
+
+%feature("docstring",
+"Copy Partials in the source PartialList having the specified label
+into a new PartialList. The source PartialList is unmodified.
+");
 
 %newobject copyLabeled;
 %inline %{
@@ -472,10 +480,10 @@ void crop( PartialList * partials, double t1, double t2 );
 		return dst;
 	}
 %}
-/*  Copy Partials in the source PartialList having the specified
-    label into a new PartialList. The source PartialList is
-    unmodified.
- */
+
+%feature("docstring",
+"Extract Partials in the source PartialList having the specified
+label and return them in a new PartialList.");
 
 %newobject extractLabeled;
 %inline %{
@@ -493,108 +501,117 @@ void crop( PartialList * partials, double t1, double t2 );
 		return dst;
 	}
 %}
-/*  Extract Partials in the source PartialList having the specified
-    label and return them in a new PartialList.
- */
 
+%feature("docstring",
+"Remove from a PartialList all Partials having the specified label.");
 void removeLabeled( PartialList * partials, long label );
-/*  Remove from a PartialList all Partials having the specified label.
- */
+
+%feature("docstring",
+"Resample all Partials in a PartialList using the specified
+sampling interval, so that the Breakpoints in the Partial
+envelopes will all lie on a common temporal grid. The Breakpoint
+times in resampled Partials will comprise a contiguous sequence of
+integer multiples of the sampling interval, beginning with the
+multiple nearest to the Partial's start time and ending with the
+multiple nearest to the Partial's end time. Resampling is
+performed in-place.");
 
 void resample( PartialList * partials, double interval );
-/*  Resample all Partials in a PartialList using the specified
-	sampling interval, so that the Breakpoints in the Partial 
-	envelopes will all lie on a common temporal grid.
-	The Breakpoint times in resampled Partials will comprise a  
-	contiguous sequence of integer multiples of the sampling interval,
-	beginning with the multiple nearest to the Partial's start time and
-	ending with the multiple nearest to the Partial's end time. Resampling
-	is performed in-place. 
 
- */
  
+%feature("docstring",
+"Scale the amplitude of the Partials in a PartialList according 
+to an envelope representing a time-varying amplitude scale value.");
+
 void scaleAmp( PartialList * partials, BreakpointEnvelope * ampEnv );
-/*	Scale the amplitude of the Partials in a PartialList according 
-	to an envelope representing a time-varying amplitude scale value.
- */
 				 
+%feature("docstring",
+"Scale the bandwidth of the Partials in a PartialList according 
+to an envelope representing a time-varying bandwidth scale value.");
+
 void scaleBandwidth( PartialList * partials, BreakpointEnvelope * bwEnv );
-/*	Scale the bandwidth of the Partials in a PartialList according 
-	to an envelope representing a time-varying bandwidth scale value.
- */
 				 
+%feature("docstring",
+"Scale the frequency of the Partials in a PartialList according 
+to an envelope representing a time-varying frequency scale value.");
+
 void scaleFrequency( PartialList * partials, BreakpointEnvelope * freqEnv );
-/*	Scale the frequency of the Partials in a PartialList according 
-	to an envelope representing a time-varying frequency scale value.
- */
 				 
+%feature("docstring",
+"Scale the relative noise content of the Partials in a PartialList 
+according to an envelope representing a (time-varying) noise energy 
+scale value.");
+
 void scaleNoiseRatio( PartialList * partials, BreakpointEnvelope * noiseEnv );
-/*	Scale the relative noise content of the Partials in a PartialList 
-	according to an envelope representing a (time-varying) noise energy 
-	scale value.
- */
+
+%feature("docstring",
+"Shift the pitch of all Partials in a PartialList according to 
+the given pitch envelope. The pitch envelope is assumed to have 
+units of cents (1/100 of a halfstep).");
 
 void shiftPitch( PartialList * partials, BreakpointEnvelope * pitchEnv );
-/*	Shift the pitch of all Partials in a PartialList according to 
-	the given pitch envelope. The pitch envelope is assumed to have 
-	units of cents (1/100 of a halfstep).
- */
 
 %inline %{	
-	void scaleAmp( PartialList * partials, double w )
+	void scaleAmp( PartialList * partials, double val )
 	{
-		BreakpointEnvelope e( w );
+		BreakpointEnvelope e( val );
 		scaleAmp( partials, &e );
 	}
 	
 	
-	void scaleBandwidth( PartialList * partials, double w )
+	void scaleBandwidth( PartialList * partials, double val )
 	{
-		BreakpointEnvelope e( w );
+		BreakpointEnvelope e( val );
 		scaleBandwidth( partials, &e );
 	}
 	
 	
-	void scaleFrequency( PartialList * partials, double w )
+	void scaleFrequency( PartialList * partials, double val )
 	{
-		BreakpointEnvelope e( w );
+		BreakpointEnvelope e( val );
 		scaleFrequency( partials, &e );
 	}
 	
 	
-	void scaleNoiseRatio( PartialList * partials, double w )
+	void scaleNoiseRatio( PartialList * partials, double val )
 	{
-		BreakpointEnvelope e( w );
+		BreakpointEnvelope e( val );
 		scaleNoiseRatio( partials, &e );
 	}
 	
 	
-	void shiftPitch( PartialList * partials, double w )
+	void shiftPitch( PartialList * partials, double val )
 	{
-		BreakpointEnvelope e( w );
+		BreakpointEnvelope e( val );
 		shiftPitch( partials, &e );
 	}
 %}	
 	
 
 
+%feature("docstring",
+"Shift the time of all the Breakpoints in a Partial by a constant
+amount (in seconds).");
+
 void shiftTime( PartialList * partials, double offset );
-/*	Shift the time of all the Breakpoints in a Partial by a 
-	constant amount.
- */
+
+%feature("docstring",
+"Eliminate overlapping Partials having the same label
+(except zero). If any two partials with same label
+overlap in time, keep only the longer of the two.
+Set the label of the shorter duration partial to zero.");
 
 void sift( PartialList * partials );
-/*  Eliminate overlapping Partials having the same label
-	(except zero). If any two partials with same label
-   	overlap in time, keep only the longer of the two.
-   	Set the label of the shorter duration partial to zero.
- */
+
+%feature("docstring",
+"Sort the Partials in a PartialList in order of increasing label.
+The sort is stable; Partials having the same label are not
+reordered.");
 
 void sortByLabel( PartialList * partials );
-/*	Sort the Partials in a PartialList in order of increasing label.
- 	The sort is stable; Partials having the same label are not 
- 	reordered.
- */
+
+%feature("docstring",
+"Return a string describing the Loris version number.");
 
 %inline %{
 	const char * version( void )
@@ -618,10 +635,6 @@ void sortByLabel( PartialList * partials );
 //	exception handler doesn't check for exceptions raised in
 //	the procedural interface!
 //
-%{
-	#include <Exception.h>
-	#include <stdexcept>
-%}
 
 //	These should probably not all report UnknownError, could
 //	make an effort to raise the right kind of (SWIG) exception.
@@ -655,54 +668,60 @@ void sortByLabel( PartialList * partials );
 // ---------------------------------------------------------------------------
 //	class Marker
 //
-//	Class Marker represents a labeled time point in a set of Partials
-//	or a vector of samples. Collections of Markers (see the MarkerContainer
-//	definition below) are held by the File I/O classes in Loris (AiffFile,
-//	SdifFile, and SpcFile) to identify temporal features in imported
-//	and exported data.
-//
-%{
-	#include<Marker.h>
-%}
+%feature("docstring",
+"Class Marker represents a labeled time point in a set of Partials
+or a vector of samples. Collections of Markers (see the MarkerContainer
+definition below) are held by the File I/O classes in Loris (AiffFile,
+SdifFile, and SpcFile) to identify temporal features in imported
+and exported data.");
 
 class Marker
 {
 public:
 //	-- construction --
+	
+%feature("docstring",
+"Default constructor - initialize a Marker at time zero with no label.");
+
 	Marker( void );
-	/*	Default constructor - initialize a Marker at time zero with no label.
-	 */
 	 
+%feature("docstring",
+"Initialize a Marker with the specified time (in seconds) and name.");
+
 	Marker( double t, const char * s );
-	/*	Initialize a Marker with the specified time (in seconds) and name.
-	 */
 	 
+%feature("docstring",
+"Initialize a Marker that is an exact copy of another Marker, that is,
+having the same time and name.");
+
 	Marker( const Marker & other );
-	/*	Initialize a Marker that is an exact copy of another Marker, that is,
-		having the same time and name.
-	 */
 		 
 //	-- access --
+
+%feature("docstring",
+"Return the name of this Marker.");
+
 	%extend 
 	{
 		const char * name( void ) { return self->name().c_str(); }
 	}
-	/*	Return a reference (or const reference) to the name string
-		for this Marker.
-	 */
 	 
+%feature("docstring",
+"Return the time (in seconds) associated with this Marker.");
+
 	double time( void );
-	/*	Return the time (in seconds) associated with this Marker.
-	 */
 	 
 //	-- mutation --
+
+%feature("docstring",
+"Set the name of the Marker.");
+
 	void setName( const char * s );
-	/*	Set the name of the Marker.
-	 */
 	 
+%feature("docstring",
+"Set the time (in seconds) associated with this Marker.");
+
 	void setTime( double t );
-	/* 	Set the time (in seconds) associated with this Marker.
-	 */
 
 	
 };	//	end of class Marker
@@ -710,15 +729,14 @@ public:
 // ---------------------------------------------------------------------------
 //	class AiffFile
 //	
+%feature("docstring",
+"");
 //	An AiffFile represents a sample file (on disk) in the Audio Interchange
 //	File Format. The file is read from disk and the samples stored in memory
 //	upon construction of an AiffFile instance. The samples are accessed by 
 //	the samples() method, which converts them to double precision floats and
 //	returns them in a SampleVector.
 //
-%{
-	#include<AiffFile.h>
-%}
 
 %newobject AiffFile::samples;
 %newobject AiffFile::getMarker;

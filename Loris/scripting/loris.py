@@ -346,66 +346,147 @@ def distill(*args):
     """
     distill(partials)
 
-    Distill labeled (channelized)  Partials in a PartialList into a 
-    PartialList containing a single (labeled) Partial per label. 
-    The distilled PartialList will contain as many Partials as
-    there were non-zero labels (non-empty channels)
-    in the original PartialList. Additionally, unlabeled (label 0) Partials are 
-    "collated" into groups of temporally non-overlapping Partials,
-    assigned an unused label, and fused into a single Partial per
-    group.
+    Distill labeled (channelized)  Partials in a PartialList into a
+    PartialList containing a single (labeled) Partial per label. The
+    distilled PartialList will contain as many Partials as there were
+    non-zero labels (non-empty channels) in the original PartialList.
+    Additionally, unlabeled (label 0) Partials are "collated" into
+    groups of temporally non-overlapping Partials, assigned an unused
+    label, and fused into a single Partial per group.
     """
     return _loris.distill(*args)
 
 def exportSdif(*args):
-    """exportSdif(path, partials)"""
+    """
+    exportSdif(path, partials)
+
+    Export Partials in a PartialList to a SDIF file at the specified
+    file path (or name). SDIF data is written in the Loris RBEP
+    format. For more information about SDIF, see the SDIF website at:
+    	www.ircam.fr/equipes/analyse-synthese/sdif/  
+    """
     return _loris.exportSdif(*args)
 
 def importSdif(*args):
-    """importSdif(path) -> PartialList"""
+    """
+    importSdif(path) -> PartialList
+
+    Import Partials from an SDIF file at the given file path (or
+    name), and return them in a PartialList. Loris can import
+    SDIF data stored in 1TRC format or in the Loris RBEP format.
+    For more information about SDIF, see the SDIF website at:
+    	www.ircam.fr/equipes/analyse-synthese/sdif/
+    """
     return _loris.importSdif(*args)
 
 def importSpc(*args):
-    """importSpc(path) -> PartialList"""
+    """
+    importSpc(path) -> PartialList
+
+    Import Partials from an Spc file at the given file path (or
+    name), and return them in a PartialList.
+    """
     return _loris.importSpc(*args)
 
 def crop(*args):
-    """crop(partials, t1, t2)"""
+    """
+    crop(partials, t1, t2)
+
+    Trim Partials by removing Breakpoints outside a specified time span.
+    Insert a Breakpoint at the boundary when cropping occurs.
+
+    """
     return _loris.crop(*args)
 
 def copyLabeled(*args):
-    """copyLabeled(partials, label) -> PartialList"""
+    """
+    copyLabeled(partials, label) -> PartialList
+
+    Copy Partials in the source PartialList having the specified label
+    into a new PartialList. The source PartialList is unmodified.
+
+    """
     return _loris.copyLabeled(*args)
 
 def extractLabeled(*args):
-    """extractLabeled(partials, label) -> PartialList"""
+    """
+    extractLabeled(partials, label) -> PartialList
+
+    Extract Partials in the source PartialList having the specified
+    label and return them in a new PartialList.
+    """
     return _loris.extractLabeled(*args)
 
 def removeLabeled(*args):
-    """removeLabeled(partials, label)"""
+    """
+    removeLabeled(partials, label)
+
+    Remove from a PartialList all Partials having the specified label.
+    """
     return _loris.removeLabeled(*args)
 
 def resample(*args):
-    """resample(partials, interval)"""
+    """
+    resample(partials, interval)
+
+    Resample all Partials in a PartialList using the specified
+    sampling interval, so that the Breakpoints in the Partial
+    envelopes will all lie on a common temporal grid. The Breakpoint
+    times in resampled Partials will comprise a contiguous sequence of
+    integer multiples of the sampling interval, beginning with the
+    multiple nearest to the Partial's start time and ending with the
+    multiple nearest to the Partial's end time. Resampling is
+    performed in-place.
+    """
     return _loris.resample(*args)
 
 def shiftTime(*args):
-    """shiftTime(partials, offset)"""
+    """
+    shiftTime(partials, offset)
+
+    Shift the time of all the Breakpoints in a Partial by a constant
+    amount (in seconds).
+    """
     return _loris.shiftTime(*args)
 
 def sift(*args):
-    """sift(partials)"""
+    """
+    sift(partials)
+
+    Eliminate overlapping Partials having the same label
+    (except zero). If any two partials with same label
+    overlap in time, keep only the longer of the two.
+    Set the label of the shorter duration partial to zero.
+    """
     return _loris.sift(*args)
 
 def sortByLabel(*args):
-    """sortByLabel(partials)"""
+    """
+    sortByLabel(partials)
+
+    Sort the Partials in a PartialList in order of increasing label.
+    The sort is stable; Partials having the same label are not
+    reordered.
+    """
     return _loris.sortByLabel(*args)
 
 def version(*args):
-    """version() -> char"""
+    """
+    version() -> char
+
+    Return a string describing the Loris version number.
+    """
     return _loris.version(*args)
 class Marker(_object):
-    """Proxy of C++ Marker class"""
+    """
+    Proxy of C++ Marker class
+
+    Class Marker represents a labeled time point in a set of Partials
+    or a vector of samples. Collections of Markers (see the MarkerContainer
+    definition below) are held by the File I/O classes in Loris (AiffFile,
+    SdifFile, and SpcFile) to identify temporal features in imported
+    and exported data.
+    """
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, Marker, name, value)
     __swig_getmethods__ = {}
@@ -417,27 +498,54 @@ class Marker(_object):
         __init__(self) -> Marker
         __init__(self, t, s) -> Marker
         __init__(self, other) -> Marker
+
+        Initialize a Marker that is an exact copy of another Marker, that is,
+        having the same time and name.
         """
         _swig_setattr(self, Marker, 'this', _loris.new_Marker(*args))
         _swig_setattr(self, Marker, 'thisown', 1)
     def name(*args): 
-        """name(self) -> char"""
+        """
+        name(self) -> char
+
+        Return the name of this Marker.
+        """
         return _loris.Marker_name(*args)
 
     def time(*args): 
-        """time(self) -> double"""
+        """
+        time(self) -> double
+
+        Return the time (in seconds) associated with this Marker.
+        """
         return _loris.Marker_time(*args)
 
     def setName(*args): 
-        """setName(self, s)"""
+        """
+        setName(self, s)
+
+        Set the name of the Marker.
+        """
         return _loris.Marker_setName(*args)
 
     def setTime(*args): 
-        """setTime(self, t)"""
+        """
+        setTime(self, t)
+
+        Set the time (in seconds) associated with this Marker.
+        """
         return _loris.Marker_setTime(*args)
 
     def __del__(self, destroy=_loris.delete_Marker):
-        """__del__(self)"""
+        """
+        __del__(self)
+
+        Class Marker represents a labeled time point in a set of Partials
+        or a vector of samples. Collections of Markers (see the MarkerContainer
+        definition below) are held by the File I/O classes in Loris (AiffFile,
+        SdifFile, and SpcFile) to identify temporal features in imported
+        and exported data.
+        """
         try:
             if self.thisown: destroy(self)
         except: pass
@@ -477,6 +585,14 @@ def exportAiff(*args):
     exportAiff(path, samples, samplerate=44100.0, bitsPerSamp=16)
     exportAiff(path, samples, samplerate=44100.0)
     exportAiff(path, samples)
+
+    Export audio samples stored in a vector to an AIFF file having the
+    specified number of channels and sample rate at the given file
+    path (or name). The floating point samples in the vector are
+    clamped to the range (-1.,1.) and converted to integers having
+    bitsPerSamp bits. The default values for the sample rate and
+    sample size, if unspecified, are 44100 Hz (CD quality) and 16 bits
+    per sample, respectively.
     """
     return _loris.exportAiff(*args)
 
@@ -485,6 +601,19 @@ def exportSpc(*args):
     exportSpc(path, partials, midiPitch, enhanced, endApproachTime)
     exportSpc(path, partials, midiPitch, enhanced)
     exportSpc(path, partials, midiPitch)
+
+    Export Partials in a PartialList to a Spc file at the specified
+    file path (or name). The fractional MIDI pitch must be specified.
+    The optional enhanced parameter defaults to true (for
+    bandwidth-enhanced spc files), but an be specified false for
+    pure-sines spc files. The optional endApproachTime parameter is in
+    seconds; its default value is zero (and has no effect). A nonzero
+    endApproachTime indicates that the PartialList does not include a
+    release, but rather ends in a static spectrum corresponding to the
+    final breakpoint values of the partials. The endApproachTime
+    specifies how long before the end of the sound the amplitude,
+    frequency, and bandwidth values are to be modified to make a
+    gradual transition to the static spectrum.
     """
     return _loris.exportSpc(*args)
 
@@ -492,6 +621,15 @@ def morph(*args):
     """
     morph(src0, src1, ffreq, famp, fbw) -> PartialList
     morph(src0, src1, freqweight, ampweight, bwweight) -> PartialList
+
+    Morph labeled Partials in two PartialLists according to the
+    given frequency, amplitude, and bandwidth (noisiness) morphing
+    envelopes, and return the morphed Partials in a PartialList.
+    Loris morphs Partials by interpolating frequency, amplitude,
+    and bandwidth envelopes of corresponding Partials in the
+    source PartialLists. For more information about the Loris
+    morphing algorithm, see the Loris website:
+    	www.cerlsoundgroup.org/Loris/
     """
     return _loris.morph(*args)
 
@@ -499,41 +637,68 @@ def synthesize(*args):
     """
     synthesize(partials, srate=44100.0) -> DoubleVector
     synthesize(partials) -> DoubleVector
+
+    Synthesize Partials in a PartialList at the given sample rate, and
+    return the (floating point) samples in a vector. The vector is
+    sized to hold as many samples as are needed for the complete
+    synthesis of all the Partials in the PartialList. If the sample
+    rate is unspecified, the deault value of 44100 Hz (CD quality) is
+    used.
     """
     return _loris.synthesize(*args)
 
 def scaleAmp(*args):
     """
     scaleAmp(partials, ampEnv)
-    scaleAmp(partials, w)
+    scaleAmp(partials, val)
+
+    Shift the pitch of all Partials in a PartialList according to 
+    the given pitch envelope. The pitch envelope is assumed to have 
+    units of cents (1/100 of a halfstep).
     """
     return _loris.scaleAmp(*args)
 
 def scaleBandwidth(*args):
     """
     scaleBandwidth(partials, bwEnv)
-    scaleBandwidth(partials, w)
+    scaleBandwidth(partials, val)
+
+    Shift the pitch of all Partials in a PartialList according to 
+    the given pitch envelope. The pitch envelope is assumed to have 
+    units of cents (1/100 of a halfstep).
     """
     return _loris.scaleBandwidth(*args)
 
 def scaleFrequency(*args):
     """
     scaleFrequency(partials, freqEnv)
-    scaleFrequency(partials, w)
+    scaleFrequency(partials, val)
+
+    Shift the pitch of all Partials in a PartialList according to 
+    the given pitch envelope. The pitch envelope is assumed to have 
+    units of cents (1/100 of a halfstep).
     """
     return _loris.scaleFrequency(*args)
 
 def scaleNoiseRatio(*args):
     """
     scaleNoiseRatio(partials, noiseEnv)
-    scaleNoiseRatio(partials, w)
+    scaleNoiseRatio(partials, val)
+
+    Shift the pitch of all Partials in a PartialList according to 
+    the given pitch envelope. The pitch envelope is assumed to have 
+    units of cents (1/100 of a halfstep).
     """
     return _loris.scaleNoiseRatio(*args)
 
 def shiftPitch(*args):
     """
     shiftPitch(partials, pitchEnv)
-    shiftPitch(partials, w)
+    shiftPitch(partials, val)
+
+    Shift the pitch of all Partials in a PartialList according to 
+    the given pitch envelope. The pitch envelope is assumed to have 
+    units of cents (1/100 of a halfstep).
     """
     return _loris.shiftPitch(*args)
 

@@ -1463,10 +1463,17 @@ static void SWIG_exception_(int code, const char *msg) {
 #include <vector>
 
 
+#include <list>
+
+
 	#include<loris.h>
 	
+	#include <AiffFile.h>
+	#include <BreakpointEnvelope.h>
 	#include <Exception.h>
 	#include <Marker.h>
+	#include <Partial.h>
+	#include <Synthesizer.h>
 
 	//	import the entire Loris namespace, because
 	//	SWIG does not seem to like to wrap functions
@@ -1476,6 +1483,8 @@ static void SWIG_exception_(int code, const char *msg) {
 	// (This has probably been fixed by now.)
 	using namespace Loris;
 	
+	#include <list>
+	#include <stdexcept>
 	#include <vector>
 
 
@@ -2657,9 +2666,6 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch )
 	}
 
 
-	#include<BreakpointEnvelope.h>
-
-
 	PartialList * importSpc( const char * path )
 	{
 		PartialList * dst = createPartialList();
@@ -2691,6 +2697,7 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch )
 		}
 		return dst;
 	}
+	
 	PartialList * morph( const PartialList * src0, const PartialList * src1, 
 						 double freqweight, 
 						 double ampweight, 
@@ -2709,9 +2716,6 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch )
 		}
 		return dst;
 	}
-
-
-	#include<Synthesizer.h>
 
 
 	std::vector<double> synthesize( const PartialList * partials, double srate = 44100.0 )
@@ -2753,37 +2757,37 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch )
 	}
 
 	
-	void scaleAmp( PartialList * partials, double w )
+	void scaleAmp( PartialList * partials, double val )
 	{
-		BreakpointEnvelope e( w );
+		BreakpointEnvelope e( val );
 		scaleAmp( partials, &e );
 	}
 	
 	
-	void scaleBandwidth( PartialList * partials, double w )
+	void scaleBandwidth( PartialList * partials, double val )
 	{
-		BreakpointEnvelope e( w );
+		BreakpointEnvelope e( val );
 		scaleBandwidth( partials, &e );
 	}
 	
 	
-	void scaleFrequency( PartialList * partials, double w )
+	void scaleFrequency( PartialList * partials, double val )
 	{
-		BreakpointEnvelope e( w );
+		BreakpointEnvelope e( val );
 		scaleFrequency( partials, &e );
 	}
 	
 	
-	void scaleNoiseRatio( PartialList * partials, double w )
+	void scaleNoiseRatio( PartialList * partials, double val )
 	{
-		BreakpointEnvelope e( w );
+		BreakpointEnvelope e( val );
 		scaleNoiseRatio( partials, &e );
 	}
 	
 	
-	void shiftPitch( PartialList * partials, double w )
+	void shiftPitch( PartialList * partials, double val )
 	{
-		BreakpointEnvelope e( w );
+		BreakpointEnvelope e( val );
 		shiftPitch( partials, &e );
 	}
 
@@ -2815,17 +2819,7 @@ SWIG_FromCharPtr(const char* cptr)
   return Py_None;
 }
 
-
-	#include <Exception.h>
-	#include <stdexcept>
-
-
-	#include<Marker.h>
-
 static char const *Marker_name(Marker *self){ return self->name().c_str(); }
-
-	#include<AiffFile.h>
-
 
 SWIGINTERNSHORT int
   SWIG_CheckUnsignedLongInRange(unsigned long value,
