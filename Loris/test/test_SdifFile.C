@@ -109,7 +109,6 @@ static void test_simplePartial( void )
 	l.push_back( p );
 
 	// 	export and import:
-	// SdifFile::Export( "tmp.sdif", l );
 	SdifFile fout( l.begin(), l.end() );
 	fout.write( "tmp.sdif" );
 	SdifFile f( "tmp.sdif" );
@@ -134,6 +133,62 @@ static void test_simplePartial( void )
 	}
 }
 
+// ----------- test_markedPartials -----------
+//
+static void test_markedPartials( void )
+{
+	std::cout << "\t--- testing import/export identity using a marked Partials... ---\n\n";
+
+	//	Fabricate Partials:
+	double times[] = {0.001, 0.003, 0.005, 0.01, 0.21, 0.5};
+	PartialList l;
+	for ( int k = 0; k < 10; ++k )
+	{
+		Partial p;
+		for ( int i = 0; i < 6; ++i )
+		{
+			double t = times[i] + (k*0.1);
+			Breakpoint b( ((1+k)*100) + (10*t), t, t, t );
+			p.insert( t, b );
+		}
+		l.push_back( p );
+	}
+	
+	//	create a SdifFile and add Markers to it:
+	SdifFile fout( l.begin(), l.end() );
+	std::cout << "adding Marker \"Marker 1\" at time .2\n";
+	fout.markers().push_back( Marker( .2, "Marker 1" ) );
+	std::cout << "adding Marker \"Marker2\" at time .1\n";
+	fout.markers().push_back( Marker( .1, "Marker2" ) );
+	
+	char * name = "tmp.sdif";
+	std::cout << "writing " << name << "\n";
+	fout.write( "tmp.sdif" );
+	std::cout << "reading " << name << "\n";
+	SdifFile f( "tmp.sdif" );
+
+	std::cout << "found " << f.partials().size() << " partials.\n";
+	
+	int k = 0;
+	PartialList::iterator it;
+	std::cout << "start times:\n";
+	for ( it = f.partials().begin(); it != f.partials().end(); ++it )
+	{
+		std::cout << it->startTime() << "\n";
+		SAME_PARAM_VALUES( it->startTime(), times[0] + (k*0.1) );
+		++k;
+	}
+	
+	cout << "There are " << f.markers().size() << " markers." << endl;
+	for ( SdifFile::markers_type::iterator it = f.markers().begin(); 
+		  it != f.markers().end(); 
+		  ++it )
+	{
+		Marker & m = *it;
+		std::cout << m.name() << " at time " << m.time() << "\n";
+	}
+}
+
 // ----------- main -----------
 //
 int main( )
@@ -145,6 +200,7 @@ int main( )
 	try 
 	{
 		test_simplePartial();
+		test_markedPartials();
 	}
 	catch( Exception & ex ) 
 	{

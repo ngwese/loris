@@ -74,7 +74,7 @@ int main( int argc, char * argv[] )
 		std::string fname = make_twoMarkers( in_fname );
 		AiffFile f( fname );
 
-		cout << "Found " << f.samples().size() <<	" samples." << endl;
+		cout << "Found " << f.samples().size() << " samples." << endl;
 		
 		for ( int i = 0; i < 10; ++i )
 			cout << f.samples()[i] << ", ";
