@@ -113,7 +113,8 @@ FourierTransform::transform( void )
 	fftw_one( _plan, (fftw_complex *)_buffer, sharedBuffer );
 	
 //	copy output into (private) complex buffer:
-	for ( long i = 0; i < size(); ++i ) {
+	for ( long i = 0; i < size(); ++i ) 
+	{
 		_buffer[i] = complex< double >( sharedBuffer[i].re, sharedBuffer[i].im );
 	}
 }

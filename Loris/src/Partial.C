@@ -152,11 +152,6 @@ Partial::end( void ) const
 PartialIterator
 Partial::insert( double time, const Breakpoint & bp )
 {
-	//	KLUDGE:
-	//if ( _bpmap.size() > 0 && time < endTime() )
-	//	notifier << "inserting breakpoint at time " << time <<
-	//			" in partial ending at time " << endTime() << endl;
-	
 	_bpmap[ time ] = bp;
 	return PartialIterator( _bpmap.find(time) );
 }

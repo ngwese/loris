@@ -19,6 +19,8 @@
 #include <map>
 #include <algorithm>
 
+#include <set>
+
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
@@ -227,8 +229,9 @@ Analyzer::analyze( const std::vector< double > & buf, double srate, double offse
 			thinPeaks( f );
 
 			//	perform bandwidth association:
+#if !defined(DeugLoris)
 			state.bwAssociation().associate( f.begin(), f.end() );
-			
+#endif			
 			//	form Partials from the extracted Breakpoints:
 			formPartials( f, frameTime, state );
 
@@ -295,37 +298,31 @@ Analyzer::extractPeaks( std::list< Breakpoint > & frame, double frameTime,
 	const double threshold = std::pow( 10., 0.05 * ampFloor() );	//	absolute magnitude threshold
 	const double sampsToHz = state.sampleRate() / state.spectrum().size();
 	
-	//	FORMERLY:
-	//	the bare minimum component frequency that should be
-	//	considered corresponds to two periods of a sine wave
-	//	in the analysis window (this is pretty minimal):
-	//
-	//	no longer, just use freqFloor.
-	const double fmin = freqFloor();
-		//std::max( freqFloor(), 2. / (state.spectrum().window().size() / state.sampleRate()) );
-	
 	//	cache corrected times for the extracted breakpoints, so 
 	//	that they don't hafta be computed over and over again:
-	state.peakTimeCache().clear();	
-
-/*
-	DEBUG	
-	bool doit = false;
-	if ( doit)
+	state.peakTimeCache().clear();
+		
+#if defined(Debug_Loris)	
+	bool spit = false;
+	std::FILE * spitfile;
+	if ( spit )
 	{
-		notifier << "*** time corrections at time " << frameTime << endl;
-		for ( int j = 1; j < (state.spectrum().size() / 2) - 1; ++j )
-		{
-			notifier << state.spectrum().reassignedTime( j ) << endl;
-		}
-		notifier << "****" << endl;
+		spitfile = std::fopen( "peaks", "w" );
 	}
-*/	
+#endif
+
 	//	look for magnitude peaks in the spectrum:
-	for ( int j = 1; j < (state.spectrum().size() / 2) - 1; ++j ) {
+	for ( int j = 1; j < (state.spectrum().size() / 2) - 1; ++j ) 
+	{
 		if ( abs(state.spectrum()[j]) > abs(state.spectrum()[j-1]) && 
-			 abs(state.spectrum()[j]) > abs(state.spectrum()[j+1])) {
-			 //	compute the fractional frequency sample
+			 abs(state.spectrum()[j]) > abs(state.spectrum()[j+1])) 
+		{
+#if defined(Debug_Loris)	
+			if (spit)
+				fprintf( spitfile, "found peak at sample %ld\n", j );
+#endif
+				
+			//	compute the fractional frequency sample
 			//	and the frequency:
 			double fsample = state.spectrum().reassignedFrequency( j );	//	fractional sample
 			double fHz = fsample * sampsToHz;
@@ -339,7 +336,7 @@ Analyzer::extractPeaks( std::list< Breakpoint > & frame, double frameTime,
 			
 			//	if the frequency is too low (not enough periods
 			//	in the analysis window), reject it:
-			if ( fHz < fmin ) 
+			if ( fHz < freqFloor() ) 
 				continue;
 				
 			//	itsa magnitude peak, does it clear the amplitude floor?
@@ -351,23 +348,29 @@ Analyzer::extractPeaks( std::list< Breakpoint > & frame, double frameTime,
 			//	reject it:
 			double timeCorrection = 
 				state.spectrum().reassignedTime( j ) / state.sampleRate();
-			//
-			//	do this later, in formPartials()
-			//
-			//if ( std::abs(timeCorrection) > cropTime() )
-			//	continue;
-				
+			
 			//	retain a spectral peak corresponding to this sample:
 			double phase = state.spectrum().reassignedPhase( j, fsample, timeCorrection );
 			frame.push_back( Breakpoint( fHz, mag, 0., phase ) );
 			
-			//	cache the peak time, rather than recomputing it when
+			//	cache the peak time, won't have j available when
 			//	ready to insert it into a Partial:
 			double time = frameTime + timeCorrection;
 			state.peakTimeCache()[ fHz ] = time;
 			
+#if defined(Debug_Loris)	
+			if (spit)
+				fprintf( spitfile, "kept breakpoint with freq %lf, amp %lf, time %lf\n", 
+							fHz, mag, time );
+#endif
+			
 		}	//	end if itsa peak
 	}
+	
+#if defined(Debug_Loris)	
+	if ( spit )
+		fclose( spitfile );
+#endif
 }
 
 // ---------------------------------------------------------------------------
@@ -386,12 +389,14 @@ Analyzer::thinPeaks( std::list< Breakpoint > & frame )
 	//	second one, _and_ I can safely decrement the iterator when 
 	//	I need to remove the element at its postion:
 	std::list< Breakpoint >::iterator it = frame.begin();
-	for ( ++it; it != frame.end(); ++it ) {
+	for ( ++it; it != frame.end(); ++it ) 
+	{
 		//	search all louder peaks for one that is too near
 		//	in frequency:
 		double lower = it->frequency() - freqResolution();
 		double upper = it->frequency() + freqResolution();
-		if ( it != find_if( frame.begin(), it, frequency_between< Breakpoint >( lower, upper ) ) ) {
+		if ( it != find_if( frame.begin(), it, frequency_between< Breakpoint >( lower, upper ) ) ) 
+		{
 			//	find_if returns the end of the range (it) if it finds nothing; 
 			//	remove *it from the frame
 			frame.erase( it-- );
@@ -419,11 +424,42 @@ static inline double distance( const Partial & partial,
 //	Append the Breakpoints to existing Partials, if appropriate, or else 
 //	give birth to new Partials.
 //
+//	HEY change the distance calculator to always use the end of the partial
+//	(breakpoint argument) instead of finding the frequency at the specified 
+//	time, since everywhere else we really only want to append to partials 
+//	here (right?).
+//
 void 
 Analyzer::formPartials( std::list< Breakpoint > & frame, double frameTime, AnalyzerState & state )
 {
+//	FIX: oldgoobers this to the state, this isn't safe
+static std::set< Partial * > oldgoobers;
+
+	std::set< Partial * > newgoobers;
+	
 	//	frequency-sort the frame:
 	frame.sort( less_frequency<Breakpoint>() );
+	
+#if defined(Debug_Loris)	
+	bool spit = false;
+	std::FILE * spitfile;
+	if (spit)
+	{
+		spitfile = std::fopen("partials", "w");
+		double deh = frameTime - hopTime() - cropTime();
+		fprintf(spitfile, "at frame time %lf, partials ending after %lf\n",
+				frameTime, deh );
+		for ( PartialList::iterator pIter = partials().begin(); 
+			  pIter != partials().end(); 
+			  ++pIter ) 
+		{
+			if ( pIter->endTime() > deh )
+			{
+				fprintf( spitfile, "end freq %lf\n", pIter->frequencyAt(frameTime) );
+			}
+		}
+	}
+#endif
 	
 	//	loop over short-time peaks:
 	std::list< Breakpoint >::iterator bpIter;
@@ -433,9 +469,16 @@ Analyzer::formPartials( std::list< Breakpoint > & frame, double frameTime, Analy
 		
 		//	check the time correction for off-center components:
 		double tcabs = std::abs( peakTime - frameTime );
+		
+#if !defined(Like_Lemur)
+		//	this may still be what we want... but its 
+		//	different from Lemur's cropping and breaking:
 		if ( tcabs > cropTime() )
 			continue;	//	don't use peaks with large time corrections
-		
+#endif
+
+/*
+	NOT USED
 		//	compute the time after which a Partial
 		//	must have Breakpoints in order to be 
 		//	eligible to receive this Breakpoint:
@@ -448,16 +491,21 @@ Analyzer::formPartials( std::list< Breakpoint > & frame, double frameTime, Analy
 		//	this Breakpoint, in case the Analyzer is used
 		//	for more than a single input buffer.
 		double tooLate = std::min( frameTime, peakTime );
+*/
 		
 		//	loop over all Partials, find the eligible Partial
 		//	that is nearest in frequency to the Peak:
 		PartialList::iterator nearest = partials().end();
 		for ( PartialList::iterator pIter = partials().begin(); pIter != partials().end(); ++pIter ) {
+/*	NOT USED
 			//	check end time for eligibility:
 			if ( pIter->endTime() < tooEarly || pIter->endTime() >= tooLate ) {
 				continue;	//	loop over all Partials
 			}
-			
+			*/
+			if ( oldgoobers.count( &(*pIter) ) == 0 )
+				continue;
+				
 			//	remember this Partial if it is nearer in frequency 
 			//	to the Breakpoint than every other Partial:
 			if ( nearest == partials().end() || 
@@ -494,17 +542,56 @@ Analyzer::formPartials( std::list< Breakpoint > & frame, double frameTime, Analy
 			 /*debugger << "spawning a partial at frequency " << peak.frequency() <<
 			 			 " amplitude " << peak.amplitude() <<
 			 			 " and time " << peakTime << endl;
-			 */
-			 spawnPartial( peakTime, peak );
+			*/
+#if defined(Like_Lemur)
+			if ( 1 ) //tcabs < cropTime() )	//	cropping Lemur-style
+			{
+#endif
+				spawnPartial( peakTime, peak );
+				newgoobers.insert( & partials().back() );
+#if defined(Like_Lemur)
+			}
+#endif
+#if defined(Debug_Loris)						 
+			if (spit) 
+			 	fprintf( spitfile, "new partial at freq %lf\n", peak.frequency() );
+#endif
 		}
 		else {
 			/*debugger << "matching a partial at frequency " << peak.frequency() <<
 			 			" amplitude " << peak.amplitude() <<
 			 			" and time " << peakTime << endl;
 			*/
-			nearest->insert( peakTime, peak );
+#if defined(Like_Lemur)
+			//	Partial breaking Lemur-style:
+			if ( 1 ) //tcabs < cropTime() ||
+				 //std::abs( nearest->endTime() - (frameTime - hopTime()) ) < cropTime() )
+			{
+#endif
+				nearest->insert( peakTime, peak );
+				newgoobers.insert( &(*nearest) );
+#if defined(Like_Lemur)
+			}
+			else
+			{
+				//	this isn't quite right, should remove that
+				//	last Breakpoint
+				(--nearest->end())->setAmplitude( 0. );
+			}			
+#endif
+#if defined(Debug_Loris)						 
+			if (spit) 
+			 	fprintf( spitfile, "connecting partial at freq %lf to freq %lf\n", 
+			 						nearest->frequencyAt(frameTime), peak.frequency() );
+#endif
 		}
 	}			 
+#if defined(Debug_Loris)						 
+	 if (spit) 
+	 	fclose( spitfile );
+#endif
+	 	
+	 oldgoobers = newgoobers;
 }
 
 // ---------------------------------------------------------------------------
@@ -534,7 +621,8 @@ Analyzer::pruneBogusPartials( AnalyzerState & state )
 	std::list<Partial> veryshortones;
 	for ( PartialList::iterator it = partials().begin(); 
 		  it != partials().end(); 
-		  /* ++it */ ) {
+		  /* ++it */ ) 
+	{
 		//	need to be careful with the iterator update, 
 		//	because erasure or splice will invalidate it:
 		PartialList::iterator next = it;
@@ -548,14 +636,15 @@ Analyzer::pruneBogusPartials( AnalyzerState & state )
 	//	distribute their energy:
 	for ( std::list<Partial>::iterator it = veryshortones.begin();
 		  it != veryshortones.end();
-		  ++it ) {
+		  ++it ) 
+	{
+#if !defined(Debug_Loris)
 		state.eDistribution().distribute( *it, partials().begin(), partials().end() );
+#endif
 	}
 
 	debugger << "Analyzer pruned " << veryshortones.size() << " zero-duration Partials." << endl;
 }
-
-
 
 #if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris

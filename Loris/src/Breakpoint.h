@@ -1,5 +1,5 @@
-#ifndef __Loris_breakpoint__
-#define __Loris_breakpoint__
+#ifndef INCLUDE_BREAKPOINT_H
+#define INCLUDE_BREAKPOINT_H
 // ===========================================================================
 //	Breakpoint.h
 //	
@@ -31,20 +31,19 @@ namespace Loris {
 //
 class Breakpoint
 {
+//	-- envelope parameters --
+	double _frequency;	//	hertz
+	double _amplitude;	//	absolute
+	double _bandwidth;	//	fraction of total energy that is noise energy
+	double _phase;		//	radians
+	
 //	-- public Breakpoint interface --
 public:
 //	construction:
+//	(use compiler-generated destructor, copy, and assign)
 	Breakpoint( void );	//	needed for STL containability
 	Breakpoint( double f, double a, double b, double p = 0. );
 	
-//	destructor is not virtual, this is not a base class,
-//	use compiler-generated:	
-	// ~Breakpoint( void ) {}
-
-//	copy and assign can be compiler-generated:
-	//Breakpoint( const Breakpoint & other );
-	//Breakpoint & operator=( const Breakpoint & other );
-
 //	attribute access:
 	double frequency( void ) const { return _frequency; }
 	double amplitude( void ) const { return _amplitude; }
@@ -60,19 +59,11 @@ public:
 //	add noise (bandwidth) energy:
 //	should this really be part of the interface?
 	void addNoise( double x );
-	
-private:
-//	-- instance variables --
-//	envelope parameters:
-	double _frequency;	//	hertz
-	double _amplitude;	//	absolute
-	double _bandwidth;	//	fraction of total energy that is noise energy
-	double _phase;		//	radians
-	
+
 };	//	end of class Breakpoint
 
 #if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
 #endif
 
-#endif	// ndef __Loris_breakpoint__
+#endif	// ndef INCLUDE_BREAKPOINT_H

@@ -9,11 +9,7 @@
 #include "KaiserWindow.h"
 #include "Exception.h"
 #include "pi.h"
-#if !defined( Deprecated_cstd_headers )
-	#include <cmath>
-#else
-	#include <math.h>
-#endif
+#include <cmath>
 
 using namespace std;
 
@@ -21,7 +17,6 @@ using namespace std;
 //	begin namespace
 namespace Loris {
 #endif
-
 
 //	prototypes for static helpers, defined below
 static double factorial( double );
@@ -47,16 +42,7 @@ KaiserWindow::create( vector< double > & samples, double shape )
  	
 //	Compute the window bounds:
 	double offset = -0.5 * (length - 1);
-	/*		
-	if (length % 2)	{
-		// odd length
-		offset = - (length - 1) / 2;
-	}
-	else {
-		//	even length
-		offset = (- length / 2) + 0.5;
-	}
-	*/
+
 //	Pre-compute the denominator in the kaiser equation.	
 	double denom = zeroethOrderBessel( shape );
 	

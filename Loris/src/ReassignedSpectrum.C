@@ -70,6 +70,10 @@ ReassignedSpectrum::~ReassignedSpectrum( void )
 void
 ReassignedSpectrum::transform( const vector< double > & buf, long idxCenter )
 {
+#if defined(Debug_Loris)
+	bool spit = false;
+#endif
+
 	Assert( idxCenter >= 0 );
 	Assert( idxCenter < buf.size() );
 	
@@ -90,9 +94,33 @@ ReassignedSpectrum::transform( const vector< double > & buf, long idxCenter )
 	load( _transform, 
 		  buf.begin() + boffset, buf.begin() + idxCenter, buf.begin() + eoffset,
 		  _window.begin() + woffset );
+		  
+#if defined(Debug_Loris)
+	if (spit)
+	{
+		FILE * spitfile = fopen("ftin", "w");
+		for ( long k = 0; k < _transform.size(); ++k )
+		{
+			fprintf( spitfile, "%ld %lf\n", k, _transform[k].real() );
+		}
+		fclose( spitfile );
+	}
+#endif
 	
 	_transform.transform();
 
+#if defined(Debug_Loris)
+	if (spit)
+	{
+		FILE * spitfile = fopen("ftout", "w");
+		for ( long k = 0; k < _transform.size(); ++k )
+		{
+			fprintf( spitfile, "%ld %lf %lf\n", k, _transform[k].real(), _transform[k].imag() );
+		}
+		fclose( spitfile );
+	}
+#endif
+	
 //	window and rotate input using frequency-ramped window
 //	and compute frequency correction transform:
 	load( _tfreqramp, 
@@ -244,41 +272,11 @@ ReassignedSpectrum::computeWindowSpectrum( const vector< double > & v )
 double
 ReassignedSpectrum::frequencyCorrection( long sample ) const
 {
-//#define __parab
-#ifndef __parab
 	double num = _transform[sample].real() * _tfreqramp[sample].imag() -
-					_transform[sample].imag() * _tfreqramp[sample].real();
+				 _transform[sample].imag() * _tfreqramp[sample].real();
 	double magSquared = norm( _transform[sample] );
 						
 	return - num / magSquared;
-
-#else
-	//	something's going on here, this suddenly doesn't work
-	//	15 feb 00
-	if ( abs( _transform[sample-1] ) == 0. ) {
-		debugger << "transform at " << sample-1 << " is zero." << endl;
-		return 0.;
-	}
-	if ( abs( _transform[sample] ) == 0. ) {
-		debugger << "transform at " << sample << " is zero." << endl;
-		return 0.;
-	}
-	if ( abs( _transform[sample+1] ) == 0. ) {
-		debugger << "transform at " << sample+1 << " is zero." << endl;
-		return 0.;
-	}
-
-//	use parabolic interpolation until
-//	we figure out why (whether?) freq reassignment sucks:
-	double dbLeft = 20. * log10( abs( _transform[sample-1] ) );
-	double dbCandidate = 20. * log10( abs( _transform[sample] ) );
-	double dbRight = 20. * log10( abs( _transform[sample+1] ) );
-
-	return	0.5 * (dbLeft - dbRight) /
-			(dbLeft - (2. * dbCandidate) + dbRight);
-
-#endif
-
 }
 
 // ---------------------------------------------------------------------------
@@ -310,7 +308,22 @@ ReassignedSpectrum::timeCorrection( long sample ) const
 double
 ReassignedSpectrum::reassignedFrequency( unsigned long idx ) const
 {
-	return idx + frequencyCorrection( idx );
+#define SMITHS_BRILLIANT_PARABOLAS
+#if ! defined(SMITHS_BRILLIANT_PARABOLAS)
+
+	return double(idx) + frequencyCorrection( idx );
+	
+#else // defined(SMITHS_BRILLIANT_PARABOLAS)
+	double dbLeft = 20. * log10( abs( _transform[idx-1] ) );
+	double dbCandidate = 20. * log10( abs( _transform[idx] ) );
+	double dbRight = 20. * log10( abs( _transform[idx+1] ) );
+	
+	double peakXOffset = 0.5 * (dbLeft - dbRight) /
+						 (dbLeft - 2.0 * dbCandidate + dbRight);
+
+	return idx + peakXOffset;
+	
+#endif	//	defined SMITHS_BRILLIANT_PARABOLAS
 }
 
 // ---------------------------------------------------------------------------
@@ -360,7 +373,7 @@ ReassignedSpectrum::reassignedMagnitude( double fracBinNum, long peakBinNumber )
 
 	Assert( fracBinNum >= 0. );
 
-//#define SMITHS_INGENEOUS_PARABOLAS
+#define SMITHS_INGENEOUS_PARABOLAS
 #if ! defined(SMITHS_INGENEOUS_PARABOLAS)
 	
 	//	compute the nominal spectral amplitude by scaling
@@ -471,10 +484,6 @@ ReassignedSpectrum::reassignedMagnitude( double fracBinNum, long peakBinNumber )
 	double dbmag = dbCandidate - 0.25 * (dbLeft - dbRight) * peakXOffset;
 	double x = magnitudeScale() * pow( 10., 0.05 * dbmag );
 	
-	if ( x > 0.5 )
-		notifier << "found big magnitude at frequency sample " << fracBinNum <<
-				" (" << peakBinNumber << "): " << x << endl;
-				
 	return x;
 	
 #endif	//	defined SMITHS_INGENEOUS_PARABOLAS
@@ -483,13 +492,9 @@ ReassignedSpectrum::reassignedMagnitude( double fracBinNum, long peakBinNumber )
 // ---------------------------------------------------------------------------
 //	reassignedPhase
 // ---------------------------------------------------------------------------
-//	The reassigned phase is interpolated according to the corrected frequency,
-//	the fractional frequency sample, and shifted to account for the time
-//	correction (in fractional time samples).
-//
-//	This algorithm assumes that the frequency correction is small, so that
-//	the phase spectrum is evaulated near the peak sample. This may be a bad 
-//	assumption.
+//	The reassigned phase is shifted to account for the time
+//	correction (in fractional time samples) according to the 
+//	corrected frequency (in fractional frequency samples).
 //
 double
 ReassignedSpectrum::reassignedPhase( long idx,

@@ -12,13 +12,7 @@
 // ===========================================================================
 #include "Breakpoint.h"
 #include "Exception.h"
-
-#if !defined( Deprecated_cstd_headers )
-	#include <cmath>
-	using std::sqrt;
-#else
-	#include <math.h>
-#endif
+#include <cmath>
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
@@ -79,7 +73,7 @@ Breakpoint::addNoise( double noise )
 	//	guard against divide-by-zero:
 	if ( e > 0. ) {
 		setBandwidth( ( n + noise ) / ( e + noise ) );
-		setAmplitude( sqrt( e + noise ) );
+		setAmplitude( std::sqrt( e + noise ) );
 	}
 	else {
 		setBandwidth( 0. );
