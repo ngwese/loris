@@ -20,44 +20,23 @@ using namespace std;
 Begin_Namespace( Loris )
 
 // ---------------------------------------------------------------------------
-//	Xgte
-// ---------------------------------------------------------------------------
-//	Function object used for inserting breakpoints in order and
-//	retrieving them.
-//
-struct Xgte
-{
-	Xgte( double z ) : _z( z ) {}
-	boolean operator () ( const pair<double, double> & bp ) const { 
-		return bp.first > _z;
-	}
-private:
-	double _z;
-};
-
-// ---------------------------------------------------------------------------
 //	insertBreakpoint
 // ---------------------------------------------------------------------------
 //	Insert or replace a breakpoint at x.
+//	_breakpoints is a map<double, double>.
 //	
 void
 BreakpointMap::insertBreakpoint( double x, double y )
 {
-	BreakpointsVector::iterator it = 
-		find_if( _breakpoints.begin(), _breakpoints.end(), Xgte(x) );
-	
-	//	insert or replace:
-	if ( (*it).first == x ) {
-		(*it).second = y;
-	}
-	else {
-		_breakpoints.insert( it, std::make_pair( x, y ) );
-	}
+	_breakpoints[x] = y;
 }
 
 // ---------------------------------------------------------------------------
 //	valueAt
 // ---------------------------------------------------------------------------
+//	_breakpoints is a map<double, double>, so iterators are references to
+//	key/value pairs.
+//	
 //
 double
 BreakpointMap::valueAt( double x ) const
@@ -67,8 +46,7 @@ BreakpointMap::valueAt( double x ) const
 		return 0.;
 	}
 
-	BreakpointsVector::const_iterator it = 
-		find_if( _breakpoints.begin(), _breakpoints.end(), Xgte(x) );
+	map< double, double >::const_iterator it = _breakpoints.lower_bound( x );
 
 	if ( it == _breakpoints.begin() ) {
 		//	x is less than the first breakpoint, extend:
@@ -76,16 +54,22 @@ BreakpointMap::valueAt( double x ) const
 	}
 	else if ( it == _breakpoints.end() ) {
 		//	x is greater than the last breakpoint, extend:
-		return _breakpoints.back().second;
+		// 	(no direct way to access the last element of a map)
+		--it;
+		return (*it).second;
 	}
 	else {
 		//	linear interpolation between consecutive breakpoints:
-		double xless = (*(it-1)).first;
 		double xgreater = (*it).first;
+		double ygreater = (*it).second;
+		--it;
+		double xless = (*it).first;
+		double yless = (*it).second;
+		
 		double alpha = (x -  xless) / (xgreater - xless);
-		return ( alpha * (*it).second ) 			//	alpha * ygreater
-			 + ( (1. - alpha) * (*(it-1)).second );	//	1-alpha * yless
+		return ( alpha * ygreater ) + ( (1. - alpha) * yless );
 	}
+
 }
 
 End_Namespace( Loris )

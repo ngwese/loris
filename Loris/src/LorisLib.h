@@ -8,7 +8,10 @@
  *
  *	Policy:
  *
- *		Loris uses and supports namespaces and the STL.
+ *		Loris uses and supports namespaces and the STL, but is not as
+ *		uniformly generic as the STL. Template versions of functions
+ *		are provided when it seems useful, and when it doesn't cause 
+ *		the header or class definition to be unwieldy.
  *
  *		Everything in the Loris library is part of the Loris namespace.
  *
@@ -36,6 +39,7 @@
  *		Some implementations may not allow classes to have template
  *		members. But that's too damned bad. Some classes need template
  *		members, so if the compiler can't handle it, get a modern compiler.
+ *		Some classes will not compile without template members.
  *		** Don't use this symbol. **
  *
  *

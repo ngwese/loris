@@ -1,6 +1,5 @@
 #ifndef __Loris_abstract_map__
 #define __Loris_abstract_map__
-
 // ===========================================================================
 //	Map.h
 //	
@@ -10,14 +9,13 @@
 //	BreakpointMap is a simple subclass of Map, specifying a linear 
 //	segment breakpoint function. 
 //
-//
 //	-kel 26 Oct 99
 //
 // ===========================================================================
 
 #include "LorisLib.h"
 
-#include <vector>
+#include <map>
 
 Begin_Namespace( Loris )
 
@@ -55,8 +53,7 @@ protected:
 class BreakpointMap : public Map
 {
 public:
-//	construction:
-//	use compiler-generated versions of these:
+//	use compiler-generated constructors:
 	//BreakpointMap( void ) {}
 	//BreakpointMap( const BreakpointMap & ) {}
 	//~BreakpointMap( void );
@@ -65,15 +62,14 @@ public:
 	BreakpointMap * clone( void ) const { return new BreakpointMap( *this ); }
 
 //	adding breakpoints:
-	void insertBreakpoint( double time, double weight ); 
+	void insertBreakpoint( double x, double y ); 
 	
 //	evaluation:
 	double valueAt( double x ) const;
 	
 private:
 //	-- instance variables --
-	typedef std::vector< std::pair< double, double > > BreakpointsVector;
-	BreakpointsVector _breakpoints;
+	std::map< double, double > _breakpoints;
 
 };	//	end of class BreakpointMap
 

@@ -1,10 +1,13 @@
 #ifndef __Loris_morph__
 #define __Loris_morph__
-
 // ===========================================================================
 //	Morph.h
 //	
-//	Stuff related to morphing.
+//	The Morph object performs sound morphing (cite Lip's papers, and the book)
+//	by interpolating Partial parmeter envelopes of corresponding Partials in
+//	a pair of source sounds. The correspondences are established by labeling.
+//	The Morph object collects morphed Partials in a list<Partial>, that can
+//	be accessed by clients.
 //
 //	-kel 15 Oct 99
 //
@@ -12,8 +15,6 @@
 
 #include "LorisLib.h"
 #include "Partial.h"
-
-#include <vector>
 #include <list>
 
 Begin_Namespace( Loris )
@@ -90,38 +91,9 @@ protected:
 
 };	//	end of class Morph
 
-
-// ---------------------------------------------------------------------------
-//	class WeightFunction
-//
-//	Probably want to beautify this a little bit, and clean up
-//	the stuff that is available in the standard library.
-//
-class WeightFunction
-{
-public:
-//	construction:
-	WeightFunction( void ) {}
-	
-	//	use compiler-generated versions of these:
-	//WeightFunction( const WeightFunction & ) {}
-	//~WeightFunction( void );
-
-//	adding breakpoints:
-	void insertBreakpoint( double time, double weight ); 
-	
-//	evaluating weights:
-	double weightAtTime( double time ) const;
-	
-private:
-//	-- instance variables --
-	typedef std::vector< std::pair< double, double > > BreakpointsVector;
-	 BreakpointsVector _breakpoints;
-
-};	//	end of class WeightFunction
-
 //	prototypes for things that aren't classes or
 //	member functions yet:
+#include <vector>
 Partial dilate( const Partial & p, const std::vector< double > & current, 
 				const std::vector< double > & desired );
 

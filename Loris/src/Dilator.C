@@ -1,0 +1,147 @@
+// ===========================================================================
+//	Dilator.C
+//	
+//	Dilator is a class of objects for temporally dilating and compressing
+//	Partials by specifying source and target times of temporal features.
+//
+//	-kel 26 Oct 99
+//
+// ===========================================================================
+
+#include "LorisLib.h"
+#include "Dilator.h"
+#include "Partial.h"
+#include "PartialIterator.h"
+#include "Breakpoint.h"
+#include "Exception.h"
+
+using namespace std;
+
+Begin_Namespace( Loris )
+
+// ---------------------------------------------------------------------------
+//	constructor
+// ---------------------------------------------------------------------------
+Dilator::Dilator( const std::vector< double > & init, 
+				  const std::vector< double > & tgt )
+{
+	setTimePoints( init, tgt );
+}
+
+// ---------------------------------------------------------------------------
+//	setTimePoints
+// ---------------------------------------------------------------------------
+//	Make sure that the initial and target vectors are of the same size.
+//	Sort the time points in both vectors; temporal features cannot be 
+//	reordered using Dilator.
+//
+//	This could be put in the template member in the class
+//	definition, but this location is better for debugging, and
+//	it allows this class to be compiled without template members,
+//	if that should ever be necessary.
+// 
+void
+Dilator::setTimePoints( const std::vector< double > & init, 
+						const std::vector< double > & tgt ) 
+{
+	//	time point vectors have to be the same size:
+	if ( init.size() != tgt.size() ) {
+		Throw( InvalidObject, 
+				"Dilator must have the same number of initial and target time points." );
+	}
+	
+	//	copy and sort the time points:
+	_initial = init;
+	sort( _initial.begin(), _initial.end() );
+	_target = tgt;
+	sort( _target.begin(), _target.end() ); 
+}
+
+// ---------------------------------------------------------------------------
+//	dilate
+// ---------------------------------------------------------------------------
+//	Dilate a Partial in-place, and return a reference to it.
+//
+//	The Partial envelope is replaced with a new envelope having the
+//	same Breakpoints at times computed to align temporal features
+//	in _initial with their counterparts in _target.
+//
+//	Depending on the specification of initial and target time 
+//	points, the dilated Partial may have Breakpoints at times
+//	less than 0.
+//
+//	It is possible to have duplicate time points in either vector.
+//	Duplicates in _initial result in very localized stretching.
+//	Duplicates in _target result in very localized compression.
+//
+//	If all time points in _initial are greater than 0, then an implicit
+//	time point at 0 is assumed in both _initial and _target, allowing
+//	the onset of a sound to be stretched without explcitly specifying a 
+//	zero point in each vector. This seems most intuitive, and only looks
+//	like an inconsistency if clients are using negative time points in 
+//	their Dilator, or Partials having Breakpoints before time 0, both 
+//	of which are probably unusual circumstances. 
+//	
+//	
+Partial &
+Dilator::dilate( Partial & p ) const
+{
+	//	Nothing to do if there are no time points:
+	if ( _initial.size() == 0 )
+		return p;
+	
+	//	sanity check:
+	Assert( _initial.size() == _target.size() );
+	Assert( _initial.front() > 0. );
+		
+	//	create the new Partial:
+	Partial newp;
+	newp.setLabel( p.label() );
+	
+	int index = 0;
+	for ( PartialIterator pIter(p); ! pIter.atEnd(); pIter.advance() ) {
+		//	find the first initial time point later than pIter:
+		while ( index < _initial.size() && pIter.time() > _initial[index] ) {
+			++index;
+		}
+		
+		//	compute a new time for the Breakpoint at pIter:
+		double newtime = 0;
+		if ( index == 0 ) {
+			//	all time points in _initial are later than 
+			//	the time of pIter; stretch if no zero time 
+			//	point has been specified, otherwise, shift:
+			if ( _initial[index] != 0. )
+				newtime = pIter.time() * _target[index] / _initial[index];
+			else
+				newtime = _target[index] + ( pIter.time() - _initial[index] );
+		}
+		else if ( index >= _initial.size() ) {
+			//	all time points in _initial are earlier than 
+			//	the time of pIter; shift:
+			newtime = _target[index - 1] + ( pIter.time() - _initial[index - 1] );
+		}
+		else {
+			//	pIter is between the time points at index and
+			//	index-1 in _initial; shift and stretch: 
+			Assert( _initial[index] != _initial[index - 1] );	//	pIter can't wind up 
+																//	between two equal times
+			newtime = _target[index-1] + 
+					  ( (pIter.time() - _initial[index - 1]) * 
+						( _target[index] - _target[index - 1] ) /
+						( _initial[index] - _initial[index - 1] ) );
+		}
+		
+		//	add a Breakpoint at the computed time:
+		newp.insert( newtime, Breakpoint( pIter.frequency(), pIter.amplitude(), 
+										  pIter.bandwidth(), pIter.phase() ) );
+	}
+	
+	//	assign the new Partial:
+	p = newp;
+	return p;
+}
+
+
+
+End_Namespace( Loris )

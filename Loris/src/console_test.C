@@ -33,6 +33,8 @@
 
 #include "Morph.h"
 #include "Distiller.h"
+#include "Map.h"
+#include "Dilator.h"
 
 using namespace std;
 using namespace Loris;
@@ -43,7 +45,7 @@ using namespace Loris;
 
 int main()
 {	
-	try {	
+	try {
 		//	import 4A partials:
 		string name = ":::morphing:ncsa morph:carhorn1.lemr";
 		BinaryFile f2;
@@ -57,16 +59,14 @@ int main()
 		
 		//	dilating car horn:
 		cout << "dilating..." << endl;
-		list< Partial > car;
 		const double currentArray[] = { 0.3, 1. };
 		const double desiredArray[] = { 0.5, 4. };
-		vector< double > cur( currentArray, currentArray + 2 );
-		vector< double > des( desiredArray, desiredArray + 2 );
+		Dilator d( currentArray, currentArray + 2, desiredArray, desiredArray + 2 );
+				 	
 		for ( list<Partial>::iterator it = imp2.partials().begin(); it != imp2.partials().end(); ++it ) {
-			car.push_back( dilate( *it, cur, des ) );
+			d.dilate( *it );
 		}
 		cout << "done." << endl;
-		imp2.partials().erase( imp2.partials().begin(), imp2.partials().end() );
 
 
 		//	import 4Bb partials:
@@ -110,26 +110,26 @@ int main()
 */
 
 		//	Create my weight function:
-		WeightFunction w;
+		BreakpointMap w;
 		w.insertBreakpoint( 0.6, 0. ); // start with clar
 		w.insertBreakpoint( 2., 1. );  // end with long amount of flute action.
 		
-		WeightFunction flat;
+		BreakpointMap flat;
 		flat.insertBreakpoint( 0., 0. );
 		flat.insertBreakpoint( 1., 0. );
 		
 		for (double z = 0.; z < 3.0; z += 0.2) {
-			cout << "weight at " << z << " is " << w.weightAtTime(z) << endl;
+			cout << "weight at " << z << " is " << w(z) << endl;
 		}
 		
-		Morph m;
-		m.setFreqFunction( w );
-		m.setAmpFunction( w );
-		m.setBwFunction( w );
+		Morph m( w );
+		//m.setFrequencyFunction( w );
+		//m.setAmplitudeFunction( w );
+		//m.setBandwidthFunction( w );
 
 	
 		cout << "morphine..." << endl;
-		m.doit( car, imp.partials() );
+		m.morph( imp2.partials(), imp.partials() );
 		cout << "done." << endl;
 
 

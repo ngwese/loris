@@ -1,7 +1,11 @@
 // ===========================================================================
 //	Morph.C
 //	
-//	Stuff related to morphing.
+//	The Morph object performs sound morphing (cite Lip's papers, and the book)
+//	by interpolating Partial parmeter envelopes of corresponding Partials in
+//	a pair of source sounds. The correspondences are established by labeling.
+//	The Morph object collects morphed Partials in a list<Partial>, that can
+//	be accessed by clients.
 //
 //	-kel 15 Oct 99
 //
@@ -37,116 +41,6 @@
 using namespace std;
 
 Begin_Namespace( Loris )
-
-#pragma mark -
-#pragma mark stuff
-
-
-// ---------------------------------------------------------------------------
-//	dilate
-// ---------------------------------------------------------------------------
-//	Not in-place temporal dilation/compression. Return a new dilated partial.
-//	
-Partial 
-dilate( const Partial & p, const vector< double > & current, 
-		const vector< double > & desired )
-{
-	Assert( current.front() > 0. );
-	Assert( current.size() == desired.size() );
-	
-	//	create the new Partial:
-	Partial newp;
-	newp.setLabel( p.label() );
-	
-	int index = 0;
-	const Breakpoint * bp;
-	for ( bp = p.head(); bp != Null; bp = bp->next() ) {
-		while ( index < current.size() && bp->time() > current[index] ) {
-			++index;
-		}
-		
-		double newtime = 0;
-		if ( index == 0 ) {
-			newtime = bp->time() * desired[index] / current[index];
-		}
-		else if ( index > current.size() ) {
-			newtime = desired[index-1] + 
-					( bp->time() - current[index - 1] );
-		}
-		else {
-			newtime = desired[index-1] + 
-					( (bp->time() - current[index - 1]) * 
-						( desired[index] - desired[index - 1] ) /
-						( current[index] - current[index - 1] ) );
-		}
-		
-		//	add a Breakpoint at the computed time:
-		newp.insert( newtime, Breakpoint(*bp) );
-	}
-	
-	return newp;
-}
-
-#pragma mark -
-#pragma mark weighting function
-// ---------------------------------------------------------------------------
-//	insertBreakpoint
-// ---------------------------------------------------------------------------
-//	
-void
-WeightFunction::insertBreakpoint( double time, double weight )
-{
-	struct LaterThan
-	{
-		LaterThan( double z ) : _z( z ) {}
-		boolean operator () ( const pair<double, double> & bp ) const { 
-			return bp.second > _z;
-		}
-		
-	private:
-		double _z;
-	};
-		
-	BreakpointsVector::iterator it = 
-		find_if( _breakpoints.begin(), _breakpoints.end(), LaterThan(time) );
-	_breakpoints.insert( it, std::make_pair( time, weight ) );
-}
-
-// ---------------------------------------------------------------------------
-//	weightAtTime
-// ---------------------------------------------------------------------------
-//
-double
-WeightFunction::weightAtTime( double time ) const
-{
-	if ( _breakpoints.size() == 0 ) {
-		return 0.5;
-	}
-	
-	if ( time <= _breakpoints.front().first ) {
-		return _breakpoints.front().second;
-	}
-	else if ( time >= _breakpoints.back().first ) {
-		return _breakpoints.back().second;
-	}
-	else {
-		std::vector< std::pair< double, double > >::const_iterator it;
-		for (it = _breakpoints.begin(); it != _breakpoints.end(); ++it ) {
-			if ((*it).first > time) {
-			//	interpolate between it and its predecessor:
-				double alpha = (time - (*(it-1)).first) / ((*it).first - (*(it-1)).first);
-				return (alpha * (*it).second) + ((1. - alpha) * (*(it-1)).second);
-			}
-		}
-	}	
-	
-	//	not reached:
-	return 0.;	
-}
-
-
-#pragma mark -
-#pragma mark construction
 
 // ---------------------------------------------------------------------------
 //	Morph constructor (single morph function)
