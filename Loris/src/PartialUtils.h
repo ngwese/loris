@@ -179,6 +179,7 @@ public:
 	}
 	
 //	-- predicates --
+
 	/*	Predicate functor returning true if the label of its Partial argument is
 		equal to the specified 32-bit label, and false otherwise.
 	 */

@@ -185,6 +185,7 @@ Morpher::morphPhases( double phi0, double phi1, double alpha )
 	{
 		phi0 += 2 * Pi;
 	}
+
 	return std::fmod( (alpha * phi1) + ((1.-alpha) * phi0), 2 * Pi );
 }
 
@@ -344,6 +345,11 @@ Morpher::morphParameters( const Partial & srcPartial, const Partial & tgtPartial
 //	to the Morpher's PartialList, and a reference to it is returned.
 //	The morphed Partial is assigned the specified label.
 //
+//	HEY!!!!!!
+//	This has gotten way too inefficient, get rid of some of those
+//	unused morphing options, and condense things so that the morph
+//	functions aren't evaluated repeatedly at the same time.
+//
 Partial &
 Morpher::morphPartial( const Partial & src, const Partial & tgt, int assignLabel )
 {
@@ -360,33 +366,54 @@ Morpher::morphPartial( const Partial & src, const Partial & tgt, int assignLabel
 	Breakpoint tmpBkpt;
 	for ( Partial::const_iterator iter = src.begin(); iter != src.end(); ++iter )
 	{	
-		//	don't insert Breakpoints arbitrarily close together:
-		Partial::iterator nearest = newp.findNearest( iter.time() );
-		if ( nearest == newp.end() ||
-			 _minBreakpointGapSec < std::fabs( nearest.time() - iter.time() ) )
+		//	don't insert Breakpoints at src times is all 
+		//	morph functions equal 1 (or > MaxMorphParam):
+		const double MaxMorphParam = .9;
+		if ( _freqFunction->valueAt( iter.time() ) < MaxMorphParam ||
+			 _ampFunction->valueAt( iter.time() ) < MaxMorphParam ||
+			 _bwFunction->valueAt( iter.time() ) < MaxMorphParam )
 		{
-			morphParameters( iter.breakpoint(), tgt, iter.time(), tmpBkpt );
-			newp.insert( iter.time(), tmpBkpt );
+			//	don't insert Breakpoints arbitrarily close together:
+			Partial::iterator nearest = newp.findNearest( iter.time() );
+			if ( nearest == newp.end() ||
+				 _minBreakpointGapSec < std::fabs( nearest.time() - iter.time() ) )
+			{
+				morphParameters( iter.breakpoint(), tgt, iter.time(), tmpBkpt );
+				newp.insert( iter.time(), tmpBkpt );
+			}
 		}
 	}
 	
 	//	now do it for the other Partial:
 	for ( Partial::const_iterator iter = tgt.begin(); iter != tgt.end(); ++iter )
 	{
-		//	don't insert Breakpoints arbitrarily close together:
-		Partial::iterator nearest = newp.findNearest( iter.time() );
-		if ( nearest == newp.end() ||
-			 _minBreakpointGapSec < std::fabs( nearest.time() - iter.time() ) )
+		//	don't insert Breakpoints at src times is all 
+		//	morph functions equal 0 (or < MinMorphParam):
+		const double MinMorphParam = .1; // 1-MaxMorphparam, above
+		if ( _freqFunction->valueAt( iter.time() ) > MinMorphParam ||
+			 _ampFunction->valueAt( iter.time() ) > MinMorphParam ||
+			 _bwFunction->valueAt( iter.time() ) > MinMorphParam )
 		{
-			morphParameters( src, iter.breakpoint(), iter.time(), tmpBkpt );
-			newp.insert( iter.time(), tmpBkpt );
+			//	don't insert Breakpoints arbitrarily close together:
+			Partial::iterator nearest = newp.findNearest( iter.time() );
+			if ( nearest == newp.end() ||
+				 _minBreakpointGapSec < std::fabs( nearest.time() - iter.time() ) )
+			{
+				morphParameters( src, iter.breakpoint(), iter.time(), tmpBkpt );
+				newp.insert( iter.time(), tmpBkpt );
+			}
 		}
 	}
 		
 	//	add the new partial to the collection,
 	//	if it is valid, and it must be, unless two 
 	//	dummy Partials were morphed:
-	Assert( newp.numBreakpoints() > 0 );
+	//
+	//	no longer true, if we are not inserting Breakpoints
+	//	at times when the corresponding source Partial is 
+	//	absent in the morph (all morph functions weight it
+	//	at or near zero).
+	// Assert( newp.numBreakpoints() > 0 );
 	_partials.push_back( newp );
 	return _partials.back();
 }
@@ -408,6 +435,10 @@ Morpher::morphPartial( const Partial & src, const Partial & tgt, int assignLabel
 //
 //	The crossfaded Partials are stored in the Morpher's PartialList.
 //
+//	HEY!!!
+//	This is inefficient too! Null Partials are stored, and then 
+//	removed.
+//
 void 
 Morpher::crossfade( PartialList::const_iterator beginSrc, 
 					PartialList::const_iterator endSrc,
@@ -426,11 +457,18 @@ Morpher::crossfade( PartialList::const_iterator beginSrc,
 	{
 		if ( it->label() == 0 )
 		{
-			morphPartial( *it, nullPartial, 0 );	
-			++debugCounter;
+			Partial & newp = morphPartial( *it, nullPartial, 0 );	
+			if ( newp.numBreakpoints() > 0 )
+			{
+				++debugCounter;
+			}
+			else
+			{
+				_partials.pop_back();
+			}
 		}
 	}
-	debugger << "there were " << debugCounter << " in sound 1" << endl;
+	debugger << "kept " << debugCounter << " from sound 1" << endl;
 
 	//	crossfade Partials corresponding to a morph weight of 1:
 	debugCounter = 0;
@@ -438,11 +476,18 @@ Morpher::crossfade( PartialList::const_iterator beginSrc,
 	{
 		if ( it->label() == 0 )
 		{
-			morphPartial( nullPartial, *it, 0 );
+			Partial & newp = morphPartial( nullPartial, *it, 0 );
 			++debugCounter;
+			if ( newp.numBreakpoints() > 0 )
+			{
+				++debugCounter;
+			}
+			{
+				_partials.pop_back();
+			}
 		}
 	}
-	debugger << "there were " << debugCounter << " in sound 2" << endl;
+	debugger << "kept " << debugCounter << " from sound 2" << endl;
 }
 
 // ---------------------------------------------------------------------------
@@ -646,6 +691,10 @@ static void fix_frequencies( Partial & fixme, const Partial & reference,
 //	initialized to zero, and it is the element type for the
 //	PartialCorrespondence map.
 //
+//	HEY!!!
+//	This is inefficient too! Null Partials are stored, and then 
+//	removed.
+//
 void Morpher::morph_aux( PartialCorrespondence & correspondence  )
 {
 	const Partial * ref0 = 0;
@@ -744,7 +793,11 @@ void Morpher::morph_aux( PartialCorrespondence & correspondence  )
 		debugger << "morphing " << ( ( 0 < src.size() )?( 1 ):( 0 ) )
 				 << " and " << ( ( 0 < tgt.size() )?( 1 ):( 0 ) )
 				 <<	" partials with label " <<	label << endl;
-		morphPartial( src, tgt, label );
+		Partial & newp = morphPartial( src, tgt, label );
+		if ( newp.numBreakpoints() == 0 )
+		{
+			_partials.pop_back();
+		}
 	}
 }
 
