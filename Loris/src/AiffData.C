@@ -58,15 +58,18 @@ namespace Loris {
 //	readChunkHeader
 // ---------------------------------------------------------------------------
 //	Read the id and chunk size from the current file position.
-//	Let exceptions propogate.
 //
 std::istream & 
 readChunkHeader( std::istream & s, CkHeader & h )
 {	
 	try
 	{
-		BigEndian::read( s, 1, sizeof(ID), (char *)&h.id );
-		BigEndian::read( s, 1, sizeof(Uint_32), (char *)&h.size );
+		ID id = 0;
+		Uint_32 sz = 0;
+		BigEndian::read( s, 1, sizeof(ID), (char *)&id );
+		BigEndian::read( s, 1, sizeof(Uint_32), (char *)&sz );
+		h.id = id;
+		h.size = sz;
 	}
 	catch( FileIOException & ex )
 	{
