@@ -36,7 +36,8 @@ Welcome to the very simple Loris morphing test!
 Kelly Fitz 2000
 
 Generates a simple linear morph between a 
-clarinet and a flute.
+clarinet and a flute using the Loris
+extension module for Python.
 """
 print __doc__
 
@@ -56,12 +57,12 @@ samplerate = cf.sampleRate()
 clar = a.analyze( v, samplerate )
 
 print 'checking SDIF export/import'
-loris.exportSdif( 'clarinet.sdif', clar )
-clar = loris.importSdif( 'clarinet.sdif' )
+loris.exportSdif( 'clarinet.pytest.sdif', clar )
+clar = loris.importSdif( 'clarinet.pytest.sdif' )
 
 try:
 	print 'making a bogus attempt at writing an Spc file'
-	loris.exportSpc( 'bad_spc_file.spc', clar, 90 )
+	loris.exportSpc( 'bad_spc_file.pytest.spc', clar, 90 )
 except:
 	import sys
 	print 'caught:', sys.exc_type, sys.exc_value
@@ -87,7 +88,7 @@ print 'shifting pitch of clarinet'
 loris.shiftPitch( clar, loris.BreakpointEnvelopeWithValue( -600 ) )
 
 # check clarinet synthesis:
-loris.exportAiff( 'clarOK.aiff', loris.synthesize( clar, samplerate ), samplerate, 1, 16 )
+loris.exportAiff( 'clarOK.pytest.aiff', loris.synthesize( clar, samplerate ), samplerate, 1, 16 )
 
 #
 #	analyze flute tone (reuse Analyzer)
@@ -101,7 +102,7 @@ loris.channelize( flut, loris.createFreqReference( flut, 20, 0, 1000 ), 1 )
 loris.distill( flut )
 
 # check flute synthesis:
-loris.exportAiff( 'flutOK.aiff', loris.synthesize( flut, samplerate ), samplerate, 1, 16 )
+loris.exportAiff( 'flutOK.pytest.aiff', loris.synthesize( flut, samplerate ), samplerate, 1, 16 )
 
 #
 #	perform temporal dilation
@@ -124,7 +125,7 @@ mf = loris.BreakpointEnvelope()
 mf.insertBreakpoint( 0.6, 0 )
 mf.insertBreakpoint( 2, 1 )
 m = loris.morph( clar, flut, mf, mf, mf )
-loris.exportAiff( 'morph.test.aiff', 
+loris.exportAiff( 'morph.pytest.aiff', 
 				  loris.synthesize( m, samplerate ), 
 				  samplerate, 1, 16 )
 

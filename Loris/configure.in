@@ -250,6 +250,14 @@ if test -n "$TCLINCLUDE" ; then
 		HAVE_TCL_H=false ] )
 fi
 
+if test -z "$TCLPACKAGE"; then
+	if test -n "$TCLINCLUDE" ; then
+		TCLPACKAGE="$TCLINCLUDE/.."
+	fi
+fi
+
+AC_PATH_PROG(TCL, tcl, :, $TCLPACKAGE/bin:$PATH)
+
 AM_CONDITIONAL(HAVE_TCL_H, test "$HAVE_TCL_H")
 
 if test -n "$TCLINCLUDE" ; then

@@ -36,10 +36,15 @@ Welcome to the very simple Loris morphing test!
 Kelly Fitz 2000
 
 Generates a simple linear morph between a 
-clarinet and a flute.
+clarinet and a flute using the Loris 
+extension module for Tcl.
 "
 
-load ../lib/loris.so loris
+if { [expr $argc > 0] } {
+	load "$argv/tcLoris.so" loris
+} else {
+	load tcLoris.so loris
+}
 
 #
 #	analyze clarinet tone
@@ -54,11 +59,11 @@ set samplerate [ $cf sampleRate ]
 set clar [ $a analyze $v $samplerate ]
 
 puts "checking SDIF export/import"
-exportSdif clarinet.sdif $clar
-PartialList -this [ set clar [ importSdif clarinet.sdif ] ]
+exportSdif clarinet.tcltest.sdif $clar
+PartialList -this [ set clar [ importSdif clarinet.tcltest.sdif ] ]
 
 puts "making a bogus attempt at writing an Spc file"
-if { [ catch { exportSpc bad_spc_file.spc $clar 90 } ] } {
+if { [ catch { exportSpc bad_spc_file.tcltest.spc $clar 90 } ] } {
 	puts "Spc export failed!"
 	puts "Error Info: $errorInfo"
 	puts "Error Code: $errorCode"
@@ -86,7 +91,7 @@ puts "shifting pitch of clarinet"
 shiftPitch $clar [ BreakpointEnvelopeWithValue -600 ]
 
 # check clarinet synthesis:
-exportAiff clarOK.aiff [ synthesize $clar $samplerate ] $samplerate 1 16
+exportAiff clarOK.tcltest.aiff [ synthesize $clar $samplerate ] $samplerate 1 16
 
 
 #
@@ -101,7 +106,7 @@ channelize $flut [ createFreqReference $flut 20 0 1000 ] 1
 distill $flut
 
 # check flute synthesis:
-exportAiff flutOK.aiff [ synthesize $flut $samplerate ] $samplerate 1 16
+exportAiff flutOK.tcltest.aiff [ synthesize $flut $samplerate ] $samplerate 1 16
 
 #
 #	perform temporal dilation
@@ -124,7 +129,7 @@ set mf [BreakpointEnvelope]
 $mf insertBreakpoint 0.6 0
 $mf insertBreakpoint 2 1
 set m [ morph $clar $flut $mf $mf $mf ]
-exportAiff morph.test.aiff [ synthesize $m $samplerate ] $samplerate 1 16
+exportAiff morph.tcltest.aiff [ synthesize $m $samplerate ] $samplerate 1 16
 
 puts "done"
 

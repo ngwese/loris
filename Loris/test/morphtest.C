@@ -64,7 +64,7 @@ int main( )
 	std::cout << "Welcome to the very simple Loris morphing demo!" << endl;
 	std::cout << "Kelly Fitz 2000" << endl << endl;
 	std::cout << "Generates a simple linear morph between a " << endl;
-	std::cout << "clarinet and a flute." << endl << endl;
+	std::cout << "clarinet and a flute using the C++ library." << endl << endl;
 	
 #if !defined(__MWERKS__)
 	std::string path( std::getenv("srcdir") );
@@ -88,9 +88,9 @@ int main( )
 		
 		//	make sure that SDIF I/O is working:
 		std::cout << "exporting sdif" << endl;
-		SdifFile::Export( "clarinet.sdif", clar );
+		SdifFile::Export( "clarinet.ctest.sdif", clar );
 		std::cout << "importing sdif" << endl;
-		SdifFile ip("clarinet.sdif");
+		SdifFile ip("clarinet.ctest.sdif");
 		clar.clear();
 		clar.splice( clar.end(), ip.partials() );
 		std::cout << "that was fun." << endl;
@@ -127,7 +127,7 @@ int main( )
 		{
 			synth.synthesize( *pIter );
 		}
-		AiffFile::Export( "clarOK.aiff", f.sampleRate(), 1, 16, v.begin(), v.end() ); 	
+		AiffFile::Export( "clarOK.ctest.aiff", f.sampleRate(), 1, 16, v.begin(), v.end() ); 	
 		
 		//	analyze flute tone
 		std::cout << "analyzing flute 3D" << endl;
@@ -158,7 +158,7 @@ int main( )
 		{
 			synth.synthesize( *pIter );
 		}
-		AiffFile::Export( "flutOK.aiff", f.sampleRate(), 1, 16, v.begin(), v.end() ); 	
+		AiffFile::Export( "flutOK.ctest.aiff", f.sampleRate(), 1, 16, v.begin(), v.end() ); 	
 		
 			
 		// perform temporal dilation
@@ -206,7 +206,7 @@ int main( )
 		{
 			synth.synthesize( *pIter );
 		}
-		AiffFile::Export( "morph.test.aiff", f.sampleRate(), 1, 16, v.begin(), v.end() ); 	
+		AiffFile::Export( "morph.ctest.aiff", f.sampleRate(), 1, 16, v.begin(), v.end() ); 	
 
 	}
 	catch( Exception & ex ) 
