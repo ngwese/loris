@@ -497,7 +497,7 @@ SpcFile::writeInstrument( std::ostream & s )
 	
 	//	give the user a chance to get the right fundamental frequency:
 	
-	ck.baseFrequency = trunc( _midiPitch );
+	ck.baseFrequency = long( _midiPitch );
 	ck.detune = ((long)(100 * _midiPitch)) % 100;
 	
 	if (ck.detune > 50)
