@@ -1,0 +1,13 @@
+Fossa is a graphical control application for analysis, manipulation, and 
+synthesis of digitized sounds using Loris sound library (http://www.cerlsoundgroup.org/Loris/).
+
+The primary distribution point for Fossa is SourceForge
+(http://loris.sourceforge.net).
+
+Fossa is free software. Please see the file COPYING for details.
+
+For a list of major changes to Loris, organized by release number,
+please see the file NEWS.
+
+For installation instructions, please see the file INSTALL.
+

@@ -1,0 +1,116 @@
+dnl Copyright (C) 2002, Susanne Lefvert 
+dnl  
+dnl This file is free software; as a special exception the author gives
+dnl unlimited permission to copy and/or distribute it, with or without 
+dnl modifications, as long as this notice is preserved.
+dnl 
+dnl This program is distributed in the hope that it will be useful, but
+dnl WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
+dnl implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+dnl Process this file with autoconf to produce a configure script
+AC_INIT(src/fossa.c++)
+
+dnl auxiliary scripts, such as config.guess, config.sub, install-sh
+dnl are placed in config
+AC_CONFIG_AUX_DIR(config) 
+AC_SUBST(ac_aux_dir)
+
+
+dnl #define directives are placed in config.h, include config.h in source files
+dnl recommended.  config.h is generated from config.h.in. 
+AM_CONFIG_HEADER(config.h) 
+
+dnl *****************************************************************
+AC_MSG_RESULT(-------- Set package name And version --------) 
+
+dnl Following standard Gnu version numbers with a tripple of
+dnl "major", "minor", and "micro". Bump the major version every 
+dnl time there is an interface-altering rework of the library. The minor
+dnl version should alternate between even (for stable releases) 
+dnl and odd (for development releases). Finally, bump the micro version every
+dnl time you do a release of the software. 
+
+PACKAGE=fossa
+MAJOR_VERSION=1
+MINOR_VERSION=1
+MICRO_VERSION=beta1
+FOSSA_VERSION="$MAJOR_VERSION"."$MINOR_VERSION"."$MICRO_VERSION"
+
+AM_INIT_AUTOMAKE("$PACKAGE","$FOSSA_VERSION")
+
+AC_MSG_RESULT(this is $PACKAGE$FOSSA_VERSION)
+
+dnl *****************************************************************
+AC_MSG_RESULT(-------- Check for C++ compiler --------)
+
+dnl These macros overwrite @CXX@, and @INSTALL@ in Makefile.in. 
+
+AC_PROG_CXX  
+AC_PROG_INSTALL 
+
+dnl Use c++ for tests
+AC_LANG_CPLUSPLUS 
+
+dnl *****************************************************************
+AC_MSG_RESULT(-------- Check for libraries --------)
+
+dnl makes it possible for the maintainter to specify paths for additional
+dnl packages. The default path is user/local/*
+
+SDIF_PACKAGE=/usr/local
+FFTW_PACKAGE=/usr/local
+LORIS_PACKAGE=/usr/local
+QT_PACKAGE=/usr/local/qt
+
+AC_ARG_WITH(sdif, [  --with-sdif=path    Set prefix of SDIF package, default is "usr/local/sdif"]], [SDIF_PACKAGE="$withval"], [AC_MSG_RESULT("default sdif path will be used: $SDIF_PACKAGE")])
+
+AC_ARG_WITH(fftw, [  --with-fftw=path    Set prefix of FFTW package, default is "usr/local/fftw"], [FFTW_PACKAGE="$withval"], [AC_MSG_RESULT("default fftw path will be used: $FFTW_PACKAGE")])
+
+AC_ARG_WITH(loris, [  --with-loris=path  Set prefix of loris package, default is "usr/local/loris"], [LORIS_PACKAGE="$withval"], [AC_MSG_RESULT("default loris path will be used: $LORIS_PACKAGE")])
+
+AC_ARG_WITH(qt, [  --with-qt=path Set prefix of qt package], [QT_PACKAGE="$withval"], [AC_MSG_RESULT("default qt path will be used: $QT_PACKAGE")])
+
+AC_SUBST(SDIF_PACKAGE)
+AC_SUBST(FFTW_PACKAGE)
+AC_SUBST(LORIS_PACKAGE)
+AC_SUBST(QT_PACKAGE)
+
+dnl Kelly's hack to get the library tests to link
+LIBS="$LIBS -L$SDIF_PACKAGE/lib -L$FFTW_PACKAGE/lib -L$LORIS_PACKAGE/lib -L$QT_PACKAGE/lib"
+AC_MSG_RESULT(LIBS is $LIBS)
+
+AC_CHECK_LIB(fftw, main, :, AC_MSG_ERROR(please install fftw library))
+AC_CHECK_LIB(sdif, main, :, AC_MSG_ERROR(please install sdif library))
+AC_CHECK_LIB(qt, main, :, AC_MSG_ERROR(please install qt library))
+AC_CHECK_LIB(loris, main, :, AC_MSG_ERROR(please install loris library))
+
+dnl *****************************************************************
+AC_MSG_RESULT(-------- Check for headers --------)
+
+AC_HEADER_STDC
+
+dnl *****************************************************************
+AC_MSG_RESULT(-------- Checks for typedefs, structures, and compiler characteristics. --------)
+
+AC_C_CONST  
+
+dnl *****************************************************************
+AC_MSG_RESULT(-------- Creating Output Files --------)
+
+AC_OUTPUT(Makefile src/Makefile)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
