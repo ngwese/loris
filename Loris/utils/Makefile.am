@@ -8,9 +8,19 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-bin_PROGRAMS  = loris_spewmarkers
+bin_PROGRAMS  = loris_analyze loris_spewmarkers
 
 INCLUDES = -I$(top_srcdir)/src
+
+# loris_analyze: a utility program to analyze
+# samples and store the partials in an SDIF file.
+loris_analyze_SOURCES = loris_analyze.C
+if DARWIN
+loris_analyze_LDADD = $(top_builddir)/src/.libs/libloris.a $(LINK_FFTW)
+else
+loris_analyze_LDADD = $(top_builddir)/src/libloris.la
+endif
+loris_analyze_LDFLAGS = -static
 
 # loris_spewmarkers: a utility program to read the
 # markers stored in a AIFF, SPC, or SDIF file and
