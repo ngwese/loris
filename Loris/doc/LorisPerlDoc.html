@@ -1,9 +1,9 @@
 <HTML>
 <HEAD>
 <TITLE>
-Python module: loris</TITLE>
+Perl module: loris</TITLE>
 <BODY BGCOLOR="#ffffff">
-<H1>Python module: loris</H1>
+<H1>Perl module: loris</H1>
 
 <HR><H1> Contents </H1>
 <UL><LI> <A HREF="#s1_">1. Loris class interfaces</A>
@@ -33,45 +33,45 @@ Python module: loris</TITLE>
 	For more information about Bandwidth-Enhanced Partials and the  
 	Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
 	the Loris website: www.cerlsoundgroup.org/Loris/
-<P><TT><B>copy()</B></TT>
+<P><TT><B>copy();</B></TT>
 <BLOCKQUOTE>  	Return a new PartialList that is a copy of this 
 			PartialList (i.e. has identical Partials).
 		   
 </BLOCKQUOTE>
 
-<P><TT><B>PartialList()</B></TT>
+<P><TT><B>new();</B></TT>
 <BLOCKQUOTE>  	Return a new empty PartialList.
 		   
 </BLOCKQUOTE>
 
-<P><TT><B>del this</B></TT>
+<P><TT><B>DESTROY</B></TT>
 <BLOCKQUOTE>  	Destroy this PartialList.
 		   
 </BLOCKQUOTE>
 
-<P><TT><B>clear()</B></TT>
+<P><TT><B>clear();</B></TT>
 <BLOCKQUOTE>  	Remove (and destroy) all the Partials from this PartialList,
 		leaving it empty.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>size()</B></TT>
+<P><TT><B>size();</B></TT>
 <BLOCKQUOTE>  	Return the number of Partials in this PartialList.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>begin()</B></TT>
+<P><TT><B>begin();</B></TT>
 <BLOCKQUOTE>  	Return an iterator refering to the first Partial in this PartialList.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>end()</B></TT>
+<P><TT><B>end();</B></TT>
 <BLOCKQUOTE>  	Return an iterator refering to the end of this PartialList (an invalid
 		element after the last valid Partial).
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>insert(position,partial)</B></TT>
+<P><TT><B>insert(position,partial);</B></TT>
 <BLOCKQUOTE>  	Insert a copy of the given Partial into this PartialList at
 		the position indicated by the PartialListIterator position.
 		Returns a PartialListIterator refering to the position of the
@@ -79,7 +79,7 @@ Python module: loris</TITLE>
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>erase(position)</B></TT>
+<P><TT><B>erase(position);</B></TT>
 <BLOCKQUOTE>  	Remove the element at the position indicated by the 
 		PartialListIterator, position. After this operation,
 		the PartialListIterator position is invalid, but all
@@ -88,7 +88,7 @@ Python module: loris</TITLE>
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>splice(position,list)</B></TT>
+<P><TT><B>splice(position,list);</B></TT>
 <BLOCKQUOTE>  	Splice all the Partials in the specified PartialList into
 		this PartialList at the position indicated by the PartialListIterator
 		position. Leaves the other PartialList empty.
@@ -119,37 +119,37 @@ Python module: loris</TITLE>
 	invalidate any other PartialListIterators, refering to other 
 	elements. The validity of an iterator can be verified using the
 	isInRange method.
-<P><TT><B>copy()</B></TT>
+<P><TT><B>copy();</B></TT>
 <BLOCKQUOTE>  	Return a new PartialListIterator that is a copy of this 
 			PartialListIterator (i.e. refers to the same position
 			in the same PartialList).
 		   
 </BLOCKQUOTE>
 
-<P><TT><B>next()</B></TT>
+<P><TT><B>next();</B></TT>
 <BLOCKQUOTE>  	Increment (advance) this PartialListIterator. Return self.
 		   
 </BLOCKQUOTE>
 
-<P><TT><B>prev()</B></TT>
+<P><TT><B>prev();</B></TT>
 <BLOCKQUOTE>  	Decrement (advance by -1) this PartialListIterator. Return self.
 		   
 </BLOCKQUOTE>
 
-<P><TT><B>partial()</B></TT>
+<P><TT><B>partial();</B></TT>
 <BLOCKQUOTE>  	Return (a reference to) the Partial at the position of this
 			PartialListIterator.
 		   
 </BLOCKQUOTE>
 
-<P><TT><B>equals(other)</B></TT>
+<P><TT><B>equals(other);</B></TT>
 <BLOCKQUOTE>  	Return true (1) if this PartialListIterator is equal to the
 			other. PartialListIterators are equal is they refer to the
 			same position in the same PartialList.
 		   
 </BLOCKQUOTE>
 
-<P><TT><B>isInRange(begin,end)</B></TT>
+<P><TT><B>isInRange(begin,end);</B></TT>
 <BLOCKQUOTE>  	Return true (1) is this iterator is within the half-open iterator
 		 	range bounded by begin and end, and false otherwise. This method
 		 	can be used to check the validity of an iterator -- call with 
@@ -157,7 +157,7 @@ Python module: loris</TITLE>
 		    
 </BLOCKQUOTE>
 
-<P><TT><B>del this</B></TT>
+<P><TT><B>DESTROY</B></TT>
 
 <A name="s1_3_">
 <H3>1.3. class Partial</H3></A>
@@ -170,116 +170,116 @@ Python module: loris</TITLE>
 	For more information about Bandwidth-Enhanced Partials and the  
 	Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
 	the Loris website: www.cerlsoundgroup.org/Loris/
-<P><TT><B>Partial()</B></TT>
+<P><TT><B>new();</B></TT>
 <BLOCKQUOTE>  	Return a new, empty (no Breakpoints) Partial.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>del this</B></TT>
+<P><TT><B>DESTROY</B></TT>
 <BLOCKQUOTE>  	Delete this Partial reference (doesn't remove it from the PartialList).
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>label()</B></TT>
+<P><TT><B>label();</B></TT>
 <BLOCKQUOTE>   	Return this Partial's label.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>initialPhase()</B></TT>
+<P><TT><B>initialPhase();</B></TT>
 <BLOCKQUOTE>   	Return this Partial's starting phase.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>startTime()</B></TT>
+<P><TT><B>startTime();</B></TT>
 <BLOCKQUOTE>   	Return this Partial's start time.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>endTime()</B></TT>
+<P><TT><B>endTime();</B></TT>
 <BLOCKQUOTE>   	Return this Partial's end time.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>duration()</B></TT>
+<P><TT><B>duration();</B></TT>
 <BLOCKQUOTE>   	Return this Partial's duration.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>numBreakpoints()</B></TT>
+<P><TT><B>numBreakpoints();</B></TT>
 <BLOCKQUOTE>   	Return this Partial's number of Breakpoints.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>setLabel(l)</B></TT>
+<P><TT><B>setLabel(l);</B></TT>
 <BLOCKQUOTE>  	Assign a new label to this Partial.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>begin()</B></TT>
+<P><TT><B>begin();</B></TT>
 <BLOCKQUOTE>  	Return a PartialIterator refering to the first Breakpoint 
 		in this Partial.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>end()</B></TT>
+<P><TT><B>end();</B></TT>
 <BLOCKQUOTE>  	Return a PartialIterator refering to the end of this Partial (an invalid
 		element after the last valid Breakpoint).
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>insert(time,bp)</B></TT>
+<P><TT><B>insert(time,bp);</B></TT>
 <BLOCKQUOTE>  	Make a copy of bp and insert it at time (seconds),
 		return an iterator refering to the inserted Breakpoint.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>findAfter(time)</B></TT>
+<P><TT><B>findAfter(time);</B></TT>
 <BLOCKQUOTE>  	Return the insertion position for a Breakpoint at
 		the specified time (that is, the position of the first
 		Breakpoint at a time later than the specified time).
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>findNearest(time)</B></TT>
+<P><TT><B>findNearest(time);</B></TT>
 <BLOCKQUOTE>  	Return the insertion position for the Breakpoint nearest
 		the specified time.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>erase(pos)</B></TT>
+<P><TT><B>erase(pos);</B></TT>
 <BLOCKQUOTE>   	Erase the Breakpoint at the position of the 
 		given iterator (invalidating the iterator).
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>frequencyAt(time)</B></TT>
+<P><TT><B>frequencyAt(time);</B></TT>
 <BLOCKQUOTE>   	Return this Partial's interpolated frequency at the specified time.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>amplitudeAt(time)</B></TT>
+<P><TT><B>amplitudeAt(time);</B></TT>
 <BLOCKQUOTE>   	Return this Partial's interpolated amplitude at the specified time.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>bandwidthAt(time)</B></TT>
+<P><TT><B>bandwidthAt(time);</B></TT>
 <BLOCKQUOTE>   	Return this Partial's interpolated bandwidth at the specified time.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>phaseAt(time)</B></TT>
+<P><TT><B>phaseAt(time);</B></TT>
 <BLOCKQUOTE>   	Return this Partial's interpolated phase at the specified time.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>copy()</B></TT>
+<P><TT><B>copy();</B></TT>
 <BLOCKQUOTE>  	Return a new Partial that is a copy of this 
 			Partial (i.e. has he same label and an identical
 			Breakpoint entvelope.
 		   
 </BLOCKQUOTE>
 
-<P><TT><B>equals(other)</B></TT>
+<P><TT><B>equals(other);</B></TT>
 <BLOCKQUOTE>  	Return true (1) if this Partial is equal to the other. 
 			Partials are equal is they have the same label and the
 			same Breakpoint envelope.
@@ -311,37 +311,37 @@ Python module: loris</TITLE>
 	invalidate any other PartialIterators, refering to other 
 	Breakpoints. The validity of an iterator can be verified using
 	the isInRange method.
-<P><TT><B>breakpoint()</B></TT>
+<P><TT><B>breakpoint();</B></TT>
 <BLOCKQUOTE>        Return (a reference to) the Breakpoint at the position of this
 			PartialIterator.
 		   
 </BLOCKQUOTE>
 
-<P><TT><B>copy()</B></TT>
+<P><TT><B>copy();</B></TT>
 <BLOCKQUOTE>  	Return a new PartialIterator that is a copy of this 
 			PartialIterator (i.e. refers to the same position
 			in the same Partial).
 		   
 </BLOCKQUOTE>
 
-<P><TT><B>next()</B></TT>
+<P><TT><B>next();</B></TT>
 <BLOCKQUOTE>  	Increment (advance) this PartialIterator. Return self.
 		   
 </BLOCKQUOTE>
 
-<P><TT><B>prev()</B></TT>
+<P><TT><B>prev();</B></TT>
 <BLOCKQUOTE>  	Decrement (advance by -1) this PartialIterator. Return self.
 		   
 </BLOCKQUOTE>
 
-<P><TT><B>equals(other)</B></TT>
+<P><TT><B>equals(other);</B></TT>
 <BLOCKQUOTE>  	Return true (1) if this PartialIterator is equal to the
 			other. PartialIterators are equal is they refer to the
 			same position (Breakpoint) in the same Partial.
 		   
 </BLOCKQUOTE>
 
-<P><TT><B>isInRange(begin,end)</B></TT>
+<P><TT><B>isInRange(begin,end);</B></TT>
 <BLOCKQUOTE>  	Return true (1) is this iterator is within the half-open iterator
 		 	range bounded by begin and end, and false otherwise. This method
 		 	can be used to check the validity of an iterator -- call with 
@@ -349,7 +349,7 @@ Python module: loris</TITLE>
 		    
 </BLOCKQUOTE>
 
-<P><TT><B>del this</B></TT>
+<P><TT><B>DESTROY</B></TT>
 
 <A name="s1_5_">
 <H3>1.5. class Breakpoint</H3></A>
@@ -364,65 +364,65 @@ Python module: loris</TITLE>
 	For more information about Bandwidth-Enhanced Partials and the  
 	Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
 	the Loris website: www.cerlsoundgroup.org/Loris/
-<P><TT><B>Breakpoint(f,a,b,p)</B></TT>
+<P><TT><B>new(f,a,b,p);</B></TT>
 <BLOCKQUOTE>  	Return a new Breakpoint having the specified frequency
 		amplitude, bandwidth, and (optionally, defaults to zero)
 		phase.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>del this</B></TT>
+<P><TT><B>DESTROY</B></TT>
 <BLOCKQUOTE>  	Delete this Breakpoint.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>frequency()</B></TT>
+<P><TT><B>frequency();</B></TT>
 <BLOCKQUOTE>  	Return the frequency of this Breakpoint. 
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>amplitude()</B></TT>
+<P><TT><B>amplitude();</B></TT>
 <BLOCKQUOTE>  	Return the amplitude of this Breakpoint. 
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>bandwidth()</B></TT>
+<P><TT><B>bandwidth();</B></TT>
 <BLOCKQUOTE>  	Return the bandwidth of this Breakpoint. 
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>phase()</B></TT>
+<P><TT><B>phase();</B></TT>
 <BLOCKQUOTE>  	Return the phase of this Breakpoint. 
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>setFrequency(x)</B></TT>
+<P><TT><B>setFrequency(x);</B></TT>
 <BLOCKQUOTE>  	Assign the frequency of this Breakpoint. 
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>setAmplitude(x)</B></TT>
+<P><TT><B>setAmplitude(x);</B></TT>
 <BLOCKQUOTE>  	Assign the amplitude of this Breakpoint. 
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>setBandwidth(x)</B></TT>
+<P><TT><B>setBandwidth(x);</B></TT>
 <BLOCKQUOTE>  	Assign the bandwidth of this Breakpoint. 
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>setPhase(x)</B></TT>
+<P><TT><B>setPhase(x);</B></TT>
 <BLOCKQUOTE>  	Assign the phase of this Breakpoint. 
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>copy()</B></TT>
+<P><TT><B>copy();</B></TT>
 <BLOCKQUOTE>  	Return a new Breakpoint that is a copy of this 
 			Breakpoint (i.e. has identical parameter values).
 		   
 </BLOCKQUOTE>
 
-<P><TT><B>equals(other)</B></TT>
+<P><TT><B>equals(other);</B></TT>
 <BLOCKQUOTE>  	Return true (1) if this Breakpoint is equal to the
 			other. Breakpoints are equal is they have identical 
 			parameter values.
@@ -441,8 +441,7 @@ Python module: loris</TITLE>
 
 	For more information about Reassigned Bandwidth-Enhanced 
 	Analysis and the Reassigned Bandwidth-Enhanced Additive Sound 
-	Model, refer to the Loris website: www.cerlsoundgroup.org/Loris/
-<P><TT><B>Analyzer(resolutionHz)</B></TT>
+<P><TT><B>new(resolutionHz);</B></TT>
 <BLOCKQUOTE>  	Construct and return a new Analyzer configured with the given	
 		frequency resolution (minimum instantaneous frequency	
 		difference between Partials). All other Analyzer parameters 	
@@ -450,24 +449,24 @@ Python module: loris</TITLE>
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>del this</B></TT>
+<P><TT><B>DESTROY</B></TT>
 <BLOCKQUOTE>  	Destroy this Analyzer. 								
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>copy()</B></TT>
+<P><TT><B>copy();</B></TT>
 <BLOCKQUOTE>  	Construct and return a new Analyzer having identical
 		parameter configuration to another Analyzer.			
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>analyze(vec,srate)</B></TT>
+<P><TT><B>analyze(vec,srate);</B></TT>
 <BLOCKQUOTE>  	Analyze a SampleVector of (mono) samples at the given sample rate 	  	
 		(in Hz) and return the resulting Partials in a PartialList. 												
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>configure(resolutionHz)</B></TT>
+<P><TT><B>configure(resolutionHz);</B></TT>
 <BLOCKQUOTE>  	Configure this Analyzer with the given frequency resolution 
 		(minimum instantaneous frequency difference between Partials). 
 		All other Analyzer parameters are (re-)computed from the 
@@ -475,44 +474,44 @@ Python module: loris</TITLE>
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>freqResolution()</B></TT>
+<P><TT><B>freqResolution();</B></TT>
 <BLOCKQUOTE>  	Return the frequency resolution (minimum instantaneous frequency  		
 		difference between Partials) for this Analyzer. 	
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>ampFloor()</B></TT>
+<P><TT><B>ampFloor();</B></TT>
 <BLOCKQUOTE>  	Return the amplitude floor (lowest detected spectral amplitude),  			
 		in (negative) dB, for this Analyzer. 				
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>windowWidth()</B></TT>
+<P><TT><B>windowWidth();</B></TT>
 <BLOCKQUOTE>  	Return the frequency-domain main lobe width (measured between 
 		zero-crossings) of the analysis window used by this Analyzer. 				
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>freqFloor()</B></TT>
+<P><TT><B>freqFloor();</B></TT>
 <BLOCKQUOTE>  	Return the frequency floor (minimum instantaneous Partial  				
 		frequency), in Hz, for this Analyzer. 				
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>hopTime()</B></TT>
+<P><TT><B>hopTime();</B></TT>
 <BLOCKQUOTE>  	Return the hop time (which corresponds approximately to the 
 		average density of Partial envelope Breakpoint data) for this 
 		Analyzer.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>freqDrift()</B></TT>
+<P><TT><B>freqDrift();</B></TT>
 <BLOCKQUOTE>  	Return the maximum allowable frequency difference between 					
 		consecutive Breakpoints in a Partial envelope for this Analyzer. 				
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>cropTime()</B></TT>
+<P><TT><B>cropTime();</B></TT>
 <BLOCKQUOTE>  	Return the crop time (maximum temporal displacement of a time-
 		frequency data point from the time-domain center of the analysis
 		window, beyond which data points are considered &quot;unreliable&quot;)
@@ -520,50 +519,50 @@ Python module: loris</TITLE>
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>bwRegionWidth()</B></TT>
+<P><TT><B>bwRegionWidth();</B></TT>
 <BLOCKQUOTE>  	Return the width (in Hz) of the Bandwidth Association regions
 		used by this Analyzer.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>setFreqResolution(x)</B></TT>
+<P><TT><B>setFreqResolution(x);</B></TT>
 <BLOCKQUOTE>  	Set the frequency resolution (minimum instantaneous frequency  		
 		difference between Partials) for this Analyzer. (Does not cause 	
 		other parameters to be recomputed.) 									
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>setAmpFloor(x)</B></TT>
+<P><TT><B>setAmpFloor(x);</B></TT>
 <BLOCKQUOTE>  	Set the amplitude floor (lowest detected spectral amplitude), in  			
 		(negative) dB, for this Analyzer. 				
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>setWindowWidth(x)</B></TT>
+<P><TT><B>setWindowWidth(x);</B></TT>
 <BLOCKQUOTE>  	Set the frequency-domain main lobe width (measured between 
 		zero-crossings) of the analysis window used by this Analyzer. 				
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>setFreqFloor(x)</B></TT>
+<P><TT><B>setFreqFloor(x);</B></TT>
 <BLOCKQUOTE>  	Set the amplitude floor (minimum instantaneous Partial  				
 		frequency), in Hz, for this Analyzer.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>setFreqDrift(x)</B></TT>
+<P><TT><B>setFreqDrift(x);</B></TT>
 <BLOCKQUOTE>  	Set the maximum allowable frequency difference between 					
 		consecutive Breakpoints in a Partial envelope for this Analyzer. 				
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>setHopTime(x)</B></TT>
+<P><TT><B>setHopTime(x);</B></TT>
 <BLOCKQUOTE>  	Set the hop time (which corresponds approximately to the average
 		density of Partial envelope Breakpoint data) for this Analyzer.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>setCropTime(x)</B></TT>
+<P><TT><B>setCropTime(x);</B></TT>
 <BLOCKQUOTE>  	Set the crop time (maximum temporal displacement of a time-
 		frequency data point from the time-domain center of the analysis
 		window, beyond which data points are considered &quot;unreliable&quot;)
@@ -571,7 +570,7 @@ Python module: loris</TITLE>
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>setBwRegionWidth(x)</B></TT>
+<P><TT><B>setBwRegionWidth(x);</B></TT>
 <BLOCKQUOTE>  	Set the width (in Hz) of the Bandwidth Association regions
 		used by this Analyzer.
 	   
@@ -583,32 +582,32 @@ Python module: loris</TITLE>
 	function with infinite extension at each end (that is, the 
 	values past either end of the breakpoint function have the 
 	values at the nearest end).
-<P><TT><B>BreakpointEnvelope()</B></TT>
+<P><TT><B>new();</B></TT>
 <BLOCKQUOTE>  	Construct and return a new BreakpointEnvelope having no 
 		breakpoints and an implicit value of 0. everywhere, 
 		until the first breakpoint is inserted.			
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>del this</B></TT>
+<P><TT><B>DESTROY</B></TT>
 <BLOCKQUOTE>  	Destroy this BreakpointEnvelope. 								
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>copy()</B></TT>
+<P><TT><B>copy();</B></TT>
 <BLOCKQUOTE>  	Construct and return a new BreakpointEnvelope that is
 		a copy of this BreapointEnvelope (has the same value
 		as this BreakpointEnvelope everywhere).			
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>valueAt(x)</B></TT>
+<P><TT><B>valueAt(x);</B></TT>
 <BLOCKQUOTE>  	Return the interpolated value of this BreakpointEnvelope at 
 		the specified time.							
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>insertBreakpoint(time,value)</B></TT>
+<P><TT><B>insertBreakpoint(time,value);</B></TT>
 <BLOCKQUOTE>  	Insert a breakpoint representing the specified (time, value) 
 		pair into this BreakpointEnvelope. If there is already a 
 		breakpoint at the specified time, it will be replaced with 
@@ -616,7 +615,7 @@ Python module: loris</TITLE>
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>BreakpointEnvelopeWithValue(initialValue)</B></TT>
+<P><TT><B>BreakpointEnvelopeWithValue(initialValue);</B></TT>
 <BLOCKQUOTE>  	Construct and return a new BreakpointEnvelope having a 
 	single breakpoint at 0. having the specified initialValue.
    
@@ -628,7 +627,7 @@ Python module: loris</TITLE>
 	an audio waveform. In Loris, the samples are assumed to have 
 	values on the range (-1., 1.) (though this is not enforced or 
 	checked). 
-<P><TT><B>SampleVector(size)</B></TT>
+<<P><TT><B>new(size);</B></TT>
 <BLOCKQUOTE>  	Return a new SampleVector having the specified number of samples,
 		all of whose value is 0. 
 		
@@ -636,17 +635,17 @@ Python module: loris</TITLE>
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>del this</B></TT>
+<P><TT><B>DESTROY</B></TT>
 <BLOCKQUOTE>  	Destroy this SampleVector.
 	    
 </BLOCKQUOTE>
 
-<P><TT><B>size()</B></TT>
+<P><TT><B>size();</B></TT>
 <BLOCKQUOTE>  	Return the number of samples represented by this SampleVector.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>resize(size)</B></TT>
+<P><TT><B>resize(size);</B></TT>
 <BLOCKQUOTE>  	Change the number of samples represented by this SampleVector. If
 		the given size is greater than the current size, all new samples 
 		will have value 0. If the given size is less than the current 
@@ -654,13 +653,13 @@ Python module: loris</TITLE>
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>clear()</B></TT>
+<P><TT><B>clear();</B></TT>
 <BLOCKQUOTE>  	Remove all samples from this SampleVector, and set its
 	 	size to zero.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>copy()</B></TT>
+<P><TT><B>copy();</B></TT>
 <BLOCKQUOTE>  	Return a new SampleVector that is a copy of this 
 		SampleVector, having the same number of samples, 
 		and samples at every position in the copy having 
@@ -669,13 +668,13 @@ Python module: loris</TITLE>
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>getAt(idx)</B></TT>
+<P><TT><B>getAt(idx);</B></TT>
 <BLOCKQUOTE>  	Return the value of the sample at the given position (index) in
 		this SampleVector.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>setAt(idx,x)</B></TT>
+<P><TT><B>setAt(idx,x);</B></TT>
 <BLOCKQUOTE>  	Set the value of the sample at the given position (index) in
 		this SampleVector.
 	   
@@ -688,38 +687,38 @@ Python module: loris</TITLE>
 	upon construction of an AiffFile instance. The samples are accessed by 
 	the samples() method, which converts them to double precision floats and
 	returns them in a SampleVector.
-<P><TT><B>AiffFile(filename)</B></TT>
+<P><TT><B>new(filename);</B></TT>
 <BLOCKQUOTE>  	Import an AIFF file with the specified file name
 		or path.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>del this</B></TT>
+<P><TT><B>DESTROY</B></TT>
 <BLOCKQUOTE>  	Delete this AIFF data (does not affect data on disk).
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>channels()</B></TT>
+<P><TT><B>channels();</B></TT>
 <BLOCKQUOTE>  	Return the number of channels of sample data this AIFF file.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>sampleFrames()</B></TT>
+<P><TT><B>sampleFrames();</B></TT>
 <BLOCKQUOTE>  	Return the number of frames of sample data this AIFF file.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>sampleRate()</B></TT>
+<P><TT><B>sampleRate();</B></TT>
 <BLOCKQUOTE>  	Return the sample rate in Hz of the sample data this AIFF file.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>sampleSize()</B></TT>
+<P><TT><B>sampleSize();</B></TT>
 <BLOCKQUOTE>  	Return the size in bits of the sample data this AIFF file.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>samples()</B></TT>
+<P><TT><B>samples();</B></TT>
 <BLOCKQUOTE>  	Return a SampleVector containing the AIFF samples from this AIFF 
 		file as double precision floats on the range -1,1.
 	   
@@ -730,7 +729,7 @@ Python module: loris</TITLE>
 <P>
 	Operations in Loris that need not be accessed though object
 	interfaces are represented as simple functions.
-<P><TT><B>channelize(partials,refFreqEnvelope,refLabel)</B></TT>
+<P><TT><B>channelize(partials,refFreqEnvelope,refLabel);</B></TT>
 <BLOCKQUOTE>  	Label Partials in a PartialList with the integer nearest to
 		the amplitude-weighted average ratio of their frequency envelope
 		to a reference frequency envelope. The frequency spectrum is 
@@ -750,7 +749,7 @@ Python module: loris</TITLE>
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>dilate(partials,initial_times,target_times)</B></TT>
+<P><TT><B>dilate(partials,initial_times,target_times);</B></TT>
 <BLOCKQUOTE>  	Dilate Partials in a PartialList according to the given 
 		initial and target time points. Partial envelopes are 
 		stretched and compressed so that temporal features at
@@ -766,7 +765,7 @@ Python module: loris</TITLE>
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>distill(partials)</B></TT>
+<P><TT><B>distill(partials);</B></TT>
 <BLOCKQUOTE>  	Distill labeled (channelized)  Partials in a PartialList into a 
 		PartialList containing a single (labeled) Partial per label. 
 		The distilled PartialList will contain as many Partials as
@@ -775,7 +774,7 @@ Python module: loris</TITLE>
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>exportAiff(path,samples,samplerate,nchannels,bitsPerSamp)</B></TT>
+<P><TT><B>exportAiff(path,samples,samplerate,nchannels,bitsPerSamp);</B></TT>
 <BLOCKQUOTE>  	Export audio samples stored in a SampleVector to an AIFF file
 		having the specified number of channels and sample rate at the 
 		given file path (or name). The floating point samples in the 
@@ -784,7 +783,7 @@ Python module: loris</TITLE>
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>exportSdif(path,partials)</B></TT>
+<P><TT><B>exportSdif(path,partials);</B></TT>
 <BLOCKQUOTE>  	Export Partials in a PartialList to a SDIF file at the specified
 		file path (or name). SDIF data is written in the 1TRC format.  
 		For more information about SDIF, see the SDIF website at:
@@ -792,7 +791,7 @@ Python module: loris</TITLE>
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>exportSpc(path,partials,midiPitch,enhanced,endApproachTime)</B></TT>
+<P><TT><B>exportSpc(path,partials,midiPitch,enhanced,endApproachTime);</B></TT>
 <BLOCKQUOTE>  	Export Partials in a PartialList to a Spc file at the specified file
 		path (or name). The fractional MIDI pitch must be specified. The optional
 		enhanced parameter defaults to true (for bandwidth-enhanced spc files), 
@@ -807,7 +806,7 @@ Python module: loris</TITLE>
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>importSdif(path)</B></TT>
+<P><TT><B>importSdif(path);</B></TT>
 <BLOCKQUOTE>  	Import Partials from an SDIF file at the given file path (or 
 	name), and return them in a PartialList.
 	For more information about SDIF, see the SDIF website at:
@@ -815,13 +814,13 @@ Python module: loris</TITLE>
    
 </BLOCKQUOTE>
 
-<P><TT><B>importSpc(path)</B></TT>
+<P><TT><B>importSpc(path);</B></TT>
 <BLOCKQUOTE>  	Import Partials from an Spc file at the given file path (or 
 	name), and return them in a PartialList.
    
 </BLOCKQUOTE>
 
-<P><TT><B>morph(src0,src1,ffreq,famp,fbw)</B></TT>
+<P><TT><B>morph(src0,src1,ffreq,famp,fbw);</B></TT>
 <BLOCKQUOTE>  	Morph labeled Partials in two PartialLists according to the
 	given frequency, amplitude, and bandwidth (noisiness) morphing
 	envelopes, and return the morphed Partials in a PartialList. 
@@ -833,7 +832,7 @@ Python module: loris</TITLE>
    
 </BLOCKQUOTE>
 
-<P><TT><B>sift(partials)</B></TT>
+<P><TT><B>sift(partials);</B></TT>
 <BLOCKQUOTE>  	Lippold's wacky experimental sifting thingie: 
 		If any two partials with same label overlap in time,
 		keep only the longer of the two partials.
@@ -844,7 +843,7 @@ Python module: loris</TITLE>
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>synthesize(partials,srate)</B></TT>
+<P><TT><B>synthesize(partials,srate);</B></TT>
 <BLOCKQUOTE>  	Synthesize Partials in a PartialList at the given sample
 	rate, and return the (floating point) samples in a SampleVector.
 	The SampleVector is sized to hold as many samples as are needed 
@@ -857,7 +856,7 @@ Python module: loris</TITLE>
 <P>
 	These procedures are generally useful but are not yet  
 	represented by classes in the Loris core.
-<P><TT><B>createFreqReference(partials,numSamples,minFreq,maxFreq)</B></TT>
+<P><TT><B>createFreqReference(partials,numSamples,minFreq,maxFreq);</B></TT>
 <BLOCKQUOTE>  	Return a newly-constructed BreakpointEnvelope comprising the
 	specified number of samples of the frequency envelope of the
 	longest Partial in a PartialList. Only Partials whose frequency
@@ -870,27 +869,27 @@ Python module: loris</TITLE>
    
 </BLOCKQUOTE>
 
-<P><TT><B>scaleAmp(partials,ampEnv)</B></TT>
+<P><TT><B>scaleAmp(partials,ampEnv);</B></TT>
 <BLOCKQUOTE>  	Scale the amplitude of the Partials in a PartialList according 
 		to an envelope representing a time-varying amplitude scale value.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>scaleNoiseRatio(partials,noiseEnv)</B></TT>
+<P><TT><B>scaleNoiseRatio(partials,noiseEnv);</B></TT>
 <BLOCKQUOTE>  	Scale the relative noise content of the Partials in a PartialList 
 		according to an envelope representing a (time-varying) noise energy 
 		scale value.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>shiftPitch(partials,pitchEnv)</B></TT>
+<P><TT><B>shiftPitch(partials,pitchEnv);</B></TT>
 <BLOCKQUOTE>  	Shift the pitch of all Partials in a PartialList according to 
 		the given pitch envelope. The pitch envelope is assumed to have 
 		units of cents (1/100 of a halfstep).
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>versionString()</B></TT>
+<P><TT><B>versionString();</B></TT>
 <BLOCKQUOTE>  	Return a (constant) string specifying the Loris version number.
 	   
 </BLOCKQUOTE>

@@ -38,6 +38,10 @@
 
 #if defined (SWIGPYTHON)
 	%title "Python module: loris", noinfo
+#elif defined (SWIGTCL)
+	%title "Tcl module: loris", noinfo
+#elif defined (SWIGPERL)
+	%title "Perl module: loris", noinfo
 #else
 	%title "Loris scripting interface", noinfo
 #endif
@@ -255,20 +259,20 @@
 		Loris::Dilator dil( initial, target, npts );
 		dil.dilate( partials->begin(), partials->end() );
 	}
+	/*	Dilate Partials in a PartialList according to the given 
+		initial and target time points. Partial envelopes are 
+		stretched and compressed so that temporal features at
+		the initial time points are aligned with the final time
+		points. Time points are sorted, so Partial envelopes are 
+		are only stretched and compressed, but breakpoints are not
+		reordered. Duplicate time points are allowed. There must be
+		the same number of initial and target time points.
+		
+		The time points are passed as strings; convert any native
+		collection to a string representation, numerical elements
+		will be extracted, other characters will be ignored.
+	 */
 %}
-/*	Dilate Partials in a PartialList according to the given 
-	initial and target time points. Partial envelopes are 
-	stretched and compressed so that temporal features at
-	the initial time points are aligned with the final time
-	points. Time points are sorted, so Partial envelopes are 
-	are only stretched and compressed, but breakpoints are not
-	reordered. Duplicate time points are allowed. There must be
-	the same number of initial and target time points.
-	
-	The time points are passed as strings; convert any native
-	collection to a string representation, numerical elements
-	will be extracted, other characters will be ignored.
- */
 
 %{
 	#include "Distiller.h"

@@ -93,5 +93,6 @@ public:
 	 
 }	//	end of added methods
 
-};	//	end of class AiffFile
+};
+
 
