@@ -11,6 +11,7 @@
 #include "BinaryFile.h"
 #include "endian.h"
 #include <string>
+#include <vector>
 
 using namespace std;
 

@@ -337,51 +337,57 @@ AiffFile::readSampleData( std::istream & s )
 void
 AiffFile::readSamples( std::istream & s )
 {	
+	//	use a vector for automatic temporary storage:
+	std::vector<char> v( _samples.size() * (_sampSize / 8) );
+	BigEndian::read( s, _samples.size(), _sampSize / 8, &v[0] );
+
 	static const double oneOverMax = 1. / LONG_MAX;	//	defined in climits
 	
-	pcm_sample z;
-
 	switch ( _sampSize ) {
 		case 32:
-			for (unsigned long i = 0; i < _samples.size(); ++i ) {
-				//	read the sample:
-				z.s32bits = 0;
-				BigEndian::read( s, 1, _sampSize / 8, (char *)&z.s32bits );
-				
-				//	convert to double:
-				_samples[i] = oneOverMax * z.s32bits;
+		{	
+			Int_32 * z = (Int_32 *)&v[0];
+			for (unsigned long i = 0; i < _samples.size(); ++i ) 
+			{
+				_samples[i] = oneOverMax * z[i];
 			}
 			break;
+		}
+/*
 		case 24:
-			for (unsigned long i = 0; i < _samples.size(); ++i ) {
-				//	read the sample:
-				z.s32bits = 0;
-				BigEndian::read( s, 1, _sampSize / 8, (char *)&z.s24bits );
-				
-				//	convert to double:
-				_samples[i] = oneOverMax * z.s32bits;
+		{
+			I_24 * z = (I_24 *)&v[0];
+			for (unsigned long i = 0; i < _samples.size(); ++i ) 
+			{
+				Int_32 samp = 0L | z[i];
+				_samples[i] = oneOverMax * samp;
 			}
 			break;
+		}
+*/
 		case 16:
-			for (unsigned long i = 0; i < _samples.size(); ++i ) {
-				//	read the sample:
-				z.s32bits = 0;
-				BigEndian::read( s, 1, _sampSize / 8, (char *)&z.s16bits );
-				
-				//	convert to double:
-				_samples[i] = oneOverMax * z.s32bits;
+		{
+			Int_16 * z = (Int_16 *)&v[0];
+			for (unsigned long i = 0; i < _samples.size(); ++i ) 
+			{
+				Int_32 samp = 0L | z[i];
+				_samples[i] = oneOverMax * (samp << 16);
+
+				if (i < 100 )
+					notifier << samp << " " << _samples[i] << endl;
 			}
 			break;
+		}
 		case 8:
-			for (unsigned long i = 0; i < _samples.size(); ++i ) {
-				//	read the sample:
-				z.s32bits = 0;
-				BigEndian::read( s, 1, _sampSize / 8, (char *)&z.s8bits );
-				
-				//	convert to double:
-				_samples[i] = oneOverMax * z.s32bits;
+		{
+			char * z = &v[0];
+			for (unsigned long i = 0; i < _samples.size(); ++i ) 
+			{
+				Int_32 samp = 0L | z[i];
+				_samples[i] = oneOverMax * (samp << 24);
 			}
 			break;
+		}
 	}
 	
 	//	except if there were any read errors:
