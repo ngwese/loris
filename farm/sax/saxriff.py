@@ -25,7 +25,14 @@ First pass notes 4 May 2001:
 	res 65, 75, 90 Hz
 	window 200 Hz
 
-Last updated: 4 Oct 2001 by Kelly Fitz
+notes from trial 2:
+	- smaller resolutions leave the reverb intact, 90 makes a
+	wierd tremolo effect on the reverb in the latter half of the 
+	sound (only really detectable with wide windows)
+	- 200 and 250 Hz windows sounds pretty good with 65 and 75 Hz 
+	resolutions -- actually 170 is pretty good too
+
+Last updated: 8 Oct 2001 by Kelly Fitz
 """
 print __doc__
 
@@ -34,7 +41,7 @@ from trials import *
 
 # use this trial counter to skip over
 # eariler trials
-trial = 2
+trial = 3
 
 print "running trial number", trial, time.ctime(time.time())
 
@@ -61,6 +68,17 @@ if trial == 2:
 		for w in widths:
 			p = analyze( source, r, w )
 			ofile = 'sax.%i.%i.aiff'%(r, w)
+			synthesize( ofile, p )
+
+	
+if trial == 3:
+	resolutions = (65, 75, 90)
+	widths = ( 170, 200, 250 )
+	for r in resolutions:
+		for w in widths:
+			p = analyze( source, r, w )
+			p = timescale( p, 2.0 )
+			ofile = 'sax.%i.%i.T2.aiff'%(r, w)
 			synthesize( ofile, p )
 
 	

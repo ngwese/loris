@@ -51,8 +51,20 @@ notes from trial 1:
 	- res 20 Hz and window 100 Hz is pretty good, and with those
 		conditions, region width doesn't have any effect
 	
+notes fro trial 2:
+	elephant1:	
+	- 20 and 40 Hz resolution sound pretty good with all windows, 60 hz
+	sounds okay with wider windows (like 200 hz)
+	
+	elephant2: 
+	- sounds a bit metallic with all these parameters settings
+	
+	elephant3:
+	- 80 Hz window sounds pretty good, even 100 is pretty good. 
+	
+	Next: try 1 and 3 with time dilation, dunno what to do about 2
 
-Last updated: 4 Oct 2001 by Kelly Fitz
+Last updated: 8 Oct 2001 by Kelly Fitz
 """
 
 print __doc__
@@ -62,7 +74,7 @@ from trials import *
 
 # use this trial counter to skip over
 # eariler trials
-trial = 2
+trial = 3
 
 print "running trial number", trial, time.ctime(time.time())
 
@@ -102,3 +114,25 @@ if trial == 2:
 				p = analyze( source, r, w )
 				ofile = '%s.%i.%i.aiff'%(source[:-5], r, w)
 				synthesize( ofile, p )
+
+if trial == 3:
+	# elephant1.aiff
+	source = sources[0]  
+	resolutions = ( 20, 40 )
+	widths = ( 130, 180 )
+	for r in resolutions:
+		for w in widths:
+			p = analyze( source, r, w )
+			p = timescale( p, 2. )
+			ofile = '%s.%i.%i.T2aiff'%(source[:-5], r, w)
+			synthesize( ofile, p )
+	# elephant3.aiff
+	source = sources[2]  
+	resolutions = ( 20, 30 )
+	widths = ( 80, 100, 130 )
+	for r in resolutions:
+		for w in widths:
+			p = analyze( source, r, w )
+			p = timescale( p, 2. )
+			ofile = '%s.%i.%i.T2aiff'%(source[:-5], r, w)
+			synthesize( ofile, p )

@@ -46,7 +46,7 @@ notes from trial 4:
 	- can use 70 or 95 Hz resolution with wider windows and get good results
 	- distillation works well for all values tried (up to 120, try larger)
 
-Last updated: 4 Oct 2001 by Kelly Fitz
+Last updated: 5 Oct 2001 by Kelly Fitz
 """
 print __doc__
 

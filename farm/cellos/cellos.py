@@ -73,7 +73,7 @@ cello69.MF
 	normalized source
 	
 
-Last updated: 4 Oct 2001 by Kelly Fitz
+Last updated: 5 Oct 2001 by Kelly Fitz
 """
 print __doc__
 
