@@ -30,7 +30,6 @@
 //		- file claims to have twice the number of samples (2 mono samples = 1 stereo)
 #define MONOFILE 1
 
-
 using namespace std;
 
 Begin_Namespace( Loris )
@@ -39,14 +38,36 @@ Begin_Namespace( Loris )
 //	SpcFile constructor from data in memory
 // ---------------------------------------------------------------------------
 //
-SpcFile::SpcFile( int pars, int frames, double rate, double midiPitch, double minNoiseFreq ) :
+SpcFile::SpcFile( int pars, int startf, int endf, 
+				double rate, double midiPitch, int firstNoisePar ) :
 	_partials( pars ),
-	_frames( frames ),
+	_startFrame( startf ),
+	_endFrame( endf ),
 	_rate( rate ),
 	_midiPitch( midiPitch ),
-	_minNoiseFreq( minNoiseFreq )
+	_firstNoisePar( firstNoisePar ),
+	_susFrame( 0 ),
+	_rlsFrame( 0 )
 {
 	Assert( pars == 32 || pars == 64 || pars == 128 );
+	Assert( _endFrame > _startFrame);
+	Assert( rate > 0.0 );
+}
+
+// ---------------------------------------------------------------------------
+//	setMarkers
+// ---------------------------------------------------------------------------
+//
+void
+SpcFile::setMarkers( double susTime, double rlsTime )
+{
+	_susFrame = (int) (susTime / _rate + 0.5);
+	_rlsFrame = (int) (rlsTime / _rate + 0.5);
+	
+	if( _susFrame < 1 )
+		_susFrame = 1;
+	if( _rlsFrame < 5 )
+		_rlsFrame = 5;
 }
 
 // ---------------------------------------------------------------------------
@@ -68,6 +89,8 @@ SpcFile::write( BinaryFile & file, const list<Partial> & plist )
 		writeContainer( file );
 		writeCommon( file );
 		writeInstrument( file );
+		if (_susFrame && _rlsFrame)
+			writeMarker( file );
 		writeSosEnvelopesChunk( file );
 		writeEnvelopeData( file, plist );
 	}
@@ -108,7 +131,7 @@ SpcFile::writeEnvelopeData( BinaryFile & file, const list<Partial> & plist )
 		writeEnvelopes( file, plist );
 	}
 	catch( FileIOException & ex ) {
-		ex.append("Failed to write SPC file Container chunk.");
+		ex.append("Failed to write SPC file SoundData chunk.");
 		throw;
 	}
 }
@@ -132,8 +155,7 @@ SpcFile::writeEnvelopes( BinaryFile & file, const list<Partial> & plist )
 	Assert( refLabel != 0 );
 
 	// write out one frame at a time:
-	for (ulong frame = 0; frame < _frames; ++frame ) {
-		notifier << "writing frame " << frame << " of " << _frames << endl;
+	for (ulong frame = _startFrame; frame <= _endFrame; ++frame ) {
 	
 		//	for each frame, write one value for every partial:
 		for (uint label = 1; label <= _partials; ++label ) {
@@ -146,23 +168,23 @@ SpcFile::writeEnvelopes( BinaryFile & file, const list<Partial> & plist )
 				pcorrect = select( plist, refLabel );
 				freqMult = (double) label / (double) refLabel; 
 				ampMult = 0;
+				Assert( pcorrect != Null && pcorrect->begin() != pcorrect->end());
 			} else {
 				freqMult = ampMult = 1.0;
 			}
-			Assert( pcorrect != Null );	//	this would be bad.
+			
+			// Zero out noise magnitude for low partial numbers.
+			double noiseMagMult = (label >= _firstNoisePar) ? 1.0 : 0.0;
 
 			//	pack log amplitude and log frequency into left:
 			left.s32bits = packLeft(*pcorrect, freqMult, ampMult, frame * _rate);
 
 			//	pack log bandwidth and phase into right:
-			right.s32bits = packRight(*pcorrect, freqMult, ampMult, frame * _rate);
+			right.s32bits = packRight(*pcorrect, noiseMagMult, frame * _rate);
 	
 			//	write the sample:
 			file.write( left.s24bits );
 			file.write( right.s24bits );
-			
-			if ((left.s32bits & 0xff000000) != 0)
-				left.s32bits += 1; // TEMPORARY
 		}
 	}
 	
@@ -185,10 +207,11 @@ SpcFile::findRefPartial( const list<Partial> & plist )
 {	
 	for (uint label = 1; label <= _partials; ++label ) {
 		// return if we can find a partial with this label:
-		if ( select( plist, label ) )
+		const Partial * refpar = select( plist, label );
+		if ( refpar != Null && refpar->begin() != refpar->end() )
 			return label;
-		
 	}
+
 	return 0;		// no labaled partial was found
 }
 
@@ -244,14 +267,11 @@ SpcFile::packLeft( const Partial & p, double freqMult, double ampMult, double ti
 //	linear phase occupies the bottom 16 bits.  
 //
 ulong
-SpcFile::packRight( const Partial & p, double freqMult, double ampMult, double time )
+SpcFile::packRight( const Partial & p, double noiseMagMult, double time )
 {	
-	double amp = ampMult * p.amplitudeAt( time );
-	double freq = freqMult * p.frequencyAt( time );
-//	double phase = p.phaseAt( time );
+	double amp = p.amplitudeAt( time );
+	double phase = p.phaseAt( time );
 	double bw = p.bandwidthAt( time );
-
-	static double phase = 0;  phase += TwoPi / 4;  // TEMPORARY phase test
 
 	ulong	theOutput;
 	
@@ -260,15 +280,8 @@ SpcFile::packRight( const Partial & p, double freqMult, double ampMult, double t
 		phase += TwoPi;
 	double zeroToOnePhase = phase / TwoPi;
 	
-	double theNoiseMag = 64.0 * amp * sqrt( bw );
-//	double theNoiseMag = 0.0;
-//	for (int i = -6; i <= 6; i++)
-//		theNoiseMag += 64.0 * amp * sqrt( bandwidthAtTime( p, time + 0.015 * i ) );
-//	theNoiseMag /= 13.0;
-
-	if (freq < _minNoiseFreq)
-		theNoiseMag = 0;
-	else if (theNoiseMag > 1.0)
+	double theNoiseMag = noiseMagMult * 64.0 * amp * sqrt( bw );
+	if (theNoiseMag > 1.0)
 		theNoiseMag = 1.0;
 	
 // 7 bits of log-noise-amplitude with 24 bits of zero to right.
@@ -332,7 +345,7 @@ SpcFile::writeCommon( BinaryFile & file )
 	ck.header.size = sizeofCommon() - sizeofCkHeader();
 					
 	ck.channels = MONOFILE ? 1 : 2;
-	ck.sampleFrames = _frames * _partials * (MONOFILE ? 2 : 1);
+	ck.sampleFrames = (_endFrame - _startFrame + 1) * _partials * (MONOFILE ? 2 : 1);
 	ck.bitsPerSample = 24;
 	IEEE::ConvertToIeeeExtended( 44100, & ck.srate ); // bogus for SPC files
 	
@@ -364,8 +377,11 @@ SpcFile::writeContainer( BinaryFile & file )
 	ck.header.id = ContainerId;
 	
 	//	size is everything after the header:
-	ck.header.size = sizeof(Int_32) + sizeofCommon() + sizeofSosEnvelopes()
-				+ sizeofInstrument() + sizeofSoundData();
+	ck.header.size = sizeof(Int_32) + sizeofCommon() 
+				+ sizeofInstrument() 
+				+ ((_susFrame && _rlsFrame) ? sizeofMarker() : 0)
+				+ sizeofSosEnvelopes()
+				+ sizeofSoundData();
 	
 	ck.formType = AiffType;
 	
@@ -413,7 +429,7 @@ SpcFile::writeInstrument( BinaryFile & file )
 	ck.lowVelocity = 1;	
 	ck.highVelocity = 127;	
 	ck.gain = 0;	
-	ck.sustainLoop.playMode = 0;		// No Looping
+	ck.sustainLoop.playMode = 0;		// Sustain looping done by name, not by this
 	ck.sustainLoop.beginLoop = 0;
 	ck.sustainLoop.endLoop = 0;
 	ck.releaseLoop.playMode = 0;		// No Looping
@@ -448,6 +464,83 @@ SpcFile::writeInstrument( BinaryFile & file )
 }
 
 // ---------------------------------------------------------------------------
+//	writeMarker
+// ---------------------------------------------------------------------------
+//
+void
+SpcFile::writeMarker( BinaryFile & file )
+{
+	//	first build a Marker chunk, so that all the data sizes will 
+	//	be correct:
+	MarkerCk ck;
+	ck.header.id = MarkerId;
+	
+	//	size is everything after the header:
+	ck.header.size = sizeofMarker() - sizeofCkHeader();
+	
+	//	we have two markers, one for sustain start, two for the loop:
+	ck.numMarkers = 3;
+
+	ck.susMarker.id = 1;				// sustain marker 
+	ck.susMarker.position = _susFrame * _partials * (MONOFILE ? 2 : 1); 
+	ck.susMarker.markerName[0] = 3;	// 3 character long name
+	ck.susMarker.markerName[1] = 's';
+	ck.susMarker.markerName[2] = 'u';
+	ck.susMarker.markerName[3] = 's';
+
+	ck.loopStartMarker.id = 2;				// loopStart marker 
+	ck.loopStartMarker.position = (_rlsFrame - 1) * _partials * (MONOFILE ? 2 : 1); 
+	ck.loopStartMarker.markerName[0] = 9;	// 9 character long name
+	ck.loopStartMarker.markerName[1] = 'l';
+	ck.loopStartMarker.markerName[2] = 'o';
+	ck.loopStartMarker.markerName[3] = 'o';
+	ck.loopStartMarker.markerName[4] = 'p';
+	ck.loopStartMarker.markerName[5] = 'S';
+	ck.loopStartMarker.markerName[6] = 't';
+	ck.loopStartMarker.markerName[7] = 'a';
+	ck.loopStartMarker.markerName[8] = 'r';
+	ck.loopStartMarker.markerName[9] = 't';
+
+	ck.loopEndMarker.id = 3;				// loopEnd marker 
+	ck.loopEndMarker.position = _rlsFrame * _partials * (MONOFILE ? 2 : 1); 
+	ck.loopEndMarker.markerName[0] = 7;		// 7 character long name
+	ck.loopEndMarker.markerName[1] = 'l';
+	ck.loopEndMarker.markerName[2] = 'o';
+	ck.loopEndMarker.markerName[3] = 'o';
+	ck.loopEndMarker.markerName[4] = 'p';
+	ck.loopEndMarker.markerName[5] = 'E';
+	ck.loopEndMarker.markerName[6] = 'n';
+	ck.loopEndMarker.markerName[7] = 'd';
+
+	//	write it out:
+	try {
+		file.write( ck.header.id );
+		file.write( ck.header.size );
+
+		file.write( ck.numMarkers );
+
+		file.write( ck.susMarker.id );
+		file.write( ck.susMarker.position );
+		for (int i = 0; i <= ck.susMarker.markerName[0]; i++)
+			file.write( ck.susMarker.markerName[i] );
+
+		file.write( ck.loopStartMarker.id );
+		file.write( ck.loopStartMarker.position );
+		for (int i = 0; i <= ck.loopStartMarker.markerName[0]; i++)
+			file.write( ck.loopStartMarker.markerName[i] );
+
+		file.write( ck.loopEndMarker.id );
+		file.write( ck.loopEndMarker.position );
+		for (int i = 0; i <= ck.loopEndMarker.markerName[0]; i++)
+			file.write( ck.loopEndMarker.markerName[i] );
+	}
+	catch( FileIOException & ex ) {
+		ex.append( "Failed to write SPC file Marker chunk." );
+		throw;
+	}
+}
+
+// ---------------------------------------------------------------------------
 //	writeSosEnvelopesChunk
 // ---------------------------------------------------------------------------
 //
@@ -463,7 +556,7 @@ SpcFile::writeSosEnvelopesChunk( BinaryFile & file )
 	ck.header.size = sizeofSosEnvelopes() - sizeofCkHeader();
 					
 	ck.signature = SosEnvelopesId;
-	ck.frames = _frames;
+	ck.frames = _endFrame - _startFrame + 1;
 	ck.validPartials = _partials * (MONOFILE ? 2 : 1);
 	
 	ck.SOSresolution = 1000000.0 * _rate;				 // convert secs to microsecs
@@ -548,7 +641,22 @@ SpcFile::sizeofInstrument( void )
 			sizeof(short) +				// gain
 			2 * sizeof(Int_16) +		// playmode for sustainLoop and releaseLoop
 			2 * sizeof(Int_16) +		// beginLoop for sustainLoop and releaseLoop
-			2 * sizeof(Int_16);			// endLoop for sustainLoop and releaseLoop
+			2 * sizeof(Int_16);			// loopEnd for sustainLoop and releaseLoop
+}
+
+// ---------------------------------------------------------------------------
+//	sizeofMarker
+// ---------------------------------------------------------------------------
+//
+Uint_32
+SpcFile::sizeofMarker( void )
+{
+	return	sizeof(Int_32) +			//	id
+			sizeof(Uint_32) +			//	size
+			sizeof(Int_16) +			// numMarkers
+			3 * sizeof(Int_16) +		// id for 3 standard markers
+			3 * sizeof(Int_32) +		// position for 3 standard markers
+			22 * sizeof(char);			// characters in names for 3 markers
 }
 
 // ---------------------------------------------------------------------------
@@ -560,7 +668,7 @@ SpcFile::sizeofInstrument( void )
 Uint_32
 SpcFile::sizeofSoundData( void )
 {
-	Uint_32 dataSize = _frames * _partials * 2 * ( 24 / 8 );
+	Uint_32 dataSize = (_endFrame - _startFrame + 1) * _partials * 2 * ( 24 / 8 );
 	
 	return	sizeof(Int_32) +	//	id
 			sizeof(Uint_32) +	//	size

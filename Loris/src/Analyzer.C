@@ -155,7 +155,7 @@ Analyzer::createSpectrum( double srate )
 		
 		//	configure bw association strategy, which 
 		//	needs to know about the window:
-		_bw.setWindow( v.begin(), v.end() );
+		_bw.setWindow( v.begin(), v.end(), _spectrum->size() );
 	}
 	catch ( Exception & ex ) {
 		ex.append( "couldn't create a ReassignedSpectrum." );

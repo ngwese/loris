@@ -86,9 +86,19 @@ public:
 		const double HzPerSample = srate / spectrum.size();
 		
 		for ( int i = 0; i < max_idx; ++i ) {
-			double e = std::norm( spectrum[i] ) * energyScale;
+			//double m = abs( spectrum[i] );
+			//double m = spectrum.magnitude(i);
+			double m = 2. * abs( spectrum[i] ) * _moreshit;
+			double e = m * m;// * energyScale;
 			distribute( i * HzPerSample, e, _spectralEnergy );
 		}
+		
+		_specCopy = std::vector<double>( spectrum.size(), 0. );
+		_sinSpec = std::vector<double>( spectrum.size(), 0. );
+		for ( int j = 0; j < spectrum.size(); ++j ) {
+			_specCopy[j] = 2. * abs( spectrum[j] ) * _moreshit;
+		}
+		_residue = _specCopy;
 	}
 	
 	//	sinusoidal energy accumulation:
@@ -108,8 +118,9 @@ public:
 	{
 		double freq = s.frequency();
 		double amp = s.amplitude();
-		distribute( freq, amp * amp, _sinusoidalEnergy  );
-		distribute( freq, 1., _weights );
+		//distribute( freq, amp * amp, _sinusoidalEnergy  );
+		//distribute( freq, 1., _weights );
+		ohBaby( freq, amp );
 	}
 	
 	//	bandwidth assocation:
@@ -123,8 +134,8 @@ public:
 		
 		while ( b != e ) {
 			double freq = b->frequency();
-			double amp = b->amplitude();
-			double e = amp * amp;
+			//double amp = b->amplitude();
+			//double e = amp * amp;
 			
 			//	compute noise to add:
 			double noise = computeNoiseEnergy( freq, surplus );
@@ -148,11 +159,16 @@ public:
 	//
 	//	Iters are a vector<double> range.
 	template< class Iter >
-	void setWindow( Iter b, Iter e ) 
+	void setWindow( Iter b, Iter e, long speclen ) 
 	{
+		std::vector< double > duh( b, e );
+		computeWindowSpectrum( duh, speclen );
+		/*
 		//	Iters reference real numbers:
-		double sqrsum = std::inner_product( b, e, b, 0. );		
+		double sqrsum = std::inner_product( b, e, b, 0. );
+		double sum = std::accumulate( b, e, 0. );
 		_windowFactor = 1. / sqrsum;
+		//_windowFactor = 0.25 * sum * sum / sqrsum;
 		//	double because we only search half the spectrum:
 		_windowFactor *= 2.;
 		//	double again for no apparent reason:
@@ -160,9 +176,13 @@ public:
 		//
 		//	now I need _another_ factor of two to make it sound decent.
 		//
-		_windowFactor *= 4.;
+		//_windowFactor *= 2.;
+		*/
 	}
-		
+	
+	void computeWindowSpectrum( std::vector< double > & v, long len );
+	void ohBaby( double f, double a );
+	
 private:	
 //	-- helpers --
 	void computeSurplusEnergy( std::vector<double> & surplus );
@@ -179,6 +199,12 @@ private:
 	std::vector< double > _spectralEnergy;
 	std::vector< double > _sinusoidalEnergy;
 	std::vector< double > _weights;
+	
+	std::vector< double > _winspec;
+	double _hzPerSamp, _moreshit;
+	
+	std::vector< double > _specCopy, _sinSpec, _residue;
+
 	
 	double _windowFactor;
 	

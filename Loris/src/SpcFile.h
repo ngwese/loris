@@ -33,10 +33,14 @@ class SpcFile
 {
 public:
 //	construction:
-	SpcFile( int pars, int frames, double rate, double tuning, double minNoiseFreq );
+	SpcFile( int pars, int startFrame, int endFrame, 
+			 double rate, double tuning, int firstNoisePar );
 	
 //	defaults destructor is okay:
 	//	~SosFile( void );
+
+//	markers:
+	void setMarkers( double susTime, double releaseTime );
 	
 //	writing:
 	void write( BinaryFile & file,  const std::list<Partial> & plist );
@@ -52,7 +56,8 @@ private:
 		SoundDataId = 'SSND',
 		ApplicationSpecificId = 'APPL',
 		SosEnvelopesId = 'SOSe',
-		InstrumentId = 'INST'
+		InstrumentId = 'INST',
+		MarkerId = 'MARK'
 	};
 	
 	struct CkHeader {
@@ -101,6 +106,32 @@ private:
 		struct AIFFLoop sustainLoop;
 		struct AIFFLoop releaseLoop;
 	};
+	
+	struct Marker3 {
+		short 	id;
+		long 	position;
+		char 	markerName[4];		// 3 character name plus termination
+	};
+
+	struct Marker9 {
+		short 	id;
+		long 	position;
+		char 	markerName[10];		// 9 character name plus termination
+	};
+
+	struct Marker7 {
+		short 	id;
+		long 	position;
+		char 	markerName[8];		// 8 character name plus termination
+	};
+
+	struct MarkerCk {
+		CkHeader header;	
+		short 	numMarkers;
+		Marker3	susMarker;			// array of markers starts here
+		Marker9	loopStartMarker;	// second marker in every spc file
+		Marker7	loopEndMarker;		// third marker in every spc file
+	};
 
 	struct SosEnvelopesCk
 	{
@@ -136,7 +167,7 @@ private:
 	//	envelope writing helpers:
 	int findRefPartial( const std::list<Partial> & plist );
 	ulong packLeft( const Partial & p, double freqMult, double ampMult, double time );
-	ulong packRight( const Partial & p, double freqMult, double ampMult, double time );
+	ulong packRight( const Partial & p, double noiseMagMult, double time );
 	ulong envLog( double ) const;
 	const Partial * select( const std::list<Partial> & partials, int label );
 	
@@ -145,6 +176,7 @@ private:
 	void writeContainer( BinaryFile & file );
 	void writeSosEnvelopesChunk( BinaryFile & file );
 	void writeInstrument( BinaryFile & file );
+	void writeMarker( BinaryFile & file );
 	
 	//	data sizes:
 	Uint_32 sizeofCommon( void );
@@ -152,13 +184,16 @@ private:
 	Uint_32 sizeofSoundData( void );
 	Uint_32 sizeofSosEnvelopes( void );
 	Uint_32 sizeofInstrument( void );
+	Uint_32 sizeofMarker( void );
 	
 //	-- instance variables --
 	int _partials;					// number of partials
-	int _frames;					// number of frames
+	int _startFrame;				// first frame number to write to file
+	int _endFrame;					// last frame number to write to file
 	double _rate;					// frame rate in seconds
 	double _midiPitch;				// midi note number
-	double _minNoiseFreq;			// ignore bandwidth below this frequency
+	double _firstNoisePar;			// ignore bandwidth below this partial
+	int _susFrame, _rlsFrame;		// frame numbers for sustain and release start
 
 };	//	end of class SosFile
 

@@ -11,6 +11,8 @@
 #include "Notifier.h"
 #include "bark.h"
 #include <algorithm>
+#include "FourierTransform.h"
+
 
 using namespace std;
 
@@ -50,10 +52,12 @@ AssociateBandwidth::~AssociateBandwidth( void )
 void
 AssociateBandwidth::computeSurplusEnergy( vector<double> & surplus )
 {
+#if 0
 	for ( int i = 0; i < surplus.size(); ++i ) {
+	#if 0
 		//	use loudness, proportional to cube root of energy:
-		double spec = pow( _spectralEnergy[i], 1. / 3. );
-		double sin = pow( _sinusoidalEnergy[i], 1. / 3. );
+		double spec = pow( _windowFactor * _spectralEnergy[i], 1. / 3. );
+		double sin = pow( _windowFactor * _sinusoidalEnergy[i], 1. / 3. );
 		
 		//	excess cannot be negative:
 		double diff = max( 0., spec - sin );
@@ -66,9 +70,21 @@ AssociateBandwidth::computeSurplusEnergy( vector<double> & surplus )
 		else {
 			debugger << "surplus energy " << diff << " in region " << i << endl;
 		}
-		*/
+		//*/
 		surplus[i] = diff * diff * diff;	//	cheaper than pow()
+	#else
+		surplus[i] = _windowFactor * max( 0., _spectralEnergy[i] - _sinusoidalEnergy[i] );
+	#endif
 	}
+#else
+	for ( long j = 0; j < _specCopy.size() / 2; ++j ) {
+		double espec = _specCopy[j] * _specCopy[j];
+		double esin = _sinSpec[j] * _sinSpec[j];
+		double diff = max( 0., espec - esin ) / _windowFactor;
+		distribute( j * _hzPerSamp, diff, surplus );
+	}
+	
+#endif
 }
 
 // ---------------------------------------------------------------------------
@@ -108,6 +124,9 @@ AssociateBandwidth::computeNoiseEnergy( double freqHz,
 void 
 AssociateBandwidth::distribute( double freqHz, double x, vector<double> & regions )
 {
+	if ( freqHz < 0. )
+		return;
+		
 	double barks = bark( freqHz );
 	
 	//	contribute x to two regions having center
@@ -194,6 +213,66 @@ AssociateBandwidth::reset( void )
 	fill( _spectralEnergy.begin(), _spectralEnergy.end(), 0. );
 	fill( _sinusoidalEnergy.begin(), _sinusoidalEnergy.end(), 0. );
 	fill( _weights.begin(), _weights.end(), 0. );
+}
+
+// ---------------------------------------------------------------------------
+//	computeWindowSpectrum
+// ---------------------------------------------------------------------------
+//	
+void
+AssociateBandwidth::computeWindowSpectrum( vector< double > & v, long len )
+{
+	FourierTransform ft( len * 16 );
+	ft( v );
+	
+	//double scale = 2. / accumulate( v.begin(), v.end(), 0. );
+	// same as?:
+	_moreshit = 1. / abs( ft[0] );
+	for( long i = 0; i < len; ++i ) {
+		double x = _moreshit * abs( ft[i] );
+		if ( i > 0 && x > _winspec[i-1] ) {
+			break;
+		}
+		_winspec.push_back( x );
+	}
+
+	//	KLUDGE: need actual sample rate
+	_hzPerSamp = 44100. / len;
+	
+	//	compute the window scale:
+	_windowFactor = _winspec[0] * _winspec[0];
+	for ( long j = 16; j < _winspec.size(); j += 16 ) {
+		_windowFactor += 2. * _winspec[j] * _winspec[j];
+	}
+	//_windowFactor /= len;
+}
+
+// ---------------------------------------------------------------------------
+//	ohBaby
+// ---------------------------------------------------------------------------
+//	
+void
+AssociateBandwidth::ohBaby( double f, double a )
+{
+	double fracBinNum = f / _hzPerSamp;
+	long offset = 
+		( ((int)(16. * (fracBinNum - round(fracBinNum))) + 8) % 16 ) - 8;
+	double z = a * _winspec[abs(offset)];
+	distribute( f, z * z, _sinusoidalEnergy  );
+	distribute( f, 1., _weights );
+	_sinSpec[ (f / _hzPerSamp) + 0.5 ] += z;
+	_residue[ (f / _hzPerSamp) + 0.5 ] -= z;
+	
+	for ( int i = 1; i * 16 < _winspec.size(); ++i ) {
+		z = a * _winspec[(16 * i) - offset];
+		distribute( f + (i * _hzPerSamp), z * z, _sinusoidalEnergy  );
+		_sinSpec[ (f / _hzPerSamp) + i + 0.5 ] += z;
+		_residue[ (f / _hzPerSamp) + i + 0.5 ] -= z;
+		z = a * _winspec[(16 * i) + offset];
+		distribute( f - (i * _hzPerSamp), z * z, _sinusoidalEnergy  );
+		_sinSpec[ (f / _hzPerSamp) - i + 0.5 ] += z;
+		_residue[ (f / _hzPerSamp) - i + 0.5 ] -= z;
+	}
 }
 
 End_Namespace( Loris )

@@ -14,6 +14,7 @@
 #include "Partial.h"
 #include "Breakpoint.h"
 #include "Exception.h"
+#include "Notifier.h"
 
 #if !defined( Deprecated_cstd_headers )
 	#include <cmath>
@@ -65,6 +66,11 @@ Breakpoint::addNoise( double noise )
 	double n = e * bandwidth();			//	current noise energy
 	setBandwidth( ( n + noise ) / ( e + noise ) );
 	setAmplitude( sqrt( e + noise ) );
+	
+	if ( amplitude() > 1 ) {
+		debugger << "added " << noise << " noise, got amplitude " <<
+					amplitude() << " and bw " << bandwidth() << endl;
+	}
 }
 
 End_Namespace( Loris )
