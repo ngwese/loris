@@ -48,6 +48,7 @@ public:
 //	construction:
 //	(use compiler-generated destructor)
 	Synthesizer( std::vector< double > & buf, double srate );
+	~Synthesizer(void);
 
 //	copy:
 //	Create a copy of other by cloning its PartialView and sharing its

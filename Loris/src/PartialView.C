@@ -59,7 +59,9 @@ PartialView::startTime( void ) const
 double
 PartialView::endTime( void ) const
 {
-	return end().time();
+	PartialViewIterator last = end();
+	last.advance(-1);
+	return last.time();
 }
 
 // ---------------------------------------------------------------------------
@@ -200,10 +202,26 @@ BasicPartialView::end( void ) const
 //	Advance the iterator.
 //
 void
-BasicPartialView::advance( PartialConstIterator & iter ) const
+BasicPartialView::advance( PartialConstIterator & iter, int n ) const
 {
-	if ( ! atEnd( iter ) ) 
-		++iter;
+	if ( n > 0 )
+	{
+		PartialConstIterator end = _partial->end();
+		while ( n > 0 && iter != end )
+		{
+			++iter;
+			--n;
+		}
+	}
+	else if (n < 0)
+	{
+		PartialConstIterator beg = _partial->begin();
+		while ( n < 0 && iter != beg )
+		{
+			--iter;
+			++n;
+		}
+	}
 }
 
 // ---------------------------------------------------------------------------

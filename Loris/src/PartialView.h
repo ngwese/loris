@@ -69,7 +69,7 @@ public:
 	virtual PartialViewIterator end( void ) const = 0;
 	
 	//	iterator interface:
-	virtual void advance( PartialConstIterator & iter ) const = 0;
+	virtual void advance( PartialConstIterator & iter, int n = 1 ) const = 0;
 	virtual bool atEnd( const PartialConstIterator & iter ) const = 0;
 
 	//	Breakpoint access:
@@ -128,7 +128,7 @@ public:
 		{ return (lhs._view == rhs._view) && (lhs._pos == rhs._pos); }
 		
 	//	iterator interface:
-	void advance( void ) { _view->advance( _pos ); }
+	void advance( int n = 1 ) { _view->advance( _pos, n ); }
 	bool atEnd( void ) { return _view->atEnd( _pos ); }
 	
 	//	Breakpoint access:
@@ -173,7 +173,7 @@ public:
 	virtual PartialViewIterator end( void ) const;
 	
 	//	iterator interface:
-	virtual void advance( PartialConstIterator & iter ) const;
+	virtual void advance( PartialConstIterator & iter, int n = 1 ) const;
 	virtual bool atEnd( const PartialConstIterator & iter ) const;
 		
 	//	Breakpoint access:
@@ -212,8 +212,8 @@ public:
 		{ return subview().end(); }
 	
 	//	iterator interface:
-	virtual void advance( PartialConstIterator & iter ) const
-		{ subview().advance( iter ); }
+	virtual void advance( PartialConstIterator & iter, int n = 1 ) const
+		{ subview().advance( iter, n ); }
 	virtual bool atEnd( const PartialConstIterator & iter ) const 
 		{ return subview().atEnd( iter ); }
 	

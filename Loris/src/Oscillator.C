@@ -15,13 +15,9 @@
 #include "random.h"
 #include "Exception.h"
 #include "pi.h"
+#include "notifier.h"
 #include <vector>
-
-#if !defined( Deprecated_cstd_headers )
-	#include <cmath>
-#else
-	#include <math.h>
-#endif
+#include <cmath>
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
@@ -45,18 +41,30 @@ Oscillator::Oscillator( double radf, double a, double bw, double ph /* = 0. */ )
 	_phase( ph ),		//	radians
 	_filter( NULL )
 {
-	//	make a Filter:
-	//	Chebychev order 3, cutoff 500, ripple -1.
-	static const double filter_gain = 4.663939184e+04;
-	static const double extraScaling = 6.;
-	static const double maCoefs[] = { 1., 3., 3., 1. }; 
-	static const double arCoefs[] = { 0., 2.9258684252, -2.8580608586, 0.9320209046 };
+//	make a Filter:
+//	Chebychev order 3, cutoff 500, ripple -1.
+	const double filter_gain = 4.663939184e+04;
+	const double extraScaling = 6.;
+	const double maCoefs[] = { 1., 3., 3., 1. }; 
+	const double arCoefs[] = { 0., 2.9258684252, -2.8580608586, 0.9320209046 };
 						   
 	_filter = new Filter( maCoefs, maCoefs + 4, 
 						  arCoefs, arCoefs + 4,
 						  extraScaling / filter_gain );
 						  
-	//	don't alias:
+//	clamp bandwidth:
+	if ( _bandwidth > 1. )
+	{
+		debugger << "clamping bandwidth at 1." << endl;
+		_bandwidth = 1.;
+	}
+	else if ( _bandwidth < 0. )
+	{ 
+		debugger << "clamping bandwidth at 0." << endl;
+		_bandwidth = 0.;
+	}
+
+//	don't alias:
 	if ( _frequency > Pi )
 		_amplitude = 0.;
 }
@@ -102,19 +110,30 @@ Oscillator::generateSamples( std::vector< double > & buffer,
 	
 //	clamp bandwidth:
 	if ( targetBw > 1. )
+	{
+		debugger << "clamping bandwidth at 1." << endl;
 		targetBw = 1.;
+	}
 	else if ( targetBw < 0. )
+	{ 
+		debugger << "clamping bandwidth at 0." << endl;
 		targetBw = 0.;
+	}
 		
 //	don't alias:
 	if ( targetFreq > Pi )	//	radian Nyquist rate
+	{
+		debugger << "ramping out Partial above Nyquist rate" << endl;
 		targetAmp = 0.;
+	}
 
 //	determine the number of samples to generate
 //	(none if the amplitude will be zero throughout):	
 	long howMany = endIdx - beginIdx;
-	if ( targetAmp == 0. && _amplitude == 0. ) 
+	if ( targetAmp == 0. && _amplitude == 0. && howMany > 0 ) 
 	{
+		// debugger << "no samples to generate at index " << beginIdx << endl;
+
 		//	if we don't need to generate samples, 
 		//	update the phase anyway (other params
 		//	will be updated below), advance the phase 
@@ -154,6 +173,7 @@ Oscillator::generateSamples( std::vector< double > & buffer,
 			//	filtered noise is modulator
 			//
 			mod = sqrt( 1. - b ) + ( noise * sqrt( 2. * b ) );	
+
 			osc = cos( p );
 			
 			//	compute a sample and add it into the buffer:
@@ -165,6 +185,8 @@ Oscillator::generateSamples( std::vector< double > & buffer,
 			f += dFreq;
 			a += dAmp;
 			b += dBw;
+			if (b < 0.)
+				b = 0.;
 			
 		}	// end of sample computation loop
 		

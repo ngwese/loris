@@ -45,5 +45,5 @@ OBJ_SDIF = $(SDIF)/sdif.o $(SDIF)/sdif-types.o
 #	flags:
 #
 INC_LORIS = -I${FFTW}/include -I$(CLASSES) -I$(SDIF)
-DEBUG_LORIS = -DDebug_Loris
+# DEBUG_LORIS = -DDebug_Loris
 LIB_LORIS = -L${FFTW}/lib -lfftw

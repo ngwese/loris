@@ -23,6 +23,7 @@
 namespace Loris {
 #endif
 
+static long countem = 0;
 
 // ---------------------------------------------------------------------------
 //	Synthesizer constructor
@@ -37,6 +38,8 @@ Synthesizer::Synthesizer( std::vector< double > & buf, double srate ) :
 	if ( _sampleRate <= 0. ) {
 		Throw( InvalidObject, "Synthesizer sample rate must be positive." );
 	}
+
+	countem = 0;
 }
 
 // ---------------------------------------------------------------------------
@@ -50,6 +53,17 @@ Synthesizer::Synthesizer( const Synthesizer & other ) :
 	_samples( other._samples ),
 	_view( other._view->clone() )
 {
+}
+
+
+// ---------------------------------------------------------------------------
+//  destructor
+// ---------------------------------------------------------------------------
+//
+Synthesizer::~Synthesizer(void)
+{
+	debugger << "synthesized " << countem << " partials, bye." << endl;
+	countem = 0;
 }
 
 // ---------------------------------------------------------------------------
@@ -69,11 +83,12 @@ void
 Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ )
 {
 /*
-	debugger << "synthesizing Partial from " << p.startTime() <<
-			" to " << p.endTime() << " starting phase " <<
+	debugger << "synthesizing Partial from " << p.startTime()*sampleRate() <<
+			" to " << p.endTime()*sampleRate() << " starting phase " <<
 			p.initialPhase() << " starting frequency " << 
-			p.begin()->second.frequency() << endl;
+			p.begin()->frequency() << endl;
 */
+
 	view().view( p );
 	
 //	don't bother to synthesize Partials having zero duration:
@@ -81,6 +96,8 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ )
 		 view().endTime() + timeShift < 0. ||
 		 (view().startTime() + timeShift) * sampleRate() > _samples.size() )
 	{
+		debugger << "ignoring a partial that would generate no samples" << endl;
+		debugger << "start time is " << view().startTime() << " end time is " << view().endTime() << endl;
 		return;
 	}
 	
@@ -159,6 +176,8 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ )
 		curSampleIdx = tgtsamp;
 	}
 
+	// debugger << "out of loop at target samp " << curSampleIdx << endl;
+
 //	either ran out of buffer ( tgtsamp >= _sample.size() )
 //	or ran out of Breakpoints ( iterator.atEnd() ), 
 //	compute the final target oscillator state assuming 
@@ -192,6 +211,8 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ )
 //	(buffer, beginIdx, endIdx, freq, amp, bw)
 	osc.generateSamples( _samples, curSampleIdx, finalsamp, 
 						 tgtradfreq, tgtamp, tgtbw );	
+
+	++countem;
 }
 
 // ---------------------------------------------------------------------------
