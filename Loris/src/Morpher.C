@@ -50,14 +50,39 @@
 
 //	begin namespace
 namespace Loris {
-
+	
+// ---------------------------------------------------------------------------
+//	Class Morpher
+//
+//!	@class Morpher Morpher.h loris/Morpher.h
+//!
+//!	Class Morpher performs sound morphing and Partial parameter
+//!	envelope interpolation according to a trio of frequency, amplitude,
+//!	and bandwidth morphing functions, described by Envelopes.
+//!	Sound morphing is achieved by interpolating the time-varying 
+//!	frequencies, amplitudes, and bandwidths of corresponding partials 
+//!	obtained from reassigned bandwidth-enhanced analysis of the source 
+//!	and target sounds. Partial correspondences may be established by 
+//!	labeling, using instances of the Channelizer and Distiller classes.
+//!
+//!	The Morpher collects morphed Partials in a PartialList, that is
+//!	accessible to clients.
+//!
+//!	For more information about sound morphing using 
+//!	the Reassigned Bandwidth-Enhanced Additive Sound 
+//!	Model, refer to the Loris website: 
+//!	www.cerlsoundgroup.org/Loris/.
+//!	
+//!	Morpher is a leaf class, do not subclass.
+//
+	
 #pragma mark -- construction --
 
 // ---------------------------------------------------------------------------
 //	Morpher constructor (single morph function)
 // ---------------------------------------------------------------------------
-//	Construct a new Morpher using the same morphing envelope for 
-//	frequency, amplitude, and bandwidth (noisiness).
+//!	Construct a new Morpher using the same morphing envelope for 
+//!	frequency, amplitude, and bandwidth (noisiness).
 //
 Morpher::Morpher( const Envelope & f ) :
 	_freqFunction( f.clone() ),
@@ -69,8 +94,8 @@ Morpher::Morpher( const Envelope & f ) :
 // ---------------------------------------------------------------------------
 //	Morpher constructor (distinct morph functions)
 // ---------------------------------------------------------------------------
-//	Construct a new Morpher using the specified morphing envelopes for
-//	frequency, amplitude, and bandwidth (noisiness).
+//!	Construct a new Morpher using the specified morphing envelopes for
+//!	frequency, amplitude, and bandwidth (noisiness).
 //
 Morpher::Morpher( const Envelope & ff, const Envelope & af, const Envelope & bwf ) :
 	_freqFunction( ff.clone() ),
@@ -82,7 +107,7 @@ Morpher::Morpher( const Envelope & ff, const Envelope & af, const Envelope & bwf
 // ---------------------------------------------------------------------------
 //	Morpher destructor
 // ---------------------------------------------------------------------------
-//	Destroy this Morpher.
+//!	Destroy this Morpher.
 //
 Morpher::~Morpher( void )
 {
@@ -93,9 +118,9 @@ Morpher::~Morpher( void )
 // ---------------------------------------------------------------------------
 //	morphParameters - Breakpoint to Breakpoint
 // ---------------------------------------------------------------------------
-//	Compute morphed parameter values at the specified time, using
-//	the source and target Breakpoints (assumed to correspond exactly 
-//	to the specified time).
+//!	Compute morphed parameter values at the specified time, using
+//!	the source and target Breakpoints (assumed to correspond exactly 
+//!	to the specified time).
 void
 Morpher::morphParameters( const Breakpoint & srcBkpt, const Breakpoint & tgtBkpt, 
 						  double time, Breakpoint & retBkpt )
@@ -129,12 +154,12 @@ Morpher::morphParameters( const Breakpoint & srcBkpt, const Breakpoint & tgtBkpt
 // ---------------------------------------------------------------------------
 //	morphParameters - Breakpoint to Partial
 // ---------------------------------------------------------------------------
-//	Compute morphed parameter values at the specified time, using
-//	the source Breakpoint (assumed to correspond exactly to the
-//	specified time) and the target Partial (whose parameters are
-//	examined at the specified time).
-//
-//	The target Partial may be a dummy Partial (no Breakpoints).
+//!	Compute morphed parameter values at the specified time, using
+//!	the source Breakpoint (assumed to correspond exactly to the
+//!	specified time) and the target Partial (whose parameters are
+//!	examined at the specified time).
+//!
+//!	The target Partial may be a dummy Partial (no Breakpoints).
 //
 void
 Morpher::morphParameters( const Breakpoint & srcBkpt, const Partial & tgtPartial, 
@@ -164,12 +189,12 @@ Morpher::morphParameters( const Breakpoint & srcBkpt, const Partial & tgtPartial
 // ---------------------------------------------------------------------------
 //	morphParameters - Partial to Breakpoint
 // ---------------------------------------------------------------------------
-//	Compute morphed parameter values at the specified time, using
-//	the source Partial (whose parameters are examined at the specified 
-//	time) and the target Breakpoint (assumed to correspond exactly to 
-//	the specified time).
-//
-//	The source Partial may be a dummy Partial (no Breakpoints).
+//!	Compute morphed parameter values at the specified time, using
+//!	the source Partial (whose parameters are examined at the specified 
+//!	time) and the target Breakpoint (assumed to correspond exactly to 
+//!	the specified time).
+//!
+//!	The source Partial may be a dummy Partial (no Breakpoints).
 //
 void
 Morpher::morphParameters( const Partial & srcPartial, const Breakpoint & tgtBkpt, 
@@ -199,12 +224,12 @@ Morpher::morphParameters( const Partial & srcPartial, const Breakpoint & tgtBkpt
 // ---------------------------------------------------------------------------
 //	morphParameters - Partial to Partial
 // ---------------------------------------------------------------------------
-//	Compute morphed parameter values at the specified time, using
-//	the source  and target Partials, both of whose parameters are 
-//	examined at the specified time.
-//
-//	Either (or neither) the source or target Partial may be a dummy 
-//	Partial (no Breakpoints), but not both.
+//!	Compute morphed parameter values at the specified time, using
+//!	the source  and target Partials, both of whose parameters are 
+//!	examined at the specified time.
+//!
+//!	Either (or neither) the source or target Partial may be a dummy 
+//!	Partial (no Breakpoints), but not both.
 //
 void
 Morpher::morphParameters( const Partial & srcPartial, const Partial & tgtPartial, 
@@ -260,15 +285,15 @@ Morpher::morphParameters( const Partial & srcPartial, const Partial & tgtPartial
 // ---------------------------------------------------------------------------
 //	morphPartial
 // ---------------------------------------------------------------------------
-//	Morph a pair of Partials to yield a new morphed Partial. 
-//	Dummy Partials (having no Breakpoints) don't contribute to the
-//	morph, except to cause their opposite to fade out. 
-//	Either (or neither) the source or target Partial may be a dummy 
-//	Partial (no Breakpoints), but not both. The morphed
-//	Partial has Breakpoints at times corresponding to every Breakpoint 
-//	in both source Partials. The morphed Partial is appended
-//	to the Morpher's PartialList, and a reference to it is returned.
-//	The morphed Partial is assigned the specified label.
+//!	Morph a pair of Partials to yield a new morphed Partial. 
+//!	Dummy Partials (having no Breakpoints) don't contribute to the
+//!	morph, except to cause their opposite to fade out. 
+//!	Either (or neither) the source or target Partial may be a dummy 
+//!	Partial (no Breakpoints), but not both. The morphed
+//!	Partial has Breakpoints at times corresponding to every Breakpoint 
+//!	in both source Partials. The morphed Partial is appended
+//!	to the Morpher's PartialList, and a reference to it is returned.
+//!	The morphed Partial is assigned the specified label.
 //
 Partial &
 Morpher::morphPartial( const Partial & src, const Partial & tgt, int assignLabel )
@@ -306,19 +331,19 @@ Morpher::morphPartial( const Partial & src, const Partial & tgt, int assignLabel
 // ---------------------------------------------------------------------------
 //	crossfade
 // ---------------------------------------------------------------------------
-//	Crossfade Partials with no correspondences.
-//
-//	Unlabeled Partials (having label 0) are considered to 
-//	have no correspondences, so they are just faded out, and not 
-//	actually morphed. This is the same as morphing each with an 
-//	empty dummy Partial (having no Breakpoints). 
-//
-//	The Partials in the first range are treated as components of the 
-//	source sound, corresponding to a morph function value of 0, and  
-//	those in the second are treated as components of the target sound, 
-//	corresponding to a morph function value of 1.
-//
-//	The crossfaded Partials are stored in the Morpher's PartialList.
+//!	Crossfade Partials with no correspondences.
+//!
+//!	Unlabeled Partials (having label 0) are considered to 
+//!	have no correspondences, so they are just faded out, and not 
+//!	actually morphed. This is the same as morphing each with an 
+//!	empty dummy Partial (having no Breakpoints). 
+//!
+//!	The Partials in the first range are treated as components of the 
+//!	source sound, corresponding to a morph function value of 0, and  
+//!	those in the second are treated as components of the target sound, 
+//!	corresponding to a morph function value of 1.
+//!
+//!	The crossfaded Partials are stored in the Morpher's PartialList.
 //
 void 
 Morpher::crossfade( PartialList::const_iterator beginSrc, 
@@ -360,15 +385,15 @@ Morpher::crossfade( PartialList::const_iterator beginSrc,
 // ---------------------------------------------------------------------------
 //	morph
 // ---------------------------------------------------------------------------
-//	Morph two sounds (collections of Partials labeled to indicate
-//	correspondences) into a single labeled collection of Partials.
-//	Unlabeled Partials (having label 0) are crossfaded. The morphed
-//	and crossfaded Partials are stored in the Morpher's PartialList.
-//
-//	The Partials in the first range are treated as components of the 
-//	source sound, corresponding to a morph function value of 0, and  
-//	those in the second are treated as components of the target sound, 
-//	corresponding to a morph function value of 1.
+//!	Morph two sounds (collections of Partials labeled to indicate
+//!	correspondences) into a single labeled collection of Partials.
+//!	Unlabeled Partials (having label 0) are crossfaded. The morphed
+//!	and crossfaded Partials are stored in the Morpher's PartialList.
+//!
+//!	The Partials in the first range are treated as components of the 
+//!	source sound, corresponding to a morph function value of 0, and  
+//!	those in the second are treated as components of the target sound, 
+//!	corresponding to a morph function value of 1.
 //
 void 
 Morpher::morph( PartialList::const_iterator beginSrc, 
@@ -452,7 +477,7 @@ Morpher::morph( PartialList::const_iterator beginSrc,
 // ---------------------------------------------------------------------------
 //	setFrequencyFunction
 // ---------------------------------------------------------------------------
-//	Assign a new frequency morphing envelope to this Morpher.
+//!	Assign a new frequency morphing envelope to this Morpher.
 //
 void
 Morpher::setFrequencyFunction( const Envelope & f )
@@ -463,7 +488,7 @@ Morpher::setFrequencyFunction( const Envelope & f )
 // ---------------------------------------------------------------------------
 //	setAmplitudeFunction
 // ---------------------------------------------------------------------------
-//	Assign a new amplitude morphing envelope to this Morpher.
+//!	Assign a new amplitude morphing envelope to this Morpher.
 //
 void
 Morpher::setAmplitudeFunction( const Envelope & f )
@@ -474,7 +499,7 @@ Morpher::setAmplitudeFunction( const Envelope & f )
 // ---------------------------------------------------------------------------
 //	setBandwidthFunction
 // ---------------------------------------------------------------------------
-//	Assign a new bandwidth morphing envelope to this Morpher.
+//!	Assign a new bandwidth morphing envelope to this Morpher.
 //
 void
 Morpher::setBandwidthFunction( const Envelope & f )
@@ -485,7 +510,7 @@ Morpher::setBandwidthFunction( const Envelope & f )
 // ---------------------------------------------------------------------------
 //	frequencyFunction
 // ---------------------------------------------------------------------------
-//	Return a reference to this Morpher's frequency morphing envelope.
+//!	Return a reference to this Morpher's frequency morphing envelope.
 //
 const Envelope &
 Morpher::frequencyFunction( void ) const 
@@ -496,7 +521,7 @@ Morpher::frequencyFunction( void ) const
 // ---------------------------------------------------------------------------
 //	amplitudeFunction
 // ---------------------------------------------------------------------------
-//	Return a reference to this Morpher's amplitude morphing envelope.
+//!	Return a reference to this Morpher's amplitude morphing envelope.
 //
 const Envelope &
 Morpher::amplitudeFunction( void ) const 
@@ -507,7 +532,7 @@ Morpher::amplitudeFunction( void ) const
 // ---------------------------------------------------------------------------
 //	bandwidthFunction
 // ---------------------------------------------------------------------------
-//	Return a reference to this Morpher's bandwidth morphing envelope.
+//!	Return a reference to this Morpher's bandwidth morphing envelope.
 //
 const Envelope &
 Morpher::bandwidthFunction( void ) const 
@@ -520,7 +545,7 @@ Morpher::bandwidthFunction( void ) const
 // ---------------------------------------------------------------------------
 //	partials
 // ---------------------------------------------------------------------------
-//	Return a reference to this Morpher's list of morphed Partials.
+//!	Return a reference to this Morpher's list of morphed Partials.
 //
 PartialList & 
 Morpher::partials( void )
@@ -531,7 +556,7 @@ Morpher::partials( void )
 // ---------------------------------------------------------------------------
 //	partials
 // ---------------------------------------------------------------------------
-//	Return a const reference to this Morpher's list of morphed Partials.
+//!	Return a const reference to this Morpher's list of morphed Partials.
 //
 const PartialList & 
 Morpher::partials( void ) const 

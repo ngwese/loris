@@ -52,8 +52,51 @@
 //	begin namespace
 namespace Loris {
 
-//long Partial::DebugCounter = 0L;
+// ---------------------------------------------------------------------------
+//	class Partial
+//
+//!	@class Partial Partial.h loris/Partial.h
+//!
+//!	An instance of class Partial represents a single component in the
+//!	reassigned bandwidth-enhanced additive model. A Partial consists of a
+//!	chain of Breakpoints describing the time-varying frequency, amplitude,
+//!	and bandwidth (or noisiness) envelopes of the component, and a 4-byte
+//!	label. The Breakpoints are non-uniformly distributed in time. For more
+//!	information about Reassigned Bandwidth-Enhanced Analysis and the
+//!	Reassigned Bandwidth-Enhanced Additive Sound Model, refer to the Loris
+//!	website: www.cerlsoundgroup.org/Loris/.
+//!	
+//!	The constituent time-tagged Breakpoints are accessible through
+//!	Partial:iterator and Partial::const_iterator interfaces.
+//!	These iterator classes implement the interface for bidirectional
+//!	iterators in the STL, including pre and post-increment and decrement,
+//!	and dereferencing. Dereferencing a Partial::itertator or
+//!	Partial::const_itertator yields a reference to a Breakpoint. Additionally,
+//!	these iterator classes have breakpoint() and time() members, returning
+//!	the Breakpoint (by reference) at the current iterator position and the
+//!	time (by value) corresponding to that Breakpoint.
+//!	
+//!	Partial is a leaf class, do not subclass.
+//!
+//!	Most of the implementation of Partial delegates to a few
+//!	container-dependent members. The following members are
+//!	container-dependent, the other members are implemented in 
+//!	terms of these:
+//!		default construction
+//!		copy (construction)
+//!		operator= (assign)
+//!		operator== (equivalence)
+//!		size
+//!		insert( pos, Breakpoint )
+//!		erase( b, e )
+//!		findAfter( time )
+//!		begin (const and non-const)
+//!		end (const and non-const)
+//!		first (const and non-const)
+//!		last (const and non-const)
+//
 
+//long Partial::DebugCounter = 0L;
 
 //	comparitor for elements in Partial::container_type
 typedef Partial::container_type::value_type Partial_value_type;
@@ -85,6 +128,7 @@ bool order_by_time( const Partial_value_type & x, const Partial_value_type & y )
 // ---------------------------------------------------------------------------
 //	Partial constructor
 // ---------------------------------------------------------------------------
+//!	Retun a new empty (no Breakpoints) unlabeled Partial.
 //
 Partial::Partial( void ) :
 	_label( 0 )
@@ -95,6 +139,8 @@ Partial::Partial( void ) :
 // ---------------------------------------------------------------------------
 //	Partial initialized constructor
 // ---------------------------------------------------------------------------
+//!	Retun a new Partial from a half-open (const) iterator range 
+//!	of time, Breakpoint pairs.
 //
 Partial::Partial( const_iterator beg, const_iterator end ) :
 	_breakpoints( beg._iter, end._iter ),
@@ -106,6 +152,9 @@ Partial::Partial( const_iterator beg, const_iterator end ) :
 // ---------------------------------------------------------------------------
 //	Partial copy constructor
 // ---------------------------------------------------------------------------
+//!	Return a new Partial that is an exact copy (has an identical set
+//!	of Breakpoints, at identical times, and the same label) of another 
+//!	Partial.
 //
 Partial::Partial( const Partial & other ) :
 	_breakpoints( other._breakpoints ),
@@ -117,6 +166,7 @@ Partial::Partial( const Partial & other ) :
 // ---------------------------------------------------------------------------
 //	Partial destructor
 // ---------------------------------------------------------------------------
+//!	Destroy this Partial.
 //
 Partial::~Partial( void )
 {
@@ -126,9 +176,9 @@ Partial::~Partial( void )
 // ---------------------------------------------------------------------------
 //	operator=
 // ---------------------------------------------------------------------------
-//	Make this Partial an exact copy (has an identical set of 
-//	Breakpoints, at identical times, and the same label) of another 
-//	Partial.
+//!	Make this Partial an exact copy (has an identical set of 
+//!	Breakpoints, at identical times, and the same label) of another 
+//!	Partial.
 //
 Partial & 
 Partial::operator=( const Partial & rhs )
@@ -146,8 +196,8 @@ Partial::operator=( const Partial & rhs )
 // ---------------------------------------------------------------------------
 //	operator==
 // ---------------------------------------------------------------------------
-//	Return true if this Partial has the same label and Breakpoint map 
-//	as rhs, and false otherwise.
+//!	Return true if this Partial has the same label and Breakpoint map 
+//!	as rhs, and false otherwise.
 //
 bool
 Partial::operator==( const Partial & rhs ) const
@@ -158,16 +208,17 @@ Partial::operator==( const Partial & rhs ) const
 // ---------------------------------------------------------------------------
 //	begin
 // ---------------------------------------------------------------------------
-//	Return an iterator refering to the position of the first
-//	Breakpoint in this Partial's envelope.
+//!	Return a const iterator refering to the position of the first
+//!	Breakpoint in this Partial's envelope.
 //		
-//	For const Partials, returns a const_iterator.
-//
 Partial::const_iterator Partial::begin( void ) const 
 { 
 	return _breakpoints.begin(); 
 }
 
+//!	Return an iterator refering to the position of the first
+//!	Breakpoint in this Partial's envelope.
+//		
 Partial::iterator Partial::begin( void ) 
 { 
 	return _breakpoints.begin(); 
@@ -176,12 +227,10 @@ Partial::iterator Partial::begin( void )
 // ---------------------------------------------------------------------------
 //	end
 // ---------------------------------------------------------------------------
-//	Return an iterator refering to the position past the last
-//	Breakpoint in this Partial's envelope. The iterator returned by
-//	end() (like the iterator returned by the end() member of any STL
-//	container) does not refer to a valid Breakpoint. 	
-//
-//	For const Partials, returns a const_iterator.
+//!	Return a const iterator refering to the position past the last
+//!	Breakpoint in this Partial's envelope. The iterator returned by
+//!	end() (like the iterator returned by the end() member of any STL
+//!	container) does not refer to a valid Breakpoint. 	
 //
 Partial::const_iterator 
 Partial::end( void ) const 
@@ -189,6 +238,11 @@ Partial::end( void ) const
 	return _breakpoints.end(); 
 }
 
+//!	Return an iterator refering to the position past the last
+//!	Breakpoint in this Partial's envelope. The iterator returned by
+//!	end() (like the iterator returned by the end() member of any STL
+//!	container) does not refer to a valid Breakpoint. 	
+//
 Partial::iterator 
 Partial::end( void ) 
 { 
@@ -198,9 +252,9 @@ Partial::end( void )
 // ---------------------------------------------------------------------------
 //	erase
 // ---------------------------------------------------------------------------
-//	Breakpoint removal: erase the Breakpoints in the specified range,
-//	and return an iterator referring to the position after the,
-//	erased range.
+//!	Breakpoint removal: erase the Breakpoints in the specified range,
+//!	and return an iterator referring to the position after the,
+//!	erased range.
 //
 Partial::iterator 
 Partial::erase( Partial::iterator beg, Partial::iterator end )
@@ -212,12 +266,10 @@ Partial::erase( Partial::iterator beg, Partial::iterator end )
 // ---------------------------------------------------------------------------
 //	findAfter
 // ---------------------------------------------------------------------------
-//	Return an iterator refering to the insertion position for a
-//	Breakpoint at the specified time (that is, the position of the first
-//	Breakpoint at a time later than the specified time).
+//!	Return a const iterator refering to the insertion position for a
+//!	Breakpoint at the specified time (that is, the position of the first
+//!	Breakpoint at a time later than the specified time).
 //	
-//	For const Partials, returns a const_iterator.
-//
 Partial::const_iterator 
 Partial::findAfter( double time ) const
 {
@@ -230,6 +282,10 @@ Partial::findAfter( double time ) const
 #endif
 }
 
+//!	Return an iterator refering to the insertion position for a
+//!	Breakpoint at the specified time (that is, the position of the first
+//!	Breakpoint at a time later than the specified time).
+//	
 Partial::iterator 
 Partial::findAfter( double time ) 
 {
@@ -245,9 +301,9 @@ Partial::findAfter( double time )
 // ---------------------------------------------------------------------------
 //	insert
 // ---------------------------------------------------------------------------
-//	Breakpoint insertion: insert a copy of the specified Breakpoint in the
-//	parameter envelope at time (seconds), and return an iterator
-//	refering to the position of the inserted Breakpoint.
+//!	Breakpoint insertion: insert a copy of the specified Breakpoint in the
+//!	parameter envelope at time (seconds), and return an iterator
+//!	refering to the position of the inserted Breakpoint.
 //
 Partial::iterator 
 Partial::insert( double time, const Breakpoint & bp )
@@ -280,9 +336,19 @@ Partial::insert( double time, const Breakpoint & bp )
 }
 
 // ---------------------------------------------------------------------------
+//	numBreakpoints
+// ---------------------------------------------------------------------------
+//!	Same as size(). Return the number of Breakpoints in this Partial.
+//
+Partial::size_type 
+Partial::numBreakpoints( void ) const 
+{ 	
+	return _breakpoints.size(); 
+}
+// ---------------------------------------------------------------------------
 //	size
 // ---------------------------------------------------------------------------
-//	Return the number of Breakpoints in this Partial.
+//!	Return the number of Breakpoints in this Partial.
 //
 Partial::size_type 
 Partial::size( void ) const 
@@ -291,18 +357,30 @@ Partial::size( void ) const
 }
 
 // ---------------------------------------------------------------------------
+//	label
+// ---------------------------------------------------------------------------
+//!	Return the 32-bit label for this Partial as an integer.
+//
+Partial::label_type 
+Partial::label( void ) const 
+{ 	
+	return _label; 
+}
+
+// ---------------------------------------------------------------------------
 //	first
 // ---------------------------------------------------------------------------
-//	Return a reference to the first Breakpoint in the Partial's
-//	envelope. Raises InvalidPartial exception if there are no 
-//	Breakpoints.
+//!	Return a reference to the first Breakpoint in the Partial's
+//!	envelope. Raises InvalidPartial exception if there are no 
+//!	Breakpoints.
 //
 Breakpoint & 
 Partial::first( void )
 {
 	if ( size() == 0 )
+	{
 		Throw( InvalidPartial, "Tried find first Breakpoint in a Partial with no Breakpoints." );
-	
+	}
 #if defined(USE_VECTOR) 
 	//	see note above
 	return _breakpoints.front().second;
@@ -314,15 +392,17 @@ Partial::first( void )
 // ---------------------------------------------------------------------------
 //	first
 // ---------------------------------------------------------------------------
-//	Return a reference to the first Breakpoint in the Partial's
-//	envelope. Raises InvalidPartial exception if there are no 
-//	Breakpoints.
+//!	Return a const reference to the first Breakpoint in the Partial's
+//!	envelope. Raises InvalidPartial exception if there are no 
+//!	Breakpoints.
 //
 const Breakpoint & 
 Partial::first( void ) const
 {
 	if ( size() == 0 )
+	{
 		Throw( InvalidPartial, "Tried find first Breakpoint in a Partial with no Breakpoints." );
+	}
 #if defined(USE_VECTOR) 
 	//	see note above
 	return _breakpoints.front().second;
@@ -334,16 +414,17 @@ Partial::first( void ) const
 // ---------------------------------------------------------------------------
 //	last
 // ---------------------------------------------------------------------------
-//	Return a reference to the last Breakpoint in the Partial's
-//	envelope. Raises InvalidPartial exception if there are no 
-//	Breakpoints.
+//!	Return a reference to the last Breakpoint in the Partial's
+//!	envelope. Raises InvalidPartial exception if there are no 
+//!	Breakpoints.
 //
 Breakpoint & 
 Partial::last( void )
 {
 	if ( size() == 0 )
+	{
 		Throw( InvalidPartial, "Tried find last Breakpoint in a Partial with no Breakpoints." );
-	
+	}
 #if defined(USE_VECTOR) 
 	//	see note above
 	return _breakpoints.back().second;
@@ -355,16 +436,17 @@ Partial::last( void )
 // ---------------------------------------------------------------------------
 //	last
 // ---------------------------------------------------------------------------
-//	Return a reference to the last Breakpoint in the Partial's
-//	envelope. Raises InvalidPartial exception if there are no 
-//	Breakpoints.
+//!	Return a const reference to the last Breakpoint in the Partial's
+//!	envelope. Raises InvalidPartial exception if there are no 
+//!	Breakpoints.
 //
 const Breakpoint & 
 Partial::last( void ) const
 {
 	if ( size() == 0 )
+	{
 		Throw( InvalidPartial, "Tried find last Breakpoint in a Partial with no Breakpoints." );
-	
+	}	
 #if defined(USE_VECTOR) 
 	//	see note above
 	return _breakpoints.back().second;
@@ -378,55 +460,58 @@ Partial::last( void ) const
 // ---------------------------------------------------------------------------
 //	initialPhase
 // ---------------------------------------------------------------------------
-//	Return starting phase in radians, except (InvalidPartial) if there
-//	are no Breakpoints.
+//!	Return starting phase in radians, except (InvalidPartial) if there
+//!	are no Breakpoints.
 //
 double
 Partial::initialPhase( void ) const
 {
 	if ( numBreakpoints() == 0 )
+	{
 		Throw( InvalidPartial, "Tried find intial phase of a Partial with no Breakpoints." );
-
+	}
 	return first().phase();
 }
 
 // ---------------------------------------------------------------------------
 //	startTime
 // ---------------------------------------------------------------------------
-//	Return start time in seconds, except (InvalidPartial) if there
-//	are no Breakpoints.
+//!	Return start time in seconds, except (InvalidPartial) if there
+//!	are no Breakpoints.
 //
 double
 Partial::startTime( void ) const
 {
 	if ( numBreakpoints() == 0 )
+	{
 		Throw( InvalidPartial, "Tried find start time of a Partial with no Breakpoints." );
-
+	}
 	return begin().time();
 }
 
 // ---------------------------------------------------------------------------
 //	endTime
 // ---------------------------------------------------------------------------
-//	Return end time in seconds, except (InvalidPartial) if there
-//	are no Breakpoints.
+//!	Return end time in seconds, except (InvalidPartial) if there
+//!	are no Breakpoints.
 //
 double
 Partial::endTime( void ) const
 {
 	if ( numBreakpoints() == 0 )
+	{
 		Throw( InvalidPartial, "Tried find end time of a Partial with no Breakpoints." );
-
+	}
 	return (--end()).time();
 }
 
 // ---------------------------------------------------------------------------
 //	absorb
 // ---------------------------------------------------------------------------
-//	Absorb another Partial's energy as noise (bandwidth), 
-//	by accumulating the other's energy as noise energy
-//	in the portion of this Partial's envelope that overlaps
-//	(in time) with the other Partial's envelope.
+//!	Absorb another Partial's energy as noise (bandwidth), 
+//!	by accumulating the other's energy as noise energy
+//!	in the portion of this Partial's envelope that overlaps
+//!	(in time) with the other Partial's envelope.
 //
 void 
 Partial::absorb( const Partial & other )
@@ -450,29 +535,42 @@ Partial::absorb( const Partial & other )
 }
 
 // ---------------------------------------------------------------------------
+//	setLabel
+// ---------------------------------------------------------------------------
+//!	Set the label for this Partial to the specified 32-bit value.
+//
+void 
+Partial::setLabel( label_type l ) 
+{ 
+	_label = l; 
+}
+
+// ---------------------------------------------------------------------------
 //	duration
 // ---------------------------------------------------------------------------
-//	Return time, in seconds, spanned by this Partial, or 0. if there
-//	are no Breakpoints.
+//!	Return time, in seconds, spanned by this Partial, or 0. if there
+//!	are no Breakpoints.
 //
 double
 Partial::duration( void ) const
 {
 	if ( numBreakpoints() == 0 )
+	{
 		return 0.;
-
+	}
 	return endTime() - startTime();
 }
 
 // ---------------------------------------------------------------------------
 //	erase
 // ---------------------------------------------------------------------------
-//	Erase the Breakpoint at the position of the 
-//	given iterator (invalidating the iterator), and
-//	return an iterator referring to the next position,
-//	or end if pos is the last Breakpoint in the Partial.
+//!	Erase the Breakpoint at the position of the 
+//!	given iterator (invalidating the iterator), and
+//!	return an iterator referring to the next position,
+//!	or end if pos is the last Breakpoint in the Partial.
+//
 Partial::iterator 
-Partial::erase( Partial::iterator pos )
+Partial::erase( iterator pos )
 {
 	if ( pos != end() )
 	{
@@ -484,11 +582,11 @@ Partial::erase( Partial::iterator pos )
 // ---------------------------------------------------------------------------
 //	split
 // ---------------------------------------------------------------------------
-//	Break this Partial at the specified position (iterator).
-//	The Breakpoint at the specified position becomes the first
-//	Breakpoint in a new Partial. Breakpoints at the specified
-//	position and subsequent positions are removed from this
-//	Partial and added to the new Partial, which is returned.
+//!	Break this Partial at the specified position (iterator).
+//!	The Breakpoint at the specified position becomes the first
+//!	Breakpoint in a new Partial. Breakpoints at the specified
+//!	position and subsequent positions are removed from this
+//!	Partial and added to the new Partial, which is returned.
 //
 Partial 
 Partial::split( iterator pos )
@@ -501,10 +599,10 @@ Partial::split( iterator pos )
 // ---------------------------------------------------------------------------
 //	findNearest (const version)
 // ---------------------------------------------------------------------------
-//	Return the insertion position for the Breakpoint nearest
-//	the specified time. Always returns a valid iterator (the
-//	position of the nearest-in-time Breakpoint) unless there
-//	are no Breakpoints.
+//!	Return the insertion position for the Breakpoint nearest
+//!	the specified time. Always returns a valid iterator (the
+//!	position of the nearest-in-time Breakpoint) unless there
+//!	are no Breakpoints.
 //
 Partial::const_iterator
 Partial::findNearest( double time ) const
@@ -533,10 +631,10 @@ Partial::findNearest( double time ) const
 // ---------------------------------------------------------------------------
 //	findNearest (non-const version)
 // ---------------------------------------------------------------------------
-//	Return the insertion position for the Breakpoint nearest
-//	the specified time. Always returns a valid iterator (the
-//	position of the nearest-in-time Breakpoint) unless there
-//	are no Breakpoints.
+//!	Return the insertion position for the Breakpoint nearest
+//!	the specified time. Always returns a valid iterator (the
+//!	position of the nearest-in-time Breakpoint) unless there
+//!	are no Breakpoints.
 //
 Partial::iterator
 Partial::findNearest( double time )
@@ -565,13 +663,19 @@ Partial::findNearest( double time )
 // ---------------------------------------------------------------------------
 //	frequencyAt
 // ---------------------------------------------------------------------------
-//	
+//!	Return the interpolated frequency (in Hz) of this Partial at the
+//!	specified time. At times beyond the ends of the Partial, return
+//!	the frequency at the nearest envelope endpoint. Throw an
+//!	InvalidPartial exception if this Partial has no Breakpoints.
+//
 double
 Partial::frequencyAt( double time ) const
 {
 	if ( numBreakpoints() == 0 )
+	{
 		Throw( InvalidPartial, "Tried to interpolate a Partial with no Breakpoints." );
-
+	}
+	
 	//	lower_bound returns a reference to the lowest
 	//	position that would be higher than an element
 	//	having key equal to time:
@@ -603,19 +707,23 @@ Partial::frequencyAt( double time ) const
 // ---------------------------------------------------------------------------
 //	ShortestSafeFadeTime
 // ---------------------------------------------------------------------------
-//	Define the default fade time for computing amplitude at the ends
-//	of a Partial. Floating point round-off errors make fadeTime == 0.0
-//	dangerous and unpredictable. 1 ns is short enough to prevent rounding
-//	errors in the least significant bit of a 48-bit mantissa for times
-//	up to ten hours.
+//!	Define the default fade time for computing amplitude at the ends
+//!	of a Partial. Floating point round-off errors make fadeTime == 0.0
+//!	dangerous and unpredictable. 1 ns is short enough to prevent rounding
+//!	errors in the least significant bit of a 48-bit mantissa for times
+//!	up to ten hours.
 //
 const double Partial::ShortestSafeFadeTime = 1.0E-9;
 
 // ---------------------------------------------------------------------------
 //	amplitudeAt
 // ---------------------------------------------------------------------------
-//	The default fadeTime is ShortestSafeFadeTime.
-//
+//!	Return the interpolated amplitude of this Partial at the
+//!	specified time. Throw an InvalidPartial exception if this 
+//!	Partial has no Breakpoints. If non-zero fadeTime is specified, 
+//!	then the amplitude at the ends of the Partial is coomputed using
+//!	a linear fade. The default fadeTime is ShortestSafeFadeTime,
+//!	see the definition of ShortestSafeFadeTime, above.
 //	
 double
 Partial::amplitudeAt( double time, double fadeTime ) const
@@ -667,12 +775,20 @@ Partial::amplitudeAt( double time, double fadeTime ) const
 // ---------------------------------------------------------------------------
 //	phaseAt
 // ---------------------------------------------------------------------------
+//!	Return the interpolated phase (in radians) of this Partial at
+//!	the specified time. At times beyond the ends of the Partial,
+//!	return the extrapolated from the nearest envelope endpoint
+//!	(assuming constant frequency, as reported by frequencyAt()).
+//!	Throw an InvalidPartial exception if this Partial has no
+//!	Breakpoints.
 //	
 double
 Partial::phaseAt( double time ) const
 {
 	if ( numBreakpoints() == 0 )
+	{
 		Throw( InvalidPartial, "Tried to interpolate a Partial with no Breakpoints." );
+	}
 	
 	//	findAfter returns the position of the earliest
 	//	Breakpoint later than time, or the end
@@ -727,12 +843,19 @@ Partial::phaseAt( double time ) const
 // ---------------------------------------------------------------------------
 //	bandwidthAt
 // ---------------------------------------------------------------------------
+//!	Return the interpolated bandwidth (noisiness) coefficient of
+//!	this Partial at the specified time. At times beyond the ends of
+//!	the Partial, return the bandwidth coefficient at the nearest
+//!	envelope endpoint. Throw an InvalidPartial exception if this
+//!	Partial has no Breakpoints.
 //	
 double
 Partial::bandwidthAt( double time ) const
 {
 	if ( numBreakpoints() == 0 )
+	{
 		Throw( InvalidPartial, "Tried to interpolate a Partial with no Breakpoints." );
+	}
 	
 	//	findAfter returns the position of the earliest
 	//	Breakpoint later than time, or the end
@@ -765,17 +888,22 @@ Partial::bandwidthAt( double time ) const
 // ---------------------------------------------------------------------------
 //	parametersAt
 // ---------------------------------------------------------------------------
-//	Return a Breakpoint representing the state of all four envelopes
-//	at the specified time. This saves having to search four times when 
-//	all four parameters are needed.
-//
-//	The default fadeTime is ShortestSafeFadeTime.
+//!	Return the interpolated parameters of this Partial at
+//!	the specified time, same as building a Breakpoint from
+//!	the results of frequencyAt, ampitudeAt, bandwidthAt, and
+//!	phaseAt, but performs only one Breakpoint envelope search.
+//!	Throw an InvalidPartial exception if this Partial has no
+//!	Breakpoints. If non-zero fadeTime is specified, then the
+//!	amplitude at the ends of the Partial is coomputed using a 
+//!	linear fade. The default fadeTime is ShortestSafeFadeTime.
 //
 Breakpoint
 Partial::parametersAt( double time, double fadeTime ) const 
 {
 	if ( numBreakpoints() == 0 )
+	{
 		Throw( InvalidPartial, "Tried to interpolate a Partial with no Breakpoints." );
+	}
 	
 	//	findAfter returns the position of the earliest
 	//	Breakpoint later than time, or the end

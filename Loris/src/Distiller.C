@@ -50,33 +50,71 @@
 
 //	begin namespace
 namespace Loris {
+	
+// ---------------------------------------------------------------------------
+//	class Distiller
+//
+//!	@class Distiller Distiller.h loris/Distiller.h
+//!
+//!	Class Distiller represents an algorithm for "distilling" a group of
+//!	Partials that logically represent a single component into a single
+//!	Partial.
+//!	
+//!	The sound morphing algorithm in Loris requires that Partials in a
+//!	given source be labeled uniquely, that is, no two Partials can have
+//!	the same label. The Distiller enforces this condition. All Partials
+//!	identified with a particular frequency channel (see Channelizer), and,
+//!	therefore, having a common label, are distilled into a single Partial,
+//!	leaving at most a single Partial per frequency channel and label.
+//!	Channels that contain no Partials are not represented in the distilled
+//!	data. Partials that are not labeled, that is, Partials having label 0,
+//!	are are "collated " into groups of non-overlapping (in time)
+//! 	Partials, assigned an unused label (greater than the label associated
+//! 	with any frequency channel), and fused into a single Partial per
+//! 	group. "Collating" is a bit like "sifting" but non-overlapping
+//! 	Partials are grouped without regard to frequency proximity. This
+//! 	algorithm produces the smallest-possible number of collated Partials.
+//! 	Thanks to Ulrike Axen for providing this optimal algorithm.
+//!	
+//!	Distillation modifies the Partial container (a PartialList). All
+//!	Partials in the distilled range having a common label are replaced by
+//!	a single Partial in the distillation process.
+//
+
 
 //	helper function prototypes:
-static Partial distillOne( PartialList & partials, int label, double fadeTime, double gapTime = 0 );
-static void collateUnlabeled( PartialList & partials, int startLabel, double fadeTime, double gapTime = 0 );
+static Partial distillOne( PartialList & partials, int label,  
+						  double fadeTime, double gapTime = 0 );
+static void collateUnlabeled( PartialList & partials, int startLabel, 
+							double fadeTime, double gapTime = 0 );
 
 // ---------------------------------------------------------------------------
 //	Distiller constructor
 // ---------------------------------------------------------------------------
-//	By default, use a Partial fade time equal to 1 ms. This is the time over
-//	which a Partial that is the distillation of two non-overlapping Partials
-//	fades out at the end of one Partial, and in again at the beginning of the
-//	other.
-//
-//	By default, the gap time, the additional time over which a Partial faded
-//	out must remain at zero amplitude before it can fade back in, is 0.
+//!	Construct a new Distiller using the specified fade time
+//!	for gaps between Partials. When two non-overlapping Partials
+//!	are distilled into a single Partial, the distilled Partial
+//!	fades out at the end of the earlier Partial and back in again
+//!	at the onset of the later one. The fade time is the time over
+//!	which these fades occur. By default, use a 1 ms fade time.
+//!	The gap time is the additional time over which a Partial faded
+//!	out must remain at zero amplitude before it can fade back in.
+//!	By default, use a gap time of 0.
 //
 Distiller::Distiller( double partialFadeTime, double partialSilentTime ) :
 	_fadeTime( partialFadeTime ),
 	_gapTime( partialSilentTime )
 {
 	if( _fadeTime < 0.0 )
+	{
 		Throw( InvalidArgument, "Distiller fade time must be non-negative." );
+	}
 }
 
 // ---------------------------------------------------------------------------
 //	Distiller destructor
 // ---------------------------------------------------------------------------
+//!	Destroy this distiller.
 //
 Distiller::~Distiller( void )
 {
@@ -85,17 +123,17 @@ Distiller::~Distiller( void )
 // ---------------------------------------------------------------------------
 //	distill
 // ---------------------------------------------------------------------------
-//	Distill labeled Partials in a list into a list containing a single 
-//	Partial per non-zero label. The distilled list will contain as many 
-//	Partials as there were non-zero labels in the original list.
-//
-//	Unlabeled (zero-labeled) Partials are collated into the smallest-possible 
-//	number of Partials that does not combine any overlapping Partials.
-//	Collated Partials assigned labels higher than any label in the original 
-//	list, and appear at the end of the distilled PartialList.
-//
-//	Return an iterator refering to the position of the first collated Partial,
-//	of the end of the distilled list if there are no collated Partials.
+//!	Distill labeled Partials in a list into a list containing a single 
+//!	Partial per non-zero label. The distilled list will contain as many 
+//!	Partials as there were non-zero labels in the original list.
+//!
+//!	Unlabeled (zero-labeled) Partials are collated into the smallest-possible 
+//!	number of Partials that does not combine any overlapping Partials.
+//!	Collated Partials assigned labels higher than any label in the original 
+//!	list, and appear at the end of the distilled PartialList.
+//!
+//!	Return an iterator refering to the position of the first collated Partial,
+//!	of the end of the distilled list if there are no collated Partials.
 //
 PartialList::iterator 
 Distiller::distill( PartialList & partials ) 

@@ -52,19 +52,18 @@ class Envelope
 //	-- public interface --
 public:
 //	-- construction --
+
+	//! 	Destroy this Envelope (virtual to allow subclassing).
 	virtual ~Envelope( void );
-	/* 	Destroy this Envelope (virtual to allow subclassing).
-	 */
 
 //	-- Envelope interface --
+
+	//!	Return an exact copy of this Envelope (following the Prototype
+	//!	pattern).
 	virtual Envelope * clone( void ) const = 0;
-	/*	Return an exact copy of this Envelope (following the Prototype
-		pattern).
-	 */
-	 
+
+	//!	Return the value of this Envelope at the specified time. 	 
 	virtual double valueAt( double x ) const = 0;	
-	/*	Return the value of this Envelope at the specified time. 
-	 */
 	
 //	-- protected interface --
 protected:

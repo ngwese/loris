@@ -38,7 +38,6 @@
 //	begin namespace
 namespace Loris {
 
-
 // ---------------------------------------------------------------------------
 //	class Distiller
 //
@@ -74,44 +73,45 @@ class Distiller
 //	-- public interface --
 public:
 //	-- construction --
-	explicit Distiller( double partialFadeTime = 0.001 /* 1 ms */,
-						double partialSilentTime = 0. );
-	/*	Construct a new Distiller using the specified fade time
-		for gaps between Partials. When two non-overlapping Partials
-		are distilled into a single Partial, the distilled Partial
-		fades out at the end of the earlier Partial and back in again
-		at the onset of the later one. The fade time is the time over
-		which these fades occur. By default, use a 1 ms fade time.
-		The gap time is the additional time over which a Partial faded
-		out must remain at zero amplitude before it can fade back in.
-		By default, use a gap time of 0.
-	 */
+
+	//	Construct a new Distiller using the specified fade time
+	//	for gaps between Partials. When two non-overlapping Partials
+	//	are distilled into a single Partial, the distilled Partial
+	//	fades out at the end of the earlier Partial and back in again
+	//	at the onset of the later one. The fade time is the time over
+	//	which these fades occur. By default, use a 1 ms fade time.
+	//	The gap time is the additional time over which a Partial faded
+	//	out must remain at zero amplitude before it can fade back in.
+	//	By default, use a gap time of 0.
+	Distiller( double partialFadeTime = 0.001 /* 1 ms */,
+			  double partialSilentTime = 0. );
 	 
+	//	Destroy this Distiller.
 	~Distiller( void );
-	/*	Destroy this Distiller.
-	 */
 	
 //	-- distillation --
+
+	//	Distill labeled Partials in a PartialList into a list containing a single 
+	//	Partial per non-zero label. The distilled list will contain as many 
+	//	Partials as there were non-zero labels in the original list.
+	//
+	//	Unlabeled (zero-labeled) Partials are collated into the smallest-possible 
+	//	number of Partials that does not combine any overlapping Partials.
+	//	Collated Partials assigned labels higher than any label in the original 
+	//	list, and appear at the end of the distilled PartialList.
+	//
+	//	Return an iterator refering to the position of the first collated Partial,
+	//	of the end of the distilled list if there are no collated Partials.
 	PartialList::iterator distill( PartialList & container );
-	/*	Distill labeled Partials in a PartialList into a list containing a single 
-		Partial per non-zero label. The distilled list will contain as many 
-		Partials as there were non-zero labels in the original list.
 
-		Unlabeled (zero-labeled) Partials are collated into the smallest-possible 
-		number of Partials that does not combine any overlapping Partials.
-		Collated Partials assigned labels higher than any label in the original 
-		list, and appear at the end of the distilled PartialList.
-	
-		Return an iterator refering to the position of the first collated Partial,
-		of the end of the distilled list if there are no collated Partials.
-	 */
-
+	//!	Function call operator: same as distill( PartialList & container ).
 	PartialList::iterator operator() ( PartialList & container )
 		{ return distill( container ); }
-	/*	Function call operator: same as distill( PartialList & container ).
-	 */
 
 // -- deprecated distill-range members, don't use! --
+
+	//	Distill Partial on the specified half-open (STL-style) range in the
+	//	specified container (PartialList). 
 	void distill( PartialList & container, PartialList::iterator dist_begin, 
 				  PartialList::iterator dist_end )
 		{ 
@@ -122,16 +122,12 @@ public:
 			container.erase( dist_begin, dist_end );
 			container.splice( dist_end, l );
 		} 
-	/*	Distill Partial on the specified half-open (STL-style) range in the
-		specified container (PartialList). 
-	 */
 
+	//	Function call operator: same as distill( PartialList & container,
+	//	PartialList::iterator dist_begin, PartialList::iterator dist_end ).
 	void operator() ( PartialList & container, PartialList::iterator dist_begin, 
 					  PartialList::iterator dist_end )
 		{ distill( container, dist_begin, dist_end ); }
-	/*	Function call operator: same as distill( PartialList & container,
-		PartialList::iterator dist_begin, PartialList::iterator dist_end ).
-	 */
 
 //	-- unimplemented --
 private:
