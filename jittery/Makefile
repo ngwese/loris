@@ -1,16 +1,19 @@
+#! make
+
+# LORIS = /Volumes/Buddha/Loris
+# need to define LORIS, the directory where Loris lives.
+
 Loris_Objects = AiffFile.o Breakpoint.o BreakpointEnvelope.o \
 	BreakpointUtils.o Endian.o Envelope.o Exception.o \
 	Filter.o  Notifier.o Partial.o \
 	PartialUtils.o SdifFile.o \
 	SpcFile.o ieee.o
 	
-Loris_Dir = /Volumes/Buddha/Loris
-
 New_Objects = JitterySynthesizer.o NoiseGenerator.o ODonnellOscil.o 
 
 CC = g++
 cc = gcc
-CC_FLAGS = -I. -I$(Loris_Dir) -I$(Loris_Dir)/classes -DHAVE_CONFIG_H
+CC_FLAGS = -I. -I$(LORIS) -I$(LORIS)/classes -DHAVE_CONFIG_H
 LD_FLAGS = -L/sw/lib -L/usr/local/lib -lfftw -lsdif
 
 .SUFFIXES: .c++ .o
@@ -18,43 +21,43 @@ LD_FLAGS = -L/sw/lib -L/usr/local/lib -lfftw -lsdif
 test_jitter: jitterMain.o $(Loris_Objects) $(New_Objects)
 	$(CC) -o $@ jitterMain.o $(Loris_Objects) $(New_Objects) $(LD_FLAGS)
 
-AiffFile.o: $(Loris_Dir)/classes/AiffFile.c++
+AiffFile.o: $(LORIS)/classes/AiffFile.c++
 	$(CC) $(CC_FLAGS) -c -o $@ $<
 
-Breakpoint.o: $(Loris_Dir)/classes/Breakpoint.c++
+Breakpoint.o: $(LORIS)/classes/Breakpoint.c++
 	$(CC) $(CC_FLAGS) -c -o $@ $<
 
-BreakpointEnvelope.o: $(Loris_Dir)/classes/BreakpointEnvelope.c++
+BreakpointEnvelope.o: $(LORIS)/classes/BreakpointEnvelope.c++
 	$(CC) $(CC_FLAGS) -c -o $@ $<
 
-BreakpointUtils.o: $(Loris_Dir)/classes/BreakpointUtils.c++
+BreakpointUtils.o: $(LORIS)/classes/BreakpointUtils.c++
 	$(CC) $(CC_FLAGS) -c -o $@ $<
 
-Endian.o: $(Loris_Dir)/classes/Endian.c++
+Endian.o: $(LORIS)/classes/Endian.c++
 	$(CC) $(CC_FLAGS) -c -o $@ $<
 
-Envelope.o: $(Loris_Dir)/classes/Envelope.c++
+Envelope.o: $(LORIS)/classes/Envelope.c++
 	$(CC) $(CC_FLAGS) -c -o $@ $<
 
-Exception.o: $(Loris_Dir)/classes/Exception.c++
+Exception.o: $(LORIS)/classes/Exception.c++
 	$(CC) $(CC_FLAGS) -c -o $@ $<
 
-Filter.o: $(Loris_Dir)/classes/Filter.c++
+Filter.o: $(LORIS)/classes/Filter.c++
 	$(CC) $(CC_FLAGS) -c -o $@ $<
  
-Notifier.o: $(Loris_Dir)/classes/Notifier.c++
+Notifier.o: $(LORIS)/classes/Notifier.c++
 	$(CC) $(CC_FLAGS) -c -o $@ $<
 
-Partial.o: $(Loris_Dir)/classes/Partial.c++
+Partial.o: $(LORIS)/classes/Partial.c++
 	$(CC) $(CC_FLAGS) -c -o $@ $<
 
-PartialUtils.o: $(Loris_Dir)/classes/PartialUtils.c++
+PartialUtils.o: $(LORIS)/classes/PartialUtils.c++
 	$(CC) $(CC_FLAGS) -c -o $@ $<
 
-SdifFile.o: $(Loris_Dir)/classes/SdifFile.c++
+SdifFile.o: $(LORIS)/classes/SdifFile.c++
 	$(CC) $(CC_FLAGS) -c -o $@ $<
 
-SpcFile.o: $(Loris_Dir)/classes/SpcFile.c++
+SpcFile.o: $(LORIS)/classes/SpcFile.c++
 	$(CC) $(CC_FLAGS) -c -o $@ $<
 
 JitterySynthesizer.o: JitterySynthesizer.c++
@@ -66,7 +69,7 @@ NoiseGenerator.o: NoiseGenerator.c++
 ODonnellOscil.o: ODonnellOscil.c++
 	$(CC) $(CC_FLAGS) -c -o $@ $<
 
-ieee.o: $(Loris_Dir)/classes/ieee.c
+ieee.o: $(LORIS)/classes/ieee.c
 	$(cc) $(CC_FLAGS) -c -o $@ $<
 	
 .c++.o:

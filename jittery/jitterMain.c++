@@ -24,10 +24,16 @@
 #include <SdifFile.h>
 #include <SpcFile.h>
 
-#if defined(__MWERKS__) && __ide_target("Original")
+#define JITTER
+#if defined(__MWERKS__) 
+#if __ide_target("Original")
+#undef JITTER
+#endif
+#endif
+
+#if !defined( JITTER )
 	#include <Synthesizer.h>
 #else
-	#define JITTER
 	#include <ODonnellOscil.h>
 	#include <JitterySynthesizer.h> 
 #endif

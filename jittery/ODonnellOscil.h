@@ -137,8 +137,8 @@ public:
 	 
 //	-- helpers --
 private:
-	void updateCoherentPM( double gain, double coherence, int partialNum );
-	void updateIncoherentPM( double gain, double coherence );
+	void updateCoherentPM( double gain, double coherence, double partialNumScale );
+	void updateIncoherentPM( double gain, double coherence, double partialNumScale = 1.0 );
 	 
 };	//	end of class Oscillator
 

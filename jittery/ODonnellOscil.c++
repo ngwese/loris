@@ -300,7 +300,14 @@ Oscillator::oscillate( double * begin, double * end,
 		//	modulation due to jitter:
 		updateCoherentPM( i_jitter, i_coherence, partialNum );
 		updateIncoherentPM( i_jitter, i_coherence );
-				
+		
+		// 	use these two lines instead to try scaling by frequency 
+		//	instead of hramonic number:
+		/*
+		updateCoherentPM( i_jitter, i_coherence, i_frequency );
+		updateIncoherentPM( i_jitter, i_coherence, i_frequency );
+		*/
+			
 		//	update the instantaneous oscillator state:
 		determ_phase += i_frequency;	//	frequency is radians per sample
 		i_frequency += dFreq;
@@ -334,21 +341,22 @@ Oscillator::oscillate( double * begin, double * end,
 //	updateCoherentPM
 // ---------------------------------------------------------------------------
 void
-Oscillator::updateCoherentPM( double gain, double coherence, int partialNum )
+Oscillator::updateCoherentPM( double gain, double coherence, double partialNumScale )
 {
-	pm_coherent += partialNum * gain * coherence * coherentJitter();
+	pm_coherent += partialNumScale * gain * coherence * coherentJitter();
 	pm_coherent = m2pi( pm_coherent );
 }
 
 // ---------------------------------------------------------------------------
 //	updateIncoherentPM
 // ---------------------------------------------------------------------------
+//	partialNumScale defaults to 1.0
 void
-Oscillator::updateIncoherentPM( double gain, double coherence )
+Oscillator::updateIncoherentPM( double gain, double coherence, double partialNumScale )
 {
 	using namespace std;
 	pm_incoherent = sqrt( 1. - (coherence*coherence) ) *
-					m2pi( pm_incoherent + ( gain * incoherentJitter() ) );
+					m2pi( pm_incoherent + ( partialNumScale * gain * incoherentJitter() ) );
 	
 }
 
