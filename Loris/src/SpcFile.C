@@ -39,13 +39,12 @@ Begin_Namespace( Loris )
 // ---------------------------------------------------------------------------
 //
 SpcFile::SpcFile( int pars, int startf, int endf, 
-				double rate, double midiPitch, int firstNoisePar ) :
+				double rate, double midiPitch ) :
 	_partials( pars ),
 	_startFrame( startf ),
 	_endFrame( endf ),
 	_rate( rate ),
 	_midiPitch( midiPitch ),
-	_firstNoisePar( firstNoisePar ),
 	_susFrame( 0 ),
 	_rlsFrame( 0 )
 {
@@ -76,7 +75,7 @@ SpcFile::setMarkers( double susTime, double rlsTime )
 // The plist should be labeled and distilled before this is called.
 //
 void
-SpcFile::write( BinaryFile & file, const list<Partial> & plist )
+SpcFile::write( BinaryFile & file, const list<Partial> & plist, int refLabel )
 {
 	
 	try {
@@ -92,7 +91,7 @@ SpcFile::write( BinaryFile & file, const list<Partial> & plist )
 		if (_susFrame && _rlsFrame)
 			writeMarker( file );
 		writeSosEnvelopesChunk( file );
-		writeEnvelopeData( file, plist );
+		writeEnvelopeData( file, plist, refLabel );
 	}
 	catch ( Exception & ex ) {
 		ex.append("Failed to write SPC file.");
@@ -107,7 +106,7 @@ SpcFile::write( BinaryFile & file, const list<Partial> & plist )
 // ---------------------------------------------------------------------------
 //
 void
-SpcFile::writeEnvelopeData( BinaryFile & file, const list<Partial> & plist )
+SpcFile::writeEnvelopeData( BinaryFile & file, const list<Partial> & plist, int refLabel )
 {
 	//	first build a Sound Data chunk, so that all the data sizes will 
 	//	be correct:
@@ -128,7 +127,7 @@ SpcFile::writeEnvelopeData( BinaryFile & file, const list<Partial> & plist )
 		file.write( ck.offset );
 		file.write( ck.blockSize );
 
-		writeEnvelopes( file, plist );
+		writeEnvelopes( file, plist, refLabel );
 	}
 	catch( FileIOException & ex ) {
 		ex.append("Failed to write SPC file SoundData chunk.");
@@ -143,19 +142,17 @@ SpcFile::writeEnvelopeData( BinaryFile & file, const list<Partial> & plist )
 //	The plist should be labeled and distilled before this is called.
 //
 void
-SpcFile::writeEnvelopes( BinaryFile & file, const list<Partial> & plist )
+SpcFile::writeEnvelopes( BinaryFile & file, const list<Partial> & plist, int refLabel )
 {	
 	double freqMult;				// frequency multiplier for partial	
 	double ampMult;					// frequency multiplier for partial	
+	double noiseMagMult;			// noise magnitude multiplier for partial
 	pcm_sample left,right;			// packed value for left, right channel in spc file
 	
-	//	find reference partial label:
-	//	the reference partial is used to fill in frequency data for missing partials.
-	uint refLabel = findRefPartial( plist );
 	Assert( refLabel != 0 );
 
 	// write out one frame at a time:
-	for (ulong frame = _startFrame; frame <= _endFrame; ++frame ) {
+	for (long frame = _startFrame; frame <= _endFrame; ++frame ) {
 	
 		//	for each frame, write one value for every partial:
 		for (uint label = 1; label <= _partials; ++label ) {
@@ -168,13 +165,11 @@ SpcFile::writeEnvelopes( BinaryFile & file, const list<Partial> & plist )
 				pcorrect = select( plist, refLabel );
 				freqMult = (double) label / (double) refLabel; 
 				ampMult = 0;
+				noiseMagMult = 1.0;
 				Assert( pcorrect != Null && pcorrect->begin() != pcorrect->end());
 			} else {
-				freqMult = ampMult = 1.0;
+				freqMult = ampMult = noiseMagMult = 1.0;
 			}
-			
-			// Zero out noise magnitude for low partial numbers.
-			double noiseMagMult = (label >= _firstNoisePar) ? 1.0 : 0.0;
 
 			//	pack log amplitude and log frequency into left:
 			left.s32bits = packLeft(*pcorrect, freqMult, ampMult, frame * _rate);
@@ -196,24 +191,6 @@ SpcFile::writeEnvelopes( BinaryFile & file, const list<Partial> & plist )
 
 #pragma mark -
 #pragma mark envelope writing helpers
-// ---------------------------------------------------------------------------
-//	findRefPartial
-// ---------------------------------------------------------------------------
-//	The plist should be labeled and distilled before this is called.
-//	Find the lowest labeled partial.
-//
-int
-SpcFile::findRefPartial( const list<Partial> & plist )
-{	
-	for (uint label = 1; label <= _partials; ++label ) {
-		// return if we can find a partial with this label:
-		const Partial * refpar = select( plist, label );
-		if ( refpar != Null && refpar->begin() != refpar->end() )
-			return label;
-	}
-
-	return 0;		// no labaled partial was found
-}
 
 // ---------------------------------------------------------------------------
 //	envLog( )

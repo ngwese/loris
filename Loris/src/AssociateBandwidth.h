@@ -118,9 +118,9 @@ public:
 	{
 		double freq = s.frequency();
 		double amp = s.amplitude();
-		//distribute( freq, amp * amp, _sinusoidalEnergy  );
-		//distribute( freq, 1., _weights );
-		ohBaby( freq, amp );
+		if ( freq > 0. ) {
+			ohBaby( freq, amp );
+		}
 	}
 	
 	//	bandwidth assocation:
@@ -137,9 +137,11 @@ public:
 			//double amp = b->amplitude();
 			//double e = amp * amp;
 			
-			//	compute noise to add:
-			double noise = computeNoiseEnergy( freq, surplus );
-			b->addNoise( noise );
+			if ( freq > 0 ) {
+				//	compute noise to add:
+				double noise = computeNoiseEnergy( freq, surplus );
+				b->addNoise( noise );
+			}
 			
 			//	next:
 			++b;

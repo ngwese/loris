@@ -88,7 +88,7 @@ Distiller::distill( const list<Partial>::const_iterator start,
 	for ( list<Partial>::const_iterator it = start; it != end; ++it ) {
 		distillOne( *it, newp, start, end );
 	}
-	
+
 	//	add the newly-distilled partial to the collection:
 	_partials.push_back( newp );
 	return _partials.back();
@@ -142,7 +142,7 @@ Distiller::distillOne( const Partial & src, Partial & dest,
 			//	by bp at the time of bp, then break out of
 			//	this loop, this Breakpoint will not be part of 
 			//	the distilled Partial.
-			double a = (*start).amplitudeAt( pIter.time() );
+			double a = it->amplitudeAt( pIter.time() );
 			if ( a > pIter.amplitude() ) {
 				break;	
 			}
@@ -182,7 +182,7 @@ Distiller::distillOne( const Partial & src, Partial & dest,
 			//	fade in, but don't insert Breakpoints at
 			//	times before zero:
 			if ( pIter.time() == pIter.startTime() && 
-				 pIter.time() > 0.001 && 
+				 pIter.time() > _fadeTime && 
 				 gapAt( pIter.time() - _fadeTime, start, end ) ) {
 				Breakpoint zeroPt( pIter.frequency(), 0., pIter.bandwidth(), 
 								   src.phaseAt( pIter.time() - _fadeTime ) );

@@ -325,6 +325,7 @@ AiffFile::readSamples( BinaryFile & file )
 		case 32:
 			for (ulong i = 0; i < _samples.size(); ++i ) {
 				//	read the sample:
+				z.s32bits = 0;
 				file.read( z.s32bits );
 				
 				//	convert to double:
@@ -334,6 +335,7 @@ AiffFile::readSamples( BinaryFile & file )
 		case 24:
 			for (ulong i = 0; i < _samples.size(); ++i ) {
 				//	read the sample:
+				z.s32bits = 0;
 				file.read( z.s24bits );
 				
 				//	convert to double:
@@ -343,6 +345,7 @@ AiffFile::readSamples( BinaryFile & file )
 		case 16:
 			for (ulong i = 0; i < _samples.size(); ++i ) {
 				//	read the sample:
+				z.s32bits = 0;
 				file.read( z.s16bits );
 				
 				//	convert to double:
@@ -352,6 +355,7 @@ AiffFile::readSamples( BinaryFile & file )
 		case 8:
 			for (ulong i = 0; i < _samples.size(); ++i ) {
 				//	read the sample:
+				z.s32bits = 0;
 				file.read( z.s8bits );
 				
 				//	convert to double:

@@ -33,8 +33,7 @@ class SpcFile
 {
 public:
 //	construction:
-	SpcFile( int pars, int startFrame, int endFrame, 
-			 double rate, double tuning, int firstNoisePar );
+	SpcFile( int pars, int startFrame, int endFrame, double rate, double tuning );
 	
 //	defaults destructor is okay:
 	//	~SosFile( void );
@@ -43,7 +42,7 @@ public:
 	void setMarkers( double susTime, double releaseTime );
 	
 //	writing:
-	void write( BinaryFile & file,  const std::list<Partial> & plist );
+	void write( BinaryFile & file,  const std::list<Partial> & plist, int refLabel );
 	
 //	-- chunk types --
 private:
@@ -161,8 +160,8 @@ private:
 //	-- helpers --
 	
 	//	envelopes writing:
-	void writeEnvelopeData( BinaryFile & file, const std::list<Partial> & plist );
-	void writeEnvelopes( BinaryFile & file, const std::list<Partial> & plist );
+	void writeEnvelopeData( BinaryFile & file, const std::list<Partial> & plist, int refLabel );
+	void writeEnvelopes( BinaryFile & file, const std::list<Partial> & plist, int refLabel );
 	
 	//	envelope writing helpers:
 	int findRefPartial( const std::list<Partial> & plist );
@@ -188,11 +187,10 @@ private:
 	
 //	-- instance variables --
 	int _partials;					// number of partials
-	int _startFrame;				// first frame number to write to file
+	int _startFrame;					// first frame number to write to file
 	int _endFrame;					// last frame number to write to file
 	double _rate;					// frame rate in seconds
 	double _midiPitch;				// midi note number
-	double _firstNoisePar;			// ignore bandwidth below this partial
 	int _susFrame, _rlsFrame;		// frame numbers for sustain and release start
 
 };	//	end of class SosFile

@@ -12,6 +12,7 @@
 #include "Partial.h"
 #include "ReassignedSpectrum.h"
 #include "AssociateBandwidth.h"
+#include "Notifier.h"
 #include <list>
 #include <vector>
 #include <memory>
@@ -67,6 +68,7 @@ private:
 		//	construction:
 		Peak( double f, double a, double b, double p, double t ) : 
 			_time( t ), Breakpoint( f, a, b, p ) {}
+		
 		Peak( void ) : _time( 0. ), Breakpoint() {}
 		//	access:
 		double time( void ) const { return _time; }
