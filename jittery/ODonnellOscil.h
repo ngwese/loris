@@ -34,15 +34,12 @@
  */
 
 #include <NoiseGenerator.h>
-
 #include <vector>
 
 //	begin namespace
 namespace Loris {
 
 class Breakpoint;
-class Envelope;
-class Partial;
 
 // ---------------------------------------------------------------------------
 //	class Oscillator
@@ -70,10 +67,6 @@ class Oscillator
 	NoiseGenerator coherentJitter;
 	NoiseGenerator incoherentJitter;
 	
-	//	jitter envelopes:
-	//Envelope & jitterGain;
-	//Envelope & jitterCoherence;
-	
 	//	instantaneous oscillator state:
 	double i_frequency;	//	radians per sample
 	double i_amplitude;	//	absolute
@@ -87,18 +80,9 @@ class Oscillator
 	double determ_phase;	//	deterministic phase in radians
 							//	(does not include modulation due to jitter)
 
-	//double fadeTime;
-	//double sampleRate;
-
 //	--- interface ---
 public:
 //	--- construction --_
-	//Oscillator( double radf, double a, double bw, double ph );
-	/*	Construct a new Oscillator with the initial state parameters 
-		(radian frequency, amplitude, bandwidth coefficient, and phase)
-		as specified.
-	 */
-	 
 	Oscillator( void );
 	/*	Construct a new Oscillator with all state parameters initialized
 		to 0.
@@ -151,65 +135,6 @@ public:
 		checked to prevent aliasing and bogus bandwidth enhancement.
 	 */
 
-#if 0	  
-//	-- state access --
-	double amplitude( void ) const { return i_amplitude; }
-	/* Return the current instantaneous amplitude of this Oscillator.
-	 */
-	 
-	double bandwidth( void ) const { return i_bandwidth; }
-	/*	Return the current instantaneous bandwidth coefficient of this
-		Oscillator.
-	 */
-	 
-	double phase( void ) const { return determ_phase; }
-	/*	Return the current instantaneous phase of this Oscillator.
-	 */
-	 
-	double radianFreq( void ) const { return i_frequency; }
-	/*	Return the current instantaneous frequency (in radians per sample)
-		of this Oscillator.	
-	 */
-	 
-//	-- state mutation --
-	void setAmplitude( double x ) { i_amplitude = x; }
-	/* 	Set the instantaneous amplitude of this Oscillator.
-	 */
-	 
-	void setBandwidth( double x ) { i_bandwidth = x; }
-	/* 	Set the instantaneous bandwidth coefficient of this Oscillator.
-	 */
-	 
-	void setPhase( double x ) { determ_phase = x; }
-	/*	Set the instantaneous phase of this Oscillator.
-	 */
-	 
-	void setRadianFreq( double x ) { i_frequency = x; }
-	/*	Set the instantaneous frequency (in radians per sample) 
-		of this Oscillator.
-	 */
-	 
-//	-- sample generation --
-	void generateSamples( double * begin, double * end,
-						  double targetFreq, double targetAmp, double targetBw,
-						  double targetJitter = 0, double targetCoherence = 0, int partialNum = 0 );
-	/*	Accumulate bandwidth-enhanced sinusoidal samples modulating the
-		oscillator state from its current values of radian frequency, amplitude,
-		and bandwidth to the specified target values. Accumulate samples into
-		the half-open (STL-style) range of doubles, starting at begin, and
-		ending before end (no sample is accumulated at end). The caller must
-		insure that the indices are valid. Target frequency and bandwidth are
-		checked to prevent aliasing and bogus bandwidth enhancement.
-	 */
-	 
-#endif	 
-	 // void oscillate( const Partial & p, double * begin, double * end );
-	 
-	 
-//	-- jitter modulator configuration --
-	 //void resetState( const Partial & p );
-	 
-	 //inline double radianFreq( double hz );
 	 
 };	//	end of class Oscillator
 
