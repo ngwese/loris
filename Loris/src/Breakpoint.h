@@ -38,20 +38,20 @@ class Breakpoint
 //	-- public Breakpoint interface --
 public:
 //	attribute access:
-	virtual Double frequency( void ) const { return _frequency; }
-	virtual Double amplitude( void ) const { return _amplitude; }
-	virtual Double bandwidth( void ) const { return _bandwidth; }
-	virtual Double phase( void ) const { return _phase; }
-	virtual Double time( void ) const { return _time; }
+	virtual double frequency( void ) const { return _frequency; }
+	virtual double amplitude( void ) const { return _amplitude; }
+	virtual double bandwidth( void ) const { return _bandwidth; }
+	virtual double phase( void ) const { return _phase; }
+	virtual double time( void ) const { return _time; }
 	
 //	attribute mutation:
-	virtual void setFrequency( Double x ) { _frequency = x; }
-	virtual void setAmplitude( Double x ) { _amplitude = x; }
-	virtual void setBandwidth( Double x ) { _bandwidth = x; }
-	virtual void setPhase( Double x ) { _phase = x; }
+	virtual void setFrequency( double x ) { _frequency = x; }
+	virtual void setAmplitude( double x ) { _amplitude = x; }
+	virtual void setBandwidth( double x ) { _bandwidth = x; }
+	virtual void setPhase( double x ) { _phase = x; }
 	
 //	construction:
-	Breakpoint( Double f, Double a, Double b, Double p = 0. );
+	Breakpoint( double f, double a, double b, double p = 0. );
 	virtual ~Breakpoint( void );
 
 //	copy and assign copy parameters only:
@@ -68,7 +68,7 @@ public:
 	
 //	virtual constructors:
 	static Breakpoint * Clone( const Breakpoint & p );
-	static Breakpoint * Create( Double f, Double a, Double b, Double p =  0. );
+	static Breakpoint * Create( double f, double a, double b, double p =  0. );
 	static void Destroy( Breakpoint * p );
 	
 //	-- private envelope link and time access --
@@ -82,7 +82,7 @@ private:
 	void linkTo( Breakpoint * bp ) { setNext( bp ); if ( bp ) bp->setPrev( this ); }
 
 //	assign time to this Breakpoint:
-	void setTime( Double x ) { _time = x; }
+	void setTime( double x ) { _time = x; }
 	
 //	make Partial a friend so that Partials can link their 
 //	constituent Breakpoints:
@@ -92,14 +92,14 @@ private:
 private:
 
 //	envelope parameters:
-	Double _frequency;	//	hertz
-	Double _amplitude;	//	absolute
-	Double _bandwidth;	//	fraction of total energy that is noise energy
-	Double _phase;		//	radians
+	double _frequency;	//	hertz
+	double _amplitude;	//	absolute
+	double _bandwidth;	//	fraction of total energy that is noise energy
+	double _phase;		//	radians
 	
 //	Breakpoints are not uniformly distributed in time, each
 //	must explicitly specify its time:
-	Double _time;		//	seconds
+	double _time;		//	seconds
 	
 //	connectivity:
 //	Partials are consist of a doubly-linked list of Breakpoints.

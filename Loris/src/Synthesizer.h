@@ -44,11 +44,11 @@ class Synthesizer
 //	-- public interface --
 public:
 //	construction:
-	Synthesizer( SampleBuffer & buf, Double srate, Double minBWEfreq = 1000., Oscillator * osc = Null );
+	Synthesizer( SampleBuffer & buf, double srate, double minBWEfreq = 1000., Oscillator * osc = Null );
 	~Synthesizer( void );
 
 //	access:
-	Double sampleRate( void ) const { return _sampleRate; }
+	double sampleRate( void ) const { return _sampleRate; }
 	
 //	synthesis:
 	void synthesizePartial( const Partial & p );	
@@ -56,11 +56,11 @@ public:
 	
 //	-- private helpers --
 private:
-	inline Double radianFreq( Double hz ) const;
+	inline double radianFreq( double hz ) const;
 
 //	-- instance variables --
 //	sample rate (Hz):
-	Double _sampleRate;
+	double _sampleRate;
 	
 //	sample buffer:
 	SampleBuffer & _samples;
@@ -78,18 +78,18 @@ private:
 	struct BweKludger
 	{
 		//	construction:
-		BweKludger( Double f ) : _cutoff( f ) {}
+		BweKludger( double f ) : _cutoff( f ) {}
 		
 		//	public inerface:
-		inline Double amp( const Breakpoint & bp ) const;
-		inline Double bw( const Breakpoint & bp ) const;
+		inline double amp( const Breakpoint & bp ) const;
+		inline double bw( const Breakpoint & bp ) const;
 
 	private:
 		//	helper
-		inline Double bwclamp( Double bw ) const;
+		inline double bwclamp( double bw ) const;
 		
 		//	instance variable:
-		Double _cutoff;
+		double _cutoff;
 
 	};	//	end of class BweKludger
 

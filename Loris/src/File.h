@@ -51,15 +51,15 @@ public:
 	void close( void );
 	
 	//	positioning:
-	Int position( void );
-	void offsetPosition( Int offset );
-	void setPosition( Int pos );
+	int position( void );
+	void offsetPosition( int offset );
+	void setPosition( int pos );
 	
-	Boolean atEOF( void );
+	boolean atEOF( void );
 	
 	//	instance variable access:
 	const string & name( void ) const { return _path; }
-	Boolean swapBytes( void ) const { return _swapBytes; }
+	boolean swapBytes( void ) const { return _swapBytes; }
 	
 	//	reading:
 	//	(binary file, don't use formatted extractors)
@@ -99,7 +99,7 @@ public:
 		stream().write( x.c, sizeof(T) );
 	}
 	
-	void write( void * bytes, Int howBig )
+	void write( void * bytes, int howBig )
 	{
 		vector< char > v( (char *) bytes, (char *) bytes + howBig );
 		
@@ -107,7 +107,7 @@ public:
 			reverse( v.begin(), v.end() );
 		}
 		
-		for (Int i = 0; i < howBig; ++i )
+		for (int i = 0; i < howBig; ++i )
 			stream().put( v[i] );
 	}
 

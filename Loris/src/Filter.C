@@ -22,7 +22,7 @@ Begin_Namespace( Loris )
 // ---------------------------------------------------------------------------
 //	Construct from coefficient vectors and gain.
 //
-Mkfilter::Mkfilter( const vector< Double > & vcx, const vector< Double > & vcy, Double gain ) : 
+Mkfilter::Mkfilter( const vector< double > & vcx, const vector< double > & vcy, double gain ) : 
 	xv( vcx.size(), 0. ), 
 	yv( vcy.size(), 0. ),
 	xCoeffs( vcx ),
@@ -39,18 +39,18 @@ Mkfilter::Mkfilter( const vector< Double > & vcx, const vector< Double > & vcy, 
 //	by decreasing age, such that the new input sample goes at the end of xv
 //	and the new output sample goes at the end of yv. This should be reversed.
 //
-Double
-Mkfilter::nextSample( Double input )
+double
+Mkfilter::nextSample( double input )
 { 
 	shift(xv);
 	xv[ xv.size() - 1 ] = input * scale;
 	shift(yv);
 
-	Double output = 0.;
-	for ( Int i = 0; i < xCoeffs.size() ; ++i )
+	double output = 0.;
+	for ( int i = 0; i < xCoeffs.size() ; ++i )
 		output += xCoeffs[i] * xv[i];
 		
-	for ( Int j = 0; j < yCoeffs.size() - 1; ++j )
+	for ( int j = 0; j < yCoeffs.size() - 1; ++j )
 		output += yCoeffs[j] * yv[j];
 	             
 	yv[ yv.size() - 1 ] = output;
@@ -63,7 +63,7 @@ Mkfilter::nextSample( Double input )
 // ---------------------------------------------------------------------------
 //
 inline void
-Mkfilter::shift( vector< Double > & v )
+Mkfilter::shift( vector< double > & v )
 { 
 	std::rotate( v.begin(), v.begin() + 1, v.end() );
 }
@@ -79,14 +79,14 @@ Mkfilter::shift( vector< Double > & v )
 Mkfilter *
 Mkfilter::Create( void )
 {
-	const Double xCoeffs[] = { 1., 3., 3., 1. };
-	const Double yCoeffs[] = { 0.9320209046, -2.8580608586, 2.9258684252, 0. };
-	const Double gain = 4.663939184e+04;
+	const double xCoeffs[] = { 1., 3., 3., 1. };
+	const double yCoeffs[] = { 0.9320209046, -2.8580608586, 2.9258684252, 0. };
+	const double gain = 4.663939184e+04;
 	
-	const Double extraScaling = 6.;
+	const double extraScaling = 6.;
 
-	vector< Double > vcx( xCoeffs, xCoeffs + 4 );
-	vector< Double > vcy( yCoeffs, yCoeffs + 4 );
+	vector< double > vcx( xCoeffs, xCoeffs + 4 );
+	vector< double > vcy( yCoeffs, yCoeffs + 4 );
 
 	try {
 		return new Mkfilter( vcx, vcy, gain / extraScaling );
@@ -106,14 +106,14 @@ Mkfilter::Create( void )
 Mkfilter *
 Mkfilter::CreateNarrow( void )
 {
-	const Double xCoeffs[] = { 1., 3., 3., 1. };
-	const Double yCoeffs[] = { 0.9446013697, -2.8876354452, 2.9430115837, 0. };
-	const Double gain = 2.169816230e+05;
+	const double xCoeffs[] = { 1., 3., 3., 1. };
+	const double yCoeffs[] = { 0.9446013697, -2.8876354452, 2.9430115837, 0. };
+	const double gain = 2.169816230e+05;
 	
-	const Double extraScaling = 6.;
+	const double extraScaling = 6.;
 
-	vector< Double > vcx( xCoeffs, xCoeffs + 4 );
-	vector< Double > vcy( yCoeffs, yCoeffs + 4 );
+	vector< double > vcx( xCoeffs, xCoeffs + 4 );
+	vector< double > vcy( yCoeffs, yCoeffs + 4 );
 
 	try {
 		return new Mkfilter( vcx, vcy, gain / extraScaling );
@@ -134,14 +134,14 @@ Mkfilter::CreateNarrow( void )
 Mkfilter *
 Mkfilter::CreateWide( void )
 {
-	const Double xCoeffs[] = { 1., 3., 3., 1. };
-	const Double yCoeffs[] = { 0.8687010111, -2.7146444787, 2.8446174086, 0. };
-	const Double gain = 6.032914230e+03;
+	const double xCoeffs[] = { 1., 3., 3., 1. };
+	const double yCoeffs[] = { 0.8687010111, -2.7146444787, 2.8446174086, 0. };
+	const double gain = 6.032914230e+03;
 	
-	const Double extraScaling = 5.;
+	const double extraScaling = 5.;
 
-	vector< Double > vcx( xCoeffs, xCoeffs + 4 );
-	vector< Double > vcy( yCoeffs, yCoeffs + 4 );
+	vector< double > vcx( xCoeffs, xCoeffs + 4 );
+	vector< double > vcy( yCoeffs, yCoeffs + 4 );
 
 	try {
 		return new Mkfilter( vcx, vcy, gain / extraScaling );

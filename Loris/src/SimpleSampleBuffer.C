@@ -22,7 +22,7 @@ Begin_Namespace( Loris )
 // ---------------------------------------------------------------------------
 //	Assume responsibility for the c-style array of samples:
 //
-SimpleSampleBuffer::SimpleSampleBuffer( Double * samples, Int howMany ) : 
+SimpleSampleBuffer::SimpleSampleBuffer( double * samples, int howMany ) : 
 	mArray( samples ),
 	mSize( howMany )
 { 
@@ -33,7 +33,7 @@ SimpleSampleBuffer::SimpleSampleBuffer( Double * samples, Int howMany ) :
 // ---------------------------------------------------------------------------
 //
 SimpleSampleBuffer::SimpleSampleBuffer( const SimpleSampleBuffer & other ) :
-	mArray( new Double[ other.mSize ] ),
+	mArray( new double[ other.mSize ] ),
 	mSize( other.mSize )
 {
 	copy( other.mArray, other.mArray + other.mSize, mArray );
@@ -48,12 +48,12 @@ SimpleSampleBuffer::SimpleSampleBuffer( const SimpleSampleBuffer & other ) :
 //	it can give undefined results it the client doesn't
 //	do the bounds-checking.
 //
-SimpleSampleBuffer::SimpleSampleBuffer( Uint len ) : 
-	mArray( new Double[ len ] ),
+SimpleSampleBuffer::SimpleSampleBuffer( ulong len ) : 
+	mArray( new double[ len ] ),
 	mSize( len )
 {
 	//	initialize to zeros:
-	for ( Int i = 0; i < len; ++i )
+	for ( int i = 0; i < len; ++i )
 		mArray[i] = 0.;
 }
 
@@ -82,7 +82,7 @@ SimpleSampleBuffer::operator= ( const SimpleSampleBuffer & other )
 			delete[] mArray;
 			try
 			{
-				mArray = new Double[ other.mSize ];
+				mArray = new double[ other.mSize ];
 				mSize = other.mSize;
 			}
 			catch( ... )

@@ -35,37 +35,37 @@ public:
 	~Oscillator( void );
 		
 //	state access/mutation:
-	Double radianFreq( void ) const { return _frequency; }
-	Double amplitude( void ) const { return _amplitude; }
-	Double bandwidth( void ) const { return _bandwidth; }
-	Double phase( void ) const { return _phase; }
+	double radianFreq( void ) const { return _frequency; }
+	double amplitude( void ) const { return _amplitude; }
+	double bandwidth( void ) const { return _bandwidth; }
+	double phase( void ) const { return _phase; }
 	
-	void setRadianFreq( Double x ) { _frequency = x; }
-	void setAmplitude( Double x ) { _amplitude = x; }
-	void setBandwidth( Double x ) { _bandwidth = x; }
-	void setPhase( Double x ) { _phase = x; }
+	void setRadianFreq( double x ) { _frequency = x; }
+	void setAmplitude( double x ) { _amplitude = x; }
+	void setBandwidth( double x ) { _bandwidth = x; }
+	void setPhase( double x ) { _phase = x; }
 	
 //	reset the whole state at once:
-	void reset( Double radf, Double amp, Double bw, Double ph );
+	void reset( double radf, double amp, double bw, double ph );
 
 //	sample generation:	
-	void generateSamples( SampleBuffer & buffer, Int howMany, Int offset,
-						  Double targetFreq, Double targetAmp, Double targetBw );
+	void generateSamples( SampleBuffer & buffer, int howMany, int offset,
+						  double targetFreq, double targetAmp, double targetBw );
 
 //	virtual constructors:
 	static Oscillator * Create( void );
 	
 //	-- private helpers --
 private:
-	inline Double oscillate( Double phase ) const;
-	inline Double modulate( Double bandwidth ) const;
+	inline double oscillate( double phase ) const;
+	inline double modulate( double bandwidth ) const;
 	
 //	-- instance variables --
 //	internal state:
-	Double _frequency;	//	radians per sample
-	Double _amplitude;	//	absolute
-	Double _bandwidth;	//	bandwidth coefficient (noise energy / total energy)
-	Double _phase;		//	radians
+	double _frequency;	//	radians per sample
+	double _amplitude;	//	absolute
+	double _bandwidth;	//	bandwidth coefficient (noise energy / total energy)
+	double _phase;		//	radians
 
 //	filter for stochastic modulation:
 	Mkfilter * _filter;

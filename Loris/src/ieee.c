@@ -39,7 +39,7 @@
  /*
   *	Kelly added the namespace and extern "C" wrapper, just in case
   * it ever gets compiled by a C++ compiler (it should agree with 
-  *	the header ieee.h).
+  *	the header ieee.h, or else it won't link).
   *	Also added a typedef for extended80, and used it in the conversion
   * routines. ConvertToIeeeExtended() should take a double arg, not 
   * an int. 

@@ -17,7 +17,7 @@ Begin_Namespace( Loris )
 //	SampleVector constructor
 // ---------------------------------------------------------------------------
 //
-SampleVector::SampleVector( const Double * b, const Double * e ) : 
+SampleVector::SampleVector( const double * b, const double * e ) : 
 	v( b, e )
 { 
 }
@@ -40,7 +40,7 @@ SampleVector::SampleVector( const SampleVector & other ) :
 //	it can give undefined results it the client doesn't
 //	do the bounds-checking.
 //
-SampleVector::SampleVector( Int len ) :
+SampleVector::SampleVector( int len ) :
 	v( len, 0 )
 {
 }

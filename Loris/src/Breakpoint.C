@@ -28,7 +28,7 @@ Begin_Namespace( Loris )
 //	Instantaneous phase (p) defaults to 0.
 //	Values are not checked for validity.
 //
-Breakpoint::Breakpoint( Double f, Double a, Double b, Double p ) :
+Breakpoint::Breakpoint( double f, double a, double b, double p ) :
 	_frequency( f ),
 	_amplitude( a ),
 	_bandwidth( b ),
@@ -109,7 +109,7 @@ Breakpoint::Clone( const Breakpoint & p )
 // ---------------------------------------------------------------------------
 //
 Breakpoint * 
-Breakpoint::Create( Double f, Double a, Double b, Double p )
+Breakpoint::Create( double f, double a, double b, double p )
 {
 	try {
 		return new Breakpoint( f, a, b, p );

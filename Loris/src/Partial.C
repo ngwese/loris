@@ -92,7 +92,7 @@ Partial::operator=( const Partial & other )
 // ---------------------------------------------------------------------------
 //	in radians
 //
-Double
+double
 Partial::initialPhase( void ) const
 {
 	if ( head() != Null )
@@ -106,7 +106,7 @@ Partial::initialPhase( void ) const
 // ---------------------------------------------------------------------------
 //	in seconds
 //
-Double
+double
 Partial::startTime( void ) const
 {
 	if ( head() != Null )
@@ -120,7 +120,7 @@ Partial::startTime( void ) const
 // ---------------------------------------------------------------------------
 //	in seconds
 //
-Double
+double
 Partial::endTime( void ) const
 {
 	if ( tail() != Null )
@@ -143,7 +143,7 @@ Partial::endTime( void ) const
 //	allocation of a new Breakpoint could fail, throwing a LowMemException.
 //
 Breakpoint *
-Partial::insert( Double time, const Breakpoint & bp )
+Partial::insert( double time, const Breakpoint & bp )
 {
 	Breakpoint * pos = find( time );
 	
@@ -195,11 +195,11 @@ Partial::insert( Double time, const Breakpoint & bp )
 //	Caller should check for non-zero duration after time removal.
 //
 //	This could except if things get screwed up, and the scooting 
-//	generates a RuntimeException. In this case, the Partial is probably
+//	generates a InvalidPartial exception. In this case, the Partial is probably
 //	garbage, so the exception should be passed up to the caller. 
 //
 Breakpoint * 
-Partial::remove( Double start, Double end )
+Partial::remove( double start, double end )
 {
 //	get the order right:
 	if ( start > end )
@@ -222,7 +222,7 @@ Partial::remove( Double start, Double end )
 	
 	Breakpoint * afterEnd = beforeEnd->next(); 	//	could be Null
 	
-	Double timeRemoved = end - start;
+	double timeRemoved = end - start;
 	
 //	remove and delete Breakpoints:
 	while( afterStart != beforeEnd ) {
@@ -245,7 +245,7 @@ Partial::remove( Double start, Double end )
 		try {
 			scoot( afterEnd, Null, - timeRemoved );
 		}
-		catch ( RuntimeException & ex ) {
+		catch ( InvalidPartial & ex ) {
 			ex.append( "Partial envelope is probably bogus." );
 			throw;
 		}
@@ -270,7 +270,7 @@ Partial::remove( Double start, Double end )
 //	the specified time (will be Null if time < startTime).
 //
 const Breakpoint * 
-Partial::find( Double time ) const
+Partial::find( double time ) const
 {
 //	check the easy case first:
 	if ( time >= endTime() )
@@ -291,7 +291,7 @@ Partial::find( Double time ) const
 //	the specified time (will be Null if time < startTime).
 //
 Breakpoint * 
-Partial::find( Double time )
+Partial::find( double time )
 {
 //	check the easy case first:
 	if ( time >= endTime() )
@@ -361,7 +361,7 @@ Partial::deleteEnvelope( void )
 // ---------------------------------------------------------------------------
 //
 void
-Partial::insertAtHead( Double time, Breakpoint * bp )
+Partial::insertAtHead( double time, Breakpoint * bp )
 {
 	//	sanity check:
 	Assert( head() == Null || time < head()->time() );
@@ -381,7 +381,7 @@ Partial::insertAtHead( Double time, Breakpoint * bp )
 // ---------------------------------------------------------------------------
 //
 void
-Partial::insertAtTail( Double time, Breakpoint * bp )
+Partial::insertAtTail( double time, Breakpoint * bp )
 {
 	//	sanity check:
 	Assert( _tail == Null || time > _tail->time() );
@@ -397,7 +397,7 @@ Partial::insertAtTail( Double time, Breakpoint * bp )
 // ---------------------------------------------------------------------------
 //
 void
-Partial::insertBefore( Breakpoint * beforeMe, Double time, Breakpoint * bp )
+Partial::insertBefore( Breakpoint * beforeMe, double time, Breakpoint * bp )
 {
 	//	sanity check:
 	Assert( time < beforeMe->time() );	//	else not before me
@@ -418,14 +418,14 @@ Partial::insertBefore( Breakpoint * beforeMe, Double time, Breakpoint * bp )
 //	recoverable condition, unless the envelope is goofed up already.
 //
 void 
-Partial::scoot( Breakpoint * start, Breakpoint * end, Double scootBy )
+Partial::scoot( Breakpoint * start, Breakpoint * end, double scootBy )
 {
 	while( start != end ) {
 		Assert( start != Null );
 		
 		//	check for Breakpoint order violation before changing anything:
 		if ( start->prev() != Null && start->time() + scootBy < start->prev()->time() )
-			Throw( RuntimeException, "Breakpoint time order violation in Partial::scoot()." );
+			Throw( InvalidPartial, "Breakpoint time order violated in Partial::scoot()." );
 	
 		//	okay to scoot:
 		start->setTime( start->time() + scootBy );

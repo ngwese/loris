@@ -42,7 +42,7 @@ Begin_Namespace( Loris )
 //	I have also confirmed that it still works (is correct after 10000 
 //	iterations) when I replace the divides with multiplies by oneOverM.
 //
-//	Returns a uniformly distributed random Double on the range [0., 1.).
+//	Returns a uniformly distributed random double on the range [0., 1.).
 //
 //	-kel 7 Nov 1997.
 //

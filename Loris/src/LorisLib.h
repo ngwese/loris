@@ -1,81 +1,109 @@
 #ifndef __Loris_library_prefix__
 #define __Loris_library_prefix__
 
-// ===========================================================================
-//	LorisLib.h
-//
-//	Prefix file for all source files used to build the Loris libraries.
-//
-//	Policy:
-//
-//		Loris uses and supports namespaces and the STL.
-//		Everything in the Loris library is part of the Loris namespace.
-//
-//	Compatibility:
-//
-//		The following symbols are used to make the Loris library 
-//		easier to port to platforms with inferior compilers:
-//
-//		USE_DEPRECATED_HEADERS:
-//		Some implementations don't have all the new-style headers they
-//		are supposed to have, so we have to use the old-style .h versions
-//		of some of the standard includes files. 
-//
-//		This can also make problems with namespace specification, because
-//		the deprecated headers may not have things like ostream in the std 
-//		namespace where they belong.
-//
-//		NO_TEMPLATE_MEMBERS:
-//		Some implementations may not allow classes to have template
-//		members. If this symbol is defined, template members are not
-//		included in the class definitions.
-//
-//
-//	-kel 16 Aug 99
-//
-// ===========================================================================
+/* ===========================================================================
+ *	LorisLib.h
+ *
+ *	Prefix file for all source files used to build the Loris libraries.
+ *
+ *	Policy:
+ *
+ *		Loris uses and supports namespaces and the STL.
+ *		Everything in the Loris library is part of the Loris namespace.
+ *
+ *	Compatibility:
+ *
+ *		The following symbols are used to make the Loris library 
+ *		easier to port to platforms with inferior compilers:
+ *
+ *		USE_DEPRECATED_HEADERS:
+ *		Some implementations don't have all the new-style headers they
+ *		are supposed to have, so we have to use the old-style .h versions
+ *		of some of the standard includes files. 
+ *
+ *		This can also make problems with namespace specification, because
+ *		the deprecated headers may not have things like ostream in the std 
+ *		namespace where they belong.
+ *
+ *		NO_TEMPLATE_MEMBERS:
+ *		Some implementations may not allow classes to have template
+ *		members. If this symbol is defined, template members are not
+ *		included in the class definitions.
+ *
+ *
+ *	-kel 16 Aug 99
+ *
+ */
 
 
-// ---------------------------------------------------------------------------
-//	These make namespace definitions easier to read.
-//
-#define Begin_Namespace( x ) namespace x {
-#define End_Namespace( x ) }
+/* ===========================================================================
+ *	These make namespace definitions easier to read, only usable 
+ *	under C++.
+ */
+#ifdef __cplusplus
+	#define Begin_Namespace( x ) namespace x {
+	#define End_Namespace( x ) }
+#else
+	#define Begin_Namespace( x )
+	#define End_Namespace( x )
+#endif
 
 Begin_Namespace( Loris )
 
-// ---------------------------------------------------------------------------
-//	Types:
-//
-//	Define commonly-used data types so that we can have some 
-//	guarantee about their sizes. Most of the time it won't matter,
-//	but if it ever does, it will be difficult to address the issue
-//	retroactively.
-//
-typedef long 			Int;
-typedef unsigned long 	Uint;
-typedef double			Double;
-typedef bool			Boolean;
+/* ---------------------------------------------------------------------------
+ *	Macros:
+ */
+ 
+/* 	I freakin' hate all caps!	*/
+#define Null NULL
 
-//	When size _really_ matters, use these, and
-//	find a way to guarantee their sizes:
-typedef short 			Int_16;
-typedef long 			Int_32;
-typedef unsigned long 	Uint_32;
-typedef float			Float_32;
-typedef double			Double_64;
+/* 	shorthand for types	*/
+typedef unsigned long 	ulong;
+typedef unsigned int 	uint;
+typedef unsigned char 	uchar;
 
-// ---------------------------------------------------------------------------
-//	Macros:
-//
-#define Null 0L
+/*	may need to define this differently 
+ *	for inferior compliers.
+ *	Under C++, this will be defined in the Loris namespace,
+ *	so we don't have to worry about name collisions. Under c,
+ *	we should try to determine whether it is already defined,
+ *	and if not, define it to int (or whatever).
+ */
+#ifdef __cplusplus
+	typedef bool	boolean;
+#elif !defined(boolean)	
+	typedef enum { false = 0, true = 1 } boolean;
+#endif
 
-// ---------------------------------------------------------------------------
-//	Constants:
-//
+/* ---------------------------------------------------------------------------
+ *	Constants:
+ */
 static const double Pi = 3.1415926535897932384626433L;
 static const double TwoPi = 2.L * Pi;
 
+#ifdef __cplusplus
+// ---------------------------------------------------------------------------
+//	Loris initialization class.
+//
+//	Linking any C++ file in Loris will cause this class to be
+//	instantiated. Its a Singleton, because we only need one of
+//	them. Its sole purpose is to force initialization of the 
+//	Loris library. See LorisInit.C for the initialization.
+//
+class Init_
+{
+//	only instance can instantiate:
+	Init_( void );
+	~Init_( void );
+public:	
+	static const Init_ & instance( void );
+};	
+	
+//	reference to the sole istance:	
+static const Init_ & _loris_lib_initializer = Init_::instance();
+
+#endif
+
 End_Namespace( Loris )
 
-#endif	// ndef __Loris_library_prefix__
+#endif	/*  ndef __Loris_library_prefix__ */

@@ -49,7 +49,7 @@ Import::~Import( void )
 //
 //		void verifySource( void )	(default is noop)
 //		void beginImport( void )	(default is noop)
-//		Boolean done( void )
+//		boolean done( void )
 //		void getPartial( void )
 //		void endImport( void )		(default is noop)
 //
@@ -93,7 +93,7 @@ Import::importPartials( void )
 	//	when done, free up that buffer? or wait til the destructor?
 		endImport();
 	}
-	catch( ImportError & ex ) {
+	catch( ImportException & ex ) {
 		ex.append( " Import failed." );
 		throw;
 	}

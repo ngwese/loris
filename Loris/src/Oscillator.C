@@ -74,7 +74,7 @@ Oscillator::Create( void )
 // ---------------------------------------------------------------------------
 //
 void
-Oscillator::reset( Double radf, Double amp, Double bw, Double ph )
+Oscillator::reset( double radf, double amp, double bw, double ph )
 {
 	setRadianFreq( radf );
 	setAmplitude( amp );
@@ -96,18 +96,18 @@ Oscillator::reset( Double radf, Double amp, Double bw, Double ph )
 //	rate, could stick that in here sometime.
 //
 void
-Oscillator::generateSamples( SampleBuffer & buffer, Int howMany, Int offset,
-							 Double targetFreq, Double targetAmp, Double targetBw )
+Oscillator::generateSamples( SampleBuffer & buffer, int howMany, int offset,
+							 double targetFreq, double targetAmp, double targetBw )
 {
 	if ( howMany <= 0 )
 		return;
 		
 //	compute trajectories:
-	const Double dFreq = (targetFreq - _frequency) / howMany;
-	const Double dAmp = (targetAmp - _amplitude) / howMany;
-	const Double dBw = (targetBw - _bandwidth) / howMany;
+	const double dFreq = (targetFreq - _frequency) / howMany;
+	const double dAmp = (targetAmp - _amplitude) / howMany;
+	const double dBw = (targetBw - _bandwidth) / howMany;
 	
-	for ( Int i = 0; i < howMany; ++i )
+	for ( int i = 0; i < howMany; ++i )
 	{
 //	compute a sample and add it into the buffer.			
 		buffer[ offset + i ] += 
@@ -137,8 +137,8 @@ Oscillator::generateSamples( SampleBuffer & buffer, Int howMany, Int offset,
 //	Could try doing this with a lookup table too, but it seems to be
 //	very little computation compared to modulate.
 //
-inline Double 
-Oscillator::oscillate( Double phase ) const
+inline double 
+Oscillator::oscillate( double phase ) const
 {
 	return cos( phase );
 }
@@ -148,8 +148,8 @@ Oscillator::oscillate( Double phase ) const
 // ---------------------------------------------------------------------------
 //	Yuck, Jackson, two square roots!
 //
-inline Double 
-Oscillator::modulate( Double bandwidth ) const
+inline double 
+Oscillator::modulate( double bandwidth ) const
 {
 //	clamp bandwidth:
 	if ( bandwidth > 1. )
@@ -159,7 +159,7 @@ Oscillator::modulate( Double bandwidth ) const
 	
 //	get a filtered noise sample, use scale as std deviation:
 //	can build scale into filter gain.
-	Double noise = _filter->nextSample( gaussian_normal() );
+	double noise = _filter->nextSample( gaussian_normal() );
 
 //	compute modulation:
 //

@@ -20,8 +20,8 @@ Begin_Namespace( Loris )
 // ---------------------------------------------------------------------------
 //	Boundary-checked access.
 //
-Double & 
-SampleBuffer::at( Uint index )
+double & 
+SampleBuffer::at( ulong index )
 {
 	if ( index >= size() )
 		//	except
@@ -36,8 +36,8 @@ SampleBuffer::at( Uint index )
 // ---------------------------------------------------------------------------
 //	Boundary-checked access, for const SampleBuffers.
 //
-const Double & 
-SampleBuffer::at( Uint index ) const
+const double & 
+SampleBuffer::at( ulong index ) const
 {
 	if ( index >= size() )
 		//	except

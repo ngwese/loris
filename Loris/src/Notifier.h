@@ -26,7 +26,6 @@
 #endif
 
 #include <string>
-using std::string;
 
 Begin_Namespace( Loris )
 
@@ -39,7 +38,7 @@ class Notifier
 //	-- public interface --
 public:
 //	construction:
-	Notifier( string s = "" );
+	Notifier( const std::string s = "" );
 	
 //	virtual destructor so Notifier can be subclassed:
 	virtual ~Notifier( void );	
@@ -49,29 +48,59 @@ public:
 //	notification somewhere other than standard-out.
 	virtual void report( void );
 
-//	implemented with a strstream, which has everything
+//	streaming (onto) operator:
+	template< class T >
+	Notifier & 
+	operator << ( const T & thing )
+	{
+		ss << thing;
+		return *this;
+	}
+	
+//	ostream implementation:
+	Notifier & put( char c );
+	Notifier & write( const char * cstr, long count );
+	Notifier & flush( void );
+	
+private:
+//	implemented with a stringstream, which has everything
 //	we want except stability:
 	stringstream ss;
 	
 };	//	end of class Notifier
 
-//	prototype for a one-shot notifier:
-void notify( string s );
-
-//	streaming operator:
-template< class T >
-Notifier & 
-operator << ( Notifier & note, const T & thing )
+// ---------------------------------------------------------------------------
+//	class Debugger
+//
+//
+class Debugger : public Notifier
 {
-	note.ss << thing;
-	return note;
-}
+//	-- public interface --
+public:
+//	construction:
+	Debugger( const std::string s = "" ) : Notifier( s ) {}
+	
+	
 
-//	lousy debugging macro:
+};	//	end of class Debugger
+
+// ---------------------------------------------------------------------------
+//	prototype for a one-shot notifier:
+//
+void notify( const std::string s );
+
+// ---------------------------------------------------------------------------
+//	prototype for a one-shot error notifier:
+//	This one displays its message and aborts.
+//
+void fatalError( const std::string s );
+
+// ---------------------------------------------------------------------------
+//	lousy debugging macro, do better!
 #if defined(Debug_Loris)
-	inline void Debug( string s ) { notify( s ); }
+	inline void Debug( const std::string s ) { notify( s ); }
 #else
-	inline void Debug( string ) {}
+	inline void Debug( const std::string ) {}
 #endif
 
 End_Namespace( Loris )

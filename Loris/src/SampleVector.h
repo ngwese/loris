@@ -27,7 +27,7 @@ class SampleVector : public SampleBuffer
 {
 public:
 //	construction:
-	SampleVector( const Double * b, const Double * e );
+	SampleVector( const double * b, const double * e );
 	SampleVector( const SampleVector & other );
 	
 //	construction from a range:
@@ -47,22 +47,22 @@ public:
 //	although, as always, operator[] is not checked, so
 //	it can give undefined results it the client doesn't
 //	do the bounds-checking.
-	explicit SampleVector( Int len = 0 );
+	explicit SampleVector( int len = 0 );
 	
 	
 //	assignment:
 	SampleVector & operator= ( const SampleVector & other );
 	
 //	public SampleBuffer interface:
-virtual Int size( void ) const { return v.size(); }
+virtual int size( void ) const { return v.size(); }
 
 //	indexed access:
-virtual Double & operator[]( Uint index )  { return v[index]; }
-virtual const Double & operator[]( Uint index ) const  { return v[index]; }
+virtual double & operator[]( ulong index )  { return v[index]; }
+virtual const double & operator[]( ulong index ) const  { return v[index]; }
 
 //	instance variables:
 private:
-	vector< Double > v;	//	the samples
+	vector< double > v;	//	the samples
 
 };	//	end of class SampleVector
 

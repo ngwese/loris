@@ -14,6 +14,7 @@
 
 
 #include "LorisLib.h"
+#include "LorisTypes.h"
 #include "Import.h"
 
 #include <list>
@@ -47,7 +48,7 @@ public:
 	
 	//	derived classes must provide a mean of determining
 	//	when the import loop should terminate:
-	virtual Boolean done( void );
+	virtual boolean done( void );
 	
 	//	derived classes must provide a means of reading 
 	//	in a Partial and adding it to the list mPartials.
@@ -135,7 +136,7 @@ private:
 //	-- instance variables --
 private:
 	File & _file;
-	Int _counter;
+	int _counter;
 };	//	end of class ImportLemur5
 
 End_Namespace( Loris )

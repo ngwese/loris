@@ -15,6 +15,7 @@
 // ===========================================================================
 
 #include "LorisLib.h"
+#include "Exception.h"
 
 Begin_Namespace( Loris )
 
@@ -49,33 +50,33 @@ public:
 	Breakpoint * tail( void ) { return _tail; }
 	
 //	label access/mutation:
-	Int label( void ) const { return _label; }
-	void setLabel( Int l ) { _label = l; }
+	int label( void ) const { return _label; }
+	void setLabel( int l ) { _label = l; }
 	
 //	shortcuts to envelope parameters:
-	Double initialPhase( void ) const;
-	Double startTime( void ) const;
-	Double endTime( void ) const;
-	Double duration( void ) const { return endTime() - startTime(); }
+	double initialPhase( void ) const;
+	double startTime( void ) const;
+	double endTime( void ) const;
+	double duration( void ) const { return endTime() - startTime(); }
 	
 //	Breakpoint insertion:
 //	Make a copy of bp and insert it at time (seconds),
 //	return a pointer to the inserted Breakpoint.
-	Breakpoint * insert( Double time, const Breakpoint & bp );
+	Breakpoint * insert( double time, const Breakpoint & bp );
 
 //	Breakpoint removal:
 //	Remove and delete all Breakpoints between start and end (seconds, inclusive),
 //	shortening the envelope by (end-start) seconds.
 //	Return a pointer to the Breakpoint immediately preceding the 
 //	removed time (will be Null if beginning of Partial is removed).
-	Breakpoint * remove( Double start, Double end );
+	Breakpoint * remove( double start, double end );
 	
 //	Breakpoint find:
 //	Return a pointer to the Breakpoint immediately preceding
 //	the specified time (will be Null if time < startTime).
 //	(const and non-const versions)
-	const Breakpoint * find( Double time ) const;
-	Breakpoint * find( Double time );
+	const Breakpoint * find( double time ) const;
+	Breakpoint * find( double time );
 	
 	
 //	debugging:
@@ -86,10 +87,10 @@ private:
 //	envelope manipulation helpers:
 	void copyEnvelope( const Breakpoint * h );
 	void deleteEnvelope( void );
-	void insertAtHead( Double time, Breakpoint * bp );
-	void insertAtTail( Double time, Breakpoint * bp );
-	void insertBefore( Breakpoint * beforeMe, Double time, Breakpoint * bp );
-	void scoot( Breakpoint * start, Breakpoint * end, Double scootBy );
+	void insertAtHead( double time, Breakpoint * bp );
+	void insertAtTail( double time, Breakpoint * bp );
+	void insertBefore( Breakpoint * beforeMe, double time, Breakpoint * bp );
+	void scoot( Breakpoint * start, Breakpoint * end, double scootBy );
 	
 //	-- instance variables --
 //	envelope:
@@ -97,10 +98,23 @@ private:
 	Breakpoint * _tail;
 	
 //	label:
-	Int _label;
+	int _label;
 
 };	//	end of class Partial
 
+// ---------------------------------------------------------------------------
+//	class InvalidPartial
+//
+//	Class of exceptions thrown when a Partial is found to be badly configured
+//	or otherwise invalid.
+//
+class InvalidPartial : public InvalidObject
+{
+public: 
+	InvalidPartial( const string & str, const string & where = "" ) : 
+		InvalidObject( string("Invalid Partial -- ").append( str ), where ) {}
+		
+};	//	end of class ImportException
 
 
 End_Namespace( Loris )

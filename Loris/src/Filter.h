@@ -39,10 +39,10 @@ class Mkfilter
 //	-- public interface --
 public:
 //	construction:
-	Mkfilter( const vector< Double > &, const vector< Double > &, Double );
+	Mkfilter( const vector< double > &, const vector< double > &, double );
 
 //	next filtered sample from input sample:				
-	Double nextSample( Double );
+	double nextSample( double );
 	
 //	virtual constructors:
 //	(three most commonly-used filters in Lemur)
@@ -52,11 +52,11 @@ public:
 	
 private:
 //	state:
-	vector< Double > xv, yv;
-	vector< Double > xCoeffs, yCoeffs;
-	Double scale;
+	vector< double > xv, yv;
+	vector< double > xCoeffs, yCoeffs;
+	double scale;
 	
-static inline void shift( vector< Double > & );
+static inline void shift( vector< double > & );
 	
 };	//	end of class Mkfilter
 

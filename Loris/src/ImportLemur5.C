@@ -18,6 +18,14 @@
 #include "Breakpoint.h"
 #include "Notifier.h"
 
+#if !defined(USE_DEPRECATED_HEADERS)
+	#include <cmath>
+	using std::fmod;
+#else
+	#include <math.h>
+#endif
+
+
 Begin_Namespace( Loris )
 
 #pragma mark -
@@ -57,7 +65,7 @@ ImportLemur5::verifySource( void )
 		_file.setPosition( 0 );
 		
 		//	check file type ids:
-		Int ids[2], size;
+		int ids[2], size;
 		_file.read( ids[0] );
 		_file.read( size );
 		_file.read( ids[1] );
@@ -70,19 +78,19 @@ ImportLemur5::verifySource( void )
 			Debug(dbg);
 			#endif
 			
-			Throw( ImportError, "File is not formatted correctly for Lemur 5 import." );
+			Throw( ImportException, "File is not formatted correctly for Lemur 5 import." );
 		}
 		
 		//	check file format number:
 		AnalysisParamsCk pck;
 		readParamsChunk( pck );
 		if ( pck.formatNumber != FormatNumber ) {
-			Throw( ImportError, "File has wrong Lemur format for Lemur 5 import." );
+			Throw( ImportException, "File has wrong Lemur format for Lemur 5 import." );
 		}
 	}
-	catch ( FileAccessException & ex ) {
+	catch ( FileIOException & ex ) {
 		//	convert to an Import Error:
-		Throw( ImportError, ex.getString() );
+		Throw( ImportException, ex.getString() );
 	}
 		
 }
@@ -112,7 +120,7 @@ ImportLemur5::beginImport( void )
 //	Return true if the number of Partials read equals the number of
 //	Partials in the Lemur file.
 //
-Boolean
+boolean
 ImportLemur5::done( void )
 {
 	Assert( _counter >= 0 );
@@ -142,24 +150,31 @@ ImportLemur5::getPartial( void )
 	p.setLabel( tkHeader.label );
 	
 	//	keep running phase and time for Breakpoint construction:
-	Double phase = tkHeader.initialPhase;
-	Double time = tkHeader.startTime * 0.001;	//	convert to seconds
+	double phase = tkHeader.initialPhase;
+	double time = tkHeader.startTime * 0.001;	//	convert to seconds
+	
+	//	use this to compute phases:
+	double prevTtnSec = 0.;
 	
 	//	loop: read Peak, create Breakpoint, add to Partial:
-	for ( Int i = 0; i < tkHeader.numPeaks; ++i ) {
+	for ( int i = 0; i < tkHeader.numPeaks; ++i ) {
 		//	read Peak:
 		PeakOnDisk pkData;
 		readPeakData( pkData );
 		
+		//	update phase based on _this_ pkData's interpolated freq:
+		phase +=TwoPi * prevTtnSec * pkData.interpolatedFrequency;
+		phase = fmod( phase, TwoPi );
+
 		//	create Breakpoint:	
 		Breakpoint bp( pkData.frequency, pkData.magnitude, pkData.bandwidth, phase );
 		
 		//	insert in Partial:
 		p.insert( time, bp );
 		
-		//	update time and phase:
-		phase = 0;	//	€€€ do this right!
-		time += pkData.ttn * 0.001;
+		//	update time:
+		prevTtnSec = pkData.ttn * 0.001;
+		time += prevTtnSec;
 	}
 }	
 		
@@ -190,7 +205,7 @@ ImportLemur5::readChunkHeader( CkHeader & h )
 		_file.read( h.id );
 		_file.read( h.size );
 	}
-	catch( FileAccessException & ex ) {
+	catch( FileIOException & ex ) {
 		ex.append( "Failed to read chunk header." );
 		throw;
 	}
@@ -228,7 +243,7 @@ ImportLemur5::readTracksChunk( TrackDataCk & ck )
 		using std::string;
 		string s( "No Track Data chunk found in this file." );
 		s.append( ex.getString() );
-		Throw( ImportError, s );
+		Throw( ImportException, s );
 	}
 	
 }
@@ -248,7 +263,7 @@ ImportLemur5::readParamsChunk( AnalysisParamsCk & ck )
 	try {
 		for ( readChunkHeader( ck.header ); ck.header.id != AnalysisParamsID; readChunkHeader( ck.header ) ) {
 			Assert( ck.header.size > 0 );
-			Int p = _file.position();
+			int p = _file.position();
 			Assert( ! _file.atEOF() );
 			p = _file.position();
 			if ( ck.header.id == FORM_ID ) {
@@ -279,7 +294,7 @@ ImportLemur5::readParamsChunk( AnalysisParamsCk & ck )
 		using std::string;
 		string s( "No Parameters chunk found in this file." );
 		s.append( ex.getString() );
-		Throw( ImportError, s );
+		Throw( ImportException, s );
 	}
 }
 

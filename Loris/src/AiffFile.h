@@ -11,6 +11,7 @@
 // ===========================================================================
 
 #include "LorisLib.h"
+#include "LorisTypes.h"
 #include "ieee.h"
 
 Begin_Namespace( Loris )
@@ -28,20 +29,20 @@ class AiffFile
 {
 public:
 //	construction:
-	AiffFile( Double rate, Int chans, Int bits, SampleBuffer & buf, File & file );
+	AiffFile( double rate, int chans, int bits, SampleBuffer & buf, File & file );
 	
 //	defaults are okay for these, but don't subclass
 	//	AiffFile( const AiffFile & other );
 	//	~AiffFile( void );
 	
 //	access/mutation:
-	Double sampleRate( void ) const { return _sampleRate; }
-	Int numChans( void ) const { return _nChannels; }
-	Int sampleSize( void ) const { return _sampSize; }
+	double sampleRate( void ) const { return _sampleRate; }
+	int numChans( void ) const { return _nChannels; }
+	int sampleSize( void ) const { return _sampSize; }
 	
-	void setSampleRate( Double x ) { _sampleRate = x; }
-	void setNumChannels( Int n ) { _nChannels = n; }
-	void setSampleSize( Int n ) { _sampSize = n; }
+	void setSampleRate( double x ) { _sampleRate = x; }
+	void setNumChannels( int n ) { _nChannels = n; }
+	void setSampleSize( int n ) { _sampSize = n; }
 	
 	SampleBuffer & samples( void ) { return _samples; }
 	const SampleBuffer & samples( void ) const { return _samples; }
@@ -107,9 +108,9 @@ private:
 	void validateParams( void );
 	
 //	-- instance variables --
-	Double _sampleRate;	//	in Hz
-	Int _nChannels;		//	samples per frame, usually one (mono) in Loris
-	Int _sampSize;		//	in bits
+	double _sampleRate;	//	in Hz
+	int _nChannels;		//	samples per frame, usually one (mono) in Loris
+	int _sampSize;		//	in bits
 	
 	SampleBuffer & _samples;
 	File & _file;

@@ -49,6 +49,7 @@ using namespace Loris;
 
 int main()
 {	
+	exit(0);
 	try {		
 		File f("Berenice:Loris:try these:flute3.lemr");
 		ImportLemur5 imp(f);
@@ -62,7 +63,7 @@ int main()
 		cout << "done" << endl;
 		
 		//	find the longest:
-		Double t = 0.;
+		double t = 0.;
 		for (list< Partial >::iterator it = l.begin(); it != l.end(); ++it ) {
 			if ( (*it).endTime() > t )
 				t = (*it).endTime();
@@ -72,13 +73,13 @@ int main()
 		cout << "found " << l.size() << " partials, total duration is " << t << endl;
 		
 		
-		const Int srate = 44100;
-		const Int nsamps = srate * t;
+		const int srate = 44100;
+		const int nsamps = srate * t;
 		SampleVector buf( nsamps );
 		
 		cout << "synthesizing... ";
 		Synthesizer synth( buf, srate );
-		Int c = 0;
+		int c = 0;
 		for (list< Partial >::iterator it = l.begin(); it != l.end(); ++it ) {
 			synth.synthesizePartial( *it );
 			if ( ++c % 100 == 0  )
@@ -87,8 +88,8 @@ int main()
 			
 		cout << "done." << endl << "writing..." << endl;
 		
-		for ( Int z = 1; z < 4; ++z ) {
-			Int ssize = z * 8;
+		for ( int z = 1; z < 4; ++z ) {
+			int ssize = z * 8;
 			
 			stringstream s;
 			s << "Berenice:Loris:try these:flute3." << ssize << ".aiff";
@@ -157,8 +158,8 @@ int main()
 	*/
 	/*
 	try {		
-		const Int srate = 44100;
-		const Double duration = 3.;
+		const int srate = 44100;
+		const double duration = 3.;
 		
 		Breakpoint bp( 100, 0.5, 0. );
 		Partial p;
@@ -169,9 +170,9 @@ int main()
 		bp.setAmplitude( 0.2 );
 		p.insert( duration, bp );
 		
-		const Int nsamps = srate * duration;
-		Double * samps = new Double[nsamps];
-		for ( Int k = 0; k < nsamps; ++k )
+		const int nsamps = srate * duration;
+		double * samps = new double[nsamps];
+		for ( int k = 0; k < nsamps; ++k )
 			samps[k] = 0.;
 		SimpleSampleBuffer buf( samps, nsamps );
 		
@@ -211,9 +212,9 @@ int main()
 	
 	notify( "Here we go!" );
 
-	Int * goober = Null;
+	int * goober = Null;
 	try {
-		goober = new Int[10000000];
+		goober = new int[10000000];
 	}
 	catch ( LowMemException & ex ) {
 		Notifier n;

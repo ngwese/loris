@@ -54,7 +54,7 @@ File::open( void )
 	if ( ! stream().is_open() ) {
 		string s( "couldn't open File: " );
 		s.append( name() );
-		Throw( FileAccessException, s );
+		Throw( FileIOException, s );
 	}
 }
 
@@ -81,7 +81,7 @@ File::openWrite( void )
 	if ( ! stream().is_open() ) {
 		string s( "couldn't open File for writing: " );
 		s.append( name() );
-		Throw( FileAccessException, s );
+		Throw( FileIOException, s );
 	}
 }
 
@@ -105,12 +105,12 @@ File::close( void )
 //	really only one stream and one pointer. Use either, but not both.
 //	
 //
-Int
+int
 File::position( void )
 {
-	Int posp = stream().tellp();
+	int posp = stream().tellp();
 	if ( posp < 0 )
-		Throw( FileAccessException, "Couldn't find position of stream pointer in File::position.");
+		Throw( FileIOException, "Couldn't find position of stream pointer in File::position.");
 	return posp;
 }
 
@@ -120,7 +120,7 @@ File::position( void )
 //	Offset the stream position from its current position.
 //
 void
-File::offsetPosition( Int offset )
+File::offsetPosition( int offset )
 {
 	stream().seekp( offset, ios::cur );
 }
@@ -132,7 +132,7 @@ File::offsetPosition( Int offset )
 //	then use it as an offset from the end of the stream.
 //
 void
-File::setPosition( Int pos )
+File::setPosition( int pos )
 {
 	ios::seekdir dehr;
 	
@@ -148,7 +148,7 @@ File::setPosition( Int pos )
 //	atEOF
 // ---------------------------------------------------------------------------
 //
-Boolean
+boolean
 File::atEOF( void )
 {
 	return stream().eof();

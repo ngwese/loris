@@ -23,7 +23,7 @@ Begin_Namespace( Loris )
 //	AiffFile constructor
 // ---------------------------------------------------------------------------
 //
-AiffFile::AiffFile( Double rate, Int chans, Int bits, SampleBuffer & buf, File & file ) :
+AiffFile::AiffFile( double rate, int chans, int bits, SampleBuffer & buf, File & file ) :
 	_sampleRate( rate ),
 	_nChannels( chans ),
 	_sampSize( bits ),
@@ -64,7 +64,7 @@ AiffFile::write( void )
 // ---------------------------------------------------------------------------
 //	validateParams
 // ---------------------------------------------------------------------------
-//	Throw InvalidConfiguration exception if the parameters are not valid.
+//	Throw InvalidObject exception if the parameters are not valid.
 //
 void
 AiffFile::validateParams( void )
@@ -72,15 +72,15 @@ AiffFile::validateParams( void )
 	using std::find;
 	
 	if ( _sampleRate < 0. )
-		Throw( InvalidConfiguration, "Bad sample rate in AiffFile." );
+		Throw( InvalidObject, "Bad sample rate in AiffFile." );
 	
-	static const Int validChannels[] = { 1, 2, 4 };
+	static const int validChannels[] = { 1, 2, 4 };
 	if (! find( validChannels, validChannels + 3, _nChannels ) )
-		Throw( InvalidConfiguration, "Bad number of channels in AiffFile." );
+		Throw( InvalidObject, "Bad number of channels in AiffFile." );
 	
-	static const Int validSizes[] = { 8, 16, 24, 32 };
+	static const int validSizes[] = { 8, 16, 24, 32 };
 	if (! find( validSizes, validSizes + 4, _sampSize ) )
-		Throw( InvalidConfiguration, "Bad sample size in AiffFile." );
+		Throw( InvalidObject, "Bad sample size in AiffFile." );
 	
 }
 
@@ -174,8 +174,8 @@ AiffFile::writeSamples( void )
 	using std::max;
 	using std::min;
 	
-	static const Double Maximum_Long = (Double) LONG_MAX;
-	//Int shift = 32 - _sampSize;
+	static const double Maximum_Long = (double) LONG_MAX;
+	//int shift = 32 - _sampSize;
 	
 	union {
 		Int_32 s32bits;
@@ -186,7 +186,7 @@ AiffFile::writeSamples( void )
 
 	switch ( _sampSize ) {
 		case 32:
-			for (Uint i = 0; i < _samples.size(); ++i ) {
+			for (ulong i = 0; i < _samples.size(); ++i ) {
 				//	convert to integer (clip instead of wrapping):
 				z.s32bits = Maximum_Long * min( 1.0, max(-1.0, _samples[i]) );
 			
@@ -195,7 +195,7 @@ AiffFile::writeSamples( void )
 			}
 			break;
 		case 24:
-			for (Uint i = 0; i < _samples.size(); ++i ) {
+			for (ulong i = 0; i < _samples.size(); ++i ) {
 				//	convert to integer (clip instead of wrapping):
 				z.s32bits = Maximum_Long * min( 1.0, max(-1.0, _samples[i]) );
 			
@@ -204,7 +204,7 @@ AiffFile::writeSamples( void )
 			}
 			break;
 		case 16:
-			for (Uint i = 0; i < _samples.size(); ++i ) {
+			for (ulong i = 0; i < _samples.size(); ++i ) {
 				//	convert to integer (clip instead of wrapping):
 				z.s32bits = Maximum_Long * min( 1.0, max(-1.0, _samples[i]) );
 			
@@ -213,7 +213,7 @@ AiffFile::writeSamples( void )
 			}
 			break;
 		case 8:
-			for (Uint i = 0; i < _samples.size(); ++i ) {
+			for (ulong i = 0; i < _samples.size(); ++i ) {
 				//	convert to integer (clip instead of wrapping):
 				z.s32bits = Maximum_Long * min( 1.0, max(-1.0, _samples[i]) );
 			

@@ -57,7 +57,7 @@ public:
 	
 	//	derived classes must provide a mean of determining
 	//	when the import loop should terminate:
-	virtual Boolean done( void ) = 0;
+	virtual boolean done( void ) = 0;
 	
 	//	derived classes must provide a means of reading 
 	//	in a Partial and adding it to the list mPartials.
@@ -77,18 +77,18 @@ protected:
 };	//	end of class Import
 
 // ---------------------------------------------------------------------------
-//	class ImportError
+//	class ImportException
 //
 //	Class of exceptions thrown when there is an error importing
 //	Partials.
 //
-class ImportError : public Exception
+class ImportException : public Exception
 {
 public: 
-	ImportError( const string & str, const string & where = "" ) : 
-		Exception( string("Import Error: ").append( str ), where ) {}
+	ImportException( const string & str, const string & where = "" ) : 
+		Exception( string("Import Error -- ").append( str ), where ) {}
 		
-};	//	end of class RuntimeException
+};	//	end of class ImportException
 
 
 End_Namespace( Loris )

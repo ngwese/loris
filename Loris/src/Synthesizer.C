@@ -38,7 +38,7 @@ Begin_Namespace( Loris )
 //	If no Oscillator (or a Null Oscillator) is specified, create a default
 //	Oscillator.
 //
-Synthesizer::Synthesizer( SampleBuffer & buf, Double srate, Double minBWEfreq, Oscillator * osc ) :
+Synthesizer::Synthesizer( SampleBuffer & buf, double srate, double minBWEfreq, Oscillator * osc ) :
 	_samples( buf ),
 	_sampleRate( srate ),
 	_oscillator( (osc != Null) ? (osc) : (Oscillator::Create()) ),
@@ -83,18 +83,18 @@ Synthesizer::synthesizePartial( const Partial & p )
 //	reset the oscillator:
 //	Remember that the oscillator only knows about radian frequency! Convert!
 	const Breakpoint * bp = p.head();
-	Double rads = radianFreq( bp->frequency() );
+	double rads = radianFreq( bp->frequency() );
 	_oscillator->reset( rads, _kludger.amp( *bp ), _kludger.bw( *bp ), bp->phase() );
 
 //	initialize sample offsets:
-	Uint bpSampleOffset = bp->time() * sampleRate() + 0.5;	// cheap, portable rounding
+	ulong bpSampleOffset = bp->time() * sampleRate() + 0.5;	// cheap, portable rounding
 
 //	synthesize Partial turn-on if necessary and possible:
-	const Int rampLen = 0.001 * sampleRate() + 0.5;	//	1 ms
+	const int rampLen = 0.001 * sampleRate() + 0.5;	//	1 ms
 	
 	if ( bp->amplitude() > 0. ) {
 		//	calculate the start time for the ramp, 
-		Int rampStart = bpSampleOffset - rampLen;
+		int rampStart = bpSampleOffset - rampLen;
 		if ( rampStart < 0 )
 			rampStart = 0;
 		
@@ -130,7 +130,7 @@ Synthesizer::synthesizePartial( const Partial & p )
 		//	between consecutive envelope breakpoints) we
 		//	obviate the running fractional sample total we
 		//	used to need.
-		Int nsamps = ( bp->time() * sampleRate() ) - bpSampleOffset + 0.5;
+		int nsamps = ( bp->time() * sampleRate() ) - bpSampleOffset + 0.5;
 		Assert( nsamps >= 0 );
 		
 		//	don't generate samples all the way to the end of the
@@ -168,8 +168,8 @@ Synthesizer::synthesizePartial( const Partial & p )
 //	radianFreq
 // ---------------------------------------------------------------------------
 //	
-inline Double 
-Synthesizer::radianFreq( Double hz ) const
+inline double 
+Synthesizer::radianFreq( double hz ) const
 {
 	return hz * TwoPi / sampleRate();
 }
@@ -178,7 +178,7 @@ Synthesizer::radianFreq( Double hz ) const
 //	kludger amp
 // ---------------------------------------------------------------------------
 //	
-inline Double
+inline double
 Synthesizer::BweKludger::amp( const Breakpoint & bp ) const
 {
 	if ( bp.frequency() > _cutoff )
@@ -191,7 +191,7 @@ Synthesizer::BweKludger::amp( const Breakpoint & bp ) const
 //	kludger bw
 // ---------------------------------------------------------------------------
 //	
-inline Double
+inline double
 Synthesizer::BweKludger::bw( const Breakpoint & bp ) const
 {
 	if ( bp.frequency() > _cutoff )
@@ -204,8 +204,8 @@ Synthesizer::BweKludger::bw( const Breakpoint & bp ) const
 //	kludger bwclamp
 // ---------------------------------------------------------------------------
 //	
-inline Double
-Synthesizer::BweKludger::bwclamp( Double bw ) const
+inline double
+Synthesizer::BweKludger::bwclamp( double bw ) const
 {
 	if( bw > 1. )
 		return 1.;

@@ -51,6 +51,7 @@ public:
 	
 //	mutation (only appending is allowed):
 	void append( const string & str );
+	Exception & operator << ( const string & str ) { append(str); return *this; }
 
 //	-- instance variables --
 protected:
@@ -58,19 +59,11 @@ protected:
 
 };	//	end of class Exception
 
-//	streaming operator for Exceptions:
-ostream & operator << ( ostream & str, const Exception & ex );
-
 // ---------------------------------------------------------------------------
-//	class RuntimeException
+//	streaming operator for Exceptions:
+//	(defined in Exception.C)
 //
-class RuntimeException : public Exception
-{
-public: 
-	RuntimeException( const string & str, const string & where = "" ) : 
-		Exception( string("Runtime Exception -- ").append( str ), where ) {}
-		
-};	//	end of class RuntimeException
+ostream & operator << ( ostream & str, const Exception & ex );	
 
 // ---------------------------------------------------------------------------
 //	class AssertionFailure
@@ -106,26 +99,26 @@ public:
 };	//	end of class LowMemException
 
 // ---------------------------------------------------------------------------
-//	class FileAccessException
+//	class FileIOException
 //
-class FileAccessException : public Exception
+class FileIOException : public Exception
 {
 public: 
-	FileAccessException( const string & str, const string & where = "" ) : 
-		Exception( string("File access error -- ").append( str ), where ) {}
+	FileIOException( const string & str, const string & where = "" ) : 
+		Exception( string("File i/o error -- ").append( str ), where ) {}
 		
 };	//	end of class FileAccessError
 
 // ---------------------------------------------------------------------------
-//	class InvalidConfiguration
+//	class InvalidObject
 //
-class InvalidConfiguration : public Exception
+class InvalidObject : public Exception
 {
 public: 
-	InvalidConfiguration( const string & str, const string & where = "" ) : 
+	InvalidObject( const string & str, const string & where = "" ) : 
 		Exception( string("Invalid configuration or object -- ").append( str ), where ) {}
 		
-};	//	end of class InvalidConfiguration
+};	//	end of class InvalidObject
 
 // ---------------------------------------------------------------------------
 //	macros for throwing exceptions
