@@ -217,7 +217,6 @@ createFreqReference( PartialList * partials, double minFreq, double maxFreq, lon
 //	defined above to convert two strings into vectors
 //	of time points:
 %{
-	#include<Dilator.h>
 	#include <string>
 	#include <vector>
 	
@@ -257,19 +256,10 @@ createFreqReference( PartialList * partials, double minFreq, double maxFreq, lon
 		if ( ivec.size() != tvec.size() )
 			Throw( Loris::InvalidArgument, "Invalid arguments to dilate(): there must be as many target points as initial points" );
 				
-		double * initial = ivec.begin();
-		double * target = tvec.begin();
+		double * initial = &(ivec[0]);
+		double * target = &(tvec[0]);
 		int npts = ivec.size();
-	
-		//	USE THE PI INSTEAD!
-			
-		ThrowIfNull((PartialList *) partials);
-		ThrowIfNull((double *) initial);
-		ThrowIfNull((double *) target);
-	
-		Loris::notifier << "dilating " << partials->size() << " Partials" << Loris::endl;
-		Loris::Dilator dil( initial, target, npts );
-		dil.dilate( partials->begin(), partials->end() );
+		dilate( partials, initial, target, npts );
 	}
 	/*	Dilate Partials in a PartialList according to the given 
 		initial and target time points. Partial envelopes are 
