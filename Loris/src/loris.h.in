@@ -74,13 +74,12 @@
 	//	include std library headers, declaring template classes
 	//	is too painful and fragile:
 	#include <list>
-	#include <vector>
-	typedef std::vector< double > SampleVector;
 	
 	//	declare Loris classes in Loris namespace:
 	namespace Loris
 	{
 		class Analyzer;
+		class Breakpoint;
 		class BreakpointEnvelope;
 		class Partial;
 		//	this has to be copied from PartialList.h
@@ -89,9 +88,10 @@
 #else 
 	/* no classes, just opaque C pointers */
 	typedef struct Analyzer Analyzer;
+	typedef struct Breakpoint Breakpoint;
 	typedef struct BreakpointEnvelope BreakpointEnvelope;
 	typedef struct PartialList PartialList;
-	typedef struct SampleVector SampleVector;
+	typedef struct Partial Partial;
 #endif
 
 #if defined(__cplusplus)
@@ -127,9 +127,9 @@ void destroyAnalyzer( Analyzer * ptr_this );
 /*	Destroy this Analyzer. 								
  */
 void analyzer_analyze( Analyzer * ptr_this, 
-					   const SampleVector * vec, double srate,
-					   PartialList * partials );
-/*	Analyze a vector of (mono) samples at the given sample rate 	  	
+					   const double * buffer, unsigned int bufferSize, 
+					   double srate, PartialList * partials );
+/*	Analyze an array of bufferSize (mono) samples at the given sample rate 	  	
 	(in Hz) and append the extracted Partials to the given 
 	PartialList. 												
  */
@@ -300,65 +300,24 @@ void partialList_splice( PartialList * ptr_this,
 /*	Splice all the Partials in the source PartialList onto the end of
 	this PartialList, leaving the source empty.
  */
+ 
+/* ---------------------------------------------------------------- */
+/*		Partial object interface
+/*
+/*
+	startTime, endTime, duration, initialPhase, label, 
+	size (numBreakpoints), setLabel,
+	frequencyAt, amplitudeAt, bandwidthAt, phaseAt
+ */ 
 
 /* ---------------------------------------------------------------- */
-/*		SampleVector object interface								
+/*		Breakpoint object interface
 /*
-/*	A SampleVector represents a vector of floating point samples of
-	an audio waveform. In Loris, the samples are assumed to have 
-	values on the range (-1., 1.) (though this is not enforced or 
-	checked). 
+/*	
+	frequency, amplitude, bandwidth, phase
+	setFrequency, setAmplitude, setBandwidth, setPhase
+ */ 
 
-	In C++, a SampleVector is a std::vector< double >.
- */
- 
-SampleVector * createSampleVector( unsigned long size );
-/*	Return a new SampleVector having the specified number of samples,
-	all of whose value is 0.
- */
-void destroySampleVector( SampleVector * ptr_this );
-/*	Destroy this SampleVector.
- */
-void sampleVector_assign( SampleVector * ptr_this, 
-						  const SampleVector * src );
-/*	Assign the contents of the source SampleVector to this (the 
-	destination) SampleVector, so that the two have identical contents. 
-	
-	This is a more intuitive name for the operation sampleVector_copy.
- */
-void sampleVector_copy( SampleVector * ptr_this, 
-						const SampleVector * src );
-/*	Make this SampleVector a copy of the source SampleVector, having 
-	the same number of samples, and samples at every position in this
-	SampleVector having the same value as the corresponding sample in
-	the source.
- */
-void sampleVector_fill( SampleVector * vec, double * buffer, 
-						unsigned long bufsize );
-/*	Fill this SampleVector with sampless stored in a buffer of 
-	doubles. All the samples in the buffer are stored, the 
-	SampleVector will be resized if it is smaller than bufsize.
-	If the SampleVector is larger than bufsize, the extra space
-	will be filled with zeros.
- */
-
-double sampleVector_getAt( const SampleVector * ptr_this, unsigned long idx );
-/*	Return the value of the sample at the given position (index) in
-	this SampleVector.
- */
-void sampleVector_setAt( SampleVector * ptr_this, unsigned long idx, double x );
-/*	Set the value of the sample at the given position (index) in
-	this SampleVector.
- */
-unsigned long sampleVector_getLength( const SampleVector * ptr_this );
-/*	Return the number of samples represented by this SampleVector.
- */
-void sampleVector_setLength( SampleVector * ptr_this, unsigned long size );
-/*	Change the number of samples represented by this SampleVector. If
-	the given size is greater than the current size, all new samples 
-	will have value 0. If the given size is less than the current 
-	size, then samples in excess of the given size are removed.
- */
 
 /* ---------------------------------------------------------------- */
 /*		non-object-based procedures
@@ -428,13 +387,12 @@ void distill( PartialList * partials );
 	(label 0) Partials are eliminated.
  */
 
-void exportAiff( const char * path, const SampleVector * vec, 
-				 double samplerate, int nchannels, int bitsPerSamp );
-/*	Export audio samples stored in a SampleVector to an AIFF file
-	having the specified number of channels and sample rate at the 
-	given file path (or name). The floating point samples in the 
-	SampleVector are clamped to the range (-1.,1.) and converted 
-	to integers having bitsPerSamp bits.
+void exportAiff( const char * path, const double * buffer, 
+				 unsigned int bufferSize, double samplerate, int bitsPerSamp );
+/*	Export mono audio samples stored in an array of size bufferSize to 
+	an AIFF file having the specified sample rate at the given file path 
+	(or name). The floating point samples in the buffer are clamped to the 
+	range (-1.,1.) and converted to integers having bitsPerSamp bits.
  */
 				 
 void exportSdif( const char * path, PartialList * partials );
@@ -458,18 +416,18 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch,
 	and bandwidth values are to be modified to make a gradual transition to 
 	the static spectrum.
  */
-				
-void importAiff( const char * path, SampleVector * vec, 
-				 double * samplerate, int * nchannels );
+ 
+unsigned int importAiff( const char * path, double * buffer, unsigned int bufferSize, 
+						 double * samplerate );
 /*	Import audio samples stored in an AIFF file at the given file
 	path (or name). The samples are converted to floating point 
-	values on the range (-1.,1.) and stored in the given 
-	SampleVector, which is resized to (exactly) accomodate all the 
-	samples from in the file. If samplerate is not a NULL pointer, 
+	values on the range (-1.,1.) and stored in an array of doubles. 
+	The value returned is the number of samples in buffer, and it is at
+	most bufferSize. If samplerate is not a NULL pointer, 
 	then, on return, it points to the value of the sample rate (in
-	Hz) of the AIFF samples. Similarly, if nchannels is not a NULL
-	pointer, then, on return, it points to the value of the number
-	of channels of audio data represented by the AIFF samples.
+	Hz) of the AIFF samples. The AIFF file must contain only a single
+	channel of audio data. The prior contents of buffer, if any, are 
+	overwritten.
  */
 
 void importSdif( const char * path, PartialList * partials );
@@ -518,15 +476,14 @@ void sift( PartialList * partials );
  */ 
 
 void synthesize( const PartialList * partials,
-				 SampleVector * samples,  
+				 double * buffer, unsigned int bufferSize,
 				 double srate );
 /*	Synthesize Partials in a PartialList at the given sample
-	rate, and store the (floating point) samples in a SampleVector.
-	The SampleVector is resized, if necessary, to hold as many
-	samples as are needed for the complete synthesis of all the
-	Partials in the PartialList. The SampleVector is not 
+	rate, and store the (floating point) samples in a buffer of
+	size bufferSize. The buffer is neither resized nor 
 	cleared before synthesis, so newly synthesized samples are
-	added to any previously computed samples in the SampleVector.
+	added to any previously computed samples in the buffer, and
+	samples beyond the end of the buffer are lost.
  */
 
 /* ---------------------------------------------------------------- */
@@ -535,11 +492,17 @@ void synthesize( const PartialList * partials,
 /*	These procedures are generally useful but are not   
 	represented by classes in the Loris core.
  */
-
-void copyByLabel( const PartialList * src, long label, PartialList * dst );
-/*	Old name for copyLabeled.
- */
  
+void copyIf( const PartialList * src, PartialList * dst, 
+			 bool ( * predicate )( const Partial * p, void * data ),
+			 void * data );
+/*	Append copies of Partials in the source PartialList satisfying the
+	specified predicate to the destination PartialList. The source list
+	is unmodified. The data parameter can be used to 
+    supply extra user-defined data to the function. Pass 0 if no 
+    additional data is needed.
+ */
+			 
 void copyLabeled( const PartialList * src, long label, PartialList * dst );
 /*	Append copies of Partials in the source PartialList having the
 	specified label to the destination PartialList. The source list
@@ -551,10 +514,59 @@ void crop( PartialList * partials, double t1, double t2 );
 	Insert a Breakpoint at the boundary when cropping occurs.
  */
 
+void extractIf( PartialList * src, PartialList * dst, 
+			 	bool ( * predicate )( const Partial * p, void * data ),
+			 	void * data );
+/*	Remove Partials in the source PartialList satisfying the
+	specified predicate from the source list and append them to
+    the destination PartialList. The data parameter can be used to 
+    supply extra user-defined data to the function. Pass 0 if no 
+    additional data is needed.
+ */
+
+
 void extractLabeled( PartialList * src, long label, PartialList * dst );
 /*  Remove Partials in the source PartialList having the specified
     label from the source list and append them to the destination 
     PartialList. 
+ */
+
+int forEachBreakpoint( Partial * p,
+		 			   int ( * func )( Breakpoint * p, double time, void * data ),
+			 		   void * data );
+/*	Apply a function to each Breakpoint in a Partial. The function
+	is called once for each Breakpoint in the source Partial. The
+	function may modify the Breakpoint (but should not otherwise attempt 
+	to modify the Partial). The data parameter can be used to supply extra
+	user-defined data to the function. Pass 0 if no additional data is needed.
+	The function should return 0 if successful. If the function returns
+	a non-zero value, then forEachBreakpoint immediately returns that value
+	without applying the function to any other Breakpoints in the Partial.
+	forEachBreakpoint returns zero if all calls to func return zero.
+ */
+			 			
+int forEachPartial( PartialList * src,
+			 		int ( * func )( Partial * p, void * data ),
+			 		void * data );
+/*	Apply a function to each Partial in a PartialList. The function
+	is called once for each Partial in the source PartialList. The
+	function may modify the Partial (but should not attempt to modify
+	the PartialList). The data parameter can be used to supply extra
+	user-defined data to the function. Pass 0 if no additional data 
+	is needed. The function should return 0 if successful. If the 
+	function returns a non-zero value, then forEachPartial immediately 
+	returns that value without applying the function to any other 
+	Partials in the PartialList. forEachPartial returns zero if all 
+	calls to func return zero.
+ */
+
+void removeIf( PartialList * src, 
+			   bool ( * predicate )( const Partial * p, void * data ),
+			   void * data );
+/*	Remove from a PartialList all Partials satisfying the
+	specified predicate. The data parameter can be used to 
+    supply extra user-defined data to the function. Pass 0 if no 
+    additional data is needed.
  */
 
 void removeLabeled( PartialList * src, long label );
@@ -598,11 +610,6 @@ void sortByLabel( PartialList * partials );
  	The sort is stable; Partials having the same label are not 
  	reordered.
  */
-
-void spliceByLabel( PartialList * src, long label, PartialList * dst );
-/*  Old name for extractLabeled. 
- */
-
 
 
 /* ---------------------------------------------------------------- */

@@ -74,6 +74,7 @@
 #include "Synthesizer.h"
 
 #include <cmath>
+#include <functional>
 #include <list>
 #include <string>
 #include <vector>
@@ -228,7 +229,8 @@ void dilate( PartialList * partials,
 
 		notifier << "dilating " << partials->size() << " Partials" << endl;
 		Dilator::dilate( partials->begin(), partials->end(),
-      		           initial, initial+npts, target );
+      		             initial, initial + npts, target );
+
 	}
 	catch( Exception & ex ) 
 	{
@@ -285,32 +287,29 @@ void distill( PartialList * partials )
 /* ---------------------------------------------------------------- */
 /*        exportAiff        
 /*
-/*	Export audio samples stored in a SampleVector to an AIFF file
-	having the specified number of channels and sample rate at the 
-	given file path (or name). The floating point samples in the 
-	SampleVector are clamped to the range (-1.,1.) and converted 
-	to integers having bitsPerSamp bits.
+/*	Export mono audio samples stored in an array of size bufferSize to 
+	an AIFF file having the specified sample rate at the given file path 
+	(or name). The floating point samples in the buffer are clamped to the 
+	range (-1.,1.) and converted to integers having bitsPerSamp bits.
  */
 extern "C"
-void exportAiff( const char * path, const SampleVector * vec, 
-				 double samplerate, int nchannels, int bitsPerSamp )
+void exportAiff( const char * path, const double * buffer, 
+				 unsigned int bufferSize, double samplerate, int bitsPerSamp )
 {
 	try 
 	{
-		ThrowIfNull((SampleVector *) vec);
-		if ( nchannels != 1 )
-			Throw( InvalidArgument,"Loris only exports single-channel AIFF files." );
+		ThrowIfNull((double *) buffer);
 	
 		// do nothing if there are no samples:
-		if ( vec->empty() )
+		if ( bufferSize == 0 )
 		{
 			notifier << "no samples to write to " << path << endl;
 			return;
 		}
 
 		//	write out samples:
-		notifier << "writing " << vec->size() << " samples to " << path << endl;
-		AiffFile fout( *vec, samplerate );
+		notifier << "writing " << bufferSize << " samples to " << path << endl;
+		AiffFile fout( buffer, bufferSize, samplerate );
 		fout.write( path, bitsPerSamp );
 	}
 	catch( Exception & ex ) 
@@ -417,36 +416,43 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch,
 /*
 /*	Import audio samples stored in an AIFF file at the given file
 	path (or name). The samples are converted to floating point 
-	values on the range (-1.,1.) and stored in the given 
-	SampleVector, which is resized to (exactly) accomodate all the 
-	samples from the file. If samplerate is not a NULL pointer, 
+	values on the range (-1.,1.) and stored in an array of doubles. 
+	The value returned is the number of samples in buffer, and it is at
+	most bufferSize. If samplerate is not a NULL pointer, 
 	then, on return, it points to the value of the sample rate (in
-	Hz) of the AIFF samples. Similarly, if nchannels is not a NULL
-	pointer, then, on return, it points to the value of the number
-	of channels of audio data represented by the AIFF samples.
+	Hz) of the AIFF samples. The AIFF file must contain only a single
+	channel of audio data. The prior contents of buffer, if any, are 
+	overwritten.
  */
 extern "C"
-void importAiff( const char * path, SampleVector * samps, 
-				 double * samplerate, int * nchannels )
+unsigned int importAiff( const char * path, double * buffer, unsigned int bufferSize, 
+						 double * samplerate )
 {
+	unsigned int howMany = 0; 
 	try 
 	{
-		ThrowIfNull((SampleVector *) samps);
-
 		//	read samples:
 		notifier << "reading samples from " << path << endl;
 		AiffFile f( path );
-		samps->resize( f.samples().size(), 0. );
-		if ( !samps->empty() )
-			samps->assign( f.samples().begin(), f.samples().end() );
-		
 		notifier << "read " << f.samples().size() << " frames at " 
 				 << f.sampleRate() << " Hz" << endl;
-		
+				
+		howMany = std::min( f.samples().size(), 
+							std::vector< double >::size_type( bufferSize ) );
+		if ( howMany < f.samples().size() )
+		{
+			notifier << "returning " << howMany << " samples" << endl;
+		}
+
+		std::copy( f.samples().begin(), f.samples().begin() + howMany,
+				   buffer );
+		std::fill( buffer + howMany,  buffer + bufferSize, 0. );
+
+				
 		if ( samplerate )
+		{
 			*samplerate = f.sampleRate();
-		if ( nchannels )
-			*nchannels = 1;
+		}
 	}
 	catch( Exception & ex ) 
 	{
@@ -460,6 +466,7 @@ void importAiff( const char * path, SampleVector * samps,
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
+	return howMany;
 }
 
 /* ---------------------------------------------------------------- */
@@ -656,55 +663,34 @@ void sift( PartialList * partials )
 /*        synthesize        
 /*
 /*	Synthesize Partials in a PartialList at the given sample
-	rate, and store the (floating point) samples in a SampleVector.
-	The SampleVector is resized, if necessary, to hold as many
-	samples as are needed for the complete synthesis of all the
-	Partials in the PartialList. The SampleVector is not 
+	rate, and store the (floating point) samples in a buffer of
+	size bufferSize. The buffer is neither resized nor 
 	cleared before synthesis, so newly synthesized samples are
-	added to any previously computed samples in the SampleVector.
+	added to any previously computed samples in the buffer, and
+	samples beyond the end of the buffer are lost.
  */
 extern "C"
 void synthesize( const PartialList * partials, 
-				 SampleVector * samples,  
+				 double * buffer, unsigned int bufferSize,  
 				 double srate )
 {
 	try 
 	{
 		ThrowIfNull((PartialList *) partials);
-		ThrowIfNull((SampleVector *) samples);
+		ThrowIfNull((double *) buffer);
 
 		notifier << "synthesizing " << partials->size() 
 				 << " Partials at " << srate << " Hz" << endl;
 
-		//	compute the duration:
-		debugger << "computing duration..." << endl;
-		double maxtime = 0.;
-		PartialList::const_iterator it;
-		for ( it = partials->begin(); it != partials->end(); ++it ) 
-		{
-			maxtime = std::max( maxtime, it->endTime() );
-		}
-		debugger << maxtime << " seconds" << endl;
-		
-		//	resize the Samplevector if necessary (pad the length
-		//	to accomodate the fade-out at the end of the latest
-		//	Partial):
-		const double fadeTime = .001;
-		const long nsamps = long( srate * ( maxtime + fadeTime ) );	
-		if ( nsamps == 0 )
-		{
-			notifier << "no samples to synthesize" << endl;
-			return;
-		} 
-		if ( samples->size() < nsamps )
-			samples->resize( nsamps, 0. );
-		
 		//	synthesize:
-		Synthesizer synth( srate, *samples );
-		for ( it = partials->begin(); it != partials->end(); ++it ) 
-		{
-			synth.synthesize( *it );
-		}
+		std::vector< double > vec;
+		Synthesizer synth( srate, vec );
+		synth.synthesize( partials->begin(), partials->end() );
+
+		//	accumulate into the buffer:
+		std::transform( buffer, buffer + bufferSize, vec.begin(), 
+						buffer, std::plus< double >() );
+
 	}
 	catch( Exception & ex ) 
 	{

@@ -330,7 +330,7 @@ public:
 	//!			Partial.
 	//!	\post	All positions beginning with pos and extending to
 	//!			the end of this Partial have been removed.
-Partial split( iterator pos );
+	Partial split( iterator pos );
 	 
 //	-- parameter interpolation/extrapolation --
 

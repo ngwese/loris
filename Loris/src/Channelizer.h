@@ -147,29 +147,29 @@ public:
 		 
 // -- static members --
 
-   //!   Static member that constructs an instance and applies
-   //!   it to a sequence of Partials. 
-   //!   Construct a Channelizer using the specified Envelope
-   //!   and reference label, and use it to channelize a
-   //!   sequence of Partials. 
-   //!
-   //!   \param   begin is the beginning of a sequence of Partials to 
-   //!            channelize.
-   //!   \param   end is the end of a sequence of Partials to 
-   //!            channelize.
+	//!   Static member that constructs an instance and applies
+	//!   it to a sequence of Partials. 
+	//!   Construct a Channelizer using the specified Envelope
+	//!   and reference label, and use it to channelize a
+	//!   sequence of Partials. 
+	//!
+	//!   \param   begin is the beginning of a sequence of Partials to 
+	//!            channelize.
+	//!   \param   end is the end of a sequence of Partials to 
+	//!            channelize.
 	//!	\param 	refChanFreq is an Envelope representing the center frequency
 	//!			   of a channel.
 	//!	\param 	refChanLabel is the corresponding channel number (i.e. 1
 	//!			   if refChanFreq is the lowest-frequency channel, and all 
 	//!			   other channels are harmonics of refChanFreq, or 2 if  
 	//!			   refChanFreq tracks the second harmonic, etc.).
-   //!   \throw   InvalidArgument if refChanLabel is not positive.
-   //!	
-   //!	If compiled with NO_TEMPLATE_MEMBERS defined, then begin and end
-   //!	must be PartialList::iterators, otherwise they can be any type
-   //!	of iterators over a sequence of Partials.
+	//!   \throw   InvalidArgument if refChanLabel is not positive.
+	//!	
+	//!	If compiled with NO_TEMPLATE_MEMBERS defined, then begin and end
+	//!	must be PartialList::iterators, otherwise they can be any type
+	//!	of iterators over a sequence of Partials.
 #if ! defined(NO_TEMPLATE_MEMBERS)
-	template<typename Iter>
+	template< typename Iter >
 	static void channelize( Iter begin, Iter end, 
 	                        const Envelope & refChanFreq, int refChanLabel );
 #else
@@ -219,12 +219,12 @@ void Channelizer::channelize( PartialList::iterator begin, PartialList::iterator
 //!            channelize.
 //!   \param   end is the end of a sequence of Partials to 
 //!            channelize.
-//!	\param 	refChanFreq is an Envelope representing the center frequency
-//!			of a channel.
-//!	\param 	refChanLabel is the corresponding channel number (i.e. 1
-//!			if refChanFreq is the lowest-frequency channel, and all 
-//!			other channels are harmonics of refChanFreq, or 2 if  
-//!			refChanFreq tracks the second harmonic, etc.).
+//!	  \param 	refChanFreq is an Envelope representing the center frequency
+//!				of a channel.
+//!	  \param 	refChanLabel is the corresponding channel number (i.e. 1
+//!				if refChanFreq is the lowest-frequency channel, and all 
+//!				other channels are harmonics of refChanFreq, or 2 if  
+//!				refChanFreq tracks the second harmonic, etc.).
 //!   \throw   InvalidArgument if refChanLabel is not positive.
 //!	
 //!	If compiled with NO_TEMPLATE_MEMBERS defined, then begin and end
@@ -232,7 +232,7 @@ void Channelizer::channelize( PartialList::iterator begin, PartialList::iterator
 //!	of iterators over a sequence of Partials.
 //
 #if ! defined(NO_TEMPLATE_MEMBERS)
-template<typename Iter>
+template< typename Iter >
 void Channelizer::channelize( Iter begin, Iter end, 
                               const Envelope & refChanFreq, int refChanLabel )
 #else

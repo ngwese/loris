@@ -70,6 +70,39 @@
 
 using namespace Loris;
 
+// ---------------------------------------------------------------------------
+//	Functors to help apply C-callbacks to lists of Partials
+//	by converting Partial references to pointer arguments.
+//
+
+struct CallWithPointer : public std::unary_function< Partial, void >
+{
+	typedef void (* Func)( Partial *, void * );
+	Func func;
+	void * data;
+	
+	CallWithPointer( Func f, void * d ) : func( f ), data( d ) {}
+	
+	void operator()( Partial & partial ) const
+	{
+		func( &partial, data );
+	}
+};
+
+struct PredWithPointer : public std::unary_function< const Partial, bool >
+{
+	typedef bool (* Pred)( const Partial *, void * );
+	Pred pred;
+	void * data;
+	
+	PredWithPointer( Pred p, void * d ) : pred( p ), data( d ) {}
+	
+	bool operator()( const Partial & partial ) const
+	{
+		return pred( &partial, data );
+	}
+};
+
 /* ---------------------------------------------------------------- */
 /*		utility functions
 /*
@@ -78,16 +111,40 @@ using namespace Loris;
  */
  
 /* ---------------------------------------------------------------- */
-/*        copyByLabel        
-/*
-/*	Old name for copyLabeled.
+/*        copyIf        
+/*	Append copies of Partials in the source PartialList satisfying the
+	specified predicate to the destination PartialList. The source list
+	is unmodified. The data parameter can be used to 
+    supply extra user-defined data to the function. Pass 0 if no 
+    additional data is needed.
  */
 extern "C"
-void copyByLabel( const PartialList * src, long label, PartialList * dst )
+void copyIf( const PartialList * src, PartialList * dst, 
+			 bool ( * predicate )( const Partial * p, void * data ),
+			 void * data )
 {
-	copyLabeled( src, label, dst );
+	try 
+	{
+		ThrowIfNull((PartialList *) src);
+		ThrowIfNull((PartialList *) dst);
+		
+		std::remove_copy_if( src->begin(), src->end(), std::back_inserter( *dst ),
+							 std::not1( PredWithPointer( predicate, data ) ) );
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in copyIf(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in copyIf(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
 }
-
+			 
 /* ---------------------------------------------------------------- */
 /*        copyLabeled        
 /*
@@ -152,6 +209,44 @@ void crop( PartialList * partials, double t1, double t2 )
 }
 
 /* ---------------------------------------------------------------- */
+/*        extractIf      
+/*
+/*	Remove Partials in the source PartialList satisfying the
+	specified predicate from the source list and append them to
+    the destination PartialList. The data parameter can be used to 
+    supply extra user-defined data to the function. Pass 0 if no 
+    additional data is needed.
+ */
+extern "C"
+void extractIf( PartialList * src, PartialList * dst, 
+			 	bool ( * predicate )( const Partial * p, void * data ),
+			 	void * data )
+{
+	try 
+	{
+		ThrowIfNull((PartialList *) src);
+		ThrowIfNull((PartialList *) dst);
+
+		std::list< Partial >::iterator it = 
+			std::stable_partition( src->begin(), src->end(), 
+								   std::not1( PredWithPointer( predicate, data ) ) );
+		dst->splice( dst->end(), *src, it, src->end() );
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in extractIf(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in extractIf(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+
+/* ---------------------------------------------------------------- */
 /*        extractLabeled        
 /*
 /*	Remove Partials in the source PartialList having the specified
@@ -185,6 +280,133 @@ void extractLabeled( PartialList * src, long label, PartialList * dst )
 	}
 }
 
+/* ---------------------------------------------------------------- */
+/*        forEachBreakpoint        
+/*
+/*	Apply a function to each Breakpoint in a Partial. The function
+	is called once for each Breakpoint in the source Partial. The
+	function may modify the Breakpoint (but should not otherwise attempt 
+	to modify the Partial). The data parameter can be used to supply extra
+	user-defined data to the function. Pass 0 if no additional data is needed.
+	The function should return 0 if successful. If the function returns
+	a non-zero value, then forEachBreakpoint immediately returns that value
+	without applying the function to any other Breakpoints in the Partial.
+	forEachBreakpoint returns zero if all calls to func return zero.
+ */
+int forEachBreakpoint( Partial * p,
+		 			   int ( * func )( Breakpoint * p, double time, void * data ),
+			 		   void * data )
+{
+	int result = 0;
+	try 
+	{
+		ThrowIfNull((Partial *) p);
+
+		Partial::iterator it;
+		for ( it = p->begin(); 0 == result && it != p->end(); ++it )
+		{
+			result = func( &(it.breakpoint()), it.time(), data );
+		}
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in forEachBreakpoint(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in forEachBreakpoint(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	
+	return result;
+}
+
+			 			
+/* ---------------------------------------------------------------- */
+/*        forEachPartial        
+/*
+/*	Apply a function to each Partial in a PartialList. The function
+	is called once for each Partial in the source PartialList. The
+	function may modify the Partial (but should not attempt to modify
+	the PartialList). The data parameter can be used to supply extra
+	user-defined data to the function. Pass 0 if no additional data 
+	is needed. The function should return 0 if successful. If the 
+	function returns a non-zero value, then forEachPartial immediately 
+	returns that value without applying the function to any other 
+	Partials in the PartialList. forEachPartial returns zero if all 
+	calls to func return zero.
+ */
+int forEachPartial( PartialList * src,
+			 		int ( * func )( Partial * p, void * data ),
+			 		void * data )
+{
+	int result = 0;
+	try 
+	{
+		ThrowIfNull((PartialList *) src);
+		
+		PartialList::iterator it;
+		for ( it = src->begin(); 0 == result && it != src->end(); ++it )
+		{
+			result = func( &(*it), data );
+		}
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in forEachPartial(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in forEachPartial(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+
+	return result;
+}
+			 		
+
+/* ---------------------------------------------------------------- */
+/*        removeIf        
+/*
+/*	Remove from a PartialList all Partials satisfying the
+	specified predicate. The data parameter can be used to 
+    supply extra user-defined data to the function. Pass 0 if no 
+    additional data is needed.
+ */
+extern "C"
+void removeIf( PartialList * src, 
+			   bool ( * predicate )( const Partial * p, void * data ),
+			   void * data )
+{
+	try 
+	{
+		ThrowIfNull((PartialList *) src);
+		std::list< Partial >::iterator it = 
+			std::remove_if( src->begin(), src->end(), 
+							PredWithPointer( predicate, data ) );
+		src->erase( it, src->end() );
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in removeIf(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in removeIf(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+
+			 
 /* ---------------------------------------------------------------- */
 /*        removeLabeled        
 /*
@@ -295,7 +517,7 @@ void scaleFrequency( PartialList * partials, BreakpointEnvelope * freqEnv )
 
 		notifier << "scaling frequency of " << partials->size() << " Partials" << endl;
 
-      PartialUtils::scaleFrequency( partials->begin(), partials->end(), *freqEnv );
+      	PartialUtils::scaleFrequency( partials->begin(), partials->end(), *freqEnv );
 	}
 	catch( Exception & ex ) 
 	{
@@ -420,16 +642,3 @@ void sortByLabel( PartialList * partials )
 {
 	partials->sort( PartialUtils::compareLabelLess() );	
 }
-
-/* ---------------------------------------------------------------- */
-/*        spliceByLabel        
-/*
-/*	Old name for extractLabeled. 
- */
-extern "C"
-void spliceByLabel( PartialList * src, long label, PartialList * dst )
-{
-	::extractLabeled( src, label, dst );
-}
-
-

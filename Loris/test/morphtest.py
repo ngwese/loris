@@ -85,7 +85,7 @@ f = 0
 n = 0
 import sys
 if float(sys.version[:3]) >= 2.2:
-	p = clar.iterator().next()
+	p = clar.first()
 	for pos in p:
 		f = f + pos.frequency()
 		n = n + 1
@@ -102,7 +102,7 @@ print 'shifting pitch of clarinet'
 loris.shiftPitch( clar, loris.BreakpointEnvelopeWithValue( -600 ) )
 
 # check clarinet synthesis:
-loris.exportAiff( 'clarOK.pytest.aiff', loris.synthesize( clar, samplerate ), samplerate, 1, 16 )
+loris.exportAiff( 'clarOK.pytest.aiff', loris.synthesize( clar, samplerate ), samplerate, 16 )
 
 #
 #	analyze flute tone (reuse Analyzer)
@@ -116,7 +116,7 @@ loris.channelize( flut, loris.createFreqReference( flut, 0, 1000 ), 1 )
 loris.distill( flut )
 
 # check flute synthesis:
-loris.exportAiff( 'flutOK.pytest.aiff', loris.synthesize( flut, samplerate ), samplerate, 1, 16 )
+loris.exportAiff( 'flutOK.pytest.aiff', loris.synthesize( flut, samplerate ), samplerate, 16 )
 
 #
 #	perform temporal dilation
@@ -141,6 +141,6 @@ mf.insertBreakpoint( 2, 1 )
 m = loris.morph( clar, flut, mf, mf, mf )
 loris.exportAiff( 'morph.pytest.aiff', 
 				  loris.synthesize( m, samplerate ), 
-				  samplerate, 1, 16 )
+				  samplerate, 16 )
 
 print 'done (%s)' % time.ctime(time.time())

@@ -96,5 +96,7 @@ endif
 SWIG = swig
 SWIG_INTERFACE = loris.i
 
-wrapper: 
+wrapper: $(PYTHON_WRAPPER)
+
+$(PYTHON_WRAPPER): $(SWIG_INTERFACE)
 	$(SWIG) -python -c++ -module loris -o $(PYTHON_WRAPPER) $(SWIG_INTERFACE)

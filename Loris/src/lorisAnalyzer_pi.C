@@ -139,28 +139,28 @@ void destroyAnalyzer( Analyzer * ptr_this )
 /* ---------------------------------------------------------------- */
 /*        analyzer_analyze        
 /*
-/*	Analyze a vector of (mono) samples at the given sample rate 	  	
-	(in Hz) and append the extracted Partials to the given 
-	PartialList. 												
+/*	Analyze an array of bufferSize (mono) samples at the given 
+	sample rate (in Hz) and append the extracted Partials to the 
+	given PartialList. 												
  */
 extern "C"
 void analyzer_analyze( Analyzer * ptr_this, 
-					   const SampleVector * vec, double srate,
-					   Loris::PartialList * partials )
+					   const double * buffer, unsigned int bufferSize, 
+					   double srate, Loris::PartialList * partials )
 {
 	try 
 	{
 		ThrowIfNull((Analyzer *) ptr_this);
-		ThrowIfNull((SampleVector *) vec);
+		ThrowIfNull((double *) buffer);
 		ThrowIfNull((Loris::PartialList *) partials);
 		
 		//	perform analysis:
-		notifier << "analyzing " << vec->size() << " samples at " <<
+		notifier << "analyzing " << bufferSize << " samples at " <<
 					srate << " Hz with frequency resolution " <<
 					ptr_this->freqResolution() << endl;
-		if ( !vec->empty())
+		if ( bufferSize > 0 )
 		{
-			ptr_this->analyze( &((*vec)[0]), &((*vec)[vec->size()]), srate );
+			ptr_this->analyze( buffer, buffer + bufferSize, srate );
 		
 			//	splice the Partials into the destination list:
 			partials->splice( partials->end(), ptr_this->partials() );

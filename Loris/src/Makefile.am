@@ -89,7 +89,7 @@ Loris_Classes = 	\
 
 libloris_la_SOURCES = loris.h lorisAnalyzer_pi.C lorisBpEnvelope_pi.C \
  lorisException_pi.C lorisException_pi.h lorisNonObj_pi.C \
- lorisPartialList_pi.C lorisSampleVector_pi.C lorisUtilities_pi.C \
+ lorisPartialList_pi.C lorisUtilities_pi.C \
  $(Loris_Classes)
 libloris_la_LIBADD = $(LINK_FFTW)
 

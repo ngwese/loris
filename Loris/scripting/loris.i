@@ -188,31 +188,7 @@ createFreqReference( PartialList * partials,
 	channelization (see channelize()).
  */
 
-%{
-#include <Exception.h>
-#include <Notifier.h>
-#include <vector>
-
-	void dilate_v( PartialList * partials, 
-		   		   const std::vector<double> & ivec, 
-				   const std::vector<double> & tvec )
-	{
-		Loris::debugger << ivec.size() << " initial points, " 
-						<< tvec.size() << " target points" << Loris::endl;
-						
-		if ( ivec.size() != tvec.size() )
-		{
-			Throw( InvalidArgument, "Invalid arguments to dilate(): there must be as many target points as initial points" );
-		}
-		
-		const double * initial = &(ivec[0]);
-		const double * target = &(tvec[0]);
-		int npts = ivec.size();
-		dilate( partials, initial, target, npts );
-	}
-%}
-
-%exception dilate_v
+%exception dilate
 {
     char * err;
     clear_exception();
@@ -230,11 +206,29 @@ createFreqReference( PartialList * partials,
     }
 }
 
-%rename (dilate) dilate_v;
-void dilate_v( PartialList * partials, 
-			   const std::vector<double> & ivec, 
-			   const std::vector<double> & tvec );
+%{
+#include <Exception.h>
+#include <vector>
+%}
 
+%inline
+%{
+	void dilate( PartialList * partials, 
+		   	     const std::vector< double > & ivec, 
+				 const std::vector< double > & tvec )
+	{
+		if ( ivec.size() != tvec.size() )
+		{
+			Throw( InvalidArgument, "Invalid arguments to dilate(): "
+			       "there must be as many target points as initial points" );
+		}
+		
+		const double * initial = &( ivec.front() );
+		const double * target = &( tvec.front() );
+		int npts = ivec.size();
+		dilate( partials, initial, target, npts );
+	}
+%}
 /*	Dilate Partials in a PartialList according to the given 
 	initial and target time points. Partial envelopes are 
 	stretched and compressed so that temporal features at
@@ -265,10 +259,10 @@ void distill( PartialList * partials );
 %inline 
 %{
 	void exportAiff( const char * path, const std::vector< double > & samples,
-					 double samplerate = 44100.0, int nchannels = 1, 
-					 int bitsPerSamp = 16 )
+					 double samplerate = 44100.0, int bitsPerSamp = 16 )
 	{
-		exportAiff( path, &samples, samplerate, nchannels, bitsPerSamp );
+		exportAiff( path, &(samples.front()), samples.size(), 
+					samplerate, bitsPerSamp );
 	}
 %}
 /*	Export audio samples stored in a SampleVector to an AIFF file
@@ -401,12 +395,17 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch,
  */
 
 
+%{
+	#include<Synthesizer.h>
+%}
+
 %newobject synthesize;
 %inline %{
 	std::vector<double> synthesize( const PartialList * partials, double srate = 44100.0 )
 	{
 		std::vector<double> dst;
-		synthesize( partials, &dst, srate );
+		Synthesizer synth( srate, dst );
+		synth.synthesize( partials->begin(), partials->end() );
 		return dst;
 	}
 %}

@@ -989,33 +989,31 @@ void std_vectorlMarker_g___delslice_____(std::vector<Marker > *self,int i,int j)
             }
 
 #include <Exception.h>
-#include <Notifier.h>
 #include <vector>
 
-	void dilate_v( PartialList * partials, 
-		   		   const std::vector<double> & ivec, 
-				   const std::vector<double> & tvec )
+
+	void dilate( PartialList * partials, 
+		   	     const std::vector< double > & ivec, 
+				 const std::vector< double > & tvec )
 	{
-		Loris::debugger << ivec.size() << " initial points, " 
-						<< tvec.size() << " target points" << Loris::endl;
-						
 		if ( ivec.size() != tvec.size() )
 		{
-			Throw( InvalidArgument, "Invalid arguments to dilate(): there must be as many target points as initial points" );
+			Throw( InvalidArgument, "Invalid arguments to dilate(): "
+			       "there must be as many target points as initial points" );
 		}
 		
-		const double * initial = &(ivec[0]);
-		const double * target = &(tvec[0]);
+		const double * initial = &( ivec.front() );
+		const double * target = &( tvec.front() );
 		int npts = ivec.size();
 		dilate( partials, initial, target, npts );
 	}
 
 
 	void exportAiff( const char * path, const std::vector< double > & samples,
-					 double samplerate = 44100.0, int nchannels = 1, 
-					 int bitsPerSamp = 16 )
+					 double samplerate = 44100.0, int bitsPerSamp = 16 )
 	{
-		exportAiff( path, &samples, samplerate, nchannels, bitsPerSamp );
+		exportAiff( path, &(samples.front()), samples.size(), 
+					samplerate, bitsPerSamp );
 	}
 
 
@@ -1088,10 +1086,14 @@ void std_vectorlMarker_g___delslice_____(std::vector<Marker > *self,int i,int j)
 	}
 
 
+	#include<Synthesizer.h>
+
+
 	std::vector<double> synthesize( const PartialList * partials, double srate = 44100.0 )
 	{
 		std::vector<double> dst;
-		synthesize( partials, &dst, srate );
+		Synthesizer synth( srate, dst );
+		synth.synthesize( partials->begin(), partials->end() );
 		return dst;
 	}
 
@@ -2756,7 +2758,7 @@ static PyObject *_wrap_dilate(PyObject *self, PyObject *args) {
         clear_exception();
         try
         {
-            dilate_v(arg1,(std::vector<double > const &)*arg2,(std::vector<double > const &)*arg3);
+            dilate(arg1,(std::vector<double > const &)*arg2,(std::vector<double > const &)*arg3);
             
         }
         catch ( InvalidArgument & ex )
@@ -2804,13 +2806,12 @@ static PyObject *_wrap_exportAiff(PyObject *self, PyObject *args) {
     char *arg1 ;
     std::vector<double > *arg2 = 0 ;
     double arg3 = (double) 44100.0 ;
-    int arg4 = (int) 1 ;
-    int arg5 = (int) 16 ;
+    int arg4 = (int) 16 ;
     std::vector<double > temp2 ;
     std::vector<double > *v2 ;
     PyObject * obj1 = 0 ;
     
-    if(!PyArg_ParseTuple(args,(char *)"sO|dii:exportAiff",&arg1,&obj1,&arg3,&arg4,&arg5)) goto fail;
+    if(!PyArg_ParseTuple(args,(char *)"sO|di:exportAiff",&arg1,&obj1,&arg3,&arg4)) goto fail;
     {
         if (PyTuple_Check(obj1) || PyList_Check(obj1)) {
             unsigned int size = (PyTuple_Check(obj1) ?
@@ -2842,7 +2843,7 @@ static PyObject *_wrap_exportAiff(PyObject *self, PyObject *args) {
     {
         char * err;
         clear_exception();
-        exportAiff((char const *)arg1,(std::vector<double > const &)*arg2,arg3,arg4,arg5);
+        exportAiff((char const *)arg1,(std::vector<double > const &)*arg2,arg3,arg4);
         
         if ((err = check_exception()))
         {

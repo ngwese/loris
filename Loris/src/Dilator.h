@@ -58,7 +58,7 @@ class Partial;
 //!	of the source sounds by dilating or contracting those temporal regions.
 //!
 //!	This same procedure can be applied to the Markers stored in AiffFile,
-//!	SdifFile, and SpcFil (see Marker.h).
+//!	SdifFile, and SpcFile (see Marker.h).
 //
 class Dilator
 {
@@ -227,16 +227,16 @@ public:
 	//!	\sa Dilator::dilate( Partial & p ) const
 	//!	\sa Dilator::dilate( Marker & m ) const
 #if ! defined(NO_TEMPLATE_MEMBERS)
-	template< typename DilateIter, typename TimeIter1, typename TimeIter2 >
+	template< typename PartialsIter, typename TimeIter1, typename TimeIter2 >
 	static 
-	void dilate( DilateIter dilate_begin, DilateIter dilate_end,
+	void dilate( PartialsIter dilate_begin, PartialsIter dilate_end,
 	             TimeIter1 ibegin, TimeIter1 iend, TimeIter2 tbegin  );
 #else
-   static
-	void dilate( PartialList::iterator dilate_begin, 
-				    PartialList::iterator dilate_end,
-				    const double * ibegin, const double * iend, 
-				    const double * tbegin  ) const;
+    static
+ 	void dilate( PartialList::iterator dilate_begin, 
+				 PartialList::iterator dilate_end,
+		   		 const double * ibegin, const double * iend, 
+				 const double * tbegin  );
 #endif
 
 };	//	end of class Dilator
@@ -382,18 +382,19 @@ void Dilator::operator() ( Marker & m ) const
 //!	
 //!	\sa Dilator::dilate( Partial & p ) const
 //!	\sa Dilator::dilate( Marker & m ) const
+//
 #if ! defined(NO_TEMPLATE_MEMBERS)
-	template< typename DilateIter, typename TimeIter1, typename TimeIter2 >
-	void dilate( DilateIter dilate_begin, DilateIter dilate_end,
-	             TimeIter1 ibegin, TimeIter1 iend, TimeIter2 tbegin  )
+template< typename PartialsIter, typename TimeIter1, typename TimeIter2 >
+void Dilator::dilate( PartialsIter dilate_begin, PartialsIter dilate_end,
+			 		  TimeIter1 ibegin, TimeIter1 iend, TimeIter2 tbegin  )
 #else
-	void dilate( PartialList::iterator dilate_begin, 
-				    PartialList::iterator dilate_end,
-				    const double * ibegin, const double * iend, 
-				    const double * tbegin  )
+void Dilator::dilate( PartialList::iterator dilate_begin, 
+			 		  PartialList::iterator dilate_end,
+			 		  const double * ibegin, const double * iend, 
+			 		  const double * tbegin  )
 #endif
 { 
-   Dilator instance( ibegin, iend, tbegin );
+  	Dilator instance( ibegin, iend, tbegin );
 	instance.dilate( dilate_begin, dilate_end ); 
 }
 
