@@ -49,6 +49,8 @@ and it acts like a list in the native language, instead
 of having its own idiosyncratic behavior. THIS BREAKS
 OLD CODE.
 
+- improved phase accuracy of synthesis.
+
 -------------------------------------------------------
 changes since 1.1 release:
 

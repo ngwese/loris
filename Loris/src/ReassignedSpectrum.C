@@ -366,8 +366,22 @@ ReassignedSpectrum::reassignedPhase( long idx,
 	
 	//	adjust phase according to the frequency correction:
 	//	first compute H(1):
+	//
+	//  this seems like it would be a good idea, but in practice,
+	//	it screws the phases up badly.
+	//  Am I just correcting in the wrong direction? No, its 
+	//	something else.
+	//
+	//  Seems like I had the slope way too big. Changed to compute 
+	//	the slope from H(1) of a rotated window, and now the slope
+	//	is so small that it seems like there will never be any phase
+	//	correction.
+	//
+	/*
 	double fcorr = fracFreqSample - idx;
-	phase += fcorr * _phaseSlope;
+	double phase_corr = - fcorr * _phaseSlope;
+	phase += phase_corr;
+	*/
 		
 	return fmod( phase, 2. * Pi );
 }
@@ -514,9 +528,17 @@ computePhaseSlope( const std::vector< double > & window, unsigned long N )
 	}
 	
 	std::complex< double > H1 = 0;
+	int halfwin = window.size() / 2;
 	for ( int i = 0; i < window.size(); ++i )
 	{
-		std::complex< double > arg( 0, -2 * Pi * i / N );
+		// rotating the window seems sure to make
+		// the phase of H zero everywhere, because,
+		// for a symmetical window, every positive
+		// n is matched with a negative n having the
+		// same window function value, so H1 should 
+		// wind up real.
+		int n = i - halfwin;
+		std::complex< double > arg( 0, -2 * Pi * n / N );
 		H1 += window[i] * std::exp( arg );
 	}
 	
