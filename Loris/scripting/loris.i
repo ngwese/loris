@@ -189,6 +189,9 @@ static void throw_string( const char * s )
 //	include the SampleVector class interface:
 %include lorisSampleVector.i
 
+//	include the AiffFile class interface:
+%include lorisAiffFile.i
+
 /* ---------------------------------------------------------------- */
 /*		non-object-based procedures
 /*

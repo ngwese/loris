@@ -23,13 +23,25 @@
  *	lorisPartialList.i
  *
  *	SWIG interface file describing the PartialList class.
- *	A PartialList is a std::list< Loris::Partial >.
+ *	A PartialList is a Loris::Handle< std::list< Loris::Partial > >.
  *	Include this file in loris.i to include the PartialList class
  *	interface in the scripting module. (Can be used with the 
- *	-shadow option to SWIG to build an Analyzer class in the 
- *	Python interface.) This file does not support exactly the 
+ *	-shadow option to SWIG to build a PartialList class in the 
+ *	scripting interface.) This file does not support exactly the 
  *	public interface of the C++ std::list class, but has been 
  *	modified to better support SWIG and scripting languages.
+ *
+ *	This interface has been modified (March 2001) to wrap the list
+ *	access with Loris::Handles, and to include iterators on the lists,
+ *	called Partial in the interface, and iterators on the Partials, 
+ *	called Breakpoint in the interface. The iterators retain a counted
+ *	reference to their collections (PartialList or Partial), and this 
+ *	is the reason for wrapping those container class with Handles, so
+ *	that an iterator that outlives its container in the interpreter
+ *	doesn't wind up refering to an object that got garbage-collected.
+ *	In this implementation, all references in the interpreter and all
+ *	references in the interpreter to iterators have to be deleted 
+ *	before the collection is finally released.
  *
  *
  * Kelly Fitz, 17 Nov 2000
@@ -176,7 +188,7 @@ public:
 			_list( hlist ),
 			_iter( pos )
 		{
-			debugger << "created a risky iterator on a list of " << _list->size() << " Partials" << std::endl;
+			debugger << "created an iterator on a list of " << _list->size() << " Partials" << std::endl;
 		}
 		
 		PartialListHandleIterator( const PartialListHandleIterator & rhs ) :
