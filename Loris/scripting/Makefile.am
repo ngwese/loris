@@ -20,9 +20,9 @@ PERL_WRAPPER = loris_perl_wrap.C
 # Darwin is special, libtool doesn't work right.
 #
 if DARWIN
-INCLUDES = -I$(top_srcdir)/src -I$(top_builddir)/pi $(PYINCLUDE) $(TCLINCLUDE) $(PERLINCLUDE)
+INCLUDES = -I$(top_srcdir)/src $(PYINCLUDE) $(TCLINCLUDE) $(PERLINCLUDE)
 else
-INCLUDES = -I$(top_srcdir)/src -I$(top_builddir)/pi
+INCLUDES = -I$(top_srcdir)/src 
 endif
 
 #----------------------------------------------------------------
@@ -65,7 +65,7 @@ pythonsitepkg_LTLIBRARIES = _loris.la
 _loris_la_SOURCES = $(PYTHON_WRAPPER)
 _loris_la_CXXFLAGS = $(AM_CXXFLAGS) $(PYINCLUDE) 
 _loris_la_LDFLAGS = -module -avoid-version
-_loris_la_LIBADD = $(top_builddir)/pi/libloris.la -lstdc++
+_loris_la_LIBADD = $(top_builddir)/src/libloris.la -lstdc++
 endif
 
 endif
@@ -107,7 +107,7 @@ tclsitepkg_LTLIBRARIES = tcLoris.la
 tcLoris_la_SOURCES = $(TCL_WRAPPER)
 tcLoris_la_CXXFLAGS = $(AM_CXXFLAGS) $(TCLINCLUDE) 
 tcLoris_la_LDFLAGS = -module -avoid-version
-tcLoris_la_LIBADD = $(top_builddir)/pi/libloris.la -lstdc++
+tcLoris_la_LIBADD = $(top_builddir)/src/libloris.la -lstdc++
 endif
 
 endif
@@ -150,7 +150,7 @@ perlsitepkg_LTLIBRARIES = perLoris.la
 perLoris_la_SOURCES = $(PERL_WRAPPER)
 perLoris_la_CXXFLAGS = $(AM_CXXFLAGS) $(PERLINCLUDE) 
 perLoris_la_LDFLAGS = -module -avoid-version
-perLoris_la_LIBADD = $(top_builddir)/pi/libloris.la -lstdc++
+perLoris_la_LIBADD = $(top_builddir)/src/libloris.la -lstdc++
 endif
 
 endif

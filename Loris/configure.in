@@ -38,7 +38,7 @@ AC_SUBST(LORIS_MAJOR_VERSION)
 AC_SUBST(LORIS_MINOR_VERSION)
 AC_SUBST(LORIS_SUBMINOR_VERSION)
 AC_SUBST(LORIS_VERSION_STR)
-AC_CONFIG_FILES([pi/loris.h])
+AC_CONFIG_FILES([src/loris.h])
 
 
 dnl----------------------------------------------------------------
@@ -605,6 +605,6 @@ dnl----------------------------------------------------------------
 AC_MSG_RESULT(----- Creating Output Files -----)
 
 AC_OUTPUT(Makefile doc/Makefile src/Makefile \
-pi/Makefile scripting/Makefile csound/Makefile test/Makefile )
+scripting/Makefile csound/Makefile test/Makefile )
 
 AC_MSG_RESULT(----- End Of Configuration -----)
