@@ -46,6 +46,10 @@
 #include <set>
 #include <algorithm>
 
+#if defined(Debug_Loris) 
+	#include <cstdio>
+#endif
+
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
