@@ -3,7 +3,7 @@
 <title>
 Loris procedural interface</title>
 <body bgcolor="#ffffff">
-<h1>Loris procedural interface - version 1.0</h1>
+<h1>Loris procedural interface - version 1.1</h1>
 
 This document describes the functions in the 
 C-linkable procedural interface for Loris. 
@@ -315,13 +315,21 @@ C-linkable procedural interface for Loris.
    
 </blockquote>
 
-<p><tt><b>sampleVector_copy( SampleVector * vec, 
+<p><tt><b>sampleVector_assign( SampleVector * vec, 
 						const SampleVector * src )</b></tt>
 <blockquote>[ returns void  ]
-<br>  	Make this SampleVector a copy of the source SampleVector, having 
-	the same number of samples, and samples at every position in this
-	SampleVector having the same value as the corresponding sample in
-	the source.
+<br>  	Assign the contents of the source SampleVector to this (the 
+	destination) SampleVector, so that the two have identical contents. 
+   
+</blockquote>
+
+<p><tt><b>sampleVector_fill( SampleVector * vec, double * buffer, unsigned long bufsize )</b></tt>
+<blockquote>[ returns void  ]
+<br>  	Fill this SampleVector with sampless stored in a buffer of 
+	doubles. All the samples in the buffer are stored, the 
+	SampleVector will be resized if it is smaller than bufsize.
+	If the SampleVector is larger than bufsize, the extra space
+	will be filled with zeros.
    
 </blockquote>
 
@@ -660,7 +668,7 @@ macros have the definitions:
 <table cellspacing="0" cellpadding="1" width="100%">
   <tbody>
 	<tr>
-	  <td valign="Top">Last updated on 7 May 2002
+	  <td valign="Top">Last updated on 20 March 2004
 	  </td>
 	  <td align="Right" valign="Top"><a href="http://www.cerlsoundgroup.org/Loris/">www.cerlsoundgroup.org/Loris/</a>
 	  </td>

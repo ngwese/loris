@@ -56,6 +56,7 @@
 
 #include <Notifier.h>
 
+#include <algorithm>
 #include <vector>
 
 using namespace Loris;
@@ -129,6 +130,39 @@ void destroySampleVector( SampleVector * ptr_this )
 }
 
 /* ---------------------------------------------------------------- */
+/*        sampleVector_assign        
+/*
+/*	Assign the contents of the source SampleVector to this (the 
+	destination) SampleVector, so that the two have identical contents. 
+	
+	This is a more intuitive name for the operation sampleVector_copy.
+ */
+extern "C"
+void sampleVector_assign( SampleVector * dst, const SampleVector * src )
+{
+	try 
+	{
+		ThrowIfNull((SampleVector *) dst);
+		ThrowIfNull((SampleVector *) src);
+
+		debugger << "assigning SampleVector of size " << src->size() << endl;
+		*dst = *src;
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in sampleVector_assign(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in sampleVector_assign(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+
+/* ---------------------------------------------------------------- */
 /*        sampleVector_copy        
 /*
 /*	Make this SampleVector a copy of the source SampleVector, having 
@@ -160,6 +194,45 @@ void sampleVector_copy( SampleVector * dst, const SampleVector * src )
 		handleException( s.c_str() );
 	}
 }
+
+/* ---------------------------------------------------------------- */
+/*        sampleVector_fill        
+/*
+/*	Fill this SampleVector with sampless stored in a buffer of 
+	doubles. All the samples in the buffer are stored, the 
+	SampleVector will be resized if it is smaller than bufsize.
+	If the SampleVector is larger than bufsize, the extra space
+	will be filled with zeros.
+ */
+extern "C"
+void sampleVector_fill( SampleVector * vec, double * buffer, unsigned long bufsize )
+{
+	try 
+	{
+		ThrowIfNull((SampleVector *) vec);
+		ThrowIfNull((double *) buffer);
+
+		debugger << "filling SampleVector with " << bufsize << " samples" << endl;
+		
+		if ( vec->size() < bufsize )
+			vec->resize( bufsize );
+		SampleVector::iterator it = std::copy( buffer, buffer+bufsize, vec->begin() );
+		std::fill( it, vec->end(), 0 );
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in sampleVector_fill(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in sampleVector_fill(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+
 
 /* ---------------------------------------------------------------- */
 /*        sampleVector_getAt        

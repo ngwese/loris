@@ -319,6 +319,13 @@ SampleVector * createSampleVector( unsigned long size );
 void destroySampleVector( SampleVector * ptr_this );
 /*	Destroy this SampleVector.
  */
+void sampleVector_assign( SampleVector * ptr_this, 
+						  const SampleVector * src );
+/*	Assign the contents of the source SampleVector to this (the 
+	destination) SampleVector, so that the two have identical contents. 
+	
+	This is a more intuitive name for the operation sampleVector_copy.
+ */
 void sampleVector_copy( SampleVector * ptr_this, 
 						const SampleVector * src );
 /*	Make this SampleVector a copy of the source SampleVector, having 
@@ -326,6 +333,15 @@ void sampleVector_copy( SampleVector * ptr_this,
 	SampleVector having the same value as the corresponding sample in
 	the source.
  */
+void sampleVector_fill( SampleVector * vec, double * buffer, 
+						unsigned long bufsize );
+/*	Fill this SampleVector with sampless stored in a buffer of 
+	doubles. All the samples in the buffer are stored, the 
+	SampleVector will be resized if it is smaller than bufsize.
+	If the SampleVector is larger than bufsize, the extra space
+	will be filled with zeros.
+ */
+
 double sampleVector_getAt( const SampleVector * ptr_this, unsigned long idx );
 /*	Return the value of the sample at the given position (index) in
 	this SampleVector.
