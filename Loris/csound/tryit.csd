@@ -1,14 +1,10 @@
-<MacOptions>
-Version: 1
-Render: File
-Ask: Yes
-Options: -b64 -W -oBuddha:Loris:csound:dehr.wav -s -m7 -d --opcode -lib=foo 
-</MacOptions>
-<MacGUI>
-ioView nobackground {65535, 65535, 65535}
-ioListing {10, 10} {400, 500}
-</MacGUI>
 <CsoundSynthesizer>
+; tryit.csd - a Csound structured data file 
+; for testing the Loris unit generators
+<CsOptions>
+-W -d -o tryit.wav
+</CsOptions>
+
 <CsInstruments>
 ; originally tryit.orc
 sr = 44100

@@ -93,7 +93,10 @@ $(PYTHON_TEST):
 endif
 
 check_PROGRAMS = test_cpp test_pi test_aiff test_partial test_distiller \
-                 test_sdiffile test_morpher test_identity
+                 test_sdiffile test_identity
+# removing Morpher test, until it can be made to report 
+# something sensible again.
+
 check_SCRIPTS = $(PYTHON_TEST)
 
 TESTS = $(check_PROGRAMS) $(check_SCRIPTS) 

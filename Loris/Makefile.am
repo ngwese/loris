@@ -22,13 +22,6 @@ MAINTAINERCLEANFILES = 	Makefile.in aclocal.m4 configure config.h.in \
 
 DISTCLEANFILES =
 
-EXTRA_DIST = reconf \
-			$(top_srcdir)/$(ac_aux_dir)/config.guess \
-            $(top_srcdir)/$(ac_aux_dir)/config.sub \
-            $(top_srcdir)/$(ac_aux_dir)/install-sh \
-            $(top_srcdir)/$(ac_aux_dir)/ltmain.sh \
-            $(top_srcdir)/$(ac_aux_dir)/missing \
-            $(top_srcdir)/$(ac_aux_dir)/mkinstalldirs
 
 DEMO_DIST_FILES =	Loris/demo/Makefile \
 					Loris/demo/README \

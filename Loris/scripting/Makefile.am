@@ -28,54 +28,16 @@ pyexec_PYTHON = loris.py
 # Wait, maybe it does now!
 #
 if DARWIN
-# PYTHON_CMODULE = _loris.so
-# PYTHON_MODULE = $(PYTHON_CMODULE) 
-# INSTALL_PYTHON_MODULE = install_python_module
-# CPPFLAGS = $(CPPFLAGS) -I$(top_srcdir)/src $(PYFLAGS) 
-# 
-# $(PYTHON_CMODULE): loris_python_wrap.o $(top_builddir)/src/.libs/libloris.a
-# 	$(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(LDFLAGS) \
-# 		-bundle -flat_namespace -undefined suppress \
-# 		-o $@ loris_python_wrap.o $(top_builddir)/src/.libs/libloris.a \
-# 		$(LINK_FFTW) $(LIBS)
-# 	-mkdir .libs
-# 	cp $@ .libs/$@
-# 
-# loris_python_wrap.o: loris_python_wrap.C ../src/loris.h \
-#   ../src/Exception.h ../src/Notifier.h ../src/BreakpointEnvelope.h \
-#   ../src/Envelope.h ../src/Marker.h ../src/AiffFile.h \
-#   ../src/Synthesizer.h ../src/Oscillator.h ../src/NoiseGenerator.h \
-#   ../src/Filter.h ../src/PartialUtils.h ../src/Partial.h \
-#   ../src/Breakpoint.h ../src/Analyzer.h ../src/PartialList.h \
-#   ../src/SdifFile.h ../src/SpcFile.h
-# 
-# install_python_module:
-# 	$(mkinstalldirs) $(pythonsitepkgdir)
-# 	$(INSTALL) $(PYTHON_CMODULE) $(pythonsitepkgdir)/$(PYTHON_CMODULE)
-
-# don't seem to need this, libtool works correctly, even 
-# under Darwin
-#	$(INSTALL) $(pyexec_PYTHON) $(pythonsitepkgdir)/$(pyexec_PYTHON)
+EXTRA_LD_FLAGS = -bundle -flat_namespace -undefined suppress
+endif
 
 pythonsitepkg_LTLIBRARIES = _loris.la
 _loris_la_SOURCES = $(PYTHON_WRAPPER)
 _loris_la_CXXFLAGS = $(AM_CXXFLAGS) -I$(top_srcdir)/src $(PYFLAGS) 
-_loris_la_LDFLAGS = -module -avoid-version -bundle -flat_namespace -undefined suppress
 _loris_la_LIBADD = $(top_builddir)/src/libloris.la $(LINK_FFTW)
+_loris_la_LDFLAGS = -module -avoid-version $(EXTRA_LD_FLAGS)
 	
-else
-#
-# not Darwin, use libtool
-#
-pythonsitepkg_LTLIBRARIES = _loris.la
-_loris_la_SOURCES = $(PYTHON_WRAPPER)
-_loris_la_CXXFLAGS = $(AM_CXXFLAGS) -I$(top_srcdir)/src $(PYFLAGS) 
-_loris_la_LDFLAGS = -module -avoid-version
-_loris_la_LIBADD = $(top_builddir)/src/libloris.la $(LINK_FFTW) -lstdc++
 endif
-
-endif
-
 
 #----------------------------------------------------------------
 # Special build and install rules for Darwin, libtool doesn't work.

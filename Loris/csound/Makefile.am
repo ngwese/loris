@@ -13,10 +13,10 @@ EXTRA_DIST = lorisgens.C lorisgens.h tryit.csd trymorph.csd flute.sdif trombone.
 MAINTAINERCLEANFILES = 	Makefile.in
 
 if HAVE_CSOUND
-csoundlibdir = $(CSOUND_PREFIX)/lib/csound
-csoundlib_LTLIBRARIES = lorisgens.la
-lorisgens_la_SOURCES = lorisgens.C
-lorisgens_la_CXXFLAGS = $(CSOUND_CXXFLAGS) $(AM_CXXFLAGS) -I$(top_srcdir)/src
-lorisgens_la_LDFLAGS = -module -avoid-version
-lorisgens_la_LIBADD = $(top_builddir)/src/libloris.la
+csoundlibdir = $(libdir)/csound
+csoundlib_LTLIBRARIES = lorisopcodes.la
+lorisopcodes_la_SOURCES = lorisgens.C
+lorisopcodes_la_CXXFLAGS = $(CSOUND_CXXFLAGS) $(AM_CXXFLAGS) -I$(top_srcdir)/src
+lorisopcodes_la_LDFLAGS = -module -avoid-version -no-undefined
+lorisopcodes_la_LIBADD = $(top_builddir)/src/libloris.la
 endif

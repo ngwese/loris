@@ -1,5 +1,5 @@
 <CsoundSynthesizer>
-; tryit.csd - a Csound structured data file 
+; trymorph.csd - a Csound structured data file 
 ; for testing the Loris unit generators
 
 <CsOptions>
