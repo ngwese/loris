@@ -234,15 +234,15 @@ if trial == 7:
 	loris.sift( p )	
 	loris.distill( p )
 	ofilebase = 'flutter.%i.%i.ssav'%(r, w)
-	synthesize( ofilebase + '.aiff', ps )
-	loris.exportSpc( ofilebase + 's.spc', ps, 64, 0 )			
-	loris.exportSpc( ofilebase + 'e.spc', ps, 64, 1 )
+	synthesize( ofilebase + '.aiff', p )
+	loris.exportSpc( ofilebase + 's.spc', p, 64, 0 )			
+	loris.exportSpc( ofilebase + 'e.spc', p, 64, 1 )
 	
 	# sifted version with sifted partials removed
 	zeros = loris.extractLabeled( p, 0 )
 	ofilebase = 'flutter.%i.%i.sift'%(r, w)
-	synthesize( ofilebase + '.aiff', ps )
-	loris.exportSpc( ofilebase + 's.spc', ps, 64, 0 )			
-	loris.exportSpc( ofilebase + 'e.spc', ps, 64, 1 )
+	synthesize( ofilebase + '.aiff', p )
+	loris.exportSpc( ofilebase + 's.spc', p, 64, 0 )			
+	loris.exportSpc( ofilebase + 'e.spc', p, 64, 1 )
 		
 			

@@ -10,10 +10,14 @@ Python script for analyzing and reconstructing a variety
 of sounds used to test the analysis/modification/synthesis
 routines in Loris.
 
-Last updated: 7 May 2002 by Kelly Fitz
+Last updated: 21 May 2002 by Kelly Fitz
 """
 
 import loris, time
+
+print """
+Using Loris version %s
+"""%loris.version()
 
 #
 #	define useful functions:

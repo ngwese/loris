@@ -12,20 +12,18 @@ import os,time,sys
 ttup = time.localtime(time.time())
 date = '%i.%i.%i'%(ttup[2], ttup[1],ttup[0])
 
-# farm is a dictionary of directory,scriptname pairs
+# farm is a dictionary of directory,scriptnames pairs
 farm = { 
-	'bell': 'nisobell.py', 
-	'cats': 'angrycat.py', 
-	'cats': 'meows.py', 
-	'cellos': 'cellos.py', 
-	'choir': 'webernchoir.py', 
-	'elephants': 'elephants.py', 
-	'flutes': 'flute.py', 
-	'flutes': 'flutter.py', 
-	'french': 'french.py',
-	'gong': 'gong.py',
-	'moses': 'moses.py',
-	'sax': 'saxriff.py' 
+	'bell': ('nisobell.py',), 
+	'cats': ('angrycat.py', 'meows.py'), 
+	'cellos': ('cellos.py',),  
+	'choir': ('webernchoir.py',), 
+	'elephants': ('elephants.py', ),
+	'flutes': ('flute.py', 'flutter.py', ),
+	'french': ('french.py',),
+	'gong': ('gong.py',),
+	'moses': ('moses.py',),
+	'sax': ('saxriff.py', )
 }
 	
 if len(sys.argv) > 1:
@@ -47,7 +45,10 @@ farmdir = '/net/magoo/users/kfitz/farm'
 def changedir(dir):
 	return 'cd %s/%s'%(farmdir,dir)
 	
-runpython = 'env PYTHONPATH=%s python'%farmdir
+if 'PYTHONPATH' in os.environ.keys():
+	runpython = 'env PYTHONPATH=%s:%s python'%(farmdir,os.environ['PYTHONPATH'])
+else:
+	runpython = 'env PYTHONPATH=%s python'%farmdir
 
 def dump(script):
 	 return '> %s.%s.out'%(script[:-3], date)
@@ -57,13 +58,15 @@ for dir in dirs:
 	if dir[-1] == '/':
 		dir = dir[:-1]
 	try:
-		script = farm[dir]
+		scripts = farm[dir]
 	except:
 		print "no directory", dir
 		continue
-	cmd = '%s %s "%s; %s %s %s" %s'%(shellcmd, nodename(node), changedir(dir), runpython, script, dump(script), inbkgrnd)
-	print cmd
-	os.system(cmd)
-	node = node+1
-	if node>16:
-		node=1
+		
+	for script in scripts:
+		cmd = '%s; %s %s %s'%(changedir(dir), runpython, script, inbkgrnd)
+		print cmd
+		os.system(cmd)
+		node = node+1
+		if node>16:
+			node=1
