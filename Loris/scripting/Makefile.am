@@ -48,6 +48,14 @@ $(PYTHON_CMODULE): loris_python_wrap.o $(top_builddir)/src/.libs/libloris.a
 	-mkdir .libs
 	cp $@ .libs/$@
 
+loris_python_wrap.o: loris_python_wrap.C ../src/loris.h \
+  ../src/Exception.h ../src/Notifier.h ../src/BreakpointEnvelope.h \
+  ../src/Envelope.h ../src/Marker.h ../src/AiffFile.h \
+  ../src/Synthesizer.h ../src/Oscillator.h ../src/NoiseGenerator.h \
+  ../src/Filter.h ../src/PartialUtils.h ../src/Partial.h \
+  ../src/Breakpoint.h ../src/Analyzer.h ../src/PartialList.h \
+  ../src/SdifFile.h ../src/SpcFile.h
+
 install_python_module:
 	$(mkinstalldirs) $(pythonsitepkgdir)
 	$(INSTALL) $(PYTHON_CMODULE) $(pythonsitepkgdir)/$(PYTHON_CMODULE)
