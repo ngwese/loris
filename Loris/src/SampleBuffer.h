@@ -31,6 +31,7 @@ Begin_Namespace( Loris )
 //	samples.
 //
 //	Derived classes must implement:
+//		void grow( int )
 //		int size() const
 //		double & operator[]( ulong )
 //		const double & operator[]( ulong ) const
@@ -41,6 +42,7 @@ class SampleBuffer
 {
 public:
 //	public interface:
+	virtual void grow( int ) = 0;
 	virtual int size( void ) const = 0;
 
 //	indexed access:

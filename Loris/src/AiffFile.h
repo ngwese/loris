@@ -4,7 +4,10 @@
 // ===========================================================================
 //	AiffFile.h
 //	
-//
+//	Association of a sample buffer and the necessary additional info 
+//	(sample rate, number of channels, and sample data size in bits)
+//	to completely specify an AIFF samples file. Extends the generic
+//	Loris::SamplesFile with AIFF i/o.
 //
 //	-kel 28 Sept 99
 //
@@ -13,6 +16,7 @@
 #include "LorisLib.h"
 #include "LorisTypes.h"
 #include "ieee.h"
+#include "SamplesFile.h"
 
 Begin_Namespace( Loris )
 
@@ -20,35 +24,26 @@ class SampleBuffer;
 class BinaryFile;
 
 // ---------------------------------------------------------------------------
-//	€ class AiffFile
+//	class AiffFile
 //
 //	The SampleBuffer must be provided by clients; it is not owned by 
 //	the AiffFile.
 //	
-class AiffFile
+class AiffFile : public SamplesFile
 {
 public:
 //	construction:
-	AiffFile( double rate, int chans, int bits, SampleBuffer & buf, BinaryFile & file );
+	AiffFile( double rate, int chans, int bits, SampleBuffer & buf );
+	AiffFile( BinaryFile & file, SampleBuffer & buf );
 	
-//	defaults are okay for these, but don't subclass
-	//	AiffFile( const AiffFile & other );
+	AiffFile( const SamplesFile & other );
+	
+//	defaults destructor is okay:
 	//	~AiffFile( void );
 	
-//	access/mutation:
-	double sampleRate( void ) const { return _sampleRate; }
-	int numChans( void ) const { return _nChannels; }
-	int sampleSize( void ) const { return _sampSize; }
-	
-	void setSampleRate( double x ) { _sampleRate = x; }
-	void setNumChannels( int n ) { _nChannels = n; }
-	void setSampleSize( int n ) { _sampSize = n; }
-	
-	SampleBuffer & samples( void ) { return _samples; }
-	const SampleBuffer & samples( void ) const { return _samples; }
-	
 //	reading and writing:
-	void write( void );
+	void read( BinaryFile & file );
+	void write( BinaryFile & file );
 	
 //	-- chunk types --
 private:
@@ -86,35 +81,26 @@ private:
 		Uint_32 blockSize;	
 		//	sample frames follow
 	};
-	
+
 //	-- helpers --
 	//	reading:
-	void readCommon( CommonCk & );
-	void readContainer( ContainerCk & );
-	void readSampleData( SoundDataCk & );
-	
+	void readChunkHeader( BinaryFile & file, CkHeader & h );
+	void readCommon( BinaryFile & file );
+	void readContainer( BinaryFile & file );
+	void readSampleData( BinaryFile & file );
+	void readSamples( BinaryFile & file );
+
 	//	writing:
-	void writeCommon( void );
-	void writeContainer( void );
-	void writeSampleData( void );
-	void writeSamples( void );
+	void writeCommon( BinaryFile & file );
+	void writeContainer( BinaryFile & file );
+	void writeSampleData( BinaryFile & file );
+	void writeSamples( BinaryFile & file );
 	
 	//	data sizes:
 	Uint_32 sizeofCommon( void );
 	Uint_32 sizeofCkHeader( void );
 	Uint_32 sizeofSoundData( void );
 
-	//	checking parameters:
-	void validateParams( void );
-	
-//	-- instance variables --
-	double _sampleRate;	//	in Hz
-	int _nChannels;		//	samples per frame, usually one (mono) in Loris
-	int _sampSize;		//	in bits
-	
-	SampleBuffer & _samples;
-	BinaryFile & _file;
-	
 };	//	end of class AiffFile
 
 End_Namespace( Loris )

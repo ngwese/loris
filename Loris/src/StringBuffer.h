@@ -20,6 +20,7 @@
 //	use std::streambuf as base class:
 #if !defined(USE_DEPRECATED_HEADERS)
 	#include <iosfwd>
+	#include <streambuf>
 #else
 	#include <ostream.h>
 #endif

@@ -70,28 +70,19 @@ SimpleSampleBuffer::~SimpleSampleBuffer( void )
 // ---------------------------------------------------------------------------
 //	assignment operator
 // ---------------------------------------------------------------------------
+//	Might except if a new array cannot be allocated. Object will be
+//	unchanged, in that case.
 //
 SimpleSampleBuffer & 
 SimpleSampleBuffer::operator= ( const SimpleSampleBuffer & other )
 {
-	if ( &other != this )
-	{
+	if ( &other != this ) {
 		//	get rid of old samples, or maybe reuse
-		if ( other.mSize != mSize )
-		{
+		if ( other.mSize != mSize ) {
+			double * z = new double[ other.mSize ];
+			mSize = other.mSize;
 			delete[] mArray;
-			try
-			{
-				mArray = new double[ other.mSize ];
-				mSize = other.mSize;
-			}
-			catch( ... )
-			{
-				//	don't leave it in an inconsistent state:
-				mArray = NULL;
-				mSize = 0;
-				throw;
-			}
+			mArray = z;
 		}
 		//	copy the samples:
 		copy( other.mArray, other.mArray + other.mSize, mArray );
@@ -99,5 +90,28 @@ SimpleSampleBuffer::operator= ( const SimpleSampleBuffer & other )
 	return *this;
 }
 
+// ---------------------------------------------------------------------------
+//	grow
+// ---------------------------------------------------------------------------
+//	Might except if a new array cannot be allocated. Object will be
+//	unchanged, in that case.
+//
+void
+SimpleSampleBuffer::grow( int n )
+{
+	if ( size() < n ) {
+		//	allocate a new array:
+		double * z = new double[ n ];
+		mSize = n;
+	
+		//	copy the samples:
+		copy( mArray, mArray + mSize, z );
+	
+		//	get rid of the old array.
+		delete[] mArray;
+		mArray = z;
+	}
+		
+}
 
 End_Namespace( Loris )

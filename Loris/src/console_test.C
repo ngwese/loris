@@ -29,7 +29,7 @@
 
 #include "AiffFile.h"
 
-#include "File.h"
+#include "BinaryFile.h"
 #include "ImportLemur5.h"
 
 
@@ -39,8 +39,6 @@
 	#include <stdio.h>
 #endif
 
-#include "File.h"
-
 #include "ieee.h"
 
 using namespace std;
@@ -49,6 +47,7 @@ using namespace Loris;
 
 int main()
 {	
+	/*
 	try {
 		Notifier n("Here's a notification.");
 		n.post();
@@ -69,12 +68,14 @@ int main()
 	d.post();
 	
 	fatalError("Another fatal error.");
-
+	*/
 	try {		
-		File f("Berenice:Loris:try these:few");
+		string name("Berenice:Loris:try these:few");
+		BinaryFile f;
+		f.view(name);
 		ImportLemur5 imp(f);
 		
-		cout << "importing partials from " << f.name() << "..." << endl;
+		cout << "importing partials from " << name << "..." << endl;
 		
 		imp.importPartials();
 		list< Partial > l;
@@ -97,7 +98,7 @@ int main()
 		const int nsamps = srate * t;
 		SampleVector buf( nsamps );
 		
-		cout << "synthesizing... ";
+		cout << "synthesizing" << endl;
 		Synthesizer synth( buf, srate );
 		int c = 0;
 		for (list< Partial >::iterator it = l.begin(); it != l.end(); ++it ) {
@@ -106,7 +107,7 @@ int main()
 				cout << "\t" << c << " partials..." << endl;
 		}
 			
-		cout << "done." << endl << "writing..." << endl;
+		cout << "writing..." << endl;
 		
 		for ( int z = 1; z < 4; ++z ) {
 			int ssize = z * 8;
@@ -116,24 +117,23 @@ int main()
 		
 			cout << s.str() << "...";
 			
-			File fout( s.str() );
-			AiffFile sf( srate, 1, ssize, buf, fout );
-			sf.write();
+			AiffFile sf( srate, 1, ssize, buf );
+			sf.write( BinaryFile( s.str() ) );
 		
 			cout << "done." << endl;
 		}
 		
-		/*
-		cout << "writing old way..." << endl;
+		cout << "reading in few.24.aiff" << endl;
+		SampleVector boogerBuf;
+		AiffFile sfin( BinaryFile("Berenice:Loris:try these:few.24.aiff"), boogerBuf );
 		
-		FSSpec spec = { 0, 0, "\pBerenice:Loris:try these:newflute3.aiff" };
-		FSpCreate( &spec, 'LEMR', 'AIFF', 0 );
+		cout << "reversing samples." << endl;
+		reverse( boogerBuf.begin(), boogerBuf.end() );
 		
-		AIFFfile fout( spec, srate, 1, 16 );
-		fout.setSamples( & buf[0], buf.size() );
-		fout.write();
-		fout.setSamples( Null, 0 );
-		*/
+		cout << "writing few.reverse.aiff" << endl;
+		AiffFile sfout( srate, 1, 16, boogerBuf );
+		sfout.write( BinaryFile( "Berenice:Loris:try these:few.reverse.aiff" ) );
+		
 		cout << "done." << endl;
 	}
 	catch ( Exception & ex ) {

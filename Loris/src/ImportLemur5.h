@@ -25,7 +25,7 @@ using std::string;
 
 Begin_Namespace( Loris )
 
-class File;
+class BinaryFile;
 
 // ---------------------------------------------------------------------------
 //	class ImportLemur5
@@ -36,7 +36,7 @@ class ImportLemur5: public Import
 //	-- public interface --
 public:
 //	construction:
-	ImportLemur5( File & lemrFile );
+	ImportLemur5( BinaryFile & lemrFile );
 	virtual ~ImportLemur5( void );
 
 //	-- primitve operations --
@@ -135,7 +135,7 @@ private:
 	
 //	-- instance variables --
 private:
-	File & _file;
+	BinaryFile & _file;
 	int _counter;
 };	//	end of class ImportLemur5
 

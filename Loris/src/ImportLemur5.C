@@ -12,7 +12,7 @@
 
 #include "LorisLib.h"
 #include "ImportLemur5.h"
-#include "File.h"
+#include "BinaryFile.h"
 #include "Exception.h"
 #include "Partial.h"
 #include "Breakpoint.h"
@@ -34,7 +34,7 @@ Begin_Namespace( Loris )
 //	ImportLemur5 constructor
 // ---------------------------------------------------------------------------
 //
-ImportLemur5::ImportLemur5( File & lemrFile ) : 
+ImportLemur5::ImportLemur5( BinaryFile & lemrFile ) : 
 	_file( lemrFile ),
 	_counter( 0 ),
 	Import()
@@ -61,14 +61,20 @@ void
 ImportLemur5::verifySource( void )
 {
 	try {
-		_file.open( );
-		_file.setPosition( 0 );
+		_file.seek( 0 );
+		if( _file.tell() != 0 )
+			Throw( FileIOException, "Couldn't rewind Lemur file (bad open mode?)." );
 		
 		//	check file type ids:
 		int ids[2], size;
 		_file.read( ids[0] );
 		_file.read( size );
 		_file.read( ids[1] );
+		
+		//	except if there were any read errors:
+		if ( ! _file.good() )
+			Throw( FileIOException, "Cannot read file in Lemur 5 import.");	
+		
 		if ( ids[0] != FORM_ID || ids[1] != LEMR_ID ) {
 			Debugger dbg("Bad file ids: ");
 			dbg << string((char *)&ids[0], 4) << " and " << string((char *)&ids[1], 4);
@@ -126,7 +132,8 @@ ImportLemur5::done( void )
 // ---------------------------------------------------------------------------
 //	getPartial
 // ---------------------------------------------------------------------------
-//	Fix phase stuff sometime.
+//	Convert any FileIOExceptions into ImportExceptions, so that clients can 
+//	reasonably expect to catch only ImportExceptions.
 //
 void
 ImportLemur5::getPartial( void )
@@ -136,42 +143,48 @@ ImportLemur5::getPartial( void )
 	//	exception:
 	--_counter;
 	
-	//	read the Track header:
-	TrackOnDisk tkHeader;
-	readTrackHeader( tkHeader );
-	
-	//	create a Partial:
-	mPartials.push_back( Partial() );
-	Partial & p = mPartials.back();
-	p.setLabel( tkHeader.label );
-	
-	//	keep running phase and time for Breakpoint construction:
-	double phase = tkHeader.initialPhase;
-	double time = tkHeader.startTime * 0.001;	//	convert to seconds
-	
-	//	use this to compute phases:
-	double prevTtnSec = 0.;
-	
-	//	loop: read Peak, create Breakpoint, add to Partial:
-	for ( int i = 0; i < tkHeader.numPeaks; ++i ) {
-		//	read Peak:
-		PeakOnDisk pkData;
-		readPeakData( pkData );
+	try {
+		//	read the Track header:
+		TrackOnDisk tkHeader;
+		readTrackHeader( tkHeader );
 		
-		//	update phase based on _this_ pkData's interpolated freq:
-		phase +=TwoPi * prevTtnSec * pkData.interpolatedFrequency;
-		phase = fmod( phase, TwoPi );
+		//	create a Partial:
+		mPartials.push_back( Partial() );
+		Partial & p = mPartials.back();
+		p.setLabel( tkHeader.label );
+		
+		//	keep running phase and time for Breakpoint construction:
+		double phase = tkHeader.initialPhase;
+		double time = tkHeader.startTime * 0.001;	//	convert to seconds
+		
+		//	use this to compute phases:
+		double prevTtnSec = 0.;
+		
+		//	loop: read Peak, create Breakpoint, add to Partial:
+		for ( int i = 0; i < tkHeader.numPeaks; ++i ) {
+			//	read Peak:
+			PeakOnDisk pkData;
+			readPeakData( pkData );
+			
+			//	update phase based on _this_ pkData's interpolated freq:
+			phase +=TwoPi * prevTtnSec * pkData.interpolatedFrequency;
+			phase = fmod( phase, TwoPi );
 
-		//	create Breakpoint:	
-		Breakpoint bp( pkData.frequency, pkData.magnitude, pkData.bandwidth, phase );
-		
-		//	insert in Partial:
-		p.insert( time, bp );
-		
-		//	update time:
-		prevTtnSec = pkData.ttn * 0.001;
-		time += prevTtnSec;
+			//	create Breakpoint:	
+			Breakpoint bp( pkData.frequency, pkData.magnitude, pkData.bandwidth, phase );
+			
+			//	insert in Partial:
+			p.insert( time, bp );
+			
+			//	update time:
+			prevTtnSec = pkData.ttn * 0.001;
+			time += prevTtnSec;
+		}
 	}
+	catch( FileIOException & ex ) {
+		Throw( ImportException, ex.str() + "Failed to import a partial from a Lemur file." );
+	}
+	
 }	
 		
 // ---------------------------------------------------------------------------
@@ -181,7 +194,6 @@ ImportLemur5::getPartial( void )
 void
 ImportLemur5::endImport( void )
 {
-	_file.close();
 }
 
 #pragma mark -
@@ -191,20 +203,12 @@ ImportLemur5::endImport( void )
 //	readChunkHeader
 // ---------------------------------------------------------------------------
 //	Read the id and chunk size from the current file position.
-//	Don't stop exceptions here, let the caller catch them and
-//	make an intelligent report.
 //
 void
 ImportLemur5::readChunkHeader( CkHeader & h )
 {
-	try {
-		_file.read( h.id );
-		_file.read( h.size );
-	}
-	catch( FileIOException & ex ) {
-		ex << "Failed to read chunk header.";
-		throw;
-	}
+	_file.read( h.id );
+	_file.read( h.size );
 } 
 
 // ---------------------------------------------------------------------------
@@ -216,32 +220,32 @@ ImportLemur5::readChunkHeader( CkHeader & h )
 void 
 ImportLemur5::readTracksChunk( TrackDataCk & ck )
 {
-	//	rewind:
-	_file.setPosition( 0 );
-	
-	//	find the chunk in the file:
-	//	read a chunk header, if it isn't the one we want, skip over it.	
 	try {
+		//	rewind:
+		_file.seek( 0 );
+		if( _file.tell() != 0 )
+			Throw( FileIOException, "Couldn't rewind Lemur file (bad open mode?)." );
+		
+		//	find the track data chunk from the file:
+		//	read a chunk header, if it isn't the one we want, skip over it.	
 		for ( readChunkHeader( ck.header ); ck.header.id != TrackDataID; readChunkHeader( ck.header ) ) {
-			Assert( ck.header.size > 0 );
-			Assert( ! _file.atEOF() );
+			//	make sure the chunk looks valid:
+			if( ck.header.size < 0 )
+				Throw( FileIOException, "Found bogus chunk size." );
+				
 			if ( ck.header.id == FORM_ID )
-				_file.offsetPosition( sizeof(Int_32) );
+				_file.offset( sizeof(Int_32) );
 			else
-				_file.offsetPosition( ck.header.size );
+				_file.offset( ck.header.size );
 		}
 		
 		//	found it, read it one field at a time:
 		_file.read( ck.numberOfTracks );
 		_file.read( ck.trackOrder );
 	}
-	catch ( Exception & ex ) {
-		using std::string;
-		string s( "No Track Data chunk found in this file." );
-		s.append( ex.str() );
-		Throw( ImportException, s );
+	catch( FileIOException & ex ) {
+		Throw( ImportException, ex.str() + "Failed to read badly-formatted Lemur file (bad Track Data chunk)." );
 	}
-	
 }
 
 // ---------------------------------------------------------------------------
@@ -251,23 +255,23 @@ ImportLemur5::readTracksChunk( TrackDataCk & ck )
 void
 ImportLemur5::readParamsChunk( AnalysisParamsCk & ck )
 {
-	//	rewind:
-	_file.setPosition( 0 );
-	
-	//	find the chunk in the file:
-	//	read a chunk header, if it isn't the one we want, skip over it.
 	try {
+		//	rewind:
+		_file.seek( 0 );
+		if( _file.tell() != 0 )
+			Throw( FileIOException, "Couldn't rewind Lemur file (bad open mode?)." );
+
+		//	find the Parameters chunk in the file:
+		//	read a chunk header, if it isn't the one we want, skip over it.
 		for ( readChunkHeader( ck.header ); ck.header.id != AnalysisParamsID; readChunkHeader( ck.header ) ) {
-			Assert( ck.header.size > 0 );
-			int p = _file.position();
-			Assert( ! _file.atEOF() );
-			p = _file.position();
-			if ( ck.header.id == FORM_ID ) {
-				_file.offsetPosition( sizeof(Int_32) );
-			}
+			//	make sure the chunk looks valid:
+			if( ck.header.size < 0 )
+				Throw( FileIOException, "Found bogus chunk size." );
+				
+			if ( ck.header.id == FORM_ID )
+				_file.offset( sizeof(Int_32) );
 			else
-				_file.offsetPosition( ck.header.size );
-			p = _file.position();
+				_file.offset( ck.header.size );
 		}
 		
 		//	found it, read it one field at a time:
@@ -286,11 +290,8 @@ ImportLemur5::readParamsChunk( AnalysisParamsCk & ck )
 		_file.read( ck.peakSeparation );
 		_file.read( ck.freqDrift );
 	}
-	catch ( Exception & ex ) {
-		using std::string;
-		string s( "No Parameters chunk found in this file." );
-		s.append( ex.str() );
-		Throw( ImportException, s );
+	catch( FileIOException & ex ) {
+		Throw( ImportException, ex.str() + "Failed to read badly-formatted Lemur file (bad Parameters chunk)." );
 	}
 }
 
@@ -302,10 +303,16 @@ ImportLemur5::readParamsChunk( AnalysisParamsCk & ck )
 void 
 ImportLemur5::readTrackHeader( TrackOnDisk & t )
 {
-	_file.read( t.startTime );
-	_file.read( t.initialPhase );
-	_file.read( t.numPeaks );
-	_file.read( t.label );
+	try {
+		_file.read( t.startTime );
+		_file.read( t.initialPhase );
+		_file.read( t.numPeaks );
+		_file.read( t.label );
+	}
+	catch( FileIOException & ex ) {
+		ex << "Failed to read track data in Lemur 5 import).";
+		throw;
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -316,10 +323,16 @@ ImportLemur5::readTrackHeader( TrackOnDisk & t )
 void 
 ImportLemur5::readPeakData( PeakOnDisk & p )
 {
-	_file.read( p.magnitude );
-	_file.read( p.frequency );
-	_file.read( p.interpolatedFrequency );
-	_file.read( p.bandwidth );
-	_file.read( p.ttn );
+	try {
+		_file.read( p.magnitude );
+		_file.read( p.frequency );
+		_file.read( p.interpolatedFrequency );
+		_file.read( p.bandwidth );
+		_file.read( p.ttn );
+	}
+	catch( FileIOException & ex ) {
+		ex << "Failed to read peak data in Lemur 5 import).";
+		throw;
+	}
 }
 End_Namespace( Loris )

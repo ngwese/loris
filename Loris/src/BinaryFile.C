@@ -12,168 +12,261 @@
 #include "Exception.h"
 #include "Notifier.h"
 #include "BinaryFile.h"
+#include "endian.h"
 
-#include <fstream>
 #include <string>
-#include <algorithm>
+using std::string;
 
-using namespace std;	//	its everywhere in here
+#if !defined( Deprecated_iostream_headers)
+	#include <iostream>
+	using std::ios;
+#else
+	#include <iostream.h>
+#endif
 
 Begin_Namespace( Loris )
 
 // ---------------------------------------------------------------------------
 //	BinaryFile constructor
 // ---------------------------------------------------------------------------
-//	The EndianFlag defaults to BigEndian.
 //
-BinaryFile::BinaryFile( const string & path, ios::openmode flags, EndianFlag e ) :
-	_swapBytes( e != machineType() ),
-	_buf( new filebuf() )
+BinaryFile::BinaryFile( void ) :
+	_prevOp( op_seek ),
+	_swapBytes( false ),
+	std::iostream( & _buf )
 {
-	_buf->open( path.c_str(), ios::binary | flags );
-	if ( ! _buf->is_open() ) {
-		string s( "couldn't open File: " );
-		s.append( path );
-		Throw( FileIOException, s );
+}
+
+// ---------------------------------------------------------------------------
+//	BinaryFile constructor with path
+// ---------------------------------------------------------------------------
+//	Try to find an approprite open mode for the file.
+//	Try edit first, then view, then create. 
+//
+BinaryFile::BinaryFile( const string & path ) :
+	_prevOp( op_seek ),
+	_swapBytes( false ),
+	std::iostream( & _buf )
+{
+	//	wow, is this ever ugly...
+	try {
+		edit( path );
+	}
+	catch ( FileIOException & ) {
+		try { 
+			view( path );
+		}
+		catch ( FileIOException & ) { 
+			try {
+				create( path );
+			}
+			catch ( FileIOException & ex ) { 
+				ex << "Couldn't find a way to open " << path;
+				throw;
+			}
+		}
 	}
 }
 
+
+#pragma mark -
+#pragma mark file association
 // ---------------------------------------------------------------------------
-//	BinaryFile destructor
+//	append
 // ---------------------------------------------------------------------------
+//	Open for appending, create if nec.
 //
-BinaryFile::~BinaryFile( void )
+void
+BinaryFile::append( const string & path )
 {
-	delete _buf;
+	buffer().open( path.c_str(), ios::out | ios::app | ios::binary );
+		
+	if ( ! buffer().is_open() ) {
+		string s( "Couldn't open BinaryFile: " );
+		s.append( path );
+		Throw( FileIOException, s );
+	}
+	_prevOp = op_seek;
 }
 
 // ---------------------------------------------------------------------------
-//	BinaryFile Append
+//	create
 // ---------------------------------------------------------------------------
+//	Open for reading and writing, erase, create if nec.
 //
-BinaryFile *
-BinaryFile::Append( const string & path, EndianFlag e )
+void
+BinaryFile::create( const string & path )
 {
-	return new BinaryFile(  path.c_str(), 
-							ios::out | ios::app | ios::binary,
-							e );
+	buffer().open( path.c_str(), ios::in | ios::out | ios::trunc | ios::binary );
+		
+	if ( ! buffer().is_open() ) {
+		string s( "Couldn't open BinaryFile: " );
+		s.append( path );
+		Throw( FileIOException, s );
+	}
+	_prevOp = op_seek;
 }
 
 // ---------------------------------------------------------------------------
-//	BinaryFile Create
+//	edit
 // ---------------------------------------------------------------------------
+//	Open for reading and writing, must exist.
 //
-BinaryFile *
-BinaryFile::Create( const string & path, EndianFlag e )
+void
+BinaryFile::edit( const string & path )
 {
-	return new BinaryFile(  path.c_str(), 
-							ios::in | ios::out | ios::trunc | ios::binary,
-							e );
+	buffer().open( path.c_str(), ios::in | ios::out | ios::binary );
+		
+	if ( ! buffer().is_open() ) {
+		string s( "Couldn't open BinaryFile: " );
+		s.append( path );
+		Throw( FileIOException, s );
+	}
+	_prevOp = op_seek;
 }
 
 // ---------------------------------------------------------------------------
-//	BinaryFile Open
+//	view
 // ---------------------------------------------------------------------------
+//	Open for reading only, must exist.
 //
-BinaryFile *
-BinaryFile::Open( const string & path, EndianFlag e, ios::openmode flags )
+void
+BinaryFile::view( const string & path )
 {
-	return new BinaryFile(  path.c_str(), 
-							flags | ios::binary,
-							e );
+	buffer().open( path.c_str(), ios::in | ios::binary );
+		
+	if ( ! buffer().is_open() ) {
+		string s( "Couldn't open BinaryFile: " );
+		s.append( path );
+		Throw( FileIOException, s );
+	}
+	_prevOp = op_seek;
 }
 
+// ---------------------------------------------------------------------------
+//	close
+// ---------------------------------------------------------------------------
+//	Why not? Copied from streams in <fstream>.
+//
+void
+BinaryFile::close( void )
+{
+	if ( buffer().close() == 0)
+		setstate(failbit);
+	_prevOp = op_seek;
+}
+
+#pragma mark -
+#pragma mark file stream position
 // ---------------------------------------------------------------------------
 //	position
 // ---------------------------------------------------------------------------
 //
-streampos
-BinaryFile::position( void ) const
+std::streampos
+BinaryFile::tell( void )
 {
-	streampos p = _buf->pubseekoff( 0, ios::cur );
-	//	check for invalid position:
-	if ( p == streampos(-1)  )
-		Throw( FileIOException, "Couldn't find valid binary file stream position.");
-
-	return p;
+	return tellp();
 }
 
 // ---------------------------------------------------------------------------
-//	skip
-// ---------------------------------------------------------------------------
-//
-streampos
-BinaryFile::skip( streamoff offset )
-{
-	streampos p = _buf->pubseekoff( offset, ios::cur );
-	//	check for invalid position:
-	if ( p == streampos(-1) )
-		Throw( FileIOException, "Couldn't find valid binary file stream position.");
-
-	return p;
-}
-
-// ---------------------------------------------------------------------------
-//	setPosition
+//	seek
 // ---------------------------------------------------------------------------
 //
 void
-BinaryFile::setPosition( streampos pos )
+BinaryFile::seek( std::streampos x )
 {
-	streampos p = _buf->pubseekpos( pos, ios::beg );
-	//	check for invalid position:
-	if ( p == streampos(-1) )
-		Throw( FileIOException, "Couldn't find valid stream position in BinaryFile::position.");
+	//if ( eof() )	//	this makes sense, I think, 
+	//	clear();	//	but not consistent with standard lib
+	seekp( x );
+	_prevOp = op_seek;
 }
 
 // ---------------------------------------------------------------------------
-//	reverseBytes
+//	offset
 // ---------------------------------------------------------------------------
+//
 void
-BinaryFile::reverseBytes( char * c, int n )
+BinaryFile::offset( long x, ios::seekdir whence )
 {
-	if ( n > 1 )
-		reverse( c, c + n );
+	//if ( eof() )	//	this makes sense, I think, 
+	//	clear();	//	but not consistent with standard lib
+	seekp( x, whence ); 
+	_prevOp = op_seek;
 }
 
+#pragma mark -
+#pragma mark endian
+// ---------------------------------------------------------------------------
+//	setBigEndian
+// ---------------------------------------------------------------------------
+//
+void
+BinaryFile::setBigEndian( void )
+{
+	_swapBytes = ! bigEndianSystem();
+}
+
+// ---------------------------------------------------------------------------
+//	setLittleEndian
+// ---------------------------------------------------------------------------
+//
+void
+BinaryFile::setLittleEndian( void )
+{
+	_swapBytes = bigEndianSystem();
+}
+
+#pragma mark -
+#pragma mark helpers
 // ---------------------------------------------------------------------------
 //	readBytes
 // ---------------------------------------------------------------------------
+//
 void
-BinaryFile::readBytes( char * data, int howmany )
+BinaryFile::readBytes( char * data, int howmany, boolean swap )
 {
-	_buf->sgetn( data, howmany );
+	//	need to seek when changing between read and write:
+	if ( _prevOp == op_wr )
+		offset( 0 );
+	_prevOp = op_rd;
+
+	//	read the bytes into data:
+	std::iostream::read( data, howmany );
+	
+	//	check stream state:
+	if ( ! good() )
+		Throw( FileIOException, "Binary File read failed." );
+	
+	//	swap byte order if nec.
+	if ( gcount() == howmany && swap ) 
+		swapByteOrder( data, howmany );
 }
 	
 // ---------------------------------------------------------------------------
 //	writeBytes
 // ---------------------------------------------------------------------------
-void
-BinaryFile::writeBytes( char * data, int howmany )
-{
-	_buf->sputn( data, howmany );
-}
-	
-// ---------------------------------------------------------------------------
-//	machineType
-// ---------------------------------------------------------------------------
-//	Returns the type of machine the program is running on.
-//	Copied from arun's code, used to determine whether to 
-//	swap bytes.
 //
-EndianFlag 
-BinaryFile::machineType( void )
+void
+BinaryFile::writeBytes( char * data, int howmany, boolean swap )
 {
-	union {
-		short s ;
-		char c[sizeof(short)] ;
-	} x ;
-	x.s = 1 ;
-	static const EndianFlag f = ( x.c[0] == 1 ) ? LittleEndian : BigEndian ;
-	
-	return f;
-}
+	//	need to seek when changing between read and write:
+	if ( _prevOp == op_rd )
+		offset(0);
+	_prevOp = op_wr;
+		
+	//	swap byte order if nec.
+	if ( swap ) 
+		swapByteOrder( data, howmany );
 
+	//	write the bytes from data:
+	std::iostream::write( data, howmany );
+	
+	//	check stream state:
+	if ( ! good() )
+		Throw( FileIOException, "Binary File write failed." );
+	
+	}
+	
 End_Namespace( Loris )
 
 

@@ -62,7 +62,7 @@ Begin_Namespace( Loris )
  */
  
 /* 	I freakin' hate all caps!	*/
-#define Null NULL
+#define Null 0L
 
 /* 	shorthand for types	*/
 typedef unsigned long 	ulong;
@@ -79,7 +79,10 @@ typedef unsigned char 	uchar;
 #ifdef __cplusplus
 	typedef bool	boolean;
 #elif !defined(boolean)	
-	typedef enum { false = 0, true = 1 } boolean;
+	typedef short boolean;
+	#if !defined(false)
+		enum { false = 0, true = 1 };
+	#endif
 #endif
 
 /* ---------------------------------------------------------------------------

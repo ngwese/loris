@@ -1,6 +1,5 @@
 #ifndef __Loris_binary_file__
 #define __Loris_binary_file__
-
 // ===========================================================================
 //	BinaryFile.h
 //	
@@ -13,53 +12,75 @@
 #include "LorisLib.h"
 
 #include <string>
-#include <iosfwd>	//	won't work for MIPSPro
+
+#if !defined( Deprecated_iostream_headers)
+	#include <iostream>
+	#include <fstream>
+	using std::iostream;
+	using std::filebuf;
+	using std::streampos;
+	using std::ios;
+#else
+	#include <iostream.h>
+	#include <fstream.h>
+#endif
 
 Begin_Namespace( Loris )
-
-//	endian flag type:
-typedef enum { BigEndian, LittleEndian } EndianFlag;
 
 // ---------------------------------------------------------------------------
 //	class BinaryFile
 //
-class BinaryFile
+//	Inherit privately from iostream so that to make use of its interface
+//	internally, but provide a simpler interace to clients of BinaryFile.
+//
+//	Unlike the standard i/o library streams, BinaryFile checks its state
+//	after i/o and exceptions (FileIOException) if the read or write was
+//	unsuccessful. 
+//
+//	Note: no check is made on positioning the stream pointer, behavior
+//	is "undefined" when streams are positioned out of bounds. 
+//
+class BinaryFile : private iostream
 {
 //	-- public interface --
 public:
 	//	construction:
-	BinaryFile( const std::string & path, std::ios::openmode flags, EndianFlag e = BigEndian );
-	~BinaryFile( void );
+	BinaryFile( void );
+	BinaryFile( const std::string & path );
+	//~BinaryFile( void );
 	
-	//	construction aids:
-	static BinaryFile * Append( const std::string & path, EndianFlag e = BigEndian );
-	static BinaryFile * Create( const std::string & path, EndianFlag e = BigEndian );
-	static BinaryFile * Open( const std::string & path, EndianFlag e = BigEndian, 
-								std::ios::openmode flags = std::ios::in | std::ios::out );
-		
+	//	define the stream buffer type:
+	//	For now, just use filebuf, but to have buffering, need to 
+	//	derived our own file buffer class. The built-in filebuf
+	//	class does no buffering, and doesn't support it.
+	typedef filebuf buffer_type;
+	
+	//	file stream association:
+	void append( const std::string & path );	//	append, create if nec.
+	void create( const std::string & path );	//	read and write, create if nec.
+	void edit( const std::string & path );		//	read and write, must exist
+	void view( const std::string & path );		//	read only, must exist
+	 void close( void );
+	
+	//	template i/o members allow arbtrary single objects 
+	//	to be transfered, read/writeBytes() do all the work.
 	//	reading:
-	//	(binary file, don't use formatted extractors)
 	template< class T >
-	void read( T & thing, boolean dontSwap = false )
+	void read( T & thing )
 	{
 		union {
 			T t;
 			char c[ sizeof(T) ];
 		} x;
 		
-		readBytes( x.c, sizeof(T) );
+		readBytes( x.c, sizeof(T), swapBytes() );
 		
-		if ( swapBytes() && ! dontSwap ) {
-			reverseBytes( x.c, sizeof(T) );
-		}
-			
 		thing = x.t;
 	}
 	
 	//	writing:
-	//	(binary file, don't use formatted extractors)
 	template< class T >
-	void write( const T & thing, boolean dontSwap = false )
+	void write( const T & thing )
 	{
 		union {
 			T t;
@@ -68,46 +89,45 @@ public:
 		
 		x.t = thing;
 		
-		if ( swapBytes() && ! dontSwap ) {
-			reverseBytes( x.c, sizeof(T) );
-		}
-		
-		writeBytes( x.c, sizeof(T) );
+		writeBytes( x.c, sizeof(T), swapBytes() );
 	}
 	
-	//	position:
-	std::streampos skip( std::streamoff offset );
+	//	absolute file stream position:
+	//	(note: streampos is _not_ an integral type)
+	streampos tell( void );
+	void seek( streampos x );
 	
-	std::streampos position( void ) const;
-	void setPosition( std::streampos pos );
+	//	relative file stream position:
+	//	(note: position offsets _are_ signed integral types)
+	void offset( long x, ios::seekdir whence = ios::cur );
+	
+	//	import status access:	
+	using iostream::clear;
+	using iostream::eof;
+	using iostream::fail;
+	using iostream::good;
 	
 	//	endian-ness:
-	//	get this outta constructor,
-	//	swap default to false
-	//	and hey, put a freakin' endian check in
-	//	ieee.c, duh! Make sure its big before 
-	//	converting. DUH.
-	setBigEndian(void);
-	setLittleEndian(void);
+	void setBigEndian( void );
+	void setLittleEndian( void );
 	
 //	-- helpers --
 protected:
+	//	instance variable access:
 	boolean swapBytes( void ) const { return _swapBytes; }
+	buffer_type & buffer( void ) { return _buf; }
 
-	static EndianFlag machineType( void );
-	static void reverseBytes( char * c, int n ); 
+	//	low level file i/o:
+	void readBytes( char * bytes, int howmany, boolean swap );
+	void writeBytes( char * bytes, int howmany, boolean swap );
 	
-	void readBytes( char * bytes, int howmany );
-	void writeBytes( char * bytes, int howmany );
-	
-
 //	-- instance variables --
 private:
-	boolean _swapBytes;
-	std::filebuf * _buf;
+	enum { op_wr, op_rd, op_seek } _prevOp;	//	was the previous operation read or write?
+	boolean _swapBytes;		//	should we swap the byte order of objects read/written?
+	filebuf _buf;			//	associated file buffer 
 
 };	//	end of class BinaryFile
-
 
 End_Namespace( Loris )
 

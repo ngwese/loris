@@ -14,9 +14,8 @@
 
 #if !defined( Deprecated_iostream_headers )
 	#include <iostream>
-	using std::ostream;
 #else
-	#include <iostream.h>
+	#include <ostream.h>
 #endif
 
 #if !defined( Deprecated_cstd_headers )

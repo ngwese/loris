@@ -24,7 +24,7 @@ class SampleBuffer;
 class Breakpoint;
 
 // ---------------------------------------------------------------------------
-//	€ class Synthesizer
+//	class Synthesizer
 //	
 //	Definition of class of synthesizers of reassigned bandwidth-enhanced
 //	partials. A Synthesizer generates samples for one partial at a time

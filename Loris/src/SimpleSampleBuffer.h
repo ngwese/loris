@@ -62,6 +62,7 @@ public:
 	~SimpleSampleBuffer( void );
 	
 //	public SampleBuffer interface:
+virtual void grow( int n );
 virtual int size( void ) const { return mSize; }
 
 //	indexed access:

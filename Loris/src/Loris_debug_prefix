@@ -12,5 +12,5 @@
 #define Debug_Loris 1
 
 #ifdef __cplusplus
-	#include "MSLheaders++"
+	#include "MSLHeaders.PPC.mch"
 #endif

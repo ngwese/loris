@@ -1,7 +1,10 @@
 // ===========================================================================
 //	AiffFile.C
 //	
-//
+//	Association of a sample buffer and the necessary additional info 
+//	(sample rate, number of channels, and sample data size in bits)
+//	to completely specify an AIFF samples file. Extends the generic
+//	Loris::SamplesFile with AIFF i/o.
 //
 //	-kel 28 Sept 99
 //
@@ -15,22 +18,64 @@
 #include "ieee.h"
 
 #include <algorithm>
+#include <string>
+using std::string;
 
+#include <limits>
 
 Begin_Namespace( Loris )
 
 // ---------------------------------------------------------------------------
-//	AiffFile constructor
+//	AiffFile constructor from data in memory
 // ---------------------------------------------------------------------------
 //
-AiffFile::AiffFile( double rate, int chans, int bits, SampleBuffer & buf, BinaryFile & file ) :
-	_sampleRate( rate ),
-	_nChannels( chans ),
-	_sampSize( bits ),
-	_samples( buf ),
-	_file( file )
+AiffFile::AiffFile( double rate, int chans, int bits, SampleBuffer & buf ) :
+	SamplesFile( rate, chans, bits, buf )
 {
-	validateParams();
+}
+
+// ---------------------------------------------------------------------------
+//	AiffFile constructor from data on disk
+// ---------------------------------------------------------------------------
+//	Read immediately.
+//
+AiffFile::AiffFile( BinaryFile & file, SampleBuffer & buf ) :
+	SamplesFile( buf )
+{
+	read( file );
+}
+
+// ---------------------------------------------------------------------------
+//	AiffFile copy constructor
+// ---------------------------------------------------------------------------
+//
+AiffFile::AiffFile( const SamplesFile & other ) :
+	SamplesFile( other )
+{
+}
+
+// ---------------------------------------------------------------------------
+//	read
+// ---------------------------------------------------------------------------
+//
+void
+AiffFile::read( BinaryFile & file )
+{
+	try {
+		//	rewind:
+		file.seek(0);
+		if( file.tell() != 0 )
+			Throw( FileIOException, "Couldn't rewind AIFF file (bad open mode?)." );
+		file.setBigEndian();
+		
+		readContainer( file );
+		readCommon( file );
+		readSampleData( file );
+	}
+	catch ( Exception & ex ) {
+		ex << "Failed to read AIFF file.";
+		throw;
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -38,54 +83,252 @@ AiffFile::AiffFile( double rate, int chans, int bits, SampleBuffer & buf, Binary
 // ---------------------------------------------------------------------------
 //
 void
-AiffFile::write( void )
+AiffFile::write( BinaryFile & file )
 {
 	validateParams();
 	
 	try {
-		writeContainer();
-		writeCommon();
-		writeSampleData();
+		//	rewind:
+		file.seek(0);
+		if( file.tell() != 0 )
+			Throw( FileIOException, "Couldn't rewind AIFF file (bad open mode?)." );
+		file.setBigEndian();
+		
+		writeContainer( file );
+		writeCommon( file );
+		writeSampleData( file );
 	}
 	catch ( Exception & ex ) {
-		ex << "Failed to write AIFF file ";
+		ex << "Failed to write AIFF file.";
 		throw;
 	}
 }
 
-
 #pragma mark -
-#pragma mark helpers
-
+#pragma mark read helpers
 // ---------------------------------------------------------------------------
-//	validateParams
+//	readChunkHeader
 // ---------------------------------------------------------------------------
-//	Throw InvalidObject exception if the parameters are not valid.
+//	Read the id and chunk size from the current file position.
+//	Let exceptions propogate.
 //
 void
-AiffFile::validateParams( void )
+AiffFile::readChunkHeader( BinaryFile & file, CkHeader & h )
 {
-	using std::find;
+	file.read( h.id );
+	file.read( h.size );
+}
+
+// ---------------------------------------------------------------------------
+//	readCommon
+// ---------------------------------------------------------------------------
+//
+void
+AiffFile::readCommon( BinaryFile & file )
+{
+	//	first build a Common chunk, so that all the data sizes will 
+	//	be correct:
+	CommonCk ck;
 	
-	if ( _sampleRate < 0. )
-		Throw( InvalidObject, "Bad sample rate in AiffFile." );
-	
-	static const int validChannels[] = { 1, 2, 4 };
-	if (! find( validChannels, validChannels + 3, _nChannels ) )
-		Throw( InvalidObject, "Bad number of channels in AiffFile." );
-	
-	static const int validSizes[] = { 8, 16, 24, 32 };
-	if (! find( validSizes, validSizes + 4, _sampSize ) )
-		Throw( InvalidObject, "Bad sample size in AiffFile." );
+	try {
+		//	rewind:
+		file.seek(0);
+		if( file.tell() != 0 )
+			Throw( FileIOException, "Couldn't rewind AIFF file (bad open mode?)." );
+		
+		//	find the chunk:
+		//	read a chunk header, if it isn't the one we want, skip over it.
+		for ( readChunkHeader( file, ck.header ); 
+			  ck.header.id != CommonId; 
+			  readChunkHeader( file, ck.header ) ) {
+			//	make sure the chunk looks valid:
+			if( ck.header.size < 0 )
+				Throw( FileIOException, "Found bogus chunk size." );
+							
+			if ( ck.header.id == ContainerId )
+				file.offset( sizeof(Int_32) );
+			else
+				file.offset( ck.header.size );
+		}
+
+		//	found it.
+		//	read in the chunk data:
+		file.read( ck.channels );
+		file.read( ck.sampleFrames );
+		file.read( ck.bitsPerSample );
+		file.read( ck.srate );
+	}
+	catch( FileIOException & ex ) {
+		ex << "Failed to read badly-formatted AIFF file (bad Common chunk).";
+		throw;
+	}
+						
+	//	allocate space for the samples:
+	try {
+		_samples.grow( ck.sampleFrames * ck.channels );
+	}
+	catch( LowMemException & ex ) {
+		ex << "Couldn't allocate buffer for AIFF samples.";
+		throw;
+	}
+	_nChannels = ck.channels;
+	_sampSize = ck.bitsPerSample;
+	_sampleRate = IEEE::ConvertFromIeeeExtended( ck.srate );
 	
 }
 
+// ---------------------------------------------------------------------------
+//	readContainer
+// ---------------------------------------------------------------------------
+//
+void
+AiffFile::readContainer( BinaryFile & file )
+{
+	//	first build a Container chunk, so that all the data sizes will 
+	//	be correct:
+	ContainerCk ck;
+	
+	try {
+		//	rewind:
+		file.seek(0);
+		if( file.tell() != 0 )
+			Throw( FileIOException, "Couldn't rewind AIFF file (bad open mode?)." );
+			
+		// Container is always first:
+		readChunkHeader( file, ck.header );
+		if( ck.header.id != ContainerId )
+			Throw( FileIOException, "Found no Container chunk." );
+			
+		//	read in the chunk data:
+		file.read( ck.formType );
+	}
+	catch( FileIOException & ex ) {
+		ex << "Failed to read badly-formatted AIFF file (bad Container chunk).";
+		throw;
+	}
+
+	//	make sure its really AIFF:
+	if ( ck.formType != AiffType )
+		Throw( FileIOException, string("Bad form type in AIFF file: ") + string( ck.formType, 4 ) );
+}	
+
+// ---------------------------------------------------------------------------
+//	readSampleData
+// ---------------------------------------------------------------------------
+//	Read from the current position, assume the header has already been read:
+//
+void
+AiffFile::readSampleData( BinaryFile & file )
+{
+	//	first build a Sound Data chunk, so that all the data sizes will 
+	//	be correct:
+	SoundDataCk ck;
+
+	try {
+		//	rewind:
+		file.seek(0);
+		if( file.tell() != 0 )
+			Throw( FileIOException, "Couldn't rewind AIFF file (bad open mode?)." );
+		
+		//	find the chunk:
+		//	read a chunk header, if it isn't the one we want, skip over it.
+		for ( readChunkHeader( file, ck.header ); 
+			  ck.header.id != SoundDataId; 
+			  readChunkHeader( file, ck.header ) ) {
+			//	make sure the chunk looks valid:
+			if( ck.header.size < 0 )
+				Throw( FileIOException, "Found bogus chunk size." );
+				
+			//	make sure we didn't run off the edge of the earth:
+			if ( ! file.good() )
+				Throw( FileIOException, "Failed to read badly-formatted AIFF file (no Sound Data chunk)." );
+			
+			if ( ck.header.id == ContainerId )
+				file.offset( sizeof(Int_32) );
+			else
+				file.offset( ck.header.size );
+		}
+
+		//	found it.
+		//	read in the chunk data:
+		file.read( ck.offset );
+		file.read( ck.blockSize );
+
+		//	skip ahead to the samples and read them:
+		file.offset( ck.offset );
+		readSamples( file );
+	}
+	catch( FileIOException & ex ) {
+		ex << "Failed to read badly-formatted AIFF file (bad Sound Data chunk).";
+		throw;
+	}
+}
+
+// ---------------------------------------------------------------------------
+//	readSamples
+// ---------------------------------------------------------------------------
+//	Let exceptions propogate.
+//
+void
+AiffFile::readSamples( BinaryFile & file )
+{	
+	static const double oneOverMax = 1. / std::numeric_limits<Int_32>::max();
+	
+	pcm_sample z;
+
+	switch ( _sampSize ) {
+		case 32:
+			for (ulong i = 0; i < _samples.size(); ++i ) {
+				//	read the sample:
+				file.read( z.s32bits );
+				
+				//	convert to double:
+				_samples[i] = oneOverMax * z.s32bits;
+			}
+			break;
+		case 24:
+			for (ulong i = 0; i < _samples.size(); ++i ) {
+				//	read the sample:
+				file.read( z.s24bits );
+				
+				//	convert to double:
+				_samples[i] = oneOverMax * z.s32bits;
+			}
+			break;
+		case 16:
+			for (ulong i = 0; i < _samples.size(); ++i ) {
+				//	read the sample:
+				file.read( z.s16bits );
+				
+				//	convert to double:
+				_samples[i] = oneOverMax * z.s32bits;
+			}
+			break;
+		case 8:
+			for (ulong i = 0; i < _samples.size(); ++i ) {
+				//	read the sample:
+				file.read( z.s8bits );
+				
+				//	convert to double:
+				_samples[i] = oneOverMax * z.s32bits;
+			}
+			break;
+	}
+	
+	//	except if there were any read errors:
+	//	(better to check earlier?)
+	if ( ! file.good() )
+		Throw( FileIOException, "Failed to read AIFF samples.");
+}
+
+#pragma mark -
+#pragma mark write helpers
 // ---------------------------------------------------------------------------
 //	writeCommon
 // ---------------------------------------------------------------------------
 //
 void
-AiffFile::writeCommon( void )
+AiffFile::writeCommon( BinaryFile & file )
 {
 	//	first build a Common chunk, so that all the data sizes will 
 	//	be correct:
@@ -101,12 +344,18 @@ AiffFile::writeCommon( void )
 	IEEE::ConvertToIeeeExtended( _sampleRate, & ck.srate );
 	
 	//	write it out:
-	_file.write( ck.header.id );
-	_file.write( ck.header.size );
-	_file.write( ck.channels );
-	_file.write( ck.sampleFrames );
-	_file.write( ck.bitsPerSample );
-	_file.write( ck.srate, false );	//	don't swap byte order, ever
+	try {
+		file.write( ck.header.id );
+		file.write( ck.header.size );
+		file.write( ck.channels );
+		file.write( ck.sampleFrames );
+		file.write( ck.bitsPerSample );
+		file.write( ck.srate );
+	}
+	catch( FileIOException & ex ) {
+		ex << "Failed to write AIFF file Common chunk.";
+		throw;
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -114,7 +363,7 @@ AiffFile::writeCommon( void )
 // ---------------------------------------------------------------------------
 //
 void
-AiffFile::writeContainer( void )
+AiffFile::writeContainer( BinaryFile & file )
 {
 	//	first build a Container chunk, so that all the data sizes will 
 	//	be correct:
@@ -127,9 +376,15 @@ AiffFile::writeContainer( void )
 	ck.formType = AiffType;
 	
 	//	write it out:
-	_file.write( ck.header.id );
-	_file.write( ck.header.size );
-	_file.write( ck.formType );
+	try {
+		file.write( ck.header.id );
+		file.write( ck.header.size );
+		file.write( ck.formType );
+	}
+	catch( FileIOException & ex ) {
+		ex << "Failed to write AIFF file Container chunk.";
+		throw;
+	}
 }	
 
 // ---------------------------------------------------------------------------
@@ -137,7 +392,7 @@ AiffFile::writeContainer( void )
 // ---------------------------------------------------------------------------
 //
 void
-AiffFile::writeSampleData( void )
+AiffFile::writeSampleData( BinaryFile & file )
 {
 	//	first build a Sound Data chunk, so that all the data sizes will 
 	//	be correct:
@@ -152,38 +407,34 @@ AiffFile::writeSampleData( void )
 	ck.blockSize = 0;
 	
 	//	write it out:
-	_file.write( ck.header.id );
-	_file.write( ck.header.size );
-	_file.write( ck.offset );
-	_file.write( ck.blockSize );
-	
-	writeSamples();
+	try {
+		file.write( ck.header.id );
+		file.write( ck.header.size );
+		file.write( ck.offset );
+		file.write( ck.blockSize );
+
+		writeSamples( file );
+	}
+	catch( FileIOException & ex ) {
+		ex << "Failed to write AIFF file Container chunk.";
+		throw;
+	}
 }
 
 // ---------------------------------------------------------------------------
 //	writeSamples
 // ---------------------------------------------------------------------------
+//	Let exceptions propogate.
 //
 void
-AiffFile::writeSamples( void )
+AiffFile::writeSamples( BinaryFile & file )
 {	
 	using std::max;
 	using std::min;
 	
-	static const double Maximum_Long = (double) LONG_MAX;
+	static const double Maximum_Long = std::numeric_limits<Int_32>::max();
 	
-	union {
-		//	32 bits sample
-		Int_32 s32bits;
-		//	24 bits sample
-		struct {
-			char data[3];
-		}  s24bits;
-		//	16 bits sample
-		Int_16 s16bits;
-		//	8 bits sample
-		char s8bits;
-	} z;
+	pcm_sample z;
 
 	switch ( _sampSize ) {
 		case 32:
@@ -192,7 +443,7 @@ AiffFile::writeSamples( void )
 				z.s32bits = Maximum_Long * min( 1.0, max(-1.0, _samples[i]) );
 			
 				//	write the sample:
-				_file.write( z.s32bits );
+				file.write( z.s32bits );
 			}
 			break;
 		case 24:
@@ -201,7 +452,7 @@ AiffFile::writeSamples( void )
 				z.s32bits = Maximum_Long * min( 1.0, max(-1.0, _samples[i]) );
 			
 				//	write the sample:
-				_file.write( z.s24bits );
+				file.write( z.s24bits );
 			}
 			break;
 		case 16:
@@ -210,7 +461,7 @@ AiffFile::writeSamples( void )
 				z.s32bits = Maximum_Long * min( 1.0, max(-1.0, _samples[i]) );
 			
 				//	write the sample:
-				_file.write( z.s16bits );
+				file.write( z.s16bits );
 			}
 			break;
 		case 8:
@@ -219,12 +470,19 @@ AiffFile::writeSamples( void )
 				z.s32bits = Maximum_Long * min( 1.0, max(-1.0, _samples[i]) );
 			
 				//	write the sample:
-				_file.write( z.s8bits );
+				file.write( z.s8bits );
 			}
 			break;
 	}
+	
+	//	except if there were any read errors:
+	//	(better to check earlier?)
+	if ( ! file.good() )
+		Throw( FileIOException, "Failed to write AIFF samples.");
 }
 
+#pragma mark -
+#pragma mark chunk sizes
 // ---------------------------------------------------------------------------
 //	sizeofCkHeader
 // ---------------------------------------------------------------------------

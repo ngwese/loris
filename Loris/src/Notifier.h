@@ -18,10 +18,13 @@
 #include "StringBuffer.h"
 
 #include <string>
+using std::string; 
 
 #if !defined( Deprecated_iostream_headers )
-	#include <iosfwd>
+	#include <ostream>
 	using std::ostream;
+	using std::streambuf;
+	using std::streamsize;
 #else
 	#include <ostream.h>
 #endif
@@ -43,10 +46,10 @@ class Notifier : public ostream
 public:
 //	construction:
 	Notifier( const std::string & s = "" );
-	Notifier( std::streambuf & buf ,const std::string & s = "" );
+	Notifier( streambuf & buf, const string & s = "" );
 	
 //	virtual destructor so Notifier can be subclassed:
-//	(use compiler generated)
+//	(use compiler generated, ostream has virtual destructor)
 	//virtual ~Notifier( void );	
 	
 //	posting:
@@ -77,7 +80,7 @@ class Debugger
 	: public Notifier
 	{
 	public:
-		Debugger( const std::string s = "" ) : Notifier( s ) {}
+		Debugger( const string s = "" ) : Notifier( s ) {}
 	};
 #else
 	//	do nothing at all:
@@ -85,20 +88,20 @@ class Debugger
 	{
 	public:
 		Debugger( void ) : ostream( & dumb ) {}
-		Debugger( const std::string ) : ostream( & dumb ) {}
+		Debugger( const string ) : ostream( & dumb ) {}
 		
 		//	post does nothing at all:
 		virtual void post( boolean = false ) {}
 		
 		//	to do nothing at all, need a dummy streambuf:
-		class dummybuf : public std::streambuf
+		class dummybuf : public streambuf
 		{
 		protected:
 			//	called every time a character is written:
 			virtual int_type overflow( int_type c ) { return c; }
 			
 			//	called when lots of characters are written:
-			virtual std::streamsize xsputn( const char *, std::streamsize n ) { return n; }
+			virtual streamsize xsputn( const char *, streamsize n ) { return n; }
 		};	//	end of class dummybuf
 		
 	private:
@@ -109,14 +112,14 @@ class Debugger
 // ---------------------------------------------------------------------------
 //	prototype for a one-shot notifiers:
 //
-void notify( const std::string & s );
-void debug( const std::string & s );
+void notify( const string & s );
+void debug( const string & s );
 
 // ---------------------------------------------------------------------------
 //	prototype for a one-shot error notifier:
 //	This one displays its message and aborts.
 //
-void fatalError( const std::string & s );
+void fatalError( const string & s );
 
 End_Namespace( Loris )
 

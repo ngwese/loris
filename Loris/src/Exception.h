@@ -16,7 +16,7 @@
 #include <string>
 
 #if !defined( Deprecated_iostream_headers )
-	#include <iosfwd>
+	#include <ostream>
 	using std::ostream;
 #else
 	#include <ostream.h>

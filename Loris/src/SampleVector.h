@@ -20,7 +20,7 @@ using std::vector;
 Begin_Namespace( Loris )
 
 // ===========================================================================
-//		€ SampleVector
+//		SampleVector
 // ===========================================================================
 //	
 class SampleVector : public SampleBuffer
@@ -49,11 +49,12 @@ public:
 //	do the bounds-checking.
 	explicit SampleVector( int len = 0 );
 	
-	
 //	assignment:
 	SampleVector & operator= ( const SampleVector & other );
 	
 //	public SampleBuffer interface:
+virtual void grow( int n )  
+		{ if (size() < n) v.insert( v.end(), n-size(), 0. ); }
 virtual int size( void ) const { return v.size(); }
 
 //	indexed access:
