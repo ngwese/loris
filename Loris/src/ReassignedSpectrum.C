@@ -235,9 +235,13 @@ ReassignedSpectrum::timeCorrection( long idx ) const
 {
 	long flip_idx;
 	if (idx>0)
+	{
 		flip_idx = _ratransform.size() - idx;
+	}
 	else
+	{
 		flip_idx = idx;
+	}
 		
 	//	the time RA FT is the circular odd part 
 	//	of the reassignment transform divided by j:
@@ -320,8 +324,10 @@ ReassignedSpectrum::reassignedMagnitude( double /* fracBinNum */, long peakBinNu
 	// 	don't need to check fracBinNum since we don't use it,
 	//	could check peakBinNumber though:
 	if( peakBinNumber < 0 )
+	{
 		Throw( InvalidArgument, "fractional bin number must be non-negative in reassignedMagnitude" );
-
+    }
+    
 #if ! defined(SMITHS_BRILLIANT_PARABOLAS)
 	
 	//	compute the nominal spectral amplitude by scaling
@@ -361,9 +367,6 @@ ReassignedSpectrum::reassignedPhase( long idx,
 {
 	double phase = arg( _transform[ idx ] );
 	
-	//	adjust phase according to the time correction:
-	phase += timeCorrection * fracFreqSample * 2. * Pi / _transform.size();
-	
 	//	adjust phase according to the frequency correction:
 	//	first compute H(1):
 	//
@@ -377,12 +380,20 @@ ReassignedSpectrum::reassignedPhase( long idx,
 	//	is so small that it seems like there will never be any phase
 	//	correction.
 	//
-	/*
+	//  Phase ought to be linear anyway, so I should just be
+	//  able to use dumb old linear interpolation.
+	//
+	double slope = (fracFreqSample > idx) ? 
+	      ( arg( _transform[ idx+1 ] ) - phase ) : 
+	      ( phase - arg( _transform[ idx-1 ] ) );
 	double fcorr = fracFreqSample - idx;
-	double phase_corr = - fcorr * _phaseSlope;
+	double phase_corr = fcorr * slope;
 	phase += phase_corr;
-	*/
+	//
 		
+	//	adjust phase according to the time correction:
+	phase += timeCorrection * fracFreqSample * 2. * Pi / _transform.size();
+	
 	return fmod( phase, 2. * Pi );
 }
 
