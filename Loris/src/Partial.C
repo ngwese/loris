@@ -343,7 +343,7 @@ Partial::phaseAt( double time ) const
 						((1. - (0.5 * alpha)) * lo.frequency());
 
 		//	need to keep fmod in here because other stuff 
-		//	(scp export and sdif export, for example) rely 
+		//	(Spc export and sdif export, for example) rely 
 		//	on it:
 		if ( alpha < 0.5 )
 		{

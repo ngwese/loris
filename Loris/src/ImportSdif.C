@@ -212,7 +212,7 @@ readEnvelopeData( SdifFileT *file, std::vector< Partial > & partialsVector )
 						// Fill a trackData structure.
 						RowOfLorisData trackData = { 0.0 };
 						SdifFloat8 *trackDataPtr = &trackData.index;
-						for (int col = 1; col <= min(ncols, lorisRowElements); col++)
+						for (int col = 1; col <= std::min(ncols, lorisRowElements); col++)
 							*(trackDataPtr++) = SdifFCurrOneRowCol(file, col);
 						
 						// Add trackData as a new breakpoint in a partial.

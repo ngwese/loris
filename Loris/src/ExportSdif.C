@@ -100,7 +100,7 @@ ExportSdif::ExportSdif( const double hop ) :
 // Let exceptions propagate.
 //
 void
-ExportSdif::write( const char *outfilename, const list<Partial> & partials )
+ExportSdif::write( const char *outfilename, const std::list<Partial> & partials )
 {
 // 
 // Initialize SDIF library.

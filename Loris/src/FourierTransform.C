@@ -233,7 +233,8 @@ static void release( long len )
 	reservations().erase( pos );
 	
 	//	shrink the shared buffer if possible:
-	if ( reservations().empty() || * reservations().begin() < len ) {
+	if ( reservations().empty() || * reservations().begin() < len ) 
+	{
 		debugger << "Releasing shared buffer of size " << len << endl;
 		delete[] sharedBuffer;
 		sharedBuffer = NULL;
