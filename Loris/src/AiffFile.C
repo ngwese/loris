@@ -98,6 +98,9 @@ struct SoundDataCk
 //
 AiffFile::AiffFile( std::istream & s )
 {
+	if (! s)
+		Throw( FileIOException, "Tried to read AIFF data from a bad stream." );
+
 	read( s );
 }
 
@@ -110,6 +113,12 @@ AiffFile::AiffFile( const std::string & filename )
 {
 	std::ifstream s;
 	s.open( filename.c_str(), std::ios::in | std::ios::binary ); 
+	if (! s)
+	{
+		std::string err( "Could not open file for reading (maybe it doesn't exist?): " );
+		err += filename;
+		Throw( FileIOException, err );
+	}
 	read( s );
 }
 
