@@ -15,7 +15,7 @@ Niso bell:
 	are approximately 105 Hz (1), 271 Hz (2), 398 Hz (4), 541 Hz (5),
 	689 Hz (6).
 
-Last updated: 11 march 2003 by Kelly Fitz
+Last updated: 11 March 2003 by Kelly Fitz
 """
 print __doc__
 
