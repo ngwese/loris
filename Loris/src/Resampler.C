@@ -68,7 +68,7 @@ Resampler::Resampler( double sampleInterval )
 //	is performed in-place. 
 //
 void 
-Resampler::resample( Partial & p )
+Resampler::resample( Partial & p ) const
 {
 	debugger << "resampling Partial having " << p.numBreakpoints() 
 			 << " Breakpoints" << endl;

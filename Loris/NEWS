@@ -40,7 +40,10 @@ BreakpointUtils.
 
 - added Resampler class for sampling Partial data at a 
 uniform rate, making it easier to use with real-time
-rendering systems.
+rendering systems. Also added resample function to scripting
+and procedural interfaces.
+
+- updated documentation
 
 -------------------------------------------------------
 changes since 1.0.1 release:

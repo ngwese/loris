@@ -58,6 +58,12 @@
 
 using namespace std;
 
+#if defined(HAVE_M_PI) && (HAVE_M_PI)
+	const double Pi = M_PI;
+#else
+	const double Pi = 3.14159265358979324;
+#endif
+
 //	begin namespace
 namespace Loris {
 
@@ -301,6 +307,8 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
 { 
  	//	configure the reassigned spectral analyzer, 
     //	always use odd-length windows:
+
+    /*	Kaiser window */
     double winshape = KaiserWindow::computeShape( sidelobeLevel() );
     long winlen = KaiserWindow::computeLength( windowWidth() / srate, winshape );    
     if (! (winlen % 2)) 
@@ -309,6 +317,38 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
     
     std::vector< double > window( winlen );
     KaiserWindow::create( window, winshape );
+   
+ 
+ 	/* Hamming window    
+	double winshape = 5;
+	long winlen = KaiserWindow::computeLength( windowWidth() / srate, winshape );    
+	if (! (winlen % 2)) 
+		++winlen;
+	debugger << "Using Hamming window of length " << winlen << endl;
+	
+	std::vector< double > window( winlen );
+	
+	for ( int i = 0; i < winlen; ++i )
+	{
+		window[i] = 0.54 - (0.46 * cos(i*2*Pi/(winlen-1)));
+	}
+	*/
+	
+	/* Hanning window 
+	double winshape = 5;
+	long winlen = KaiserWindow::computeLength( windowWidth() / srate, winshape );    
+	if (! (winlen % 2)) 
+		++winlen;
+	debugger << "Using Hanning window of length " << winlen << endl;
+	
+	std::vector< double > window( winlen );
+	
+	for ( int i = 0; i < winlen; ++i )
+	{
+		window[i] = 0.5 - (0.5 * cos(i*2*Pi/(winlen-1)));
+	}
+	*/
+	
 	ReassignedSpectrum spectrum( window );
 	
     //	configure the peak selection and partial formation policies:

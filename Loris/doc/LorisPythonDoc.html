@@ -822,6 +822,12 @@ in time.
    
 </blockquote>
 
+<p><tt><b>crop(partials,begintime,endtime)</b></tt>
+<blockquote>  	Trim Partials by removing Breakpoints outside a specified time span.
+	Insert a Breakpoint at the boundary when cropping occurs.
+</blockquote>
+
+
 <p><tt><b>dilate(partials,initial_times,target_times)</b></tt>
 <blockquote>  	Dilate Partials in a PartialList according to the given 
 		initial and target time points. Partial envelopes are 
@@ -913,9 +919,32 @@ in time.
    
 </blockquote>
 
+<p><tt><b>resample(partials,interval)</b></tt>
+<blockquote>  	Resample all Partials in a PartialList using the specified
+	sampling interval, so that the Breakpoints in the Partial 
+	envelopes will all lie on a common temporal grid.
+	The Breakpoint times in resampled Partials will comprise a  
+	contiguous sequence of integer multiples of the sampling interval,
+	beginning with the multiple nearest to the Partial's start time and
+	ending with the multiple nearest to the Partial's end time. Resampling
+	is performed in-place. 
+</blockquote>
+
 <p><tt><b>scaleAmp(partials,ampEnv)</b></tt>
 <blockquote>  	Scale the amplitude of the Partials in a PartialList according 
 		to an envelope representing a time-varying amplitude scale value.
+	   
+</blockquote>
+
+<p><tt><b>scaleBandwidth(partials,bwEnv)</b></tt>
+<blockquote>  	Scale the bandwidth of the Partials in a PartialList according 
+	to an envelope representing a time-varying bandwidth scale value.
+	   
+</blockquote>
+
+<p><tt><b>scaleFrequency(partials,freqEnv)</b></tt>
+<blockquote>  	Scale the frequency of the Partials in a PartialList according 
+	to an envelope representing a time-varying frequency scale value.
 	   
 </blockquote>
 
@@ -930,6 +959,12 @@ in time.
 <blockquote>  	Shift the pitch of all Partials in a PartialList according to 
 		the given pitch envelope. The pitch envelope is assumed to have 
 		units of cents (1/100 of a halfstep).
+	   
+</blockquote>
+
+<p><tt><b>shiftTime(partials,offset)</b></tt>
+<blockquote>  	Shift the time of all the Breakpoints in a Partial by a 
+	constant amount.
 	   
 </blockquote>
 

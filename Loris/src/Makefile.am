@@ -81,7 +81,6 @@ libclasses_la_SOURCES = AiffFile.C \
 		ImportLemur.h \
 		KaiserWindow.C \
 		KaiserWindow.h \
-		Loris_types.h \
 		Morpher.C \
 		Morpher.h \
 		Notifier.C \

@@ -33,6 +33,7 @@ classes in the Loris C++ class library.
 <li><a href="#PartialList">PartialList</a>
 <li><a href="#PartialPtrs">PartialPtrs</a>
 <li><a href="#PartialUtils">PartialUtils</a>
+<li><a href="#Resampler">Resampler</a>
 <li><a href="#SdifFile">SdifFile</a>
 <li><a href="#Sieve">Sieve</a>
 <li><a href="#SpcFile">SpcFile</a>
@@ -1853,7 +1854,6 @@ in which case it is a class (having only static members and private
 constructors).
 <p>
 
-<h4>Free Functions</h4>
 <p><tt><b>	template &lt;typename Iterator&gt;<br>
 timeSpan( Iterator begin, Iterator end ) </b></tt>
 <blockquote>[ returns pair&lt; double, double &gt;  ]
@@ -1864,9 +1864,98 @@ Partial start time and latest Partial end time in the range.
 </blockquote>
 
 
+<h4>Partial mutating functors</h4>
+
+<p><tt><b>	struct crop :
+		public std::unary_function&lt; const Partial, void &gt;
+</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Trim a Partial by removing Breakpoints outside a specified time span.
+Insert a Breakpoint at the boundary when cropping occurs.
+<pre>
+Loris::PartialUtils::crop( double minTime, double maxTime ) 
+</pre>
+</blockquote>	
+
+<p><tt><b>	struct scale_amp :
+		public std::unary_function&lt; const Partial, void &gt;
+</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Scale the amplitude of the specified Partial according to
+an envelope representing a time-varying amplitude scale value.
+<pre>
+Loris::PartialUtils::scale_amp( Envelope & e )
+</pre>
+</blockquote>	
+
+<p><tt><b>	struct scale_bandwidth :
+		public std::unary_function&lt; const Partial, void &gt;
+</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Scale the bandwidth of the specified Partial according to
+an envelope representing a time-varying bandwidth scale value.
+<pre>
+Loris::PartialUtils::scale_bandwidth( Envelope & e )
+</pre>
+</blockquote>	
+
+<p><tt><b>	struct scale_frequency :
+		public std::unary_function&lt; const Partial, void &gt;
+</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Scale the frequency of the specified Partial according to
+an envelope representing a time-varying frequency scale value.
+<pre>
+Loris::PartialUtils::scale_frequency( Envelope & e )
+</pre>
+</blockquote>	
+
+<p><tt><b>	struct scale_noise_ratio :
+		public std::unary_function&lt; const Partial, void &gt;
+</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Scale the relative noise content of the specified Partial according 
+to an envelope representing a (time-varying) noise energy 
+scale value.
+<pre>
+Loris::PartialUtils::scale_noise_ratio( Envelope & e )
+</pre>
+</blockquote>	
+
+<p><tt><b>	struct shift_pitch :
+		public std::unary_function&lt; const Partial, void &gt;
+</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Shift the pitch of the specified Partial according to
+the given pitch envelope. The pitch envelope is assumed to have 
+units of cents (1/100 of a halfstep).
+<pre>
+Loris::PartialUtils::shift_pitch( Envelope & e )
+</pre>
+</blockquote>	
+
+<p><tt><b>	struct shift_time :
+		public std::unary_function&lt; const Partial, void &gt;
+</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Shift the time of all the Breakpoints in a Partial by a 
+constant amount.
+<pre>
+Loris::PartialUtils::shift_time( double offset )
+</pre>
+</blockquote>	
+
+
 <h4>Predicates</h4>
 <p><tt><b>	struct label_equals : 
-		public std::binary_function&lt; const Partial, int, bool &gt;
+		public std::unary_function&lt; const Partial, bool &gt;
 </b></tt>
 <blockquote>[ returns bool  ]
 <br>
@@ -1876,11 +1965,24 @@ equal to the specified 32-bit label, and false otherwise, constructed
 Loris::PartialUtils::label_equals( int label )
 </pre>
 </blockquote>	
-	
+
+<p><tt><b>struct label_greater : 
+		public std::unary_function&lt; const Partial, bool &gt;
+</b></tt>
+<blockquote>[ returns bool  ]
+<br>
+Predicate functor returning true if the label its Partial argument is
+greater than the specified 32-bit label, and false otherwise, constructed
+<pre>
+Loris::PartialUtils::label_greater( int label )
+</pre>
+</blockquote>	
+
+
 <h4>Comparitors</h4>
 
-<p><tt><b>struct label_less : 
-public std::binary_function&lt; const Partial, const Partial, bool &gt;
+<p><tt><b>struct compare_label : 
+	public std::binary_function&lt; const Partial, const Partial, bool &gt;
 </b></tt>
 <blockquote>[ returns bool  ]
 <br>
@@ -1889,8 +1991,8 @@ argument has a label whose 32-bit integer representation is less than
 that of the second Partial argument's label, and false otherwise.
 </blockquote>	
 
-<p><tt><b>struct duration_greater : 
-public std::binary_function&lt; const Partial, const Partial, bool &gt;
+<p><tt><b>struct compare_duration : 
+	public std::binary_function&lt; const Partial, const Partial, bool &gt;
 </b></tt>
 <blockquote>[ returns bool  ]
 <br>
@@ -1899,6 +2001,73 @@ argument has duration greater than that of the second Partial
 argument, and false otherwise.
 </blockquote>	
 				
+<p><a href="#contents"><small>Contents</small></a>	
+
+<a name="Resampler">
+<hr><h2>Resampler</h2></a>
+
+<p>
+Class Resampler represents an algorithm for resampling Partial envelopes
+at regular time intervals. Resampling makes the envelope data more suitable 
+for exchange (as SDIF data, for example) with other applications that
+cannot process raw (continuously-distributed) reassigned data. Resampling
+will often greatly reduce the size of the data (by greatly reducing the 
+number of Breakpoints in the Partials) without adversely affecting the
+quality of the reconstruction.
+</p>
+
+<h3>Member Functions</h3>
+<h4>Construction</h4>
+<p><tt><b>Resampler( double sampleInterval )
+</b></tt>
+<blockquote>
+<br>
+Construct a new Resampler using the specified sampling interval.
+</blockquote>	
+
+<h4>Resampling</h4>
+<p><tt><b> resample( Partial &amp; p ) const
+</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Resample a Partial using this Resampler's stored sampling interval.
+The Breakpoint times in the resampled Partial will comprise a  
+contiguous sequence of integer multiples of the sampling interval,
+beginning with the multiple nearest to the Partial's start time and
+ending with the multiple nearest to the Partial's end time. Resampling
+is performed in-place.
+</blockquote>	
+
+<p><tt><b> operator() ( Partial &amp; p ) const
+</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Function call operator: same as resample().
+</blockquote>	
+
+
+<p><tt><b> resample( PartialList::iterator begin, PartialList::iterator end ) const
+</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Resample all Partials in the specified (half-open) range using this
+Resampler's stored sampling interval, so that the Breakpoints in 
+the Partial envelopes will all lie on a common temporal grid.
+The Breakpoint times in the resampled Partial will comprise a  
+contiguous sequence of integer multiples of the sampling interval,
+beginning with the multiple nearest to the Partial's start time and
+ending with the multiple nearest to the Partial's end time. Resampling
+is performed in-place. 
+</blockquote>	
+
+<p><tt><b> operator() ( PartialList::iterator begin, PartialList::iterator end ) const
+</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Function call operator: same as resample().
+</blockquote>	
+
+
 <p><a href="#contents"><small>Contents</small></a>	
 
 <a name="SdifFile">

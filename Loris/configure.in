@@ -118,6 +118,34 @@ AC_MSG_RESULT(----- Compiler Feature Checks -----)
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
 
+dnl SIZEOF buildin integer types, min is the minmimum according ISO
+dnl SIZEOF_BOOL
+AC_CHECK_SIZEOF(bool)
+dnl SIZEOF_CHAR, min = 1
+AC_CHECK_SIZEOF(char)
+dnl define __CHAR_UNSIGNED__ , unless defined by compiler
+AC_C_CHAR_UNSIGNED
+dnl SIZEOF_SHORT, min = 2
+AC_CHECK_SIZEOF(short)
+dnl SIZEOF_INT, min = 4
+AC_CHECK_SIZEOF(int)
+dnl SIZEOF_LONG, min = 4
+AC_CHECK_SIZEOF(long)
+dnl assign default, if not defined
+dnl AC_CHECK_TYPE([long long], long)
+dnl AC_CHECK_TYPE([unsigned long long], [unsigned long])
+dnl SIZEOF_LONG_LONG, 0 if undefined
+dnl AC_CHECK_SIZEOF([long long])
+dnl SIZEOF_INT_P
+AC_CHECK_SIZEOF(int *) 
+dnl SIZEOF_SIZE_T
+AC_CHECK_SIZEOF(size_t) 
+
+dnl SIZEOF_FLOAT, should always be 4 I think
+AC_CHECK_SIZEOF(float)
+dnl SIZEOF_DOUBLE, should always be 8 I think
+AC_CHECK_SIZEOF(double)
+
 dnl Check for a definition of M_PI in cmath, if not use our own.
 AH_TEMPLATE([HAVE_M_PI],
             [Define 1 if M_PI defined in cmath, 0 otherwise.])

@@ -312,11 +312,6 @@ void dilate_v( PartialList * partials, vector<double> & ivec, vector<double> & t
 	}
 %}
 #endif	
-
-
-//%rename(dilate) dilate_str;
-//void dilate_str( PartialList * partials, 
-//				 char * initial_times, char * target_times );
 /*	Dilate Partials in a PartialList according to the given 
 	initial and target time points. Partial envelopes are 
 	stretched and compressed so that temporal features at

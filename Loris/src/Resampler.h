@@ -69,7 +69,7 @@ public:
 	 */
 	 
 //	-- resampling --
-	void resample( Partial & p );
+	void resample( Partial & p ) const;
 	/*	Resample a Partial using this Resampler's stored sampling interval.
 		The Breakpoint times in the resampled Partial will comprise a  
 		contiguous sequence of integer multiples of the sampling interval,
@@ -78,7 +78,11 @@ public:
 		is performed in-place. 
 	 */
 	 
-	void resample( PartialList::iterator begin, PartialList::iterator end  )
+	void operator() ( Partial & p ) const { resample( p ); }
+	/*	Function call operator: same as resample().
+	 */
+	 
+	void resample( PartialList::iterator begin, PartialList::iterator end  ) const
 	{
 		while ( begin != end )
 			resample( *begin++ );
@@ -94,6 +98,12 @@ public:
 		is performed in-place. 
 	 */
 
+	void operator() ( PartialList::iterator begin, PartialList::iterator end  ) const 
+		{ resample( begin, end ); }
+	/*	Function call operator: same as resample().
+	 */
+	 
+	
 };	//	end of class Resampler
 
 }	//	end of namespace Loris

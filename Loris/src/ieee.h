@@ -39,12 +39,27 @@ namespace IEEE {
 extern "C" {
 #endif
 
-typedef struct {
-	char data[10];
-} extended80;
+/*	struct extended80 defined below 	*/
+typedef struct extended80 extended80;
 
+/*	conversion functions				*/
 extern void ConvertToIeeeExtended(double num, extended80 * x) ;
 extern double ConvertFromIeeeExtended(extended80 x) ;
+
+/*	struct extended80 definition, with 
+	constructors and conversion to 
+	double, if C++ 								
+ */
+struct extended80 {
+	char data[10];
+	
+#ifdef __cplusplus
+	extended80( double x = 0. ) { ConvertToIeeeExtended( x, this ); }
+	operator double( void ) const { return ConvertFromIeeeExtended( *this ); }
+#endif
+	
+};
+
 
 #ifdef __cplusplus
 }	//	end extern "C"
