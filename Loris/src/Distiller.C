@@ -29,21 +29,13 @@ namespace Loris {
 #endif
 
 
-// ---------------------------------------------------------------------------
-//	Distiller constructor
-// ---------------------------------------------------------------------------
-//
-Distiller::Distiller( double x = 0.001 ) : 
-	_fadeTime( x ) 
-{
-}
+
 
 // ---------------------------------------------------------------------------
 //	Distiller copy constructor
 // ---------------------------------------------------------------------------
 //
 Distiller::Distiller( const Distiller & other ) : 
-	_fadeTime( other._fadeTime ),
 	PartialCollector( other )
 {
 }
@@ -56,8 +48,7 @@ Distiller &
 Distiller::operator= ( const Distiller & other )
 {
 	if ( &other != this ) {
-		_partials = other._partials;
-		_fadeTime = other._fadeTime;
+		partials() = other.partials();
 	}
 	return *this;
 }
@@ -85,8 +76,8 @@ Distiller::distill( const list<Partial>::const_iterator start,
 	}
 
 	//	add the newly-distilled partial to the collection:
-	_partials.push_back( newp );
-	return _partials.back();
+	partials().push_back( newp );
+	return partials().back();
 }
 
 #pragma mark -
@@ -117,6 +108,8 @@ Distiller::distillOne( const Partial & src, Partial & dest,
 					   const list<Partial>::const_iterator start,
 					   const list<Partial>::const_iterator end  )
 {
+	const double FADE_TIME = 0.001;	//	1 ms
+	
 	//	iterate over the source Partial:
 	for ( BasicPartialIterator pIter( src ); ! pIter.atEnd(); pIter.advance() ) { 
 		//	iterate over all Partials in the range and compute the
@@ -172,21 +165,21 @@ Distiller::distillOne( const Partial & src, Partial & dest,
 			//	if there is a gap after this Breakpoint, 
 			//	fade out:
 			if ( pIter.time() == pIter.endTime() && 
-				 gapAt( pIter.time() + _fadeTime, start, end ) ) {
+				 gapAt( pIter.time() + FADE_TIME, start, end ) ) {
 				Breakpoint zeroPt( pIter.frequency(), 0., pIter.bandwidth(), 
-								   src.phaseAt( pIter.time() + _fadeTime ) );
-				dest.insert( pIter.time() + _fadeTime, zeroPt );
+								   src.phaseAt( pIter.time() + FADE_TIME ) );
+				dest.insert( pIter.time() + FADE_TIME, zeroPt );
 			}
 			
 			//	if there is a gap before this Breakpoint,
 			//	fade in, but don't insert Breakpoints at
 			//	times before zero:
 			if ( pIter.time() == pIter.startTime() && 
-				 pIter.time() > _fadeTime && 
-				 gapAt( pIter.time() - _fadeTime, start, end ) ) {
+				 pIter.time() > FADE_TIME && 
+				 gapAt( pIter.time() - FADE_TIME, start, end ) ) {
 				Breakpoint zeroPt( pIter.frequency(), 0., pIter.bandwidth(), 
-								   src.phaseAt( pIter.time() - _fadeTime ) );
-				dest.insert( pIter.time() - _fadeTime, zeroPt );
+								   src.phaseAt( pIter.time() - FADE_TIME ) );
+				dest.insert( pIter.time() - FADE_TIME, zeroPt );
 			}
 		}	//	end if all other Partials are quieter at time of pIter
 	}	//	end iteration over source Partial

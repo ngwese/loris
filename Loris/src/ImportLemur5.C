@@ -211,7 +211,7 @@ ImportLemur5::getPartial( void )
 		}
 
 		if ( p.duration() > 0. ) {
-			_partials.push_back( p );
+			partials().push_back( p );
 		}
 		/*
 		else {

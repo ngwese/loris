@@ -104,7 +104,7 @@ Morph::operator=( const Morph & other )
 		auto_ptr< Map > af( other.amplitudeFunction().clone() );
 		auto_ptr< Map > bwf( other.bandwidthFunction().clone() );
 		
-		_partials = other._partials;
+		partials() = other.partials();
 		_freqFunction = ff;
 		_ampFunction = af;
 		_bwFunction = bwf;
@@ -218,7 +218,7 @@ Morph::morphPartial( const Partial & p0, const Partial & p1, int assignLabel /* 
 	//	add the new partial to the collection,
 	//	if it is valid:
 	if ( newp.begin() != newp.end() ) {
-		_partials.push_back( newp );
+		partials().push_back( newp );
 	}
 
 }

@@ -14,7 +14,6 @@
 #include "Breakpoint.h"
 #include "Exception.h"
 #include "pi.h"
-#include <algorithm>
 
 #if !defined( Deprecated_cstd_headers )
 	#include <cmath>
@@ -22,16 +21,12 @@
 	#include <math.h>
 #endif
 
-using namespace std;
+//using namespace std;
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
 #endif
-
-
-#pragma mark -
-#pragma mark construction
 
 // ---------------------------------------------------------------------------
 //	Partial constructor
@@ -42,132 +37,111 @@ Partial::Partial( void ) :
 {
 }	
 
-#pragma mark -
-#pragma mark envelope parameter shortcuts
 // ---------------------------------------------------------------------------
 //	initialPhase
 // ---------------------------------------------------------------------------
-//	in radians
+//	Return starting phase in radians, except (InvalidPartial) if there
+//	are no Breakpoints.
 //
 double
 Partial::initialPhase( void ) const
 {
-	if ( _bpmap.size() > 0 )
-		//	map iterator is a pair: first is time, 
-		//	second is Breakpoint.
-		return _bpmap.begin()->second.phase();
-	else
-		return 0.;
+	if ( _bpmap.size() == 0 )
+		Throw( InvalidPartial, "Tried find intial phase of a Partial with no Breakpoints." );
+
+	return begin()->phase();
 }
 
 // ---------------------------------------------------------------------------
 //	startTime
 // ---------------------------------------------------------------------------
-//	in seconds
+//	Return start time in seconds, except (InvalidPartial) if there
+//	are no Breakpoints.
 //
 double
 Partial::startTime( void ) const
 {
-	if ( _bpmap.size() > 0 )
-		//	map iterator is a pair: first is time, 
-		//	second is Breakpoint.
-		return  _bpmap.begin()->first;
-	else
-		return 0.;
+	if ( _bpmap.size() == 0 )
+		Throw( InvalidPartial, "Tried find start time of a Partial with no Breakpoints." );
+
+	return begin().time();
 }
 
 // ---------------------------------------------------------------------------
 //	endTime
 // ---------------------------------------------------------------------------
-//	in seconds
+//	Return end time in seconds, except (InvalidPartial) if there
+//	are no Breakpoints.
 //
 double
 Partial::endTime( void ) const
 {
-	if ( _bpmap.size() > 0 )
-		//	map iterator is a pair: first is time, 
-		//	second is Breakpoint.
-		return (--_bpmap.end())->first;
-	else
-		return 0.;
+	if ( _bpmap.size() == 0 )
+		Throw( InvalidPartial, "Tried find end time of a Partial with no Breakpoints." );
+
+	return (--end()).time();
 }
 
-#pragma mark -
-#pragma mark envelope access/mutation
+// ---------------------------------------------------------------------------
+//	begin (non-const)
+// ---------------------------------------------------------------------------
+//	Iterator generation.
+//
+Jackson 
+Partial::begin( void )
+{ 
+	return Jackson( _bpmap.begin() ); 
+}
+
+// ---------------------------------------------------------------------------
+//	end (non-const)
+// ---------------------------------------------------------------------------
+//	Iterator generation.
+//
+Jackson 
+Partial::end( void )
+{ 
+	return Jackson( _bpmap.end() ); 
+}
+
+// ---------------------------------------------------------------------------
+//	begin (const)
+// ---------------------------------------------------------------------------
+//	Const iterator generation.
+//
+JacksonConst 
+Partial::begin( void ) const
+{ 
+	return JacksonConst( _bpmap.begin() ); 
+}
+
+// ---------------------------------------------------------------------------
+//	end (const)
+// ---------------------------------------------------------------------------
+//	Iterator generation.
+//
+JacksonConst 
+Partial::end( void ) const
+{ 
+	return JacksonConst( _bpmap.end() ); 
+}
+
 // ---------------------------------------------------------------------------
 //	insert
 // ---------------------------------------------------------------------------
-//	Make a copy of bp and insert it at time (seconds),
-//	return a pointer to the inserted Breakpoint.
+//	Insert a copy of the specified Breakpoint at time (seconds),
+//	return position (iterator) of the inserted Breakpoint.
 //	If there is already a Breakpoint at time, assign
 //	bp to it (copying parameters).
 //
 //	Could except:
 //	allocation of a new Breakpoint could fail, throwing a std::bad__alloc.
 //
-Breakpoint *
+Jackson
 Partial::insert( double time, const Breakpoint & bp )
 {
-	Breakpoint & pos = _bpmap[ time ];
-	pos = bp;
-	return & pos;
-}
-
-// ---------------------------------------------------------------------------
-//	remove
-// ---------------------------------------------------------------------------
-//	Remove and delete all Breakpoints between start and end (seconds, inclusive),
-//	shortening the envelope by (end-start) seconds.
-//	Return a pointer to the Breakpoint immediately preceding the 
-//	removed time (will be NULL if beginning of Partial is removed).
-//
-//	This could remove all Breakpoints in the Partial without warning!
-//	Caller should check for non-zero duration after time removal.
-//
-//	What kind of return value should this have? I don't want the caller
-//	deleting the pointer I return.
-//
-//
-Breakpoint * 
-Partial::remove( double tstart, double tend )
-{
-//	get the order right:
-	if ( tstart > tend )
-		std::swap( tstart, tend );
-		
-//	get iterator bounds:
-//	lower_bound returns a reference to the lowest
-//	position that would be higher than an element
-//	having key equal to time:
-	std::map< double, Breakpoint >::iterator begin = 
-		_bpmap.lower_bound( tstart );
-	std::map< double, Breakpoint >::iterator end = 
-		_bpmap.lower_bound( tend );
-				
-//	remember the Breakpoint before the gap, or NULL:
-	Breakpoint * ret = NULL;
-	if ( begin != _bpmap.begin() ) {
-		std::map< double, Breakpoint >::iterator it = begin;
-		--it;
-		ret = & it->second;
-	}
-	
-//	remove Breakpoints on the range [begin, end):
-	_bpmap.erase( begin, end );
-	
-//	all Breakpoints later than tend, that is, at positions
-//	starting at end, have to be shifted in time to close 
-//	the gap:
-	double gap = tend - tstart;
-	while ( end != _bpmap.end() ) {
-		//	insert a copy of this Breakpoint at the new time:
-		_bpmap[ end->first - gap ] = end->second;
-		
-		//	remove this Breakpoint, and incr. iterator:
-		_bpmap.erase( end++ );
-	}
-	
-	return ret;
+	_bpmap[ time ] = bp;
+	return Jackson( _bpmap.find(time) );
 }
 
 // ---------------------------------------------------------------------------
@@ -175,7 +149,8 @@ Partial::remove( double tstart, double tend )
 // ---------------------------------------------------------------------------
 //	Return the insertion position for a Breakpoint at
 //	the specified time (that is, the position of the first
-//	Breakpoint at a time later than the specified time).
+//	Breakpoint at a time later than or equal to the specified 
+//	time).
 //
 JacksonConst
 Partial::findPos( double time ) const
@@ -188,16 +163,15 @@ Partial::findPos( double time ) const
 // ---------------------------------------------------------------------------
 //	Return the insertion position for a Breakpoint at
 //	the specified time (that is, the position of the first
-//	Breakpoint at a time later than the specified time).
+//	Breakpoint at a time later than or equal to the specified 
+//	time).
 //
 Jackson
 Partial::findPos( double time )
 {
-	return _bpmap.lower_bound( time );
+	return Jackson( _bpmap.lower_bound( time ) );
 } 
 
-#pragma mark -
-#pragma mark envelope interpolation/extrapolation
 // ---------------------------------------------------------------------------
 //	frequencyAt
 // ---------------------------------------------------------------------------
@@ -288,7 +262,7 @@ Partial::phaseAt( double time ) const
 	if ( it == _bpmap.begin() ) {
 	//	time is before the onset of the Partial:
 		double dp = TwoPi * (it.time() - time) * it->frequency();
-		return fmod( it->phase() - dp, TwoPi);
+		return std::fmod( it->phase() - dp, TwoPi);
 
 	}
 	else if (it == _bpmap.end() ) {
@@ -297,7 +271,7 @@ Partial::phaseAt( double time ) const
 		--it;
 		
 		double dp = TwoPi * (time - it.time()) * it->frequency();
-		return fmod( it->phase() + dp, TwoPi );
+		return std::fmod( it->phase() + dp, TwoPi );
 	}
 	else {
 	//	interpolate between it and its predeccessor
@@ -310,7 +284,7 @@ Partial::phaseAt( double time ) const
 		double favg = (0.5 * alpha * hi.frequency()) + 
 						((1. - (0.5 * alpha)) * lo.frequency());
 		double dp = TwoPi * (time - lotime) * favg;
-		return fmod( lo.phase() + dp, TwoPi );
+		return std::fmod( lo.phase() + dp, TwoPi );
 
 	}
 }
@@ -349,7 +323,6 @@ Partial::bandwidthAt( double time ) const
 		return (alpha * hi.bandwidth()) + ((1. - alpha) * lo.bandwidth());
 	}
 }
-
 
 #if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris

@@ -34,6 +34,13 @@ class BinaryFile;
 //
 class ImportLemur5: public Import
 {
+//	-- instance variables --
+	BinaryFile & _file;
+	double _bweCutoff;	//	Lemur's bandwidth enhancement cutoff frequency
+						//	(used to remove undesirable low frequency bandwidth
+						//	association in Lemur analyses)
+	int _counter;		//	counts tracks to detect completion
+	
 //	-- public interface --
 public:
 //	construction:
@@ -135,13 +142,9 @@ private:
 	void readTrackHeader( TrackOnDisk & t );
 	void readPeakData( PeakOnDisk & p );
 	
-//	-- instance variables --
-private:
-	BinaryFile & _file;
-	double _bweCutoff;	//	Lemur's bandwidth enhancement cutoff frequency
-						//	(used to remove undesirable low frequency bandwidth
-						//	association in Lemur analyses)
-	int _counter;		//	counts tracks to detect completion
+//	-- unimplemented --
+	ImportLemur5( const ImportLemur5 & other );
+	ImportLemur5  & operator = ( const ImportLemur5 & rhs );
 };	//	end of class ImportLemur5
 
 #if !defined( NO_LORIS_NAMESPACE )

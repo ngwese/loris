@@ -41,16 +41,25 @@ namespace Loris {
 //
 class Morph : public PartialCollector
 {
+//	-- instance variables --
+	//	morphing functions:
+	std::auto_ptr< Map > _freqFunction;
+	std::auto_ptr< Map > _ampFunction;
+	std::auto_ptr< Map > _bwFunction;
+	
+	//	label for partials that should be crossfaded,
+	//	instead of morphing:
+	int _crossfadelabel;
+		
 //	-- public interface --
 public:
 //	construction:
+//	(allow compiler to generate destructor)
 	Morph( void );
 	Morph( const Map & f );
 	Morph( const Map & ff, const Map & af, const Map & bwf );
+	
 	Morph( const Morph & other );
-	
-	//~Morph( void );	//	use compiler-generated destructor
-	
 	Morph & operator= ( const Morph & other );
 
 //	morph two sounds (collections of Partials labeled to indicate
@@ -220,16 +229,6 @@ protected:
 		}
 	}
 						
-//	-- instance variables --
-	//	morphing functions:
-	std::auto_ptr< Map > _freqFunction;
-	std::auto_ptr< Map > _ampFunction;
-	std::auto_ptr< Map > _bwFunction;
-	
-	//	label for partials that should be crossfaded,
-	//	instead of morphing:
-	int _crossfadelabel;
-		
 };	//	end of class Morph
 
 #if !defined( NO_LORIS_NAMESPACE )

@@ -400,8 +400,8 @@ Analyzer::formPartials( std::list< Breakpoint > & frame, double frameTime, Analy
 		
 		//	loop over all Partials, find the eligible Partial
 		//	that is nearest in frequency to the Peak:
-		partial_iterator nearest = partials().end();
-		for ( partial_iterator pIter = partials().begin(); pIter != partials().end(); ++pIter ) {
+		PartialList::iterator nearest = partials().end();
+		for ( PartialList::iterator pIter = partials().begin(); pIter != partials().end(); ++pIter ) {
 			//	check end time for eligibility:
 			if ( pIter->endTime() < tooEarly || pIter->endTime() >= tooLate ) {
 				continue;	//	loop over all Partials
@@ -481,12 +481,12 @@ Analyzer::pruneBogusPartials( AnalyzerState & state )
 {
 	//	collect the very short Partials:
 	std::list<Partial> veryshortones;
-	for ( partial_iterator it = partials().begin(); 
+	for ( PartialList::iterator it = partials().begin(); 
 		  it != partials().end(); 
 		  /* ++it */ ) {
 		//	need to be careful with the iterator update, 
 		//	because erasure or splice will invalidate it:
-		partial_iterator next = it;
+		PartialList::iterator next = it;
 		++next;
 		if ( it->duration() == 0. ) {
 			veryshortones.splice( veryshortones.end(), partials(), it );

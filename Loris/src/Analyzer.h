@@ -81,6 +81,9 @@ private:
 	void pruneBogusPartials( AnalyzerState & state );
 	void spawnPartial( double time, const Breakpoint & bp );
 	
+//	-- unimplemented --
+	Analyzer( const Analyzer & other );
+	Analyzer  & operator = ( const Analyzer & rhs );
 };	//	end of class Analyzer
 
 #if !defined( NO_LORIS_NAMESPACE )

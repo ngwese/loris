@@ -29,32 +29,18 @@ class Dilator : public PartialCollector
 	
 //	-- public interface --
 public:
-	
 //	construction from n time points:
+//	(allow compiler to generate destructor)
 	Dilator( const double * ibegin, const double * tbegin, int n );
-	
-	//	use compiler-generated:
-	// ~Dilator( void );
 	
 //	dilation:
 	void dilate( Partial & p );
-	
-//	template dilation of an iterator range:
-//	(only if template members are allowed)
-#if !defined(No_template_members)
-	template < class Iter >
-	void dilate( Iter begin, Iter end ) const
-	{
-		while ( begin != end )
-			dilate( *(begin++) );
-	}
-#endif
+	void dilate( PartialList::iterator begin, PartialList::iterator end );
 	
 //	not implemented:
 private:
-	Dilator( void );
 	Dilator( const Dilator & );
-	Dilator & operator= ( const Dilator & other );
+	Dilator & operator= ( const Dilator & rhs );
 };	//	end of class Dilator
 
 

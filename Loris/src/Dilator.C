@@ -126,7 +126,19 @@ Dilator::dilate( Partial & p )
 	}
 	
 	//	store the new Partial:
-	_partials.push_back( newp );
+	partials().push_back( newp );
+}
+
+// ---------------------------------------------------------------------------
+//	dilate (range)
+// ---------------------------------------------------------------------------
+//	dilate() each Partial in the specified half-open range.
+//
+void 
+Dilator::dilate( PartialList::iterator begin, PartialList::iterator end )
+{
+	while ( begin != end )
+		dilate( *(begin++) );
 }
 
 #if !defined( NO_LORIS_NAMESPACE )
