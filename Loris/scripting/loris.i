@@ -160,6 +160,16 @@
 	interfaces are represented as simple functions.
 %}
 
+#define USE_PI
+
+#if defined(USE_PI)
+%{
+	#define LORIS_OPAQUE_POINTERS 0
+	#include<loris.h>
+%}
+#endif
+
+#if !defined(USE_PI)
 %{
 	#include<Channelizer.h>
 %}
@@ -198,6 +208,29 @@
 		their frequencies are not modified in any way.
 	 */
 %}
+#else
+void channelize( PartialList * partials, 
+				 BreakpointEnvelope * refFreqEnvelope, int refLabel );
+/*	Label Partials in a PartialList with the integer nearest to
+	the amplitude-weighted average ratio of their frequency envelope
+	to a reference frequency envelope. The frequency spectrum is 
+	partitioned into non-overlapping channels whose time-varying 
+	center frequencies track the reference frequency envelope. 
+	The reference label indicates which channel's center frequency
+	is exactly equal to the reference envelope frequency, and other
+	channels' center frequencies are multiples of the reference 
+	envelope frequency divided by the reference label. Each Partial 
+	in the PartialList is labeled with the number of the channel
+	that best fits its frequency envelope. The quality of the fit
+	is evaluated at the breakpoints in the Partial envelope and
+	weighted by the amplitude at each breakpoint, so that high-
+	amplitude breakpoints contribute more to the channel decision.
+	Partials are labeled, but otherwise unmodified. In particular, 
+	their frequencies are not modified in any way.
+ */
+ 
+#endif			 
+
 
 //	dilate() needs to be wrapped by a function that
 //	accepts the time points as strings until a language-
@@ -233,10 +266,8 @@
 		}
 		return v;
 	}
-%}
 
-%inline %{
-	void dilate( PartialList * partials, 
+	void dilate_str( PartialList * partials, 
 				 char * initial_times, char * target_times )
 	{
 		std::vector<double> ivec = strtovec( initial_times );
@@ -252,6 +283,8 @@
 		double * target = tvec.begin();
 		int npts = ivec.size();
 	
+		//	USE THE PI INSTEAD!
+			
 		ThrowIfNull((PartialList *) partials);
 		ThrowIfNull((double *) initial);
 		ThrowIfNull((double *) target);
@@ -275,6 +308,14 @@
 	 */
 %}
 
+%name(dilate) 
+void dilate_str( PartialList * partials, 
+				 char * initial_times, char * target_times );
+
+
+
+
+#if !defined(USE_PI)
 %{
 	#include<Distiller.h>
 %}
@@ -296,7 +337,11 @@ void distill( PartialList * partials )
 		(label 0) Partials are eliminated.
 	 */
 %}
+#else
+void distill( PartialList * partials );
+#endif
 				 
+#if !defined(USE_PI)
 %{
 	#include<AiffFile.h>
 %}
@@ -317,9 +362,15 @@ void distill( PartialList * partials )
 	 */
 				 
 %}
+#else
+void exportAiff( const char * path,
+				 SampleVector * samples,
+				 double samplerate, int nchannels, int bitsPerSamp );
+#endif
 
+
+#if !defined(USE_PI)
 %{
-	//	stupid name for sdif file header, name collision
 	#include<SdifFile.h>
 %}
 
@@ -341,7 +392,13 @@ void distill( PartialList * partials )
 			www.ircam.fr/equipes/analyse-synthese/sdif/  
 	 */
 %}
+#else
+void exportSdif( const char * path, PartialList * partials );
 
+#endif
+
+
+#if !defined(USE_PI)
 %{
 	#include<SpcFile.h>
 %}
@@ -371,6 +428,11 @@ void distill( PartialList * partials )
 		the static spectrum.
 	 */
 %}
+#else
+void exportSpc( const char * path, PartialList * partials, double midiPitch, 
+				int enhanced = true, double endApproachTime = 0. );
+#endif
+
 
 //	SWIG problem:
 //	%new and %inline don't play nice together, so if I %inline
@@ -380,7 +442,7 @@ void distill( PartialList * partials )
 //
 %{
 	#include<SdifFile.h>
-	PartialList * importSdif( const char * path )
+	PartialList * importSdif_( const char * path )
 	{
 		Loris::notifier << "importing Partials from " << path << Loris::endl;
 		Loris::SdifFile imp( path );
@@ -392,7 +454,7 @@ void distill( PartialList * partials )
 		return partials;
 	}
 %}
-%new PartialList * importSdif( const char * path );
+%name(importSdif) %new PartialList * importSdif_( const char * path );
 /*	Import Partials from an SDIF file at the given file path (or 
 	name), and return them in a PartialList.
 	For more information about SDIF, see the SDIF website at:
@@ -401,7 +463,7 @@ void distill( PartialList * partials )
 
 %{
 	#include<SpcFile.h>
-	PartialList * importSpc( const char * path )
+	PartialList * importSpc_( const char * path )
 	{
 		Loris::notifier << "importing Partials from " << path << Loris::endl;
 		Loris::SpcFile imp( path );
@@ -413,14 +475,14 @@ void distill( PartialList * partials )
 		return partials;
 	}
 %}
-%new PartialList * importSpc( const char * path );
+%name(importSpc) %new PartialList * importSpc_( const char * path );
 /*	Import Partials from an Spc file at the given file path (or 
 	name), and return them in a PartialList.
  */	
 
 %{
 	#include<Morpher.h>
-	PartialList * morph( const PartialList * src0, const PartialList * src1, 
+	PartialList * morph_( const PartialList * src0, const PartialList * src1, 
 						 const BreakpointEnvelope * ffreq, 
 						 const BreakpointEnvelope * famp, 
 						 const BreakpointEnvelope * fbw )
@@ -445,7 +507,7 @@ void distill( PartialList * partials )
 		return dst;
 	}
 %}
-%new PartialList * morph( const PartialList * src0, const PartialList * src1, 
+%name(morph) %new PartialList * morph_( const PartialList * src0, const PartialList * src1, 
 						  const BreakpointEnvelope * ffreq, 
 						  const BreakpointEnvelope * famp, 
 						  const BreakpointEnvelope * fbw );
@@ -461,7 +523,7 @@ void distill( PartialList * partials )
 
 %{
 	#include<Synthesizer.h>
-	SampleVector * synthesize( const PartialList * partials, double srate )
+	SampleVector * synthesize_( const PartialList * partials, double srate )
 	{
 		ThrowIfNull((PartialList *) partials);
 
@@ -501,12 +563,13 @@ void distill( PartialList * partials )
 		return samples;
 	}
 %}
-%new SampleVector * synthesize( const PartialList * partials, double srate );
+%name(synthesize) %new SampleVector * synthesize_( const PartialList * partials, double srate );
 /*	Synthesize Partials in a PartialList at the given sample
 	rate, and return the (floating point) samples in a SampleVector.
 	The SampleVector is sized to hold as many samples as are needed 
 	for the complete synthesis of all the Partials in the PartialList. 
  */
+
 
 %{
 	#include<Sieve.h>
@@ -536,12 +599,14 @@ void distill( PartialList * partials )
 /*		utility functions
 /*
  */
+#if 0
 %section "Utility functions", sort
 %text %{
 	These procedures are generally useful but are not yet  
 	represented by classes in the Loris core.
 %}
 
+			
 %{
 	//#define LORIS_OPAQUE_POINTERS 0
 	//#include <loris.h>
@@ -550,6 +615,7 @@ extern "C"
 BreakpointEnvelope * 
 createFreqReference( PartialList * partials, double minFreq, double maxFreq );
 %}
+#endif
 
 %new BreakpointEnvelope * 
 createFreqReference( PartialList * partials, double minFreq, double maxFreq );
@@ -564,7 +630,7 @@ createFreqReference( PartialList * partials, double minFreq, double maxFreq );
 	channelization (see channelize()).
  */
   
-#if 0
+#if defined(USE_PI)
 
 void scaleAmp( PartialList * partials, BreakpointEnvelope * ampEnv );
 /*	Scale the amplitude of the Partials in a PartialList according 
@@ -687,5 +753,4 @@ void shiftPitch( PartialList * partials, BreakpointEnvelope * pitchEnv );
  
 #endif
 
-			
 			
