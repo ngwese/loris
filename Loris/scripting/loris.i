@@ -22,24 +22,32 @@
  *
  *	loris.i
  *
- *	SWIG interface file supporting the Loris procedural inteface
- *	declared in loris.h. The non-object functions and utility functions
- *	are described in this file, object representations are described 
- *	in their own interface (.i) files.
+ *  SWIG interface file for building scripting language modules
+ *  implementing Loris functionality. This interface has been 
+ *  completely rewritten (23 Jan 2003) to support new versions
+ *  of SWIG (current is 1.3.17) and take advantage of new features
+ *  and bug fixes. This interface wraps many functions in the 
+ *  Loris procedural interface, but also provides some Loris C++
+ *  class wrappers, to provide enhanced functionality in the 
+ *  context of laguages that perform garbage collection.
  *
+ *	Also, several interface (.i) files were collapsed into one
+ *	(not sure I did myself any favors).
  *
  * Kelly Fitz, 8 Nov 2000
+ * rewrite: Kelly Fitz, 23 Jan 2003
  * loris@cerlsoundgroup.org
  *
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
+ 
 
 #if defined (SWIGPYTHON)
 	%module loris
-#elif defined (SWIGTCL8)
+#elif defined (SWIGTCL)
 	%module tcLoris
-#elif defined (SWIGPERL5)
+#elif defined (SWIGPERL)
 	%module loris_perl
 #else
 	%module loris
@@ -47,19 +55,24 @@
 
 //	perl defines list and screws us up,
 //	undefine it so that we can use std::list
-#if defined (SWIGPERL5)
+#if defined (SWIGPERL)
 	%{
 		#undef list
 	%}
 #endif
 
-//	Exceptions, notification, and debugging
+// ----------------------------------------------------------------
+//		notification and exception handlers
 //
 %{
-	#include<Notifier.h>
-	#include<Exception.h>
-	#include <string>
+	#include<loris.h>
 	
+	//	import the entire Loris namespace, because
+	//	SWIG does not seem to like to wrap functions
+	//	with qualified names (like Loris::channelize),
+	//	they simply get ignored.
+	using namespace Loris;
+
 	//	notification function for Loris debugging
 	//	and notifications, installed in initialization
 	//	block below:
@@ -68,23 +81,6 @@
 		printf("*\t%s\n", s);
 	}	
 	
-	//	class NullPointer
-	//
-	//	Define a Loris::Exception subclass for catching NULL pointers.
-	//	This is copied from lorisException_pi.h. It could be in Loris,
-	//	but probably was never needed because Loris doesn't make much 
-	//	use of pointers.
-	//
-	class NullPointer : public Loris::Exception
-	{
-	public: 
-		NullPointer( const std::string & str, const std::string & where = "" ) : 
-			Exception( std::string("NULL pointer exception -- ").append( str ), where ) {}
-	};	//	end of class NullPointer
-	
-	//	define a macro for testing and throwing:
-	#define ThrowIfNull(ptr) if ((ptr)==NULL) Throw( NullPointer, #ptr );	
-
 	//	exception handling for the procedural interface
 	//	(the pi catches all exceptions and handles them
 	//	by passing their string descriptions to this 
@@ -94,11 +90,6 @@
 	{
 		sprintf(EXCEPTION_THROWN, "%255s\0", s);
 	}
-%}
-
-%{
-	#include<loris.h>
-	using namespace Loris;
 %}
 
 //	Configure notification and debugging using a
@@ -112,65 +103,34 @@
 	Loris::setExceptionHandler( exception_handler );
 %}
 
-//	Wrap all calls into the Loris library with exception
-//	handlers to prevent exceptions from leaking out of the
-//	C++ code, wherein they can be handled, and into the
-//	interpreter, where they will surely cause an immediate
-//	halt. Only std::exceptions and Loris::Exceptions (and 
-//	subclasses) can be thrown.
+
+// ----------------------------------------------------------------
+//		wrap procedural interface
 //
+//	Not all functions in the procedural interface are trivially
+//	wrapped, some are wrapped to return newly-allocated objects,
+//	which we wouldn't do in the procedural interface, but we
+//	can do, because SWIG and the scripting langauges take care of 
+//	the memory management ambiguities.
+//
+
+//	Wrap procedural interface calls with exception checks.
+//	No exceptions are ever thrown out of the procedural interface,
+//	of course, but they are reported using the exception
+//	handler defined above, and installed when the module is
+//	loaded.
+//
+
 %include exception.i 
-%except {
-	try
-	{	
-		*EXCEPTION_THROWN = '\0';
-		$function
-		if (*EXCEPTION_THROWN)
-		{
-			SWIG_exception( SWIG_RuntimeError, EXCEPTION_THROWN );
-		}
-			
-	}
-	catch( Loris::Exception & ex ) 
+%exception 
+{
+	*EXCEPTION_THROWN = '\0';
+	$action
+	if (*EXCEPTION_THROWN)
 	{
-		//	catch Loris::Exceptions:
-		std::string s("Loris exception: " );
-		s.append( ex.what() );
-		SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-	}
-	catch( std::exception & ex ) 
-	{
-		//	catch std::exceptions:
-		//	(these are very unlikely to come from the interface
-		//	code, and cannot escape the procedural interface to
-		//	Loris, which catches all exceptions.)
-		std::string s("std C++ exception: " );
-		s.append( ex.what() );
-		SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
+		SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
 	}
 }
-
-//	include the PartialList class interface:
-%include lorisPartialList.i
-
-//	include the SampleVector class interface:
-%include lorisSampleVector.i
-
-//	include the Analyzer class interface:
-%include lorisAnalyzer.i
-
-//	include the BreakpointEnvelope class interface:
-%include lorisBpEnvelope.i
-
-//	include the AiffFile class interface:
-%include lorisAiffFile.i
-
-/* ---------------------------------------------------------------- */
-/*		non-object-based procedures
-/*
- *	Operations in Loris that need not be accessed though object
- *	interfaces are represented as simple functions.
- */
 
 void channelize( PartialList * partials, 
 				 BreakpointEnvelope * refFreqEnvelope, int refLabel );
@@ -191,9 +151,12 @@ void channelize( PartialList * partials,
 	Partials are labeled, but otherwise unmodified. In particular, 
 	their frequencies are not modified in any way.
  */
- 
-%new BreakpointEnvelope * 
-createFreqReference( PartialList * partials, double minFreq, double maxFreq, long numSamps = 0 );
+
+
+%newobject createFreqReference;
+BreakpointEnvelope * 
+createFreqReference( PartialList * partials, 
+					 double minFreq, double maxFreq, long numSamps = 0 );
 /*	Return a newly-constructed BreakpointEnvelope by sampling the 
 	frequency envelope of the longest Partial in a PartialList. 
 	Only Partials whose frequency at the Partial's loudest (highest 
@@ -216,7 +179,13 @@ createFreqReference( PartialList * partials, double minFreq, double maxFreq, lon
 //	of numbers. This wrapper uses the strtovec() converter
 //	defined above to convert two strings into vectors
 //	of time points:
+//
+//	HEY! how dumb is this? Just use the SampleVector (rename to 
+//	just Vector or something) for this purpose!
+//
 %{
+	#include <Exception.h>
+	#include <Notifier.h>
 	#include <string>
 	#include <vector>
 	
@@ -245,7 +214,7 @@ createFreqReference( PartialList * partials, double minFreq, double maxFreq, lon
 	}
 
 	void dilate_str( PartialList * partials, 
-				 char * initial_times, char * target_times )
+					 char * initial_times, char * target_times )
 	{
 		std::vector<double> ivec = strtovec( initial_times );
 		std::vector<double> tvec = strtovec( target_times );
@@ -261,24 +230,24 @@ createFreqReference( PartialList * partials, double minFreq, double maxFreq, lon
 		int npts = ivec.size();
 		dilate( partials, initial, target, npts );
 	}
-	/*	Dilate Partials in a PartialList according to the given 
-		initial and target time points. Partial envelopes are 
-		stretched and compressed so that temporal features at
-		the initial time points are aligned with the final time
-		points. Time points are sorted, so Partial envelopes are 
-		are only stretched and compressed, but breakpoints are not
-		reordered. Duplicate time points are allowed. There must be
-		the same number of initial and target time points.
-		
-		The time points are passed as strings; convert any native
-		collection to a string representation, numerical elements
-		will be extracted, other characters will be ignored.
-	 */
 %}
 
 %rename(dilate) dilate_str;
 void dilate_str( PartialList * partials, 
 				 char * initial_times, char * target_times );
+/*	Dilate Partials in a PartialList according to the given 
+	initial and target time points. Partial envelopes are 
+	stretched and compressed so that temporal features at
+	the initial time points are aligned with the final time
+	points. Time points are sorted, so Partial envelopes are 
+	are only stretched and compressed, but breakpoints are not
+	reordered. Duplicate time points are allowed. There must be
+	the same number of initial and target time points.
+	
+	The time points are passed as strings; convert any native
+	collection to a string representation, numerical elements
+	will be extracted, other characters will be ignored.
+ */
 
 
 
@@ -291,9 +260,8 @@ void distill( PartialList * partials );
  */
 				 
 
-void exportAiff( const char * path,
-				 SampleVector * samples,
-				 double samplerate = 44100.0, int nchannels = 1, int bitsPerSamp = 16 );
+void exportAiff( const char * path, SampleVector * samples,
+ 				 double samplerate = 44100.0, int nchannels = 1, int bitsPerSamp = 16 );
 /*	Export audio samples stored in a SampleVector to an AIFF file
 	having the specified number of channels and sample rate at the 
 	given file path (or name). The floating point samples in the 
@@ -330,162 +298,100 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch,
  */
 
 
-//	SWIG problem:
-//	%new and %inline don't play nice together, so if I %inline
-//	these next four functions, then their return objects don't
-//	get ownership on the scripting side. So cannot use the 
-//	%inline shortcut when the return value is %new.
-//
-%{
-	#include<SdifFile.h>
-	PartialList * importSdif_( const char * path )
+%newobject importSdif;
+%inline %{
+	PartialList * importSdif( const char * path )
 	{
-		Loris::notifier << "importing Partials from " << path << Loris::endl;
-		Loris::SdifFile imp( path );
+		PartialList * dst = createPartialList();
+		importSdif( path, dst );
 
-		PartialList * partials = new PartialList();
-		//	splice() can't throw, can it???
-		partials->splice( partials->end(), imp.partials() );
-
-		return partials;
+		// check for exception:
+		if (*EXCEPTION_THROWN)
+		{
+			destroyPartialList( dst );
+			dst = NULL;
+		}
+		return dst;
 	}
 %}
-
-%wrapper %{
-// HEY THIS SHOULD COME RIGHT BEFORE THE WRAPPER FOR IMPORT SDIF
-// I can use this to conditionally compile in the SDIF import/export
-// stuff in the scripting modules.
-//
-// but I have some cleaning up to do first. 
-%}
-%rename(importSdif) importSdif_;
-%new PartialList * importSdif_( const char * path );
-/*	Import Partials from an SDIF file at the given file path (or 
+/*  Import Partials from an SDIF file at the given file path (or
 	name), and return them in a PartialList.
 	For more information about SDIF, see the SDIF website at:
-		www.ircam.fr/equipes/analyse-synthese/sdif/  
- */	
-%wrapper %{
-// HEY THIS SHOULD COME RIGHT AFTER THE WRAPPER FOR IMPORT SDIF
-%}
+		www.ircam.fr/equipes/analyse-synthese/sdif/
+ */
 
-%{
-	#include<SpcFile.h>
-	PartialList * importSpc_( const char * path )
+
+%newobject importSpc;
+%inline %{
+	PartialList * importSpc( const char * path )
 	{
-		Loris::notifier << "importing Partials from " << path << Loris::endl;
-		Loris::SpcFile imp( path );
+		PartialList * dst = createPartialList();
+		importSpc( path, dst );
 
-		PartialList * partials = new PartialList();
-		//	splice() can't throw, can it???
-		partials->splice( partials->end(), imp.partials() );
-
-		return partials;
+		// check for exception:
+		if (*EXCEPTION_THROWN)
+		{
+			destroyPartialList( dst );
+			dst = NULL;
+		}
+		return dst;
 	}
 %}
-
-%rename(importSpc) importSpc_;
-%new PartialList * importSpc_( const char * path );
-/*	Import Partials from an Spc file at the given file path (or 
+/*  Import Partials from an Spc file at the given file path (or
 	name), and return them in a PartialList.
- */	
+ */
 
-%{
-	#include<Morpher.h>
-	PartialList * morph_( const PartialList * src0, const PartialList * src1, 
+%newobject morph;
+%inline %{
+	PartialList * morph( const PartialList * src0, const PartialList * src1, 
 						 const BreakpointEnvelope * ffreq, 
 						 const BreakpointEnvelope * famp, 
 						 const BreakpointEnvelope * fbw )
 	{
-		ThrowIfNull((PartialList *) src0);
-		ThrowIfNull((PartialList *) src1);
-		ThrowIfNull((BreakpointEnvelope *) ffreq);
-		ThrowIfNull((BreakpointEnvelope *) famp);
-		ThrowIfNull((BreakpointEnvelope *) fbw);
-
-		Loris::notifier << "morphing " << src0->size() << " Partials with "
-						<< src1->size() << " Partials" << Loris::endl;
-					
-		//	make a Morpher object and do it:
-		Loris::Morpher m( *ffreq, *famp, *fbw );
-		m.morph( src0->begin(), src0->end(), src1->begin(), src1->end() );
-				
-		//	splice the morphed Partials into a new PartialList:
-		PartialList * dst = new PartialList();
-		//	splice() can't throw, can it???
-		dst->splice( dst->end(), m.partials() );
+		PartialList * dst = createPartialList();
+		morph( src0, src1, ffreq, famp, fbw, dst );
+		
+		// check for exception:
+		if (*EXCEPTION_THROWN)
+		{
+			destroyPartialList( dst );
+			dst = NULL;
+		}
 		return dst;
 	}
 %}
-
-%rename(morph) morph_;
-%new PartialList * morph_( const PartialList * src0, const PartialList * src1, 
-						  const BreakpointEnvelope * ffreq, 
-						  const BreakpointEnvelope * famp, 
-						  const BreakpointEnvelope * fbw );
-/*	Morph labeled Partials in two PartialLists according to the
+/*  Morph labeled Partials in two PartialLists according to the
 	given frequency, amplitude, and bandwidth (noisiness) morphing
-	envelopes, and return the morphed Partials in a PartialList. 
-	Loris morphs Partials by interpolating frequency, amplitude, 
+	envelopes, and return the morphed Partials in a PartialList.
+	Loris morphs Partials by interpolating frequency, amplitude,
 	and bandwidth envelopes of corresponding Partials in the
 	source PartialLists. For more information about the Loris
-	morphing algorithm, see the Loris website: 
+	morphing algorithm, see the Loris website:
 	www.cerlsoundgroup.org/Loris/
  */
 
-%{
-	#include<Synthesizer.h>
-	SampleVector * synthesize_( const PartialList * partials, double srate = 44100.0 )
+
+%newobject synthesize;
+%inline %{
+	SampleVector * synthesize( const PartialList * partials, double srate = 44100.0 )
 	{
-		ThrowIfNull((PartialList *) partials);
-
-		Loris::notifier << "synthesizing " << partials->size() 
-						<< " Partials at " << srate << " Hz" << Loris::endl;
-
-		//	compute the duration:
-		debugger << "computing duration..." << Loris::endl;
-		double maxtime = 0.;
-		PartialList::const_iterator it;
-		for ( it = partials->begin(); it != partials->end(); ++it ) 
+		SampleVector * dst = createSampleVector(0);
+		synthesize( partials, dst, srate );
+				
+		// check for exception:
+		if (*EXCEPTION_THROWN)
 		{
-			maxtime = std::max( maxtime, it->endTime() );
+			destroySampleVector( dst );
+			dst = NULL;
 		}
-		debugger << maxtime << " seconds" << Loris::endl;
-		
-		//	allocate a SampleVector to accomodate the fade-out at 
-		//	the end of the latest Partial:
-		const double fadeTime = .001; 	// 1 ms
-		const long nsamps = long( srate * ( maxtime + fadeTime ) );	
-		SampleVector * samples = new SampleVector( nsamps, 0. );
-		
-		//	synthesize:
-		if ( ! samples->empty() )
-		{
-			try
-			{
-				Loris::Synthesizer synth( srate, &((*samples)[0]), &((*samples)[samples->size()]), fadeTime );
-				for ( it = partials->begin(); it != partials->end(); ++it ) 
-				{
-					synth.synthesize( *it );
-				}
-			}
-			catch(...)
-			{
-				delete samples;
-				throw;
-			}
-		}
-		
-		return samples;
+		return dst;
 	}
 %}
-%rename(synthesize) synthesize_;
-%new SampleVector * synthesize_( const PartialList * partials, double srate = 44100.0 );
-/*	Synthesize Partials in a PartialList at the given sample
+/*  Synthesize Partials in a PartialList at the given sample
 	rate, and return the (floating point) samples in a SampleVector.
-	The SampleVector is sized to hold as many samples as are needed 
-	for the complete synthesis of all the Partials in the PartialList. 
-	If the sample rate is unspecified, the deault value of 44100 Hz 
+	The SampleVector is sized to hold as many samples as are needed
+	for the complete synthesis of all the Partials in the PartialList.
+	If the sample rate is unspecified, the deault value of 44100 Hz
 	(CD quality) is used.
  */
 
@@ -497,33 +403,22 @@ void sift( PartialList * partials );
  */
 
 
-
-/* ---------------------------------------------------------------- */
-/*		utility functions
-/*
- *	These procedures are generally useful but are not yet  
- *	represented by classes in the Loris core.
- */
-%{
-	PartialList * extract_( PartialList * partials, long label )
+%newobject extract;
+%inline %{
+	PartialList * extract( PartialList * partials, long label )
 	{
-        ThrowIfNull((PartialList *) partials);
-
-		PartialList * ret = new PartialList();
-		try 
+		PartialList * dst = createPartialList();
+		spliceByLabel( partials, label, dst );
+		
+		// check for exception:
+		if (*EXCEPTION_THROWN)
 		{
-			spliceByLabel( partials, label, ret );
+			destroyPartialList( dst );
+			dst = NULL;
 		}
-		catch(...)
-		{
-			delete ret;
-			throw;
-		}
-		return ret;
+		return dst;
 	}
 %}
-%rename(extractLabeled) extract_;
-%new PartialList * extract_( PartialList * partials, long label );
 /*  Extract Partials in the source PartialList having the specified
     label and return them in a new PartialList.
  */
@@ -554,5 +449,286 @@ void shiftPitch( PartialList * partials, BreakpointEnvelope * pitchEnv );
 	}
 %}
  
+// ----------------------------------------------------------------
+//		wrap Loris classes
 
+//	Wrap all calls into the Loris library with exception
+//	handlers to prevent exceptions from leaking out of the
+//	C++ code, wherein they can be handled, and into the
+//	interpreter, where they will surely cause an immediate
+//	halt. Only std::exceptions and Loris::Exceptions (and 
+//	subclasses) can be thrown.
+//
+//	Don't use procedural interface calls here, because this 
+//	exception handler doesn't check for exceptions raised in
+//	the procedural interface!
+//
+%{
+	#include <Exception.h>
+	#include <stdexcept>
+%}
+
+//	These should probably not all report UnknownError, could
+//	make an effort to raise the right kind of (SWIG) exception.
+//
+%exception {
+	try
+	{	
+		$action
+	}
+	catch( Loris::Exception & ex ) 
+	{
+		//	catch Loris::Exceptions:
+		std::string s("Loris exception: " );
+		s.append( ex.what() );
+		SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		//	catch std::exceptions:
+		std::string s("std C++ exception: " );
+		s.append( ex.what() );
+		SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+	}
+}
+
+// several classes define a copy member that
+// returns a new object:
+//
+%newobject *::copy;
+
+
+// ---------------------------------------------------------------------------
+//	class AiffFile
+//	
+//	An AiffFile represents a sample file (on disk) in the Audio Interchange
+//	File Format. The file is read from disk and the samples stored in memory
+//	upon construction of an AiffFile instance. The samples are accessed by 
+//	the samples() method, which converts them to double precision floats and
+//	returns them in a SampleVector.
+//
+%{
+	#include<AiffFile.h>
+%}
+
+%newobject AiffFile::samples;
+
+class AiffFile
+{
+public:
+	AiffFile( const char * filename );
+	~AiffFile( void );
+	
+	int channels( void ) const;
+	unsigned long sampleFrames( void ) const;
+	double sampleRate( void ) const;
+	int sampleSize( void ) const;
+	 
+	%extend 
+	{
+		SampleVector * samples( void )
+		{
+			SampleVector * vec = new SampleVector( self->sampleFrames() );
+			if ( ! vec->empty() )
+				self->getSamples( &((*vec)[0]), &((*vec)[vec->size()]) );
+			return vec;
+		}
+		 
+	}	
+	/*	Return a SampleVector containing the AIFF samples from this AIFF 
+		file as double precision floats on the range -1,1.
+	 */
+};
+
+// ---------------------------------------------------------------------------
+//	class Analyzer
+//	
+//	An Analyzer represents a configuration of parameters for
+//	performing Reassigned Bandwidth-Enhanced Additive Analysis
+//	of sampled waveforms. This analysis process yields a collection 
+//	of Partials, each having a trio of synchronous, non-uniformly-
+//	sampled breakpoint envelopes representing the time-varying 
+//	frequency, amplitude, and noisiness of a single bandwidth-
+//	enhanced sinusoid. 
+//
+//	For more information about Reassigned Bandwidth-Enhanced 
+//	Analysis and the Reassigned Bandwidth-Enhanced Additive Sound 
+//	Model, refer to the Loris website: www.cerlsoundgroup.org/Loris/
+//
+
+%{
+	#include<Analyzer.h>
+	#include<Partial.h>
+%}
+
+%newobject Analyzer::analyze;
 			
+class Analyzer
+{
+public:
+	%extend 
+	{
+		//	construction:
+		Analyzer( double resolutionHz, double windowWidthHz = 0. )
+		{
+			if ( windowWidthHz == 0. )
+				windowWidthHz = resolutionHz;
+			return new Analyzer( resolutionHz, windowWidthHz );
+		}
+		/*	Construct and return a new Analyzer configured with the given	
+			frequency resolution (minimum instantaneous frequency	
+			difference between Partials) and analysis window main 
+			lobe width (between zeros). All other Analyzer parameters 	
+			are computed from the specified resolution and window
+			width. If the window width is not specified, or is 0,
+			then it is assumed to be equal to the resolution. 			
+		 */
+	
+		Analyzer * copy( void )
+		{
+			return new Analyzer( *self );
+		}
+		/*	Construct and return a new Analyzer having identical
+			parameter configuration to another Analyzer.			
+		 */
+	
+		//	analysis:
+		PartialList * analyze( const SampleVector * vec, double srate )
+		{
+			PartialList * partials = new PartialList();
+			if ( ! vec->empty() )
+				self->analyze( &((*vec)[0]), &((*vec)[vec->size()]), srate );
+			partials->splice( partials->end(), self->partials() );
+			return partials;
+		}
+		/*	Analyze a SampleVector of (mono) samples at the given sample rate 	  	
+			(in Hz) and return the resulting Partials in a PartialList. 												
+		 */
+	}
+	
+	//	parameter access:
+	double freqResolution( void ) const;
+	double ampFloor( void ) const;
+ 	double windowWidth( void ) const;
+ 	double freqFloor( void ) const;
+	double hopTime( void ) const;
+ 	double freqDrift( void ) const;
+ 	double cropTime( void ) const;
+	double bwRegionWidth( void ) const;
+	
+	//	parameter mutation:
+	void setFreqResolution( double x );
+	void setAmpFloor( double x );
+	void setWindowWidth( double x );
+	void setFreqFloor( double x );
+	void setFreqDrift( double x );
+ 	void setHopTime( double x );
+ 	void setCropTime( double x );
+ 	void setBwRegionWidth( double x );
+
+};	//	end of class Analyzer
+			
+// ---------------------------------------------------------------------------
+//	class BreakpointEnvelope
+//
+//	A BreakpointEnvelope represents a linear segment breakpoint 
+//	function with infinite extension at each end (that is, the 
+//	values past either end of the breakpoint function have the 
+//	values at the nearest end).
+//
+%{
+	#include<BreakpointEnvelope.h>
+%}
+
+class BreakpointEnvelope
+{
+public:
+	//	construction:
+	BreakpointEnvelope( void );
+	~BreakpointEnvelope( void );
+	
+	%name(BreakpointEnvelopeWithValue) BreakpointEnvelope( double initialValue );
+	
+	%extend 
+	{
+		BreakpointEnvelope * copy( void )
+		{
+			return new BreakpointEnvelope( *self );
+		}
+		/*	Construct and return a new BreakpointEnvelope that is
+			a copy of this BreapointEnvelope (has the same value
+			as this BreakpointEnvelope everywhere).			
+		 */
+	}
+
+	//	envelope access and mutation:
+	void insertBreakpoint( double time, double value );
+	double valueAt( double x ) const;		
+	 
+};	//	end of class BreakpointEnvelope
+
+
+// ---------------------------------------------------------------------------
+//	class SampleVector
+//	
+//	A SampleVector represents a vector of floating point samples of
+//	an audio waveform. In Loris, the samples are assumed to have 
+//	values on the range (-1., 1.) (though this is not enforced or 
+//	checked). 
+//
+class SampleVector
+{
+public:
+	SampleVector( unsigned long size = 0 );	 
+	 ~SampleVector( void );
+
+	void clear( void );
+	void resize( unsigned long size );
+	unsigned long size( void );
+	 
+	%extend
+	{
+		SampleVector * copy( void )
+		{
+			return new SampleVector( *self );
+		}
+		/*	Return a new SampleVector that is a copy of this 
+			SampleVector, having the same number of samples, 
+			and samples at every position in the copy having 
+			the same value as the corresponding sample in
+			this SampleVector.
+		 */
+		 
+		double getAt( unsigned long idx )
+		{
+			if ( idx >= self->size() )
+				throw std::out_of_range("SampleVector::getAt index out of range");
+			return (*self)[idx];
+		}
+		/*	Return the value of the sample at the given position (index) in
+			this SampleVector.
+		 */
+		 
+		void setAt( unsigned long idx, double x )
+		{
+			if ( idx >= self->size() )
+				throw std::out_of_range("SampleVector::setAt index out of range");
+			(*self)[idx] = x;
+		}
+		/*	Set the value of the sample at the given position (index) in
+			this SampleVector.
+		 */
+	}
+
+};	//	end of class SampleVector
+
+// ----------------------------------------------------------------
+//		wrap PartialList classes
+//
+//	(PartialList, PartialListIterator, Partial, PartialIterator, 
+//	and Breakpoint)
+//
+//	This stuff is kind of big, so it lives in its own interface
+//	file.
+%include lorisPartialList.i
+

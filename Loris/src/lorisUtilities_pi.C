@@ -87,6 +87,9 @@ void copyByLabel( const PartialList * src, long label, PartialList * dst )
 {
 	try 
 	{
+		ThrowIfNull((PartialList *) src);
+		ThrowIfNull((PartialList *) dst);
+
 		std::list< Partial >::const_iterator it = src->begin();
 		for ( it = std::find_if( it, src->end(), PartialUtils::label_equals(label) );
 			  it != src->end();
@@ -123,6 +126,9 @@ void spliceByLabel( PartialList * src, long label, PartialList * dst )
 {
 	try 
 	{
+		ThrowIfNull((PartialList *) src);
+		ThrowIfNull((PartialList *) dst);
+
 		std::list< Partial >::iterator it = src->begin();
 		for ( it = std::find_if( it, src->end(), PartialUtils::label_equals(label) );
 			  it != src->end();

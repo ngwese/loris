@@ -60,6 +60,10 @@
 %include typemaps.i
 %apply double * OUTPUT { double * tmin_out, double * tmax_out };
 
+%newobject *::copy;
+%newobject *::next;	// iterators do this
+%newobject *::prev;	// iterators do this too
+
 %{
 #include<Partial.h>
 #include<PartialList.h>
@@ -93,7 +97,7 @@ class PartialListIterator;
 class PartialList
 {
 public:
-	%addmethods
+	%extend
 	{
 		//	construction:
 		// include these in the added methods for debugging:
@@ -116,7 +120,7 @@ public:
 		//	C++ copy constructor has the wrong semantics 
 		//	for the scripting interface, define a copy 
 		//	member:
-		%new PartialList * copy( void )
+		PartialList * copy( void )
 		{
 			return new PartialList( *self );
 		}
@@ -219,9 +223,9 @@ public:
 	//	are inappropriate for the scripting interface (those
 	//	languages don't have pointers), so the methods in the 
 	//	interface all need to be added:
-	%addmethods 
+	%extend 
 	{
-		%new PartialListIterator * copy( void )
+		PartialListIterator * copy( void )
 		{
 			return new PartialListIterator( *self );
 		}
@@ -230,7 +234,7 @@ public:
 			in the same PartialList).
 		 */
 		 
-		%new PartialListIterator * next( void )
+		PartialListIterator * next( void )
 		{
 			PartialListIterator * next = new PartialListIterator(*self);
 			++(*next);
@@ -240,7 +244,7 @@ public:
 			PartialList. 
 		 */
 		 
-		%new PartialListIterator * prev( void )
+		PartialListIterator * prev( void )
 		{
 			PartialListIterator * prev = new PartialListIterator(*self);
 			--(*prev);
@@ -341,13 +345,13 @@ public:
 	/* 	Return this Partial's duration.
 	 */
 	
-	long numBreakpoints( void ) const { return _bpmap.size(); }
+	long numBreakpoints( void ) const;
 	/* 	Return this Partial's number of Breakpoints.
 	 */
 	
 //	mutation members:
 //
-	void setLabel( int l ) { _label = l; }
+	void setLabel( int l );
 	/*	Assign a new label to this Partial.
 	 */
 		
@@ -415,9 +419,9 @@ public:
 //	add methods for copy and comparison members that, in C++ have
 //	inappropriate semantics for the scripting interface:
 //
-	%addmethods
+	%extend
 	{
-		%new Partial * copy( void )
+		Partial * copy( void )
 		{
 			return new Partial( *self );
 		}
@@ -495,7 +499,7 @@ public:
 	//	are inappropriate for the scripting interface (those
 	//	languages don't have pointers), so many methods in the 
 	//	interface need to be added:
-	%addmethods 
+	%extend 
 	{
 		//	this doesn't seem to swig correctly, Breakpoint
 		//	winds up with ownership, try fixng it here:
@@ -508,7 +512,7 @@ public:
 		 */
 
 
-		%new PartialIterator * copy( void )
+		PartialIterator * copy( void )
 		{
 			return new PartialIterator( *self );
 		}
@@ -517,7 +521,7 @@ public:
 			in the same Partial).
 		 */
 		 
-		%new PartialIterator * next( void )
+		PartialIterator * next( void )
 		{
 			PartialIterator * next = new PartialIterator(*self);
 			++(*next);
@@ -526,7 +530,7 @@ public:
 		/*	Return an iterator refering to the next position in the Partial.
 		 */
 		 
-		%new PartialIterator * prev( void )
+		PartialIterator * prev( void )
 		{
 			PartialIterator * prev = new PartialIterator(*self);
 			--(*prev);
@@ -633,9 +637,9 @@ public:
 	//	C++ copy constructor has the wrong semantics 
 	//	for the scripting interface, define a copy 
 	//	member:
-	%addmethods
+	%extend
 	{
-		%new Breakpoint * copy( void )
+		Breakpoint * copy( void )
 		{
 			return new Breakpoint( *self );
 		}

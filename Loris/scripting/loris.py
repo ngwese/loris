@@ -27,6 +27,165 @@ except AttributeError:
     _newclass = 0
 
 
+channelize = _loris.channelize
+
+createFreqReference = _loris.createFreqReference
+
+dilate = _loris.dilate
+
+distill = _loris.distill
+
+exportAiff = _loris.exportAiff
+
+exportSdif = _loris.exportSdif
+
+exportSpc = _loris.exportSpc
+
+importSdif = _loris.importSdif
+
+importSpc = _loris.importSpc
+
+morph = _loris.morph
+
+synthesize = _loris.synthesize
+
+sift = _loris.sift
+
+extract = _loris.extract
+
+scaleAmp = _loris.scaleAmp
+
+scaleNoiseRatio = _loris.scaleNoiseRatio
+
+shiftPitch = _loris.shiftPitch
+
+version = _loris.version
+
+class AiffFile(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, AiffFile, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, AiffFile, name)
+    def __init__(self,*args):
+        self.this = apply(_loris.new_AiffFile,args)
+        self.thisown = 1
+    def __del__(self, destroy= _loris.delete_AiffFile):
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+    def channels(*args): return apply(_loris.AiffFile_channels,args)
+    def sampleFrames(*args): return apply(_loris.AiffFile_sampleFrames,args)
+    def sampleRate(*args): return apply(_loris.AiffFile_sampleRate,args)
+    def sampleSize(*args): return apply(_loris.AiffFile_sampleSize,args)
+    def samples(*args): return apply(_loris.AiffFile_samples,args)
+    def __repr__(self):
+        return "<C AiffFile instance at %s>" % (self.this,)
+
+class AiffFilePtr(AiffFile):
+    def __init__(self,this):
+        self.this = this
+        if not hasattr(self,"thisown"): self.thisown = 0
+        self.__class__ = AiffFile
+_loris.AiffFile_swigregister(AiffFilePtr)
+
+class Analyzer(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, Analyzer, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, Analyzer, name)
+    def __init__(self,*args):
+        self.this = apply(_loris.new_Analyzer,args)
+        self.thisown = 1
+    def copy(*args): return apply(_loris.Analyzer_copy,args)
+    def analyze(*args): return apply(_loris.Analyzer_analyze,args)
+    def freqResolution(*args): return apply(_loris.Analyzer_freqResolution,args)
+    def ampFloor(*args): return apply(_loris.Analyzer_ampFloor,args)
+    def windowWidth(*args): return apply(_loris.Analyzer_windowWidth,args)
+    def freqFloor(*args): return apply(_loris.Analyzer_freqFloor,args)
+    def hopTime(*args): return apply(_loris.Analyzer_hopTime,args)
+    def freqDrift(*args): return apply(_loris.Analyzer_freqDrift,args)
+    def cropTime(*args): return apply(_loris.Analyzer_cropTime,args)
+    def bwRegionWidth(*args): return apply(_loris.Analyzer_bwRegionWidth,args)
+    def setFreqResolution(*args): return apply(_loris.Analyzer_setFreqResolution,args)
+    def setAmpFloor(*args): return apply(_loris.Analyzer_setAmpFloor,args)
+    def setWindowWidth(*args): return apply(_loris.Analyzer_setWindowWidth,args)
+    def setFreqFloor(*args): return apply(_loris.Analyzer_setFreqFloor,args)
+    def setFreqDrift(*args): return apply(_loris.Analyzer_setFreqDrift,args)
+    def setHopTime(*args): return apply(_loris.Analyzer_setHopTime,args)
+    def setCropTime(*args): return apply(_loris.Analyzer_setCropTime,args)
+    def setBwRegionWidth(*args): return apply(_loris.Analyzer_setBwRegionWidth,args)
+    def __del__(self, destroy= _loris.delete_Analyzer):
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+    def __repr__(self):
+        return "<C Analyzer instance at %s>" % (self.this,)
+
+class AnalyzerPtr(Analyzer):
+    def __init__(self,this):
+        self.this = this
+        if not hasattr(self,"thisown"): self.thisown = 0
+        self.__class__ = Analyzer
+_loris.Analyzer_swigregister(AnalyzerPtr)
+
+class BreakpointEnvelope(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, BreakpointEnvelope, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, BreakpointEnvelope, name)
+    def __init__(self,*args):
+        self.this = apply(_loris.new_BreakpointEnvelope,args)
+        self.thisown = 1
+    def __del__(self, destroy= _loris.delete_BreakpointEnvelope):
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+    def copy(*args): return apply(_loris.BreakpointEnvelope_copy,args)
+    def insertBreakpoint(*args): return apply(_loris.BreakpointEnvelope_insertBreakpoint,args)
+    def valueAt(*args): return apply(_loris.BreakpointEnvelope_valueAt,args)
+    def __repr__(self):
+        return "<C BreakpointEnvelope instance at %s>" % (self.this,)
+
+class BreakpointEnvelopePtr(BreakpointEnvelope):
+    def __init__(self,this):
+        self.this = this
+        if not hasattr(self,"thisown"): self.thisown = 0
+        self.__class__ = BreakpointEnvelope
+_loris.BreakpointEnvelope_swigregister(BreakpointEnvelopePtr)
+def BreakpointEnvelopeWithValue(*args):
+    val = apply(_loris.new_BreakpointEnvelopeWithValue,args)
+    val.thisown = 1
+    return val
+
+
+class SampleVector(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, SampleVector, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, SampleVector, name)
+    def __init__(self,*args):
+        self.this = apply(_loris.new_SampleVector,args)
+        self.thisown = 1
+    def __del__(self, destroy= _loris.delete_SampleVector):
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+    def clear(*args): return apply(_loris.SampleVector_clear,args)
+    def resize(*args): return apply(_loris.SampleVector_resize,args)
+    def size(*args): return apply(_loris.SampleVector_size,args)
+    def copy(*args): return apply(_loris.SampleVector_copy,args)
+    def getAt(*args): return apply(_loris.SampleVector_getAt,args)
+    def setAt(*args): return apply(_loris.SampleVector_setAt,args)
+    def __repr__(self):
+        return "<C SampleVector instance at %s>" % (self.this,)
+
+class SampleVectorPtr(SampleVector):
+    def __init__(self,this):
+        self.this = this
+        if not hasattr(self,"thisown"): self.thisown = 0
+        self.__class__ = SampleVector
+_loris.SampleVector_swigregister(SampleVectorPtr)
+
 class PartialList(_object):
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, PartialList, name, value)
@@ -187,161 +346,5 @@ class BreakpointPtr(Breakpoint):
         if not hasattr(self,"thisown"): self.thisown = 0
         self.__class__ = Breakpoint
 _loris.Breakpoint_swigregister(BreakpointPtr)
-
-class SampleVector(_object):
-    __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, SampleVector, name, value)
-    __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, SampleVector, name)
-    def __init__(self,*args):
-        self.this = apply(_loris.new_SampleVector,args)
-        self.thisown = 1
-    def __del__(self, destroy= _loris.delete_SampleVector):
-        try:
-            if self.thisown: destroy(self)
-        except: pass
-    def size(*args): return apply(_loris.SampleVector_size,args)
-    def resize(*args): return apply(_loris.SampleVector_resize,args)
-    def clear(*args): return apply(_loris.SampleVector_clear,args)
-    def copy(*args): return apply(_loris.SampleVector_copy,args)
-    def getAt(*args): return apply(_loris.SampleVector_getAt,args)
-    def setAt(*args): return apply(_loris.SampleVector_setAt,args)
-    def __repr__(self):
-        return "<C SampleVector instance at %s>" % (self.this,)
-
-class SampleVectorPtr(SampleVector):
-    def __init__(self,this):
-        self.this = this
-        if not hasattr(self,"thisown"): self.thisown = 0
-        self.__class__ = SampleVector
-_loris.SampleVector_swigregister(SampleVectorPtr)
-
-class Analyzer(_object):
-    __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, Analyzer, name, value)
-    __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, Analyzer, name)
-    def __del__(self, destroy= _loris.delete_Analyzer):
-        try:
-            if self.thisown: destroy(self)
-        except: pass
-    def __init__(self,*args):
-        self.this = apply(_loris.new_Analyzer,args)
-        self.thisown = 1
-    def copy(*args): return apply(_loris.Analyzer_copy,args)
-    def analyze(*args): return apply(_loris.Analyzer_analyze,args)
-    def freqResolution(*args): return apply(_loris.Analyzer_freqResolution,args)
-    def ampFloor(*args): return apply(_loris.Analyzer_ampFloor,args)
-    def windowWidth(*args): return apply(_loris.Analyzer_windowWidth,args)
-    def freqFloor(*args): return apply(_loris.Analyzer_freqFloor,args)
-    def hopTime(*args): return apply(_loris.Analyzer_hopTime,args)
-    def freqDrift(*args): return apply(_loris.Analyzer_freqDrift,args)
-    def cropTime(*args): return apply(_loris.Analyzer_cropTime,args)
-    def bwRegionWidth(*args): return apply(_loris.Analyzer_bwRegionWidth,args)
-    def setFreqResolution(*args): return apply(_loris.Analyzer_setFreqResolution,args)
-    def setAmpFloor(*args): return apply(_loris.Analyzer_setAmpFloor,args)
-    def setWindowWidth(*args): return apply(_loris.Analyzer_setWindowWidth,args)
-    def setFreqFloor(*args): return apply(_loris.Analyzer_setFreqFloor,args)
-    def setFreqDrift(*args): return apply(_loris.Analyzer_setFreqDrift,args)
-    def setHopTime(*args): return apply(_loris.Analyzer_setHopTime,args)
-    def setCropTime(*args): return apply(_loris.Analyzer_setCropTime,args)
-    def setBwRegionWidth(*args): return apply(_loris.Analyzer_setBwRegionWidth,args)
-    def __repr__(self):
-        return "<C Analyzer instance at %s>" % (self.this,)
-
-class AnalyzerPtr(Analyzer):
-    def __init__(self,this):
-        self.this = this
-        if not hasattr(self,"thisown"): self.thisown = 0
-        self.__class__ = Analyzer
-_loris.Analyzer_swigregister(AnalyzerPtr)
-
-class BreakpointEnvelope(_object):
-    __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, BreakpointEnvelope, name, value)
-    __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, BreakpointEnvelope, name)
-    def __init__(self,*args):
-        self.this = apply(_loris.new_BreakpointEnvelope,args)
-        self.thisown = 1
-    def __del__(self, destroy= _loris.delete_BreakpointEnvelope):
-        try:
-            if self.thisown: destroy(self)
-        except: pass
-    def copy(*args): return apply(_loris.BreakpointEnvelope_copy,args)
-    def valueAt(*args): return apply(_loris.BreakpointEnvelope_valueAt,args)
-    def insertBreakpoint(*args): return apply(_loris.BreakpointEnvelope_insertBreakpoint,args)
-    def __repr__(self):
-        return "<C BreakpointEnvelope instance at %s>" % (self.this,)
-
-class BreakpointEnvelopePtr(BreakpointEnvelope):
-    def __init__(self,this):
-        self.this = this
-        if not hasattr(self,"thisown"): self.thisown = 0
-        self.__class__ = BreakpointEnvelope
-_loris.BreakpointEnvelope_swigregister(BreakpointEnvelopePtr)
-
-BreakpointEnvelopeWithValue = _loris.BreakpointEnvelopeWithValue
-
-class AiffFile(_object):
-    __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, AiffFile, name, value)
-    __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, AiffFile, name)
-    def __init__(self,*args):
-        self.this = apply(_loris.new_AiffFile,args)
-        self.thisown = 1
-    def __del__(self, destroy= _loris.delete_AiffFile):
-        try:
-            if self.thisown: destroy(self)
-        except: pass
-    def channels(*args): return apply(_loris.AiffFile_channels,args)
-    def sampleFrames(*args): return apply(_loris.AiffFile_sampleFrames,args)
-    def sampleRate(*args): return apply(_loris.AiffFile_sampleRate,args)
-    def sampleSize(*args): return apply(_loris.AiffFile_sampleSize,args)
-    def samples(*args): return apply(_loris.AiffFile_samples,args)
-    def __repr__(self):
-        return "<C AiffFile instance at %s>" % (self.this,)
-
-class AiffFilePtr(AiffFile):
-    def __init__(self,this):
-        self.this = this
-        if not hasattr(self,"thisown"): self.thisown = 0
-        self.__class__ = AiffFile
-_loris.AiffFile_swigregister(AiffFilePtr)
-
-channelize = _loris.channelize
-
-createFreqReference = _loris.createFreqReference
-
-dilate = _loris.dilate
-
-distill = _loris.distill
-
-exportAiff = _loris.exportAiff
-
-exportSdif = _loris.exportSdif
-
-exportSpc = _loris.exportSpc
-
-importSdif = _loris.importSdif
-
-importSpc = _loris.importSpc
-
-morph = _loris.morph
-
-synthesize = _loris.synthesize
-
-sift = _loris.sift
-
-extractLabeled = _loris.extractLabeled
-
-scaleAmp = _loris.scaleAmp
-
-scaleNoiseRatio = _loris.scaleNoiseRatio
-
-shiftPitch = _loris.shiftPitch
-
-version = _loris.version
 
 
