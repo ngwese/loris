@@ -61,6 +61,22 @@ static void fftw_die_Loris(const char * s)
 }
 
 // ---------------------------------------------------------------------------
+//  CompileTimeError
+// ---------------------------------------------------------------------------
+//	Gnarly code adopted from Alexandrescu (Modern C++ Design) for compile-time
+//	checking of type information. Need to make sure that fftw_complex and 
+//	std::complex<double> are the same size and have the same memory layout.
+//	Try to do that at compile-time;
+//
+template<int> struct CompileTimeError;
+template<> struct CompileTimeError<true> {};
+#define STATIC_CHECK(expr, msg) \
+    { CompileTimeError<((expr) != 0)> ERROR_##msg; (void)ERROR_##msg; }
+
+template <class T, class U> struct CompareTypes { enum { same = 0 }; };
+template<class T> struct CompareTypes<T, T> { enum { same = 1 }; };
+
+// ---------------------------------------------------------------------------
 //	FourierTransform constructor
 // ---------------------------------------------------------------------------
 //	The private buffer _buffer has to be allocated immediately, so that it can be 
@@ -80,6 +96,14 @@ FourierTransform::FourierTransform( long len ) :
 	//	-- sanity --
 	//	check to make sure that std::complex< double >
 	//	and fftw_complex are really identical:
+
+	//	if this won't compile, fftw_real is not defined to be double,
+	//	and this class won't work under those conditions:
+	STATIC_CHECK((CompareTypes<double, fftw_real>::same!=0), fftw_real_IS_NOT_DOUBLE);
+
+	STATIC_CHECK( sizeof(std::complex<double>) == sizeof(fftw_complex), 
+				  fftw_complex_DIFFERENT_SIZE_FROM_std_complex_double );
+
 	static bool checked = false;
 	if ( ! checked ) 
 	{
