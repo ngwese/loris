@@ -1,6 +1,14 @@
 Loris THANKS file
 
-Loris has originally been written by Kelly Fitz.
-Many people have further contributed to FOO by reporting problems, 
-suggesting various improvements, or submitting actual code. Here is
-a list of these people. Help me keep it complete and exempt of errors.
+Loris is developed by Kelly Fitz and Lippold Haken at the CERL Sound
+Group (http://www.cerlsoundgroup.org), with contributions from Paul
+Christensen. 
+
+IEEE floating point conversion code was provided by Malcolm Slaney 
+and Ken Turkowski, by way of Arun Chandra. 
+
+Reference-counted "smart pointer" code provided by Vladimir Batov.
+
+Key parts of the development of Loris were initiated during an invited
+residency by Kelly Fitz at the Bregman Electronic Music Studio at
+Dartmouth College in 1996, graciously arranged by Larry Polansky.

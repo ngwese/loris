@@ -1,18 +1,153 @@
 Loris -- History of visible changes.
 
-Copyright (C) 2001, Kelly Fitz <kfitz@cerlsoundgroup.org>
+Loris is Copyright (C) 1999-2001 by Kelly Fitz and Lippold Haken 
+<loris@cerlsoundgroup.org>.
 See the end for copying conditions.
 
-Please send Loris bug reports to kfitz@cerlsoundgroup.org.
+Please send Loris bug reports to loris@cerlsoundgroup.org.
 
-Version 0.1
+-------------------------------------------------------
+changes since 1.0beta4 release:
 
-* List your features here
+- The Distiller now incorporates the formerly-experimental sifting
+process, that had been implemented in the Sieve class, which is 
+now obsolete. The sifting process now is more predictable: it retains
+the longest Partial of an overlapping pair, instead of the first one
+it encountered.
+
+- Loris has been autoconfiscated. This is a first attempt to use
+the GNU autotools to configure Loris for Unix and Linux (and
+windows?) builds.
+
+
+-------------------------------------------------------
+changes since 1.0beta3 release:
+
+- Tcl and Perl interfaces and documentation have been added to the
+scripting support. The Tcl module can be tested using the morphtest.tcl
+script in the test directory. The Perl module has not been tested yet
+and is awaiting a competent Perl programmer to provide a Perl version of
+the test script.
+
+- the macro LORIS_VERSION has been added to a prefix file included in
+all Loris headers and sources. So it is now possible to determine the
+Loris release version programmatically and at compile time. See the
+header Loris_prefix.h for a description of the format of this macro. The
+Loris version is also accessible using the versionString function in the
+scripting interface.
+
+- the PartialList and Partial iterators in the scripting interface have
+been rewritten and now mimic the C++ STL classes they wrap. Most
+importantly, iterators do _no_ memory or reference management. So that
+in Python, if you loose the last reference to a PartialList and the list
+gets deleted, you may be left with invalid Partials, Iterators, and
+Breakpoints, that formerly corrsponded to contents of that PartialList.
+See the documentation for more details. This implementation is very
+different from the implementation in release 1.0beta3, but is more or
+less the one that we expect to stick with.
+
+- the non-object functions in the scripting interface for accessing AIFF
+format sample files (ImportAiff, and infoAiff) have been removed. Use the 
+AiffFile class added in the previous release. See the test and demo scripts
+for examples.
+
+- the ExportSpc class has been removed from the scripting interface and
+replaced by non-object importSpc and exportSpc functions. See the
+documenation for details. In the C++ class library the ExportSpc class
+has been replaced by the SpcFile class, the ImportSdif and ExportSdif
+classes have been replaced by the SdifFile class.
+
+- the CodeWarrior project itself is no longer distributed for the MacOS.
+Instead, the exported XML description is distributed. This file can be
+used to build (mostly) a CodeWarrior project using any recent version of
+the IDE, using the Import Project option on the File menu.
+
+-------------------------------------------------------
+change since 1.0beta2 release:
+
+- preliminary implementation of PartialList iteration and access to
+individual Partials in a PartialList in the scripting interface. This
+implementation is incomplete and experimental, and should be expected
+to change.
+
+- AiffFile class added to scripting interface, so there is no longer a
+separate function (and disk access) for querying the sample rate, bit
+depth, and number of channels in a samples file. These parameters are
+now obtained from an AiffFile object that also provides access to the
+SampleVector.
+
+- Sieve class has been added to Loris class library, invoked through
+sift() function in the scripting interface. The sifting operation is
+an experimental process that sometimes improves the fidelity of morphs
+and syntheses from distilled PartialLists. Sifting is performed after
+channelization and before distillation, and has the effect of
+relabeling some Partials to zero (0). These Partials are left behind
+unmodified by the distillation process, and can be removed from the
+PartialList, or retained and synthesized. (Partials labeled zero do
+not participate in morphing, they are instead faded in and out.) This
+implementation is experimental and should be expected to change.
+
+- errors in test and demo scripts have been fixed.
+
+- Python interface documentation has been updated and improved.
+
+- updated to use the version 3.2.2 of the SDIF library from IRCAM,
+obtain from the IRCAM SDIF website (www.ircam.fr/sdif). This version
+is incompatible with version 3.2.0, used in by earlier Loris releases.
+Update to version 3.2.2, or compile with the flag SDIF_VERSION defined
+to have the value 320 to use version 3.2.0 of the SDIF library. See
+the README file or more information.
+
+- SWIG 1.3a5 is being used to generate the Python wrappers now, so
+anyone wishing to try generating wrappers for other languages can now
+choose from Java, Guile, Ruby, and others, in addition to Tcl and Perl.
+
+- other minor changes in the scripting interface, see the demo and
+test scripts for examples. 
+
+-------------------------------------------------------
+change since 1.0beta1 release:
+
+- added .spc file support for real-time bandwidth-enhanced additive
+synthesis and sound morphing using the Symbolic Sound Kyma System.
+Documentation updated accordingly (though not very extensive).
+
+- Loris module tested and verified with Python 2.0, now the default
+build (to build or another Python release, change the Makefile, or,
+in the MacOS Codewarrior project, the Access Path, to reflect the 
+correct version number).
+
+- static library target added to Codewarrior project for MacOS.
+
+- MacOS Python module now uses a static library instead of a shared 
+libarary (DLL), since static libraries seem much more stable and are
+less restrictive. (This should alleviate some instability related to
+memory management across library boundaries.)
+
+- test directory has been added with the simple morph test, distinct
+from the longer test in the demo directory (and package).
+
+-------------------------------------------------------
+changes since 1.0alpha release:
+
+- the core Loris library is mostly unchanged from the alpha release,
+but the scripting interface has been completely rewritten to provide
+a generic interface to a variety of scriping languages using SWIG
+(www.swig.org) At this time, only the Python module has been
+tested, and only with Python 1.5.2, though Loris is also reported to
+work with Python 1.6.
+
+- a c-linkable procedural interface has been implemented.
+
+- a first-cut of (html) documentation for the procedural interface and
+for the Python module is included, and posted to SourceForge
+(sourceforge.net/projects/loris).
 
 -------------------------------------------------------
 Copying information:
 
-Copyright (C) 2001, Kelly Fitz <kfitz@cerlsoundgroup.org>
+Copyright (C) 1999-2001, Kelly Fitz and Lippold Haken 
+<loris@cerlsoundgroup.org>
 
    Permission is granted to anyone to make or distribute verbatim copies
    of this document as received, in any medium, provided that the
