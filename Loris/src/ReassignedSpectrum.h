@@ -45,8 +45,8 @@ public:
 	
 //	reassigned spectral data access:		
 	double reassignedFrequency( unsigned long idx ) const;
-	double reassignedTime( double fracFreqSample ) const;
-	double reassignedPhase( double fracFreqSample, double timeCorrection ) const;	
+	double reassignedTime( unsigned long idx ) const;
+	double reassignedPhase( long idx, double fracFreqSample, double timeCorrection ) const;	
 	double reassignedMagnitude( double fracBinNum, long intBinNumber ) const;
 	
 	const std::complex< double > & operator[]( unsigned long idx ) const 

@@ -307,7 +307,20 @@ Analyzer::extractPeaks( std::list< Breakpoint > & frame, double frameTime,
 	//	cache corrected times for the extracted breakpoints, so 
 	//	that they don't hafta be computed over and over again:
 	state.peakTimeCache().clear();	
-	
+
+/*
+	DEBUG	
+	bool doit = false;
+	if ( doit)
+	{
+		notifier << "*** time corrections at time " << frameTime << endl;
+		for ( int j = 1; j < (state.spectrum().size() / 2) - 1; ++j )
+		{
+			notifier << state.spectrum().reassignedTime( j ) << endl;
+		}
+		notifier << "****" << endl;
+	}
+*/	
 	//	look for magnitude peaks in the spectrum:
 	for ( int j = 1; j < (state.spectrum().size() / 2) - 1; ++j ) {
 		if ( abs(state.spectrum()[j]) > abs(state.spectrum()[j-1]) && 
@@ -316,6 +329,13 @@ Analyzer::extractPeaks( std::list< Breakpoint > & frame, double frameTime,
 			//	and the frequency:
 			double fsample = state.spectrum().reassignedFrequency( j );	//	fractional sample
 			double fHz = fsample * sampsToHz;
+			
+			//	don't keep big frequency corrections:
+			if ( std::abs( fsample - j ) > .5 )
+			{
+				//notifier << "big frequency correction: " << fsample << " " << j << endl;
+				//continue;
+			}
 			
 			//	if the frequency is too low (not enough periods
 			//	in the analysis window), reject it:
@@ -330,7 +350,7 @@ Analyzer::extractPeaks( std::list< Breakpoint > & frame, double frameTime,
 			//	if the time correction for this peak is large,
 			//	reject it:
 			double timeCorrection = 
-				state.spectrum().reassignedTime( fsample ) / state.sampleRate();
+				state.spectrum().reassignedTime( j ) / state.sampleRate();
 			//
 			//	do this later, in formPartials()
 			//
@@ -338,7 +358,7 @@ Analyzer::extractPeaks( std::list< Breakpoint > & frame, double frameTime,
 			//	continue;
 				
 			//	retain a spectral peak corresponding to this sample:
-			double phase = state.spectrum().reassignedPhase( fsample, timeCorrection );
+			double phase = state.spectrum().reassignedPhase( j, fsample, timeCorrection );
 			frame.push_back( Breakpoint( fHz, mag, 0., phase ) );
 			
 			//	cache the peak time, rather than recomputing it when
@@ -421,7 +441,7 @@ Analyzer::formPartials( std::list< Breakpoint > & frame, double frameTime, Analy
 		//	eligible to receive this Breakpoint:
 		//	The earliest Breakpoint we could have kept 
 		//	from the previous frame:
-		double tooEarly = frameTime - (2. * cropTime());
+		double tooEarly = frameTime - hopTime() - cropTime();
 		
 		//	compute the time before which a Partial
 		//	must end in order to be eligible to receive

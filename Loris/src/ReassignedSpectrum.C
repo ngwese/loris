@@ -73,9 +73,6 @@ ReassignedSpectrum::transform( const vector< double > & buf, long idxCenter )
 	Assert( idxCenter >= 0 );
 	Assert( idxCenter < buf.size() );
 	
-//	allocate a temporary sample buffer:
-	vector< double > tmp( _window.size(), 0. );
-	
 //	determine sample boundaries from center index, 
 //	buffer length, and window length:
 	long boffset = idxCenter - ( _window.size() / 2 );
@@ -88,13 +85,8 @@ ReassignedSpectrum::transform( const vector< double > & buf, long idxCenter )
 	if ( eoffset < boffset ) {
 		eoffset = boffset;
 	}
-	
-	long middleOffset = _window.size() / 2;
-	
+		
 //	window and rotate input and compute normal transform:
-	std::transform( buf.begin() + boffset, buf.begin() + eoffset, 
-					_window.begin() + woffset, 
-					tmp.begin() + woffset, multiplies< double >() );
 	load( _transform, 
 		  buf.begin() + boffset, buf.begin() + idxCenter, buf.begin() + eoffset,
 		  _window.begin() + woffset );
@@ -103,9 +95,6 @@ ReassignedSpectrum::transform( const vector< double > & buf, long idxCenter )
 
 //	window and rotate input using frequency-ramped window
 //	and compute frequency correction transform:
-	std::transform( buf.begin() + boffset, buf.begin() + eoffset, 
-					_winfreqramp.begin() + woffset, 
-					tmp.begin() + woffset, multiplies< double >() );
 	load( _tfreqramp, 
 		  buf.begin() + boffset, buf.begin() + idxCenter, buf.begin() + eoffset,
 		  _winfreqramp.begin() + woffset );
@@ -114,9 +103,6 @@ ReassignedSpectrum::transform( const vector< double > & buf, long idxCenter )
 
 //	window and rotate input using time-ramped window and
 //	compute time correction transform:
-	std::transform( buf.begin() + boffset, buf.begin() + eoffset, 
-					_wintimeramp.begin() + woffset, 
-					tmp.begin() + woffset, multiplies< double >() );
 	load( _ttimeramp, 
 		  buf.begin() + boffset, buf.begin() + idxCenter, buf.begin() + eoffset,
 		  _wintimeramp.begin() + woffset );
@@ -312,7 +298,7 @@ ReassignedSpectrum::timeCorrection( long sample ) const
 		  		 _transform[sample].imag() * _ttimeramp[sample].imag();
 	double magSquared = norm( _transform[sample] );
 	
-	return  num / magSquared;
+	return num / magSquared;
 }
 
 // ---------------------------------------------------------------------------
@@ -330,22 +316,13 @@ ReassignedSpectrum::reassignedFrequency( unsigned long idx ) const
 // ---------------------------------------------------------------------------
 //	reassignedTime
 // ---------------------------------------------------------------------------
-//	Return the value of the time correction corresponding to the corrected
-//	(fractional) frequency sample, interpolating the time corrections for 
-//	neighboring samples.
-//
-//	Do we really want to be interpolating these? Maybe we just want the 
-//	corrected time for the (amplitude) peak sample.
-//
 //	The nominal time is 0 (samples) since no other temporal information about 
 //	the transformed buffer is available.
 //
 double
-ReassignedSpectrum::reassignedTime( double fracFreqSample ) const
+ReassignedSpectrum::reassignedTime( unsigned long idx ) const
 {
-	double alpha = fracFreqSample - floor( fracFreqSample );
-	return (alpha * timeCorrection( ceil(fracFreqSample) )) + 
-		   (( 1.-alpha ) * timeCorrection( floor(fracFreqSample) ));
+	return timeCorrection( idx );
 }
 
 // ---------------------------------------------------------------------------
@@ -382,6 +359,9 @@ ReassignedSpectrum::reassignedMagnitude( double fracBinNum, long peakBinNumber )
 #endif
 
 	Assert( fracBinNum >= 0. );
+
+//#define SMITHS_INGENEOUS_PARABOLAS
+#if ! defined(SMITHS_INGENEOUS_PARABOLAS)
 	
 	//	compute the nominal spectral amplitude by scaling
 	//	the peak spectral sample:
@@ -477,18 +457,26 @@ ReassignedSpectrum::reassignedMagnitude( double fracBinNum, long peakBinNumber )
 	correctAmp /= ampRatio;	
 	return correctAmp;
 
-#if defined(SMITHS_INGENEOUS_PARABOLAS)
+#else // defined(SMITHS_INGENEOUS_PARABOLAS)
+	
 	//	keep this parabolic interpolation computation around
 	//	only for sake of comparison, it is unlikely to yield
 	//	good results with bandwidth association:
-	double dbLeft = 20. * log10( abs( _transform[idx-1] ) );
-	double dbCandidate = 20. * log10( abs( _transform[idx] ) );
-	double dbRight = 20. * log10( abs( _transform[idx+1] ) );
+	double dbLeft = 20. * log10( abs( _transform[peakBinNumber-1] ) );
+	double dbCandidate = 20. * log10( abs( _transform[peakBinNumber] ) );
+	double dbRight = 20. * log10( abs( _transform[peakBinNumber+1] ) );
 	
 	double peakXOffset = 0.5 * (dbLeft - dbRight) /
 						 (dbLeft - 2.0 * dbCandidate + dbRight);
 	double dbmag = dbCandidate - 0.25 * (dbLeft - dbRight) * peakXOffset;
-	return magnitudeScale() *  * pow( 10., 0.05 * dbmag );
+	double x = magnitudeScale() * pow( 10., 0.05 * dbmag );
+	
+	if ( x > 0.5 )
+		notifier << "found big magnitude at frequency sample " << fracBinNum <<
+				" (" << peakBinNumber << "): " << x << endl;
+				
+	return x;
+	
 #endif	//	defined SMITHS_INGENEOUS_PARABOLAS
 }
 
@@ -504,30 +492,11 @@ ReassignedSpectrum::reassignedMagnitude( double fracBinNum, long peakBinNumber )
 //	assumption.
 //
 double
-ReassignedSpectrum::reassignedPhase( double fracFreqSample, 
+ReassignedSpectrum::reassignedPhase( long idx,
+									 double fracFreqSample, 
 									 double timeCorrection ) const
 {
-	//	compute (interpolate) the phase at the reassigned frequency:
-	double alpha = fracFreqSample - floor( fracFreqSample );
-
-	double phaseBelow = arg( _transform[ floor( fracFreqSample ) ] );
-	double phaseAbove = arg( _transform[ ceil( fracFreqSample ) ] );
-
-	//	unwrap, assume that adjacent phase measurements near a
-	//	spectral peak cannot differ by more than Pi:
-	if ( fabs(phaseBelow - phaseAbove) > Pi )
-	{
-		if ( phaseBelow > phaseAbove ) {
-			phaseAbove += TwoPi;
-		}
-		else {
-			phaseAbove -= TwoPi;
-		}
-	}
-
-	double phase = ( alpha * phaseAbove ) + (( 1. - alpha ) * phaseBelow );
-				
-	//	correct for time offset:
+	double phase = arg( _transform[ idx ] );
 	phase += timeCorrection * fracFreqSample * TwoPi / _transform.size();
 	
 	return fmod( phase, TwoPi );
