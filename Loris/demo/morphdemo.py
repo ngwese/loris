@@ -151,7 +151,7 @@ fname = 'clarinet.dilated.sdif'
 print 'exporting sdif file:', fname, '(%s)' % time.ctime(time.time())
 loris.exportSdif( fname, clar )
 
-fname = 'cell.dilated.aiff'
+fname = 'cello.dilated.aiff'
 print 'synthesizing', fname, '(%s)' % time.ctime(time.time())
 loris.exportAiff( fname, loris.synthesize( cel, samplerate ), samplerate, 1, 16 )
 fname = 'cello.dilated.sdif'

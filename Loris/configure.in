@@ -22,7 +22,7 @@ PACKAGE=loris
 LORIS_MAJOR_VERSION=1
 LORIS_MINOR_VERSION=0
 LORIS_SUBMINOR_VERSION=0
-LORIS_BETA_VERSION=beta9
+LORIS_BETA_VERSION=beta10
 VERSION_STR="$LORIS_MAJOR_VERSION"."$LORIS_MINOR_VERSION""$LORIS_BETA_VERSION"
 AM_INIT_AUTOMAKE("$PACKAGE","$VERSION_STR")
 AC_MSG_RESULT(this is $PACKAGE$VERSION_STR)
@@ -458,6 +458,7 @@ dnl----------------------------------------------------------------
 AC_MSG_RESULT(----- Creating Output Files -----)
 
 AC_OUTPUT(Makefile doc/Makefile Makefile src/Makefile \
-mac/Makefile pi/Makefile scripting/Makefile test/Makefile)
+mac/Makefile pi/Makefile scripting/Makefile test/Makefile \
+demo/Makefile)
 
 AC_MSG_RESULT(----- End Of Configuration -----)
