@@ -87,14 +87,17 @@ readChunkHeader( std::istream & s, CkHeader & h )
 std::istream & 
 readApplicationSpecifcData( std::istream & s, SosEnvelopesCk & ck, unsigned long chunkSize )
 {
-	ck.header.id = ApplicationSpecificId;	
-	ck.header.size = chunkSize;
 	try 
 	{
-		BigEndian::read( s, 1, sizeof(Int_32), (char *)&ck.signature );
+		Int_32 tmp_signature;
+		BigEndian::read( s, 1, sizeof(Int_32), (char *)&tmp_signature );
 		
-		if ( ck.signature == SosEnvelopesId )
+		if ( tmp_signature == SosEnvelopesId )
 		{
+			ck.header.id = ApplicationSpecificId;	
+			ck.header.size = chunkSize;
+			ck.signature = SosEnvelopesId; 
+			
 			//	lookout! The format of this chunk is a mess, due
 			//	to obsolete stuff lying around!
 			BigEndian::read( s, 1, sizeof(Int_32), (char *)&ck.enhanced );
@@ -249,10 +252,22 @@ readMarkerData( std::istream & s, MarkerCk & ck, unsigned long chunkSize )
 			
 			//	need to add one to the length, because, like C-strings,
 			//	Pascal strings are null-terminated, but the null character
-			//	is _not_ counted in the length:
+			//	is _not_ counted in the length.
+			//
+			//	Correction? At least one web source says that Pascal strings
+			//	are _not_ null terminated, but are padded (with an extra byte
+			//	that is not part of the count) if necessary to make the total 
+			//	number of bytes even (that is, the char bytes, _plus_ the count). 
+			//
+			//	This way seems to work with all the files I have tried (Kyma and 
+			//	Peak, mostly) for AIFF and Spc.
+			int ncharbytes = namelength;
+			if ( ncharbytes%2 == 0 )
+				++ncharbytes;
 			static char tmpChars[256];
-			BigEndian::read( s, namelength+1, sizeof(char), tmpChars );
-			bytesToRead -= (namelength+1) * sizeof(char);
+			BigEndian::read( s, ncharbytes, sizeof(char), tmpChars );
+			bytesToRead -= ncharbytes * sizeof(char);
+			tmpChars[ namelength ] = '\0';
 		
 			//	convert to a string:
 			marker.markerName = std::string( tmpChars );
