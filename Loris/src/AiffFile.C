@@ -56,12 +56,36 @@ AiffFile::AiffFile( BinaryFile & file, vector< double > & buf ) :
 }
 
 // ---------------------------------------------------------------------------
+//	AiffFile constructor from filename
+// ---------------------------------------------------------------------------
+//	Read immediately.
+//
+AiffFile::AiffFile( const std::string & filename, vector< double > & buf ) :
+	SamplesFile( buf )
+{
+	read( filename );
+}
+
+// ---------------------------------------------------------------------------
 //	AiffFile copy constructor
 // ---------------------------------------------------------------------------
 //
 AiffFile::AiffFile( const SamplesFile & other ) :
 	SamplesFile( other )
 {
+}
+
+// ---------------------------------------------------------------------------
+//	read
+// ---------------------------------------------------------------------------
+//
+void
+AiffFile::read( const string & filename )
+{
+	BinaryFile f;
+	f.setBigEndian();
+	f.view( filename );
+	read(f);
 }
 
 // ---------------------------------------------------------------------------
@@ -86,6 +110,19 @@ AiffFile::read( BinaryFile & file )
 		ex.append( "Failed to read AIFF file." );
 		throw;
 	}
+}
+
+// ---------------------------------------------------------------------------
+//	write
+// ---------------------------------------------------------------------------
+//
+void
+AiffFile::write( const string & filename )
+{
+	BinaryFile f;
+	f.setBigEndian();
+	f.create( filename );
+	write(f);
 }
 
 // ---------------------------------------------------------------------------

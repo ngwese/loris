@@ -34,15 +34,18 @@ class AiffFile : public SamplesFile
 public:
 //	construction:
 	AiffFile( double rate, int chans, int bits, std::vector< double > & buf );
+	AiffFile( const std::string & filename, std::vector< double > & buf );
 	AiffFile( BinaryFile & file, std::vector< double > & buf );
 	
 	AiffFile( const SamplesFile & other );
 	
-//	defaults destructor is okay:
+//	compiler-generated destructor is okay:
 	//	~AiffFile( void );
 	
 //	reading and writing:
+	void read( const std::string & filename );
 	void read( BinaryFile & file );
+	void write( const std::string & filename );
 	void write( BinaryFile & file );
 	
 //	-- chunk types --
