@@ -32,7 +32,7 @@ dnl in AC_INIT above!
 LORIS_MAJOR_VERSION=1
 LORIS_MINOR_VERSION=2
 LORIS_SUBMINOR_VERSION=0
-LORIS_PRERELEASE_STR="beta4"
+LORIS_PRERELEASE_STR="beta5"
 LORIS_VERSION_STR="$PACKAGE_STRING$LORIS_PRERELEASE_STR"
 AC_SUBST(LORIS_MAJOR_VERSION)
 AC_SUBST(LORIS_MINOR_VERSION)
@@ -669,6 +669,7 @@ dnl----------------------------------------------------------------
 AC_MSG_RESULT(----- Creating Output Files -----)
 
 AC_OUTPUT(Makefile doc/Makefile src/Makefile \
-scripting/Makefile csound/Makefile test/Makefile )
+scripting/Makefile csound/Makefile test/Makefile \
+utils/Makefile )
 
 AC_MSG_RESULT(----- End Of Configuration -----)
