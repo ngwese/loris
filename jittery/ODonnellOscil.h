@@ -134,7 +134,11 @@ public:
 		insure that the indices are valid. Target frequency and bandwidth are
 		checked to prevent aliasing and bogus bandwidth enhancement.
 	 */
-
+	 
+//	-- helpers --
+private:
+	void updateCoherentPM( double gain, double coherence, int partialNum );
+	void updateIncoherentPM( double gain, double coherence );
 	 
 };	//	end of class Oscillator
 

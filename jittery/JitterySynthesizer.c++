@@ -318,7 +318,7 @@ Synthesizer::configureJitter( const Envelope & gain, const Envelope & coherence,
 double 
 Synthesizer::coherenceAt( double t, int pnum ) const 
 { 
-	return ( useJitter() && (pnum < jitterCutoff) ) ? 
+	return ( useJitter() && (pnum > 0) && (pnum <= jitterCutoff) ) ? 
 			jitterCoherence->valueAt(t) : 0.; 
 }
 
