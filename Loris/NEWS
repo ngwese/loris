@@ -26,6 +26,10 @@ build. Both are distributed as XML exports.
 from IRCAM. Earlier versions had problems that prevented Loris
 from using them as intended.
 
+- The Loris demo and Loris Mac source releases have 
+been terminated. The demo is now attached to the Loris
+web page (www.cerlsoundgroup.org/Loris), and the Mac
+source is now incldued with the full source distribution.
 
 -------------------------------------------------------
 changes since 1.0beta3 release:
