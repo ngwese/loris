@@ -2,37 +2,38 @@
 #
 #	Loris objects definition
 #
-OBJ_LORIS = AiffFile.o \
-			Analyzer.o \
-			AssociateBandwidth.o \
-			BinaryFile.o \
-			Breakpoint.o \
-			Dilator.o \
-			Distiller.o \
-			DistributeEnergy.o \
-			Exception.o \
-			Filter.o \
-			FourierTransform.o \
-			ImportPartials.o \
-			ImportLemur5.o \
-			KaiserWindow.o \
-			Map.o \
-			Morph.o \
-			Oscillator.o \
-			Partial.o \
-			ReassignedSpectrum.o \
-			SamplesFile.o \
-			Synthesizer.o \
-			endian.o \
-			ieee.o \
-			notifier.o \
-#			SpcFile.o \	FIX ME
-#			FloatingThreshold.o \
+CLASSES = $(TOP)/Loris/classes
+OBJ_LORIS = $(CLASSES)/AiffFile.o \
+			$(CLASSES)/Analyzer.o \
+			$(CLASSES)/AssociateBandwidth.o \
+			$(CLASSES)/BinaryFile.o \
+			$(CLASSES)/Breakpoint.o \
+			$(CLASSES)/Dilator.o \
+			$(CLASSES)/Distiller.o \
+			$(CLASSES)/DistributeEnergy.o \
+			$(CLASSES)/Exception.o \
+			$(CLASSES)/Filter.o \
+			$(CLASSES)/FourierTransform.o \
+			$(CLASSES)/ImportPartials.o \
+			$(CLASSES)/ImportLemur5.o \
+			$(CLASSES)/KaiserWindow.o \
+			$(CLASSES)/Map.o \
+			$(CLASSES)/Morph.o \
+			$(CLASSES)/Oscillator.o \
+			$(CLASSES)/Partial.o \
+			$(CLASSES)/ReassignedSpectrum.o \
+			$(CLASSES)/SamplesFile.o \
+			$(CLASSES)/Synthesizer.o \
+			$(CLASSES)/endian.o \
+			$(CLASSES)/ieee.o \
+			$(CLASSES)/notifier.o \
+#			$(CLASSES)/SpcFile.o \	FIX ME
+#			$(CLASSES)/FloatingThreshold.o \
 
 #
 #	fftw:
 #
-fftw_prefix = /usr/people/kfitz/FFTW
+fftw_prefix = $(TOP)/FFTW
 
 #
 #	flags:

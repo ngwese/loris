@@ -2,7 +2,7 @@
 #
 #	Makefile for building the Loris class library.
 #
-
+TOP = ../..
 include Rules.loris
 
 #
