@@ -50,7 +50,7 @@ Breakpoint::Breakpoint( double f, double a, double b, double p ) :
 }
 
 // ---------------------------------------------------------------------------
-//	Breakpoint constructor
+//	addNoise
 // ---------------------------------------------------------------------------
 //	Compute new amplitude and bandwidth values. Don't remove (add negative)  
 //	noise energy in excess of the current noise energy.
@@ -58,26 +58,26 @@ Breakpoint::Breakpoint( double f, double a, double b, double p ) :
 void 
 Breakpoint::addNoise( double noise )
 {
+	//	compute current energies:
 	double e = amplitude() * amplitude();	//	current total energy
-	double n = e * bandwidth();			//	current noise energy
+	double n = e * bandwidth();				//	current noise energy
 	
-	if ( n < noise ) {
-		n = 0;
-		e -= n;
+	//	guard against divide-by-zero, and don't allow
+	//	the sinusoidal energy to decrease:
+	if ( n + noise > 0. ) 
+	{
+		//	if new noise energy is positive, total
+		//	energy must also be positive:
+		Assert( e + noise > 0 );
+		setBandwidth( (n + noise) / (e + noise) );
+		setAmplitude( std::sqrt(e + noise) );
 	}
-	else {
-		n += noise;
-		e += noise;
-	}
-	
-	//	guard against divide-by-zero:
-	if ( e > 0. ) {
-		setBandwidth( ( n + noise ) / ( e + noise ) );
-		setAmplitude( std::sqrt( e + noise ) );
-	}
-	else {
+	else 
+	{
+		//	if new noise energy is negative, leave 
+		//	all sinusoidal energy:
 		setBandwidth( 0. );
-		setAmplitude( 0. );
+		setAmplitude( std::sqrt( e - n ) );
 	}
 }
 
