@@ -64,7 +64,7 @@ class AnalyzerState
 
 	double _sampleRate;
 	
-	std::vector< Partial * > _oldgoobers;		//	yuck?
+	std::vector< Partial * > _eligiblePartials;		//	yuck?
 	
 public:
 //	construction:
@@ -80,7 +80,7 @@ public:
 	
 	double sampleRate(void) { return _sampleRate; }
 
-	std::vector< Partial * > & goobers(void) { return _oldgoobers; }
+	std::vector< Partial * > & eligiblePartials(void) { return _eligiblePartials; }
 	
 };	//	end of class AnalyzerState
 
@@ -462,7 +462,7 @@ void
 Analyzer::formPartials( std::list< Breakpoint > & frame, double /* frameTime */ , 
 						AnalyzerState & state )
 {
-	std::vector< Partial * > newgoobers;
+	std::vector< Partial * > newlyEligible;
 	
 	//	frequency-sort the frame:
 	frame.sort( BreakpointUtils::less_frequency() );
@@ -474,23 +474,23 @@ Analyzer::formPartials( std::list< Breakpoint > & frame, double /* frameTime */ 
 		const Breakpoint & peak = *bpIter;
 		const double peakTime = state.peakTimeCache()[ peak.frequency() ];
 
-		//	Loop over all eligible Partials (goobers), 
+		//	Loop over all eligible Partials 
 		//	find the candidate Partials  nearest in frequency 
 		//	to peak.
 		//
-		//	Since we build the goobers collection in the
+		//	Since we build the eligiblePartials collection in the
 		//	order that we process Breakpoints in the frame, 
-		//	increasing-frequency order, the goobers will also
+		//	increasing-frequency order, the eligiblePartials will also
 		//	be sorted in order of increasing frequency of the
 		//	last Breakpoint.)
 		//
 		//	Find the lowest end-frequency Partial that is
 		//	higher in frequency than peak, if such a Partial
-		//	exists in goobers:
+		//	exists in eligiblePartials:
 		//
 		//	(this initializer could probably be outside this loop)
-		std::vector< Partial * >::iterator candidate = state.goobers().begin();
-		while ( candidate != state.goobers().end() &&
+		std::vector< Partial * >::iterator candidate = state.eligiblePartials().begin();
+		while ( candidate != state.eligiblePartials().end() &&
 				(*candidate)->frequencyAt(peakTime) < peak.frequency() )
 		{
 			++candidate;			
@@ -499,17 +499,17 @@ Analyzer::formPartials( std::list< Breakpoint > & frame, double /* frameTime */ 
 		//	now candidate points to the end or to 
 		//	the lowest-frequency Partial above this
 		//	peak's frequency, remember this Partial,
-		//	and its predecessor in goobers, the highest
+		//	and its predecessor in eligiblePartials, the highest
 		//	end-frequency Partial lower in frequency 
 		//	than peak, if such a Partial exists in 
-		//	goobers:
+		//	eligiblePartials:
 		Partial * firstChoice = NULL, * secondChoice = NULL;
-		if ( candidate != state.goobers().end() )
+		if ( candidate != state.eligiblePartials().end() )
 		{
 			secondChoice = *candidate;
 		}
 		
-		if ( candidate != state.goobers().begin() )
+		if ( candidate != state.eligiblePartials().begin() )
 		{
 			--candidate;
 			firstChoice = *candidate;
@@ -518,9 +518,9 @@ Analyzer::formPartials( std::list< Breakpoint > & frame, double /* frameTime */ 
 		//	it may be that the candidate below ("firstChoice")
 		//	has already been matched to a peak in this frame,
 		//	in which case firstChoice is the last element of
-		//	newgoobers and we should set firstChoice to secondChoice
+		//	newlyEligible and we should set firstChoice to secondChoice
 		//	and secondChoice to NULL:
-		if ( newgoobers.size() > 0 && newgoobers.back() == firstChoice )
+		if ( newlyEligible.size() > 0 && newlyEligible.back() == firstChoice )
 		{
 			firstChoice = secondChoice;
 			secondChoice = NULL;
@@ -551,7 +551,7 @@ Analyzer::formPartials( std::list< Breakpoint > & frame, double /* frameTime */ 
 			 distance(*firstChoice, peak) > freqDrift() )
 		{
 			spawnPartial( peakTime, peak );
-			newgoobers.push_back( & partials().back() );
+			newlyEligible.push_back( & partials().back() );
 			continue;
 		}
 		
@@ -578,7 +578,7 @@ Analyzer::formPartials( std::list< Breakpoint > & frame, double /* frameTime */ 
 			 thisdist <= distance( *firstChoice, *peakBelow ) /* (4) */ ) 
 		{
 			firstChoice->insert( peakTime, peak );
-			newgoobers.push_back( &(*firstChoice) );
+			newlyEligible.push_back( &(*firstChoice) );
 			continue;
 		}
 	
@@ -592,7 +592,7 @@ Analyzer::formPartials( std::list< Breakpoint > & frame, double /* frameTime */ 
 			 distance(*secondChoice, peak) > freqDrift() )
 		{
 			spawnPartial( peakTime, peak );
-			newgoobers.push_back( & partials().back() );
+			newlyEligible.push_back( & partials().back() );
 			continue;
 		}
 		
@@ -616,18 +616,18 @@ Analyzer::formPartials( std::list< Breakpoint > & frame, double /* frameTime */ 
 			 distance( *secondChoice, peak ) < distance( *secondChoice, *other ) )
 		{
 			secondChoice->insert( peakTime, peak );
-			newgoobers.push_back( &(*secondChoice) );
+			newlyEligible.push_back( &(*secondChoice) );
 		}
 		else //	oh well, spawn another
 		{
 			spawnPartial( peakTime, peak );
-			newgoobers.push_back( & partials().back() );
+			newlyEligible.push_back( & partials().back() );
 		}
 		
 		//	done.		
 	}			 
 	 	
-	 state.goobers() = newgoobers;
+	 state.eligiblePartials() = newlyEligible;
 }
 
 #else //	not def sucks
@@ -635,7 +635,7 @@ void
 Analyzer::formPartials( std::list< Breakpoint > & frame, double /* frameTime */, 
 						AnalyzerState & state )
 {
-	std::vector< Partial * > newgoobers;
+	std::vector< Partial * > newlyEligible;
 	
 	//	frequency-sort the frame:
 	frame.sort( BreakpointUtils::less_frequency() );
@@ -651,8 +651,8 @@ Analyzer::formPartials( std::list< Breakpoint > & frame, double /* frameTime */,
 		//	that is nearest in frequency to the Peak:
 		Partial * nearest = NULL;
 		std::vector< Partial * >::iterator candidate;
-		for ( candidate = state.goobers().begin();
-			  candidate != state.goobers().end();
+		for ( candidate = state.eligiblePartials().begin();
+			  candidate != state.eligiblePartials().end();
 			  ++candidate )
 		{
 			//	remember this Partial if it is nearer in frequency 
@@ -684,16 +684,16 @@ Analyzer::formPartials( std::list< Breakpoint > & frame, double /* frameTime */,
 			 ( bpIter != frame.begin() && thisdist > distance( *nearest, *prev ) ) /* (4) */ ) 
 		{
 			spawnPartial( peakTime, peak );
-			newgoobers.push_back( & partials().back() );
+			newlyEligible.push_back( & partials().back() );
 		}
 		else 
 		{
 				nearest->insert( peakTime, peak );
-				newgoobers.push_back( &(*nearest) );
+				newlyEligible.push_back( &(*nearest) );
 		}
 	}			 
 	 	
-	 state.goobers() = newgoobers;
+	 state.eligiblePartials() = newlyEligible;
 }
 
 #endif	//	def sucks
