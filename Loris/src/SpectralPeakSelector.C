@@ -36,6 +36,7 @@
 	#include <config.h>
 #endif
 
+#include <algorithm>
 #include <cmath>
 #include <utility>
 #include <vector>
