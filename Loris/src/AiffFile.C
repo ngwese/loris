@@ -165,7 +165,7 @@ AiffFile::write( const std::string & filename, unsigned int bps )
 		Throw( InvalidArgument, "Invalid bits-per-sample." );
 	}
 
-	std::ofstream s( filename.c_str() );
+	std::ofstream s( filename.c_str(), std::ofstream::binary );
 	if ( ! s )
 	{
 		std::string s = "Could not create file \"";
@@ -356,7 +356,7 @@ AiffFile::readAiffData( const std::string & filename )
 
 	try 
 	{
-		std::ifstream s( filename.c_str() );
+		std::ifstream s( filename.c_str(), std::ifstream::binary );
 	
 		//	the Container chunk must be first, read it:
 		readChunkHeader( s, containerChunk.header );

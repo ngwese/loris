@@ -64,6 +64,13 @@
 	const double Pi = 3.14159265358979324;
 #endif
 
+
+//	Define this if SpcFiles should always have a number of 
+//	Partials that is a power of two. Cannot decide whether 
+//	or not they should. Lip?
+#define PO2
+
+
 using std::exp;
 using std::log;
 using std::sqrt;
@@ -211,7 +218,7 @@ SpcFile::write( const std::string & filename, bool enhanced, double endApproachT
 	if ( endApproachTime < 0 )
 		Throw( InvalidArgument, "End Approach Time may not be negative." );
 
-	std::ofstream s( filename.c_str() );
+	std::ofstream s( filename.c_str(), std::ofstream::binary );
 	if ( ! s )
 	{
 		std::string s = "Could not create file \"";
@@ -411,9 +418,6 @@ SpcFile::setSampleRate( double rate )
 
 #pragma mark -- helpers --
 
-
-#define PO2
-
 // ---------------------------------------------------------------------------
 //	growPartials 
 // ---------------------------------------------------------------------------
@@ -604,10 +608,12 @@ static void afbp( const Partial & p, double time, double phaseRefTime,
 //	frequency occupies the bottom 16 bits.
 //
 //	In rval, the log of the noise magnitude occupies the top 8 bits, the scaled
-//	linear phase occupies the bottom 16 bits.  
+//	linear phase occupies the bottom 16 bits. 
+//
+//	lval and rval are pointers to 3-bytes each, filled in by this function.
 //
 static void pack( double amp, double freq, double bw, double phase,
-				  unsigned long &lval, unsigned long &rval )
+				  Byte * lbytes, Byte * rbytes )
 {	
 
 // Set phase for one hop earlier, so that Kyma synthesis target phase is correct.
@@ -633,46 +639,36 @@ static void pack( double amp, double freq, double bw, double phase,
 // Pack lval:	
 // 7 bits of log-sine-amplitude with 24 bits of zero to right.
 // 16 bits of log-frequency with 8 bits of zero to right.
+	unsigned long lval;
 	lval = ( envLog( theSineMag ) & 0xFE00 ) << 15;
 	lval |= ( envLog( zeroToOneFreq ) & 0xFFFF ) << 8;
+	
+//	store in lbytes:
+//	store the sample bytes in big endian order, 
+//	most significant byte first:
+	const int BytesPerSample = 3;
+	for ( int j = BytesPerSample; j > 0; --j )
+	{
+		//	mask the lowest byte after shifting:
+		*(lbytes++) = 0xFF & (lval >> (8*(j-1)));
+	}
 
 // Pack rval:
 // 7 bits of log-noise-amplitude with 24 bits of zero to right.
 // 16 bits of phase with 8 bits of zero to right.
+	unsigned long rval;
 	rval = ( envLog( theNoiseMag ) & 0xFE00 ) << 15;
 	rval  |= ( (unsigned long) ( zeroToOnePhase * 0xFFFF ) ) << 8;
-}
 
-//#define OLDYUK
-#ifdef OLDYUK
-// ---------------------------------------------------------------------------
-//	select
-// ---------------------------------------------------------------------------
-//	Special select function that returns a pointer to the Partial
-//	having the specified label, or NULL if there is not such Partial
-//	in the list. 
-//
-static const Partial * select( const SpcFile::partials_type & partials, 
-							   int label, int firstFrameFlag )
-{
-#ifndef PO2
-	if ( label > partials.size() )
-		return 0;
-#else
-	Assert( label <= partials.size() );
-#endif
-	const Partial & ret = partials[ label - 1 ];
-		
-	//	there should only be one of such Partial, verify this on first frame:
-	if ( firstFrameFlag )
+//	store in rbytes:
+//	store the sample bytes in big endian order, 
+//	most significant byte first:
+	for ( int j = BytesPerSample; j > 0; --j )
 	{
-		if ( std::count_if( partials.begin(), partials.end(), PartialUtils::label_equals(label)) != 1 )
-			Throw( FileIOException, "Partials are not distilled." );
+		//	mask the lowest byte after shifting:
+		*(rbytes++) = 0xFF & (rval >> (8*(j-1)));
 	}
-	
-	return &ret;
 }
-#endif
 
 // ---------------------------------------------------------------------------
 //	packEnvelopes
@@ -693,23 +689,12 @@ static void packEnvelopes( const SpcFile::partials_type & partials,
 	bytes.reserve( dataSize );
 	
 	// get the reference partial; the lowest-nonzero-labeled partial with any breakpoints
-	//
-#ifdef OLDYUK
-	int refLabel = 0;				// label of reference partial; always use fundamental
-	const Partial * refPar = NULL;	// pointer to reference partial
-	do {
-		Assert( refLabel < spcEI.fileNumPartials );
-		refPar = select( partials, ++refLabel, false );
-	} while ( refPar == NULL || refPar->size() == 0 );
-	//
-#else
 	SpcFile::partials_type::const_iterator pos = 
 		std::find_if( partials.begin(), partials.end(), notEmpty );
 	Assert( pos != partials.end() );
 	const Partial & refPar = *pos;
 	int refLabel = refPar.label();
 	Assert( (refLabel - 1) == (pos - partials.begin()) );
-#endif
 	
 	// write out one frame at a time:
 	for (double tim = spcEI.startTime; tim <= spcEI.endTime; tim += spcEI.hop ) 
@@ -718,28 +703,6 @@ static void packEnvelopes( const SpcFile::partials_type & partials,
 		//  (this loop extends to the pad partials)
 		for (unsigned int label = 1; label <= spcEI.fileNumPartials; ++label ) 
 		{
-#ifdef OLDYUK
-			// find partial with the correct label
-			const Partial * pcorrect = select( partials, label, tim == spcEI.startTime );
-		
-			// if no such partial, frequency multiply the reference partial
-			double freqMult = 1.;			// frequency multiplier for partial	
-			double magMult  = 1.;			// magnitude multiplier for partial	
-			if ( pcorrect == NULL || pcorrect->size() == 0 ) 
-			{
-				pcorrect = refPar;
-				freqMult = (double) label / (double) refLabel; 
-				magMult = 0.0;
-			} 
-			
-			//  find the reference time for the phase
-			double phaseRefTime = getPhaseRefTime( label, *pcorrect, tim );
-			
-			//  find amplitude, frequency, bandwidth, phase value
-			double amp, freq, bw, phase;
-			afbp( *pcorrect, tim, phaseRefTime, magMult, freqMult, amp, freq, bw, phase);
-
-#else
 			double amp, freq, bw, phase;
 			// 	find partial with the correct label
 			// 	if partial with the correct is empty, 
@@ -766,21 +729,18 @@ static void packEnvelopes( const SpcFile::partials_type & partials,
 				//  find amplitude, frequency, bandwidth, phase value
 				afbp( partials[ label - 1 ], tim, phaseRefTime, 1, 1, amp, freq, bw, phase );
 			}
-#endif
 			
 			//	pack log amplitude and log frequency into 24-bit lval,
 			//  log bandwidth and phase into 24-bit rval:
-			unsigned long lval, rval;
-			pack( amp, freq, bw, phase, lval, rval);
+			Byte leftbytes[3], rightbytes[3];
+			pack( amp, freq, bw, phase, leftbytes, rightbytes);
 	
 			//	pack integer samples into the Byte vector without 
-			//	byte swapping, they are already correctly packed: 
-			char * leftbytes = BigEndian::ulongTo24(&lval);
+			//	byte swapping, they are already correctly packed
+			//	(see pack above): 
 			bytes.insert( bytes.end(), leftbytes, leftbytes + 3 );
-			
 			if ( spcEI.enhanced )
 			{
-				char * rightbytes = BigEndian::ulongTo24(&rval);
 				bytes.insert( bytes.end(), rightbytes, rightbytes + 3 );
 			}				
 		}
@@ -1067,12 +1027,32 @@ static unsigned long getNumSampleFrames( void )
 //	Add ehanced-spc breakpoint to existing Loris partials.
 //
 static void
-processEnhancedPoint( const int left, const int right, 
+processEnhancedPoint( Byte * leftbytes, Byte * rightbytes, 
 					  const double frameTime, 
 					  Partial & par )
 {
+//	represent bytes as 24 bit integers:
+	const int BytesPerSample = 3;	
+
+	//	assign the leading byte, so that the sign
+	//	is preserved:
+	long left = static_cast<char>(*(leftbytes++));
+	for ( int j = 1; j < BytesPerSample; ++j )
+	{
+		//	OR bytes after the most significant, so
+		//	that their sign is ignored:
+		left = (left << 8) + (unsigned char)*(leftbytes++);
+	}
+	
+	long right = static_cast<char>(*(rightbytes++));
+	for ( int j = 1; j < BytesPerSample; ++j )
+	{
+		//	OR bytes after the most significant, so
+		//	that their sign is ignored:
+		right = (right << 8) + (unsigned char)*(rightbytes++);
+	}
 //
-// Unpack values.  Counterpart to ExportSpc::packLeft() and ExportSpc::packRight().
+// Unpack values.  
 //
 	double freq = 		envExp( (left >> 8)   & 0xffff ) * 22050.0;
 	double sineMag =	envExp( (left >> 15)  & 0xfe00 );
@@ -1106,12 +1086,25 @@ processEnhancedPoint( const int left, const int right,
 //	Add sine-only spc breakpoint to existing Loris partials.
 //
 static void
-processSineOnlyPoint( const int packed, 
-				const double frameTime, 
-				Partial & par )
+processSineOnlyPoint( Byte * bytes, 
+					  const double frameTime, 
+					  Partial & par )
 {
+//	represent bytes as 24 bit integers:
+	const int BytesPerSample = 3;	
+
+	//	assign the leading byte, so that the sign
+	//	is preserved:
+	long packed = static_cast<char>(*(bytes++));
+	for ( int j = 1; j < BytesPerSample; ++j )
+	{
+		//	OR bytes after the most significant, so
+		//	that their sign is ignored:
+		packed = (packed << 8) + (unsigned char)*(bytes++);
+	}
+
 //
-// Unpack values.  Counterpart to ExportSpc::packLeft() and ExportSpc::packRight().
+// Unpack values.  
 //
 	double freq = 		envExp( (packed >> 8)   & 0xffff ) * 22050.0;
 	double amp =		envExp( (packed >> 15)  & 0xfe00 );
@@ -1141,7 +1134,7 @@ SpcFile::readSpcData( const std::string & filename )
 
 	try 
 	{
-		std::ifstream s( filename.c_str() );
+		std::ifstream s( filename.c_str(), std::ifstream::binary );
 	
 		//	the Container chunk must be first, read it:
 		readChunkHeader( s, containerChunk.header );
@@ -1242,7 +1235,7 @@ SpcFile::readSpcData( const std::string & filename )
 	if ( numPartials < MinNumPartials || numPartials > LargestLabel )
 			Throw( FileIOException, "Bad number of partials in SPC file." );
 	
-	
+	/*
 	//	it seems absurd to convert the samples to
 	//	doubles, just to convert them back again
 	std::vector< double > samples;
@@ -1254,28 +1247,42 @@ SpcFile::readSpcData( const std::string & filename )
 		notifier << "Header says there should be " << commonChunk.sampleFrames
 				 << "." << endl;
 	}
-
+	*/
+	
+	const int BytesPerSample = 3;
+	const int PredictedNumBytes = 
+		BytesPerSample * numFrames * fileNumPartials( numPartials ) * (enhanced)?(2):(1);
+	if ( soundDataChunk.sampleBytes.size() != PredictedNumBytes )
+	{
+		notifier << "Found " << soundDataChunk.sampleBytes.size() << " bytes of "
+				 << commonChunk.bitsPerSample << "-bit sample data." << endl;
+		notifier << "Header says there should be " << PredictedNumBytes
+				 << "." << endl;
+	}
 
 	//  process SPC data points
 	partials_.clear();
 	growPartials( numPartials );
-	double *vpt = &(samples[0]);
+	Byte * bytes = &soundDataChunk.sampleBytes.front();
 	for ( int frame = 0; frame < numFrames; ++frame ) 
 	{
 		for ( int partial = 0; partial < fileNumPartials( numPartials ); ++partial )
 		{
+			
 			if (enhanced)
 			{
-				int left = int ( LONG_MAX * *vpt++ + 0.5 );
-				int right = int ( LONG_MAX * *vpt++ + 0.5 );
+				Byte * lbytes = bytes;
+				bytes += BytesPerSample;
+				Byte * rbytes = bytes;
+				bytes += BytesPerSample;
 				if ( partial < partials_.size() )
-					processEnhancedPoint( left, right, frame * hop, partials_[partial] );
+					processEnhancedPoint( lbytes, rbytes, frame * hop, partials_[partial] );
 			}
 			else
 			{
-				int packed = int ( LONG_MAX * *vpt++ + 0.5 );
 				if ( partial < partials_.size() )
-					processSineOnlyPoint( packed, frame * hop, partials_[partial] );
+					processSineOnlyPoint( bytes, frame * hop, partials_[partial] );
+				bytes += BytesPerSample;
 			}
 		}
 	}

@@ -503,6 +503,8 @@ configureSoundDataCk( SoundDataCk & ck, const std::vector< double > & samples,
 	ck.offset = 0;
 	ck.blockSize = 0;
 	
+	//	convert the samples to integers stored in 
+	//	big endian order in the byte vector:
 	convertSamplesToBytes( samples, ck.sampleBytes, bps );
 }
 
@@ -676,7 +678,7 @@ writeSamples( std::ostream & s, const std::vector< Byte > & bytes )
 
 	//	write integer samples without byte swapping,
 	//	the bytes were constructed in the correct
-	//	big endian order: 
+	//	big endian order (see convertSamplesToBytes): 
 	BigEndian::write( s, bytes.size(), 1, (char*)(&bytes[0]) );
 	
 	return s;
@@ -751,7 +753,7 @@ convertBytesToSamples( const std::vector< Byte > & bytes,
 	{
 		//	assign the leading byte, so that the sign
 		//	is preserved:
-		samp = (char)*(bytePos++);
+		samp = static_cast<char>(*(bytePos++));
 		for ( size_type j = 1; j < bytesPerSample; ++j )
 		{
 			Assert( bytePos != bytes.end() );
@@ -777,6 +779,11 @@ convertBytesToSamples( const std::vector< Byte > & bytes,
 //	samples as are stored in the samples vector, and any prior
 //	contents are overwritten.
 //
+//	This formats the samples as big endian bytes, that is, the most
+//	significant bytes are stored earlier in the byte vector, so 
+//	no byte-swapping should be performed when this byte array is 
+//	written to disk, and moreover this function is specific to 
+//	big-endian data storage (like AIFF files).
 void
 convertSamplesToBytes( const std::vector< double > & samples, 
 					   std::vector< Byte > & bytes, unsigned int bps )
@@ -807,13 +814,8 @@ convertSamplesToBytes( const std::vector< double > & samples,
 	{
 		samp = long(*(samplePos++) * maxSample);
 		
-		//	should we clip? Seems like this isn't the place.
-		/*
-		if ( samp <= maxSamp )
-			samp = maxSamp -1;
-		else if ( samp < -maxSamp )
-			samp = -maxSamp;
-		*/
+		//	store the sample bytes in big endian order, 
+		//	most significant byte first:
 		for ( size_type j = bytesPerSample; j > 0; --j )
 		{
 			//Assert( bytePos != bytes.end() );
