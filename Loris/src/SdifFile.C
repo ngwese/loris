@@ -81,10 +81,12 @@ SDIF spec: http://www.cnmat.berkeley.edu/SDIF/
 #include <Partial.h>
 #include <PartialList.h>
 #include <PartialPtrs.h>
-#include <list>
-#include <vector>
+
 #include <cmath>
+#include <cstdio>
+#include <list>
 #include <string>
+#include <vector>
 
 #if defined(HAVE_M_PI) && (HAVE_M_PI)
 	const double Pi = M_PI;
@@ -92,19 +94,11 @@ SDIF spec: http://www.cnmat.berkeley.edu/SDIF/
 	const double Pi = 3.14159265358979324;
 #endif
 
-#if defined(WORDS_BIGENDIAN)
-	//	WORDS_BIGENDIAN is defined in config.h, determined 
-	//	at configure-time, LITTLE_ENDIAN might be erroneously
-	//	defined in some standard header
-	#undef LITTLE_ENDIAN	
-#elif !defined(WORDS_BIGENDIAN) && !defined(LITTLE_ENDIAN)
-	//	if no config, guess LITTLE_ENDIAN
-	#define LITTLE_ENDIAN 1
-#endif
+//extern "C" {
+//#include <stdio.h>
+//}
 
-extern "C" {
-#include <stdio.h>
-}
+using namespace std;
 
 //	begin namespace
 namespace Loris {
@@ -299,7 +293,10 @@ static char *error_string_array[] = {
 //	CNMAT SDIF little endian machinery.
 // ---------------------------------------------------------------------------
 
-#ifdef LITTLE_ENDIAN
+//	WORDS_BIGENDIAN is defined (or not) in config.h, determined 
+//	at configure-time, changed from test of LITTLE_ENDIAN
+//	which might be erroneously defined in some standard header.
+#if !defined(WORDS_BIGENDIAN)
 #define BUFSIZE 4096
 static	char	p[BUFSIZE];
 #endif
@@ -311,7 +308,7 @@ static SDIFresult SDIF_Write1(const void *block, size_t n, FILE *f) {
 
 
 static SDIFresult SDIF_Write2(const void *block, size_t n, FILE *f) {
-#ifdef LITTLE_ENDIAN
+#if !defined(WORDS_BIGENDIAN)
     SDIFresult r;
     const char *q = (const char *)block;
     int	i, m = 2*n;
@@ -338,7 +335,7 @@ static SDIFresult SDIF_Write2(const void *block, size_t n, FILE *f) {
 
 
 static SDIFresult SDIF_Write4(const void *block, size_t n, FILE *f) {
-#ifdef LITTLE_ENDIAN
+#if !defined(WORDS_BIGENDIAN)
     SDIFresult r;
    const char *q = (const char *)block;
     int i, m = 4*n;
@@ -365,7 +362,7 @@ static SDIFresult SDIF_Write4(const void *block, size_t n, FILE *f) {
 
 
 static SDIFresult SDIF_Write8(const void *block, size_t n, FILE *f) {
-#ifdef LITTLE_ENDIAN
+#if !defined(WORDS_BIGENDIAN)
     SDIFresult r;
    const char *q = (const char *)block;
     int i, m = 8*n;
@@ -401,7 +398,7 @@ static SDIFresult SDIF_Read1(void *block, size_t n, FILE *f) {
 
 static SDIFresult SDIF_Read2(void *block, size_t n, FILE *f) {
 
-#ifdef LITTLE_ENDIAN
+#if !defined(WORDS_BIGENDIAN)
     SDIFresult r;
     char *q = (char *)block;
     int i, m = 2*n;
@@ -428,7 +425,7 @@ static SDIFresult SDIF_Read2(void *block, size_t n, FILE *f) {
 
 
 static SDIFresult SDIF_Read4(void *block, size_t n, FILE *f) {
-#ifdef LITTLE_ENDIAN
+#if !defined(WORDS_BIGENDIAN)
     SDIFresult r;
     char *q = (char *)block;
     int i, m = 4*n;
@@ -458,7 +455,7 @@ static SDIFresult SDIF_Read4(void *block, size_t n, FILE *f) {
 
 
 static SDIFresult SDIF_Read8(void *block, size_t n, FILE *f) {
-#ifdef LITTLE_ENDIAN
+#if !defined(WORDS_BIGENDIAN)
     SDIFresult r;
     char *q = (char *)block;
     int i, m = 8*n;
@@ -556,7 +553,7 @@ static void SDIF_FillGlobalHeader(SDIF_GlobalHeader *h) {
 }
 
 static SDIFresult SDIF_WriteGlobalHeader(const SDIF_GlobalHeader *h, FILE *f) {
-#ifdef LITTLE_ENDIAN
+#if !defined(WORDS_BIGENDIAN)
     SDIFresult r;
     if (r = SDIF_Write1(&(h->SDIF), 4, f)) return r;
     if (r = SDIF_Write4(&(h->size), 1, f)) return r;
@@ -571,7 +568,7 @@ static SDIFresult SDIF_WriteGlobalHeader(const SDIF_GlobalHeader *h, FILE *f) {
 }
 
 static SDIFresult SDIF_ReadFrameHeader(SDIF_FrameHeader *fh, FILE *f) {
-#ifdef LITTLE_ENDIAN
+#if !defined(WORDS_BIGENDIAN)
     SDIFresult r;
 
     if (SDIF_Read1(&(fh->frameType),4,f)) {
@@ -597,13 +594,13 @@ static SDIFresult SDIF_ReadFrameHeader(SDIF_FrameHeader *fh, FILE *f) {
 	}
     }
     return ESDIF_READ_FAILED;
-#endif /* LITTLE_ENDIAN */
+#endif /* ! WORDS_BIGENDIAN */
 }
 
 
 static SDIFresult SDIF_WriteFrameHeader(const SDIF_FrameHeader *fh, FILE *f) {
 
-#ifdef LITTLE_ENDIAN
+#if !defined(WORDS_BIGENDIAN)
     SDIFresult r;
 
     if (r = SDIF_Write1(&(fh->frameType),4,f)) return r;
@@ -670,7 +667,7 @@ static SDIFresult SDIF_SkipFrame(const SDIF_FrameHeader *head, FILE *f) {
 //	CNMAT SDIF matrix headers.
 // ---------------------------------------------------------------------------
 static SDIFresult SDIF_ReadMatrixHeader(SDIF_MatrixHeader *m, FILE *f) {
-#ifdef LITTLE_ENDIAN
+#if !defined(WORDS_BIGENDIAN)
     SDIFresult r;
     if (r = SDIF_Read1(&(m->matrixType),4,f)) return r;
     if (r = SDIF_Read4(&(m->matrixDataType),1,f)) return r;
@@ -688,7 +685,7 @@ static SDIFresult SDIF_ReadMatrixHeader(SDIF_MatrixHeader *m, FILE *f) {
 }
 
 static SDIFresult SDIF_WriteMatrixHeader(const SDIF_MatrixHeader *m, FILE *f) {
-#ifdef LITTLE_ENDIAN
+#if !defined(WORDS_BIGENDIAN)
     SDIFresult r;
     if (r = SDIF_Write1(&(m->matrixType),4,f)) return r;
     if (r = SDIF_Write4(&(m->matrixDataType),1,f)) return r;
@@ -747,7 +744,7 @@ static SDIFresult SDIF_ReadMatrixData(void *putItHere, FILE *f, const SDIF_Matri
     char paddingBuffer[8];  /* Most padding any matrix could have. */
     SDIFresult r;
     
-#ifdef LITTLE_ENDIAN
+#if !defined(WORDS_BIGENDIAN)
     switch (datumSize) {
         case 1:
             if (r = SDIF_Read1(putItHere, numItems, f)) return r;
@@ -790,7 +787,7 @@ static SDIFresult SDIF_WriteMatrixData(FILE *f, const SDIF_MatrixHeader *head, v
     size_t datumSize = (size_t) SDIF_GetMatrixDataTypeSize(head->matrixDataType);
     size_t numItems = (size_t) (head->rowCount * head->columnCount);
 
-#ifdef LITTLE_ENDIAN
+#if !defined(WORDS_BIGENDIAN)
 	SDIFresult r;
     switch (datumSize) {
         case 1:
