@@ -56,7 +56,7 @@ loris.channelize( clar, loris.createFreqReference( clar, 20, 0, 1000 ), 1 )
 loris.distill( clar )
 
 print "there's temporary junk in here!"
-Usetemporaryjunk = 1
+Usetemporaryjunk = 0
 if Usetemporaryjunk:
 	print "using temporary junk!"
 

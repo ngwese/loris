@@ -337,16 +337,16 @@ public:
 		}
 		
 		//	attribute access:
-		double frequency( void ) const { return _iter->frequency(); }
-		double amplitude( void ) const { return _iter->amplitude(); }
-		double bandwidth( void ) const { return _iter->bandwidth(); }
-		double phase( void ) const { return _iter->phase(); }
+		double frequency( void ) const { return _iter.breakpoint().frequency(); }
+		double amplitude( void ) const { return _iter.breakpoint().amplitude(); }
+		double bandwidth( void ) const { return _iter.breakpoint().bandwidth(); }
+		double phase( void ) const { return _iter.breakpoint().phase(); }
 		
 		//	attribute mutation:
-		void setFrequency( double x ) { _iter->setFrequency(x); }
-		void setAmplitude( double x ) { _iter->setAmplitude(x); }
-		void setBandwidth( double x ) { _iter->setBandwidth(x); }
-		void setPhase( double x ) { _iter->setPhase(x); }
+		void setFrequency( double x ) { _iter.breakpoint().setFrequency(x); }
+		void setAmplitude( double x ) { _iter.breakpoint().setAmplitude(x); }
+		void setBandwidth( double x ) { _iter.breakpoint().setBandwidth(x); }
+		void setPhase( double x ) { _iter.breakpoint().setPhase(x); }
 
 		//	time:
 		double time( void ) const { return _iter.time(); }

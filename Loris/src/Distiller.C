@@ -93,7 +93,7 @@ static void distill_aux( const Partial & src,
 			//	this loop, this Breakpoint will not be part of 
 			//	the distilled Partial.
 			double a = it->amplitudeAt( pIter.time() );
-			if ( a > pIter->amplitude() ) 
+			if ( a > pIter.breakpoint().amplitude() ) 
 				break;	
 			else 
 				xse += a*a;
@@ -108,7 +108,7 @@ static void distill_aux( const Partial & src,
 		if ( it == end ) 
 		{
 			//	create and insert the new Breakpoint:
-			Breakpoint newBp( *pIter );
+			Breakpoint newBp( pIter.breakpoint() );
 			newBp.addNoise( xse );
 			dest.insert( pIter.time(), newBp );
 			

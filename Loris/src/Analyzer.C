@@ -493,7 +493,7 @@ static inline double distance( const Partial & partial,
 {
 	//	need a more efficient way to check for invalid Partials!
 	Assert(partial.begin() != partial.end());
-	return std::abs( (--partial.end())->frequency() - bp.frequency() );
+	return std::abs( (--partial.end()).breakpoint().frequency() - bp.frequency() );
 }
 
 // ---------------------------------------------------------------------------

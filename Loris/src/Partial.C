@@ -90,7 +90,7 @@ Partial::initialPhase( void ) const
 	if ( _bpmap.size() == 0 )
 		Throw( InvalidPartial, "Tried find intial phase of a Partial with no Breakpoints." );
 
-	return begin()->phase();
+	return begin().breakpoint().phase();
 }
 
 // ---------------------------------------------------------------------------
@@ -246,20 +246,20 @@ Partial::frequencyAt( double time ) const
 	if ( it == _bpmap.begin() ) 
 	{
 	//	time is before the onset of the Partial:
-		return it->frequency();
+		return it.breakpoint().frequency();
 	}
 	else if ( it == _bpmap.end() ) 
 	{
 	//	time is past the end of the Partial:
-		return (--it)->frequency();
+		return (--it).breakpoint().frequency();
 	}
 	else 
 	{
 	//	interpolate between it and its predeccessor
 	//	(we checked already that it is not begin):
-		const Breakpoint & hi = *it;
+		const Breakpoint & hi = it.breakpoint();
 		double hitime = it.time();
-		const Breakpoint & lo = *(--it);
+		const Breakpoint & lo = (--it).breakpoint();
 		double lotime = it.time();
 		double alpha = (time - lotime) / (hitime - lotime);
 		return (alpha * hi.frequency()) + ((1. - alpha) * lo.frequency());
@@ -292,7 +292,7 @@ Partial::amplitudeAt( double time ) const
 		else
 		{
 			double alpha = (it.time() - time) / FadeTime();
-			return (1. - alpha) * it->amplitude();
+			return (1. - alpha) * it.breakpoint().amplitude();
 		}
 	}
 	else if (it == _bpmap.end() ) 
@@ -309,16 +309,16 @@ Partial::amplitudeAt( double time ) const
 		else
 		{
 			double alpha = (time - it.time()) / FadeTime();
-			return (1. - alpha) * it->amplitude();
+			return (1. - alpha) * it.breakpoint().amplitude();
 		}
 	}
 	else 
 	{
 	//	interpolate between it and its predeccessor
 	//	(we checked already that it is not begin):
-		const Breakpoint & hi = *it;
+		const Breakpoint & hi = it.breakpoint();
 		double hitime = it.time();
-		const Breakpoint & lo = *(--it);
+		const Breakpoint & lo = (--it).breakpoint();
 		double lotime = it.time();
 		double alpha = (time - lotime) / (hitime - lotime);
 		return (alpha * hi.amplitude()) + ((1. - alpha) * lo.amplitude());
@@ -346,8 +346,8 @@ Partial::phaseAt( double time ) const
 	if ( it == _bpmap.begin() ) 
 	{
 	//	time is before the onset of the Partial:
-		double dp = TwoPi * (it.time() - time) * it->frequency();
-		return std::fmod( it->phase() - dp, TwoPi);
+		double dp = TwoPi * (it.time() - time) * it.breakpoint().frequency();
+		return std::fmod( it.breakpoint().phase() - dp, TwoPi);
 	}
 	else if (it == _bpmap.end() ) 
 	{
@@ -355,16 +355,16 @@ Partial::phaseAt( double time ) const
 	//	( first decrement iterator to get the tail Breakpoint)
 		--it;
 		
-		double dp = TwoPi * (time - it.time()) * it->frequency();
-		return std::fmod( it->phase() + dp, TwoPi );
+		double dp = TwoPi * (time - it.time()) * it.breakpoint().frequency();
+		return std::fmod( it.breakpoint().phase() + dp, TwoPi );
 	}
 	else 
 	{
 	//	interpolate between it and its predeccessor
 	//	(we checked already that it is not begin):
-		const Breakpoint & hi = *it;
+		const Breakpoint & hi = it.breakpoint();
 		double hitime = it.time();
-		const Breakpoint & lo = *(--it);
+		const Breakpoint & lo = (--it).breakpoint();
 		double lotime = it.time();
 		double alpha = (time - lotime) / (hitime - lotime);
 		double favg = (0.5 * alpha * hi.frequency()) + 
@@ -405,20 +405,20 @@ Partial::bandwidthAt( double time ) const
 	if ( it == _bpmap.begin() ) 
 	{
 	//	time is before the onset of the Partial:
-		return it-> bandwidth();
+		return it.breakpoint(). bandwidth();
 	}
 	else if (it == _bpmap.end() ) 
 	{
 	//	time is past the end of the Partial:
-		return (--it)->bandwidth();
+		return (--it).breakpoint().bandwidth();
 	}
 	else 
 	{
 	//	interpolate between it and its predeccessor
 	//	(we checked already that it is not begin):
-		const Breakpoint & hi = *it;
+		const Breakpoint & hi = it.breakpoint();
 		double hitime = it.time();
-		const Breakpoint & lo = *(--it);
+		const Breakpoint & lo = (--it).breakpoint();
 		double lotime = it.time();
 		double alpha = (time - lotime) / (hitime - lotime);
 		return (alpha * hi.bandwidth()) + ((1. - alpha) * lo.bandwidth());

@@ -113,8 +113,8 @@ static void addNoiseEnergy( double energy, Partial & p,
 		//	don't transfer noise energy to 
 		//	zero-amplitude breakpoints, 
 		//	sounds bad:
-		if ( it->amplitude() > 0. )
-			it->addNoise( energy );
+		if ( it.breakpoint().amplitude() > 0. )
+			it.breakpoint().addNoise( energy );
 	}
 }
 
@@ -132,7 +132,7 @@ DistributeEnergy::distribute( const Partial & p,
 	double tUpperBound = p.startTime();	// initialize:
 	for ( envIter = p.begin(); envIter != p.end(); ++envIter ) {
 		double time = envIter.time();
-		const Breakpoint & bp = * envIter;
+		const Breakpoint & bp = envIter.breakpoint();
 		
 		//	find nearest Partial in (begin,end) above
 		//	and below (in frequency) to bp at time:

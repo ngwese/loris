@@ -33,8 +33,8 @@
  * and things like that.
  *
  * $Log$
- * Revision 1.13  2001/02/08 21:03:21  kfitz
- * Tweaking iterators in scripting interface.
+ * Revision 1.14  2001/02/09 23:44:34  kfitz
+ * Cleaned up the PartialIterator and ConstPartialIterator class interfaces a bit, removing the duplication of the Breakpoint interface and adding instead a breakpoint() member. Changed all uses of the iterators to use the breakpoint() accessor.
  *
  ************************************************************************/
 
@@ -859,16 +859,16 @@ PartialList * PartialListCopy_( const PartialList * other )
 		}
 		
 		//	attribute access:
-		double frequency( void ) const { return _iter->frequency(); }
-		double amplitude( void ) const { return _iter->amplitude(); }
-		double bandwidth( void ) const { return _iter->bandwidth(); }
-		double phase( void ) const { return _iter->phase(); }
+		double frequency( void ) const { return _iter.breakpoint().frequency(); }
+		double amplitude( void ) const { return _iter.breakpoint().amplitude(); }
+		double bandwidth( void ) const { return _iter.breakpoint().bandwidth(); }
+		double phase( void ) const { return _iter.breakpoint().phase(); }
 		
 		//	attribute mutation:
-		void setFrequency( double x ) { _iter->setFrequency(x); }
-		void setAmplitude( double x ) { _iter->setAmplitude(x); }
-		void setBandwidth( double x ) { _iter->setBandwidth(x); }
-		void setPhase( double x ) { _iter->setPhase(x); }
+		void setFrequency( double x ) { _iter.breakpoint().setFrequency(x); }
+		void setAmplitude( double x ) { _iter.breakpoint().setAmplitude(x); }
+		void setBandwidth( double x ) { _iter.breakpoint().setBandwidth(x); }
+		void setPhase( double x ) { _iter.breakpoint().setPhase(x); }
 
 		//	time:
 		double time( void ) const { return _iter.time(); }

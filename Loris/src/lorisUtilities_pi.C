@@ -155,13 +155,13 @@ createFreqReference( PartialList * partials, int numSamples,
 			//	(highest sinusoidal amplitude) Breakpoint:
 			PartialConstIterator partialIter = it->begin();
 			double maxAmp = 
-				partialIter->amplitude() * std::sqrt( 1. - partialIter->bandwidth() );
+				partialIter.breakpoint().amplitude() * std::sqrt( 1. - partialIter.breakpoint().bandwidth() );
 			double time = partialIter.time();
 			
 			for ( ++partialIter; partialIter != it->end(); ++partialIter ) 
 			{
-				double a = partialIter->amplitude() * 
-							std::sqrt( 1. - partialIter->bandwidth() );
+				double a = partialIter.breakpoint().amplitude() * 
+							std::sqrt( 1. - partialIter.breakpoint().bandwidth() );
 				if ( a > maxAmp ) 
 				{
 					maxAmp = a;
@@ -237,7 +237,7 @@ void scaleAmp( PartialList * partials, BreakpointEnvelope * ampEnv )
 		{
 			for ( PartialIterator jack = pIter->begin(); jack != pIter->end(); ++jack ) 
 			{		
-				jack->setAmplitude( jack->amplitude() * ampEnv->valueAt(jack.time()) );
+				jack.breakpoint().setAmplitude( jack.breakpoint().amplitude() * ampEnv->valueAt(jack.time()) );
 			}
 		}	
 	}
@@ -279,7 +279,7 @@ void scaleNoiseRatio( PartialList * partials, BreakpointEnvelope * noiseEnv )
 			for ( PartialIterator jack = pIter->begin(); jack != pIter->end(); ++jack ) 
 			{		
 				//	compute new bandwidth value:
-				double bw = jack->bandwidth();
+				double bw = jack.breakpoint().bandwidth();
 				if ( bw < 1. ) 
 				{
 					double ratio = bw  / (1. - bw);
@@ -291,7 +291,7 @@ void scaleNoiseRatio( PartialList * partials, BreakpointEnvelope * noiseEnv )
 					bw = 1.;
 				}
 				
-				jack->setBandwidth( bw );
+				jack.breakpoint().setBandwidth( bw );
 			}
 		}	
 	}
@@ -335,7 +335,7 @@ void shiftPitch( PartialList * partials, BreakpointEnvelope * pitchEnv )
 				//	compute frequency scale:
 				double scale = 
 					std::pow(2., (0.01 * pitchEnv->valueAt(jack.time())) /12.);				
-				jack->setFrequency( jack->frequency() * scale );
+				jack.breakpoint().setFrequency( jack.breakpoint().frequency() * scale );
 			}
 		}	
 	}

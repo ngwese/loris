@@ -149,8 +149,8 @@ Dilator::dilate( Partial & p )
 		}
 		
 		//	add a Breakpoint at the computed time:
-		newp.insert( newtime, Breakpoint( iter->frequency(), iter->amplitude(), 
-										  iter->bandwidth(), iter->phase() ) );
+		newp.insert( newtime, Breakpoint( iter.breakpoint().frequency(), iter.breakpoint().amplitude(), 
+										  iter.breakpoint().bandwidth(), iter.breakpoint().phase() ) );
 	}
 	
 	//	store the new Partial:

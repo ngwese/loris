@@ -147,27 +147,26 @@ public:
 //	(allow compiler to generate copy, assignment, and destruction):
 	PartialIterator( void ) {}
 	
-//	iteration:
+//	pre-increment/decrement:
 	PartialIterator& operator ++ () { ++_iter; return *this; }
-	PartialIterator operator ++ ( int ) { PartialIterator temp(*this); ++(*this); return temp; }
 	PartialIterator& operator -- () { --_iter; return *this; }
-	PartialIterator operator -- ( int ) { PartialIterator temp(*this); --(*this); return temp; }
-	
-//	derference:
-	const Breakpoint & operator * ( void ) const { return _iter->second; }
-	const Breakpoint * operator -> ( void ) const { return &(_iter->second); }
-	Breakpoint & operator * ( void ) { return _iter->second; }
-	Breakpoint * operator -> ( void ) { return &(_iter->second); }
-	
-//	Breakpoint attribute access (conveience, but maybe not great design):
-	double frequency( void ) const { return _iter->second.frequency(); }
-	double amplitude( void ) const { return _iter->second.amplitude(); }
-	double bandwidth( void ) const { return _iter->second.bandwidth(); }
-	double phase( void ) const { return _iter->second.phase(); }
 
-//	time access (not available through Breakpoint):
+//	post-increment/decrement:
+	PartialIterator operator ++ ( int ) { return PartialIterator( _iter++ ); } 
+	PartialIterator operator -- ( int ) { return PartialIterator( _iter-- ); } 
+	
+//	time and Breakpoint access:
+	const Breakpoint & breakpoint( void ) const { return _iter->second; }
+	Breakpoint & breakpoint( void ) { return _iter->second; }
 	double time( void ) const { return _iter->first; }	
-
+	
+//	dereference (for treating Partial like a 
+//	STL collection of Breakpoints):
+	const Breakpoint & operator * ( void ) const { return _iter->second; }
+	Breakpoint & operator * ( void ) { return _iter->second; }
+	const Breakpoint * operator -> ( void ) const { return & _iter->second; }
+	Breakpoint * operator -> ( void ) { return & _iter->second; }
+	
 //	comparison:
 	friend bool operator == ( const PartialIterator & lhs, const PartialIterator & rhs )
 		{ return lhs._iter == rhs._iter; }
@@ -191,10 +190,6 @@ private:
 //	Const iterator for the Loris::Partial Breakpoint map. Wraps
 //	the const iterator for std::map< double, Breakpoint >.
 //
-//	Get rid of advance()?
-//	can't get rid of derference, but could implement Breakpoint interface
-//	so that parameter access would be uniform.
-//
 class PartialConstIterator
 {
 //	-- instance variables --
@@ -207,26 +202,23 @@ public:
 	PartialConstIterator( void ) {}
 	PartialConstIterator( const PartialIterator & other ) : _iter( other._iter ) {}
 	
-//	iteration:
+//	pre-increment/decrement:
 	PartialConstIterator& operator ++ () { ++_iter; return *this; }
-	PartialConstIterator operator ++ ( int ) { PartialConstIterator temp(*this); ++(*this); return temp; }
 	PartialConstIterator& operator -- () { --_iter; return *this; }
-	PartialConstIterator operator -- ( int ) { PartialConstIterator temp(*this); --(*this); return temp; }
-	void advance( void ) { ++(*this); }
+
+//	post-increment/decrement:
+	PartialConstIterator operator ++ ( int ) { return PartialConstIterator( _iter++ ); } 
+	PartialConstIterator operator -- ( int ) { return PartialConstIterator( _iter-- ); } 
 	
-//	derference:
-	const Breakpoint & operator * ( void ) const { return _iter->second; }
-	const Breakpoint * operator -> ( void ) const { return &(_iter->second); }
-
-//	Breakpoint attribute access (conveience, but maybe not great design):
-	double frequency( void ) const { return _iter->second.frequency(); }
-	double amplitude( void ) const { return _iter->second.amplitude(); }
-	double bandwidth( void ) const { return _iter->second.bandwidth(); }
-	double phase( void ) const { return _iter->second.phase(); }
-
-//	time access (not available through Breakpoint):
+//	time and Breakpoint access:
+	const Breakpoint & breakpoint( void ) const { return _iter->second; }	
 	double time( void ) const { return _iter->first; }	
 
+//	dereference (for treating Partial like a 
+//	STL collection of Breakpoints):
+	const Breakpoint & operator * ( void ) const { return _iter->second; }
+	const Breakpoint * operator -> ( void ) const { return & _iter->second; }
+	
 //	comparison:
 	friend bool operator == ( const PartialConstIterator & lhs, const PartialConstIterator & rhs )
 		{ return lhs._iter == rhs._iter; }

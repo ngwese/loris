@@ -103,12 +103,14 @@ Channelizer_imp::~Channelizer_imp( void )
 static double loudestAt( const Partial & p )
 {
 	PartialConstIterator env = p.begin();
-	double maxAmp = env->amplitude() * std::sqrt( 1. - env->bandwidth() );
+	double maxAmp = env.breakpoint().amplitude() * std::sqrt( 1. - env.breakpoint().bandwidth() );
 	double time = env.time();
 	
-	for ( ++env; env != p.end(); ++env ) {
-		double a = env->amplitude() * std::sqrt( 1. - env->bandwidth() );
-		if ( a > maxAmp ) {
+	for ( ++env; env != p.end(); ++env ) 
+	{
+		double a = env.breakpoint().amplitude() * std::sqrt( 1. - env.breakpoint().bandwidth() );
+		if ( a > maxAmp ) 
+		{
 			maxAmp = a;
 			time = env.time();
 		}
@@ -152,8 +154,8 @@ Channelizer_imp::channelize( std::list< Partial >::iterator begin, std::list< Pa
 		for ( bp = it->begin(); bp != it->end(); ++bp )
 		{
 			//	use sinusoidal amplitude:
-			double a = bp->amplitude() * std::sqrt( 1. - bp->bandwidth() );
-			double f = bp->frequency();
+			double a = bp.breakpoint().amplitude() * std::sqrt( 1. - bp.breakpoint().bandwidth() );
+			double f = bp.breakpoint().frequency();
 			double t = bp.time();
 			
 			double refFreq = _refChannelFreq->valueAt( t ) / _refChannelLabel;

@@ -159,10 +159,10 @@ Morpher_imp::morphPartial( const Partial & p0, const Partial & p1, int assignLab
 			double theta1 = p1.phaseAt( iter.time() );
 			
 			//	create a new weighted average Breakpoint:	
-			Breakpoint newbp( (alphaF * freq1) + ((1.-alphaF) * iter->frequency()),
-							   (alphaA * amp1) + ((1.-alphaA) * iter->amplitude()),
-							   (alphaBW * bw1) + ((1.-alphaBW) * iter->bandwidth()),
-							   (alphaF * theta1) + ((1.-alphaF) * iter->phase()) );
+			Breakpoint newbp( (alphaF * freq1) + ((1.-alphaF) * iter.breakpoint().frequency()),
+							   (alphaA * amp1) + ((1.-alphaA) * iter.breakpoint().amplitude()),
+							   (alphaBW * bw1) + ((1.-alphaBW) * iter.breakpoint().bandwidth()),
+							   (alphaF * theta1) + ((1.-alphaF) * iter.breakpoint().phase()) );
 			
 			//	insert the new Breakpoint in the morphed Partial:
 			newp.insert( iter.time(), newbp );
@@ -170,10 +170,10 @@ Morpher_imp::morphPartial( const Partial & p0, const Partial & p1, int assignLab
 		else
 		{
 			//	create a new scaled-amplitude Breakpoint:	
-			Breakpoint newbp( iter->frequency(),
-							  (1.-alphaA) * iter->amplitude(),
-							  iter->bandwidth(),
-							  iter->phase() );
+			Breakpoint newbp( iter.breakpoint().frequency(),
+							  (1.-alphaA) * iter.breakpoint().amplitude(),
+							  iter.breakpoint().bandwidth(),
+							  iter.breakpoint().phase() );
 		
 			//	insert the new Breakpoint in the morphed Partial:
 			newp.insert( iter.time(), newbp );
@@ -201,10 +201,10 @@ Morpher_imp::morphPartial( const Partial & p0, const Partial & p1, int assignLab
 			double theta0 = p0.phaseAt( iter.time() );
 			
 			//	create a new weighted average Breakpoint:	
-			Breakpoint newbp( (alphaF * freq0) + ((1.-alphaF) * iter->frequency()),
-							   (alphaA * amp0) + ((1.-alphaA) * iter->amplitude()),
-							   (alphaBW * bw0) + ((1.-alphaBW) * iter->bandwidth()),
-							   (alphaF * theta0) + ((1.-alphaF) * iter->phase()) );
+			Breakpoint newbp( (alphaF * freq0) + ((1.-alphaF) * iter.breakpoint().frequency()),
+							   (alphaA * amp0) + ((1.-alphaA) * iter.breakpoint().amplitude()),
+							   (alphaBW * bw0) + ((1.-alphaBW) * iter.breakpoint().bandwidth()),
+							   (alphaF * theta0) + ((1.-alphaF) * iter.breakpoint().phase()) );
 			
 			//	insert the new Breakpoint in the morphed Partial:
 			newp.insert( iter.time(), newbp );
@@ -212,10 +212,10 @@ Morpher_imp::morphPartial( const Partial & p0, const Partial & p1, int assignLab
 		else
 		{
 			//	create a new scaled-amplitude Breakpoint:	
-			Breakpoint newbp( iter->frequency(),
-							  (1.-alphaA) * iter->amplitude(),
-							  iter->bandwidth(),
-							  iter->phase() );
+			Breakpoint newbp( iter.breakpoint().frequency(),
+							  (1.-alphaA) * iter.breakpoint().amplitude(),
+							  iter.breakpoint().bandwidth(),
+							  iter.breakpoint().phase() );
 		
 			//	insert the new Breakpoint in the morphed Partial:
 			newp.insert( iter.time(), newbp );

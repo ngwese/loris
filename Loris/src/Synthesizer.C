@@ -156,9 +156,9 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ )
 //	compute the initial oscillator state, assuming
 //	a prepended Breakpoint of zero amplitude:
 	double itime = iterator.time() + timeShift - Partial::FadeTime();
-	double ifreq = iterator.frequency();
+	double ifreq = iterator.breakpoint().frequency();
 	double iamp = 0.;
-	double ibw = iterator.bandwidth();
+	double ibw = iterator.breakpoint().bandwidth();
 
 //	interpolate the initial oscillator state if
 //	the onset time is before the start of the 
@@ -170,25 +170,25 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ )
 		while (iterator.time() + timeShift < 0.)
 		{
 			itime = iterator.time() + timeShift;
-			ifreq = iterator.frequency();
-			iamp = iterator.amplitude();
-			ibw = iterator.bandwidth();
-			iterator.advance();
+			ifreq = iterator.breakpoint().frequency();
+			iamp = iterator.breakpoint().amplitude();
+			ibw = iterator.breakpoint().bandwidth();
+			++iterator;
 		}
 		
 		//	compute interpolated initial values:
 		double alpha = - itime / (iterator.time() + timeShift - itime);
-		ifreq = (alpha * iterator.frequency()) + ((1.-alpha) * ifreq);
-		iamp = (alpha * iterator.amplitude()) + ((1.-alpha) * iamp);
-		ibw = (alpha * iterator.bandwidth()) + ((1.-alpha) * ibw);
+		ifreq = (alpha * iterator.breakpoint().frequency()) + ((1.-alpha) * ifreq);
+		iamp = (alpha * iterator.breakpoint().amplitude()) + ((1.-alpha) * iamp);
+		ibw = (alpha * iterator.breakpoint().bandwidth()) + ((1.-alpha) * ibw);
 		itime = 0.;
 	}
 	
 //	compute the starting phase:
 	double dsamps = (iterator.time() + timeShift - itime) * sampleRate();
 	Assert( dsamps >= 0. );
-	double avgfreq = 0.5 * (ifreq + iterator.frequency());
-	double iphase = iterator.phase() - (radianFreq(avgfreq) * dsamps);
+	double avgfreq = 0.5 * (ifreq + iterator.breakpoint().frequency());
+	double iphase = iterator.breakpoint().phase() - (radianFreq(avgfreq) * dsamps);
 		
 //	setup the oscillator:
 //	Remember that the oscillator only knows about radian frequency! Convert!
@@ -214,9 +214,9 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ )
 		//	values.)
 		osc.generateSamples( //_samples, curSampleIdx, tgtsamp, 
 							 _sampleBuffer + curSampleIdx, _sampleBuffer + tgtsamp,
-							 radianFreq( iterator.frequency() ), 
-							 iterator.amplitude(), 
-							 iterator.bandwidth() );
+							 radianFreq( iterator.breakpoint().frequency() ), 
+							 iterator.breakpoint().amplitude(), 
+							 iterator.breakpoint().bandwidth() );
 									  
 		//	if the current oscillator amplitude is
 		//	zero, reset the phase (note: the iterator
@@ -224,7 +224,7 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ )
 		//	should be set _after_ generating samples,
 		//	when the oscillator and iterator are in-sync):
 		if ( osc.amplitude() == 0. )
-			osc.setPhase( iterator.phase() );
+			osc.setPhase( iterator.breakpoint().phase() );
 			
 		//	update the current sample index:
 		curSampleIdx = tgtsamp;
@@ -245,9 +245,9 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ )
 	}
 	else
 	{
-		tgtradfreq = radianFreq( iterator.frequency() );
-		tgtamp = iterator.amplitude();
-		tgtbw = iterator.bandwidth();
+		tgtradfreq = radianFreq( iterator.breakpoint().frequency() );
+		tgtamp = iterator.breakpoint().amplitude();
+		tgtbw = iterator.breakpoint().bandwidth();
 	}
 	
 //	interpolate final oscillator state if the target 
