@@ -11,11 +11,12 @@
 AC_INIT(reconf)
 AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(loris,1.0beta5)
-LF_CONFIGURE_CC
-LF_CONFIGURE_CXX
-LF_HOST_TYPE
-LF_SET_WARNINGS
+AM_INIT_AUTOMAKE(loris,1.0beta6)
+# LF_CONFIGURE_CC
+# LF_CONFIGURE_CXX
+# LF_HOST_TYPE
+# LF_SET_WARNINGS
+AC_PROG_CXX
 
 AC_SUBST(ac_aux_dir)
 
@@ -25,13 +26,22 @@ AM_CONDITIONAL(HAVE_SWIG, test -n "$SWIG")
 
 
 # This needs to do something reasonable
+AC_LANG_SAVE
+AC_LANG_CPLUSPLUS
 AC_MSG_CHECKING(for M_PI defined in cmath)
-AC_TRY_CPP([#include <cmath>; assert(M_PI);], [
-	AC_MSG_RESULT(ok)
+AC_TRY_COMPILE([ #include <cmath>;], [double pi = M_PI;], [
 	HAVE_M_PI=true ], [
-	AC_MSG_RESULT(nope, using local definition of pi)
 	HAVE_M_PI=false ] )
 
+if "$HAVE_M_PI"; then
+	AC_MSG_RESULT(yep)
+	AC_DEFINE(HAVE_M_PI)
+else
+	AC_MSG_RESULT(nope using local definition of pi)
+fi
+
+# restore this
+AC_LANG_RESTORE
 
 #----------------------------------------------------------------
 # Look for IRCAM's SDIF package

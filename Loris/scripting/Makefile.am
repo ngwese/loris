@@ -10,8 +10,7 @@
 
 INCLUDES =  $(PYINCLUDE) $(TCLINCLUDE) $(PERLINCLUDE) -I$(top_srcdir)/src
 
-EXTRA_DIST = loris.py loris.pm loris.i lorisAiffFile.i lorisAnalyzer.i \\
-			 lorisBpEnvelope.i lorisPartialList.i lorisSampleVector.i
+EXTRA_DIST = loris.py loris.pm loris.i lorisAiffFile.i lorisAnalyzer.i lorisBpEnvelope.i lorisPartialList.i lorisSampleVector.i
 
 MAINTAINERCLEANFILES = Makefile.in
 

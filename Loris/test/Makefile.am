@@ -22,7 +22,7 @@ endif
 
 if HAVE_TCL_H
 run_tcltest:
-	echo "$(TCL) $(top_srcdir)/test/morphtest.tcl $(top_builddir)/scripting/.libs" >> $@
+	echo "$(TCL) $(top_srcdir)/test/morphtest.tcl" >> $@
 	chmod +x $@
 endif
 

@@ -257,7 +257,7 @@ ReassignedSpectrum::frequencyCorrection( long idx ) const
 		
 	//	the freq RA FT is the circular even part
 	//	of the reassignment transform:
-	std:complex<double> fra_part = 0.5*( _ratransform[idx] + std::conj( _ratransform[flip_idx] ) );
+	std::complex<double> fra_part = 0.5*( _ratransform[idx] + std::conj( _ratransform[flip_idx] ) );
 	
 	double num = _transform[idx].real() * fra_part.imag() -
 				 _transform[idx].imag() * fra_part.real();
