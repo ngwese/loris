@@ -87,15 +87,13 @@ import sys
 if float(sys.version[:3]) >= 2.2:
 	p = clar.iterator().next()
 	for pos in p:
-		bp = pos.breakpoint()
-		f = f + bp.frequency()
+		f = f + pos.frequency()
 		n = n + 1
 else:
 	p = clar.iterator().next()
-	pos = p.iterator()
-	while not pos.atEnd():
-		bp = pos.next().breakpoint()
-		f = f + bp.frequency()
+	it = p.iterator()
+	while not it.atEnd():
+		f = f + it.next().frequency()
 		n = n + 1
 		
 print "avg frequency of first distilled clarinet partial is", f/n

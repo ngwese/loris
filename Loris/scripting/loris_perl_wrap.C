@@ -576,15 +576,15 @@ static void _swig_create_magic(CPerlObj *pPerl, SV *sv, const char *name, int (C
 #define  SWIGTYPE_p_PartialList swig_types[1] 
 #define  SWIGTYPE_p_SampleVector swig_types[2] 
 #define  SWIGTYPE_p_AiffFile swig_types[3] 
-#define  SWIGTYPE_p_Analyzer swig_types[4] 
-#define  SWIGTYPE_p_NewPlistIterator swig_types[5] 
-#define  SWIGTYPE_p_NewPartialIterator swig_types[6] 
-#define  SWIGTYPE_p_double swig_types[7] 
-#define  SWIGTYPE_p_PartialListIterator swig_types[8] 
-#define  SWIGTYPE_p_PartialIterator swig_types[9] 
-#define  SWIGTYPE_p_Breakpoint swig_types[10] 
-#define  SWIGTYPE_p_BreakpointEnvelope swig_types[11] 
-#define  SWIGTYPE_p_Dingus swig_types[12] 
+#define  SWIGTYPE_p_BreakpointPosition swig_types[4] 
+#define  SWIGTYPE_p_Analyzer swig_types[5] 
+#define  SWIGTYPE_p_NewPlistIterator swig_types[6] 
+#define  SWIGTYPE_p_NewPartialIterator swig_types[7] 
+#define  SWIGTYPE_p_double swig_types[8] 
+#define  SWIGTYPE_p_PartialListIterator swig_types[9] 
+#define  SWIGTYPE_p_PartialIterator swig_types[10] 
+#define  SWIGTYPE_p_Breakpoint swig_types[11] 
+#define  SWIGTYPE_p_BreakpointEnvelope swig_types[12] 
 static swig_type_info *swig_types[14];
 
 /* -------- TYPES TABLE (END) -------- */
@@ -932,7 +932,7 @@ public:
 	}
 };
 
-typedef Partial::iterator Dingus;
+typedef Partial::iterator BreakpointPosition;
 
 class NewPartialIterator
 {
@@ -944,14 +944,14 @@ public:
 	
 	bool atEnd( void ) { return it == subject.end(); }
 
-	Dingus * next( void )
+	BreakpointPosition * next( void )
 	{
 		if ( atEnd() )
 		{
 			throw_exception("end of Partial");
 			return 0;
 		}
-		Dingus * ret = new Dingus(it);
+		BreakpointPosition * ret = new BreakpointPosition(it);
 		++it;
 		return ret;
 	}
@@ -1057,12 +1057,20 @@ Breakpoint *Breakpoint_copy(Breakpoint *self){
 int Breakpoint_equals(Breakpoint *self,Breakpoint *other){
 			return *self == *other;
 		}
-double Dingus_time(Dingus *self){ 
+double BreakpointPosition_time(BreakpointPosition *self){ 
 			return self->time(); 
 		}
-Breakpoint *Dingus_breakpoint(Dingus *self){ 
+Breakpoint *BreakpointPosition_breakpoint(BreakpointPosition *self){ 
 			return &(self->breakpoint());
 		}
+double BreakpointPosition_frequency(BreakpointPosition *self){ return self->breakpoint().frequency(); }
+double BreakpointPosition_amplitude(BreakpointPosition *self){ return self->breakpoint().amplitude(); }
+double BreakpointPosition_bandwidth(BreakpointPosition *self){ return self->breakpoint().bandwidth(); }
+double BreakpointPosition_phase(BreakpointPosition *self){ return self->breakpoint().phase(); }
+void BreakpointPosition_setFrequency(BreakpointPosition *self,double x){ self->breakpoint().setFrequency( x ); }
+void BreakpointPosition_setAmplitude(BreakpointPosition *self,double x){ self->breakpoint().setAmplitude( x ); }
+void BreakpointPosition_setBandwidth(BreakpointPosition *self,double x){ self->breakpoint().setBandwidth( x ); }
+void BreakpointPosition_setPhase(BreakpointPosition *self,double x){ self->breakpoint().setPhase( x ); }
 #ifdef PERL_OBJECT
 #define MAGIC_CLASS _wrap_perLoris_var::
 class _wrap_perLoris_var : public CPerlObj {
@@ -4270,7 +4278,7 @@ XS(_wrap_NewPartialIterator_next) {
     const char *_swigerr = _swigmsg;
     {
         NewPartialIterator *arg1 = (NewPartialIterator *) 0 ;
-        Dingus *result;
+        BreakpointPosition *result;
         int argvi = 0;
         dXSARGS;
         
@@ -4285,7 +4293,7 @@ XS(_wrap_NewPartialIterator_next) {
         {
             char * err;
             clear_exception();
-            result = (Dingus *)(arg1)->next();
+            result = (BreakpointPosition *)(arg1)->next();
             
             if ((err = check_exception()))
             {
@@ -4294,7 +4302,7 @@ XS(_wrap_NewPartialIterator_next) {
             }
         }
         ST(argvi) = sv_newmortal();
-        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_Dingus,0);
+        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_BreakpointPosition,0);
         XSRETURN(argvi);
         fail:
         (void) _swigerr;
@@ -7044,7 +7052,7 @@ XS(_wrap_delete_PartialIterator) {
 }
 
 
-XS(_wrap_new_Breakpoint) {
+XS(_wrap_new_Breakpoint__SWIG_0) {
     char _swigmsg[SWIG_MAX_ERRMSG] = "";
     const char *_swigerr = _swigmsg;
     {
@@ -7097,6 +7105,104 @@ XS(_wrap_new_Breakpoint) {
         (void) _swigerr;
     }
     croak(_swigerr);
+}
+
+
+XS(_wrap_new_Breakpoint__SWIG_1) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        Breakpoint *arg1 = 0 ;
+        Breakpoint *result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 1) || (items > 1)) {
+            SWIG_croak("Usage: new_Breakpoint(rhs);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_Breakpoint,0) < 0) {
+                SWIG_croak("Type error in argument 1 of new_Breakpoint. Expected _p_Breakpoint");
+            }
+        }
+        {
+            try
+            {
+                result = (Breakpoint *)new Breakpoint((Breakpoint const &)*arg1);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_Breakpoint,0);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_new_Breakpoint) {
+    dXSARGS;
+    
+    if (items == 1) {
+        int _v;
+        {
+            void *tmp;
+            if (SWIG_ConvertPtr(ST(0), (void **) &tmp, SWIGTYPE_p_Breakpoint, 0) == -1) {
+                _v = 0;
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            (*PL_markstack_ptr++);SWIG_CALLXS(_wrap_new_Breakpoint__SWIG_1); return;
+        }
+    }
+    if ((items >= 3) && (items <= 4)) {
+        int _v;
+        {
+            _v = SvNOK(ST(0)) ? 1 : 0;
+        }
+        if (_v) {
+            {
+                _v = SvNOK(ST(1)) ? 1 : 0;
+            }
+            if (_v) {
+                {
+                    _v = SvNOK(ST(2)) ? 1 : 0;
+                }
+                if (_v) {
+                    if (items <= 3) {
+                        (*PL_markstack_ptr++);SWIG_CALLXS(_wrap_new_Breakpoint__SWIG_0); return;
+                    }
+                    {
+                        _v = SvNOK(ST(3)) ? 1 : 0;
+                    }
+                    if (_v) {
+                        (*PL_markstack_ptr++);SWIG_CALLXS(_wrap_new_Breakpoint__SWIG_0); return;
+                    }
+                }
+            }
+        }
+    }
+    
+    croak("No matching function for overloaded 'new_Breakpoint'");
+    XSRETURN(0);
 }
 
 
@@ -7636,27 +7742,27 @@ XS(_wrap_Breakpoint_equals) {
 }
 
 
-XS(_wrap_Dingus_time) {
+XS(_wrap_BreakpointPosition_time) {
     char _swigmsg[SWIG_MAX_ERRMSG] = "";
     const char *_swigerr = _swigmsg;
     {
-        Dingus *arg1 = (Dingus *) 0 ;
+        BreakpointPosition *arg1 = (BreakpointPosition *) 0 ;
         double result;
         int argvi = 0;
         dXSARGS;
         
         if ((items < 1) || (items > 1)) {
-            SWIG_croak("Usage: Dingus_time(self);");
+            SWIG_croak("Usage: BreakpointPosition_time(self);");
         }
         {
-            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_Dingus,0) < 0) {
-                SWIG_croak("Type error in argument 1 of Dingus_time. Expected _p_Dingus");
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_BreakpointPosition,0) < 0) {
+                SWIG_croak("Type error in argument 1 of BreakpointPosition_time. Expected _p_BreakpointPosition");
             }
         }
         {
             try
             {
-                result = (double)Dingus_time(arg1);
+                result = (double)BreakpointPosition_time(arg1);
                 
             }
             catch( Loris::Exception & ex ) 
@@ -7684,27 +7790,27 @@ XS(_wrap_Dingus_time) {
 }
 
 
-XS(_wrap_Dingus_breakpoint) {
+XS(_wrap_BreakpointPosition_breakpoint) {
     char _swigmsg[SWIG_MAX_ERRMSG] = "";
     const char *_swigerr = _swigmsg;
     {
-        Dingus *arg1 = (Dingus *) 0 ;
+        BreakpointPosition *arg1 = (BreakpointPosition *) 0 ;
         Breakpoint *result;
         int argvi = 0;
         dXSARGS;
         
         if ((items < 1) || (items > 1)) {
-            SWIG_croak("Usage: Dingus_breakpoint(self);");
+            SWIG_croak("Usage: BreakpointPosition_breakpoint(self);");
         }
         {
-            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_Dingus,0) < 0) {
-                SWIG_croak("Type error in argument 1 of Dingus_breakpoint. Expected _p_Dingus");
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_BreakpointPosition,0) < 0) {
+                SWIG_croak("Type error in argument 1 of BreakpointPosition_breakpoint. Expected _p_BreakpointPosition");
             }
         }
         {
             try
             {
-                result = (Breakpoint *)Dingus_breakpoint(arg1);
+                result = (Breakpoint *)BreakpointPosition_breakpoint(arg1);
                 
             }
             catch( Loris::Exception & ex ) 
@@ -7732,6 +7838,394 @@ XS(_wrap_Dingus_breakpoint) {
 }
 
 
+XS(_wrap_BreakpointPosition_frequency) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        BreakpointPosition *arg1 = (BreakpointPosition *) 0 ;
+        double result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 1) || (items > 1)) {
+            SWIG_croak("Usage: BreakpointPosition_frequency(self);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_BreakpointPosition,0) < 0) {
+                SWIG_croak("Type error in argument 1 of BreakpointPosition_frequency. Expected _p_BreakpointPosition");
+            }
+        }
+        {
+            try
+            {
+                result = (double)BreakpointPosition_frequency(arg1);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        sv_setnv(ST(argvi++), (double) result);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_BreakpointPosition_amplitude) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        BreakpointPosition *arg1 = (BreakpointPosition *) 0 ;
+        double result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 1) || (items > 1)) {
+            SWIG_croak("Usage: BreakpointPosition_amplitude(self);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_BreakpointPosition,0) < 0) {
+                SWIG_croak("Type error in argument 1 of BreakpointPosition_amplitude. Expected _p_BreakpointPosition");
+            }
+        }
+        {
+            try
+            {
+                result = (double)BreakpointPosition_amplitude(arg1);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        sv_setnv(ST(argvi++), (double) result);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_BreakpointPosition_bandwidth) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        BreakpointPosition *arg1 = (BreakpointPosition *) 0 ;
+        double result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 1) || (items > 1)) {
+            SWIG_croak("Usage: BreakpointPosition_bandwidth(self);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_BreakpointPosition,0) < 0) {
+                SWIG_croak("Type error in argument 1 of BreakpointPosition_bandwidth. Expected _p_BreakpointPosition");
+            }
+        }
+        {
+            try
+            {
+                result = (double)BreakpointPosition_bandwidth(arg1);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        sv_setnv(ST(argvi++), (double) result);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_BreakpointPosition_phase) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        BreakpointPosition *arg1 = (BreakpointPosition *) 0 ;
+        double result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 1) || (items > 1)) {
+            SWIG_croak("Usage: BreakpointPosition_phase(self);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_BreakpointPosition,0) < 0) {
+                SWIG_croak("Type error in argument 1 of BreakpointPosition_phase. Expected _p_BreakpointPosition");
+            }
+        }
+        {
+            try
+            {
+                result = (double)BreakpointPosition_phase(arg1);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        sv_setnv(ST(argvi++), (double) result);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_BreakpointPosition_setFrequency) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        BreakpointPosition *arg1 = (BreakpointPosition *) 0 ;
+        double arg2 ;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 2) || (items > 2)) {
+            SWIG_croak("Usage: BreakpointPosition_setFrequency(self,x);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_BreakpointPosition,0) < 0) {
+                SWIG_croak("Type error in argument 1 of BreakpointPosition_setFrequency. Expected _p_BreakpointPosition");
+            }
+        }
+        arg2 = (double) SvNV(ST(1));
+        
+        {
+            try
+            {
+                BreakpointPosition_setFrequency(arg1,arg2);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_BreakpointPosition_setAmplitude) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        BreakpointPosition *arg1 = (BreakpointPosition *) 0 ;
+        double arg2 ;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 2) || (items > 2)) {
+            SWIG_croak("Usage: BreakpointPosition_setAmplitude(self,x);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_BreakpointPosition,0) < 0) {
+                SWIG_croak("Type error in argument 1 of BreakpointPosition_setAmplitude. Expected _p_BreakpointPosition");
+            }
+        }
+        arg2 = (double) SvNV(ST(1));
+        
+        {
+            try
+            {
+                BreakpointPosition_setAmplitude(arg1,arg2);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_BreakpointPosition_setBandwidth) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        BreakpointPosition *arg1 = (BreakpointPosition *) 0 ;
+        double arg2 ;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 2) || (items > 2)) {
+            SWIG_croak("Usage: BreakpointPosition_setBandwidth(self,x);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_BreakpointPosition,0) < 0) {
+                SWIG_croak("Type error in argument 1 of BreakpointPosition_setBandwidth. Expected _p_BreakpointPosition");
+            }
+        }
+        arg2 = (double) SvNV(ST(1));
+        
+        {
+            try
+            {
+                BreakpointPosition_setBandwidth(arg1,arg2);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_BreakpointPosition_setPhase) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        BreakpointPosition *arg1 = (BreakpointPosition *) 0 ;
+        double arg2 ;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 2) || (items > 2)) {
+            SWIG_croak("Usage: BreakpointPosition_setPhase(self,x);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_BreakpointPosition,0) < 0) {
+                SWIG_croak("Type error in argument 1 of BreakpointPosition_setPhase. Expected _p_BreakpointPosition");
+            }
+        }
+        arg2 = (double) SvNV(ST(1));
+        
+        {
+            try
+            {
+                BreakpointPosition_setPhase(arg1,arg2);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
 
 /* -------- TYPE CONVERSION AND EQUIVALENCE RULES (BEGIN) -------- */
 
@@ -7739,6 +8233,7 @@ static swig_type_info _swigt__p_Partial[] = {{"_p_Partial", 0, "Partial *", 0},{
 static swig_type_info _swigt__p_PartialList[] = {{"_p_PartialList", 0, "PartialList *", 0},{"_p_PartialList"},{0}};
 static swig_type_info _swigt__p_SampleVector[] = {{"_p_SampleVector", 0, "SampleVector *", 0},{"_p_SampleVector"},{0}};
 static swig_type_info _swigt__p_AiffFile[] = {{"_p_AiffFile", 0, "AiffFile *", 0},{"_p_AiffFile"},{0}};
+static swig_type_info _swigt__p_BreakpointPosition[] = {{"_p_BreakpointPosition", 0, "BreakpointPosition *", 0},{"_p_BreakpointPosition"},{0}};
 static swig_type_info _swigt__p_Analyzer[] = {{"_p_Analyzer", 0, "Analyzer *", 0},{"_p_Analyzer"},{0}};
 static swig_type_info _swigt__p_NewPlistIterator[] = {{"_p_NewPlistIterator", 0, "NewPlistIterator *", 0},{"_p_NewPlistIterator"},{0}};
 static swig_type_info _swigt__p_NewPartialIterator[] = {{"_p_NewPartialIterator", 0, "NewPartialIterator *", 0},{"_p_NewPartialIterator"},{0}};
@@ -7747,13 +8242,13 @@ static swig_type_info _swigt__p_PartialListIterator[] = {{"_p_PartialListIterato
 static swig_type_info _swigt__p_PartialIterator[] = {{"_p_PartialIterator", 0, "PartialIterator *", 0},{"_p_PartialIterator"},{0}};
 static swig_type_info _swigt__p_Breakpoint[] = {{"_p_Breakpoint", 0, "Breakpoint *", 0},{"_p_Breakpoint"},{0}};
 static swig_type_info _swigt__p_BreakpointEnvelope[] = {{"_p_BreakpointEnvelope", 0, "BreakpointEnvelope *", 0},{"_p_BreakpointEnvelope"},{0}};
-static swig_type_info _swigt__p_Dingus[] = {{"_p_Dingus", 0, "Dingus *", 0},{"_p_Dingus"},{0}};
 
 static swig_type_info *swig_types_initial[] = {
 _swigt__p_Partial, 
 _swigt__p_PartialList, 
 _swigt__p_SampleVector, 
 _swigt__p_AiffFile, 
+_swigt__p_BreakpointPosition, 
 _swigt__p_Analyzer, 
 _swigt__p_NewPlistIterator, 
 _swigt__p_NewPartialIterator, 
@@ -7762,7 +8257,6 @@ _swigt__p_PartialListIterator,
 _swigt__p_PartialIterator, 
 _swigt__p_Breakpoint, 
 _swigt__p_BreakpointEnvelope, 
-_swigt__p_Dingus, 
 0
 };
 
@@ -7908,8 +8402,16 @@ static swig_command_info swig_commands[] = {
 {"perLoris::Breakpoint_setPhase", _wrap_Breakpoint_setPhase},
 {"perLoris::Breakpoint_copy", _wrap_Breakpoint_copy},
 {"perLoris::Breakpoint_equals", _wrap_Breakpoint_equals},
-{"perLoris::Dingus_time", _wrap_Dingus_time},
-{"perLoris::Dingus_breakpoint", _wrap_Dingus_breakpoint},
+{"perLoris::BreakpointPosition_time", _wrap_BreakpointPosition_time},
+{"perLoris::BreakpointPosition_breakpoint", _wrap_BreakpointPosition_breakpoint},
+{"perLoris::BreakpointPosition_frequency", _wrap_BreakpointPosition_frequency},
+{"perLoris::BreakpointPosition_amplitude", _wrap_BreakpointPosition_amplitude},
+{"perLoris::BreakpointPosition_bandwidth", _wrap_BreakpointPosition_bandwidth},
+{"perLoris::BreakpointPosition_phase", _wrap_BreakpointPosition_phase},
+{"perLoris::BreakpointPosition_setFrequency", _wrap_BreakpointPosition_setFrequency},
+{"perLoris::BreakpointPosition_setAmplitude", _wrap_BreakpointPosition_setAmplitude},
+{"perLoris::BreakpointPosition_setBandwidth", _wrap_BreakpointPosition_setBandwidth},
+{"perLoris::BreakpointPosition_setPhase", _wrap_BreakpointPosition_setPhase},
 {0,0}
 };
 

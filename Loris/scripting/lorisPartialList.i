@@ -145,7 +145,7 @@ public:
 	}
 };
 
-typedef Partial::iterator Dingus;
+typedef Partial::iterator BreakpointPosition;
 
 class NewPartialIterator
 {
@@ -157,14 +157,14 @@ public:
 	
 	bool atEnd( void ) { return it == subject.end(); }
 
-	Dingus * next( void )
+	BreakpointPosition * next( void )
 	{
 		if ( atEnd() )
 		{
 			throw_exception("end of Partial");
 			return 0;
 		}
-		Dingus * ret = new Dingus(it);
+		BreakpointPosition * ret = new BreakpointPosition(it);
 		++it;
 		return ret;
 	}
@@ -221,7 +221,7 @@ class NewPartialIterator
 {
 public:
 	bool atEnd( void );
-	Dingus * next( void );
+	BreakpointPosition * next( void );
 #ifdef SIWGPYTHON
     %extend
     {
@@ -798,6 +798,11 @@ public:
 		phase.
 	 */
 
+	Breakpoint( const Breakpoint & rhs );
+	/*	Return a new Breakpoint that is a copy of this 
+		Breakpoint (i.e. has identical parameter values).
+	 */
+
 	~Breakpoint( void );
 	/*	Delete this Breakpoint.
 	 */
@@ -838,9 +843,6 @@ public:
 	/*	Assign the phase of this Breakpoint. 
 	 */
 	 
-	//	C++ copy constructor has the wrong semantics 
-	//	for the scripting interface, define a copy 
-	//	member:
 	%extend
 	{
 		Breakpoint * copy( void )
@@ -865,8 +867,8 @@ public:
 };	//	//	end of SWIG interface class Breakpoint
 
 
-%nodefault Dingus;
-class Dingus
+%nodefault BreakpointPosition;
+class BreakpointPosition
 {
 public:
 	%extend
@@ -879,5 +881,42 @@ public:
 		{ 
 			return &(self->breakpoint());
 		}
+		
+		//	duplicate the Breakpoint interface:
+		//	(not sure yet whether this is the right way)
+		//
+		
+		double frequency( void ) { return self->breakpoint().frequency(); }
+		/*	Return the frequency of this Breakpoint. 
+		*/
+		
+		double amplitude( void ) { return self->breakpoint().amplitude(); }
+		/*	Return the amplitude of this Breakpoint. 
+		*/
+		
+		double bandwidth( void ) { return self->breakpoint().bandwidth(); }
+		/*	Return the bandwidth of this Breakpoint. 
+		*/
+		
+		double phase( void ) { return self->breakpoint().phase(); }
+		/*	Return the phase of this Breakpoint. 
+		*/
+			
+		void setFrequency( double x ) { self->breakpoint().setFrequency( x ); }
+		/*	Assign the frequency of this Breakpoint. 
+		*/
+		
+		void setAmplitude( double x ) { self->breakpoint().setAmplitude( x ); }
+		/*	Assign the amplitude of this Breakpoint. 
+		*/
+		
+		void setBandwidth( double x ) { self->breakpoint().setBandwidth( x ); }
+		/*	Assign the bandwidth of this Breakpoint. 
+		*/
+		
+		void setPhase( double x ) { self->breakpoint().setPhase( x ); }
+		/*	Assign the phase of this Breakpoint. 
+		*/
+		
 	}
 };

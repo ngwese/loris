@@ -661,7 +661,7 @@ SWIG_InstallConstants(PyObject *d, swig_const_info constants[]) {
 #define  SWIGTYPE_p_Partial swig_types[4] 
 #define  SWIGTYPE_p_vectorTdouble_t swig_types[5] 
 #define  SWIGTYPE_p_BreakpointEnvelope swig_types[6] 
-#define  SWIGTYPE_p_Dingus swig_types[7] 
+#define  SWIGTYPE_p_BreakpointPosition swig_types[7] 
 #define  SWIGTYPE_p_AiffFile swig_types[8] 
 #define  SWIGTYPE_p_SampleVector swig_types[9] 
 #define  SWIGTYPE_p_PartialIterator swig_types[10] 
@@ -1060,7 +1060,7 @@ public:
 	}
 };
 
-typedef Partial::iterator Dingus;
+typedef Partial::iterator BreakpointPosition;
 
 class NewPartialIterator
 {
@@ -1072,14 +1072,14 @@ public:
 	
 	bool atEnd( void ) { return it == subject.end(); }
 
-	Dingus * next( void )
+	BreakpointPosition * next( void )
 	{
 		if ( atEnd() )
 		{
 			throw_exception("end of Partial");
 			return 0;
 		}
-		Dingus * ret = new Dingus(it);
+		BreakpointPosition * ret = new BreakpointPosition(it);
 		++it;
 		return ret;
 	}
@@ -1218,12 +1218,20 @@ Breakpoint *Breakpoint_copy(Breakpoint *self){
 int Breakpoint_equals(Breakpoint *self,Breakpoint *other){
 			return *self == *other;
 		}
-double Dingus_time(Dingus *self){ 
+double BreakpointPosition_time(BreakpointPosition *self){ 
 			return self->time(); 
 		}
-Breakpoint *Dingus_breakpoint(Dingus *self){ 
+Breakpoint *BreakpointPosition_breakpoint(BreakpointPosition *self){ 
 			return &(self->breakpoint());
 		}
+double BreakpointPosition_frequency(BreakpointPosition *self){ return self->breakpoint().frequency(); }
+double BreakpointPosition_amplitude(BreakpointPosition *self){ return self->breakpoint().amplitude(); }
+double BreakpointPosition_bandwidth(BreakpointPosition *self){ return self->breakpoint().bandwidth(); }
+double BreakpointPosition_phase(BreakpointPosition *self){ return self->breakpoint().phase(); }
+void BreakpointPosition_setFrequency(BreakpointPosition *self,double x){ self->breakpoint().setFrequency( x ); }
+void BreakpointPosition_setAmplitude(BreakpointPosition *self,double x){ self->breakpoint().setAmplitude( x ); }
+void BreakpointPosition_setBandwidth(BreakpointPosition *self,double x){ self->breakpoint().setBandwidth( x ); }
+void BreakpointPosition_setPhase(BreakpointPosition *self,double x){ self->breakpoint().setPhase( x ); }
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -3648,7 +3656,7 @@ static PyObject *_wrap_NewPartialIterator_atEnd(PyObject *self, PyObject *args) 
 static PyObject *_wrap_NewPartialIterator_next(PyObject *self, PyObject *args) {
     PyObject *resultobj;
     NewPartialIterator *arg1 = (NewPartialIterator *) 0 ;
-    Dingus *result;
+    BreakpointPosition *result;
     PyObject * obj0 = 0 ;
     
     if(!PyArg_ParseTuple(args,(char *)"O:NewPartialIterator_next",&obj0)) goto fail;
@@ -3656,7 +3664,7 @@ static PyObject *_wrap_NewPartialIterator_next(PyObject *self, PyObject *args) {
     {
         char * err;
         clear_exception();
-        result = (Dingus *)(arg1)->next();
+        result = (BreakpointPosition *)(arg1)->next();
         
         if ((err = check_exception()))
         {
@@ -3671,7 +3679,7 @@ static PyObject *_wrap_NewPartialIterator_next(PyObject *self, PyObject *args) {
             
         }
     }
-    resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_Dingus, 1);
+    resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_BreakpointPosition, 1);
     return resultobj;
     fail:
     return NULL;
@@ -5903,7 +5911,7 @@ static PyObject * PartialIterator_swigregister(PyObject *self, PyObject *args) {
     Py_INCREF(obj);
     return Py_BuildValue((char *)"");
 }
-static PyObject *_wrap_new_Breakpoint(PyObject *self, PyObject *args) {
+static PyObject *_wrap_new_Breakpoint__SWIG_0(PyObject *self, PyObject *args) {
     PyObject *resultobj;
     double arg1 ;
     double arg2 ;
@@ -5936,6 +5944,102 @@ static PyObject *_wrap_new_Breakpoint(PyObject *self, PyObject *args) {
     resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_Breakpoint, 1);
     return resultobj;
     fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_new_Breakpoint__SWIG_1(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    Breakpoint *arg1 = 0 ;
+    Breakpoint *result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:new_Breakpoint",&obj0)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_Breakpoint,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    if (arg1 == NULL) {
+        PyErr_SetString(PyExc_TypeError,"null reference"); SWIG_fail; 
+    }
+    {
+        try
+        {
+            result = (Breakpoint *)new Breakpoint((Breakpoint const &)*arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_Breakpoint, 1);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_new_Breakpoint(PyObject *self, PyObject *args) {
+    int argc;
+    PyObject *argv[5];
+    int ii;
+    
+    argc = PyObject_Length(args);
+    for (ii = 0; (ii < argc) && (ii < 4); ii++) {
+        argv[ii] = PyTuple_GetItem(args,ii);
+    }
+    if (argc == 1) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(argv[0], (void **) &ptr, SWIGTYPE_p_Breakpoint, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            return _wrap_new_Breakpoint__SWIG_1(self,args);
+        }
+    }
+    if ((argc >= 3) && (argc <= 4)) {
+        int _v;
+        {
+            _v = (PyFloat_Check(argv[0]) || PyInt_Check(argv[0]) || PyLong_Check(argv[0])) ? 1 : 0;
+        }
+        if (_v) {
+            {
+                _v = (PyFloat_Check(argv[1]) || PyInt_Check(argv[1]) || PyLong_Check(argv[1])) ? 1 : 0;
+            }
+            if (_v) {
+                {
+                    _v = (PyFloat_Check(argv[2]) || PyInt_Check(argv[2]) || PyLong_Check(argv[2])) ? 1 : 0;
+                }
+                if (_v) {
+                    if (argc <= 3) {
+                        return _wrap_new_Breakpoint__SWIG_0(self,args);
+                    }
+                    {
+                        _v = (PyFloat_Check(argv[3]) || PyInt_Check(argv[3]) || PyLong_Check(argv[3])) ? 1 : 0;
+                    }
+                    if (_v) {
+                        return _wrap_new_Breakpoint__SWIG_0(self,args);
+                    }
+                }
+            }
+        }
+    }
+    
+    PyErr_SetString(PyExc_TypeError,"No matching function for overloaded 'new_Breakpoint'");
     return NULL;
 }
 
@@ -6345,18 +6449,18 @@ static PyObject * Breakpoint_swigregister(PyObject *self, PyObject *args) {
     Py_INCREF(obj);
     return Py_BuildValue((char *)"");
 }
-static PyObject *_wrap_Dingus_time(PyObject *self, PyObject *args) {
+static PyObject *_wrap_BreakpointPosition_time(PyObject *self, PyObject *args) {
     PyObject *resultobj;
-    Dingus *arg1 = (Dingus *) 0 ;
+    BreakpointPosition *arg1 = (BreakpointPosition *) 0 ;
     double result;
     PyObject * obj0 = 0 ;
     
-    if(!PyArg_ParseTuple(args,(char *)"O:Dingus_time",&obj0)) goto fail;
-    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_Dingus,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    if(!PyArg_ParseTuple(args,(char *)"O:BreakpointPosition_time",&obj0)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_BreakpointPosition,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
     {
         try
         {
-            result = (double)Dingus_time(arg1);
+            result = (double)BreakpointPosition_time(arg1);
             
         }
         catch( Loris::Exception & ex ) 
@@ -6381,18 +6485,18 @@ static PyObject *_wrap_Dingus_time(PyObject *self, PyObject *args) {
 }
 
 
-static PyObject *_wrap_Dingus_breakpoint(PyObject *self, PyObject *args) {
+static PyObject *_wrap_BreakpointPosition_breakpoint(PyObject *self, PyObject *args) {
     PyObject *resultobj;
-    Dingus *arg1 = (Dingus *) 0 ;
+    BreakpointPosition *arg1 = (BreakpointPosition *) 0 ;
     Breakpoint *result;
     PyObject * obj0 = 0 ;
     
-    if(!PyArg_ParseTuple(args,(char *)"O:Dingus_breakpoint",&obj0)) goto fail;
-    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_Dingus,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    if(!PyArg_ParseTuple(args,(char *)"O:BreakpointPosition_breakpoint",&obj0)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_BreakpointPosition,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
     {
         try
         {
-            result = (Breakpoint *)Dingus_breakpoint(arg1);
+            result = (Breakpoint *)BreakpointPosition_breakpoint(arg1);
             
         }
         catch( Loris::Exception & ex ) 
@@ -6417,10 +6521,298 @@ static PyObject *_wrap_Dingus_breakpoint(PyObject *self, PyObject *args) {
 }
 
 
-static PyObject * Dingus_swigregister(PyObject *self, PyObject *args) {
+static PyObject *_wrap_BreakpointPosition_frequency(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    BreakpointPosition *arg1 = (BreakpointPosition *) 0 ;
+    double result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:BreakpointPosition_frequency",&obj0)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_BreakpointPosition,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        try
+        {
+            result = (double)BreakpointPosition_frequency(arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    resultobj = PyFloat_FromDouble(result);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_BreakpointPosition_amplitude(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    BreakpointPosition *arg1 = (BreakpointPosition *) 0 ;
+    double result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:BreakpointPosition_amplitude",&obj0)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_BreakpointPosition,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        try
+        {
+            result = (double)BreakpointPosition_amplitude(arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    resultobj = PyFloat_FromDouble(result);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_BreakpointPosition_bandwidth(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    BreakpointPosition *arg1 = (BreakpointPosition *) 0 ;
+    double result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:BreakpointPosition_bandwidth",&obj0)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_BreakpointPosition,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        try
+        {
+            result = (double)BreakpointPosition_bandwidth(arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    resultobj = PyFloat_FromDouble(result);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_BreakpointPosition_phase(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    BreakpointPosition *arg1 = (BreakpointPosition *) 0 ;
+    double result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:BreakpointPosition_phase",&obj0)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_BreakpointPosition,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        try
+        {
+            result = (double)BreakpointPosition_phase(arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    resultobj = PyFloat_FromDouble(result);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_BreakpointPosition_setFrequency(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    BreakpointPosition *arg1 = (BreakpointPosition *) 0 ;
+    double arg2 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"Od:BreakpointPosition_setFrequency",&obj0,&arg2)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_BreakpointPosition,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        try
+        {
+            BreakpointPosition_setFrequency(arg1,arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_BreakpointPosition_setAmplitude(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    BreakpointPosition *arg1 = (BreakpointPosition *) 0 ;
+    double arg2 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"Od:BreakpointPosition_setAmplitude",&obj0,&arg2)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_BreakpointPosition,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        try
+        {
+            BreakpointPosition_setAmplitude(arg1,arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_BreakpointPosition_setBandwidth(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    BreakpointPosition *arg1 = (BreakpointPosition *) 0 ;
+    double arg2 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"Od:BreakpointPosition_setBandwidth",&obj0,&arg2)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_BreakpointPosition,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        try
+        {
+            BreakpointPosition_setBandwidth(arg1,arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_BreakpointPosition_setPhase(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    BreakpointPosition *arg1 = (BreakpointPosition *) 0 ;
+    double arg2 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"Od:BreakpointPosition_setPhase",&obj0,&arg2)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_BreakpointPosition,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        try
+        {
+            BreakpointPosition_setPhase(arg1,arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject * BreakpointPosition_swigregister(PyObject *self, PyObject *args) {
     PyObject *obj;
     if (!PyArg_ParseTuple(args,(char*)"O", &obj)) return NULL;
-    SWIG_TypeClientData(SWIGTYPE_p_Dingus, obj);
+    SWIG_TypeClientData(SWIGTYPE_p_BreakpointPosition, obj);
     Py_INCREF(obj);
     return Py_BuildValue((char *)"");
 }
@@ -6567,9 +6959,17 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"Breakpoint_copy", _wrap_Breakpoint_copy, METH_VARARGS },
 	 { (char *)"Breakpoint_equals", _wrap_Breakpoint_equals, METH_VARARGS },
 	 { (char *)"Breakpoint_swigregister", Breakpoint_swigregister, METH_VARARGS },
-	 { (char *)"Dingus_time", _wrap_Dingus_time, METH_VARARGS },
-	 { (char *)"Dingus_breakpoint", _wrap_Dingus_breakpoint, METH_VARARGS },
-	 { (char *)"Dingus_swigregister", Dingus_swigregister, METH_VARARGS },
+	 { (char *)"BreakpointPosition_time", _wrap_BreakpointPosition_time, METH_VARARGS },
+	 { (char *)"BreakpointPosition_breakpoint", _wrap_BreakpointPosition_breakpoint, METH_VARARGS },
+	 { (char *)"BreakpointPosition_frequency", _wrap_BreakpointPosition_frequency, METH_VARARGS },
+	 { (char *)"BreakpointPosition_amplitude", _wrap_BreakpointPosition_amplitude, METH_VARARGS },
+	 { (char *)"BreakpointPosition_bandwidth", _wrap_BreakpointPosition_bandwidth, METH_VARARGS },
+	 { (char *)"BreakpointPosition_phase", _wrap_BreakpointPosition_phase, METH_VARARGS },
+	 { (char *)"BreakpointPosition_setFrequency", _wrap_BreakpointPosition_setFrequency, METH_VARARGS },
+	 { (char *)"BreakpointPosition_setAmplitude", _wrap_BreakpointPosition_setAmplitude, METH_VARARGS },
+	 { (char *)"BreakpointPosition_setBandwidth", _wrap_BreakpointPosition_setBandwidth, METH_VARARGS },
+	 { (char *)"BreakpointPosition_setPhase", _wrap_BreakpointPosition_setPhase, METH_VARARGS },
+	 { (char *)"BreakpointPosition_swigregister", BreakpointPosition_swigregister, METH_VARARGS },
 	 { NULL, NULL }
 };
 
@@ -6583,7 +6983,7 @@ static swig_type_info _swigt__p_double[] = {{"_p_double", 0, "double *", 0},{"_p
 static swig_type_info _swigt__p_Partial[] = {{"_p_Partial", 0, "Partial *", 0},{"_p_Partial"},{0}};
 static swig_type_info _swigt__p_vectorTdouble_t[] = {{"_p_vectorTdouble_t", 0, "vector<double > *", 0},{"_p_vectorTdouble_t"},{0}};
 static swig_type_info _swigt__p_BreakpointEnvelope[] = {{"_p_BreakpointEnvelope", 0, "BreakpointEnvelope *", 0},{"_p_BreakpointEnvelope"},{0}};
-static swig_type_info _swigt__p_Dingus[] = {{"_p_Dingus", 0, "Dingus *", 0},{"_p_Dingus"},{0}};
+static swig_type_info _swigt__p_BreakpointPosition[] = {{"_p_BreakpointPosition", 0, "BreakpointPosition *", 0},{"_p_BreakpointPosition"},{0}};
 static swig_type_info _swigt__p_AiffFile[] = {{"_p_AiffFile", 0, "AiffFile *", 0},{"_p_AiffFile"},{0}};
 static swig_type_info _swigt__p_SampleVector[] = {{"_p_SampleVector", 0, "SampleVector *", 0},{"_p_SampleVector"},{0}};
 static swig_type_info _swigt__p_PartialIterator[] = {{"_p_PartialIterator", 0, "PartialIterator *", 0},{"_p_PartialIterator"},{0}};
@@ -6599,7 +6999,7 @@ _swigt__p_double,
 _swigt__p_Partial, 
 _swigt__p_vectorTdouble_t, 
 _swigt__p_BreakpointEnvelope, 
-_swigt__p_Dingus, 
+_swigt__p_BreakpointPosition, 
 _swigt__p_AiffFile, 
 _swigt__p_SampleVector, 
 _swigt__p_PartialIterator, 

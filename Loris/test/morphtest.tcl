@@ -92,7 +92,7 @@ set n 0
 
 set iter [[[$clar iterator] next] iterator]
 while { ! [ $iter atEnd] } {
-	set  f [expr $f + [ [ [$iter next] breakpoint ] frequency ] ]
+	set  f [expr $f + [ [$iter next] frequency ] ]
 	incr n
 }
 puts "avg frequency of first distilled clarinet partial is [expr $f/$n]"

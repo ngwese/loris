@@ -390,22 +390,30 @@ class BreakpointPtr(Breakpoint):
         _swig_setattr(self, Breakpoint,self.__class__,Breakpoint)
 _loris.Breakpoint_swigregister(BreakpointPtr)
 
-class Dingus(_object):
+class BreakpointPosition(_object):
     __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, Dingus, name, value)
+    __setattr__ = lambda self, name, value: _swig_setattr(self, BreakpointPosition, name, value)
     __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, Dingus, name)
-    def time(*args): return apply(_loris.Dingus_time,args)
-    def breakpoint(*args): return apply(_loris.Dingus_breakpoint,args)
+    __getattr__ = lambda self, name: _swig_getattr(self, BreakpointPosition, name)
+    def time(*args): return apply(_loris.BreakpointPosition_time,args)
+    def breakpoint(*args): return apply(_loris.BreakpointPosition_breakpoint,args)
+    def frequency(*args): return apply(_loris.BreakpointPosition_frequency,args)
+    def amplitude(*args): return apply(_loris.BreakpointPosition_amplitude,args)
+    def bandwidth(*args): return apply(_loris.BreakpointPosition_bandwidth,args)
+    def phase(*args): return apply(_loris.BreakpointPosition_phase,args)
+    def setFrequency(*args): return apply(_loris.BreakpointPosition_setFrequency,args)
+    def setAmplitude(*args): return apply(_loris.BreakpointPosition_setAmplitude,args)
+    def setBandwidth(*args): return apply(_loris.BreakpointPosition_setBandwidth,args)
+    def setPhase(*args): return apply(_loris.BreakpointPosition_setPhase,args)
     def __init__(self): raise RuntimeError, "No constructor defined"
     def __repr__(self):
-        return "<C Dingus instance at %s>" % (self.this,)
+        return "<C BreakpointPosition instance at %s>" % (self.this,)
 
-class DingusPtr(Dingus):
+class BreakpointPositionPtr(BreakpointPosition):
     def __init__(self,this):
-        _swig_setattr(self, Dingus, 'this', this)
-        if not hasattr(self,"thisown"): _swig_setattr(self, Dingus, 'thisown', 0)
-        _swig_setattr(self, Dingus,self.__class__,Dingus)
-_loris.Dingus_swigregister(DingusPtr)
+        _swig_setattr(self, BreakpointPosition, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, BreakpointPosition, 'thisown', 0)
+        _swig_setattr(self, BreakpointPosition,self.__class__,BreakpointPosition)
+_loris.BreakpointPosition_swigregister(BreakpointPositionPtr)
 
 

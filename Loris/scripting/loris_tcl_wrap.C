@@ -1005,15 +1005,15 @@ typedef struct {
 #define  SWIGTYPE_p_PartialList swig_types[1] 
 #define  SWIGTYPE_p_SampleVector swig_types[2] 
 #define  SWIGTYPE_p_AiffFile swig_types[3] 
-#define  SWIGTYPE_p_Analyzer swig_types[4] 
-#define  SWIGTYPE_p_NewPlistIterator swig_types[5] 
-#define  SWIGTYPE_p_NewPartialIterator swig_types[6] 
-#define  SWIGTYPE_p_double swig_types[7] 
-#define  SWIGTYPE_p_PartialListIterator swig_types[8] 
-#define  SWIGTYPE_p_PartialIterator swig_types[9] 
-#define  SWIGTYPE_p_Breakpoint swig_types[10] 
-#define  SWIGTYPE_p_BreakpointEnvelope swig_types[11] 
-#define  SWIGTYPE_p_Dingus swig_types[12] 
+#define  SWIGTYPE_p_BreakpointPosition swig_types[4] 
+#define  SWIGTYPE_p_Analyzer swig_types[5] 
+#define  SWIGTYPE_p_NewPlistIterator swig_types[6] 
+#define  SWIGTYPE_p_NewPartialIterator swig_types[7] 
+#define  SWIGTYPE_p_double swig_types[8] 
+#define  SWIGTYPE_p_PartialListIterator swig_types[9] 
+#define  SWIGTYPE_p_PartialIterator swig_types[10] 
+#define  SWIGTYPE_p_Breakpoint swig_types[11] 
+#define  SWIGTYPE_p_BreakpointEnvelope swig_types[12] 
 static swig_type_info *swig_types[14];
 
 /* -------- TYPES TABLE (END) -------- */
@@ -1361,7 +1361,7 @@ public:
 	}
 };
 
-typedef Partial::iterator Dingus;
+typedef Partial::iterator BreakpointPosition;
 
 class NewPartialIterator
 {
@@ -1373,14 +1373,14 @@ public:
 	
 	bool atEnd( void ) { return it == subject.end(); }
 
-	Dingus * next( void )
+	BreakpointPosition * next( void )
 	{
 		if ( atEnd() )
 		{
 			throw_exception("end of Partial");
 			return 0;
 		}
-		Dingus * ret = new Dingus(it);
+		BreakpointPosition * ret = new BreakpointPosition(it);
 		++it;
 		return ret;
 	}
@@ -1486,12 +1486,20 @@ Breakpoint *Breakpoint_copy(Breakpoint *self){
 int Breakpoint_equals(Breakpoint *self,Breakpoint *other){
 			return *self == *other;
 		}
-double Dingus_time(Dingus *self){ 
+double BreakpointPosition_time(BreakpointPosition *self){ 
 			return self->time(); 
 		}
-Breakpoint *Dingus_breakpoint(Dingus *self){ 
+Breakpoint *BreakpointPosition_breakpoint(BreakpointPosition *self){ 
 			return &(self->breakpoint());
 		}
+double BreakpointPosition_frequency(BreakpointPosition *self){ return self->breakpoint().frequency(); }
+double BreakpointPosition_amplitude(BreakpointPosition *self){ return self->breakpoint().amplitude(); }
+double BreakpointPosition_bandwidth(BreakpointPosition *self){ return self->breakpoint().bandwidth(); }
+double BreakpointPosition_phase(BreakpointPosition *self){ return self->breakpoint().phase(); }
+void BreakpointPosition_setFrequency(BreakpointPosition *self,double x){ self->breakpoint().setFrequency( x ); }
+void BreakpointPosition_setAmplitude(BreakpointPosition *self,double x){ self->breakpoint().setAmplitude( x ); }
+void BreakpointPosition_setBandwidth(BreakpointPosition *self,double x){ self->breakpoint().setBandwidth( x ); }
+void BreakpointPosition_setPhase(BreakpointPosition *self,double x){ self->breakpoint().setPhase( x ); }
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -3824,14 +3832,14 @@ _wrap_NewPartialIterator_atEnd(ClientData clientData, Tcl_Interp *interp, int ob
 static int
 _wrap_NewPartialIterator_next(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
     NewPartialIterator *arg1 = (NewPartialIterator *) 0 ;
-    Dingus *result;
+    BreakpointPosition *result;
     
     if (SWIG_GetArgs(interp, objc, objv,"o:NewPartialIterator_next self ",0) == TCL_ERROR) SWIG_fail;
     if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_NewPartialIterator,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     {
         char * err;
         clear_exception();
-        result = (Dingus *)(arg1)->next();
+        result = (BreakpointPosition *)(arg1)->next();
         
         if ((err = check_exception()))
         {
@@ -3839,7 +3847,7 @@ _wrap_NewPartialIterator_next(ClientData clientData, Tcl_Interp *interp, int obj
             
         }
     }
-    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_Dingus,0));
+    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_BreakpointPosition,0));
     return TCL_OK;
     fail:
     return TCL_ERROR;
@@ -5956,7 +5964,7 @@ static swig_attribute swig_PartialIterator_attributes[] = {
 static swig_class *swig_PartialIterator_bases[] = {0};
 swig_class _wrap_class_PartialIterator = { "PartialIterator", &SWIGTYPE_p_PartialIterator,_wrap_new_PartialIterator, swig_delete_PartialIterator, swig_PartialIterator_methods, swig_PartialIterator_attributes, swig_PartialIterator_bases };
 static int
-_wrap_new_Breakpoint(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+_wrap_new_Breakpoint__SWIG_0(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
     double arg1 ;
     double arg2 ;
     double arg3 ;
@@ -5988,6 +5996,100 @@ _wrap_new_Breakpoint(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Ob
     Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_Breakpoint,0));
     return TCL_OK;
     fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_new_Breakpoint__SWIG_1(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    Breakpoint *arg1 = 0 ;
+    Breakpoint *result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"o:new_Breakpoint rhs ",0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_Breakpoint,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            result = (Breakpoint *)new Breakpoint((Breakpoint const &)*arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_Breakpoint,0));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_new_Breakpoint(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    Tcl_Obj *CONST *argv = objv+1;
+    int argc = objc-1;
+    if (argc == 1) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(interp, argv[0], (void **) &ptr, SWIGTYPE_p_Breakpoint, 0) == TCL_ERROR) {
+                _v = 0;
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            return _wrap_new_Breakpoint__SWIG_1(clientData, interp, objc, objv);
+        }
+    }
+    if ((argc >= 3) && (argc <= 4)) {
+        int _v;
+        {
+            double tmp;
+            if (Tcl_GetDoubleFromObj(NULL,argv[0],&tmp) == TCL_ERROR) _v = 0;
+            else _v = 1;
+        }
+        if (_v) {
+            {
+                double tmp;
+                if (Tcl_GetDoubleFromObj(NULL,argv[1],&tmp) == TCL_ERROR) _v = 0;
+                else _v = 1;
+            }
+            if (_v) {
+                {
+                    double tmp;
+                    if (Tcl_GetDoubleFromObj(NULL,argv[2],&tmp) == TCL_ERROR) _v = 0;
+                    else _v = 1;
+                }
+                if (_v) {
+                    if (argc <= 3) {
+                        return _wrap_new_Breakpoint__SWIG_0(clientData, interp, objc, objv);
+                    }
+                    {
+                        double tmp;
+                        if (Tcl_GetDoubleFromObj(NULL,argv[3],&tmp) == TCL_ERROR) _v = 0;
+                        else _v = 1;
+                    }
+                    if (_v) {
+                        return _wrap_new_Breakpoint__SWIG_0(clientData, interp, objc, objv);
+                    }
+                }
+            }
+        }
+    }
+    
+    Tcl_SetResult(interp,(char *) "No matching function for overloaded 'new_Breakpoint'", TCL_STATIC);
     return TCL_ERROR;
 }
 
@@ -6401,16 +6503,16 @@ static swig_attribute swig_Breakpoint_attributes[] = {
 static swig_class *swig_Breakpoint_bases[] = {0};
 swig_class _wrap_class_Breakpoint = { "Breakpoint", &SWIGTYPE_p_Breakpoint,_wrap_new_Breakpoint, swig_delete_Breakpoint, swig_Breakpoint_methods, swig_Breakpoint_attributes, swig_Breakpoint_bases };
 static int
-_wrap_Dingus_time(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
-    Dingus *arg1 = (Dingus *) 0 ;
+_wrap_BreakpointPosition_time(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    BreakpointPosition *arg1 = (BreakpointPosition *) 0 ;
     double result;
     
-    if (SWIG_GetArgs(interp, objc, objv,"o:Dingus_time self ",0) == TCL_ERROR) SWIG_fail;
-    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_Dingus,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    if (SWIG_GetArgs(interp, objc, objv,"o:BreakpointPosition_time self ",0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_BreakpointPosition,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     {
         try
         {
-            result = (double)Dingus_time(arg1);
+            result = (double)BreakpointPosition_time(arg1);
             
         }
         catch( Loris::Exception & ex ) 
@@ -6436,16 +6538,16 @@ _wrap_Dingus_time(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *
 
 
 static int
-_wrap_Dingus_breakpoint(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
-    Dingus *arg1 = (Dingus *) 0 ;
+_wrap_BreakpointPosition_breakpoint(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    BreakpointPosition *arg1 = (BreakpointPosition *) 0 ;
     Breakpoint *result;
     
-    if (SWIG_GetArgs(interp, objc, objv,"o:Dingus_breakpoint self ",0) == TCL_ERROR) SWIG_fail;
-    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_Dingus,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    if (SWIG_GetArgs(interp, objc, objv,"o:BreakpointPosition_breakpoint self ",0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_BreakpointPosition,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     {
         try
         {
-            result = (Breakpoint *)Dingus_breakpoint(arg1);
+            result = (Breakpoint *)BreakpointPosition_breakpoint(arg1);
             
         }
         catch( Loris::Exception & ex ) 
@@ -6470,16 +6572,304 @@ _wrap_Dingus_breakpoint(ClientData clientData, Tcl_Interp *interp, int objc, Tcl
 }
 
 
-static swig_method swig_Dingus_methods[] = {
-    {"time", _wrap_Dingus_time}, 
-    {"breakpoint", _wrap_Dingus_breakpoint}, 
+static int
+_wrap_BreakpointPosition_frequency(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    BreakpointPosition *arg1 = (BreakpointPosition *) 0 ;
+    double result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"o:BreakpointPosition_frequency self ",0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_BreakpointPosition,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            result = (double)BreakpointPosition_frequency(arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,Tcl_NewDoubleObj((double) result));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_BreakpointPosition_amplitude(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    BreakpointPosition *arg1 = (BreakpointPosition *) 0 ;
+    double result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"o:BreakpointPosition_amplitude self ",0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_BreakpointPosition,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            result = (double)BreakpointPosition_amplitude(arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,Tcl_NewDoubleObj((double) result));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_BreakpointPosition_bandwidth(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    BreakpointPosition *arg1 = (BreakpointPosition *) 0 ;
+    double result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"o:BreakpointPosition_bandwidth self ",0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_BreakpointPosition,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            result = (double)BreakpointPosition_bandwidth(arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,Tcl_NewDoubleObj((double) result));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_BreakpointPosition_phase(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    BreakpointPosition *arg1 = (BreakpointPosition *) 0 ;
+    double result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"o:BreakpointPosition_phase self ",0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_BreakpointPosition,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            result = (double)BreakpointPosition_phase(arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,Tcl_NewDoubleObj((double) result));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_BreakpointPosition_setFrequency(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    BreakpointPosition *arg1 = (BreakpointPosition *) 0 ;
+    double arg2 ;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"od:BreakpointPosition_setFrequency self x ",0,&arg2) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_BreakpointPosition,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            BreakpointPosition_setFrequency(arg1,arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_BreakpointPosition_setAmplitude(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    BreakpointPosition *arg1 = (BreakpointPosition *) 0 ;
+    double arg2 ;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"od:BreakpointPosition_setAmplitude self x ",0,&arg2) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_BreakpointPosition,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            BreakpointPosition_setAmplitude(arg1,arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_BreakpointPosition_setBandwidth(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    BreakpointPosition *arg1 = (BreakpointPosition *) 0 ;
+    double arg2 ;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"od:BreakpointPosition_setBandwidth self x ",0,&arg2) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_BreakpointPosition,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            BreakpointPosition_setBandwidth(arg1,arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_BreakpointPosition_setPhase(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    BreakpointPosition *arg1 = (BreakpointPosition *) 0 ;
+    double arg2 ;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"od:BreakpointPosition_setPhase self x ",0,&arg2) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_BreakpointPosition,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            BreakpointPosition_setPhase(arg1,arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static swig_method swig_BreakpointPosition_methods[] = {
+    {"time", _wrap_BreakpointPosition_time}, 
+    {"breakpoint", _wrap_BreakpointPosition_breakpoint}, 
+    {"frequency", _wrap_BreakpointPosition_frequency}, 
+    {"amplitude", _wrap_BreakpointPosition_amplitude}, 
+    {"bandwidth", _wrap_BreakpointPosition_bandwidth}, 
+    {"phase", _wrap_BreakpointPosition_phase}, 
+    {"setFrequency", _wrap_BreakpointPosition_setFrequency}, 
+    {"setAmplitude", _wrap_BreakpointPosition_setAmplitude}, 
+    {"setBandwidth", _wrap_BreakpointPosition_setBandwidth}, 
+    {"setPhase", _wrap_BreakpointPosition_setPhase}, 
     {0,0}
 };
-static swig_attribute swig_Dingus_attributes[] = {
+static swig_attribute swig_BreakpointPosition_attributes[] = {
     {0,0,0}
 };
-static swig_class *swig_Dingus_bases[] = {0};
-swig_class _wrap_class_Dingus = { "Dingus", &SWIGTYPE_p_Dingus,0,0, swig_Dingus_methods, swig_Dingus_attributes, swig_Dingus_bases };
+static swig_class *swig_BreakpointPosition_bases[] = {0};
+swig_class _wrap_class_BreakpointPosition = { "BreakpointPosition", &SWIGTYPE_p_BreakpointPosition,0,0, swig_BreakpointPosition_methods, swig_BreakpointPosition_attributes, swig_BreakpointPosition_bases };
 
 static swig_command_info swig_commands[] = {
     { SWIG_prefix "channelize", (swig_wrapper_func) _wrap_channelize, NULL},
@@ -6622,9 +7012,17 @@ static swig_command_info swig_commands[] = {
     { SWIG_prefix "Breakpoint_copy", (swig_wrapper_func) _wrap_Breakpoint_copy, NULL},
     { SWIG_prefix "Breakpoint_equals", (swig_wrapper_func) _wrap_Breakpoint_equals, NULL},
     { SWIG_prefix "Breakpoint", (swig_wrapper_func) SWIG_ObjectConstructor, &_wrap_class_Breakpoint},
-    { SWIG_prefix "Dingus_time", (swig_wrapper_func) _wrap_Dingus_time, NULL},
-    { SWIG_prefix "Dingus_breakpoint", (swig_wrapper_func) _wrap_Dingus_breakpoint, NULL},
-    { SWIG_prefix "Dingus", (swig_wrapper_func) SWIG_ObjectConstructor, &_wrap_class_Dingus},
+    { SWIG_prefix "BreakpointPosition_time", (swig_wrapper_func) _wrap_BreakpointPosition_time, NULL},
+    { SWIG_prefix "BreakpointPosition_breakpoint", (swig_wrapper_func) _wrap_BreakpointPosition_breakpoint, NULL},
+    { SWIG_prefix "BreakpointPosition_frequency", (swig_wrapper_func) _wrap_BreakpointPosition_frequency, NULL},
+    { SWIG_prefix "BreakpointPosition_amplitude", (swig_wrapper_func) _wrap_BreakpointPosition_amplitude, NULL},
+    { SWIG_prefix "BreakpointPosition_bandwidth", (swig_wrapper_func) _wrap_BreakpointPosition_bandwidth, NULL},
+    { SWIG_prefix "BreakpointPosition_phase", (swig_wrapper_func) _wrap_BreakpointPosition_phase, NULL},
+    { SWIG_prefix "BreakpointPosition_setFrequency", (swig_wrapper_func) _wrap_BreakpointPosition_setFrequency, NULL},
+    { SWIG_prefix "BreakpointPosition_setAmplitude", (swig_wrapper_func) _wrap_BreakpointPosition_setAmplitude, NULL},
+    { SWIG_prefix "BreakpointPosition_setBandwidth", (swig_wrapper_func) _wrap_BreakpointPosition_setBandwidth, NULL},
+    { SWIG_prefix "BreakpointPosition_setPhase", (swig_wrapper_func) _wrap_BreakpointPosition_setPhase, NULL},
+    { SWIG_prefix "BreakpointPosition", (swig_wrapper_func) SWIG_ObjectConstructor, &_wrap_class_BreakpointPosition},
     {0, 0, 0}
 };
 
@@ -6642,6 +7040,7 @@ static swig_type_info _swigt__p_Partial[] = {{"_p_Partial", 0, "Partial *", &_wr
 static swig_type_info _swigt__p_PartialList[] = {{"_p_PartialList", 0, "PartialList *", &_wrap_class_PartialList},{"_p_PartialList"},{0}};
 static swig_type_info _swigt__p_SampleVector[] = {{"_p_SampleVector", 0, "SampleVector *", &_wrap_class_SampleVector},{"_p_SampleVector"},{0}};
 static swig_type_info _swigt__p_AiffFile[] = {{"_p_AiffFile", 0, "AiffFile *", &_wrap_class_AiffFile},{"_p_AiffFile"},{0}};
+static swig_type_info _swigt__p_BreakpointPosition[] = {{"_p_BreakpointPosition", 0, "BreakpointPosition *", &_wrap_class_BreakpointPosition},{"_p_BreakpointPosition"},{0}};
 static swig_type_info _swigt__p_Analyzer[] = {{"_p_Analyzer", 0, "Analyzer *", &_wrap_class_Analyzer},{"_p_Analyzer"},{0}};
 static swig_type_info _swigt__p_NewPlistIterator[] = {{"_p_NewPlistIterator", 0, "NewPlistIterator *", &_wrap_class_NewPlistIterator},{"_p_NewPlistIterator"},{0}};
 static swig_type_info _swigt__p_NewPartialIterator[] = {{"_p_NewPartialIterator", 0, "NewPartialIterator *", &_wrap_class_NewPartialIterator},{"_p_NewPartialIterator"},{0}};
@@ -6650,13 +7049,13 @@ static swig_type_info _swigt__p_PartialListIterator[] = {{"_p_PartialListIterato
 static swig_type_info _swigt__p_PartialIterator[] = {{"_p_PartialIterator", 0, "PartialIterator *", &_wrap_class_PartialIterator},{"_p_PartialIterator"},{0}};
 static swig_type_info _swigt__p_Breakpoint[] = {{"_p_Breakpoint", 0, "Breakpoint *", &_wrap_class_Breakpoint},{"_p_Breakpoint"},{0}};
 static swig_type_info _swigt__p_BreakpointEnvelope[] = {{"_p_BreakpointEnvelope", 0, "BreakpointEnvelope *", &_wrap_class_BreakpointEnvelope},{"_p_BreakpointEnvelope"},{0}};
-static swig_type_info _swigt__p_Dingus[] = {{"_p_Dingus", 0, "Dingus *", &_wrap_class_Dingus},{"_p_Dingus"},{0}};
 
 static swig_type_info *swig_types_initial[] = {
 _swigt__p_Partial, 
 _swigt__p_PartialList, 
 _swigt__p_SampleVector, 
 _swigt__p_AiffFile, 
+_swigt__p_BreakpointPosition, 
 _swigt__p_Analyzer, 
 _swigt__p_NewPlistIterator, 
 _swigt__p_NewPartialIterator, 
@@ -6665,7 +7064,6 @@ _swigt__p_PartialListIterator,
 _swigt__p_PartialIterator, 
 _swigt__p_Breakpoint, 
 _swigt__p_BreakpointEnvelope, 
-_swigt__p_Dingus, 
 0
 };
 
