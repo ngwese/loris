@@ -42,10 +42,12 @@ libloris_la_LIBADD = \
 		$(top_builddir)/classes/Notifier.lo \
 		$(top_builddir)/classes/Oscillator.lo \
 		$(top_builddir)/classes/Partial.lo \
+		$(top_builddir)/classes/PartialBuilder.lo \
 		$(top_builddir)/classes/ReassignedSpectrum.lo \
 		$(top_builddir)/classes/SdifFile.lo \
 		$(top_builddir)/classes/Sieve.lo \
 		$(top_builddir)/classes/SpcFile.lo \
+		$(top_builddir)/classes/SpectralPeakSelector.lo \
 		$(top_builddir)/classes/Synthesizer.lo \
 		-lfftw -lsdif
 # libloris_la_LDFLAGS = -version-info 3:1:0 -prebind

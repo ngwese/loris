@@ -102,7 +102,7 @@ public:
 
 
 //	-- predicates --
-	/*	Predicate functor returning true if the label its Partial argument is
+	/*	Predicate functor returning true if the label of its Partial argument is
 		equal to the specified 32-bit label, and false otherwise.
 	 */
 	struct label_equals : 
@@ -113,6 +113,19 @@ public:
 		
 		bool operator()( const Partial & p ) const 
 			{ return p.label() == label; }
+	};
+	
+	/*	Predicate functor returning true if the label of its Partial argument is
+		greater than the specified 32-bit label, and false otherwise.
+	 */
+	struct label_greater : 
+		public std::unary_function< const Partial, bool >
+	{
+		int label;
+		label_greater( int l ) : label(l) {}
+		
+		bool operator()( const Partial & p ) const 
+			{ return p.label() > label; }
 	};
 	
 	/*	Template adapter for using PartialUtil predicates with 

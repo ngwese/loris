@@ -32,13 +32,16 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
+#include <memory>
 #include <vector>
+#include <Partial.h>
 #include <PartialList.h>
 
 //	begin namespace
 namespace Loris {
 
 class Analyzer_imp;
+class Envelope;
 
 // ---------------------------------------------------------------------------
 //	class Analyzer
@@ -58,7 +61,7 @@ class Analyzer_imp;
 class Analyzer
 {
 //	-- instance variables --
-	Analyzer_imp * _imp; 	//	insulating implementation class
+	std::auto_ptr< Analyzer_imp > _imp; 	//	insulating implementation class
 				
 //	-- public interface --
 public:
@@ -106,11 +109,27 @@ public:
 		PartialList (std::list of Partials).	
 	 */
 	
-	void analyze( const std::vector<double> & buffer, double srate )
-		{ analyze( &(buffer[0]),  &(buffer[0]) + buffer.size(), srate ); }
+	void analyze( const std::vector<double> & buffer, double srate );
 	/*	Analyze a vector of (mono) samples at the given sample rate 	  	
 		(in Hz) and append the extracted Partials to Analyzer's 
 		PartialList (std::list of Partials).	
+	 */
+	
+//	-- tracking analysis --
+	void analyze( const double * bufBegin, const double * bufEnd, double srate,
+				  const Envelope & reference );
+	/*	Analyze a range of (mono) samples at the given sample rate 	  	
+		(in Hz) and append the extracted Partials to Analyzer's 
+		PartialList (std::list of Partials). Use the specified envelope
+		as a frequency reference for Partial tracking.
+	 */
+	
+	void analyze( const std::vector<double> & buffer, double srate, 
+				  const Envelope & reference );
+	/*	Analyze a vector of (mono) samples at the given sample rate 	  	
+		(in Hz) and append the extracted Partials to Analyzer's 
+		PartialList (std::list of Partials). Use the specified envelope
+		as a frequency reference for Partial tracking.
 	 */
 	
 //	-- parameter access --

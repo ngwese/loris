@@ -33,6 +33,7 @@ pkginclude_HEADERS = AiffFile.h	\
 				Notifier.h	\
 				Oscillator.h	\
 				Partial.h	\
+				PartialBuilder.h	\
 				PartialList.h	\
 				PartialPtrs.h	\
 				PartialUtils.h	\
@@ -40,6 +41,8 @@ pkginclude_HEADERS = AiffFile.h	\
 				SdifFile.h	\
 				Sieve.h	\
 				SpcFile.h	\
+				SpectralPeaks.h \
+				SpectralPeakSelector.h \
 				Synthesizer.h
 
 noinst_LTLIBRARIES = libclasses.la
@@ -89,6 +92,8 @@ libclasses_la_SOURCES = AiffFile.C \
 		Oscillator.h \
 		Partial.C \
 		Partial.h \
+		PartialBuilder.C	\
+		PartialBuilder.h	\
 		PartialList.h \
 		PartialPtrs.h \
 		PartialUtils.h \
@@ -101,6 +106,9 @@ libclasses_la_SOURCES = AiffFile.C \
 		Sieve.C \
 		SpcFile.C \
 		SpcFile.h \
+		SpectralPeaks.h \
+		SpectralPeakSelector.C \
+		SpectralPeakSelector.h \
 		Synthesizer.C \
 		Synthesizer.h
 

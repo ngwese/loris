@@ -294,7 +294,7 @@ ReassignedSpectrum::reassignedTime( unsigned long idx ) const
 //	in separately. fracBinNum is no longer used, we just use the peak magnitude.
 //	
 double
-ReassignedSpectrum::reassignedMagnitude( double fracBinNum, long peakBinNumber ) const
+ReassignedSpectrum::reassignedMagnitude( double /* fracBinNum */, long peakBinNumber ) const
 {
 	// 	don't need to check fracBinNum since we don't use it,
 	//	could check peakBinNumber though:

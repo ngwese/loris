@@ -24,7 +24,9 @@
  *
  * AssociateBandwidth.h
  *
- * Definition of Loris analysis strategy class AssociateBandwidth.
+ * Definition of a class representing a policy for associating noise
+ * (bandwidth) energy with reassigned spectral peaks to be used in
+ * Partial formation.
  *
  * Kelly Fitz, 20 Jan 2000
  * loris@cerlsoundgroup.org
@@ -32,6 +34,8 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
+
+#include <SpectralPeaks.h>
 
 #include <vector>
 
@@ -69,6 +73,24 @@ public:
 	AssociateBandwidth( double regionWidth, double srate );
 	~AssociateBandwidth( void );
 	
+	//	Perform bandwidth association on a collection of reassigned spectral peaks
+	//	or ridges. The range [begin, rejected) spans the Peaks selected to form
+	//	Partials. The range [rejected, end) spans the Peaks that were found in
+	//	the reassigned spectrum, but rejected as too weak or too close (in 
+	//	frequency) to another stronger Peak. 
+	void associateBandwidth( Peaks::iterator begin, 	//	beginning of Peaks
+							 Peaks::iterator rejected, 	//	first rejected Peak
+							 Peaks::iterator end );		//	end of Peaks
+	
+		
+//	-- private helpers --	
+private:	
+	double computeNoiseEnergy( double freq, double amp );
+	
+	//	These four formerly comprised the public interface
+	//	to this policy, now they are all hidden behind a 
+	//	single call to associateBandwidth.
+	
 	//	energy accumulation:
 	void accumulateNoise( double freq, double amp );	
 	void accumulateSinusoid( double freq, double amp  );	
@@ -79,16 +101,6 @@ public:
 	//	call this to wipe out the accumulated energy to 
 	//	prepare for the next frame (yuk):
 	void reset( void );
-		
-private:	
-//	-- helpers --	
-	//	called in associate():	
-	double computeNoiseEnergy( double freq, double amp );
-	
-	inline double binFrequency( double freq );
-	double computeAlpha( double binfreq );
-	void distribute( double freqHz, double x, std::vector<double> & regions );
-	int findRegionBelow( double binfreq );	
 	
 };	// end of class AssociateBandwidth
 

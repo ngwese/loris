@@ -406,7 +406,7 @@ static Partial distillOne( PartialList & partials, int label,
 			}
 
 			// merge the contributing part:
-			merge( cb, ce, newp, fadeTime );
+			merge( cb, ce, newp, fadeTime, gapTime );
 		}
 		else
 		{

@@ -14,6 +14,7 @@ MAINTAINERCLEANFILES = 	Makefile.in
 
 INCLUDES = -I$(top_srcdir)/src
 
+# simple morphing test
 test_c_SOURCES = morphtest.C
 test_c_LDADD = $(top_builddir)/pi/libloris.la
 
