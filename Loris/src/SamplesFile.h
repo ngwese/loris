@@ -59,21 +59,11 @@ public:
 	
 //	reading and writing:
 	virtual void read( std::istream & s ) = 0;
-	virtual void write( BinaryFile & file ) = 0;
+	virtual void write( std::ostream & s ) = 0;
 	
 //	parameter validation:
 protected:	
 	void validateParams( void );
-	
-//	data type for integer pcm samples of different sizes:
-	typedef union {
-		//	different size samples:
-		Int_32 s32bits;						//	32 bits sample
-		struct I_24 { char data[3]; }  s24bits;	//	24 bits sample
-		Int_16 s16bits;						//	16 bits sample
-		char s8bits;						//	8 bits sample
-	} pcm_sample;
-
 	
 //	-- instance variables --
 	double _sampleRate;	//	in Hz

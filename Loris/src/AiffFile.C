@@ -68,6 +68,16 @@ struct SoundDataCk
 	//	sample frames follow
 };
 
+//	data type for integer pcm samples of different sizes:
+struct I_24 { char data[3]; };
+typedef union 
+{
+	//	different size samples:
+	Int_32 s32bits;						//	32 bits sample
+	I_24  s24bits;						//	24 bits sample
+	Int_16 s16bits;						//	16 bits sample
+	char s8bits;						//	8 bits sample
+} pcm_sample;
 
 // ---------------------------------------------------------------------------
 //	AiffFile constructor from data in memory
@@ -146,10 +156,9 @@ AiffFile::read( std::istream & s )
 void
 AiffFile::write( const std::string & filename )
 {
-	BinaryFile f;
-	f.setBigEndian();
-	f.create( filename );
-	write(f);
+	std::ofstream s;
+	s.open( filename.c_str(), std::ios::out | std::ios::binary ); 
+	write(s);
 }
 
 // ---------------------------------------------------------------------------
@@ -157,20 +166,14 @@ AiffFile::write( const std::string & filename )
 // ---------------------------------------------------------------------------
 //
 void
-AiffFile::write( BinaryFile & file )
+AiffFile::write( std::ostream & s )
 {
 	validateParams();
 	
 	try {
-		//	rewind:
-		file.seek(0);
-		if( file.tell() != 0 )
-			Throw( FileIOException, "Couldn't rewind AIFF file (bad open mode?)." );
-		file.setBigEndian();
-		
-		writeContainer( file );
-		writeCommon( file );
-		writeSampleData( file );
+		writeContainer( s );
+		writeCommon( s );
+		writeSampleData( s );
 	}
 	catch ( Exception & ex ) {
 		ex.append( "Failed to write AIFF file." );
@@ -394,7 +397,7 @@ AiffFile::readSamples( std::istream & s )
 // ---------------------------------------------------------------------------
 //
 void
-AiffFile::writeCommon( BinaryFile & file )
+AiffFile::writeCommon( std::ostream & s )
 {
 	//	first build a Common chunk, so that all the data sizes will 
 	//	be correct:
@@ -420,15 +423,18 @@ AiffFile::writeCommon( BinaryFile & file )
 */
 	
 	//	write it out:
-	try {
-		file.write( ck.header.id );
-		file.write( ck.header.size );
-		file.write( ck.channels );
-		file.write( ck.sampleFrames );
-		file.write( ck.bitsPerSample );
-		file.write( ck.srate );
+	try 
+	{
+		BigEndian::write( s, 1, sizeof(ID), (char *)&ck.header.id );
+		BigEndian::write( s, 1, sizeof(Int_32), (char *)&ck.header.size );
+		BigEndian::write( s, 1, sizeof(Int_16), (char *)&ck.channels );
+		BigEndian::write( s, 1, sizeof(Int_32), (char *)&ck.sampleFrames );
+		BigEndian::write( s, 1, sizeof(Int_16), (char *)&ck.bitsPerSample );
+		//	don't let this get byte-reversed:
+		BigEndian::write( s, 10, sizeof(char), (char *)&ck.srate );
 	}
-	catch( FileIOException & ex ) {
+	catch( FileIOException & ex ) 
+	{
 		ex.append( "Failed to write AIFF file Common chunk." );
 		throw;
 	}
@@ -439,7 +445,7 @@ AiffFile::writeCommon( BinaryFile & file )
 // ---------------------------------------------------------------------------
 //
 void
-AiffFile::writeContainer( BinaryFile & file )
+AiffFile::writeContainer( std::ostream & s )
 {
 	//	first build a Container chunk, so that all the data sizes will 
 	//	be correct:
@@ -459,12 +465,14 @@ AiffFile::writeContainer( BinaryFile & file )
 */
 	
 	//	write it out:
-	try {
-		file.write( ck.header.id );
-		file.write( ck.header.size );
-		file.write( ck.formType );
+	try 
+	{
+		BigEndian::write( s, 1, sizeof(ID), (char *)&ck.header.id );
+		BigEndian::write( s, 1, sizeof(Int_32), (char *)&ck.header.size );
+		BigEndian::write( s, 1, sizeof(ID), (char *)&ck.formType );
 	}
-	catch( FileIOException & ex ) {
+	catch( FileIOException & ex ) 
+	{
 		ex.append( "Failed to write AIFF file Container chunk." );
 		throw;
 	}
@@ -475,7 +483,7 @@ AiffFile::writeContainer( BinaryFile & file )
 // ---------------------------------------------------------------------------
 //
 void
-AiffFile::writeSampleData( BinaryFile & file )
+AiffFile::writeSampleData( std::ostream & s )
 {
 	//	first build a Sound Data chunk, so that all the data sizes will 
 	//	be correct:
@@ -498,13 +506,14 @@ AiffFile::writeSampleData( BinaryFile & file )
 */
 
 	//	write it out:
-	try {
-		file.write( ck.header.id );
-		file.write( ck.header.size );
-		file.write( ck.offset );
-		file.write( ck.blockSize );
+	try 
+	{
+		BigEndian::write( s, 1, sizeof(ID), (char *)&ck.header.id );
+		BigEndian::write( s, 1, sizeof(Int_32), (char *)&ck.header.size );
+		BigEndian::write( s, 1, sizeof(Int_32), (char *)&ck.offset );
+		BigEndian::write( s, 1, sizeof(Int_32), (char *)&ck.blockSize );
 
-		writeSamples( file );
+		writeSamples( s );
 	}
 	catch( FileIOException & ex ) {
 		ex.append( "Failed to write AIFF file Container chunk." );
@@ -518,7 +527,7 @@ AiffFile::writeSampleData( BinaryFile & file )
 //	Let exceptions propogate.
 //
 void
-AiffFile::writeSamples( BinaryFile & file )
+AiffFile::writeSamples( std::ostream & s )
 {	
 	debugger << "writing " << _samples.size() << " samples of size " << _sampSize << endl;
 
@@ -531,7 +540,7 @@ AiffFile::writeSamples( BinaryFile & file )
 				z.s32bits = LONG_MAX * std::min( 1.0, std::max(-1.0, _samples[i]) );
 			
 				//	write the sample:
-				file.write( z.s32bits );
+				BigEndian::write( s, 1, sizeof(Int_32), (char *)&z.s32bits );
 			}
 			break;
 		case 24:
@@ -540,7 +549,7 @@ AiffFile::writeSamples( BinaryFile & file )
 				z.s32bits = LONG_MAX * std::min( 1.0, std::max(-1.0, _samples[i]) );
 			
 				//	write the sample:
-				file.write( z.s24bits );
+				BigEndian::write( s, 1, sizeof(I_24), (char *)&z.s24bits );
 			}
 			break;
 		case 16:
@@ -549,10 +558,7 @@ AiffFile::writeSamples( BinaryFile & file )
 				z.s32bits = LONG_MAX * std::min( 1.0, std::max(-1.0, _samples[i]) );
 			
 				//	write the sample:
-				// file.write( z.s16bits );
-				//	this cast shouldn't matter, does it?
-				//	??????
-				file.write( Int_16(z.s16bits) );
+				BigEndian::write( s, 1, sizeof(Int_16), (char *)&z.s16bits );
 			}
 			break;
 		case 8:
@@ -561,14 +567,14 @@ AiffFile::writeSamples( BinaryFile & file )
 				z.s32bits = LONG_MAX * std::min( 1.0, std::max(-1.0, _samples[i]) );
 			
 				//	write the sample:
-				file.write( z.s8bits );
+				BigEndian::write( s, 1, sizeof(char), (char *)&z.s8bits );
 			}
 			break;
 	}
 	
 	//	except if there were any read errors:
 	//	(better to check earlier?)
-	if ( ! file.good() )
+	if ( ! s.good() )
 		Throw( FileIOException, "Failed to write AIFF samples.");
 }
 

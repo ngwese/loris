@@ -12,7 +12,6 @@
 //	-kel 28 Sept 99
 //
 // ===========================================================================
-
 #include "LorisTypes.h"
 #include "ieee.h"
 #include "SamplesFile.h"
@@ -25,7 +24,6 @@ namespace Loris {
 #endif
 
 struct CkHeader;
-class BinaryFile;
 
 // ---------------------------------------------------------------------------
 //	class AiffFile
@@ -50,7 +48,7 @@ public:
 	void read( const std::string & filename );
 	void read( std::istream & s );
 	void write( const std::string & filename );
-	void write( BinaryFile & file );
+	void write( std::ostream & s );
 	
 //	-- helpers --
 private:
@@ -62,10 +60,10 @@ private:
 	void readSamples( std::istream & s );
 
 	//	writing:
-	void writeCommon( BinaryFile & file );
-	void writeContainer( BinaryFile & file );
-	void writeSampleData( BinaryFile & file );
-	void writeSamples( BinaryFile & file );
+	void writeCommon( std::ostream & s );
+	void writeContainer( std::ostream & s );
+	void writeSampleData( std::ostream & s );
+	void writeSamples( std::ostream & s );
 	
 	//	data sizes:
 	Uint_32 sizeofCommon( void );
