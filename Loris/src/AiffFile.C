@@ -713,7 +713,7 @@ AiffFile::writeSamples( std::ostream & s, const double * bufBegin, const double 
 		{	
 			while ( bufBegin < bufEnd )
 			{
-				samp = LONG_MAX * std::min( 1.0, std::max(-1.0, *bufBegin) );
+				samp = long( LONG_MAX * std::min( 1.0, std::max(-1.0, *bufBegin) ) );
 				
 				_bytes[bytesIdx++] = (samp >> 24) & 0xFF;		//	msb
 				_bytes[bytesIdx++] = (samp >> 16) & 0xFF;
@@ -728,7 +728,7 @@ AiffFile::writeSamples( std::ostream & s, const double * bufBegin, const double 
 		{	
 			while ( bufBegin < bufEnd )
 			{
-				samp = LONG_MAX * std::min( 1.0, std::max(-1.0, *bufBegin) );
+				samp = long( LONG_MAX * std::min( 1.0, std::max(-1.0, *bufBegin) ) );
 				
 				_bytes[bytesIdx++] = (samp >> 24) & 0xFF;		//	msb
 				_bytes[bytesIdx++] = (samp >> 16) & 0xFF;
@@ -742,7 +742,7 @@ AiffFile::writeSamples( std::ostream & s, const double * bufBegin, const double 
 		{	
 			while ( bufBegin < bufEnd )
 			{
-				samp = LONG_MAX * std::min( 1.0, std::max(-1.0, *bufBegin) );
+				samp = long( LONG_MAX * std::min( 1.0, std::max(-1.0, *bufBegin) ) );
 				
 				_bytes[bytesIdx++] = (samp >> 24) & 0xFF;		//	msb
 				_bytes[bytesIdx++] = (samp >> 16) & 0xFF;		//	lsb
@@ -755,7 +755,7 @@ AiffFile::writeSamples( std::ostream & s, const double * bufBegin, const double 
 		{	
 			while ( bufBegin < bufEnd )
 			{
-				samp = LONG_MAX * std::min( 1.0, std::max(-1.0, *bufBegin) );
+				samp = long( LONG_MAX * std::min( 1.0, std::max(-1.0, *bufBegin) ) );
 				
 				_bytes[bytesIdx++] = (samp >> 24) & 0xFF;		//	msb
 				

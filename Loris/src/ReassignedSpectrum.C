@@ -371,7 +371,7 @@ ReassignedSpectrum::reassignedMagnitude( double fracBinNum, long peakBinNumber )
 	
 	//	compute the offset in the oversampled window spectrum:
 	//	(cheapo rounding)
-	long offset = ( OVERSAMPLE_WINDOW_SPECTRUM * (peakBinNumber - fracBinNum) ) + 0.5;
+	long offset = long((OVERSAMPLE_WINDOW_SPECTRUM * (peakBinNumber - fracBinNum)) + 0.5);
 	
 	//	if the offset is very large, corresponding to 
 	//	a very large frequency correction (larger than,

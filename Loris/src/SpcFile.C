@@ -103,7 +103,7 @@ static unsigned long envLog( double floatingValue )
 {
 	static double coeff = 65535.0 / log( 32768. );
 
-	return coeff * log( 32768.0 * floatingValue + 1.0 );
+	return (unsigned long)( coeff * log( 32768.0 * floatingValue + 1.0 ) );
 
 }	//  end of envLog( )
 
@@ -707,7 +707,7 @@ static void writeSosEnvelopesChunk( std::ostream & s )
 	ck.validPartials = spcEI.numPartials * ((spcEI.enhanced && MONO_ENH) ? 2 : 1);
 	
 	//	resolution in microseconds
-	ck.SOSresolution( es ) = 1000000.0 * spcEI.hop;
+	ck.SOSresolution( es ) = long( 1000000.0 * spcEI.hop );
 	
 	//	all partials quasiharmonic
 	ck.SOSquasiHarmonic( es ) =  spcEI.numPartials * ((spcEI.enhanced && MONO_ENH) ? 2 : 1); 
@@ -965,7 +965,7 @@ static void writeEnvelopeData( std::ostream & s, const list<Partial> & plist )
 	ck.header.size = sizeofSoundData() - sizeofCkHeader();
 				
 	//	no block alignment:	
-	ck.offset = 0.;
+	ck.offset = 0L;
 	ck.blockSize = 0;
 	
 	//	write it out:
@@ -1037,7 +1037,7 @@ static double endTime( const std::list<Partial> & pars )
 // ---------------------------------------------------------------------------
 //	Find the number of partials.
 //
-static double numPartials( const std::list<Partial> & pars )
+static long numPartials( const std::list<Partial> & pars )
 {
 
 // We purposely consider partials with no breakpoints, to allow
