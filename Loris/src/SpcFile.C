@@ -807,7 +807,7 @@ configureSosMarkerCk( MarkerCk & ck, const std::vector< Marker > & markers  )
 		//	count) is even, and this seems to work better with other
 		//	programs (e.g. Kyma)
 		if ( m.markerName.size()%2 == 0 )
-				m.markerName.push_back( '\0' );
+				m.markerName.insert(m.markerName.end(), '\0');
 		dataSize += sizeof(Uint_16) + sizeof(Uint_32) + (m.markerName.size() + 1);
 	}
 
