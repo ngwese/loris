@@ -149,11 +149,16 @@ static void throw_string( const char * s )
 //	grab the standard typemaps:
 %include typemaps.i
 
+%section "Loris class interfaces"
+
 //	include the Analyzer class interface:
 %include lorisAnalyzer.i
 
 //	include the BreakpointEnvelope class interface:
 %include lorisBpEnvelope.i
+
+//	include the ExportSpc class interface:
+%include lorisExportSpc.i
 
 //	include the PartialList class interface:
 %include lorisPartialList.i

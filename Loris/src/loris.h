@@ -75,6 +75,7 @@
 	{
 		class Analyzer;
 		class BreakpointEnvelope;
+		class ExportSpc;
 		class Partial;
 	}
 	//	include std library headers, declaring template classes
@@ -84,11 +85,13 @@
 	//	define types used in procedural interface:
 	using Loris::Analyzer;
 	using Loris::BreakpointEnvelope;
+	using Loris::ExportSpc;
 	typedef std::list< Loris::Partial > PartialList;
 	typedef std::vector< double > SampleVector;
 #else /* no classes, just opaque C pointers */
 	typedef struct Analyzer Analyzer;
 	typedef struct BreakpointEnvelope BreakpointEnvelope;
+	typedef struct ExportSpc ExportSpc;
 	typedef struct PartialList PartialList;
 	typedef struct SampleVector SampleVector;
 #endif
@@ -225,6 +228,12 @@ BreakpointEnvelope * createBreakpointEnvelope( void );
 	until the first breakpoint is inserted.			
  */
 
+BreakpointEnvelope * copyBreakpointEnvelope( const BreakpointEnvelope * ptr_this );
+/*	Construct and return a new BreakpointEnvelope that is an
+	exact copy of the specified BreakpointEnvelopes, having 
+	an identical set of breakpoints.	
+ */
+
 void destroyBreakpointEnvelope( BreakpointEnvelope * ptr_this );
 /*	Destroy this BreakpointEnvelope. 								
  */
@@ -237,10 +246,167 @@ void breakpointEnvelope_insertBreakpoint( BreakpointEnvelope * ptr_this,
 	the new breakpoint.
  */
 
-double breakpointEnvelope_valueAt( BreakpointEnvelope * ptr_this, 
+double breakpointEnvelope_valueAt( const BreakpointEnvelope * ptr_this, 
 								   double time );
 /*	Return the interpolated value of this BreakpointEnvelope at the 
 	specified time.							
+ */
+
+/* ---------------------------------------------------------------- */
+/*		ExportSpc object interface
+/*
+/*	An ExportSpc represents a configuration of parameters for
+	exporting a collection of Bandwidth-Enhanced partials to 
+	an spc-format file for use with the Symbolic Sound Kyma
+	System.
+
+	In C++, an ExportSpc * is a Loris::ExportSpc *.
+ */
+ 
+ExportSpc * createExportSpc( double midiPitch );
+/*	Construct a new ExportSpc instance configured from the 
+	given MIDI note number. All other ExportSpc parameters
+	are computed fromthe specified note number.
+ */
+
+void destroyExportSpc( ExportSpc * ptr_this );
+/*	Destroy this ExportSpc instance.
+ */
+
+void exportSpc_write( ExportSpc * ptr_this, const char * path,
+					  PartialList * partials );
+/*	Export the given list of Partials to an spc file having the
+	specified path (or name) according to the current configuration 
+	of this ExportSpc instance.
+ */
+
+void exportSpc_configure( ExportSpc * ptr_this, double midiPitch );
+/*	Set the MIDI note number (69.00 = A440) for this spc file,
+	and recompute all other parameters to default values.			
+ */
+
+double exportSpc_getMidiPitch( const ExportSpc * ptr_this );
+/*	Return the MIDI note number (69.00 = A440) for this spc file.
+ */
+
+void exportSpc_setMidiPitch( ExportSpc * ptr_this, double x );
+/*	Set the MIDI note number (69.00 = A440) for this 
+	spc file. (Does not cause other parameters to be 
+	recomputed.) 			
+ */
+
+int exportSpc_getNumPartials( const ExportSpc * ptr_this );
+/*	Return the number of partials in spc file, may 
+	be 32, 64, 128, or 256.
+ */
+
+void exportSpc_setNumPartials( ExportSpc * ptr_this, int x );
+/*	Set the number of partials in spc file, may 
+	be 32, 64, 128, or 256.
+ */
+
+int exportSpc_getRefLabel( const ExportSpc * ptr_this );
+/*	Return the label of the reference partial for this ExportSpc
+	instance. A reference label of 1 indicates the fundamental.
+	The reference label is used for filling in frequencies during 
+	time gaps in other partials. 
+ */
+
+void exportSpc_setRefLabel( ExportSpc * ptr_this, int x );
+/*	Set the label of the reference partial for this ExportSpc
+	instance. A reference label of 1 indicates the fundamental.
+	The reference partial is used for filling in frequencies 
+	during time gaps in other partials. 
+ */
+
+int exportSpc_getEnhanced( const ExportSpc * ptr_this );
+/*	Return true if this spc file is in bandwidth-enhanced format,
+	false if it is in pure sinusoidal format.
+ */
+
+void exportSpc_setEnhanced( ExportSpc * ptr_this, int boool );
+/*	Set the type of spc file: true for bandwidth-enhanced format,
+	false for pure sinusoidal format.
+*/
+
+double exportSpc_getHop( const ExportSpc * ptr_this );
+/*	Return the frame duration (in seconds) for this spc file.
+ */
+
+void exportSpc_setHop( ExportSpc * ptr_this, double x );
+/*	Set the frame duration (in seconds) for this spc file.
+ */
+
+double exportSpc_getAttackThreshold( const ExportSpc * ptr_this );
+/*	Return the amplitude threshold for cropping the start of the 
+	spc file. This is specified as a fraction of maximum amplitude 
+	of the sound, with a value between 0.0 and 1.0. If the value is 
+	0.0, this indicates no cropping at the start of the spc file.
+ */
+
+void exportSpc_setAttackThreshold( ExportSpc * ptr_this, double x );
+/*	Set the amplitude threshold for cropping the start of the spc 
+	file. This is specified as a fraction of maximum amplitude of 
+	the sound, with a value between 0.0 and 1.0.  Specify 0.0 for 
+	no cropping of the start of the spc file.
+ */
+
+double exportSpc_getStartFreqTime( const ExportSpc * ptr_this );
+/*	Return the time (in seconds) at which frequency in attack is 
+	considered stable.  Frequencies before this time are modified 
+	in the spc file to avoid real-time morphing artifacts when the 
+	spc file is used in Kyma. This returns 0.0 if the spc file has 
+	no modified attack frequencies.
+ */
+
+void exportSpc_setStartFreqTime( ExportSpc * ptr_this, double x );
+/*	Set the time (in seconds) at which frequency in attack is 
+	considered stable.  Frequencies before this time are modified 
+	in the spc file to avoid real-time morphing artifacts when the 
+	spc file is used in Kyma. Specify 0.0 to avoid modified attack 
+	frequencies.
+ */
+
+double exportSpc_getEndTime( const ExportSpc * ptr_this );
+/*	Return the time (in seconds) at which the end of the spc file 
+	is truncated. This returns 0.0 if the spc file is not truncate 
+	at the end.
+ */
+
+void exportSpc_setEndTime( ExportSpc * ptr_this, double x );
+/*	Set the time (in seconds) to truncate the end of the spc file.
+	Set this to the 0.0 (or, equivalently, to the last end time of 
+	any partial in the sound) to avoid truncating the end of the 
+	spc file.
+ */
+
+double exportSpc_getEndApproachTime( const ExportSpc * ptr_this );
+ /*	Return a value in seconds that indicates how long before the 
+	end of the spc file the amplitude, frequency, and bandwidth 
+	values are modified to make a gradual transition to the spectral 
+	content at the end of the spc file.  This returns 0.0 if no such 
+	modifications are done in the spc file.	
+ */
+
+void exportSpc_setEndApproachTime( ExportSpc * ptr_this, double x );
+/*	Set how long (in seconds) before the end of the spc file the 
+	amplitude, frequency, and bandwidth values are to be modified 
+	to make a gradual transition to the spectral content at the 
+	end of the spc file. Specify 0.0 to avoid these modifications 
+	in the spc file.	
+ */
+
+double exportSpc_getMarkerTime( const ExportSpc * ptr_this );
+/*	Return the time (in seconds) at which a marker is inserted in 
+	the spc file. This returns 0.0 if no marker is inserted into 
+	the spc file.
+ */
+
+void exportSpc_setMarkerTime( ExportSpc * ptr_this, double x );
+/*	Set the time (in seconds) at which a marker is inserted in the 
+	spc file. Only one marker is inserted into the spc file; it will
+	be inserted at the time specified with setMarkerTime().  
+	Specify 0.0 to avoid inserting a marker into the spc file.
  */
 
 /* ---------------------------------------------------------------- */

@@ -101,6 +101,36 @@ BreakpointEnvelope * createBreakpointEnvelope( void )
 }
 
 /* ---------------------------------------------------------------- */
+/*        copyBreakpointEnvelope
+/*
+/*	Construct and return a new BreakpointEnvelope that is an
+	exact copy of the specified BreakpointEnvelopes, having 
+	an identical set of breakpoints.	
+ */
+extern "C"
+BreakpointEnvelope * copyBreakpointEnvelope( const BreakpointEnvelope * ptr_this )
+{
+	try 
+	{
+		debugger << "copying BreakpointEnvelope" << endl;
+		return new BreakpointEnvelope( *ptr_this );
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in copyBreakpointEnvelope(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in copyBreakpointEnvelope(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	return NULL;
+}
+
+/* ---------------------------------------------------------------- */
 /*        destroyBreakpointEnvelope       
 /*
 /*	Destroy this BreakpointEnvelope. 								
@@ -170,7 +200,7 @@ void breakpointEnvelope_insertBreakpoint( BreakpointEnvelope * ptr_this,
 	specified time.							
  */
 extern "C"
-double breakpointEnvelope_valueAt( BreakpointEnvelope * ptr_this, 
+double breakpointEnvelope_valueAt( const BreakpointEnvelope * ptr_this, 
 								   double time )
 {
 	try 

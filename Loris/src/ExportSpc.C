@@ -65,28 +65,26 @@ namespace Loris {
 #endif
 
 //	envelope writing
-void writeEnvelopeData( std::ostream & s, const list<Partial> & plist, int refLabel,
-				int startFrame, int endFrame, int partials, int enhanced,
-				int endApproachFrames, double hop, double startFreqTime);
-void writeEnvelopes( std::ostream & s, const list<Partial> & plist, int refLabel,
-				int startFrame, int endFrame, int partials, int enhanced,
-				int endApproachFrames, double hop, double startFreqTime);
+void writeEnvelopeData( std::ostream & s, const list<Partial> & plist, 
+						double startTime, double endTime, const ExportSpc & es);
+void writeEnvelopes( std::ostream & s, const list<Partial> & plist, 
+						double startTime, double endTime, const ExportSpc & es);
 
 // 	envelope writing helpers
 unsigned long packLeft( const Partial & p, double freqMult, double ampMult, 
-						double time1, double weightFactor, double time2, double startFreqTime );
-unsigned long packRight( const Partial & p, double noiseMagMult, double time1,
-						double weightFactor, double time2 );
+						double time, double endApproachWeight, const ExportSpc & es);
+unsigned long packRight( const Partial & p, double noiseMagMult, double time, 
+						double endApproachWeight, const ExportSpc & es);
 unsigned long envLog( double floatingValue );
-const Partial * select( const std::list< Partial > & partials, int label, int firstFrame = false );
-double crop( const std::list< Partial > & partials, int endFrame, double hop, double threshold );
+const Partial * select( const std::list< Partial > & partials, int label, int firstFrameFlag = false );
+double crop( const std::list< Partial > & partials, double endTime, const ExportSpc &es );
 
 //	chunk wiriting helpers
-void writeCommon( std::ostream & s, int startFrame, int endFrame, int partials, int enhanced );
-void writeContainer( std::ostream & s, int startFrame, int endFrame, int partials, int enhanced, int markerFrame );
-void writeInstrument( std::ostream & s, int midiPitch );
-void writeMarker( std::ostream & s, int partials, int enhanced, int markerFrame );
-void writeSosEnvelopesChunk( std::ostream & s, int startFrame, int endFrame, int partials, int enhanced, double hop );
+void writeCommon( std::ostream & s, double startTime, double endTime, const ExportSpc & es );
+void writeContainer( std::ostream & s, double startTime, double endTime, const ExportSpc & es );
+void writeInstrument( std::ostream & s, const ExportSpc & es );
+void writeMarker( std::ostream & s, const ExportSpc & es );
+void writeSosEnvelopesChunk( std::ostream & s, double startTime, double endTime, const ExportSpc & es );
 
 //	chunk size helpers
 unsigned long sizeofCkHeader( void );
@@ -94,7 +92,7 @@ unsigned long sizeofCommon( void );
 unsigned long sizeofSosEnvelopes( void );
 unsigned long sizeofInstrument( void );
 unsigned long sizeofMarker( void );
-unsigned long sizeofSoundData( int startFrame, int endFrame, int partials, int enhanced );
+unsigned long sizeofSoundData( double startTime, double endTime, const ExportSpc & es );
 
 
 //	-- chunk types --
@@ -200,10 +198,10 @@ struct SosEnvelopesCk
 	Int_32	initPhase[initPhaseLth]; // obsolete initial phase array; was VARIABLE LENGTH array 
 							// this is big enough for a max of 512 partials plus values below
 //	Int_32	resolution;		// frame duration in microseconds 
-	#define SOSresolution(enh, pars)   initPhase[(enh && MONO_ENH) ? 2 * pars : pars]	
+	#define SOSresolution(enh, pars)   initPhase[(enh && MONO_ENH) ? 2 * (pars) : pars]	
 							// follows the initPhase[] array
 //	Int_32	quasiHarmonic;	// how many of the partials are quasiharmonic
-	#define SOSquasiHarmonic(enh, pars)  initPhase[(enh && MONO_ENH) ? 2 * pars + 1 : pars + 1]	
+	#define SOSquasiHarmonic(enh, pars)  initPhase[(enh && MONO_ENH) ? 2 * (pars) + 1 : pars + 1]	
 							// follows the initPhase[] array
 };  
 
@@ -211,27 +209,88 @@ struct SosEnvelopesCk
 
 
 // ---------------------------------------------------------------------------
-//	ExportSpc constructor from data in memory
+//	ExportSpc constructor
 // ---------------------------------------------------------------------------
+//	The core analysis parameter is the midi note number. Configure all other
+//	parameters according to this parameter, subsequent parameter mutations
+//	will be independent.
 //
-ExportSpc::ExportSpc( int pars, double hop, double midiPitch, double thresh, double endt, 
-				double markert, double startFreqTime, double endApproachTime) :
-	_partials( pars ),
-	_hop( abs(hop) ),
-	_enhanced( hop > 0.0 ),
-	_midiPitch( midiPitch ),
-	_threshold( thresh ),
-	_endFrame( endt / abs(hop) + 1 ),
-	_markerFrame( markert / abs(hop) + 1 ),
-	_startFreqTime( startFreqTime ),
-	_endApproachFrames( endApproachTime / abs(hop) + 1 )
+ExportSpc::ExportSpc( double midiPitch )
 {
-	// Max number of partials is due to (arbitrary) size of initPhase[].
-	Assert( pars == 32 || pars == 64 || pars == 128 || pars == 256 
-				|| (pars == 512 && (!_enhanced || !MONO_ENH)) );
+	configure( midiPitch );
+}
+
+// ---------------------------------------------------------------------------
+//	ExportSpc destructor
+// ---------------------------------------------------------------------------
+//	Destroy this ExportSpc instance.
+//
+ExportSpc::~ExportSpc( void )
+{
+}
+
+
+// ---------------------------------------------------------------------------
+//	configure
+// ---------------------------------------------------------------------------
+//	Compute default values for analysis parameters from the single core
+//	parameter, the midi note number.
+//
+void
+ExportSpc::configure( double midiPitch )
+{
+	//	note number (69.00 = A440) for spc file;
+	//	this is the core parameter, others are, by default,
+	//	computed from this one	
+	_midiPitch = midiPitch;
+
+	//	number of partials in spc file, may be 32, 64, 128, or 256
+	_numPartials = (_midiPitch < 48.0) ? 256 : 128;
+	if (_midiPitch > 72.5)
+		_numPartials = 32;
+	else if (_midiPitch > 60.5)
+		_numPartials = 64;
+	else if (_midiPitch > 48.5)
+		_numPartials = 128;
+	else 
+		_numPartials = 256;
 	
-	// Unlike sdif files, spc files always contain resampled envelope values.
-	Assert( hop != 0.0 );
+	// 	label for reference partial (1 indicates fundamental),
+	// 	used for filling in frequencies during time gaps in other partials
+	_refLabel = 2;	
+			
+	//	true for bandwidth-enhanced spc file format,
+	//	false for pure sinusoidal spc file format
+	_enhanced = true;		
+		
+	//	in seconds, frame duration for spc file
+	_hop = 0.005;
+	
+	//	fraction of maximum amplitude of the sound, this provides an amplitude 
+	//	threshold for cropping the start of the spc file, 
+	//	0.0 indicates no cropping
+	_attackThreshold = 0.0;
+	
+	//	in seconds, this indicates time at which frequency in attack is
+	//	considered stable, frequencies before this time are modified in
+	//	the spc file to avoid real-time morphing artifacts, 0.0 indicates
+	//	the spc file is to have no attack frequencies modified
+	 _startFreqTime = 0.0;		
+	 
+	//	in seconds, this indicates the time at which to truncate the end
+	//	of the spc file; we set it to zero here, write() will use end of file
+	//	if user does not overwrite this zero. 
+	_endTime = 0.0;
+
+	//	in seconds, this indicates how long before _endTime the
+	//	amplitude, frequency, and bandwidth values are to be modified to
+	//	make a gradual transition to the spectral content at _endTime,
+	//	0.0 indicates no such modifications are to be don
+	_endApproachTime = 0.0;
+	
+	//	in seconds, this indicates time at which a marker is inserted in the
+	//	spc file, 0.0 indicates no marker is desired
+	_markerTime = 0.0;		
 }
 
 // ---------------------------------------------------------------------------
@@ -240,27 +299,54 @@ ExportSpc::ExportSpc( int pars, double hop, double midiPitch, double thresh, dou
 // The plist should be labeled and distilled before this is called.
 //
 void
-ExportSpc::write( ostream & file, const list<Partial> & plist, int refLabel )
+ExportSpc::write( const std::string & filename, const list<Partial> & plist )
 {
+	std::ofstream s;
+	s.open( filename.c_str(), std::ios::out | std::ios::binary ); 
+	
+	write( s, plist );
+}
+
+// ---------------------------------------------------------------------------
+//	write
+// ---------------------------------------------------------------------------
+// The plist should be labeled and distilled before this is called.
+//
+void
+ExportSpc::write( ostream & file, const list<Partial> & plist )
+{
+	// Max number of partials is due to (arbitrary) size of initPhase[].
+	if (_numPartials != 32 && _numPartials != 64 && _numPartials != 128 && _numPartials != 256)
+		Throw( FileIOException, "Number of partials must be 32, 64, 128, or 256." );
+
+	// Find the end time, if it is not set yet. 
+	double endTime = _endTime;	
+	if (!endTime)
+	{
+		for ( std::list< Partial >::const_iterator it = plist.begin(); it != plist.end(); ++it ) 
+		{
+			if ( it->begin() != it->end() && it->endTime() > endTime)
+				endTime = it->endTime();
+		}
+	}
 	
 	// Find starting frame after cropping.
-	_startFrame = crop( plist, _endFrame, _hop, _threshold ) / _hop + 1;
+	double startTime = crop( plist, endTime, *this );
 
-	debugger << "startFrame = " << _startFrame << " endFrame = " << _endFrame 
-			 << " hop = " << _hop << " threshold = " << _threshold 
-			 << " ref label = " << refLabel << endl;
+	debugger << "startTime = " << startTime << " endTime = " << endTime 
+			 << " hop = " << _hop << " attackThreshold = " << _attackThreshold 
+			 << " ref label = " << _refLabel << endl;
 	
 	// Write out all the chunks.
 	try 
 	{
-		writeContainer( file, _startFrame, _endFrame, _partials, _enhanced, _markerFrame );
-		writeCommon( file, _startFrame, _endFrame, _partials, _enhanced );
-		writeInstrument( file, _midiPitch );
-		if (_markerFrame)
-			writeMarker( file, _partials, _enhanced, _markerFrame );
-		writeSosEnvelopesChunk( file, _startFrame, _endFrame, _partials, _enhanced, _hop );
-		writeEnvelopeData( file, plist, refLabel, _startFrame, _endFrame, _partials, _enhanced,
-				_endApproachFrames, _hop, _startFreqTime );
+		writeContainer( file, startTime, endTime, *this );
+		writeCommon( file, startTime, endTime, *this );
+		writeInstrument( file, *this );
+		if (_markerTime)
+			writeMarker( file, *this );
+		writeSosEnvelopesChunk( file, startTime, endTime, *this );
+		writeEnvelopeData( file, plist, startTime, endTime, *this );
 	}
 	catch ( Exception & ex ) 
 	{
@@ -275,9 +361,8 @@ ExportSpc::write( ostream & file, const list<Partial> & plist, int refLabel )
 //	writeEnvelopeData
 // ---------------------------------------------------------------------------
 //
-void writeEnvelopeData( std::ostream & s, const list<Partial> & plist, int refLabel,
-				int startFrame, int endFrame, int partials, int enhanced,
-				int endApproachFrames, double hop, double startFreqTime)
+void writeEnvelopeData( std::ostream & s, const list<Partial> & plist, 
+					double startTime, double endTime, const ExportSpc & es )
 {
 	//	first build a Sound Data chunk, so that all the data sizes will 
 	//	be correct:
@@ -285,7 +370,7 @@ void writeEnvelopeData( std::ostream & s, const list<Partial> & plist, int refLa
 	ck.header.id = SoundDataId;
 	
 	//	size is everything after the header:
-	ck.header.size = sizeofSoundData( startFrame, endFrame, partials, enhanced ) - sizeofCkHeader();
+	ck.header.size = sizeofSoundData( startTime, endTime, es ) - sizeofCkHeader();
 				
 	//	no block alignment:	
 	ck.offset = 0.;
@@ -299,9 +384,7 @@ void writeEnvelopeData( std::ostream & s, const list<Partial> & plist, int refLa
 		BigEndian::write( s, 1, sizeof(Int_32), (char *)&ck.offset );
 		BigEndian::write( s, 1, sizeof(Int_32), (char *)&ck.blockSize );
 
-	 	writeEnvelopes( s, plist, refLabel,
-				startFrame, endFrame, partials, enhanced,
-				endApproachFrames, hop, startFreqTime);
+	 	writeEnvelopes( s, plist, startTime, endTime, es);
 	}
 	catch( FileIOException & ex ) 
 	{
@@ -316,44 +399,42 @@ void writeEnvelopeData( std::ostream & s, const list<Partial> & plist, int refLa
 //	Let exceptions propogate.
 //	The plist should be labeled and distilled before this is called.
 //
-void writeEnvelopes( std::ostream & s, const list<Partial> & plist, int refLabel,
-				int startFrame, int endFrame, int partials, int enhanced,
-				int endApproachFrames, double hop, double startFreqTime)
+void writeEnvelopes( std::ostream & s, const list<Partial> & plist, 
+				double startTime, double endTime, const ExportSpc & es)
 {	
-	double freqMult;				// frequency multiplier for partial	
-	double magMult;					// magnitude multiplier for partial	
-	unsigned long left,right;		// packed 24-bit value for left, right channel in spc file
 	
 	// the label for the reference partial must be non-zero:
-	if( refLabel == 0 )
+	if( es.refLabel() == 0 )
 		Throw( FileIOException, "Label for reference partial is zero." );
 	
 	// make sure the reference partial is there:
-	const Partial * refPar = select( plist, refLabel );
+	const Partial * refPar = select( plist, es.refLabel() );
 	if ( refPar == NULL )
 		Throw( FileIOException, "No partial has the reference partial label!" );
 	if ( refPar->begin() == refPar->end() )
 		Throw( FileIOException, "Reference partial has zero length." );
 
 	// write out one frame at a time:
-	for (long frame = startFrame; frame <= endFrame; ++frame ) 
+	for (double tim = startTime; tim <= endTime; tim += es.hop() ) 
 	{
 	
 		//	for each frame, write one value for every partial:
-		for (unsigned int label = 1; label <= partials; ++label ) 
+		for (unsigned int label = 1; label <= es.numPartials(); ++label ) 
 		{
+			double freqMult;			// frequency multiplier for partial	
+			double magMult;			// magnitude multiplier for partial	
 
 			// find partial with the correct label:
 			// if no partial is found, frequency multiply the reference partial 
-			const Partial * pcorrect = select( plist, label, frame == startFrame );
+			const Partial * pcorrect = select( plist, label, tim == startTime );
 		
 			if ( pcorrect == NULL || pcorrect->begin() == pcorrect->end() ) 
 			{
 				pcorrect = refPar;
-				freqMult = (double) label / (double) refLabel; 
+				freqMult = (double) label / (double) es.refLabel(); 
 				magMult = 0.0;
 			} 
-			else if (!endApproachFrames && frame == endFrame) 
+			else if (!es.endApproachTime() && tim > endTime - es.hop()) 
 			{
 				freqMult = 1.0;
 				magMult = 0.0;	// last frame has zero amp, if not ending at static spectrum
@@ -366,23 +447,22 @@ void writeEnvelopes( std::ostream & s, const list<Partial> & plist, int refLabel
 			
 			//	Check for special processing for approach to static spectrum at end.
 			//	Compute weighting factor between "normal" envelope point and static point.
-			double weightFactor = 1.0;
-			if (endApproachFrames && frame > endFrame - endApproachFrames)
-				weightFactor = (endFrame - frame) / (double) endApproachFrames;
+			double endApproachWeight = 1.0;
+			if (!es.endApproachTime() && tim > endTime - es.endApproachTime())
+				endApproachWeight = (endTime - tim) / es.endApproachTime();
 
-			//	pack log amplitude and log frequency into 24-bit left:
+			//	pack log amplitude and log frequency into 24-bit lval:
 			//  The log frequency value sticks at the release frame's frequency value.
-			left = packLeft(*pcorrect, freqMult, magMult, frame * hop, 
-								weightFactor, endFrame * hop, startFreqTime);
+			unsigned long lval = packLeft( *pcorrect, freqMult, magMult, tim, endApproachWeight, es );
 
 			//	pack log bandwidth and phase into 24-bit right:
-			right = packRight(*pcorrect, magMult, frame * hop, weightFactor, endFrame * hop);
+			unsigned long rval = packRight( *pcorrect, magMult, tim, endApproachWeight, es );
 	
 			//	write integer samples without byte swapping,
 			//	they are already correctly packed: 
-			BigEndian::write( s, 3, 1, (char*)&left );
-			if (enhanced)
-				BigEndian::write( s, 3, 1, (char*)&right );
+			BigEndian::write( s, 3, 1, (char*)&lval );
+			if (es.enhanced())
+				BigEndian::write( s, 3, 1, (char*)&rval );
 		}
 	}
 }
@@ -410,31 +490,31 @@ unsigned long envLog( double floatingValue )
 //	frequency occupies the bottom 16 bits.
 //
 unsigned long packLeft( const Partial & p, double freqMult, double ampMult, 
-						double time1, double weightFactor, double time2, double startFreqTime )
+						double time, double endApproachWeight, const ExportSpc & es )
 {	
 
-// Find amp, freq, and bw at time1.
-	double amp = ampMult * p.amplitudeAt( time1 );
-	double freq = freqMult * p.frequencyAt( time1 );
-	double bw = p.bandwidthAt( time1 );
+// Find amp, freq, and bw at time.
+	double amp = ampMult * p.amplitudeAt( time );
+	double freq = freqMult * p.frequencyAt( time );
+	double bw = p.bandwidthAt( time );
 
-// Approach amp, freq, and bw values at time2, if necessary.	
+// Approach amp, freq, and bw values at _endTime, if necessary.	
 // This avoids a sudden transition when using stick-at-end-frame sustains.
-	if (weightFactor != 1.0) 
+	if (endApproachWeight != 1.0) 
 	{
-		double amp2 = ampMult * p.amplitudeAt( time2 );
-		double freq2 = freqMult * p.frequencyAt( time2 );
-		double bw2 = p.bandwidthAt( time2 );
-		amp = (amp * weightFactor + amp2 * (1.0 - weightFactor));
-		freq = (freq * weightFactor + freq2 * (1.0 - weightFactor));
-		bw = (bw * weightFactor + bw2 * (1.0 - weightFactor));
+		double amp2 = ampMult * p.amplitudeAt( es.endTime() );
+		double freq2 = freqMult * p.frequencyAt( es.endTime() );
+		double bw2 = p.bandwidthAt( es.endTime() );
+		amp = (amp * endApproachWeight + amp2 * (1.0 - endApproachWeight));
+		freq = (freq * endApproachWeight + freq2 * (1.0 - endApproachWeight));
+		bw = (bw * endApproachWeight + bw2 * (1.0 - endApproachWeight));
 	}
 
 // Approach frequency values at _startFreqTime, if necessary.	
-	if (startFreqTime && time1 < startFreqTime)
+	if (es.startFreqTime() && time < es.startFreqTime())
 	{
-		double freq3 = freqMult * p.frequencyAt( startFreqTime );
-		double fweight = (time1 < 0.0 ? 0.0 : time1 / startFreqTime);
+		double freq3 = freqMult * p.frequencyAt( es.startFreqTime() );
+		double fweight = (time < 0.0 ? 0.0 : time / es.startFreqTime());
 		freq = (freq * fweight + freq3 * (1.0 - fweight));
 	}
 	
@@ -457,28 +537,33 @@ unsigned long packLeft( const Partial & p, double freqMult, double ampMult,
 //	in Kyma.  The log of the noise magnitude occupies the top 8 bits, the scaled
 //	linear phase occupies the bottom 16 bits.  
 //
-unsigned long packRight( const Partial & p, double noiseMagMult, double time1,
-						double weightFactor, double time2 )
-{	
-	double amp = p.amplitudeAt( time1 );
-	double phase = p.phaseAt( time1 );
-	double bw = p.bandwidthAt( time1 );
+unsigned long packRight( const Partial & p, double noiseMagMult, double time,
+						double endApproachWeight, const ExportSpc & es  )
+{
+// Find amp, bw, and phase at time.	
+	double amp = p.amplitudeAt( time );
+	double phase = p.phaseAt( time );
+	double bw = p.bandwidthAt( time );
 	
-	if (weightFactor != 1.0) 
+// Approach amp and bw values at _endTime, if necessary.	
+// This avoids a sudden transition when using stick-at-end-frame sustains.
+	if (endApproachWeight != 1.0) 
 	{
-		double amp2 = p.amplitudeAt( time2 );
-		double bw2 = p.bandwidthAt( time2 );
-		amp = (amp * weightFactor + amp2 * (1.0 - weightFactor));
-		bw = (bw * weightFactor + bw2 * (1.0 - weightFactor));
+		double amp2 = p.amplitudeAt( es.endTime() );
+		double bw2 = p.bandwidthAt( es.endTime() );
+		amp = (amp * endApproachWeight + amp2 * (1.0 - endApproachWeight));
+		bw = (bw * endApproachWeight + bw2 * (1.0 - endApproachWeight));
 	}
 
 	unsigned long	theOutput;
-	
+
+// Make phase into range 0..1.	
 	phase = fmod( phase, TwoPi );
 	if ( phase < 0. )
 		phase += TwoPi;
 	double zeroToOnePhase = phase / TwoPi;
-	
+
+// Compute noise magnitude from amp and bw.	
 	double theNoiseMag = noiseMagMult * 64.0 * amp * sqrt( bw );
 	if (theNoiseMag > 1.0)
 		theNoiseMag = 1.0;
@@ -500,7 +585,7 @@ unsigned long packRight( const Partial & p, double noiseMagMult, double time1,
 //	having the specified label, or NULL if there is not such Partial
 //	in the list. 
 //
-const Partial * select( const std::list< Partial > & partials, int label, int firstFrame )
+const Partial * select( const std::list< Partial > & partials, int label, int firstFrameFlag )
 {
 	const Partial * ret = NULL;
 	list< Partial >::const_iterator it = 
@@ -512,7 +597,7 @@ const Partial * select( const std::list< Partial > & partials, int label, int fi
 		ret = &(*it);
 
 		//	there should only be one of such Partial, verify this on first frame:
-		if ( firstFrame )
+		if ( firstFrameFlag )
 		{
 			if ( std::count_if( ++it, partials.end(), 
 										std::bind2nd(PartialUtils::label_equals(), label) ) != 0)
@@ -528,17 +613,17 @@ const Partial * select( const std::list< Partial > & partials, int label, int fi
 // ---------------------------------------------------------------------------
 //	Find first frame at which amplitude sum reaches a certain percentage of the
 //	peak amplitude sum.
-double crop( const std::list< Partial > & partials, int endFrame, double hop, double threshold )
+double crop( const std::list< Partial > & partials, double endTime, const ExportSpc & es )
 {
 	
 	// Find max amp sum.
-	double tim, ampsum;
+	double tim;
 	double maxampsum = 0.0;
-	for ( tim = 0.0; tim < endFrame * hop; tim += hop ) 
+	for ( tim = 0.0; tim <= endTime; tim += es.hop() ) 
 	{
 	
 		// Compute sum of amp of all partials at this time.
-		ampsum = 0.0;
+		double ampsum = 0.0;
 		for ( std::list< Partial >::const_iterator it = partials.begin(); it != partials.end(); ++it ) 
 		{
 			if ( it->begin() != it->end() )
@@ -552,11 +637,11 @@ double crop( const std::list< Partial > & partials, int endFrame, double hop, do
 
 	// Find first time we get some percentage of the max amp.
 	// This will be used to crop the attack.
-	for (tim = 0.0; tim < endFrame * hop; tim += hop) 
+	for ( tim = 0.0; tim <= endTime; tim += es.hop() ) 
 	{
 
 		// Compute sum of amp of all partials at this time.
-		ampsum = 0.0;
+		double ampsum = 0.0;
 		for ( std::list< Partial >::const_iterator it = partials.begin(); it != partials.end(); ++it ) 
 		{
 			if ( it->begin() != it->end() )
@@ -564,7 +649,7 @@ double crop( const std::list< Partial > & partials, int endFrame, double hop, do
 		}
 		
 		// If we hit the amp level, we will crop to here; exit.
-		if (ampsum > threshold * maxampsum)
+		if (ampsum > es.attackThreshold() * maxampsum)
 			return tim;
 	}
 	
@@ -577,7 +662,7 @@ double crop( const std::list< Partial > & partials, int endFrame, double hop, do
 //	writeCommon
 // ---------------------------------------------------------------------------
 //
-void writeCommon( std::ostream & s, int startFrame, int endFrame, int partials, int enhanced )
+void writeCommon( std::ostream & s, double startTime, double endTime, const ExportSpc & es )
 {
 	//	first build a Common chunk, so that all the data sizes will 
 	//	be correct:
@@ -587,15 +672,16 @@ void writeCommon( std::ostream & s, int startFrame, int endFrame, int partials, 
 	//	size is everything after the header:
 	ck.header.size = sizeofCommon() - sizeofCkHeader();
 
-	if (enhanced) 			// bandwidth-enhanced spc file
+	int frames = int( (endTime - startTime) / es.hop() ) + 1;
+	if ( es.enhanced() ) 			// bandwidth-enhanced spc file
 	{					
 		ck.channels = MONO_ENH ? 1 : 2;
-		ck.sampleFrames = (endFrame - startFrame + 1) * partials * (MONO_ENH ? 2 : 1);
+		ck.sampleFrames = frames * es.numPartials() * (MONO_ENH ? 2 : 1);
 	}
 	else					// pure sinusoidal spc file
 	{					
 		ck.channels = 1;
-		ck.sampleFrames = (endFrame - startFrame + 1) * partials;
+		ck.sampleFrames = frames * es.numPartials();
 	}
 	
 	ck.bitsPerSample = 24;
@@ -622,7 +708,7 @@ void writeCommon( std::ostream & s, int startFrame, int endFrame, int partials, 
 //	writeContainer
 // ---------------------------------------------------------------------------
 //
-void writeContainer( std::ostream & s, int startFrame, int endFrame, int partials, int enhanced, int markerFrame )
+void writeContainer( std::ostream & s, double startTime, double endTime, const ExportSpc & es )
 {
 	//	first build a Container chunk, so that all the data sizes will 
 	//	be correct:
@@ -632,9 +718,9 @@ void writeContainer( std::ostream & s, int startFrame, int endFrame, int partial
 	//	size is everything after the header:
 	ck.header.size = sizeof(Int_32) + sizeofCommon() 
 				+ sizeofInstrument() 
-				+ (markerFrame ? sizeofMarker() : 0)
+				+ (es.markerTime() ? sizeofMarker() : 0)
 				+ sizeofSosEnvelopes()
-				+ sizeofSoundData( startFrame, endFrame, partials, enhanced );
+				+ sizeofSoundData( startTime, endTime, es );
 	
 	ck.formType = AiffType;
 	
@@ -656,7 +742,7 @@ void writeContainer( std::ostream & s, int startFrame, int endFrame, int partial
 //	writeInstrument
 // ---------------------------------------------------------------------------
 //
-void writeInstrument( std::ostream & s, int midiPitch )
+void writeInstrument( std::ostream & s, const ExportSpc & es )
 {
 	//	first build an Inst chunk, so that all the data sizes will 
 	//	be correct:
@@ -666,8 +752,8 @@ void writeInstrument( std::ostream & s, int midiPitch )
 	//	size is everything after the header:
 	ck.header.size = sizeofInstrument() - sizeofCkHeader();
 	
-	ck.baseFrequency = long( midiPitch );
-	ck.detune = ((long)(100 * midiPitch)) % 100;
+	ck.baseFrequency = long( es.midiPitch() );
+	ck.detune = long( 100 * es.midiPitch() ) % 100;
 	if (ck.detune > 50)
 	{
 		ck.baseFrequency++;
@@ -716,7 +802,7 @@ void writeInstrument( std::ostream & s, int midiPitch )
 //	writeMarker
 // ---------------------------------------------------------------------------
 //
-void writeMarker( std::ostream & s, int partials, int enhanced, int markerFrame )
+void writeMarker( std::ostream & s, const ExportSpc & es )
 {
 	//	first build a Marker chunk, so that all the data sizes will 
 	//	be correct:
@@ -728,7 +814,7 @@ void writeMarker( std::ostream & s, int partials, int enhanced, int markerFrame 
 	
 	ck.numMarkers = 1;					// one marker
 	ck.aMarker.id = 1;					// first marker 
-	ck.aMarker.position = markerFrame * partials * ((enhanced && MONO_ENH) ? 2 : 1); 
+	ck.aMarker.position = int( es.markerTime() / es.hop() ) *  es.numPartials() * ((es.enhanced() && MONO_ENH) ? 2 : 1); 
 	ck.aMarker.markerName[0] = 1;		// 1 character long name
 	ck.aMarker.markerName[1] = 'a';
 
@@ -755,7 +841,7 @@ void writeMarker( std::ostream & s, int partials, int enhanced, int markerFrame 
 //	writeSosEnvelopesChunk
 // ---------------------------------------------------------------------------
 //
-void writeSosEnvelopesChunk( std::ostream & s, int startFrame, int endFrame, int partials, int enhanced, double hop )
+void writeSosEnvelopesChunk( std::ostream & s, double startTime, double endTime, const ExportSpc & es )
 {
 	//	first build an SOSe chunk, so that all the data sizes will 
 	//	be correct:
@@ -766,11 +852,16 @@ void writeSosEnvelopesChunk( std::ostream & s, int startFrame, int endFrame, int
 	ck.header.size = sizeofSosEnvelopes() - sizeofCkHeader();
 					
 	ck.signature = SosEnvelopesId;
-	ck.frames = endFrame - startFrame + 1;
-	ck.validPartials = partials * ((enhanced && MONO_ENH) ? 2 : 1);
+
+	ck.frames = int((endTime - startTime) / es.hop()) + 1;
+	ck.validPartials = es.numPartials() * ((es.enhanced() && MONO_ENH) ? 2 : 1);
 	
-	ck.SOSresolution(enhanced,partials) = 1000000.0 * hop;				 // convert secs to microsecs
-	ck.SOSquasiHarmonic(enhanced,partials) = partials * ((enhanced && MONO_ENH) ? 2 : 1); // all our partials quasiharmonic
+	//	resolution in microseconds
+	ck.SOSresolution(es.enhanced(),es.numPartials()) = 1000000.0 * es.hop();
+	
+	//	all partials quasiharmonic
+	ck.SOSquasiHarmonic(es.enhanced(),es.numPartials()) = 
+					es.numPartials() * ((es.enhanced() && MONO_ENH) ? 2 : 1); 
 	
 	//	write it out:
 	try 
@@ -871,10 +962,10 @@ unsigned long sizeofMarker( void )
 //	No block alignment, the envelope samples start right after the 
 //	chunk header info.
 //
-unsigned long sizeofSoundData( int startFrame, int endFrame, int partials, int enhanced )
+unsigned long sizeofSoundData( double startTime, double endTime, const ExportSpc & es )
 {
-	unsigned long dataSize = (endFrame - startFrame + 1) * partials * ( 24 / 8 )
-							 * (enhanced ? 2 : 1);
+	int frames = int((endTime - startTime) / es.hop()) + 1;
+	unsigned long dataSize = frames * es.numPartials() * ( 24 / 8 ) * (es.enhanced() ? 2 : 1);
 	
 	return	sizeof(Int_32) +	//	id
 			sizeof(Uint_32) +	//	size
@@ -886,3 +977,4 @@ unsigned long sizeofSoundData( int startFrame, int endFrame, int partials, int e
 #if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
 #endif
+

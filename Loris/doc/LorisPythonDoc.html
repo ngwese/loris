@@ -7,12 +7,14 @@ Python module: loris</TITLE>
 
 <HR><H1> Contents </H1>
 <UL><LI> <A HREF="#s1_">1. Version</A>
-<LI> <A HREF="#s2_">2. class Analyzer</A>
-<LI> <A HREF="#s3_">3. class BreakpointEnvelope</A>
-<LI> <A HREF="#s4_">4. class PartialList</A>
-<LI> <A HREF="#s5_">5. class SampleVector</A>
-<LI> <A HREF="#s6_">6. Non-object-based procedures</A>
-<LI> <A HREF="#s7_">7. Utility functions</A>
+<LI> <A HREF="#s2_">2. Loris class interfaces</A>
+<UL><LI> <A HREF="#s2_1_">2.1. class Analyzer</A>
+<LI> <A HREF="#s2_2_">2.2. class BreakpointEnvelope</A>
+<LI> <A HREF="#s2_3_">2.3. class ExportSpc</A>
+<LI> <A HREF="#s2_4_">2.4. class PartialList</A>
+<LI> <A HREF="#s2_5_">2.5. class SampleVector</A>
+</UL><LI> <A HREF="#s3_">3. Non-object-based procedures</A>
+<LI> <A HREF="#s4_">4. Utility functions</A>
 </UL>
 
 <A name="s1_">
@@ -20,32 +22,14 @@ Python module: loris</TITLE>
 <P><TT><B>__version__ = Loris 1.0beta1 </B></TT>
 
 <A name="s2_">
-<HR><H2>2. class Analyzer</H2></A>
-<P>	An Analyzer represents a configuration of parameters for
-	performing Reassigned Bandwidth-Enhanced Additive Analysis
-	of sampled waveforms. This analysis process yields a collection 
-	of Partials, each having a trio of synchronous, non-uniformly-
-	sampled breakpoint envelopes representing the time-varying 
-	frequency, amplitude, and noisiness of a single bandwidth-
-	enhanced sinusoid. 
-
-	For more information about Reassigned Bandwidth-Enhanced 
-	Analysis and the Reassigned Bandwidth-Enhanced Additive Sound 
-	Model, refer to the Loris website: 
-	<a href="http://www.cerlsoundgroup.org/Loris/" 
-	name="Loris web site">www.cerlsoundgroup.org/Loris/</a>
-	
+<HR><H2>2. Loris class interfaces</H2></A>
+<A name="s2_1_">
+<H3>2.1. class Analyzer</H3></A>
 <P><TT><B>Analyzer(resolutionHz)</B></TT>
 <BLOCKQUOTE>  	Construct and return a new Analyzer configured with the given	
 		frequency resolution (minimum instantaneous frequency	
 		difference between Partials). All other Analyzer parameters 	
 		are computed from the specified frequency resolution. 			
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>AnalyzerCopy(other)</B></TT>
-<BLOCKQUOTE>  	Construct and return a new Analyzer having identical
-		parameter configuration to another Analyzer.			
 	   
 </BLOCKQUOTE>
 
@@ -170,29 +154,18 @@ Python module: loris</TITLE>
 	   
 </BLOCKQUOTE>
 
-<A name="s3_">
-<HR><H2>3. class BreakpointEnvelope</H2></A>
-<P>
-	A BreakpointEnvelope represents a linear segment breakpoint 
-	function with infinite extension at each end (that is, the 
-	values past either end of the breakpoint function have the 
-	values at the nearest end).
+<P><TT><B>AnalyzerCopy(other)</B></TT>
+<BLOCKQUOTE>  	Construct and return a new Analyzer having identical
+	parameter configuration to another Analyzer.			
+   
+</BLOCKQUOTE>
+
+<A name="s2_2_">
+<H3>2.2. class BreakpointEnvelope</H3></A>
 <P><TT><B>BreakpointEnvelope()</B></TT>
 <BLOCKQUOTE>  	Construct and return a new BreakpointEnvelope having no 
 		breakpoints and an implicit value of 0. everywhere, 
 		until the first breakpoint is inserted.			
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>BreakpointEnvelopeWithValue(initialValue)</B></TT>
-<BLOCKQUOTE>  	Construct and return a new BreakpointEnvelope having a 
-		single breakpoint at 0. having the specified initialValue.
-</BLOCKQUOTE>
-
-<P><TT><B>BreakpointEnvelopeCopy(other)</B></TT>
-<BLOCKQUOTE>  	Construct and return a new BreakpointEnvelope that is
-		a copy of this BreapointEnvelope (has the same value
-		as this BreakpointEnvelope everywhere).			
 	   
 </BLOCKQUOTE>
 
@@ -215,28 +188,194 @@ Python module: loris</TITLE>
 	   
 </BLOCKQUOTE>
 
-<A name="s4_">
-<HR><H2>4. class PartialList</H2></A>
-<P>
-	A PartialList represents a collection of Bandwidth-Enhanced 
-	Partials, each having a trio of synchronous, non-uniformly-
-	sampled breakpoint envelopes representing the time-varying 
-	frequency, amplitude, and noisiness of a single bandwidth-
-	enhanced sinusoid.
+<P><TT><B>BreakpointEnvelopeCopy(other)</B></TT>
+<BLOCKQUOTE>  	Construct and return a new BreakpointEnvelope that is
+	a copy of this BreapointEnvelope (has the same value
+	as this BreakpointEnvelope everywhere).			
+   
+</BLOCKQUOTE>
 
-	For more information about Bandwidth-Enhanced Partials and the  
-	Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
-	the Loris website:  
-	<a href="http://www.cerlsoundgroup.org/Loris/" 
-	name="Loris web site">www.cerlsoundgroup.org/Loris/</a>
-<P><TT><B>PartialList()</B></TT>
-<BLOCKQUOTE>  	Return a new empty PartialList.
+<P><TT><B>BreakpointEnvelopeWithValue(initialValue)</B></TT>
+<BLOCKQUOTE>  	Construct and return a new BreakpointEnvelope having a 
+	single breakpoint at 0. having the specified initialValue.
+   
+</BLOCKQUOTE>
+
+<A name="s2_3_">
+<H3>2.3. class ExportSpc</H3></A>
+<P><TT><B>ExportSpc(midiPitch)</B></TT>
+<BLOCKQUOTE>  	Construct a new ExportSpc instance configured from the 
+		given MIDI note number. All other ExportSpc parameters
+		are computed fromthe specified note number.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>PartialListCopy(other)</B></TT>
-<BLOCKQUOTE>  	Return a new PartialList that is a copy of this 
-		PartialList (i.e. has identical Partials).
+<P><TT><B>del this</B></TT>
+<BLOCKQUOTE>  	Destroy this ExportSpc instance.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>write(filename,partials)</B></TT>
+<BLOCKQUOTE>  	Export the given list of Partials to an spc file having the
+		specified path (or name) according to the current configuration 
+		of this ExportSpc instance.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>configure(midiPitch)</B></TT>
+<BLOCKQUOTE>  	Set the MIDI note number (69.00 = A440) for this spc file,
+		and recompute all other parameters to default values.			
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>midiPitch()</B></TT>
+<BLOCKQUOTE>  	Return the MIDI note number (69.00 = A440) for this spc file.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>numPartials()</B></TT>
+<BLOCKQUOTE>  	Return the number of partials in spc file, may 
+		be 32, 64, 128, or 256.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>refLabel()</B></TT>
+<BLOCKQUOTE>  	Return the label of the reference partial for this ExportSpc
+		instance. A reference label of 1 indicates the fundamental.
+		The reference label is used for filling in frequencies during 
+		time gaps in other partials. 
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>enhanced()</B></TT>
+<BLOCKQUOTE>  	Return true if this spc file is in bandwidth-enhanced format,
+		false if it is in pure sinusoidal format.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>hop()</B></TT>
+<BLOCKQUOTE>  	Return the frame duration (in seconds) for this spc file.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>attackThreshold()</B></TT>
+<BLOCKQUOTE>  	Return the amplitude threshold for cropping the start of the 
+		spc file. This is specified as a fraction of maximum amplitude 
+		of the sound, with a value between 0.0 and 1.0. If the value is 
+		0.0, this indicates no cropping at the start of the spc file.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>startFreqTime()</B></TT>
+<BLOCKQUOTE>  	Return the time (in seconds) at which frequency in attack is 
+		considered stable.  Frequencies before this time are modified 
+		in the spc file to avoid real-time morphing artifacts when the 
+		spc file is used in Kyma. This returns 0.0 if the spc file has 
+		no modified attack frequencies.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>endTime()</B></TT>
+<BLOCKQUOTE>  	Return the time (in seconds) at which the end of the spc file 
+		is truncated. This returns 0.0 if the spc file is not truncate 
+		at the end.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>endApproachTime()</B></TT>
+<BLOCKQUOTE>  	Return a value in seconds that indicates how long before the 
+		end of the spc file the amplitude, frequency, and bandwidth 
+		values are modified to make a gradual transition to the spectral 
+		content at the end of the spc file.  This returns 0.0 if no such 
+		modifications are done in the spc file.	
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>markerTime()</B></TT>
+<BLOCKQUOTE>  	Return the time (in seconds) at which a marker is inserted in 
+		the spc file. This returns 0.0 if no marker is inserted into 
+		the spc file.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>setMidiPitch(x)</B></TT>
+<BLOCKQUOTE>  	Set the MIDI note number (69.00 = A440) for this 
+		spc file. (Does not cause other parameters to be 
+		recomputed.) 			
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>setNumPartials(x)</B></TT>
+<BLOCKQUOTE>  	Set the number of partials in spc file, may 
+		be 32, 64, 128, or 256.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>setRefLabel(x)</B></TT>
+<BLOCKQUOTE>  	Set the label of the reference partial for this ExportSpc
+		instance. A reference label of 1 indicates the fundamental.
+		The reference partial is used for filling in frequencies 
+		during time gaps in other partials. 
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>setEnhanced(x)</B></TT>
+<BLOCKQUOTE>  	Set the type of spc file: true for bandwidth-enhanced format,
+		false for pure sinusoidal format.
+	  
+</BLOCKQUOTE>
+
+<P><TT><B>setHop(x)</B></TT>
+<BLOCKQUOTE>  	Set the frame duration (in seconds) for this spc file.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>setAttackThreshold(x)</B></TT>
+<BLOCKQUOTE>  	Set the amplitude threshold for cropping the start of the spc 
+		file. This is specified as a fraction of maximum amplitude of 
+		the sound, with a value between 0.0 and 1.0.  Specify 0.0 for 
+		no cropping of the start of the spc file.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>setStartFreqTime(x)</B></TT>
+<BLOCKQUOTE>  	Set the time (in seconds) at which frequency in attack is 
+		considered stable.  Frequencies before this time are modified 
+		in the spc file to avoid real-time morphing artifacts when the 
+		spc file is used in Kyma. Specify 0.0 to avoid modified attack 
+		frequencies.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>setEndTime(x)</B></TT>
+<BLOCKQUOTE>  	Set the time (in seconds) to truncate the end of the spc file.
+		Set this to the 0.0 (or, equivalently, to the last end time of 
+		any partial in the sound) to avoid truncating the end of the 
+		spc file.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>setEndApproachTime(x)</B></TT>
+<BLOCKQUOTE>  	Set how long (in seconds) before the end of the spc file the 
+		amplitude, frequency, and bandwidth values are to be modified 
+		to make a gradual transition to the spectral content at the 
+		end of the spc file. Specify 0.0 to avoid these modifications 
+		in the spc file.	
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>setMarkerTime(x)</B></TT>
+<BLOCKQUOTE>  	Set the time (in seconds) at which a marker is inserted in the 
+		spc file. Only one marker is inserted into the spc file; it will
+		be inserted at the time specified with setMarkerTime().  
+		Specify 0.0 to avoid inserting a marker into the spc file.
+	   
+</BLOCKQUOTE>
+
+<A name="s2_4_">
+<H3>2.4. class PartialList</H3></A>
+<P><TT><B>PartialList()</B></TT>
+<BLOCKQUOTE>  	Return a new empty PartialList.
 	   
 </BLOCKQUOTE>
 
@@ -262,26 +401,19 @@ Python module: loris</TITLE>
 	   
 </BLOCKQUOTE>
 
-<A name="s5_">
-<HR><H2>5. class SampleVector</H2></A>
-	A SampleVector represents a vector of floating point samples of
-	an audio waveform. In Loris, the samples are assumed to have 
-	values on the range (-1., 1.) (though this is not enforced or 
-	checked). 
+<P><TT><B>PartialListCopy(other)</B></TT>
+<BLOCKQUOTE>  	Return a new PartialList that is a copy of this 
+	PartialList (i.e. has identical Partials).
+   
+</BLOCKQUOTE>
+
+<A name="s2_5_">
+<H3>2.5. class SampleVector</H3></A>
 <P><TT><B>SampleVector(size)</B></TT>
 <BLOCKQUOTE>  	Return a new SampleVector having the specified number of samples,
 		all of whose value is 0. 
 		
 		If no size is specified, 0 is assumed.
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>SampleVectorCopy(other)</B></TT>
-<BLOCKQUOTE>  	Return a new SampleVector that is a copy of this 
-		SampleVector, having the same number of samples, 
-		and samples at every position in the copy having 
-		the same value as the corresponding sample in
-		this SampleVector.
 	   
 </BLOCKQUOTE>
 
@@ -321,8 +453,17 @@ Python module: loris</TITLE>
 	   
 </BLOCKQUOTE>
 
-<A name="s6_">
-<HR><H2>6. Non-object-based procedures</H2></A>
+<P><TT><B>SampleVectorCopy(other)</B></TT>
+<BLOCKQUOTE>  	Return a new SampleVector that is a copy of this 
+	SampleVector, having the same number of samples, 
+	and samples at every position in the copy having 
+	the same value as the corresponding sample in
+	this SampleVector.
+   
+</BLOCKQUOTE>
+
+<A name="s3_">
+<HR><H2>3. Non-object-based procedures</H2></A>
 <P>
 	Operations in Loris that need not be accessed though object
 	interfaces are represented as simple functions.
@@ -384,9 +525,8 @@ Python module: loris</TITLE>
 <BLOCKQUOTE>  	Export Partials in a PartialList to a SDIF file at the specified
 	file path (or name). SDIF data is written in the 1TRC format.  
 	For more information about SDIF, see the SDIF website at:
-		<a href="http://www.ircam.fr/equipes/analyse-synthese/sdif/" 
-		name="IRCAM SDIF web site">www.ircam.fr/equipes/analyse-synthese/sdif/</a>  
-<BR>		
+		www.ircam.fr/equipes/analyse-synthese/sdif/  
+		
 	The hop parameter is currently used to specify a time-domain 
 	resampling of the Partial envelopes. This parameter is 
 	deprecated, and will be removed in future versions, which 
@@ -412,8 +552,7 @@ Python module: loris</TITLE>
 <BLOCKQUOTE>  	Import Partials from an SDIF file at the given file path (or 
 	name), and return them in a PartialList.
 	For more information about SDIF, see the SDIF website at:
-		<a href="http://www.ircam.fr/equipes/analyse-synthese/sdif/" 
-		name="IRCAM SDIF web site">www.ircam.fr/equipes/analyse-synthese/sdif/</a>  
+		www.ircam.fr/equipes/analyse-synthese/sdif/  
    
 </BLOCKQUOTE>
 
@@ -433,8 +572,7 @@ Python module: loris</TITLE>
 	and bandwidth envelopes of corresponding Partials in the
 	source PartialLists. For more information about the Loris
 	morphing algorithm, see the Loris website: 
-	<a href="http://www.cerlsoundgroup.org/Loris/" 
-	name="Loris web site">www.cerlsoundgroup.org/Loris/</a>
+	www.cerlsoundgroup.org/Loris/
    
 </BLOCKQUOTE>
 
@@ -446,8 +584,8 @@ Python module: loris</TITLE>
    
 </BLOCKQUOTE>
 
-<A name="s7_">
-<HR><H2>7. Utility functions</H2></A>
+<A name="s4_">
+<HR><H2>4. Utility functions</H2></A>
 <P>
 	These procedures are generally useful but are not yet  
 	represented by classes in the Loris core.

@@ -318,7 +318,6 @@ void exportSdif( const char * path, PartialList * partials, double hop )
 /*	Export Partials in a PartialList to an SPC file, for use with
 	the Kyma system. Waiting on a real doc string for this one.  
 		
- */
 extern "C"
 void exportSpc( const char *fname, PartialList * partials,
 				int numSpcPars, int refParNum, double frameRate, double midiPitch, 
@@ -371,6 +370,7 @@ void exportSpc( const char *fname, PartialList * partials,
 	}
 
 }
+ */
 
 /* ---------------------------------------------------------------- */
 /*        importAiff        

@@ -65,11 +65,6 @@ public:
 	/*	Return a new empty PartialList.
 	 */
 
-	%name( PartialListCopy ) PartialList( const PartialList & other );
-	/*	Return a new PartialList that is a copy of this 
-		PartialList (i.e. has identical Partials).
-	 */
-	 
 	~PartialList( void );
 	/*	Destroy this PartialList.
 	 */
@@ -100,3 +95,20 @@ public:
 }
 
 };	//	end of (SWIG) class PartialList
+
+//	define a copy constructor:
+//	(this should give the right documentation, the 
+//	right ownership, the right function name in the
+//	module, etc.)
+%{
+PartialList * PartialListCopy_( const PartialList * other )
+{
+	return new PartialList( *other );
+}
+%}
+
+%name( PartialListCopy )  
+%new PartialList * PartialListCopy_( const PartialList * other );
+/*	Return a new PartialList that is a copy of this 
+	PartialList (i.e. has identical Partials).
+ */

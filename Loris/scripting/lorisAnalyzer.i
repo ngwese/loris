@@ -40,9 +40,9 @@
 %{
 #include "Analyzer.h"
 #include "Partial.h"
-#include <list>
-typedef std::list< Loris::Partial > PartialList;
-using Loris::Analyzer;
+//#include <list>
+//typedef std::list< Loris::Partial > PartialList;
+//using Loris::Analyzer;
 
 //	for procedural interface construction and 
 //	destruction, see comment below:
@@ -80,22 +80,14 @@ public:
 //	to be constructed and destructed in the DLL, instead of 
 //	across DLL boundaries, which might make a difference on
 //	the Mac.
+//
+//	In fact, there seems to be a problem with the compiler-generated
+//	assignment operator too. Don't let's use that here either. Other
+//	member functions don't seem to cause instability.
+//	Note that the copy function here uses a defined assignment
+//	operator, and those don't seem to be problematic.
 //	
-	//Analyzer( double resolutionHz );
-	/*	Construct and return a new Analyzer configured with the given	
-		frequency resolution (minimum instantaneous frequency	
-		difference between Partials). All other Analyzer parameters 	
-		are computed from the specified frequency resolution. 			
-	 */
-	//%name( AnalyzerCopy ) Analyzer( const Analyzer & other );
-	/*	Construct and return a new Analyzer having identical
-		parameter configuration to another Analyzer.			
-	 */
-	//~Analyzer( void );
-	/*	Destroy this Analyzer. 								
-	 */
 
-//	analysis:
 %addmethods 
 {
 	Analyzer( double resolutionHz )
@@ -107,17 +99,7 @@ public:
 		difference between Partials). All other Analyzer parameters 	
 		are computed from the specified frequency resolution. 			
 	 */
-	
-	//%name( AnalyzerCopy ) Analyzer( const Analyzer & other )
-	%name( AnalyzerCopy ) Analyzer( const Analyzer * other )
-	{
-		Analyzer * a = createAnalyzer( other->freqResolution() );
-		*a = *other;
-		return a;
-	}
-	/*	Construct and return a new Analyzer having identical
-		parameter configuration to another Analyzer.			
-	 */
+		 
 	~Analyzer( void )
 	{
 		destroyAnalyzer( self );
@@ -125,6 +107,7 @@ public:
 	/*	Destroy this Analyzer. 								
 	 */	
 	
+//	analysis:
 	%new 
 	PartialList * analyze( const SampleVector * vec, double srate )
 	{
@@ -222,3 +205,22 @@ public:
 	 */
 
 };	//	end of class Analyzer
+
+//	define a copy constructor:
+//	(this should give the right documentation, the 
+//	right ownership, the right function name in the
+//	module, etc.)
+%{
+Analyzer * AnalyzerCopy_( const Analyzer * other )
+{
+	Analyzer * a = createAnalyzer( other->freqResolution() );
+	*a = *other;
+	return a;
+}
+%}
+
+%name( AnalyzerCopy ) 
+%new Analyzer * AnalyzerCopy_( const Analyzer * other );
+/*	Construct and return a new Analyzer having identical
+	parameter configuration to another Analyzer.			
+ */

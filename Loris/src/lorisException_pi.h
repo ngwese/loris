@@ -1,3 +1,5 @@
+#ifndef INCLUDE_LORISEXCEPTION_PI_H
+#define INCLUDE_LORISEXCEPTION_PI_H
 /*
  * This is the Loris C++ Class Library, implementing analysis, 
  * manipulation, and synthesis of digitized sounds using the Reassigned 
@@ -72,3 +74,4 @@ public:
 #define ThrowIfNull(ptr) if ((ptr)==NULL) Throw( NullPointer, #ptr );	
 
 
+#endif	/* ndef INCLUDE_LORISEXCEPTION_PI_H */

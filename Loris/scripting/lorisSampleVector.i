@@ -60,13 +60,7 @@ public:
 		
 		If no size is specified, 0 is assumed.
 	 */
-	 %name( SampleVectorCopy ) SampleVector( const SampleVector & other );
-	/*	Return a new SampleVector that is a copy of this 
-		SampleVector, having the same number of samples, 
-		and samples at every position in the copy having 
-		the same value as the corresponding sample in
-		this SampleVector.
-	 */
+	 
 	 ~SampleVector( void );
 	 /*	Destroy this SampleVector.
 	  */
@@ -92,6 +86,8 @@ public:
 	double getAt( unsigned long idx )
 	{
 		// return self->at(idx);	//	g++ doesn't implement at()?
+		if ( idx >= self->size() )
+			throw std::out_of_range("vector::at index out of range");
 		return (*self)[idx];
 	}
 	/*	Return the value of the sample at the given position (index) in
@@ -100,6 +96,8 @@ public:
 	void setAt( unsigned long idx, double x )
 	{
 		// self->at(idx) = x;	//	g++ doesn't implement at()?
+		if ( idx >= self->size() )
+			throw std::out_of_range("vector::at index out of range");
 		(*self)[idx] = x;
 	}
 	/*	Set the value of the sample at the given position (index) in
@@ -109,3 +107,22 @@ public:
 
 };	//	end of (SWIG) class SampleVector
 
+//	define a copy constructor:
+//	(this should give the right documentation, the 
+//	right ownership, the right function name in the
+//	module, etc.)
+%{
+SampleVector * SampleVectorCopy_( const SampleVector * other )
+{
+	return new SampleVector( *other );
+}
+%}
+
+%name( SampleVectorCopy )  
+%new SampleVector * SampleVectorCopy_( const SampleVector * other );
+/*	Return a new SampleVector that is a copy of this 
+	SampleVector, having the same number of samples, 
+	and samples at every position in the copy having 
+	the same value as the corresponding sample in
+	this SampleVector.
+ */

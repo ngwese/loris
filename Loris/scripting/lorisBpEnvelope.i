@@ -68,6 +68,10 @@ public:
 //	to be constructed and destructed in the DLL, instead of 
 //	across DLL boundaries, which might make a difference on
 //	the Mac.
+//
+//	In fact, there seems to be a problem with the compiler-generated
+//	assignment operator too. Don't let's use that here either. Other
+//	member functions don't seem to cause instability.
 //	
 %addmethods
 {
@@ -79,26 +83,7 @@ public:
 		breakpoints and an implicit value of 0. everywhere, 
 		until the first breakpoint is inserted.			
 	 */
-	%name( BreakpointEnvelopeWithValue ) BreakpointEnvelope( double initialValue )
-	{
-		BreakpointEnvelope * env = createBreakpointEnvelope();
-		env->insertBreakpoint( 0., initialValue );
-		return env;
-	}
-	/*	Construct and return a new BreakpointEnvelope having a 
-		single breakpoint at 0. having the specified initialValue.
-	 */
-	//%name( BreakpointEnvelopeCopy ) BreakpointEnvelope( const BreakpointEnvelope & other )
-	%name( BreakpointEnvelopeCopy ) BreakpointEnvelope( const BreakpointEnvelope * other )
-	{
-		BreakpointEnvelope * env = createBreakpointEnvelope();
-		*env = *other;
-		return env;
-	}
-	/*	Construct and return a new BreakpointEnvelope that is
-		a copy of this BreapointEnvelope (has the same value
-		as this BreakpointEnvelope everywhere).			
-	 */
+	 	 
 	~BreakpointEnvelope( void )
 	{
 		destroyBreakpointEnvelope( self );
@@ -122,3 +107,44 @@ public:
 	 */
 	 
 };	//	end of abstract class BreakpointEnvelope
+
+//	define a copy constructor:
+//	(this should give the right documentation, the 
+//	right ownership, the right function name in the
+//	module, etc.)
+%{
+BreakpointEnvelope * BreakpointEnvelopeCopy_( const BreakpointEnvelope * other )
+{
+	//BreakpointEnvelope * env = createBreakpointEnvelope();
+	//*env = *other;
+	return copyBreakpointEnvelope( other );
+}
+%}
+
+%name( BreakpointEnvelopeCopy ) 
+%new BreakpointEnvelope * BreakpointEnvelopeCopy_( const BreakpointEnvelope * other );
+/*	Construct and return a new BreakpointEnvelope that is
+	a copy of this BreapointEnvelope (has the same value
+	as this BreakpointEnvelope everywhere).			
+ */
+
+//	define a constructor with initial value:
+//	(this should give the right documentation, the 
+//	right ownership, the right function name in the
+//	module, etc.)
+%{
+BreakpointEnvelope * BreakpointEnvelopeWithValue_( double initialValue )
+{
+	BreakpointEnvelope * env = createBreakpointEnvelope();
+	env->insertBreakpoint( 0., initialValue );
+	//breakpointEnvelope_insertBreakpoint( env, 0., initialValue );
+	return env;
+}
+%}
+
+%name( BreakpointEnvelopeWithValue ) 
+%new BreakpointEnvelope * BreakpointEnvelopeWithValue_( double initialValue );
+/*	Construct and return a new BreakpointEnvelope having a 
+	single breakpoint at 0. having the specified initialValue.
+ */
+ 
