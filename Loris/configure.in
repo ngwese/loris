@@ -21,10 +21,16 @@ AC_MSG_RESULT(----- Package Name And Version -----)
 PACKAGE=loris
 LORIS_MAJOR_VERSION=1
 LORIS_MINOR_VERSION=0
-LORIS_SUBMINOR_VERSION=beta8
-VERSION="$LORIS_MAJOR_VERSION"."$LORIS_MINOR_VERSION""$LORIS_SUBMINOR_VERSION"
-AM_INIT_AUTOMAKE("$PACKAGE","$VERSION")
-AC_MSG_RESULT(this is $PACKAGE$VERSION)
+LORIS_SUBMINOR_VERSION=0
+LORIS_BETA_VERSION=beta8
+VERSION_STR="$LORIS_MAJOR_VERSION"."$LORIS_MINOR_VERSION""$LORIS_BETA_VERSION"
+AM_INIT_AUTOMAKE("$PACKAGE","$VERSION_STR")
+AC_MSG_RESULT(this is $PACKAGE$VERSION_STR)
+
+AC_SUBST(LORIS_MAJOR_VERSION)
+AC_SUBST(LORIS_MINOR_VERSION)
+AC_SUBST(LORIS_SUBMINOR_VERSION)
+AC_SUBST(VERSION_STR)
 
 AM_CONFIG_HEADER(config.h)
 
@@ -40,6 +46,11 @@ dnl LF_SET_WARNINGS
 AC_PROG_CXX
 
 AM_PROG_LIBTOOL
+
+dnl----------------------------------------------------------------
+dnl Perform special libtool checks under Darwin.
+dnl----------------------------------------------------------------
+
 AC_DEFUN([PATCH_LIBTOOL_ON_DARWIN_ZSH_OVERQUOTING],
 [# libtool-1.4 specific, on zsh target the final requoting does one too much
 case "$host_os" in
@@ -68,6 +79,13 @@ esac
 
 KELLYS_GREAT_DARWIN_FIX
 AM_CONDITIONAL(DARWIN, test "$DARWIN")
+
+dnl----------------------------------------------------------------
+dnl Look for swig.
+dnl
+dnl If swig is available, then a target will be generated 
+dnl for rebuilding the scripting wrappers.
+dnl----------------------------------------------------------------
 
 AC_PATH_PROG(SWIG, swig)
 AM_CONDITIONAL(HAVE_SWIG, test -n "$SWIG")

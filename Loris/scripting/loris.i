@@ -583,9 +583,9 @@ void shiftPitch( PartialList * partials, BreakpointEnvelope * pitchEnv );
 	units of cents (1/100 of a halfstep).
  */
 
-#endif
 
-#if 1
+#else
+
 %{
 	#include <cmath>
 %}
@@ -676,6 +676,14 @@ void shiftPitch( PartialList * partials, BreakpointEnvelope * pitchEnv );
 		units of cents (1/100 of a halfstep).
 	 */
 %} 
+
+%inline %{
+	const char * version( void )
+	{
+		static const char * vstr = LORIS_VERSION_STR;
+		return vstr;
+	}
+%}
  
 #endif
 
