@@ -34,7 +34,6 @@
 #include "Exception.h"
 #include "notifier.h"
 #include "Breakpoint.h"
-#include "bark.h"
 #include <algorithm>
 #include <cmath>
 
@@ -258,8 +257,11 @@ AssociateBandwidth::binFrequency( double freqHz )
 #ifndef Use_Barks
 	return freqHz * _regionRate;
 #else
-	//	ignore region rate when using barks
-	return bark(freqHz);
+	//	Compute Bark frequency from Hertz.
+	//	Got this formula for Bark frequency from Sciarraba's thesis.
+	//	Ignore region rate when using barks
+	double tmp = std::atan( ( 0.001 / 7.5 ) * freqHz );
+	return  13. * std::atan( 0.76 * 0.001 * freqHz ) + 3.5 * ( tmp * tmp );
 #endif
 	
 }
