@@ -44,159 +44,227 @@ class Partial;
 // ---------------------------------------------------------------------------
 //	Class Morpher
 //
-//	Class Morpher performs sound morphing and Partial parameter
-//	envelope interpolation according to a trio of frequency, amplitude,
-//	and bandwidth morphing functions, described by Envelopes.
-//	Sound morphing is achieved by interpolating the time-varying 
-//	frequencies, amplitudes, and bandwidths of corresponding partials 
-//	obtained from reassigned bandwidth-enhanced analysis of the source 
-//	and target sounds. Partial correspondences may be established by 
-//	labeling, using instances of the Channelizer and Distiller classes.
-//
-//	The Morpher collects morphed Partials in a PartialList, that is
-//	accessible to clients.
-//
-//	For more information about sound morphing using 
-//	the Reassigned Bandwidth-Enhanced Additive Sound 
-//	Model, refer to the Loris website: 
-//	www.cerlsoundgroup.org/Loris/.
-//	
-//	Morpher is a leaf class, do not subclass.
+//!	Class Morpher performs sound morphing and Partial parameter
+//!	envelope interpolation according to a trio of frequency, amplitude,
+//!	and bandwidth morphing functions, described by Envelopes.
+//!	Sound morphing is achieved by interpolating the time-varying 
+//!	frequencies, amplitudes, and bandwidths of corresponding partials 
+//!	obtained from reassigned bandwidth-enhanced analysis of the source 
+//!	and target sounds. Partial correspondences may be established by 
+//!	labeling, using instances of the Channelizer and Distiller classes.
+//!
+//!	The Morpher collects morphed Partials in a PartialList, that is
+//!	accessible to clients.
+//!
+//!	For more information about sound morphing using 
+//!	the Reassigned Bandwidth-Enhanced Additive Sound 
+//!	Model, refer to the Loris website: 
+//!	www.cerlsoundgroup.org/Loris/.
+//!	
+//!	Morpher is a leaf class, do not subclass.
 //
 class Morpher
 {
 //	-- instance variables --
-	std::auto_ptr< Envelope > _freqFunction;	//	frequency morphing function
-	std::auto_ptr< Envelope > _ampFunction;		//	amplitude morphing function
-	std::auto_ptr< Envelope > _bwFunction;		//	bandwidth morphing function
-	
-	PartialList _partials;						//	collect Partials here
-	
-	Partial::label_type _refLabel0, _refLabel1;	//	labels of the reference Partials
-												//	for source and target sounds when 
-												//	morphing sequences of labeled Partials,
-												//	default 0 implies no reference Partial
 
-	double _freqFixThresholdDb; 				//	amplitude threshold below which Partial
-												//	frequencies are corrected according to
-												//	a reference Partial, if specified.
+	std::auto_ptr< Envelope > _freqFunction;	//!	frequency morphing function
+	std::auto_ptr< Envelope > _ampFunction;		//!	amplitude morphing function
+	std::auto_ptr< Envelope > _bwFunction;		//!	bandwidth morphing function
 	
-	double _ampMorphShape;						//	shaping parameter that controls the 
-												//	slope of the amplitude morphing function,
-												//	for values greater than 1, this function
-												//	gets nearly linear (like the old amplitude
-												//	morphing function), for values much less 
-												//	than 1 (e.g. 1E-5) the slope is gently
-												//	curved and sounds pretty "linear", for 
-												//	very small values (e.g. 1E-12) the curve
-												//	is very steep and sounds un-natural because
-												//	of the huge jump from zero amplitude to
-												//	very small amplitude.
+	PartialList _partials;						//!	collect Partials here
+	
+	Partial::label_type _refLabel0, _refLabel1;	//!	labels of the reference Partials
+												//!	for source and target sounds when 
+												//!	morphing sequences of labeled Partials,
+												//!	default 0 implies no reference Partial
+
+	double _freqFixThresholdDb; 				//!	amplitude threshold below which Partial
+												//!	frequencies are corrected according to
+												//!	a reference Partial, if specified.
+	
+	double _ampMorphShape;						//!	shaping parameter that controls the 
+												//!	slope of the amplitude morphing function,
+												//!	for values greater than 1, this function
+												//!	gets nearly linear (like the old amplitude
+												//!	morphing function), for values much less 
+												//!	than 1 (e.g. 1E-5) the slope is gently
+												//!	curved and sounds pretty "linear", for 
+												//!	very small values (e.g. 1E-12) the curve
+												//!	is very steep and sounds un-natural because
+												//!	of the huge jump from zero amplitude to
+												//!	very small amplitude.
 																		
-	double _minBreakpointGapSec;				//	the minimum time gap between two Breakpoints
-												//	in the morphed Partials. Morphing two
-												//	Partials can generate a third Partial having
-												//	Breakpoints arbitrarily close together in time,
-												//	and this makes morphs huge. Raising this 
-												//	threshold limits the Breakpoint density in
-												//	the morphed Partials. 
-												//	Default is zero (huge morphs).
+	double _minBreakpointGapSec;				//!	the minimum time gap between two Breakpoints
+												//!	in the morphed Partials. Morphing two
+												//!	Partials can generate a third Partial having
+												//!	Breakpoints arbitrarily close together in time,
+												//!	and this makes morphs huge. Raising this 
+												//!	threshold limits the Breakpoint density in
+												//!	the morphed Partials. 
+												//!	Default is zero (huge morphs).
 //	-- public interface --
 public:
 //	-- construction --
 
-	//	Construct a new Morpher using the same morphing envelope for 
-	//	frequency, amplitude, and bandwidth (noisiness).
+	//!	Construct a new Morpher using the same morphing envelope for 
+	//!	frequency, amplitude, and bandwidth (noisiness).
+	//!	
+	//!	@param 	f is the Envelope to clone for all three morphing 
+	//!			functions.
 	Morpher( const Envelope & f );
 
-	//	Construct a new Morpher using the specified morphing envelopes for
-	//	frequency, amplitude, and bandwidth (noisiness).
+	//!	Construct a new Morpher using the specified morphing envelopes for
+	//!	frequency, amplitude, and bandwidth (noisiness).
+	//!
+	//!	@param 	ff is the Envelope to clone for the frequency morphing function
+	//!	@param 	af is the Envelope to clone for the amplitude morphing function
+	//!	@param 	bwf is the Envelope to clone for the bandwidth morphing function	
 	Morpher( const Envelope & ff, const Envelope & af, const Envelope & bwf );
 
-	//	Destroy this Morpher.
+	//!	Destroy this Morpher.
 	~Morpher( void );
 	
 //	-- morphed parameter computation --
 
-	//	Morph Breakpoint to Breakpoint:
-	//	Compute morphed parameter values at the specified time, using
-	//	the source and target Breakpoints (assumed to correspond exactly 
-	//	to the specified time). Return the morphed Parameters in the
-	//	specified return Breakpoint.
+	//!	Morph Breakpoint to Breakpoint:
+	//!	Compute morphed parameter values at the specified time, using
+	//!	the source and target Breakpoints (assumed to correspond exactly 
+	//!	to the specified time). Return the morphed Parameters in the
+	//!	specified return Breakpoint.
+	//!
+	//!	@param 	srcBkpt is the Breakpoint corresponding to a morph function
+	//!		   	value of 0.
+	//!	@param 	tgtBkpt is the Breakpoint corresponding to a morph function
+	//!		   	value of 1.
+	//!	@param 	time is the time corresponding to both Breakpoints (used
+	//!			to evaluate the morphing functions).
+	//!	@param	retBkpt is a Breakpoint that is modified to return the new
+	//!			intepolated parameters (faster than copying, useless optimization).
 	void morphParameters( const Breakpoint & srcBkpt, const Breakpoint & tgtBkpt, 
 						  double time, Breakpoint & retBkpt );
 						  
-	//	Morph Breakpoint to Partial:
-	//	Compute morphed parameter values at the specified time, using
-	//	the source Breakpoint (assumed to correspond exactly to the
-	//	specified time) and the target Partial (whose parameters are
-	//	examined at the specified time). Return the morphed Parameters 
-	//	in the specified return Breakpoint.
+	//!	Morph Breakpoint to Partial:
+	//!	Compute morphed parameter values at the specified time, using
+	//!	the source Breakpoint (assumed to correspond exactly to the
+	//!	specified time) and the target Partial (whose parameters are
+	//!	examined at the specified time). Return the morphed Parameters 
+	//!	in the specified return Breakpoint.
+	//!
+	//!	@param 	srcBkpt is the Breakpoint corresponding to a morph function
+	//!		   	value of 0.
+	//!	@param 	tgtPartial is the Partial corresponding to a morph function
+	//!		   	value of 1, evaluated at the specified time.
+	//!	@param 	time is the time corresponding to srcBkpt (used
+	//!			to evaluate the morphing functions and tgtPartial).
+	//!	@param	retBkpt is a Breakpoint that is modified to return the new
+	//!			intepolated parameters (faster than copying, useless optimization).
 	void morphParameters( const Breakpoint & srcBkpt, const Partial & tgtPartial, 
 						  double time, Breakpoint & retBkpt );
 						  
-	//	Morph Partial to Breakpoint
-	//	Compute morphed parameter values at the specified time, using
-	//	the source Partial (whose parameters are examined at the specified 
-	//	time) and the target Breakpoint (assumed to correspond exactly to 
-	//	the specified time). Return the morphed Parameters in the
-	//	specified return Breakpoint.
+	//!	Morph Partial to Breakpoint
+	//!	Compute morphed parameter values at the specified time, using
+	//!	the source Partial (whose parameters are examined at the specified 
+	//!	time) and the target Breakpoint (assumed to correspond exactly to 
+	//!	the specified time). Return the morphed Parameters in the
+	//!	specified return Breakpoint.
+	//!
+	//!	@param 	srcPartial is the Partial corresponding to a morph function
+	//!		   	value of 0, evaluated at the specified time.
+	//!	@param 	tgtBkpt is the Breakpoint corresponding to a morph function
+	//!		   	value of 1.
+	//!	@param 	time is the time corresponding to tgtBkpt (used
+	//!			to evaluate the morphing functions and srcPartial).
+	//!	@param	retBkpt is a Breakpoint that is modified to return the new
+	//!			intepolated parameters (faster than copying, useless optimization).
 	void morphParameters( const Partial & srcPartial, const Breakpoint & tgtBkpt, 
 						  double time, Breakpoint & retBkpt );
 						  
-	//	Morph Partial to Partial
-	//	Compute morphed parameter values at the specified time, using
-	//	the source  and target Partials, both of whose parameters are 
-	//	examined at the specified time. Return the morphed Parameters 
-	//	in the specified return Breakpoint.
-	//
-	//	Either (or neither) the source or target Partial may be a dummy 
-	//	Partial (no Breakpoints), but not both.
+	//!	Morph Partial to Partial
+	//!	Compute morphed parameter values at the specified time, using
+	//!	the source  and target Partials, both of whose parameters are 
+	//!	examined at the specified time. Return the morphed Parameters 
+	//!	in the specified return Breakpoint.
+	//!
+	//!	Either (or neither) the source or target Partial may be a dummy 
+	//!	Partial (no Breakpoints), but not both.
+	//!
+	//!	@param 	srcPartial is the Partial corresponding to a morph function
+	//!		   	value of 0, evaluated at the specified time.
+	//!	@param 	tgtPartial is the Partial corresponding to a morph function
+	//!		   	value of 1, evaluated at the specified time.
+	//!	@param 	time is the time corresponding to srcBkpt (used
+	//!			to evaluate the morphing functions and both Partials).
+	//!	@param	retBkpt is a Breakpoint that is modified to return the new
+	//!			intepolated parameters (faster than copying, useless optimization).
 	void morphParameters( const Partial & srcPartial, const Partial & tgtPartial, 
 						  double time, Breakpoint & retBkpt );
 
 
 //	-- Partial morphing --
 
-	//	Morph a pair of Partials to yield a new morphed Partial. 
-	//	Dummy Partials (having no Breakpoints) don't contribute to the
-	//	morph, except to cause their opposite to fade out. 
-	//	Either (or neither) the source or target Partial may be a dummy 
-	//	Partial (no Breakpoints), but not both. The morphed
-	//	Partial has Breakpoints at times corresponding to every Breakpoint 
-	//	in both source Partials. The morphed Partial is appended
-	//	to the Morpher's PartialList, and a reference to it is returned.
-	//	The new morphed Partial is assigned the specified label.
+	//!	Morph a pair of Partials to yield a new morphed Partial. 
+	//!	Dummy Partials (having no Breakpoints) don't contribute to the
+	//!	morph, except to cause their opposite to fade out. 
+	//!	Either (or neither) the source or target Partial may be a dummy 
+	//!	Partial (no Breakpoints), but not both. The morphed
+	//!	Partial has Breakpoints at times corresponding to every Breakpoint 
+	//!	in both source Partials. The morphed Partial is appended
+	//!	to the Morpher's PartialList, and a reference to it is returned.
+	//!	The new morphed Partial is assigned the specified label.
+	//!
+	//!	@param 	srcPartial is the Partial corresponding to a morph function
+	//!		   	value of 0, evaluated at the specified time.
+	//!	@param 	tgtPartial is the Partial corresponding to a morph function
+	//!		   	value of 1, evaluated at the specified time.
+	//!	@param 	assignLabel is the label assigned to the morphed Partiall
 	Partial & morphPartial( const Partial & src, const Partial & tgt, 
-						   int assignLabel );
+						    int assignLabel );
 
-	//	Morph two sounds (collections of Partials labeled to indicate
-	//	correspondences) into a single labeled collection of Partials.
-	//	Unlabeled Partials (having label 0) are crossfaded. The morphed
-	//	and crossfaded Partials are stored in the Morpher's PartialList.
-	//
-	//	The Partials in the first range are treated as components of the 
-	//	source sound, corresponding to a morph function value of 0, and  
-	//	those in the second are treated as components of the target sound, 
-	//	corresponding to a morph function value of 1.
+	//!	Morph two sounds (collections of Partials labeled to indicate
+	//!	correspondences) into a single labeled collection of Partials.
+	//!	Unlabeled Partials (having label 0) are crossfaded. The morphed
+	//!	and crossfaded Partials are stored in the Morpher's PartialList.
+	//!
+	//!	The Partials in the first range are treated as components of the 
+	//!	source sound, corresponding to a morph function value of 0, and  
+	//!	those in the second are treated as components of the target sound, 
+	//!	corresponding to a morph function value of 1.
+	//!
+	//!	@param  beginSrc is the beginning of the sequence of Partials
+	//!			corresponding to a morph function value of 0.
+	//!	@param  endSrc is (one past) the end of the sequence of Partials
+	//!			corresponding to a morph function value of 0.
+	//!	@param  beginTgt is the beginning of the sequence of Partials
+	//!			corresponding to a morph function value of 1.
+	//!	@param  endTgt is (one past) the end of the sequence of Partials
+	//!			corresponding to a morph function value of 1.
 	void morph( PartialList::const_iterator beginSrc, 
 				PartialList::const_iterator endSrc,
 				PartialList::const_iterator beginTgt, 
 				PartialList::const_iterator endTgt );
 
-	//	Crossfade Partials with no correspondences.
-	//
-	//	Unlabeled Partials (having label 0) are considered to 
-	//	have no correspondences, so they are just faded out, and not 
-	//	actually morphed. This is the same as morphing each with an 
-	//	empty dummy Partial (having no Breakpoints). 
-	//
-	//	The Partials in the first range are treated as components of the 
-	//	source sound, corresponding to a morph function value of 0, and  
-	//	those in the second are treated as components of the target sound, 
-	//	corresponding to a morph function value of 1.
-	//
-	//	The crossfaded Partials are stored in the Morpher's PartialList.
+	//!	Crossfade Partials with no correspondences.
+	//!
+	//!	Unlabeled Partials (having label 0) are considered to 
+	//!	have no correspondences, so they are just faded out, and not 
+	//!	actually morphed. This is the same as morphing each with an 
+	//!	empty dummy Partial (having no Breakpoints). 
+	//!
+	//!	The Partials in the first range are treated as components of the 
+	//!	source sound, corresponding to a morph function value of 0, and  
+	//!	those in the second are treated as components of the target sound, 
+	//!	corresponding to a morph function value of 1.
+	//!
+	//!	The crossfaded Partials are stored in the Morpher's PartialList.
+	//!
+	//!	@param  beginSrc is the beginning of the sequence of Partials
+	//!			corresponding to a morph function value of 0.
+	//!	@param  endSrc is (one past) the end of the sequence of Partials
+	//!			corresponding to a morph function value of 0.
+	//!	@param  beginTgt is the beginning of the sequence of Partials
+	//!			corresponding to a morph function value of 1.
+	//!	@param  endTgt is (one past) the end of the sequence of Partials
+	//!			corresponding to a morph function value of 1.
 	void crossfade( PartialList::const_iterator beginSrc, 
 					PartialList::const_iterator endSrc,
 					PartialList::const_iterator beginTgt, 
@@ -204,22 +272,22 @@ public:
 
 //	-- morphing function access/mutation --
 
-	//	Assign a new frequency morphing envelope to this Morpher.
+	//!	Assign a new frequency morphing envelope to this Morpher.
 	void setFrequencyFunction( const Envelope & f );
 	
-	//	Assign a new amplitude morphing envelope to this Morpher.
+	//!	Assign a new amplitude morphing envelope to this Morpher.
 	void setAmplitudeFunction( const Envelope & f );
 	
-	//	Assign a new bandwidth morphing envelope to this Morpher.
+	//!	Assign a new bandwidth morphing envelope to this Morpher.
 	void setBandwidthFunction( const Envelope & f );
 
-	//	Return a reference to this Morpher's frequency morphing envelope.
+	//!	Return a reference to this Morpher's frequency morphing envelope.
 	const Envelope & frequencyFunction( void ) const;
 	
-	//	Return a reference to this Morpher's amplitude morphing envelope.
+	//!	Return a reference to this Morpher's amplitude morphing envelope.
 	const Envelope & amplitudeFunction( void ) const;
 	
-	//	Return a reference to this Morpher's bandwidth morphing envelope.
+	//!	Return a reference to this Morpher's bandwidth morphing envelope.
 	const Envelope & bandwidthFunction( void ) const;
 	
 	//!	Return the shaping parameter for the amplitude moprhing
@@ -251,7 +319,7 @@ public:
 	//!	of the huge jump from zero amplitude to
 	//!	very small amplitude.
 	//!
-	//!	@param x is the new shaping parameter, it must be positive.
+	//!	@param 	x is the new shaping parameter, it must be positive.
 	void setAmplitudeShape( double x );
 	
 	//!	Return the minimum time gap (secs) between two Breakpoints
@@ -273,58 +341,59 @@ public:
 	//!	the morphed Partials. 
 	//!	Default is zero (huge morphs).
 	//!
-	//!	@param x is the new minimum gap in seconds, it must be 
-	//!		   non-negative.
+	//!	@param 	x is the new minimum gap in seconds, it must be 
+	//!			non-negative.
 	void setMinBreakpointGap( double x );
 
 
 //	-- reference Partial label access/mutation --
 	
-	// 	Return the label of the Partial to be used as a reference
-	//	Partial for the source sequence in a morph of two Partial
-	//	sequences. The reference partial is used to compute 
-	//	frequencies for very low-amplitude Partials whose frequency
-	//	estimates are not considered reliable. The reference Partial
-	//	is considered to have good frequency estimates throughout.
-	//	The default label of 0 indicates that no reference Partial
-	//	should be used for the source sequence.
+	//! Return the label of the Partial to be used as a reference
+	//!	Partial for the source sequence in a morph of two Partial
+	//!	sequences. The reference partial is used to compute 
+	//!	frequencies for very low-amplitude Partials whose frequency
+	//!	estimates are not considered reliable. The reference Partial
+	//!	is considered to have good frequency estimates throughout.
+	//!	The default label of 0 indicates that no reference Partial
+	//!	should be used for the source sequence.
 	Partial::label_type sourceReferenceLabel( void ) const;
 	
-	// 	Return the label of the Partial to be used as a reference
-	//	Partial for the target sequence in a morph of two Partial
-	//	sequences. The reference partial is used to compute 
-	//	frequencies for very low-amplitude Partials whose frequency
-	//	estimates are not considered reliable. The reference Partial
-	//	is considered to have good frequency estimates throughout.
-	//	The default label of 0 indicates that no reference Partial
-	//	should be used for the target sequence.
+	//! Return the label of the Partial to be used as a reference
+	//!	Partial for the target sequence in a morph of two Partial
+	//!	sequences. The reference partial is used to compute 
+	//!	frequencies for very low-amplitude Partials whose frequency
+	//!	estimates are not considered reliable. The reference Partial
+	//!	is considered to have good frequency estimates throughout.
+	//!	The default label of 0 indicates that no reference Partial
+	//!	should be used for the target sequence.
 	Partial::label_type targetReferenceLabel( void ) const;
 	
-	// 	Set the label of the Partial to be used as a reference
-	//	Partial for the source sequence in a morph of two Partial
-	//	sequences. The reference partial is used to compute 
-	//	frequencies for very low-amplitude Partials whose frequency
-	//	estimates are not considered reliable. The reference Partial
-	//	is considered to have good frequency estimates throughout.
-	//	Setting the reference label to 0 indicates that no reference 
-	//	Partial should be used for the source sequence.
+	//! Set the label of the Partial to be used as a reference
+	//!	Partial for the source sequence in a morph of two Partial
+	//!	sequences. The reference partial is used to compute 
+	//!	frequencies for very low-amplitude Partials whose frequency
+	//!	estimates are not considered reliable. The reference Partial
+	//!	is considered to have good frequency estimates throughout.
+	//!	Setting the reference label to 0 indicates that no reference 
+	//!	Partial should be used for the source sequence.
 	void setSourceReferenceLabel( Partial::label_type l );
 	
-	// 	Set the label of the Partial to be used as a reference
-	//	Partial for the target sequence in a morph of two Partial
-	//	sequences. The reference partial is used to compute 
-	//	frequencies for very low-amplitude Partials whose frequency
-	//	estimates are not considered reliable. The reference Partial
-	//	is considered to have good frequency estimates throughout.
-	//	Setting the reference label to 0 indicates that no reference 
-	//	Partial should be used for the target sequence.
+	//! Set the label of the Partial to be used as a reference
+	//!	Partial for the target sequence in a morph of two Partial
+	//!	sequences. The reference partial is used to compute 
+	//!	frequencies for very low-amplitude Partials whose frequency
+	//!	estimates are not considered reliable. The reference Partial
+	//!	is considered to have good frequency estimates throughout.
+	//!	Setting the reference label to 0 indicates that no reference 
+	//!	Partial should be used for the target sequence.
 	void setTargetReferenceLabel( Partial::label_type l );
 	
 //	-- PartialList access --
-	//	Return a reference to this Morpher's list of morphed Partials.
+
+	//!	Return a reference to this Morpher's list of morphed Partials.
 	PartialList & partials( void ); 
 
-	//	Return a const reference to this Morpher's list of morphed Partials.
+	//!	Return a const reference to this Morpher's list of morphed Partials.
 	const PartialList & partials( void ) const; 
 					
 //	-- unimplemented until useful --
@@ -349,12 +418,12 @@ private:
 	};
 	typedef std::map< Partial::label_type, PartialPtrPair > PartialCorrespondence;
 	
-	//	Helper function that performs the morph between corresponding pairs
-	//	of Partials identified in a PartialCorrespondence. Called by the
-	//	morph() implementation accepting two sequences of Partials.
+	//!	Helper function that performs the morph between corresponding pairs
+	//!	of Partials identified in a PartialCorrespondence. Called by the
+	//!	morph() implementation accepting two sequences of Partials.
 	void morph_aux( PartialCorrespondence & correspondence );
 	
-	//	Helper functions for computing individual morphed parameter values
+	//!	Helper functions for computing individual morphed parameter values
 	double morphFrequencies( double f0, double f1, double alpha );
 	double morphAmplitudes( double a0, double a1, double alpha );
 	double morphBandwidths( double bw0, double bw1, double alpha );

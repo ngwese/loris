@@ -14,7 +14,28 @@ that were causing some breakpoints to be lost in the
 export process (thanks to Michael Klingbeil for help 
 finding these errors!).
 
-- fixed phase interpolation in the phaseAt operation.
+- fixed phase interpolation in the phaseAt operation,
+and improved it in the Morpher.
+
+- changed amplitude morphing to use a shaping parameter
+that allows much smoother-sounding morphs, by performing
+multiplicative (additiive in log scale) amplitude morphing.
+The old linear behavior can be achieved (or very-nearly
+approximated) by setting this parameter to something big
+(like 10000), but setting it to something on the order of
+1E-5 often sounds more natural, and setting it very small
+like 1E-12 causes very abrupt-sounding transitions.
+
+- added frequency reference envelope parameter to 
+Morpher, so that a strong reference Partial can be used 
+to estimate frequencies of very weak ones (only works for
+harmonically-labeled Partials). A threshold parameter for
+idetifying weak Partials goes with this.
+
+- added a Morpher parameter for controlling the minimum 
+time between Breakpoints in a morphed Partial, to reduce 
+the abundance of Breakpoint data that the Morpher can 
+generate.
 
 -------------------------------------------------------
 changes since 1.1 release:

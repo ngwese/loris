@@ -78,11 +78,44 @@ static bool float_equal( double x, double y )
 	cout << "\t" << x << " == " << y << " ?" << endl;
 	#endif
 	#define EPSILON .0000001
+	bool ret = false;
 	if ( std::fabs(x) > 0. )
-		return std::fabs((x-y)/x) < EPSILON;
+	{
+		ret = std::fabs((x-y)/x) < EPSILON;
+	}
 	else
-		return std::fabs(x-y) < EPSILON;
+	{
+		ret = std::fabs(x-y) < EPSILON;
+	}
+	if ( !ret )
+	{
+		cout << "\tFAILED: " << x << " != " << y << " !" << endl;
+	}
+	return ret;
 }
+
+//	function to do smarter phase interpolation, like the morpher does
+static double 
+interpolate_phases( double phi0, double phi1, double alpha )
+{
+	const double Pi = 3.14159265358979324;
+
+	//	try to wrap the phase so that they are
+	//	as similar as possible:
+	while ( ( phi0 - phi1 ) > Pi )
+	{
+		phi0 -= 2 * Pi;
+	}
+	while ( ( phi1 - phi0 ) > Pi )
+	{
+		phi0 += 2 * Pi;
+	}
+	return std::fmod( (alpha * phi1) + ((1.-alpha) * phi0), 2 * Pi );
+}
+
+//	define a amplitude shaping parameter that gives nearly linear morphs
+//	(the non-linear ones are too hard to predict and test)
+const double ALMOSTLINEAR = 1E5;
 
 
 int main( )
@@ -115,6 +148,7 @@ int main( )
 			
 		//	construct Morpher:
 		Morpher testM( fenv, aenv, bwenv );
+		testM.setAmplitudeShape( ALMOSTLINEAR );
 		
 		
 		/*                                                */
@@ -237,7 +271,7 @@ int main( )
 			double f = (1.-fenv.valueAt(t)) * p1.frequencyAt(t) + fenv.valueAt(t) * p2.frequencyAt(t);
 			double a = (1.-aenv.valueAt(t)) * p1.amplitudeAt(t) + aenv.valueAt(t) * p2.amplitudeAt(t);
 			double bw = (1.-bwenv.valueAt(t)) * p1.bandwidthAt(t) + bwenv.valueAt(t) * p2.bandwidthAt(t);
-			double ph = (1.-fenv.valueAt(t)) * p1.phaseAt(t) + fenv.valueAt(t) * p2.phaseAt(t);
+			double ph = interpolate_phases( p1.phaseAt(t), p2.phaseAt(t), fenv.valueAt(t) );
 			pm_by_hand.insert( t, Breakpoint( f, a, bw, ph ) );
 		}
 		pm_by_hand.setLabel(2);
