@@ -13,7 +13,6 @@
 //
 // ===========================================================================
 
-
 #include "LorisLib.h"
 
 Begin_Namespace( Loris )
@@ -21,7 +20,7 @@ Begin_Namespace( Loris )
 class Partial;
 class Oscillator;
 class SampleBuffer;
-class Breakpoint;
+class PartialIterator;
 
 // ---------------------------------------------------------------------------
 //	class Synthesizer
@@ -35,8 +34,8 @@ class Breakpoint;
 //	The Synthesizer does not own its SampleBuffer, the client 
 //	is responsible for its construction and destruction. 
 //
-//	The Oscillator may be specified at construction (if not, one will be
-// 	created), and _is_ owned by the Synthesizer, that is, it will be 
+//	Non-standard Oscillator and PartialIterator may be assigned,
+// 	and are then owned by the Synthesizer, that is, they will be 
 //	destroyed with the Synthesizer.
 //
 class Synthesizer
@@ -44,11 +43,17 @@ class Synthesizer
 //	-- public interface --
 public:
 //	construction:
-	Synthesizer( SampleBuffer & buf, double srate, double minBWEfreq = 1000., Oscillator * osc = Null );
+	Synthesizer( SampleBuffer & buf, double srate );
 	~Synthesizer( void );
 
 //	access:
 	double sampleRate( void ) const { return _sampleRate; }
+	
+//	for specifying the oscillator:
+	void setOscillator( Oscillator * osc = Null );
+	
+//	for specifying the iterator:
+	void setIterator( PartialIterator * iter = Null );
 	
 //	synthesis:
 	void synthesizePartial( const Partial & p );	
@@ -68,32 +73,8 @@ private:
 //	oscillator:
 	Oscillator * _oscillator;
 
-//	BW enhanced synthesis still sounds bad if applied to low frequency
-//	partials. For breakpoints below a certain cutoff, it is best to set
-//	the bandwidth to zero, and adjust the amplitude to account for the
-//	missing noise energy. 
-//
-//	This kludger does the trick.
-//
-	struct BweKludger
-	{
-		//	construction:
-		BweKludger( double f ) : _cutoff( f ) {}
-		
-		//	public inerface:
-		inline double amp( const Breakpoint & bp ) const;
-		inline double bw( const Breakpoint & bp ) const;
-
-	private:
-		//	helper
-		inline double bwclamp( double bw ) const;
-		
-		//	instance variable:
-		double _cutoff;
-
-	};	//	end of class BweKludger
-
-	const BweKludger _kludger;
+//	partial iterator, possibly does transformation:
+	PartialIterator * _iterator;
 	
 };	//	end of class Synthesizer
 

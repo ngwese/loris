@@ -21,10 +21,13 @@
 Begin_Namespace( Loris )
 
 class SampleBuffer;
-class Mkfilter;
+class Filter;
 
 // ---------------------------------------------------------------------------
-//	€ class Oscillator
+//	class Oscillator
+//
+//	Oscillator is designed as a leaf class, and needs some minor modifications
+//	if it is to serve as a base class for other kinds of oscillators.
 //	
 class Oscillator
 {
@@ -44,16 +47,18 @@ public:
 	void setAmplitude( double x ) { _amplitude = x; }
 	void setBandwidth( double x ) { _bandwidth = x; }
 	void setPhase( double x ) { _phase = x; }
-	
+
 //	reset the whole state at once:
 	void reset( double radf, double amp, double bw, double ph );
 
 //	sample generation:	
 	void generateSamples( SampleBuffer & buffer, int howMany, int offset,
 						  double targetFreq, double targetAmp, double targetBw );
-
-//	virtual constructors:
-	static Oscillator * Create( void );
+	
+//	filter access/specification:
+	Filter & filter( void ) { return *_filter; }
+	const Filter & filter( void ) const { return *_filter; }
+	void setFilter( Filter * f = Null );
 	
 //	-- private helpers --
 private:
@@ -68,7 +73,7 @@ private:
 	double _phase;		//	radians
 
 //	filter for stochastic modulation:
-	Mkfilter * _filter;
+	Filter * _filter;
 
 };	//	end of class Oscillator
 

@@ -15,13 +15,12 @@
 #include "LorisLib.h"
 #include "SampleBuffer.h"
 
-#include <algorithm>
-using std::copy;
+#include <algorithm>	//	for copy
 
 Begin_Namespace( Loris )
 
 // ===========================================================================
-//		€ SimpleSampleBuffer
+//		SimpleSampleBuffer
 // ===========================================================================
 //	
 class SimpleSampleBuffer : public SampleBuffer
@@ -34,16 +33,14 @@ public:
 //	construction from a range:
 //	(this is more likely to compile correctly
 //	if it is defined in the class definition)
-#if !defined( NO_TEMPLATE_MEMBERS )
 	template< class InputIterator >
 	SimpleSampleBuffer( InputIterator b, InputIterator e ) :
 		mArray( new double[ e - b ] ),
 		mSize( e - b )
 	{
 		//	copy the samples:
-		copy( b, e, mArray );
+		std::copy( b, e, mArray );
 	}
-#endif
 
 //	copying:
 	SimpleSampleBuffer( const SimpleSampleBuffer & other );

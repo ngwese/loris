@@ -38,23 +38,23 @@ class Breakpoint
 //	-- public Breakpoint interface --
 public:
 //	attribute access:
-	virtual double frequency( void ) const { return _frequency; }
-	virtual double amplitude( void ) const { return _amplitude; }
-	virtual double bandwidth( void ) const { return _bandwidth; }
-	virtual double phase( void ) const { return _phase; }
-	virtual double time( void ) const { return _time; }
+	double frequency( void ) const { return _frequency; }
+	double amplitude( void ) const { return _amplitude; }
+	double bandwidth( void ) const { return _bandwidth; }
+	double phase( void ) const { return _phase; }
+	double time( void ) const { return _time; }
 	
 //	attribute mutation:
-	virtual void setFrequency( double x ) { _frequency = x; }
-	virtual void setAmplitude( double x ) { _amplitude = x; }
-	virtual void setBandwidth( double x ) { _bandwidth = x; }
-	virtual void setPhase( double x ) { _phase = x; }
+	void setFrequency( double x ) { _frequency = x; }
+	void setAmplitude( double x ) { _amplitude = x; }
+	void setBandwidth( double x ) { _bandwidth = x; }
+	void setPhase( double x ) { _phase = x; }
 	
 //	construction:
 	Breakpoint( double f, double a, double b, double p = 0. );
-	virtual ~Breakpoint( void );
+	~Breakpoint( void );
 
-//	copy and assign copy parameters only:
+//	copy and assign copy parameters only (not linkage):
 	Breakpoint( const Breakpoint & other );
 	Breakpoint & operator=( const Breakpoint & other );
 
@@ -65,11 +65,6 @@ public:
 	
 	Breakpoint * prev( void ) { return _prevBreakpoint; }
 	Breakpoint * next( void ) { return _nextBreakpoint; }
-	
-//	virtual constructors:
-	static Breakpoint * Clone( const Breakpoint & p );
-	static Breakpoint * Create( double f, double a, double b, double p =  0. );
-	static void Destroy( Breakpoint * p );
 	
 //	-- private envelope link and time access --
 //	Only Partials can link Breakpoints and assign times to them.
@@ -88,9 +83,8 @@ private:
 //	constituent Breakpoints:
 	friend class Partial;
 	
-//	-- instance variables --
 private:
-
+//	-- instance variables --
 //	envelope parameters:
 	double _frequency;	//	hertz
 	double _amplitude;	//	absolute

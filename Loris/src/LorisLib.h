@@ -32,10 +32,11 @@
  *		the deprecated headers may not have things like ostream in the std 
  *		namespace where they belong.
  *
- *		No_template_members 
+ *		No_template_members  ** Don't use this symbol. **
  *		Some implementations may not allow classes to have template
- *		members. If this symbol is defined, template members are not
- *		included in the class definitions.
+ *		members. But that's too damned bad. Some classes need template
+ *		members, so if the compiler can't handle it, get a modern compiler.
+ *		** Don't use this symbol. **
  *
  *
  *	-kel 16 Aug 99
@@ -61,7 +62,10 @@ Begin_Namespace( Loris )
  *	Macros:
  */
  
-/* 	I freakin' hate all caps!	*/
+/* 	I freakin' hate all caps!	
+ *	And anyway, it seems to be somewhat uncool to use the 
+ *	c NULL in C++. This definition will always work.
+ */
 #define Null 0L
 
 /* 	shorthand for types	*/

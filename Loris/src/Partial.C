@@ -154,7 +154,7 @@ Partial::insert( double time, const Breakpoint & bp )
 	}
 	else {
 		//	insert copy:
-		Breakpoint * newp = Breakpoint::Clone( bp );
+		Breakpoint * newp = new Breakpoint( bp );
 		if ( pos == Null ) {
 			//	insert at head:
 			newp->linkTo( head() );
@@ -227,9 +227,9 @@ Partial::remove( double start, double end )
 //	remove and delete Breakpoints:
 	while( afterStart != beforeEnd ) {
 		afterStart = afterStart->next();
-		Breakpoint::Destroy( afterStart->prev() );
+		delete afterStart->prev();
 	}
-	Breakpoint::Destroy( afterStart );
+	delete afterStart;
 
 //	link across the gap, checking ends:
 	if ( beforeStart != Null ) 
@@ -349,9 +349,9 @@ Partial::deleteEnvelope( void )
 		
 	while( bp->next() != Null ) {
 		bp = bp->next();
-		Breakpoint::Destroy( bp->prev() );
+		delete bp->prev();
 	}
-	Breakpoint::Destroy( bp );
+	delete bp;
 
 	_head = _tail = Null;
 }

@@ -111,6 +111,20 @@ public:
 	InvalidObject( const std::string & str, const std::string & where = "" ) : 
 		Exception( std::string("Invalid configuration or object -- ").append( str ), where ) {}
 		
+};
+
+// ---------------------------------------------------------------------------
+//	class InvalidIterator
+//
+//	Class of exceptions thrown when an Iterator is found to be badly configured
+//	or otherwise invalid.
+//
+class InvalidIterator : public InvalidObject
+{
+public: 
+	InvalidIterator( const std::string & str, const std::string & where = "" ) : 
+		InvalidObject( std::string("Invalid Iterator -- ").append( str ), where ) {}
+		
 };	//	end of class InvalidObject
 
 // ---------------------------------------------------------------------------

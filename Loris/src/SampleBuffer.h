@@ -71,8 +71,8 @@ public:
 //	Iterator access:
 //	see BufferIterator.h for Iterator class definitions.
 public:
-	typedef Iterator_< SampleBuffer, double > Iterator;
-	typedef ConstIterator_< SampleBuffer, double > ConstIterator;
+	typedef BufIterator_< SampleBuffer, double > Iterator;
+	typedef ConstBufIterator_< SampleBuffer, double > ConstIterator;
 	
 	Iterator begin( void ) { return Iterator( *this, 0 ); }
 	Iterator end( void ) { return Iterator( *this, size() ); }

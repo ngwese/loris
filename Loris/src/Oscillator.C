@@ -42,8 +42,10 @@ Oscillator::Oscillator( void ) :
 	_amplitude( 0. ),	//	absolute
 	_bandwidth( 0. ),	//	bandwidth coefficient (noise energy / total energy)
 	_phase( 0. ),		//	radians
-	_filter( Mkfilter::Create() )
+	_filter( Null  )
 {
+	//	initialize:
+	setFilter();
 }
 
 // ---------------------------------------------------------------------------
@@ -54,17 +56,6 @@ Oscillator::Oscillator( void ) :
 Oscillator::~Oscillator( void )
 {
 	delete _filter;
-}
-
-// ---------------------------------------------------------------------------
-//	Oscillator virtual constructor
-// ---------------------------------------------------------------------------
-//	tell me again, why did I do this?
-//
-Oscillator *
-Oscillator::Create( void )
-{
-	return new Oscillator();
 }
 
 #pragma mark -
@@ -81,6 +72,22 @@ Oscillator::reset( double radf, double amp, double bw, double ph )
 	setBandwidth( bw );
 	setPhase( ph );
 }
+
+// ---------------------------------------------------------------------------
+//	setFilter
+// ---------------------------------------------------------------------------
+//	Default f is Null, indicating that the default filter should be 
+//	used.
+//
+void
+Oscillator::setFilter( Filter * f )
+{	
+	if ( f == Null )
+		f = new Filter( Filter::NormalCoefs().first, Filter::NormalCoefs().second );
+
+	delete _filter;
+	_filter = f;
+}	
 
 #pragma mark -
 #pragma mark sample generation

@@ -1,13 +1,15 @@
-// ---------------------------------------------------------------------------
+// ===========================================================================
 //	Filter.C
 //
-//	Implementations of filters for bandwidth-enhanced partial synthesis.
+//	Implementations of Loris::Filter, a generic ARMA digital filter.
 //
-//	This is only partly implemented, should clean it up.
+//	Check this out: http://www.cs.york.ac.uk/~fisher/mkfilter/
+//	Digital filter designed by mkfilter/mkshape/gencode   A.J. Fisher
+//  Command line: /www/usr/fisher/helpers/mkfilter -Bu -Lp -o 4 -a 0.0113378685 0.0000000000 -l
 //
-//	Kelly Fitz 
-//	May 1998
-// ---------------------------------------------------------------------------
+//	-kel 1 Sep 99
+//
+// ===========================================================================
 
 #include "LorisLib.h"
 #include "Filter.h"
@@ -15,45 +17,67 @@
 
 #include <algorithm>	//	for rotate()
 
+#include <vector>
+using std::vector;
+
+#include <utility>
+using std::pair;
+
 Begin_Namespace( Loris )
 
 // ---------------------------------------------------------------------------
-//	Mkfilter constructor
+//	Filter constructor
 // ---------------------------------------------------------------------------
-//	Construct from coefficient vectors and gain.
+//	Construct by passing in a vector of MA (x) coefficients and a vector
+//	of AR (y) coefficients and (optionally) the filter gain, which is used
+//	to normalize the fitler output.
 //
-Mkfilter::Mkfilter( const vector< double > & vcx, const vector< double > & vcy, double gain ) : 
-	xv( vcx.size(), 0. ), 
-	yv( vcy.size(), 0. ),
-	xCoeffs( vcx ),
-	yCoeffs( vcy ),
-	scale( 1. / gain )
+Filter::Filter( const vector< double > & vcx, const vector< double > & vcy, double gain ) : 
+	_xv( vcx.size(), 0. ), 
+	_yv( vcy.size(), 0. ),
+	_maCoefs( vcx ),
+	_arCoefs( vcy ),
+	_scale( 1. / gain )
+{
+}
+
+// ---------------------------------------------------------------------------
+//	Filter copy constructor
+// ---------------------------------------------------------------------------
+//	Don't copy the filter state, that's silly.
+//
+Filter::Filter( const Filter & other ) : 
+	_xv( other._maCoefs.size(), 0. ), 
+	_yv( other._arCoefs.size(), 0. ),
+	_maCoefs( other._maCoefs ),
+	_arCoefs( other._arCoefs ),
+	_scale( other._scale )
 {
 }
 
 // ---------------------------------------------------------------------------
 //	nextSample
 // ---------------------------------------------------------------------------
-//	Implement recurrence relation. xCoeffs holds the MA coefficients, yCoeffs
+//	Implement recurrence relation. _maCoefs holds the MA coefficients, _arCoefs
 //	holds the AR coeffs. The coefficient vectors and delay lines are ordered
-//	by decreasing age, such that the new input sample goes at the end of xv
-//	and the new output sample goes at the end of yv. This should be reversed.
+//	by decreasing age, such that the new input sample goes at the end of _xv
+//	and the new output sample goes at the end of _yv. This should be reversed.
 //
 double
-Mkfilter::nextSample( double input )
+Filter::nextSample( double input )
 { 
-	shift(xv);
-	xv[ xv.size() - 1 ] = input * scale;
-	shift(yv);
+	shift(_xv);
+	_xv.back() = input * _scale;
+	shift(_yv);
 
 	double output = 0.;
-	for ( int i = 0; i < xCoeffs.size() ; ++i )
-		output += xCoeffs[i] * xv[i];
+	for ( int i = 0; i < _maCoefs.size() ; ++i )
+		output += _maCoefs[i] * _xv[i];
 		
-	for ( int j = 0; j < yCoeffs.size() - 1; ++j )
-		output += yCoeffs[j] * yv[j];
+	for ( int j = 0; j < _arCoefs.size() - 1; ++j )	//	-1?
+		output += _arCoefs[j] * _yv[j];
 	             
-	yv[ yv.size() - 1 ] = output;
+	_yv[ _yv.size() - 1 ] = output;
 	
 	return output;
 }
@@ -63,94 +87,74 @@ Mkfilter::nextSample( double input )
 // ---------------------------------------------------------------------------
 //
 inline void
-Mkfilter::shift( vector< double > & v )
+Filter::shift( vector< double > & v )
 { 
 	std::rotate( v.begin(), v.begin() + 1, v.end() );
 }
 
 #pragma mark - 
-#pragma mark virtual constructors
-
+#pragma mark coefficient computation
 // ---------------------------------------------------------------------------
-//	Create
+//	NormalCoefs
 // ---------------------------------------------------------------------------
 //	Chebychev order 3, cutoff 500, ripple -1.
+//	(static)
+//	The filter gain and the extra scaling are incorporated in the
+//	MA coefficients.
 //
-Mkfilter *
-Mkfilter::Create( void )
+pair< const vector< double >, const vector< double > >
+Filter::NormalCoefs( void )
 {
-	const double xCoeffs[] = { 1., 3., 3., 1. };
-	const double yCoeffs[] = { 0.9320209046, -2.8580608586, 2.9258684252, 0. };
-	const double gain = 4.663939184e+04;
-	
-	const double extraScaling = 6.;
+	static const double gain = 4.663939184e+04;
+	static const double extraScaling = 6.;
+	static const double maCoefs[] = { 1. * extraScaling / gain, 3. * extraScaling / gain, 
+									  3. * extraScaling / gain, 1. * extraScaling / gain };
+	static const double arCoefs[] = { 0.9320209046, -2.8580608586, 2.9258684252, 0. };
 
-	vector< double > vcx( xCoeffs, xCoeffs + 4 );
-	vector< double > vcy( yCoeffs, yCoeffs + 4 );
-
-	try {
-		return new Mkfilter( vcx, vcy, gain / extraScaling );
-	}
-	catch ( LowMemException & ex ) {
-		ex << "Failed to Create a Mkfilter.";
-		throw;
-		return Null; 	//	not reached
-	}
+	return std::make_pair( vector< double >( maCoefs, maCoefs + 4 ), 
+						   vector< double >( arCoefs, arCoefs + 4 ) );
 }
 
 // ---------------------------------------------------------------------------
-//	CreateNarrow
+//	NarrowCoefs
 // ---------------------------------------------------------------------------
 //	Chebychev order 3, cutoff 200, ripple -0.1.
+//	(static)
+//	The filter gain and the extra scaling are incorporated in the
+//	MA coefficients.
 //
-Mkfilter *
-Mkfilter::CreateNarrow( void )
+pair< const vector< double >, const vector< double > >
+Filter::NarrowCoefs( void )
 {
-	const double xCoeffs[] = { 1., 3., 3., 1. };
-	const double yCoeffs[] = { 0.9446013697, -2.8876354452, 2.9430115837, 0. };
-	const double gain = 2.169816230e+05;
-	
-	const double extraScaling = 6.;
+	static const double gain = 2.169816230e+05;
+	static const double extraScaling = 6.;
+	static const double maCoefs[] = { 1. * extraScaling / gain, 3. * extraScaling / gain, 
+									  3. * extraScaling / gain, 1. * extraScaling / gain };
+	static const double arCoefs[] = { 0.9446013697, -2.8876354452, 2.9430115837, 0. };
 
-	vector< double > vcx( xCoeffs, xCoeffs + 4 );
-	vector< double > vcy( yCoeffs, yCoeffs + 4 );
-
-	try {
-		return new Mkfilter( vcx, vcy, gain / extraScaling );
-	}
-	catch ( LowMemException & ex ) {
-		ex << "Failed to Create a Mkfilter.";
-		throw;
-		return Null; 	//	not reached
-	}
+	return std::make_pair( vector< double >( maCoefs, maCoefs + 4 ), 
+						   vector< double >( arCoefs, arCoefs + 4 ) );
 }
 
-
 // ---------------------------------------------------------------------------
-//	CreateWide
+//	WideCoefs
 // ---------------------------------------------------------------------------
 //	Chebychev order 3, cutoff 1000, ripple -1.
+//	(static)
+//	The filter gain and the extra scaling are incorporated in the
+//	MA coefficients.
 //
-Mkfilter *
-Mkfilter::CreateWide( void )
+pair< const vector< double >, const vector< double > >
+Filter::WideCoefs( void )
 {
-	const double xCoeffs[] = { 1., 3., 3., 1. };
-	const double yCoeffs[] = { 0.8687010111, -2.7146444787, 2.8446174086, 0. };
-	const double gain = 6.032914230e+03;
-	
-	const double extraScaling = 5.;
+	static const double gain = 6.032914230e+03;
+	static const double extraScaling = 5.;
+	static const double maCoefs[] = { 1. * extraScaling / gain, 3. * extraScaling / gain, 
+									  3. * extraScaling / gain, 1. * extraScaling / gain };
+	static const double arCoefs[] = { 0.8687010111, -2.7146444787, 2.8446174086, 0. };
 
-	vector< double > vcx( xCoeffs, xCoeffs + 4 );
-	vector< double > vcy( yCoeffs, yCoeffs + 4 );
-
-	try {
-		return new Mkfilter( vcx, vcy, gain / extraScaling );
-	}
-	catch ( LowMemException & ex ) {
-		ex << "Failed to Create a Mkfilter.";
-		throw;
-		return Null; 	//	not reached
-	}
+	return std::make_pair( vector< double >( maCoefs, maCoefs + 4 ), 
+						   vector< double >( arCoefs, arCoefs + 4 ) );
 }
 
 End_Namespace( Loris )

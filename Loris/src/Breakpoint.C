@@ -85,52 +85,6 @@ Breakpoint::operator=( const Breakpoint & other )
 	return *this;
 }
 
-#pragma mark -
-#pragma mark virtual constructors
-// ---------------------------------------------------------------------------
-//	Clone
-// ---------------------------------------------------------------------------
-//
-Breakpoint * 
-Breakpoint::Clone( const Breakpoint & p )
-{
-	try {
-		return new Breakpoint( p );
-	}
-	catch ( LowMemException & ex ) {
-		ex << "Failed to Clone a Breakpoint.";
-		throw;
-		return Null; 	//	not reached
-	}
-}
-
-// ---------------------------------------------------------------------------
-//	Create
-// ---------------------------------------------------------------------------
-//
-Breakpoint * 
-Breakpoint::Create( double f, double a, double b, double p )
-{
-	try {
-		return new Breakpoint( f, a, b, p );
-	}
-	catch ( LowMemException & ex ) {
-		ex << "Failed to Create a Breakpoint.";
-		throw;
-		return Null; 	//	not reached
-	}
-}
-
-// ---------------------------------------------------------------------------
-//	Destroy
-// ---------------------------------------------------------------------------
-//
-void 
-Breakpoint::Destroy( Breakpoint * p )
-{
-	delete p;
-}
-
 End_Namespace( Loris )
 
 

@@ -34,7 +34,7 @@ Begin_Namespace( Loris )
 //	MSL seems to implement it incorrectly (str() freezes
 //	the string, according to their docs, and that's wrong)
 //	and MIPSPro doesn't seem to implement it at all, so
-//	its easier for now to implement the simple thing I need.
+//	its easier for now to implement the simple thing.
 //
 class StringBuffer : public std::streambuf
 {

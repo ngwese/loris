@@ -8,7 +8,7 @@
 //
 //	Definition of a class of Iterators for SampleBuffers. 
 //	(see SampleBuffer.h)
-//	These used to be defined in the SampleBuffer class definition, 
+//	These used to be designed in the SampleBuffer class definition, 
 //	they have been isolated in this file to improve the clarity of that 
 //	definition, which used to be consumed by these rarely-used 
 //	iterator definitions. 
@@ -59,23 +59,9 @@ using std::random_access_iterator_tag;
 Begin_Namespace( Loris )
 
 // ---------------------------------------------------------------------------
-//	class InvalidIterator
+//	class ConstBufIterator_
 //
-//	Class of exceptions thrown when an Iterator is found to be badly configured
-//	or otherwise invalid.
-//
-class InvalidIterator : public InvalidObject
-{
-public: 
-	InvalidIterator( const std::string & str, const std::string & where = "" ) : 
-		InvalidObject( std::string("Invalid Iterator -- ").append( str ), where ) {}
-		
-};	//	end of class InvalidIterator
-
-// ---------------------------------------------------------------------------
-//	class ConstIterator_
-//
-//	ConstIterator_ definition
+//	ConstBufIterator_ definition
 //
 //	Define a random access iterator that can 
 //	traverse any object derived from SampleBuffer. 
@@ -83,37 +69,37 @@ public:
 //	Could use a template to allow me to define const
 //	and non-const types without typing everything 
 //	twice. The drawback to that approach is that 
-//	I can't provide a conversion from Iterator_ to a 
-//	ConstIterator_.
+//	I can't provide a conversion from BufIterator_ to a 
+//	ConstBufIterator_.
 //
 //	So, use the approach in the STL, two separate
 //	definitions, mostly identical. 
 //
-template< class Buffer_Type, class Value_Type > class Iterator_;	// fwd declaration, 
-																// for conversion
+template< class Buffer_Type, class Value_Type > class BufIterator_;	// fwd declaration, 
+																	// for conversion
 	
 template< class Buffer_Type, class Value_Type >
-class ConstIterator_ : 
+class ConstBufIterator_ : 
 	public iterator< random_access_iterator_tag, const Value_Type >
 {
-//	Buffer_Type is a friend of its Iterator_, so
+//	Buffer_Type is a friend of its BufIterator_, so
 //	that only SampleBuffer can access the private
 //	constructor:
 	friend class Buffer_Type;
 	
-//	Iterator_ keeps a reference to its subject 
+//	BufIterator_ keeps a reference to its subject 
 //	SampleBuffer (Aggregate), it uses only the 
 //	interface defined in SampleBuffer, so it 
 //	doesn't need to know the concrete class.
 	const Buffer_Type & mSubject;
 	
-//	Iterator_ stores its position in the 
+//	BufIterator_ stores its position in the 
 //	traversal:
 	int mPosition;
 	
 //	The private constructor is available only to 
 //	SampleBuffer:
-	ConstIterator_( const Buffer_Type & sb, int pos ) :
+	ConstBufIterator_( const Buffer_Type & sb, int pos ) :
 		mSubject( sb ),
 		mPosition( 0 )
 	{
@@ -123,20 +109,20 @@ class ConstIterator_ :
 //	don't allow uninitialized construction:
 //	is this a problem for STL compliance?
 private:
-	ConstIterator_( void );
+	ConstBufIterator_( void );
 	
-//	anyone can copy an ConstIterator_:
+//	anyone can copy an ConstBufIterator_:
 public:
-	ConstIterator_( const ConstIterator_ & other ) :
+	ConstBufIterator_( const ConstBufIterator_ & other ) :
 		mSubject( other.mSubject ),
 		mPosition( other.mPosition )
 	{
 	}
 	
-//	construction from a non-const Iterator_:
+//	construction from a non-const BufIterator_:
 //	this is the principle (non-templatizable)
-//	difference between Iterator_ and ConstIterator_.
-	ConstIterator_( const Iterator_< Buffer_Type, double > & other ) :
+//	difference between BufIterator_ and ConstBufIterator_.
+	ConstBufIterator_( const BufIterator_< Buffer_Type, double > & other ) :
 		mSubject( other.mSubject ),
 		mPosition( other.mPosition )
 	{
@@ -144,7 +130,7 @@ public:
 	
 //	assignment is okay too, as long as the 
 //	subject doesn't change:
-	ConstIterator_ & operator= ( const ConstIterator_ & other )
+	ConstBufIterator_ & operator= ( const ConstBufIterator_ & other )
 	{
 		//	check for identity:
 		if ( &other != this )
@@ -165,56 +151,56 @@ public:
 //	increment:
 //	define operator ++() and implement all other
 //	increments and decrements in terms of that one.
-	ConstIterator_ & operator += ( int n )
+	ConstBufIterator_ & operator += ( int n )
 		{ setPosition( mPosition + n ); return *this; }
 	
-	ConstIterator_ & operator ++( void ) 
+	ConstBufIterator_ & operator ++( void ) 
 		{ *this += 1; return *this; }
 	
-	ConstIterator_ operator ++( int ) 
-		{ ConstIterator_ it( *this ); *this += 1; return it; }
+	ConstBufIterator_ operator ++( int ) 
+		{ ConstBufIterator_ it( *this ); *this += 1; return it; }
 	
-	ConstIterator_ operator +( int  n )
-		{ return ConstIterator_( *this ) += n; } 
+	ConstBufIterator_ operator +( int  n )
+		{ return ConstBufIterator_( *this ) += n; } 
 	
 //	decrement:
-	ConstIterator_ & operator -= ( int n )
+	ConstBufIterator_ & operator -= ( int n )
 		{ *this += -n; return *this; }
 	
-	ConstIterator_ & operator --( void ) 
+	ConstBufIterator_ & operator --( void ) 
 		{ *this += -1; return *this; }
 	
-	ConstIterator_ operator --( int ) 
-		{ ConstIterator_ it( *this ); *this += -1; return it; }
+	ConstBufIterator_ operator --( int ) 
+		{ ConstBufIterator_ it( *this ); *this += -1; return it; }
 		
-	ConstIterator_ operator -( int  n ) 
-		{ return ConstIterator_( *this ) -= n; }
+	ConstBufIterator_ operator -( int  n ) 
+		{ return ConstBufIterator_( *this ) -= n; }
 	
 //	comparison:	
 //	note - STL iterators don't seem to check that they share
 //	the same subject before computing difference or comparing.
-	boolean operator == ( const ConstIterator_ & other ) const
+	boolean operator == ( const ConstBufIterator_ & other ) const
 		{ checkSubject( other ); return mPosition == other.mPosition;}
 	
-	boolean operator < ( const ConstIterator_ & other ) const
+	boolean operator < ( const ConstBufIterator_ & other ) const
 		{ checkSubject( other ); return mPosition < other.mPosition; }
 	
-	boolean operator > ( const ConstIterator_ & other ) const
+	boolean operator > ( const ConstBufIterator_ & other ) const
 		{ checkSubject( other ); return mPosition > other.mPosition; }
 	
-	boolean operator != ( const ConstIterator_ & other ) const
+	boolean operator != ( const ConstBufIterator_ & other ) const
 		{ return ! operator == (other); }
 		
-	boolean operator <= ( const ConstIterator_ & other ) const
+	boolean operator <= ( const ConstBufIterator_ & other ) const
 		{ return ! operator > (other); }
 		
-	boolean operator >= ( const ConstIterator_ & other ) const
+	boolean operator >= ( const ConstBufIterator_ & other ) const
 		{ return ! operator < (other); }		
 	
 //	distance:
 //	note - STL iterators don't seem to check that they share
 //	the same subject before computing difference or comparing.
-	int operator - ( const ConstIterator_ & other ) const
+	int operator - ( const ConstBufIterator_ & other ) const
 		{ checkSubject( other ); return mPosition - other.mPosition; }
 	
 //	helper for setting position with boundary checking:
@@ -240,45 +226,45 @@ private:
 //	location:
 //	note - STL iterators don't seem to check that they share
 //	the same subject before computing difference or comparing.
-	void checkSubject( const ConstIterator_ & other ) const 
+	void checkSubject( const ConstBufIterator_ & other ) const 
 	{
 		if ( & mSubject != & other.mSubject )
 			Throw( InvalidIterator, "Operation requires Buffer Iterators have same subject!" );
 	} 
 
-};	//	end of class ConstIterator_
+};	//	end of class ConstBufIterator_
 	
 // ---------------------------------------------------------------------------
-//	class Iterator_
+//	class BufIterator_
 //
-//	Almost exactly the same as ConstIterator_. 
+//	Almost exactly the same as ConstBufIterator_. 
 //			
 template< class Buffer_Type, class Value_Type >
-class Iterator_ : 
+class BufIterator_ : 
 	public iterator< random_access_iterator_tag, Value_Type > 
 {
-//	Buffer_Type is a friend of its Iterator_, so
+//	Buffer_Type is a friend of its BufIterator_, so
 //	that only SampleBuffer can access the private
 //	constructor:
 	friend class Buffer_Type;
 	
-//	ConstIterator_ is also a friend, so that they can
+//	ConstBufIterator_ is also a friend, so that they can
 //	be converted:
-	friend class ConstIterator_< Buffer_Type, Value_Type >;
+	friend class ConstBufIterator_< Buffer_Type, Value_Type >;
 	
-//	Iterator_ keeps a reference to its subject 
+//	BufIterator_ keeps a reference to its subject 
 //	SampleBuffer (Aggregate), it uses only the 
 //	interface defined in SampleBuffer, so it 
 //	doesn't need to know the concrete class.
 	Buffer_Type & mSubject;
 	
-//	Iterator_ stores its position in the 
+//	BufIterator_ stores its position in the 
 //	traversal:
 	int mPosition;
 	
 //	The private constructor is available only to 
 //	SampleBuffer:
-	Iterator_( Buffer_Type & sb, int pos ) :
+	BufIterator_( Buffer_Type & sb, int pos ) :
 		mSubject( sb ),
 		mPosition( 0 )
 	{
@@ -288,11 +274,11 @@ class Iterator_ :
 //	don't allow uninitialized construction:
 //	is this a problem for STL compliance?
 private:
-	Iterator_( void );
+	BufIterator_( void );
 	
-//	anyone can copy an Iterator_:
+//	anyone can copy an BufIterator_:
 public:
-	Iterator_( const Iterator_ & other ) :
+	BufIterator_( const BufIterator_ & other ) :
 		mSubject( other.mSubject ),
 		mPosition( other.mPosition )
 	{
@@ -300,7 +286,7 @@ public:
 	
 //	assignment is okay too, as long as the 
 //	subject doesn't change:
-	Iterator_ & operator= ( const Iterator_ & other )
+	BufIterator_ & operator= ( const BufIterator_ & other )
 	{
 		//	check for identity:
 		if ( &other != this )
@@ -321,56 +307,56 @@ public:
 //	increment:
 //	define operator ++() and implement all other
 //	increments and decrements in terms of that one.
-	Iterator_ & operator += ( int n )
+	BufIterator_ & operator += ( int n )
 		{ setPosition( mPosition + n ); return *this; }
 	
-	Iterator_ & operator ++( void ) 
+	BufIterator_ & operator ++( void ) 
 		{ *this += 1; return *this; }
 	
-	Iterator_ operator ++( int ) 
-		{ Iterator_ it( *this ); *this += 1; return it; }
+	BufIterator_ operator ++( int ) 
+		{ BufIterator_ it( *this ); *this += 1; return it; }
 	
-	Iterator_ operator +( int  n )
-		{ return Iterator_( *this ) += n; } 
+	BufIterator_ operator +( int  n )
+		{ return BufIterator_( *this ) += n; } 
 	
 //	decrement:
-	Iterator_ & operator -= ( int n )
+	BufIterator_ & operator -= ( int n )
 		{ *this += -n; return *this; }
 	
-	Iterator_ & operator --( void ) 
+	BufIterator_ & operator --( void ) 
 		{ *this += -1; return *this; }
 	
-	Iterator_ operator --( int ) 
-		{ Iterator_ it( *this ); *this += -1; return it; }
+	BufIterator_ operator --( int ) 
+		{ BufIterator_ it( *this ); *this += -1; return it; }
 		
-	Iterator_ operator -( int  n ) 
-		{ return Iterator_( *this ) -= n; }
+	BufIterator_ operator -( int  n ) 
+		{ return BufIterator_( *this ) -= n; }
 	
 //	comparison:	
 //	note - STL iterators don't seem to check that they share
 //	the same subject before computing difference or comparing.
-	boolean operator == ( const Iterator_ & other ) const
+	boolean operator == ( const BufIterator_ & other ) const
 		{ checkSubject( other ); return mPosition == other.mPosition;}
 	
-	boolean operator < ( const Iterator_ & other ) const
+	boolean operator < ( const BufIterator_ & other ) const
 		{ checkSubject( other ); return mPosition < other.mPosition; }
 	
-	boolean operator > ( const Iterator_ & other ) const
+	boolean operator > ( const BufIterator_ & other ) const
 		{ checkSubject( other ); return mPosition > other.mPosition; }
 	
-	boolean operator != ( const Iterator_ & other ) const
+	boolean operator != ( const BufIterator_ & other ) const
 		{ return ! operator == (other); }
 		
-	boolean operator <= ( const Iterator_ & other ) const
+	boolean operator <= ( const BufIterator_ & other ) const
 		{ return ! operator > (other); }
 		
-	boolean operator >= ( const Iterator_ & other ) const
+	boolean operator >= ( const BufIterator_ & other ) const
 		{ return ! operator < (other); }		
 	
 //	distance:
 //	note - STL iterators don't seem to check that they share
 //	the same subject before computing difference or comparing.
-	int operator - ( const Iterator_ & other ) const
+	int operator - ( const BufIterator_ & other ) const
 		{ checkSubject( other ); return mPosition - other.mPosition; }
 	
 //	helper for setting position with boundary checking:
@@ -396,13 +382,13 @@ private:
 //	location:
 //	note - STL iterators don't seem to check that they share
 //	the same subject before computing difference or comparing.
-	void checkSubject( const Iterator_ & other ) const 
+	void checkSubject( const BufIterator_ & other ) const 
 	{
 		if ( & mSubject != & other.mSubject )
 			Throw( InvalidIterator, "Operation requires Buffer Iterators have same subject!" );
 	} 
 
-};	//	end of class Iterator_
+};	//	end of class BufIterator_
 
 End_Namespace( Loris )
 

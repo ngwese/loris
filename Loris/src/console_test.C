@@ -41,12 +41,64 @@
 
 #include "ieee.h"
 
+#include "LoFreqBweKludger.h"
+
 using namespace std;
 using namespace Loris;
 
 
 int main()
 {	
+	try {		
+		//	import flute partials:
+		string name("Berenice:Loris:try these:flute3.lemr");
+		BinaryFile f;
+		f.view(name);
+		ImportLemur5 imp(f);
+		
+		cout << "importing partials from " << name << "..." << endl;
+		imp.importPartials();
+		cout << "done" << endl;
+	
+		//	find the duration:
+		double t = 0.;
+		for ( list< Partial >::iterator it = imp.partials().begin(); 
+			  it != imp.partials().end(); 
+			  ++it ) {
+			if ( (*it).endTime() > t )
+				t = (*it).endTime();
+		}
+				
+		cout << "found " << imp.partials().size() << " partials, total duration is " << t << endl;
+		
+		//	synthesize:
+		const int srate = 44100;
+		const int nsamps = srate * t;
+		SampleVector buf( nsamps );
+		Synthesizer synth( buf, srate );
+		synth.setIterator( new LoFreqBweKludger(1000.) );
+		
+		cout << "synthesizing" << endl;
+		int c = 0;
+		for ( list< Partial >::iterator it = imp.partials().begin(); 
+			  it != imp.partials().end(); 
+			  ++it ) {
+			synth.synthesizePartial( *it );
+			if ( ++c % 100 == 0  )
+				cout << "\t" << c << " partials..." << endl;
+		}
+		
+		//	write out samples:
+		cout << "writing newflute.aiff" << endl;
+		AiffFile sfout( srate, 1, 16, buf );
+		sfout.write( BinaryFile( "Berenice:Loris:try these:newflute.aiff" ) );
+		
+		cout << "done." << endl;
+	}
+	catch ( Exception & ex ) {
+		cout << ex;
+	}
+
 	/*
 	try {
 		Notifier n("Here's a notification.");
@@ -69,6 +121,7 @@ int main()
 	
 	fatalError("Another fatal error.");
 	*/
+	/*
 	try {		
 		string name("Berenice:Loris:try these:few");
 		BinaryFile f;
@@ -100,6 +153,7 @@ int main()
 		
 		cout << "synthesizing" << endl;
 		Synthesizer synth( buf, srate );
+		synth.useIterator( new LoFreqBweKludger(1000.) );
 		int c = 0;
 		for (list< Partial >::iterator it = l.begin(); it != l.end(); ++it ) {
 			synth.synthesizePartial( *it );
@@ -139,7 +193,7 @@ int main()
 	catch ( Exception & ex ) {
 		cout << ex;
 	}
-
+	*/
 	/*
 	fstream f;	
 	try {

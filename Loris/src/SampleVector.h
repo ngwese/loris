@@ -15,7 +15,6 @@
 #include "SampleBuffer.h"
 
 #include <vector>
-using std::vector;
 
 Begin_Namespace( Loris )
 
@@ -33,13 +32,11 @@ public:
 //	construction from a range:
 //	(this is more likely to compile correctly
 //	if it is defined in the class definition)
-#if !defined( NO_TEMPLATE_MEMBERS )
 	template< class InputIterator >
 	SampleVector( InputIterator b, InputIterator e ) :
 		v( b, e )
 	{
 	}
-#endif
 
 	
 // 	uninitialized construction is empty buffer:
@@ -63,7 +60,7 @@ virtual const double & operator[]( ulong index ) const  { return v[index]; }
 
 //	instance variables:
 private:
-	vector< double > v;	//	the samples
+	std::vector< double > v;	//	the samples
 
 };	//	end of class SampleVector
 
