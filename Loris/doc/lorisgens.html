@@ -263,7 +263,7 @@ bandwidth-enhanced analysis of a three-second clarinet tone, stored in
 a file, "clarinet.sdif." The instrument in Example 2 adds tuning and
 vibrato to the clarinet tone synthesized by <code>instr 1</code>,
 boosts its amplitde and noisiness, and applies a highpass filter to
-the result. The following score can be usd to test both of the
+the result. The following score can be used to test both of the
 instruments described above.
 </p>
 <pre>
@@ -287,7 +287,7 @@ instruments described above.
     e
 </pre>
 
-<p>Morphing Example
+<p>Morphing Example 1
 </p>
 <pre><em>;
 ;
@@ -322,11 +322,51 @@ endin
 
 </pre>
 
-<p> The instrument in Example 1 performs a sound morph between a clarinet
+<p>Morphing Example 2
+</p>
+<pre><em>;
+; Morph the partials in trombone.sdif into the
+; partials in meow.sdif. The start and end times
+; for the morph are specified by parameters p4 
+; and p5, respectively. The morph occurs over the
+; second of four pitches in each of the sounds, 
+; from .75 to 1.2 seconds in the flutter-tongued
+; trombone tone, and from 1.7 to 2.2 seconds in 
+; the cat's meow. Different morphing functions are
+; used for the frequency and amplitude envelopes,
+; so that the partial amplitudes make a faster  
+; transition from trombone to cat than the frequencies. 
+; (The bandwidth envelopes use the same morphing 
+; function as the amplitudes.) 
+;
+instr 2
+    ionset   <strong>=</strong>           p4
+    imorph   <strong>=</strong>           p5 - p4
+    irelease <strong>=</strong>           p3 - p5
+    
+    im0      <strong>=</strong>           p4
+    im1      <strong>=</strong>           p5
+    itmorph  <strong>=</strong>           im1-im0
+    
+    kttbn    <strong>linseg</strong>      0, ionset, .75, imorph, 1.2, irelease, 2.4
+    ktmeow   <strong>linseg</strong>      0, ionset, 1.7, imorph, 2.2, irelease, 3.4
+    
+    kmfreq   <strong>linseg</strong>      0, ionset, 0, .75*imorph, .25, .25*imorph, 1, irelease, 1
+    kmamp    <strong>linseg</strong>      0, ionset, 0, .75*imorph, .9, .25*imorph, 1, irelease, 1
+    
+             <strong>lorisread</strong>   kttbn, "trombone.sdif", 1, 1, 1, 1, .001
+             <strong>lorisread</strong>   ktmeow, "meow.sdif", 2, 1, 1, 1, .001
+             <strong>lorismorph</strong>  1, 2, 3, kmfreq, kmamp, kmamp
+    asig     <strong>lorisplay</strong>   3, 1, 1, 1
+             <strong>out</strong>         asig
+endin
+
+</pre>
+
+<p> The instrument in Morphing Example 1 performs a sound morph between a clarinet
 tone and a flute tone using reassigned bandwidth-enhanced partials stored in
 "clarinet.sdif" and "flute.sdif."
-
-
+<p>
 The morph is performed over the sustain portions of the tones, 2. seconds
 to 2.0 seconds in the case of the clarinet tone and .5 seconds to 2.1 seconds
 in the case of the flute tone. The time index functions, <code>ktcl</code> and 
@@ -336,20 +376,46 @@ parameters <code>p4</code> and <code>p5</code>, respectively. The onset
 in the morphed sounds is purely clarinet partial data, and the decay is
 purely flute data. The clarinet partials are shifted in pitch to match the
 pitch of the flute tone (D above middle C).
-</p>
+<p>
 
-<!--
-[[p]] The instrument in Example 1 performs a sound morph between a carhorn
-and a cat's meow using reassigned bandwidth-enhanced partials stored in
-"carhorn.sdif" and "meow.sdif." The morph is performed over all but the
-last two seconds of the note, since [[code]]kmorph[[/code]] changes from 
-0 to 1 over [[code]]p3-2.5[[/code]] seconds, and then remains constant (1.0)
-for the remainder of the note. [[code]]ktime[[/code]] changes from 0 to 0.75 over the
-first [[code]]p3-2.5[[/code]] seconds, so the morph is performed using the
-first 0.75 seconds of the source partials. The remainder of the note
-(2.5 seconds) uses only the partials from "meow.sdif."
-[[/p]]
--->
+The instrument in Morphing Example 2 performs a sound morph between a
+flutter-tongued trombone tone and a cat's meow using reassigned
+bandwidth-enhanced partials stored in "trombone.sdif" and "meow.sdif."
+The data in these SDIF files have been channelized and distilled to
+establish correspondences between partials.
+<p>
+The two sets of partials are imported and stored in memory locations
+labeled 1 and 2, respectively. Both of the original sounds have four
+notes, and the morph is performed over the second note in each sound
+(from .75 to 1.2 seconds in the flutter-tongued trombone tone, and
+from 1.7 to 2.2 seconds in the cat's meow). The different time index
+functions, <code>kttbn</code> and <code></code>ktmeow, align those
+segments of the source and target partial sets with the specified
+morph start, morph end, and overall duration parameters. Two different
+morphing functions are used, so that the partial ammplitudes and
+bandwidth coefficients morph quickly from the trombone values to the
+cat's-meow values, and the frequencies make a more gradual transition.
+The morphed partials are stored in a memory location labeled 3 and
+rendered by the subsequent <code>lorisplay</code> instruction. They
+could also have been used as a source for another morph in a three-way
+morphing instrument. The following score can be used to test both of
+the instruments described above.
+<p>
+<pre>
+	; play instr 1
+	;     strt   dur   onset   decay
+	i 1    0      3     .25     .15
+	i 1    +      1     .10     .10
+	i 1    +      6    1.      1.
+	s
+	
+	; play instr 2
+	;     strt   dur  morph_start   morph_end
+	i 2    0      4     .75           2.75
+	
+	e
+</pre>
+<p>
 
 <h3>Author</h3>
 <p>Kelly Fitz<br>
@@ -358,7 +424,7 @@ WSU, Pullman<br>
 email:<a href="mailto:loris@cerlsoundgroup.org">loris@cerlsoundgroup.org</a></p>
 
 <p>
-Last update: 29 May 2002
+Last update: 11 June 2002
 </p>
 
 <hr size="2" color="#A9A9A9" noshade>

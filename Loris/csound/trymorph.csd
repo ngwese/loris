@@ -48,45 +48,64 @@ instr 1
 endin
 
 ;
-; Morph the partials in carhorn.sdif into
-; the partials in meow.sdif linearly over 
-; all but the last 2 seconds of the note.
-; The morph is performed over the first 
-; .75 seconds of the source sounds. The last
-; 2.5 seconds (of meow) is unmodified.
-; Use 1 ms fade time.
+; Morph the partials in trombone.sdif into the
+; partials in meow.sdif. The start and end times
+; for the morph are specified by parameters p4 
+; and p5, respectively. The morph occurs over the
+; second of four pitches in each of the sounds, 
+; from .75 to 1.2 seconds in the flutter-tongued
+; trombone tone, and from 1.7 to 2.2 seconds in 
+; the cat's meow. Different morphing functions are
+; used for the frequency and amplitude envelopes,
+; so that the partial amplitudes make a faster  
+; transition from trombone to cat than the frequencies. 
+; (The bandwidth envelopes use the same morphing 
+; function as the amplitudes.) 
 ;
 instr 2
-    ktime1   linseg      0, p3, 3.4
-    ktime2   linseg      0, p3, 1.25
-    kmurph   linseg      0, p3/3, 0, p3/3, 1, p3/3, 1
+    ionset   =           p4
+    imorph   =           p5 - p4
+    irelease =           p3 - p5
     
-             lorisread   ktime1, "meow3.sdif", 1, 1, 1, 1, .001
-             lorisread   ktime2, "carhorn.sdif", 2, 1, 1, 1, .001
-             lorismorph  1, 2, 3, kmurph, kmurph, kmurph
-	asig     lorisplay   3, 1, 1, 1
+    im0      =           p4
+    im1      =           p5
+    itmorph  =           im1-im0
+    
+    kttbn    linseg      0, ionset, .75, imorph, 1.2, irelease, 2.4
+    ktmeow   linseg      0, ionset, 1.7, imorph, 2.2, irelease, 3.4
+    
+    kmfreq   linseg      0, ionset, 0, .75*imorph, .25, .25*imorph, 1, irelease, 1
+    kmamp    linseg      0, ionset, 0, .75*imorph, .9, .25*imorph, 1, irelease, 1
+    
+             lorisread   kttbn, "trombone.sdif", 1, 1, 1, 1, .001
+             lorisread   ktmeow, "meow.sdif", 2, 1, 1, 1, .001
+             lorismorph  1, 2, 3, kmfreq, kmamp, kmamp
+    asig     lorisplay   3, 1, 1, 1
              out         asig
 endin
 
+;;
+;; Morph the partials in carhorn.sdif into
+;; the partials in meow.sdif linearly over 
+;; all but the last 2 seconds of the note.
+;; The morph is performed over the first 
+;; .75 seconds of the source sounds. The last
+;; 2.5 seconds (of meow) is unmodified.
+;; Use 1 ms fade time.
+;;
+;instr 2
+;    ktime1   linseg      0, p3, 3.4
+;    ktime2   linseg      0, p3, 1.25
+;    kmurph   linseg      0, p3/3, 0, p3/3, 1, p3/3, 1
+;    
+;             lorisread   ktime1, "meow3.sdif", 1, 1, 1, 1, .001
+;             lorisread   ktime2, "carhorn.sdif", 2, 1, 1, 1, .001
+;             lorismorph  1, 2, 3, kmurph, kmurph, kmurph
+;	asig     lorisplay   3, 1, 1, 1
+;             out         asig
+;endin
 
-;;   ;
-;;   ; Morph the partials in carhorn.sdif into
-;;   ; the partials in meow.sdif linearly over 
-;;   ; all but the last 2 seconds of the note.
-;;   ; The morph is performed over the first 
-;;   ; .75 seconds of the source sounds. The last
-;;   ; 2.5 seconds (of meow) is unmodified.
-;;   ; Use 1 ms fade time.
-;;   ;
-;;   instr 4
-;;       ktime    linseg      0, p3-2.5, 0.75, 2.5, 3.5   ; time index function
-;;       kmorph   linseg      0, p3-2.5, 1.0, 2.5, 1.0    ; morphing function
-;;       asig     lorismorph  ktime, "carhorn.sdif", "meow.sdif", kmorph, kmorph, kmorph, .001
-;;                out         asig
-;;   endin
-;;   
-;;   
-;;   
+
 
 </CsInstruments>   
 
@@ -97,5 +116,10 @@ i 1    0      3     .25     .15
 i 1    +      1     .10     .10
 i 1    +      6    1.      1.
 s
+
+; play instr 2
+;     strt   dur  morph_start   morph_end
+i 2    0      4     .75           2.75
+
 e
 </CsScore>   </CsoundSynthesizer>
