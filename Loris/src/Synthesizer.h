@@ -21,6 +21,7 @@ Begin_Namespace( Loris )
 class Partial;
 class Oscillator;
 class SampleBuffer;
+class Breakpoint;
 
 // ---------------------------------------------------------------------------
 //	€ class Synthesizer
@@ -43,11 +44,11 @@ class Synthesizer
 //	-- public interface --
 public:
 //	construction:
-	Synthesizer( SampleBuffer & buf, Double srate, Oscillator * osc = Null );
+	Synthesizer( SampleBuffer & buf, Double srate, Double minBWEfreq = 1000., Oscillator * osc = Null );
 	~Synthesizer( void );
 
 //	access:
-	Double sampleRate( void ) const { return mSampleRate; }
+	Double sampleRate( void ) const { return _sampleRate; }
 	
 //	synthesis:
 	void synthesizePartial( const Partial & p );	
@@ -59,14 +60,41 @@ private:
 
 //	-- instance variables --
 //	sample rate (Hz):
-	Double mSampleRate;
-
+	Double _sampleRate;
+	
 //	sample buffer:
-	SampleBuffer & mSamples;
+	SampleBuffer & _samples;
 	
 //	oscillator:
-	Oscillator * mOscillator;
+	Oscillator * _oscillator;
 
+//	BW enhanced synthesis still sounds bad if applied to low frequency
+//	partials. For breakpoints below a certain cutoff, it is best to set
+//	the bandwidth to zero, and adjust the amplitude to account for the
+//	missing noise energy. 
+//
+//	This kludger does the trick.
+//
+	struct BweKludger
+	{
+		//	construction:
+		BweKludger( Double f ) : _cutoff( f ) {}
+		
+		//	public inerface:
+		inline Double amp( const Breakpoint & bp ) const;
+		inline Double bw( const Breakpoint & bp ) const;
+
+	private:
+		//	helper
+		inline Double bwclamp( Double bw ) const;
+		
+		//	instance variable:
+		Double _cutoff;
+
+	};	//	end of class BweKludger
+
+	const BweKludger _kludger;
+	
 };	//	end of class Synthesizer
 
 

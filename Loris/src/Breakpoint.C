@@ -29,13 +29,13 @@ Begin_Namespace( Loris )
 //	Values are not checked for validity.
 //
 Breakpoint::Breakpoint( Double f, Double a, Double b, Double p ) :
-	mFrequency( f ),
-	mAmplitude( a ),
-	mBandwidth( b ),
-	mPhase( p ),
-	mTime( 0 ),
-	mPrevBreakpoint( Null ),
-	mNextBreakpoint( Null )
+	_frequency( f ),
+	_amplitude( a ),
+	_bandwidth( b ),
+	_phase( p ),
+	_time( 0 ),
+	_prevBreakpoint( Null ),
+	_nextBreakpoint( Null )
 {
 }
 	
@@ -46,7 +46,7 @@ Breakpoint::Breakpoint( Double f, Double a, Double b, Double p ) :
 //
 Breakpoint::~Breakpoint( void )
 {
-	mPrevBreakpoint = mNextBreakpoint = Null;
+	_prevBreakpoint = _nextBreakpoint = Null;
 }	
 
 // ---------------------------------------------------------------------------
@@ -56,13 +56,13 @@ Breakpoint::~Breakpoint( void )
 //	Is this too wierd?
 //
 Breakpoint::Breakpoint( const Breakpoint & other ) :
-	mFrequency( other.frequency() ),
-	mAmplitude( other.amplitude() ),
-	mBandwidth( other.bandwidth() ),
-	mPhase( other.phase() ),
-	mTime( 0 ),
-	mPrevBreakpoint( Null ),
-	mNextBreakpoint( Null )
+	_frequency( other.frequency() ),
+	_amplitude( other.amplitude() ),
+	_bandwidth( other.bandwidth() ),
+	_phase( other.phase() ),
+	_time( 0 ),
+	_prevBreakpoint( Null ),
+	_nextBreakpoint( Null )
 {
 }
 	
@@ -76,10 +76,10 @@ Breakpoint &
 Breakpoint::operator=( const Breakpoint & other )
 {
 	if ( this != &other ) {
-		mFrequency = other.frequency();
-		mAmplitude = other.amplitude();
-		mBandwidth = other.bandwidth();
-		mPhase = other.phase();
+		_frequency = other.frequency();
+		_amplitude = other.amplitude();
+		_bandwidth = other.bandwidth();
+		_phase = other.phase();
 	}
 	
 	return *this;

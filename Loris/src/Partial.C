@@ -28,9 +28,9 @@ Begin_Namespace( Loris )
 // ---------------------------------------------------------------------------
 //
 Partial::Partial( void ) :
-	mHead( Null ),
-	mTail( Null ),
-	mLabel( 0L )
+	_head( Null ),
+	_tail( Null ),
+	_label( 0L )
 {
 }
 
@@ -55,11 +55,11 @@ Partial::~Partial( void )
 //	exceptions can just propogate up.
 //
 Partial::Partial( const Partial & other ) :
-	mHead( Null ),
-	mTail( Null ),
-	mLabel( other.mLabel )
+	_head( Null ),
+	_tail( Null ),
+	_label( other._label )
 {
-	copyEnvelope( other.mHead );
+	copyEnvelope( other._head );
 }
 
 // ---------------------------------------------------------------------------
@@ -158,13 +158,13 @@ Partial::insert( Double time, const Breakpoint & bp )
 		if ( pos == Null ) {
 			//	insert at head:
 			newp->linkTo( head() );
-			mHead = newp;
+			_head = newp;
 			newp->setTime( time );	
 			
 			//	if this is the only Breakpoint, 
 			//	fix the tail pointer too:
 			if ( tail() == Null )
-				mTail = newp;
+				_tail = newp;
 		}
 		else {
 			//	insert after pos:
@@ -174,7 +174,7 @@ Partial::insert( Double time, const Breakpoint & bp )
 			
 			//	check to see if insert was after tail:
 			if ( pos == tail() )	//	pointer comparison
-				mTail = newp;
+				_tail = newp;
 		}
 		
 		checkEnvelope();
@@ -235,9 +235,9 @@ Partial::remove( Double start, Double end )
 	if ( beforeStart != Null ) 
 		beforeStart->linkTo( afterEnd );
 	else {
-		mHead = afterEnd;
-		if ( mHead != Null )
-			mHead->setPrev( Null );
+		_head = afterEnd;
+		if ( _head != Null )
+			_head->setPrev( Null );
 	}
 
 //	scoot Breakpoints to fill gap, if necessary:	
@@ -252,9 +252,9 @@ Partial::remove( Double start, Double end )
 	
 	}
 	else {
-		mTail = beforeStart;
-		if ( mTail != Null )
-			mTail->setNext( Null );
+		_tail = beforeStart;
+		if ( _tail != Null )
+			_tail->setNext( Null );
 	}
 	
 	checkEnvelope();
@@ -353,7 +353,7 @@ Partial::deleteEnvelope( void )
 	}
 	Breakpoint::Destroy( bp );
 
-	mHead = mTail = Null;
+	_head = _tail = Null;
 }
 
 // ---------------------------------------------------------------------------
@@ -367,13 +367,13 @@ Partial::insertAtHead( Double time, Breakpoint * bp )
 	Assert( head() == Null || time < head()->time() );
 	
 	bp->linkTo( head() );
-	mHead = bp;
+	_head = bp;
 	bp->setTime( time );	
 	
 	//	if this is the only Breakpoint, 
 	//	fix the tail pointer too:
 	if ( tail() == Null )
-		mTail = bp;
+		_tail = bp;
 }
 
 // ---------------------------------------------------------------------------
@@ -384,11 +384,11 @@ void
 Partial::insertAtTail( Double time, Breakpoint * bp )
 {
 	//	sanity check:
-	Assert( mTail == Null || time > mTail->time() );
+	Assert( _tail == Null || time > _tail->time() );
 	
-	if ( mTail != Null )
-		mTail->linkTo( bp );
-	mTail = bp;	
+	if ( _tail != Null )
+		_tail->linkTo( bp );
+	_tail = bp;	
 	bp->setTime( time );	
 }
 

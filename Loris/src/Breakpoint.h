@@ -38,17 +38,17 @@ class Breakpoint
 //	-- public Breakpoint interface --
 public:
 //	attribute access:
-	virtual Double frequency( void ) const { return mFrequency; }
-	virtual Double amplitude( void ) const { return mAmplitude; }
-	virtual Double bandwidth( void ) const { return mBandwidth; }
-	virtual Double phase( void ) const { return mPhase; }
-	virtual Double time( void ) const { return mTime; }
+	virtual Double frequency( void ) const { return _frequency; }
+	virtual Double amplitude( void ) const { return _amplitude; }
+	virtual Double bandwidth( void ) const { return _bandwidth; }
+	virtual Double phase( void ) const { return _phase; }
+	virtual Double time( void ) const { return _time; }
 	
 //	attribute mutation:
-	virtual void setFrequency( Double x ) { mFrequency = x; }
-	virtual void setAmplitude( Double x ) { mAmplitude = x; }
-	virtual void setBandwidth( Double x ) { mBandwidth = x; }
-	virtual void setPhase( Double x ) { mPhase = x; }
+	virtual void setFrequency( Double x ) { _frequency = x; }
+	virtual void setAmplitude( Double x ) { _amplitude = x; }
+	virtual void setBandwidth( Double x ) { _bandwidth = x; }
+	virtual void setPhase( Double x ) { _phase = x; }
 	
 //	construction:
 	Breakpoint( Double f, Double a, Double b, Double p = 0. );
@@ -60,11 +60,11 @@ public:
 
 //	access neighbors in the Partial parameter envelope:
 //	const and non-const access, should this be public?
-	const Breakpoint * prev( void ) const { return mPrevBreakpoint; }
-	const Breakpoint * next( void ) const { return mNextBreakpoint; }
+	const Breakpoint * prev( void ) const { return _prevBreakpoint; }
+	const Breakpoint * next( void ) const { return _nextBreakpoint; }
 	
-	Breakpoint * prev( void ) { return mPrevBreakpoint; }
-	Breakpoint * next( void ) { return mNextBreakpoint; }
+	Breakpoint * prev( void ) { return _prevBreakpoint; }
+	Breakpoint * next( void ) { return _nextBreakpoint; }
 	
 //	virtual constructors:
 	static Breakpoint * Clone( const Breakpoint & p );
@@ -75,14 +75,14 @@ public:
 //	Only Partials can link Breakpoints and assign times to them.
 private:
 //	neigbor pointer assigment:	
-	void setPrev( Breakpoint * bp ) { mPrevBreakpoint = bp; }
-	void setNext( Breakpoint * bp ) { mNextBreakpoint = bp; }
+	void setPrev( Breakpoint * bp ) { _prevBreakpoint = bp; }
+	void setNext( Breakpoint * bp ) { _nextBreakpoint = bp; }
 	
 //	one-step forward link:
 	void linkTo( Breakpoint * bp ) { setNext( bp ); if ( bp ) bp->setPrev( this ); }
 
 //	assign time to this Breakpoint:
-	void setTime( Double x ) { mTime = x; }
+	void setTime( Double x ) { _time = x; }
 	
 //	make Partial a friend so that Partials can link their 
 //	constituent Breakpoints:
@@ -92,19 +92,19 @@ private:
 private:
 
 //	envelope parameters:
-	Double mFrequency;	//	hertz
-	Double mAmplitude;	//	absolute
-	Double mBandwidth;	//	fraction of total energy that is noise energy
-	Double mPhase;		//	radians
+	Double _frequency;	//	hertz
+	Double _amplitude;	//	absolute
+	Double _bandwidth;	//	fraction of total energy that is noise energy
+	Double _phase;		//	radians
 	
 //	Breakpoints are not uniformly distributed in time, each
 //	must explicitly specify its time:
-	Double mTime;		//	seconds
+	Double _time;		//	seconds
 	
 //	connectivity:
 //	Partials are consist of a doubly-linked list of Breakpoints.
-	Breakpoint * mPrevBreakpoint;
-	Breakpoint * mNextBreakpoint;
+	Breakpoint * _prevBreakpoint;
+	Breakpoint * _nextBreakpoint;
 	
 };	//	end of class Breakpoint
 

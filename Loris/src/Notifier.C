@@ -63,6 +63,5 @@ notify( string s )
 	n.report();
 }
 
-
 End_Namespace( Loris )
 

@@ -18,10 +18,11 @@
 #include "LorisLib.h"
 
 #if !defined(USE_DEPRECATED_HEADERS)
-	#include <strstream>
-	using std::strstream;
+	#include <sstream>
+	using std::stringstream;
 #else
 	#include <strstream.h>
+	typedef strstream stringstream;
 #endif
 
 #include <string>
@@ -50,13 +51,14 @@ public:
 
 //	implemented with a strstream, which has everything
 //	we want except stability:
-	strstream ss;
+	stringstream ss;
 	
 };	//	end of class Notifier
 
 //	prototype for a one-shot notifier:
 void notify( string s );
 
+//	streaming operator:
 template< class T >
 Notifier & 
 operator << ( Notifier & note, const T & thing )
@@ -64,6 +66,13 @@ operator << ( Notifier & note, const T & thing )
 	note.ss << thing;
 	return note;
 }
+
+//	lousy debugging macro:
+#if defined(Debug_Loris)
+	inline void Debug( string s ) { notify( s ); }
+#else
+	inline void Debug( string ) {}
+#endif
 
 End_Namespace( Loris )
 

@@ -54,10 +54,9 @@ Begin_Namespace( Loris )
 //
 //	Abstract base class providing the interface for objects
 //	representing a buffer of (double precision) floating point
-//	samples at a specified sampling frequency.
+//	samples.
 //
 //	Derived classes must implement:
-//		Double samplingFrequency() const
 //		Int size() const
 //		Double & operator[]( Uint )
 //		const Double & operator[]( Uint ) const
@@ -68,7 +67,6 @@ class SampleBuffer
 {
 public:
 //	public interface:
-virtual Double samplingFrequency( void ) const = 0;
 virtual Int size( void ) const = 0;
 
 //	indexed access:
@@ -87,7 +85,7 @@ protected:
 
 //	don't permit assignment:	
 private:
-	SampleBuffer & operator= ( const SampleBuffer & );
+	SampleBuffer & operator= ( const SampleBuffer & );	// not implemented
 	
 //	destruction:
 public:
@@ -109,7 +107,8 @@ virtual	~SampleBuffer( void ) {}
 //	definitions, mostly identical. 
 //	
 //	Need forward declaration of class ConstIterator
-//	so that we can make it a friend.
+//	so that we can make it a friend. This is a bug, 
+//	I think. Shouldn't need this.
 	class ConstIterator;
 public:
 	class Iterator : 

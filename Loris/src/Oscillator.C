@@ -19,6 +19,14 @@
 #include "Noise.h"
 #include "Filter.h"
 
+#if !defined(USE_DEPRECATED_HEADERS)
+	#include <cmath>
+	using std::fmod;
+	using std::cos;
+#else
+	#include <math.h>
+#endif
+
 Begin_Namespace( Loris )
 
 #pragma mark -
@@ -30,11 +38,11 @@ Begin_Namespace( Loris )
 //	Initialize state to something, like zeros.
 //
 Oscillator::Oscillator( void ) :
-	mFrequency( 0. ),	//	radians per sample
-	mAmplitude( 0. ),	//	absolute
-	mBandwidth( 0. ),	//	bandwidth coefficient (noise energy / total energy)
-	mPhase( 0. ),		//	radians
-	mFilter( Mkfilter::Create() )
+	_frequency( 0. ),	//	radians per sample
+	_amplitude( 0. ),	//	absolute
+	_bandwidth( 0. ),	//	bandwidth coefficient (noise energy / total energy)
+	_phase( 0. ),		//	radians
+	_filter( Mkfilter::Create() )
 {
 }
 
@@ -45,7 +53,7 @@ Oscillator::Oscillator( void ) :
 //
 Oscillator::~Oscillator( void )
 {
-	delete mFilter;
+	delete _filter;
 }
 
 // ---------------------------------------------------------------------------
@@ -95,21 +103,21 @@ Oscillator::generateSamples( SampleBuffer & buffer, Int howMany, Int offset,
 		return;
 		
 //	compute trajectories:
-	const Double dFreq = targetFreq - mFrequency;
-	const Double dAmp = targetAmp = mAmplitude;
-	const Double dBw = targetBw - mBandwidth;
+	const Double dFreq = (targetFreq - _frequency) / howMany;
+	const Double dAmp = (targetAmp - _amplitude) / howMany;
+	const Double dBw = (targetBw - _bandwidth) / howMany;
 	
 	for ( Int i = 0; i < howMany; ++i )
 	{
 //	compute a sample and add it into the buffer.			
 		buffer[ offset + i ] += 
-			modulate( mBandwidth ) * mAmplitude * oscillate( mPhase );
+			modulate( _bandwidth ) * _amplitude * oscillate( _phase );
 		
 //	update the oscillator state:
-		mFrequency += dFreq;
-		mAmplitude += dAmp;
-		mBandwidth += dBw;
-		mPhase += mFrequency;	//	mFrequency is radians per sample
+		_phase += _frequency;	//	_frequency is radians per sample
+		_frequency += dFreq;
+		_amplitude += dAmp;
+		_bandwidth += dBw;
 		
 	}	// end of sample computation loop
 
@@ -117,7 +125,7 @@ Oscillator::generateSamples( SampleBuffer & buffer, Int howMany, Int offset,
 //	high oscillation frequencies:
 //	(Doesn't really matter much what fmod does, as long as it brings 
 //	the phase nearer to zero.)
-	mPhase = fmod( mPhase, TwoPi );
+	_phase = fmod( _phase, TwoPi );
 }
 
 #pragma mark -
@@ -151,7 +159,7 @@ Oscillator::modulate( Double bandwidth ) const
 	
 //	get a filtered noise sample, use scale as std deviation:
 //	can build scale into filter gain.
-	Double noise = mFilter->nextSample( gaussian_normal() );
+	Double noise = _filter->nextSample( gaussian_normal() );
 
 //	compute modulation:
 //

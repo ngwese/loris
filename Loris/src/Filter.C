@@ -89,7 +89,7 @@ Mkfilter::Create( void )
 	vector< Double > vcy( yCoeffs, yCoeffs + 4 );
 
 	try {
-		return new Mkfilter( vcx, vcy, gain * extraScaling );
+		return new Mkfilter( vcx, vcy, gain / extraScaling );
 	}
 	catch ( LowMemException & ex ) {
 		ex.append(  "Failed to Create a Mkfilter." );
@@ -116,7 +116,7 @@ Mkfilter::CreateNarrow( void )
 	vector< Double > vcy( yCoeffs, yCoeffs + 4 );
 
 	try {
-		return new Mkfilter( vcx, vcy, gain * extraScaling );
+		return new Mkfilter( vcx, vcy, gain / extraScaling );
 	}
 	catch ( LowMemException & ex ) {
 		ex.append(  "Failed to Create a Mkfilter." );
@@ -144,7 +144,7 @@ Mkfilter::CreateWide( void )
 	vector< Double > vcy( yCoeffs, yCoeffs + 4 );
 
 	try {
-		return new Mkfilter( vcx, vcy, gain * extraScaling );
+		return new Mkfilter( vcx, vcy, gain / extraScaling );
 	}
 	catch ( LowMemException & ex ) {
 		ex.append(  "Failed to Create a Mkfilter." );

@@ -35,15 +35,15 @@ public:
 	~Oscillator( void );
 		
 //	state access/mutation:
-	Double radianFreq( void ) const { return mFrequency; }
-	Double amplitude( void ) const { return mAmplitude; }
-	Double bandwidth( void ) const { return mBandwidth; }
-	Double phase( void ) const { return mPhase; }
+	Double radianFreq( void ) const { return _frequency; }
+	Double amplitude( void ) const { return _amplitude; }
+	Double bandwidth( void ) const { return _bandwidth; }
+	Double phase( void ) const { return _phase; }
 	
-	void setRadianFreq( Double x ) { mFrequency = x; }
-	void setAmplitude( Double x ) { mAmplitude = x; }
-	void setBandwidth( Double x ) { mBandwidth = x; }
-	void setPhase( Double x ) { mPhase = x; }
+	void setRadianFreq( Double x ) { _frequency = x; }
+	void setAmplitude( Double x ) { _amplitude = x; }
+	void setBandwidth( Double x ) { _bandwidth = x; }
+	void setPhase( Double x ) { _phase = x; }
 	
 //	reset the whole state at once:
 	void reset( Double radf, Double amp, Double bw, Double ph );
@@ -62,13 +62,13 @@ private:
 	
 //	-- instance variables --
 //	internal state:
-	Double mFrequency;	//	radians per sample
-	Double mAmplitude;	//	absolute
-	Double mBandwidth;	//	bandwidth coefficient (noise energy / total energy)
-	Double mPhase;		//	radians
+	Double _frequency;	//	radians per sample
+	Double _amplitude;	//	absolute
+	Double _bandwidth;	//	bandwidth coefficient (noise energy / total energy)
+	Double _phase;		//	radians
 
 //	filter for stochastic modulation:
-	Mkfilter * mFilter;
+	Mkfilter * _filter;
 
 };	//	end of class Oscillator
 

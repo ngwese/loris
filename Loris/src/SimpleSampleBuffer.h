@@ -4,7 +4,7 @@
 // ---------------------------------------------------------------------------
 //	SimpleSampleBuffer.h
 //
-//	Implementation of a concrete SampleBuffer (SampleBuffer.h) that
+//	Definition of a concrete SampleBuffer (SampleBuffer.h) that
 //	stores its samples in a dumb c-style array of doubles that it
 //	owns. 
 //
@@ -12,12 +12,13 @@
 //	Feb 1999
 // ---------------------------------------------------------------------------
 
+#include "LorisLib.h"
 #include "SampleBuffer.h"
 
 #include <algorithm>
+using std::copy;
 
-Lemur_Begin_Namespace( Lemur )
-Lemur_Using( std::copy )
+Begin_Namespace( Loris )
 
 // ===========================================================================
 //		€ SimpleSampleBuffer
@@ -28,97 +29,53 @@ class SimpleSampleBuffer : public SampleBuffer
 public:
 //	construction:
 //	assume responsibility for the c-style array of samples:
-	SimpleSampleBuffer( Double * samples, Int32 howMany, Double sr ) : 
-		mArray( samples ),
-		mSize( howMany ),
-		mSamplingFrequency( sr )
-	{ 
-	}
+	SimpleSampleBuffer( Double * samples, Int howMany );
 	
-//	construction from another collection:
+//	construction from a range:
+//	(this is more likely to compile correctly
+//	if it is defined in the class definition)
+#if !defined( NO_TEMPLATE_MEMBERS )
 	template< class InputIterator >
-	SimpleSampleBuffer( InputIterator b, InputIterator e, Double sr ) :
+	SimpleSampleBuffer( InputIterator b, InputIterator e ) :
 		mArray( new Double[ e - b ] ),
-		mSize( e - b ),
-		mSamplingFrequency( sr )
+		mSize( e - b )
 	{
 		//	copy the samples:
 		copy( b, e, mArray );
 	}
+#endif
 
 //	copying:
-	SimpleSampleBuffer( const SimpleSampleBuffer & other ) :
-		mArray( new Double[ other.mSize ] ),
-		mSize( other.mSize ),
-		mSamplingFrequency( other.mSamplingFrequency )
-	{
-		copy( other.mArray, other.mArray + other.mSize, mArray );
-	}
+	SimpleSampleBuffer( const SimpleSampleBuffer & other );
 	
 // 	uninitialized construction is empty buffer:
 //	this is pretty safe given SampleBuffer's interface,
 //	although, as always, operator[] is not checked, so
 //	it can give undefined results it the client doesn't
 //	do the bounds-checking.
-	SimpleSampleBuffer( void ) : 
-		mArray( NULL ),
-		mSize( 0 ),
-		mSamplingFrequency( 1. )
-	{
-	}
+	explicit SimpleSampleBuffer( Uint len = 0 );
 	
 //	assignment:
-	SimpleSampleBuffer & operator= ( const SimpleSampleBuffer & other )
-	{
-		if ( &other != this )
-		{
-			//	get rid of old samples, or maybe reuse
-			if ( other.mSize != mSize )
-			{
-				delete[] mArray;
-				try
-				{
-					mArray = new Double[ other.mSize ];
-					mSize = other.mSize;
-					mSamplingFrequency = other.mSamplingFrequency;
-				}
-				catch( ... )
-				{
-					//	don't leave it in an inconsistent state:
-					mArray = NULL;
-					mSize = 0;
-					throw;
-				}
-			}
-			//	copy the samples:
-			copy( other.mArray, other.mArray + other.mSize, mArray );
-		}
-		return *this;
-	}
+	SimpleSampleBuffer & operator= ( const SimpleSampleBuffer & other );
 	
 //	destruction:
-	~SimpleSampleBuffer( void )
-	{
-		delete[] mArray;
-		mArray = NULL;
-	}
+	~SimpleSampleBuffer( void );
 	
 //	public SampleBuffer interface:
-virtual Double samplingFrequency( void ) const { return mSamplingFrequency; }
-virtual Int32 size( void ) const { return mSize; }
+virtual Int size( void ) const { return mSize; }
 
 //	indexed access:
-virtual Double & operator[]( Uint32 index )  { return mArray[index]; }
-virtual const Double & operator[]( Uint32 index ) const  { return mArray[index]; }
+virtual Double & operator[]( Uint index )  { return mArray[index]; }
+virtual const Double & operator[]( Uint index ) const  { return mArray[index]; }
 
 //	instance variables:
 	Double * mArray;	//	samples
-	Int32 mSize;
+	Int mSize;
 	Double mSamplingFrequency;	
 
 };	//	end of class SimpleSampleBuffer
 
-Lemur_End_Namespace( Lemur )
+End_Namespace( Loris )
 
 
 #endif	//	ndef __Simple_Sample_Buffer__

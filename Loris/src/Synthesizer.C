@@ -19,6 +19,14 @@
 #include "Partial.h"
 #include "Breakpoint.h"
 
+#if !defined(USE_DEPRECATED_HEADERS)
+	#include <cmath>
+	using std::sqrt;
+#else
+	#include <math.h>
+#endif
+
+
 Begin_Namespace( Loris )
 
 #pragma mark -
@@ -30,13 +38,14 @@ Begin_Namespace( Loris )
 //	If no Oscillator (or a Null Oscillator) is specified, create a default
 //	Oscillator.
 //
-Synthesizer::Synthesizer( SampleBuffer & buf, Double srate, Oscillator * osc ) :
-	mSamples( buf ),
-	mSampleRate( srate ),
-	mOscillator( (osc != Null) ? (osc) : (Oscillator::Create()) )
+Synthesizer::Synthesizer( SampleBuffer & buf, Double srate, Double minBWEfreq, Oscillator * osc ) :
+	_samples( buf ),
+	_sampleRate( srate ),
+	_oscillator( (osc != Null) ? (osc) : (Oscillator::Create()) ),
+	_kludger( minBWEfreq )
 {
 	//	check to make sure that the sample rate is valid:
-	Assert( mSampleRate > 0. );
+	Assert( _sampleRate > 0. );
 }
 
 // ---------------------------------------------------------------------------
@@ -45,7 +54,7 @@ Synthesizer::Synthesizer( SampleBuffer & buf, Double srate, Oscillator * osc ) :
 //
 Synthesizer::~Synthesizer( void )
 {
-	delete mOscillator;
+	delete _oscillator;
 }
 
 #pragma mark -
@@ -54,6 +63,16 @@ Synthesizer::~Synthesizer( void )
 // ---------------------------------------------------------------------------
 //	synthesizePartial
 // ---------------------------------------------------------------------------
+//	No clicks aloud!
+//	All Partials begin and end at zero amplitude. If possible, the ramp
+//	on or off is pasted on the beginning and end of the Partial, but if 
+//	the Partial is too close to the buffer boundary (e.g. it starts at time
+//	0.), then the head or tail of the Partial gets smooshed a little. Phase
+//	is always corrected, and is never altered by the ramping. 
+//
+//	The old bandwidth kludge is in here. Breakpoints below a certain 
+//	frequency (mBweCutoff) are given bandwidths of zero, because low
+//	frequency noise is way too strong otherwise. FIX SOMEDAY!
 //	
 void
 Synthesizer::synthesizePartial( const Partial & p )
@@ -65,21 +84,33 @@ Synthesizer::synthesizePartial( const Partial & p )
 //	Remember that the oscillator only knows about radian frequency! Convert!
 	const Breakpoint * bp = p.head();
 	Double rads = radianFreq( bp->frequency() );
-	mOscillator->reset( rads, 0., bp->bandwidth(), bp->phase() );
+	_oscillator->reset( rads, _kludger.amp( *bp ), _kludger.bw( *bp ), bp->phase() );
 
 //	initialize sample offsets:
-//	Keep track of fractional samples, so we don't loose samples 
-//	due to rounding; fractionalSamples is the (fractional) number 
-//	of samples that need to be generated.
 	Uint bpSampleOffset = bp->time() * sampleRate() + 0.5;	// cheap, portable rounding
 
-//	synthesize Partial turn-on if necessary:
+//	synthesize Partial turn-on if necessary and possible:
 	const Int rampLen = 0.001 * sampleRate() + 0.5;	//	1 ms
 	
 	if ( bp->amplitude() > 0. ) {
+		//	calculate the start time for the ramp, 
+		Int rampStart = bpSampleOffset - rampLen;
+		if ( rampStart < 0 )
+			rampStart = 0;
+		
 		//	roll back the phase so that it is correct
-		//	at the time of the first real Breakpoint:
-		mOscillator->setPhase( mOscillator->phase() - ( rads * rampLen ) );
+		//	at the time of the first real Breakpoint
+		//	(not nec. the time that the top of the amplitude
+		//	ramp is reached, if the Partial starts very 
+		//	early):
+		_oscillator->setPhase( _oscillator->phase() - ( rads * (bpSampleOffset - rampStart) ) );
+		
+		//	recalculate the bpSampleOffset if necessary:
+		if ( bpSampleOffset < rampLen )
+			bpSampleOffset = rampLen;
+		
+		//	ramp up from zero amplitude:
+		_oscillator->setAmplitude( 0. );
 		
 		//	generate rampLen samples before bpSampleOffset
 		//	targeting the radian frequency, amplitude, and 
@@ -87,8 +118,8 @@ Synthesizer::synthesizePartial( const Partial & p )
 		//	frequency and bandwidth have been reset to
 		//	these same values already, the amplitude to 
 		//	zero):
-		mOscillator->generateSamples( mSamples, rampLen, bpSampleOffset - rampLen,
-									  rads, bp->amplitude(), bp->bandwidth() );
+		_oscillator->generateSamples( _samples, rampLen, rampStart, rads,
+									_kludger.amp( *bp ), _kludger.bw( *bp ) );
 	}
 
 //	synthesize linear-frequency segments:
@@ -102,40 +133,86 @@ Synthesizer::synthesizePartial( const Partial & p )
 		Int nsamps = ( bp->time() * sampleRate() ) - bpSampleOffset + 0.5;
 		Assert( nsamps >= 0 );
 		
+		//	don't generate samples all the way to the end of the
+		//	buffer, make sure to leave enough for ramping off:
+		if ( bpSampleOffset + nsamps + rampLen > _samples.size() )
+			nsamps = _samples.size() - bpSampleOffset - rampLen;
+		
 		//	generate nsamps samples starting at bpSampleOffset
 		//	targeting the radian frequency, amplitude, and 
 		//	bandwidth of the next Breakpoint bp:
-		mOscillator->generateSamples( mSamples, nsamps, bpSampleOffset,
+		_oscillator->generateSamples( _samples, nsamps, bpSampleOffset,
 									  radianFreq( bp->frequency() ), 
-									  bp->amplitude(), bp->bandwidth() );
+									  _kludger.amp( *bp ), _kludger.bw( *bp ) );
 
 		//	update the offset:	
 		bpSampleOffset += nsamps;
 	}
 	
 //	synthesize Partial turn-off if necessary:
-	if ( bp->amplitude() > 0. ) {
+	if ( _oscillator->amplitude() > 0. ) {
 		//	generate rampLen samples starting at bpSampleOffset
 		//	targeting zero amplitude, and not changing the frequency
 		//	or bandwidth:
-		mOscillator->generateSamples( mSamples, rampLen, bpSampleOffset,
-									  mOscillator->radianFreq(), 0., mOscillator->bandwidth() );
+		_oscillator->generateSamples( _samples, rampLen, bpSampleOffset,
+									  _oscillator->radianFreq(), 0., _oscillator->bandwidth() );
 	}
 
 
 }
 
 #pragma mark -
-#pragma mark synthesis
+#pragma mark kludging
 
 // ---------------------------------------------------------------------------
-//	synthesizePartial
+//	radianFreq
 // ---------------------------------------------------------------------------
 //	
 inline Double 
 Synthesizer::radianFreq( Double hz ) const
 {
 	return hz * TwoPi / sampleRate();
+}
+
+// ---------------------------------------------------------------------------
+//	kludger amp
+// ---------------------------------------------------------------------------
+//	
+inline Double
+Synthesizer::BweKludger::amp( const Breakpoint & bp ) const
+{
+	if ( bp.frequency() > _cutoff )
+		return bp.amplitude();
+	else
+		return bp.amplitude() * sqrt(1. - bwclamp( bp.bandwidth() ) );
+}
+
+// ---------------------------------------------------------------------------
+//	kludger bw
+// ---------------------------------------------------------------------------
+//	
+inline Double
+Synthesizer::BweKludger::bw( const Breakpoint & bp ) const
+{
+	if ( bp.frequency() > _cutoff )
+		return bwclamp( bp.bandwidth() );
+	else
+		return 0.;
+}
+
+// ---------------------------------------------------------------------------
+//	kludger bwclamp
+// ---------------------------------------------------------------------------
+//	
+inline Double
+Synthesizer::BweKludger::bwclamp( Double bw ) const
+{
+	if( bw > 1. )
+		return 1.;
+	else if ( bw < 0. )
+		return 0.;
+	else
+		return bw;
 }
 
 End_Namespace( Loris )

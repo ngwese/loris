@@ -10,7 +10,6 @@
 #include "LorisLib.h"
 #include "Exception.h"
 
-#include <stdio.h>
 #include <string>
 
 #if !defined(USE_DEPRECATED_HEADERS)
@@ -29,22 +28,12 @@ Begin_Namespace( Loris )
 // ---------------------------------------------------------------------------
 //	Exception constructor
 // ---------------------------------------------------------------------------
-//	in defaults to empty, at to 0.
+//	where defaults to empty.
 //
-Exception::Exception( const string & str, const string & in, Int at ) :
+Exception::Exception( const string & str, const string & where ) :
 	mReportString( str )
 {
-	if ( ! in.empty() ) {
-		mReportString.append( " in " );
-		mReportString.append( in );
-	}
-	
-	if ( at > 0 ) {
-		mReportString.append( " at " );
-		char s[16];
-		sprintf( s, "%ld", at );
-		mReportString.append( s );
-	}
+	mReportString.append( where );
 }
 	
 

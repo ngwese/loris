@@ -11,7 +11,14 @@
 //
 // ===========================================================================
 
-#include <math.h>
+#if !defined(USE_DEPRECATED_HEADERS)
+	#include <cmath>
+	using std::sqrt;
+	using std::log;
+	using std::trunc;
+#else
+	#include <math.h>
+#endif
 
 Begin_Namespace( Loris )
 

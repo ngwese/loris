@@ -42,15 +42,15 @@ public:
 	Partial & operator =( const Partial & other );
 	
 //	Breakpoint envelope access (const and non-const):
-	const Breakpoint * head( void ) const { return mHead; }
-	const Breakpoint * tail( void ) const { return mTail; }
+	const Breakpoint * head( void ) const { return _head; }
+	const Breakpoint * tail( void ) const { return _tail; }
 	
-	Breakpoint * head( void ) { return mHead; }
-	Breakpoint * tail( void ) { return mTail; }
+	Breakpoint * head( void ) { return _head; }
+	Breakpoint * tail( void ) { return _tail; }
 	
 //	label access/mutation:
-	Int label( void ) const { return mLabel; }
-	void setLabel( Int l ) { mLabel = l; }
+	Int label( void ) const { return _label; }
+	void setLabel( Int l ) { _label = l; }
 	
 //	shortcuts to envelope parameters:
 	Double initialPhase( void ) const;
@@ -93,11 +93,11 @@ private:
 	
 //	-- instance variables --
 //	envelope:
-	Breakpoint * mHead;
-	Breakpoint * mTail;
+	Breakpoint * _head;
+	Breakpoint * _tail;
 	
 //	label:
-	Int mLabel;
+	Int _label;
 
 };	//	end of class Partial
 

@@ -82,11 +82,11 @@ protected:
 //	Class of exceptions thrown when there is an error importing
 //	Partials.
 //
-class ImportError : public RuntimeException
+class ImportError : public Exception
 {
 public: 
-	ImportError( const string & str, const string & in = "", Int at = 0L ) : 
-		RuntimeException( string("Import Error: ").append( str ), in, at ) {}
+	ImportError( const string & str, const string & where = "" ) : 
+		Exception( string("Import Error: ").append( str ), where ) {}
 		
 };	//	end of class RuntimeException
 
