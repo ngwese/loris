@@ -66,6 +66,15 @@ else
 test_aiff_LDADD = $(top_builddir)/src/libloris.la
 endif
 
+# synthesis/analysis identity test
+test_identity_SOURCES = test_Identity.C
+if DARWIN
+test_identity_LDADD = $(top_builddir)/src/.libs/libloris.a $(LINK_FFTW)
+else
+test_identity_LDADD = $(top_builddir)/src/libloris.la
+endif
+
+
 if BUILD_PYTHON
 PYTHON_TEST = run_pytest
 $(PYTHON_TEST):
@@ -74,7 +83,7 @@ $(PYTHON_TEST):
 	chmod +x $@
 endif
 
-check_PROGRAMS = test_aiff test_partial test_distiller test_sdiffile test_morpher test_c
+check_PROGRAMS = test_aiff test_partial test_distiller test_sdiffile test_morpher test_c test_identity
 check_SCRIPTS = $(PYTHON_TEST)
 
 TESTS = $(check_PROGRAMS) $(check_SCRIPTS) 
