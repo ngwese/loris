@@ -242,6 +242,23 @@ Oscillator::~Oscillator( void )
 }
 
 // ---------------------------------------------------------------------------
+//	assignment operator
+// ---------------------------------------------------------------------------
+Oscillator & 
+Oscillator::operator=( const Oscillator & rhs )
+{
+	if ( &rhs != this )
+	{
+		_frequency = rhs._frequency;
+		_amplitude = rhs._amplitude;
+		_bandwidth = rhs._bandwidth;
+		_phase = rhs._phase;
+		_filter.reset( new Filter( *(rhs._filter) ) );
+	}
+	return *this;
+}	
+
+// ---------------------------------------------------------------------------
 //	generateSamples
 // ---------------------------------------------------------------------------
 //	Accumulate bandwidth-enhanced sinusoidal samples modulating the 

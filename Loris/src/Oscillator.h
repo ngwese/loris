@@ -74,6 +74,8 @@ public:
 	Oscillator( const Oscillator & other );
 	~Oscillator( void );
 		
+	Oscillator & operator= ( const Oscillator & other );
+
 //	state access:
 	double radianFreq( void ) const { return _frequency; }
 	double amplitude( void ) const { return _amplitude; }
@@ -99,12 +101,6 @@ public:
 	void generateSamples( double * begin, double * end,
 					  double targetFreq, double targetAmp, double targetBw );
 	
-private:
-//	-- unimplemented --
-//	not implemented until proven useful:
-//	(need to be careful copying the Filter ptr)
-	Oscillator & operator= ( const Oscillator & other );
-		
 };	//	end of class Oscillator
 
 }	//	end of namespace Loris
