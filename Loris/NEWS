@@ -28,6 +28,18 @@ frequency proximity. This algorithm produces the
 smallest-possible number of collated Partials. Thanks to
 Ulrike Axen for providing this optimal algorithm.
 
+- Perl module can now be built, optionally, with the 
+--with-perl option to configure. It is still untested,
+but a very minimal test is performed in make check,just
+to make sure that it can be loaded. The perl module
+is (temporarily) called perLoris.
+
+- Python sequences can be used as arguments to dilate, 
+other languages still need strings, but typemaps could
+be added for them too.
+
+- autodetection of scripting langauges has been improved
+
 -------------------------------------------------------
 changes since 1.0 release:
 
