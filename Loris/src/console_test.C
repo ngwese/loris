@@ -33,6 +33,10 @@
 using namespace std;
 using namespace Loris;
 
+//
+//	test app using a console interface
+//
+
 int main()
 {	
 	try {		
