@@ -173,6 +173,7 @@ Synthesizer::synthesizePartial( const Partial & p )
 	if ( p.duration() == 0. )
 		return;
 
+/*
 //	HEY do something better about this.
 	//Assert( p.endTime() < _samples.size() / sampleRate() );
 	if ( p.endTime() > _samples.size() / sampleRate() ) {
@@ -181,6 +182,7 @@ Synthesizer::synthesizePartial( const Partial & p )
 		debugger << " Having a go of it anyway." << endl;
 		//return;
 	}
+*/
 		
 //	reset the oscillator:
 //	Remember that the oscillator only knows about radian frequency! Convert!

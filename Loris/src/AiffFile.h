@@ -18,6 +18,7 @@
 #include "ieee.h"
 #include "SamplesFile.h"
 #include <vector>
+#include <string>
 
 Begin_Namespace( Loris )
 
@@ -109,3 +110,4 @@ private:
 End_Namespace( Loris )
 
 #endif //	ndef __Loris_aiff_file__
+

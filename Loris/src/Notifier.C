@@ -116,7 +116,8 @@ DebuggerStream::DebuggerStream( void )
 	setbuffer();
 #else
 	//	initialize the buffer to a dummy if not debugging:
-	_note = NotifierBufPtr( new dummybuf() );
+	// _note = NotifierBufPtr( new dummybuf() );
+	_note.reset( new dummybuf() );
 	ostream::init( _note.get() );
 #endif
 }

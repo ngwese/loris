@@ -49,10 +49,10 @@ public:
 	// ~Dilator( void );
 	
 //	-- time-point access and mutation --
-	const std::set< double > & initialTimePoints( void ) const { return _initial; }
-	const std::set< double > & targetTimePoints( void ) const { return _target; }
-	std::set< double > & initialTimePoints( void ) { return _initial; }
-	std::set< double > & targetTimePoints( void ) { return _target; }
+	const std::multiset< double > & initialTimePoints( void ) const { return _initial; }
+	const std::multiset< double > & targetTimePoints( void ) const { return _target; }
+	std::multiset< double > & initialTimePoints( void ) { return _initial; }
+	std::multiset< double > & targetTimePoints( void ) { return _target; }
 	
 //	template time point specification from iterators:
 //	If template members aren't available, accept only vector iterators.
@@ -91,8 +91,8 @@ public:
 	
 //	-- instance variables --
 private:
-	std::set< double > _initial;
-	std::set< double > _target;
+	std::multiset< double > _initial;
+	std::multiset< double > _target;
 		
 };	//	end of class Dilator
 

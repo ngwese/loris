@@ -80,7 +80,7 @@ Dilator::dilate( Partial & p ) const
 	//	use iterators here instead of index, so that the algorithm
 	//	is independent of the kind of container I choose for the time
 	//	points:
-	typedef set< double >::const_iterator IterType;
+	typedef multiset< double >::const_iterator IterType;
 	IterType iterInit( _initial.begin() ), iterTgt( _target.begin() );
 	
 	for ( PartialIterator pIter(p); ! pIter.atEnd(); pIter.advance() ) {

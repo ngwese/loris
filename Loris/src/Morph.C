@@ -263,6 +263,8 @@ Morph::crossfadePartials( const list<Partial> & plist1,
 						  const list<Partial> & plist2, 
 						  int label )
 {
+	debugger << "crossfading Partials labeled " << label << endl;
+
 	//	fade Partials in the first list (the morph source, corresponding
 	//	to a morph weight of 0):
 	for ( list< Partial >::const_iterator it = plist1.begin(); it != plist1.end(); ++it ) {
