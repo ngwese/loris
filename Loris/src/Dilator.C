@@ -28,48 +28,13 @@ Begin_Namespace( Loris )
 Dilator::Dilator( const vector< double > & init, 
 				  const vector< double > & tgt )
 {
-	setTimePoints( init, tgt );
-}
-
-// ---------------------------------------------------------------------------
-//	setTimePoints
-// ---------------------------------------------------------------------------
-//	Make sure that the initial and target vectors are of the same size.
-//	Sort the time points in both vectors; temporal features cannot be 
-//	reordered using Dilator.
-//
-//	This could be put in the template member in the class
-//	definition, but this location is better for debugging, and
-//	it allows this class to be compiled without template members,
-//	if that should ever be necessary.
-// 
-void
-Dilator::setTimePoints( const vector< double > & init, 
-						const vector< double > & tgt ) 
-{
 	//	time point vectors have to be the same size:
 	if ( init.size() != tgt.size() ) {
 		Throw( InvalidObject, 
 				"Dilator must have the same number of initial and target time points." );
 	}
-	
-	//	copy and sort the time points:
-	_initial = init;
-	sort( _initial.begin(), _initial.end() );
-	_target = tgt;
-	sort( _target.begin(), _target.end() ); 
 
-/*
-	debugger << "Dilator got initial time points: ";
-	for ( vector< double >::iterator it = _initial.begin(); it != _initial.end(); ++it )
-		debugger << *it << " ";
-	debugger << endl;
-
-   debugger << "Dilator got target time points: ";
-    for ( vector< double >::iterator it = _target.begin(); it != _target.end(); ++it )
-        debugger << *it << " ";
-    debugger << endl;
-*/
+	setTimePoints( init.begin(), tgt.begin(), init.size() );
 }
 
 // ---------------------------------------------------------------------------
@@ -101,52 +66,60 @@ Dilator::setTimePoints( const vector< double > & init,
 Partial &
 Dilator::dilate( Partial & p ) const
 {
+	//	sanity check:
+	Assert( _initial.size() == _target.size() );
+		
 	//	Nothing to do if there are no time points:
 	if ( _initial.size() == 0 )
 		return p;
 	
-	//	sanity check:
-	Assert( _initial.size() == _target.size() );
-	Assert( _initial.front() > 0. );
-		
 	//	create the new Partial:
 	Partial newp;
 	newp.setLabel( p.label() );
-
-	//debugger << "created new Partial with label " << newp.label() << endl;
 	
-	int index = 0;
+	//	use iterators here instead of index, so that the algorithm
+	//	is independent of the kind of container I choose for the time
+	//	points:
+	typedef set< double >::const_iterator IterType;
+	IterType iterInit( _initial.begin() ), iterTgt( _target.begin() );
+	
 	for ( PartialIterator pIter(p); ! pIter.atEnd(); pIter.advance() ) {
 		//	find the first initial time point later than pIter:
-		while ( index < _initial.size() && pIter.time() > _initial[index] ) {
-			++index;
+		while ( iterInit != _initial.end() && pIter.time() > *iterInit ) {
+			++iterInit;
+			++iterTgt;
 		}
-		
+	
 		//	compute a new time for the Breakpoint at pIter:
 		double newtime = 0;
-		if ( index == 0 ) {
+		if ( iterInit == _initial.begin() ) {
 			//	all time points in _initial are later than 
 			//	the time of pIter; stretch if no zero time 
 			//	point has been specified, otherwise, shift:
-			if ( _initial[index] != 0. )
-				newtime = pIter.time() * _target[index] / _initial[index];
+			if ( *iterInit != 0. )
+				newtime = pIter.time() * (*iterTgt) / (*iterInit);
 			else
-				newtime = _target[index] + ( pIter.time() - _initial[index] );
+				newtime = (*iterTgt) + ( pIter.time() - (*iterInit) );
 		}
-		else if ( index >= _initial.size() ) {
+		else if ( iterInit == _initial.end() ) {
 			//	all time points in _initial are earlier than 
 			//	the time of pIter; shift:
-			newtime = _target[index - 1] + ( pIter.time() - _initial[index - 1] );
+			IterType prevTgt = iterTgt; --prevTgt;
+			IterType prevInit = iterInit; --prevInit;
+			newtime = *prevTgt + ( pIter.time() - (*prevInit) );
 		}
 		else {
+			IterType prevTgt = iterTgt; --prevTgt;
+			IterType prevInit = iterInit; --prevInit;
+			
 			//	pIter is between the time points at index and
 			//	index-1 in _initial; shift and stretch: 
-			Assert( _initial[index] != _initial[index - 1] );	//	pIter can't wind up 
-																//	between two equal times
-			newtime = _target[index-1] + 
-					  ( (pIter.time() - _initial[index - 1]) * 
-						( _target[index] - _target[index - 1] ) /
-						( _initial[index] - _initial[index - 1] ) );
+			Assert( *iterInit > *prevInit );	//	pIter can't wind up 
+												//	between two equal times
+			newtime = *prevTgt + 
+					  ( (pIter.time() - (*prevInit)) * 
+						( (*iterTgt) - (*prevTgt) ) /
+						( (*iterInit) - (*prevInit) ) );
 		}
 		
 		//	add a Breakpoint at the computed time:
@@ -154,17 +127,9 @@ Dilator::dilate( Partial & p ) const
 										  pIter.bandwidth(), pIter.phase() ) );
 	}
 	
-/*
-	debugger << "old Partial spanned: " << p.startTime() << " to " << p.endTime() << endl;
-	debugger << "new Partial spans: " << newp.startTime() << " to " << newp.endTime() << endl;
-	debugger << "assigning." << endl;
-*/
-
 	//	assign the new Partial:
 	p = newp;
 	return p;
 }
-
-
 
 End_Namespace( Loris )
