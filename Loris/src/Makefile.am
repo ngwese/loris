@@ -10,7 +10,7 @@
 
 MAINTAINERCLEANFILES    = Makefile.in
 
-INCLUDES = -I$(FFTWINCLUDE) -I$(SDIFINCLUDE) $(default_includes)
+INCLUDES = $(FFTWINCLUDE) $(SDIFINCLUDE) $(default_includes)
 LDFLAGS = -L$(libdir)
 
 AM_CFLAGS = $(DEBUG_LORIS)

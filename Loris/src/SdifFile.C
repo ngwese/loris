@@ -28,6 +28,7 @@
  * Lippold Haken, 20 October 2000, using IRCAM SDIF library (tutorial by Diemo Schwarz)
  * Lippold Haken, 22 December 2000, using 1LBL frames
  * Lippold Haken, 27 March 2001, write only 7-column 1TRC, combine reading and writing classes
+ * Lippold Haken, 31 Jan 2002, write either 4-column 1TRC or 6-column RABP
  * loris@cerlsoundgroup.org
  *
  * http://www.cerlsoundgroup.org/Loris/
@@ -63,21 +64,28 @@ namespace Loris {
 #endif
 
 
-//	Row of matrix data in SDIF 1TRC or SDIF 1LBL format.
-//	The 1TRC matrices have envelope information (in 5 or 7 columns).
-//	The 1LBL matrix is optional; it has partial label information (in 2 columns).
+//	Row of matrix data in SDIF RBEP, 1TRC, or 1LBL format.
 //
-//	Loris exports a 7-column 1TRC format that includes noise and exact timing information.
+//  The RBEP matrices are for reassigned bandwidth enhanced partials (in 6 columns).
+//	The 1TRC matrices are for sine-only partials (in 4 columns).
+//  The first four columns of an RBEP matrix correspond to the 4 columns in 1TRC.
+//	In the past, Loris exported a 7-column 1TRC; this is no longer exported, but can be imported.
 //
 //	The 1LBL format always has two columns, index and partial label.
+//	The 1LBL matrix is optional; it has partial label information (in 2 columns).
 int lorisRowMaxElements = 7;
+int lorisRowEnhancedElements = 6;
+int lorisRowSineOnlyElements = 4;
 typedef struct {
     SdifFloat8 index, freqOrLabel, amp, phase, noise, timeOffset, resampledFlag;
 } RowOfLorisData;
 
-//  SDIF signature used by Loris.
-static SdifSignature lorisSignature = SdifSignatureConst('1','T','R','C');
-static SdifSignature lorisLabels = SdifSignatureConst('1','L','B','L');
+
+//  SDIF signatures used by Loris.
+#define lorisEnhancedSignature  SdifSignatureConst('R','B','E','P')
+#define lorisLabelsSignature    SdifSignatureConst('1','L','B','L')
+#define lorisSineOnlySignature  SdifSignatureConst('1','T','R','C')
+
 
 //	Exception class for handling errors in SDIF library:
 class SdifLibraryError : public FileIOException
@@ -132,7 +140,7 @@ processRow( const SdifSignature msig, const RowOfLorisData & rowData, const doub
 //
 // Create a new breakpoint and insert it.
 //	
-	if (msig == lorisSignature) 
+	if (msig == lorisEnhancedSignature || msig == lorisSineOnlySignature) 
 	{
 		Breakpoint newbp( rowData.freqOrLabel, rowData.amp, rowData.noise, rowData.phase );
 		partialsVector[long(rowData.index)].insert( frameTime + rowData.timeOffset, newbp );
@@ -140,7 +148,7 @@ processRow( const SdifSignature msig, const RowOfLorisData & rowData, const doub
 //
 // Set partial label.
 //
-	else if (msig == lorisLabels) 
+	else if (msig == lorisLabelsSignature) 
 	{
 		partialsVector[long(rowData.index)].setLabel( (int) rowData.freqOrLabel );
 	}
@@ -169,8 +177,9 @@ readLorisMatrices( SdifFileT *file, std::vector< Partial > & partialsVector )
 		
 		// Skip frames until we find one we are interested in.
 		while (!SdifFCurrFrameIsSelected(file) 
-				|| (SdifFCurrSignature(file) != lorisSignature 
-					&& SdifFCurrSignature(file) != lorisLabels))
+				|| (SdifFCurrSignature(file) != lorisEnhancedSignature 
+					&& SdifFCurrSignature(file) != lorisSineOnlySignature 
+					&& SdifFCurrSignature(file) != lorisLabelsSignature))
 		{
 			ThrowIfSdifError( SdifFLastError(file), "Error reading SDIF file." );
 
@@ -503,7 +512,7 @@ indexPartials( const std::list< Partial > & partials, std::vector< Partial * > &
 //  Return true if time is beyond end of all the partials.
 //
 static int
-collectActiveIndices( const std::vector< Partial * > & partialsVector, 
+collectActiveIndices( const std::vector< Partial * > & partialsVector, const bool enhanced,
 								const double frameTime, const double nextFrameTime,
 								std::vector< int > & activeIndices )
 {
@@ -512,11 +521,12 @@ collectActiveIndices( const std::vector< Partial * > & partialsVector,
 	for (int i = 0; i < partialsVector.size(); i++) 
 	{
 		// Is there a breakpoint within the frame?
-		// if there is no breakpoint and zero amplitude, skip the partial.
-		// Partials are included in 5-column 1TRC if the next frame (or previous frame) had a breakpoint.
+		// Skip the partial if there is no breakpoint and either:
+		//		(1) we are writing enhanced format, 
+		// 	 or (2) the partial has zero amplitude.
 		PartialIterator it = partialsVector[i]->findAfter( frameTime );
 		if ( ( it != partialsVector[i]->end() && it.time() < nextFrameTime ) 
-					|| partialsVector[i]->amplitudeAt( frameTime ) != 0.0 ) 
+					|| (!enhanced && partialsVector[i]->amplitudeAt( frameTime ) != 0.0 ) ) 
 			activeIndices.push_back(i);	
 
 		if (partialsVector[i]->endTime() > frameTime )
@@ -569,8 +579,8 @@ writeEnvelopeLabels( SdifFileT * out,
 //
 	if (anyLabel)
 		SdifFWriteFrameAndOneMatrix( out, 
-			lorisLabels, streamID, frameTime, 							// frame header
-			lorisLabels, eFloat4, partialsVector.size(), cols, data);	// matrix 
+			lorisLabelsSignature, streamID, frameTime, 							// frame header
+			lorisLabelsSignature, eFloat4, partialsVector.size(), cols, data);	// matrix 
 
 //	
 // Free 1LBL matrix space.
@@ -586,10 +596,10 @@ writeEnvelopeLabels( SdifFileT * out,
 //	Assemble SDIF matrix data for these partials.
 //
 static void
-assembleMatrixData( SdifFloat4 *data, 
+assembleMatrixData( SdifFloat4 *data, const bool enhanced,
 								const std::vector< Partial * > & partialsVector, 
 								const std::vector< int > & activeIndices, 
-								const double frameTime, const double nextFrameTime )
+								const double frameTime )
 {	
 	// The array matrix data is row-major order at "data".
 	SdifFloat4 *rowDataPtr = data;
@@ -600,17 +610,12 @@ assembleMatrixData( SdifFloat4 *data,
 		int index = activeIndices[i];
 		Partial * par = partialsVector[index];
 		
-		// For exact timing (7-column 1TRC format):
-		// Use data at breakpoint if one is in frame, else fabricate data at frameTime.
-		double tim = frameTime;
-		double resampledFlag = 0.0;
-		PartialIterator it = par->findAfter(frameTime);
-		if (it != par->end() && it.time() < nextFrameTime) 
-			tim = it.time();		// use data at breakpoint time
-		else 
-			resampledFlag = 1.0;	// no breakpoint in frame; fabricated this data point
+		// For enhanced format we use exact timing; the activeIndices only includes
+		// partials that have breakpoints in this frame.
+		// For sine-only format we resample at frame times.
+		double tim = (enhanced ? par->findAfter(frameTime).time() : frameTime);
 		
-		// 1TRC must have phase between 0 and 2*Pi.
+		// Must have phase between 0 and 2*Pi.
 		double phas = par->phaseAt( tim );
 		if (phas < 0)
 			phas += 2. * Pi; 
@@ -618,11 +623,13 @@ assembleMatrixData( SdifFloat4 *data,
 		// Fill in values for this row of matrix data.
 		*rowDataPtr++ = index;							// first row of matrix   (standard)
 		*rowDataPtr++ = par->frequencyAt( tim );		// second row of matrix  (standard)
-		*rowDataPtr++ = par->amplitudeAt( tim );		// fourth row of matrix  (standard)
-		*rowDataPtr++ = phas;							// third row of matrix   (standard)
-		*rowDataPtr++ = par->bandwidthAt( tim );		// fifth row of matrix   (loris)
-		*rowDataPtr++ = tim - frameTime;				// sixth row of matrix   (loris)
-		*rowDataPtr++ = resampledFlag;					// seventh row of matrix (loris)
+		*rowDataPtr++ = par->amplitudeAt( tim );		// third row of matrix   (standard)
+		*rowDataPtr++ = phas;							// fourth row of matrix  (standard)
+		if (enhanced)
+		{
+			*rowDataPtr++ = par->bandwidthAt( tim );	// fifth row of matrix   (loris)
+			*rowDataPtr++ = tim - frameTime;			// sixth row of matrix   (loris)
+		}
 	}
 }
 
@@ -633,7 +640,8 @@ assembleMatrixData( SdifFloat4 *data,
 //
 static void
 writeEnvelopeData( SdifFileT * out,
-				const std::vector< Partial * > & partialsVector )
+				const std::vector< Partial * > & partialsVector,
+				const bool enhanced )
 {
 //
 // Export SDIF file from Loris data.
@@ -671,7 +679,7 @@ writeEnvelopeData( SdifFileT * out,
 // Make a vector of partial indices that includes all partials active at this time.
 //
 		std::vector< int > activeIndices;
-		endOfAll = collectActiveIndices( partialsVector,
+		endOfAll = collectActiveIndices( partialsVector, enhanced,
 									frameTime, nextFrameTime, activeIndices );
 
 //
@@ -684,16 +692,17 @@ writeEnvelopeData( SdifFileT * out,
 		{
 		
 			// Allocate matrix data.
-			SdifFloat4 *data = new SdifFloat4[numTracks * lorisRowMaxElements];
+			int cols = (enhanced ? lorisRowEnhancedElements : lorisRowSineOnlyElements);
+			SdifFloat4 *data = new SdifFloat4[numTracks * cols];
 
 			// Fill in matrix data.
-			assembleMatrixData( data, partialsVector, 
-								activeIndices, frameTime, nextFrameTime );
+			assembleMatrixData( data, enhanced, partialsVector, activeIndices, frameTime );
 								
 			// Write out matrix data.
+			SdifSignature sig = (enhanced ? lorisEnhancedSignature : lorisSineOnlySignature);
 			SdifFWriteFrameAndOneMatrix( out, 
-					lorisSignature, streamID, frameTime, 							// frame header
-					lorisSignature, eFloat4, numTracks, lorisRowMaxElements, data);	// matrix 
+					sig, streamID, frameTime, 					// frame header
+					sig, eFloat4, numTracks, cols, data);		// matrix 
 			
 			// Free matrix space.
 			delete [] data;
@@ -712,7 +721,7 @@ writeEnvelopeData( SdifFileT * out,
 // Export SDIF file.
 //
 void
-SdifFile::Export( const std::string & filename, const std::list<Partial> & partials )
+SdifFile::Export( const std::string & filename, const std::list<Partial> & partials, const bool enhanced )
 {
 
 // 
@@ -726,6 +735,33 @@ SdifFile::Export( const std::string & filename, const std::list<Partial> & parti
 	SdifFileT *out = SdifFOpen(filename.c_str(), eWriteFile);
 	if (!out)
 		Throw( FileIOException, "Could not open SDIF file for writing." );
+
+	// Define RBEP matrix and frame type for enhanced partials.
+	if (enhanced)
+	{
+		SdifMatrixTypeT *parsMatrixType = SdifCreateMatrixType(lorisEnhancedSignature,NULL);
+		SdifMatrixTypeInsertTailColumnDef(parsMatrixType,"Index");  
+		SdifMatrixTypeInsertTailColumnDef(parsMatrixType,"Frequency");  
+		SdifMatrixTypeInsertTailColumnDef(parsMatrixType,"Amplitude");  
+		SdifMatrixTypeInsertTailColumnDef(parsMatrixType,"Phase");  
+		SdifMatrixTypeInsertTailColumnDef(parsMatrixType,"Noise");  
+		SdifMatrixTypeInsertTailColumnDef(parsMatrixType,"TimeOffset");  
+		SdifPutMatrixType(out->MatrixTypesTable, parsMatrixType);
+
+		SdifFrameTypeT *parsFrameType = SdifCreateFrameType(lorisEnhancedSignature,NULL);
+		SdifFrameTypePutComponent(parsFrameType, lorisEnhancedSignature, "RABWE_Partials");
+		SdifPutFrameType(out->FrameTypesTable, parsFrameType);
+	}
+
+	// Define 1LBL matrix and frame type for labels.
+	SdifMatrixTypeT *labelsMatrixType = SdifCreateMatrixType(lorisLabelsSignature,NULL);
+	SdifMatrixTypeInsertTailColumnDef(labelsMatrixType,"Index");  
+	SdifMatrixTypeInsertTailColumnDef(labelsMatrixType,"Label");  
+	SdifPutMatrixType(out->MatrixTypesTable, labelsMatrixType);
+
+	SdifFrameTypeT *labelsFrameType = SdifCreateFrameType(lorisLabelsSignature,NULL);
+	SdifFrameTypePutComponent(labelsFrameType, lorisLabelsSignature, "RABWE_Labels");
+	SdifPutFrameType(out->FrameTypesTable, labelsFrameType);
 
 	// Write file header information 
 	SdifFWriteGeneralHeader( out );    
@@ -746,7 +782,7 @@ SdifFile::Export( const std::string & filename, const std::list<Partial> & parti
 		writeEnvelopeLabels( out, partialsVector );
 		
 		// Write partials to SDIF file.
-		writeEnvelopeData( out, partialsVector );
+		writeEnvelopeData( out, partialsVector, enhanced );
 	}
 	catch ( Exception & ex ) 
 	{

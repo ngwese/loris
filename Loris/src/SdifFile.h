@@ -28,6 +28,8 @@
  *
  * Lippold Haken, 4 July 2000
  * Lippold Haken, 20 October 2000, using IRCAM SDIF library
+ * Lippold Haken, 27 March 2001, write only 7-column 1TRC, combine reading and writing classes
+ * Lippold Haken, 31 Jan 2002, write either 4-column 1TRC or 6-column RABP
  * loris@cerlsoundgroup.org
  *
  * http://www.cerlsoundgroup.org/Loris/
@@ -61,7 +63,9 @@ public:
 	const std::list<Partial> & partials( void ) const { return _partials; }
 
 //	export:
-	static void Export( const std::string & filename, const std::list<Partial> & plist );
+//	enhanced chooses between 4-column 1TRC (sine only) or 6-column RABP (reassigned and enhanced)
+	static void Export( const std::string & filename, 
+					const std::list<Partial> & plist, const bool enhanced = true);
 	
 //	-- private interface --
 private:
