@@ -24,21 +24,23 @@
  *
  * Notifier.h
  *
- *	Declarations of ostreams used for notification throughout
- *	the Loris class library. These streams are used like cout
- *	or cerr, but they buffer their contents in a std::string
- *	until a newline is receieved. Then they post their entire
- *	contents to a notification handler (type NotificationHandler,
- *	defined below). The default handler just prints to stderr. 
- *	Other handlers (of type NotificationHandler) may be assigned
- *	using setNotifierHandler() and setDebuggerHandler(), proto-
- *	typed below. 
- *
- *	The ostream debugger is disabled when the symbol Debug_Loris
- *	is undefined. It cannot be enabled using setDebuggerHandler().
- *
- *	This header may be included in c files, the ostream declarations
- *	and support will be omitted.
+ *	A pair of dedicated streams, notifier and debugger, are used for
+ *	notification throughout the Loris class library. These streams are used
+ *	like cout or cerr, but they buffer their contents until a newline is
+ *	receieved. Then they post their entire contents to a notification
+ *	handler. The default handler just prints to stderr, but other handlers
+ *	may be dynamically specified using setNotifierHandler() and
+ *	setDebuggerHandler().
+ *	
+ *	debugger is enabled only when compiled with the preprocessor macro
+ *	Debug_Loris defined. It cannot be enabled using setDebuggerHandler() if
+ *	Debug_Loris is undefined.When Debug_Loris is not defined, characters
+ *	streamed onto debugger are never posted nor are they otherwise
+ *	accessible.
+ *	
+ *	Notifier.h may be included in c files. The stream declarations are
+ *	omitted, but the notification handler routines are accessible.
+ *	
  *
  * Kelly Fitz, 28 Feb 2000
  * loris@cerlsoundgroup.org
@@ -63,9 +65,28 @@ std::ostream & getDebuggerStream(void);
 
 //	declare streams:
 static std::ostream & notifier = getNotifierStream();
-static std::ostream & debugger = getDebuggerStream();
+/*	This stream is used throughout Loris (and may be used by clients)
+	to provide user feedback. Characters streamed onto notifier are
+	buffered until a newline is received, and then the entire contents
+	of the stream are flushed to the current notification handler (stderr,
+	by default).
+ */
 
-//	import endl and ends from std into Loris:
+static std::ostream & debugger = getDebuggerStream();
+/*	This stream is used throughout Loris (and may be used by clients)
+	to provide debugging information. Characters streamed onto debugger are
+	buffered until a newline is received, and then the entire contents
+	of the stream are flushed to the current debugger handler (stderr,
+	by default).
+	
+	debugger is enabled only when compiled with the preprocessor macro
+	Debug_Loris defined. It cannot be enabled using setDebuggerHandler()
+	if Debug_Loris is undefined. When Debug_Loris is not defined,
+	characters streamed onto debugger are never posted nor are they
+	otherwise accessible.
+ */
+ 
+//	for convenience, import endl and ends from std into Loris:
 using std::endl;
 using std::ends;
 
@@ -85,9 +106,17 @@ extern "C" {
 
 //	These functions do not throw exceptions.
 typedef void(*NotificationHandler)(const char * s);
-NotificationHandler setNotifierHandler( NotificationHandler fn );
+/*	NotificationHandler setNotifierHandler( NotificationHandler fn );
+	Specify a new handling procedure for posting user feedback, and return
+	the current handler. 
+ */
+ 
 NotificationHandler setDebuggerHandler( NotificationHandler fn );
-
+/*	Specify a new handling procedure for posting debugging information, and return
+	the current handler. This has no effect unless compiled with the Debug_Loris
+	preprocessor macro defined.
+ */
+ 
 #ifdef __cplusplus
 }	//	end extern "C"
 }	//	end of namespace Loris

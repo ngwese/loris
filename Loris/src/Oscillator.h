@@ -44,15 +44,14 @@ class Filter;
 // ---------------------------------------------------------------------------
 //	class Oscillator
 //
-//	Oscillator represents a single bandwidth-enhanced sinusoidal oscillator
-//	used for synthesizing sounds from Reassigned Bandwidth-Enhanced analysis
-// 	data. Oscillator encapsulates the oscillator state, including the instan-
-//	taneous radian frequency, amplitude, bandwidth, and phase, and a filter
-//	object used to generate the bandlimited stochastic modulator.
-//
-//	Loris::Synthesizer uses an instance of Loris::Oscillator to synthesize
-//	bandwidth-enhanced partials obtained from Reassigned Bandwidth-Enhanced
-//	analysis data.
+//	Class Oscillator represents the state of a single bandwidth-enhanced
+//	sinusoidal oscillator used for synthesizing sounds from Reassigned
+//	Bandwidth-Enhanced analysis data. Oscillator encapsulates the oscillator
+//	state, including the instan- taneous radian frequency (radians per
+//	sample), amplitude, bandwidth coefficient, and phase, and a filter
+//	object used to generate the bandlimited stochastic modulator. Class
+//	Synthesizer uses an instance of Oscillator to synthesize
+//	bandwidth-enhanced Partials.
 //
 class Oscillator
 {
@@ -68,39 +67,87 @@ class Oscillator
 
 //	-- public interface --
 public:
-//	construction (with initial state):
+//	-- construction --
 	Oscillator( double radf, double a, double bw, double ph );
+	/*	Construct a new Oscillator with the initial state parameters 
+		(radian frequencym amplitude, bandwidth coefficient, and phase)
+		as specified.
+	 */
+	 
 	Oscillator( void );
+	/*	Construct a new Oscillator with all state parameters initialized
+		to 0.
+	 */
+	 
 	Oscillator( const Oscillator & other );
+	/* 	Construct a new Oscillator that has the same state paramters
+		as another Oscillator. The filter used by the new Oscillator
+		will have the same coefficients and response as the other
+		Oscillator, but the state of the filter delay lines is not 
+		copied.
+	 */
+	 
 	~Oscillator( void );
-		
+	/* 	Destroy this Oscillator.
+	 */
+	 
 	Oscillator & operator= ( const Oscillator & other );
-
-//	state access:
-	double radianFreq( void ) const { return _frequency; }
+	/*	Assignment operator: make this Oscillator an exact copy of
+		another Oscillator. The filter used by this Oscillator
+		will have the same coefficients and response as the other
+		Oscillator, but the state of the filter delay lines is not 
+		copied.
+	 */
+	 
+//	-- state access --
 	double amplitude( void ) const { return _amplitude; }
+	/* Return the current instantaneous amplitude of this Oscillator.
+	 */
+	 
 	double bandwidth( void ) const { return _bandwidth; }
+	/*	Return the current instantaneous bandwidth coefficient of this
+		Oscillator.
+	 */
+	 
 	double phase( void ) const { return _phase; }
-
-//	state mutation:	
-	void setRadianFreq( double x ) { _frequency = x; }
+	/*	Return the current instantaneous phase of this Oscillator.
+	 */
+	 
+	double radianFreq( void ) const { return _frequency; }
+	/*	Return the current instantaneous frequency (in radians per sample)
+		of this Oscillator.	
+	 */
+	 
+//	-- state mutation --
 	void setAmplitude( double x ) { _amplitude = x; }
+	/* 	Set the instantaneous amplitude of this Oscillator.
+	 */
+	 
 	void setBandwidth( double x ) { _bandwidth = x; }
+	/* 	Set the instantaneous bandwidth coefficient of this Oscillator.
+	 */
+	 
 	void setPhase( double x ) { _phase = x; }
-
-//	sample generation:	
-//	Accumulate bandwidth-enhanced sinusoidal samples modulating the 
-//	oscillator state from its current values of radian frequency,
-//	amplitude, and bandwidth to the specified target values, starting
-//	at beginIdx and ending at (before) endIdx (no sample is accumulated
-//	at endIdx). The indices are positions in the specified buffer.
-//
-//	The caller must insure that the indices are valid. Target frequency
-//	and bandwidth are checked to prevent aliasing and bogus bandwidth
-//	enhancement.
+	/*	Set the instantaneous phase of this Oscillator.
+	 */
+	 
+	void setRadianFreq( double x ) { _frequency = x; }
+	/*	Set the instantaneous frequency (in radians per sample) 
+		of this Oscillator.
+	 */
+	 
+//	-- sample generation --
 	void generateSamples( double * begin, double * end,
-					  double targetFreq, double targetAmp, double targetBw );
-	
+						  double targetFreq, double targetAmp, double targetBw );
+	/*	Accumulate bandwidth-enhanced sinusoidal samples modulating the
+		oscillator state from its current values of radian frequency, amplitude,
+		and bandwidth to the specified target values. Accumulate samples into
+		the half-open (STL-style) range of doubles, starting at begin, and
+		ending before end (no sample is accumulated at end). The caller must
+		insure that the indices are valid. Target frequency and bandwidth are
+		checked to prevent aliasing and bogus bandwidth enhancement.
+	 */
+	 
 };	//	end of class Oscillator
 
 }	//	end of namespace Loris

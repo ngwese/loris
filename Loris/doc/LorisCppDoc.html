@@ -1284,71 +1284,217 @@ Return a const reference to this Morpher's list of morphed Partials.
 <a name="Notifier">
 <hr><h2>Notifier</h2></a>
 <p>
-Dehr?
+A pair of dedicated streams, <code>notifier</code> and
+<code>debugger</code>, are used for notification throughout the Loris
+class library. These streams are used like <code>cout</code> or
+<code>cerr</code>, but they buffer their contents until a newline is
+receieved. Then they post their entire contents to a notification
+handler. The default handler just prints to stderr, but other handlers
+may be dynamically specified using setNotifierHandler() and
+setDebuggerHandler().
 <p>
-<pre>
-std::ostream & getNotifierStream(void);
-std::ostream & getDebuggerStream(void);
+<code>debugger</code> is enabled only when compiled with the
+preprocessor macro Debug_Loris defined. It cannot be enabled using
+setDebuggerHandler() if Debug_Loris is undefined.When Debug_Loris
+is not defined, characters streamed onto debugger are never posted
+nor are they otherwise accessible.
+<p>
+Notifier.h may be included in c files. The stream declarations
+are omitted, but the notification handler routines are accessible.
+<p>
 
-//	declare streams:
-static std::ostream & notifier = getNotifierStream();
-static std::ostream & debugger = getDebuggerStream();
+<p><tt><b>static std::ostream & notifier
+</b></tt>
+<blockquote>
+<br>
+This stream is used throughout Loris (and may be used by clients)
+to provide user feedback. Characters streamed onto notifier are
+buffered until a newline is received, and then the entire contents
+of the stream are flushed to the current notification handler (stderr,
+by default).
+</blockquote>	
 
-These are declared extern "C" and can be called from C:
-typedef void(*NotificationHandler)(const char * s);
-NotificationHandler setNotifierHandler( NotificationHandler fn );
-NotificationHandler setDebuggerHandler( NotificationHandler fn );
-</pre>
-				
+<p><tt><b>static std::ostream & debugger
+</b></tt>
+<blockquote>
+<br>
+This stream is used throughout Loris (and may be used by clients)
+to provide debugging information. Characters streamed onto debugger are
+buffered until a newline is received, and then the entire contents
+of the stream are flushed to the current debugger handler (stderr,
+by default).
+<p>
+<code>debugger</code> is enabled only when compiled with the
+preprocessor macro Debug_Loris defined. It cannot be enabled using
+setDebuggerHandler() if Debug_Loris is undefined. When Debug_Loris
+is not defined, characters streamed onto debugger are never posted
+nor are they otherwise accessible.
+</blockquote>	
+
+
+<p><tt><b>typedef void(*NotificationHandler)(const char * s); <br>
+setNotifierHandler( NotificationHandler fn )
+</b></tt>
+<blockquote>[ returns NotificationHandler  ]
+<br>
+Specify a new handling procedure for posting user feedback, and return
+the current handler. 
+</blockquote>	
+
+
+<p><tt><b> setDebuggerHandler( NotificationHandler fn )
+</b></tt>
+<blockquote>[ returns NotificationHandler  ]
+<br>
+Specify a new handling procedure for posting debugging information, and return
+the current handler. This has no effect unless compiled with the Debug_Loris
+preprocessor macro defined.
+</blockquote>	
+
 <p><a href="#contents"><small>Contents</small></a>	
 
 <a name="Oscillator">
 <hr><h2>Oscillator</h2></a>
 <p>
-Oscillator represents a single bandwidth-enhanced sinusoidal oscillator
-used for synthesizing sounds from Reassigned Bandwidth-Enhanced analysis
-data. Oscillator encapsulates the oscillator state, including the instan-
-taneous radian frequency, amplitude, bandwidth, and phase, and a filter
-object used to generate the bandlimited stochastic modulator.
-
-Loris::Synthesizer uses an instance of Loris::Oscillator to synthesize
-bandwidth-enhanced partials obtained from Reassigned Bandwidth-Enhanced
-analysis data.
+Class Oscillator represents the state of a single bandwidth-enhanced
+sinusoidal oscillator used for synthesizing sounds from Reassigned
+Bandwidth-Enhanced analysis data. Oscillator encapsulates the oscillator
+state, including the instan- taneous radian frequency (radians per
+sample), amplitude, bandwidth coefficient, and phase, and a filter
+object used to generate the bandlimited stochastic modulator. Class <a
+href="#Synthesizer">Synthesizer</a> uses an instance of Oscillator to
+synthesize bandwidth-enhanced Partials.
 <p>
-<pre>
-//	construction (with initial state):
-	Oscillator( double radf, double a, double bw, double ph );
-	Oscillator( void );
-	Oscillator( const Oscillator & other );
-	~Oscillator( void );
+<h3>Member Functions</h3>
+<h4>Construction</h4>
+
+<p><tt><b>Oscillator( double radf, double a, double bw, double ph )
+</b></tt>
+<blockquote>
+<br>
+Construct a new Oscillator with the initial state parameters 
+(radian frequencym amplitude, bandwidth coefficient, and phase)
+as specified.
+</blockquote>	
+
+<p><tt><b>Oscillator( void )
+</b></tt>
+<blockquote>
+<br>
+Construct a new Oscillator with all state parameters initialized
+to 0.
+</blockquote>	
+
+<p><tt><b>Oscillator( const Oscillator & other )
+</b></tt>
+<blockquote>
+<br>
+Construct a new Oscillator that has the same state paramters
+as another Oscillator. The filter used by the new Oscillator
+will have the same coefficients and response as the other
+Oscillator, but the state of the filter delay lines is not 
+copied.
+</blockquote>	
+
+<p><tt><b>~Oscillator( void )
+</b></tt>
+<blockquote>
+<br>
+Destroy this Oscillator.
+</blockquote>	
+
 		
-	Oscillator & operator= ( const Oscillator & other );
+<p><tt><b> operator= ( const Oscillator & other )
+</b></tt>
+<blockquote>[ returns Oscillator &  ]
+<br>
+Assignment operator: make this Oscillator an exact copy of
+another Oscillator. The filter used by this Oscillator
+will have the same coefficients and response as the other
+Oscillator, but the state of the filter delay lines is not 
+copied.
+</blockquote>	
 
-//	state access:
-	double radianFreq( void ) const { return _frequency; }
-	double amplitude( void ) const { return _amplitude; }
-	double bandwidth( void ) const { return _bandwidth; }
-	double phase( void ) const { return _phase; }
 
-//	state mutation:	
-	void setRadianFreq( double x ) { _frequency = x; }
-	void setAmplitude( double x ) { _amplitude = x; }
-	void setBandwidth( double x ) { _bandwidth = x; }
-	void setPhase( double x ) { _phase = x; }
+<h4>State Access</h4>
+<p><tt><b> amplitude( void ) const
+</b></tt>
+<blockquote>[ returns double  ]
+<br>
+Return the current instantaneous amplitude of this Oscillator.
+</blockquote>	
 
-//	sample generation:	
-//	Accumulate bandwidth-enhanced sinusoidal samples modulating the 
-//	oscillator state from its current values of radian frequency,
-//	amplitude, and bandwidth to the specified target values, starting
-//	at beginIdx and ending at (before) endIdx (no sample is accumulated
-//	at endIdx). The indices are positions in the specified buffer.
-//
-//	The caller must insure that the indices are valid. Target frequency
-//	and bandwidth are checked to prevent aliasing and bogus bandwidth
-//	enhancement.
-	void generateSamples( double * begin, double * end,
-					  double targetFreq, double targetAmp, double targetBw );
-</pre>
+<p><tt><b> bandwidth( void ) const
+</b></tt>
+<blockquote>[ returns double  ]
+<br>
+Return the current instantaneous bandwidth coefficient of this
+Oscillator.
+</blockquote>	
+
+<p><tt><b> phase( void ) const
+</b></tt>
+<blockquote>[ returns double  ]
+<br>
+Return the current instantaneous phase of this Oscillator.
+</blockquote>	
+
+<p><tt><b> radianFreq( void ) const
+</b></tt>
+<blockquote>[ returns double  ]
+<br>
+Return the current instantaneous frequency (in radians per sample)
+of this Oscillator.
+</blockquote>	
+
+
+<h4>State Mutation</h4>
+<p><tt><b> setAmplitude( double x )
+</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Set the instantaneous amplitude of this Oscillator.
+</blockquote>	
+
+<p><tt><b> setBandwidth( double x )
+</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Set the instantaneous bandwidth coefficient of this
+Oscillator.
+
+</blockquote>	
+
+<p><tt><b> setPhase( double x )
+</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Set the instantaneous phase of this Oscillator.
+</blockquote>	
+
+<p><tt><b> setRadianFreq( double x )
+</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Set the instantaneous frequency (in radians per sample)
+of this Oscillator.
+</blockquote>	
+
+
+<h4>Sample Generation</h4>
+<p><tt><b> generateSamples( double * begin, double * end,
+double targetFreq, double targetAmp, double targetBw )
+</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Accumulate bandwidth-enhanced sinusoidal samples modulating the
+oscillator state from its current values of radian frequency, amplitude,
+and bandwidth to the specified target values. Accumulate samples into
+the half-open (STL-style) range of doubles, starting at begin, and
+ending before end (no sample is accumulated at end). The caller must
+insure that the indices are valid. Target frequency and bandwidth are
+checked to prevent aliasing and bogus bandwidth enhancement.
+</blockquote>	
 				
 <p><a href="#contents"><small>Contents</small></a>	
 
