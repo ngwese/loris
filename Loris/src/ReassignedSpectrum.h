@@ -34,14 +34,19 @@ public:
 //	length of the three Fourier transforms:
 	long size( void ) const { return _transform.size(); }
 	
-//	peers may need to know about the analysis window:
+//	peers may need to know about the analysis window
+//	or about the scale factors in introduces:
 	const std::vector< double > & window( void ) const { return _window; }
+	double magnitudeScale(void) const { return _windowMagnitudeScale; }
+	double energyScale(void) const { return _windowEnergyScale; }
 	
 //	reassigned spectral data access:		
 	double magnitude( unsigned long idx ) const;
 	double reassignedFrequency( unsigned long idx ) const;
 	double reassignedTime( double fracFreqSample ) const;
 	double reassignedPhase( double fracFreqSample, double timeCorrection ) const;
+	
+	double correctedMagnitude( double fracBinNum, long bin ) const;
 	
 	const std::complex< double > & operator[]( unsigned long idx ) const 
 		{ return _transform[idx]; }
@@ -58,6 +63,10 @@ private:
 	double frequencyCorrection( long sample ) const;
 	double timeCorrection( long sample ) const;
 	
+	//	compute the window spectrum used to correct
+	//	spectral component magnitudes:
+	void computeWindowSpectrum( const std::vector< double > & v );
+
 //	-- instance variables --
 private:
 	//	transforms:
@@ -66,8 +75,12 @@ private:
 	//	windows:
 	std::vector< double > _window, _winfreqramp, _wintimeramp;
 	
-	//	scale factor for correcting magnitudes:
-	double _magScale;	
+	//	oversampled window spectrum for correcting magnitudes:
+	std::vector< double > _mainlobe;
+
+	//	scale factors for correcting magnitudes:
+	double _windowMagnitudeScale;	
+	double _windowEnergyScale;	
 };	//	end of class ReassignedSpectrum
 
 End_Namespace( Loris )

@@ -58,7 +58,7 @@ public:
 		//	accumulate sinusoidal energy:
 		for ( Iter it = b; it != e; ++it ) {
 			double a = accumulateSinusoid( it->frequency(), it->amplitude() );
-			it->setAmplitude( a );
+			//it->setAmplitude( a );
 		}
 		
 		//	compute surplus spectral energy:

@@ -273,6 +273,10 @@ AssociateBandwidth::accumulateSinusoid( double f, double a )
 	//	distribute weight at the peak frequency:
 	distribute( f, 1., _weights );
 	
+	double asdfg = a * a * _spectrum.energyScale();
+	distribute( f, asdfg, _sinusoidalEnergy  );
+	return a;
+	
 	//	compute the offset in the oversampled window spectrum:
 	double fracBinNum = f / _hzPerSamp;
 	long intBinNumber = round(fracBinNum);

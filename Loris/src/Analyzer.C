@@ -286,15 +286,15 @@ Analyzer::extractPeaks( std::list< Breakpoint > & frame, double frameTime, Analy
 	for ( int j = 1; j < (state.spectrum().size() / 2) - 1; ++j ) {
 		if ( abs(state.spectrum()[j]) > abs(state.spectrum()[j-1]) && 
 			 abs(state.spectrum()[j]) > abs(state.spectrum()[j+1])) {
-			//	itsa magnitude peak, does it clear the amplitude floor?
-			double mag = state.spectrum().magnitude( j );
-			if ( mag < threshold )
-				continue;
-			
-			//	compute the fractional frequency sample
+			 //	compute the fractional frequency sample
 			//	and the frequency:
 			double fsample = state.spectrum().reassignedFrequency( j );	//	fractional sample
 			double fHz = fsample * sampsToHz;
+			
+			//	itsa magnitude peak, does it clear the amplitude floor?
+			double mag = state.spectrum().correctedMagnitude( fsample, j );
+			if ( mag < threshold )
+				continue;
 			
 			//	if the frequency is too low (not enough periods
 			//	in the analysis window), reject it:
