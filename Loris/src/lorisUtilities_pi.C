@@ -170,15 +170,7 @@ void scaleAmp( PartialList * partials, BreakpointEnvelope * ampEnv )
 
 		notifier << "scaling amplitude of " << partials->size() << " Partials" << endl;
 
-		PartialList::iterator listPos;
-		for ( listPos = partials->begin(); listPos != partials->end(); ++listPos ) 
-		{
-			Partial::iterator envPos;
-			for ( envPos = listPos->begin(); envPos != listPos->end(); ++envPos ) 
-			{		
-				envPos.breakpoint().setAmplitude( envPos.breakpoint().amplitude() * ampEnv->valueAt(envPos.time()) );
-			}
-		}	
+		PartialUtils::scaleAmp( partials->begin(), partials->end(), *ampEnv );
 	}
 	catch( Exception & ex ) 
 	{
@@ -211,28 +203,7 @@ void scaleNoiseRatio( PartialList * partials, BreakpointEnvelope * noiseEnv )
 
 		notifier << "scaling noise ratio of " << partials->size() << " Partials" << endl;
 
-		PartialList::iterator listPos;
-		for ( listPos = partials->begin(); listPos != partials->end(); ++listPos ) 
-		{
-			Partial::iterator envPos;
-			for ( envPos = listPos->begin(); envPos != listPos->end(); ++envPos ) 
-			{		
-				//	compute new bandwidth value:
-				double bw = envPos.breakpoint().bandwidth();
-				if ( bw < 1. ) 
-				{
-					double ratio = bw  / (1. - bw);
-					ratio *= noiseEnv->valueAt(envPos.time());
-					bw = ratio / (1. + ratio);
-				}
-				else 
-				{
-					bw = 1.;
-				}
-				
-				envPos.breakpoint().setBandwidth( bw );
-			}
-		}	
+		PartialUtils::scaleNoiseRatio( partials->begin(), partials->end(), *noiseEnv );
 	}
 	catch( Exception & ex ) 
 	{
@@ -265,18 +236,7 @@ void shiftPitch( PartialList * partials, BreakpointEnvelope * pitchEnv )
 
 		notifier << "shifting pitch of " << partials->size() << " Partials" << endl;
 		
-		PartialList::iterator listPos;
-		for ( listPos = partials->begin(); listPos != partials->end(); ++listPos ) 
-		{
-			Partial::iterator envPos;
-			for ( envPos = listPos->begin(); envPos != listPos->end(); ++envPos ) 
-			{		
-				//	compute frequency scale:
-				double scale = 
-					std::pow(2., (0.01 * pitchEnv->valueAt(envPos.time())) /12.);				
-				envPos.breakpoint().setFrequency( envPos.breakpoint().frequency() * scale );
-			}
-		}	
+		PartialUtils::shiftPitch( partials->begin(), partials->end(), *pitchEnv );
 	}
 	catch( Exception & ex ) 
 	{

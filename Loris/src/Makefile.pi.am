@@ -43,6 +43,7 @@ libloris_la_LIBADD = \
 		$(top_builddir)/classes/Oscillator.lo \
 		$(top_builddir)/classes/Partial.lo \
 		$(top_builddir)/classes/PartialBuilder.lo \
+		$(top_builddir)/classes/PartialUtils.lo \
 		$(top_builddir)/classes/ReassignedSpectrum.lo \
 		$(top_builddir)/classes/SdifFile.lo \
 		$(top_builddir)/classes/Sieve.lo \

@@ -94,6 +94,7 @@ libclasses_la_SOURCES = AiffFile.C \
 		PartialBuilder.h	\
 		PartialList.h \
 		PartialPtrs.h \
+		PartialUtils.C \
 		PartialUtils.h \
 		random.h \
 		ReassignedSpectrum.C \

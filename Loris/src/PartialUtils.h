@@ -40,7 +40,7 @@
 //	begin namespace
 namespace Loris {
 
-using std::pair;
+class Envelope;
 
 // ---------------------------------------------------------------------------
 //	class/namespace PartialUtils
@@ -62,16 +62,82 @@ namespace PartialUtils {
 //	PartialUtils is a class:
 class PartialUtils
 {
-//	unimplemented, cannot instantiate PartialUtils:
-	PartialUtils(void);
-	PartialUtils(const PartialUtils &);
-	
-//	-- public interface --
 public:
 #endif
-
 //	-- free functions --
 
+	/*	Scale the amplitude of the specified Partial according to
+		an envelope representing a time-varying amplitude scale value.
+	 */
+	struct scale_amp : public std::unary_function< Partial, void >
+	{
+		Envelope & env;
+		scale_amp( Envelope & e ) : env(e) {}
+		
+		void operator()( Partial & p ) const;	// see PartialUtils.C
+	};
+
+	/*	Apply scale_amp to all partials in a half-open range.
+	 */
+	template <typename Iterator>
+	#if defined( NO_NESTED_NAMESPACE )
+	static
+	#endif
+	inline 
+	void scaleAmp( Iterator begin, Iterator end, Envelope & e )
+	{
+		std::for_each( begin, end, scale_amp( e ) );	
+	}
+
+	/*	Scale the relative noise content of the specified Partial according 
+		to an envelope representing a (time-varying) noise energy 
+		scale value.
+	 */
+	struct scale_noise_ratio : public std::unary_function< Partial, void >
+	{
+		Envelope & env;
+		scale_noise_ratio( Envelope & e ) : env(e) {}
+		
+		void operator()( Partial & p ) const;	// see PartialUtils.C
+	};
+
+	/*	Apply scale_noise_ratio to all partials in a half-open range.
+	 */
+	template <typename Iterator>
+	#if defined( NO_NESTED_NAMESPACE )
+	static
+	#endif
+	inline 
+	void scaleNoiseRatio( Iterator begin, Iterator end, Envelope & e )
+	{
+		std::for_each( begin, end, scale_noise_ratio( e ) );	
+	}
+
+	/*	Shift the pitch of the specified Partial according to
+		the given pitch envelope. The pitch envelope is assumed to have 
+		units of cents (1/100 of a halfstep).
+	 */
+	struct shift_pitch : public std::unary_function< Partial, void >
+	{
+		Envelope & env;
+		shift_pitch( Envelope & e ) : env(e) {}
+		
+		void operator()( Partial & p ) const;	// see PartialUtils.C
+	};
+
+	/*	Apply shift_pitch to all partials in a half-open range.
+	 */
+	template <typename Iterator>
+	#if defined( NO_NESTED_NAMESPACE )
+	static
+	#endif
+	inline 
+	void shiftPitch( Iterator begin, Iterator end, Envelope & e )
+	{
+		std::for_each( begin, end, shift_pitch( e ) );	
+	}
+	
+	
 	/*	Return the time (in seconds) spanned by a specified half-open
 		(STL-style) range of Partials as a std::pair composed of the earliest
 		Partial start time and latest Partial end time in the range.
@@ -81,7 +147,7 @@ public:
 	static
 	#endif
 	inline 
-	pair<double,double> timeSpan( Iterator begin, Iterator end ) 
+	std::pair<double,double> timeSpan( Iterator begin, Iterator end ) 
 	{
 		double tmin = 0., tmax = 0.;
 		if ( begin != end )
@@ -98,9 +164,6 @@ public:
 		}
 		return std::make_pair(tmin, tmax);
 	}
-
-
-
 //	-- predicates --
 	/*	Predicate functor returning true if the label of its Partial argument is
 		equal to the specified 32-bit label, and false otherwise.
@@ -179,10 +242,14 @@ public:
 			{ return comp(*lhs, *rhs); }
 	};
 
-
 #if !defined( NO_NESTED_NAMESPACE )
 }	//	end of namespace PartialUtils
 #else
+//	unimplemented, cannot instantiate PartialUtils:
+private:
+	PartialUtils(void);
+	PartialUtils(const PartialUtils &);
+	
 };	//	end of class PartialUtils
 #endif
 
