@@ -25,6 +25,7 @@ pyexec_PYTHON = loris.py
 
 #----------------------------------------------------------------
 # Darwin is special, libtool doesn't work right.
+# Wait, maybe it does now!
 #
 if DARWIN
 # PYTHON_CMODULE = _loris.so
@@ -60,7 +61,7 @@ pythonsitepkg_LTLIBRARIES = _loris.la
 _loris_la_SOURCES = $(PYTHON_WRAPPER)
 _loris_la_CXXFLAGS = $(AM_CXXFLAGS) -I$(top_srcdir)/src $(PYFLAGS) 
 _loris_la_LDFLAGS = -module -avoid-version -bundle -flat_namespace -undefined suppress
-_loris_la_LIBADD = $(top_builddir)/src/libloris.la $(LINK_FFTW) -lstdc++
+_loris_la_LIBADD = $(top_builddir)/src/libloris.la $(LINK_FFTW)
 	
 else
 #
@@ -79,13 +80,13 @@ endif
 #----------------------------------------------------------------
 # Special build and install rules for Darwin, libtool doesn't work.
 #
-if DARWIN
-
-all-local: $(PYTHON_MODULE)
-
-install-exec-local: $(INSTALL_PYTHON_MODULE)
-
-endif 
+# if DARWIN
+# 
+# all-local: $(PYTHON_MODULE)
+# 
+# install-exec-local: $(INSTALL_PYTHON_MODULE)
+# 
+# endif 
 
 #----------------------------------------------------------------
 # Define a target for building the

@@ -10,7 +10,7 @@ dnl implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 
 dnl initialization
-AC_INIT(Loris, 1.3.0beta, loris@cerlsoundgroup.org, loris)
+AC_INIT(Loris, 1.3.0, loris@cerlsoundgroup.org, loris)
 
 AC_CONFIG_AUX_DIR(config)
 AC_SUBST(ac_aux_dir)
