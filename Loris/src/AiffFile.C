@@ -51,6 +51,8 @@ enum {
 	ContainerId = 'FORM', 
 	AiffType = 'AIFF', 
 	CommonId = 'COMM',
+	ApplicationSpecificId = 'APPL',
+	SosEnvelopesId = 'SOSe',
 	SoundDataId = 'SSND'
 };
 
@@ -159,6 +161,36 @@ int
 AiffFile::sampleSize( void ) const
 {
 	return _sampSize;
+}
+
+// ---------------------------------------------------------------------------
+//	partials
+// ---------------------------------------------------------------------------
+//
+int
+AiffFile::partials( void ) const
+{
+	return _partials;
+}
+
+// ---------------------------------------------------------------------------
+//	frames
+// ---------------------------------------------------------------------------
+//
+int
+AiffFile::frames( void ) const
+{
+	return _frames;
+}
+
+// ---------------------------------------------------------------------------
+//	hop
+// ---------------------------------------------------------------------------
+//
+double
+AiffFile::hop( void ) const
+{
+	return _hop;
 }
 
 // ---------------------------------------------------------------------------
@@ -277,8 +309,9 @@ AiffFile::read( std::istream & s )
 		readContainer( s );
 		
 		//	read other chunks, we are only interested in
-		//	the Common chunk and the Sound Data chunk:
+		//	the Common chunk, the Sound Data chunk, and SPC-specific chunk:
 		bool foundCOMM = false, foundSSND = false;
+		_hop = _partials = _frames = 0;
 		while ( ! foundCOMM || ! foundSSND )
 		{
 			if ( s.eof() )
@@ -293,6 +326,10 @@ AiffFile::read( std::istream & s )
 			{
 				readCommonData( s );
 				foundCOMM = true;
+			}
+			else if ( h.id == ApplicationSpecificId )
+			{
+				readApplicationSpecifcData( s, h.size );
 			}
 			else if ( h.id == SoundDataId )
 			{
@@ -323,6 +360,45 @@ AiffFile::readChunkHeader( std::istream & s, CkHeader & h )
 {
 	BigEndian::read( s, 1, sizeof(ID), (char *)&h.id );
 	BigEndian::read( s, 1, sizeof(Uint_32), (char *)&h.size );
+}
+
+// ---------------------------------------------------------------------------
+//	readApplicationSpecifcData
+// ---------------------------------------------------------------------------
+//	Read the data in the ApplicationSpecific chunk, assume the stream is correctly
+//	positioned, and that the chunk header has already been read.
+//  Look for data specific to SPC files.
+//
+void
+AiffFile::readApplicationSpecifcData( std::istream & s, int length )
+{
+	Int_32 signature, frames, partials, resolution;
+	try 
+	{
+		BigEndian::read( s, 1, sizeof(Int_32), (char *)&signature );
+		
+		if ( signature == SosEnvelopesId )
+		{
+			BigEndian::read( s, 1, sizeof(Int_32), (char *)&frames );
+			BigEndian::read( s, 1, sizeof(Int_32), (char *)&partials );
+			s.ignore( partials * sizeof(Int_32) );
+			BigEndian::read( s, 1, sizeof(Int_32), (char *)&resolution );
+			s.ignore( length - (4 + partials) * sizeof(Int_32) );
+			
+			_frames = frames;
+			_partials = partials;
+			_hop = resolution * 0.000001;	// resolution is in microseconds
+		}
+		else
+		{
+			s.ignore( length - sizeof(Int_32) );
+		}
+	}
+	catch( FileIOException & ex ) 
+	{
+		ex.append( " Failed to read badly-formatted AIFF file (bad ApplicationSpecific chunk)." );
+		throw;
+	}
 }
 
 // ---------------------------------------------------------------------------

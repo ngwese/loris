@@ -69,8 +69,6 @@ OBJ_LORIS = AiffFile.o \
 			Endian.o \
 			Envelope.o \
 			Exception.o \
-			ExportSdif.o \
-			ExportSpc.o \
 			Filter.o \
 			FourierTransform.o \
 			ImportLemur.o \
@@ -80,7 +78,9 @@ OBJ_LORIS = AiffFile.o \
 			Oscillator.o \
 			Partial.o \
 			ReassignedSpectrum.o \
+			SdifFile.o \
 			Sieve.o \
+			SpcFile.o \
 			Synthesizer.o \
 			ieee.o \
 			notifier.o
