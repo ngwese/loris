@@ -86,7 +86,7 @@ from trials import *
 
 # use this trial counter to skip over
 # eariler trials
-trial = 7
+trial = 8
 
 print "running trial number", trial, time.ctime(time.time())
 
@@ -275,7 +275,7 @@ if trial == 8:	# final trial
 	zeros = loris.extractLabeled( p, 0 )
 	ofilebase = 'flutter.%i.%i.sft'%(r, w)
 	synthesize( ofilebase + '.aiff', p )
-	loris.exportSdif( ofilebase + 'sdif', p )
+	loris.exportSdif( ofilebase + '.sdif', p )
 	loris.exportSpc( ofilebase + '.s.spc', p, 64, 0 )			
 	loris.exportSpc( ofilebase + '.e.spc', p, 64, 1 )
 		
