@@ -39,12 +39,9 @@
 #include "Dilator.h"
 #include "Distiller.h"
 #include "Exception.h"
-#include "ExportSdif.h"
-#include "ExportSpc.h"
-#include "Handle.h"
-#include "ImportSdif.h"
 #include "Morpher.h"
 #include "Partial.h"
+#include "Sdiff.h"
 #include "Synthesizer.h"
 #include "notifier.h"
 
@@ -82,10 +79,9 @@ int main( )
 		
 		//	make sure that SDIF I/O is working:
 		std::cout << "exporting sdif" << endl;
-		ExportSdif xp( 0 );
-		xp.write( "clarinet.sdif", clar );
+		SdifFile::Export( "clarinet.sdif", clar );
 		std::cout << "importing sdif" << endl;
-		ImportSdif ip("clarinet.sdif");
+		SdifFile ip("clarinet.sdif");
 		clar.clear();
 		clar.splice( clar.end(), ip.partials() );
 		std::cout << "that was fun." << endl;
