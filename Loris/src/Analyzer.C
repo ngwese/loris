@@ -47,7 +47,7 @@
 #include <Partial.h>
 #include <PartialPtrs.h>
 #include <ReassignedSpectrum.h>
-#include <PeakSelector.h>
+#include <SpectralPeakSelector.h>
 #include <PartialBuilder.h>
 
 #include <algorithm>

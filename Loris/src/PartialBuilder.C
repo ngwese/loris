@@ -237,7 +237,8 @@ PartialBuilder::formPartials( Peaks & peaks, double frameTime )
 		//	too great, or the next peak is a better match for the 
 		//	eligible Partial, otherwise add this peak to the eligible
 		//	Partial:
-		Peaks::iterator nextPeak = ++Peaks::iterator( bpIter );
+		Peaks::iterator nextPeak = Peaks::iterator( bpIter ); ++nextPeak;
+								  // ++Peaks::iterator( bpIter );
 		if ( eligible == eligiblePartials.end() ||
 			 freq_distance( **eligible, bp ) > normalizedDrift ||
 			 ( nextPeak != peaks.end() &&
