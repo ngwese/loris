@@ -48,7 +48,7 @@ class AssociateBandwidth
 public:
 	//	construction:
 	AssociateBandwidth( const ReassignedSpectrum & spec, 
-						double srate, int numBins = 18 );
+						double srate, double resolution = 1000. );
 	~AssociateBandwidth( void );
 
 	//	bandwidth assocation:
@@ -61,7 +61,8 @@ public:
 		
 		//	accumulate sinusoidal energy:
 		for ( Iter it = b; it != e; ++it ) {
-			accumulateSinusoid( it->frequency(), it->amplitude() );
+			double a = accumulateSinusoid( it->frequency(), it->amplitude() );
+			it->setAmplitude( a );
 		}
 		
 		//	compute surplus spectral energy:
@@ -85,7 +86,7 @@ private:
 	void computeWindowSpectrum( const std::vector< double > & v );
 	
 	//	called in associate():	
-	void accumulateSinusoid( double f, double a  );
+	double accumulateSinusoid( double f, double a  );
 	void accumulateSpectrum( void );
 	double computeNoiseEnergy( double freqHz );
 	void computeSurplusEnergy( void );
@@ -105,6 +106,7 @@ private:
 	//	oversampled window spectrum for correcting magnitudes:
 	std::vector< double > _winspec;
 	
+	double _regionRate;
 	double _hzPerSamp;
 	double _windowFactor;
 	

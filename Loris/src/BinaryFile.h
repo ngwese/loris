@@ -57,7 +57,7 @@ public:
 	//	construction:
 	BinaryFile( void );
 	BinaryFile( const std::string & path );
-	//~BinaryFile( void );
+	~BinaryFile( void ) { close(); }
 	
 	//	define the stream buffer type:
 	//	For now, just use filebuf, but to have buffering, need to 

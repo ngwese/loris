@@ -211,14 +211,21 @@ AiffFile::readCommon( BinaryFile & file )
 		throw;
 	}
 						
-	//	allocate space for the samples:
-	try {
-		_samples.resize( ck.sampleFrames * ck.channels, 0. );
+	//	allocate space for the samples, but don't shrink the
+	//	buffer if it is big enough:
+	long n = ck.sampleFrames * ck.channels;
+	if ( n > _samples.size() ) {
+		try {
+			debugger << "found " << n << " samples" << endl;
+			_samples.resize( n, 0. );
+			debugger << "grew buffer to size " << n << endl;
+		}
+		catch( LowMemException & ex ) {
+			ex.append( "Couldn't allocate buffer for AIFF samples." );
+			throw;
+		}
 	}
-	catch( LowMemException & ex ) {
-		ex.append( "Couldn't allocate buffer for AIFF samples." );
-		throw;
-	}
+	
 	_nChannels = ck.channels;
 	_sampSize = ck.bitsPerSample;
 	_sampleRate = IEEE::ConvertFromIeeeExtended( ck.srate );

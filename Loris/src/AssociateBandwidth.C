@@ -22,16 +22,18 @@ using namespace Loris;
 // ---------------------------------------------------------------------------
 //	Association regions are centered on all integer bin frequencies, there 
 //	are numBins of them, starting at bin frequency 1. The lowest frequency
-//	region is always ignored, its surplus energy is set to zero.
+//	region is always ignored, its surplus energy is set to zero. resolution
+//	is the frequency separation of the region centers.
 //
 AssociateBandwidth::AssociateBandwidth( const ReassignedSpectrum & spec, 
 										double srate,
-										int numBins /* = 24 */ ) :
+										double resolution /* = 1000 */) :
 	_spectrum( spec ),
-	_spectralEnergy( numBins ),
-	_sinusoidalEnergy( numBins ),
-	_weights( numBins ),
-	_surplus( numBins ),
+	_spectralEnergy( int(0.5 * srate/resolution) ),
+	_sinusoidalEnergy( int(0.5 * srate/resolution) ),
+	_weights( int(0.5 * srate/resolution) ),
+	_surplus( int(0.5 * srate/resolution) ),
+	_regionRate( 1. / resolution ),
 	_hzPerSamp( srate / spec.size() )
 {
 	computeWindowSpectrum( _spectrum.window() );
@@ -190,7 +192,7 @@ AssociateBandwidth::reset( void )
 //	computeWindowSpectrum
 // ---------------------------------------------------------------------------
 //	
-#define WinSpecOversample 16
+#define WinSpecOversample 64
 void
 AssociateBandwidth::computeWindowSpectrum( const vector< double > & v )
 {
@@ -243,13 +245,21 @@ AssociateBandwidth::accumulateSpectrum( void )
 //	Accumulate sinusoidal energy at frequency f and (nominal) amplitude a.
 //	First need to compute a more accurate amplitude, and use that to 
 //	scale the window spectrum when distributing energy.
+//
+//	3 Feb:
+//	- new simpler offset really gives the smallest residual
+//	- only need offset for amplitude correction, can use exact
+//		window samples for distribution by distributing around
+//		f instead of intBinNumber
+//
+//	Return corrected amp, for fun.
 //	
-void
+double
 AssociateBandwidth::accumulateSinusoid( double f, double a )
 {
 	//	don't mess with negative frequencies:
 	if ( f < 0. )
-		return;
+		return a;
 
 	//	distribute weight at the peak frequency:
 	distribute( f, 1., _weights );
@@ -257,15 +267,70 @@ AssociateBandwidth::accumulateSinusoid( double f, double a )
 	//	compute the offset in the oversampled window spectrum:
 	double fracBinNum = f / _hzPerSamp;
 	long intBinNumber = round(fracBinNum);
-	long offset = 
-		- (( ((int)(WinSpecOversample * (fracBinNum - intBinNumber)) + (WinSpecOversample / 2)) % WinSpecOversample ) - (WinSpecOversample / 2));
+	long offset = round( WinSpecOversample * (intBinNumber - fracBinNum) );
 	
 	//	compute the more accurate peak amplitude:
 	double correctAmp = a / _winspec[abs(offset)];
 	
+	//	find the best rate to step through the 
+	//	window spectrum:
+	long step = WinSpecOversample;
+	long minStep = 1;
+	double leastRes = -1.;
+	for ( ; step > minStep; --step ) {
+		//	compute the residue at this step:
+		//	(use offset here because we are comparing
+		//	with the actual spectral samples, and 
+		//	the offset will give better measurements
+		//	of the window spectrum at those samples)
+		double specSamp = _spectrum.magnitude(intBinNumber);
+		double res = (specSamp * specSamp) - (correctAmp * correctAmp);
+		for ( int j = 1; (step * j) + abs(offset) < _winspec.size(); ++j ) {
+			//	j FT bins above:
+			double z = correctAmp * _winspec[(step * j) + offset];
+			specSamp = _spectrum.magnitude(intBinNumber + j);
+			res += (specSamp * specSamp) - (z * z);
+			
+			//	j FT bins below, 
+			//	don't index bins below 0:
+			if ( intBinNumber >= j ) {
+				z = correctAmp * _winspec[(step * j) - offset];
+				specSamp = _spectrum.magnitude(intBinNumber - j);
+				res += (specSamp * specSamp) - (z * z);
+			}
+		}	//	end for j
+		
+		//	res is now the energy residue for
+		//	the current step, if it is worse than
+		//	the previous one, use the previous step
+		//	as the best one (assumes monotony):
+		if ( leastRes > -1. && abs(res) > leastRes ) {
+			++step;
+			break;
+		}
+		//	otherwise, this is the smallest residue yet:
+		leastRes = abs(res);
+	}	//	end for step
+	
+
+//#define GOOBER
+#ifdef GOOBER	
+	for ( ; step < 2 * WinSpecOversample; ++step ) {
+	
+	//	copy the residual again:
+	_residue = _specCopy;
+	fill( _sinSpec.begin(), _sinSpec.end(), 0. );
+#endif
+	
 	//	distribute the peak amplitude: 
+//#define WAITAMINIT
+#ifdef WAITAMINIT
+	double z = correctAmp;
+	distribute( f, z * z, _sinusoidalEnergy  );
+#else
 	double z = correctAmp * _winspec[abs(offset)];
 	distribute( intBinNumber * _hzPerSamp, z * z, _sinusoidalEnergy  );
+#endif
 
 #ifdef Debug_Loris
 	_sinSpec[ intBinNumber ] += z;
@@ -273,9 +338,14 @@ AssociateBandwidth::accumulateSinusoid( double f, double a )
 #endif
 
 	//	distribute samples of the oversampled window spectrum:
-	for ( int i = 1; (WinSpecOversample * i) + abs(offset) < _winspec.size(); ++i ) {
-		z = correctAmp * _winspec[(WinSpecOversample * i) + offset];
+	for ( int i = 1; (step * i) + abs(offset) < _winspec.size(); ++i ) {
+#ifdef WAITAMINIT
+		z = correctAmp * _winspec[step * i];
+		distribute( f + (i * _hzPerSamp), z * z, _sinusoidalEnergy  );
+#else
+		z = correctAmp * _winspec[(step * i) + offset];
 		distribute( (intBinNumber + i) * _hzPerSamp, z * z, _sinusoidalEnergy  );
+#endif
 #ifdef Debug_Loris
 		_sinSpec[ intBinNumber + i ] += z;
 		_residue[ intBinNumber + i ] -= z;
@@ -283,29 +353,43 @@ AssociateBandwidth::accumulateSinusoid( double f, double a )
 		
 		//	don't index bins below 0:
 		if ( intBinNumber >= i ) {
-			z = correctAmp * _winspec[(WinSpecOversample * i) - offset];
+#ifdef WAITAMINIT
+			z = correctAmp * _winspec[step * i];
+			distribute( f - (i * _hzPerSamp), z * z, _sinusoidalEnergy  );
+#else
+			z = correctAmp * _winspec[(step * i) - offset];
 			distribute( (intBinNumber - i) * _hzPerSamp, z * z, _sinusoidalEnergy  );
+#endif
 #ifdef Debug_Loris
 			_sinSpec[ intBinNumber - i ] += z;
 			_residue[ intBinNumber - i ] -= z;
 #endif
 		}
 	}
+
+#ifdef GOOBER	
+	}
+#endif
+
+	//	compute a better amplitude estimate 
+	//	from the step and the window function:
+	double ampRatio = 1. - (0.5 * (1. - ((double)step / WinSpecOversample)));
+	return correctAmp / ampRatio;
 }
 
 // ---------------------------------------------------------------------------
 //	binFrequency
 // ---------------------------------------------------------------------------
 //	Compute the warped fractional bin/region frequency corresponding to 
-//	freqHz.
+//	freqHz. (_regionRate is the number of regions per hertz.)
+//
+//	Once, we used bark frequency scale warping here, but there seems to be
+//	no reason to do so. The best results seem to be indistinguishable from
+// 	plain 'ol 1k bins.
 //	
 inline double
 AssociateBandwidth::binFrequency( double freqHz )
 {
-	return freqHz * 0.001;
-/*
-	double b = bark( freqHz ) - 9.;
-	return max( b, 0. );
-*/
+	return freqHz * _regionRate;
 }
 

@@ -108,7 +108,7 @@ Analyzer::analyze( const vector< double > & buf, double srate )
 		throw;
 	}
 	
-	debugger << "analysis complete" << endl;
+	//debugger << "analysis complete" << endl;
 }
 
 
