@@ -107,7 +107,7 @@ To convert ten samples into a buffer, use <br>
 </blockquote>
 
 <h4>Export (static)</h4>
-<p><tt><b>static Export( const std::string & filename, double rate, int chans, int bits, <br>
+<p><tt><b>Export( const std::string & filename, double rate, int chans, int bits,
 					const double * bufBegin, const double * bufEnd )</b></tt>
 <blockquote>[ returns void  ]
 <br>
@@ -356,16 +356,12 @@ zero-crossings) of the analysis window used by this Analyzer.
 <p><tt><b> partials( void )</b></tt>
 <blockquote>[ returns PartialList & ]
 <br>
-Return a mutable reference to this Analyzer's list of 
-analyzed Partials. 
+Return a reference to this Analyzer's list of 
+analyzed Partials, or, for const Analyzers, a
+const reference to this Analyzer's 
+list of analyzed Partials (const PartialList &). 
 </blockquote>
 
-<p><tt><b> partials( void ) const</b></tt>
-<blockquote>[ returns const PartialList & ]
-<br>
-Return an immutable (const) reference to this Analyzer's 
-list of analyzed Partials. 
-</blockquote>
 
 <p><a href="#contents"><small>Contents</small></a>	
 
@@ -1849,22 +1845,96 @@ argument, and false otherwise.
 <a name="SdifFile">
 <hr><h2>SdifFile</h2></a>
 <p>
-Definition of class SdifFile, which reads and writes SDIF files.
+Class SdifFile represents Spectral Description Interchange Format (SDIF)
+data files, and manages file I/O and sample conversion. Construction of
+an SdifFile from a stream or filename automatically imports the <a
+href="#Partial">Partial</a> data. The static Export() members export <a
+href="#Partial">Partials</a> to a SDIF file using the specified
+filename.
 <p>
-<pre>
-//	construction (import):
-//	(let compiler generate destructor)
-	SdifFile( const std::string & infilename );
-		
-//	PartialList access:
-	PartialList & partials( void ) { return _partials; }
-	const PartialList & partials( void ) const { return _partials; }
+Loris stores <a href="#Partial">Partials</a> in SDIF RBEP and RBEL
+frames. The RBEP and RBEL frame and matrix definitions are included in
+the SDIF file's header. Each RBEP frame contains one RBEP matrix, and
+each row in a RBEP matrix describes one <a
+href="#Breakpoint">Breakpoint</a> in a Loris <a
+href="#Partial">Partial</a>. The data in RBEP matrices are SDIF 32-bit
+floats.
+<p>
+The six columns in an RBEP matrix are: partialIndex, frequency,
+amplitude, phase, noise, timeOffset. The partialIndex uniquely
+identifies a <a href="#Partial">Partial</a>. When Loris exports SDIF
+data, each <a href="#Partial">Partial</a> is assigned a unique
+partialIndex. The frequency (Hz), amplitude (0..1), phase (radians), and
+noise (bandwidth) are encoded the same as Loris <a
+href="#Breakpoint">Breakpoints</a>. The timeOffset is an offset from the
+RBEP frame time, specifying the exact time of the <a
+href="#Breakpoint">Breakpoint</a>. Loris always specifies positive
+timeOffsets, and the <a href="#Breakpoint">Breakpoint's</a> exact time
+is always be earlier than the next RBEP frame's time.
+<p>
+Since reassigned bandwidth-enhanced <a
+href="#Breakpoint">Breakpoints</a> are non-uniformly spaced in time, the
+RBEP frame times are also non-uniformly spaced. Each RBEP frame will
+contain at most one <a href="#Breakpoint">Breakpoint</a> for any given
+<a href="#Partial">Partial</a>. A <a href="#Partial">Partial</a> may
+extend over a RBEP frame and have no <a
+href="#Breakpoint">Breakpoints</a> specified by the RBEP frame, as
+happens when one active <a href="#Partial">Partial</a> has a lower
+temporal density of <a href="#Breakpoint">Breakpoints</a> than other
+active <a href="#Partial">Partials</a>.
+<p>
+If <a href="#Partial">Partials</a> have nonzero labels in Loris, then a
+RBEL frame describing the labeling of the <a
+href="#Partial">Partials</a> will precede the first RBEP frame in the
+SDIF file. The RBEL frame contains a single, two-column RBEL matrix The
+first column is the partialIndex, and the second column specifies the
+label for the <a href="#Partial">Partial</a>.
+<p>
+In addition to RBEP frames, Loris can also read and write SDIF 1TRC
+frames (refer to IRCAM's SDIF web site, <a
+href="http://www.ircam.fr/sdif">www.ircam.fr/sdif/</a>, for definitions
+of standard SDIF description types). Since 1TRC frames do not represent
+bandwidth-enhancement or the exact timing of Loris <a
+href="#Breakpoint">Breakpoints</a>, their use is not recommended. 1TRC
+capabilities are provided in Loris to allow interchange with programs
+that are unable to interpret RBEP frames.
+<p>
+<h3>Member Functions</h3>
+<h4>Construction</h4>
+<p><tt><b>SdifFile( const std::string & infilename )
+</b></tt>
+<blockquote>
+<br>
+Initialize an instance of SdifFile by importing Partial data from
+the file having the specified filename.
+</blockquote>	
 
-//	export:
-//	enhanced chooses between 4-column 1TRC (sine only) or 6-column RABP (reassigned and enhanced)
-	static void Export( const std::string & filename, 
-						const PartialList & plist, const bool enhanced = true);
-</pre>
+		
+<h4>Partial Access</h4>
+<p><tt><b>partials( void )
+</b></tt>
+<blockquote>[ returns PartialList &   ]
+<br>
+Return a reference to this SdifFile's list of Partials, or, for const
+SdifFiles, a const reference to this SdifFile's list of Partials (const
+PartialList &).
+</blockquote>	
+
+
+<h4>Export (static)</h4>
+	
+<p><tt><b> Export( const std::string & filename, 
+const PartialList & plist, const bool enhanced = true)
+</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Export the Partials in the specified <a
+href="#PartialList">PartialList</a> to a SDIF file having the specified
+file name or path. If <code>enhanced</code> is true (the default),
+reassigned bandwidth-enhanced Partial data are exported in the
+six-column RBEP format. Otherwise, the Partial data is exported as
+resampled sinusoidal analysis data in the 1TRC format.
+</blockquote>	
 				
 <p><a href="#contents"><small>Contents</small></a>	
 
