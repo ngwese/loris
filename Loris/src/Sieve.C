@@ -66,7 +66,10 @@ struct SortPartialPtrs :
 };
 
 //	Definition of a collection sorted by that comparitor.
-typedef std::set< Partial *, SortPartialPtrs > PartialPtrsSet;
+//	This has to be a multiset, because the seemingly unlikely
+//	event of two Partials testing equivalent by SortPartialPtrs
+//	_does_ occur, and causes Partials to be lost!
+typedef std::multiset< Partial *, SortPartialPtrs > PartialPtrsSet;
 
 //	Definition of predicate for finding the end of a Patial *
 //	range having a common label.
@@ -82,7 +85,7 @@ struct PartialPtrLabelNE :
 
 
 // ---------------------------------------------------------------------------
-//	sieve_aux STATIC
+//	find_overlapping (template function)
 // ---------------------------------------------------------------------------
 //	Iterate over all other Partials with same labeling.
 //  If any other partial has time-overlap with this partial,
@@ -95,52 +98,6 @@ struct PartialPtrLabelNE :
 //
 //  Return 1 if we relabel the partial, else return zero.
 //	
-static int sieve_aux( Partial & src, double minGapTime,
-				   	  std::list<Partial>::const_iterator start,
-				   	  std::list<Partial>::const_iterator end)
-{
-	std::list< Partial >::const_iterator it;
-	for ( it = start; it != end; ++it ) 
-	{
-		//	skip if other partial is already sifted out.
-		if ( it->label() == 0 )
-			continue;
-
-		//	skip the source Partial:
-		//	(identity test: compare addresses)
-		//	(this is a sanity check, should not happen since
-		//	src should be at position end)
-		Assert( &(*it) != &src );
-			
-		//  skip if no overlap:
-		if ( src.startTime() > it->endTime() + minGapTime ||
-			 src.endTime() + minGapTime < it->startTime() )
-		{
-			continue;
-		}
-		
-		//  are we longer duration?
-		//	(this should never be true, since the Partials
-		//	are sorted by duration)
-		Assert( src.duration() <= it->duration() );
-		
-		//  we overlap wth something longer; remove us from this label.
-#if Debug_Loris
-		debugger << "Partial starting " << src.startTime() << ", " 
-				 << src.frequencyAt( src.startTime() ) << " ending " 
-				 << src.endTime()  << ", " << src.frequencyAt( src.endTime() ) 
-				 << " zapped by Partial starting " 
-				 << it->startTime() << ", " << it->frequencyAt( it->startTime() )
-				 << " ending " << it->endTime() << ", " 
-				 << it->frequencyAt( it->endTime() ) << endl;
-#endif
-
-		src.setLabel( 0 );
-		return 1;
-	}	//	end iteration over Partial range
-	
-	return 0;
-}
 
 template <typename Iter>	//	Iter must be the position of a Partial *
 Iter
@@ -257,19 +214,11 @@ Sieve::sift( std::list<Partial> & container,
 			 std::list< Partial >::iterator sift_end  )
 {
 	int zapped = 0;
-
-	//	make a new temporary list that can be sorted and
-	//	distilled, since it isn't possible to sort a select
-	//	range of position in a list:
-	//	(why am I making a temporary copy of this list whose
-	//	contents I am replacing anyway?)
-	//std::list<Partial> sift_list;
-	//sift_list.splice( sift_list.begin(), container, sift_begin, sift_end );
 	
-	//	sort the std::list< Partial > by length and label:
-	//sift_list.sort( PartialUtils::duration_greater() );
-	//sift_list.sort( PartialUtils::label_less() );
-	
+	//	make a sorted collection of pointers to 
+	//	Partials in the range to sift:
+	//	(sort is by increasing label, then
+	//	decreasing duration)
 	PartialPtrsSet sift_set;
 	while ( sift_begin != sift_end )
 	{
@@ -301,12 +250,10 @@ Sieve::sift( std::list<Partial> & container,
 			PartialPtrsSet::iterator it;
 			for ( it = lowerbound; it != upperbound; ++it ) 
 			{
-				//	sieve_aux only needs to consider Partials on the
+				//	find_overlapping only needs to consider Partials on the
 				//	half-open range [lowerbound, it), because all 
 				//	Partials after it are shorter, thanks to the
 				//	sorting of the sift_set:
-				//zapped += sieve_aux( *it, _minGapTime, lowerbound, it );
-				
 				if( it != find_overlapping( **it, _minGapTime, lowerbound, it ) )
 				{
 					(*it)->setLabel(0);
@@ -322,10 +269,6 @@ Sieve::sift( std::list<Partial> & container,
 #ifdef Debug_Loris
 	debugger << "Sifted out (relabeled) " << zapped << " of " << sift_set.size() << "." << endl;
 #endif
-
-	//	splice the Partials back into the original list:
-	//container.splice( sift_end, sift_list );
-
 }
 
 }	//	end of namespace Loris
