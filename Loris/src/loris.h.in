@@ -160,17 +160,17 @@ void analyzer_setWindowWidth( Analyzer * ptr_this, double x );
  */
 double analyzer_getSidelobeLevel( const Analyzer * ptr_this );
 /*	Return the sidelobe attenutation level for the Kaiser analysis window in
-	negative dB. More negative numbers (e.g. -90) give very good sidelobe 
+	positive dB. More negative numbers (e.g. -90) give very good sidelobe 
 	rejection but cause the window to be longer in time. Less negative 
-	numbers raise the level of the sidelobes, increasing the liklihood
+	numbers raise the level of the sidelobes, increasing the likelihood
 	of frequency-domain interference, but allow the window to be shorter
 	in time.
  */
 void analyzer_setSidelobeLevel( Analyzer * ptr_this, double x );
 /*	Set the sidelobe attenutation level for the Kaiser analysis window in
-	negative dB. More negative numbers (e.g. -90) give very good sidelobe 
+	positive dB. More negative numbers (e.g. -90) give very good sidelobe 
 	rejection but cause the window to be longer in time. Less negative 
-	numbers raise the level of the sidelobes, increasing the liklihood
+	numbers raise the level of the sidelobes, increasing the likelihood
 	of frequency-domain interference, but allow the window to be shorter
 	in time.
  */

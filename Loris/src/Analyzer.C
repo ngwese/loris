@@ -105,13 +105,11 @@ struct Analyzer_imp
 						//	component to be considered reliable, and to be eligible
 						//	for extraction and for Breakpoint formation
 	double bwRegionWidth;	//	width in Hz of overlapping bandwidth 
-							//	association regions
-                            
-    bool assocBW;		//	if true, perform bandwidth association, otherwise 
-                        //	collect noise energy in noise Partials labeled -1.
-							
-    bool sidelobeLevel;	//	sidelobe attenutation level for the Kaiser analysis 
-    				 	//	window, in negative dB
+							//	association regions, or zero if bandwidth association
+							//	is disabled
+                            							
+    double sidelobeLevel;	//	sidelobe attenutation level for the Kaiser analysis 
+    				 		//	window, in positive dB
 							
 	PartialList partials;	//	collect Partials here
 
@@ -195,9 +193,19 @@ AnalyzerState::AnalyzerState( Analyzer_imp & imp, double srate ) :
 		//	configure spectrum:
 		spectrum.reset( new ReassignedSpectrum( window ) );
 		
-		//	configure bw association strategy:
+		//	configure bw association strategy, unless
+		//	bandwidth association is disabled:
 #if !defined(No_BW_Association)
-		bwAssociation.reset( new AssociateBandwidth( params.bwRegionWidth, sampleRate ) );
+		if( params.bwRegionWidth > 0 )
+		{
+			debugger << "Using bandwidth association regions of width " 
+					 << params.bwRegionWidth << " Hz" << endl;
+			bwAssociation.reset( new AssociateBandwidth( params.bwRegionWidth, sampleRate ) );
+		}
+		else
+		{
+			debugger << "Bandwidth association disabled" << endl;
+		}
 #endif
 	}
 	catch ( Exception & ex ) 
@@ -308,8 +316,8 @@ Analyzer::configure( double resolutionHz, double windowWidthHz )
 	_imp->windowWidth = windowWidthHz;
 	
 	//	the Kaiser window sidelobe level can be the same
-	//	as the amplitude floor:
-	_imp->sidelobeLevel = _imp->ampFloor;
+	//	as the amplitude floor (except in positive dB):
+	_imp->sidelobeLevel = - _imp->ampFloor;
 	
 	//	for the minimum frequency, below which no data is kept,
 	//	use the frequency resolution by default (this makes 
@@ -341,9 +349,6 @@ Analyzer::configure( double resolutionHz, double windowWidthHz )
 	//	defaults to 2 kHz, corresponding to 
 	//	1 kHz region center spacing:
 	_imp->bwRegionWidth = 2000.;
-    
-    //	peform bandwidth association by default:
-    _imp->assocBW = true;
 }
 
 #pragma mark -- analysis --
@@ -398,25 +403,28 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate 
 			thinPeaks( state );
 
 #if !defined(No_BW_Association)
-			//	perform bandwidth association:
-			//
-			//	accumulate retained Breakpoints as sinusoids, 
-			//	thinned breakpoints are accumulated as noise:
-			//	(see also thinPeaks() and extractPeaks())
-			FRAME & frame = state.currentFrame;
-			for ( FRAME::iterator it = frame.begin(); it != frame.end(); ++it )
+			if ( associateBandwidth() )
 			{
-				state.bwAssociation->accumulateSinusoid( it->second.frequency(), it->second.amplitude() );
+				//	perform bandwidth association:
+				//
+				//	accumulate retained Breakpoints as sinusoids, 
+				//	thinned breakpoints are accumulated as noise:
+				//	(see also thinPeaks() and extractPeaks())
+				FRAME & frame = state.currentFrame;
+				for ( FRAME::iterator it = frame.begin(); it != frame.end(); ++it )
+				{
+					state.bwAssociation->accumulateSinusoid( it->second.frequency(), it->second.amplitude() );
+				}
+				
+				//	associate bandwidth with each Breakpoint here:
+				for ( FRAME::iterator it = frame.begin(); it != frame.end(); ++it )
+				{
+					state.bwAssociation->associate( it->second );
+				}
+				
+				//	reset after association, yuk:
+				state.bwAssociation->reset();
 			}
-			
-			//	associate bandwidth with each Breakpoint here:
-			for ( FRAME::iterator it = frame.begin(); it != frame.end(); ++it )
-			{
-				state.bwAssociation->associate( it->second );
-			}
-			
-			//	reset after association, yuk:
-			state.bwAssociation->reset();
 #endif	//	 !defined(No_BW_Association)
 
 			//	form Partials from the extracted Breakpoints:
@@ -449,7 +457,7 @@ Analyzer::ampFloor( void ) const
 }
 
 // ---------------------------------------------------------------------------
-//	associateBandwith
+//	associateBandwidth
 // ---------------------------------------------------------------------------
 //	Return true if this Analyzer is configured to peform bandwidth
 //	association to distribute noise energy among extracted Partials, 
@@ -457,9 +465,9 @@ Analyzer::ampFloor( void ) const
 //	labeled -1 in this Analyzer's PartialList.
 //
 bool 
-Analyzer::associateBandwith( void ) const 
+Analyzer::associateBandwidth( void ) const 
 { 
-    return _imp->assocBW; 
+    return _imp->bwRegionWidth > 0.; 
 }
 
 // ---------------------------------------------------------------------------
@@ -549,9 +557,9 @@ Analyzer::hopTime( void ) const
 //	sidelobeLevel
 // ---------------------------------------------------------------------------
 //	Return the sidelobe attenutation level for the Kaiser analysis window in
-//	negative dB. More negative numbers (e.g. -90) give very good sidelobe 
-//	rejection but cause the window to be longer in time. Less negative 
-//	numbers raise the level of the sidelobes, increasing the liklihood
+//	positive dB. Larger numbers (e.g. 90) give very good sidelobe 
+//	rejection but cause the window to be longer in time. Smaller numbers 
+//	(like 60) raise the level of the sidelobes, increasing the likelihood
 // 	of frequency-domain interference, but allow the window to be shorter
 // 	in time.
 //
@@ -585,20 +593,6 @@ void
 Analyzer::setAmpFloor( double x ) 
 { 
 	_imp->ampFloor = x; 
-}
-
-// ---------------------------------------------------------------------------
-//	setAssociateBandwidth
-// ---------------------------------------------------------------------------
-//	If true, configure this Analyzer to peform bandwidth
-//	association to distribute noise energy among extracted Partials.
-//	If false, collect noise energy in noise Partials, assign them
-//	the label -1, and retain them in this Analyzer's PartialList.
-//
-void 
-Analyzer::setAssociateBandwidth( bool b )
-{
-    _imp->assocBW = b;
 }
 
 // ---------------------------------------------------------------------------
@@ -676,9 +670,9 @@ Analyzer::setFreqResolution( double x )
 //	setSidelobeLevel
 // ---------------------------------------------------------------------------
 //	Set the sidelobe attenutation level for the Kaiser analysis window in
-//	negative dB. More negative numbers (e.g. -90) give very good sidelobe 
-//	rejection but cause the window to be longer in time. Less negative 
-//	numbers raise the level of the sidelobes, increasing the liklihood
+//	positive dB. Larger numbers (e.g. 90) give very good sidelobe 
+//	rejection but cause the window to be longer in time. Smaller numbers 
+//	(like 60) raise the level of the sidelobes, increasing the likelihood
 // 	of frequency-domain interference, but allow the window to be shorter
 // 	in time.
 //
@@ -749,9 +743,6 @@ static void extractPeaks( AnalyzerState & state )
     //	get state objects:
     FRAME & frame = state.currentFrame;
     ReassignedSpectrum & spectrum = *state.spectrum;
-#if !defined(No_BW_Association)
-    AssociateBandwidth & bwAssociation = *state.bwAssociation;
-#endif
 
     //	get analysis parameters:
 	const double ampFloor = state.params.ampFloor;
@@ -762,6 +753,7 @@ static void extractPeaks( AnalyzerState & state )
     const double frameTime = state.currentFrameTime;
 	
 	const double threshold = pow( 10., 0.05 * ampFloor );	//	absolute magnitude threshold
+	const double hysteresis = pow( 10., 0.05 * (ampFloor+10.) ); // fade very quiet peaks
 	const double sampsToHz = sampleRate / spectrum.size();
 	
 	//	look for magnitude peaks in the spectrum:
@@ -796,7 +788,8 @@ static void extractPeaks( AnalyzerState & state )
 			if ( mag < threshold )
 			{
 #if !defined(No_BW_Association)
-				bwAssociation.accumulateNoise( fHz, mag );
+				if ( state.bwAssociation.get() )
+					state.bwAssociation->accumulateNoise( fHz, mag );
 #endif
 #if defined(Noise_Partials)
                 double phase = spectrum.reassignedPhase( j, fsample, timeCorrectionSamps );
@@ -804,6 +797,20 @@ static void extractPeaks( AnalyzerState & state )
                 state.currentNoiseFrame.push_back( std::make_pair( time, Breakpoint( fHz, mag, 1., phase ) ) );
 #endif
 				continue;
+			}
+			
+			//	hard thresholds should be avoided, so peaks near the
+			// 	amplitude threshold are faded out over 10 dB, that is, 
+			//	peaks within 10 dB of the threshold are scaled down in
+			//	amplitude (linearly) as they get closer to the threshold:
+			if ( mag < hysteresis )
+			{
+				//	INVARIANT:
+				// 	mag is less than hysteresis and greater than
+				//	threshold (see block above), and hysteresis is
+				//	greater than threshold, of course:
+				double alpha = (hysteresis - mag)/(hysteresis-threshold);
+				mag *= 1. - alpha;
 			}
 											
 			//	retain a spectral peak corresponding to this sample:
@@ -865,9 +872,6 @@ static void thinPeaks( AnalyzerState & state )
 {
     //	get state objects:
     FRAME & frame = state.currentFrame;
-#if !defined(No_BW_Association)
-    AssociateBandwidth & bwAssociation = *state.bwAssociation;
-#endif
 
     //	get analysis parameters:
 	const double freqResolution = state.params.freqResolution;
@@ -898,7 +902,8 @@ static void thinPeaks( AnalyzerState & state )
 			//	if it found something else, accumulate *it as noise, and
 			//	remove *it from the frame:
 #if !defined(No_BW_Association)
-			bwAssociation.accumulateNoise( bp.frequency(), bp.amplitude() );
+			if ( state.bwAssociation.get() )
+				state.bwAssociation->accumulateNoise( bp.frequency(), bp.amplitude() );
 #endif
 #if defined(Noise_Partials)
             bp.setBandwidth(1.);

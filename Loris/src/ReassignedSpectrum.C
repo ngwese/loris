@@ -223,8 +223,8 @@ ReassignedSpectrum::computeWindowSpectrum( const vector< double > & v )
 //	Parabolic interpolation can be tried too, but it appears to give
 //	slightly worse results for the square wave.
 //
-double
-ReassignedSpectrum::frequencyCorrection( long idx ) const
+inline double 
+ReassignedSpectrum::compute_freq_correction( unsigned long idx ) const
 {
 	long flip_idx;
 	if (idx>0)
@@ -242,6 +242,60 @@ ReassignedSpectrum::frequencyCorrection( long idx ) const
 	double magSquared = std::norm( _transform[idx] );
 
 	return - num / magSquared;
+}
+
+double
+ReassignedSpectrum::frequencyCorrection( long idx ) const
+{
+	Assert( idx >= 0 );
+	
+	double correction = compute_freq_correction(idx);
+				
+	// 	if the correction is greater in magnitude than
+	// 	half a bin, then we might be able to find a better
+	//	estimate looking at the next frequency sample:
+	//
+	//	This may or may not be a good idea, but we
+	//	don't know of any problem that it solves, and
+	//	it certainly is not the normal way to use reassigned
+	//	frequency data, so it is being disabled.
+	//	-kel (and Lip) 19 March 2003
+	//
+#if 0
+	if ( std::fabs( correction ) > 0.5 )
+	{
+		int idxincr = (correction>0)?(1):(-1);
+		int nextidx = idx;
+		double bestEstimate = 0;
+		
+		// 	INVARIANT:
+		//	correction is the current smallest-magnitude
+		//	frequency correction we have seen, and it was
+		//	computed at nextidx.
+		do
+		{
+			// 	save the best estimate, and try
+			//	to find a better one at the next bin:
+			bestEstimate = correction;
+			nextidx += idxincr;
+			correction = compute_freq_correction(nextidx);
+		} while( std::fabs(correction) < std::fabs(bestEstimate) );
+				
+		// 	yik!!
+		// 	the final correction is the smallest-magnitude
+		//	correction we can find, plus the difference between
+		//	the best estimate's index, and the original index
+		correction = (double(nextidx) - (double)idx - (double)idxincr) + bestEstimate;
+		
+		/*if ( nextidx - idxincr !=  idx )
+		{
+			notifier << "prefered " << correction << " to " << compute_freq_correction(idx) << endl;
+			notifier << "\ttime correction is " << timeCorrection( idx ) << endl;
+		}*/
+	}
+#endif
+	
+	return correction;
 }
 
 // ---------------------------------------------------------------------------

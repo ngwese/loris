@@ -11,6 +11,13 @@ changes since 1.0.2 release:
 - added window sidelobeLevel parameter to Analyzer, 
 decoupled it from the amplitude floor.
 
+- bandwidth (noise) association can now be disabled in 
+Analyzer by setting bwRegionWidth to 0.
+
+- softened amplitude floor in Analyzer, now amplitudes 
+near (within 10dB) of the amplitude floor are faded out,
+instead of suddenly being eliminated at the threshold
+
 -------------------------------------------------------
 changes since 1.0.1 release:
 

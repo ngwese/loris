@@ -111,7 +111,7 @@ public:
 	/*	Return the amplitude floor (lowest detected spectral amplitude),  			
 		in (negative) dB, for this Analyzer. 				
 	 */
-	bool associateBandwith( void ) const;
+	bool associateBandwidth( void ) const;
 	/*	Return true if this Analyzer is configured to peform bandwidth
         association to distribute noise energy among extracted Partials, 
         and false if noise energy will be collected in noise Partials,
@@ -152,9 +152,9 @@ public:
 	 */
 	double sidelobeLevel( void ) const;
 	/*	Return the sidelobe attenutation level for the Kaiser analysis window in
-		negative dB. More negative numbers (e.g. -90) give very good sidelobe 
+		positive dB. More negative numbers (e.g. -90) give very good sidelobe 
 		rejection but cause the window to be longer in time. Less negative 
-		numbers raise the level of the sidelobes, increasing the liklihood
+		numbers raise the level of the sidelobes, increasing the likelihood
 		of frequency-domain interference, but allow the window to be shorter
 		in time.
 	 */
@@ -168,13 +168,6 @@ public:
 	/*	Set the amplitude floor (lowest detected spectral amplitude), in  			
 		(negative) dB, for this Analyzer. 				
 	 */
-    void setAssociateBandwidth( bool b );
-    /*	If true, configure this Analyzer to peform bandwidth
-        association to distribute noise energy among extracted Partials.
-        If false, collect noise energy in noise Partials, assign them
-        the label -1, and retain them in this Analyzer's PartialList.
-	 */
-
  	void setBwRegionWidth( double x );
 	/*	Set the width (in Hz) of the Bandwidth Association regions
 		used by this Analyzer.
@@ -210,9 +203,9 @@ public:
 	 */
  	void setSidelobeLevel( double x );
 	/*	Set the sidelobe attenutation level for the Kaiser analysis window in
-		negative dB. More negative numbers (e.g. -90) give very good sidelobe 
+		positive dB. More negative numbers (e.g. -90) give very good sidelobe 
 		rejection but cause the window to be longer in time. Less negative 
-		numbers raise the level of the sidelobes, increasing the liklihood
+		numbers raise the level of the sidelobes, increasing the likelihood
 		of frequency-domain interference, but allow the window to be shorter
 		in time.
 	 */

@@ -101,6 +101,8 @@ private:
 	//	compute the window spectrum used to correct
 	//	spectral component magnitudes:
 	void computeWindowSpectrum( const std::vector< double > & v );
+	
+	double compute_freq_correction( unsigned long idx ) const;
 
 };	//	end of class ReassignedSpectrum
 

@@ -1,9 +1,9 @@
-<HTML>
-<HEAD>
-<TITLE>
-Perl module: loris</TITLE>
-<BODY BGCOLOR="#ffffff">
-<H1>Perl module: loris - version 1.0</H1>
+<html>
+<head>
+<title>
+Perl module: loris</title>
+<body bgcolor="#ffffff">
+<h1>Perl module: loris - version 1.0</h1>
 
 This document describes the functions in the 
 Perl module <tt>loris</tt>. 
@@ -15,70 +15,70 @@ automatically. If you would like to assist the Loris team in verifying
 and documenting the Perl module, please 
 <a href="mailto:loris@cerlsoundgroup.org">email us</a>.<p>
 
-<HR><H1> Contents </H1>
-<UL><LI> <A HREF="#s1_">1. Loris class interfaces</A>
-<UL>
-<LI> <A HREF="#s1_9_">1.1. class AiffFile</A>
-<LI> <A HREF="#s1_6_">1.2. class Analyzer</A>
-<LI> <A HREF="#s1_5_">1.3. class Breakpoint</A>
-<LI> <A HREF="#s1_7_">1.4. class BreakpointEnvelope</A>
-<LI> <A HREF="#s1_3_">1.5. class Partial</A>
-<LI> <A HREF="#s1_4_">1.6. class PartialIterator</A>
-<LI> <A HREF="#s1_1_">1.7. class PartialList</A>
-<LI> <A HREF="#s1_2_">1.8. class PartialListIterator</A>
-<LI> <A HREF="#s1_8_">1.9. class SampleVector</A>
-</UL>
-<LI> <A HREF="#s2_">2. Non-object-based procedures</A>
-</UL>
+<hr><h1> Contents </h1>
+<ul><li> <a href="#s1_">1. Loris class interfaces</a>
+<ul>
+<li> <a href="#s1_9_">1.1. class AiffFile</a>
+<li> <a href="#s1_6_">1.2. class Analyzer</a>
+<li> <a href="#s1_5_">1.3. class Breakpoint</a>
+<li> <a href="#s1_7_">1.4. class BreakpointEnvelope</a>
+<li> <a href="#s1_3_">1.5. class Partial</a>
+<li> <a href="#s1_4_">1.6. class PartialIterator</a>
+<li> <a href="#s1_1_">1.7. class PartialList</a>
+<li> <a href="#s1_2_">1.8. class PartialListIterator</a>
+<li> <a href="#s1_8_">1.9. class SampleVector</a>
+</ul>
+<li> <a href="#s2_">2. Non-object-based procedures</a>
+</ul>
 
-<A name="s1_">
-<HR><H2>1. Loris class interfaces</H2></A>
-<A name="s1_9_">
-<H3>1.1. class AiffFile</H3></A>
+<a name="s1_">
+<hr><h2>1. Loris class interfaces</h2></a>
+<a name="s1_9_">
+<h3>1.1. class AiffFile</h3></a>
 	An AiffFile represents a sample file (on disk) in the Audio Interchange
 	File Format. The file is read from disk and the samples stored in memory
 	upon construction of an AiffFile instance. The samples are accessed by 
 	the samples() method, which converts them to double precision floats and
 	returns them in a SampleVector.
-<P><TT><B>new(filename);</B></TT>
-<BLOCKQUOTE>  	Import an AIFF file with the specified file name
+<p><tt><b>new(filename);</b></tt>
+<blockquote>  	Import an AIFF file with the specified file name
 		or path.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>DESTROY</B></TT>
-<BLOCKQUOTE>  	Delete this AIFF data (does not affect data on disk).
+<p><tt><b>DESTROY</b></tt>
+<blockquote>  	Delete this AIFF data (does not affect data on disk).
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>channels();</B></TT>
-<BLOCKQUOTE>  	Return the number of channels of sample data this AIFF file.
+<p><tt><b>channels();</b></tt>
+<blockquote>  	Return the number of channels of sample data this AIFF file.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>samples();</B></TT>
-<BLOCKQUOTE>  	Return a SampleVector containing the AIFF samples from this AIFF 
+<p><tt><b>samples();</b></tt>
+<blockquote>  	Return a SampleVector containing the AIFF samples from this AIFF 
 		file as double precision floats on the range -1,1.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>sampleFrames();</B></TT>
-<BLOCKQUOTE>  	Return the number of frames of sample data this AIFF file.
+<p><tt><b>sampleFrames();</b></tt>
+<blockquote>  	Return the number of frames of sample data this AIFF file.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>sampleRate();</B></TT>
-<BLOCKQUOTE>  	Return the sample rate in Hz of the sample data this AIFF file.
+<p><tt><b>sampleRate();</b></tt>
+<blockquote>  	Return the sample rate in Hz of the sample data this AIFF file.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>sampleSize();</B></TT>
-<BLOCKQUOTE>  	Return the size in bits of the sample data this AIFF file.
+<p><tt><b>sampleSize();</b></tt>
+<blockquote>  	Return the size in bits of the sample data this AIFF file.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<A name="s1_6_">
-<H3>1.2. class Analyzer</H3></A>
+<a name="s1_6_">
+<h3>1.2. class Analyzer</h3></a>
 	An Analyzer represents a configuration of parameters for
 	performing Reassigned Bandwidth-Enhanced Additive Analysis
 	of sampled waveforms. This analysis process yields a collection 
@@ -91,8 +91,8 @@ and documenting the Perl module, please
 	Analysis and the Reassigned Bandwidth-Enhanced Additive Sound 
 	Model, refer to the Loris website: www.cerlsoundgroup.org/Loris/
 
-<P><TT><B>new(resolutionHz,windowWidthHz);</B></TT>
-<BLOCKQUOTE>  	Construct and return a new Analyzer configured with the given	
+<p><tt><b>new(resolutionHz,windowWidthHz);</b></tt>
+<blockquote>  	Construct and return a new Analyzer configured with the given	
 		frequency resolution (minimum instantaneous frequency	
 		difference between Partials) and analysis window main 
 		lobe width (between zeros). All other Analyzer parameters 	
@@ -100,41 +100,41 @@ and documenting the Perl module, please
 		width. If the window width is not specified, or is 0,
 		then it is assumed to be equal to the resolution. 	 			
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>DESTROY</B></TT>
-<BLOCKQUOTE>  	Destroy this Analyzer. 								
+<p><tt><b>DESTROY</b></tt>
+<blockquote>  	Destroy this Analyzer. 								
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>ampFloor();</B></TT>
-<BLOCKQUOTE>  	Return the amplitude floor (lowest detected spectral amplitude),  			
+<p><tt><b>ampFloor();</b></tt>
+<blockquote>  	Return the amplitude floor (lowest detected spectral amplitude),  			
 		in (negative) dB, for this Analyzer. 				
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>analyze(vec,srate);</B></TT>
-<BLOCKQUOTE>  	Analyze a SampleVector of (mono) samples at the given sample rate 	  	
+<p><tt><b>analyze(vec,srate);</b></tt>
+<blockquote>  	Analyze a SampleVector of (mono) samples at the given sample rate 	  	
 		(in Hz) and return the resulting Partials in a PartialList. 												
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>bwRegionWidth();</B></TT>
-<BLOCKQUOTE>  	Return the width (in Hz) of the Bandwidth Association regions
+<p><tt><b>bwRegionWidth();</b></tt>
+<blockquote>  	Return the width (in Hz) of the Bandwidth Association regions
 		used by this Analyzer.<p>
 	   
 	   	This parameter is deprecated, and not generally useful. It will be
 	   	removed in a future Loris release.
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>copy();</B></TT>
-<BLOCKQUOTE>  	Construct and return a new Analyzer having identical
+<p><tt><b>copy();</b></tt>
+<blockquote>  	Construct and return a new Analyzer having identical
 		parameter configuration to another Analyzer.			
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>cropTime();</B></TT>
-<BLOCKQUOTE>  	Return the crop time (maximum temporal displacement of a time-
+<p><tt><b>cropTime();</b></tt>
+<blockquote>  	Return the crop time (maximum temporal displacement of a time-
 		frequency data point from the time-domain center of the analysis
 		window, beyond which data points are considered &quot;unreliable&quot;)
 		for this Analyzer.<p>
@@ -142,56 +142,66 @@ and documenting the Perl module, please
 	   	This parameter is deprecated, and not generally useful. It will be
 	   	removed in a future Loris release.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>freqDrift();</B></TT>
-<BLOCKQUOTE>  	Return the maximum allowable frequency difference between 					
+<p><tt><b>freqDrift();</b></tt>
+<blockquote>  	Return the maximum allowable frequency difference between 					
 		consecutive Breakpoints in a Partial envelope for this Analyzer. 				
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>freqFloor();</B></TT>
-<BLOCKQUOTE>  	Return the frequency floor (minimum instantaneous Partial  				
+<p><tt><b>freqFloor();</b></tt>
+<blockquote>  	Return the frequency floor (minimum instantaneous Partial  				
 		frequency), in Hz, for this Analyzer. 				
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>freqResolution();</B></TT>
-<BLOCKQUOTE>  	Return the frequency resolution (minimum instantaneous frequency  		
+<p><tt><b>freqResolution();</b></tt>
+<blockquote>  	Return the frequency resolution (minimum instantaneous frequency  		
 		difference between Partials) for this Analyzer. 	
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>hopTime();</B></TT>
-<BLOCKQUOTE>  	Return the hop time (which corresponds approximately to the 
+<p><tt><b>hopTime();</b></tt>
+<blockquote>  	Return the hop time (which corresponds approximately to the 
 		average density of Partial envelope Breakpoint data) for this 
 		Analyzer.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>windowWidth();</B></TT>
-<BLOCKQUOTE>  	Return the frequency-domain main lobe width (measured between 
+<p><tt><b>sidelobeLevel();</b></tt>
+<blockquote>  	
+Return the sidelobe attenutation level for the Kaiser analysis window in
+positive dB. Larger numbers (e.g. 90) give very good sidelobe 
+rejection but cause the window to be longer in time. Smaller numbers 
+(like 60) raise the level of the sidelobes, increasing the likelihood
+of frequency-domain interference, but allow the window to be shorter
+in time.
+</blockquote>
+
+<p><tt><b>windowWidth();</b></tt>
+<blockquote>  	Return the frequency-domain main lobe width (measured between 
 		zero-crossings) of the analysis window used by this Analyzer. 				
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>setAmpFloor(x);</B></TT>
-<BLOCKQUOTE>  	Set the amplitude floor (lowest detected spectral amplitude), in  			
+<p><tt><b>setAmpFloor(x);</b></tt>
+<blockquote>  	Set the amplitude floor (lowest detected spectral amplitude), in  			
 		(negative) dB, for this Analyzer. 				
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>setBwRegionWidth(x);</B></TT>
-<BLOCKQUOTE>  	Set the width (in Hz) of the Bandwidth Association regions
+<p><tt><b>setBwRegionWidth(x);</b></tt>
+<blockquote>  	Set the width (in Hz) of the Bandwidth Association regions
 		used by this Analyzer.<p>
 	   
 	   	This parameter is deprecated, and not generally useful. It will be
 	   	removed in a future Loris release.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>setCropTime(x);</B></TT>
-<BLOCKQUOTE>  	Set the crop time (maximum temporal displacement of a time-
+<p><tt><b>setCropTime(x);</b></tt>
+<blockquote>  	Set the crop time (maximum temporal displacement of a time-
 		frequency data point from the time-domain center of the analysis
 		window, beyond which data points are considered &quot;unreliable&quot;)
 		for this Analyzer.<p>
@@ -199,41 +209,51 @@ and documenting the Perl module, please
 	   	This parameter is deprecated, and not generally useful. It will be
 	   	removed in a future Loris release.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>setFreqDrift(x);</B></TT>
-<BLOCKQUOTE>  	Set the maximum allowable frequency difference between 					
+<p><tt><b>setFreqDrift(x);</b></tt>
+<blockquote>  	Set the maximum allowable frequency difference between 					
 		consecutive Breakpoints in a Partial envelope for this Analyzer. 				
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>setFreqFloor(x);</B></TT>
-<BLOCKQUOTE>  	Set the amplitude floor (minimum instantaneous Partial  				
+<p><tt><b>setFreqFloor(x);</b></tt>
+<blockquote>  	Set the amplitude floor (minimum instantaneous Partial  				
 		frequency), in Hz, for this Analyzer.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>setFreqResolution(x);</B></TT>
-<BLOCKQUOTE>  	Set the frequency resolution (minimum instantaneous frequency  		
+<p><tt><b>setFreqResolution(x);</b></tt>
+<blockquote>  	Set the frequency resolution (minimum instantaneous frequency  		
 		difference between Partials) for this Analyzer. (Does not cause 	
 		other parameters to be recomputed.) 									
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>setHopTime(x);</B></TT>
-<BLOCKQUOTE>  	Set the hop time (which corresponds approximately to the average
+<p><tt><b>setHopTime(x);</b></tt>
+<blockquote>  	Set the hop time (which corresponds approximately to the average
 		density of Partial envelope Breakpoint data) for this Analyzer.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>setWindowWidth(x);</B></TT>
-<BLOCKQUOTE>  	Set the frequency-domain main lobe width (measured between 
+<p><tt><b>setSidelobeLevel(x);</b></tt>
+<blockquote>  	
+Set the sidelobe attenutation level for the Kaiser analysis window in
+positive dB. Larger numbers (e.g. 90) give very good sidelobe 
+rejection but cause the window to be longer in time. Smaller numbers 
+(like 60) raise the level of the sidelobes, increasing the likelihood
+of frequency-domain interference, but allow the window to be shorter
+in time.
+</blockquote>
+
+<p><tt><b>setWindowWidth(x);</b></tt>
+<blockquote>  	Set the frequency-domain main lobe width (measured between 
 		zero-crossings) of the analysis window used by this Analyzer. 				
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<A name="s1_5_">
-<H3>1.3. class Breakpoint</H3></A>
+<a name="s1_5_">
+<h3>1.3. class Breakpoint</h3></a>
 	A Breakpoint represents a single breakpoint in the time-varying
 	frequency, amplitude, and bandwidth envelope of a Reassigned 
 	Bandwidth-Enhanced Partial.<p>
@@ -245,118 +265,118 @@ and documenting the Perl module, please
 	For more information about Bandwidth-Enhanced Partials and the  
 	Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
 	the Loris website: www.cerlsoundgroup.org/Loris/
-<P><TT><B>new(f,a,b,p);</B></TT>
-<BLOCKQUOTE>  	Return a new Breakpoint having the specified frequency
+<p><tt><b>new(f,a,b,p);</b></tt>
+<blockquote>  	Return a new Breakpoint having the specified frequency
 		amplitude, bandwidth, and (optionally, defaults to zero)
 		phase.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>DESTROY</B></TT>
-<BLOCKQUOTE>  	Delete this Breakpoint.
+<p><tt><b>DESTROY</b></tt>
+<blockquote>  	Delete this Breakpoint.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>amplitude();</B></TT>
-<BLOCKQUOTE>  	Return the amplitude of this Breakpoint. 
+<p><tt><b>amplitude();</b></tt>
+<blockquote>  	Return the amplitude of this Breakpoint. 
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>bandwidth();</B></TT>
-<BLOCKQUOTE>  	Return the bandwidth of this Breakpoint. 
+<p><tt><b>bandwidth();</b></tt>
+<blockquote>  	Return the bandwidth of this Breakpoint. 
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>copy();</B></TT>
-<BLOCKQUOTE>  	Return a new Breakpoint that is a copy of this 
+<p><tt><b>copy();</b></tt>
+<blockquote>  	Return a new Breakpoint that is a copy of this 
 			Breakpoint (i.e. has identical parameter values).
 		   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>equals(other);</B></TT>
-<BLOCKQUOTE>  	Return true (1) if this Breakpoint is equal to the
+<p><tt><b>equals(other);</b></tt>
+<blockquote>  	Return true (1) if this Breakpoint is equal to the
 			other. Breakpoints are equal is they have identical 
 			parameter values.
 		   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>frequency();</B></TT>
-<BLOCKQUOTE>  	Return the frequency of this Breakpoint. 
+<p><tt><b>frequency();</b></tt>
+<blockquote>  	Return the frequency of this Breakpoint. 
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>phase();</B></TT>
-<BLOCKQUOTE>  	Return the phase of this Breakpoint. 
+<p><tt><b>phase();</b></tt>
+<blockquote>  	Return the phase of this Breakpoint. 
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>setAmplitude(x);</B></TT>
-<BLOCKQUOTE>  	Assign the amplitude of this Breakpoint. 
+<p><tt><b>setAmplitude(x);</b></tt>
+<blockquote>  	Assign the amplitude of this Breakpoint. 
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>setBandwidth(x);</B></TT>
-<BLOCKQUOTE>  	Assign the bandwidth of this Breakpoint. 
+<p><tt><b>setBandwidth(x);</b></tt>
+<blockquote>  	Assign the bandwidth of this Breakpoint. 
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>setFrequency(x);</B></TT>
-<BLOCKQUOTE>  	Assign the frequency of this Breakpoint. 
+<p><tt><b>setFrequency(x);</b></tt>
+<blockquote>  	Assign the frequency of this Breakpoint. 
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>setPhase(x);</B></TT>
-<BLOCKQUOTE>  	Assign the phase of this Breakpoint. 
+<p><tt><b>setPhase(x);</b></tt>
+<blockquote>  	Assign the phase of this Breakpoint. 
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<A name="s1_7_">
-<H3>1.4. class BreakpointEnvelope</H3></A>
+<a name="s1_7_">
+<h3>1.4. class BreakpointEnvelope</h3></a>
 	A BreakpointEnvelope represents a linear segment breakpoint 
 	function with infinite extension at each end (that is, the 
 	values past either end of the breakpoint function have the 
 	values at the nearest end).
-<P><TT><B>new();</B></TT>
-<BLOCKQUOTE>  	Construct and return a new BreakpointEnvelope having no 
+<p><tt><b>new();</b></tt>
+<blockquote>  	Construct and return a new BreakpointEnvelope having no 
 		breakpoints and an implicit value of 0. everywhere, 
 		until the first breakpoint is inserted.			
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>BreakpointEnvelopeWithValue(initialValue)</B></TT>
-<BLOCKQUOTE>  	Construct and return a new BreakpointEnvelope having a 
+<p><tt><b>BreakpointEnvelopeWithValue(initialValue)</b></tt>
+<blockquote>  	Construct and return a new BreakpointEnvelope having a 
 	single breakpoint at 0. having the specified initialValue.
    
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>DESTROY</B></TT>
-<BLOCKQUOTE>  	Destroy this BreakpointEnvelope. 								
+<p><tt><b>DESTROY</b></tt>
+<blockquote>  	Destroy this BreakpointEnvelope. 								
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>copy();</B></TT>
-<BLOCKQUOTE>  	Construct and return a new BreakpointEnvelope that is
+<p><tt><b>copy();</b></tt>
+<blockquote>  	Construct and return a new BreakpointEnvelope that is
 		a copy of this BreapointEnvelope (has the same value
 		as this BreakpointEnvelope everywhere).			
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>insertBreakpoint(time,value);</B></TT>
-<BLOCKQUOTE>  	Insert a breakpoint representing the specified (time, value) 
+<p><tt><b>insertBreakpoint(time,value);</b></tt>
+<blockquote>  	Insert a breakpoint representing the specified (time, value) 
 		pair into this BreakpointEnvelope. If there is already a 
 		breakpoint at the specified time, it will be replaced with 
 		the new breakpoint.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>valueAt(time);</B></TT>
-<BLOCKQUOTE>  	Return the interpolated value of this BreakpointEnvelope at 
+<p><tt><b>valueAt(time);</b></tt>
+<blockquote>  	Return the interpolated value of this BreakpointEnvelope at 
 		the specified time.							
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<A name="s1_3_">
-<H3>1.5. class Partial</H3></A>
+<a name="s1_3_">
+<h3>1.5. class Partial</h3></a>
 	A Partial represents a Reassigned Bandwidth-Enhanced model component.
 	A Partial consists of a trio of synchronous, non-uniformly-
 	sampled breakpoint envelopes representing the time-varying 
@@ -366,124 +386,124 @@ and documenting the Perl module, please
 	For more information about Bandwidth-Enhanced Partials and the  
 	Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
 	the Loris website: www.cerlsoundgroup.org/Loris/
-<P><TT><B>new();</B></TT>
-<BLOCKQUOTE>  	Return a new, empty (no Breakpoints) Partial.
+<p><tt><b>new();</b></tt>
+<blockquote>  	Return a new, empty (no Breakpoints) Partial.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>DESTROY</B></TT>
-<BLOCKQUOTE>  	Delete this Partial reference (doesn't remove it from the PartialList).
+<p><tt><b>DESTROY</b></tt>
+<blockquote>  	Delete this Partial reference (doesn't remove it from the PartialList).
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>amplitudeAt(time);</B></TT>
-<BLOCKQUOTE>   	Return this Partial's interpolated amplitude at the specified time.
+<p><tt><b>amplitudeAt(time);</b></tt>
+<blockquote>   	Return this Partial's interpolated amplitude at the specified time.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>bandwidthAt(time);</B></TT>
-<BLOCKQUOTE>   	Return this Partial's interpolated bandwidth at the specified time.
+<p><tt><b>bandwidthAt(time);</b></tt>
+<blockquote>   	Return this Partial's interpolated bandwidth at the specified time.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>begin();</B></TT>
-<BLOCKQUOTE>  	Return a PartialIterator refering to the first Breakpoint 
+<p><tt><b>begin();</b></tt>
+<blockquote>  	Return a PartialIterator refering to the first Breakpoint 
 		in this Partial.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>copy();</B></TT>
-<BLOCKQUOTE>  	Return a new Partial that is a copy of this 
+<p><tt><b>copy();</b></tt>
+<blockquote>  	Return a new Partial that is a copy of this 
 			Partial (i.e. has he same label and an identical
 			Breakpoint entvelope.
 		   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>duration();</B></TT>
-<BLOCKQUOTE>   	Return this Partial's duration.
+<p><tt><b>duration();</b></tt>
+<blockquote>   	Return this Partial's duration.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>end();</B></TT>
-<BLOCKQUOTE>  	Return a PartialIterator refering to the end of this Partial (an invalid
+<p><tt><b>end();</b></tt>
+<blockquote>  	Return a PartialIterator refering to the end of this Partial (an invalid
 		element after the last valid Breakpoint).
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>endTime();</B></TT>
-<BLOCKQUOTE>   	Return this Partial's end time.
+<p><tt><b>endTime();</b></tt>
+<blockquote>   	Return this Partial's end time.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>erase(pos);</B></TT>
-<BLOCKQUOTE>   	Erase the Breakpoint at the position of the 
+<p><tt><b>erase(pos);</b></tt>
+<blockquote>   	Erase the Breakpoint at the position of the 
 		given iterator (invalidating the iterator).
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>equals(other);</B></TT>
-<BLOCKQUOTE>  	Return true (1) if this Partial is equal to the other. 
+<p><tt><b>equals(other);</b></tt>
+<blockquote>  	Return true (1) if this Partial is equal to the other. 
 			Partials are equal is they have the same label and the
 			same Breakpoint envelope.
 		   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>findAfter(time);</B></TT>
-<BLOCKQUOTE>  	Return the insertion position for a Breakpoint at
+<p><tt><b>findAfter(time);</b></tt>
+<blockquote>  	Return the insertion position for a Breakpoint at
 		the specified time (that is, the position of the first
 		Breakpoint at a time later than the specified time).
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>findNearest(time);</B></TT>
-<BLOCKQUOTE>  	Return the insertion position for the Breakpoint nearest
+<p><tt><b>findNearest(time);</b></tt>
+<blockquote>  	Return the insertion position for the Breakpoint nearest
 		the specified time.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>frequencyAt(time);</B></TT>
-<BLOCKQUOTE>   	Return this Partial's interpolated frequency at the specified time.
+<p><tt><b>frequencyAt(time);</b></tt>
+<blockquote>   	Return this Partial's interpolated frequency at the specified time.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>label();</B></TT>
-<BLOCKQUOTE>   	Return this Partial's label.
+<p><tt><b>label();</b></tt>
+<blockquote>   	Return this Partial's label.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>initialPhase();</B></TT>
-<BLOCKQUOTE>   	Return this Partial's starting phase.
+<p><tt><b>initialPhase();</b></tt>
+<blockquote>   	Return this Partial's starting phase.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>insert(time,bp);</B></TT>
-<BLOCKQUOTE>  	Make a copy of bp and insert it at time (seconds),
+<p><tt><b>insert(time,bp);</b></tt>
+<blockquote>  	Make a copy of bp and insert it at time (seconds),
 		return an iterator refering to the inserted Breakpoint.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>numBreakpoints();</B></TT>
-<BLOCKQUOTE>   	Return this Partial's number of Breakpoints.
+<p><tt><b>numBreakpoints();</b></tt>
+<blockquote>   	Return this Partial's number of Breakpoints.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>phaseAt(time);</B></TT>
-<BLOCKQUOTE>   	Return this Partial's interpolated phase at the specified time.
+<p><tt><b>phaseAt(time);</b></tt>
+<blockquote>   	Return this Partial's interpolated phase at the specified time.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>setLabel(l);</B></TT>
-<BLOCKQUOTE>  	Assign a new label to this Partial.
+<p><tt><b>setLabel(l);</b></tt>
+<blockquote>  	Assign a new label to this Partial.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>startTime();</B></TT>
-<BLOCKQUOTE>   	Return this Partial's start time.
+<p><tt><b>startTime();</b></tt>
+<blockquote>   	Return this Partial's start time.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<A name="s1_4_">
-<H3>1.6. class PartialIterator</H3></A>
+<a name="s1_4_">
+<h3>1.6. class PartialIterator</h3></a>
 	A PartialIterator represents an iterator on a Partial.<p>
 	
 	PartialIterators can only be obtained from their subject 
@@ -507,58 +527,58 @@ and documenting the Perl module, please
 	invalidate any other PartialIterators, refering to other 
 	Breakpoints. The validity of an iterator can be verified using
 	the isInRange method.
-<P><TT><B>DESTROY</B></TT>
-<BLOCKQUOTE>  	Destroy this PartialIterator (doesn't affect the corresponding 
+<p><tt><b>DESTROY</b></tt>
+<blockquote>  	Destroy this PartialIterator (doesn't affect the corresponding 
 			Breakpoint).
 		   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>breakpoint();</B></TT>
-<BLOCKQUOTE>        Return (a reference to) the Breakpoint at the position of this
+<p><tt><b>breakpoint();</b></tt>
+<blockquote>        Return (a reference to) the Breakpoint at the position of this
 			PartialIterator.
 		   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>copy();</B></TT>
-<BLOCKQUOTE>  	Return a new PartialIterator that is a copy of this 
+<p><tt><b>copy();</b></tt>
+<blockquote>  	Return a new PartialIterator that is a copy of this 
 			PartialIterator (i.e. refers to the same position
 			in the same Partial).
 		   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>equals(other);</B></TT>
-<BLOCKQUOTE>  	Return true (1) if this PartialIterator is equal to the
+<p><tt><b>equals(other);</b></tt>
+<blockquote>  	Return true (1) if this PartialIterator is equal to the
 			other. PartialIterators are equal is they refer to the
 			same position (Breakpoint) in the same Partial.
 		   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>isInRange(begin,end);</B></TT>
-<BLOCKQUOTE>  	Return true (1) is this iterator is within the half-open iterator
+<p><tt><b>isInRange(begin,end);</b></tt>
+<blockquote>  	Return true (1) is this iterator is within the half-open iterator
 		 	range bounded by begin and end, and false otherwise. This method
 		 	can be used to check the validity of an iterator -- call with 
 		 	begin and end methods of the Partial as arguments.
 		    
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>next();</B></TT>
-<BLOCKQUOTE>  	Increment (advance) this PartialIterator. Return self.
+<p><tt><b>next();</b></tt>
+<blockquote>  	Increment (advance) this PartialIterator. Return self.
 		   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>prev();</B></TT>
-<BLOCKQUOTE>  	Decrement (advance by -1) this PartialIterator. Return self.
+<p><tt><b>prev();</b></tt>
+<blockquote>  	Decrement (advance by -1) this PartialIterator. Return self.
 		   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>time();</B></TT>
-<BLOCKQUOTE>  	Return the time of the Breakpoint at the position of this
+<p><tt><b>time();</b></tt>
+<blockquote>  	Return the time of the Breakpoint at the position of this
 		PartialIterator.
 		   
-</BLOCKQUOTE>
+</blockquote>
 
-<A name="s1_1_">
-<H3>1.7. class PartialList</H3></A>
+<a name="s1_1_">
+<h3>1.7. class PartialList</h3></a>
 	A PartialList represents a collection of Bandwidth-Enhanced 
 	Partials, each having a trio of synchronous, non-uniformly-
 	sampled breakpoint envelopes representing the time-varying 
@@ -568,76 +588,76 @@ and documenting the Perl module, please
 	For more information about Bandwidth-Enhanced Partials and the  
 	Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
 	the Loris website: www.cerlsoundgroup.org/Loris/
-<P><TT><B>new();</B></TT>
-<BLOCKQUOTE>  	Return a new empty PartialList.
+<p><tt><b>new();</b></tt>
+<blockquote>  	Return a new empty PartialList.
 		   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>DESTROY</B></TT>
-<BLOCKQUOTE>  	Destroy this PartialList.
+<p><tt><b>DESTROY</b></tt>
+<blockquote>  	Destroy this PartialList.
 		   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>begin();</B></TT>
-<BLOCKQUOTE>  	Return an iterator refering to the first Partial in this PartialList.
+<p><tt><b>begin();</b></tt>
+<blockquote>  	Return an iterator refering to the first Partial in this PartialList.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>clear();</B></TT>
-<BLOCKQUOTE>  	Remove (and destroy) all the Partials from this PartialList,
+<p><tt><b>clear();</b></tt>
+<blockquote>  	Remove (and destroy) all the Partials from this PartialList,
 		leaving it empty.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>copy();</B></TT>
-<BLOCKQUOTE>  	Return a new PartialList that is a copy of this 
+<p><tt><b>copy();</b></tt>
+<blockquote>  	Return a new PartialList that is a copy of this 
 			PartialList (i.e. has identical Partials).
 		   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>end();</B></TT>
-<BLOCKQUOTE>  	Return an iterator refering to the end of this PartialList (an invalid
+<p><tt><b>end();</b></tt>
+<blockquote>  	Return an iterator refering to the end of this PartialList (an invalid
 		element after the last valid Partial).
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>erase(position);</B></TT>
-<BLOCKQUOTE>  	Remove the element at the position indicated by the 
+<p><tt><b>erase(position);</b></tt>
+<blockquote>  	Remove the element at the position indicated by the 
 		PartialListIterator, position. After this operation,
 		the PartialListIterator position is invalid, but all
 		other iterators refering to other positions in the
 		PartialList are unaffected.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>insert(position,partial);</B></TT>
-<BLOCKQUOTE>  	Insert a copy of the given Partial into this PartialList at
+<p><tt><b>insert(position,partial);</b></tt>
+<blockquote>  	Insert a copy of the given Partial into this PartialList at
 		the position indicated by the PartialListIterator position.
 		Returns a PartialListIterator refering to the position of the
 		newly-inserted Partial.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>size();</B></TT>
-<BLOCKQUOTE>  	Return the number of Partials in this PartialList.
+<p><tt><b>size();</b></tt>
+<blockquote>  	Return the number of Partials in this PartialList.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>splice(position,list);</B></TT>
-<BLOCKQUOTE>  	Splice all the Partials in the specified PartialList into
+<p><tt><b>splice(position,list);</b></tt>
+<blockquote>  	Splice all the Partials in the specified PartialList into
 		this PartialList at the position indicated by the PartialListIterator
 		position. Leaves the other PartialList empty.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>timespan();</B></TT>
-<BLOCKQUOTE>  	Return the minimum start time and maximum end time
+<p><tt><b>timespan();</b></tt>
+<blockquote>  	Return the minimum start time and maximum end time
 		 	of all Partials in this PartialList in a tuple.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<A name="s1_2_">
-<H3>1.8. class PartialListIterator</H3></A>
+<a name="s1_2_">
+<h3>1.8. class PartialListIterator</h3></a>
 	A PartialListIterator represents an iterator on a PartialList.
 	Its interface reflects the interface of the underlying std::list
 	iterator.<p>
@@ -660,119 +680,119 @@ and documenting the Perl module, please
 	invalidate any other PartialListIterators, refering to other 
 	elements. The validity of an iterator can be verified using the
 	isInRange method.
-<P><TT><B>DESTROY</B></TT>
-<BLOCKQUOTE>  	Destroy this PartialListIterator (doesn't affect the corresponding 
+<p><tt><b>DESTROY</b></tt>
+<blockquote>  	Destroy this PartialListIterator (doesn't affect the corresponding 
 			Partial).
 		   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>copy();</B></TT>
-<BLOCKQUOTE>  	Return a new PartialListIterator that is a copy of this 
+<p><tt><b>copy();</b></tt>
+<blockquote>  	Return a new PartialListIterator that is a copy of this 
 			PartialListIterator (i.e. refers to the same position
 			in the same PartialList).
 		   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>equals(other);</B></TT>
-<BLOCKQUOTE>  	Return true (1) if this PartialListIterator is equal to the
+<p><tt><b>equals(other);</b></tt>
+<blockquote>  	Return true (1) if this PartialListIterator is equal to the
 			other. PartialListIterators are equal if they refer to the
 			same position in the same PartialList.
 		   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>isInRange(begin,end);</B></TT>
-<BLOCKQUOTE>  	Return true (1) if this iterator is within the half-open iterator
+<p><tt><b>isInRange(begin,end);</b></tt>
+<blockquote>  	Return true (1) if this iterator is within the half-open iterator
 		 	range bounded by begin and end, and false otherwise. This method
 		 	can be used to check the validity of an iterator -- call with 
 		 	begin and end methods of the PartialList as arguments.
 		    
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>next();</B></TT>
-<BLOCKQUOTE>  	Return an iterator refering to the next position in the
+<p><tt><b>next();</b></tt>
+<blockquote>  	Return an iterator refering to the next position in the
 			PartialList.
 		   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>partial();</B></TT>
-<BLOCKQUOTE>  	Return (a reference to) the Partial at the position of this
+<p><tt><b>partial();</b></tt>
+<blockquote>  	Return (a reference to) the Partial at the position of this
 			PartialListIterator.
 		   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>prev();</B></TT>
-<BLOCKQUOTE>  	Return an iterator refering to the previous position
+<p><tt><b>prev();</b></tt>
+<blockquote>  	Return an iterator refering to the previous position
 			in the PartialList.
 		   
-</BLOCKQUOTE>
+</blockquote>
 
 
-<A name="s1_8_">
-<H3>1.9. class SampleVector</H3></A>
+<a name="s1_8_">
+<h3>1.9. class SampleVector</h3></a>
 	A SampleVector represents a vector of floating point samples of
 	an audio waveform. In Loris, the samples are assumed to have 
 	values on the range (-1., 1.) (though this is not enforced or 
 	checked). 
-<P><TT><B>new(size);</B></TT>
-<BLOCKQUOTE>  	Return a new SampleVector having the specified number of samples,
+<p><tt><b>new(size);</b></tt>
+<blockquote>  	Return a new SampleVector having the specified number of samples,
 		all of whose value is 0. <p>
 		
 		If no size is specified, 0 is assumed.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>DESTROY</B></TT>
-<BLOCKQUOTE>  	Destroy this SampleVector.
+<p><tt><b>DESTROY</b></tt>
+<blockquote>  	Destroy this SampleVector.
 	    
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>clear();</B></TT>
-<BLOCKQUOTE>  	Remove all samples from this SampleVector, and set its
+<p><tt><b>clear();</b></tt>
+<blockquote>  	Remove all samples from this SampleVector, and set its
 	 	size to zero.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>copy();</B></TT>
-<BLOCKQUOTE>  	Return a new SampleVector that is a copy of this 
+<p><tt><b>copy();</b></tt>
+<blockquote>  	Return a new SampleVector that is a copy of this 
 		SampleVector, having the same number of samples, 
 		and samples at every position in the copy having 
 		the same value as the corresponding sample in
 		this SampleVector.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>getAt(idx);</B></TT>
-<BLOCKQUOTE>  	Return the value of the sample at the given position (index) in
+<p><tt><b>getAt(idx);</b></tt>
+<blockquote>  	Return the value of the sample at the given position (index) in
 		this SampleVector.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>resize(size);</B></TT>
-<BLOCKQUOTE>  	Change the number of samples represented by this SampleVector. If
+<p><tt><b>resize(size);</b></tt>
+<blockquote>  	Change the number of samples represented by this SampleVector. If
 		the given size is greater than the current size, all new samples 
 		will have value 0. If the given size is less than the current 
 		size, then samples in excess of the given size are removed.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>setAt(idx,x);</B></TT>
-<BLOCKQUOTE>  	Set the value of the sample at the given position (index) in
+<p><tt><b>setAt(idx,x);</b></tt>
+<blockquote>  	Set the value of the sample at the given position (index) in
 		this SampleVector.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>size();</B></TT>
-<BLOCKQUOTE>  	Return the number of samples represented by this SampleVector.
+<p><tt><b>size();</b></tt>
+<blockquote>  	Return the number of samples represented by this SampleVector.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<A name="s2_">
-<HR><H2>2. Non-object-based procedures</H2></A>
-<P>
+<a name="s2_">
+<hr><h2>2. Non-object-based procedures</h2></a>
+<p>
 	Operations in Loris that need not be accessed though object
 	interfaces are represented as simple functions.
-<P><TT><B>channelize(partials,refFreqEnvelope,refLabel);</B></TT>
-<BLOCKQUOTE>  	Label Partials in a PartialList with the integer nearest to
+<p><tt><b>channelize(partials,refFreqEnvelope,refLabel);</b></tt>
+<blockquote>  	Label Partials in a PartialList with the integer nearest to
 		the amplitude-weighted average ratio of their frequency envelope
 		to a reference frequency envelope. The frequency spectrum is 
 		partitioned into non-overlapping channels whose time-varying 
@@ -789,10 +809,10 @@ and documenting the Perl module, please
 		Partials are labeled, but otherwise unmodified. In particular, 
 		their frequencies are not modified in any way.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>createFreqReference(partials,minFreq,maxFreq,numSamples);</B></TT>
-<BLOCKQUOTE>  	Return a newly-constructed BreakpointEnvelope by sampling the 
+<p><tt><b>createFreqReference(partials,minFreq,maxFreq,numSamples);</b></tt>
+<blockquote>  	Return a newly-constructed BreakpointEnvelope by sampling the 
 	frequency envelope of the longest Partial in a PartialList. 
 	Only Partials whose frequency at the Partial's loudest (highest 
 	amplitude) breakpoint is within the given frequency range are 
@@ -807,10 +827,10 @@ and documenting the Perl module, please
 	good first approximation to a reference envelope for
 	channelization (see channelize()).
    
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>dilate(partials,initial_times,target_times);</B></TT>
-<BLOCKQUOTE>  	Dilate Partials in a PartialList according to the given 
+<p><tt><b>dilate(partials,initial_times,target_times);</b></tt>
+<blockquote>  	Dilate Partials in a PartialList according to the given 
 		initial and target time points. Partial envelopes are 
 		stretched and compressed so that temporal features at
 		the initial time points are aligned with the final time
@@ -823,10 +843,10 @@ and documenting the Perl module, please
 		collection to a string representation, numerical elements
 		will be extracted, other characters will be ignored.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>distill(partials);</B></TT>
-<BLOCKQUOTE>  	Distill labeled (channelized)  Partials in a PartialList into a 
+<p><tt><b>distill(partials);</b></tt>
+<blockquote>  	Distill labeled (channelized)  Partials in a PartialList into a 
 	PartialList containing a single (labeled) Partial per label. 
 	The distilled PartialList will contain as many Partials as
 	there were non-zero labels (non-empty channels)
@@ -835,27 +855,27 @@ and documenting the Perl module, please
 	assigned an unused label, and fused into a single Partial per
 	group.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>exportAiff(path,samples,samplerate,nchannels,bitsPerSamp);</B></TT>
-<BLOCKQUOTE>  	Export audio samples stored in a SampleVector to an AIFF file
+<p><tt><b>exportAiff(path,samples,samplerate,nchannels,bitsPerSamp);</b></tt>
+<blockquote>  	Export audio samples stored in a SampleVector to an AIFF file
 		having the specified number of channels and sample rate at the 
 		given file path (or name). The floating point samples in the 
 		SampleVector are clamped to the range (-1.,1.) and converted 
 		to integers having bitsPerSamp bits.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>exportSdif(path,partials);</B></TT>
-<BLOCKQUOTE>  	Export Partials in a PartialList to a SDIF file at the specified
+<p><tt><b>exportSdif(path,partials);</b></tt>
+<blockquote>  	Export Partials in a PartialList to a SDIF file at the specified
 		file path (or name). SDIF data is written in the 1TRC format.  
 		For more information about SDIF, see the SDIF website at:
 			www.ircam.fr/equipes/analyse-synthese/sdif/  
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>exportSpc(path,partials,midiPitch,enhanced,endApproachTime);</B></TT>
-<BLOCKQUOTE>  	Export Partials in a PartialList to a Spc file at the specified file
+<p><tt><b>exportSpc(path,partials,midiPitch,enhanced,endApproachTime);</b></tt>
+<blockquote>  	Export Partials in a PartialList to a Spc file at the specified file
 		path (or name). The fractional MIDI pitch must be specified. The optional
 		enhanced parameter defaults to true (for bandwidth-enhanced spc files), 
 		but can be specified false for pure-sines spc files. The optional 
@@ -867,29 +887,29 @@ and documenting the Perl module, please
 		and bandwidth values are to be modified to make a gradual transition to 
 		the static spectrum.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>extractLabeled(partials,label);</B></TT>
-<BLOCKQUOTE>  	Extract Partials in the source PartialList having the specified
+<p><tt><b>extractLabeled(partials,label);</b></tt>
+<blockquote>  	Extract Partials in the source PartialList having the specified
     label and return them in a new PartialList.	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>importSdif(path);</B></TT>
-<BLOCKQUOTE>  	Import Partials from an SDIF file at the given file path (or 
+<p><tt><b>importSdif(path);</b></tt>
+<blockquote>  	Import Partials from an SDIF file at the given file path (or 
 	name), and return them in a PartialList.
 	For more information about SDIF, see the SDIF website at:
 		www.ircam.fr/equipes/analyse-synthese/sdif/  
    
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>importSpc(path);</B></TT>
-<BLOCKQUOTE>  	Import Partials from an Spc file at the given file path (or 
+<p><tt><b>importSpc(path);</b></tt>
+<blockquote>  	Import Partials from an Spc file at the given file path (or 
 	name), and return them in a PartialList.
    
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>morph(src0,src1,ffreq,famp,fbw);</B></TT>
-<BLOCKQUOTE>  	Morph labeled Partials in two PartialLists according to the
+<p><tt><b>morph(src0,src1,ffreq,famp,fbw);</b></tt>
+<blockquote>  	Morph labeled Partials in two PartialLists according to the
 	given frequency, amplitude, and bandwidth (noisiness) morphing
 	envelopes, and return the morphed Partials in a PartialList. 
 	Loris morphs Partials by interpolating frequency, amplitude, 
@@ -898,48 +918,48 @@ and documenting the Perl module, please
 	morphing algorithm, see the Loris website: 
 	www.cerlsoundgroup.org/Loris/
    
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>scaleAmp(partials,ampEnv);</B></TT>
-<BLOCKQUOTE>  	Scale the amplitude of the Partials in a PartialList according 
+<p><tt><b>scaleAmp(partials,ampEnv);</b></tt>
+<blockquote>  	Scale the amplitude of the Partials in a PartialList according 
 		to an envelope representing a time-varying amplitude scale value.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>scaleNoiseRatio(partials,noiseEnv);</B></TT>
-<BLOCKQUOTE>  	Scale the relative noise content of the Partials in a PartialList 
+<p><tt><b>scaleNoiseRatio(partials,noiseEnv);</b></tt>
+<blockquote>  	Scale the relative noise content of the Partials in a PartialList 
 		according to an envelope representing a (time-varying) noise energy 
 		scale value.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>shiftPitch(partials,pitchEnv);</B></TT>
-<BLOCKQUOTE>  	Shift the pitch of all Partials in a PartialList according to 
+<p><tt><b>shiftPitch(partials,pitchEnv);</b></tt>
+<blockquote>  	Shift the pitch of all Partials in a PartialList according to 
 		the given pitch envelope. The pitch envelope is assumed to have 
 		units of cents (1/100 of a halfstep).
 	   
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>synthesize(partials,srate);</B></TT>
-<BLOCKQUOTE>  	Synthesize Partials in a PartialList at the given sample
+<p><tt><b>synthesize(partials,srate);</b></tt>
+<blockquote>  	Synthesize Partials in a PartialList at the given sample
 	rate, and return the (floating point) samples in a SampleVector.
 	The SampleVector is sized to hold as many samples as are needed 
 	for the complete synthesis of all the Partials in the PartialList. 
    
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>sift(partials)</B></TT>
-<BLOCKQUOTE> Eliminate overlapping Partials having the same label
+<p><tt><b>sift(partials)</b></tt>
+<blockquote> Eliminate overlapping Partials having the same label
     (except zero). If any two partials with same label
     overlap in time, keep only the longer of the two.
     Set the label of the shorter duration partial to zero.
 
-</BLOCKQUOTE>
+</blockquote>
 
-<P><TT><B>version();</B></TT>
-<BLOCKQUOTE>  	Return a (constant) string specifying the Loris version number.
+<p><tt><b>version();</b></tt>
+<blockquote>  	Return a (constant) string specifying the Loris version number.
 	   
-</BLOCKQUOTE>
+</blockquote>
 
 <hr align="Center" size="3">    
 <table cellspacing="0" cellpadding="1" width="100%">
@@ -954,5 +974,5 @@ and documenting the Perl module, please
 </table>
 
 
-</BODY>
-</HTML>
+</body>
+</html>
