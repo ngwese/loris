@@ -118,7 +118,7 @@ include dependfile
 #	admin:
 #
 clean:
-	-rm#  .o
+	-rm *.o
 
 .C.o:
 	$(CC) $(CFLAGS) -c $< 
