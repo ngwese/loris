@@ -37,6 +37,10 @@ them. (Cannot seem to get them to work under OS X.)
 - added FFTW3 compatibilty, version detected at configure 
 time.
 
+- added utilities directory, including a program for spewing markers
+(loris_spewmarkers) and another for performing Loris analysis
+(loris_analyze).
+
 -------------------------------------------------------
 changes since 1.0.2 release:
 
