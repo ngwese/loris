@@ -22,6 +22,10 @@ BreakpointEnvelope to const.
 reference Partial when the number of samples is not
 specified.
 
+- Sieve no longer sorts Partial list, and therefore no
+longer needs the list itself as an argument to sift(),
+can pass just iterators.
+
 -------------------------------------------------------
 changes since 1.0beta8 release:
 
