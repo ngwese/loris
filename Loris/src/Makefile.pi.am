@@ -47,9 +47,11 @@ if DARWIN
 		$(top_builddir)/classes/Synthesizer.lo \
 		-lfftw -lsdif
 else
+	why isn't this working?
 	libloris_la_LIBADD = $(top_builddir)/classes/libclasses.la
 endif
 
+libloris_la_LIBADD = $(top_builddir)/classes/libclasses.la
 libloris_la_LDFLAGS = -version-info 0:0:0
 
 
@@ -59,5 +61,5 @@ loris.h: loris.h.in
 	sed "s/LORIS_MAJOR_VERSION/LORIS_MAJOR_VERSION $(LORIS_MAJOR_VERSION)/g" < loris.h.in | \
 	sed "s/LORIS_MINOR_VERSION/LORIS_MINOR_VERSION $(LORIS_MINOR_VERSION)/g" | \
 	sed "s/LORIS_SUBMINOR_VERSION/LORIS_SUBMINOR_VERSION $(LORIS_SUBMINOR_VERSION)/g" | \
-	sed "s/LORIS_VERSION_STR/LORIS_VERSION_STR \"$(STR)\"/g" > loris.h
+	sed "s/LORIS_VERSION_STR/LORIS_VERSION_STR \"$(VERSION_STR)\"/g" > loris.h
 	

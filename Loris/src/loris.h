@@ -43,13 +43,27 @@
  *		handled internally, clients can specify an exception handler and 
  *		a notification function (the default one in Loris uses printf()).
  *
- * Kelly Fitz, 2 Nov 2000
+ *	This file is generated automatically from loris.h.in. Do not modify 
+ * 	this file (loris.h).
+ *
+ * Kelly Fitz, 4 Feb 2002
  * loris@cerlsoundgroup.org
  *
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
  
+/* ---------------------------------------------------------------- */
+/*		Loris version declarations
+/*
+/*	Define symbols that facilitate version/release identification.
+ */
+ 
+#define LORIS_MAJOR_VERSION 1 
+#define LORIS_MINOR_VERSION 0 
+#define LORIS_SUBMINOR_VERSION 0 
+#define LORIS_VERSION_STR "1.0beta8" 
+
 /* ---------------------------------------------------------------- */
 /*		object type declarations
 /*

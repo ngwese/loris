@@ -175,7 +175,8 @@
 %}
 
 %inline %{
-	void channelize( PartialList * partials, 
+%rename (channelize) 
+	void channelize_( PartialList * partials, 
 					 BreakpointEnvelope * refFreqEnvelope, int refLabel )
 	{
 		ThrowIfNull((PartialList *) partials);
@@ -599,7 +600,6 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch,
 /*		utility functions
 /*
  */
-#if 0
 %section "Utility functions", sort
 %text %{
 	These procedures are generally useful but are not yet  
@@ -608,14 +608,10 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch,
 
 			
 %{
-	//#define LORIS_OPAQUE_POINTERS 0
-	//#include <loris.h>
-
 extern "C"
 BreakpointEnvelope * 
 createFreqReference( PartialList * partials, double minFreq, double maxFreq );
 %}
-#endif
 
 %new BreakpointEnvelope * 
 createFreqReference( PartialList * partials, double minFreq, double maxFreq );
@@ -743,6 +739,7 @@ void shiftPitch( PartialList * partials, BreakpointEnvelope * pitchEnv );
 	 */
 %} 
 
+#endif
 %inline %{
 	const char * version( void )
 	{
@@ -751,6 +748,5 @@ void shiftPitch( PartialList * partials, BreakpointEnvelope * pitchEnv );
 	}
 %}
  
-#endif
 
 			

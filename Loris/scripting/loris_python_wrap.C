@@ -696,41 +696,8 @@ typedef std::vector< double > SampleVector;
 using Loris::AiffFile;
 
 
-	#include<Channelizer.h>
-
-
-	void channelize( PartialList * partials, 
-					 BreakpointEnvelope * refFreqEnvelope, int refLabel )
-	{
-		ThrowIfNull((PartialList *) partials);
-		ThrowIfNull((BreakpointEnvelope *) refFreqEnvelope);
-	
-		if ( refLabel <= 0 )
-			Throw( Loris::InvalidArgument, "Channelization reference label must be positive." );
-		
-		Loris::notifier << "channelizing " << partials->size() << " Partials" << Loris::endl;
-	
-		Loris::Channelizer chan( *refFreqEnvelope, refLabel );
-		chan.channelize( partials->begin(), partials->end() );		
-	
-	}
-	/*	Label Partials in a PartialList with the integer nearest to
-		the amplitude-weighted average ratio of their frequency envelope
-		to a reference frequency envelope. The frequency spectrum is 
-		partitioned into non-overlapping channels whose time-varying 
-		center frequencies track the reference frequency envelope. 
-		The reference label indicates which channel's center frequency
-		is exactly equal to the reference envelope frequency, and other
-		channels' center frequencies are multiples of the reference 
-		envelope frequency divided by the reference label. Each Partial 
-		in the PartialList is labeled with the number of the channel
-		that best fits its frequency envelope. The quality of the fit
-		is evaluated at the breakpoints in the Partial envelope and
-		weighted by the amplitude at each breakpoint, so that high-
-		amplitude breakpoints contribute more to the channel decision.
-		Partials are labeled, but otherwise unmodified. In particular, 
-		their frequencies are not modified in any way.
-	 */
+	#define LORIS_OPAQUE_POINTERS 0
+	#include<loris.h>
 
 
 	#include<Dilator.h>
@@ -761,8 +728,7 @@ using Loris::AiffFile;
 		return v;
 	}
 
-
-	void dilate( PartialList * partials, 
+	void dilate_str( PartialList * partials, 
 				 char * initial_times, char * target_times )
 	{
 		std::vector<double> ivec = strtovec( initial_times );
@@ -778,6 +744,8 @@ using Loris::AiffFile;
 		double * target = tvec.begin();
 		int npts = ivec.size();
 	
+		//	USE THE PI INSTEAD!
+			
 		ThrowIfNull((PartialList *) partials);
 		ThrowIfNull((double *) initial);
 		ThrowIfNull((double *) target);
@@ -801,97 +769,8 @@ using Loris::AiffFile;
 	 */
 
 
-	#include<Distiller.h>
-
-
-void distill( PartialList * partials )
-	{
-		ThrowIfNull((PartialList *) partials);
-	
-		Loris::notifier << "distilling " << partials->size() << " Partials" << Loris::endl;
-		Loris::Distiller still;
-		still.distill( *partials );
-		
-	}
-	/*	Distill labeled (channelized)  Partials in a PartialList into a 
-		PartialList containing a single (labeled) Partial per label. 
-		The distilled PartialList will contain as many Partials as
-		there were non-zero labels in the original PartialList. Unlabeled 
-		(label 0) Partials are eliminated.
-	 */
-
-
-	#include<AiffFile.h>
-
-
-	void exportAiff( const char * path,
-					 SampleVector * samples,
-					 double samplerate, int nchannels, int bitsPerSamp )
-	{		
-		Loris::AiffFile::Export( path, samplerate, nchannels, bitsPerSamp, 
-								 samples->begin(), samples->end() );
-	}
-	/*	Export audio samples stored in a SampleVector to an AIFF file
-		having the specified number of channels and sample rate at the 
-		given file path (or name). The floating point samples in the 
-		SampleVector are clamped to the range (-1.,1.) and converted 
-		to integers having bitsPerSamp bits.
-	 */
-				 
-
-
-	//	stupid name for sdif file header, name collision
 	#include<SdifFile.h>
-
-
-	void exportSdif( const char * path, PartialList * partials )
-	{
-		ThrowIfNull((PartialList *) partials);
-
-		if ( partials->size() == 0 ) 
-			Throw( Loris::InvalidObject, "No Partials in PartialList to export to sdif file." );
-	
-		Loris::notifier << "exporting sdif partial data to " << path << Loris::endl;		
-		Loris::SdifFile::Export( path, *partials );
-		
-	}
-	/*	Export Partials in a PartialList to a SDIF file at the specified
-		file path (or name). SDIF data is written in the 1TRC format.  
-		For more information about SDIF, see the SDIF website at:
-			www.ircam.fr/equipes/analyse-synthese/sdif/  
-	 */
-
-
-	#include<SpcFile.h>
-
-
-	void exportSpc( const char * path, PartialList * partials, double midiPitch, 
-					int enhanced = true, double endApproachTime = 0. )
-	{
-		ThrowIfNull((PartialList *) partials);
-
-		if ( partials->size() == 0 )
-			Throw( Loris::InvalidObject, "No Partials in PartialList to export to Spc file." );
-
-		Loris::notifier << "exporting Spc partial data to " << path << Loris::endl;
-		Loris::SpcFile::Export( path, *partials, midiPitch, enhanced, endApproachTime );
-	}
-	/*	Export Partials in a PartialList to a Spc file at the specified file
-		path (or name). The fractional MIDI pitch must be specified. The optional
-		enhanced parameter defaults to true (for bandwidth-enhanced spc files), 
-		but an be specified false for pure-sines spc files. The optional 
-		endApproachTime parameter is in seconds; its default value is zero (and 
-		has no effect). A nonzero endApproachTime indicates that the plist does 
-		not include a release, but rather ends in a static spectrum corresponding 
-		to the final breakpoint values of the partials. The endApproachTime
-		specifies how long before the end of the sound the amplitude, frequency, 
-		and bandwidth values are to be modified to make a gradual transition to 
-		the static spectrum.
-	 */
-
-
-	#include<SdifFile.h>
-	PartialList * importSdif( const char * path )
+	PartialList * importSdif_( const char * path )
 	{
 		Loris::notifier << "importing Partials from " << path << Loris::endl;
 		Loris::SdifFile imp( path );
@@ -905,7 +784,7 @@ void distill( PartialList * partials )
 
 
 	#include<SpcFile.h>
-	PartialList * importSpc( const char * path )
+	PartialList * importSpc_( const char * path )
 	{
 		Loris::notifier << "importing Partials from " << path << Loris::endl;
 		Loris::SpcFile imp( path );
@@ -919,7 +798,7 @@ void distill( PartialList * partials )
 
 
 	#include<Morpher.h>
-	PartialList * morph( const PartialList * src0, const PartialList * src1, 
+	PartialList * morph_( const PartialList * src0, const PartialList * src1, 
 						 const BreakpointEnvelope * ffreq, 
 						 const BreakpointEnvelope * famp, 
 						 const BreakpointEnvelope * fbw )
@@ -946,7 +825,7 @@ void distill( PartialList * partials )
 
 
 	#include<Synthesizer.h>
-	SampleVector * synthesize( const PartialList * partials, double srate )
+	SampleVector * synthesize_( const PartialList * partials, double srate )
 	{
 		ThrowIfNull((PartialList *) partials);
 
@@ -1008,99 +887,16 @@ void distill( PartialList * partials )
 	 */
 
 
-	//#define LORIS_OPAQUE_POINTERS 0
-	//#include <loris.h>
-
 extern "C"
 BreakpointEnvelope * 
 createFreqReference( PartialList * partials, double minFreq, double maxFreq );
 
 
-	#include <cmath>
-
-
-	void scaleAmp( PartialList * partials, BreakpointEnvelope * ampEnv )
+	const char * version( void )
 	{
-		ThrowIfNull((PartialList *) partials);
-		ThrowIfNull((BreakpointEnvelope *) ampEnv);
-
-		Loris::notifier << "scaling amplitude of " << partials->size() << " Partials" << Loris::endl;
-
-		PartialList::iterator listPos;
-		for ( listPos = partials->begin(); listPos != partials->end(); ++listPos ) 
-		{
-			PartialIterator envPos;
-			for ( envPos = listPos->begin(); envPos != listPos->end(); ++envPos ) 
-			{		
-				envPos.breakpoint().setAmplitude( envPos.breakpoint().amplitude() * ampEnv->valueAt(envPos.time()) );
-			}
-		}	
+		static const char * vstr = LORIS_VERSION_STR;
+		return vstr;
 	}
-	/*	Scale the amplitude of the Partials in a PartialList according 
-		to an envelope representing a time-varying amplitude scale value.
-	 */
-
-
-	void scaleNoiseRatio( PartialList * partials, BreakpointEnvelope * noiseEnv )
-	{
-		ThrowIfNull((PartialList *) partials);
-		ThrowIfNull((BreakpointEnvelope *) noiseEnv);
-
-		Loris::notifier << "scaling noise ratio of " << partials->size() << " Partials" << Loris::endl;
-
-		PartialList::iterator listPos;
-		for ( listPos = partials->begin(); listPos != partials->end(); ++listPos ) 
-		{
-			PartialIterator envPos;
-			for ( envPos = listPos->begin(); envPos != listPos->end(); ++envPos ) 
-			{		
-				//	compute new bandwidth value:
-				double bw = envPos.breakpoint().bandwidth();
-				if ( bw < 1. ) 
-				{
-					double ratio = bw  / (1. - bw);
-					ratio *= noiseEnv->valueAt(envPos.time());
-					bw = ratio / (1. + ratio);
-				}
-				else 
-				{
-					bw = 1.;
-				}
-				
-				envPos.breakpoint().setBandwidth( bw );
-			}
-		}	
-	}
-	/*	Scale the relative noise content of the Partials in a PartialList 
-		according to an envelope representing a (time-varying) noise energy 
-		scale value.
-	 */
-
-
-	void shiftPitch( PartialList * partials, BreakpointEnvelope * pitchEnv )
-	{
-		ThrowIfNull((PartialList *) partials);
-		ThrowIfNull((BreakpointEnvelope *) pitchEnv);
-
-		Loris::notifier << "shifting pitch of " << partials->size() << " Partials" << Loris::endl;
-		
-		PartialList::iterator listPos;
-		for ( listPos = partials->begin(); listPos != partials->end(); ++listPos ) 
-		{
-			PartialIterator envPos;
-			for ( envPos = listPos->begin(); envPos != listPos->end(); ++envPos ) 
-			{		
-				//	compute frequency scale:
-				double scale = 
-					std::pow(2., (0.01 * pitchEnv->valueAt(envPos.time())) /12.);				
-				envPos.breakpoint().setFrequency( envPos.breakpoint().frequency() * scale );
-			}
-		}	
-	}
-	/*	Shift the pitch of all Partials in a PartialList according to 
-		the given pitch envelope. The pitch envelope is assumed to have 
-		units of cents (1/100 of a halfstep).
-	 */
 
 #ifdef __cplusplus
 extern "C" {
@@ -5100,7 +4896,7 @@ static PyObject *_wrap_dilate(PyObject *self, PyObject *args) {
     {
         try
         {
-            dilate(arg0,arg1,arg2);
+            dilate_str(arg0,arg1,arg2);
             
         }
         catch( Loris::Exception & ex ) 
@@ -5288,7 +5084,7 @@ static PyObject *_wrap_importSdif(PyObject *self, PyObject *args) {
     {
         try
         {
-            result = (PartialList *)importSdif((char const *)arg0);
+            result = (PartialList *)importSdif_((char const *)arg0);
             
         }
         catch( Loris::Exception & ex ) 
@@ -5322,7 +5118,7 @@ static PyObject *_wrap_importSpc(PyObject *self, PyObject *args) {
     {
         try
         {
-            result = (PartialList *)importSpc((char const *)arg0);
+            result = (PartialList *)importSpc_((char const *)arg0);
             
         }
         catch( Loris::Exception & ex ) 
@@ -5370,7 +5166,7 @@ static PyObject *_wrap_morph(PyObject *self, PyObject *args) {
     {
         try
         {
-            result = (PartialList *)morph((PartialList const *)arg0,(PartialList const *)arg1,(BreakpointEnvelope const *)arg2,(BreakpointEnvelope const *)arg3,(BreakpointEnvelope const *)arg4);
+            result = (PartialList *)morph_((PartialList const *)arg0,(PartialList const *)arg1,(BreakpointEnvelope const *)arg2,(BreakpointEnvelope const *)arg3,(BreakpointEnvelope const *)arg4);
             
         }
         catch( Loris::Exception & ex ) 
@@ -5407,7 +5203,7 @@ static PyObject *_wrap_synthesize(PyObject *self, PyObject *args) {
     {
         try
         {
-            result = (SampleVector *)synthesize((PartialList const *)arg0,arg1);
+            result = (SampleVector *)synthesize_((PartialList const *)arg0,arg1);
             
         }
         catch( Loris::Exception & ex ) 
@@ -5623,6 +5419,39 @@ static PyObject *_wrap_shiftPitch(PyObject *self, PyObject *args) {
 }
 
 
+static PyObject *_wrap_version(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    char *result ;
+    
+    if(!PyArg_ParseTuple(args,(char *)":version")) return NULL;
+    {
+        try
+        {
+            result = (char *)version();
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            //	(these are very unlikely to come from the interface
+            //	code, and cannot escape the procedural interface to
+            //	Loris, which catches all exceptions.)
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
+        }
+    }resultobj = PyString_FromString(result);
+    return resultobj;
+}
+
+
 static PyMethodDef loriscMethods[] = {
 	 { (char *)"PartialList_copy", _wrap_PartialList_copy, METH_VARARGS },
 	 { (char *)"new_PartialList", _wrap_new_PartialList, METH_VARARGS },
@@ -5741,6 +5570,7 @@ static PyMethodDef loriscMethods[] = {
 	 { (char *)"scaleAmp", _wrap_scaleAmp, METH_VARARGS },
 	 { (char *)"scaleNoiseRatio", _wrap_scaleNoiseRatio, METH_VARARGS },
 	 { (char *)"shiftPitch", _wrap_shiftPitch, METH_VARARGS },
+	 { (char *)"version", _wrap_version, METH_VARARGS },
 	 { NULL, NULL }
 };
 

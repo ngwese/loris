@@ -525,6 +525,8 @@ scaleNoiseRatio = lorisc.scaleNoiseRatio
 
 shiftPitch = lorisc.shiftPitch
 
+version = lorisc.version
+
 
 
 #-------------- VARIABLE WRAPPERS ------------------
