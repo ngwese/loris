@@ -134,6 +134,15 @@ public:
  	static void Export( const std::string & filename, double rate, int chans, int bits, 
 						const double * bufBegin, const double * bufEnd );
 
+#if ! defined(NO_TEMPLATE_MEMBERS)
+	template < class Iter >
+ 	static void Export( const std::string & filename, double rate, int chans, int bits, 
+						Iter bufBegin, Iter bufEnd )
+	{
+		Export( filename, rate, chans, bits, &(*bufBegin ), &(*bufEnd) );
+	}
+#endif
+
 /*	Export the sample data on the half-open (STL-style) range [bufBegin, bufEnd)
 	in the format of a AIFF samples file on the specified ostream, using the 
 	specified sample rate (in Hz), number of channels, and sample size (in bits).
