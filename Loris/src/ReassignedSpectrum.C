@@ -34,17 +34,6 @@ ReassignedSpectrum::ReassignedSpectrum( const vector< double > & window ) :
 	applyTimeRamp( _wintimeramp );
 	
 	computeWindowSpectrum( _window );
-	
-	//	compute the appropriate scale factor
-	//	to report correct component magnitudes:
-	double winsum = 0;
-	for ( int i = 0; i < _window.size(); ++i ) {
-		winsum += _window[i];
-	}
-	_windowMagnitudeScale = 2. / winsum;
-	
-	debugger << "ReassignedSpectrum: length is " << _transform.size() << 
-				" mag scale is " << magnitudeScale() << endl;
 }
 
 // ---------------------------------------------------------------------------
@@ -209,6 +198,18 @@ static const long OVERSAMPLE_WINDOW_SPECTRUM = 16;
 void
 ReassignedSpectrum::computeWindowSpectrum( const vector< double > & v )
 {
+	//	compute the appropriate scale factor
+	//	to report correct component magnitudes:
+	double winsum = 0;
+	for ( int i = 0; i < _window.size(); ++i ) {
+		winsum += _window[i];
+	}
+	_windowMagnitudeScale = 2. / winsum;
+	
+	debugger << "ReassignedSpectrum: length is " << _transform.size()
+			 << " mag scale is " << magnitudeScale() << endl;
+
+	//	now do the energy scale:
 	debugger << "AssociateBandwidth oversampling window spectrum by " << OVERSAMPLE_WINDOW_SPECTRUM << endl;
 	
 	FourierTransform ft( size() * OVERSAMPLE_WINDOW_SPECTRUM );
@@ -226,13 +227,14 @@ ReassignedSpectrum::computeWindowSpectrum( const vector< double > & v )
 
 	//	compute the window scale by summing the main
 	//	lobe samples (but not oversampling):
-	_windowEnergyScale = _mainlobe[0] * _mainlobe[0];
+	double sqrSum = _mainlobe[0] * _mainlobe[0];
 	for ( long j = OVERSAMPLE_WINDOW_SPECTRUM; j < _mainlobe.size(); j += OVERSAMPLE_WINDOW_SPECTRUM ) {
 		//	twice, because _mainlobe has only one side of
 		//	the mainlobe, and all samples but the center
 		//	(DC) sample are reflected on the other side:
-		_windowEnergyScale += 2. * _mainlobe[j] * _mainlobe[j];
+		sqrSum += 2. * _mainlobe[j] * _mainlobe[j];
 	}
+	_windowEnergyScale = 1. / sqrSum;
 }
 
 // ---------------------------------------------------------------------------
@@ -354,9 +356,12 @@ ReassignedSpectrum::reassignedTime( double fracFreqSample ) const
 //	or squishing (which can be caused by non-stationary frequency components).
 //	An add-hoc scale factor (found empirically by examining chirp analyses) is 
 //	applied to arrive at the final amplitude estimate.
+//
+//	KLUDGE:
+//	intBinNumber argument 
 //	
 double
-ReassignedSpectrum::reassignedMagnitude( double fracBinNum ) const
+ReassignedSpectrum::reassignedMagnitude( double fracBinNum,long intBinNumber ) const
 {
 	Assert( fracBinNum >= 0. );
 	
@@ -364,7 +369,7 @@ ReassignedSpectrum::reassignedMagnitude( double fracBinNum ) const
 #ifndef SMITHS_INGENEOUS_PARABOLAS
 
 	//	compute the offset in the oversampled window spectrum:
-	long intBinNumber = round(fracBinNum);
+	// long intBinNumber = round(fracBinNum);
 	
 #if Debug_Loris
 	//	sanity:
@@ -374,6 +379,8 @@ ReassignedSpectrum::reassignedMagnitude( double fracBinNum ) const
 #endif
 	
 	double a = magnitudeScale() * abs( _transform[ intBinNumber ] );
+	
+	intBinNumber = round(fracBinNum);	// !!!!!!!!!!
 	long offset = round( OVERSAMPLE_WINDOW_SPECTRUM * (intBinNumber - fracBinNum) );
 	
 	//	compute a more accurate peak amplitude from

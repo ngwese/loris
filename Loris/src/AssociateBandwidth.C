@@ -66,7 +66,7 @@ AssociateBandwidth::computeSurplusEnergy( void )
 	//	DC should never show up as noise: 
 	for ( int i = 1; i < _surplus.size(); ++i ) {
 		_surplus[i] = 
-			max(0., _spectralEnergy[i]-_sinusoidalEnergy[i]);
+			max(0., _spectralEnergy[i]-_sinusoidalEnergy[i]) * _spectrum.energyScale();
 	}
 }
 
@@ -200,11 +200,9 @@ void
 AssociateBandwidth::accumulateSpectrum( void )
 {
 	const int max_idx = _spectrum.size() / 2;
-	const double inverseEscale = 1. / _spectrum.energyScale();
 	for ( int i = 0; i < max_idx; ++i ) {
-		double m = std::abs( _spectrum[i] );
-		double espec = m * m * inverseEscale;
-		distribute( i * _hzPerSamp, espec, _spectralEnergy );
+		double m = std::abs( _spectrum[i] ) * _spectrum.magnitudeScale();
+		distribute( i * _hzPerSamp, m * m, _spectralEnergy );
 	}
 }
 
@@ -226,8 +224,9 @@ AssociateBandwidth::accumulateSinusoid( double f, double a )
 	distribute( f, 1., _weights );
 	
 	//	compute energy contribution and distribute 
-	//	at frequency f:
-	double esine = a * a;
+	//	at frequency f (scale to look like spectral
+	//	energy):
+	double esine = a * a / _spectrum.energyScale();
 	distribute( f, esine, _sinusoidalEnergy  );
 }
 

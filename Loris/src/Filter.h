@@ -45,26 +45,12 @@ public:
 //	next filtered sample from input sample:				
 	double nextSample( double );
 	
-//	coefficient computation:
-//	Return a pair of coefficient vectors, first is ma, second is ar.
-//	The gain and scaling are accounted for in the ma coefficients.
-//	(These are three commonly-used filters from Lemur.)
-	//	Chebychev order 3, cutoff 500, ripple -1.
-	static std::pair< const std::vector< double >, const std::vector< double > >
-		NormalCoefs( void );
-		
-	//	Chebychev order 3, cutoff 200, ripple -0.1.
-	static std::pair< const std::vector< double >, const std::vector< double > >
-		NarrowCoefs( void );
-		
-	static std::pair< const std::vector< double >, const std::vector< double > >
-		WideCoefs( void );
-	
 private:
 //	state:
 	std::vector< double > _xv, _yv;
 	std::vector< double > _maCoefs, _arCoefs;
 	double _scale;
+	int _p;
 	
 //	helper:
 static inline void shift( std::vector< double > & );

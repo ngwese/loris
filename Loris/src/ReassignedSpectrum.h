@@ -44,7 +44,7 @@ public:
 	double reassignedFrequency( unsigned long idx ) const;
 	double reassignedTime( double fracFreqSample ) const;
 	double reassignedPhase( double fracFreqSample, double timeCorrection ) const;	
-	double reassignedMagnitude( double fracBinNum ) const;
+	double reassignedMagnitude( double fracBinNum, long intBinNumber ) const;
 	
 	const std::complex< double > & operator[]( unsigned long idx ) const 
 		{ return _transform[idx]; }

@@ -41,11 +41,12 @@ class Oscillator
 public:
 //	construction:
 	Oscillator( void );
-	Oscillator( const Oscillator & other );
-	
 	// ~Oscillator( void );	//	use compiler-generated
 
-	Oscillator & operator= ( const Oscillator & other );
+//	reset the whole state at once:
+//	(get rid of this)
+	void reset( double radf, double amp, double bw, double ph );
+
 		
 //	state access/mutation:
 	double radianFreq( void ) const { return _frequency; }
@@ -58,30 +59,16 @@ public:
 	void setBandwidth( double x ) { _bandwidth = x; }
 	void setPhase( double x ) { _phase = x; }
 
-//	provide Filter access like iterator 
-//	access provided by PartialIteratorOwner:	
-	const std::auto_ptr< Filter > & filter( void ) const { return _filter; }
-	std::auto_ptr< Filter > 
-	setFilter( std::auto_ptr< Filter > f = std::auto_ptr< Filter >( 
-		new Filter( Filter::NormalCoefs().first, Filter::NormalCoefs().second ) ) ) 
-	{
-		std::auto_ptr< Filter > ret( _filter );
-		_filter = f;
-		return ret;
-	}
-
-//	reset the whole state at once:
-	void reset( double radf, double amp, double bw, double ph );
-
 //	sample generation:	
 	void generateSamples( std::vector< double > & buffer, long howMany, long offset,
 						  double targetFreq, double targetAmp, double targetBw );
 	
-//	-- private helpers --
 private:
-	inline double oscillate( double phase ) const;
-	inline double modulate( double bandwidth ) const;
-	
+//	-- unimplemented --
+//	not implemented until proven useful:
+	Oscillator( const Oscillator & other );
+	Oscillator & operator= ( const Oscillator & other );
+		
 //	-- instance variables --
 //	internal state:
 	double _frequency;	//	radians per sample

@@ -15,6 +15,7 @@
 #include "Oscillator.h"
 #include "Filter.h"
 #include "random.h"
+#include "Exception.h"
 #include <vector>
 
 #if !defined( Deprecated_cstd_headers )
@@ -27,9 +28,6 @@ using namespace std;
 
 Begin_Namespace( Loris )
 
-#pragma mark -
-#pragma mark construction
-
 // ---------------------------------------------------------------------------
 //	Oscillator construction
 // ---------------------------------------------------------------------------
@@ -39,49 +37,19 @@ Oscillator::Oscillator( void ) :
 	_frequency( 0. ),	//	radians per sample
 	_amplitude( 0. ),	//	absolute
 	_bandwidth( 0. ),	//	bandwidth coefficient (noise energy / total energy)
-	_phase( 0. ),		//	radians
-	_filter( new Filter( Filter::NormalCoefs().first, Filter::NormalCoefs().second ) )
+	_phase( 0. )		//	radians
 {
+	//	Chebychev order 3, cutoff 500, ripple -1.
+	static const double gain = 4.663939184e+04;
+	static const double extraScaling = 4.5;	//	was 6.
+	static const double maCoefs[] = { 1., 3., 3., 1. }; 
+	static const double arCoefs[] = { 0.9320209046, -2.8580608586, 2.9258684252, 0. };
+						   
+	_filter.reset( new Filter( vector< double >( maCoefs, maCoefs + 4 ), 
+							   vector< double >( arCoefs, arCoefs + 4 ),
+							   gain / extraScaling ) );
 }
 
-// ---------------------------------------------------------------------------
-//	Oscillator copy construction
-// ---------------------------------------------------------------------------
-//	This will have to be modified if Filter ever becomes a base class.
-//
-Oscillator::Oscillator( const Oscillator & other ) :
-	_frequency( other._frequency ),
-	_amplitude( other._amplitude ),
-	_bandwidth( other._bandwidth ),
-	_phase( other._phase ),
-	_filter( new Filter( *other._filter ) )
-{
-}	
-
-// ---------------------------------------------------------------------------
-//	assignment
-// ---------------------------------------------------------------------------
-//	This will have to be modified if Filter ever becomes a base class.
-//
-Oscillator &
-Oscillator::operator= (const Oscillator & other )
-{
-	//	do nothing if assigning to self:
-	if ( &other != this ) {	
-	//	do cloning first:
-		setFilter( auto_ptr< Filter >( new Filter( * other._filter ) ) );
-			
-		_frequency = other._frequency;
-		_amplitude = other._amplitude;
-		_bandwidth = other._bandwidth;
-		_phase = other._phase;
-	}
-	
-	return *this;
-}
-
-#pragma mark -
-#pragma mark state access/mutation
 // ---------------------------------------------------------------------------
 //	reset
 // ---------------------------------------------------------------------------
@@ -95,8 +63,6 @@ Oscillator::reset( double radf, double amp, double bw, double ph )
 	setPhase( ph );
 }
 
-#pragma mark -
-#pragma mark sample generation
 // ---------------------------------------------------------------------------
 //	generateSamples
 // ---------------------------------------------------------------------------
@@ -112,90 +78,78 @@ void
 Oscillator::generateSamples( vector< double > & buffer, long howMany, long offset,
 							 double targetFreq, double targetAmp, double targetBw )
 {
-//	if no samples are generated, set the oscillator state to the
-//	target values anyway:
-	if ( howMany <= 0 ) {
-		_frequency = targetFreq;
-		_amplitude = targetAmp;
-		_bandwidth = targetBw;
-		return;
-	}
-		
-//	compute trajectories:
-	const double dFreq = (targetFreq - _frequency) / howMany;
-	const double dAmp = (targetAmp - _amplitude) / howMany;
-	const double dBw = (targetBw - _bandwidth) / howMany;
+//	caller is responsible for making sure that
+//	the sample buffer indices are valid:
+	Assert( offset > 0 );
+	Assert( offset + howMany < buffer.size() );
+	Assert( howMany >= 0 );
 	
-	for ( int i = 0; i < howMany; ++i )
-	{
-//	compute a sample and add it into the buffer.
-		//	don't insert samples at indices less than zero, but
-		//	compute the sample anyway, because the oscillator and
-		//	modulator might have state that need to be updated:
-		double x = modulate( _bandwidth ) * _amplitude * oscillate( _phase );
-				//fmod( _phase * 0.1, 1.0 );
-		if ( offset + i >= 0 ) 	
-			buffer[ offset + i ] += x;
-			//buffer.at( offset + i ) += x;
-			
-//	update the oscillator state:
-		_phase += _frequency;	//	_frequency is radians per sample
-		_frequency += dFreq;
-		_amplitude += dAmp;
-		_bandwidth += dBw;
-		
-	}	// end of sample computation loop
-
-//	normalize the state phase to prevent eventual loss of precision at
-//	high oscillation frequencies:
-//	(Doesn't really matter much what fmod does, as long as it brings 
-//	the phase nearer to zero.)
-	_phase = fmod( _phase, TwoPi );
-}
-
-#pragma mark -
-#pragma mark private helpers
-
-// ---------------------------------------------------------------------------
-//	oscillate
-// ---------------------------------------------------------------------------
-//	Could try doing this with a lookup table too, but it seems to be
-//	very little computation compared to modulate.
-//
-inline double 
-Oscillator::oscillate( double phase ) const
-{
-	return cos( phase );
-}
-
-// ---------------------------------------------------------------------------
-//	modulate
-// ---------------------------------------------------------------------------
-//	Yuck, Jackson, two square roots!
-//
-inline double 
-Oscillator::modulate( double bandwidth ) const
-{
 //	clamp bandwidth:
-	if ( bandwidth > 1. )
-		bandwidth = 1.;
-	else if ( bandwidth < 0. )
-		bandwidth = 0.;
+	if ( targetBw > 1. )
+		targetBw = 1.;
+	else if ( targetBw < 0. )
+		targetBw = 0.;
 	
-//	get a filtered noise sample, use scale as std deviation:
-//	can build scale into filter gain.
-	double noise = _filter->nextSample( gaussian_normal() );
+//	generate and accumulate samples:
+//	(if no samples are generated, the oscillator state 
+//	will be set below to the target values anyway):
+	if ( howMany > 0 )
+	{
+	//	compute trajectories:
+		const double dFreq = (targetFreq - _frequency) / howMany;
+		const double dAmp = (targetAmp - _amplitude) / howMany;
+		const double dBw = (targetBw - _bandwidth) / howMany;
+		
+	//	temp local variables for speed:
+		double f = _frequency, a = _amplitude, b = _bandwidth, p = _phase;
+		double noise, mod, osc, samp;
+		for ( int i = 0; i < howMany; ++i )
+		{
+			//
+			//	get a filtered noise sample, use scale as std deviation:
+			//	can build scale into filter gain.
+			noise = _filter->nextSample( gaussian_normal() );
 
-//	compute modulation:
-//
-//	This will give the right amplitude modulation when scaled
-//	by the Partial amplitude:
-//
-//	carrier amp: sqrt( 1. - bandwidth ) * amp
-//	modulation index: sqrt( 2. * bandwidth ) * amp
-//	filtered noise is modulator
-//
-	return sqrt( 1. - bandwidth ) + ( noise * sqrt( 2. * bandwidth ) );	
+			//	compute modulation:
+			//
+			//	This will give the right amplitude modulation when scaled
+			//	by the Partial amplitude:
+			//
+			//	carrier amp: sqrt( 1. - bandwidth ) * amp
+			//	modulation index: sqrt( 2. * bandwidth ) * amp
+			//	filtered noise is modulator
+			//
+			mod = sqrt( 1. - b ) + ( noise * sqrt( 2. * b ) );	
+			osc = cos( p );
+			
+			//	compute a sample and add it into the buffer:
+			samp = mod * a * osc;
+			buffer[ offset + i ] += samp;
+				
+			//	update the oscillator state:
+			p += f;	//	frequency is radians per sample
+			f += dFreq;
+			a += dAmp;
+			b += dBw;
+			
+		}	// end of sample computation loop
+		
+		//	update phase from loop variable and normalize 
+		//	to prevent eventual loss of precision at
+		//	high oscillation frequencies:
+		//	(Doesn't really matter much exactly what fmod does, 
+		//	as long as it brings the phase nearer to zero.)
+		_phase = fmod( p, TwoPi );
+	}
+	
+//	set the state variables to their target values,
+//	just in case they didn't arrive exactly (overshooting
+//	amplitude or, especially, bandwidth, could be bad, and
+//	does happen):
+	_frequency = targetFreq;
+	_amplitude = targetAmp;
+	_bandwidth = targetBw;
+
 }
 
 End_Namespace( Loris )

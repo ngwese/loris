@@ -70,7 +70,7 @@ Synthesizer::Synthesizer( const Synthesizer & other ) :
 	_sampleRate( other._sampleRate ),
 	_offset( other._offset ),
 	_fadeTime( other._fadeTime ),
-	_oscillator( new Oscillator( * other._oscillator ) ),
+	//_oscillator( new Oscillator( * other._oscillator ) ),
 	_samples( other._samples ),
 	PartialIteratorOwner( other )
 {
@@ -98,7 +98,7 @@ Synthesizer::operator=( const Synthesizer & other )
 		_samples.reserve( other._samples.size() );
 		
 		//	do cloning:
-		auto_ptr< Oscillator > osc( new Oscillator( * other._oscillator ) );
+		//auto_ptr< Oscillator > osc( new Oscillator( * other._oscillator ) );
 		PartialIteratorPtr iter( other.iterator()->clone() );
 		
 		_sampleRate = other._sampleRate;
@@ -106,7 +106,7 @@ Synthesizer::operator=( const Synthesizer & other )
 		_fadeTime = other._fadeTime;
 		_samples = other._samples;
 		
-		setOscillator( osc );
+		//setOscillator( osc );
 		setIterator( iter );
 	}
 	
