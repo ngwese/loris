@@ -11,9 +11,9 @@
 #!/bin/sh
 rm -f config.cache
 rm -f acconfig.h
+mkdir config
 echo "- aclocal."
-# aclocal -I m4 -I /usr/local/share/aclocal
-aclocal -I m4 
+aclocal -I config
 echo "- autoconf."
 autoconf
 echo "- acconfig."
@@ -21,5 +21,5 @@ acconfig
 echo "- autoheader."
 autoheader
 echo "- automake."
-automake -foreign
+automake --foreign --add-missing
 exit

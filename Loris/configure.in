@@ -9,12 +9,15 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 AC_INIT(reconf)
+AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE(loris,1.0beta5)
 LF_CONFIGURE_CC
 LF_CONFIGURE_CXX
 LF_HOST_TYPE
 LF_SET_WARNINGS
+
+AC_SUBST(ac_aux_dir)
 
 AM_PROG_LIBTOOL
 AC_PATH_PROG(SWIG, swig)
@@ -396,5 +399,5 @@ AC_SUBST(PERLINCLUDE)
 #----------------------------------------------------------------
 # Generate Makefiles
 #----------------------------------------------------------------
-AC_OUTPUT(Makefile doc/Makefile m4/Makefile Makefile src/Makefile \
+AC_OUTPUT(Makefile doc/Makefile Makefile src/Makefile \
 pi/Makefile scripting/Makefile test/Makefile)
