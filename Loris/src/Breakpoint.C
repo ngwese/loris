@@ -32,11 +32,11 @@
  */
 
 #if HAVE_CONFIG_H
-	#include <config.h>
+	#include "config.h"
 #endif
 
-#include<Breakpoint.h>
-#include<Exception.h>
+#include "Breakpoint.h"
+#include "Exception.h"
 #include <cmath>
 
 //	begin namespace

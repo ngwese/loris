@@ -54,7 +54,7 @@
 
 
 #include "loris.h"
-#include <Notifier.h>
+#include "Notifier.h"
 
 using namespace Loris;
 

@@ -53,8 +53,8 @@
 #include "loris.h"
 #include "lorisException_pi.h"
 
-#include <Analyzer.h>
-#include <Notifier.h>
+#include "Analyzer.h"
+#include "Notifier.h"
 
 using namespace Loris;
 

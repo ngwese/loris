@@ -33,10 +33,10 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-#include <Distiller.h>
-#include <Exception.h>
-#include <Partial.h>
-#include <PartialList.h>
+#include "Distiller.h"
+#include "Exception.h"
+#include "Partial.h"
+#include "PartialList.h"
 
 #include <cmath>
 #include <iostream>

@@ -38,7 +38,7 @@
  *
  */
 
-#include <Partial.h>
+#include "Partial.h"
 #include <iterator>
 #include <vector>
 

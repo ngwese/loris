@@ -32,19 +32,19 @@
  *
  */
 
-#include <AiffFile.h>
-#include <Analyzer.h>
-#include <BreakpointEnvelope.h>
-#include <Channelizer.h>
-#include <Dilator.h>
-#include <Distiller.h>
-#include <Exception.h>
-#include <FrequencyReference.h>
-#include <Morpher.h>
-#include <Notifier.h>
-#include <Partial.h>
-#include <SdifFile.h>
-#include <Synthesizer.h>
+#include "AiffFile.h"
+#include "Analyzer.h"
+#include "BreakpointEnvelope.h"
+#include "Channelizer.h"
+#include "Dilator.h"
+#include "Distiller.h"
+#include "Exception.h"
+#include "FrequencyReference.h"
+#include "Morpher.h"
+#include "Notifier.h"
+#include "Partial.h"
+#include "SdifFile.h"
+#include "Synthesizer.h"
 
 #include <iostream>
 #include <vector>

@@ -41,18 +41,18 @@
  */
 
 #if HAVE_CONFIG_H
-	#include <config.h>
+	#include "config.h"
 #endif
 
-#include <SpcFile.h>
+#include "SpcFile.h"
 
-#include <AiffData.h>
-#include <Breakpoint.h>
-#include <Endian.h>
-#include <Exception.h>
-#include <Marker.h>
-#include <Notifier.h>
-#include <PartialUtils.h>
+#include "AiffData.h"
+#include "Breakpoint.h"
+#include "Endian.h"
+#include "Exception.h"
+#include "Marker.h"
+#include "Notifier.h"
+#include "PartialUtils.h"
 
 #include <algorithm>
 #include <cmath>

@@ -31,16 +31,16 @@
  *
  */
 #if HAVE_CONFIG_H
-	#include <config.h>
+	#include "config.h"
 #endif
 
-#include <AiffFile.h>
+#include "AiffFile.h"
 
-#include <AiffData.h>
-#include <Exception.h>
-#include <Marker.h>
-#include <Notifier.h>
-#include <Synthesizer.h>
+#include "AiffData.h"
+#include "Exception.h"
+#include "Marker.h"
+#include "Notifier.h"
+#include "Synthesizer.h"
 
 #include <algorithm>
 #include <climits>

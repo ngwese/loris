@@ -32,14 +32,14 @@
  */
  
 #if HAVE_CONFIG_H
-	#include <config.h>
+	#include "config.h"
 #endif
 
-#include <Oscillator.h>
+#include "Oscillator.h"
 
-#include <Filter.h>
-#include <Partial.h>
-#include <Notifier.h>
+#include "Filter.h"
+#include "Partial.h"
+#include "Notifier.h"
 
 #include <cmath>
 #include <vector>

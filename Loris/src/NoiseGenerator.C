@@ -33,10 +33,10 @@
  */
 
 #if HAVE_CONFIG_H
-	#include <config.h>
+	#include "config.h"
 #endif
 
-#include <NoiseGenerator.h>
+#include "NoiseGenerator.h"
 #include <cmath>
 
 //	begin namespace

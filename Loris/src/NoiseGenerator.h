@@ -34,7 +34,7 @@
  *
  */
 
-#include <Filter.h>
+#include "Filter.h"
 
 //	begin namespace
 namespace Loris {

@@ -32,12 +32,12 @@
  */
 
 #if HAVE_CONFIG_H
-	#include <config.h>
+	#include "config.h"
 #endif
 
-#include <ReassignedSpectrum.h>
-#include <Notifier.h>
-#include <Exception.h>
+#include "ReassignedSpectrum.h"
+#include "Notifier.h"
+#include "Exception.h"
 #include <algorithm>
 #include <cstdlib>	//	for std::abs()
 

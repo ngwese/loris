@@ -33,10 +33,10 @@
  *
  */
 #if HAVE_CONFIG_H
-	#include <config.h>
+	#include "config.h"
 #endif
 
-#include <Marker.h>
+#include "Marker.h"
 
 //	begin namespace
 namespace Loris {

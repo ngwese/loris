@@ -35,15 +35,15 @@
  *
  */
 #if HAVE_CONFIG_H
-	#include <config.h>
+	#include "config.h"
 #endif
 
-#include <Resampler.h>
-#include <Breakpoint.h>
-#include <Exception.h>
-#include <Notifier.h>
-#include <Partial.h>
-#include <PartialList.h>
+#include "Resampler.h"
+#include "Breakpoint.h"
+#include "Exception.h"
+#include "Notifier.h"
+#include "Partial.h"
+#include "PartialList.h"
 
 //	begin namespace
 namespace Loris {

@@ -72,15 +72,15 @@ SDIF spec: http://www.cnmat.berkeley.edu/SDIF/
 */
 
 #if HAVE_CONFIG_H
-	#include <config.h>
+	#include "config.h"
 #endif
 
-#include <SdifFile.h>
-#include <Exception.h>
-#include <Notifier.h>
-#include <Partial.h>
-#include <PartialList.h>
-#include <PartialPtrs.h>
+#include "SdifFile.h"
+#include "Exception.h"
+#include "Notifier.h"
+#include "Partial.h"
+#include "PartialList.h"
+#include "PartialPtrs.h"
 
 #include <cmath>
 #include <cstdio>
@@ -168,7 +168,8 @@ namespace Loris {
     /* These won't necessarily be the right size on any conceivable
        platform, so you may need to change them by hand.  The call to
        SDIF_Init() performs a sanity check of the sizes of these types,
-       so if they're wrong you'll find out about it. */
+       so if they're wrong you'll find out about it. 
+       */
 
     typedef unsigned short  sdif_unicode;
     typedef short           sdif_int16;
@@ -1342,7 +1343,7 @@ static void import_sdif( const std::string &infilename,
 	if ( partials.size() == 0 )
 	{
 		notifier << "No Partials were imported from " << infilename 
-				 << ", no (non-empty) 1TRC frames found." << endl;
+				 << ", no (non-empty) SDIF frames found." << endl;
 	}
 	
 }

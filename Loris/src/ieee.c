@@ -1,14 +1,14 @@
-#include <math.h>
-#include "ieee.h"
-
 /*
  * C O N V E R T   T O   I E E E   E X T E N D E D
  */
 
 #if HAVE_CONFIG_H
-	#include <config.h>
+	#include "config.h"
 #endif
 
+#include "ieee.h"
+
+#include <math.h>
 
 /* 
  *

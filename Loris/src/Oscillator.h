@@ -33,7 +33,7 @@
  *
  */
 
-#include <NoiseGenerator.h>
+#include "NoiseGenerator.h"
 #include <vector>
 
 //	begin namespace

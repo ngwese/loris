@@ -36,7 +36,7 @@
  
 #include <utility>
 #include <vector>
-#include <Breakpoint.h>
+#include "Breakpoint.h"
 
 //	begin namespace
 namespace Loris {

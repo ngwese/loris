@@ -36,11 +36,11 @@
 #include <string>
 #include <vector>
 
-#include <AiffFile.h>
-#include <Exception.h>
-#include <Marker.h>
-#include <SdifFile.h>
-#include <SpcFile.h>
+#include "AiffFile.h"
+#include "Exception.h"
+#include "Marker.h"
+#include "SdifFile.h"
+#include "SpcFile.h"
 
 using std::cout;
 using std::string;

@@ -36,10 +36,12 @@
  *
  */
 
-#include <Breakpoint.h>
-#include <Exception.h>
+#include "Breakpoint.h"
+#include "Exception.h"
 
 #include <map>
+//#include <utility>
+//#include <vector>
 
 //	begin namespace
 namespace Loris {
@@ -85,6 +87,8 @@ class Partial_ConstIterator;
 //		findAfter( time )
 //		begin (const and non-const)
 //		end (const and non-const)
+//		first (const and non-const)
+//		last (const and non-const)
 //
 class Partial
 {
@@ -94,6 +98,9 @@ public:
 	typedef int label_type;	// should verify that this is a 32 bit type.
 	
 	typedef std::map< double, Breakpoint > container_type;
+	//	typedef std::vector< std::pair< double, Breakpoint > > container_type;
+	//	see Partial.C for a discussion of issues surrounding the 
+	//	choice of std::map as a Breakpoint container.
 	typedef Partial_Iterator iterator;
 	typedef Partial_ConstIterator const_iterator;
 	typedef container_type::size_type size_type;
@@ -319,7 +326,7 @@ public:
 //	-- implementation --
 private:
 	label_type _label;
-	container_type _bpmap;	//	Breakpoint envelope
+	container_type _breakpoints;	//	Breakpoint envelope
 	 
 };	//	end of class Partial
 
@@ -327,15 +334,16 @@ private:
 //	class Partial_Iterator
 //
 //	Non-const iterator for the Loris::Partial Breakpoint map. Wraps
-//	the non-const iterator for std::map< double, Breakpoint >. Implements
-//	a bidirectional iterator interface, and additionally offers time
+//	the non-const iterator for the (time,Breakpoint) pair container
+//	Partial::container_type. Partial_Iterator implements a
+//	bidirectional iterator interface, and additionally offers time
 //	and Breakpoint (reference) access through time() and breakpoint()
-//	memebrs.
+//	members.
 //
 class Partial_Iterator
 {
 //	-- instance variables --
-	typedef std::map< double, Breakpoint > BaseContainer;
+	typedef Partial::container_type BaseContainer;
 	typedef BaseContainer::iterator BaseIterator;
 	BaseIterator _iter;
 	
@@ -343,10 +351,10 @@ class Partial_Iterator
 public:
 //	-- bidirectional iterator interface --
 	typedef BaseIterator::iterator_category	iterator_category;
-	typedef Breakpoint     								value_type;
+	typedef Breakpoint     					value_type;
 	typedef BaseIterator::difference_type  	difference_type;
-	typedef Breakpoint *								pointer;
-	typedef Breakpoint &								reference;
+	typedef Breakpoint *					pointer;
+	typedef Breakpoint &					reference;
 
 //	construction:
 //	(allow compiler to generate copy, assignment, and destruction):
@@ -401,15 +409,16 @@ private:
 //	class Partial_ConstIterator
 //
 //	Const iterator for the Loris::Partial Breakpoint map. Wraps
-//	the const iterator for std::map< double, Breakpoint >. Implements
-//	a bidirectional iterator interface, and additionally offers time
+//	the non-const iterator for the (time,Breakpoint) pair container
+//	Partial::container_type. Partial_Iterator implements a
+//	bidirectional iterator interface, and additionally offers time
 //	and Breakpoint (reference) access through time() and breakpoint()
-//	memebrs.
+//	members.
 //
 class Partial_ConstIterator
 {
 //	-- instance variables --
-	typedef std::map< double, Breakpoint > BaseContainer;
+	typedef Partial::container_type BaseContainer;
 	typedef BaseContainer::const_iterator BaseIterator;
 	BaseIterator _iter;
 	
@@ -417,10 +426,10 @@ class Partial_ConstIterator
 public:
 //	-- bidirectional iterator interface --
 	typedef BaseIterator::iterator_category	iterator_category;
-	typedef Breakpoint     								value_type;
+	typedef Breakpoint     					value_type;
 	typedef BaseIterator::difference_type  	difference_type;
-	typedef const Breakpoint *							pointer;
-	typedef const Breakpoint &							reference;
+	typedef const Breakpoint *				pointer;
+	typedef const Breakpoint &				reference;
 
 //	construction:
 //	(allow compiler to generate copy, assignment, and destruction):

@@ -32,15 +32,15 @@
  */
 
 #if HAVE_CONFIG_H
-	#include <config.h>
+	#include "config.h"
 #endif
 
-#include <Dilator.h>
-#include <Breakpoint.h>
-#include <Exception.h>
-#include <Notifier.h>
-#include <Partial.h>
-#include <PartialList.h>
+#include "Dilator.h"
+#include "Breakpoint.h"
+#include "Exception.h"
+#include "Notifier.h"
+#include "Partial.h"
+#include "PartialList.h"
 
 #include <algorithm>
 

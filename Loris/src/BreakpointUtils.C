@@ -32,11 +32,11 @@
  */
 
 #if HAVE_CONFIG_H
-	#include <config.h>
+	#include "config.h"
 #endif
 
-#include <BreakpointUtils.h>
-#include <Breakpoint.h>
+#include "BreakpointUtils.h"
+#include "Breakpoint.h"
 
 #include <cmath>
 #if defined(HAVE_M_PI) && (HAVE_M_PI)

@@ -8,13 +8,13 @@
 #include <string>
 #include <vector>
 
-#include <AiffFile.h>
-#include <Analyzer.h>
-#include <Channelizer.h>
-#include <Distiller.h>
-#include <FrequencyReference.h>
-#include <Resampler.h>
-#include <SdifFile.h>
+#include "AiffFile.h"
+#include "Analyzer.h"
+#include "Channelizer.h"
+#include "Distiller.h"
+#include "FrequencyReference.h"
+#include "Resampler.h"
+#include "SdifFile.h"
 
 using std::cout;
 using std::endl;

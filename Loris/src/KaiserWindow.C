@@ -32,11 +32,11 @@
  */
 
 #if HAVE_CONFIG_H
-	#include <config.h>
+	#include "config.h"
 #endif
 
-#include <KaiserWindow.h>
-#include <Exception.h>
+#include "KaiserWindow.h"
+#include "Exception.h"
 #include <cmath>
 
 #if defined(HAVE_M_PI) && (HAVE_M_PI)

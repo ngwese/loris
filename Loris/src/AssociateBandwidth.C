@@ -34,15 +34,15 @@
  */
 
 #if HAVE_CONFIG_H
-	#include <config.h>
+	#include "config.h"
 #endif
 
-#include <AssociateBandwidth.h>
-#include <Breakpoint.h>
-#include <BreakpointUtils.h>
-#include <Exception.h>
-#include <Notifier.h>
-#include <SpectralPeaks.h>
+#include "AssociateBandwidth.h"
+#include "Breakpoint.h"
+#include "BreakpointUtils.h"
+#include "Exception.h"
+#include "Notifier.h"
+#include "SpectralPeaks.h"
 
 #include <algorithm>
 #include <cmath>

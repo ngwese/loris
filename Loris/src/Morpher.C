@@ -32,17 +32,17 @@
  */
 
 #if HAVE_CONFIG_H
-	#include <config.h>
+	#include "config.h"
 #endif
 
-#include <Morpher.h>
-#include <Breakpoint.h>
-#include <Envelope.h>
-#include <Exception.h>
-#include <Notifier.h>
-#include <Partial.h>
-#include <PartialList.h>
-#include <PartialUtils.h>
+#include "Morpher.h"
+#include "Breakpoint.h"
+#include "Envelope.h"
+#include "Exception.h"
+#include "Notifier.h"
+#include "Partial.h"
+#include "PartialList.h"
+#include "PartialUtils.h"
 
 #include <algorithm>
 #include <memory>
@@ -91,23 +91,6 @@ Morpher::~Morpher( void )
 #pragma mark -- morphed parameter computation --
 
 // ---------------------------------------------------------------------------
-//	evaluateAt - STATIC
-// ---------------------------------------------------------------------------
-//	Static helper function that evaluates a Partial's parameters at a
-//	specified time and returns them as a Breakpoint. Actually, it
-//	assigns them to a Breakpoint passed in by reference, for efficiency.
-//	Assumes that p is a valid Partial, otherwise the Partial
-//	parameter evaluators will except.
-//
-static inline void evaluateAt( const Partial & p, double time, Breakpoint & retBkpt )
-{
-	retBkpt.setAmplitude( p.amplitudeAt( time ) );
-	retBkpt.setFrequency( p.frequencyAt( time ) );
-	retBkpt.setBandwidth( p.bandwidthAt( time ) );
-	retBkpt.setPhase( p.phaseAt( time ) );
-}
-
-// ---------------------------------------------------------------------------
 //	morphParameters - Breakpoint to Breakpoint
 // ---------------------------------------------------------------------------
 //	Compute morphed parameter values at the specified time, using
@@ -135,7 +118,7 @@ Morpher::morphParameters( const Breakpoint & srcBkpt, const Breakpoint & tgtBkpt
 	//	(if amp is zero, then even if alpha is very small
 	//	the effect is to multiply by zero, because 0^x = 0).
 	using std::pow;
-	static const double Epsilon = 1E-12;
+	static const double Epsilon = 1E-6;
 	retBkpt.setAmplitude( pow(tgtBkpt.amplitude()+Epsilon, alphaA) * pow(srcBkpt.amplitude()+Epsilon, (1.-alphaA)) );
 #endif	
 	
@@ -164,7 +147,6 @@ Morpher::morphParameters( const Breakpoint & srcBkpt, const Partial & tgtPartial
 	{
 		//	evalute the target Partial at time:
 		Breakpoint tgtBkpt = tgtPartial.parametersAt( time );
-		//evaluateAt( tgtPartial, time, tgtBkpt );
 		
 		//	compute weighted average parameters for 
 		//	the return Breakpoint:	
@@ -200,7 +182,6 @@ Morpher::morphParameters( const Partial & srcPartial, const Breakpoint & tgtBkpt
 	{
 		//	evalute the target Partial at time:
 		Breakpoint srcBkpt = srcPartial.parametersAt( time );
-		//evaluateAt( srcPartial, time, srcBkpt );
 		
 		//	compute weighted average parameters for 
 		//	the return Breakpoint:	
@@ -240,14 +221,12 @@ Morpher::morphParameters( const Partial & srcPartial, const Partial & tgtPartial
 	{
 		//	compute interpolated values for srcPartial:
 		srcBkpt  = srcPartial.parametersAt( time );
-		//evaluateAt( srcPartial, time, srcBkpt );
 	}
 	else
 	{
 		//	srcPartial is a dummy Partial, just fade (amplitude scale)
 		//	the target Partial:
 		retBkpt = tgtPartial.parametersAt( time );
-		//evaluateAt( tgtPartial, time, retBkpt );
 		retBkpt.setAmplitude( _ampFunction->valueAt( time ) * retBkpt.amplitude() );
 		return;
 	}
@@ -260,14 +239,12 @@ Morpher::morphParameters( const Partial & srcPartial, const Partial & tgtPartial
 	{
 		//	compute interpolated values for tgtPartial:
 		tgtBkpt = tgtPartial.parametersAt( time );
-		//evaluateAt( tgtPartial, time, tgtBkpt );
 	}
 	else
 	{
 		//	tgtPartial is a dummy Partial, just fade (amplitude scale)
 		//	the source Partial:
 		retBkpt = srcPartial.parametersAt( time );
-		//evaluateAt( srcPartial, time, retBkpt );
 		retBkpt.setAmplitude( (1.-_ampFunction->valueAt( time )) * retBkpt.amplitude() );		
 		return;
 	}

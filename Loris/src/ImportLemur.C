@@ -33,16 +33,16 @@
  */
 
 #if HAVE_CONFIG_H
-	#include <config.h>
+	#include "config.h"
 #endif
 
-#include <ImportLemur.h>
-#include <Endian.h>
-#include <Exception.h>
-#include <Partial.h>
-#include <PartialList.h>
-#include <Breakpoint.h>
-#include <Notifier.h>
+#include "ImportLemur.h"
+#include "Endian.h"
+#include "Exception.h"
+#include "Partial.h"
+#include "PartialList.h"
+#include "Breakpoint.h"
+#include "Notifier.h"
 #include <algorithm>
 #include <cmath>
 #include <fstream>

@@ -34,8 +34,8 @@
  *
  */
 
-#include <Partial.h>
-#include <Exception.h>
+#include "Partial.h"
+#include "Exception.h"
 
 #include <cmath>
 #include <iostream>

@@ -33,7 +33,7 @@
  */
 
 #if HAVE_CONFIG_H
-	#include <config.h>
+	#include "config.h"
 #endif
 
 #include <algorithm>
@@ -41,12 +41,12 @@
 #include <utility>
 #include <vector>
 
-#include <Breakpoint.h>
-#include <Envelope.h>
-#include <Notifier.h>
-#include <Partial.h>	//	yuk, just for label type
-#include <ReassignedSpectrum.h>
-#include <SpectralPeakSelector.h>
+#include "Breakpoint.h"
+#include "Envelope.h"
+#include "Notifier.h"
+#include "Partial.h"	//	yuk, just for label type
+#include "ReassignedSpectrum.h"
+#include "SpectralPeakSelector.h"
 
 
 //	begin namespace

@@ -32,11 +32,11 @@
  */
 
 #if HAVE_CONFIG_H
-	#include <config.h>
+	#include "config.h"
 #endif
 
-#include<BreakpointEnvelope.h>
-#include<Notifier.h>
+#include "BreakpointEnvelope.h"
+#include "Notifier.h"
 
 //	begin namespace
 namespace Loris {

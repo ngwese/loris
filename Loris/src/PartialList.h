@@ -37,7 +37,7 @@
 //	Seems like we shouldn't need to include Partial.h, but 
 //	without it, I can't instantiate a PartialList. I need
 //	a definition of Partial for PartialList to be unambiguous.
-#include <Partial.h>
+#include "Partial.h"
 #include <list>
 
 //	begin namespace

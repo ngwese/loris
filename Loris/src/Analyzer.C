@@ -32,23 +32,23 @@
  */
 
 #if HAVE_CONFIG_H
-	#include <config.h>
+	#include "config.h"
 #endif
 
-#include <Analyzer.h>
+#include "Analyzer.h"
 
-#include <AssociateBandwidth.h>
-#include <Breakpoint.h>
-#include <BreakpointEnvelope.h>
-#include <Envelope.h>
-#include <Exception.h>
-#include <KaiserWindow.h>
-#include <Notifier.h>
-#include <Partial.h>
-#include <PartialPtrs.h>
-#include <ReassignedSpectrum.h>
-#include <SpectralPeakSelector.h>
-#include <PartialBuilder.h>
+#include "AssociateBandwidth.h"
+#include "Breakpoint.h"
+#include "BreakpointEnvelope.h"
+#include "Envelope.h"
+#include "Exception.h"
+#include "KaiserWindow.h"
+#include "Notifier.h"
+#include "Partial.h"
+#include "PartialPtrs.h"
+#include "ReassignedSpectrum.h"
+#include "SpectralPeakSelector.h"
+#include "PartialBuilder.h"
 
 #include <algorithm>
 #include <cmath>

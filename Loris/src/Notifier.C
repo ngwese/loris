@@ -39,10 +39,10 @@
  */
 
 #if HAVE_CONFIG_H
-	#include <config.h>
+	#include "config.h"
 #endif
 
-#include<Notifier.h>
+#include "Notifier.h"
 #include <string>
 #include <cstdio>
 

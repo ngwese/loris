@@ -35,7 +35,7 @@
  *
  */
 
-#include <SpectralPeaks.h>
+#include "SpectralPeaks.h"
 
 #include <vector>
 

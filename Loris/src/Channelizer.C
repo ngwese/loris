@@ -32,14 +32,14 @@
  */
 
 #if HAVE_CONFIG_H
-	#include <config.h>
+	#include "config.h"
 #endif
 
-#include <Channelizer.h>
-#include <Envelope.h>
-#include <Partial.h>
-#include <PartialList.h>
-#include <Notifier.h>
+#include "Channelizer.h"
+#include "Envelope.h"
+#include "Partial.h"
+#include "PartialList.h"
+#include "Notifier.h"
 
 #include <cmath>
 

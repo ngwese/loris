@@ -33,7 +33,7 @@
  *
  */
 
-#include <Partial.h>
+#include "Partial.h"
 
 #include <algorithm>
 #include <functional>

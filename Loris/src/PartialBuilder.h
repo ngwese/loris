@@ -40,10 +40,10 @@
  *
  */
  
-#include <Partial.h>
-#include <PartialList.h>
-#include <PartialPtrs.h>
-#include <SpectralPeaks.h>
+#include "Partial.h"
+#include "PartialList.h"
+#include "PartialPtrs.h"
+#include "SpectralPeaks.h"
 
 //	begin namespace
 namespace Loris {

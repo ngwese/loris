@@ -69,9 +69,6 @@
 #include <functional>
 #include <vector>
 
-//	forward declare this type from fftw.h:
-//struct fftw_plan;
-
 //	begin namespace
 namespace Loris {
 

@@ -34,8 +34,8 @@
  */
 #include <memory>
 #include <vector>
-#include <Partial.h>
-#include <PartialList.h>
+#include "Partial.h"
+#include "PartialList.h"
 
 //	begin namespace
 namespace Loris {

@@ -32,17 +32,17 @@
  */
 
 #if HAVE_CONFIG_H
-	#include <config.h>
+	#include "config.h"
 #endif
 
-#include <AiffData.h>
+#include "AiffData.h"
 
-#include <Endian.h>
-#include <Exception.h>
-#include <Marker.h>
-#include <Notifier.h>
+#include "Endian.h"
+#include "Exception.h"
+#include "Marker.h"
+#include "Notifier.h"
 
-#include <ieee.h>
+#include "ieee.h"
 
 #include <climits>
 #include <cmath>

@@ -53,14 +53,14 @@
 #include "cs.h"
 #include "string.h"
 
-#include <Breakpoint.h>
-#include <Envelope.h>
-#include <Exception.h>
-#include <Morpher.h>
-#include <Oscillator.h>
-#include <Partial.h>
-#include <PartialUtils.h>
-#include <SdifFile.h>
+#include "Breakpoint.h"
+#include "Envelope.h"
+#include "Exception.h"
+#include "Morpher.h"
+#include "Oscillator.h"
+#include "Partial.h"
+#include "PartialUtils.h"
+#include "SdifFile.h"
 
 #include <algorithm>
 #include <exception>

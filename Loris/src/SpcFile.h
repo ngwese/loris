@@ -39,11 +39,11 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-#include <Marker.h>
-#include <Partial.h>
+#include "Marker.h"
+#include "Partial.h"
 
 #if defined(NO_TEMPLATE_MEMBERS)
-#include <PartialList.h>
+#include "PartialList.h"
 #endif
  
 #include <string>

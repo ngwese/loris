@@ -32,15 +32,15 @@
  */
 
 #if HAVE_CONFIG_H
-	#include <config.h>
+	#include "config.h"
 #endif
 
-#include <FrequencyReference.h>
-#include <Breakpoint.h>
-#include <BreakpointEnvelope.h>
-#include <Notifier.h>
-#include <Partial.h>
-#include <PartialList.h>
+#include "FrequencyReference.h"
+#include "Breakpoint.h"
+#include "BreakpointEnvelope.h"
+#include "Notifier.h"
+#include "Partial.h"
+#include "PartialList.h"
 
 #include <algorithm>
 #include <cmath>

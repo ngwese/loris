@@ -47,18 +47,18 @@
  */
 
 #if HAVE_CONFIG_H
-	#include <config.h>
+	#include "config.h"
 #endif
 
-#include <PartialBuilder.h>
+#include "PartialBuilder.h"
 
-#include <BreakpointEnvelope.h>
-#include <Envelope.h>
-#include <Notifier.h>
-#include <Partial.h>
-#include <PartialList.h>
-#include <PartialPtrs.h>
-#include <SpectralPeaks.h>
+#include "BreakpointEnvelope.h"
+#include "Envelope.h"
+#include "Notifier.h"
+#include "Partial.h"
+#include "PartialList.h"
+#include "PartialPtrs.h"
+#include "SpectralPeaks.h"
 
 #include <algorithm>
 #include <cmath>

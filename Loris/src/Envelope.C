@@ -32,10 +32,10 @@
  */
 
 #if HAVE_CONFIG_H
-	#include <config.h>
+	#include "config.h"
 #endif
 
-#include<Envelope.h>
+#include "Envelope.h"
 
 //	Since Envelope is just an interface, there's nothing interesting in 
 //	the implementation file.

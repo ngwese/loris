@@ -34,8 +34,8 @@
  *
  */
  
-#include <Partial.h>
-#include <SpectralPeaks.h>
+#include "Partial.h"
+#include "SpectralPeaks.h"
 
 //	begin namespace
 namespace Loris {

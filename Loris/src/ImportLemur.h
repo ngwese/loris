@@ -34,8 +34,8 @@
  *
  */
 
-#include <PartialList.h>
-#include <Exception.h>
+#include "PartialList.h"
+#include "Exception.h"
 #include <string>
 
 //	begin namespace

@@ -32,14 +32,14 @@
  */
 
 #if HAVE_CONFIG_H
-	#include <config.h>
+	#include "config.h"
 #endif
 
-#include <PartialUtils.h>
+#include "PartialUtils.h"
 
-#include <Breakpoint.h>
-#include <Envelope.h>
-#include <Partial.h>
+#include "Breakpoint.h"
+#include "Envelope.h"
+#include "Partial.h"
 
 #include <cmath>
 #include <functional>

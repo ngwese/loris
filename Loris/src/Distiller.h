@@ -33,7 +33,7 @@
  *
  */
 
-#include <PartialList.h>
+#include "PartialList.h"
 
 //	begin namespace
 namespace Loris {

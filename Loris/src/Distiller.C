@@ -32,17 +32,17 @@
  */
 
 #if HAVE_CONFIG_H
-	#include <config.h>
+	#include "config.h"
 #endif
 
-#include <Distiller.h>
-#include <Breakpoint.h>
-#include <BreakpointUtils.h>
-#include <Exception.h>
-#include <Partial.h>
-#include <PartialList.h>
-#include <PartialUtils.h>
-#include <Notifier.h>
+#include "Distiller.h"
+#include "Breakpoint.h"
+#include "BreakpointUtils.h"
+#include "Exception.h"
+#include "Partial.h"
+#include "PartialList.h"
+#include "PartialUtils.h"
+#include "Notifier.h"
 
 #include <algorithm>
 #include <functional>

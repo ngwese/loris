@@ -5,18 +5,18 @@
 #include "AiffFile.h"
 #include "Marker.h"
 
-#include <Analyzer.h>
-#include <BreakpointEnvelope.h>
-#include <Channelizer.h>
-#include <Dilator.h>
-#include <Distiller.h>
-#include <Exception.h>
-#include <FrequencyReference.h>
-#include <Partial.h>
-#include <PartialList.h>
-#include <PartialUtils.h>
+#include "Analyzer.h"
+#include "BreakpointEnvelope.h"
+#include "Channelizer.h"
+#include "Dilator.h"
+#include "Distiller.h"
+#include "Exception.h"
+#include "FrequencyReference.h"
+#include "Partial.h"
+#include "PartialList.h"
+#include "PartialUtils.h"
 
-#include <SpcFile.h>
+#include "SpcFile.h"
 
 #include <algorithm>
 #include <fstream>

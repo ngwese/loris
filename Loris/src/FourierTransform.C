@@ -33,12 +33,12 @@
  */
 
 #if HAVE_CONFIG_H
-	#include <config.h>
+	#include "config.h"
 #endif
 
-#include <FourierTransform.h>
-#include <Exception.h>
-#include <Notifier.h>
+#include "FourierTransform.h"
+#include "Exception.h"
+#include "Notifier.h"
 #include <cstring>	//	for memcpy
 #include <set>
 

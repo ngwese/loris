@@ -32,14 +32,15 @@
  */
 
 #if HAVE_CONFIG_H
-	#include <config.h>
+	#include "config.h"
 #endif
 
-#include <Partial.h>
-#include <Breakpoint.h>
-#include <Exception.h>
-#include <Notifier.h>
+#include "Partial.h"
+#include "Breakpoint.h"
+#include "Exception.h"
+#include "Notifier.h"
 
+#include <algorithm>
 #include <cmath>
 
 #if defined(HAVE_M_PI) && (HAVE_M_PI)
@@ -52,6 +53,32 @@
 namespace Loris {
 
 //long Partial::DebugCounter = 0L;
+
+
+//	comparitor for elements in Partial::container_type
+typedef Partial::container_type::value_type Partial_value_type;
+static 
+bool order_by_time( const Partial_value_type & x, const Partial_value_type & y )
+{
+	//	Partial_value_type is a (time,Breakpoint) pair
+	return x.first < y.first;
+}
+
+//	--- concering the type of Partial::container_type
+//
+//	On the surface, it would seem that a vector of (time,Breakpoint)
+//	pairs would be a more efficient container for the Partial
+//	parameter envelope points, and the changes required to implement
+//	Partial using vector instead of map are minimal and simple. 
+//
+//	However, the crucial factor in that change is the expiration of
+//	Partial::iterators. With map, iterators remain valid after
+//	insertions and removals, but with vector they do not. So it 
+//	is easy to change the container type, but it is a much harder
+//	project to find all the places in Loris that rely on iterators
+//	that remain valid after insertions and removals.
+#undef USE_VECTOR
+
 
 #pragma mark -- construction --
 
@@ -70,7 +97,7 @@ Partial::Partial( void ) :
 // ---------------------------------------------------------------------------
 //
 Partial::Partial( const_iterator beg, const_iterator end ) :
-	_bpmap( beg._iter, end._iter ),
+	_breakpoints( beg._iter, end._iter ),
 	_label( 0 )
 {
 //	++DebugCounter;
@@ -81,7 +108,7 @@ Partial::Partial( const_iterator beg, const_iterator end ) :
 // ---------------------------------------------------------------------------
 //
 Partial::Partial( const Partial & other ) :
-	_bpmap( other._bpmap ),
+	_breakpoints( other._breakpoints ),
 	_label( other._label )
 {
 //	++DebugCounter;
@@ -108,7 +135,7 @@ Partial::operator=( const Partial & rhs )
 {
 	if ( this != &rhs )
 	{
-		_bpmap = rhs._bpmap;
+		_breakpoints = rhs._breakpoints;
 		_label = rhs._label;
 	}
 	return *this;
@@ -125,7 +152,7 @@ Partial::operator=( const Partial & rhs )
 bool
 Partial::operator==( const Partial & rhs ) const
 {
-	return (_label == rhs._label) && (_bpmap == rhs._bpmap);
+	return (_label == rhs._label) && (_breakpoints == rhs._breakpoints);
 }
 
 // ---------------------------------------------------------------------------
@@ -138,12 +165,12 @@ Partial::operator==( const Partial & rhs ) const
 //
 Partial::const_iterator Partial::begin( void ) const 
 { 
-	return _bpmap.begin(); 
+	return _breakpoints.begin(); 
 }
 
 Partial::iterator Partial::begin( void ) 
 { 
-	return _bpmap.begin(); 
+	return _breakpoints.begin(); 
 }
 
 // ---------------------------------------------------------------------------
@@ -159,13 +186,13 @@ Partial::iterator Partial::begin( void )
 Partial::const_iterator 
 Partial::end( void ) const 
 { 
-	return _bpmap.end(); 
+	return _breakpoints.end(); 
 }
 
 Partial::iterator 
 Partial::end( void ) 
 { 
-	return _bpmap.end(); 
+	return _breakpoints.end(); 
 }
 
 // ---------------------------------------------------------------------------
@@ -178,7 +205,7 @@ Partial::end( void )
 Partial::iterator 
 Partial::erase( Partial::iterator beg, Partial::iterator end )
 {
-	_bpmap.erase( beg._iter, end._iter );
+	_breakpoints.erase( beg._iter, end._iter );
 	return end;
 }
 
@@ -194,13 +221,25 @@ Partial::erase( Partial::iterator beg, Partial::iterator end )
 Partial::const_iterator 
 Partial::findAfter( double time ) const
 {
-	return _bpmap.lower_bound( time );
+#if defined(USE_VECTOR) 
+	//	see note above
+	Partial_value_type dummy( time, Breakpoint() );
+	return std::upper_bound( _breakpoints.begin(), _breakpoints.end(), dummy, order_by_time );
+#else
+	return _breakpoints.lower_bound( time );
+#endif
 }
 
 Partial::iterator 
 Partial::findAfter( double time ) 
 {
-	return _bpmap.lower_bound( time );
+#if defined(USE_VECTOR) 
+	//	see note above
+	Partial_value_type dummy( time, Breakpoint() );
+	return std::upper_bound( _breakpoints.begin(), _breakpoints.end(), dummy, order_by_time );
+#else
+	return _breakpoints.lower_bound( time );
+#endif
 }
 
 // ---------------------------------------------------------------------------
@@ -213,11 +252,31 @@ Partial::findAfter( double time )
 Partial::iterator 
 Partial::insert( double time, const Breakpoint & bp )
 {
+#if defined(USE_VECTOR) 
+	//	see note above
+	//	find the position at which to insert the new Breakpoint:
+	Partial_value_type dummy( time, Breakpoint() );
+	Partial::container_type::iterator insertHere = 
+		std::lower_bound( _breakpoints.begin(), _breakpoints.end(), dummy, order_by_time );
+		
+	//	if the time at insertHere is equal to the insertion time,
+	//	simply replace the Breakpoint, otherwise insert:
+	if ( insertHere->first == time )
+	{
+		insertHere->second = bp;
+	}
+	else
+	{
+		insertHere = _breakpoints.insert( insertHere, Partial_value_type(time, bp) );
+	}
+	return insertHere;
+#else
 	std::pair< container_type::iterator, bool > result = 
-		_bpmap.insert( container_type::value_type(time, bp) );
+		_breakpoints.insert( container_type::value_type(time, bp) );
 	if ( ! result.second )
 		result.first->second = bp;
 	return result.first;
+#endif
 }
 
 // ---------------------------------------------------------------------------
@@ -228,10 +287,8 @@ Partial::insert( double time, const Breakpoint & bp )
 Partial::size_type 
 Partial::size( void ) const 
 { 	
-	return _bpmap.size(); 
+	return _breakpoints.size(); 
 }
-
-#pragma mark -- container-independent implementation --
 
 // ---------------------------------------------------------------------------
 //	first
@@ -245,7 +302,13 @@ Partial::first( void )
 {
 	if ( size() == 0 )
 		Throw( InvalidPartial, "Tried find first Breakpoint in a Partial with no Breakpoints." );
+	
+#if defined(USE_VECTOR) 
+	//	see note above
+	return _breakpoints.front().second;
+#else
 	return begin().breakpoint();
+#endif
 }
 
 // ---------------------------------------------------------------------------
@@ -260,7 +323,12 @@ Partial::first( void ) const
 {
 	if ( size() == 0 )
 		Throw( InvalidPartial, "Tried find first Breakpoint in a Partial with no Breakpoints." );
+#if defined(USE_VECTOR) 
+	//	see note above
+	return _breakpoints.front().second;
+#else
 	return begin().breakpoint();
+#endif
 }
 
 // ---------------------------------------------------------------------------
@@ -275,7 +343,13 @@ Partial::last( void )
 {
 	if ( size() == 0 )
 		Throw( InvalidPartial, "Tried find last Breakpoint in a Partial with no Breakpoints." );
+	
+#if defined(USE_VECTOR) 
+	//	see note above
+	return _breakpoints.back().second;
+#else
 	return (--end()).breakpoint();
+#endif
 }
 
 // ---------------------------------------------------------------------------
@@ -290,8 +364,16 @@ Partial::last( void ) const
 {
 	if ( size() == 0 )
 		Throw( InvalidPartial, "Tried find last Breakpoint in a Partial with no Breakpoints." );
+	
+#if defined(USE_VECTOR) 
+	//	see note above
+	return _breakpoints.back().second;
+#else
 	return (--end()).breakpoint();
+#endif
 }
+
+#pragma mark -- container-independent implementation --
 
 // ---------------------------------------------------------------------------
 //	initialPhase
@@ -541,9 +623,9 @@ Partial::amplitudeAt( double time, double fadeTime ) const
 	if ( numBreakpoints() == 0 )
 		Throw( InvalidPartial, "Tried to interpolate a Partial with no Breakpoints." );
 
-	//	lower_bound returns a reference to the lowest
-	//	position that would be higher than an element
-	//	having key equal to time:
+	//	findAfter returns the position of the earliest
+	//	Breakpoint later than time, or the end
+	//	position if no such Breakpoint exists:
 	Partial::const_iterator it = findAfter( time );
 		
 	if ( it == begin() ) 
@@ -592,9 +674,9 @@ Partial::phaseAt( double time ) const
 	if ( numBreakpoints() == 0 )
 		Throw( InvalidPartial, "Tried to interpolate a Partial with no Breakpoints." );
 	
-	//	lower_bound returns a reference to the lowest
-	//	position that would be higher than an element
-	//	having key equal to time:
+	//	findAfter returns the position of the earliest
+	//	Breakpoint later than time, or the end
+	//	position if no such Breakpoint exists:
 	Partial::const_iterator it = findAfter( time );
 		
 	//	compute phase:
@@ -652,9 +734,9 @@ Partial::bandwidthAt( double time ) const
 	if ( numBreakpoints() == 0 )
 		Throw( InvalidPartial, "Tried to interpolate a Partial with no Breakpoints." );
 	
-	//	lower_bound returns a reference to the lowest
-	//	position that would be higher than an element
-	//	having key equal to time:
+	//	findAfter returns the position of the earliest
+	//	Breakpoint later than time, or the end
+	//	position if no such Breakpoint exists:
 	Partial::const_iterator it = findAfter( time );
 		
 	if ( it == begin() ) 
@@ -695,9 +777,9 @@ Partial::parametersAt( double time, double fadeTime ) const
 	if ( numBreakpoints() == 0 )
 		Throw( InvalidPartial, "Tried to interpolate a Partial with no Breakpoints." );
 	
-	//	lower_bound returns a reference to the lowest
-	//	position that would be higher than an element
-	//	having key equal to time:
+	//	findAfter returns the position of the earliest
+	//	Breakpoint later than time, or the end
+	//	position if no such Breakpoint exists:
 	Partial::const_iterator it = findAfter( time );
 		
 	if ( it == begin() ) 

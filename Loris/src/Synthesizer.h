@@ -34,8 +34,8 @@
  *
  */
 
-#include <Oscillator.h>
-#include <PartialUtils.h>
+#include "Oscillator.h"
+#include "PartialUtils.h"
 
 #include <vector>
 

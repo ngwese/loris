@@ -34,7 +34,7 @@
  */
 
 #if defined(NO_TEMPLATE_MEMBERS)
-#include <PartialList.h>
+#include "PartialList.h"
 #endif
 
 #include <memory>
