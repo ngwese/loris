@@ -39,18 +39,19 @@ if trial == 1:
 		resolutions = ( .3*fund, .5*fund, .8*fund, .95*fund )
 		wmults = ( .9, 1., 1.2, 1.5, 1.8, 2.5 )
 		bws = (1000, 2000, 4000)
-		for mult in wmults:
-			w = r * mult
-			for bw in bws:
-				p = analyze( source, r, w, bw )
-				ofile = '%s.%i.%i.%ik.aiff'%(source[:-5], r, w, bw/1000)
-				synthesize( ofile, p )
-				for f in (fund, .5*fund,.3*fund):
-					p2 = p.copy()
-					harmonicDistill( p2, f )
-					ofile = '%s.%i.%i.%ik.d%i.aiff'%(source[:-5], r, w, bw/1000, f)
-					synthesize( ofile, p2 )
-					p2 = p.copy()
-					harmonicSift( p2, f )
-					ofile = '%s.%i.%i.%ik.s%i.aiff'%(source[:-5], r, w, bw/1000, f)
-					synthesize( ofile, p2 )
+		for r in resolutions:
+			for mult in wmults:
+				w = r * mult
+				for bw in bws:
+					p = analyze( source, r, w, bw )
+					ofile = '%s.%i.%i.%ik.aiff'%(source[:-5], r, w, bw/1000)
+					synthesize( ofile, p )
+					for f in (fund, .5*fund,.3*fund):
+						p2 = p.copy()
+						harmonicDistill( p2, f )
+						ofile = '%s.%i.%i.%ik.d%i.aiff'%(source[:-5], r, w, bw/1000, f)
+						synthesize( ofile, p2 )
+						p2 = p.copy()
+						harmonicSift( p2, f )
+						ofile = '%s.%i.%i.%ik.s%i.aiff'%(source[:-5], r, w, bw/1000, f)
+						synthesize( ofile, p2 )
