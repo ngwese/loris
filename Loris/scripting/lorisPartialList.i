@@ -58,8 +58,8 @@
  */
 
 %{
-#include "Partial.h"
-#include "notifier.h"
+#include<Partial.h>
+#include<Notifier.h>
 #include <list>
 
 using Loris::debugger;

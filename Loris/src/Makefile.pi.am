@@ -1,0 +1,24 @@
+# Copyright (C) 2001 Kelly Fitz <kfitz@cerlsoundgroup.org>
+#  
+# This file is free software; as a special exception the author gives
+# unlimited permission to copy and/or distribute it, with or without 
+# modifications, as long as this notice is preserved.
+# 
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
+# implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+# INCLUDES = $(default_includes)
+INCLUDES = -I$(top_srcdir)/classes
+
+lib_LTLIBRARIES = libloris.la
+libloris_la_SOURCES = lorisAnalyzer_pi.C lorisBpEnvelope_pi.C \
+ lorisException_pi.C lorisException_pi.h loris.h lorisNonObj_pi.C \
+ lorisPartialList_pi.C lorisSampleVector_pi.C lorisUtilities_pi.C \
+ loris.h
+
+libloris_la_LIBADD = $(top_builddir)/classes/libclasses.la
+
+#library_includedir = $(includedir)
+#library_include_HEADERS = loris.h
+include_HEADERS = loris.h

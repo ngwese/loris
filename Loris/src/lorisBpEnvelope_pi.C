@@ -55,8 +55,8 @@
 #include "loris.h"
 #include "lorisException_pi.h"
 
-#include "BreakpointEnvelope.h"
-#include "notifier.h"
+#include <BreakpointEnvelope.h>
+#include <Notifier.h>
 
 using namespace Loris;
 

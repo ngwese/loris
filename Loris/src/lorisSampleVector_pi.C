@@ -55,7 +55,7 @@
 #include "loris.h"
 #include "lorisException_pi.h"
 
-#include "notifier.h"
+#include <Notifier.h>
 
 #include <vector>
 

@@ -55,8 +55,8 @@
 #include "loris.h"
 #include "lorisException_pi.h"
 
-#include "Partial.h"
-#include "notifier.h"
+#include <Partial.h>
+#include <Notifier.h>
 
 #include <list>
 

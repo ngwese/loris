@@ -38,8 +38,8 @@
  *
  */
 %{
-#include "Analyzer.h"
-#include "Partial.h"
+#include<Analyzer.h>
+#include<Partial.h>
 
 using Loris::Analyzer;
 %}

@@ -55,7 +55,7 @@
 
 #define LORIS_OPAQUE_POINTERS 0
 #include "loris.h"
-#include "notifier.h"
+#include <Notifier.h>
 
 using namespace Loris;
 

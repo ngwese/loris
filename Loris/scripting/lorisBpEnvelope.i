@@ -37,7 +37,7 @@
  *
  */
 %{
-#include "BreakpointEnvelope.h"
+#include<BreakpointEnvelope.h>
 using Loris::BreakpointEnvelope;
 %}
 

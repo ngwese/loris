@@ -59,8 +59,8 @@
 //	Exceptions, notification, and debugging
 //
 %{
-	#include "notifier.h"
-	#include "Exception.h"
+	#include<Notifier.h>
+	#include<Exception.h>
 	#include <string>
 	
 	//	notification function for Loris debugging
@@ -160,7 +160,7 @@
 %}
 
 %{
-	#include "Channelizer.h"
+	#include<Channelizer.h>
 %}
 
 %inline %{
@@ -205,7 +205,7 @@
 //	defined above to convert two strings into vectors
 //	of time points:
 %{
-	#include "Dilator.h"	
+	#include<Dilator.h>
 	#include <string>
 	#include <vector>
 	
@@ -275,7 +275,7 @@
 %}
 
 %{
-	#include "Distiller.h"
+	#include<Distiller.h>
 %}
 
 %inline %{
@@ -297,7 +297,7 @@ void distill( PartialList * partials )
 %}
 				 
 %{
-	#include "AiffFile.h"
+	#include<AiffFile.h>
 %}
 
 %inline %{
@@ -319,7 +319,7 @@ void distill( PartialList * partials )
 
 %{
 	//	stupid name for sdif file header, name collision
-	#include "Sdiff.h"
+	#include<SdifFile.h>
 %}
 
 %inline %{
@@ -342,7 +342,7 @@ void distill( PartialList * partials )
 %}
 
 %{
-	#include "SpcFile.h"
+	#include<SpcFile.h>
 %}
 
 %inline %{
@@ -378,7 +378,7 @@ void distill( PartialList * partials )
 //	%inline shortcut when the return value is %new.
 //
 %{
-	#include "Sdiff.h"
+	#include<SdifFile.h>
 	PartialList * importSdif( const char * path )
 	{
 		Loris::notifier << "importing Partials from " << path << Loris::endl;
@@ -399,7 +399,7 @@ void distill( PartialList * partials )
  */	
 
 %{
-	#include "SpcFile.h"
+	#include<SpcFile.h>
 	PartialList * importSpc( const char * path )
 	{
 		Loris::notifier << "importing Partials from " << path << Loris::endl;
@@ -418,7 +418,7 @@ void distill( PartialList * partials )
  */	
 
 %{
-	#include "Morpher.h"
+	#include<Morpher.h>
 	PartialList * morph( const PartialList * src0, const PartialList * src1, 
 						 const BreakpointEnvelope * ffreq, 
 						 const BreakpointEnvelope * famp, 
@@ -459,7 +459,7 @@ void distill( PartialList * partials )
  */
 
 %{
-	#include "Synthesizer.h"
+	#include<Synthesizer.h>
 	SampleVector * synthesize( const PartialList * partials, double srate )
 	{
 		ThrowIfNull((PartialList *) partials);
@@ -508,7 +508,7 @@ void distill( PartialList * partials )
  */
 
 %{
-	#include "Sieve.h"
+	#include<Sieve.h>
 %}
 	
 %inline 
@@ -733,38 +733,6 @@ createFreqReference( PartialList * partials, int numSamples,
 	 */
 %} 
  
-%{
-	#include "Loris_prefix.h"
-%}
 
-%inline %{
-	const char * versionString( void )
-	{
-		int vmajor = (LORIS_VERSION & 0xF000) >> 12;
-		int vminor = (LORIS_VERSION & 0x0F00) >> 8;
-		int vpre = (LORIS_VERSION & 0x00F0) >> 4;
-		int vprenum = (LORIS_VERSION & 0x000F);
-		
-		static char str[24];
-		if ( vpre != 0 )
-		{
-			char * spre;
-			if ( vpre == 0xB )
-				spre = "beta";
-			else if ( vpre == 0xA )
-				spre = "alpha";
-			else
-				spre = "???";
-				
-			sprintf( str, "Loris %d.%d %s %d", vmajor, vminor, spre, vprenum );
-		}
-		else
-			sprintf( str, "Loris %d.%d", vmajor, vminor );
-			
-		return str;
-	}
-	/*	Return a (constant) string specifying the Loris version number.
-	 */
-%}
 			
 			

@@ -38,7 +38,7 @@
  *
  */
 %{
-#include "AiffFile.h"
+#include<AiffFile.h>
 using Loris::AiffFile;
 %}
 
