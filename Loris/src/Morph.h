@@ -42,12 +42,14 @@ class Map;
 //	virtual clone()	member in the Map class, and take advantage of 
 //	it in the single-argument and copy constructors.
 //
+//	update: this is WAY too much of a nuisance, need another solution.
+//
 class Morph
 {
 //	-- public interface --
 public:
 //	construction:
-	Morph( std::auto_ptr< Map > f );
+	Morph( std::auto_ptr< Map > f = std::auto_ptr< Map >() );
 	Morph( std::auto_ptr< Map > ff, 
 		   std::auto_ptr< Map > af, 
 		   std::auto_ptr< Map > bwf );

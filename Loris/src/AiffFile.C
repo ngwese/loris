@@ -12,8 +12,8 @@
 
 #include "LorisLib.h"
 #include "AiffFile.h"
-#include "SampleBuffer.h"
 #include "BinaryFile.h"
+#include "Exception.h"
 #include "ieee.h"
 
 #include <algorithm>

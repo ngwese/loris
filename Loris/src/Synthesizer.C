@@ -186,7 +186,7 @@ Synthesizer::synthesizePartial( const Partial & p )
 	for ( iterator().advance(); ! iterator().atEnd(); iterator().advance() ) {
 		bpSampleOffset = synthesizeEnvelopeSegment( bpSampleOffset );
 		
-		if ( bpSampleOffset > _samples.size() )
+		if ( bpSampleOffset >= _samples.size() )
 			break;
 	}
 

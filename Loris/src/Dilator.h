@@ -51,14 +51,13 @@ public:
 #if !defined(No_template_members)
 //	template constructors from iterators:
 	template < class Iter1, class Iter2 >
-	Dilator( const Iter1 & ibegin, const Iter1 & iend, 
-			 const Iter2 & tbegin, const Iter2 & tend )
+	Dilator( Iter1 ibegin, Iter1 iend, Iter2 tbegin, Iter2 tend )
 	{
 		setTimePoints( ibegin, iend, tbegin, tend );
 	}
 	
 	template < class Iter1, class Iter2 >
-	Dilator( const Iter1 & ibegin, const Iter2 & tbegin, int n )
+	Dilator( Iter1 ibegin, Iter2 tbegin, int n )
 	{
 		setTimePoints( ibegin, tbegin, n );
 	}
@@ -66,15 +65,14 @@ public:
 //	template time point specification from iterators:
 //	(just makes temporary vectors)
 	template < class Iter1, class Iter2 >
-	void setTimePoints( const Iter1 & ibegin, const Iter1 & iend, 
-						const Iter2 & tbegin, const Iter2 & tend )
+	void setTimePoints( Iter1 ibegin, Iter1 iend, Iter2 tbegin, Iter2 tend )
 	{
 		setTimePoints( vector< double >( ibegin, iend ), 
 					   vector< double >( tbegin, tend ) );
 	}
 
 	template < class Iter1, class Iter2 >
-	void setTimePoints( const Iter1 & ibegin, const Iter2 & tbegin, int n )
+	void setTimePoints( Iter1 ibegin, Iter2 tbegin, int n )
 	{
 		vector< double > i, t;
 		while ( n > 0 ) {
@@ -84,6 +82,15 @@ public:
 		}
 		setTimePoints( i, t );
 	}
+	
+//	template dilation of an iterator range:
+	template < class Iter >
+	void operator() ( Iter begin, Iter end ) const
+	{
+		while ( begin != end )
+			dilate( *(begin++) );
+	}
+	
 #endif	//	template members allowed
 
 //	-- instance variables --

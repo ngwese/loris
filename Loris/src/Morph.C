@@ -400,7 +400,7 @@ auto_ptr< Map >
 Morph::defaultMap( void )
 {
 	BreakpointMap * m = new BreakpointMap();
-	m->insertBreakpoint( 0., 0.5 );
+	//m->insertBreakpoint( 0., 0.5 );
 	return auto_ptr< Map >( m );
 }
 
