@@ -659,6 +659,7 @@ void lorisread_cleanup(void * p)
 	std::cerr << "** Cleaning up lorisread (owner " << tp->h.insdshead << ")" << std::endl;
 #endif
 	delete tp->imp;
+	tp->imp = 0;
 }
 
 #pragma mark -- LorisPlayer --
@@ -758,6 +759,7 @@ void lorisplay_cleanup(void * p)
 	std::cerr << "** Cleaning up lorisplay (owner " << tp->h.insdshead << ")" << std::endl;
 #endif
 	delete tp->imp;
+	tp->imp = 0;
 }
 
 #pragma mark -- LorisMorpher --
@@ -1099,6 +1101,7 @@ void lorismorph_cleanup(void * p)
 	std::cerr << "** Cleaning up lorismorph (owner " << tp->h.insdshead << ")" << std::endl;
 #endif
 	delete tp->imp;
+	tp->imp = 0;
 }
 
 // ---------------------------------------------------------------------------

@@ -116,7 +116,7 @@ f 0    11
 s
 
 ; play instr 2
-;     strt   dur  morph_start   morph_end
+;    strt   dur  morph_start   morph_end
 i 2    0      4     .75           2.75
 
 e
