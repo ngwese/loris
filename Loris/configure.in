@@ -234,12 +234,26 @@ else
 fi
 
 dnl check whether template member functions should
-dnl be used (someday)
+dnl be used
 AH_TEMPLATE([NO_TEMPLATE_MEMBERS],
             [Define for compilers that do not support template member functions.])
-
-dnl devise a way to check this
-dnl AC_DEFINE([NO_TEMPLATE_MEMBERS])
+AC_MSG_CHECKING(whether C++ compiler supports template member functions)
+AC_COMPILE_IFELSE([
+	AC_LANG_SOURCE([[
+		#include <vector>
+		struct C
+		{
+			int z;
+			template< class T >
+			C( T b, T e ) : z( e-b ) {}
+		};]], [[
+		std::vector< int > v(100, 1);
+		C c( v.begin(), v .end() );
+		return 0;
+		]])], [
+	AC_MSG_RESULT(yes)], [
+	AC_MSG_RESULT(no, not using template members)
+	AC_DEFINE([NO_TEMPLATE_MEMBERS])])
 
 dnl restore this
 AC_LANG_RESTORE

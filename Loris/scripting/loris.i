@@ -350,6 +350,14 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch,
 		return partials;
 	}
 %}
+
+%wrapper %{
+// HEY THIS SHOULD COME RIGHT BEFORE THE WRAPPER FOR IMPORT SDIF
+// I can use this to conditionally compile in the SDIF import/export
+// stuff in the scripting modules.
+//
+// but I have some cleaning up to do first. 
+%}
 %rename(importSdif) importSdif_;
 %new PartialList * importSdif_( const char * path );
 /*	Import Partials from an SDIF file at the given file path (or 
@@ -357,6 +365,9 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch,
 	For more information about SDIF, see the SDIF website at:
 		www.ircam.fr/equipes/analyse-synthese/sdif/  
  */	
+%wrapper %{
+// HEY THIS SHOULD COME RIGHT AFTER THE WRAPPER FOR IMPORT SDIF
+%}
 
 %{
 	#include<SpcFile.h>
