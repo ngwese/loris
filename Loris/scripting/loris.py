@@ -189,6 +189,7 @@ class PartialIterator:
         return val
     def breakpoint(*args):
         val = apply(lorisc.PartialIterator_breakpoint,args)
+        if val: val = BreakpointPtr(val) 
         return val
     def copy(*args):
         val = apply(lorisc.PartialIterator_copy,args)

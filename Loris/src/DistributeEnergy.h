@@ -35,7 +35,7 @@
 
 #include <list>
 
-#if defined(__MWERKS__)
+#if 0// defined(__MWERKS__)
 #include<Partial.h>
 //	On Mac, can't get around including Partial.h unless make a 
 //	class out of std::list< Partial > and its iterators that I can
