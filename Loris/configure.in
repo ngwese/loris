@@ -243,6 +243,9 @@ AC_ARG_WITH(fftw,
 					[specify the prefix of the FFTW  package] ),
 	[FFTWPACKAGE="$withval"], [FFTWPACKAGE=])
 
+dnl save the state of the CPPFLAGS and LIBS
+SAVE_CPP_FLAGS="$CPPFLAGS"
+SAVE_LIBS="$LIBS"
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
 
@@ -250,11 +253,6 @@ if test -n "$FFTWPACKAGE" ; then
 dnl	search the specified FFTW package path for
 dnl	a usable FFTW header and library
 
-dnl	AC_MSG_RESULT([prepending $FFTWPACKAGE/include to include search path (fftw package)])
-dnl	FFTWINCLUDEDIR="$FFTWPACKAGE/include/"
-dnl	CPPFLAGS="-I$FFTWINCLUDEDIR $CPPFLAGS"
-dnl	FFTWLIBDIR="-L$FFTWPACKAGE/lib/"
-	
 	dnl identify include directory
 	if test -d "$FFTWPACKAGE/include" ; then
 		FFTWINCLUDEDIR="$FFTWPACKAGE/include"
@@ -286,17 +284,13 @@ dnl	FFTWLIBDIR="-L$FFTWPACKAGE/lib/"
 	AC_MSG_RESULT(using $FFTW_HEADER found in $FFTWINCLUDEDIR)
 	
 	dnl check the usability of the header and library found
-	SAVE_FLAGS="$CPPFLAGS"
 	CPPFLAGS="-I$FFTWINCLUDEDIR $CPPFLAGS"
-	SAVE_LIBS="$LIBS"
 	LIBS="-L$FFTWLIBDIR $LIBS"
 	AC_CHECK_HEADERS([$FFTW_HEADER], [
 		AC_CHECK_LIB("$FFTW_LIB", $FFTW_MAKE_PLAN, :, AC_MSG_ERROR(cannot use $FFTW_LIB library), -lm)
 		],[
 		AC_MSG_ERROR(cannot use $FFTW_HEADER header)
 		] )
-	CPPFLAGS="$SAVE_FLAGS"
-	LIBS="$SAVE_LIBS"
 		
 else
 dnl no FFTW package directory was specified, so try to 
@@ -396,6 +390,7 @@ if test -n "$NO_COMPILE_TIME_ASSERTIONS"; then
 	  AC_MSG_RESULT(-------------------------------------------)
 	  AC_MSG_ERROR(Compile-time type checks failed!!!!)
 	  ] )
+
 else
 	AC_MSG_RESULT(cannot use compile-time checks to compare std::complex<double> to fftw_complex)
 fi
@@ -403,6 +398,8 @@ fi
 
 dnl restore this
 AC_LANG_RESTORE
+CPPFLAGS="$SAVE_CPP_FLAGS"
+LIBS="$SAVE_LIBS"
 
 dnl
 dnl end of FFTW check
