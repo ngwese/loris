@@ -69,6 +69,7 @@ public:
 	~Channelizer_imp( void );
 	
 	void channelize( std::list< Partial >::iterator begin, std::list< Partial >::iterator end );
+	void channelize_one( Partial & p, double tstart, double tend );
 
 private:
 	//	don't allow copy or assign:
@@ -147,59 +148,15 @@ Channelizer_imp::channelize( std::list< Partial >::iterator begin, std::list< Pa
 
 	for ( std::list< Partial >::iterator it = begin; it != end; ++it ) 
 	{
-		#define FANCY
-		#ifdef FANCY
-		
-		/// debugger << "channelizing Partial with " << it->countBreakpoints() << " Breakpoints" << endl;
-		
-		//	compute an amplitude-weighted average channel
-		//	label for each Partial:
-		double ampsum = 0.;
-		double weightedlabel = 0.;
-		PartialConstIterator bp;
-		for ( bp = it->begin(); bp != it->end(); ++bp )
-		{
-			//	use sinusoidal amplitude:
-			double a = bp.breakpoint().amplitude() * std::sqrt( 1. - bp.breakpoint().bandwidth() );
-			double f = bp.breakpoint().frequency();
-			double t = bp.time();
-			
-			double refFreq = _refChannelFreq->valueAt( t ) / _refChannelLabel;
-			weightedlabel += a * (f / refFreq);
-			ampsum += a;
-		}
-		
-		int label;
-		if ( ampsum > 0. )	
-			label = (int)((weightedlabel / ampsum) + 0.5);
-		else	//	this should never happen, but just in case:
-			label = 0;
-		Assert( label >= 0 );
-		
-		#else	//	not def FANCY
 
-		//	less fancy, just use label calculated at 
-		//	time of peak sinusoidal amplitude.
-		//	
-		//	calculate time of peak sunusoidal amplitude:
-		double time = loudestAt( *it );
-					
-		//	get reference frequency at time:
-		double refFreq = _refChannelFreq->valueAt( time ) / _refChannelLabel;
-		
-		//	compute the label for this partial as 
-		//	nearest integer multiple of reference 
-		//	frequency at time:
-		int label = (int)((it->frequencyAt( time ) / refFreq) + 0.5);
-	
-		#endif	// def FANCY
-			
-		//	assign label, and remember it, but
-		//	only if it is a valid (positive) 
-		//	distillation label:
-		it->setLabel( label );
+		//	just define these here for now, ultimately will be arguments:
+		double tstart = it->startTime();
+		double tend = it->endTime();
 
+		channelize_one(*it, tstart, tend);
+		
 #ifdef Debug_Loris
+		int label = it->label();
 		if (label > 0)
 			labelsfound.insert(label);
 #endif
@@ -209,6 +166,67 @@ Channelizer_imp::channelize( std::list< Partial >::iterator begin, std::list< Pa
 	debugger << "found " << labelsfound.size() << " non-empty channels" << endl;	
 #endif
 }
+
+// ---------------------------------------------------------------------------
+//	Channelizer_imp channelize_one
+// ---------------------------------------------------------------------------
+//	Helper function to channelize a single partial over a specified
+//	time span, called by channelize() above.
+//
+void
+Channelizer_imp::channelize_one( Partial & p, double tstart, double tend )
+{
+	//	bail if this Partial does not overlap the specified
+	//	time span:
+	if ( p.startTime() > tend || p.endTime() < tstart )
+	{
+		debugger << "channelizer skipping Partial spanning ";
+		debugger << p.startTime() << "," << p.endTime() << " outside of span ";
+		debugger << tstart << "," << tend << endl;
+		return;
+	}
+
+	debugger << "channelizing Partial with " << p.numBreakpoints() << " Breakpoints" << endl;
+		
+	//	compute an amplitude-weighted average channel
+	//	label for each Partial:
+	double ampsum = 0.;
+	double weightedlabel = 0.;
+	PartialConstIterator bp;
+	for ( bp = p.findAfter(tstart); bp != p.end(); ++bp )
+	{
+		//	bail if the current breakpoint is outside of the
+		//	specified time span:
+		if ( bp.time() > tend )
+		{
+			debugger << "channelizer reached end of time span" << endl;
+			break;
+		}
+	
+		//	use sinusoidal amplitude:
+		double a = bp.breakpoint().amplitude() * std::sqrt( 1. - bp.breakpoint().bandwidth() );
+		double f = bp.breakpoint().frequency();
+		double t = bp.time();
+		
+		double refFreq = _refChannelFreq->valueAt( t ) / _refChannelLabel;
+		weightedlabel += a * (f / refFreq);
+		ampsum += a;
+	}
+	
+	int label;
+	if ( ampsum > 0. )	
+		label = (int)((weightedlabel / ampsum) + 0.5);
+	else	//	this should never happen, but just in case:
+		label = 0;
+	Assert( label >= 0 );
+
+			
+	//	assign label, and remember it, but
+	//	only if it is a valid (positive) 
+	//	distillation label:
+	p.setLabel( label );
+
+}	//	end of channelize_one
 
 // ---------------------------------------------------------------------------
 //	Channelizer constructor 
