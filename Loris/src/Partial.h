@@ -43,8 +43,8 @@ class Partial
 //	-- public interface --
 public:
 //	construction:
-//	(allow compiler to generate copy, assignment, and destruction):
 	Partial( void );
+	Partial( const Partial & other );
 	~Partial( void );
 	
 //	access:
@@ -94,6 +94,10 @@ public:
 //	static member for making sure that all algorithms
 //	that fade Partials in and out use the same fade time:
 	static double FadeTime( void );
+	
+#if Debug_Loris
+	static long DebugCounter;
+#endif
 };	//	end of class Partial
 
 // ---------------------------------------------------------------------------
@@ -215,14 +219,6 @@ class InvalidPartial : public InvalidObject
 public: 
 	InvalidPartial( const std::string & str, const std::string & where = "" ) : 
 	InvalidObject( std::string("Invalid Partial -- ").append( str ), where ) {}
-		
-#if defined(__sgi) && ! defined(__GNUC__)
-//	copying:
-//	(exception objects are copied once when caught by reference,
-//	or twice when caught by value)
-//	This should be generated automatically by the compiler.
-	InvalidPartial( const InvalidPartial & other ) : InvalidObject( other ) {}
-#endif // lame compiler
 		
 };	//	end of class InvalidPartial
 

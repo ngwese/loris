@@ -38,10 +38,10 @@ typedef struct {
 
 //	prototypes for helpers:
 static void read( const char *infilename, std::list<Partial> & partials );
-static void readEnvelopeData( FILE *in, std::vector< Partial * > & partialsVector );
+static void readEnvelopeData( FILE *in, std::vector< Partial > & partialsVector );
 static void readMatrixData( FILE *in, const SDIF_MatrixHeader & mh, 
 							const double frameTime, 
-							std::vector< Partial * > & partialsVector );
+							std::vector< Partial > & partialsVector );
 static void readRowData( FILE *in, const SDIF_MatrixHeader & mh, 
 						 RowOfLorisData64 & trackData );
 static void readRow32( FILE *in, const SDIF_MatrixHeader & mh, 
@@ -50,7 +50,7 @@ static void readRow64( FILE *in, const SDIF_MatrixHeader & mh,
 					   RowOfLorisData64 & trackData );
 static void addRowToPartials( const RowOfLorisData64 & trackData, 
 							  const double frameTime, 
-							  std::vector< Partial * > & partialsVector );
+							  std::vector< Partial > & partialsVector );
 
 // ---------------------------------------------------------------------------
 //	ImportSdif constructor from data in memory
@@ -85,13 +85,17 @@ read( const char *infilename, std::list<Partial> & partials )
 	{
 	
 		// Build up partialsVector.
-		std::vector< Partial * > partialsVector;
+		std::vector< Partial > partialsVector;
 		readEnvelopeData( in, partialsVector );
 		
 		// Copy partialsVector to partials list.
-		for (int i = 0; i < partialsVector.size(); i++)
-			if (partialsVector[i] != NULL)
-				partials.push_back( * partialsVector[i] );
+		for (int i = 0; i < partialsVector.size(); ++i)
+		{
+			if (partialsVector[i].countBreakpoints() > 0)
+			{
+				partials.push_back( partialsVector[i] );
+			}
+		}
 	}
 	catch ( Exception & ex ) 
 	{
@@ -114,7 +118,7 @@ read( const char *infilename, std::list<Partial> & partials )
 // Let exceptions propagate.
 //
 static void
-readEnvelopeData( FILE *in, std::vector< Partial * > & partialsVector )
+readEnvelopeData( FILE *in, std::vector< Partial > & partialsVector )
 {
 	SDIF_FrameHeader fh;
 	SDIF_MatrixHeader mh;
@@ -159,7 +163,7 @@ readEnvelopeData( FILE *in, std::vector< Partial * > & partialsVector )
 //
 static void
 readMatrixData( FILE *in, const SDIF_MatrixHeader & mh, 
-				const double time, std::vector< Partial * > & partialsVector )
+				const double time, std::vector< Partial > & partialsVector )
 {	
 //
 // We must have a 1TRC matrix with at least index, frequency, and amplitude in the matrix data.
@@ -305,7 +309,7 @@ readRow64( FILE *in, const SDIF_MatrixHeader & mh, RowOfLorisData64 & trackData 
 //
 static void
 addRowToPartials( const RowOfLorisData64 & trackData, const double frameTime, 
-				  std::vector< Partial * > & partialsVector )
+				  std::vector< Partial > & partialsVector )
 {	
 
 //
@@ -322,30 +326,15 @@ addRowToPartials( const RowOfLorisData64 & trackData, const double frameTime,
 // Check if partial of this index already exists.
 // Create a new partial, or add breakpoint to existing partial.
 //
-	Partial * oldpar = (partialsVector.size() <= trackData.index) ? NULL : partialsVector[trackData.index];
-
-	if ( oldpar == NULL ) 
+	if (partialsVector.size() <= trackData.index)
 	{
-	
-		// Create the new partial.
-		Partial * newpar = new Partial();
-		newpar->setLabel( (int) trackData.label );
-		newpar->insert( frameTime + trackData.timeOffset, newbp );
-		
-		// Make sure partialsVector is big enough for this index, then fill in pointer to the partial.
-		if (trackData.index < 0 || trackData.index > 10000000)
-			Throw( FileIOException, "SDIF file has track index values that are negative or over 10 million.");
-		while (partialsVector.size() <= trackData.index)
-			partialsVector.push_back( NULL );
-		partialsVector[trackData.index] = newpar;
-		
-	} 
-	else 
-	{
-	
-		// Add to existing partial.
-		oldpar->insert( frameTime + trackData.timeOffset, newbp );
+		partialsVector.resize( trackData.index + 500 );
 	}
+	
+	//	make sure that the label is right and insert the Breakpoint:
+	partialsVector[trackData.index].setLabel( (int) trackData.label );
+	partialsVector[trackData.index].insert( frameTime + trackData.timeOffset, newbp );
+		
 }
 
 

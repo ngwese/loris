@@ -23,6 +23,10 @@
 namespace Loris {
 #endif
 
+#if Debug_Loris
+long Partial::DebugCounter = 0L;
+#endif
+
 // ---------------------------------------------------------------------------
 //	Partial constructor
 // ---------------------------------------------------------------------------
@@ -30,7 +34,23 @@ namespace Loris {
 Partial::Partial( void ) :
 	_label( 0L )
 {
+#if Debug_Loris
+	++DebugCounter;
+#endif
 }	
+
+// ---------------------------------------------------------------------------
+//	Partial copy constructor
+// ---------------------------------------------------------------------------
+//
+Partial::Partial( const Partial & other ) :
+	_bpmap( other._bpmap ),
+	_label( other._label )
+{
+#if Debug_Loris
+	++DebugCounter;
+#endif
+}
 
 // ---------------------------------------------------------------------------
 //	Partial destructor
@@ -38,6 +58,9 @@ Partial::Partial( void ) :
 //
 Partial::~Partial( void )
 {
+#if Debug_Loris
+	--DebugCounter;
+#endif
 }	
 
 // ---------------------------------------------------------------------------

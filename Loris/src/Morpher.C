@@ -32,8 +32,9 @@ namespace Loris {
 //
 //	Implementation class for Morpher.
 //
-struct Morpher_imp
+class Morpher_imp
 {
+public:
 //	-- instance variables --
 	//	reference-counted smart pointers from Batov:
 	//	(these Envelopes will never be modified by the Morpher_imp

@@ -18,6 +18,8 @@
 namespace Loris {
 #endif
 
+class Partial;
+
 // ---------------------------------------------------------------------------
 //	class Distiller
 //

@@ -32,8 +32,9 @@ namespace Loris {
 //
 //	Implementation class for Channelizer insulating Channelizer interface.
 //
-struct Channelizer_imp
+class Channelizer_imp
 {
+public:
 	Handle<Envelope> _refChannelFreq;
 	int _refChannelLabel;
 

@@ -612,7 +612,7 @@ Analyzer::formPartials( std::list< Breakpoint > & frame, double /* frameTime */ 
 
 #else //	not def sucks
 void 
-Analyzer::formPartials( std::list< Breakpoint > & frame, double frameTime, 
+Analyzer::formPartials( std::list< Breakpoint > & frame, double /* frameTime */, 
 						AnalyzerState & state )
 {
 	std::vector< Partial * > newgoobers;
