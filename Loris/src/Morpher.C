@@ -583,6 +583,12 @@ Morpher::morph( PartialList::const_iterator beginSrc,
 //
 static void fix_frequencies( Partial & fixme, const Partial & reference )
 {
+	//	sanity
+	if ( 0 == reference.size() )
+	{
+		Throw( InvalidArgument, "reference Partial in fix_frequencies must not be empty" );
+	}
+
 	//	nothing to do if fixme is the reference Partial:
 	if ( &fixme != &reference )
 	{
@@ -633,7 +639,7 @@ static void fix_frequencies( Partial & fixme, const Partial & reference )
 		//	because the earliest Breakpoint is inserted first.
 		Partial::const_iterator earlyBpPos = reference.begin();
 		const double oldStartTime = fixme.startTime();
-		while ( earlyBpPos.time() < oldStartTime )
+		while ( ( earlyBpPos != reference.end() ) && ( earlyBpPos.time() < oldStartTime ) )
 		{
 			Breakpoint silentBreakpoint = earlyBpPos.breakpoint();
 			silentBreakpoint.setAmplitude( 0 );
@@ -675,6 +681,10 @@ static void fix_frequencies( Partial & fixme, const Partial & reference )
 					 << " and frequency " << silentBreakpoint.frequency()
 					 << " at end of Partial labeled " << fixme.label() << endl;
 			*/
+			if ( lateBpPos == reference.begin() )
+			{
+				break;	// YIK! need to think of a better way
+			}
 			--lateBpPos;
 		}
 	}
