@@ -23,9 +23,6 @@ INSTALLATION:
 For generic configuration and installation instructions, see
 the file INSTALL.
 
-For Macintosh-specific configuration and installation instructions,
-see the file README-MAC.
-
 In order to compile and link the Loris library and scripting
 extensions, you will need the FFTW Fourier transform routines,
 available at www.fftw.org, and IRCAM's SDIF (Sound Description
@@ -37,6 +34,34 @@ Loris supports a reassigned bandwidth-enhanced version of the
 SDIF 1TRC format that is not handled correctly by versions 
 of IRCAM's SDIF library earlier than 3.4. Please download 
 release 3.4 or later.
+
+MacOS INSTALLATION:
+
+Loris can be built using the standard GNU tools from a Terminal window
+under Mac OS X (Darwin), follow the instructions for the standard 
+distribution. All compatibility issues that caused poor performance 
+or failure of the standard configuration and build tools under 
+Darwin have (long since) been resolved (except that the Tcl
+module fails to load under MacOS 10.2). You will, of course, need
+the developers' tools, available from Apple, in order to compile
+Loris (or anything else) under Darwin. It is also possible to
+build Loris using CodeWarrior or ProjectBuilder under OS X. 
+
+Loris can also be built for older versions of the Mac OS, but 
+owing to the difficulty of maintaining the project files for 
+new releases of the CodeWarrior development environment, we are
+no longer attempting to distribute those project files in any
+form. Users wanting to build Loris using CodeWarrior can simply
+drag the source files in the classes and pi directories into
+a new project along with appropriate versions of the SDIF and
+FFTW libraries (available from their respecitve websites). 
+Users wanting to build an extension for MacPython should 
+follow the directions for building MacPython extensions using
+CodeWarrior, using loris_python_wrap.C from the scripting
+directory to build the module, loriscmodule.shlib, or something 
+similar (the suffix convention differs depending on the version
+of MacPython), and loris.py from the scripting directory as the 
+interface to the C module. 
 
 
 COPYRIGHT AND LICENSE:

@@ -464,7 +464,6 @@ dnl----------------------------------------------------------------
 AC_MSG_RESULT(----- Creating Output Files -----)
 
 AC_OUTPUT(Makefile doc/Makefile Makefile src/Makefile \
-mac/Makefile pi/Makefile scripting/Makefile csound/Makefile \
-test/Makefile )
+pi/Makefile scripting/Makefile csound/Makefile test/Makefile )
 
 AC_MSG_RESULT(----- End Of Configuration -----)
