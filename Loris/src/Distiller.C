@@ -187,12 +187,14 @@ static void fixGaps( Partial & dest,
 				double time = seg->second + Partial::FadeTime();
 				double freq = dest.frequencyAt( seg->second );
 				double phase = dest.phaseAt(seg->second) +  (freq * Partial::FadeTime()); 
-				dest.insert( time, Breakpoint( freq, 0., 0., phase ) );
+				double bw = dest.bandwidthAt( seg->second );
+				dest.insert( time, Breakpoint( freq, 0., bw, phase ) );
 				
 				time = nextseg->first - Partial::FadeTime();
 				freq = dest.frequencyAt( nextseg->first );
 				phase = dest.phaseAt(nextseg->first) - (freq * Partial::FadeTime());
-				dest.insert( time, Breakpoint( freq, 0., 0., phase ) );
+				bw = dest.bandwidthAt( nextseg->first );
+				dest.insert( time, Breakpoint( freq, 0., bw, phase ) );
 			} 
 			
 			//	advance iterators:
@@ -209,7 +211,8 @@ static void fixGaps( Partial & dest,
 		double time = dest.startTime() - Partial::FadeTime();
 		double freq = dest.frequencyAt(time);
 		double phase = dest.phaseAt(time);
-		dest.insert( time, Breakpoint( freq, 0., 0., phase ) );		
+		double bw = dest.bandwidthAt(time);
+		dest.insert( time, Breakpoint( freq, 0., bw, phase ) );		
 	}
 	
 	if ( dest.amplitudeAt( dest.endTime() ) > 0. )
@@ -217,7 +220,8 @@ static void fixGaps( Partial & dest,
 		double time = dest.endTime() + Partial::FadeTime();
 		double freq = dest.frequencyAt(time);
 		double phase = dest.phaseAt(time);
-		dest.insert( time, Breakpoint( freq, 0., 0., phase ) );		
+		double bw = dest.bandwidthAt(time);
+		dest.insert( time, Breakpoint( freq, 0., bw, phase ) );		
 	}
 }
 
