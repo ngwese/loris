@@ -18,7 +18,7 @@
 
 Begin_Namespace( Loris )
 
-class WeightFunction;
+class Map;
 
 // ---------------------------------------------------------------------------
 //	class Morph
@@ -28,10 +28,10 @@ class Morph
 //	-- public interface --
 public:
 //	construction:
-	Morph( const WeightFunction & f );
-	Morph( const WeightFunction & ff, 
-		   const WeightFunction & af, 
-		   const WeightFunction & bwf );
+	Morph( const Map & f );
+	Morph( const Map & ff, 
+		   const Map & af, 
+		   const Map & bwf );
 	Morph( const Morph & other );
 	~Morph( void );
 
@@ -51,13 +51,13 @@ public:
 							int label = 0);
 
 //	specify morphing functions:	
-	void setFrequencyFunction( const WeightFunction & f );
-	void setAmplitudeFunction( const WeightFunction & f );
-	void setBandwidthFunction( const WeightFunction & f );
+	void setFrequencyFunction( const Map & f );
+	void setAmplitudeFunction( const Map & f );
+	void setBandwidthFunction( const Map & f );
 
-	inline const WeightFunction & frequencyFunction( void ) const;
-	inline const WeightFunction & amplitudeFunction( void ) const;
-	inline const WeightFunction & bandwidthFunction( void ) const;
+	inline const Map & frequencyFunction( void ) const;
+	inline const Map & amplitudeFunction( void ) const;
+	inline const Map & bandwidthFunction( void ) const;
 	
 //	label range access:
 	std::pair< int, int > range( void ) const { return std::make_pair( _minlabel, _maxlabel ); }
@@ -77,9 +77,9 @@ protected:
 	std::list< Partial > _partials;
 	
 	//	morphing functions:
-	WeightFunction * _freqFunction;
-	WeightFunction * _ampFunction;
-	WeightFunction * _bwFunction;
+	Map * _freqFunction;
+	Map * _ampFunction;
+	Map * _bwFunction;
 	
 	//	range of labels for morphing:
 	int _minlabel, _maxlabel;
@@ -122,7 +122,6 @@ private:
 
 //	prototypes for things that aren't classes or
 //	member functions yet:
-std::list< Partial > select( const std::list<Partial> & all, int label );
 Partial dilate( const Partial & p, const std::vector< double > & current, 
 				const std::vector< double > & desired );
 

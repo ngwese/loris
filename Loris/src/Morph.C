@@ -7,7 +7,6 @@
 //
 // ===========================================================================
 #include "LorisLib.h"
-
 #include "Morph.h"
 #include "Synthesizer.h"
 #include "Exception.h"
@@ -15,6 +14,7 @@
 #include "PartialIterator.h"
 #include "Breakpoint.h"
 #include "Distiller.h"
+#include "Map.h"
 
 #if !defined( Deprecated_cstd_headers )
 	#include <cmath>
@@ -153,7 +153,7 @@ WeightFunction::weightAtTime( double time ) const
 // ---------------------------------------------------------------------------
 //	Use auto_ptrs instead to clean up this obscene mess.
 //
-Morph::Morph( const WeightFunction & f ) :
+Morph::Morph( const Map & f ) :
 	_freqFunction( Null ),
 	_ampFunction( Null ),
 	_bwFunction( Null ),
@@ -179,9 +179,9 @@ Morph::Morph( const WeightFunction & f ) :
 // ---------------------------------------------------------------------------
 //	Use auto_ptrs instead to clean up this obscene mess.
 //
-Morph::Morph( const WeightFunction & ff, 
-			  const WeightFunction & af, 
-			  const WeightFunction & bwf ) :
+Morph::Morph( const Map & ff, 
+			  const Map & af, 
+			  const Map & bwf ) :
 	_freqFunction( Null ),
 	_ampFunction( Null ),
 	_bwFunction( Null ),
@@ -245,10 +245,12 @@ Morph::~Morph( void )
 // ---------------------------------------------------------------------------
 //
 void
-Morph::setFrequencyFunction( const WeightFunction & f )
+Morph::setFrequencyFunction( const Map & f )
 {
-	delete _freqFunction;
-	_freqFunction = new WeightFunction( f );
+	if ( _freqFunction != &f ) {
+		delete _freqFunction;
+		_freqFunction = f.clone();
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -256,10 +258,12 @@ Morph::setFrequencyFunction( const WeightFunction & f )
 // ---------------------------------------------------------------------------
 //
 void
-Morph::setAmplitudeFunction( const WeightFunction & f )
+Morph::setAmplitudeFunction( const Map & f )
 {
-	delete _ampFunction;
-	_ampFunction = new WeightFunction( f );
+	if ( _ampFunction != &f ) {
+		delete _ampFunction;
+		_ampFunction = f.clone();
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -267,17 +271,19 @@ Morph::setAmplitudeFunction( const WeightFunction & f )
 // ---------------------------------------------------------------------------
 //
 void
-Morph::setBandwidthFunction( const WeightFunction & f )
+Morph::setBandwidthFunction( const Map & f )
 {
-	delete _bwFunction;
-	_bwFunction = new WeightFunction( f );
+	if ( _bwFunction != &f ) {
+		delete _bwFunction;
+		_bwFunction = f.clone();
+	}
 }
 
 // ---------------------------------------------------------------------------
 //	frequencyFunction
 // ---------------------------------------------------------------------------
 //
-inline const WeightFunction & 
+inline const Map & 
 Morph::frequencyFunction(void) const 
 { 
 //	make sure the morphing function has been specified:
@@ -290,7 +296,7 @@ Morph::frequencyFunction(void) const
 //	amplitudeFunction
 // ---------------------------------------------------------------------------
 //
-inline const WeightFunction & 
+inline const Map & 
 Morph::amplitudeFunction(void) const
 { 
 //	make sure the morphing function has been specified:
@@ -303,7 +309,7 @@ Morph::amplitudeFunction(void) const
 //	bandwidthFunction
 // ---------------------------------------------------------------------------
 //
-inline const WeightFunction & 
+inline const Map & 
 Morph::bandwidthFunction(void) const
 { 
 //	make sure the morphing function has been specified:
@@ -414,9 +420,9 @@ Morph::morphPartial( const Partial & p1, const Partial & p2 )
 	
 	//	loop over Breakpoints in first partial:
 	for ( const Breakpoint * bp1 = p1.head(); bp1 != Null; bp1 = bp1->next() ) {
-		double alphaF = frequencyFunction().weightAtTime( bp1->time() );
-		double alphaA = amplitudeFunction().weightAtTime( bp1->time() );
-		double alphaBW = bandwidthFunction().weightAtTime( bp1->time() );
+		double alphaF = frequencyFunction().valueAt( bp1->time() );
+		double alphaA = amplitudeFunction().valueAt( bp1->time() );
+		double alphaBW = bandwidthFunction().valueAt( bp1->time() );
 		
 		double amp2 = ( p2.duration() > 0. ) ? 
 			p2.amplitudeAt( bp1->time() ) : 0.;
@@ -437,9 +443,9 @@ Morph::morphPartial( const Partial & p1, const Partial & p2 )
 	
 	//	now do it for the other Partial:
 	for ( const Breakpoint * bp2 = p2.head(); bp2 != Null; bp2 = bp2->next() ) {
-		double alphaF = 1. - frequencyFunction().weightAtTime( bp2->time() );
-		double alphaA = 1. - amplitudeFunction().weightAtTime( bp2->time() );
-		double alphaBW = 1. - bandwidthFunction().weightAtTime( bp2->time() );
+		double alphaF = 1. - frequencyFunction().valueAt( bp2->time() );
+		double alphaA = 1. - amplitudeFunction().valueAt( bp2->time() );
+		double alphaBW = 1. - bandwidthFunction().valueAt( bp2->time() );
 		
 		double amp1 = ( p1.duration() > 0. ) ? 
 			p1.amplitudeAt( bp2->time() ) : 0.;
@@ -501,6 +507,5 @@ Morph::collectByLabel( const list<Partial>::const_iterator & start,
 	//cout << "found " << n << " partials labeled " << label << endl;
 	return n;
 }
-
 
 End_Namespace( Loris )
