@@ -29,7 +29,8 @@ instr 1
     kmurph   linseg      0, p3/3, 0, p3/3, 1, p3/3, 1
     kduh     lorisread   ktime, "clarinet.dilated.sdif", 1, 1, 2, 1, .001
     kduh     lorisread   ktime, "flute.dilated.sdif", 2, 1, 1, 1, .001
-    asig     lorismorph  1, 2, kmurph, kmurph, kmurph
+    kduh     lorismorph  1, 2, 3, kmurph, kmurph, kmurph
+	asig     lorisplay   3, 1, 1, 1
              out         asig
 endin
 
@@ -40,7 +41,8 @@ instr 2
     
     kduh     lorisread   ktime1, "meow3.sdif", 1, 1, 1, 1, .001
     kduh     lorisread   ktime2, "carhorn.sdif", 2, 1, 1, 1, .001
-    asig     lorismorph  1, 2, kmurph, kmurph, kmurph
+    kduh     lorismorph  1, 2, 3, kmurph, kmurph, kmurph
+	asig     lorisplay   3, 1, 1, 1
              out         asig
 endin
 

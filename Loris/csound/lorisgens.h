@@ -85,7 +85,7 @@ typedef struct
 	float *result;
 	
 	/* unit generator parameters/arguments */
-	float *srcidx, *tgtidx, *freqenv, *ampenv, *bwenv;    
+	float *srcidx, *tgtidx, *morphedidx, *freqenv, *ampenv, *bwenv;    
 
 	/* private internal data, used by generator */
 	LorisMorpher *imp;

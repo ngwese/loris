@@ -46,7 +46,7 @@ c) Add the Loris unit generator to the opcode list by adding:
 
 {"lorisread",  S(LORISREAD),  3, "k", "kSikkko", lorisread_setup,  lorisread, NULL },
 {"lorisplay",  S(LORISPLAY),  5, "a", "ikkk",    lorisplay_setup,  NULL, lorisplay },
-{"lorismorph", S(LORISMORPH), 5, "a", "iikkk",   lorismorph_setup, NULL, lorismorph }
+{"lorismorph", S(LORISMORPH), 5, "k", "iiikkk",  lorismorph_setup, lorismorph, NULL }
  
 to the array of similar OENTRY structures.
 

@@ -60,7 +60,6 @@
 using namespace Loris;
 using namespace std;
 
-typedef std::vector< Breakpoint > BREAKPOINTS;
 typedef std::vector< Partial > PARTIALS;
 typedef std::vector< Oscillator > OSCILS;
 
@@ -267,6 +266,12 @@ static inline void convert_samples( const double * src, float * tgt, int nn )
 //	Breakpoints that are members of any Partial. Each set of parameters
 //	(Breakpoint) is paired with the label of the corresponding Partial.
 //
+//	A static map of EnvelopeReader is maintained that allows EnvelopeReader to be
+//	found by index and Csound owner-instrument. A EnvelopeReader can be added to 
+//	this map, by is parent LorisReader (below), and subsequently found by
+//	other generators having the same owner instrument. This is how lorisplay
+//	and lorismorph access the data read by a LorisReader.
+//
 class EnvelopeReader
 {
 	std::vector< std::pair< Breakpoint, long > > _vec;
@@ -284,6 +289,7 @@ public:
 	long labelAt( long idx ) const { return _vec[idx].second; }
 
 	long size( void ) const { return _vec.size(); }
+	void resize( long n ) { _vec.resize(n); }
 	
 	//	tagging:
 	typedef std::pair< INSDS *, int > Tag;
@@ -431,17 +437,10 @@ ImportedPartials::GetPartials( const string & sdiffilname, double fadetime )
 //	LorisReader samples a ImportedPartials instance at a given time, updated by
 //	calls to updateEnvelopePoints(). 
 //
-//	A static map of LorisReaders is maintained that allows LorisReaders to be
-//	found by index and Csound owner-instrument. A LorisReader can be added to 
-//	this map, by is parent Lorisread_priv (below), and subsequently found by
-//	other generators having the same owner instrument. This is how lorisplay
-//	and lorismorph access the data read by a LorisReader.
-//
 class LorisReader
 {
 	const ImportedPartials & _partials;
 	EnvelopeReader _envelopes;
-//	double _time;
 	EnvelopeReader::Tag _tag;
 	
 public:	
@@ -452,11 +451,6 @@ public:
 	//	envelope parameter computation:
 	//	(returns number of active Partials)
 	long updateEnvelopePoints( double time, double fscale, double ascale, double bwscale );
-	
-	//	access:
-	//const ImportedPartials & partials( void ) const { return _partials; }
-	const EnvelopeReader & envelopePoints( void ) const { return _envelopes; }
-//	double time( void ) const { return _time; }
 }; 
 
 // ---------------------------------------------------------------------------
@@ -466,7 +460,6 @@ public:
 LorisReader::LorisReader( const string & fname, double fadetime, INSDS * owner, int idx ) :
 	_partials( ImportedPartials::GetPartials( fname, fadetime ) ),
 	_envelopes( _partials.size() ),
-//	_time( 0. ),
 	_tag( owner, idx )
 {
 	//	set the labels for the EnvelopeReader:
@@ -490,7 +483,7 @@ LorisReader::~LorisReader( void )
 	EnvelopeReader::TagMap & tags = EnvelopeReader::Tags();
 	EnvelopeReader::TagMap::iterator it = tags.find( _tag );
 	
-	if ( it != tags.end() )
+	if ( it != tags.end() && it->second == &_envelopes )
 	{
 		tags.erase(it);
 	}
@@ -503,9 +496,6 @@ LorisReader::~LorisReader( void )
 long 
 LorisReader::updateEnvelopePoints( double time, double fscale, double ascale, double bwscale )
 {
-	// update time;
-//	_time = time;
-	
 	long countActive = 0;
 	
 	for (long i = 0; i < _partials.size(); ++i )
@@ -697,21 +687,21 @@ class LorisMorpher
 	Morpher morpher;
 	const EnvelopeReader * src_reader;
 	const EnvelopeReader * tgt_reader;
-	OSCILS oscils;
+
+	EnvelopeReader morphed_envelopes;
+	EnvelopeReader::Tag tag;
 		
 	typedef std::map< long, std::pair< long, long > > LabelMap;
 	LabelMap labelMap;
 	std::vector< long > src_unlabeled, tgt_unlabeled;
 	
-	std::vector< double > dblbuffer;
-
 public:	
 	//	construction:
 	LorisMorpher( LORISMORPH * params );
-	~LorisMorpher( void ) {}
+	~LorisMorpher( void );
 	
 	//	envelope update:
-	void updateEnvelopes( float * result );
+	long updateEnvelopes( void );
 	
 	//
 	//	Define Envelope classes that can access the 
@@ -799,7 +789,7 @@ LorisMorpher::LorisMorpher( LORISMORPH * params ) :
 	morpher( GetFreqFunc( params ), GetAmpFunc( params ), GetBwFunc( params ) ),
 	src_reader( EnvelopeReader::Find( params->h.insdshead, *(params->srcidx) ) ),
 	tgt_reader( EnvelopeReader::Find( params->h.insdshead, *(params->tgtidx) ) ),
-	dblbuffer( ksmps, 0. )
+	tag( params->h.insdshead, *(params->morphedidx) )
 {
 	if ( src_reader != NULL ) 
 	{
@@ -858,37 +848,58 @@ LorisMorpher::LorisMorpher( LORISMORPH * params ) :
 	std::cerr << src_unlabeled.size() << " unlabeled source Partials, and ";
 	std::cerr << tgt_unlabeled.size() << " unlabeled target Partials." << std::endl;
 	
-	//	allocate Oscillators:
-	oscils.resize( labelMap.size() + src_unlabeled.size() + tgt_unlabeled.size() );
 	
+	//	allocate and set the labels for the morphed envelopes:
+	morphed_envelopes.resize( labelMap.size() + src_unlabeled.size() + tgt_unlabeled.size() );
+	long envidx = 0;
+	LabelMap::iterator it;
+	for( it = labelMap.begin(); it != labelMap.end(); ++it, ++envidx )
+	{
+		morphed_envelopes.labelAt(envidx) = it->first;
+	}
 	
+	//	tag these envelopes:
+	EnvelopeReader::Tags()[ tag ] = &morphed_envelopes;
+}
+
+// ---------------------------------------------------------------------------
+//	LorisMorpher destruction
+// ---------------------------------------------------------------------------
+//
+LorisMorpher::~LorisMorpher( void )
+{
+	//	if the morphed envelopes are still in the tag map,
+	//	remove them:
+	EnvelopeReader::TagMap & tags = EnvelopeReader::Tags();
+	EnvelopeReader::TagMap::iterator it = tags.find( tag );
+	
+	if ( it != tags.end() && it->second == &morphed_envelopes )
+	{
+		tags.erase(it);
+	}
 }
 
 // ---------------------------------------------------------------------------
 //	LorisMorpher updateEnvelopes
 // ---------------------------------------------------------------------------
+//	Taking it on faith that the EnvelopeReaders will not be destroyed before
+//	we are done using them!
 //
-void 
-LorisMorpher::updateEnvelopes( float * result )
+long 
+LorisMorpher::updateEnvelopes( void )
 {
-	//	clear the buffer first!
-	double * bufbegin =  &(dblbuffer[0]);
-	clear_buffer( bufbegin, ksmps );
-	
-	//	now accumulate samples into the buffer:
-	
 	//	first render all the labeled (morphed) Partials:
 	// std::cerr << "** Morphing Partials labeled " << labelMap.begin()->first;
 	// std::cerr << " to " << (--labelMap.end())->first << std::endl;
 	
-	Breakpoint bp;
 	Partial dummy;
-	long oscidx = 0;
+	long envidx = 0;
 	LabelMap::iterator it;
-	for( it = labelMap.begin(); it != labelMap.end(); ++it, ++oscidx )
+	for( it = labelMap.begin(); it != labelMap.end(); ++it, ++envidx )
 	{
 		long label = it->first;
 		std::pair<long, long> & indices = it->second;
+		Breakpoint & bp = morphed_envelopes.valueAt(envidx);
 		
 		long isrc = indices.first;
 		long itgt = indices.second;
@@ -896,7 +907,7 @@ LorisMorpher::updateEnvelopes( float * result )
 		//	this should not happen:
 		if ( itgt < 0 && isrc < 0 )
 		{
-			std::cerr << "HEY!!!! The labelMap had a pair of bogus indices in it at pos " << oscidx << std::endl;
+			std::cerr << "HEY!!!! The labelMap had a pair of bogus indices in it at pos " << envidx << std::endl;
 			continue;
 		}
 		
@@ -907,48 +918,48 @@ LorisMorpher::updateEnvelopes( float * result )
 		if ( itgt < 0 )
 		{
 			//	morph from the source to a dummy:
-			// std::cerr << "** Morphing source to dummy " << oscidx << std::endl;
+			// std::cerr << "** Morphing source to dummy " << envidx << std::endl;
 			morpher.morphParameters( src_reader->valueAt(isrc), dummy, 0, bp );
 		}
 		else if ( isrc < 0 )
 		{
 			//	morph from a dummy to the target:
-			// std::cerr << "** Morphing dummy to target " << oscidx << std::endl;
+			// std::cerr << "** Morphing dummy to target " << envidx << std::endl;
 			morpher.morphParameters( dummy, tgt_reader->valueAt(itgt), 0, bp );
 		}
 		else 
 		{
 			//	morph from the source to the target:
-			// std::cerr << "** Morphing source to target " << oscidx << std::endl;
+			// std::cerr << "** Morphing source to target " << envidx << std::endl;
 			morpher.morphParameters( src_reader->valueAt(isrc), tgt_reader->valueAt(itgt), 0, bp );
 		}	
-		
-		accum_samples( oscils[oscidx], bp, bufbegin,ksmps );
 	} 
 	
 	//	render unlabeled source Partials:
 	// std::cerr << "** Crossfading " << src_unlabeled.size();
 	// std::cerr << " unlabeled source Partials" << std::endl;
-	for( long i = 0; i < src_unlabeled.size(); ++i, ++oscidx )  
+	for( long i = 0; i < src_unlabeled.size(); ++i, ++envidx )  
 	{
 		//	morph from the source to a dummy:
+		Breakpoint & bp = morphed_envelopes.valueAt(envidx);
 		morpher.morphParameters( src_reader->valueAt( src_unlabeled[i] ), dummy, 0, bp );
-		accum_samples( oscils[oscidx], bp, bufbegin, ksmps );
 	}
 	
 	
 	//	render unlabeled target Partials:
 	// std::cerr << "** Crossfading " << tgt_unlabeled.size();
 	// std::cerr << " unlabeled target Partials" << std::endl;
-	for( long i = 0; i < tgt_unlabeled.size(); ++i, ++oscidx )  
+	for( long i = 0; i < tgt_unlabeled.size(); ++i, ++envidx )  
 	{
 		//	morph from a dummy to the target:
+		Breakpoint & bp = morphed_envelopes.valueAt(envidx);
 		morpher.morphParameters( dummy, tgt_reader->valueAt( tgt_unlabeled[i] ), 0, bp );
-		accum_samples( oscils[oscidx], bp, bufbegin, ksmps );
 	}	
 	
-	//	transfer samples into the result buffer:
-	convert_samples( bufbegin, result, ksmps );
+	//	tag these envelopes:
+	EnvelopeReader::Tags()[ tag ] = &morphed_envelopes;
+	
+	return morphed_envelopes.size();
 }
 
 #pragma mark -- lorismorph generator functions --
@@ -972,13 +983,10 @@ void lorismorph_setup( LORISMORPH * p )
 // ---------------------------------------------------------------------------
 //	Audio-rate generator function.
 //
-//	Taking it on faith that the EnvelopeReaders will not be destroyed before
-//	we are done using them!
-//
 extern "C"
 void lorismorph( LORISMORPH * p )
 {
-	p->imp->updateEnvelopes( p->result );
+	*p->result = p->imp->updateEnvelopes();
 }
 
 // ---------------------------------------------------------------------------
