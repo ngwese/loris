@@ -61,6 +61,10 @@ static const Partial::label_type DefaultReferenceLabel = 0;	//	by default, don't
 															//	(this is the traditional behavior or Loris)
 #endif
 
+static const double DefaultFixThreshold = -90; 	// dB, very low by default
+static const double DefaultAmpShape = 1E-5; 	// shaping parameter, see morphParameters
+
+
 	
 // ---------------------------------------------------------------------------
 //	Class Morpher
@@ -100,7 +104,9 @@ Morpher::Morpher( const Envelope & f ) :
 	_ampFunction( f.clone() ),
 	_bwFunction( f.clone() ),
 	_refLabel0( DefaultReferenceLabel ),
-	_refLabel1( DefaultReferenceLabel )
+	_refLabel1( DefaultReferenceLabel ),
+	_freqFixThresholdDb( DefaultFixThreshold ),
+	_ampMorphShape( DefaultAmpShape )
 {
 }
 
@@ -115,7 +121,9 @@ Morpher::Morpher( const Envelope & ff, const Envelope & af, const Envelope & bwf
 	_ampFunction( af.clone() ),
 	_bwFunction( bwf.clone() ),
 	_refLabel0( DefaultReferenceLabel ),
-	_refLabel1( DefaultReferenceLabel )
+	_refLabel1( DefaultReferenceLabel ),
+	_freqFixThresholdDb( DefaultFixThreshold ),
+	_ampMorphShape( DefaultAmpShape )
 {
 }
 
@@ -131,6 +139,74 @@ Morpher::~Morpher( void )
 #pragma mark -- morphed parameter computation --
 
 // ---------------------------------------------------------------------------
+//	Helper function for computing individual morphed frequency values
+//
+inline double 
+Morpher::morphFrequencies( double f0, double f1, double alpha )
+{
+	return (alpha * f1) + ((1.-alpha) * f0);
+}
+	
+// ---------------------------------------------------------------------------
+//	Helper function for computing individual morphed amplitude values
+//
+inline double 
+Morpher::morphAmplitudes( double a0, double a1, double alpha )
+{
+#if !defined(LOG_AMP_MORPHING)
+	return (alpha * a1) + ((1.-alpha) * a0);
+#else	
+	//	log-amplitude morphing:
+	//	it is essential to add in a small Epsilon, so that 
+	//	occasional zero amplitudes do not introduce artifacts
+	//	(if amp is zero, then even if alpha is very small
+	//	the effect is to multiply by zero, because 0^x = 0).
+	//
+	//	When Epsilon is very small, the curve representing the
+	//	morphed amplitude is very steep, such that there is a 
+	//	huge difference between zero amplitude and very small
+	//	amplitude, and this causes audible artifacts. So instead
+	//	use a larger value that shapes the curve more nicely. 
+	//	Just have to subtract this value from the morphed 
+	//	amplitude to avoid raising the noise floor a whole lot.
+	using std::pow;
+	static const double Epsilon = 1E-12;
+	if ( ( a0 > Epsilon ) || ( a1 > Epsilon ) )
+	{
+		/*
+		retBkpt.setAmplitude( pow( std::max( a0, Epsilon ), (1.-alpha) ) *
+							  pow( std::max( a1, Epsilon ), alpha ) );		
+		*/
+		double newamp = ( pow( a0 + _ampMorphShape, (1.-alpha) ) * 
+						  pow( a1 + _ampMorphShape, alpha ) ) - _ampMorphShape;
+		return std::max( 0.0, newamp );		
+		
+	}
+	else
+	{
+		return 0;
+	}
+#endif	
+}
+	
+// ---------------------------------------------------------------------------
+//	Helper function for computing individual morphed bandwidth values
+//
+inline double 
+Morpher::morphBandwidths( double bw0, double bw1, double alpha )
+{
+	return (alpha * bw1) + ((1.-alpha) * bw0);
+}
+	
+// ---------------------------------------------------------------------------
+//	Helper function for computing individual morphed phase values
+//
+inline double 
+Morpher::morphPhases( double phi0, double phi1, double alpha )
+{
+	return (alpha * phi1) + ((1.-alpha) * phi0);
+}
+// ---------------------------------------------------------------------------
 //	morphParameters - Breakpoint to Breakpoint
 // ---------------------------------------------------------------------------
 //!	Compute morphed parameter values at the specified time, using
@@ -141,39 +217,19 @@ Morpher::morphParameters( const Breakpoint & srcBkpt, const Breakpoint & tgtBkpt
 						  double time, Breakpoint & retBkpt )
 {
 	//	evaluate morphing functions at time:
-	double alphaA = _ampFunction->valueAt( time );
-	double alphaF = _freqFunction->valueAt( time );
-	double alphaBW = _bwFunction->valueAt( time );
+	const double alphaF = _freqFunction->valueAt( time );
+	const double alphaA = _ampFunction->valueAt( time );
+	const double alphaBW = _bwFunction->valueAt( time );
 
 	//	compute weighted average parameters for 
 	//	the return Breakpoint:	
-	retBkpt.setFrequency( (alphaF * tgtBkpt.frequency()) + ((1.-alphaF) * srcBkpt.frequency()) );
-
-#if !defined(LOG_AMP_MORPHING)
-	retBkpt.setAmplitude( (alphaA * tgtBkpt.amplitude()) + ((1.-alphaA) * srcBkpt.amplitude()) );
-#else	
-	//	log-amplitude morphing:
-	//	it is essential to add in a small Epsilon, so that 
-	//	occasional zero amplitudes do not introduce artifacts
-	//	(if amp is zero, then even if alpha is very small
-	//	the effect is to multiply by zero, because 0^x = 0).
-	using std::pow;
-	static const double Epsilon = 1E-12;
-	double A0 = srcBkpt.amplitude();
-	double A1 = tgtBkpt.amplitude();
-	if ( A0 > Epsilon || A1 > Epsilon )
-	{
-		retBkpt.setAmplitude( pow( std::max( A0, Epsilon ), (1.-alphaA) ) *
-							  pow( std::max( A1, Epsilon ), alphaA ) );		
-	}
-	else
-	{
-		retBkpt.setAmplitude( 0 );
-	}
-#endif	
-	
-	retBkpt.setBandwidth( (alphaBW * tgtBkpt.bandwidth()) + ((1.-alphaBW) * srcBkpt.bandwidth()) );
-	retBkpt.setPhase( (alphaF * tgtBkpt.phase()) + ((1.-alphaF) * srcBkpt.phase()) );
+	retBkpt.setFrequency( morphFrequencies( srcBkpt.frequency(), tgtBkpt.frequency(),
+											alphaF ) );
+	retBkpt.setAmplitude( morphAmplitudes( srcBkpt.amplitude(), tgtBkpt.amplitude(),
+										   alphaA ) );
+	retBkpt.setBandwidth( morphBandwidths( srcBkpt.bandwidth(), tgtBkpt.bandwidth(),
+										   alphaBW ) );
+	retBkpt.setPhase( morphPhases( srcBkpt.phase(), tgtBkpt.phase(), alphaF ) );
 }
 
 // ---------------------------------------------------------------------------
@@ -581,7 +637,8 @@ Morpher::morph( PartialList::const_iterator beginSrc,
 //	Local helper function to correct the frequencies of low-amplitude
 //	breakpoints using a reference Partial.
 //
-static void fix_frequencies( Partial & fixme, const Partial & reference )
+static void fix_frequencies( Partial & fixme, const Partial & reference, 
+							 double thresholdDb )
 {
 	//	sanity
 	if ( 0 == reference.size() )
@@ -593,10 +650,9 @@ static void fix_frequencies( Partial & fixme, const Partial & reference )
 	if ( &fixme != &reference )
 	{
 		//	compute absolute magnitude thresholds:
-		const double ThresholdDB = -65;
 		const double FadeRangeDB = 10;
-		const double Threshold = std::pow( 10., 0.05 * ThresholdDB );
-		const double BeginFade = std::pow( 10., 0.05 * (ThresholdDB+FadeRangeDB) );
+		const double Threshold = std::pow( 10., 0.05 * thresholdDb );
+		const double BeginFade = std::pow( 10., 0.05 * (thresholdDb+FadeRangeDB) );
 		const double OneOverFadeSpan = 1. / ( BeginFade - Threshold );
 
 		double fscale = (double)fixme.label() / reference.label();
@@ -755,7 +811,7 @@ void Morpher::morph_aux( PartialCorrespondence & correspondence  )
 				//	find quiet parts of the source Partial,
 				//	and use scaled reference frequencies for 
 				//	those Breakpoints:
-				fix_frequencies( src, *ref0 );		
+				fix_frequencies( src, *ref0, _freqFixThresholdDb );		
 			}
 		}
 		else if ( ref0 != 0 )
@@ -783,7 +839,7 @@ void Morpher::morph_aux( PartialCorrespondence & correspondence  )
 				//	find quiet parts of the target Partial,
 				//	and use scaled reference frequencies for 
 				//	those Breakpoints:
-				fix_frequencies( tgt, *ref1 );
+				fix_frequencies( tgt, *ref1, _freqFixThresholdDb );
 			}
 		}
 		else if ( ref1 != 0 )
@@ -880,7 +936,7 @@ Morpher::bandwidthFunction( void ) const
 // ---------------------------------------------------------------------------
 //	sourceReferenceLabel
 // ---------------------------------------------------------------------------
-//! 	Return the label of the Partial to be used as a reference
+//! Return the label of the Partial to be used as a reference
 //!	Partial for the source sequence in a morph of two Partial
 //!	sequences. The reference partial is used to compute 
 //!	frequencies for very low-amplitude Partials whose frequency
@@ -898,7 +954,7 @@ Morpher::sourceReferenceLabel( void ) const
 // ---------------------------------------------------------------------------
 //	targetReferenceLabel
 // ---------------------------------------------------------------------------
-//! 	Return the label of the Partial to be used as a reference
+//! Return the label of the Partial to be used as a reference
 //!	Partial for the target sequence in a morph of two Partial
 //!	sequences. The reference partial is used to compute 
 //!	frequencies for very low-amplitude Partials whose frequency
@@ -916,7 +972,7 @@ Morpher::targetReferenceLabel( void ) const
 // ---------------------------------------------------------------------------
 //	setSourceReferenceLabel
 // ---------------------------------------------------------------------------
-//! 	Set the label of the Partial to be used as a reference
+//! Set the label of the Partial to be used as a reference
 //!	Partial for the source sequence in a morph of two Partial
 //!	sequences. The reference partial is used to compute 
 //!	frequencies for very low-amplitude Partials whose frequency
@@ -934,7 +990,7 @@ Morpher::setSourceReferenceLabel( Partial::label_type l )
 // ---------------------------------------------------------------------------
 //	setTargetReferenceLabel
 // ---------------------------------------------------------------------------
-//! 	Set the label of the Partial to be used as a reference
+//! Set the label of the Partial to be used as a reference
 //!	Partial for the target sequence in a morph of two Partial
 //!	sequences. The reference partial is used to compute 
 //!	frequencies for very low-amplitude Partials whose frequency
@@ -948,6 +1004,55 @@ Morpher::setTargetReferenceLabel( Partial::label_type l )
 {
 	_refLabel1 = l;
 }
+
+// ---------------------------------------------------------------------------
+//	amplitudeShape
+// ---------------------------------------------------------------------------
+//	Return the shaping parameter for the amplitude moprhing
+//	function (only used in new log-amplitude morphing).
+//	This shaping parameter controls the 
+//	slope of the amplitude morphing function,
+//	for values greater than 1, this function
+//	gets nearly linear (like the old amplitude
+//	morphing function), for values much less 
+//	than 1 (e.g. 1E-5) the slope is gently
+//	curved and sounds pretty "linear", for 
+//	very small values (e.g. 1E-12) the curve
+//	is very steep and sounds un-natural because
+//	of the huge jump from zero amplitude to
+//	very small amplitude.
+double Morpher::amplitudeShape( void ) const
+{
+	return _ampMorphShape;
+}
+
+// ---------------------------------------------------------------------------
+//	setAmplitudeShape
+// ---------------------------------------------------------------------------
+//	Set the shaping parameter for the amplitude moprhing
+//	function (only used in new log-amplitude morphing).
+//	This shaping parameter controls the 
+//	slope of the amplitude morphing function,
+//	for values greater than 1, this function
+//	gets nearly linear (like the old amplitude
+//	morphing function), for values much less 
+//	than 1 (e.g. 1E-5) the slope is gently
+//	curved and sounds pretty "linear", for 
+//	very small values (e.g. 1E-12) the curve
+//	is very steep and sounds un-natural because
+//	of the huge jump from zero amplitude to
+//	very small amplitude.
+//
+//	x is the new shaping parameter, it must be positive.
+void Morpher::setAmplitudeShape( double x )
+{
+	if ( x <= 0. )
+	{
+		Throw( InvalidArgument, "the amplitude morph shaping parameter must be positive");
+	}
+	_ampMorphShape = x;
+}
+
 
 #pragma mark -- PartialList access --
 

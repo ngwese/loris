@@ -77,6 +77,23 @@ class Morpher
 												//	morphing sequences of labeled Partials,
 												//	default 0 implies no reference Partial
 
+	double _freqFixThresholdDb; 				//	amplitude threshold below which Partial
+												//	frequencies are corrected according to
+												//	a reference Partial, if specified.
+	
+	double _ampMorphShape;						//	shaping parameter that controls the 
+												//	slope of the amplitude morphing function,
+												//	for values greater than 1, this function
+												//	gets nearly linear (like the old amplitude
+												//	morphing function), for values much less 
+												//	than 1 (e.g. 1E-5) the slope is gently
+												//	curved and sounds pretty "linear", for 
+												//	very small values (e.g. 1E-12) the curve
+												//	is very steep and sounds un-natural because
+												//	of the huge jump from zero amplitude to
+												//	very small amplitude.
+																		
+	
 //	-- public interface --
 public:
 //	-- construction --
@@ -197,6 +214,38 @@ public:
 	
 	//	Return a reference to this Morpher's bandwidth morphing envelope.
 	const Envelope & bandwidthFunction( void ) const;
+	
+	//!	Return the shaping parameter for the amplitude moprhing
+	//!	function (only used in new log-amplitude morphing).
+	//!	This shaping parameter controls the 
+	//!	slope of the amplitude morphing function,
+	//!	for values greater than 1, this function
+	//!	gets nearly linear (like the old amplitude
+	//!	morphing function), for values much less 
+	//!	than 1 (e.g. 1E-5) the slope is gently
+	//!	curved and sounds pretty "linear", for 
+	//!	very small values (e.g. 1E-12) the curve
+	//!	is very steep and sounds un-natural because
+	//!	of the huge jump from zero amplitude to
+	//!	very small amplitude.	
+	double amplitudeShape( void ) const;
+	
+	//!	Set the shaping parameter for the amplitude moprhing
+	//!	function (only used in new log-amplitude morphing).
+	//!	This shaping parameter controls the 
+	//!	slope of the amplitude morphing function,
+	//!	for values greater than 1, this function
+	//!	gets nearly linear (like the old amplitude
+	//!	morphing function), for values much less 
+	//!	than 1 (e.g. 1E-5) the slope is gently
+	//!	curved and sounds pretty "linear", for 
+	//!	very small values (e.g. 1E-12) the curve
+	//!	is very steep and sounds un-natural because
+	//!	of the huge jump from zero amplitude to
+	//!	very small amplitude.
+	//!
+	//!	@param x is the new shaping parameter, it must be positive.
+	void setAmplitudeShape( double x );
 
 //	-- reference Partial label access/mutation --
 	
@@ -273,6 +322,13 @@ private:
 	//	of Partials identified in a PartialCorrespondence. Called by the
 	//	morph() implementation accepting two sequences of Partials.
 	void morph_aux( PartialCorrespondence & correspondence );
+	
+	//	Helper functions for computing individual morphed parameter values
+	double morphFrequencies( double f0, double f1, double alpha );
+	double morphAmplitudes( double a0, double a1, double alpha );
+	double morphBandwidths( double bw0, double bw1, double alpha );
+	double morphPhases( double phi0, double phi1, double alpha );
+		
 
 };	//	end of class Morpher
 
