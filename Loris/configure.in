@@ -8,7 +8,10 @@ dnl This program is distributed in the hope that it will be useful, but
 dnl WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 dnl implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-AC_INIT(pi/loris.h.in)
+
+dnl initialization
+dnl used to be AC_INIT(pi/loris.h.in)
+AC_INIT(Loris, 1.0.1, loris@cerlsoundgroup.org, loris)
 
 AC_CONFIG_AUX_DIR(config)
 AC_SUBST(ac_aux_dir)
@@ -18,14 +21,18 @@ dnl Package Name And Version
 dnl----------------------------------------------------------------
 
 AC_MSG_RESULT(----- Package Name And Version -----)
-PACKAGE=loris
+dnl make sure these are consistent with the version number
+dnl in AC_INIT above
 LORIS_MAJOR_VERSION=1
 LORIS_MINOR_VERSION=0
 LORIS_SUBMINOR_VERSION=1
 LORIS_PRERELEASE_STR=
-VERSION_STR="$LORIS_MAJOR_VERSION"."$LORIS_MINOR_VERSION"."$LORIS_SUBMINOR_VERSION""$LORIS_PRERELEASE_STR"
-AM_INIT_AUTOMAKE("$PACKAGE","$VERSION_STR")
-AC_MSG_RESULT(this is $PACKAGE-$VERSION_STR)
+
+dnl VERSION_STR="$LORIS_MAJOR_VERSION"."$LORIS_MINOR_VERSION"."$LORIS_SUBMINOR_VERSION""$LORIS_PRERELEASE_STR"
+VERSION_STR=$PACKAGE_STRING
+
+AM_INIT_AUTOMAKE("$PACKAGE_TARNAME","$PACKAGE_STRING")
+AC_MSG_RESULT(this is $PACKAGE_STRING)
 
 AC_SUBST(LORIS_MAJOR_VERSION)
 AC_SUBST(LORIS_MINOR_VERSION)
@@ -225,9 +232,10 @@ AC_TRY_COMPILE([ #include <cmath>;], [double pi = M_PI;], [
 
 if "$HAVE_M_PI"; then
 	AC_MSG_RESULT(yep)
-	AC_DEFINE(HAVE_M_PI)
+	AC_DEFINE([HAVE_M_PI], 1, [Define 1 if M_PI defined in cmath, 0 otherwise.])
 else
 	AC_MSG_RESULT(nope using local definition of pi)
+	AC_DEFINE([HAVE_M_PI], 0, [Define 1 if M_PI defined in cmath, 0 otherwise.])
 fi
 
 dnl restore this
@@ -463,7 +471,7 @@ dnl----------------------------------------------------------------
 
 AC_MSG_RESULT(----- Creating Output Files -----)
 
-AC_OUTPUT(Makefile doc/Makefile Makefile src/Makefile \
+AC_OUTPUT(Makefile doc/Makefile src/Makefile \
 pi/Makefile scripting/Makefile csound/Makefile test/Makefile )
 
 AC_MSG_RESULT(----- End Of Configuration -----)
