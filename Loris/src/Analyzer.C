@@ -51,6 +51,9 @@
 #include <utility>
 #include <vector>
 
+#define No_BW_Association
+#define Noise_Partials
+
 using namespace std;
 
 //	begin namespace
@@ -64,6 +67,9 @@ struct AnalyzerState;
 static void extractPeaks( AnalyzerState & state );
 static void thinPeaks( AnalyzerState & state );
 static void formPartials( AnalyzerState & state );
+#if defined(Noise_Partials)
+static void formNoisePartials( AnalyzerState & state );
+#endif
 
 // ---------------------------------------------------------------------------
 //	AnalyzerState definition
@@ -81,7 +87,9 @@ struct AnalyzerState
 	std::auto_ptr< ReassignedSpectrum > spectrum;
     
     //	bandwidth association strategy:
+#if !defined(No_BW_Association)
 	std::auto_ptr< AssociateBandwidth > bwAssociation;
+#endif
 		
 	//	collection of ptrs to Partials eligible for matching:
 	PartialPtrs eligiblePartials;
@@ -89,7 +97,6 @@ struct AnalyzerState
     //	the current frame (collection of 
     //	reassigned spectral peaks):
     FRAME currentFrame;
-    
     //	reference to the Analyzer instance, for parameter
     //	access:
     Analyzer & analyzer;
@@ -99,6 +106,12 @@ struct AnalyzerState
     
     //	the time corresponding to the currenf frame:
     double currentFrameTime;
+
+#if defined(Noise_Partials)
+	FRAME currentNoiseFrame;
+	PartialPtrs eligibleNoisePartials;
+#endif
+   
 	
 //	-- construction --
 //	(use compiler-constructed destructor)
@@ -138,7 +151,9 @@ AnalyzerState::AnalyzerState( Analyzer & anal, double srate ) :
 		
 		//	configure bw association strategy, which 
 		//	needs to know about the window:
+#if !defined(No_BW_Association)
 		bwAssociation.reset( new AssociateBandwidth( analyzer.bwRegionWidth(), sampleRate ) );
+#endif
 	}
 	catch ( Exception & ex ) 
     {
@@ -219,6 +234,16 @@ Analyzer::operator =( const Analyzer & rhs )
 }
 
 // ---------------------------------------------------------------------------
+//	Analyzer destructor
+// ---------------------------------------------------------------------------
+//
+Analyzer::~Analyzer( void )
+{
+}
+
+#pragma mark -- configuration --
+
+// ---------------------------------------------------------------------------
 //	configure
 // ---------------------------------------------------------------------------
 //	Compute default values for analysis parameters from the two core
@@ -274,15 +299,12 @@ Analyzer::configure( double resolutionHz, double windowWidthHz )
 	//	defaults to 2 kHz, corresponding to 
 	//	1 kHz region center spacing:
 	_bwRegionWidth = 2000.;
+    
+    //	peform bandwidth association bu default:
+    _assocBW = true;
 }
 
-// ---------------------------------------------------------------------------
-//	Analyzer destructor
-// ---------------------------------------------------------------------------
-//
-Analyzer::~Analyzer( void )
-{
-}
+#pragma mark -- analysis --
 
 // ---------------------------------------------------------------------------
 //	analyze
@@ -327,6 +349,9 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate 
 			
 			//	extract peaks from the spectrum:
 			state.currentFrame.clear();
+#if defined(Noise_Partials)
+			state.currentNoiseFrame.clear();
+#endif
 			extractPeaks( state );	
 			thinPeaks( state );
 
@@ -354,6 +379,9 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate 
 
 			//	form Partials from the extracted Breakpoints:
 			formPartials( state );
+#if defined(Noise_Partials)
+            formNoisePartials( state );
+#endif
 
 		}	//	end of loop over short-time frames
 	}
@@ -363,6 +391,239 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate 
 		throw;
 	}
 }
+
+#pragma mark -- parameter access --
+
+// ---------------------------------------------------------------------------
+//	ampFloor
+// ---------------------------------------------------------------------------
+//	Return the amplitude floor (lowest detected spectral amplitude),  			
+//	in (negative) dB, for this Analyzer. 				
+//
+double 
+Analyzer::ampFloor( void ) const 
+{ 
+    return _floor; 
+}
+
+// ---------------------------------------------------------------------------
+//	associateBandwith
+// ---------------------------------------------------------------------------
+//	Return true if this Analyzer is configured to peform bandwidth
+//	association to distribute noise energy among extracted Partials, 
+//	and false if noise energy will be collected in noise Partials,
+//	labeled -1 in this Analyzer's PartialList.
+//
+bool 
+Analyzer::associateBandwith( void ) const 
+{ 
+    return _assocBW; 
+}
+
+// ---------------------------------------------------------------------------
+//	bwRegionWidth
+// ---------------------------------------------------------------------------
+//	Return the width (in Hz) of the Bandwidth Association regions
+//	used by this Analyzer.
+//
+//		This parameter is deprecated and not generally useful. It will be
+//		removed in a future release.
+//
+double 
+Analyzer::bwRegionWidth( void ) const
+{ 
+    debugger << "Analyzer::bwRegionWidth() is a deprecated member, and will be removed in a future Loris release." << endl;
+    return _bwRegionWidth; 
+}
+
+// ---------------------------------------------------------------------------
+//	cropTime
+// ---------------------------------------------------------------------------
+//	Return the crop time (maximum temporal displacement of a time-
+//	frequency data point from the time-domain center of the analysis
+//	window, beyond which data points are considered "unreliable")
+//	for this Analyzer.
+//		
+//	This parameter is deprecated and not generally useful. It will be
+//	removed in a future release.
+//
+double 
+Analyzer::cropTime( void ) const 
+{ 
+    debugger << "Analyzer::cropTime() is a deprecated member, and will be removed in a future Loris release." << endl;
+    return _cropTime; 
+}
+
+// ---------------------------------------------------------------------------
+//	freqDrift
+// ---------------------------------------------------------------------------
+//	Return the maximum allowable frequency difference 
+//	consecutive Breakpoints in a Partial envelope for this Analyzer. 				
+//
+double 
+Analyzer::freqDrift( void ) const { return _drift;}
+
+// ---------------------------------------------------------------------------
+//	freqFloor
+// ---------------------------------------------------------------------------
+//	Return the frequency floor (minimum instantaneous Partial  				
+//	frequency), in Hz, for this Analyzer. 				
+//
+double 
+Analyzer::freqFloor( void ) const { return _minFrequency; }
+
+// ---------------------------------------------------------------------------
+//	freqResolution
+// ---------------------------------------------------------------------------
+//	Return the frequency resolution (minimum instantaneous frequency  		
+//	difference between Partials) for this Analyzer.
+//
+double 
+Analyzer::freqResolution( void ) const { return _resolution; }
+
+// ---------------------------------------------------------------------------
+//	hopTime
+// ---------------------------------------------------------------------------
+//	Return the hop time (which corresponds approximately to the 
+//	average density of Partial envelope Breakpoint data) for this 
+//	Analyzer.
+//
+double 
+Analyzer::hopTime( void ) const { return _hop; }
+
+// ---------------------------------------------------------------------------
+//	windowWidth
+// ---------------------------------------------------------------------------
+//	Return the frequency-domain main lobe width (measured between 
+//	zero-crossings) of the analysis window used by this Analyzer. 				
+//
+double 
+Analyzer::windowWidth( void ) const { return _windowWidth; }
+
+#pragma mark -- parameter mutation --
+
+// ---------------------------------------------------------------------------
+//	setAmpFloor
+// ---------------------------------------------------------------------------
+//	Set the amplitude floor (lowest detected spectral amplitude), in  			
+//	(negative) dB, for this Analyzer. 				
+//
+void 
+Analyzer::setAmpFloor( double x ) { _floor = x; }
+
+// ---------------------------------------------------------------------------
+//	setAssociateBandwidth
+// ---------------------------------------------------------------------------
+//	If true, configure this Analyzer to peform bandwidth
+//	association to distribute noise energy among extracted Partials.
+//	If false, collect noise energy in noise Partials, assign them
+//	the label -1, and retain them in this Analyzer's PartialList.
+//
+void 
+Analyzer::setAssociateBandwidth( bool b )
+{
+    _assocBW = b;
+}
+
+// ---------------------------------------------------------------------------
+//	setBwRegionWidth
+// ---------------------------------------------------------------------------
+//	Set the width (in Hz) of the Bandwidth Association regions
+//	used by this Analyzer.
+//		
+//	This parameter is deprecated and not generally useful. It will be
+//	removed in a future release.
+//
+void 
+Analyzer::setBwRegionWidth( double x ) 
+{ 
+    debugger << "Analyzer::setBwRegionWidth() is a deprecated member, and will be removed in a future Loris release." << endl;
+    _bwRegionWidth = x; 
+}	
+
+// ---------------------------------------------------------------------------
+//	setCropTime
+// ---------------------------------------------------------------------------
+//	Set the crop time (maximum temporal displacement of a time-
+//	frequency data point from the time-domain center of the analysis
+//	window, beyond which data points are considered "unreliable")
+//	for this Analyzer.
+//		
+//	This parameter is deprecated and not generally useful. It will be
+//	removed in a future release.
+//
+void 
+Analyzer::setCropTime( double x ) 
+{ 
+    debugger << "Analyzer::setCropTime() is a deprecated member, and will be removed in a future Loris release." << endl;
+    _cropTime = x; 
+}
+
+// ---------------------------------------------------------------------------
+//	setFreqDrift
+// ---------------------------------------------------------------------------
+//	Set the maximum allowable frequency difference between 					
+//	consecutive Breakpoints in a Partial envelope for this Analyzer. 				
+//
+void 
+Analyzer::setFreqDrift( double x ) { _drift = x; }
+
+// ---------------------------------------------------------------------------
+//	setFreqFloor
+// ---------------------------------------------------------------------------
+//	Set the amplitude floor (minimum instantaneous Partial  				
+//	frequency), in Hz, for this Analyzer. 				
+//
+void 
+Analyzer::setFreqFloor( double x ) { _minFrequency = x; }
+
+// ---------------------------------------------------------------------------
+//	setFreqResolution
+// ---------------------------------------------------------------------------
+//	Set the frequency resolution (minimum instantaneous frequency  		
+//	difference between Partials) for this Analyzer. (Does not cause 	
+//	other parameters to be recomputed.) 									
+//
+void 
+Analyzer::setFreqResolution( double x ) { _resolution = x; }
+
+// ---------------------------------------------------------------------------
+//	setHopTime
+// ---------------------------------------------------------------------------
+//	Set the hop time (which corresponds approximately to the average
+//	density of Partial envelope Breakpoint data) for this Analyzer.
+//
+void 
+Analyzer::setHopTime( double x ) { _hop = x; }
+
+// ---------------------------------------------------------------------------
+//	setWindowWidth
+// ---------------------------------------------------------------------------
+//	Set the frequency-domain main lobe width (measured between 
+//	zero-crossings) of the analysis window used by this Analyzer.
+//
+void 
+Analyzer::setWindowWidth( double x ) { _windowWidth = x; }
+
+#pragma mark -- PartialList access --
+
+// ---------------------------------------------------------------------------
+//	partials
+// ---------------------------------------------------------------------------
+//	Return a mutable reference to this Analyzer's list of 
+//	analyzed Partials. 
+//
+PartialList & 
+Analyzer::partials( void ) { return _partials; }
+
+// ---------------------------------------------------------------------------
+//	partials
+// ---------------------------------------------------------------------------
+//	Return an immutable (const) reference to this Analyzer's 
+//	list of analyzed Partials. 
+//
+const PartialList & 
+Analyzer::partials( void ) const { return _partials; }
 
 #pragma mark -- internal analysis helpers --
 
@@ -381,8 +642,10 @@ static void extractPeaks( AnalyzerState & state )
     //	get state objects:
     FRAME & frame = state.currentFrame;
     ReassignedSpectrum & spectrum = *state.spectrum;
+#if !defined(No_BW_Association)
     AssociateBandwidth & bwAssociation = *state.bwAssociation;
-    
+#endif
+
     //	get analysis parameters:
 	const double ampFloor = state.analyzer.ampFloor();
 	const double freqFloor = state.analyzer.freqFloor();
@@ -425,7 +688,14 @@ static void extractPeaks( AnalyzerState & state )
 			double mag = spectrum.reassignedMagnitude( fsample, j );
 			if ( mag < threshold )
 			{
+#if !defined(No_BW_Association)
 				bwAssociation.accumulateNoise( fHz, mag );
+#endif
+#if defined(Noise_Partials)
+                double phase = spectrum.reassignedPhase( j, fsample, timeCorrectionSamps );
+                double time = frameTime + (timeCorrectionSamps / sampleRate);
+                state.currentNoiseFrame.push_back( std::make_pair( time, Breakpoint( fHz, mag, 1., phase ) ) );
+#endif
 				continue;
 			}
 											
@@ -488,7 +758,9 @@ static void thinPeaks( AnalyzerState & state )
 {
     //	get state objects:
     FRAME & frame = state.currentFrame;
+#if !defined(No_BW_Association)
     AssociateBandwidth & bwAssociation = *state.bwAssociation;
+#endif
 
     //	get analysis parameters:
 	const double freqResolution = state.analyzer.freqResolution();
@@ -518,7 +790,13 @@ static void thinPeaks( AnalyzerState & state )
 			//	find_if returns the end of the range (it) if it finds nothing; 
 			//	if it found something else, accumulate *it as noise, and
 			//	remove *it from the frame:
+#if !defined(No_BW_Association)
 			bwAssociation.accumulateNoise( bp.frequency(), bp.amplitude() );
+#endif
+#if defined(Noise_Partials)
+            bp.setBandwidth(1.);
+            state.currentNoiseFrame.push_back( std::make_pair( it->first, bp ) );
+#endif
 			bp.setAmplitude(0.0);
 		}
 	}
@@ -641,5 +919,80 @@ static void formPartials( AnalyzerState & state )
 	 	
 	eligiblePartials = newlyEligible;
 }
+
+#if defined(Noise_Partials)
+static void formNoisePartials( AnalyzerState & state )
+{
+    std::cout << "forming noise Partials" << endl;
+    
+    //	get state objects:
+    FRAME & frame = state.currentNoiseFrame;
+    PartialPtrs & eligiblePartials = state.eligibleNoisePartials;
+    PartialList & partials = state.analyzer.partials();
+
+    //	get analysis parameters:
+	const double freqDrift = state.analyzer.freqDrift();
+
+	PartialPtrs newlyEligible;
+	
+	//	frequency-sort the frame:
+	std::sort( frame.begin(), frame.end(), sort_frame_lesser_freq );
+	
+	//	loop over short-time spectral peaks:
+	FRAME::iterator bpIter;
+	for( bpIter = frame.begin(); bpIter != frame.end(); ++bpIter ) 
+	{
+		const Breakpoint & bp = bpIter->second;
+		const double peakTime = bpIter->first;
+		
+		// 	find the Partial that is nearest in frequency to the Peak:
+		Partial * nearest = NULL;
+		if ( ! eligiblePartials.empty() )
+		{
+			nearest = * min_element( eligiblePartials.begin(), eligiblePartials.end(),
+									 less_freq_difference( bp.frequency() ) );
+		}
+		
+		//	(now have nearest Partial)
+		//	Create a new Partial with this Breakpoint if:
+		//	- no candidate (nearest) Partial was found (no eligible Partials) (1)
+		//	- the nearest Partial is still too far away (2)
+		//	- the next Breakpoint in the Frame exists and is
+		//		closer to the nearest Partial (3)
+		//	- the previous Breakpoint in the Frame exists and is
+		//		closer to the nearest Partial (4)
+		//
+		//	Otherwise, add this Breakpoint to the nearest Partial.
+		double thisdist = (nearest != NULL) ? (distance(*nearest, bp)) : (0.);
+		FRAME::iterator next = bpIter+1;
+		// FRAME::iterator prev = bpIter-1;
+		// --prev;	//	hey, how do we know we can do _this_? What if bpIter is the first one?
+					//	This might give undefined results, even though we make sure not to use it.
+		if ( nearest == NULL /* (1) */ || 
+			 thisdist > freqDrift /* (2) */ ||
+			 ( next != frame.end() && thisdist > distance( *nearest, next->second ) ) /* (3) */ ||
+			 ( bpIter != frame.begin() && thisdist > distance( *nearest, (bpIter-1)->second ) ) /* (4) */ ) 
+		{
+			//	create a new Partial, beginning with this Breakpoint at
+			//	the specified time, and add it to the collection:
+			Partial p;
+            p.setLabel(-1);
+			p.insert( peakTime, bp );
+			partials.push_back( p );
+			newlyEligible.push_back( & partials.back() );
+		}
+		else 
+		{
+			nearest->insert( peakTime, bp );
+			newlyEligible.push_back( &(*nearest) );
+		}
+	}			 
+	 	
+	eligiblePartials = newlyEligible;
+    
+    std::cout << "there are now " << eligiblePartials.size() << " eligible noise Partials" << endl;
+}
+
+#endif
 
 }	//	end of namespace Loris

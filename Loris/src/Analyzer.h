@@ -77,6 +77,9 @@ class Analyzer
 						//	for extraction and for Breakpoint formation
 	double _bwRegionWidth;	//	width in Hz of overlapping bandwidth 
 							//	association regions
+                            
+    bool 	_assocBW;	//	if true, perform bandwidth association, otherwise 
+                        //	collect noise energy in noise Partials labeled -1.
 							
 	PartialList _partials;	//	collect Partials here
 			
@@ -127,18 +130,24 @@ public:
 	 */
 	
 //	-- parameter access --
-	double ampFloor( void ) const { return _floor; }
+	double ampFloor( void ) const;
 	/*	Return the amplitude floor (lowest detected spectral amplitude),  			
 		in (negative) dB, for this Analyzer. 				
 	 */
-	double bwRegionWidth( void ) const { return _bwRegionWidth; }
+	bool associateBandwith( void ) const;
+	/*	Return true if this Analyzer is configured to peform bandwidth
+        association to distribute noise energy among extracted Partials, 
+        and false if noise energy will be collected in noise Partials,
+        labeled -1 in this Analyzer's PartialList.
+	 */
+	double bwRegionWidth( void ) const;
 	/*	Return the width (in Hz) of the Bandwidth Association regions
 		used by this Analyzer.
 		
 		This parameter is deprecated and not generally useful. It will be
 		removed in a future release.
 	 */
- 	double cropTime( void ) const { return _cropTime; }
+ 	double cropTime( void ) const;
 	/*	Return the crop time (maximum temporal displacement of a time-
 		frequency data point from the time-domain center of the analysis
 		window, beyond which data points are considered "unreliable")
@@ -147,41 +156,48 @@ public:
 		This parameter is deprecated and not generally useful. It will be
 		removed in a future release.
 	 */	
- 	double freqDrift( void ) const { return _drift;}
+ 	double freqDrift( void ) const;
 	/*	Return the maximum allowable frequency difference between 					
 		consecutive Breakpoints in a Partial envelope for this Analyzer. 				
 	 */
- 	double freqFloor( void ) const { return _minFrequency; }
+ 	double freqFloor( void ) const;
 	/*	Return the frequency floor (minimum instantaneous Partial  				
 		frequency), in Hz, for this Analyzer. 				
 	 */
-	double freqResolution( void ) const { return _resolution; }
+	double freqResolution( void ) const;
 	/*	Return the frequency resolution (minimum instantaneous frequency  		
 		difference between Partials) for this Analyzer. 	
 	 */
-	double hopTime( void ) const { return _hop; }
+	double hopTime( void ) const;
 	/*	Return the hop time (which corresponds approximately to the 
 		average density of Partial envelope Breakpoint data) for this 
 		Analyzer.
 	 */
- 	double windowWidth( void ) const { return _windowWidth; }
+ 	double windowWidth( void ) const;
 	/*	Return the frequency-domain main lobe width (measured between 
 		zero-crossings) of the analysis window used by this Analyzer. 				
 	 */
 	 
 //	-- parameter mutation --
- 	void setAmpFloor( double x ) { _floor = x; }
+ 	void setAmpFloor( double x );
 	/*	Set the amplitude floor (lowest detected spectral amplitude), in  			
 		(negative) dB, for this Analyzer. 				
 	 */
- 	void setBwRegionWidth( double x ) { _bwRegionWidth = x; }	
+    void setAssociateBandwidth( bool b );
+    /*	If true, configure this Analyzer to peform bandwidth
+        association to distribute noise energy among extracted Partials.
+        If false, collect noise energy in noise Partials, assign them
+        the label -1, and retain them in this Analyzer's PartialList.
+	 */
+
+ 	void setBwRegionWidth( double x );
 	/*	Set the width (in Hz) of the Bandwidth Association regions
 		used by this Analyzer.
 		
 		This parameter is deprecated and not generally useful. It will be
 		removed in a future release.
 	 */
- 	void setCropTime( double x ) { _cropTime = x; }
+ 	void setCropTime( double x );
 	/*	Set the crop time (maximum temporal displacement of a time-
 		frequency data point from the time-domain center of the analysis
 		window, beyond which data points are considered "unreliable")
@@ -190,34 +206,34 @@ public:
 		This parameter is deprecated and not generally useful. It will be
 		removed in a future release.
 	 */
-	void setFreqDrift( double x ) { _drift = x; }
+	void setFreqDrift( double x );
 	/*	Set the maximum allowable frequency difference between 					
 		consecutive Breakpoints in a Partial envelope for this Analyzer. 				
 	 */
-	void setFreqFloor( double x ) { _minFrequency = x; }
+	void setFreqFloor( double x );
 	/*	Set the amplitude floor (minimum instantaneous Partial  				
 		frequency), in Hz, for this Analyzer.
 	 */
-	void setFreqResolution( double x ) { _resolution = x; }
+	void setFreqResolution( double x );
 	/*	Set the frequency resolution (minimum instantaneous frequency  		
 		difference between Partials) for this Analyzer. (Does not cause 	
 		other parameters to be recomputed.) 									
 	 */
- 	void setHopTime( double x ) { _hop = x; }
+ 	void setHopTime( double x );
 	/*	Set the hop time (which corresponds approximately to the average
 		density of Partial envelope Breakpoint data) for this Analyzer.
 	 */
-	void setWindowWidth( double x ) { _windowWidth = x; }
+	void setWindowWidth( double x );
 	/*	Set the frequency-domain main lobe width (measured between 
 		zero-crossings) of the analysis window used by this Analyzer. 				
 	 */
 
 //	-- PartialList access --
-	PartialList & partials( void ) { return _partials; }
+	PartialList & partials( void );
 	/*	Return a mutable reference to this Analyzer's list of 
 		analyzed Partials. 
 	 */
-	const PartialList & partials( void ) const { return _partials; }
+	const PartialList & partials( void ) const;
 	/*	Return an immutable (const) reference to this Analyzer's 
 		list of analyzed Partials. 
 	 */
