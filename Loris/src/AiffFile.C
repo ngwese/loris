@@ -515,7 +515,7 @@ AiffFile::readSamples( std::istream & s )
 	debugger << "reading " << _bytes.size() << " bytes of sample data" << endl;
 
 	//	read integer samples without byte swapping: 
-	BigEndian::read( s, _bytes.size(), 1, (char*)_bytes.begin() );
+	BigEndian::read( s, _bytes.size(), 1, (char*)(&_bytes[0]) );
 }
 
 // ---------------------------------------------------------------------------
@@ -764,7 +764,7 @@ AiffFile::writeSamples( std::ostream & s, const double * bufBegin, const double 
 	}
 	
 	//	write integer samples without byte swapping: 
-	BigEndian::write( s, _bytes.size(), 1, (char*)_bytes.begin() );
+	BigEndian::write( s, _bytes.size(), 1, (char*)(&_bytes[0]) );
 }
 
 // ---------------------------------------------------------------------------

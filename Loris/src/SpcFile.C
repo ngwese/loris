@@ -206,7 +206,7 @@ read( std::istream & s, PartialList & partialsList )
 		//	read spc aiff file
 		AiffFile f( s );
 		std::vector< double > v( f.sampleFrames() );
-		f.getSamples( v.begin(), v.end() );
+		f.getSamples( &(v[0]), &(v[0]) + v.size() );
 		
 		//  enhanced file format has number of partials doubled
 		//  sine-only file format has proper number of partials
@@ -226,7 +226,7 @@ read( std::istream & s, PartialList & partialsList )
 		partialsVector.resize( partials );
 
 		//  process SPC data points
-		double *vpt = v.begin();
+		double *vpt = &(v[0]);
 		for (int frame = 0; frame < frames; ++frame) 
 		{
 			for (int partial = 0; partial < fileNumPartials( partials ); ++partial)

@@ -98,7 +98,8 @@ namespace Loris {
 class FourierTransform 
 {
 //	-- instance variables --
-	std::vector< std::complex< double > > _buffer;
+	typedef std::vector< std::complex< double > > VecComplex;
+	 VecComplex _buffer;
 	
 	//	fftw planning structure:
 	fftw_plan_struct * _plan;
@@ -121,11 +122,11 @@ public:
 		
 //	iterator access, for STL algorithms:
 //	(inline for efficiency)
-	typedef std::complex< double > * iterator;
+	typedef VecComplex::iterator iterator;
 	iterator begin( void )	{ return _buffer.begin(); }
 	iterator end( void )	{ return _buffer.end(); }
 		
-	typedef const std::complex< double > * const_iterator;
+	typedef VecComplex::const_iterator const_iterator;
 	const_iterator begin( void ) const	{ return _buffer.begin(); }
 	const_iterator end( void ) const 	{ return _buffer.end(); }
 		

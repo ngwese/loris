@@ -148,11 +148,11 @@ FourierTransform::transform( void )
 	Assert( sharedBuffer != NULL );
 
 //	crunch:	
-	fftw_one( _plan, (fftw_complex *)(_buffer.begin()), sharedBuffer );
+	fftw_one( _plan, (fftw_complex *)(&_buffer[0]), sharedBuffer );
 	
 //	copy output into (private) complex buffer:
 //	(fftw_complex and std::complex< double > had better be the same!)
-	std::copy( sharedBuffer, sharedBuffer + size(), (fftw_complex *)_buffer.begin() );
+	std::copy( sharedBuffer, sharedBuffer + size(), (fftw_complex *)(&_buffer[0]) );
 }
 
 // ---------------------------------------------------------------------------
@@ -192,7 +192,7 @@ FourierTransform::makePlan( void )
 	_plan = fftw_create_plan_specific( size(), 
 									   FFTW_FORWARD,
 									   FFTW_ESTIMATE,
-									   (fftw_complex *)_buffer.begin(), 
+									   (fftw_complex *)(&_buffer[0]), 
 									   1,
 									   sharedBuffer, 
 									   1); 
