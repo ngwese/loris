@@ -47,8 +47,6 @@ print '(in %s)' % os.getcwd()
 #
 print 'analyzing clarinet 3G# (%s)' % time.ctime(time.time())
 a = loris.Analyzer( 390 )
-#v = loris.importAiff( 'clarinet.aiff' )
-#(n, samplerate, nchans) = loris.infoAiff( 'clarinet.aiff' )
 
 cf = loris.AiffFile( 'clarinet.aiff' )
 v = cf.samples()
@@ -92,9 +90,7 @@ loris.exportAiff( 'clarOK.aiff', loris.synthesize( clar, samplerate ), samplerat
 #
 print 'analyzing flute 3D (%s)' % time.ctime(time.time())
 a.configure( 270 )		# reconfigure Analyzer
-v = loris.importAiff( 'flute.aiff' )
-(n, samplerate, nchans) = loris.infoAiff( 'flute.aiff' )
-
+v = loris.AiffFile( 'flute.aiff' ).samples()
 flut = a.analyze( v, samplerate )
 
 loris.channelize( flut, loris.createFreqReference( flut, 20, 0, 1000 ), 1 )
@@ -124,7 +120,7 @@ mf = loris.BreakpointEnvelope()
 mf.insertBreakpoint( 0.6, 0 )
 mf.insertBreakpoint( 2, 1 )
 m = loris.morph( clar, flut, mf, mf, mf )
-loris.exportAiffNEW( 'morph.test.aiff', 
+loris.exportAiff( 'morph.test.aiff', 
 				  loris.synthesize( m, samplerate ), 
 				  samplerate, 1, 16 )
 

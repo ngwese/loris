@@ -488,8 +488,8 @@ SWIG_InstallConstants(PyObject *d, swig_const_info constants[]) {
 /* -------- TYPES TABLE (BEGIN) -------- */
 
 #define  SWIGTYPE_p_ExportSpc swig_types[0] 
-#define  SWIGTYPE_p_SampleVector swig_types[1] 
-#define  SWIGTYPE_p_PartialListHandle swig_types[2] 
+#define  SWIGTYPE_p_PartialListHandle swig_types[1] 
+#define  SWIGTYPE_p_SampleVector swig_types[2] 
 #define  SWIGTYPE_p_PartialListHandleIteratorHandle swig_types[3] 
 #define  SWIGTYPE_p_BreakpointHandle swig_types[4] 
 #define  SWIGTYPE_p_AiffFile swig_types[5] 
@@ -672,24 +672,21 @@ using Loris::endl;
 typedef Loris::Handle< std::list< Loris::Partial > > PartialListHandle;
 
 
+/*
+	PartialListHandleIterator
+	
+	A class representing an iterator on a PartialList, composed of an iterator
+	on a std::list of Partials and a Handle to the std::list itself. Even if the
+	last reference (by handle, above) to the Partial list itself is lost, the 
+	list will not be deleted as long as there are surviving iterators. 
+ */
 	class PartialListHandleIterator
 	{
 		PartialListHandle _list;
 		std::list< Loris::Partial >::iterator _iter;
 		
-		//	no default constructor:
-		PartialListHandleIterator( void );
-		
 		public:
 		//	construction:
-		PartialListHandleIterator( PartialListHandle hlist ) :
-			_list( hlist ),
-			_iter( hlist->begin() )
-		{
-			debugger << "created an iterator on a list of " << _list->size() << " Partials" << std::endl;
-		}
-		
-		//	better be careful that pos is an iterator of *hlist!
 		PartialListHandleIterator( PartialListHandle hlist, std::list< Loris::Partial >::iterator pos ) :
 			_list( hlist ),
 			_iter( pos )
@@ -734,6 +731,11 @@ typedef Loris::Handle< std::list< Loris::Partial > > PartialListHandle;
 			return _iter == _list->end();
 		}
 		
+		Loris::Partial & current( void ) 
+		{
+			return *_iter;
+		}
+		
 		//	easiest place to implement removal is in this class,
 		//	not sure its the most logical place in the interface:
 		//	Advances iterator, so this iterator is still valid,
@@ -743,29 +745,19 @@ typedef Loris::Handle< std::list< Loris::Partial > > PartialListHandle;
 			_iter = _list->erase( _iter );
 		}
 		
-		//	Partial access:
-		int label( void ) const 			{ return _iter->label(); }
-		double initialPhase( void ) const	{ return _iter->initialPhase(); }
-		double startTime( void ) const 		{ return _iter->startTime(); }
-		double endTime( void ) const		{ return _iter->endTime(); }
-		double duration( void ) const		{ return _iter->duration(); }
-		
-		long countBreakpoints( void ) const { return _iter->countBreakpoints(); }
-		
-		double frequencyAt( double time ) const	{ return _iter->frequencyAt( time ); }
-		double amplitudeAt( double time ) const	{ return _iter->amplitudeAt( time ); }
-		double bandwidthAt( double time ) const	{ return _iter->bandwidthAt( time ); }
-		double phaseAt( double time ) const		{ return _iter->phaseAt( time ); }
-	
-		//	mutation:
-		void setLabel( int l ) { _iter->setLabel( l ); }
-		
-		Loris::Partial & partial( void ) { return *_iter; }
-	
 	};	//	end of class PartialListHandleIteratorHandle
 	
 	typedef Loris::Handle< PartialListHandleIterator > PartialListHandleIteratorHandle;
 	
+/*
+	BreakpointHandle
+	
+	A class representing an iterator on a Partial, composed of an iterator on a 
+	Partial and a Handle to a PartialListHandleIterator, defined above. Even if 
+	the last reference (by handle, above) to the Partial (PartialList iterator) 
+	itself or even to the PartialList itself, is lost, the PartialList will not be 
+	deleted as long as there are surviving Breakpoints. 
+ */
 	class BreakpointHandle
 	{
 		PartialListHandleIteratorHandle _partialH;
@@ -777,13 +769,13 @@ typedef Loris::Handle< std::list< Loris::Partial > > PartialListHandle;
 			_partialH( subject ),
 			_iter( pos )
 		{
-			debugger << "created an iterator on a partial having " << _partialH->countBreakpoints()
+			debugger << "created an iterator on a partial having " << _partialH->current().countBreakpoints()
 					 << " breakpoints" << std::endl;
 		}
 		
 		~BreakpointHandle( void )
 		{
-			debugger << "destroyed an iterator on a partial having " << _partialH->countBreakpoints()
+			debugger << "destroyed an iterator on a partial having " << _partialH->current().countBreakpoints()
 					 << " breakpoints" << std::endl;
 		}
 		
@@ -811,7 +803,7 @@ typedef Loris::Handle< std::list< Loris::Partial > > PartialListHandle;
 		
 		bool atEnd( void )
 		{
-			return _iter == _partialH->partial().end();
+			return _iter == _partialH->current().end();
 		}
 		
 	};	//	end of class BreakpointHandle
@@ -825,37 +817,11 @@ typedef Loris::Handle< std::list< Loris::Partial > > PartialListHandle;
 #define LORIS_OPAQUE_POINTERS 0
 #include "loris.h"
 
-Analyzer * AnalyzerCopy_( const Analyzer * other )
-{
-	Analyzer * a = createAnalyzer( other->freqResolution() );
-	*a = *other;
-	return a;
-}
-
 #include "BreakpointEnvelope.h"
 using Loris::BreakpointEnvelope;
 
-//	for procedural interface construction and 
-//	destruction, see comment below:
-//#define LORIS_OPAQUE_POINTERS 0
-//#include "loris.h"
-
-BreakpointEnvelope * BreakpointEnvelopeCopy_( const BreakpointEnvelope * other )
-{
-	BreakpointEnvelope * env = createBreakpointEnvelope();
-	*env = *other;
-	return new BreakpointEnvelope( *other );
-	//return copyBreakpointEnvelope( other );
-}
-
 BreakpointEnvelope * BreakpointEnvelopeWithValue_( double initialValue )
 {
-	/*
-	BreakpointEnvelope * env = createBreakpointEnvelope();
-	env->insertBreakpoint( 0., initialValue );
-	//breakpointEnvelope_insertBreakpoint( env, 0., initialValue );
-	return env;
-	*/
 	return new BreakpointEnvelope( initialValue );
 }
 
@@ -871,22 +837,8 @@ using Loris::ExportSpc;
 #include <vector>
 typedef std::vector< double > SampleVector;
 
-SampleVector * SampleVectorCopy_( const SampleVector * other )
-{
-	return new SampleVector( *other );
-}
-
 #include "AiffFile.h"
 using Loris::AiffFile;
-
-//	AIFF export:
-	void exportAiffNEW( const char * path,
-					 SampleVector * samples,
-					 double samplerate, int nchannels, int bitsPerSamp )
-	{		
-		AiffFile::Export( path, samplerate, nchannels, bitsPerSamp, 
-						 samples->begin(), samples->end() );
-	}
 
 	void channelize_( PartialListHandle * partials, 
 					 BreakpointEnvelope * refFreqEnvelope, int refLabel )
@@ -918,6 +870,25 @@ void dilate_str( PartialListHandle * partials,
 	{
 		distill( *partials );
 	}
+
+#include "AiffFile.h"
+using Loris::AiffFile;
+
+//	AIFF export:
+	void exportAiff( const char * path,
+					 SampleVector * samples,
+					 double samplerate, int nchannels, int bitsPerSamp )
+	{		
+		AiffFile::Export( path, samplerate, nchannels, bitsPerSamp, 
+						 samples->begin(), samples->end() );
+	}
+	/*	Export audio samples stored in a SampleVector to an AIFF file
+		having the specified number of channels and sample rate at the 
+		given file path (or name). The floating point samples in the 
+		SampleVector are clamped to the range (-1.,1.) and converted 
+		to integers having bitsPerSamp bits.
+	 */
+				 
 
 	void exportSdif_( const char * path, PartialListHandle * partials, double hop )
 	{
@@ -1020,118 +991,6 @@ void dilate_str( PartialListHandle * partials,
 #ifdef __cplusplus
 extern "C" {
 #endif
-static PyObject *_wrap_AnalyzerCopy(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    Analyzer *arg0 ;
-    PyObject * argo0 =0 ;
-    Analyzer *result ;
-    
-    if(!PyArg_ParseTuple(args,"O:AnalyzerCopy",&argo0)) return NULL;
-    if ((SWIG_ConvertPtr(argo0,(void **) &arg0,SWIGTYPE_p_Analyzer,1)) == -1) return NULL;
-    {
-        try
-        {
-            // LorisErrorString.clear();
-            LorisErrorString = "";
-            result = (Analyzer *)AnalyzerCopy_((Analyzer const *)arg0);
-            
-            
-            //	catch exceptions in the procedural interface, 
-            //	converted to strings by the exception handler 
-            //	in the Loris procedural interface:
-            if ( ! LorisErrorString.empty() )
-            {
-                //	this is an improperly-braced macro!
-                SWIG_exception( SWIG_RuntimeError, (char *) LorisErrorString.c_str() );
-            }
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception in scripting interface: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            //	(these are very unlikely to come from the interface
-            //	code, and cannot escape the procedural interface to
-            //	Loris, which catches all exceptions.)
-            std::string s("std C++ exception in scripting interface: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        catch( std::string & exs )
-        {
-            //	exceptions generated by functions defined in this
-            //	file may throw std::strings:
-            std::string s("Exception thrown in scripting interface wrapper code: " );
-            s.append( exs );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        
-    }resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_Analyzer);
-    return resultobj;
-}
-
-
-static PyObject *_wrap_BreakpointEnvelopeCopy(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    BreakpointEnvelope *arg0 ;
-    PyObject * argo0 =0 ;
-    BreakpointEnvelope *result ;
-    
-    if(!PyArg_ParseTuple(args,"O:BreakpointEnvelopeCopy",&argo0)) return NULL;
-    if ((SWIG_ConvertPtr(argo0,(void **) &arg0,SWIGTYPE_p_BreakpointEnvelope,1)) == -1) return NULL;
-    {
-        try
-        {
-            // LorisErrorString.clear();
-            LorisErrorString = "";
-            result = (BreakpointEnvelope *)BreakpointEnvelopeCopy_((BreakpointEnvelope const *)arg0);
-            
-            
-            //	catch exceptions in the procedural interface, 
-            //	converted to strings by the exception handler 
-            //	in the Loris procedural interface:
-            if ( ! LorisErrorString.empty() )
-            {
-                //	this is an improperly-braced macro!
-                SWIG_exception( SWIG_RuntimeError, (char *) LorisErrorString.c_str() );
-            }
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception in scripting interface: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            //	(these are very unlikely to come from the interface
-            //	code, and cannot escape the procedural interface to
-            //	Loris, which catches all exceptions.)
-            std::string s("std C++ exception in scripting interface: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        catch( std::string & exs )
-        {
-            //	exceptions generated by functions defined in this
-            //	file may throw std::strings:
-            std::string s("Exception thrown in scripting interface wrapper code: " );
-            s.append( exs );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        
-    }resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_BreakpointEnvelope);
-    return resultobj;
-}
-
-
 static PyObject *_wrap_BreakpointEnvelopeWithValue(PyObject *self, PyObject *args) {
     PyObject *resultobj;
     double arg0 ;
@@ -1182,122 +1041,6 @@ static PyObject *_wrap_BreakpointEnvelopeWithValue(PyObject *self, PyObject *arg
         }
         
     }resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_BreakpointEnvelope);
-    return resultobj;
-}
-
-
-static PyObject *_wrap_SampleVectorCopy(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    SampleVector *arg0 ;
-    PyObject * argo0 =0 ;
-    SampleVector *result ;
-    
-    if(!PyArg_ParseTuple(args,"O:SampleVectorCopy",&argo0)) return NULL;
-    if ((SWIG_ConvertPtr(argo0,(void **) &arg0,SWIGTYPE_p_SampleVector,1)) == -1) return NULL;
-    {
-        try
-        {
-            // LorisErrorString.clear();
-            LorisErrorString = "";
-            result = (SampleVector *)SampleVectorCopy_((SampleVector const *)arg0);
-            
-            
-            //	catch exceptions in the procedural interface, 
-            //	converted to strings by the exception handler 
-            //	in the Loris procedural interface:
-            if ( ! LorisErrorString.empty() )
-            {
-                //	this is an improperly-braced macro!
-                SWIG_exception( SWIG_RuntimeError, (char *) LorisErrorString.c_str() );
-            }
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception in scripting interface: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            //	(these are very unlikely to come from the interface
-            //	code, and cannot escape the procedural interface to
-            //	Loris, which catches all exceptions.)
-            std::string s("std C++ exception in scripting interface: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        catch( std::string & exs )
-        {
-            //	exceptions generated by functions defined in this
-            //	file may throw std::strings:
-            std::string s("Exception thrown in scripting interface wrapper code: " );
-            s.append( exs );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        
-    }resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_SampleVector);
-    return resultobj;
-}
-
-
-static PyObject *_wrap_exportAiffNEW(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    char *arg0 ;
-    SampleVector *arg1 ;
-    double arg2 ;
-    int arg3 ;
-    int arg4 ;
-    PyObject * argo1 =0 ;
-    
-    if(!PyArg_ParseTuple(args,"sOdii:exportAiffNEW",&arg0,&argo1,&arg2,&arg3,&arg4)) return NULL;
-    if ((SWIG_ConvertPtr(argo1,(void **) &arg1,SWIGTYPE_p_SampleVector,1)) == -1) return NULL;
-    {
-        try
-        {
-            // LorisErrorString.clear();
-            LorisErrorString = "";
-            exportAiffNEW((char const *)arg0,arg1,arg2,arg3,arg4);
-            
-            
-            //	catch exceptions in the procedural interface, 
-            //	converted to strings by the exception handler 
-            //	in the Loris procedural interface:
-            if ( ! LorisErrorString.empty() )
-            {
-                //	this is an improperly-braced macro!
-                SWIG_exception( SWIG_RuntimeError, (char *) LorisErrorString.c_str() );
-            }
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception in scripting interface: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            //	(these are very unlikely to come from the interface
-            //	code, and cannot escape the procedural interface to
-            //	Loris, which catches all exceptions.)
-            std::string s("std C++ exception in scripting interface: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        catch( std::string & exs )
-        {
-            //	exceptions generated by functions defined in this
-            //	file may throw std::strings:
-            std::string s("Exception thrown in scripting interface wrapper code: " );
-            s.append( exs );
-            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
-        }
-        
-    }Py_INCREF(Py_None);
-    resultobj = Py_None;
     return resultobj;
 }
 
@@ -1492,7 +1235,7 @@ static PyObject *_wrap_exportAiff(PyObject *self, PyObject *args) {
         {
             // LorisErrorString.clear();
             LorisErrorString = "";
-            exportAiff((char const *)arg0,(SampleVector const *)arg1,arg2,arg3,arg4);
+            exportAiff((char const *)arg0,arg1,arg2,arg3,arg4);
             
             
             //	catch exceptions in the procedural interface, 
@@ -2255,7 +1998,6 @@ static PyObject *_wrap_sift(PyObject *self, PyObject *args) {
 
 PartialListHandle * new_PartialListHandle() {
     {
-        // debugger << "creating a list of " << pl->size() << " Partials" << std::endl;
         debugger << "creating an empty list of Partials" << endl;
         return new PartialListHandle();
     }
@@ -2696,7 +2438,7 @@ static PyObject *_wrap_PartialList_last(PyObject *self, PyObject *args) {
 
 void  PartialListHandle_append(PartialListHandle *self,PartialListHandleIteratorHandle *iter) {
     {
-        (*self)->push_back( (*iter)->partial() );
+        (*self)->push_back( (*iter)->current() );
     }
 }
 
@@ -3022,7 +2764,7 @@ static PyObject *_wrap_Partial_atEnd(PyObject *self, PyObject *args) {
 
 int  PartialListHandleIteratorHandle_label(PartialListHandleIteratorHandle *self) {
     {
-        return (*self)->label(); 
+        return (*self)->current().label(); 
     }
 }
 
@@ -3085,7 +2827,7 @@ static PyObject *_wrap_Partial_label(PyObject *self, PyObject *args) {
 
 double  PartialListHandleIteratorHandle_initialPhase(PartialListHandleIteratorHandle *self) {
     {
-        return (*self)->initialPhase(); 
+        return (*self)->current().initialPhase(); 
     }
 }
 
@@ -3148,7 +2890,7 @@ static PyObject *_wrap_Partial_initialPhase(PyObject *self, PyObject *args) {
 
 double  PartialListHandleIteratorHandle_startTime(PartialListHandleIteratorHandle *self) {
     {
-        return (*self)->startTime(); 
+        return (*self)->current().startTime(); 
     }
 }
 
@@ -3211,7 +2953,7 @@ static PyObject *_wrap_Partial_startTime(PyObject *self, PyObject *args) {
 
 double  PartialListHandleIteratorHandle_endTime(PartialListHandleIteratorHandle *self) {
     {
-        return (*self)->endTime(); 
+        return (*self)->current().endTime(); 
     }
 }
 
@@ -3274,7 +3016,7 @@ static PyObject *_wrap_Partial_endTime(PyObject *self, PyObject *args) {
 
 double  PartialListHandleIteratorHandle_duration(PartialListHandleIteratorHandle *self) {
     {
-        return (*self)->duration(); 
+        return (*self)->current().duration(); 
     }
 }
 
@@ -3337,7 +3079,7 @@ static PyObject *_wrap_Partial_duration(PyObject *self, PyObject *args) {
 
 long  PartialListHandleIteratorHandle_countBreakpoints(PartialListHandleIteratorHandle *self) {
     {
-        return (*self)->countBreakpoints(); 
+        return (*self)->current().countBreakpoints(); 
     }
 }
 
@@ -3400,7 +3142,7 @@ static PyObject *_wrap_Partial_countBreakpoints(PyObject *self, PyObject *args) 
 
 double  PartialListHandleIteratorHandle_frequencyAt(PartialListHandleIteratorHandle *self,double time) {
     {
-        return (*self)->frequencyAt( time ); 
+        return (*self)->current().frequencyAt( time ); 
     }
 }
 
@@ -3464,7 +3206,7 @@ static PyObject *_wrap_Partial_frequencyAt(PyObject *self, PyObject *args) {
 
 double  PartialListHandleIteratorHandle_amplitudeAt(PartialListHandleIteratorHandle *self,double time) {
     {
-        return (*self)->amplitudeAt( time ); 
+        return (*self)->current().amplitudeAt( time ); 
     }
 }
 
@@ -3528,7 +3270,7 @@ static PyObject *_wrap_Partial_amplitudeAt(PyObject *self, PyObject *args) {
 
 double  PartialListHandleIteratorHandle_bandwidthAt(PartialListHandleIteratorHandle *self,double time) {
     {
-        return (*self)->bandwidthAt( time ); 
+        return (*self)->current().bandwidthAt( time ); 
     }
 }
 
@@ -3592,7 +3334,7 @@ static PyObject *_wrap_Partial_bandwidthAt(PyObject *self, PyObject *args) {
 
 double  PartialListHandleIteratorHandle_phaseAt(PartialListHandleIteratorHandle *self,double time) {
     {
-        return (*self)->phaseAt( time ); 
+        return (*self)->current().phaseAt( time ); 
     }
 }
 
@@ -3656,7 +3398,7 @@ static PyObject *_wrap_Partial_phaseAt(PyObject *self, PyObject *args) {
 
 void  PartialListHandleIteratorHandle_setLabel(PartialListHandleIteratorHandle *self,int l) {
     {
-        (*self)->setLabel( l ); 
+        (*self)->current().setLabel( l ); 
     }
 }
 
@@ -3783,7 +3525,7 @@ static PyObject *_wrap_Partial_removeFromList(PyObject *self, PyObject *args) {
 
 BreakpointHandle * PartialListHandleIteratorHandle_first(PartialListHandleIteratorHandle *self) {
     {
-        return new BreakpointHandle( *self, (*self)->partial().begin() );
+        return new BreakpointHandle( *self, (*self)->current().begin() );
     }
 }
 
@@ -3846,7 +3588,7 @@ static PyObject *_wrap_Partial_first(PyObject *self, PyObject *args) {
 
 BreakpointHandle * PartialListHandleIteratorHandle_last(PartialListHandleIteratorHandle *self) {
     {
-        return new BreakpointHandle( *self, --( (*self)->partial().end() ) );
+        return new BreakpointHandle( *self, --( (*self)->current().end() ) );
     }
 }
 
@@ -4583,13 +4325,6 @@ static PyObject *_wrap_Breakpoint_atEnd(PyObject *self, PyObject *args) {
 }
 
 
-Analyzer * new_Analyzer(double resolutionHz) {
-    {
-        return createAnalyzer( resolutionHz );
-    }
-}
-
-
 static PyObject *_wrap_new_Analyzer(PyObject *self, PyObject *args) {
     PyObject *resultobj;
     double arg0 ;
@@ -4601,7 +4336,7 @@ static PyObject *_wrap_new_Analyzer(PyObject *self, PyObject *args) {
         {
             // LorisErrorString.clear();
             LorisErrorString = "";
-            result = (Analyzer *)new_Analyzer(arg0);
+            result = (Analyzer *)new Analyzer(arg0);
             
             
             //	catch exceptions in the procedural interface, 
@@ -4644,13 +4379,6 @@ static PyObject *_wrap_new_Analyzer(PyObject *self, PyObject *args) {
 }
 
 
-void  delete_Analyzer(Analyzer *self) {
-    {
-        destroyAnalyzer( self );
-    }
-}
-
-
 static PyObject *_wrap_delete_Analyzer(PyObject *self, PyObject *args) {
     PyObject *resultobj;
     Analyzer *arg0 ;
@@ -4663,7 +4391,7 @@ static PyObject *_wrap_delete_Analyzer(PyObject *self, PyObject *args) {
         {
             // LorisErrorString.clear();
             LorisErrorString = "";
-            delete_Analyzer(arg0);
+            delete arg0;
             
             
             //	catch exceptions in the procedural interface, 
@@ -4707,12 +4435,75 @@ static PyObject *_wrap_delete_Analyzer(PyObject *self, PyObject *args) {
 }
 
 
+Analyzer * Analyzer_copy(Analyzer *self) {
+    {
+        return new Analyzer( self->freqResolution() );
+    }
+}
+
+
+static PyObject *_wrap_Analyzer_copy(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    Analyzer *arg0 ;
+    PyObject * argo0 =0 ;
+    Analyzer *result ;
+    
+    if(!PyArg_ParseTuple(args,"O:Analyzer_copy",&argo0)) return NULL;
+    if ((SWIG_ConvertPtr(argo0,(void **) &arg0,SWIGTYPE_p_Analyzer,1)) == -1) return NULL;
+    {
+        try
+        {
+            // LorisErrorString.clear();
+            LorisErrorString = "";
+            result = (Analyzer *)Analyzer_copy(arg0);
+            
+            
+            //	catch exceptions in the procedural interface, 
+            //	converted to strings by the exception handler 
+            //	in the Loris procedural interface:
+            if ( ! LorisErrorString.empty() )
+            {
+                //	this is an improperly-braced macro!
+                SWIG_exception( SWIG_RuntimeError, (char *) LorisErrorString.c_str() );
+            }
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception in scripting interface: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            //	(these are very unlikely to come from the interface
+            //	code, and cannot escape the procedural interface to
+            //	Loris, which catches all exceptions.)
+            std::string s("std C++ exception in scripting interface: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
+        }
+        catch( std::string & exs )
+        {
+            //	exceptions generated by functions defined in this
+            //	file may throw std::strings:
+            std::string s("Exception thrown in scripting interface wrapper code: " );
+            s.append( exs );
+            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
+        }
+        
+    }resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_Analyzer);
+    return resultobj;
+}
+
+
 PartialListHandle * Analyzer_analyze(Analyzer *self,SampleVector const *vec,double srate) {
     {
         PartialListHandle * partials = new PartialListHandle();
-        //self->analyze( vec->begin(), vec->end(), srate );
-        //partials->splice( partials->end(), self->partials() );
-        analyzer_analyze( self, vec, srate, *partials );
+        self->analyze( vec->begin(), vec->end(), srate );
+        (*partials)->splice( (*partials)->end(), self->partials() );
+        //analyzer_analyze( self, vec, srate, *partials );
         return partials;
     }
 }
@@ -5844,6 +5635,69 @@ static PyObject *_wrap_delete_BreakpointEnvelope(PyObject *self, PyObject *args)
         
     }Py_INCREF(Py_None);
     resultobj = Py_None;
+    return resultobj;
+}
+
+
+BreakpointEnvelope * BreakpointEnvelope_copy(BreakpointEnvelope *self) {
+    {
+        return new BreakpointEnvelope( *self );
+    }
+}
+
+
+static PyObject *_wrap_BreakpointEnvelope_copy(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    BreakpointEnvelope *arg0 ;
+    PyObject * argo0 =0 ;
+    BreakpointEnvelope *result ;
+    
+    if(!PyArg_ParseTuple(args,"O:BreakpointEnvelope_copy",&argo0)) return NULL;
+    if ((SWIG_ConvertPtr(argo0,(void **) &arg0,SWIGTYPE_p_BreakpointEnvelope,1)) == -1) return NULL;
+    {
+        try
+        {
+            // LorisErrorString.clear();
+            LorisErrorString = "";
+            result = (BreakpointEnvelope *)BreakpointEnvelope_copy(arg0);
+            
+            
+            //	catch exceptions in the procedural interface, 
+            //	converted to strings by the exception handler 
+            //	in the Loris procedural interface:
+            if ( ! LorisErrorString.empty() )
+            {
+                //	this is an improperly-braced macro!
+                SWIG_exception( SWIG_RuntimeError, (char *) LorisErrorString.c_str() );
+            }
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception in scripting interface: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            //	(these are very unlikely to come from the interface
+            //	code, and cannot escape the procedural interface to
+            //	Loris, which catches all exceptions.)
+            std::string s("std C++ exception in scripting interface: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
+        }
+        catch( std::string & exs )
+        {
+            //	exceptions generated by functions defined in this
+            //	file may throw std::strings:
+            std::string s("Exception thrown in scripting interface wrapper code: " );
+            s.append( exs );
+            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
+        }
+        
+    }resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_BreakpointEnvelope);
     return resultobj;
 }
 
@@ -7620,6 +7474,69 @@ static PyObject *_wrap_SampleVector_clear(PyObject *self, PyObject *args) {
 }
 
 
+SampleVector * SampleVector_copy(SampleVector *self) {
+    {
+        return new SampleVector( *self );
+    }
+}
+
+
+static PyObject *_wrap_SampleVector_copy(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    SampleVector *arg0 ;
+    PyObject * argo0 =0 ;
+    SampleVector *result ;
+    
+    if(!PyArg_ParseTuple(args,"O:SampleVector_copy",&argo0)) return NULL;
+    if ((SWIG_ConvertPtr(argo0,(void **) &arg0,SWIGTYPE_p_SampleVector,1)) == -1) return NULL;
+    {
+        try
+        {
+            // LorisErrorString.clear();
+            LorisErrorString = "";
+            result = (SampleVector *)SampleVector_copy(arg0);
+            
+            
+            //	catch exceptions in the procedural interface, 
+            //	converted to strings by the exception handler 
+            //	in the Loris procedural interface:
+            if ( ! LorisErrorString.empty() )
+            {
+                //	this is an improperly-braced macro!
+                SWIG_exception( SWIG_RuntimeError, (char *) LorisErrorString.c_str() );
+            }
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception in scripting interface: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            //	(these are very unlikely to come from the interface
+            //	code, and cannot escape the procedural interface to
+            //	Loris, which catches all exceptions.)
+            std::string s("std C++ exception in scripting interface: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
+        }
+        catch( std::string & exs )
+        {
+            //	exceptions generated by functions defined in this
+            //	file may throw std::strings:
+            std::string s("Exception thrown in scripting interface wrapper code: " );
+            s.append( exs );
+            SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
+        }
+        
+    }resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_SampleVector);
+    return resultobj;
+}
+
+
 double  SampleVector_getAt(SampleVector *self,unsigned long idx) {
     {
 // return self->at(idx);	//	g++ doesn't implement at()?
@@ -8155,11 +8072,7 @@ static PyObject *_wrap_AiffFile_samples(PyObject *self, PyObject *args) {
 
 
 static PyMethodDef loriscMethods[] = {
-	 { "AnalyzerCopy", _wrap_AnalyzerCopy, METH_VARARGS },
-	 { "BreakpointEnvelopeCopy", _wrap_BreakpointEnvelopeCopy, METH_VARARGS },
 	 { "BreakpointEnvelopeWithValue", _wrap_BreakpointEnvelopeWithValue, METH_VARARGS },
-	 { "SampleVectorCopy", _wrap_SampleVectorCopy, METH_VARARGS },
-	 { "exportAiffNEW", _wrap_exportAiffNEW, METH_VARARGS },
 	 { "channelize", _wrap_channelize, METH_VARARGS },
 	 { "dilate", _wrap_dilate, METH_VARARGS },
 	 { "distill", _wrap_distill, METH_VARARGS },
@@ -8216,6 +8129,7 @@ static PyMethodDef loriscMethods[] = {
 	 { "Breakpoint_atEnd", _wrap_Breakpoint_atEnd, METH_VARARGS },
 	 { "new_Analyzer", _wrap_new_Analyzer, METH_VARARGS },
 	 { "delete_Analyzer", _wrap_delete_Analyzer, METH_VARARGS },
+	 { "Analyzer_copy", _wrap_Analyzer_copy, METH_VARARGS },
 	 { "Analyzer_analyze", _wrap_Analyzer_analyze, METH_VARARGS },
 	 { "Analyzer_configure", _wrap_Analyzer_configure, METH_VARARGS },
 	 { "Analyzer_freqResolution", _wrap_Analyzer_freqResolution, METH_VARARGS },
@@ -8236,6 +8150,7 @@ static PyMethodDef loriscMethods[] = {
 	 { "Analyzer_setBwRegionWidth", _wrap_Analyzer_setBwRegionWidth, METH_VARARGS },
 	 { "new_BreakpointEnvelope", _wrap_new_BreakpointEnvelope, METH_VARARGS },
 	 { "delete_BreakpointEnvelope", _wrap_delete_BreakpointEnvelope, METH_VARARGS },
+	 { "BreakpointEnvelope_copy", _wrap_BreakpointEnvelope_copy, METH_VARARGS },
 	 { "BreakpointEnvelope_valueAt", _wrap_BreakpointEnvelope_valueAt, METH_VARARGS },
 	 { "BreakpointEnvelope_insertBreakpoint", _wrap_BreakpointEnvelope_insertBreakpoint, METH_VARARGS },
 	 { "new_ExportSpc", _wrap_new_ExportSpc, METH_VARARGS },
@@ -8267,6 +8182,7 @@ static PyMethodDef loriscMethods[] = {
 	 { "SampleVector_size", _wrap_SampleVector_size, METH_VARARGS },
 	 { "SampleVector_resize", _wrap_SampleVector_resize, METH_VARARGS },
 	 { "SampleVector_clear", _wrap_SampleVector_clear, METH_VARARGS },
+	 { "SampleVector_copy", _wrap_SampleVector_copy, METH_VARARGS },
 	 { "SampleVector_getAt", _wrap_SampleVector_getAt, METH_VARARGS },
 	 { "SampleVector_setAt", _wrap_SampleVector_setAt, METH_VARARGS },
 	 { "new_AiffFile", _wrap_new_AiffFile, METH_VARARGS },
@@ -8286,8 +8202,8 @@ static PyMethodDef loriscMethods[] = {
 /* -------- TYPE CONVERSION AND EQUIVALENCE RULES (BEGIN) -------- */
 
 static swig_type_info _swigt__p_ExportSpc[] = {{"_p_ExportSpc", 0, "ExportSpc *"},{"_p_ExportSpc"},{0}};
-static swig_type_info _swigt__p_SampleVector[] = {{"_p_SampleVector", 0, "SampleVector *"},{"_p_SampleVector"},{0}};
 static swig_type_info _swigt__p_PartialListHandle[] = {{"_p_PartialListHandle", 0, "PartialListHandle *"},{"_p_PartialListHandle"},{0}};
+static swig_type_info _swigt__p_SampleVector[] = {{"_p_SampleVector", 0, "SampleVector *"},{"_p_SampleVector"},{0}};
 static swig_type_info _swigt__p_PartialListHandleIteratorHandle[] = {{"_p_PartialListHandleIteratorHandle", 0, "PartialListHandleIteratorHandle *"},{"_p_PartialListHandleIteratorHandle"},{0}};
 static swig_type_info _swigt__p_BreakpointHandle[] = {{"_p_BreakpointHandle", 0, "BreakpointHandle *"},{"_p_BreakpointHandle"},{0}};
 static swig_type_info _swigt__p_AiffFile[] = {{"_p_AiffFile", 0, "AiffFile *"},{"_p_AiffFile"},{0}};
@@ -8296,8 +8212,8 @@ static swig_type_info _swigt__p_BreakpointEnvelope[] = {{"_p_BreakpointEnvelope"
 
 static swig_type_info *swig_types_initial[] = {
 _swigt__p_ExportSpc, 
-_swigt__p_SampleVector, 
 _swigt__p_PartialListHandle, 
+_swigt__p_SampleVector, 
 _swigt__p_PartialListHandleIteratorHandle, 
 _swigt__p_BreakpointHandle, 
 _swigt__p_AiffFile, 

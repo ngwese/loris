@@ -8,23 +8,272 @@ Python module: loris</TITLE>
 <HR><H1> Contents </H1>
 <UL><LI> <A HREF="#s1_">1. Version</A>
 <LI> <A HREF="#s2_">2. Loris class interfaces</A>
-<UL><LI> <A HREF="#s2_1_">2.1. class Analyzer</A>
-<LI> <A HREF="#s2_2_">2.2. class BreakpointEnvelope</A>
-<LI> <A HREF="#s2_3_">2.3. class ExportSpc</A>
-<LI> <A HREF="#s2_4_">2.4. class PartialList</A>
-<LI> <A HREF="#s2_5_">2.5. class SampleVector</A>
+<UL><LI> <A HREF="#s2_1_">2.1. class PartialList</A>
+<LI> <A HREF="#s2_2_">2.2. class Partial</A>
+<LI> <A HREF="#s2_3_">2.3. class Breakpoint</A>
+<LI> <A HREF="#s2_4_">2.4. class Analyzer</A>
+<LI> <A HREF="#s2_5_">2.5. class BreakpointEnvelope</A>
+<LI> <A HREF="#s2_6_">2.6. class ExportSpc</A>
+<LI> <A HREF="#s2_7_">2.7. class SampleVector</A>
+<LI> <A HREF="#s2_8_">2.8. class AiffFile</A>
 </UL><LI> <A HREF="#s3_">3. Non-object-based procedures</A>
 <LI> <A HREF="#s4_">4. Utility functions</A>
 </UL>
 
 <A name="s1_">
 <HR><H2>1. Version</H2></A>
-<P><TT><B>__version__ = Loris 1.0beta2 </B></TT>
+<P><TT><B>version = 'Loris 1.0beta3' </B></TT>
 
 <A name="s2_">
 <HR><H2>2. Loris class interfaces</H2></A>
 <A name="s2_1_">
-<H3>2.1. class Analyzer</H3></A>
+<H3>2.1. class PartialList</H3></A>
+	A PartialList represents a collection of Bandwidth-Enhanced 
+	Partials, each having a trio of synchronous, non-uniformly-
+	sampled breakpoint envelopes representing the time-varying 
+	frequency, amplitude, and noisiness of a single bandwidth-
+	enhanced sinusoid.
+
+	For more information about Bandwidth-Enhanced Partials and the  
+	Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
+	the Loris website: www.cerlsoundgroup.org/Loris/
+	
+<P><TT><B>PartialList()</B></TT>
+<BLOCKQUOTE>  	Return a new empty PartialList.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>del this</B></TT>
+<BLOCKQUOTE>  	Destroy this PartialList.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>clear()</B></TT>
+<BLOCKQUOTE>  	Remove (and destroy) all the Partials from this PartialList,
+		leaving it empty.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>copy()</B></TT>
+<BLOCKQUOTE>  	Return a new PartialList that is a copy of this 
+		PartialList (i.e. has identical Partials).
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>size()</B></TT>
+<BLOCKQUOTE>  	Return the number of Partials in this PartialList.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>first()</B></TT>
+<BLOCKQUOTE>  	Return an iterator refering to the first Partial in this PartialList.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>last()</B></TT>
+<BLOCKQUOTE>  	Return an iterator refering to the last Partial in this PartialList.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>append(iter)</B></TT>
+<BLOCKQUOTE>  	Append a copy of the Partial referenced by the specified iterator
+		to the end of this PartialList.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>splice(otherPartials)</B></TT>
+<BLOCKQUOTE>  	Splice all the Partials in the other PartialList onto the end of
+		this PartialList, leaving the other empty.
+	   
+</BLOCKQUOTE>
+
+<A name="s2_2_">
+<H3>2.2. class Partial</H3></A>
+	The Partial class in the Loris scripting interface represents both
+	a Loris::Partial and an iterator on a list of Partials, so its interface
+	includes access and mutation of Partials and iterator behavior, like
+	next() and atEnd().
+	
+	Partials (iterators on PartialLists) can only be created using the 
+	PartialList members first() and last() (a temporary condition, probably).
+
+<P><TT><B>del this</B></TT>
+<BLOCKQUOTE>  	Delete this Partial reference (doesn't remove it from the PartialList).
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>next()</B></TT>
+<BLOCKQUOTE>  	Advance this PartialList iterator to the next position in the list.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>atEnd()</B></TT>
+<BLOCKQUOTE>  	Return true if this PartialList iterator refers to a position past
+		the end of the list (does not refer to a valid Partial). Otherwise
+		return false.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>label()</B></TT>
+<BLOCKQUOTE>   	Return this Partial's label.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>initialPhase()</B></TT>
+<BLOCKQUOTE>   	Return this Partial's starting phase.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>startTime()</B></TT>
+<BLOCKQUOTE>   	Return this Partial's start time.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>endTime()</B></TT>
+<BLOCKQUOTE>   	Return this Partial's end time.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>duration()</B></TT>
+<BLOCKQUOTE>   	Return this Partial's duration.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>countBreakpoints()</B></TT>
+<BLOCKQUOTE>   	Return this Partial's number of Breakpoints.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>frequencyAt(time)</B></TT>
+<BLOCKQUOTE>   	Return this Partial's interpolated frequency at the specified time.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>amplitudeAt(time)</B></TT>
+<BLOCKQUOTE>   	Return this Partial's interpolated amplitude at the specified time.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>bandwidthAt(time)</B></TT>
+<BLOCKQUOTE>   	Return this Partial's interpolated bandwidth at the specified time.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>phaseAt(time)</B></TT>
+<BLOCKQUOTE>   	Return this Partial's interpolated phase at the specified time.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>setLabel(l)</B></TT>
+<BLOCKQUOTE>  	Assign a new label to this Partial.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>removeFromList()</B></TT>
+<BLOCKQUOTE>  	Remove this Partial from its PartialList, and advance the
+		iterator, so that the iterator is still valid (represents
+		a valid list position, though it may be atEnd) but refers 
+		to the next Partial in the list, or is atEnd.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>first()</B></TT>
+<BLOCKQUOTE>  	Return the first Breakpoint in this Partial.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>last()</B></TT>
+<BLOCKQUOTE>  	Return the last Breakpoint in this Partial.
+	   
+</BLOCKQUOTE>
+
+<A name="s2_3_">
+<H3>2.3. class Breakpoint</H3></A>
+	The Breakpoint class in the Loris scripting interface represents both
+	a Loris::Breakpoint and an iterator on a Loris Partial, so its interface
+	includes access and mutation of Breakpoint data and iterator behavior, like
+	next() and atEnd().
+	
+	Breakpoints (iterators on PartialLists) can only be created using the 
+	Partial members first() and last().
+
+<P><TT><B>del this</B></TT>
+<BLOCKQUOTE>  	Delete this Breakpoint reference (does not remove from the Partial).
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>frequency()</B></TT>
+<BLOCKQUOTE>  	Return the frequency of this Breakpoint. 
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>amplitude()</B></TT>
+<BLOCKQUOTE>  	Return the amplitude of this Breakpoint. 
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>bandwidth()</B></TT>
+<BLOCKQUOTE>  	Return the bandwidth of this Breakpoint. 
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>phase()</B></TT>
+<BLOCKQUOTE>  	Return the phase of this Breakpoint. 
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>setFrequency(x)</B></TT>
+<BLOCKQUOTE>  	Assign the frequency of this Breakpoint. 
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>setAmplitude(x)</B></TT>
+<BLOCKQUOTE>  	Assign the amplitude of this Breakpoint. 
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>setBandwidth(x)</B></TT>
+<BLOCKQUOTE>  	Assign the bandwidth of this Breakpoint. 
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>setPhase(x)</B></TT>
+<BLOCKQUOTE>  	Assign the phase of this Breakpoint. 
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>time()</B></TT>
+<BLOCKQUOTE>  	Return the time of this Breakpoint (not mutable).
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>next()</B></TT>
+<BLOCKQUOTE>  	Advance this iterator to the next position (Breakpoint)
+		in the Partial. 
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>atEnd()</B></TT>
+<BLOCKQUOTE>  	Return true if this iterator refers to a position past the end 
+		of the Partial's envelope (does not refer to a valid Breakpoint).
+		Otherwise return false.
+	   
+</BLOCKQUOTE>
+
+<A name="s2_4_">
+<H3>2.4. class Analyzer</H3></A>
+	An Analyzer represents a configuration of parameters for
+	performing Reassigned Bandwidth-Enhanced Additive Analysis
+	of sampled waveforms. This analysis process yields a collection 
+	of Partials, each having a trio of synchronous, non-uniformly-
+	sampled breakpoint envelopes representing the time-varying 
+	frequency, amplitude, and noisiness of a single bandwidth-
+	enhanced sinusoid. 
+
+	For more information about Reassigned Bandwidth-Enhanced 
+	Analysis and the Reassigned Bandwidth-Enhanced Additive Sound 
+	Model, refer to the Loris website: www.cerlsoundgroup.org/Loris/
+
 <P><TT><B>Analyzer(resolutionHz)</B></TT>
 <BLOCKQUOTE>  	Construct and return a new Analyzer configured with the given	
 		frequency resolution (minimum instantaneous frequency	
@@ -49,6 +298,12 @@ Python module: loris</TITLE>
 		(minimum instantaneous frequency difference between Partials). 
 		All other Analyzer parameters are (re-)computed from the 
 		frequency resolution. 		
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>copy()</B></TT>
+<BLOCKQUOTE>  	Construct and return a new Analyzer having identical
+		parameter configuration to another Analyzer.			
 	   
 </BLOCKQUOTE>
 
@@ -154,14 +409,13 @@ Python module: loris</TITLE>
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>AnalyzerCopy(other)</B></TT>
-<BLOCKQUOTE>  	Construct and return a new Analyzer having identical
-	parameter configuration to another Analyzer.			
-   
-</BLOCKQUOTE>
+<A name="s2_5_">
+<H3>2.5. class BreakpointEnvelope</H3></A>
+	A BreakpointEnvelope represents a linear segment breakpoint 
+	function with infinite extension at each end (that is, the 
+	values past either end of the breakpoint function have the 
+	values at the nearest end).
 
-<A name="s2_2_">
-<H3>2.2. class BreakpointEnvelope</H3></A>
 <P><TT><B>BreakpointEnvelope()</B></TT>
 <BLOCKQUOTE>  	Construct and return a new BreakpointEnvelope having no 
 		breakpoints and an implicit value of 0. everywhere, 
@@ -171,6 +425,13 @@ Python module: loris</TITLE>
 
 <P><TT><B>del this</B></TT>
 <BLOCKQUOTE>  	Destroy this BreakpointEnvelope. 								
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>copy()</B></TT>
+<BLOCKQUOTE>  	Construct and return a new BreakpointEnvelope that is
+		a copy of this BreapointEnvelope (has the same value
+		as this BreakpointEnvelope everywhere).			
 	   
 </BLOCKQUOTE>
 
@@ -188,21 +449,19 @@ Python module: loris</TITLE>
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>BreakpointEnvelopeCopy(other)</B></TT>
-<BLOCKQUOTE>  	Construct and return a new BreakpointEnvelope that is
-	a copy of this BreapointEnvelope (has the same value
-	as this BreakpointEnvelope everywhere).			
-   
-</BLOCKQUOTE>
-
 <P><TT><B>BreakpointEnvelopeWithValue(initialValue)</B></TT>
 <BLOCKQUOTE>  	Construct and return a new BreakpointEnvelope having a 
 	single breakpoint at 0. having the specified initialValue.
    
 </BLOCKQUOTE>
 
-<A name="s2_3_">
-<H3>2.3. class ExportSpc</H3></A>
+<A name="s2_6_">
+<H3>2.6. class ExportSpc</H3></A>
+	An ExportSpc represents a configuration of parameters for
+	exporting a collection of Bandwidth-Enhanced partials to 
+	an spc-format file for use with the Symbolic Sound Kyma
+	System.
+
 <P><TT><B>ExportSpc(midiPitch)</B></TT>
 <BLOCKQUOTE>  	Construct a new ExportSpc instance configured from the 
 		given MIDI note number. All other ExportSpc parameters
@@ -372,43 +631,13 @@ Python module: loris</TITLE>
 	   
 </BLOCKQUOTE>
 
-<A name="s2_4_">
-<H3>2.4. class PartialList</H3></A>
-<P><TT><B>PartialList()</B></TT>
-<BLOCKQUOTE>  	Return a new empty PartialList.
-	   
-</BLOCKQUOTE>
+<A name="s2_7_">
+<H3>2.7. class SampleVector</H3></A>
+	A SampleVector represents a vector of floating point samples of
+	an audio waveform. In Loris, the samples are assumed to have 
+	values on the range (-1., 1.) (though this is not enforced or 
+	checked). 
 
-<P><TT><B>del this</B></TT>
-<BLOCKQUOTE>  	Destroy this PartialList.
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>clear()</B></TT>
-<BLOCKQUOTE>  	Remove (and destroy) all the Partials from this PartialList,
-		leaving it empty.
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>size()</B></TT>
-<BLOCKQUOTE>  	Return the number of Partials in this PartialList.
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>splice(other)</B></TT>
-<BLOCKQUOTE>  	Splice all the Partials in the other PartialList onto the end of
-		this PartialList, leaving the other empty.
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>PartialListCopy(other)</B></TT>
-<BLOCKQUOTE>  	Return a new PartialList that is a copy of this 
-	PartialList (i.e. has identical Partials).
-   
-</BLOCKQUOTE>
-
-<A name="s2_5_">
-<H3>2.5. class SampleVector</H3></A>
 <P><TT><B>SampleVector(size)</B></TT>
 <BLOCKQUOTE>  	Return a new SampleVector having the specified number of samples,
 		all of whose value is 0. 
@@ -438,7 +667,16 @@ Python module: loris</TITLE>
 <P><TT><B>clear()</B></TT>
 <BLOCKQUOTE>  	Remove all samples from this SampleVector, and set its
 	 	size to zero.
-	     
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>copy()</B></TT>
+<BLOCKQUOTE>  	Return a new SampleVector that is a copy of this 
+		SampleVector, having the same number of samples, 
+		and samples at every position in the copy having 
+		the same value as the corresponding sample in
+		this SampleVector.
+	   
 </BLOCKQUOTE>
 
 <P><TT><B>getAt(idx)</B></TT>
@@ -453,13 +691,49 @@ Python module: loris</TITLE>
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>SampleVectorCopy(other)</B></TT>
-<BLOCKQUOTE>  	Return a new SampleVector that is a copy of this 
-	SampleVector, having the same number of samples, 
-	and samples at every position in the copy having 
-	the same value as the corresponding sample in
-	this SampleVector.
-   
+<A name="s2_8_">
+<H3>2.8. class AiffFile</H3></A>
+	An AiffFile represents a sample file (on disk) in the Audio Interchange
+	File Format. The file is read from disk and the samples stored in memory
+	upon construction of an AiffFile instance. The samples are accessed by 
+	the samples() method, which converts them to double precision floats and
+	returns them in a SampleVector.
+
+<P><TT><B>AiffFile(filename)</B></TT>
+<BLOCKQUOTE>  	Import an AIFF file with the specified file name
+		or path.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>del this</B></TT>
+<BLOCKQUOTE>  	Delete this AIFF data (does not affect data on disk).
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>channels()</B></TT>
+<BLOCKQUOTE>  	Return the number of channels of sample data this AIFF file.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>sampleFrames()</B></TT>
+<BLOCKQUOTE>  	Return the number of frames of sample data this AIFF file.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>sampleRate()</B></TT>
+<BLOCKQUOTE>  	Return the sample rate in Hz of the sample data this AIFF file.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>sampleSize()</B></TT>
+<BLOCKQUOTE>  	Return the size in bits of the sample data this AIFF file.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>samples()</B></TT>
+<BLOCKQUOTE>  	Return a SampleVector containing the AIFF samples from this AIFF 
+		file as double precision floats on the range -1,1.
+	   
 </BLOCKQUOTE>
 
 <A name="s3_">
@@ -512,13 +786,13 @@ Python module: loris</TITLE>
    
 </BLOCKQUOTE>
 
-<P><TT><B>exportAiff(path,vec,samplerate,nchannels,bitsPerSamp)</B></TT>
+<P><TT><B>exportAiff(path,samples,samplerate,nchannels,bitsPerSamp)</B></TT>
 <BLOCKQUOTE>  	Export audio samples stored in a SampleVector to an AIFF file
-	having the specified number of channels and sample rate at the 
-	given file path (or name). The floating point samples in the 
-	SampleVector are clamped to the range (-1.,1.) and converted 
-	to integers having bitsPerSamp bits.
-   
+		having the specified number of channels and sample rate at the 
+		given file path (or name). The floating point samples in the 
+		SampleVector are clamped to the range (-1.,1.) and converted 
+		to integers having bitsPerSamp bits.
+	   
 </BLOCKQUOTE>
 
 <P><TT><B>exportSdif(path,partials,hop)</B></TT>

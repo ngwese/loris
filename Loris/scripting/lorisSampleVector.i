@@ -77,13 +77,24 @@ public:
 		size, then samples in excess of the given size are removed.
 	 */
 	 
-	 void clear( void );
-	 /*	Remove all samples from this SampleVector, and set its
+	void clear( void );
+	/*	Remove all samples from this SampleVector, and set its
 	 	size to zero.
-	   */
+	 */
 
 %addmethods
 {
+	%new SampleVector * copy( void )
+	{
+		return new SampleVector( *self );
+	}
+	/*	Return a new SampleVector that is a copy of this 
+		SampleVector, having the same number of samples, 
+		and samples at every position in the copy having 
+		the same value as the corresponding sample in
+		this SampleVector.
+	 */
+	 
 	double getAt( unsigned long idx )
 	{
 		// return self->at(idx);	//	g++ doesn't implement at()?
@@ -107,23 +118,3 @@ public:
 }
 
 };	//	end of (SWIG) class SampleVector
-
-//	define a copy constructor:
-//	(this should give the right documentation, the 
-//	right ownership, the right function name in the
-//	module, etc.)
-%{
-SampleVector * SampleVectorCopy_( const SampleVector * other )
-{
-	return new SampleVector( *other );
-}
-%}
-
-%name( SampleVectorCopy )  
-%new SampleVector * SampleVectorCopy_( const SampleVector * other );
-/*	Return a new SampleVector that is a copy of this 
-	SampleVector, having the same number of samples, 
-	and samples at every position in the copy having 
-	the same value as the corresponding sample in
-	this SampleVector.
- */

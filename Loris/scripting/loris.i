@@ -287,16 +287,31 @@ void dilate_str( PartialListHandle * partials,
 	there were non-zero labels in the original PartialList. Unlabeled 
 	(label 0) Partials are eliminated.
  */
-
-void exportAiff( const char * path, const SampleVector * vec, 
-				 double samplerate, int nchannels, int bitsPerSamp );
-/*	Export audio samples stored in a SampleVector to an AIFF file
-	having the specified number of channels and sample rate at the 
-	given file path (or name). The floating point samples in the 
-	SampleVector are clamped to the range (-1.,1.) and converted 
-	to integers having bitsPerSamp bits.
- */
 				 
+%{
+#include "AiffFile.h"
+using Loris::AiffFile;
+%}
+
+%inline 
+%{
+//	AIFF export:
+	void exportAiff( const char * path,
+					 SampleVector * samples,
+					 double samplerate, int nchannels, int bitsPerSamp )
+	{		
+		AiffFile::Export( path, samplerate, nchannels, bitsPerSamp, 
+						 samples->begin(), samples->end() );
+	}
+	/*	Export audio samples stored in a SampleVector to an AIFF file
+		having the specified number of channels and sample rate at the 
+		given file path (or name). The floating point samples in the 
+		SampleVector are clamped to the range (-1.,1.) and converted 
+		to integers having bitsPerSamp bits.
+	 */
+				 
+%}
+
 //	wrapper for exportSdif():
 %{
 	void exportSdif_( const char * path, PartialListHandle * partials, double hop )

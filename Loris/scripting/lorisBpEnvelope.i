@@ -39,11 +39,6 @@
 %{
 #include "BreakpointEnvelope.h"
 using Loris::BreakpointEnvelope;
-
-//	for procedural interface construction and 
-//	destruction, see comment below:
-//#define LORIS_OPAQUE_POINTERS 0
-//#include "loris.h"
 %}
 
 // ---------------------------------------------------------------------------
@@ -58,35 +53,28 @@ class BreakpointEnvelope
 {
 public:
 //	construction:
-//
-//	Mac ONLY problem:
-//	use the construction and destruction functions in the 
-//	procedural interface until I can determine why deleting
-//	objects with destructors defined out of line (in the Loris
-//	DLL) cause the Macintosh to crash. Using the procedural 
-//	interface causes the objects with out of line destructors
-//	to be constructed and destructed in the DLL, instead of 
-//	across DLL boundaries, which might make a difference on
-//	the Mac.
-//
-//	In fact, there seems to be a problem with the compiler-generated
-//	assignment operator too. Don't let's use that here either. Other
-//	member functions don't seem to cause instability.
-//	
-
-//%addmethods
-//{
-	BreakpointEnvelope( void );	// { return createBreakpointEnvelope(); }
+	BreakpointEnvelope( void );
 	/*	Construct and return a new BreakpointEnvelope having no 
 		breakpoints and an implicit value of 0. everywhere, 
 		until the first breakpoint is inserted.			
 	 */
 	 	 
-	~BreakpointEnvelope( void );	// { destroyBreakpointEnvelope( self ); }
+	~BreakpointEnvelope( void );
 	/*	Destroy this BreakpointEnvelope. 								
 	 */
-//}
 	
+%addmethods 
+{
+	%new BreakpointEnvelope * copy( void )
+	{
+		return new BreakpointEnvelope( *self );
+	}
+	/*	Construct and return a new BreakpointEnvelope that is
+		a copy of this BreapointEnvelope (has the same value
+		as this BreakpointEnvelope everywhere).			
+	 */
+}
+
 //	Envelope interface:
 	virtual double valueAt( double x ) const;	
 	/*	Return the interpolated value of this BreakpointEnvelope at 
@@ -103,40 +91,19 @@ public:
 	 
 };	//	end of abstract class BreakpointEnvelope
 
-//	define a copy constructor:
-//	(this should give the right documentation, the 
-//	right ownership, the right function name in the
-//	module, etc.)
-%{
-BreakpointEnvelope * BreakpointEnvelopeCopy_( const BreakpointEnvelope * other )
-{
-	BreakpointEnvelope * env = createBreakpointEnvelope();
-	*env = *other;
-	return new BreakpointEnvelope( *other );
-	//return copyBreakpointEnvelope( other );
-}
-%}
-
-%name( BreakpointEnvelopeCopy ) 
-%new BreakpointEnvelope * BreakpointEnvelopeCopy_( const BreakpointEnvelope * other );
-/*	Construct and return a new BreakpointEnvelope that is
-	a copy of this BreapointEnvelope (has the same value
-	as this BreakpointEnvelope everywhere).			
- */
-
 //	define a constructor with initial value:
 //	(this should give the right documentation, the 
 //	right ownership, the right function name in the
 //	module, etc.)
+//
+//	Could probably get rid of this by making the default
+//	argument to the BreakpointEnvelope constructor wrapper
+//	NAN, and then testing for that argument value, and
+//	calling the either default constructor or the initial
+//	value constructor.
 %{
 BreakpointEnvelope * BreakpointEnvelopeWithValue_( double initialValue )
 {
-	/*
-	BreakpointEnvelope * env = createBreakpointEnvelope();
-	env->insertBreakpoint( 0., initialValue );
-	//breakpointEnvelope_insertBreakpoint( env, 0., initialValue );
-	return env;
-	*/
 	return new BreakpointEnvelope( initialValue );
 }
 %}

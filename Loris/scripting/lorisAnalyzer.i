@@ -67,51 +67,36 @@ class Analyzer
 {
 public:
 //	construction:
-//
-//	Mac ONLY problem:
-//	use the construction and destruction functions in the 
-//	procedural interface until I can determine why deleting
-//	objects with destructors defined out of line (in the Loris
-//	DLL) cause the Macintosh to crash. Using the procedural 
-//	interface causes the objects with out of line destructors
-//	to be constructed and destructed in the DLL, instead of 
-//	across DLL boundaries, which might make a difference on
-//	the Mac.
-//
-//	In fact, there seems to be a problem with the compiler-generated
-//	assignment operator too. Don't let's use that here either. Other
-//	member functions don't seem to cause instability.
-//	Note that the copy function here uses a defined assignment
-//	operator, and those don't seem to be problematic.
-//	
-
-%addmethods 
-{
-	Analyzer( double resolutionHz )
-	{
-		return createAnalyzer( resolutionHz );
-	}
+	Analyzer( double resolutionHz );
 	/*	Construct and return a new Analyzer configured with the given	
 		frequency resolution (minimum instantaneous frequency	
 		difference between Partials). All other Analyzer parameters 	
 		are computed from the specified frequency resolution. 			
 	 */
 		 
-	~Analyzer( void )
-	{
-		destroyAnalyzer( self );
-	}
+	~Analyzer( void );
 	/*	Destroy this Analyzer. 								
 	 */	
-	
+	 
+%addmethods 
+{
+//	copying:
+	%new Analyzer * copy( void )
+	{
+		return new Analyzer( self->freqResolution() );
+	}
+	/*	Construct and return a new Analyzer having identical
+		parameter configuration to another Analyzer.			
+	 */
+
 //	analysis:
 	%new 
 	PartialListHandle * analyze( const SampleVector * vec, double srate )
 	{
 		PartialListHandle * partials = new PartialListHandle();
-		//self->analyze( vec->begin(), vec->end(), srate );
-		//partials->splice( partials->end(), self->partials() );
-		analyzer_analyze( self, vec, srate, *partials );
+		self->analyze( vec->begin(), vec->end(), srate );
+		(*partials)->splice( (*partials)->end(), self->partials() );
+		//analyzer_analyze( self, vec, srate, *partials );
 		return partials;
 	}
 	/*	Analyze a SampleVector of (mono) samples at the given sample rate 	  	
@@ -126,7 +111,7 @@ public:
 		All other Analyzer parameters are (re-)computed from the 
 		frequency resolution. 		
 	 */
-
+	
 //	parameter access:
 	double freqResolution( void ) const { return _resolution; }
 	/*	Return the frequency resolution (minimum instantaneous frequency  		
@@ -202,22 +187,3 @@ public:
 	 */
 
 };	//	end of class Analyzer
-
-//	define a copy constructor:
-//	(this should give the right documentation, the 
-//	right ownership, the right function name in the
-//	module, etc.)
-%{
-Analyzer * AnalyzerCopy_( const Analyzer * other )
-{
-	Analyzer * a = createAnalyzer( other->freqResolution() );
-	*a = *other;
-	return a;
-}
-%}
-
-%name( AnalyzerCopy ) 
-%new Analyzer * AnalyzerCopy_( const Analyzer * other );
-/*	Construct and return a new Analyzer having identical
-	parameter configuration to another Analyzer.			
- */

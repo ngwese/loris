@@ -42,19 +42,42 @@
 using Loris::AiffFile;
 %}
 
+/*
+	An AiffFile represents a sample file (on disk) in the Audio Interchange
+	File Format. The file is read from disk and the samples stored in memory
+	upon construction of an AiffFile instance. The samples are accessed by 
+	the samples() method, which converts them to double precision floats and
+	returns them in a SampleVector.
+ */
 class AiffFile
 {
 public:
 //	construction (import):
 	AiffFile( const char * filename );
+	/*	Import an AIFF file with the specified file name
+		or path.
+	 */
 	~AiffFile( void );
+	/*	Delete this AIFF data (does not affect data on disk).
+	 */
 	
 //	parameter access:
 	int channels( void ) const;
+	/*	Return the number of channels of sample data this AIFF file.
+	 */
+	 
 	unsigned long sampleFrames( void ) const;
+	/*	Return the number of frames of sample data this AIFF file.
+	 */
+	 
 	double sampleRate( void ) const;
+	/*	Return the sample rate in Hz of the sample data this AIFF file.
+	 */
+	 
 	int sampleSize( void ) const;
-
+	/*	Return the size in bits of the sample data this AIFF file.
+	 */
+	 
 %addmethods 
 {
 //	sample access:	
@@ -64,20 +87,11 @@ public:
 		self->getSamples( vec->begin(), vec->end() );
 		return vec;
 	}
+	/*	Return a SampleVector containing the AIFF samples from this AIFF 
+		file as double precision floats on the range -1,1.
+	 */
+	 
 }	//	end of added methods
 
 };	//	end of class AiffFile
-
-%inline 
-%{
-//	AIFF export:
-	void exportAiffNEW( const char * path,
-					 SampleVector * samples,
-					 double samplerate, int nchannels, int bitsPerSamp )
-	{		
-		AiffFile::Export( path, samplerate, nchannels, bitsPerSamp, 
-						 samples->begin(), samples->end() );
-	}
-%}
-
 
