@@ -2,8 +2,8 @@
 #
 #	Loris objects definition
 #
-# CLASSES = $(TOP)/Loris/classes
-CLASSES = .
+CLASSES = $(TOP)/Loris/classes
+# CLASSES = .
 OBJ_LORIS = $(CLASSES)/AiffFile.o \
 			$(CLASSES)/Analyzer.o \
 			$(CLASSES)/AssociateBandwidth.o \
@@ -22,6 +22,7 @@ OBJ_LORIS = $(CLASSES)/AiffFile.o \
 			$(CLASSES)/Morph.o \
 			$(CLASSES)/Oscillator.o \
 			$(CLASSES)/Partial.o \
+			$(CLASSES)/PartialView.o \
 			$(CLASSES)/ReassignedSpectrum.o \
 			$(CLASSES)/SamplesFile.o \
 			$(CLASSES)/Synthesizer.o \
@@ -34,10 +35,11 @@ OBJ_LORIS = $(CLASSES)/AiffFile.o \
 #
 #	fftw:
 #
-fftw_prefix = $(TOP)/FFTW
+FFTW = $(TOP)/FFTW
 
 #
 #	flags:
 #
-INC_LORIS = -I${fftw_prefix}/include
+INC_LORIS = -I${FFTW}/include -I$(CLASSES)
 #DEBUG_LORIS = -DDebug_Loris
+LIB_LORIS = -L${FFTW}/lib -lfftw
