@@ -18,6 +18,8 @@ using namespace std;
 
 Begin_Namespace( Loris )
 
+#define HEY 64
+
 // ---------------------------------------------------------------------------
 //	AssociateBandwidth constructor
 // ---------------------------------------------------------------------------
@@ -52,12 +54,12 @@ AssociateBandwidth::~AssociateBandwidth( void )
 void
 AssociateBandwidth::computeSurplusEnergy( vector<double> & surplus )
 {
-#if 0
+#if 1
 	for ( int i = 0; i < surplus.size(); ++i ) {
 	#if 0
 		//	use loudness, proportional to cube root of energy:
-		double spec = pow( _windowFactor * _spectralEnergy[i], 1. / 3. );
-		double sin = pow( _windowFactor * _sinusoidalEnergy[i], 1. / 3. );
+		double spec = pow( _spectralEnergy[i] / _windowFactor, 1. / 3. );
+		double sin = pow( _sinusoidalEnergy[i] / _windowFactor, 1. / 3. );
 		
 		//	excess cannot be negative:
 		double diff = max( 0., spec - sin );
@@ -73,11 +75,14 @@ AssociateBandwidth::computeSurplusEnergy( vector<double> & surplus )
 		//*/
 		surplus[i] = diff * diff * diff;	//	cheaper than pow()
 	#else
-		surplus[i] = _windowFactor * max( 0., _spectralEnergy[i] - _sinusoidalEnergy[i] );
+		surplus[i] = max( 0., _spectralEnergy[i] - _sinusoidalEnergy[i] ) / _windowFactor;
 	#endif
 	}
 #else
+	//_specCopy = _sinSpec;
 	for ( long j = 0; j < _specCopy.size() / 2; ++j ) {
+		//if ( j > 80 )
+		//	_specCopy[j] += 0.01 / 80.;
 		double espec = _specCopy[j] * _specCopy[j];
 		double esin = _sinSpec[j] * _sinSpec[j];
 		double diff = max( 0., espec - esin ) / _windowFactor;
@@ -85,6 +90,7 @@ AssociateBandwidth::computeSurplusEnergy( vector<double> & surplus )
 	}
 	
 #endif
+	surplus[0] = surplus[1] =0.;
 }
 
 // ---------------------------------------------------------------------------
@@ -159,11 +165,13 @@ AssociateBandwidth::findRegionBelow( double barks )
 	Assert( barks >= 0. );
 	
 	//	the lowest region is centered at 1 bark:
-	if ( barks < 1. ) {
+	const double lowest_bark = 1.;
+	if ( barks < lowest_bark ) {
 		return -1;
 	}
 	else {
-		return min( (int)floor( barks ) - 1, (int)_spectralEnergy.size() - 1 );
+		return min( (int)(floor( barks ) - lowest_bark), 
+					(int)_spectralEnergy.size() - 1 );
 	}
 }
 
@@ -197,6 +205,11 @@ AssociateBandwidth::computeAlpha( double barks )
 	if ( barks > maxfreq ) {
 		return 0.;
 	}
+	/*
+	else if ( barks < 4. ) {
+		return 0.;
+	}
+	*/
 	else {
 		return barks - floor(barks);
 	}
@@ -222,7 +235,7 @@ AssociateBandwidth::reset( void )
 void
 AssociateBandwidth::computeWindowSpectrum( vector< double > & v, long len )
 {
-	FourierTransform ft( len * 16 );
+	FourierTransform ft( len * HEY );
 	ft( v );
 	
 	//double scale = 2. / accumulate( v.begin(), v.end(), 0. );
@@ -241,10 +254,9 @@ AssociateBandwidth::computeWindowSpectrum( vector< double > & v, long len )
 	
 	//	compute the window scale:
 	_windowFactor = _winspec[0] * _winspec[0];
-	for ( long j = 16; j < _winspec.size(); j += 16 ) {
+	for ( long j = HEY; j < _winspec.size(); j += HEY ) {
 		_windowFactor += 2. * _winspec[j] * _winspec[j];
 	}
-	//_windowFactor /= len;
 }
 
 // ---------------------------------------------------------------------------
@@ -255,23 +267,28 @@ void
 AssociateBandwidth::ohBaby( double f, double a )
 {
 	double fracBinNum = f / _hzPerSamp;
+	long intBinNumber = round(fracBinNum);
 	long offset = 
-		( ((int)(16. * (fracBinNum - round(fracBinNum))) + 8) % 16 ) - 8;
-	double z = a * _winspec[abs(offset)];
-	distribute( f, z * z, _sinusoidalEnergy  );
-	distribute( f, 1., _weights );
-	_sinSpec[ (f / _hzPerSamp) + 0.5 ] += z;
-	_residue[ (f / _hzPerSamp) + 0.5 ] -= z;
+		- (( ((int)(HEY * (fracBinNum - intBinNumber)) + (HEY / 2)) % HEY ) - (HEY / 2));
 	
-	for ( int i = 1; i * 16 < _winspec.size(); ++i ) {
-		z = a * _winspec[(16 * i) - offset];
-		distribute( f + (i * _hzPerSamp), z * z, _sinusoidalEnergy  );
-		_sinSpec[ (f / _hzPerSamp) + i + 0.5 ] += z;
-		_residue[ (f / _hzPerSamp) + i + 0.5 ] -= z;
-		z = a * _winspec[(16 * i) + offset];
-		distribute( f - (i * _hzPerSamp), z * z, _sinusoidalEnergy  );
-		_sinSpec[ (f / _hzPerSamp) - i + 0.5 ] += z;
-		_residue[ (f / _hzPerSamp) - i + 0.5 ] -= z;
+	double correctAmp = a / _winspec[abs(offset)];
+	double z = correctAmp * _winspec[abs(offset)];
+	distribute( intBinNumber * _hzPerSamp, z * z, _sinusoidalEnergy  );
+	distribute( f, 1., _weights );
+	_sinSpec[ intBinNumber ] += z;
+	_residue[ intBinNumber ] -= z;
+	
+	for ( int i = 1; (HEY * i) + abs(offset) < _winspec.size(); ++i ) {
+		z = correctAmp * _winspec[(HEY * i) + offset];
+		distribute( (intBinNumber + i) * _hzPerSamp, z * z, _sinusoidalEnergy  );
+		_sinSpec[ intBinNumber + i ] += z;
+		_residue[ intBinNumber + i ] -= z;
+		if ( intBinNumber >= i ) {
+			z = correctAmp * _winspec[(HEY * i) - offset];
+			distribute( (intBinNumber - i) * _hzPerSamp, z * z, _sinusoidalEnergy  );
+			_sinSpec[ intBinNumber - i ] += z;
+			_residue[ intBinNumber - i ] -= z;
+		}
 	}
 }
 

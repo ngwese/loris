@@ -29,6 +29,8 @@ Begin_Namespace( Loris )
  */
 inline double bark( const double freq )
 {
+	return freq * 0.001;
+	
 	double tmp = atan( ( 0.001 / 7.5 ) * freq );
 	return  13. * atan( 0.76 * 0.001 * freq ) + 3.5 * ( tmp * tmp );
 }
