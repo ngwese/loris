@@ -481,6 +481,26 @@ void morph( const PartialList * src0, const PartialList * src1,
 	www.cerlsoundgroup.org/Loris/
  */
 
+void resample( PartialList * partials, double interval );
+/*  Resample all Partials in a PartialList using the specified
+	sampling interval, so that the Breakpoints in the Partial 
+	envelopes will all lie on a common temporal grid.
+	The Breakpoint times in resampled Partials will comprise a  
+	contiguous sequence of integer multiples of the sampling interval,
+	beginning with the multiple nearest to the Partial's start time and
+	ending with the multiple nearest to the Partial's end time. Resampling
+	is performed in-place. 
+
+ */
+
+void sift( PartialList * partials );
+/*  Eliminate overlapping Partials having the same label
+    (except zero). If any two partials with same label
+    overlap in time, keep only the longer of the two.
+    Set the label of the shorter duration partial to zero.
+
+ */ 
+
 void synthesize( const PartialList * partials,
 				 SampleVector * samples,  
 				 double srate );
@@ -492,14 +512,6 @@ void synthesize( const PartialList * partials,
 	cleared before synthesis, so newly synthesized samples are
 	added to any previously computed samples in the SampleVector.
  */
-
-void sift( PartialList * partials );
-/*  Eliminate overlapping Partials having the same label
-    (except zero). If any two partials with same label
-    overlap in time, keep only the longer of the two.
-    Set the label of the shorter duration partial to zero.
-
- */ 
 
 /* ---------------------------------------------------------------- */
 /*		utility functions
@@ -528,6 +540,16 @@ void spliceByLabel( PartialList * src, long label, PartialList * dst );
 void scaleAmp( PartialList * partials, BreakpointEnvelope * ampEnv );
 /*	Scale the amplitude of the Partials in a PartialList according 
 	to an envelope representing a time-varying amplitude scale value.
+ */
+				 
+void scaleBandwidth( PartialList * partials, BreakpointEnvelope * bwEnv );
+/*	Scale the bandwidth of the Partials in a PartialList according 
+	to an envelope representing a time-varying bandwidth scale value.
+ */
+				 
+void scaleFrequency( PartialList * partials, BreakpointEnvelope * freqEnv );
+/*	Scale the frequency of the Partials in a PartialList according 
+	to an envelope representing a time-varying frequency scale value.
  */
 				 
 void scaleNoiseRatio( PartialList * partials, BreakpointEnvelope * noiseEnv );

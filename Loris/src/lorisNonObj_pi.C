@@ -67,6 +67,7 @@
 #include <Notifier.h>
 #include <Partial.h>
 #include <PartialUtils.h>
+#include <Resampler.h>
 #include <SdifFile.h>
 #include <Sieve.h>
 #include <SpcFile.h>
@@ -139,6 +140,67 @@ void channelize( PartialList * partials,
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
+}
+
+/* ---------------------------------------------------------------- */
+/*        createFreqReference        
+/*
+/*	Return a newly-constructed BreakpointEnvelope by sampling the 
+	frequency envelope of the longest Partial in a PartialList. 
+	Only Partials whose frequency at the Partial's loudest (highest 
+	amplitude) breakpoint is within the given frequency range are 
+	considered. The envelope will have the specified number of samples.
+	If the specified number of samples is 0, then the
+	longest Partial's frequency envelope is sampled every 30 ms
+	(No fewer than 10 samples are used, so the sampling maybe more
+	dense for very short Partials.) 
+	
+	For very simple sounds, this frequency reference may be a 
+	good first approximation to a reference envelope for
+	channelization (see channelize()).
+	
+	Clients are responsible for disposing of the newly-constructed 
+	BreakpointEnvelope.
+ */
+extern "C"
+BreakpointEnvelope * 
+createFreqReference( PartialList * partials, double minFreq, double maxFreq, long numSamps )
+{
+	try 
+	{
+		ThrowIfNull((PartialList *) partials);
+		
+		//	use auto_ptr to manage memory in case 
+		//	an exception is generated (hard to imagine):
+		std::auto_ptr< BreakpointEnvelope > env_ptr;
+		if ( numSamps != 0 )
+		{
+			env_ptr.reset( new BreakpointEnvelope( 
+								FrequencyReference( partials->begin(), partials->end(), 
+													minFreq, maxFreq, numSamps ).envelope() ) );
+		}
+		else
+		{
+			env_ptr.reset( new BreakpointEnvelope( 
+								FrequencyReference( partials->begin(), partials->end(), 
+													minFreq, maxFreq ).envelope() ) );
+		}
+		
+		return env_ptr.release();
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in createFreqReference(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in createFreqReference(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	return NULL;
 }
 
 /* ---------------------------------------------------------------- */
@@ -348,67 +410,6 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch,
 }
 
 /* ---------------------------------------------------------------- */
-/*        createFreqReference        
-/*
-/*	Return a newly-constructed BreakpointEnvelope by sampling the 
-	frequency envelope of the longest Partial in a PartialList. 
-	Only Partials whose frequency at the Partial's loudest (highest 
-	amplitude) breakpoint is within the given frequency range are 
-	considered. The envelope will have the specified number of samples.
-	If the specified number of samples is 0, then the
-	longest Partial's frequency envelope is sampled every 30 ms
-	(No fewer than 10 samples are used, so the sampling maybe more
-	dense for very short Partials.) 
-	
-	For very simple sounds, this frequency reference may be a 
-	good first approximation to a reference envelope for
-	channelization (see channelize()).
-	
-	Clients are responsible for disposing of the newly-constructed 
-	BreakpointEnvelope.
- */
-extern "C"
-BreakpointEnvelope * 
-createFreqReference( PartialList * partials, double minFreq, double maxFreq, long numSamps )
-{
-	try 
-	{
-		ThrowIfNull((PartialList *) partials);
-		
-		//	use auto_ptr to manage memory in case 
-		//	an exception is generated (hard to imagine):
-		std::auto_ptr< BreakpointEnvelope > env_ptr;
-		if ( numSamps != 0 )
-		{
-			env_ptr.reset( new BreakpointEnvelope( 
-								FrequencyReference( partials->begin(), partials->end(), 
-													minFreq, maxFreq, numSamps ).envelope() ) );
-		}
-		else
-		{
-			env_ptr.reset( new BreakpointEnvelope( 
-								FrequencyReference( partials->begin(), partials->end(), 
-													minFreq, maxFreq ).envelope() ) );
-		}
-		
-		return env_ptr.release();
-	}
-	catch( Exception & ex ) 
-	{
-		std::string s("Loris exception in createFreqReference(): " );
-		s.append( ex.what() );
-		handleException( s.c_str() );
-	}
-	catch( std::exception & ex ) 
-	{
-		std::string s("std C++ exception in createFreqReference(): " );
-		s.append( ex.what() );
-		handleException( s.c_str() );
-	}
-	return NULL;
-}
-
-/* ---------------------------------------------------------------- */
 /*        importAiff        
 /*
 /*	Import audio samples stored in an AIFF file at the given file
@@ -576,6 +577,80 @@ void morph( const PartialList * src0, const PartialList * src1,
 }
 
 /* ---------------------------------------------------------------- */
+/*        resample
+/*
+/*  Resample all Partials in a PartialList using the specified
+	sampling interval, so that the Breakpoints in the Partial 
+	envelopes will all lie on a common temporal grid.
+	The Breakpoint times in resampled Partials will comprise a  
+	contiguous sequence of integer multiples of the sampling interval,
+	beginning with the multiple nearest to the Partial's start time and
+	ending with the multiple nearest to the Partial's end time. Resampling
+	is performed in-place. 
+
+ */
+extern "C"
+void resample( PartialList * partials, double interval )
+{
+	try 
+	{
+		ThrowIfNull((PartialList *) partials);
+		
+        Loris::notifier << "resampling " << partials->size() << " Partials" << Loris::endl;
+
+        Loris::Resampler resampler( interval );
+        resampler.resample( partials->begin(), partials->end() );
+	}
+	catch( Exception & ex )
+    {
+        std::string s("Loris exception in resample(): " );
+        s.append( ex.what() );
+        handleException( s.c_str() );
+    }
+    catch( std::exception & ex )
+    {
+        std::string s("std C++ exception in resample(): " );
+        s.append( ex.what() );
+        handleException( s.c_str() );
+    }
+}
+
+
+/* ---------------------------------------------------------------- */
+/*        sift
+/*  Eliminate overlapping Partials having the same label
+	(except zero). If any two partials with same label
+	overlap in time, keep only the longer of the two.
+	Set the label of the shorter duration partial to zero.
+
+ */
+extern "C"
+void sift( PartialList * partials )
+{
+	try 
+	{
+		ThrowIfNull((PartialList *) partials);
+		
+        Loris::notifier << "sifting " << partials->size() << " Partials" << Loris::endl;
+
+        Loris::Sieve sieve( 0.0001 );
+        sieve.sift( partials->begin(), partials->end() );
+	}
+	catch( Exception & ex )
+    {
+        std::string s("Loris exception in sift(): " );
+        s.append( ex.what() );
+        handleException( s.c_str() );
+    }
+    catch( std::exception & ex )
+    {
+        std::string s("std C++ exception in sift(): " );
+        s.append( ex.what() );
+        handleException( s.c_str() );
+    }
+}
+
+/* ---------------------------------------------------------------- */
 /*        synthesize        
 /*
 /*	Synthesize Partials in a PartialList at the given sample
@@ -643,38 +718,6 @@ void synthesize( const PartialList * partials,
 	}
 }
 
-/* ---------------------------------------------------------------- */
-/*        sift
-/*  Eliminate overlapping Partials having the same label
-	(except zero). If any two partials with same label
-	overlap in time, keep only the longer of the two.
-	Set the label of the shorter duration partial to zero.
 
- */
-extern "C"
-void sift( PartialList * partials )
-{
-	try 
-	{
-		ThrowIfNull((PartialList *) partials);
-		
-        Loris::notifier << "sifting " << partials->size() << " Partials" << Loris::endl;
-
-        Loris::Sieve sieve( 0.0001 );
-        sieve.sift( partials->begin(), partials->end() );
-	}
-	catch( Exception & ex )
-    {
-        std::string s("Loris exception in sift(): " );
-        s.append( ex.what() );
-        handleException( s.c_str() );
-    }
-    catch( std::exception & ex )
-    {
-        std::string s("std C++ exception in sift(): " );
-        s.append( ex.what() );
-        handleException( s.c_str() );
-    }
-}
 
 

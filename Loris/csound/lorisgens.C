@@ -88,7 +88,7 @@ static void import_partials( const std::string & sdiffilname, PARTIALS & part )
 		part.insert( part.begin(), f.partials().begin(), f.partials().end() );
 		
 		//	just for grins, sort the vector:
-		std::sort( part.begin(), part.end(), PartialUtils::label_less() );
+		std::sort( part.begin(), part.end(), PartialUtils::compare_label<>() );
 	}
 	catch(Exception ex)
 	{

@@ -1570,29 +1570,6 @@ static PyObject *_wrap_synthesize(PyObject *self, PyObject *args) {
 }
 
 
-static PyObject *_wrap_sift(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    PartialList *arg1 = (PartialList *) 0 ;
-    PyObject * obj0 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"O:sift",&obj0)) goto fail;
-    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
-    {
-        *EXCEPTION_THROWN = '\0';
-        sift(arg1);
-        
-        if (*EXCEPTION_THROWN)
-        {
-            SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
-        }
-    }
-    Py_INCREF(Py_None); resultobj = Py_None;
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
 static PyObject *_wrap_crop(PyObject *self, PyObject *args) {
     PyObject *resultobj;
     PartialList *arg1 = (PartialList *) 0 ;
@@ -1669,6 +1646,58 @@ static PyObject *_wrap_scaleAmp(PyObject *self, PyObject *args) {
 }
 
 
+static PyObject *_wrap_scaleBandwidth(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    PartialList *arg1 = (PartialList *) 0 ;
+    BreakpointEnvelope *arg2 = (BreakpointEnvelope *) 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:scaleBandwidth",&obj0,&obj1)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    if ((SWIG_ConvertPtr(obj1,(void **) &arg2, SWIGTYPE_p_BreakpointEnvelope,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        *EXCEPTION_THROWN = '\0';
+        scaleBandwidth(arg1,arg2);
+        
+        if (*EXCEPTION_THROWN)
+        {
+            SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_scaleFrequency(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    PartialList *arg1 = (PartialList *) 0 ;
+    BreakpointEnvelope *arg2 = (BreakpointEnvelope *) 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:scaleFrequency",&obj0,&obj1)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    if ((SWIG_ConvertPtr(obj1,(void **) &arg2, SWIGTYPE_p_BreakpointEnvelope,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        *EXCEPTION_THROWN = '\0';
+        scaleFrequency(arg1,arg2);
+        
+        if (*EXCEPTION_THROWN)
+        {
+            SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
 static PyObject *_wrap_scaleNoiseRatio(PyObject *self, PyObject *args) {
     PyObject *resultobj;
     PartialList *arg1 = (PartialList *) 0 ;
@@ -1732,6 +1761,53 @@ static PyObject *_wrap_shiftTime(PyObject *self, PyObject *args) {
     {
         *EXCEPTION_THROWN = '\0';
         shiftTime(arg1,arg2);
+        
+        if (*EXCEPTION_THROWN)
+        {
+            SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_resample(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    PartialList *arg1 = (PartialList *) 0 ;
+    double arg2 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"Od:resample",&obj0,&arg2)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        *EXCEPTION_THROWN = '\0';
+        resample(arg1,arg2);
+        
+        if (*EXCEPTION_THROWN)
+        {
+            SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_sift(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    PartialList *arg1 = (PartialList *) 0 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:sift",&obj0)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        *EXCEPTION_THROWN = '\0';
+        sift(arg1);
         
         if (*EXCEPTION_THROWN)
         {
@@ -6828,13 +6904,16 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"importSpc", _wrap_importSpc, METH_VARARGS },
 	 { (char *)"morph", _wrap_morph, METH_VARARGS },
 	 { (char *)"synthesize", _wrap_synthesize, METH_VARARGS },
-	 { (char *)"sift", _wrap_sift, METH_VARARGS },
 	 { (char *)"crop", _wrap_crop, METH_VARARGS },
 	 { (char *)"extractLabeled", _wrap_extractLabeled, METH_VARARGS },
 	 { (char *)"scaleAmp", _wrap_scaleAmp, METH_VARARGS },
+	 { (char *)"scaleBandwidth", _wrap_scaleBandwidth, METH_VARARGS },
+	 { (char *)"scaleFrequency", _wrap_scaleFrequency, METH_VARARGS },
 	 { (char *)"scaleNoiseRatio", _wrap_scaleNoiseRatio, METH_VARARGS },
 	 { (char *)"shiftPitch", _wrap_shiftPitch, METH_VARARGS },
 	 { (char *)"shiftTime", _wrap_shiftTime, METH_VARARGS },
+	 { (char *)"resample", _wrap_resample, METH_VARARGS },
+	 { (char *)"sift", _wrap_sift, METH_VARARGS },
 	 { (char *)"version", _wrap_version, METH_VARARGS },
 	 { (char *)"new_AiffFile", _wrap_new_AiffFile, METH_VARARGS },
 	 { (char *)"delete_AiffFile", _wrap_delete_AiffFile, METH_VARARGS },

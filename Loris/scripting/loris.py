@@ -49,19 +49,25 @@ morph = _loris.morph
 
 synthesize = _loris.synthesize
 
-sift = _loris.sift
-
 crop = _loris.crop
 
 extractLabeled = _loris.extractLabeled
 
 scaleAmp = _loris.scaleAmp
 
+scaleBandwidth = _loris.scaleBandwidth
+
+scaleFrequency = _loris.scaleFrequency
+
 scaleNoiseRatio = _loris.scaleNoiseRatio
 
 shiftPitch = _loris.shiftPitch
 
 shiftTime = _loris.shiftTime
+
+resample = _loris.resample
+
+sift = _loris.sift
 
 version = _loris.version
 

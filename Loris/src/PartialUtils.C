@@ -93,6 +93,38 @@ PartialUtils::scale_amp::operator()( Partial & p ) const
 }
 
 // ---------------------------------------------------------------------------
+//	scale_bandwidth::operator()
+// ---------------------------------------------------------------------------
+//	Scale the bandwidth of the specified Partial according to
+//	an envelope representing a time-varying bandwidth scale value.
+//
+void 
+PartialUtils::scale_bandwidth::operator()( Partial & p ) const
+{
+	for ( Partial::iterator pos = p.begin(); pos != p.end(); ++pos ) 
+	{		
+		pos.breakpoint().setBandwidth( pos.breakpoint().bandwidth() * 
+									   env.valueAt(pos.time()) );
+	}	
+}
+
+// ---------------------------------------------------------------------------
+//	scale_frequency::operator()
+// ---------------------------------------------------------------------------
+//	Scale the frequency of the specified Partial according to
+//	an envelope representing a time-varying frequency scale value.
+//
+void 
+PartialUtils::scale_frequency::operator()( Partial & p ) const
+{
+	for ( Partial::iterator pos = p.begin(); pos != p.end(); ++pos ) 
+	{		
+		pos.breakpoint().setFrequency( pos.breakpoint().frequency() * 
+									   env.valueAt(pos.time()) );
+	}	
+}
+
+// ---------------------------------------------------------------------------
 //	scale_noise_ratio::operator()
 // ---------------------------------------------------------------------------
 //	Scale the relative noise content of the specified Partial according 

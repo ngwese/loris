@@ -66,7 +66,7 @@ class PartialUtils
 {
 public:
 #endif
-//	-- free functions --
+//	-- Partial mutating functors --
 
 	/* 	Trim a Partial by removing Breakpoints outside a specified time span.
 		Insert a Breakpoint at the boundary when cropping occurs.
@@ -83,18 +83,6 @@ public:
 		void operator()( Partial & p ) const;	// see PartialUtils.C
 	};
 
-	/*	Apply crop to all partials in a half-open range.
-	 */
-	template <typename Iterator>
-	#if defined( NO_NESTED_NAMESPACE )
-	static
-	#endif
-	inline 
-	void cropAll( Iterator begin, Iterator end, double t1, double t2 )
-	{
-		std::for_each( begin, end, crop( t1, t2 ) );	
-	}
-
 	/*	Scale the amplitude of the specified Partial according to
 		an envelope representing a time-varying amplitude scale value.
 	 */
@@ -106,17 +94,27 @@ public:
 		void operator()( Partial & p ) const;	// see PartialUtils.C
 	};
 
-	/*	Apply scale_amp to all partials in a half-open range.
+	/*	Scale the bandwidth of the specified Partial according to
+		an envelope representing a time-varying bandwidth scale value.
 	 */
-	template <typename Iterator>
-	#if defined( NO_NESTED_NAMESPACE )
-	static
-	#endif
-	inline 
-	void scaleAmp( Iterator begin, Iterator end, Envelope & e )
+	struct scale_bandwidth : public std::unary_function< Partial, void >
 	{
-		std::for_each( begin, end, scale_amp( e ) );	
-	}
+		Envelope & env;
+		scale_bandwidth( Envelope & e ) : env(e) {}
+		
+		void operator()( Partial & p ) const;	// see PartialUtils.C
+	};
+
+	/*	Scale the frequency of the specified Partial according to
+		an envelope representing a time-varying frequency scale value.
+	 */
+	struct scale_frequency : public std::unary_function< Partial, void >
+	{
+		Envelope & env;
+		scale_frequency( Envelope & e ) : env(e) {}
+		
+		void operator()( Partial & p ) const;	// see PartialUtils.C
+	};
 
 	/*	Scale the relative noise content of the specified Partial according 
 		to an envelope representing a (time-varying) noise energy 
@@ -130,18 +128,6 @@ public:
 		void operator()( Partial & p ) const;	// see PartialUtils.C
 	};
 
-	/*	Apply scale_noise_ratio to all partials in a half-open range.
-	 */
-	template <typename Iterator>
-	#if defined( NO_NESTED_NAMESPACE )
-	static
-	#endif
-	inline 
-	void scaleNoiseRatio( Iterator begin, Iterator end, Envelope & e )
-	{
-		std::for_each( begin, end, scale_noise_ratio( e ) );	
-	}
-
 	/*	Shift the pitch of the specified Partial according to
 		the given pitch envelope. The pitch envelope is assumed to have 
 		units of cents (1/100 of a halfstep).
@@ -152,20 +138,7 @@ public:
 		shift_pitch( Envelope & e ) : env(e) {}
 		
 		void operator()( Partial & p ) const;	// see PartialUtils.C
-	};
-
-	/*	Apply shift_pitch to all partials in a half-open range.
-	 */
-	template <typename Iterator>
-	#if defined( NO_NESTED_NAMESPACE )
-	static
-	#endif
-	inline 
-	void shiftPitch( Iterator begin, Iterator end, Envelope & e )
-	{
-		std::for_each( begin, end, shift_pitch( e ) );	
-	}
-	
+	};	
 	
 	/*	Shift the time of all the Breakpoints in a Partial by a 
 		constant amount.
@@ -178,19 +151,6 @@ public:
 		void operator()( Partial & p ) const;	// see PartialUtils.C
 	};
 
-	/*	Apply shift_time to all partials in a half-open range.
-	 */
-	template <typename Iterator>
-	#if defined( NO_NESTED_NAMESPACE )
-	static
-	#endif
-	inline 
-	void shiftTime( Iterator begin, Iterator end, double offset )
-	{
-		std::for_each( begin, end, shift_time( offset ) );	
-	}
-	
-	
 	/*	Return the time (in seconds) spanned by a specified half-open
 		(STL-style) range of Partials as a std::pair composed of the earliest
 		Partial start time and latest Partial end time in the range.
@@ -217,6 +177,7 @@ public:
 		}
 		return std::make_pair(tmin, tmax);
 	}
+	
 //	-- predicates --
 	/*	Predicate functor returning true if the label of its Partial argument is
 		equal to the specified 32-bit label, and false otherwise.
@@ -243,58 +204,58 @@ public:
 		bool operator()( const Partial & p ) const 
 			{ return p.label() > label; }
 	};
-	
-	/*	Template adapter for using PartialUtil predicates with 
-		collections of pointers to Partials.
-	 */
-	template<typename Predicate>
-	struct deref_predicate :
-		public std::unary_function< const Partial *, bool >
-	{
-		Predicate pred;
-		deref_predicate( Predicate p = Predicate() ) : pred(p) {}
 		
-		bool operator()( const Partial * p ) const 
-			{ return pred(*p); }
-	};
-	
 //	-- comparitors --
 	/*	Comparitor (binary) functor returning true if its first Partial
 		argument has a label whose 32-bit integer representation is less than
 		that of the second Partial argument's label, and false otherwise.
 	 */
-	struct label_less : 
+	template< class Comparitor = std::less< Partial::label_type > >
+	struct compare_label : 
 		public std::binary_function< const Partial, const Partial, bool >
 	{
+		Comparitor comp;
 		bool operator()( const Partial & lhs, const Partial & rhs ) const 
-			{ return lhs.label() < rhs.label(); }
+			{ return comp( lhs.label(), rhs.label() ); }
 	};
 	
+/*
+	Not sure yet whether I want to add these.
+		
+	template< class Comparitor >
+	compare_label< Comparitor > 
+	label_comparitor( Comparitor c = std::less< Partial::label_type >() )
+		{ return compare_label< Comparitor >(); }
+		
+	compare_label< > 
+	label_comparitor( void )
+		{ return compare_label< >(); }
+*/
 	/*	Comparitor (binary) functor returning true if its first Partial
 		argument has duration greater than that of the second Partial
 		argument, and false otherwise.
 	 */
-	struct duration_greater : 
+	template< class Comparitor = std::less< double > >
+	struct compare_duration : 
 		public std::binary_function< const Partial, const Partial, bool >
 	{
-		bool operator()( const Partial & lhs, const Partial & rhs ) const 
-			{ return lhs.duration() > rhs.duration(); }
-	};
-	
-	/*	Template adapter for using PartialUtil comparitors with 
-		collections of pointers to Partials.
-	 */
-	template<typename Comparitor>
-	struct deref_comparitor :
-		public std::binary_function< const Partial *, const Partial *, bool >
-	{
 		Comparitor comp;
-		deref_comparitor( Comparitor c = Comparitor() ) : comp(c) {}
-		
-		bool operator()( const Partial * lhs, const Partial * rhs ) const 
-			{ return comp(*lhs, *rhs); }
+		bool operator()( const Partial & lhs, const Partial & rhs ) const 
+			{ return comp( lhs.duration(), rhs.duration() ); }
 	};
-
+/*
+	Not sure yet whether I want to add these.
+		
+	template< class Comparitor >
+	compare_duration< Comparitor > 
+	duration_comparitor( Comparitor c = std::less< double >() )
+		{ return compare_duration< Comparitor >(); }
+		
+	compare_duration< > 
+	duration_comparitor( void )
+		{ return compare_duration< >(); }
+	
+*/	
 #if !defined( NO_NESTED_NAMESPACE )
 }	//	end of namespace PartialUtils
 #else

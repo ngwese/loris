@@ -1558,40 +1558,6 @@ XS(_wrap_synthesize) {
 }
 
 
-XS(_wrap_sift) {
-    char _swigmsg[SWIG_MAX_ERRMSG] = "";
-    const char *_swigerr = _swigmsg;
-    {
-        PartialList *arg1 = (PartialList *) 0 ;
-        int argvi = 0;
-        dXSARGS;
-        
-        if ((items < 1) || (items > 1)) {
-            SWIG_croak("Usage: sift(partials);");
-        }
-        {
-            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialList,0) < 0) {
-                SWIG_croak("Type error in argument 1 of sift. Expected _p_PartialList");
-            }
-        }
-        {
-            *EXCEPTION_THROWN = '\0';
-            sift(arg1);
-            
-            if (*EXCEPTION_THROWN)
-            {
-                SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
-            }
-        }
-        
-        XSRETURN(argvi);
-        fail:
-        (void) _swigerr;
-    }
-    croak(_swigerr);
-}
-
-
 XS(_wrap_crop) {
     char _swigmsg[SWIG_MAX_ERRMSG] = "";
     const char *_swigerr = _swigmsg;
@@ -1710,6 +1676,86 @@ XS(_wrap_scaleAmp) {
 }
 
 
+XS(_wrap_scaleBandwidth) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        PartialList *arg1 = (PartialList *) 0 ;
+        BreakpointEnvelope *arg2 = (BreakpointEnvelope *) 0 ;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 2) || (items > 2)) {
+            SWIG_croak("Usage: scaleBandwidth(partials,bwEnv);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialList,0) < 0) {
+                SWIG_croak("Type error in argument 1 of scaleBandwidth. Expected _p_PartialList");
+            }
+        }
+        {
+            if (SWIG_ConvertPtr(ST(1), (void **) &arg2, SWIGTYPE_p_BreakpointEnvelope,0) < 0) {
+                SWIG_croak("Type error in argument 2 of scaleBandwidth. Expected _p_BreakpointEnvelope");
+            }
+        }
+        {
+            *EXCEPTION_THROWN = '\0';
+            scaleBandwidth(arg1,arg2);
+            
+            if (*EXCEPTION_THROWN)
+            {
+                SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+            }
+        }
+        
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_scaleFrequency) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        PartialList *arg1 = (PartialList *) 0 ;
+        BreakpointEnvelope *arg2 = (BreakpointEnvelope *) 0 ;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 2) || (items > 2)) {
+            SWIG_croak("Usage: scaleFrequency(partials,freqEnv);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialList,0) < 0) {
+                SWIG_croak("Type error in argument 1 of scaleFrequency. Expected _p_PartialList");
+            }
+        }
+        {
+            if (SWIG_ConvertPtr(ST(1), (void **) &arg2, SWIGTYPE_p_BreakpointEnvelope,0) < 0) {
+                SWIG_croak("Type error in argument 2 of scaleFrequency. Expected _p_BreakpointEnvelope");
+            }
+        }
+        {
+            *EXCEPTION_THROWN = '\0';
+            scaleFrequency(arg1,arg2);
+            
+            if (*EXCEPTION_THROWN)
+            {
+                SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+            }
+        }
+        
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
 XS(_wrap_scaleNoiseRatio) {
     char _swigmsg[SWIG_MAX_ERRMSG] = "";
     const char *_swigerr = _swigmsg;
@@ -1812,6 +1858,77 @@ XS(_wrap_shiftTime) {
         {
             *EXCEPTION_THROWN = '\0';
             shiftTime(arg1,arg2);
+            
+            if (*EXCEPTION_THROWN)
+            {
+                SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+            }
+        }
+        
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_resample) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        PartialList *arg1 = (PartialList *) 0 ;
+        double arg2 ;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 2) || (items > 2)) {
+            SWIG_croak("Usage: resample(partials,interval);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialList,0) < 0) {
+                SWIG_croak("Type error in argument 1 of resample. Expected _p_PartialList");
+            }
+        }
+        arg2 = (double) SvNV(ST(1));
+        
+        {
+            *EXCEPTION_THROWN = '\0';
+            resample(arg1,arg2);
+            
+            if (*EXCEPTION_THROWN)
+            {
+                SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+            }
+        }
+        
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_sift) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        PartialList *arg1 = (PartialList *) 0 ;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 1) || (items > 1)) {
+            SWIG_croak("Usage: sift(partials);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialList,0) < 0) {
+                SWIG_croak("Type error in argument 1 of sift. Expected _p_PartialList");
+            }
+        }
+        {
+            *EXCEPTION_THROWN = '\0';
+            sift(arg1);
             
             if (*EXCEPTION_THROWN)
             {
@@ -8284,13 +8401,16 @@ static swig_command_info swig_commands[] = {
 {"perLoris::importSpc", _wrap_importSpc},
 {"perLoris::morph", _wrap_morph},
 {"perLoris::synthesize", _wrap_synthesize},
-{"perLoris::sift", _wrap_sift},
 {"perLoris::crop", _wrap_crop},
 {"perLoris::extractLabeled", _wrap_extractLabeled},
 {"perLoris::scaleAmp", _wrap_scaleAmp},
+{"perLoris::scaleBandwidth", _wrap_scaleBandwidth},
+{"perLoris::scaleFrequency", _wrap_scaleFrequency},
 {"perLoris::scaleNoiseRatio", _wrap_scaleNoiseRatio},
 {"perLoris::shiftPitch", _wrap_shiftPitch},
 {"perLoris::shiftTime", _wrap_shiftTime},
+{"perLoris::resample", _wrap_resample},
+{"perLoris::sift", _wrap_sift},
 {"perLoris::version", _wrap_version},
 {"perLoris::new_AiffFile", _wrap_new_AiffFile},
 {"perLoris::delete_AiffFile", _wrap_delete_AiffFile},

@@ -105,7 +105,7 @@ Distiller::distill( PartialList & partials )
 
 	//	sort the PartialList by label:
 	debugger << "Distiller sorting Partials by label..." << endl;
-	partials.sort( PartialUtils::label_less() );
+	partials.sort( PartialUtils::compare_label< std::less< Partial::label_type > >() );
 
 	// 	iterate over labels and distill each one:
 	PartialList::iterator lowerbound = partials.begin();
@@ -343,7 +343,7 @@ static Partial distillOne( PartialList & partials, int label,
 	
 	//	sort Partials by duration, longer
 	//	Partials will be prefered:
-	partials.sort( PartialUtils::duration_greater() );
+	partials.sort( PartialUtils::compare_duration< std::greater< double > >() );
 	
 	// keep the longest Partial:
 	PartialList::iterator it = partials.begin();

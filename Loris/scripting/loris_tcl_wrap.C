@@ -1775,28 +1775,6 @@ _wrap_synthesize(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *C
 
 
 static int
-_wrap_sift(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
-    PartialList *arg1 = (PartialList *) 0 ;
-    
-    if (SWIG_GetArgs(interp, objc, objv,"o:sift partials ",0) == TCL_ERROR) SWIG_fail;
-    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
-    {
-        *EXCEPTION_THROWN = '\0';
-        sift(arg1);
-        
-        if (*EXCEPTION_THROWN)
-        {
-            SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
-        }
-    }
-    
-    return TCL_OK;
-    fail:
-    return TCL_ERROR;
-}
-
-
-static int
 _wrap_crop(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
     PartialList *arg1 = (PartialList *) 0 ;
     double arg2 ;
@@ -1869,6 +1847,54 @@ _wrap_scaleAmp(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CON
 
 
 static int
+_wrap_scaleBandwidth(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    PartialList *arg1 = (PartialList *) 0 ;
+    BreakpointEnvelope *arg2 = (BreakpointEnvelope *) 0 ;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"oo:scaleBandwidth partials bwEnv ",0,0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[2], (void **) &arg2, SWIGTYPE_p_BreakpointEnvelope,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        *EXCEPTION_THROWN = '\0';
+        scaleBandwidth(arg1,arg2);
+        
+        if (*EXCEPTION_THROWN)
+        {
+            SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+        }
+    }
+    
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_scaleFrequency(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    PartialList *arg1 = (PartialList *) 0 ;
+    BreakpointEnvelope *arg2 = (BreakpointEnvelope *) 0 ;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"oo:scaleFrequency partials freqEnv ",0,0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[2], (void **) &arg2, SWIGTYPE_p_BreakpointEnvelope,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        *EXCEPTION_THROWN = '\0';
+        scaleFrequency(arg1,arg2);
+        
+        if (*EXCEPTION_THROWN)
+        {
+            SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+        }
+    }
+    
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
 _wrap_scaleNoiseRatio(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
     PartialList *arg1 = (PartialList *) 0 ;
     BreakpointEnvelope *arg2 = (BreakpointEnvelope *) 0 ;
@@ -1926,6 +1952,51 @@ _wrap_shiftTime(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CO
     {
         *EXCEPTION_THROWN = '\0';
         shiftTime(arg1,arg2);
+        
+        if (*EXCEPTION_THROWN)
+        {
+            SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+        }
+    }
+    
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_resample(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    PartialList *arg1 = (PartialList *) 0 ;
+    double arg2 ;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"od:resample partials interval ",0,&arg2) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        *EXCEPTION_THROWN = '\0';
+        resample(arg1,arg2);
+        
+        if (*EXCEPTION_THROWN)
+        {
+            SWIG_exception( SWIG_UnknownError, EXCEPTION_THROWN );
+        }
+    }
+    
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_sift(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    PartialList *arg1 = (PartialList *) 0 ;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"o:sift partials ",0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        *EXCEPTION_THROWN = '\0';
+        sift(arg1);
         
         if (*EXCEPTION_THROWN)
         {
@@ -6883,13 +6954,16 @@ static swig_command_info swig_commands[] = {
     { SWIG_prefix "importSpc", (swig_wrapper_func) _wrap_importSpc, NULL},
     { SWIG_prefix "morph", (swig_wrapper_func) _wrap_morph, NULL},
     { SWIG_prefix "synthesize", (swig_wrapper_func) _wrap_synthesize, NULL},
-    { SWIG_prefix "sift", (swig_wrapper_func) _wrap_sift, NULL},
     { SWIG_prefix "crop", (swig_wrapper_func) _wrap_crop, NULL},
     { SWIG_prefix "extractLabeled", (swig_wrapper_func) _wrap_extractLabeled, NULL},
     { SWIG_prefix "scaleAmp", (swig_wrapper_func) _wrap_scaleAmp, NULL},
+    { SWIG_prefix "scaleBandwidth", (swig_wrapper_func) _wrap_scaleBandwidth, NULL},
+    { SWIG_prefix "scaleFrequency", (swig_wrapper_func) _wrap_scaleFrequency, NULL},
     { SWIG_prefix "scaleNoiseRatio", (swig_wrapper_func) _wrap_scaleNoiseRatio, NULL},
     { SWIG_prefix "shiftPitch", (swig_wrapper_func) _wrap_shiftPitch, NULL},
     { SWIG_prefix "shiftTime", (swig_wrapper_func) _wrap_shiftTime, NULL},
+    { SWIG_prefix "resample", (swig_wrapper_func) _wrap_resample, NULL},
+    { SWIG_prefix "sift", (swig_wrapper_func) _wrap_sift, NULL},
     { SWIG_prefix "version", (swig_wrapper_func) _wrap_version, NULL},
     { SWIG_prefix "new_AiffFile", (swig_wrapper_func) _wrap_new_AiffFile, NULL},
     { SWIG_prefix "delete_AiffFile", (swig_wrapper_func) _wrap_delete_AiffFile, NULL},

@@ -480,14 +480,6 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch,
 	(CD quality) is used.
  */
 
-void sift( PartialList * partials );
-/*  Eliminate overlapping Partials having the same label
-	(except zero). If any two partials with same label
-   	overlap in time, keep only the longer of the two.
-   	Set the label of the shorter duration partial to zero.
- */
-
-
 void crop( PartialList * partials, double t1, double t2 );
 /*	Trim Partials by removing Breakpoints outside a specified time span.
 	Insert a Breakpoint at the boundary when cropping occurs.
@@ -518,6 +510,16 @@ void scaleAmp( PartialList * partials, BreakpointEnvelope * ampEnv );
 	to an envelope representing a time-varying amplitude scale value.
  */
 				 
+void scaleBandwidth( PartialList * partials, BreakpointEnvelope * bwEnv );
+/*	Scale the bandwidth of the Partials in a PartialList according 
+	to an envelope representing a time-varying bandwidth scale value.
+ */
+				 
+void scaleFrequency( PartialList * partials, BreakpointEnvelope * freqEnv );
+/*	Scale the frequency of the Partials in a PartialList according 
+	to an envelope representing a time-varying frequency scale value.
+ */
+				 
 void scaleNoiseRatio( PartialList * partials, BreakpointEnvelope * noiseEnv );
 /*	Scale the relative noise content of the Partials in a PartialList 
 	according to an envelope representing a (time-varying) noise energy 
@@ -533,6 +535,25 @@ void shiftPitch( PartialList * partials, BreakpointEnvelope * pitchEnv );
 void shiftTime( PartialList * partials, double offset );
 /*	Shift the time of all the Breakpoints in a Partial by a 
 	constant amount.
+ */
+
+void resample( PartialList * partials, double interval );
+/*  Resample all Partials in a PartialList using the specified
+	sampling interval, so that the Breakpoints in the Partial 
+	envelopes will all lie on a common temporal grid.
+	The Breakpoint times in resampled Partials will comprise a  
+	contiguous sequence of integer multiples of the sampling interval,
+	beginning with the multiple nearest to the Partial's start time and
+	ending with the multiple nearest to the Partial's end time. Resampling
+	is performed in-place. 
+
+ */
+
+void sift( PartialList * partials );
+/*  Eliminate overlapping Partials having the same label
+	(except zero). If any two partials with same label
+   	overlap in time, keep only the longer of the two.
+   	Set the label of the shorter duration partial to zero.
  */
 
 %inline %{

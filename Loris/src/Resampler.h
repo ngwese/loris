@@ -74,7 +74,7 @@ public:
 		The Breakpoint times in the resampled Partial will comprise a  
 		contiguous sequence of integer multiples of the sampling interval,
 		beginning with the multiple nearest to the Partial's start time and
-		ending withthe multiple nearest to the Partial's end time. Resampling
+		ending with the multiple nearest to the Partial's end time. Resampling
 		is performed in-place. 
 	 */
 	 
@@ -90,7 +90,7 @@ public:
 		The Breakpoint times in the resampled Partial will comprise a  
 		contiguous sequence of integer multiples of the sampling interval,
 		beginning with the multiple nearest to the Partial's start time and
-		ending withthe multiple nearest to the Partial's end time. Resampling
+		ending with the multiple nearest to the Partial's end time. Resampling
 		is performed in-place. 
 	 */
 

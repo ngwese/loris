@@ -127,7 +127,7 @@ void crop( PartialList * partials, double t1, double t2 )
 
 		notifier << "cropping " << partials->size() << " Partials" << endl;
 
-		PartialUtils::cropAll( partials->begin(), partials->end(), t1, t2 );
+		std::for_each( partials->begin(), partials->end(), PartialUtils::crop( t1, t2 ) );	
 	}
 	catch( Exception & ex ) 
 	{
@@ -197,7 +197,7 @@ void scaleAmp( PartialList * partials, BreakpointEnvelope * ampEnv )
 
 		notifier << "scaling amplitude of " << partials->size() << " Partials" << endl;
 
-		PartialUtils::scaleAmp( partials->begin(), partials->end(), *ampEnv );
+		std::for_each( partials->begin(), partials->end(), PartialUtils::scale_amp( *ampEnv ) );
 	}
 	catch( Exception & ex ) 
 	{
@@ -208,6 +208,70 @@ void scaleAmp( PartialList * partials, BreakpointEnvelope * ampEnv )
 	catch( std::exception & ex ) 
 	{
 		std::string s("std C++ exception in scaleAmp(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+
+/* ---------------------------------------------------------------- */
+/*        scaleBandwidth        
+/*
+/*	Scale the bandwidth of the Partials in a PartialList according 
+	to an envelope representing a time-varying bandwidth scale value.
+ */
+extern "C"
+void scaleBandwidth( PartialList * partials, BreakpointEnvelope * bwEnv )
+{
+	try
+	{
+		ThrowIfNull((PartialList *) partials);
+		ThrowIfNull((BreakpointEnvelope *) bwEnv);
+
+		notifier << "scaling bandwidth of " << partials->size() << " Partials" << endl;
+
+		std::for_each( partials->begin(), partials->end(), PartialUtils::scale_bandwidth( *bwEnv ) );
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in scaleBandwidth(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in scaleBandwidth(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+
+/* ---------------------------------------------------------------- */
+/*        scaleFrequency        
+/*
+/*	Scale the frequency of the Partials in a PartialList according 
+	to an envelope representing a time-varying frequency scale value.
+ */
+extern "C"
+void scaleFrequency( PartialList * partials, BreakpointEnvelope * freqEnv )
+{
+	try
+	{
+		ThrowIfNull((PartialList *) partials);
+		ThrowIfNull((BreakpointEnvelope *) freqEnv);
+
+		notifier << "scaling frequency of " << partials->size() << " Partials" << endl;
+
+		std::for_each( partials->begin(), partials->end(), PartialUtils::scale_frequency( *freqEnv ) );
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in scaleFrequency(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in scaleFrequency(): " );
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
@@ -230,7 +294,7 @@ void scaleNoiseRatio( PartialList * partials, BreakpointEnvelope * noiseEnv )
 
 		notifier << "scaling noise ratio of " << partials->size() << " Partials" << endl;
 
-		PartialUtils::scaleNoiseRatio( partials->begin(), partials->end(), *noiseEnv );
+		std::for_each( partials->begin(), partials->end(), PartialUtils::scale_noise_ratio( *noiseEnv ) );
 	}
 	catch( Exception & ex ) 
 	{
@@ -263,7 +327,7 @@ void shiftPitch( PartialList * partials, BreakpointEnvelope * pitchEnv )
 
 		notifier << "shifting pitch of " << partials->size() << " Partials" << endl;
 		
-		PartialUtils::shiftPitch( partials->begin(), partials->end(), *pitchEnv );
+		std::for_each( partials->begin(), partials->end(), PartialUtils::shift_pitch( *pitchEnv ) );
 	}
 	catch( Exception & ex ) 
 	{
@@ -294,7 +358,7 @@ void shiftTime( PartialList * partials, double offset )
 
 		notifier << "shifting time of " << partials->size() << " Partials" << endl;
 		
-		PartialUtils::shiftTime( partials->begin(), partials->end(), offset );
+		std::for_each( partials->begin(), partials->end(), PartialUtils::shift_time( offset ) );
 	}
 	catch( Exception & ex ) 
 	{
