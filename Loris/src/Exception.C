@@ -31,8 +31,8 @@ Begin_Namespace( Loris )
 //	where defaults to empty.
 //
 Exception::Exception( const string & str, const string & where ) :
-	_sbuf( str ),
-	ostream( & _sbuf )
+	_sbuf( str )
+	//ostream( & _sbuf )
 {
 	_sbuf.append( where );
 	_sbuf.append(" ");
@@ -57,6 +57,17 @@ const char *
 Exception::what( void ) const
 {
 	return str().c_str();
+}
+
+// ---------------------------------------------------------------------------
+//	append 
+// ---------------------------------------------------------------------------
+//
+Exception & 
+Exception::append( const string & str )
+{
+	_sbuf.append(str);
+	return *this;
 }
 
 // ---------------------------------------------------------------------------

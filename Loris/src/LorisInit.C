@@ -70,7 +70,7 @@ Init_::initLib( void ) throw()
 		initLowMem(16000);
 	}
 	catch( Exception & ex ) {
-		ex << "Loris library initialization failed. ";
+		ex.append( "Loris library initialization failed." );
 		fatalError( ex.str() );
 	}
 	catch( ... ) {

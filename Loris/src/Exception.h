@@ -11,8 +11,6 @@
 
 #include "LorisLib.h"
 #include "StringBuffer.h"
-
-//	use standard library strings and streams
 #include <string>
 
 //  (need the ostream macro for non-compliant libraries)
@@ -34,21 +32,21 @@ Begin_Namespace( Loris )
 //	Inherits streaming capability from ostream, uses its own string
 //	buffer (defined below) as a buffer. 
 //
-class Exception : public STDostream
+class Exception
 {
 //	-- public interface --
 public:
 //	construction:
 	Exception( const std::string & str, const std::string & where = "" );
 
-//	virtual destructor so it Exception can be subclassed,
-//	let the compiler generate it, ostream (parent) already 
-//	has one:
-	//virtual ~Exception( void ) {}
+//	virtual destructor so it Exception can be subclassed:
+	virtual ~Exception( void ) {}
 	
 //	access:
 	const std::string & str( void ) const;
 	const char * what( void ) const;
+	
+	Exception & append( const std::string & str );
 	
 #if defined(__sgi) && ! defined(__GNUC__)
 //	copying:
@@ -56,7 +54,7 @@ public:
 //	or twice when caught by value)
 //	This should be generated automatically by the compiler.
 protected:
-	Exception( const Exception & other ) : _sbuf( other._sbuf ), ostream( & _sbuf ) {}
+	Exception( const Exception & other ) : _sbuf( other._sbuf ) {}
 #endif // lame compiler
 	
 //	-- instance variable - the string buffer --

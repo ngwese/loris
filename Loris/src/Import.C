@@ -94,7 +94,7 @@ Import::importPartials( void )
 		endImport();
 	}
 	catch( ImportException & ex ) {
-		ex << "Import failed.";
+		ex.append( "Import failed." );
 		throw;
 	}
 }

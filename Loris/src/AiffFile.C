@@ -82,7 +82,7 @@ AiffFile::read( BinaryFile & file )
 		readSampleData( file );
 	}
 	catch ( Exception & ex ) {
-		ex << "Failed to read AIFF file.";
+		ex.append( "Failed to read AIFF file." );
 		throw;
 	}
 }
@@ -108,7 +108,7 @@ AiffFile::write( BinaryFile & file )
 		writeSampleData( file );
 	}
 	catch ( Exception & ex ) {
-		ex << "Failed to write AIFF file.";
+		ex.append( "Failed to write AIFF file." );
 		throw;
 	}
 }
@@ -165,7 +165,7 @@ AiffFile::readCommon( BinaryFile & file )
 		file.read( ck.srate );
 	}
 	catch( FileIOException & ex ) {
-		ex << "Failed to read badly-formatted AIFF file (bad Common chunk).";
+		ex.append( "Failed to read badly-formatted AIFF file (bad Common chunk)." );
 		throw;
 	}
 						
@@ -174,7 +174,7 @@ AiffFile::readCommon( BinaryFile & file )
 		_samples.resize( ck.sampleFrames * ck.channels, 0. );
 	}
 	catch( LowMemException & ex ) {
-		ex << "Couldn't allocate buffer for AIFF samples.";
+		ex.append( "Couldn't allocate buffer for AIFF samples." );
 		throw;
 	}
 	_nChannels = ck.channels;
@@ -209,7 +209,7 @@ AiffFile::readContainer( BinaryFile & file )
 		file.read( ck.formType );
 	}
 	catch( FileIOException & ex ) {
-		ex << "Failed to read badly-formatted AIFF file (bad Container chunk).";
+		ex.append( "Failed to read badly-formatted AIFF file (bad Container chunk)." );
 		throw;
 	}
 
@@ -262,7 +262,7 @@ AiffFile::readSampleData( BinaryFile & file )
 		readSamples( file );
 	}
 	catch( FileIOException & ex ) {
-		ex << "Failed to read badly-formatted AIFF file (bad Sound Data chunk).";
+		ex.append( "Failed to read badly-formatted AIFF file (bad Sound Data chunk)." );
 		throw;
 	}
 }
@@ -356,7 +356,7 @@ AiffFile::writeCommon( BinaryFile & file )
 		file.write( ck.srate );
 	}
 	catch( FileIOException & ex ) {
-		ex << "Failed to write AIFF file Common chunk.";
+		ex.append( "Failed to write AIFF file Common chunk." );
 		throw;
 	}
 }
@@ -385,7 +385,7 @@ AiffFile::writeContainer( BinaryFile & file )
 		file.write( ck.formType );
 	}
 	catch( FileIOException & ex ) {
-		ex << "Failed to write AIFF file Container chunk.";
+		ex.append( "Failed to write AIFF file Container chunk." );
 		throw;
 	}
 }	
@@ -419,7 +419,7 @@ AiffFile::writeSampleData( BinaryFile & file )
 		writeSamples( file );
 	}
 	catch( FileIOException & ex ) {
-		ex << "Failed to write AIFF file Container chunk.";
+		ex.append( "Failed to write AIFF file Container chunk." );
 		throw;
 	}
 }

@@ -310,7 +310,7 @@ ImportLemur5::readTrackHeader( TrackOnDisk & t )
 		_file.read( t.label );
 	}
 	catch( FileIOException & ex ) {
-		ex << "Failed to read track data in Lemur 5 import).";
+		ex.append( "Failed to read track data in Lemur 5 import." );
 		throw;
 	}
 }
@@ -331,7 +331,7 @@ ImportLemur5::readPeakData( PeakOnDisk & p )
 		_file.read( p.ttn );
 	}
 	catch( FileIOException & ex ) {
-		ex << "Failed to read peak data in Lemur 5 import).";
+		ex.append( "Failed to read peak data in Lemur 5 import." );
 		throw;
 	}
 }

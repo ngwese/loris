@@ -68,7 +68,7 @@ BinaryFile::BinaryFile( const string & path ) :
 				create( path );
 			}
 			catch ( FileIOException & ex ) { 
-				ex << "Couldn't find a way to open " << path;
+				ex.append( "Couldn't find a way to open " ).append( path );
 				throw;
 			}
 		}

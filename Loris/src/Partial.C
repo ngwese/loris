@@ -253,7 +253,7 @@ Partial::remove( double start, double end )
 			scoot( afterEnd, Null, - timeRemoved );
 		}
 		catch ( InvalidPartial & ex ) {
-			ex << "Partial envelope is probably bogus.";
+			ex.append( "Partial envelope is probably bogus." );
 			throw;
 		}
 	
