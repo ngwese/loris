@@ -5,10 +5,11 @@
 //	buffers with a default implementation that uses the console for 
 //	reporting.
 //
-//	Stream classes for notification and debugging are also implemented here,
-//	they are just streams that use NotifierBufs.
-//
-//	C++ notification functions and streams in Loris namespace defined at bottom.
+//	Stream objects for notification and debugging are also defined here,
+//	they are just streams that use NotifierBufs. To change the notification
+//	behavior, derive a new NotifierBuf and use the setbuffer() members of
+//	NoitifierStream and DebuggerStream to assign the new buffer type
+//	to the global notification and debugging streams.
 //
 //	-kel 9 Sept 99
 //
@@ -38,9 +39,10 @@ Begin_Namespace( Loris )
 // ---------------------------------------------------------------------------
 //	stream instances
 // ---------------------------------------------------------------------------
-//	declared extern in Notifier.h
-NotifierStream & notifier = NotifierStream::instance();
-DebuggerStream & debugger = DebuggerStream::instance();
+//	declared extern in Notifier.h, use thse like cout and cerr.
+//
+NotifierStream notifier;
+DebuggerStream debugger;
 
 
 // ---------------------------------------------------------------------------
@@ -73,7 +75,7 @@ NotifierBuf::post( boolean block )
 	
 	if ( block ) {
 		string resp;
-		cout << "confirm (or type 'throw' to take exception): ";
+		cout << "Proceed? (Type 'throw' to take exception, or anything else to proceed.): ";
 		IOSfmtflags oldflags = cin.flags();
 
 		 //cin >> noskipws >> resp;
@@ -91,28 +93,51 @@ NotifierBuf::post( boolean block )
 }
 
 // ---------------------------------------------------------------------------
-//	NotifierStream instance
+//	NotifierStream setbuffer
 // ---------------------------------------------------------------------------
+//	Assign a new buffer to the stream.
 //
-NotifierStream &
-NotifierStream::instance( void )
+auto_ptr< NotifierBuf > 
+NotifierStream::setbuffer( auto_ptr< NotifierBuf > b )
 {
-	static NotifierStream _s;
-	return _s;
+	auto_ptr< NotifierBuf > ret = _note;
+	_note = b;
+	ostream::init( _note.get() );
+	return ret;
 }
 
-
 // ---------------------------------------------------------------------------
-//	DebuggerStream instance
+//	DebuggerStream constructor
 // ---------------------------------------------------------------------------
 //
-DebuggerStream &
-DebuggerStream::instance( void )
+DebuggerStream::DebuggerStream( void )
 {
-	static DebuggerStream _s;
-	return _s;
+#if defined( Debug_Loris )
+	setbuffer();
+#else
+	//	initialize the buffer to a dummy if not debugging:
+	_note = auto_ptr< NotifierBuf >( new dummybuf() );
+	ostream::init( _note.get() );
+#endif
 }
 
+// ---------------------------------------------------------------------------
+//	DebuggerStream setbuffer
+// ---------------------------------------------------------------------------
+//	Assign a new buffer to the stream, or ignore if not debugging.
+//
+auto_ptr< NotifierBuf > 
+DebuggerStream::setbuffer( auto_ptr< NotifierBuf > b )
+{
+#if defined( Debug_Loris )
+	auto_ptr< NotifierBuf > ret = _note;
+	_note = b;
+	ostream::init( _note.get() );
+	return ret;
+#else
+	return b;
+#endif
+}
 
 End_Namespace( Loris )
 

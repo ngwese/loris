@@ -8,9 +8,13 @@
 //	reporting.
 //
 //	Stream classes for notification and debugging are also defined here,
-//	they are just streams that use NotifierBufs.
+//	they are just streams that use NotifierBufs. To change the notification
+//	behavior, derive a new NotifierBuf and use the setbuffer() members of
+//	NoitifierStream and DebuggerStream to assign the new buffer type
+//	to the global notification and debugging streams.
 //
-//	C++ notification functions and streams in Loris namespace defined at bottom.
+//	C++ notification functions and streams in Loris namespace are
+//	prototyped at bottom.
 //
 //	-kel 9 Sept 99
 //
@@ -18,16 +22,15 @@
 #include "LorisLib.h"
 #include "StringBuffer.h"
 #include <string>
+#include <memory>
 
 //	macros for non-compliant compilers:
 #if !defined( Deprecated_iostream_headers )
 	#include <iostream>
 	#define STDostream std::ostream
-	#define STDstreambuf std::streambuf
 #else
 	#include <iostream.h>
 	#define STDostream ostream
-	#define STDstreambuf streambuf
 #endif
 
 Begin_Namespace( Loris )
@@ -82,25 +85,31 @@ protected:
 	
 };	//	end of class NotifierBuf
 
-
 // ---------------------------------------------------------------------------
 //	class NotifierStream
 //
 //	ostream based on a NotifierBuf.
 //
+//
 class NotifierStream : public STDostream
 {
 public:
-	static NotifierStream & instance( void );
-	void confirm( void ) { _note.post( true ); } // block until confirmed
+	//	construction:
+	NotifierStream( void ) { setbuffer(); }
 	
-//protected:
-	NotifierStream( void ) : STDostream( & _note ) {}
-	NotifierBuf _note;
+	//	force post and block until confirmed:
+	void confirm( void ) { _note->post( true ); }
+	
+	//	assign a new buffer to the stream:
+	std::auto_ptr< NotifierBuf > 
+	setbuffer( std::auto_ptr< NotifierBuf > b = std::auto_ptr< NotifierBuf >(new NotifierBuf()) );
+
+private:	
+	std::auto_ptr< NotifierBuf > _note;
 	
 };	//	end of class NotifierStream
 	
-extern NotifierStream & notifier;	//	local in Notifier.C
+extern NotifierStream notifier;	//	local in Notifier.C
 
 // ---------------------------------------------------------------------------
 //	class DebuggerStream
@@ -113,24 +122,32 @@ extern NotifierStream & notifier;	//	local in Notifier.C
 class DebuggerStream : public STDostream
 {
 public:
-	static DebuggerStream & instance( void );
+	//	construction:
+	DebuggerStream( void );
 	
-//protected:
-	DebuggerStream( void ) : STDostream( & _note ) {}
-	
+	//	assign a new buffer to the stream:
+	std::auto_ptr< NotifierBuf > 
 #if defined( Debug_Loris )
-	NotifierBuf _note;
+	setbuffer( std::auto_ptr< NotifierBuf > b = std::auto_ptr< NotifierBuf >(new NotifierBuf()) );
 #else
+	setbuffer( std::auto_ptr< NotifierBuf > b = std::auto_ptr< NotifierBuf >() );
+#endif		
+	
+private:
+#if !defined( Debug_Loris )
 	//	to do nothing at all, need a dummy streambuf:
-	struct dummybuf : public STDstreambuf
+	struct dummybuf : public NotifierBuf
 	{
 		virtual int_type overflow( int_type c ) { return c; }
-	} _note;
+	};
 #endif
-	
+
+	//	the buffer:
+	std::auto_ptr< NotifierBuf > _note;
+
 };	//	end of class DebuggerStream
 
-extern DebuggerStream & debugger;	//	local in Notifier.C
+extern DebuggerStream debugger;	//	local in Notifier.C
 
 // ---------------------------------------------------------------------------
 //	prototype for a one-shot notifiers:
