@@ -164,6 +164,8 @@ Synthesizer::synthesize( const Partial & p )
 
 //	initialize sample offset:
 	long bpSampleOffset = (iterator()->time() + offset()) * sampleRate();
+	
+	double DEBUGbw = iterator()->bandwidth();
 
 //	synthesize Partial turn-on if necessary and possible;
 	if ( iterator()->amplitude() > 0. ) {
@@ -174,6 +176,8 @@ Synthesizer::synthesize( const Partial & p )
 	for ( iterator()->advance(); ! iterator()->atEnd(); iterator()->advance() ) {
 		bpSampleOffset = synthesizeEnvelopeSegment( bpSampleOffset );
 		
+		DEBUGbw = max( DEBUGbw, iterator()->bandwidth() );
+		
 		if ( bpSampleOffset >= _samples.size() )
 			break;
 	}
@@ -182,6 +186,8 @@ Synthesizer::synthesize( const Partial & p )
 	if ( _oscillator->amplitude() > 0. ) {
 		bpSampleOffset = synthesizeFadeOut( bpSampleOffset );
 	}
+	
+	//debugger << "max bandwidth: " << DEBUGbw << endl;
 }
 
 // ---------------------------------------------------------------------------

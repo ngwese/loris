@@ -44,7 +44,7 @@ public:
 	long hopSize( void ) const			//	samples
 		{ return _hop; }
 	double frameLength( void ) const	//	seconds
-		{ return _hop * _srate; }
+		{ return _hop / _srate; }
 	double sampleRate( void ) const
 		{ return _srate; }
 	double partialSeparation( void ) const
@@ -86,6 +86,7 @@ private:
 	//	Partial construction:
 	void formPartials( Frame & frame );
 	void spawnPartial( double time, const Breakpoint & bp );
+	void pruneBogusPartials( void );
 	
 //	-- instance variables --
 private:

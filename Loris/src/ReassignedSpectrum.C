@@ -291,18 +291,20 @@ ReassignedSpectrum::reassignedTime( double fracFreqSample ) const
 double
 ReassignedSpectrum::magnitude( unsigned long idx ) const
 {
+//#define __parab
+#ifndef __parab
 	return _magScale * abs( _transform[ idx ] );
-/*
+#else
 	//	parabola thing:
 	double dbLeft = 20. * log10( abs( _transform[idx-1] ) );
 	double dbCandidate = 20. * log10( abs( _transform[idx] ) );
 	double dbRight = 20. * log10( abs( _transform[idx+1] ) );
 	
-	double polynomialPeakXOffset =	0.5 * (dbLeft - dbRight) /
-						(dbLeft - 2.0 * dbCandidate + dbRight);
-	
-	return dbCandidate - 0.25 * (dbLeft - dbRight) * polynomialPeakXOffset;
-*/
+	double peakXOffset = 0.5 * (dbLeft - dbRight) /
+						 (dbLeft - 2.0 * dbCandidate + dbRight);
+	double dbmag = dbCandidate - 0.25 * (dbLeft - dbRight) * peakXOffset;
+	return _magScale * pow( 10., 0.05 * dbmag );
+#endif
 }
 
 // ---------------------------------------------------------------------------

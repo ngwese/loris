@@ -61,8 +61,9 @@ Breakpoint::Breakpoint( double f, double a, double b, double p ) :
 void 
 Breakpoint::addNoise( double noise )
 {
-	double e = _amplitude * _amplitude;
-	setBandwidth( noise / ( e + noise ) );
+	double e = amplitude() * amplitude();	//	current total energy
+	double n = e * bandwidth();			//	current noise energy
+	setBandwidth( ( n + noise ) / ( e + noise ) );
 	setAmplitude( sqrt( e + noise ) );
 }
 

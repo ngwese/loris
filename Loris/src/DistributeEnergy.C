@@ -48,7 +48,7 @@ DistributeEnergy::computeAlpha( double x, double below, double above ) const
 }
 
 // ---------------------------------------------------------------------------
-//	computeAlpha
+//	addNoiseEnergy
 // ---------------------------------------------------------------------------
 //	Distribute energy to p as bandwidth over the time (lower,upper).
 //

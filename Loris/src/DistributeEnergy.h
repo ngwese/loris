@@ -11,7 +11,7 @@
 #include "LorisLib.h"
 #include "Partial.h"
 #include "Breakpoint.h"
-//#include "Notifier.h"
+#include "Notifier.h"
 #include "bark.h"
 
 Begin_Namespace( Loris )
@@ -33,6 +33,7 @@ public:
 	template< class Iter >
 	void distribute( const Partial & p, Iter begin, Iter end ) const
 	{
+		return;
 		//	loop over Breakpoints in p:
 		Partial::const_iterator envIter;
 		double tUpperBound = p.startTime();	// initialize:
@@ -43,7 +44,7 @@ public:
 			//	find nearest Partial in (begin,end) above
 			//	and below (in frequency) to bp at time:
 			Iter above = end, below = end;
-			double freqAbove, freqBelow;
+			double freqAbove = 0., freqBelow = 0.;
 			for ( Iter it = begin; it != end; ++it ) {
 				//	cannot distribute energy to a Partial
 				//	that does not exist at time:
@@ -80,7 +81,7 @@ public:
 			
 			//	compute time bounds for energy distribution:
 			//	(halfway between this breakpoint and its neighbors)
-			double tLowerBound = ( tUpperBound + time ) * 0.5;
+			double tLowerBound = tUpperBound;
 			Partial::const_iterator next( envIter );
 			if ( ++next != p.end() ) {
 				tUpperBound = ( next->first + time ) * 0.5;
@@ -89,16 +90,33 @@ public:
 				tUpperBound = time;
 			}
 			
+			/*
+			if ( bp.frequency() < 2000. ) {
+				debugger << "distributing energy, freq: " << bp.frequency() <<
+							" time: " << time;
+				if ( above != end ) {
+					debugger << " candidate above freq " << freqAbove <<
+								" duration " << above->duration();
+				}
+				if ( below != end ) {
+					debugger << " candidate below freq " << freqBelow <<
+								" duration " << below->duration();
+				}
+				debugger << endl;
+			}
+			*/
 			//	make sure the candidates aren't too far
 			//	(farther than one bark frequency unit)
 			//	in frequency from bp:
 			double b = bark( bp.frequency() );
-			if ( bark( freqAbove ) - b > 1. ) {
+			const double MAX = 1.;	// ???
+			if ( bark( freqAbove ) - b > MAX ) {
 				above = end;
 			}
-			if ( b - bark( freqBelow ) > 1. ) {
+			if ( b - bark( freqBelow ) > MAX ) {
 				below = end;
 			} 
+			
 			
 			//	four cases: either, neither, or both could
 			//	be end (i.e. no candidate exists):

@@ -8,8 +8,8 @@
 // ===========================================================================
 #include "FourierTransform.h"
 #include "Exception.h"
-
-#include "AiffFile.h"	//	for debugging only
+#include "fft.h"
+//#include "AiffFile.h"	//	for debugging only
 
 using namespace std;
 
@@ -52,6 +52,61 @@ FourierTransform::transform( const vector< double > & buf )
 //
 void
 FourierTransform::transform( void )
+//#define __inscrutible__
+#ifdef __inscrutible__
+{
+//	setup fft buffers:
+	static long bufsize = 0;
+	static double * real = Null;
+	static double * imag = Null;
+	if ( bufsize < size() ) {
+		try {
+			delete[] real;
+			real = Null;	//	to prevent deleting again
+			delete[] imag;
+			imag = Null;	//	to prevent deleting again
+			bufsize = 0;
+			real = new double[ size() ];
+			imag = new double[ size() ];
+			bufsize = size();
+		}
+		catch( LowMemException & ex ) {
+			bufsize = 0;
+			delete[] real;
+			real = Null;	//	to prevent deleting again
+			delete[] imag;
+			imag = Null;	//	to prevent deleting again
+			ex.append( "couldn't allocate fft buffers." );
+			throw;
+		}
+	}
+	
+//	permute input to reverse binary order:
+	for ( long i = 0; i < size(); ++i ) {
+		//	only swap once:
+		if ( _revBinaryTable[i] > i ) {	
+			swap( _z[i], _z[ _revBinaryTable[i] ] );
+		}
+	} 
+	
+//	copy input into local buffers:
+	for ( long i = 0; i < size(); ++i ) {
+		real[i] = _z[i].real();
+		imag[i] = _z[i].imag();
+	}
+	
+//	do decimation-in-time butterfly steps:
+	for ( long span = 1;  span < size();  span = span * 2 ) {
+		butterfly( real, imag, span, bufsize );
+	}
+
+//	copy output into complex buffer:
+	for ( long i = 0; i < size(); ++i ) {
+		_z[i] = complex< double >( real[i], imag[i] );
+	}
+	
+}
+#else
 {
 //	permute input to reverse binary order:
 	for ( long i = 0; i < size(); ++i ) {
@@ -66,6 +121,7 @@ FourierTransform::transform( void )
 		decimationStep( span );
 	}
 }
+#endif
 
 // ---------------------------------------------------------------------------
 //	load

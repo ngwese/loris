@@ -51,6 +51,18 @@ Begin_Namespace( Loris )
 //	template members, to avoid reference to other concrete types, particularly
 //	container types. Do I like this?
 //
+//	One necessary improvement to this is tighter coupling with the rest of
+//	the analysis. It really is essential that the same breakpoints be 
+//	accumulated as are associated. And its safe to assume that we have the
+//	same spectrum all the time. This thing should be constructed with the
+//	spectrum and sample rate (store a reference to the spectrum, get the 
+//	window information too somehow, and compute the energy scale) and invoked
+//	on a range of breakpoints, calling accumulateSiusoids and associate
+//	at that time.
+//
+//	To keep this generic, if desired, the whole class could be templatized
+//	on the spectrum type and possibly (not nec.) the breakpoint type.
+//
 class AssociateBandwidth
 {
 //	-- public interface --
@@ -80,6 +92,7 @@ public:
 	}
 	
 	//	sinusoidal energy accumulation:
+	//	Iters are iterators over Analyzer::Peaks
 	template< class Iter >
 	void accumulateSinusoids( Iter b, Iter e )
 	{
@@ -89,6 +102,7 @@ public:
 		}
 	}
 		
+	//	Sinusoid is Analyzer::Peak
 	template< class Sinusoid >
 	void accumulateSinusoid( const Sinusoid & s )
 	{
@@ -99,6 +113,7 @@ public:
 	}
 	
 	//	bandwidth assocation:
+	//	Iters are iterators over Analyzer::Peaks
 	template< class Iter >
 	void associate( Iter b, Iter e )
 	{
@@ -115,10 +130,6 @@ public:
 			double noise = computeNoiseEnergy( freq, surplus );
 			b->addNoise( noise );
 			
-			//	compute new amplitude and bandwidth values:
-			//b->setBandwidth( noise / ( e + noise ) );
-			//b->setAmplitude( sqrt( e + noise ) );
-			
 			//	next:
 			++b;
 		}
@@ -134,17 +145,22 @@ public:
 	//	here.
 	//
 	//	(include a non-template version)
+	//
+	//	Iters are a vector<double> range.
 	template< class Iter >
 	void setWindow( Iter b, Iter e ) 
 	{
 		//	Iters reference real numbers:
-		double sqrsum = std::inner_product( b, e, b, 0. );
+		double sqrsum = std::inner_product( b, e, b, 0. );		
 		_windowFactor = 1. / sqrsum;
 		//	double because we only search half the spectrum:
 		_windowFactor *= 2.;
 		//	double again for no apparent reason:
 		//	(never figured out why I need this extra factor of 2)
-		_windowFactor *= 2.;
+		//
+		//	now I need _another_ factor of two to make it sound decent.
+		//
+		_windowFactor *= 4.;
 	}
 		
 private:	

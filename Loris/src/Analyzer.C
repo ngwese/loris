@@ -11,6 +11,7 @@
 #include "KaiserWindow.h"
 #include "Notifier.h"
 #include "AssociateBandwidth.h"
+#include "DistributeEnergy.h"
 
 Begin_Namespace( Loris )
 
@@ -62,7 +63,9 @@ Analyzer::analyze( const vector< double > & buf, double srate )
 
 //	loop over short-time analysis frames:
 //	Arbitrarily, the first window is centered hop
-//	samples before the beginning of the buffer, and 
+//	samples before the beginning of the buffer (though 
+//	there's no way we would ever keep something from that 
+//	frame, it would have too large a time correction), and 
 //	the last window is the first one centered more than
 //	hop samples past the end of the buffer.
 	const long latestIdx = buf.size() + 2L * hopSize();
@@ -74,8 +77,6 @@ Analyzer::analyze( const vector< double > & buf, double srate )
 			//debugger << "analyzing frame centered at " << _winMiddleIdx << endl; 
 			 
 			//	compute reassigned spectrum:
-			//	actually, need to call this with a 
-			//	sub range of the sample buffer.
 			_spectrum->transform( buf, _winMiddleIdx );
 			
 			//	extract peaks from the spectrum:
@@ -88,10 +89,21 @@ Analyzer::analyze( const vector< double > & buf, double srate )
 			_bw.accumulateSinusoids( f.begin(), f.end() );
 			_bw.associate( f.begin(), f.end() );
 			
+			/*	I wonder if I can possibly get away with
+				requiring the transform window center to 
+				be a valid iterator on buf...
+				
+			if ( _winMiddleIdx <= 0 || _winMiddleIdx >= buf.size() ) {
+				debugger << "kept " << f.size() << " peaks." << endl;
+			}
+			*/
+			
 			//	form Partials from the extracted Breakpoints:
 			formPartials( f );
 
 		}	//	end of loop over short-time frames
+		
+		pruneBogusPartials();
 	}
 	catch ( Exception & ex ) {
 		ex.append( "analysis failed." );
@@ -122,7 +134,7 @@ Analyzer::createSpectrum( double srate )
 	double winshape = KaiserWindow::computeShape( _windowAtten );
 	
 	//	compute the hop size:
-	//	Smith and Serra (1990) cite (Allen 1977) saying: a good choice of hop 
+	//	Smith and Serra (1990) cite Allen (1977) saying: a good choice of hop 
 	//	is the window length divided by the main lobe width in frequency samples.
 	//	Don't include zero padding in the computation of width (i.e. use window
 	//	length instead of transform length).
@@ -131,7 +143,7 @@ Analyzer::createSpectrum( double srate )
 	
 	//	lower frequency bound for Breakpoint extraction,
 	//	require at least two periods in the window:
-	double _minfreq = 2. / ( winlen / srate );
+	_minfreq = 2. / ( winlen / srate );
 	
 	try {
 		//	configure window:
@@ -198,8 +210,8 @@ struct frequency_between
 void 
 Analyzer::extractPeaks( Frame & frame )
 {
-	double threshold = pow( 10., 0.05 * noiseFloor() );	//	absolute magnitude threshold
-	double sampsToHz = sampleRate() / _spectrum->size();
+	const double threshold = pow( 10., 0.05 * noiseFloor() );	//	absolute magnitude threshold
+	const double sampsToHz = sampleRate() / _spectrum->size();
 	
 	//	look for magnitude peaks in the spectrum:
 	for ( int j = 1; j < (_spectrum->size() / 2) - 1; ++j ) {
@@ -248,10 +260,13 @@ Analyzer::thinPeaks( Frame & frame )
 {
 	frame.sort( greater_amplitude<Peak>() );
 	
+	//debugger << "had " << frame.size() << " peaks in this frame" << endl;
+
 	//	nothing can mask the loudest peak, so I can start with the
 	//	second one, _and_ I can safely decrement the iterator when 
 	//	I need to remove the element at its postion:
 	Frame::iterator it = frame.begin();
+	//debugger << "loudest Peak is " << it->frequency() << " amplitude " << it->amplitude() << endl;
 	for ( ++it; it != frame.end(); ++it ) {
 		//	search all louder peaks for one that is too near
 		//	in frequency:
@@ -260,13 +275,16 @@ Analyzer::thinPeaks( Frame & frame )
 		if ( it != find_if( frame.begin(), it, frequency_between< Peak >( lower, upper ) ) ) {
 			//	find_if returns the end of the range (it) if it finds nothing; 
 			//	remove *it from the frame
-			// debugger << "atttempting removal of Peak at " << it->frequency() << " amplitude " << it->amplitude() << endl;
+			//debugger << "attempting removal of Peak at " << it->frequency() << " amplitude " << it->amplitude() << endl;
 			frame.erase( it-- );
 			// debugger << "done" << endl;
 		}
+		else {
+			//debugger << "keeping Peak at " << it->frequency() << " amplitude " << it->amplitude() << endl;
+		}
 	}
 	
-	// debugger << "kept " << frame.size() << " peaks in this frame" << endl;
+	//debugger << "kept " << frame.size() << " peaks in this frame" << endl;
 }
 
 // ---------------------------------------------------------------------------
@@ -302,7 +320,9 @@ Analyzer::formPartials( Frame & frame )
 		//	compute the time after which a Partial
 		//	must have Breakpoints in order to be 
 		//	eligible to receive this Breakpoint:
-		double tooEarly = frameTime() - (1.5 * frameLength());	//	???
+		//	The earliest Breakpoint we could have kept 
+		//	from the previous frame:
+		double tooEarly = frameTime() - (2. * frameLength());
 		
 		//	loop over all Partials, find the eligible Partial
 		//	that is nearest in frequency to the Peak:
@@ -371,6 +391,33 @@ Analyzer::spawnPartial( double time, const Breakpoint & bp )
 	Partial p;
 	p.insert( time, bp );
 	partials().push_back( p );
+}
+
+// ---------------------------------------------------------------------------
+//	pruneBogusPartials
+// ---------------------------------------------------------------------------
+//	Discovered that we have many Partials of zero duration, no sense
+//	in retaining those.
+//
+void
+Analyzer::pruneBogusPartials( void )
+{
+	long countem = 0;
+	for ( partial_iterator it = partials().begin(); 
+		  it != partials().end(); 
+		  /* ++it */ ) {
+		//	need to be careful with the iterator update, 
+		//	because erasure will invalidate it:
+		partial_iterator next = it;
+		++next;
+		if ( it->duration() == 0. ) {
+			distributeEnergy( *it, partials().begin(), partials().end() );
+			partials().erase( it );
+			++countem;
+		}
+		it = next;
+	}
+	debugger << "Analyzer removed " << countem << " zero-duration Partials." << endl;
 }
 
 

@@ -51,8 +51,7 @@ void
 AssociateBandwidth::computeSurplusEnergy( vector<double> & surplus )
 {
 	for ( int i = 0; i < surplus.size(); ++i ) {
-		//	spectral energy has to be scaled to account
-		//	for windowing and transform length:
+		//	use loudness, proportional to cube root of energy:
 		double spec = pow( _spectralEnergy[i], 1. / 3. );
 		double sin = pow( _sinusoidalEnergy[i], 1. / 3. );
 		

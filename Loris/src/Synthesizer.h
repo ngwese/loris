@@ -147,7 +147,6 @@ public:
 		_nyquistfreq( fNyquist ),
 		_bwecutoff( flow )  {}
 		
-	//SynthesisIterator( const Partial & pin, double f );
 	SynthesisIterator( const SynthesisIterator & other ) :
 		_nyquistfreq( other._nyquistfreq ), 
 		_bwecutoff( other._bwecutoff ), 
