@@ -609,7 +609,9 @@ Partial::findNearest( double time ) const
 {
 	//	if there are no Breakpoints, return end:
 	if ( numBreakpoints() == 0 )
+	{
 		return end();
+	}
 			
 	//	get the position of the first Breakpoint after time:
 	Partial::const_iterator pos = findAfter( time );
@@ -621,7 +623,9 @@ Partial::findNearest( double time ) const
 		Partial::const_iterator prev = pos;
 		--prev;
 		if ( pos == end() || pos.time() - time > time - prev.time() )
+		{
 			return prev;
+		}
 	}
 
 	//	failing all else:	
@@ -641,8 +645,9 @@ Partial::findNearest( double time )
 {
 	//	if there are no Breakpoints, return end:
 	if ( numBreakpoints() == 0 )
+	{
 		return end();
-			
+	}		
 	//	get the position of the first Breakpoint after time:
 	Partial::iterator pos = findAfter( time );
 	
@@ -653,7 +658,9 @@ Partial::findNearest( double time )
 		Partial::iterator prev = pos;
 		--prev;
 		if ( pos == end() || pos.time() - time > time - prev.time() )
+		{
 			return prev;
+		}
 	}
 
 	//	failing all else:	

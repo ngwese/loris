@@ -93,7 +93,14 @@ class Morpher
 												//	of the huge jump from zero amplitude to
 												//	very small amplitude.
 																		
-	
+	double _minBreakpointGapSec;				//	the minimum time gap between two Breakpoints
+												//	in the morphed Partials. Morphing two
+												//	Partials can generate a third Partial having
+												//	Breakpoints arbitrarily close together in time,
+												//	and this makes morphs huge. Raising this 
+												//	threshold limits the Breakpoint density in
+												//	the morphed Partials. 
+												//	Default is zero (huge morphs).
 //	-- public interface --
 public:
 //	-- construction --
@@ -246,6 +253,30 @@ public:
 	//!
 	//!	@param x is the new shaping parameter, it must be positive.
 	void setAmplitudeShape( double x );
+	
+	//!	Return the minimum time gap (secs) between two Breakpoints
+	//!	in the morphed Partials. Morphing two
+	//!	Partials can generate a third Partial having
+	//!	Breakpoints arbitrarily close together in time,
+	//!	and this makes morphs huge. Raising this 
+	//!	threshold limits the Breakpoint density in
+	//!	the morphed Partials. 
+	//!	Default is zero (huge morphs).
+	double minBreakpointGap( void ) const;
+
+	//!	Set the minimum time gap (secs) between two Breakpoints
+	//!	in the morphed Partials. Morphing two
+	//!	Partials can generate a third Partial having
+	//!	Breakpoints arbitrarily close together in time,
+	//!	and this makes morphs huge. Raising this 
+	//!	threshold limits the Breakpoint density in
+	//!	the morphed Partials. 
+	//!	Default is zero (huge morphs).
+	//!
+	//!	@param x is the new minimum gap in seconds, it must be 
+	//!		   non-negative.
+	void setMinBreakpointGap( double x );
+
 
 //	-- reference Partial label access/mutation --
 	

@@ -47,6 +47,13 @@
 #include <algorithm>
 #include <memory>
 #include <set>
+#include <cmath>
+
+#if defined(HAVE_M_PI) && (HAVE_M_PI)
+	const double Pi = M_PI;
+#else
+	const double Pi = 3.14159265358979324;
+#endif
 
 //#undef LOG_AMP_MORPHING
 
@@ -63,6 +70,7 @@ static const Partial::label_type DefaultReferenceLabel = 0;	//	by default, don't
 
 static const double DefaultFixThreshold = -90; 	// dB, very low by default
 static const double DefaultAmpShape = 1E-5; 	// shaping parameter, see morphParameters
+static const double DefaultBreakpointGap = 0;	// minimum time (sec) between Breakpoints in morphed Partials
 
 
 	
@@ -106,7 +114,8 @@ Morpher::Morpher( const Envelope & f ) :
 	_refLabel0( DefaultReferenceLabel ),
 	_refLabel1( DefaultReferenceLabel ),
 	_freqFixThresholdDb( DefaultFixThreshold ),
-	_ampMorphShape( DefaultAmpShape )
+	_ampMorphShape( DefaultAmpShape ),
+	_minBreakpointGapSec( DefaultBreakpointGap )
 {
 }
 
@@ -123,7 +132,8 @@ Morpher::Morpher( const Envelope & ff, const Envelope & af, const Envelope & bwf
 	_refLabel0( DefaultReferenceLabel ),
 	_refLabel1( DefaultReferenceLabel ),
 	_freqFixThresholdDb( DefaultFixThreshold ),
-	_ampMorphShape( DefaultAmpShape )
+	_ampMorphShape( DefaultAmpShape ),
+	_minBreakpointGapSec( DefaultBreakpointGap )
 {
 }
 
@@ -204,7 +214,17 @@ Morpher::morphBandwidths( double bw0, double bw1, double alpha )
 inline double 
 Morpher::morphPhases( double phi0, double phi1, double alpha )
 {
-	return (alpha * phi1) + ((1.-alpha) * phi0);
+	//	try to wrap the phase so that they are
+	//	as similar as possible:
+	while ( ( phi0 - phi1 ) > Pi )
+	{
+		phi0 -= 2 * Pi;
+	}
+	while ( ( phi1 - phi0 ) > Pi )
+	{
+		phi0 += 2 * Pi;
+	}
+	return std::fmod( (alpha * phi1) + ((1.-alpha) * phi0), 2 * Pi );
 }
 // ---------------------------------------------------------------------------
 //	morphParameters - Breakpoint to Breakpoint
@@ -481,20 +501,32 @@ Morpher::morphPartial( const Partial & src, const Partial & tgt, int assignLabel
 	//	make a new Partial:
 	Partial newp;
 	newp.setLabel( assignLabel );
-	
+		
 	//	loop over Breakpoints in first partial:
 	Breakpoint tmpBkpt;
 	for ( Partial::const_iterator iter = src.begin(); iter != src.end(); ++iter )
 	{	
-		morphParameters( iter.breakpoint(), tgt, iter.time(), tmpBkpt );
-		newp.insert( iter.time(), tmpBkpt );
+		//	don't insert Breakpoints arbitrarily close together:
+		Partial::iterator nearest = newp.findNearest( iter.time() );
+		if ( nearest == newp.end() ||
+			 _minBreakpointGapSec < std::fabs( nearest.time() - iter.time() ) )
+		{
+			morphParameters( iter.breakpoint(), tgt, iter.time(), tmpBkpt );
+			newp.insert( iter.time(), tmpBkpt );
+		}
 	}
 	
 	//	now do it for the other Partial:
 	for ( Partial::const_iterator iter = tgt.begin(); iter != tgt.end(); ++iter )
 	{
-		morphParameters( src, iter.breakpoint(), iter.time(), tmpBkpt );
-		newp.insert( iter.time(), tmpBkpt );
+		//	don't insert Breakpoints arbitrarily close together:
+		Partial::iterator nearest = newp.findNearest( iter.time() );
+		if ( nearest == newp.end() ||
+			 _minBreakpointGapSec < std::fabs( nearest.time() - iter.time() ) )
+		{
+			morphParameters( src, iter.breakpoint(), iter.time(), tmpBkpt );
+			newp.insert( iter.time(), tmpBkpt );
+		}
 	}
 		
 	//	add the new partial to the collection,
@@ -1053,6 +1085,44 @@ void Morpher::setAmplitudeShape( double x )
 	_ampMorphShape = x;
 }
 
+// ---------------------------------------------------------------------------
+//	minBreakpointGap
+// ---------------------------------------------------------------------------
+//	Return the minimum time gap (secs) between two Breakpoints
+//	in the morphed Partials. Morphing two
+//	Partials can generate a third Partial having
+//	Breakpoints arbitrarily close together in time,
+//	and this makes morphs huge. Raising this 
+//	threshold limits the Breakpoint density in
+//	the morphed Partials. 
+//	Default is zero (huge morphs).
+double Morpher::minBreakpointGap( void ) const
+{
+	return _minBreakpointGapSec;
+}
+
+// ---------------------------------------------------------------------------
+//	setMinBreakpointGap
+// ---------------------------------------------------------------------------
+//	Set the minimum time gap (secs) between two Breakpoints
+//	in the morphed Partials. Morphing two
+//	Partials can generate a third Partial having
+//	Breakpoints arbitrarily close together in time,
+//	and this makes morphs huge. Raising this 
+//	threshold limits the Breakpoint density in
+//	the morphed Partials. 
+//	Default is zero (huge morphs).
+//
+//	x is the new minimum gap in seconds, it must be 
+//	non-negative.
+void Morpher::setMinBreakpointGap( double x )
+{
+	if ( x < 0. )
+	{
+		Throw( InvalidArgument, "the minimum Breakpoint gap must be non-negative");
+	}
+	_minBreakpointGapSec = x;
+}
 
 #pragma mark -- PartialList access --
 
