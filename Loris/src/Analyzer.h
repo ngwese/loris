@@ -26,8 +26,10 @@ class Analyzer : public PartialCollector
 	double _resolution;	//	in Hz, minimum instantaneous frequency distance;
 						//	this is the core parameter, others are, by default,
 						//	computed from this one
+						//	freqResolution?
 	double _floor;		//	dB, relative to full amplitude sine wave, absolute
 						//	amplitude threshold
+						//	ampFloor?
 	double _windowWidth;//	in Hz, width of main lobe; this might be more
 						//	conveniently presented as window length, but
 						//	the main lobe width more explicitly highlights
@@ -35,8 +37,10 @@ class Analyzer : public PartialCollector
 	double _minFrequency;	//	lowest frequency component extracted
 							//	in spectral analysis
 							//	yucky name
+							//	freqFloor?
 	double _frameLength;//	in seconds, time between analysis windows in
 						//	successive spectral analyses
+						//	hopSize? no. hop? hopTime?
 	double _bwRegionWidth;	//	width in Hz of overlapping bandwidth 
 							//	association regions
 							
