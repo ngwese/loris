@@ -529,10 +529,6 @@ createFreqReference_( PartialListHandle * partials, int numSamples,
 	EXPERIMENTAL JUNK:
  */
 
-%init %{
-	printf_notifier( "loris module includes new experimental junk!\n\n" );
-%}
-
 %{
 #include "Sieve.h"
 %}

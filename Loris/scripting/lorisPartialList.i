@@ -140,7 +140,6 @@ public:
 	/*	Return an iterator refering to the last Partial in this PartialList.
 	 */
 	
-	//	insertion of new Partials:
 	void append( PartialListHandleIteratorHandle * iter )
 	{
 		(*self)->push_back( (*iter)->partial() );
@@ -148,7 +147,7 @@ public:
 	/*	Append a copy of the Partial referenced by the specified iterator
 		to the end of this PartialList.
 	 */
-
+	 
 	void splice( PartialListHandle * otherPartials )
 	{
 		if ( self == otherPartials )
@@ -228,6 +227,15 @@ public:
 			return _iter == _list->end();
 		}
 		
+		//	easiest place to implement removal is in this class,
+		//	not sure its the most logical place in the interface:
+		//	Advances iterator, so this iterator is still valid,
+		//	though it may be atEnd(), after removal.
+		void removeFromList( void )
+		{
+			_iter = _list->erase( _iter );
+		}
+		
 		//	Partial access:
 		int label( void ) const 			{ return _iter->label(); }
 		double initialPhase( void ) const	{ return _iter->initialPhase(); }
@@ -286,6 +294,11 @@ public:
 
 	//	mutation:
 	void setLabel( int l ) {  (*self)->setLabel( l ); }
+	
+	//	removal from list:
+	//	Advances iterator, so this iterator is still valid,
+	//	though it may be atEnd(), after removal.
+	void removeFromList( void ) {  (*self)->removeFromList(); }
 	
 	//	BreakpointHandle access:
 	%new
