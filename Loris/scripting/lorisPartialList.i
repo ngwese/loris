@@ -468,7 +468,6 @@ public:
 	
 
  */
- 
 class Breakpoint;
 
 class PartialIterator

@@ -54,11 +54,28 @@
 namespace Loris {
 #endif
 
-//	Chebychev order 3, cutoff 500, ripple -1.
-static const double Gain = 4.663939184e+04;
-static const double ExtraScaling = 6.;
-static const double MaCoefs[] = { 1., 3., 3., 1. }; 
-static const double ArCoefs[] = { 0., 2.9258684252, -2.8580608586, 0.9320209046 };
+// ---------------------------------------------------------------------------
+//	protoype filter
+// ---------------------------------------------------------------------------
+//	Static local function for obtaining a prototype Filter
+//	to use in Oscillator construction. Eventually, allow
+//	external (client) specification of the Filter prototype.
+//
+static const Filter & prototype_filter( void )
+{
+	//	Chebychev order 3, cutoff 500, ripple -1.
+	//
+	//	Coefficients obtained from http://www.cs.york.ac.uk/~fisher/mkfilter/
+	//	Digital filter designed by mkfilter/mkshape/gencode   A.J. Fisher
+	//
+	static const double Gain = 4.663939184e+04;
+	static const double ExtraScaling = 6.;
+	static const double MaCoefs[] = { 1., 3., 3., 1. }; 
+	static const double ArCoefs[] = { 1., 2.9258684252, -2.8580608586, 0.9320209046 };
+
+	static const Filter proto( MaCoefs, MaCoefs + 4, ArCoefs, ArCoefs + 4, ExtraScaling/Gain );
+	return proto;
+}
 
 // ---------------------------------------------------------------------------
 //	Oscillator construction
@@ -74,9 +91,7 @@ Oscillator::Oscillator( double radf, double a, double bw, double ph /* = 0. */ )
 	_amplitude( a ),	//	absolute
 	_bandwidth( bw ),	//	bandwidth coefficient (noise energy / total energy)
 	_phase( ph ),		//	radians
-	_filter( new Filter( MaCoefs, MaCoefs + 4, 
-						 ArCoefs, ArCoefs + 4,
-						 ExtraScaling / Gain ) )
+	_filter( new Filter( prototype_filter() ) )
 {
 //	clamp bandwidth:
 	if ( _bandwidth > 1. )

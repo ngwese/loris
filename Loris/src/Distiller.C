@@ -354,6 +354,16 @@ Distiller::distill( std::list<Partial> & container, std::list< Partial >::iterat
 	container.sort( PartialUtils::duration_greater() );
 	debugger << "Distiller sorting Partials by label..." << endl;
 	container.sort( PartialUtils::label_less() );	//	this had better be a stable sort
+
+	//
+	// HEY this is screwed up, those iterators (args)
+	// aren't valid after sorting!
+	// TEMPORARY:
+	dist_begin = container.begin();
+	dist_end = container.end();
+	// FIX by splicing the specified range into another
+	// list and distilling back into the original container
+	//
 	
 	// 	iterate over labels and distill each one:
 	std::list<Partial>::iterator lowerbound = dist_begin;
@@ -366,7 +376,7 @@ Distiller::distill( std::list<Partial> & container, std::list< Partial >::iterat
 		//	first the first element in l after lowerbound
 		//	having a label not equal to 'label':
 		std::list<Partial>::iterator upperbound = 
-			std::find_if( lowerbound, container.end(), 
+			std::find_if( lowerbound, dist_end, 
 						  std::not1( std::bind2nd( PartialUtils::label_equals(), label ) ) );
 #ifdef Debug_Loris
 		//	don't want to compute this iterator distance unless debugging:
