@@ -17,8 +17,8 @@ CC = g++
 Includes = $(INC_LORIS)
 Debugging = $(DEBUG_LORIS)
 
-cFLAGS	:=	-O2 $(Includes) $(Debugging)
-CFLAGS	:= 	-O2 $(Includes) $(Debugging)
+CFLAGS	:= 	-O2 $(Includes) $(Debugging) -DNew_Association
+cFLAGS	:=	$(CFLAGS)
 
 #
 #	targets:
