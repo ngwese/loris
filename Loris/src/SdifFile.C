@@ -1170,7 +1170,7 @@ readMarkers( FILE * file, SDIF_FrameHeader fh, SdifFile::markers_type & markersV
 		{
 			if (mh.matrixDataType == SDIF_FLOAT64)
 			{
-				sdif_float32 markerTime64;
+				sdif_float64 markerTime64;
 				SDIF_Read8(&markerTime64,1,file);
 				markersVector.push_back(Marker(markerTime64, ""));
 			}
