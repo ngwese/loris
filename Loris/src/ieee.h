@@ -40,7 +40,11 @@ extern "C" {
 #endif
 
 /*	struct extended80 defined below 	*/
+#ifndef __cplusplus
 typedef struct extended80 extended80;
+#else
+struct extended80;
+#endif
 
 /*	conversion functions				*/
 extern void ConvertToIeeeExtended(double num, extended80 * x) ;
