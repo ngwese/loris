@@ -28,7 +28,7 @@
  * Lippold Haken, 20 October 2000, using IRCAM SDIF library (tutorial by Diemo Schwarz)
  * Lippold Haken, 22 December 2000, using 1LBL frames
  * Lippold Haken, 27 March 2001, write only 7-column 1TRC, combine reading and writing classes
- * Lippold Haken, 31 Jan 2002, write either 4-column 1TRC or 6-column RABP
+ * Lippold Haken, 31 Jan 2002, write either 4-column 1TRC or 6-column RBEP
  * loris@cerlsoundgroup.org
  *
  * http://www.cerlsoundgroup.org/Loris/
@@ -62,15 +62,15 @@ extern "C" {
 namespace Loris {
 
 
-//	Row of matrix data in SDIF RBEP, 1TRC, or 1LBL format.
+//	Row of matrix data in SDIF RBEP, 1TRC, or RBEL format.
 //
 //  The RBEP matrices are for reassigned bandwidth enhanced partials (in 6 columns).
 //	The 1TRC matrices are for sine-only partials (in 4 columns).
 //  The first four columns of an RBEP matrix correspond to the 4 columns in 1TRC.
 //	In the past, Loris exported a 7-column 1TRC; this is no longer exported, but can be imported.
 //
-//	The 1LBL format always has two columns, index and partial label.
-//	The 1LBL matrix is optional; it has partial label information (in 2 columns).
+//	The RBEL format always has two columns, index and partial label.
+//	The RBEL matrix is optional; it has partial label information (in 2 columns).
 int lorisRowMaxElements = 7;
 int lorisRowEnhancedElements = 6;
 int lorisRowSineOnlyElements = 4;
@@ -81,7 +81,7 @@ typedef struct {
 
 //  SDIF signatures used by Loris.
 #define lorisEnhancedSignature  SdifSignatureConst('R','B','E','P')
-#define lorisLabelsSignature    SdifSignatureConst('1','L','B','L')
+#define lorisLabelsSignature    SdifSignatureConst('R','B','E','L')
 #define lorisSineOnlySignature  SdifSignatureConst('1','T','R','C')
 
 
@@ -233,7 +233,7 @@ readLorisMatrices( SdifFileT *file, std::vector< Partial > & partialsVector )
 						}
 						
 						// Add rowData as a new breakpoint in a partial, or,
-						// if its a 1LBL matrix, read label mapping.
+						// if its a RBEL matrix, read label mapping.
 						processRow(msig, rowData, time, partialsVector);
 					}
 				}
@@ -252,40 +252,6 @@ readLorisMatrices( SdifFileT *file, std::vector< Partial > & partialsVector )
 			ThrowIfSdifError( SdifFLastError(file), "Error reading SDIF file" );
 		}
 	} 
-
-//
-// Error messages.
-//	
-#if 0
-	SdifErrorT* errPtr = SdifFLastError (file);
-	if (errPtr)
-	{
-		debugger << "SDIF error number " << (int)errPtr->Tag << endl;
-		if ( errPtr->Tag == eUnDefined )
-		{
-			//	this should ne generate an error anymore
-			debugger << "should not be generating eUnDefined errors..." << endl;
-			Throw(FileIOException, 
-			"Error reading SDIF file: Undefined martrix type. "
-			"Is the SdifTypes.STYP file accessible to Loris, and does it include the 1LBL definition?");
-		}
-		//	this error tag vanished between versions 3.2.2 and 3.4 
-		//	of IRCAM's SDIF library, and we require version 3.4
-		//	or later.
-		/*
-		else if ( errPtr->Tag == eBadNbData )
-		{
-			Throw(FileIOException, 
-			"Error reading SDIF file: bad martrix data. "
-			"Does the SdifTypes.STYP file include the bandwidth-enhanced 1TRC definition?");
-		}
-		*/
-		else
-		{			
-			Throw(FileIOException, "Error reading SDIF file.");
-		}
-	}
-#endif
 }
 
 
@@ -545,7 +511,7 @@ writeEnvelopeLabels( SdifFileT * out,
 				const std::vector< Partial * > & partialsVector )
 {
 //
-// Write Loris labels to SDIF file in a 1LBL matrix.
+// Write Loris labels to SDIF file in a RBEL matrix.
 // This precedes the 1TRC data in the file.
 // Let exceptions propagate.
 //
@@ -554,7 +520,7 @@ writeEnvelopeLabels( SdifFileT * out,
 	double frameTime = 0.0;
 
 //
-// Allocate 1LBL matrix data.
+// Allocate RBEL matrix data.
 //
 	int cols = 2;
 	SdifFloat4 *data = new SdifFloat4[partialsVector.size() * cols];
@@ -581,7 +547,7 @@ writeEnvelopeLabels( SdifFileT * out,
 			lorisLabelsSignature, eFloat4, partialsVector.size(), cols, data);	// matrix 
 
 //	
-// Free 1LBL matrix space.
+// Free RBEL matrix space.
 //
 	delete [] data;
 }
@@ -751,7 +717,7 @@ SdifFile::Export( const std::string & filename, const std::list<Partial> & parti
 		SdifPutFrameType(out->FrameTypesTable, parsFrameType);
 	}
 
-	// Define 1LBL matrix and frame type for labels.
+	// Define RBEL matrix and frame type for labels.
 	SdifMatrixTypeT *labelsMatrixType = SdifCreateMatrixType(lorisLabelsSignature,NULL);
 	SdifMatrixTypeInsertTailColumnDef(labelsMatrixType,"Index");  
 	SdifMatrixTypeInsertTailColumnDef(labelsMatrixType,"Label");  
