@@ -75,12 +75,12 @@ class CurrentPartialsView:public QFrame{
   void stateChanged();
 
  private:
-  QGridLayout* layout;
-  QTabWidget* tab;
-  PartialsList* partialsList;
-  Tab* amplitudeTab;
-  Tab* frequencyTab;
-  Tab* noiseTab;
+  QGridLayout  *layout;
+  QTabWidget   *tab;
+  PartialsList *partialsList;
+  Tab          *amplitudeTab;
+  Tab          *frequencyTab;
+  Tab          *noiseTab;
   
   void setGui();
   void setConnections();
@@ -101,15 +101,15 @@ class Tab:public QWidget{
   virtual void update();
   
  private:
-  QVBoxLayout* tabLayout;
-  QGroupBox* box;
-  QGridLayout* boxLayout;
-  QFrame* infoBox;
-  QLabel* stateText;
-  QLabel* nrOfPartialsText;
-  QLabel* durationText;
-  QPushButton* okPushButton;
-  QGridLayout* infoBoxLayout;
+  QVBoxLayout *tabLayout;
+  QGroupBox   *box;
+  QGridLayout *boxLayout;
+  QFrame      *infoBox;
+  QLabel      *stateText;
+  QLabel      *nrOfPartialsText;
+  QLabel      *durationText;
+  QPushButton *okPushButton;
+  QGridLayout *infoBoxLayout;
   
   void setGui();
   
@@ -117,12 +117,12 @@ class Tab:public QWidget{
    virtual void shiftValues() = 0;
 
  protected:
-  QLabel* maxNumber;
-  QLineEdit* shiftValue;
-  QLabel* shiftText; 
-  QLabel* maxText;
-  QLabel* partialsView;
-  PartialsList* partialsList;
+  QLabel       *maxNumber;
+  QLineEdit    *shiftValue;
+  QLabel       *shiftText; 
+  QLabel       *maxText;
+  QLabel       *partialsView;
+  PartialsList *partialsList;
 };
 
 // ---------------------------------------------------------------------------

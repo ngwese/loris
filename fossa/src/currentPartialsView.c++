@@ -145,6 +145,9 @@ void CurrentPartialsView::setGui(){
 //	Tab constructor - Tab is a virtual base class so actual Tab objects can not be 
 //                        constructed, just subclasses of Tab.
 // ---------------------------------------------------------------------------
+//
+// FIXME: I don't really think this is true.  The constructor should be pure 
+// virtual. Plus, CurrentPartialsView has Tab elements. (CDS 5/9/03)
 
 Tab::Tab(QWidget* parent, char* name, PartialsList* pList):QWidget(parent, name){
   partialsList = pList;
