@@ -27,13 +27,56 @@ namespace Loris {
 #endif
 
 // ---------------------------------------------------------------------------
+//	class Morpher_imp
+//
+//	Implementation class for Morpher.
+//
+struct Morpher_imp
+{
+//	-- instance variables --
+	//	reference-counted smart pointers from Batov:
+	//	(these Envelopes will never be modified by the Morpher_imp
+	//	class, but Morpher should be able to grant non-const
+	//	access to them, so they are not const Handles)
+	Handle< Envelope > _freqFunction;	//	frequency morphing function
+	Handle< Envelope > _ampFunction;	//	amplitude morphing function
+	Handle< Envelope > _bwFunction;		//	bandwidth morphing function
+	
+	PartialList _partials;	//	collect Partials here
+			
+//	construction:
+	Morpher_imp( Handle< Envelope > ff, Handle< Envelope > af, Handle< Envelope > bwf );
+	~Morpher_imp( void );
+	
+//	morphing:
+//	Morph two sounds (collections of Partials labeled to indicate
+//	correspondences) into a single labeled collection of Partials.
+	void morph( PartialList::const_iterator begin0, 
+				PartialList::const_iterator end0,
+				PartialList::const_iterator begin1, 
+				PartialList::const_iterator end1 );
+
+//	-- helpers --
+//	single Partial morph:
+//	(core morphing operation, called by morph() and crossfade())
+	void morphPartial( const Partial & p1, const Partial & p2, int assignLabel );
+	
+//	crossfade Partials with no correspondences:
+//	(crossfaded Partials are unlabeled, or assigned the 
+//	default label, 0)
+	void crossfade( PartialList::const_iterator begin0, 
+					PartialList::const_iterator end0,
+					PartialList::const_iterator begin1, 
+					PartialList::const_iterator end1 );
+
+};	//	end of class Morpher_imp
+
+// ---------------------------------------------------------------------------
 //	Morpher constructor (single morph function)
 // ---------------------------------------------------------------------------
 //
 Morpher::Morpher( Handle< Envelope > f ) :
-	_freqFunction( f ),
-	_ampFunction( f ),
-	_bwFunction( f )
+	_imp( new Morpher_imp( f, f, f ) )
 {
 }
 
@@ -42,9 +85,7 @@ Morpher::Morpher( Handle< Envelope > f ) :
 // ---------------------------------------------------------------------------
 //
 Morpher::Morpher( Handle< Envelope > ff, Handle< Envelope > af, Handle< Envelope > bwf ) :
-	_freqFunction( ff ),
-	_ampFunction( af ),
-	_bwFunction( bwf )
+	_imp( new Morpher_imp( ff, af, bwf ) )
 {
 }
 
@@ -54,6 +95,7 @@ Morpher::Morpher( Handle< Envelope > ff, Handle< Envelope > af, Handle< Envelope
 //
 Morpher::~Morpher( void )
 {
+	delete _imp;
 }
 
 // ---------------------------------------------------------------------------
@@ -123,22 +165,22 @@ Morpher::morph( PartialList::const_iterator begin0,
 		if ( p0 == end0 )
 		{
 			Assert( p1 != end1 );
-			morphPartial( Partial(), *p1, *labelIter );
+			_imp->morphPartial( Partial(), *p1, *labelIter );
 		}
 		else if ( p1 == end1 )
 		{
 			Assert( p0 != end0 );
-			morphPartial( *p0, Partial(), *labelIter );
+			_imp->morphPartial( *p0, Partial(), *labelIter );
 		}
 		else
 		{			 
-			morphPartial( *p0, *p1, *labelIter );
+			_imp->morphPartial( *p0, *p1, *labelIter );
 		}
 		
 	}	//	end loop over labels
 	
 	//	crossfade the remaining unlabeled Partials:
-	crossfade( begin0, end0, begin1, end1 );
+	_imp->crossfade( begin0, end0, begin1, end1 );
 }
 
 // ---------------------------------------------------------------------------
@@ -148,7 +190,7 @@ Morpher::morph( PartialList::const_iterator begin0,
 void
 Morpher::setFrequencyFunction( Handle< Envelope > f )
 {
-	_freqFunction = f;
+	_imp->_freqFunction = f;
 }
 
 // ---------------------------------------------------------------------------
@@ -158,7 +200,7 @@ Morpher::setFrequencyFunction( Handle< Envelope > f )
 void
 Morpher::setAmplitudeFunction( Handle< Envelope > f )
 {
-	_ampFunction = f;
+	_imp->_ampFunction = f;
 }
 
 // ---------------------------------------------------------------------------
@@ -168,7 +210,7 @@ Morpher::setAmplitudeFunction( Handle< Envelope > f )
 void
 Morpher::setBandwidthFunction( Handle< Envelope > f )
 {
-	_bwFunction = f;
+	_imp->_bwFunction = f;
 }
 
 // ---------------------------------------------------------------------------
@@ -178,7 +220,7 @@ Morpher::setBandwidthFunction( Handle< Envelope > f )
 Handle< Envelope >
 Morpher::frequencyFunction( void )
 {
-	return _freqFunction;
+	return _imp->_freqFunction;
 }
 
 // ---------------------------------------------------------------------------
@@ -188,7 +230,7 @@ Morpher::frequencyFunction( void )
 Handle< Envelope >
 Morpher::amplitudeFunction( void )
 {
-	return _ampFunction;
+	return _imp->_ampFunction;
 }
 
 // ---------------------------------------------------------------------------
@@ -198,7 +240,7 @@ Morpher::amplitudeFunction( void )
 Handle< Envelope >
 Morpher::bandwidthFunction( void )
 {
-	return _bwFunction;
+	return _imp->_bwFunction;
 }
 
 // ---------------------------------------------------------------------------
@@ -208,7 +250,7 @@ Morpher::bandwidthFunction( void )
 Handle< const Envelope >
 Morpher::frequencyFunction( void ) const 
 {
-	return _freqFunction;
+	return _imp->_freqFunction;
 }
 
 // ---------------------------------------------------------------------------
@@ -218,7 +260,7 @@ Morpher::frequencyFunction( void ) const
 Handle< const Envelope >
 Morpher::amplitudeFunction( void ) const 
 {
-	return _ampFunction;
+	return _imp->_ampFunction;
 }
 
 // ---------------------------------------------------------------------------
@@ -228,7 +270,46 @@ Morpher::amplitudeFunction( void ) const
 Handle< const Envelope >
 Morpher::bandwidthFunction( void ) const 
 {
-	return _bwFunction;
+	return _imp->_bwFunction;
+}
+
+// ---------------------------------------------------------------------------
+//	partials
+// ---------------------------------------------------------------------------
+//
+PartialList & 
+Morpher::partials( void )
+{ 
+	return _imp->_partials; 
+}
+
+// ---------------------------------------------------------------------------
+//	partials
+// ---------------------------------------------------------------------------
+//
+const PartialList & 
+Morpher::partials( void ) const 
+{ 
+	return _imp->_partials; 
+}
+
+// ---------------------------------------------------------------------------
+//	Morpher_imp constructor 
+// ---------------------------------------------------------------------------
+//
+Morpher_imp::Morpher_imp( Handle< Envelope > ff, Handle< Envelope > af, Handle< Envelope > bwf ) :
+	_freqFunction( ff ),
+	_ampFunction( af ),
+	_bwFunction( bwf )
+{
+}
+
+// ---------------------------------------------------------------------------
+//	Morpher_imp destructor
+// ---------------------------------------------------------------------------
+//
+Morpher_imp::~Morpher_imp( void )
+{
 }
 
 // ---------------------------------------------------------------------------
@@ -241,7 +322,7 @@ Morpher::bandwidthFunction( void ) const
 //	in both source Partials.
 //
 void 
-Morpher::morphPartial( const Partial & p0, const Partial & p1, int assignLabel )
+Morpher_imp::morphPartial( const Partial & p0, const Partial & p1, int assignLabel )
 {
 	//	make a new Partial:
 	Partial newp;
@@ -336,7 +417,7 @@ Morpher::morphPartial( const Partial & p0, const Partial & p1, int assignLabel )
 	//	if it is valid:
 	if ( newp.begin() != newp.end() ) 
 	{
-		partials().push_back( newp );
+		_partials.push_back( newp );
 	}
 
 }
@@ -357,7 +438,7 @@ Morpher::morphPartial( const Partial & p0, const Partial & p1, int assignLabel )
 //	morph function of 1.
 //
 void 
-Morpher::crossfade( PartialList::const_iterator begin0, 
+Morpher_imp::crossfade( PartialList::const_iterator begin0, 
 				  PartialList::const_iterator end0,
 				  PartialList::const_iterator begin1, 
 				  PartialList::const_iterator end1 )
@@ -380,63 +461,6 @@ Morpher::crossfade( PartialList::const_iterator begin0,
 			morphPartial( nullPartial, *it, 0 );
 	}
 }
-/*
-// ---------------------------------------------------------------------------
-//	crossfadeLists
-// ---------------------------------------------------------------------------
-//	Crossfade Partials with no correspondences.
-//
-//	The Partials in the specified range are considered to have 
-//	no correspondences, so they are just faded out, and not 
-//	actually morphed. This is the same as morphing each with an 
-//	empty Partial. 
-//
-//	The Partials in fromlist are treated as components of the 
-//	sound corresponding to a morph function of 0, those in tolist
-//	are treated as components of the sound corresponding to a 
-//	morph function of 1.
-//
-void
-Morpher::crossfadeLists( const PartialList & fromlist, 
-					   const PartialList & tolist )
-{
-	//	crossfade Partials corresponding to a morph weight of 0:
-	for ( PartialList::const_iterator it = fromlist.begin();
-		  it != fromlist.end();
-		  ++it )
-	{
-		morphPartial( *it, Partial() );	
-	}
-
-	//	crossfade Partials corresponding to a morph weight of 1:
-	for ( PartialList::const_iterator it = tolist.begin();
-		  it != tolist.end();
-		  ++it )
-	{
-		morphPartial( Partial(), *it );
-	}
-}
-
-// ---------------------------------------------------------------------------
-//	collectByLabel
-// ---------------------------------------------------------------------------
-//	Static member for accessing the label for 
-//	crossfaded Partials (0):
-//
-static void collectByLabel( PartialList::const_iterator start, 
-							PartialList::const_iterator end, 
-							PartialList & collector, 
-							int label )
-{
-	while ( start != end ) {
-		if ( start->label() == label ) {
-			collector.push_back( *start );
-		}
-		++start;
-	}
-}
-
-*/
 
 #if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris

@@ -12,8 +12,8 @@
 //	-kel 15 Oct 99
 //
 // ===========================================================================
-#include "Partial.h"
-#include "Handle.h"	//	Batov's template Handle class	
+#include "Partial.h"	//	needed only for PartialList definition
+#include "Handle.h"	 	//	Batov's template Handle class	
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
@@ -21,25 +21,20 @@ namespace Loris {
 #endif
 
 class Envelope;
+class Morpher_imp;
 
 // ---------------------------------------------------------------------------
 //	class Morpher
 //
-//	Hey, how about a comment?
+//	Fully-insulating class encapsulating manipulations involving 
+//	linear interpolation of Partial parameter envelopes. The implementation
+//	is entirely defined in the Morpher_imp class, in Morpher.C.
 //
 class Morpher
 {
-//	-- instance variables --
-	//	reference-counted smart pointers from Batov:
-	//	(these Envelopes will never be modified by the Morpher
-	//	class, but Morpher should be able to grant non-const
-	//	access to them, so they are not const Handles)
-	Handle< Envelope > _freqFunction;	//	frequency morphing function
-	Handle< Envelope > _ampFunction;	//	amplitude morphing function
-	Handle< Envelope > _bwFunction;		//	bandwidth morphing function
-	
-	PartialList _partials;	//	collect Partials here
-			
+//	-- instance variable --
+	Morpher_imp * _imp;
+
 //	-- public interface --
 public:
 //	construction:
@@ -71,22 +66,8 @@ public:
 	
 	
 //	PartialList access:
-	PartialList & partials( void ) { return _partials; }
-	const PartialList & partials( void ) const { return _partials; }
-	
-//	-- helpers --
-protected:	
-//	single Partial morph:
-//	(core morphing operation, called by morph() and crossfade())
-	void morphPartial( const Partial & p1, const Partial & p2, int assignLabel );
-	
-//	crossfade Partials with no correspondences:
-//	(crossfaded Partials are unlabeled, or assigned the 
-//	default label, 0)
-	void crossfade( PartialList::const_iterator begin0, 
-					PartialList::const_iterator end0,
-					PartialList::const_iterator begin1, 
-					PartialList::const_iterator end1 );
+	PartialList & partials( void ); 
+	const PartialList & partials( void ) const; 
 
 //	-- unimplemented until useful --
 private:

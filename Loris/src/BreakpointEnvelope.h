@@ -12,6 +12,7 @@
 //	-kel 21 July 2000
 //
 // ===========================================================================
+#include "Envelope.h"
 #include <map>
 
 #if !defined( NO_LORIS_NAMESPACE )
@@ -24,7 +25,7 @@ namespace Loris {
 //
 //	Linear-segment breakpoint function with infinite extension at each end.
 //
-class BreakpointEnvelope
+class BreakpointEnvelope : public Envelope
 {
 //	-- instance variables --
 	std::map< double, double > _breakpoints;
