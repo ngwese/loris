@@ -8,6 +8,7 @@
 // ===========================================================================
 #include "ReassignedSpectrum.h"
 #include "Notifier.h"
+#include "Exception.h"
 
 using namespace std;
 
@@ -69,6 +70,9 @@ ReassignedSpectrum::~ReassignedSpectrum( void )
 void
 ReassignedSpectrum::transform( const vector< double > & buf, long idxCenter )
 {
+	Assert( idxCenter >= 0 );
+	Assert( idxCenter < buf.size() );
+	
 //	allocate a temporary sample buffer:
 	vector< double > tmp( _window.size(), 0. );
 	
@@ -85,11 +89,18 @@ ReassignedSpectrum::transform( const vector< double > & buf, long idxCenter )
 		eoffset = boffset;
 	}
 	
+	long middleOffset = _window.size() / 2;
+	
 //	window and rotate input and compute normal transform:
 	std::transform( buf.begin() + boffset, buf.begin() + eoffset, 
 					_window.begin() + woffset, 
 					tmp.begin() + woffset, multiplies< double >() );
-	_transform.loadAndRotate( tmp );
+	//_transform.loadAndRotate( tmp );
+	//load( _transform, tmp.begin(), tmp.begin() + middleOffset, tmp.end() );
+	load( _transform, 
+		  buf.begin() + boffset, buf.begin() + idxCenter, buf.begin() + eoffset,
+		  _window.begin() + woffset );
+	
 	_transform.transform();
 
 //	window and rotate input using frequency-ramped window
@@ -97,7 +108,12 @@ ReassignedSpectrum::transform( const vector< double > & buf, long idxCenter )
 	std::transform( buf.begin() + boffset, buf.begin() + eoffset, 
 					_winfreqramp.begin() + woffset, 
 					tmp.begin() + woffset, multiplies< double >() );
-	_tfreqramp.loadAndRotate( tmp );
+	//_tfreqramp.loadAndRotate( tmp );
+	//load( _tfreqramp, tmp.begin(), tmp.begin() + middleOffset, tmp.end() );
+	load( _tfreqramp, 
+		  buf.begin() + boffset, buf.begin() + idxCenter, buf.begin() + eoffset,
+		  _winfreqramp.begin() + woffset );
+
 	_tfreqramp.transform();
 
 //	window and rotate input using time-ramped window and
@@ -105,7 +121,12 @@ ReassignedSpectrum::transform( const vector< double > & buf, long idxCenter )
 	std::transform( buf.begin() + boffset, buf.begin() + eoffset, 
 					_wintimeramp.begin() + woffset, 
 					tmp.begin() + woffset, multiplies< double >() );
-	_ttimeramp.loadAndRotate( tmp );
+	//_ttimeramp.loadAndRotate( tmp );
+	//load( _ttimeramp, tmp.begin(), tmp.begin() + middleOffset, tmp.end() );
+	load( _ttimeramp, 
+		  buf.begin() + boffset, buf.begin() + idxCenter, buf.begin() + eoffset,
+		  _wintimeramp.begin() + woffset );
+	
 	_ttimeramp.transform();
 }
 
@@ -125,7 +146,8 @@ ReassignedSpectrum::applyFreqRamp( vector< double > & w )
 	//	Use a transform exactly as long as the window.
 	//	load, w/out rotation, and transform.
 	FourierTransform temp( w.size() );
-	temp.load( w );
+	//temp.load( w );
+	load( temp, w.begin(), w.end() );
 	temp.transform();
 	
 	//	extract complex transform and multiply by

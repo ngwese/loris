@@ -42,8 +42,27 @@ using namespace Loris;
 // ---------------------------------------------------------------------------
 //
 FourierTransform::FourierTransform( long len ) :
-	_z( len, complex<double>(0.,0.) )
+	//_z( len, complex<double>(0.,0.) )
+	_size( len ),
+	_z( new complex< double >[ len ] )
 {
+	//	check to make sure that std::complex< double >
+	//	and fftw_complex are really identical:
+	static boolean checked = false;
+	if ( ! checked ) {
+		union {
+			std::complex< double > _std;
+			fftw_complex _fftw;
+		} u;
+		u._std = std::complex<double>(1234.5678, 9876.5432);
+		if ( c_re( u._fftw ) != u._std.real() ||
+			 c_im( u._fftw ) != u._std.imag() ) {
+			Throw( InvalidObject, 
+				   "FourierTransform found std::complex< double > and fftw_complex to be different." );
+		}
+	}
+	
+	fill( _z, _z + len, 0. );
 }
 
 // ---------------------------------------------------------------------------
@@ -54,14 +73,14 @@ FourierTransform::FourierTransform( long len ) :
 //	The buffer will be zero-padded or truncated if it
 //	is the wrong size. The input will also be rotated to
 //	align its phase reference with the middle of the buffer.
-//
+/*
 void
 FourierTransform::transform( const vector< double > & buf )
 {
 	loadAndRotate( buf );
 	transform();
 }
-
+*/
 // ---------------------------------------------------------------------------
 //	transform
 // ---------------------------------------------------------------------------
@@ -73,23 +92,30 @@ FourierTransform::transform( void )
 {
 //	setup fft buffers:
 	static long bufsize = 0;
-	static fftw_complex * fftwIn = Null;
+	//static fftw_complex * fftwIn = Null;
 	static fftw_complex * fftwOut = Null;
 	static fftw_plan plan = Null;	//	this is stupidity, fftw_plan is a pointer type
 									// 	unknown whether you can destroy an uninitialized
 									//	plan, seems unlikely.
+									
+	union { 
+		complex< double > * cplx;
+		fftw_complex * fftw;
+	} deh;
+	deh.Clx = _z;
+	fftw_complex * fftwIn = deh.fftw;
 	
 	if ( bufsize != size() ) {
 		try {
 			debugger << "FFTW planing for size " << size() << endl;
-			delete[] fftwIn;
-			fftwIn = Null;	//	to prevent deleting again
+			//delete[] fftwIn;
+			//fftwIn = Null;	//	to prevent deleting again
 			delete[] fftwOut;
 			fftwOut = Null;	//	to prevent deleting again
 			bufsize = 0;
 			if ( plan ) 
 				fftw_destroy_plan( plan );
-			fftwIn = new fftw_complex[ size() ];
+			//fftwIn = new fftw_complex[ size() ];
 			fftwOut = new fftw_complex[ size() ];
 			bufsize = size();
 			plan = fftw_create_plan_specific( bufsize, FFTW_FORWARD,
@@ -99,20 +125,20 @@ FourierTransform::transform( void )
 		}
 		catch( LowMemException & ex ) {
 			bufsize = 0;
-			delete[] fftwIn;
-			fftwIn = Null;	//	to prevent deleting again
+			//delete[] fftwIn;
+			//fftwIn = Null;	//	to prevent deleting again
 			delete[] fftwOut;
 			fftwOut = Null;	//	to prevent deleting again
 			ex.append( "couldn't prepare FourierTransform." );
 			throw;
 		}
 	}
-//	copy input into fftw buffers:
+/*	copy input into fftw buffers:
 	for ( long i = 0; i < size(); ++i ) {
 		fftwIn[i].re = _z[i].real();
 		fftwIn[i].im = _z[i].imag();
 	}
-	
+*/	
 //	cruch:	
 	fftw_one( plan, fftwIn, fftwOut );
 	
@@ -122,7 +148,7 @@ FourierTransform::transform( void )
 	}
 	
 }
-
+/*
 // ---------------------------------------------------------------------------
 //	load
 // ---------------------------------------------------------------------------
@@ -132,13 +158,13 @@ FourierTransform::transform( void )
 void
 FourierTransform::load( const vector< double > & buf )
 {
-	if ( buf.size() < _z.size() ) {
-		copy( buf.begin(), buf.end(), _z.begin() );
+	if ( buf.size() < size() ) {
+		copy( buf.begin(), buf.end(), begin() );
 		//	zero the rest:
-		fill( _z.begin() + buf.size(), _z.end(), 0. );
+		fill( begin() + buf.size(), end(), 0. );
 	}
 	else {
-		copy( buf.begin(), buf.begin() + _z.size(), _z.begin() );
+		copy( buf.begin(), buf.begin() + size(), begin() );
 	}
 }
 
@@ -162,24 +188,25 @@ FourierTransform::load( const vector< double > & buf )
 void
 FourierTransform::loadAndRotate( const vector< double > & buf )
 {
-	if ( buf.size() < _z.size() ) {
+	if ( buf.size() < size() ) {
 		//	pre-zero:
-		fill( _z.begin(), _z.end(), 0. );
+		fill( begin(), end(), 0. );
 		//	copy second half of buf into beginning of _z:
-		copy( buf.begin() + buf.size() / 2, buf.end(), _z.begin() );
+		copy( buf.begin() + buf.size() / 2, buf.end(), begin() );
 		//	copy second half of buf into end of _z:
-		copy( buf.begin(), buf.begin() + buf.size() / 2, _z.end() - buf.size() / 2 );
+		copy( buf.begin(), buf.begin() + buf.size() / 2, end() - buf.size() / 2 );
 	}
 	else {
 		//	copy _z.size()/2 samples starting at middle of
 		//	buf into first half of _z:
 		copy( buf.begin() + buf.size() / 2, 
-			  buf.begin() + (buf.size() / 2) + (_z.size() / 2), 
-			  _z.begin() );
+			  buf.begin() + (buf.size() / 2) + (size() / 2), 
+			  begin() );
 		//	copy _z.size()/2 samples ending at middle of
 		//	buf into second half of _z:
 		copy( buf.begin(), 
-			  buf.begin() + (_z.size() / 2),
-			  _z.begin() + (_z.size() / 2) );
+			  buf.begin() + (size() / 2),
+			  begin() + (size() / 2) );
 	}
 }
+*/

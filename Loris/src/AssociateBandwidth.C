@@ -192,8 +192,10 @@ AssociateBandwidth::computeWindowSpectrum( const vector< double > & v )
 	debugger << "AssociateBandwidth oversampling window spectrum by " << WinSpecOversample << endl;
 	
 	FourierTransform ft( _spectrum.size() * WinSpecOversample );
-	ft( v );
-	
+	//ft( v );
+	load( ft, v.begin(), v.end() );
+	ft.transform();	
+
 	double peakScale = 1. / abs( ft[0] );
 	for( long i = 0; i < ft.size(); ++i ) {
 		double x = peakScale * abs( ft[i] );

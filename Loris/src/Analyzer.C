@@ -52,6 +52,8 @@ Analyzer::analyze( const vector< double > & buf, double srate )
 //	(changes in the analysis parameters may
 //	require reconstruction of the spectrogram, 
 //	so construct it at the last minute)
+//	(in fact, it could be local, no need for it 
+//	to persist, is there?)
 	if (! _spectrum.get() ) {
 		createSpectrum( srate );
 	}
@@ -72,8 +74,8 @@ Analyzer::analyze( const vector< double > & buf, double srate )
 //	hop samples past the end of the buffer.
 	const long latestIdx = buf.size() + 2L * hopSize();
 	try { 
-		for ( _winMiddleIdx = - hopSize(); 
-			  _winMiddleIdx < latestIdx; 
+		for ( _winMiddleIdx = 0; //- hopSize(); 
+			  _winMiddleIdx < buf.size(); //latestIdx; 
 			  _winMiddleIdx += hopSize() ) {
 			 
 			//debugger << "analyzing frame centered at " << _winMiddleIdx << endl; 
