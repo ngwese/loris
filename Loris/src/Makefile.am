@@ -19,14 +19,12 @@ AM_CXXFLAGS = $(DEBUG_LORIS)
 
 pkginclude_HEADERS = AiffFile.h	\
 				Analyzer.h		\
-				AssociateBandwidth.h	\
 				BreakpointEnvelope.h	\
 				Breakpoint.h	\
 				BreakpointUtils.h	\
 				Channelizer.h	\
 				Dilator.h	\
 				Distiller.h	\
-				Endian.h	\
 				Envelope.h	\
 				Exception.h	\
 				Filter.h	\
