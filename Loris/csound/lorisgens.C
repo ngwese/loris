@@ -45,6 +45,7 @@
 
 #include <algorithm>
 #include <exception>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -57,24 +58,70 @@ static void destroy_oscillators(Oscillator *oscp);
 static void lorisplay_cleanup(void * p);
 
 // ---------------------------------------------------------------------------
+//	sdif_openfile
+// ---------------------------------------------------------------------------
+//	Import Partials from the named SDIF file if they have not already 
+//	been imported. Return a pointer to the SdifFile object containing the
+//	Partials. 
+//
+//	This function could be used by several generators, so that they could
+//	all share the pool of reassigned bandwidth-enhanced partials imported
+//	from SDIF files.
+//
+static SdifFile * sdif_openfile( const std::string & filename )
+{
+	static std::map< std::string, SdifFile * > filenamemap;
+	
+	std::map< std::string, SdifFile * >::iterator it = filenamemap.find( filename );
+		
+	if ( it != filenamemap.end() )
+	{
+     	// fprintf(stderr, "** found SDIF file %s\n", filename.c_str());
+		return it->second;
+	}
+	else
+	{	
+		try 
+		{
+			// fprintf(stderr, "** importing SDIF file %s\n", filename.c_str());
+			SdifFile * f = new SdifFile(filename);
+			filenamemap[filename] = f;
+			return f;
+		}
+		catch(Exception ex)
+		{
+		  fprintf(stderr, "\nERROR importing SDIF file: %s", ex.what());
+		  return NULL;
+		}
+		catch(std::exception ex)
+		{
+		  fprintf(stderr, "\nERROR importing SDIF file: %s", ex.what());
+		  return NULL;
+		}
+	}
+}
+
+// ---------------------------------------------------------------------------
 //	Lorisplay_priv definition
 // ---------------------------------------------------------------------------
 // 	Define a structure holding private internal data.
 //
+typedef std::vector< Partial > PARTIALS;
+typedef std::vector< Oscillator > OSCILS;
+
 struct Lorisplay_priv
 {
-	Oscillator *oscp;
-	Partial *part;
+	OSCILS oscp;
+	PARTIALS part;
 	
-	// double *dblbuffer;
 	std::vector< double > dblbuffer;
-	std::string sdiffilnam;
-	
-	int n;
-	float fadetime;
 	
 	Lorisplay_priv( LORISPLAY * params );
 	~Lorisplay_priv( void );
+	
+private:
+	void import_partials( const std::string & sdiffilname );
+	void apply_fadetime( double fadetime );
 }; 
 
 // ---------------------------------------------------------------------------
@@ -82,49 +129,141 @@ struct Lorisplay_priv
 // ---------------------------------------------------------------------------
 //
 Lorisplay_priv::Lorisplay_priv( LORISPLAY * params ) :
-	dblbuffer( ksmps, 0. ),
-	fadetime( *params->fadetime )
+	dblbuffer( ksmps, 0. )
 {
+	std::string sdiffilname;
+
 	//	determine the name of the SDIF file to use:
 	//	this code adapted from ugens8.c pvset()
 	if ( *params->ifilnam == sstrcod )
 	{
 		//	use strg name, if given:
-		sdiffilnam = unquote(params->STRARG);
+		sdiffilname = unquote(params->STRARG);
 	}
     /* unclear what this does, not described in pvoc docs
     else if ((long)*p->ifilnam <= strsmax && strsets != NULL && strsets[(long)*p->ifilnam])
-      strcpy(sdiffilnam, strsets[(long)*p->ifilnam]);
+      strcpy(sdiffilname, strsets[(long)*p->ifilnam]);
      */
     else 
     {
     	//	else use loris.filnum
     	char tmp[32];
     	sprintf(tmp,"loris.%d", (int)*params->ifilnam);
-		sdiffilnam = tmp;
+		sdiffilname = tmp;
 	}
 	
 	//	allocate Partials and Oscillators:
-	createPartials(this);
+	import_partials( sdiffilname );
+	apply_fadetime( *params->fadetime );
 }
 
 // ---------------------------------------------------------------------------
-//	Lorisplay_priv contructor
+//	Lorisplay_priv detructor
 // ---------------------------------------------------------------------------
 //
 Lorisplay_priv::~Lorisplay_priv( void )
 {
-	destroy_oscillators(oscp);
-	destroy_partials(part);
 }
 
-/* I made a small step toward making this more efficient, by only
-	loading each SDIF file once. I am still unnecessarily making
-	copies of all the partials. There's lots of work to be done here.
-	-kel
-	7 May 2002
- */
- 
+
+// ---------------------------------------------------------------------------
+//	Lorisplay_priv import_partials
+// ---------------------------------------------------------------------------
+//	Import the Partials, if necessary, and make a private copy of them,
+//	and allocate Oscillators for each Partial.
+//
+void 
+Lorisplay_priv::import_partials( const std::string & sdiffilname )
+{
+	SdifFile * f = sdif_openfile( sdiffilname );
+	if ( f == NULL )
+		return;
+		
+	//	copy the Partials into the vector in bwestore:
+	//	NOTE - cannot (trivially) share Partials between generators, because
+	//	fadetimes might be different!
+	part.reserve( f->partials().size() );
+	part.insert( part.begin(), f->partials().begin(), f->partials().end() );
+	
+	//	allocate the Oscillators:
+	oscp.resize( part.size() );	
+}
+
+
+// ---------------------------------------------------------------------------
+//	Lorisplay_priv apply_fadetime
+// ---------------------------------------------------------------------------
+//	Fade Partials in and out, if fadetime > 0.
+//
+void 
+Lorisplay_priv::apply_fadetime( double fadetime )
+{
+	//	nothing to do if fadetime is zero:
+	if (fadetime <= 0.)
+		return;
+		
+	//	iterator over all Partials, adding Breakpoints at both ends:
+	PARTIALS::iterator iter;
+	for ( iter = part.begin(); iter != part.end(); ++iter )  
+	{
+		Partial & partial = *iter;
+		
+		double btime = partial.startTime();	// get start time of partial
+	    double etime = partial.endTime();	// get end time of partial
+
+		//	if a fadetime has been specified, introduce zero-amplitude
+		//	Breakpoints to fade in and out over fadetime seconds:
+		if( fadetime != 0 )
+		{
+			if ( partial.amplitudeAt(btime) > 0. )
+			{
+				//	only fade in if starting amplitude is non-zero:
+				if( btime > 0. ) 
+				{
+					//	if the Partial begins after time 0, insert a Breakpoint
+					//	of zero amplitude at a time fadetime before the beginning, 
+					//	of the Partial, or at zero, whichever is later:
+					double t = std::max(btime - fadetime, 0.);
+					partial.insert( t, Breakpoint( partial.frequencyAt(t), partial.amplitudeAt(t), 
+												   partial.bandwidthAt(t), partial.phaseAt(t)));
+				}
+				else 
+				{
+					//	if the Partial begins at time zero, insert the zero-amplitude
+					//	Breakpoint at time zero, and make sure that the next Breakpoint
+					//	in the Partial is no more than fadetime away from the beginning
+					//	of the Partial:
+					
+					//	find the first Breakpoint later than time 0:
+					Partial::iterator pit = partial.begin();
+					while (pit.time() < 0.)
+						++pit;
+					if ( pit.time() > fadetime )
+					{
+						//	if first Breakpoint afer 0 is later than fadetime, 
+						//	insert a Breakpoint at fadetime:
+						double t = fadetime;
+						partial.insert( t, Breakpoint( partial.frequencyAt(t), partial.amplitudeAt(t), 
+													   partial.bandwidthAt(t), partial.phaseAt(t)));
+					}
+					
+					//	insert the zero-amplitude Breakpoint at 0:
+					partial.insert( 0, Breakpoint( partial.frequencyAt(0), 0, 
+												   partial.bandwidthAt(0), partial.phaseAt(0)));
+
+				}
+			}
+			
+			//	add fadeout Breakpoint at end:
+			double t = etime + fadetime;
+			partial.insert( t, Breakpoint( partial.frequencyAt(t), 0, 
+										   partial.bandwidthAt(t), partial.phaseAt(t)));
+		}
+	}
+	
+}
+
+
 //function gets the amplitude of a partial at a specific time
 static
 float getAmp(float time, Partial *part)
@@ -165,203 +304,31 @@ void init_oscillator(Partial *part, Oscillator *oscp, float time)
 
 }
 
-//function creates an array of n oscillators
-static
-Oscillator * createOscillators(int n)
-{
-Oscillator *oscp = new Oscillator[n];
-return oscp;
-}
 
-#define MAXFILES (32)
-static SdifFile * files[MAXFILES];
-
-//	access a named SDIF file
-static int sdif_openfile(const std::string & filename)
-{
-	static std::vector< std::string > filenames(MAXFILES);
-	int i;
-    char *pname;
-    SdifFile *pfile = NULL;
-
-    for (i=0; i < MAXFILES; ++i) {
-      if (files[i]==NULL)	{				//	if we find an empty space, load 
-      										//	the file into that space
-        break;
-      }
-      else if ( filenames[i] == filename ) {//	if we find the one we're looking
-      										//	for, return its index
-      	// fprintf(stderr, "** found SDIF file %s at index %d\n", filename.c_str(), i);
-      	return i;
-      }
-    }
-    
-    if (i==MAXFILES) 
-    {
-      fprintf(stderr, "\nERROR importing SDIF file: too many files open");
-      return -1;
-    }
-
-	try 
-	{
-    	files[i] = new SdifFile(filename);
-    	filenames[i] = filename;
-     	// fprintf(stderr, "** importing SDIF file %s at index %d\n", filename.c_str(), i);
-    }
-    catch(Exception ex)
-    {
-      fprintf(stderr, "\nERROR importing SDIF file: %s", ex.what());
-      return -1;
-    }
-    catch(std::exception ex)
-    {
-      fprintf(stderr, "\nERROR importing SDIF file: %s", ex.what());
-      return -1;
-    }
-
-    return i;
-}
-
-//function creates all the partials specified by the input file
-static
-void createPartials(Lorisplay_priv *bwestore)
-{
-int count = 0;
-
-	int idx = sdif_openfile(bwestore->sdiffilnam);
-	if (idx < 0) {
-		bwestore->n = 0;
-		return;
-	}
-	
-	SdifFile & f = *(files[idx]);
-
-	bwestore->n = f.partials().size();  //the number of partials total
-	bwestore->oscp = createOscillators(bwestore->n);  //create n oscillators
-	list< Partial >::iterator iter;  //make a list of partials to iterate through
-	bwestore->part = new Partial[bwestore->n];  //create array of partials
-	for ( iter = f.partials().begin(); iter != f.partials().end(); ++iter )  //for all of the partials
-	{
-
-		bwestore->part[count] = *iter;  //set the partial to one of the partials read in
-		Partial & partial = bwestore->part[count];
-		
-		double btime = partial.startTime();  //get start time of partial
-	    double etime = partial.endTime();  //get end time of partial
-
-		//	if a fadetime has been specified, introduce zero-amplitude
-		//	Breakpoints to fade in and out over fadetime seconds:
-		if( (bwestore->fadetime) != 0 )
-		{
-			if ( partial.amplitudeAt(btime) > 0. )
-			{
-				//	only fade in if starting amplitude is non-zero:
-				if( btime > 0. ) 
-				{
-					//	if the Partial begins after time 0, insert a Breakpoint
-					//	of zero amplitude at a time fadetime before the beginning, 
-					//	of the Partial, or at zero, whichever is later:
-					double t = std::max(btime - (bwestore->fadetime), 0.);
-					partial.insert( t, Breakpoint( partial.frequencyAt(t), partial.amplitudeAt(t), 
-												   partial.bandwidthAt(t), partial.phaseAt(t)));
-				}
-				else 
-				{
-					//	if the Partial begins at time zero, insert the zero-amplitude
-					//	Breakpoint at time zero, and make sure that the next Breakpoint
-					//	in the Partial is no more than fadetime away from the beginning
-					//	of the Partial:
-					
-					//	find the first Breakpoint later than time 0:
-					Partial::iterator pit = partial.begin();
-					while (pit.time() < 0.)
-						++pit;
-					if ( pit.time() > bwestore->fadetime )
-					{
-						//	if first Breakpoint afer 0 is later than fadetime, 
-						//	insert a Breakpoint at fadetime:
-						double t = bwestore->fadetime;
-						partial.insert( t, Breakpoint( partial.frequencyAt(t), partial.amplitudeAt(t), 
-													   partial.bandwidthAt(t), partial.phaseAt(t)));
-					}
-					
-					//	insert the zero-amplitude Breakpoint at 0:
-					partial.insert( 0, Breakpoint( partial.frequencyAt(0), 0, 
-												   partial.bandwidthAt(0), partial.phaseAt(0)));
-
-				}
-			}
-			
-			//	add fadeout Breakpoint at end:
-			double t = etime + bwestore->fadetime;
-			partial.insert( t, Breakpoint( partial.frequencyAt(t), 0, 
-										   partial.bandwidthAt(t), partial.phaseAt(t)));
-		}
-
-		++count;
-
-	}
-}
-
-//function cleans up the array of partials created
-static
-void destroy_partials(Partial *part)
-{
-	
-	delete [] part;
-
-}
-
-// function cleans up array of oscillators created
-static
-void destroy_oscillators(Oscillator *oscp)
-{
-
-	delete [] oscp;
-
-}
-
-//function runs at initialization time for bweoscil
+//function runs at initialization time for lorisplay
 extern "C"
 void lorisplay_setup(LORISPLAY *p)
 {
-	int i;
-
 	p->bwestore = new Lorisplay_priv( p );
-	//p->bwestore = (Lorisplay_priv *)malloc(sizeof(Lorisplay_priv));  //allocate storage structure
-	//p->bwestore->fadetime = *(p->fadetime);  //store fadetime in bwestore
-	#if 0
-	/* import the SDIF file, this code adapted from ugens8.c pvset() */
-	if (*p->ifilnam == sstrcod)                         /* if strg name given */
-      strcpy(p->bwestore->sdiffilnam, unquote(p->STRARG));           /*   use that         */
-    /* unclear what this does, not described in pvoc docs
-    else if ((long)*p->ifilnam <= strsmax && strsets != NULL && strsets[(long)*p->ifilnam])
-      strcpy(sdiffilnam, strsets[(long)*p->ifilnam]);
-     */
-    else 
-    	sprintf(p->bwestore->sdiffilnam,"loris.%d", (int)*p->ifilnam); /* else loris.filnum   */
-	#endif
-	
-    //createPartials(p->bwestore);
-	p->h.dopadr = lorisplay_cleanup;  //set lorisplay_cleanup as cleanup routine
-	//p->bwestore->dblbuffer = (double *)malloc(ksmps*sizeof(double));  //allocate memory for buffer to be used for generating samples into
+	p->h.dopadr = lorisplay_cleanup;  // set lorisplay_cleanup as cleanup routine
 }
 
-//function runs through on the k-rate for bweoscil
+//function runs through on the k-rate for lorisplay
 extern "C"
 void lorisplay(LORISPLAY *p)
 {
 	//temp variables
 	float *answer = p->result;
-        int nn = ksmps;
+    int nn = ksmps;
 	int i;
 	float amp;
 	float prevtime = *(p->time) - ksmps/esr;   //calculation of previous time
+	int numOscils = p->bwestore->oscp.size();
+
 	//	zero the buffer first!
-	//bzero(p->bwestore->dblbuffer->begin(), ksmps*sizeof(double));  //zero buffer that result is stored in
 	std::fill( p->bwestore->dblbuffer.begin(), p->bwestore->dblbuffer.end(), 0. );
 	double * bufbegin =  p->bwestore->dblbuffer.begin();
-	for(i=0; i < (p->bwestore->n); i++)  //for each oscillator
+	for(i=0; i < numOscils; i++)  //for each oscillator
 	{
 	amp = getAmp(*(p->time), &(p->bwestore->part[i]));  //get amp at current time
 	if(amp > 0 || p->bwestore->oscp[i].amplitude() > 0)  //if current or last amplitude greater than zero
@@ -386,15 +353,11 @@ void lorisplay(LORISPLAY *p)
 	 
 }
 
-//function cleans up after bweoscil is ran
+//	function cleans up after lorisplay
 static
 void lorisplay_cleanup(void * p)
 {
 	LORISPLAY * tp = (LORISPLAY *)p;
-	//destroy or free all memory allocation created
 	delete tp->bwestore;
-	// destroy_oscillators(tp->bwestore->oscp);
-	// destroy_partials(tp->bwestore->part);
-	//free(tp->bwestore->dblbuffer);
 }
 

@@ -60,3 +60,22 @@ instr 3
 	a2 atone a1, 1000  
 	out a2
 endin
+
+;;   ;
+;;   ; Morph the partials in carhorn.sdif into
+;;   ; the partials in meow.sdif linearly over 
+;;   ; all but the last 2 seconds of the note.
+;;   ; The morph is performed over the first 
+;;   ; .75 seconds of the source sounds. The last
+;;   ; 2.5 seconds (of meow) is unmodified.
+;;   ; Use 1 ms fade time.
+;;   ;
+;;   instr 4
+;;       ktime    linseg      0, p3-2.5, 0.75, 2.5, 3.5   ; time index function
+;;       kmorph   linseg      0, p3-2.5, 1.0, 2.5, 1.0    ; morphing function
+;;       asig     lorismorph  ktime, "carhorn.sdif", "meow.sdif", kmorph, kmorph, kmorph, .001
+;;                out         asig
+;;   endin
+;;   
+;;   
+;;   
