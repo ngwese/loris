@@ -25,7 +25,7 @@
 #
 #	Very simple Loris instrument tone morphing demonstration.
 #
-#   Kelly Fitz, 28 Sept 1999
+#   Kelly Fitz, 19 Nov 2000
 #   loris@cerlsoundgroup.org
 #  
 #   http://www.cerlsoundgroup.org/Loris/
@@ -46,18 +46,35 @@ print '(in %s)' % os.getcwd()
 #	analyze clarinet tone
 #
 print 'analyzing clarinet 3G# (%s)' % time.ctime(time.time())
-a = loris.new_Analyzer(270)
-clar = a.analyze('clarinet.aiff')
-loris.distill(1, loris.reference(20, clar, 1000), clar )
-loris.pitch(-600, clar)
+a = loris.Analyzer(270)
+v = loris.importAiff( 'clarinet.aiff' )
+(n, samplerate, nchans) = loris.infoAiff( 'clarinet.aiff' )
+
+clar = a.analyze( v, samplerate )
+
+loris.channelize( clar, loris.createFreqReference( clar, 20, 0, 1000 ), 1 )
+loris.distill( clar )
+
+loris.shiftPitch( clar, loris.BreakpointEnvelopeWithValue( -600 ) )
+
+# check clarinet synthesis:
+# loris.exportAiff( 'clarOK.aiff', loris.synthesize( clar, samplerate ), samplerate, 1, 16 )
 
 #
-#	analyze flute tone
+#	analyze flute tone (reuse Analyzer)
 #
 print 'analyzing flute 3D (%s)' % time.ctime(time.time())
-# reuse: a = loris.new_Analyzer(270)
-flut = a.analyze('flute.aiff')
-loris.distill(1, loris.reference(20, flut, 1000), flut )
+# reuse: a = loris.Analyzer(270)
+v = loris.importAiff( 'flute.aiff' )
+(n, samplerate, nchans) = loris.infoAiff( 'flute.aiff' )
+
+flut = a.analyze( v, samplerate )
+
+loris.channelize( flut, loris.createFreqReference( flut, 20, 0, 1000 ), 1 )
+loris.distill( flut )
+
+# check flute synthesis:
+# loris.exportAiff( 'flutOK.aiff', loris.synthesize( flut, samplerate ), samplerate, 1, 16 )
 
 #
 #	perform temporal dilation
@@ -68,14 +85,18 @@ tgt_times = [0.3, 1.2]
 
 print 'dilating sounds to match', tgt_times, '(%s)' % time.ctime(time.time())
 print 'flute times:', flute_times
-loris.dilate( flute_times, tgt_times, flut )
+loris.dilate( flut, str(flute_times), str(tgt_times) )
 print 'clarinet times:', clar_times
-loris.dilate( clar_times, tgt_times, clar )
+loris.dilate( clar, str(clar_times), str(tgt_times) )
 
 #
 #	perform morph
 #
 print 'morphing flute and clarinet (%s)' % time.ctime(time.time())
-mf = [(0.6, 0), (2, 1)]
-m = loris.morph(clar, flut, mf, mf, mf )
-loris.synthesize('simple_morph.aiff', m)
+mf = loris.BreakpointEnvelope()
+mf.insertBreakpoint( 0.6, 0 )
+mf.insertBreakpoint( 2, 1 )
+m = loris.morph( clar, flut, mf, mf, mf )
+loris.exportAiff( 'simple_morph.aiff', 
+				  loris.synthesize( m, samplerate ), 
+				  samplerate, 1, 16 )

@@ -84,26 +84,14 @@ OBJ_LORIS = AiffFile.o \
 			Synthesizer.o \
 			ieee.o \
 			notifier.o
-
-OBJ_SDIF = sdif.o sdif-types.o
-
 #
 #	targets:
 #
-all: classes sdif
+lib: classes
+	${CC} -shared ${OBJ_LORIS} ${LIB_LORIS} -o $(OUTPUT)/libloris.so
 
 classes: ${OBJ_LORIS}
 	echo "checked Loris objects"
-
-#	SDIF objects:
-sdif: $(OBJ_SDIF)
-	echo "checked SDIF objects"
-
-sdif.o: 
-	$(cc) $(cFLAGS) -c $(SDIF)/sdif.c
-
-sdif-types.o:
-	$(cc) $(cFLAGS) -c $(SDIF)/sdif-types.c	
 
 #
 #	dependencies:

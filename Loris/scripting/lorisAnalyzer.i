@@ -107,6 +107,7 @@ public:
 		difference between Partials). All other Analyzer parameters 	
 		are computed from the specified frequency resolution. 			
 	 */
+	
 	//%name( AnalyzerCopy ) Analyzer( const Analyzer & other )
 	%name( AnalyzerCopy ) Analyzer( const Analyzer * other )
 	{
@@ -128,11 +129,12 @@ public:
 	PartialList * analyze( const SampleVector * vec, double srate )
 	{
 		PartialList * partials = new PartialList();
-		self->analyze( vec->begin(), vec->end(), srate );
-		partials->splice( partials->end(), self->partials() );
+		//self->analyze( vec->begin(), vec->end(), srate );
+		//partials->splice( partials->end(), self->partials() );
+		analyzer_analyze( self, vec, srate, partials );
 		return partials;
 	}
-	/*	Analyze a range of (mono) samples at the given sample rate 	  	
+	/*	Analyze a SampleVector of (mono) samples at the given sample rate 	  	
 		(in Hz) and return the resulting Partials in a PartialList. 												
 	 */
 }

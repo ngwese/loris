@@ -36,66 +36,58 @@
  *
  */
 
-%title "Loris scripting interface", noinfo
-%module loris %{
+#if defined (SWIGPYTHON)
+	%title "Python module: loris", noinfo
+#else
+	%title "Loris scripting interface", noinfo
+#endif
 
+%section "Version"
+
+%module loris 
+
+#if defined (SWIGPYTHON)
+	const char __version__[] =  "Loris 1.0beta1 ";
+#else
+	const char version[] =  "Loris 1.0beta1 ";
+#endif
+
+%{
 #define LORIS_OPAQUE_POINTERS 0
 #include "loris.h"
 
 #include <string>
 #include <vector>
 
+//	convert a string into a vector of doubles,
+//	ignore any extraneous characters:
 static std::vector<double> strtovec( const std::string & s )
 {
-    printf( "* got: %s\n", s.c_str() );
-
     std::vector<double> v;
-
-    string::size_type beg, end;
-    const string delims(" \t,[](){}");
+    std::string::size_type beg, end;
+    //const string delims(" \t,[](){}");
     const string numparts("1234567890+-.");
     beg = s.find_first_of( numparts );
     while ( beg != string::npos )
     {
         end = s.find_first_not_of( numparts, beg );
         if ( end == string::npos )
-        {
             end = s.length();
-        }
 
         double x = atof( s.c_str() + beg );
-        //printf( "%lf ", x );
-
         v.push_back(x);
 
         beg = s.find_first_of( numparts, end );
     }
-    //printf("\n");
-
     return v;
 }
 
-void dilate_str( PartialList * partials, 
-			 	 char * initial, char * target )
-{
-	std::vector<double> ivec = strtovec( initial );
-	std::vector<double> tvec = strtovec( target );
-	
-	printf( "* %d initial points, %d target points\n",
-			(int)ivec.size(), (int)tvec.size() );
-			
-	if ( ivec.size() != tvec.size() )
-	{
-		std::string s( "Invalid arguments to dilate(): there must be as many target points as initial points" );
-		throw s;
-	}
-			
-	dilate( partials, ivec.begin(), tvec.begin(), ivec.size() );
-}
-
+//	notification function for Loris exceptions
+//	and notifications, installed in initialization
+//	block below:
 static void printf_notifier( const char * s )
 {
-	printf("Loris:\t%s\n", s);
+	printf("*\t%s\n", s);
 }
 
 //	Exceptions absolutely cannot be thrown out of a shared
@@ -109,6 +101,8 @@ static void throw_string( const char * s )
 }
 %}
 
+//	Initialization:
+//
 //	Install a notification function using a
 //	in a SWIG initialization block.
 %init %{
@@ -196,6 +190,33 @@ void channelize( PartialList * partials,
 	their frequencies are not modified in any way.
  */
 
+//	dilate() needs to be wrapped by a function that
+//	accepts the time points as strings until a language-
+//	neutral method can be found for passing a sequence
+//	of numbers. This wrapper uses the strtovec() converter
+//	defined above to convert two strings into vectors
+//	of time points:
+%{
+void dilate_str( PartialList * partials, 
+			 	 char * initial, char * target )
+{
+	std::vector<double> ivec = strtovec( initial );
+	std::vector<double> tvec = strtovec( target );
+	
+	char s[256];
+	sprintf(s, "%d initial points, %d target points",
+				(int)ivec.size(), (int)tvec.size() );
+	printf_notifier( s );
+		
+	if ( ivec.size() != tvec.size() )
+	{
+		std::string s( "Invalid arguments to dilate(): there must be as many target points as initial points" );
+		throw s;
+	}
+			
+	dilate( partials, ivec.begin(), tvec.begin(), ivec.size() );
+}
+%}
 %name(dilate) void dilate_str( PartialList * partials, 
 			 				   char * initial_times, char * target_times );
 /*	Dilate Partials in a PartialList according to the given 
@@ -232,7 +253,7 @@ void exportAiff( const char * path, const SampleVector * vec,
 void exportSdif( const char * path, PartialList * partials, double hop = 0. );
 /*	Export Partials in a PartialList to a SDIF file at the specified
 	file path (or name). SDIF data is written in the 1TRC format.  
-	For more information about SDIF, see the SDIF web site at:
+	For more information about SDIF, see the SDIF website at:
 		www.ircam.fr/equipes/analyse-synthese/sdif/  
 		
 	The hop parameter is currently used to specify a time-domain 
@@ -244,11 +265,6 @@ void exportSdif( const char * path, PartialList * partials, double hop = 0. );
 	
 	If unspecified, hop defaults to 0.
  */
-
-//	use a typemap to get the samplerate and number of
-//	channels out of here:
-%apply double * OUTPUT { double * samplerate }
-%apply int * OUTPUT { int * nchannels }
 
 //void importAiff( const char * path, SampleVector * vec, 
 //				 double * samplerate, int * nchannels );
@@ -284,21 +300,31 @@ void exportSdif( const char * path, PartialList * partials, double hop = 0. );
 	and the number of channels.
  */
 
+//	use a typemap to get the samplerate and number of
+//	channels out of infoAiff():
+%apply double * OUTPUT { double * samplerate }
+%apply int * OUTPUT { int * nchannels }
+
 %inline 
 %{
-	double infoAiff( const char * path, int * nchannels )
+	unsigned long infoAiff( const char * path, double * samplerate, int * nchannels )
 	{		
-		double samplerate;
+		char s[256];
+		sprintf(s, "getting info for %s", path );
+		printf_notifier( s );
+		
 		SampleVector * vec = new SampleVector();
-		importAiff( path, vec, &samplerate, nchannels );
-		return samplerate;
+		importAiff( path, vec, samplerate, nchannels );
+		return vec->size() / *nchannels;
 	}
-	/*	Return the sample rate and number of channels of audio samples 
-		stored in an AIFF file at the given file path (or name). The 
-		samples themselves are obtained using importAiff( path ). 
+	/*	Return the number of sample frames, sample rate, and number 
+		of channels of audio samples stored in an AIFF file at the 
+		given file path (or name). The samples themselves are obtained 
+		using importAiff( path ). 
 	 */
 %}
 
+//	wrapper for importSdif() to return a PartialList:
 %{
 	PartialList * importSdif_( const char * path )
 	{
@@ -310,8 +336,11 @@ void exportSdif( const char * path, PartialList * partials, double hop = 0. );
 %name( importSdif ) %new PartialList * importSdif_( const char * path );
 /*	Import Partials from an SDIF file at the given file path (or 
 	name), and return them in a PartialList.
+	For more information about SDIF, see the SDIF website at:
+		www.ircam.fr/equipes/analyse-synthese/sdif/  
  */	
 
+//	wrapper for morph() to return a PartialList:
 %{
 	PartialList * morph_( const PartialList * src0, const PartialList * src1, 
 						  const BreakpointEnvelope * ffreq, 
@@ -340,6 +369,7 @@ void exportSdif( const char * path, PartialList * partials, double hop = 0. );
 	www.cerlsoundgroup.org/Loris/
  */
 
+//	wrapper for synthesize to return a SampelVector:
 %{
 	SampleVector * synthesize_( const PartialList * partials, double srate )
 	{
@@ -384,9 +414,6 @@ createFreqReference( PartialList * partials, int numSamples,
 	For very simple sounds, this frequency reference may be a 
 	good first approximation to a reference envelope for
 	channelization (see channelize()).
-	
-	Clients are responsible for disposing of the newly-constructed 
-	BreakpointEnvelope.
  */
  
 void scaleAmp( PartialList * partials, BreakpointEnvelope * ampEnv );

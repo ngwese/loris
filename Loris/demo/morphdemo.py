@@ -60,31 +60,37 @@ print '(in %s)' % os.getcwd()
 # analysis configuration and distillation parameters
 #
 print 'analyzing flute 3D (%s)' % time.ctime(time.time())
-a = loris.new_Analyzer(270)
+a = loris.Analyzer(270)
 a.setFreqFloor(250)		# eliminate some subharmonic garbage
-flut = a.analyze('flute.aiff')
+v = loris.importAiff( 'flute.aiff' )
+(n, samplerate, nchans) = loris.infoAiff( 'flute.aiff' )
+flut = a.analyze( v, samplerate )
 print 'using fundamental as reference'
-flut_env = loris.reference(20, flut, 1000)
-loris.distill(1, flut_env, flut )
+flut_env = loris.createFreqReference( flut, 20, 0, 1000 )
+loris.channelize( flut, flut_env, 1 )
+loris.distill( flut )
 fname = 'fluteOK.aiff'
 print 'synthesizing', fname, '(%s)' % time.ctime(time.time())
-loris.synthesize( fname, flut )
+loris.exportAiff( fname, loris.synthesize( flut, samplerate ), samplerate, 1, 16 )
 
 #
 #	analyze clarinet tone
 #
 print 'analyzing clarinet 3G# (%s)' % time.ctime(time.time())
-clar = a.analyze('clarinet.aiff')
+v = loris.importAiff( 'clarinet.aiff' )
+(n, samplerate, nchans) = loris.infoAiff( 'clarinet.aiff' )
+clar = a.analyze( v, samplerate )
 print 'using fundamental as reference'
-env = loris.reference(20, clar, 1000)
-loris.distill(1, env, clar )
+env = loris.createFreqReference( clar, 20, 0, 1000 )
+loris.channelize( clar, env, 1 )
+loris.distill( clar )
 print 'shifting clarinet pitch down by six half steps'
-loris.pitch(-600, clar)
+loris.shiftPitch( clar, loris.BreakpointEnvelopeWithValue( -600 ) )
 print 'doubling amplitude'
-loris.amp(2., clar)
+loris.scaleAmp( clar, loris.BreakpointEnvelopeWithValue( 2 ) )
 fname = 'clarOK.aiff'
 print 'synthesizing', fname, '(%s)' % time.ctime(time.time())
-loris.synthesize( fname, clar )
+loris.exportAiff( fname, loris.synthesize( clar, samplerate ), samplerate, 1, 16 )
 
 #
 #	analyze cello tone
@@ -92,12 +98,16 @@ loris.synthesize( fname, clar )
 print 'analyzing cello 2D# (%s)' % time.ctime(time.time())
 a.configure(135)
 a.setFreqFloor(100)		# eliminate some subharmonic garbage
-cel = a.analyze('cello.aiff')
+v = loris.importAiff( 'cello.aiff' )
+(n, samplerate, nchans) = loris.infoAiff( 'cello.aiff' )
+cel = a.analyze( v, samplerate )
 print 'using third harmonic as reference'
-loris.distill(3, loris.reference(20, cel, 200, 1000), cel )
+third = loris.createFreqReference( cel, 20, 0, 1000 )
+loris.channelize( cel, third, 3 )
+loris.distill( cel )
 fname = 'cellOK.aiff'
 print 'synthesizing', fname, '(%s)' % time.ctime(time.time())
-loris.synthesize( fname, cel )
+loris.exportAiff( fname, loris.synthesize( cel, samplerate ), samplerate, 1, 16 )
 
 #
 #	perform temporal dilation
@@ -115,11 +125,11 @@ tgt_times = [0., 0.19, 3., 3.25]
 
 print 'dilating sounds to match', tgt_times, '(%s)' % time.ctime(time.time())
 print 'flute times:', flute_times
-loris.dilate( flute_times, tgt_times, flut )
+loris.dilate( flut, str(flute_times), str(tgt_times) )
 print 'clarinet times:', clar_times
-loris.dilate( clar_times, tgt_times, clar )
+loris.dilate( clar, str(clar_times), str(tgt_times) )
 print 'cello times:', cel_times
-loris.dilate( cel_times, tgt_times, cel )
+loris.dilate( cel, str(cel_times), str(tgt_times) )
 
 #
 #	perform morphs
@@ -127,26 +137,45 @@ loris.dilate( cel_times, tgt_times, cel )
 # Morphs are from the first sound to the 
 # second over the time 0.6 to 1.6 seconds.
 #
-mf = [(0.6, 0), (1.6, 1)]
+mf = loris.BreakpointEnvelope()
+mf.insertBreakpoint( 0.6, 0 )
+mf.insertBreakpoint( 1.6, 1 )
+
+samplerate = 44100.
+
 print 'morphing flute and clarinet (%s)' % time.ctime(time.time())
-loris.synthesize('clariflute.aiff', loris.morph(clar, flut, mf, mf, mf ))
-loris.synthesize('flutinet.aiff', loris.morph(flut, clar, mf, mf, mf ))
+loris.exportAiff( 'clariflute.aiff', 
+				  loris.synthesize( loris.morph( clar, flut, mf, mf, mf ), samplerate ), 
+				  samplerate, 1, 16 )
+loris.exportAiff( 'flutinet.aiff', 
+				  loris.synthesize( loris.morph( flut, clar, mf, mf, mf ), samplerate ), 
+				  samplerate, 1, 16 )
 
 print 'morphing flute and cello (%s)' % time.ctime(time.time())
 print 'shifting flute pitch down by eleven half steps'
-flut_low = flut.copy()
-loris.pitch(-1100, flut_low)
-loris.synthesize('cellute.aiff', loris.morph(cel, flut_low, mf, mf, mf ))
-loris.synthesize('flutello.aiff', loris.morph(flut_low, cel, mf, mf, mf ))
+flut_low = loris.PartialListCopy( flut )
+loris.shiftPitch( flut_low, loris.BreakpointEnvelopeWithValue( -1100 ) )
+loris.exportAiff( 'cellute.aiff', 
+				  loris.synthesize( loris.morph( cel, flut_low, mf, mf, mf ), samplerate ), 
+				  samplerate, 1, 16 )
+loris.exportAiff( 'flutello.aiff', 
+				  loris.synthesize( loris.morph( flut_low, cel, mf, mf, mf ), samplerate ), 
+				  samplerate, 1, 16 )
 
 print 'morphing flute and cello again (%s)' % time.ctime(time.time())
 print 'shifting flute pitch up by one half step'
-loris.pitch(100, flut)
-# perform distillation again to relabel the partials such that the
+loris.shiftPitch( flut, loris.BreakpointEnvelopeWithValue( 100 ) )
+# perform channelization again to relabel the partials such that the
 # fundamental is labeled 2, the second harmonic 4, the third 6, etc.
-loris.distill(2, flut_env, flut)
-loris.synthesize('cellute2.aiff', loris.morph(cel, flut, mf, mf, mf ))
-loris.synthesize('flutello2.aiff', loris.morph(flut, cel, mf, mf, mf ))
+loris.channelize( flut, flut_env, 2 )
+loris.distill( flut )	# shouldn't need to re-distill, right?
+
+loris.exportAiff( 'cellute2.aiff', 
+				  loris.synthesize( loris.morph( cel, flut, mf, mf, mf ), samplerate ), 
+				  samplerate, 1, 16 )
+loris.exportAiff( 'flutello2.aiff', 
+				  loris.synthesize( loris.morph( flut, cel, mf, mf, mf ), samplerate ), 
+				  samplerate, 1, 16 )
 
 # 	all done
 print 'hey, I\'m spent. (%s)' % time.ctime(time.time())

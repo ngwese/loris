@@ -33,8 +33,8 @@
  * and things like that.
  *
  * $Log$
- * Revision 1.1  2000/11/20 05:53:33  kfitz
- * Implemented a (temporary) fix for the memory management that was crashing the Mac, Maybe just a problem of calling constructors across DLL boundaries, fixed by using create/destroy functions in the procedural interface, instead of normal constructors/destructors for classes having destructors defined out-of-line (in the DLL).
+ * Revision 1.2  2000/11/20 08:56:41  kfitz
+ * Nearly ready to go. (?)
  *
  ************************************************************************/
 
@@ -554,7 +554,7 @@ char *SWIG_GetPtr(char *_c, void **ptr, char *_t)
 #define SWIG_init    initlorisc
 
 #define SWIG_name    "lorisc"
-
+static PyObject *_wrap_python_const___version__;
 
 #define LORIS_OPAQUE_POINTERS 0
 #include "loris.h"
@@ -562,57 +562,35 @@ char *SWIG_GetPtr(char *_c, void **ptr, char *_t)
 #include <string>
 #include <vector>
 
+//	convert a string into a vector of doubles,
+//	ignore any extraneous characters:
 static std::vector<double> strtovec( const std::string & s )
 {
-    printf( "* got: %s\n", s.c_str() );
-
     std::vector<double> v;
-
-    string::size_type beg, end;
-    const string delims(" \t,[](){}");
+    std::string::size_type beg, end;
+    //const string delims(" \t,[](){}");
     const string numparts("1234567890+-.");
     beg = s.find_first_of( numparts );
     while ( beg != string::npos )
     {
         end = s.find_first_not_of( numparts, beg );
         if ( end == string::npos )
-        {
             end = s.length();
-        }
 
         double x = atof( s.c_str() + beg );
-        //printf( "%lf ", x );
-
         v.push_back(x);
 
         beg = s.find_first_of( numparts, end );
     }
-    //printf("\n");
-
     return v;
 }
 
-void dilate_str( PartialList * partials, 
-			 	 char * initial, char * target )
-{
-	std::vector<double> ivec = strtovec( initial );
-	std::vector<double> tvec = strtovec( target );
-	
-	printf( "* %d initial points, %d target points\n",
-			(int)ivec.size(), (int)tvec.size() );
-			
-	if ( ivec.size() != tvec.size() )
-	{
-		std::string s( "Invalid arguments to dilate(): there must be as many target points as initial points" );
-		throw s;
-	}
-			
-	dilate( partials, ivec.begin(), tvec.begin(), ivec.size() );
-}
-
+//	notification function for Loris exceptions
+//	and notifications, installed in initialization
+//	block below:
 static void printf_notifier( const char * s )
 {
-	printf("Loris:\t%s\n", s);
+	printf("*\t%s\n", s);
 }
 
 //	Exceptions absolutely cannot be thrown out of a shared
@@ -729,6 +707,26 @@ typedef std::list< Loris::Partial > PartialList;
 #include <vector>
 typedef std::vector< double > SampleVector;
 
+void dilate_str( PartialList * partials, 
+			 	 char * initial, char * target )
+{
+	std::vector<double> ivec = strtovec( initial );
+	std::vector<double> tvec = strtovec( target );
+	
+	char s[256];
+	sprintf(s, "%d initial points, %d target points",
+				(int)ivec.size(), (int)tvec.size() );
+	printf_notifier( s );
+		
+	if ( ivec.size() != tvec.size() )
+	{
+		std::string s( "Invalid arguments to dilate(): there must be as many target points as initial points" );
+		throw s;
+	}
+			
+	dilate( partials, ivec.begin(), tvec.begin(), ivec.size() );
+}
+
 	SampleVector * importAiff_( const char * path )
 	{
 		double samplerate;
@@ -738,16 +736,20 @@ typedef std::vector< double > SampleVector;
 		return vec;
 	}
 
-	double infoAiff( const char * path, int * nchannels )
+	unsigned long infoAiff( const char * path, double * samplerate, int * nchannels )
 	{		
-		double samplerate;
+		char s[256];
+		sprintf(s, "getting info for %s", path );
+		printf_notifier( s );
+		
 		SampleVector * vec = new SampleVector();
-		importAiff( path, vec, &samplerate, nchannels );
-		return samplerate;
+		importAiff( path, vec, samplerate, nchannels );
+		return vec->size() / *nchannels;
 	}
-	/*	Return the sample rate and number of channels of audio samples 
-		stored in an AIFF file at the given file path (or name). The 
-		samples themselves are obtained using importAiff( path ). 
+	/*	Return the number of sample frames, sample rate, and number 
+		of channels of audio samples stored in an AIFF file at the 
+		given file path (or name). The samples themselves are obtained 
+		using importAiff( path ). 
 	 */
 
 	PartialList * importSdif_( const char * path )
@@ -1076,14 +1078,19 @@ static PyObject *_wrap_importAiff(PyObject *self, PyObject *args) {
 
 static PyObject *_wrap_infoAiff(PyObject *self, PyObject *args) {
     PyObject * _resultobj;
-    double  _result;
+    unsigned long  _result;
     char * _arg0;
-    int * _arg1;
-    int  temp;
+    double * _arg1;
+    double  temp;
+    int * _arg2;
+    int  temp0;
 
     self = self;
 {
   _arg1 = &temp;
+}
+{
+  _arg2 = &temp0;
 }
     if(!PyArg_ParseTuple(args,"s:infoAiff",&_arg0)) 
         return NULL;
@@ -1091,7 +1098,7 @@ static PyObject *_wrap_infoAiff(PyObject *self, PyObject *args) {
 	try
 	{	
 		LorisErrorString.clear();
-		    _result = (double )infoAiff(_arg0,_arg1);
+		    _result = (unsigned long )infoAiff(_arg0,_arg1,_arg2);
 
 		if ( ! LorisErrorString.empty() )
 		{
@@ -1116,10 +1123,29 @@ static PyObject *_wrap_infoAiff(PyObject *self, PyObject *args) {
 		s.append( exs );
 		SWIG_exception( SWIG_RuntimeError, (char *) s.c_str() );
 	}
-}    _resultobj = Py_BuildValue("d",_result);
+}    _resultobj = Py_BuildValue("l",_result);
 {
     PyObject *o;
-    o = PyInt_FromLong((long) (*_arg1));
+    o = PyFloat_FromDouble((double) (*_arg1));
+    if (!_resultobj) {
+      _resultobj = o;
+    } else if (_resultobj == Py_None) {
+      Py_DECREF(Py_None);
+      _resultobj = o;
+    } else {
+      if (!PyList_Check(_resultobj)) {
+	PyObject *o2 = _resultobj;
+	_resultobj = PyList_New(0);
+	PyList_Append(_resultobj,o2);
+	Py_XDECREF(o2);
+      }
+      PyList_Append(_resultobj,o);
+      Py_XDECREF(o);
+    }
+}
+{
+    PyObject *o;
+    o = PyInt_FromLong((long) (*_arg2));
     if (!_resultobj) {
       _resultobj = o;
     } else if (_resultobj == Py_None) {
@@ -1749,8 +1775,9 @@ static PyObject *_wrap_delete_Analyzer(PyObject *self, PyObject *args) {
 
 static PartialList * Analyzer_analyze(Analyzer *self,const SampleVector * vec,double  srate) {
 		PartialList * partials = new PartialList();
-		self->analyze( vec->begin(), vec->end(), srate );
-		partials->splice( partials->end(), self->partials() );
+		//self->analyze( vec->begin(), vec->end(), srate );
+		//partials->splice( partials->end(), self->partials() );
+		analyzer_analyze( self, vec, srate, partials );
 		return partials;
 	}
 static PyObject *_wrap_Analyzer_analyze(PyObject *self, PyObject *args) {
@@ -3798,6 +3825,8 @@ SWIGEXPORT(void,initlorisc)() {
 	 SWIG_globals = SWIG_newvarlink();
 	 m = Py_InitModule("lorisc", loriscMethods);
 	 d = PyModule_GetDict(m);
+	 _wrap_python_const___version__ = PyString_FromString("Loris 1.0beta1 ");
+	 PyDict_SetItemString(d,"__version__", _wrap_python_const___version__);
 
 	setNotifier( printf_notifier );
 	setExceptionHandler( throw_string );

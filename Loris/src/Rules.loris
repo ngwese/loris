@@ -66,16 +66,12 @@ FFTW_PREFIX = /usr/local
 
 #
 #	sdif:
-#	(these objects are built in the classes directory, 
-#	because the Makefile distributed with SDIF isn't
-#	very general, and I don't want to modify it)
 #
-SDIF = $(TOP)/CNMAT-SDIF-alpha
-OBJ_SDIF = $(CLASSES)/sdif.o $(CLASSES)/sdif-types.o
+SDIF_PREFIX = /usr/local
 
 #
 #	flags:
 #
-INC_LORIS = -I$(CLASSES) -I$(SDIF) -I${FFTW_PREFIX}/include 
-LIB_LORIS = -L${FFTW_PREFIX}/lib -lfftw
+INC_LORIS = -I$(CLASSES) -I${SDIF_PREFIX}/include -I${FFTW_PREFIX}/include 
+LIB_LORIS = -L${FFTW_PREFIX}/lib -lfftw -L${SDIF_PREFIX}/lib -lsdif
 # DEBUG_LORIS = -DDebug_Loris

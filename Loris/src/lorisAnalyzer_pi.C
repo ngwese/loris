@@ -143,7 +143,6 @@ void destroyAnalyzer( Analyzer * ptr_this )
 /*	Not allowed yet in Analyzer interface, could implement here 
 	by copying parameters.
  */ 
-/*
 extern "C"
 void Analyzer_copy( Analyzer * dst, const Analyzer * src )
 {
@@ -165,7 +164,7 @@ void Analyzer_copy( Analyzer * dst, const Analyzer * src )
 		handleException( s.c_str() );
 	}
 }
-*/
+
 /* ---------------------------------------------------------------- */
 /*        analyzer_analyze        
 /*

@@ -111,6 +111,8 @@
 	For more information about Reassigned Bandwidth-Enhanced 
 	Analysis and the Reassigned Bandwidth-Enhanced Additive Sound 
 	Model, refer to the Loris website: www.cerlsoundgroup.org/Loris/.
+	
+	In C++, Analyzer is Loris::Analyzer, defined in Analyzer.h.
  */
 Analyzer * createAnalyzer( double resolution );
 /*	Construct and return a new Analyzer configured with the given	
@@ -214,7 +216,7 @@ void analyzer_setBwRegionWidth( Analyzer * ptr_this, double x );
 	values past either end of the breakpoint function have the 
 	values at the nearest end).
 
-	In C++, a BreakpointEnvelope * is a Loris::BreakpointEnvelope *.
+	In C++, a BreakpointEnvelope is a Loris::BreakpointEnvelope.
  */
  
 BreakpointEnvelope * createBreakpointEnvelope( void );
@@ -254,7 +256,7 @@ double breakpointEnvelope_valueAt( BreakpointEnvelope * ptr_this,
 	Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
 	the Loris website: www.cerlsoundgroup.org/Loris/.
 
-	In C++, a PartialList * is a std::list< Loris::Partial > *.
+	In C++, a PartialList is a std::list< Loris::Partial >.
  */ 
 PartialList * createPartialList( void );
 /*	Return a new empty PartialList.
@@ -289,7 +291,7 @@ void partialList_splice( PartialList * ptr_this,
 	values on the range (-1., 1.) (though this is not enforced or 
 	checked). 
 
-	In C++, a SampleVector * is a std::vector< double > *.
+	In C++, a SampleVector is a std::vector< double >.
  */
  
 SampleVector * createSampleVector( unsigned long size );
@@ -496,7 +498,7 @@ void shiftPitch( PartialList * partials, BreakpointEnvelope * pitchEnv );
  */
 
 /* ---------------------------------------------------------------- */
-/*		notification and exception handlers							
+/*		Notification and exception handlers							
 /*
 /*
 	An exception handler and a notifier may be specified. Both 
