@@ -35,6 +35,7 @@
 #include "Exception.h"
 #include "notifier.h"
 
+#include <sdif.h>
 #include <vector>
 
 #if !defined( NO_LORIS_NAMESPACE )
@@ -218,6 +219,7 @@ readEnvelopeData( SdifFileT *file, std::vector< Partial > & partialsVector )
 	SdifErrorT* errPtr = SdifFLastError (file);
 	if (errPtr)
 	{
+		debugger << "SDIF error number " << (int)errPtr->Tag << endl;
 		Throw(FileIOException, "Error reading SDIF file.");
 	}
 }

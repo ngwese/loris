@@ -34,10 +34,7 @@
  *
  */
 #include "Partial.h"
-
-extern "C" {
-#include <sdif.h>
-}
+#include <list>
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
@@ -50,7 +47,7 @@ namespace Loris {
 class ImportSdif
 {
 //	-- instance variables --
-	PartialList _partials;	//	collect Partials here
+	std::list<Partial> _partials;	//	collect Partials here
 
 //	-- public interface --
 public:
@@ -59,8 +56,8 @@ public:
 	ImportSdif( const char *infilename );
 		
 //	PartialList access:
-	PartialList & partials( void ) { return _partials; }
-	const PartialList & partials( void ) const { return _partials; }
+	std::list<Partial> & partials( void ) { return _partials; }
+	const std::list<Partial> & partials( void ) const { return _partials; }
 	
 //	-- private interface --
 private:

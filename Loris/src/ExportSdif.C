@@ -35,11 +35,10 @@
 #include "ExportSdif.h"
 #include "Exception.h"
 #include "notifier.h"
+#include "Partial.h"
+#include <list>
 #include <cmath>
-
-extern "C" {
 #include <sdif.h>
-}
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace

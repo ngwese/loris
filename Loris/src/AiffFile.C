@@ -706,7 +706,8 @@ AiffFile::sizeofSoundData( void )
 {
 	Uint_32 dataSize = _bytes.size();
 	//	must be an even number of bytes:
-	if ( dataSize % 2 ) {
+	if ( dataSize % 2 ) 
+	{
 		++dataSize;
 	}
 	

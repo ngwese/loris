@@ -246,7 +246,7 @@ Distiller::~Distiller( void )
 //	Partials are eliminated.
 //
 void 
-Distiller::distill( PartialList & l )
+Distiller::distill( std::list<Partial> & l )
 {
 	int howmanywerethere = l.size();
 
@@ -257,7 +257,7 @@ Distiller::distill( PartialList & l )
 	
 	// 	iterate over labels and distill each one:
 	Distiller still;
-	PartialList::iterator dist_begin = l.begin();
+	std::list<Partial>::iterator dist_begin = l.begin();
 	/*
 		std::find_if( l.begin(), l.end(), 
 					  std::not1( std::bind2nd( PartialUtils::label_equals(), 0 ) ) ); 
@@ -267,9 +267,9 @@ Distiller::distill( PartialList & l )
 		int label = dist_begin->label();
 		debugger << "distilling Partials labeled " << label << endl;
 		
-		//	first the first element in l after beginp
+		//	first the first element in l after dist_begin
 		//	having a label not equal to 'label':
-		PartialList::iterator dist_end = 
+		std::list<Partial>::iterator dist_end = 
 			std::find_if( dist_begin, l.end(), 
 						  std::not1( std::bind2nd( PartialUtils::label_equals(), label ) ) );
 #ifdef Debug_Loris

@@ -119,9 +119,8 @@ public:
 //	that fade Partials in and out use the same fade time:
 	static double FadeTime( void );
 	
-#ifdef Debug_Loris
-	static long DebugCounter;
-#endif
+//	static long DebugCounter;
+
 };	//	end of class Partial
 
 // ---------------------------------------------------------------------------

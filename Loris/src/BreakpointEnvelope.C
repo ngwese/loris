@@ -48,6 +48,17 @@ BreakpointEnvelope::BreakpointEnvelope(void)
 }
 
 // ---------------------------------------------------------------------------
+//	constructor with initial (or constant) value
+// ---------------------------------------------------------------------------
+//
+BreakpointEnvelope::BreakpointEnvelope( double initialValue )
+{
+	debugger << "constructing BreakpointEnvelope with initial value " 
+			 << initialValue << endl;
+	insertBreakpoint( 0., initialValue );
+}
+
+// ---------------------------------------------------------------------------
 //	copy constructor
 // ---------------------------------------------------------------------------
 //

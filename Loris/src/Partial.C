@@ -46,9 +46,7 @@ static const double TwoPi = 2. * M_PI;
 namespace Loris {
 #endif
 
-#ifdef Debug_Loris
-long Partial::DebugCounter = 0L;
-#endif
+//long Partial::DebugCounter = 0L;
 
 // ---------------------------------------------------------------------------
 //	Partial constructor
@@ -57,9 +55,7 @@ long Partial::DebugCounter = 0L;
 Partial::Partial( void ) :
 	_label( 0L )
 {
-#ifdef Debug_Loris
-	++DebugCounter;
-#endif
+//	++DebugCounter;
 }	
 
 // ---------------------------------------------------------------------------
@@ -70,9 +66,7 @@ Partial::Partial( const Partial & other ) :
 	_bpmap( other._bpmap ),
 	_label( other._label )
 {
-#ifdef Debug_Loris
-	++DebugCounter;
-#endif
+//	++DebugCounter;
 }
 
 // ---------------------------------------------------------------------------
@@ -81,9 +75,7 @@ Partial::Partial( const Partial & other ) :
 //
 Partial::~Partial( void )
 {
-#ifdef Debug_Loris
-	--DebugCounter;
-#endif
+//	--DebugCounter;
 }	
 
 // ---------------------------------------------------------------------------

@@ -32,7 +32,7 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-#include "Partial.h" 	//	only needed for PartialList definition, duh.
+#include <list>
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
@@ -57,7 +57,7 @@ public:
 	~Distiller( void );
 	
 //	distillation:
-	void distill( PartialList & l );
+	void distill( std::list<Partial> & l );
 
 //	-- unimplemented --
 private:

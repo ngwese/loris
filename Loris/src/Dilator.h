@@ -46,14 +46,12 @@ namespace Loris {
 //	Dilator is a class of objects for temporally dilating and compressing
 //	Partials by specifying initial and target times of temporal features.
 //
-//	Make this an in-place operation.
-//
 class Dilator
 {
 //	-- implementation --
 	std::vector< double > _initial, _target;	//	time points
 	
-	PartialList _partials;	//	collect Partials here
+//	PartialList _partials;	//	collect Partials here
 
 //	-- public interface --
 public:
@@ -66,8 +64,8 @@ public:
 	void dilate( PartialList::iterator begin, PartialList::iterator end );
 	
 //	PartialList access:
-	PartialList & partials( void ) { return _partials; }
-	const PartialList & partials( void ) const { return _partials; }
+//	PartialList & partials( void ) { return _partials; }
+//	const PartialList & partials( void ) const { return _partials; }
 
 //	-- unimplemented until useful --
 private:

@@ -34,19 +34,14 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-#include "Partial.h"
-#include <vector>
 #include <list>
-
-extern "C" {
-#include <sdif.h>
-}
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
 #endif
 
+class Partial;
 
 // ---------------------------------------------------------------------------
 //	class ExportSdif

@@ -87,8 +87,6 @@ Dilator::~Dilator(void)
 //	their Dilator, or Partials having Breakpoints before time 0, both 
 //	of which are probably unusual circumstances. 
 //	
-//	Dilated Partials are collected (Dilator isa PartialCollector).
-//	
 void
 Dilator::dilate( Partial & p )
 {
@@ -156,7 +154,7 @@ Dilator::dilate( Partial & p )
 	}
 	
 	//	store the new Partial:
-	partials().push_back( newp );
+	p = newp;
 }
 
 // ---------------------------------------------------------------------------

@@ -63,6 +63,7 @@ public:
 	
 	//	construction:
 	BreakpointEnvelope( void );
+	BreakpointEnvelope( double initialValue );
 	BreakpointEnvelope( const BreakpointEnvelope & );
 	virtual ~BreakpointEnvelope( void );
 	
