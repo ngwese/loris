@@ -14,7 +14,7 @@
 #include "PartialIterator.h"
 #include "Breakpoint.h"
 #include "Exception.h"
-#include "Notifier.h"
+#include "notifier.h"
 
 #include <algorithm>
 

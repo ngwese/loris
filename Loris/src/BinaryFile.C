@@ -8,7 +8,7 @@
 // ===========================================================================
 #include "LorisLib.h"
 #include "Exception.h"
-#include "Notifier.h"
+#include "notifier.h"
 #include "BinaryFile.h"
 #include "endian.h"
 

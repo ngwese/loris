@@ -9,7 +9,7 @@
 #include "Analyzer.h"
 #include "Exception.h"
 #include "KaiserWindow.h"
-#include "Notifier.h"
+#include "notifier.h"
 #include "AssociateBandwidth.h"
 #include "DistributeEnergy.h"
 

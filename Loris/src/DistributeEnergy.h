@@ -11,7 +11,7 @@
 #include "LorisLib.h"
 #include "Partial.h"
 #include "Breakpoint.h"
-#include "Notifier.h"
+#include "notifier.h"
 #include "bark.h"
 
 Begin_Namespace( Loris )

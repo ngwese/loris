@@ -12,7 +12,7 @@
 #include "Partial.h"
 #include "ReassignedSpectrum.h"
 #include "AssociateBandwidth.h"
-#include "Notifier.h"
+#include "notifier.h"
 #include <list>
 #include <vector>
 #include <memory>

@@ -31,7 +31,7 @@
 // ===========================================================================
 #include "FourierTransform.h"
 #include "Exception.h"
-#include "Notifier.h"
+#include "notifier.h"
 #include "fftw.h"
 #include <set>
 

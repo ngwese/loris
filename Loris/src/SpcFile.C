@@ -15,7 +15,7 @@
 #include "BinaryFile.h"
 #include "Partial.h"
 
-#include "Notifier.h"
+#include "notifier.h"
 
 #include "ieee.h"
 

@@ -8,7 +8,7 @@
 // ===========================================================================
 #include "AssociateBandwidth.h"
 #include "Exception.h"
-#include "Notifier.h"
+#include "notifier.h"
 #include "FourierTransform.h"
 #include "ReassignedSpectrum.h"
 #include <algorithm>

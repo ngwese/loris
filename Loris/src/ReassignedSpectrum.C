@@ -7,7 +7,7 @@
 //
 // ===========================================================================
 #include "ReassignedSpectrum.h"
-#include "Notifier.h"
+#include "notifier.h"
 #include "Exception.h"
 #include <functional>
 

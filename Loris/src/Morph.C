@@ -19,7 +19,7 @@
 #include "Breakpoint.h"
 #include "Distiller.h"
 #include "Map.h"
-#include "Notifier.h"
+#include "notifier.h"
 
 #if !defined( Deprecated_cstd_headers )
 	#include <cmath>

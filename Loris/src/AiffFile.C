@@ -14,7 +14,7 @@
 #include "AiffFile.h"
 #include "BinaryFile.h"
 #include "Exception.h"
-#include "Notifier.h"
+#include "notifier.h"
 #include "ieee.h"
 
 #include <algorithm>

@@ -15,7 +15,7 @@
 #include "Oscillator.h"
 #include "Partial.h"
 #include "PartialIterator.h"
-#include "Notifier.h"
+#include "notifier.h"
 
 #include <algorithm>
 #include <vector>
