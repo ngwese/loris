@@ -37,18 +37,22 @@
 
 #include <Analyzer.h>
 #include <AssociateBandwidth.h>
+#include <BreakpointUtils.h>
 #include <Exception.h>
 #include <KaiserWindow.h>
-#include <ReassignedSpectrum.h>
-#include <BreakpointUtils.h>
 #include <Notifier.h>
 #include <Partial.h>
-#include <list>
-#include <vector>
-#include <memory>
-#include <map>
-#include <set>
+#include <ReassignedSpectrum.h>
+
 #include <algorithm>
+#include <cmath>
+#include <list>
+#include <map>
+#include <memory>
+#include <set>
+#include <vector>
+
+using namespace std;
 
 //	begin namespace
 namespace Loris {
@@ -357,7 +361,7 @@ void
 Analyzer::extractPeaks( std::list< Breakpoint > & frame, double frameTime, 
 						AnalyzerState & state )
 {
-	const double threshold = std::pow( 10., 0.05 * ampFloor() );	//	absolute magnitude threshold
+	const double threshold = pow( 10., 0.05 * ampFloor() );	//	absolute magnitude threshold
 	const double sampsToHz = state.sampleRate() / state.spectrum().size();
 	
 	//	cache corrected times for the extracted breakpoints, so 
@@ -387,7 +391,7 @@ Analyzer::extractPeaks( std::list< Breakpoint > & frame, double frameTime,
 			//	association, not part of thinning, and the cropping/breaking
 			//	check in formPartials() is unnecessary (large time corrections
 			//	will already have been removed).
-			if ( std::abs(timeCorrectionSamps) > cropTime() * state.sampleRate() )
+			if ( fabs(timeCorrectionSamps) > cropTime() * state.sampleRate() )
 				continue;
 				
 			//	breakpoints are extracted and thinned and the survivors are
@@ -395,7 +399,7 @@ Analyzer::extractPeaks( std::list< Breakpoint > & frame, double frameTime,
 			double mag = state.spectrum().reassignedMagnitude( fsample, j );
 			
 			//	the second part is a sinusoidality measure (?)
-			if ( mag < threshold ) // || std::abs( fsample - j ) > 1. ) 
+			if ( mag < threshold ) // || std::fabs( fsample - j ) > 1. ) 
 			{
 				state.bwAssociation().accumulateNoise( fHz, mag );
 				continue;
@@ -463,7 +467,7 @@ static inline double distance( const Partial & partial,
 {
 	//	need a more efficient way to check for invalid Partials!
 	Assert(partial.begin() != partial.end());
-	return std::abs( (--partial.end()).breakpoint().frequency() - bp.frequency() );
+	return fabs( (--partial.end()).breakpoint().frequency() - bp.frequency() );
 }
 
 // ---------------------------------------------------------------------------

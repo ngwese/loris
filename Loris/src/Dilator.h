@@ -33,38 +33,111 @@
  *
  */
 
+#if defined(NO_TEMPLATE_MEMBERS)
 #include <PartialList.h>
+#endif
+
 #include <vector>
 
 //	begin namespace
 namespace Loris {
 
+class Partial;
+
 // ---------------------------------------------------------------------------
 //	class Dilator
 //
-//	Dilator is a class of objects for temporally dilating and compressing
-//	Partials by specifying initial and target times of temporal features.
+//	Class Dilator represents an algorithm for for non-uniformly expanding
+//	and contracting the Partial parameter envelopes according to the initial
+//	and target (desired) times of temporal features.
+//	
+//	It is frequently necessary to redistribute temporal events in this way
+//	in preparation for a sound morph. For example, when morphing instrument
+//	tones, it is common to align the attack, sustain, and release portions
+//	of the source sounds by dilating or contracting those temporal regions.
 //
 class Dilator
 {
-//	-- implementation --
+//	-- instance variables --
 	std::vector< double > _initial, _target;	//	time points
 	
 //	-- public interface --
 public:
-//	construction from n time points:
-	Dilator( const double * ibegin, const double * tbegin, int n );
+//	-- construction --
+	Dilator( void );
+	/*	Construct a new Dilator with no time points.
+	 */
+	 
+	//Dilator( const double * ibegin, const double * iend, const double * tbegin );
+	/*	Construct a new Dilator using a range of initial time points
+		and a range of target (desired) time points. The client must
+		ensure that the target range has at least as many elements as
+		the initial range.
+	 */
+	
+#if ! defined(NO_TEMPLATE_MEMBERS)
+	template<typename Iter1, typename Iter2>
+	Dilator( Iter1 ibegin, Iter1 iend, Iter2 tbegin )
+#else
+	Dilator( const double * ibegin, const double * iend, const double * tbegin )
+#endif
+	{
+		while ( ibegin != iend )
+			insert( *ibegin++, *tbegin++ );
+	}
+	/*	Construct a new Dilator using a range of initial time points
+		and a range of target (desired) time points. The client must
+		ensure that the target range has at least as many elements as
+		the initial range.
+	 */
+
 	~Dilator( void );
+	/*	Destroy this Dilator.
+	 */
 	
-//	dilation:
+	void insert( double i, double t );
+	/*	Specify a pair of initial and target time points to be used
+		by this Dilator, corresponding, for example, to the initial
+		and desired time of a particular temporal feature in an
+		analyzed sound.
+	 */
+	
+//	-- dilation --
 	void dilate( Partial & p );
-	void dilate( PartialList::iterator begin, PartialList::iterator end );
-	
-//	function call operator:
-//	(should this be for a single Partial, or the range?)
-	void operator() ( PartialList::iterator begin, PartialList::iterator end )
-		{ dilate( begin, end ); }
-	
+	/*	Non-uniformly expand and contract the parameter envelopes of the
+		specified Partial according to this Dilator's stored initial and 
+		target (desired) times.
+	 */
+	 
+	void operator() ( Partial & p ) { dilate( p ); }
+	/*	Function call operator: same as dilate( Partial & p ).
+	 */
+	 
+#if ! defined(NO_TEMPLATE_MEMBERS)
+	template<typename Iter>
+	void dilate( Iter dilate_begin, Iter dilate_end  )
+#else
+	void dilate( PartialList::iterator dilate_begin, PartialList::iterator dilate_end  )
+#endif
+	{
+		while ( dilate_begin != dilate_end )
+			dilate( *(dilate_begin++) );
+	}
+	/*	Non-uniformly expand and contract the parameter envelopes of the each
+		Partial in the specified half-open range according to this Dilator's
+		stored initial and target (desired) times.
+	 */
+	 
+#if ! defined(NO_TEMPLATE_MEMBERS)
+	template<typename Iter>
+	void operator() ( Iter dilate_begin, Iter dilate_end  )
+#else
+	void operator() ( PartialList::iterator dilate_begin, PartialList::iterator dilate_end )
+#endif
+		{ dilate( dilate_begin, dilate_end ); }
+	/*	Function call operator: same as dilate( Iter dilate_begin, Iter dilate_end )
+	 */
+	 
 //	-- unimplemented until useful --
 private:
 	Dilator( const Dilator & );

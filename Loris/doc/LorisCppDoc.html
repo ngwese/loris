@@ -593,52 +593,189 @@ and false otherwise.
 <a name="Channelizer">
 <hr><h2>Channelizer</h2></a>
 <p>
-Definition of a class for labeling Partials in a PartialList
-according to a set of linearly-spaced, variable-frequency
-channels (like a time-varying harmonic frequency relationship).
-
-This class interface is fully insulating.
-This class is a leaf class, not for subclassing (no virtual destructor). 
+Class Channelizer represents an algorithm for automatic labeling of a
+collection (STL range) of Partials. Partials must be labeled in
+preparation for morphing (see <a href="#Morpher">Morpher</a>) to
+establish correspondences between Partials in the morph source and
+target sounds.
 <p>
-<pre>
-	//	construction:
-	Channelizer( const Envelope & refChanFreq, int refChanLabel );
-	Channelizer( const Channelizer & other );
-	~Channelizer( void );
+Channelized partials are labeled according to their adherence to a
+harmonic frequency structure with a time-varying fundamental frequency.
+The frequency spectrum is partitioned into non-overlapping channels
+having time-varying center frequencies that are harmonic (integer)
+multiples of a specified reference frequency envelope, and each channel
+is identified by a unique label equal to its harmonic number. Each
+Partial is assigned the label corresponding to the channel containing
+the greatest portion of its (the Partial's) energy.
+<p>
+A reference frequency Envelope for channelization and the channel number
+to which it corresponds (1 for an Envelope that tracks the Partial at
+the fundamental frequency) must be specified. The reference Envelope can
+be constructed explcitly, point by point (using, for example, the <a
+href="#BreakpointEnvelope">BreakpointEnvelope</a> class), or constructed
+automatically using the <a
+href="#FrequencyReference">FrequencyReference</a> class.
+<p>
+Channelizer is a leaf class, do not subclass. 
+<p>
+<h3>Member Functions</h3>
+<h4>Construction</h4>
+<p><tt><b>Channelizer( const Envelope & refChanFreq, int refChanLabel )
+</b></tt>
+<blockquote>
+<br>
+Construct a new Channelizer using the specified reference frequency
+Envelope to represent the channel numbered refChanLabel.
+</blockquote>	
 
-	//	assignment:
-	Channelizer & operator=( const Channelizer & rhs );
+<p><tt><b>Channelizer( const Channelizer & other )
+</b></tt>
+<blockquote>
+<br>
+Construct a new Channelizer that is an exact copy of this Channelizer
+(uses the same reference frequency Envelope to represent the same 
+channel).
+</blockquote>	
 
-	//	channelizing:
-	void channelize( PartialList::iterator begin, PartialList::iterator end ) const;
+<p><tt><b>~Channelizer( void )
+</b></tt>
+<blockquote>
+<br>
+Destroy this Channelizer.
+</blockquote>	
 
-	//	function call operator:
-	void operator() ( PartialList::iterator begin, PartialList::iterator end ) const
-		{ channelize( begin, end ); }
-</pre>
+<p><tt><b> operator=( const Channelizer & rhs )
+</b></tt>
+<blockquote>[ returns Channelizer &  ]
+<br>
+Assignment operator: make this Channelizer an exact copy of rhs 
+(use the same set of frequency channels).
+</blockquote>	
+
+
+<h4>Channelizing</h4>
+<p><tt><b> channelize( PartialList::iterator begin, PartialList::iterator end ) const
+</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Assign each Partial in the specified half-open (STL-style) range
+the label corresponding to the frequency channel containing the
+greatest portion of its (the Partial's) energy.
+</blockquote>	
+
+
+<p><tt><b> operator() ( PartialList::iterator begin, PartialList::iterator end ) const
+</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Function call operator: same as channelize().
+</blockquote>	
 				
 <p><a href="#contents"><small>Contents</small></a>	
 
 <a name="Dilator">
 <hr><h2>Dilator</h2></a>
 <p>
-Dilator is a class of objects for temporally dilating and compressing
-Partials by specifying initial and target times of temporal features.
+Class Dilator represents an algorithm for for non-uniformly expanding
+and contracting the Partial parameter envelopes according to the initial
+and target (desired) times of temporal features.
 <p>
+It is frequently necessary to redistribute temporal events in this way
+in preparation for a sound morph. For example, when morphing instrument
+tones, it is common to align the attack, sustain, and release portions
+of the source sounds by dilating or contracting those temporal regions.
+<p>
+<h3>Member Functions</h3>
+<h4>Construction</h4>
+<p><tt><b>Dilator( void )
+</b></tt>
+<blockquote>
+<br>
+Construct a new Dilator with no time points.
+</blockquote>	
+
+<p><tt><b>template&lt;typename Iter1, typename Iter2&gt;<br>
+Dilator( Iter1 ibegin, Iter1 iend, Iter2 tbegin )
+</b></tt>
+<blockquote>
+<br>
+Construct a new Dilator using a range of initial time points
+and a range of target (desired) time points. The client must
+ensure that the target range has at least as many elements as
+the initial range.
+<p>
+If compiled with NO_TEMPLATE_MEMBERS defined, this constructor
+is defined:
 <pre>
-//	construction from n time points:
-	Dilator( const double * ibegin, const double * tbegin, int n );
-	~Dilator( void );
-	
-//	dilation:
-	void dilate( Partial & p );
-	void dilate( PartialList::iterator begin, PartialList::iterator end );
-	
-//	function call operator:
-//	(should this be for a single Partial, or the range?)
-	void operator() ( PartialList::iterator begin, PartialList::iterator end )
-		{ dilate( begin, end ); }
+Dilator( const double * ibegin, const double * iend, const double * tbegin )
 </pre>
+</blockquote>
+	
+<p><tt><b>~Dilator( void )
+</b></tt>
+<blockquote>
+<br>
+Destroy this Dilator.
+</blockquote>	
+	
+<p><tt><b> insert( double i, double t )
+</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Specify a pair of initial and target time points to be used
+by this Dilator, corresponding, for example, to the initial
+and desired time of a particular temporal feature in an
+analyzed sound.
+</blockquote>	
+
+<h4>Dilation</h4>
+<p><tt><b> dilate( Partial & p )
+</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Non-uniformly expand and contract the parameter envelopes of the
+specified Partial according to this Dilator's stored initial and 
+target (desired) times.
+</blockquote>	
+
+<p><tt><b> operator() ( Partial & p )
+</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Function call operator: same as dilate( Partial & p ).
+</blockquote>	
+
+		
+<p><tt><b>template&lt;typename Iter&gt;<br>
+ dilate( Iter dilate_begin, Iter dilate_end )
+</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Non-uniformly expand and contract the parameter envelopes of the each
+Partial in the specified half-open range according to this Dilator's
+stored initial and target (desired) times.
+<p>
+If compiled with NO_TEMPLATE_MEMBERS defined, this member
+is defined:
+<pre>
+dilate( PartialList::iterator dilate_begin, PartialList::iterator dilate_end  )
+</pre>
+</blockquote>	
+
+<p><tt><b>template&lt;typename Iter&gt;<br>
+ operator() ( Iter dilate_begin, Iter dilate_end  )
+</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Function call operator: same as dilate( Iter dilate_begin, Iter dilate_end )
+<p>
+If compiled with NO_TEMPLATE_MEMBERS defined, this member
+is defined:
+<pre>
+operator() ( PartialList::iterator dilate_begin, PartialList::iterator dilate_end )
+</pre>
+</blockquote>	
+
 				
 <p><a href="#contents"><small>Contents</small></a>	
 

@@ -164,7 +164,7 @@ void dilate( PartialList * partials,
 		ThrowIfNull((double *) target);
 
 		notifier << "dilating " << partials->size() << " Partials" << endl;
-		Dilator dil( initial, target, npts );
+		Dilator dil( initial, initial+npts, target );
 		PartialList::iterator it;
 		for ( it = partials->begin(); it != partials->end(); ++it )
 		{

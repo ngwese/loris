@@ -46,26 +46,46 @@
 //	begin namespace
 namespace Loris {
 
+// ---------------------------------------------------------------------------
+//	constructor
+// ---------------------------------------------------------------------------
+//	Default constructor.
+//
+Dilator::Dilator( void )
+{
+}
 
 // ---------------------------------------------------------------------------
 //	constructor
 // ---------------------------------------------------------------------------
-//	Construct from n initial and n target time points.
-//
-Dilator::Dilator( const double * ibegin, const double * tbegin, int n ) :
-	_initial( ibegin, ibegin+n ),
-	_target( tbegin, tbegin+n )
+//	Construct from initial and target time points.
+/*
+Dilator::Dilator( const double * ibegin, const double * iend, const double * tbegin )
 {
-	std::sort( _initial.begin(), _initial.end() );
-	std::sort( _target.begin(), _target.end() );
+	while ( ibegin != iend )
+		insert( *ibegin++, *tbegin++ );
 }
-
+*/
 // ---------------------------------------------------------------------------
 //	destructor
 // ---------------------------------------------------------------------------
 //
 Dilator::~Dilator(void)
 {
+}
+
+// ---------------------------------------------------------------------------
+//	insert
+// ---------------------------------------------------------------------------
+//	Insert a pair of initial and target time points. No need to worry 
+//	about the sorting order, the time points will be sorted before 
+//	they are used.
+//
+void
+Dilator::insert( double i, double t )
+{
+	_initial.push_back(i);
+	_target.push_back(t);
 }
 
 // ---------------------------------------------------------------------------
@@ -103,7 +123,11 @@ Dilator::dilate( Partial & p )
 	//	don't dilate if there's no time points:
 	if ( _initial.size() == 0 )
 		return;
-		
+
+	//	sort the time points before dilating:
+	std::sort( _initial.begin(), _initial.end() );
+	std::sort( _target.begin(), _target.end() );
+
 	//	create the new Partial:
 	Partial newp;
 	newp.setLabel( p.label() );
@@ -180,18 +204,6 @@ Dilator::dilate( Partial & p )
 	
 	//	store the new Partial:
 	p = newp;
-}
-
-// ---------------------------------------------------------------------------
-//	dilate (range)
-// ---------------------------------------------------------------------------
-//	dilate() each Partial in the specified half-open range.
-//
-void 
-Dilator::dilate( PartialList::iterator begin, PartialList::iterator end )
-{
-	while ( begin != end )
-		dilate( *(begin++) );
 }
 
 }	//	end of namespace Loris

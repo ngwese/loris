@@ -48,9 +48,6 @@ namespace Loris {
 //	noise energy cannot be removed (negative energy added) in excess 
 //	of the current noise energy.
 //
-#if defined( NO_NESTED_NAMESPACE )
-static
-#endif
 void 
 BreakpointUtils::addNoiseEnergy( Breakpoint & bp, double enoise )
 {
