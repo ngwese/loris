@@ -37,6 +37,7 @@
 #include "PartialUtils.h"
 #include "notifier.h"
 #include <algorithm>
+#include <cmath>
 #include <list>
 
 //	Pi:
