@@ -1,14 +1,27 @@
-/*
- *  Hello World for the CodeWarrior
- *  © 1997-1998 Metrowerks Corp.
- *
- *  Questions and comments to:
- *       <mailto:support@metrowerks.com>
- *       <http://www.metrowerks.com/>
- */
+//	
+//	console_test.C 
+//
+//	Macintosh C++ test client for Loris.
+//
 
+//	all the Loris headers you could ever want or need:
 #include "LorisLib.h"
+#include "Synthesizer.h"
+#include "Exception.h"
+#include "AiffFile.h"
+#include "BinaryFile.h"
+#include "ImportLemur5.h"
+#include "LoFreqBweKludger.h"
+#include "Breakpoint.h"
+#include "Oscillator.h"
+#include "Filter.h"
+#include "Morph.h"
+#include "Distiller.h"
+#include "Map.h"
+#include "Dilator.h"
+#include "notify.h"
 
+//	all the standard headers you could ever want or need:
 #if !defined( Deprecated_iostream_headers)
 	#include <iostream>
 #else
@@ -23,182 +36,79 @@
 
 #include <memory>
 
-#include "Synthesizer.h"
-#include "Exception.h"
-#include "AiffFile.h"
-#include "BinaryFile.h"
-#include "ImportLemur5.h"
-#include "LoFreqBweKludger.h"
-#include "Breakpoint.h"
-#include "Oscillator.h"
-#include "Filter.h"
-
-#include "Morph.h"
-#include "Distiller.h"
-#include "Map.h"
-#include "Dilator.h"
-#include "notify.h"
-
+//	welcome to namespaces:
 using namespace std;
 using namespace Loris;
+
+//	client class for performing a two-way morph:
+//	(client source code is in the directory Loris/clients)
+#include "TwoWayMorph.h"
+
+//	here's a few, defined below:
+void configCarElephantMorph( TwoWayMorph & m );
+void configClarinetFluteMorph( TwoWayMorph & m );
 
 //
 //	test app using a console interface
 //
-
 int main()
 {	
-	try {
-		//	import 4A partials:
-		string name = ":::morphing:ncsa morph:carhorn1.lemr";
-		BinaryFile f2;
-		f2.view(name);
-		ImportLemur5 imp2(f2);
-		
-		cout << "importing partials from " << name << "..." << endl;
-		imp2.importPartials();
-		cout << "done" << endl;
-		f2.close();
-		
-		//	dilating car horn:
-		cout << "dilating..." << endl;
-		const double currentArray[] = { 0.3, 1. };
- 		const double desiredArray[] = { 0.5, 4. };
- 		//const double currentArray[] = { 0.1, 0.75, 0.5 };
-		//const double desiredArray[] = { 0.3, 0.3, 4.};
-		Dilator d( currentArray, currentArray + 2, desiredArray, desiredArray + 2 );
-		double maxtime = 0.;
-		for ( list<Partial>::iterator it = imp2.partials().begin(); it != imp2.partials().end(); ++it ) {
-			d.dilate( *it );
-			maxtime = max( maxtime, (*it).endTime() );
-		}
-		cout << "done." << endl;
-		
-		/*
-		//	synthesize:
-		const int carsrate = 44100;
-		SampleVector carbuf( carsrate * maxtime );
-		Synthesizer carsynth( carbuf, carsrate );
-		carsynth.setIterator( new LoFreqBweKludger(1000.) );
-		
-		cout << "synthesizing" << endl;
-		int z = 0;
-		for ( list< Partial >::iterator it = imp2.partials().begin(); 
-			  it != imp2.partials().end(); 
-			  ++it ) {
-			carsynth.synthesizePartial( *it );
-			if ( ++z % 10 == 0  )
-				cout << "\t" << z << " partials..." << endl;
-		}
-		
-		//	write out samples:
-		string carname(":::morphing:ncsa morph:dilatedhorn.aiff");
-		cout << "writing " << carname << endl;
-		AiffFile sfcar( carsrate, 1, 16, carbuf );
-		sfcar.write( BinaryFile( carname ) );
-		cout << "done." << endl;
-
-		return 0;
-		*/
-		
-		//	import 4Bb partials:
-		name = ":::morphing:ncsa morph:elephant3.lemr";
-		BinaryFile f;
-		f.view(name);
-		ImportLemur5 imp(f);
-		
-		cout << "importing partials from " << name << "..." << endl;
-		imp.importPartials();
-		cout << "done" << endl;
-		f.close();
-
-/*		
-		cout << "distilling..." << endl;
-		list< Partial > hoowah;
-		//cel.splice( cel.begin(), imp2.partials() );
-		//const double goober[] = { 0.5, 4.5 };
-		///const double othergoober[] = { 0.1, 3. };
-		//vector< double > cur( goober, goober + 2 );
-		//vector< double > des( othergoober, othergoober + 2 );
-		//for ( list<Partial>::iterator it = imp.partials().begin(); it != imp.partials().end(); ++it ) {
-			
-		Distiller dis;
-		for ( int label = 1; label < 100; ++label ) {
-			list< Partial > l = select( imp.partials(), label );
-			hoowah.push_back( dis.distill( l ) );
-		}
-		cout << "done." << endl;
-		imp.partials().erase( imp.partials().begin(), imp.partials().end() );
-
-		
-		// Shift my frequencies.
-//		double shiftRatio = 1. / sqrt(2);
-		double shiftRatio = pow(2, 1./12.);
-		for ( list<Partial>::iterator it = hoowah.begin(); it != hoowah.end(); ++it ) {
-			for ( Breakpoint * bp = (*it).head(); bp != Null; bp = bp->next() ) {
-				bp->setFrequency( bp->frequency() * shiftRatio );
-			}
-		}
-*/
-
-		//	Create my weight function:
-		BreakpointMap w;
-		w.insertBreakpoint( 0.6, 0. ); // start with clar
-		w.insertBreakpoint( 2., 1. );  // end with long amount of flute action.
-		
-		BreakpointMap flat;
-		flat.insertBreakpoint( 0., 0. );
-		flat.insertBreakpoint( 1., 0. );
-		
-		for (double z = 0.; z < 3.0; z += 0.2) {
-			cout << "weight at " << z << " is " << w(z) << endl;
-		}
-		
-		Morph m( auto_ptr<Map>(w.clone()) );
-		//m.setFrequencyFunction( w );
-		//m.setAmplitudeFunction( w );
-		//m.setBandwidthFunction( w );
-
+	//	use the client class TwoWayMorph:
+	TwoWayMorph m;
+	configClarinetFluteMorph(m);
 	
-		cout << "morphine..." << endl;
-		m.morph( imp2.partials(), imp.partials() );
-		cout << "done." << endl;
-
-
-		//	synthesize:
-		const int srate = 44100;
-		const int nsamps = srate * 6;
-		vector<double> buf( nsamps );
-		Synthesizer synth( buf, srate );
-		synth.setIterator( auto_ptr<PartialIterator>( new LoFreqBweKludger(2000.) ) );
-		//synth.setOffset( 4 );
-				
-		cout << "synthesizing" << endl;
-		synth.synthesize( m.partials().begin(), m.partials().end() );
-		/*
-		int c = 0;
-		for ( list< Partial >::iterator it = m.partials().begin(); 
-			  it != m.partials().end(); 
-			  ++it ) {
-			synth.synthesizePartial( *it );
-			if ( ++c % 10 == 0  )
-				cout << "\t" << c << " partials..." << endl;
-		}
-		*/
-		
-		//	write out samples:
-		string newname(":::morphing:ncsa morph:newelecar.aiff");
-		cout << "writing " << newname << endl;
-		AiffFile sfout( srate, 1, 16, buf );
-		sfout.write( BinaryFile( newname ) );
-		
-		cout << "done." << endl;
-
-	}
-	catch ( Exception & ex ) {
-		cout << ex;
-	}
+	//	go:
+	m.doMorph();
 
 	return 0;
 }
 
+//
+//	car->elephant morph:
+//
+void
+configCarElephantMorph( TwoWayMorph & m )
+{
+	m.setFile0( ":::morphing:ncsa morph:carhorn1.lemr" );
+	m.setFile1( ":::morphing:ncsa morph:elephant3.lemr" );
+	
+	//	time points for dilation:
+	//	Initial time points can be specified for both sounds,
+	//	but both are assumed to have the same target time points.
+	m.addTimePoint0( 0.3 );
+	m.addTimePoint0( 1. );
+	m.addTargetTimePoint( 0.5 );
+	m.addTargetTimePoint( 4. );
+	
+	//	pitch shifting for either or both, in halfsteps:
+	m.setPitchShift0( -3 );
+	
+	//	morphing functions:
+	//	Individual morphing functions can also be set using 
+	//	freqyBreakpoint(), ampBreakpoint(), and bwBreakpoint().
+	m.morphBreakpoint( 0.6, 0. );
+	m.morphBreakpoint( 2., 1. );
+	
+	m.setDestFile(":::morphing:ncsa morph:newelecar.aiff");
+}
+
+//
+//	clarinet->flute morph:
+//
+void configClarinetFluteMorph( TwoWayMorph & m )
+{
+	m.setFile0( ":::sample_sounds:clarinet4G#.lemr" );
+	m.setFile1( ":::sample_sounds:flute4D.lemr" );
+	
+	//	pitch shifting for either or both, in halfsteps:
+	m.setPitchShift0( -4 );
+	m.setPitchShift1( 2 );
+	
+	//	morphing functions:
+	//	Individual morphing functions can also be set using 
+	//	freqyBreakpoint(), ampBreakpoint(), and bwBreakpoint().
+	m.morphBreakpoint( 0.6, 0. );
+	m.morphBreakpoint( 2., 1. );
+	
+	m.setDestFile(":::sample_sounds:clariflute.aiff");	
+}
