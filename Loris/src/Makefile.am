@@ -18,7 +18,6 @@ pkginclude_HEADERS = AiffFile.h	\
 				Breakpoint.h	\
 				BreakpointUtils.h	\
 				Channelizer.h	\
-				COWPtr.h	\
 				Dilator.h	\
 				Distiller.h	\
 				Envelope.h	\
@@ -59,7 +58,6 @@ libclasses_la_SOURCES = AiffFile.C \
 		BreakpointUtils.h \
 		Channelizer.C \
 		Channelizer.h \
-		COWPtr.h	\
 		Dilator.C \
 		Dilator.h \
 		Distiller.C \

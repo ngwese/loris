@@ -946,7 +946,7 @@ static void writeEnvelopes( std::ostream & s, const list<Partial> & plist)
 	do {
 		Assert( refLabel < spcEI.fileNumPartials );
 		refPar = select( plist, ++refLabel, false );
-		} while ( refPar == NULL || refPar->begin() == refPar->end() );
+	} while ( refPar == NULL || refPar->size() == 0 );
 
 	// write out one frame at a time:
 	for (double tim = spcEI.startTime; tim <= spcEI.endTime; tim += spcEI.hop ) 
@@ -962,7 +962,7 @@ static void writeEnvelopes( std::ostream & s, const list<Partial> & plist)
 			// if no such partial, frequency multiply the reference partial
 			double freqMult = 1.;			// frequency multiplier for partial	
 			double magMult  = 1.;			// magnitude multiplier for partial	
-			if ( pcorrect == NULL || pcorrect->begin() == pcorrect->end() ) 
+			if ( pcorrect == NULL || pcorrect->size() == 0 ) 
 			{
 				pcorrect = refPar;
 				freqMult = (double) label / (double) refLabel; 
@@ -1051,7 +1051,7 @@ static double startTime( const PartialList & pars )
 {
 	double startTime = 1000.;
 	for ( PartialList::const_iterator pIter = pars.begin(); pIter != pars.end(); ++pIter )
-		if ( pIter->begin() != pIter->end() && startTime > pIter->startTime() && pIter->label() > 0 )
+		if ( pIter->size() > 0 && startTime > pIter->startTime() && pIter->label() > 0 )
 			startTime = pIter->startTime();
 	return startTime;
 }
@@ -1066,7 +1066,7 @@ static double endTime( const PartialList & pars )
 {
 	double endTime = -1000.;
 	for ( PartialList::const_iterator pIter = pars.begin(); pIter != pars.end(); ++pIter )
-		if ( pIter->begin() != pIter->end() && endTime < pIter->endTime()  && pIter->label() > 0 )
+		if ( pIter->size() > 0 && endTime < pIter->endTime()  && pIter->label() > 0 )
 			endTime = pIter->endTime();
 	return endTime;
 }

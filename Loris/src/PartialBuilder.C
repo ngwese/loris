@@ -91,7 +91,7 @@ PartialBuilder::PartialBuilder( double drift, const Envelope & env ) :
 //
 static inline double end_frequency( const Partial & partial )
 {
-	return (--partial.end()).breakpoint().frequency();
+	return partial.last().frequency();
 }
 
 // ---------------------------------------------------------------------------

@@ -44,7 +44,8 @@
  * to manage a pointer to the std::map, and implements copy-on-write semantics. 
  * I thought this would speed things up by eliminating some copying of big 
  * Breakpoint maps, but in fact, it slowed things down! Must be that indirection
- * isn't free! So the no frills policy is the one 
+ * isn't free! So the no frills policy is the one we use. The reference 
+ * counted one has been moved out to RefCountedBreakpointContainer.h.
  *
  * Kelly Fitz, 16 Aug 1999
  * loris@cerlsoundgroup.org
@@ -53,18 +54,16 @@
  *
  */
 
-#include <COWPtr.h>		// for RefCountedBreakpointContainer
 #include <Exception.h>
 #include <Breakpoint.h>
 #include <GenericPartialIterator.h>
 #include <map>
 
-
 //	begin namespace
 namespace Loris {
 
 // ---------------------------------------------------------------------------
-//	Breakpoint container policies
+//	Breakpoint container policy
 //
 //	responsibilities:
 //		default construction
@@ -143,90 +142,6 @@ protected:
 //	-- implementation core --
 private:
 	container_type _bpmap;	//	Breakpoint envelope
-	
-};
-
-//	NOTE: any mutating operation, AND anything that
-//	returns a non-const iterator has to make_unique!
-//
-//	This is invoked by make_unique to clone the map.
-inline std::map< double, Breakpoint > * 
-clone( const std::map< double, Breakpoint > * tp )
-{
-	return new std::map< double, Breakpoint >(*tp);
-}
-
-class RefCountedBreakpointContainer : public GenericBreakpointContainer
-{
-//	-- public interface --
-public:
-//	-- types --
-	typedef std::map< double, Breakpoint > container_type;
-	typedef GenericPartialIterator< RefCountedBreakpointContainer > iterator;
-	typedef GenericPartialConstIterator< RefCountedBreakpointContainer > const_iterator;
-	typedef container_type::size_type size_type;
-
-//	-- construction --
-	RefCountedBreakpointContainer( void ) : _ptr( new container_type() ) {}
-	
-//	-- compare --
-	bool operator==( const RefCountedBreakpointContainer & rhs ) const
-		{ return *_ptr == *(rhs._ptr); }
-
-//	-- access opertions --
-	const_iterator begin( void ) const { return makeIterator<const_iterator>( _ptr->begin() ); }
-	iterator begin( void ) { _ptr.make_unique(); return makeIterator<iterator>( _ptr->begin() ); }
-	const_iterator end( void ) const { return makeIterator<const_iterator>( _ptr->end() ); }
-	iterator end( void ) { _ptr.make_unique(); return makeIterator<iterator>( _ptr->end() ); }
-	size_type size( void ) const { 	return _ptr->size(); }
-	
-	const_iterator findAfter( double time ) const
-	{
-		return makeIterator<const_iterator>( _ptr->lower_bound( time ) );
-	}
-	iterator findAfter( double time ) 
-	{
-		_ptr.make_unique();
-		return makeIterator<iterator>( _ptr->lower_bound( time ) );
-	}
-
-//	-- mutating operations --
-	iterator insert( double time, const Breakpoint & bp )
-	{
-		// make this reference unique!
-		_ptr.make_unique();
-		
-		std::pair< container_type::iterator, bool > result = 
-			_ptr->insert( container_type::value_type(time, bp) );
-		if ( ! result.second )
-			result.first->second = bp;
-		return makeIterator<iterator>( result.first );
-	}
- 
-	iterator erase( iterator beg, iterator end )
-	{
-		// make this reference unique!
-		_ptr.make_unique();
-		
-		//	This relies on the unsavory conversion from const_iterator 
-		//	to container_type::const_iterator.
-		_ptr->erase( baseIterator(beg), baseIterator(end) );
-		return end;
-	}
-
-protected:
-	//	protect destruction
-	~RefCountedBreakpointContainer( void ) {}
-
-	//	icky constructor for Partial to use:
-	//	This relies on the unsavory conversion from const_iterator 
-	//	to container_type::const_iterator.
-	RefCountedBreakpointContainer( const_iterator beg, const_iterator end ) 
-		: _ptr( new container_type( baseIterator(beg), baseIterator(end) ) ) {}
-
-//	-- implementation core --
-private:
-	COWPtr< container_type > _ptr;	//	reference counted Breakpoint envelope
 	
 };
 
@@ -349,6 +264,13 @@ public:
 		class Synthesizer).
 	 */
 	 
+	Breakpoint & first( void );
+	const Breakpoint & first( void ) const;
+	/*	Return a reference to the first Breakpoint in the Partial's
+		envelope. Raises InvalidPartial exception if there are no 
+		Breakpoints.
+	 */
+	 
 	double initialPhase( void ) const;
 	/*	Return the phase (in radians) of this Partial at its start time
 		(the phase of the first Breakpoint). Note that the initial
@@ -358,6 +280,13 @@ public:
 	 	 
 	label_type label( void ) const { return _label; }
 	/*	Return the 32-bit label for this Partial as an integer.
+	 */
+	 
+	Breakpoint & last( void );
+	const Breakpoint & last( void ) const;
+	/*	Return a reference to the last Breakpoint in the Partial's
+		envelope. Raises InvalidPartial exception if there are no 
+		Breakpoints.
 	 */
 	 
 	size_type numBreakpoints( void ) const { return size(); }

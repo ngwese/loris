@@ -145,6 +145,66 @@ Partial::operator==( const Partial & rhs ) const
 }
 
 // ---------------------------------------------------------------------------
+//	first
+// ---------------------------------------------------------------------------
+//	Return a reference to the first Breakpoint in the Partial's
+//	envelope. Raises InvalidPartial exception if there are no 
+//	Breakpoints.
+//
+Breakpoint & 
+Partial::first( void )
+{
+	if ( size() == 0 )
+		Throw( InvalidPartial, "Tried find first Breakpoint in a Partial with no Breakpoints." );
+	return begin().breakpoint();
+}
+
+// ---------------------------------------------------------------------------
+//	first
+// ---------------------------------------------------------------------------
+//	Return a reference to the first Breakpoint in the Partial's
+//	envelope. Raises InvalidPartial exception if there are no 
+//	Breakpoints.
+//
+const Breakpoint & 
+Partial::first( void ) const
+{
+	if ( size() == 0 )
+		Throw( InvalidPartial, "Tried find first Breakpoint in a Partial with no Breakpoints." );
+	return begin().breakpoint();
+}
+
+// ---------------------------------------------------------------------------
+//	last
+// ---------------------------------------------------------------------------
+//	Return a reference to the last Breakpoint in the Partial's
+//	envelope. Raises InvalidPartial exception if there are no 
+//	Breakpoints.
+//
+Breakpoint & 
+Partial::last( void )
+{
+	if ( size() == 0 )
+		Throw( InvalidPartial, "Tried find last Breakpoint in a Partial with no Breakpoints." );
+	return (--end()).breakpoint();
+}
+
+// ---------------------------------------------------------------------------
+//	last
+// ---------------------------------------------------------------------------
+//	Return a reference to the last Breakpoint in the Partial's
+//	envelope. Raises InvalidPartial exception if there are no 
+//	Breakpoints.
+//
+const Breakpoint & 
+Partial::last( void ) const
+{
+	if ( size() == 0 )
+		Throw( InvalidPartial, "Tried find last Breakpoint in a Partial with no Breakpoints." );
+	return (--end()).breakpoint();
+}
+
+// ---------------------------------------------------------------------------
 //	initialPhase
 // ---------------------------------------------------------------------------
 //	Return starting phase in radians, except (InvalidPartial) if there
@@ -156,7 +216,7 @@ Partial::initialPhase( void ) const
 	if ( numBreakpoints() == 0 )
 		Throw( InvalidPartial, "Tried find intial phase of a Partial with no Breakpoints." );
 
-	return begin().breakpoint().phase();
+	return first().phase();
 }
 
 // ---------------------------------------------------------------------------

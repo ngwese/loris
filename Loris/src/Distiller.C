@@ -259,10 +259,10 @@ static void merge( Partial::const_iterator beg,
 	Partial::iterator removeEnd = destPartial.findAfter( toMerge.endTime() + clearance );
 	if ( removeEnd != destPartial.end() )
 	{
-		if ( (--toMerge.end()).breakpoint().amplitude() > 0 )
+		if ( toMerge.last().amplitude() > 0 )
 		{
 			toMerge.insert( toMerge.endTime() + fadeTime, 
-							makeNullAfter((--toMerge.end()).breakpoint(), fadeTime) );
+							makeNullAfter(toMerge.last(), fadeTime) );
 		}
 
 		if ( removeEnd.breakpoint().amplitude() > 0 )
@@ -280,10 +280,10 @@ static void merge( Partial::const_iterator beg,
 	Partial::iterator removeBegin = destPartial.findAfter( toMerge.startTime() - clearance );
 	if ( removeBegin != destPartial.begin() )
 	{
-		if ( toMerge.begin().breakpoint().amplitude() > 0 )
+		if ( toMerge.first().amplitude() > 0 )
 		{
 			toMerge.insert( toMerge.startTime() - fadeTime, 
-							makeNullBefore( toMerge.begin().breakpoint(), fadeTime ) );
+							makeNullBefore( toMerge.first(), fadeTime ) );
 		}
 
 		Partial::iterator beforeMerge = --Partial::iterator(removeBegin);

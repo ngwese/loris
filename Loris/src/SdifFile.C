@@ -464,7 +464,7 @@ static void
 indexPartials( const PartialList & partials, std::vector< Partial * > & partialsVector )
 {
 	for ( PartialList::const_iterator it = partials.begin(); it != partials.end(); ++it)
-		if (it->begin() != it->end())
+		if ( it->size() != 0 )
 			partialsVector.push_back((Partial *)&(*it));	
 }
 

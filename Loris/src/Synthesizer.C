@@ -212,7 +212,7 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ ) const
 	debugger << "synthesizing Partial from " << p.startTime() * sampleRate() <<
 			" to " << p.endTime() * sampleRate() << " starting phase " <<
 			p.initialPhase() << " starting frequency " << 
-			p.begin()->frequency() << endl;
+			p.first().frequency() << endl;
 
 	
 //	don't bother to synthesize Partials that will generate no samples in
