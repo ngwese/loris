@@ -1,5 +1,5 @@
-#ifndef INCLUDE_DISTILLER_H
-#define INCLUDE_DISTILLER_H
+#ifndef INCLUDE_PARTIALLIST_H
+#define INCLUDE_PARTIALLIST_H
 /*
  * This is the Loris C++ Class Library, implementing analysis, 
  * manipulation, and synthesis of digitized sounds using the Reassigned 
@@ -22,56 +22,30 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *
- * Distiller.h
+ *	PartialList.h
  *
- * Definition of class Distiller.
+ *	Type definition of Loris::PartialList, which is just a name
+ *	for std::list< Loris::Partial >.
  *
- * Kelly Fitz, 20 Oct 1999
+ * Kelly Fitz, 6 March 2002
  * loris@cerlsoundgroup.org
  *
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-
-#include <PartialList.h>
+ 
+//	Seems like we houldn't need to include Partial.h, but 
+//	without it, I can't instantiate a PartialList. I need
+//	a definition of Partial for PartialList to be unambiguous.
+#include<Partial.h>
+#include <list>
 
 //	begin namespace
 namespace Loris {
 
-
-// ---------------------------------------------------------------------------
-//	class Distiller
-//
-//	A group of Partials that logically represent a single component
-//	can be distilled into a single Partial using a Distiller. 
-//
-//
-class Distiller
-{
-//	-- public interface --
-public:
-//	construction:	
-	Distiller( void );
-	~Distiller( void );
-	
-//	distillation:
-	void distill( PartialList & container, PartialList::iterator dist_begin, 
-				  PartialList::iterator dist_end );
-	void distill( PartialList & container );
-
-//	function call operator:
-	void operator() ( PartialList & container, PartialList::iterator dist_begin, 
-					  PartialList::iterator dist_end )
-		{ distill( container, dist_begin, dist_end ); }
-
-
-//	-- unimplemented --
-private:
-	Distiller( const Distiller & other );
-	Distiller & operator= ( const Distiller & other );
-	
-};	//	end of class Distiller
+typedef std::list< Loris::Partial > PartialList;
+typedef std::list< Loris::Partial >::iterator PartialListIterator;
 
 }	//	end of namespace Loris
 
-#endif /* ndef INCLUDE_DISTILLER_H */
+#endif /* ndef INCLUDE_PARTIALLIST_H */

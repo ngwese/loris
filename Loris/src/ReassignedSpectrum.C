@@ -42,7 +42,7 @@
 #include <cstdlib>	//	for std::abs()
 
 
-#if HAVE_M_PI
+#if defined(HAVE_M_PI) && (HAVE_M_PI)
 	#include <cmath>	//	for M_PI (except on Mac)
 	const double Pi = M_PI;
 #else

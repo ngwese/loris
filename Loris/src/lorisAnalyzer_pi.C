@@ -146,13 +146,13 @@ void destroyAnalyzer( Analyzer * ptr_this )
 extern "C"
 void analyzer_analyze( Analyzer * ptr_this, 
 					   const SampleVector * vec, double srate,
-					   PartialList * partials )
+					   Loris::PartialList * partials )
 {
 	try 
 	{
 		ThrowIfNull((Analyzer *) ptr_this);
 		ThrowIfNull((SampleVector *) vec);
-		ThrowIfNull((PartialList *) partials);
+		ThrowIfNull((Loris::PartialList *) partials);
 		
 		//	perform analysis:
 		notifier << "analyzing " << vec->size() << " samples at " <<

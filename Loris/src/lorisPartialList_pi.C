@@ -75,7 +75,7 @@ using namespace Loris;
 	Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
 	the Loris website: www.cerlsoundgroup.org/Loris/.
 
-	In C++, a PartialList * is a std::list< Loris::Partial > *.
+	In C++, a PartialList * is a Loris::PartialList *.
  */ 
 
 /* ---------------------------------------------------------------- */

@@ -33,14 +33,13 @@
  *
  */
 
-#include <list>
+#include <PartialList.h>
 #include <memory>
 
 //	begin namespace
 namespace Loris {
 
 class BreakpointEnvelope;
-class Partial; 
 
 // ---------------------------------------------------------------------------
 //	class FrequencyReference
@@ -59,11 +58,11 @@ private:
 //	-- public interface --
 public:
 	//	construction: 
-	FrequencyReference( std::list<Partial>::const_iterator begin, 
-						std::list<Partial>::const_iterator end, 
+	FrequencyReference( PartialList::const_iterator begin, 
+						PartialList::const_iterator end, 
 						double minFreq, double maxFreq, long numSamps );
-	FrequencyReference( std::list<Partial>::const_iterator begin, 
-						std::list<Partial>::const_iterator end, 
+	FrequencyReference( PartialList::const_iterator begin, 
+						PartialList::const_iterator end, 
 						double minFreq, double maxFreq );
 	FrequencyReference( const FrequencyReference & other );
 	FrequencyReference & operator= ( const FrequencyReference & other );

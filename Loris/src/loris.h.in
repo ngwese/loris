@@ -73,22 +73,21 @@
 	(namespace std) are also used.
  */
 #if defined(__cplusplus)
-	//	declare Loris classes:
+	//	include std library headers, declaring template classes
+	//	is too painful and fragile:
+	#include <list>
+	#include <vector>
+	typedef std::vector< double > SampleVector;
+	
+	//	declare Loris classes in Loris namespace:
 	namespace Loris
 	{
 		class Analyzer;
 		class BreakpointEnvelope;
 		class Partial;
+		//	this has to be copied from PartialList.h
+		typedef std::list< Loris::Partial > PartialList;
 	}
-	//	include std library headers, declaring template classes
-	//	is too painful and fragile:
-	#include <list>
-	#include <vector>
-	//	define types used in procedural interface:
-	using Loris::Analyzer;
-	using Loris::BreakpointEnvelope;
-	typedef std::list< Loris::Partial > PartialList;
-	typedef std::vector< double > SampleVector;
 #else 
 	/* no classes, just opaque C pointers */
 	typedef struct Analyzer Analyzer;
@@ -98,6 +97,7 @@
 #endif
 
 #if defined(__cplusplus)
+	namespace Loris {
 	extern "C" {
 #endif
 
@@ -260,7 +260,7 @@ double breakpointEnvelope_valueAt( const BreakpointEnvelope * ptr_this,
 	Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
 	the Loris website: www.cerlsoundgroup.org/Loris/.
 
-	In C++, a PartialList is a std::list< Loris::Partial >.
+	In C++, a PartialList is a Loris::PartialList.
  */ 
 PartialList * createPartialList( void );
 /*	Return a new empty PartialList.
@@ -534,6 +534,7 @@ void setNotifier( void(*f)(const char *) );
 
 #if defined(__cplusplus)
 }	/* extern "C" 	*/
+}	/* end of namespace Loris */
 #endif
 
 #endif	/* ndef INCLUDE_LORIS_H */

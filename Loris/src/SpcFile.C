@@ -37,13 +37,14 @@
 	#include <config.h>
 #endif
 
-#include<SpcFile.h>
-#include<AiffFile.h>
-#include<Exception.h>
-#include<Endian.h>
-#include<Partial.h>
-#include<PartialUtils.h>
-#include<Notifier.h>
+#include <SpcFile.h>
+#include <AiffFile.h>
+#include <Exception.h>
+#include <Endian.h>
+#include <Partial.h>
+#include <PartialList.h>
+#include <PartialUtils.h>
+#include <Notifier.h>
 #include "ieee.h"
 #include "Loris_types.h"
 #include <climits>
@@ -53,7 +54,7 @@
 #include <algorithm>
 #include <fstream>
 
-#if HAVE_M_PI
+#if defined(HAVE_M_PI) && (HAVE_M_PI)
 	const double Pi = M_PI;
 #else
 	const double Pi = 3.14159265358979324;
@@ -172,7 +173,7 @@ processPoint( const int left, const int right,
 // Let exceptions propagate.
 //
 static void
-read( const char *infilename, std::list<Partial> & partialsList )
+read( const char *infilename, PartialList & partialsList )
 {
 
 	try
@@ -862,7 +863,7 @@ static void pack( double amp, double freq, double bw, double phase,
 //	having the specified label, or NULL if there is not such Partial
 //	in the list. 
 //
-static const Partial * select( const std::list< Partial > & partials, int label, int firstFrameFlag )
+static const Partial * select( const PartialList & partials, int label, int firstFrameFlag )
 {
 	const Partial * ret = NULL;
 	list< Partial >::const_iterator it = 
@@ -1005,10 +1006,10 @@ static double hop( int numPartials, double sampleRate )
 // ---------------------------------------------------------------------------
 //	Find the start time: the earliest time of any labeled partial.
 //
-static double startTime( const std::list<Partial> & pars )
+static double startTime( const PartialList & pars )
 {
 	double startTime = 1000.;
-	for ( std::list< Partial >::const_iterator pIter = pars.begin(); pIter != pars.end(); ++pIter )
+	for ( PartialList::const_iterator pIter = pars.begin(); pIter != pars.end(); ++pIter )
 		if ( pIter->begin() != pIter->end() && startTime > pIter->startTime() && pIter->label() > 0 )
 			startTime = pIter->startTime();
 	return startTime;
@@ -1020,10 +1021,10 @@ static double startTime( const std::list<Partial> & pars )
 // ---------------------------------------------------------------------------
 //	Find the end time: the latest time of any labeled partial.
 //
-static double endTime( const std::list<Partial> & pars )
+static double endTime( const PartialList & pars )
 {
 	double endTime = -1000.;
-	for ( std::list< Partial >::const_iterator pIter = pars.begin(); pIter != pars.end(); ++pIter )
+	for ( PartialList::const_iterator pIter = pars.begin(); pIter != pars.end(); ++pIter )
 		if ( pIter->begin() != pIter->end() && endTime < pIter->endTime()  && pIter->label() > 0 )
 			endTime = pIter->endTime();
 	return endTime;
@@ -1035,13 +1036,13 @@ static double endTime( const std::list<Partial> & pars )
 // ---------------------------------------------------------------------------
 //	Find the number of partials.
 //
-static long numPartials( const std::list<Partial> & pars )
+static long numPartials( const PartialList & pars )
 {
 
 // We purposely consider partials with no breakpoints, to allow
 // a larger number of partials than actually have data.
 	int numPartials = 0;
-	for ( std::list< Partial >::const_iterator pIter = pars.begin(); pIter != pars.end(); ++pIter )
+	for ( PartialList::const_iterator pIter = pars.begin(); pIter != pars.end(); ++pIter )
 		if ( numPartials < pIter->label() )
 			numPartials = pIter->label();
 
@@ -1062,8 +1063,8 @@ static long numPartials( const std::list<Partial> & pars )
 // default value (and not specified by the caller).
 //
 void
-SpcFile::Export( const std::string & filename, const std::list<Partial> & plist, double midipitch, 
-					int enhanced, double endApproachTime )
+SpcFile::Export( const std::string & filename, const PartialList & plist, double midipitch, 
+				 int enhanced, double endApproachTime )
 {
 	std::ofstream s;
 	s.open( filename.c_str(), std::ios::out | std::ios::binary ); 
@@ -1080,8 +1081,8 @@ SpcFile::Export( const std::string & filename, const std::list<Partial> & plist,
 // default value (and not specified by the caller).
 //
 void
-SpcFile::Export( std::ostream & file, const std::list<Partial> & plist, double midipitch, 
-						int enhanced, double endApproachTime )
+SpcFile::Export( std::ostream & file, const PartialList & plist, double midipitch, 
+				 int enhanced, double endApproachTime )
 {	
 	//	note number (69.00 = A440) for spc file
 	spcEI.midipitch = midipitch;

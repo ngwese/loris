@@ -40,6 +40,7 @@
 #include <BreakpointEnvelope.h>
 #include <Notifier.h>
 #include <Partial.h>
+#include <PartialList.h>
 
 #include <algorithm>
 
@@ -48,9 +49,9 @@ namespace Loris {
 
 
 //	forward declarations for helpers, defined below:
-static std::list< Partial >::const_iterator
-findLongestPartialInFreqRange( std::list<Partial>::const_iterator begin, 
-							   std::list<Partial>::const_iterator end, 
+static PartialList::const_iterator
+findLongestPartialInFreqRange( PartialList::const_iterator begin, 
+							   PartialList::const_iterator end, 
 							   double minFreq, double maxFreq );
 static void
 buildEnvelopeFromPartial( BreakpointEnvelope & env, const Partial & p, long numsamps );							   
@@ -62,8 +63,8 @@ buildEnvelopeFromPartial( BreakpointEnvelope & env, const Partial & p, long nums
 //	a given iterator range and in a specified frequency range. The envelope
 //	will have the specified number of samples.
 //
-FrequencyReference::FrequencyReference( std::list<Partial>::const_iterator begin, 
-										std::list<Partial>::const_iterator end, 
+FrequencyReference::FrequencyReference( PartialList::const_iterator begin, 
+										PartialList::const_iterator end, 
 										double minFreq, double maxFreq,
 										long numSamps ) :
 	_env( new BreakpointEnvelope() )
@@ -82,7 +83,7 @@ FrequencyReference::FrequencyReference( std::list<Partial>::const_iterator begin
 #endif
 
 	//	find the longest Partial in the specified frequency range:
-	std::list< Partial >::const_iterator longest  = 
+	PartialList::const_iterator longest  = 
 		findLongestPartialInFreqRange( begin, end, minFreq, maxFreq );
 		
 	if ( longest == end )
@@ -102,8 +103,8 @@ FrequencyReference::FrequencyReference( std::list<Partial>::const_iterator begin
 //	Partial's frequency envelope at 10 or more points, with a resolution
 //	of at least 30 ms.
 //
-FrequencyReference::FrequencyReference( std::list<Partial>::const_iterator begin, 
-										std::list<Partial>::const_iterator end, 
+FrequencyReference::FrequencyReference( PartialList::const_iterator begin, 
+										PartialList::const_iterator end, 
 										double minFreq, double maxFreq ) :
 	_env( new BreakpointEnvelope() )
 {
@@ -118,7 +119,7 @@ FrequencyReference::FrequencyReference( std::list<Partial>::const_iterator begin
 #endif
 
 	//	find the longest Partial in the specified frequency range:
-	std::list< Partial >::const_iterator longest  = 
+	PartialList::const_iterator longest  = 
 		findLongestPartialInFreqRange( begin, end, minFreq, maxFreq );
 		
 	if ( longest == end )
@@ -224,19 +225,19 @@ struct IsInFrequencyRange
 //	that attains its maximum sinusoidal energy at a frequency within 
 //	a specified range.
 //
-static std::list< Partial >::const_iterator
-findLongestPartialInFreqRange( std::list<Partial>::const_iterator begin, 
-							   std::list<Partial>::const_iterator end, 
+static PartialList::const_iterator
+findLongestPartialInFreqRange( PartialList::const_iterator begin, 
+							   PartialList::const_iterator end, 
 							   double minFreq, double maxFreq )
 {
-	std::list<Partial>::const_iterator it = 
+	PartialList::const_iterator it = 
 		std::find_if( begin, end, IsInFrequencyRange(minFreq, maxFreq) );
 	
 	//	there may be no Partials in the specified frequency range:
 	if ( it == end )
 		return it;
 		
-	std::list<Partial>::const_iterator longest = it;
+	PartialList::const_iterator longest = it;
 	for ( it = std::find_if( ++it, end, IsInFrequencyRange(minFreq, maxFreq) );
 		  it != end;
 		  it = std::find_if( ++it, end, IsInFrequencyRange(minFreq, maxFreq) ) )

@@ -36,19 +36,20 @@
 	#include <config.h>
 #endif
 
-#include<ImportLemur.h>
-#include<Endian.h>
-#include<Exception.h>
-#include<Partial.h>
-#include<Breakpoint.h>
-#include<Notifier.h>
+#include <ImportLemur.h>
+#include <Endian.h>
+#include <Exception.h>
+#include <Partial.h>
+#include <PartialList.h>
+#include <Breakpoint.h>
+#include <Notifier.h>
 #include "Loris_types.h"
 #include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <string>
 
-#if HAVE_M_PI
+#if defined(HAVE_M_PI) && (HAVE_M_PI)
 	const double Pi = M_PI;
 #else
 	const double Pi = 3.14159265358979324;
@@ -128,8 +129,8 @@ struct PeakOnDisk
 };
 
 //	prototypes for import helpers:
-static void importPartials( std::istream & s, std::list<Partial> & partials, double bweCutoff );
-static void getPartial( std::istream & s, std::list<Partial> & partials, double bweCutoff );	
+static void importPartials( std::istream & s, PartialList & partials, double bweCutoff );
+static void getPartial( std::istream & s, PartialList & partials, double bweCutoff );	
 static void readChunkHeader( std::istream & s, CkHeader & ck );
 static void readContainer( std::istream & s );
 static void readParamsChunk( std::istream & s );
@@ -168,7 +169,7 @@ ImportLemur::ImportLemur( const std::string & fname, double bweCutoff /* = 1000 
 //	version of Lemur ever wrote these files anyway.
 //
 static void
-importPartials( std::istream & s, std::list<Partial> & partials, double bweCutoff )
+importPartials( std::istream & s, PartialList & partials, double bweCutoff )
 {
 	try 
 	{
@@ -259,7 +260,7 @@ readContainer( std::istream & s )
 //	reasonably expect to catch only ImportExceptions.
 //
 static void
-getPartial( std::istream & s, std::list<Partial> & partials, double bweCutoff )
+getPartial( std::istream & s, PartialList & partials, double bweCutoff )
 {
 	try 
 	{

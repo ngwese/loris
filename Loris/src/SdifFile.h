@@ -35,8 +35,7 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-#include <Partial.h>
-#include <list>
+#include <PartialList.h>
 #include <string>
 
 //	begin namespace
@@ -48,7 +47,7 @@ namespace Loris {
 class SdifFile
 {
 //	-- instance variables --
-	std::list<Partial> _partials;	//	collect Partials for reading here
+	PartialList _partials;	//	collect Partials for reading here
 
 //	-- public interface --
 public:
@@ -56,14 +55,14 @@ public:
 //	(let compiler generate destructor)
 	SdifFile( const std::string & infilename );
 		
-//	std::list< Partial > access:
-	std::list<Partial> & partials( void ) { return _partials; }
-	const std::list<Partial> & partials( void ) const { return _partials; }
+//	PartialList access:
+	PartialList & partials( void ) { return _partials; }
+	const PartialList & partials( void ) const { return _partials; }
 
 //	export:
 //	enhanced chooses between 4-column 1TRC (sine only) or 6-column RABP (reassigned and enhanced)
 	static void Export( const std::string & filename, 
-					const std::list<Partial> & plist, const bool enhanced = true);
+						const PartialList & plist, const bool enhanced = true);
 	
 //	-- private interface --
 private:

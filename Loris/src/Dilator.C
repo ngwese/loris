@@ -37,6 +37,7 @@
 
 #include<Dilator.h>
 #include<Partial.h>
+#include<PartialList.h>
 #include<Breakpoint.h>
 #include<Exception.h>
 #include<Notifier.h>
@@ -121,7 +122,8 @@ Dilator::dilate( Partial & p )
 	
 		//	compute a new time for the Breakpoint at pIter:
 		double newtime = 0;
-		if ( idx == 0 ) {
+		if ( idx == 0 ) 
+		{
 			//	all time points in _initial are later than 
 			//	the currentTime; stretch if no zero time 
 			//	point has been specified, otherwise, shift:
@@ -130,7 +132,8 @@ Dilator::dilate( Partial & p )
 			else
 				newtime = _target[idx] + (currentTime - _initial[idx]);
 		}
-		else if ( idx == _initial.size() ) {
+		else if ( idx == _initial.size() ) 
+		{
 			//	all time points in _initial are earlier than 
 			//	the currentTime; shift:
 			//
@@ -138,7 +141,8 @@ Dilator::dilate( Partial & p )
 			//	idx-1 is safe
 			newtime = _target[idx-1] + (currentTime - _initial[idx-1]);
 		}
-		else {
+		else 
+		{
 			//	currentTime is between the time points at idx and
 			//	idx-1 in _initial; shift and stretch: 
 			//
@@ -156,6 +160,24 @@ Dilator::dilate( Partial & p )
 										  iter.breakpoint().bandwidth(), iter.breakpoint().phase() ) );
 	}
 	
+	//	new Breakpoints need to be added to the Partial at times corresponding
+	//	to all target time points that are after the first Breakpoint and
+	//	before the last, otherwise, Partials may be briefly out of tune with
+	//	each other, since our Breakpoints are non-uniformly distributed in time:
+	for ( idx = 0; idx < _initial.size(); ++ idx )
+	{
+		if ( _initial[idx] < p.startTime() )
+			continue;
+		else if ( _initial[idx] > p.endTime() )
+			break;
+		else
+		{
+			newp.insert( _target[idx], 
+						Breakpoint( p.frequencyAt(_initial[idx]), p.amplitudeAt(_initial[idx]),
+									p.bandwidthAt(_initial[idx]), p.phaseAt(_initial[idx]) ) );
+		}
+	}
+	
 	//	store the new Partial:
 	p = newp;
 }
@@ -166,7 +188,7 @@ Dilator::dilate( Partial & p )
 //	dilate() each Partial in the specified half-open range.
 //
 void 
-Dilator::dilate( std::list< Partial >::iterator begin, std::list< Partial >::iterator end )
+Dilator::dilate( PartialList::iterator begin, PartialList::iterator end )
 {
 	while ( begin != end )
 		dilate( *(begin++) );

@@ -35,13 +35,14 @@
 	#include <config.h>
 #endif
 
-#include<Analyzer.h>
-#include<AssociateBandwidth.h>
-#include<Exception.h>
-#include<KaiserWindow.h>
-#include<ReassignedSpectrum.h>
-#include<BreakpointUtils.h>
-#include<Notifier.h>
+#include <Analyzer.h>
+#include <AssociateBandwidth.h>
+#include <Exception.h>
+#include <KaiserWindow.h>
+#include <ReassignedSpectrum.h>
+#include <BreakpointUtils.h>
+#include <Notifier.h>
+#include <Partial.h>
 #include <list>
 #include <vector>
 #include <memory>

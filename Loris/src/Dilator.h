@@ -33,9 +33,8 @@
  *
  */
 
-#include<Partial.h>
+#include <PartialList.h>
 #include <vector>
-#include <list>
 
 //	begin namespace
 namespace Loris {
@@ -59,11 +58,11 @@ public:
 	
 //	dilation:
 	void dilate( Partial & p );
-	void dilate( std::list< Partial >::iterator begin, std::list< Partial >::iterator end );
+	void dilate( PartialList::iterator begin, PartialList::iterator end );
 	
 //	function call operator:
 //	(should this be for a single Partial, or the range?)
-	void operator() ( std::list< Partial >::iterator begin, std::list< Partial >::iterator end )
+	void operator() ( PartialList::iterator begin, PartialList::iterator end )
 		{ dilate( begin, end ); }
 	
 //	-- unimplemented until useful --

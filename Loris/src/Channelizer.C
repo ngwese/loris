@@ -38,8 +38,8 @@
 #include<Channelizer.h>
 #include<Envelope.h>
 #include<Partial.h>
+#include<PartialList.h>
 #include<Notifier.h>
-#include <list>
 #include <memory>
 
 
@@ -66,7 +66,7 @@ public:
 	Channelizer_imp( const Envelope & env, int label );
 	~Channelizer_imp( void );
 	
-	void channelize( std::list< Partial >::iterator begin, std::list< Partial >::iterator end );
+	void channelize( PartialList::iterator begin, PartialList::iterator end );
 	void channelize_one( Partial & p, double tstart, double tend );
 
 private:
@@ -138,13 +138,13 @@ static double loudestAt( const Partial & p )
 //	envelopes which badly match the Partials to be channelized.
 //	
 void
-Channelizer_imp::channelize( std::list< Partial >::iterator begin, std::list< Partial >::iterator end )
+Channelizer_imp::channelize( PartialList::iterator begin, PartialList::iterator end )
 {
 #ifdef Debug_Loris
 	std::set<int> labelsfound;
 #endif
 
-	for ( std::list< Partial >::iterator it = begin; it != end; ++it ) 
+	for ( PartialList::iterator it = begin; it != end; ++it ) 
 	{
 
 		//	just define these here for now, ultimately will be arguments:
@@ -288,7 +288,7 @@ Channelizer::~Channelizer( void )
 //	Delegate to implementation.
 //	
 void
-Channelizer::channelize( std::list< Partial >::iterator begin, std::list< Partial >::iterator end ) const
+Channelizer::channelize( PartialList::iterator begin, PartialList::iterator end ) const
 {
 	_imp->channelize( begin, end );
 }

@@ -33,8 +33,7 @@
  *
  */
 
-#include<Partial.h>
-#include <list>
+#include<PartialList.h>
 
 //	begin namespace
 namespace Loris {
@@ -82,7 +81,7 @@ class Analyzer
 	double _bwRegionWidth;	//	width in Hz of overlapping bandwidth 
 							//	association regions
 							
-	std::list< Partial > _partials;	//	collect Partials here
+	PartialList _partials;	//	collect Partials here
 			
 //	-- public interface --
 public:
@@ -205,11 +204,11 @@ public:
 	 */
 
 //	Partial list access:
-	std::list< Partial > & partials( void ) { return _partials; }
+	PartialList & partials( void ) { return _partials; }
 	/*	Return a mutable reference to this Analyzer's list of 
 		analyzed Partials. 
 	 */
-	const std::list< Partial > & partials( void ) const { return _partials; }
+	const PartialList & partials( void ) const { return _partials; }
 	/*	Return an immutable (const) reference to this Analyzer's 
 		list of analyzed Partials. 
 	 */

@@ -35,17 +35,17 @@
 	#include <config.h>
 #endif
 
-#include<Distiller.h>
-#include<Partial.h>
-#include<Breakpoint.h>
-#include<Exception.h>
-#include<PartialUtils.h>
-#include<Notifier.h>
+#include <Distiller.h>
+#include <Partial.h>
+#include <PartialList.h>
+#include <Breakpoint.h>
+#include <Exception.h>
+#include <PartialUtils.h>
+#include <Notifier.h>
 #include <algorithm>
 #include <cmath>
-#include <list>
 
-#if HAVE_M_PI
+#if defined(HAVE_M_PI) && (HAVE_M_PI)
 	const double Pi = M_PI;
 #else
 	const double Pi = 3.14159265358979324;
@@ -120,7 +120,7 @@ Distiller::~Distiller( void )
 //	If iterator bounds aren't specified, then the whole list is processed.
 //
 void 
-Distiller::distill( std::list<Partial> & container  )
+Distiller::distill( PartialList & container  )
 {
 	distill( container, container.begin(), container.end() );
 }
@@ -155,26 +155,26 @@ Distiller::distill( std::list<Partial> & container  )
 //							
 //
 void 
-Distiller::distill( std::list<Partial> & container, 
-					std::list< Partial >::iterator dist_begin, 
-					std::list< Partial >::iterator dist_end )
+Distiller::distill( PartialList & container, 
+					PartialList::iterator dist_begin, 
+					PartialList::iterator dist_end )
 {
 	int howmanywerethere = container.size();
 
 	//	make a new temporary list that can be sorted and
 	//	distilled, since it isn't possible to sort a select
 	//	range of position in a list:
-	std::list<Partial> dist_list;
+	PartialList dist_list;
 	dist_list.splice( dist_list.begin(), container, dist_begin, dist_end );
 	
-	//	sort the std::list< Partial > by duration and label:
+	//	sort the PartialList by duration and label:
 	debugger << "Distiller sorting Partials by duration..." << endl;
 	dist_list.sort( PartialUtils::duration_greater() );
 	debugger << "Distiller sorting Partials by label..." << endl;
 	dist_list.sort( PartialUtils::label_less() );	//	this is a stable sort
 
 	// 	iterate over labels and distill each one:
-	std::list<Partial>::iterator lowerbound = dist_list.begin();
+	PartialList::iterator lowerbound = dist_list.begin();
 					  
 	while ( lowerbound != dist_list.end() )
 	{
@@ -182,7 +182,7 @@ Distiller::distill( std::list<Partial> & container,
 		
 		//	find the first element in l after lowerbound
 		//	having a label not equal to 'label':
-		std::list<Partial>::iterator upperbound = 
+		PartialList::iterator upperbound = 
 			std::find_if( lowerbound, dist_list.end(), 
 						  std::not1( std::bind2nd( PartialUtils::label_equals(), label ) ) );
 #ifdef Debug_Loris
@@ -202,7 +202,7 @@ Distiller::distill( std::list<Partial> & container,
 			newp.setLabel( label );
 			
 			//	iterate over range:
-			for ( std::list< Partial >::iterator it = lowerbound; it != upperbound; ++it )
+			for ( PartialList::iterator it = lowerbound; it != upperbound; ++it )
 			{
 				//	skip this Partial if it overlaps with any longer Partial:
 				if ( ! overlap( it, lowerbound, it ) )
@@ -273,7 +273,7 @@ Distiller::distill( std::list<Partial> & container,
 					{
 						Breakpoint bp = envpos.breakpoint();
 						double time = envpos.time();
-						std::list< Partial >::iterator nextp( it );
+						PartialList::iterator nextp( it );
 						++nextp;
 						double xse = collectEnergy( time, nextp, upperbound );
 						bp.addNoise( xse );

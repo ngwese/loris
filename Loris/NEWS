@@ -7,6 +7,26 @@ See the end for copying conditions.
 Please send Loris bug reports to loris@cerlsoundgroup.org.
 
 -------------------------------------------------------
+changes since 1.0beta8 release:
+
+- fixed Dilator to insert Breakpoints in new Partials at 
+times corresponding to dilation target time points. Without
+these new Breakpoints, and since our Breakpoints are 
+non-uniformly distributed in time, Partials could go
+breifly out of tune with each other as a result of 
+dilation.
+
+- added PartialList.h defining the type PartialList as
+a name for std::list< Partial >, in the Loris namespace.
+
+- replaced all instances of #if HAVE_M_PI with 
+#if defined(HAVE_M_PI) && (HAVE_M_PI), which seems 
+better.
+
+- put everything in procedural interface (loris.h) in
+Loris namespace, when compiling C++.
+
+-------------------------------------------------------
 changes since 1.0beta7 release:
 
 - fixed phase error in SpcFile.C, introduced by replacing

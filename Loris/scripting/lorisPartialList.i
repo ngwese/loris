@@ -23,7 +23,7 @@
  *	lorisPartialList.i
  *
  *	SWIG interface file describing the PartialList class.
- *	A PartialList is a Loris::Handle< std::list< Loris::Partial > >.
+ *	A PartialList is a Loris::Handle<  >.
  *	Include this file in loris.i to include the PartialList class
  *	interface in the scripting module. (Can be used with the 
  *	-shadow option to SWIG to build a PartialList class in the 
@@ -62,20 +62,17 @@
 
 %{
 #include<Partial.h>
+#include<PartialList.h>
 #include<PartialUtils.h>
 #include<Notifier.h>
 #include <list>
 
 using Loris::debugger;
 using Loris::Partial;
+using Loris::PartialIterator;
+using Loris::PartialList;
+using Loris::PartialListIterator;
 using Loris::Breakpoint;
-
-//	define the names of the classes that are 
-//	wrapped by this interface file:
-//	(additionally Partial and Breakpoint)
-typedef std::list< Loris::Partial > PartialList;
-typedef std::list< Loris::Partial >::iterator PartialListIterator;
-typedef Loris::Partial::iterator PartialIterator;
 
 %}
 

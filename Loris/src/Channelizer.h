@@ -33,16 +33,7 @@
  *
  */
 
-#include <list>
-
-#if 0 //defined(__MWERKS__)
-#include<Partial.h>
-//	On Mac, can't get around including Partial.h unless make a 
-//	class out of std::list< Partial > and its iterators that I can
-//	forward-declare. CW seems not to be able to handle 
-//	list<Partial>::iterator without the definition of Partial.
-//	GNU, however, can handle it. Maybe in the new CW?
-#endif
+#include <PartialList.h>
 
 //	begin namespace
 namespace Loris {
@@ -54,7 +45,7 @@ class Partial;
 // ---------------------------------------------------------------------------
 //	class Channelizer
 //
-//	Definition of a class for labeling Partials in a std::list< Partial >
+//	Definition of a class for labeling Partials in a PartialList
 //	according to a set of linearly-spaced, variable-frequency
 //	channels (like a time-varying harmonic frequency relationship).
 //
@@ -77,10 +68,10 @@ public:
 	Channelizer & operator=( const Channelizer & rhs );
 
 	//	channelizing:
-	void channelize( std::list< Partial >::iterator begin, std::list< Partial >::iterator end ) const;
+	void channelize( PartialList::iterator begin, PartialList::iterator end ) const;
 
 	//	function call operator:
-	void operator() ( std::list< Partial >::iterator begin, std::list< Partial >::iterator end ) const
+	void operator() ( PartialList::iterator begin, PartialList::iterator end ) const
 		{ channelize( begin, end ); }
 	
 };	//	end of class Channelizer

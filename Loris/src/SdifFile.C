@@ -39,16 +39,17 @@
 	#include <config.h>
 #endif
 
-#include<SdifFile.h>
-#include<Exception.h>
-#include<Notifier.h>
-#include<Partial.h>
+#include <SdifFile.h>
+#include <Exception.h>
+#include <Notifier.h>
+#include <Partial.h>
+#include <PartialList.h>
 #include <list>
 #include <vector>
 #include <cmath>
 #include <string>
 
-#if HAVE_M_PI
+#if defined(HAVE_M_PI) && (HAVE_M_PI)
 	const double Pi = M_PI;
 #else
 	const double Pi = 3.14159265358979324;
@@ -263,7 +264,7 @@ readLorisMatrices( SdifFileT *file, std::vector< Partial > & partialsVector )
 // Let exceptions propagate.
 //
 static void
-read( const char *infilename, std::list<Partial> & partials )
+read( const char *infilename, PartialList & partials )
 {
 
 // 
@@ -460,9 +461,9 @@ getNextFrameTime( const double frameTime,
 //  The vector index will be the sdif 1TRC index for the partial. 
 //
 static void
-indexPartials( const std::list< Partial > & partials, std::vector< Partial * > & partialsVector )
+indexPartials( const PartialList & partials, std::vector< Partial * > & partialsVector )
 {
-	for (std::list< Partial >::const_iterator it = partials.begin(); it != partials.end(); ++it)
+	for ( PartialList::const_iterator it = partials.begin(); it != partials.end(); ++it)
 		if (it->begin() != it->end())
 			partialsVector.push_back((Partial *)&(*it));	
 }
@@ -477,8 +478,8 @@ indexPartials( const std::list< Partial > & partials, std::vector< Partial * > &
 //
 static int
 collectActiveIndices( const std::vector< Partial * > & partialsVector, const bool enhanced,
-								const double frameTime, const double nextFrameTime,
-								std::vector< int > & activeIndices )
+					  const double frameTime, const double nextFrameTime,
+					  std::vector< int > & activeIndices )
 {
 	int endOfAll = true;
 	
@@ -561,9 +562,9 @@ writeEnvelopeLabels( SdifFileT * out,
 //
 static void
 assembleMatrixData( SdifFloat4 *data, const bool enhanced,
-								const std::vector< Partial * > & partialsVector, 
-								const std::vector< int > & activeIndices, 
-								const double frameTime )
+					const std::vector< Partial * > & partialsVector, 
+					const std::vector< int > & activeIndices, 
+					const double frameTime )
 {	
 	// The array matrix data is row-major order at "data".
 	SdifFloat4 *rowDataPtr = data;
@@ -604,8 +605,8 @@ assembleMatrixData( SdifFloat4 *data, const bool enhanced,
 //
 static void
 writeEnvelopeData( SdifFileT * out,
-				const std::vector< Partial * > & partialsVector,
-				const bool enhanced )
+				   const std::vector< Partial * > & partialsVector,
+				   const bool enhanced )
 {
 //
 // Export SDIF file from Loris data.
@@ -685,7 +686,8 @@ writeEnvelopeData( SdifFileT * out,
 // Export SDIF file.
 //
 void
-SdifFile::Export( const std::string & filename, const std::list<Partial> & partials, const bool enhanced )
+SdifFile::Export( const std::string & filename, const PartialList & partials, 
+				  const bool enhanced )
 {
 
 // 

@@ -33,16 +33,7 @@
  *
  */
 
-#include <list>
-
-#if 0 // defined(__MWERKS__)
-#include<Partial.h>
-//	On Mac, can't get around including Partial.h unless make a 
-//	class out of std::list< Partial > and its iterators that I can
-//	forward-declare. CW seems not to be able to handle 
-//	list<Partial>::iterator without the definition of Partial.
-//	GNU, however, can handle it. Maybe in the new CW?
-#endif
+#include<PartialList.h>
 
 //	begin namespace
 namespace Loris {
@@ -83,10 +74,10 @@ public:
 //	morphing:
 //	Morph two sounds (collections of Partials labeled to indicate
 //	correspondences) into a single labeled collection of Partials.
-	void morph( std::list< Partial >::const_iterator begin0, 
-				std::list< Partial >::const_iterator end0,
-				std::list< Partial >::const_iterator begin1, 
-				std::list< Partial >::const_iterator end1 );
+	void morph( PartialList::const_iterator begin0, 
+				PartialList::const_iterator end0,
+				PartialList::const_iterator begin1, 
+				PartialList::const_iterator end1 );
 
 //	morphing functions access/mutation:	
 	void setFrequencyFunction( const Envelope & f );
@@ -99,8 +90,8 @@ public:
 	
 	
 //	Partial list access:
-	std::list< Partial > & partials( void ); 
-	const std::list< Partial > & partials( void ) const; 
+	PartialList & partials( void ); 
+	const PartialList & partials( void ) const; 
 
 //	-- unimplemented until useful --
 private:

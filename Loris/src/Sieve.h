@@ -33,12 +33,11 @@
  *
  */
 
-#include <list>
+#include <PartialList.h>
 
 //	begin namespace
 namespace Loris {
 
-class Partial;
 
 // ---------------------------------------------------------------------------
 //	class Sieve
@@ -61,10 +60,10 @@ public:
 	~Sieve( void );
 	
 //	sift:
-	void sift( std::list<Partial> & sift_list );
-	void sift( std::list<Partial> & sift_list, 
-			   std::list< Partial >::iterator sieve_begin, 
-			   std::list< Partial >::iterator sieve_end  );
+	void sift( PartialList & sift_list );
+	void sift( PartialList & sift_list, 
+			   PartialList::iterator sieve_begin, 
+			   PartialList::iterator sieve_end  );
 
 //	-- unimplemented --
 private:

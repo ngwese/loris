@@ -34,8 +34,10 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-#include<Partial.h>
-#include <list>
+ 
+#include <PartialList.h>
+#include <iosfwd>
+#include <string>
 
 //	begin namespace
 namespace Loris {
@@ -46,7 +48,7 @@ namespace Loris {
 class SpcFile
 {
 //	-- instance variables --
-	std::list<Partial> _partialsList;	//	collect Partials here (import)
+	PartialList _partialsList;	//	collect Partials here (import)
 
 //	-- public interface --
 public:
@@ -54,9 +56,9 @@ public:
 //	(let compiler generate destructor)
 	SpcFile( const char *infilename );
 		
-//	std::list< Partial > access:
-	std::list<Partial> & partials( void ) { return _partialsList; }
-	const std::list<Partial> & partials( void ) const { return _partialsList; }
+//	PartialList access:
+	PartialList & partials( void ) { return _partialsList; }
+	const PartialList & partials( void ) const { return _partialsList; }
 
 //	export:
 //
@@ -69,9 +71,9 @@ public:
 //  static spectrum corresponding to the final breakpoint values of the partials.  the endApproachTime
 //  specifies how long before the end of the sound the amplitude, frequency, and bandwidth values are
 //  to be modified to make a gradual transition to the static spectrum.
- 	static void Export( const std::string & filename, const std::list<Partial> & plist, double midiPitch, 
+ 	static void Export( const std::string & filename, const PartialList & plist, double midiPitch, 
 				int enhanced = true, double endApproachTime = 0. );
-	static void Export( std::ostream & file, const std::list<Partial> & plist, double midiPitch, 
+	static void Export( std::ostream & file, const PartialList & plist, double midiPitch, 
 				int enhanced = true, double endApproachTime = 0. );
 	
 //	-- private interface --
