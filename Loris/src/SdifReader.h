@@ -12,10 +12,12 @@
 #include "Partial.h"
 #include "Exception.h"
 #include <vector>
-#include <iosfwd>
-#include <stdio.h>
+#include <stdio.h>	//	for FILE
+
+extern "C" {
 #include "sdif.h"
 #include "sdif-types.h"
+}
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace

@@ -468,19 +468,25 @@ Analyzer::formPartials( std::list< Breakpoint > & frame, double frameTime,
 	
 	//	loop over short-time peaks:
 	std::list< Breakpoint >::iterator bpIter;
-	for( bpIter = frame.begin(); bpIter != frame.end(); ++bpIter ) {
+	for( bpIter = frame.begin(); bpIter != frame.end(); ++bpIter ) 
+	{
 		const Breakpoint & peak = *bpIter;
 		const double peakTime = state.peakTimeCache()[ peak.frequency() ];
-		
+
+#if defined(Like_Lemur)		
 		//	check the time correction for off-center components:
 		double tcabs = std::abs( peakTime - frameTime );
-#if !defined(Like_Lemur)
+#endif	//	like Lemur
+#if 0 // !defined(Like_Lemur)
 		//	don't use peaks with large time corrections:
 		//	This is the only time we toss out peaks without
 		//	saving their energy for bandwidth association.
 		//	
 		//	this may still be what we want... but its 
 		//	different from Lemur's cropping and breaking:
+		//
+		//	this is irrelevant now, these are rejected in
+		//	extractPeaks now.
 		if ( tcabs > cropTime() )
 		{
 			continue;	

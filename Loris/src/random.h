@@ -6,6 +6,8 @@
 //	Inline implementations of algorithms for generating random numbers
 //	with uniform and gaussian distributions.
 //
+//	Get rid of the stupid templates sometime.
+//
 //	-kel 31 Aug 99
 //
 // ===========================================================================

@@ -6,25 +6,11 @@
 //	-lip 4 Jul 00
 //
 // ===========================================================================
-#include "SpcFile.h"
-#include "Endian.h"
+#include "SdifReader.h"
+#include "Exception.h"
 #include "Partial.h"
 #include "notifier.h"
-#include "ieee.h"
 #include "pi.h"
-#include "LorisTypes.h"
-#include "SdifReader.h"
-
-#include <algorithm>
-#include <string>
-#include <cmath>
-#include <fstream>
-
-#include <string.h>
-#include <stdio.h>
-#include <unistd.h>
-
-using namespace std;
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
@@ -46,7 +32,7 @@ SdifReader::SdifReader(  )
 // Let exceptions propagate.
 //
 void
-SdifReader::read( const char *infilename, list<Partial> & partials )
+SdifReader::read( const char *infilename, std::list<Partial> & partials )
 {
 	FILE *in;
 

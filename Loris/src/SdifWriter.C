@@ -7,33 +7,21 @@
 //	-lip 4 Jul 00
 //
 // ===========================================================================
-#include "SpcFile.h"
-#include "Endian.h"
-#include "Partial.h"
-#include "notifier.h"
-#include "ieee.h"
-#include "pi.h"
-#include "LorisTypes.h"
 #include "SdifWriter.h"
+#include "Partial.h"
+#include "Exception.h"
+#include "notifier.h"
+#include "pi.h"
 
-#include <algorithm>
-#include <string>
-#include <cmath>
-#include <fstream>
-
-#include <string.h>
-#include <stdio.h>
-#include <unistd.h>
+extern "C" {
 #include "sdif.h"
 #include "sdif-types.h"
-
-using namespace std;
+}
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
 #endif
-
 
 //	Row of matrix data in SDIF 1TRC format.
 //	Loris exports both a 6-column (resampled) and 8-column (exact times) format.
