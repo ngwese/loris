@@ -52,50 +52,6 @@
 //	begin namespace
 namespace Loris {
 
-// ---------------------------------------------------------------------------
-//	class Partial
-//
-//!	@class Partial Partial.h loris/Partial.h
-//!
-//!	An instance of class Partial represents a single component in the
-//!	reassigned bandwidth-enhanced additive model. A Partial consists of a
-//!	chain of Breakpoints describing the time-varying frequency, amplitude,
-//!	and bandwidth (or noisiness) envelopes of the component, and a 4-byte
-//!	label. The Breakpoints are non-uniformly distributed in time. For more
-//!	information about Reassigned Bandwidth-Enhanced Analysis and the
-//!	Reassigned Bandwidth-Enhanced Additive Sound Model, refer to the Loris
-//!	website: www.cerlsoundgroup.org/Loris/.
-//!	
-//!	The constituent time-tagged Breakpoints are accessible through
-//!	Partial:iterator and Partial::const_iterator interfaces.
-//!	These iterator classes implement the interface for bidirectional
-//!	iterators in the STL, including pre and post-increment and decrement,
-//!	and dereferencing. Dereferencing a Partial::itertator or
-//!	Partial::const_itertator yields a reference to a Breakpoint. Additionally,
-//!	these iterator classes have breakpoint() and time() members, returning
-//!	the Breakpoint (by reference) at the current iterator position and the
-//!	time (by value) corresponding to that Breakpoint.
-//!	
-//!	Partial is a leaf class, do not subclass.
-//!
-//!	Most of the implementation of Partial delegates to a few
-//!	container-dependent members. The following members are
-//!	container-dependent, the other members are implemented in 
-//!	terms of these:
-//!		default construction
-//!		copy (construction)
-//!		operator= (assign)
-//!		operator== (equivalence)
-//!		size
-//!		insert( pos, Breakpoint )
-//!		erase( b, e )
-//!		findAfter( time )
-//!		begin (const and non-const)
-//!		end (const and non-const)
-//!		first (const and non-const)
-//!		last (const and non-const)
-//
-
 //long Partial::DebugCounter = 0L;
 
 //	comparitor for elements in Partial::container_type
@@ -192,18 +148,6 @@ Partial::operator=( const Partial & rhs )
 }
 
 #pragma mark -- container-dependent implementation --
-
-// ---------------------------------------------------------------------------
-//	operator==
-// ---------------------------------------------------------------------------
-//!	Return true if this Partial has the same label and Breakpoint map 
-//!	as rhs, and false otherwise.
-//
-bool
-Partial::operator==( const Partial & rhs ) const
-{
-	return (_label == rhs._label) && (_breakpoints == rhs._breakpoints);
-}
 
 // ---------------------------------------------------------------------------
 //	begin

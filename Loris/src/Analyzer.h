@@ -53,7 +53,7 @@ class Envelope;
 //!	sampled breakpoint envelopes representing the time-varying 
 //!	frequency, amplitude, and noisiness of a single bandwidth-
 //!	enhanced sinusoid. These Partials are accumulated in the
-//! 	Analyzer.
+//! Analyzer.
 //!
 //!	The core analysis parameter is the frequency resolution, the minimum
 //!	instantaneous frequency spacing between partials. All other
@@ -64,7 +64,7 @@ class Envelope;
 //!	For more information about Reassigned Bandwidth-Enhanced 
 //!	Analysis and the Reassigned Bandwidth-Enhanced Additive Sound 
 //!	Model, refer to the Loris website: www.cerlsoundgroup.org/Loris/.
-//!
+//
 class Analyzer
 {
 //	-- instance variables --
@@ -80,7 +80,7 @@ public:
 	//!	difference between Partials). All other Analyzer parameters 	
 	//!	are computed from the specified frequency resolution. 	
 	//!	
-	//!	@param resolutionHz is the frequency resolution in Hz.
+	//!	\param resolutionHz is the frequency resolution in Hz.
 	explicit Analyzer( double resolutionHz );
 	
 	//!	Construct a new Analyzer configured with the given	
@@ -89,8 +89,8 @@ public:
 	//!	(main lobe, zero-to-zero). All other Analyzer parameters 	
 	//!	are computed from the specified resolution and window width. 	
 	//!	
-	//!	@param resolutionHz is the frequency resolution in Hz.
-	//!	@param windowWidthHz is the main lobe width of the Kaiser
+	//!	\param resolutionHz is the frequency resolution in Hz.
+	//!	\param windowWidthHz is the main lobe width of the Kaiser
 	//!	analysis window in Hz.
 	Analyzer( double resolutionHz, double windowWidthHz );
 
@@ -98,20 +98,20 @@ public:
 	//!	parameter configuration to another Analyzer. 
 	//!	The list of collected Partials is not copied. 		
 	//!	
-	//!	@param other is the Analyzer to copy.	
+	//!	\param other is the Analyzer to copy.	
 	Analyzer( const Analyzer & other );
 
-	//!	Destroy this Analyzer. 								
+	//!	Destroy this Analyzer.
 	~Analyzer( void );
 
-	//!	Change this Analyzer's parameter configuration to 
-	//!	be identical to that of another Analyzer. The list of 
-	//!	collected Partials is not copied or otherwise modified. 
+	//!	Construct  a new Analyzer having identical
+	//!	parameter configuration to another Analyzer. 
+	//!	The list of collected Partials is not copied. 		
 	//!	
-	//!	@param rhs is the Analyzer from which to copy parameters.			
+	//!	\param rhs is the Analyzer to copy.	
 	Analyzer & operator=( const Analyzer & rhs );
 
-//!	-- configuration --
+//	-- configuration --
 
 	//!	Configure this Analyzer with the given frequency resolution 
 	//!	(minimum instantaneous frequency difference between Partials)
@@ -119,72 +119,73 @@ public:
 	//!	All other Analyzer parameters are (re-)computed from the 
 	//!	frequency resolution and window width. 		
 	//!	
-	//!	@param resolutionHz is the frequency resolution in Hz.
-	//!	@param windowWidthHz is the main lobe width of the Kaiser
+	//!	\param resolutionHz is the frequency resolution in Hz.
+	//!	\param windowWidthHz is the main lobe width of the Kaiser
 	//!	analysis window in Hz.
-	//!
+	//!		
 	//!	There are three categories of analysis parameters:
 	//!	- the resolution, and params that are usually related to (or
 	//!	identical to) the resolution (frequency floor and drift)
 	//!	- the window width and params that are usually related to (or
 	//!	identical to) the window width (hop and crop times)
 	//!	- independent parameters (bw region width and amp floor)
-	void configure( double resolutionHz, double windowWidthHz );
+		void configure( double resolutionHz, double windowWidthHz );
 
-//!	-- analysis --
+//	-- analysis --
 
-	//!	Analyze a range of (mono) samples at the given sample rate 	  	
-	//!	(in Hz) and collect the resulting Partials.	
-	//!	
-	//!	@param bufBegin is a pointer to a buffer of floating point samples
-	//!	@param bufEnd is (one-past) the end of a buffer of floating point 
-	//!	samples
-	//!	@param srate is the sample rate of the samples in the buffer
-	void analyze( const double * bufBegin, const double * bufEnd, double srate );
-	
 	//!	Analyze a vector of (mono) samples at the given sample rate 	  	
 	//!	(in Hz) and append the extracted Partials to Analyzer's 
 	//!	PartialList (std::list of Partials).	
 	//!	
-	//!	@param vec is a vector of floating point samples
-	//!	@param srate is the sample rate of the samples in the vector
+	//!	\param 	vec is a vector of floating point samples
+	//!	\param 	srate is the sample rate of the samples in the vector 
 	void analyze( const std::vector<double> & vec, double srate );
 	
-//!	-- tracking analysis --
+	//!	Analyze a range of (mono) samples at the given sample rate 	  	
+	//!	(in Hz) and collect the resulting Partials.	
+	//!	
+	//!	\param 	bufBegin is a pointer to a buffer of floating point samples
+	//!	\param 	bufEnd is (one-past) the end of a buffer of floating point 
+	//!			samples
+	//!	\param 	srate is the sample rate of the samples in the buffer
+	void analyze( const double * bufBegin, const double * bufEnd, double srate );
+	
+//	-- tracking analysis --
 
+	//!	Analyze a vector of (mono) samples at the given sample rate 	  	
+	//!	(in Hz) and append the extracted Partials to Analyzer's 
+	//!	PartialList (std::list of Partials). Use the specified envelope
+	//!	as a frequency reference for Partial tracking.
+	//!
+	//!	\param 	vec is a vector of floating point samples
+	//!	\param 	srate is the sample rate of the samples in the vector
+	//!	\param 	reference is an Envelope having the approximate
+	//!			frequency contour expected of the resulting Partials.
+	void analyze( const std::vector<double> & vec, double srate, 
+				  const Envelope & reference );
+	
 	//!	Analyze a range of (mono) samples at the given sample rate 	  	
 	//!	(in Hz) and append the extracted Partials to Analyzer's 
 	//!	PartialList (std::list of Partials). Use the specified envelope
 	//!	as a frequency reference for Partial tracking.
 	//!	
-	//!	@param bufBegin is a pointer to a buffer of floating point samples
-	//!	@param bufEnd is (one-past) the end of a buffer of floating point 
-	//!	samples
-	//!	@param srate is the sample rate of the samples in the buffer
-	//!	@param reference is an Envelope having the approximate
-	//!	frequency contour expected of the resulting Partials.
+	//!	\param 	bufBegin is a pointer to a buffer of floating point samples
+	//!	\param 	bufEnd is (one-past) the end of a buffer of floating point 
+	//!			samples
+	//!	\param 	srate is the sample rate of the samples in the buffer
+	//!	\param 	reference is an Envelope having the approximate
+	//!			frequency contour expected of the resulting Partials.
 	void analyze( const double * bufBegin, const double * bufEnd, double srate,
 				  const Envelope & reference );
 	
-	//!	Analyze a vector of (mono) samples at the given sample rate 	  	
-	//!	(in Hz) and append the extracted Partials to Analyzer's 
-	//!	PartialList (std::list of Partials). Use the specified envelope
-	//!	as a frequency reference for Partial tracking.
-	//!	
-	//!	@param vec is a vector of floating point samples
-	//!	@param srate is the sample rate of the samples in the vector
-	//!	@param reference is an Envelope having the approximate
-	//!	frequency contour expected of the resulting Partials.
-	void analyze( const std::vector<double> & vec, double srate, 
-				  const Envelope & reference );
-	
-//!	-- parameter access --
+//	-- parameter access --
+
 	//!	Return the amplitude floor (lowest detected spectral amplitude),  			
 	//!	in (negative) dB, for this Analyzer. 				
 	double ampFloor( void ) const;
 
 	//!	Return true if this Analyzer is configured to peform bandwidth
-	//!   association to distribute noise energy among extracted Partials, 
+	//!	association to distribute noise energy among extracted Partials, 
 	//!	and false if noise energy will be collected in noise Partials,
 	//!	labeled -1 in this Analyzer's PartialList.
 	bool associateBandwidth( void ) const;
@@ -229,19 +230,19 @@ public:
 	//!	zero-crossings) of the analysis window used by this Analyzer. 				
  	double windowWidth( void ) const;
 	 
-//!	-- parameter mutation --
+//	-- parameter mutation --
 
 	//!	Set the amplitude floor (lowest detected spectral amplitude), in  			
 	//!	(negative) dB, for this Analyzer. 
 	//!	
-	//!	@param x is the new value of this parameter.			
+	//!	\param x is the new value of this parameter.			
   	void setAmpFloor( double x );
 
 	//!	Set the width (in Hz) of the Bandwidth Association regions
 	//!	used by this Analyzer. If zero, bandwidth enhancement is 
 	//!	disabled.
 	//!	
-	//!	@param x is the new value of this parameter.			
+	//!	\param x is the new value of this parameter.			
 	void setBwRegionWidth( double x );
 
 	//!	Set the crop time (maximum temporal displacement of a time-
@@ -249,32 +250,32 @@ public:
 	//!	window, beyond which data points are considered "unreliable")
 	//!	for this Analyzer.
 	//!	
-	//!	@param x is the new value of this parameter.			
+	//!	\param x is the new value of this parameter.			
  	void setCropTime( double x );
 
 	//!	Set the maximum allowable frequency difference between 					
 	//!	consecutive Breakpoints in a Partial envelope for this Analyzer. 				
 	//!	
-	//!	@param x is the new value of this parameter.			
+	//!	\param x is the new value of this parameter.			
 	void setFreqDrift( double x );
 
 	//!	Set the frequency floor (minimum instantaneous Partial  				
 	//!	frequency), in Hz, for this Analyzer.
 	//!	
-	//!	@param x is the new value of this parameter.			
+	//!	\param x is the new value of this parameter.			
 	void setFreqFloor( double x );
 
 	//!	Set the frequency resolution (minimum instantaneous frequency  		
 	//!	difference between Partials) for this Analyzer. (Does not cause 	
 	//!	other parameters to be recomputed.) 									
 	//!	
-	//!	@param x is the new value of this parameter.			
+	//!	\param x is the new value of this parameter.			
 	void setFreqResolution( double x );
 
 	//!	Set the hop time (which corresponds approximately to the average
 	//!	density of Partial envelope Breakpoint data) for this Analyzer.
 	//!	
-	//!	@param x is the new value of this parameter.			
+	//!	\param x is the new value of this parameter.			
   	void setHopTime( double x );
 
 	//!	Set the sidelobe attenutation level for the Kaiser analysis window in
@@ -284,16 +285,16 @@ public:
 	//!	of frequency-domain interference, but allow the window to be shorter
 	//!	in time.
 	//!	
-	//!	@param x is the new value of this parameter.			
+	//!	\param x is the new value of this parameter.			
 	void setSidelobeLevel( double x );
 
 	//!	Set the frequency-domain main lobe width (measured between 
 	//!	zero-crossings) of the analysis window used by this Analyzer. 	
 	//!	
-	//!	@param x is the new value of this parameter.			
+	//!	\param x is the new value of this parameter.			
 	void setWindowWidth( double x );
 
-//!	-- PartialList access --
+//	-- PartialList access --
 
 	//!	Return a mutable reference to this Analyzer's list of 
 	//!	analyzed Partials. 
@@ -303,8 +304,8 @@ public:
 	//!	list of analyzed Partials. 
 	const PartialList & partials( void ) const;
 	
-};	//!	end of class Analyzer
+};	//	end of class Analyzer
 
-}	//!	end of namespace Loris
+}	//	end of namespace Loris
 
 #endif /* ndef INCLUDE_ANALYZER_H */

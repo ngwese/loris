@@ -42,36 +42,6 @@
 namespace Loris {
 
 // ---------------------------------------------------------------------------
-//	class BreakpointEnvelope
-//
-//!	@class BreakpointEnvelope BreakpointEnvelope.h loris/BreakpointEnvelope.h
-//!	
-//!	A BreakpointEnvelope represents a linear segment breakpoint 
-//!	function with infinite extension at each end (that is, evalutaing 
-//!	the envelope past either end of the breakpoint function yields the 
-//!	value at the nearest end point).
-//!
-//!	BreakpointEnvelope implements the Envelope interface, described
-//!	by the abstract class Envelope. 
-//!
-//!	BreakpointEnvelope inherits the types
-//!		@li @c size_type
-//!		@li @c value_type
-//!		@li @c iterator
-//!		@li @c const_iterator
-//!
-//!	and the member functions
-//!		@li <tt>size_type size( void ) const</tt>
-//!		@li <tt>bool empty( void ) const</tt>
-//!		@li <tt>iterator begin( void )</tt>
-//!		@li <tt>const_iterator begin( void ) const</tt>
-//!		@li <tt>iterator end( void )</tt>
-//!		@li <tt>const_iterator end( void ) const</tt>
-//!
-//!	from <tt>std::map< double, double ></tt>.
-//
-
-// ---------------------------------------------------------------------------
 //	constructor
 // ---------------------------------------------------------------------------
 //!	Construct a new BreakpointEnvelope having no 
@@ -88,7 +58,7 @@ BreakpointEnvelope::BreakpointEnvelope(void)
 //!	single breakpoint at 0 (and an implicit value everywhere)
 //!	of initialValue.		
 //!	
-//!	@param initialValue is the value of this BreakpointEnvelope
+//!	\param initialValue is the value of this BreakpointEnvelope
 //!	at time 0.	
 //
 BreakpointEnvelope::BreakpointEnvelope( double initialValue )
@@ -116,8 +86,8 @@ BreakpointEnvelope::clone( void ) const
 //!	breakpoint at the specified time, it will be replaced with 
 //!	the new breakpoint.
 //!	
-//!	@param time is the time at which to insert a new breakpoint
-//!	@param value is the value of the new breakpoint
+//!	\param time is the time at which to insert a new breakpoint
+//!	\param value is the value of the new breakpoint
 //	
 void
 BreakpointEnvelope::insert( double time, double value )
@@ -131,7 +101,7 @@ BreakpointEnvelope::insert( double time, double value )
 //!	Return the linearly-interpolated value of this BreakpointEnvelope at 
 //!	the specified time.
 //!	
-//!	@param t is the time at which to evaluate this 
+//!	\param t is the time at which to evaluate this 
 //!	BreakpointEnvelope.
 //
 double

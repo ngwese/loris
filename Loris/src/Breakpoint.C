@@ -42,27 +42,6 @@
 //	begin namespace
 namespace Loris {
 
-// ---------------------------------------------------------------------------
-//	class Breakpoint
-//
-//!	@class Breakpoint Breakpoint.h loris/Breakpoint.h
-//!	
-//!	Class Breakpoint represents a single breakpoint in the
-//!	Partial parameter (frequency, amplitude, bandwidth) envelope.
-//!	Instantaneous phase is also stored, but is only used at the onset of 
-//!	a partial, or when it makes a transition from zero to nonzero amplitude.
-//!	
-//!	Loris Partials represent reassigned bandwidth-enhanced model components.
-//!	A Partial consists of a chain of Breakpoints describing the time-varying
-//!	frequency, amplitude, and bandwidth (noisiness) of the component.
-//!	For more information about Reassigned Bandwidth-Enhanced 
-//!	Analysis and the Reassigned Bandwidth-Enhanced Additive Sound 
-//!	Model, refer to the Loris website: 
-//!	www.cerlsoundgroup.org/Loris/.
-//!	
-//!	Breakpoint is a leaf class, do not subclass.
-//
-
 
 #pragma mark -
 #pragma mark construction
@@ -70,7 +49,8 @@ namespace Loris {
 // ---------------------------------------------------------------------------
 //	Breakpoint default constructor
 // ---------------------------------------------------------------------------
-//!	Construct a new Breakpoint with all parameters initialized to 0.
+//!	Construct a new Breakpoint with all parameters initialized to 0
+//!	(needed for STL containability).
 Breakpoint::Breakpoint( void ) :
 	_frequency( 0. ),
 	_amplitude( 0. ),
@@ -84,10 +64,10 @@ Breakpoint::Breakpoint( void ) :
 // ---------------------------------------------------------------------------
 //!	Construct a new Breakpoint with the specified parameters.
 //!	
-//!	@param f is the intial frequency.
-//!	@param a is the initial amplitude.
-//!	@param b is the initial bandwidth.
-//!	@param p is the initial phase, if specified (if unspecified, 0 
+//!	\param f is the intial frequency.
+//!	\param a is the initial amplitude.
+//!	\param b is the initial bandwidth.
+//!	\param p is the initial phase, if specified (if unspecified, 0 
 //!	is assumed).
 //
 Breakpoint::Breakpoint( double f, double a, double b, double p ) :
@@ -99,24 +79,6 @@ Breakpoint::Breakpoint( double f, double a, double b, double p ) :
 }
 
 // ---------------------------------------------------------------------------
-//	operator==
-// ---------------------------------------------------------------------------
-//!	Comparison operator: return true if the frequency, amplitude, 
-//!	bandwidth, and phase of this Breakpoint are equal to those of
-//!	the Breakpoint rhs. Otherwise, return false.
-//!	
-//!	@param rhs is the Breakpoint to comparebool 
-//
-bool
-Breakpoint::operator==( const Breakpoint & rhs ) const
-{
-	return _frequency == rhs._frequency &&
-			_amplitude == rhs._amplitude &&
-			_bandwidth == rhs._bandwidth &&
-			_phase == rhs._phase;
-}
-
-// ---------------------------------------------------------------------------
 //	addNoiseEnergy
 // ---------------------------------------------------------------------------
 //!	Add noise (bandwidth) energy to this Breakpoint by computing new 
@@ -124,7 +86,7 @@ Breakpoint::operator==( const Breakpoint & rhs ) const
 //!	noise energy cannot be removed (negative energy added) in excess 
 //!	of the current noise energy.
 //!	
-//!	@param enoise is the amount of noise energy to add to
+//!	\param enoise is the amount of noise energy to add to
 //!	this Breakpoint.
 //
 void 

@@ -112,7 +112,7 @@ static void printf_notifier( const char * s )
 %include "std_vector.i"
 
 %{
-	#include <loris/Marker.h>	// for defining a vector of Markers
+	#include <Marker.h>	// for defining a vector of Markers
 %}
 
 namespace std {

@@ -47,47 +47,17 @@
 namespace Loris {
 
 // ---------------------------------------------------------------------------
-//	Channelizer
-//
-//!	@class Channelizer Channelizer.h loris/Channelizer.h
-//!	
-//!	Class Channelizer represents an algorithm for automatic labeling of
-//!	a sequence of Partials. Partials must be labeled in
-//!	preparation for morphing (see Morpher) to establish correspondences
-//!	between Partials in the morph source and target sounds. 
-//!	
-//!	Channelized partials are labeled according to their adherence to a
-//!	harmonic frequency structure with a time-varying fundamental
-//!	frequency. The frequency spectrum is partitioned into
-//!	non-overlapping channels having time-varying center frequencies that
-//!	are harmonic (integer) multiples of a specified reference frequency
-//!	envelope, and each channel is identified by a unique label equal to
-//!	its harmonic number. Each Partial is assigned the label
-//!	corresponding to the channel containing the greatest portion of its
-//!	(the Partial's) energy. 
-//!	
-//!	A reference frequency Envelope for channelization and the channel
-//!	number to which it corresponds (1 for an Envelope that tracks the
-//!	Partial at the fundamental frequency) must be specified. The
-//!	reference Envelope can be constructed explcitly, point by point
-//!	(using, for example, the BreakpointEnvelope class), or constructed
-//!	automatically using the FrequencyReference class. 
-//!	
-//!	Channelizer is a leaf class, do not subclass.
-//
-
-// ---------------------------------------------------------------------------
 //	Channelizer constructor 
 // ---------------------------------------------------------------------------
 //!	Construct a new Channelizer using the specified reference
 //!	@c Envelope to represent the a numbered channel. 
 //!	
-//!	@param refChanFreq is an Envelope representing the center frequency
-//!	of a channel.
-//!	@param refChanLabel is the corresponding channel number (i.e. 1
-//!	if @a refChanFreq is the lowest-frequency channel, and all other channels
-//!	are harmonics of @a refChanFreq, or 2 if @a refChanFreq tracks the second
-//!	harmonic, etc.).
+//!	\param 	refChanFreq is an Envelope representing the center frequency
+//!			of a channel.
+//!	\param 	refChanLabel is the corresponding channel number (i.e. 1
+//!			if refChanFreq is the lowest-frequency channel, and all 
+//!			other channels are harmonics of refChanFreq, or 2 if  
+//!			refChanFreq tracks the second harmonic, etc.).
 //
 Channelizer::Channelizer( const Envelope & refChanFreq, int refChanLabel ) :
 	_refChannelFreq( refChanFreq.clone() ),
@@ -106,7 +76,7 @@ Channelizer::Channelizer( const Envelope & refChanFreq, int refChanLabel ) :
 //!	The copy represents the same set of frequency channels, constructed
 //!	from the same reference Envelope and channel number.
 //!	
-//!	@param other is the Channelizer to copy
+//!	\param other is the Channelizer to copy
 //
 Channelizer::Channelizer( const Channelizer & other ) :
 	_refChannelFreq( other._refChannelFreq->clone() ),
@@ -121,7 +91,7 @@ Channelizer::Channelizer( const Channelizer & other ) :
 //!	This Channelizer is made to represent the same set of frequency channels, 
 //!	constructed from the same reference Envelope and channel number as @a rhs.
 //!
-//!	@param rhs is the Channelizer to copy
+//!	\param rhs is the Channelizer to copy
 //
 Channelizer & 
 Channelizer::operator=( const Channelizer & rhs )
@@ -136,7 +106,7 @@ Channelizer::operator=( const Channelizer & rhs )
 
 
 // ---------------------------------------------------------------------------
-//	Channelizer_imp destructor
+//	Channelizer destructor
 // ---------------------------------------------------------------------------
 //!	Destroy this Channelizer.
 Channelizer::~Channelizer( void )
@@ -181,7 +151,7 @@ static double loudestAt( const Partial & p )
 //!	Label a Partial with the number of the frequency channel containing
 //!	the greatest portion of its (the Partial's) energy.
 //!	
-//!	@param partial is the Partial to label.
+//!	\param partial is the Partial to label.
 //
 void
 Channelizer::channelize( Partial & partial ) const

@@ -575,15 +575,6 @@ public:
 	%extend
 	{
 		Partial * copy( void ) { return new Partial( *self ); }
-		 
-		int equals( Partial * other )
-		{
-			return *self == *other;
-		}
-		/*	Return true (1) if this Partial is equal to the other. 
-			Partials are equal is they have the same label and the
-			same Breakpoint envelope.
-		 */
 	}	//	end of added methods
 		
 };
@@ -670,16 +661,7 @@ public:
 		/*	Return a new Breakpoint that is a copy of this 
 			Breakpoint (i.e. has identical parameter values).
 		 */
-		 
-		int equals( Breakpoint * other )
-		{
-			return *self == *other;
-		}
-		/*	Return true (1) if this Breakpoint is equal to the
-			other. Breakpoints are equal is they have identical 
-			parameter values.
-		 */
-
+	
 	}	//	end of added methods
 	
 };	//	//	end of SWIG interface class Breakpoint

@@ -850,7 +850,7 @@ static void SWIG_exception_(int code, const char *msg) {
 #include <stdexcept>
 
 
-	#include <loris/Marker.h>	// for defining a vector of Markers
+	#include <Marker.h>	// for defining a vector of Markers
 
 double std_vectorldouble_g_pop___(std::vector<double > *self){
                 if (self->size() == 0)
@@ -1547,14 +1547,8 @@ Breakpoint *Partial_last(Partial *self){
             }
         }
 Partial *Partial_copy(Partial *self){ return new Partial( *self ); }
-int Partial_equals(Partial *self,Partial *other){
-			return *self == *other;
-		}
 Breakpoint *Breakpoint_copy(Breakpoint *self){
 			return new Breakpoint( *self );
-		}
-int Breakpoint_equals(Breakpoint *self,Breakpoint *other){
-			return *self == *other;
 		}
 double BreakpointPosition_time(BreakpointPosition *self){ 
 			return self->time(); 
@@ -10407,45 +10401,6 @@ static PyObject *_wrap_Partial_copy(PyObject *self, PyObject *args) {
 }
 
 
-static PyObject *_wrap_Partial_equals(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    Partial *arg1 = (Partial *) 0 ;
-    Partial *arg2 = (Partial *) 0 ;
-    int result;
-    PyObject * obj0 = 0 ;
-    PyObject * obj1 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"OO:Partial_equals",&obj0,&obj1)) goto fail;
-    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_Partial,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
-    if ((SWIG_ConvertPtr(obj1,(void **) &arg2, SWIGTYPE_p_Partial,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
-    {
-        try
-        {
-            result = (int)Partial_equals(arg1,arg2);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    resultobj = PyInt_FromLong((long)result);
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
 static PyObject * Partial_swigregister(PyObject *self, PyObject *args) {
     PyObject *obj;
     if (!PyArg_ParseTuple(args,(char*)"O", &obj)) return NULL;
@@ -10939,45 +10894,6 @@ static PyObject *_wrap_Breakpoint_copy(PyObject *self, PyObject *args) {
         }
     }
     resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_Breakpoint, 1);
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_Breakpoint_equals(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    Breakpoint *arg1 = (Breakpoint *) 0 ;
-    Breakpoint *arg2 = (Breakpoint *) 0 ;
-    int result;
-    PyObject * obj0 = 0 ;
-    PyObject * obj1 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"OO:Breakpoint_equals",&obj0,&obj1)) goto fail;
-    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_Breakpoint,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
-    if ((SWIG_ConvertPtr(obj1,(void **) &arg2, SWIGTYPE_p_Breakpoint,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
-    {
-        try
-        {
-            result = (int)Breakpoint_equals(arg1,arg2);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    resultobj = PyInt_FromLong((long)result);
     return resultobj;
     fail:
     return NULL;
@@ -12179,7 +12095,6 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"Partial_findAfter", _wrap_Partial_findAfter, METH_VARARGS },
 	 { (char *)"Partial_findNearest", _wrap_Partial_findNearest, METH_VARARGS },
 	 { (char *)"Partial_copy", _wrap_Partial_copy, METH_VARARGS },
-	 { (char *)"Partial_equals", _wrap_Partial_equals, METH_VARARGS },
 	 { (char *)"Partial_swigregister", Partial_swigregister, METH_VARARGS },
 	 { (char *)"new_Breakpoint", _wrap_new_Breakpoint, METH_VARARGS },
 	 { (char *)"delete_Breakpoint", _wrap_delete_Breakpoint, METH_VARARGS },
@@ -12192,7 +12107,6 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"Breakpoint_setBandwidth", _wrap_Breakpoint_setBandwidth, METH_VARARGS },
 	 { (char *)"Breakpoint_setPhase", _wrap_Breakpoint_setPhase, METH_VARARGS },
 	 { (char *)"Breakpoint_copy", _wrap_Breakpoint_copy, METH_VARARGS },
-	 { (char *)"Breakpoint_equals", _wrap_Breakpoint_equals, METH_VARARGS },
 	 { (char *)"Breakpoint_swigregister", Breakpoint_swigregister, METH_VARARGS },
 	 { (char *)"BreakpointPosition_time", _wrap_BreakpointPosition_time, METH_VARARGS },
 	 { (char *)"BreakpointPosition_breakpoint", _wrap_BreakpointPosition_breakpoint, METH_VARARGS },

@@ -461,7 +461,6 @@ class Partial(_object):
     def findAfter(*args): return _loris.Partial_findAfter(*args)
     def findNearest(*args): return _loris.Partial_findNearest(*args)
     def copy(*args): return _loris.Partial_copy(*args)
-    def equals(*args): return _loris.Partial_equals(*args)
 
 class PartialPtr(Partial):
     def __init__(self, this):
@@ -493,7 +492,6 @@ class Breakpoint(_object):
     def setBandwidth(*args): return _loris.Breakpoint_setBandwidth(*args)
     def setPhase(*args): return _loris.Breakpoint_setPhase(*args)
     def copy(*args): return _loris.Breakpoint_copy(*args)
-    def equals(*args): return _loris.Breakpoint_equals(*args)
 
 class BreakpointPtr(Breakpoint):
     def __init__(self, this):

@@ -73,9 +73,8 @@ namespace Loris {
 //	Definition of an implementation class that insulates clients from
 //	the implementation and representation details of Analyzer parameters.
 //
-class Analyzer_imp
+struct Analyzer_imp
 {
-public:
 	double freqResolution;	//	in Hz, minimum instantaneous frequency distance;
 							//	this is the core parameter, others are, by default,
 							//	computed from this one
@@ -124,7 +123,7 @@ public:
 //!	difference between Partials). All other Analyzer parameters 	
 //!	are computed from the specified frequency resolution. 	
 //!	
-//!	@param resolutionHz is the frequency resolution in Hz.
+//!	\param resolutionHz is the frequency resolution in Hz.
 //
 Analyzer::Analyzer( double resolutionHz ) :
 	_imp( new Analyzer_imp )
@@ -135,15 +134,15 @@ Analyzer::Analyzer( double resolutionHz ) :
 // ---------------------------------------------------------------------------
 //	Analyzer constructor
 // ---------------------------------------------------------------------------
-//	Construct a new Analyzer configured with the given	
-//	frequency resolution (minimum instantaneous frequency	
-//	difference between Partials) and analysis window width
-//	(main lobe, zero-to-zero). All other Analyzer parameters 	
-//	are computed from the specified resolution and window width. 	
-//	
-//	resolutionHz is the frequency resolution in Hz.
-//	windowWidthHz is the main lobe width of the Kaiser
-//	analysis window in Hz.
+//!	Construct a new Analyzer configured with the given	
+//!	frequency resolution (minimum instantaneous frequency	
+//!	difference between Partials) and analysis window width
+//!	(main lobe, zero-to-zero). All other Analyzer parameters 	
+//!	are computed from the specified resolution and window width. 	
+//!	
+//!	\param resolutionHz is the frequency resolution in Hz.
+//!	\param windowWidthHz is the main lobe width of the Kaiser
+//!	analysis window in Hz.
 //
 Analyzer::Analyzer( double resolutionHz, double windowWidthHz ) :
 	_imp( new Analyzer_imp )
@@ -154,11 +153,11 @@ Analyzer::Analyzer( double resolutionHz, double windowWidthHz ) :
 // ---------------------------------------------------------------------------
 //	Analyzer copy constructor
 // ---------------------------------------------------------------------------
-//	Construct  a new Analyzer having identical
-//	parameter configuration to another Analyzer. 
-//	The list of collected Partials is not copied. 		
-//	
-//	other is the Analyzer to copy.	
+//!	Construct  a new Analyzer having identical
+//!	parameter configuration to another Analyzer. 
+//!	The list of collected Partials is not copied. 		
+//!	
+//!	\param other is the Analyzer to copy.	
 //
 Analyzer::Analyzer( const Analyzer & other ) :
 	_imp( new Analyzer_imp( *other._imp ) )
@@ -168,11 +167,11 @@ Analyzer::Analyzer( const Analyzer & other ) :
 // ---------------------------------------------------------------------------
 //	Analyzer assignment
 // ---------------------------------------------------------------------------
-//	Construct  a new Analyzer having identical
-//	parameter configuration to another Analyzer. 
-//	The list of collected Partials is not copied. 		
-//	
-//	rhs is the Analyzer to copy.	
+//!	Construct  a new Analyzer having identical
+//!	parameter configuration to another Analyzer. 
+//!	The list of collected Partials is not copied. 		
+//!	
+//!	\param rhs is the Analyzer to copy.	
 //
 Analyzer & 
 Analyzer::operator=( const Analyzer & rhs )
@@ -187,7 +186,7 @@ Analyzer::operator=( const Analyzer & rhs )
 // ---------------------------------------------------------------------------
 //	Analyzer destructor
 // ---------------------------------------------------------------------------
-//	Destroy this Analyzer.
+//!	Destroy this Analyzer.
 //
 Analyzer::~Analyzer( void )
 {
@@ -198,22 +197,22 @@ Analyzer::~Analyzer( void )
 // ---------------------------------------------------------------------------
 //	configure
 // ---------------------------------------------------------------------------
-//	Configure this Analyzer with the given frequency resolution 
-//	(minimum instantaneous frequency difference between Partials)
-//	and analysis window width (main lobe, zero-to-zero, in Hz). 
-//	All other Analyzer parameters are (re-)computed from the 
-//	frequency resolution and window width. 		
-//	
-//	resolutionHz is the frequency resolution in Hz.
-//	windowWidthHz is the main lobe width of the Kaiser
-//	analysis window in Hz.
-//		
-//	There are three categories of analysis parameters:
-//	- the resolution, and params that are usually related to (or
-//	identical to) the resolution (frequency floor and drift)
-//	- the window width and params that are usually related to (or
-//	identical to) the window width (hop and crop times)
-//	- independent parameters (bw region width and amp floor)
+//!	Configure this Analyzer with the given frequency resolution 
+//!	(minimum instantaneous frequency difference between Partials)
+//!	and analysis window width (main lobe, zero-to-zero, in Hz). 
+//!	All other Analyzer parameters are (re-)computed from the 
+//!	frequency resolution and window width. 		
+//!	
+//!	\param resolutionHz is the frequency resolution in Hz.
+//!	\param windowWidthHz is the main lobe width of the Kaiser
+//!	analysis window in Hz.
+//!		
+//!	There are three categories of analysis parameters:
+//!	- the resolution, and params that are usually related to (or
+//!	identical to) the resolution (frequency floor and drift)
+//!	- the window width and params that are usually related to (or
+//!	identical to) the window width (hop and crop times)
+//!	- independent parameters (bw region width and amp floor)
 //
 void
 Analyzer::configure( double resolutionHz, double windowWidthHz )
@@ -271,12 +270,12 @@ Analyzer::configure( double resolutionHz, double windowWidthHz )
 // ---------------------------------------------------------------------------
 //	analyze
 // ---------------------------------------------------------------------------
-//	Analyze a vector of (mono) samples at the given sample rate 	  	
-//	(in Hz) and append the extracted Partials to Analyzer's 
-//	PartialList (std::list of Partials).	
-//	
-//	vec is a vector of floating point samples
-//	srate is the sample rate of the samples in the vector 
+//!	Analyze a vector of (mono) samples at the given sample rate 	  	
+//!	(in Hz) and append the extracted Partials to Analyzer's 
+//!	PartialList (std::list of Partials).	
+//!	
+//!	\param vec is a vector of floating point samples
+//!	\param srate is the sample rate of the samples in the vector 
 //
 void 
 Analyzer::analyze( const std::vector<double> & vec, double srate )		
@@ -288,13 +287,13 @@ Analyzer::analyze( const std::vector<double> & vec, double srate )
 // ---------------------------------------------------------------------------
 //	analyze
 // ---------------------------------------------------------------------------
-//	Analyze a range of (mono) samples at the given sample rate 	  	
-//	(in Hz) and collect the resulting Partials.	
-//	
-//	bufBegin is a pointer to a buffer of floating point samples
-//	bufEnd is (one-past) the end of a buffer of floating point 
-//	samples
-//	srate is the sample rate of the samples in the buffer
+//!	Analyze a range of (mono) samples at the given sample rate 	  	
+//!	(in Hz) and collect the resulting Partials.	
+//!	
+//!	\param bufBegin is a pointer to a buffer of floating point samples
+//!	\param bufEnd is (one-past) the end of a buffer of floating point 
+//!	samples
+//!	\param srate is the sample rate of the samples in the buffer
 //
 void 
 Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate )
@@ -306,15 +305,15 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate 
 // ---------------------------------------------------------------------------
 //	analyze
 // ---------------------------------------------------------------------------
-//	Analyze a vector of (mono) samples at the given sample rate 	  	
-//	(in Hz) and append the extracted Partials to Analyzer's 
-//	PartialList (std::list of Partials). Use the specified envelope
-//	as a frequency reference for Partial tracking.
-//
-//	vec is a vector of floating point samples
-//	srate is the sample rate of the samples in the vector
-//	reference is an Envelope having the approximate
-//	frequency contour expected of the resulting Partials.
+//!	Analyze a vector of (mono) samples at the given sample rate 	  	
+//!	(in Hz) and append the extracted Partials to Analyzer's 
+//!	PartialList (std::list of Partials). Use the specified envelope
+//!	as a frequency reference for Partial tracking.
+//!
+//!	\param vec is a vector of floating point samples
+//!	\param srate is the sample rate of the samples in the vector
+//!	\param reference is an Envelope having the approximate
+//!	frequency contour expected of the resulting Partials.
 //
 void 
 Analyzer::analyze( const std::vector<double> & vec, double srate, 
@@ -326,17 +325,17 @@ Analyzer::analyze( const std::vector<double> & vec, double srate,
 // ---------------------------------------------------------------------------
 //	analyze
 // ---------------------------------------------------------------------------
-//	Analyze a range of (mono) samples at the given sample rate 	  	
-//	(in Hz) and append the extracted Partials to Analyzer's 
-//	PartialList (std::list of Partials). Use the specified envelope
-//	as a frequency reference for Partial tracking.
-//	
-//	bufBegin is a pointer to a buffer of floating point samples
-//	bufEnd is (one-past) the end of a buffer of floating point 
-//	samples
-//	srate is the sample rate of the samples in the buffer
-//	reference is an Envelope having the approximate
-//	frequency contour expected of the resulting Partials.
+//!	Analyze a range of (mono) samples at the given sample rate 	  	
+//!	(in Hz) and append the extracted Partials to Analyzer's 
+//!	PartialList (std::list of Partials). Use the specified envelope
+//!	as a frequency reference for Partial tracking.
+//!	
+//!	\param bufBegin is a pointer to a buffer of floating point samples
+//!	\param bufEnd is (one-past) the end of a buffer of floating point 
+//!	samples
+//!	\param srate is the sample rate of the samples in the buffer
+//!	\param reference is an Envelope having the approximate
+//!	frequency contour expected of the resulting Partials.
 //
 void 
 Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
@@ -430,8 +429,8 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
 // ---------------------------------------------------------------------------
 //	ampFloor
 // ---------------------------------------------------------------------------
-//	Return the amplitude floor (lowest detected spectral amplitude),  			
-//	in (negative) dB, for this Analyzer. 				
+//!	Return the amplitude floor (lowest detected spectral amplitude),  			
+//!	in (negative) dB, for this Analyzer. 				
 //
 double 
 Analyzer::ampFloor( void ) const 
@@ -442,10 +441,10 @@ Analyzer::ampFloor( void ) const
 // ---------------------------------------------------------------------------
 //	associateBandwidth
 // ---------------------------------------------------------------------------
-//	Return true if this Analyzer is configured to peform bandwidth
-//	association to distribute noise energy among extracted Partials, 
-//	and false if noise energy will be collected in noise Partials,
-//	labeled -1 in this Analyzer's PartialList.
+//!	Return true if this Analyzer is configured to peform bandwidth
+//!	association to distribute noise energy among extracted Partials, 
+//!	and false if noise energy will be collected in noise Partials,
+//!	labeled -1 in this Analyzer's PartialList.
 //
 bool 
 Analyzer::associateBandwidth( void ) const 
@@ -456,8 +455,8 @@ Analyzer::associateBandwidth( void ) const
 // ---------------------------------------------------------------------------
 //	bwRegionWidth
 // ---------------------------------------------------------------------------
-//	Return the width (in Hz) of the Bandwidth Association regions
-//	used by this Analyzer.
+//!	Return the width (in Hz) of the Bandwidth Association regions
+//!	used by this Analyzer.
 //
 double 
 Analyzer::bwRegionWidth( void ) const
@@ -469,10 +468,10 @@ Analyzer::bwRegionWidth( void ) const
 // ---------------------------------------------------------------------------
 //	cropTime
 // ---------------------------------------------------------------------------
-//	Return the crop time (maximum temporal displacement of a time-
-//	frequency data point from the time-domain center of the analysis
-//	window, beyond which data points are considered "unreliable")
-//	for this Analyzer.
+//!	Return the crop time (maximum temporal displacement of a time-
+//!	frequency data point from the time-domain center of the analysis
+//!	window, beyond which data points are considered "unreliable")
+//!	for this Analyzer.
 //
 double 
 Analyzer::cropTime( void ) const 
@@ -484,8 +483,8 @@ Analyzer::cropTime( void ) const
 // ---------------------------------------------------------------------------
 //	freqDrift
 // ---------------------------------------------------------------------------
-//	Return the maximum allowable frequency difference 
-//	consecutive Breakpoints in a Partial envelope for this Analyzer. 				
+//!	Return the maximum allowable frequency difference 
+//!	consecutive Breakpoints in a Partial envelope for this Analyzer. 				
 //
 double 
 Analyzer::freqDrift( void ) const 
@@ -496,8 +495,8 @@ Analyzer::freqDrift( void ) const
 // ---------------------------------------------------------------------------
 //	freqFloor
 // ---------------------------------------------------------------------------
-//	Return the frequency floor (minimum instantaneous Partial  				
-//	frequency), in Hz, for this Analyzer. 				
+//!	Return the frequency floor (minimum instantaneous Partial  				
+//!	frequency), in Hz, for this Analyzer. 				
 //
 double 
 Analyzer::freqFloor( void ) const 
@@ -508,8 +507,8 @@ Analyzer::freqFloor( void ) const
 // ---------------------------------------------------------------------------
 //	freqResolution
 // ---------------------------------------------------------------------------
-//	Return the frequency resolution (minimum instantaneous frequency  		
-//	difference between Partials) for this Analyzer.
+//!	Return the frequency resolution (minimum instantaneous frequency  		
+//!	difference between Partials) for this Analyzer.
 //
 double 
 Analyzer::freqResolution( void ) const 
@@ -520,9 +519,9 @@ Analyzer::freqResolution( void ) const
 // ---------------------------------------------------------------------------
 //	hopTime
 // ---------------------------------------------------------------------------
-//	Return the hop time (which corresponds approximately to the 
-//	average density of Partial envelope Breakpoint data) for this 
-//	Analyzer.
+//!	Return the hop time (which corresponds approximately to the 
+//!	average density of Partial envelope Breakpoint data) for this 
+//!	Analyzer.
 //
 double 
 Analyzer::hopTime( void ) const 
@@ -533,12 +532,12 @@ Analyzer::hopTime( void ) const
 // ---------------------------------------------------------------------------
 //	sidelobeLevel
 // ---------------------------------------------------------------------------
-//	Return the sidelobe attenutation level for the Kaiser analysis window in
-//	positive dB. Larger numbers (e.g. 90) give very good sidelobe 
-//	rejection but cause the window to be longer in time. Smaller numbers 
-//	(like 60) raise the level of the sidelobes, increasing the likelihood
-//	of frequency-domain interference, but allow the window to be shorter
-//	in time.
+//!	Return the sidelobe attenutation level for the Kaiser analysis window in
+//!	positive dB. Larger numbers (e.g. 90) give very good sidelobe 
+//!	rejection but cause the window to be longer in time. Smaller numbers 
+//!	(like 60) raise the level of the sidelobes, increasing the likelihood
+//!	of frequency-domain interference, but allow the window to be shorter
+//!	in time.
 //
 double 
 Analyzer::sidelobeLevel( void ) const 
@@ -549,8 +548,8 @@ Analyzer::sidelobeLevel( void ) const
 // ---------------------------------------------------------------------------
 //	windowWidth
 // ---------------------------------------------------------------------------
-//	Return the frequency-domain main lobe width (measured between 
-//	zero-crossings) of the analysis window used by this Analyzer. 				
+//!	Return the frequency-domain main lobe width (measured between 
+//!	zero-crossings) of the analysis window used by this Analyzer. 				
 //
 double 
 Analyzer::windowWidth( void ) const 
@@ -570,10 +569,10 @@ Analyzer::windowWidth( void ) const
 // ---------------------------------------------------------------------------
 //	setAmpFloor
 // ---------------------------------------------------------------------------
-//	Set the amplitude floor (lowest detected spectral amplitude), in  			
-//	(negative) dB, for this Analyzer. 
-//	
-//	x is the new value of this parameter. 				
+//!	Set the amplitude floor (lowest detected spectral amplitude), in  			
+//!	(negative) dB, for this Analyzer. 
+//!	
+//!	\param x is the new value of this parameter. 				
 //
 void 
 Analyzer::setAmpFloor( double x ) 
@@ -585,11 +584,11 @@ Analyzer::setAmpFloor( double x )
 // ---------------------------------------------------------------------------
 //	setBwRegionWidth
 // ---------------------------------------------------------------------------
-//	Set the width (in Hz) of the Bandwidth Association regions
-//	used by this Analyzer. If zero, bandwidth enhancement is 
-//	disabled.
-//	
-//	x is the new value of this parameter.
+//!	Set the width (in Hz) of the Bandwidth Association regions
+//!	used by this Analyzer. If zero, bandwidth enhancement is 
+//!	disabled.
+//!	
+//!	\param x is the new value of this parameter.
 //
 void 
 Analyzer::setBwRegionWidth( double x ) 
@@ -602,12 +601,12 @@ Analyzer::setBwRegionWidth( double x )
 // ---------------------------------------------------------------------------
 //	setCropTime
 // ---------------------------------------------------------------------------
-//	Set the crop time (maximum temporal displacement of a time-
-//	frequency data point from the time-domain center of the analysis
-//	window, beyond which data points are considered "unreliable")
-//	for this Analyzer.
-//	
-//	x is the new value of this parameter.
+//!	Set the crop time (maximum temporal displacement of a time-
+//!	frequency data point from the time-domain center of the analysis
+//!	window, beyond which data points are considered "unreliable")
+//!	for this Analyzer.
+//!	
+//!	\param x is the new value of this parameter.
 //
 void 
 Analyzer::setCropTime( double x ) 
@@ -620,10 +619,10 @@ Analyzer::setCropTime( double x )
 // ---------------------------------------------------------------------------
 //	setFreqDrift
 // ---------------------------------------------------------------------------
-//	Set the maximum allowable frequency difference between 					
-//	consecutive Breakpoints in a Partial envelope for this Analyzer. 				
-//	
-//	x is the new value of this parameter.			
+//!	Set the maximum allowable frequency difference between 					
+//!	consecutive Breakpoints in a Partial envelope for this Analyzer. 				
+//!	
+//!	\param x is the new value of this parameter.			
 //
 void 
 Analyzer::setFreqDrift( double x ) 
@@ -635,10 +634,10 @@ Analyzer::setFreqDrift( double x )
 // ---------------------------------------------------------------------------
 //	setFreqFloor
 // ---------------------------------------------------------------------------
-//	Set the frequency floor (minimum instantaneous Partial  				
-//	frequency), in Hz, for this Analyzer.
-//	
-//	x is the new value of this parameter.					
+//!	Set the frequency floor (minimum instantaneous Partial  				
+//!	frequency), in Hz, for this Analyzer.
+//!	
+//!	\param x is the new value of this parameter.					
 //
 void 
 Analyzer::setFreqFloor( double x ) 
@@ -650,11 +649,11 @@ Analyzer::setFreqFloor( double x )
 // ---------------------------------------------------------------------------
 //	setFreqResolution
 // ---------------------------------------------------------------------------
-//	Set the frequency resolution (minimum instantaneous frequency  		
-//	difference between Partials) for this Analyzer. (Does not cause 	
-//	other parameters to be recomputed.) 									
-//	
-//	x is the new value of this parameter.										
+//!	Set the frequency resolution (minimum instantaneous frequency  		
+//!	difference between Partials) for this Analyzer. (Does not cause 	
+//!	other parameters to be recomputed.) 									
+//!	
+//!	\param x is the new value of this parameter.										
 //
 void 
 Analyzer::setFreqResolution( double x ) 
@@ -666,14 +665,14 @@ Analyzer::setFreqResolution( double x )
 // ---------------------------------------------------------------------------
 //	setSidelobeLevel
 // ---------------------------------------------------------------------------
-//	Set the sidelobe attenutation level for the Kaiser analysis window in
-//	positive dB. More negative numbers (e.g. -90) give very good sidelobe 
-//	rejection but cause the window to be longer in time. Less negative 
-//	numbers raise the level of the sidelobes, increasing the likelihood
-//	of frequency-domain interference, but allow the window to be shorter
-//	in time.
-//	
-//	x is the new value of this parameter.	
+//!	Set the sidelobe attenutation level for the Kaiser analysis window in
+//!	positive dB. More negative numbers (e.g. -90) give very good sidelobe 
+//!	rejection but cause the window to be longer in time. Less negative 
+//!	numbers raise the level of the sidelobes, increasing the likelihood
+//!	of frequency-domain interference, but allow the window to be shorter
+//!	in time.
+//!	
+//!	\param x is the new value of this parameter.	
 //
 void 
 Analyzer::setSidelobeLevel( double x ) 
@@ -685,10 +684,10 @@ Analyzer::setSidelobeLevel( double x )
 // ---------------------------------------------------------------------------
 //	setHopTime
 // ---------------------------------------------------------------------------
-//	Set the hop time (which corresponds approximately to the average
-//	density of Partial envelope Breakpoint data) for this Analyzer.
-//	
-//	x is the new value of this parameter.
+//!	Set the hop time (which corresponds approximately to the average
+//!	density of Partial envelope Breakpoint data) for this Analyzer.
+//!	
+//!	\param x is the new value of this parameter.
 //
 void 
 Analyzer::setHopTime( double x ) 
@@ -700,10 +699,10 @@ Analyzer::setHopTime( double x )
 // ---------------------------------------------------------------------------
 //	setWindowWidth
 // ---------------------------------------------------------------------------
-//	Set the frequency-domain main lobe width (measured between 
-//	zero-crossings) of the analysis window used by this Analyzer. 	
-//	
-//	x is the new value of this parameter.			
+//!	Set the frequency-domain main lobe width (measured between 
+//!	zero-crossings) of the analysis window used by this Analyzer. 	
+//!	
+//!	\param x is the new value of this parameter.			
 //
 void 
 Analyzer::setWindowWidth( double x ) 
@@ -717,8 +716,8 @@ Analyzer::setWindowWidth( double x )
 // ---------------------------------------------------------------------------
 //	partials
 // ---------------------------------------------------------------------------
-//	Return a mutable reference to this Analyzer's list of 
-//	analyzed Partials. 
+//!	Return a mutable reference to this Analyzer's list of 
+//!	analyzed Partials. 
 //
 PartialList & 
 Analyzer::partials( void ) 
@@ -729,8 +728,8 @@ Analyzer::partials( void )
 // ---------------------------------------------------------------------------
 //	partials
 // ---------------------------------------------------------------------------
-//	Return an immutable (const) reference to this Analyzer's 
-//	list of analyzed Partials. 
+//!	Return an immutable (const) reference to this Analyzer's 
+//!	list of analyzed Partials. 
 //
 const PartialList & 
 Analyzer::partials( void ) const
