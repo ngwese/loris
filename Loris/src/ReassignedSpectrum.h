@@ -45,7 +45,7 @@ namespace Loris {
 //	class ReassignedSpectrum
 //
 //	Computes a reassigned short-time Fourier spectrum and identifies
-//	(interpolates) short-time magnitude-spectral peaks.. 
+//	(interpolates) short-time magnitude-spectral peaks. 
 //	
 class ReassignedSpectrum
 {
@@ -56,7 +56,7 @@ public:
 	~ReassignedSpectrum( void );
 
 //	spectrum computation:	
-	void transform( const std::vector< double > & buf, long idxCenter );
+	void transform( const double * bufBegin, const double * pos, const double * bufEnd );
 
 //	length of the three Fourier transforms:
 	long size( void ) const { return _transform.size(); }

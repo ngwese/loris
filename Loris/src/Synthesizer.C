@@ -37,7 +37,6 @@
 #include "Partial.h"
 #include "notifier.h"
 #include <algorithm>
-#include <vector>
 #include <cmath>
 
 //	Pi:
@@ -55,13 +54,19 @@ static long countem = 0;
 //	Synthesizer constructor
 // ---------------------------------------------------------------------------
 //
-Synthesizer::Synthesizer( std::vector< double > & buf, double srate ) :
+Synthesizer::Synthesizer( double * buffer, long bufferLength, double srate ) :
 	_sampleRate( srate ),
-	_samples( buf )
+	_sampleBuffer( buffer ),
+	_sampleBufferSize( bufferLength )
 {
 	//	check to make sure that the sample rate is valid:
-	if ( _sampleRate <= 0. ) {
+	if ( srate <= 0. ) {
 		Throw( InvalidObject, "Synthesizer sample rate must be positive." );
+	}
+
+	//	check to make sure that the buffer bounds are valid:
+	if ( bufferLength <= 0 ) {
+		Throw( InvalidObject, "Synthesizer buffer length must be positive." );
 	}
 
 	countem = 0;
@@ -70,12 +75,12 @@ Synthesizer::Synthesizer( std::vector< double > & buf, double srate ) :
 // ---------------------------------------------------------------------------
 //	Synthesizer copy constructor
 // ---------------------------------------------------------------------------
-//	Create a copy of other by cloning its PartialView and sharing its
-//	sample buffer.
+//	Synthesizer copies share a sample buffer.
 //
 Synthesizer::Synthesizer( const Synthesizer & other ) :
 	_sampleRate( other._sampleRate ),
-	_samples( other._samples )
+	_sampleBuffer( other._sampleBuffer ),
+	_sampleBufferSize( other._sampleBufferSize )
 {
 	countem = 0;
 }
@@ -114,10 +119,13 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ )
 			p.begin()->frequency() << endl;
 */
 	
-//	don't bother to synthesize Partials having zero duration:
-	if ( p.duration() == 0. || 
+//	don't bother to synthesize Partials that will generate no samples in
+//	the samples buffer; but note that Partials having a single Breakpoint,
+//	while officially of duration "0.", will generate samples due to ramping
+//	in and out:
+	if ( /* p.duration() == 0. || */
 		 p.endTime() + timeShift < 0. ||
-		 (p.startTime() + timeShift) * sampleRate() > _samples.size() )
+		 (p.startTime() + timeShift) * sampleRate() > numSamples() )
 	{
 		debugger << "ignoring a partial that would generate no samples" << endl;
 		debugger << "start time is " << p.startTime() << " end time is " << p.endTime() << endl;
@@ -178,12 +186,16 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ )
 	{
 		//	compute target sample index:
 		long tgtsamp = (iterator.time() + timeShift) * sampleRate();
-		if ( tgtsamp >= _samples.size() )
+		if ( tgtsamp >= numSamples() )
 			break;
 			
 		//	generate samples:
 		//	(buffer, beginIdx, endIdx, freq, amp, bw)
-		osc.generateSamples( _samples, curSampleIdx, tgtsamp, 
+		//	(Could check first whether any non-zero samples
+		//	will be generated, if not, can just set target
+		//	values.)
+		osc.generateSamples( //_samples, curSampleIdx, tgtsamp, 
+							 _sampleBuffer + curSampleIdx, _sampleBuffer + tgtsamp,
 							 radianFreq( iterator.frequency() ), 
 							 iterator.amplitude(), 
 							 iterator.bandwidth() );
@@ -223,8 +235,7 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ )
 //	interpolate final oscillator state if the target 
 //	final sample is past the end of the buffer:
 	long finalsamp = 
-		std::min( curSampleIdx + long(Partial::FadeTime() * sampleRate()), 
-				  long(_samples.size()) );
+		std::min( curSampleIdx + long(Partial::FadeTime() * sampleRate()), numSamples() );
 	double alpha = 
 		(finalsamp - curSampleIdx) / (Partial::FadeTime() * sampleRate());
 	tgtradfreq = (alpha * tgtradfreq) + ((1. - alpha) * osc.radianFreq());
@@ -233,7 +244,8 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ )
 	
 //	generate samples:
 //	(buffer, beginIdx, endIdx, freq, amp, bw)
-	osc.generateSamples( _samples, curSampleIdx, finalsamp, 
+	osc.generateSamples( //_samples, curSampleIdx, finalsamp, 
+						 _sampleBuffer + curSampleIdx, _sampleBuffer + finalsamp,
 						 tgtradfreq, tgtamp, tgtbw );	
 
 	++countem;

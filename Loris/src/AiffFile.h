@@ -46,7 +46,7 @@ struct CkHeader;
 // ---------------------------------------------------------------------------
 //	class AiffFile
 //
-//	The SampleBuffer must be provided by clients; it is not owned by 
+//	The sample vector must be provided by clients; it is not owned by 
 //	the AiffFile. Streams passed to AIFFfiles also remain the responsibility
 //	of the client.
 //	
@@ -58,43 +58,43 @@ class AiffFile
 	int _sampSize;		//	in bits
 	
 	std::vector< double > & _samples;
-	
+		
 //	-- public interface --
 public:
-//	construction:
+//	construction (import):
 //	(compiler can generate destructor, copy, and assignment)
-	AiffFile( double rate, int chans, int bits, std::vector< double > & buf );
 	AiffFile( const std::string & filename, std::vector< double > & buf );
 	AiffFile( std::istream & s, std::vector< double > & buf );
 	
-//	reading and writing:
-	void read( const std::string & filename );
-	void read( std::istream & s );
-	void write( const std::string & filename );
-	void write( std::ostream & s );
+//	export:
+	static void Export( std::ostream & s, double rate, int chans, int bits, std::vector< double > & buf );
+	static void Export( const std::string & filename, double rate, int chans, int bits, std::vector< double > & buf );
 	
-//	access/mutation:
+//	access:
 	double sampleRate( void ) const { return _sampleRate; }
 	int numChans( void ) const { return _nChannels; }
 	int sampleSize( void ) const { return _sampSize; }
-	
-	void setSampleRate( double x ) { _sampleRate = x; }
-	void setNumChannels( int n ) { _nChannels = n; }
-	void setSampleSize( int n ) { _sampSize = n; }
 	
 	std::vector< double > & samples( void ) { return _samples; }
 	const std::vector< double > & samples( void ) const { return _samples; }
 	
 //	-- helpers --
 private:
+	//	construct from data in memory and write (export):
+	AiffFile( std::ostream & s, double rate, int chans, int bits, std::vector< double > & buf );
+	
 	//	reading:
+	void read( const std::string & filename );
+	void read( std::istream & s );
 	void readChunkHeader( std::istream & s, CkHeader & h );
 	void readContainer( std::istream & s );
 	void readCommonData( std::istream & s );
-	void readSampleData( std::istream & s );
-	void readSamples( std::istream & s );
+	void readSampleData( std::istream & s, unsigned long chunkSize, std::vector< unsigned char > & bytes );
+	void readSamples( std::istream & s, unsigned long howManyBytes, std::vector< unsigned char > & bytes );
+	void convertSamples( std::vector< unsigned char > & bytes );	//	from raw data to doubles
 
 	//	writing:
+	void write( std::ostream & s );
 	void writeCommon( std::ostream & s );
 	void writeContainer( std::ostream & s );
 	void writeSampleData( std::ostream & s );

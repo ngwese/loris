@@ -119,14 +119,14 @@ static void addNoiseEnergy( double energy, Partial & p,
 }
 
 // ---------------------------------------------------------------------------
-//	addNoiseEnergy
+//	distribute
 // ---------------------------------------------------------------------------
 //
 void 
-DistributeEnergy::distribute( const Partial & p, 
+DistributeEnergy::distribute( const Partial & p,
 							  PartialList::iterator begin, 
 							  PartialList::iterator end ) const
-{
+{	
 	//	loop over Breakpoints in p:
 	PartialConstIterator envIter;
 	double tUpperBound = p.startTime();	// initialize:

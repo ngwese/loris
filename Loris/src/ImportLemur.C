@@ -159,6 +159,8 @@ ImportLemur::ImportLemur( const char * fname, double bweCutoff /* = 1000 Hz */)
 //	Clients should be prepared to catch ImportExceptions.
 //
 //	THIS WON'T WORK IF CHUNKS ARE IN A DIFFERENT ORDER!!!
+//	Fortunately, they never will be, since only the research 
+//	version of Lemur ever wrote these files anyway.
 //
 static void
 importPartials( std::istream & s, std::list<Partial> & partials, double bweCutoff )

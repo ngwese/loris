@@ -227,7 +227,7 @@ Analyzer::~Analyzer( void )
 // ---------------------------------------------------------------------------
 //
 void 
-Analyzer::analyze( const std::vector< double > & buf, double srate )
+Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate )
 {
 //	construct a state object for this analysis:	
 	AnalyzerState state( *this, srate );
@@ -239,16 +239,16 @@ Analyzer::analyze( const std::vector< double > & buf, double srate )
 	const long hop = long( hopTime() * srate );	//	truncate
 		
 	try { 
-		for ( long winMiddleIdx = 0; 
-			  winMiddleIdx < buf.size();
-			  winMiddleIdx += hop ) 
+		for ( const double * winMiddle = bufBegin; 
+			  winMiddle < bufEnd;
+			  winMiddle += hop ) 
 		{
 			//	compute the time of this analysis frame:
-			const double frameTime = ( winMiddleIdx / srate );
+			const double frameTime = long(winMiddle - bufBegin) / srate;
 			 
 			//	compute reassigned spectrum:
 			//	make this better!
-			state.spectrum().transform( buf, winMiddleIdx );
+			state.spectrum().transform( bufBegin, winMiddle, bufEnd );
 			
 			//	extract peaks from the spectrum:
 			std::list< Breakpoint > f;
@@ -725,9 +725,18 @@ Analyzer::spawnPartial( double time, const Breakpoint & bp )
 //	Maybe there should be some other notion of a too-short Partial.
 //	Should it be a parameter?
 //
+//	Actually, maybe the energy in these Partials is important for very 
+//	impulsive sounds?
+//
 void
 Analyzer::pruneBogusPartials( AnalyzerState & state )
 {
+#define DONT_PRUNE
+#if defined(DONT_PRUNE)
+	debugger << "Analyzer not pruning zero-duration Partials." << endl;
+	return;
+#endif
+
 	//	collect the very short Partials:
 	std::list<Partial> veryshortones;
 	for ( PartialList::iterator it = partials().begin(); 

@@ -33,7 +33,6 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-#include <vector>	
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
@@ -49,7 +48,7 @@ class Partial;
 //	partials. Synthesizer accumulates samples for one partial at a time
 //	at a specified sample rate into a specified sample buffer.
 //
-//	The Synthesizer does not own its sample vector, the client 
+//	The Synthesizer does not own its sample buffer, the client 
 //	is responsible for its construction and destruction. Many 
 //	Synthesizers may share a buffer. (But this class is not thread-safe.)
 //
@@ -57,13 +56,14 @@ class Synthesizer
 {
 //	-- instance variables --
 	double _sampleRate;					//	in Hz
-	std::vector< double > & _samples;	//	samples are computed and stored here
+	double * _sampleBuffer;				//	samples are computed and stored here
+	long _sampleBufferSize;				//	length of buffer in samples
 		
 //	-- public interface --
 public:
 //	construction:
 //	(use compiler-generated destructor)
-	Synthesizer( std::vector< double > & buf, double srate );
+	Synthesizer( double * buffer, long bufferLength, double srate );
 	Synthesizer( const Synthesizer & other );
 	~Synthesizer(void);
 	
@@ -82,8 +82,10 @@ public:
 //	access:
 	double sampleRate( void ) const { return _sampleRate; }
 	
-	std::vector< double > & samples( void ) { return _samples; }
-	const std::vector< double > & samples( void ) const { return _samples; }
+	double * samples( void ) { return _sampleBuffer; }
+	const double * samples( void ) const { return _sampleBuffer; }
+	
+	long numSamples( void ) const { return _sampleBufferSize; }
 	
 //	-- private helpers --
 private:

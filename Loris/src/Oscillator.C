@@ -115,8 +115,9 @@ Oscillator::~Oscillator( void )
 //	enhancement.
 //
 void
-Oscillator::generateSamples( std::vector< double > & buffer, 
-							 long beginIdx, long endIdx,
+Oscillator::generateSamples( //std::vector< double > & buffer, 
+							 //long beginIdx, long endIdx,
+							 double * begin, double * end,
 							 double targetFreq, double targetAmp, double targetBw )
 {
 //	use math functions in namespace std:
@@ -126,9 +127,10 @@ Oscillator::generateSamples( std::vector< double > & buffer,
 //	the sample buffer indices are valid, only
 //	check sanity when debugging:
 #ifdef Debug_Loris
-	Assert( beginIdx >= 0 );
-	Assert( endIdx <= buffer.size() );
-	Assert( endIdx >= beginIdx );
+	//Assert( beginIdx >= 0 );
+	//Assert( endIdx <= buffer.size() );
+	//Assert( endIdx >= beginIdx );
+	Assert( end >= begin );
 #endif
 	
 //	clamp bandwidth:
@@ -152,7 +154,7 @@ Oscillator::generateSamples( std::vector< double > & buffer,
 
 //	determine the number of samples to generate
 //	(none if the amplitude will be zero throughout):	
-	long howMany = endIdx - beginIdx;
+	long howMany = end - begin; //endIdx - beginIdx;
 	if ( targetAmp == 0. && _amplitude == 0. && howMany > 0 ) 
 	{
 		// debugger << "no samples to generate at index " << beginIdx << endl;
@@ -161,7 +163,10 @@ Oscillator::generateSamples( std::vector< double > & buffer,
 		//	update the phase anyway (other params
 		//	will be updated below), advance the phase 
 		//	by the average frequency times the number
-		//	of samples:
+		//	of samples (only do this so that Oscillator
+		//	is generally useful, in Loris, Synthesizer
+		//	will reset phase after this call if the
+		//	amplitude goes to zero):
 		_phase += (0.5 * (_frequency + targetFreq)) * howMany;
 		_phase = fmod( _phase, TwoPi );
 		howMany = 0;
@@ -180,6 +185,7 @@ Oscillator::generateSamples( std::vector< double > & buffer,
 	//	temp local variables for speed:
 		double f = _frequency, a = _amplitude, b = _bandwidth, p = _phase;
 		double noise, mod, osc, samp;
+		double * putItHere = begin;
 		for ( int i = 0; i < howMany; ++i )
 		{
 			//	get a filtered noise sample, use scale as std deviation:
@@ -201,7 +207,9 @@ Oscillator::generateSamples( std::vector< double > & buffer,
 			
 			//	compute a sample and add it into the buffer:
 			samp = mod * a * osc;
-			buffer[ beginIdx + i ] += samp;
+			//buffer[ beginIdx + i ] += samp;
+			*putItHere += samp;
+			++putItHere;
 				
 			//	update the oscillator state:
 			p += f;	//	frequency is radians per sample

@@ -99,15 +99,24 @@ ReassignedSpectrum::~ReassignedSpectrum( void )
 //	does what I am using std::transform() to do. I also need to get rid of that
 //	name collision (transform).
 //
+//	To make Analyzer slightly friendlier, I am changing the arg list here to
+//	have three double pointers, buffer begin, window position, and buffer end.
+//	These pointers act like STL iterators (that is, bufEnd is one past the
+//	end of the buffer).
+//
 void
-ReassignedSpectrum::transform( const vector< double > & buf, long idxCenter )
+//ReassignedSpectrum::transform( const vector< double > & buf, long idxCenter )
+ReassignedSpectrum::transform( const double * bufBegin, const double * pos, const double * bufEnd )
 {
 #if defined(Debug_Loris)
 	bool spit = false;
 #endif
 
-	Assert( idxCenter >= 0 );
-	Assert( idxCenter < buf.size() );
+	Assert( pos >= bufBegin );
+	Assert( pos < bufEnd );
+	
+	const long idxCenter = long(pos - bufBegin);
+	const long bufSize = long(bufEnd - bufBegin);
 	
 //	determine sample boundaries from center index, 
 //	buffer length, and window length:
@@ -117,14 +126,14 @@ ReassignedSpectrum::transform( const vector< double > & buf, long idxCenter )
 		woffset = -boffset;
 		boffset = 0;
 	}
-	long eoffset = min( (long)buf.size(), boffset - woffset + (long)_window.size() );
+	long eoffset = min( bufSize, boffset - woffset + (long)_window.size() );
 	if ( eoffset < boffset ) {
 		eoffset = boffset;
 	}
 		
 //	window and rotate input and compute normal transform:
 	load( _transform, 
-		  buf.begin() + boffset, buf.begin() + idxCenter, buf.begin() + eoffset,
+		  bufBegin + boffset, bufBegin + idxCenter, bufBegin + eoffset,
 		  _window.begin() + woffset );
 		  
 #if defined(Debug_Loris)
@@ -156,7 +165,7 @@ ReassignedSpectrum::transform( const vector< double > & buf, long idxCenter )
 //	window and rotate input using frequency-ramped window
 //	and compute frequency correction transform:
 	load( _tfreqramp, 
-		  buf.begin() + boffset, buf.begin() + idxCenter, buf.begin() + eoffset,
+		  bufBegin + boffset, bufBegin + idxCenter, bufBegin + eoffset,
 		  _winfreqramp.begin() + woffset );
 	
 	_tfreqramp.transform();
@@ -164,7 +173,7 @@ ReassignedSpectrum::transform( const vector< double > & buf, long idxCenter )
 //	window and rotate input using time-ramped window and
 //	compute time correction transform:
 	load( _ttimeramp, 
-		  buf.begin() + boffset, buf.begin() + idxCenter, buf.begin() + eoffset,
+		  bufBegin + boffset, bufBegin + idxCenter, bufBegin + eoffset,
 		  _wintimeramp.begin() + woffset );
 	
 	_ttimeramp.transform();

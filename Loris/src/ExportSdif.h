@@ -33,7 +33,6 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-#include "Partial.h"
 #include <vector>
 #include <stdio.h>	//	for FILE
 #include <list>
@@ -42,6 +41,8 @@
 //	begin namespace
 namespace Loris {
 #endif
+
+class Partial;
 
 // ---------------------------------------------------------------------------
 //	BreakpointTime
@@ -81,7 +82,7 @@ private:
 								const double frameTime, const double nextFrameTime );
 	
 	//	envelope writing helpers:
-	void indexPartials( const PartialList & partials, std::vector< Partial * > & partialsVector );
+	void indexPartials( const std::list< Partial > & partials, std::vector< Partial * > & partialsVector );
 	int collectActiveIndices( const std::vector< Partial * > & partialsVector, 
 								const double frameTime, const double nextFrameTime,
 								std::vector< int > & activeIndices );

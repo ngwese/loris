@@ -58,7 +58,7 @@ typedef Int_32 ID;
 
 struct CkHeader {
 	Int_32 id;
-	ID size;
+	Uint_32 size;
 };
 
 struct ContainerCk
@@ -83,19 +83,6 @@ struct SoundDataCk
 	Uint_32 blockSize;	
 	//	sample frames follow
 };
-
-// ---------------------------------------------------------------------------
-//	AiffFile constructor from data in memory
-// ---------------------------------------------------------------------------
-//
-AiffFile::AiffFile( double rate, int chans, int bits, std::vector< double > & buf ) :
-	_sampleRate( rate ),
-	_nChannels( chans ),
-	_sampSize( bits ),
-	_samples( buf )
-{
-	validateParams();
-}
 
 // ---------------------------------------------------------------------------
 //	AiffFile constructor from data on disk
@@ -125,7 +112,19 @@ AiffFile::AiffFile( const std::string & filename, std::vector< double > & buf ) 
 	read( filename );
 }
 
-
+// ---------------------------------------------------------------------------
+//	AiffFile constructor from data in memory
+// ---------------------------------------------------------------------------
+//	Called only by static export members, write immediately.
+//
+AiffFile::AiffFile( std::ostream & s, double rate, int chans, int bits, std::vector< double > & buf ) :
+	_sampleRate( rate ),
+	_nChannels( chans ),
+	_sampSize( bits ),
+	_samples( buf )
+{
+	write( s );
+}
 
 // ---------------------------------------------------------------------------
 //	read
@@ -142,7 +141,6 @@ AiffFile::read( const std::string & filename )
 // ---------------------------------------------------------------------------
 //	read
 // ---------------------------------------------------------------------------
-//	THIS WON'T WORK IF CHUNKS ARE IN A DIFFERENT ORDER!!!
 //
 void
 AiffFile::read( std::istream & s )
@@ -152,11 +150,18 @@ AiffFile::read( std::istream & s )
 		//	the Container chunk must be first, read it:
 		readContainer( s );
 		
+		//	temporary buffer for reading:
+		std::vector< unsigned char > bytes;
+		
 		//	read other chunks, we are only interested in
 		//	the Common chunk and the Sound Data chunk:
 		bool foundCOMM = false, foundSSND = false;
 		while ( ! foundCOMM || ! foundSSND )
 		{
+			if ( s.eof() )
+				Throw( FileIOException, 
+					   "Reached end of file before finding both a Common chunk and a Sound Data chunk." );
+			
 			//	read a chunk header, if it isn't the one we want, skip over it.
 			CkHeader h;
 			readChunkHeader( s, h );
@@ -168,12 +173,7 @@ AiffFile::read( std::istream & s )
 			}
 			else if ( h.id == SoundDataId )
 			{
-				if (! foundCOMM) 	//	 I hope this doesn't happen
-				{
-					Throw( FileIOException, 
-							"Mia culpa! I am not smart enough to read the Sound data before the Common data." );
-				}							
-				readSampleData( s );
+				readSampleData( s, h.size, bytes );
 				foundSSND = true;
 			}
 			else
@@ -181,29 +181,41 @@ AiffFile::read( std::istream & s )
 				s.ignore( h.size );
 			}
 		}
-
+		
+		convertSamples( bytes );
 	}
 	catch ( Exception & ex ) 
 	{
-		if ( s.eof() )
-		{
-			ex.append("Reached end of file before finding both a Common chunk and a Sound Data chunk.");
-		}
-		ex.append( "Failed to read AIFF file." );
+		ex.append( " Failed to read AIFF file." );
 		throw;
 	}
 }
 
 // ---------------------------------------------------------------------------
-//	write
+//	Export 
 // ---------------------------------------------------------------------------
+//	Static member for exporting AIFF data to a named file.
 //
 void
-AiffFile::write( const std::string & filename )
+AiffFile::Export( const std::string & filename, double rate, int chans, int bits, 
+				  std::vector< double > & buf )
 {
 	std::ofstream s;
 	s.open( filename.c_str(), std::ios::out | std::ios::binary ); 
-	write(s);
+	Export(s, rate, chans, bits, buf);
+}
+
+// ---------------------------------------------------------------------------
+//	Export 
+// ---------------------------------------------------------------------------
+//	Static member for exporting AIFF data on a stream.
+//
+void
+AiffFile::Export( std::ostream & s, double rate, int chans, int bits, 
+				  std::vector< double > & buf )
+{
+	//	writes immediately:
+	AiffFile f( s, rate, chans, bits, buf);
 }
 
 // ---------------------------------------------------------------------------
@@ -223,7 +235,7 @@ AiffFile::write( std::ostream & s )
 	}
 	catch ( Exception & ex ) 
 	{
-		ex.append( "Failed to write AIFF file." );
+		ex.append( " Failed to write AIFF file." );
 		throw;
 	}
 }
@@ -261,16 +273,12 @@ AiffFile::readCommonData( std::istream & s )
 	}
 	catch( FileIOException & ex ) 
 	{
-		ex.append( "Failed to read badly-formatted AIFF file (bad Common chunk)." );
+		ex.append( " Failed to read badly-formatted AIFF file (bad Common chunk)." );
 		throw;
 	}
 						
 	//	allocate space for the samples:
-	long n = ck.sampleFrames * ck.channels;
-	if ( n != _samples.size() ) 
-	{
-		_samples.resize( n, 0. );
-	}
+	_samples.resize( ck.sampleFrames * ck.channels, 0. );
 	
 	_nChannels = ck.channels;
 	_sampSize = ck.bitsPerSample;
@@ -297,7 +305,7 @@ AiffFile::readContainer( std::istream & s )
 	}
 	catch( FileIOException & ex ) 
 	{
-		ex.append( "Failed to read badly-formatted AIFF file (bad Container chunk)." );
+		ex.append( " Failed to read badly-formatted AIFF file (bad Container chunk)." );
 		throw;
 	}
 
@@ -313,17 +321,23 @@ AiffFile::readContainer( std::istream & s )
 //	positioned, and that the chunk header has already been read.
 //
 void
-AiffFile::readSampleData( std::istream & s )
+AiffFile::readSampleData( std::istream & s, unsigned long chunkSize, 
+						  std::vector< unsigned char > & bytes )
 {
 	SoundDataCk ck;
 	try 
 	{
 		BigEndian::read( s, 1, sizeof(Uint_32), (char *)&ck.offset );
 		BigEndian::read( s, 1, sizeof(Uint_32), (char *)&ck.blockSize );
+		
+		//	compute the actual number of bytes that
+		//	can be read from this chunk:
+		//	(chunkSize is everything after the header)
+		unsigned long howManyBytes = ( chunkSize - ck.offset ) - (2 * sizeof(Uint_32));
 
 		//	skip ahead to the samples and read them:
 		s.ignore( ck.offset );
-		readSamples( s );
+		readSamples( s, howManyBytes, bytes );
 	}
 	catch( FileIOException & ex ) 
 	{
@@ -339,13 +353,34 @@ AiffFile::readSampleData( std::istream & s )
 //	Can do lots better by reading all the samples into a buffer at once.
 //
 void
-AiffFile::readSamples( std::istream & s )
+AiffFile::readSamples( std::istream & s, unsigned long howManyBytes,
+					   std::vector< unsigned char > & bytes )
 {	
 	//	use a vector for automatic temporary storage:
-	std::vector<unsigned char> v( _samples.size() * (_sampSize / 8) );
-
+	bytes.resize( howManyBytes );
+	
 	//	read integer samples without byte swapping: 
-	BigEndian::read( s, _samples.size() * _sampSize / 8, 1, (char*)v.begin() );
+	BigEndian::read( s, bytes.size(), 1, (char*)bytes.begin() );
+}
+
+// ---------------------------------------------------------------------------
+//	convertSamples
+// ---------------------------------------------------------------------------
+//	Once the bytes have been read from disk and the sample size is known,
+//	convert the raw sample data to doubles.
+//
+void
+AiffFile::convertSamples( std::vector< unsigned char > & bytes )
+{
+	std::vector<unsigned char> & v = bytes;
+	
+	//	compute number of available samples, might not be the same
+	//	as the number stored in the Common data chunk:
+	//	(remember that _samples has already been resized)
+	const long howManySamps = 
+		std::min( _samples.size(), bytes.size() / (_sampSize / 8) );
+	if ( howManySamps < 0 )
+		Throw( FileIOException, "Found too many samples, more than 2 billion, in this AIFF file." ); 
 
 	//	shift sample bytes into a long integer, and scale 
 	//	to make a double:
@@ -355,7 +390,8 @@ AiffFile::readSamples( std::istream & s )
 	{
 		case 32:
 		{	
-			for (long i = 0; i < v.size(); i += 4 ) 
+			const unsigned long howManyBytes = howManySamps * 4;
+			for (unsigned long i = 0; i < howManyBytes; i += 4 ) 
 			{
 				samp = (v[i] << 24) + (v[i+1] << 16) + (v[i+2] << 8) + v[i+3];
 				_samples[i/4] = oneOverMax * samp; 
@@ -364,7 +400,8 @@ AiffFile::readSamples( std::istream & s )
 		}
 		case 24:
 		{
-			for (long i = 0; i < v.size(); i += 3 ) 
+			const unsigned long howManyBytes = howManySamps * 3;
+			for (unsigned long i = 0; i < howManyBytes; i += 3 ) 
 			{
 				samp = (v[i] << 24) + (v[i+1] << 16) + (v[i+2] << 8);
 				_samples[i/3] = oneOverMax * samp; 
@@ -373,7 +410,8 @@ AiffFile::readSamples( std::istream & s )
 		}
 		case 16:
 		{
-			for (long i = 0; i < v.size(); i += 2 ) 
+			const unsigned long howManyBytes = howManySamps * 2;
+			for (unsigned long i = 0; i < howManyBytes; i += 2 ) 
 			{
 				samp = (v[i] << 24) + (v[i+1] << 16);
 				_samples[i/2] = oneOverMax * samp; 
@@ -382,7 +420,8 @@ AiffFile::readSamples( std::istream & s )
 		}
 		case 8:
 		{
-			for (long i = 0; i < v.size(); ++i ) 
+			const unsigned long howManyBytes = howManySamps;
+			for (unsigned long i = 0; i < howManyBytes; ++i ) 
 			{
 				samp = (v[i] << 24);
 				_samples[i] = oneOverMax * samp; 
@@ -390,6 +429,8 @@ AiffFile::readSamples( std::istream & s )
 			break;
 		}
 	}
+	
+	bytes.clear();
 }
 
 // ---------------------------------------------------------------------------

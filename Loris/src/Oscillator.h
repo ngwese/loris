@@ -94,7 +94,8 @@ public:
 //	The caller must insure that the indices are valid. Target frequency
 //	and bandwidth are checked to prevent aliasing and bogus bandwidth
 //	enhancement.
-	void generateSamples( std::vector< double > & buffer, long beginIdx, long endIdx,
+	void generateSamples( //std::vector< double > & buffer, long beginIdx, long endIdx,
+						  double * begin, double * end,
 						  double targetFreq, double targetAmp, double targetBw );
 	
 private:

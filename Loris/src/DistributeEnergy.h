@@ -32,15 +32,23 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
+#include <list>
+
+#if defined(__MWERKS__)
 #include "Partial.h"
-//	can't get around including Partial.h until make a 
+//	On Mac, can't get around including Partial.h unless make a 
 //	class out of PartialList and its iterators that I can
-//	forward-declare
+//	forward-declare. CW seems not to be able to handle 
+//	list<Partial>::iterator without the definition of Partial.
+//	GNU, however, can handle it. Maybe in the new CW?
+#endif
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
 #endif
+
+class Partial;
 
 // ---------------------------------------------------------------------------
 //	class DistributeEnergy
@@ -63,8 +71,8 @@ public:
 	~DistributeEnergy(void);
 	
 	//	distribution:
-	void distribute( const Partial & p, PartialList::iterator begin, 
-										PartialList::iterator end ) const;
+	void distribute( const Partial & p, std::list<Partial>::iterator begin, 
+										std::list<Partial>::iterator end ) const;
 	
 private: //	unimplemented:
 	DistributeEnergy(void);

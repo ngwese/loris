@@ -118,22 +118,4 @@ public:
 	void push_front( const Partial & p ) { _l.push_front(p); }
 	void push_back( const Partial & p ) { _l.push_back(p); }
 
-	iterator insert( iterator pos, const Partial & p ) { return _l.insert(pos, p); }	
-	iterator erase( iterator pos ) { return _l.erase(pos); }
-
-	void splice( iterator pos, PartialList & other ) { _l.splice(pos, other._l); }
-	
-		
-};	//	end of class PartialList
-
-#else // not defined PartialListIsClass
-
-typedef std::list<Partial> PartialList
-
-#endif // def PartialListIsClass
-
-#if !defined( NO_LORIS_NAMESPACE )
-}	//	end of namespace Loris
-#endif
-
-#endif	// ndef INCLUDE_PARTIALLIST_H
+	iterator insert( iterator pos, const Partia

@@ -33,7 +33,6 @@
  *
  */
 #include "Partial.h"
-#include <vector>
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
@@ -80,7 +79,7 @@ public:
 	~Analyzer( void );
 
 //	analysis:
-	void analyze( const std::vector< double > & buf, double srate );
+	void analyze( const double * bufBegin, const double * bufEnd, double srate );
 	
 //	configuration:
 	void configure( double resolutionHz );
