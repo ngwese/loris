@@ -4,12 +4,9 @@
 //	Implementation of Loris::ImportLemur5, a concrete subclass of 
 //	Loris::Import for importing Partials stored in Lemur 5 alpha files.
 //
-//
 //	-kel 10 Sept 99
 //
 // ===========================================================================
-
-
 #include "LorisLib.h"
 #include "ImportLemur5.h"
 #include "BinaryFile.h"
@@ -17,10 +14,12 @@
 #include "Partial.h"
 #include "Breakpoint.h"
 #include "notifier.h"
+#include <algorithm>
 
 #if !defined( Deprecated_cstd_headers )
 	#include <cmath>
 	using std::fmod;
+	using std::sqrt;
 #else
 	#include <math.h>
 #endif
@@ -36,6 +35,7 @@ Begin_Namespace( Loris )
 //
 ImportLemur5::ImportLemur5( BinaryFile & lemrFile ) : 
 	_file( lemrFile ),
+	_bweCutoff( 1000. ),	//	default cutoff in Lemur
 	_counter( 0 ),
 	Import()
 {
@@ -164,17 +164,35 @@ ImportLemur5::getPartial( void )
 			PeakOnDisk pkData;
 			readPeakData( pkData );
 			
+			double frequency = pkData.frequency;
+			double amplitude = pkData.magnitude;
+			double bandwidth = std::min( pkData.bandwidth, 1.f );
+			
+			//	fix bandwidth:
+			//	Lemur used a cutoff frequency, below which 
+			//	bandwidth was ignored; Loris does not, so 
+			//	toss out that bogus bandwidth.
+			if ( frequency < _bweCutoff ) {
+				amplitude *= sqrt(1. - bandwidth);
+				bandwidth = 0.;
+			}
+			//	otherwise, adjust the bandwidth value
+			//	to account for the difference in noise
+			//	scaling between Lemur and Loris; this
+			//	mess doubles the noise modulation index
+			//	without changing the sine modulation index,
+			//	see Oscillator::modulate(). 
+			else {
+				amplitude *= sqrt( 1. + (3. * bandwidth) );
+				bandwidth = (4. * bandwidth) / ( 1. + (3. * bandwidth) ); 
+			}
+
 			//	update phase based on _this_ pkData's interpolated freq:
 			phase +=TwoPi * prevTtnSec * pkData.interpolatedFrequency;
 			phase = fmod( phase, TwoPi );
 			
-			if ( ! (pkData.bandwidth <= 1.) ) {
-				debugger << "Import found bogus bandwidth: " << pkData.bandwidth << endl;
-				pkData.bandwidth = 0.;
-			}
-
 			//	create Breakpoint:	
-			Breakpoint bp( pkData.frequency, pkData.magnitude, pkData.bandwidth, phase );
+			Breakpoint bp( frequency, amplitude, bandwidth, phase );
 			
 			//	insert in Partial:
 			p.insert( time, bp );

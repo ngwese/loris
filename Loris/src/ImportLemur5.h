@@ -39,6 +39,10 @@ public:
 //	construction:
 	ImportLemur5( BinaryFile & lemrFile );
 	~ImportLemur5( void );
+	
+//	access/mutation:
+	double bwEnhancementCutoff( void ) const { return _bweCutoff; }
+	void setBwEnhancementCutoff( double x ) { _bweCutoff = x; }
 
 //	-- primitve operations --
 	//	check that Lemur file is valid:
@@ -57,7 +61,7 @@ public:
 
 	//	clean up after import:
 	virtual void endImport( void );
-
+	
 //	-- types and ids --
 private:	
 	enum { 
@@ -98,10 +102,7 @@ private:
 
 	struct TrackDataCk
 	{
-		//Int_32	ckID;
-		//Int_32	ckSize;
 		CkHeader header;
-		
 		Uint_32	numberOfTracks;
 		Int_32	trackOrder;			// enumerated type
 		// track data follows
@@ -109,7 +110,7 @@ private:
 
 	struct TrackOnDisk
 	{
-		Double_64	startTime;			// in milliseconds
+		Double_64	startTime;		// in milliseconds
 		Float_32	initialPhase;
 		Uint_32		numPeaks;
 		Int_32		label;
@@ -137,7 +138,10 @@ private:
 //	-- instance variables --
 private:
 	BinaryFile & _file;
-	int _counter;
+	double _bweCutoff;	//	Lemur's bandwidth enhancement cutoff frequency
+						//	(used to remove undesirable low frequency bandwidth
+						//	association in Lemur analyses)
+	int _counter;		//	counts tracks to detect completion
 };	//	end of class ImportLemur5
 
 End_Namespace( Loris )
