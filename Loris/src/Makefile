@@ -108,8 +108,8 @@ sdif-types.o:
 #	so it does the wrong thing with the file names (.C.o)
 #
 depend: 
-	${CC} -MM $(CFLAGS)#  .C | sed 's/c++\.o/\o/g' > dependfile
-	${cc} -MM $(cFLAGS)#  .c >> dependfile
+	${CC} -MM $(CFLAGS) *.C | sed 's/c++\.o/\o/g' > dependfile
+	${cc} -MM $(cFLAGS) *.c >> dependfile
 	${cc} -MM $(cFLAGS) $(SDIF)/sdif.c $(SDIF)/sdif-types.c >> dependfile
 
 include dependfile
