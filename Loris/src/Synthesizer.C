@@ -73,12 +73,6 @@ Synthesizer::Synthesizer( const Synthesizer & other ) :
 {
 }
 
-
-
-/*
-	This will work when the SampleBuffer class is replaced with
-	plain ol' copiable vectors.
-	
 // ---------------------------------------------------------------------------
 //	assignment operator
 // ---------------------------------------------------------------------------
@@ -96,12 +90,15 @@ Synthesizer::operator=( const Synthesizer & other )
 		//	first do cloning:
 		auto_ptr< Oscillator > osc( new Oscillator( * other._oscillator ) );
 		auto_ptr< PartialIterator > it( other._iterator->clone() );
-		
+
+		//	try to reserve enough space to copy the 
+		//	sample vector before attempting the copy:
+		_samples.reserve( other._samples.size() );
+				
 		_sampleRate = other._sampleRate;
 		_offset = other._offset;
 		_fadeTime = other._fadeTime;
 		_samples = other._samples;
-		_sampleRate = other._sampleRate;
 		_oscillator = osc;
 		_iterator = it;
 		
@@ -109,7 +106,7 @@ Synthesizer::operator=( const Synthesizer & other )
 	
 	return *this;
 }
-*/
+
 // ---------------------------------------------------------------------------
 //	setOscillator
 // ---------------------------------------------------------------------------

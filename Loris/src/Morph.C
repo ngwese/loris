@@ -294,8 +294,6 @@ Morph::morph( const list<Partial> & plist1, const list<Partial> & plist2 )
 //	Partial has Breakpoints at times corresponding to every Breakpoint 
 //	in both source Partials.
 //
-//	This should use PartialIterators instead of directly using Breakpoints.
-//
 void 
 Morph::morphPartial( const Partial & p1, const Partial & p2 )
 {
@@ -303,49 +301,49 @@ Morph::morphPartial( const Partial & p1, const Partial & p2 )
 	Partial newp;
 	
 	//	loop over Breakpoints in first partial:
-	for ( const Breakpoint * bp1 = p1.head(); bp1 != Null; bp1 = bp1->next() ) {
-		double alphaF = frequencyFunction().valueAt( bp1->time() );
-		double alphaA = amplitudeFunction().valueAt( bp1->time() );
-		double alphaBW = bandwidthFunction().valueAt( bp1->time() );
+	for ( PartialIterator it(p1); !it.atEnd(); it.advance() ) {
+		double alphaF = frequencyFunction().valueAt( it.time() );
+		double alphaA = amplitudeFunction().valueAt( it.time() );
+		double alphaBW = bandwidthFunction().valueAt( it.time() );
 		
 		double amp2 = ( p2.duration() > 0. ) ? 
-			p2.amplitudeAt( bp1->time() ) : 0.;
+			p2.amplitudeAt( it.time() ) : 0.;
 		double freq2 = ( p2.duration() > 0. ) ? 
-			p2.frequencyAt( bp1->time() ) : bp1->frequency();
+			p2.frequencyAt( it.time() ) : it.frequency();
 		double bw2 = ( p2.duration() > 0. ) ? 
-			p2.bandwidthAt( bp1->time() ) : bp1->bandwidth();
+			p2.bandwidthAt( it.time() ) : it.bandwidth();
 		double theta2 = ( p2.duration() > 0. ) ? 
-			p2.phaseAt( bp1->time() ) : bp1->phase();
+			p2.phaseAt( it.time() ) : it.phase();
 			
-		Breakpoint newbp( (alphaF * freq2) + ((1.-alphaF) * bp1->frequency()),
-						   (alphaA * amp2) + ((1.-alphaA) * bp1->amplitude()),
-						   (alphaBW * bw2) + ((1.-alphaBW) * bp1->bandwidth()),
-						   (alphaF * theta2) + ((1.-alphaF) * bp1->phase()) );
+		Breakpoint newbp( (alphaF * freq2) + ((1.-alphaF) * it.frequency()),
+						   (alphaA * amp2) + ((1.-alphaA) * it.amplitude()),
+						   (alphaBW * bw2) + ((1.-alphaBW) * it.bandwidth()),
+						   (alphaF * theta2) + ((1.-alphaF) * it.phase()) );
 		
-		newp.insert( bp1->time(), newbp );
+		newp.insert( it.time(), newbp );
 	}
 	
 	//	now do it for the other Partial:
-	for ( const Breakpoint * bp2 = p2.head(); bp2 != Null; bp2 = bp2->next() ) {
-		double alphaF = 1. - frequencyFunction().valueAt( bp2->time() );
-		double alphaA = 1. - amplitudeFunction().valueAt( bp2->time() );
-		double alphaBW = 1. - bandwidthFunction().valueAt( bp2->time() );
+	for ( PartialIterator it(p2); !it.atEnd(); it.advance() ) {
+		double alphaF = 1. - frequencyFunction().valueAt( it.time() );
+		double alphaA = 1. - amplitudeFunction().valueAt( it.time() );
+		double alphaBW = 1. - bandwidthFunction().valueAt( it.time() );
 		
 		double amp1 = ( p1.duration() > 0. ) ? 
-			p1.amplitudeAt( bp2->time() ) : 0.;
+			p1.amplitudeAt( it.time() ) : 0.;
 		double freq1 = ( p1.duration() > 0. ) ? 
-			p1.frequencyAt( bp2->time() ) : bp2->frequency();
+			p1.frequencyAt( it.time() ) : it.frequency();
 		double bw1 = ( p1.duration() > 0. ) ? 
-			p1.bandwidthAt( bp2->time() ) : bp2->bandwidth();
+			p1.bandwidthAt( it.time() ) : it.bandwidth();
 		double theta1 = ( p1.duration() > 0. ) ? 
-			p1.phaseAt( bp2->time() ) : bp2->phase();
+			p1.phaseAt( it.time() ) : it.phase();
 			
-		Breakpoint newbp( (alphaF * freq1) + ((1.-alphaF) * bp2->frequency()),
-						   (alphaA * amp1) + ((1.-alphaA) * bp2->amplitude()),
-						   (alphaBW * bw1) + ((1.-alphaBW) * bp2->bandwidth()),
-						   (alphaF * theta1) + ((1.-alphaF) * bp2->phase()) );
+		Breakpoint newbp( (alphaF * freq1) + ((1.-alphaF) * it.frequency()),
+						   (alphaA * amp1) + ((1.-alphaA) * it.amplitude()),
+						   (alphaBW * bw1) + ((1.-alphaBW) * it.bandwidth()),
+						   (alphaF * theta1) + ((1.-alphaF) * it.phase()) );
 		
-		newp.insert( bp2->time(), newbp );
+		newp.insert( it.time(), newbp );
 	}
 	
 		
