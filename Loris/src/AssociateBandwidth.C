@@ -8,6 +8,7 @@
 // ===========================================================================
 #include "AssociateBandwidth.h"
 #include "Exception.h"
+#include "Notifier.h"
 #include <algorithm>
 
 using namespace std;
@@ -56,6 +57,16 @@ AssociateBandwidth::computeSurplusEnergy( vector<double> & surplus )
 		
 		//	excess cannot be negative:
 		double diff = max( 0., spec - sin );
+		/*
+		double diff = spec - sin;
+		if ( diff < 0. ) {
+			debugger << "clamping surplus energy at zero in region " << i << endl;
+			diff = 0.;
+		}
+		else {
+			debugger << "surplus energy " << diff << " in region " << i << endl;
+		}
+		*/
 		surplus[i] = diff * diff * diff;	//	cheaper than pow()
 	}
 }
@@ -128,7 +139,7 @@ int
 AssociateBandwidth::findRegionBelow( double barks )
 {
 	//	sanity check:
-	Assert( barks > 0. );
+	Assert( barks >= 0. );
 	
 	//	the lowest region is centered at 1 bark:
 	if ( barks < 1. ) {
@@ -163,7 +174,7 @@ double
 AssociateBandwidth::computeAlpha( double barks )
 {
 	//	sanity check:
-	Assert( barks > 0. );
+	Assert( barks >= 0. );
 	
 	const double maxfreq = _spectralEnergy.size();
 	if ( barks > maxfreq ) {

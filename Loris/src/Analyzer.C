@@ -10,6 +10,7 @@
 #include "Exception.h"
 #include "KaiserWindow.h"
 #include "Notifier.h"
+#include "AssociateBandwidth.h"
 
 Begin_Namespace( Loris )
 
@@ -77,13 +78,18 @@ Analyzer::analyze( const vector< double > & buf, double srate )
 			//	sub range of the sample buffer.
 			_spectrum->transform( buf, _winMiddleIdx );
 			
-			//	extract Breakpoints from the spectrum:
-			Frame breakpoints = extractBreakpoints();	
+			//	extract peaks from the spectrum:
+			Frame f;
+			extractPeaks( f );	
+			thinPeaks( f );
 
 			//	perform bandwidth association:
+			_bw.accumulateSpectrum( *_spectrum, sampleRate() );
+			_bw.accumulateSinusoids( f.begin(), f.end() );
+			_bw.associate( f.begin(), f.end() );
 			
 			//	form Partials from the extracted Breakpoints:
-			formPartials( breakpoints );
+			formPartials( f );
 
 		}	//	end of loop over short-time frames
 	}
@@ -134,6 +140,10 @@ Analyzer::createSpectrum( double srate )
 		
 		//	configure spectrum:
 		_spectrum.reset( new ReassignedSpectrum( v ) );
+		
+		//	configure bw association strategy, which 
+		//	needs to know about the window:
+		_bw.setWindow( v.begin(), v.end() );
 	}
 	catch ( Exception & ex ) {
 		ex.append( "couldn't create a ReassignedSpectrum." );
@@ -146,7 +156,7 @@ Analyzer::createSpectrum( double srate )
 }
 
 // ---------------------------------------------------------------------------
-//	extractBreakpoints
+//	extractPeaks
 // ---------------------------------------------------------------------------
 //	The reassigned spectrum has been computed, and short-time peaks
 //	identified. From those peaks, construct Breakpoints, subject to 
@@ -156,93 +166,107 @@ Analyzer::createSpectrum( double srate )
 //	so the frame generated here is automatically frequency-sorted.
 //
 template<class T>
-struct less_first_frequency
+struct less_frequency
 {
 	boolean operator()( const T & lhs, const T & rhs ) const
-		{ return lhs.first.frequency() < rhs.first.frequency(); }
+		{ return lhs.frequency() < rhs.frequency(); }
 };
 
 template<class T>
-struct greater_magnitude
+struct greater_amplitude
 {
 	boolean operator()( const T & lhs, const T & rhs ) const
-		{ return lhs.magnitude() > rhs.magnitude(); }
+		{ return lhs.amplitude() > rhs.amplitude(); }
 };	
 
 template<class T>
-struct frequency_first_near
+struct frequency_between
 {
-	frequency_first_near( double f, double howNear ) : 
-		_fmin( f - howNear ), _fmax( f + howNear ) {}
+	frequency_between( double x, double y ) : 
+		_fmin( x ), _fmax( y ) 
+		{ if (x>y) swap(x,y); }
 	boolean operator()( const T & t )  const
 		{ 
-			return (t.first.frequency() > _fmin) && 
-				   (t.first.frequency() < _fmax); 
+			return (t.frequency() > _fmin) && 
+				   (t.frequency() < _fmax); 
 		}
 	private:
 		double _fmin, _fmax;
 };
 
 	
-Analyzer::Frame 
-Analyzer::extractBreakpoints( void )
+void 
+Analyzer::extractPeaks( Frame & frame )
 {
-	//	pass this as an argument
-	Frame frame;	//	empty frame
+	double threshold = pow( 10., 0.05 * noiseFloor() );	//	absolute magnitude threshold
+	double sampsToHz = sampleRate() / _spectrum->size();
 	
-	//	collect short-time peaks, and sort them by 
-	//	decreasing magnitude:
-	ReassignedSpectrum::Peaks tmp = _spectrum->findPeaks( noiseFloor() );			
-	vector< ReassignedSpectrum::Peak > peaks( tmp.begin(), tmp.end() );
-	sort( peaks.begin(), peaks.end(), greater_magnitude<ReassignedSpectrum::Peak>() );
-	
-	//	loop over short-time peaks:
-	vector< ReassignedSpectrum::Peak >::iterator it;
-	for ( it = peaks.begin(); it != peaks.end(); ++it ) {
-		//	check against lower frequency bound:
-		double peakfreq = _spectrum->reassignedFrequency( it->frequency() ) * sampleRate();
-		if ( peakfreq < _minfreq ) {
-			continue;	//	loop over short-time peaks
-		} 
+	//	look for magnitude peaks in the spectrum:
+	for ( int j = 1; j < (_spectrum->size() / 2) - 1; ++j ) {
+		if ( abs((*_spectrum)[j]) > abs((*_spectrum)[j-1]) && 
+			 abs((*_spectrum)[j]) > abs((*_spectrum)[j+1])) {
+			//	itsa magnitude peak, does it clear the noise floor?
+			double mag = _spectrum->magnitude( j );
+			if ( mag < threshold )
+				continue;
+			
+			//	compute the fractional frequency sample
+			//	and the frequency:
+			double fsample = _spectrum->reassignedFrequency( j );	//	fractional sample
+			double fHz = fsample * sampsToHz;
+			
+			//	if the frequency is too low (not enough periods
+			//	in the analysis window), reject it:
+			if ( fHz < _minfreq ) 
+				continue;
+				
+			//	if the time correction for this peak is large,
+			//	reject it:
+			double timeCorrection = _spectrum->reassignedTime( fsample );
+			if ( abs(timeCorrection) > hopSize() )
+				continue;
+				
+			//	retain a spectral peak corresponding to
+			//	this sample:
+			double phase = _spectrum->reassignedPhase( fsample, timeCorrection );
+			double time = frameTime() + ( timeCorrection / sampleRate() );
+			frame.push_back( Peak( fHz, mag, 0., phase, time ) );
+		
+		}	//	end if itsa peak
+	}
+}
 
-		//	if the time correction for this peak is large,
-		//	forget it, go on to the next one:
-		double timeCorrection = _spectrum->reassignedTime( it->frequency() );
-		if ( abs(timeCorrection) > hopSize() ) {
-			continue;	//	loop over short-time peaks
-		} 
-		
-		//	make sure its not too close to any louder 
-		//	Breakpoints, already retained:
-		Frame::const_iterator masker = 
-			find_if( frame.begin(), frame.end(), 
-				 frequency_first_near< Frame::value_type >( peakfreq, partialSeparation() ) );
-		if ( masker	!= frame.end() ) {
-		/*
-			debugger << "rejecting Breakpoint at " << peakfreq << " magnitude " <<
-					 it->magnitude() << " masked by one at " << 
-					 masker->first.frequency() << " magnitude " << 
-					 masker->first.amplitude() << endl;
-		*/
-			continue;
-		}	
-		
-		//	create a Breakpoint corresponding to the
-		//	short-time reassigned spectral peak:
-		Breakpoint bp( peakfreq, it->magnitude(), 0. /* bandwidth */, 
-					   _spectrum->reassignedPhase( it->frequency(), timeCorrection ) );
+// ---------------------------------------------------------------------------
+//	thinPeaks
+// ---------------------------------------------------------------------------
+//	After all of the peaks have been collected, 
+//	sort the by magnitude and thin them according
+//	to the specified partial density.
+//
+void 
+Analyzer::thinPeaks( Frame & frame )
+{
+	frame.sort( greater_amplitude<Peak>() );
 	
-		//	add it to the frame:
-		frame.push_back( make_pair( bp, frameTime() + (timeCorrection / sampleRate()) ) );
+	//	nothing can mask the loudest peak, so I can start with the
+	//	second one, _and_ I can safely decrement the iterator when 
+	//	I need to remove the element at its postion:
+	Frame::iterator it = frame.begin();
+	for ( ++it; it != frame.end(); ++it ) {
+		//	search all louder peaks for one that is too near
+		//	in frequency:
+		double lower = it->frequency() - partialSeparation();
+		double upper = it->frequency() + partialSeparation();
+		if ( it != find_if( frame.begin(), it, frequency_between< Peak >( lower, upper ) ) ) {
+			//	find_if returns the end of the range (it) if it finds nothing; 
+			//	remove *it from the frame
+			// debugger << "atttempting removal of Peak at " << it->frequency() << " amplitude " << it->amplitude() << endl;
+			frame.erase( it-- );
+			// debugger << "done" << endl;
+		}
 	}
-	/*
-	if ( peaks.size() != frame.size() ) {
-		debugger << "had " << peaks.size() << " peaks, kept " << frame.size() << " breakpoints." << endl;
-	}
-	*/
-	sort( frame.begin(), frame.end(), 
-		  less_first_frequency<Frame::value_type>() );
-	return frame;
+	
+	// debugger << "kept " << frame.size() << " peaks in this frame" << endl;
 }
 
 // ---------------------------------------------------------------------------
@@ -262,24 +286,26 @@ static inline double distance( const Partial & partial,
 // ---------------------------------------------------------------------------
 //	formPartials
 // ---------------------------------------------------------------------------
-//	frame is a frequency-sorted collection of Breakpoint-time pairs.
 //	Append the Breakpoints to existing Partials, if appropriate, or else 
 //	give birth to new Partials.
 //
 void 
-Analyzer::formPartials( const Frame & frame )
+Analyzer::formPartials( Frame & frame )
 {
+	//	frequency-sort the frame:
+	frame.sort( less_frequency<Peak>() );
+	
 	//	loop over short-time peaks:
-	for( Frame::const_iterator bpIter = frame.begin(); bpIter != frame.end(); ++bpIter ) {
-		const Breakpoint & bp = bpIter->first;
-		double peakTime = bpIter->second;
+	for( Frame::iterator bpIter = frame.begin(); bpIter != frame.end(); ++bpIter ) {
+		const Peak & peak = *bpIter;
 		
 		//	compute the time after which a Partial
 		//	must have Breakpoints in order to be 
 		//	eligible to receive this Breakpoint:
 		double tooEarly = frameTime() - (1.5 * frameLength());	//	???
 		
-		//	loop over all Partials:
+		//	loop over all Partials, find the eligible Partial
+		//	that is nearest in frequency to the Peak:
 		partial_iterator pIter, nearest = partials().end();
 		for ( pIter = partials().begin(); pIter != partials().end(); ++pIter ) {
 			//	candidate Partials must have 
@@ -291,7 +317,7 @@ Analyzer::formPartials( const Frame & frame )
 			//	remember this Partial if it is nearer in frequency 
 			//	to the Breakpoint than every other Partial:
 			if ( nearest == partials().end() || 
-				 distance( *pIter, bp, peakTime ) < distance( *nearest, bp, peakTime ) ) {
+				 distance( *pIter, peak, peak.time() ) < distance( *nearest, peak, peak.time() ) ) {
 				//	this Partial is nearest (so far):
 				nearest = pIter;
 			}
@@ -308,23 +334,27 @@ Analyzer::formPartials( const Frame & frame )
 		//
 		//	Otherwise, add this Breakpoint to the nearest Partial.
 		double thisdist = (nearest != partials().end()) ? 
-							(distance(*nearest, bp, peakTime)) : 
+							(distance(*nearest, peak, peak.time())) : 
 							(0.);
+		Frame::iterator next = bpIter;
+		++next;
+		Frame::iterator prev = bpIter;
+		--prev;
 		if ( nearest == partials().end() /* (1) */ || 
 			 thisdist > captureRange() /* (2) */ ||
-			 ( bpIter+1 != frame.end() && 
-			 	thisdist > distance( *nearest, (bpIter+1)->first, (bpIter+1)->second ) ) /* (3) */ ||
+			 ( next != frame.end() && 
+			 	thisdist > distance( *nearest, *(next), next->time() ) ) /* (3) */ ||
 			 ( bpIter != frame.begin() && 
-			 	thisdist > distance( *nearest, (bpIter-1)->first, (bpIter-1)->second ) ) /* (4) */ ) {
+			 	thisdist > distance( *nearest, *(prev), prev->time() ) ) /* (4) */ ) {
 			 	
-			 //debugger << "spawning a partial at frequency " << bpIter->first.frequency() <<
-			 //			" and time " << bpIter->second << endl;
-			 spawnPartial( peakTime, bp );
+			 //debugger << "spawning a partial at frequency " << peak.frequency() <<
+			 //			" and time " << peak.time() << endl;
+			 spawnPartial( peak.time(), peak );
 		}
 		else {
-			//debugger << "matching a partial at frequency " << bpIter->first.frequency() <<
-			// 			" and time " << bpIter->second << endl;
-			nearest->insert( peakTime, bp );
+			//debugger << "matching a partial at frequency " << peak.frequency() <<
+			// 			" and time " << peak.time() << endl;
+			nearest->insert( peak.time(), peak );
 		}
 	}			 
 }

@@ -10,7 +10,6 @@
 // ===========================================================================
 #include "LorisLib.h"
 #include "FourierTransform.h"
-
 #include <vector>
 
 Begin_Namespace( Loris )
@@ -36,36 +35,13 @@ public:
 	long size( void ) const { return _transform.size(); }
 	
 //	reassigned spectral data access:		
-	double reassignedFrequency( double fracFreqSample ) const;
+	double magnitude( unsigned long idx ) const;
+	double reassignedFrequency( unsigned long idx ) const;
 	double reassignedTime( double fracFreqSample ) const;
-	double reassignedMagnitude( double fracFreqSample ) const;
 	double reassignedPhase( double fracFreqSample, double timeCorrection ) const;
 	
-//	short-time magnitude spectral peak access:
-	//	Peak type
-	//	frequency is fractional samples, magnitude is absolute
-	class Peak
-	{
-	public:
-		//	construction:
-		Peak( double f, double m ) : _p( f, m ) {}
-		Peak( void ) : _p( 0., 0. ) {}
-		//	access:
-		double frequency( void ) const { return _p.first; }
-		double magnitude( void ) const { return _p.second; }
-		//	comparison (by frequency):
-		boolean operator< ( const Peak & rhs ) const 
-			{ return frequency() < rhs.frequency(); }
-		//	frequency-magnitude pair:
-	private:
-		std::pair< double, double > _p;
-	};	//	end of class Peak
-	
-	//	Peak collection type
-	typedef std::set< Peak > Peaks;
-	
-	//	Peak collection access:
-	Peaks findPeaks( double threshold_dB = -240. ) const;
+	const std::complex< double > & operator[]( unsigned long idx ) const 
+		{ return _transform[idx]; }
 	
 //	-- internal helpers --
 private:

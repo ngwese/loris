@@ -12,6 +12,8 @@
 #include <numeric>
 #include <complex>
 
+//#include "Notifier.h"
+
 Begin_Namespace( Loris )
 
 // ---------------------------------------------------------------------------
@@ -116,7 +118,6 @@ public:
 		//	clear vectors:
 		reset();
 	}
-	
 	
 	//	window specification:
 	//	Spectral energy computation needs to be adjusted for the

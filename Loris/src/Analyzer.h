@@ -10,9 +10,9 @@
 // ===========================================================================
 #include "LorisLib.h"
 #include "Partial.h"
-//#include "Breakpoint.h"
 #include "ReassignedSpectrum.h"
-
+#include "AssociateBandwidth.h"
+#include <list>
 #include <vector>
 #include <memory>
 
@@ -33,7 +33,6 @@ public:
 
 //	analysis:
 	void analyze( const std::vector< double > & buf, double srate );
-	
 
 //	Lemur parameter specfication:
 	void setPartialSeparation( double x ) { _freqResolution = x; }
@@ -59,20 +58,39 @@ public:
 
 //	-- internal helpers --
 private:
+	//	auxiliary class representing spectral peaks, 
+	//	extending the Breakpoint class to include some 
+	//	extra data needed only for analysis:
+	class Peak : public Breakpoint
+	{
+	public:
+		//	construction:
+		Peak( double f, double a, double b, double p, double t ) : 
+			_time( t ), Breakpoint( f, a, b, p ) {}
+		Peak( void ) : _time( 0. ), Breakpoint() {}
+		//	access:
+		double time( void ) const { return _time; }
+		void setTime( double x ) { _time = x; }
+	private:
+		double _time; 	//	in seconds
+	};	//	end of class Peak
+	
+	typedef std:: list< Peak > Frame;
+	
 	//	construct spectrum analyzer and analysis window:
 	void createSpectrum( double srate );
 	
-	//	frequency-sorted Breakpoint collection:	
-	typedef std::vector< std::pair< Breakpoint, double > > Frame;
-	Frame extractBreakpoints( void );
+	void extractPeaks( Frame & frame );
+	void thinPeaks( Frame & frame );
 	
 	//	Partial construction:
-	void formPartials( const Frame & frame );
+	void formPartials( Frame & frame );
 	void spawnPartial( double time, const Breakpoint & bp );
 	
 //	-- instance variables --
 private:
 	std::auto_ptr< ReassignedSpectrum > _spectrum;
+	AssociateBandwidth _bw;
 	
 	//	parameters (from Lemur):
 	double _freqResolution;		//	minimum frequency distance (Hz) between Partials

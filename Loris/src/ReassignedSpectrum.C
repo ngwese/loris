@@ -109,43 +109,7 @@ ReassignedSpectrum::transform( const vector< double > & buf, long idxCenter )
 	_ttimeramp.transform();
 }
 
-// ---------------------------------------------------------------------------
-//	findPeaks
-// ---------------------------------------------------------------------------
-//	Detect and collect peaks in this short-time time-frequency spectrum
-//	that exceed a specified magnitude threshold (defaults to -240 dB).
-//
-ReassignedSpectrum::Peaks
-ReassignedSpectrum::findPeaks( double threshold_dB ) const
-{
-	double threshold = pow( 10., 0.05 * threshold_dB );	//	absolute magnitude threshold
-	Peaks peaks;	//	empty collection
-	
-	for ( int j = 1; j < (_transform.size() / 2) - 1; ++j ) {
-		if ( abs(_transform[j]) > abs(_transform[j-1]) && 
-			 abs(_transform[j]) > abs(_transform[j+1])) {
-			//	itsa magnitude peak:
-			double f = j + frequencyCorrection( j );	//	fractional sample
-			//double m = reassignedMagnitude( f );		//	from fractional sample
-			double m = _magScale * abs(_transform[j]);
-			 
-			//	only retain data above the magnitude threshold:
-			if ( m > threshold ) {
-				peaks.insert( Peak( f, m ) );
-				
-				/*	Hopefully, this doesn't happen much.
-				if ( abs(f-j) > 1 ) {
-					debugger << "\Found frequency correction of " << abs(f-j) <<
-								" for frequency sample " << j << 
-								" having magnitude " << 20. * log10(m) << endl;
-				}
-				*/
-			}
-		}
-	}
-	
-	return peaks;
-}
+
 
 // ---------------------------------------------------------------------------
 //	applyFreqRamp
@@ -285,13 +249,13 @@ ReassignedSpectrum::timeCorrection( long sample ) const
 // ---------------------------------------------------------------------------
 //	reassignedFrequency
 // ---------------------------------------------------------------------------
-//	Compute the normalized (to sample rate 1.0) reassigned frequency 
-//	from the fractional frequency sample.
+//	Return the reassigned, fractional frequency sample 
+//	for the specified index.
 //
 double
-ReassignedSpectrum::reassignedFrequency( double fracFreqSample ) const
+ReassignedSpectrum::reassignedFrequency( unsigned long idx ) const
 {
-	return fracFreqSample / _transform.size();
+	return idx + frequencyCorrection( idx );
 }
 
 // ---------------------------------------------------------------------------
@@ -300,6 +264,9 @@ ReassignedSpectrum::reassignedFrequency( double fracFreqSample ) const
 //	Return the value of the time correction corresponding to the corrected
 //	(fractional) frequency sample, interpolating the time corrections for 
 //	neighboring samples.
+//
+//	Do we really want to be interpolating these? Maybe we just want the 
+//	corrected time for the (amplitude) peak sample.
 //
 //	The nominal time is 0 (samples) since no other temporal information about 
 //	the transformed buffer is available.
@@ -313,26 +280,23 @@ ReassignedSpectrum::reassignedTime( double fracFreqSample ) const
 }
 
 // ---------------------------------------------------------------------------
-//	reassignedMagnitude
+//	magnitude
 // ---------------------------------------------------------------------------
-//	This algorithm assumes that the frequency correction is small, so that
-//	the magnitude spectrum is evaulated near the peak sample. This may be a bad 
-//	assumption. In fact, it is a terrible assumption. Small peaks with large
-//	frequency corrections evaulated at their corrected frequencies will 
-//	report artificially large magnitudes. This is just because frequency 
-//	reassignment is correctly reassigning the spectral samples to the 
-//	centers of spectral gravity, where the strong components are.
+//	The magnitude isn't reassigned, its just scaled to 
+//	account for the transform window. It is also evalutated
+//	at a specified sample index, rather than a fractional sample,
+//	becuase the latter would cause misleading (large) magnitudes
+//	to be reported at points of large frequency correction.
 //
 double
-ReassignedSpectrum::reassignedMagnitude( double fracFreqSample ) const
+ReassignedSpectrum::magnitude( unsigned long idx ) const
 {
-	return _magScale * abs( _transform[ round(fracFreqSample) ] );
+	return _magScale * abs( _transform[ idx ] );
 /*
 	//	parabola thing:
-	long sample = round(fracFreqSample);
-	double dbLeft = 20. * log10( abs( _transform[sample-1] ) );
-	double dbCandidate = 20. * log10( abs( _transform[sample] ) );
-	double dbRight = 20. * log10( abs( _transform[sample+1] ) );
+	double dbLeft = 20. * log10( abs( _transform[idx-1] ) );
+	double dbCandidate = 20. * log10( abs( _transform[idx] ) );
+	double dbRight = 20. * log10( abs( _transform[idx+1] ) );
 	
 	double polynomialPeakXOffset =	0.5 * (dbLeft - dbRight) /
 						(dbLeft - 2.0 * dbCandidate + dbRight);
