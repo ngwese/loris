@@ -44,6 +44,7 @@
 #include <Morpher.h>
 #include <Oscillator.h>
 #include <Partial.h>
+#include <PartialUtils.h>
 #include <SdifFile.h>
 
 #include <algorithm>
@@ -83,6 +84,9 @@ static void import_partials( const std::string & sdiffilname, PARTIALS & part )
 		//	copy the Partials into the vector:
 		part.reserve( f.partials().size() );
 		part.insert( part.begin(), f.partials().begin(), f.partials().end() );
+		
+		//	just for grins, sort the vector:
+		std::sort( part.begin(), part.end(), PartialUtils::label_less() );
 	}
 	catch(Exception ex)
 	{
@@ -254,26 +258,96 @@ static inline void convert_samples( const double * src, float * tgt, int nn )
 	} while(--nn);
 }
 
-#pragma mark -- LorisPartials --
+#pragma mark -- EnvelopeReader --
+// ---------------------------------------------------------------------------
+//	EnvelopeReader definition
+// ---------------------------------------------------------------------------
+//	EnvelopeReader is a vector of Partial parameter envelope values sampled
+//	at some time, represented as Breakpoints, though not necessarily
+//	Breakpoints that are members of any Partial. Each set of parameters
+//	(Breakpoint) is paired with the label of the corresponding Partial.
+//
+class EnvelopeReader
+{
+	std::vector< std::pair< Breakpoint, long > > _vec;
+	
+public:
+	//	construction:
+	explicit EnvelopeReader( long n = 0 ) : _vec(n) {}
+	~EnvelopeReader( void ) {}
+	
+	//	access:
+	Breakpoint & valueAt( long idx ) { return _vec[idx].first; }
+	const Breakpoint & valueAt( long idx ) const { return _vec[idx].first; }
+
+	long & labelAt( long idx ) { return _vec[idx].second; }
+	long labelAt( long idx ) const { return _vec[idx].second; }
+
+	long size( void ) const { return _vec.size(); }
+	
+	//	tagging:
+	typedef std::pair< INSDS *, int > Tag;
+	typedef std::map< Tag, EnvelopeReader * > TagMap;
+	static TagMap & Tags( void );
+	static const EnvelopeReader * Find( INSDS * owner, int idx );
+};
 
 // ---------------------------------------------------------------------------
-//	LorisPartials definition
+//	EnvelopeReader Tags
 // ---------------------------------------------------------------------------
-//	LorisPartials keeps track of a collection of imported Partials and the
+//	Protect this map inside a function, because Csound has a C main() function,
+//	and global C++ objects cannot be guaranteed to be instantiated properly.
+//
+EnvelopeReader::TagMap & 
+EnvelopeReader::Tags( void )
+{
+	static TagMap readers;
+	return readers;
+}
+
+// ---------------------------------------------------------------------------
+//	EnvelopeReader Tags
+// ---------------------------------------------------------------------------
+//	May return NULL if no reader with the specified owner and index
+//	is found.
+//
+const EnvelopeReader * 
+EnvelopeReader::Find( INSDS * owner, int idx )
+{
+	TagMap & readers = Tags();
+	TagMap::iterator it = readers.find( Tag( owner, idx ) );
+	if ( it != readers.end() )
+	{
+		std::cerr << "** found EnvelopeReader with owner " << owner << " and index " << idx << std::endl; 
+		return it->second;
+	}
+	else
+	{
+		std::cerr << "** could not find EnvelopeReader with owner " << owner << " and index " << idx << std::endl; 
+		return NULL;
+	}
+}
+
+#pragma mark -- ImportedPartials --
+
+// ---------------------------------------------------------------------------
+//	ImportedPartials definition
+// ---------------------------------------------------------------------------
+//	ImportedPartials keeps track of a collection of imported Partials and the
 //	fadetime, if any, that is applied to them, and the name of the file from
-//	which they were imported. LorisPartials instances can be compared using
+//	which they were imported. ImportedPartials instances can be compared using
 //	equivalence so that they can be stored in an associative container. 
-//	LorisPartials are stored in a std::set accessed by the static member
+//	ImportedPartials are stored in a std::set accessed by the static member
 //	GetPartials(), so that Partials from a particular file and using a 
 //	particular fade time can be imported just once and reused.
 //
 //	The PARTIALS member is mutable, since it is not involve in the equivalence
 //	test. Only const access to Partials is provided to clients, but the 
 //	GetPartials() member needs to be able to import the Partials into a 
-//	LorisPartials that is already part of a std::set (and is thus immutable).
+//	ImportedPartials that is already part of a std::set (and is thus immutable).
 //	(The alternative is to copy, which is wasteful.)
 //
-class LorisPartials
+class ImportedPartials
 {
 	mutable PARTIALS _partials;
 	double _fadetime;
@@ -281,10 +355,10 @@ class LorisPartials
 	
 public:
 	//	construction:
-	LorisPartials( void ) {}
-	LorisPartials( const string & path, double fadetime ) :
+	ImportedPartials( void ) {}
+	ImportedPartials( const string & path, double fadetime ) :
 		_fadetime( fadetime ), _fname( path ) {}
-	~LorisPartials( void ) {}
+	~ImportedPartials( void ) {}
 	
 	//	access:
 	const Partial & operator [] ( long idx ) const { return _partials[idx]; }
@@ -292,13 +366,13 @@ public:
 	long size( void ) const { return _partials.size(); }
 	
 	//	comparison:
-	friend bool operator < ( const LorisPartials & lhs, const LorisPartials & rhs )
+	friend bool operator < ( const ImportedPartials & lhs, const ImportedPartials & rhs )
 	{
 		return (lhs._fadetime < rhs._fadetime) || (lhs._fname < rhs._fname);
 	}
 
 	// 	static member for managing a permanent collection:
-	static const LorisPartials & GetPartials( const string & sdiffilname, double fadetime );
+	static const ImportedPartials & GetPartials( const string & sdiffilname, double fadetime );
 };
 
 // ---------------------------------------------------------------------------
@@ -309,13 +383,13 @@ public:
 //	imported Partials if possible. Store imported Partials in a permanent
 //	set of imported Partials.
 //
-const LorisPartials & 
-LorisPartials::GetPartials( const string & sdiffilname, double fadetime )
+const ImportedPartials & 
+ImportedPartials::GetPartials( const string & sdiffilname, double fadetime )
 {
-	static std::set< LorisPartials > AllPartials;
+	static std::set< ImportedPartials > AllPartials;
 	
-	LorisPartials empty( sdiffilname, fadetime );
-	std::set< LorisPartials >::iterator it = AllPartials.find( empty );
+	ImportedPartials empty( sdiffilname, fadetime );
+	std::set< ImportedPartials >::iterator it = AllPartials.find( empty );
 		
 	if ( it == AllPartials.end() )
 	{
@@ -329,13 +403,13 @@ LorisPartials::GetPartials( const string & sdiffilname, double fadetime )
 		}
 		catch( Exception & ex )
 	    {
-	        std::string s("Loris exception in LorisPartials::GetPartials(): " );
+	        std::string s("Loris exception in ImportedPartials::GetPartials(): " );
 	        s.append( ex.what() );
 	        std::cerr << s << std::endl;
 	    }
 	    catch( std::exception & ex )
 	    {
-	        std::string s("std C++ exception in LorisPartials::GetPartials(): " );
+	        std::string s("std C++ exception in ImportedPartials::GetPartials(): " );
 	        s.append( ex.what() );
 	        std::cerr << s << std::endl;
 	    }
@@ -354,7 +428,7 @@ LorisPartials::GetPartials( const string & sdiffilname, double fadetime )
 // ---------------------------------------------------------------------------
 //	LorisReader definition
 // ---------------------------------------------------------------------------
-//	LorisReader samples a LorisPartials instance at a given time, updated by
+//	LorisReader samples a ImportedPartials instance at a given time, updated by
 //	calls to updateEnvelopePoints(). 
 //
 //	A static map of LorisReaders is maintained that allows LorisReaders to be
@@ -365,42 +439,61 @@ LorisPartials::GetPartials( const string & sdiffilname, double fadetime )
 //
 class LorisReader
 {
-	const LorisPartials & _partials;
-	BREAKPOINTS _breakpoints;
-	double _time;
+	const ImportedPartials & _partials;
+	EnvelopeReader _envelopes;
+//	double _time;
+	EnvelopeReader::Tag _tag;
 	
 public:	
 	//	construction:
-	LorisReader( const string & fname, double fadetime );
-	~LorisReader( void ) {}
+	LorisReader( const string & fname, double fadetime, INSDS * owner, int idx );
+	~LorisReader( void );
 	
 	//	envelope parameter computation:
 	//	(returns number of active Partials)
 	long updateEnvelopePoints( double time, double fscale, double ascale, double bwscale );
 	
 	//	access:
-	const LorisPartials & partials( void ) const { return _partials; }
-	const BREAKPOINTS & envelopePoints( void ) const { return _breakpoints; }
-	double time( void ) const { return _time; }
-	
-	//	access a particular LorisReader by owner instrument and index:
-	static void AssignOwnerAndIndex( INSDS * owner, int index, LorisReader & reader );
-	static LorisReader * GetByOwnerAndIndex( INSDS * owner, int index );
-	
-private:
-	typedef std::pair< INSDS *, int > OwnerAndIndex;
-	static std::map<OwnerAndIndex, LorisReader *> & OwnerAndIndexMap( void );
+	//const ImportedPartials & partials( void ) const { return _partials; }
+	const EnvelopeReader & envelopePoints( void ) const { return _envelopes; }
+//	double time( void ) const { return _time; }
 }; 
 
 // ---------------------------------------------------------------------------
 //	LorisReader construction
 // ---------------------------------------------------------------------------
 //
-LorisReader::LorisReader( const string & fname, double fadetime ) :
-	_partials( LorisPartials::GetPartials( fname, fadetime ) ),
-	_time( 0. )
+LorisReader::LorisReader( const string & fname, double fadetime, INSDS * owner, int idx ) :
+	_partials( ImportedPartials::GetPartials( fname, fadetime ) ),
+	_envelopes( _partials.size() ),
+//	_time( 0. ),
+	_tag( owner, idx )
 {
-	_breakpoints.resize( _partials.size() );
+	//	set the labels for the EnvelopeReader:
+	for ( long i = 0; i < _partials.size(); ++i ) 
+	{
+		_envelopes.labelAt(i) = _partials[i].label();
+	}
+	
+	//	tag these envelopes:
+	EnvelopeReader::Tags()[ _tag ] = &_envelopes;
+}
+
+// ---------------------------------------------------------------------------
+//	LorisReader destruction
+// ---------------------------------------------------------------------------
+//
+LorisReader::~LorisReader( void )
+{
+	//	if this reader's envelopes are still in the tag map,
+	//	remove them:
+	EnvelopeReader::TagMap & tags = EnvelopeReader::Tags();
+	EnvelopeReader::TagMap::iterator it = tags.find( _tag );
+	
+	if ( it != tags.end() )
+	{
+		tags.erase(it);
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -411,14 +504,14 @@ long
 LorisReader::updateEnvelopePoints( double time, double fscale, double ascale, double bwscale )
 {
 	// update time;
-	_time = time;
+//	_time = time;
 	
 	long countActive = 0;
 	
 	for (long i = 0; i < _partials.size(); ++i )
 	{
 		const Partial & p = _partials[i];
-		Breakpoint & bp = _breakpoints[i];
+		Breakpoint & bp = _envelopes.valueAt(i);
 		
 		//	update envelope paramters for this Partial:
 	 	bp.setFrequency( fscale * p.frequencyAt( time ) );
@@ -431,63 +524,23 @@ LorisReader::updateEnvelopePoints( double time, double fscale, double ascale, do
 			++countActive;
 	}
 	
+	//	tag these envelopes:
+	EnvelopeReader::Tags()[ _tag ] = &_envelopes;
+
 	return countActive;
 }
 
+#pragma mark -- lorisread generator functions --
+
+static void lorisread_cleanup(void * p);
+
 // ---------------------------------------------------------------------------
-//	LorisReader AssignOwnerAndIndex
+//	lorisread_setup
 // ---------------------------------------------------------------------------
+//	Runs at initialization time for lorisplay.
 //
-void 
-LorisReader::AssignOwnerAndIndex( INSDS * owner, int index, LorisReader & reader )
-{
-	OwnerAndIndexMap()[ std::make_pair( owner, index ) ] = &reader;
-}
-
-// ---------------------------------------------------------------------------
-//	LorisReader GetByOwnerAndIndex
-// ---------------------------------------------------------------------------
-//	May return NULL.
-//
-LorisReader * 
-LorisReader::GetByOwnerAndIndex( INSDS * owner, int index )
-{
-	return OwnerAndIndexMap()[ std::make_pair( owner, index ) ];
-}
-
-// ---------------------------------------------------------------------------
-//	LorisReader OwnerAndIndexMap
-// ---------------------------------------------------------------------------
-//	Protect this map inside a function, because Csound has a C main() function,
-//	and global C++ objects cannot be guaranteed to be instantiated properly.
-//
-std::map< LorisReader::OwnerAndIndex, LorisReader * > & 
-LorisReader::OwnerAndIndexMap( void )
-{
-	static std::map< OwnerAndIndex, LorisReader * > readers;
-	return readers;
-}
-
-#pragma mark -- Lorisread_priv --
-
-// ---------------------------------------------------------------------------
-//	Lorisread_priv definition
-// ---------------------------------------------------------------------------
-// 	Define a structure holding private internal data.
-//
-struct Lorisread_priv
-{
-	std::auto_ptr< LorisReader > reader;
-
-	Lorisread_priv( LORISREAD * params );
-	~Lorisread_priv( void ) {}
-}; 
-
-// ---------------------------------------------------------------------------
-//	Lorisread_priv contructor
-// ---------------------------------------------------------------------------
-//
-Lorisread_priv::Lorisread_priv( LORISREAD * params )
+extern "C"
+void lorisread_setup( LORISREAD * params )
 {
 	std::string sdiffilname;
 
@@ -510,25 +563,11 @@ Lorisread_priv::Lorisread_priv( LORISREAD * params )
 		sdiffilname = tmp;
 	}
 	
-	//	load the reader:
-	reader.reset( new LorisReader( sdiffilname, *(params->fadetime) ) );
-	LorisReader::AssignOwnerAndIndex( params->h.insdshead, *(params->readerIdx), *reader );
-}
-
-#pragma mark -- lorisread generator functions --
-
-static void lorisread_cleanup(void * p);
-
-// ---------------------------------------------------------------------------
-//	lorisread_setup
-// ---------------------------------------------------------------------------
-//	Runs at initialization time for lorisplay.
-//
-extern "C"
-void lorisread_setup( LORISREAD * p )
-{
-	p->priv = new Lorisread_priv( p );
-	p->h.dopadr = lorisread_cleanup;  // set lorisplay_cleanup as cleanup routine
+	//	construct the implementation object:
+	params->imp = new LorisReader( sdiffilname, *params->fadetime, params->h.insdshead, *params->readerIdx );
+	
+	// set lorisplay_cleanup as cleanup routine:
+	params->h.dopadr = lorisread_cleanup;  
 }
 
 // ---------------------------------------------------------------------------
@@ -539,10 +578,8 @@ void lorisread_setup( LORISREAD * p )
 extern "C"
 void lorisread( LORISREAD * p )
 {
-	*(p->result) = p->priv->reader->updateEnvelopePoints( *p->time, 
-														  *p->freqenv, 
-														  *p->ampenv,
-														  *p->bwenv );
+	*(p->result) = p->imp->updateEnvelopePoints( *p->time, *p->freqenv, 
+												 *p->ampenv, *p->bwenv );
 }
 
 // ---------------------------------------------------------------------------
@@ -554,36 +591,39 @@ static
 void lorisread_cleanup(void * p)
 {
 	LORISREAD * tp = (LORISREAD *)p;
-	delete tp->priv;
+	delete tp->imp;
 }
 
-#pragma mark -- Lorisplay_priv --
+#pragma mark -- LorisPlayer --
 
 // ---------------------------------------------------------------------------
-//	Lorisplay_priv definition
+//	LorisPlayer definition
 // ---------------------------------------------------------------------------
 // 	Define a structure holding private internal data.
 //
-struct Lorisplay_priv
+struct LorisPlayer
 {
-	LorisReader * reader;
+	const EnvelopeReader * reader;
 	OSCILS oscils;
 	
 	std::vector< double > dblbuffer;
 	
-	Lorisplay_priv( LORISPLAY * params );
-	~Lorisplay_priv( void ) {}
+	LorisPlayer( LORISPLAY * params );
+	~LorisPlayer( void ) {}
 }; 
 
 // ---------------------------------------------------------------------------
-//	Lorisplay_priv contructor
+//	LorisPlayer contructor
 // ---------------------------------------------------------------------------
 //
-Lorisplay_priv::Lorisplay_priv( LORISPLAY * params ) :
-	reader( LorisReader::GetByOwnerAndIndex( params->h.insdshead, *(params->readerIdx) ) ),
+LorisPlayer::LorisPlayer( LORISPLAY * params ) :
+	reader( EnvelopeReader::Find( params->h.insdshead, *(params->readerIdx) ) ),
 	dblbuffer( ksmps, 0. )
 {
-	oscils.resize( reader->envelopePoints().size() );
+	if ( reader != NULL )
+		oscils.resize( reader->size() );
+	else
+		std::cerr << "** Could not find lorisplay source with index " << (int)*(params->readerIdx) << std::endl;
 }
 
 #pragma mark -- lorisplay generator functions --
@@ -598,7 +638,7 @@ static void lorisplay_cleanup(void * p);
 extern "C"
 void lorisplay_setup( LORISPLAY * p )
 {
-	p->priv = new Lorisplay_priv( p );
+	p->imp = new LorisPlayer( p );
 	p->h.dopadr = lorisplay_cleanup;  // set lorisplay_cleanup as cleanup routine
 }
 
@@ -610,8 +650,7 @@ void lorisplay_setup( LORISPLAY * p )
 extern "C"
 void lorisplay( LORISPLAY * p )
 {
-	Lorisplay_priv & player = *(p->priv);
-	const BREAKPOINTS & envPts = player.reader->envelopePoints();
+	LorisPlayer & player = *p->imp;
 	OSCILS & oscils = player.oscils;
 	
 	//	clear the buffer first!
@@ -622,7 +661,7 @@ void lorisplay( LORISPLAY * p )
 	long numOscils = player.oscils.size();
 	for( long i = 0; i < numOscils; ++i )  
 	{
-		const Breakpoint & bp = envPts[i];
+		const Breakpoint & bp = player.reader->valueAt(i);
 		Breakpoint modifiedBp(  (*p->freqenv) * bp.frequency(),
 								(*p->ampenv) * bp.amplitude(),
 								(*p->bwenv) * bp.bandwidth(),
@@ -643,21 +682,21 @@ static
 void lorisplay_cleanup(void * p)
 {
 	LORISPLAY * tp = (LORISPLAY *)p;
-	delete tp->priv;
+	delete tp->imp;
 }
 
-#pragma mark -- Lorismorph_priv --
+#pragma mark -- LorisMorpher --
 
 // ---------------------------------------------------------------------------
-//	Lorismorph_priv definition
+//	LorisMorpher definition
 // ---------------------------------------------------------------------------
 // 	Define a structure holding private internal data for lorismorph
 //
-struct Lorismorph_priv
+class LorisMorpher
 {
 	Morpher morpher;
-	LorisReader * src_reader;
-	LorisReader * tgt_reader;
+	const EnvelopeReader * src_reader;
+	const EnvelopeReader * tgt_reader;
 	OSCILS oscils;
 		
 	typedef std::map< long, std::pair< long, long > > LabelMap;
@@ -665,11 +704,14 @@ struct Lorismorph_priv
 	std::vector< long > src_unlabeled, tgt_unlabeled;
 	
 	std::vector< double > dblbuffer;
+
+public:	
+	//	construction:
+	LorisMorpher( LORISMORPH * params );
+	~LorisMorpher( void ) {}
 	
-	//double time;
-	
-	Lorismorph_priv( LORISMORPH * params );
-	~Lorismorph_priv( void ) {}
+	//	envelope update:
+	void updateEnvelopes( float * result );
 	
 	//
 	//	Define Envelope classes that can access the 
@@ -744,7 +786,7 @@ struct Lorismorph_priv
 }; 
 
 // ---------------------------------------------------------------------------
-//	Lorismorph_priv contructor
+//	LorisMorpher contructor
 // ---------------------------------------------------------------------------
 //	This is a very ugly piece of code to set up an index map that makes it
 //	fast to associate the Breakpoints in the source and target readers with
@@ -753,110 +795,97 @@ struct Lorismorph_priv
 //	will be unpredictable if the labeling is not unique), so it seems
 //	like an index map is the most efficient way.
 //
-Lorismorph_priv::Lorismorph_priv( LORISMORPH * params ) :
+LorisMorpher::LorisMorpher( LORISMORPH * params ) :
 	morpher( GetFreqFunc( params ), GetAmpFunc( params ), GetBwFunc( params ) ),
-	src_reader( LorisReader::GetByOwnerAndIndex( params->h.insdshead, *(params->srcidx) ) ),
-	tgt_reader( LorisReader::GetByOwnerAndIndex( params->h.insdshead, *(params->tgtidx) ) ),
+	src_reader( EnvelopeReader::Find( params->h.insdshead, *(params->srcidx) ) ),
+	tgt_reader( EnvelopeReader::Find( params->h.insdshead, *(params->tgtidx) ) ),
 	dblbuffer( ksmps, 0. )
 {
-	//	build Partial pointer maps:
-	const LorisPartials & srcPartials = src_reader->partials();
-	const LorisPartials &tgtPartials = tgt_reader->partials();
-	
-	//	allocate some memory -- this could be more memory-efficient:
-	src_unlabeled.reserve( srcPartials.size() );
-	tgt_unlabeled.reserve( tgtPartials.size() );
-	
-	//	map source Partial indices:
-	//	(make a note of the largest label we see)
-	long maxsrclabel = 0;
-	for ( long i = 0; i < srcPartials.size(); ++i )
+	if ( src_reader != NULL ) 
 	{
-		const Partial & part = srcPartials[i];
-		if ( part.label() != 0 )
-			labelMap[ part.label() ] = std::make_pair(i, long(-1));
-		else
-			src_unlabeled.push_back( i );
-			
-		if ( part.label() > maxsrclabel )
-			maxsrclabel = part.label();
-	}
-	// std::cerr << "** Largest source label is " << maxsrclabel << std::endl;
-	
-	//	map target Partial indices:
-	//	(make a note of the largest label we see)
-	long maxtgtlabel = 0;
-	for ( long i = 0; i < tgtPartials.size(); ++i )
-	{
-		const Partial & part = tgtPartials[i];
-		if ( part.label() != 0 )
+		//	map source Partial indices:
+		//	(make a note of the largest label we see)
+		src_unlabeled.reserve( src_reader->size() );
+		long maxsrclabel = 0;
+		for ( long i = 0; i < src_reader->size(); ++i )
 		{
-			if ( labelMap.count( part.label() ) > 0 )
-				labelMap[part.label()].second = i;
+			long label = src_reader->labelAt(i);
+			if ( label != 0 )
+				labelMap[ label ] = std::make_pair(i, long(-1));
 			else
-				labelMap[part.label()] = std::make_pair(long(-1), i);
+				src_unlabeled.push_back( i );
+				
+			if ( label > maxsrclabel )
+				maxsrclabel = label;
 		}
-		else
-			tgt_unlabeled.push_back( i );
-			
-		if ( part.label() > maxtgtlabel )
-			maxtgtlabel = part.label();
+		std::cerr << "** Largest source label is " << maxsrclabel << std::endl;
 	}
-	// std::cerr << "** Largest target label is " << maxtgtlabel << std::endl;
+	else
+	{
+		std::cerr << "** Could not find lorismorph source with index " << (int)*(params->srcidx) << std::endl;
+	}
 	
+	if ( tgt_reader != NULL )
+	{
+		//	map target Partial indices:
+		//	(make a note of the largest label we see)
+		tgt_unlabeled.reserve( tgt_reader->size() );
+		long maxtgtlabel = 0;
+		for ( long i = 0; i < tgt_reader->size(); ++i )
+		{
+			long label = tgt_reader->labelAt(i);
+			if ( label != 0 )
+			{
+				if ( labelMap.count( label ) > 0 )
+					labelMap[ label ].second = i;
+				else
+					labelMap[ label ] = std::make_pair(long(-1), i);
+			}
+			else
+				tgt_unlabeled.push_back( i );
+				
+			if ( label > maxtgtlabel )
+				maxtgtlabel = label;
+		}
+		std::cerr << "** Largest target label is " << maxtgtlabel << std::endl;
+	}
+	else
+	{
+		std::cerr << "** Could not find lorismorph target with index " << (int)*(params->tgtidx) << std::endl;
+	}
+		
 	std::cerr << "** Morph will use " << labelMap.size() << " labeled Partials, ";
 	std::cerr << src_unlabeled.size() << " unlabeled source Partials, and ";
 	std::cerr << tgt_unlabeled.size() << " unlabeled target Partials." << std::endl;
 	
 	//	allocate Oscillators:
 	oscils.resize( labelMap.size() + src_unlabeled.size() + tgt_unlabeled.size() );
-}
-
-
-#pragma mark -- lorismorph generator functions --
-
-static void lorismorph_cleanup(void * p);
-
-// ---------------------------------------------------------------------------
-//	lorismorph_setup
-// ---------------------------------------------------------------------------
-//	Runs at initialization time for lorismorph.
-//
-extern "C"
-void lorismorph_setup( LORISMORPH * p )
-{
-	p->priv = new Lorismorph_priv( p );
-	p->h.dopadr = lorismorph_cleanup;  // set lorismorph_cleanup as cleanup routine
-}
-
-// ---------------------------------------------------------------------------
-//	lorismorph
-// ---------------------------------------------------------------------------
-//	Audio-rate generator function.
-//
-extern "C"
-void lorismorph( LORISMORPH * p )
-{
-	Lorismorph_priv & imp = *(p->priv);
-	const BREAKPOINTS & srcEnvPts = imp.src_reader->envelopePoints();
-	const BREAKPOINTS & tgtEnvPts = imp.tgt_reader->envelopePoints();
-	OSCILS & oscils = imp.oscils;
 	
+	
+}
+
+// ---------------------------------------------------------------------------
+//	LorisMorpher updateEnvelopes
+// ---------------------------------------------------------------------------
+//
+void 
+LorisMorpher::updateEnvelopes( float * result )
+{
 	//	clear the buffer first!
-	double * bufbegin =  &(imp.dblbuffer[0]);
+	double * bufbegin =  &(dblbuffer[0]);
 	clear_buffer( bufbegin, ksmps );
 	
 	//	now accumulate samples into the buffer:
 	
 	//	first render all the labeled (morphed) Partials:
-	// std::cerr << "** Morphing Partials labeled " << imp.labelMap.begin()->first;
-	// std::cerr << " to " << (--imp.labelMap.end())->first << std::endl;
+	// std::cerr << "** Morphing Partials labeled " << labelMap.begin()->first;
+	// std::cerr << " to " << (--labelMap.end())->first << std::endl;
 	
 	Breakpoint bp;
 	Partial dummy;
 	long oscidx = 0;
-	Lorismorph_priv::LabelMap::iterator it;
-	for( it = imp.labelMap.begin(); it != imp.labelMap.end(); ++it, ++oscidx )
+	LabelMap::iterator it;
+	for( it = labelMap.begin(); it != labelMap.end(); ++it, ++oscidx )
 	{
 		long label = it->first;
 		std::pair<long, long> & indices = it->second;
@@ -879,51 +908,77 @@ void lorismorph( LORISMORPH * p )
 		{
 			//	morph from the source to a dummy:
 			// std::cerr << "** Morphing source to dummy " << oscidx << std::endl;
-			imp.morpher.morphParameters( srcEnvPts[isrc], dummy, 0, bp );
+			morpher.morphParameters( src_reader->valueAt(isrc), dummy, 0, bp );
 		}
 		else if ( isrc < 0 )
 		{
 			//	morph from a dummy to the target:
 			// std::cerr << "** Morphing dummy to target " << oscidx << std::endl;
-			imp.morpher.morphParameters( dummy, tgtEnvPts[itgt], 0, bp );
+			morpher.morphParameters( dummy, tgt_reader->valueAt(itgt), 0, bp );
 		}
 		else 
 		{
 			//	morph from the source to the target:
 			// std::cerr << "** Morphing source to target " << oscidx << std::endl;
-			imp.morpher.morphParameters( srcEnvPts[isrc], tgtEnvPts[itgt], 0, bp );
+			morpher.morphParameters( src_reader->valueAt(isrc), tgt_reader->valueAt(itgt), 0, bp );
 		}	
 		
 		accum_samples( oscils[oscidx], bp, bufbegin,ksmps );
 	} 
 	
 	//	render unlabeled source Partials:
-	// std::cerr << "** Crossfading " << imp.src_unlabeled.size();
+	// std::cerr << "** Crossfading " << src_unlabeled.size();
 	// std::cerr << " unlabeled source Partials" << std::endl;
-	for( long i = 0; i < imp.src_unlabeled.size(); ++i, ++oscidx )  
+	for( long i = 0; i < src_unlabeled.size(); ++i, ++oscidx )  
 	{
 		//	morph from the source to a dummy:
-		imp.morpher.morphParameters( srcEnvPts[ imp.src_unlabeled[i] ], dummy, 0, bp );
+		morpher.morphParameters( src_reader->valueAt( src_unlabeled[i] ), dummy, 0, bp );
 		accum_samples( oscils[oscidx], bp, bufbegin, ksmps );
 	}
 	
 	
 	//	render unlabeled target Partials:
-	// std::cerr << "** Crossfading " << imp.tgt_unlabeled.size();
+	// std::cerr << "** Crossfading " << tgt_unlabeled.size();
 	// std::cerr << " unlabeled target Partials" << std::endl;
-	for( long i = 0; i < imp.tgt_unlabeled.size(); ++i, ++oscidx )  
+	for( long i = 0; i < tgt_unlabeled.size(); ++i, ++oscidx )  
 	{
 		//	morph from a dummy to the target:
-		imp.morpher.morphParameters( dummy, tgtEnvPts[ imp.tgt_unlabeled[i] ], 0, bp );
+		morpher.morphParameters( dummy, tgt_reader->valueAt( tgt_unlabeled[i] ), 0, bp );
 		accum_samples( oscils[oscidx], bp, bufbegin, ksmps );
 	}	
 	
 	//	transfer samples into the result buffer:
-	convert_samples( bufbegin, p->result, ksmps );
+	convert_samples( bufbegin, result, ksmps );
+}
 
-	//	update time:
-	//imp.time += ksmps / esr;
-	 
+#pragma mark -- lorismorph generator functions --
+
+static void lorismorph_cleanup(void * p);
+
+// ---------------------------------------------------------------------------
+//	lorismorph_setup
+// ---------------------------------------------------------------------------
+//	Runs at initialization time for lorismorph.
+//
+extern "C"
+void lorismorph_setup( LORISMORPH * p )
+{
+	p->imp = new LorisMorpher( p );
+	p->h.dopadr = lorismorph_cleanup;  // set lorismorph_cleanup as cleanup routine
+}
+
+// ---------------------------------------------------------------------------
+//	lorismorph
+// ---------------------------------------------------------------------------
+//	Audio-rate generator function.
+//
+//	Taking it on faith that the EnvelopeReaders will not be destroyed before
+//	we are done using them!
+//
+extern "C"
+void lorismorph( LORISMORPH * p )
+{
+	p->imp->updateEnvelopes( p->result );
 }
 
 // ---------------------------------------------------------------------------
@@ -935,5 +990,5 @@ static
 void lorismorph_cleanup(void * p)
 {
 	LORISMORPH * tp = (LORISMORPH *)p;
-	delete tp->priv;
+	delete tp->imp;
 }

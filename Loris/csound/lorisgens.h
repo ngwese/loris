@@ -39,9 +39,9 @@
 #include "cs.h"
 
 /* declare structures holding private internal data */
-typedef struct Lorisread_priv Lorisread_priv;
-typedef struct Lorisplay_priv Lorisplay_priv;
-typedef struct Lorismorph_priv Lorismorph_priv;
+typedef struct LorisReader LorisReader;
+typedef struct LorisPlayer LorisPlayer;
+typedef struct LorisMorpher LorisMorpher;
 
 /*	Define a structure to hold parameters for the lorisread module. */
 typedef struct 
@@ -56,7 +56,7 @@ typedef struct
 	float *time, *ifilnam, *readerIdx, *freqenv, *ampenv, *bwenv, *fadetime;    
 
 	/* private internal data, used by generator */
-	Lorisread_priv *priv;
+	LorisReader *imp;
 } LORISREAD;
 
 /*	Define a structure to hold parameters for the lorisplay module. */
@@ -72,7 +72,7 @@ typedef struct
 	float *readerIdx, *freqenv, *ampenv, *bwenv;    
 
 	/* private internal data, used by generator */
-	Lorisplay_priv *priv;
+	LorisPlayer *imp;
 } LORISPLAY;
 
 /*	Define a structure to hold parameters for the lorismorph module. */
@@ -88,7 +88,7 @@ typedef struct
 	float *srcidx, *tgtidx, *freqenv, *ampenv, *bwenv;    
 
 	/* private internal data, used by generator */
-	Lorismorph_priv *priv;
+	LorisMorpher *imp;
 } LORISMORPH;
 
 

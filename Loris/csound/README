@@ -31,8 +31,12 @@ to the list of headers included at top of file.
 b) Add declarations for the functions invoked directly by the Loris unit
 generators:
 
+void lorisread_setup(void*);  
+void lorisread(void*);
 void lorisplay_setup(void*);
 void lorisplay(void*);
+void lorismorph_setup(void*);
+void lorismorph(void*);
 
 must be added to the list of function definitions found after all the
 #include statements.
@@ -40,8 +44,10 @@ must be added to the list of function definitions found after all the
 
 c) Add the Loris unit generator to the opcode list by adding:
 
-{"lorisplay", S(LORISPLAY), 5, "a", "kSkkko", lorisplay_setup, NULL, lorisplay }
-  
+{"lorisread",  S(LORISREAD),  3, "k", "kSikkko", lorisread_setup,  lorisread, NULL },
+{"lorisplay",  S(LORISPLAY),  5, "a", "ikkk",    lorisplay_setup,  NULL, lorisplay },
+{"lorismorph", S(LORISMORPH), 5, "a", "iikkk",   lorismorph_setup, NULL, lorismorph }
+ 
 to the array of similar OENTRY structures.
 
 
