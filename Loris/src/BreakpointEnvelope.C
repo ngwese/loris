@@ -70,7 +70,7 @@ BreakpointEnvelope::valueAt( double x ) const
 		return 0.;
 	}
 
-	map< double, double >::const_iterator it = _breakpoints.lower_bound( x );
+	std::map< double, double >::const_iterator it = _breakpoints.lower_bound( x );
 
 	if ( it == _breakpoints.begin() ) 
 	{
