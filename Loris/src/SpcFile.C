@@ -898,14 +898,14 @@ static const Partial * select( const PartialList & partials, int label, int firs
 //
 static void writeEnvelopes( std::ostream & s, const list<Partial> & plist)
 {	
-	const int refLabel = 1;			// label of reference partial; always use fundamental
 	
-	// make sure the reference partial is there:
-	const Partial * refPar = select( plist, refLabel, false );
-	if ( refPar == NULL )
-		Throw( FileIOException, "You do not have a partial labeled 1." );
-	if ( refPar->begin() == refPar->end() )
-		Throw( FileIOException, "Partial labeled 1 has zero length." );
+	// get the reference partial; the lowest-nonzero-labeled partial with any breakpoints
+	int refLabel = 0;				// label of reference partial; always use fundamental
+	const Partial * refPar = NULL;		// pointer to reference partial
+	do {
+		Assert( refLabel < spcEI.fileNumPartials );
+		refPar = select( plist, ++refLabel, false );
+		} while ( refPar == NULL || refPar->begin() == refPar->end() );
 
 	// write out one frame at a time:
 	for (double tim = spcEI.startTime; tim <= spcEI.endTime; tim += spcEI.hop ) 
