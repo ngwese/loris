@@ -8,4 +8,5 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-EXTRA_DIST = LorisCDoc.html LorisPerlDoc.html LorisPythonDoc.html LorisTclDoc.html index.html
+EXTRA_DIST = lorisgens.C lorisgens.h tryit.csd trymorph.csd flute.sdif trombone.sdif meow.sdif
+

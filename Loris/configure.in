@@ -91,6 +91,16 @@ AC_PATH_PROG(SWIG, swig)
 AM_CONDITIONAL(HAVE_SWIG, test -n "$SWIG")
 
 dnl----------------------------------------------------------------
+dnl Look for csound.
+dnl
+dnl If csound is available, then a message will be printed
+dnl refering to the README in the csound directorya.
+dnl----------------------------------------------------------------
+
+AC_PATH_PROG(CSOUND, csound)
+AM_CONDITIONAL(HAVE_CSOUND, test -n "$CSOUND")
+
+dnl----------------------------------------------------------------
 dnl Check for librairies
 dnl----------------------------------------------------------------
 
@@ -454,6 +464,7 @@ dnl----------------------------------------------------------------
 AC_MSG_RESULT(----- Creating Output Files -----)
 
 AC_OUTPUT(Makefile doc/Makefile Makefile src/Makefile \
-mac/Makefile pi/Makefile scripting/Makefile test/Makefile )
+mac/Makefile pi/Makefile scripting/Makefile csound/Makefile \
+test/Makefile )
 
 AC_MSG_RESULT(----- End Of Configuration -----)
