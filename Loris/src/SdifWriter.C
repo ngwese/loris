@@ -280,7 +280,7 @@ SdifWriter::collectActiveIndices( const std::vector< Partial * > & partialsVecto
 	
 	for (int i = 0; i < partialsVector.size(); i++) 
 	{
-		if (partialsVector[i]->startTime() <= nextFrameTime 
+		if (partialsVector[i]->startTime() < nextFrameTime 
 						&& partialsVector[i]->endTime() > frameTime - _hop)
 			activeIndices.push_back(i);	
 		if (partialsVector[i]->endTime() > frameTime + _hop)
