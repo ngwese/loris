@@ -682,29 +682,41 @@ void sift( PartialList * partials )
 	size bufferSize. The buffer is neither resized nor 
 	cleared before synthesis, so newly synthesized samples are
 	added to any previously computed samples in the buffer, and
-	samples beyond the end of the buffer are lost.
+	samples beyond the end of the buffer are lost. Return the
+	number of samples synthesized, that is, the index of the
+	latest sample in the buffer that was modified.
  */
 extern "C"
-void synthesize( const PartialList * partials, 
+unsigned int synthesize( const PartialList * partials, 
 				 double * buffer, unsigned int bufferSize,  
 				 double srate )
 {
+	unsigned int howMany = 0;
 	try 
 	{
 		ThrowIfNull((PartialList *) partials);
 		ThrowIfNull((double *) buffer);
 
 		notifier << "synthesizing " << partials->size() 
-				 << " Partials at " << srate << " Hz" << endl;
+				   << " Partials at " << srate << " Hz" << endl;
 
 		//	synthesize:
 		std::vector< double > vec;
 		Synthesizer synth( srate, vec );
 		synth.synthesize( partials->begin(), partials->end() );
+		
+		// determine the number of synthesized samples
+		// that will be stored:
+		howMany = vec.size();
+		if ( howMany > bufferSize )
+		{
+			howMany = bufferSize;
+		}
 
 		//	accumulate into the buffer:
-		std::transform( buffer, buffer + bufferSize, vec.begin(), 
+		std::transform( buffer, buffer + howMany, vec.begin(), 
 						    buffer, std::plus< double >() );
+						    
 
 	}
 	catch( Exception & ex ) 
@@ -719,6 +731,7 @@ void synthesize( const PartialList * partials,
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
+	return howMany;
 }
 
 

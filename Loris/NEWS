@@ -68,6 +68,13 @@ rendering Partials stored in a SDIF file, optionally
 with dilation and constant amplitude and frequency 
 scaling.
 
+- Updated Csound opcodes to be compatible with current
+versions of Csound that support dynamic loading of opcode
+libraries, so it is no longer necessary to rebuild the
+csound application to integrate the Loris opcodes. Added
+csound detection and building of the opcode librarty to 
+autobuild process. This works most reliably with ABS
+distributions of Csound version 4.
 
 -------------------------------------------------------
 changes since 1.1 release:

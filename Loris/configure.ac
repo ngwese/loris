@@ -33,7 +33,7 @@ dnl each release!!!!!
 LORIS_MAJOR_VERSION=1
 LORIS_MINOR_VERSION=3
 LORIS_SUBMINOR_VERSION=0
-LORIS_PRERELEASE_STR="beta2"
+LORIS_PRERELEASE_STR="beta3"
 LORIS_VERSION_STR="$PACKAGE_STRING$LORIS_PRERELEASE_STR"
 AC_SUBST(LORIS_MAJOR_VERSION)
 AC_SUBST(LORIS_MINOR_VERSION)
@@ -48,6 +48,7 @@ dnl----------------------------------------------------------------
 AC_MSG_RESULT(----- Program Checks -----)
 AC_PROG_CXX
 AM_PROG_LIBTOOL
+AC_LIBTOOL_CXX
 
 AC_ARG_VAR([DOXYGEN], 
 	   [Path to doxygen when available])

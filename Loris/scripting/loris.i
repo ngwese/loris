@@ -41,101 +41,130 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
- 
-//	perl defines list and screws us up,
-//	undefine it so that we can use std::list
-#if defined (SWIGPERL)
-	%{
-		#undef list
-	%}
-#endif
+
+%include exception.i 
+%include "std_vector.i"
+
+// ----------------------------------------------------------------
+//		docstring for the Loris module (Python)
+//
+%define DOCSTRING
+"
+Loris is an Open Source sound modeling and processing software package
+based on the Reassigned Bandwidth-Enhanced Additive Sound Model. Loris
+supports modified resynthesis and manipulations of the model data,
+such as time- and frequency-scale modification and sound morphing.
+
+
+Loris is developed by Kelly Fitz and Lippold Haken at the CERL Sound
+Group, and is distributed under the GNU General Public License (GPL).
+For more information, please visit
+
+   http://www.cerlsoundgroup.org/Loris/
+"
+%enddef
+
+%module(docstring=DOCSTRING) loris
+
+// enable automatic docstring generation in Python module
+%feature("autodoc","0");
+
+// ----------------------------------------------------------------
+//		include Loris headers needed to generate wrappers
+//
+%{
+	#include<loris.h>
+	
+	#include <Exception.h>
+	#include <Marker.h>
+
+	//	import the entire Loris namespace, because
+	//	SWIG does not seem to like to wrap functions
+	//	with qualified names (like Loris::channelize),
+	//	they simply get ignored.
+	//
+	// (This has probably been fixed by now.)
+	using namespace Loris;
+	
+	#include <vector>
+%}
+
+// ----------------------------------------------------------------
+//		Use the SWIG library to wrap std::vectors.
+//
+namespace std {
+   %template(DoubleVector) vector< double >;
+   %template(MarkerVector) vector< Marker >;
+};
 
 // ----------------------------------------------------------------
 //		notification and exception handlers
 //
+//	Exception handling code for procedural interface calls.
+//	Copied from the SWIG manual. Tastes great, less filling.
+
 %{ 
-/*	exception handling code for procedural interface calls
-
-	Copied from the SWIG manual. Tastes great, less filling.
-*/
-static char error_message[256];
-static int error_status = 0;
-
-void throw_exception(const char *msg) {
-        strncpy(error_message,msg,256);
-        error_status = 1;
-}
-
-void clear_exception() {
-        error_status = 0;
-}
-char *check_exception() {
-        if (error_status) return error_message;
-        else return NULL;
-}
-
-#include <loris.h>
-
-//	import the entire Loris namespace, because
-//	SWIG does not seem to like to wrap functions
-//	with qualified names (like Loris::channelize),
-//	they simply get ignored.
-//
-// (This has probably been fixed by now.)
-using namespace Loris;
-
-//	notification function for Loris debugging
-//	and notifications, installed in initialization
-//	block below:
-static void printf_notifier( const char * s )
-{
-	printf("*\t%s\n", s);
-}	
-
+	static char error_message[256];
+	static int error_status = 0;
+	
+	void throw_exception( const char *msg ) 
+	{
+		strncpy(error_message,msg,256);
+		error_status = 1;
+	}
+	
+	void clear_exception( void ) 
+	{
+		error_status = 0;
+	}
+	
+	char *check_exception( void ) 
+	{
+		if ( error_status ) 
+		{
+			return error_message;
+		}
+		else 
+		{
+			return NULL;
+		}
+	}
 %}
+
+// Procedural interface functions all use the exception
+// and notification mechanism defined above.
+//
+%exception 
+{
+    char * err;
+    clear_exception();
+    $action
+    if ( 0 != (err = check_exception()) )
+    {
+        SWIG_exception( SWIG_ValueError, err );
+    }
+}
 
 //	Configure notification and debugging using a
 //	in a SWIG initialization block. This code is
 //	executed when the module is loaded by the 
 //	host interpreter.
 //
+%{
+	//	notification function for Loris debugging
+	//	and notifications, installed in initialization
+	//	block below:
+	static void printf_notifier( const char * s )
+	{
+		printf("*\t%s\n", s);
+	}	
+%}
+
 %init 
 %{
 	Loris::setNotifier( printf_notifier );
 	Loris::setExceptionHandler( throw_exception );
 %}
-
-// ----------------------------------------------------------------
-//		helper functions for creating vectors of doubles
-//
-
-%include "std_vector.i"
-
-%{
-	#include <Marker.h>	// for defining a vector of Markers
-%}
-
-namespace std {
-   %template(DoubleVector) vector< double >;
-   %template(MarkerVector) vector< Marker >;
-};
-
-%pythoncode 
-%{
-	SampleVector = DoubleVector
-%}
-
-%include exception.i 
-%exception 
-{
-    char * err;
-    clear_exception();
-    $action
-    if ((err = check_exception()))
-    {
-        SWIG_exception( SWIG_ValueError, err );
-    }
-}
 
 // ----------------------------------------------------------------
 //		wrap procedural interface
@@ -147,77 +176,79 @@ namespace std {
 //	the memory management ambiguities.
 //
 
+%define doc_channelize
+"Label Partials in a PartialList with the integer nearest to the
+amplitude-weighted average ratio of their frequency envelope to a
+reference frequency envelope. The frequency spectrum is
+partitioned into non-overlapping channels whose time-varying
+center frequencies track the reference frequency envelope. The
+reference label indicates which channel's center frequency is
+exactly equal to the reference envelope frequency, and other
+channels' center frequencies are multiples of the reference
+envelope frequency divided by the reference label. Each Partial in
+the PartialList is labeled with the number of the channel that
+best fits its frequency envelope. The quality of the fit is
+evaluated at the breakpoints in the Partial envelope and weighted
+by the amplitude at each breakpoint, so that high- amplitude
+breakpoints contribute more to the channel decision. Partials are
+labeled, but otherwise unmodified. In particular, their
+frequencies are not modified in any way."
+%enddef
+%feature("docstring", doc_channelize) channelize;
 void channelize( PartialList * partials, 
 				 BreakpointEnvelope * refFreqEnvelope, int refLabel );
-/*	Label Partials in a PartialList with the integer nearest to
-	the amplitude-weighted average ratio of their frequency envelope
-	to a reference frequency envelope. The frequency spectrum is 
-	partitioned into non-overlapping channels whose time-varying 
-	center frequencies track the reference frequency envelope. 
-	The reference label indicates which channel's center frequency
-	is exactly equal to the reference envelope frequency, and other
-	channels' center frequencies are multiples of the reference 
-	envelope frequency divided by the reference label. Each Partial 
-	in the PartialList is labeled with the number of the channel
-	that best fits its frequency envelope. The quality of the fit
-	is evaluated at the breakpoints in the Partial envelope and
-	weighted by the amplitude at each breakpoint, so that high-
-	amplitude breakpoints contribute more to the channel decision.
-	Partials are labeled, but otherwise unmodified. In particular, 
-	their frequencies are not modified in any way.
- */
 
+
+%define doc_createFreqReference
+"Return a newly-constructed BreakpointEnvelope by sampling the
+frequency envelope of the longest Partial in a PartialList. Only
+Partials whose frequency at the Partial's loudest (highest
+amplitude) breakpoint is within the given frequency range are
+considered.
+
+If the number of sample points is not specified, then the longest
+Partial's frequency envelope is sampled every 30 ms (No fewer than
+10 samples are used, so the sampling maybe more dense for very
+short Partials.)
+
+For very simple sounds, this frequency reference may be a good
+first approximation to a reference envelope for channelization
+(see channelize)."
+%enddef
+%feature("docstring", doc_createFreqReference) createFreqReference;
 
 %newobject createFreqReference;
 BreakpointEnvelope * 
 createFreqReference( PartialList * partials, 
 					 double minFreq, double maxFreq, long numSamps );
-%inline %{
-BreakpointEnvelope * 
-createFreqReference( PartialList * partials, 
-					 double minFreq, double maxFreq )
-{
-	createFreqReference( partials, minFreq, maxFreq, 0 );
-}
-%}
-/*	Return a newly-constructed BreakpointEnvelope by sampling the 
-	frequency envelope of the longest Partial in a PartialList. 
-	Only Partials whose frequency at the Partial's loudest (highest 
-	amplitude) breakpoint is within the given frequency range are 
-	considered. 
-	
-	If the number of sample points is not specified, then the
-	longest Partial's frequency envelope is sampled every 30 ms
-	(No fewer than 10 samples are used, so the sampling maybe more
-	dense for very short Partials.) 
-	
-	For very simple sounds, this frequency reference may be a 
-	good first approximation to a reference envelope for
-	channelization (see channelize()).
- */
-
-%exception dilate
-{
-    char * err;
-    clear_exception();
-	try
-	{
-		$action
-	}
-	catch ( InvalidArgument & ex )
-	{
-		SWIG_exception(SWIG_ValueError, (char *)ex.what() );
-	}
-    if ((err = check_exception()))
-    {
-        SWIG_exception( SWIG_ValueError, err );
-    }
-}
-
+%inline 
 %{
-#include <Exception.h>
-#include <vector>
+	BreakpointEnvelope * 
+	createFreqReference( PartialList * partials, 
+						 double minFreq, double maxFreq )
+	{
+		createFreqReference( partials, minFreq, maxFreq, 0 );
+	}
 %}
+
+%define doc_dilate
+"Dilate Partials in a PartialList according to the given initial
+and target time points. Partial envelopes are stretched and
+compressed so that temporal features at the initial time points
+are aligned with the final time points. Time points are sorted, so
+Partial envelopes are are only stretched and compressed, but
+breakpoints are not reordered. Duplicate time points are allowed.
+There must be the same number of initial and target time points."
+%enddef
+%feature("docstring", doc_dilate) dilate;
+
+//	dilate needs a contract
+%contract dilate( PartialList * partials, 
+                  const std::vector< double > & ivec, 
+                  const std::vector< double > & tvec ) {
+require:
+	ivec->size() == tvec->size();
+}
 
 %inline
 %{
@@ -225,45 +256,27 @@ createFreqReference( PartialList * partials,
 		   	     const std::vector< double > & ivec, 
 				 const std::vector< double > & tvec )
 	{
-		if ( ivec.size() != tvec.size() )
-		{
-			Throw( InvalidArgument, "Invalid arguments to dilate(): "
-			       "there must be as many target points as initial points" );
-		}
-		
 		const double * initial = &( ivec.front() );
 		const double * target = &( tvec.front() );
 		int npts = ivec.size();
 		dilate( partials, initial, target, npts );
 	}
 %}
-/*	Dilate Partials in a PartialList according to the given 
-	initial and target time points. Partial envelopes are 
-	stretched and compressed so that temporal features at
-	the initial time points are aligned with the final time
-	points. Time points are sorted, so Partial envelopes are 
-	are only stretched and compressed, but breakpoints are not
-	reordered. Duplicate time points are allowed. There must be
-	the same number of initial and target time points.
-	
-	The time points are passed as strings; convert any native
-	collection to a string representation, numerical elements
-	will be extracted, other characters will be ignored.
- */
 
-
+%define doc_distill
+"Distill labeled (channelized)  Partials in a PartialList into a 
+PartialList containing a single (labeled) Partial per label. 
+The distilled PartialList will contain as many Partials as
+there were non-zero labels (non-empty channels)
+in the original PartialList. Additionally, unlabeled (label 0) Partials are 
+\"collated\" into groups of temporally non-overlapping Partials,
+assigned an unused label, and fused into a single Partial per
+group."
+%enddef
+%feature("docstring", doc_distill) distill;
 void distill( PartialList * partials );
-/*	Distill labeled (channelized)  Partials in a PartialList into a 
-	PartialList containing a single (labeled) Partial per label. 
-	The distilled PartialList will contain as many Partials as
-	there were non-zero labels (non-empty channels)
-	in the original PartialList. Additionally, unlabeled (label 0) Partials are 
-	"collated" into groups of temporally non-overlapping Partials,
-	assigned an unused label, and fused into a single Partial per
-	group.
- */
-				 
 
+				
 %inline 
 %{
 	void exportAiff( const char * path, const std::vector< double > & samples,

@@ -1378,67 +1378,6 @@ static swig_type_info *swig_types[30];
 #define SWIG_init    init_loris
 
 #define SWIG_name    "_loris"
- 
-/*	exception handling code for procedural interface calls
-
-	Copied from the SWIG manual. Tastes great, less filling.
-*/
-static char error_message[256];
-static int error_status = 0;
-
-void throw_exception(const char *msg) {
-        strncpy(error_message,msg,256);
-        error_status = 1;
-}
-
-void clear_exception() {
-        error_status = 0;
-}
-char *check_exception() {
-        if (error_status) return error_message;
-        else return NULL;
-}
-
-#include <loris.h>
-
-//	import the entire Loris namespace, because
-//	SWIG does not seem to like to wrap functions
-//	with qualified names (like Loris::channelize),
-//	they simply get ignored.
-//
-// (This has probably been fixed by now.)
-using namespace Loris;
-
-//	notification function for Loris debugging
-//	and notifications, installed in initialization
-//	block below:
-static void printf_notifier( const char * s )
-{
-	printf("*\t%s\n", s);
-}	
-
-
-
-#include <iostream>  
-
-
-#if PY_VERSION_HEX < 0x02000000
-#define PySequence_Size PySequence_Length
-#endif
-#include <stdexcept>
-
-
-  
-#if defined(__SUNPRO_CC) 
-#define SWIG_STD_NOASSIGN_STL
-#define SWIG_STD_NOINSERT_TEMPLATE_STL
-#endif
-
-
-
-#include <string>
-#include <stdexcept>
-
 
 #define  SWIG_MemoryError    1
 #define  SWIG_IOError        2
@@ -1497,13 +1436,47 @@ static void SWIG_exception_(int code, const char *msg) {
 #include <stdexcept>
 
 
+#include <iostream>  
+
+
+#if PY_VERSION_HEX < 0x02000000
+#define PySequence_Size PySequence_Length
+#endif
+#include <stdexcept>
+
+
+  
+#if defined(__SUNPRO_CC) 
+#define SWIG_STD_NOASSIGN_STL
+#define SWIG_STD_NOINSERT_TEMPLATE_STL
+#endif
+
+
+
+#include <string>
+#include <stdexcept>
+
+
 #include <algorithm>
 
 
 #include <vector>
 
 
-	#include <Marker.h>	// for defining a vector of Markers
+	#include<loris.h>
+	
+	#include <Exception.h>
+	#include <Marker.h>
+
+	//	import the entire Loris namespace, because
+	//	SWIG does not seem to like to wrap functions
+	//	with qualified names (like Loris::channelize),
+	//	they simply get ignored.
+	//
+	// (This has probably been fixed by now.)
+	using namespace Loris;
+	
+	#include <vector>
 
 
 SWIGINTERN int
@@ -2471,6 +2444,42 @@ static void std_vector_Sl_Marker_Sg____setitem__(std::vector<Marker > *self,std:
 static void std_vector_Sl_Marker_Sg__append(std::vector<Marker > *self,std::vector<Marker >::value_type const &x){
       self->push_back(x);
     }
+ 
+	static char error_message[256];
+	static int error_status = 0;
+	
+	void throw_exception( const char *msg ) 
+	{
+		strncpy(error_message,msg,256);
+		error_status = 1;
+	}
+	
+	void clear_exception( void ) 
+	{
+		error_status = 0;
+	}
+	
+	char *check_exception( void ) 
+	{
+		if ( error_status ) 
+		{
+			return error_message;
+		}
+		else 
+		{
+			return NULL;
+		}
+	}
+
+
+	//	notification function for Loris debugging
+	//	and notifications, installed in initialization
+	//	block below:
+	static void printf_notifier( const char * s )
+	{
+		printf("*\t%s\n", s);
+	}	
+
 
 #include <limits.h>
 
@@ -2549,28 +2558,18 @@ SWIG_Check_int(PyObject* obj)
 }
 
 
-BreakpointEnvelope * 
-createFreqReference( PartialList * partials, 
-					 double minFreq, double maxFreq )
-{
-	createFreqReference( partials, minFreq, maxFreq, 0 );
-}
-
-
-#include <Exception.h>
-#include <vector>
+	BreakpointEnvelope * 
+	createFreqReference( PartialList * partials, 
+						 double minFreq, double maxFreq )
+	{
+		createFreqReference( partials, minFreq, maxFreq, 0 );
+	}
 
 
 	void dilate( PartialList * partials, 
 		   	     const std::vector< double > & ivec, 
 				 const std::vector< double > & tvec )
 	{
-		if ( ivec.size() != tvec.size() )
-		{
-			Throw( InvalidArgument, "Invalid arguments to dilate(): "
-			       "there must be as many target points as initial points" );
-		}
-		
 		const double * initial = &( ivec.front() );
 		const double * target = &( tvec.front() );
 		int npts = ivec.size();
@@ -5341,7 +5340,7 @@ static PyObject *_wrap_channelize(PyObject *, PyObject *args) {
         clear_exception();
         channelize(arg1,arg2,arg3);
         
-        if ((err = check_exception()))
+        if ( 0 != (err = check_exception()) )
         {
             SWIG_exception( SWIG_ValueError, err );
         }
@@ -5385,7 +5384,7 @@ static PyObject *_wrap_createFreqReference__SWIG_0(PyObject *, PyObject *args) {
         clear_exception();
         result = (BreakpointEnvelope *)createFreqReference(arg1,arg2,arg3,arg4);
         
-        if ((err = check_exception()))
+        if ( 0 != (err = check_exception()) )
         {
             SWIG_exception( SWIG_ValueError, err );
         }
@@ -5423,7 +5422,7 @@ static PyObject *_wrap_createFreqReference__SWIG_1(PyObject *, PyObject *args) {
         clear_exception();
         result = (BreakpointEnvelope *)createFreqReference(arg1,arg2,arg3);
         
-        if ((err = check_exception()))
+        if ( 0 != (err = check_exception()) )
         {
             SWIG_exception( SWIG_ValueError, err );
         }
@@ -5533,19 +5532,14 @@ static PyObject *_wrap_dilate(PyObject *, PyObject *args) {
         if (SWIG_arg_fail(3)) SWIG_fail;
         arg3 = ptr;
     }
+    SWIG_contract_assert((arg2->size()==arg3->size()), "Contract violation: require: (arg2->size()==arg3->size())");
+    
     {
         char * err;
         clear_exception();
-        try
-        {
-            dilate(arg1,(std::vector<double > const &)*arg2,(std::vector<double > const &)*arg3);
-            
-        }
-        catch ( InvalidArgument & ex )
-        {
-            SWIG_exception(SWIG_ValueError, (char *)ex.what() );
-        }
-        if ((err = check_exception()))
+        dilate(arg1,(std::vector<double > const &)*arg2,(std::vector<double > const &)*arg3);
+        
+        if ( 0 != (err = check_exception()) )
         {
             SWIG_exception( SWIG_ValueError, err );
         }
@@ -5574,7 +5568,7 @@ static PyObject *_wrap_distill(PyObject *, PyObject *args) {
         clear_exception();
         distill(arg1);
         
-        if ((err = check_exception()))
+        if ( 0 != (err = check_exception()) )
         {
             SWIG_exception( SWIG_ValueError, err );
         }
@@ -5627,7 +5621,7 @@ static PyObject *_wrap_exportAiff__SWIG_0(PyObject *, PyObject *args) {
         clear_exception();
         exportAiff((char const *)arg1,(std::vector<double > const &)*arg2,arg3,arg4);
         
-        if ((err = check_exception()))
+        if ( 0 != (err = check_exception()) )
         {
             SWIG_exception( SWIG_ValueError, err );
         }
@@ -5676,7 +5670,7 @@ static PyObject *_wrap_exportAiff__SWIG_1(PyObject *, PyObject *args) {
         clear_exception();
         exportAiff((char const *)arg1,(std::vector<double > const &)*arg2,arg3);
         
-        if ((err = check_exception()))
+        if ( 0 != (err = check_exception()) )
         {
             SWIG_exception( SWIG_ValueError, err );
         }
@@ -5719,7 +5713,7 @@ static PyObject *_wrap_exportAiff__SWIG_2(PyObject *, PyObject *args) {
         clear_exception();
         exportAiff((char const *)arg1,(std::vector<double > const &)*arg2);
         
-        if ((err = check_exception()))
+        if ( 0 != (err = check_exception()) )
         {
             SWIG_exception( SWIG_ValueError, err );
         }
@@ -5805,7 +5799,7 @@ static PyObject *_wrap_exportSdif(PyObject *, PyObject *args) {
         clear_exception();
         exportSdif((char const *)arg1,arg2);
         
-        if ((err = check_exception()))
+        if ( 0 != (err = check_exception()) )
         {
             SWIG_exception( SWIG_ValueError, err );
         }
@@ -5853,7 +5847,7 @@ static PyObject *_wrap_exportSpc__SWIG_0(PyObject *, PyObject *args) {
         clear_exception();
         exportSpc((char const *)arg1,arg2,arg3,arg4,arg5);
         
-        if ((err = check_exception()))
+        if ( 0 != (err = check_exception()) )
         {
             SWIG_exception( SWIG_ValueError, err );
         }
@@ -5895,7 +5889,7 @@ static PyObject *_wrap_exportSpc__SWIG_1(PyObject *, PyObject *args) {
         clear_exception();
         exportSpc((char const *)arg1,arg2,arg3,arg4);
         
-        if ((err = check_exception()))
+        if ( 0 != (err = check_exception()) )
         {
             SWIG_exception( SWIG_ValueError, err );
         }
@@ -5931,7 +5925,7 @@ static PyObject *_wrap_exportSpc__SWIG_2(PyObject *, PyObject *args) {
         clear_exception();
         exportSpc((char const *)arg1,arg2,arg3);
         
-        if ((err = check_exception()))
+        if ( 0 != (err = check_exception()) )
         {
             SWIG_exception( SWIG_ValueError, err );
         }
@@ -6045,7 +6039,7 @@ static PyObject *_wrap_importSdif(PyObject *, PyObject *args) {
         clear_exception();
         result = (PartialList *)importSdif((char const *)arg1);
         
-        if ((err = check_exception()))
+        if ( 0 != (err = check_exception()) )
         {
             SWIG_exception( SWIG_ValueError, err );
         }
@@ -6072,7 +6066,7 @@ static PyObject *_wrap_importSpc(PyObject *, PyObject *args) {
         clear_exception();
         result = (PartialList *)importSpc((char const *)arg1);
         
-        if ((err = check_exception()))
+        if ( 0 != (err = check_exception()) )
         {
             SWIG_exception( SWIG_ValueError, err );
         }
@@ -6114,7 +6108,7 @@ static PyObject *_wrap_morph__SWIG_0(PyObject *, PyObject *args) {
         clear_exception();
         result = (PartialList *)morph((PartialList const *)arg1,(PartialList const *)arg2,(BreakpointEnvelope const *)arg3,(BreakpointEnvelope const *)arg4,(BreakpointEnvelope const *)arg5);
         
-        if ((err = check_exception()))
+        if ( 0 != (err = check_exception()) )
         {
             SWIG_exception( SWIG_ValueError, err );
         }
@@ -6162,7 +6156,7 @@ static PyObject *_wrap_morph__SWIG_1(PyObject *, PyObject *args) {
         clear_exception();
         result = (PartialList *)morph((PartialList const *)arg1,(PartialList const *)arg2,arg3,arg4,arg5);
         
-        if ((err = check_exception()))
+        if ( 0 != (err = check_exception()) )
         {
             SWIG_exception( SWIG_ValueError, err );
         }
@@ -6303,7 +6297,7 @@ static PyObject *_wrap_synthesize__SWIG_0(PyObject *, PyObject *args) {
         clear_exception();
         result = synthesize((PartialList const *)arg1,arg2);
         
-        if ((err = check_exception()))
+        if ( 0 != (err = check_exception()) )
         {
             SWIG_exception( SWIG_ValueError, err );
         }
@@ -6331,7 +6325,7 @@ static PyObject *_wrap_synthesize__SWIG_1(PyObject *, PyObject *args) {
         clear_exception();
         result = synthesize((PartialList const *)arg1);
         
-        if ((err = check_exception()))
+        if ( 0 != (err = check_exception()) )
         {
             SWIG_exception( SWIG_ValueError, err );
         }
@@ -6418,7 +6412,7 @@ static PyObject *_wrap_crop(PyObject *, PyObject *args) {
         clear_exception();
         crop(arg1,arg2,arg3);
         
-        if ((err = check_exception()))
+        if ( 0 != (err = check_exception()) )
         {
             SWIG_exception( SWIG_ValueError, err );
         }
@@ -6450,7 +6444,7 @@ static PyObject *_wrap_copyLabeled(PyObject *, PyObject *args) {
         clear_exception();
         result = (PartialList *)copyLabeled(arg1,arg2);
         
-        if ((err = check_exception()))
+        if ( 0 != (err = check_exception()) )
         {
             SWIG_exception( SWIG_ValueError, err );
         }
@@ -6482,7 +6476,7 @@ static PyObject *_wrap_extractLabeled(PyObject *, PyObject *args) {
         clear_exception();
         result = (PartialList *)extractLabeled(arg1,arg2);
         
-        if ((err = check_exception()))
+        if ( 0 != (err = check_exception()) )
         {
             SWIG_exception( SWIG_ValueError, err );
         }
@@ -6513,7 +6507,7 @@ static PyObject *_wrap_removeLabeled(PyObject *, PyObject *args) {
         clear_exception();
         removeLabeled(arg1,arg2);
         
-        if ((err = check_exception()))
+        if ( 0 != (err = check_exception()) )
         {
             SWIG_exception( SWIG_ValueError, err );
         }
@@ -6544,7 +6538,7 @@ static PyObject *_wrap_resample(PyObject *, PyObject *args) {
         clear_exception();
         resample(arg1,arg2);
         
-        if ((err = check_exception()))
+        if ( 0 != (err = check_exception()) )
         {
             SWIG_exception( SWIG_ValueError, err );
         }
@@ -6573,7 +6567,7 @@ static PyObject *_wrap_scaleAmp__SWIG_0(PyObject *, PyObject *args) {
         clear_exception();
         scaleAmp(arg1,arg2);
         
-        if ((err = check_exception()))
+        if ( 0 != (err = check_exception()) )
         {
             SWIG_exception( SWIG_ValueError, err );
         }
@@ -6602,7 +6596,7 @@ static PyObject *_wrap_scaleBandwidth__SWIG_0(PyObject *, PyObject *args) {
         clear_exception();
         scaleBandwidth(arg1,arg2);
         
-        if ((err = check_exception()))
+        if ( 0 != (err = check_exception()) )
         {
             SWIG_exception( SWIG_ValueError, err );
         }
@@ -6631,7 +6625,7 @@ static PyObject *_wrap_scaleFrequency__SWIG_0(PyObject *, PyObject *args) {
         clear_exception();
         scaleFrequency(arg1,arg2);
         
-        if ((err = check_exception()))
+        if ( 0 != (err = check_exception()) )
         {
             SWIG_exception( SWIG_ValueError, err );
         }
@@ -6660,7 +6654,7 @@ static PyObject *_wrap_scaleNoiseRatio__SWIG_0(PyObject *, PyObject *args) {
         clear_exception();
         scaleNoiseRatio(arg1,arg2);
         
-        if ((err = check_exception()))
+        if ( 0 != (err = check_exception()) )
         {
             SWIG_exception( SWIG_ValueError, err );
         }
@@ -6689,7 +6683,7 @@ static PyObject *_wrap_shiftPitch__SWIG_0(PyObject *, PyObject *args) {
         clear_exception();
         shiftPitch(arg1,arg2);
         
-        if ((err = check_exception()))
+        if ( 0 != (err = check_exception()) )
         {
             SWIG_exception( SWIG_ValueError, err );
         }
@@ -6720,7 +6714,7 @@ static PyObject *_wrap_scaleAmp__SWIG_1(PyObject *, PyObject *args) {
         clear_exception();
         scaleAmp(arg1,arg2);
         
-        if ((err = check_exception()))
+        if ( 0 != (err = check_exception()) )
         {
             SWIG_exception( SWIG_ValueError, err );
         }
@@ -6810,7 +6804,7 @@ static PyObject *_wrap_scaleBandwidth__SWIG_1(PyObject *, PyObject *args) {
         clear_exception();
         scaleBandwidth(arg1,arg2);
         
-        if ((err = check_exception()))
+        if ( 0 != (err = check_exception()) )
         {
             SWIG_exception( SWIG_ValueError, err );
         }
@@ -6900,7 +6894,7 @@ static PyObject *_wrap_scaleFrequency__SWIG_1(PyObject *, PyObject *args) {
         clear_exception();
         scaleFrequency(arg1,arg2);
         
-        if ((err = check_exception()))
+        if ( 0 != (err = check_exception()) )
         {
             SWIG_exception( SWIG_ValueError, err );
         }
@@ -6990,7 +6984,7 @@ static PyObject *_wrap_scaleNoiseRatio__SWIG_1(PyObject *, PyObject *args) {
         clear_exception();
         scaleNoiseRatio(arg1,arg2);
         
-        if ((err = check_exception()))
+        if ( 0 != (err = check_exception()) )
         {
             SWIG_exception( SWIG_ValueError, err );
         }
@@ -7080,7 +7074,7 @@ static PyObject *_wrap_shiftPitch__SWIG_1(PyObject *, PyObject *args) {
         clear_exception();
         shiftPitch(arg1,arg2);
         
-        if ((err = check_exception()))
+        if ( 0 != (err = check_exception()) )
         {
             SWIG_exception( SWIG_ValueError, err );
         }
@@ -7170,7 +7164,7 @@ static PyObject *_wrap_shiftTime(PyObject *, PyObject *args) {
         clear_exception();
         shiftTime(arg1,arg2);
         
-        if ((err = check_exception()))
+        if ( 0 != (err = check_exception()) )
         {
             SWIG_exception( SWIG_ValueError, err );
         }
@@ -7195,7 +7189,7 @@ static PyObject *_wrap_sift(PyObject *, PyObject *args) {
         clear_exception();
         sift(arg1);
         
-        if ((err = check_exception()))
+        if ( 0 != (err = check_exception()) )
         {
             SWIG_exception( SWIG_ValueError, err );
         }
@@ -7220,7 +7214,7 @@ static PyObject *_wrap_sortByLabel(PyObject *, PyObject *args) {
         clear_exception();
         sortByLabel(arg1);
         
-        if ((err = check_exception()))
+        if ( 0 != (err = check_exception()) )
         {
             SWIG_exception( SWIG_ValueError, err );
         }
@@ -7242,7 +7236,7 @@ static PyObject *_wrap_version(PyObject *, PyObject *args) {
         clear_exception();
         result = (char *)version();
         
-        if ((err = check_exception()))
+        if ( 0 != (err = check_exception()) )
         {
             SWIG_exception( SWIG_ValueError, err );
         }

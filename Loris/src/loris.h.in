@@ -598,7 +598,7 @@ void sift( PartialList * partials );
 
  */ 
 
-void synthesize( const PartialList * partials,
+unsigned int synthesize( const PartialList * partials,
 				     double * buffer, unsigned int bufferSize,
 				     double srate );
 /*	Synthesize Partials in a PartialList at the given sample
@@ -606,7 +606,9 @@ void synthesize( const PartialList * partials,
 	size bufferSize. The buffer is neither resized nor 
 	cleared before synthesis, so newly synthesized samples are
 	added to any previously computed samples in the buffer, and
-	samples beyond the end of the buffer are lost.
+	samples beyond the end of the buffer are lost. Return the
+	number of samples synthesized, that is, the index of the
+	latest sample in the buffer that was modified.
  */
 
 /* ---------------------------------------------------------------- */
