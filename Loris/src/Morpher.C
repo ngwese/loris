@@ -65,7 +65,7 @@ public:
 	//	reference-counted smart pointers from Batov:
 	//	(these Envelopes will never be modified by the Morpher_imp
 	//	class, but Morpher should be able to grant non-const
-	//	access to them, so they are not const Handles)
+	//	access to them (?), so they are not const)
 	std::auto_ptr< Envelope > _freqFunction;	//	frequency morphing function
 	std::auto_ptr< Envelope > _ampFunction;		//	amplitude morphing function
 	std::auto_ptr< Envelope > _bwFunction;		//	bandwidth morphing function

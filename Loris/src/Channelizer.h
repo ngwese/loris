@@ -49,7 +49,6 @@ namespace Loris {
 #endif
 
 class Channelizer_imp;
-template <class T> class Handle;	//	Batov's Handle<> template, in Handle.h
 class Envelope;
 class Partial;
 

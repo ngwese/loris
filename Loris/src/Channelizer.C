@@ -71,8 +71,6 @@ private:
 // ---------------------------------------------------------------------------
 //	Channelizer_imp constructor 
 // ---------------------------------------------------------------------------
-//	Can verify in Meyer that when the exception is thrown, the Handle<>
-//	destructor is guaranteed to be called.
 //
 Channelizer_imp::Channelizer_imp( const Envelope & env, int label ) :
 	_refChannelFreq( env.clone() ),

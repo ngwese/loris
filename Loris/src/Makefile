@@ -73,7 +73,6 @@ OBJ_LORIS = AiffFile.o \
 			ExportSpc.o \
 			Filter.o \
 			FourierTransform.o \
-			Handle.o \
 			ImportLemur.o \
 			ImportSdif.o \
 			KaiserWindow.o \

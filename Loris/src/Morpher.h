@@ -48,7 +48,6 @@
 namespace Loris {
 #endif
 
-template <class T> class Handle;	//	Batov's Handle<> template, in Handle.h
 class Envelope;
 class Partial;
 class Morpher_imp;

@@ -47,7 +47,7 @@ namespace Loris {
 //	Clients of Envelope, like Morpher, use the Prototype pattern to safely
 //	take ownership of their Envelopes. Formerly, Handle<>s were used for this
 //	purpose, but using them polymorphically seemed to trigger random and 
-//	diverse compiler problems.  
+//	diverse compiler problems. Handle<>s are no longer part of Loris.
 //
 //	Envelope is an abstract base class representing a generic real (double) 
 //	function of one real (double) argument. 

@@ -48,7 +48,6 @@ OBJ_LORIS = $(CLASSES)/AiffFile.o \
 			$(CLASSES)/ExportSpc.o \
 			$(CLASSES)/Filter.o \
 			$(CLASSES)/FourierTransform.o \
-			$(CLASSES)/Handle.o \
 			$(CLASSES)/ImportLemur.o \
 			$(CLASSES)/ImportSdif.o \
 			$(CLASSES)/KaiserWindow.o \
