@@ -49,32 +49,42 @@ OBJ_LORIS = AiffFile.o \
 			Partial.o \
 			PartialView.o \
 			ReassignedSpectrum.o \
-			Synthesizer.o \
-			ieee.o \
-			notifier.o \
-			SpcFile.o \
 			SdifReader.o \
 			SdifWriter.o \
-#			FloatingThreshold.o \
+			SpcFile.o \
+			Synthesizer.o \
+			ieee.o \
+			notifier.o
 
+OBJ_SDIF = sdif.o sdif-types.o
 
 #
 #	targets:
 #
-classes: ${OBJ_LORIS}
+all: classes sdif
 
-# this should use gcc probably
-sdif: 
-	cd $(SDIF); $(MAKE) sdif.o sdif-types.o 
+classes: ${OBJ_LORIS}
+	echo "checked Loris objects"
+
+#	SDIF objects:
+sdif: $(OBJ_SDIF)
+	echo "checked SDIF objects"
+
+sdif.o: 
+	$(cc) $(cFLAGS) -c $(SDIF)/sdif.c
+
+sdif-types.o:
+	$(cc) $(cFLAGS) -c $(SDIF)/sdif-types.c	
 
 #
 #	dependencies:
-#	doesn't work because g++ doesn't recognize c++ suffix,
+#	need the sed thing because g++ doesn't recognize c++ suffix,
 #	so it does the wrong thing with the file names (.C.o)
 #
 depend: 
-	${CC} -MM $(CFLAGS) *.C > dependfile
+	${CC} -MM $(CFLAGS) *.C | sed 's/c++\.o/\o/g' > dependfile
 	${cc} -MM $(cFLAGS) *.c >> dependfile
+	${cc} -MM $(cFLAGS) $(SDIF)/sdif.c $(SDIF)/sdif-types.c >> dependfile
 
 include dependfile
 

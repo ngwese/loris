@@ -22,13 +22,12 @@ OBJ_LORIS = $(CLASSES)/AiffFile.o \
 			$(CLASSES)/Partial.o \
 			$(CLASSES)/PartialView.o \
 			$(CLASSES)/ReassignedSpectrum.o \
-			$(CLASSES)/Synthesizer.o \
-			$(CLASSES)/ieee.o \
-			$(CLASSES)/notifier.o \
-			$(CLASSES)/SpcFile.o \
 			$(CLASSES)/SdifReader.o \
 			$(CLASSES)/SdifWriter.o \
-#			$(CLASSES)/FloatingThreshold.o \
+			$(CLASSES)/SpcFile.o \
+			$(CLASSES)/Synthesizer.o \
+			$(CLASSES)/ieee.o \
+			$(CLASSES)/notifier.o
 
 #
 #	fftw:
@@ -37,9 +36,12 @@ FFTW = $(TOP)/FFTW
 
 #
 #	sdif:
+#	(these objects are built in the classes directory, 
+#	because the Makefile distributed with SDIF isn't
+#	very general, and I don't want to modify it)
 #
 SDIF = $(TOP)/CNMAT-SDIF-alpha
-OBJ_SDIF = $(SDIF)/sdif.o $(SDIF)/sdif-types.o
+OBJ_SDIF = $(CLASSES)/sdif.o $(CLASSES)/sdif-types.o
 
 #
 #	flags:
