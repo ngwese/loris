@@ -940,9 +940,9 @@ static void writeEnvelopes( std::ostream & s, const list<Partial> & plist)
 	
 			//	write integer samples without byte swapping,
 			//	they are already correctly packed: 
-			BigEndian::write( s, 3, 1, (char*)&lval );
+			BigEndian::write( s, 1, 3, BigEndian::ulongTo24(&lval) );
 			if (spcEI.enhanced)
-				BigEndian::write( s, 3, 1, (char*)&rval );
+				BigEndian::write( s, 1, 3, BigEndian::ulongTo24(&rval) );
 		}
 	}
 }
