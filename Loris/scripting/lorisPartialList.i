@@ -194,9 +194,8 @@ public:
 	PartialListIterators are also invalidated when PartialList element 
 	they reference is erased from the PartialList. Erasure does not 
 	invalidate any other PartialListIterators, refering to other 
-	elements.
-	
-	&&&& define a method for checking iterator validity!!!
+	elements. The validity of an iterator can be verified using the
+	isInRange method.
 
  */
 class PartialListIterator
@@ -251,6 +250,22 @@ public:
 			other. PartialListIterators are equal is they refer to the
 			same position in the same PartialList.
 		 */
+		 
+		 int isInRange( const PartialListIterator * begin, const PartialListIterator * end )
+		 {	
+		 	PartialListIterator it;
+		 	for ( it = *begin; it != *end; ++it )
+		 	{
+		 		if ( it == *self )
+		 			return true;
+		 	}
+		 	return false;
+		 }
+		 /*	Return true (1) is this iterator is within the half-open iterator
+		 	range bounded by begin and end, and false otherwise. This method
+		 	can be used to check the validity of an iterator -- call with 
+		 	begin and end methods of the PartialList as arguments.
+		  */
 
 	}	//	end of added methods
 
@@ -432,9 +447,9 @@ public:
 	PartialIterators are also invalidated when the Breakpoint 
 	they reference is erased from the Partial. Erasure does not 
 	invalidate any other PartialIterators, refering to other 
-	Breakpoints.
+	Breakpoints. The validity of an iterator can be verified using
+	the isInRange method.
 	
-	&&&& define a method for checking iterator validity!!!
 
  */
 class PartialIterator
@@ -509,6 +524,22 @@ public:
 			other. PartialIterators are equal is they refer to the
 			same position (Breakpoint) in the same Partial.
 		 */
+
+		 int isInRange( const PartialIterator * begin, const PartialIterator * end )
+		 {	
+		 	PartialIterator it;
+		 	for ( it = *begin; it != *end; ++it )
+		 	{
+		 		if ( it == *self )
+		 			return true;
+		 	}
+		 	return false;
+		 }
+		 /*	Return true (1) is this iterator is within the half-open iterator
+		 	range bounded by begin and end, and false otherwise. This method
+		 	can be used to check the validity of an iterator -- call with 
+		 	begin and end methods of the Partial as arguments.
+		  */
 
 	}	//	end of added methods
 

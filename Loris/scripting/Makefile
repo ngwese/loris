@@ -1,4 +1,3 @@
-#!gmake
 #
 #   This is the Loris C++ Class Library, implementing analysis, 
 #   manipulation, and synthesis of digitized sounds using the Reassigned 
@@ -36,22 +35,24 @@ include $(TOP)/Loris/classes/Rules.loris
 
 SWIG = /usr/local/bin/swig
 SWIG_INTERFACE = loris.i
+SUB_INTERFACES = lorisAiffFile.i lorisAnalyzer.i lorisBpEnvelope.i \
+				 lorisExportSpc.i lorisPartialList.i lorisSampleVector.i
 
 PY_WRAPPER = loris_python_wrap.C
 PY_MODULE = loriscmodule.so
 
 PERL_WRAPPER = loris_perl_wrap.C
 
-PY_VERSION = 1.5
-PYTHON_PREFIX = /usr
+PY_VERSION = 2.1
+PYTHON_PREFIX = /usr/local
 PYTHON_INCLUDE = ${PYTHON_PREFIX}/include/python${PY_VERSION}
 PYTHON_LIB = ${PYTHON_PREFIX}/lib/python${PY_VERSION}/config
 INC_PY = -DHAVE_CONFIG_H -I${PYTHON_INCLUDE} -I${PYTHON_LIB}
 
 PERL_CORE = /System/Library/Perl/darwin/CORE/
 
-CC = g++
-CFLAGS 	:= -O2 ${INC_PY} -I${PI} -I${CLASSES} -Wno-multichar
+CC = c++
+CFLAGS = -O2 ${INC_PY} -I${PI} -I${CLASSES} -Wno-multichar -xc++
 
 python: $(PY_MODULE)
 
@@ -67,7 +68,7 @@ pywrap: $(PY_WRAPPER:c++=o)
 $(PY_WRAPPER:c++=o): $(PY_WRAPPER)
 	$(CC) $(CFLAGS) -c $(PY_WRAPPER)
 
-$(PY_WRAPPER): $(SWIG_INTERFACE)
+$(PY_WRAPPER): $(SWIG_INTERFACE) $(SUB_INTERFACES)
 	$(SWIG) -python -shadow -c++ -o $(PY_WRAPPER) $(SWIG_INTERFACE)
 
 perlwrap:
