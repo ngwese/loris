@@ -77,6 +77,11 @@ typedef std::vector< Oscillator > OSCILS;
 //	debugging flag
 // #define DEBUG_LORISGENS
 
+//	globals:
+static double Lorisgens_Srate = 1;
+static double Lorisgens_Krate = 1;
+static int Lorisgens_Ksamps = 1;
+
 #pragma mark -- static helpers --
 
 // ---------------------------------------------------------------------------
@@ -191,7 +196,7 @@ static void apply_fadetime( PARTIALS & part, double fadetime )
 static inline double radianFreq( double hz )
 {
 	//	only need to compute this once ever
-	static const double TwoPiOverSR = TWOPI / esr;
+	static const double TwoPiOverSR = TWOPI / Lorisgens_Srate;
 	return hz * TwoPiOverSR;
 }
 
@@ -240,7 +245,7 @@ static void accum_samples( Oscillator & oscil, Breakpoint & bp, double * bufbegi
 			oscil.setAmplitude( amp );
 			oscil.setBandwidth( bw );
 			*/
-			oscil.resetEnvelopes( bp, esr );
+			oscil.resetEnvelopes( bp, Lorisgens_Srate );
 			
 			//	roll back the phase:
 			oscil.resetPhase( bp.phase() - ( radfreq * nsamps ) );
@@ -248,7 +253,7 @@ static void accum_samples( Oscillator & oscil, Breakpoint & bp, double * bufbegi
 		
 		//	accumulate samples into buffer:
 		// oscil.generateSamples( bufbegin, bufbegin + nsamps, radfreq, amp, bw );
-		oscil.oscillate( bufbegin, bufbegin + nsamps, bp, esr );
+		oscil.oscillate( bufbegin, bufbegin + nsamps, bp, Lorisgens_Srate );
 	}
 }
 
@@ -1092,7 +1097,7 @@ extern "C"
 	 * the table of OENTRY structures defined in this shared library.
 	 */
 
-	PUBLIC int opcode_size()
+	/* PUBLIC */ int opcode_size()
 	{
 		return sizeof(OENTRY) * 3;
 	}
@@ -1102,8 +1107,38 @@ extern "C"
 	 * the table of OENTRY structures defined in this shared library.
 	 */
 
-	PUBLIC OENTRY *opcode_init(GLOBALS *csound)
+	/* PUBLIC */ OENTRY *opcode_init(GLOBALS *csound)
 	{
+		//	seems like I ought to be able to take this
+		//	opportunity to initialize the global sample
+		//	rate and k-rate:
+		Lorisgens_Srate = csound->GetSr( csound );
+		Lorisgens_Krate = csound->GetKr( csound );
+		Lorisgens_Ksamps = csound->GetKsmps( csound );
+		std::cerr << "*** sample rate is " << Lorisgens_Srate << std::endl;
+		std::cerr << "*** control rate is " << Lorisgens_Krate << std::endl;
+		
 		return lorisOentry;
 	}
 };
+
+/*
+ * 	seems like I am close to getting this to work, but still cannot load the plugin:
+ * 
+ * /bin/sh ../libtool --mode=compile g++ -DHAVE_CONFIG_H -I. -I. -I.. 
+ * 		-I../src -I/usr/local/src/Csound-4.23 -g -O2 -c -o lorisgens.lo 
+ * 		lorisgens.C
+ * 
+ * gcc -shared lorisgens.lo -Wl,--rpath 
+ * 		-Wl,/net/zeus/facstaff/kfitz/Loris/csound/.libs -Wl,--rpath 
+ * 		-Wl,/usr/local/lib ../src/.libs/libloris.so -lstdc++ -Wl,-soname 
+ * 		-Wl,lorisgens.so -o .libs/lorisgens.so
+
+ csound --opcode-lib=.libs/lorisgens.so tryit.csd
+ 
+ Loading libraries .libs/lorisgens.so
+ Failed to load .libs/lorisgens.so for .libs/lorisgens.so: undefined symbol: _ZN5Loris8SdifFile8partialsEv.
+ 
+ 
+ */
+ 

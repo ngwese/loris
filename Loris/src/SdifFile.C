@@ -94,10 +94,6 @@ SDIF spec: http://www.cnmat.berkeley.edu/SDIF/
 	const double Pi = 3.14159265358979324;
 #endif
 
-//extern "C" {
-//#include <stdio.h>
-//}
-
 using namespace std;
 
 //	begin namespace
