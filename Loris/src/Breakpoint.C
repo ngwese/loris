@@ -13,7 +13,6 @@
 #include "LorisLib.h"
 #include "Breakpoint.h"
 #include "Exception.h"
-#include "notifier.h"
 
 #if !defined( Deprecated_cstd_headers )
 	#include <cmath>

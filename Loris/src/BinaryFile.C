@@ -11,14 +11,7 @@
 #include "notifier.h"
 #include "BinaryFile.h"
 #include "endian.h"
-
 #include <string>
-
-#if !defined( Deprecated_iostream_headers)
-	#include <iostream>
-#else
-	#include <iostream.h>
-#endif
 
 //	MIPSPro specific kludge, they're so lame:
 #if defined(__sgi) && ! defined(__GNUC__)

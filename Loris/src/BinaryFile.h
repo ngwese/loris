@@ -15,14 +15,14 @@
 
 //	use macros for non-compliant libraries:
 #if !defined( Deprecated_iostream_headers)
-	#include <iostream>
+	#include <istream>
 	#include <fstream>
 	#define STDiostream std::iostream
 	#define STDios std::ios
 	#define STDfilebuf std::filebuf
 	#define STDstreampos std::streampos
 #else
-	#include <iostream.h>
+	#include <istream.h>
 	#include <fstream.h>
 	#define STDiostream iostream
 	#define STDios ios

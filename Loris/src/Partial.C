@@ -14,7 +14,6 @@
 #include "Partial.h"
 #include "Breakpoint.h"
 #include "Exception.h"
-#include "notifier.h"
 #include <algorithm>
 
 #if !defined( Deprecated_cstd_headers )
