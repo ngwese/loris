@@ -445,7 +445,16 @@ AiffFile::write( std::ostream & s, const double * bufBegin, const double * bufEn
 		//	size and number of samples (must be allocated
 		//	before writing chunks, therefore):
 		//	(could throw bad_alloc)
-		_bytes.resize( (bufEnd - bufBegin) * (sampleSize() / 8), 0. );	
+		//	AIFF requires that chunks be an even number of
+		//	bytes, even if the actual sample data is an
+		//	odd number of bytes. 
+		std::vector< double >:: size_type bufferSize = 
+			(bufEnd - bufBegin) * (sampleSize() / 8);
+		if ( bufferSize % 2 )
+			++bufferSize;
+		_bytes.resize( bufferSize, 0. );	
+		// debugger << "resized output buffer to " << _bytes.size() << " bytes" << endl;
+		
 		writeContainer( s );
 		writeCommon( s );
 		writeSampleData( s, bufBegin, bufEnd );
@@ -491,7 +500,7 @@ AiffFile::writeCommon( std::ostream & s )
 	debugger << "channels: " << ck.channels << endl;
 	debugger << "sample frames: " << ck.sampleFrames << endl;
 	debugger << "bits per sample: " << ck.bitsPerSample << endl;
-	debugger << "rate: " << _sampleRate << "?" << endl;
+	debugger << "rate: " << _sampleRate  << endl;
 */
 	
 	//	write it out:
@@ -587,7 +596,8 @@ AiffFile::writeSampleData( std::ostream & s, const double * bufBegin, const doub
 
 		writeSamples( s, bufBegin, bufEnd );
 	}
-	catch( FileIOException & ex ) {
+	catch( FileIOException & ex ) 
+	{
 		ex.append( "Failed to write AIFF file Container chunk." );
 		throw;
 	}
@@ -710,7 +720,7 @@ AiffFile::sizeofSoundData( void )
 	{
 		++dataSize;
 	}
-	
+
 	return	sizeof(Int_32) +	//	id
 			sizeof(Uint_32) +	//	size
 			sizeof(Uint_32) + 	//	offset
