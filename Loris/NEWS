@@ -6,6 +6,12 @@ See the end for copying conditions.
 
 Please send Loris bug reports to loris@cerlsoundgroup.org.
 -------------------------------------------------------
+changes since 1.0.2 release:
+
+- added window sidelobeLevel parameter to Analyzer, 
+decoupled it from the amplitude floor.
+
+-------------------------------------------------------
 changes since 1.0.1 release:
 
 - moved compile-time type checks from FourierTransform.C

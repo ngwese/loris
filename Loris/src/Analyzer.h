@@ -150,6 +150,14 @@ public:
 		average density of Partial envelope Breakpoint data) for this 
 		Analyzer.
 	 */
+	double sidelobeLevel( void ) const;
+	/*	Return the sidelobe attenutation level for the Kaiser analysis window in
+		negative dB. More negative numbers (e.g. -90) give very good sidelobe 
+		rejection but cause the window to be longer in time. Less negative 
+		numbers raise the level of the sidelobes, increasing the liklihood
+		of frequency-domain interference, but allow the window to be shorter
+		in time.
+	 */
  	double windowWidth( void ) const;
 	/*	Return the frequency-domain main lobe width (measured between 
 		zero-crossings) of the analysis window used by this Analyzer. 				
@@ -199,6 +207,14 @@ public:
  	void setHopTime( double x );
 	/*	Set the hop time (which corresponds approximately to the average
 		density of Partial envelope Breakpoint data) for this Analyzer.
+	 */
+ 	void setSidelobeLevel( double x );
+	/*	Set the sidelobe attenutation level for the Kaiser analysis window in
+		negative dB. More negative numbers (e.g. -90) give very good sidelobe 
+		rejection but cause the window to be longer in time. Less negative 
+		numbers raise the level of the sidelobes, increasing the liklihood
+		of frequency-domain interference, but allow the window to be shorter
+		in time.
 	 */
 	void setWindowWidth( double x );
 	/*	Set the frequency-domain main lobe width (measured between 

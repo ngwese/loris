@@ -366,6 +366,7 @@ ReassignedSpectrum::reassignedMagnitude( double fracBinNum, long peakBinNumber )
 	//	compute the nominal spectral amplitude by scaling
 	//	the peak spectral sample:
 	double a = magnitudeScale() * abs( _transform[ peakBinNumber ] );
+	return a;
 	
 	//	compute the offset in the oversampled window spectrum:
 	//	(cheapo rounding)

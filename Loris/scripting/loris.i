@@ -749,6 +749,7 @@ public:
 	double freqResolution( void ) const;
 	double ampFloor( void ) const;
  	double windowWidth( void ) const;
+ 	double sidelobeLevel( void ) const;
  	double freqFloor( void ) const;
 	double hopTime( void ) const;
  	double freqDrift( void ) const;
@@ -759,6 +760,7 @@ public:
 	void setFreqResolution( double x );
 	void setAmpFloor( double x );
 	void setWindowWidth( double x );
+	void setSidelobeLevel( double x );
 	void setFreqFloor( double x );
 	void setFreqDrift( double x );
  	void setHopTime( double x );

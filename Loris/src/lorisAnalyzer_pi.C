@@ -353,6 +353,71 @@ void analyzer_setWindowWidth( Analyzer * ptr_this, double x )
 }
 
 /* ---------------------------------------------------------------- */
+/*        analyzer_getSidelobeLevel        
+/*
+/*	Return the sidelobe attenutation level for the Kaiser analysis window in
+	negative dB. More negative numbers (e.g. -90) give very good sidelobe 
+	rejection but cause the window to be longer in time. Less negative 
+	numbers raise the level of the sidelobes, increasing the liklihood
+	of frequency-domain interference, but allow the window to be shorter
+	in time.
+ */
+extern "C"
+double analyzer_getSidelobeLevel( const Analyzer * ptr_this )
+{
+	try  
+	{
+		ThrowIfNull((Analyzer *) ptr_this);
+		return ptr_this->sidelobeLevel();
+	}
+	catch( Exception & ex )  
+	{
+		std::string s("Loris exception in analyzer_getSidelobeLevel(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex )  
+	{
+		std::string s("std C++ exception in analyzer_getSidelobeLevel(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	return 0;
+}
+
+/* ---------------------------------------------------------------- */
+/*        analyzer_setSidelobeLevel        
+/*
+/*	Set the sidelobe attenutation level for the Kaiser analysis window in
+	negative dB. More negative numbers (e.g. -90) give very good sidelobe 
+	rejection but cause the window to be longer in time. Less negative 
+	numbers raise the level of the sidelobes, increasing the liklihood
+	of frequency-domain interference, but allow the window to be shorter
+	in time.
+ */
+extern "C"
+void analyzer_setSidelobeLevel( Analyzer * ptr_this, double x )
+{
+	try  
+	{
+		ThrowIfNull((Analyzer *) ptr_this);
+		ptr_this->setSidelobeLevel( x );
+	}
+	catch( Exception & ex )  
+	{
+		std::string s("Loris exception in analyzer_setSidelobeLevel(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex )  
+	{
+		std::string s("std C++ exception in analyzer_setSidelobeLevel(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+
+/* ---------------------------------------------------------------- */
 /*        analyzer_getFreqFloor        
 /*
 /*	Return the frequency floor (minimum instantaneous Partial  				

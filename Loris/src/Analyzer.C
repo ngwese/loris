@@ -110,6 +110,9 @@ struct Analyzer_imp
     bool assocBW;		//	if true, perform bandwidth association, otherwise 
                         //	collect noise energy in noise Partials labeled -1.
 							
+    bool sidelobeLevel;	//	sidelobe attenutation level for the Kaiser analysis 
+    				 	//	window, in negative dB
+							
 	PartialList partials;	//	collect Partials here
 
 };
@@ -177,7 +180,7 @@ AnalyzerState::AnalyzerState( Analyzer_imp & imp, double srate ) :
     {
         //	analysis window parameters:
         //	use the amplitude floor as the window attenuation 
-        double winshape = KaiserWindow::computeShape( - params.ampFloor );
+        double winshape = KaiserWindow::computeShape( params.sidelobeLevel );
         long winlen = KaiserWindow::computeLength( params.windowWidth / sampleRate, winshape );
         
         //	always use odd-length windows:
@@ -304,6 +307,10 @@ Analyzer::configure( double resolutionHz, double windowWidthHz )
 	//	frequency resolution:
 	_imp->windowWidth = windowWidthHz;
 	
+	//	the Kaiser window sidelobe level can be the same
+	//	as the amplitude floor:
+	_imp->sidelobeLevel = _imp->ampFloor;
+	
 	//	for the minimum frequency, below which no data is kept,
 	//	use the frequency resolution by default (this makes 
 	//	Lip happy, and is always safe?) and allow the client 
@@ -335,7 +342,7 @@ Analyzer::configure( double resolutionHz, double windowWidthHz )
 	//	1 kHz region center spacing:
 	_imp->bwRegionWidth = 2000.;
     
-    //	peform bandwidth association bu default:
+    //	peform bandwidth association by default:
     _imp->assocBW = true;
 }
 
@@ -350,7 +357,7 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate 
 {
 	//	construct state object for this analysis:	
     AnalyzerState state( *_imp, srate );
-
+    
 //
 //	need to check for bogus parameters somewhere!!!!
 //
@@ -539,6 +546,22 @@ Analyzer::hopTime( void ) const
 }
 
 // ---------------------------------------------------------------------------
+//	sidelobeLevel
+// ---------------------------------------------------------------------------
+//	Return the sidelobe attenutation level for the Kaiser analysis window in
+//	negative dB. More negative numbers (e.g. -90) give very good sidelobe 
+//	rejection but cause the window to be longer in time. Less negative 
+//	numbers raise the level of the sidelobes, increasing the liklihood
+// 	of frequency-domain interference, but allow the window to be shorter
+// 	in time.
+//
+double 
+Analyzer::sidelobeLevel( void ) const 
+{ 
+	return _imp->sidelobeLevel; 
+}
+
+// ---------------------------------------------------------------------------
 //	windowWidth
 // ---------------------------------------------------------------------------
 //	Return the frequency-domain main lobe width (measured between 
@@ -650,6 +673,22 @@ Analyzer::setFreqResolution( double x )
 }
 
 // ---------------------------------------------------------------------------
+//	setSidelobeLevel
+// ---------------------------------------------------------------------------
+//	Set the sidelobe attenutation level for the Kaiser analysis window in
+//	negative dB. More negative numbers (e.g. -90) give very good sidelobe 
+//	rejection but cause the window to be longer in time. Less negative 
+//	numbers raise the level of the sidelobes, increasing the liklihood
+// 	of frequency-domain interference, but allow the window to be shorter
+// 	in time.
+//
+void 
+Analyzer::setSidelobeLevel( double x ) 
+{ 
+	_imp->sidelobeLevel = x; 
+}
+
+// ---------------------------------------------------------------------------
 //	setHopTime
 // ---------------------------------------------------------------------------
 //	Set the hop time (which corresponds approximately to the average
@@ -739,7 +778,7 @@ static void extractPeaks( AnalyzerState & state )
 			//	ignore peaks below our frequency and amplitude floors:
 			if ( fHz < freqFloor )
 				continue;
-				
+
 			//	find the time correction (in samples!) for this peak:
 			double timeCorrectionSamps = spectrum.reassignedTime( j );
 			

@@ -417,9 +417,10 @@ static void collate_aux( PartialList & partials, int startlabel, double fadeTime
 		//	does not remove any null Breakpoints, and 
 		//	because Partials joined in this way might
 		//	be far apart in frequency.
+		const double GapTime = 2.*fadeTime;
 		PartialList::iterator it = 
 			std::find_if( partials.begin(), endcollated, 
-						  ends_before( endcollated->startTime() - (2.*fadeTime) ) );
+						  ends_before( endcollated->startTime() - GapTime) );
 						  
 		// 	if no such Partial exists, then this Partial
 		//	becomes one of the collated ones, otherwise, 
