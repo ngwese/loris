@@ -45,17 +45,40 @@
 //	begin namespace
 namespace Loris {
 
-//	PartialPtrs is a collection of pointers to Partials that
-//	can be used (among other things) for algorithms that operate
-//	on a range of Partials, but don't rely on access to their
-//	container.
+
+// ---------------------------------------------------------------------------
+//	class PartialPtrs
+//
+//	PartialPtrs is a typedef for a std::vectror<> of pointers to Loris
+//	Partials. The oscciated bidirectional iterators are also defined as
+//	PartialPtrsIterator and PartialPtrsConstIterator. Since these are
+//	simply typedefs, they classes have identical interfaces to
+//	std::vector, std::vector::iterator, and std::vector::const_iterator,
+//	respectively.
+//	
+//	PartialPtrs is a collection of pointers to Partials that can be used
+//	(among other things) for algorithms that operate on a range of
+//	Partials, but don't rely on access to their container. A template
+//	function defined in a header file can convert a range of Partials to a
+//	PartialPtrs using the template free function fillPartialPtrs() (see
+//	below), and pass the latter to the algorithm implementation, thereby
+//	generalizing access to the algorithm across containers without
+//	exposing the implementation in the header file.
+//
 typedef std::vector< Loris::Partial * > PartialPtrs;
 typedef std::vector< Loris::Partial * >::iterator PartialPtrsIterator;
 typedef std::vector< Loris::Partial * >::const_iterator PartialPtrsConstIterator;
 
-//	This is a generally useful operation that allows us to adapt our
-//	algorithms to work with arbitrary containers of Partials without
-//	exposing the algorithms themselves in the header files.
+
+// ---------------------------------------------------------------------------
+//	fillPartialPtrs
+// ---------------------------------------------------------------------------
+//	Fill the specified PartialPtrs with pointers to the Partials n the
+//	specified half-open (STL-style) range. This is a generally useful
+//	operation that can be used to adapt algorithms to work with arbitrary
+//	containers of Partials without exposing the algorithms themselves in
+//	the header files.
+//
 template <typename Iter>
 void fillPartialPtrs( Iter begin, Iter end, PartialPtrs & fillme )
 {

@@ -46,7 +46,7 @@ namespace Loris {
 //	BreakpointUtils represents a collection of utility functions and 
 //	function objects for applying STL searching and sorting algorithms 
 //	to collections of Loris Breakpoints. BreakpointUtils is a namespace
-//	within the Loris namespace, unless compiled with NO_LORIS_NAMESPACE,
+//	within the Loris namespace, unless compiled with NO_NESTED_NAMESPACE,
 //	in which case it is a class (having only static members and private
 //	constructors).
 //

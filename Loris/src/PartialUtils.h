@@ -70,62 +70,18 @@ class PartialUtils
 public:
 #endif
 
-//	predicates:
-	struct label_equals : 
-		public std::unary_function< const Partial, bool >
-	{
-		int label;
-		label_equals( int l ) : label(l) {}
-		
-		bool operator()( const Partial & p ) const 
-			{ return p.label() == label; }
-	};
-	
-	template<typename Predicate>
-	struct deref_predicate :
-		public std::unary_function< const Partial *, bool >
-	{
-		Predicate pred;
-		deref_predicate( Predicate p = Predicate() ) : pred(p) {}
-		
-		bool operator()( const Partial * p ) const 
-			{ return pred(*p); }
-	};
-	
-//	comparitors:
-	struct label_less : 
-		public std::binary_function< const Partial, const Partial, bool >
-	{
-		bool operator()( const Partial & lhs, const Partial & rhs ) const 
-			{ return lhs.label() < rhs.label(); }
-	};
-	
-	struct duration_greater : 
-		public std::binary_function< const Partial, const Partial, bool >
-	{
-		bool operator()( const Partial & lhs, const Partial & rhs ) const 
-			{ return lhs.duration() > rhs.duration(); }
-	};
-	
-	template<typename Comparitor>
-	struct deref_comparitor :
-		public std::binary_function< const Partial *, const Partial *, bool >
-	{
-		Comparitor comp;
-		deref_comparitor( Comparitor c = Comparitor() ) : comp(c) {}
-		
-		bool operator()( const Partial * lhs, const Partial * rhs ) const 
-			{ return comp(*lhs, *rhs); }
-	};
+//	-- free functions --
 
-//	functions on ranges of Partials:
+	/*	Return the time (in seconds) spanned by a specified half-open
+		(STL-style) range of Partials as a std::pair composed of the earliest
+		Partial start time and latest Partial end time in the range.
+	 */
 	template <typename Iterator>
-#if defined( NO_NESTED_NAMESPACE )
+	#if defined( NO_NESTED_NAMESPACE )
 	static
-#endif
+	#endif
 	inline 
-	pair<double,double>
-	timeSpan( Iterator begin, Iterator end ) 
+	pair<double,double> timeSpan( Iterator begin, Iterator end ) 
 	{
 		double tmin = 0., tmax = 0.;
 		if ( begin != end )
@@ -142,7 +98,74 @@ public:
 		}
 		return std::make_pair(tmin, tmax);
 	}
+
+
+
+//	-- predicates --
+	/*	Predicate functor returning true if the label its Partial argument is
+		equal to the specified 32-bit label, and false otherwise.
+	 */
+	struct label_equals : 
+		public std::unary_function< const Partial, bool >
+	{
+		int label;
+		label_equals( int l ) : label(l) {}
+		
+		bool operator()( const Partial & p ) const 
+			{ return p.label() == label; }
+	};
 	
+	/*	Template adapter for using PartialUtil predicates with 
+		collections of pointers to Partials.
+	 */
+	template<typename Predicate>
+	struct deref_predicate :
+		public std::unary_function< const Partial *, bool >
+	{
+		Predicate pred;
+		deref_predicate( Predicate p = Predicate() ) : pred(p) {}
+		
+		bool operator()( const Partial * p ) const 
+			{ return pred(*p); }
+	};
+	
+//	-- comparitors --
+	/*	Comparitor (binary) functor returning true if its first Partial
+		argument has a label whose 32-bit integer representation is less than
+		that of the second Partial argument's label, and false otherwise.
+	 */
+	struct label_less : 
+		public std::binary_function< const Partial, const Partial, bool >
+	{
+		bool operator()( const Partial & lhs, const Partial & rhs ) const 
+			{ return lhs.label() < rhs.label(); }
+	};
+	
+	/*	Comparitor (binary) functor returning true if its first Partial
+		argument has duration greater than that of the second Partial
+		argument, and false otherwise.
+	 */
+	struct duration_greater : 
+		public std::binary_function< const Partial, const Partial, bool >
+	{
+		bool operator()( const Partial & lhs, const Partial & rhs ) const 
+			{ return lhs.duration() > rhs.duration(); }
+	};
+	
+	/*	Template adapter for using PartialUtil comparitors with 
+		collections of pointers to Partials.
+	 */
+	template<typename Comparitor>
+	struct deref_comparitor :
+		public std::binary_function< const Partial *, const Partial *, bool >
+	{
+		Comparitor comp;
+		deref_comparitor( Comparitor c = Comparitor() ) : comp(c) {}
+		
+		bool operator()( const Partial * lhs, const Partial * rhs ) const 
+			{ return comp(*lhs, *rhs); }
+	};
+
 
 #if !defined( NO_NESTED_NAMESPACE )
 }	//	end of namespace PartialUtils

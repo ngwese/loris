@@ -34,7 +34,7 @@
  *
  */
  
-//	Seems like we houldn't need to include Partial.h, but 
+//	Seems like we shouldn't need to include Partial.h, but 
 //	without it, I can't instantiate a PartialList. I need
 //	a definition of Partial for PartialList to be unambiguous.
 #include <Partial.h>
@@ -43,6 +43,15 @@
 //	begin namespace
 namespace Loris {
 
+// ---------------------------------------------------------------------------
+//	class PartialList
+//
+//	PartialList is a typedef for a std::list<> of Loris Partials. The
+//	oscciated bidirectional iterators are also defined as
+//	PartialListIterator and PartialListConstIterator. Since these are
+//	simply typedefs, they classes have identical interfaces to std::list,
+//	std::list::iterator, and std::list::const_iterator, respectively.
+//
 typedef std::list< Loris::Partial > PartialList;
 typedef std::list< Loris::Partial >::iterator PartialListIterator;
 typedef std::list< Loris::Partial >::const_iterator PartialListConstIterator;

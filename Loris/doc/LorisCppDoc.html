@@ -31,6 +31,7 @@ classes in the Loris C++ class library.
 <li><a href="#Oscillator">Oscillator</a>
 <li><a href="#Partial">Partial</a>
 <li><a href="#PartialList">PartialList</a>
+<li><a href="#PartialPtrs">PartialPtrs</a>
 <li><a href="#PartialUtils">PartialUtils</a>
 <li><a href="#SdifFile">SdifFile</a>
 <li><a href="#Sieve">Sieve</a>
@@ -542,7 +543,7 @@ the new breakpoint.
 BreakpointUtils represents a collection of utility functions and 
 function objects for applying STL searching and sorting algorithms 
 to collections of Loris Breakpoints. BreakpointUtils is a namespace
-within the Loris namespace, unless compiled with NO_LORIS_NAMESPACE,
+within the Loris namespace, unless compiled with NO_NESTED_NAMESPACE,
 in which case it is a class (having only static members and private
 constructors).
 <p>
@@ -1740,77 +1741,108 @@ InvalidPartial exception if this Partial has no Breakpoints.
 <a name="PartialList">
 <hr><h2>PartialList</h2></a>
 <p>
-Typedefs for std lists of Partials.
-<p>
-<pre>
-typedef std::list< Loris::Partial > PartialList;
-typedef std::list< Loris::Partial >::iterator PartialListIterator;
-typedef std::list< Loris::Partial >::const_iterator PartialListConstIterator;
-</pre>
+PartialList is a typedef for a std::list<> of Loris Partials. The
+oscciated bidirectional iterators are also defined as
+PartialListIterator and PartialListConstIterator. Since these are
+simply typedefs, they classes have identical interfaces to
+<code>std::list</code>, <code>std::list::iterator</code>, and
+<code>std::list::const_iterator</code>, respectively.
 				
+<p><a href="#contents"><small>Contents</small></a>	
+
+<a name="PartialPtrs">
+<hr><h2>PartialPtrs</h2></a>
+<p>
+PartialPtrs is a typedef for a std::vectror<> of pointers to Loris
+Partials. The oscciated bidirectional iterators are also defined as
+PartialPtrsIterator and PartialPtrsConstIterator. Since these are
+simply typedefs, they classes have identical interfaces to
+<code>std::vector</code>, <code>std::vector::iterator</code>, and
+<code>std::vector::const_iterator</code>, respectively.
+<p>
+PartialPtrs is a collection of pointers to Partials that can be used
+(among other things) for algorithms that operate on a range of
+Partials, but don't rely on access to their container. A template
+function defined in a header file can convert a range of Partials to a
+PartialPtrs using the template free function
+<code>fillPartialPtrs()</code> (see below), and pass the latter to the
+algorithm implementation, thereby generalizing access to the algorithm
+across containers without exposing the implementation in the header
+file.
+<p>
+<h4>Free Functions</h4>
+
+
+<p><tt><b>template &lt;typename Iter&gt;<br>
+ fillPartialPtrs( Iter begin, Iter end, PartialPtrs & fillme )</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Fill the specified PartialPtrs with pointers to the Partials n the
+specified half-open (STL-style) range. This is a generally useful
+operation that can be used to adapt algorithms to work with arbitrary
+containers of Partials without exposing the algorithms themselves in
+the header files.
+</blockquote>
+
+
 <p><a href="#contents"><small>Contents</small></a>	
 
 <a name="PartialUtils">
 <hr><h2>PartialUtils</h2></a>
 <p>
-A group of Partial utility function objects for use with STL 
-searching and sorting algorithms. PartialUtils is a namespace
+PartialUtils represents a collection of utility functions and 
+function objects for applying STL searching and sorting algorithms 
+to collections of Loris Partials. PartialUtils is a namespace
 within the Loris namespace, unless compiled with NO_NESTED_NAMESPACE,
-in which case it is a class.
-
-Lakos suggests protecting utility functions like this in a class 
-definition, but I think a namespace is better, since that is really
-what is being constructed.
+in which case it is a class (having only static members and private
+constructors).
 <p>
+
+<h4>Free Functions</h4>
+<p><tt><b>	template &lt;typename Iterator&gt;<br>
+timeSpan( Iterator begin, Iterator end ) </b></tt>
+<blockquote>[ returns pair&lt; double, double &gt;  ]
+<br>
+Return the time (in seconds) spanned by a specified half-open
+(STL-style) range of Partials as a std::pair composed of the earliest
+Partial start time and latest Partial end time in the range.
+</blockquote>
+
+
+<h4>Predicates</h4>
+<p><tt><b>	struct label_equals : 
+		public std::binary_function&lt; const Partial, int, bool &gt;
+</b></tt>
+<blockquote>[ returns bool  ]
+<br>
+Predicate functor returning true if the label its Partial argument is
+equal to the specified 32-bit label, and false otherwise, constructed
 <pre>
-//	predicates:
-	struct label_equals : 
-		public std::binary_function< const Partial, int, bool >
-	{
-		bool operator()( const Partial & p, int label ) const 
-			{ return p.label() == label; }
-	};
-	
-//	comparitors:
-	struct label_less : 
-		public std::binary_function< const Partial, const Partial, bool >
-	{
-		bool operator()( const Partial & lhs, const Partial & rhs ) const 
-			{ return lhs.label() < rhs.label(); }
-	};
-	
-	struct duration_greater : 
-		public std::binary_function< const Partial, const Partial, bool >
-	{
-		bool operator()( const Partial & lhs, const Partial & rhs ) const 
-			{ return lhs.duration() > rhs.duration(); }
-	};
-	
-//	functions on ranges of Partials:
-	template <typename Iterator>
-#if defined( NO_NESTED_NAMESPACE )
-	static
-#endif
-	inline 
-	pair<double,double>
-	timeSpan( Iterator begin, Iterator end ) 
-	{
-		double tmin = 0., tmax = 0.;
-		if ( begin != end )
-		{
-			Iterator it = begin;
-			tmin = it->startTime();
-			tmax = it->endTime();
-			while( it != end )
-			{
-				tmin = std::min( tmin, it->startTime() );
-				tmax = std::max( tmax, it->endTime() );
-				++it;
-			}
-		}
-		return std::make_pair(tmin, tmax);
-	}
+Loris::PartialUtils::label_equals( int label )
 </pre>
+</blockquote>	
+	
+<h4>Comparitors</h4>
+
+<p><tt><b>struct label_less : 
+public std::binary_function&lt; const Partial, const Partial, bool &gt;
+</b></tt>
+<blockquote>[ returns bool  ]
+<br>
+Comparitor (binary) functor returning true if its first Partial
+argument has a label whose 32-bit integer representation is less than
+that of the second Partial argument's label, and false otherwise.
+</blockquote>	
+
+<p><tt><b>struct duration_greater : 
+public std::binary_function&lt; const Partial, const Partial, bool &gt;
+</b></tt>
+<blockquote>[ returns bool  ]
+<br>
+Comparitor (binary) functor returning true if its first Partial
+argument has duration greater than that of the second Partial
+argument, and false otherwise.
+</blockquote>	
 				
 <p><a href="#contents"><small>Contents</small></a>	
 
