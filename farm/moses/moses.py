@@ -34,7 +34,12 @@ more recent notes, still trial 1, but Loris 1.0.1beta1:
 	_not_ accumulated as noise energy. Verify the above with the
 	unmodified Analyzer.
 	
-Last updated: 26 June 2002 by Kelly Fitz
+notes from trial 2 with Loris 1.2.0beta2:
+	- these both sound quite good, and they are difficult to 
+	distinguish, and they both need some attention to the noisy
+	parts.
+
+Last updated: 15 April 2004 by Kelly Fitz
 """
 print __doc__
 

@@ -14,28 +14,30 @@ elephant1:
 elephant3:
 	Use 30 Hz resolution and 80 Hz window, dift and distill at 30 Hz,
 	or 45 Hz if necessary.
+	
+These sound good individually, but to do the morph, need to distill/sift
+them to a common frequency, like 60 Hz.
 
-
-Last updated: 16 May 2003 by Kelly Fitz
+Last updated: 1 March 2005 by Kelly Fitz
 """
 
 print __doc__
 
 import loris, time
 
-anal = loris.Analyzer( 40, 130 )
 orate = 44100
 
 #
 # elephant1
 #
 name = 'elephant1'
+anal = loris.Analyzer( 40, 130 )
 f = loris.AiffFile( name + '.aiff' )
 print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
 p = anal.analyze( f.samples(), f.sampleRate() )
 
-# distilled at 40 Hz
-ref = loris.BreakpointEnvelopeWithValue( 40 )
+# distilled at 60 Hz
+ref = loris.BreakpointEnvelopeWithValue( 60 )
 loris.channelize( p, ref, 1 )
 loris.distill( p )
 print 'synthesizing distilled %s (%s)'%(name, time.ctime(time.time()))
@@ -43,14 +45,12 @@ samples = loris.synthesize( p, orate )
 loris.exportAiff( name + '.recon.aiff', samples, orate )
 loris.exportSdif( name + '.sdif', p )
 
-# remove any Partials labeled greater than 512
-iter = p.begin()
-end = p.end()
-while not iter.equals(end):
-	next = iter.next()
-	if iter.partial().label() > 512:
-		p.erase(iter)
-	iter = next
+# remove any Partials labeled greater than 256
+for partial in p:
+	if partial.label() > 256:
+		partial.setLabel( 0 )
+loris.removeLabeled( p, 0 )
+
 loris.exportSpc( name + '.s.spc', p, 60, 0 )
 loris.exportSpc( name + '.e.spc', p, 60, 1 )
 
@@ -63,8 +63,8 @@ f = loris.AiffFile( name + '.aiff' )
 print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
 p = anal.analyze( f.samples(), f.sampleRate() )
 
-# sifted at 30 Hz
-ref = loris.BreakpointEnvelopeWithValue( 30 )
+# sifted at 60 Hz
+ref = loris.BreakpointEnvelopeWithValue( 60 )
 loris.channelize( p, ref, 1 )
 loris.sift( p )
 zeros = loris.extractLabeled( p, 0 )
@@ -74,14 +74,12 @@ samples = loris.synthesize( p, orate )
 loris.exportAiff( name + '.recon.aiff', samples, orate )
 loris.exportSdif( name + '.sdif', p )
 
-# remove any Partials labeled greater than 512
-iter = p.begin()
-end = p.end()
-while not iter.equals(end):
-	next = iter.next()
-	if iter.partial().label() > 512:
-		p.erase(iter)
-	iter = next
+# remove any Partials labeled greater than 256
+for partial in p:
+	if partial.label() > 256:
+		partial.setLabel( 0 )
+loris.removeLabeled( p, 0 )
+
 loris.exportSpc( name + '.s.spc', p, 60, 0 )
 loris.exportSpc( name + '.e.spc', p, 60, 1 )
 
