@@ -380,6 +380,31 @@ public:
 		{
 			self->splice( self->end(), *other );
 		}
+
+		Partial * first( void )
+		{
+			if ( self->empty() )
+			{
+				return 0;
+			}
+			else
+			{
+				return &( self->front() );
+			}
+		}
+
+		Partial * last( void )
+		{
+			if ( self->empty() )
+			{
+				return 0;
+			}
+			else
+			{
+				return &( self->back() );
+			}
+		}
+
 	}	//	end of added methods
 
 #ifdef LEGACY_ITERATOR_BEHAVIOR
@@ -432,6 +457,8 @@ public:
 	double endTime( void );
 	double duration( void );
 	long numBreakpoints( void );
+	// Breakpoint & first( void );
+	// Breakpoint & last( void );
 	
 	void setLabel( int l );
 		
@@ -470,6 +497,30 @@ public:
 				*pos = self->erase( *pos );
 			}
 		}
+
+        Breakpoint * first( void )
+        {
+            if ( self->numBreakpoints() == 0 )
+            {
+                return 0;
+            }
+            else
+            {
+                return &( self->first() );
+            }
+        }
+
+        Breakpoint * last( void )
+        {
+            if ( self->numBreakpoints() == 0 )
+            {
+                return 0;
+            }
+            else
+            {
+                return &( self->last() );
+            }
+        }
 #if !defined( LEGACY_ITERATOR_BEHAVIOR )
 		//  cannot include these while the legacy versions
 		//  are still supported!
