@@ -26,13 +26,15 @@ namespace Loris {
 //
 //	Hey, how about a comment?
 //
-class Morph : public PartialCollector
+class Morph
 {
 //	-- instance variables --
 	std::auto_ptr< Map > _freqFunction;	//	frequency morphing function
 	std::auto_ptr< Map > _ampFunction;	//	amplitude morphing function
 	std::auto_ptr< Map > _bwFunction;	//	bandwidth morphing function
 	
+	PartialList _partials;	//	collect Partials here
+			
 //	-- public interface --
 public:
 //	construction:
@@ -61,6 +63,10 @@ public:
 	Map & frequencyFunction( void ) { return * _freqFunction; }
 	Map & amplitudeFunction( void ) { return * _ampFunction; }
 	Map & bandwidthFunction( void ) { return * _bwFunction; }
+	
+//	PartialList access:
+	PartialList & partials( void ) { return _partials; }
+	const PartialList & partials( void ) const { return _partials; }
 	
 //	-- helpers --
 protected:	

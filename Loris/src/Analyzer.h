@@ -23,7 +23,7 @@ class AnalyzerState;
 // ---------------------------------------------------------------------------
 //	class Analyzer
 //	
-class Analyzer : public PartialCollector
+class Analyzer
 {
 //	-- analysis parameters --
 	double _resolution;	//	in Hz, minimum instantaneous frequency distance;
@@ -42,6 +42,8 @@ class Analyzer : public PartialCollector
 	double _bwRegionWidth;	//	width in Hz of overlapping bandwidth 
 							//	association regions
 							
+	PartialList _partials;	//	collect Partials here
+			
 //	-- public interface --
 public:
 //	construction:
@@ -69,6 +71,10 @@ public:
 	void setFreqFloor( double x ) { _minFrequency = x; }
 	void setHopTime( double x ) { _hop = x; }
 	void setBwRegionWidth( double x ) { _bwRegionWidth = x; }	
+
+//	PartialList access:
+	PartialList & partials( void ) { return _partials; }
+	const PartialList & partials( void ) const { return _partials; }
 
 //	-- internal helpers --
 //	Should these be completely hidden? They all only access public 

@@ -24,8 +24,11 @@ namespace Loris {
 //
 //	Make this interface more like other function objects in Loris.
 //
-class Distiller : public PartialCollector
+class Distiller
 {
+//	-- instance variables --
+	PartialList _partials;	//	collect Partials here
+			
 //	-- public interface --
 public:
 //	construction:	
@@ -37,6 +40,10 @@ public:
 							 PartialList::const_iterator end, 
 							 int assignLabel = 0 );
 
+//	PartialList access:
+	PartialList & partials( void ) { return _partials; }
+	const PartialList & partials( void ) const { return _partials; }
+	
 //	-- helpers --
 protected:
 	void distillOne( const Partial & src, 

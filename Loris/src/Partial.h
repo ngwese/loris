@@ -229,42 +229,6 @@ public:
 //
 typedef std::list< Partial > PartialList;
 
-// ---------------------------------------------------------------------------
-//	Mixin class PartialCollector
-//
-//	Many function objects in Loris generate Partials.
-//	The Partials are stored in a (STL) list that is accessible to
-//	clients. Any Partials remaining in the list are destroyed
-//	with the object. Partials can be transfered from one list to 
-//	another _without_ copying using list::splice().
-//
-class PartialCollector
-{
-//	-- instance variables --
-	PartialList _partials;
-			
-//	-- public interface --
-public:
-//	PartialList access:
-	PartialList & partials( void ) { return _partials; }
-	const PartialList & partials( void ) const { return _partials; }
-	
-//	virtual constructor for subclassing:
-	virtual ~PartialCollector( void ) {}
-
-//	protected construction 
-//	(base class only, cannot instantiate)
-protected:
-	PartialCollector( void ) {}
-	PartialCollector( const PartialCollector & other ) :
-		_partials( other._partials ) {}
-
-//	-- unimplemented --
-private:
-	PartialCollector & operator= ( const PartialCollector & other );
-
-};	//	end of mixin class PartialCollector
-
 #if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
 #endif

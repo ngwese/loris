@@ -21,11 +21,13 @@ namespace Loris {
 //	class Dilator
 //
 //
-class Dilator : public PartialCollector
+class Dilator
 {
 //	-- implementation --
 	std::vector< double > _initial, _target;	//	time points
 	
+	PartialList _partials;	//	collect Partials here
+
 //	-- public interface --
 public:
 //	construction from n time points:
@@ -36,6 +38,10 @@ public:
 	void dilate( Partial & p );
 	void dilate( PartialList::iterator begin, PartialList::iterator end );
 	
+//	PartialList access:
+	PartialList & partials( void ) { return _partials; }
+	const PartialList & partials( void ) const { return _partials; }
+
 //	-- unimplemented until useful --
 private:
 	Dilator( const Dilator & );

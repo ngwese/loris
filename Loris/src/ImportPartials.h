@@ -31,8 +31,11 @@ namespace Loris {
 //	Import has a Template Method (GoF p.325), importPartials() for performing
 //	the import. Primitive operations must be implemented by subclasses.
 //
-class Import : public PartialCollector
+class Import
 {
+//	-- instance variables --
+	PartialList _partials;	//	collect Partials here
+			
 //	-- public Import interface --
 public:
 //	template method for importing partials:
@@ -56,10 +59,16 @@ public:
 	//	clean up after import:
 	virtual void endImport( void ) {}
 
+//	PartialList access:
+	PartialList & partials( void ) { return _partials; }
+	const PartialList & partials( void ) const { return _partials; }
+	
+//	public virtual constructor for subclassing:
+	virtual ~Import( void ) {}
+	
 protected:
 //	construction:
 	Import( void );
-	//virtual ~Import( void ) {}
 };	//	end of class Import
 
 // ---------------------------------------------------------------------------
