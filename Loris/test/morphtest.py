@@ -57,7 +57,7 @@ print '(looking for sources in %s)' % path
 print 'analyzing clarinet 3G# (%s)' % time.ctime(time.time())
 a = loris.Analyzer( 390 )
 
-cf = loris.AiffFile( path + os.sep + 'clarinet.aiff' )
+cf = loris.AiffFile( os.path.join(path, 'clarinet.aiff') )
 v = cf.samples()
 samplerate = cf.sampleRate()
 
@@ -103,7 +103,7 @@ loris.exportAiff( 'clarOK.pytest.aiff', loris.synthesize( clar, samplerate ), sa
 #
 print 'analyzing flute 3D (%s)' % time.ctime(time.time())
 a.configure( 270 )		# reconfigure Analyzer
-v = loris.AiffFile( path + os.sep + 'flute.aiff' ).samples()
+v = loris.AiffFile( os.path.join(path, 'flute.aiff') ).samples()
 flut = a.analyze( v, samplerate )
 
 loris.channelize( flut, loris.createFreqReference( flut, 20, 0, 1000 ), 1 )
