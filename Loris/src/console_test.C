@@ -23,7 +23,6 @@
 
 #include "Synthesizer.h"
 #include "Exception.h"
-#include "Notifier.h"
 #include "SampleVector.h"
 #include "AiffFile.h"
 #include "BinaryFile.h"
@@ -35,6 +34,7 @@
 #include "Distiller.h"
 #include "Map.h"
 #include "Dilator.h"
+#include "notify.h"
 
 using namespace std;
 using namespace Loris;
@@ -60,15 +60,44 @@ int main()
 		//	dilating car horn:
 		cout << "dilating..." << endl;
 		const double currentArray[] = { 0.3, 1. };
-		const double desiredArray[] = { 0.5, 4. };
+ 		const double desiredArray[] = { 0.5, 4. };
+ 		//const double currentArray[] = { 0.1, 0.75, 0.5 };
+		//const double desiredArray[] = { 0.3, 0.3, 4.};
 		Dilator d( currentArray, currentArray + 2, desiredArray, desiredArray + 2 );
-				 	
+		double maxtime = 0.;
 		for ( list<Partial>::iterator it = imp2.partials().begin(); it != imp2.partials().end(); ++it ) {
 			d.dilate( *it );
+			maxtime = max( maxtime, (*it).endTime() );
 		}
 		cout << "done." << endl;
+		
+		/*
+		//	synthesize:
+		const int carsrate = 44100;
+		SampleVector carbuf( carsrate * maxtime );
+		Synthesizer carsynth( carbuf, carsrate );
+		carsynth.setIterator( new LoFreqBweKludger(1000.) );
+		
+		cout << "synthesizing" << endl;
+		int z = 0;
+		for ( list< Partial >::iterator it = imp2.partials().begin(); 
+			  it != imp2.partials().end(); 
+			  ++it ) {
+			carsynth.synthesizePartial( *it );
+			if ( ++z % 10 == 0  )
+				cout << "\t" << z << " partials..." << endl;
+		}
+		
+		//	write out samples:
+		string carname(":::morphing:ncsa morph:dilatedhorn.aiff");
+		cout << "writing " << carname << endl;
+		AiffFile sfcar( carsrate, 1, 16, carbuf );
+		sfcar.write( BinaryFile( carname ) );
+		cout << "done." << endl;
 
-
+		return 0;
+		*/
+		
 		//	import 4Bb partials:
 		name = ":::morphing:ncsa morph:elephant3.lemr";
 		BinaryFile f;
@@ -158,53 +187,6 @@ int main()
 		
 		cout << "done." << endl;
 
-/*
-		//	import flute partials:
-		string name(":::sample_sounds:swell.lemr");
-		BinaryFile f;
-		f.view(name);
-		ImportLemur5 imp(f);
-		
-		cout << "importing partials from " << name << "..." << endl;
-		imp.importPartials();
-		cout << "done" << endl;
-	
-		//	find the duration:
-		double t = 0.;
-		for ( list< Partial >::iterator it = imp.partials().begin(); 
-			  it != imp.partials().end(); 
-			  ++it ) {
-			if ( (*it).endTime() > t )
-				t = (*it).endTime();
-		}
-				
-		cout << "found " << imp.partials().size() << " partials, total duration is " << t << endl;
-		
-		//	synthesize:
-		const int srate = 44100;
-		const int nsamps = srate * t;
-		SampleVector buf( nsamps );
-		Synthesizer synth( buf, srate );
-		synth.setIterator( new LoFreqBweKludger(1000.) );
-		
-		cout << "synthesizing" << endl;
-		int c = 0;
-		for ( list< Partial >::iterator it = imp.partials().begin(); 
-			  it != imp.partials().end(); 
-			  ++it ) {
-			synth.synthesizePartial( *it );
-			if ( ++c % 100 == 0  )
-				cout << "\t" << c << " partials..." << endl;
-		}
-		
-		//	write out samples:
-		string newname(":::sample_sounds:swell.aiff");
-		cout << "writing " << newname << endl;
-		AiffFile sfout( srate, 1, 16, buf );
-		sfout.write( BinaryFile( newname ) );
-		
-		cout << "done." << endl;
-*/
 	}
 	catch ( Exception & ex ) {
 		cout << ex;

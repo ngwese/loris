@@ -16,11 +16,10 @@
 // ===========================================================================
 
 #include "LorisLib.h"
-#include "Notifier.h"
 #include "Exception.h"
-
 #include "LorisTypes.h"
 #include "LowMem.h"
+#include "notify.h"
 
 #include <string>
 
@@ -41,7 +40,7 @@ Init_::Init_( void )
 		Assert( check_ctypes() );
 		
 		//	reserve memory and install a new handler:
-		reserveSpace();
+		reserveSpace(16000);
 	}
 	catch( Exception & ex ) {
 		ex << "Loris library initialization failed. ";

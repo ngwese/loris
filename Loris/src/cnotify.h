@@ -13,6 +13,7 @@
 #endif
 
 void notify( const char * cstr );
+void debug( const char * cstr );
 void fatalError( const char * cstr );
 
 #ifdef __cplusplus

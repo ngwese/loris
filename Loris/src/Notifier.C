@@ -10,6 +10,7 @@
 #include "LorisLib.h"
 #include "Notifier.h"
 #include "Exception.h"
+#include "notify.h"
 #include "cnotify.h"
 
 #if !defined( Deprecated_iostream_headers )
@@ -20,18 +21,28 @@
 
 #if !defined( Deprecated_cstd_headers )
 	#include <cstdio>
-	using std::abort;
 #else
 	#include <stdio.h>
 #endif
 
+using namespace std;
+
 Begin_Namespace( Loris )
+
+// ---------------------------------------------------------------------------
+//	notification streams
+// ---------------------------------------------------------------------------
+//	These are declared extern in Notifier.h, so they can be used
+//	anywhere.
+//
+Notifier notifier;
+Debugger debugger;
 
 // ---------------------------------------------------------------------------
 //	Notifier constructor
 // ---------------------------------------------------------------------------
 //
-Notifier::Notifier( const std::string & s ) :
+Notifier::Notifier( const string & s ) :
 	_sbuf( s ),
 	ostream( & _sbuf )
 {
@@ -42,6 +53,7 @@ Notifier::Notifier( const std::string & s ) :
 // ---------------------------------------------------------------------------
 //	Derived classes can override the reporting behavior to put the 
 //	notification somewhere other than standard-out.
+//
 //	If block is true, post() should not return until the
 //	user confirms receipt of the notification. The logistics
 //	of this confirmation can also be overridden by derived classes. 
@@ -52,9 +64,10 @@ Notifier::post( boolean block )
 	using namespace std;
 	
 	cout << _sbuf.str() << endl;
+	_sbuf.erase();
 	
 	if ( block ) {
-		std::string resp;
+		string resp;
 		cout << "confirm (or type 'throw' to take exception): ";
 		ios::fmtflags oldflags = cin.flags();
 		cin >> noskipws >> resp;
@@ -73,10 +86,24 @@ Notifier::post( boolean block )
 //	One-shot notification.
 //
 void
-notify( const std::string & s )
+notify( const string & s )
 {
-	Notifier n(s);
-	n.post();
+	//Notifier n(s);
+	notifier << s;
+	notifier.post();
+}
+
+// ---------------------------------------------------------------------------
+//	debug
+// ---------------------------------------------------------------------------
+//	One-shot debug notification.
+//
+void
+debug( const string & s )
+{
+	//Debugger d(s);
+	debugger << s;
+	debugger.post();
 }
 
 // ---------------------------------------------------------------------------
@@ -87,7 +114,7 @@ notify( const std::string & s )
 //	a blocking alert dialog is needed.
 //
 void
-fatalError( const std::string & s )
+fatalError( const string & s )
 {
 	try {
 		Notifier n(s);
@@ -110,7 +137,19 @@ End_Namespace( Loris )
 extern "C" void
 notify( const char * cstr )
 {
-	Loris::notify( std::string(cstr) );
+	Loris::notify( string(cstr) );
+}
+
+// ---------------------------------------------------------------------------
+//	debug
+// ---------------------------------------------------------------------------
+//	One-shot c-callable debug notification, not in namespace.
+//	Prototype in cnotify.h.
+//
+extern "C" void
+debug( const char * cstr )
+{
+	Loris::debug( string(cstr) );
 }
 
 // ---------------------------------------------------------------------------
@@ -122,6 +161,6 @@ notify( const char * cstr )
 extern "C" void
 fatalError( const char * cstr )
 {
-	Loris::fatalError( std::string(cstr) );
+	Loris::fatalError( string(cstr) );
 }
 

@@ -50,6 +50,9 @@ public:
 	//	(without using the enclosing stream):
 	StringBuffer & append( const std::string & s ) { _str.append( s ); return *this; }
 	
+	//	erasing:
+	void erase( void ) { _str = ""; }
+	
 protected:
 	//	called every time a character is written:
 	virtual int_type overflow( int_type c ) 

@@ -59,7 +59,7 @@ public:
 //	user confirms receipt of the notification. The logistics
 //	of this confirmation can also be overridden by derived classes. 
 	virtual void post( boolean block = false );
-
+	
 //	-- instance variable - the string buffer --
 protected:
 	StringBuffer _sbuf;
@@ -108,18 +108,6 @@ class Debugger
 		dummybuf dumb;
 	};
 #endif	//	Debug_Loris	
-
-// ---------------------------------------------------------------------------
-//	prototype for a one-shot notifiers:
-//
-void notify( const string & s );
-void debug( const string & s );
-
-// ---------------------------------------------------------------------------
-//	prototype for a one-shot error notifier:
-//	This one displays its message and aborts.
-//
-void fatalError( const string & s );
 
 End_Namespace( Loris )
 
