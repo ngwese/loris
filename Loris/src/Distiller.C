@@ -119,7 +119,7 @@ Distiller::distill( PartialList & partials )
 
 	//	sort the PartialList by label:
 	debugger << "Distiller sorting Partials by label..." << endl;
-	partials.sort( PartialUtils::label_less() );	//	this is a stable sort
+	partials.sort( PartialUtils::label_less() );
 
 	// 	iterate over labels and distill each one:
 	PartialList::iterator lowerbound = partials.begin();
@@ -165,6 +165,10 @@ Distiller::distill( PartialList & partials )
 				//	replace the Partial at enddistilled with 
 				// 	the resulting distilled partial:
 				distill_aux( samelabel, label, *enddistilled, _fadeTime );
+			}
+			else
+			{
+				*enddistilled = *lowerbound;
 			}
 			++enddistilled;
 		}
@@ -566,8 +570,8 @@ static void distill_aux( PartialList & partials, int label,
 	
 	// keep the longest Partial:
 	PartialList::iterator it = partials.begin();
-	newp.setLabel( label );
 	newp = *it;
+	newp.setLabel( label );
 	
 	//	iterate over remaining partials:
 	for ( ++it; it != partials.end(); ++it )
