@@ -361,7 +361,8 @@ Morpher::morphPartial( const Partial & src, const Partial & tgt, int assignLabel
 	//	make a new Partial:
 	Partial newp;
 	newp.setLabel( assignLabel );
-		
+
+#if 0	
 	//	loop over Breakpoints in first partial:
 	Breakpoint tmpBkpt;
 	for ( Partial::const_iterator iter = src.begin(); iter != src.end(); ++iter )
@@ -404,6 +405,61 @@ Morpher::morphPartial( const Partial & src, const Partial & tgt, int assignLabel
 			}
 		}
 	}
+
+#else
+    Partial::const_iterator src_iter = src.begin();
+    Partial::const_iterator tgt_iter = tgt.begin();
+	Breakpoint tmpBkpt;
+	double morphEnd = 0;
+	
+    while ( src_iter != src.end() || tgt_iter != tgt.end() )
+    {
+        if ( ( tgt_iter == tgt.end() ) ||
+             ( src_iter != src.end() && src_iter.time() < tgt_iter.time() ) )
+        {
+            //  src Breakpoint is earlier, add it
+            
+    		//	don't insert Breakpoints at src times is all 
+    		//	morph functions equal 1 (or > MaxMorphParam):
+    		const double MaxMorphParam = .9;
+    		if ( _freqFunction->valueAt( src_iter.time() ) < MaxMorphParam ||
+    			 _ampFunction->valueAt( src_iter.time() ) < MaxMorphParam ||
+    			 _bwFunction->valueAt( src_iter.time() ) < MaxMorphParam )
+    		{
+    			//	don't insert Breakpoints arbitrarily close together:
+    			if ( _minBreakpointGapSec < ( src_iter.time() - morphEnd ) )
+    			{
+    				morphParameters( src_iter.breakpoint(), tgt, src_iter.time(), tmpBkpt );
+    				newp.insert( src_iter.time(), tmpBkpt );
+    			}
+    		}
+    		morphEnd = src_iter.time();
+            ++src_iter;
+        }
+        else 
+        {
+            //  tgt Breakpoint is earlier add it
+            
+     		//	don't insert Breakpoints at src times is all 
+    		//	morph functions equal 0 (or < MinMorphParam):
+    		const double MinMorphParam = .1; // 1-MaxMorphparam, above
+    		if ( _freqFunction->valueAt( tgt_iter.time() ) > MinMorphParam ||
+    			 _ampFunction->valueAt( tgt_iter.time() ) > MinMorphParam ||
+    			 _bwFunction->valueAt( tgt_iter.time() ) > MinMorphParam )
+    		{
+    			//	don't insert Breakpoints arbitrarily close together:
+    			if ( _minBreakpointGapSec < ( tgt_iter.time() - morphEnd ) )
+    			{
+    				morphParameters( src, tgt_iter.breakpoint(), tgt_iter.time(), tmpBkpt );
+    				newp.insert( tgt_iter.time(), tmpBkpt );
+    			}
+    		}
+    		morphEnd = tgt_iter.time();
+    		++tgt_iter;
+    	}  
+    }
+
+#endif
 		
 	//	add the new partial to the collection,
 	//	if it is valid, and it must be, unless two 
