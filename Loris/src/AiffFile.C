@@ -339,7 +339,17 @@ AiffFile::readSamples( std::istream & s )
 {	
 	//	use a vector for automatic temporary storage:
 	std::vector<char> v( _samples.size() * (_sampSize / 8) );
-	BigEndian::read( s, _samples.size(), _sampSize / 8, &v[0] );
+
+	//	read integer samples in without byte-swapping:
+	notifier << "reading " << v.size() << " bytes " << _samples.size() << " samples" << endl;
+	BigEndian::read( s, v.size(), 1, v.begin() );
+	for ( long k = 0; k < v.size(); k += 100 )
+		notifier << short(v[k]) << " ";
+	notifier << endl;
+
+	//	except if there were any read errors:
+	if ( ! s.good() )
+		Throw( FileIOException, "Failed to read AIFF samples.");
 
 	static const double oneOverMax = 1. / LONG_MAX;	//	defined in climits
 	
@@ -359,7 +369,7 @@ AiffFile::readSamples( std::istream & s )
 			I_24 * z = (I_24 *)&v[0];
 			for (unsigned long i = 0; i < _samples.size(); ++i ) 
 			{
-				Int_32 samp = 0L | z[i];
+				Int_32 samp = (Int_32)v[i*_sampSize]
 				_samples[i] = oneOverMax * samp;
 			}
 			break;
@@ -367,14 +377,14 @@ AiffFile::readSamples( std::istream & s )
 */
 		case 16:
 		{
-			Int_16 * z = (Int_16 *)&v[0];
-			for (unsigned long i = 0; i < _samples.size(); ++i ) 
+			for (long i = 0; i < v.size(); i += 2 ) 
 			{
-				Int_32 samp = 0L | z[i];
-				_samples[i] = oneOverMax * (samp << 16);
+				Int_32 samp = (long(v[i]) << 24) + (long(v[i+1]) << 16);
+				_samples[i/2] = oneOverMax * samp; 
 
 				if (i < 100 )
-					notifier << samp << " " << _samples[i] << endl;
+					notifier << (short)v[i] << " " << (short)v[i+1] 
+					<< " " << samp << " " << _samples[i] << endl;
 			}
 			break;
 		}
@@ -389,11 +399,6 @@ AiffFile::readSamples( std::istream & s )
 			break;
 		}
 	}
-	
-	//	except if there were any read errors:
-	//	(better to check earlier?)
-	if ( ! s.good() )
-		Throw( FileIOException, "Failed to read AIFF samples.");
 }
 
 #pragma mark -
