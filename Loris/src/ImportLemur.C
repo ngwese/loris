@@ -1,7 +1,7 @@
 // ===========================================================================
-//	ImportLemur5.C
+//	ImportLemur.C
 //	
-//	Implementation of Loris::ImportLemur5, a concrete subclass of 
+//	Implementation of Loris::ImportLemur, a concrete subclass of 
 //	Loris::Import for importing Partials stored in Lemur 5 alpha files.
 //
 //	-kel 10 Sept 99
@@ -9,7 +9,7 @@
 //	THIS IS STILL BUSTED, WON'T WORK IF CHUNKS ARE IN A DIFFERENT ORDER!!!
 //
 // ===========================================================================
-#include "ImportLemur5.h"
+#include "ImportLemur.h"
 #include "Endian.h"
 #include "Exception.h"
 #include "Partial.h"
@@ -27,7 +27,7 @@ namespace Loris {
 
 //	-- types and ids --
 enum { 
-		FORM_ID = 'FORM', 
+		ContainerId = 'FORM', 
 		LEMR_ID = 'LEMR', 
 		AnalysisParamsID = 'LMAN', 
 		TrackDataID = 'TRKS',
@@ -40,6 +40,12 @@ struct CkHeader
 {
 	Int_32 id;
 	Int_32 size;
+};
+
+struct ContainerCk
+{
+	CkHeader header;
+	ID formType;
 };
 
 struct AnalysisParamsCk
@@ -89,99 +95,106 @@ struct PeakOnDisk
 	Double_64	ttn;
 };
 
-
 // ---------------------------------------------------------------------------
-//	ImportLemur5 constructor
+//	ImportLemur constructor
 // ---------------------------------------------------------------------------
+//	Imports immediately.
+//	Clients should be prepared to catch ImportErrors.
 //
-ImportLemur5::ImportLemur5( std::istream & s ) : 
-	_file( s ),
-	_bweCutoff( 1000. ),	//	default cutoff in Lemur
-	_counter( 0 ),
-	Import()
+ImportLemur::ImportLemur( std::istream & s, double bweCutoff /* = 1000 Hz */) : 
+	_bweCutoff( bweCutoff )	//	default cutoff in Lemur
 {
+	importPartials( s );
 }
 
 // ---------------------------------------------------------------------------
-//	ImportLemur5 destructor
+//	importPartials
 // ---------------------------------------------------------------------------
-//
-ImportLemur5::~ImportLemur5( void )
-{
-}
-
-// ---------------------------------------------------------------------------
-//	verifySource
-// ---------------------------------------------------------------------------
-//	Verify that the file has the correct format and is available for reading.
+//	Clients should be prepared to catch ImportExceptions.
 //
 void
-ImportLemur5::verifySource( void )
+ImportLemur::importPartials( std::istream & s )
 {
 	try 
 	{
-		//	check file type ids:
-		Int_32 ids[2], size;
-		BigEndian::read( _file, 1, sizeof(ID), (char *)&ids[0] );
-		BigEndian::read( _file, 1, sizeof(Uint_32), (char *)&size );
-		BigEndian::read( _file, 1, sizeof(ID), (char *)&ids[1] );
+		//	the Container chunk must be first, read it:
+		readContainer( s );
 		
-		//	except if there were any read errors:
-		if ( ! _file.good() )
-			Throw( FileIOException, "Cannot read stream in Lemur 5 import.");	
-		
-		if ( ids[0] != FORM_ID || ids[1] != LEMR_ID ) {
-			debugger << "Bad file ids: ";
-			debugger << std::string((char *)&ids[0], 4) << " and " << std::string((char *)&ids[1], 4);
-			debugger << "(backwards on little endian systems)" << endl;
+		//	read other chunks:
+		bool foundParams = false, foundTracks = false;
+		while ( ! foundParams || ! foundTracks )
+		{
+			//	read a chunk header, if it isn't the one we want, skip over it.
+			CkHeader h;
+			readChunkHeader( s, h );
 			
-			Throw( ImportException, "File is not formatted correctly for Lemur 5 import." );
+			if ( h.id == AnalysisParamsID )
+			{
+				readParamsChunk( s );
+				foundParams = true;
+			}
+			else if ( h.id == TrackDataID )
+			{
+				if (! foundParams) 	//	 I hope this doesn't happen
+				{
+					Throw( ImportException, 
+							"Mia culpa! I am not smart enough to read the Track data before the Analysis Parameters data." );
+				}							
+				//	read Partials:
+				for ( long counter = readTracksChunk( s ); counter > 0; --counter ) 
+				{
+					getPartial(s);
+				}
+				foundTracks = true;
+			}
+			else
+			{
+				s.ignore( h.size );
+			}
 		}
-		
-		//	check file format number:
-		AnalysisParamsCk pck;
-		readParamsChunk( pck );
-		if ( pck.formatNumber != FormatNumber ) {
-			Throw( ImportException, "File has wrong Lemur format for Lemur 5 import." );
-		}
+
 	}
-	catch ( FileIOException & ex ) 
+	catch ( Exception & ex ) 
 	{
-		//	convert to an Import Error:
+		if ( s.eof() )
+		{
+			ex.append("Reached end of file before finding both a Tracks chunk and a Parameters chunk.");
+		}
+		ex.append( "Import failed." );
 		Throw( ImportException, ex.str() );
 	}
+
 }
 
 // ---------------------------------------------------------------------------
-//	beginImport
+//	readContainer
 // ---------------------------------------------------------------------------
-//	Find the Tracks chunk and remember how many tracks there are to import. 
-//
-//	to avoid hitting the disk thousands of times, probably want
-//	to allocate a read buffer that can be grown when needed,
-//	and also freed at the end.
 //
 void
-ImportLemur5::beginImport( void )
+ImportLemur::readContainer( std::istream & s )
 {
-	//	find and read the TrackData chunk,
-	//	make a note of how many tracks there are:		
-	TrackDataCk tck;
-	readTracksChunk( tck );
-	_counter = tck.numberOfTracks;
-}
+	ContainerCk ck;		
+	try 
+	{
+		//	read chunk header:
+		readChunkHeader( s, ck.header );
+		if( ck.header.id != ContainerId )
+			Throw( FileIOException, "Found no Container chunk." );
+		
+		//	read FORM type
+		BigEndian::read( s, 1, sizeof(ID), (char *)&ck.formType );		
+	}
+	catch( FileIOException & ex ) 
+	{
+		ex.append( "Failed to read badly-formatted Lemur file (bad Container chunk)." );
+		throw;
+	}
 
-// ---------------------------------------------------------------------------
-//	done
-// ---------------------------------------------------------------------------
-//	Return true if the number of Partials read equals the number of
-//	Partials in the Lemur file.
-//
-bool
-ImportLemur5::done( void )
-{
-	Assert( _counter >= 0 );
-	return _counter == 0;
+	//	make sure its really a Dr. Lemur file:
+	if ( ck.formType != LEMR_ID ) 
+	{
+		Throw( ImportException, "File is not formatted correctly for Lemur 5 import." );
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -191,17 +204,13 @@ ImportLemur5::done( void )
 //	reasonably expect to catch only ImportExceptions.
 //
 void
-ImportLemur5::getPartial( void )
+ImportLemur::getPartial( std::istream & s )
 {
-	//	decrement the counter before we have
-	//	a chance to get blown outta here by an
-	//	exception:
-	--_counter;
-	
-	try {
+	try 
+	{
 		//	read the Track header:
 		TrackOnDisk tkHeader;
-		readTrackHeader( tkHeader );
+		readTrackHeader( s, tkHeader );
 		
 		//	create a Partial:
 		Partial p;
@@ -222,7 +231,7 @@ ImportLemur5::getPartial( void )
 		for ( int i = 0; i < tkHeader.numPeaks; ++i ) {
 			//	read Peak:
 			PeakOnDisk pkData;
-			readPeakData( pkData );
+			readPeakData( s, pkData );
 			
 			double frequency = pkData.frequency;
 			double amplitude = pkData.magnitude;
@@ -277,18 +286,6 @@ ImportLemur5::getPartial( void )
 	}
 	
 }	
-		
-// ---------------------------------------------------------------------------
-//	endImport
-// ---------------------------------------------------------------------------
-//
-void
-ImportLemur5::endImport( void )
-{
-}
-
-#pragma mark -
-#pragma mark helpers
 
 // ---------------------------------------------------------------------------
 //	readChunkHeader
@@ -296,10 +293,10 @@ ImportLemur5::endImport( void )
 //	Read the id and chunk size from the current file position.
 //
 void
-ImportLemur5::readChunkHeader( CkHeader & h )
+ImportLemur::readChunkHeader( std::istream & s, CkHeader & h )
 {
-	BigEndian::read( _file, 1, sizeof(ID), (char *)&h.id );
-	BigEndian::read( _file, 1, sizeof(Int_32), (char *)&h.size );
+	BigEndian::read( s, 1, sizeof(ID), (char *)&h.id );
+	BigEndian::read( s, 1, sizeof(Int_32), (char *)&h.size );
 } 
 
 // ---------------------------------------------------------------------------
@@ -307,75 +304,63 @@ ImportLemur5::readChunkHeader( CkHeader & h )
 // ---------------------------------------------------------------------------
 //	Leave file positioned at end of chunk header data and at the beginning 
 //	of the first track.
+//	Assumes that the stream is correctly positioned and that the chunk 
+//	header has been read.
+//	Returns the number of tracks to read.
 //
-void 
-ImportLemur5::readTracksChunk( TrackDataCk & ck )
+long 
+ImportLemur::readTracksChunk( std::istream & s )
 {
+	TrackDataCk ck;
 	try 
 	{		
-		//	find the track data chunk from the file:
-		//	read a chunk header, if it isn't the one we want, skip over it.	
-		for ( readChunkHeader( ck.header ); ck.header.id != TrackDataID; readChunkHeader( ck.header ) ) {
-			//	make sure the chunk looks valid:
-			if( ck.header.size < 0 )
-				Throw( FileIOException, "Found bogus chunk size." );
-				
-			if ( ck.header.id == FORM_ID )
-				_file.ignore( sizeof(Int_32) );
-			else
-				_file.ignore( ck.header.size );
-		}
-		
 		//	found it, read it one field at a time:
-		BigEndian::read( _file, 1, sizeof(Uint_32), (char *)&ck.numberOfTracks );
-		BigEndian::read( _file, 1, sizeof(Int_32), (char *)&ck.trackOrder );
+		BigEndian::read( s, 1, sizeof(Uint_32), (char *)&ck.numberOfTracks );
+		BigEndian::read( s, 1, sizeof(Int_32), (char *)&ck.trackOrder );
 	}
 	catch( FileIOException & ex ) {
 		Throw( ImportException, ex.str() + "Failed to read badly-formatted Lemur file (bad Track Data chunk)." );
 	}
+	
+	return ck.numberOfTracks;
 }
 
 // ---------------------------------------------------------------------------
 //	readParamsChunk
 // ---------------------------------------------------------------------------
+//	Verify that the file has the correct format and is available for reading.
+//	Assumes that the stream is correctly positioned and that the chunk 
+//	header has been read.
 //
 void
-ImportLemur5::readParamsChunk( AnalysisParamsCk & ck )
+ImportLemur::readParamsChunk( std::istream & s )
 {
+	AnalysisParamsCk ck;
 	try 
 	{
-		//	find the Parameters chunk in the file:
-		//	read a chunk header, if it isn't the one we want, skip over it.
-		for ( readChunkHeader( ck.header ); ck.header.id != AnalysisParamsID; readChunkHeader( ck.header ) ) {
-			//	make sure the chunk looks valid:
-			if( ck.header.size < 0 )
-				Throw( FileIOException, "Found bogus chunk size." );
-				
-			if ( ck.header.id == FORM_ID )
-				_file.ignore( sizeof(Int_32) );
-			else
-				_file.ignore( ck.header.size );
-		}
-		
-		//	found it, read it one field at a time:
-		BigEndian::read( _file, 1, sizeof(Int_32), (char *)&ck.formatNumber );
-		BigEndian::read( _file, 1, sizeof(Int_32), (char *)&ck.originalFormatNumber );
+		BigEndian::read( s, 1, sizeof(Int_32), (char *)&ck.formatNumber );
+		BigEndian::read( s, 1, sizeof(Int_32), (char *)&ck.originalFormatNumber );
 
-		BigEndian::read( _file, 1, sizeof(Int_32), (char *)&ck.ftLength );
-		BigEndian::read( _file, 1, sizeof(Float_32), (char *)&ck.winWidth );
-		BigEndian::read( _file, 1, sizeof(Float_32), (char *)&ck.winAtten );
-		BigEndian::read( _file, 1, sizeof(Int_32), (char *)&ck.hopSize );
-		BigEndian::read( _file, 1, sizeof(Float_32), (char *)&ck.sampleRate );
+		BigEndian::read( s, 1, sizeof(Int_32), (char *)&ck.ftLength );
+		BigEndian::read( s, 1, sizeof(Float_32), (char *)&ck.winWidth );
+		BigEndian::read( s, 1, sizeof(Float_32), (char *)&ck.winAtten );
+		BigEndian::read( s, 1, sizeof(Int_32), (char *)&ck.hopSize );
+		BigEndian::read( s, 1, sizeof(Float_32), (char *)&ck.sampleRate );
 		
-		BigEndian::read( _file, 1, sizeof(Float_32), (char *)&ck.noiseFloor );
-		BigEndian::read( _file, 1, sizeof(Float_32), (char *)&ck.peakAmpRange );
-		BigEndian::read( _file, 1, sizeof(Float_32), (char *)&ck.maskingRolloff );
-		BigEndian::read( _file, 1, sizeof(Float_32), (char *)&ck.peakSeparation );
-		BigEndian::read( _file, 1, sizeof(Float_32), (char *)&ck.freqDrift );
+		BigEndian::read( s, 1, sizeof(Float_32), (char *)&ck.noiseFloor );
+		BigEndian::read( s, 1, sizeof(Float_32), (char *)&ck.peakAmpRange );
+		BigEndian::read( s, 1, sizeof(Float_32), (char *)&ck.maskingRolloff );
+		BigEndian::read( s, 1, sizeof(Float_32), (char *)&ck.peakSeparation );
+		BigEndian::read( s, 1, sizeof(Float_32), (char *)&ck.freqDrift );
 	}
 	catch( FileIOException & ex ) 
 	{
 		Throw( ImportException, ex.str() + "Failed to read badly-formatted Lemur file (bad Parameters chunk)." );
+	}
+	
+	if ( ck.formatNumber != FormatNumber ) 
+	{
+		Throw( ImportException, "File has wrong Lemur format for Lemur 5 import." );
 	}
 }
 
@@ -385,14 +370,14 @@ ImportLemur5::readParamsChunk( AnalysisParamsCk & ck )
 //	Read from current position.
 //
 void 
-ImportLemur5::readTrackHeader( TrackOnDisk & t )
+ImportLemur::readTrackHeader( std::istream & s, TrackOnDisk & t )
 {
 	try 
 	{
-		BigEndian::read( _file, 1, sizeof(Double_64), (char *)&t.startTime );
-		BigEndian::read( _file, 1, sizeof(Float_32), (char *)&t.initialPhase );
-		BigEndian::read( _file, 1, sizeof(Uint_32), (char *)&t.numPeaks );
-		BigEndian::read( _file, 1, sizeof(Int_32), (char *)&t.label );
+		BigEndian::read( s, 1, sizeof(Double_64), (char *)&t.startTime );
+		BigEndian::read( s, 1, sizeof(Float_32), (char *)&t.initialPhase );
+		BigEndian::read( s, 1, sizeof(Uint_32), (char *)&t.numPeaks );
+		BigEndian::read( s, 1, sizeof(Int_32), (char *)&t.label );
 	}
 	catch( FileIOException & ex ) 
 	{
@@ -407,15 +392,15 @@ ImportLemur5::readTrackHeader( TrackOnDisk & t )
 //	Read from current position.
 //
 void 
-ImportLemur5::readPeakData( PeakOnDisk & p )
+ImportLemur::readPeakData( std::istream & s, PeakOnDisk & p )
 {
 	try 
 	{
-		BigEndian::read( _file, 1, sizeof(Float_32), (char *)&p.magnitude );
-		BigEndian::read( _file, 1, sizeof(Float_32), (char *)&p.frequency );
-		BigEndian::read( _file, 1, sizeof(Float_32), (char *)&p.interpolatedFrequency );
-		BigEndian::read( _file, 1, sizeof(Float_32), (char *)&p.bandwidth );
-		BigEndian::read( _file, 1, sizeof(Double_64), (char *)&p.ttn );
+		BigEndian::read( s, 1, sizeof(Float_32), (char *)&p.magnitude );
+		BigEndian::read( s, 1, sizeof(Float_32), (char *)&p.frequency );
+		BigEndian::read( s, 1, sizeof(Float_32), (char *)&p.interpolatedFrequency );
+		BigEndian::read( s, 1, sizeof(Float_32), (char *)&p.bandwidth );
+		BigEndian::read( s, 1, sizeof(Double_64), (char *)&p.ttn );
 	}
 	catch( FileIOException & ex ) 
 	{

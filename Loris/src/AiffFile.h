@@ -12,6 +12,7 @@
 // ===========================================================================
 #include <vector>
 #include <string>
+#include <iosfwd>
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
@@ -24,7 +25,8 @@ struct CkHeader;
 //	class AiffFile
 //
 //	The SampleBuffer must be provided by clients; it is not owned by 
-//	the AiffFile.
+//	the AiffFile. Streams passed to AIFFfiles also remain the responsibility
+//	of the client.
 //	
 class AiffFile
 {
@@ -65,8 +67,8 @@ public:
 private:
 	//	reading:
 	void readChunkHeader( std::istream & s, CkHeader & h );
-	void readCommon( std::istream & s );
 	void readContainer( std::istream & s );
+	void readCommonData( std::istream & s );
 	void readSampleData( std::istream & s );
 	void readSamples( std::istream & s );
 

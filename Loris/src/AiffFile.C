@@ -127,12 +127,48 @@ AiffFile::read( const std::string & filename )
 void
 AiffFile::read( std::istream & s )
 {
-	try {
+	try 
+	{
+		//	the Container chunk must be first, read it:
 		readContainer( s );
-		readCommon( s );
-		readSampleData( s );
+		
+		//	read other chunks, we are only interested in
+		//	the Common chunk and the Sound Data chunk:
+		bool foundCOMM = false, foundSSND = false;
+		while ( ! foundCOMM || ! foundSSND )
+		{
+			//	read a chunk header, if it isn't the one we want, skip over it.
+			CkHeader h;
+			readChunkHeader( s, h );
+			
+			if ( h.id == CommonId )
+			{
+				readCommonData( s );
+				foundCOMM = true;
+			}
+			else if ( h.id == SoundDataId )
+			{
+				if (! foundCOMM) 	//	 I hope this doesn't happen
+				{
+					Throw( FileIOException, 
+							"Mia culpa! I am not smart enough to read the Sound data before the Common data." );
+				}							
+				readSampleData( s );
+				foundSSND = true;
+			}
+			else
+			{
+				s.ignore( h.size );
+			}
+		}
+
 	}
-	catch ( Exception & ex ) {
+	catch ( Exception & ex ) 
+	{
+		if ( s.eof() )
+		{
+			ex.append("Reached end of file before finding both a Common chunk and a Sound Data chunk.");
+		}
 		ex.append( "Failed to read AIFF file." );
 		throw;
 	}
@@ -159,12 +195,14 @@ AiffFile::write( std::ostream & s )
 {
 	validateParams();
 	
-	try {
+	try 
+	{
 		writeContainer( s );
 		writeCommon( s );
 		writeSampleData( s );
 	}
-	catch ( Exception & ex ) {
+	catch ( Exception & ex ) 
+	{
 		ex.append( "Failed to write AIFF file." );
 		throw;
 	}
@@ -184,44 +222,25 @@ AiffFile::readChunkHeader( std::istream & s, CkHeader & h )
 }
 
 // ---------------------------------------------------------------------------
-//	readCommon
+//	readCommonData
 // ---------------------------------------------------------------------------
-//	YUCK this only works if the stream isn't already past the COMM chunk, no 
-//	way to rewind a istream!
+//	Read the data in the Common chunk, assume the stream is correctly
+//	positioned, and that the chunk header has already been read.
 //
 void
-AiffFile::readCommon( std::istream & s )
+AiffFile::readCommonData( std::istream & s )
 {
-	//	first build a Common chunk, so that all the data sizes will 
-	//	be correct:
 	CommonCk ck;
-	
-	try {
-		//	find the chunk:
-		//	read a chunk header, if it isn't the one we want, skip over it.
-		for ( readChunkHeader( s, ck.header ); 
-			  ck.header.id != CommonId; 
-			  readChunkHeader( s, ck.header ) ) 
-		{
-			if ( ck.header.id == ContainerId )
-			{
-				s.ignore( 4 * sizeof(char) );
-			}
-			else
-			{
-				s.ignore( ck.header.size );
-			}
-		}
-
-		//	found it.
-		//	read in the chunk data:
+	try 
+	{
 		BigEndian::read( s, 1, sizeof(Int_16), (char *)&ck.channels );
 		BigEndian::read( s, 1, sizeof(Int_32), (char *)&ck.sampleFrames );
 		BigEndian::read( s, 1, sizeof(Int_16), (char *)&ck.bitsPerSample );
 		//	don't let this get byte-reversed:
 		BigEndian::read( s, 10, sizeof(char), (char *)&ck.srate );
 	}
-	catch( FileIOException & ex ) {
+	catch( FileIOException & ex ) 
+	{
 		ex.append( "Failed to read badly-formatted AIFF file (bad Common chunk)." );
 		throw;
 	}
@@ -245,11 +264,9 @@ AiffFile::readCommon( std::istream & s )
 void
 AiffFile::readContainer( std::istream & s )
 {
-	//	first build a Container chunk, so that all the data sizes will 
-	//	be correct:
 	ContainerCk ck;		
-	
-	try {
+	try 
+	{
 		// Container is always first:
 		readChunkHeader( s, ck.header );
 		if( ck.header.id != ContainerId )
@@ -258,7 +275,8 @@ AiffFile::readContainer( std::istream & s )
 		//	read in the chunk data:
 		BigEndian::read( s, 1, sizeof(ID), (char *)&ck.formType );
 	}
-	catch( FileIOException & ex ) {
+	catch( FileIOException & ex ) 
+	{
 		ex.append( "Failed to read badly-formatted AIFF file (bad Container chunk)." );
 		throw;
 	}
@@ -271,37 +289,15 @@ AiffFile::readContainer( std::istream & s )
 // ---------------------------------------------------------------------------
 //	readSampleData
 // ---------------------------------------------------------------------------
-//	Read from the current position, assume the header has already been read:
-//	YUCK this only works if the stream isn't already past the SSND chunk, no 
-//	way to rewind a istream!
+//	Read the data in the Sound Data chunk, assume the stream is correctly
+//	positioned, and that the chunk header has already been read.
 //
 void
 AiffFile::readSampleData( std::istream & s )
 {
-	//	first build a Sound Data chunk, so that all the data sizes will 
-	//	be correct:
 	SoundDataCk ck;
-
-	try {
-		//	find the chunk:
-		//	read a chunk header, if it isn't the one we want, skip over it.
-		for ( readChunkHeader( s, ck.header ); 
-			  ck.header.id != SoundDataId; 
-			  readChunkHeader( s, ck.header ) ) 
-		{
-				
-			//	make sure we didn't run off the edge of the earth:
-			if ( ! s.good() )
-				Throw( FileIOException, "Failed to read badly-formatted AIFF file (no Sound Data chunk)." );
-			
-			if ( ck.header.id == ContainerId )
-				s.ignore( sizeof(Int_32) );
-			else
-				s.ignore( ck.header.size );
-		}
-
-		//	found it.
-		//	read in the chunk data:
+	try 
+	{
 		BigEndian::read( s, 1, sizeof(Uint_32), (char *)&ck.offset );
 		BigEndian::read( s, 1, sizeof(Uint_32), (char *)&ck.blockSize );
 
@@ -309,7 +305,8 @@ AiffFile::readSampleData( std::istream & s )
 		s.ignore( ck.offset );
 		readSamples( s );
 	}
-	catch( FileIOException & ex ) {
+	catch( FileIOException & ex ) 
+	{
 		ex.append( "Failed to read badly-formatted AIFF file (bad Sound Data chunk)." );
 		throw;
 	}
