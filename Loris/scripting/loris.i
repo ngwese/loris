@@ -176,12 +176,17 @@ void channelize( PartialList * partials,
  */
  
 %new BreakpointEnvelope * 
-createFreqReference( PartialList * partials, double minFreq, double maxFreq );
+createFreqReference( PartialList * partials, double minFreq, double maxFreq, long numSamps = 0 );
 /*	Return a newly-constructed BreakpointEnvelope by sampling the 
 	frequency envelope of the longest Partial in a PartialList. 
 	Only Partials whose frequency at the Partial's loudest (highest 
 	amplitude) breakpoint is within the given frequency range are 
 	considered. 
+	
+	If the number of sample points is not specified, then the
+	longest Partial's frequency envelope is sampled every 30 ms
+	(No fewer than 10 samples are used, so the sampling maybe more
+	dense for very short Partials.) 
 	
 	For very simple sounds, this frequency reference may be a 
 	good first approximation to a reference envelope for

@@ -343,7 +343,11 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch,
 	frequency envelope of the longest Partial in a PartialList. 
 	Only Partials whose frequency at the Partial's loudest (highest 
 	amplitude) breakpoint is within the given frequency range are 
-	considered. 
+	considered. The envelope will have the specified number of samples.
+	If the specified number of samples is 0, then the
+	longest Partial's frequency envelope is sampled every 30 ms
+	(No fewer than 10 samples are used, so the sampling maybe more
+	dense for very short Partials.) 
 	
 	For very simple sounds, this frequency reference may be a 
 	good first approximation to a reference envelope for
@@ -354,7 +358,7 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch,
  */
 extern "C"
 BreakpointEnvelope * 
-createFreqReference( PartialList * partials, double minFreq, double maxFreq )
+createFreqReference( PartialList * partials, double minFreq, double maxFreq, long numSamps )
 {
 	try 
 	{
@@ -362,9 +366,20 @@ createFreqReference( PartialList * partials, double minFreq, double maxFreq )
 		
 		//	use auto_ptr to manage memory in case 
 		//	an exception is generated (hard to imagine):
-		std::auto_ptr< BreakpointEnvelope > env_ptr( new BreakpointEnvelope( 
-			FrequencyReference( partials->begin(), partials->end(), minFreq, maxFreq ).envelope() ) );
-
+		std::auto_ptr< BreakpointEnvelope > env_ptr;
+		if ( numSamps != 0 )
+		{
+			env_ptr.reset( new BreakpointEnvelope( 
+								FrequencyReference( partials->begin(), partials->end(), 
+													minFreq, maxFreq, numSamps ).envelope() ) );
+		}
+		else
+		{
+			env_ptr.reset( new BreakpointEnvelope( 
+								FrequencyReference( partials->begin(), partials->end(), 
+													minFreq, maxFreq ).envelope() ) );
+		}
+		
 		return env_ptr.release();
 	}
 	catch( Exception & ex ) 

@@ -61,6 +61,9 @@ public:
 	//	construction: 
 	FrequencyReference( std::list<Partial>::const_iterator begin, 
 						std::list<Partial>::const_iterator end, 
+						double minFreq, double maxFreq, long numSamps );
+	FrequencyReference( std::list<Partial>::const_iterator begin, 
+						std::list<Partial>::const_iterator end, 
 						double minFreq, double maxFreq );
 	FrequencyReference( const FrequencyReference & other );
 	FrequencyReference & operator= ( const FrequencyReference & other );

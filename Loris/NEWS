@@ -92,6 +92,17 @@ sample size (16 bits) in exportAiff in scripting interface.
 - Improved efficiency and consistency of Sieve and sifting operation,
 and added default gap equal to 0.
 
+- FrequencyReference class can be constructed with a specified
+number of samples of the longest Partial's frequency envelope
+(the old way) or sampled every 30ms (the recent way). In the
+procedural interface, specifying a number of samples equal
+to 0 causes the 30ms sampling. In the scripting interface,
+the number of samples argument is optional, and if unspecified,
+the 30 ms sampling is used. In the scripting and procedural 
+interfaces, the number of samples is the last argument to
+createFreqReference(), whereas is used to be the third. THIS
+MAY BREAK OLD CODE.
+
 -------------------------------------------------------
 changes since 1.0beta6 release:
 

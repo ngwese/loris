@@ -52,10 +52,55 @@ static std::list< Partial >::const_iterator
 findLongestPartialInFreqRange( std::list<Partial>::const_iterator begin, 
 							   std::list<Partial>::const_iterator end, 
 							   double minFreq, double maxFreq );
+static void
+buildEnvelopeFromPartial( BreakpointEnvelope & env, const Partial & p, long numsamps );							   
 
 // ---------------------------------------------------------------------------
 //	construction
 // ---------------------------------------------------------------------------
+//	Create a reference frequency envelope from the longest Partial found in 
+//	a given iterator range and in a specified frequency range. The envelope
+//	will have the specified number of samples.
+//
+FrequencyReference::FrequencyReference( std::list<Partial>::const_iterator begin, 
+										std::list<Partial>::const_iterator end, 
+										double minFreq, double maxFreq,
+										long numSamps ) :
+	_env( new BreakpointEnvelope() )
+{
+	if ( numSamps < 1 )
+		Throw( InvalidArgument, "A frequency reference envelope must have a positive number of samples." );
+
+	//	sanity:
+	if ( maxFreq < minFreq )
+		std::swap( minFreq, maxFreq );
+
+#ifdef Loris_Debug
+	debugger << "Finding frequency reference envelope in range " <<
+	debugger << minFreq << " to " << maxFreq << " Hz, from " <<
+	debugger << std::distance(begin,end) << " Partials" << std:: endl;
+#endif
+
+	//	find the longest Partial in the specified frequency range:
+	std::list< Partial >::const_iterator longest  = 
+		findLongestPartialInFreqRange( begin, end, minFreq, maxFreq );
+		
+	if ( longest == end )
+		Throw( InvalidArgument, "No Partials attain their maximum sinusoidal energy within the specified frequency range." );
+	
+	buildEnvelopeFromPartial( *_env, *longest, numSamps );
+}
+
+
+// ---------------------------------------------------------------------------
+//	construction
+// ---------------------------------------------------------------------------
+//	Create a reference frequency envelope from the longest Partial found in 
+//	a given iterator range and in a specified frequency range.
+//
+//	When the number of envelope samples is not specified, sample the longest
+//	Partial's frequency envelope at 10 or more points, with a resolution
+//	of at least 30 ms.
 //
 FrequencyReference::FrequencyReference( std::list<Partial>::const_iterator begin, 
 										std::list<Partial>::const_iterator end, 
@@ -86,13 +131,8 @@ FrequencyReference::FrequencyReference( std::list<Partial>::const_iterator begin
 	//
 	const double APPROX_DT = .030;	//	30 milliseconds
 	long numSamps = std::max( long( longest->duration() / APPROX_DT ), 10L );
-	double dt = longest->duration() / ( numSamps + 1 );
-	for ( long i = 0; i < numSamps; ++i ) 
-	{
-		double t = longest->startTime() + ((i+1) * dt);
-		double f = longest->frequencyAt(t);
-		_env->insertBreakpoint( t, f );
-	}
+	
+	buildEnvelopeFromPartial( *_env, *longest, numSamps );
 }
 
 // ---------------------------------------------------------------------------
@@ -207,5 +247,21 @@ findLongestPartialInFreqRange( std::list<Partial>::const_iterator begin,
 		
 	return longest;
 }
+
+// ---------------------------------------------------------------------------
+//	buildEnvelopeFromPartial (static helper function)
+// ---------------------------------------------------------------------------
+//
+static void
+buildEnvelopeFromPartial( BreakpointEnvelope & env, const Partial & p, long numsamps )
+{
+	double dt = p.duration() / ( numsamps + 1 );
+	for ( long i = 0; i < numsamps; ++i ) 
+	{
+		double t = p.startTime() + ((i+1) * dt);
+		double f = p.frequencyAt(t);
+		env.insertBreakpoint( t, f );
+	}
+}					   
 
 }	//	end of namespace Loris
