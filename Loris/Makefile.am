@@ -8,7 +8,7 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = doc src pi scripting test
+SUBDIRS = doc src mac pi scripting test
 
 AUX_DIST = 	$(ac_aux_dir)/config.guess \
 			$(ac_aux_dir)/config.sub \

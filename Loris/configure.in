@@ -339,4 +339,4 @@ AC_SUBST(PERLINCLUDE)
 # Generate Makefiles
 #----------------------------------------------------------------
 AC_OUTPUT(Makefile doc/Makefile Makefile src/Makefile \
-pi/Makefile scripting/Makefile test/Makefile)
+mac/Makefile pi/Makefile scripting/Makefile test/Makefile)
