@@ -879,7 +879,7 @@ writeSosEnvelopesChunk( std::ostream & s, const SosEnvelopesCk & ck )
 		
 		// The SOSresultion and SOSquasiHarmonic fields are in the phase table memory.
 		//BigEndian::write( s, initPhaseLth, sizeof(Int_32), (char *)&ck.initPhase[0] );
-		static const int InitPhaseLth = ( 4*LargestLabel + 8 );
+		static const int InitPhaseLth = ( LargestLabel + 8 );
 		Int_32 bogus[ InitPhaseLth ]; // obsolete initial phase array
 		std::fill( bogus, bogus + InitPhaseLth, 0 );
 		bogus[ ck.validPartials ] = ck.resolution;
