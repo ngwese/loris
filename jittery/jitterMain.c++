@@ -26,6 +26,7 @@
 
 #if __ide_target("Jittery")
 	#define JITTER
+	#include <ODonnellOscil.h>
 	#include <JitterySynthesizer.h>
 #elif __ide_target("Original")
 	#include <Synthesizer.h>
@@ -83,14 +84,14 @@ static void doCello( void )
 //	testNoise
 static void testNoise( void )
 {
-	NoiseGenerator n;
+	NoiseGenerator gen;
 	
 	std::vector< double > v1( SRATE ), v2( SRATE );
 	const double s = 13446;
-	n.reset( s );
-	std::generate( v1.begin(), v1.end(), n );
-	n.reset( s );
-	std::generate( v2.begin(), v2.end(), n );
+	gen.reset( s );
+	std::generate( v1.begin(), v1.end(), gen );
+	gen.reset( s );
+	std::generate( v2.begin(), v2.end(), gen );
 	
 	//	these two should be the same, because there's
 	//	no filter:
@@ -102,15 +103,20 @@ static void testNoise( void )
 	const double b[] = { 1. };
 	const double a[] = { 1., 0.99 };
 	Filter phil( b, b+1, a, a+2, 1 / 100. );
-	n = NoiseGenerator( phil, s );
+	gen = NoiseGenerator( phil, s );
 	
-	std::generate( v1.begin(), v1.end(), n );
+	std::generate( v1.begin(), v1.end(), gen );
+	gen.reset( s );
+	std::generate( v2.begin(), v2.end(), gen );
 	
+	//	these two should be the same, because I reset:
+	Assert( v1 == v2 );
+
 	cout << "exporting " << v1.size() << " filtered samples." << endl;
 	AiffFile::Export( "filtered.aiff", SRATE, 1, 24, 
 					  &(v1[0]), &(v1[0])+v1.size() );
 					  
-	//	Chebychev order 3, cutoff 500, ripple -1.
+	//	Chebychev order 3, cutoff 500 (at 44k), ripple -1.
 	//
 	//	Coefficients obtained from http://www.cs.york.ac.uk/~fisher/mkfilter/
 	//	Digital filter designed by mkfilter/mkshape/gencode   A.J. Fisher
@@ -120,13 +126,53 @@ static void testNoise( void )
 	static const double ArCoefs[] = { 1., 2.9258684252, -2.8580608586, 0.9320209046 };
 	phil = Filter( MaCoefs, MaCoefs + 4, ArCoefs, ArCoefs + 4, 1 / Gain );
 
-	n = NoiseGenerator( phil, s );
+	gen = NoiseGenerator( phil, s );
 	
-	std::generate( v1.begin(), v1.end(), n );
+	std::generate( v1.begin(), v1.end(), gen );
 	
 	cout << "exporting " << v1.size() << " really filtered samples." << endl;
 	AiffFile::Export( "cheby.aiff", SRATE, 1, 24, 
 					  &(v1[0]), &(v1[0])+v1.size() );
+}
+
+// ---------------------------------------------------------------------------
+//	testOscil
+
+static void testOscil( void )
+{
+#ifndef JITTER
+	cout << "cannot test old oscillotor using testOscil, skipping." << endl;
+#else
+
+	Breakpoint bp( 210, 0.2, 0, 0 );
+	Oscillator osc;
+	osc.resetEnvelopes( bp, SRATE );
+	double jitter = 1;
+	
+	//	generate incoherent jitter
+	double coherence = 0;
+	osc.resetJitter( jitter, coherence, 0 );
+	
+	std::vector< double > samps( SRATE );
+	osc.oscillate( &samps.front(), 1+&samps.back(), bp, SRATE, jitter, coherence, 1 );
+	
+	cout << "exporting " << samps.size() << " incoherently jittery sinusoidal samples." << endl;
+	AiffFile::Export( "osctest.co0.aiff", SRATE, 1, 24, 
+					  &samps.front(), 1+&samps.back() );
+					  
+	//	generate coherent jitter
+	coherence = 1;
+	osc.resetJitter( jitter, coherence, 0 );
+	
+	std::fill( samps.begin(), samps.end(), 0 );
+	osc.oscillate( &samps.front(), 1+&samps.back(), bp, SRATE, jitter, coherence, 1 );
+	
+	cout << "exporting " << samps.size() << " coherently jittery sinusoidal samples." << endl;
+	AiffFile::Export( "osctest.co1.aiff", SRATE, 1, 24, 
+					  &samps.front(), 1+&samps.back() );
+	
+
+#endif
 }
 
 // ---------------------------------------------------------------------------
@@ -212,8 +258,9 @@ int main()
 	try
 	{
 		// doCello();
-		// testNoise();
-		testSines();
+		testNoise();
+		// testSines();
+		testOscil();
 	}
 	catch( exception & ex )
 	{

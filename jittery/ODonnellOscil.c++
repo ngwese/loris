@@ -81,15 +81,12 @@ static const Filter & prototype_filter( void )
 //	one_pole_filter
 // ---------------------------------------------------------------------------
 //	Construct a single pole filter with the specified feedback coefficient	
-//	and gain.
+//	and automatically-computed gain .
 //
 static Filter one_pole_filter( double feedback )
 {
-	//std::vector< double > b( 1, 1.0 ), a( 2, 1.0 );
-	//a[1] = feedback;
 	double b[] = {1};
 	double a[] = {1, feedback };
-	//return Filter( b.begin(), b.end(), a.begin(), a.end(), gain );
 	return Filter( b, b+1, a, a+2, 1 - feedback );
 }
 
@@ -352,9 +349,8 @@ Oscillator::updateIncoherentPM( double gain, double coherence )
 	using namespace std;
 	pm_incoherent = sqrt( 1. - (coherence*coherence) ) *
 					m2pi( pm_incoherent + ( gain * incoherentJitter() ) );
+	
 }
-
-
 
 
 }	//	end of namespace Loris
