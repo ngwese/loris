@@ -16,7 +16,12 @@ has been hard to reproduce.
 The parameters we once liked for this are resolution 25 and
 window width 75 Hz.
 
-Last updated: 5 Dec 2001 by Kelly Fitz
+notes from trial 1:
+	- 50 Hz has artifacts
+	- 200 Hz window is too wide
+	- 20,25, 30 res with 75 or 100 window are hard to distinguish
+
+Last updated: 4 Feb 2002 by Kelly Fitz
 """
 print __doc__
 

@@ -16,7 +16,13 @@ without a slightly reverberant quality.
 The parameters we once liked for this are resolution 60 and
 window width 200 Hz.
 
-Last updated: 5 Dec 2001 by Kelly Fitz
+notes from trial 1:
+	- 80 Hz is unusable
+	- 60,200 is a little noisy, as is 40,200
+	- 60,300 sounds a little hoarse, as does 40,300
+	- 60,100 is usable
+
+Last updated: 4 Feb 2002 by Kelly Fitz
 """
 print __doc__
 
