@@ -216,7 +216,7 @@ static void test_distill_overlapping2( void )
 	//	them the same label, and distill them.
 	Partial p1;
 	p1.insert( 0, Breakpoint( 100, 0.4, 0, 0 ) );
-	p1.insert( 0.3, Breakpoint( 110, 0.4, 0, .1 ) );
+	p1.insert( 0.3, Breakpoint( 100, 0.4, 0, .1 ) );
 	p1.setLabel( 12 );
 	
 	Partial p2;
@@ -236,12 +236,21 @@ static void test_distill_overlapping2( void )
 	//	produce.
 	Partial compare;
 	compare.insert( 0, Breakpoint( 100, 0.4, 0, 0 ) );
-	compare.insert( 0.3, Breakpoint( 110, 0.5, 9./25., .1 ) );
+	double t = 0 + fade;
+	compare.insert( t, Breakpoint( p1.frequencyAt(t), 0, 
+								   p1.bandwidthAt(t), p1.phaseAt(t) ) );
+	t = 0.2 - fade;
+	compare.insert( t, Breakpoint( p2.frequencyAt(t), 0, 
+								   p2.bandwidthAt(t), p2.phaseAt(t) ) );
+	compare.insert( 0.2, Breakpoint( 200, 0.3, 0, 0 ) );
+	compare.insert( 0.35, Breakpoint( 210, 0.3, 0.2, .1 ) );
+	compare.setLabel( 12 );
 
 	//	compare Partials (distilled Partials
 	//	should be in label order):
 	TEST( l.size() == 1 );
 	TEST( l.begin()->numBreakpoints() == compare.numBreakpoints() );
+	TEST( l.begin()->label() == compare.label() );
 	// TEST( *l.begin() == compare );
 	
 	Partial::iterator distit = l.begin()->begin();
@@ -270,12 +279,12 @@ static void test_distill_overlapping3( void )
 	//	them the same label, and distill them.
 	Partial p1;
 	p1.insert( 0, Breakpoint( 100, 0.4, 0, 0 ) );
-	p1.insert( 0.3, Breakpoint( 110, 0.4, 0, .1 ) );
+	p1.insert( 0.3, Breakpoint( 100, 0.4, 0, .1 ) );
 	p1.setLabel( 123 );
 	
 	Partial p2;
-	p2.insert( 0.2, Breakpoint( 200, 0.3, 0, 0 ) );
-	p2.insert( 0.35, Breakpoint( 210, 0.3, 0.2, .1 ) );
+	p2.insert( 0.2, Breakpoint( 200, 0.3, 0.2, 0 ) );
+	p2.insert( 0.35, Breakpoint( 200, 0.3, 0.2, .1 ) );
 	p2.setLabel( 123 );
 
 	Partial p3;
@@ -296,7 +305,22 @@ static void test_distill_overlapping3( void )
 	//	produce.
 	Partial compare;
 	compare.insert( 0, Breakpoint( 100, 0.4, 0, 0 ) );
-	compare.insert( 0.3, Breakpoint( 110, 0.5, 9./25., .1 ) );
+	double t = 0 + fade;
+	compare.insert( t, Breakpoint( p1.frequencyAt(t), 0, 
+								   p1.bandwidthAt(t), p1.phaseAt(t) ) );
+	t = 0.2 - fade;
+	compare.insert( t, Breakpoint( p2.frequencyAt(t), 0, 
+								   p2.bandwidthAt(t), p2.phaseAt(t) ) );
+	compare.insert( 0.2, Breakpoint( 200, 0.3, 0.2, 0 ) );
+	t = 0.2 + fade;
+	compare.insert( t, Breakpoint( p2.frequencyAt(t), 0, 
+								   p2.bandwidthAt(t), p2.phaseAt(t) ) );
+	t = 0.32 - fade;
+	compare.insert( t, Breakpoint( p3.frequencyAt(t), 0, 
+								   p3.bandwidthAt(t), p3.phaseAt(t) ) );
+	compare.insert( 0.32, Breakpoint( 300, 0.3, 0, 0 ) );
+	compare.insert( 0.4, Breakpoint( 310, 0.3, 0.2, .1 ) );
+	compare.setLabel( 123 );
 
 	//	compare Partials (distilled Partials
 	//	should be in label order):
