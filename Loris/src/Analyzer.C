@@ -54,6 +54,8 @@ Analyzer::analyze( const vector< double > & buf, double srate )
 //	so construct it at the last minute)
 //	(in fact, it could be local, no need for it 
 //	to persist, is there?)
+//	(in fact, all the heavy-lifters should
+//	be local state!)
 	if (! _spectrum.get() ) {
 		createSpectrum( srate );
 	}
@@ -81,6 +83,7 @@ Analyzer::analyze( const vector< double > & buf, double srate )
 			//debugger << "analyzing frame centered at " << _winMiddleIdx << endl; 
 			 
 			//	compute reassigned spectrum:
+			//	make this better!
 			_spectrum->transform( buf, _winMiddleIdx );
 			
 			//	extract peaks from the spectrum:
@@ -216,6 +219,10 @@ Analyzer::extractPeaks( Frame & frame )
 	const double threshold = pow( 10., 0.05 * noiseFloor() );	//	absolute magnitude threshold
 	const double sampsToHz = sampleRate() / _spectrum->size();
 	
+	//	cache corrected times for the extracted breakpoints, so 
+	//	that they don't hafta be computed over and over again:
+	_peakTimeCache.clear();	
+	
 	//	look for magnitude peaks in the spectrum:
 	for ( int j = 1; j < (_spectrum->size() / 2) - 1; ++j ) {
 		if ( abs((*_spectrum)[j]) > abs((*_spectrum)[j-1]) && 
@@ -245,8 +252,9 @@ Analyzer::extractPeaks( Frame & frame )
 			//	this sample:
 			double phase = _spectrum->reassignedPhase( fsample, timeCorrection );
 			double time = frameTime() + ( timeCorrection / sampleRate() );
-			frame.push_back( Peak( fHz, mag, 0., phase, time ) );
-		
+			frame.push_back( Breakpoint( fHz, mag, 0., phase ) );
+			_peakTimeCache[ fHz ] = time;
+			
 		}	//	end if itsa peak
 	}
 }
@@ -261,7 +269,7 @@ Analyzer::extractPeaks( Frame & frame )
 void 
 Analyzer::thinPeaks( Frame & frame )
 {
-	frame.sort( greater_amplitude<Peak>() );
+	frame.sort( greater_amplitude<Breakpoint>() );
 	
 	//debugger << "had " << frame.size() << " peaks in this frame" << endl;
 
@@ -274,7 +282,7 @@ Analyzer::thinPeaks( Frame & frame )
 		//	in frequency:
 		double lower = it->frequency() - partialSeparation();
 		double upper = it->frequency() + partialSeparation();
-		if ( it != find_if( frame.begin(), it, frequency_between< Peak >( lower, upper ) ) ) {
+		if ( it != find_if( frame.begin(), it, frequency_between< Breakpoint >( lower, upper ) ) ) {
 			//	find_if returns the end of the range (it) if it finds nothing; 
 			//	remove *it from the frame
 			frame.erase( it-- );
@@ -308,11 +316,12 @@ void
 Analyzer::formPartials( Frame & frame )
 {
 	//	frequency-sort the frame:
-	frame.sort( less_frequency<Peak>() );
+	frame.sort( less_frequency<Breakpoint>() );
 	
 	//	loop over short-time peaks:
 	for( Frame::iterator bpIter = frame.begin(); bpIter != frame.end(); ++bpIter ) {
-		const Peak & peak = *bpIter;
+		const Breakpoint & peak = *bpIter;
+		const double peakTime = _peakTimeCache[ peak.frequency() ];
 		
 		//	compute the time after which a Partial
 		//	must have Breakpoints in order to be 
@@ -334,7 +343,7 @@ Analyzer::formPartials( Frame & frame )
 			//	remember this Partial if it is nearer in frequency 
 			//	to the Breakpoint than every other Partial:
 			if ( nearest == partials().end() || 
-				 distance( *pIter, peak, peak.time() ) < distance( *nearest, peak, peak.time() ) ) {
+				 distance( *pIter, peak, peakTime ) < distance( *nearest, peak, peakTime ) ) {
 				//	this Partial is nearest (so far):
 				nearest = pIter;
 			}
@@ -351,7 +360,7 @@ Analyzer::formPartials( Frame & frame )
 		//
 		//	Otherwise, add this Breakpoint to the nearest Partial.
 		double thisdist = (nearest != partials().end()) ? 
-							(distance(*nearest, peak, peak.time())) : 
+							(distance(*nearest, peak, peakTime)) : 
 							(0.);
 		Frame::iterator next = bpIter;
 		++next;
@@ -360,22 +369,22 @@ Analyzer::formPartials( Frame & frame )
 		if ( nearest == partials().end() /* (1) */ || 
 			 thisdist > captureRange() /* (2) */ ||
 			 ( next != frame.end() && 
-			 	thisdist > distance( *nearest, *(next), next->time() ) ) /* (3) */ ||
+			 	thisdist > distance( *nearest, *(next), _peakTimeCache[ next->frequency() ] ) ) /* (3) */ ||
 			 ( bpIter != frame.begin() && 
-			 	thisdist > distance( *nearest, *(prev), prev->time() ) ) /* (4) */ ) {
+			 	thisdist > distance( *nearest, *(prev), _peakTimeCache[ prev->frequency() ] ) ) /* (4) */ ) {
 			 	
 			 /*debugger << "spawning a partial at frequency " << peak.frequency() <<
 			 			 " amplitude " << peak.amplitude() <<
-			 			 " and time " << peak.time() << endl;
+			 			 " and time " << peakTime << endl;
 			 */
-			 spawnPartial( peak.time(), peak );
+			 spawnPartial( peakTime, peak );
 		}
 		else {
 			/*debugger << "matching a partial at frequency " << peak.frequency() <<
 			 			" amplitude " << peak.amplitude() <<
-			 			" and time " << peak.time() << endl;
+			 			" and time " << peakTime << endl;
 			*/
-			nearest->insert( peak.time(), peak );
+			nearest->insert( peakTime, peak );
 		}
 	}			 
 }

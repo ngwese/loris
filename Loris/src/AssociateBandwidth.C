@@ -204,7 +204,7 @@ AssociateBandwidth::computeWindowSpectrum( const vector< double > & v )
 	}
 
 	//	compute the window scale by summing the main
-	//	lobe samples:
+	//	lobe samples (but not oversampling):
 	_windowFactor = _mainlobe[0] * _mainlobe[0];
 	for ( long j = WinSpecOversample; j < _mainlobe.size(); j += WinSpecOversample ) {
 		//	twice, because _mainlobe has only one side of
@@ -418,7 +418,10 @@ AssociateBandwidth::accumulateSinusoid( double f, double a )
 	}
 	
 	#ifdef YOYO
-	distribute( f, YO, _sinusoidalEnergy  );
+	//	this should be the same:
+	double booger = correctAmp * correctAmp * _windowFactor;
+	distribute( f, booger, _sinusoidalEnergy  );
+	//distribute( f, YO, _sinusoidalEnergy  );
 	#endif
 
 	#ifdef HERE_WE_GO_AGAIN

@@ -16,6 +16,7 @@
 #include <list>
 #include <vector>
 #include <memory>
+#include <map>
 
 Begin_Namespace( Loris )
 
@@ -59,25 +60,7 @@ public:
 
 //	-- internal helpers --
 private:
-	//	auxiliary class representing spectral peaks, 
-	//	extending the Breakpoint class to include some 
-	//	extra data needed only for analysis:
-	class Peak : public Breakpoint
-	{
-	public:
-		//	construction:
-		Peak( double f, double a, double b, double p, double t ) : 
-			_time( t ), Breakpoint( f, a, b, p ) {}
-		
-		Peak( void ) : _time( 0. ), Breakpoint() {}
-		//	access:
-		double time( void ) const { return _time; }
-		void setTime( double x ) { _time = x; }
-	private:
-		double _time; 	//	in seconds
-	};	//	end of class Peak
-	
-	typedef std:: list< Peak > Frame;
+	typedef std:: list< Breakpoint > Frame;
 	
 	//	construct spectrum analyzer and analysis window:
 	void createSpectrum( double srate );
@@ -94,6 +77,8 @@ private:
 private:
 	std::auto_ptr< ReassignedSpectrum > _spectrum;
 	std::auto_ptr< AssociateBandwidth > _bw;
+	
+	std::map< double, double > _peakTimeCache;	//	yuck
 	
 	//	parameters (from Lemur):
 	double _freqResolution;		//	minimum frequency distance (Hz) between Partials

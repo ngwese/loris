@@ -24,7 +24,7 @@ Begin_Namespace( Loris )
 //	Instantaneous phase is also stored, but is only used at the onset of 
 //	a partial, or when it makes a transition from zero to nonzero amplitude.
 //
-//	Leaf class, do not subclass. On second thought...
+//	Leaf class, do not subclass.
 //
 class Breakpoint
 {
@@ -36,8 +36,7 @@ public:
 	
 //	destructor is not virtual, this is not a base class,
 //	use compiler-generated:	
-//	well, actually...
-	virtual ~Breakpoint( void ) {}
+	// ~Breakpoint( void ) {}
 
 //	copy and assign can be compiler-generated:
 	//Breakpoint( const Breakpoint & other );
@@ -56,6 +55,7 @@ public:
 	void setPhase( double x ) { _phase = x; }
 	
 //	add noise (bandwidth) energy:
+//	should this really be part of the interface?
 	void addNoise( double x );
 	
 private:
