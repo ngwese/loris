@@ -26,7 +26,7 @@ OBJ_LORIS = $(CLASSES)/AiffFile.o \
 			$(CLASSES)/Synthesizer.o \
 			$(CLASSES)/ieee.o \
 			$(CLASSES)/notifier.o \
-#			$(CLASSES)/SpcFile.o \	FIX ME
+			$(CLASSES)/SpcFile.o \
 #			$(CLASSES)/FloatingThreshold.o \
 
 #
