@@ -79,6 +79,31 @@ typedef struct {
 static SdifSignature lorisSignature = SdifSignatureConst('1','T','R','C');
 static SdifSignature lorisLabels = SdifSignatureConst('1','L','B','L');
 
+//	Exception class for handling errors in SDIF library:
+class SdifLibraryError : public FileIOException
+{
+public:
+	SdifLibraryError( const std::string & str, const std::string & where = "" ) : 
+		FileIOException( std::string("SDIF library error -- ").append( str ), where ) {}
+};	//	end of class SdifLibraryError
+
+//	macro to check for SDIF library errors and throw exceptions when
+//	they occur, which we really ought to do after every SDIF library
+//	call:
+#define ThrowIfSdifError( getErr, report )										\
+	do {																		\
+		SdifErrorT* errPtr = (getErr);											\
+		if (errPtr)																\
+		{																		\
+	        debugger << "SDIF error number " << (int)errPtr->Tag << endl;		\
+			std::string s(report);												\
+			s.append(", SDIF error message: ");									\
+			s.append(errPtr->UserMess);											\
+			Throw( SdifLibraryError, s );										\
+		}																		\
+	} while (false)	
+
+
 #pragma mark envelope reading helpers
 // ---------------------------------------------------------------------------
 //	processRow
@@ -101,7 +126,7 @@ processRow( const SdifSignature msig, const RowOfLorisData & rowData, const doub
 //
 	if (partialsVector.size() <= rowData.index)
 	{
-		partialsVector.resize( rowData.index + 500 );
+		partialsVector.resize( long(rowData.index) + 500 );
 	}
 
 //
@@ -110,14 +135,14 @@ processRow( const SdifSignature msig, const RowOfLorisData & rowData, const doub
 	if (msig == lorisSignature) 
 	{
 		Breakpoint newbp( rowData.freqOrLabel, rowData.amp, rowData.noise, rowData.phase );
-		partialsVector[rowData.index].insert( frameTime + rowData.timeOffset, newbp );
+		partialsVector[long(rowData.index)].insert( frameTime + rowData.timeOffset, newbp );
 	}
 //
 // Set partial label.
 //
 	else if (msig == lorisLabels) 
 	{
-		partialsVector[rowData.index].setLabel( (int) rowData.freqOrLabel );
+		partialsVector[long(rowData.index)].setLabel( (int) rowData.freqOrLabel );
 	}
 		
 }
@@ -137,55 +162,68 @@ readLorisMatrices( SdifFileT *file, std::vector< Partial > & partialsVector )
 //
 // Read all frames matching the file selection.
 //
-	while (!eof && !SdifFLastError(file))
+	while (!eof) // && !SdifFLastError(file))
 	{
 		bytesread += SdifFReadFrameHeader(file);
+		ThrowIfSdifError( SdifFLastError(file), "Error reading SDIF file" );
 		
 		// Skip frames until we find one we are interested in.
 		while (!SdifFCurrFrameIsSelected(file) 
 				|| (SdifFCurrSignature(file) != lorisSignature 
 					&& SdifFCurrSignature(file) != lorisLabels))
 		{
+			ThrowIfSdifError( SdifFLastError(file), "Error reading SDIF file." );
+
 			SdifSkipFrameData(file);
 			eof = (SdifFGetSignature(file, &bytesread) == eEof);
+			ThrowIfSdifError( SdifFLastError(file), "Error reading SDIF file" );
+
 			if (eof)
 				break;		// eof
 			bytesread += SdifFReadFrameHeader(file);
+			ThrowIfSdifError( SdifFLastError(file), "Error reading SDIF file" );
 		}
 		
 		if (!eof)
 		{
-
 			// Access frame header information.
 			SdifFloat8 time = SdifFCurrTime(file);
 			SdifSignature fsig = SdifFCurrFrameSignature(file);
 			SdifUInt4 streamid = SdifFCurrID(file);
 			SdifUInt4 nmatrix = SdifFCurrNbMatrix(file);
-			
+			ThrowIfSdifError( SdifFLastError(file), "Error reading SDIF file" );
+
 			// Read all matrices in this frame matching the selection.
 			for (int m = 0; m < nmatrix; m++)
 			{
 				bytesread += SdifFReadMatrixHeader(file);
-				
+				ThrowIfSdifError( SdifFLastError(file), "Error reading SDIF file" );
+
 				if (SdifFCurrMatrixIsSelected(file))
 				{
+					ThrowIfSdifError( SdifFLastError(file), "Error reading SDIF file" );
 				
 					// Access matrix header information.
 					SdifSignature msig = SdifFCurrMatrixSignature(file);
 					SdifInt4 nrows = SdifFCurrNbRow(file);
 					SdifInt4 ncols = SdifFCurrNbCol(file);
 					SdifDataTypeET type = SdifFCurrDataType(file);
-					
+					ThrowIfSdifError( SdifFLastError(file), "Error reading SDIF file" );
+
 					// Read each row of matrix data.
 					for (int row = 0; row < nrows; row++)
 					{
 						bytesread += SdifFReadOneRow(file);
+					ThrowIfSdifError( SdifFLastError(file), "Error reading SDIF file" );
 
 						// Fill a rowData structure.
 						RowOfLorisData rowData = { 0.0 };
 						SdifFloat8 *rowDataPtr = &rowData.index;
 						for (int col = 1; col <= std::min(ncols, lorisRowMaxElements); col++)
+						{
 							*(rowDataPtr++) = SdifFCurrOneRowCol(file, col);
+							ThrowIfSdifError( SdifFLastError(file), "Error reading SDIF file" );
+						}
 						
 						// Add rowData as a new breakpoint in a partial, or,
 						// if its a 1LBL matrix, read label mapping.
@@ -195,44 +233,52 @@ readLorisMatrices( SdifFileT *file, std::vector< Partial > & partialsVector )
 				else
 				{
 					bytesread += SdifSkipMatrixData(file);
+					ThrowIfSdifError( SdifFLastError(file), "Error reading SDIF file" );
 				}
 				
 				bytesread += SdifFReadPadding(file, SdifFPaddingCalculate(file->Stream, bytesread));
+				ThrowIfSdifError( SdifFLastError(file), "Error reading SDIF file" );
 			}
 			
 			// read next signature
 			eof = (SdifFGetSignature(file, &bytesread) == eEof);
+			ThrowIfSdifError( SdifFLastError(file), "Error reading SDIF file" );
 		}
 	} 
 
 //
 // Error messages.
 //	
+#if 0
 	SdifErrorT* errPtr = SdifFLastError (file);
 	if (errPtr)
 	{
 		debugger << "SDIF error number " << (int)errPtr->Tag << endl;
 		if ( errPtr->Tag == eUnDefined )
 		{
+			//	this should ne generate an error anymore
+			debugger << "should not be generating eUnDefined errors..." << endl;
 			Throw(FileIOException, 
 			"Error reading SDIF file: Undefined martrix type. "
 			"Is the SdifTypes.STYP file accessible to Loris, and does it include the 1LBL definition?");
 		}
-#if defined(SDIF_VERSION_MINOR) && (SDIF_VERSION_MINOR < 4)
 		//	this error tag vanished between versions 3.2.2 and 3.4 
-		//	of IRCAM's SDIF library. The version macros appeared.
+		//	of IRCAM's SDIF library, and we require version 3.4
+		//	or later.
+		/*
 		else if ( errPtr->Tag == eBadNbData )
 		{
 			Throw(FileIOException, 
 			"Error reading SDIF file: bad martrix data. "
 			"Does the SdifTypes.STYP file include the bandwidth-enhanced 1TRC definition?");
 		}
-#endif
+		*/
 		else
 		{			
 			Throw(FileIOException, "Error reading SDIF file.");
 		}
 	}
+#endif
 }
 
 
@@ -251,6 +297,9 @@ read( const char *infilename, std::list<Partial> & partials )
 // Initialize SDIF library.
 //
 	SdifGenInit("");
+#if !defined(Debug_Loris)
+	SdifDisableErrorOutput();
+#endif
 	
 //
 // Open SDIF file for reading.

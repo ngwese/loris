@@ -13,6 +13,10 @@ changes since 1.0beta7 release:
 TwoPi symbol by 2. * Pi in the denominator without proper
 parenthesis.
 
+- eliminated many spurious compiler warnings
+
+- improved error handling and reporting in SDIF reading
+
 -------------------------------------------------------
 changes since 1.0beta6 release:
 

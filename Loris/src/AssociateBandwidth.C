@@ -159,7 +159,7 @@ AssociateBandwidth::findRegionBelow( double binfreq )
 		return -1;
 	}
 	else {
-		return std::min( std::floor(binfreq - booger), _surplus.size() - 1. );
+		return int( std::min( std::floor(binfreq - booger), _surplus.size() - 1. ) );
 	}
 }
 

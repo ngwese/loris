@@ -300,15 +300,15 @@ static struct SpcExportInfo spcEI;		// spc Export information
 //
 enum 
 { 
-	FileType = 'KYMs',
-	ContainerId = 'FORM', 
-	AiffType = 'AIFF', 
-	CommonId = 'COMM',
-	SoundDataId = 'SSND',
-	ApplicationSpecificId = 'APPL',
-	SosEnvelopesId = 'SOSe',
-	InstrumentId = 'INST',
-	MarkerId = 'MARK'
+	FileType = 0x4b594d73,					// 'KYMs'
+	ContainerId = 0x464f524d,				// 'FORM' 
+	AiffType = 0x41494646,					// 'AIFF' 
+	CommonId = 0x434f4d4d,					// 'COMM'
+	SoundDataId = 0x53534e44,				// 'SSND'
+	ApplicationSpecificId = 0x4150504c,		// 'APPL'
+	SosEnvelopesId = 0x534f5365,			// 'SOSe'
+	InstrumentId = 0x494e5354,				// 'INST'
+	MarkerId = 0x4d41524b					// 'MARK'
 };
 
 struct CkHeader 

@@ -61,10 +61,10 @@ namespace Loris {
 
 //	-- types and ids --
 enum { 
-		ContainerId = 'FORM', 
-		LEMR_ID = 'LEMR', 
-		AnalysisParamsID = 'LMAN', 
-		TrackDataID = 'TRKS',
+		ContainerId = 0x464f524d,				// 'FORM' 
+		LEMR_ID = 0x4c454d52,					// 'LEMR' 
+		AnalysisParamsID = 0x4c4d414e,			// 'LMAN' 
+		TrackDataID = 0x54524b53,				// 'TRKS'
 		FormatNumber = 4962 };
 
 //	for reading and writing files, the exact sizes and

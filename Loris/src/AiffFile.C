@@ -53,12 +53,12 @@ namespace Loris {
 
 //	-- chunk types --
 enum { 
-	ContainerId = 'FORM', 
-	AiffType = 'AIFF', 
-	CommonId = 'COMM',
-	ApplicationSpecificId = 'APPL',
-	SosEnvelopesId = 'SOSe',
-	SoundDataId = 'SSND'
+	ContainerId = 0x464f524d,				// 'FORM' 
+	AiffType = 0x41494646,					// 'AIFF' 
+	CommonId = 0x434f4d4d,					// 'COMM'
+	ApplicationSpecificId = 0x4150504c,		// 'APPL'
+	SosEnvelopesId = 0x534f5365,			// 'SOSe'
+	SoundDataId = 0x53534e44,				// 'SSND'
 };
 
 typedef Int_32 ID;
@@ -493,7 +493,7 @@ AiffFile::readSampleData( std::istream & s, unsigned long chunkSize )
 		//	(chunkSize is everything after the header)
 		const unsigned long howManyBytes = 
 			( chunkSize - ck.offset ) - (2 * sizeof(Uint_32));
-		_bytes.resize( howManyBytes, 0. );		//	could throw bad_alloc
+		_bytes.resize( howManyBytes, 0 );		//	could throw bad_alloc
 
 		//	skip ahead to the samples and read them:
 		s.ignore( ck.offset );
@@ -542,7 +542,7 @@ AiffFile::write( std::ostream & s, const double * bufBegin, const double * bufEn
 			(bufEnd - bufBegin) * (sampleSize() / 8);
 		if ( bufferSize % 2 )
 			++bufferSize;
-		_bytes.resize( bufferSize, 0. );	
+		_bytes.resize( bufferSize, 0 );	
 		// debugger << "resized output buffer to " << _bytes.size() << " bytes" << endl;
 		
 		writeContainer( s );
