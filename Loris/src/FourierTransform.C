@@ -88,6 +88,7 @@ FourierTransform::FourierTransform( long len ) :
 //
 FourierTransform::~FourierTransform( void )
 {
+	delete[] _z;
 	if ( _plan != Null ) {
 		fftw_destroy_plan( _plan );
 		release( size() );
@@ -127,7 +128,6 @@ FourierTransform::transform( void )
 	for ( long i = 0; i < size(); ++i ) {
 		_z[i] = complex< double >( sharedBuffer[i].re, sharedBuffer[i].im );
 	}
-	
 }
 
 // ---------------------------------------------------------------------------
