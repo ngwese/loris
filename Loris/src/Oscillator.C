@@ -115,7 +115,6 @@ Oscillator::generateSamples( vector< double > & buffer, long howMany, long offse
 		double noise, mod, osc, samp;
 		for ( int i = 0; i < howMany; ++i )
 		{
-			//
 			//	get a filtered noise sample, use scale as std deviation:
 			//	can build scale into filter gain.
 			noise = _filter->sample( gaussian_normal() );
@@ -155,7 +154,7 @@ Oscillator::generateSamples( vector< double > & buffer, long howMany, long offse
 //	set the state variables to their target values,
 //	just in case they didn't arrive exactly (overshooting
 //	amplitude or, especially, bandwidth, could be bad, and
-//	does happen):
+//	it does happen):
 	_frequency = targetFreq;
 	_amplitude = targetAmp;
 	_bandwidth = targetBw;

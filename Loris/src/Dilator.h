@@ -1,5 +1,5 @@
-#ifndef __Loris_dilator__
-#define __Loris_dilator__
+#ifndef __INCLUDE_DILATOR_H__
+#define __INCLUDE_DILATOR_H__
 // ===========================================================================
 //	Dilator.h
 //
@@ -10,74 +10,31 @@
 //
 // ===========================================================================
 #include "LorisLib.h"
-#include "PartialIterator.h"
-
+#include "Partial.h"
 #include <vector>
-#include <set>
 
 Begin_Namespace( Loris )
-
-class Partial;
 
 // ---------------------------------------------------------------------------
 //	class Dilator
 //
-//	HEY provide access to the PartialIterator, like others.
 //
-class Dilator : public PartialIteratorOwner
+class Dilator : public PartialCollector
 {
-//	-- construction --
-public:
-	Dilator( void ) {}
+//	-- implementation --
+	std::vector< double > _initial, _target;
 	
-//	constructor from iterators:
-//	If template members aren't available, accept only vector iterators.
-#if !defined(No_template_members)
-	template < class Iter1, class Iter2 >
-	Dilator( Iter1 ibegin, Iter2 tbegin, int n )
-#else
-	Dilator( std::vector< double >::const_iterator ibegin, 
-			 std::vector< double >::const_iterator tbegin, 
-			 int n )
-#endif
-	{
-		setTimePoints( ibegin, tbegin, n );
-	}
+//	-- public interface --
+public:
+	
+//	construction from n time points:
+	Dilator( const double * ibegin, const double * tbegin, int n );
 	
 	//	use compiler-generated:
-	// Dilator( const Dilator & );
 	// ~Dilator( void );
-	// Dilator & operator= ( const Dilator & other );
 	
-//	-- time-point access and mutation --
-//	could do this more beautifully without exposing the 
-//	underlying structure, what kind of access is really 
-//	needed?
-	const std::multiset< double > & initialTimePoints( void ) const { return _initial; }
-	const std::multiset< double > & targetTimePoints( void ) const { return _target; }
-	std::multiset< double > & initialTimePoints( void ) { return _initial; }
-	std::multiset< double > & targetTimePoints( void ) { return _target; }
-	
-//	template time point specification from iterators:
-//	If template members aren't available, accept only vector iterators.
-#if !defined(No_template_members)
-	template < class Iter1, class Iter2 >
-	void setTimePoints( Iter1 ibegin, Iter2 tbegin, int n )
-#else
-	void setTimePoints( std::vector< double >::const_iterator ibegin, 
-						std::vector< double >::const_iterator tbegin, int n )
-#endif
-	{
-		while ( n > 0 ) {
-			_initial.insert( *(ibegin++) );
-			_target.insert( *(tbegin++) );
-			--n;
-		}
-	}
-	
-//	-- dilation --
-	Partial & dilate( Partial & p ) const;
-	Partial & operator()( Partial & p ) const { return dilate( p ); }
+//	dilation:
+	void dilate( Partial & p );
 	
 //	template dilation of an iterator range:
 //	(only if template members are allowed)
@@ -88,19 +45,16 @@ public:
 		while ( begin != end )
 			dilate( *(begin++) );
 	}
-	
-	template < class Iter >
-	void operator() ( Iter begin, Iter end ) const { dilate( begin, end ); }
 #endif
 	
-//	-- instance variables --
+//	not implemented:
 private:
-	std::multiset< double > _initial;
-	std::multiset< double > _target;
-		
+	Dilator( void );
+	Dilator( const Dilator & );
+	Dilator & operator= ( const Dilator & other );
 };	//	end of class Dilator
 
 
 End_Namespace( Loris )
 
-#endif	// ndef __Loris_dilator__
+#endif	// ndef __INCLUDE_DILATOR_H__

@@ -7,27 +7,33 @@
 //	-kel 26 Oct 99
 //
 // ===========================================================================
-
-#include "LorisLib.h"
 #include "Dilator.h"
 #include "Partial.h"
 #include "PartialIterator.h"
 #include "Breakpoint.h"
 #include "Exception.h"
 #include "notifier.h"
-
 #include <algorithm>
-
-using namespace std;
 
 Begin_Namespace( Loris )
 
 // ---------------------------------------------------------------------------
+//	constructor
+// ---------------------------------------------------------------------------
+//	Construct from n initial and n target time points.
+//
+Dilator::Dilator( const double * ibegin, const double * tbegin, int n ) :
+	_initial( ibegin, ibegin+n ),
+	_target( tbegin, tbegin+n )
+{
+	std::sort( _initial.begin(), _initial.end() );
+	std::sort( _target.begin(), _target.end() );
+}
+
+// ---------------------------------------------------------------------------
 //	dilate
 // ---------------------------------------------------------------------------
-//	Dilate a Partial in-place, and return a reference to it.
-//
-//	The Partial envelope is replaced with a new envelope having the
+//	Replace the Partial envelope with a new envelope having the
 //	same Breakpoints at times computed to align temporal features
 //	in _initial with their counterparts in _target.
 //
@@ -47,88 +53,76 @@ Begin_Namespace( Loris )
 //	their Dilator, or Partials having Breakpoints before time 0, both 
 //	of which are probably unusual circumstances. 
 //	
+//	Dilated Partials are collected (Dilator isa PartialCollector).
 //	
-Partial &
-Dilator::dilate( Partial & p ) const
+void
+Dilator::dilate( Partial & p )
 {
-/*
-	debugger << "Initial time points: ";
-	for (multiset< double >::const_iterator it = _initial.begin(); it != _initial.end(); ++it )
-		debugger << *it;
-	debugger << endl;
+	debugger << "dilating Partial having " << p.countBreakpoints() 
+			 << " Breakpoints" << endl;
 
-    debugger << "Target time points: ";
-    for (multiset< double >::const_iterator it = _target.begin(); it != _target.end(); ++it )
-        debugger << *it;
-    debugger << endl;
-*/
 	//	sanity check:
 	Assert( _initial.size() == _target.size() );
+	
+	//	don't dilate if there's no time points:
+	if ( _initial.size() == 0 )
+		return;
 		
 	//	create the new Partial:
 	Partial newp;
 	newp.setLabel( p.label() );
 	
-	//	create iterators on the timepoint collections:
-	typedef multiset< double >::const_iterator TimepointIterator;
-	TimepointIterator iterInit( _initial.begin() ), iterTgt( _target.begin() );
-	
-	for ( iterator()->reset(p); ! iterator()->atEnd(); iterator()->advance() ) {
-		//	find the first initial time point later than pIter:
-		while ( iterInit != _initial.end() && iterator()->time() > *iterInit ) {
-			++iterInit;
-			++iterTgt;
+	//	timepoint index:
+	int idx = 0;
+	for ( BasicPartialIterator iter(p); ! iter.atEnd(); iter.advance() ) 
+	{
+		//	find the first initial time point later 
+		//	than the currentTime:
+		double currentTime = iter.time();
+		while ( idx < _initial.size() && currentTime > _initial[idx] )
+		{
+			++idx;
 		}
 	
 		//	compute a new time for the Breakpoint at pIter:
 		double newtime = 0;
-		if ( _initial.size() == 0 ) {
-			//	need to traverse the Partial, even if there's
-			//	no dilating going on, because the caller may
-			//	be relying on a side effect of the PartialIterator:
-				newtime = iterator()->time();
-		}
-		else if ( iterInit == _initial.begin() ) {
+		if ( idx == 0 ) {
 			//	all time points in _initial are later than 
-			//	the time of pIter; stretch if no zero time 
+			//	the currentTime; stretch if no zero time 
 			//	point has been specified, otherwise, shift:
-			if ( *iterInit != 0. )
-				newtime = iterator()->time() * (*iterTgt) / (*iterInit);
+			if ( _initial[idx] != 0. )
+				newtime = currentTime * _target[idx] / _initial[idx];
 			else
-				newtime = (*iterTgt) + ( iterator()->time() - (*iterInit) );
+				newtime = _target[idx] + (currentTime - _initial[idx]);
 		}
-		else if ( iterInit == _initial.end() ) {
+		else if ( idx == _initial.size() ) {
 			//	all time points in _initial are earlier than 
-			//	the time of pIter; shift:
-			//TimepointIterator prevTgt = iterTgt; --prevTgt;
-			//TimepointIterator prevInit = iterInit; --prevInit;
-			//newtime = *prevTgt + ( iterator()->time() - (*prevInit) );
-			//	or:
-			newtime = * --(TimepointIterator(iterTgt)) + 
-						( iterator()->time() - * --(TimepointIterator(iterInit)) );
+			//	the currentTime; shift:
+			//
+			//	note: size is already known to be > 0, so
+			//	idx-1 is safe
+			newtime = _target[idx-1] + (currentTime - _initial[idx-1]);
 		}
 		else {
-			TimepointIterator prevTgt = iterTgt; --prevTgt;
-			TimepointIterator prevInit = iterInit; --prevInit;
+			//	currentTime is between the time points at idx and
+			//	idx-1 in _initial; shift and stretch: 
+			//
+			//	note: size is already known to be > 0, so
+			//	idx-1 is safe
+			Assert( _initial[idx-1] < _initial[idx] );	//	currentTime can't wind up 
+														//	between two equal times
 			
-			//	pIter is between the time points at index and
-			//	index-1 in _initial; shift and stretch: 
-			Assert( *iterInit > *prevInit );	//	pIter can't wind up 
-												//	between two equal times
-			newtime = *prevTgt + 
-					  ( (iterator()->time() - (*prevInit)) * 
-						( (*iterTgt) - (*prevTgt) ) /
-						( (*iterInit) - (*prevInit) ) );
+			double stretch = (_target[idx]	- _target[idx-1]) / (_initial[idx] - _initial[idx-1]);			
+			newtime = _target[idx-1] + ((currentTime - _initial[idx-1]) * stretch);
 		}
 		
 		//	add a Breakpoint at the computed time:
-		newp.insert( newtime, Breakpoint( iterator()->frequency(), iterator()->amplitude(), 
-										  iterator()->bandwidth(), iterator()->phase() ) );
+		newp.insert( newtime, Breakpoint( iter.frequency(), iter.amplitude(), 
+										  iter.bandwidth(), iter.phase() ) );
 	}
 	
-	//	assign the new Partial:
-	p = newp;
-	return p;
+	//	store the new Partial:
+	_partials.push_back( newp );
 }
 
 End_Namespace( Loris )

@@ -107,6 +107,10 @@ public:
 //	Breakpoint at a time later than the specified time).
 	iterator findPos( double time );
 	const_iterator findPos( double time ) const;
+	
+//	Its nice to be able to find out how many Breakpoints
+//	there are:
+	long countBreakpoints( void ) const { return _bpmap.size(); }
 		
 //	-- instance variables --
 private:
