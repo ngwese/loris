@@ -5,7 +5,7 @@
  * This is Fossa, a grapical control application for analysis, synthesis, 
  * and manipulations of digitized sounds using Loris (Fitz and Haken). 
  *
- * Fossa is Copyright (c) 2001 - 2002 by Susanne Lefvert
+ * Fossa is Copyright (c) 2001-2 by Susanne Lefvert, 2003 by Donour Sizemore
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

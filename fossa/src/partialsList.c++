@@ -352,7 +352,7 @@ void PartialsList::setCurrentState(Partials::State s){
 
 double PartialsList::getCurrentMaxAmplitude(){
   if(inList(current)){
-    partialsList.at(current)->getMaxAmplitude();
+    return partialsList.at(current)->getMaxAmplitude();
   }
   else cout<<"PartialsList::getCurrentMaxAmplitude(): current not in list"<<endl;
 }
@@ -364,7 +364,7 @@ double PartialsList::getCurrentMaxAmplitude(){
 
 double PartialsList::getCurrentMaxFrequency(){
   if(inList(current)){
-    partialsList.at(current)->getMaxFrequency();
+    return partialsList.at(current)->getMaxFrequency();
   }
   else cout<<"PartialsList::getCurrentMaxFrequency(): current not in list"<<endl;
 }
@@ -376,7 +376,7 @@ double PartialsList::getCurrentMaxFrequency(){
 
 double PartialsList::getCurrentMaxNoise(){
   if(inList(current)){
-    partialsList.at(current)->getMaxNoise();
+    return partialsList.at(current)->getMaxNoise();
   }
   else cout<<"PartialsList::getCurrentMaxNoise(): current not in list"<<endl;
 }

@@ -48,7 +48,7 @@ class Axis:public QCanvasRectangle{
  public:
   
   Axis(QCanvas* canvas, int x, int y, QString text,int l, int width, int nbOfTicks, double min, double max);
-  int rtti() const;
+  int    rtti() const;
   double getIndex() const;
   double getLength() const;
   
@@ -75,7 +75,6 @@ class VerticalAxis:public Axis{
   
  public:  
   VerticalAxis(QCanvas* canvas, int x, int y, QString text,int l, int width,int nbOfTicks,double min,double max,bool left);
-  
   void drawShape(QPainter & painter);
   
  private:
