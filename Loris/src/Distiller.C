@@ -256,7 +256,6 @@ Distiller::distill( std::list<Partial> & l )
 	
 	
 	// 	iterate over labels and distill each one:
-	Distiller still;
 	std::list<Partial>::iterator dist_begin = l.begin();
 	/*
 		std::find_if( l.begin(), l.end(), 
