@@ -118,7 +118,7 @@ public:
 	
 		PartialList( void )
 		{
-			debugger << "creating an empty list of Partials" << std::endl;
+			debugger << "creating an empty list of Partials" << Loris::endl;
 			return new PartialList();
 		}
 		/*	Return a new empty PartialList.
@@ -126,7 +126,7 @@ public:
 		
 		~PartialList( void )
 		{
-			debugger << "destroying  a list of " << self->size() << " Partials" << std::endl;
+			debugger << "destroying  a list of " << self->size() << " Partials" << Loris::endl;
 			delete self;
 		}
 		/*	Destroy this PartialList.
