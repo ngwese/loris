@@ -41,7 +41,8 @@
 #endif
 
 #include "lorisInterface.h"
-
+using std::string;
+using std::vector;
 // ---------------------------------------------------------------------------
 //      LorisInterface constructor
 // ---------------------------------------------------------------------------
@@ -60,16 +61,18 @@ LorisInterface::LorisInterface(){}
 list<Loris::Partial>* LorisInterface::importAiff(const char* path, double resolution, double width){ 
   try{
     list<Loris::Partial>* partials = new list<Loris::Partial>;  // deleted in partialslist
-    AiffFile file(path);
+    Loris::AiffFile file(path);
     vector<double> sampleVector(file.sampleFrames());  
-    file.getSamples(sampleVector.begin(), sampleVector.end()); 
+    file.getSamples(&sampleVector[0],&sampleVector[sampleVector.size()]); 
 
     Analyzer analyzer(width);               // according to Kelly Fitz
     analyzer.setFreqResolution(resolution); // loris version 8 has 
     analyzer.setFreqFloor(resolution);      // constructor for this.
     analyzer.setFreqDrift(resolution);
 
-    analyzer.analyze(sampleVector.begin(),sampleVector.end(),file.sampleRate());
+
+    analyzer.analyze(&sampleVector[0],&sampleVector[sampleVector.size()],file.sampleRate()); 
+    analyzer.analyze(0,0,0);
     partials->splice(partials->end(), analyzer.partials());
     return partials;
   }
@@ -170,18 +173,19 @@ void LorisInterface::exportAiff(double sampleRate, int bitsPerSample, const char
   
   try{
     // insuring a long enough buffer for synthesized partials
-	const double Padding = .01;	//	10ms is more than enough
+    const double Padding = .01;	//	10ms is more than enough
     double time = ((maxtime + Padding) * sampleRate);
     vector<double> sampleVector = vector<double>(time);
-    Synthesizer synthesizer(sampleRate, sampleVector.begin(), sampleVector.end());
-   
+    Synthesizer synthesizer(sampleRate, &sampleVector[0], &sampleVector[sampleVector.size()]);
+    //FIXME Synthesizer synthesizer(sampleRate, sampleVector.begin(), sampleVector.end());
+
     // Synthesize all Loris::Partials in the list
     for(list<Loris::Partial>::iterator it = partials.begin(); it!=partials.end(); it++){
       synthesizer.synthesize(*it);
     }
-   
+    
     // Loris can only synthesise mono files (channels = 1)
-    AiffFile::Export(name, sampleRate, 1, bitsPerSample, sampleVector.begin(), sampleVector.end());
+    AiffFile::Export(name, sampleRate, 1, bitsPerSample, &sampleVector[0], &sampleVector[sampleVector.size()]);
   }
   
   catch(...){
@@ -198,7 +202,6 @@ void LorisInterface::exportSdif(const char* name, list<Loris::Partial> partials)
   try{
     SdifFile::Export(name, partials);
   }
-  
   catch(...){
     throw;
   }
