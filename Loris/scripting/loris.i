@@ -103,6 +103,104 @@
 	Loris::setExceptionHandler( exception_handler );
 %}
 
+// ----------------------------------------------------------------
+//		helper functions for creating vectors of doubles
+//
+%{
+#include <vector>
+#include <string>
+using std::vector;
+using std::string;
+
+// helper function for converting a string to a
+// vector of doubles (this will work anywhere)
+static bool fill_vector( const string & s, vector<double> & v )
+{
+	std::string::size_type beg, end;
+	const std::string numparts("1234567890+-.");
+	beg = s.find_first_of( numparts );
+	while ( beg != std::string::npos )
+	{
+		end = s.find_first_not_of( numparts, beg );
+		if ( end == std::string::npos )
+			end = s.length();
+
+		double x = atof( s.c_str() + beg );
+		v.push_back(x);
+
+		beg = s.find_first_of( numparts, end );
+	}
+}
+
+%}
+#if SWIGPYTHON
+%{
+// helper function for converting a Python sequence
+// to a vector of doubles
+static bool fill_vector( PyObject * input, vector<double> & v )
+{
+	// verify that it is a sequence:
+	if ( !PySequence_Check(input) )
+	{
+		PyErr_SetString(PyExc_TypeError,"not a sequence");
+		return false;
+	}
+	// loop over elements of sequence, adding to vector
+	int size = PySequence_Size(input);
+	for ( int i = 0; i < size; ++i ) 
+	{
+		PyObject *o = PySequence_GetItem(input,i);
+		if (PyNumber_Check(o)) 
+		{
+			v.push_back( PyFloat_AsDouble(o) );
+			Py_DECREF(o);
+		}
+		else 
+		{
+			PyErr_SetString(PyExc_TypeError,"sequence must contain numbers");
+			Py_DECREF(o);
+			return false;
+		}
+	}	
+	
+	// return successfully
+	return true;
+}
+%}
+
+// special typemap for converting Python strings or 
+// sequences into vector<double> arguments.
+%typemap(in) vector<double> & {
+	// test first if input is a string,
+	// because a string is a Python sequence,
+	// but not a sequence of numbers.
+	if (PyString_Check($input))
+	{
+		$1 = new vector<double>;
+		fill_vector( PyString_AsString($input), *$1 );
+	}
+	else if (PySequence_Check($input)) 
+	{
+		$1 = new vector<double>;
+		if (! fill_vector( $input, *$1 ) )
+		{
+			delete $1;
+			return NULL;
+		}
+	} 
+	else 
+	{
+		PyErr_SetString(PyExc_TypeError,"could not covert argument to a vector of doubles");
+		return NULL;
+	}
+}
+
+%typemap(freearg) vd {
+	delete $1;
+}
+#endif
+// end of special Python typemap
+
 
 // ----------------------------------------------------------------
 //		wrap procedural interface
@@ -230,11 +328,48 @@ createFreqReference( PartialList * partials,
 		int npts = ivec.size();
 		dilate( partials, initial, target, npts );
 	}
+	
+	void dilate_v( PartialList * partials, vector<double> & ivec, vector<double> & tvec )
+	{
+		Loris::debugger << ivec.size() << " initial points, " 
+						<< tvec.size() << " target points" << Loris::endl;
+						
+		if ( ivec.size() != tvec.size() )
+			Throw( Loris::InvalidArgument, "Invalid arguments to dilate(): there must be as many target points as initial points" );
+
+		double * initial = &(ivec[0]);
+		double * target = &(tvec[0]);
+		int npts = ivec.size();
+		dilate( partials, initial, target, npts );
+	}
+		
 %}
 
-%rename(dilate) dilate_str;
-void dilate_str( PartialList * partials, 
-				 char * initial_times, char * target_times );
+#if SWIGPYTHON
+// ------------ Python accepts string or sequence --------------
+%rename (dilate) dilate_v;
+void dilate_v( PartialList * partials, vector<double> & ivec, vector<double> & tvec );
+#else
+// ------------ others accept string only --------------
+%rename (dilate) dilate_s;
+%inline %{
+	void dilate_s( PartialList * partials, 
+				   char * initial_times, char * target_times )
+	{
+		std::vector<double> ivec;
+		fill_vector( initial_times, ivec );
+		std::vector<double> tvec;
+		fill_vector( target_times, tvec );
+		
+		dilate_v( partials, ivec, tvec );
+	}
+%}
+#endif	
+
+
+//%rename(dilate) dilate_str;
+//void dilate_str( PartialList * partials, 
+//				 char * initial_times, char * target_times );
 /*	Dilate Partials in a PartialList according to the given 
 	initial and target time points. Partial envelopes are 
 	stretched and compressed so that temporal features at
