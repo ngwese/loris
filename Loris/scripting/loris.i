@@ -733,6 +733,9 @@ createFreqReference( PartialList * partials, int numSamples,
 	 */
 %} 
  
+%{
+	#include "Loris_prefix.h"
+%}
 
 %inline %{
 	const char * versionString( void )
