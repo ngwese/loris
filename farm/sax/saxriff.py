@@ -48,9 +48,20 @@ note from trial 4:
 	the next note, if shorter, is distilled or sifted away, so 
 	that instead of followng the reference channel, partials follow
 	the reverb tails?
+	- therefore, sifting is going to be bad for these sounds, don't need
+	to try that anymore. But distilling sounds terrible too, because
+	of all the extra crunch. Try distilling and removing the noise.
+	- 170 Hz window sounds mushy, I think.
+
+notes from trial 5:
+	- the results of removing noise from the distillations make unclear whether
+	there's any hope for this approach. They are far from good.
+	- there is no apparent difference between distilling at one or two partials
+	per harmonic. So I infer that the additional information is not in
+	between-harmonic partials, but rather in the tails of harmonic partials.
 	
 
-Last updated: 31 May 2002 by Kelly Fitz
+Last updated: 16 May 2003 by Kelly Fitz
 """
 print __doc__
 
@@ -59,7 +70,7 @@ from trials import *
 
 # use this trial counter to skip over
 # eariler trials
-trial = 4
+trial = 5
 
 print "running trial number", trial, time.ctime(time.time())
 
@@ -135,5 +146,30 @@ if trial == 4:
 				loris.exportSpc( ofilebases + '.s.spc', ps, 70, 0 ) 
 				loris.exportSpc( ofilebases + '.e.spc', ps, 70, 1 ) 
 
+
+
+if trial == 5:
+	pref = loris.importSpc('saxriff.fund.qharm')
+	ref = loris.createFreqReference( pref, 50, 500 )
+	resolutions = (65, 90)
+	widths = ( 200, 250 )
+	for r in resolutions:
+		for w in widths:
+			p = analyze( source, r, w )
+			ofilebase = 'sax.%i.%i'%(r,w)
+			loris.exportSdif( ofilebase + '.raw.sdif', p )
+			synthesize( ofilebase + '.raw.aiff', p )
+			for h in (1,2):
+				loris.channelize(p, ref, h)
+				# distilled version
+				pd = p
+				loris.distill( pd )
+				setAllBandwidth( pd, 0 )
+				ofilebased = ofilebase + '.d%i'%h
+				loris.exportSdif( ofilebased + '.sdif', pd )
+				synthesize( ofilebased + '.aiff', pd )
+				pruneByLabel( pd, range(1,512) )
+				loris.exportSpc( ofilebased + '.s.spc', pd, 70, 0 ) 
+				loris.exportSpc( ofilebased + '.e.spc', pd, 70, 1 ) 
 
 
