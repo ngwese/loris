@@ -49,7 +49,7 @@ const double Pi = 3.14159265358979324;
 // --- macros ---
 
 //	define this to see pages and pages of spew
-//#define VERBOSE
+#define VERBOSE
 #ifdef VERBOSE									
 	#define TEST(invariant)									\
 		do {													\
@@ -96,8 +96,8 @@ static void test_parametersAt( void )
 {
 	std::cout << "\t--- testing Partial::parameterAt members... ---\n\n";
 
-	//	Fabricate a Partials, and verify that parameter estimation works: 
-	Partial p1, p2;
+	//	Fabricate a Partial, and verify that parameter estimation works: 
+	Partial p1;
 	const int NUM_BPTS = 3;
 	const double P1_TIMES[] = {0.2, .8, 1.0};
 	const double P1_FREQS[] = {100, 100, 120};
@@ -106,8 +106,10 @@ static void test_parametersAt( void )
 	const double P1_PHS[] = {-.8, .8, .8}; // std::fmod( .8 + (2 * Pi * (0.2*110)), 2. * Pi )};
 		
 	for (int i = 0; i < NUM_BPTS; ++i )
+	{
 		p1.insert( P1_TIMES[i], Breakpoint( P1_FREQS[i], P1_AMPS[i], P1_BWS[i], P1_PHS[i] ) );
-		
+	}
+	
 	// check parameters at t = 0.2
 	double t = 0.2;
 	SAME_PARAM_VALUES( p1.frequencyAt(t), P1_FREQS[0] );
@@ -158,12 +160,14 @@ static void test_parametersAt( void )
 	SAME_PARAM_VALUES( p1.frequencyAt(t), .5 * (P1_FREQS[1] + P1_FREQS[2]) );
 	SAME_PARAM_VALUES( p1.amplitudeAt(t), .5 * (P1_AMPS[1] + P1_AMPS[2]) );
 	SAME_PARAM_VALUES( p1.bandwidthAt(t), .5 * (P1_BWS[1] + P1_BWS[2]) );
-	// no phase change, exactly eleven periods (off by 2 Pi)
-	SAME_PARAM_VALUES( p1.phaseAt(t), P1_PHS[2] - (2. * Pi) );
+	// no phase change, exactly eleven periods (off by Pi? Why?)
+	// .1 s at avg 105 Hz equals 10.5 periods, half a period (Pi)
+	// different from phase at 0.8
+	SAME_PARAM_VALUES( p1.phaseAt(t), P1_PHS[1] - Pi );
 	SAME_PARAM_VALUES( p1.parametersAt(t).frequency(), .5 * (P1_FREQS[1] + P1_FREQS[2]) );
 	SAME_PARAM_VALUES( p1.parametersAt(t).amplitude(), .5 * (P1_AMPS[1] + P1_AMPS[2]) );
 	SAME_PARAM_VALUES( p1.parametersAt(t).bandwidth(), .5 * (P1_BWS[1] + P1_BWS[2]) );
-	SAME_PARAM_VALUES( p1.parametersAt(t).phase(), P1_PHS[2] - (2. * Pi) );
+	SAME_PARAM_VALUES( p1.parametersAt(t).phase(), P1_PHS[1] - Pi );
 
 	// check parameters at t = 1.1
 	t = 1.1;

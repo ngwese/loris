@@ -820,19 +820,21 @@ Partial::phaseAt( double time ) const
 		const Breakpoint & lo = (--it).breakpoint();
 		double lotime = it.time();
 		double alpha = (time - lotime) / (hitime - lotime);
-		double favg = (alpha * hi.frequency()) + 
-						((1. - alpha) * lo.frequency());
+		double finterp = ( alpha * hi.frequency() ) + 
+						 ( ( 1. - alpha ) * lo.frequency() );
 
 		//	need to keep fmod in here because other stuff 
 		//	(Spc export and sdif export, for example) rely 
 		//	on it:
 		if ( alpha < 0.5 )
 		{
+			double favg = 0.5 * ( lo.frequency() + finterp );
 			double dp = 2. * Pi * (time - lotime) * favg;
 			return std::fmod( lo.phase() + dp, 2. * Pi );
 		}
 		else
 		{
+			double favg = 0.5 * ( hi.frequency() + finterp );
 			double dp = 2. * Pi * (hitime - time) * favg;
 			return std::fmod( hi.phase() - dp, 2. * Pi );
 		}
@@ -962,8 +964,8 @@ Partial::parametersAt( double time, double fadeTime ) const
 		double lotime = it.time();
 		double alpha = (time - lotime) / (hitime - lotime);
 
-		double favg = (alpha * hi.frequency()) + 
-						((1. - alpha) * lo.frequency());
+		double finterp = ( alpha * hi.frequency() ) + 
+						 ( ( 1. - alpha ) * lo.frequency() );
 
 		//	need to keep fmod in here because other stuff 
 		//	(Spc export and sdif export, for example) rely 
@@ -971,11 +973,13 @@ Partial::parametersAt( double time, double fadeTime ) const
 		double ph = 0;
 		if ( alpha < 0.5 )
 		{
+			double favg = 0.5 * ( lo.frequency() + finterp );
 			double dp = 2. * Pi * (time - lotime) * favg;
 			ph = std::fmod( lo.phase() + dp, 2. * Pi );
 		}
 		else
 		{
+			double favg = 0.5 * ( hi.frequency() + finterp );
 			double dp = 2. * Pi * (hitime - time) * favg;
 			ph = std::fmod( hi.phase() - dp, 2. * Pi );
 		}

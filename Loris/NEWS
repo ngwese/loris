@@ -7,6 +7,16 @@ See the end for copying conditions.
 Please send Loris bug reports to loris@cerlsoundgroup.org.
 
 -------------------------------------------------------
+changes since 1.2 release:
+
+- fixed floating point rounding errors in SDIF export 
+that were causing some breakpoints to be lost in the
+export process (thanks to Michael Klingbeil for help 
+finding these errors!).
+
+- fixed phase interpolation in the phaseAt operation.
+
+-------------------------------------------------------
 changes since 1.1 release:
 
 - added rewritten AiffFile and SpcFile classes, with 
