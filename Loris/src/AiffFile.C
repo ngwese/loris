@@ -339,11 +339,11 @@ void
 AiffFile::readSamples( std::istream & s )
 {	
 	//	use a vector for automatic temporary storage:
-	std::vector<char> v( _samples.size() * (_sampSize / 8) );
+	std::vector<unsigned char> v( _samples.size() * (_sampSize / 8) );
 
-	//	read integer samples: 
+	//	read integer samples without byte swapping: 
 	notifier << "reading " << v.size() << " bytes " << _samples.size() << " samples" << endl;
-	BigEndian::read( s, _samples.size(), _sampSize / 8, v.begin() );
+	BigEndian::read( s, _samples.size() * _sampSize / 8, 1, (char*)v.begin() );
 
 	//	except if there were any read errors:
 	if ( ! s.good() )
@@ -375,24 +375,16 @@ AiffFile::readSamples( std::istream & s )
 */
 		case 16:
 		{
-			long shift = 0;
-			if (!bigEndianSystem())
-				shift = 16;
 			for (long i = 0; i < v.size(); i += 2 ) 
 			{
-				pcm_sample * sptr = (pcm_sample *)&v[i];
-				Int_32 samp = sptr->s32bits << shift;
+				Int_32 samp = (v[i] << 24) + (v[i+1] << 16);
 				_samples[i/2] = oneOverMax * samp; 
-
-				if (i < 100 )
-					notifier << (short)v[i] << " " << (short)v[i+1] 
-					<< " " << samp << " " << _samples[i] << endl;
 			}
 			break;
 		}
 		case 8:
 		{
-			char * z = &v[0];
+			unsigned char * z = &v[0];
 			for (unsigned long i = 0; i < _samples.size(); ++i ) 
 			{
 				Int_32 samp = 0L | z[i];
