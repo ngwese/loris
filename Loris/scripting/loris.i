@@ -84,6 +84,16 @@
 	
 	//	define a macro for testing and throwing:
 	#define ThrowIfNull(ptr) if ((ptr)==NULL) Throw( NullPointer, #ptr );	
+
+	//	exception handling for the procedural interface
+	//	(the pi catches all exceptions and handles them
+	//	by passing their string descriptions to this 
+	//	function):
+	static char EXCEPTION_THROWN[256];
+	static void exception_handler( const char * s )
+	{
+		sprintf(EXCEPTION_THROWN, "%255s\0", s);
+	}
 %}
 
 %{
@@ -98,8 +108,8 @@
 //
 %init 
 %{
-	Loris::setNotifierHandler( printf_notifier );
-	Loris::setDebuggerHandler( printf_notifier );
+	Loris::setNotifier( printf_notifier );
+	Loris::setExceptionHandler( exception_handler );
 %}
 
 //	Wrap all calls into the Loris library with exception
@@ -113,7 +123,13 @@
 %except {
 	try
 	{	
+		*EXCEPTION_THROWN = '\0';
 		$function
+		if (*EXCEPTION_THROWN)
+		{
+			SWIG_exception( SWIG_RuntimeError, EXCEPTION_THROWN );
+		}
+			
 	}
 	catch( Loris::Exception & ex ) 
 	{
@@ -466,6 +482,13 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch,
 	for the complete synthesis of all the Partials in the PartialList. 
 	If the sample rate is unspecified, the deault value of 44100 Hz 
 	(CD quality) is used.
+ */
+
+void sift( PartialList * partials );
+/*  Eliminate overlapping Partials having the same label
+	(except zero). If any two partials with same label
+   	overlap in time, keep only the longer of the two.
+   	Set the label of the shorter duration partial to zero.
  */
 
 

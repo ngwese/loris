@@ -431,6 +431,8 @@ morph = lorisc.morph
 
 synthesize = lorisc.synthesize
 
+sift = lorisc.sift
+
 extractLabeled = lorisc.extractLabeled
 
 scaleAmp = lorisc.scaleAmp

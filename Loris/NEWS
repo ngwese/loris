@@ -9,8 +9,6 @@ Please send Loris bug reports to loris@cerlsoundgroup.org.
 -------------------------------------------------------
 changes since 1.0beta9 release:
 
-- Removed experimental Sieve class, and related sift functions.
-
 - Updated documentation (finally).
 
 -------------------------------------------------------

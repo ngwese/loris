@@ -68,6 +68,7 @@
 #include <Partial.h>
 #include <PartialUtils.h>
 #include <SdifFile.h>
+#include <Sieve.h>
 #include <SpcFile.h>
 #include <Synthesizer.h>
 
@@ -623,3 +624,39 @@ void synthesize( const PartialList * partials,
 		handleException( s.c_str() );
 	}
 }
+
+/* ---------------------------------------------------------------- */
+/*        sift
+/*  Eliminate overlapping Partials having the same label
+	(except zero). If any two partials with same label
+	overlap in time, keep only the longer of the two.
+	Set the label of the shorter duration partial to zero.
+
+ */
+extern "C"
+void sift( PartialList * partials )
+{
+	try 
+	{
+		ThrowIfNull((PartialList *) partials);
+		
+        Loris::notifier << "sifting " << partials->size() << " Partials" << Loris::endl;
+
+        Loris::Sieve sieve( 0.0001 );
+        sieve.sift( *partials );
+	}
+	catch( Exception & ex )
+    {
+        std::string s("Loris exception in sift(): " );
+        s.append( ex.what() );
+        handleException( s.c_str() );
+    }
+    catch( std::exception & ex )
+    {
+        std::string s("std C++ exception in sift(): " );
+        s.append( ex.what() );
+        handleException( s.c_str() );
+    }
+}
+
+

@@ -43,6 +43,7 @@ libloris_la_LIBADD = \
 		$(top_builddir)/classes/Partial.lo \
 		$(top_builddir)/classes/ReassignedSpectrum.lo \
 		$(top_builddir)/classes/SdifFile.lo \
+		$(top_builddir)/classes/Sieve.lo \
 		$(top_builddir)/classes/SpcFile.lo \
 		$(top_builddir)/classes/Synthesizer.lo \
 		-lfftw -lsdif

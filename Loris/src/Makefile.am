@@ -42,6 +42,7 @@ pkginclude_HEADERS = AiffFile.h	\
 				PartialUtils.h	\
 				ReassignedSpectrum.h	\
 				SdifFile.h	\
+				Sieve.h	\
 				SpcFile.h	\
 				Synthesizer.h
 
@@ -97,6 +98,8 @@ libclasses_la_SOURCES = AiffFile.C \
 		ReassignedSpectrum.h \
 		SdifFile.h \
 		SdifFile.C \
+		Sieve.h \
+		Sieve.C \
 		SpcFile.C \
 		SpcFile.h \
 		Synthesizer.C \

@@ -562,6 +562,16 @@ C-linkable procedural interface for Loris.
    
 </BLOCKQUOTE>
 
+<P><TT><B>sift( PartialList * partials )</B></TT>
+<BLOCKQUOTE>[ returns void  ]
+<BR>    Eliminate overlapping Partials having the same label
+    (except zero). If any two partials with same label
+    overlap in time, keep only the longer of the two.
+    Set the label of the shorter duration partial to zero.
+
+</BLOCKQUOTE>
+
+
 <A name="s7_">
 <HR><H2>6. Notification and exception handlers</H2></A>
 <P>

@@ -477,6 +477,14 @@ void synthesize( const PartialList * partials,
 	added to any previously computed samples in the SampleVector.
  */
 
+void sift( PartialList * partials );
+/*  Eliminate overlapping Partials having the same label
+    (except zero). If any two partials with same label
+    overlap in time, keep only the longer of the two.
+    Set the label of the shorter duration partial to zero.
+
+ */ 
+
 /* ---------------------------------------------------------------- */
 /*		utility functions
 /*
