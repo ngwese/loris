@@ -1,5 +1,5 @@
-#ifndef __Loris_exception__
-#define __Loris_exception__
+#ifndef INCLUDE_EXCEPTION_H
+#define INCLUDE_EXCEPTION_H
 /*
  * This is the Loris C++ Class Library, implementing analysis, 
  * manipulation, and synthesis of digitized sounds using the Reassigned 
@@ -33,6 +33,7 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
+#include <Loris_prefix.h>
 #include <string>
 
 #if !defined( NO_LORIS_NAMESPACE )
@@ -156,4 +157,4 @@ public:
 }	//	end of namespace Loris
 #endif
 
-#endif	// ndef __Loris_exception__
+#endif /* ndef INCLUDE_EXCEPTION_H */

@@ -32,6 +32,7 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
+#include <Loris_prefix.h>
 #include <list>
 
 #if defined(__MWERKS__)
@@ -114,4 +115,4 @@ private:
 }	//	end of namespace Loris
 #endif
 
-#endif	// ndef INCLUDE_MORPHER_H
+#endif /* ndef INCLUDE_MORPHER_H */

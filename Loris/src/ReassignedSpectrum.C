@@ -30,6 +30,7 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
+#include <Loris_prefix.h>
 #include "ReassignedSpectrum.h"
 #include "notifier.h"
 #include "Exception.h"

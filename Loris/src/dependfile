@@ -1,5 +1,5 @@
 AiffFile.o: AiffFile.C AiffFile.h Endian.h Exception.h \
- notifier.h ieee.h LorisTypes.h
+ notifier.h ieee.h
 Analyzer.o: Analyzer.C Analyzer.h Partial.h Exception.h \
  Breakpoint.h AssociateBandwidth.h DistributeEnergy.h KaiserWindow.h \
  ReassignedSpectrum.h FourierTransform.h BreakpointUtils.h notifier.h
@@ -22,14 +22,12 @@ Exception.o: Exception.C Exception.h
 ExportSdif.o: ExportSdif.C ExportSdif.h Exception.h notifier.h \
  Partial.h Breakpoint.h
 ExportSpc.o: ExportSpc.C ExportSpc.h Endian.h Partial.h \
- Exception.h Breakpoint.h notifier.h ieee.h LorisTypes.h \
- PartialUtils.h
+ Exception.h Breakpoint.h notifier.h ieee.h PartialUtils.h
 Filter.o: Filter.C Filter.h
 FourierTransform.o: FourierTransform.C FourierTransform.h \
  Exception.h notifier.h /usr/local/include/fftw.h
-Handle.o: Handle.C Handle.h counted.h create.h unofficial.h
 ImportLemur.o: ImportLemur.C ImportLemur.h Partial.h Exception.h \
- Breakpoint.h Endian.h notifier.h LorisTypes.h
+ Breakpoint.h Endian.h notifier.h
 ImportSdif.o: ImportSdif.C ImportSdif.h Partial.h Exception.h \
  Breakpoint.h notifier.h
 KaiserWindow.o: KaiserWindow.C KaiserWindow.h Exception.h

@@ -33,6 +33,7 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
+#include <Loris_prefix.h>
 #include "Partial.h"
 #include "Exception.h"
 #include <list>
@@ -84,5 +85,4 @@ public:
 }	//	end of namespace Loris
 #endif
 
-#endif	// ndef INCLUDE_IMPORTLEMUR_H
-
+#endif /* ndef INCLUDE_IMPORTLEMUR_H */

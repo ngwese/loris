@@ -30,6 +30,7 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
+#include <Loris_prefix.h>
 #include "Oscillator.h"
 #include "Filter.h"
 #include "random.h"

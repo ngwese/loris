@@ -31,6 +31,7 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
+#include <Loris_prefix.h>
 #include "ExportSpc.h"
 #include "Endian.h"
 #include "Partial.h"

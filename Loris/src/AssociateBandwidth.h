@@ -1,5 +1,5 @@
-#ifndef INCLUDE_ASSOCIATE_BANDWIDTH_H
-#define INCLUDE_ASSOCIATE_BANDWIDTH_H
+#ifndef INCLUDE_ASSOCIATEBANDWIDTH_H
+#define INCLUDE_ASSOCIATEBANDWIDTH_H
 /*
  * This is the Loris C++ Class Library, implementing analysis, 
  * manipulation, and synthesis of digitized sounds using the Reassigned 
@@ -32,6 +32,7 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
+#include <Loris_prefix.h>
 #include <vector>
 
 #if !defined( NO_LORIS_NAMESPACE )
@@ -97,4 +98,4 @@ private:
 }	//	end of namespace Loris
 #endif
 
-#endif 	// ndef INCLUDE_ASSOCIATE_BANDWIDTH_H
+#endif /* ndef INCLUDE_ASSOCIATEBANDWIDTH_H */

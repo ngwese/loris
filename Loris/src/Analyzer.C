@@ -30,6 +30,7 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
+#include <Loris_prefix.h>
 #include "Analyzer.h"
 #include "AssociateBandwidth.h"
 #include "DistributeEnergy.h"

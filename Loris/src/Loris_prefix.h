@@ -62,7 +62,7 @@
 /*
  *	M_PI is apparently not available everywhere (e.g. Metrowerks).
  */
-#if !defined(M_PI)
+#if defined(MWERKS)
 	#define M_PI 3.1415926535897932384626433L
 #endif /* not defined M_PI */
 

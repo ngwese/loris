@@ -33,6 +33,7 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
+#include <Loris_prefix.h>
 
 // ===========================================================================
 //	Make sure that fftw and this class use the same floating point
@@ -219,4 +220,4 @@ load( FourierTransform & t, Iterator1 begin, Iterator1 center, Iterator1 end, It
 }	//	end of namespace Loris
 #endif
 
-#endif // ndef INCLUDE_FOURIERTRANSFORM_H
+#endif /* ndef INCLUDE_FOURIERTRANSFORM_H */

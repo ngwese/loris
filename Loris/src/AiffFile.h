@@ -33,6 +33,7 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
+#include <Loris_prefix.h>
 #include <vector>
 #include <string>
 #include <iosfwd>
@@ -119,5 +120,4 @@ private:
 }	//	end of namespace Loris
 #endif
 
-#endif //	ndef INCLUDE_AIFFFILE_H
-
+#endif /* ndef INCLUDE_AIFFFILE_H */

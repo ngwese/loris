@@ -8,6 +8,7 @@
  * Lippold Haken, 20 Jan 2001
  *
  */
+#include <Loris_prefix.h>
 #include "Sieve.h"
 #include "Partial.h"
 #include "Breakpoint.h"

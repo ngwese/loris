@@ -4,6 +4,7 @@
 /*
  * C O N V E R T   T O   I E E E   E X T E N D E D
  */
+#include <Loris_prefix.h>
 
 /* 
  *

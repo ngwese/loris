@@ -1,5 +1,5 @@
-#ifndef __INCLUDE_FILTER_H__
-#define __INCLUDE_FILTER_H__
+#ifndef INCLUDE_FILTER_H
+#define INCLUDE_FILTER_H
 /*
  * This is the Loris C++ Class Library, implementing analysis, 
  * manipulation, and synthesis of digitized sounds using the Reassigned 
@@ -32,6 +32,7 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
+#include <Loris_prefix.h>
 #include <vector>
 
 #if !defined( NO_LORIS_NAMESPACE )
@@ -98,4 +99,4 @@ private:
 }	//	end of namespace Loris
 #endif
 
-#endif	// ndef __INCLUDE_FILTER_H__
+#endif /* ndef INCLUDE_FILTER_H */

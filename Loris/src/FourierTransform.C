@@ -31,6 +31,7 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
+#include <Loris_prefix.h>
 #include "FourierTransform.h"
 #include "Exception.h"
 #include "notifier.h"

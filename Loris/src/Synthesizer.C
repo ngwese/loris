@@ -31,6 +31,7 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
+#include <Loris_prefix.h>
 #include "Synthesizer.h"
 #include "Exception.h"
 #include "Oscillator.h"

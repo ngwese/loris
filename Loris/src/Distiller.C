@@ -30,6 +30,7 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
+#include <Loris_prefix.h>
 #include "Distiller.h"
 #include "Partial.h"
 #include "Breakpoint.h"

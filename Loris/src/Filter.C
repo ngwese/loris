@@ -30,6 +30,7 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
+#include <Loris_prefix.h>
 #include "Filter.h"
 //#include "Exception.h"	//	need this if an Exception is thrown in the
 							//	constructor for an invalid AR[0] coefficient

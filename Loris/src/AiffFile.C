@@ -30,6 +30,7 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
+#include <Loris_prefix.h>
 #include "AiffFile.h"
 #include "Endian.h"
 #include "Exception.h"

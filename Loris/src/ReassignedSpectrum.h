@@ -1,5 +1,5 @@
-#ifndef __reassigned_spectrum_analyzer__
-#define __reassigned_spectrum_analyzer__
+#ifndef INCLUDE_REASSIGNEDSPECTRUM_H
+#define INCLUDE_REASSIGNEDSPECTRUM_H
 /*
  * This is the Loris C++ Class Library, implementing analysis, 
  * manipulation, and synthesis of digitized sounds using the Reassigned 
@@ -32,6 +32,7 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
+#include <Loris_prefix.h>
 #include "FourierTransform.h"
 #include <vector>
 
@@ -112,4 +113,4 @@ private:
 }	//	end of namespace Loris
 #endif
 
-#endif	// ndef __reassigned_spectrum_analyzer__
+#endif /* ndef INCLUDE_REASSIGNEDSPECTRUM_H */

@@ -34,6 +34,7 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
+#include <Loris_prefix.h>
 #include <list>
 
 #if !defined( NO_LORIS_NAMESPACE )
@@ -65,5 +66,4 @@ public:
 }	//	end of namespace Loris
 #endif
 
-#endif //	ndef INCLUDE_EXPORTSDIF_H
-
+#endif /* ndef INCLUDE_EXPORTSDIF_H */

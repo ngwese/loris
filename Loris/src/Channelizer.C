@@ -30,6 +30,7 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
+#include <Loris_prefix.h>
 #include "Channelizer.h"
 #include "Envelope.h"
 #include "Partial.h"

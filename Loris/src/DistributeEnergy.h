@@ -32,6 +32,7 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
+#include <Loris_prefix.h>
 #include <list>
 
 #if defined(__MWERKS__)
@@ -84,4 +85,4 @@ private: //	unimplemented:
 }	//	end of namespace Loris
 #endif
 
-#endif 	// ndef INCLUDE_DISTRIBUTEENERGY_H
+#endif /* ndef INCLUDE_DISTRIBUTEENERGY_H */

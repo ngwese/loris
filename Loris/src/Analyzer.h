@@ -32,6 +32,7 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
+#include <Loris_prefix.h>
 #include "Partial.h"
 #include <list>
 
@@ -224,4 +225,4 @@ private:
 }	//	end of namespace Loris
 #endif
 
-#endif	// ndef INCLUDE_ANALYZER_H
+#endif /* ndef INCLUDE_ANALYZER_H */

@@ -32,6 +32,7 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
+#include <Loris_prefix.h>
 #include "Partial.h"
 #include <vector>
 #include <list>
@@ -73,4 +74,4 @@ private:
 }	//	end of namespace Loris
 #endif
 
-#endif	// ndef INCLUDE_DILATOR_H
+#endif /* ndef INCLUDE_DILATOR_H */

@@ -10,6 +10,7 @@
  * Lippold Haken, 20 Jan 2001
  *
  */
+#include <Loris_prefix.h>
 #include <list>
 
 #if !defined( NO_LORIS_NAMESPACE )
@@ -53,5 +54,4 @@ private:
 }	//	end of namespace Loris
 #endif
 
-#endif	// ndef INCLUDE_SIEVE_H
-
+#endif /* ndef INCLUDE_SIEVE_H */

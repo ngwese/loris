@@ -1,5 +1,5 @@
-#ifndef INCLUDE_LORISTYPES_H
-#define INCLUDE_LORISTYPES_H
+#ifndef INCLUDE_LORIS_TYPES_H
+#define INCLUDE_LORIS_TYPES_H
 /*
  * This is the Loris C++ Class Library, implementing analysis, 
  * manipulation, and synthesis of digitized sounds using the Reassigned 
@@ -38,6 +38,7 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
+#include <Loris_prefix.h>
 
 #if defined( __cplusplus ) 
 #if !defined( NO_LORIS_NAMESPACE )
@@ -58,4 +59,4 @@ typedef double			Double_64;
 #endif
 #endif	
 
-#endif /* ndef INCLUDE_LORISTYPES_H */
+#endif /* ndef INCLUDE_LORIS_TYPES_H */

@@ -32,6 +32,7 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
+#include <Loris_prefix.h>
 #include "Partial.h"
 #include <functional>
 
@@ -95,4 +96,4 @@ public:
 }	//	end of namespace Loris
 #endif
 
-#endif	//	ndef INCLUDE_PARTIALUTILS_H
+#endif /* ndef INCLUDE_PARTIALUTILS_H */

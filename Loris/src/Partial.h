@@ -32,6 +32,7 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
+#include <Loris_prefix.h>
 #include "Exception.h"
 #include "Breakpoint.h"
 #include <map>
@@ -266,4 +267,4 @@ public:
 }	//	end of namespace Loris
 #endif
 
-#endif	// ndef INCLUDE_PARTIAL_H
+#endif /* ndef INCLUDE_PARTIAL_H */
