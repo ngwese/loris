@@ -46,11 +46,11 @@ struct CkHeader;
 // ---------------------------------------------------------------------------
 //	class AiffFile
 //
-//	AiffFile manages a buffer of raw (integer sample data). Creating an 
-//	AiffFile from a stream or filename automatically reads the sample data, 
-//	which can then be converted and accessed using getSamples(). Use the 
-//	static members Export() to export samples (doubles) to a AIFF file 
-//	using the specified stream or filename.
+//	Class AiffFile represents a AIFF-format samples file, and
+//	manages file I/O and sample conversion. Construction of an 
+//	AiffFile from a stream or filename automatically imports 
+//	the sample data. The static Export() members export samples 
+//	(doubles) to a AIFF file using the specified stream or filename.
 //
 //	This class could be made more insulating at some point.
 //	
@@ -68,28 +68,82 @@ class AiffFile
 		
 //	-- public interface --
 public:
-//	construction (import):
-//	(compiler can generate destructor, copy, and assignment)
-	AiffFile( const std::string & filename );
-	AiffFile( std::istream & s );
+	//	construction (and import):
+	//	(compiler can generate destructor, copy, and assignment)
+
+/*	Initialize an instance of AiffFile by importing data from
+	the file having the specified filename or path.
+
+ */
+ 	AiffFile( const std::string & filename );
+
+/*	Initialize an instance of AiffFile by importing data from
+	the specified istream.
+
+ */
+ 	AiffFile( std::istream & s );
 	
-//	export:
-	static void Export( std::ostream & s, double rate, int chans, int bits, 
-						const double * bufBegin, const double * bufEnd );
-	static void Export( const std::string & filename, double rate, int chans, int bits, 
-						const double * bufBegin, const double * bufEnd );
+	//	access:
+/*	Return the number of channels of sample data represented in this
+	AiffFile (e.g. 1 for mono, 2 for stereo, etc).
+
+ */
+ 	int channels( void ) const;
+
+/*	Return the number of sample frames represented in this AiffFile.
+	A sample frame contains one sample per channel for a single sample
+	interval (e.g. mono and stereo samples files having a sample rate of
+	44100 Hz both have 44100 sample frames per second of audio samples).
+
+ */
+ 	unsigned long sampleFrames( void ) const;
+
+/*	Return the sampling freqency in Hz for the sample data in this
+	AiffFile.
+
+ */
+ 	double sampleRate( void ) const;
+
+/*	Return the size in bits of a single, integer audio sample in this AiffFile.
+
+ */
+ 	int sampleSize( void ) const;
 	
-//	access:
-	int channels( void ) const;
-	unsigned long sampleFrames( void ) const;
-	double sampleRate( void ) const;
-	int sampleSize( void ) const;
+	//	disgusting, these should not be here at all, just for Spc import:
 	int partials( void ) const;
 	int frames( void ) const;
 	double hop( void ) const;
 	
-	void getSamples( double * bufBegin, double * bufEnd );	//	from raw data to doubles
+/*	Convert the integer sample data to doubles and store in on the half-open
+	(STL-style) range [bufBegin, bufEnd). bufEnd represents a position after
+	the last valid position in the buffer, no sample is written at bufEnd.
+	To convert ten samples into a buffer, use
+		myAiffFile.getSamples(myBuf, myBuf+10);
 
+ */
+ 	void getSamples( double * bufBegin, double * bufEnd );	//	from raw data to doubles
+
+	//	export:
+/*	Export the sample data on the half-open (STL-style) range [bufBegin, bufEnd)
+	to a AIFF samples file having the specified file name or path, using the 
+	specified sample rate (in Hz), number of channels, and sample size (in bits).
+	bufEnd represents a position after the last valid position in the buffer, no 
+	sample is read from *bufEnd.
+
+ */
+ 	static void Export( const std::string & filename, double rate, int chans, int bits, 
+						const double * bufBegin, const double * bufEnd );
+
+/*	Export the sample data on the half-open (STL-style) range [bufBegin, bufEnd)
+	in the format of a AIFF samples file on the specified ostream, using the 
+	specified sample rate (in Hz), number of channels, and sample size (in bits).
+	bufEnd represents a position after the last valid position in the buffer, no 
+	sample is read from *bufEnd.
+
+ */
+ 	static void Export( std::ostream & s, double rate, int chans, int bits, 
+						const double * bufBegin, const double * bufEnd );
+	
 //	-- helpers --
 private:
 	//	construct from data in memory and write (export):

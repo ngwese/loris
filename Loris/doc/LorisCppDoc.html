@@ -1,0 +1,122 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/1999/REC-html401-19991224/strict.dtd">
+<html lang="en">
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=iso-8859-1">
+	<title>Loris C++ API</title>
+	<meta name="generator" content="BBEdit 6.1.2+">
+</head>
+<body BGCOLOR="#ffffff">
+
+<h1>Loris C++ API - version 1.0</h1>
+
+This document describes the public interfaces for the 
+classes in the Loris C++ class library. 
+
+<a name="contents"><h1>Classes</h1></a>
+<ul>
+<li><a href="#AiffFile">AiffFile</a>
+</ul>
+
+<a name="AiffFile">
+<hr><h2>AiffFile</h2></a>
+<p>
+Class AiffFile represents a AIFF-format samples file, and
+manages file I/O and sample conversion. Construction of an 
+AiffFile from a stream or filename automatically imports 
+the sample data. The static Export() members export samples 
+(doubles) to a AIFF file using the specified stream or filename.
+<p>
+<h3>Member Functions</h3>
+
+<p><tt><b>AiffFile( const std::string & filename )</b></tt>
+<blockquote>
+<br>
+Initialize an instance of AiffFile by importing data from
+the file having the specified filename or path.
+</blockquote>
+
+<p><tt><b>AiffFile( std::istream & s )</b></tt>
+<blockquote>
+<br>
+Initialize an instance of AiffFile by importing data from
+the specified istream.
+</blockquote>
+
+<p><tt><b>channels( void ) const</b></tt>
+<blockquote>[ returns int  ]
+<br>
+Return the number of channels of sample data represented in this
+AiffFile (e.g. 1 for mono, 2 for stereo, etc).
+</blockquote>
+
+<p><tt><b>sampleFrames( void ) const</b></tt>
+<blockquote>[ returns unsigned long  ]
+<br>
+Return the number of sample frames represented in this AiffFile.
+A sample frame contains one sample per channel for a single sample
+interval (e.g. mono and stereo samples files having a sample rate of
+44100 Hz both have 44100 sample frames per second of audio samples).
+</blockquote>
+
+<p><tt><b>sampleRate( void ) const</b></tt>
+<blockquote>[ returns double  ]
+<br>
+Return the sampling freqency in Hz for the sample data in this
+AiffFile.
+</blockquote>
+
+<p><tt><b>sampleSize( void ) const</b></tt>
+<blockquote>[ returns int  ]
+<br>
+Return the size in bits of a single, integer audio sample in this AiffFile.
+</blockquote>
+
+<p><tt><b>getSamples( double * bufBegin, double * bufEnd )</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Convert the integer sample data to doubles and store in on the half-open
+(STL-style) range [bufBegin, bufEnd). bufEnd represents a position after
+the last valid position in the buffer, no sample is written at bufEnd.
+To convert ten samples into a buffer, use <br>
+<tt>myAiffFile.getSamples(myBuf, myBuf+10);</tt><br>
+</blockquote>
+
+<h3>Static Member Functions</h3>
+<p><tt><b>static Export( const std::string & filename, double rate, int chans, int bits, <br>
+					const double * bufBegin, const double * bufEnd )</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Export the sample data on the half-open (STL-style) range [bufBegin, bufEnd)
+to a AIFF samples file having the specified file name or path, using the 
+specified sample rate (in Hz), number of channels, and sample size (in bits).
+bufEnd represents a position after the last valid position in the buffer, no 
+sample is read from *bufEnd.
+</blockquote>
+
+<p><tt><b>static Export( std::ostream & s, double rate, int chans, int bits, <br>
+					const double * bufBegin, const double * bufEnd )</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Export the sample data on the half-open (STL-style) range [bufBegin, bufEnd)
+in the format of a AIFF samples file on the specified ostream, using the 
+specified sample rate (in Hz), number of channels, and sample size (in bits).
+bufEnd represents a position after the last valid position in the buffer, no 
+sample is read from *bufEnd.
+</blockquote>
+					
+<p><a href="#contents"><small>Contents</small></a>					
+
+<hr align="Center" size="3">    
+<table cellspacing="0" cellpadding="1" width="100%">
+  <tbody>
+	<tr>
+	  <td valign="Top">Last updated on 7 May 2002
+	  </td>
+	  <td align="Right" valign="Top"><a href="http://www.cerlsoundgroup.org/Loris/">www.cerlsoundgroup.org/Loris/</a>
+	  </td>
+	</tr>       
+  </tbody>    
+
+</body>
+</html>
