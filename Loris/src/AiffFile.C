@@ -38,15 +38,17 @@ enum {
 	SoundDataId = 'SSND'
 };
 
+typedef Int_32 ID;
+
 struct CkHeader {
 	Int_32 id;
-	Uint_32 size;
+	ID size;
 };
 
 struct ContainerCk
 {
 	CkHeader header;
-	Int_32 formType;
+	ID formType;
 };
 
 struct CommonCk
@@ -187,7 +189,7 @@ AiffFile::write( BinaryFile & file )
 void
 AiffFile::readChunkHeader( std::istream & s, CkHeader & h )
 {
-	BigEndian::read( s, 4, sizeof(char), (char *)&h.id );
+	BigEndian::read( s, 1, sizeof(ID), (char *)&h.id );
 	BigEndian::read( s, 1, sizeof(Uint_32), (char *)&h.size );
 }
 
@@ -264,7 +266,7 @@ AiffFile::readContainer( std::istream & s )
 			Throw( FileIOException, "Found no Container chunk." );
 			
 		//	read in the chunk data:
-		BigEndian::read( s, 4, sizeof(char), (char *)&ck.formType );
+		BigEndian::read( s, 1, sizeof(ID), (char *)&ck.formType );
 	}
 	catch( FileIOException & ex ) {
 		ex.append( "Failed to read badly-formatted AIFF file (bad Container chunk)." );
