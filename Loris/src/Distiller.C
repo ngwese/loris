@@ -68,8 +68,12 @@ static void collateUnlabeled( PartialList & partials, int startLabel, double fad
 //	fades out at the end of one Partial, and in again at the beginning of the
 //	other.
 //
-Distiller::Distiller( double partialFadeTime ) :
-	_fadeTime( partialFadeTime )
+//	By default, the gap time, the additional time over which a Partial faded
+//	out must remain at zero amplitude before it can fade back in, is 0.
+//
+Distiller::Distiller( double partialFadeTime, double partialSilentTime ) :
+	_fadeTime( partialFadeTime ),
+	_gapTime( partialSilentTime )
 {
 	if( _fadeTime < 0.0 )
 		Throw( InvalidArgument, "Distiller fade time must be non-negative." );
@@ -151,7 +155,7 @@ Distiller::distill( PartialList & partials )
 				
 				//	replace the Partial at enddistilled with 
 				// 	the resulting distilled partial:
-				*enddistilled = distillOne( samelabel, label, _fadeTime );
+				*enddistilled = distillOne( samelabel, label, _fadeTime, _gapTime );
 			}
 			else
 			{
@@ -184,7 +188,7 @@ Distiller::distill( PartialList & partials )
 	//	collate unlabeled (zero-labeled) Partials:
 	if ( savezeros.size() > 0 )
 	{
-		collateUnlabeled( savezeros, std::max(label+1, 1), _fadeTime );
+		collateUnlabeled( savezeros, std::max(label+1, 1), _fadeTime, _gapTime );
 		ret = savezeros.begin();
 		partials.splice( partials.end(), savezeros );
 	}

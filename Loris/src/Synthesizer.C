@@ -192,7 +192,7 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ ) const
 	}
 	
 //	create an iterator on the PartialView:
-	PartialConstIterator iterator = p.begin();
+	Partial::const_iterator iterator = p.begin();
 	
 //	compute the initial oscillator state, assuming
 //	a prepended Breakpoint of zero amplitude:

@@ -113,7 +113,7 @@ Channelizer_imp::~Channelizer_imp( void )
 //
 static double loudestAt( const Partial & p )
 {
-	PartialConstIterator env = p.begin();
+	Partial::const_iterator env = p.begin();
 	double maxAmp = env.breakpoint().amplitude() * std::sqrt( 1. - env.breakpoint().bandwidth() );
 	double time = env.time();
 	
@@ -192,7 +192,7 @@ Channelizer_imp::channelize_one( Partial & p, double tstart, double tend )
 	//	label for each Partial:
 	double ampsum = 0.;
 	double weightedlabel = 0.;
-	PartialConstIterator bp;
+	Partial::const_iterator bp;
 	for ( bp = p.findAfter(tstart); bp != p.end(); ++bp )
 	{
 		//	bail if the current breakpoint is outside of the

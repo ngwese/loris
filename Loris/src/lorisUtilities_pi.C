@@ -173,7 +173,7 @@ void scaleAmp( PartialList * partials, BreakpointEnvelope * ampEnv )
 		PartialList::iterator listPos;
 		for ( listPos = partials->begin(); listPos != partials->end(); ++listPos ) 
 		{
-			PartialIterator envPos;
+			Partial::iterator envPos;
 			for ( envPos = listPos->begin(); envPos != listPos->end(); ++envPos ) 
 			{		
 				envPos.breakpoint().setAmplitude( envPos.breakpoint().amplitude() * ampEnv->valueAt(envPos.time()) );
@@ -214,7 +214,7 @@ void scaleNoiseRatio( PartialList * partials, BreakpointEnvelope * noiseEnv )
 		PartialList::iterator listPos;
 		for ( listPos = partials->begin(); listPos != partials->end(); ++listPos ) 
 		{
-			PartialIterator envPos;
+			Partial::iterator envPos;
 			for ( envPos = listPos->begin(); envPos != listPos->end(); ++envPos ) 
 			{		
 				//	compute new bandwidth value:
@@ -268,7 +268,7 @@ void shiftPitch( PartialList * partials, BreakpointEnvelope * pitchEnv )
 		PartialList::iterator listPos;
 		for ( listPos = partials->begin(); listPos != partials->end(); ++listPos ) 
 		{
-			PartialIterator envPos;
+			Partial::iterator envPos;
 			for ( envPos = listPos->begin(); envPos != listPos->end(); ++envPos ) 
 			{		
 				//	compute frequency scale:

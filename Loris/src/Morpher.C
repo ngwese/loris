@@ -288,14 +288,14 @@ Morpher::morphPartial( const Partial & src, const Partial & tgt, int assignLabel
 	
 	//	loop over Breakpoints in first partial:
 	Breakpoint tmpBkpt;
-	for ( PartialConstIterator iter = src.begin(); iter != src.end(); ++iter )
+	for ( Partial::const_iterator iter = src.begin(); iter != src.end(); ++iter )
 	{	
 		morphParameters( iter.breakpoint(), tgt, iter.time(), tmpBkpt );
 		newp.insert( iter.time(), tmpBkpt );
 	}
 	
 	//	now do it for the other Partial:
-	for ( PartialConstIterator iter = tgt.begin(); iter != tgt.end(); ++iter )
+	for ( Partial::const_iterator iter = tgt.begin(); iter != tgt.end(); ++iter )
 	{
 		morphParameters( src, iter.breakpoint(), iter.time(), tmpBkpt );
 		newp.insert( iter.time(), tmpBkpt );

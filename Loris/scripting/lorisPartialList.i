@@ -73,11 +73,11 @@
 
 using Loris::debugger;
 using Loris::Partial;
-using Loris::PartialIterator;
 using Loris::PartialList;
 using Loris::PartialListIterator;
 using Loris::Breakpoint;
 
+typedef Loris::Partial::iterator PartialIterator;
 %}
 
 /*	PartialList

@@ -1543,10 +1543,10 @@ href="http://www.cerlsoundgroup.org/Loris/">www.cerlsoundgroup.org/Loris/</a>.
 The constituent time-tagged <a href="#Breakpoint">Breakpoints</a> are
 accessible through <code>Partial:iterator</code> and
 <code>Partial::const_iterator</code> interfaces, which are typedefs for
-PartialIterator and PartialConstIterator, respectively. These iterator
+Partial::iterator and Partial::const_iterator, respectively. These iterator
 classes implement the interface for bidirectional iterators in the STL,
 including pre and post-increment and decrement, and dereferencing.
-Dereferencing a PartialIterator or PartialConstIterator yields a
+Dereferencing a Partial::iterator or Partial::const_iterator yields a
 reference to a Breakpoint. Additionally, these iterator classes have
 <code>breakpoint()</code> and <code>time()</code> members, returning the
 <a href="#Breakpoint">Breakpoint</a> (by reference) at the
@@ -1564,7 +1564,7 @@ Partial is a leaf class, do not subclass.
 Return a new empty (no Breakpoints) Partial.
 </blockquote>	
 
-<p><tt><b>Partial( PartialConstIterator beg, PartialConstIterator end )
+<p><tt><b>Partial( Partial::const_iterator beg, PartialConstIterator end )
 </b></tt>
 <blockquote>
 <br>
@@ -1675,68 +1675,68 @@ Set the label for this Partial to the specified 32-bit value.
 <h4>Iterator Access</h4>	
 <p><tt><b> begin( void )
 </b></tt>
-<blockquote>[ returns PartialIterator  ]
+<blockquote>[ returns Partial::iterator  ]
 <br>
-Return a PartialIterator refering to the position of the first
+Return a Partial::iterator refering to the position of the first
 Breakpoint in this Partial's envelope.
 <p>
-For const Partials, returns a PartialConstIterator.
+For const Partials, returns a Partial::const_iterator.
 </blockquote>	
 
 
 <p><tt><b> end( void )
 </b></tt>
-<blockquote>[ returns PartialIterator  ]
+<blockquote>[ returns Partial::iterator  ]
 <br>
-Return a PartialIterator refering to the position past the last Breakpoint in
+Return a Partial::iterator refering to the position past the last Breakpoint in
 this Partial's envelope. The iterator returned by end() (like the
 iterator returned by the end() member of any STL container) does not
 refer to a valid Breakpoint.
 <p>
-For const Partials, returns a PartialConstIterator.
+For const Partials, returns a Partial::const_iterator.
 </blockquote>	
 
 
-<p><tt><b> erase( PartialIterator pos )
+<p><tt><b> erase( Partial::iterator pos )
 </b></tt>
 <blockquote>[ returns void  ]
 <br>
 Breakpoint removal: erase the Breakpoint at the position of the given
-PartialIterator (invalidating the PartialIterator).
+Partial::iterator (invalidating the PartialIterator).
 </blockquote>	
 
 <p><tt><b> findAfter( double time ) 
 </b></tt>
-<blockquote>[ returns PartialIterator  ]
+<blockquote>[ returns Partial::iterator  ]
 <br>
-Return a PartialIterator refering to the insertion position for a
+Return a Partial::iterator refering to the insertion position for a
 Breakpoint at the specified time (that is, the position of the first
 Breakpoint at a time later than the specified time).
 <p>
-For const Partials, returns a PartialConstIterator.
+For const Partials, returns a Partial::const_iterator.
 </blockquote>	
 
 <p><tt><b> findNearest( double time )
 </b></tt>
-<blockquote>[ returns PartialIterator  ]
+<blockquote>[ returns Partial::iterator  ]
 <br>
-Return a PartialIterator refering to the position of the
+Return a Partial::iterator refering to the position of the
 Breakpoint in this Partial nearest the specified time.
 <p>
-For const Partials, returns a PartialConstIterator.
+For const Partials, returns a Partial::const_iterator.
 </blockquote>	
 
 	
 <p><tt><b> insert( double time, const Breakpoint &amp;bp )
 </b></tt>
-<blockquote>[ returns PartialIterator  ]
+<blockquote>[ returns Partial::iterator  ]
 <br>
 Breakpoint insertion: insert a copy of the specified Breakpoint in the
-parameter envelope at time (seconds), and return a PartialIterator
+parameter envelope at time (seconds), and return a Partial::iterator
 refering to the position of the inserted Breakpoint.
 </blockquote>	
 
-<p><tt><b> split( PartialIterator pos )
+<p><tt><b> split( Partial::iterator pos )
 </b></tt>
 <blockquote>[ returns Partial ]
 <br>

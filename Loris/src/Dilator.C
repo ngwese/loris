@@ -185,7 +185,7 @@ Dilator::dilate( Partial & p )
 	
 	//	timepoint index:
 	int idx = 0;
-	for ( PartialConstIterator iter = p.begin(); iter != p.end(); ++iter )
+	for ( Partial::const_iterator iter = p.begin(); iter != p.end(); ++iter )
 	{
 		//	find the first initial time point later 
 		//	than the currentTime:

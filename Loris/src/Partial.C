@@ -122,7 +122,7 @@ Partial::~Partial( void )
 double
 Partial::initialPhase( void ) const
 {
-	if ( _bpmap.size() == 0 )
+	if ( numBreakpoints() == 0 )
 		Throw( InvalidPartial, "Tried find intial phase of a Partial with no Breakpoints." );
 
 	return begin().breakpoint().phase();
@@ -137,7 +137,7 @@ Partial::initialPhase( void ) const
 double
 Partial::startTime( void ) const
 {
-	if ( _bpmap.size() == 0 )
+	if ( numBreakpoints() == 0 )
 		Throw( InvalidPartial, "Tried find start time of a Partial with no Breakpoints." );
 
 	return begin().time();
@@ -152,7 +152,7 @@ Partial::startTime( void ) const
 double
 Partial::endTime( void ) const
 {
-	if ( _bpmap.size() == 0 )
+	if ( numBreakpoints() == 0 )
 		Throw( InvalidPartial, "Tried find end time of a Partial with no Breakpoints." );
 
 	return (--end()).time();
@@ -196,7 +196,7 @@ Partial::absorb( const Partial & other )
 double
 Partial::duration( void ) const
 {
-	if ( _bpmap.size() == 0 )
+	if ( numBreakpoints() == 0 )
 		return 0.;
 
 	return endTime() - startTime();
@@ -219,10 +219,10 @@ Partial::operator==( const Partial & rhs ) const
 // ---------------------------------------------------------------------------
 //	Iterator generation.
 //
-PartialIterator 
+Partial::iterator 
 Partial::begin( void )
 { 
-	return PartialIterator( _bpmap.begin() ); 
+	return Partial::iterator( _bpmap.begin() ); 
 }
 
 // ---------------------------------------------------------------------------
@@ -230,10 +230,10 @@ Partial::begin( void )
 // ---------------------------------------------------------------------------
 //	Iterator generation.
 //
-PartialIterator 
+Partial::iterator 
 Partial::end( void )
 { 
-	return PartialIterator( _bpmap.end() ); 
+	return Partial::iterator( _bpmap.end() ); 
 }
 
 // ---------------------------------------------------------------------------
@@ -241,10 +241,10 @@ Partial::end( void )
 // ---------------------------------------------------------------------------
 //	Const iterator generation.
 //
-PartialConstIterator 
+Partial::const_iterator 
 Partial::begin( void ) const
 { 
-	return PartialConstIterator( _bpmap.begin() ); 
+	return Partial::const_iterator( _bpmap.begin() ); 
 }
 
 // ---------------------------------------------------------------------------
@@ -252,10 +252,10 @@ Partial::begin( void ) const
 // ---------------------------------------------------------------------------
 //	Iterator generation.
 //
-PartialConstIterator 
+Partial::const_iterator 
 Partial::end( void ) const
 { 
-	return PartialConstIterator( _bpmap.end() ); 
+	return Partial::const_iterator( _bpmap.end() ); 
 }
 
 // ---------------------------------------------------------------------------
@@ -269,11 +269,11 @@ Partial::end( void ) const
 //	Could except:
 //	allocation of a new Breakpoint could fail, throwing a std::bad__alloc.
 //
-PartialIterator
+Partial::iterator
 Partial::insert( double time, const Breakpoint & bp )
 {
 	_bpmap[ time ] = bp;
-	return PartialIterator( _bpmap.find(time) );
+	return Partial::iterator( _bpmap.find(time) );
 }
 
 // ---------------------------------------------------------------------------
@@ -283,16 +283,14 @@ Partial::insert( double time, const Breakpoint & bp )
 //	given iterator (invalidating the iterator), and
 //	return an iterator referring to the next position,
 //	or end if pos is the last Breakpoint in the Partial.
-PartialIterator 
-Partial::erase( PartialIterator pos )
+Partial::iterator 
+Partial::erase( Partial::iterator pos )
 {
-	PartialIterator ret = pos;
-	if ( pos._iter != _bpmap.end() )
+	if ( pos != end() )
 	{
-		++ret;
-		_bpmap.erase( pos._iter );
+		pos = erase( pos, ++pos );
 	}
-	return ret;
+	return pos;
 }
 
 // ---------------------------------------------------------------------------
@@ -301,8 +299,8 @@ Partial::erase( PartialIterator pos )
 //	Erase the Breakpoints in the specified range of positions,
 //	and return an iterator referring to the position after the,
 //	erased range.
-PartialIterator 
-Partial::erase( PartialIterator beg, PartialIterator end )
+Partial::iterator 
+Partial::erase( Partial::iterator beg, Partial::iterator end )
 {
 	while ( beg._iter != end._iter )
 	{
@@ -323,9 +321,8 @@ Partial::erase( PartialIterator beg, PartialIterator end )
 Partial 
 Partial::split( iterator pos )
 {
-	Partial res;
-	res._bpmap.insert( pos._iter, _bpmap.end() );
-	_bpmap.erase( pos._iter, _bpmap.end() );
+	Partial res( pos, end() );
+	erase( pos, end() );
 	return res;
 }
 
@@ -337,10 +334,10 @@ Partial::split( iterator pos )
 //	Breakpoint at a time later than or equal to the specified 
 //	time).
 //
-PartialConstIterator
+Partial::const_iterator
 Partial::findAfter( double time ) const
 {
-	return PartialConstIterator( _bpmap.lower_bound( time ) );
+	return Partial::const_iterator( _bpmap.lower_bound( time ) );
 }
 
 // ---------------------------------------------------------------------------
@@ -351,10 +348,10 @@ Partial::findAfter( double time ) const
 //	Breakpoint at a time later than or equal to the specified 
 //	time).
 //
-PartialIterator
+Partial::iterator
 Partial::findAfter( double time )
 {
-	return PartialIterator( _bpmap.lower_bound( time ) );
+	return Partial::iterator( _bpmap.lower_bound( time ) );
 } 
 
 // ---------------------------------------------------------------------------
@@ -365,7 +362,7 @@ Partial::findAfter( double time )
 //	position of the nearest-in-time Breakpoint) unless there
 //	are no Breakpoints.
 //
-PartialConstIterator
+Partial::const_iterator
 Partial::findNearest( double time ) const
 {
 	//	if there are no Breakpoints, return end:
@@ -373,13 +370,13 @@ Partial::findNearest( double time ) const
 		return end();
 			
 	//	get the position of the first Breakpoint after time:
-	PartialConstIterator pos( _bpmap.lower_bound( time ) );
+	Partial::const_iterator pos = findAfter( time );
 	
 	//	if there is an earlier Breakpoint that is closer in
 	//	time, prefer that one:
 	if ( pos != begin() )
 	{
-		PartialConstIterator prev = pos;
+		Partial::const_iterator prev = pos;
 		--prev;
 		if ( pos == end() || pos.time() - time > time - prev.time() )
 			return prev;
@@ -397,7 +394,7 @@ Partial::findNearest( double time ) const
 //	position of the nearest-in-time Breakpoint) unless there
 //	are no Breakpoints.
 //
-PartialIterator
+Partial::iterator
 Partial::findNearest( double time )
 {
 	//	if there are no Breakpoints, return end:
@@ -405,13 +402,13 @@ Partial::findNearest( double time )
 		return end();
 			
 	//	get the position of the first Breakpoint after time:
-	PartialIterator pos( _bpmap.lower_bound( time ) );
+	Partial::iterator pos = findAfter( time );
 	
 	//	if there is an earlier Breakpoint that is closer in
 	//	time, prefer that one:
 	if ( pos != begin() )
 	{
-		PartialIterator prev = pos;
+		Partial::iterator prev = pos;
 		--prev;
 		if ( pos == end() || pos.time() - time > time - prev.time() )
 			return prev;
@@ -428,20 +425,20 @@ Partial::findNearest( double time )
 double
 Partial::frequencyAt( double time ) const
 {
-	if ( _bpmap.size() == 0 )
+	if ( numBreakpoints() == 0 )
 		Throw( InvalidPartial, "Tried to interpolate a Partial with no Breakpoints." );
 
 	//	lower_bound returns a reference to the lowest
 	//	position that would be higher than an element
 	//	having key equal to time:
-	PartialConstIterator it = findAfter( time );
+	Partial::const_iterator it = findAfter( time );
 		
-	if ( it == _bpmap.begin() ) 
+	if ( it == begin() ) 
 	{
 	//	time is before the onset of the Partial:
 		return it.breakpoint().frequency();
 	}
-	else if ( it == _bpmap.end() ) 
+	else if ( it == end() ) 
 	{
 	//	time is past the end of the Partial:
 		return (--it).breakpoint().frequency();
@@ -466,33 +463,22 @@ Partial::frequencyAt( double time ) const
 double
 Partial::amplitudeAt( double time ) const
 {
-	if ( _bpmap.size() == 0 )
+	if ( numBreakpoints() == 0 )
 		Throw( InvalidPartial, "Tried to interpolate a Partial with no Breakpoints." );
 
 	//	lower_bound returns a reference to the lowest
 	//	position that would be higher than an element
 	//	having key equal to time:
-	PartialConstIterator it = findAfter( time );
+	Partial::const_iterator it = findAfter( time );
 		
-	if ( it == _bpmap.begin() ) 
+	if ( it == begin() ) 
 	{
 	//	time is before the onset of the Partial:
 	//	fade in ampltude
 		double alpha = std::min(1., (it.time() - time) / FadeTime() );
 		return (1. - alpha) * it.breakpoint().amplitude();
-		/*
-		if ( time < it.time() - FadeTime() )
-		{
-			return 0.;
-		}
-		else
-		{
-			double alpha = (it.time() - time) / FadeTime();
-			return (1. - alpha) * it.breakpoint().amplitude();
-		}
-		*/
 	}
-	else if (it == _bpmap.end() ) 
+	else if (it == end() ) 
 	{
 	//	time is past the end of the Partial:
 	//	fade out ampltude
@@ -501,17 +487,6 @@ Partial::amplitudeAt( double time ) const
 		
 		double alpha = std::min(1., (time - it.time()) / FadeTime() );
 		return (1. - alpha) * it.breakpoint().amplitude();
-		/*
-		if ( time > it.time() + FadeTime() )
-		{
-			return 0.;
-		}
-		else
-		{
-			double alpha = (time - it.time()) / FadeTime();
-			return (1. - alpha) * it.breakpoint().amplitude();
-		}
-		*/
 	}
 	else 
 	{
@@ -533,24 +508,22 @@ Partial::amplitudeAt( double time ) const
 double
 Partial::phaseAt( double time ) const
 {
-	if ( _bpmap.size() == 0 )
+	if ( numBreakpoints() == 0 )
 		Throw( InvalidPartial, "Tried to interpolate a Partial with no Breakpoints." );
 	
 	//	lower_bound returns a reference to the lowest
 	//	position that would be higher than an element
 	//	having key equal to time:
-	PartialConstIterator it = findAfter( time );
+	Partial::const_iterator it = findAfter( time );
 		
 	//	compute phase:
-	//	map iterator is a pair: first is time, 
-	//	second is Breakpoint.
-	if ( it == _bpmap.begin() ) 
+	if ( it == begin() ) 
 	{
 	//	time is before the onset of the Partial:
 		double dp = 2. * Pi * (it.time() - time) * it.breakpoint().frequency();
 		return std::fmod( it.breakpoint().phase() - dp, 2. * Pi);
 	}
-	else if (it == _bpmap.end() ) 
+	else if (it == end() ) 
 	{
 	//	time is past the end of the Partial:
 	//	( first decrement iterator to get the tail Breakpoint)
@@ -595,20 +568,20 @@ Partial::phaseAt( double time ) const
 double
 Partial::bandwidthAt( double time ) const
 {
-	if ( _bpmap.size() == 0 )
+	if ( numBreakpoints() == 0 )
 		Throw( InvalidPartial, "Tried to interpolate a Partial with no Breakpoints." );
 	
 	//	lower_bound returns a reference to the lowest
 	//	position that would be higher than an element
 	//	having key equal to time:
-	PartialConstIterator it = findAfter( time );
+	Partial::const_iterator it = findAfter( time );
 		
-	if ( it == _bpmap.begin() ) 
+	if ( it == begin() ) 
 	{
 	//	time is before the onset of the Partial:
 		return it.breakpoint().bandwidth();
 	}
-	else if (it == _bpmap.end() ) 
+	else if (it == end() ) 
 	{
 	//	time is past the end of the Partial:
 		return (--it).breakpoint().bandwidth();
@@ -636,15 +609,15 @@ Partial::bandwidthAt( double time ) const
 Breakpoint
 Partial::parametersAt( double time ) const 
 {
-	if ( _bpmap.size() == 0 )
+	if ( numBreakpoints() == 0 )
 		Throw( InvalidPartial, "Tried to interpolate a Partial with no Breakpoints." );
 	
 	//	lower_bound returns a reference to the lowest
 	//	position that would be higher than an element
 	//	having key equal to time:
-	PartialConstIterator it = findAfter( time );
+	Partial::const_iterator it = findAfter( time );
 		
-	if ( it == _bpmap.begin() ) 
+	if ( it == begin() ) 
 	{
 	//	time is before the onset of the Partial:
 	//	frequency is starting frequency, 
@@ -659,7 +632,7 @@ Partial::parametersAt( double time ) const
 		return Breakpoint( it.breakpoint().frequency(), amp, 
 						   it.breakpoint().bandwidth(), ph );
 	}
-	else if (it == _bpmap.end() ) 
+	else if (it == end() ) 
 	{
 	//	time is past the end of the Partial:
 	//	frequency is ending frequency, 

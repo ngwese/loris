@@ -104,7 +104,7 @@ int main( )
 			  pIter != clar.end(); 
 			  ++pIter ) 
 		{
-			for ( PartialIterator jack = pIter->begin(); jack != pIter->end(); ++jack ) 
+			for ( Partial::iterator jack = pIter->begin(); jack != pIter->end(); ++jack ) 
 			{		
 				jack->setFrequency( jack->frequency() * pscale );
 			}

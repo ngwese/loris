@@ -212,7 +212,7 @@ FrequencyReference::envelope( void ) const
 //
 static double timeOfPeakEnergy( const Partial & p )
 {
-	PartialConstIterator partialIter = p.begin();
+	Partial::const_iterator partialIter = p.begin();
 	double maxAmp = 
 		partialIter->amplitude() * std::sqrt( 1. - partialIter->bandwidth() );
 	double time = partialIter.time();

@@ -378,7 +378,7 @@ makeSortedBreakpointTimes( const std::vector< Partial * > & partialsVector,
 // Make list of all breakpoint times from all partials.
 	for (int i = 0; i < partialsVector.size(); i++) 
 	{
-		for ( PartialIterator it = partialsVector[i]->begin(); 
+		for ( Partial::iterator it = partialsVector[i]->begin(); 
 			  it != partialsVector[i]->end();
 			  ++it ) 
 		{
@@ -489,7 +489,7 @@ collectActiveIndices( const std::vector< Partial * > & partialsVector, const boo
 		// Skip the partial if there is no breakpoint and either:
 		//		(1) we are writing enhanced format, 
 		// 	 or (2) the partial has zero amplitude.
-		PartialIterator it = partialsVector[i]->findAfter( frameTime );
+		Partial::iterator it = partialsVector[i]->findAfter( frameTime );
 		if ( ( it != partialsVector[i]->end() && it.time() < nextFrameTime ) 
 					|| (!enhanced && partialsVector[i]->amplitudeAt( frameTime ) != 0.0 ) ) 
 			activeIndices.push_back(i);	
