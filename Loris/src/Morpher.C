@@ -255,21 +255,33 @@ Morpher_imp::crossfade( std::list< Partial >::const_iterator begin0,
 {
 	Partial nullPartial;
 	debugger << "crossfading unlabeled (labeled 0) Partials" << endl;
+	
+	long debugCounter;
 
 	//	crossfade Partials corresponding to a morph weight of 0:
 	std::list< Partial >::const_iterator it;
+	debugCounter = 0;
 	for ( it = begin0; it != end0; ++it )
 	{
 		if ( it->label() == 0 )
+		{
 			morphPartial( *it, nullPartial, 0 );	
+			++debugCounter;
+		}
 	}
+	debugger << "there were " << debugCounter << " in sound 1" << endl;
 
 	//	crossfade Partials corresponding to a morph weight of 1:
+	debugCounter = 0;
 	for ( it = begin1; it != end1; ++it )
 	{
 		if ( it->label() == 0 )
+		{
 			morphPartial( nullPartial, *it, 0 );
+			++debugCounter;
+		}
 	}
+	debugger << "there were " << debugCounter << " in sound 2" << endl;
 }
 
 // ---------------------------------------------------------------------------

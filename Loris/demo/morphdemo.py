@@ -66,7 +66,7 @@ v = loris.importAiff( 'flute.aiff' )
 (n, samplerate, nchans) = loris.infoAiff( 'flute.aiff' )
 flut = a.analyze( v, samplerate )
 print 'using fundamental as reference'
-flut_env = loris.createFreqReference( flut, 20, 0, 1000 )
+flut_env = loris.createFreqReference( flut, 20, 250, 500 )
 loris.channelize( flut, flut_env, 1 )
 loris.distill( flut )
 fname = 'fluteOK.aiff'
@@ -85,7 +85,7 @@ v = loris.importAiff( 'clarinet.aiff' )
 (n, samplerate, nchans) = loris.infoAiff( 'clarinet.aiff' )
 clar = a.analyze( v, samplerate )
 print 'using fundamental as reference'
-env = loris.createFreqReference( clar, 20, 0, 1000 )
+env = loris.createFreqReference( clar, 20, 350, 500 )
 loris.channelize( clar, env, 1 )
 loris.distill( clar )
 print 'shifting clarinet pitch down by six half steps'
@@ -109,7 +109,7 @@ v = loris.importAiff( 'cello.aiff' )
 (n, samplerate, nchans) = loris.infoAiff( 'cello.aiff' )
 cel = a.analyze( v, samplerate )
 print 'using third harmonic as reference'
-third = loris.createFreqReference( cel, 20, 0, 1000 )
+third = loris.createFreqReference( cel, 20, 400, 500 )
 loris.channelize( cel, third, 3 )
 loris.distill( cel )
 fname = 'cellOK.aiff'

@@ -93,12 +93,11 @@ static void distill_aux( const Partial & src,
 			//	this loop, this Breakpoint will not be part of 
 			//	the distilled Partial.
 			double a = it->amplitudeAt( pIter.time() );
-			if ( a > pIter->amplitude() ) {
+			if ( a > pIter->amplitude() ) 
 				break;	
-			}
-			else {
+			else 
 				xse += a*a;
-			}
+				
 		}	//	end iteration over Partial range
 		
 		//	if all Partials were examined, then
@@ -260,7 +259,6 @@ Distiller::distill( std::list<Partial> & l )
 	//	sort the std::list< Partial > by label:
 	debugger << "Distiller sorting Partials by label..." << endl;
 	l.sort( PartialUtils::label_less() );
-	
 	
 	// 	iterate over labels and distill each one:
 	std::list<Partial>::iterator dist_begin = l.begin();
