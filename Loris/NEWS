@@ -9,6 +9,10 @@ Please send Loris bug reports to loris@cerlsoundgroup.org.
 -------------------------------------------------------
 changes since 1.0beta7 release:
 
+- fixed phase error in SpcFile.C, introduced by replacing
+TwoPi symbol by 2. * Pi in the denominator without proper
+parenthesis.
+
 -------------------------------------------------------
 changes since 1.0beta6 release:
 

@@ -832,7 +832,7 @@ static void pack( double amp, double freq, double bw, double phase,
 	phase = std::fmod( phase, 2. * Pi );
 	if ( phase < 0. )
 		phase += 2. * Pi; 
-	double zeroToOnePhase = phase / 2. * Pi;
+	double zeroToOnePhase = phase / (2. * Pi);
 
 // Make frequency into range 0..1.
 	double zeroToOneFreq = freq / 22050.0;		// 0..1 , 1 is 22.050 kHz
