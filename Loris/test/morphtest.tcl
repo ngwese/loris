@@ -89,12 +89,11 @@ puts "finding avg frequency of fundamental"
 # clarinet analysis:
 set f 0
 set n 0
-set iter [[[$clar begin] partial] begin] 
-set end [[[$clar begin] partial] end]
-while { ! [ $iter equals $end ] } {
-	set  f [expr $f + [ [$iter breakpoint] frequency ] ]
+
+set iter [[[$clar iterator] next] iterator]
+while { ! [ $iter atEnd] } {
+	set  f [expr $f + [ [ [$iter next] breakpoint ] frequency ] ]
 	incr n
-	set iter [$iter next]
 }
 puts "avg frequency of first distilled clarinet partial is [expr $f/$n]"
 

@@ -83,13 +83,21 @@ loris.distill( clar )
 # clarinet analysis:
 f = 0
 n = 0
-iter = clar.begin().partial().begin()
-end = clar.begin().partial().end()
-while not iter.equals(end):
-	bp = iter.breakpoint()
-	f = f + bp.frequency()
-	n = n + 1
-	iter = iter.next()
+import sys
+if float(sys.version[:3]) >= 2.2:
+	p = clar.iterator().next()
+	for pos in p:
+		bp = pos.breakpoint()
+		f = f + bp.frequency()
+		n = n + 1
+else:
+	p = clar.iterator().next()
+	pos = p.iterator()
+	while not pos.atEnd():
+		bp = pos.next().breakpoint()
+		f = f + bp.frequency()
+		n = n + 1
+		
 print "avg frequency of first distilled clarinet partial is", f/n
 
 print 'shifting pitch of clarinet'
