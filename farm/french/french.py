@@ -25,7 +25,22 @@ notes from trial 2:
 	- all of these sound kind of hoarse, 250 are also a little crunchy (?),
 	150 windows are better.
 
-Last updated: 27 May 2003 by Kelly Fitz
+Made a fundamental frequency reference in Kyma.
+
+notes from trial 3:
+	- tracking analysis seems much worse than non-tracking!
+	
+notes from trial 4:
+	- taking an analysis from trial 3, I generated a new fundamental by
+	taking a weighted average of the loudest (>35dB) harmonic partals. 
+	Then I used this new fundamental and got much better results that 
+	trial 3! This is cool, because it gives me a pretty good way of 
+	generating a fundamental reference that I can use in a tracking
+	analysis. 
+	- try more analysis configuations with this new fundamental
+	- do we need to sift?
+
+Last updated: 17 Oct 2003 by Kelly Fitz
 """
 print __doc__
 
@@ -34,7 +49,7 @@ import loris, time
 
 # use this trial counter to skip over
 # eariler trials
-trial = 2
+trial = 4
 
 print "running trial number", trial, time.ctime(time.time())
 
@@ -42,6 +57,16 @@ source = 'french.aiff'
 file = loris.AiffFile( source )
 samples = file.samples()
 rate = file.sampleRate()
+
+def makeSpc( fname, partials ):
+	N_SPC_PARTIALS = 200
+	spc = loris.PartialList()
+	for p in partials:
+		if p.label() <= N_SPC_PARTIALS:
+			spc.insert( p )
+	print 'exporting %i spc partials'%spc.size() 
+	loris.exportSpc( fname + '.s.spc', spc, 60, 0 )
+	loris.exportSpc( fname + '.e.spc', spc, 60, 1 )
 
 
 # if trial == 1:
@@ -69,3 +94,68 @@ if trial == 2:
 			loris.exportAiff( ofile + '.aiff', loris.synthesize( p, rate ), rate, 1, 16 )
 			loris.exportSpc( ofile + '.s.spc', p, 60, 0 ) 
 			loris.exportSpc( ofile + '.e.spc', p, 60, 1 ) 
+
+if trial == 3:
+	print "obtaining fundamental frequency reference"
+	pref = loris.extractLabeled( loris.importSpc('french.fund.clean.spc'), 1 )
+	ref = loris.createFreqReference( pref, 30, 300 )
+	resolutions = ( 40, 60 )
+	widths = ( 150, 250 )
+	for r in resolutions:
+		for w in widths:
+			a = loris.Analyzer( r, w )
+			# turn off BW association for now
+			a.setBwRegionWidth( 0 )
+			p = a.analyze( samples, rate, ref )
+			ofile = 'french.%i.%i'%(r, w)
+			loris.exportAiff( ofile + '.raw.aiff', loris.synthesize( p, rate ), rate, 1, 16 )
+			# channelize
+			loris.channelize( p, ref, 1 )
+			#loris.sift( p )
+			#zeros = extractLabeled( p, 0 )
+			#print 'sifted out', zeros.size(), 'partials'
+			loris.distill( p )
+			# export
+			loris.exportAiff( ofile + '.aiff', loris.synthesize( p, rate ), rate, 1, 16 )
+			loris.exportSdif( ofile + '.sdif', p )
+			makeSpc( ofile, p )
+
+if trial == 4:
+	print "obtaining fundamental frequency reference"
+	pref = loris.extractLabeled( loris.importSpc('harmonicfund.s.spc'), 1 )
+	ref = loris.createFreqReference( pref, 30, 300 )
+	resolutions = ( 40, 60, 80 )
+	widths = (  120, 150, 250 )
+	for r in resolutions:
+		for w in widths:
+			a = loris.Analyzer( r, w )
+			# turn off BW association for now
+			a.setBwRegionWidth( 0 )
+			p = a.analyze( samples, rate, ref )
+			p2 = loris.PartialList( p )
+			ofile = 'french.%i.%i'%(r, w)
+			loris.exportAiff( ofile + '.raw.aiff', loris.synthesize( p, rate ), rate, 1, 16 )
+			# one partial per harmonic
+			# channelize
+			loris.channelize( p, ref, 1 )
+			#loris.sift( p )
+			#zeros = extractLabeled( p, 0 )
+			#print 'sifted out', zeros.size(), 'partials'
+			loris.distill( p )
+			# export
+			loris.exportAiff( ofile + '.aiff', loris.synthesize( p, rate ), rate, 1, 16 )
+			loris.exportSdif( ofile + '.sdif', p )
+			makeSpc( ofile, p )
+			# two partials per harmonic
+			p = p2
+			# channelize
+			loris.channelize( p, ref, 2 )
+			#loris.sift( p )
+			#zeros = extractLabeled( p, 0 )
+			#print 'sifted out', zeros.size(), 'partials'
+			loris.distill( p )
+			# export
+			loris.exportAiff( ofile + '.aiff', loris.synthesize( p, rate ), rate, 1, 16 )
+			loris.exportSdif( ofile + '.sdif', p )
+			makeSpc( ofile, p )
+

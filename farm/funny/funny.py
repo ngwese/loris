@@ -121,7 +121,7 @@ Using Loris version %s
 
 # use this trial counter to skip over
 # eariler trials
-trial = 7
+trial = 6
 
 print "running trial number", trial, time.ctime(time.time())
 
