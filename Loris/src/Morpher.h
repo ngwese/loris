@@ -214,6 +214,66 @@ public:
 					PartialList::const_iterator endTgt,
 					Partial::label_type label = 0 );
 
+    //!	Compute morphed parameter values at the specified time, using
+    //!	the source Breakpoint (assumed to correspond exactly to the
+    //!	specified time) and the target Partial (whose parameters are
+    //!	examined at the specified time).
+    //!
+    //!	\pre    the target Partial may not be a dummy Partial (no Breakpoints).
+    //!
+    //!	\param 	srcBkpt is the Breakpoint corresponding to a morph function
+    //!		   	value of 0.
+    //!	\param 	tgtPartial is the Partial corresponding to a morph function
+    //!		   	value of 1, evaluated at the specified time.
+    //!	\param 	time is the time corresponding to srcBkpt (used
+    //!			to evaluate the morphing functions and tgtPartial).
+    //!	\param	newpis the morphed Partial under construction, the morphed
+    //!			Breakpoint is added to this Partial.
+    Breakpoint 
+    morphSrcBreakpoint( const Breakpoint & bp, const Partial & tgtPartial, double time ) const;
+
+    //!	Compute morphed parameter values at the specified time, using
+    //!	the target Breakpoint (assumed to correspond exactly to the
+    //!	specified time) and the source Partial (whose parameters are
+    //!	examined at the specified time).
+    //!
+    //!	\pre    the source Partial may not be a dummy Partial (no Breakpoints).
+    //!
+    //!	\param 	tgtBkpt is the Breakpoint corresponding to a morph function
+    //!		   	value of 1.
+    //!	\param 	srcPartial is the Partial corresponding to a morph function
+    //!		   	value of 0, evaluated at the specified time.
+    //!	\param 	time is the time corresponding to srcBkpt (used
+    //!			to evaluate the morphing functions and tgtPartial).
+    //!	\param	newpis the morphed Partial under construction, the morphed
+    //!			Breakpoint is added to this Partial.
+    Breakpoint 
+    morphTgtBreakpoint( const Breakpoint & bp, const Partial & tgtPartial, double time ) const;
+
+    //!	Compute morphed parameter values at the specified time, using
+    //!	the source Breakpoint, assumed to correspond exactly to the
+    //!	specified time, and assuming that there is no corresponding 
+    //! target Partial, so the source Breakpoint should be simply faded.
+    //!
+    //!	\param 	bp is the Breakpoint corresponding to a morph function
+    //!		   	value of 0.
+    //!	\param 	time is the time corresponding to bp (used
+    //!			to evaluate the morphing functions).
+    //!	\return the faded Breakpoint
+    Breakpoint fadeSrcBreakpoint( Breakpoint bp, double time ) const;
+
+    //!	Compute morphed parameter values at the specified time, using
+    //!	the target Breakpoint, assumed to correspond exactly to the
+    //!	specified time, and assuming that there is not corresponding 
+    //! source Partial, so the target Breakpoint should be simply faded.
+    //!
+    //!	\param 	bp is the Breakpoint corresponding to a morph function
+    //!		   	value of 1.
+    //!	\param 	time is the time corresponding to bp (used
+    //!			to evaluate the morphing functions).
+    //!	\return the faded Breakpoint
+    Breakpoint fadeTgtBreakpoint( Breakpoint bp, double time ) const;
+    
 //	-- morphing function access/mutation --
 
 	//!	Assign a new frequency morphing envelope to this Morpher.
@@ -368,76 +428,48 @@ private:
    //! one of the sources in a morph has a Partial with a particular label.
 	Partial makePartialFromReference( Partial scaleMe, double fscale );
 
-	//!	Helper functions for computing individual morphed parameter values
-	double morphFrequencies( double f0, double f1, double alpha );
-	double morphAmplitudes( double a0, double a1, double alpha );
-	double morphBandwidths( double bw0, double bw1, double alpha );
-	double morphPhases( double phi0, double phi1, double alpha );
-
-
-    //!	Compute morphed parameter values at the specified time, using
-    //!	the source Breakpoint (assumed to correspond exactly to the
-    //!	specified time) and the target Partial (whose parameters are
-    //!	examined at the specified time).
+    //!    Compute morphed parameter values at the specified time, using
+    //!    the source Breakpoint (assumed to correspond exactly to the
+    //!    specified time) and the target Partial (whose parameters are
+    //!    examined at the specified time). Append the morphed Breakpoint
+    //!    to newp only if the target should contribute to the morph at
+    //!    the specified time.
     //!
-    //!	\pre    the target Partial may not be a dummy Partial (no Breakpoints).
+    //!    \pre    the target Partial may not be a dummy Partial (no Breakpoints).
     //!
-    //!	\param 	srcBkpt is the Breakpoint corresponding to a morph function
-    //!		   	value of 0.
-    //!	\param 	tgtPartial is the Partial corresponding to a morph function
-    //!		   	value of 1, evaluated at the specified time.
-    //!	\param 	time is the time corresponding to srcBkpt (used
-    //!			to evaluate the morphing functions and tgtPartial).
-    //!	\param	newpis the morphed Partial under construction, the morphed
-    //!			Breakpoint is added to this Partial.
-    void morphSrcBreakpoint( const Breakpoint & bp, const Partial & tgtPartial, double time, 
-						     Partial & newp );
-
-    //!	Compute morphed parameter values at the specified time, using
-    //!	the target Breakpoint (assumed to correspond exactly to the
-    //!	specified time) and the source Partial (whose parameters are
-    //!	examined at the specified time).
+    //!    \param  srcBkpt is the Breakpoint corresponding to a morph function
+    //!            value of 0.
+    //!    \param  tgtPartial is the Partial corresponding to a morph function
+    //!            value of 1, evaluated at the specified time.
+    //!    \param  time is the time corresponding to srcBkpt (used
+    //!            to evaluate the morphing functions and tgtPartial).
+    //!    \param  newp is the morphed Partial under construction, the morphed
+    //!            Breakpoint is added to this Partial.
+    //
+    void appendMorphedSrc( const Breakpoint & srcBkpt, const Partial & tgtPartial, 
+                           double time, Partial & newp  );
+                           
+    //!    Compute morphed parameter values at the specified time, using
+    //!    the target Breakpoint (assumed to correspond exactly to the
+    //!    specified time) and the source Partial (whose parameters are
+    //!    examined at the specified time). Append the morphed Breakpoint
+    //!    to newp only if the target should contribute to the morph at
+    //!    the specified time.
     //!
-    //!	\pre    the source Partial may not be a dummy Partial (no Breakpoints).
+    //!    \pre    the source Partial may not be a dummy Partial (no Breakpoints).
     //!
-    //!	\param 	tgtBkpt is the Breakpoint corresponding to a morph function
-    //!		   	value of 1.
-    //!	\param 	srcPartial is the Partial corresponding to a morph function
-    //!		   	value of 0, evaluated at the specified time.
-    //!	\param 	time is the time corresponding to srcBkpt (used
-    //!			to evaluate the morphing functions and tgtPartial).
-    //!	\param	newpis the morphed Partial under construction, the morphed
-    //!			Breakpoint is added to this Partial.
-    void morphTgtBreakpoint( const Breakpoint & bp, const Partial & tgtPartial, double time, 
-						     Partial & newp );
-
-    //!	Compute morphed parameter values at the specified time, using
-    //!	the source Breakpoint, assumed to correspond exactly to the
-    //!	specified time, and assuming that there is no corresponding 
-    //! target Partial, so the source Breakpoint should be simply faded.
-    //!
-    //!	\param 	bp is the Breakpoint corresponding to a morph function
-    //!		   	value of 0.
-    //!	\param 	time is the time corresponding to bp (used
-    //!			to evaluate the morphing functions).
-    //!	\param	newp is the morphed Partial under construction, the morphed
-    //!			Breakpoint is added to this Partial.
-    void fadeSrcBreakpoint( Breakpoint bp, double time, 
-						    Partial & newp );
-
-    //!	Compute morphed parameter values at the specified time, using
-    //!	the target Breakpoint, assumed to correspond exactly to the
-    //!	specified time, and assuming that there is not corresponding 
-    //! source Partial, so the target Breakpoint should be simply faded.
-    //!
-    //!	\param 	bp is the Breakpoint corresponding to a morph function
-    //!		   	value of 1.
-    //!	\param 	time is the time corresponding to bp (used
-    //!			to evaluate the morphing functions).
-    //!	\param	newp is the morphed Partial under construction, the morphed
-    //!			Breakpoint is added to this Partial.
-    void fadeTgtBreakpoint( Breakpoint bp, double time, 
-						    Partial & newp );
+    //!    \param  tgtBkpt is the Breakpoint corresponding to a morph function
+    //!            value of 1.
+    //!    \param  srcPartial is the Partial corresponding to a morph function
+    //!            value of 0, evaluated at the specified time.
+    //!    \param  time is the time corresponding to srcBkpt (used
+    //!            to evaluate the morphing functions and srcPartial).
+    //!    \param  newp is the morphed Partial under construction, the morphed
+    //!            Breakpoint is added to this Partial.
+    //
+    void appendMorphedTgt( const Breakpoint & tgtBkpt, const Partial & srcPartial, 
+                           double time, Partial & newp  );
+                           
 
 };	//	end of class Morpher
 

@@ -933,7 +933,7 @@ public:
 			partials->splice( partials->end(), self->partials() );
 			return partials;
 		}
-		/*	Analyze a SampleVector of (mono) samples at the given sample rate 	  	
+		/*	Analyze a vector of (mono) samples at the given sample rate 	  	
 			(in Hz) and return the resulting Partials in a PartialList. Use 
 			the specified frequency envelope as a fundamental reference for
 			Partial formation.

@@ -68,8 +68,19 @@ static const double DefaultAmpShape = 1E-5;      // shaping parameter, see morph
 static const double DefaultBreakpointGap = 1E-4; // minimum time (sec) between Breakpoints in 
                                                  // morphed Partials
 
+// helper declarations
+static inline double interpolateFrequencies( double f0, double f1, double alpha );
+static inline double interpolateLogAmplitudes( double a0, double a1, double alpha, double shape );
+static inline double interpolateBandwidths( double bw0, double bw1, double alpha );
+static inline double interpolatePhases( double phi0, double phi1, double alpha );
+static inline double interpolateWholePeriods( double f0, double f1, double dt, double alpha );
 
-    
+static inline Breakpoint interpolateParameters( const Breakpoint & srcBkpt, const Breakpoint & tgtBkpt,
+                                                double fweight, double aweight, double ashape, 
+                                                double bweight );
+
+static void morphPhaseTravel( const Breakpoint & bp0, Breakpoint & bp1, double dt, double alpha );
+
 #pragma mark -- construction --
 
 // ---------------------------------------------------------------------------
@@ -203,13 +214,21 @@ Morpher::morphPartial( const Partial & src, const Partial & tgt, int assignLabel
             //  Ran out of tgt Breakpoints, or 
             //  src Breakpoint is earlier, add it.
             double t = src_iter.time();
-            if ( 0 < tgt.numBreakpoints() )
+
+            //  Don't insert Breakpoints arbitrarily close together, 
+            //  only insert a new Breakpoint if it is later than
+            //  the end of the new Partial by more than the gap time.
+            if ( 0 == newp.numBreakpoints() || 
+                _minBreakpointGapSec <= ( t - newp.endTime() ) )
             {
-                morphSrcBreakpoint( src_iter.breakpoint(), tgt, t, newp );
-            }
-            else
-            {
-                fadeSrcBreakpoint( src_iter.breakpoint(), t, newp );
+                if ( 0 < tgt.numBreakpoints() )
+                {
+                    appendMorphedSrc( src_iter.breakpoint(), tgt, t, newp );
+                }
+                else
+                {
+                    newp.insert( t, fadeSrcBreakpoint( src_iter.breakpoint(), t ) );
+                }
             }
             ++src_iter;
         }
@@ -218,14 +237,21 @@ Morpher::morphPartial( const Partial & src, const Partial & tgt, int assignLabel
             //  Ran out of src Breakpoints, or
             //  tgt Breakpoint is earlier add it.
             double t = tgt_iter.time();
-
-            if ( 0 < src.numBreakpoints() )
+            
+            //  Don't insert Breakpoints arbitrarily close together, 
+            //  only insert a new Breakpoint if it is later than
+            //  the end of the new Partial by more than the gap time.
+            if ( 0 == newp.numBreakpoints() || 
+                _minBreakpointGapSec <= ( t - newp.endTime() ) )
             {
-                morphTgtBreakpoint( tgt_iter.breakpoint(), src, t, newp );
-            }
-            else
-            {
-                fadeTgtBreakpoint( tgt_iter.breakpoint(), t, newp );
+                if ( 0 < src.numBreakpoints() )
+                {
+                    appendMorphedTgt( tgt_iter.breakpoint(), src, t, newp );
+                }
+                else
+                {
+                    newp.insert( t, fadeTgtBreakpoint( tgt_iter.breakpoint(), t ) );
+                }
             }
             ++tgt_iter;
         }  
@@ -277,8 +303,16 @@ Morpher::crossfade( PartialList::const_iterator beginSrc,
                   bpPos != it->end(); 
                   ++bpPos )
             {        
-               fadeSrcBreakpoint( bpPos.breakpoint(), bpPos.time(), newp );
-         }
+                //  Don't insert Breakpoints arbitrarily close together, 
+                //  only insert a new Breakpoint if it is later than
+                //  the end of the new Partial by more than the gap time.
+                if ( 0 == newp.numBreakpoints() || 
+                    _minBreakpointGapSec <= ( bpPos.time() - newp.endTime() ) )
+                {
+                    newp.insert( bpPos.time(), 
+                                 fadeSrcBreakpoint( bpPos.breakpoint(), bpPos.time() ) );
+                }
+            }
             
             if ( newp.numBreakpoints() > 0 )
             {
@@ -303,8 +337,16 @@ Morpher::crossfade( PartialList::const_iterator beginSrc,
                   bpPos != it->end(); 
                   ++bpPos )
             {
-            fadeTgtBreakpoint( bpPos.breakpoint(), bpPos.time(), newp );           
-         }
+                //  Don't insert Breakpoints arbitrarily close together, 
+                //  only insert a new Breakpoint if it is later than
+                //  the end of the new Partial by more than the gap time.
+                if ( 0 == newp.numBreakpoints() || 
+                    _minBreakpointGapSec <= ( bpPos.time() - newp.endTime() ) )
+                {
+                    newp.insert( bpPos.time(),
+                                 fadeTgtBreakpoint( bpPos.breakpoint(), bpPos.time() ) );           
+                }
+            }
             
             if ( newp.numBreakpoints() > 0 )
             {
@@ -388,6 +430,129 @@ Morpher::morph( PartialList::const_iterator beginSrc,
     
     //    crossfade the remaining unlabeled Partials:
     crossfade( beginSrc, endSrc, beginTgt, endTgt );
+}
+
+
+// ---------------------------------------------------------------------------
+//    morphSrcBreakpoint
+// ---------------------------------------------------------------------------
+//!    Compute morphed parameter values at the specified time, using
+//!    the source Breakpoint (assumed to correspond exactly to the
+//!    specified time) and the target Partial (whose parameters are
+//!    examined at the specified time).
+//!
+//!    \pre    the target Partial may not be a dummy Partial (no Breakpoints).
+//!
+//!    \param  srcBkpt is the Breakpoint corresponding to a morph function
+//!            value of 0.
+//!    \param  tgtPartial is the Partial corresponding to a morph function
+//!            value of 1, evaluated at the specified time.
+//!    \param  time is the time corresponding to srcBkpt (used
+//!            to evaluate the morphing functions and tgtPartial).
+//!    \return the morphed Breakpoint
+//
+Breakpoint
+Morpher::morphSrcBreakpoint( const Breakpoint & srcBkpt, const Partial & tgtPartial, 
+                             double time  ) const
+{
+    if ( 0 == tgtPartial.numBreakpoints() )
+    {
+        Throw( InvalidArgument, "morphSrcBreakpoint cannot morph with empty Partial" );
+    }
+    
+    double fweight = _freqFunction->valueAt( time );
+    double aweight = _ampFunction->valueAt( time );
+    double bweight = _bwFunction->valueAt( time );
+    
+    Breakpoint tgtBkpt = tgtPartial.parametersAt( time );
+    
+    // compute interpolated Breakpoint parameters:
+    return interpolateParameters( srcBkpt, tgtBkpt, fweight, 
+                                  aweight, _ampMorphShape, bweight );
+}
+
+// ---------------------------------------------------------------------------
+//    morphTgtBreakpoint
+// ---------------------------------------------------------------------------
+//!    Compute morphed parameter values at the specified time, using
+//!    the target Breakpoint (assumed to correspond exactly to the
+//!    specified time) and the source Partial (whose parameters are
+//!    examined at the specified time).
+//!
+//!    \pre    the source Partial may not be a dummy Partial (no Breakpoints).
+//!
+//!    \param  tgtBkpt is the Breakpoint corresponding to a morph function
+//!            value of 1.
+//!    \param  srcPartial is the Partial corresponding to a morph function
+//!            value of 0, evaluated at the specified time.
+//!    \param  time is the time corresponding to srcBkpt (used
+//!            to evaluate the morphing functions and srcPartial).
+//!    \return the morphed Breakpoint
+//
+Breakpoint
+Morpher::morphTgtBreakpoint( const Breakpoint & tgtBkpt, const Partial & srcPartial, 
+                             double time  ) const
+{
+    if ( 0 == srcPartial.numBreakpoints() )
+    {
+        Throw( InvalidArgument, "morphTgtBreakpoint cannot morph with empty Partial" );
+    }
+    
+    double fweight = _freqFunction->valueAt( time );
+    double aweight = _ampFunction->valueAt( time );
+    double bweight = _bwFunction->valueAt( time );
+    
+    Breakpoint srcBkpt = srcPartial.parametersAt( time );
+   
+    // compute interpolated Breakpoint parameters:           
+    return interpolateParameters( srcBkpt, tgtBkpt, fweight, 
+                                  aweight, _ampMorphShape, bweight );
+}
+
+// ---------------------------------------------------------------------------
+//    fadeSrcBreakpoint
+// ---------------------------------------------------------------------------
+//! Compute morphed parameter values at the specified time, using
+//! the source Breakpoint, assumed to correspond exactly to the
+//! specified time, and assuming that there is no corresponding 
+//! target Partial, so the source Breakpoint should be simply faded.
+//!
+//! \param  bp is the Breakpoint corresponding to a morph function
+//!         value of 0.
+//! \param  time is the time corresponding to bp (used
+//!         to evaluate the morphing functions).
+//! \return the faded Breakpoint
+//
+Breakpoint
+Morpher::fadeSrcBreakpoint( Breakpoint bp, double time ) const
+{
+    double alpha = _ampFunction->valueAt( time );
+    bp.setAmplitude( interpolateLogAmplitudes( bp.amplitude(), 0, 
+                                               alpha, _ampMorphShape ) );
+    return bp;
+}
+
+// ---------------------------------------------------------------------------
+//    fadeTgtBreakpoint
+// ---------------------------------------------------------------------------
+//! Compute morphed parameter values at the specified time, using
+//! the target Breakpoint, assumed to correspond exactly to the
+//! specified time, and assuming that there is not corresponding 
+//! source Partial, so the target Breakpoint should be simply faded.
+//!
+//! \param  bp is the Breakpoint corresponding to a morph function
+//!         value of 1.
+//! \param  time is the time corresponding to bp (used
+//!         to evaluate the morphing functions).
+//! \return the faded Breakpoint
+//
+Breakpoint
+Morpher::fadeTgtBreakpoint( Breakpoint bp, double time ) const
+{
+    double alpha = _ampFunction->valueAt( time );
+    bp.setAmplitude( interpolateLogAmplitudes( 0, bp.amplitude(), 
+                                               alpha, _ampMorphShape ) );
+    return bp;
 }
 
 #pragma mark -- morphing function access/mutation --
@@ -1009,7 +1174,7 @@ interpolatePhases( double phi0, double phi1, double alpha )
 }
 
 // ---------------------------------------------------------------------------
-//    Helper function for correcting the blandly-interpolated phase to 
+//  Helper function for correcting the blandly-interpolated phase to 
 //  account for different number of periods traveled over dt. This
 //  is probably not the final word on how to do this correctly,
 //  but probably we need something like this in order that
@@ -1021,6 +1186,28 @@ interpolateWholePeriods( double f0, double f1, double dt, double alpha )
     double periods1 = 2 * Pi * int(f1 * dt);
     
     return std::fmod( (alpha * periods1) + ((1.-alpha) * periods0), 2 * Pi );
+}
+
+
+// ---------------------------------------------------------------------------
+//    Helper function for interpolating Breakpoint parameters
+//
+static inline Breakpoint 
+interpolateParameters( const Breakpoint & srcBkpt, const Breakpoint & tgtBkpt,
+                       double fweight, double aweight, double ashape, 
+                       double bweight )
+{
+    // compute interpolated Breakpoint parameters:
+    Breakpoint morphed;
+    morphed.setFrequency( interpolateFrequencies( srcBkpt.frequency(), tgtBkpt.frequency(), 
+                                                  fweight ) );
+    morphed.setAmplitude( interpolateLogAmplitudes( srcBkpt.amplitude(), tgtBkpt.amplitude(), 
+                                                    aweight, ashape ) );
+    morphed.setBandwidth( interpolateBandwidths( srcBkpt.bandwidth(), tgtBkpt.bandwidth(), 
+                                                 bweight ) );
+    morphed.setPhase( interpolatePhases( srcBkpt.phase(), tgtBkpt.phase(), fweight ) );
+    
+    return morphed;
 }
 
 // ---------------------------------------------------------------------------
@@ -1105,211 +1292,119 @@ morphPhaseTravel( const Breakpoint & bp0, Breakpoint & bp1, double dt, double al
 }
 
 // ---------------------------------------------------------------------------
-//    morphSrcBreakpoint
+//    appendMorphedSrc
 // ---------------------------------------------------------------------------
 //!    Compute morphed parameter values at the specified time, using
 //!    the source Breakpoint (assumed to correspond exactly to the
 //!    specified time) and the target Partial (whose parameters are
-//!    examined at the specified time).
+//!    examined at the specified time). Append the morphed Breakpoint
+//!    to newp only if the target should contribute to the morph at
+//!    the specified time.
 //!
 //!    \pre    the target Partial may not be a dummy Partial (no Breakpoints).
 //!
-//!    \param     srcBkpt is the Breakpoint corresponding to a morph function
-//!               value of 0.
-//!    \param     tgtPartial is the Partial corresponding to a morph function
-//!               value of 1, evaluated at the specified time.
-//!    \param     time is the time corresponding to srcBkpt (used
+//!    \param  srcBkpt is the Breakpoint corresponding to a morph function
+//!            value of 0.
+//!    \param  tgtPartial is the Partial corresponding to a morph function
+//!            value of 1, evaluated at the specified time.
+//!    \param  time is the time corresponding to srcBkpt (used
 //!            to evaluate the morphing functions and tgtPartial).
-//!    \param    newp is the morphed Partial under construction, the morphed
+//!    \param  newp is the morphed Partial under construction, the morphed
 //!            Breakpoint is added to this Partial.
 //
 void
-Morpher::morphSrcBreakpoint( const Breakpoint & srcBkpt, const Partial & tgtPartial, 
-                             double time, Partial & newp  )
+Morpher::appendMorphedSrc( const Breakpoint & srcBkpt, const Partial & tgtPartial, 
+                           double time, Partial & newp  )
 {
     if ( 0 == tgtPartial.numBreakpoints() )
     {
         Throw( InvalidArgument, "morphSrcBreakpoint cannot morph with empty Partial" );
     }
     
-    //    Don't insert Breakpoints arbitrarily close together, 
-    //  only insert a new Breakpoint if it is later than
-    //  the end of the new Partial by more than the gap time.
-    if ( 0 == newp.numBreakpoints() || 
-        _minBreakpointGapSec <= ( time - newp.endTime() ) )
+    double fweight = _freqFunction->valueAt( time );
+    double aweight = _ampFunction->valueAt( time );
+    double bweight = _bwFunction->valueAt( time );
+    
+    //    Don't insert Breakpoints at src times if all 
+    //    morph functions equal 1 (or > MaxMorphParam).
+    const double MaxMorphParam = .9;
+    if ( fweight < MaxMorphParam ||
+          aweight < MaxMorphParam ||
+          bweight < MaxMorphParam )
     {
-        double fweight = _freqFunction->valueAt( time );
-        double aweight = _ampFunction->valueAt( time );
-        double bweight = _bwFunction->valueAt( time );
+        Breakpoint tgtBkpt = tgtPartial.parametersAt( time );
         
-        //    Don't insert Breakpoints at src times if all 
-        //    morph functions equal 1 (or > MaxMorphParam).
-        const double MaxMorphParam = .9;
-        if ( fweight < MaxMorphParam ||
-              aweight < MaxMorphParam ||
-              bweight < MaxMorphParam )
-        {
-            Breakpoint tgtBkpt = tgtPartial.parametersAt( time );
-            
-            // compute interpolated Breakpoint parameters:
-            Breakpoint morphed;
-            morphed.setFrequency( interpolateFrequencies( srcBkpt.frequency(), tgtBkpt.frequency(), 
-                                                          fweight ) );
-            morphed.setAmplitude( interpolateLogAmplitudes( srcBkpt.amplitude(), tgtBkpt.amplitude(), 
-                                                            aweight, _ampMorphShape ) );
-            morphed.setBandwidth( interpolateBandwidths( srcBkpt.bandwidth(), tgtBkpt.bandwidth(), 
-                                                         bweight ) );
-            morphed.setPhase( interpolatePhases( srcBkpt.phase(), tgtBkpt.phase(), fweight ) );
+        // compute interpolated Breakpoint parameters:
+        Breakpoint morphed = interpolateParameters( srcBkpt, tgtBkpt, fweight, 
+                                                    aweight, _ampMorphShape, bweight );
 
-            // correct phase travel:
-            if ( 0 != newp.numBreakpoints() )
-            {
-                double dt = ( time - newp.endTime() );
-                morphed.setPhase( morphed.phase() + 
-                                  interpolateWholePeriods( srcBkpt.frequency(), 
-                                                           tgtBkpt.frequency(), 
-                                                           dt, fweight ) );
-                morphPhaseTravel( newp.last(), morphed, dt, fweight );
-            }
-        
-            newp.insert( time, morphed );
+        // correct phase travel:
+        if ( 0 != newp.numBreakpoints() )
+        {
+            double dt = ( time - newp.endTime() );
+            morphed.setPhase( morphed.phase() + 
+                              interpolateWholePeriods( srcBkpt.frequency(), 
+                                                       tgtBkpt.frequency(), 
+                                                       dt, fweight ) );
+            morphPhaseTravel( newp.last(), morphed, dt, fweight );
         }
+    
+        newp.insert( time, morphed );
     }
 }
 
 // ---------------------------------------------------------------------------
-//    morphTgtBreakpoint
+//    appendMorphedTgt
 // ---------------------------------------------------------------------------
 //!    Compute morphed parameter values at the specified time, using
 //!    the target Breakpoint (assumed to correspond exactly to the
 //!    specified time) and the source Partial (whose parameters are
-//!    examined at the specified time).
+//!    examined at the specified time). Append the morphed Breakpoint
+//!    to newp only if the target should contribute to the morph at
+//!    the specified time.
 //!
 //!    \pre    the source Partial may not be a dummy Partial (no Breakpoints).
 //!
-//!    \param     tgtBkpt is the Breakpoint corresponding to a morph function
-//!               value of 1.
-//!    \param     srcPartial is the Partial corresponding to a morph function
-//!               value of 0, evaluated at the specified time.
-//!    \param     time is the time corresponding to srcBkpt (used
+//!    \param  tgtBkpt is the Breakpoint corresponding to a morph function
+//!            value of 1.
+//!    \param  srcPartial is the Partial corresponding to a morph function
+//!            value of 0, evaluated at the specified time.
+//!    \param  time is the time corresponding to srcBkpt (used
 //!            to evaluate the morphing functions and srcPartial).
-//!    \param    newp is the morphed Partial under construction, the morphed
+//!    \param  newp is the morphed Partial under construction, the morphed
 //!            Breakpoint is added to this Partial.
 //
 void
-Morpher::morphTgtBreakpoint( const Breakpoint & tgtBkpt, const Partial & srcPartial, 
-                             double time, Partial & newp  )
+Morpher::appendMorphedTgt( const Breakpoint & tgtBkpt, const Partial & srcPartial, 
+                           double time, Partial & newp  )
 {
     if ( 0 == srcPartial.numBreakpoints() )
     {
         Throw( InvalidArgument, "morphTgtBreakpoint cannot morph with empty Partial" );
     }
     
-    //    Don't insert Breakpoints arbitrarily close together, 
-    //  only insert a new Breakpoint if it is later than
-    //  the end of the new Partial by more than the gap time.
-    if ( 0 == newp.numBreakpoints() || 
-        _minBreakpointGapSec <= ( time - newp.endTime() ) )
+    double fweight = _freqFunction->valueAt( time );
+    double aweight = _ampFunction->valueAt( time );
+    double bweight = _bwFunction->valueAt( time );
+    
+    Breakpoint srcBkpt = srcPartial.parametersAt( time );
+   
+    // compute interpolated Breakpoint parameters:           
+    Breakpoint morphed = interpolateParameters( srcBkpt, tgtBkpt, fweight, 
+                                                aweight, _ampMorphShape, bweight );
+
+    // correct phase travel:
+    if ( 0 != newp.numBreakpoints() )
     {
-        double fweight = _freqFunction->valueAt( time );
-        double aweight = _ampFunction->valueAt( time );
-        double bweight = _bwFunction->valueAt( time );
-        
-        //    Don't insert Breakpoints at tgt times if all 
-        //    morph functions equal 0 (or < MinMorphParam).
-        const double MinMorphParam = .1; // 1-MaxMorphparam, above
-        if ( fweight > MinMorphParam ||
-             aweight > MinMorphParam ||
-             bweight > MinMorphParam )
-        {
-            Breakpoint srcBkpt = srcPartial.parametersAt( time );
-           
-            // compute interpolated Breakpoint parameters:           
-            Breakpoint morphed;
-            morphed.setFrequency( interpolateFrequencies( srcBkpt.frequency(), tgtBkpt.frequency(), 
-                                                          fweight ) );
-            morphed.setAmplitude( interpolateLogAmplitudes( srcBkpt.amplitude(), tgtBkpt.amplitude(), 
-                                                            aweight, _ampMorphShape ) );
-            morphed.setBandwidth( interpolateBandwidths( srcBkpt.bandwidth(), tgtBkpt.bandwidth(), 
-                                                         bweight ) );
-            morphed.setPhase( interpolatePhases( srcBkpt.phase(), tgtBkpt.phase(), fweight ) );
-
-            // correct phase travel:
-            if ( 0 != newp.numBreakpoints() )
-            {
-                double dt = ( time - newp.endTime() );
-                morphed.setPhase( morphed.phase() + 
-                                  interpolateWholePeriods( srcBkpt.frequency(), 
-                                                           tgtBkpt.frequency(), 
-                                                           dt, fweight ) );
-                morphPhaseTravel( newp.last(), morphed, dt, fweight );
-            }
-
-            newp.insert( time, morphed );
-        }
+        double dt = ( time - newp.endTime() );
+        morphed.setPhase( morphed.phase() + 
+                          interpolateWholePeriods( srcBkpt.frequency(), 
+                                                   tgtBkpt.frequency(), 
+                                                   dt, fweight ) );
+        morphPhaseTravel( newp.last(), morphed, dt, fweight );
     }
-}
 
-// ---------------------------------------------------------------------------
-//    fadeTgtBreakpoint
-// ---------------------------------------------------------------------------
-//!    Compute morphed parameter values at the specified time, using
-//!    the source Breakpoint, assumed to correspond exactly to the
-//!    specified time, and assuming that there is no corresponding 
-//! target Partial, so the source Breakpoint should be simply faded.
-//!
-//!    \param     bp is the Breakpoint corresponding to a morph function
-//!               value of 0.
-//!    \param     time is the time corresponding to bp (used
-//!            to evaluate the morphing functions).
-//!    \param    newp is the morphed Partial under construction, the morphed
-//!            Breakpoint is added to this Partial.
-//
-void
-Morpher::fadeSrcBreakpoint( Breakpoint bp, double time, 
-                            Partial & newp )
-{
-    //    Don't insert Breakpoints arbitrarily close together.
-    //  (Need to be consistent with morphing behavior.)
-    if ( 0 == newp.numBreakpoints() || 
-         _minBreakpointGapSec <= ( time - newp.endTime() ) )
-    {
-        double alpha = _ampFunction->valueAt( time );
-        bp.setAmplitude( interpolateLogAmplitudes( bp.amplitude(), 0, 
-                                                   alpha, _ampMorphShape ) );
-        newp.insert( time, bp );
-    }
-}
-
-// ---------------------------------------------------------------------------
-//    fadeTgtBreakpoint
-// ---------------------------------------------------------------------------
-//!    Compute morphed parameter values at the specified time, using
-//!    the target Breakpoint, assumed to correspond exactly to the
-//!    specified time, and assuming that there is not corresponding 
-//! source Partial, so the target Breakpoint should be simply faded.
-//!
-//!    \param     bp is the Breakpoint corresponding to a morph function
-//!               value of 1.
-//!    \param     time is the time corresponding to bp (used
-//!            to evaluate the morphing functions).
-//!    \param    newp is the morphed Partial under construction, the morphed
-//!            Breakpoint is added to this Partial.
-//
-void
-Morpher::fadeTgtBreakpoint( Breakpoint bp, double time, 
-                            Partial & newp )
-{
-    //    Don't insert Breakpoints arbitrarily close together.
-    //  (Need to be consistent with morphing behavior.)
-    if ( 0 == newp.numBreakpoints() || 
-         _minBreakpointGapSec <= ( time - newp.endTime() ) )
-    {
-        double alpha = _ampFunction->valueAt( time );
-        bp.setAmplitude( interpolateLogAmplitudes( 0, bp.amplitude(), 
-                                                   alpha, _ampMorphShape ) );
-        newp.insert( time, bp );
-    }
+    newp.insert( time, morphed );
 }
 
 }    //    end of namespace Loris
