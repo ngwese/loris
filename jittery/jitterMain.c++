@@ -255,7 +255,7 @@ static void testSines( void )
 static void testBland( void )
 {
 #ifdef JITTER
-	const double J = 1;		// jitter amount
+	const double J = 0.15;		// jitter amount
 	BreakpointEnvelope jitter( J );
 	const double A = 1.0; 		// strength of attractor
 	BreakpointEnvelope coherence( A );
