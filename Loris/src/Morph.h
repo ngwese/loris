@@ -199,6 +199,9 @@ protected:
 
 
 //	collect Partial labels in a set:	
+//	This only has to be a template because it is 
+//	called by another member with the same template
+//	parameter (above).
 #if !defined(No_template_members)
 	template < class Iter >
 	void collectLabels( Iter begin, Iter end, std::set<int> & labels )

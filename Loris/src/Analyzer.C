@@ -21,9 +21,13 @@ Begin_Namespace( Loris )
 // ---------------------------------------------------------------------------
 //	Analyzer constructor
 // ---------------------------------------------------------------------------
-//	Choose reasonable default values. Duh.
+//	The core analysis parameter is the frequency resolution, the minimum
+//	instantaneous frequency spacing between partials. Configure all other
+//	parameters according to this parameter, subsequent parameter mutations
+//	will be independent.
 //
-Analyzer::Analyzer( void ) :
+Analyzer::Analyzer( double resolutionHz )
+/*
 	_freqResolution( 100 ),
 	_noiseFloor( -90. ),
 	_windowWidth( 200 ),
@@ -31,7 +35,41 @@ Analyzer::Analyzer( void ) :
 	_srate( 1. ),
 	_minfreq( 0. ),
 	_hop( 1 )
+*/
 {
+	configure( resolutionHz );
+}
+
+// ---------------------------------------------------------------------------
+//	configure
+// ---------------------------------------------------------------------------
+//	Compute default values for analysis parameters from the single core
+//	parameter, the frequency resolution.
+//
+void
+Analyzer::configure( double resolutionHz )
+{
+	_resolution = resolutionHz;
+	
+	//	floor defaults to -90 dB:
+	_floor = -90.;
+	
+	//	window width is equal to the frequency resolution:
+	_windowWidth = _resolution;
+	
+	//	minimum frequency? Aaagh!
+	_minFrequency = _resolution;
+	
+	//	frame length (in seconds) is the inverse of the
+	//	window width....really.
+	//	Smith and Serra (1990) cite Allen (1977) saying: a good choice of hop 
+	//	is the window length divided by the main lobe width in frequency samples.
+	//	Turns out to be just the inverse of the width.
+	_frameLength = 1. / _windowWidth;
+	
+	//	bandwidth association region width 
+	//	defaults to 2kHz:
+	_bwRegionWidth = 2000.;
 }
 
 // ---------------------------------------------------------------------------
@@ -57,9 +95,7 @@ Analyzer::analyze( const vector< double > & buf, double srate )
 //	to persist, is there?)
 //	(in fact, all the heavy-lifters should
 //	be local state!)
-	if (! _spectrum.get() ) {
-		createSpectrum( srate );
-	}
+	createSpectrum( srate );
 	
 //	Somewhere up here, we should partition the partials
 //	collection, make sure we don't try to match with partials
@@ -75,21 +111,28 @@ Analyzer::analyze( const vector< double > & buf, double srate )
 //	frame, it would have too large a time correction), and 
 //	the last window is the first one centered more than
 //	hop samples past the end of the buffer.
-	const long latestIdx = buf.size() + 2L * hopSize();
+//	
+//	UPDATE THIS COMMENT
+//
+//	Also, need to check for bogus parameters somewhere.
+//
+	const long hop = long( frameLength() );	//	just truncate
+	//const long latestIdx = buf.size() + 2L * hopSize();
 	try { 
-		for ( _winMiddleIdx = 0; //- hopSize(); 
-			  _winMiddleIdx < buf.size(); //latestIdx; 
-			  _winMiddleIdx += hopSize() ) {
+		for ( long winMiddleIdx = 0; 
+			  winMiddleIdx < buf.size();
+			  winMiddleIdx += hop ) {
 			 
 			//debugger << "analyzing frame centered at " << _winMiddleIdx << endl; 
+			const double frameTime = winMiddleIdx / srate;
 			 
 			//	compute reassigned spectrum:
 			//	make this better!
-			_spectrum->transform( buf, _winMiddleIdx );
+			_spectrum->transform( buf, winMiddleIdx );
 			
 			//	extract peaks from the spectrum:
 			Frame f;
-			extractPeaks( f );	
+			extractPeaks( f, frameTime, srate );	
 			thinPeaks( f );
 
 			//	perform bandwidth association:
@@ -98,14 +141,15 @@ Analyzer::analyze( const vector< double > & buf, double srate )
 			/*	I wonder if I can possibly get away with
 				requiring the transform window center to 
 				be a valid iterator on buf...
-				
 			*/
-			if ( _winMiddleIdx < 0 || _winMiddleIdx >= buf.size() ) {
-				debugger << "kept " << f.size() << " peaks at index " << _winMiddleIdx << endl;
+			if ( winMiddleIdx < 0 || winMiddleIdx >= buf.size() ) {
+				if ( f.size() > 0 ) { 
+					debugger << "kept " << f.size() << " peaks at index " << winMiddleIdx << endl;
+				}
 			}
 			
 			//	form Partials from the extracted Breakpoints:
-			formPartials( f );
+			formPartials( f, frameTime );
 
 		}	//	end of loop over short-time frames
 		
@@ -130,15 +174,14 @@ Analyzer::analyze( const vector< double > & buf, double srate )
 void
 Analyzer::createSpectrum( double srate )
 {	
-	_srate = srate;
-	
 	//	window parameters:
-	long winlen = KaiserWindow::computeLength( _windowWidth / srate, _windowAtten );
+	const double Window_Attenuation = 95.;	//	always
+	double winshape = KaiserWindow::computeShape( Window_Attenuation );
+	long winlen = KaiserWindow::computeLength( _windowWidth / srate, Window_Attenuation );
 	if (! (winlen % 2)) {
 		++winlen;
 	}
-	double winshape = KaiserWindow::computeShape( _windowAtten );
-	
+/*	
 	//	compute the hop size:
 	//	Smith and Serra (1990) cite Allen (1977) saying: a good choice of hop 
 	//	is the window length divided by the main lobe width in frequency samples.
@@ -151,7 +194,7 @@ Analyzer::createSpectrum( double srate )
 	//	require at least two (no, three!) periods in the window:
 	//_minfreq = max( 2. / ( winlen / srate ), _freqResolution );
 	_minfreq = 2. / ( winlen / srate );
-	
+*/	
 	try {
 		//	configure window:
 		vector< double > v( winlen );
@@ -168,10 +211,11 @@ Analyzer::createSpectrum( double srate )
 		ex.append( "couldn't create a ReassignedSpectrum." );
 		throw;
 	}
-	
+/*	
 	debugger << "created reassigned spectrum analyzer: window length " <<
 			winlen << ", hop size " << _hop << ", minimum frequency " <<
 			_minfreq << endl;
+*/
 }
 
 // ---------------------------------------------------------------------------
@@ -215,10 +259,11 @@ struct frequency_between
 
 	
 void 
-Analyzer::extractPeaks( Frame & frame )
+Analyzer::extractPeaks( Frame & frame, double frameTime, double sampleRate )
 {
-	const double threshold = pow( 10., 0.05 * noiseFloor() );	//	absolute magnitude threshold
-	const double sampsToHz = sampleRate() / _spectrum->size();
+	const double threshold = pow( 10., 0.05 * floor() );	//	absolute magnitude threshold
+	const double sampsToHz = sampleRate / _spectrum->size();
+	const long hopSize = long( frameLength() );
 	
 	//	cache corrected times for the extracted breakpoints, so 
 	//	that they don't hafta be computed over and over again:
@@ -240,19 +285,19 @@ Analyzer::extractPeaks( Frame & frame )
 			
 			//	if the frequency is too low (not enough periods
 			//	in the analysis window), reject it:
-			if ( fHz < _minfreq ) 
+			if ( fHz < minFrequency() ) 
 				continue;
 				
 			//	if the time correction for this peak is large,
 			//	reject it:
 			double timeCorrection = _spectrum->reassignedTime( fsample );
-			if ( abs(timeCorrection) > hopSize() )
+			if ( abs(timeCorrection) > hopSize )
 				continue;
 				
 			//	retain a spectral peak corresponding to
 			//	this sample:
 			double phase = _spectrum->reassignedPhase( fsample, timeCorrection );
-			double time = frameTime() + ( timeCorrection / sampleRate() );
+			double time = frameTime + ( timeCorrection / sampleRate );
 			frame.push_back( Breakpoint( fHz, mag, 0., phase ) );
 			_peakTimeCache[ fHz ] = time;
 			
@@ -281,8 +326,8 @@ Analyzer::thinPeaks( Frame & frame )
 	for ( ++it; it != frame.end(); ++it ) {
 		//	search all louder peaks for one that is too near
 		//	in frequency:
-		double lower = it->frequency() - partialSeparation();
-		double upper = it->frequency() + partialSeparation();
+		double lower = it->frequency() - resolution();
+		double upper = it->frequency() + resolution();
 		if ( it != find_if( frame.begin(), it, frequency_between< Breakpoint >( lower, upper ) ) ) {
 			//	find_if returns the end of the range (it) if it finds nothing; 
 			//	remove *it from the frame
@@ -314,7 +359,7 @@ static inline double distance( const Partial & partial,
 //	give birth to new Partials.
 //
 void 
-Analyzer::formPartials( Frame & frame )
+Analyzer::formPartials( Frame & frame, double frameTime )
 {
 	//	frequency-sort the frame:
 	frame.sort( less_frequency<Breakpoint>() );
@@ -329,7 +374,7 @@ Analyzer::formPartials( Frame & frame )
 		//	eligible to receive this Breakpoint:
 		//	The earliest Breakpoint we could have kept 
 		//	from the previous frame:
-		double tooEarly = frameTime() - (2. * frameLength());
+		double tooEarly = frameTime - (2. * frameLength());
 		
 		//	loop over all Partials, find the eligible Partial
 		//	that is nearest in frequency to the Peak:
@@ -368,7 +413,7 @@ Analyzer::formPartials( Frame & frame )
 		Frame::iterator prev = bpIter;
 		--prev;
 		if ( nearest == partials().end() /* (1) */ || 
-			 thisdist > captureRange() /* (2) */ ||
+			 thisdist > 0.5 * resolution() /* (2) */ ||
 			 ( next != frame.end() && 
 			 	thisdist > distance( *nearest, *(next), _peakTimeCache[ next->frequency() ] ) ) /* (3) */ ||
 			 ( bpIter != frame.begin() && 
