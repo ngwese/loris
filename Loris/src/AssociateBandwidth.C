@@ -36,14 +36,16 @@ using namespace Loris;
 //
 AssociateBandwidth::AssociateBandwidth( const ReassignedSpectrum & spec, 
 										double srate,
-										double regionWidth ) :
+										double regionWidth,
+										double crop ) :
 	_spectrum( spec ),
 	_spectralEnergy( int(srate/regionWidth) ),
 	_sinusoidalEnergy( int(srate/regionWidth) ),
 	_weights( int(srate/regionWidth) ),
 	_surplus( int(srate/regionWidth) ),
 	_regionRate( 2./regionWidth ),
-	_hzPerSamp( srate / spec.size() )
+	_hzPerSamp( srate / spec.size() ),
+	_cropSamps( crop * srate )
 {
 }	
 
@@ -199,9 +201,26 @@ AssociateBandwidth::reset( void )
 void 
 AssociateBandwidth::accumulateSpectrum( void )
 {
+	//	how we gonna taper off time-corrected components?
+	const double start_taper = 0.5;
+	const double end_taper = 1.;
+	
 	const int max_idx = _spectrum.size() / 2;
 	for ( int i = 0; i < max_idx; ++i ) {
+		//	taper is a number near zero for small time corrections,
+		//	one for large correcitons:
+		double tcratio = std::abs(_spectrum.timeCorrection(i)) / _cropSamps;
+		double taper;
+		if ( tcratio < start_taper )
+			taper = 1.;
+		else if ( tcratio < end_taper )
+			taper = (end_taper - tcratio) / (end_taper - start_taper);
+		else //	time correction is past end_taper
+			taper = 0.;
+			
 		double m = std::abs( _spectrum[i] ) * _spectrum.magnitudeScale();
+		m *= taper;
+		
 		distribute( i * _hzPerSamp, m * m, _spectralEnergy );
 	}
 }

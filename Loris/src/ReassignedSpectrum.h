@@ -51,6 +51,11 @@ public:
 	
 	const std::complex< double > & operator[]( unsigned long idx ) const 
 		{ return _transform[idx]; }
+
+//	time and frequency corrections 
+//	at transform sample indices:
+	double frequencyCorrection( long sample ) const;
+	double timeCorrection( long sample ) const;
 	
 //	-- internal helpers --
 private:
@@ -58,11 +63,6 @@ private:
 	//	frequency and time reassignment:
 	void applyFreqRamp( std::vector< double > & w );
 	void applyTimeRamp( std::vector< double > & w );
-	
-	//	compute time and frequency corrections 
-	//	at transform sample indices:
-	double frequencyCorrection( long sample ) const;
-	double timeCorrection( long sample ) const;
 	
 	//	compute the window spectrum used to correct
 	//	spectral component magnitudes:

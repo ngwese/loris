@@ -43,11 +43,21 @@ class ReassignedSpectrum;
 //
 class AssociateBandwidth
 {
+//	-- instance variables --
+	const ReassignedSpectrum & _spectrum;
+	
+	//	energy vectors, reused each associate() call:
+	std::vector< double > _spectralEnergy, _sinusoidalEnergy, _weights, _surplus;
+	
+	double _regionRate;
+	double _hzPerSamp;
+	double _cropSamps;	//	analysis cropTime in samples, see accumulateSpectrum
+	
 //	-- public interface --
 public:
 	//	construction:
 	AssociateBandwidth( const ReassignedSpectrum & spec, 
-						double srate, double regionWidth );
+						double srate, double regionWidth, double crop );
 	~AssociateBandwidth( void );
 
 	//	bandwidth assocation:
@@ -92,14 +102,6 @@ private:
 	int findRegionBelow( double binfreq );	
 	void reset( void );
 	
-//	-- instance variables --
-	const ReassignedSpectrum & _spectrum;
-	
-	//	energy vectors, reused each associate() call:
-	std::vector< double > _spectralEnergy, _sinusoidalEnergy, _weights, _surplus;
-	
-	double _regionRate;
-	double _hzPerSamp;
 };	// end of class AssociateBandwidth
 
 #if !defined( NO_LORIS_NAMESPACE )

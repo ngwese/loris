@@ -90,7 +90,7 @@ AnalyzerState::AnalyzerState( const Analyzer & anal, double srate ) :
 		
 		//	configure bw association strategy, which 
 		//	needs to know about the window:
-		_bw.reset( new AssociateBandwidth( *_spectrum, srate, anal.bwRegionWidth() ) );
+		_bw.reset( new AssociateBandwidth( *_spectrum, srate, anal.bwRegionWidth(), anal.cropTime() ) );
 		
 		//	configure the energy distribution strategy:
 		_energy.reset( new DistributeEnergy( 0.5 * anal.bwRegionWidth() ) );

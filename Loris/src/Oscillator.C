@@ -48,7 +48,7 @@ Oscillator::Oscillator( double radf, double a, double bw, double ph /* = 0. */ )
 	//	make a Filter:
 	//	Chebychev order 3, cutoff 500, ripple -1.
 	static const double filter_gain = 4.663939184e+04;
-	static const double extraScaling = 4.5;	//	was 6.
+	static const double extraScaling = 6.;
 	static const double maCoefs[] = { 1., 3., 3., 1. }; 
 	static const double arCoefs[] = { 0., 2.9258684252, -2.8580608586, 0.9320209046 };
 						   
