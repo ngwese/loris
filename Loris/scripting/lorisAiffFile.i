@@ -53,10 +53,30 @@ class AiffFile
 {
 public:
 //	construction (import):
-	AiffFile( const char * filename );
+//	PROBLEM: construction can throw if the file doesn't exist,
+//	and this leaves the AiffFile object in a bogus state, sort of.
+//	Python complains when it tries to clean up the object lacking
+//	a thisown member, which isn't initialized if an exception is
+//	thrown. Is this a SWIG problem? Seems like I am doing my part
+//	by providing an exception handler in the interface file.
+//	Actually, when this happens, the bogus object is hidden, 
+//	un-named. Python waits until quitting to complain.
+	AiffFile( const char * filename )
+	{
+		try
+		{
+			self = new AiffFile( filename );
+		}
+		catch(...)
+		{
+			self = NULL;
+			throw;
+		}
+	}
 	/*	Import an AIFF file with the specified file name
 		or path.
 	 */
+
 	~AiffFile( void );
 	/*	Delete this AIFF data (does not affect data on disk).
 	 */
