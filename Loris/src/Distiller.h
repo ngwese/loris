@@ -32,8 +32,8 @@ public:
 	//~Distiller( void );
 	
 //	distillation:
-	const Partial & distill( const std::list<Partial>::const_iterator & start,
-							 const std::list<Partial>::const_iterator & end, 
+	const Partial & distill( const std::list<Partial>::const_iterator start,
+							 const std::list<Partial>::const_iterator end, 
 							 int assignLabel = 0 );
 
 //	access:
@@ -45,8 +45,8 @@ public:
 //	-- helpers --
 protected:
 	void distillOne( const Partial & src, Partial & dest, 
-					 const std::list<Partial>::const_iterator & start,
-					 const std::list<Partial>::const_iterator & end );
+					 const std::list<Partial>::const_iterator start,
+					 const std::list<Partial>::const_iterator end );
 	boolean gapAt( double time, std::list<Partial>::const_iterator start,
 				   std::list<Partial>::const_iterator end ) const;
 

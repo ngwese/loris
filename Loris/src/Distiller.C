@@ -35,8 +35,8 @@ Begin_Namespace( Loris )
 //	(start, end) _must_ be a valid range in a list< Partial >...or else!
 //
 const Partial & 
-Distiller::distill( const list<Partial>::const_iterator & start,
-				 	const list<Partial>::const_iterator & end, 
+Distiller::distill( const list<Partial>::const_iterator start,
+				 	const list<Partial>::const_iterator end, 
 				 	int assignLabel /* default = 0 */ )
 {
 	//	create the resulting distilled partial:
@@ -78,8 +78,8 @@ Distiller::distill( const list<Partial>::const_iterator & start,
 //	
 void
 Distiller::distillOne( const Partial & src, Partial & dest, 
-					   const list<Partial>::const_iterator & start,
-					   const list<Partial>::const_iterator & end  )
+					   const list<Partial>::const_iterator start,
+					   const list<Partial>::const_iterator end  )
 {
 	//	iterate over the source Partial:
 	for ( iterator()->reset( src ); ! iterator()->atEnd(); iterator()->advance() ) { 
@@ -158,7 +158,8 @@ Distiller::distillOne( const Partial & src, Partial & dest,
 //	otherwise return false.
 //
 boolean 
-Distiller::gapAt( double time, list<Partial>::const_iterator start,
+Distiller::gapAt( double time, 
+				  list<Partial>::const_iterator start,
 				  list<Partial>::const_iterator end ) const
 {
 	while ( start != end ) {

@@ -48,8 +48,12 @@ public:
 	//	use compiler-generated:
 	// Dilator( const Dilator & );
 	// ~Dilator( void );
+	// Dilator & operator= ( const Dilator & other );
 	
 //	-- time-point access and mutation --
+//	could do this more beautifully without exposing the 
+//	underlying structure, what kind of access is really 
+//	needed?
 	const std::multiset< double > & initialTimePoints( void ) const { return _initial; }
 	const std::multiset< double > & targetTimePoints( void ) const { return _target; }
 	std::multiset< double > & initialTimePoints( void ) { return _initial; }

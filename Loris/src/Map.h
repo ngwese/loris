@@ -41,7 +41,6 @@ public:
 	virtual ~Map( void ) {}
 	
 //	protect copying and assignment:
-//	(use compiler-generated constructor)
 protected:
 	Map( void ) {}
 	Map( const Map & ) {}
