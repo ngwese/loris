@@ -332,43 +332,39 @@ AC_ARG_WITH(tcl,[  --with-tcl=path         Set location of Tcl package],[
 AC_ARG_WITH(tclincl,[  --with-tclincl=path     Set location of Tcl include directory],[
 	TCLINCLUDE="$withval"], [TCLINCLUDE=])
 	
-if "$DARWIN"; then 
-	AC_MSG_RESULT(Cannot build Tcl module under Darwin yet.)
-else
-	if test -z "$TCLINCLUDE"; then
-	   if test -n "$TCLPACKAGE"; then
-		TCLINCLUDE="$TCLPACKAGE/include"
-	   fi
-	fi
+if test -z "$TCLINCLUDE"; then
+   if test -n "$TCLPACKAGE"; then
+	TCLINCLUDE="$TCLPACKAGE/include"
+   fi
+fi
+
+if test -f "$TCLINCLUDE" ; then
+	dnl this is really dumb, I cannot figure out
+	dnl how to remove the filename from the string!
+	AC_MSG_ERROR($TCLINCLUDE: please specify the directory containing tcl.h)
+fi
 	
-	if test -f "$TCLINCLUDE" ; then
-		dnl this is really dumb, I cannot figure out
-		dnl how to remove the filename from the string!
-		AC_MSG_ERROR($TCLINCLUDE: please specify the directory containing tcl.h)
-	fi
-		
-	AC_MSG_CHECKING(for Tcl header file)
-	if test -z "$TCLINCLUDE"; then
-		AC_TRY_CPP([#include <tcl.h>], [
-			AC_MSG_RESULT(found it in default include path)
-			FOUND_TCL_H=true ], [
-			AC_MSG_RESULT(cannot find tcl.h in default include path, not building Tcl module)
-			FOUND_TCL_H=false ] )
-	fi
-	
+AC_MSG_CHECKING(for Tcl header file)
+if test -z "$TCLINCLUDE"; then
+	AC_TRY_CPP([#include <tcl.h>], [
+		AC_MSG_RESULT(found it in default include path)
+		FOUND_TCL_H=true ], [
+		AC_MSG_RESULT(cannot find tcl.h in default include path, not building Tcl module)
+		FOUND_TCL_H=false ] )
+fi
+
+if test -n "$TCLINCLUDE" ; then
+	AC_TRY_CPP([#include <$TCLINCLUDE/tcl.h>], [
+		AC_MSG_RESULT(found it in $TCLINCLUDE)
+		FOUND_TCL_H=true ], [
+		AC_MSG_RESULT(cannot find tcl.h in $TCLINCLUDE, not building Tcl module)
+		TCLINCLUDE=""
+		FOUND_TCL_H=false ] )
+fi
+
+if test -z "$TCLPACKAGE"; then
 	if test -n "$TCLINCLUDE" ; then
-		AC_TRY_CPP([#include <$TCLINCLUDE/tcl.h>], [
-			AC_MSG_RESULT(found it in $TCLINCLUDE)
-			FOUND_TCL_H=true ], [
-			AC_MSG_RESULT(cannot find tcl.h in $TCLINCLUDE, not building Tcl module)
-			TCLINCLUDE=""
-			FOUND_TCL_H=false ] )
-	fi
-	
-	if test -z "$TCLPACKAGE"; then
-		if test -n "$TCLINCLUDE" ; then
-			TCLPACKAGE="$TCLINCLUDE/.."
-		fi
+		TCLPACKAGE="$TCLINCLUDE/.."
 	fi
 fi
 

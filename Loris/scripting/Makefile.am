@@ -100,6 +100,8 @@ INSTALL_PYTHON_MODULE = install_python_module
 
 $(PYTHON_CMODULE): loris_python_wrap.o $(top_builddir)/pi/.libs/libloris.a
 	$(CXXLD) $(LD_DARWINBUNDLE_FLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ loris_python_wrap.o $(top_builddir)/pi/.libs/libloris.a -lsdif -lfftw -lstdc++ $(LIBS)
+	-mkdir .libs
+	cp $@ .libs/$@
 
 install_python_module:
 	$(INSTALL) loriscmodule.so $(pythonsitepkgdir)/loriscmodule.so
@@ -114,6 +116,8 @@ INSTALL_TCL_MODULE = install_tcl_module
 
 $(TCL_MODULE): loris_tcl_wrap.o $(top_builddir)/pi/.libs/libloris.a
 	$(CXXLD) $(LD_DARWINBUNDLE_FLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ loris_tcl_wrap.o $(top_builddir)/pi/.libs/libloris.a -lsdif -lfftw -lstdc++ $(LIBS)
+	-mkdir .libs
+	cp $@ .libs/$@
 
 install_tcl_module:
 	$(INSTALL) tcLoris.so $(tclsitepkgdir)/$(TCL_MODULE)
