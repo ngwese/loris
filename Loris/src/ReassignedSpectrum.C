@@ -62,7 +62,7 @@ ReassignedSpectrum::~ReassignedSpectrum( void )
 //	of the window must always be at the center of the transform buffer (the
 //	FourierTransform's loadAndRotate() assumes this).
 //
-//	I don't like the tempoarary buffer. I think that FT needs an interface that
+//	I don't like the temporary buffer. I think that FT needs an interface that
 //	does what I am using std::transform() to do. I also need to get rid of that
 //	name collision (transform).
 //

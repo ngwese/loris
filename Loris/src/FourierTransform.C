@@ -3,6 +3,27 @@
 //
 //	Implementation of Loris::FourierTransform.
 //
+//	how about these:
+//
+//		load( iter begin, iter center, iter end )
+//		load( iter begin, iter center, iter end, iter windowBegin )
+//		load( iter begin, iter end, long offset )
+//		load( iter begin, iter end, iter windowBegin, long offset )
+//
+//	rotation is so boring that we sould either make it automatic (probaly not)
+//	or just make a rotate() member. We always rotate to center the window, so
+//	really the center iterator is a thing to align with the beginning of the
+//	transform, right? It never makes sense not to align a windowed transform, so 
+//	we can get rid of #4. So, when do we need that offset? Maybe never. Certainly
+//	we don't need to rotate if we are using offset, so just build rotation into the
+//	first two, and blow off the third, or don't do rotation there.
+//
+//	Oh, I know, need to handle the case when we have only a few samples in the 
+//	beginning of the window, but we still want to center the window. Then we probably
+//	need an offset or rotate argument. If we support padding at one end (i.e. 
+//	samples in just the beginning of the window), it would be nice to support it
+//	it at both ends (i.e. samples just at the end of the window).
+//
 //	-kel 7 Dec 99
 //
 // ===========================================================================
@@ -10,6 +31,8 @@
 #include "Exception.h"
 #include "fft.h"
 //#include "AiffFile.h"	//	for debugging only
+
+#include "fftw.h"
 
 using namespace std;
 
@@ -52,57 +75,53 @@ FourierTransform::transform( const vector< double > & buf )
 //
 void
 FourierTransform::transform( void )
-//#define __inscrutible__
-#ifdef __inscrutible__
+#define __use_fftw__
+#ifdef _use_fftw__
 {
+//	try using FFTW for Fourier transforms:
 //	setup fft buffers:
 	static long bufsize = 0;
-	static double * real = Null;
-	static double * imag = Null;
-	if ( bufsize < size() ) {
+	static fftw_complex * fftwIn = Null;
+	static fftw_complex * fftwOut = Null;
+	static fftw_plan plan;
+	
+	if ( bufsize != size() ) {
 		try {
-			delete[] real;
-			real = Null;	//	to prevent deleting again
-			delete[] imag;
-			imag = Null;	//	to prevent deleting again
+			delete[] fftwIN;
+			fftwIn = Null;	//	to prevent deleting again
+			delete[] fftwOut;
+			fftwOut = Null;	//	to prevent deleting again
 			bufsize = 0;
-			real = new double[ size() ];
-			imag = new double[ size() ];
+			real = new fftw_complex[ size() ];
+			imag = new fftw_complex[ size() ];
 			bufsize = size();
+			fftw_create_plan_specific(bufsize, -1,
+                                    FFTW_ESTIMATE,
+                                    fftwIn, 1,
+                                    fftwOut, 1); 
 		}
 		catch( LowMemException & ex ) {
 			bufsize = 0;
-			delete[] real;
-			real = Null;	//	to prevent deleting again
-			delete[] imag;
-			imag = Null;	//	to prevent deleting again
-			ex.append( "couldn't allocate fft buffers." );
+			delete[] fftwIn;
+			fftwIn = Null;	//	to prevent deleting again
+			delete[] fftwOut;
+			fftwOut = Null;	//	to prevent deleting again
+			ex.append( "couldn't prepare FFTW." );
 			throw;
 		}
 	}
-	
-//	permute input to reverse binary order:
+//	copy input into fftw buffers:
 	for ( long i = 0; i < size(); ++i ) {
-		//	only swap once:
-		if ( _revBinaryTable[i] > i ) {	
-			swap( _z[i], _z[ _revBinaryTable[i] ] );
-		}
-	} 
-	
-//	copy input into local buffers:
-	for ( long i = 0; i < size(); ++i ) {
-		real[i] = _z[i].real();
-		imag[i] = _z[i].imag();
+		fftIn[i].re = _z[i].real();
+		fftIn[i].im = _z[i].imag();
 	}
 	
-//	do decimation-in-time butterfly steps:
-	for ( long span = 1;  span < size();  span = span * 2 ) {
-		butterfly( real, imag, span, bufsize );
-	}
-
+//	cruch:	
+	fftw_one( plan, fftwIn, fftOut );
+	
 //	copy output into complex buffer:
 	for ( long i = 0; i < size(); ++i ) {
-		_z[i] = complex< double >( real[i], imag[i] );
+		_z[i] = complex< double >( fftwOut[i].re, fftwOut[i].im );
 	}
 	
 }
