@@ -9,33 +9,24 @@
 #include "AssociateBandwidth.h"
 #include "Exception.h"
 #include "notifier.h"
-#include "FourierTransform.h"
-#include "ReassignedSpectrum.h"
 #include "Breakpoint.h"
 #include "bark.h"
 #include <algorithm>
+#include <cmath>
 
-using namespace std;
 using namespace Loris;
 
 // ---------------------------------------------------------------------------
 //	AssociateBandwidth constructor
 // ---------------------------------------------------------------------------
-//	Association regions are centered on all integer bin frequencies, there 
-//	are numBins of them, starting at bin frequency 1. The lowest frequency
-//	region is always ignored, its surplus energy is set to zero. regionWidth
+//	Association regions are centered on all integer bin frequencies, regionWidth
 //	is the total width (in Hz) of the overlapping bandwidth association regions, 
 //	the region centers are spaced at half this width.
 //
-AssociateBandwidth::AssociateBandwidth( const ReassignedSpectrum & spec, 
-										double srate,
-										double regionWidth ) :
-	_spectralEnergy( int(srate/regionWidth) ),
-	_sinusoidalEnergy( int(srate/regionWidth) ),
+AssociateBandwidth::AssociateBandwidth( double regionWidth, double srate ) :
 	_weights( int(srate/regionWidth) ),
 	_surplus( int(srate/regionWidth) ),
-	_regionRate( 2./regionWidth ),
-	_hzPerSamp( srate / spec.size() )
+	_regionRate( 2./regionWidth )
 {
 }	
 
@@ -45,22 +36,6 @@ AssociateBandwidth::AssociateBandwidth( const ReassignedSpectrum & spec,
 //
 AssociateBandwidth::~AssociateBandwidth( void )
 {
-}
-
-// ---------------------------------------------------------------------------
-//	computeSurplusEnergy
-// ---------------------------------------------------------------------------
-//	Old strategy only, the new one accumulates noise energy directly.
-//
-void
-AssociateBandwidth::computeSurplusEnergy( void )
-{
-	//	the lowest-frequency region (0) is always ignored, 
-	//	DC should never show up as noise: 
-	for ( int i = 1; i < _surplus.size(); ++i ) {
-		_surplus[i] = 
-			max(0., _spectralEnergy[i]-_sinusoidalEnergy[i]);
-	}
 }
 
 // ---------------------------------------------------------------------------
@@ -107,7 +82,7 @@ AssociateBandwidth::computeNoiseEnergy( double freqHz )
 // ---------------------------------------------------------------------------
 //
 void 
-AssociateBandwidth::distribute( double freqHz, double x, vector<double> & regions )
+AssociateBandwidth::distribute( double freqHz, double x, std::vector<double> & regions )
 {
 	//	don't mess with negative frequencies:
 	if ( freqHz < 0. )
@@ -148,7 +123,7 @@ AssociateBandwidth::findRegionBelow( double binfreq )
 		return -1;
 	}
 	else {
-		return min( floor(binfreq - booger), _spectralEnergy.size() - 1. );
+		return std::min( std::floor(binfreq - booger), _surplus.size() - 1. );
 	}
 }
 
@@ -166,11 +141,11 @@ AssociateBandwidth::computeAlpha( double binfreq )
 	//	everything above the center of the highest
 	//	bin is lumped into that bin; i.e it does
 	//	not taper off at higher frequencies:	
-	if ( binfreq > _spectralEnergy.size() ) {
+	if ( binfreq > _surplus.size() ) {
 		return 0.;
 	}
 	else {
-		return binfreq - floor( binfreq );
+		return binfreq - std::floor( binfreq );
 	}
 }
 
@@ -182,41 +157,18 @@ AssociateBandwidth::computeAlpha( double binfreq )
 void
 AssociateBandwidth::reset( void )
 {
-	fill( _spectralEnergy.begin(), _spectralEnergy.end(), 0. );
-	fill( _sinusoidalEnergy.begin(), _sinusoidalEnergy.end(), 0. );
-	fill( _weights.begin(), _weights.end(), 0. );
-	fill( _surplus.begin(), _surplus.end(), 0. );
-}
-
-// ---------------------------------------------------------------------------
-//	accumulateSpectrum
-// ---------------------------------------------------------------------------
-//	Spectral energy accumulation. Spectral energy is scaled by the  
-//	energy scale, so that sinusoidal energy (in accumulateSinusoid) 
-//	and surplus energy (in computeSurplusEnergy) need not be scaled.
-//
-//	Old strategy only.
-//
-void 
-AssociateBandwidth::accumulateSpectrum( const ReassignedSpectrum & spectrum )
-{
-	const int max_idx = spectrum.size() / 2;
-	for ( int i = 0; i < max_idx; ++i ) {
-		double m = std::abs( spectrum[i] ) * spectrum.magnitudeScale();
-		distribute( i * _hzPerSamp, m * m * spectrum.energyScale(), _spectralEnergy );
-	}
+	std::fill( _weights.begin(), _weights.end(), 0. );
+	std::fill( _surplus.begin(), _surplus.end(), 0. );
 }
 
 // ---------------------------------------------------------------------------
 //	accumulateSinusoid
 // ---------------------------------------------------------------------------
 //	Accumulate sinusoidal energy at frequency f and amplitude a.
-//	Both new and old strategies use this; the new one calls it as
-//	Breakpoints are extracted, the od one calls it for each 
-//	Breakpoint that survives the thinning process.
+//	The amplitude isn't used for anything.
 //	
 void
-AssociateBandwidth::accumulateSinusoid( double f, double a )
+AssociateBandwidth::accumulateSinusoid( double f, double /* a */ )
 {
 	//	don't mess with negative frequencies:
 	if ( f < 0. )
@@ -224,22 +176,12 @@ AssociateBandwidth::accumulateSinusoid( double f, double a )
 
 	//	distribute weight at the peak frequency:
 	distribute( f, 1., _weights );
-
-#if	!defined(New_Association)
-	//	compute energy contribution and distribute 
-	//	at frequency f (old strategy only):
-	distribute( f, a * a, _sinusoidalEnergy  );
-#else
-	//	get rid of compiler warnings:
-	a = a;
-#endif
 }
 
 // ---------------------------------------------------------------------------
 //	accumulateNoise
 // ---------------------------------------------------------------------------
 //	Accumulate a rejected spectral peak as surplus (noise) energy.
-//	New strategy only.
 //
 void
 AssociateBandwidth::accumulateNoise( double freq, double amp )

@@ -26,6 +26,7 @@ loris.distill(1, loris.reference(20, flut, 1000), flut )
 #	analyze clarinet tone
 #
 print 'analyzing clarinet 3G# (%s)' % time.ctime(time.time())
+a = loris.new_Analyzer(270)
 clar = a.analyze('clarinet.aiff')
 loris.distill(1, loris.reference(20, clar, 1000), clar )
 loris.pitch(-600, clar)

@@ -9,7 +9,6 @@
 //
 // ===========================================================================
 #include <vector>
-#include <cmath>
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
@@ -17,47 +16,39 @@ namespace Loris {
 #endif
 
 class Breakpoint;
-class ReassignedSpectrum;
 
 // ---------------------------------------------------------------------------
 //	class AssociateBandwidth
 //
-//	Two strategies of bandwidth association are represented here:
-//
-// 	In the old strategy, Breakpoints are extracted and thinned and
-//	the survivors are accumulated as sinusoids. Then the spectral
-//	spectral energy is accumulated, the surplus is computed as the
-//	difference, and the results is distributed as bandwidth. 
-//
 //	In the new strategy, Breakpoints are extracted and accumulated
 //	as sinusoids. Spectral peaks that are not extracted (don't exceed
-//	the amplitude floor) are accumulated diectly as noise (surplus). 
-//	Breakpoints which are subsequently thinned are just lost, not
-//	represented as noise. After all spectral peaks have been accumulated
-//	as noise or sinusoids, the noise is distributed as bandwidth.
+//	the amplitude floor) or are rejected for certain reasons, are 
+//	accumulated diectly as noise (surplus). After all spectral peaks 
+//	have been accumulated as noise or sinusoids, the noise is distributed 
+//	as bandwidth.
 //
 class AssociateBandwidth
 {
 //	-- instance variables --
-	//	energy vectors, reused each associate() call:
-	std::vector< double > _spectralEnergy, _sinusoidalEnergy, _weights, _surplus;
+	std::vector< double > _weights;	//	weights vector for recording 
+									//	frequency distribution of retained
+									//	sinusoids
+	 std::vector< double > _surplus;//	surplus (noise) energy vector for
+	 								//	accumulating the distribution of
+	 								//	spectral energy to be distributed 
+	 								//	as noise
 	
-	double _regionRate;
-	double _hzPerSamp;		//	this is needed only by the old strategy
+	double _regionRate;				//	inverse of region center spacing
 	
 //	-- public interface --
 public:
 	//	construction:
-	//	(first two args needed only under the old strategy)
-	AssociateBandwidth( const ReassignedSpectrum & spec, 
-						double srate, double regionWidth );
+	AssociateBandwidth( double regionWidth, double srate );
 	~AssociateBandwidth( void );
 	
 	//	energy accumulation:
-	void accumulateNoise( double freq, double amp );				//	new strategy only
-	void accumulateSinusoid( double f, double a  );					//	both new and old strategies
-	void accumulateSpectrum( const ReassignedSpectrum & spectrum );	//	old strategy only
-	void computeSurplusEnergy( void );								//	old strategy only
+	void accumulateNoise( double freq, double amp );	
+	void accumulateSinusoid( double f, double a  );	
 	
 	//	bandwidth assocation:
 	void associate( Breakpoint & bp );

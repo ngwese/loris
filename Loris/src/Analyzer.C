@@ -95,7 +95,7 @@ AnalyzerState::AnalyzerState( const Analyzer & anal, double srate ) :
 		
 		//	configure bw association strategy, which 
 		//	needs to know about the window:
-		_bw.reset( new AssociateBandwidth( *_spectrum, srate, anal.bwRegionWidth() ) );
+		_bw.reset( new AssociateBandwidth( anal.bwRegionWidth(), srate ) );
 		
 		//	configure the energy distribution strategy:
 		_energy.reset( new DistributeEnergy( 0.5 * anal.bwRegionWidth() ) );
@@ -218,57 +218,29 @@ Analyzer::analyze( const std::vector< double > & buf, double srate )
 			extractPeaks( f, frameTime, state );	
 			thinPeaks( f, state );
 
+#if !defined(No_BW_Association)
 			//	perform bandwidth association:
 			//
-			//	old association strategy: 
-			//	breakpoints are extracted and thinned and the survivors are
-			//	accumulated as sinusoids in the association process.
-			//	In this case, the accumulation of sinusoids has to happen
-			//	here, as does the accumulation of spectral energy and the
-			//	computation of surplus energy. (This all used to be wrapped
-			//	up in a template member of AssociateBandwidth.)
-			//
-			//	new association strategy:
-			//	breakpoints are extracted and accumulated as sinusoids,
-			//	anything that seems like a good sinusoid but is thinned 
-			//	because it is too close to a louder sinusoid is just lost,
-			//	_not_ represented as noise.
-			//	in this case, the accumulation of sinusoids happened in 
-			//	extractPeaks() , as did the accumulation of noise.
-			//
-			//	CHANGE: try accumulating only retained Breakpoints as
-			//	sinusoids, thinned breakpoints are accumulated as noise, 
-			//	see also thinPeaks() and extractPeaks()
-			//
-#if !defined(No_BW_Association)
-			//	accumulate sinusoids:
-			//	this was lower, in if !defined(New_Association)
-			for ( std::list< Breakpoint >::iterator it = f.begin();
-				  it != f.end(); 
-				  ++it )
+			//	accumulate retained Breakpoints as sinusoids, 
+			//	thinned breakpoints are accumulated as noise:
+			//	(see also thinPeaks() and extractPeaks())
+			std::list< Breakpoint >::iterator it;
+			for ( it = f.begin(); it != f.end(); ++it )
 			{
 				state.bwAssociation().accumulateSinusoid( it->frequency(), it->amplitude() );
 			}
 			
-#if !defined(New_Association)
-			//	accumulate spectral energy:
-			state.bwAssociation().accumulateSpectrum( state.spectrum() );
-		
-			//	compute surplus spectral energy:
-			state.bwAssociation().computeSurplusEnergy();
-#endif
-			//	using either strategy, associate bandwidth with 
+			//	associate bandwidth with 
 			//	each Breakpoint here:
-			for ( std::list< Breakpoint >::iterator it = f.begin();
-				  it != f.end(); 
-				  ++it )
+			for ( it = f.begin(); it != f.end(); ++it )
 			{
 				state.bwAssociation().associate( *it );
 			}
 			
-			//	reset after association:
+			//	reset after association, yuk:
 			state.bwAssociation().reset();
-#endif
+#endif	//	 !defined(No_BW_Association)
+
 			//	form Partials from the extracted Breakpoints:
 			formPartials( f, frameTime, state );
 
@@ -329,44 +301,14 @@ Analyzer::extractPeaks( std::list< Breakpoint > & frame, double frameTime,
 			double fsample = state.spectrum().reassignedFrequency( j );	//	fractional sample
 			double fHz = fsample * sampsToHz;
 			
-			/*
-			//	don't keep big frequency corrections:
-			if ( std::abs( fsample - j ) > .5 )
-			{
-				debugger << "big frequency correction: " << fsample << " " << j << endl;
-				//continue;
-			}
-			*/
-			
-			//	reject peaks below our frequency and amplitude floors:
+			//	ignore peaks below our frequency and amplitude floors:
 			if ( fHz < freqFloor() )
 				continue;
 				
-			//	old association strategy: 
-			//	breakpoints are extracted and thinned and the survivors are
-			//	accumulated as sinusoids in the association process.
-			//
-			//	new association strategy:
-			//	breakpoints are extracted and accumulated as sinusoids,
-			//	anything that seems like a good sinusoid but is thinned 
-			//	because it is too close to a louder sinusoid is just lost,
-			//	_not_ represented as noise.
-			double mag = state.spectrum().reassignedMagnitude( fsample, j );
-			
 			//	find the time correction (in samples!) for this peak:
-			//	this was below the threshold test, but under the new strategy,
-			//	it may not be necessary to keep around off-center peaks
-			//	through the association process, might be better to get
-			//	rid of them right away. In any event, it seems bad for them
-			//	to affect the thinning of peaks (thinPeaks()).
 			double timeCorrectionSamps = state.spectrum().reassignedTime( j );
 			
-#if !defined(New_Association)
-			if ( mag < threshold ) 
-			{
-				continue;
-			}
-#else		//	new association strategy:
+			//	ignore peaks with large time corrections:
 			//	if I do this, then off-center peaks are not part of
 			//	association, not part of thinning, and the cropping/breaking
 			//	check in formPartials() is unnecessary (large time corrections
@@ -374,6 +316,10 @@ Analyzer::extractPeaks( std::list< Breakpoint > & frame, double frameTime,
 			if ( std::abs(timeCorrectionSamps) > cropTime() * state.sampleRate() )
 				continue;
 				
+			//	breakpoints are extracted and thinned and the survivors are
+			//	accumulated as sinusoids in the association process.
+			double mag = state.spectrum().reassignedMagnitude( fsample, j );
+			
 			//	the second part is a sinusoidality measure (?)
 			if ( mag < threshold ) // || std::abs( fsample - j ) > 1. ) 
 			{
@@ -384,7 +330,6 @@ Analyzer::extractPeaks( std::list< Breakpoint > & frame, double frameTime,
 			{
 				//state.bwAssociation().accumulateSinusoid( fHz, mag );			
 			}
-#endif
 
 #if 0	//	this seems wrong defined(Like_Lemur)
 			double correctionAbove = state.spectrum().reassignedTime( std::ceil( fsample ) );
@@ -449,13 +394,9 @@ Analyzer::thinPeaks( std::list< Breakpoint > & frame, AnalyzerState & state )
 							BreakpointUtils::frequency_between(lower, upper) ) ) 
 		{
 			//	find_if returns the end of the range (it) if it finds nothing; 
-			//	remove *it from the frame
-#if defined(New_Association)
-			//	should check for large time correction before
-			//	deciding to keep the energy (unless they have 
-			//	already been eliminated):
+			//	if it found something else, accumulate *it as noise, and
+			//	remove *it from the frame:
 			state.bwAssociation().accumulateNoise( it->frequency(), it->amplitude() );
-#endif
 			frame.erase( it-- );
 		}
 	}
