@@ -10,7 +10,7 @@ class PartialList:
         if val: val = PartialListPtr(val) ; val.thisown = 1
         return val
     def __del__(self,lorisc=lorisc):
-        if self.thisown == 1 :
+        if getattr(self,'thisown',0):
             lorisc.delete_PartialList(self)
     def clear(*args):
         val = apply(lorisc.PartialList_clear,args)
@@ -36,6 +36,10 @@ class PartialList:
     def splice(*args):
         val = apply(lorisc.PartialList_splice,args)
         return val
+    __setmethods__ = {}
+    for _s in []: __setmethods__.update(_s.__setmethods__)
+    __getmethods__ = {}
+    for _s in []: __getmethods__.update(_s.__getmethods__)
     def __repr__(self):
         return "<C PartialList instance at %s>" % (self.this,)
 class PartialListPtr(PartialList):
@@ -47,8 +51,9 @@ class PartialListPtr(PartialList):
 
 
 class PartialListIterator:
-    def __init__(self,this):
-        self.this = this
+    def __init__(self,*args):
+        self.this = apply(lorisc.new_PartialListIterator,args)
+        self.thisown = 1
 
     def copy(*args):
         val = apply(lorisc.PartialListIterator_copy,args)
@@ -72,6 +77,13 @@ class PartialListIterator:
     def isInRange(*args):
         val = apply(lorisc.PartialListIterator_isInRange,args)
         return val
+    def __del__(self,lorisc=lorisc):
+        if getattr(self,'thisown',0):
+            lorisc.delete_PartialListIterator(self)
+    __setmethods__ = {}
+    for _s in []: __setmethods__.update(_s.__setmethods__)
+    __getmethods__ = {}
+    for _s in []: __getmethods__.update(_s.__getmethods__)
     def __repr__(self):
         return "<C PartialListIterator instance at %s>" % (self.this,)
 class PartialListIteratorPtr(PartialListIterator):
@@ -88,7 +100,7 @@ class Partial:
         self.thisown = 1
 
     def __del__(self,lorisc=lorisc):
-        if self.thisown == 1 :
+        if getattr(self,'thisown',0):
             lorisc.delete_Partial(self)
     def label(*args):
         val = apply(lorisc.Partial_label,args)
@@ -153,6 +165,10 @@ class Partial:
     def equals(*args):
         val = apply(lorisc.Partial_equals,args)
         return val
+    __setmethods__ = {}
+    for _s in []: __setmethods__.update(_s.__setmethods__)
+    __getmethods__ = {}
+    for _s in []: __getmethods__.update(_s.__getmethods__)
     def __repr__(self):
         return "<C Partial instance at %s>" % (self.this,)
 class PartialPtr(Partial):
@@ -164,15 +180,15 @@ class PartialPtr(Partial):
 
 
 class PartialIterator:
-    def __init__(self,this):
-        self.this = this
+    def __init__(self,*args):
+        self.this = apply(lorisc.new_PartialIterator,args)
+        self.thisown = 1
 
     def time(*args):
         val = apply(lorisc.PartialIterator_time,args)
         return val
     def breakpoint(*args):
         val = apply(lorisc.PartialIterator_breakpoint,args)
-        if val: val = BreakpointPtr(val) 
         return val
     def copy(*args):
         val = apply(lorisc.PartialIterator_copy,args)
@@ -192,6 +208,13 @@ class PartialIterator:
     def isInRange(*args):
         val = apply(lorisc.PartialIterator_isInRange,args)
         return val
+    def __del__(self,lorisc=lorisc):
+        if getattr(self,'thisown',0):
+            lorisc.delete_PartialIterator(self)
+    __setmethods__ = {}
+    for _s in []: __setmethods__.update(_s.__setmethods__)
+    __getmethods__ = {}
+    for _s in []: __getmethods__.update(_s.__getmethods__)
     def __repr__(self):
         return "<C PartialIterator instance at %s>" % (self.this,)
 class PartialIteratorPtr(PartialIterator):
@@ -208,7 +231,7 @@ class Breakpoint:
         self.thisown = 1
 
     def __del__(self,lorisc=lorisc):
-        if self.thisown == 1 :
+        if getattr(self,'thisown',0):
             lorisc.delete_Breakpoint(self)
     def frequency(*args):
         val = apply(lorisc.Breakpoint_frequency,args)
@@ -241,6 +264,10 @@ class Breakpoint:
     def equals(*args):
         val = apply(lorisc.Breakpoint_equals,args)
         return val
+    __setmethods__ = {}
+    for _s in []: __setmethods__.update(_s.__setmethods__)
+    __getmethods__ = {}
+    for _s in []: __getmethods__.update(_s.__getmethods__)
     def __repr__(self):
         return "<C Breakpoint instance at %s>" % (self.this,)
 class BreakpointPtr(Breakpoint):
@@ -257,7 +284,7 @@ class Analyzer:
         self.thisown = 1
 
     def __del__(self,lorisc=lorisc):
-        if self.thisown == 1 :
+        if getattr(self,'thisown',0):
             lorisc.delete_Analyzer(self)
     def copy(*args):
         val = apply(lorisc.Analyzer_copy,args)
@@ -318,6 +345,10 @@ class Analyzer:
     def setBwRegionWidth(*args):
         val = apply(lorisc.Analyzer_setBwRegionWidth,args)
         return val
+    __setmethods__ = {}
+    for _s in []: __setmethods__.update(_s.__setmethods__)
+    __getmethods__ = {}
+    for _s in []: __getmethods__.update(_s.__getmethods__)
     def __repr__(self):
         return "<C Analyzer instance at %s>" % (self.this,)
 class AnalyzerPtr(Analyzer):
@@ -334,7 +365,7 @@ class BreakpointEnvelope:
         self.thisown = 1
 
     def __del__(self,lorisc=lorisc):
-        if self.thisown == 1 :
+        if getattr(self,'thisown',0):
             lorisc.delete_BreakpointEnvelope(self)
     def copy(*args):
         val = apply(lorisc.BreakpointEnvelope_copy,args)
@@ -346,6 +377,10 @@ class BreakpointEnvelope:
     def insertBreakpoint(*args):
         val = apply(lorisc.BreakpointEnvelope_insertBreakpoint,args)
         return val
+    __setmethods__ = {}
+    for _s in []: __setmethods__.update(_s.__setmethods__)
+    __getmethods__ = {}
+    for _s in []: __getmethods__.update(_s.__getmethods__)
     def __repr__(self):
         return "<C BreakpointEnvelope instance at %s>" % (self.this,)
 class BreakpointEnvelopePtr(BreakpointEnvelope):
@@ -362,7 +397,7 @@ class SampleVector:
         self.thisown = 1
 
     def __del__(self,lorisc=lorisc):
-        if self.thisown == 1 :
+        if getattr(self,'thisown',0):
             lorisc.delete_SampleVector(self)
     def size(*args):
         val = apply(lorisc.SampleVector_size,args)
@@ -383,6 +418,10 @@ class SampleVector:
     def setAt(*args):
         val = apply(lorisc.SampleVector_setAt,args)
         return val
+    __setmethods__ = {}
+    for _s in []: __setmethods__.update(_s.__setmethods__)
+    __getmethods__ = {}
+    for _s in []: __getmethods__.update(_s.__getmethods__)
     def __repr__(self):
         return "<C SampleVector instance at %s>" % (self.this,)
 class SampleVectorPtr(SampleVector):
@@ -399,7 +438,7 @@ class AiffFile:
         self.thisown = 1
 
     def __del__(self,lorisc=lorisc):
-        if self.thisown == 1 :
+        if getattr(self,'thisown',0):
             lorisc.delete_AiffFile(self)
     def channels(*args):
         val = apply(lorisc.AiffFile_channels,args)
@@ -417,6 +456,10 @@ class AiffFile:
         val = apply(lorisc.AiffFile_samples,args)
         if val: val = SampleVectorPtr(val) ; val.thisown = 1
         return val
+    __setmethods__ = {}
+    for _s in []: __setmethods__.update(_s.__setmethods__)
+    __getmethods__ = {}
+    for _s in []: __getmethods__.update(_s.__getmethods__)
     def __repr__(self):
         return "<C AiffFile instance at %s>" % (self.this,)
 class AiffFilePtr(AiffFile):

@@ -87,6 +87,8 @@ typedef Loris::Partial::iterator PartialIterator;
 	Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
 	the Loris website: www.cerlsoundgroup.org/Loris/
 */
+class PartialListIterator;
+
 class PartialList
 {
 public:
@@ -206,6 +208,9 @@ public:
 	isInRange method.
 
  */
+
+class Partial;
+
 class PartialListIterator
 {
 public:
@@ -293,6 +298,9 @@ public:
 	Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
 	the Loris website: www.cerlsoundgroup.org/Loris/
  */
+ 
+class PartialIterator;
+
 class Partial
 {
 public:
