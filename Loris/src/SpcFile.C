@@ -83,9 +83,19 @@ namespace Loris {
 // ---------------------------------------------------------------------------
 
 //	can't we change this? Seems like we could, but 
-//	it s part of the size of the magic junk in the 
+//	its part of the size of the magic junk in the 
 //	Sose chunk.
-const int LargestLabel = 512;	// max number of partials for SPC file
+const int LargestLabel = 256;	// max number of partials for SPC file
+
+    //  1 Mar 05
+    //  Found that this cannot actually be 512 for enhanced
+    //  Partials, it crashes with a segmentation fault above 256. 
+    //  Unfortunately, whatever is causing the problem is not
+    //  using this constant, but some other hardcoded thing.
+    //  if I change this to 256, then I can still export
+    //  256 enhanced Partials, but I don't know what to change
+    //  to allow 512! Ugh!
+    //  -kel
 
 //	this used to be hard coded into Partial, don't know
 //	whether it is needed to make spc files work.
@@ -354,7 +364,9 @@ void
 SpcFile::addPartial( const Partial & p )
 {
 	if ( p.label() == 0 )
+	{
 		Throw( InvalidArgument, "Spc Partials must be labeled." );
+	}
 	addPartial( p, p.label() );
 }
 
@@ -376,12 +388,18 @@ void
 SpcFile::addPartial( const Partial & p, int label  )
 {
 	if ( label < 1 )
+	{
 		Throw( InvalidArgument, "Spc Partials must have positive labels." );
+	}
 	if ( label > LargestLabel )
-		Throw( InvalidArgument, "Spc Partial label is too large, cannot have more than 512." );
+    {
+		Throw( InvalidArgument, "Spc Partial label is too large, cannot have more than 256." );
+	}
 
 	if ( label > partials_.size() )
+    {
 		growPartials( label );
+	}
 		
 	partials_[label - 1] = p;
 	partials_[label - 1].setLabel( label );
@@ -397,7 +415,9 @@ void
 SpcFile::setMidiNoteNumber( double nn )
 {
 	if ( nn < 0 || nn > 128 )
+	{
 		Throw( InvalidArgument, "MIDI note number outside of the valid range [1,128]" );
+	}
 	notenum_ = nn;
 }
 
@@ -412,7 +432,9 @@ void
 SpcFile::setSampleRate( double rate )
 {
 	if ( rate <= 0 )
+	{
 		Throw( InvalidArgument, "Sample rate must be positive." );
+	}
 	rate_ = rate;
 }
 
@@ -430,13 +452,17 @@ SpcFile::growPartials( partials_type::size_type sz )
 #ifdef PO2
 		partials_type::size_type po2sz = MinNumPartials;
 		while ( po2sz < sz )
+		{
 			po2sz *= 2;
+		}
 		partials_.resize( po2sz );
 #else
 		partials_.resize( sz );
 #endif
 		for ( partials_type::size_type j = 0; j < partials_.size(); ++j )
+		{
 			partials_[j].setLabel( j+1 );
+		}
 	}
 }
 
@@ -1002,7 +1028,7 @@ configureExportStruct( const SpcFile::partials_type & plist, double midipitch,
 
 	// Max number of partials is due to (arbitrary) size of initPhase[].
 	if ( spcEI.numPartials < 1 || spcEI.numPartials > LargestLabel )
-		Throw( FileIOException, "Partials must be distilled and labeled between 1 and 512." );
+		Throw( FileIOException, "Partials must be distilled and labeled between 1 and 256." );
 
 	debugger << "startTime = " << spcEI.startTime << " endTime = " << spcEI.endTime 
 			 << " hop = " << spcEI.hop << " partials = " << spcEI.numPartials << endl;
