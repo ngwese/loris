@@ -33,7 +33,7 @@ endif
 
 pythonsitepkg_LTLIBRARIES = _loris.la
 _loris_la_SOURCES = $(PYTHON_WRAPPER)
-_loris_la_CXXFLAGS = $(AM_CXXFLAGS) -I$(top_srcdir)/src $(PYFLAGS) 
+_loris_la_CXXFLAGS = -I$(top_srcdir)/src $(PYFLAGS) 
 _loris_la_LIBADD = $(top_builddir)/src/libloris.la $(LINK_FFTW)
 _loris_la_LDFLAGS = -module -avoid-version $(EXTRA_LD_FLAGS)
 	

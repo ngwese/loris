@@ -232,7 +232,6 @@ private:
 //!	must be a PartialList, otherwise it can be any container type
 //!	storing Partials that supports at least bidirectional iterators.
 //!
-//!   \sa Distiller::distill( Container & partials )
 //
 #if ! defined(NO_TEMPLATE_MEMBERS)
 template< typename Container >
