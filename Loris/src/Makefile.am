@@ -12,6 +12,8 @@ MAINTAINERCLEANFILES = Makefile.in
 
 INCLUDES = $(FFTWINCLUDE) $(SDIFINCLUDE) $(default_includes)
 
+EXTRA_DIST = loris.h.in
+
 pkginclude_HEADERS = AiffFile.h	\
 				Analyzer.h		\
 				BreakpointEnvelope.h	\
@@ -44,8 +46,9 @@ pkginclude_HEADERS = AiffFile.h	\
 				SpectralPeakSelector.h \
 				Synthesizer.h
 
-noinst_LTLIBRARIES = libclasses.la
-libclasses_la_SOURCES = AiffFile.C \
+#noinst_LTLIBRARIES = libclasses.la
+#libclasses_la_SOURCES 
+Loris_Classes = AiffFile.C \
 		AiffFile.h \
 		Analyzer.C \
 		Analyzer.h \
@@ -112,5 +115,22 @@ libclasses_la_SOURCES = AiffFile.C \
 		Synthesizer.C \
 		Synthesizer.h
 
-libclasses_la_LIBADD = -lfftw -lsdif
+# libclasses_la_LIBADD = -lfftw -lsdif
+lib_LTLIBRARIES = libloris.la
+libloris_la_SOURCES = loris.h lorisAnalyzer_pi.C lorisBpEnvelope_pi.C \
+ lorisException_pi.C lorisException_pi.h lorisNonObj_pi.C \
+ lorisPartialList_pi.C lorisSampleVector_pi.C lorisUtilities_pi.C \
+ $(Loris_Classes)
+
+if DARWIN
+# libloris_la_LDFLAGS = -version-info 3:1:0 -prebind
+# automake doesn't like the conditional definition of 
+# LDFLAGS, so use this to add Darwin-specific flags:
+EXTRA_LD_FLAGS = -prebind
+endif
+
+libloris_la_LIBADD = -lfftw -lsdif
+libloris_la_LDFLAGS = -version-info 3:6:3 $(EXTRA_LD_FLAGS)
+
+nodist_include_HEADERS = loris.h
 

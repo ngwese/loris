@@ -9,6 +9,7 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 INCLUDES = -I$(top_srcdir)/classes
+
 EXTRA_DIST = loris.h.in
 
 MAINTAINERCLEANFILES = 	Makefile.in
