@@ -27,6 +27,8 @@
 	#include <math.h>
 #endif
 
+#include <algorithm>
+
 using namespace std;
 
 Begin_Namespace( Loris )
@@ -50,7 +52,7 @@ Morph::Morph( auto_ptr< Map > f ) :
 {
 	//	initialize morphing functions:
 	if ( ! f.get() ) {
-#if defined(__sgi) && ! defined(__GNUC__)
+#if defined(__sgi) 
 		//	Since the argument to operator= is non-const, 
 		//	defaultMap() can't, strictly speaking, be 
 		//	used as the argument, because temporaries
@@ -155,7 +157,7 @@ void
 Morph::setFrequencyFunction(  auto_ptr< Map > f )
 {
 	if ( ! f.get() ) {
-#if defined(__sgi) && ! defined(__GNUC__)
+#if defined(__sgi) 
 		//	Since the argument to operator= is non-const, 
 		//	defaultMap() can't, strictly speaking, be 
 		//	used as the argument, because temporaries
@@ -187,7 +189,7 @@ void
 Morph::setAmplitudeFunction(  auto_ptr< Map > f )
 {
 	if ( ! f.get() ) {
-#if defined(__sgi) && ! defined(__GNUC__)
+#if defined(__sgi) 
 		//	Since the argument to operator= is non-const, 
 		//	defaultMap() can't, strictly speaking, be 
 		//	used as the argument, because temporaries
@@ -219,7 +221,7 @@ void
 Morph::setBandwidthFunction(  auto_ptr< Map > f )
 {
 	if ( ! f.get() ) {
-#if defined(__sgi) && ! defined(__GNUC__)
+#if defined(__sgi) 
 		//	Since the argument to operator= is non-const, 
 		//	defaultMap() can't, strictly speaking, be 
 		//	used as the argument, because temporaries

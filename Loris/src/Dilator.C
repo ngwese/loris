@@ -16,6 +16,8 @@
 #include "Exception.h"
 #include "Notifier.h"
 
+#include <algorithm>
+
 using namespace std;
 
 Begin_Namespace( Loris )
