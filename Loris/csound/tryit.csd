@@ -1,6 +1,12 @@
 <CsoundSynthesizer>
 ; tryit.csd - a Csound structured data file 
 ; for testing the Loris unit generators
+;
+; To try this out, copy flute and clarinet
+; SDIF files from the test directory into
+; this directory, naming them flute.sdif
+; and clarinet.sdif.
+;
 <CsOptions>
 -W -d -o tryit.wav
 </CsOptions>
@@ -73,25 +79,6 @@ instr 3
 	out a2
 endin
 
-;;   ;
-;;   ; Morph the partials in carhorn.sdif into
-;;   ; the partials in meow.sdif linearly over 
-;;   ; all but the last 2 seconds of the note.
-;;   ; The morph is performed over the first 
-;;   ; .75 seconds of the source sounds. The last
-;;   ; 2.5 seconds (of meow) is unmodified.
-;;   ; Use 1 ms fade time.
-;;   ;
-;;   instr 4
-;;       ktime    linseg      0, p3-2.5, 0.75, 2.5, 3.5   ; time index function
-;;       kmorph   linseg      0, p3-2.5, 1.0, 2.5, 1.0    ; morphing function
-;;       asig     lorismorph  ktime, "carhorn.sdif", "meow.sdif", kmorph, kmorph, kmorph, .001
-;;                out         asig
-;;   endin
-;;   
-;;   
-;;   
-
 </CsInstruments>
 <CsScore>
 ; originally tryit.sco
@@ -111,16 +98,6 @@ i 2     1     3    8.08
 i 2     3.5   1    8.04
 i 2     4     6    8.00
 i 2     4     6    8.07
-
-s
-;; i 3 0 4 8.08
-;; i 3 + 3 8.01
-;; 
-;; i 3 8   6 8.02
-;; i 3 8.01 5 8.06
-;; i 3 8.02 6 8.09
-;; i 3 12   2 8.11
-;; 
 
 e
 </CsScore>

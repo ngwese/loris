@@ -8,14 +8,14 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-EXTRA_DIST = lorisgens.C lorisgens.h tryit.csd trymorph.csd flute.sdif trombone.sdif meow.sdif
+EXTRA_DIST = tryit.csd trymorph.csd 
 
 MAINTAINERCLEANFILES = 	Makefile.in
 
 if HAVE_CSOUND
 csoundlibdir = $(libdir)/csound
 csoundlib_LTLIBRARIES = lorisops.la
-lorisops_la_SOURCES = lorisgens.C
+lorisops_la_SOURCES = lorisgens.C lorisgens.h
 lorisops_la_CXXFLAGS = $(CSOUND_CXXFLAGS) $(AM_CXXFLAGS) -I$(top_srcdir)/src
 lorisops_la_LDFLAGS = -module -avoid-version -no-undefined
 lorisops_la_LIBADD = $(top_builddir)/src/libloris.la

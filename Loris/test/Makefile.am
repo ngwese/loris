@@ -101,5 +101,5 @@ TESTS = $(check_PROGRAMS) $(check_SCRIPTS)
 
 CLEANFILES = $(PYTHON_TEST) 
 
-distclean-local:
+clean-local:
 	-rm -fr *.ctest.* *.pytest.* *.pi.* tmp.sdif 
