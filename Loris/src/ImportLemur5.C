@@ -6,39 +6,96 @@
 //
 //	-kel 10 Sept 99
 //
+//	THIS IS STILL BUSTED, WON'T WORK IF CHUNKS ARE IN A DIFFERENT ORDER!!!
+//
 // ===========================================================================
 #include "ImportLemur5.h"
-#include "BinaryFile.h"
+#include "Endian.h"
 #include "Exception.h"
 #include "Partial.h"
 #include "Breakpoint.h"
 #include "notifier.h"
 #include "pi.h"
+#include "LorisTypes.h"
 #include <algorithm>
-
-#if !defined( Deprecated_cstd_headers )
-	#include <cmath>
-	using std::fmod;
-	using std::sqrt;
-#else
-	#include <math.h>
-#endif
-
+#include <cmath>
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
 #endif
 
+//	-- types and ids --
+enum { 
+		FORM_ID = 'FORM', 
+		LEMR_ID = 'LEMR', 
+		AnalysisParamsID = 'LMAN', 
+		TrackDataID = 'TRKS',
+		FormatNumber = 4962 };
 
-#pragma mark -
-#pragma mark construction
+//	for reading and writing files, the exact sizes and
+//	alignments are critical.
+typedef Int_32 ID;
+struct CkHeader 
+{
+	Int_32 id;
+	Int_32 size;
+};
+
+struct AnalysisParamsCk
+{
+	//Int_32 ckID;
+	//Int_32 ckSize;
+	CkHeader header;
+	
+	Int_32 formatNumber;
+	Int_32 originalFormatNumber;
+	
+	Int_32 ftLength;			//	samples, transform length
+	Float_32 winWidth;			//	Hz, main lobe width
+	Float_32 winAtten;			//	dB, sidelobe attenuation
+	Int_32	hopSize;			//	samples, frame length
+	Float_32 sampleRate;		// 	Hz, from analyzed sample
+	
+	Float_32 noiseFloor;		//	dB (negative)
+	Float_32 peakAmpRange;		//	dB, floating relative amplitde threshold
+	Float_32 maskingRolloff;	//	dB/Hz, peak masking curve	
+	Float_32 peakSeparation;	//	Hz, minimum separation between peaks
+	Float_32 freqDrift;			//	Hz, maximum track freq drift over a frame
+}; 
+
+struct TrackDataCk
+{
+	CkHeader header;
+	Uint_32	numberOfTracks;
+	Int_32	trackOrder;			// enumerated type
+	// track data follows
+};
+
+struct TrackOnDisk
+{
+	Double_64	startTime;		// in milliseconds
+	Float_32	initialPhase;
+	Uint_32		numPeaks;
+	Int_32		label;
+};
+
+struct PeakOnDisk
+{
+	Float_32	magnitude;
+	Float_32	frequency;
+	Float_32	interpolatedFrequency;
+	Float_32	bandwidth;
+	Double_64	ttn;
+};
+
+
 // ---------------------------------------------------------------------------
 //	ImportLemur5 constructor
 // ---------------------------------------------------------------------------
 //
-ImportLemur5::ImportLemur5( BinaryFile & lemrFile ) : 
-	_file( lemrFile ),
+ImportLemur5::ImportLemur5( std::istream & s ) : 
+	_file( s ),
 	_bweCutoff( 1000. ),	//	default cutoff in Lemur
 	_counter( 0 ),
 	Import()
@@ -51,11 +108,8 @@ ImportLemur5::ImportLemur5( BinaryFile & lemrFile ) :
 //
 ImportLemur5::~ImportLemur5( void )
 {
-	_file.close();
 }
 
-#pragma mark -
-#pragma mark primitive operations
 // ---------------------------------------------------------------------------
 //	verifySource
 // ---------------------------------------------------------------------------
@@ -64,24 +118,22 @@ ImportLemur5::~ImportLemur5( void )
 void
 ImportLemur5::verifySource( void )
 {
-	try {
-		_file.seek( 0 );
-		if( _file.tell() != 0 )
-			Throw( FileIOException, "Couldn't rewind Lemur file (bad open mode?)." );
-		
+	try 
+	{
 		//	check file type ids:
-		int ids[2], size;
-		_file.read( ids[0] );
-		_file.read( size );
-		_file.read( ids[1] );
+		Int_32 ids[2], size;
+		BigEndian::read( _file, 1, sizeof(ID), (char *)&ids[0] );
+		BigEndian::read( _file, 1, sizeof(Uint_32), (char *)&size );
+		BigEndian::read( _file, 1, sizeof(ID), (char *)&ids[1] );
 		
 		//	except if there were any read errors:
 		if ( ! _file.good() )
-			Throw( FileIOException, "Cannot read file in Lemur 5 import.");	
+			Throw( FileIOException, "Cannot read stream in Lemur 5 import.");	
 		
 		if ( ids[0] != FORM_ID || ids[1] != LEMR_ID ) {
 			debugger << "Bad file ids: ";
-			debugger << string((char *)&ids[0], 4) << " and " << string((char *)&ids[1], 4);
+			debugger << std::string((char *)&ids[0], 4) << " and " << std::string((char *)&ids[1], 4);
+			debugger << "(backwards on little endian systems)" << endl;
 			
 			Throw( ImportException, "File is not formatted correctly for Lemur 5 import." );
 		}
@@ -93,11 +145,11 @@ ImportLemur5::verifySource( void )
 			Throw( ImportException, "File has wrong Lemur format for Lemur 5 import." );
 		}
 	}
-	catch ( FileIOException & ex ) {
+	catch ( FileIOException & ex ) 
+	{
 		//	convert to an Import Error:
 		Throw( ImportException, ex.str() );
 	}
-		
 }
 
 // ---------------------------------------------------------------------------
@@ -181,7 +233,7 @@ ImportLemur5::getPartial( void )
 			//	bandwidth was ignored; Loris does not, so 
 			//	toss out that bogus bandwidth.
 			if ( frequency < _bweCutoff ) {
-				amplitude *= sqrt(1. - bandwidth);
+				amplitude *= std::sqrt(1. - bandwidth);
 				bandwidth = 0.;
 			}
 			//	otherwise, adjust the bandwidth value
@@ -191,13 +243,13 @@ ImportLemur5::getPartial( void )
 			//	without changing the sine modulation index,
 			//	see Oscillator::modulate(). 
 			else {
-				amplitude *= sqrt( 1. + (3. * bandwidth) );
+				amplitude *= std::sqrt( 1. + (3. * bandwidth) );
 				bandwidth = (4. * bandwidth) / ( 1. + (3. * bandwidth) ); 
 			}
 
 			//	update phase based on _this_ pkData's interpolated freq:
 			phase +=TwoPi * prevTtnSec * pkData.interpolatedFrequency;
-			phase = fmod( phase, TwoPi );
+			phase = std::fmod( phase, TwoPi );
 			
 			//	create Breakpoint:	
 			Breakpoint bp( frequency, amplitude, bandwidth, phase );
@@ -246,8 +298,8 @@ ImportLemur5::endImport( void )
 void
 ImportLemur5::readChunkHeader( CkHeader & h )
 {
-	_file.read( h.id );
-	_file.read( h.size );
+	BigEndian::read( _file, 1, sizeof(ID), (char *)&h.id );
+	BigEndian::read( _file, 1, sizeof(Int_32), (char *)&h.size );
 } 
 
 // ---------------------------------------------------------------------------
@@ -259,12 +311,8 @@ ImportLemur5::readChunkHeader( CkHeader & h )
 void 
 ImportLemur5::readTracksChunk( TrackDataCk & ck )
 {
-	try {
-		//	rewind:
-		_file.seek( 0 );
-		if( _file.tell() != 0 )
-			Throw( FileIOException, "Couldn't rewind Lemur file (bad open mode?)." );
-		
+	try 
+	{		
 		//	find the track data chunk from the file:
 		//	read a chunk header, if it isn't the one we want, skip over it.	
 		for ( readChunkHeader( ck.header ); ck.header.id != TrackDataID; readChunkHeader( ck.header ) ) {
@@ -273,14 +321,14 @@ ImportLemur5::readTracksChunk( TrackDataCk & ck )
 				Throw( FileIOException, "Found bogus chunk size." );
 				
 			if ( ck.header.id == FORM_ID )
-				_file.offset( sizeof(Int_32) );
+				_file.ignore( sizeof(Int_32) );
 			else
-				_file.offset( ck.header.size );
+				_file.ignore( ck.header.size );
 		}
 		
 		//	found it, read it one field at a time:
-		_file.read( ck.numberOfTracks );
-		_file.read( ck.trackOrder );
+		BigEndian::read( _file, 1, sizeof(Uint_32), (char *)&ck.numberOfTracks );
+		BigEndian::read( _file, 1, sizeof(Int_32), (char *)&ck.trackOrder );
 	}
 	catch( FileIOException & ex ) {
 		Throw( ImportException, ex.str() + "Failed to read badly-formatted Lemur file (bad Track Data chunk)." );
@@ -294,12 +342,8 @@ ImportLemur5::readTracksChunk( TrackDataCk & ck )
 void
 ImportLemur5::readParamsChunk( AnalysisParamsCk & ck )
 {
-	try {
-		//	rewind:
-		_file.seek( 0 );
-		if( _file.tell() != 0 )
-			Throw( FileIOException, "Couldn't rewind Lemur file (bad open mode?)." );
-
+	try 
+	{
 		//	find the Parameters chunk in the file:
 		//	read a chunk header, if it isn't the one we want, skip over it.
 		for ( readChunkHeader( ck.header ); ck.header.id != AnalysisParamsID; readChunkHeader( ck.header ) ) {
@@ -308,28 +352,29 @@ ImportLemur5::readParamsChunk( AnalysisParamsCk & ck )
 				Throw( FileIOException, "Found bogus chunk size." );
 				
 			if ( ck.header.id == FORM_ID )
-				_file.offset( sizeof(Int_32) );
+				_file.ignore( sizeof(Int_32) );
 			else
-				_file.offset( ck.header.size );
+				_file.ignore( ck.header.size );
 		}
 		
 		//	found it, read it one field at a time:
-		_file.read( ck.formatNumber );
-		_file.read( ck.originalFormatNumber );
+		BigEndian::read( _file, 1, sizeof(Int_32), (char *)&ck.formatNumber );
+		BigEndian::read( _file, 1, sizeof(Int_32), (char *)&ck.originalFormatNumber );
 
-		_file.read( ck.ftLength );
-		_file.read( ck.winWidth );
-		_file.read( ck.winAtten );
-		_file.read( ck.hopSize );
-		_file.read( ck.sampleRate );
+		BigEndian::read( _file, 1, sizeof(Int_32), (char *)&ck.ftLength );
+		BigEndian::read( _file, 1, sizeof(Float_32), (char *)&ck.winWidth );
+		BigEndian::read( _file, 1, sizeof(Float_32), (char *)&ck.winAtten );
+		BigEndian::read( _file, 1, sizeof(Int_32), (char *)&ck.hopSize );
+		BigEndian::read( _file, 1, sizeof(Float_32), (char *)&ck.sampleRate );
 		
-		_file.read( ck.noiseFloor );
-		_file.read( ck.peakAmpRange );
-		_file.read( ck.maskingRolloff );
-		_file.read( ck.peakSeparation );
-		_file.read( ck.freqDrift );
+		BigEndian::read( _file, 1, sizeof(Float_32), (char *)&ck.noiseFloor );
+		BigEndian::read( _file, 1, sizeof(Float_32), (char *)&ck.peakAmpRange );
+		BigEndian::read( _file, 1, sizeof(Float_32), (char *)&ck.maskingRolloff );
+		BigEndian::read( _file, 1, sizeof(Float_32), (char *)&ck.peakSeparation );
+		BigEndian::read( _file, 1, sizeof(Float_32), (char *)&ck.freqDrift );
 	}
-	catch( FileIOException & ex ) {
+	catch( FileIOException & ex ) 
+	{
 		Throw( ImportException, ex.str() + "Failed to read badly-formatted Lemur file (bad Parameters chunk)." );
 	}
 }
@@ -342,13 +387,15 @@ ImportLemur5::readParamsChunk( AnalysisParamsCk & ck )
 void 
 ImportLemur5::readTrackHeader( TrackOnDisk & t )
 {
-	try {
-		_file.read( t.startTime );
-		_file.read( t.initialPhase );
-		_file.read( t.numPeaks );
-		_file.read( t.label );
+	try 
+	{
+		BigEndian::read( _file, 1, sizeof(Double_64), (char *)&t.startTime );
+		BigEndian::read( _file, 1, sizeof(Float_32), (char *)&t.initialPhase );
+		BigEndian::read( _file, 1, sizeof(Uint_32), (char *)&t.numPeaks );
+		BigEndian::read( _file, 1, sizeof(Int_32), (char *)&t.label );
 	}
-	catch( FileIOException & ex ) {
+	catch( FileIOException & ex ) 
+	{
 		ex.append( "Failed to read track data in Lemur 5 import." );
 		throw;
 	}
@@ -362,14 +409,16 @@ ImportLemur5::readTrackHeader( TrackOnDisk & t )
 void 
 ImportLemur5::readPeakData( PeakOnDisk & p )
 {
-	try {
-		_file.read( p.magnitude );
-		_file.read( p.frequency );
-		_file.read( p.interpolatedFrequency );
-		_file.read( p.bandwidth );
-		_file.read( p.ttn );
+	try 
+	{
+		BigEndian::read( _file, 1, sizeof(Float_32), (char *)&p.magnitude );
+		BigEndian::read( _file, 1, sizeof(Float_32), (char *)&p.frequency );
+		BigEndian::read( _file, 1, sizeof(Float_32), (char *)&p.interpolatedFrequency );
+		BigEndian::read( _file, 1, sizeof(Float_32), (char *)&p.bandwidth );
+		BigEndian::read( _file, 1, sizeof(Double_64), (char *)&p.ttn );
 	}
-	catch( FileIOException & ex ) {
+	catch( FileIOException & ex ) 
+	{
 		ex.append( "Failed to read peak data in Lemur 5 import." );
 		throw;
 	}

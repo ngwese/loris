@@ -8,16 +8,17 @@
 //
 //	-kel 28 Sept 99
 //
+//	THIS IS STILL BUSTED, WON'T WORK IF CHUNKS ARE IN A DIFFERENT ORDER!!!
+//
 // ===========================================================================
-
 #include "AiffFile.h"
-#include "BinaryFile.h"
+#include "Endian.h"
 #include "Exception.h"
 #include "notifier.h"
 #include "ieee.h"
 #include <algorithm>
 #include <string>
-#include <iostream>
+#include <fstream>
 
 #if !defined(Deprecated_cstd_headers)
 #include <climits>

@@ -11,9 +11,7 @@
 //	-kel 6 Oct 99
 //
 // ===========================================================================
-
 #include "SamplesFile.h"
-#include "BinaryFile.h"
 #include "Exception.h"
 
 #include <algorithm>

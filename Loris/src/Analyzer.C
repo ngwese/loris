@@ -163,7 +163,7 @@ Analyzer::configure( double resolutionHz )
 	//	correction, beyond which a reassigned spectral component
 	//	is considered unreliable, and not considered eligible for
 	//	Breakpoint formation in extractPeaks(). By default, use
-	//	the hop time:
+	//	the hop time (should it be half that?):
 	_cropTime = _hop;
 	
 	//	bandwidth association region width 
@@ -331,8 +331,8 @@ Analyzer::extractPeaks( std::list< Breakpoint > & frame, double frameTime,
 			//	if the time correction for this peak is large,
 			//	reject it:
 			double timeCorrection = state.spectrum().reassignedTime( fsample );
-			//if ( std::abs(timeCorrection) > maxCorrection )
-			//	continue;
+			if ( std::abs(timeCorrection) > maxCorrection )
+				continue;
 				
 			//	retain a spectral peak corresponding to this sample:
 			double phase = state.spectrum().reassignedPhase( fsample, timeCorrection );
