@@ -161,6 +161,10 @@ Synthesizer::setIterator( auto_ptr< PartialIterator > iter )
 //	0.), then the ramp at the head or tail of the Partial gets compressed. 
 //	Phase is always corrected, and is never altered by the ramping. Samples
 //	are never written outside the buffer boundaries.
+//
+//	A long Partial may generate samples at non-zero amplitude all the way 
+//	to the end of the buffer. There's no guarantee that there won't be
+//	a click at the end. Yet.
 //	
 void
 Synthesizer::synthesizePartial( const Partial & p )
@@ -173,8 +177,9 @@ Synthesizer::synthesizePartial( const Partial & p )
 	//Assert( p.endTime() < _samples.size() / sampleRate() );
 	if ( p.endTime() > _samples.size() / sampleRate() ) {
 		debugger << "found Partial ending at " << p.endTime() 
-					<< " but I only have a buffer of length " << _samples.size() << endl;
-		return;
+					<< " but I only have a buffer of length " << _samples.size();
+		debugger << " Having a go of it anyway." << endl;
+		//return;
 	}
 		
 //	reset the oscillator:
@@ -221,10 +226,14 @@ Synthesizer::synthesizeEnvelopeSegment( long currentSampleOffset )
 		//	between consecutive envelope breakpoints) we
 		//	obviate the running fractional sample total we
 		//	used to need.
-		//	Don't synthesize samples past the end of the buffer.
 		long nsamps = ((iterator().time() + offset()) * sampleRate()) - currentSampleOffset;
+		
+		//	Don't synthesize samples past the end of the buffer.
 		nsamps = min( nsamps, long(_samples.size()) - currentSampleOffset );
+		
+		//	check sanity:
 		Assert( nsamps >= 0 );
+		Assert( nsamps + currentSampleOffset <= _samples.size() );
 		
 		//	generate nsamps samples starting at currentSampleOffset
 		//	targeting the radian frequency, amplitude, and 
@@ -249,7 +258,7 @@ Synthesizer::synthesizeEnvelopeSegment( long currentSampleOffset )
 inline long
 Synthesizer::synthesizeFadeIn( long currentSampleOffset )
 {
-	const long rampLen = 0.001 * sampleRate() /* + 0.5 */;	//	1 ms
+	const long rampLen = _fadeTime * sampleRate() /* + 0.5 */;
 	
 	if ( currentSampleOffset > 0 ) {
 		//	calculate the start time for the ramp, 
@@ -293,7 +302,7 @@ Synthesizer::synthesizeFadeIn( long currentSampleOffset )
 inline long
 Synthesizer::synthesizeFadeOut( long currentSampleOffset )
 {
-	const long rampLen = 0.001 * sampleRate() /* + 0.5 */;	//	1 ms
+	const long rampLen = _fadeTime * sampleRate() /* + 0.5 */;
 	
 	if ( currentSampleOffset < _samples.size() - 1 ) {
 		//	make sure the ramp doesn't run off the end of the buffer:

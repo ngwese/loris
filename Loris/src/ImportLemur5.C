@@ -182,10 +182,12 @@ ImportLemur5::getPartial( void )
 		if ( p.duration() > 0. ) {
 			mPartials.push_back( p );
 		}
+		/*
 		else {
 			debugger << "import rejecting a Partial of zero duration (" 
 					<< tkHeader.numPeaks << " peaks read)" << endl;
 		}
+		*/
 	}
 	catch( FileIOException & ex ) {
 		Throw( ImportException, ex.str() + "Failed to import a partial from a Lemur file." );
