@@ -92,9 +92,11 @@ SDIF spec: http://www.cnmat.berkeley.edu/SDIF/
 	const double Pi = 3.14159265358979324;
 #endif
 
-#if !defined(WORDS_BIGENDIAN) && !defined(LITTLE_ENDIAN)
+#if defined(WORDS_BIGENDIAN)
 	//	WORDS_BIGENDIAN is defined in config.h, determined 
 	//	at configure-time
+	#undef LITTLE_ENDIAN	
+#elif !defined(WORDS_BIGENDIAN) && !defined(LITTLE_ENDIAN)
 	#define LITTLE_ENDIAN 1
 #endif
 
@@ -113,62 +115,62 @@ namespace Loris {
 
 //	try to use the information gathered by configure:
 #if HAVE_CONFIG_H
-	#if SIZEOF_SHORT == 2
-    typedef unsigned short	sdif_unicode;
-    typedef short			sdif_int16;
-	#elif SIZEOF_INT == 2	
-    typedef unsigned int		sdif_unicode;
-    typedef int				sdif_int16;
-	#else
-	#error "cannot identify a two-byte integer type"
-	#endif
-	
-	#if SIZEOF_INT == 4
-    typedef int				sdif_int32;
-    typedef unsigned int		sdif_uint32;
-	#elif SIZEOF_LONG == 4	
-    typedef long				sdif_int32;
-    typedef unsigned long	sdif_uint32;
-	#else
-	#error "cannot identify a four-byte integer type"
-	#endif
+    #if SIZEOF_SHORT == 2
+    typedef unsigned short  sdif_unicode;
+    typedef short           sdif_int16;
+    #elif SIZEOF_INT == 2   
+    typedef unsigned int    sdif_unicode;
+    typedef int             sdif_int16;
+    #else
+    #error "cannot identify a two-byte integer type"
+    #endif
+    
+    #if SIZEOF_INT == 4
+    typedef int             sdif_int32;
+    typedef unsigned int    sdif_uint32;
+    #elif SIZEOF_LONG == 4  
+    typedef long            sdif_int32;
+    typedef unsigned long   sdif_uint32;
+    #else
+    #error "cannot identify a four-byte integer type"
+    #endif
 
-	#if SIZEOF_FLOAT == 4
-    typedef float			sdif_float32;
-	#else
-	#error "cannot identify a four-byte floating-point type"
-	#endif
-	
-	#if SIZEOF_DOUBLE == 8
-    typedef double			sdif_float64;
-	#else
-	#error "cannot identify a eight-byte floating-point type"
-	#endif
+    #if SIZEOF_FLOAT == 4
+    typedef float           sdif_float32;
+    #else
+    #error "cannot identify a four-byte floating-point type"
+    #endif
+    
+    #if SIZEOF_DOUBLE == 8
+    typedef double          sdif_float64;
+    #else
+    #error "cannot identify a eight-byte floating-point type"
+    #endif
 #else
 #ifdef __sgi
-    typedef unsigned short	sdif_unicode;
-    typedef short		sdif_int16;
-    typedef int			sdif_int32;
-    typedef unsigned int	sdif_uint32;
-    typedef float		sdif_float32;
-    typedef double		sdif_float64;
+    typedef unsigned short  sdif_unicode;
+    typedef short           sdif_int16;
+    typedef int             sdif_int32;
+    typedef unsigned int    sdif_uint32;
+    typedef float           sdif_float32;
+    typedef double          sdif_float64;
 #elif defined(__WIN32__) || defined(_WINDOWS)
     #ifndef _WINDOWS_
-    	#include <windows.h>
+        #include <windows.h>
     #endif 
-    typedef unsigned short	sdif_unicode;
-    typedef short		sdif_int16;
-    typedef int			sdif_int32;
-    typedef unsigned int	sdif_uint32;
-    typedef float		sdif_float32;
-    typedef double		sdif_float64;
+    typedef unsigned short  sdif_unicode;
+    typedef short           sdif_int16;
+    typedef int             sdif_int32;
+    typedef unsigned int    sdif_uint32;
+    typedef float           sdif_float32;
+    typedef double          sdif_float64;
 #elif defined(__LINUX__)
-    typedef unsigned short	sdif_unicode;
-    typedef short		sdif_int16;
-    typedef int			sdif_int32;
-    typedef unsigned int	sdif_uint32;
-    typedef float		sdif_float32;
-    typedef double		sdif_float64;
+    typedef unsigned short  sdif_unicode;
+    typedef short           sdif_int16;
+    typedef int             sdif_int32;
+    typedef unsigned int    sdif_uint32;
+    typedef float           sdif_float32;
+    typedef double          sdif_float64;
 #else
 
     /* These won't necessarily be the right size on any conceivable
@@ -176,12 +178,12 @@ namespace Loris {
        SDIF_Init() performs a sanity check of the sizes of these types,
        so if they're wrong you'll find out about it. */
 
-    typedef unsigned short	sdif_unicode;
-    typedef short		sdif_int16;
-    typedef long		sdif_int32;
-    typedef unsigned long	sdif_uint32;
-    typedef float		sdif_float32;
-    typedef double		sdif_float64;
+    typedef unsigned short  sdif_unicode;
+    typedef short           sdif_int16;
+    typedef long            sdif_int32;
+    typedef unsigned long   sdif_uint32;
+    typedef float           sdif_float32;
+    typedef double          sdif_float64;
 
 #endif
 #endif
@@ -554,6 +556,7 @@ static void SDIF_FillGlobalHeader(SDIF_GlobalHeader *h) {
 static SDIFresult SDIF_WriteGlobalHeader(const SDIF_GlobalHeader *h, FILE *f) {
 #ifdef LITTLE_ENDIAN
     SDIFresult r;
+    #error "why is this defined"
     if (r = SDIF_Write1(&(h->SDIF), 4, f)) return r;
     if (r = SDIF_Write4(&(h->size), 1, f)) return r;
     if (r = SDIF_Write4(&(h->SDIFversion), 1, f)) return r;

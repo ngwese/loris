@@ -133,8 +133,8 @@ public:
 	 
 	partials_type & partials( void );
 	const partials_type & partials( void ) const;
-	/*	Return a reference to the bandwidth-enhanced Partials represented 
-		by the envelope parameter streams in this SdifFile.
+	/*	Return a reference (or const reference) to the bandwidth-enhanced
+		Partials represented by this SdifFile.
 	 */
 
 //	-- mutation --
@@ -186,6 +186,7 @@ private:
 	
 };	//	end of class SdifFile
 
+#pragma mark -- template members --
 
 // ---------------------------------------------------------------------------
 //	constructor from Partial range
@@ -223,9 +224,8 @@ void SdifFile::addPartials( Iter begin_partials, Iter end_partials  )
 void SdifFile::addPartials( PartialList::const_iterator begin_partials, 
 							PartialList::const_iterator end_partials  )
 #endif
-{ 
-	while ( begin_partials != end_partials ) 
-		addPartial( *(begin_partials++) ); 
+{
+	partials_.insert( partials_.end(), begin_partials, end_partials );
 }
 
 }	//	end of namespace Loris
