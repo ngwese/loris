@@ -67,10 +67,6 @@ instr 2
     imorph   =           p5 - p4
     irelease =           p3 - p5
     
-    im0      =           p4
-    im1      =           p5
-    itmorph  =           im1-im0
-    
     kttbn    linseg      0, ionset, .75, imorph, 1.2, irelease, 2.4
     ktmeow   linseg      0, ionset, 1.7, imorph, 2.2, irelease, 3.4
     

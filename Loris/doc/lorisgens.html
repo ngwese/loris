@@ -338,16 +338,12 @@ endin
 ; transition from trombone to cat than the frequencies. 
 ; (The bandwidth envelopes use the same morphing 
 ; function as the amplitudes.) 
-;
+;</em>
 instr 2
     ionset   <strong>=</strong>           p4
     imorph   <strong>=</strong>           p5 - p4
     irelease <strong>=</strong>           p3 - p5
-    
-    im0      <strong>=</strong>           p4
-    im1      <strong>=</strong>           p5
-    itmorph  <strong>=</strong>           im1-im0
-    
+        
     kttbn    <strong>linseg</strong>      0, ionset, .75, imorph, 1.2, irelease, 2.4
     ktmeow   <strong>linseg</strong>      0, ionset, 1.7, imorph, 2.2, irelease, 3.4
     
