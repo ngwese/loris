@@ -30,18 +30,19 @@ using namespace Loris;
 // ---------------------------------------------------------------------------
 //	Association regions are centered on all integer bin frequencies, there 
 //	are numBins of them, starting at bin frequency 1. The lowest frequency
-//	region is always ignored, its surplus energy is set to zero. resolution
-//	is the frequency separation of the region centers.
+//	region is always ignored, its surplus energy is set to zero. regionWidth
+//	is the total width (in Hz) of the overlapping bandwidth association regions, 
+//	the region centers are spaced at half this width.
 //
 AssociateBandwidth::AssociateBandwidth( const ReassignedSpectrum & spec, 
 										double srate,
-										double resolution /* = 1000 */) :
+										double regionWidth ) :
 	_spectrum( spec ),
-	_spectralEnergy( int(0.5 * srate/resolution) ),
-	_sinusoidalEnergy( int(0.5 * srate/resolution) ),
-	_weights( int(0.5 * srate/resolution) ),
-	_surplus( int(0.5 * srate/resolution) ),
-	_regionRate( 1. / resolution ),
+	_spectralEnergy( int(srate/regionWidth) ),
+	_sinusoidalEnergy( int(srate/regionWidth) ),
+	_weights( int(srate/regionWidth) ),
+	_surplus( int(srate/regionWidth) ),
+	_regionRate( 2./regionWidth ),
 	_hzPerSamp( srate / spec.size() )
 {
 	computeWindowSpectrum( _spectrum.window() );

@@ -27,8 +27,14 @@ Begin_Namespace( Loris )
 //
 class DistributeEnergy
 {
-//	-- public interface --
+	double _maxdist; 	//	the maximum frequency distance (in Hz) over
+					//	which energy will be redistributed; energy from
+					//	a discarded Partial will be distributed only
+					//	to Partials nearer in frequency than _maxdist
 public:
+	//	construction:
+	DistributeEnergy( double distanceHz ) : _maxdist( distanceHz ) {}
+	
 	//	distribute
 	template< class Iter >
 	void distribute( const Partial & p, Iter begin, Iter end ) const
@@ -89,30 +95,11 @@ public:
 				tUpperBound = time;
 			}
 			
-			/*
-			if ( bp.frequency() < 2000. ) {
-				debugger << "distributing energy, freq: " << bp.frequency() <<
-							" time: " << time;
-				if ( above != end ) {
-					debugger << " candidate above freq " << freqAbove <<
-								" duration " << above->duration();
-				}
-				if ( below != end ) {
-					debugger << " candidate below freq " << freqBelow <<
-								" duration " << below->duration();
-				}
-				debugger << endl;
-			}
-			*/
 			//	make sure the candidates aren't too far
-			//	(farther than one bark frequency unit)
-			//	in frequency from bp:
-			double b = bark( bp.frequency() );
-			const double MAX = 1.;	// ???
-			if ( bark( freqAbove ) - b > MAX ) {
+			if ( freqAbove - bp.frequency() > _maxdist ) {
 				above = end;
 			}
-			if ( b - bark( freqBelow ) > MAX ) {
+			if ( bp.frequency() - freqBelow > _maxdist ) {
 				below = end;
 			} 
 			
@@ -149,16 +136,6 @@ private:
 	
 };	// end of class DistributeEnergy
 
-// ---------------------------------------------------------------------------
-//	distributeEnergy
-// ---------------------------------------------------------------------------
-//
-template< class Iter >
-void distributeEnergy( const Partial & p, const Iter & begin, const Iter & end ) 
-{
-	DistributeEnergy d;
-	d( p, begin, end );
-}
 
 End_Namespace( Loris )
 

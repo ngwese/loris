@@ -36,7 +36,7 @@ class ReassignedSpectrum;
 //
 //	The design strategy proliferation begins! This class uses mostly
 //	template members, to avoid reference to other concrete types, particularly
-//	container types. Do I like this?
+//	container types. Do I like this? No I do not.
 //
 class AssociateBandwidth
 {
@@ -44,7 +44,7 @@ class AssociateBandwidth
 public:
 	//	construction:
 	AssociateBandwidth( const ReassignedSpectrum & spec, 
-						double srate, double resolution = 1000. );
+						double srate, double regionWidth );
 	~AssociateBandwidth( void );
 
 	//	bandwidth assocation:
