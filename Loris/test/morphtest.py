@@ -23,7 +23,8 @@
 #  
 #	morphtest.py
 #
-#	Very simple Loris instrument tone morphing demonstration.
+#	Very simple Loris instrument tone morphing demonstration using a
+#	dynamically-loaded Python module.
 #
 #   Kelly Fitz, 13 Dec 2000
 #   loris@cerlsoundgroup.org
@@ -82,6 +83,7 @@ while not iter.equals(end):
 	iter.next()
 print "avg frequency of first distilled clarinet partial is", f/n
 
+print 'shifting pitch of clarinet'
 loris.shiftPitch( clar, loris.BreakpointEnvelopeWithValue( -600 ) )
 
 # check clarinet synthesis:
