@@ -16,6 +16,7 @@
 #include "Partial.h"
 #include "Breakpoint.h"
 #include "Map.h"
+#include "PartialUtils.h"
 #include "notifier.h"
 #include <set>
 #include <cmath>
@@ -79,13 +80,6 @@ Morph::~Morph( void )
 //	Morph two sounds (collections of Partials labeled to indicate
 //	correspondences) into a single labeled collection of Partials.
 //
-
-struct LabelIs : std::binary_function< const Partial, int, bool >
-{
-	bool operator()( const Partial & p, int label ) const 
-		{ return p.label() == label; }
-};
-
 void 
 Morph::morph( PartialList::const_iterator begin0, 
 			  PartialList::const_iterator end0,
@@ -100,7 +94,7 @@ Morph::morph( PartialList::const_iterator begin0,
 	for ( PartialList::const_iterator it = begin0; it != end0; ++it ) 
 	{
 		//	don't add the crossfade label to the set:
-		if ( it->label() != CrossfadeLabel() )
+		if ( it->label() != 0 )
 		{
 			//	set::insert() returns a pair, the second element
 			//	of which is false if the insertion failed because
@@ -111,51 +105,59 @@ Morph::morph( PartialList::const_iterator begin0,
 	}
 	for ( PartialList::const_iterator it = begin1; it != end1; ++it ) 
 	{
-		//	don't add the crossfade label to the set:
-		if ( it->label() != CrossfadeLabel() )
+		//	don't add the non-label, 0, to the set:
+		if ( it->label() != 0 )
 		{
 			//	as above:
 			if ( ! moreLabels.insert(it->label()).second )
 				Throw( MorphException, "Partials must be distilled before morphing." );
 		}
 	}
+	
+	//	combine the label sets
 	labels.insert( moreLabels.begin(), moreLabels.end() );
 		
-	//	loop over lots of labels:
+	//	loop over lots of labels and morph Partials
+	//	having corresponding labels:
 	std::set< int >::iterator labelIter;
 	for ( labelIter = labels.begin(); labelIter != labels.end(); ++labelIter ) 
 	{
-		Assert( *labelIter != CrossfadeLabel() );
+		Assert( *labelIter != 0 );
 		
 		//	find source Partial 0:
-		const Partial nullPartial;
-		PartialList::const_iterator piter = 
-			find_if( begin0, end0, std::bind2nd(LabelIs(), *labelIter) );
-		const Partial & p0 = ( piter != end0 )?( *piter ):( nullPartial );
-		//const Partial * pptr0 = ( piter != end0 )?( &(*piter) ):( &nullPartial );
+		//const Partial nullPartial;
+		PartialList::const_iterator p0 = 
+			find_if( begin0, end0, std::bind2nd(PartialUtils::label_equals(), *labelIter) );
+		//const Partial & p0 = ( piter != end0 )?( *piter ):( nullPartial );
 				
 		//	find source Partial 1:
-		piter = find_if( begin1, end1, std::bind2nd(LabelIs(), *labelIter) );
-		const Partial & p1 = ( piter != end1 )?( *piter ):( nullPartial );
-		//const Partial * pptr1 = ( piter != end1 )?( &(*piter) ):( &nullPartial );
+		PartialList::const_iterator p1 = 
+			find_if( begin1, end1, std::bind2nd(PartialUtils::label_equals(), *labelIter) );
+		//const Partial & p1 = ( piter != end1 )?( *piter ):( nullPartial );
 		
-		debugger << "morphing " << ((&p0 != &nullPartial)?(1):(0)) 
-				 << " and " << ((&p1 != &nullPartial)?(1):(0)) 
+		debugger << "morphing " << ((p0 != end0)?(1):(0)) 
+				 << " and " << ((p1 != end1)?(1):(0)) 
 				 <<	" partials with label " <<	*labelIter << endl;
-					 
-		morphPartial( p0, p1, *labelIter );
+				 
+		if ( p0 == end0 )
+		{
+			Assert( p1 != end1 );
+			morphPartial( Partial(), *p1, *labelIter );
+		}
+		else if ( p1 == end1 )
+		{
+			Assert( p0 != end0 );
+			morphPartial( *p0, Partial(), *labelIter );
+		}
+		else
+		{			 
+			morphPartial( *p0, *p1, *labelIter );
+		}
 		
 	}	//	end loop over labels
 	
-	//	crossfade the remaining Partials:
+	//	crossfade the remaining unlabeled Partials:
 	crossfade( begin0, end0, begin1, end1 );
-	/*
-	PartialList sublist0, sublist1;
-	collectByLabel( begin0, end0, sublist0, CrossfadeLabel() );
-	collectByLabel( begin1, end1, sublist1, CrossfadeLabel() );
-	debugger << "crossfading Partials labeled " << *labelIter << endl;
-	crossfadeLists( sublist0, sublist1 );
-	*/
 }
 
 // ---------------------------------------------------------------------------
@@ -275,7 +277,7 @@ Morph::morphPartial( const Partial & p0, const Partial & p1, int assignLabel /* 
 // ---------------------------------------------------------------------------
 //	Crossfade Partials with no correspondences.
 //
-//	The Partials having label 0 (CrossfadeLabel) are considered to 
+//	Unlabeled Partials (having label 0) are considered to 
 //	have no correspondences, so they are just faded out, and not 
 //	actually morphed. This is the same as morphing each with an 
 //	empty Partial. 
@@ -292,21 +294,20 @@ Morph::crossfade( PartialList::const_iterator begin0,
 				  PartialList::const_iterator end1 )
 {
 	Partial nullPartial;
-	const int CFL = CrossfadeLabel();
-	debugger << "crossfading Partials labeled " << CFL << endl;
+	debugger << "crossfading unlabeled (labeled 0) Partials" << endl;
 
 	//	crossfade Partials corresponding to a morph weight of 0:
 	PartialList::const_iterator it;
 	for ( it = begin0; it != end0; ++it )
 	{
-		if ( it->label() == CFL )
+		if ( it->label() == 0 )
 			morphPartial( *it, nullPartial );	
 	}
 
 	//	crossfade Partials corresponding to a morph weight of 1:
 	for ( it = begin1; it != end1; ++it )
 	{
-		if ( it->label() == CFL )
+		if ( it->label() == 0 )
 			morphPartial( nullPartial, *it );
 	}
 }

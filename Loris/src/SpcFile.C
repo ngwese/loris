@@ -15,6 +15,7 @@
 #include "ieee.h"
 #include "pi.h"
 #include "LorisTypes.h"
+#include "PartialUtils.h"
 
 #include <algorithm>
 #include <string>
@@ -394,26 +395,20 @@ SpcFile::packRight( const Partial & p, double noiseMagMult, double time1,
 //	having the specified label, or NULL if there is not such Partial
 //	in the list. 
 //
-struct LabelIs 
-{
-	LabelIs( int l ) : _l( l ) {}
-	bool operator()( const Partial & p ) const { return p.label() == _l; }
-	private:
-		int _l;	//	the label to search for
-};
-	
 const Partial *
 SpcFile::select( const PartialList & partials, int label )
 {
 	const Partial * ret = NULL;
 	list< Partial >::const_iterator it = 
-		find_if( partials.begin(), partials.end(), LabelIs( label ) );
+		std::find_if( partials.begin(), partials.end(), 
+				 std::bind2nd(PartialUtils::label_equals(), label) );
 		
 	if ( it != partials.end() ) {
 		ret = &(*it);
 		#if Debug_Loris
 		//	there should only be one of such Partial:
-		Assert( find_if( ++it, partials.end(), LabelIs( label ) ) == partials.end() );
+		Assert( 0 == std::count_if( ++it, partials.end(), 
+									std::bind2nd(PartialUtils::label_equals(), label) ) );
 		#endif
 	}
 	

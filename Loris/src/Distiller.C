@@ -51,10 +51,10 @@ Distiller::~Distiller( void )
 void 
 Distiller::distill( PartialList::const_iterator start,
 				 	PartialList::const_iterator end, 
-				 	int assignLabel /* = 0 */ )
+				 	int assignLabel )
 {
-	if ( assignLabel < 0 )
-		Throw( InvalidArgument, "distillation label must be non-negative" );
+	if ( assignLabel <= 0 )
+		Throw( InvalidArgument, "distillation label must be positive" );
 
 	//	create the resulting distilled partial:
 	Partial newp;
@@ -154,22 +154,7 @@ Distiller::distillOne( const Partial & src,
 		//	Create a new Breakpoint and add it to dest:
 		if ( it == end ) 
 		{
-			/*
-			//	compute the original Breakpoint energy:
-			double etot = pIter->amplitude() * pIter->amplitude();
-			double ebw = etot * pIter->bandwidth();
-			
-			//	add some bandwith energy:
-			etot += xse;
-			ebw += xse;
-			double bw;
-			if ( etot > 0. ) 
-				bw = ebw / etot;
-			else 
-				bw = 0.;
-			*/
 			//	create and insert the new Breakpoint:
-			// Breakpoint newBp( pIter->frequency(), std::sqrt( etot ), bw, pIter->phase() );
 			Breakpoint newBp( *pIter );
 			newBp.addNoise( xse );
 			dest.insert( pIter.time(), newBp );

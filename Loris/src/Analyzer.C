@@ -12,6 +12,7 @@
 #include "Exception.h"
 #include "KaiserWindow.h"
 #include "ReassignedSpectrum.h"
+#include "BreakpointUtils.h"
 #include "notifier.h"
 #include <list>
 #include <vector>
@@ -282,42 +283,6 @@ Analyzer::analyze( const std::vector< double > & buf, double srate, double offse
 }
 
 // ---------------------------------------------------------------------------
-//	Breakpoint comparitors
-// ---------------------------------------------------------------------------
-//	For using STL algorithms on collections of Breakpoints.
-//	No real reason for these to be templates, actually.
-//
-template<class T>
-struct less_frequency
-{
-	bool operator()( const T & lhs, const T & rhs ) const
-		{ return lhs.frequency() < rhs.frequency(); }
-};
-
-template<class T>
-struct greater_amplitude
-{
-	bool operator()( const T & lhs, const T & rhs ) const
-		{ return lhs.amplitude() > rhs.amplitude(); }
-};	
-
-template<class T>
-struct frequency_between
-{
-	frequency_between( double x, double y ) : 
-		_fmin( x ), _fmax( y ) 
-		{ if (x>y) std::swap(x,y); }
-	bool operator()( const T & t )  const
-		{ 
-			return (t.frequency() > _fmin) && 
-				   (t.frequency() < _fmax); 
-		}
-	private:
-		double _fmin, _fmax;
-};
-
-
-// ---------------------------------------------------------------------------
 //	extractPeaks
 // ---------------------------------------------------------------------------
 //	The reassigned spectrum has been computed, and short-time peaks
@@ -467,7 +432,7 @@ Analyzer::extractPeaks( std::list< Breakpoint > & frame, double frameTime,
 void 
 Analyzer::thinPeaks( std::list< Breakpoint > & frame, AnalyzerState & state )
 {
-	frame.sort( greater_amplitude<Breakpoint>() );
+	frame.sort( BreakpointUtils::greater_amplitude() );
 	
 	//	nothing can mask the loudest peak, so I can start with the
 	//	second one, _and_ I can safely decrement the iterator when 
@@ -479,13 +444,15 @@ Analyzer::thinPeaks( std::list< Breakpoint > & frame, AnalyzerState & state )
 		//	in frequency:
 		double lower = it->frequency() - freqResolution();
 		double upper = it->frequency() + freqResolution();
-		if ( it != find_if( frame.begin(), it, frequency_between< Breakpoint >( lower, upper ) ) ) 
+		if ( it != find_if( frame.begin(), it, 
+							BreakpointUtils::frequency_between(lower, upper) ) ) 
 		{
 			//	find_if returns the end of the range (it) if it finds nothing; 
 			//	remove *it from the frame
 #if defined(New_Association)
 			//	should check for large time correction before
-			//	deciding to keep the energy:
+			//	deciding to keep the energy (unless they have 
+			//	already been eliminated):
 			state.bwAssociation().accumulateNoise( it->frequency(), it->amplitude() );
 #endif
 			frame.erase( it-- );
@@ -521,7 +488,7 @@ Analyzer::formPartials( std::list< Breakpoint > & frame, double frameTime,
 	std::set< Partial * > newgoobers;
 	
 	//	frequency-sort the frame:
-	frame.sort( less_frequency<Breakpoint>() );
+	frame.sort( BreakpointUtils::less_frequency() );
 	
 #if defined(Debug_Loris)	
 	bool spit = false;

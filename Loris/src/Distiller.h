@@ -1,6 +1,5 @@
 #ifndef INCLUDE_DISTILLER_H
 #define INCLUDE_DISTILLER_H
-
 // ===========================================================================
 //	Distiller.h
 //	
@@ -42,7 +41,7 @@ public:
 //	distillation:
 	void distill( PartialList::const_iterator start,
 				  PartialList::const_iterator end,
-				  int assignLabel = 0 );
+				  int assignLabel );
 
 //	PartialList access:
 	PartialList & partials( void ) { return _partials; }
