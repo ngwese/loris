@@ -71,8 +71,16 @@ trial 7:
 	a tiny bit worse than more than one. At this point, I am forced to 
 	conclude that this sound will always sound ugly, and its only hope
 	is clever morphing technique to mask its uglines..
-	
-Last updated: 21 May 2002 by Kelly Fitz
+
+So far, all results have been bad or worse with this sound, try turning off
+bandwidth association and see what happens. In Loris 1.0.3, this can be
+accomplished by setting the BW region width to 0.
+
+trial 9:
+	200 Hz and 150 Hz windows don't sound much different, nor do 70 Hz
+	and 50 Hz resolutions. Turning off BW, for now, seems to help.
+
+Last updated: 26 March 2003 by Kelly Fitz
 """
 
 print __doc__
@@ -82,7 +90,7 @@ from trials import *
 
 # use this trial counter to skip over
 # eariler trials
-trial = 8
+trial = 9
 
 print "running trial number", trial, time.ctime(time.time())
 
@@ -235,4 +243,18 @@ if trial == 8:	# last trial, pending a great idea
 		synthesize( ofilebase + '.aiff', siftme )
 		loris.exportSpc( ofilebase + '.s.spc', siftme, 36, 0 )
 		loris.exportSpc( ofilebase + '.e.spc', siftme, 36, 1 )
+
+if trial == 9: # try turning off bw enhancement (Loris 1.0.3)
+	resolutions = ( 50, 70 )
+	widths = ( 100, 150, 200 )
+	for r in resolutions:
+		for w in widths:
+			an = loris.Analyzer( r, w )
+			an.setBwRegionWidth( 0 )
+			f = loris.AiffFile( source )
+			p = an.analyze( f.samples(), f.sampleRate() )
+			# collate
+			loris.distill( p )
+			v = loris.synthesize( p, f.sampleRate() )
+			loris.exportAiff( 'angry.%i.%i.raw.aiff'%(r, w), v, f.sampleRate(), 1, 16 )
 
