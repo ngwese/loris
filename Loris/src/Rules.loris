@@ -29,7 +29,7 @@
 #
 #	Loris objects definition
 #
-OUTPUT = $(TOP)/lib
+OUTPUT = $(TOP)/Loris/lib
 CLASSES = $(TOP)/Loris/classes
 OBJ_LORIS = $(CLASSES)/AiffFile.o \
 			$(CLASSES)/Analyzer.o \
@@ -76,6 +76,6 @@ OBJ_SDIF = $(CLASSES)/sdif.o $(CLASSES)/sdif-types.o
 #
 #	flags:
 #
-INC_LORIS = -I${FFTW_PREFIX}/include -I$(CLASSES) -I$(SDIF)
+INC_LORIS = -I$(CLASSES) -I$(SDIF) -I${FFTW_PREFIX}/include 
 LIB_LORIS = -L${FFTW_PREFIX}/lib -lfftw
 # DEBUG_LORIS = -DDebug_Loris
