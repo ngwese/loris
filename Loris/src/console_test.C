@@ -7,8 +7,6 @@
  *       <http://www.metrowerks.com/>
  */
 
-//	Hey I am just adding this comment here, see.
-
 #include "LorisLib.h"
 
 #if !defined( Deprecated_iostream_headers)
@@ -34,8 +32,6 @@
 
 using namespace std;
 using namespace Loris;
-
-//	hey I am just adding this comment down here see?
 
 int main()
 {	
