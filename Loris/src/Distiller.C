@@ -10,7 +10,6 @@
 #include "Distiller.h"
 #include "Partial.h"
 #include "Breakpoint.h"
-#include "Map.h"
 #include "notifier.h"
 #include <cmath>
 #include <list>

@@ -10,6 +10,11 @@
 //
 // ===========================================================================
 
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
+
 // ---------------------------------------------------------------------------
 //	class Envelope
 //
@@ -34,3 +39,9 @@ private:
 	Envelope & operator= ( const Envelope & );
 
 };	//	end of abstract class Envelope
+
+#if !defined( NO_LORIS_NAMESPACE )
+}	//	end of namespace Loris
+#endif
+
+#endif	// ndef INCLUDE_PARTIALLIST_H

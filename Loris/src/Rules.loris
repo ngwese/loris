@@ -7,20 +7,22 @@ OBJ_LORIS = $(CLASSES)/AiffFile.o \
 			$(CLASSES)/Analyzer.o \
 			$(CLASSES)/AssociateBandwidth.o \
 			$(CLASSES)/Breakpoint.o \
+			$(CLASSES)/BreakpointEnvelope.o \
 			$(CLASSES)/Dilator.o \
 			$(CLASSES)/Distiller.o \
 			$(CLASSES)/DistributeEnergy.o \
 			$(CLASSES)/Endian.o \
+			$(CLASSES)/Envelope.o \
 			$(CLASSES)/Exception.o \
 			$(CLASSES)/ExportSdif.o \
 			$(CLASSES)/ExportSpc.o \
 			$(CLASSES)/Filter.o \
 			$(CLASSES)/FourierTransform.o \
+			$(CLASSES)/Handle.o \
 			$(CLASSES)/ImportLemur.o \
 			$(CLASSES)/ImportSdif.o \
 			$(CLASSES)/KaiserWindow.o \
-			$(CLASSES)/Map.o \
-			$(CLASSES)/Morph.o \
+			$(CLASSES)/Morpher.o \
 			$(CLASSES)/Oscillator.o \
 			$(CLASSES)/Partial.o \
 			$(CLASSES)/PartialView.o \

@@ -6,12 +6,18 @@
 //	BreakpointEnvelope specifyies a linear segment breakpoint function, 
 //	and implements the Envelope interface. 
 //
-//	Should this class be almost fully-insulating (i.e. hide std::map<>)?
+//	This class isn't insulating, clients that should be protected from 
+//	the details should use the EnvelopeInterface.
 //
 //	-kel 21 July 2000
 //
 // ===========================================================================
 #include <map>
+
+#if !defined( NO_LORIS_NAMESPACE )
+//	begin namespace
+namespace Loris {
+#endif
 
 // ---------------------------------------------------------------------------
 //	class BreakpointEnvelope
@@ -25,13 +31,19 @@ class BreakpointEnvelope
 
 //	-- public interface --
 public:
+	//	Envelope interface:
 	virtual double valueAt( double x ) const;	
 	
+	//	construction:
 	BreakpointEnvelope( void );
 	BreakpointEnvelope( const BreakpointEnvelope & );
 	virtual ~BreakpointEnvelope( void );
 	
-	BreakpointEnvelope & operator= ( const BreakpointEnvelope & );
+	//	compiler-generated assignment is okay
+	//	BreakpointEnvelope & operator= ( const BreakpointEnvelope & );
+
+	//	envelope composition:
+	void insertBreakpoint( double x, double y );
 
 };	//	end of abstract class BreakpointEnvelope
 

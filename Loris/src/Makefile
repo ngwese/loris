@@ -34,20 +34,22 @@ OBJ_LORIS = AiffFile.o \
 			Analyzer.o \
 			AssociateBandwidth.o \
 			Breakpoint.o \
+			BreakpointEnvelope.o \
 			Dilator.o \
 			Distiller.o \
 			DistributeEnergy.o \
 			Endian.o \
+			Envelope.o \
 			Exception.o \
 			ExportSdif.o \
 			ExportSpc.o \
 			Filter.o \
 			FourierTransform.o \
+			Handle.o \
 			ImportLemur.o \
 			ImportSdif.o \
 			KaiserWindow.o \
-			Map.o \
-			Morph.o \
+			Morpher.o \
 			Oscillator.o \
 			Partial.o \
 			PartialView.o \

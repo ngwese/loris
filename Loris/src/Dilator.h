@@ -33,6 +33,7 @@ public:
 //	construction from n time points:
 //	(allow compiler to generate destructor)
 	Dilator( const double * ibegin, const double * tbegin, int n );
+	~Dilator( void );
 	
 //	dilation:
 	void dilate( Partial & p );
