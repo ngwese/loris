@@ -16,6 +16,14 @@ subdirectory. This file can be used to build a CodeWarrior project for
 any recent version of the IDE, using the Import Project option on the
 File menu.
 
+The use of XML project files was intended to resolve issues of IDE
+version compatibility, but, alas, it simply doesn't work well, and
+since Metrowerks has changed the names of their libraries (again)
+with CodeWarrior 7, it now works even worse than before. You may,
+therefore, have to tidy up various target settings and library names
+if you are not using exactly the right version of CodeWarrior (i.e.
+the same one we use).
+
 In order to compile and link the Loris library and scripting extensions,
 you will need the FFTW Fourier transform routines, available at
 www.fftw.org, and the SDIF (Sound Description Interchange Format) data
@@ -60,6 +68,7 @@ libraries included in the MacFFTW distribution (do (NOT) use his
 projects to recompile the libraries), b) compile your FFTW library on
 another architecture on which the tests are passed, or c) experiment
 with turning off various optimizations until the tests are passed.
+These errors exist as late as CodeWarrior 7.
 
 SDIF: 
 
@@ -77,7 +86,13 @@ Darwin/MacOS X:
 Loris does not perform well under Darwin/MacOS X. For unknown reasons,
 the FFTW library runs very slowly under Darwin. Also, dynamically loaded
 libraries (like the scripting modules) are different and incompatible
-under Darwin. We are working on solutions for these problems.
+under Darwin, and libtool does not appear to work correctly under
+Darwin. 
+
+However, Loris can be built using CodeWarrior under Mac OS X, and the
+distrubuted project builds a (carbonized) module for the carbonized 
+version of Python 2.1.1. It still runs slowly though, for reasons 
+unknown.
 
 COPYRIGHT AND LICENSE:
 
