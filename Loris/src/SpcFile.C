@@ -39,20 +39,21 @@
 
 #include <SpcFile.h>
 #include <AiffFile.h>
-#include <Exception.h>
 #include <Endian.h>
+#include <Exception.h>
 #include <Partial.h>
 #include <PartialList.h>
 #include <PartialUtils.h>
 #include <Notifier.h>
 #include "ieee.h"
 #include "Loris_types.h"
+
+#include <algorithm>
 #include <climits>
 #include <cmath>
-#include <vector>
 #include <list>
-#include <algorithm>
 #include <fstream>
+#include <vector>
 
 #if defined(HAVE_M_PI) && (HAVE_M_PI)
 	const double Pi = M_PI;
@@ -197,13 +198,13 @@ processSineOnlyPoint( const int packed,
 // Let exceptions propagate.
 //
 static void
-read( const char *infilename, PartialList & partialsList )
+read( std::istream & s, PartialList & partialsList )
 {
 
 	try
 	{
 		//	read spc aiff file
-		AiffFile f( infilename );
+		AiffFile f( s );
 		std::vector< double > v( f.sampleFrames() );
 		f.getSamples( v.begin(), v.end() );
 		
@@ -260,29 +261,54 @@ read( const char *infilename, PartialList & partialsList )
 		throw;
 	}
 	
-//
-// Complain if no Partials were imported:
-//
-	if ( partialsList.size() == 0 )
-	{
-		notifier << "No Partials were imported from " << infilename << endl;
-	}
-	
 }
 
+#pragma mark -- construction --
 
 // ---------------------------------------------------------------------------
-//	SpcFile constructor from data in memory
+//	SpcFile constructor from filename
 // ---------------------------------------------------------------------------
 //
-SpcFile::SpcFile( const char *infilename ) 
+SpcFile::SpcFile( const std::string & filename ) 
 {
-	read( infilename, _partialsList );
+	std::ifstream s;
+	s.open( filename.c_str(), std::ios::in | std::ios::binary ); 
+	if (! s)
+	{
+		std::string err( "Could not open file for reading (maybe it doesn't exist?): " );
+		err += filename;
+		Throw( FileIOException, err );
+	}
+	read( s, _partialsList );
+	
+	// complain if no Partials were imported:
+	if ( _partialsList.size() == 0 )
+	{
+		notifier << "No Partials were imported from " << filename << "." << endl;
+	}
 }
 
-#pragma mark -
-#pragma mark -
-#pragma mark export structures
+// ---------------------------------------------------------------------------
+//	SpcFile constructor from stream
+// ---------------------------------------------------------------------------
+//
+SpcFile::SpcFile( std::istream & s )
+{
+	if (! s)
+		Throw( FileIOException, "Tried to read Spc data from a bad stream." );
+	
+	read( s, _partialsList );
+	
+	// complain if no Partials were imported:
+	if ( _partialsList.size() == 0 )
+	{
+		notifier << "No Partials were imported from the specified stream." << endl;
+	}
+}
+
+
+#pragma mark -- export structures --
+
 // ---------------------------------------------------------------------------
 //	Export Structures
 // ---------------------------------------------------------------------------

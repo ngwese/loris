@@ -187,7 +187,7 @@ Destroy this Analyzer.
 </blockquote>
 
 <h4>Configuration</h4>
-<p><tt><b>operator = ( const Analyzer & rhs )
+<p><tt><b>operator= ( const Analyzer & rhs )
 </b></tt>
 <blockquote>[ returns Analyzer &  ]
 <br>
@@ -400,7 +400,7 @@ p, if specified, or 0 otherwise.
 </blockquote>
 
 <h4>Comparison</h4>
-<p><tt><b> operator == ( const Breakpoint & rhs ) const</b></tt>
+<p><tt><b> operator== ( const Breakpoint & rhs ) const</b></tt>
 <blockquote>[ returns bool ]
 <br>
 Comparison operator: return true if the frequency, amplitude, 
@@ -644,7 +644,7 @@ channel).
 Destroy this Channelizer.
 </blockquote>	
 
-<p><tt><b> operator=( const Channelizer & rhs )
+<p><tt><b> operator= ( const Channelizer & rhs )
 </b></tt>
 <blockquote>[ returns Channelizer &  ]
 <br>
@@ -1946,121 +1946,290 @@ resampled sinusoidal analysis data in the 1TRC format.
 <a name="Sieve">
 <hr><h2>Sieve</h2></a>
 <p>
-Sift labeled Partials: 
-If any two partials with same label overlap in time,
-keep only the longer of the two partials.
-Set the label of the shorter duration partial to zero.
+Class Sieve represents an algorithm for identifying
+channelized (see <a href="#Channelizer">Channelizer</a>)
+<a href="#Partial">Partials</a> that overlap in time, and 
+selecting the longer one to represent the channel.
 <p>
+In some cases, the energy redistribution effected by the distiller
+(see <a href="#Distiller">Distiller</a>) is undesirable. In such
+cases, the partials can be sifted before distillation. The sifting
+process in Loris identifies all the partials that would be rejected
+(and converted to noise energy) by the distiller and assigns them a
+label of 0. These sifted partials can then be identified and treated
+sepearately or removed altogether, or they can be passed through the
+distiller unlabeled, and crossfaded in the morphing process
+(see <a href="#Morpher">Morpher</a>).
+<p>
+
+<h3>Member Functions</h3>
+<h4>Construction</h4>
+<p><tt><b>Sieve( double partialFadeTime )</b></tt>
+<blockquote>
+<br>
+Construct a new Sieve using the specified partial fade
+time. If unspecified, the fade time defaults to one 
+millisecond (0.001 s).
+</blockquote>
+
+<p><tt><b>~Sieve( void )</b></tt>
+<blockquote>
+<br>
+Destroy this Sieve.
+</blockquote>
+
+<h4>Sifting</h4>
+
+<p><tt><b> template&lt;typename Iter&gt;<br>
+sift( Iter sift_begin, Iter sift_end  )
+</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Sift labeled <a href="#Partial">Partials</a> on the
+specified half-open (STL-style) range. If any two <a
+href="#Partial">Partials</a> having same label overlap in time,
+keep only the longer of the two <a href="#Partial">Partials</a>.
+Set the label of the shorter duration partial to zero. No Partials
+are removed from the <a href="#PartialList">PartialList</a> and
+the list order is unaltered.
+<p>
+If compiled with NO_TEMPLATE_MEMBERS defined, this member
+is defined:
 <pre>
-//	construction:	
-	explicit Sieve( double partialFadeTime = 0.001 /* 1 ms */ );
-	~Sieve( void );
-	
-//	sift:
-#if ! defined(NO_TEMPLATE_MEMBERS)
-	template<typename Iter>
-	void sift( Iter sift_begin, Iter sift_end  )
-#else
-	void sift( PartialList::iterator sift_begin, PartialList::iterator sift_end  )
-#endif
-	{
-		PartialPtrs ptrs;
-		fillPartialPtrs( sift_begin, sift_end, ptrs );
-		sift_ptrs( ptrs );
-	}
+sift( PartialList::iterator sift_begin, PartialList::iterator sift_end  )
 </pre>
+</blockquote>
 				
 <p><a href="#contents"><small>Contents</small></a>	
 
 <a name="SpcFile">
 <hr><h2>SpcFile</h2></a>
 <p>
-Implementation of class SpcFile, which reads and writes SPC files.
+Class SpcFile represents a AIFF-format samples file containing Spc
+parameter stream data for real time bandwidth-enhanced additive
+synthesis and sound morphing and manipulation using the Symbolic
+Sound Kyma Sound Design Workstation. Construction of a SpcFile
+from a stream or filename automatically imports the pramater
+stream data as <a href="#Partial">Partials</a>. The static
+Export() members convert <a href="#Partial">Partials</a> to Spc
+paramater streams and export them to a Spc file using the
+specified stream or filename.
 <p>
-<pre>
-//	construction:
-//	(let compiler generate destructor)
-	SpcFile( const char *infilename );
-		
-//	PartialList access:
-	PartialList & partials( void ) { return _partialsList; }
-	const PartialList & partials( void ) const { return _partialsList; }
+For more information about the Spc parameter stream format and
+about real time bandwidth-enhanced additive synthesis using Kyma,
+refer to the Loris website: <a
+href="http://www.cerlsoundgroup.org/Loris/">www.cerlsoundgroup.org/Loris/</a>.
+<p>
+<h3>Member Functions</h3>
+<h4>Construction</h4>
+<p><tt><b>SpcFile( const std::string & filename )
+</b></tt>
+<blockquote>
+<br>
+Initialize an instance of AiffFile by importing Partial parameter
+stream data from the file having the specified filename or path.
+</blockquote>	
 
-//	export:
-//
-//  the optional enhanced parameter;s default value is true (for bandwidth-enhanced spc files); it
-//  can be specified false for pure-sines spc files.
-//
-//  it is normally left at its default 
-//	the optional endApproachTime parameter is in seconds; its default value is zero (and has no effect).
-//  a nonzero endApproachTime indicates that the plist does not include a release, but rather ends in a 
-//  static spectrum corresponding to the final breakpoint values of the partials.  the endApproachTime
-//  specifies how long before the end of the sound the amplitude, frequency, and bandwidth values are
-//  to be modified to make a gradual transition to the static spectrum.
- 	static void Export( const std::string & filename, const PartialList & plist, double midiPitch, 
-				int enhanced = true, double endApproachTime = 0. );
-	static void Export( std::ostream & file, const PartialList & plist, double midiPitch, 
-				int enhanced = true, double endApproachTime = 0. );
-</pre>
+<p><tt><b>SpcFile( std::istream & s )</b></tt>
+<blockquote>
+<br>
+Initialize an instance of AiffFile by importing Partial parameter
+stream data from the file having the specified stream.
+</blockquote>
+		
+		
+<h4>PartialList Access</h4>
+<p><tt><b> partials( void )</b></tt>
+<blockquote>[ returns PartialList & ]
+<br>
+Return a reference to this SpcFile's list of imported Partials,
+or, for const SpcFiles, a const reference to this SpcFile's list
+of imported Partials (const <a href="#PartialList">PartialList</a> &). 
+</blockquote>
+
+<h4>Export (static)</h4>
+
+<p><tt><b>Export( const std::string & filename, const PartialList & plist, double midiPitch, 
+int enhanced, double endApproachTime )</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Export <a href="#Partial">Partials</a> in the specified <a
+href="#PartialList">PartialList</a> to a Spc file having the
+specified file name or path, using the specified MIDI note number
+(specify note number 60 for sounds that have no definable pitch).
+The <code>enhanced</code> flag is optional, and specifies
+phase-accurate bandwidth-enhanced parameter streams if true (the
+default), or pure sinusoidal parameter streams without phase data
+if false.
+<p>
+The optional <code>endApproachTime</code> parameter is specified
+in seconds. Its default value is zero (and has no effect). A
+nonzero <code>endApproachTime</code> indicates that the data in
+the <a href="#PartialList">PartialList</a> does not include a
+release, but rather ends in a static spectrum corresponding to the
+final breakpoint values of the partials. The
+<code>endApproachTime</code> specifies how long before the end of
+the sound the amplitude, frequency, and bandwidth values are to be
+modified to make a gradual transition to the static spectrum.
+</blockquote>
+
+
+<p><tt><b>Export( std::ostream & file, const PartialList & plist, double midiPitch, 
+int enhanced, double endApproachTime )
+</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Export <a href="#Partial">Partials</a> in the specified <a
+href="#PartialList">PartialList</a> to a Spc file on the specified
+ostream, using the specified MIDI note number (specify note number
+60 for sounds that have no definable pitch).
+<p>
+As above, the <code>enhanced</code> flag and <code>endApproachTime</code>
+are optional parameters (see above for a description).
+</blockquote>
 				
 <p><a href="#contents"><small>Contents</small></a>	
 
 <a name="Synthesizer">
 <hr><h2>Synthesizer</h2></a>
 <p>
-Definition of class of synthesizers of (reassigned) bandwidth-enhanced
-partials. Synthesizer accumulates samples for one partial at a time
-at a specified sample rate into a specified sample buffer.
-
-The Synthesizer does not own its sample buffer, the client 
-is responsible for its construction and destruction. Many 
-Synthesizers may share a buffer. (But this class is not thread-safe.)
+Class Synthesizer represents an algorithm for rendering
+bandwidth-enhanced Partials as floating point (<code>double</code>)
+samples at a specified sampling rate, and accumulating them into a
+buffer. The Synthesizer does not own the sample buffer, the client is
+responsible for its construction and destruction, and many
+Synthesizers may share a buffer.
 <p>
-<pre>
-//	-- construction --
-	Synthesizer( double srate, double * bufStart, double * bufEnd, double fadeTime = .001 );
-	Synthesizer( const Synthesizer & other );
-	~Synthesizer(void);
-	
-	Synthesizer & operator= ( const Synthesizer & other );
-	
-//	-- synthesis --
-//
-//	Synthesize a bandwidth-enhanced sinusoidal Partial with the specified 
-//	timeShift (in seconds). Zero-amplitude Breakpoints are inserted
-//	1 millisecond (Partial::FadeTime()) from either end of the Partial to reduce 
-//	turn-on and turn-off artifacts. The client is responsible or insuring
-//	that the buffer is long enough to hold all samples from the time-shifted
-//	and padded Partials. Synthesizer will not generate samples outside the
-//	buffer, but neither will any attempt be made to eliminate clicks at the
-//	buffer boundaries.  
-	void synthesize( const Partial & p, double timeShift = 0. ) const;	
-	
-//	function-call operator, for use as a functor:
-	void operator() ( const Partial & p, double timeShift = 0. ) const
-		{ synthesize( p, timeShift ) ; }
+<h3>Member Functions</h3>
+<h4>Construction</h4>
 
-#if !defined(NO_TEMPLATE_MEMBERS)
-//	Partial range operations:
-	template<typename Iter>
-	void synthesize( Iter begin_partials, Iter end_partials, double timeShift = 0. ) const
-		{ while ( begin_partials != end_partials ) synthesize( *(begin_partials++), timeShift ); }
+<p><tt><b>Synthesizer( double srate, double * bufStart, double * bufEnd, double fadeTime )</b></tt>
+<blockquote>
+<br>
+Construct a Synthesizer using the specified sampling rate, sample
+buffer (specified by its endpoints, in the STL style), and Partial
+fade time (in seconds). Since Partials generated by the Loris <a
+href="#Analyzer">Analyzer</a> generally begin and end at non-zero
+amplitude, zero-amplitude Breakpoints are inserted at either end of
+the Partial, at a temporal distance equal to the fade time, to reduce
+turn-on and turn-off artifacts. If the fade time is unspecified, the
+default value of one millisecond (0.001 seconds) is used.
+</blockquote>
 
-	template<typename Iter>
-	void operator() ( Iter begin_partials, Iter end_partials, double timeShift = 0. ) const
-		{ synthesize( begin_partials, end_partials, timeShift ); }
-#endif
+<p><tt><b>Synthesizer( const Synthesizer & other )</b></tt>
+<blockquote>
+<br>
+Construct a Synthesizer that is an exact copy of another Synthesizer,
+that is, uses the same sample buffer, sampling rate, and fade time.
+</blockquote>
+
+<p><tt><b>~Synthesizer(void)</b></tt>
+<blockquote>
+<br>
+Destroy this Synthesizer. (Does not destroy the sample buffer.)
+</blockquote>
 	
-//	-- access --
-	double fadeTime( void ) const;
-	long numSamples( void ) const;
-	double sampleRate( void ) const;
-	const double * samples( void ) const;
-	double * samples( void );
+<p><tt><b> operator= ( const Synthesizer & rhs )</b></tt>
+<blockquote>[ returns Synthesizer &  ]
+<br>
+Assignment operator: change this synthesizer to be an exact copy of
+the specified Synthesizer, <code>rhs</code>, that is, using the same
+sample buffer, sampling rate, and fade time.
+</blockquote>
 	
-//	-- mutation --
-	void setFadeTime( double partialFadeTime );
-</pre>
+
+<h4>Synthesis</h4>
+
+<p><tt><b> synthesize( const Partial & p, double timeShift ) const</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Synthesize a bandwidth-enhanced sinusoidal Partial with the
+(optionally) specified timeShift (in seconds). Zero-amplitude
+Breakpoints are inserted at either end of the Partial to reduce
+turn-on and turn-off artifacts, as described above. The client is
+responsible or insuring that this Synthesizer's buffer is long enough
+to hold all samples from the time-shifted and padded Partials.
+Synthesizer will not generate samples outside the buffer, but neither
+will any attempt be made to eliminate clicks at the buffer boundaries.
+If the time shift is unspecified, no time shift is used.
+</blockquote>
+	
+<p><tt><b> operator() ( const Partial & p, double timeShift ) const</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Function call operator: same as <code>synthesize( p, timeShift )</code>.
+</blockquote>
+
+
+
+<p><tt><b>template&lt;typename Iter&gt;<br>
+ synthesize( Iter begin_partials, Iter end_partials, double timeShift ) const
+</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Synthesize all Partials on the specified half-open (STL-style) range
+with the (optionally) specified timeShift (in seconds). Zero-amplitude
+Breakpoints are inserted at either end of the Partial to reduce
+turn-on and turn-off artifacts, as described above. The client is
+responsible or insuring that this Synthesizer's buffer is long enough
+to hold all samples from the time-shifted and padded Partials.
+Synthesizer will not generate samples outside the buffer, but neither
+will any attempt be made to eliminate clicks at the buffer boundaries.
+If the time shift is unspecified, no time shift is used.
+<p>
+If compiled with NO_TEMPLATE_MEMBERS defined, this member
+is not defined.
+</blockquote>
+
+<p><tt><b>template&lt;typename Iter&gt;<br>
+ operator() ( Iter begin_partials, Iter end_partials, double timeShift ) const
+</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Function call operator: same as 
+<code>synthesize( begin_partials, end_partials, timeShift )</code>.
+<p>
+If compiled with NO_TEMPLATE_MEMBERS defined, this member
+is not defined.
+</blockquote>
+
+<h4>Parameter Access</h4>
+<p><tt><b> fadeTime( void ) const</b></tt>
+<blockquote>[ returns double  ]
+<br>
+Return this Synthesizer's Partial fade time, in seconds.
+</blockquote>
+
+<p><tt><b> numSamples( void ) const</b></tt>
+<blockquote>[ returns long  ]
+<br>
+Return the size of the sample buffer used (but not owned) by
+this Synthesizer.
+</blockquote>
+
+<p><tt><b> sampleRate( void ) const</b></tt>
+<blockquote>[ returns double  ]
+<br>
+Return the sampling rate (in Hz) for this Synthesizer.
+</blockquote>
+
+<p><tt><b> samples( void )</b></tt>
+<blockquote>[ returns double *  ]
+<br>
+Return a pointer to the beginning of the sample buffer used (but not
+owned) by this Synthesizer. For immutable (<code>const</code>)
+Synthesizers, this member returns a pointer to the beginning of an
+immutable sample buffer (<code>const double *</code>).
+</blockquote>
+	
+<h4>Parameter Mutation</h4>
+<p><tt><b> setFadeTime( double partialFadeTime )</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Set this Synthesizer's fade time to the specified value 
+(in seconds, must be non-negative).
+</blockquote>
+
 				
 <p><a href="#contents"><small>Contents</small></a>	
 
@@ -2072,7 +2241,7 @@ Synthesizers may share a buffer. (But this class is not thread-safe.)
 <table cellspacing="0" cellpadding="1" width="100%">
   <tbody>
 	<tr>
-	  <td valign="Top">Last updated on 20 May 2002
+	  <td valign="Top">Last updated on 11 June 2002
 	  </td>
 	  <td align="Right" valign="Top"><a href="http://www.cerlsoundgroup.org/Loris/">www.cerlsoundgroup.org/Loris/</a>
 	  </td>

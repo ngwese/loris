@@ -82,15 +82,24 @@ Synthesizer::Synthesizer( double srate, double * bufStart, double * bufEnd, doub
 	_imp( new Synthesizer_imp )
 {
 	//	check to make sure that the sample rate is valid:
-	if ( srate <= 0. ) {
+	if ( srate <= 0. ) 
+	{
 		Throw( InvalidObject, "Synthesizer sample rate must be positive." );
 	}
 
 	//	check to make sure that the buffer bounds are valid:
-	if ( bufEnd - bufStart <= 0 ) {
+	if ( bufEnd - bufStart <= 0 ) 
+	{
 		Throw( InvalidObject, "Synthesizer buffer length must be positive." );
 	}
-	
+
+	//	check to make sure that the specified fade time
+	//	is valid:
+	if ( fadeTime < 0. )
+	{
+		Throw( InvalidObject, "Synthesizer Partial fade time must be non-negative." );
+	}
+
 	//	initialize the implementation struct:
 	_imp->fadeTime = fadeTime;
 	_imp->sampleRate = srate;
@@ -252,8 +261,6 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ ) const
 	
 //	synthesize linear-frequency segments until there aren't any more
 //	segments or the segments threaten to run off the end of the buffer:
-	//const PartialConstIterator End = p.end();
-	//for ( ; iterator != End; ++iterator ) 
 	while ( iterator != p.end() )
 	{
 		//	compute target sample index:
@@ -376,7 +383,13 @@ Synthesizer::samples( void )
 void 
 Synthesizer::setFadeTime( double partialFadeTime )  
 {
-	Assert( partialFadeTime >= 0.0 );
+	//	check to make sure that the specified fade time
+	//	is valid:
+	if ( partialFadeTime < 0. )
+	{
+		Throw( InvalidObject, "Synthesizer Partial fade time must be non-negative." );
+	}
+
 	_imp->fadeTime = partialFadeTime;
 }
 

@@ -54,7 +54,8 @@ class SpcFile
 public:
 //	construction:
 //	(let compiler generate destructor)
-	SpcFile( const char *infilename );
+	SpcFile( const std::string & filename );
+	SpcFile( std::istream & s );
 		
 //	PartialList access:
 	PartialList & partials( void ) { return _partialsList; }
