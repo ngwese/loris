@@ -1,4 +1,4 @@
-#!python
+#! python
 #
 #   This is the Loris C++ Class Library, implementing analysis, 
 #   manipulation, and synthesis of digitized sounds using the Reassigned 

@@ -78,7 +78,9 @@ AC_CHECK_LIB(sdif, SdifGenInit, :, AC_MSG_ERROR(cannot use SDIF library))
 # make sure that we can figure out how to use
 # the SDIF library
 AC_MSG_CHECKING(SDIF release version (must be at least 3.4))
-AC_TRY_RUN( [ #include<$SDIF_H> ], [
+# should actually try running this, but these things weren't defined
+# in earlier versions, so maybe it isn't worth the trouble
+AC_TRY_COMPILE( [ #include<$SDIF_H> ], [
 		assert( SDIF_VERSION_MAJOR >= 3 && SDIF_VERSION_MINOR >= 4 ); ],[ 
 		AC_MSG_RESULT(ok)
 		], [
@@ -246,7 +248,6 @@ AC_PATH_PROG(PYTHON, python, :, $PYPACKAGE/bin:$PATH)
 
 
 AM_CONDITIONAL(HAVE_PYTHON_H, test -n "$PYINCLUDE")
-AM_CONDITIONAL(HAVE_PYTHON_SITE, test -n "$PYSITE")
 
 if test -n "$PYINCLUDE" ; then
 	PYINCLUDE="-I$PYINCLUDE"
@@ -282,24 +283,25 @@ AC_MSG_CHECKING(for Tcl header file)
 if test -z "$TCLINCLUDE"; then
 	AC_TRY_CPP([#include <tcl.h>], [
 		AC_MSG_RESULT(found it)
-		HAVE_TCL=true ], [
-		HAVE_TCL=false ] )
+		HAVE_TCL_H=true ], [
+		HAVE_TCL_H=false ] )
 fi
 
 if test -n "$TCLINCLUDE" ; then
 	AC_TRY_CPP([#include <$TCLINCLUDE/tcl.h>], [
 		AC_MSG_RESULT($TCLINCLUDE)
-		HAVE_TCL=true ], [
+		HAVE_TCL_H=true ], [
 		AC_MSG_RESULT(cannot find tcl.h in $TCLINCLUDE)
 		TCLINCLUDE=""
-		HAVE_TCL=false ] )
+		HAVE_TCL_H=false ] )
 fi
+
+AM_CONDITIONAL(HAVE_TCL_H, test "$HAVE_TCL_H")
 
 if test -n "$TCLINCLUDE" ; then
 	TCLINCLUDE="-I$TCLINCLUDE"
 fi
 AC_SUBST(TCLINCLUDE)
-# AC_SUBST(HAVE_TCL)
 
 #----------------------------------------------------------------
 # Look for Perl5

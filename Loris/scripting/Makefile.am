@@ -15,31 +15,42 @@ PERL_WRAPPER = loris_perl_wrap.C
 # install conditionally
 #
 if HAVE_PYTHON_H
-if HAVE_PYTHON_SITE
-pythonsitepkgdir = $(PYSITE)
-endif
-endif
-
+pythonsitepkgdir = $(pkglibdir)/python
 pythonsitepkg_SCRIPTS = loris.py loris.pyo
 pythonsitepkg_LTLIBRARIES = loriscmodule.la
+endif
 
 loriscmodule_la_SOURCES = $(PYTHON_WRAPPER)
 loriscmodule_la_LDFLAGS = -module -avoid-version
 loriscmodule_la_LIBADD = $(top_builddir)/src/libclasses.la -lstdc++ 
+
 
 # This should be an install hook, but on my machine, the
 # install hook does not execute _after_ everything is 
 # installed, as it is documented to do, it executes before
 # loris.py and loriscmodule.a are installed, and thus fails.
 loris.pyo: loris.py
-	env PYTHONPATH=$(srcdir):.libs $(PYTHON) -O -c "import loris"	
+	env PYTHONPATH=$(srcdir):.libs $(PYTHON) -O -c "import loris"
 
-noinst_LTLIBRARIES = tcLoris.la loris_perl.la
-noinst_SCRIPTS = loris.pm
+
+#----------------------------------------------------------------
+# If Tcl is available, define a target for building and
+# installing the PythonTcl module
+#
+if HAVE_TCL_H
+tclsitepkgdir = $(pkglibdir)/tcl
+tclsitepkg_LTLIBRARIES = tcLoris.la
+endif
 
 tcLoris_la_SOURCES = $(TCL_WRAPPER)
 tcLoris_la_LDFLAGS = -module -avoid-version
 tcLoris_la_LIBADD = $(top_builddir)/src/libclasses.la -lstdc++
+
+#----------------------------------------------------------------
+# Don't install the Perl module, it is untested.
+#
+noinst_LTLIBRARIES = loris_perl.la
+noinst_SCRIPTS = loris.pm
 
 loris_perl_la_SOURCES = $(PERL_WRAPPER)
 loris_perl_la_LDFLAGS = -module -avoid-version

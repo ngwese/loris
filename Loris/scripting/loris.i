@@ -40,7 +40,7 @@
 	%module loris
 	%title "Python module: loris", noinfo
 #elif defined (SWIGTCL)
-	%module loris
+	%module tcLoris
 	%title "Tcl module: loris", noinfo
 #elif defined (SWIGPERL)
 	%module loris_perl
@@ -49,8 +49,6 @@
 	%module loris
 	%title "Loris scripting interface", noinfo
 #endif
-
-// %module loris 
 
 //	perl defines list and screws us up,
 //	undefine it so that we can use std::list

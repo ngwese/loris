@@ -12,7 +12,7 @@
 
 rm -f config.cache
 rm -f acconfig.h
-mkdir config
+# mkdir config
 echo "- aclocal."
 aclocal -I config
 echo "- autoconf."
