@@ -15,7 +15,7 @@
 #include "BinaryFile.h"
 #include "Partial.h"
 
-#include "Morph.h"
+#include "Notifier.h"
 
 #include "ieee.h"
 
@@ -133,7 +133,7 @@ SpcFile::writeEnvelopes( BinaryFile & file, const list<Partial> & plist )
 
 	// write out one frame at a time:
 	for (ulong frame = 0; frame < _frames; ++frame ) {
-		cout << "writing frame " << frame << " of " << _frames << endl;
+		notifier << "writing frame " << frame << " of " << _frames << endl;
 	
 		//	for each frame, write one value for every partial:
 		for (uint label = 1; label <= _partials; ++label ) {
@@ -149,13 +149,13 @@ SpcFile::writeEnvelopes( BinaryFile & file, const list<Partial> & plist )
 			} else {
 				freqMult = ampMult = 1.0;
 			}
-			const Partial & p = *pcorrect;
+			Assert( pcorrect != Null );	//	this would be bad.
 
 			//	pack log amplitude and log frequency into left:
-			left.s32bits = packLeft(p, freqMult, ampMult, frame * _rate);
+			left.s32bits = packLeft(*pcorrect, freqMult, ampMult, frame * _rate);
 
 			//	pack log bandwidth and phase into right:
-			right.s32bits = packRight(p, freqMult, ampMult, frame * _rate);
+			right.s32bits = packRight(*pcorrect, freqMult, ampMult, frame * _rate);
 	
 			//	write the sample:
 			file.write( left.s24bits );
