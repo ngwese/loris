@@ -1197,9 +1197,6 @@ public:
 			PartialList * plist = new PartialList( self->partials() );
 			return plist;
 		}
-		/*	Return a SampleVector containing the AIFF samples from this AIFF 
-			file as double precision floats on the range -1,1.
-		 */
 		 
 		//	add a PartialList of Partials:
 		void addPartials( PartialList * l )
@@ -1360,6 +1357,13 @@ public:
 			only PartialList::const_iterator arguments.
 		*/
 	
+		//	return a copy of the Partials represented by this SdifFile.
+		PartialList * partials( void )
+		{
+			PartialList * plist = new PartialList( self->partials().begin(), self->partials().end() );
+			return plist;
+		}
+
 		//	add a PartialList of Partials:
 		void addPartials( PartialList * l )
 		{
