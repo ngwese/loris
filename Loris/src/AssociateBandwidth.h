@@ -57,8 +57,7 @@ public:
 		
 		//	accumulate sinusoidal energy:
 		for ( Iter it = b; it != e; ++it ) {
-			double a = accumulateSinusoid( it->frequency(), it->amplitude() );
-			//it->setAmplitude( a );
+			accumulateSinusoid( it->frequency(), it->amplitude() );
 		}
 		
 		//	compute surplus spectral energy:
@@ -78,11 +77,8 @@ public:
 	
 private:	
 //	-- helpers --	
-	//	initialization:
-	void computeWindowSpectrum( const std::vector< double > & v );
-	
 	//	called in associate():	
-	double accumulateSinusoid( double f, double a  );
+	void accumulateSinusoid( double f, double a  );
 	void accumulateSpectrum( void );
 	double computeNoiseEnergy( double freqHz );
 	void computeSurplusEnergy( void );
@@ -99,17 +95,8 @@ private:
 	//	energy vectors, reused each associate() call:
 	std::vector< double > _spectralEnergy, _sinusoidalEnergy, _weights, _surplus;
 	
-	//	oversampled window spectrum for correcting magnitudes:
-	std::vector< double > _mainlobe;
-	
 	double _regionRate;
 	double _hzPerSamp;
-	double _windowFactor;
-	
-	//	debugging:
-#ifdef Debug_Loris
-	std::vector< double > _specCopy, _sinSpec, _residue;
-#endif
 };	// end of class AssociateBandwidth
 
 End_Namespace( Loris )

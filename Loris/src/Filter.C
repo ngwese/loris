@@ -106,7 +106,7 @@ pair< const vector< double >, const vector< double > >
 Filter::NormalCoefs( void )
 {
 	static const double gain = 4.663939184e+04;
-	static const double extraScaling = 3.;	//	was 6.
+	static const double extraScaling = 4.5;	//	was 6.
 	static const double maCoefs[] = { 1. * extraScaling / gain, 3. * extraScaling / gain, 
 									  3. * extraScaling / gain, 1. * extraScaling / gain };
 	static const double arCoefs[] = { 0.9320209046, -2.8580608586, 2.9258684252, 0. };

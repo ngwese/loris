@@ -45,7 +45,6 @@ AssociateBandwidth::AssociateBandwidth( const ReassignedSpectrum & spec,
 	_regionRate( 2./regionWidth ),
 	_hzPerSamp( srate / spec.size() )
 {
-	computeWindowSpectrum( _spectrum.window() );
 }	
 
 // ---------------------------------------------------------------------------
@@ -67,7 +66,7 @@ AssociateBandwidth::computeSurplusEnergy( void )
 	//	DC should never show up as noise: 
 	for ( int i = 1; i < _surplus.size(); ++i ) {
 		_surplus[i] = 
-			max(0., _spectralEnergy[i]-_sinusoidalEnergy[i]) / _windowFactor;
+			max(0., _spectralEnergy[i]-_sinusoidalEnergy[i]);
 	}
 }
 
@@ -191,258 +190,45 @@ AssociateBandwidth::reset( void )
 }
 
 // ---------------------------------------------------------------------------
-//	computeWindowSpectrum
-// ---------------------------------------------------------------------------
-//	
-static const long WinSpecOversample = 16;
-void
-AssociateBandwidth::computeWindowSpectrum( const vector< double > & v )
-{
-	debugger << "AssociateBandwidth oversampling window spectrum by " << WinSpecOversample << endl;
-	
-	FourierTransform ft( _spectrum.size() * WinSpecOversample );
-	load( ft, v.begin(), v.end() );
-	ft.transform();	
-
-	double peakScale = 1. / abs( ft[0] );
-	for( long i = 0; i < ft.size(); ++i ) {
-		double x = peakScale * abs( ft[i] );
-		if ( i > 0 && x > _mainlobe[i-1] ) {
-			break;
-		}
-		_mainlobe.push_back( x );
-	}
-
-	//	compute the window scale by summing the main
-	//	lobe samples (but not oversampling):
-	_windowFactor = _mainlobe[0] * _mainlobe[0];
-	for ( long j = WinSpecOversample; j < _mainlobe.size(); j += WinSpecOversample ) {
-		//	twice, because _mainlobe has only one side of
-		//	the mainlobe, and all samples but the center
-		//	(DC) sample are reflected on the other side:
-		_windowFactor += 2. * _mainlobe[j] * _mainlobe[j];
-	}
-}
-
-// ---------------------------------------------------------------------------
 //	accumulateSpectrum
 // ---------------------------------------------------------------------------
-//	Spectral energy accumulation.
+//	Spectral energy accumulation. Spectral energy is scaled by the inverse of 
+//	the energy scale, so that sinusoidal energy (in accumulateSinusoid) and 
+//	surplus energy (in computeSurplusEnergy) need not be scaled.
 //
 void 
 AssociateBandwidth::accumulateSpectrum( void )
 {
 	const int max_idx = _spectrum.size() / 2;
+	const double inverseEscale = 1. / _spectrum.energyScale();
 	for ( int i = 0; i < max_idx; ++i ) {
-		double m = _spectrum.magnitude(i);
-		distribute( i * _hzPerSamp, m * m, _spectralEnergy );
+		double m = std::abs( _spectrum[i] );
+		double espec = m * m * inverseEscale;
+		distribute( i * _hzPerSamp, espec, _spectralEnergy );
 	}
-	
-#ifdef Debug_Loris
-	_specCopy = std::vector<double>( _spectrum.size(), 0. );
-	_sinSpec = std::vector<double>( _spectrum.size(), 0. );
-	for ( int j = 0; j < _spectrum.size(); ++j ) {
-		_specCopy[j] = _spectrum.magnitude(j);
-	}
-	_residue = _specCopy;
-#endif
 }
 
 // ---------------------------------------------------------------------------
 //	accumulateSinusoid
 // ---------------------------------------------------------------------------
 //	Accumulate sinusoidal energy at frequency f and (nominal) amplitude a.
-//	First need to compute a more accurate amplitude, and use that to 
-//	scale the window spectrum when distributing energy.
-//
-//	3 Feb:
-//	- new simpler offset really gives the smallest residual
-//	- only need offset for amplitude correction, can use exact
-//		window samples for distribution by distributing around
-//		f instead of intBinNumber
-//
-//	Return corrected amp, for fun.
+//	Now using more refined amplitude estimates obtained from ReassignedSpectrum
+//	using samples of the main lobe of the analysis window spectrum.
 //	
-double
+void
 AssociateBandwidth::accumulateSinusoid( double f, double a )
 {
 	//	don't mess with negative frequencies:
 	if ( f < 0. )
-		return a;
+		return;
 
 	//	distribute weight at the peak frequency:
 	distribute( f, 1., _weights );
 	
-	double asdfg = a * a * _spectrum.energyScale();
-	distribute( f, asdfg, _sinusoidalEnergy  );
-	return a;
-	
-	//	compute the offset in the oversampled window spectrum:
-	double fracBinNum = f / _hzPerSamp;
-	long intBinNumber = round(fracBinNum);
-	int offset = round( WinSpecOversample * (intBinNumber - fracBinNum) );
-	
-	//	compute the more accurate peak amplitude:
-	//	(main lobe spectrum has been normalized so
-	//	that the zeroeth sample is 1.0)
-	double correctAmp = a / _mainlobe[abs(offset)];
-	
-	//	find the best rate to step through the 
-	//	window spectrum:
-	long step = WinSpecOversample;
-	const long minStep = 1;
-	double leastRes = -1.;
-	const long Q = 4;
-	for ( ; step > minStep; --step ) {
-		//	compute the residue at this step:
-		//	(use offset here because we are comparing
-		//	with the actual spectral samples, and 
-		//	the offset will give better measurements
-		//	of the window spectrum at those samples)
-		double specSamp = _spectrum.magnitude(intBinNumber);
-		double res = (specSamp * specSamp) - (correctAmp * correctAmp);
-		for ( int j = 1; (step * j) + abs(offset) < _mainlobe.size()/Q; ++j ) {
-			//	j FT bins above:
-			double z = correctAmp * _mainlobe[(step * j) + offset];
-			specSamp = _spectrum.magnitude(intBinNumber + j);
-			res += (specSamp * specSamp) - (z * z);
-			
-			//	j FT bins below, 
-			//	don't index bins below 0:
-			if ( intBinNumber >= j ) {
-				z = correctAmp * _mainlobe[(step * j) - offset];
-				specSamp = _spectrum.magnitude(intBinNumber - j);
-				res += (specSamp * specSamp) - (z * z);
-			}
-		}	//	end for j
-		
-		//	res is now the energy residue for
-		//	the current step, if it is worse than
-		//	the previous one, use the previous step
-		//	as the best one (assumes monotony):
-		if ( leastRes > -1. && abs(res) > leastRes ) {
-			++step;
-			break;
-		}
-		//	otherwise, this is the smallest residue yet:
-		leastRes = abs(res);
-	}	//	end for step
-	
-	
-	//	if we don't like a smaller step, maybe a bigger one would
-	//	be nice:
-	if ( step == WinSpecOversample ) {
-		const long maxStep = 2 * WinSpecOversample;
-		for ( ++step; step < maxStep; ++step ) {
-			//	compute the residue at this step:
-			//	(use offset here because we are comparing
-			//	with the actual spectral samples, and 
-			//	the offset will give better measurements
-			//	of the window spectrum at those samples)
-			double specSamp = _spectrum.magnitude(intBinNumber);
-			double res = (specSamp * specSamp) - (correctAmp * correctAmp);
-			for ( int j = 1; (step * j) + abs(offset) < _mainlobe.size()/Q; ++j ) {
-				//	j FT bins above:
-				double z = correctAmp * _mainlobe[(step * j) + offset];
-				specSamp = _spectrum.magnitude(intBinNumber + j);
-				res += (specSamp * specSamp) - (z * z);
-				
-				//	j FT bins below, 
-				//	don't index bins below 0:
-				if ( intBinNumber >= j ) {
-					z = correctAmp * _mainlobe[(step * j) - offset];
-					specSamp = _spectrum.magnitude(intBinNumber - j);
-					res += (specSamp * specSamp) - (z * z);
-				}
-			}	//	end for j
-			
-			//	res is now the energy residue for
-			//	the current step, if it is worse than
-			//	the previous one, use the previous step
-			//	as the best one (assumes monotony):
-			if ( abs(res) > leastRes ) {
-				--step;
-				break;
-			}
-			//	otherwise, this is the smallest residue yet:
-			leastRes = abs(res);
-		}	//	end for step
-	}	//	end if we didn't like a smaller step
-	
-	//	try computing a new correct amplitude
-	//	from the optimal step, then using that
-	//	amplitude and a step of WinSpecOversample:
-	#define HERE_WE_GO_AGAIN
-	#ifdef HERE_WE_GO_AGAIN
-	//	compute a better amplitude estimate 
-	//	from the step and the window function:
-	//	(I pulled this outta my butt)
-	double ampRatio = 1. - (0.5 * (1. - ((double)step / WinSpecOversample)));
-	correctAmp /= ampRatio;	
-	step = WinSpecOversample;
-	#endif
-	
-	//	distribute the peak amplitude: 
-	//	If I decide to keep this yoyo stuff, I can probably
-	//	condense the above loops with the one below.
-	double z = correctAmp;
-	#define YOYO
-	#ifndef YOYO
-	distribute( f, z * z, _sinusoidalEnergy  );
-	#else
-	double YO = z * z;
-	#endif
-	
-#ifdef Debug_Loris
-	double zz = correctAmp * _mainlobe[abs(offset)];
-	_sinSpec[ intBinNumber ] += zz;
-	_residue[ intBinNumber ] -= zz;
-#endif
-
-	//	distribute samples of the oversampled window spectrum:
-	for ( int i = 1; (step * i) + abs(offset) < _mainlobe.size(); ++i ) {
-		z = correctAmp * _mainlobe[step * i];
-		#ifndef YOYO
-		distribute( f + (i * _hzPerSamp), z * z, _sinusoidalEnergy  );
-		#else
-		YO += z * z;
-		#endif
-		
-#ifdef Debug_Loris
-		zz = correctAmp * _mainlobe[(step * i) + offset];
-		_sinSpec[ intBinNumber + i ] += zz;
-		_residue[ intBinNumber + i ] -= zz;
-#endif
-		
-		//	don't index bins below 0:
-		if ( intBinNumber >= i ) {
-			z = correctAmp * _mainlobe[step * i];
-			#ifndef YOYO
-			distribute( f - (i * _hzPerSamp), z * z, _sinusoidalEnergy  );
-			#else
-			YO += z * z;
-			#endif
-			
-#ifdef Debug_Loris
-			zz = correctAmp * _mainlobe[(step * i) - offset];
-			_sinSpec[ intBinNumber - i ] += zz;
-			_residue[ intBinNumber - i ] -= zz;
-#endif
-		}
-	}
-	
-	#ifdef YOYO
-	//	this should be the same:
-	double booger = correctAmp * correctAmp * _windowFactor;
-	distribute( f, booger, _sinusoidalEnergy  );
-	//distribute( f, YO, _sinusoidalEnergy  );
-	#endif
-
-	#ifdef HERE_WE_GO_AGAIN
-	return correctAmp;
-	#else	
-	return correctAmp / ampRatio;
-	#endif
+	//	compute energy contribution and distribute 
+	//	at frequency f:
+	double esine = a * a;
+	distribute( f, esine, _sinusoidalEnergy  );
 }
 
 // ---------------------------------------------------------------------------

@@ -292,7 +292,7 @@ Analyzer::extractPeaks( std::list< Breakpoint > & frame, double frameTime, Analy
 			double fHz = fsample * sampsToHz;
 			
 			//	itsa magnitude peak, does it clear the amplitude floor?
-			double mag = state.spectrum().correctedMagnitude( fsample, j );
+			double mag = state.spectrum().reassignedMagnitude( fsample );
 			if ( mag < threshold )
 				continue;
 			

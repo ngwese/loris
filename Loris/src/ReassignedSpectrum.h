@@ -41,12 +41,10 @@ public:
 	double energyScale(void) const { return _windowEnergyScale; }
 	
 //	reassigned spectral data access:		
-	double magnitude( unsigned long idx ) const;
 	double reassignedFrequency( unsigned long idx ) const;
 	double reassignedTime( double fracFreqSample ) const;
-	double reassignedPhase( double fracFreqSample, double timeCorrection ) const;
-	
-	double correctedMagnitude( double fracBinNum, long bin ) const;
+	double reassignedPhase( double fracFreqSample, double timeCorrection ) const;	
+	double reassignedMagnitude( double fracBinNum ) const;
 	
 	const std::complex< double > & operator[]( unsigned long idx ) const 
 		{ return _transform[idx]; }

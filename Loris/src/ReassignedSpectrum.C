@@ -205,13 +205,13 @@ ReassignedSpectrum::applyTimeRamp( vector< double > & w )
 //	Compute the spectrum of the (normal) analysis window, used to correct
 //	component magnitudes.
 //	
-static const long WinSpecOversample = 16;
+static const long OVERSAMPLE_WINDOW_SPECTRUM = 16;
 void
 ReassignedSpectrum::computeWindowSpectrum( const vector< double > & v )
 {
-	debugger << "AssociateBandwidth oversampling window spectrum by " << WinSpecOversample << endl;
+	debugger << "AssociateBandwidth oversampling window spectrum by " << OVERSAMPLE_WINDOW_SPECTRUM << endl;
 	
-	FourierTransform ft( size() * WinSpecOversample );
+	FourierTransform ft( size() * OVERSAMPLE_WINDOW_SPECTRUM );
 	load( ft, v.begin(), v.end() );
 	ft.transform();	
 
@@ -227,7 +227,7 @@ ReassignedSpectrum::computeWindowSpectrum( const vector< double > & v )
 	//	compute the window scale by summing the main
 	//	lobe samples (but not oversampling):
 	_windowEnergyScale = _mainlobe[0] * _mainlobe[0];
-	for ( long j = WinSpecOversample; j < _mainlobe.size(); j += WinSpecOversample ) {
+	for ( long j = OVERSAMPLE_WINDOW_SPECTRUM; j < _mainlobe.size(); j += OVERSAMPLE_WINDOW_SPECTRUM ) {
 		//	twice, because _mainlobe has only one side of
 		//	the mainlobe, and all samples but the center
 		//	(DC) sample are reflected on the other side:
@@ -341,77 +341,87 @@ ReassignedSpectrum::reassignedTime( double fracFreqSample ) const
 }
 
 // ---------------------------------------------------------------------------
-//	magnitude
+//	reassignedMagnitude
 // ---------------------------------------------------------------------------
-//	The magnitude isn't reassigned, its just scaled to 
-//	account for the transform window. It is also evalutated
-//	at a specified sample index, rather than a fractional sample,
-//	becuase the latter would cause misleading (large) magnitudes
-//	to be reported at points of large frequency correction.
+//	The magnitude is "reassigned" only in the sense that it is corrected to
+//	account for the frequency reassignment used to obtain the fractional
+//	bin frequency estimate, fracBinNum.
 //
+//	Two magnitude corrections are performed. First, the oversampled window
+//	spectrum is used to estimate the amplitude based on the difference between
+//	fracBinNum and the nearest bin (peak) frequency. Next, the shape of the
+//	spectrum in the vicinity of the peak is examined for signs of stretching
+//	or squishing (which can be caused by non-stationary frequency components).
+//	An add-hoc scale factor (found empirically by examining chirp analyses) is 
+//	applied to arrive at the final amplitude estimate.
+//	
 double
-ReassignedSpectrum::magnitude( unsigned long idx ) const
-{
-//#define __parab
-#ifndef __parab
-	return magnitudeScale() * abs( _transform[ idx ] );
-#else
-	//	parabola thing:
-	double dbLeft = 20. * log10( abs( _transform[idx-1] ) );
-	double dbCandidate = 20. * log10( abs( _transform[idx] ) );
-	double dbRight = 20. * log10( abs( _transform[idx+1] ) );
-	
-	double peakXOffset = 0.5 * (dbLeft - dbRight) /
-						 (dbLeft - 2.0 * dbCandidate + dbRight);
-	double dbmag = dbCandidate - 0.25 * (dbLeft - dbRight) * peakXOffset;
-	return _magScale * pow( 10., 0.05 * dbmag );
-#endif
-}
-
-// ---------------------------------------------------------------------------
-//	correctedMagnitude
-// ---------------------------------------------------------------------------
-//	f is fractional bin number.
-double
-ReassignedSpectrum::correctedMagnitude( double fracBinNum, long bin ) const
+ReassignedSpectrum::reassignedMagnitude( double fracBinNum ) const
 {
 	Assert( fracBinNum >= 0. );
 	
+//#define SMITHS_INGENEOUS_PARABOLAS
+#ifndef SMITHS_INGENEOUS_PARABOLAS
+
 	//	compute the offset in the oversampled window spectrum:
-	double a = magnitude(bin);
 	long intBinNumber = round(fracBinNum);
-	long offset = round( WinSpecOversample * (intBinNumber - fracBinNum) );
 	
-	//	compute the more accurate peak amplitude:
+#if Debug_Loris
+	//	sanity:
+	//	we are all screwed up if intBinNumber isn't a peak:
+	Assert( abs(_transform[ intBinNumber ]) > abs(_transform[ intBinNumber+1 ]) &&
+			abs(_transform[ intBinNumber ]) > abs(_transform[ intBinNumber-1 ]) );
+#endif
+	
+	double a = magnitudeScale() * abs( _transform[ intBinNumber ] );
+	long offset = round( OVERSAMPLE_WINDOW_SPECTRUM * (intBinNumber - fracBinNum) );
+	
+	//	compute a more accurate peak amplitude from
+	//	samples of the window's main lobe:
 	//	(main lobe spectrum has been normalized so
 	//	that the zeroeth sample is 1.0)
 	double correctAmp = a / _mainlobe[abs(offset)];
 	
-	//	find the best rate to step through the 
-	//	window spectrum:
-	long step = WinSpecOversample;
-	const long minStep = 1;
+	//	estimate main lobe stretching or squishing
+	//	by finding the step rate that gives the
+	//	best match (least residue) for the main lobe:
+	//	start at the step corresponding to no stretching 
+	//	or squishing and assume monotonicity:
+	long step = OVERSAMPLE_WINDOW_SPECTRUM;
+	//	step must be at least 1:	
+	const long minStep = 1;	
+	//	only examine the middle of 
+	//	the main lobe:
+	const long maxMainlobeIndex = _mainlobe.size() / 4;	
+	
+	//	initialize residue:
 	double leastRes = -1.;
-	const long Q = 4;
-	for ( ; step > minStep; --step ) {
+	for ( ; step > minStep; --step ) 
+	{
 		//	compute the residue at this step:
 		//	(use offset here because we are comparing
 		//	with the actual spectral samples, and 
 		//	the offset will give better measurements
 		//	of the window spectrum at those samples)
-		double specSamp = magnitude(intBinNumber);
+		double specSamp = magnitudeScale() * abs( _transform[ intBinNumber ] );
 		double res = (specSamp * specSamp) - (correctAmp * correctAmp);
-		for ( int j = 1; (step * j) + abs(offset) < _mainlobe.size()/Q; ++j ) {
-			//	j FT bins above:
-			double z = correctAmp * _mainlobe[(step * j) + offset];
-			specSamp = magnitude(intBinNumber + j);
-			res += (specSamp * specSamp) - (z * z);
+		for ( int j = 1; (step * j) + abs(offset) < maxMainlobeIndex; ++j ) 
+		{
+			//	j FT bins above, 
+			//	don't index bins above Nyquist:
+			if ( intBinNumber < size() / 2 ) 
+			{
+				double z = correctAmp * _mainlobe[(step * j) + offset];
+				specSamp = magnitudeScale() * abs( _transform[ intBinNumber+j ] );
+				res += (specSamp * specSamp) - (z * z);
+			}
 			
 			//	j FT bins below, 
 			//	don't index bins below 0:
-			if ( intBinNumber >= j ) {
-				z = correctAmp * _mainlobe[(step * j) - offset];
-				specSamp = magnitude(intBinNumber - j);
+			if ( intBinNumber >= j ) 
+			{
+				double z = correctAmp * _mainlobe[(step * j) - offset];
+				specSamp = magnitudeScale() * abs( _transform[ intBinNumber-j ] );
 				res += (specSamp * specSamp) - (z * z);
 			}
 		}	//	end for j
@@ -420,7 +430,8 @@ ReassignedSpectrum::correctedMagnitude( double fracBinNum, long bin ) const
 		//	the current step, if it is worse than
 		//	the previous one, use the previous step
 		//	as the best one (assumes monotony):
-		if ( leastRes > -1. && abs(res) > leastRes ) {
+		if ( leastRes > -1. && abs(res) > leastRes ) 
+		{
 			++step;
 			break;
 		}
@@ -431,27 +442,34 @@ ReassignedSpectrum::correctedMagnitude( double fracBinNum, long bin ) const
 	
 	//	if we don't like a smaller step, maybe a bigger one would
 	//	be nice:
-	if ( step == WinSpecOversample ) {
-		const long maxStep = 2 * WinSpecOversample;
-		for ( ++step; step < maxStep; ++step ) {
+	if ( step == OVERSAMPLE_WINDOW_SPECTRUM ) {
+		const long maxStep = 2 * OVERSAMPLE_WINDOW_SPECTRUM;
+		for ( ++step; step < maxStep; ++step ) 
+		{
 			//	compute the residue at this step:
 			//	(use offset here because we are comparing
 			//	with the actual spectral samples, and 
 			//	the offset will give better measurements
 			//	of the window spectrum at those samples)
-			double specSamp = magnitude(intBinNumber);
+			double specSamp = magnitudeScale() * abs( _transform[ intBinNumber ] );
 			double res = (specSamp * specSamp) - (correctAmp * correctAmp);
-			for ( int j = 1; (step * j) + abs(offset) < _mainlobe.size()/Q; ++j ) {
-				//	j FT bins above:
-				double z = correctAmp * _mainlobe[(step * j) + offset];
-				specSamp = magnitude(intBinNumber + j);
-				res += (specSamp * specSamp) - (z * z);
+			for ( int j = 1; (step * j) + abs(offset) < maxMainlobeIndex; ++j ) 
+			{
+				//	j FT bins above, 
+				//	don't index bins above Nyquist:
+				if ( intBinNumber < size() / 2 ) 
+				{
+					double z = correctAmp * _mainlobe[(step * j) + offset];
+					specSamp = magnitudeScale() * abs( _transform[ intBinNumber+j ] );
+					res += (specSamp * specSamp) - (z * z);
+				}
 				
 				//	j FT bins below, 
 				//	don't index bins below 0:
-				if ( intBinNumber >= j ) {
-					z = correctAmp * _mainlobe[(step * j) - offset];
-					specSamp = magnitude(intBinNumber - j);
+				if ( intBinNumber >= j ) 
+				{
+					double z = correctAmp * _mainlobe[(step * j) - offset];
+					specSamp = magnitudeScale() * abs( _transform[ intBinNumber-j ] );
 					res += (specSamp * specSamp) - (z * z);
 				}
 			}	//	end for j
@@ -460,7 +478,8 @@ ReassignedSpectrum::correctedMagnitude( double fracBinNum, long bin ) const
 			//	the current step, if it is worse than
 			//	any previous one, use the previous step
 			//	as the best one (assumes monotony):
-			if ( abs(res) > leastRes ) {
+			if ( abs(res) > leastRes ) 
+			{
 				--step;
 				break;
 			}
@@ -471,13 +490,28 @@ ReassignedSpectrum::correctedMagnitude( double fracBinNum, long bin ) const
 	
 	//	try computing a new correct amplitude
 	//	from the optimal step, then using that
-	//	amplitude and a step of WinSpecOversample:
+	//	amplitude and a step of OVERSAMPLE_WINDOW_SPECTRUM:
 	//	compute a better amplitude estimate 
 	//	from the step and the window function:
 	//	(I pulled this outta my butt)
-	double ampRatio = 1. - (0.5 * (1. - ((double)step / WinSpecOversample)));
+	double ampRatio = 1. - (0.5 * (1. - ((double)step / OVERSAMPLE_WINDOW_SPECTRUM)));
 	correctAmp /= ampRatio;	
 	return correctAmp;
+
+#else	
+	//	defined SMITHS_INGENEOUS_PARABOLAS
+	//	keep this parabolic interpolation computation around
+	//	only for sake of comparison, it is unlikely to yield
+	//	good results with bandwidth association:
+	double dbLeft = 20. * log10( abs( _transform[idx-1] ) );
+	double dbCandidate = 20. * log10( abs( _transform[idx] ) );
+	double dbRight = 20. * log10( abs( _transform[idx+1] ) );
+	
+	double peakXOffset = 0.5 * (dbLeft - dbRight) /
+						 (dbLeft - 2.0 * dbCandidate + dbRight);
+	double dbmag = dbCandidate - 0.25 * (dbLeft - dbRight) * peakXOffset;
+	return magnitudeScale() *  * pow( 10., 0.05 * dbmag );
+#endif	//	defined SMITHS_INGENEOUS_PARABOLAS
 }
 
 // ---------------------------------------------------------------------------
