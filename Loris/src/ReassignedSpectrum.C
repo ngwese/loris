@@ -35,27 +35,23 @@
 	#include <config.h>
 #endif
 
-#include<ReassignedSpectrum.h>
-#include<Notifier.h>
-#include<Exception.h>
+#include <ReassignedSpectrum.h>
+#include <Notifier.h>
+#include <Exception.h>
 #include <algorithm>
 #include <cstdlib>	//	for std::abs()
 
-
 #if defined(HAVE_M_PI) && (HAVE_M_PI)
-	#include <cmath>	//	for M_PI (except on Mac)
+	#include <cmath>	//	for M_PI (except when its not there)
 	const double Pi = M_PI;
 #else
 	const double Pi = 3.14159265358979324;
 #endif
 
-#if defined(Debug_Loris)
-#include <stdio.h>
-#endif
-
-
-#if defined(Debug_Loris)
-#include <stdio.h>
+// old quadratic interpolation code is still around, in case
+// we ever want o use it for comparison, Lemur used to use that.
+#if defined(Like_Lemur)
+#define SMITHS_BRILLIANT_PARABOLAS
 #endif
 
 //	there's a freakin' ton of std in here, 
@@ -75,7 +71,7 @@ buildReassignmentWindow( RealWinIter winbegin, RealWinIter winend,
 //	ReassignedSpectrum constructor
 // ---------------------------------------------------------------------------
 //	Transform lengths are the smallest power of two greater than twice the
-//	window length. The noise floor is specified in dB (negative).
+//	window length.
 //
 ReassignedSpectrum::ReassignedSpectrum( const std::vector< double > & window ) :
 	_transform( 1 << long( 1 + ceil( log((double)window.size()) / log(2.)) ) ),
@@ -84,7 +80,18 @@ ReassignedSpectrum::ReassignedSpectrum( const std::vector< double > & window ) :
 	_rawindow( window.size(), 0. )
 {
 	buildReassignmentWindow( _window.begin(), _window.end(), _rawindow.begin(), _transform.size() );
-	computeWindowSpectrum( _window );
+	
+	//	compute the appropriate scale factor
+	//	to report correct component magnitudes:
+	double winsum = 0;
+	for ( int i = 0; i < _window.size(); ++i ) {
+		winsum += _window[i];
+	}
+	_windowMagnitudeScale = 2. / winsum;
+	
+	debugger << "ReassignedSpectrum: length is " << _transform.size()
+			 << " mag scale is " << _windowMagnitudeScale << endl;
+
 }
 
 // ---------------------------------------------------------------------------
@@ -161,57 +168,6 @@ ReassignedSpectrum::transform( const double * sampsBegin, const double * sampCen
 }
 
 // ---------------------------------------------------------------------------
-//	computeWindowSpectrum
-// ---------------------------------------------------------------------------
-//	Compute the spectrum of the (normal) analysis window, used to correct
-//	component magnitudes.
-//	
-static const long OVERSAMPLE_WINDOW_SPECTRUM = 16;
-void
-ReassignedSpectrum::computeWindowSpectrum( const vector< double > & v )
-{
-	//	compute the appropriate scale factor
-	//	to report correct component magnitudes:
-	double winsum = 0;
-	for ( int i = 0; i < _window.size(); ++i ) {
-		winsum += _window[i];
-	}
-	_windowMagnitudeScale = 2. / winsum;
-	
-	debugger << "ReassignedSpectrum: length is " << _transform.size()
-			 << " mag scale is " << magnitudeScale() << endl;
-
-	//	now do the energy scale:
-	debugger << "AssociateBandwidth oversampling window spectrum by " << OVERSAMPLE_WINDOW_SPECTRUM << endl;
-	
-	FourierTransform ft( size() * OVERSAMPLE_WINDOW_SPECTRUM );
-	FourierTransform::iterator it = 
-		std::copy( v.begin(), v.end(), ft.begin() );
-	std::fill( it, ft.end(), 0. );
-	ft.transform();	
-
-	double peakScale = 1. / abs( ft[0] );
-	for( long i = 0; i < ft.size(); ++i ) {
-		double x = peakScale * abs( ft[i] );
-		if ( i > 0 && x > _mainlobe[i-1] ) {
-			break;
-		}
-		_mainlobe.push_back( x );
-	}
-
-	//	compute the window scale by summing the main
-	//	lobe samples (but not oversampling):
-	double sqrSum = _mainlobe[0] * _mainlobe[0];
-	for ( long j = OVERSAMPLE_WINDOW_SPECTRUM; j < _mainlobe.size(); j += OVERSAMPLE_WINDOW_SPECTRUM ) {
-		//	twice, because _mainlobe has only one side of
-		//	the mainlobe, and all samples but the center
-		//	(DC) sample are reflected on the other side:
-		sqrSum += 2. * _mainlobe[j] * _mainlobe[j];
-	}
-	_windowEnergyScale = 1. / sqrSum;
-}
-
-// ---------------------------------------------------------------------------
 //	frequencyCorrection
 // ---------------------------------------------------------------------------
 //	Equation 14 from the Trans ASP correspondence.
@@ -220,12 +176,15 @@ ReassignedSpectrum::computeWindowSpectrum( const vector< double > & v )
 //	sample is the frequency sample index, the nominal component 
 //	frequency in samples. 
 //
-//	Parabolic interpolation can be tried too, but it appears to give
-//	slightly worse results for the square wave.
+//	Parabolic interpolation can be tried too (see reassignedFrequency()) 
+//	but it appears to give slightly worse results, for example, with 
+//	a square wave.
 //
-inline double 
-ReassignedSpectrum::compute_freq_correction( unsigned long idx ) const
+double
+ReassignedSpectrum::frequencyCorrection( long idx ) const
 {
+	Assert( idx >= 0 );
+	
 	long flip_idx;
 	if (idx>0)
 		flip_idx = _ratransform.size() - idx;
@@ -242,60 +201,6 @@ ReassignedSpectrum::compute_freq_correction( unsigned long idx ) const
 	double magSquared = std::norm( _transform[idx] );
 
 	return - num / magSquared;
-}
-
-double
-ReassignedSpectrum::frequencyCorrection( long idx ) const
-{
-	Assert( idx >= 0 );
-	
-	double correction = compute_freq_correction(idx);
-				
-	// 	if the correction is greater in magnitude than
-	// 	half a bin, then we might be able to find a better
-	//	estimate looking at the next frequency sample:
-	//
-	//	This may or may not be a good idea, but we
-	//	don't know of any problem that it solves, and
-	//	it certainly is not the normal way to use reassigned
-	//	frequency data, so it is being disabled.
-	//	-kel (and Lip) 19 March 2003
-	//
-#if 0
-	if ( std::fabs( correction ) > 0.5 )
-	{
-		int idxincr = (correction>0)?(1):(-1);
-		int nextidx = idx;
-		double bestEstimate = 0;
-		
-		// 	INVARIANT:
-		//	correction is the current smallest-magnitude
-		//	frequency correction we have seen, and it was
-		//	computed at nextidx.
-		do
-		{
-			// 	save the best estimate, and try
-			//	to find a better one at the next bin:
-			bestEstimate = correction;
-			nextidx += idxincr;
-			correction = compute_freq_correction(nextidx);
-		} while( std::fabs(correction) < std::fabs(bestEstimate) );
-				
-		// 	yik!!
-		// 	the final correction is the smallest-magnitude
-		//	correction we can find, plus the difference between
-		//	the best estimate's index, and the original index
-		correction = (double(nextidx) - (double)idx - (double)idxincr) + bestEstimate;
-		
-		/*if ( nextidx - idxincr !=  idx )
-		{
-			notifier << "prefered " << correction << " to " << compute_freq_correction(idx) << endl;
-			notifier << "\ttime correction is " << timeCorrection( idx ) << endl;
-		}*/
-	}
-#endif
-	
-	return correction;
 }
 
 // ---------------------------------------------------------------------------
@@ -344,14 +249,12 @@ ReassignedSpectrum::timeCorrection( long idx ) const
 double
 ReassignedSpectrum::reassignedFrequency( unsigned long idx ) const
 {
-#if defined(Like_Lemur)
-#define SMITHS_BRILLIANT_PARABOLAS
-#endif
-
 #if ! defined(SMITHS_BRILLIANT_PARABOLAS)
+
 	return double(idx) + frequencyCorrection( idx );
 	
 #else // defined(SMITHS_BRILLIANT_PARABOLAS)
+
 	double dbLeft = 20. * log10( abs( _transform[idx-1] ) );
 	double dbCandidate = 20. * log10( abs( _transform[idx] ) );
 	double dbRight = 20. * log10( abs( _transform[idx+1] ) );
@@ -379,140 +282,32 @@ ReassignedSpectrum::reassignedTime( unsigned long idx ) const
 // ---------------------------------------------------------------------------
 //	reassignedMagnitude
 // ---------------------------------------------------------------------------
-//	The magnitude is "reassigned" only in the sense that it is corrected to
-//	account for the frequency reassignment used to obtain the fractional
-//	bin frequency estimate, fracBinNum.
-//
-//	Two magnitude corrections are performed. First, the oversampled window
-//	spectrum is used to estimate the amplitude based on the difference between
-//	fracBinNum and the peak bin frequency, peakBinNumber. Next, the shape of the
-//	spectrum in the vicinity of the peak is examined for signs of stretching
-//	or squishing (which can be caused by non-stationary frequency components).
-//	An add-hoc scale factor (found empirically by examining chirp analyses) is 
-//	applied to arrive at the final amplitude estimate. Formerly, we allowed
-//	main lobe squishing (narrowing, with an amplitude overestimation), but 
-//	lacking any explanation for that kind of behavior, that part of the algorithm
-// 	has been eliminated. 
-//
+//	The magnitude is not "reassigned", it is only scaled to account for
+//	the analysis window. 
+//	
+//	Two magnitude corrections that used to be performed have been removed:
+//	- main lobe oversampling to improve magnitude estimates
+//	- ad-hoc chirp correction
+
 //	peakBinNumber may not (often is not, except for very well-behaved sounds)
 //	be the nearest integer bin number to fracBinNum, so it has to be passed 
-//	in separately. Large frequency corrections may cause other problems too,
-//	see below.
+//	in separately. fracBinNum is no longer used, we just use the peak magnitude.
 //	
 double
 ReassignedSpectrum::reassignedMagnitude( double fracBinNum, long peakBinNumber ) const
 {
-#if Debug_Loris
-	//	sanity:
-	//	we are all screwed up if peakBinNumber isn't a peak:
-	Assert( abs(_transform[ peakBinNumber ]) > abs(_transform[ peakBinNumber+1 ]) &&
-			abs(_transform[ peakBinNumber ]) > abs(_transform[ peakBinNumber-1 ]) );
-#endif
+	// 	don't need to check fracBinNum since we don't use it,
+	//	could check peakBinNumber though:
+	if( peakBinNumber < 0 )
+		Throw( InvalidArgument, "fractional bin number must be non-negative in reassignedMagnitude" );
 
-	Assert( fracBinNum >= 0. );
-
-#if defined(Like_Lemur)
-#define SMITHS_INGENEOUS_PARABOLAS
-#endif
-
-#if ! defined(SMITHS_INGENEOUS_PARABOLAS)
+#if ! defined(SMITHS_BRILLIANT_PARABOLAS)
 	
 	//	compute the nominal spectral amplitude by scaling
 	//	the peak spectral sample:
-	double a = magnitudeScale() * abs( _transform[ peakBinNumber ] );
-	return a;
+	return _windowMagnitudeScale * abs( _transform[ peakBinNumber ] );
 	
-	//	compute the offset in the oversampled window spectrum:
-	//	(cheapo rounding)
-	long offset = long((OVERSAMPLE_WINDOW_SPECTRUM * (peakBinNumber - fracBinNum)) + 0.5);
-	
-	//	if the offset is very large, corresponding to 
-	//	a very large frequency correction (larger than,
-	//	say, half the main lobe width), clamp the 
-	//	amplitude rather than letting it get huge:
-	if ( abs(offset) >= _mainlobe.size() * 0.5 )
-	{
-		return a / _mainlobe[_mainlobe.size() / 2];
-	}
-
-	//	compute a more accurate peak amplitude from
-	//	samples of the window's main lobe:
-	//	(main lobe spectrum has been normalized so
-	//	that the zeroeth sample is 1.0)
-	double correctAmp = a / _mainlobe[abs(offset)];
-	
-	//	estimate main lobe stretching by finding the step 
-	//	rate that gives the best match (least residue) for 
-	//	the main lobe, starting at the step corresponding 
-	//	to no stretching and assuming monotonicity:
-	//
-	//	(this only makes sense when the offset (and frequency
-	//	correction) are small)
-	if ( abs(offset) > OVERSAMPLE_WINDOW_SPECTRUM )
-	{
-		return correctAmp;
-	}
-	
-	long step = OVERSAMPLE_WINDOW_SPECTRUM;
-	//	step must be at least 1:	
-	const long minStep = 1;	
-	//	only examine the middle of the main lobe:
-	const long maxMainlobeIndex = _mainlobe.size() / 2;	
-	
-	//	initialize residue:
-	double leastRes = -1.;
-	for ( ; step > minStep; --step ) 
-	{
-		//	compute the residue at this step:
-		//	(use offset here because we are comparing
-		//	with the actual spectral samples, and 
-		//	the offset will give better measurements
-		//	of the window spectrum at those samples)
-		double specSamp = magnitudeScale() * abs( _transform[ peakBinNumber ] );
-		double res = (specSamp * specSamp) - (correctAmp * correctAmp);
-		for ( int j = 1; (step * j) + abs(offset) < maxMainlobeIndex; ++j ) 
-		{
-			//	j FT bins above, 
-			//	don't index bins above Nyquist:
-			if ( peakBinNumber+j < size() / 2 ) 
-			{
-				double z = correctAmp * _mainlobe[(step * j) + offset];
-				specSamp = magnitudeScale() * abs( _transform[ peakBinNumber+j ] );
-				res += (specSamp * specSamp) - (z * z);
-			}
-			
-			//	j FT bins below, 
-			//	don't index bins below 0:
-			if ( peakBinNumber >= j ) 
-			{
-				double z = correctAmp * _mainlobe[(step * j) - offset];
-				specSamp = magnitudeScale() * abs( _transform[ peakBinNumber-j ] );
-				res += (specSamp * specSamp) - (z * z);
-			}
-		}	//	end for j
-		
-		//	res is now the energy residue for
-		//	the current step, if it is worse than
-		//	the previous one, use the previous step
-		//	as the best one (assumes monotony):
-		if ( leastRes > -1. && abs(res) > leastRes ) 
-		{
-			++step;
-			break;
-		}
-		//	otherwise, this is the smallest residue yet:
-		leastRes = abs(res);
-	}	//	end for step
-	
-	//	massage the amplitude as a (ad hoc) function
-	//	of the ratio between the optimal step and the
-	//	oversampling function (this was found to be 
-	//	pretty good for chirps):
-	double ampRatio = 1. - (0.5 * (1. - ((double)step / OVERSAMPLE_WINDOW_SPECTRUM)));
-	correctAmp /= ampRatio;	
-	return correctAmp;
-
-#else // defined(SMITHS_INGENEOUS_PARABOLAS)
+#else // defined(SMITHS_BRILLIANT_PARABOLAS)
 	
 	//	keep this parabolic interpolation computation around
 	//	only for sake of comparison, it is unlikely to yield
@@ -524,11 +319,11 @@ ReassignedSpectrum::reassignedMagnitude( double fracBinNum, long peakBinNumber )
 	double peakXOffset = 0.5 * (dbLeft - dbRight) /
 						 (dbLeft - 2.0 * dbCandidate + dbRight);
 	double dbmag = dbCandidate - 0.25 * (dbLeft - dbRight) * peakXOffset;
-	double x = magnitudeScale() * pow( 10., 0.05 * dbmag );
+	double x = _windowMagnitudeScale * pow( 10., 0.05 * dbmag );
 	
 	return x;
 	
-#endif	//	defined SMITHS_INGENEOUS_PARABOLAS
+#endif	//	defined SMITHS_BRILLIANT_PARABOLAS
 }
 
 // ---------------------------------------------------------------------------

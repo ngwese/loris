@@ -39,7 +39,6 @@
 //	begin namespace
 namespace Loris {
 
-
 // ---------------------------------------------------------------------------
 //	class ReassignedSpectrum
 //
@@ -57,12 +56,8 @@ private:
 	std::vector< double > _window;
 	std::vector< std::complex< double > > _rawindow;
 	
-	//	oversampled window spectrum for correcting magnitudes:
-	std::vector< double > _mainlobe;
-
 	//	scale factors for correcting magnitudes:
 	double _windowMagnitudeScale;	
-	double _windowEnergyScale;	
 	
 //	-- public interface --
 public:
@@ -94,16 +89,6 @@ public:
 	double frequencyCorrection( long sample ) const;
 	double timeCorrection( long sample ) const;
 	
-//	-- internal helpers --
-private:
-	double magnitudeScale(void) const { return _windowMagnitudeScale; }
-	/// double energyScale(void) const { return _windowEnergyScale; }
-	//	compute the window spectrum used to correct
-	//	spectral component magnitudes:
-	void computeWindowSpectrum( const std::vector< double > & v );
-	
-	double compute_freq_correction( unsigned long idx ) const;
-
 };	//	end of class ReassignedSpectrum
 
 }	//	end of namespace Loris
