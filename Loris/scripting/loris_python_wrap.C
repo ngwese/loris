@@ -33,7 +33,7 @@
  * and things like that.
  *
  * $Log$
- * Revision 1.3  2000/11/20 09:54:40  kfitz
+ * Revision 1.4  2000/11/20 09:57:26  kfitz
  * g++ is lacking!
  *
  ************************************************************************/
@@ -3707,7 +3707,8 @@ static PyObject *_wrap_SampleVector_clear(PyObject *self, PyObject *args) {
 }
 
 static double  SampleVector_getAt(SampleVector *self,unsigned long  idx) {
-		return self->at(idx);
+		// return self->at(idx);	//	g++ doesn't implement at()?
+		return (*self)[idx];
 	}
 static PyObject *_wrap_SampleVector_getAt(PyObject *self, PyObject *args) {
     PyObject * _resultobj;
@@ -3760,7 +3761,8 @@ static PyObject *_wrap_SampleVector_getAt(PyObject *self, PyObject *args) {
 }
 
 static void  SampleVector_setAt(SampleVector *self,unsigned long  idx,double  x) {
-		self->at(idx) = x;
+		// self->at(idx) = x;	//	g++ doesn't implement at()?
+		(*self)[idx] = x;
 	}
 static PyObject *_wrap_SampleVector_setAt(PyObject *self, PyObject *args) {
     PyObject * _resultobj;
