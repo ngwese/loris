@@ -24,31 +24,26 @@
 //	samples in just the beginning of the window), it would be nice to support it
 //	it at both ends (i.e. samples just at the end of the window).
 //
-//	-kel 7 Dec 99
+//	HEY this fftw stuff uses int for transform size, better hope its four bytes!
+//
+//	-kel 14 Feb 00
 //
 // ===========================================================================
 #include "FourierTransform.h"
 #include "Exception.h"
-#include "fft.h"
-//#include "AiffFile.h"	//	for debugging only
-
+#include "Notifier.h"
 #include "fftw.h"
 
 using namespace std;
-
-Begin_Namespace( Loris )
+using namespace Loris;
 
 // ---------------------------------------------------------------------------
 //	FourierTransform constructor
 // ---------------------------------------------------------------------------
 //
-FourierTransform::FourierTransform( unsigned long len ) :
-	_z( len ),
-	_revBinaryTable( len )
+FourierTransform::FourierTransform( long len ) :
+	_z( len, complex<double>(0.,0.) )
 {
-	//	this will except if len is not 
-	//	a power of two:
-	fillReverseBinaryTable();
 }
 
 // ---------------------------------------------------------------------------
@@ -75,30 +70,32 @@ FourierTransform::transform( const vector< double > & buf )
 //
 void
 FourierTransform::transform( void )
-#define __use_fftw__
-#ifdef _use_fftw__
 {
-//	try using FFTW for Fourier transforms:
 //	setup fft buffers:
 	static long bufsize = 0;
 	static fftw_complex * fftwIn = Null;
 	static fftw_complex * fftwOut = Null;
-	static fftw_plan plan;
+	static fftw_plan plan = Null;	//	this is stupidity, fftw_plan is a pointer type
+									// 	unknown whether you can destroy an uninitialized
+									//	plan, seems unlikely.
 	
 	if ( bufsize != size() ) {
 		try {
-			delete[] fftwIN;
+			debugger << "FFTW planing for size " << size() << endl;
+			delete[] fftwIn;
 			fftwIn = Null;	//	to prevent deleting again
 			delete[] fftwOut;
 			fftwOut = Null;	//	to prevent deleting again
 			bufsize = 0;
-			real = new fftw_complex[ size() ];
-			imag = new fftw_complex[ size() ];
+			if ( plan ) 
+				fftw_destroy_plan( plan );
+			fftwIn = new fftw_complex[ size() ];
+			fftwOut = new fftw_complex[ size() ];
 			bufsize = size();
-			fftw_create_plan_specific(bufsize, -1,
-                                    FFTW_ESTIMATE,
-                                    fftwIn, 1,
-                                    fftwOut, 1); 
+			plan = fftw_create_plan_specific( bufsize, FFTW_FORWARD,
+											  FFTW_ESTIMATE,
+											  fftwIn, 1,
+											  fftwOut, 1); 
 		}
 		catch( LowMemException & ex ) {
 			bufsize = 0;
@@ -106,18 +103,18 @@ FourierTransform::transform( void )
 			fftwIn = Null;	//	to prevent deleting again
 			delete[] fftwOut;
 			fftwOut = Null;	//	to prevent deleting again
-			ex.append( "couldn't prepare FFTW." );
+			ex.append( "couldn't prepare FourierTransform." );
 			throw;
 		}
 	}
 //	copy input into fftw buffers:
 	for ( long i = 0; i < size(); ++i ) {
-		fftIn[i].re = _z[i].real();
-		fftIn[i].im = _z[i].imag();
+		fftwIn[i].re = _z[i].real();
+		fftwIn[i].im = _z[i].imag();
 	}
 	
 //	cruch:	
-	fftw_one( plan, fftwIn, fftOut );
+	fftw_one( plan, fftwIn, fftwOut );
 	
 //	copy output into complex buffer:
 	for ( long i = 0; i < size(); ++i ) {
@@ -125,22 +122,6 @@ FourierTransform::transform( void )
 	}
 	
 }
-#else
-{
-//	permute input to reverse binary order:
-	for ( long i = 0; i < size(); ++i ) {
-		//	only swap once:
-		if ( _revBinaryTable[i] > i ) {	
-			swap( _z[i], _z[ _revBinaryTable[i] ] );
-		}
-	} 
-	
-//	do decimation-in-time butterfly steps:
-	for ( long span = 1;  span < size();  span = span * 2 ) {
-		decimationStep( span );
-	}
-}
-#endif
 
 // ---------------------------------------------------------------------------
 //	load
@@ -201,72 +182,4 @@ FourierTransform::loadAndRotate( const vector< double > & buf )
 			  buf.begin() + (_z.size() / 2),
 			  _z.begin() + (_z.size() / 2) );
 	}
-/*
-	vector< double > v( _z.size() );
-	struct dick {
-		double operator()( const complex<double> & c ) { return c.real(); }
-	};
-	std::transform( _z.begin(), _z.end(), v.begin(), dick() );
-	AiffFile a( 44100., 1, 16, v );
-	a.write("ftbuffer.aiff");
-*/
 }
-
-// ---------------------------------------------------------------------------
-//	fillReverseBinaryTable
-// ---------------------------------------------------------------------------
-//	Except if the length is not a power of two.
-//
-void
-FourierTransform::fillReverseBinaryTable( void )
-{
-	//	compute log length:
-	long len = _revBinaryTable.size();
-	long loglen, n;
-	for ( loglen = 1, n = 2; n != len; ++loglen, n = n << 1 ) {
-		if ( n > len )
-			Throw( InvalidObject, "FourierTransform length must be a power of two." );
-	}
-	
-	//	fill the table:
-	for (long i = 0; i < len; ++i) {
-		_revBinaryTable[i] = 0;
-
-		for (long j = 0; j < loglen; ++j) {
-			// get the jth bit and make it the Size-j th bit 
-			long temp = ((1 << j) & i) >> j;
-			_revBinaryTable[i] |= (temp << loglen - j - 1);
-		}
-	}
-}
-
-// ---------------------------------------------------------------------------
-//	decimationStep
-// ---------------------------------------------------------------------------
-//	Perform one step of the decimation-in-time butterfly algorithm
-//	for length a power of 2. The input is assumed to be permuted
-//	to reverse binary order.
-//
-void
-FourierTransform::decimationStep( long span )
-{
-	const long twospan	= span * 2;
-	const double dangle = Pi / span;
-	
-	long i;
-	double angle;
-	for ( i = 0, angle = 0.0;  i < span;  ++i, angle += dangle ) {
-		//	negative angle agrees with the O&S definition 
-		//	of the complex exponential W.
-		//	(also it appears to give the right results)
-		complex< double > W = polar( 1., - angle );
-		
-		for ( long j = i;  j < size();  j += twospan ) {	
-			complex< double > temp( _z[j + span] * W );				
-			_z[j + span] = _z[j] - temp;
-			_z[j] += temp;
-		}
-	}
-}
-
-End_Namespace( Loris )

@@ -9,7 +9,7 @@
 #include "ReassignedSpectrum.h"
 #include "Notifier.h"
 
-#include "AiffFile.h"	//	for debugging only
+using namespace std;
 
 Begin_Namespace( Loris )
 
@@ -121,28 +121,33 @@ ReassignedSpectrum::applyFreqRamp( vector< double > & w )
 {
 	//	we're going to do the frequency-domain ramp 
 	//	by Fourier transforming the window, ramping,
-	//	then transforming again. Can reuse the FT
-	//	we already have.
+	//	then transforming again. 
+	//	Use a transform exactly as long as the window.
 	//	load, w/out rotation, and transform.
-	_transform.load( w );
-	_transform.transform();
+	FourierTransform temp( w.size() );
+	temp.load( w );
+	temp.transform();
 	
 	//	extract complex transform and multiply by
 	//	a frequency (sample) ramp:
 	//	(the frequency ramp goes from 0 to N/2
 	//	over the first half, then -N/2 to 0 over 
-	//	the second (aliased) half of the transform)
-	for ( int k = 0 ; k < _transform.size(); ++k ) {
-		if ( k < _transform.size() / 2 ) {
-			_transform[ k ] *= k;
+	//	the second (aliased) half of the transform,
+	//	and has to be scaled by the ratio of the 
+	//	transform lengths, so that k spans the length
+	//	of the padded transforms, N)
+	double lenRatio = (double)_transform.size() / temp.size();
+	for ( int k = 0 ; k < temp.size(); ++k ) {
+		if ( k < temp.size() / 2 ) {
+			temp[ k ] *= k * lenRatio;
 		}
 		else {
-			_transform[ k ] *= k - _transform.size();
+			temp[ k ] *= (k - temp.size()) * lenRatio;
 		}
 	}
 	
 	//	invert the transform:
-	_transform.transform();
+	temp.transform();
 	
 	//	the DFT of a DFT gives the scaled and INDEX REVERSED
 	//	sequence. See p. 539 of O and S.
@@ -150,9 +155,9 @@ ReassignedSpectrum::applyFreqRamp( vector< double > & w )
 	//
 	//	seems that I want the imaginary part of the index-reversed
 	//	transform scaled by the size of the transform:
-	reverse( _transform.begin() + 1, _transform.end() );
+	reverse( temp.begin() + 1, temp.end() );
 	for ( int i = 0; i < w.size(); ++i ) {
-		w[i] = - imag( _transform[i] ) / _transform.size();
+		w[i] = - imag( temp[i] ) / temp.size();
 	}
 }
 
@@ -198,6 +203,20 @@ ReassignedSpectrum::frequencyCorrection( long sample ) const
 	return - num / magSquared;
 
 #else
+	//	something's going on here, this suddenly doesn't work
+	//	15 feb 00
+	if ( abs( _transform[sample-1] ) == 0. ) {
+		debugger << "transform at " << sample-1 << " is zero." << endl;
+		return 0.;
+	}
+	if ( abs( _transform[sample] ) == 0. ) {
+		debugger << "transform at " << sample << " is zero." << endl;
+		return 0.;
+	}
+	if ( abs( _transform[sample+1] ) == 0. ) {
+		debugger << "transform at " << sample+1 << " is zero." << endl;
+		return 0.;
+	}
 
 //	use parabolic interpolation until
 //	we figure out why (whether?) freq reassignment sucks:

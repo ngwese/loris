@@ -13,6 +13,8 @@
 #include "AssociateBandwidth.h"
 #include "DistributeEnergy.h"
 
+using namespace std;
+
 Begin_Namespace( Loris )
 
 // ---------------------------------------------------------------------------

@@ -25,7 +25,7 @@ class ReassignedSpectrum
 //	-- public interface --
 public:
 //	construction:
-	ReassignedSpectrum( const vector< double > & window );
+	ReassignedSpectrum( const std::vector< double > & window );
 	~ReassignedSpectrum( void );
 
 //	spectrum computation:	

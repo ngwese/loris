@@ -185,10 +185,12 @@ AssociateBandwidth::reset( void )
 //	computeWindowSpectrum
 // ---------------------------------------------------------------------------
 //	
-static const long WinSpecOversample = 64;
+static const long WinSpecOversample = 16;
 void
 AssociateBandwidth::computeWindowSpectrum( const vector< double > & v )
 {
+	debugger << "AssociateBandwidth oversampling window spectrum by " << WinSpecOversample << endl;
+	
 	FourierTransform ft( _spectrum.size() * WinSpecOversample );
 	ft( v );
 	

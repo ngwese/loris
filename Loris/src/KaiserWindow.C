@@ -33,25 +33,16 @@ KaiserWindow::create( vector< double > & samples, double shape )
  		return;
  	
 //	Compute the window bounds:
-	long lowerLimit, upperLimit;
 	double offset;		
-	if (length % 2)		// odd length
-	{
-		lowerLimit = - (length - 1) / 2;
-		upperLimit = (length - 1) / 2;
+	if (length % 2)	{
+		// odd length
 		offset = - (length - 1) / 2;
 	}
-	else					// even length
-	{
-		//	need to be careful computing even length windows:
-		lowerLimit = - length / 2;
-		upperLimit = length / 2 - 1;
+	else {
+		//	even length
 		offset = (- length / 2) + 0.5;
 	}
 	
-//	sanity check:
-	Assert( upperLimit - lowerLimit + 1 == length );
-
 //	Pre-compute the denominator in the kaiser equation.	
 	double denom = zeroethOrderBessel( shape );
 	

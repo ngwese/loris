@@ -1,17 +1,22 @@
-#ifndef __fourier_transform__
-#define __fourier_transform__
+#ifndef __fftw_wrapper__
+#define __fftw_wrapper__
 // ===========================================================================
 //	FourierTransform.h
 //
 //	Class definition for Loris::FourierTransform.
+//	Uses the FFTW library to perform efficient transforms of arbitrary
+//	length. Clients store and access the in-place transform data as a
+//	vector of complex<double>. Internally, the transform is computed 
+//	out-of-place using two c-arrays of FFTW's complex type.
 //
-//	-kel 7 Dec 99
+//	Still needs some work on the implementation to make it efficient.
+//
+//	-kel 15 Feb 00
 //
 // ===========================================================================
 #include "LorisLib.h"
-
 #include <vector>
-#include <complex.h>
+#include <complex>
 
 Begin_Namespace( Loris )
 
@@ -29,7 +34,7 @@ class FourierTransform
 //	-- public interface --
 public:
 //	construction:
-	FourierTransform( ulong len );
+	FourierTransform( long len );
 	
 	//	use compiler-generated:
 	// ~FourierTransform( void ) {}	
@@ -40,7 +45,7 @@ public:
 	// FourierTransform & operator= ( const FourierTransform & );
 		
 //	transform length access:
-	int size( void ) const { return _z.size(); }
+	long size( void ) const { return _z.size(); }
 	
 //	spectrum access:
 	std::complex< double > & operator[] ( unsigned long index )
@@ -67,18 +72,12 @@ public:
 	void transform( const std::vector< double > & buf );
 	void operator() ( const std::vector< double > & buf ) { transform( buf ); }
 	
-//	-- helpers --
-private:
-	void fillReverseBinaryTable( void );
-	void decimationStep( long span );
-	
 //	-- instance variables --
 private:
 	std::vector< std::complex< double > > _z;
-	std::vector< unsigned long > _revBinaryTable;
 	
 };	//	end of class FourierTransform
 
 End_Namespace( Loris )
 
-#endif // ndef __fourier_transform__
+#endif // ndef __fftw_wrapper__
