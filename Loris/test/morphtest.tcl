@@ -40,11 +40,17 @@ clarinet and a flute using the Loris
 extension module for Tcl.
 "
 
-if { [expr $argc > 0] } {
-	load "$argv/tcLoris.so" loris
+set srcdir [lindex [array get env srcdir] 1]
+set top_builddir [lindex [array get env top_builddir] 1]
+
+if { [expr [string length $srcdir]> 0] } {
+	load "$top_builddir/scripting/.libs/tcLoris.so" loris
 } else {
 	load tcLoris.so loris
+	set srcdir .
 }
+
+puts "(looking for sources in $srcdir)"
 
 #
 #	analyze clarinet tone
@@ -52,7 +58,7 @@ if { [expr $argc > 0] } {
 puts "analyzing clarinet 3G#"
 set a [ Analyzer -args 390 ]
 
-set cf [ AiffFile -args clarinet.aiff ]
+set cf [ AiffFile -args $srcdir/clarinet.aiff ]
 set v [ $cf samples ]
 set samplerate [ $cf sampleRate ]
 
@@ -99,7 +105,7 @@ exportAiff clarOK.tcltest.aiff [ synthesize $clar $samplerate ] $samplerate 1 16
 #
 puts "analyzing flute 3D"
 $a configure 270
-set v [ [ AiffFile -args flute.aiff ] samples ]
+set v [ [ AiffFile -args $srcdir/flute.aiff ] samples ]
 set flut [ $a analyze $v $samplerate ]
 
 channelize $flut [ createFreqReference $flut 20 0 1000 ] 1

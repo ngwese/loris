@@ -42,7 +42,14 @@ extension module for Python.
 print __doc__
 
 import loris, os, time
-print '(in %s)' % os.getcwd()
+
+path = os.getcwd()
+print '(in %s)' % path
+try:	
+	path = os.environ['srcdir']
+except:
+	pass
+print '(looking for sources in %s)' % path
 
 #
 #	analyze clarinet tone
@@ -50,7 +57,7 @@ print '(in %s)' % os.getcwd()
 print 'analyzing clarinet 3G# (%s)' % time.ctime(time.time())
 a = loris.Analyzer( 390 )
 
-cf = loris.AiffFile( 'clarinet.aiff' )
+cf = loris.AiffFile( path + os.sep + 'clarinet.aiff' )
 v = cf.samples()
 samplerate = cf.sampleRate()
 
@@ -62,6 +69,7 @@ clar = loris.importSdif( 'clarinet.pytest.sdif' )
 
 try:
 	print 'making a bogus attempt at writing an Spc file'
+	print 'WARNING: this will fail because the Partials are unchannelized'
 	loris.exportSpc( 'bad_spc_file.pytest.spc', clar, 90 )
 except:
 	import sys
@@ -95,7 +103,7 @@ loris.exportAiff( 'clarOK.pytest.aiff', loris.synthesize( clar, samplerate ), sa
 #
 print 'analyzing flute 3D (%s)' % time.ctime(time.time())
 a.configure( 270 )		# reconfigure Analyzer
-v = loris.AiffFile( 'flute.aiff' ).samples()
+v = loris.AiffFile( path + os.sep + 'flute.aiff' ).samples()
 flut = a.analyze( v, samplerate )
 
 loris.channelize( flut, loris.createFreqReference( flut, 20, 0, 1000 ), 1 )
