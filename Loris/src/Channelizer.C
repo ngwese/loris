@@ -129,6 +129,10 @@ static double loudestAt( const Partial & p )
 void
 Channelizer_imp::channelize( std::list< Partial >::iterator begin, std::list< Partial >::iterator end )
 {
+	debugger << "hey, is this thing valid?" << endl;
+	_refChannelFreq->valueAt( 1.0 );
+	debugger << "yes" << endl;
+	
 #ifdef Debug_Loris
 	std::set<int> labelsfound;
 #endif
@@ -137,7 +141,9 @@ Channelizer_imp::channelize( std::list< Partial >::iterator begin, std::list< Pa
 	{
 		#define FANCY
 		#ifdef FANCY
-
+		
+		/// debugger << "channelizing Partial with " << it->countBreakpoints() << " Breakpoints" << endl;
+		
 		//	compute an amplitude-weighted average channel
 		//	label for each Partial:
 		double ampsum = 0.;
@@ -171,7 +177,7 @@ Channelizer_imp::channelize( std::list< Partial >::iterator begin, std::list< Pa
 		double time = loudestAt( *it );
 					
 		//	get reference frequency at time:
-		double refFreq = refFreqEnvelope->valueAt( time ) / refLabel;
+		double refFreq = _refChannelFreq->valueAt( time ) / _refChannelLabel;
 		
 		//	compute the label for this partial as 
 		//	nearest integer multiple of reference 
@@ -209,6 +215,38 @@ Channelizer_imp::channelize( std::list< Partial >::iterator begin, std::list< Pa
 Channelizer::Channelizer( Handle< Envelope > env, int label ) :
 	_imp( new Channelizer_imp( env, label ) )
 {
+}
+
+// ---------------------------------------------------------------------------
+//	Channelizer copy constructor 
+// ---------------------------------------------------------------------------
+//
+Channelizer::Channelizer( const Channelizer & other ) :
+	_imp( new Channelizer_imp( * other._imp ) )
+{
+}
+
+// ---------------------------------------------------------------------------
+//	Channelizer assignment 
+// ---------------------------------------------------------------------------
+Channelizer & 
+Channelizer::operator=( const Channelizer & rhs )
+{
+	if ( &rhs != this )
+	{
+		//	two different Channelizers had better
+		//	never share an imp!
+		if ( _imp != rhs._imp )
+		{
+			delete _imp;
+			_imp = new Channelizer_imp( *rhs._imp );
+		}
+		else
+		{
+			debugger << "Yikes! Two different Channelizers were sharing an implementation!" << endl;
+		}
+	}
+	return *this;
 }
 
 // ---------------------------------------------------------------------------

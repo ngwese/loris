@@ -70,8 +70,13 @@ class Channelizer
 	
 //	-- public interface --
 public:
+	//	construction:
 	Channelizer( Handle<Envelope> refChanFreq, int refChanLabel );
+	Channelizer( const Channelizer & other );
 	~Channelizer( void );
+
+	//	assignment:
+	Channelizer & operator=( const Channelizer & rhs );
 
 	//	channelizing:
 	void channelize( std::list< Partial >::iterator begin, std::list< Partial >::iterator end );
