@@ -91,6 +91,13 @@ Loris library, you may also need to add something like
   
 to the LIB definition.
 
+You may also need to add
+
+	-lstdc++
+
+to the LIB definition to include the standard C++ library (it may
+have a different name if you are not using a GNU C/C++ compiler).
+
 f) Finally, add a rule for compiling c++ source files. The following should do:
 
 .C.o:

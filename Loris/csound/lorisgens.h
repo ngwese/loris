@@ -38,8 +38,25 @@
 #include "cs.h"
 
 /* declare structures holding private internal data */
+typedef struct Lorisread_priv Lorisread_priv;
 typedef struct Lorisplay_priv Lorisplay_priv;
 typedef struct Lorismorph_priv Lorismorph_priv;
+
+/*	Define a structure to hold parameters for the lorisread module. */
+typedef struct 
+{
+	/*	standard structure holding csound global data (esr, ksmps, etc.) */
+	OPDS h;  	
+	
+	/* output */
+	float *result;
+	
+	/* unit generator parameters/arguments */
+	float *time, *ifilnam, *readerIdx, *fadetime;    
+
+	/* private internal data, used by generator */
+	Lorisread_priv *priv;
+} LORISREAD;
 
 /*	Define a structure to hold parameters for the lorisplay module. */
 typedef struct 
@@ -51,10 +68,10 @@ typedef struct
 	float *result;
 	
 	/* unit generator parameters/arguments */
-	float *time, *ifilnam, *freqenv, *ampenv, *bwenv, *fadetime;    
+	float *readerIdx, *freqenv, *ampenv, *bwenv;    
 
 	/* private internal data, used by generator */
-	Lorisplay_priv *bwestore;
+	Lorisplay_priv *priv;
 } LORISPLAY;
 
 /*	Define a structure to hold parameters for the lorismorph module. */

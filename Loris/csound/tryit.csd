@@ -1,3 +1,18 @@
+<CsoundSynthesizer>
+; tryit.csd - a Csound structured data file 
+; for testing the Loris unit generators
+
+<CsOptions>
+-A -d -o tryitnow.aiff
+</CsOptions>
+
+<CsVersion> ;optional section
+After 4.17  ; the Loris generators can't possibly work 
+            ; with Csound before version 4.18
+</CsVersion>
+
+<CsInstruments>
+; originally tryit.orc
 sr = 44100
 kr = 4410
 ksmps = 10
@@ -11,7 +26,8 @@ nchnls = 1
 ;
 instr 1
     ktime    linseg      0, p3, 3.0    ; linear time function from 0 to 3 seconds
-    asig     lorisplay   ktime, "clarinet.sdif", 1, 1, 1, .001
+    kduh     lorisread   ktime, "clarinet.sdif", 1, .001
+    asig     lorisplay   1, 1, 1, 1
              out         asig
 endin
 
@@ -35,7 +51,9 @@ instr 2
     kvib     oscil       kvenv, 4, 1   ; table 1, sinusoid
 
     kbwenv   linseg      1, p3/6, 1, p3/6, 2, 2*p3/3, 2
-    a1       lorisplay   ktime, "clarinet.sdif", ifscale+kvib, 2, kbwenv, .001  
+    kduh     lorisread   ktime, "clarinet.sdif", 1, .001
+    a1       lorisplay   1, ifscale+kvib, 2, kbwenv  
+;    a1       lorisplay   1, ifscale+kvib, 2, kbwenv  
     a2       atone       a1, 1000      ; highpass filter, cutoff 1000 Hz
              out         a2
 endin
@@ -55,7 +73,8 @@ instr 3
 	kvenv linseg	0, idur/6, 0, idur/2, .02, idur/3, 0
 	kvib oscil		kvenv, 4, 1		; table 1, sinusoid
 
-	a1 lorisplay ktime, "clarinet.sdif", ifscale+kvib, 2, 1, ifadetime  
+    kduh     lorisread   ktime, "clarinet.sdif", 1, ifadetime
+	a1 lorisplay 1, ifscale+kvib, 2, 1  
 
 	a2 atone a1, 1000  
 	out a2
@@ -79,3 +98,36 @@ endin
 ;;   
 ;;   
 ;;   
+
+</CsInstruments>   
+
+<CsScore>
+; originally tryit.sco
+; make sinusoid in table 1
+f 1 0 4096 10 1
+
+; play instr 1
+;     strt   dur
+i 1    0      3
+i 1    +      1
+i 1    +      6
+
+; play instr 2
+;     strt   dur   ptch
+i 2    11     3    8.08
+i 2    13.5   1    8.04
+i 2    14     6    8.00
+i 2    14     6    8.07
+
+s
+;; i 3 0 4 8.08
+;; i 3 + 3 8.01
+;; 
+;; i 3 8   6 8.02
+;; i 3 8.01 5 8.06
+;; i 3 8.02 6 8.09
+;; i 3 12   2 8.11
+;; 
+
+e
+</CsScore>   </CsoundSynthesizer>

@@ -38,6 +38,7 @@
 #include "lorisgens.h"
 #include "string.h"
 
+#include <Breakpoint.h>
 #include <Exception.h>
 #include <Oscillator.h>
 #include <Partial.h>
@@ -45,6 +46,7 @@
 
 #include <algorithm>
 #include <exception>
+#include <iostream>
 #include <map>
 #include <string>
 #include <vector>
@@ -52,8 +54,11 @@
 using namespace Loris;
 using namespace std;
 
+typedef std::vector< Breakpoint > BREAKPOINTS;
 typedef std::vector< Partial > PARTIALS;
 typedef std::vector< Oscillator > OSCILS;
+
+#pragma mark -- static helpers --
 
 // ---------------------------------------------------------------------------
 //	sdif_openfile
@@ -74,27 +79,27 @@ static SdifFile * sdif_openfile( const std::string & filename )
 		
 	if ( it != filenamemap.end() )
 	{
-     	// fprintf(stderr, "** found SDIF file %s\n", filename.c_str());
+		std::cerr << "** re-using SDIF file " << filename << std::endl;		  
 		return it->second;
 	}
 	else
 	{	
 		try 
 		{
-			// fprintf(stderr, "** importing SDIF file %s\n", filename.c_str());
+			std::cerr << "** importing SDIF file " << filename << std::endl;		  
 			SdifFile * f = new SdifFile(filename);
 			filenamemap[filename] = f;
 			return f;
 		}
 		catch(Exception ex)
 		{
-		  fprintf(stderr, "\nERROR importing SDIF file: %s", ex.what());
-		  return NULL;
+			std::cerr << "\nERROR importing SDIF file: " << ex.what() << std::endl;		  
+			return NULL;
 		}
 		catch(std::exception ex)
 		{
-		  fprintf(stderr, "\nERROR importing SDIF file: %s", ex.what());
-		  return NULL;
+			std::cerr << "\nERROR importing SDIF file: " << ex.what() << std::endl;		  
+			return NULL;
 		}
 	}
 }
@@ -191,71 +196,150 @@ static void apply_fadetime( PARTIALS & part, double fadetime )
 }
 
 // ---------------------------------------------------------------------------
-//	helpers
+//	radianFreq
 // ---------------------------------------------------------------------------
-
-//function gets the amplitude of a partial at a specific time
-static
-float getAmp(float time, Partial *part)
+//	Compute radian frequency (used by Loris::Oscillator) from frequency in Hz.
+//	
+static inline double radianFreq( double hz )
 {
-return part->amplitudeAt(time);
+	return hz * tpidsr;
 }
 
-//function gets the frequency of a partial at a specific time
-static
-float getFreq(float time, Partial *part)
-{
-return (part->frequencyAt(time))*TWOPI/esr;
-}
-
-//function gets the bandwidth of a partial at a specific time
-static
-float getBw(float time, Partial *part)
-{
-return part->bandwidthAt(time);
-}
-
-//function gets the phase of a partial at a specific time
-static
-float getPhase(float time, Partial *part)
-{
-return part->phaseAt(time);
-}
-
-//function initiallizes an oscillator according to a partial at a specific time
-static
-void init_oscillator(Partial *part, Oscillator *oscp, float time)
-{
-	//give the oscillator values for initialization
-	oscp->setBandwidth(getBw(time, part));
-	oscp->setAmplitude(getAmp(time, part));
-	oscp->setRadianFreq(getFreq(time, part));
-	oscp->setPhase(getPhase(time, part));
-
-}
+#pragma mark -- LorisReader --
 
 // ---------------------------------------------------------------------------
-//	Lorisplay_priv definition
+//	LorisReader definition
 // ---------------------------------------------------------------------------
-// 	Define a structure holding private internal data.
 //
-struct Lorisplay_priv
+class LorisReader
 {
-	OSCILS oscp;
-	PARTIALS part;
+	PARTIALS _partials;
+	BREAKPOINTS _breakpoints;
+	double _time;
 	
-	std::vector< double > dblbuffer;
+public:	
+	//	construction:
+	LorisReader( void ) : _time(0) {}	// initializes an empty reader
+	~LorisReader( void ) {}
 	
-	Lorisplay_priv( LORISPLAY * params );
-	~Lorisplay_priv( void ) {}
+	//	Partial loading:
+	//	(returns the number of Partials loaded);
+	long loadPartials( const std::string & sdiffilname, double fadetime );
+	
+	//	envelope parameter computation:
+	//	(returns number of active Partials)
+	long updateEnvelopePoints( double time );
+	
+	//	access:
+	const PARTIALS & partials( void ) const { return _partials; }
+	const BREAKPOINTS & envelopePoints( void ) const { return _breakpoints; }
+	double time( void ) const { return _time; }
+	
+	//	access a particular LorisReader by index:
+	static LorisReader & GetByIndex( int index );
 }; 
 
 // ---------------------------------------------------------------------------
-//	Lorisplay_priv contructor
+//	LorisReader loadPartials
+// ---------------------------------------------------------------------------
+//	Return the number of Partials loaded.
+//
+long
+LorisReader::loadPartials( const std::string & sdiffilname, double fadetime )
+{
+	try 
+	{
+		//	initialize:
+		_partials.clear();
+		std::fill( _breakpoints.begin(), _breakpoints.end(), Breakpoint() );
+		
+		//	import Partials and apply fadetime:
+		import_partials( sdiffilname, _partials );
+		apply_fadetime( _partials, fadetime );
+		
+		//	allocate (initialize) Breakpoints:
+		_breakpoints.resize( _partials.size() );
+	}
+	catch( Exception & ex )
+    {
+        std::string s("Loris exception in LorisReader::loadPartials(): " );
+        s.append( ex.what() );
+        std::cerr << s << std::endl;
+    }
+    catch( std::exception & ex )
+    {
+        std::string s("std C++ exception in LorisReader::loadPartials(): " );
+        s.append( ex.what() );
+        std::cerr << s << std::endl;
+    }
+	
+	return _partials.size();
+}
+
+// ---------------------------------------------------------------------------
+//	LorisReader updateEnvelopePoints
 // ---------------------------------------------------------------------------
 //
-Lorisplay_priv::Lorisplay_priv( LORISPLAY * params ) :
-	dblbuffer( ksmps, 0. )
+long 
+LorisReader::updateEnvelopePoints( double time )
+{
+	// update time;
+	_time = time;
+	
+	long countActive = 0;
+	
+	for (long i = 0; i < _partials.size(); ++i )
+	{
+		Partial & p = _partials[i];
+		Breakpoint & bp = _breakpoints[i];
+		
+		//	update envelope paramters for this Partial:
+	 	bp.setFrequency( p.frequencyAt( time ) );
+		bp.setAmplitude( p.amplitudeAt( time ) );
+		bp.setBandwidth( p.bandwidthAt( time ) );
+		bp.setPhase( p.phaseAt( time ) );
+	
+		//	update counter:
+		if ( bp.amplitude() > 0 )
+			++countActive;
+	}
+	
+	return countActive;
+}
+
+// ---------------------------------------------------------------------------
+//	LorisReader GetByIndex
+// ---------------------------------------------------------------------------
+//	May return an empty reader.
+//
+LorisReader & 
+LorisReader::GetByIndex( int index )
+{
+	static std::map<int, LorisReader> readers;
+	return readers[index];
+}
+
+#pragma mark -- Lorisread_priv --
+
+// ---------------------------------------------------------------------------
+//	Lorisread_priv definition
+// ---------------------------------------------------------------------------
+// 	Define a structure holding private internal data.
+//
+struct Lorisread_priv
+{
+	LorisReader & reader;
+
+	Lorisread_priv( LORISREAD * params );
+	~Lorisread_priv( void ) {}
+}; 
+
+// ---------------------------------------------------------------------------
+//	Lorisread_priv contructor
+// ---------------------------------------------------------------------------
+//
+Lorisread_priv::Lorisread_priv( LORISREAD * params ) :
+	reader( LorisReader::GetByIndex( (int)*(params->readerIdx) ) )
 {
 	std::string sdiffilname;
 
@@ -278,68 +362,188 @@ Lorisplay_priv::Lorisplay_priv( LORISPLAY * params ) :
 		sdiffilname = tmp;
 	}
 	
-	//	allocate Partials and Oscillators:
-	import_partials( sdiffilname, part );
-	oscp.resize( part.size() );	
-	apply_fadetime( part, *params->fadetime );
+	//	load the reader:
+	reader.loadPartials( sdiffilname, *(params->fadetime) );
 }
 
-//function runs at initialization time for lorisplay
+#pragma mark -- lorisread generator functions --
+
+static void lorisread_cleanup(void * p);
+
+// ---------------------------------------------------------------------------
+//	lorisread_setup
+// ---------------------------------------------------------------------------
+//	Runs at initialization time for lorisplay.
+//
+extern "C"
+void lorisread_setup( LORISREAD * p )
+{
+	p->priv = new Lorisread_priv( p );
+	p->h.dopadr = lorisread_cleanup;  // set lorisplay_cleanup as cleanup routine
+}
+
+// ---------------------------------------------------------------------------
+//	lorisread
+// ---------------------------------------------------------------------------
+//	Control-rate generator function.
+//
+extern "C"
+void lorisread( LORISREAD * p )
+{
+	*(p->result) = 
+		(MYFLT) p->priv->reader.updateEnvelopePoints( *(p->time) );
+}
+
+// ---------------------------------------------------------------------------
+//	lorisread_cleanup
+// ---------------------------------------------------------------------------
+//	Cleans up after lorisread.
+//
+static
+void lorisread_cleanup(void * p)
+{
+	LORISREAD * tp = (LORISREAD *)p;
+	delete tp->priv;
+}
+
+
+// ---------------------------------------------------------------------------
+//	Lorisplay_priv definition
+// ---------------------------------------------------------------------------
+// 	Define a structure holding private internal data.
+//
+struct Lorisplay_priv
+{
+	LorisReader & reader;
+	OSCILS oscils;
+	
+	std::vector< double > dblbuffer;
+	
+	Lorisplay_priv( LORISPLAY * params );
+	~Lorisplay_priv( void ) {}
+}; 
+
+// ---------------------------------------------------------------------------
+//	Lorisplay_priv contructor
+// ---------------------------------------------------------------------------
+//
+Lorisplay_priv::Lorisplay_priv( LORISPLAY * params ) :
+	reader( LorisReader::GetByIndex( *(params->readerIdx) ) ),
+	dblbuffer( ksmps, 0. )
+{
+	oscils.resize( reader.envelopePoints().size() );
+}
+
+#pragma mark -- lorisplay generator functions --
+
 static void lorisplay_cleanup(void * p);
 
+// ---------------------------------------------------------------------------
+//	lorisplay_setup
+// ---------------------------------------------------------------------------
+//	Runs at initialization time for lorisplay.
+//
 extern "C"
-void lorisplay_setup(LORISPLAY *p)
+void lorisplay_setup( LORISPLAY * p )
 {
-	p->bwestore = new Lorisplay_priv( p );
+	p->priv = new Lorisplay_priv( p );
 	p->h.dopadr = lorisplay_cleanup;  // set lorisplay_cleanup as cleanup routine
 }
 
-//function runs through on the k-rate for lorisplay
+// ---------------------------------------------------------------------------
+//	lorisplay
+// ---------------------------------------------------------------------------
+//	Audio-rate generator function.
+//
 extern "C"
-void lorisplay(LORISPLAY *p)
+void lorisplay( LORISPLAY * p )
 {
-	//temp variables
-	float *answer = p->result;
-    int nn = ksmps;
-	int i;
-	float amp;
-	float prevtime = *(p->time) - ksmps/esr;   //calculation of previous time
-	int numOscils = p->bwestore->oscp.size();
+	Lorisplay_priv & player = *(p->priv);
+	const BREAKPOINTS & envPts = player.reader.envelopePoints();
+	OSCILS & oscils = player.oscils;
+	
+	//	clear the buffer first!
+	std::fill( player.dblbuffer.begin(), player.dblbuffer.end(), 0. );
+	
+	//	now accumulate samples into the buffer:
+	double * bufbegin =  &(player.dblbuffer[0]);
+	long numOscils = player.oscils.size();
+	for( long i = 0; i < numOscils; i++)  
+	{
+		const Breakpoint & bp = envPts[i];
 
-	//	zero the buffer first!
-	std::fill( p->bwestore->dblbuffer.begin(), p->bwestore->dblbuffer.end(), 0. );
-	double * bufbegin =  p->bwestore->dblbuffer.begin();
-	for(i=0; i < numOscils; i++)  //for each oscillator
-	{
-	amp = getAmp(*(p->time), &(p->bwestore->part[i]));  //get amp at current time
-	if(amp > 0 || p->bwestore->oscp[i].amplitude() > 0)  //if current or last amplitude greater than zero
-	{
-		if (p->bwestore->oscp[i].amplitude() == 0){ //if last amplitude was zero reinitialize the oscillator
-			// fprintf(stderr, "initializing oscillator %d at time %f for Partial beginning at time %f\n",
-			//				i, prevtime, p->bwestore->part[i].startTime() );
-			init_oscillator(&(p->bwestore->part[i]), &(p->bwestore->oscp[i]), prevtime);
-		}	
-		p->bwestore->oscp[i].generateSamples( bufbegin, bufbegin + nn, 
-											  *(p->freqenv)*getFreq(*(p->time), &(p->bwestore->part[i])), 
-											  *(p->ampenv)*getAmp(*(p->time), &(p->bwestore->part[i])), 
-											  *(p->bwenv)*getBw(*(p->time), &(p->bwestore->part[i])));  
-											  //generate samples from oscillators
-	}
+		//	do nothing if the amplitude is zero over the
+		//	duration of the control block:
+		if( bp.amplitude() > 0 || oscils[i].amplitude() > 0 ) 
+		{
+			double radfreq = radianFreq( (*p->freqenv) * bp.frequency() );
+			double amp = (*p->ampenv) * bp.amplitude();
+			double bw = (*p->bwenv) * bp.bandwidth();
+			
+			//	initialize the oscillator if it is changing from zero
+			//	to non-zero amplitude in this  control block:
+			if ( oscils[i].amplitude() == 0. )
+			{
+				//	don't initialize with bogus values, Oscillator
+				//	only guards against out-of-range target values
+				//	in generateSamples(), parameter mutators are 
+				//	dangerous:
+				
+				if ( radfreq > PI )	//	don't alias
+					amp = 0.;
+
+				if ( bw > 1. )		//	clamp bandwidth
+					bw = 1.;
+				else if ( bw < 0. )
+					bw = 0.;
+			
+				/*
+				std::cerr << "initializing oscillator " << i << " at time ";
+				std::cerr << player.reader.time() << " for Partial beginning at time ";
+				std::cerr << (player.reader.partials())[i].startTime() << std::endl;
+				
+				std::cerr << "parameters: " << (*p->freqenv) * bp.frequency() << "  ";
+				std::cerr << amp << "  " << bw << std::endl;
+				*/
+							
+				//	initialize frequency, amplitude, and bandwidth to 
+				//	their target values:
+				oscils[i].setRadianFreq( radfreq );
+				oscils[i].setAmplitude( amp );
+				oscils[i].setBandwidth( bw );
+				
+				//	roll back the phase:
+				oscils[i].setPhase( bp.phase() - ( radfreq * ksmps ) );
+			}	
+			
+			//	accumulate samples into buffer:
+			oscils[i].generateSamples( bufbegin, bufbegin + ksmps, radfreq, amp, bw );
+		}
 	} 
 	
-	std::vector<double> & buf = p->bwestore->dblbuffer;
-	do{
-		*answer++ = buf[ksmps-nn] * 32767;  // make amplitudes so they correspond to csound amplitudes
-	}while(--nn);
+	//	transfer samples into the result buffer:
+	float *answer = p->result;
+	double * buf = &(player.dblbuffer[0]);
+    int nn = ksmps;
+	do 
+	{
+		// 	scale Loris sample amplitudes (+/- 1.0) to 
+		//	csound sample amplitudes (+/- 32k):
+		*answer++ = (*buf++) * 32767.;  
+	} while(--nn);
 	 
 }
 
-//	function cleans up after lorisplay
+// ---------------------------------------------------------------------------
+//	lorisplay_cleanup
+// ---------------------------------------------------------------------------
+//	Cleans up after lorisplay.
+//
 static
 void lorisplay_cleanup(void * p)
 {
 	LORISPLAY * tp = (LORISPLAY *)p;
-	delete tp->bwestore;
+	delete tp->priv;
 }
 
 // ---------------------------------------------------------------------------
