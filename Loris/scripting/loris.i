@@ -733,26 +733,26 @@ createFreqReference( PartialList * partials, int numSamples,
 %inline %{
 	const char * versionString( void )
 	{
-		int vmajor = (LORIS_VERSION & 0xF000) >> 24;
-		int vminor = (LORIS_VERSION & 0x0F00) >> 16;
-		int vpre = (LORIS_VERSION & 0x00F0) >> 8;
+		int vmajor = (LORIS_VERSION & 0xF000) >> 12;
+		int vminor = (LORIS_VERSION & 0x0F00) >> 8;
+		int vpre = (LORIS_VERSION & 0x00F0) >> 4;
 		int vprenum = (LORIS_VERSION & 0x000F);
 		
 		static char str[24];
 		if ( vpre != 0 )
 		{
 			char * spre;
-			if ( vpre == 'B' )
+			if ( vpre == 0xB )
 				spre = "beta";
-			else if ( vpre == 'A' )
+			else if ( vpre == 0xA )
 				spre = "alpha";
 			else
 				spre = "???";
 				
-			sprintf( str, "%d.%d %s %d", vmajor, vminor, spre, vprenum );
+			sprintf( str, "Loris %d.%d %s %d", vmajor, vminor, spre, vprenum );
 		}
 		else
-			sprintf( str, "%d.%d", vmajor, vminor );
+			sprintf( str, "Loris %d.%d", vmajor, vminor );
 			
 		return str;
 	}

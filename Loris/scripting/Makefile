@@ -47,8 +47,8 @@ PERL_MODULE = loris.so
 TCL_WRAPPER = loris_tcl_wrap.C
 TCL_MODULE = loris.so
 
-PY_VERSION = 2.0
-PYTHON_PREFIX = /usr/local
+PY_VERSION = 1.5
+PYTHON_PREFIX = /usr
 PYTHON_INCLUDE = ${PYTHON_PREFIX}/include/python${PY_VERSION}
 # PYTHON_LIB = ${PYTHON_PREFIX}/lib/python${PY_VERSION}/config
 INC_PY = ${PYTHON_INCLUDE}
