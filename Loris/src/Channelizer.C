@@ -35,65 +35,62 @@
 	#include <config.h>
 #endif
 
-#include<Channelizer.h>
-#include<Envelope.h>
-#include<Partial.h>
-#include<PartialList.h>
-#include<Notifier.h>
+#include <Channelizer.h>
+#include <Envelope.h>
+#include <Partial.h>
+#include <PartialList.h>
+#include <Notifier.h>
 
 #include <cmath>
-#include <memory>
-
-
-//	for debugging
-#ifdef Debug_Loris
-#include <set>
-#endif
 
 //	begin namespace
 namespace Loris {
 
-
 // ---------------------------------------------------------------------------
-//	class Channelizer_imp
-//
-//	Implementation class for Channelizer insulating Channelizer interface.
-//
-class Channelizer_imp
-{
-public:
-	const std::auto_ptr<Envelope> _refChannelFreq;
-	int _refChannelLabel;
-
-	Channelizer_imp( const Envelope & env, int label );
-	~Channelizer_imp( void );
-	
-	void channelize( PartialList::iterator begin, PartialList::iterator end );
-	void channelize_one( Partial & p, double tstart, double tend );
-
-private:
-	//	don't allow copy or assign:
-	Channelizer_imp( const Channelizer_imp & );
-	Channelizer_imp & operator=( const Channelizer_imp & );
-};	//	end of class Channelizer_imp
-
-// ---------------------------------------------------------------------------
-//	Channelizer_imp constructor 
+//	Channelizer constructor 
 // ---------------------------------------------------------------------------
 //
-Channelizer_imp::Channelizer_imp( const Envelope & env, int label ) :
+Channelizer::Channelizer( const Envelope & env, int label ) :
 	_refChannelFreq( env.clone() ),
 	_refChannelLabel( label )
 {
 	if ( label <= 0 )
+	{
 		Throw( InvalidArgument, "Channelizer reference label must be positive." );
+	}
 }
+
+// ---------------------------------------------------------------------------
+//	Channelizer copy constructor 
+// ---------------------------------------------------------------------------
+//
+Channelizer::Channelizer( const Channelizer & other ) :
+	_refChannelFreq( other._refChannelFreq->clone() ),
+	_refChannelLabel( other._refChannelLabel )
+{
+}
+
+// ---------------------------------------------------------------------------
+//	Channelizer assignment 
+// ---------------------------------------------------------------------------
+//
+Channelizer & 
+Channelizer::operator=( const Channelizer & rhs )
+{
+	if ( &rhs != this )
+	{
+		_refChannelFreq.reset( rhs._refChannelFreq->clone() );
+		_refChannelLabel = rhs._refChannelLabel;
+	}
+	return *this;
+}
+
 
 // ---------------------------------------------------------------------------
 //	Channelizer_imp destructor
 // ---------------------------------------------------------------------------
 //
-Channelizer_imp::~Channelizer_imp( void )
+Channelizer::~Channelizer( void )
 {
 }
 
@@ -130,62 +127,14 @@ static double loudestAt( const Partial & p )
 }
 
 // ---------------------------------------------------------------------------
-//	Channelizer_imp channelize
+//	channelize (one Partial)
 // ---------------------------------------------------------------------------
-//	Two algorithms are defined here, the fancier one computes the best channel
-//	label for each Partial by computing the amplitude-weighted average 
-//	frequency channel for the Partial. The simple algorithm just evaluates the
-//	frequency channel at the time of peak sinusoidal amplitude for each 
-//	Partial. Still resolving which algorithm to use. Only matter for reference
-//	envelopes which badly match the Partials to be channelized.
-//	
-void
-Channelizer_imp::channelize( PartialList::iterator begin, PartialList::iterator end )
-{
-#ifdef Debug_Loris
-	std::set<int> labelsfound;
-#endif
-
-	for ( PartialList::iterator it = begin; it != end; ++it ) 
-	{
-
-		//	just define these here for now, ultimately will be arguments:
-		double tstart = it->startTime();
-		double tend = it->endTime();
-
-		channelize_one(*it, tstart, tend);
-		
-#ifdef Debug_Loris
-		int label = it->label();
-		if (label > 0)
-			labelsfound.insert(label);
-#endif
-	}
-
-#ifdef Debug_Loris
-	debugger << "found " << labelsfound.size() << " non-empty channels" << endl;	
-#endif
-}
-
-// ---------------------------------------------------------------------------
-//	Channelizer_imp channelize_one
-// ---------------------------------------------------------------------------
-//	Helper function to channelize a single partial over a specified
-//	time span, called by channelize() above.
+//	Label a Partial with the number of the frequency channel containing
+//	the greatest portion of its (the Partial's) energy.
 //
 void
-Channelizer_imp::channelize_one( Partial & p, double tstart, double tend )
+Channelizer::channelize( Partial & p ) const
 {
-	//	bail if this Partial does not overlap the specified
-	//	time span:
-	if ( p.startTime() > tend || p.endTime() < tstart )
-	{
-		debugger << "channelizer skipping Partial spanning ";
-		debugger << p.startTime() << "," << p.endTime() << " outside of span ";
-		debugger << tstart << "," << tend << endl;
-		return;
-	}
-
 	debugger << "channelizing Partial with " << p.numBreakpoints() << " Breakpoints" << endl;
 		
 	//	compute an amplitude-weighted average channel
@@ -193,16 +142,8 @@ Channelizer_imp::channelize_one( Partial & p, double tstart, double tend )
 	double ampsum = 0.;
 	double weightedlabel = 0.;
 	Partial::const_iterator bp;
-	for ( bp = p.findAfter(tstart); bp != p.end(); ++bp )
+	for ( bp = p.begin(); bp != p.end(); ++bp )
 	{
-		//	bail if the current breakpoint is outside of the
-		//	specified time span:
-		if ( bp.time() > tend )
-		{
-			debugger << "channelizer reached end of time span" << endl;
-			break;
-		}
-	
 		//	use sinusoidal amplitude:
 		double a = bp.breakpoint().amplitude() * std::sqrt( 1. - bp.breakpoint().bandwidth() );
 		double f = bp.breakpoint().frequency();
@@ -219,80 +160,12 @@ Channelizer_imp::channelize_one( Partial & p, double tstart, double tend )
 	else	//	this should never happen, but just in case:
 		label = 0;
 	Assert( label >= 0 );
-
 			
 	//	assign label, and remember it, but
 	//	only if it is a valid (positive) 
 	//	distillation label:
 	p.setLabel( label );
 
-}	//	end of channelize_one
-
-// ---------------------------------------------------------------------------
-//	Channelizer constructor 
-// ---------------------------------------------------------------------------
-//	In fully-insulating interface constructors, with no subclassing (fully-
-//	insulating interfaces have no virtual members), can safely initialize the
-//	imp pointer this way because only that constructor could generate an 
-//	exception, and in that case the associated memory would be released 
-//	automatically. So there's no risk of a memory leak associated with this
-//	pointer initialization.
-//
-Channelizer::Channelizer( const Envelope & refChanFreq, int refChanLabel ) :
-	_imp( new Channelizer_imp( refChanFreq, refChanLabel ) )
-{
-}
-
-// ---------------------------------------------------------------------------
-//	Channelizer copy constructor 
-// ---------------------------------------------------------------------------
-//
-Channelizer::Channelizer( const Channelizer & other ) :
-	_imp( new Channelizer_imp( * other._imp->_refChannelFreq, other._imp->_refChannelLabel ) )
-{
-}
-
-// ---------------------------------------------------------------------------
-//	Channelizer assignment 
-// ---------------------------------------------------------------------------
-Channelizer & 
-Channelizer::operator=( const Channelizer & rhs )
-{
-	if ( &rhs != this )
-	{
-		//	two different Channelizers had better
-		//	never share an imp!
-		if ( _imp != rhs._imp )
-		{
-			delete _imp;
-			_imp = new Channelizer_imp( * rhs._imp->_refChannelFreq, rhs._imp->_refChannelLabel );
-		}
-		else
-		{
-			debugger << "Yikes! Two different Channelizers were sharing an implementation!" << endl;
-		}
-	}
-	return *this;
-}
-
-// ---------------------------------------------------------------------------
-//	Channelizer destructor
-// ---------------------------------------------------------------------------
-//
-Channelizer::~Channelizer( void )
-{
-	delete _imp;
-}
-
-// ---------------------------------------------------------------------------
-//	Channelizer channelize
-// ---------------------------------------------------------------------------
-//	Delegate to implementation.
-//	
-void
-Channelizer::channelize( PartialList::iterator begin, PartialList::iterator end ) const
-{
-	_imp->channelize( begin, end );
 }
 
 }	//	end of namespace Loris
