@@ -71,7 +71,7 @@ class Channelizer
 //	-- public interface --
 public:
 	//	construction:
-	Channelizer( Handle<Envelope> refChanFreq, int refChanLabel );
+	Channelizer( const Envelope & refChanFreq, int refChanLabel );
 	Channelizer( const Channelizer & other );
 	~Channelizer( void );
 

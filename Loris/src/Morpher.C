@@ -35,12 +35,12 @@
 #include "Partial.h"
 #include "Breakpoint.h"
 #include "Envelope.h"
-#include "Handle.h"
 #include "PartialUtils.h"
 #include "notifier.h"
-#include <set>
-#include <cmath>
 #include <algorithm>
+#include <cmath>
+#include <memory>
+#include <set>
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
@@ -66,29 +66,16 @@ public:
 	//	(these Envelopes will never be modified by the Morpher_imp
 	//	class, but Morpher should be able to grant non-const
 	//	access to them, so they are not const Handles)
-	Handle< Envelope > _freqFunction;	//	frequency morphing function
-	Handle< Envelope > _ampFunction;	//	amplitude morphing function
-	Handle< Envelope > _bwFunction;		//	bandwidth morphing function
+	std::auto_ptr< Envelope > _freqFunction;	//	frequency morphing function
+	std::auto_ptr< Envelope > _ampFunction;		//	amplitude morphing function
+	std::auto_ptr< Envelope > _bwFunction;		//	bandwidth morphing function
 	
 	std::list< Partial > _partials;	//	collect Partials here
 			
 //	construction:
-	Morpher_imp( Handle< Envelope > ff, Handle< Envelope > af, Handle< Envelope > bwf );
+	Morpher_imp( const Envelope & ff, const Envelope & af, const Envelope & bwf );
 	~Morpher_imp( void );
 	
-//	morphing:
-//	Morph two sounds (collections of Partials labeled to indicate
-//	correspondences) into a single labeled collection of Partials.
-//	Currently, Morpher::morph() calls the helper members of the 
-//	implementation class.
-/*
-	void morph( std::list< Partial >::const_iterator begin0, 
-				std::list< Partial >::const_iterator end0,
-				std::list< Partial >::const_iterator begin1, 
-				std::list< Partial >::const_iterator end1 );
-*/
-
-//	-- helpers --
 //	single Partial morph:
 //	(core morphing operation, called by morph() and crossfade())
 	void morphPartial( const Partial & p1, const Partial & p2, int assignLabel );
@@ -107,10 +94,10 @@ public:
 //	Morpher_imp constructor 
 // ---------------------------------------------------------------------------
 //
-Morpher_imp::Morpher_imp( Handle< Envelope > ff, Handle< Envelope > af, Handle< Envelope > bwf ) :
-	_freqFunction( ff ),
-	_ampFunction( af ),
-	_bwFunction( bwf )
+Morpher_imp::Morpher_imp( const Envelope & ff, const Envelope & af, const Envelope & bwf ) :
+	_freqFunction( ff.clone() ),
+	_ampFunction( af.clone() ),
+	_bwFunction( bwf.clone() )
 {
 }
 
@@ -294,7 +281,7 @@ Morpher_imp::crossfade( std::list< Partial >::const_iterator begin0,
 //	automatically. So there's no risk of a memory leak associated with this
 //	pointer initialization.
 //
-Morpher::Morpher( Handle< Envelope > f ) :
+Morpher::Morpher( const Envelope & f ) :
 	_imp( new Morpher_imp( f, f, f ) )
 {
 }
@@ -309,7 +296,7 @@ Morpher::Morpher( Handle< Envelope > f ) :
 //	automatically. So there's no risk of a memory leak associated with this
 //	pointer initialization.
 //
-Morpher::Morpher( Handle< Envelope > ff, Handle< Envelope > af, Handle< Envelope > bwf ) :
+Morpher::Morpher( const Envelope & ff, const Envelope & af, const Envelope & bwf ) :
 	_imp( new Morpher_imp( ff, af, bwf ) )
 {
 }
@@ -413,9 +400,9 @@ Morpher::morph( std::list< Partial >::const_iterator begin0,
 // ---------------------------------------------------------------------------
 //
 void
-Morpher::setFrequencyFunction( Handle< Envelope > f )
+Morpher::setFrequencyFunction( const Envelope & f )
 {
-	_imp->_freqFunction = f;
+	_imp->_freqFunction.reset( f.clone() );
 }
 
 // ---------------------------------------------------------------------------
@@ -423,9 +410,9 @@ Morpher::setFrequencyFunction( Handle< Envelope > f )
 // ---------------------------------------------------------------------------
 //
 void
-Morpher::setAmplitudeFunction( Handle< Envelope > f )
+Morpher::setAmplitudeFunction( const Envelope & f )
 {
-	_imp->_ampFunction = f;
+	_imp->_ampFunction.reset( f.clone() );
 }
 
 // ---------------------------------------------------------------------------
@@ -433,69 +420,39 @@ Morpher::setAmplitudeFunction( Handle< Envelope > f )
 // ---------------------------------------------------------------------------
 //
 void
-Morpher::setBandwidthFunction( Handle< Envelope > f )
+Morpher::setBandwidthFunction( const Envelope & f )
 {
-	_imp->_bwFunction = f;
+	_imp->_bwFunction.reset( f.clone() );
 }
 
 // ---------------------------------------------------------------------------
 //	frequencyFunction
 // ---------------------------------------------------------------------------
 //
-Handle< Envelope >
-Morpher::frequencyFunction( void )
-{
-	return _imp->_freqFunction;
-}
-
-// ---------------------------------------------------------------------------
-//	amplitudeFunction
-// ---------------------------------------------------------------------------
-//
-Handle< Envelope >
-Morpher::amplitudeFunction( void )
-{
-	return _imp->_ampFunction;
-}
-
-// ---------------------------------------------------------------------------
-//	bandwidthFunction
-// ---------------------------------------------------------------------------
-//
-Handle< Envelope >
-Morpher::bandwidthFunction( void )
-{
-	return _imp->_bwFunction;
-}
-
-// ---------------------------------------------------------------------------
-//	frequencyFunction
-// ---------------------------------------------------------------------------
-//
-Handle< const Envelope >
+const Envelope &
 Morpher::frequencyFunction( void ) const 
 {
-	return _imp->_freqFunction;
+	return * _imp->_freqFunction;
 }
 
 // ---------------------------------------------------------------------------
 //	amplitudeFunction
 // ---------------------------------------------------------------------------
 //
-Handle< const Envelope >
+const Envelope &
 Morpher::amplitudeFunction( void ) const 
 {
-	return _imp->_ampFunction;
+	return * _imp->_ampFunction;
 }
 
 // ---------------------------------------------------------------------------
 //	bandwidthFunction
 // ---------------------------------------------------------------------------
 //
-Handle< const Envelope >
+const Envelope &
 Morpher::bandwidthFunction( void ) const 
 {
-	return _imp->_bwFunction;
+	return * _imp->_bwFunction;
 }
 
 // ---------------------------------------------------------------------------

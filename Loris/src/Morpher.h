@@ -78,8 +78,8 @@ class Morpher
 //	-- public interface --
 public:
 //	construction:
-	Morpher( Handle< Envelope > f );
-	Morpher( Handle< Envelope > ff, Handle< Envelope > af, Handle< Envelope > bwf );
+	Morpher( const Envelope & f );
+	Morpher( const Envelope & ff, const Envelope & af, const Envelope & bwf );
 	~Morpher( void );
 	
 //	morphing:
@@ -91,21 +91,16 @@ public:
 				std::list< Partial >::const_iterator end1 );
 
 //	morphing functions access/mutation:	
-	void setFrequencyFunction( Handle< Envelope > f );
-	void setAmplitudeFunction( Handle< Envelope > f );
-	void setBandwidthFunction( Handle< Envelope > f );
+	void setFrequencyFunction( const Envelope & f );
+	void setAmplitudeFunction( const Envelope & f );
+	void setBandwidthFunction( const Envelope & f );
 
-	Handle< Envelope > frequencyFunction( void );
-	Handle< const Envelope > frequencyFunction( void ) const;
-
-	Handle< Envelope > amplitudeFunction( void );
-	Handle< const Envelope > amplitudeFunction( void ) const;
-
-	Handle< Envelope > bandwidthFunction( void );
-	Handle< const Envelope > bandwidthFunction( void ) const;
+	const Envelope & frequencyFunction( void ) const;
+	const Envelope & amplitudeFunction( void ) const;
+	const Envelope & bandwidthFunction( void ) const;
 	
 	
-//	std::list< Partial > access:
+//	Partial list access:
 	std::list< Partial > & partials( void ); 
 	const std::list< Partial > & partials( void ) const; 
 

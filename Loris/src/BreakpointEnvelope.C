@@ -44,7 +44,7 @@ namespace Loris {
 //
 BreakpointEnvelope::BreakpointEnvelope(void)
 {
-	/// debugger << "constructing BreakpointEnvelope" << endl;
+	debugger << "constructing BreakpointEnvelope" << endl;
 }
 
 // ---------------------------------------------------------------------------
@@ -53,8 +53,8 @@ BreakpointEnvelope::BreakpointEnvelope(void)
 //
 BreakpointEnvelope::BreakpointEnvelope( double initialValue )
 {
-	// debugger << "constructing BreakpointEnvelope with initial value " 
-	// 		 << initialValue << endl;
+	debugger << "constructing BreakpointEnvelope with initial value " 
+	 		 << initialValue << endl;
 	insertBreakpoint( 0., initialValue );
 }
 
@@ -65,7 +65,7 @@ BreakpointEnvelope::BreakpointEnvelope( double initialValue )
 BreakpointEnvelope::BreakpointEnvelope(const BreakpointEnvelope & other) :
 	_breakpoints( other._breakpoints )
 {
-	// debugger << "copying BreakpointEnvelope" << endl;
+	debugger << "copying BreakpointEnvelope" << endl;
 }
 
 // ---------------------------------------------------------------------------
@@ -75,6 +75,17 @@ BreakpointEnvelope::BreakpointEnvelope(const BreakpointEnvelope & other) :
 BreakpointEnvelope::~BreakpointEnvelope(void)
 {
 	debugger << "destroying BreakpointEnvelope" << endl;
+}
+
+// ---------------------------------------------------------------------------
+//	clone
+// ---------------------------------------------------------------------------
+//
+BreakpointEnvelope * 
+BreakpointEnvelope::clone( void ) const
+{
+	debugger << "BreakpointEnvelope clone: ";	//	constructor also reports to debugger
+	return new BreakpointEnvelope( *this );
 }
 
 // ---------------------------------------------------------------------------
@@ -88,8 +99,6 @@ BreakpointEnvelope::insertBreakpoint( double x, double y )
 {
 	_breakpoints[x] = y;
 }
-
-
 
 // ---------------------------------------------------------------------------
 //	valueAt

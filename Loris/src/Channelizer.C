@@ -31,10 +31,10 @@
  *
  */
 #include "Channelizer.h"
-#include "Handle.h"
 #include "Envelope.h"
 #include "Partial.h"
 #include "notifier.h"
+#include <memory>
 
 //	for debugging
 #ifdef Debug_Loris
@@ -54,14 +54,18 @@ namespace Loris {
 class Channelizer_imp
 {
 public:
-	Handle<Envelope> _refChannelFreq;
+	const std::auto_ptr<Envelope> _refChannelFreq;
 	int _refChannelLabel;
 
-	Channelizer_imp( Handle<Envelope> env, int label );
+	Channelizer_imp( const Envelope & env, int label );
 	~Channelizer_imp( void );
 	
 	void channelize( std::list< Partial >::iterator begin, std::list< Partial >::iterator end );
 
+private:
+	//	don't allow copy or assign:
+	Channelizer_imp( const Channelizer_imp & );
+	Channelizer_imp & operator=( const Channelizer_imp & );
 };	//	end of class Channelizer_imp
 
 // ---------------------------------------------------------------------------
@@ -70,8 +74,8 @@ public:
 //	Can verify in Meyer that when the exception is thrown, the Handle<>
 //	destructor is guaranteed to be called.
 //
-Channelizer_imp::Channelizer_imp( Handle< Envelope > env, int label ) :
-	_refChannelFreq( env ),
+Channelizer_imp::Channelizer_imp( const Envelope & env, int label ) :
+	_refChannelFreq( env.clone() ),
 	_refChannelLabel( label )
 {
 	if ( label <= 0 )
@@ -210,8 +214,8 @@ Channelizer_imp::channelize( std::list< Partial >::iterator begin, std::list< Pa
 //	automatically. So there's no risk of a memory leak associated with this
 //	pointer initialization.
 //
-Channelizer::Channelizer( Handle< Envelope > env, int label ) :
-	_imp( new Channelizer_imp( env, label ) )
+Channelizer::Channelizer( const Envelope & refChanFreq, int refChanLabel ) :
+	_imp( new Channelizer_imp( refChanFreq, refChanLabel ) )
 {
 }
 
@@ -220,7 +224,7 @@ Channelizer::Channelizer( Handle< Envelope > env, int label ) :
 // ---------------------------------------------------------------------------
 //
 Channelizer::Channelizer( const Channelizer & other ) :
-	_imp( new Channelizer_imp( * other._imp ) )
+	_imp( new Channelizer_imp( * other._imp->_refChannelFreq, other._imp->_refChannelLabel ) )
 {
 }
 
@@ -237,7 +241,7 @@ Channelizer::operator=( const Channelizer & rhs )
 		if ( _imp != rhs._imp )
 		{
 			delete _imp;
-			_imp = new Channelizer_imp( *rhs._imp );
+			_imp = new Channelizer_imp( * rhs._imp->_refChannelFreq, rhs._imp->_refChannelLabel );
 		}
 		else
 		{

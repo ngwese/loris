@@ -40,8 +40,14 @@ namespace Loris {
 // ---------------------------------------------------------------------------
 //	class Envelope
 //
-//	Abstract base class, specifying interface ( valueAt() ).
-//	Derived classes must implement valueAt().
+//	Abstract base class, specifying interface ( valueAt() and clone() ).
+//	Derived classes must implement valueAt() and clone(), the latter to 
+//	support the Prototype pattern.
+//
+//	Clients of Envelope, like Morpher, use the Prototype pattern to safely
+//	take ownership of their Envelopes. Formerly, Handle<>s were used for this
+//	purpose, but using them polymorphically seemed to trigger random and 
+//	diverse compiler problems.  
 //
 //	Envelope is an abstract base class representing a generic real (double) 
 //	function of one real (double) argument. 
@@ -52,6 +58,8 @@ class Envelope
 public:
 	virtual double valueAt( double x ) const = 0;	
 	virtual ~Envelope( void );
+	
+	virtual Envelope * clone( void ) const = 0;
 	
 //	-- protected interface --
 protected:

@@ -90,14 +90,10 @@ int main( )
 		clar.splice( clar.end(), ip.partials() );
 		std::cout << "that was fun." << endl;
 		
-		//	spc?
-		ExportSpc dehr( 90 );
-		dehr.write( "dehr.spc", clar );
-
-		Handle< BreakpointEnvelope > clarRef;
-		getFreqReference( clar, 20, 0, 1000, clarRef );
+		BreakpointEnvelope clarRef;
+		getFreqReference( clar, 20, 0, 1000, &clarRef );
 							  
-		Channelizer ch( ( Handle< Envelope >( clarRef ) ), 1 );
+		Channelizer ch( clarRef, 1 );
 		ch.channelize( clar.begin(), clar.end() );
 		
 		Distiller still;
@@ -139,10 +135,10 @@ int main( )
 		a.analyze( v.begin(), v.end(), f.sampleRate() );
 		flut.splice( flut.end(), a.partials() );
 
-		Handle< BreakpointEnvelope > flutRef;
-		getFreqReference( flut, 20, 0, 1000, flutRef );
+		BreakpointEnvelope flutRef;
+		getFreqReference( flut, 20, 0, 1000, &flutRef );
 							  
-		ch = Channelizer( ( Handle< Envelope >( flutRef ) ), 1 );
+		ch = Channelizer( flutRef, 1 );
 		ch.channelize( flut.begin(), flut.end() );
 
 		still.distill( flut );
@@ -180,10 +176,10 @@ int main( )
 		
 		// perform morph:
 		std::cout << "morphing flute and clarinet" << endl;
-		Handle< BreakpointEnvelope > mf;
-		Morpher m( (Handle< Envelope >( mf )) );
-		mf->insertBreakpoint( 0.6, 0 );
-		mf->insertBreakpoint( 2, 1 );
+		BreakpointEnvelope mf;
+		mf.insertBreakpoint( 0.6, 0 );
+		mf.insertBreakpoint( 2, 1 );
+		Morpher m( mf );
 		m.morph( clar.begin(), clar.end(), flut.begin(), flut.end() );
 
 		// check flute synthesis:

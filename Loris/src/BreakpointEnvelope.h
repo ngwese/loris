@@ -78,6 +78,11 @@ public:
 	virtual ~BreakpointEnvelope( void );
 	/*	Destroy this BreakpointEnvelope. 								
 	 */
+
+	virtual BreakpointEnvelope * clone( void ) const;
+	/*	Return an exact copy of this BreakpointEnvelope.
+		(Prototype pattern)
+	 */
 	
 //	Envelope interface:
 	virtual double valueAt( double x ) const;	

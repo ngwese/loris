@@ -81,7 +81,12 @@
 #include <fstream>
 #include <set>
 
+
 using namespace Loris;
+
+typedef Handle<BreakpointEnvelope> BpEnv_Handle;
+typedef Handle<Envelope> Env_Handle;
+
 
 /* ---------------------------------------------------------------- */
 /*		non-object-based procedures
@@ -124,14 +129,7 @@ void channelize( PartialList * partials,
 		
 		notifier << "channelizing " << partials->size() << " Partials" << endl;
 
-		//	All of these declarations are very fragile, and metrowerks 
-		//	and gnu differ on which ones they do incorrectly.
-		//
-		// Handle<BreakpointEnvelope> href(*refFreqEnvelope);
-		typedef Handle<BreakpointEnvelope> BpEnv_Handle;
-		typedef Handle<Envelope> Env_Handle;
-		Env_Handle href = BpEnv_Handle(*refFreqEnvelope);
-		Channelizer chan( href, refLabel );
+		Channelizer chan( *refFreqEnvelope, refLabel );
 		chan.channelize( partials->begin(), partials->end() );		
 	}
 	catch( Exception & ex ) 
@@ -313,66 +311,6 @@ void exportSdif( const char * path, PartialList * partials, double hop )
 }
 
 /* ---------------------------------------------------------------- */
-/*        exportSdif        
-/*
-/*	Export Partials in a PartialList to an SPC file, for use with
-	the Kyma system. Waiting on a real doc string for this one.  
-		
-extern "C"
-void exportSpc( const char *fname, PartialList * partials,
-				int numSpcPars, int refParNum, double frameRate, double midiPitch, 
-				double thresh, double endtime, double markertime, double approachtime )
-{
-	if ( partials->size() == 0 ) 
-	{
-		notifier << "no partials to export!" << endl;
-		return;
-	}
-	
-	try 
-	{
-		notifier << "exporting spc partial data to " << fname << endl;
-		std::fstream fs;
-		fs.open( fname, std::ios::out | std::ios::binary );
-		
-		if ( endtime == 0. )
-		{
-				//	compute the time span:
-			debugger << "computing time span..." << endl;
-			double mintime = 999999., maxtime = 0.;
-			for ( PartialList::const_iterator it = partials->begin(); 
-				  it != partials->end(); 
-				  ++it ) 
-			{
-				mintime = std::min( mintime, it->endTime() );
-				maxtime = std::max( maxtime, it->endTime() );
-			}
-			debugger << "(" << mintime << " , " << maxtime << ") seconds" << endl;
-			endtime = maxtime;
-		}
-		
-		ExportSpc efout( numSpcPars, frameRate, midiPitch, thresh, 
-						 endtime, markertime, approachtime  );
-		efout.write( fs, *partials, refParNum );
-		
-	}
-	catch( Exception & ex ) 
-	{
-		std::string s("Loris exception in exportSpc(): " );
-		s.append( ex.what() );
-		handleException( s.c_str() );
-	}
-	catch( std::exception & ex ) 
-	{
-		std::string s("std C++ exception in exportSpc(): " );
-		s.append( ex.what() );
-		handleException( s.c_str() );
-	}
-
-}
- */
-
-/* ---------------------------------------------------------------- */
 /*        importAiff        
 /*
 /*	Import audio samples stored in an AIFF file at the given file
@@ -485,21 +423,9 @@ void morph( const PartialList * src0, const PartialList * src1,
 
 		notifier << "morphing " << src0->size() << " Partials with " <<
 					src1->size() << " Partials" << endl;
+					
 		//	make a Morpher object and do it:
-		//	All of these declarations are very fragile, and metrowerks 
-		//	and gnu differ on which ones they do incorrectly.
-		typedef Handle<BreakpointEnvelope> BpEnv_Handle;
-		typedef Handle<Envelope> Env_Handle;
-		/*
-		//	this works in gnu, but not metrowerks:
-		Handle<BreakpointEnvelope> ff(*ffreq); 
-		Handle<BreakpointEnvelope> fa(*famp);
-		Handle<BreakpointEnvelope> fb(*fbw);
-		*/
-		Env_Handle ff = BpEnv_Handle(*ffreq);
-		Env_Handle fa = BpEnv_Handle(*famp);
-		Env_Handle fb = BpEnv_Handle(*fbw);
-		Morpher m( ff, fa, fb );
+		Morpher m( *ffreq, *famp, *fbw );
 		m.morph( src0->begin(), src0->end(), src1->begin(), src1->end() );
 				
 		//	splice the morphed Partials into dst:
