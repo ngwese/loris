@@ -101,12 +101,35 @@ endif
 #
 if BUILD_PERL
 perlsitepkgdir = $(exec_prefix)/lib/$(SITEPERL)
-perlsitepkg_LTLIBRARIES = perLoris.la
 perlsitepkg_SCRIPTS = perLoris.pm
 
+#----------------------------------------------------------------
+# Darwin is special, libtool doesn't work right.
+#
+if DARWIN
+PERL_MODULE = perLoris.bundle
+INSTALL_PERL_MODULE = install_perl_module
+
+$(PERL_MODULE): loris_perl_wrap.o $(top_builddir)/pi/.libs/libloris.a
+	$(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(LDFLAGS) \
+		-bundle -flat_namespace -undefined suppress \
+		-o $@ loris_perl_wrap.o $(top_builddir)/pi/.libs/libloris.a \
+		-lsdif -lfftw $(LIBS)
+	-mkdir .libs
+	cp $@ .libs/$@
+
+install_perl_module:
+	$(INSTALL) perLoris.so $(perlsitepkgdir)/$(PERL_MODULE)
+
+else
+#
+# not Darwin, use libtool
+#
+perlsitepkg_LTLIBRARIES = perLoris.la
 perLoris_la_SOURCES = $(PERL_WRAPPER)
 perLoris_la_LDFLAGS = -module -avoid-version
 perLoris_la_LIBADD = $(top_builddir)/pi/libloris.la -lstdc++
+endif
 
 endif
 
