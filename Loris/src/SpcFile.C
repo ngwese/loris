@@ -636,12 +636,12 @@ static void pack( double amp, double freq, double bw, double phase,
 	if (theNoiseMag > 1.0)
 		theNoiseMag = 1.0;
 
-// Pack lval:	
-// 7 bits of log-sine-amplitude with 24 bits of zero to right.
-// 16 bits of log-frequency with 8 bits of zero to right.
+// Pack amp and freq into 24 least-significant bits of lval:	
+// 7 bits of log-sine-amplitude with 16 bits of zero to right.
+// 16 bits of log-frequency with 0 bits of zero to right.
 	unsigned long lval;
-	lval = ( envLog( theSineMag ) & 0xFE00 ) << 15;
-	lval |= ( envLog( zeroToOneFreq ) & 0xFFFF ) << 8;
+	lval = ( envLog( theSineMag ) & 0xFE00 ) << 7;
+	lval |= ( envLog( zeroToOneFreq ) & 0xFFFF );
 	
 //	store in lbytes:
 //	store the sample bytes in big endian order, 
@@ -653,12 +653,12 @@ static void pack( double amp, double freq, double bw, double phase,
 		*(lbytes++) = 0xFF & (lval >> (8*(j-1)));
 	}
 
-// Pack rval:
-// 7 bits of log-noise-amplitude with 24 bits of zero to right.
-// 16 bits of phase with 8 bits of zero to right.
+// Pack noise amp and phase into 24 least-significant bits of rval:
+// 7 bits of log-noise-amplitude with 16 bits of zero to right.
+// 16 bits of phase with 0 bits of zero to right.
 	unsigned long rval;
-	rval = ( envLog( theNoiseMag ) & 0xFE00 ) << 15;
-	rval  |= ( (unsigned long) ( zeroToOnePhase * 0xFFFF ) ) << 8;
+	rval = ( envLog( theNoiseMag ) & 0xFE00 ) << 7;
+	rval  |= ( (unsigned long) ( zeroToOnePhase * 0xFFFF ) );
 
 //	store in rbytes:
 //	store the sample bytes in big endian order, 
@@ -1054,10 +1054,10 @@ processEnhancedPoint( Byte * leftbytes, Byte * rightbytes,
 //
 // Unpack values.  
 //
-	double freq = 		envExp( (left >> 8)   & 0xffff ) * 22050.0;
-	double sineMag =	envExp( (left >> 15)  & 0xfe00 );
-	double noiseMag =	envExp( (right >> 15) & 0xfe00 ) / 64.;
-	double phase = 			  ( (right >> 8)  & 0xffff ) * ( 2. * Pi / 0xffff );
+	double freq = envExp( left & 0xffff ) * 22050.0;
+	double sineMag =	 envExp( (left >> 7)  & 0xfe00 );
+	double noiseMag = envExp( (right >> 7) & 0xfe00 ) / 64.;
+	double phase = ( right & 0xffff ) * ( 2. * Pi / 0xffff );
 	
 	double total = sineMag * sineMag + noiseMag * noiseMag;
 
@@ -1106,10 +1106,10 @@ processSineOnlyPoint( Byte * bytes,
 //
 // Unpack values.  
 //
-	double freq = 		envExp( (packed >> 8)   & 0xffff ) * 22050.0;
-	double amp =		envExp( (packed >> 15)  & 0xfe00 );
-	double noise = 		0.;
-	double phase = 		0.;
+	double freq = envExp( packed & 0xffff ) * 22050.0;
+	double amp =	 envExp( (packed >> 7)  & 0xfe00 );
+	double noise = 0.;
+	double phase = 0.;
 
 //
 // Create a new breakpoint and insert it.
@@ -1234,24 +1234,11 @@ SpcFile::readSpcData( const std::string & filename )
 			Throw( FileIOException, "Not an SPC file." );
 	if ( numPartials < MinNumPartials || numPartials > LargestLabel )
 			Throw( FileIOException, "Bad number of partials in SPC file." );
-	
-	/*
-	//	it seems absurd to convert the samples to
-	//	doubles, just to convert them back again
-	std::vector< double > samples;
-	convertBytesToSamples( soundDataChunk.sampleBytes, samples, commonChunk.bitsPerSample );
-	if ( samples.size() != commonChunk.sampleFrames )
-	{
-		notifier << "Found " << samples.size() << " frames of "
-				 << commonChunk.bitsPerSample << "-bit sample data." << endl;
-		notifier << "Header says there should be " << commonChunk.sampleFrames
-				 << "." << endl;
-	}
-	*/
-	
+
+	//	check the number of bytes of Spc data: 	
 	const int BytesPerSample = 3;
 	const int PredictedNumBytes = 
-		BytesPerSample * numFrames * fileNumPartials( numPartials ) * (enhanced)?(2):(1);
+		BytesPerSample * numFrames * fileNumPartials( numPartials ) * ( enhanced ? 2 : 1 );
 	if ( soundDataChunk.sampleBytes.size() != PredictedNumBytes )
 	{
 		notifier << "Found " << soundDataChunk.sampleBytes.size() << " bytes of "
@@ -1268,7 +1255,6 @@ SpcFile::readSpcData( const std::string & filename )
 	{
 		for ( int partial = 0; partial < fileNumPartials( numPartials ); ++partial )
 		{
-			
 			if (enhanced)
 			{
 				Byte * lbytes = bytes;
@@ -1287,6 +1273,5 @@ SpcFile::readSpcData( const std::string & filename )
 		}
 	}
 }
-
 
 }	//	end of namespace Loris
