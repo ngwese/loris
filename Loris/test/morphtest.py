@@ -73,11 +73,13 @@ loris.distill( clar )
 # clarinet analysis:
 f = 0
 n = 0
-bp = clar.first().first()
-while not bp.atEnd():
+iter = clar.begin().partial().begin()
+end = clar.begin().partial().end()
+while not iter.equals(end):
+	bp = iter.breakpoint()
 	f = f + bp.frequency()
 	n = n + 1
-	bp.next()
+	iter.next()
 print "avg frequency of first distilled clarinet partial is", f/n
 
 loris.shiftPitch( clar, loris.BreakpointEnvelopeWithValue( -600 ) )

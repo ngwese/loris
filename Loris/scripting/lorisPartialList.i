@@ -442,10 +442,17 @@ class PartialIterator
 public:
 //	time and Breakpoint access:
 //
+#if 0
+	//	this doesn't swig right, returning a reference
+	//	causes the object (in Python) to wind up with
+	//	ownership, which of course it should not. Why
+	//	is this busted? Fix by adding method to return ptr.
+	//	
 	Breakpoint & breakpoint( void ) { return _iter->second; }
 	/*	Return (a reference to) the Breakpoint at the position of this
 		PartialIterator.
 	 */
+#endif
 	 
 	double time( void ) const { return _iter->first; }	
 	/*	Return the time of the Breakpoint at the position of this
@@ -458,6 +465,17 @@ public:
 	//	interface all need to be added:
 	%addmethods 
 	{
+		//	this doesn't seem to swig correctly, Breakpoint
+		//	winds up with ownership, try fixng it here:
+	        Breakpoint * breakpoint( void ) 
+		{ 
+			return &(self->breakpoint());
+		}
+		/*      Return (a reference to) the Breakpoint at the position of this
+			PartialIterator.
+		 */
+
+
 		%new PartialIterator * copy( void )
 		{
 			return new PartialIterator( *self );
@@ -522,7 +540,7 @@ public:
 		phase.
 	 */
 
-	~BreakpointHandle( void );
+	~Breakpoint( void );
 	/*	Delete this Breakpoint.
 	 */
 

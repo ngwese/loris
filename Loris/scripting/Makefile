@@ -34,32 +34,45 @@
 TOP = ../..
 include $(TOP)/Loris/classes/Rules.loris
 
+SWIG = /usr/local/bin/swig
+SWIG_INTERFACE = loris.i
 
-OBJ_BRIDGE = loris_python_wrap.o
+PY_WRAPPER = loris_python_wrap.C
+PY_MODULE = loriscmodule.so
 
-PY_VERSION = 2.0
-PYTHON_PREFIX = /usr/local
+PERL_WRAPPER = loris_perl_wrap.C
+
+PY_VERSION = 1.5
+PYTHON_PREFIX = /usr
 PYTHON_INCLUDE = ${PYTHON_PREFIX}/include/python${PY_VERSION}
 PYTHON_LIB = ${PYTHON_PREFIX}/lib/python${PY_VERSION}/config
 INC_PY = -DHAVE_CONFIG_H -I${PYTHON_INCLUDE} -I${PYTHON_LIB}
 
+PERL_CORE = /System/Library/Perl/darwin/CORE/
+
 CC = g++
 CFLAGS 	:= -O2 ${INC_PY} -I${PI} -I${CLASSES} -Wno-multichar
 
-python: lorislib ${OBJ_BRIDGE}
-	${CC} -shared ${OBJ_BRIDGE} $(OUTPUT)/libloris.a ${LIB_LORIS} -o $(OUTPUT)/loriscmodule.so
+python: $(PY_MODULE)
+
+$(PY_MODULE): lorislib pywrap
+	${CC} -shared $(PY_WRAPPER:c++=o) $(OUTPUT)/libloris.a ${LIB_LORIS} -o $(OUTPUT)/loriscmodule.so
+	-mv loris.py $(OUTPUT)/loris.py
 
 lorislib: 
 	cd $(PI); $(MAKE) lib
 	
-pywrap: 
-	swig -python -shadow -c++ -o loris_python_wrap.C loris.i
-	cc $(CFLAGS) -c loris_python_wrap.C
+pywrap: $(PY_WRAPPER:c++=o)
+
+$(PY_WRAPPER:c++=o): $(PY_WRAPPER)
+	$(CC) $(CFLAGS) -c $(PY_WRAPPER)
+
+$(PY_WRAPPER): $(SWIG_INTERFACE)
+	$(SWIG) -python -shadow -c++ -o $(PY_WRAPPER) $(SWIG_INTERFACE)
 
 perlwrap:
-	swig -perl5 -c++ -o loris_perl_wrap.C loris.i
-	cc $(CFLAGS) -I/System/Library/Perl/darwin/CORE/ -c loris_perl_wrap.C
-	
+	$(SWIG) -perl5 -c++ -o $(PERL_WRAPPER) $(SWIG_INTERFACE)
+	$(CC) $(CFLAGS) -I$(PERL_CORE) -c $(PERL_WRAPPER)
 	
 #
 #   dependencies:

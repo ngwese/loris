@@ -83,7 +83,7 @@ int main( )
 		//	make sure that SDIF I/O is working:
 		std::cout << "exporting sdif" << endl;
 		ExportSdif xp( 0 );
-		xp.write( "clar.sdif", clar );
+		xp.write( "clarinet.sdif", clar );
 		std::cout << "importing sdif" << endl;
 		ImportSdif ip("clarinet.sdif");
 		clar.clear();
