@@ -7,6 +7,13 @@ See the end for copying conditions.
 Please send Loris bug reports to loris@cerlsoundgroup.org.
 
 -------------------------------------------------------
+changes since 1.0beta9 release:
+
+- Removed experimental Sieve class, and related sift functions.
+
+- Updated documentation (finally).
+
+-------------------------------------------------------
 changes since 1.0beta8 release:
 
 - fixed Dilator to insert Breakpoints in new Partials at 

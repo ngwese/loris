@@ -315,7 +315,7 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch,
 	enhanced parameter defaults to true (for bandwidth-enhanced spc files), 
 	but an be specified false for pure-sines spc files. The optional 
 	endApproachTime parameter is in seconds; its default value is zero (and 
-	has no effect). A nonzero endApproachTime indicates that the plist does 
+	has no effect). A nonzero endApproachTime indicates that the PartialList does 
 	not include a release, but rather ends in a static spectrum corresponding 
 	to the final breakpoint values of the partials. The endApproachTime
 	specifies how long before the end of the sound the amplitude, frequency, 
@@ -469,29 +469,6 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch,
  */
 
 
-%{
-	#include<Sieve.h>
-%}
-	
-%inline 
-%{
-	void sift( PartialList * partials )
-	{		
-		
-		ThrowIfNull((PartialList *) partials);
-
-		Loris::notifier << "sifting " << partials->size() << " Partials" << Loris::endl;
-		
-		Loris::Sieve sieve( 0.0001 );
-		sieve.sift( *partials );
-	}
-	/*	Eliminate overlapping Partials having the same label 
-		(except zero). If any two partials with same label 
-		overlap in time, keep only the longer of the two.
-		Set the label of the shorter duration partial to zero.
-		
-	 */
-%}
 
 /* ---------------------------------------------------------------- */
 /*		utility functions

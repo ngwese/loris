@@ -7,178 +7,350 @@ Python module: loris</TITLE>
 
 <HR><H1> Contents </H1>
 <UL><LI> <A HREF="#s1_">1. Loris class interfaces</A>
-<UL><LI> <A HREF="#s1_1_">1.1. class PartialList</A>
-<LI> <A HREF="#s1_2_">1.2. class PartialListIterator</A>
-<LI> <A HREF="#s1_3_">1.3. class Partial</A>
-<LI> <A HREF="#s1_4_">1.4. class PartialIterator</A>
-<LI> <A HREF="#s1_5_">1.5. class Breakpoint</A>
-<LI> <A HREF="#s1_6_">1.6. class Analyzer</A>
-<LI> <A HREF="#s1_7_">1.7. class BreakpointEnvelope</A>
-<LI> <A HREF="#s1_8_">1.8. class SampleVector</A>
-<LI> <A HREF="#s1_9_">1.9. class AiffFile</A>
-</UL><LI> <A HREF="#s2_">2. Non-object-based procedures</A>
-<LI> <A HREF="#s3_">3. Utility functions</A>
+<UL>
+<LI> <A HREF="#s1_9_">1.1. class AiffFile</A>
+<LI> <A HREF="#s1_6_">1.2. class Analyzer</A>
+<LI> <A HREF="#s1_5_">1.3. class Breakpoint</A>
+<LI> <A HREF="#s1_7_">1.4. class BreakpointEnvelope</A>
+<LI> <A HREF="#s1_3_">1.5. class Partial</A>
+<LI> <A HREF="#s1_4_">1.6. class PartialIterator</A>
+<LI> <A HREF="#s1_1_">1.7. class PartialList</A>
+<LI> <A HREF="#s1_2_">1.8. class PartialListIterator</A>
+<LI> <A HREF="#s1_8_">1.9. class SampleVector</A>
+</UL>
+<LI> <A HREF="#s2_">2. Non-object-based procedures</A>
 </UL>
 
 <A name="s1_">
 <HR><H2>1. Loris class interfaces</H2></A>
-<A name="s1_1_">
-<H3>1.1. class PartialList</H3></A>
-	A PartialList represents a collection of Bandwidth-Enhanced 
-	Partials, each having a trio of synchronous, non-uniformly-
+<A name="s1_9_">
+<H3>1.1. class AiffFile</H3></A>
+	An AiffFile represents a sample file (on disk) in the Audio Interchange
+	File Format. The file is read from disk and the samples stored in memory
+	upon construction of an AiffFile instance. The samples are accessed by 
+	the samples() method, which converts them to double precision floats and
+	returns them in a SampleVector.
+<P><TT><B>AiffFile(filename)</B></TT>
+<BLOCKQUOTE>  	Import an AIFF file with the specified file name
+		or path.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>del this</B></TT>
+<BLOCKQUOTE>  	Delete this AIFF data (does not affect data on disk).
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>channels()</B></TT>
+<BLOCKQUOTE>  	Return the number of channels of sample data this AIFF file.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>samples()</B></TT>
+<BLOCKQUOTE>  	Return a SampleVector containing the AIFF samples from this AIFF 
+		file as double precision floats on the range -1,1.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>sampleFrames()</B></TT>
+<BLOCKQUOTE>  	Return the number of frames of sample data this AIFF file.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>sampleRate()</B></TT>
+<BLOCKQUOTE>  	Return the sample rate in Hz of the sample data this AIFF file.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>sampleSize()</B></TT>
+<BLOCKQUOTE>  	Return the size in bits of the sample data this AIFF file.
+	   
+</BLOCKQUOTE>
+
+<A name="s1_6_">
+<H3>1.2. class Analyzer</H3></A>
+	An Analyzer represents a configuration of parameters for
+	performing Reassigned Bandwidth-Enhanced Additive Analysis
+	of sampled waveforms. This analysis process yields a collection 
+	of Partials, each having a trio of synchronous, non-uniformly-
 	sampled breakpoint envelopes representing the time-varying 
 	frequency, amplitude, and noisiness of a single bandwidth-
-	enhanced sinusoid.
+	enhanced sinusoid. <br>
 
+	For more information about Reassigned Bandwidth-Enhanced 
+	Analysis and the Reassigned Bandwidth-Enhanced Additive Sound 
+	Model, refer to the Loris website: www.cerlsoundgroup.org/Loris/
+<P><TT><B>Analyzer(resolutionHz,windowWidthHz)</B></TT>
+<BLOCKQUOTE>  	Construct and return a new Analyzer configured with the given	
+		frequency resolution (minimum instantaneous frequency	
+		difference between Partials) and analysis window main 
+		lobe width (between zeros). All other Analyzer parameters 	
+		are computed from the specified resolution and window
+		width. If the window width is not specified, or is 0,
+		then it is assumed to be equal to the resolution. 	 			
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>del this</B></TT>
+<BLOCKQUOTE>  	Destroy this Analyzer. 								
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>ampFloor()</B></TT>
+<BLOCKQUOTE>  	Return the amplitude floor (lowest detected spectral amplitude),  			
+		in (negative) dB, for this Analyzer. 				
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>analyze(vec,srate)</B></TT>
+<BLOCKQUOTE>  	Analyze a SampleVector of (mono) samples at the given sample rate 	  	
+		(in Hz) and return the resulting Partials in a PartialList. 												
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>bwRegionWidth()</B></TT>
+<BLOCKQUOTE>  	Return the width (in Hz) of the Bandwidth Association regions
+		used by this Analyzer.<br>
+	   
+	   	This parameter is deprecated, and not generally useful. It will be
+	   	removed in a future Loris release.
+</BLOCKQUOTE>
+
+<P><TT><B>copy()</B></TT>
+<BLOCKQUOTE>  	Construct and return a new Analyzer having identical
+		parameter configuration to another Analyzer.			
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>cropTime()</B></TT>
+<BLOCKQUOTE>  	Return the crop time (maximum temporal displacement of a time-
+		frequency data point from the time-domain center of the analysis
+		window, beyond which data points are considered &quot;unreliable&quot;)
+		for this Analyzer.<br>
+	   
+	   	This parameter is deprecated, and not generally useful. It will be
+	   	removed in a future Loris release.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>freqDrift()</B></TT>
+<BLOCKQUOTE>  	Return the maximum allowable frequency difference between 					
+		consecutive Breakpoints in a Partial envelope for this Analyzer. 				
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>freqFloor()</B></TT>
+<BLOCKQUOTE>  	Return the frequency floor (minimum instantaneous Partial  				
+		frequency), in Hz, for this Analyzer. 				
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>freqResolution()</B></TT>
+<BLOCKQUOTE>  	Return the frequency resolution (minimum instantaneous frequency  		
+		difference between Partials) for this Analyzer. 	
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>hopTime()</B></TT>
+<BLOCKQUOTE>  	Return the hop time (which corresponds approximately to the 
+		average density of Partial envelope Breakpoint data) for this 
+		Analyzer.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>windowWidth()</B></TT>
+<BLOCKQUOTE>  	Return the frequency-domain main lobe width (measured between 
+		zero-crossings) of the analysis window used by this Analyzer. 				
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>setAmpFloor(x)</B></TT>
+<BLOCKQUOTE>  	Set the amplitude floor (lowest detected spectral amplitude), in  			
+		(negative) dB, for this Analyzer. 				
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>setBwRegionWidth(x)</B></TT>
+<BLOCKQUOTE>  	Set the width (in Hz) of the Bandwidth Association regions
+		used by this Analyzer.<br>
+	   
+	   	This parameter is deprecated, and not generally useful. It will be
+	   	removed in a future Loris release.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>setCropTime(x)</B></TT>
+<BLOCKQUOTE>  	Set the crop time (maximum temporal displacement of a time-
+		frequency data point from the time-domain center of the analysis
+		window, beyond which data points are considered &quot;unreliable&quot;)
+		for this Analyzer.<br>
+	   
+	   	This parameter is deprecated, and not generally useful. It will be
+	   	removed in a future Loris release.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>setFreqDrift(x)</B></TT>
+<BLOCKQUOTE>  	Set the maximum allowable frequency difference between 					
+		consecutive Breakpoints in a Partial envelope for this Analyzer. 				
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>setFreqFloor(x)</B></TT>
+<BLOCKQUOTE>  	Set the amplitude floor (minimum instantaneous Partial  				
+		frequency), in Hz, for this Analyzer.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>setFreqResolution(x)</B></TT>
+<BLOCKQUOTE>  	Set the frequency resolution (minimum instantaneous frequency  		
+		difference between Partials) for this Analyzer. (Does not cause 	
+		other parameters to be recomputed.) 									
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>setHopTime(x)</B></TT>
+<BLOCKQUOTE>  	Set the hop time (which corresponds approximately to the average
+		density of Partial envelope Breakpoint data) for this Analyzer.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>setWindowWidth(x)</B></TT>
+<BLOCKQUOTE>  	Set the frequency-domain main lobe width (measured between 
+		zero-crossings) of the analysis window used by this Analyzer. 				
+	   
+</BLOCKQUOTE>
+
+<A name="s1_5_">
+<H3>1.3. class Breakpoint</H3></A>
+	A Breakpoint represents a single breakpoint in the time-varying
+	frequency, amplitude, and bandwidth envelope of a Reassigned 
+	Bandwidth-Enhanced Partial.<br>
+	
+	Instantaneous phase is also stored, but is only used at the onset of 
+	a partial, or when it makes a transition from zero to nonzero amplitude.<br>
+
+	A Partial represents a Reassigned Bandwidth-Enhanced model component.
 	For more information about Bandwidth-Enhanced Partials and the  
 	Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
 	the Loris website: www.cerlsoundgroup.org/Loris/
-<P><TT><B>PartialList()</B></TT>
-<BLOCKQUOTE>  	Return a new empty PartialList.
-		   
-</BLOCKQUOTE>
-
-<P><TT><B>del this</B></TT>
-<BLOCKQUOTE>  	Destroy this PartialList.
-		   
-</BLOCKQUOTE>
-
-<P><TT><B>begin()</B></TT>
-<BLOCKQUOTE>  	Return an iterator refering to the first Partial in this PartialList.
+<P><TT><B>Breakpoint(f,a,b,p)</B></TT>
+<BLOCKQUOTE>  	Return a new Breakpoint having the specified frequency
+		amplitude, bandwidth, and (optionally, defaults to zero)
+		phase.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>clear()</B></TT>
-<BLOCKQUOTE>  	Remove (and destroy) all the Partials from this PartialList,
-		leaving it empty.
+<P><TT><B>del this</B></TT>
+<BLOCKQUOTE>  	Delete this Breakpoint.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>amplitude()</B></TT>
+<BLOCKQUOTE>  	Return the amplitude of this Breakpoint. 
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>bandwidth()</B></TT>
+<BLOCKQUOTE>  	Return the bandwidth of this Breakpoint. 
 	   
 </BLOCKQUOTE>
 
 <P><TT><B>copy()</B></TT>
-<BLOCKQUOTE>  	Return a new PartialList that is a copy of this 
-			PartialList (i.e. has identical Partials).
-		   
-</BLOCKQUOTE>
-
-<P><TT><B>end()</B></TT>
-<BLOCKQUOTE>  	Return an iterator refering to the end of this PartialList (an invalid
-		element after the last valid Partial).
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>erase(position)</B></TT>
-<BLOCKQUOTE>  	Remove the element at the position indicated by the 
-		PartialListIterator, position. After this operation,
-		the PartialListIterator position is invalid, but all
-		other iterators refering to other positions in the
-		PartialList are unaffected.
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>insert(position,partial)</B></TT>
-<BLOCKQUOTE>  	Insert a copy of the given Partial into this PartialList at
-		the position indicated by the PartialListIterator position.
-		Returns a PartialListIterator refering to the position of the
-		newly-inserted Partial.
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>size()</B></TT>
-<BLOCKQUOTE>  	Return the number of Partials in this PartialList.
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>splice(position,list)</B></TT>
-<BLOCKQUOTE>  	Splice all the Partials in the specified PartialList into
-		this PartialList at the position indicated by the PartialListIterator
-		position. Leaves the other PartialList empty.
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>timespan()</B></TT>
-<BLOCKQUOTE>  	Return the minimum start time and maximum end time
-		 	of all Partials in this PartialList in a tuple.
-	   
-</BLOCKQUOTE>
-
-<A name="s1_2_">
-<H3>1.2. class PartialListIterator</H3></A>
-	A PartialListIterator represents an iterator on a PartialList.
-	Its interface reflects the interface of the underlying std::list
-	iterator.
-	
-	PartialListIterators can only be obtained from their subject 
-	PartialList, through the begin and end methods of PartialList, 
-	and by copying, through the PartialListIterator copy method.
-	PartialListIterators are used to access individual elements
-	(Partials) of a PartialList.
-	
-	PartialListIterators are valid only as long as their subject
-	PartialList exists. In languages with some form of grabage 
-	collection, this means that a reference to the PartialList 
-	must be maintained in order to iterate. If that reference is
-	lost, the PartialList will be deleted, and the iterators will
-	refer to free memory. 
-	
-	PartialListIterators are also invalidated when PartialList element 
-	they reference is erased from the PartialList. Erasure does not 
-	invalidate any other PartialListIterators, refering to other 
-	elements. The validity of an iterator can be verified using the
-	isInRange method.
-<P><TT><B>del this</B></TT>
-<BLOCKQUOTE>  	Destroy this PartialListIterator (doesn't affect the corresponding 
-			Partial).
-		   
-</BLOCKQUOTE>
-
-<P><TT><B>copy()</B></TT>
-<BLOCKQUOTE>  	Return a new PartialListIterator that is a copy of this 
-			PartialListIterator (i.e. refers to the same position
-			in the same PartialList).
+<BLOCKQUOTE>  	Return a new Breakpoint that is a copy of this 
+			Breakpoint (i.e. has identical parameter values).
 		   
 </BLOCKQUOTE>
 
 <P><TT><B>equals(other)</B></TT>
-<BLOCKQUOTE>  	Return true (1) if this PartialListIterator is equal to the
-			other. PartialListIterators are equal if they refer to the
-			same position in the same PartialList.
+<BLOCKQUOTE>  	Return true (1) if this Breakpoint is equal to the
+			other. Breakpoints are equal is they have identical 
+			parameter values.
 		   
 </BLOCKQUOTE>
 
-<P><TT><B>isInRange(begin,end)</B></TT>
-<BLOCKQUOTE>  	Return true (1) if this iterator is within the half-open iterator
-		 	range bounded by begin and end, and false otherwise. This method
-		 	can be used to check the validity of an iterator -- call with 
-		 	begin and end methods of the PartialList as arguments.
-		    
+<P><TT><B>frequency()</B></TT>
+<BLOCKQUOTE>  	Return the frequency of this Breakpoint. 
+	   
 </BLOCKQUOTE>
 
-<P><TT><B>next()</B></TT>
-<BLOCKQUOTE>  	Return an iterator refering to the next position in the
-			PartialList.
-		   
+<P><TT><B>phase()</B></TT>
+<BLOCKQUOTE>  	Return the phase of this Breakpoint. 
+	   
 </BLOCKQUOTE>
 
-<P><TT><B>partial()</B></TT>
-<BLOCKQUOTE>  	Return (a reference to) the Partial at the position of this
-			PartialListIterator.
-		   
+<P><TT><B>setAmplitude(x)</B></TT>
+<BLOCKQUOTE>  	Assign the amplitude of this Breakpoint. 
+	   
 </BLOCKQUOTE>
 
-<P><TT><B>prev()</B></TT>
-<BLOCKQUOTE>  	Return an iterator refering to the previous position
-			in the PartialList.
-		   
+<P><TT><B>setBandwidth(x)</B></TT>
+<BLOCKQUOTE>  	Assign the bandwidth of this Breakpoint. 
+	   
 </BLOCKQUOTE>
 
+<P><TT><B>setFrequency(x)</B></TT>
+<BLOCKQUOTE>  	Assign the frequency of this Breakpoint. 
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>setPhase(x)</B></TT>
+<BLOCKQUOTE>  	Assign the phase of this Breakpoint. 
+	   
+</BLOCKQUOTE>
+
+<A name="s1_7_">
+<H3>1.4. class BreakpointEnvelope</H3></A>
+	A BreakpointEnvelope represents a linear segment breakpoint 
+	function with infinite extension at each end (that is, the 
+	values past either end of the breakpoint function have the 
+	values at the nearest end).
+<P><TT><B>BreakpointEnvelope()</B></TT>
+<BLOCKQUOTE>  	Construct and return a new BreakpointEnvelope having no 
+		breakpoints and an implicit value of 0. everywhere, 
+		until the first breakpoint is inserted.			
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>BreakpointEnvelopeWithValue(initialValue)</B></TT>
+<BLOCKQUOTE>  	Construct and return a new BreakpointEnvelope having a 
+	single breakpoint at 0. having the specified initialValue.
+   
+</BLOCKQUOTE>
+
+<P><TT><B>del this</B></TT>
+<BLOCKQUOTE>  	Destroy this BreakpointEnvelope. 								
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>copy()</B></TT>
+<BLOCKQUOTE>  	Construct and return a new BreakpointEnvelope that is
+		a copy of this BreapointEnvelope (has the same value
+		as this BreakpointEnvelope everywhere).			
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>insertBreakpoint(time,value)</B></TT>
+<BLOCKQUOTE>  	Insert a breakpoint representing the specified (time, value) 
+		pair into this BreakpointEnvelope. If there is already a 
+		breakpoint at the specified time, it will be replaced with 
+		the new breakpoint.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>valueAt(time)</B></TT>
+<BLOCKQUOTE>  	Return the interpolated value of this BreakpointEnvelope at 
+		the specified time.							
+	   
+</BLOCKQUOTE>
 
 <A name="s1_3_">
-<H3>1.3. class Partial</H3></A>
+<H3>1.5. class Partial</H3></A>
 	A Partial represents a Reassigned Bandwidth-Enhanced model component.
 	A Partial consists of a trio of synchronous, non-uniformly-
 	sampled breakpoint envelopes representing the time-varying 
 	frequency, amplitude, and noisiness of a single bandwidth-
-	enhanced sinusoid.
+	enhanced sinusoid.<br>
 	
 	For more information about Bandwidth-Enhanced Partials and the  
 	Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
@@ -300,15 +472,15 @@ Python module: loris</TITLE>
 </BLOCKQUOTE>
 
 <A name="s1_4_">
-<H3>1.4. class PartialIterator</H3></A>
-	A PartialIterator represents an iterator on a Partial.
+<H3>1.6. class PartialIterator</H3></A>
+	A PartialIterator represents an iterator on a Partial.<br>
 	
 	PartialIterators can only be obtained from their subject 
 	Partial, through the begin and end methods of Partial, 
 	and by copying, through the PartialIterator copy method.
 	PartialIterators are used to access individual Breakpoints
 	in Partial Breakpoint envelopes, and the times of those 
-	Breakpoints.
+	Breakpoints.<br>
 	
 	PartialIterators are valid only as long as their subject
 	Partial exists. In languages with some form of grabage 
@@ -317,7 +489,7 @@ Python module: loris</TITLE>
 	lost, the Partial will be deleted, and the iterators will
 	refer to free memory. By extension, if the Partial is an
 	element of a PartialList, a reference to the PartialList
-	must be maintained.
+	must be maintained.<br>
 	
 	PartialIterators are also invalidated when the Breakpoint 
 	they reference is erased from the Partial. Erasure does not 
@@ -374,286 +546,165 @@ Python module: loris</TITLE>
 		   
 </BLOCKQUOTE>
 
-<A name="s1_5_">
-<H3>1.5. class Breakpoint</H3></A>
-	A Breakpoint represents a single breakpoint in the time-varying
-	frequency, amplitude, and bandwidth envelope of a Reassigned 
-	Bandwidth-Enhanced Partial.
-	
-	Instantaneous phase is also stored, but is only used at the onset of 
-	a partial, or when it makes a transition from zero to nonzero amplitude.
+<A name="s1_1_">
+<H3>1.7. class PartialList</H3></A>
+	A PartialList represents a collection of Bandwidth-Enhanced 
+	Partials, each having a trio of synchronous, non-uniformly-
+	sampled breakpoint envelopes representing the time-varying 
+	frequency, amplitude, and noisiness of a single bandwidth-
+	enhanced sinusoid.<br>
 
-	A Partial represents a Reassigned Bandwidth-Enhanced model component.
 	For more information about Bandwidth-Enhanced Partials and the  
 	Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
 	the Loris website: www.cerlsoundgroup.org/Loris/
-<P><TT><B>Breakpoint(f,a,b,p)</B></TT>
-<BLOCKQUOTE>  	Return a new Breakpoint having the specified frequency
-		amplitude, bandwidth, and (optionally, defaults to zero)
-		phase.
-	   
+<P><TT><B>PartialList()</B></TT>
+<BLOCKQUOTE>  	Return a new empty PartialList.
+		   
 </BLOCKQUOTE>
 
 <P><TT><B>del this</B></TT>
-<BLOCKQUOTE>  	Delete this Breakpoint.
+<BLOCKQUOTE>  	Destroy this PartialList.
+		   
+</BLOCKQUOTE>
+
+<P><TT><B>begin()</B></TT>
+<BLOCKQUOTE>  	Return an iterator refering to the first Partial in this PartialList.
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>amplitude()</B></TT>
-<BLOCKQUOTE>  	Return the amplitude of this Breakpoint. 
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>bandwidth()</B></TT>
-<BLOCKQUOTE>  	Return the bandwidth of this Breakpoint. 
+<P><TT><B>clear()</B></TT>
+<BLOCKQUOTE>  	Remove (and destroy) all the Partials from this PartialList,
+		leaving it empty.
 	   
 </BLOCKQUOTE>
 
 <P><TT><B>copy()</B></TT>
-<BLOCKQUOTE>  	Return a new Breakpoint that is a copy of this 
-			Breakpoint (i.e. has identical parameter values).
+<BLOCKQUOTE>  	Return a new PartialList that is a copy of this 
+			PartialList (i.e. has identical Partials).
+		   
+</BLOCKQUOTE>
+
+<P><TT><B>end()</B></TT>
+<BLOCKQUOTE>  	Return an iterator refering to the end of this PartialList (an invalid
+		element after the last valid Partial).
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>erase(position)</B></TT>
+<BLOCKQUOTE>  	Remove the element at the position indicated by the 
+		PartialListIterator, position. After this operation,
+		the PartialListIterator position is invalid, but all
+		other iterators refering to other positions in the
+		PartialList are unaffected.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>insert(position,partial)</B></TT>
+<BLOCKQUOTE>  	Insert a copy of the given Partial into this PartialList at
+		the position indicated by the PartialListIterator position.
+		Returns a PartialListIterator refering to the position of the
+		newly-inserted Partial.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>size()</B></TT>
+<BLOCKQUOTE>  	Return the number of Partials in this PartialList.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>splice(position,list)</B></TT>
+<BLOCKQUOTE>  	Splice all the Partials in the specified PartialList into
+		this PartialList at the position indicated by the PartialListIterator
+		position. Leaves the other PartialList empty.
+	   
+</BLOCKQUOTE>
+
+<P><TT><B>timespan()</B></TT>
+<BLOCKQUOTE>  	Return the minimum start time and maximum end time
+		 	of all Partials in this PartialList in a tuple.
+	   
+</BLOCKQUOTE>
+
+<A name="s1_2_">
+<H3>1.8. class PartialListIterator</H3></A>
+	A PartialListIterator represents an iterator on a PartialList.
+	Its interface reflects the interface of the underlying std::list
+	iterator.<br>
+	
+	PartialListIterators can only be obtained from their subject 
+	PartialList, through the begin and end methods of PartialList, 
+	and by copying, through the PartialListIterator copy method.
+	PartialListIterators are used to access individual elements
+	(Partials) of a PartialList.<br>
+	
+	PartialListIterators are valid only as long as their subject
+	PartialList exists. In languages with some form of grabage 
+	collection, this means that a reference to the PartialList 
+	must be maintained in order to iterate. If that reference is
+	lost, the PartialList will be deleted, and the iterators will
+	refer to free memory. <br>
+	
+	PartialListIterators are also invalidated when PartialList element 
+	they reference is erased from the PartialList. Erasure does not 
+	invalidate any other PartialListIterators, refering to other 
+	elements. The validity of an iterator can be verified using the
+	isInRange method.
+<P><TT><B>del this</B></TT>
+<BLOCKQUOTE>  	Destroy this PartialListIterator (doesn't affect the corresponding 
+			Partial).
+		   
+</BLOCKQUOTE>
+
+<P><TT><B>copy()</B></TT>
+<BLOCKQUOTE>  	Return a new PartialListIterator that is a copy of this 
+			PartialListIterator (i.e. refers to the same position
+			in the same PartialList).
 		   
 </BLOCKQUOTE>
 
 <P><TT><B>equals(other)</B></TT>
-<BLOCKQUOTE>  	Return true (1) if this Breakpoint is equal to the
-			other. Breakpoints are equal is they have identical 
-			parameter values.
+<BLOCKQUOTE>  	Return true (1) if this PartialListIterator is equal to the
+			other. PartialListIterators are equal if they refer to the
+			same position in the same PartialList.
 		   
 </BLOCKQUOTE>
 
-<P><TT><B>frequency()</B></TT>
-<BLOCKQUOTE>  	Return the frequency of this Breakpoint. 
-	   
+<P><TT><B>isInRange(begin,end)</B></TT>
+<BLOCKQUOTE>  	Return true (1) if this iterator is within the half-open iterator
+		 	range bounded by begin and end, and false otherwise. This method
+		 	can be used to check the validity of an iterator -- call with 
+		 	begin and end methods of the PartialList as arguments.
+		    
 </BLOCKQUOTE>
 
-<P><TT><B>phase()</B></TT>
-<BLOCKQUOTE>  	Return the phase of this Breakpoint. 
-	   
+<P><TT><B>next()</B></TT>
+<BLOCKQUOTE>  	Return an iterator refering to the next position in the
+			PartialList.
+		   
 </BLOCKQUOTE>
 
-<P><TT><B>setAmplitude(x)</B></TT>
-<BLOCKQUOTE>  	Assign the amplitude of this Breakpoint. 
-	   
+<P><TT><B>partial()</B></TT>
+<BLOCKQUOTE>  	Return (a reference to) the Partial at the position of this
+			PartialListIterator.
+		   
 </BLOCKQUOTE>
 
-<P><TT><B>setBandwidth(x)</B></TT>
-<BLOCKQUOTE>  	Assign the bandwidth of this Breakpoint. 
-	   
+<P><TT><B>prev()</B></TT>
+<BLOCKQUOTE>  	Return an iterator refering to the previous position
+			in the PartialList.
+		   
 </BLOCKQUOTE>
 
-<P><TT><B>setFrequency(x)</B></TT>
-<BLOCKQUOTE>  	Assign the frequency of this Breakpoint. 
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>setPhase(x)</B></TT>
-<BLOCKQUOTE>  	Assign the phase of this Breakpoint. 
-	   
-</BLOCKQUOTE>
-
-<A name="s1_6_">
-<H3>1.6. class Analyzer</H3></A>
-	An Analyzer represents a configuration of parameters for
-	performing Reassigned Bandwidth-Enhanced Additive Analysis
-	of sampled waveforms. This analysis process yields a collection 
-	of Partials, each having a trio of synchronous, non-uniformly-
-	sampled breakpoint envelopes representing the time-varying 
-	frequency, amplitude, and noisiness of a single bandwidth-
-	enhanced sinusoid. 
-
-	For more information about Reassigned Bandwidth-Enhanced 
-	Analysis and the Reassigned Bandwidth-Enhanced Additive Sound 
-	Model, refer to the Loris website: www.cerlsoundgroup.org/Loris/
-<P><TT><B>Analyzer(resolutionHz)</B></TT>
-<BLOCKQUOTE>  	Construct and return a new Analyzer configured with the given	
-		frequency resolution (minimum instantaneous frequency	
-		difference between Partials). All other Analyzer parameters 	
-		are computed from the specified frequency resolution. 			
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>del this</B></TT>
-<BLOCKQUOTE>  	Destroy this Analyzer. 								
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>copy()</B></TT>
-<BLOCKQUOTE>  	Construct and return a new Analyzer having identical
-		parameter configuration to another Analyzer.			
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>analyze(vec,srate)</B></TT>
-<BLOCKQUOTE>  	Analyze a SampleVector of (mono) samples at the given sample rate 	  	
-		(in Hz) and return the resulting Partials in a PartialList. 												
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>configure(resolutionHz)</B></TT>
-<BLOCKQUOTE>  	Configure this Analyzer with the given frequency resolution 
-		(minimum instantaneous frequency difference between Partials). 
-		All other Analyzer parameters are (re-)computed from the 
-		frequency resolution. 		
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>freqResolution()</B></TT>
-<BLOCKQUOTE>  	Return the frequency resolution (minimum instantaneous frequency  		
-		difference between Partials) for this Analyzer. 	
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>ampFloor()</B></TT>
-<BLOCKQUOTE>  	Return the amplitude floor (lowest detected spectral amplitude),  			
-		in (negative) dB, for this Analyzer. 				
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>windowWidth()</B></TT>
-<BLOCKQUOTE>  	Return the frequency-domain main lobe width (measured between 
-		zero-crossings) of the analysis window used by this Analyzer. 				
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>freqFloor()</B></TT>
-<BLOCKQUOTE>  	Return the frequency floor (minimum instantaneous Partial  				
-		frequency), in Hz, for this Analyzer. 				
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>hopTime()</B></TT>
-<BLOCKQUOTE>  	Return the hop time (which corresponds approximately to the 
-		average density of Partial envelope Breakpoint data) for this 
-		Analyzer.
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>freqDrift()</B></TT>
-<BLOCKQUOTE>  	Return the maximum allowable frequency difference between 					
-		consecutive Breakpoints in a Partial envelope for this Analyzer. 				
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>cropTime()</B></TT>
-<BLOCKQUOTE>  	Return the crop time (maximum temporal displacement of a time-
-		frequency data point from the time-domain center of the analysis
-		window, beyond which data points are considered &quot;unreliable&quot;)
-		for this Analyzer.
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>bwRegionWidth()</B></TT>
-<BLOCKQUOTE>  	Return the width (in Hz) of the Bandwidth Association regions
-		used by this Analyzer.
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>setFreqResolution(x)</B></TT>
-<BLOCKQUOTE>  	Set the frequency resolution (minimum instantaneous frequency  		
-		difference between Partials) for this Analyzer. (Does not cause 	
-		other parameters to be recomputed.) 									
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>setAmpFloor(x)</B></TT>
-<BLOCKQUOTE>  	Set the amplitude floor (lowest detected spectral amplitude), in  			
-		(negative) dB, for this Analyzer. 				
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>setWindowWidth(x)</B></TT>
-<BLOCKQUOTE>  	Set the frequency-domain main lobe width (measured between 
-		zero-crossings) of the analysis window used by this Analyzer. 				
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>setFreqFloor(x)</B></TT>
-<BLOCKQUOTE>  	Set the amplitude floor (minimum instantaneous Partial  				
-		frequency), in Hz, for this Analyzer.
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>setFreqDrift(x)</B></TT>
-<BLOCKQUOTE>  	Set the maximum allowable frequency difference between 					
-		consecutive Breakpoints in a Partial envelope for this Analyzer. 				
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>setHopTime(x)</B></TT>
-<BLOCKQUOTE>  	Set the hop time (which corresponds approximately to the average
-		density of Partial envelope Breakpoint data) for this Analyzer.
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>setCropTime(x)</B></TT>
-<BLOCKQUOTE>  	Set the crop time (maximum temporal displacement of a time-
-		frequency data point from the time-domain center of the analysis
-		window, beyond which data points are considered &quot;unreliable&quot;)
-		for this Analyzer.
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>setBwRegionWidth(x)</B></TT>
-<BLOCKQUOTE>  	Set the width (in Hz) of the Bandwidth Association regions
-		used by this Analyzer.
-	   
-</BLOCKQUOTE>
-
-<A name="s1_7_">
-<H3>1.7. class BreakpointEnvelope</H3></A>
-	A BreakpointEnvelope represents a linear segment breakpoint 
-	function with infinite extension at each end (that is, the 
-	values past either end of the breakpoint function have the 
-	values at the nearest end).
-<P><TT><B>BreakpointEnvelope()</B></TT>
-<BLOCKQUOTE>  	Construct and return a new BreakpointEnvelope having no 
-		breakpoints and an implicit value of 0. everywhere, 
-		until the first breakpoint is inserted.			
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>del this</B></TT>
-<BLOCKQUOTE>  	Destroy this BreakpointEnvelope. 								
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>copy()</B></TT>
-<BLOCKQUOTE>  	Construct and return a new BreakpointEnvelope that is
-		a copy of this BreapointEnvelope (has the same value
-		as this BreakpointEnvelope everywhere).			
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>valueAt(x)</B></TT>
-<BLOCKQUOTE>  	Return the interpolated value of this BreakpointEnvelope at 
-		the specified time.							
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>insertBreakpoint(time,value)</B></TT>
-<BLOCKQUOTE>  	Insert a breakpoint representing the specified (time, value) 
-		pair into this BreakpointEnvelope. If there is already a 
-		breakpoint at the specified time, it will be replaced with 
-		the new breakpoint.
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>BreakpointEnvelopeWithValue(initialValue)</B></TT>
-<BLOCKQUOTE>  	Construct and return a new BreakpointEnvelope having a 
-	single breakpoint at 0. having the specified initialValue.
-   
-</BLOCKQUOTE>
 
 <A name="s1_8_">
-<H3>1.8. class SampleVector</H3></A>
+<H3>1.9. class SampleVector</H3></A>
 	A SampleVector represents a vector of floating point samples of
 	an audio waveform. In Loris, the samples are assumed to have 
 	values on the range (-1., 1.) (though this is not enforced or 
 	checked). 
 <P><TT><B>SampleVector(size)</B></TT>
 <BLOCKQUOTE>  	Return a new SampleVector having the specified number of samples,
-		all of whose value is 0. 
+		all of whose value is 0. <br>
 		
 		If no size is specified, 0 is assumed.
 	   
@@ -662,19 +713,6 @@ Python module: loris</TITLE>
 <P><TT><B>del this</B></TT>
 <BLOCKQUOTE>  	Destroy this SampleVector.
 	    
-</BLOCKQUOTE>
-
-<P><TT><B>size()</B></TT>
-<BLOCKQUOTE>  	Return the number of samples represented by this SampleVector.
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>resize(size)</B></TT>
-<BLOCKQUOTE>  	Change the number of samples represented by this SampleVector. If
-		the given size is greater than the current size, all new samples 
-		will have value 0. If the given size is less than the current 
-		size, then samples in excess of the given size are removed.
-	   
 </BLOCKQUOTE>
 
 <P><TT><B>clear()</B></TT>
@@ -698,53 +736,22 @@ Python module: loris</TITLE>
 	   
 </BLOCKQUOTE>
 
+<P><TT><B>resize(size)</B></TT>
+<BLOCKQUOTE>  	Change the number of samples represented by this SampleVector. If
+		the given size is greater than the current size, all new samples 
+		will have value 0. If the given size is less than the current 
+		size, then samples in excess of the given size are removed.
+	   
+</BLOCKQUOTE>
+
 <P><TT><B>setAt(idx,x)</B></TT>
 <BLOCKQUOTE>  	Set the value of the sample at the given position (index) in
 		this SampleVector.
 	   
 </BLOCKQUOTE>
 
-<A name="s1_9_">
-<H3>1.9. class AiffFile</H3></A>
-	An AiffFile represents a sample file (on disk) in the Audio Interchange
-	File Format. The file is read from disk and the samples stored in memory
-	upon construction of an AiffFile instance. The samples are accessed by 
-	the samples() method, which converts them to double precision floats and
-	returns them in a SampleVector.
-<P><TT><B>AiffFile(filename)</B></TT>
-<BLOCKQUOTE>  	Import an AIFF file with the specified file name
-		or path.
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>del this</B></TT>
-<BLOCKQUOTE>  	Delete this AIFF data (does not affect data on disk).
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>channels()</B></TT>
-<BLOCKQUOTE>  	Return the number of channels of sample data this AIFF file.
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>sampleFrames()</B></TT>
-<BLOCKQUOTE>  	Return the number of frames of sample data this AIFF file.
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>sampleRate()</B></TT>
-<BLOCKQUOTE>  	Return the sample rate in Hz of the sample data this AIFF file.
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>sampleSize()</B></TT>
-<BLOCKQUOTE>  	Return the size in bits of the sample data this AIFF file.
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>samples()</B></TT>
-<BLOCKQUOTE>  	Return a SampleVector containing the AIFF samples from this AIFF 
-		file as double precision floats on the range -1,1.
+<P><TT><B>size()</B></TT>
+<BLOCKQUOTE>  	Return the number of samples represented by this SampleVector.
 	   
 </BLOCKQUOTE>
 
@@ -773,6 +780,24 @@ Python module: loris</TITLE>
 	   
 </BLOCKQUOTE>
 
+<P><TT><B>createFreqReference(partials,minFreq,maxFreq,numSamples)</B></TT>
+<BLOCKQUOTE>  	Return a newly-constructed BreakpointEnvelope by sampling the 
+	frequency envelope of the longest Partial in a PartialList. 
+	Only Partials whose frequency at the Partial's loudest (highest 
+	amplitude) breakpoint is within the given frequency range are 
+	considered. <br>
+	
+	If the number of sample points is not specified, then the
+	longest Partial's frequency envelope is sampled every 30 ms
+	(No fewer than 10 samples are used, so the sampling maybe more
+	dense for very short Partials.) <br>
+	
+	For very simple sounds, this frequency reference may be a 
+	good first approximation to a reference envelope for
+	channelization (see channelize()).
+   
+</BLOCKQUOTE>
+
 <P><TT><B>dilate(partials,initial_times,target_times)</B></TT>
 <BLOCKQUOTE>  	Dilate Partials in a PartialList according to the given 
 		initial and target time points. Partial envelopes are 
@@ -781,7 +806,7 @@ Python module: loris</TITLE>
 		points. Time points are sorted, so Partial envelopes are 
 		are only stretched and compressed, but breakpoints are not
 		reordered. Duplicate time points are allowed. There must be
-		the same number of initial and target time points.
+		the same number of initial and target time points.<br>
 		
 		The time points are passed as strings; convert any native
 		collection to a string representation, numerical elements
@@ -821,13 +846,18 @@ Python module: loris</TITLE>
 		enhanced parameter defaults to true (for bandwidth-enhanced spc files), 
 		but an be specified false for pure-sines spc files. The optional 
 		endApproachTime parameter is in seconds; its default value is zero (and 
-		has no effect). A nonzero endApproachTime indicates that the plist does 
+		has no effect). A nonzero endApproachTime indicates that the PartialList does 
 		not include a release, but rather ends in a static spectrum corresponding 
 		to the final breakpoint values of the partials. The endApproachTime
 		specifies how long before the end of the sound the amplitude, frequency, 
 		and bandwidth values are to be modified to make a gradual transition to 
 		the static spectrum.
 	   
+</BLOCKQUOTE>
+
+<P><TT><B>extractLabeled(partials,label)</B></TT>
+<BLOCKQUOTE>  	Extract Partials in the source PartialList having the specified
+    label and return them in a new PartialList.	   
 </BLOCKQUOTE>
 
 <P><TT><B>importSdif(path)</B></TT>
@@ -856,43 +886,6 @@ Python module: loris</TITLE>
    
 </BLOCKQUOTE>
 
-<P><TT><B>sift(partials)</B></TT>
-<BLOCKQUOTE>  	Lippold's wacky experimental sifting thingie: 
-		If any two partials with same label overlap in time,
-		keep only the longer of the two partials.
-		Set the label of the shorter duration partial to zero.
-		
-		This used to be &quot;experimental,&quot; and is now just 
-		&quot;transitional.&quot;
-	   
-</BLOCKQUOTE>
-
-<P><TT><B>synthesize(partials,srate)</B></TT>
-<BLOCKQUOTE>  	Synthesize Partials in a PartialList at the given sample
-	rate, and return the (floating point) samples in a SampleVector.
-	The SampleVector is sized to hold as many samples as are needed 
-	for the complete synthesis of all the Partials in the PartialList. 
-   
-</BLOCKQUOTE>
-
-<A name="s3_">
-<HR><H2>3. Utility functions</H2></A>
-<P>
-	These procedures are generally useful but are not yet  
-	represented by classes in the Loris core.
-<P><TT><B>createFreqReference(partials,numSamples,minFreq,maxFreq)</B></TT>
-<BLOCKQUOTE>  	Return a newly-constructed BreakpointEnvelope comprising the
-	specified number of samples of the frequency envelope of the
-	longest Partial in a PartialList. Only Partials whose frequency
-	at the Partial's loudest (highest amplitude) breakpoint is
-	within the given frequency range are considered. 
-	
-	For very simple sounds, this frequency reference may be a 
-	good first approximation to a reference envelope for
-	channelization (see channelize()).
-   
-</BLOCKQUOTE>
-
 <P><TT><B>scaleAmp(partials,ampEnv)</B></TT>
 <BLOCKQUOTE>  	Scale the amplitude of the Partials in a PartialList according 
 		to an envelope representing a time-varying amplitude scale value.
@@ -913,7 +906,15 @@ Python module: loris</TITLE>
 	   
 </BLOCKQUOTE>
 
-<P><TT><B>versionString()</B></TT>
+<P><TT><B>synthesize(partials,srate)</B></TT>
+<BLOCKQUOTE>  	Synthesize Partials in a PartialList at the given sample
+	rate, and return the (floating point) samples in a SampleVector.
+	The SampleVector is sized to hold as many samples as are needed 
+	for the complete synthesis of all the Partials in the PartialList. 
+   
+</BLOCKQUOTE>
+
+<P><TT><B>version()</B></TT>
 <BLOCKQUOTE>  	Return a (constant) string specifying the Loris version number.
 	   
 </BLOCKQUOTE>
