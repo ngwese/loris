@@ -36,11 +36,15 @@ class DistributeEnergy
 public:
 	//	construction:
 	explicit DistributeEnergy( double distanceHz );
+	~DistributeEnergy(void);
 	
 	//	distribution:
 	void distribute( const Partial & p, PartialList::iterator begin, 
 										PartialList::iterator end ) const;
 	
+private: //	unimplemented:
+	DistributeEnergy(void);
+	DistributeEnergy(const DistributeEnergy &);
 	
 };	// end of class DistributeEnergy
 

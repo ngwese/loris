@@ -10,11 +10,13 @@
 //
 // ===========================================================================
 #include <cmath>
-//	no standard trunc() function for
-//	floating point, have to defined one.
-//	DON'T use integer conversion, because
-//	long int ins't as long as double's
-//	mantissa, see below.
+//	trunc() is a problem. It's not in cmath, officially, though
+//	Metrowerks has it in there. SGI has it in math.h which is
+//	(erroneously!) included in g++ cmath, but trunc is not imported
+//	into std. For these two compilers, could just import std. But
+//	trnc doesn't seem to exist anywhere in Linux g++, so use std::modf().
+//	DON'T use integer conversion, because long int ins't as long 
+//	as double's mantissa, see below.
 static inline double trunc( double x ) { double y; std::modf(x, &y); return y; }
 
 #if !defined( NO_LORIS_NAMESPACE )

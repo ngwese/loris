@@ -140,11 +140,6 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ )
 		if ( tgtsamp >= _samples.size() )
 			break;
 			
-		//	if the current oscillator amplitude is
-		//	zero, reset the phase:
-		if ( osc.amplitude() == 0. )
-			osc.setPhase( iterator.phase() );
-			
 		//	generate samples:
 		//	(buffer, beginIdx, endIdx, freq, amp, bw)
 		osc.generateSamples( _samples, curSampleIdx, tgtsamp, 
@@ -152,6 +147,14 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ )
 							 iterator.amplitude(), 
 							 iterator.bandwidth() );
 									  
+		//	if the current oscillator amplitude is
+		//	zero, reset the phase (note: the iterator
+		//	values are the target values, so the phase
+		//	should be set _after_ generating samples,
+		//	when the oscillator and iterator are in-sync):
+		if ( osc.amplitude() == 0. )
+			osc.setPhase( iterator.phase() );
+			
 		//	update the current sample index:
 		curSampleIdx = tgtsamp;
 	}
