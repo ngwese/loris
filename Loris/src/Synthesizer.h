@@ -63,7 +63,7 @@ class Synthesizer
 public:
 //	construction:
 //	(use compiler-generated destructor)
-	Synthesizer( double * buffer, long bufferLength, double srate );
+	Synthesizer( double srate, double * bufStart, double * bufEnd );
 	Synthesizer( const Synthesizer & other );
 	~Synthesizer(void);
 	
@@ -78,6 +78,9 @@ public:
 //	buffer, but neither will any attempt be made to eliminate clicks at the
 //	buffer boundaries.  
 	void synthesize( const Partial & p, double timeShift = 0. );	
+	
+//	function-call operator, for use as a functor:
+//	void operator() ( const Partial & p ) { synthesize( p ) ; }
 	
 //	access:
 	double sampleRate( void ) const { return _sampleRate; }

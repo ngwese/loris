@@ -54,18 +54,18 @@ static long countem = 0;
 //	Synthesizer constructor
 // ---------------------------------------------------------------------------
 //
-Synthesizer::Synthesizer( double * buffer, long bufferLength, double srate ) :
+Synthesizer::Synthesizer( double srate, double * bufStart, double * bufEnd  ) :
 	_sampleRate( srate ),
-	_sampleBuffer( buffer ),
-	_sampleBufferSize( bufferLength )
+	_sampleBuffer( bufStart ),
+	_sampleBufferSize( bufEnd - bufStart )
 {
 	//	check to make sure that the sample rate is valid:
-	if ( srate <= 0. ) {
+	if ( _sampleRate <= 0. ) {
 		Throw( InvalidObject, "Synthesizer sample rate must be positive." );
 	}
 
 	//	check to make sure that the buffer bounds are valid:
-	if ( bufferLength <= 0 ) {
+	if ( _sampleBufferSize <= 0 ) {
 		Throw( InvalidObject, "Synthesizer buffer length must be positive." );
 	}
 
