@@ -1,7 +1,7 @@
 #ifndef __Loris_import__
 #define __Loris_import__
 // ===========================================================================
-//	Import.h
+//	ImportPartials.h
 //	
 //	Class definition for Loris::Import, an abstract base class for
 //	objects that import Partials into Loris.

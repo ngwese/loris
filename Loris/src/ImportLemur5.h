@@ -1,6 +1,5 @@
 #ifndef __Loris_import_Lemur5__
 #define __Loris_import_Lemur5__
-
 // ===========================================================================
 //	ImportLemur5.h
 //	
@@ -11,11 +10,9 @@
 //	-kel 10 Sept 99
 //
 // ===========================================================================
-
-
 #include "LorisLib.h"
 #include "LorisTypes.h"
-#include "Import.h"
+#include "ImportPartials.h"
 
 #include <list>
 using std::list;

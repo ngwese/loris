@@ -1,5 +1,5 @@
 // ===========================================================================
-//	Import.h
+//	ImportPartials.C
 //	
 //	Implementation of Loris::Import, an abstract base class for
 //	objects that import Partials into Loris, including the
@@ -10,7 +10,7 @@
 //
 // ===========================================================================
 #include "LorisLib.h"
-#include "Import.h"
+#include "ImportPartials.h"
 #include "Partial.h"
 #include "Exception.h"
 
