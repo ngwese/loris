@@ -21,6 +21,10 @@ of CodeWarrior and gcc (3).
 do anything until prebound versions of SDIF and FFTW
 are available.
 
+- removed old Mac OS project files, etc, since they
+were never up-to-date anyway, and too difficult to 
+maintain.
+
 -------------------------------------------------------
 changes since 1.0beta9 release:
 
