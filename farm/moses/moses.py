@@ -43,7 +43,7 @@ from trials import *
 
 # use this trial counter to skip over
 # eariler trials
-trial = 1
+trial = 2
 
 print "running trial number", trial, time.ctime(time.time())
 
@@ -57,3 +57,14 @@ if trial == 1:
 			p = analyze( source, r, w )
 			ofile = 'moses.%i.%i.aiff'%(r, w)
 			synthesize( ofile, p )
+
+if trial == 2:
+    resolutions = (70,80)
+    widths = ( 200,)
+    for r in resolutions:
+        for w in widths:
+            p = analyze( source, r, w )
+            ofile = 'moses.%i.%i.aiff'%(r, w)
+            synthesize( ofile, p )
+
+
