@@ -44,6 +44,14 @@
 
 %module loris 
 
+//	perl defines list and screws us up,
+//	undefine it so that we can use std::list
+#if defined (SWIGPERL)
+	%{
+		#undef list
+	%}
+#endif
+
 //	Exceptions, notification, and debugging
 //
 %{

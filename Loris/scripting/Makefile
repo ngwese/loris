@@ -42,38 +42,54 @@ PY_WRAPPER = loris_python_wrap.C
 PY_MODULE = loriscmodule.so
 
 PERL_WRAPPER = loris_perl_wrap.C
+PERL_MODULE = loris.so
 
-PY_VERSION = 2.0
-PYTHON_PREFIX = /usr/local
+TCL_WRAPPER = loris_tcl_wrap.C
+TCL_MODULE = loris.so
+
+PY_VERSION = 1.5
+PYTHON_PREFIX = /usr
 PYTHON_INCLUDE = ${PYTHON_PREFIX}/include/python${PY_VERSION}
-PYTHON_LIB = ${PYTHON_PREFIX}/lib/python${PY_VERSION}/config
-INC_PY = -DHAVE_CONFIG_H -I${PYTHON_INCLUDE} -I${PYTHON_LIB}
+# PYTHON_LIB = ${PYTHON_PREFIX}/lib/python${PY_VERSION}/config
+INC_PY = ${PYTHON_INCLUDE}
 
-PERL_CORE = /System/Library/Perl/darwin/CORE/
+# PERL_INCLUDE = /System/Library/Perl/darwin/CORE/
+PERL_INCLUDE = /usr/lib/perl5/5.6.0/i386-linux/CORE/
+
+TCL_INCLUDE = /usr/include
 
 CC = c++
-CFLAGS = -O2 ${INC_PY} -I${PI} -I${CLASSES} -Wno-multichar -xc++
+CFLAGS = -O2 -I${CLASSES} -Wno-multichar -xc++
 
 python: $(PY_MODULE)
+
+perl: $(PERL_MODULE)
+
+tcl: tclwrap
+	${CC} -shared $(TCL_WRAPPER:c++=o) $(OBJ_LORIS) ${LIB_LORIS} -o loris.so
 
 $(PY_MODULE): pywrap
 	${CC} -shared $(PY_WRAPPER:c++=o) $(OBJ_LORIS) ${LIB_LORIS} -o $(OUTPUT)/loriscmodule.so
 	-mv loris.py $(OUTPUT)/loris.py
 
-lorislib: 
-	cd $(PI); $(MAKE) lib
-	
+$(PERL_MODULE): perlwrap
+	${CC} -shared $(PERL_WRAPPER:c++=o) $(OBJ_LORIS) ${LIB_LORIS} -o loris.so
+
 pywrap: $(PY_WRAPPER:c++=o)
 
 $(PY_WRAPPER:c++=o): $(PY_WRAPPER)
-	$(CC) $(CFLAGS) -c $(PY_WRAPPER)
+	$(CC) $(CFLAGS) -I$(PYTHON_INCLUDE) -c $(PY_WRAPPER)
 
 $(PY_WRAPPER): $(SWIG_INTERFACE) $(SUB_INTERFACES)
 	$(SWIG) -python -shadow -c++ -o $(PY_WRAPPER) $(SWIG_INTERFACE)
 
 perlwrap:
 	$(SWIG) -perl5 -c++ -o $(PERL_WRAPPER) $(SWIG_INTERFACE)
-	$(CC) $(CFLAGS) -I$(PERL_CORE) -c $(PERL_WRAPPER)
+	$(CC) $(CFLAGS) -I$(PERL_INCLUDE) -c $(PERL_WRAPPER)
+	
+tclwrap:
+	$(SWIG) -tcl -c++ -o $(TCL_WRAPPER) $(SWIG_INTERFACE)
+	$(CC) $(CFLAGS) -I$(TCL_INCLUDE) -c $(TCL_WRAPPER)
 	
 #
 #   dependencies:
@@ -87,6 +103,7 @@ include dependfile
 
 clean:
 	-rm ./*.o $(OUTPUT)/loriscmodule.so
+	-rm *.so
 
 veryclean: clean
 	cd $(CLASSES); $(MAKE) clean
