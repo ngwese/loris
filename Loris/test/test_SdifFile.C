@@ -48,24 +48,39 @@ const double Pi = 3.14159265358979324;
 
 // --- macros ---
 
-#define TEST(invariant)									\
-	do {												\
-		std::cout << "TEST: " << #invariant << endl;	\
-		Assert( invariant );							\
-		std::cout << " PASS" << endl << endl;			\
-	} while (false)
-
-#define TEST_VALUE( expr, val )									\
-	do {														\
-		std::cout << "TEST: " << #expr << "==" << (val) << endl;\
-		Assert( (expr) == (val) );								\
-		std::cout << "  PASS" << endl << endl;					\
-	} while (false)
+//	define this to see pages and pages of spew
+#define VERBOSE
+#ifdef VERBOSE									
+	#define TEST(invariant)									\
+		do {													\
+			std::cout << "TEST: " << #invariant << endl;		\
+			Assert( invariant );								\
+			std::cout << " PASS" << endl << endl;			\
+		} while (false)
 	
+	#define TEST_VALUE( expr, val )									\
+		do {															\
+			std::cout << "TEST: " << #expr << "==" << (val) << endl;\
+			Assert( (expr) == (val) );								\
+			std::cout << "  PASS" << endl << endl;					\
+		} while (false)
+#else
+	#define TEST(invariant)					\
+		do {									\
+			Assert( invariant );				\
+		} while (false)
+	
+	#define TEST_VALUE( expr, val )			\
+		do {									\
+			Assert( (expr) == (val) );		\
+		} while (false)
+#endif	
 	
 static bool float_equal( double x, double y )
 {
+	#ifdef VERBOSE
 	cout << "\t" << x << " == " << y << " ?" << endl;
+	#endif
 	#define EPSILON .0000001
 	if ( std::fabs(x) > 0. )
 		return std::fabs((x-y)/x) < EPSILON;
@@ -94,7 +109,9 @@ static void test_simplePartial( void )
 	l.push_back( p );
 
 	// 	export and import:
-	SdifFile::Export( "tmp.sdif", l );
+	// SdifFile::Export( "tmp.sdif", l );
+	SdifFile fout( l.begin(), l.end() );
+	fout.write( "tmp.sdif" );
 	SdifFile f( "tmp.sdif" );
 	Partial p2 = f.partials().front();
 

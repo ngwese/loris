@@ -174,7 +174,7 @@ FourierTransform::transform( void )
 
 //	crunch:	
 #if defined(HAVE_FFTW3_H)
-	fftw_execute(_plan); 	// repeat as needed
+	fftw_execute( _plan ); 	// repeat as needed
 #else
 	fftw_one( _plan, reinterpret_cast<fftw_complex*>(&_buffer[0]), sharedBuffer );
 #endif
@@ -183,7 +183,9 @@ FourierTransform::transform( void )
 //	(fftw_complex and std::complex< double > had better be the same!)
 //	std::copy( sharedBuffer, sharedBuffer + size(), 
 //			   reinterpret_cast<fftw_complex*>(&_buffer.front()) );
-	memcpy(sharedBuffer, &_buffer.front(), size() * sizeof(fftw_complex));
+//
+//	this is probably a little faster:
+	memcpy( &_buffer.front(), sharedBuffer, size() * sizeof(fftw_complex) );
 }
 
 // ---------------------------------------------------------------------------

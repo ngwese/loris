@@ -32,7 +32,7 @@
  */
 
 #include <Marker.h>
-//#include <Partial.h>
+#include <Partial.h>
 #include <PartialList.h>
  
 #include <string>
@@ -40,8 +40,6 @@
 
 //	begin namespace
 namespace Loris {
-
-class Partial;
 
 // ---------------------------------------------------------------------------
 //	class SdifFile
@@ -80,6 +78,13 @@ class Partial;
 //	SDIF file. The RBEL frame contains a single, two-column RBEL matrix The
 //	first column is the partialIndex, and the second column specifies the
 //	label for the partial.
+//
+// 	If markers are associated with the partials in Loris, then a RBEM frame
+// 	describing the markers will precede the first RBEP frame in the SDIF
+//	file.  The RBEM frame contains two single-column RBEM matrices.  The
+//	first matrix contains 32-bit floats indicating the time (in seconds)
+//	for each marker.  The second matrix contains UTF-8 data, the names of
+//	each of the markers separated by '\0'.
 //	
 //	In addition to RBEP frames, Loris can also read and write SDIF 1TRC
 //	frames (refer to IRCAM's SDIF web site, www.ircam.fr/sdif/, for
@@ -177,6 +182,7 @@ public:
 		reassigned bandwidth-enhanced Partial data are exported in the
 		six-column RBEP format. Otherwise, the Partial data is exported as
 		resampled sinusoidal analysis data in the 1TRC format.
+		Provided for backwards compatability.
 	 */
 
 private:

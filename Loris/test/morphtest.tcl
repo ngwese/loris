@@ -55,7 +55,7 @@ puts "(looking for sources in $srcdir)"
 #
 #	analyze clarinet tone
 #
-puts "analyzing clarinet 3G#"
+puts "analyzing clarinet 4G#"
 Analyzer a 390
 
 AiffFile cf $srcdir/clarinet.aiff
@@ -107,7 +107,7 @@ exportAiff clarOK.tcltest.aiff [ synthesize $clar $samplerate ] $samplerate
 #
 #	analyze flute tone (reuse Analyzer)
 #
-puts "analyzing flute 3D"
+puts "analyzing flute 4D"
 Analyzer a 270
 AiffFile cf $srcdir/flute.aiff
 set v [ cf samples ]

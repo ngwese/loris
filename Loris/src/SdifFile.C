@@ -558,7 +558,6 @@ static void SDIF_FillGlobalHeader(SDIF_GlobalHeader *h) {
 static SDIFresult SDIF_WriteGlobalHeader(const SDIF_GlobalHeader *h, FILE *f) {
 #ifdef LITTLE_ENDIAN
     SDIFresult r;
-    #error "why is this defined"
     if (r = SDIF_Write1(&(h->SDIF), 4, f)) return r;
     if (r = SDIF_Write4(&(h->size), 1, f)) return r;
     if (r = SDIF_Write4(&(h->SDIFversion), 1, f)) return r;

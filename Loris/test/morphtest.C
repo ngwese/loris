@@ -52,6 +52,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <string>
+#include <stdexcept>
 
 using namespace Loris;
 
@@ -72,7 +73,7 @@ int main( )
 	try 
 	{
 		//	analyze clarinet tone
-		std::cout << "analyzing clarinet 3G#" << endl;
+		std::cout << "analyzing clarinet 4G#" << endl;
 		Analyzer a(415*.8, 415*1.6);
 		AiffFile f( path + "clarinet.aiff" );
 		std::vector< double > v = f.samples(); 
@@ -89,13 +90,17 @@ int main( )
 		still.distill( clar );
 
 		//	make sure that SDIF I/O is working:
-		std::cout << "exporting sdif" << endl;
+		std::cout << "exporting " << clar.size() << " partials to sdif" << endl;
 		SdifFile::Export( "clarinet.ctest.sdif", clar );
 		std::cout << "importing sdif" << endl;
 		SdifFile ip("clarinet.ctest.sdif");
+		if ( clar.size() != ip.partials().size() )
+		{
+			throw std::runtime_error( "SDIF import yields a different number of partials than were exported!" );
+		}
 		clar.clear();
 		clar.splice( clar.end(), ip.partials() );
-		std::cout << "that was fun." << endl;
+		std::cout << "imported " << clar.size() << " partials, that was fun." << endl;
 		
 		std::cout << "shifting pitch of " << clar.size() << " Partials by 600 cents" << endl;
 		double pscale = std::pow(2., (0.01 * -600) /12.);
@@ -119,7 +124,7 @@ int main( )
 		clarout.write( "clarOK.ctest.aiff", 16 );
 		
 		//	analyze flute tone
-		std::cout << "analyzing flute 3D" << endl;
+		std::cout << "analyzing flute 4D" << endl;
 		a = Analyzer(270);
 		f = AiffFile( path + "flute.aiff" );
 		v = f.samples();
