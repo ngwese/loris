@@ -1,0 +1,9 @@
+--------- Changes since 1.1beta1 -----------
+
+- Removed reference to Partial::FadeTime (now obsolete) to 
+make Fossa compatible with Loris 1.0.
+(2002 8 27 kel)
+
+
+(This ChangeLog was empty when I found it, someone feel free to
+give it a standard format. -kel)

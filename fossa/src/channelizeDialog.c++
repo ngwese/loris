@@ -88,7 +88,7 @@ void ChannelizeDialog::channelizing(){
   if(max > min){
     try{
       statusbar->message("Channelizing partials with minimum frequency: "+temp.setNum(min)+", maximum frequency: "+temp.setNum(max)+", and reference label: "+temp.setNum(refLabel));
-      partialsList->channelizeCurrent(refLabel, min, max);
+      partialsList->channelizeCurrent((int)refLabel, min, max);
       statusbar->message("Channelized partials successfully.", 5000);
     }
     catch(InvalidArgument& ex){

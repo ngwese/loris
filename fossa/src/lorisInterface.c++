@@ -170,7 +170,8 @@ void LorisInterface::exportAiff(double sampleRate, int bitsPerSample, const char
   
   try{
     // insuring a long enough buffer for synthesized partials
-    double time = ((maxtime + Partial::FadeTime()) * sampleRate);
+	const double Padding = .01;	//	10ms is more than enough
+    double time = ((maxtime + Padding) * sampleRate);
     vector<double> sampleVector = vector<double>(time);
     Synthesizer synthesizer(sampleRate, sampleVector.begin(), sampleVector.end());
    

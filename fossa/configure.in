@@ -34,7 +34,7 @@ dnl time you do a release of the software.
 PACKAGE=fossa
 MAJOR_VERSION=1
 MINOR_VERSION=1
-MICRO_VERSION=beta1
+MICRO_VERSION=beta2
 FOSSA_VERSION="$MAJOR_VERSION"."$MINOR_VERSION"."$MICRO_VERSION"
 
 AM_INIT_AUTOMAKE("$PACKAGE","$FOSSA_VERSION")
@@ -78,7 +78,7 @@ AC_SUBST(QT_PACKAGE)
 
 dnl Kelly's hack to get the library tests to link
 LIBS="$LIBS -L$SDIF_PACKAGE/lib -L$FFTW_PACKAGE/lib -L$LORIS_PACKAGE/lib -L$QT_PACKAGE/lib"
-AC_MSG_RESULT(LIBS is $LIBS)
+dnl AC_MSG_RESULT(LIBS is $LIBS)
 
 AC_CHECK_LIB(fftw, main, :, AC_MSG_ERROR(please install fftw library))
 AC_CHECK_LIB(sdif, main, :, AC_MSG_ERROR(please install sdif library))
