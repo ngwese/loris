@@ -418,7 +418,7 @@ dnl--------------------------------------------------------------------
 dnl	Try to locate the Tcl package
 dnl--------------------------------------------------------------------
 dnl By default, look for a tclsh binary, and use the header in the same
-dnl path. It --with-tcl is specified, then if the argument is
+dnl path. If --with-tcl is specified, then if the argument is
 dnl a file, look first in the directory cotnaining that file, otherwise
 dnl if the argument is a directory, assume that it is the prefix for the 
 dnl tcl installation, and look first in that directory/bin. If --without-tcl
@@ -478,6 +478,58 @@ fi
 AM_CONDITIONAL(BUILD_TCL, test "$USETCL" != "no")
 AC_SUBST(TCLINCLUDE)
 
+dnl--------------------------------------------------------------------
+dnl	Try to locate Perl
+dnl--------------------------------------------------------------------
+dnl By default, do not build the Perl module, because it has never been
+dnl tested. If the user insists, try to locate Perl and the necessary 
+dnl headers. If --with-perl is specified, then if the argument is
+dnl a file, assume that it is the perl binary and use it, otherwise
+dnl if the argument is a directory, assume that it is the prefix for the 
+dnl Perl installation, and look first in that directory/bin.
+
+AC_ARG_WITH(perl,
+	AC_HELP_STRING( [--with-perl@<:@=path@:>@],
+					[build Perl module (default is NO) (optionally specify prefix of Perl package)] ),
+	[USEPERL="$withval"], [USEPERL="no"])
+	
+PERLINCLUDE=
+if test  "$USEPERL" != "no"; then
+	if test -f "$USEPERL"; then
+		dnl assume that the perl binary was specified
+		PERL="$USEPERL"
+	fi
+	if test -d "$USEPERL"; then
+		dnl assume that the perl prefix was specified,
+		dnl use automake tools for finding a program (perl)
+		PERLPREFIX="$USEPERL"
+		AC_PATH_PROG(PERL, perl, [], [$PERLPREFIX/bin])
+		if test -z "$PERL"; then
+			AC_MSG_ERROR(cannot find perl in $PERLPREFIX/bin$PATH_SEPARATOR$PATH)
+		fi
+	fi
+	if test -z "$PERL"; then
+		if test "$USEPERL" != "yes"; then
+			AC_MSG_WARN(ignoring $USEPERL neither file nor directory)
+		fi
+		AC_PATH_PROG(PERL, perl)
+		if test -z "$PERL"; then
+			AC_MSG_ERROR(cannot find perl in $PATH)
+		fi
+	fi	
+	
+	dnl use Perl to identify the directory with the headers
+	AC_MSG_CHECKING(for perl5 headers directory)
+	PERLINCLUDE=`($PERL -e 'use Config; print $Config{archlib};') 2>/dev/null`/CORE
+	if test ! -d "$PERLINCLUDE"; then
+		AC_MSG_ERROR(cannot find perl5 headers directory $PERLINCLUDE)
+	fi
+	AC_MSG_RESULT(found $PERLINCLUDE)
+	PERLINCLUDE="-I$PERLINCLUDE"
+fi
+
+AM_CONDITIONAL(BUILD_PERL, test "$USEPERL" != "no")
+AC_SUBST(PERLINCLUDE)
 
 dnl----------------------------------------------------------------
 dnl Check for Loris debugging flag

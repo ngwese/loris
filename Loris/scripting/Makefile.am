@@ -12,7 +12,7 @@ INCLUDES = $(PYINCLUDE) $(TCLINCLUDE) $(PERLINCLUDE) -I$(top_srcdir)/src -I$(top
 
 EXTRA_DIST = loris.py loris.pm loris.i lorisPartialList.i 
 
-CLEANFILES = loris.pyo loris.pyc
+CLEANFILES = loris.pyo loris.pyc $(PYTHON_CMODULE) $(TCL_MODULE)
 MAINTAINERCLEANFILES = Makefile.in
 
 PYTHON_WRAPPER = loris_python_wrap.C
@@ -27,21 +27,36 @@ if BUILD_PYTHON
 pythonsitepkgdir = $(pyexecdir)
 pyexec_PYTHON = loris.py
 
-# Darwin is special, see below
+#----------------------------------------------------------------
+# Darwin is special, libtool doesn't work right.
+#
 if DARWIN
+PYTHON_CMODULE = _loris.so
+PYTHON_MODULE = $(PYTHON_CMODULE) 
+INSTALL_PYTHON_MODULE = install_python_module
+
+$(PYTHON_CMODULE): loris_python_wrap.o $(top_builddir)/pi/.libs/libloris.a
+	$(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(LDFLAGS) \
+		-bundle -flat_namespace -undefined suppress \
+		-o $@ loris_python_wrap.o $(top_builddir)/pi/.libs/libloris.a \
+		-lsdif -lfftw $(LIBS)
+	-mkdir .libs
+	cp $@ .libs/$@
+
+install_python_module:
+	$(INSTALL) _loris.so $(pythonsitepkgdir)/_loris.so
+	
 else
-#pythonsitepkg_SCRIPTS = loris.py 
-#loris.pyo
+#
+# not Darwin, use libtool
+#
 pythonsitepkg_LTLIBRARIES = _loris.la
-endif
-
-endif
-
-# old versions of automake don't like these things
-# defined conditionally:
 _loris_la_SOURCES = $(PYTHON_WRAPPER)
 _loris_la_LDFLAGS = -module -avoid-version
-_loris_la_LIBADD = $(top_builddir)/pi/libloris.la -lstdc++ 
+_loris_la_LIBADD = $(top_builddir)/pi/libloris.la -lstdc++
+endif
+
+endif
 
 
 #----------------------------------------------------------------
@@ -50,72 +65,60 @@ _loris_la_LIBADD = $(top_builddir)/pi/libloris.la -lstdc++
 #
 if BUILD_TCL
 tclsitepkgdir = $(pkglibdir)/tcl
-# Darwin is special, see below
-if DARWIN
-else
-tclsitepkg_LTLIBRARIES = tcLoris.la
-endif
-endif
-
-# old versions of automake don't like these things
-# defined conditionally:
-tcLoris_la_SOURCES = $(TCL_WRAPPER)
-tcLoris_la_LDFLAGS = -module -avoid-version
-tcLoris_la_LIBADD = $(top_builddir)/pi/libloris.la -lstdc++
-
 
 #----------------------------------------------------------------
-# Don't build or install the Perl module, it is untested.
-#
-#if BUILD_PERL
-#
-#noinst_LTLIBRARIES = loris_perl.la
-#noinst_SCRIPTS = loris.pm
-#
-#loris_perl_la_SOURCES = $(PERL_WRAPPER)
-#loris_perl_la_LDFLAGS = -module -avoid-version
-#loris_perl_la_LIBADD = $(top_builddir)/pi/libloris.la -lstdc++
-#
-#endif
-
-#----------------------------------------------------------------
-# Special build rules for Darwin, because libtool doesn't work.
+# Darwin is special, libtool doesn't work right.
 #
 if DARWIN
-
-LD_DARWINBUNDLE_FLAGS = -bundle -flat_namespace -undefined suppress
-
-if BUILD_PYTHON
-PYTHON_CMODULE = _loris.so
-PYTHON_MODULE = $(PYTHON_CMODULE) 
-INSTALL_PYTHON_MODULE = install_python_module
-
-$(PYTHON_CMODULE): loris_python_wrap.o $(top_builddir)/pi/.libs/libloris.a
-	$(CXXLD) $(LD_DARWINBUNDLE_FLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ loris_python_wrap.o $(top_builddir)/pi/.libs/libloris.a -lsdif -lfftw -lstdc++ $(LIBS)
-	-mkdir .libs
-	cp $@ .libs/$@
-
-install_python_module:
-	$(INSTALL) _loris.so $(pythonsitepkgdir)/_loris.so
-	
-endif
-
-if BUILD_TCL
 TCL_MODULE = tcLoris.so
 INSTALL_TCL_MODULE = install_tcl_module
 
 $(TCL_MODULE): loris_tcl_wrap.o $(top_builddir)/pi/.libs/libloris.a
-	$(CXXLD) $(LD_DARWINBUNDLE_FLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ loris_tcl_wrap.o $(top_builddir)/pi/.libs/libloris.a -lsdif -lfftw -lstdc++ $(LIBS)
+	$(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(LDFLAGS) \
+		-dynamiclib -flat_namespace -undefined suppress \
+		-o $@ loris_tcl_wrap.o $(top_builddir)/pi/.libs/libloris.a \
+		-lsdif -lfftw $(LIBS)
 	-mkdir .libs
 	cp $@ .libs/$@
 
 install_tcl_module:
 	$(INSTALL) tcLoris.so $(tclsitepkgdir)/$(TCL_MODULE)
+
+else
+#
+# not Darwin, use libtool
+#
+tclsitepkg_LTLIBRARIES = tcLoris.la
+tcLoris_la_SOURCES = $(TCL_WRAPPER)
+tcLoris_la_LDFLAGS = -module -avoid-version
+tcLoris_la_LIBADD = $(top_builddir)/pi/libloris.la -lstdc++
 endif
 
-all-local: $(PYTHON_MODULE) $(TCL_MODULE)
+endif
 
-install-exec-local: $(INSTALL_PYTHON_MODULE) $(INSTALL_TCL_MODULE)
+#----------------------------------------------------------------
+# If the user insists, build the Perl module. It is untested.
+# Do not install it.
+#
+if BUILD_PERL
+
+noinst_LTLIBRARIES = perLoris.la
+noinst_SCRIPTS = perLoris.pm
+
+perLoris_la_SOURCES = $(PERL_WRAPPER)
+perLoris_la_LDFLAGS = -module -avoid-version
+perLoris_la_LIBADD = $(top_builddir)/pi/libloris.la -lstdc++
+
+endif
+
+#----------------------------------------------------------------
+# Special build and install rules for Darwin, libtool doesn't work.
+#
+if DARWIN
+
+all-local: $(PYTHON_MODULE) $(TCL_MODULE) $(PERL_MODULE)
+
+install-exec-local: $(INSTALL_PYTHON_MODULE) $(INSTALL_TCL_MODULE) $(INSTALL_PERL_MODULE)
 
 endif 
 
@@ -127,8 +130,7 @@ if HAVE_SWIG
 SWIG_INTERFACE = loris.i
 
 wrappers: 
-	$(SWIG) -python -shadow -c++ -o $(PYTHON_WRAPPER) $(SWIG_INTERFACE)
+	$(SWIG) -python -c++ -o $(PYTHON_WRAPPER) $(SWIG_INTERFACE)
 	$(SWIG) -tcl -c++ -o $(TCL_WRAPPER) $(SWIG_INTERFACE)
 	$(SWIG) -perl -c++ -o $(PERL_WRAPPER) $(SWIG_INTERFACE)
-	mv loris_perl.pm loris.pm
 endif

@@ -48,7 +48,7 @@
 #elif defined (SWIGTCL)
 	%module tcLoris
 #elif defined (SWIGPERL)
-	%module loris_perl
+	%module perLoris
 #else
 	%module loris
 #endif
@@ -130,6 +130,7 @@ static bool fill_vector( const string & s, vector<double> & v )
 
 		beg = s.find_first_of( numparts, end );
 	}
+	return true;
 }
 
 %}
