@@ -972,6 +972,7 @@ SampleVector *AiffFile_samples(AiffFile *self){
 		}
 
 	#include<Analyzer.h>
+	#include<BreakpointEnvelope.h>
 	#include<Partial.h>
 
 Analyzer *new_Analyzer(double resolutionHz,double windowWidthHz){
@@ -982,10 +983,17 @@ Analyzer *new_Analyzer(double resolutionHz,double windowWidthHz){
 Analyzer *Analyzer_copy(Analyzer *self){
 			return new Analyzer( *self );
 		}
-PartialList *Analyzer_analyze(Analyzer *self,SampleVector const *vec,double srate){
+PartialList *Analyzer_analyze__SWIG_0(Analyzer *self,SampleVector const *vec,double srate){
 			PartialList * partials = new PartialList();
 			if ( ! vec->empty() )
 				self->analyze( &((*vec)[0]), &((*vec)[vec->size()]), srate );
+			partials->splice( partials->end(), self->partials() );
+			return partials;
+		}
+PartialList *Analyzer_analyze__SWIG_1(Analyzer *self,SampleVector const *vec,double srate,BreakpointEnvelope *env){
+			PartialList * partials = new PartialList();
+			if ( ! vec->empty() )
+				self->analyze( *vec, srate, *env );
 			partials->splice( partials->end(), self->partials() );
 			return partials;
 		}
@@ -995,6 +1003,13 @@ PartialList *Analyzer_analyze(Analyzer *self,SampleVector const *vec,double srat
 BreakpointEnvelope *BreakpointEnvelope_copy(BreakpointEnvelope *self){
 			return new BreakpointEnvelope( *self );
 		}
+
+	BreakpointEnvelope *
+	BreakpointEnvelopeWithValue( double initialValue )
+	{
+		return new BreakpointEnvelope( initialValue );
+	}
+
 SampleVector *SampleVector_copy(SampleVector *self){
 			return new SampleVector( *self );
 		}
@@ -1948,7 +1963,7 @@ static PyObject *_wrap_Analyzer_copy(PyObject *self, PyObject *args) {
 }
 
 
-static PyObject *_wrap_Analyzer_analyze(PyObject *self, PyObject *args) {
+static PyObject *_wrap_Analyzer_analyze__SWIG_0(PyObject *self, PyObject *args) {
     PyObject *resultobj;
     Analyzer *arg1 = (Analyzer *) 0 ;
     SampleVector *arg2 = (SampleVector *) 0 ;
@@ -1963,7 +1978,7 @@ static PyObject *_wrap_Analyzer_analyze(PyObject *self, PyObject *args) {
     {
         try
         {
-            result = (PartialList *)Analyzer_analyze(arg1,(SampleVector const *)arg2,arg3);
+            result = (PartialList *)Analyzer_analyze__SWIG_0(arg1,(SampleVector const *)arg2,arg3);
             
         }
         catch( Loris::Exception & ex ) 
@@ -1984,6 +1999,137 @@ static PyObject *_wrap_Analyzer_analyze(PyObject *self, PyObject *args) {
     resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_PartialList, 1);
     return resultobj;
     fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Analyzer_analyze__SWIG_1(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    Analyzer *arg1 = (Analyzer *) 0 ;
+    SampleVector *arg2 = (SampleVector *) 0 ;
+    double arg3 ;
+    BreakpointEnvelope *arg4 = (BreakpointEnvelope *) 0 ;
+    PartialList *result;
+    PyObject * obj0  = 0 ;
+    PyObject * obj1  = 0 ;
+    PyObject * obj3  = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OOdO:Analyzer_analyze",&obj0,&obj1,&arg3,&obj3)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_Analyzer,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    if ((SWIG_ConvertPtr(obj1,(void **) &arg2, SWIGTYPE_p_SampleVector,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    if ((SWIG_ConvertPtr(obj3,(void **) &arg4, SWIGTYPE_p_BreakpointEnvelope,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    {
+        try
+        {
+            result = (PartialList *)Analyzer_analyze__SWIG_1(arg1,(SampleVector const *)arg2,arg3,arg4);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_PartialList, 1);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Analyzer_analyze(PyObject *self, PyObject *args) {
+    int argc;
+    PyObject *argv[5];
+    int ii;
+    
+    argc = PyObject_Length(args);
+    for (ii = 0; (ii < argc) && (ii < 4); ii++) {
+        argv[ii] = PyTuple_GetItem(args,ii);
+    }
+    if (argc == 3) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(argv[0], (void **) &ptr, SWIGTYPE_p_Analyzer, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *ptr;
+                if (SWIG_ConvertPtr(argv[1], (void **) &ptr, SWIGTYPE_p_SampleVector, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                }else {
+                    _v = 1;
+                }
+            }
+            if (_v) {
+                {
+                    _v = (PyFloat_Check(argv[2]) || PyInt_Check(argv[2]) || PyLong_Check(argv[2])) ? 1 : 0;
+                }
+                if (_v) {
+                    return _wrap_Analyzer_analyze__SWIG_0(self,args);
+                }
+            }
+        }
+    }
+    if (argc == 4) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(argv[0], (void **) &ptr, SWIGTYPE_p_Analyzer, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *ptr;
+                if (SWIG_ConvertPtr(argv[1], (void **) &ptr, SWIGTYPE_p_SampleVector, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                }else {
+                    _v = 1;
+                }
+            }
+            if (_v) {
+                {
+                    _v = (PyFloat_Check(argv[2]) || PyInt_Check(argv[2]) || PyLong_Check(argv[2])) ? 1 : 0;
+                }
+                if (_v) {
+                    {
+                        void *ptr;
+                        if (SWIG_ConvertPtr(argv[3], (void **) &ptr, SWIGTYPE_p_BreakpointEnvelope, 0) == -1) {
+                            _v = 0;
+                            PyErr_Clear();
+                        }else {
+                            _v = 1;
+                        }
+                    }
+                    if (_v) {
+                        return _wrap_Analyzer_analyze__SWIG_1(self,args);
+                    }
+                }
+            }
+        }
+    }
+    
+    PyErr_SetString(PyExc_TypeError,"No matching function for overloaded 'Analyzer_analyze'");
     return NULL;
 }
 
@@ -2678,7 +2824,7 @@ static PyObject * Analyzer_swigregister(PyObject *self, PyObject *args) {
     Py_INCREF(obj);
     return Py_BuildValue((char *)"");
 }
-static PyObject *_wrap_new_BreakpointEnvelope(PyObject *self, PyObject *args) {
+static PyObject *_wrap_new_BreakpointEnvelope__SWIG_0(PyObject *self, PyObject *args) {
     PyObject *resultobj;
     BreakpointEnvelope *result;
     
@@ -2707,6 +2853,67 @@ static PyObject *_wrap_new_BreakpointEnvelope(PyObject *self, PyObject *args) {
     resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_BreakpointEnvelope, 1);
     return resultobj;
     fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_new_BreakpointEnvelope__SWIG_1(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    double arg1 ;
+    BreakpointEnvelope *result;
+    
+    if(!PyArg_ParseTuple(args,(char *)"d:new_BreakpointEnvelope",&arg1)) goto fail;
+    {
+        try
+        {
+            result = (BreakpointEnvelope *)new BreakpointEnvelope(arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_BreakpointEnvelope, 1);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_new_BreakpointEnvelope(PyObject *self, PyObject *args) {
+    int argc;
+    PyObject *argv[2];
+    int ii;
+    
+    argc = PyObject_Length(args);
+    for (ii = 0; (ii < argc) && (ii < 1); ii++) {
+        argv[ii] = PyTuple_GetItem(args,ii);
+    }
+    if (argc == 0) {
+        return _wrap_new_BreakpointEnvelope__SWIG_0(self,args);
+    }
+    if (argc == 1) {
+        int _v;
+        {
+            _v = (PyFloat_Check(argv[0]) || PyInt_Check(argv[0]) || PyLong_Check(argv[0])) ? 1 : 0;
+        }
+        if (_v) {
+            return _wrap_new_BreakpointEnvelope__SWIG_1(self,args);
+        }
+    }
+    
+    PyErr_SetString(PyExc_TypeError,"No matching function for overloaded 'new_BreakpointEnvelope'");
     return NULL;
 }
 
@@ -2740,40 +2947,6 @@ static PyObject *_wrap_delete_BreakpointEnvelope(PyObject *self, PyObject *args)
         }
     }
     Py_INCREF(Py_None); resultobj = Py_None;
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_new_BreakpointEnvelopeWithValue(PyObject *self, PyObject *args) {
-    PyObject *resultobj;
-    double arg1 ;
-    BreakpointEnvelope *result;
-    
-    if(!PyArg_ParseTuple(args,(char *)"d:new_BreakpointEnvelopeWithValue",&arg1)) goto fail;
-    {
-        try
-        {
-            result = (BreakpointEnvelope *)new BreakpointEnvelope(arg1);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_BreakpointEnvelope, 1);
     return resultobj;
     fail:
     return NULL;
@@ -2897,6 +3070,40 @@ static PyObject * BreakpointEnvelope_swigregister(PyObject *self, PyObject *args
     Py_INCREF(obj);
     return Py_BuildValue((char *)"");
 }
+static PyObject *_wrap_BreakpointEnvelopeWithValue(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    double arg1 ;
+    BreakpointEnvelope *result;
+    
+    if(!PyArg_ParseTuple(args,(char *)"d:BreakpointEnvelopeWithValue",&arg1)) goto fail;
+    {
+        try
+        {
+            result = (BreakpointEnvelope *)BreakpointEnvelopeWithValue(arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    resultobj = SWIG_NewPointerObj((void *) result, SWIGTYPE_p_BreakpointEnvelope, 1);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
 static PyObject *_wrap_new_SampleVector(PyObject *self, PyObject *args) {
     PyObject *resultobj;
     unsigned long arg1 = (unsigned long) 0 ;
@@ -5581,11 +5788,11 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"Analyzer_swigregister", Analyzer_swigregister, METH_VARARGS },
 	 { (char *)"new_BreakpointEnvelope", _wrap_new_BreakpointEnvelope, METH_VARARGS },
 	 { (char *)"delete_BreakpointEnvelope", _wrap_delete_BreakpointEnvelope, METH_VARARGS },
-	 { (char *)"new_BreakpointEnvelopeWithValue", _wrap_new_BreakpointEnvelopeWithValue, METH_VARARGS },
 	 { (char *)"BreakpointEnvelope_copy", _wrap_BreakpointEnvelope_copy, METH_VARARGS },
 	 { (char *)"BreakpointEnvelope_insertBreakpoint", _wrap_BreakpointEnvelope_insertBreakpoint, METH_VARARGS },
 	 { (char *)"BreakpointEnvelope_valueAt", _wrap_BreakpointEnvelope_valueAt, METH_VARARGS },
 	 { (char *)"BreakpointEnvelope_swigregister", BreakpointEnvelope_swigregister, METH_VARARGS },
+	 { (char *)"BreakpointEnvelopeWithValue", _wrap_BreakpointEnvelopeWithValue, METH_VARARGS },
 	 { (char *)"new_SampleVector", _wrap_new_SampleVector, METH_VARARGS },
 	 { (char *)"delete_SampleVector", _wrap_delete_SampleVector, METH_VARARGS },
 	 { (char *)"SampleVector_clear", _wrap_SampleVector_clear, METH_VARARGS },

@@ -1273,6 +1273,7 @@ SampleVector *AiffFile_samples(AiffFile *self){
 		}
 
 	#include<Analyzer.h>
+	#include<BreakpointEnvelope.h>
 	#include<Partial.h>
 
 Analyzer *new_Analyzer(double resolutionHz,double windowWidthHz){
@@ -1283,10 +1284,17 @@ Analyzer *new_Analyzer(double resolutionHz,double windowWidthHz){
 Analyzer *Analyzer_copy(Analyzer *self){
 			return new Analyzer( *self );
 		}
-PartialList *Analyzer_analyze(Analyzer *self,SampleVector const *vec,double srate){
+PartialList *Analyzer_analyze__SWIG_0(Analyzer *self,SampleVector const *vec,double srate){
 			PartialList * partials = new PartialList();
 			if ( ! vec->empty() )
 				self->analyze( &((*vec)[0]), &((*vec)[vec->size()]), srate );
+			partials->splice( partials->end(), self->partials() );
+			return partials;
+		}
+PartialList *Analyzer_analyze__SWIG_1(Analyzer *self,SampleVector const *vec,double srate,BreakpointEnvelope *env){
+			PartialList * partials = new PartialList();
+			if ( ! vec->empty() )
+				self->analyze( *vec, srate, *env );
 			partials->splice( partials->end(), self->partials() );
 			return partials;
 		}
@@ -1296,6 +1304,13 @@ PartialList *Analyzer_analyze(Analyzer *self,SampleVector const *vec,double srat
 BreakpointEnvelope *BreakpointEnvelope_copy(BreakpointEnvelope *self){
 			return new BreakpointEnvelope( *self );
 		}
+
+	BreakpointEnvelope *
+	BreakpointEnvelopeWithValue( double initialValue )
+	{
+		return new BreakpointEnvelope( initialValue );
+	}
+
 SampleVector *SampleVector_copy(SampleVector *self){
 			return new SampleVector( *self );
 		}
@@ -2154,7 +2169,7 @@ _wrap_Analyzer_copy(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj
 
 
 static int
-_wrap_Analyzer_analyze(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+_wrap_Analyzer_analyze__SWIG_0(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
     Analyzer *arg1 = (Analyzer *) 0 ;
     SampleVector *arg2 = (SampleVector *) 0 ;
     double arg3 ;
@@ -2166,7 +2181,7 @@ _wrap_Analyzer_analyze(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_
     {
         try
         {
-            result = (PartialList *)Analyzer_analyze(arg1,(SampleVector const *)arg2,arg3);
+            result = (PartialList *)Analyzer_analyze__SWIG_0(arg1,(SampleVector const *)arg2,arg3);
             
         }
         catch( Loris::Exception & ex ) 
@@ -2187,6 +2202,128 @@ _wrap_Analyzer_analyze(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_
     Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_PartialList,0));
     return TCL_OK;
     fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_Analyzer_analyze__SWIG_1(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    Analyzer *arg1 = (Analyzer *) 0 ;
+    SampleVector *arg2 = (SampleVector *) 0 ;
+    double arg3 ;
+    BreakpointEnvelope *arg4 = (BreakpointEnvelope *) 0 ;
+    PartialList *result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"oodo:Analyzer_analyze self vec srate env ",0,0,&arg3,0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_Analyzer,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[2], (void **) &arg2, SWIGTYPE_p_SampleVector,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[4], (void **) &arg4, SWIGTYPE_p_BreakpointEnvelope,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            result = (PartialList *)Analyzer_analyze__SWIG_1(arg1,(SampleVector const *)arg2,arg3,arg4);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_PartialList,0));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_Analyzer_analyze(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    Tcl_Obj *CONST *argv = objv+1;
+    int argc = objc-1;
+    if (argc == 3) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(interp, argv[0], (void **) &ptr, SWIGTYPE_p_Analyzer, 0) == TCL_ERROR) {
+                _v = 0;
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *ptr;
+                if (SWIG_ConvertPtr(interp, argv[1], (void **) &ptr, SWIGTYPE_p_SampleVector, 0) == TCL_ERROR) {
+                    _v = 0;
+                }else {
+                    _v = 1;
+                }
+            }
+            if (_v) {
+                {
+                    double tmp;
+                    if (Tcl_GetDoubleFromObj(NULL,argv[2],&tmp) == TCL_ERROR) _v = 0;
+                    else _v = 1;
+                }
+                if (_v) {
+                    return _wrap_Analyzer_analyze__SWIG_0(clientData, interp, objc, objv);
+                }
+            }
+        }
+    }
+    if (argc == 4) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(interp, argv[0], (void **) &ptr, SWIGTYPE_p_Analyzer, 0) == TCL_ERROR) {
+                _v = 0;
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *ptr;
+                if (SWIG_ConvertPtr(interp, argv[1], (void **) &ptr, SWIGTYPE_p_SampleVector, 0) == TCL_ERROR) {
+                    _v = 0;
+                }else {
+                    _v = 1;
+                }
+            }
+            if (_v) {
+                {
+                    double tmp;
+                    if (Tcl_GetDoubleFromObj(NULL,argv[2],&tmp) == TCL_ERROR) _v = 0;
+                    else _v = 1;
+                }
+                if (_v) {
+                    {
+                        void *ptr;
+                        if (SWIG_ConvertPtr(interp, argv[3], (void **) &ptr, SWIGTYPE_p_BreakpointEnvelope, 0) == TCL_ERROR) {
+                            _v = 0;
+                        }else {
+                            _v = 1;
+                        }
+                    }
+                    if (_v) {
+                        return _wrap_Analyzer_analyze__SWIG_1(clientData, interp, objc, objv);
+                    }
+                }
+            }
+        }
+    }
+    
+    Tcl_SetResult(interp,(char *) "No matching function for overloaded 'Analyzer_analyze'", TCL_STATIC);
     return TCL_ERROR;
 }
 
@@ -2888,7 +3025,7 @@ static swig_attribute swig_Analyzer_attributes[] = {
 static swig_class *swig_Analyzer_bases[] = {0};
 swig_class _wrap_class_Analyzer = { "Analyzer", &SWIGTYPE_p_Analyzer,_wrap_new_Analyzer, swig_delete_Analyzer, swig_Analyzer_methods, swig_Analyzer_attributes, swig_Analyzer_bases };
 static int
-_wrap_new_BreakpointEnvelope(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+_wrap_new_BreakpointEnvelope__SWIG_0(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
     BreakpointEnvelope *result;
     
     if (SWIG_GetArgs(interp, objc, objv,":new_BreakpointEnvelope ") == TCL_ERROR) SWIG_fail;
@@ -2921,6 +3058,64 @@ _wrap_new_BreakpointEnvelope(ClientData clientData, Tcl_Interp *interp, int objc
 
 
 static int
+_wrap_new_BreakpointEnvelope__SWIG_1(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    double arg1 ;
+    BreakpointEnvelope *result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"d:new_BreakpointEnvelope initialValue ",&arg1) == TCL_ERROR) SWIG_fail;
+    {
+        try
+        {
+            result = (BreakpointEnvelope *)new BreakpointEnvelope(arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_BreakpointEnvelope,0));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_new_BreakpointEnvelope(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    Tcl_Obj *CONST *argv = objv+1;
+    int argc = objc-1;
+    if (argc == 0) {
+        return _wrap_new_BreakpointEnvelope__SWIG_0(clientData, interp, objc, objv);
+    }
+    if (argc == 1) {
+        int _v;
+        {
+            double tmp;
+            if (Tcl_GetDoubleFromObj(NULL,argv[0],&tmp) == TCL_ERROR) _v = 0;
+            else _v = 1;
+        }
+        if (_v) {
+            return _wrap_new_BreakpointEnvelope__SWIG_1(clientData, interp, objc, objv);
+        }
+    }
+    
+    Tcl_SetResult(interp,(char *) "No matching function for overloaded 'new_BreakpointEnvelope'", TCL_STATIC);
+    return TCL_ERROR;
+}
+
+
+static int
 _wrap_delete_BreakpointEnvelope(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
     BreakpointEnvelope *arg1 = (BreakpointEnvelope *) 0 ;
     
@@ -2948,40 +3143,6 @@ _wrap_delete_BreakpointEnvelope(ClientData clientData, Tcl_Interp *interp, int o
         }
     }
     
-    return TCL_OK;
-    fail:
-    return TCL_ERROR;
-}
-
-
-static int
-_wrap_new_BreakpointEnvelopeWithValue(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
-    double arg1 ;
-    BreakpointEnvelope *result;
-    
-    if (SWIG_GetArgs(interp, objc, objv,"d:new_BreakpointEnvelopeWithValue initialValue ",&arg1) == TCL_ERROR) SWIG_fail;
-    {
-        try
-        {
-            result = (BreakpointEnvelope *)new BreakpointEnvelope(arg1);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_BreakpointEnvelope,0));
     return TCL_OK;
     fail:
     return TCL_ERROR;
@@ -3110,6 +3271,40 @@ static swig_attribute swig_BreakpointEnvelope_attributes[] = {
 };
 static swig_class *swig_BreakpointEnvelope_bases[] = {0};
 swig_class _wrap_class_BreakpointEnvelope = { "BreakpointEnvelope", &SWIGTYPE_p_BreakpointEnvelope,_wrap_new_BreakpointEnvelope, swig_delete_BreakpointEnvelope, swig_BreakpointEnvelope_methods, swig_BreakpointEnvelope_attributes, swig_BreakpointEnvelope_bases };
+static int
+_wrap_BreakpointEnvelopeWithValue(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    double arg1 ;
+    BreakpointEnvelope *result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"d:BreakpointEnvelopeWithValue initialValue ",&arg1) == TCL_ERROR) SWIG_fail;
+    {
+        try
+        {
+            result = (BreakpointEnvelope *)BreakpointEnvelopeWithValue(arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_BreakpointEnvelope,0));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
 static int
 _wrap_new_SampleVector(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
     unsigned long arg1 = (unsigned long) 0 ;
@@ -5780,11 +5975,11 @@ static swig_command_info swig_commands[] = {
     { SWIG_prefix "Analyzer", (swig_wrapper_func) SWIG_ObjectConstructor, &_wrap_class_Analyzer},
     { SWIG_prefix "new_BreakpointEnvelope", (swig_wrapper_func) _wrap_new_BreakpointEnvelope, NULL},
     { SWIG_prefix "delete_BreakpointEnvelope", (swig_wrapper_func) _wrap_delete_BreakpointEnvelope, NULL},
-    { SWIG_prefix "new_BreakpointEnvelopeWithValue", (swig_wrapper_func) _wrap_new_BreakpointEnvelopeWithValue, NULL},
     { SWIG_prefix "BreakpointEnvelope_copy", (swig_wrapper_func) _wrap_BreakpointEnvelope_copy, NULL},
     { SWIG_prefix "BreakpointEnvelope_insertBreakpoint", (swig_wrapper_func) _wrap_BreakpointEnvelope_insertBreakpoint, NULL},
     { SWIG_prefix "BreakpointEnvelope_valueAt", (swig_wrapper_func) _wrap_BreakpointEnvelope_valueAt, NULL},
     { SWIG_prefix "BreakpointEnvelope", (swig_wrapper_func) SWIG_ObjectConstructor, &_wrap_class_BreakpointEnvelope},
+    { SWIG_prefix "BreakpointEnvelopeWithValue", (swig_wrapper_func) _wrap_BreakpointEnvelopeWithValue, NULL},
     { SWIG_prefix "new_SampleVector", (swig_wrapper_func) _wrap_new_SampleVector, NULL},
     { SWIG_prefix "delete_SampleVector", (swig_wrapper_func) _wrap_delete_SampleVector, NULL},
     { SWIG_prefix "SampleVector_clear", (swig_wrapper_func) _wrap_SampleVector_clear, NULL},

@@ -697,6 +697,7 @@ public:
 
 %{
 	#include<Analyzer.h>
+	#include<BreakpointEnvelope.h>
 	#include<Partial.h>
 %}
 
@@ -743,6 +744,21 @@ public:
 		/*	Analyze a SampleVector of (mono) samples at the given sample rate 	  	
 			(in Hz) and return the resulting Partials in a PartialList. 												
 		 */
+		 
+		PartialList * analyze( const SampleVector * vec, double srate, 
+							   BreakpointEnvelope * env )
+		{
+			PartialList * partials = new PartialList();
+			if ( ! vec->empty() )
+				self->analyze( *vec, srate, *env );
+			partials->splice( partials->end(), self->partials() );
+			return partials;
+		}
+		/*	Analyze a SampleVector of (mono) samples at the given sample rate 	  	
+			(in Hz) and return the resulting Partials in a PartialList. Use 
+			the specified frequency envelope as a fundamental reference for
+			Partial formation.
+		 */
 	}
 	
 	//	parameter access:
@@ -786,9 +802,8 @@ class BreakpointEnvelope
 public:
 	//	construction:
 	BreakpointEnvelope( void );
+	BreakpointEnvelope( double initialValue );
 	~BreakpointEnvelope( void );
-	
-	%name(BreakpointEnvelopeWithValue) BreakpointEnvelope( double initialValue );
 	
 	%extend 
 	{
@@ -808,6 +823,15 @@ public:
 	 
 };	//	end of class BreakpointEnvelope
 
+%newobject BreakpointEnvelopeWithValue;
+
+%inline %{
+	BreakpointEnvelope *
+	BreakpointEnvelopeWithValue( double initialValue )
+	{
+		return new BreakpointEnvelope( initialValue );
+	}
+%}
 
 // ---------------------------------------------------------------------------
 //	class SampleVector

@@ -154,11 +154,8 @@ class BreakpointEnvelopePtr(BreakpointEnvelope):
         if not hasattr(self,"thisown"): self.thisown = 0
         self.__class__ = BreakpointEnvelope
 _loris.BreakpointEnvelope_swigregister(BreakpointEnvelopePtr)
-def BreakpointEnvelopeWithValue(*args):
-    val = apply(_loris.new_BreakpointEnvelopeWithValue,args)
-    val.thisown = 1
-    return val
 
+BreakpointEnvelopeWithValue = _loris.BreakpointEnvelopeWithValue
 
 class SampleVector(_object):
     __swig_setmethods__ = {}

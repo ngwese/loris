@@ -792,6 +792,7 @@ SampleVector *AiffFile_samples(AiffFile *self){
 		}
 
 	#include<Analyzer.h>
+	#include<BreakpointEnvelope.h>
 	#include<Partial.h>
 
 Analyzer *new_Analyzer(double resolutionHz,double windowWidthHz){
@@ -802,10 +803,17 @@ Analyzer *new_Analyzer(double resolutionHz,double windowWidthHz){
 Analyzer *Analyzer_copy(Analyzer *self){
 			return new Analyzer( *self );
 		}
-PartialList *Analyzer_analyze(Analyzer *self,SampleVector const *vec,double srate){
+PartialList *Analyzer_analyze__SWIG_0(Analyzer *self,SampleVector const *vec,double srate){
 			PartialList * partials = new PartialList();
 			if ( ! vec->empty() )
 				self->analyze( &((*vec)[0]), &((*vec)[vec->size()]), srate );
+			partials->splice( partials->end(), self->partials() );
+			return partials;
+		}
+PartialList *Analyzer_analyze__SWIG_1(Analyzer *self,SampleVector const *vec,double srate,BreakpointEnvelope *env){
+			PartialList * partials = new PartialList();
+			if ( ! vec->empty() )
+				self->analyze( *vec, srate, *env );
 			partials->splice( partials->end(), self->partials() );
 			return partials;
 		}
@@ -815,6 +823,13 @@ PartialList *Analyzer_analyze(Analyzer *self,SampleVector const *vec,double srat
 BreakpointEnvelope *BreakpointEnvelope_copy(BreakpointEnvelope *self){
 			return new BreakpointEnvelope( *self );
 		}
+
+	BreakpointEnvelope *
+	BreakpointEnvelopeWithValue( double initialValue )
+	{
+		return new BreakpointEnvelope( initialValue );
+	}
+
 SampleVector *SampleVector_copy(SampleVector *self){
 			return new SampleVector( *self );
 		}
@@ -2071,7 +2086,7 @@ XS(_wrap_Analyzer_copy) {
 }
 
 
-XS(_wrap_Analyzer_analyze) {
+XS(_wrap_Analyzer_analyze__SWIG_0) {
     char _swigmsg[SWIG_MAX_ERRMSG] = "";
     const char *_swigerr = _swigmsg;
     {
@@ -2100,7 +2115,7 @@ XS(_wrap_Analyzer_analyze) {
         {
             try
             {
-                result = (PartialList *)Analyzer_analyze(arg1,(SampleVector const *)arg2,arg3);
+                result = (PartialList *)Analyzer_analyze__SWIG_0(arg1,(SampleVector const *)arg2,arg3);
                 
             }
             catch( Loris::Exception & ex ) 
@@ -2125,6 +2140,146 @@ XS(_wrap_Analyzer_analyze) {
         (void) _swigerr;
     }
     croak(_swigerr);
+}
+
+
+XS(_wrap_Analyzer_analyze__SWIG_1) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        Analyzer *arg1 = (Analyzer *) 0 ;
+        SampleVector *arg2 = (SampleVector *) 0 ;
+        double arg3 ;
+        BreakpointEnvelope *arg4 = (BreakpointEnvelope *) 0 ;
+        PartialList *result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 4) || (items > 4)) {
+            SWIG_croak("Usage: Analyzer_analyze(self,vec,srate,env);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_Analyzer,0) < 0) {
+                SWIG_croak("Type error in argument 1 of Analyzer_analyze. Expected _p_Analyzer");
+            }
+        }
+        {
+            if (SWIG_ConvertPtr(ST(1), (void **) &arg2, SWIGTYPE_p_SampleVector,0) < 0) {
+                SWIG_croak("Type error in argument 2 of Analyzer_analyze. Expected _p_SampleVector");
+            }
+        }
+        arg3 = (double) SvNV(ST(2));
+        
+        {
+            if (SWIG_ConvertPtr(ST(3), (void **) &arg4, SWIGTYPE_p_BreakpointEnvelope,0) < 0) {
+                SWIG_croak("Type error in argument 4 of Analyzer_analyze. Expected _p_BreakpointEnvelope");
+            }
+        }
+        {
+            try
+            {
+                result = (PartialList *)Analyzer_analyze__SWIG_1(arg1,(SampleVector const *)arg2,arg3,arg4);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_PartialList,0);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_Analyzer_analyze) {
+    dXSARGS;
+    
+    if (items == 3) {
+        int _v;
+        {
+            void *tmp;
+            if (SWIG_ConvertPtr(ST(0), (void **) &tmp, SWIGTYPE_p_Analyzer, 0) == -1) {
+                _v = 0;
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *tmp;
+                if (SWIG_ConvertPtr(ST(1), (void **) &tmp, SWIGTYPE_p_SampleVector, 0) == -1) {
+                    _v = 0;
+                }else {
+                    _v = 1;
+                }
+            }
+            if (_v) {
+                {
+                    _v = SvNOK(ST(2)) ? 1 : 0;
+                }
+                if (_v) {
+                    (*PL_markstack_ptr++);SWIG_CALLXS(_wrap_Analyzer_analyze__SWIG_0); return;
+                }
+            }
+        }
+    }
+    if (items == 4) {
+        int _v;
+        {
+            void *tmp;
+            if (SWIG_ConvertPtr(ST(0), (void **) &tmp, SWIGTYPE_p_Analyzer, 0) == -1) {
+                _v = 0;
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *tmp;
+                if (SWIG_ConvertPtr(ST(1), (void **) &tmp, SWIGTYPE_p_SampleVector, 0) == -1) {
+                    _v = 0;
+                }else {
+                    _v = 1;
+                }
+            }
+            if (_v) {
+                {
+                    _v = SvNOK(ST(2)) ? 1 : 0;
+                }
+                if (_v) {
+                    {
+                        void *tmp;
+                        if (SWIG_ConvertPtr(ST(3), (void **) &tmp, SWIGTYPE_p_BreakpointEnvelope, 0) == -1) {
+                            _v = 0;
+                        }else {
+                            _v = 1;
+                        }
+                    }
+                    if (_v) {
+                        (*PL_markstack_ptr++);SWIG_CALLXS(_wrap_Analyzer_analyze__SWIG_1); return;
+                    }
+                }
+            }
+        }
+    }
+    
+    croak("No matching function for overloaded 'Analyzer_analyze'");
+    XSRETURN(0);
 }
 
 
@@ -3047,7 +3202,7 @@ XS(_wrap_delete_Analyzer) {
 }
 
 
-XS(_wrap_new_BreakpointEnvelope) {
+XS(_wrap_new_BreakpointEnvelope__SWIG_0) {
     char _swigmsg[SWIG_MAX_ERRMSG] = "";
     const char *_swigerr = _swigmsg;
     {
@@ -3089,6 +3244,72 @@ XS(_wrap_new_BreakpointEnvelope) {
 }
 
 
+XS(_wrap_new_BreakpointEnvelope__SWIG_1) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        double arg1 ;
+        BreakpointEnvelope *result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 1) || (items > 1)) {
+            SWIG_croak("Usage: new_BreakpointEnvelope(initialValue);");
+        }
+        arg1 = (double) SvNV(ST(0));
+        
+        {
+            try
+            {
+                result = (BreakpointEnvelope *)new BreakpointEnvelope(arg1);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_BreakpointEnvelope,0);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_new_BreakpointEnvelope) {
+    dXSARGS;
+    
+    if (items == 0) {
+        (*PL_markstack_ptr++);SWIG_CALLXS(_wrap_new_BreakpointEnvelope__SWIG_0); return;
+    }
+    if (items == 1) {
+        int _v;
+        {
+            _v = SvNOK(ST(0)) ? 1 : 0;
+        }
+        if (_v) {
+            (*PL_markstack_ptr++);SWIG_CALLXS(_wrap_new_BreakpointEnvelope__SWIG_1); return;
+        }
+    }
+    
+    croak("No matching function for overloaded 'new_BreakpointEnvelope'");
+    XSRETURN(0);
+}
+
+
 XS(_wrap_delete_BreakpointEnvelope) {
     char _swigmsg[SWIG_MAX_ERRMSG] = "";
     const char *_swigerr = _swigmsg;
@@ -3127,51 +3348,6 @@ XS(_wrap_delete_BreakpointEnvelope) {
             }
         }
         
-        XSRETURN(argvi);
-        fail:
-        (void) _swigerr;
-    }
-    croak(_swigerr);
-}
-
-
-XS(_wrap_new_BreakpointEnvelopeWithValue) {
-    char _swigmsg[SWIG_MAX_ERRMSG] = "";
-    const char *_swigerr = _swigmsg;
-    {
-        double arg1 ;
-        BreakpointEnvelope *result;
-        int argvi = 0;
-        dXSARGS;
-        
-        if ((items < 1) || (items > 1)) {
-            SWIG_croak("Usage: new_BreakpointEnvelopeWithValue(initialValue);");
-        }
-        arg1 = (double) SvNV(ST(0));
-        
-        {
-            try
-            {
-                result = (BreakpointEnvelope *)new BreakpointEnvelope(arg1);
-                
-            }
-            catch( Loris::Exception & ex ) 
-            {
-                //	catch Loris::Exceptions:
-                std::string s("Loris exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-            catch( std::exception & ex ) 
-            {
-                //	catch std::exceptions:
-                std::string s("std C++ exception: " );
-                s.append( ex.what() );
-                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-            }
-        }
-        ST(argvi) = sv_newmortal();
-        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_BreakpointEnvelope,0);
         XSRETURN(argvi);
         fail:
         (void) _swigerr;
@@ -3323,6 +3499,51 @@ XS(_wrap_BreakpointEnvelope_valueAt) {
         }
         ST(argvi) = sv_newmortal();
         sv_setnv(ST(argvi++), (double) result);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_BreakpointEnvelopeWithValue) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        double arg1 ;
+        BreakpointEnvelope *result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 1) || (items > 1)) {
+            SWIG_croak("Usage: BreakpointEnvelopeWithValue(initialValue);");
+        }
+        arg1 = (double) SvNV(ST(0));
+        
+        {
+            try
+            {
+                result = (BreakpointEnvelope *)BreakpointEnvelopeWithValue(arg1);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_BreakpointEnvelope,0);
         XSRETURN(argvi);
         fail:
         (void) _swigerr;
@@ -6862,10 +7083,10 @@ static swig_command_info swig_commands[] = {
 {"perLoris::delete_Analyzer", _wrap_delete_Analyzer},
 {"perLoris::new_BreakpointEnvelope", _wrap_new_BreakpointEnvelope},
 {"perLoris::delete_BreakpointEnvelope", _wrap_delete_BreakpointEnvelope},
-{"perLoris::new_BreakpointEnvelopeWithValue", _wrap_new_BreakpointEnvelopeWithValue},
 {"perLoris::BreakpointEnvelope_copy", _wrap_BreakpointEnvelope_copy},
 {"perLoris::BreakpointEnvelope_insertBreakpoint", _wrap_BreakpointEnvelope_insertBreakpoint},
 {"perLoris::BreakpointEnvelope_valueAt", _wrap_BreakpointEnvelope_valueAt},
+{"perLoris::BreakpointEnvelopeWithValue", _wrap_BreakpointEnvelopeWithValue},
 {"perLoris::new_SampleVector", _wrap_new_SampleVector},
 {"perLoris::delete_SampleVector", _wrap_delete_SampleVector},
 {"perLoris::SampleVector_clear", _wrap_SampleVector_clear},
