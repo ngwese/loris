@@ -43,7 +43,7 @@ PY_MODULE = loriscmodule.so
 
 PERL_WRAPPER = loris_perl_wrap.C
 
-PY_VERSION = 2.1
+PY_VERSION = 2.0
 PYTHON_PREFIX = /usr/local
 PYTHON_INCLUDE = ${PYTHON_PREFIX}/include/python${PY_VERSION}
 PYTHON_LIB = ${PYTHON_PREFIX}/lib/python${PY_VERSION}/config

@@ -64,7 +64,6 @@
 #include "Exception.h"
 #include "ExportSdif.h"
 #include "ExportSpc.h"
-#include "Handle.h"
 #include "ImportLemur.h"
 #include "ImportSdif.h"
 #include "Morpher.h"
@@ -83,10 +82,6 @@
 
 
 using namespace Loris;
-
-typedef Handle<BreakpointEnvelope> BpEnv_Handle;
-typedef Handle<Envelope> Env_Handle;
-
 
 /* ---------------------------------------------------------------- */
 /*		non-object-based procedures

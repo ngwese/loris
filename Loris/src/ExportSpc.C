@@ -36,7 +36,6 @@
 #include "Partial.h"
 #include "notifier.h"
 #include "ieee.h"
-#include "LorisTypes.h"
 #include "PartialUtils.h"
 
 #include <algorithm>

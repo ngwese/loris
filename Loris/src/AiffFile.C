@@ -35,7 +35,6 @@
 #include "Exception.h"
 #include "notifier.h"
 #include "ieee.h"
-#include "LorisTypes.h"
 #include <algorithm>
 #include <string>
 #include <fstream>

@@ -37,7 +37,6 @@
 #include "Partial.h"
 #include "Breakpoint.h"
 #include "notifier.h"
-#include "LorisTypes.h"
 #include <algorithm>
 #include <cmath>
 #include <fstream>
