@@ -124,7 +124,7 @@ public:
 	//!	greatest portion of its (the Partial's) energy.
 	//!	
 	//!	\param begin is the beginning of the range of Partials to channelize
-	//!	\param end is (one-past) the end of the range of Partials o channelize
+	//!	\param end is (one-past) the end of the range of Partials to channelize
 	//!	
 	//!	If compiled with NO_TEMPLATE_MEMBERS defined, then begin and end
 	//!	must be PartialList::iterators, otherwise they can be any type
@@ -158,10 +158,10 @@ public:
 	//!         channelize.
 	//! \param  end is the end of a sequence of Partials to 
 	//!         channelize.
-	//!	\param 	refChanFreq is an Envelope representing the center frequency
-	//!	        of a channel.
-	//!	\param 	refChanLabel is the corresponding channel number (i.e. 1
-	//!	        if refChanFreq is the lowest-frequency channel, and all 
+	//! \param 	refChanFreq is an Envelope representing the center frequency
+	//!         of a channel.
+	//! \param 	refChanLabel is the corresponding channel number (i.e. 1
+	//!         if refChanFreq is the lowest-frequency channel, and all 
 	//!         other channels are harmonics of refChanFreq, or 2 if  
 	//!         refChanFreq tracks the second harmonic, etc.).
 	//! \throw  InvalidArgument if refChanLabel is not positive.

@@ -48,6 +48,29 @@
 //	begin namespace
 namespace Loris {
 
+// ---------------------------------------------------------------------------
+//	Sieve constructor
+// ---------------------------------------------------------------------------
+//!	Construct a new Sieve using the specified partial fade
+//!	time. If unspecified, the fade time defaults to one 
+//!	millisecond (0.001 s).
+//!
+//!   \param   partialFadeTime is the extra time (in seconds)  
+//!            added to each end of a Partial to accomodate 
+//!            the fade to and from zero amplitude. Default is
+//!            0.001 (one millisecond). The Partial fade time
+//!            must be non-negative.
+//!   \throw  InvalidArgument if partialFadeTime is negative.
+//
+Sieve::Sieve( double partialFadeTime ) :
+	_fadeTime( partialFadeTime )
+{
+	if ( _fadeTime < 0.0 )
+	{
+	   Throw( InvalidArgument, "the Partial fade time must be non-negative" );
+	}
+}
+
 //	Definition of a comparitor for sorting a collection of pointers
 //	to Partials by label (increasing) and duration (decreasing), so
 //	that Partial ptrs are arranged by label, with the lowest labels
@@ -134,34 +157,17 @@ find_overlapping( Partial & p, double minGapTime, Iter start, Iter end)
 }
 
 // ---------------------------------------------------------------------------
-//	Sieve constructor
+//	sift_ptrs (private helper)
 // ---------------------------------------------------------------------------
-//	By default, use a Partial fade time equal to 1 ms, so that the 
-//	detremination of overlapping Partials includes the time needed for
-//	them to fade in and out if synthesized with a fade time of 1 ms.
-//
-Sieve::Sieve( double partialFadeTime ) :
-	_fadeTime( partialFadeTime )
-{
-	Assert( _fadeTime >= 0.0 );
-}
-
-// ---------------------------------------------------------------------------
-//	Sieve destructor
-// ---------------------------------------------------------------------------
-//
-Sieve::~Sieve( void )
-{
-}
-
-// ---------------------------------------------------------------------------
-//	sift
-// ---------------------------------------------------------------------------
-//	Sift labeled Partials: 
-//  If any two partials with same label overlap in time,
-//  keep only the longer of the two partials.
-//  Set the label of the shorter duration partial to zero.
-//
+//!   Sift labeled Partials. If any two Partials having the same (non-zero)
+//!   label overlap in time (where overlap includes the fade time at both 
+//!   ends of each Partial), then set the label of the Partial having the
+//!   shorter duration to zero. Sifting is performed on a collection of 
+//!   pointers to Partials so that the it can be performed without changing 
+//!   the order of the Partials in the sequence.
+//!
+//!   \param   ptrs is a collection of pointers to the Partials in the
+//!            sequence to be sifted.
 void 
 Sieve::sift_ptrs( PartialPtrs & ptrs  )
 {

@@ -58,12 +58,12 @@ namespace Loris {
 //!	Channels that contain no Partials are not represented in the distilled
 //!	data. Partials that are not labeled, that is, Partials having label 0,
 //!	are are "collated " into groups of non-overlapping (in time)
-//! Partials, assigned an unused label (greater than the label associated
-//! with any frequency channel), and fused into a single Partial per
-//! group. "Collating" is a bit like "sifting" but non-overlapping
-//! Partials are grouped without regard to frequency proximity. This
-//! algorithm produces the smallest-possible number of collated Partials.
-//! Thanks to Ulrike Axen for providing this optimal algorithm.
+//!   Partials, assigned an unused label (greater than the label associated
+//!   with any frequency channel), and fused into a single Partial per
+//!   group. "Collating" is a bit like "sifting" but non-overlapping
+//!   Partials are grouped without regard to frequency proximity. This
+//!   algorithm produces the smallest-possible number of collated Partials.
+//!   Thanks to Ulrike Axen for providing this optimal algorithm.
 //!	
 //!	Distillation modifies the Partial container (a PartialList). All
 //!	Partials in the distilled range having a common label are replaced by
@@ -90,8 +90,18 @@ public:
 	//!	By default, use a gap time of one tenth of a millisecond, to 
 	//!	prevent a pair of arbitrarily close null Breakpoints being
 	//!	inserted.
+	//!
+	//!   \param   partialFadeTime is the time (in seconds) over
+	//!            which Partials joined by distillation fade to
+	//!            and from zero amplitude. Default is 0.001 (one
+	//!            millisecond).
+	//!   \param   partialSilentTime is the minimum duration (in seconds) 
+	//!            of the silent (zero-amplitude) gap between two 
+	//!            Partials joined by distillation. (Default is
+	//!            0.0001 (one tenth of a millisecond).
+	explicit
 	Distiller( double partialFadeTime = 0.001    /* 1 ms */,
-			   double partialSilentTime = 0.0001 /* .1 ms */ );
+              double partialSilentTime = 0.0001 /* .1 ms */ );
 	 
 	//	Use compiler-generated copy, assign, and destroy.
 	
@@ -107,22 +117,22 @@ public:
 	//!
 	//!	Return an iterator refering to the position of the first collated Partial,
 	//!	of the end of the distilled collection if there are no collated Partials.
-	//! Since distillation is in-place, the Partials collection may be smaller
-	//! (fewer Partials) after distillation, and any iterators on the collection
-	//! may be invalidated.
+	//!   Since distillation is in-place, the Partials collection may be smaller
+	//!   (fewer Partials) after distillation, and any iterators on the collection
+	//!   may be invalidated.
 	//!
-	//! \post   All Partials in the collection are uniquely-labeled
-	//! \param  partials is the collection of Partials to distill in-place
-	//! \return the position of the end of the range of distilled Partials,
-	//!         which is either the end of the collection, oor the position
-	//!         of the first collated Partial, composed of unlabeled Partials
-	//!         in the original collection.
+	//!   \post   All Partials in the collection are uniquely-labeled
+	//!   \param  partials is the collection of Partials to distill in-place
+	//!   \return the position of the end of the range of distilled Partials,
+	//!           which is either the end of the collection, oor the position
+	//!           of the first collated Partial, composed of unlabeled Partials
+	//!           in the original collection.
 	//!
 	//!	If compiled with NO_TEMPLATE_MEMBERS defined, then partials
 	//!	must be a PartialList, otherwise it can be any container type
 	//!	storing Partials that supports at least bidirectional iterators.
-    //!
-    //! \sa Distiller::distill( Container & partials )
+   //!
+   //!  \sa Distiller::distill( Container & partials )
 #if ! defined(NO_TEMPLATE_MEMBERS)
 	template< typename Container >
 	typename Container::iterator distill( Container & partials );
@@ -139,21 +149,37 @@ public:
 	PartialList::iterator operator() ( PartialList & partials );
 #endif
 	
-	//! Static member that constructs an instance and applies
-	//! it to a sequence of Partials. 
-	//! Construct a Distiller using default parameters, 
-	//! and use it to distill a sequence of Partials. 
-	//!
-	//!	If compiled with NO_TEMPLATE_MEMBERS defined, then partials
-	//!	must be a PartialList, otherwise it can be any container type
-	//!	storing Partials that supports at least bidirectional iterators.
-	//
-	//  UGH WHAT DO I CALL THIS THING? IT CAN'T HAVE THE SAME SIGNATURE!
-#if ! defined(NO_TEMPLATE_MEMBERS)
+   //! Static member that constructs an instance and applies
+   //! it to a sequence of Partials. 
+   //! Construct a Distiller using default parameters, 
+   //! and use it to distill a sequence of Partials. 
+   //!
+   //! \post   All Partials in the collection are uniquely-labeled
+   //! \param  partials is the collection of Partials to distill in-place
+   //! \param   partialFadeTime is the time (in seconds) over
+   //!          which Partials joined by distillation fade to
+   //!          and from zero amplitude.
+   //! \param   partialSilentTime is the minimum duration (in seconds) 
+   //!          of the silent (zero-amplitude) gap between two 
+   //!          Partials joined by distillation. (Default is
+   //!          0.0001 (one tenth of a millisecond).
+   //! \return the position of the end of the range of distilled Partials,
+   //!         which is either the end of the collection, oor the position
+   //!         of the first collated Partial, composed of unlabeled Partials
+   //!         in the original collection.
+   //!
+   //!	If compiled with NO_TEMPLATE_MEMBERS defined, then partials
+   //!	must be a PartialList, otherwise it can be any container type
+   //!	storing Partials that supports at least bidirectional iterators.
+   #if ! defined(NO_TEMPLATE_MEMBERS)
 	template< typename Container >
-	static typename Container::iterator dohickey( Container & partials );
+	static typename Container::iterator 
+	distill( Container & partials, double partialFadeTime,
+                                  double partialSilentTime = 0.0001 /* .1 ms */ );
 #else
-	static inline PartialList::iterator dohickey( PartialList & partials );
+	static inline PartialList::iterator
+	distill( PartialList & partials, double partialFadeTime,
+                                    double partialSilentTime = 0.0001 /* .1 ms */ );
 #endif
 
 
@@ -191,22 +217,22 @@ private:
 //!
 //!	Return an iterator refering to the position of the first collated Partial,
 //!	of the end of the distilled collection if there are no collated Partials.
-//! Since distillation is in-place, the Partials collection may be smaller
-//! (fewer Partials) after distillation, and any iterators on the collection
-//! may be invalidated.
+//!   Since distillation is in-place, the Partials collection may be smaller
+//!   (fewer Partials) after distillation, and any iterators on the collection
+//!   may be invalidated.
 //!
-//! \post   All Partials in the collection are uniquely-labeled
-//! \param  partials is the collection of Partials to distill in-place
-//! \return the position of the end of the range of distilled Partials,
-//!         which is either the end of the collection, oor the position
-//!         of the first collated Partial, composed of unlabeled Partials
-//!         in the original collection.
+//!   \post   All Partials in the collection are uniquely-labeled
+//!   \param  partials is the collection of Partials to distill in-place
+//!   \return the position of the end of the range of distilled Partials,
+//!           which is either the end of the collection, oor the position
+//!           of the first collated Partial, composed of unlabeled Partials
+//!           in the original collection.
 //!
 //!	If compiled with NO_TEMPLATE_MEMBERS defined, then partials
 //!	must be a PartialList, otherwise it can be any container type
 //!	storing Partials that supports at least bidirectional iterators.
 //!
-//! \sa Distiller::distill( Container & partials )
+//!   \sa Distiller::distill( Container & partials )
 //
 #if ! defined(NO_TEMPLATE_MEMBERS)
 template< typename Container >
@@ -336,9 +362,8 @@ PartialList::iterator Distiller::operator()( PartialList & partials )
 	return distill( partials );
 }
 
-
 // ---------------------------------------------------------------------------
-//	dohickey
+//	distill
 // ---------------------------------------------------------------------------
 //! Static member that constructs an instance and applies
 //! it to a sequence of Partials. 
@@ -347,6 +372,13 @@ PartialList::iterator Distiller::operator()( PartialList & partials )
 //!
 //! \post   All Partials in the collection are uniquely-labeled
 //! \param  partials is the collection of Partials to distill in-place
+//! \param   partialFadeTime is the time (in seconds) over
+//!          which Partials joined by distillation fade to
+//!          and from zero amplitude.
+//! \param   partialSilentTime is the minimum duration (in seconds) 
+//!          of the silent (zero-amplitude) gap between two 
+//!          Partials joined by distillation. (Default is
+//!          0.0001 (one tenth of a millisecond).
 //! \return the position of the end of the range of distilled Partials,
 //!         which is either the end of the collection, oor the position
 //!         of the first collated Partial, composed of unlabeled Partials
@@ -356,16 +388,19 @@ PartialList::iterator Distiller::operator()( PartialList & partials )
 //!	must be a PartialList, otherwise it can be any container type
 //!	storing Partials that supports at least bidirectional iterators.
 //
-//  UGH WHAT DO I CALL THIS THING? IT CAN'T HAVE THE SAME SIGNATURE!
 #if ! defined(NO_TEMPLATE_MEMBERS)
 template< typename Container >
-typename Container::iterator Distiller::dohickey( Container & partials )
+typename Container::iterator 
+Distiller::distill( Container & partials, double partialFadeTime,
+                                          double partialSilentTime )
 #else
 inline
-PartialList::iterator Distiller::dohickey( PartialList & partials )
+PartialList::iterator 
+Distiller::distill( PartialList & partials, double partialFadeTime,
+                                            double partialSilentTime )
 #endif
 {
-    Distiller instance;
+    Distiller instance( partialFadeTime, partialSilentTime );
     return instance.distill( partials );
 }
 

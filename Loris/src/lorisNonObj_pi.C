@@ -169,7 +169,8 @@ void channelize( PartialList * partials,
  */
 extern "C"
 BreakpointEnvelope * 
-createFreqReference( PartialList * partials, double minFreq, double maxFreq, long numSamps )
+createFreqReference( PartialList * partials, double minFreq, double maxFreq, 
+                     long numSamps )
 {
 	try 
 	{
@@ -222,7 +223,7 @@ createFreqReference( PartialList * partials, double minFreq, double maxFreq, lon
  */
 extern "C"
 void dilate( PartialList * partials, 
-			 const double * initial, const double * target, int npts )
+			    const double * initial, const double * target, int npts )
 {
 	try 
 	{
@@ -232,7 +233,7 @@ void dilate( PartialList * partials,
 
 		notifier << "dilating " << partials->size() << " Partials" << endl;
 		Dilator::dilate( partials->begin(), partials->end(),
-      		             initial, initial + npts, target );
+      		           initial, initial + npts, target );
 
 	}
 	catch( Exception & ex ) 
@@ -269,8 +270,9 @@ void distill( PartialList * partials )
 		ThrowIfNull((PartialList *) partials);
 
 		notifier << "distilling " << partials->size() << " Partials" << endl;
-		Distiller still;
-		still.distill( *partials );
+		
+		// uses default fade time of 1 ms, should be parameter
+		Distiller::distill( *partials, 0.001 );
 		
 	}
 	catch( Exception & ex ) 
@@ -297,7 +299,7 @@ void distill( PartialList * partials )
  */
 extern "C"
 void exportAiff( const char * path, const double * buffer, 
-				 unsigned int bufferSize, double samplerate, int bitsPerSamp )
+				     unsigned int bufferSize, double samplerate, int bitsPerSamp )
 {
 	try 
 	{
@@ -346,9 +348,12 @@ void exportSdif( const char * path, PartialList * partials )
 		ThrowIfNull((PartialList *) partials);
 
 		if ( partials->size() == 0 ) 
+		{
 			Throw( Loris::InvalidObject, "No Partials in PartialList to export to sdif file." );
+		}
 	
-		Loris::notifier << "exporting sdif partial data to " << path << Loris::endl;		
+		notifier << "exporting sdif partial data to " << path << endl;		
+		
 		SdifFile fout( partials->begin(), partials->end() );
 		fout.write( path );
 	}
@@ -383,21 +388,28 @@ void exportSdif( const char * path, PartialList * partials )
  */
 extern "C"
 void exportSpc( const char * path, PartialList * partials, double midiPitch, 
-				int enhanced, double endApproachTime )
+				    int enhanced, double endApproachTime )
 {
 	try 
 	{
 		ThrowIfNull((PartialList *) partials);
 
 		if ( partials->size() == 0 )
-			Throw( Loris::InvalidObject, "No Partials in PartialList to export to Spc file." );
-
-		notifier << "exporting Spc partial data to " << path << Loris::endl;
+		{
+			Throw( InvalidObject, "No Partials in PartialList to export to Spc file." );
+		}
+		
+		notifier << "exporting Spc partial data to " << path << endl;
+		
 		SpcFile fout( partials->begin(), partials->end(), midiPitch );
 		if ( enhanced == 0 )
+		{
 			fout.writeSinusoidal( path, endApproachTime );
+		}
 		else
+		{
 			fout.write( path, endApproachTime );
+		}
 	}
 	catch( Exception & ex ) 
 	{
@@ -428,8 +440,9 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch,
 	overwritten.
  */
 extern "C"
-unsigned int importAiff( const char * path, double * buffer, unsigned int bufferSize, 
-						 double * samplerate )
+unsigned int 
+importAiff( const char * path, double * buffer, unsigned int bufferSize, 
+            double * samplerate )
 {
 	unsigned int howMany = 0; 
 	try 
@@ -643,10 +656,10 @@ void sift( PartialList * partials )
 	{
 		ThrowIfNull((PartialList *) partials);
 		
-        Loris::notifier << "sifting " << partials->size() << " Partials" << Loris::endl;
+      notifier << "sifting " << partials->size() << " Partials" << Loris::endl;
 
-        Loris::Sieve sieve;
-        sieve.sift( partials->begin(), partials->end() );
+      // uses default fade time of 1 ms, should be parameter
+      Sieve::sift( partials->begin(), partials->end(), 0.001 );
 	}
 	catch( Exception & ex )
     {
@@ -692,7 +705,7 @@ void synthesize( const PartialList * partials,
 
 		//	accumulate into the buffer:
 		std::transform( buffer, buffer + bufferSize, vec.begin(), 
-						buffer, std::plus< double >() );
+						    buffer, std::plus< double >() );
 
 	}
 	catch( Exception & ex ) 
