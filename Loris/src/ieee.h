@@ -1,5 +1,5 @@
-#ifndef __IEEE_H__
-#define __IEEE_H__
+#ifndef INCLUDE_IEEE_H
+#define INCLUDE_IEEE_H
 /*
 	From arun Chandra's code, see ieee.c for the original source.
 	
@@ -23,4 +23,4 @@ extern double ConvertFromIeeeExtended(extended80 x) ;
 }	//	end namespace
 #endif
 
-#endif 
+#endif /* ndef INCLUDE_IEEE_H */

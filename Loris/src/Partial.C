@@ -83,6 +83,21 @@ Partial::endTime( void ) const
 }
 
 // ---------------------------------------------------------------------------
+//	duration
+// ---------------------------------------------------------------------------
+//	Return time, in seconds, spanned by this Partial, or 0. if there
+//	are no Breakpoints.
+//
+double
+Partial::duration( void ) const
+{
+	if ( _bpmap.size() == 0 )
+		return 0.;
+
+	return endTime() - startTime();
+}
+
+// ---------------------------------------------------------------------------
 //	begin (non-const)
 // ---------------------------------------------------------------------------
 //	Iterator generation.

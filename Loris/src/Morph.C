@@ -4,7 +4,7 @@
 //	The Morph object performs sound morphing (cite Lip's papers, and the book)
 //	by interpolating Partial parmeter envelopes of corresponding Partials in
 //	a pair of source sounds. The correspondences are established by labeling.
-//	The Morph object collects morphed Partials in a list<Partial>, that can
+//	The Morph object collects morphed Partials in a PartialList, that can
 //	be accessed by clients.
 //
 //	-kel 15 Oct 99
@@ -19,6 +19,7 @@
 #include "Distiller.h"
 #include "Map.h"
 #include "notifier.h"
+#include <set>
 
 #if !defined( Deprecated_cstd_headers )
 	#include <cmath>
@@ -26,15 +27,30 @@
 	#include <math.h>
 #endif
 
-#include <algorithm>
-
-using namespace std;
-
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
 #endif
 
+//	declarations of local helpers, defined at bottom:
+static void collectLabels( PartialList::const_iterator begin, 
+						   PartialList::const_iterator end, 
+						   std::set<int> & labels );
+static void collectByLabel( PartialList::const_iterator start, 
+							PartialList::const_iterator end, 
+							PartialList & collector, 
+							int label );
+							
+// ---------------------------------------------------------------------------
+//	Morph default constructor
+// ---------------------------------------------------------------------------
+//
+Morph::Morph( void ) :
+	_freqFunction( new BreakpointMap() ),
+	_ampFunction( new BreakpointMap() ),
+	_bwFunction( new BreakpointMap() )
+{
+}
 
 // ---------------------------------------------------------------------------
 //	Morph constructor (single morph function)
@@ -43,22 +59,10 @@ namespace Loris {
 Morph::Morph( const Map & f ) :
 	_freqFunction( f.clone() ),
 	_ampFunction( f.clone() ),
-	_bwFunction( f.clone() ),
-	_crossfadelabel( 0 )
+	_bwFunction( f.clone() )
 {
 }
 
-// ---------------------------------------------------------------------------
-//	Morph default constructor
-// ---------------------------------------------------------------------------
-//
-Morph::Morph( void ) :
-	_freqFunction( new BreakpointMap() ),
-	_ampFunction( new BreakpointMap() ),
-	_bwFunction( new BreakpointMap() ),
-	_crossfadelabel( 0 )
-{
-}
 // ---------------------------------------------------------------------------
 //	Morph constructor (distinct morph functions)
 // ---------------------------------------------------------------------------
@@ -66,51 +70,51 @@ Morph::Morph( void ) :
 Morph::Morph( const Map & ff, const Map & af, const Map & bwf ) :
 	_freqFunction( ff.clone() ),
 	_ampFunction( af.clone() ),
-	_bwFunction( bwf.clone() ),
-	_crossfadelabel( 0 )
+	_bwFunction( bwf.clone() )
 {
 }
 
 // ---------------------------------------------------------------------------
-//	Morph copy constructor
+//	morph
 // ---------------------------------------------------------------------------
+//	Morph two sounds (collections of Partials labeled to indicate
+//	correspondences) into a single labeled collection of Partials.
 //
-Morph::Morph( const Morph & other ) :
-	_freqFunction( other.frequencyFunction().clone() ),
-	_ampFunction( other.amplitudeFunction().clone() ),
-	_bwFunction( other.bandwidthFunction().clone() ),
-	_crossfadelabel( 0 ),
-	PartialCollector( other )
+void 
+Morph::morph( PartialList::const_iterator begin0, 
+			  PartialList::const_iterator end0,
+			  PartialList::const_iterator begin1, 
+			  PartialList::const_iterator end1 )
 {
-}
-
-// ---------------------------------------------------------------------------
-//	assignment operator
-// ---------------------------------------------------------------------------
-//	For best behavior, if any part of assignment fails, the object
-//	should be unmodified. To that end, the morphing functions are 
-//	cloned first, since that could potentially generate a low memory
-//	exception, then the partials list is copied, which could also
-//	generate an exception, finally all the other assignments are made, 
-//	and they cannot generate exceptions.
-//
-Morph & 
-Morph::operator=( const Morph & other )
-{
-	//	do nothing if assigning to self:
-	if ( &other != this ) {	
-		//	first do cloning:
-		auto_ptr< Map > ff( other.frequencyFunction().clone() );
-		auto_ptr< Map > af( other.amplitudeFunction().clone() );
-		auto_ptr< Map > bwf( other.bandwidthFunction().clone() );
-		
-		partials() = other.partials();
-		_freqFunction = ff;
-		_ampFunction = af;
-		_bwFunction = bwf;
-	}
+	//	find label range:
+	std::set< int > labels;
+	collectLabels( begin0, end0, labels );
+	collectLabels( begin1, end1, labels );
+	const int CROSSFADE_LABEL = 0;
 	
-	return *this;
+	//	loop over lots of labels:
+	for ( std::set< int >::iterator it = labels.begin(); it != labels.end(); ++it ) {
+		int label = *it;
+		
+		//	collect Partials in plist1:
+		PartialList sublist1;
+		collectByLabel( begin0, end0, sublist1, label );
+
+		//	collect Partials in plist2:
+		PartialList sublist2;
+		collectByLabel( begin1, end1, sublist2, label );
+		
+		if ( label == CROSSFADE_LABEL ) {
+			debugger << "crossfading Partials labeled " << label << endl;
+			crossfadeLists( sublist1, sublist2 );
+		}
+		else {
+			debugger << "morphing " << sublist1.size() << " and "
+					 << sublist2.size() << " partials with label " << label << endl;
+					 
+			morphLists( sublist1, sublist2, label );
+		}
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -141,6 +145,29 @@ void
 Morph::setBandwidthFunction( const Map & f )
 {
 	_bwFunction.reset( f.clone() );
+}
+
+// ---------------------------------------------------------------------------
+//	morphLists
+// ---------------------------------------------------------------------------
+//	Distill and morph. Either distillation could yield an empty Partial, 
+//	but morphPartial can deal with it.
+//
+void
+Morph::morphLists( const PartialList & fromlist, const PartialList & tolist, 
+				   int assignLabel /* default = 0 */ )
+{
+	//	don't bother if there's no Partials:
+	if ( fromlist.size() == 0 && tolist.size() == 0 ) {
+		//	this shouldn't happen:
+		debugger << "Morph::morphLists() got two empty lists!" << endl;
+		return;
+	}
+	
+	Distiller still;
+	morphPartial( still.distill( fromlist.begin(), fromlist.end() ), 
+				  still.distill( tolist.begin(), tolist.end() ),
+				  assignLabel );
 }
 
 // ---------------------------------------------------------------------------
@@ -224,29 +251,71 @@ Morph::morphPartial( const Partial & p0, const Partial & p1, int assignLabel /* 
 }
 
 // ---------------------------------------------------------------------------
+//	crossfadeLists
+// ---------------------------------------------------------------------------
+//	Crossfade Partials with no correspondences.
+//
+//	The Partials in the  specified range are considered to have 
+//	no correspondences, so they are just faded out, and not 
+//	actually morphed. This is the same as morphing each with an 
+//	empty Partial. 
+//
+//	The Partials in fromlist are treated as components of the 
+//	sound corresponding to a morph function of 0, those in tolist
+//	are treated as components of the sound corresponding to a 
+//	morph function of 1.
+//
+void
+Morph::crossfadeLists( const PartialList & fromlist, 
+					   const PartialList & tolist )
+{
+	//	crossfade Partials corresponding to a morph weight of 0:
+	for ( PartialList::const_iterator it = fromlist.begin();
+		  it != fromlist.end();
+		  ++it )
+	{
+		morphPartial( *it, Partial() );	
+	}
+
+	//	crossfade Partials corresponding to a morph weight of 1:
+	for ( PartialList::const_iterator it = tolist.begin();
+		  it != tolist.end();
+		  ++it )
+	{
+		morphPartial( Partial(), *it );
+	}
+}
+
+// ---------------------------------------------------------------------------
+//	collectLabels
+// ---------------------------------------------------------------------------
+//	Collect Partial labels in a set.	
+//
+//	local helper
+//
+static void collectLabels( PartialList::const_iterator begin, 
+						   PartialList::const_iterator end, 
+						   std::set<int> & labels )
+{
+	while ( begin != end ) {
+		labels.insert( begin->label() );
+		++begin;
+	}
+}
+
+// ---------------------------------------------------------------------------
 //	collectByLabel
 // ---------------------------------------------------------------------------
 //	Copy all Partials in the range [start, end) having the specified label 
 //	into collector. It would be more efficient to splice the element from
 //	the original list, but those lists are immutable, so just copy it.
 //
-//  function object for selecting by label:
-//	(this should be local to collectByLabel, but MIPSPro
-//	doesn't allow template args to reference local types)
-struct LabelIs
-{
-	int _x;
-	LabelIs( int x ) : _x(x) {}
-	bool operator() (const Partial & p) const {
-		return p.label() == _x;
-	}
-};
-
-void
-Morph::collectByLabel( list<Partial>::const_iterator start, 
-					   list<Partial>::const_iterator end, 
-					   list<Partial> & collector, 
-					   int label )
+//	local helper
+//
+static void collectByLabel( PartialList::const_iterator start, 
+							PartialList::const_iterator end, 
+							PartialList & collector, 
+							int label )
 {
 	while ( start != end ) {
 		if ( start->label() == label ) {
@@ -254,40 +323,6 @@ Morph::collectByLabel( list<Partial>::const_iterator start,
 		}
 		++start;
 	}
-}
-
-// ---------------------------------------------------------------------------
-//	morphLists
-// ---------------------------------------------------------------------------
-//	Distill and morph. Either distillation could yield an empty Partial, 
-//	but morphPartial can deal with it.
-//
-void
-Morph::morphLists( const list<Partial> & fromlist, const list<Partial> & tolist, 
-				   int assignLabel /* default = 0 */ )
-{
-	//	don't bother if there's no Partials:
-	if ( fromlist.size() == 0 && tolist.size() == 0 ) {
-		//	this shouldn't happen:
-		debugger << "Morph::morphLists() got two empty lists!" << endl;
-		return;
-	}
-	
-	Distiller still;
-	morphPartial( still.distill( fromlist.begin(), fromlist.end() ), 
-				  still.distill( tolist.begin(), tolist.end() ),
-				  assignLabel );
-}
-
-// ---------------------------------------------------------------------------
-//	crossfadeLists
-// ---------------------------------------------------------------------------
-//
-void
-Morph::crossfadeLists( const list<Partial> & fromlist, const list<Partial> & tolist )
-{
-	crossfadeFromPartials( fromlist.begin(), fromlist.end() );
-	crossfadeToPartials( tolist.begin(), tolist.end() );
 }
 
 #if !defined( NO_LORIS_NAMESPACE )

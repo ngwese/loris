@@ -55,7 +55,7 @@ public:
 	double initialPhase( void ) const;
 	double startTime( void ) const;
 	double endTime( void ) const;
-	double duration( void ) const { return endTime() - startTime(); }
+	double duration( void ) const;
 	
 //	mutation:
 	void setLabel( int l ) { _label = l; }

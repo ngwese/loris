@@ -1,5 +1,5 @@
-#ifndef __INCLUDE_DILATOR_H__
-#define __INCLUDE_DILATOR_H__
+#ifndef INCLUDE_DILATOR_H
+#define INCLUDE_DILATOR_H
 // ===========================================================================
 //	Dilator.h
 //
@@ -17,7 +17,6 @@
 namespace Loris {
 #endif
 
-
 // ---------------------------------------------------------------------------
 //	class Dilator
 //
@@ -25,7 +24,7 @@ namespace Loris {
 class Dilator : public PartialCollector
 {
 //	-- implementation --
-	std::vector< double > _initial, _target;
+	std::vector< double > _initial, _target;	//	time points
 	
 //	-- public interface --
 public:
@@ -37,15 +36,15 @@ public:
 	void dilate( Partial & p );
 	void dilate( PartialList::iterator begin, PartialList::iterator end );
 	
-//	not implemented:
+//	-- unimplemented until useful --
 private:
 	Dilator( const Dilator & );
 	Dilator & operator= ( const Dilator & rhs );
+	
 };	//	end of class Dilator
-
 
 #if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
 #endif
 
-#endif	// ndef __INCLUDE_DILATOR_H__
+#endif	// ndef INCLUDE_DILATOR_H
