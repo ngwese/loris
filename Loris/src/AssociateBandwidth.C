@@ -12,16 +12,8 @@
 #include "FourierTransform.h"
 #include "ReassignedSpectrum.h"
 #include "Breakpoint.h"
+#include "bark.h"
 #include <algorithm>
-
-//	would you believe all this for a round() function?
-#if !defined( __GNUC__ )
-	#include <cmath>
-	using std::round;
-#else
-	#define round(x) ((x)>0.)?(trunc((x)+0.5)):(trunc((x)-0.5))
-#endif
-
 
 using namespace std;
 using namespace Loris;
@@ -97,12 +89,12 @@ AssociateBandwidth::computeNoiseEnergy( double freqHz )
 	double alpha = computeAlpha( bin );
 
 	double noise = 0.;
-	//	have to check for alpha == 0, because 
-	//	the weights will be zero:
-	if ( posAbove < _surplus.size() && alpha > 0. )
+	//	Have to check for alpha == 0, because 
+	//	the weights will be zero (see computeAlpha()):
+	if ( posAbove < _surplus.size() && alpha != 0. )
 		noise += _surplus[posAbove] * alpha / _weights[posAbove];
 	
-	if ( posBelow > 0 )
+	if ( posBelow >= 0 )
 		noise += _surplus[posBelow] * (1. - alpha) / _weights[posBelow];
 				
 	return noise;
@@ -143,14 +135,18 @@ AssociateBandwidth::distribute( double freqHz, double x, vector<double> & region
 //	Return the index of the last region having center frequency less than
 //	or equal to freq, or -1 if no region is low enough. 
 //
+//	Note: the zeroeth region is centered at bin frequency 1 and tapers
+//	to zero at bin frequency 0! (when booger is 1.)
+//
 int 
 AssociateBandwidth::findRegionBelow( double binfreq )
 {
-	if ( binfreq < 1. ) {
+	const double booger = 0.;
+	if ( binfreq < booger ) {
 		return -1;
 	}
 	else {
-		return min( floor(binfreq - 1.), _spectralEnergy.size() - 1. );
+		return min( floor(binfreq - booger), _spectralEnergy.size() - 1. );
 	}
 }
 
@@ -264,12 +260,7 @@ AssociateBandwidth::accumulateNoise( double freq, double amp )
 void 
 AssociateBandwidth::associate( Breakpoint & bp )
 {		
-	//	distribute surplus noise energy:
-	//	(ignore negative frequencies)
-	if ( bp.frequency() > 0 ) 
-	{
-		bp.addNoise( computeNoiseEnergy( bp.frequency() ) );
-	}
+	bp.addNoise( computeNoiseEnergy( bp.frequency() ) );
 }
 
 
@@ -282,11 +273,18 @@ AssociateBandwidth::associate( Breakpoint & bp )
 //
 //	Once, we used bark frequency scale warping here, but there seems to be
 //	no reason to do so. The best results seem to be indistinguishable from
-// 	plain 'ol 1k bins, and most results are much worse.
+// 	plain 'ol 1k bins, and some results are much worse.
 //	
 inline double
 AssociateBandwidth::binFrequency( double freqHz )
 {
+//#define Use_Barks
+#ifndef Use_Barks
 	return freqHz * _regionRate;
+#else
+	//	ignore region rate when using barks
+	return bark(freqHz);
+#endif
+	
 }
 

@@ -454,7 +454,7 @@ Analyzer::extractPeaks( std::list< Breakpoint > & frame, double frameTime,
 //	to the specified partial density.
 //
 void 
-Analyzer::thinPeaks( std::list< Breakpoint > & frame, AnalyzerState & state )
+Analyzer::thinPeaks( std::list< Breakpoint > & frame, AnalyzerState &  )
 {
 	frame.sort( greater_amplitude<Breakpoint>() );
 	
@@ -472,9 +472,6 @@ Analyzer::thinPeaks( std::list< Breakpoint > & frame, AnalyzerState & state )
 		{
 			//	find_if returns the end of the range (it) if it finds nothing; 
 			//	remove *it from the frame
-#if defined(Debug_Loris)
-			state.bwAssociation().accumulateNoise( it->frequency(), it->amplitude() );
-#endif
 			frame.erase( it-- );
 		}
 	}
