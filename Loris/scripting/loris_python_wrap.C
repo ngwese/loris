@@ -33,8 +33,8 @@
  * and things like that.
  *
  * $Log$
- * Revision 1.11  2001/02/07 23:23:48  kfitz
- * Added highly experimental version of iterators over partials and partial lists.
+ * Revision 1.12  2001/02/08 15:55:22  kfitz
+ * Fixed typo in new experimental PartialList iterator class.
  *
  ************************************************************************/
 
@@ -5481,7 +5481,7 @@ static PyObject *_wrap_PartialListHIter_atEnd(PyObject *self, PyObject *args) {
     return _resultobj;
 }
 
-static int  PartialListHIter_label(PartialListHIter *self) { return (*self)->atEnd(); }
+static int  PartialListHIter_label(PartialListHIter *self) { return (*self)->label(); }
 static PyObject *_wrap_PartialListHIter_label(PyObject *self, PyObject *args) {
     PyObject * _resultobj;
     int  _result;
@@ -5731,7 +5731,7 @@ static PyObject *_wrap_PartialListHIter_duration(PyObject *self, PyObject *args)
     return _resultobj;
 }
 
-static long  PartialListHIter_countBreakpoints(PartialListHIter *self) { return (*self)->atEnd(); }
+static long  PartialListHIter_countBreakpoints(PartialListHIter *self) { return (*self)->countBreakpoints(); }
 static PyObject *_wrap_PartialListHIter_countBreakpoints(PyObject *self, PyObject *args) {
     PyObject * _resultobj;
     long  _result;

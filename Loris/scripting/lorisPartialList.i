@@ -276,13 +276,13 @@ public:
 	bool atEnd( void )	{ return (*self)->atEnd(); }
 
 	//	Partial access:
-	int label( void ) const 			{ return (*self)->atEnd(); }
+	int label( void ) const 			{ return (*self)->label(); }
 	double initialPhase( void ) const	{ return (*self)->initialPhase(); }
 	double startTime( void ) const 		{ return (*self)->startTime(); }
 	double endTime( void ) const		{ return (*self)->endTime(); }
 	double duration( void ) const		{ return (*self)->duration(); }
 	
-	long countBreakpoints( void ) const { return (*self)->atEnd(); }
+	long countBreakpoints( void ) const { return (*self)->countBreakpoints(); }
 	
 	double frequencyAt( double time ) const	{ return (*self)->frequencyAt( time ); }
 	double amplitudeAt( double time ) const	{ return (*self)->amplitudeAt( time ); }
