@@ -420,8 +420,7 @@ static inline void applyFreqRamp( vector< double > & w  )
 	//	Use a transform exactly as long as the window.
 	//	load, w/out rotation, and transform.
 	FourierTransform temp( w.size() );
-	FourierTransform::iterator it = 
-		std::copy( w.begin(), w.end(), temp.begin() );
+	FourierTransform::iterator it =  std::copy( w.begin(), w.end(), temp.begin() );
 	std::fill( it, temp.end(), 0. );
 	temp.transform();
 	
@@ -433,13 +432,16 @@ static inline void applyFreqRamp( vector< double > & w  )
 	//	and has to be scaled by the ratio of the 
 	//	transform lengths, so that k spans the length
 	//	of the padded transforms, N)
-	double lenRatio = 1.0; //(double)transformSize / temp.size();
-	for ( int k = 0 ; k < temp.size(); ++k ) {
-		if ( k < temp.size() / 2 ) {
-			temp[ k ] *= k * lenRatio;
+	for ( int k = 0 ; k < temp.size(); ++k ) 
+	{
+	   double x = (double)k;   // to get type promotion right
+		if ( k < temp.size() / 2 ) 
+		{
+			temp[ k ] *= x;
 		}
-		else {
-			temp[ k ] *= (k - temp.size()) * lenRatio;
+		else 
+		{
+			temp[ k ] *= ( x - temp.size() );
 		}
 	}
 	
@@ -453,7 +455,8 @@ static inline void applyFreqRamp( vector< double > & w  )
 	//	seems that I want the imaginary part of the index-reversed
 	//	transform scaled by the size of the transform:
 	std::reverse( temp.begin() + 1, temp.end() );
-	for ( int i = 0; i < w.size(); ++i ) {
+	for ( int i = 0; i < w.size(); ++i ) 
+	{
 		w[i] = - imag( temp[i] ) / temp.size();
 	}
 }

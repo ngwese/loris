@@ -33,121 +33,177 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-
-
-// ===========================================================================
-//	Make sure that fftw and this class use the same floating point
-//	data format and that fftw is compiled with int having at least 
-//	four bytes.
-//
-//	Also contains inline template transform loading free functions.
-//
-//	about complex math functions for fftw_complex:
-//
-//	These functions are all defined as templates in <complex>.
-//	Regrettably, they are all implemented using real() and 
-//	imag() _member_ functions of the template argument, T. 
-//	If they had instead been implemented in terms of the real()
-//	and imag() (template) free functions, then I could just specialize
-//	those two for the fftw complex data type, and the other template
-//	functions would work. Instead, I have to specialize _all_ of
-//	those functions that I want to use. I hope this was a learning 
-//	experience for someone... In the mean time, the alternative I 
-//	have is to take advantage of the fact that fftw_complex and 
-//	std::complex<double> have the same footprint, so I can just
-//	cast back and forth between the two types. Its icky, but it 
-//	works, and its a lot faster than converting, and more palatable
-//	than redefining all those operators.
-//
-//	On the subject of brilliant designs, fftw_complex is defined as
-//	a typedef of an anonymous struct, as in typedef struct {...} fftw_complex,
-//	so I cannot forward-declare that type.
-//
-// ===========================================================================
-
 #include <complex>
-#include <functional>
 #include <vector>
 
 //	begin namespace
 namespace Loris {
 
+class FTimpl;
+
 // ---------------------------------------------------------------------------
 //	class FourierTransform
 //
-//	FourierTransform is a class wrapper for the FFTW library (www.fftw.org).
-//	Uses the FFTW library to perform efficient transforms of arbitrary
-//	length. Clients store and access the in-place transform data as a
-//	c-array of complex<double>. Internally, the transform is computed 
-//	out-of-place using two c-arrays of FFTW's complex type, including 
-//	a shared temporary output buffer (making this class not at all 
-//	thread-safe). 
-//
-//	This class assumes (and REQUIRES) that fftw_real (defined in fftw.h) 
-//	is type double, AND MOREOVER, that the memory layout of fftw_complex
-//	is the same as std::complex< double >. Some attempt is made to verify
-//	this condition in the constructor.
-//
-//	Does not (yet) support the use of "wisdom" in fftw for greater
-//	optimization. Uses the fftw complex transform (as opposed to
-//	the real transform, rfftw).
+//! FourierTransform provides a simplified interface to the FFTW library 
+//! (www.fftw.org). Loris uses the FFTW library to perform efficient 
+//! Fourier transforms of arbitrary length. Clients store and access 
+//! the in-place transform data as a sequence of std::complex< double >.
+//! Samples are stored in the FourierTransform instance using subscript
+//! or iterator access, the transform is computed by the transform member,
+//! and the transformed samples replace the input samples, and are 
+//! accessed by subscript or iterator. FourierTransform computes a complex
+//! transform, so it can be used to invert a transform of real samples
+//! as well. Uses the standard library complex class, which implements
+//! arithmetic operations. Does not use FFTW "wisdom" to speed up
+//! transform computation.
 //
 class FourierTransform 
 {
-//	-- instance variables --
-	typedef std::vector< std::complex< double > > VecComplex;
-	VecComplex _buffer;
-	
-	//	fftw planning structure:
-	//	This is disgusting, but the name of the planning
-	//	structure in FFTW3 changed from fftw_plan_struct to
-	//	fftw_plan_s, and I am having a hard time figuring
-	//	out how to support both versions (2 and 3) without
-	//	including the fftw header in here, where it definitely
-	//	should not be.
-	//fftw_plan_struct * _plan;
-	void * _plan;
-	
 //	-- public interface --
 public:
-//	construction:
-	FourierTransform( long len );
-	~FourierTransform( void );	
-		
-//	transform length access:
-	long size( void ) const { return _buffer.size(); }
-	
-//	spectrum access:
-//	(inline for efficiency)
-	std::complex< double > & operator[] ( unsigned long index )
-		{ return _buffer[index]; }
-	const std::complex< double > & operator[] ( unsigned long index ) const
-		{ return _buffer[index]; }
-		
-//	iterator access, for STL algorithms:
-//	(inline for efficiency)
-	typedef VecComplex::iterator iterator;
-	iterator begin( void )	{ return _buffer.begin(); }
-	iterator end( void )	{ return _buffer.end(); }
-		
-	typedef VecComplex::const_iterator const_iterator;
-	const_iterator begin( void ) const	{ return _buffer.begin(); }
-	const_iterator end( void ) const 	{ return _buffer.end(); }
-		
-//	spectrum computation:
-	void transform( void );
-	
-//	planning:
-//	(probably only called internally)
-	void makePlan( void );
-	
-private:	
-//	copy and assignment unimplemented:
-//	(this class has pointers, cannot use compiler-generated
-//	copy and assignment)
-	FourierTransform( const FourierTransform & );
-	FourierTransform & operator= ( const FourierTransform & );
+   
+   //! An unsigned integral type large enough
+   //! to represent the length of any transform.
+   typedef std::vector< std::complex< double > >::size_type size_type;
 
+   //! The type of a non-const iterator of (complex) transform samples.
+	typedef std::vector< std::complex< double > >::iterator iterator;
+
+   //! The type of a const iterator of (complex) transform samples.		
+	typedef std::vector< std::complex< double > >::const_iterator const_iterator;
+
+//	--- lifecycle ---
+
+   //! Initialize a new FourierTransform of the specified size.
+   //!
+   //! \param  len is the length of the transform in samples (the
+   //!         number of samples in the transform)
+	//! \throw  RuntimeError if the necessary buffers cannot be 
+	//!         allocated, or there is an error configuring FFTW.
+	FourierTransform( size_type len );
+	
+	//! Initialize a new FourierTransform that is a copy of another,
+	//! having the same size and the same buffer contents.
+	//!
+	//! \param  rhs is the instance to copy
+	//! \throw  RuntimeError if the necessary buffers cannot be 
+	//!         allocated, or there is an error configuring FFTW.
+	FourierTransform( const FourierTransform & rhs );
+	
+	//! Free the resources associated with this FourierTransform.
+	~FourierTransform( void );	
+
+//	--- operators ---
+		
+	//! Make this FourierTransform a copy of another, having
+	//! the same size and buffer contents.
+	//!
+	//! \param  rhs is the instance to copy
+	//! \return a refernce to this instance
+	//! \throw  RuntimeError if the necessary buffers cannot be 
+	//!         allocated, or there is an error configuring FFTW.
+	FourierTransform & operator= ( const FourierTransform & rhs );
+	
+
+//	--- access/mutation ---
+
+   //! Access (read/write) a transform sample by index.
+   //! Use this member to fill the transform buffer before
+   //! computing the transform, and to access the samples
+   //! after computing the transform. (inlined for speed)
+   //!
+   //! \param  index is the index or rank of the complex
+   //!         transform sample to access. Zero is the first
+   //!         position in the buffer.
+   //! \return non-const reference to the std::complex< double >
+   //!         at the specified position in the buffer.
+	std::complex< double > & operator[] ( size_type index )
+	{ 
+	   return _buffer[ index ]; 
+	}
+
+   //! Access (read-only) a transform sample by index.
+   //! Use this member to fill the transform buffer before
+   //! computing the transform, and to access the samples
+   //! after computing the transform. (inlined for speed)
+   //!
+   //! \param  index is the index or rank of the complex
+   //!         transform sample to access. Zero is the first
+   //!         position in the buffer.
+   //! \return const reference to the std::complex< double >
+   //!         at the specified position in the buffer.
+	const std::complex< double > & operator[] ( size_type index ) const
+	{ 
+	   return _buffer[ index ]; 
+	}
+
+   //! Return an iterator refering to the beginning of the sequence of
+   //! complex samples in the transform buffer.
+   //!
+   //! \return a non-const iterator refering to the first position
+   //!         in the transform buffer. 
+	iterator begin( void )	
+	{ 
+	   return _buffer.begin(); 
+	}
+	
+	//! Return an iterator refering to the end of the sequence of
+   //! complex samples in the transform buffer.
+   //!
+   //! \return a non-const iterator refering to one past the last 
+   //!         position in the transform buffer. 
+	iterator end( void )	
+	{ 
+	   return _buffer.end(); 
+	}
+
+   //! Return a const iterator refering to the beginning of the sequence of
+   //! complex samples in the transform buffer.
+   //!
+   //! \return a const iterator refering to the first position
+   //!         in the transform buffer. 
+	const_iterator begin( void ) const	
+	{ 
+	   return _buffer.begin(); 
+	}
+	
+	//! Return a const iterator refering to the end of the sequence of
+   //! complex samples in the transform buffer.
+   //!
+   //! \return a const iterator refering to one past the last 
+   //!         position in the transform buffer. 
+	const_iterator end( void ) const 	
+	{ 
+	   return _buffer.end(); 
+	}
+
+//	--- operations ---
+		
+   //! Compute the Fourier transform of the samples stored in the 
+   //! transform buffer. The samples stored in the transform buffer
+   //! (accessed by index or by iterator) are replaced by the 
+   //! transformed samples, in-place. 
+	void transform( void );
+
+//	--- inquiry ---
+
+   //! Return the length of the transform (in samples).
+   //! 
+   //! \return the length of the transform in samples.
+	size_type size( void ) const ;
+				
+//	-- instance variables --
+private:
+
+   //! buffer containing the complex transform input before
+   //! computing the transform, and the complex transform output
+   //! after computing the transform
+	std::vector< std::complex< double > > _buffer;
+
+	// insulating implementation instance (defined in 
+	// FourierTransform.C), conceals interface to FFTW
+	FTimpl * _impl;
+	
 };	//	end of class FourierTransform
 
 

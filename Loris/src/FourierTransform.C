@@ -39,97 +39,167 @@
 #include "FourierTransform.h"
 #include "Exception.h"
 #include "Notifier.h"
-#include <cstring>	//	for memcpy
-#include <set>
 
 #if defined(HAVE_FFTW3_H)
 	#include <fftw3.h>
+   #define c_re(c) ((c)[0])
+   #define c_im(c) ((c)[1])
 #else
 	#include <fftw.h>
 #endif
 
-#define PLAN(_p) (static_cast<fftw_plan>(_p))
+// ===========================================================================
+//	No longer matters that fftw and this class use the same floating point
+//	data format. The insulating implementation class now does its job of
+// really insulating clients completely from FFTW, by copying data between
+// buffers of std::complex< double > and fftw_complex, rather than 
+// relying on those two complex types to have the same memory layout.
+// The overhead of copying is probably not significant, compared to 
+// the expense of computing the spectra. 
+//
+//	about complex math functions for fftw_complex:
+//
+//	These functions are all defined as templates in <complex>.
+//	Regrettably, they are all implemented using real() and 
+//	imag() _member_ functions of the template argument, T. 
+//	If they had instead been implemented in terms of the real()
+//	and imag() (template) free functions, then I could just specialize
+//	those two for the fftw complex data type, and the other template
+//	functions would work. Instead, I have to specialize _all_ of
+//	those functions that I want to use. I hope this was a learning 
+//	experience for someone... In the mean time, the alternative I 
+//	have is to take advantage of the fact that fftw_complex and 
+//	std::complex<double> have the same footprint, so I can just
+//	cast back and forth between the two types. Its icky, but it 
+//	works, and its a lot faster than converting, and more palatable
+//	than redefining all those operators.
+//
+//	On the subject of brilliant designs, fftw_complex is defined as
+//	a typedef of an anonymous struct, as in typedef struct {...} fftw_complex,
+//	so I cannot forward-declare that type.
+//
+// In other good news, the planning structure got a slight name change
+// in version 3, making it even more important to remove all traces of
+// FFTW from the FourierTransform class definition.
+//
+// ===========================================================================
 
-using namespace std;
-using namespace Loris;
 
-//	prototypes for local (file-scope) functions that 
-//	manage the shared buffer, used for out-of-place
-//	transform computations:
-static void reserve( long len );
-static void release( long len );
-static fftw_complex * sharedBuffer = NULL;
+//	begin namespace
+namespace Loris {
 
-//	"die hook" for FFTW, which otherwise try to write to a
-//	non-existent console.
-static void fftw_die_Loris(const char * s)
-{
-	notifier << "The FFTW library used by Loris has encountered a fatal error: " << s << endl;
-	exit(EXIT_FAILURE);
-}
+using std::complex;
+using std::vector;
+
+// die hook defined below:
+static void fftw_die_Loris( const char * s );
+
+#pragma mark --- private implementation class ---
 
 // ---------------------------------------------------------------------------
-//  Check_Types
-// ---------------------------------------------------------------------------
-//	Attempt to verify that std::complex< double >
-//	and fftw_complex are really identical, that is, 
-//	they are the same size and have the same memory
-//	layout.
+//  FTimpl
 //
-//	Some of this is performed using compile-time assertions,
-//	that are part of the configure script.
-//	The only thing that I haven't already verified at
-//	configure-time is that the two complex types store
-//	their real and imaginary parts in the same order; 
-//	hard to see how we can do this at compile-time, 
-//	since the implementation of std::complex is private.
+// Insulating implementation class to insulate clients
+// completely from everything about the interaction between
+// Loris and FFTW. There is more copying of data between buffers,
+// but this is not the expensive part of computing Fourier transforms
+// and we don't have to do unsavry things that require std::complex
+// and fftw_complex to have the same memory layout (we could even get
+// by with single-precision floats in FFTW if necessary). Also got
+// rid of lots of shared buffer stuff that just made the implementation
+// lots more complicated than necessary. This one is simple, if not
+// as memory efficient.
 //
-//	According to the FFTW folks, the C++ folks have more or
-//	less agreed to standardize the complex<> layout to 
-//	be binary-compatible with fftw_complex, so all of
-//	the reinterpret_cast stuff in here should be OK.
-//	Doesn't hurt to check though.
-//
-//	In an ideal world, we wouldn't rely on these types
-//	being identical, but in this world, relaxing that 
-// 	assuption would cost us (in copying)...
-//
-static bool Check_Types( void )
+class FTimpl
 {
-#if defined(HAVE_FFTW3_H)
-#define c_re(c) ((c)[0])
-#define c_im(c) ((c)[1])
-#endif
-	debugger << "checking memory layout of std::complex<double> and fftw_complex" << endl;
-	static bool checked = false;
-	if ( ! checked ) 
-	{
-		std::complex<double> cplxstd(1234.5678, 9876.5432);
-		fftw_complex * cplxfftw = reinterpret_cast<fftw_complex*>(&cplxstd);
-		if ( c_re( *cplxfftw ) != cplxstd.real() ||
-			 c_im( *cplxfftw ) != cplxstd.imag() ) 
-		{
-			Throw( InvalidObject, 
-				   "FourierTransform found std::complex< double > and fftw_complex to be different." );
-		}
-	}
-	
-	debugger << "found them to be identical" << endl;
-	return true;
-}
+public:
+   fftw_plan plan;
+   FourierTransform::size_type N;
+   fftw_complex * ftIn;    // actually, these can be the same for FFTW3
+   fftw_complex * ftOut;
+   
+   // Construct an implementation instance:
+   // allocate an input buffer, and an output buffer
+   // and make a plan.
+   FTimpl( FourierTransform::size_type sz ) : 
+      plan( 0 ), N( sz ), ftIn( 0 ), ftOut( 0 ) 
+   {      
+      // allocate buffers:
+      ftIn = (fftw_complex *)fftw_malloc( sizeof( fftw_complex ) * N );
+      ftOut = (fftw_complex *)fftw_malloc( sizeof( fftw_complex ) * N );
+      if ( 0 == ftIn || 0 == ftOut )
+      {
+         fftw_free( ftIn );
+         fftw_free( ftOut );
+         throw RuntimeError( "cannot allocate Fourier transform buffers" );
+      }
+      
+   	//	create a plan:
+   #if defined(HAVE_FFTW3_H)
+   	plan = fftw_plan_dft_1d( N, ftIn, ftOut, FFTW_FORWARD, FFTW_ESTIMATE );
+   #else
+   	plan = fftw_create_plan_specific( N, FFTW_FORWARD, FFTW_ESTIMATE,
+   									          ftIn, 1, ftOut, 1 );
+   #endif									   
+   	//	verify:
+   	if ( 0 == plan )
+   	{
+   		Throw( RuntimeError, "FourierTransform could not make a (fftw) plan." );
+   	}
+   }
+   
+   // Destroy the implementation instance:
+   // dump the plan.
+   ~FTimpl( void )
+   {
+   	if ( 0 != plan )
+   	{
+   		fftw_destroy_plan( plan );
+   	}         
+   	
+   	fftw_free( ftIn );
+      fftw_free( ftOut );
+   }
+   
+   // Copy complex< double >'s from a buffer into ftIn, 
+   // the buffer must be as long as ftIn.
+   void loadInput( const complex< double > * bufPtr )
+   {
+      for ( FourierTransform::size_type k = 0; k < N; ++k )
+      {
+         c_re( ftIn[ k ] ) = bufPtr->real();
+         c_im( ftIn[ k ] ) = bufPtr->imag();
+         ++bufPtr;
+      }
+   }
+   
+   // Copy complex< double >'s from ftOut into a buffer,
+   // which must be as long as ftOut.
+   void copyOutput( complex< double > * bufPtr ) const
+   {
+      for ( FourierTransform::size_type k = 0; k < N; ++k )
+      {
+         *bufPtr = complex< double >( c_re( ftOut[ k ] ), c_im( ftOut[ k ] ) );
+         ++bufPtr;
+      }
+   }
+}; // end of class FTimpl
 
-static bool CHECKED_TYPES = Check_Types();
+#pragma mark --- FourierTransform members ---
 
 // ---------------------------------------------------------------------------
 //	FourierTransform constructor
 // ---------------------------------------------------------------------------
-//	The private buffer _buffer has to be allocated immediately, so that it can be 
-//	accessed for loading. The shared output buffer for FFTW can be allocated
-//	later, in makePlan(), using reserve().
+//! Initialize a new FourierTransform of the specified size.
+//!
+//! \param  len is the length of the transform in samples (the
+//!         number of samples in the transform)
+//! \throw  RuntimeError if the necessary buffers cannot be 
+//!         allocated, or there is an error configuring FFTW.
 //
-FourierTransform::FourierTransform( long len ) :
+FourierTransform::FourierTransform( size_type len ) :
 	_buffer( len ),
-	_plan( NULL )
+	_impl( new FTimpl( len ) )
 {
 #if !defined(HAVE_FFTW3_H)
 	//	FFTW calls fprintf a lot, which may be a problem in
@@ -142,171 +212,110 @@ FourierTransform::FourierTransform( long len ) :
 #endif
 
 	//	zero:
-	fill( _buffer.begin(), _buffer.end(), 0. );
+	std::fill( _buffer.begin(), _buffer.end(), 0. );
+}
+
+// ---------------------------------------------------------------------------
+//	FourierTransform copy constructor
+// ---------------------------------------------------------------------------
+//! Initialize a new FourierTransform that is a copy of another,
+//! having the same size and the same buffer contents.
+//!
+//! \param  rhs is the instance to copy
+//! \throw  RuntimeError if the necessary buffers cannot be 
+//!         allocated, or there is an error configuring FFTW.
+//
+FourierTransform::FourierTransform( const FourierTransform & rhs ) :
+	_buffer( rhs._buffer ),
+	_impl( new FTimpl( rhs._buffer.size() ) ) // not copied
+{
 }
 
 // ---------------------------------------------------------------------------
 //	FourierTransform destructor
 // ---------------------------------------------------------------------------
-//	Release the plan and the shared buffer. The instance vector will clean
-//	up itself.
+//! Free the resources associated with this FourierTransform.
 //
 FourierTransform::~FourierTransform( void )
-{
-	if ( _plan != NULL ) 
-	{
-		fftw_destroy_plan( PLAN(_plan) );
-		release( size() );
-	}
+{	
+   delete _impl;
 }
 
 // ---------------------------------------------------------------------------
+//	FourierTransform assignment operator
+// ---------------------------------------------------------------------------
+//! Make this FourierTransform a copy of another, having
+//! the same size and buffer contents.
+//!
+//! \param  rhs is the instance to copy
+//! \return a refernce to this instance
+//! \throw  RuntimeError if the necessary buffers cannot be 
+//!         allocated, or there is an error configuring FFTW.
+//
+FourierTransform &
+FourierTransform::operator=( const FourierTransform & rhs )
+{
+   if ( this != &rhs )
+   {
+      _buffer = rhs._buffer;
+      
+      // The implementation instance is not assigned, 
+      // but a new one is created.
+      delete _impl;
+      _impl = 0;
+      _impl = new FTimpl( _buffer.size() );
+   }
+   
+   return *this;
+}
+
+// ---------------------------------------------------------------------------
+//	size
+// ---------------------------------------------------------------------------
+//! Return the length of the transform (in samples).
+//! 
+//! \return the length of the transform in samples.
+FourierTransform::size_type 
+FourierTransform::size( void ) const 
+{ 
+   return _buffer.size(); 
+}
+	
+// ---------------------------------------------------------------------------
 //	transform
 // ---------------------------------------------------------------------------
-//	Compute a Fourier transform of the current contents of the transform
-//	buffer.
+//! Compute the Fourier transform of the samples stored in the 
+//! transform buffer. The samples stored in the transform buffer
+//! (accessed by index or by iterator) are replaced by the 
+//! transformed samples, in-place. 
 //
 void
 FourierTransform::transform( void )
 {
-//	make a plan, if necessary:
-	if ( _plan == NULL ) 
-		makePlan();
-	
-//	sanity:
-	Assert( _plan != NULL );
-	Assert( sharedBuffer != NULL );
+   // copy data into the transform input buffer:
+   _impl->loadInput( &_buffer.front() );
 
-//	crunch:	
+   //	crunch:	
 #if defined(HAVE_FFTW3_H)
-	fftw_execute( PLAN(_plan) ); 	// repeat as needed
+	fftw_execute( _impl->plan );
 #else
-	fftw_one( PLAN(_plan), reinterpret_cast<fftw_complex*>(&_buffer[0]), sharedBuffer );
+	fftw_one( _impl->plan, _impl->ftIn, _impl->ftOut );	
 #endif
 
-//	copy output into (private) complex buffer:
-//	(fftw_complex and std::complex< double > had better be the same!)
-//	std::copy( sharedBuffer, sharedBuffer + size(), 
-//			   reinterpret_cast<fftw_complex*>(&_buffer.front()) );
-//
-//	this is probably a little faster:
-	memcpy( &_buffer.front(), sharedBuffer, size() * sizeof(fftw_complex) );
+	// copy the data out of the transform output buffer:
+	_impl->copyOutput( &_buffer.front() );
 }
 
 // ---------------------------------------------------------------------------
-//	makePlan
+// fftw_die_Loris
 // ---------------------------------------------------------------------------
-//	Ensure that the shared buffer is large enough for this transform, then
-//	create a plan specific to this transform's length and input buffer, and
-//	the current shared output buffer. This member is invoked automatically
-//	the first time transform() is called, but clients wanting to make sure 
-//	that the plan is optimal may invoke it at other times (if they suspect
-//	that the shared buffer has been reallocated, for example).
-//
-//	May throw an allocation exception if the shared buffer cannot be allocated.
-//	Throws InvalidObject if the plan cannot be created.
-//
-void
-FourierTransform::makePlan( void )
+//	"die hook" for FFTW, which otherwise try to write to a
+//	non-existent console.
+static void fftw_die_Loris( const char * s )
 {
-	//	reserve the shared buffer:
-	//	(Do this first, so that, when release is called
-	//	below, to decrement the instance count for this
-	//	transform size, the shared buffer is not deallocated
-	//	and shrunk, only to be immediately grown again.
-	//	In this way, no buffer reallocation will occur if
-	//	the shared buffer is already big enough for this
-	//	transform.)
-	reserve( size() );
-	
-	//	check for an existing plan:
-	if ( _plan != NULL ) 
-	{
-		fftw_destroy_plan( PLAN(_plan) );
-		release( size() );
-	}
-	
-	//	create a plan:
-#if defined(HAVE_FFTW3_H)
-	_plan = fftw_plan_dft_1d( size(), 
-							  reinterpret_cast<fftw_complex*>(&_buffer.front()), 
-							  sharedBuffer, FFTW_FORWARD, FFTW_ESTIMATE );
-#else
-	_plan = fftw_create_plan_specific( size(), 
-									   FFTW_FORWARD,
-									   FFTW_ESTIMATE,
-									   reinterpret_cast<fftw_complex*>(&_buffer.front()), 
-									   1,
-									   sharedBuffer, 
-									   1); 
-#endif									   
-	//	verify:
-	if ( _plan == NULL )
-		Throw( InvalidObject, "FourierTransform could not make a (fftw) plan." );
+	notifier << "The FFTW library used by Loris has encountered a fatal error: " << s << endl;
+	exit(EXIT_FAILURE);
 }
 
-// ---------------------------------------------------------------------------
-//	reservations
-// ---------------------------------------------------------------------------
-//	Access a multiset of the lengths of all existing FourierTransform
-//	instances. It is sorted with greater<> so that the first element
-//	is the length of the largest existing transform.
-//	 
-static multiset< long, greater<long> > & reservations( void ) 
-{
-	static multiset< long, greater<long> > _mset;
-	return _mset;
-}
 
-// ---------------------------------------------------------------------------
-//	reserve
-// ---------------------------------------------------------------------------
-//	Register a new transform by adding its length to the reservations.
-//	Reallocate the shared buffer if necessary.
-//	Might throw a low memory exception.
-//
-static void reserve( long len )
-{
-	//	allocate a bigger shared buffer if necessary:
-	if ( reservations().empty() || * reservations().begin() < len )
-	{
-		debugger << "Allocating shared buffer of size " << len << endl;
-		delete[] sharedBuffer;
-		sharedBuffer = NULL;	//	to prevent deleting again
-		sharedBuffer = new fftw_complex[ len ];
-	}
-	
-	reservations().insert( len );
-}
-
-// ---------------------------------------------------------------------------
-//	release
-// ---------------------------------------------------------------------------
-//
-static void release( long len )
-{
-	//	find a reservation for this length:
-	multiset< long, greater<long> >::iterator pos = reservations().find( len );
-	if ( pos == reservations().end() ) 
-	{
-		debugger << "wierd, couldn't find a reservation for a transform of length " << len << endl;
-		return;
-	}
-	
-	//	erase it:
-	reservations().erase( pos );
-	
-	//	shrink the shared buffer if possible:
-	if ( reservations().empty() || * reservations().begin() < len ) 
-	{
-		debugger << "Releasing shared buffer of size " << len << endl;
-		delete[] sharedBuffer;
-		sharedBuffer = NULL;
-		
-		if ( ! reservations().empty() ) 
-		{
-			debugger << "Allocating shared buffer of size " << * reservations().begin() << endl;
-			sharedBuffer = new fftw_complex[ * reservations().begin() ];
-		}
-	}
-}
+}	//	end of namespace Loris
