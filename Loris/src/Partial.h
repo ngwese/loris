@@ -37,12 +37,8 @@ class PartialConstIterator;
 class Partial
 {
 //	-- instance variables --
-private:
-//	Breakpoint envelope:
-	std::map< double, Breakpoint > _bpmap;
-	
-//	label:
-	int _label;
+	std::map< double, Breakpoint > _bpmap;	//	Breakpoint envelope:
+	int _label;		//	label:
 
 //	-- public interface --
 public:

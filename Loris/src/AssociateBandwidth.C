@@ -11,6 +11,7 @@
 #include "notifier.h"
 #include "FourierTransform.h"
 #include "ReassignedSpectrum.h"
+#include "Breakpoint.h"
 #include <algorithm>
 
 //	would you believe all this for a round() function?
@@ -36,16 +37,13 @@ using namespace Loris;
 //
 AssociateBandwidth::AssociateBandwidth( const ReassignedSpectrum & spec, 
 										double srate,
-										double regionWidth,
-										double crop ) :
-	_spectrum( spec ),
+										double regionWidth ) :
 	_spectralEnergy( int(srate/regionWidth) ),
 	_sinusoidalEnergy( int(srate/regionWidth) ),
 	_weights( int(srate/regionWidth) ),
 	_surplus( int(srate/regionWidth) ),
 	_regionRate( 2./regionWidth ),
-	_hzPerSamp( srate / spec.size() ),
-	_cropSamps( crop * srate )
+	_hzPerSamp( srate / spec.size() )
 {
 }	
 
@@ -60,6 +58,7 @@ AssociateBandwidth::~AssociateBandwidth( void )
 // ---------------------------------------------------------------------------
 //	computeSurplusEnergy
 // ---------------------------------------------------------------------------
+//	Old strategy only, the new one accumulates noise energy directly.
 //
 void
 AssociateBandwidth::computeSurplusEnergy( void )
@@ -68,7 +67,7 @@ AssociateBandwidth::computeSurplusEnergy( void )
 	//	DC should never show up as noise: 
 	for ( int i = 1; i < _surplus.size(); ++i ) {
 		_surplus[i] = 
-			max(0., _spectralEnergy[i]-_sinusoidalEnergy[i]) * _spectrum.energyScale();
+			max(0., _spectralEnergy[i]-_sinusoidalEnergy[i]);
 	}
 }
 
@@ -103,7 +102,7 @@ AssociateBandwidth::computeNoiseEnergy( double freqHz )
 	if ( posAbove < _surplus.size() && alpha > 0. )
 		noise += _surplus[posAbove] * alpha / _weights[posAbove];
 	
-	if ( posBelow >= 0 )
+	if ( posBelow > 0 )
 		noise += _surplus[posBelow] * (1. - alpha) / _weights[posBelow];
 				
 	return noise;
@@ -194,44 +193,29 @@ AssociateBandwidth::reset( void )
 // ---------------------------------------------------------------------------
 //	accumulateSpectrum
 // ---------------------------------------------------------------------------
-//	Spectral energy accumulation. Spectral energy is scaled by the inverse of 
-//	the energy scale, so that sinusoidal energy (in accumulateSinusoid) and 
-//	surplus energy (in computeSurplusEnergy) need not be scaled.
+//	Spectral energy accumulation. Spectral energy is scaled by the  
+//	energy scale, so that sinusoidal energy (in accumulateSinusoid) 
+//	and surplus energy (in computeSurplusEnergy) need not be scaled.
+//
+//	Old strategy only.
 //
 void 
-AssociateBandwidth::accumulateSpectrum( void )
+AssociateBandwidth::accumulateSpectrum( const ReassignedSpectrum & spectrum )
 {
-	//	how we gonna taper off time-corrected components?
-	const double start_taper = 0.5;
-	const double end_taper = 1.;
-	
-	const int max_idx = _spectrum.size() / 2;
+	const int max_idx = spectrum.size() / 2;
 	for ( int i = 0; i < max_idx; ++i ) {
-		//	taper is a number near zero for small time corrections,
-		//	one for large correcitons:
-		double tcratio = std::abs(_spectrum.timeCorrection(i)) / _cropSamps;
-		double taper  = 1.;
-		/*
-		if ( tcratio < start_taper )
-			taper = 1.;
-		else if ( tcratio < end_taper )
-			taper = (end_taper - tcratio) / (end_taper - start_taper);
-		else //	time correction is past end_taper
-			taper = 0.;
-		*/	
-		double m = std::abs( _spectrum[i] ) * _spectrum.magnitudeScale();
-		m *= taper;
-		
-		distribute( i * _hzPerSamp, m * m, _spectralEnergy );
+		double m = std::abs( spectrum[i] ) * spectrum.magnitudeScale();
+		distribute( i * _hzPerSamp, m * m * spectrum.energyScale(), _spectralEnergy );
 	}
 }
 
 // ---------------------------------------------------------------------------
 //	accumulateSinusoid
 // ---------------------------------------------------------------------------
-//	Accumulate sinusoidal energy at frequency f and (nominal) amplitude a.
-//	Now using more refined amplitude estimates obtained from ReassignedSpectrum
-//	using samples of the main lobe of the analysis window spectrum.
+//	Accumulate sinusoidal energy at frequency f and amplitude a.
+//	Both new and old strategies use this; the new one calls it as
+//	Breakpoints are extracted, the od one calls it for each 
+//	Breakpoint that survives the thinning process.
 //	
 void
 AssociateBandwidth::accumulateSinusoid( double f, double a )
@@ -242,13 +226,53 @@ AssociateBandwidth::accumulateSinusoid( double f, double a )
 
 	//	distribute weight at the peak frequency:
 	distribute( f, 1., _weights );
-	
+
+#if	!defined(New_Association)
 	//	compute energy contribution and distribute 
-	//	at frequency f (scale to look like spectral
-	//	energy):
-	double esine = a * a / _spectrum.energyScale();
-	distribute( f, esine, _sinusoidalEnergy  );
+	//	at frequency f (old strategy only):
+	distribute( f, a * a, _sinusoidalEnergy  );
+#else
+	//	get rid of compiler warnings:
+	a = a;
+#endif
 }
+
+// ---------------------------------------------------------------------------
+//	accumulateNoise
+// ---------------------------------------------------------------------------
+//	Accumulate a rejected spectral peak as surplus (noise) energy.
+//	New strategy only.
+//
+void
+AssociateBandwidth::accumulateNoise( double freq, double amp )
+{
+	//	don't mess with negative frequencies:
+	if ( freq < 0. )
+		return;
+
+	//	compute energy contribution and distribute 
+	//	at frequency f:
+	distribute( freq, amp * amp, _surplus  );
+}
+
+// ---------------------------------------------------------------------------
+//	associate
+// ---------------------------------------------------------------------------
+//	Associate bandwidth with a single Breakpoint.
+//	Both strategies call this.
+//
+void 
+AssociateBandwidth::associate( Breakpoint & bp )
+{		
+	//	distribute surplus noise energy:
+	//	(ignore negative frequencies)
+	if ( bp.frequency() > 0 ) 
+	{
+		bp.addNoise( computeNoiseEnergy( bp.frequency() ) );
+	}
+}
+
+
 
 // ---------------------------------------------------------------------------
 //	binFrequency

@@ -1,5 +1,5 @@
-#ifndef __bandwidth_association_header__
-#define __bandwidth_association_header__
+#ifndef INCLUDE_ASSOCIATE_BANDWIDTH_H
+#define INCLUDE_ASSOCIATE_BANDWIDTH_H
 // ===========================================================================
 //	AssociateBandwidth.h
 //	
@@ -9,98 +9,72 @@
 //
 // ===========================================================================
 #include <vector>
-
-#if !defined( Deprecated_cstd_headers )
-	#include <cmath>
-#else
-	#include <math.h>
-#endif
+#include <cmath>
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
 #endif
 
-
+class Breakpoint;
 class ReassignedSpectrum;
 
 // ---------------------------------------------------------------------------
 //	class AssociateBandwidth
 //
-//	Region center frequencies should be a function of the number of regions, 
-//	but for now, use the Lemur algorithm which centers them all on integer
-//	bark frequencies.
+//	Two strategies of bandwidth association are represented here:
 //
-//	Use:
-//		accumulateSpectrum( spectrum, srate );
-//		accumulateSinusoids( iter, iter );
-//		(both any number of times, any sequence)
-//		associate( iter, iter ); (calls reset at end)
+// 	In the old strategy, Breakpoints are extracted and thinned and
+//	the survivors are accumulated as sinusoids. Then the spectral
+//	spectral energy is accumulated, the surplus is computed as the
+//	difference, and the results is distributed as bandwidth. 
 //
-//	The design strategy proliferation begins! This class uses mostly
-//	template members, to avoid reference to other concrete types, particularly
-//	container types. Do I like this? No I do not.
+//	In the new strategy, Breakpoints are extracted and accumulated
+//	as sinusoids. Spectral peaks that are not extracted (don't exceed
+//	the amplitude floor) are accumulated diectly as noise (surplus). 
+//	Breakpoints which are subsequently thinned are just lost, not
+//	represented as noise. After all spectral peaks have been accumulated
+//	as noise or sinusoids, the noise is distributed as bandwidth.
 //
 class AssociateBandwidth
 {
 //	-- instance variables --
-	const ReassignedSpectrum & _spectrum;
-	
 	//	energy vectors, reused each associate() call:
 	std::vector< double > _spectralEnergy, _sinusoidalEnergy, _weights, _surplus;
 	
 	double _regionRate;
-	double _hzPerSamp;
-	double _cropSamps;	//	analysis cropTime in samples, see accumulateSpectrum
+	double _hzPerSamp;		//	this is needed only by the old strategy
 	
 //	-- public interface --
 public:
 	//	construction:
+	//	(first two args needed only under the old strategy)
 	AssociateBandwidth( const ReassignedSpectrum & spec, 
-						double srate, double regionWidth, double crop );
+						double srate, double regionWidth );
 	~AssociateBandwidth( void );
-
-	//	bandwidth assocation:
-	//	Iters are iterators over Analyzer::Peaks
-	template< class Iter >
-	void associate( Iter b, Iter e )
-	{		
-		//	accumulate spectral energy:
-		accumulateSpectrum();
-		
-		//	accumulate sinusoidal energy:
-		for ( Iter it = b; it != e; ++it ) {
-			accumulateSinusoid( it->frequency(), it->amplitude() );
-		}
-		
-		//	compute surplus spectral energy:
-		computeSurplusEnergy();
-		
-		//	distribute surplus noise energy:
-		//	(ignore negative frequencies)
-		for ( Iter it = b; it != e; ++it ) {
-			if ( it->frequency() > 0 ) {
-				it->addNoise( computeNoiseEnergy( it->frequency() ) );
-			}
-		}
-		
-		//	clear vectors:
-		reset();
-	}
 	
+	//	energy accumulation:
+	void accumulateNoise( double freq, double amp );				//	new strategy only
+	void accumulateSinusoid( double f, double a  );					//	both new and old strategies
+	void accumulateSpectrum( const ReassignedSpectrum & spectrum );	//	old strategy only
+	void computeSurplusEnergy( void );								//	old strategy only
+	
+	//	bandwidth assocation:
+	void associate( Breakpoint & bp );
+	
+	//	call this to wipe out the accumulated energy to 
+	//	prepare for the next frame (yuk):
+	void reset( void );
+		
 private:	
 //	-- helpers --	
 	//	called in associate():	
-	void accumulateSinusoid( double f, double a  );
-	void accumulateSpectrum( void );
 	double computeNoiseEnergy( double freqHz );
-	void computeSurplusEnergy( void );
 	
 	inline double binFrequency( double freq );
 	double computeAlpha( double binfreq );
 	void distribute( double freqHz, double x, std::vector<double> & regions );
 	int findRegionBelow( double binfreq );	
-	void reset( void );
 	
 };	// end of class AssociateBandwidth
 
@@ -108,4 +82,4 @@ private:
 }	//	end of namespace Loris
 #endif
 
-#endif 	// ndef __bandwidth_association_header__
+#endif 	// ndef INCLUDE_ASSOCIATE_BANDWIDTH_H

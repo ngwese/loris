@@ -88,7 +88,7 @@ public:
 private:
 	void extractPeaks( std::list< Breakpoint > & frame, double frameTime, AnalyzerState & state );
 	void formPartials( std::list< Breakpoint > & frame, double frameTime, AnalyzerState & state );
-	void thinPeaks( std::list< Breakpoint > & frame );
+	void thinPeaks( std::list< Breakpoint > & frame, AnalyzerState & state );
 	void pruneBogusPartials( AnalyzerState & state );
 	void spawnPartial( double time, const Breakpoint & bp );
 	

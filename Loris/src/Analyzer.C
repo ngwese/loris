@@ -94,7 +94,7 @@ AnalyzerState::AnalyzerState( const Analyzer & anal, double srate ) :
 		
 		//	configure bw association strategy, which 
 		//	needs to know about the window:
-		_bw.reset( new AssociateBandwidth( *_spectrum, srate, anal.bwRegionWidth(), anal.cropTime() ) );
+		_bw.reset( new AssociateBandwidth( *_spectrum, srate, anal.bwRegionWidth() ) );
 		
 		//	configure the energy distribution strategy:
 		_energy.reset( new DistributeEnergy( 0.5 * anal.bwRegionWidth() ) );
@@ -194,13 +194,6 @@ Analyzer::analyze( const std::vector< double > & buf, double srate, double offse
 //	construct a state object for this analysis:	
 	AnalyzerState state( *this, srate );
 	
-//	Somewhere up here, we should partition the partials
-//	collection, make sure we don't try to match with partials
-//	from an earlier analysis. Then, we should sort the whole 
-//	collection at the end. This is easy, just make the current
-//	end of the partials collection part of the Analyzer state, 
-//	and use it in formPartials().
-
 //	loop over short-time analysis frames:
 //	Arbitrarily, the first window is centered hop
 //	samples before the beginning of the buffer (though 
@@ -230,11 +223,53 @@ Analyzer::analyze( const std::vector< double > & buf, double srate, double offse
 			//	extract peaks from the spectrum:
 			std::list< Breakpoint > f;
 			extractPeaks( f, frameTime, state );	
-			thinPeaks( f );
+			thinPeaks( f, state );
 
 			//	perform bandwidth association:
+			//
+			//	old association strategy: 
+			//	breakpoints are extracted and thinned and the survivors are
+			//	accumulated as sinusoids in the association process.
+			//	In this case, the accumulation of sinusoids has to happen
+			//	here, as does the accumulation of spectral energy and the
+			//	computation of surplus energy. (This all used to be wrapped
+			//	up in a template member of AssociateBandwidth.)
+			//
+			//	new association strategy:
+			//	breakpoints are extracted and accumulated as sinusoids,
+			//	anything that seems like a good sinusoid but is thinned 
+			//	because it is too close to a louder sinusoid is just lost,
+			//	_not_ represented as noise.
+			//	in this case, the accumulation of sinusoids happened in 
+			//	extractPeaks() , as did the accumulation of noise.
+			//
 #if !defined(No_BW_Association)
-			state.bwAssociation().associate( f.begin(), f.end() );
+#if !defined(New_Association)
+			//	accumulate spectral energy:
+			state.bwAssociation().accumulateSpectrum( state.spectrum() );
+		
+			//	accumulate sinusoids:
+			for ( std::list< Breakpoint >::iterator it = f.begin();
+				  it != f.end(); 
+				  ++it )
+			{
+				state.bwAssociation().accumulateSinusoid( it->frequency(), it->amplitude() );
+			}
+			
+			//	compute surplus spectral energy:
+			state.bwAssociation().computeSurplusEnergy();
+#endif
+			//	using either strategy, associate bandwidth with 
+			//	each Breakpoint here:
+			for ( std::list< Breakpoint >::iterator it = f.begin();
+				  it != f.end(); 
+				  ++it )
+			{
+				state.bwAssociation().associate( *it );
+			}
+			
+			//	reset after association:
+			state.bwAssociation().reset();
 #endif
 			//	form Partials from the extracted Breakpoints:
 			formPartials( f, frameTime, state );
@@ -331,23 +366,46 @@ Analyzer::extractPeaks( std::list< Breakpoint > & frame, double frameTime,
 			double fsample = state.spectrum().reassignedFrequency( j );	//	fractional sample
 			double fHz = fsample * sampsToHz;
 			
+			/*
 			//	don't keep big frequency corrections:
 			if ( std::abs( fsample - j ) > .5 )
 			{
-				//notifier << "big frequency correction: " << fsample << " " << j << endl;
+				debugger << "big frequency correction: " << fsample << " " << j << endl;
 				//continue;
 			}
+			*/
 			
-			//	if the frequency is too low (not enough periods
-			//	in the analysis window), reject it:
-			if ( fHz < freqFloor() ) 
+			//	reject peaks below our frequency and amplitude floors:
+			if ( fHz < freqFloor() )
 				continue;
 				
-			//	itsa magnitude peak, does it clear the amplitude floor?
+			//	old association strategy: 
+			//	breakpoints are extracted and thinned and the survivors are
+			//	accumulated as sinusoids in the association process.
+			//
+			//	new association strategy:
+			//	breakpoints are extracted and accumulated as sinusoids,
+			//	anything that seems like a good sinusoid but is thinned 
+			//	because it is too close to a louder sinusoid is just lost,
+			//	_not_ represented as noise.
 			double mag = state.spectrum().reassignedMagnitude( fsample, j );
-			if ( mag < threshold )
+#if !defined(New_Association)
+			if ( mag < threshold ) 
+			{
 				continue;
-			
+			}
+#else		//	new association strategy
+			if ( mag < threshold ) 
+			{
+				state.bwAssociation().accumulateNoise( fHz, mag );
+				continue;
+			}
+			else
+			{
+				state.bwAssociation().accumulateSinusoid( fHz, mag );			
+			}
+#endif
+
 			//	find the time correction (in samples!) for this peak:
 			double timeCorrectionSamps = state.spectrum().reassignedTime( j );
 				
@@ -396,7 +454,7 @@ Analyzer::extractPeaks( std::list< Breakpoint > & frame, double frameTime,
 //	to the specified partial density.
 //
 void 
-Analyzer::thinPeaks( std::list< Breakpoint > & frame )
+Analyzer::thinPeaks( std::list< Breakpoint > & frame, AnalyzerState & state )
 {
 	frame.sort( greater_amplitude<Breakpoint>() );
 	
@@ -414,6 +472,9 @@ Analyzer::thinPeaks( std::list< Breakpoint > & frame )
 		{
 			//	find_if returns the end of the range (it) if it finds nothing; 
 			//	remove *it from the frame
+#if defined(Debug_Loris)
+			state.bwAssociation().accumulateNoise( it->frequency(), it->amplitude() );
+#endif
 			frame.erase( it-- );
 		}
 	}
@@ -424,13 +485,14 @@ Analyzer::thinPeaks( std::list< Breakpoint > & frame )
 // ---------------------------------------------------------------------------
 //	Helper function, used lots in formPartials().
 //	Returns the (positive) frequency distance between a Breakpoint 
-//	at a particular time and a Partial.
+//	and the last Breakpoint in a Partial.
 //
 static inline double distance( const Partial & partial, 
-							   const Breakpoint & bp, 
-							   double time )
+							   const Breakpoint & bp )
 {
-	return std::abs( partial.frequencyAt( time ) - bp.frequency() );
+	//	need a more efficient way to check for invalid Partials!
+	Assert(partial.begin() != partial.end());
+	return std::abs( (--partial.end())->frequency() - bp.frequency() );
 }
 
 // ---------------------------------------------------------------------------
@@ -438,11 +500,6 @@ static inline double distance( const Partial & partial,
 // ---------------------------------------------------------------------------
 //	Append the Breakpoints to existing Partials, if appropriate, or else 
 //	give birth to new Partials.
-//
-//	HEY change the distance calculator to always use the end of the partial
-//	(breakpoint argument) instead of finding the frequency at the specified 
-//	time, since everywhere else we really only want to append to partials 
-//	here (right?).
 //
 void 
 Analyzer::formPartials( std::list< Breakpoint > & frame, double frameTime, AnalyzerState & state )
@@ -482,33 +539,20 @@ Analyzer::formPartials( std::list< Breakpoint > & frame, double frameTime, Analy
 		//	check the time correction for off-center components:
 		double tcabs = std::abs( peakTime - frameTime );
 #if !defined(Like_Lemur)
+		//	don't use peaks with large time corrections:
+		//	This is the only time we toss out peaks without
+		//	saving their energy for bandwidth association.
+		//	
 		//	this may still be what we want... but its 
 		//	different from Lemur's cropping and breaking:
 		if ( tcabs > cropTime() )
-			continue;	//	don't use peaks with large time corrections
+		{
+			continue;	
+		}
 #endif	//	like Lemur
 
 		//	loop over all eligible Partials, find the Partial
 		//	that is nearest in frequency to the Peak:
-		/*
-		PartialList::iterator nearest = partials().end();
-		for ( PartialList::iterator candidate = partials().begin(); 
-			  candidate != partials().end(); 
-			  ++candidate ) 
-		{
-			if ( state.goobers().count( &(*candidate) ) == 0 )
-				continue;
-				
-			//	remember this Partial if it is nearer in frequency 
-			//	to the Breakpoint than every other Partial:
-			if ( nearest == partials().end() || 
-				 distance( *candidate, peak, peakTime ) < distance( *nearest, peak, peakTime ) ) 
-			{
-				//	this Partial is nearest (so far):
-				nearest = candidate;
-			}
-		}
-		*/
 		Partial * nearest = NULL;
 		std::set< Partial * >::iterator candidate;
 		for ( candidate = state.goobers().begin();
@@ -517,10 +561,8 @@ Analyzer::formPartials( std::list< Breakpoint > & frame, double frameTime, Analy
 		{
 			//	remember this Partial if it is nearer in frequency 
 			//	to the Breakpoint than every other Partial:
-			if ( nearest == NULL || 
-				 distance( **candidate, peak, peakTime ) < distance( *nearest, peak, peakTime ) ) 
+			if ( ! nearest || distance( **candidate, peak ) < distance( *nearest, peak ) ) 
 			{
-				//	this Partial is nearest (so far):
 				nearest = *candidate;
 			}
 		}			
@@ -535,19 +577,16 @@ Analyzer::formPartials( std::list< Breakpoint > & frame, double frameTime, Analy
 		//		closer to the nearest Partial (4)
 		//
 		//	Otherwise, add this Breakpoint to the nearest Partial.
-		double thisdist = (nearest != NULL) ? //partials().end()) ? 
-							(distance(*nearest, peak, peakTime)) : 
-							(0.);
+		double thisdist = (nearest != NULL) ? (distance(*nearest, peak)) : (0.);
 		std::list< Breakpoint >::iterator next = bpIter;
 		++next;
 		std::list< Breakpoint >::iterator prev = bpIter;
 		--prev;
 		if ( nearest == NULL /* (1) */ || 
 			 thisdist > 0.5 * freqResolution() /* (2) */ ||
-			 ( next != frame.end() && 
-			 	thisdist > distance( *nearest, *(next), state.peakTimeCache()[ next->frequency() ] ) ) /* (3) */ ||
-			 ( bpIter != frame.begin() && 
-			 	thisdist > distance( *nearest, *(prev), state.peakTimeCache()[ prev->frequency() ] ) ) /* (4) */ ) {
+			 ( next != frame.end() && thisdist > distance( *nearest, *next ) ) /* (3) */ ||
+			 ( bpIter != frame.begin() && thisdist > distance( *nearest, *prev ) ) /* (4) */ ) 
+		{
 			 	
 			 /*debugger << "spawning a partial at frequency " << peak.frequency() <<
 			 			 " amplitude " << peak.amplitude() <<
@@ -574,7 +613,8 @@ Analyzer::formPartials( std::list< Breakpoint > & frame, double frameTime, Analy
 			 	fprintf( spitfile, "new partial at freq %lf\n", peak.frequency() );
 #endif	//	debug
 		}
-		else {
+		else 
+		{
 			/*debugger << "matching a partial at frequency " << peak.frequency() <<
 			 			" amplitude " << peak.amplitude() <<
 			 			" and time " << peakTime << endl;
