@@ -103,15 +103,6 @@ void copyLabeled( const PartialList * src, long label, PartialList * dst )
 		ThrowIfNull((PartialList *) src);
 		ThrowIfNull((PartialList *) dst);
 		
-		/*
-		std::list< Partial >::const_iterator it = src->begin();
-		for ( it = std::find_if( it, src->end(), PartialUtils::label_equals(label) );
-			  it != src->end();
-			  it = std::find_if( ++it, src->end(), PartialUtils::label_equals(label) ) )
-		{
-			 dst->push_back( *it );
-		}
-		*/
 		std::remove_copy_if( src->begin(), src->end(), std::back_inserter( *dst ),
 							 std::not1( PartialUtils::label_equals(label) ) );
 	}
@@ -175,16 +166,6 @@ void extractLabeled( PartialList * src, long label, PartialList * dst )
 		ThrowIfNull((PartialList *) src);
 		ThrowIfNull((PartialList *) dst);
 
-		/*
-		std::list< Partial >::iterator it = src->begin();
-		for ( it = std::find_if( it, src->end(), PartialUtils::label_equals(label) );
-			  it != src->end();
-			  it = std::find_if( it, src->end(), PartialUtils::label_equals(label) ) )
-		{
-			std::list< Partial >::iterator remove_me = it++;
-			dst->splice( dst->end(), *src, remove_me );
-		}
-		*/
 		std::list< Partial >::iterator it = 
 			std::stable_partition( src->begin(), src->end(), 
 								   std::not1( PartialUtils::label_equals(label) ) );
@@ -207,7 +188,7 @@ void extractLabeled( PartialList * src, long label, PartialList * dst )
 /* ---------------------------------------------------------------- */
 /*        removeLabeled        
 /*
-/*	Remove from a PartialList Partials having the specified label. 
+/*	Remove from a PartialList all Partials having the specified label. 
  */
 extern "C"
 void removeLabeled( PartialList * src, long label )
@@ -232,18 +213,6 @@ void removeLabeled( PartialList * src, long label )
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
-}
-
-
-/* ---------------------------------------------------------------- */
-/*        spliceByLabel        
-/*
-/*	Old name for extractLabeled. 
- */
-extern "C"
-void spliceByLabel( PartialList * src, long label, PartialList * dst )
-{
-	extractLabeled( src, label, dst );
 }
 
 /* ---------------------------------------------------------------- */
@@ -437,6 +406,30 @@ void shiftTime( PartialList * partials, double offset )
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
+}
+
+/* ---------------------------------------------------------------- */
+/*        sortByLabel        
+/*
+/*	Sort the Partials in a PartialList in order of increasing label.
+ * 	The sort is stable; Partials having the same label are not 
+ * 	reordered.
+ */
+extern "C"
+void sortByLabel( PartialList * partials )
+{
+	partials->sort( PartialUtils::compare_label<>() );	
+}
+
+/* ---------------------------------------------------------------- */
+/*        spliceByLabel        
+/*
+/*	Old name for extractLabeled. 
+ */
+extern "C"
+void spliceByLabel( PartialList * src, long label, PartialList * dst )
+{
+	extractLabeled( src, label, dst );
 }
 
 

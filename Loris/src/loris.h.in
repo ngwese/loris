@@ -558,11 +558,7 @@ void extractLabeled( PartialList * src, long label, PartialList * dst );
  */
 
 void removeLabeled( PartialList * src, long label );
-/*  Remove from a PartialList Partials having the specified label.
- */
-
-void spliceByLabel( PartialList * src, long label, PartialList * dst );
-/*  Old name for extractLabeled. 
+/*  Remove from a PartialList all Partials having the specified label.
  */
 
 void scaleAmp( PartialList * partials, BreakpointEnvelope * ampEnv );
@@ -596,6 +592,17 @@ void shiftTime( PartialList * partials, double offset );
 /*	Shift the time of all the Breakpoints in a Partial by a 
 	constant amount.
  */
+
+void sortByLabel( PartialList * partials );
+/*	Sort the Partials in a PartialList in order of increasing label.
+ 	The sort is stable; Partials having the same label are not 
+ 	reordered.
+ */
+
+void spliceByLabel( PartialList * src, long label, PartialList * dst );
+/*  Old name for extractLabeled. 
+ */
+
 
 
 /* ---------------------------------------------------------------- */

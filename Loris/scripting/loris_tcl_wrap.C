@@ -1002,22 +1002,23 @@ typedef struct {
 /* -------- TYPES TABLE (BEGIN) -------- */
 
 #define  SWIGTYPE_p_PartialList swig_types[0] 
-#define  SWIGTYPE_p_Breakpoint swig_types[1] 
-#define  SWIGTYPE_p_Analyzer swig_types[2] 
-#define  SWIGTYPE_p_double swig_types[3] 
-#define  SWIGTYPE_p_Partial swig_types[4] 
-#define  SWIGTYPE_p_Loris__Partial swig_types[5] 
-#define  SWIGTYPE_p_BreakpointEnvelope swig_types[6] 
-#define  SWIGTYPE_p_BreakpointPosition swig_types[7] 
-#define  SWIGTYPE_p_AiffFile swig_types[8] 
-#define  SWIGTYPE_p_SampleVector swig_types[9] 
-#define  SWIGTYPE_p_SdifFile swig_types[10] 
-#define  SWIGTYPE_p_PartialListIterator swig_types[11] 
+#define  SWIGTYPE_p_SpcFile swig_types[1] 
+#define  SWIGTYPE_p_Breakpoint swig_types[2] 
+#define  SWIGTYPE_p_Analyzer swig_types[3] 
+#define  SWIGTYPE_p_double swig_types[4] 
+#define  SWIGTYPE_p_Partial swig_types[5] 
+#define  SWIGTYPE_p_Loris__Partial swig_types[6] 
+#define  SWIGTYPE_p_BreakpointEnvelope swig_types[7] 
+#define  SWIGTYPE_p_BreakpointPosition swig_types[8] 
+#define  SWIGTYPE_p_AiffFile swig_types[9] 
+#define  SWIGTYPE_p_SampleVector swig_types[10] 
+#define  SWIGTYPE_p_SdifFile swig_types[11] 
 #define  SWIGTYPE_p_NewPartialIterator swig_types[12] 
 #define  SWIGTYPE_p_NewPlistIterator swig_types[13] 
 #define  SWIGTYPE_p_Marker swig_types[14] 
-#define  SWIGTYPE_p_PartialIterator swig_types[15] 
-static swig_type_info *swig_types[17];
+#define  SWIGTYPE_p_PartialListIterator swig_types[15] 
+#define  SWIGTYPE_p_PartialIterator swig_types[16] 
+static swig_type_info *swig_types[18];
 
 /* -------- TYPES TABLE (END) -------- */
 
@@ -1443,6 +1444,33 @@ void SdifFile_removeMarker(SdifFile *self,int i){
 		 	self->markers().erase( self->markers().begin() + i );
 		 }
 void SdifFile_addMarker(SdifFile *self,Marker m){
+		 	self->markers().push_back( m );
+		 }
+
+	#include<SpcFile.h>
+
+SpcFile *new_SpcFile__SWIG_2(PartialList *l,double midiNoteNum){
+			return new SpcFile( l->begin(), l->end(), midiNoteNum );
+		}
+void SpcFile_addPartials(SpcFile *self,PartialList *l){
+			self->addPartials( l->begin(), l->end() );
+		}
+int SpcFile_numMarkers(SpcFile *self){ return self->markers().size(); }
+Marker &SpcFile_getMarker(SpcFile *self,int i){
+		 	if ( i < 0 || i >= self->markers().size() )
+		 	{
+		 		Throw( InvalidArgument, "Marker index out of range." );
+		 	}
+		 	return self->markers()[i];
+		 }
+void SpcFile_removeMarker(SpcFile *self,int i){
+		 	if ( i < 0 || i >= self->markers().size() )
+		 	{
+		 		Throw( InvalidArgument, "Marker index out of range." );
+		 	}
+		 	self->markers().erase( self->markers().begin() + i );
+		 }
+void SpcFile_addMarker(SpcFile *self,Marker m){
 		 	self->markers().push_back( m );
 		 }
 
@@ -2181,6 +2209,30 @@ _wrap_removeLabeled(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj
 
 
 static int
+_wrap_resample(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    PartialList *arg1 = (PartialList *) 0 ;
+    double arg2 ;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"od:resample partials interval ",0,&arg2) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        char * err;
+        clear_exception();
+        resample(arg1,arg2);
+        
+        if ((err = check_exception()))
+        {
+            SWIG_exception( SWIG_ValueError, err );
+        }
+    }
+    
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
 _wrap_scaleAmp__SWIG_0(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
     PartialList *arg1 = (PartialList *) 0 ;
     BreakpointEnvelope *arg2 = (BreakpointEnvelope *) 0 ;
@@ -2725,16 +2777,15 @@ _wrap_shiftTime(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CO
 
 
 static int
-_wrap_resample(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+_wrap_sift(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
     PartialList *arg1 = (PartialList *) 0 ;
-    double arg2 ;
     
-    if (SWIG_GetArgs(interp, objc, objv,"od:resample partials interval ",0,&arg2) == TCL_ERROR) SWIG_fail;
+    if (SWIG_GetArgs(interp, objc, objv,"o:sift partials ",0) == TCL_ERROR) SWIG_fail;
     if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     {
         char * err;
         clear_exception();
-        resample(arg1,arg2);
+        sift(arg1);
         
         if ((err = check_exception()))
         {
@@ -2749,15 +2800,15 @@ _wrap_resample(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CON
 
 
 static int
-_wrap_sift(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+_wrap_sortByLabel(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
     PartialList *arg1 = (PartialList *) 0 ;
     
-    if (SWIG_GetArgs(interp, objc, objv,"o:sift partials ",0) == TCL_ERROR) SWIG_fail;
+    if (SWIG_GetArgs(interp, objc, objv,"o:sortByLabel partials ",0) == TCL_ERROR) SWIG_fail;
     if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
     {
         char * err;
         clear_exception();
-        sift(arg1);
+        sortByLabel(arg1);
         
         if ((err = check_exception()))
         {
@@ -5777,6 +5828,707 @@ static swig_attribute swig_SdifFile_attributes[] = {
 };
 static swig_class *swig_SdifFile_bases[] = {0};
 swig_class _wrap_class_SdifFile = { "SdifFile", &SWIGTYPE_p_SdifFile,_wrap_new_SdifFile, swig_delete_SdifFile, swig_SdifFile_methods, swig_SdifFile_attributes, swig_SdifFile_bases };
+static int
+_wrap_new_SpcFile__SWIG_0(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    char *arg1 ;
+    SpcFile *result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"s:new_SpcFile filename ",&arg1) == TCL_ERROR) SWIG_fail;
+    {
+        try
+        {
+            result = (SpcFile *)new SpcFile((char const *)arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_SpcFile,0));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_new_SpcFile__SWIG_1(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    double arg1 = (double) 60 ;
+    SpcFile *result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"|d:new_SpcFile midiNoteNum ",&arg1) == TCL_ERROR) SWIG_fail;
+    {
+        try
+        {
+            result = (SpcFile *)new SpcFile(arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_SpcFile,0));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_delete_SpcFile(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    SpcFile *arg1 = (SpcFile *) 0 ;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"o:delete_SpcFile self ",0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_SpcFile,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            delete arg1;
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_SpcFile_sampleRate(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    SpcFile *arg1 = (SpcFile *) 0 ;
+    double result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"o:SpcFile_sampleRate self ",0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_SpcFile,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            result = (double)((SpcFile const *)arg1)->sampleRate();
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,Tcl_NewDoubleObj((double) result));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_SpcFile_midiNoteNumber(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    SpcFile *arg1 = (SpcFile *) 0 ;
+    double result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"o:SpcFile_midiNoteNumber self ",0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_SpcFile,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            result = (double)((SpcFile const *)arg1)->midiNoteNumber();
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,Tcl_NewDoubleObj((double) result));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_SpcFile_addPartial__SWIG_0(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    SpcFile *arg1 = (SpcFile *) 0 ;
+    Loris::Partial *arg2 = 0 ;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"oo:SpcFile_addPartial self p ",0,0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_SpcFile,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[2], (void **) &arg2, SWIGTYPE_p_Loris__Partial,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            (arg1)->addPartial((Loris::Partial const &)*arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_SpcFile_addPartial__SWIG_1(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    SpcFile *arg1 = (SpcFile *) 0 ;
+    Loris::Partial *arg2 = 0 ;
+    int arg3 ;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"ooi:SpcFile_addPartial self p label ",0,0,&arg3) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_SpcFile,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[2], (void **) &arg2, SWIGTYPE_p_Loris__Partial,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            (arg1)->addPartial((Loris::Partial const &)*arg2,arg3);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_SpcFile_addPartial(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    Tcl_Obj *CONST *argv = objv+1;
+    int argc = objc-1;
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(interp, argv[0], (void **) &ptr, SWIGTYPE_p_SpcFile, 0) == TCL_ERROR) {
+                _v = 0;
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *ptr;
+                if (SWIG_ConvertPtr(interp, argv[1], (void **) &ptr, SWIGTYPE_p_Loris__Partial, 0) == TCL_ERROR) {
+                    _v = 0;
+                }else {
+                    _v = 1;
+                }
+            }
+            if (_v) {
+                return _wrap_SpcFile_addPartial__SWIG_0(clientData, interp, objc, objv);
+            }
+        }
+    }
+    if (argc == 3) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(interp, argv[0], (void **) &ptr, SWIGTYPE_p_SpcFile, 0) == TCL_ERROR) {
+                _v = 0;
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *ptr;
+                if (SWIG_ConvertPtr(interp, argv[1], (void **) &ptr, SWIGTYPE_p_Loris__Partial, 0) == TCL_ERROR) {
+                    _v = 0;
+                }else {
+                    _v = 1;
+                }
+            }
+            if (_v) {
+                {
+                    long tmp;
+                    if (Tcl_GetLongFromObj(NULL,argv[2],&tmp) == TCL_ERROR) _v = 0;
+                    else _v = 1;
+                }
+                if (_v) {
+                    return _wrap_SpcFile_addPartial__SWIG_1(clientData, interp, objc, objv);
+                }
+            }
+        }
+    }
+    
+    Tcl_SetResult(interp,(char *) "No matching function for overloaded 'SpcFile_addPartial'", TCL_STATIC);
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_SpcFile_setMidiNoteNumber(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    SpcFile *arg1 = (SpcFile *) 0 ;
+    double arg2 ;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"od:SpcFile_setMidiNoteNumber self nn ",0,&arg2) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_SpcFile,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            (arg1)->setMidiNoteNumber(arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_SpcFile_setSampleRate(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    SpcFile *arg1 = (SpcFile *) 0 ;
+    double arg2 ;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"od:SpcFile_setSampleRate self rate ",0,&arg2) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_SpcFile,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            (arg1)->setSampleRate(arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_SpcFile_write(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    SpcFile *arg1 = (SpcFile *) 0 ;
+    char *arg2 ;
+    bool arg3 = (bool) true ;
+    double arg4 = (double) 0 ;
+    int tempb3 ;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"os|od:SpcFile_write self filename enhanced endApproachTime ",0,&arg2,0,&arg4) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_SpcFile,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    if (objc > 3) {
+        if (Tcl_GetIntFromObj(interp,objv[3],&tempb3) == TCL_ERROR) SWIG_fail;
+        arg3 = tempb3 ? true : false;
+    }
+    {
+        try
+        {
+            (arg1)->write((char const *)arg2,arg3,arg4);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_new_SpcFile__SWIG_2(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    PartialList *arg1 = (PartialList *) 0 ;
+    double arg2 = (double) 60 ;
+    SpcFile *result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"o|d:new_SpcFile l midiNoteNum ",0,&arg2) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            result = (SpcFile *)new_SpcFile__SWIG_2(arg1,arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_SpcFile,0));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_new_SpcFile(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    Tcl_Obj *CONST *argv = objv+1;
+    int argc = objc-1;
+    if ((argc >= 0) && (argc <= 1)) {
+        int _v;
+        if (argc <= 0) {
+            return _wrap_new_SpcFile__SWIG_1(clientData, interp, objc, objv);
+        }
+        {
+            double tmp;
+            if (Tcl_GetDoubleFromObj(NULL,argv[0],&tmp) == TCL_ERROR) _v = 0;
+            else _v = 1;
+        }
+        if (_v) {
+            return _wrap_new_SpcFile__SWIG_1(clientData, interp, objc, objv);
+        }
+    }
+    if ((argc >= 1) && (argc <= 2)) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(interp, argv[0], (void **) &ptr, SWIGTYPE_p_PartialList, 0) == TCL_ERROR) {
+                _v = 0;
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            if (argc <= 1) {
+                return _wrap_new_SpcFile__SWIG_2(clientData, interp, objc, objv);
+            }
+            {
+                double tmp;
+                if (Tcl_GetDoubleFromObj(NULL,argv[1],&tmp) == TCL_ERROR) _v = 0;
+                else _v = 1;
+            }
+            if (_v) {
+                return _wrap_new_SpcFile__SWIG_2(clientData, interp, objc, objv);
+            }
+        }
+    }
+    if (argc == 1) {
+        int _v;
+        {
+            _v = 1;
+        }
+        if (_v) {
+            return _wrap_new_SpcFile__SWIG_0(clientData, interp, objc, objv);
+        }
+    }
+    
+    Tcl_SetResult(interp,(char *) "No matching function for overloaded 'new_SpcFile'", TCL_STATIC);
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_SpcFile_addPartials(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    SpcFile *arg1 = (SpcFile *) 0 ;
+    PartialList *arg2 = (PartialList *) 0 ;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"oo:SpcFile_addPartials self l ",0,0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_SpcFile,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[2], (void **) &arg2, SWIGTYPE_p_PartialList,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            SpcFile_addPartials(arg1,arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_SpcFile_numMarkers(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    SpcFile *arg1 = (SpcFile *) 0 ;
+    int result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"o:SpcFile_numMarkers self ",0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_SpcFile,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            result = (int)SpcFile_numMarkers(arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Tcl_SetObjResult(interp,Tcl_NewIntObj((long) result));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_SpcFile_getMarker(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    SpcFile *arg1 = (SpcFile *) 0 ;
+    int arg2 ;
+    Marker *result;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"oi:SpcFile_getMarker self i ",0,&arg2) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_SpcFile,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            {
+                Marker &_result_ref = SpcFile_getMarker(arg1,arg2);
+                result = (Marker *) &_result_ref;
+            }
+            
+        }
+        catch ( InvalidArgument & ex )
+        {
+            SWIG_exception(SWIG_ValueError, ex.what() );
+        }
+    }
+    Tcl_SetObjResult(interp,SWIG_NewInstanceObj(interp, (void *) result, SWIGTYPE_p_Marker,0));
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_SpcFile_removeMarker(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    SpcFile *arg1 = (SpcFile *) 0 ;
+    int arg2 ;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"oi:SpcFile_removeMarker self i ",0,&arg2) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_SpcFile,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    {
+        try
+        {
+            SpcFile_removeMarker(arg1,arg2);
+            
+        }
+        catch ( InvalidArgument & ex )
+        {
+            SWIG_exception(SWIG_ValueError, ex.what() );
+        }
+    }
+    
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static int
+_wrap_SpcFile_addMarker(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+    SpcFile *arg1 = (SpcFile *) 0 ;
+    Marker arg2 ;
+    Marker *argp2 ;
+    
+    if (SWIG_GetArgs(interp, objc, objv,"oo:SpcFile_addMarker self m ",0,0) == TCL_ERROR) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[1], (void **) &arg1, SWIGTYPE_p_SpcFile,SWIG_POINTER_EXCEPTION | 0) != TCL_OK)) SWIG_fail;
+    if ((SWIG_ConvertPtr(interp, objv[2], (void **) &argp2, SWIGTYPE_p_Marker,SWIG_POINTER_EXCEPTION ) != TCL_OK)) SWIG_fail;
+    arg2 = *argp2; 
+    {
+        try
+        {
+            SpcFile_addMarker(arg1,arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    
+    return TCL_OK;
+    fail:
+    return TCL_ERROR;
+}
+
+
+static void swig_delete_SpcFile(void *obj) {
+SpcFile *arg1 = (SpcFile *) obj;
+delete arg1;
+}
+static swig_method swig_SpcFile_methods[] = {
+    {"sampleRate", _wrap_SpcFile_sampleRate}, 
+    {"midiNoteNumber", _wrap_SpcFile_midiNoteNumber}, 
+    {"addPartial", _wrap_SpcFile_addPartial}, 
+    {"setMidiNoteNumber", _wrap_SpcFile_setMidiNoteNumber}, 
+    {"setSampleRate", _wrap_SpcFile_setSampleRate}, 
+    {"write", _wrap_SpcFile_write}, 
+    {"addPartials", _wrap_SpcFile_addPartials}, 
+    {"numMarkers", _wrap_SpcFile_numMarkers}, 
+    {"getMarker", _wrap_SpcFile_getMarker}, 
+    {"removeMarker", _wrap_SpcFile_removeMarker}, 
+    {"addMarker", _wrap_SpcFile_addMarker}, 
+    {0,0}
+};
+static swig_attribute swig_SpcFile_attributes[] = {
+    {0,0,0}
+};
+static swig_class *swig_SpcFile_bases[] = {0};
+swig_class _wrap_class_SpcFile = { "SpcFile", &SWIGTYPE_p_SpcFile,_wrap_new_SpcFile, swig_delete_SpcFile, swig_SpcFile_methods, swig_SpcFile_attributes, swig_SpcFile_bases };
 static int
 _wrap_NewPlistIterator_atEnd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
     NewPlistIterator *arg1 = (NewPlistIterator *) 0 ;
@@ -9443,14 +10195,15 @@ static swig_command_info swig_commands[] = {
     { SWIG_prefix "copyLabeled", (swig_wrapper_func) _wrap_copyLabeled, NULL},
     { SWIG_prefix "extractLabeled", (swig_wrapper_func) _wrap_extractLabeled, NULL},
     { SWIG_prefix "removeLabeled", (swig_wrapper_func) _wrap_removeLabeled, NULL},
+    { SWIG_prefix "resample", (swig_wrapper_func) _wrap_resample, NULL},
     { SWIG_prefix "scaleAmp", (swig_wrapper_func) _wrap_scaleAmp, NULL},
     { SWIG_prefix "scaleBandwidth", (swig_wrapper_func) _wrap_scaleBandwidth, NULL},
     { SWIG_prefix "scaleFrequency", (swig_wrapper_func) _wrap_scaleFrequency, NULL},
     { SWIG_prefix "scaleNoiseRatio", (swig_wrapper_func) _wrap_scaleNoiseRatio, NULL},
     { SWIG_prefix "shiftPitch", (swig_wrapper_func) _wrap_shiftPitch, NULL},
     { SWIG_prefix "shiftTime", (swig_wrapper_func) _wrap_shiftTime, NULL},
-    { SWIG_prefix "resample", (swig_wrapper_func) _wrap_resample, NULL},
     { SWIG_prefix "sift", (swig_wrapper_func) _wrap_sift, NULL},
+    { SWIG_prefix "sortByLabel", (swig_wrapper_func) _wrap_sortByLabel, NULL},
     { SWIG_prefix "version", (swig_wrapper_func) _wrap_version, NULL},
     { SWIG_prefix "new_Marker", (swig_wrapper_func) _wrap_new_Marker, NULL},
     { SWIG_prefix "Marker_name", (swig_wrapper_func) _wrap_Marker_name, NULL},
@@ -9525,6 +10278,20 @@ static swig_command_info swig_commands[] = {
     { SWIG_prefix "SdifFile_removeMarker", (swig_wrapper_func) _wrap_SdifFile_removeMarker, NULL},
     { SWIG_prefix "SdifFile_addMarker", (swig_wrapper_func) _wrap_SdifFile_addMarker, NULL},
     { SWIG_prefix "SdifFile", (swig_wrapper_func) SWIG_ObjectConstructor, &_wrap_class_SdifFile},
+    { SWIG_prefix "delete_SpcFile", (swig_wrapper_func) _wrap_delete_SpcFile, NULL},
+    { SWIG_prefix "SpcFile_sampleRate", (swig_wrapper_func) _wrap_SpcFile_sampleRate, NULL},
+    { SWIG_prefix "SpcFile_midiNoteNumber", (swig_wrapper_func) _wrap_SpcFile_midiNoteNumber, NULL},
+    { SWIG_prefix "SpcFile_addPartial", (swig_wrapper_func) _wrap_SpcFile_addPartial, NULL},
+    { SWIG_prefix "SpcFile_setMidiNoteNumber", (swig_wrapper_func) _wrap_SpcFile_setMidiNoteNumber, NULL},
+    { SWIG_prefix "SpcFile_setSampleRate", (swig_wrapper_func) _wrap_SpcFile_setSampleRate, NULL},
+    { SWIG_prefix "SpcFile_write", (swig_wrapper_func) _wrap_SpcFile_write, NULL},
+    { SWIG_prefix "new_SpcFile", (swig_wrapper_func) _wrap_new_SpcFile, NULL},
+    { SWIG_prefix "SpcFile_addPartials", (swig_wrapper_func) _wrap_SpcFile_addPartials, NULL},
+    { SWIG_prefix "SpcFile_numMarkers", (swig_wrapper_func) _wrap_SpcFile_numMarkers, NULL},
+    { SWIG_prefix "SpcFile_getMarker", (swig_wrapper_func) _wrap_SpcFile_getMarker, NULL},
+    { SWIG_prefix "SpcFile_removeMarker", (swig_wrapper_func) _wrap_SpcFile_removeMarker, NULL},
+    { SWIG_prefix "SpcFile_addMarker", (swig_wrapper_func) _wrap_SpcFile_addMarker, NULL},
+    { SWIG_prefix "SpcFile", (swig_wrapper_func) SWIG_ObjectConstructor, &_wrap_class_SpcFile},
     { SWIG_prefix "NewPlistIterator_atEnd", (swig_wrapper_func) _wrap_NewPlistIterator_atEnd, NULL},
     { SWIG_prefix "NewPlistIterator_next", (swig_wrapper_func) _wrap_NewPlistIterator_next, NULL},
     { SWIG_prefix "NewPlistIterator_partial", (swig_wrapper_func) _wrap_NewPlistIterator_partial, NULL},
@@ -9627,6 +10394,7 @@ static swig_const_info swig_constants[] = {
 /* -------- TYPE CONVERSION AND EQUIVALENCE RULES (BEGIN) -------- */
 
 static swig_type_info _swigt__p_PartialList[] = {{"_p_PartialList", 0, "PartialList *", &_wrap_class_PartialList},{"_p_PartialList"},{0}};
+static swig_type_info _swigt__p_SpcFile[] = {{"_p_SpcFile", 0, "SpcFile *", &_wrap_class_SpcFile},{"_p_SpcFile"},{0}};
 static swig_type_info _swigt__p_Breakpoint[] = {{"_p_Breakpoint", 0, "Breakpoint *", &_wrap_class_Breakpoint},{"_p_Breakpoint"},{0}};
 static swig_type_info _swigt__p_Analyzer[] = {{"_p_Analyzer", 0, "Analyzer *", &_wrap_class_Analyzer},{"_p_Analyzer"},{0}};
 static swig_type_info _swigt__p_double[] = {{"_p_double", 0, "double *", 0},{"_p_double"},{0}};
@@ -9637,14 +10405,15 @@ static swig_type_info _swigt__p_BreakpointPosition[] = {{"_p_BreakpointPosition"
 static swig_type_info _swigt__p_AiffFile[] = {{"_p_AiffFile", 0, "AiffFile *", &_wrap_class_AiffFile},{"_p_AiffFile"},{0}};
 static swig_type_info _swigt__p_SampleVector[] = {{"_p_SampleVector", 0, "SampleVector *", &_wrap_class_SampleVector},{"_p_SampleVector"},{0}};
 static swig_type_info _swigt__p_SdifFile[] = {{"_p_SdifFile", 0, "SdifFile *", &_wrap_class_SdifFile},{"_p_SdifFile"},{0}};
-static swig_type_info _swigt__p_PartialListIterator[] = {{"_p_PartialListIterator", 0, "PartialListIterator *", &_wrap_class_PartialListIterator},{"_p_PartialListIterator"},{0}};
 static swig_type_info _swigt__p_NewPartialIterator[] = {{"_p_NewPartialIterator", 0, "NewPartialIterator *", &_wrap_class_NewPartialIterator},{"_p_NewPartialIterator"},{0}};
 static swig_type_info _swigt__p_NewPlistIterator[] = {{"_p_NewPlistIterator", 0, "NewPlistIterator *", &_wrap_class_NewPlistIterator},{"_p_NewPlistIterator"},{0}};
 static swig_type_info _swigt__p_Marker[] = {{"_p_Marker", 0, "Marker *", &_wrap_class_Marker},{"_p_Marker"},{0}};
+static swig_type_info _swigt__p_PartialListIterator[] = {{"_p_PartialListIterator", 0, "PartialListIterator *", &_wrap_class_PartialListIterator},{"_p_PartialListIterator"},{0}};
 static swig_type_info _swigt__p_PartialIterator[] = {{"_p_PartialIterator", 0, "PartialIterator *", &_wrap_class_PartialIterator},{"_p_PartialIterator"},{0}};
 
 static swig_type_info *swig_types_initial[] = {
 _swigt__p_PartialList, 
+_swigt__p_SpcFile, 
 _swigt__p_Breakpoint, 
 _swigt__p_Analyzer, 
 _swigt__p_double, 
@@ -9655,10 +10424,10 @@ _swigt__p_BreakpointPosition,
 _swigt__p_AiffFile, 
 _swigt__p_SampleVector, 
 _swigt__p_SdifFile, 
-_swigt__p_PartialListIterator, 
 _swigt__p_NewPartialIterator, 
 _swigt__p_NewPlistIterator, 
 _swigt__p_Marker, 
+_swigt__p_PartialListIterator, 
 _swigt__p_PartialIterator, 
 0
 };

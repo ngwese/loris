@@ -55,11 +55,13 @@ extractLabeled = _loris.extractLabeled
 
 removeLabeled = _loris.removeLabeled
 
-shiftTime = _loris.shiftTime
-
 resample = _loris.resample
 
+shiftTime = _loris.shiftTime
+
 sift = _loris.sift
+
+sortByLabel = _loris.sortByLabel
 
 version = _loris.version
 
@@ -262,6 +264,39 @@ class SdifFilePtr(SdifFile):
         if not hasattr(self,"thisown"): _swig_setattr(self, SdifFile, 'thisown', 0)
         _swig_setattr(self, SdifFile,self.__class__,SdifFile)
 _loris.SdifFile_swigregister(SdifFilePtr)
+
+class SpcFile(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, SpcFile, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, SpcFile, name)
+    def __del__(self, destroy= _loris.delete_SpcFile):
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+    def sampleRate(*args): return apply(_loris.SpcFile_sampleRate,args)
+    def midiNoteNumber(*args): return apply(_loris.SpcFile_midiNoteNumber,args)
+    def addPartial(*args): return apply(_loris.SpcFile_addPartial,args)
+    def setMidiNoteNumber(*args): return apply(_loris.SpcFile_setMidiNoteNumber,args)
+    def setSampleRate(*args): return apply(_loris.SpcFile_setSampleRate,args)
+    def write(*args): return apply(_loris.SpcFile_write,args)
+    def __init__(self,*args):
+        _swig_setattr(self, SpcFile, 'this', apply(_loris.new_SpcFile,args))
+        _swig_setattr(self, SpcFile, 'thisown', 1)
+    def addPartials(*args): return apply(_loris.SpcFile_addPartials,args)
+    def numMarkers(*args): return apply(_loris.SpcFile_numMarkers,args)
+    def getMarker(*args): return apply(_loris.SpcFile_getMarker,args)
+    def removeMarker(*args): return apply(_loris.SpcFile_removeMarker,args)
+    def addMarker(*args): return apply(_loris.SpcFile_addMarker,args)
+    def __repr__(self):
+        return "<C SpcFile instance at %s>" % (self.this,)
+
+class SpcFilePtr(SpcFile):
+    def __init__(self,this):
+        _swig_setattr(self, SpcFile, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, SpcFile, 'thisown', 0)
+        _swig_setattr(self, SpcFile,self.__class__,SpcFile)
+_loris.SpcFile_swigregister(SpcFilePtr)
 
 class NewPlistIterator(_object):
     __swig_setmethods__ = {}

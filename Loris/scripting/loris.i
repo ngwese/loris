@@ -565,7 +565,19 @@ void crop( PartialList * partials, double t1, double t2 );
  */
 
 void removeLabeled( PartialList * partials, long label );
-/*  Remove from a PartialList Partials having the specified label.
+/*  Remove from a PartialList all Partials having the specified label.
+ */
+
+void resample( PartialList * partials, double interval );
+/*  Resample all Partials in a PartialList using the specified
+	sampling interval, so that the Breakpoints in the Partial 
+	envelopes will all lie on a common temporal grid.
+	The Breakpoint times in resampled Partials will comprise a  
+	contiguous sequence of integer multiples of the sampling interval,
+	beginning with the multiple nearest to the Partial's start time and
+	ending with the multiple nearest to the Partial's end time. Resampling
+	is performed in-place. 
+
  */
  
 void scaleAmp( PartialList * partials, BreakpointEnvelope * ampEnv );
@@ -638,23 +650,17 @@ void shiftTime( PartialList * partials, double offset );
 	constant amount.
  */
 
-void resample( PartialList * partials, double interval );
-/*  Resample all Partials in a PartialList using the specified
-	sampling interval, so that the Breakpoints in the Partial 
-	envelopes will all lie on a common temporal grid.
-	The Breakpoint times in resampled Partials will comprise a  
-	contiguous sequence of integer multiples of the sampling interval,
-	beginning with the multiple nearest to the Partial's start time and
-	ending with the multiple nearest to the Partial's end time. Resampling
-	is performed in-place. 
-
- */
-
 void sift( PartialList * partials );
 /*  Eliminate overlapping Partials having the same label
 	(except zero). If any two partials with same label
    	overlap in time, keep only the longer of the two.
    	Set the label of the shorter duration partial to zero.
+ */
+
+void sortByLabel( PartialList * partials );
+/*	Sort the Partials in a PartialList in order of increasing label.
+ 	The sort is stable; Partials having the same label are not 
+ 	reordered.
  */
 
 %inline %{
@@ -1229,6 +1235,175 @@ public:
 	}	
 };	//	end of class SdifFile
 
+// ---------------------------------------------------------------------------
+//	class SpcFile
+//
+//	Class SpcFile represents a collection of reassigned bandwidth-enhanced
+//	Partial data in a SPC-format envelope stream data file, used by the
+//	real-time bandwidth-enhanced additive synthesizer implemented on the
+//	Symbolic Sound Kyma Sound Design Workstation. Class SpcFile manages 
+//	file I/O and conversion between Partials and envelope parameter streams.
+//	
+%{
+	#include<SpcFile.h>
+%}
+
+%newobject SpcFile::partials;
+%exception SpcFile::getMarker
+{
+	try
+	{
+		$action
+	}
+	catch ( InvalidArgument & ex )
+	{
+		SWIG_exception(SWIG_ValueError, ex.what() );
+	}
+}
+%exception SpcFile::removeMarker
+{
+	try
+	{
+		$action
+	}
+	catch ( InvalidArgument & ex )
+	{
+		SWIG_exception(SWIG_ValueError, ex.what() );
+	}
+}
+
+
+class SpcFile
+{
+public:
+	SpcFile( const char * filename );
+	/*	Initialize an instance of SpcFile by importing envelope parameter 
+		streams from the file having the specified filename or path.
+	*/
+	
+	SpcFile( double midiNoteNum = 60 );
+	/*	Initialize an instance of SpcFile having the specified fractional
+		MIDI note number, and no Partials (or envelope parameter streams). 
+	*/
+
+	~SpcFile( void );
+	
+	double sampleRate( void ) const;
+	double midiNoteNumber( void ) const;
+
+	void addPartial( const Loris::Partial & p );
+	/*	Add the specified Partial to the enevelope parameter streams
+		represented by this SpcFile. 
+		
+		A SpcFile can contain only one Partial having any given (non-zero) 
+		label, so an added Partial will replace a Partial having the 
+		same label, if such a Partial exists.
+
+		This may throw an InvalidArgument exception if an attempt is made
+		to add unlabeled Partials, or Partials labeled higher than the
+		allowable maximum.
+	 */
+	 
+	void addPartial( const Loris::Partial & p, int label );
+	/*	Add a Partial, assigning it the specified label (and position in the
+		Spc data).
+		
+		A SpcFile can contain only one Partial having any given (non-zero) 
+		label, so an added Partial will replace a Partial having the 
+		same label, if such a Partial exists.
+
+		This may throw an InvalidArgument exception if an attempt is made
+		to add unlabeled Partials, or Partials labeled higher than the
+		allowable maximum.
+	 */
+
+	void setMidiNoteNumber( double nn );
+	/*	Set the fractional MIDI note number assigned to this SpcFile. 
+		If the sound has no definable pitch, use note number 60.0 (the default).
+	 */
+	 
+	void setSampleRate( double rate );
+	/*	Set the sampling freqency in Hz for the spc data in this
+		SpcFile. This is the rate at which Kyma must be running to ensure
+		proper playback of bandwidth-enhanced Spc data.
+		
+		The default sample rate is 44100 Hz.
+	*/
+			 
+	void write( const char * filename, bool enhanced = true,
+				double endApproachTime = 0 );
+	/*	Export the envelope parameter streams represented by this SpcFile to
+		the file having the specified filename or path. Export phase-correct 
+		bandwidth-enhanced envelope parameter streams if enhanced is true 
+		(the default), or pure sinsoidal streams otherwise.
+	
+		A nonzero endApproachTime indicates that the Partials do not include a
+		release or decay, but rather end in a static spectrum corresponding to the
+		final Breakpoint values of the partials. The endApproachTime specifies how
+		long before the end of the sound the amplitude, frequency, and bandwidth
+		values are to be modified to make a gradual transition to the static spectrum.
+		
+		If the endApproachTime is not specified, it is assumed to be zero, 
+		corresponding to Partials that decay or release normally.
+	*/
+	
+	%extend 
+	{
+		SpcFile( PartialList * l, double midiNoteNum = 60 ) 
+		{
+			return new SpcFile( l->begin(), l->end(), midiNoteNum );
+		}
+		/*	Initialize an instance of SpcFile with copies of the Partials
+			on the specified half-open (STL-style) range.
+	
+			If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
+			only PartialList::const_iterator arguments.
+		*/
+	
+		//	add a PartialList of Partials:
+		void addPartials( PartialList * l )
+		{
+			self->addPartials( l->begin(), l->end() );
+		}
+		/*	Add all Partials on the specified half-open (STL-style) range
+			to the enevelope parameter streams represented by this SpcFile. 
+			
+			A SpcFile can contain only one Partial having any given (non-zero) 
+			label, so an added Partial will replace a Partial having the 
+			same label, if such a Partial exists.
+	
+			This may throw an InvalidArgument exception if an attempt is made
+			to add unlabeled Partials, or Partials labeled higher than the
+			allowable maximum.
+		 */
+		 
+		 //	add members to access Markers
+		 int numMarkers( void ) { return self->markers().size(); }
+		 
+		 Marker & getMarker( int i )
+		 {
+		 	if ( i < 0 || i >= self->markers().size() )
+		 	{
+		 		Throw( InvalidArgument, "Marker index out of range." );
+		 	}
+		 	return self->markers()[i];
+		 }
+		 
+		 void removeMarker( int i )
+		 {
+		 	if ( i < 0 || i >= self->markers().size() )
+		 	{
+		 		Throw( InvalidArgument, "Marker index out of range." );
+		 	}
+		 	self->markers().erase( self->markers().begin() + i );
+		 }
+		 
+		 void addMarker( Marker m )
+		 {
+		 	self->markers().push_back( m );
+		 }
+	}	
+};	//	end of class SpcFile
 
 // ----------------------------------------------------------------
 //		wrap PartialList classes

@@ -573,22 +573,23 @@ static void _swig_create_magic(CPerlObj *pPerl, SV *sv, const char *name, int (C
 /* -------- TYPES TABLE (BEGIN) -------- */
 
 #define  SWIGTYPE_p_PartialList swig_types[0] 
-#define  SWIGTYPE_p_Breakpoint swig_types[1] 
-#define  SWIGTYPE_p_Analyzer swig_types[2] 
-#define  SWIGTYPE_p_double swig_types[3] 
-#define  SWIGTYPE_p_Partial swig_types[4] 
-#define  SWIGTYPE_p_Loris__Partial swig_types[5] 
-#define  SWIGTYPE_p_BreakpointEnvelope swig_types[6] 
-#define  SWIGTYPE_p_BreakpointPosition swig_types[7] 
-#define  SWIGTYPE_p_AiffFile swig_types[8] 
-#define  SWIGTYPE_p_SampleVector swig_types[9] 
-#define  SWIGTYPE_p_SdifFile swig_types[10] 
-#define  SWIGTYPE_p_PartialListIterator swig_types[11] 
+#define  SWIGTYPE_p_SpcFile swig_types[1] 
+#define  SWIGTYPE_p_Breakpoint swig_types[2] 
+#define  SWIGTYPE_p_Analyzer swig_types[3] 
+#define  SWIGTYPE_p_double swig_types[4] 
+#define  SWIGTYPE_p_Partial swig_types[5] 
+#define  SWIGTYPE_p_Loris__Partial swig_types[6] 
+#define  SWIGTYPE_p_BreakpointEnvelope swig_types[7] 
+#define  SWIGTYPE_p_BreakpointPosition swig_types[8] 
+#define  SWIGTYPE_p_AiffFile swig_types[9] 
+#define  SWIGTYPE_p_SampleVector swig_types[10] 
+#define  SWIGTYPE_p_SdifFile swig_types[11] 
 #define  SWIGTYPE_p_NewPartialIterator swig_types[12] 
 #define  SWIGTYPE_p_NewPlistIterator swig_types[13] 
 #define  SWIGTYPE_p_Marker swig_types[14] 
-#define  SWIGTYPE_p_PartialIterator swig_types[15] 
-static swig_type_info *swig_types[17];
+#define  SWIGTYPE_p_PartialListIterator swig_types[15] 
+#define  SWIGTYPE_p_PartialIterator swig_types[16] 
+static swig_type_info *swig_types[18];
 
 /* -------- TYPES TABLE (END) -------- */
 
@@ -1014,6 +1015,33 @@ void SdifFile_removeMarker(SdifFile *self,int i){
 		 	self->markers().erase( self->markers().begin() + i );
 		 }
 void SdifFile_addMarker(SdifFile *self,Marker m){
+		 	self->markers().push_back( m );
+		 }
+
+	#include<SpcFile.h>
+
+SpcFile *new_SpcFile__SWIG_2(PartialList *l,double midiNoteNum){
+			return new SpcFile( l->begin(), l->end(), midiNoteNum );
+		}
+void SpcFile_addPartials(SpcFile *self,PartialList *l){
+			self->addPartials( l->begin(), l->end() );
+		}
+int SpcFile_numMarkers(SpcFile *self){ return self->markers().size(); }
+Marker &SpcFile_getMarker(SpcFile *self,int i){
+		 	if ( i < 0 || i >= self->markers().size() )
+		 	{
+		 		Throw( InvalidArgument, "Marker index out of range." );
+		 	}
+		 	return self->markers()[i];
+		 }
+void SpcFile_removeMarker(SpcFile *self,int i){
+		 	if ( i < 0 || i >= self->markers().size() )
+		 	{
+		 		Throw( InvalidArgument, "Marker index out of range." );
+		 	}
+		 	self->markers().erase( self->markers().begin() + i );
+		 }
+void SpcFile_addMarker(SpcFile *self,Marker m){
 		 	self->markers().push_back( m );
 		 }
 
@@ -2037,6 +2065,44 @@ XS(_wrap_removeLabeled) {
 }
 
 
+XS(_wrap_resample) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        PartialList *arg1 = (PartialList *) 0 ;
+        double arg2 ;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 2) || (items > 2)) {
+            SWIG_croak("Usage: resample(partials,interval);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialList,0) < 0) {
+                SWIG_croak("Type error in argument 1 of resample. Expected _p_PartialList");
+            }
+        }
+        arg2 = (double) SvNV(ST(1));
+        
+        {
+            char * err;
+            clear_exception();
+            resample(arg1,arg2);
+            
+            if ((err = check_exception()))
+            {
+                SWIG_exception( SWIG_ValueError, err );
+            }
+        }
+        
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
 XS(_wrap_scaleAmp__SWIG_0) {
     char _swigmsg[SWIG_MAX_ERRMSG] = "";
     const char *_swigerr = _swigmsg;
@@ -2730,44 +2796,6 @@ XS(_wrap_shiftTime) {
 }
 
 
-XS(_wrap_resample) {
-    char _swigmsg[SWIG_MAX_ERRMSG] = "";
-    const char *_swigerr = _swigmsg;
-    {
-        PartialList *arg1 = (PartialList *) 0 ;
-        double arg2 ;
-        int argvi = 0;
-        dXSARGS;
-        
-        if ((items < 2) || (items > 2)) {
-            SWIG_croak("Usage: resample(partials,interval);");
-        }
-        {
-            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialList,0) < 0) {
-                SWIG_croak("Type error in argument 1 of resample. Expected _p_PartialList");
-            }
-        }
-        arg2 = (double) SvNV(ST(1));
-        
-        {
-            char * err;
-            clear_exception();
-            resample(arg1,arg2);
-            
-            if ((err = check_exception()))
-            {
-                SWIG_exception( SWIG_ValueError, err );
-            }
-        }
-        
-        XSRETURN(argvi);
-        fail:
-        (void) _swigerr;
-    }
-    croak(_swigerr);
-}
-
-
 XS(_wrap_sift) {
     char _swigmsg[SWIG_MAX_ERRMSG] = "";
     const char *_swigerr = _swigmsg;
@@ -2788,6 +2816,41 @@ XS(_wrap_sift) {
             char * err;
             clear_exception();
             sift(arg1);
+            
+            if ((err = check_exception()))
+            {
+                SWIG_exception( SWIG_ValueError, err );
+            }
+        }
+        
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_sortByLabel) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        PartialList *arg1 = (PartialList *) 0 ;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 1) || (items > 1)) {
+            SWIG_croak("Usage: sortByLabel(partials);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialList,0) < 0) {
+                SWIG_croak("Type error in argument 1 of sortByLabel. Expected _p_PartialList");
+            }
+        }
+        {
+            char * err;
+            clear_exception();
+            sortByLabel(arg1);
             
             if ((err = check_exception()))
             {
@@ -6679,6 +6742,904 @@ XS(_wrap_SdifFile_addMarker) {
             try
             {
                 SdifFile_addMarker(arg1,arg2);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_new_SpcFile__SWIG_0) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        char *arg1 ;
+        SpcFile *result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 1) || (items > 1)) {
+            SWIG_croak("Usage: new_SpcFile(filename);");
+        }
+        if (!SvOK((SV*) ST(0))) arg1 = 0;
+        else arg1 = (char *) SvPV(ST(0), PL_na);
+        {
+            try
+            {
+                result = (SpcFile *)new SpcFile((char const *)arg1);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_SpcFile,0);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_new_SpcFile__SWIG_1) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        double arg1 = (double) 60 ;
+        SpcFile *result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 0) || (items > 1)) {
+            SWIG_croak("Usage: new_SpcFile(midiNoteNum);");
+        }
+        if (items > 0) {
+            arg1 = (double) SvNV(ST(0));
+            
+        }
+        {
+            try
+            {
+                result = (SpcFile *)new SpcFile(arg1);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_SpcFile,0);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_delete_SpcFile) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        SpcFile *arg1 = (SpcFile *) 0 ;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 1) || (items > 1)) {
+            SWIG_croak("Usage: delete_SpcFile(self);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_SpcFile,0) < 0) {
+                SWIG_croak("Type error in argument 1 of delete_SpcFile. Expected _p_SpcFile");
+            }
+        }
+        {
+            try
+            {
+                delete arg1;
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_SpcFile_sampleRate) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        SpcFile *arg1 = (SpcFile *) 0 ;
+        double result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 1) || (items > 1)) {
+            SWIG_croak("Usage: SpcFile_sampleRate(self);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_SpcFile,0) < 0) {
+                SWIG_croak("Type error in argument 1 of SpcFile_sampleRate. Expected _p_SpcFile");
+            }
+        }
+        {
+            try
+            {
+                result = (double)((SpcFile const *)arg1)->sampleRate();
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        sv_setnv(ST(argvi++), (double) result);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_SpcFile_midiNoteNumber) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        SpcFile *arg1 = (SpcFile *) 0 ;
+        double result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 1) || (items > 1)) {
+            SWIG_croak("Usage: SpcFile_midiNoteNumber(self);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_SpcFile,0) < 0) {
+                SWIG_croak("Type error in argument 1 of SpcFile_midiNoteNumber. Expected _p_SpcFile");
+            }
+        }
+        {
+            try
+            {
+                result = (double)((SpcFile const *)arg1)->midiNoteNumber();
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        sv_setnv(ST(argvi++), (double) result);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_SpcFile_addPartial__SWIG_0) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        SpcFile *arg1 = (SpcFile *) 0 ;
+        Loris::Partial *arg2 = 0 ;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 2) || (items > 2)) {
+            SWIG_croak("Usage: SpcFile_addPartial(self,p);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_SpcFile,0) < 0) {
+                SWIG_croak("Type error in argument 1 of SpcFile_addPartial. Expected _p_SpcFile");
+            }
+        }
+        {
+            if (SWIG_ConvertPtr(ST(1), (void **) &arg2, SWIGTYPE_p_Loris__Partial,0) < 0) {
+                SWIG_croak("Type error in argument 2 of SpcFile_addPartial. Expected _p_Loris__Partial");
+            }
+        }
+        {
+            try
+            {
+                (arg1)->addPartial((Loris::Partial const &)*arg2);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_SpcFile_addPartial__SWIG_1) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        SpcFile *arg1 = (SpcFile *) 0 ;
+        Loris::Partial *arg2 = 0 ;
+        int arg3 ;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 3) || (items > 3)) {
+            SWIG_croak("Usage: SpcFile_addPartial(self,p,label);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_SpcFile,0) < 0) {
+                SWIG_croak("Type error in argument 1 of SpcFile_addPartial. Expected _p_SpcFile");
+            }
+        }
+        {
+            if (SWIG_ConvertPtr(ST(1), (void **) &arg2, SWIGTYPE_p_Loris__Partial,0) < 0) {
+                SWIG_croak("Type error in argument 2 of SpcFile_addPartial. Expected _p_Loris__Partial");
+            }
+        }
+        arg3 = (int) SvIV(ST(2));
+        {
+            try
+            {
+                (arg1)->addPartial((Loris::Partial const &)*arg2,arg3);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_SpcFile_addPartial) {
+    dXSARGS;
+    
+    if (items == 2) {
+        int _v;
+        {
+            void *tmp;
+            if (SWIG_ConvertPtr(ST(0), (void **) &tmp, SWIGTYPE_p_SpcFile, 0) == -1) {
+                _v = 0;
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *tmp;
+                if (SWIG_ConvertPtr(ST(1), (void **) &tmp, SWIGTYPE_p_Loris__Partial, 0) == -1) {
+                    _v = 0;
+                }else {
+                    _v = 1;
+                }
+            }
+            if (_v) {
+                (*PL_markstack_ptr++);SWIG_CALLXS(_wrap_SpcFile_addPartial__SWIG_0); return;
+            }
+        }
+    }
+    if (items == 3) {
+        int _v;
+        {
+            void *tmp;
+            if (SWIG_ConvertPtr(ST(0), (void **) &tmp, SWIGTYPE_p_SpcFile, 0) == -1) {
+                _v = 0;
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *tmp;
+                if (SWIG_ConvertPtr(ST(1), (void **) &tmp, SWIGTYPE_p_Loris__Partial, 0) == -1) {
+                    _v = 0;
+                }else {
+                    _v = 1;
+                }
+            }
+            if (_v) {
+                {
+                    _v = SvIOK(ST(2)) ? 1 : 0;
+                }
+                if (_v) {
+                    (*PL_markstack_ptr++);SWIG_CALLXS(_wrap_SpcFile_addPartial__SWIG_1); return;
+                }
+            }
+        }
+    }
+    
+    croak("No matching function for overloaded 'SpcFile_addPartial'");
+    XSRETURN(0);
+}
+
+
+XS(_wrap_SpcFile_setMidiNoteNumber) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        SpcFile *arg1 = (SpcFile *) 0 ;
+        double arg2 ;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 2) || (items > 2)) {
+            SWIG_croak("Usage: SpcFile_setMidiNoteNumber(self,nn);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_SpcFile,0) < 0) {
+                SWIG_croak("Type error in argument 1 of SpcFile_setMidiNoteNumber. Expected _p_SpcFile");
+            }
+        }
+        arg2 = (double) SvNV(ST(1));
+        
+        {
+            try
+            {
+                (arg1)->setMidiNoteNumber(arg2);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_SpcFile_setSampleRate) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        SpcFile *arg1 = (SpcFile *) 0 ;
+        double arg2 ;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 2) || (items > 2)) {
+            SWIG_croak("Usage: SpcFile_setSampleRate(self,rate);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_SpcFile,0) < 0) {
+                SWIG_croak("Type error in argument 1 of SpcFile_setSampleRate. Expected _p_SpcFile");
+            }
+        }
+        arg2 = (double) SvNV(ST(1));
+        
+        {
+            try
+            {
+                (arg1)->setSampleRate(arg2);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_SpcFile_write) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        SpcFile *arg1 = (SpcFile *) 0 ;
+        char *arg2 ;
+        bool arg3 = (bool) true ;
+        double arg4 = (double) 0 ;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 2) || (items > 4)) {
+            SWIG_croak("Usage: SpcFile_write(self,filename,enhanced,endApproachTime);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_SpcFile,0) < 0) {
+                SWIG_croak("Type error in argument 1 of SpcFile_write. Expected _p_SpcFile");
+            }
+        }
+        if (!SvOK((SV*) ST(1))) arg2 = 0;
+        else arg2 = (char *) SvPV(ST(1), PL_na);
+        if (items > 2) {
+            arg3 = (bool) SvIV(ST(2));
+        }
+        if (items > 3) {
+            arg4 = (double) SvNV(ST(3));
+            
+        }
+        {
+            try
+            {
+                (arg1)->write((char const *)arg2,arg3,arg4);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_new_SpcFile__SWIG_2) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        PartialList *arg1 = (PartialList *) 0 ;
+        double arg2 = (double) 60 ;
+        SpcFile *result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 1) || (items > 2)) {
+            SWIG_croak("Usage: new_SpcFile(l,midiNoteNum);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_PartialList,0) < 0) {
+                SWIG_croak("Type error in argument 1 of new_SpcFile. Expected _p_PartialList");
+            }
+        }
+        if (items > 1) {
+            arg2 = (double) SvNV(ST(1));
+            
+        }
+        {
+            try
+            {
+                result = (SpcFile *)new_SpcFile__SWIG_2(arg1,arg2);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_SpcFile,0);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_new_SpcFile) {
+    dXSARGS;
+    
+    if ((items >= 0) && (items <= 1)) {
+        int _v;
+        if (items <= 0) {
+            (*PL_markstack_ptr++);SWIG_CALLXS(_wrap_new_SpcFile__SWIG_1); return;
+        }
+        {
+            _v = SvNOK(ST(0)) ? 1 : 0;
+        }
+        if (_v) {
+            (*PL_markstack_ptr++);SWIG_CALLXS(_wrap_new_SpcFile__SWIG_1); return;
+        }
+    }
+    if ((items >= 1) && (items <= 2)) {
+        int _v;
+        {
+            void *tmp;
+            if (SWIG_ConvertPtr(ST(0), (void **) &tmp, SWIGTYPE_p_PartialList, 0) == -1) {
+                _v = 0;
+            }else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            if (items <= 1) {
+                (*PL_markstack_ptr++);SWIG_CALLXS(_wrap_new_SpcFile__SWIG_2); return;
+            }
+            {
+                _v = SvNOK(ST(1)) ? 1 : 0;
+            }
+            if (_v) {
+                (*PL_markstack_ptr++);SWIG_CALLXS(_wrap_new_SpcFile__SWIG_2); return;
+            }
+        }
+    }
+    if (items == 1) {
+        int _v;
+        {
+            _v = SvPOK(ST(0)) ? 1 : 0;
+        }
+        if (_v) {
+            (*PL_markstack_ptr++);SWIG_CALLXS(_wrap_new_SpcFile__SWIG_0); return;
+        }
+    }
+    
+    croak("No matching function for overloaded 'new_SpcFile'");
+    XSRETURN(0);
+}
+
+
+XS(_wrap_SpcFile_addPartials) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        SpcFile *arg1 = (SpcFile *) 0 ;
+        PartialList *arg2 = (PartialList *) 0 ;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 2) || (items > 2)) {
+            SWIG_croak("Usage: SpcFile_addPartials(self,l);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_SpcFile,0) < 0) {
+                SWIG_croak("Type error in argument 1 of SpcFile_addPartials. Expected _p_SpcFile");
+            }
+        }
+        {
+            if (SWIG_ConvertPtr(ST(1), (void **) &arg2, SWIGTYPE_p_PartialList,0) < 0) {
+                SWIG_croak("Type error in argument 2 of SpcFile_addPartials. Expected _p_PartialList");
+            }
+        }
+        {
+            try
+            {
+                SpcFile_addPartials(arg1,arg2);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_SpcFile_numMarkers) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        SpcFile *arg1 = (SpcFile *) 0 ;
+        int result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 1) || (items > 1)) {
+            SWIG_croak("Usage: SpcFile_numMarkers(self);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_SpcFile,0) < 0) {
+                SWIG_croak("Type error in argument 1 of SpcFile_numMarkers. Expected _p_SpcFile");
+            }
+        }
+        {
+            try
+            {
+                result = (int)SpcFile_numMarkers(arg1);
+                
+            }
+            catch( Loris::Exception & ex ) 
+            {
+                //	catch Loris::Exceptions:
+                std::string s("Loris exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+            catch( std::exception & ex ) 
+            {
+                //	catch std::exceptions:
+                std::string s("std C++ exception: " );
+                s.append( ex.what() );
+                SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        sv_setiv(ST(argvi++), (IV) result);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_SpcFile_getMarker) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        SpcFile *arg1 = (SpcFile *) 0 ;
+        int arg2 ;
+        Marker *result;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 2) || (items > 2)) {
+            SWIG_croak("Usage: SpcFile_getMarker(self,i);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_SpcFile,0) < 0) {
+                SWIG_croak("Type error in argument 1 of SpcFile_getMarker. Expected _p_SpcFile");
+            }
+        }
+        arg2 = (int) SvIV(ST(1));
+        {
+            try
+            {
+                {
+                    Marker &_result_ref = SpcFile_getMarker(arg1,arg2);
+                    result = (Marker *) &_result_ref;
+                }
+                
+            }
+            catch ( InvalidArgument & ex )
+            {
+                SWIG_exception(SWIG_ValueError, ex.what() );
+            }
+        }
+        ST(argvi) = sv_newmortal();
+        SWIG_MakePtr(ST(argvi++), (void *) result, SWIGTYPE_p_Marker,0);
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_SpcFile_removeMarker) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        SpcFile *arg1 = (SpcFile *) 0 ;
+        int arg2 ;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 2) || (items > 2)) {
+            SWIG_croak("Usage: SpcFile_removeMarker(self,i);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_SpcFile,0) < 0) {
+                SWIG_croak("Type error in argument 1 of SpcFile_removeMarker. Expected _p_SpcFile");
+            }
+        }
+        arg2 = (int) SvIV(ST(1));
+        {
+            try
+            {
+                SpcFile_removeMarker(arg1,arg2);
+                
+            }
+            catch ( InvalidArgument & ex )
+            {
+                SWIG_exception(SWIG_ValueError, ex.what() );
+            }
+        }
+        
+        XSRETURN(argvi);
+        fail:
+        (void) _swigerr;
+    }
+    croak(_swigerr);
+}
+
+
+XS(_wrap_SpcFile_addMarker) {
+    char _swigmsg[SWIG_MAX_ERRMSG] = "";
+    const char *_swigerr = _swigmsg;
+    {
+        SpcFile *arg1 = (SpcFile *) 0 ;
+        Marker arg2 ;
+        int argvi = 0;
+        dXSARGS;
+        
+        if ((items < 2) || (items > 2)) {
+            SWIG_croak("Usage: SpcFile_addMarker(self,m);");
+        }
+        {
+            if (SWIG_ConvertPtr(ST(0), (void **) &arg1, SWIGTYPE_p_SpcFile,0) < 0) {
+                SWIG_croak("Type error in argument 1 of SpcFile_addMarker. Expected _p_SpcFile");
+            }
+        }
+        {
+            Marker * argp;
+            if (SWIG_ConvertPtr(ST(1),(void **) &argp, SWIGTYPE_p_Marker,0) < 0) {
+                SWIG_croak("Type error in argument 2 of SpcFile_addMarker. Expected _p_Marker");
+            }
+            arg2 = *argp;
+        }
+        {
+            try
+            {
+                SpcFile_addMarker(arg1,arg2);
                 
             }
             catch( Loris::Exception & ex ) 
@@ -11416,6 +12377,7 @@ XS(_wrap_delete_PartialListIterator) {
 /* -------- TYPE CONVERSION AND EQUIVALENCE RULES (BEGIN) -------- */
 
 static swig_type_info _swigt__p_PartialList[] = {{"_p_PartialList", 0, "PartialList *", 0},{"_p_PartialList"},{0}};
+static swig_type_info _swigt__p_SpcFile[] = {{"_p_SpcFile", 0, "SpcFile *", 0},{"_p_SpcFile"},{0}};
 static swig_type_info _swigt__p_Breakpoint[] = {{"_p_Breakpoint", 0, "Breakpoint *", 0},{"_p_Breakpoint"},{0}};
 static swig_type_info _swigt__p_Analyzer[] = {{"_p_Analyzer", 0, "Analyzer *", 0},{"_p_Analyzer"},{0}};
 static swig_type_info _swigt__p_double[] = {{"_p_double", 0, "double *", 0},{"_p_double"},{0}};
@@ -11426,14 +12388,15 @@ static swig_type_info _swigt__p_BreakpointPosition[] = {{"_p_BreakpointPosition"
 static swig_type_info _swigt__p_AiffFile[] = {{"_p_AiffFile", 0, "AiffFile *", 0},{"_p_AiffFile"},{0}};
 static swig_type_info _swigt__p_SampleVector[] = {{"_p_SampleVector", 0, "SampleVector *", 0},{"_p_SampleVector"},{0}};
 static swig_type_info _swigt__p_SdifFile[] = {{"_p_SdifFile", 0, "SdifFile *", 0},{"_p_SdifFile"},{0}};
-static swig_type_info _swigt__p_PartialListIterator[] = {{"_p_PartialListIterator", 0, "PartialListIterator *", 0},{"_p_PartialListIterator"},{0}};
 static swig_type_info _swigt__p_NewPartialIterator[] = {{"_p_NewPartialIterator", 0, "NewPartialIterator *", 0},{"_p_NewPartialIterator"},{0}};
 static swig_type_info _swigt__p_NewPlistIterator[] = {{"_p_NewPlistIterator", 0, "NewPlistIterator *", 0},{"_p_NewPlistIterator"},{0}};
 static swig_type_info _swigt__p_Marker[] = {{"_p_Marker", 0, "Marker *", 0},{"_p_Marker"},{0}};
+static swig_type_info _swigt__p_PartialListIterator[] = {{"_p_PartialListIterator", 0, "PartialListIterator *", 0},{"_p_PartialListIterator"},{0}};
 static swig_type_info _swigt__p_PartialIterator[] = {{"_p_PartialIterator", 0, "PartialIterator *", 0},{"_p_PartialIterator"},{0}};
 
 static swig_type_info *swig_types_initial[] = {
 _swigt__p_PartialList, 
+_swigt__p_SpcFile, 
 _swigt__p_Breakpoint, 
 _swigt__p_Analyzer, 
 _swigt__p_double, 
@@ -11444,10 +12407,10 @@ _swigt__p_BreakpointPosition,
 _swigt__p_AiffFile, 
 _swigt__p_SampleVector, 
 _swigt__p_SdifFile, 
-_swigt__p_PartialListIterator, 
 _swigt__p_NewPartialIterator, 
 _swigt__p_NewPlistIterator, 
 _swigt__p_Marker, 
+_swigt__p_PartialListIterator, 
 _swigt__p_PartialIterator, 
 0
 };
@@ -11480,14 +12443,15 @@ static swig_command_info swig_commands[] = {
 {"perLoris::copyLabeled", _wrap_copyLabeled},
 {"perLoris::extractLabeled", _wrap_extractLabeled},
 {"perLoris::removeLabeled", _wrap_removeLabeled},
+{"perLoris::resample", _wrap_resample},
 {"perLoris::scaleAmp", _wrap_scaleAmp},
 {"perLoris::scaleBandwidth", _wrap_scaleBandwidth},
 {"perLoris::scaleFrequency", _wrap_scaleFrequency},
 {"perLoris::scaleNoiseRatio", _wrap_scaleNoiseRatio},
 {"perLoris::shiftPitch", _wrap_shiftPitch},
 {"perLoris::shiftTime", _wrap_shiftTime},
-{"perLoris::resample", _wrap_resample},
 {"perLoris::sift", _wrap_sift},
+{"perLoris::sortByLabel", _wrap_sortByLabel},
 {"perLoris::version", _wrap_version},
 {"perLoris::new_Marker", _wrap_new_Marker},
 {"perLoris::Marker_name", _wrap_Marker_name},
@@ -11556,6 +12520,19 @@ static swig_command_info swig_commands[] = {
 {"perLoris::SdifFile_getMarker", _wrap_SdifFile_getMarker},
 {"perLoris::SdifFile_removeMarker", _wrap_SdifFile_removeMarker},
 {"perLoris::SdifFile_addMarker", _wrap_SdifFile_addMarker},
+{"perLoris::delete_SpcFile", _wrap_delete_SpcFile},
+{"perLoris::SpcFile_sampleRate", _wrap_SpcFile_sampleRate},
+{"perLoris::SpcFile_midiNoteNumber", _wrap_SpcFile_midiNoteNumber},
+{"perLoris::SpcFile_addPartial", _wrap_SpcFile_addPartial},
+{"perLoris::SpcFile_setMidiNoteNumber", _wrap_SpcFile_setMidiNoteNumber},
+{"perLoris::SpcFile_setSampleRate", _wrap_SpcFile_setSampleRate},
+{"perLoris::SpcFile_write", _wrap_SpcFile_write},
+{"perLoris::new_SpcFile", _wrap_new_SpcFile},
+{"perLoris::SpcFile_addPartials", _wrap_SpcFile_addPartials},
+{"perLoris::SpcFile_numMarkers", _wrap_SpcFile_numMarkers},
+{"perLoris::SpcFile_getMarker", _wrap_SpcFile_getMarker},
+{"perLoris::SpcFile_removeMarker", _wrap_SpcFile_removeMarker},
+{"perLoris::SpcFile_addMarker", _wrap_SpcFile_addMarker},
 {"perLoris::NewPlistIterator_atEnd", _wrap_NewPlistIterator_atEnd},
 {"perLoris::NewPlistIterator_next", _wrap_NewPlistIterator_next},
 {"perLoris::NewPlistIterator_partial", _wrap_NewPlistIterator_partial},
