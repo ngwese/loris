@@ -34,7 +34,7 @@ if len(sys.argv) > 1:
 else:
 	dirs = farm.keys()
 
-inbkgrnd = '&'
+inbkgrnd = '' # '&'
 
 farmdir = os.getcwd()  #'/net/magoo/users/kfitz/farm'
 def changedir(dir):
