@@ -1,32 +1,33 @@
-Adding bweoscil to Csound:
+Adding lorisgens to Csound:
 
 in entry[1 2].c:
 
 
-#include "bweoscil.h"  //must be included in list of included libraries as top of file
+#include "lorisgens.h"  
+must be included in list of included libraries as top of file
 
 
-void bwes(void*);
+void lorisplay_setup(void*);
+void lorisplay(void*);
+
+must be added to the list of function definitions found after the #include statements
 
 
-and
-
-
-void bwei(void*); //must be added to the list of function definitions found after the #include statements
-
-
-{"bweoscil",  S(BWE),      5,    "a",    "kSkkko",    bwei,     NULL,    bwes    },  //has to be added to the end of thelist of similar statements
+{"lorisplay",  S(LORISPLAY), 5, "a",    "kSkkko", lorisplay_setup, NULL, lorisplay },  
+has to be added to the end of thelist of similar statements
 
 
 in Makefile:
+LORISSRC = lorisgens.C
+
+add $(LORISSRC) to list of sources CSRCS
+
+LORISOBJ = lorisgens.o
+
+add $(LORISOBJ) to list of objects COBJS
 
 
-COBJCORB = bweoscil.o //must be added to the list of objects to be make
-
-(maybe also add to list of sources?)
-
-
-bweoscil.h //must be added to the list of header files to include in the make
+add lorisgens.h to list of headers HDRS
 
 
 also (kel) add loris to include and lib lines

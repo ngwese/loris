@@ -8,7 +8,7 @@ instr 1
 	ktime linseg 0, p3, 3.0	; a linear time vector that just goes from 0 to 3 
 				; sec over the duration of instrument play
 
-	a1 bweoscil ktime, "clarinet.sdif", 1, 1, 1 	; will just play the partials contained
+	a1 lorisplay ktime, "clarinet.sdif", 1, 1, 1 	; will just play the partials contained
 							; within clarinet.sdif straight through
 					     		; from 0 to 3 sec with no fadetime 
 							; and no envelope on the amplitude,
@@ -30,7 +30,7 @@ instr 2
 	kfreqenv expseg 1, p3/2, 1, p3/2, .95 	; frequency envelope
 	kbwenv linseg 1, p3/2, 2, p3/2, 0  	; bandwidth envelope
 
-	a1 bweoscil ktime, "clarinet.sdif", kampenv, kfreqenv, kbwenv, ifadetime  
+	a1 lorisplay ktime, "clarinet.sdif", kampenv, kfreqenv, kbwenv, ifadetime  
 						; plays through the partials over the time vector
 						; ktime created, with the evelopes created and a
 						; partial fade time as given.
@@ -54,7 +54,7 @@ instr 3
 	kvenv linseg	0, idur/6, 0, idur/2, .02, idur/3, 0
 	kvib oscil		kvenv, 4, 1		; table 1, sinusoid
 
-	a1 bweoscil ktime, "clarinet.sdif", 2, ifscale+kvib, 1, ifadetime  
+	a1 lorisplay ktime, "clarinet.sdif", 2, ifscale+kvib, 1, ifadetime  
 
 	a2 atone a1, 1000  
 	out a2
