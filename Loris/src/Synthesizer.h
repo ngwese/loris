@@ -14,10 +14,10 @@
 // ===========================================================================
 
 #include "LorisLib.h"
-#include "Oscillator.h"
+//#include "Oscillator.h"
 #include "PartialIterator.h"
 #include <vector>
-#include <memory> 	//	for auto_ptr
+//#include <memory> 	//	for auto_ptr
 
 Begin_Namespace( Loris )
 
@@ -53,31 +53,30 @@ public:
 	
 	//~Synthesizer( void );	//	use compiler-generated destructor
 	
-	Synthesizer & operator= ( const Synthesizer & other );
+	Synthesizer & operator= ( const Synthesizer & other );	//	 get rid of?
 
 //	access:
 	double sampleRate( void ) const { return _sampleRate; }
-	
+	/*
 	double offset( void ) const { return _offset; }
 	void setOffset( double x ) { _offset = x; }
 	
 	double fadeTime( void ) const { return _fadeTime; }
 	void setFadeTime( double x ) { if (x >= 0.) _fadeTime = x; }
-	
+	*/
 	std::vector< double > & samples( void ) { return _samples; }
 	const std::vector< double > & samples( void ) const { return _samples; }
-	void setSampleBuffer( std::vector< double > & buf ) { _samples = buf; }
+	//void setSampleBuffer( std::vector< double > & buf ) { _samples = buf; }
 
 //	provide Oscillator access like iterator 
-//	access provided by PartialIteratorOwner:	
+/*	access provided by PartialIteratorOwner:	
 	const std::auto_ptr< Oscillator > & oscillator( void ) const { return _oscillator; }
 	std::auto_ptr< Oscillator > 
 	setOscillator( std::auto_ptr< Oscillator > osc = 
 					std::auto_ptr< Oscillator >( new Oscillator() ) ) ;
-
+*/
 //	synthesis:
 	void synthesize( const Partial & p );	
-	void operator()( const Partial & p ) { synthesize( p ); }
 	
 //	-- template member functions for synthesis --
 //
@@ -109,26 +108,23 @@ public:
 			synthesize( *(begin++) );
 		}
 	}
-	
-	template < class Iter >
-	void operator() ( Iter begin, Iter end ) { synthesize( begin, end ); }
 #endif 	//	template members allowed
 
 //	-- private helpers --
 private:
-	inline long synthesizeEnvelopeSegment( long currentSampleOffset );
-	inline long synthesizeFadeIn( long currentSampleOffset );
-	inline long synthesizeFadeOut( long currentSampleOffset );
+	//inline long synthesizeEnvelopeSegment( long currentSampleOffset );
+	//inline long synthesizeFadeIn( long currentSampleOffset );
+	//inline long synthesizeFadeOut( long currentSampleOffset );
 	inline double radianFreq( double hz ) const;
 
 //	-- instance variables --
 	double _sampleRate;		//	in Hz
-	double _offset;			//	time offset for synthesized Partials, in seconds
-	double _fadeTime;		//	default (maximum) fade in/out time for Partials, in seconds
+	//double _offset;			//	time offset for synthesized Partials, in seconds
+	//double _fadeTime;		//	default (maximum) fade in/out time for Partials, in seconds
 	
 	std::vector< double > & _samples;	//	samples are computed and stored here
 	
-	std::auto_ptr< Oscillator > _oscillator;	//	performs the sample computation
+	//std::auto_ptr< Oscillator > _oscillator;	//	performs the sample computation
 	
 };	//	end of class Synthesizer
 

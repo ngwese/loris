@@ -31,13 +31,31 @@ Begin_Namespace( Loris )
 // ---------------------------------------------------------------------------
 //	Oscillator construction
 // ---------------------------------------------------------------------------
-//	Initialize state to something, like zeros.
+//	Initialize state.
 //
+Oscillator::Oscillator( double radf, double a, double bw, double ph /* = 0. */ ) :
+	_frequency( radf ),	//	radians per sample
+	_amplitude( a ),	//	absolute
+	_bandwidth( bw ),	//	bandwidth coefficient (noise energy / total energy)
+	_phase( ph ),		//	radians
+	_filter( Null )
+{
+	//	Chebychev order 3, cutoff 500, ripple -1.
+	static const double filter_gain = 4.663939184e+04;
+	static const double extraScaling = 4.5;	//	was 6.
+	static const double maCoefs[] = { 1., 3., 3., 1. }; 
+	static const double arCoefs[] = { 0., 2.9258684252, -2.8580608586, 0.9320209046 };
+						   
+	_filter = new Filter( maCoefs, maCoefs + 4, 
+						  arCoefs, arCoefs + 4,
+						  extraScaling / filter_gain );
+}
+
 Oscillator::Oscillator( void ) :
-	_frequency( 0. ),	//	radians per sample
-	_amplitude( 0. ),	//	absolute
-	_bandwidth( 0. ),	//	bandwidth coefficient (noise energy / total energy)
-	_phase( 0. ),		//	radians
+	_frequency( 0 ),	//	radians per sample
+	_amplitude( 0 ),	//	absolute
+	_bandwidth( 0 ),	//	bandwidth coefficient (noise energy / total energy)
+	_phase( 0 ),		//	radians
 	_filter( Null )
 {
 	//	Chebychev order 3, cutoff 500, ripple -1.

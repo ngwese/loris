@@ -43,6 +43,7 @@ class Oscillator
 public:
 //	construction:
 	Oscillator( void );
+	Oscillator( double radf, double a, double bw, double ph = 0. );
 	~Oscillator( void );	//	use compiler-generated
 
 //	reset the whole state at once:

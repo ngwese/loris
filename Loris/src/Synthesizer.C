@@ -46,9 +46,9 @@ Begin_Namespace( Loris )
 //
 Synthesizer::Synthesizer( vector< double > & buf, double srate ) :
 	_sampleRate( srate ),
-	_offset( 0.001 ),
-	_fadeTime( 0.001 ),
-	_oscillator( new Oscillator() ),
+	//_offset( 0.001 ),
+	//_fadeTime( 0.001 ),
+	//_oscillator( new Oscillator() ),
 	_samples( buf ),
 	PartialIteratorOwner( PartialIteratorPtr( new SynthesisIterator( srate * 0.5, 0. ) ) )
 {
@@ -68,8 +68,8 @@ Synthesizer::Synthesizer( vector< double > & buf, double srate ) :
 //
 Synthesizer::Synthesizer( const Synthesizer & other ) :
 	_sampleRate( other._sampleRate ),
-	_offset( other._offset ),
-	_fadeTime( other._fadeTime ),
+	//_offset( other._offset ),
+	//_fadeTime( other._fadeTime ),
 	//_oscillator( new Oscillator( * other._oscillator ) ),
 	_samples( other._samples ),
 	PartialIteratorOwner( other )
@@ -87,7 +87,7 @@ Synthesizer::Synthesizer( const Synthesizer & other ) :
 //
 //	Unlike the copy constructor, this Synthesizer gets a copy 
 //	of other's sample buffer. Is this desired?
-//
+/*
 Synthesizer & 
 Synthesizer::operator=( const Synthesizer & other )
 {
@@ -112,7 +112,7 @@ Synthesizer::operator=( const Synthesizer & other )
 	
 	return *this;
 }
-
+*/
 // ---------------------------------------------------------------------------
 //	synthesize
 // ---------------------------------------------------------------------------
@@ -131,59 +131,119 @@ Synthesizer::operator=( const Synthesizer & other )
 void
 Synthesizer::synthesize( const Partial & p )
 {
+	double timeShift = 0.;
 /*
 	debugger << "synthesizing Partial from " << p.startTime() <<
 			" to " << p.endTime() << " starting phase " <<
 			p.initialPhase() << " starting frequency " << 
 			p.begin()->second.frequency() << endl;
 */
-//	don't bother to synthesize Partials having zero duration:
-	if ( p.duration() == 0. )
-		return;
-
-/*
-//	HEY do something better about this.
-	Can't figure out whether this is still a problem...
-
-	//Assert( p.endTime() < _samples.size() / sampleRate() );
-	if ( p.endTime() > _samples.size() / sampleRate() ) {
-		debugger << "found Partial ending at " << p.endTime() 
-					<< " but I only have a buffer of length " << _samples.size();
-		debugger << " Having a go of it anyway." << endl;
-		//return;
-	}
-*/
-		
-//	reset the oscillator:
-//	Remember that the oscillator only knows about radian frequency! Convert!
 	iterator()->reset( p );
-	_oscillator->reset( radianFreq( iterator()->frequency() ), 
-						iterator()->amplitude(), 
-						iterator()->bandwidth(), 
-						iterator()->phase() );
-
-//	initialize sample offset:
-	long bpSampleOffset = (iterator()->time() + offset()) * sampleRate();
 	
-//	synthesize Partial turn-on if necessary and possible;
-	if ( iterator()->amplitude() > 0. ) {
-		synthesizeFadeIn( bpSampleOffset );
+//	don't bother to synthesize Partials having zero duration:
+	if ( iterator()->duration() == 0. || 
+		 iterator()->endTime() + timeShift < 0. ||
+		 (iterator()->startTime() + timeShift) * sampleRate() > _samples.size() )
+	{
+		return;
 	}
-
-//	synthesize linear-frequency segments until there aren't any more:
-	for ( iterator()->advance(); ! iterator()->atEnd(); iterator()->advance() ) {
-		bpSampleOffset = synthesizeEnvelopeSegment( bpSampleOffset );
+	
+//	compute initial values assuming fade-in:
+	const double FADE_TIME = 0.001; 	//	1 ms
+	double itime = iterator()->time() + timeShift - FADE_TIME;
+	double ifreq = iterator()->frequency();
+	double iamp = 0.;
+	double ibw = iterator()->bandwidth();
+	
+	if ( itime < 0. )
+	{
+		//	advance the iterator until it refers
+		//	to a breakpoint past zero:
+		while (iterator()->time() + timeShift < 0.)
+		{
+			itime = iterator()->time() + timeShift;
+			ifreq = iterator()->frequency();
+			iamp = iterator()->amplitude();
+			ibw = iterator()->bandwidth();
+			iterator()->advance();
+		}
 		
-		if ( bpSampleOffset >= _samples.size() )
+		//	compute interpolated initial values:
+		double alpha = - itime / (iterator()->time() + timeShift - itime);
+		ifreq = (alpha * iterator()->frequency()) + ((1.-alpha) * ifreq);
+		iamp = (alpha * iterator()->amplitude()) + ((1.-alpha) * iamp);
+		ibw = (alpha * iterator()->bandwidth()) + ((1.-alpha) * ibw);
+		itime = 0.;
+	}
+	
+//	compute the starting phase:
+	double dsamps = (iterator()->time() + timeShift - itime) * sampleRate();
+	Assert( dsamps >= 0. );
+	double avgfreq = 0.5 * (ifreq + iterator()->frequency());
+	double iphase = iterator()->phase() - (radianFreq(avgfreq) * dsamps);
+		
+//	setup the oscillator:
+//	Remember that the oscillator only knows about radian frequency! Convert!
+	Oscillator osc( radianFreq( ifreq ), iamp, ibw, iphase );
+	
+//	initialize sample timeShift:
+	long curSampleIdx = itime * sampleRate();
+	
+//	synthesize linear-frequency segments until there aren't any more:
+	for ( ; ! iterator()->atEnd(); iterator()->advance() ) 
+	{
+		//	compute target sample index:
+		long tgtsamp = (iterator()->time() + timeShift) * sampleRate();
+		if ( tgtsamp >= _samples.size() )
 			break;
+			
+		//	generate samples:
+		osc.generateSamples( _samples, 
+							 tgtsamp - curSampleIdx, 
+							 curSampleIdx,
+							 radianFreq( iterator()->frequency() ), 
+							 iterator()->amplitude(), 
+							 iterator()->bandwidth() );
+									  
+		//	update the current sample index:
+		curSampleIdx = tgtsamp;
 	}
 
-//	synthesize Partial turn-off if necessary:
-	if ( _oscillator->amplitude() > 0. ) {
-		bpSampleOffset = synthesizeFadeOut( bpSampleOffset );
+//	either ran out of buffer ( tgtsamp >= _sample.size() )
+//	or ran out of Breakpoints ( iterator()->atEnd() )
+//	synthesize Partial turn-off:
+	double tgtradfreq, tgtamp, tgtbw;
+	if ( iterator()->atEnd() ) 
+	{
+		tgtradfreq = osc.radianFreq();
+		tgtamp = 0.;
+		tgtbw = osc.bandwidth();
 	}
+	else
+	{
+		tgtradfreq = radianFreq( iterator()->frequency() );
+		tgtamp = iterator()->amplitude();
+		tgtbw = iterator()->bandwidth();
+	}
+	
+//	interpolate final values:
+	long finalsamp = 
+		std::min( curSampleIdx + long(FADE_TIME * sampleRate()), long(_samples.size()) );
+	double alpha = (finalsamp - curSampleIdx) / (FADE_TIME * sampleRate());
+	tgtradfreq = (alpha * tgtradfreq) + ((1. - alpha) * osc.radianFreq());
+	tgtamp = (alpha * tgtamp) + ((1. - alpha) * osc.amplitude());
+	tgtbw = (alpha * tgtbw) + ((1. - alpha) * osc.bandwidth());
+	
+//	generate samples:
+	osc.generateSamples( _samples, 
+						 finalsamp - curSampleIdx, 
+						 curSampleIdx,
+						 tgtradfreq, 
+						 tgtamp, 
+						 tgtbw );	
 }
 
+#if 0
 // ---------------------------------------------------------------------------
 //	synthesizeEnvelopeSegment
 // ---------------------------------------------------------------------------
@@ -314,6 +374,7 @@ Synthesizer::setOscillator( auto_ptr< Oscillator > osc )
 	_oscillator = osc;
 	return ret;
 }
+#endif
 
 // ---------------------------------------------------------------------------
 //	radianFreq
