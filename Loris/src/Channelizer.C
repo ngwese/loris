@@ -40,6 +40,8 @@
 #include<Partial.h>
 #include<PartialList.h>
 #include<Notifier.h>
+
+#include <cmath>
 #include <memory>
 
 

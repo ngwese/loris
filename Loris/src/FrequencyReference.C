@@ -43,6 +43,7 @@
 #include <PartialList.h>
 
 #include <algorithm>
+#include <cmath>
 
 //	begin namespace
 namespace Loris {
@@ -79,7 +80,7 @@ FrequencyReference::FrequencyReference( PartialList::const_iterator begin,
 #ifdef Loris_Debug
 	debugger << "Finding frequency reference envelope in range " <<
 	debugger << minFreq << " to " << maxFreq << " Hz, from " <<
-	debugger << std::distance(begin,end) << " Partials" << std:: endl;
+	debugger << std::distance(begin,end) << " Partials" << std::endl;
 #endif
 
 	//	find the longest Partial in the specified frequency range:
@@ -122,7 +123,7 @@ FrequencyReference::FrequencyReference( PartialList::const_iterator begin,
 #ifdef Loris_Debug
 	debugger << "Finding frequency reference envelope in range " <<
 	debugger << minFreq << " to " << maxFreq << " Hz, from " <<
-	debugger << std::distance(begin,end) << " Partials" << std:: endl;
+	debugger << std::distance(begin,end) << " Partials" << std::endl;
 #endif
 
 	//	find the longest Partial in the specified frequency range:

@@ -5,6 +5,14 @@ Loris is Copyright (C) 1999-2001 by Kelly Fitz and Lippold Haken
 See the end for copying conditions.
 
 Please send Loris bug reports to loris@cerlsoundgroup.org.
+-------------------------------------------------------
+changes since 1.0.1 release:
+
+- moved compile-time type checks from FourierTransform.C
+to configure.in, so the former now compiles even with 
+wimpy compilers
+
+- added check for template member support to configure.in
 
 -------------------------------------------------------
 changes since 1.0 release:

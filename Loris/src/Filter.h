@@ -41,6 +41,7 @@
 #if !defined(NO_TEMPLATE_MEMBERS)
 #include <Exception.h>
 #include <algorithm>
+#include <functional>
 #include <numeric>
 #endif
 

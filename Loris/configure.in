@@ -96,11 +96,20 @@ dnl----------------------------------------------------------------
 dnl Look for csound.
 dnl
 dnl If csound is available, then a message will be printed
-dnl refering to the README in the csound directorya.
+dnl refering to the README in the csound directory.
 dnl----------------------------------------------------------------
 
 AC_PATH_PROG(CSOUND, csound)
 AM_CONDITIONAL(HAVE_CSOUND, test -n "$CSOUND")
+
+if test -n "$HAVE_CSOUND"; then
+	AC_MSG_RESULT(-----------------------------------------)
+	AC_MSG_RESULT(You have Csound installed. See the)
+	AC_MSG_RESULT(README file in the csound directory)
+	AC_MSG_RESULT(for information about building the)
+	AC_MSG_RESULT(Loris csound modules.)
+	AC_MSG_RESULT(-----------------------------------------)
+fi
 
 dnl----------------------------------------------------------------
 dnl Check for librairies
@@ -197,9 +206,12 @@ AC_ARG_WITH(fftw,[  --with-fftw=path        Set prefix of (non-installed) FFTW  
 
 if test -n "$FFTWPACKAGE" ; then
 	FFTWINCLUDE="$FFTWPACKAGE/include"
-	FFTW_H="$FFTWINCLUDE/fftw.h"
+	CPPFLAGS="-I$FFTWINCLUDE $CXXFLAGS"
 	LIBS="-L$FFTWPACKAGE/lib $LIBS"
 fi
+
+AC_LANG_SAVE
+AC_LANG_CPLUSPLUS
 
 AC_CHECK_HEADER($FFTW_H, :, AC_MSG_ERROR(cannot find FFTW header))
 AC_CHECK_LIB(fftw, fftw_create_plan, :, AC_MSG_ERROR(cannot use FFTW, library), -lm)
@@ -208,6 +220,68 @@ if test -n "$FFTWINCLUDE" ; then
 	FFTWINCLUDE="-I$FFTWINCLUDE"
 fi
 AC_SUBST(FFTWINCLUDE)
+
+dnl Gnarly code adopted from Alexandrescu (Modern C++ Design) for compile-time
+dnl checking of type information. Need to make sure that fftw_complex and 
+dnl std::complex<double> are the same size and have the same memory layout.
+dnl Try to do that at compile-time, much better than doing it at runtime.
+dnl Actually, best of all is at configure-time.
+
+AC_MSG_CHECKING(whether std::complex<double> is same as fftw_complex)
+
+AC_COMPILE_IFELSE( 
+	AC_LANG_SOURCE([[
+		#include <complex>
+		#include "$FFTW_H"
+		//	Gnarly code adopted from Alexandrescu (Modern C++ Design) for compile-time
+		//	checking of type information. Need to make sure that fftw_complex and 
+		//	std::complex<double> are the same size and have the same memory layout.
+		//
+		template<int> struct CompileTimeError;
+		template<> struct CompileTimeError<true> {};
+		#define STATIC_CHECK(expr, msg) \
+			{ CompileTimeError<((expr) != 0)> ERROR_##msg; (void)ERROR_##msg; }
+		
+		template <class T, class U> struct CompareTypes { enum { same = 0 }; };
+		template<class T> struct CompareTypes<T, T> { enum { same = 1 }; };
+		
+		static void Check_Types( void )
+		{
+			//	check to make sure that std::complex< double >
+			//	and fftw_complex are really identical:
+		
+			//	if this won't compile, fftw_real is not defined to be double,
+			//	and this class won't work under those conditions:
+			STATIC_CHECK((CompareTypes<double, fftw_real>::same!=0), fftw_real_IS_NOT_DOUBLE);
+		
+			//	if this won't compile, then the two complex types have 
+			//	different sizes, and therefore don't have the same memory 
+			//	layout, and this FourierTransform class won't work:
+			STATIC_CHECK( sizeof(std::complex<double>) == sizeof(fftw_complex), 
+						  fftw_complex_DIFFERENT_SIZE_FROM_std_complex_double );
+						  
+			//	if this doesn't compile, then probably the previous one didn't
+			//	compile either, but it doesn't hurt to verify that the layout
+			//	of the complex types is trivial:
+			STATIC_CHECK( sizeof(fftw_complex) == sizeof(double) + sizeof(double),
+						  fftw_complex_LAYOUT_IS_NONTRIVIAL );
+		}
+		
+  ]]),[
+  AC_MSG_RESULT(ok) ], [
+  AC_MSG_WARN(failed)
+  AC_MSG_RESULT(-----------------------------------------)
+  AC_MSG_RESULT(Compile-time type checks failed. This)
+  AC_MSG_RESULT(may mean that std::complex<double> and)
+  AC_MSG_RESULT(and fftw_complex do not have the same)
+  AC_MSG_RESULT(size and memory layout. Or it may mean)
+  AC_MSG_RESULT(that your compiler cannot handle fancy)
+  AC_MSG_RESULT(template programming. Check the log.)
+  AC_MSG_RESULT(-----------------------------------------)
+  ] )
+
+dnl restore this
+AC_LANG_RESTORE
 
 dnl
 dnl end of FFTW check
