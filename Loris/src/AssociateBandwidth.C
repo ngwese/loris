@@ -210,14 +210,15 @@ AssociateBandwidth::accumulateSpectrum( void )
 		//	taper is a number near zero for small time corrections,
 		//	one for large correcitons:
 		double tcratio = std::abs(_spectrum.timeCorrection(i)) / _cropSamps;
-		double taper;
+		double taper  = 1.;
+		/*
 		if ( tcratio < start_taper )
 			taper = 1.;
 		else if ( tcratio < end_taper )
 			taper = (end_taper - tcratio) / (end_taper - start_taper);
 		else //	time correction is past end_taper
 			taper = 0.;
-			
+		*/	
 		double m = std::abs( _spectrum[i] ) * _spectrum.magnitudeScale();
 		m *= taper;
 		

@@ -294,7 +294,6 @@ Analyzer::extractPeaks( std::list< Breakpoint > & frame, double frameTime,
 {
 	const double threshold = std::pow( 10., 0.05 * ampFloor() );	//	absolute magnitude threshold
 	const double sampsToHz = state.sampleRate() / state.spectrum().size();
-	const long maxCorrection = long( cropTime() * state.sampleRate() );
 	
 	//	FORMERLY:
 	//	the bare minimum component frequency that should be
@@ -330,9 +329,13 @@ Analyzer::extractPeaks( std::list< Breakpoint > & frame, double frameTime,
 			
 			//	if the time correction for this peak is large,
 			//	reject it:
-			double timeCorrection = state.spectrum().reassignedTime( fsample );
-			if ( std::abs(timeCorrection) > maxCorrection )
-				continue;
+			double timeCorrection = 
+				state.spectrum().reassignedTime( fsample ) / state.sampleRate();
+			//
+			//	do this later, in formPartials()
+			//
+			//if ( std::abs(timeCorrection) > cropTime() )
+			//	continue;
 				
 			//	retain a spectral peak corresponding to this sample:
 			double phase = state.spectrum().reassignedPhase( fsample, timeCorrection );
@@ -340,7 +343,7 @@ Analyzer::extractPeaks( std::list< Breakpoint > & frame, double frameTime,
 			
 			//	cache the peak time, rather than recomputing it when
 			//	ready to insert it into a Partial:
-			double time = frameTime + ( timeCorrection / state.sampleRate() );
+			double time = frameTime + timeCorrection;
 			state.peakTimeCache()[ fHz ] = time;
 			
 		}	//	end if itsa peak
@@ -407,6 +410,11 @@ Analyzer::formPartials( std::list< Breakpoint > & frame, double frameTime, Analy
 	for( bpIter = frame.begin(); bpIter != frame.end(); ++bpIter ) {
 		const Breakpoint & peak = *bpIter;
 		const double peakTime = state.peakTimeCache()[ peak.frequency() ];
+		
+		//	check the time correction for off-center components:
+		double tcabs = std::abs( peakTime - frameTime );
+		if ( tcabs > cropTime() )
+			continue;	//	don't use peaks with large time corrections
 		
 		//	compute the time after which a Partial
 		//	must have Breakpoints in order to be 
