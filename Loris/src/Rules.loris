@@ -7,11 +7,11 @@ CLASSES = $(TOP)/Loris/classes
 OBJ_LORIS = $(CLASSES)/AiffFile.o \
 			$(CLASSES)/Analyzer.o \
 			$(CLASSES)/AssociateBandwidth.o \
-			$(CLASSES)/BinaryFile.o \
 			$(CLASSES)/Breakpoint.o \
 			$(CLASSES)/Dilator.o \
 			$(CLASSES)/Distiller.o \
 			$(CLASSES)/DistributeEnergy.o \
+			$(CLASSES)/Endian.o \
 			$(CLASSES)/Exception.o \
 			$(CLASSES)/Filter.o \
 			$(CLASSES)/FourierTransform.o \
@@ -24,9 +24,7 @@ OBJ_LORIS = $(CLASSES)/AiffFile.o \
 			$(CLASSES)/Partial.o \
 			$(CLASSES)/PartialView.o \
 			$(CLASSES)/ReassignedSpectrum.o \
-			$(CLASSES)/SamplesFile.o \
 			$(CLASSES)/Synthesizer.o \
-			$(CLASSES)/endian.o \
 			$(CLASSES)/ieee.o \
 			$(CLASSES)/notifier.o \
 #			$(CLASSES)/SpcFile.o \	FIX ME
