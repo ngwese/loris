@@ -315,13 +315,14 @@ Partial::phaseAt( double time ) const
 	//	compute phase:
 	//	map iterator is a pair: first is time, 
 	//	second is Breakpoint.
-	if ( it == _bpmap.begin() ) {
+	if ( it == _bpmap.begin() ) 
+	{
 	//	time is before the onset of the Partial:
 		double dp = TwoPi * (it.time() - time) * it->frequency();
 		return std::fmod( it->phase() - dp, TwoPi);
-
 	}
-	else if (it == _bpmap.end() ) {
+	else if (it == _bpmap.end() ) 
+	{
 	//	time is past the end of the Partial:
 	//	( first decrement iterator to get the tail Breakpoint)
 		--it;
@@ -329,7 +330,8 @@ Partial::phaseAt( double time ) const
 		double dp = TwoPi * (time - it.time()) * it->frequency();
 		return std::fmod( it->phase() + dp, TwoPi );
 	}
-	else {
+	else 
+	{
 	//	interpolate between it and its predeccessor
 	//	(we checked already that it is not begin):
 		const Breakpoint & hi = *it;
@@ -339,8 +341,20 @@ Partial::phaseAt( double time ) const
 		double alpha = (time - lotime) / (hitime - lotime);
 		double favg = (0.5 * alpha * hi.frequency()) + 
 						((1. - (0.5 * alpha)) * lo.frequency());
-		double dp = TwoPi * (time - lotime) * favg;
-		return std::fmod( lo.phase() + dp, TwoPi );
+
+		//	need to keep fmod in here because other stuff 
+		//	(scp export and sdif export, for example) rely 
+		//	on it:
+		if ( alpha < 0.5 )
+		{
+			double dp = TwoPi * (time - lotime) * favg;
+			return std::fmod( lo.phase() + dp, TwoPi );
+		}
+		else
+		{
+			double dp = TwoPi * (hitime - time) * favg;
+			return std::fmod( hi.phase() - dp, TwoPi );
+		}
 
 	}
 }
