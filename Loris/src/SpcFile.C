@@ -775,6 +775,9 @@ static void writeSosEnvelopesChunk( std::ostream & s )
 	}
 }
 
+//	this used to be hard coded into Partial, don't know
+//	whether it is needed to make spc files work.
+#define PARTIAL_AMP_FADE 0.001 
 
 #pragma mark -
 #pragma mark envelope writing helpers
@@ -793,7 +796,7 @@ static double getPhaseRefTime( int label, const Partial & p, double time  )
 		return prevPRT[ label ]; 
 			
 // Go forward to nonzero amplitude.
-	while ( p.amplitudeAt( time ) < spcEI.ampEpsilon && time < spcEI.endTime + spcEI.hop)
+	while ( p.amplitudeAt( time, PARTIAL_AMP_FADE ) < spcEI.ampEpsilon && time < spcEI.endTime + spcEI.hop)
 	{
 		time += spcEI.hop;
 	}
@@ -824,7 +827,8 @@ static void afbp( const Partial & p, double time, double phaseRefTime,
 		if ( time > p.endTime() && p.endTime() > spcEI.endTime - 2 * spcEI.hop)
 			time = p.endTime();
 		double wt = ( spcEI.endTime - time ) / spcEI.endApproachTime;
-		amp   = magMult  * ( wt * p.amplitudeAt( time ) + (1.0 - wt) * p.amplitudeAt( spcEI.endTime )  );
+		amp   = magMult  * ( wt * p.amplitudeAt( time, PARTIAL_AMP_FADE ) + 
+							 (1.0 - wt) * p.amplitudeAt( spcEI.endTime, PARTIAL_AMP_FADE )  );
 		freq  = freqMult * ( wt * p.frequencyAt( time ) + (1.0 - wt) * p.frequencyAt( spcEI.endTime )  );
 		bw    =            ( wt * p.bandwidthAt( time ) + (1.0 - wt) * p.bandwidthAt( spcEI.endTime )  );
 		phase = p.phaseAt( time );
@@ -843,7 +847,7 @@ static void afbp( const Partial & p, double time, double phaseRefTime,
 // Use envelope values at "time".
 	else
 	{
-		amp = magMult * p.amplitudeAt( time );
+		amp = magMult * p.amplitudeAt( time, PARTIAL_AMP_FADE );
 		freq = freqMult * p.frequencyAt( time );
 		bw = p.bandwidthAt( time );
 		phase = p.phaseAt( time );

@@ -45,13 +45,8 @@
 #include <Notifier.h>
 
 #include <algorithm>
-#include <cmath>
-
-#if defined(HAVE_M_PI) && (HAVE_M_PI)
-	const double Pi = M_PI;
-#else
-	const double Pi = 3.14159265358979324;
-#endif
+#include <functional>
+#include <utility>
 
 //	begin namespace
 namespace Loris {
@@ -200,38 +195,6 @@ Distiller::distill( PartialList & partials )
 #pragma mark -- helpers --
 
 // ---------------------------------------------------------------------------
-//	makeNullBefore	(STATIC)
-// ---------------------------------------------------------------------------
-// return a null (zero-amplitude) Breakpoint
-// to preceed the specified Breakpoint
-static Breakpoint makeNullBefore( const Breakpoint & bp, double fadeTime )
-{
-	Breakpoint ret( bp );
-	// adjust phase
-	double dp = 2. * Pi * fadeTime * bp.frequency();
-	ret.setPhase( std::fmod( ret.phase() - dp, 2. * Pi ) );
-	ret.setAmplitude(0.);
-	
-	return ret;
-}
-
-// ---------------------------------------------------------------------------
-//	makeNullAfter	(STATIC)
-// ---------------------------------------------------------------------------
-// return a null (zero-amplitude) Breakpoint
-// to succeed the specified Breakpoint
-static Breakpoint makeNullAfter( const Breakpoint & bp, double fadeTime )
-{
-	Breakpoint ret( bp );
-	// adjust phase
-	double dp = 2. * Pi * fadeTime * bp.frequency();
-	ret.setPhase( std::fmod( ret.phase() + dp, 2. * Pi ) );
-	ret.setAmplitude(0.);
-	
-	return ret;
-}
-
-// ---------------------------------------------------------------------------
 //	merge	(STATIC)
 // ---------------------------------------------------------------------------
 //	Merge the Breakpoints in the specified iterator range into the
@@ -262,7 +225,7 @@ static void merge( Partial::const_iterator beg,
 		if ( toMerge.last().amplitude() > 0 )
 		{
 			toMerge.insert( toMerge.endTime() + fadeTime, 
-							makeNullAfter(toMerge.last(), fadeTime) );
+							BreakpointUtils::makeNullAfter(toMerge.last(), fadeTime) );
 		}
 
 		if ( removeEnd.breakpoint().amplitude() > 0 )
@@ -270,7 +233,7 @@ static void merge( Partial::const_iterator beg,
 			//	update removeEnd so that we don't remove this 
 			//	null we are inserting:
 			removeEnd = destPartial.insert( removeEnd.time() - fadeTime, 
-											makeNullBefore( removeEnd.breakpoint(), fadeTime ) );
+											BreakpointUtils::makeNullBefore( removeEnd.breakpoint(), fadeTime ) );
 		}		
 	}
 	
@@ -283,14 +246,14 @@ static void merge( Partial::const_iterator beg,
 		if ( toMerge.first().amplitude() > 0 )
 		{
 			toMerge.insert( toMerge.startTime() - fadeTime, 
-							makeNullBefore( toMerge.first(), fadeTime ) );
+							BreakpointUtils::makeNullBefore( toMerge.first(), fadeTime ) );
 		}
 
 		Partial::iterator beforeMerge = --Partial::iterator(removeBegin);
 		if ( beforeMerge.breakpoint().amplitude() > 0 )
 		{
 			destPartial.insert( beforeMerge.time() + fadeTime, 
-								makeNullAfter( beforeMerge.breakpoint(), fadeTime ) );
+								BreakpointUtils::makeNullAfter( beforeMerge.breakpoint(), fadeTime ) );
 		}		
 	}
 	

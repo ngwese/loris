@@ -578,7 +578,8 @@ assembleMatrixData( SdifFloat4 *data, const bool enhanced,
 		// For enhanced format we use exact timing; the activeIndices only includes
 		// partials that have breakpoints in this frame.
 		// For sine-only format we resample at frame times.
-		double tim = (enhanced ? par->findAfter(frameTime).time() : frameTime);
+		double tim = ( enhanced && (par->endTime() < frameTime) ) ? 
+						par->findAfter(frameTime).time() : frameTime;
 		
 		// Must have phase between 0 and 2*Pi.
 		double phas = par->phaseAt( tim );
@@ -586,6 +587,7 @@ assembleMatrixData( SdifFloat4 *data, const bool enhanced,
 			phas += 2. * Pi; 
 		
 		// Fill in values for this row of matrix data.
+		// Should amplitude be evaluated with a fade?
 		*rowDataPtr++ = index;							// first row of matrix   (standard)
 		*rowDataPtr++ = par->frequencyAt( tim );		// second row of matrix  (standard)
 		*rowDataPtr++ = par->amplitudeAt( tim );		// third row of matrix   (standard)

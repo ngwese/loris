@@ -150,8 +150,8 @@ Morpher::morphParameters( const Breakpoint & srcBkpt, const Partial & tgtPartial
 	if ( tgtPartial.numBreakpoints() > 0 )
 	{
 		//	evalute the target Partial at time:
-		Breakpoint tgtBkpt;
-		evaluateAt( tgtPartial, time, tgtBkpt );
+		Breakpoint tgtBkpt = tgtPartial.parametersAt( time );
+		//evaluateAt( tgtPartial, time, tgtBkpt );
 		
 		//	compute weighted average parameters for 
 		//	the return Breakpoint:	
@@ -186,8 +186,8 @@ Morpher::morphParameters( const Partial & srcPartial, const Breakpoint & tgtBkpt
 	if ( srcPartial.numBreakpoints() > 0 )
 	{
 		//	evalute the target Partial at time:
-		Breakpoint srcBkpt;
-		evaluateAt( srcPartial, time, srcBkpt );
+		Breakpoint srcBkpt = srcPartial.parametersAt( time );
+		//evaluateAt( srcPartial, time, srcBkpt );
 		
 		//	compute weighted average parameters for 
 		//	the return Breakpoint:	
@@ -226,13 +226,15 @@ Morpher::morphParameters( const Partial & srcPartial, const Partial & tgtPartial
 	if ( srcPartial.numBreakpoints() > 0 )
 	{
 		//	compute interpolated values for srcPartial:
-		evaluateAt( srcPartial, time, srcBkpt );
+		srcBkpt  = srcPartial.parametersAt( time );
+		//evaluateAt( srcPartial, time, srcBkpt );
 	}
 	else
 	{
 		//	srcPartial is a dummy Partial, just fade (amplitude scale)
 		//	the target Partial:
-		evaluateAt( tgtPartial, time, retBkpt );
+		retBkpt = tgtPartial.parametersAt( time );
+		//evaluateAt( tgtPartial, time, retBkpt );
 		retBkpt.setAmplitude( _ampFunction->valueAt( time ) * retBkpt.amplitude() );
 		return;
 	}
@@ -244,13 +246,15 @@ Morpher::morphParameters( const Partial & srcPartial, const Partial & tgtPartial
 	if ( tgtPartial.numBreakpoints() > 0 )
 	{
 		//	compute interpolated values for tgtPartial:
-		evaluateAt( tgtPartial, time, tgtBkpt );
+		tgtBkpt = tgtPartial.parametersAt( time );
+		//evaluateAt( tgtPartial, time, tgtBkpt );
 	}
 	else
 	{
 		//	tgtPartial is a dummy Partial, just fade (amplitude scale)
 		//	the source Partial:
-		evaluateAt( srcPartial, time, retBkpt );
+		retBkpt = srcPartial.parametersAt( time );
+		//evaluateAt( srcPartial, time, retBkpt );
 		retBkpt.setAmplitude( (1.-_ampFunction->valueAt( time )) * retBkpt.amplitude() );		
 		return;
 	}

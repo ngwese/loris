@@ -54,25 +54,6 @@ namespace Loris {
 //long Partial::DebugCounter = 0L;
 
 // ---------------------------------------------------------------------------
-//	FadeTime (STATIC)
-// ---------------------------------------------------------------------------
-//	Static member for making sure that all algorithms
-//	that fade Partials in and out use the same fade time.
-//	Returns 1 ms.
-//
-//	Removed this from the Partial interface, but found that
-//	it is also used internally. It makes sense as a parameter
-//	to the other classes that used it, but not as an argument 
-//	to the parameterAt() members. Need a better solution 
-//	probably.
-//	
-static double FadeTime( void )
-{
-	static const double FADE_TIME = 0.001;	//	1 ms
-	return FADE_TIME;
-}
-
-// ---------------------------------------------------------------------------
 //	Partial constructor
 // ---------------------------------------------------------------------------
 //
@@ -434,7 +415,7 @@ Partial::frequencyAt( double time ) const
 // ---------------------------------------------------------------------------
 //	
 double
-Partial::amplitudeAt( double time ) const
+Partial::amplitudeAt( double time, double fadeTime /* = 0. */ ) const
 {
 	if ( numBreakpoints() == 0 )
 		Throw( InvalidPartial, "Tried to interpolate a Partial with no Breakpoints." );
@@ -446,20 +427,26 @@ Partial::amplitudeAt( double time ) const
 		
 	if ( it == begin() ) 
 	{
-	//	time is before the onset of the Partial:
-	//	fade in ampltude
-		double alpha = std::min(1., (it.time() - time) / FadeTime() );
-		return (1. - alpha) * it.breakpoint().amplitude();
+		double alpha =  (time < it.time()) ? 0. : 1.;
+		if ( fadeTime > 0 )
+		{
+			//	fade in ampltude if time is before the onset of the Partial:
+			alpha = std::max(0., 1. - ((it.time() - time) / fadeTime) );
+		}
+		return alpha * it.breakpoint().amplitude();
 	}
-	else if (it == end() ) 
+	else if ( it == end() ) 
 	{
-	//	time is past the end of the Partial:
-	//	fade out ampltude
-	//	( first decrement iterator to get the tail Breakpoint)
+		//	( first decrement iterator to get the tail Breakpoint)
 		--it;
 		
-		double alpha = std::min(1., (time - it.time()) / FadeTime() );
-		return (1. - alpha) * it.breakpoint().amplitude();
+		double alpha =  (time > it.time()) ? 0. : 1.;
+		if ( fadeTime > 0 )
+		{
+			//	fade out ampltude if time is past the end of the Partial:
+			alpha = std::max(0., 1. - ((time - it.time()) / fadeTime) );
+		}
+		return alpha * it.breakpoint().amplitude();
 	}
 	else 
 	{
@@ -580,7 +567,7 @@ Partial::bandwidthAt( double time ) const
 //	all four parameters are needed.
 //
 Breakpoint
-Partial::parametersAt( double time ) const 
+Partial::parametersAt( double time, double fadeTime /* = 0. */ ) const 
 {
 	if ( numBreakpoints() == 0 )
 		Throw( InvalidPartial, "Tried to interpolate a Partial with no Breakpoints." );
@@ -592,12 +579,17 @@ Partial::parametersAt( double time ) const
 		
 	if ( it == begin() ) 
 	{
-	//	time is before the onset of the Partial:
-	//	frequency is starting frequency, 
-	//	amplitude is 0 (or fading), bandwidth is starting 
-	//	bandwidth, and phase is rolled back.
-		double alpha = std::min(1., (it.time() - time) / FadeTime() );
-		double amp = (1. - alpha) * it.breakpoint().amplitude();
+		//	time is before the onset of the Partial:
+		//	frequency is starting frequency, 
+		//	amplitude is 0 (or fading), bandwidth is starting 
+		//	bandwidth, and phase is rolled back.
+		double alpha =  (time < it.time()) ? 0. : 1.;
+		if ( fadeTime > 0 )
+		{
+			//	fade in ampltude if time is before the onset of the Partial:
+			alpha = std::max(0., 1. - ((it.time() - time) / fadeTime) );
+		}
+		double amp = alpha * it.breakpoint().amplitude();
 
 		double dp = 2. * Pi * (it.time() - time) * it.breakpoint().frequency();
 		double ph = std::fmod( it.breakpoint().phase() - dp, 2. * Pi);
@@ -607,17 +599,22 @@ Partial::parametersAt( double time ) const
 	}
 	else if (it == end() ) 
 	{
-	//	time is past the end of the Partial:
-	//	frequency is ending frequency, 
-	//	amplitude is 0 (or fading), bandwidth is ending 
-	//	bandwidth, and phase is rolled forward.
+		//	time is past the end of the Partial:
+		//	frequency is ending frequency, 
+		//	amplitude is 0 (or fading), bandwidth is ending 
+		//	bandwidth, and phase is rolled forward.
 		--it; 
 		
+		double alpha =  (time > it.time()) ? 0. : 1.;
+		if ( fadeTime > 0 )
+		{
+			//	fade out ampltude if time is past the end of the Partial:
+			alpha = std::max(0., 1. - ((time - it.time()) / fadeTime) );
+		}
+		double amp = alpha * it.breakpoint().amplitude();
+
 		double dp = 2. * Pi * (time - it.time()) * it.breakpoint().frequency();
 		double ph = std::fmod( it.breakpoint().phase() + dp, 2. * Pi );
-
-		double alpha = std::min(1., (time - it.time()) / FadeTime() );
-		double amp = (1. - alpha) * it.breakpoint().amplitude();
 
 		return Breakpoint( it.breakpoint().frequency(), amp, 
 						   it.breakpoint().bandwidth(), ph );

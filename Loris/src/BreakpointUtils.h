@@ -25,6 +25,7 @@
  * BreakpointUtils.h
  *
  * Breakpoint utility functions collected in namespace BreakpointUtils.
+ * Some out-of-line functions are defined in BreakpointUtils.C.
  *
  * Kelly Fitz, 6 July 2000
  * loris@cerlsoundgroup.org
@@ -82,7 +83,23 @@ public:
 		
 		This operation is now part of the Breakpoint interface.
 	 */
+	 
+	#if defined( NO_NESTED_NAMESPACE )
+	static
+	#endif
+	Breakpoint makeNullBefore( const Breakpoint & bp, double fadeTime ); // see BreakpointUtils.C
+	/*	Return a null (zero-amplitude) Breakpoint to preceed the specified 
+		Breakpoint, useful for fading in a Partial.
+	 */
 	
+	#if defined( NO_NESTED_NAMESPACE )
+	static
+	#endif
+	Breakpoint makeNullAfter( const Breakpoint & bp, double fadeTime ); // see BreakpointUtils.C
+	/*	Return a null (zero-amplitude) Breakpoint to succeed the specified 
+		Breakpoint, useful for fading out a Partial.
+	 */
+
 
 //	-- predicates --
 	/*	Predicate functor returning true if its Breakpoint argument 

@@ -26,6 +26,7 @@ libloris_la_LIBADD = \
 		$(top_builddir)/classes/AssociateBandwidth.lo \
 		$(top_builddir)/classes/Breakpoint.lo \
 		$(top_builddir)/classes/BreakpointEnvelope.lo \
+		$(top_builddir)/classes/BreakpointUtils.lo \
 		$(top_builddir)/classes/Channelizer.lo \
 		$(top_builddir)/classes/Dilator.lo \
 		$(top_builddir)/classes/Distiller.lo \

@@ -336,13 +336,16 @@ public:
 	 */
 	 
 //	-- parameter interpolation/extrapolation --
-	double amplitudeAt( double time ) const;
+
+	double amplitudeAt( double time, double fadeTime = 0. ) const;
 	/*	Return the interpolated amplitude of this Partial at the
 		specified time. At times beyond the ends of the Partial, return
 		zero. Throw an InvalidPartial exception if this Partial has no
-		Breakpoints.
+		Breakpoints. If non-zero fadeTime is specified, then the
+		amplitude at the ends of the Partial is coomputed using a 
+		linear fade.
 	 */
-	 
+
 	double bandwidthAt( double time ) const;
 	/*	Return the interpolated bandwidth (noisiness) coefficient of
 		this Partial at the specified time. At times beyond the ends of
@@ -367,13 +370,15 @@ public:
 		Breakpoints.
 	 */
 
-	Breakpoint parametersAt( double time ) const;
+	Breakpoint parametersAt( double time, double fadeTime = 0. ) const;
 	/*	Return the interpolated parameters of this Partial at
 		the specified time, same as building a Breakpoint from
 		the results of frequencyAt, ampitudeAt, bandwidthAt, and
 		phaseAt, but performs only one Breakpoint envelope search.
 		Throw an InvalidPartial exception if this Partial has no
-		Breakpoints.
+		Breakpoints. If non-zero fadeTime is specified, then the
+		amplitude at the ends of the Partial is coomputed using a 
+		linear fade.
 	 */
 
 //	-- implementation --
