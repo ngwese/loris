@@ -66,12 +66,12 @@ static std::vector<double> strtovec( const std::string & s )
     std::vector<double> v;
     std::string::size_type beg, end;
     //const string delims(" \t,[](){}");
-    const string numparts("1234567890+-.");
+    const std::string numparts("1234567890+-.");
     beg = s.find_first_of( numparts );
-    while ( beg != string::npos )
+    while ( beg != std::string::npos )
     {
         end = s.find_first_not_of( numparts, beg );
-        if ( end == string::npos )
+        if ( end == std::string::npos )
             end = s.length();
 
         double x = atof( s.c_str() + beg );
@@ -438,5 +438,36 @@ void shiftPitch( PartialList * partials, BreakpointEnvelope * pitchEnv );
 	the given pitch envelope. The pitch envelope is assumed to have 
 	units of cents (1/100 of a halfstep).
  */
+ 
+ 
+/*
+	EXPERIMENTAL JUNK:
+ */
+
+%init %{
+	printf_notifier( "loris module includes new experimental junk!\n\n" );
+%}
+
+%{
+#include "Sieve.h"
+%}
+	
+%inline 
+%{
+	void sift( PartialList * partials )
+	{		
+		char s[256];
+		sprintf(s, "sifting %d Partials", partials->size() );
+		printf_notifier( s );
+		
+		Loris::Sieve sieve( 0.001 );
+		sieve.sift( *partials );
+	}
+	/*	Lippold's wacky experimental sifting thingie: 
+		If any two partials with same label overlap in time,
+		keep only the longer of the two partials.
+		Set the label of the shorter duration partial to zero.
+	 */
+%}
 
 

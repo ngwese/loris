@@ -100,3 +100,5 @@ m = loris.morph( clar, flut, mf, mf, mf )
 loris.exportAiff( 'morph.test.aiff', 
 				  loris.synthesize( m, samplerate ), 
 				  samplerate, 1, 16 )
+
+print 'done (%s)' % time.ctime(time.time())

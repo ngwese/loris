@@ -162,9 +162,14 @@ double ConvertFromIeeeExtended(extended80 x)
 	}
 
 	if (bytes[0] & 0x80)
+		f = -f;
+#if 0	//	CW6 optimizer doesn't like this, internal compiler error!
 		return -f;
 	else
 		return f;
+#endif
+
+	return f;
 }
 
 #ifdef __cplusplus

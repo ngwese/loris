@@ -243,15 +243,18 @@ Partial::frequencyAt( double time ) const
 	//	having key equal to time:
 	PartialConstIterator it = findPos( time );
 		
-	if ( it == _bpmap.begin() ) {
+	if ( it == _bpmap.begin() ) 
+	{
 	//	time is before the onset of the Partial:
 		return it->frequency();
 	}
-	else if ( it == _bpmap.end() ) {
+	else if ( it == _bpmap.end() ) 
+	{
 	//	time is past the end of the Partial:
 		return (--it)->frequency();
 	}
-	else {
+	else 
+	{
 	//	interpolate between it and its predeccessor
 	//	(we checked already that it is not begin):
 		const Breakpoint & hi = *it;
@@ -278,15 +281,39 @@ Partial::amplitudeAt( double time ) const
 	//	having key equal to time:
 	PartialConstIterator it = findPos( time );
 		
-	if ( it == _bpmap.begin() ) {
+	if ( it == _bpmap.begin() ) 
+	{
 	//	time is before the onset of the Partial:
-		return 0.;
+	//	fade in ampltude
+		if ( time < it.time() - FadeTime() )
+		{
+			return 0.;
+		}
+		else
+		{
+			double alpha = (it.time() - time) / FadeTime();
+			return (1. - alpha) * it->amplitude();
+		}
 	}
-	else if (it == _bpmap.end() ) {
+	else if (it == _bpmap.end() ) 
+	{
 	//	time is past the end of the Partial:
-		return 0.;
+	//	fade out ampltude
+	//	( first decrement iterator to get the tail Breakpoint)
+		--it;
+		
+		if ( time > it.time() + FadeTime() )
+		{
+			return 0.;
+		}
+		else
+		{
+			double alpha = (time - it.time()) / FadeTime();
+			return (1. - alpha) * it->amplitude();
+		}
 	}
-	else {
+	else 
+	{
 	//	interpolate between it and its predeccessor
 	//	(we checked already that it is not begin):
 		const Breakpoint & hi = *it;
@@ -297,6 +324,7 @@ Partial::amplitudeAt( double time ) const
 		return (alpha * hi.amplitude()) + ((1. - alpha) * lo.amplitude());
 	}
 }
+
 // ---------------------------------------------------------------------------
 //	phaseAt
 // ---------------------------------------------------------------------------
@@ -374,15 +402,18 @@ Partial::bandwidthAt( double time ) const
 	//	having key equal to time:
 	PartialConstIterator it = findPos( time );
 		
-	if ( it == _bpmap.begin() ) {
+	if ( it == _bpmap.begin() ) 
+	{
 	//	time is before the onset of the Partial:
 		return it-> bandwidth();
 	}
-	else if (it == _bpmap.end() ) {
+	else if (it == _bpmap.end() ) 
+	{
 	//	time is past the end of the Partial:
 		return (--it)->bandwidth();
 	}
-	else {
+	else 
+	{
 	//	interpolate between it and its predeccessor
 	//	(we checked already that it is not begin):
 		const Breakpoint & hi = *it;

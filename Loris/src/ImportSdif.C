@@ -26,6 +26,7 @@
  *
  * Lippold Haken, 4 July 2000, using CNMAT SDIF library
  * Lippold Haken, 20 October 2000, using IRCAM SDIF library (tutorial by Diemo Schwarz)
+ * Lippold Haken, 22 December 2000, using 1LBL frames
  * loris@cerlsoundgroup.org
  *
  * http://www.cerlsoundgroup.org/Loris/
@@ -46,119 +47,76 @@ extern "C" {
 namespace Loris {
 #endif
 
-//	Row of matrix data in SDIF 1TRC format.
-//	Loris exports both a 6-column (resampled) and 8-column (exact times) format.
-//  The 6 column format excludes timeOffset and discardable.
-int lorisRowElements = 8;
+//	Row of matrix data in SDIF 1TRC or SDIF 1LBL format.
+//	The 1TRC matrices have envelope information (in 5 or 7 columns).
+//	The 1LBL matrix is optional; it has partial label information (in 2 columns).
+//
+//	Loris exports both a 5-column (resampled at frame times) and 7-column (exact times) 1TRC format.
+//  The 5 column 1TRC format excludes timeOffset and resampledFlag.
+//
+//	The 1LBL format always has two columns, index and partial label.
+int lorisRowMaxElements = 7;
 typedef struct {
-    SdifFloat8 index, freq, amp, phase, noise, label, timeOffset, discardable;
+    SdifFloat8 index, freqOrLabel, amp, phase, noise, timeOffset, resampledFlag;
 } RowOfLorisData;
 
 //  SDIF signature used by Loris.
 static SdifSignature lorisSignature = SdifSignatureConst('1TRC');
+static SdifSignature lorisLabels = SdifSignatureConst('1LBL');
 
-//	prototypes for helpers:
-static void read( const char *infilename, std::list<Partial> & partials );
-static void readEnvelopeData( SdifFileT *in, std::vector< Partial > & partialsVector );
-static void addRowToPartials( const RowOfLorisData & trackData, 
-							  const double frameTime, 
-							  std::vector< Partial > & partialsVector );
 
+#pragma mark envelope reading helpers
 // ---------------------------------------------------------------------------
-//	ImportSdif constructor from data in memory
+//	processRow
 // ---------------------------------------------------------------------------
-//
-ImportSdif::ImportSdif( const char *infilename ) 
-{
-	read( infilename, _partials );
-}
-
-// ---------------------------------------------------------------------------
-//	read
-// ---------------------------------------------------------------------------
-// Let exceptions propagate.
+//	Add to existing Loris partials, or create new Loris partials for this data.
 //
 static void
-read( const char *infilename, std::list<Partial> & partials )
-{
+processRow( const SdifSignature msig, const RowOfLorisData & rowData, const double frameTime, 
+				  std::vector< Partial > & partialsVector )
+{	
 
-// 
-// Initialize SDIF library.
 //
-	SdifGenInit("");
+// Skip this if the data point is not from the original data (7-column 1TRC format).
+// This flag is never set if all data is resampled (5-column 1TRC format).
+//
+	if (rowData.resampledFlag)
+		return;
 	
 //
-// Open SDIF file for reading.
-// Note: Currently we do not specify any selection criterion in this call.
+// Make sure we have enough partials for this partial's index.
 //
-	SdifFileT *in = SdifFOpen(infilename, eReadFile);
-	if (!in)
+	if (partialsVector.size() <= rowData.index)
 	{
-		SdifGenKill();
-		Throw( FileIOException, "Could not open SDIF file for reading." );
+		partialsVector.resize( rowData.index + 500 );
 	}
 
-	SdifFReadGeneralHeader(in);		// read file header
-	SdifFReadAllASCIIChunks(in);	// read ascii header info, such as name-value tables
-
 //
-// Read SDIF data.
+// Create a new breakpoint and insert it.
 //	
-	try 
+	if (msig == lorisSignature) 
 	{
-	
-		// Build up partialsVector.
-		std::vector< Partial > partialsVector;
-		readEnvelopeData( in, partialsVector );
+		Breakpoint newbp( rowData.freqOrLabel, rowData.amp, rowData.noise, rowData.phase );
+		partialsVector[rowData.index].insert( frameTime + rowData.timeOffset, newbp );
+	}
+//
+// Set partial label.
+//
+	else if (msig == lorisLabels) 
+	{
+		partialsVector[rowData.index].setLabel( (int) rowData.freqOrLabel );
+	}
 		
-		// Copy partialsVector to partials list.
-		for (int i = 0; i < partialsVector.size(); ++i)
-		{
-			if (partialsVector[i].countBreakpoints() > 0)
-			{
-				partials.push_back( partialsVector[i] );
-			}
-		}
-	}
-	catch ( Exception & ex ) 
-	{
-		partials.clear();
-		ex.append("Failed to read SDIF file.");
-		SdifFClose(in);
-		SdifGenKill();
-		throw;
-	}
-
-//
-// Close SDIF input file.
-//
-	SdifFClose(in);
-
-// 
-// Done with SDIF library.
-//
-	SdifGenKill();
-	
-//
-// Make a noise if no Partials were imported:
-//
-	if ( partials.size() == 0 )
-	{
-		notifier << "No Partials were imported from " << infilename 
-				 << ", no (non-empty) 1TRC frames found." << endl;
-	}
-	
 }
 
-#pragma mark -
-#pragma mark envelope reading
+
 // ---------------------------------------------------------------------------
-//	readEnvelopeData
+//	readLorisMatrices
 // ---------------------------------------------------------------------------
 // Let exceptions propagate.
 //
 static void
-readEnvelopeData( SdifFileT *file, std::vector< Partial > & partialsVector )
+readLorisMatrices( SdifFileT *file, std::vector< Partial > & partialsVector )
 {
 	size_t bytesread = 0;
 	int eof = false;
@@ -172,7 +130,8 @@ readEnvelopeData( SdifFileT *file, std::vector< Partial > & partialsVector )
 		
 		// Skip frames until we find one we are interested in.
 		while (!SdifFCurrFrameIsSelected(file) 
-				|| SdifFCurrSignature(file) != lorisSignature)
+				|| (SdifFCurrSignature(file) != lorisSignature 
+					&& SdifFCurrSignature(file) != lorisLabels))
 		{
 			SdifSkipFrameData(file);
 			eof = (SdifFGetSignature(file, &bytesread) == eEof);
@@ -209,14 +168,15 @@ readEnvelopeData( SdifFileT *file, std::vector< Partial > & partialsVector )
 					{
 						bytesread += SdifFReadOneRow(file);
 
-						// Fill a trackData structure.
-						RowOfLorisData trackData = { 0.0 };
-						SdifFloat8 *trackDataPtr = &trackData.index;
-						for (int col = 1; col <= std::min(ncols, lorisRowElements); col++)
-							*(trackDataPtr++) = SdifFCurrOneRowCol(file, col);
+						// Fill a rowData structure.
+						RowOfLorisData rowData = { 0.0 };
+						SdifFloat8 *rowDataPtr = &rowData.index;
+						for (int col = 1; col <= std::min(ncols, lorisRowMaxElements); col++)
+							*(rowDataPtr++) = SdifFCurrOneRowCol(file, col);
 						
-						// Add trackData as a new breakpoint in a partial.
-						addRowToPartials(trackData, time, partialsVector);
+						// Add rowData as a new breakpoint in a partial, or,
+						// if its a 1LBL matrix, read label mapping.
+						processRow(msig, rowData, time, partialsVector);
 					}
 				}
 				else
@@ -231,7 +191,10 @@ readEnvelopeData( SdifFileT *file, std::vector< Partial > & partialsVector )
 			eof = (SdifFGetSignature(file, &bytesread) == eEof);
 		}
 	} 
-	
+
+//
+// Error messages.
+//	
 	SdifErrorT* errPtr = SdifFLastError (file);
 	if (errPtr)
 	{
@@ -239,12 +202,14 @@ readEnvelopeData( SdifFileT *file, std::vector< Partial > & partialsVector )
 		if ( errPtr->Tag == eUnDefined )
 		{
 			Throw(FileIOException, 
-			"Error reading SDIF file: undefined martrix type. Is the SdifTypes.STYP file accessible?");
+			"Error reading SDIF file: Undefined martrix type. "
+			"Is the SdifTypes.STYP file accessible to Loris, and does it include the 1LBL definition?");
 		}
 		else if ( errPtr->Tag == eBadNbData )
 		{
 			Throw(FileIOException, 
-			"Error reading SDIF file: bad martrix data. Does the SdifTypes.STYP file include the bandwidth-enhanced 1TRC definition?");
+			"Error reading SDIF file: bad martrix data. "
+			"Does the SdifTypes.STYP file include the bandwidth-enhanced 1TRC definition?");
 		}
 		else
 		{			
@@ -254,44 +219,99 @@ readEnvelopeData( SdifFileT *file, std::vector< Partial > & partialsVector )
 }
 
 
+#pragma mark -
+#pragma mark import sdif
 // ---------------------------------------------------------------------------
-//	addRowToPartials
+//	read
 // ---------------------------------------------------------------------------
-//	Add to existing Loris partials, or create new Loris partials for this data.
+// Let exceptions propagate.
 //
 static void
-addRowToPartials( const RowOfLorisData & trackData, const double frameTime, 
-				  std::vector< Partial > & partialsVector )
-{	
+read( const char *infilename, std::list<Partial> & partials )
+{
+
+// 
+// Initialize SDIF library.
+//
+	SdifGenInit("");
+	
+//
+// Open SDIF file for reading.
+// Note: Currently we do not specify any selection criterion in this call.
+//
+	SdifFileT *in = SdifFOpen(infilename, eReadFile);
+	if (!in)
+	{
+		SdifGenKill();
+		Throw( FileIOException, "Could not open SDIF file for reading." );
+	}
+
+	SdifFReadGeneralHeader(in);		// read file header
+	SdifFReadAllASCIIChunks(in);	// read ascii header info, such as name-value tables
 
 //
-// Skip this if the data point is discardable.
+// Read SDIF data.
+//	
+	try 
+	{
+	
+		// Build up partialsVector.
+		std::vector< Partial > partialsVector;
+		readLorisMatrices( in, partialsVector );
+		
+		// Copy partialsVector to partials list.
+		for (int i = 0; i < partialsVector.size(); ++i)
+		{
+			if (partialsVector[i].countBreakpoints() > 0)
+			{
+				partials.push_back( partialsVector[i] );
+			}
+		}
+	}
+	catch ( Exception & ex ) 
+	{
+		partials.clear();
+		ex.append(" Failed to read SDIF file.");
+		SdifFClose(in);
+		SdifGenKill();
+		throw;
+	}
+
 //
-	if (trackData.discardable)
-		return;
+// Close SDIF input file.
 //
-// Create new breakpoint.
+	SdifFClose(in);
+
+// 
+// Done with SDIF library.
 //
-	Breakpoint newbp( trackData.freq, trackData.amp, trackData.noise, trackData.phase );
+	SdifGenKill();
 	
 //
-// Check if partial of this index already exists.
-// Create a new partial, or add breakpoint to existing partial.
+// Complain if no Partials were imported:
 //
-	if (partialsVector.size() <= trackData.index)
+	if ( partials.size() == 0 )
 	{
-		partialsVector.resize( trackData.index + 500 );
+		notifier << "No Partials were imported from " << infilename 
+				 << ", no (non-empty) 1TRC frames found." << endl;
 	}
 	
-	//	make sure that the label is right and insert the Breakpoint:
-	partialsVector[trackData.index].setLabel( (int) trackData.label );
-	partialsVector[trackData.index].insert( frameTime + trackData.timeOffset, newbp );
-		
+}
+
+
+// ---------------------------------------------------------------------------
+//	ImportSdif constructor from data in memory
+// ---------------------------------------------------------------------------
+//
+ImportSdif::ImportSdif( const char *infilename ) 
+{
+	read( infilename, _partials );
 }
 
 
 #if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
 #endif
+
 
 
