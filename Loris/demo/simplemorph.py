@@ -73,7 +73,7 @@ print 'clarinet times:', clar_times
 loris.dilate( clar_times, tgt_times, clar )
 
 #
-#	perform morphs
+#	perform morph
 #
 print 'morphing flute and clarinet (%s)' % time.ctime(time.time())
 mf = [(0.6, 0), (2, 1)]

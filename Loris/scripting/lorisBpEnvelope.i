@@ -39,6 +39,11 @@
 %{
 #include "BreakpointEnvelope.h"
 using Loris::BreakpointEnvelope;
+
+//	for procedural interface construction and 
+//	destruction, see comment below:
+#define LORIS_OPAQUE_POINTERS 0
+#include "loris.h"
 %}
 
 // ---------------------------------------------------------------------------
@@ -53,23 +58,54 @@ class BreakpointEnvelope
 {
 public:
 //	construction:
-	BreakpointEnvelope( void );
+//
+//	Mac ONLY problem:
+//	use the construction and destruction functions in the 
+//	procedural interface until I can determine why deleting
+//	objects with destructors defined out of line (in the Loris
+//	DLL) cause the Macintosh to crash. Using the procedural 
+//	interface causes the objects with out of line destructors
+//	to be constructed and destructed in the DLL, instead of 
+//	across DLL boundaries, which might make a difference on
+//	the Mac.
+//	
+%addmethods
+{
+	BreakpointEnvelope( void )
+	{
+		return createBreakpointEnvelope();
+	}
 	/*	Construct and return a new BreakpointEnvelope having no 
 		breakpoints and an implicit value of 0. everywhere, 
 		until the first breakpoint is inserted.			
 	 */
-	%name( BreakpointEnvelopeWithValue ) BreakpointEnvelope( double initialValue );
+	%name( BreakpointEnvelopeWithValue ) BreakpointEnvelope( double initialValue )
+	{
+		BreakpointEnvelope * env = createBreakpointEnvelope();
+		env->insertBreakpoint( 0., initialValue );
+		return env;
+	}
 	/*	Construct and return a new BreakpointEnvelope having a 
 		single breakpoint at 0. having the specified initialValue.
 	 */
-	%name( BreakpointEnvelopeCopy ) BreakpointEnvelope( const BreakpointEnvelope & other );
+	//%name( BreakpointEnvelopeCopy ) BreakpointEnvelope( const BreakpointEnvelope & other )
+	%name( BreakpointEnvelopeCopy ) BreakpointEnvelope( const BreakpointEnvelope * other )
+	{
+		BreakpointEnvelope * env = createBreakpointEnvelope();
+		*env = *other;
+		return env;
+	}
 	/*	Construct and return a new BreakpointEnvelope that is
 		a copy of this BreapointEnvelope (has the same value
 		as this BreakpointEnvelope everywhere).			
 	 */
-	~BreakpointEnvelope( void );
+	~BreakpointEnvelope( void )
+	{
+		destroyBreakpointEnvelope( self );
+	}
 	/*	Destroy this BreakpointEnvelope. 								
 	 */
+}
 	
 //	Envelope interface:
 	virtual double valueAt( double x ) const;	
@@ -85,18 +121,4 @@ public:
 		the new breakpoint.
 	 */
 	 
-/*
-%addmethods
-{
-	%new BreakpointEnvelope * copy( void )
-	{
-		return new BreakpointEnvelope( *self );
-	}
-	/*	Construct and return a new BreakpointEnvelope that is
-		a copy of this BreapointEnvelope (has the same value
-		as this BreakpointEnvelope everywhere).			
-	 * /
-
-}
-*/
 };	//	end of abstract class BreakpointEnvelope

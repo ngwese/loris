@@ -65,6 +65,11 @@ public:
 	/*	Return a new empty PartialList.
 	 */
 
+	%name( PartialListCopy ) PartialList( const PartialList & other );
+	/*	Return a new PartialList that is a copy of this 
+		PartialList (i.e. has identical Partials).
+	 */
+	 
 	~PartialList( void );
 	/*	Destroy this PartialList.
 	 */
@@ -80,14 +85,6 @@ public:
 	
 %addmethods
 {
-	%new PartialList * copy( void )
-	{
-		return new PartialList( *self );
-	}
-	/*	Return a new PartialList that is a copy of this 
-		PartialList (i.e. has identical Partials).
-	 */
-	 
 	void splice( PartialList & other )
 	{
 		if ( self == &other )

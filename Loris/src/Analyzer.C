@@ -144,6 +144,48 @@ Analyzer::Analyzer( double resolutionHz )
 }
 
 // ---------------------------------------------------------------------------
+//	Analyzer copy constructor
+// ---------------------------------------------------------------------------
+//	Copy all parameter configuration from the other Analyzer, but not 
+//	the collected Partials.
+//
+Analyzer::Analyzer( const Analyzer & other ) :
+	_resolution( other._resolution ),
+	_floor( other._floor ),
+	_windowWidth( other._windowWidth ),
+	_minFrequency( other._minFrequency ),
+	_drift( other._drift ),
+	_hop( other._hop ),
+	_cropTime( other._cropTime ),
+	_bwRegionWidth( other._bwRegionWidth )
+{
+}
+
+// ---------------------------------------------------------------------------
+//	Analyzer assignment
+// ---------------------------------------------------------------------------
+//	Copy all parameter configuration from the other Analyzer, but not 
+//	the collected Partials. Do not modify the list of previously collected
+//	Partials.
+//
+Analyzer & 
+Analyzer::operator =( const Analyzer & rhs )
+{
+	if ( this != & rhs ) 
+	{
+		_resolution = rhs._resolution;
+		_floor = rhs._floor;
+		_windowWidth = rhs._windowWidth;
+		_minFrequency = rhs._minFrequency;
+		_drift = rhs._drift;
+		_hop = rhs._hop;
+		_cropTime = rhs._cropTime;
+		_bwRegionWidth = rhs._bwRegionWidth;
+	}
+	return *this;
+}
+
+// ---------------------------------------------------------------------------
 //	configure
 // ---------------------------------------------------------------------------
 //	Compute default values for analysis parameters from the single core

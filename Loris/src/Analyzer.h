@@ -94,7 +94,16 @@ public:
 		difference between Partials). All other Analyzer parameters 	
 		are computed from the specified frequency resolution. 			
 	 */
-
+	Analyzer( const Analyzer & other );
+	/*	Construct and return a new Analyzer having identical
+		parameter configuration to another Analyzer. The list of 
+		collected Partials is not copied. 			
+	 */
+	Analyzer & operator = ( const Analyzer & rhs );
+	/*	Change this Analyzer's parameter configuration to 
+		be identical to that of another Analyzer. The list of 
+		collected Partials is not copied or otherwise modified. 			
+	 */
 	~Analyzer( void );
 	/*	Destroy this Analyzer. 								
 	 */
@@ -209,9 +218,6 @@ private:
 	void pruneBogusPartials( AnalyzerState & state );
 	void spawnPartial( double time, const Breakpoint & bp );
 	
-//	-- unimplemented --
-	Analyzer( const Analyzer & other );
-	Analyzer  & operator = ( const Analyzer & rhs );
 };	//	end of class Analyzer
 
 #if !defined( NO_LORIS_NAMESPACE )

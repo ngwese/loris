@@ -89,16 +89,6 @@ public:
 
 %addmethods
 {
-	%new SampleVector * copy( void )
-	{
-		return new SampleVector( *self );
-	}
-	/*	Return a new SampleVector that is a copy of this 
-		SampleVector, having the same number of samples, 
-		and samples at every position in the copy having 
-		the same value as the corresponding sample in
-		this SampleVector.
-	 */
 	double getAt( unsigned long idx )
 	{
 		return self->at(idx);

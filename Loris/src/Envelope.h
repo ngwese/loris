@@ -58,10 +58,6 @@ protected:
 	//	protect construction:
 	Envelope( void );
 	Envelope( const Envelope & );
-	
-//	-- unimplemented --
-private:
-	Envelope & operator= ( const Envelope & );
 
 };	//	end of abstract class Envelope
 

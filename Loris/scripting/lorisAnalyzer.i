@@ -43,6 +43,11 @@
 #include <list>
 typedef std::list< Loris::Partial > PartialList;
 using Loris::Analyzer;
+
+//	for procedural interface construction and 
+//	destruction, see comment below:
+#define LORIS_OPAQUE_POINTERS 0
+#include "loris.h"
 %}
 
 
@@ -65,20 +70,60 @@ class Analyzer
 {
 public:
 //	construction:
-	Analyzer( double resolutionHz );
+//
+//	Mac ONLY problem:
+//	use the construction and destruction functions in the 
+//	procedural interface until I can determine why deleting
+//	objects with destructors defined out of line (in the Loris
+//	DLL) cause the Macintosh to crash. Using the procedural 
+//	interface causes the objects with out of line destructors
+//	to be constructed and destructed in the DLL, instead of 
+//	across DLL boundaries, which might make a difference on
+//	the Mac.
+//	
+	//Analyzer( double resolutionHz );
 	/*	Construct and return a new Analyzer configured with the given	
 		frequency resolution (minimum instantaneous frequency	
 		difference between Partials). All other Analyzer parameters 	
 		are computed from the specified frequency resolution. 			
 	 */
-
-	~Analyzer( void );
+	//%name( AnalyzerCopy ) Analyzer( const Analyzer & other );
+	/*	Construct and return a new Analyzer having identical
+		parameter configuration to another Analyzer.			
+	 */
+	//~Analyzer( void );
 	/*	Destroy this Analyzer. 								
 	 */
 
 //	analysis:
 %addmethods 
 {
+	Analyzer( double resolutionHz )
+	{
+		return createAnalyzer( resolutionHz );
+	}
+	/*	Construct and return a new Analyzer configured with the given	
+		frequency resolution (minimum instantaneous frequency	
+		difference between Partials). All other Analyzer parameters 	
+		are computed from the specified frequency resolution. 			
+	 */
+	//%name( AnalyzerCopy ) Analyzer( const Analyzer & other )
+	%name( AnalyzerCopy ) Analyzer( const Analyzer * other )
+	{
+		Analyzer * a = createAnalyzer( other->freqResolution() );
+		*a = *other;
+		return a;
+	}
+	/*	Construct and return a new Analyzer having identical
+		parameter configuration to another Analyzer.			
+	 */
+	~Analyzer( void )
+	{
+		destroyAnalyzer( self );
+	}
+	/*	Destroy this Analyzer. 								
+	 */	
+	
 	%new 
 	PartialList * analyze( const SampleVector * vec, double srate )
 	{
