@@ -8,20 +8,18 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-EXTRA_DIST = loris.py perLoris.pm loris.i lorisPartialList.i 
+EXTRA_DIST = loris.py loris.i lorisPartialList.i 
 
-CLEANFILES = loris.pyo loris.pyc $(PYTHON_CMODULE) $(TCL_MODULE) $(PERL_MODULE)
+CLEANFILES = loris.pyo loris.pyc $(PYTHON_CMODULE)
 MAINTAINERCLEANFILES = Makefile.in
 
 PYTHON_WRAPPER = loris_python_wrap.C
-TCL_WRAPPER = loris_tcl_wrap.C
-PERL_WRAPPER = loris_perl_wrap.C
 
 #----------------------------------------------------------------
 # Darwin is special, libtool doesn't work right.
 #
 if DARWIN
-INCLUDES = -I$(top_srcdir)/src $(PYINCLUDE) $(TCLINCLUDE) $(PERLINCLUDE)
+INCLUDES = -I$(top_srcdir)/src $(PYINCLUDE)
 else
 INCLUDES = -I$(top_srcdir)/src 
 endif
@@ -73,109 +71,23 @@ endif
 
 
 #----------------------------------------------------------------
-# If Tcl is available, define a target for building and
-# installing the Tcl module
-#
-if BUILD_TCL
-# tclsitepkgdir = $(pkglibdir)/tcl
-# I have no idea where I am supposed to put this.
-tclsitepkgdir = $(exec_prefix)/lib/tcl
-
-#----------------------------------------------------------------
-# Darwin is special, libtool doesn't work right.
-#
-if DARWIN
-TCL_MODULE = tcLoris.so
-INSTALL_TCL_MODULE = install_tcl_module
-
-$(TCL_MODULE): loris_tcl_wrap.o $(top_builddir)/src/.libs/libloris.a
-	$(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(LDFLAGS) \
-		-dynamiclib -flat_namespace -undefined suppress \
-		-o $@ loris_tcl_wrap.o $(top_builddir)/src/.libs/libloris.a \
-		$(LINK_FFTW) $(LIBS)
-	-mkdir .libs
-	cp $@ .libs/$@
-
-install_tcl_module:
-	$(mkinstalldirs) $(tclsitepkgdir)
-	$(INSTALL) $(TCL_MODULE) $(tclsitepkgdir)/$(TCL_MODULE)
-
-else
-#
-# not Darwin, use libtool
-#
-tclsitepkg_LTLIBRARIES = tcLoris.la
-tcLoris_la_SOURCES = $(TCL_WRAPPER)
-tcLoris_la_CXXFLAGS = $(AM_CXXFLAGS) $(TCLINCLUDE) 
-tcLoris_la_LDFLAGS = -module -avoid-version
-tcLoris_la_LIBADD = $(top_builddir)/src/libloris.la -lstdc++
-endif
-
-endif
-
-#----------------------------------------------------------------
-# If the user insists, build the Perl module. It is untested.
-#
-if BUILD_PERL
-perlsitepkgdir = $(exec_prefix)/lib/$(SITEPERL)
-perlsitepkg_SCRIPTS = perLoris.pm
-
-#----------------------------------------------------------------
-# Darwin is special, libtool doesn't work right.
-#
-if DARWIN
-PERL_MODULE = perLoris.bundle
-INSTALL_PERL_MODULE = install_perl_module
-
-$(PERL_MODULE): loris_perl_wrap.o $(top_builddir)/src/.libs/libloris.a
-	$(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(LDFLAGS) \
-		-bundle -flat_namespace -undefined suppress \
-		-o $@ loris_perl_wrap.o $(top_builddir)/src/.libs/libloris.a \
-		$(LINK_FFTW) $(LIBS)
-	-mkdir .libs
-	cp $@ .libs/$@
-
-install_perl_module:
-	$(mkinstalldirs) $(perlsitepkgdir)
-	$(INSTALL) $(PERL_MODULE) $(perlsitepkgdir)/$(PERL_MODULE)
-
-# don't seem to need this, libtool works correctly, even 
-# under Darwin
-#	$(INSTALL) $(perlsitepkg_SCRIPTS) $(perlsitepkgdir)/$(perlsitepkg_SCRIPTS)
-
-else
-#
-# not Darwin, use libtool
-#
-perlsitepkg_LTLIBRARIES = perLoris.la
-perLoris_la_SOURCES = $(PERL_WRAPPER)
-perLoris_la_CXXFLAGS = $(AM_CXXFLAGS) $(PERLINCLUDE) 
-perLoris_la_LDFLAGS = -module -avoid-version
-perLoris_la_LIBADD = $(top_builddir)/src/libloris.la -lstdc++
-endif
-
-endif
-
-#----------------------------------------------------------------
 # Special build and install rules for Darwin, libtool doesn't work.
 #
 if DARWIN
 
-all-local: $(PYTHON_MODULE) $(TCL_MODULE) $(PERL_MODULE)
+all-local: $(PYTHON_MODULE)
 
-install-exec-local: $(INSTALL_PYTHON_MODULE) $(INSTALL_TCL_MODULE) $(INSTALL_PERL_MODULE)
+install-exec-local: $(INSTALL_PYTHON_MODULE)
 
 endif 
 
 #----------------------------------------------------------------
-# If swig is available, define a target for building the
-# wrappers from swig interface files.
+# Define a target for building the
+# wrapper from swig interface files.
 #
-if HAVE_SWIG
+SWIG = swig
 SWIG_INTERFACE = loris.i
 
-wrappers: 
+wrapper: 
+	mv $(PYTHON_WRAPPER) $(PYTHON_WRAPPER).bak
 	$(SWIG) -python -c++ -module loris -o $(PYTHON_WRAPPER) $(SWIG_INTERFACE)
-	$(SWIG) -tcl -c++ -module tcLoris -o $(TCL_WRAPPER) $(SWIG_INTERFACE)
-	$(SWIG) -perl -c++ -module perLoris -o $(PERL_WRAPPER) $(SWIG_INTERFACE)
-endif

@@ -8,7 +8,7 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-EXTRA_DIST = clarinet.aiff flute.aiff fromKyma.spc morphtest.py morphtest.tcl
+EXTRA_DIST = clarinet.aiff flute.aiff fromKyma.spc morphtest.py
 
 MAINTAINERCLEANFILES = 	Makefile.in
 
@@ -74,28 +74,12 @@ $(PYTHON_TEST):
 	chmod +x $@
 endif
 
-if BUILD_TCL
-TCL_TEST = run_tcltest
-$(TCL_TEST):
-	echo "env srcdir=$(srcdir) top_builddir=$(top_builddir) \
-		$(TCLSH) $(top_srcdir)/test/morphtest.tcl" >> $@
-	chmod +x $@
-endif
-
-if BUILD_PERL
-PERL_TEST = run_perltest
-$(PERL_TEST):
-	echo "$(PERL) -I$(top_srcdir)/scripting:$(top_builddir)/scripting/.libs \
-			 -e 'use perLoris; print perLoris::version, \"\n\";'" >> $@
-	chmod +x $@
-endif
-
 check_PROGRAMS = test_aiff test_partial test_distiller test_sdiffile test_morpher test_c
-check_SCRIPTS = $(PYTHON_TEST) $(TCL_TEST) $(PERL_TEST)
+check_SCRIPTS = $(PYTHON_TEST)
 
 TESTS = $(check_PROGRAMS) $(check_SCRIPTS) 
 
-CLEANFILES = $(PYTHON_TEST) $(TCL_TEST) $(PERL_TEST)
+CLEANFILES = $(PYTHON_TEST) 
 
 distclean-local:
-	-rm -fr *.ctest.* *.pytest.* *.tcltest.* tmp.sdif 
+	-rm -fr *.ctest.* *.pytest.* tmp.sdif 
