@@ -35,12 +35,13 @@
 	#include <config.h>
 #endif
 
-#include<Dilator.h>
-#include<Partial.h>
-#include<PartialList.h>
-#include<Breakpoint.h>
-#include<Exception.h>
-#include<Notifier.h>
+#include <Dilator.h>
+#include <Breakpoint.h>
+#include <Exception.h>
+#include <Notifier.h>
+#include <Partial.h>
+#include <PartialList.h>
+
 #include <algorithm>
 
 //	begin namespace
@@ -86,6 +87,55 @@ Dilator::insert( double i, double t )
 {
 	_initial.push_back(i);
 	_target.push_back(t);
+}
+
+// ---------------------------------------------------------------------------
+//	warpTime
+// ---------------------------------------------------------------------------
+//	Return the dilated time value corresponding to the specified initial time.
+//
+double
+Dilator::warpTime( double currentTime )
+{
+    int idx = std::distance( _initial.begin(), 
+                             std::lower_bound( _initial.begin(), _initial.end(), currentTime ) );
+    Assert( idx == _initial.size() || currentTime <= _initial[idx] );
+    
+    //	compute a new time for the Breakpoint at pIter:
+    double newtime = 0;
+    if ( idx == 0 ) 
+    {
+        //	all time points in _initial are later than 
+        //	the currentTime; stretch if no zero time 
+        //	point has been specified, otherwise, shift:
+        if ( _initial[idx] != 0. )
+            newtime = currentTime * _target[idx] / _initial[idx];
+        else
+            newtime = _target[idx] + (currentTime - _initial[idx]);
+    }
+    else if ( idx == _initial.size() ) 
+    {
+        //	all time points in _initial are earlier than 
+        //	the currentTime; shift:
+        //
+        //	note: size is already known to be > 0, so
+        //	idx-1 is safe
+        newtime = _target[idx-1] + (currentTime - _initial[idx-1]);
+    }
+    else 
+    {
+        //	currentTime is between the time points at idx and
+        //	idx-1 in _initial; shift and stretch: 
+        //
+        //	note: size is already known to be > 0, so
+        //	idx-1 is safe
+        Assert( _initial[idx-1] < _initial[idx] );	//	currentTime can't wind up 
+                                                    //	between two equal times
+        
+        double stretch = (_target[idx]	- _target[idx-1]) / (_initial[idx] - _initial[idx-1]);			
+        newtime = _target[idx-1] + ((currentTime - _initial[idx-1]) * stretch);
+    }
+
 }
 
 // ---------------------------------------------------------------------------
@@ -139,11 +189,16 @@ Dilator::dilate( Partial & p )
 		//	find the first initial time point later 
 		//	than the currentTime:
 		double currentTime = iter.time();
+        /*
 		while ( idx < _initial.size() && currentTime > _initial[idx] )
 		{
 			++idx;
 		}
-	
+        */
+        idx = std::distance( _initial.begin(), 
+                             std::lower_bound( _initial.begin(), _initial.end(), currentTime ) );
+        Assert( idx == _initial.size() || currentTime <= _initial[idx] );
+        
 		//	compute a new time for the Breakpoint at pIter:
 		double newtime = 0;
 		if ( idx == 0 ) 
@@ -180,8 +235,9 @@ Dilator::dilate( Partial & p )
 		}
 		
 		//	add a Breakpoint at the computed time:
-		newp.insert( newtime, Breakpoint( iter.breakpoint().frequency(), iter.breakpoint().amplitude(), 
-										  iter.breakpoint().bandwidth(), iter.breakpoint().phase() ) );
+		//newp.insert( newtime, Breakpoint( iter.breakpoint().frequency(), iter.breakpoint().amplitude(), 
+		//								  iter.breakpoint().bandwidth(), iter.breakpoint().phase() ) );
+		newp.insert( newtime, iter.breakpoint() );
 	}
 	
 	//	new Breakpoints need to be added to the Partial at times corresponding
@@ -197,8 +253,8 @@ Dilator::dilate( Partial & p )
 		else
 		{
 			newp.insert( _target[idx], 
-						Breakpoint( p.frequencyAt(_initial[idx]), p.amplitudeAt(_initial[idx]),
-									p.bandwidthAt(_initial[idx]), p.phaseAt(_initial[idx]) ) );
+						 Breakpoint( p.frequencyAt(_initial[idx]), p.amplitudeAt(_initial[idx]),
+									 p.bandwidthAt(_initial[idx]), p.phaseAt(_initial[idx]) ) );
 		}
 	}
 	

@@ -776,31 +776,78 @@ operator() ( PartialList::iterator dilate_begin, PartialList::iterator dilate_en
 </pre>
 </blockquote>	
 
+<p><tt><b> warpTime( double currentTime )</b></tt>
+<blockquote>[ returns double  ]
+<br>
+Return the dilated time value corresponding to the specified 
+initial time.
+</blockquote>
 				
 <p><a href="#contents"><small>Contents</small></a>	
 
 <a name="Distiller">
 <hr><h2>Distiller</h2></a>
 <p>
-A group of Partials that logically represent a single component
-can be distilled into a single Partial using a Distiller. 
+Class Distiller represents an algorithm for "distilling" a group of
+Partials that logically represent a single component into a single
+Partial.
 <p>
-<pre>
-//	construction:	
-	Distiller( void );
-	~Distiller( void );
-	
-//	distillation:
-	void distill( PartialList & container, PartialList::iterator dist_begin, 
-				  PartialList::iterator dist_end );
-	void distill( PartialList & container );
+The sound morphing algorithm in Loris requires that Partials in a
+given source be labeled uniquely, that is, no two Partials can have
+the same label. The Distiller enforces this condition. All Partials
+identified with a particular frequency channel (see <a
+href="#Channelizer">Channelizer</a>), and, therefore, having a common
+label, are distilled into a single Partial, leaving at most a single
+Partial per frequency channel and label. Channels that contain no
+Partials are not represented in the distilled data. Partials that are
+not labeled, that is, Partials having label 0, are unaffected by the
+distillation process. All unlabeled Partials remain unlabeled and
+unmodified in the distilled partial set.
+<p>
+Distillation modifies the Partial container (a PartialList). All 
+Partials in the distilled range having a common label are replaced
+by a single Partial in the distillation process.
+<p>
+<h3>Member Functions</h3>
+<h4>Construction</h4>
+<p><tt><b>Distiller( void )</b></tt>
+<blockquote>
+<br>
+Construct a new Distiller.
+</blockquote>
 
-//	function call operator:
-	void operator() ( PartialList & container, PartialList::iterator dist_begin, 
-					  PartialList::iterator dist_end )
-		{ distill( container, dist_begin, dist_end ); }
-</pre>
-				
+<p><tt><b>~Distiller( void )</b></tt>
+<blockquote>
+<br>
+Destroy this Distiller.
+</blockquote>
+	
+<h4>Distillation</h4>
+
+<p><tt><b> distill( PartialList & container, PartialList::iterator dist_begin, 
+PartialList::iterator dist_end )
+</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Distill Partial on the specified half-open (STL-style) range in the
+specified container (PartialList). 
+</blockquote>	
+
+<p><tt><b> distill( PartialList & container )</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Distill all Partials in the specified container (PartialList).
+</blockquote>
+
+<p><tt><b> operator() ( PartialList & container, PartialList::iterator dist_begin, 
+PartialList::iterator dist_end )
+</b></tt>
+<blockquote>[ returns void  ]
+<br>
+Function call operator: same as distill( PartialList & container, PartialList::iterator dist_begin, 
+PartialList::iterator dist_end ). 
+</blockquote>
+	
 <p><a href="#contents"><small>Contents</small></a>	
 
 <a name="Envelope">

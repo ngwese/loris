@@ -152,12 +152,12 @@ int main( )
 				  << tgt_times[1] << ")" << endl;
 		std::cout << "flute times: (" << flute_times[0] << ", " 
 				  << flute_times[1] << ")" << endl;
-		Dilator dil( flute_times, tgt_times, 2 );
+		Dilator dil( flute_times, flute_times+2, tgt_times );
 		dil.dilate( flut.begin(), flut.end() );
 		
 		std::cout << "clarinet times: (" << clar_times[0] << ", " 
 				  << clar_times[1] << ")" << endl;
-		Dilator dil2( clar_times, tgt_times, 2 );	//	 no assignment operator yet
+		Dilator dil2( clar_times, clar_times+2, tgt_times );	//	 no assignment operator yet
 		dil2.dilate( clar.begin(), clar.end() );
 		
 		

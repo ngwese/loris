@@ -289,6 +289,7 @@ static struct SpcExportInfo spcEI;		// spc Export information
 //		- file is mono, not stereo (despite the fact that it contain BW&phase)
 //		- file claims to have twice the number of partials
 //		- file claims to have twice the number of samples (2 mono samples = 1 stereo)
+//		- currently, SpcFile::read() only works for kludge-enhanced spc files.
 #define MONO_ENH 1
 
 

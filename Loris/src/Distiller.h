@@ -42,28 +42,55 @@ namespace Loris {
 // ---------------------------------------------------------------------------
 //	class Distiller
 //
-//	A group of Partials that logically represent a single component
-//	can be distilled into a single Partial using a Distiller. 
-//
+//	Class Distiller represents an algorithm for "distilling" a group of
+//	Partials that logically represent a single component into a single
+//	Partial.
+//	
+//	The sound morphing algorithm in Loris requires that Partials in a
+//	given source be labeled uniquely, that is, no two Partials can have
+//	the same label. The Distiller enforces this condition. All Partials
+//	identified with a particular frequency channel (see Channelizer), and,
+//	therefore, having a common label, are distilled into a single Partial,
+//	leaving at most a single Partial per frequency channel and label.
+//	Channels that contain no Partials are not represented in the distilled
+//	data. Partials that are not labeled, that is, Partials having label 0,
+//	are unaffected by the distillation process. All unlabeled Partials
+//	remain unlabeled and unmodified in the distilled partial set.
+//	
+//	Distillation modifies the Partial container (a PartialList). All
+//	Partials in the distilled range having a common label are replaced by
+//	a single Partial in the distillation process.
 //
 class Distiller
 {
 //	-- public interface --
 public:
-//	construction:	
+//	-- construction --
 	Distiller( void );
+	/*	Construct a new Distiller.
+	 */
+	 
 	~Distiller( void );
+	/*	Destroy this Distiller.
+	 */
 	
-//	distillation:
+//	-- distillation --
 	void distill( PartialList & container, PartialList::iterator dist_begin, 
 				  PartialList::iterator dist_end );
+	/*	Distill Partial on the specified half-open (STL-style) range in the
+		specified container (PartialList). 
+	 */
+	 
 	void distill( PartialList & container );
+	/*	Distill all Partials in the specified container (PartialList).
+	 */
 
-//	function call operator:
 	void operator() ( PartialList & container, PartialList::iterator dist_begin, 
 					  PartialList::iterator dist_end )
 		{ distill( container, dist_begin, dist_end ); }
-
+	/*	Function call operator: same as distill( PartialList & container,
+		PartialList::iterator dist_begin, PartialList::iterator dist_end ).
+	 */
 
 //	-- unimplemented --
 private:

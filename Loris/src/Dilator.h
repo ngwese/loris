@@ -138,6 +138,11 @@ public:
 	/*	Function call operator: same as dilate( Iter dilate_begin, Iter dilate_end )
 	 */
 	 
+    double warpTime( double currentTime );
+    /*	Return the dilated time value corresponding to the specified 
+        initial time.
+     */
+
 //	-- unimplemented until useful --
 private:
 	Dilator( const Dilator & );
