@@ -16,7 +16,13 @@ test_c_SOURCES = morphtest.C
 test_c_LDADD = $(top_builddir)/pi/libloris.la
 
 test_morpher_SOURCES = test_Morpher.C
+# Darwin is special, dynamic linking sometimes seems to fail 
+# on this test (only), can't figure it out.
+if DARWIN
+test_morpher_LDADD = $(top_builddir)/pi/.libs/libloris.a
+else
 test_morpher_LDADD = $(top_builddir)/pi/libloris.la
+endif
 
 if BUILD_PYTHON
 PYTHON_TEST = run_pytest

@@ -185,7 +185,6 @@ int main( )
 		
 		//	restore
 		testM.setBandwidthFunction( bwenv );
-		
 		/*                                                */
 		/*********** Partial morphing tests ***************/
 		/*                                                */
