@@ -39,6 +39,9 @@ class Analyzer
 							//	in spectral analysis
 	double _hop;		//	in seconds, time between analysis windows in
 						//	successive spectral analyses
+	double _cropTime;	//	in seconds, maximum time correction for a spectral
+						//	component to be considered reliable, and to be eligible
+						//	for extraction and for Breakpoint formation
 	double _bwRegionWidth;	//	width in Hz of overlapping bandwidth 
 							//	association regions
 							
@@ -62,6 +65,7 @@ public:
 	double windowWidth( void ) const { return _windowWidth; }
 	double freqFloor( void ) const { return _minFrequency; }
 	double hopTime( void ) const { return _hop; }
+	double cropTime( void ) const { return _cropTime; }
 	double bwRegionWidth( void ) const { return _bwRegionWidth; }
 	
 //	parameter mutation:
@@ -70,6 +74,7 @@ public:
 	void setWindowWidth( double x ) { _windowWidth = x; }
 	void setFreqFloor( double x ) { _minFrequency = x; }
 	void setHopTime( double x ) { _hop = x; }
+	void setCropTime( double x ) { _cropTime = x; }
 	void setBwRegionWidth( double x ) { _bwRegionWidth = x; }	
 
 //	PartialList access:

@@ -79,6 +79,7 @@ AnalyzerState::AnalyzerState( const Analyzer & anal, double srate ) :
 		if (! (winlen % 2)) {
 			++winlen;
 		}
+		debugger << "Using Kaiser window of length " << winlen << endl;
 		
 		//	configure window:
 		std::vector< double > v( winlen );
@@ -132,20 +133,38 @@ Analyzer::configure( double resolutionHz )
 	//	frequency resolution:
 	_windowWidth = _resolution;
 	
+	//	OLD COMMENT:
 	//	the bare minimum component frequency that should be
 	//	considered corresponds to two periods of a sine wave
 	//	in the analysis window (this is pretty minimal) and
 	//	this minimum is enforced in extractPeaks(). 
 	//	The _minFrequency allows a higher frequency threshold
 	//	to be set, for harmonic analyses, for example:
-	_minFrequency = 0.;
+	//
+	//	NEW COMMENT:
+	//	I think that's ugly, the two periods thing can't
+	//	be determined until the analysis is being run (because
+	//	it is sample rate dependent) so the client can't tell
+	//	whether its frequencyFloor setting is relevant or
+	//	is being overriden by the two periods thing. Instead,
+	//	use the frequency resolution by default (this makes 
+	//	Lip happy, and is always safe?) and allow the client 
+	//	to change it to anything at all.
+	_minFrequency = _resolution;
 	
-	//	frame length (in seconds) is the inverse of the
+	//	hop time (in seconds) is the inverse of the
 	//	window width....really. Smith and Serra (1990) cite 
 	//	Allen (1977) saying: a good choice of hop is the window 
 	//	length divided by the main lobe width in frequency samples,
 	//	which turns out to be just the inverse of the width.
 	_hop = 1. / _windowWidth;
+	
+	//	crop time (in seconds) is the maximum allowable time
+	//	correction, beyond which a reassigned spectral component
+	//	is considered unreliable, and not considered eligible for
+	//	Breakpoint formation in extractPeaks(). By default, use
+	//	the hop time:
+	_cropTime = _hop;
 	
 	//	bandwidth association region width 
 	//	defaults to 2 kHz, corresponding to 
@@ -270,17 +289,21 @@ struct frequency_between
 //	so the frame generated here is automatically frequency-sorted.
 //
 void 
-Analyzer::extractPeaks( std::list< Breakpoint > & frame, double frameTime, AnalyzerState & state )
+Analyzer::extractPeaks( std::list< Breakpoint > & frame, double frameTime, 
+						AnalyzerState & state )
 {
 	const double threshold = std::pow( 10., 0.05 * ampFloor() );	//	absolute magnitude threshold
 	const double sampsToHz = state.sampleRate() / state.spectrum().size();
-	const long hopSize = long( hopTime() * state.sampleRate() );
+	const long maxCorrection = long( cropTime() * state.sampleRate() );
 	
+	//	FORMERLY:
 	//	the bare minimum component frequency that should be
 	//	considered corresponds to two periods of a sine wave
 	//	in the analysis window (this is pretty minimal):
-	const double fmin = 
-		std::max( freqFloor(), 2. / (state.spectrum().window().size() / state.sampleRate()) );
+	//
+	//	no longer, just use freqFloor.
+	const double fmin = freqFloor();
+		//std::max( freqFloor(), 2. / (state.spectrum().window().size() / state.sampleRate()) );
 	
 	//	cache corrected times for the extracted breakpoints, so 
 	//	that they don't hafta be computed over and over again:
@@ -308,7 +331,7 @@ Analyzer::extractPeaks( std::list< Breakpoint > & frame, double frameTime, Analy
 			//	if the time correction for this peak is large,
 			//	reject it:
 			double timeCorrection = state.spectrum().reassignedTime( fsample );
-			if ( std::abs(timeCorrection) > hopSize )
+			if ( std::abs(timeCorrection) > maxCorrection )
 				continue;
 				
 			//	retain a spectral peak corresponding to this sample:
