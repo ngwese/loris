@@ -59,7 +59,7 @@ public:
 //	Synthesize a bandwidth-enhanced sinusoidal Partial with the specified 
 //	timeShift (in seconds). The Partial parameter data is filtered by the 
 //	Synthesizer's PartialView. Zero-amplitude Breakpoints are inserted
-//	1 millisecond (FADE_TIME) from either end of the Partial to reduce 
+//	1 millisecond (Partial::FadeTime()) from either end of the Partial to reduce 
 //	turn-on and turn-off artifacts. The client is responsible or insuring
 //	that the buffer is long enough to hold all samples from the time-shifted
 //	and padded Partials. Synthesizer will not generate samples outside the

@@ -13,13 +13,15 @@
 //
 // ===========================================================================
 #include "Partial.h"
-#include "Map.h"
+#include "Exception.h"
 #include <memory>	//	for auto_ptr
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
 #endif
+
+class Map;
 
 // ---------------------------------------------------------------------------
 //	class Morph
@@ -29,6 +31,8 @@ namespace Loris {
 class Morph
 {
 //	-- instance variables --
+	//	it would be better to use the reference-counted
+	//	smart pointers from Batov than std::auto_ptrs.
 	std::auto_ptr< Map > _freqFunction;	//	frequency morphing function
 	std::auto_ptr< Map > _ampFunction;	//	amplitude morphing function
 	std::auto_ptr< Map > _bwFunction;	//	bandwidth morphing function
@@ -38,10 +42,10 @@ class Morph
 //	-- public interface --
 public:
 //	construction:
-//	(allow compiler to generate destructor)
 	Morph( void );
 	Morph( const Map & f );
 	Morph( const Map & ff, const Map & af, const Map & bwf );
+	~Morph( void );
 	
 //	morphing:
 //	Morph two sounds (collections of Partials labeled to indicate
@@ -86,6 +90,16 @@ protected:
 //	default label, 0)
 	void crossfadeLists( const PartialList & fromlist, 
 						 const PartialList & tolist );
+						 
+	void crossfade( PartialList::const_iterator begin0, 
+					PartialList::const_iterator end0,
+					PartialList::const_iterator begin1, 
+					PartialList::const_iterator end1 );
+
+						 
+//	static member for accessing the label for 
+//	crossfaded Partials (0):
+	static int CrossfadeLabel(void);
 
 //	-- unimplemented until useful --
 private:
@@ -93,6 +107,19 @@ private:
 	Morph & operator= ( const Morph & other );
 
 };	//	end of class Morph
+
+// ---------------------------------------------------------------------------
+//	class MorphException
+//
+//	Class of exceptions thrown when there is an error morphing
+//	Partials.
+//
+class MorphException : public Exception
+{
+public: 
+	MorphException( const std::string & str, const std::string & where = "" ) : 
+		Exception( std::string("Morph Error -- ").append( str ), where ) {}		
+};
 
 #if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris

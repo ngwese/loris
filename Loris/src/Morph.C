@@ -15,16 +15,11 @@
 #include "Exception.h"
 #include "Partial.h"
 #include "Breakpoint.h"
-#include "Distiller.h"
 #include "Map.h"
 #include "notifier.h"
 #include <set>
-
-#if !defined( Deprecated_cstd_headers )
-	#include <cmath>
-#else
-	#include <math.h>
-#endif
+#include <cmath>
+#include <functional>
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
@@ -32,9 +27,6 @@ namespace Loris {
 #endif
 
 //	declarations of local helpers, defined at bottom:
-static void collectLabels( PartialList::const_iterator begin, 
-						   PartialList::const_iterator end, 
-						   std::set<int> & labels );
 static void collectByLabel( PartialList::const_iterator start, 
 							PartialList::const_iterator end, 
 							PartialList & collector, 
@@ -74,46 +66,96 @@ Morph::Morph( const Map & ff, const Map & af, const Map & bwf ) :
 }
 
 // ---------------------------------------------------------------------------
+//	Morph destructor
+// ---------------------------------------------------------------------------
+//
+Morph::~Morph( void )
+{
+}
+
+// ---------------------------------------------------------------------------
 //	morph
 // ---------------------------------------------------------------------------
 //	Morph two sounds (collections of Partials labeled to indicate
 //	correspondences) into a single labeled collection of Partials.
 //
+
+struct LabelIs : std::binary_function< const Partial, int, bool >
+{
+	bool operator()( const Partial & p, int label ) const 
+		{ return p.label() == label; }
+};
+
 void 
 Morph::morph( PartialList::const_iterator begin0, 
 			  PartialList::const_iterator end0,
 			  PartialList::const_iterator begin1, 
 			  PartialList::const_iterator end1 )
 {
-	//	find label range:
-	std::set< int > labels;
-	collectLabels( begin0, end0, labels );
-	collectLabels( begin1, end1, labels );
-	const int CROSSFADE_LABEL = 0;
-	
-	//	loop over lots of labels:
-	for ( std::set< int >::iterator it = labels.begin(); it != labels.end(); ++it ) {
-		int label = *it;
-		
-		//	collect Partials in plist1:
-		PartialList sublist1;
-		collectByLabel( begin0, end0, sublist1, label );
-
-		//	collect Partials in plist2:
-		PartialList sublist2;
-		collectByLabel( begin1, end1, sublist2, label );
-		
-		if ( label == CROSSFADE_LABEL ) {
-			debugger << "crossfading Partials labeled " << label << endl;
-			crossfadeLists( sublist1, sublist2 );
-		}
-		else {
-			debugger << "morphing " << sublist1.size() << " and "
-					 << sublist2.size() << " partials with label " << label << endl;
-					 
-			morphLists( sublist1, sublist2, label );
+	//	collect the labels in the two Partial ranges, 
+	//	object if the Partials have not been distilled,
+	//	that is, if they contain multiple Partials having 
+	//	the same non-zero label:
+	std::set< int > labels, moreLabels;
+	for ( PartialList::const_iterator it = begin0; it != end0; ++it ) 
+	{
+		//	don't add the crossfade label to the set:
+		if ( it->label() != CrossfadeLabel() )
+		{
+			//	set::insert() returns a pair, the second element
+			//	of which is false if the insertion failed because
+			//	the set already contained the insertee:
+			if ( ! labels.insert(it->label()).second )
+				Throw( MorphException, "Partials must be distilled before morphing." );
 		}
 	}
+	for ( PartialList::const_iterator it = begin1; it != end1; ++it ) 
+	{
+		//	don't add the crossfade label to the set:
+		if ( it->label() != CrossfadeLabel() )
+		{
+			//	as above:
+			if ( ! moreLabels.insert(it->label()).second )
+				Throw( MorphException, "Partials must be distilled before morphing." );
+		}
+	}
+	labels.insert( moreLabels.begin(), moreLabels.end() );
+		
+	//	loop over lots of labels:
+	std::set< int >::iterator labelIter;
+	for ( labelIter = labels.begin(); labelIter != labels.end(); ++labelIter ) 
+	{
+		Assert( *labelIter != CrossfadeLabel() );
+		
+		//	find source Partial 0:
+		const Partial nullPartial;
+		PartialList::const_iterator piter = 
+			find_if( begin0, end0, std::bind2nd(LabelIs(), *labelIter) );
+		const Partial & p0 = ( piter != end0 )?( *piter ):( nullPartial );
+		//const Partial * pptr0 = ( piter != end0 )?( &(*piter) ):( &nullPartial );
+				
+		//	find source Partial 1:
+		piter = find_if( begin1, end1, std::bind2nd(LabelIs(), *labelIter) );
+		const Partial & p1 = ( piter != end1 )?( *piter ):( nullPartial );
+		//const Partial * pptr1 = ( piter != end1 )?( &(*piter) ):( &nullPartial );
+		
+		debugger << "morphing " << ((&p0 != &nullPartial)?(1):(0)) 
+				 << " and " << ((&p1 != &nullPartial)?(1):(0)) 
+				 <<	" partials with label " <<	*labelIter << endl;
+					 
+		morphPartial( p0, p1, *labelIter );
+		
+	}	//	end loop over labels
+	
+	//	crossfade the remaining Partials:
+	crossfade( begin0, end0, begin1, end1 );
+	/*
+	PartialList sublist0, sublist1;
+	collectByLabel( begin0, end0, sublist0, CrossfadeLabel() );
+	collectByLabel( begin1, end1, sublist1, CrossfadeLabel() );
+	debugger << "crossfading Partials labeled " << *labelIter << endl;
+	crossfadeLists( sublist0, sublist1 );
+	*/
 }
 
 // ---------------------------------------------------------------------------
@@ -144,29 +186,6 @@ void
 Morph::setBandwidthFunction( const Map & f )
 {
 	_bwFunction.reset( f.clone() );
-}
-
-// ---------------------------------------------------------------------------
-//	morphLists
-// ---------------------------------------------------------------------------
-//	Distill and morph. Either distillation could yield an empty Partial, 
-//	but morphPartial can deal with it.
-//
-void
-Morph::morphLists( const PartialList & fromlist, const PartialList & tolist, 
-				   int assignLabel /* default = 0 */ )
-{
-	//	don't bother if there's no Partials:
-	if ( fromlist.size() == 0 && tolist.size() == 0 ) {
-		//	this shouldn't happen:
-		debugger << "Morph::morphLists() got two empty lists!" << endl;
-		return;
-	}
-	
-	Distiller still;
-	morphPartial( still.distill( fromlist.begin(), fromlist.end() ), 
-				  still.distill( tolist.begin(), tolist.end() ),
-				  assignLabel );
 }
 
 // ---------------------------------------------------------------------------
@@ -252,11 +271,52 @@ Morph::morphPartial( const Partial & p0, const Partial & p1, int assignLabel /* 
 }
 
 // ---------------------------------------------------------------------------
+//	crossfade
+// ---------------------------------------------------------------------------
+//	Crossfade Partials with no correspondences.
+//
+//	The Partials having label 0 (CrossfadeLabel) are considered to 
+//	have no correspondences, so they are just faded out, and not 
+//	actually morphed. This is the same as morphing each with an 
+//	empty Partial. 
+//
+//	The Partials in the first range are treated as components of the 
+//	sound corresponding to a morph function of 0, those in the second
+//	are treated as components of the sound corresponding to a 
+//	morph function of 1.
+//
+void 
+Morph::crossfade( PartialList::const_iterator begin0, 
+				  PartialList::const_iterator end0,
+				  PartialList::const_iterator begin1, 
+				  PartialList::const_iterator end1 )
+{
+	Partial nullPartial;
+	const int CFL = CrossfadeLabel();
+	debugger << "crossfading Partials labeled " << CFL << endl;
+
+	//	crossfade Partials corresponding to a morph weight of 0:
+	PartialList::const_iterator it;
+	for ( it = begin0; it != end0; ++it )
+	{
+		if ( it->label() == CFL )
+			morphPartial( *it, nullPartial );	
+	}
+
+	//	crossfade Partials corresponding to a morph weight of 1:
+	for ( it = begin1; it != end1; ++it )
+	{
+		if ( it->label() == CFL )
+			morphPartial( nullPartial, *it );
+	}
+}
+
+// ---------------------------------------------------------------------------
 //	crossfadeLists
 // ---------------------------------------------------------------------------
 //	Crossfade Partials with no correspondences.
 //
-//	The Partials in the  specified range are considered to have 
+//	The Partials in the specified range are considered to have 
 //	no correspondences, so they are just faded out, and not 
 //	actually morphed. This is the same as morphing each with an 
 //	empty Partial. 
@@ -288,30 +348,10 @@ Morph::crossfadeLists( const PartialList & fromlist,
 }
 
 // ---------------------------------------------------------------------------
-//	collectLabels
-// ---------------------------------------------------------------------------
-//	Collect Partial labels in a set.	
-//
-//	local helper
-//
-static void collectLabels( PartialList::const_iterator begin, 
-						   PartialList::const_iterator end, 
-						   std::set<int> & labels )
-{
-	while ( begin != end ) {
-		labels.insert( begin->label() );
-		++begin;
-	}
-}
-
-// ---------------------------------------------------------------------------
 //	collectByLabel
 // ---------------------------------------------------------------------------
-//	Copy all Partials in the range [start, end) having the specified label 
-//	into collector. It would be more efficient to splice the element from
-//	the original list, but those lists are immutable, so just copy it.
-//
-//	local helper
+//	Static member for accessing the label for 
+//	crossfaded Partials (0):
 //
 static void collectByLabel( PartialList::const_iterator start, 
 							PartialList::const_iterator end, 
@@ -324,6 +364,18 @@ static void collectByLabel( PartialList::const_iterator start,
 		}
 		++start;
 	}
+}
+
+// ---------------------------------------------------------------------------
+//	CrossfadeLabel
+// ---------------------------------------------------------------------------
+//	Static member for accessing the label for 
+//	crossfaded Partials (0):
+int 
+Morph::CrossfadeLabel(void)
+{
+	const int CROSSFADE_LABEL = 0;
+	return CROSSFADE_LABEL;
 }
 
 #if !defined( NO_LORIS_NAMESPACE )

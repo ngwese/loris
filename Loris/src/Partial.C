@@ -336,6 +336,20 @@ Partial::bandwidthAt( double time ) const
 	}
 }
 
+// ---------------------------------------------------------------------------
+//	FadeTime
+// ---------------------------------------------------------------------------
+//	Static member for making sure that all algorithms
+//	that fade Partials in and out use the same fade time.
+//	Returns 1 ms.
+//	
+double
+Partial::FadeTime( void )
+{
+	const double FADE_TIME = 0.001;	//	1 ms
+	return FADE_TIME;
+}
+
 #if !defined( NO_LORIS_NAMESPACE )
 }	//	end of namespace Loris
 #endif

@@ -58,7 +58,7 @@ Synthesizer::Synthesizer( const Synthesizer & other ) :
 //	Synthesize a bandwidth-enhanced sinusoidal Partial with the specified 
 //	timeShift (in seconds). The Partial parameter data is filtered by the 
 //	Synthesizer's PartialView. Zero-amplitude Breakpoints are inserted
-//	1 millisecond (FADE_TIME) from either end of the Partial to reduce 
+//	1 millisecond (Partial::FadeTime()) from either end of the Partial to reduce 
 //	turn-on and turn-off artifacts. The client is responsible or insuring
 //	that the buffer is long enough to hold all samples from the time-shifted
 //	and padded Partials. Synthesizer will not generate samples outside the
@@ -89,8 +89,7 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ )
 	
 //	compute the initial oscillator state, assuming
 //	a prepended Breakpoint of zero amplitude:
-	const double FADE_TIME = 0.001; 	//	1 ms
-	double itime = iterator.time() + timeShift - FADE_TIME;
+	double itime = iterator.time() + timeShift - Partial::FadeTime();
 	double ifreq = iterator.frequency();
 	double iamp = 0.;
 	double ibw = iterator.bandwidth();
@@ -173,8 +172,8 @@ Synthesizer::synthesize( const Partial & p, double timeShift /* = 0.*/ )
 //	interpolate final oscillator state if the target 
 //	final sample is past the end of the buffer:
 	long finalsamp = 
-		std::min( curSampleIdx + long(FADE_TIME * sampleRate()), long(_samples.size()) );
-	double alpha = (finalsamp - curSampleIdx) / (FADE_TIME * sampleRate());
+		std::min( curSampleIdx + long(Partial::FadeTime() * sampleRate()), long(_samples.size()) );
+	double alpha = (finalsamp - curSampleIdx) / (Partial::FadeTime() * sampleRate());
 	tgtradfreq = (alpha * tgtradfreq) + ((1. - alpha) * osc.radianFreq());
 	tgtamp = (alpha * tgtamp) + ((1. - alpha) * osc.amplitude());
 	tgtbw = (alpha * tgtbw) + ((1. - alpha) * osc.bandwidth());

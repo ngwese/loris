@@ -1,5 +1,5 @@
-#ifndef __Loris_distiller__
-#define __Loris_distiller__
+#ifndef INCLUDE_DISTILLER_H
+#define INCLUDE_DISTILLER_H
 
 // ===========================================================================
 //	Distiller.h
@@ -11,13 +11,15 @@
 //
 // ===========================================================================
 #include "Partial.h"
-#include <list>
+#include "Exception.h"
+#include <memory>	//	for auto_ptr
 
 #if !defined( NO_LORIS_NAMESPACE )
 //	begin namespace
 namespace Loris {
 #endif
 
+class Map;
 
 // ---------------------------------------------------------------------------
 //	class Distiller
@@ -28,17 +30,19 @@ class Distiller
 {
 //	-- instance variables --
 	PartialList _partials;	//	collect Partials here
+	std::auto_ptr< Map > _referenceEnv;
+	int _refLabel;
 			
 //	-- public interface --
 public:
 //	construction:	
-//	(allow compiler to generate destructor)
-	Distiller( void ) {}
+	Distiller( const Map & env, int label );
+	~Distiller( void );
 	
 //	distillation:
-	const Partial & distill( PartialList::const_iterator start,
-							 PartialList::const_iterator end, 
-							 int assignLabel = 0 );
+	void distill( PartialList::const_iterator start,
+				  PartialList::const_iterator end,
+				  int assignLabel = 0 );
 
 //	PartialList access:
 	PartialList & partials( void ) { return _partials; }
@@ -53,6 +57,11 @@ protected:
 	bool gapAt( double time, 
 				PartialList::const_iterator start,
 				PartialList::const_iterator end ) const;
+				
+	void fixGaps( Partial & dest, 
+				  PartialList::const_iterator start,
+				  PartialList::const_iterator end,
+				  double freqRatio );
 				   
 //	-- unimplemented --
 private:
@@ -65,4 +74,4 @@ private:
 }	//	end of namespace Loris
 #endif
 
-#endif	// ndef __Loris_distiller__
+#endif	// ndef INCLUDE_DISTILLER_H

@@ -90,6 +90,9 @@ public:
 	double bandwidthAt( double time ) const;
 	double phaseAt( double time ) const;
 	
+//	static member for making sure that all algorithms
+//	that fade Partials in and out use the same fade time:
+	static double FadeTime( void );
 };	//	end of class Partial
 
 // ---------------------------------------------------------------------------
