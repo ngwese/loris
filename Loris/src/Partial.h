@@ -24,7 +24,7 @@
  *
  * Partial.h
  *
- * Definition of class Loris::Partial.
+ * Definition of class Loris::Partial an associated iterators and exceptions.
  *
  * Kelly Fitz, 16 Aug 1999
  * loris@cerlsoundgroup.org
@@ -47,15 +47,27 @@ class PartialConstIterator;
 // ---------------------------------------------------------------------------
 //	class Partial
 //
-//	Definition of class of objects representing reassigned bandwidth-enhanced 
-//	model components in Loris. Partials are described by the Partial parameter 
-//	(frequency, amplitude, bandwidth) envelope and a 4-byte label. 
-//
-//	Loris Partials represent reassigned bandwidth-enhanced model components.
-//	A Partial consists of a chain of Breakpoints describing the time-varying
-//	frequency, amplitude, and bandwidth (noisiness) of the component.
-//
-//	Leaf class, do not subclass.
+//	An instance of class Partial represents a single component in the
+//	reassigned bandwidth-enhanced additive model. A Partial consists of a
+//	chain of Breakpoints describing the time-varying frequency, amplitude,
+//	and bandwidth (or noisiness) envelopes of the component, and a 4-byte
+//	label. The Breakpoints are non-uniformly distributed in time. For more
+//	information about Reassigned Bandwidth-Enhanced Analysis and the
+//	Reassigned Bandwidth-Enhanced Additive Sound Model, refer to the Loris
+//	website: www.cerlsoundgroup.org/Loris/.
+//	
+//	The constituent time-tagged Breakpoints are accessible through
+//	Partial:iterator and Partial::const_iterator interfaces, which are
+//	typedefs for PartialIterator and PartialConstIterator, respectively.
+//	These iterator classes implement the interface for bidirectional
+//	iterators in the STL, including pre and post-increment and decrement,
+//	and dereferencing. Dereferencing a PartialIterator or
+//	PartialConstIterator yields a reference to a Breakpoint. Additionally,
+//	these iterator classes have breakpoint() and time() members, returning
+//	the Breakpoint (by reference) at the current iterator position and the
+//	time (by value) corresponding to that Breakpoint.
+//	
+//	Partial is a leaf class, do not subclass.
 //
 class Partial
 {
@@ -65,84 +77,167 @@ class Partial
 
 //	-- public interface --
 public:
-//	construction:
+//	-- construction --
 	Partial( void );
+	/* 	Retun a new empty (no Breakpoints) Partial.
+	 */
+	 
 	Partial( const Partial & other );
+	/*	Return a new Partial that is an exact copy (has an identical set
+		of Breakpoints, at identical times, and the same label) of another 
+		Partial.
+	 */
+	 
 	~Partial( void );
+	/* 	Destroy this Partial.
+	 */
 	
-//	access/query:
-	int label( void ) const { return _label; }
-	double initialPhase( void ) const;
-	double startTime( void ) const;
-	double endTime( void ) const;
-	double duration( void ) const;
-	long numBreakpoints( void ) const { return _bpmap.size(); }
-	
-//	mutation:
-	void setLabel( int l ) { _label = l; }
-	
-//	comparison:
+//	-- comparison --
 	bool operator== ( const Partial & rhs ) const;
+	/*	Equality operator: return true if this Partial has an identical
+		parameter envelope (identical Breakpoints at identical times) and the
+		same label as the Partial rhs, otherwise return false.
+	 */
+	 
+//	-- access --
+	double duration( void ) const;
+	/*	Return the duration (in seconds) spanned by the Breakpoints in
+		this Partial. Note that the synthesized onset time will differ,
+		depending on the fade time used to synthesize this Partial (see
+		class Synthesizer).
+	 */
+	 
+	double endTime( void ) const;
+	/*	Return the time (in seconds) of the last Breakpoint in this
+		Partial. Note that the synthesized onset time will differ,
+		depending on the fade time used to synthesize this Partial (see
+		class Synthesizer).
+	 */
+	 
+	double initialPhase( void ) const;
+	/*	Return the phase (in radians) of this Partial at its start time
+		(the phase of the first Breakpoint). Note that the initial
+		synthesized phase will differ, depending on the fade time used
+		to synthesize this Partial (see class Synthesizer).
+	 */
+	 
+	int label( void ) const { return _label; }
+	/*	Return the 32-bit label for this Partial as an integer.
+	 */
+	 
+	long numBreakpoints( void ) const { return _bpmap.size(); }
+	/*	Return the number of Breakpoints in this Partial.
+	 */
 	
-//	iterator generation:
+	double startTime( void ) const;
+	/*	Return the time (in seconds) of the first Breakpoint in this
+		Partial. Note that the synthesized onset time will differ,
+		depending on the fade time used to synthesize this Partial (see
+		class Synthesizer).
+	 */
+	 
+//	-- mutation --
+	void setLabel( int l ) { _label = l; }
+	/*	Set the label for this Partial to the specified 32-bit value.
+	 */
+	
+//	-- iterator access --
 	typedef PartialIterator iterator;
 	typedef PartialConstIterator const_iterator;
-	iterator begin( void );
-	iterator end( void );
-	const_iterator begin( void ) const;
-	const_iterator end( void ) const;
 	
-//	Breakpoint insertion:
-//	Make a copy of bp and insert it at time (seconds),
-//	return an iterator refering to the inserted Breakpoint.
-	iterator insert( double time, const Breakpoint & bp );
+	iterator begin( void );
+	const_iterator begin( void ) const;
+	/*	Return a PartialIterator refering to the position of the first
+		Breakpoint in this Partial's envelope.
+		
+		For const Partials, returns a PartialConstIterator.
+	 */
+	 
+	iterator end( void );
+	const_iterator end( void ) const;
+	/*	Return a PartialIterator refering to the position past the last
+		Breakpoint in this Partial's envelope. The iterator returned by
+		end() (like the iterator returned by the end() member of any STL
+		container) does not refer to a valid Breakpoint. 	
 
-//	Return the insertion position for a Breakpoint at
-//	the specified time (that is, the position of the first
-//	Breakpoint at a time later than the specified time).
+		For const Partials, returns a PartialConstIterator.
+	 */
+	 
+	void erase( iterator & pos );
+	/*	Breakpoint removal: erase the Breakpoint at the position of the given
+		PartialIterator (invalidating the PartialIterator).
+	 */
+	 
 	iterator findAfter( double time );
 	const_iterator findAfter( double time ) const;
-	
-//	Return the insertion position for the Breakpoint nearest
-//	the specified time.
+	/*	Return a PartialIterator refering to the insertion position for a
+		Breakpoint at the specified time (that is, the position of the first
+		Breakpoint at a time later than the specified time).
+		
+		For const Partials, returns a PartialConstIterator.
+	 */
+	 
 	iterator findNearest( double time );
 	const_iterator findNearest( double time ) const;
-	
-//	Breakpoint removal:
-//	Erase the Breakpoint at the position of the 
-//	given iterator (invalidating the iterator).
-	void erase( iterator & pos );
-	
-//	partial envelope interpolation/extrapolation:
-//	Return the interpolated value of a partial parameter at
-//	the specified time. At times beyond the ends of the
-//	Partial, frequency and bandwidth hold their boundary values,
-//	amplitude is zero, and phase is computed from frequency.
-//	There is of sensible definition for any of these for Partials
-//	having no Breakpoints, so they except (InvalidPartial) under 
-//	that condition.
-//
-	double frequencyAt( double time ) const;
+	/*	Return a PartialIterator refering to the position of the
+		Breakpoint in this Partial nearest the specified time.
+		
+		For const Partials, returns a PartialConstIterator.
+	 */
+	 
+	iterator insert( double time, const Breakpoint & bp );
+	/*	Breakpoint insertion: insert a copy of the specified Breakpoint in the
+		parameter envelope at time (seconds), and return a PartialIterator
+		refering to the position of the inserted Breakpoint.
+	 */
+	 
+//	-- parameter interpolation/extrapolation --
 	double amplitudeAt( double time ) const;
+	/*	Return the interpolated amplitude of this Partial at the
+		specified time. At times beyond the ends of the Partial, return
+		zero. Throw an InvalidPartial exception if this Partial has no
+		Breakpoints.
+	 */
+	 
 	double bandwidthAt( double time ) const;
+	/*	Return the interpolated bandwidth (noisiness) coefficient of
+		this Partial at the specified time. At times beyond the ends of
+		the Partial, return the bandwidth coefficient at the nearest
+		envelope endpoint. Throw an InvalidPartial exception if this
+		Partial has no Breakpoints.
+	 */
+	 
+	double frequencyAt( double time ) const;
+	/*	Return the interpolated frequency (in Hz) of this Partial at the
+		specified time. At times beyond the ends of the Partial, return
+		the frequency at the nearest envelope endpoint. Throw an
+		InvalidPartial exception if this Partial has no Breakpoints.
+	 */
+	 
 	double phaseAt( double time ) const;
-	
+	/*	Return the interpolated phase (in radians) of this Partial at
+		the specified time. At times beyond the ends of the Partial,
+		return the extrapolated from the nearest envelope endpoint
+		(assuming constant frequency, as reported by frequencyAt()).
+		Throw an InvalidPartial exception if this Partial has no
+		Breakpoints.
+	 */
+	 
 //	static member for making sure that all algorithms
 //	that fade Partials in and out use the same fade time:
+//	(this is on its way out!)
 	static double FadeTime( void );
 	
-//	static long DebugCounter;
-
 };	//	end of class Partial
 
 // ---------------------------------------------------------------------------
 //	class PartialIterator
 //
-//	This is pretty much just a wrapper for the nasty-looking map<>
-//	iterators.
-//
 //	Non-const iterator for the Loris::Partial Breakpoint map. Wraps
-//	the non-const iterator for std::map< double, Breakpoint >.
+//	the non-const iterator for std::map< double, Breakpoint >. Implements
+//	a bidirectional iterator interface, and additionally offers time
+//	and Breakpoint (reference) access through time() and breakpoint()
+//	memebrs.
 //
 class PartialIterator
 {
@@ -151,6 +246,7 @@ class PartialIterator
 	
 //	-- public interface --
 public:
+//	-- bidirectional iterator interface --
 //	construction:
 //	(allow compiler to generate copy, assignment, and destruction):
 	PartialIterator( void ) {}
@@ -162,11 +258,6 @@ public:
 //	post-increment/decrement:
 	PartialIterator operator ++ ( int ) { return PartialIterator( _iter++ ); } 
 	PartialIterator operator -- ( int ) { return PartialIterator( _iter-- ); } 
-	
-//	time and Breakpoint access:
-	const Breakpoint & breakpoint( void ) const { return _iter->second; }
-	Breakpoint & breakpoint( void ) { return _iter->second; }
-	double time( void ) const { return _iter->first; }	
 	
 //	dereference (for treating Partial like a 
 //	STL collection of Breakpoints):
@@ -180,6 +271,11 @@ public:
 		{ return lhs._iter == rhs._iter; }
 	friend bool operator != ( const PartialIterator & lhs, const PartialIterator & rhs )
 		{ return lhs._iter != rhs._iter; }
+	
+//	-- time and Breakpoint access --
+	const Breakpoint & breakpoint( void ) const { return _iter->second; }
+	Breakpoint & breakpoint( void ) { return _iter->second; }
+	double time( void ) const { return _iter->first; }	
 	
 //	-- private implementation --
 private:
@@ -196,7 +292,10 @@ private:
 //	class PartialConstIterator
 //
 //	Const iterator for the Loris::Partial Breakpoint map. Wraps
-//	the const iterator for std::map< double, Breakpoint >.
+//	the const iterator for std::map< double, Breakpoint >. Implements
+//	a bidirectional iterator interface, and additionally offers time
+//	and Breakpoint (reference) access through time() and breakpoint()
+//	memebrs.
 //
 class PartialConstIterator
 {
@@ -205,6 +304,7 @@ class PartialConstIterator
 	
 //	-- public interface --
 public:
+//	-- bidirectional iterator interface --
 //	construction:
 //	(allow compiler to generate copy, assignment, and destruction):
 	PartialConstIterator( void ) {}
@@ -218,10 +318,6 @@ public:
 	PartialConstIterator operator ++ ( int ) { return PartialConstIterator( _iter++ ); } 
 	PartialConstIterator operator -- ( int ) { return PartialConstIterator( _iter-- ); } 
 	
-//	time and Breakpoint access:
-	const Breakpoint & breakpoint( void ) const { return _iter->second; }	
-	double time( void ) const { return _iter->first; }	
-
 //	dereference (for treating Partial like a 
 //	STL collection of Breakpoints):
 	const Breakpoint & operator * ( void ) const { return _iter->second; }
@@ -233,6 +329,10 @@ public:
 	friend bool operator != ( const PartialConstIterator & lhs, const PartialConstIterator & rhs )
 		{ return lhs._iter != rhs._iter; }
 	
+//	-- time and Breakpoint access --
+	const Breakpoint & breakpoint( void ) const { return _iter->second; }	
+	double time( void ) const { return _iter->first; }	
+
 //	-- private implementation --
 private:
 	//	construction by Partial from a map<> iterator:
