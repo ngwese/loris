@@ -1003,7 +1003,6 @@ SWIGEXPORT(int) SWIG_init(Tcl_Interp *);
 
 using Loris::debugger;
 using Loris::Partial;
-using Loris::PartialUtils;
 using Loris::Breakpoint;
 
 //	define the names of the classes that are 
@@ -1027,7 +1026,7 @@ PartialList *PartialList_copy(PartialList *self){
 		}
 void PartialList_timeSpan(PartialList *self,double *tmin_out,double *tmax_out){
 		 	std::pair<double, double> span = 
-		 		PartialUtils::timeSpan( self->begin(), self->end() );
+		 		Loris::PartialUtils::timeSpan( self->begin(), self->end() );
 		 	*tmin_out = span.first;
 		 	*tmax_out = span.second;
 		 }

@@ -68,7 +68,6 @@
 
 using Loris::debugger;
 using Loris::Partial;
-using Loris::PartialUtils;
 using Loris::Breakpoint;
 
 //	define the names of the classes that are 
@@ -133,7 +132,7 @@ public:
 		 void timeSpan( double * tmin_out, double * tmax_out )
 		 {
 		 	std::pair<double, double> span = 
-		 		PartialUtils::timeSpan( self->begin(), self->end() );
+		 		Loris::PartialUtils::timeSpan( self->begin(), self->end() );
 		 	*tmin_out = span.first;
 		 	*tmax_out = span.second;
 		 }
