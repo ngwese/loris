@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *
- * SpcFile.hcc
+ * SpcFile.C
  *
  * Implementation of SpcFile class for Partial import and export for
  * real-time synthesis in Kyma.
@@ -801,6 +801,10 @@ configureSosMarkerCk( MarkerCk & ck, const std::vector< Marker > & markers  )
 		//	characters plus the size byte, plus the terminal '\0':
 		dataSize += sizeof(Uint_16) + sizeof(Uint_32) + (m.markerName.size() + 2);
 	}
+
+	//	must be an even number of bytes
+	if ( dataSize%2 )
+		++dataSize;
 
 	ck.header.size = dataSize;
 }

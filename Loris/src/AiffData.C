@@ -442,6 +442,10 @@ configureMarkerCk( MarkerCk & ck, const std::vector< Marker > & markers, double 
 		dataSize += sizeof(Uint_16) + sizeof(Uint_32) + (m.markerName.size() + 2);
 	}
 
+	//	must be an even number of bytes
+	if ( dataSize%2 )
+		++dataSize;
+
 	ck.header.size = dataSize;
 }
 
@@ -592,6 +596,7 @@ writeMarkerData( std::ostream & s, const MarkerCk & ck )
 		BigEndian::write( s, 1, sizeof(Int_32), (char *)&ck.header.size );
 		BigEndian::write( s, 1, sizeof(Uint_16), (char *)&ck.numMarkers );
 		
+		int markerbytes = 0;
 		for ( int j = 0; j < ck.markers.size(); ++j )
 		{
 			const MarkerCk::Marker & m = ck.markers[j];
@@ -609,7 +614,12 @@ writeMarkerData( std::ostream & s, const MarkerCk & ck )
 			tmpChars[m.markerName.size()+1] = '\0';
 			
 			BigEndian::write( s, bytesToWrite, sizeof(char), tmpChars );
+			markerbytes += bytesToWrite;
 		}
+		
+		//	be sure to write an even number of bytes
+		if ( markerbytes%2 )
+			BigEndian::write( s, 1, sizeof(char), "\0" );
 		
 	}
 	catch( FileIOException & ex ) 
