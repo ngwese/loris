@@ -40,7 +40,9 @@ namespace Loris {
 // ---------------------------------------------------------------------------
 //	class Breakpoint
 // ---------------------------------------------------------------------------
-/**	Class Breakpoint represents a single breakpoint in the
+/**	\class Breakpoint Breakpoint.h loris/Breakpoint.h
+ *	
+ *	Class Breakpoint represents a single breakpoint in the
  *	Partial parameter (frequency, amplitude, bandwidth) envelope.
  *	Instantaneous phase is also stored, but is only used at the onset of 
  *	a partial, or when it makes a transition from zero to nonzero amplitude.
@@ -119,12 +121,12 @@ public:
 	 */
  	void setBandwidth( double x ) { _bandwidth = x; }
 
-	/*	Set the frequency of this Breakpoint.
+	/**	Set the frequency of this Breakpoint.
 	 	\param x is the new frequency.
 	 */
  	void setFrequency( double x ) { _frequency = x; }
 
-	/*	Set the phase of this Breakpoint.
+	/**	Set the phase of this Breakpoint.
 	 	\param x is the new phase.
 	 */
  	void setPhase( double x ) { _phase = x; }

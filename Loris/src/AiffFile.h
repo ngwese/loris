@@ -49,7 +49,9 @@ class Partial;
 // ---------------------------------------------------------------------------
 //	class AiffFile
 //
-/**	Class AiffFile represents sample data in a AIFF-format samples 
+/**	\class AiffFile AiffFile.h loris/AiffFile.h
+ *	
+ *	Class AiffFile represents sample data in a AIFF-format samples 
  *	file, and manages file I/O and sample conversion. Since the sound
  *	analysis and synthesis algorithms in Loris and the reassigned
  *	bandwidth-enhanced representation are monaural, AiffFile manages
@@ -69,7 +71,7 @@ public:
 	 */
 	typedef samples_type::size_type size_type;
 	
-	/** 	The type of AIFF marker storage in an AiffFile.
+	/** The type of AIFF marker storage in an AiffFile.
 	 */
 	typedef std::vector< Marker > markers_type;
 

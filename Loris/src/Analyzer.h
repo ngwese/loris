@@ -46,7 +46,9 @@ class Envelope;
 // ---------------------------------------------------------------------------
 //	class Analyzer
 // ---------------------------------------------------------------------------
-/**	Class Analyzer represents a configuration of parameters for
+/**	\class Analyzer Analyzer.h loris/Analyzer.h
+ *	
+ *	Class Analyzer represents a configuration of parameters for
  *	performing Reassigned Bandwidth-Enhanced Additive Analysis
  *	of sampled sounds. The analysis process yields a collection 
  *	of Partials, each having a trio of synchronous, non-uniformly-

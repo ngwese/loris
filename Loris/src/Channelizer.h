@@ -48,7 +48,8 @@ class Partial;
 // ---------------------------------------------------------------------------
 //	Channelizer
 // ---------------------------------------------------------------------------
-/**	
+/**	\class Channelizer Channelizer.h loris/Channelizer.h
+ *	
  *	Class Channelizer represents an algorithm for automatic labeling of
  *	a sequence of Partials. Partials must be labeled in
  *	preparation for morphing (see Morpher) to establish correspondences

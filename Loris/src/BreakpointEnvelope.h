@@ -39,16 +39,37 @@
 //	begin namespace
 namespace Loris {
 
+/** \class BreakpointEnvelope BreakpointEnvelope.h loris/BreakpointEnvelope.h
+ */
+
 // ---------------------------------------------------------------------------
 //	class BreakpointEnvelope
 // ---------------------------------------------------------------------------
-/**	A BreakpointEnvelope represents a linear segment breakpoint 
+/**	\class BreakpointEnvelope BreakpointEnvelope.h loris/BreakpointEnvelope.h
+ *	
+ *	A BreakpointEnvelope represents a linear segment breakpoint 
  *	function with infinite extension at each end (that is, evalutaing 
  *	the envelope past either end of the breakpoint function yields the 
  *	value at the nearest end point).
  *
  *	BreakpointEnvelope implements the Envelope interface, described
  *	by the abstract class Envelope. 
+ *
+ *	BreakpointEnvelope inherits the types
+ *		\li \c size_type
+ *		\li \c value_type
+ *		\li \c iterator
+ *		\li \c const_iterator
+ *
+ *	and the member functions
+ *		\li <tt>size_type size( void ) const</tt>
+ *		\li <tt>bool empty( void ) const</tt>
+ *		\li <tt>iterator begin( void )</tt>
+ *		\li <tt>const_iterator begin( void ) const</tt>
+ *		\li <tt>iterator end( void )</tt>
+ *		\li <tt>const_iterator end( void ) const</tt>
+ *
+ *	from <tt>std::map< double, double ></tt>.
  */
 class BreakpointEnvelope : public Envelope, private std::map< double, double >
 {
@@ -94,10 +115,7 @@ public:
 	void insertBreakpoint( double time, double value );
 	 
 //	-- interface inherited from std::map --
-//	cannot figure out how to get these documented using doxygen
-
-	using std::map< double, double >::size; //!< Detailed description after the member
-
+	using std::map< double, double >::size;
 	using std::map< double, double >::empty;
 	using std::map< double, double >::begin;
 	using std::map< double, double >::end;
