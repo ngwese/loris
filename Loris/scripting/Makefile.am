@@ -11,11 +11,12 @@ PERL_WRAPPER = loris_perl_wrap.C
 # If Python is available, define a target for building and
 # installing the Python module
 #
-# cannot figure out how to have it build always, but 
-# install conditionally
-#
 if HAVE_PYTHON_H
+if HAVE_SITEPY
+pythonsitepkgdir = $(SITEPY)
+else
 pythonsitepkgdir = $(pkglibdir)/python
+endif
 pythonsitepkg_SCRIPTS = loris.py loris.pyo
 pythonsitepkg_LTLIBRARIES = loriscmodule.la
 endif
