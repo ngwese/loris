@@ -233,7 +233,6 @@ void sampleVector_fill( SampleVector * vec, double * buffer, unsigned long bufsi
 	}
 }
 
-
 /* ---------------------------------------------------------------- */
 /*        sampleVector_getAt        
 /*
