@@ -127,11 +127,6 @@ ReassignedSpectrum::applyFreqRamp( vector< double > & w )
 	_transform.load( w );
 	_transform.transform();
 	
-	//	now that I have the window spectrum, I should be able
-	//	to compute its slope near the peak, and use that later
-	//	to correct the peak magnitudes:
-	//mWinTransformSlope = 1. - abs( winFT.complexAt(1) ) / abs( winFT.complexAt(0) );
-	
 	//	extract complex transform and multiply by
 	//	a frequency (sample) ramp:
 	//	(the frequency ramp goes from 0 to N/2
@@ -155,16 +150,7 @@ ReassignedSpectrum::applyFreqRamp( vector< double > & w )
 	//
 	//	seems that I want the imaginary part of the index-reversed
 	//	transform scaled by the size of the transform:
-	rotate( _transform.begin(), _transform.begin() + 1, _transform.end() );
-	reverse( _transform.begin(), _transform.end() );
-	/*
-	std::transform( winFT.begin(), 
-					winFT.end(), 
-					_freqRampWin.begin(), 
-					imag<double> );
-	for_each( _freqRampWin.begin(), _freqRampWin.end(), 
-				bind2nd( divides<double>(), winFT.size() ) );
-	*/
+	reverse( _transform.begin() + 1, _transform.end() );
 	for ( int i = 0; i < w.size(); ++i ) {
 		w[i] = - imag( _transform[i] ) / _transform.size();
 	}

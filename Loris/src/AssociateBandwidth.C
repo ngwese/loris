@@ -29,10 +29,10 @@ AssociateBandwidth::AssociateBandwidth( const ReassignedSpectrum & spec,
 										double srate,
 										double resolution /* = 1000 */) :
 	_spectrum( spec ),
-	_spectralEnergy( int(0.5 * srate/resolution) ),
-	_sinusoidalEnergy( int(0.5 * srate/resolution) ),
-	_weights( int(0.5 * srate/resolution) ),
-	_surplus( int(0.5 * srate/resolution) ),
+	_spectralEnergy( 24 ), // int(0.5 * srate/resolution) ),
+	_sinusoidalEnergy( 24 ), // int(0.5 * srate/resolution) ),
+	_weights( 24 ), // int(0.5 * srate/resolution) ),
+	_surplus( 24 ), // int(0.5 * srate/resolution) ),
 	_regionRate( 1. / resolution ),
 	_hzPerSamp( srate / spec.size() )
 {
@@ -50,13 +50,6 @@ AssociateBandwidth::~AssociateBandwidth( void )
 // ---------------------------------------------------------------------------
 //	computeSurplusEnergy
 // ---------------------------------------------------------------------------
-//	In each region, compute the difference between the loudness (cube root 
-//	of energy) due to spectral energy and the loudness due to sinusoidal 
-//	energy, and from that difference compute the excess spectral energy 
-//	in each region. 
-//
-//	This is the only place we use loudness in this algorithm, probably 
-//	doesn't matter at all...
 //
 void
 AssociateBandwidth::computeSurplusEnergy( void )
@@ -192,7 +185,7 @@ AssociateBandwidth::reset( void )
 //	computeWindowSpectrum
 // ---------------------------------------------------------------------------
 //	
-#define WinSpecOversample 64
+static const long WinSpecOversample = 64;
 void
 AssociateBandwidth::computeWindowSpectrum( const vector< double > & v )
 {
@@ -275,8 +268,9 @@ AssociateBandwidth::accumulateSinusoid( double f, double a )
 	//	find the best rate to step through the 
 	//	window spectrum:
 	long step = WinSpecOversample;
-	long minStep = 1;
+	const long minStep = 1;
 	double leastRes = -1.;
+	const long Q = 4;
 	for ( ; step > minStep; --step ) {
 		//	compute the residue at this step:
 		//	(use offset here because we are comparing
@@ -285,7 +279,7 @@ AssociateBandwidth::accumulateSinusoid( double f, double a )
 		//	of the window spectrum at those samples)
 		double specSamp = _spectrum.magnitude(intBinNumber);
 		double res = (specSamp * specSamp) - (correctAmp * correctAmp);
-		for ( int j = 1; (step * j) + abs(offset) < _winspec.size(); ++j ) {
+		for ( int j = 1; (step * j) + abs(offset) < _winspec.size()/Q; ++j ) {
 			//	j FT bins above:
 			double z = correctAmp * _winspec[(step * j) + offset];
 			specSamp = _spectrum.magnitude(intBinNumber + j);
@@ -312,21 +306,56 @@ AssociateBandwidth::accumulateSinusoid( double f, double a )
 		leastRes = abs(res);
 	}	//	end for step
 	
-
-//#define GOOBER
-#ifdef GOOBER	
-	for ( ; step < 2 * WinSpecOversample; ++step ) {
 	
-	//	copy the residual again:
-	_residue = _specCopy;
-	fill( _sinSpec.begin(), _sinSpec.end(), 0. );
-#endif
+	//	if we don't like a smaller step, maybe a bigger one would
+	//	be nice:
+	if ( step == WinSpecOversample ) {
+		const long maxStep = 2 * WinSpecOversample;
+		for ( ++step; step < maxStep; ++step ) {
+			//	compute the residue at this step:
+			//	(use offset here because we are comparing
+			//	with the actual spectral samples, and 
+			//	the offset will give better measurements
+			//	of the window spectrum at those samples)
+			double specSamp = _spectrum.magnitude(intBinNumber);
+			double res = (specSamp * specSamp) - (correctAmp * correctAmp);
+			for ( int j = 1; (step * j) + abs(offset) < _winspec.size()/Q; ++j ) {
+				//	j FT bins above:
+				double z = correctAmp * _winspec[(step * j) + offset];
+				specSamp = _spectrum.magnitude(intBinNumber + j);
+				res += (specSamp * specSamp) - (z * z);
+				
+				//	j FT bins below, 
+				//	don't index bins below 0:
+				if ( intBinNumber >= j ) {
+					z = correctAmp * _winspec[(step * j) - offset];
+					specSamp = _spectrum.magnitude(intBinNumber - j);
+					res += (specSamp * specSamp) - (z * z);
+				}
+			}	//	end for j
+			
+			//	res is now the energy residue for
+			//	the current step, if it is worse than
+			//	the previous one, use the previous step
+			//	as the best one (assumes monotony):
+			if ( abs(res) > leastRes ) {
+				--step;
+				break;
+			}
+			//	otherwise, this is the smallest residue yet:
+			leastRes = abs(res);
+		}	//	end for step
+	}	//	end if we didn't like a smaller step
 	
 	//	distribute the peak amplitude: 
 	double z = correctAmp;
+	#define YOYO
+	#ifndef YOYO
 	distribute( f, z * z, _sinusoidalEnergy  );
-	// distribute( intBinNumber * _hzPerSamp, z * z, _sinusoidalEnergy  );
-
+	#else
+	double YO = z * z;
+	#endif
+	
 #ifdef Debug_Loris
 	double zz = correctAmp * _winspec[abs(offset)];
 	_sinSpec[ intBinNumber ] += zz;
@@ -336,9 +365,12 @@ AssociateBandwidth::accumulateSinusoid( double f, double a )
 	//	distribute samples of the oversampled window spectrum:
 	for ( int i = 1; (step * i) + abs(offset) < _winspec.size(); ++i ) {
 		z = correctAmp * _winspec[step * i];
+		#ifndef YOYO
 		distribute( f + (i * _hzPerSamp), z * z, _sinusoidalEnergy  );
-		// distribute( (intBinNumber + i) * _hzPerSamp, z * z, _sinusoidalEnergy  );
-
+		#else
+		YO += z * z;
+		#endif
+		
 #ifdef Debug_Loris
 		zz = correctAmp * _winspec[(step * i) + offset];
 		_sinSpec[ intBinNumber + i ] += zz;
@@ -348,9 +380,12 @@ AssociateBandwidth::accumulateSinusoid( double f, double a )
 		//	don't index bins below 0:
 		if ( intBinNumber >= i ) {
 			z = correctAmp * _winspec[step * i];
+			#ifndef YOYO
 			distribute( f - (i * _hzPerSamp), z * z, _sinusoidalEnergy  );
-			// distribute( (intBinNumber - i) * _hzPerSamp, z * z, _sinusoidalEnergy  );
-
+			#else
+			YO += z * z;
+			#endif
+			
 #ifdef Debug_Loris
 			zz = correctAmp * _winspec[(step * i) - offset];
 			_sinSpec[ intBinNumber - i ] += zz;
@@ -358,11 +393,11 @@ AssociateBandwidth::accumulateSinusoid( double f, double a )
 #endif
 		}
 	}
-
-#ifdef GOOBER	
-	}
-#endif
-
+	
+	#ifdef YOYO
+	distribute( f, YO, _sinusoidalEnergy  );
+	#endif
+	
 	//	compute a better amplitude estimate 
 	//	from the step and the window function:
 	double ampRatio = 1. - (0.5 * (1. - ((double)step / WinSpecOversample)));
@@ -383,5 +418,6 @@ inline double
 AssociateBandwidth::binFrequency( double freqHz )
 {
 	return freqHz * _regionRate;
+	//return bark( freqHz );
 }
 

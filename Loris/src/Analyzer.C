@@ -126,7 +126,7 @@ Analyzer::createSpectrum( double srate )
 	
 	//	window parameters:
 	long winlen = KaiserWindow::computeLength( _windowWidth / srate, _windowAtten );
-	if (! winlen % 2) {
+	if (! (winlen % 2)) {
 		++winlen;
 	}
 	double winshape = KaiserWindow::computeShape( _windowAtten );
@@ -141,7 +141,8 @@ Analyzer::createSpectrum( double srate )
 	
 	//	lower frequency bound for Breakpoint extraction,
 	//	require at least two (no, three!) periods in the window:
-	_minfreq = max( 2. / ( winlen / srate ), _freqResolution );
+	//_minfreq = max( 2. / ( winlen / srate ), _freqResolution );
+	_minfreq = 2. / ( winlen / srate );
 	
 	try {
 		//	configure window:
@@ -162,7 +163,7 @@ Analyzer::createSpectrum( double srate )
 	
 	debugger << "created reassigned spectrum analyzer: window length " <<
 			winlen << ", hop size " << _hop << ", minimum frequency " <<
-			_minfreq << endl; 
+			_minfreq << endl;
 }
 
 // ---------------------------------------------------------------------------
