@@ -44,8 +44,8 @@ Oscillator::Oscillator( void ) :
 	_phase( 0. ),		//	radians
 	_filter( Null  )
 {
-	//	initialize:
-	setFilter();
+	//	initialize the filter:
+	setFilter( f );
 }
 
 // ---------------------------------------------------------------------------
@@ -100,14 +100,21 @@ Oscillator::setFilter( Filter * f )
 //	the specified new values.
 //
 //	In Lemur, we used to synthesize at zero amplitude above the Nyquist 
-//	rate, could stick that in here sometime.
+//	rate, could stick that in here sometime, except that the Osciillator
+//	has no knowledge of sample rate... Should be handled by the Synthesizer.
 //
 void
-Oscillator::generateSamples( SampleBuffer & buffer, int howMany, int offset,
+Oscillator::generateSamples( SampleBuffer & buffer, long howMany, long offset,
 							 double targetFreq, double targetAmp, double targetBw )
 {
-	if ( howMany <= 0 )
+//	if no samples are generated, set the oscillator state to the
+//	target values anyway:
+	if ( howMany <= 0 ) {
+		_frequency = targetFreq;
+		_amplitude = targetAmp;
+		_bandwidth = targetBw;
 		return;
+	}
 		
 //	compute trajectories:
 	const double dFreq = (targetFreq - _frequency) / howMany;
@@ -116,10 +123,14 @@ Oscillator::generateSamples( SampleBuffer & buffer, int howMany, int offset,
 	
 	for ( int i = 0; i < howMany; ++i )
 	{
-//	compute a sample and add it into the buffer.			
-		buffer[ offset + i ] += 
-			modulate( _bandwidth ) * _amplitude * oscillate( _phase );
-		
+//	compute a sample and add it into the buffer.
+		//	don't insert samples at indices less than zero, but
+		//	compute the sample anyway, because the oscillator and
+		//	modulator might have state that need to be updated:
+		double x = modulate( _bandwidth ) * _amplitude * oscillate( _phase );
+		if ( offset + i >= 0 ) 	
+			buffer[ offset + i ] += x;
+			
 //	update the oscillator state:
 		_phase += _frequency;	//	_frequency is radians per sample
 		_frequency += dFreq;

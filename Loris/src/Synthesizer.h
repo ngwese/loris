@@ -38,6 +38,10 @@ class PartialIterator;
 // 	and are then owned by the Synthesizer, that is, they will be 
 //	destroyed with the Synthesizer.
 //
+//	Some properties of the Synthesizer cannot safely (or reasonably) 
+//	be changed on the fly: the buffer, the sample rate. Others, like
+//	the oscillator, the iterator, the offset, can usefully be modified.
+//
 class Synthesizer
 {
 //	-- public interface --
@@ -49,32 +53,53 @@ public:
 //	access:
 	double sampleRate( void ) const { return _sampleRate; }
 	
-//	for specifying the oscillator:
+	double offset( void ) const { return _offset; }
+	void setOffset( double x ) { _offset = x; }
+	
+	double fadeTime( void ) const { return _fadeTime; }
+	void setFadeTime( double x ) { if (x >= 0.) _fadeTime = x; }
+	
+	Oscillator & oscillator( void ) { return *_oscillator; }
+	const Oscillator & oscillator( void ) const { return *_oscillator; }
 	void setOscillator( Oscillator * osc = Null );
 	
-//	for specifying the iterator:
+	PartialIterator & iterator( void ) { return *_iterator; }
+	const PartialIterator & iterator( void ) const { return *_iterator; }
 	void setIterator( PartialIterator * iter = Null );
 	
 //	synthesis:
 	void synthesizePartial( const Partial & p );	
 	void operator()( const Partial & p ) { synthesizePartial( p ); }
 	
+//	-- template member functions for synthesis --
+//
+//	Strictly speaking, we can do without these if necessary.
+//
+#if !defined(No_template_members)
+	template < class Iterator >
+	void synthesize( Iterator begin, Iterator end )
+	{
+		while( begin != end ) {
+			synthesizePartial( *(begin++) );
+		}
+	}
+#endif 	//	template members allowed
+
 //	-- private helpers --
 private:
+	inline long synthesizeEnvelopeSegment( long currentSampleOffset );
+	inline long synthesizeFadeIn( long currentSampleOffset );
+	inline long synthesizeFadeOut( long currentSampleOffset );
 	inline double radianFreq( double hz ) const;
 
 //	-- instance variables --
-//	sample rate (Hz):
-	double _sampleRate;
+	double _sampleRate;		//	in Hz
+	double _offset;			//	time offset for synthesized Partials, in seconds
+	double _fadeTime;		//	default (maximum) fade in/out time for Partials, in seconds
 	
-//	sample buffer:
 	SampleBuffer & _samples;
-	
-//	oscillator:
 	Oscillator * _oscillator;
-
-//	partial iterator, possibly does transformation:
-	PartialIterator * _iterator;
+	PartialIterator * _iterator;	//	possibly does transformation
 	
 };	//	end of class Synthesizer
 

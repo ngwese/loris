@@ -26,7 +26,7 @@ class Filter;
 // ---------------------------------------------------------------------------
 //	class Oscillator
 //
-//	Oscillator is designed as a leaf class, and needs some minor modifications
+//	Oscillator is designed as a leaf class, and needs some modifications
 //	if it is to serve as a base class for other kinds of oscillators.
 //	
 class Oscillator
@@ -34,7 +34,7 @@ class Oscillator
 //	-- public interface --
 public:
 //	construction:
-	Oscillator( void );
+	Oscillator( Filter * f = Null );
 	~Oscillator( void );
 		
 //	state access/mutation:
@@ -52,7 +52,7 @@ public:
 	void reset( double radf, double amp, double bw, double ph );
 
 //	sample generation:	
-	void generateSamples( SampleBuffer & buffer, int howMany, int offset,
+	void generateSamples( SampleBuffer & buffer, long howMany, long offset,
 						  double targetFreq, double targetAmp, double targetBw );
 	
 //	filter access/specification:
