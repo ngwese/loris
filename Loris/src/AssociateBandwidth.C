@@ -9,10 +9,9 @@
 #include "AssociateBandwidth.h"
 #include "Exception.h"
 #include "Notifier.h"
-#include "bark.h"
-#include <algorithm>
 #include "FourierTransform.h"
 #include "ReassignedSpectrum.h"
+#include <algorithm>
 
 using namespace std;
 using namespace Loris;
@@ -29,10 +28,10 @@ AssociateBandwidth::AssociateBandwidth( const ReassignedSpectrum & spec,
 										double srate,
 										double resolution /* = 1000 */) :
 	_spectrum( spec ),
-	_spectralEnergy( 24 ), // int(0.5 * srate/resolution) ),
-	_sinusoidalEnergy( 24 ), // int(0.5 * srate/resolution) ),
-	_weights( 24 ), // int(0.5 * srate/resolution) ),
-	_surplus( 24 ), // int(0.5 * srate/resolution) ),
+	_spectralEnergy( int(0.5 * srate/resolution) ),
+	_sinusoidalEnergy( int(0.5 * srate/resolution) ),
+	_weights( int(0.5 * srate/resolution) ),
+	_surplus( int(0.5 * srate/resolution) ),
 	_regionRate( 1. / resolution ),
 	_hzPerSamp( srate / spec.size() )
 {
@@ -192,23 +191,26 @@ AssociateBandwidth::computeWindowSpectrum( const vector< double > & v )
 	debugger << "AssociateBandwidth oversampling window spectrum by " << WinSpecOversample << endl;
 	
 	FourierTransform ft( _spectrum.size() * WinSpecOversample );
-	//ft( v );
 	load( ft, v.begin(), v.end() );
 	ft.transform();	
 
 	double peakScale = 1. / abs( ft[0] );
 	for( long i = 0; i < ft.size(); ++i ) {
 		double x = peakScale * abs( ft[i] );
-		if ( i > 0 && x > _winspec[i-1] ) {
+		if ( i > 0 && x > _mainlobe[i-1] ) {
 			break;
 		}
-		_winspec.push_back( x );
+		_mainlobe.push_back( x );
 	}
 
-	//	compute the window scale:
-	_windowFactor = _winspec[0] * _winspec[0];
-	for ( long j = WinSpecOversample; j < _winspec.size(); j += WinSpecOversample ) {
-		_windowFactor += 2. * _winspec[j] * _winspec[j];
+	//	compute the window scale by summing the main
+	//	lobe samples:
+	_windowFactor = _mainlobe[0] * _mainlobe[0];
+	for ( long j = WinSpecOversample; j < _mainlobe.size(); j += WinSpecOversample ) {
+		//	twice, because _mainlobe has only one side of
+		//	the mainlobe, and all samples but the center
+		//	(DC) sample are reflected on the other side:
+		_windowFactor += 2. * _mainlobe[j] * _mainlobe[j];
 	}
 }
 
@@ -267,14 +269,14 @@ AssociateBandwidth::accumulateSinusoid( double f, double a )
 	long offset = round( WinSpecOversample * (intBinNumber - fracBinNum) );
 	
 	//	compute the more accurate peak amplitude:
-	double correctAmp = a / _winspec[abs(offset)];
+	double correctAmp = a / _mainlobe[abs(offset)];
 	
 	//	find the best rate to step through the 
 	//	window spectrum:
 	long step = WinSpecOversample;
 	const long minStep = 1;
 	double leastRes = -1.;
-	const long Q = 4;
+	const long Q = 1;// 4;
 	for ( ; step > minStep; --step ) {
 		//	compute the residue at this step:
 		//	(use offset here because we are comparing
@@ -283,16 +285,16 @@ AssociateBandwidth::accumulateSinusoid( double f, double a )
 		//	of the window spectrum at those samples)
 		double specSamp = _spectrum.magnitude(intBinNumber);
 		double res = (specSamp * specSamp) - (correctAmp * correctAmp);
-		for ( int j = 1; (step * j) + abs(offset) < _winspec.size()/Q; ++j ) {
+		for ( int j = 1; (step * j) + abs(offset) < _mainlobe.size()/Q; ++j ) {
 			//	j FT bins above:
-			double z = correctAmp * _winspec[(step * j) + offset];
+			double z = correctAmp * _mainlobe[(step * j) + offset];
 			specSamp = _spectrum.magnitude(intBinNumber + j);
 			res += (specSamp * specSamp) - (z * z);
 			
 			//	j FT bins below, 
 			//	don't index bins below 0:
 			if ( intBinNumber >= j ) {
-				z = correctAmp * _winspec[(step * j) - offset];
+				z = correctAmp * _mainlobe[(step * j) - offset];
 				specSamp = _spectrum.magnitude(intBinNumber - j);
 				res += (specSamp * specSamp) - (z * z);
 			}
@@ -323,16 +325,16 @@ AssociateBandwidth::accumulateSinusoid( double f, double a )
 			//	of the window spectrum at those samples)
 			double specSamp = _spectrum.magnitude(intBinNumber);
 			double res = (specSamp * specSamp) - (correctAmp * correctAmp);
-			for ( int j = 1; (step * j) + abs(offset) < _winspec.size()/Q; ++j ) {
+			for ( int j = 1; (step * j) + abs(offset) < _mainlobe.size()/Q; ++j ) {
 				//	j FT bins above:
-				double z = correctAmp * _winspec[(step * j) + offset];
+				double z = correctAmp * _mainlobe[(step * j) + offset];
 				specSamp = _spectrum.magnitude(intBinNumber + j);
 				res += (specSamp * specSamp) - (z * z);
 				
 				//	j FT bins below, 
 				//	don't index bins below 0:
 				if ( intBinNumber >= j ) {
-					z = correctAmp * _winspec[(step * j) - offset];
+					z = correctAmp * _mainlobe[(step * j) - offset];
 					specSamp = _spectrum.magnitude(intBinNumber - j);
 					res += (specSamp * specSamp) - (z * z);
 				}
@@ -361,14 +363,14 @@ AssociateBandwidth::accumulateSinusoid( double f, double a )
 	#endif
 	
 #ifdef Debug_Loris
-	double zz = correctAmp * _winspec[abs(offset)];
+	double zz = correctAmp * _mainlobe[abs(offset)];
 	_sinSpec[ intBinNumber ] += zz;
 	_residue[ intBinNumber ] -= zz;
 #endif
 
 	//	distribute samples of the oversampled window spectrum:
-	for ( int i = 1; (step * i) + abs(offset) < _winspec.size(); ++i ) {
-		z = correctAmp * _winspec[step * i];
+	for ( int i = 1; (step * i) + abs(offset) < _mainlobe.size(); ++i ) {
+		z = correctAmp * _mainlobe[step * i];
 		#ifndef YOYO
 		distribute( f + (i * _hzPerSamp), z * z, _sinusoidalEnergy  );
 		#else
@@ -376,14 +378,14 @@ AssociateBandwidth::accumulateSinusoid( double f, double a )
 		#endif
 		
 #ifdef Debug_Loris
-		zz = correctAmp * _winspec[(step * i) + offset];
+		zz = correctAmp * _mainlobe[(step * i) + offset];
 		_sinSpec[ intBinNumber + i ] += zz;
 		_residue[ intBinNumber + i ] -= zz;
 #endif
 		
 		//	don't index bins below 0:
 		if ( intBinNumber >= i ) {
-			z = correctAmp * _winspec[step * i];
+			z = correctAmp * _mainlobe[step * i];
 			#ifndef YOYO
 			distribute( f - (i * _hzPerSamp), z * z, _sinusoidalEnergy  );
 			#else
@@ -391,7 +393,7 @@ AssociateBandwidth::accumulateSinusoid( double f, double a )
 			#endif
 			
 #ifdef Debug_Loris
-			zz = correctAmp * _winspec[(step * i) - offset];
+			zz = correctAmp * _mainlobe[(step * i) - offset];
 			_sinSpec[ intBinNumber - i ] += zz;
 			_residue[ intBinNumber - i ] -= zz;
 #endif
@@ -416,12 +418,11 @@ AssociateBandwidth::accumulateSinusoid( double f, double a )
 //
 //	Once, we used bark frequency scale warping here, but there seems to be
 //	no reason to do so. The best results seem to be indistinguishable from
-// 	plain 'ol 1k bins.
+// 	plain 'ol 1k bins, and most results are much worse.
 //	
 inline double
 AssociateBandwidth::binFrequency( double freqHz )
 {
 	return freqHz * _regionRate;
-	//return bark( freqHz );
 }
 

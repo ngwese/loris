@@ -20,8 +20,6 @@
 
 Begin_Namespace( Loris )
 
-class Breakpoint;
-
 // ---------------------------------------------------------------------------
 //	class Partial
 //

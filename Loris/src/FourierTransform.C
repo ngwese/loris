@@ -44,12 +44,22 @@ using namespace Loris;
 FourierTransform::FourierTransform( long len ) :
 	//_z( len, complex<double>(0.,0.) )
 	_size( len ),
-	_z( new complex< double >[ len ] )
+	_z( new complex< double >[ len ] ),
+	_plan( Null )
 {
 	//	check to make sure that std::complex< double >
 	//	and fftw_complex are really identical:
 	static boolean checked = false;
 	if ( ! checked ) {
+		//	check that fftw_real is a double in the version
+		//	of the FFTW library that we linked:
+		if ( fftw_sizeof_fftw_real() != sizeof( double ) ) {
+			Throw( InvalidObject, 
+				   "FourierTransform found fftw_real is not the same size as double." );
+		}
+		
+		//	check that storage for the two complex types is
+		//	the same:
 		union {
 			std::complex< double > _std;
 			fftw_complex _fftw;
@@ -63,6 +73,19 @@ FourierTransform::FourierTransform( long len ) :
 	}
 	
 	fill( _z, _z + len, 0. );
+}
+
+// ---------------------------------------------------------------------------
+//	FourierTransform destructor
+// ---------------------------------------------------------------------------
+//
+FourierTransform::~FourierTransform( void )
+{
+	//	anybody's guess whether this handles Null pointers,
+	//	check first:
+	if ( _plan != Null ) {
+		fftw_destroy_plan( _plan );
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -94,34 +117,23 @@ FourierTransform::transform( void )
 	static long bufsize = 0;
 	//static fftw_complex * fftwIn = Null;
 	static fftw_complex * fftwOut = Null;
-	static fftw_plan plan = Null;	//	this is stupidity, fftw_plan is a pointer type
+	//static fftw_plan plan = Null;	//	this is stupidity, fftw_plan is a pointer type
 									// 	unknown whether you can destroy an uninitialized
 									//	plan, seems unlikely.
-									
-	union { 
-		complex< double > * cplx;
-		fftw_complex * fftw;
-	} deh;
-	deh.Clx = _z;
-	fftw_complex * fftwIn = deh.fftw;
-	
-	if ( bufsize != size() ) {
+		
+	//	this is inefficient, a big transform leaves
+	//	this huge turd (fftwOut) lying around forever:
+	if ( bufsize < size() ) {
 		try {
-			debugger << "FFTW planing for size " << size() << endl;
+			debugger << "FFTW allocating static buffer for size " << size() << endl;
 			//delete[] fftwIn;
 			//fftwIn = Null;	//	to prevent deleting again
 			delete[] fftwOut;
 			fftwOut = Null;	//	to prevent deleting again
 			bufsize = 0;
-			if ( plan ) 
-				fftw_destroy_plan( plan );
 			//fftwIn = new fftw_complex[ size() ];
 			fftwOut = new fftw_complex[ size() ];
 			bufsize = size();
-			plan = fftw_create_plan_specific( bufsize, FFTW_FORWARD,
-											  FFTW_ESTIMATE,
-											  fftwIn, 1,
-											  fftwOut, 1); 
 		}
 		catch( LowMemException & ex ) {
 			bufsize = 0;
@@ -133,6 +145,17 @@ FourierTransform::transform( void )
 			throw;
 		}
 	}
+	
+	//	make a plan, if necessary:
+	Assert( _z != Null );
+	Assert( fftwOut != Null );
+	if ( _plan == Null ) {
+		_plan = fftw_create_plan_specific( bufsize, FFTW_FORWARD,
+										  FFTW_ESTIMATE,
+										  (fftw_complex *)_z, 1,
+										  fftwOut, 1); 
+	}
+	
 /*	copy input into fftw buffers:
 	for ( long i = 0; i < size(); ++i ) {
 		fftwIn[i].re = _z[i].real();
@@ -140,9 +163,9 @@ FourierTransform::transform( void )
 	}
 */	
 //	cruch:	
-	fftw_one( plan, fftwIn, fftwOut );
+	fftw_one( _plan, (fftw_complex *)_z, fftwOut );
 	
-//	copy output into complex buffer:
+//	copy output into (private) complex buffer:
 	for ( long i = 0; i < size(); ++i ) {
 		_z[i] = complex< double >( fftwOut[i].re, fftwOut[i].im );
 	}

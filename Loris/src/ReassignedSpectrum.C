@@ -113,7 +113,7 @@ ReassignedSpectrum::transform( const vector< double > & buf, long idxCenter )
 	load( _tfreqramp, 
 		  buf.begin() + boffset, buf.begin() + idxCenter, buf.begin() + eoffset,
 		  _winfreqramp.begin() + woffset );
-
+	
 	_tfreqramp.transform();
 
 //	window and rotate input using time-ramped window and

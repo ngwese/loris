@@ -1,6 +1,5 @@
 #ifndef __Loris_breakpoint__
 #define __Loris_breakpoint__
-
 // ===========================================================================
 //	Breakpoint.h
 //	
@@ -13,10 +12,7 @@
 //	-kel 16 Aug 99
 //
 // ===========================================================================
-
-
 #include "LorisLib.h"
-#include "Breakpoint.h"
 
 Begin_Namespace( Loris )
 

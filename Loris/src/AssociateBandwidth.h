@@ -9,17 +9,15 @@
 //
 // ===========================================================================
 #include "LorisLib.h"
-#include <numeric>
-#include <complex>
+//#include <numeric>
+//#include <complex>
 
 #if !defined( Deprecated_cstd_headers )
 	#include <cmath>
-	using std::sqrt;
+	//using std::sqrt;
 #else
 	#include <math.h>
 #endif
-
-//#include "Notifier.h"
 
 Begin_Namespace( Loris )
 
@@ -104,7 +102,7 @@ private:
 	std::vector< double > _spectralEnergy, _sinusoidalEnergy, _weights, _surplus;
 	
 	//	oversampled window spectrum for correcting magnitudes:
-	std::vector< double > _winspec;
+	std::vector< double > _mainlobe;
 	
 	double _regionRate;
 	double _hzPerSamp;

@@ -50,7 +50,7 @@ Synthesizer::Synthesizer( vector< double > & buf, double srate ) :
 	_fadeTime( 0.001 ),
 	_oscillator( new Oscillator() ),
 	_samples( buf ),
-	PartialIteratorOwner( PartialIteratorPtr( new SynthesisIterator( srate * 0.5, 1000. ) ) )
+	PartialIteratorOwner( PartialIteratorPtr( new SynthesisIterator( srate * 0.5, 0. ) ) )
 {
 	//	check to make sure that the sample rate is valid:
 	if ( _sampleRate <= 0. ) {

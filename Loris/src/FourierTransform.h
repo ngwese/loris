@@ -18,6 +18,9 @@
 #include <vector>
 #include <complex>
 
+//	declare the fftw plan struct type:
+struct fftw_plan_struct; 
+
 Begin_Namespace( Loris )
 
 // ---------------------------------------------------------------------------
@@ -35,9 +38,7 @@ class FourierTransform
 public:
 //	construction:
 	FourierTransform( long len );
-	
-	//	use compiler-generated:
-	// ~FourierTransform( void ) {}	
+	~FourierTransform( void );	
 	
 //	copy and assignment:
 	//	use compiler-generated:
@@ -80,6 +81,8 @@ private:
 	//std::vector< std::complex< double > > _z;
 	const long _size;
 	std::complex< double > * _z, * _out;
+	
+	fftw_plan_struct * _plan;
 	
 };	//	end of class FourierTransform
 

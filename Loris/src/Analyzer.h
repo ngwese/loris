@@ -17,9 +17,9 @@
 #include <vector>
 #include <memory>
 
-class Breakpoint;
-
 Begin_Namespace( Loris )
+
+class Breakpoint;
 
 // ---------------------------------------------------------------------------
 //	class Analyzer
