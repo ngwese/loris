@@ -42,7 +42,7 @@ a flute, and a cello. The results can be compared
 to those in the "reference" directory.
 
 In order to run this demo, the Loris module (loris.py 
-and loriscmodule.la) must be in your PYTHONPATH.
+and _loris.so) must be in your PYTHONPATH.
 """
 print __doc__
 
