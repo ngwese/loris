@@ -106,8 +106,8 @@ extern "C" {
 
 //	These functions do not throw exceptions.
 typedef void(*NotificationHandler)(const char * s);
-/*	NotificationHandler setNotifierHandler( NotificationHandler fn );
-	Specify a new handling procedure for posting user feedback, and return
+NotificationHandler setNotifierHandler( NotificationHandler fn );
+/*	Specify a new handling procedure for posting user feedback, and return
 	the current handler. 
  */
  
