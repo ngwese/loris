@@ -233,6 +233,13 @@ else
 	AC_DEFINE([HAVE_M_PI], 0, [Define 1 if M_PI defined in cmath, 0 otherwise.])
 fi
 
+dnl check whether template member functions should
+dnl be used (someday)
+AH_TEMPLATE([NO_TEMPLATE_MEMBERS],
+            [Define for compilers that do not support template member functions.])
+
+AC_DEFINE([NO_TEMPLATE_MEMBERS])
+
 dnl restore this
 AC_LANG_RESTORE
 
