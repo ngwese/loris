@@ -82,7 +82,9 @@ Resampler::resample( Partial & p )
 	double lastTime  = interval_ * int( 0.5 + p.endTime()   / interval_ );
 	
 	//  resample:
-	for ( double tim = firstTime; tim <= lastTime; tim += interval_ ) 
+	for ( double tim = firstTime; 
+		  tim < p.endTime() + ( 0.5 * interval_) ; 
+		  tim += interval_ ) 
 	{
 		Breakpoint newbp( p.frequencyAt( tim ), p.amplitudeAt( tim ), 
 						  p.bandwidthAt( tim ), p.phaseAt( tim ) );
