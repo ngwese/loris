@@ -51,7 +51,6 @@
  *
  */
 
-#define LORIS_OPAQUE_POINTERS 0
 #include "loris.h"
 #include "lorisException_pi.h"
 

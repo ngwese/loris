@@ -79,11 +79,21 @@
 	class interfaces are also used, then define the symbol 
 	LORIS_OPAQUE_POINTERS to be false in the source file before
 	including this header.
- */
+ 
+	Actually, I cannot remember why this extra junk was
+	ever needed. I can compile an link C and C++ programs
+	using this header and interface, with (C++ only) and
+	without (both) also using class headers (Analyzer.h)
+	without having any of this opaque ptrs junk in here.
+	I am getting rid of it.
+
 #ifndef LORIS_OPAQUE_POINTERS
 #define LORIS_OPAQUE_POINTERS 1
 #endif
 #if defined(__cplusplus) && ! LORIS_OPAQUE_POINTERS
+
+ */
+#if defined(__cplusplus)
 	//	declare Loris classes:
 	namespace Loris
 	{
@@ -100,14 +110,15 @@
 	using Loris::BreakpointEnvelope;
 	typedef std::list< Loris::Partial > PartialList;
 	typedef std::vector< double > SampleVector;
-#else /* no classes, just opaque C pointers */
+#else 
+	/* no classes, just opaque C pointers */
 	typedef struct Analyzer Analyzer;
 	typedef struct BreakpointEnvelope BreakpointEnvelope;
 	typedef struct PartialList PartialList;
 	typedef struct SampleVector SampleVector;
 #endif
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 	extern "C" {
 #endif
 
@@ -535,7 +546,7 @@ void setNotifier( void(*f)(const char *) );
 	const char * argument, and returns void.
  */
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 }	/* extern "C" 	*/
 #endif
 

@@ -34,6 +34,13 @@ matrices contain irregularly-spaced bandwidth-enhanced
 data, but no interpolated (bogus) data, so a frame may 
 not contain breakpoints for all active Partials.
 
+- Simplified loris.h slightly by removing the silly
+LORIS_OPAQUE_POINTERS symbol, whose purpose is a mystery.
+
+- Cleaned up the SWIG interface somewhat to reflect modern
+developments in SWIG (like the elimination of the documentation
+facility).
+
 -------------------------------------------------------
 changes since 1.0beta6 release:
 

@@ -62,3 +62,5 @@ loris.h: loris.h.in
 	sed "s/LORIS_SUBMINOR_VERSION/LORIS_SUBMINOR_VERSION $(LORIS_SUBMINOR_VERSION)/g" | \
 	sed "s/LORIS_VERSION_STR/LORIS_VERSION_STR \"$(VERSION_STR)\"/g" > loris.h
 	
+# install-data-local:
+# 	$(INSTALL_DATA) loris.h $(includedir)/loris.h
