@@ -107,7 +107,7 @@ public:
 	 */
 
 	PartialList::iterator operator() ( PartialList & container )
-		{ distill( container ); }
+		{ return distill( container ); }
 	/*	Function call operator: same as distill( PartialList & container ).
 	 */
 

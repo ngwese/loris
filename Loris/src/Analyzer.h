@@ -32,7 +32,7 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-
+#include <vector>
 #include <PartialList.h>
 
 //	begin namespace
@@ -102,6 +102,13 @@ public:
 //	-- analysis --
 	void analyze( const double * bufBegin, const double * bufEnd, double srate );
 	/*	Analyze a range of (mono) samples at the given sample rate 	  	
+		(in Hz) and append the extracted Partials to Analyzer's 
+		PartialList (std::list of Partials).	
+	 */
+	
+	void analyze( const std::vector<double> & buffer, double srate )
+		{ analyze( &(buffer[0]),  &(buffer[0]) + buffer.size(), srate ); }
+	/*	Analyze a vector of (mono) samples at the given sample rate 	  	
 		(in Hz) and append the extracted Partials to Analyzer's 
 		PartialList (std::list of Partials).	
 	 */

@@ -110,6 +110,42 @@ Synthesizer::Synthesizer( double srate, double * bufStart, double * bufEnd, doub
 }
 
 // ---------------------------------------------------------------------------
+//	Synthesizer constructor
+// ---------------------------------------------------------------------------
+//	The default fadeTime is 1 ms. (.001)
+//
+Synthesizer::Synthesizer( double srate, std::vector<double> & buffer, double fadeTime  ) :
+	_imp( new Synthesizer_imp )
+{
+	//	check to make sure that the sample rate is valid:
+	if ( srate <= 0. ) 
+	{
+		Throw( InvalidObject, "Synthesizer sample rate must be positive." );
+	}
+
+	//	check to make sure that the buffer bounds are valid:
+	if ( buffer.size() == 0 ) 
+	{
+		Throw( InvalidObject, "Synthesizer buffer length must be positive." );
+	}
+
+	//	check to make sure that the specified fade time
+	//	is valid:
+	if ( fadeTime < 0. )
+	{
+		Throw( InvalidObject, "Synthesizer Partial fade time must be non-negative." );
+	}
+
+	//	initialize the implementation struct:
+	_imp->fadeTime = fadeTime;
+	_imp->sampleRate = srate;
+	_imp->sampleBuffer = &(buffer[0]);
+	_imp->sampleBufferSize = buffer.size();
+
+	//countem = 0;
+}
+
+// ---------------------------------------------------------------------------
 //	Synthesizer copy constructor
 // ---------------------------------------------------------------------------
 //	Synthesizer copies share a sample buffer.
