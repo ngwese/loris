@@ -418,7 +418,7 @@ if trial == 5:
 				
 if trial == 6:
 	source = 'funnyLoud1.aiff'
-	pref = loris.importSpc('trythis1.qharm')
+	pref = loris.importSpc('funnyPeeple1.fund.qharm')
 	ref = loris.createFreqReference( pref, 50, 1000 )
 	r = 155
 	w = 400
@@ -448,7 +448,7 @@ if trial == 6:
 	loris.exportSpc( ofilebases + '.e.spc', ps, 60, 1 ) 
 
 	source = 'funnyLoud2.aiff'
-	pref = loris.importSpc('trythis2.qharm')
+	pref = loris.importSpc('funnyPeeple2.fund.qharm')
 	ref = loris.createFreqReference( pref, 50, 1000 )
 	r = 170
 	w = 400
@@ -479,7 +479,7 @@ if trial == 6:
 
 if trial == 7:
 	source = 'funnyLoud1.aiff'
-	pref = loris.importSpc('trythis1.qharm')
+	pref = loris.importSpc('funnyPeeple1.fund.qharm')
 	ref = loris.createFreqReference( pref, 50, 1000 )
 	r = 155
 	w = 400
@@ -511,7 +511,7 @@ if trial == 7:
 	loris.exportSpc( ofilebases + '.e.spc', ps, 60, 1 ) 
 
 	source = 'funnyLoud2.aiff'
-	pref = loris.importSpc('trythis2.qharm')
+	pref = loris.importSpc('funnyPeeple2.fund.qharm')
 	ref = loris.createFreqReference( pref, 50, 1000 )
 	r = 170
 	w = 400
