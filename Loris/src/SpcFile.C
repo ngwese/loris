@@ -97,6 +97,7 @@ const int LargestLabel = 256;	// max number of partials for SPC file
     //  to allow 512! Ugh!
     //  -kel
 
+
 //	this used to be hard coded into Partial, don't know
 //	whether it is needed to make spc files work.
 const double Fade = 0.001;
