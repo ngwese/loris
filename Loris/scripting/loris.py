@@ -61,11 +61,11 @@ class PartialListIterator:
         return val
     def next(*args):
         val = apply(lorisc.PartialListIterator_next,args)
-        if val: val = PartialListIteratorPtr(val) 
+        if val: val = PartialListIteratorPtr(val) ; val.thisown = 1
         return val
     def prev(*args):
         val = apply(lorisc.PartialListIterator_prev,args)
-        if val: val = PartialListIteratorPtr(val) 
+        if val: val = PartialListIteratorPtr(val) ; val.thisown = 1
         return val
     def partial(*args):
         val = apply(lorisc.PartialListIterator_partial,args)
@@ -197,11 +197,11 @@ class PartialIterator:
         return val
     def next(*args):
         val = apply(lorisc.PartialIterator_next,args)
-        if val: val = PartialIteratorPtr(val) 
+        if val: val = PartialIteratorPtr(val) ; val.thisown = 1
         return val
     def prev(*args):
         val = apply(lorisc.PartialIterator_prev,args)
-        if val: val = PartialIteratorPtr(val) 
+        if val: val = PartialIteratorPtr(val) ; val.thisown = 1
         return val
     def equals(*args):
         val = apply(lorisc.PartialIterator_equals,args)

@@ -1592,8 +1592,9 @@ _wrap_PartialListIterator_copy(ClientData clientData, Tcl_Interp *interp, int ob
 
 PartialListIterator *PartialListIterator_next(PartialListIterator *self) {
     {
-        ++(*self);
-        return self;
+        PartialListIterator * next = new PartialListIterator(*self);
+        ++(*next);
+        return next;
     }
 }
 
@@ -1633,8 +1634,9 @@ _wrap_PartialListIterator_next(ClientData clientData, Tcl_Interp *interp, int ob
 
 PartialListIterator *PartialListIterator_prev(PartialListIterator *self) {
     {
-        --(*self);
-        return self;
+        PartialListIterator * prev = new PartialListIterator(*self);
+        --(*prev);
+        return prev;
     }
 }
 
@@ -2738,8 +2740,9 @@ _wrap_PartialIterator_copy(ClientData clientData, Tcl_Interp *interp, int objc, 
 
 PartialIterator *PartialIterator_next(PartialIterator *self) {
     {
-        ++(*self);
-        return self;
+        PartialIterator * next = new PartialIterator(*self);
+        ++(*next);
+        return next;
     }
 }
 
@@ -2779,8 +2782,9 @@ _wrap_PartialIterator_next(ClientData clientData, Tcl_Interp *interp, int objc, 
 
 PartialIterator *PartialIterator_prev(PartialIterator *self) {
     {
-        --(*self);
-        return self;
+        PartialIterator * prev = new PartialIterator(*self);
+        --(*prev);
+        return prev;
     }
 }
 

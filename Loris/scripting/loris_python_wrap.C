@@ -1545,8 +1545,9 @@ static PyObject *_wrap_PartialListIterator_copy(PyObject *self, PyObject *args) 
 
 PartialListIterator *PartialListIterator_next(PartialListIterator *self) {
     {
-        ++(*self);
-        return self;
+        PartialListIterator * next = new PartialListIterator(*self);
+        ++(*next);
+        return next;
     }
 }
 
@@ -1589,8 +1590,9 @@ static PyObject *_wrap_PartialListIterator_next(PyObject *self, PyObject *args) 
 
 PartialListIterator *PartialListIterator_prev(PartialListIterator *self) {
     {
-        --(*self);
-        return self;
+        PartialListIterator * prev = new PartialListIterator(*self);
+        --(*prev);
+        return prev;
     }
 }
 
@@ -2753,8 +2755,9 @@ static PyObject *_wrap_PartialIterator_copy(PyObject *self, PyObject *args) {
 
 PartialIterator *PartialIterator_next(PartialIterator *self) {
     {
-        ++(*self);
-        return self;
+        PartialIterator * next = new PartialIterator(*self);
+        ++(*next);
+        return next;
     }
 }
 
@@ -2797,8 +2800,9 @@ static PyObject *_wrap_PartialIterator_next(PyObject *self, PyObject *args) {
 
 PartialIterator *PartialIterator_prev(PartialIterator *self) {
     {
-        --(*self);
-        return self;
+        PartialIterator * prev = new PartialIterator(*self);
+        --(*prev);
+        return prev;
     }
 }
 

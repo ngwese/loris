@@ -1398,8 +1398,9 @@ XS(_wrap_PartialListIterator_copy) {
 
 PartialListIterator *PartialListIterator_next(PartialListIterator *self) {
     {
-        ++(*self);
-        return self;
+        PartialListIterator * next = new PartialListIterator(*self);
+        ++(*next);
+        return next;
     }
 }
 
@@ -1447,8 +1448,9 @@ XS(_wrap_PartialListIterator_next) {
 
 PartialListIterator *PartialListIterator_prev(PartialListIterator *self) {
     {
-        --(*self);
-        return self;
+        PartialListIterator * prev = new PartialListIterator(*self);
+        --(*prev);
+        return prev;
     }
 }
 
@@ -2765,8 +2767,9 @@ XS(_wrap_PartialIterator_copy) {
 
 PartialIterator *PartialIterator_next(PartialIterator *self) {
     {
-        ++(*self);
-        return self;
+        PartialIterator * next = new PartialIterator(*self);
+        ++(*next);
+        return next;
     }
 }
 
@@ -2814,8 +2817,9 @@ XS(_wrap_PartialIterator_next) {
 
 PartialIterator *PartialIterator_prev(PartialIterator *self) {
     {
-        --(*self);
-        return self;
+        PartialIterator * prev = new PartialIterator(*self);
+        --(*prev);
+        return prev;
     }
 }
 

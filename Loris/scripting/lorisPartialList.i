@@ -230,20 +230,24 @@ public:
 			in the same PartialList).
 		 */
 		 
-		PartialListIterator * next( void )
+		%new PartialListIterator * next( void )
 		{
-			++(*self);
-			return self;
+			PartialListIterator * next = new PartialListIterator(*self);
+			++(*next);
+			return next;
 		}
-		/*	Increment (advance) this PartialListIterator. Return self.
+		/*  Return an iterator refering to the next position in the
+			PartialList. 
 		 */
 		 
-		PartialListIterator * prev( void )
+		%new PartialListIterator * prev( void )
 		{
-			--(*self);
-			return self;
+			PartialListIterator * prev = new PartialListIterator(*self);
+			--(*prev);
+			return prev;
 		}
-		/*	Decrement (advance by -1) this PartialListIterator. Return self.
+		/*	Return an iterator refering to the previous position
+			in the PartialList,
 		 */
 		 
 		Partial * partial( void )
@@ -495,16 +499,16 @@ public:
 	//	most of the pointer semantics of std C++ iterators
 	//	are inappropriate for the scripting interface (those
 	//	languages don't have pointers), so many methods in the 
-	//	interface all need to be added:
+	//	interface need to be added:
 	%addmethods 
 	{
 		//	this doesn't seem to swig correctly, Breakpoint
 		//	winds up with ownership, try fixng it here:
-	        Breakpoint * breakpoint( void ) 
+		Breakpoint * breakpoint( void ) 
 		{ 
 			return &(self->breakpoint());
 		}
-		/*      Return (a reference to) the Breakpoint at the position of this
+		/*  Return (a reference to) the Breakpoint at the position of this
 			PartialIterator.
 		 */
 
@@ -518,20 +522,22 @@ public:
 			in the same Partial).
 		 */
 		 
-		PartialIterator * next( void )
+		%new PartialIterator * next( void )
 		{
-			++(*self);
-			return self;
+			PartialIterator * next = new PartialIterator(*self);
+			++(*next);
+			return next;
 		}
-		/*	Increment (advance) this PartialIterator. Return self.
+		/*	Return an iterator refering to the next position in the Partial.
 		 */
 		 
-		PartialIterator * prev( void )
+		%new PartialIterator * prev( void )
 		{
-			--(*self);
-			return self;
+			PartialIterator * prev = new PartialIterator(*self);
+			--(*prev);
+			return prev;
 		}
-		/*	Decrement (advance by -1) this PartialIterator. Return self.
+		/*	Return an iterator refering to the previous position in the Partial.
 		 */
 		 
 		int equals( PartialIterator * other )
