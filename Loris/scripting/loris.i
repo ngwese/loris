@@ -39,10 +39,10 @@
 #if defined (SWIGPYTHON)
 	%module loris
 	%title "Python module: loris", noinfo
-#elif defined (SWIGTCL)
+#elif defined (SWIGTCL8)
 	%module tcLoris
 	%title "Tcl module: loris", noinfo
-#elif defined (SWIGPERL)
+#elif defined (SWIGPERL5)
 	%module loris_perl
 	%title "Perl module: loris", noinfo
 #else
@@ -52,7 +52,7 @@
 
 //	perl defines list and screws us up,
 //	undefine it so that we can use std::list
-#if defined (SWIGPERL)
+#if defined (SWIGPERL5)
 	%{
 		#undef list
 	%}

@@ -185,7 +185,7 @@ if test -z "$PYPACKAGE"; then
 	fi
 fi
 
-AC_PATH_PROG(PYTHON, python, :, $PYPACKAGE/bin:$PATH)
+AC_PATH_PROGS(PYTHON, python python2.1 python2.0 python1.6 python1.5, :, $PYPACKAGE/bin:$PATH)
 
 AC_MSG_CHECKING(for where to install Python site packages)
 AC_ARG_WITH(sitepy,[  --with-sitepy=path      Set path to install Python site packages],[
@@ -256,7 +256,7 @@ if test -z "$TCLPACKAGE"; then
 	fi
 fi
 
-AC_PATH_PROG(TCL, tcl, :, $TCLPACKAGE/bin:$PATH)
+AC_PATH_PROGS(TCL, tclsh tclsh8.3 tclsh8.2, :, $TCLPACKAGE/bin:$PATH)
 
 AM_CONDITIONAL(HAVE_TCL_H, test "$HAVE_TCL_H")
 
@@ -280,9 +280,9 @@ if test -f "$PERLBIN" ; then
 	PERL="$PERLBIN"
 else
 	if test -n "$PERLBIN" ; then
-		AC_CHECK_PROGS(PERL, perl5.004 perl5.003 perl5.002 perl5.001 perl5 perl, ,$PERLBIN:$PERLBIN/bin)
+		AC_CHECK_PROGS(PERL, perl5.006 perl5.005 perl5.004 perl5.003 perl5.002 perl5.001 perl5 perl, ,$PERLBIN:$PERLBIN/bin)
 	else
-		AC_CHECK_PROGS(PERL, perl5.004 perl5.003 perl5.002 perl5.001 perl5 perl)	
+		AC_CHECK_PROGS(PERL, perl5.006 perl5.005 perl5.004 perl5.003 perl5.002 perl5.001 perl5 perl)	
 	fi
 fi
 

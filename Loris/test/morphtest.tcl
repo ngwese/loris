@@ -44,9 +44,9 @@ set srcdir [lindex [array get env srcdir] 1]
 set top_builddir [lindex [array get env top_builddir] 1]
 
 if { [expr [string length $srcdir]> 0] } {
-	load "$top_builddir/scripting/.libs/tcLoris.so" loris
+	load "$top_builddir/scripting/.libs/tcLoris.so" tcLoris
 } else {
-	load tcLoris.so loris
+	load tcLoris.so tcLoris
 	set srcdir .
 }
 

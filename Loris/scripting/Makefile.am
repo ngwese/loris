@@ -67,7 +67,7 @@ SWIG_INTERFACE = loris.i
 
 wrappers: 
 	$(SWIG) -python -shadow -c++ -o $(PYTHON_WRAPPER) $(SWIG_INTERFACE)
-	$(SWIG) -tcl -c++ -o $(TCL_WRAPPER) $(SWIG_INTERFACE)
+	$(SWIG) -tcl8 -c++ -o $(TCL_WRAPPER) $(SWIG_INTERFACE)
 	$(SWIG) -perl5 -c++ -o $(PERL_WRAPPER) $(SWIG_INTERFACE)
 	mv loris_perl.pm loris.pm
 endif

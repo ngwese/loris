@@ -412,8 +412,8 @@ static swig_type_info *swig_types[10];
 
 /* -------- TYPES TABLE (END) -------- */
 
-#define SWIG_init    Loris_Init
-#define SWIG_name    "loris"
+#define SWIG_init    Tcloris_Init
+#define SWIG_name    "tcloris"
 #define SWIG_prefix  ""
 #define SWIG_namespace ""
 
@@ -423,7 +423,7 @@ extern "C" {
 #ifdef MAC_TCL
 #pragma export on
 #endif
-SWIGEXPORT(int) Loris_Init(Tcl_Interp *);
+SWIGEXPORT(int) Tcloris_Init(Tcl_Interp *);
 #ifdef MAC_TCL
 #pragma export off
 #endif
@@ -5437,7 +5437,7 @@ _swigt__p_BreakpointEnvelope,
 
 /* -------- TYPE CONVERSION AND EQUIVALENCE RULES (END) -------- */
 
-SWIGEXPORT(int) Loris_Init(Tcl_Interp *interp) {
+SWIGEXPORT(int) Tcloris_Init(Tcl_Interp *interp) {
     int i;
     if (interp == 0) return TCL_ERROR;
     for (i = 0; swig_types_initial[i]; i++) {
