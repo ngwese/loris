@@ -10,10 +10,11 @@
 
 SUBDIRS = doc src mac pi scripting test
 
+# used to have ltconfig in here too, but newer versions
+# of libtool (>1.4) don't use that.
 AUX_DIST = 	$(ac_aux_dir)/config.guess \
 			$(ac_aux_dir)/config.sub \
 			$(ac_aux_dir)/install-sh \
-			$(ac_aux_dir)/ltconfig \
 			$(ac_aux_dir)/ltmain.sh \
 			$(ac_aux_dir)/missing \
 			$(ac_aux_dir)/mkinstalldirs
