@@ -41,10 +41,7 @@
 #include "Analyzer.h"
 #include "Partial.h"
 
-//	for procedural interface construction and 
-//	destruction, see comment below:
-#define LORIS_OPAQUE_POINTERS 0
-#include "loris.h"
+using Loris::Analyzer;
 %}
 
 

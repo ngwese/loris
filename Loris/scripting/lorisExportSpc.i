@@ -38,8 +38,9 @@
  *
  */
 %{
-#include "ExportSpc.h"
-using Loris::ExportSpc;
+	#include "ExportSpc.h"
+	using Loris::ExportSpc;
+%}
 
 // ---------------------------------------------------------------------------
 //	class ExportSpc
