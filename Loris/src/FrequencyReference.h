@@ -64,16 +64,14 @@ public:
 	FrequencyReference( std::list<Partial>::const_iterator begin, 
 						std::list<Partial>::const_iterator end, 
 						double minFreq, double maxFreq );
+	FrequencyReference( const FrequencyReference & other );
+	FrequencyReference & operator= ( const FrequencyReference & other );
 	~FrequencyReference();
 
 	//	BreakpointEnvelope access:
 	BreakpointEnvelope & envelope( void ) { return *_env; }
 	const BreakpointEnvelope & envelope( void ) const { return *_env; }
 
-//	-- unimplemented --
-private:
-	FrequencyReference( const FrequencyReference & other );
-	FrequencyReference & operator= ( const FrequencyReference & other );
 
 };// end of class FrequencyReference
 

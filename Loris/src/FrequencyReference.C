@@ -35,7 +35,7 @@
 	#include <config.h>
 #endif
 
-#include "FrequencyReference.h"
+#include <FrequencyReference.h>
 #include <Breakpoint.h>
 #include <BreakpointEnvelope.h>
 #include <Notifier.h>
@@ -98,6 +98,15 @@ FrequencyReference::FrequencyReference( std::list<Partial>::const_iterator begin
 }
 
 // ---------------------------------------------------------------------------
+//	copy construction
+// ---------------------------------------------------------------------------
+//
+FrequencyReference::FrequencyReference( const FrequencyReference & other ) :
+	_env( other._env->clone() )
+{
+}
+
+// ---------------------------------------------------------------------------
 //	destruction
 // ---------------------------------------------------------------------------
 //
@@ -105,6 +114,19 @@ FrequencyReference::~FrequencyReference()
 {
 }
 
+// ---------------------------------------------------------------------------
+//	assignment
+// ---------------------------------------------------------------------------
+//
+FrequencyReference &
+FrequencyReference::operator = ( const FrequencyReference & rhs )
+{
+	if ( &rhs != this )
+	{
+		_env.reset( rhs._env->clone() );
+	}
+	return *this;
+}
 
 // ---------------------------------------------------------------------------
 //	timeOfPeakEnergy (static helper function)
