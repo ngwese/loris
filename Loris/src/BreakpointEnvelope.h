@@ -48,13 +48,10 @@ namespace Loris {
 //	value at the nearest end point).
 //
 //	BreakpointEnvelope implements the Envelope interface, described
-//	by the abstract class <a href="#Envelope">Envelope</a>. 
+//	by the abstract class Envelope. 
 //
-class BreakpointEnvelope : public Envelope
+class BreakpointEnvelope : public Envelope, private std::map< double, double >
 {
-//	-- instance variables --
-	std::map< double, double > _breakpoints;
-
 //	-- public interface --
 public:
 //	-- construction --
@@ -67,18 +64,8 @@ public:
 		single breakpoint at 0. (and an implicit value everywhere)
 		of initialValue.			
 	 */
-	BreakpointEnvelope( const BreakpointEnvelope & other );
-	/*	Construct and return a new BreakpointEnvelope that is
-		a copy of this BreapointEnvelope (has the same value
-		as this BreakpointEnvelope everywhere).			
-	 */
-	virtual ~BreakpointEnvelope( void );
-	/*	Destroy this BreakpointEnvelope. 								
-	 */
 
-	//	compiler-generated assignment is okay
-	//	BreakpointEnvelope & operator= ( const BreakpointEnvelope & );
-
+	//	compiler-generated copy, assignment, and destruction are OK.
 	
 //	-- Envelope interface --
 	virtual BreakpointEnvelope * clone( void ) const;
@@ -99,22 +86,15 @@ public:
 		the new breakpoint.
 	 */
 	 
-//
-//	iterator access:
-/*	this ugly hack is unused as far as I can tell.
-	typedef std::map< double, double >::iterator iterator;
-	typedef std::map< double, double >::const_iterator const_iterator;
-	
-	iterator begin( void ) { return _breakpoints.begin(); }
-	const_iterator begin( void ) const { return _breakpoints.begin(); }
-	
-	iterator end( void ) { return _breakpoints.end(); }
-	const_iterator end( void ) const { return _breakpoints.end(); }
-	
-	unsigned long size( void ) const { return _breakpoints.size(); }
-	bool empty( void ) const { return _breakpoints.empty(); }
-*/	
-	
+	//	import some interface from std::map:
+	using std::map< double, double >::size;
+	using std::map< double, double >::empty;
+	using std::map< double, double >::begin;
+	using std::map< double, double >::end;
+	using std::map< double, double >::size_type;
+	using std::map< double, double >::value_type;
+	using std::map< double, double >::iterator;
+	using std::map< double, double >::const_iterator;
 
 };	//	end of class BreakpointEnvelope
 

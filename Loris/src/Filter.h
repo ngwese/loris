@@ -40,6 +40,7 @@
 //#define NO_TEMPLATE_MEMBERS
 #if !defined(NO_TEMPLATE_MEMBERS)
 #include <Exception.h>
+#include <Notifier.h>
 #include <algorithm>
 #include <functional>
 #include <numeric>
