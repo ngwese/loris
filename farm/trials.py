@@ -115,7 +115,10 @@ def harmonicSift( partials, fundamental ):
 	
 	Before distilling, the partials are sifted, and partials
 	rejected by the Sieve (those labeled 0) are removed.
+	
+	THIS IS OBSOLETE: the Distiller does this sifting now
 	"""
+	raise 'harmonicSift IS OBSOLETE: the Distiller does this sifting now'
 	env = loris.BreakpointEnvelopeWithValue( fundamental )
 	loris.channelize( partials, env, 1 )
 	# do sifting and removal of sifted-out partials:
