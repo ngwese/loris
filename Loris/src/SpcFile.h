@@ -46,7 +46,6 @@
 #include <PartialList.h>
 #endif
  
-#include <iosfwd>
 #include <string>
 #include <vector>
 
@@ -203,7 +202,7 @@ public:
 
 private:
 //	-- implementation --
-	partials_type partials_;		//	Partials to store in Spc format
+	partials_type partials_;	//	Partials to store in Spc format
 	markers_type markers_;		// 	AIFF Markers
 
 	double notenum_, rate_;		// MIDI note number and sample rate

@@ -84,13 +84,6 @@ public:
 		collection of Markers, and false otherwise. (Markers are sorted by time.)
 	 */
 	 
-	bool operator== ( const Marker & rhs ) const;
-	/*	Return true if this Marker is equal to (identical to, having
-		the same time and name) rhs.
-		
-		How could this possibly be useful?
-	 */
-	 
 //	-- access --
 	std::string & name( void );
 	const std::string & name( void ) const;

@@ -65,7 +65,7 @@ namespace Loris {
 template < typename RealWinIter, typename CplxWinIter >
 static void 
 buildReassignmentWindow( RealWinIter winbegin, RealWinIter winend, 
-						 CplxWinIter rawinbegin, long transformSize );
+						 CplxWinIter rawinbegin );
 
 // ---------------------------------------------------------------------------
 //	ReassignedSpectrum constructor
@@ -79,7 +79,7 @@ ReassignedSpectrum::ReassignedSpectrum( const std::vector< double > & window ) :
 	_window( window ),
 	_rawindow( window.size(), 0. )
 {
-	buildReassignmentWindow( _window.begin(), _window.end(), _rawindow.begin(), _transform.size() );
+	buildReassignmentWindow( _window.begin(), _window.end(), _rawindow.begin() );
 	
 	//	compute the appropriate scale factor
 	//	to report correct component magnitudes:
@@ -241,6 +241,7 @@ ReassignedSpectrum::timeCorrection( long idx ) const
 	
 	//	need to scale by the oversampling factor?
 	//	No, seems to sound bad, why?
+	//	(try alienthreat)
 	double oversampling = (double)_ratransform.size() / _rawindow.size();
 	return num / magSquared;
 }
@@ -375,7 +376,7 @@ make_complex<T>::operator()(const T& re, const T& im) const
 // ---------------------------------------------------------------------------
 //	Adapted from the FrequencyReassignment constructor in Lemur 5.
 //
-static inline void applyFreqRamp( vector< double > & w, long transformSize  )
+static inline void applyFreqRamp( vector< double > & w  )
 {
 	//	we're going to do the frequency-domain ramp 
 	//	by Fourier transforming the window, ramping,
@@ -447,13 +448,13 @@ static inline void applyTimeRamp( vector< double > & w )
 template < typename RealWinIter, typename CplxWinIter >
 static void 
 buildReassignmentWindow( RealWinIter winbegin, RealWinIter winend, 
-						 CplxWinIter rawinbegin, long transformSize )
+						 CplxWinIter rawinbegin )
 {
 	std::vector< double > tramp( winbegin, winend );
 	applyTimeRamp( tramp );
 	
 	std::vector< double > framp( winbegin, winend );
-	applyFreqRamp( framp, transformSize );
+	applyFreqRamp( framp );
 	
 	std::transform( framp.begin(), framp.end(), tramp.begin(),
 					rawinbegin, make_complex< double >() );	
