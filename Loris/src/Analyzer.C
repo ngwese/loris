@@ -143,7 +143,7 @@ Analyzer::createSpectrum( double srate )
 	
 	//	lower frequency bound for Breakpoint extraction,
 	//	require at least two (no, three!) periods in the window:
-	_minfreq = 3. / ( winlen / srate );
+	_minfreq = 2. / ( winlen / srate );
 	
 	try {
 		//	configure window:

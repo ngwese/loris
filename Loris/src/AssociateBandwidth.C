@@ -90,7 +90,8 @@ AssociateBandwidth::computeSurplusEnergy( vector<double> & surplus )
 	}
 	
 #endif
-	surplus[0] = surplus[1] =0.;
+	//	throw out low frequency stuff:
+	surplus[0] = 0.;
 }
 
 // ---------------------------------------------------------------------------
@@ -104,7 +105,7 @@ double
 AssociateBandwidth::computeNoiseEnergy( double freqHz, 
 										const vector<double> & surplus )
 {
-	double barks = bark( freqHz );
+	double barks = binFreq( freqHz );
 	
 	//	contribute x to two regions having center
 	//	frequencies less and greater than freqHz:
@@ -133,7 +134,7 @@ AssociateBandwidth::distribute( double freqHz, double x, vector<double> & region
 	if ( freqHz < 0. )
 		return;
 		
-	double barks = bark( freqHz );
+	double barks = binFreq( freqHz );
 	
 	//	contribute x to two regions having center
 	//	frequencies less and greater than freqHz:
@@ -292,5 +293,14 @@ AssociateBandwidth::ohBaby( double f, double a )
 	}
 }
 
+// ---------------------------------------------------------------------------
+//	binFreq
+// ---------------------------------------------------------------------------
+//	
+inline double
+AssociateBandwidth::binFreq( double freq )
+{
+	return freq * 0.001;
+}
 End_Namespace( Loris )
 

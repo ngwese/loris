@@ -182,6 +182,7 @@ public:
 	
 	void computeWindowSpectrum( std::vector< double > & v, long len );
 	void ohBaby( double f, double a );
+	inline double binFreq( double freq );
 	
 private:	
 //	-- helpers --
