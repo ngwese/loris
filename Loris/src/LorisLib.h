@@ -9,14 +9,21 @@
  *	Policy:
  *
  *		Loris uses and supports namespaces and the STL.
+ *
  *		Everything in the Loris library is part of the Loris namespace.
+ *
+ *		Loris uses built-in types (int, double, etc), except when size
+ *		is critical, then use the size-checked types in LorisTypes.h.
  *
  *	Compatibility:
  *
  *		The following symbols are used to make the Loris library 
  *		easier to port to platforms with inferior compilers:
  *
- *		USE_DEPRECATED_HEADERS:
+ *		Deprecated_cstd_headers	( no cstdio, cmath, cstdlib, new )
+ *		Deprecated_iostream_headers ( no iostream, ostream, streambuf )
+ *		Deprecated_string_stream ( no sstream, use strstream? )
+ *
  *		Some implementations don't have all the new-style headers they
  *		are supposed to have, so we have to use the old-style .h versions
  *		of some of the standard includes files. 
@@ -25,7 +32,7 @@
  *		the deprecated headers may not have things like ostream in the std 
  *		namespace where they belong.
  *
- *		NO_TEMPLATE_MEMBERS:
+ *		No_template_members 
  *		Some implementations may not allow classes to have template
  *		members. If this symbol is defined, template members are not
  *		included in the class definitions.
@@ -33,10 +40,10 @@
  *
  *	-kel 16 Aug 99
  *
+ * ===========================================================================
  */
 
-
-/* ===========================================================================
+/* ---------------------------------------------------------------------------
  *	These make namespace definitions easier to read, only usable 
  *	under C++.
  */

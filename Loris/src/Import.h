@@ -85,8 +85,8 @@ protected:
 class ImportException : public Exception
 {
 public: 
-	ImportException( const string & str, const string & where = "" ) : 
-		Exception( string("Import Error -- ").append( str ), where ) {}
+	ImportException( const std::string & str, const std::string & where = "" ) : 
+		Exception( std::string("Import Error -- ").append( str ), where ) {}
 		
 };	//	end of class ImportException
 

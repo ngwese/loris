@@ -7,20 +7,24 @@
 //
 // ===========================================================================
 
-
 #include "LorisLib.h"
 #include "Notifier.h"
+#include "Exception.h"
 #include "cnotify.h"
 
-#if !defined(USE_DEPRECATED_HEADERS)
+#if !defined( Deprecated_iostream_headers )
 	#include <iostream>
-	#include <cstdio>
+	using std::ostream;
 #else
 	#include <iostream.h>
-	#include <stdio.h>
 #endif
 
-using namespace std;
+#if !defined( Deprecated_cstd_headers )
+	#include <cstdio>
+	using std::abort;
+#else
+	#include <stdio.h>
+#endif
 
 Begin_Namespace( Loris )
 
@@ -28,29 +32,40 @@ Begin_Namespace( Loris )
 //	Notifier constructor
 // ---------------------------------------------------------------------------
 //
-Notifier::Notifier( const string s )
-{
-	ss << s;
-}
-
-// ---------------------------------------------------------------------------
-//	Notifier destructor
-// ---------------------------------------------------------------------------
-//
-Notifier::~Notifier( void )
+Notifier::Notifier( const std::string & s ) :
+	_sbuf( s ),
+	ostream( & _sbuf )
 {
 }
 
 // ---------------------------------------------------------------------------
-//	report
+//	post
 // ---------------------------------------------------------------------------
 //	Derived classes can override the reporting behavior to put the 
 //	notification somewhere other than standard-out.
+//	If block is true, post() should not return until the
+//	user confirms receipt of the notification. The logistics
+//	of this confirmation can also be overridden by derived classes. 
 //
 void 
-Notifier::report( void )
+Notifier::post( boolean block )
 {
-	cout << ss.str() << endl;
+	using namespace std;
+	
+	cout << _sbuf.str() << endl;
+	
+	if ( block ) {
+		std::string resp;
+		cout << "confirm (or type 'throw' to take exception): ";
+		ios::fmtflags oldflags = cin.flags();
+		cin >> noskipws >> resp;
+		cin.flags( oldflags );
+		cin.clear();
+		
+		if ( resp == "throw" ) {
+			Throw(Exception, "User took  exception to notification." );
+		}
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -59,11 +74,10 @@ Notifier::report( void )
 //	One-shot notification.
 //
 void
-notify( const string s )
+notify( const std::string & s )
 {
-	Notifier n;
-	n << s;
-	n.report();
+	Notifier n(s);
+	n.post();
 }
 
 // ---------------------------------------------------------------------------
@@ -74,9 +88,15 @@ notify( const string s )
 //	a blocking alert dialog is needed.
 //
 void
-fatalError( const string s )
+fatalError( const std::string & s )
 {
-	cerr << s << endl << endl;
+	try {
+		Notifier n(s);
+		n << " (aborting)";
+		n.post( true ); // block until confirmed
+	}
+	catch (...) {
+	}
 	abort();
 }
 
@@ -91,7 +111,7 @@ End_Namespace( Loris )
 extern "C" void
 notify( const char * cstr )
 {
-	Loris::notify( string(cstr) );
+	Loris::notify( std::string(cstr) );
 }
 
 // ---------------------------------------------------------------------------
@@ -103,6 +123,6 @@ notify( const char * cstr )
 extern "C" void
 fatalError( const char * cstr )
 {
-	Loris::fatalError( string(cstr) );
+	Loris::fatalError( std::string(cstr) );
 }
 

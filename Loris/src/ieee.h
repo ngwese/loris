@@ -11,7 +11,9 @@ namespace IEEE {
 extern "C" {
 #endif
 
-typedef char extended80[10];
+typedef struct {
+	char data[10];
+} extended80;
 
 extern void ConvertToIeeeExtended(double num, extended80 * x) ;
 extern double ConvertFromIeeeExtended(extended80 x) ;

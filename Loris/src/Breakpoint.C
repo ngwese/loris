@@ -98,7 +98,7 @@ Breakpoint::Clone( const Breakpoint & p )
 		return new Breakpoint( p );
 	}
 	catch ( LowMemException & ex ) {
-		ex.append( "Failed to Clone a Breakpoint." );
+		ex << "Failed to Clone a Breakpoint.";
 		throw;
 		return Null; 	//	not reached
 	}
@@ -115,7 +115,7 @@ Breakpoint::Create( double f, double a, double b, double p )
 		return new Breakpoint( f, a, b, p );
 	}
 	catch ( LowMemException & ex ) {
-		ex.append(  "Failed to Create a Breakpoint." );
+		ex << "Failed to Create a Breakpoint.";
 		throw;
 		return Null; 	//	not reached
 	}

@@ -63,7 +63,7 @@ void ConvertToIeeeExtended(double num, extended80 * x)
 	int expon;
 	double fMant, fsMant;
 	int hiMant, loMant;
-	char * bytes = (char *)x;
+	char * bytes = x->data;
 
 	if (num < 0) {
 		sign = 0x8000;
@@ -129,7 +129,7 @@ double ConvertFromIeeeExtended(extended80 x)
 	double f;
 	int expon;
 	int hiMant, loMant;
-	char * bytes = (char *)&x;
+	char * bytes = x.data;
 
 	expon = ((bytes[0] & 0x7F) << 8) | (bytes[1] & 0xFF);
 	hiMant = ((int)(bytes[2] & 0xFF) << 24)

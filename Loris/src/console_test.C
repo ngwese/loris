@@ -10,7 +10,7 @@
 
 #include "LorisLib.h"
 
-#if !defined(USE_DEPRECATED_HEADERS)
+#if !defined( Deprecated_iostream_headers)
 	#include <iostream>
 #else
 	#include <iostream.h>
@@ -33,7 +33,7 @@
 #include "ImportLemur5.h"
 
 
-#if !defined(USE_DEPRECATED_HEADERS)
+#if !defined( Deprecated_cstd_headers )
 	#include <cstdio>
 #else
 	#include <stdio.h>
@@ -49,9 +49,29 @@ using namespace Loris;
 
 int main()
 {	
-	exit(0);
+	try {
+		Notifier n("Here's a notification.");
+		n.post();
+		
+		n << " Here it is again.";
+		n.post(true);
+		
+		fatalError("Here's a fatal error.");
+	}
+	catch (Exception & ex ) {
+		cout << "Exception: " << ex;
+	}
+	
+	cout << "posting debug...";
+	
+	Debugger d("Here's some debugging stuff.");
+	d << " And here's some more.";
+	d.post();
+	
+	fatalError("Another fatal error.");
+
 	try {		
-		File f("Berenice:Loris:try these:flute3.lemr");
+		File f("Berenice:Loris:try these:few");
 		ImportLemur5 imp(f);
 		
 		cout << "importing partials from " << f.name() << "..." << endl;
@@ -92,7 +112,7 @@ int main()
 			int ssize = z * 8;
 			
 			stringstream s;
-			s << "Berenice:Loris:try these:flute3." << ssize << ".aiff";
+			s << "Berenice:Loris:try these:few." << ssize << ".aiff";
 		
 			cout << s.str() << "...";
 			
@@ -117,7 +137,7 @@ int main()
 		cout << "done." << endl;
 	}
 	catch ( Exception & ex ) {
-		ex.streamOn( cout );
+		cout << ex;
 	}
 
 	/*

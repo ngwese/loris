@@ -12,13 +12,12 @@
 
 #include <string>
 
-#if !defined(USE_DEPRECATED_HEADERS)
-	#include <iostream>
+#if !defined( Deprecated_iostream_headers )
+	#include <ostream>
+	using std::ostream;
 #else
-	#include <iostream.h>
+	#include <ostream.h>
 #endif
-
-using namespace std;
 
 Begin_Namespace( Loris )
 
@@ -30,13 +29,14 @@ Begin_Namespace( Loris )
 // ---------------------------------------------------------------------------
 //	where defaults to empty.
 //
-Exception::Exception( const string & str, const string & where ) :
-	mReportString( str )
+Exception::Exception( const std::string & str, const std::string & where ) :
+	_sbuf( str ),
+	ostream( & _sbuf )
 {
-	mReportString.append( where );
+	_sbuf.append( where );
+	_sbuf.append(" ");
 }
 	
-
 // ---------------------------------------------------------------------------
 //	Exception destructor
 // ---------------------------------------------------------------------------
@@ -45,30 +45,25 @@ Exception::~Exception( void )
 {
 }
 
-#pragma mark -
-#pragma mark reporting
 // ---------------------------------------------------------------------------
-//	printOn
+//	str
 // ---------------------------------------------------------------------------
-//	This is much less cool than streamOn() because I can't check that str is
-//	long enough for the report string. To be safe, make sure that no more than
-//	255 characters are written on str.
 //
-void
-Exception::printOn( char * str ) const
+const std::string &
+Exception::str( void ) const
 {
-	strncpy( str, mReportString.c_str(), 255 );
+	return _sbuf.str();
 }
 
-
 // ---------------------------------------------------------------------------
-//	streamOn
+//	what
 // ---------------------------------------------------------------------------
+//	std::exception interface.
 //
-void
-Exception::streamOn( ostream & str ) const
+const char *
+Exception::what( void ) const
 {
-	str << mReportString;
+	return str().c_str();
 }
 
 // ---------------------------------------------------------------------------
@@ -77,24 +72,9 @@ Exception::streamOn( ostream & str ) const
 //	Not a member function of Exception.
 //
 ostream & 
-operator << ( ostream & str, const Exception & ex )
+operator << ( ostream & ostr, const Exception & ex )
 {
-	ex.streamOn( str );
-	return str;
+	return ostr << ex.str();
 }
-
-#pragma mark -
-#pragma mark mutation
-// ---------------------------------------------------------------------------
-//	append
-// ---------------------------------------------------------------------------
-//
-void 
-Exception::append( const string & str )
-{
-	mReportString.append( " " );
-	mReportString.append( str );
-}
-
 
 End_Namespace( Loris )

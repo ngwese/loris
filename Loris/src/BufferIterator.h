@@ -67,8 +67,8 @@ Begin_Namespace( Loris )
 class InvalidIterator : public InvalidObject
 {
 public: 
-	InvalidIterator( const string & str, const string & where = "" ) : 
-		InvalidObject( string("Invalid Iterator -- ").append( str ), where ) {}
+	InvalidIterator( const std::string & str, const std::string & where = "" ) : 
+		InvalidObject( std::string("Invalid Iterator -- ").append( str ), where ) {}
 		
 };	//	end of class InvalidIterator
 

@@ -1,6 +1,5 @@
 #ifndef __Loris_notifier__
 #define __Loris_notifier__
-
 // ===========================================================================
 //	Notifier.h
 //	
@@ -8,100 +7,116 @@
 //	objects with a default implementation that uses the console for 
 //	reporting.
 //
-//	Still have to figure out a way to allow this to be subclassed.
+//	The interface is about right here, but the class heirarchy might 
+//	need to be altered to make it more flexible for subclassing.
 //
 //	-kel 9 Sept 99
 //
 // ===========================================================================
 
-
 #include "LorisLib.h"
-
-#if !defined(USE_DEPRECATED_HEADERS)
-	#include <sstream>
-	using std::stringstream;
-#else
-	#include <strstream.h>
-	typedef strstream stringstream;
-#endif
+#include "StringBuffer.h"
 
 #include <string>
+
+#if !defined( Deprecated_iostream_headers )
+	#include <iosfwd>
+	using std::ostream;
+#else
+	#include <ostream.h>
+#endif
 
 Begin_Namespace( Loris )
 
 // ---------------------------------------------------------------------------
 //	class Notifier
 //
+//	Least common denominator notification object. Uses console for i/o (post).
+//	Derived classes can do otherwise, may need to do this differently to
+//	compile apps with no console at all, probably need to abstract the
+//	interface. 
+//	Inherits streaming from ostream.
 //
-class Notifier
+class Notifier : public ostream
 {
 //	-- public interface --
 public:
 //	construction:
-	Notifier( const std::string s = "" );
+	Notifier( const std::string & s = "" );
+	Notifier( std::streambuf & buf ,const std::string & s = "" );
 	
 //	virtual destructor so Notifier can be subclassed:
-	virtual ~Notifier( void );	
+//	(use compiler generated)
+	//virtual ~Notifier( void );	
 	
-//	reporting:
+//	posting:
 //	Derived classes can override the reporting behavior to put the 
 //	notification somewhere other than standard-out.
-	virtual void report( void );
+//	If block is true, post() should not return until the
+//	user confirms receipt of the notification. The logistics
+//	of this confirmation can also be overridden by derived classes. 
+	virtual void post( boolean block = false );
 
-//	streaming (onto) operator:
-	template< class T >
-	Notifier & 
-	operator << ( const T & thing )
-	{
-		ss << thing;
-		return *this;
-	}
-	
-//	ostream implementation:
-	Notifier & put( char c );
-	Notifier & write( const char * cstr, long count );
-	Notifier & flush( void );
-	
-private:
-//	implemented with a stringstream, which has everything
-//	we want except stability:
-	stringstream ss;
+//	-- instance variable - the string buffer --
+protected:
+	StringBuffer _sbuf;
 	
 };	//	end of class Notifier
 
 // ---------------------------------------------------------------------------
 //	class Debugger
 //
+//	When debugging is enabled, this can be just a Notifier. When debugging
+//	is disabled though, it should be gutted by substituting a dummy buffer,
+//	that does nothing at all with the characters it gets, for the StringBuffer
+//	used by Notifier.
 //
-class Debugger : public Notifier
-{
-//	-- public interface --
-public:
-//	construction:
-	Debugger( const std::string s = "" ) : Notifier( s ) {}
-	
-	
-
-};	//	end of class Debugger
+class Debugger 
+#if Debug_Loris
+	//	inherit everything from Notifier:
+	: public Notifier
+	{
+	public:
+		Debugger( const std::string s = "" ) : Notifier( s ) {}
+	};
+#else
+	//	do nothing at all:
+	 : public ostream
+	{
+	public:
+		Debugger( void ) : ostream( & dumb ) {}
+		Debugger( const std::string ) : ostream( & dumb ) {}
+		
+		//	post does nothing at all:
+		virtual void post( boolean = false ) {}
+		
+		//	to do nothing at all, need a dummy streambuf:
+		class dummybuf : public std::streambuf
+		{
+		protected:
+			//	called every time a character is written:
+			virtual int_type overflow( int_type c ) { return c; }
+			
+			//	called when lots of characters are written:
+			virtual std::streamsize xsputn( const char *, std::streamsize n ) { return n; }
+		};	//	end of class dummybuf
+		
+	private:
+		dummybuf dumb;
+	};
+#endif	//	Debug_Loris	
 
 // ---------------------------------------------------------------------------
-//	prototype for a one-shot notifier:
+//	prototype for a one-shot notifiers:
 //
-void notify( const std::string s );
+void notify( const std::string & s );
+void debug( const std::string & s );
 
 // ---------------------------------------------------------------------------
 //	prototype for a one-shot error notifier:
 //	This one displays its message and aborts.
 //
-void fatalError( const std::string s );
-
-// ---------------------------------------------------------------------------
-//	lousy debugging macro, do better!
-#if defined(Debug_Loris)
-	inline void Debug( const std::string s ) { notify( s ); }
-#else
-	inline void Debug( const std::string ) {}
-#endif
+void fatalError( const std::string & s );
 
 End_Namespace( Loris )
 

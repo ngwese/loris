@@ -17,7 +17,7 @@
 Begin_Namespace( Loris )
 
 class SampleBuffer;
-class File;
+class BinaryFile;
 
 // ---------------------------------------------------------------------------
 //	€ class AiffFile
@@ -29,7 +29,7 @@ class AiffFile
 {
 public:
 //	construction:
-	AiffFile( double rate, int chans, int bits, SampleBuffer & buf, File & file );
+	AiffFile( double rate, int chans, int bits, SampleBuffer & buf, BinaryFile & file );
 	
 //	defaults are okay for these, but don't subclass
 	//	AiffFile( const AiffFile & other );
@@ -113,7 +113,7 @@ private:
 	int _sampSize;		//	in bits
 	
 	SampleBuffer & _samples;
-	File & _file;
+	BinaryFile & _file;
 	
 };	//	end of class AiffFile
 

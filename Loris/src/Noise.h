@@ -11,7 +11,7 @@
 //
 // ===========================================================================
 
-#if !defined(USE_DEPRECATED_HEADERS)
+#if !defined( Deprecated_cstd_headers )
 	#include <cmath>
 	using std::sqrt;
 	using std::log;

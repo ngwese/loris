@@ -18,7 +18,7 @@
 #include "Breakpoint.h"
 #include "Notifier.h"
 
-#if !defined(USE_DEPRECATED_HEADERS)
+#if !defined( Deprecated_cstd_headers )
 	#include <cmath>
 	using std::fmod;
 #else
@@ -70,13 +70,9 @@ ImportLemur5::verifySource( void )
 		_file.read( size );
 		_file.read( ids[1] );
 		if ( ids[0] != FORM_ID || ids[1] != LEMR_ID ) {
-			#ifdef Debug_Loris
-			string dbg("Bad file ids: ");
-			dbg.append((char *)&ids[0], 4);
-			dbg.append(" and ");
-			dbg.append((char *)&ids[1], 4);
-			Debug(dbg);
-			#endif
+			Debugger dbg("Bad file ids: ");
+			dbg << string((char *)&ids[0], 4) << " and " << string((char *)&ids[1], 4);
+			dbg.post();
 			
 			Throw( ImportException, "File is not formatted correctly for Lemur 5 import." );
 		}
@@ -90,7 +86,7 @@ ImportLemur5::verifySource( void )
 	}
 	catch ( FileIOException & ex ) {
 		//	convert to an Import Error:
-		Throw( ImportException, ex.getString() );
+		Throw( ImportException, ex.str() );
 	}
 		
 }
@@ -206,7 +202,7 @@ ImportLemur5::readChunkHeader( CkHeader & h )
 		_file.read( h.size );
 	}
 	catch( FileIOException & ex ) {
-		ex.append( "Failed to read chunk header." );
+		ex << "Failed to read chunk header.";
 		throw;
 	}
 } 
@@ -242,7 +238,7 @@ ImportLemur5::readTracksChunk( TrackDataCk & ck )
 	catch ( Exception & ex ) {
 		using std::string;
 		string s( "No Track Data chunk found in this file." );
-		s.append( ex.getString() );
+		s.append( ex.str() );
 		Throw( ImportException, s );
 	}
 	
@@ -293,7 +289,7 @@ ImportLemur5::readParamsChunk( AnalysisParamsCk & ck )
 	catch ( Exception & ex ) {
 		using std::string;
 		string s( "No Parameters chunk found in this file." );
-		s.append( ex.getString() );
+		s.append( ex.str() );
 		Throw( ImportException, s );
 	}
 }

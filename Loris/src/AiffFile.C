@@ -10,7 +10,7 @@
 #include "LorisLib.h"
 #include "AiffFile.h"
 #include "SampleBuffer.h"
-#include "File.h"
+#include "BinaryFile.h"
 
 #include "ieee.h"
 
@@ -23,7 +23,7 @@ Begin_Namespace( Loris )
 //	AiffFile constructor
 // ---------------------------------------------------------------------------
 //
-AiffFile::AiffFile( double rate, int chans, int bits, SampleBuffer & buf, File & file ) :
+AiffFile::AiffFile( double rate, int chans, int bits, SampleBuffer & buf, BinaryFile & file ) :
 	_sampleRate( rate ),
 	_nChannels( chans ),
 	_sampSize( bits ),
@@ -43,16 +43,12 @@ AiffFile::write( void )
 	validateParams();
 	
 	try {
-		_file.openWrite();
 		writeContainer();
 		writeCommon();
 		writeSampleData();
-		_file.close();
 	}
 	catch ( Exception & ex ) {
-		_file.close();
-		ex.append( "Failed to write AIFF file " );
-		ex.append( _file.name() );
+		ex << "Failed to write AIFF file ";
 		throw;
 	}
 }
@@ -110,7 +106,7 @@ AiffFile::writeCommon( void )
 	_file.write( ck.channels );
 	_file.write( ck.sampleFrames );
 	_file.write( ck.bitsPerSample );
-	_file.write( ck.srate, sizeof( IEEE::extended80 ) );
+	_file.write( ck.srate, false );	//	don't swap byte order, ever
 }
 
 // ---------------------------------------------------------------------------
@@ -175,12 +171,17 @@ AiffFile::writeSamples( void )
 	using std::min;
 	
 	static const double Maximum_Long = (double) LONG_MAX;
-	//int shift = 32 - _sampSize;
 	
 	union {
+		//	32 bits sample
 		Int_32 s32bits;
-		char s24bits[3];
+		//	24 bits sample
+		struct {
+			char data[3];
+		}  s24bits;
+		//	16 bits sample
 		Int_16 s16bits;
+		//	8 bits sample
 		char s8bits;
 	} z;
 
@@ -200,7 +201,7 @@ AiffFile::writeSamples( void )
 				z.s32bits = Maximum_Long * min( 1.0, max(-1.0, _samples[i]) );
 			
 				//	write the sample:
-				_file.write( z.s24bits, 3 );
+				_file.write( z.s24bits );
 			}
 			break;
 		case 16:

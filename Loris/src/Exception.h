@@ -1,6 +1,5 @@
 #ifndef __Loris_exception__
 #define __Loris_exception__
-
 // ===========================================================================
 //	Exception.h
 //	
@@ -10,18 +9,17 @@
 //
 // ===========================================================================
 
-
 #include "LorisLib.h"
+#include "StringBuffer.h"
 
 //	use standard library strings and streams
 #include <string>
-using std::string;
 
-#if !defined(USE_DEPRECATED_HEADERS)
-	#include <iostream>
+#if !defined( Deprecated_iostream_headers )
+	#include <iosfwd>
 	using std::ostream;
 #else
-	#include <iostream.h>
+	#include <ostream.h>
 #endif
 
 Begin_Namespace( Loris )
@@ -31,32 +29,27 @@ Begin_Namespace( Loris )
 //
 //	Generic exception class for reporting exceptional circumstances.
 //	Can be a base class for more specific exception classes in Loris.
+//	Inherits streaming capability from ostream, uses its own string
+//	buffer (defined below) as a buffer. 
 //
-class Exception
+class Exception : public ostream
 {
 //	-- public interface --
 public:
 //	construction:
-	Exception( const string & str, const string & where = "" );
+	Exception( const std::string & str, const std::string & where = "" );
 
 //	virtual destructor so it Exception can be subclassed:
 	virtual ~Exception( void );
 	
-//	reporting:
-	void printOn( char * str ) const;
-	void streamOn( ostream & str ) const;
-	
 //	access:
-	const string & getString( void ) const { return mReportString; }
+	const std::string & str( void ) const;
+	const char * what( void ) const;
 	
-//	mutation (only appending is allowed):
-	void append( const string & str );
-	Exception & operator << ( const string & str ) { append(str); return *this; }
-
-//	-- instance variables --
+//	-- instance variable - the string buffer --
 protected:
-	string mReportString;
-
+	StringBuffer _sbuf;
+	
 };	//	end of class Exception
 
 // ---------------------------------------------------------------------------
@@ -71,8 +64,8 @@ ostream & operator << ( ostream & str, const Exception & ex );
 class AssertionFailure : public Exception
 {
 public: 
-	AssertionFailure( const string & str, const string & where = "" ) : 
-		Exception( string("Assertion failed -- ").append( str ), where ) {}
+	AssertionFailure( const std::string & str, const std::string & where = "" ) : 
+		Exception( std::string("Assertion failed -- ").append( str ), where ) {}
 		
 };	//	end of class AssertionFailure
 
@@ -82,8 +75,8 @@ public:
 class LowMemException : public Exception
 {
 public: 
-	LowMemException( const string & str, const string & where = "" ) : 
-		Exception( string("Low Memory Exception -- ").append( str ), where ) {}
+	LowMemException( const std::string & str, const std::string & where = "" ) : 
+		Exception( std::string("Low Memory Exception -- ").append( str ), where ) {}
 		
 };	//	end of class LowMemException
 
@@ -93,8 +86,8 @@ public:
 class IndexOutOfBounds : public Exception
 {
 public: 
-	IndexOutOfBounds( const string & str, const string & where = "" ) : 
-		Exception( string("Index out of bounds -- ").append( str ), where ) {}
+	IndexOutOfBounds( const std::string & str, const std::string & where = "" ) : 
+		Exception( std::string("Index out of bounds -- ").append( str ), where ) {}
 		
 };	//	end of class LowMemException
 
@@ -104,8 +97,8 @@ public:
 class FileIOException : public Exception
 {
 public: 
-	FileIOException( const string & str, const string & where = "" ) : 
-		Exception( string("File i/o error -- ").append( str ), where ) {}
+	FileIOException( const std::string & str, const std::string & where = "" ) : 
+		Exception( std::string("File i/o error -- ").append( str ), where ) {}
 		
 };	//	end of class FileAccessError
 
@@ -115,8 +108,8 @@ public:
 class InvalidObject : public Exception
 {
 public: 
-	InvalidObject( const string & str, const string & where = "" ) : 
-		Exception( string("Invalid configuration or object -- ").append( str ), where ) {}
+	InvalidObject( const std::string & str, const std::string & where = "" ) : 
+		Exception( std::string("Invalid configuration or object -- ").append( str ), where ) {}
 		
 };	//	end of class InvalidObject
 

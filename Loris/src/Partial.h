@@ -111,10 +111,10 @@ private:
 class InvalidPartial : public InvalidObject
 {
 public: 
-	InvalidPartial( const string & str, const string & where = "" ) : 
-		InvalidObject( string("Invalid Partial -- ").append( str ), where ) {}
+	InvalidPartial( const std::string & str, const std::string & where = "" ) : 
+		InvalidObject( std::string("Invalid Partial -- ").append( str ), where ) {}
 		
-};	//	end of class ImportException
+};	//	end of class InvalidPartial
 
 
 End_Namespace( Loris )

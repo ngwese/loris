@@ -19,7 +19,7 @@
 #include "Noise.h"
 #include "Filter.h"
 
-#if !defined(USE_DEPRECATED_HEADERS)
+#if !defined( Deprecated_cstd_headers )
 	#include <cmath>
 	using std::fmod;
 	using std::cos;

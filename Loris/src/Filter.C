@@ -92,7 +92,7 @@ Mkfilter::Create( void )
 		return new Mkfilter( vcx, vcy, gain / extraScaling );
 	}
 	catch ( LowMemException & ex ) {
-		ex.append(  "Failed to Create a Mkfilter." );
+		ex << "Failed to Create a Mkfilter.";
 		throw;
 		return Null; 	//	not reached
 	}
@@ -119,7 +119,7 @@ Mkfilter::CreateNarrow( void )
 		return new Mkfilter( vcx, vcy, gain / extraScaling );
 	}
 	catch ( LowMemException & ex ) {
-		ex.append(  "Failed to Create a Mkfilter." );
+		ex << "Failed to Create a Mkfilter.";
 		throw;
 		return Null; 	//	not reached
 	}
@@ -147,7 +147,7 @@ Mkfilter::CreateWide( void )
 		return new Mkfilter( vcx, vcy, gain / extraScaling );
 	}
 	catch ( LowMemException & ex ) {
-		ex.append(  "Failed to Create a Mkfilter." );
+		ex << "Failed to Create a Mkfilter.";
 		throw;
 		return Null; 	//	not reached
 	}

@@ -44,9 +44,8 @@ Init_::Init_( void )
 		reserveSpace();
 	}
 	catch( Exception & ex ) {
-		std::string s( "Loris library initialization failed. " );
-		s.append( ex.getString() );
-		fatalError(s);
+		ex << "Loris library initialization failed. ";
+		fatalError( ex.str() );
 	}
 }
 
