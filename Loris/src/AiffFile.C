@@ -19,6 +19,9 @@
 #include <algorithm>
 #include <string>
 
+//	define a local floating point constant representing the
+//	biggest 32 bit sample (can't rely on numeric_limits in
+//	under-compliant libraries):
 #if !defined( Lacks_numeric_limits )
 	#include <limits>
 	static const double Maximum_Long = std::numeric_limits<Loris::Int_32>::max();

@@ -119,14 +119,6 @@ protected:
 
 };	//	end of class Morph
 
-/*
-//	prototypes for things that aren't classes or
-//	member functions yet:
-#include <vector>
-Partial dilate( const Partial & p, const std::vector< double > & current, 
-				const std::vector< double > & desired );
-*/
-
 End_Namespace( Loris )
 
 #endif	// ndef __Loris_morph__

@@ -10,11 +10,7 @@
 //	-kel 5 Oct 99
 //
 // ===========================================================================
-
-
 #include "LorisLib.h"
-
-//	use standard library strings:
 #include <string>
 
 //	use std::streambuf as base class:
@@ -25,8 +21,8 @@
 	#define STDstreambuf std::streambuf
 #else
 	#include <iostream.h>
-	#define int_type int
 	#define STDstreambuf streambuf
+	#define int_type int	//	should be member of streambuf
 #endif
 
 Begin_Namespace( Loris )

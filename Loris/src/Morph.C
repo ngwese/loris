@@ -61,16 +61,18 @@ Morph::Morph( auto_ptr< Map > f ) :
 {
 	//	initialize morphing functions:
 	if ( ! f.get() ) {
-		//	need to do this here, because clone() can't
-		//	be called on a Null (auto) pointer:
-		// f = defaultMap();
-		//	since the argument to operator= is non-const, 
+#if defined(__sgi) && ! defined(__GNUC__)
+		//	Since the argument to operator= is non-const, 
 		//	defaultMap() can't, strictly speaking, be 
 		//	used as the argument, because temporaries
 		//	are not lvalues, and only lvalues can initialize
 		//	non-const references.
 		//	At least, some compilers see it that way.
 		f.reset( defaultMap().release() );
+#else
+		//	Fortunately, others do not see it that way.
+		f = defaultMap();
+#endif
 	}
 		
 	setFrequencyFunction( auto_ptr< Map >( f->clone() ) );
@@ -163,8 +165,20 @@ Morph::operator=( const Morph & other )
 void
 Morph::setFrequencyFunction(  auto_ptr< Map > f )
 {
-	if ( ! f.get() ) 
+	if ( ! f.get() ) {
+#if defined(__sgi) && ! defined(__GNUC__)
+		//	Since the argument to operator= is non-const, 
+		//	defaultMap() can't, strictly speaking, be 
+		//	used as the argument, because temporaries
+		//	are not lvalues, and only lvalues can initialize
+		//	non-const references.
+		//	At least, some compilers see it that way.
 		f.reset( defaultMap().release() );
+#else
+		//	Fortunately, others do not see it that way.
+		f = defaultMap();
+#endif
+	}
 
 	_freqFunction = f;
 }
@@ -183,8 +197,20 @@ Morph::setFrequencyFunction(  auto_ptr< Map > f )
 void
 Morph::setAmplitudeFunction(  auto_ptr< Map > f )
 {
-	if ( ! f.get() ) 
+	if ( ! f.get() ) {
+#if defined(__sgi) && ! defined(__GNUC__)
+		//	Since the argument to operator= is non-const, 
+		//	defaultMap() can't, strictly speaking, be 
+		//	used as the argument, because temporaries
+		//	are not lvalues, and only lvalues can initialize
+		//	non-const references.
+		//	At least, some compilers see it that way.
 		f.reset( defaultMap().release() );
+#else
+		//	Fortunately, others do not see it that way.
+		f = defaultMap();
+#endif
+	}
 
 	_ampFunction = f;
 }
@@ -203,8 +229,20 @@ Morph::setAmplitudeFunction(  auto_ptr< Map > f )
 void
 Morph::setBandwidthFunction(  auto_ptr< Map > f )
 {
-	if ( ! f.get() ) 
+	if ( ! f.get() ) {
+#if defined(__sgi) && ! defined(__GNUC__)
+		//	Since the argument to operator= is non-const, 
+		//	defaultMap() can't, strictly speaking, be 
+		//	used as the argument, because temporaries
+		//	are not lvalues, and only lvalues can initialize
+		//	non-const references.
+		//	At least, some compilers see it that way.
 		f.reset( defaultMap().release() );
+#else
+		//	Fortunately, others do not see it that way.
+		f = defaultMap();
+#endif
+	}
 
 	_bwFunction = f;
 }
@@ -402,8 +440,8 @@ Morph::collectByLabel( const list<Partial>::const_iterator & start,
 // ---------------------------------------------------------------------------
 //	defaultMap
 // ---------------------------------------------------------------------------
-//	Static member for creating a default morphing function. By default,
-//	use a BreakpointMap that makes a constant 50% morph.
+//	Static member for creating a default morphing function.
+//	May want a different default sometime.
 //
 auto_ptr< Map > 
 Morph::defaultMap( void )
@@ -412,7 +450,5 @@ Morph::defaultMap( void )
 	//m->insertBreakpoint( 0., 0.5 );
 	return auto_ptr< Map >( m );
 }
-
-
 
 End_Namespace( Loris )

@@ -18,12 +18,16 @@
 
 #if !defined( Deprecated_iostream_headers)
 	#include <iostream>
-	#define IOSbinary std::ios::binary
 #else
 	#include <iostream.h>
-	//	this probably has nothing to do with iostream
-	#define IOSbinary 0
 #endif
+
+//	MIPSPro specific kludge, they're so lame:
+#if defined(__sgi) && ! defined(__GNUC__)
+	#define IOSbinary 0
+#else
+	#define IOSbinary std::ios::binary
+#endif	
 
 using namespace std;
 
@@ -70,7 +74,6 @@ BinaryFile::BinaryFile( const string & path ) :
 		}
 	}
 }
-
 
 #pragma mark -
 #pragma mark file association

@@ -21,11 +21,11 @@
 
 #if !defined( Deprecated_cstd_headers )
 	#include <cmath>
-	using std::sqrt;
 #else
 	#include <math.h>
 #endif
 
+using namespace std;
 
 Begin_Namespace( Loris )
 // ---------------------------------------------------------------------------

@@ -14,7 +14,6 @@
 //	-kel 4 Oct 99
 //
 // ===========================================================================
-
 #include "LorisLib.h"
 #include "LorisInit.h"
 #include "Exception.h"
@@ -33,7 +32,9 @@ Begin_Namespace( Loris )
 //
 Init_::Init_( void )
 {
-	// Debug("creating Loris Init__.");
+//	don't do this:
+//	debugger << "Initializing Loris library.";
+//	debugger.post();
 	 
 	try {
 	 	//	check type sizes:
@@ -56,7 +57,8 @@ Init_::Init_( void )
 //
 Init_::~Init_( void )
 {
-	 // Debug("destroying Loris Init__.");
+//	 debugger << "Finalizing Loris library.";
+//	 debugger.post();
 }
 
 // ---------------------------------------------------------------------------
@@ -65,6 +67,11 @@ Init_::~Init_( void )
 //	A static const reference is created in every compilation that includes
 //	LorisLib.h, and it is initialized with this static member. No other
 //	instance of Init_ is possible, and Init_ has no functional members.
+//
+//	This is not re-entrant, which can cause problems if, for example, I 
+//	enter another source file while constructing, causing another instance
+//	to be constructed! I think. It defintitely dies if I try to put a debugging
+//	statement in the constructor.
 //
 const Init_ &
 Init_::instance( void )

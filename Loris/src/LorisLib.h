@@ -26,6 +26,7 @@
  *		Deprecated_cstd_headers	( no cstdio, cmath, cstdlib, new )
  *		Deprecated_iostream_headers ( no iostream, ostream, streambuf )
  *		Deprecated_string_stream ( no sstream, use strstream? )
+ *		Lacks_numeric_limits ( no limits, use limits.h, lacks numeric_limits )
  *
  *		Some implementations don't have all the new-style headers they
  *		are supposed to have, so we have to use the old-style .h versions
@@ -41,6 +42,10 @@
  *		members, so if the compiler can't handle it, get a modern compiler.
  *		Some classes will not compile without template members.
  *		** Don't use this symbol. **
+ *		Actually, I want to use this symbol, find a way.
+ *
+ *		Special MIPSPro kludges are flagged, for now, by the symbol __sgi.
+ *		Specifically: defined(__sgi) && ! defined(__GNUC__).
  *
  *
  *	-kel 16 Aug 99
@@ -52,7 +57,7 @@
  *	These make namespace definitions easier to read, only usable 
  *	under C++.
  */
-#ifdef __cplusplus
+#if defined( __cplusplus ) && ! defined( No_Loris_namespace )
 	#define Begin_Namespace( x ) namespace x {
 	#define End_Namespace( x ) }
 #else

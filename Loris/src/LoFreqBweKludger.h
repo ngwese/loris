@@ -39,9 +39,15 @@ public:
 	//LoFreqBweKludger( const LoFreqBweKludger & other );
 	
 //	cloning:
-//	HEY this is screwed up under MIPSPro
-	// LoFreqBweKludger * clone( void ) const { return new LoFreqBweKludger( *this ); }
-	PartialIterator * clone( void ) const { return new LoFreqBweKludger( *this ); }
+//	In standard C++, an overriding member can return a type that
+//	is derived from the type of the overidden parent member.
+//	But not in MIPSPro C++.
+#if defined(__sgi) && ! defined(__GNUC__)
+	PartialIterator * 
+#else
+	LoFreqBweKludger *	
+#endif
+		clone( void ) const { return new LoFreqBweKludger( *this ); }
 
 	//	override these two:
 	double amplitude( void ) const;

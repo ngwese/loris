@@ -15,10 +15,8 @@
 
 #if !defined( Deprecated_iostream_headers )
 	#include <iostream>
-	#define IOSfmtflags ios::fmtflags
 #else
 	#include <iostream.h>
-	#define IOSfmtflags int
 #endif
 
 #if !defined( Deprecated_cstd_headers )
@@ -26,6 +24,13 @@
 #else
 	#include <stdio.h>
 #endif
+
+//	MIPSPro is especially lame:
+#if defined(__sgi) && ! defined(__GNUC__)
+	#define IOSfmtflags int
+#else
+	#define IOSfmtflags ios::fmtflags
+#endif	
 
 using namespace std;
 
@@ -62,9 +67,7 @@ Notifier::Notifier( const string & s ) :
 //
 void 
 Notifier::post( boolean block )
-{
-	using namespace std;
-	
+{	
 	cout << _sbuf.str() << endl;
 	_sbuf.erase();
 	

@@ -13,19 +13,27 @@
 
 #include <string>
 
-//	probably should use macros to do this:
+//	use macros for non-compliant libraries:
 #if !defined( Deprecated_iostream_headers)
 	#include <iostream>
 	#include <fstream>
-	using std::iostream;
-	using std::filebuf;
-	using std::streampos;
-	using std::ios;
+	#define STDiostream std::iostream
+	#define STDios std::ios
+	#define STDfilebuf std::filebuf
+	#define STDstreampos std::streampos
 #else
 	#include <iostream.h>
 	#include <fstream.h>
-	#define seekdir seek_dir
+	#define STDiostream iostream
+	#define STDios ios
+	#define STDfilebuf filebuf
+	#define STDstreampos streampos
 #endif
+
+//	this is wrong in MIPSPro, kludged alreday in egcs.
+#if defined(__sgi) && ! defined(__GNUC__)
+	#define seekdir seek_dir
+#endif	
 
 Begin_Namespace( Loris )
 
@@ -42,7 +50,7 @@ Begin_Namespace( Loris )
 //	Note: no check is made on positioning the stream pointer, behavior
 //	is "undefined" when streams are positioned out of bounds. 
 //
-class BinaryFile : private iostream
+class BinaryFile : private STDiostream
 {
 //	-- public interface --
 public:
@@ -55,7 +63,7 @@ public:
 	//	For now, just use filebuf, but to have buffering, need to 
 	//	derived our own file buffer class. The built-in filebuf
 	//	class does no buffering, and doesn't support it.
-	typedef filebuf buffer_type;
+	typedef STDfilebuf buffer_type;
 	
 	//	file stream association:
 	void append( const std::string & path );	//	append, create if nec.
@@ -97,18 +105,18 @@ public:
 	//	absolute file stream position:
 	//	(note: streampos is _not_ an integral type)
 	//	(that is to say, it _should not_ be)
-	streampos tell( void );
-	void seek( streampos x );
+	STDstreampos tell( void );
+	void seek( STDstreampos x );
 	
 	//	relative file stream position:
 	//	(note: position offsets _are_ signed integral types)
-	void offset( long x, ios::seekdir whence = ios::cur );
+	void offset( long x, STDios::seekdir whence = STDios::cur );
 	
 	//	import status access:	
-	using iostream::clear;
-	using iostream::eof;
-	using iostream::fail;
-	using iostream::good;
+	using STDiostream::clear;
+	using STDiostream::eof;
+	using STDiostream::fail;
+	using STDiostream::good;
 	
 	//	endian-ness:
 	void setBigEndian( void );
@@ -127,8 +135,9 @@ protected:
 //	-- instance variables --
 private:
 	enum { op_wr, op_rd, op_seek } _prevOp;	//	was the previous operation read or write?
+	
 	boolean _swapBytes;		//	should we swap the byte order of objects read/written?
-	filebuf _buf;			//	associated file buffer 
+	STDfilebuf _buf;		//	associated file buffer 
 
 };	//	end of class BinaryFile
 

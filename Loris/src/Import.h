@@ -18,7 +18,6 @@
 #include "Exception.h"
 
 #include <list>
-using std::list;
 
 Begin_Namespace( Loris )
 
@@ -45,8 +44,8 @@ public:
 	void importPartials( void );
 	
 //	access to imported Partials:
-	list< Partial > & partials( void ) { return mPartials; }
-	const list< Partial > & partials ( void ) const { return mPartials; }
+	std::list< Partial > & partials( void ) { return mPartials; }
+	const std::list< Partial > & partials ( void ) const { return mPartials; }
 	
 //	-- primitve operations --
 	//	check that source of Partials is valid or ready:
@@ -72,7 +71,7 @@ protected:
 	virtual ~Import( void );
 
 //	-- instance variables --
-	list< Partial > mPartials;	//	list<> of imported Partials
+	std::list< Partial > mPartials;	//	list<> of imported Partials
 
 };	//	end of class Import
 
@@ -87,7 +86,13 @@ class ImportException : public Exception
 public: 
 	ImportException( const std::string & str, const std::string & where = "" ) : 
 		Exception( std::string("Import Error -- ").append( str ), where ) {}
+#if defined(__sgi) && ! defined(__GNUC__)
+//	copying:
+//	(exception objects are copied once when caught by reference,
+//	or twice when caught by value)
+//	This should be generated automatically by the compiler.
 	ImportException( const ImportException & other ) : Exception( other ) {}
+#endif // lame compiler
 		
 };	//	end of class ImportException
 

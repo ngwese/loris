@@ -13,12 +13,11 @@
 //	-kel 9 Sept 99
 //
 // ===========================================================================
-
 #include "LorisLib.h"
 #include "StringBuffer.h"
-
 #include <string>
 
+//	macros for non-compliant compilers:
 #if !defined( Deprecated_iostream_headers )
 	#include <iostream>
 	#define STDostream std::ostream

@@ -30,9 +30,14 @@ Begin_Namespace( Loris )
 //	Right now, the singleton is declared and constructed
 //	in instance().
 //
+//	Make the instance a pointer static to some file,
+//	the constructor assigns this to the that pointer, 
+//	then the construction of a derived class will also
+//	initialize the Singleton.
+//
 class Init_
 {
-//	construction and destruciton are protected:
+//	construction is protected:
 protected:
 	Init_( void );
 

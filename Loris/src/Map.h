@@ -15,9 +15,7 @@
 //	-kel 26 Oct 99
 //
 // ===========================================================================
-
 #include "LorisLib.h"
-
 #include <map>
 
 Begin_Namespace( Loris )
@@ -65,11 +63,15 @@ public:
 	//~BreakpointMap( void );
 	
 //	cloning:
-//	HEY do somthing better, some lousy compilers
-//	don't allow overridden members to return dervied
-//	types.
-	// BreakpointMap * clone( void ) const { return new BreakpointMap( *this ); }
-	Map * clone( void ) const { return new BreakpointMap( *this ); }
+//	In standard C++, an overriding member can return a type that
+//	is derived from the type of the overidden parent member.
+//	But not in MIPSPro C++.
+#if defined(__sgi) && ! defined(__GNUC__)
+	Map * 
+#else
+	BreakpointMap *	
+#endif
+		clone( void ) const { return new BreakpointMap( *this ); }
 
 //	adding breakpoints:
 	void insertBreakpoint( double x, double y ); 
