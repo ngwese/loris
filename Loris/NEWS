@@ -17,6 +17,9 @@ parenthesis.
 
 - improved error handling and reporting in SDIF reading
 
+- autobuilding of Loris library and the Python module 
+under Darwin isbcware now possible
+
 -------------------------------------------------------
 changes since 1.0beta6 release:
 
