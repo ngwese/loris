@@ -50,7 +50,7 @@ typedef struct
 	float *result;
 	
 	/* unit generator parameters/arguments */
-	float *time, *ifilnam, *ampenv, *freqenv, *bwenv, *fadetime;    
+	float *time, *ifilnam, *freqenv, *ampenv, *bwenv, *fadetime;    
 
 	/* private internal data, used by generator */
 	Lorisplay_priv *bwestore;

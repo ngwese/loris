@@ -1,0 +1,207 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/1999/REC-html401-19991224/loose.dtd">
+
+<html>
+<head>
+	<title>lorisplay</title>
+	 <LINK REL="stylesheet" TYPE="text/css" HREF="../manual.css" TITLE="formal">
+</head>
+
+<body bgcolor="white">
+<!--
+[[table  align="right" cellpadding="1" cellspacing="1" border="0"]]
+	[[tr]]
+		[[td width="45" align="right"]]
+			[[a href="../manual2.htm#contents" target="_parent"]][[img src="../toc.gif" width="38" height="18" alt="Use Non-Frames Version" border="0"]][[/a]]
+		[[/td]]
+		[[td width="10"]][[/td]]
+		[[td width="45" align="right"]]
+			[[a href="guiro.htm"]][[img src="../prev.gif" width="38" height="18" alt="Previous Page" border="0"]][[/a]]
+		[[/td]]
+		[[td width="45" align="right"]]
+			[[a href="pvread.htm"]][[img src="../next.gif" width="38" height="18" alt="Next Page" border="0"]][[/a]]
+		[[/td]]
+	[[/tr]]
+[[/table]]
+-->
+Signal Generators: Bandwidth-Enhanced Additive Resynthesis
+
+<hr size="1" color="#A9A9A9" noshade>
+
+<h2>lorisplay</h2>
+<pre>
+  ar      <strong>lorisplay</strong>       ktimpnt, ifilcod, kfreqenv, kampenv, kbwenv[, ifadetime]
+</pre>
+<hr size="2" color="#A9A9A9" noshade>
+
+<h3>Description</h3>
+
+<p>Output of <strong>lorisplay</strong> is a sum of a set of individualy
+specified bandwidth enhanced partials that have their amplitude,
+frequency, bandwidth and phase specified over time.  These parameters
+are specified in a SDIF file, that will be read in, at specific points
+in time, breakpoints, and the parameters are interpolated between
+breakpoints.
+</p>
+<p>For more information about
+<em>Bandwidth-Enhanced Additive Synthesis</em>, <em>Reassigned
+Bandwidth-Enhanced Additive Model</em>, and <strong>Loris</strong>,
+visit the <strong>Loris</strong> web site at <a
+href="www.cerlsoundgroup.org/Loris/">www.cerlsoundgroup.org/Loris/</a>
+</p>
+
+<h3>Initialization</h3>
+
+<p><em>ifilcod</em> &#8211; integer or character-string denoting a
+control-file derived from reassigned bandwidth-enhanced analysis of an
+audio signal. An integer denotes the suffix of a file
+<em>loris.sdif</em> (e.g. <em>loris.sdif.1</em>); a character-string (in
+double quotes) gives a filename, optionally a full pathname. If not
+fullpath, the file is sought first in the current directory, then in the
+one given by the environment variable <a
+href="../syntax/dirfiles.htm"><strong>SADIR</strong></a> (if defined).
+</p>
+<p> The <strong>lorisplay</strong> control file contains breakpoint
+frequency, amplitude, noisiness, and phase envelope values organized for
+bandwidth-enhanced additive resynthesis. The control data must conform
+to one of the SDIF formats that can be interpreted using the
+<strong>Loris</strong> library for sound modeling and manipulation.
+Memory usage depends on the size of the files involved, which are read
+and held entirely in memory during computation but are shared by
+multiple calls. 
+</p>
+
+
+<p> <strong>Loris</strong> stores partials in SDIF RBEP frames. Each
+RBEP frame contains one RBEP matrix, and each row in a RBEP matrix
+describes one breakpoint in a <strong>Loris</strong> partial. A RBEL
+frame containing one RBEL matrix describing the labeling of the partials
+may precede the first RBEP frame in the SDIF file. The RBEP and RBEL
+frame and matrix definitions are included in the SDIF file's header. In
+addition to RBEP frames, <strong>Loris</strong> can also read and write
+SDIF 1TRC frames.  Since 1TRC frames do not represent
+bandwidth-enhancement or the exact timing of <strong>Loris</strong>
+breakpoints, their use is not recommended. 1TRC capabilities are
+provided to allow interchange with programs that are unable to handle
+RBEP frames.
+</p>
+
+<p><em>ifadetime</em> (optional) &#8211; Can be used if the total sounds
+or individual partials have sharp attacks or decays to avoid "pops" and
+"clicks" that might be caused.  Causes partials to have to fade in at
+the begining of a partial and fade out at the end of the partial.  This
+is done by adding two more breakpoints in the partial, one before the
+start time of every partial and the other after the end time of every
+partial.  The additional breakpoints will be at partial start time -
+ifadetime and partial end time + ifadetime (in seconds) unless the
+partial start time is at 0 (sec) (in which case there will be no fade
+in) or unless start time - ifadetime < 0 (in which case the fade in
+breakpoint will be placed at 0 sec).  The additional breakpoints will
+have the same frequency, bandwidth, and phase as the start or end points
+respectively, but their amplitudes will be zero.  If no value is
+entered, this defaults to zero. Note that the fadetime may not be exact, 
+since the partial parameters are updated at the control rate (krate).
+</p>
+
+<h3>Performance</h3>
+<p><strong>lorisplay</strong> implements signal reconstruction using
+Bandwidth-Enhanced Additive Synthesis. The control data stems from a
+pre-computed analysis file stored in SDIF format, as described above.
+The passage of time through this file is specified by <em>ktimpnt</em>,
+which represents the time in seconds. <em>ktimpnt</em> must always be
+positive, but can move forwards or backwards in time, be stationary or
+discontinuous, as a pointer into the analysis file. <em>kfreqenv</em> is
+a control-rate transposition factor: a value of 1 incurs no
+transposition, 1.5 transposes up a perfect fifth, and .5 down an octave.
+<em>kampenv</em> is a control-rate scale factor that is applied to all
+partial amplitude envelopes. <em>kbwenv</em> is a control-rate scale
+factor that is applied to all partial bandwidth or noisiness envelopes.
+</p>
+
+<p>This implementation of <strong>lorisplay</strong> was orignally
+written by Corbin Champion, with assistance from Kelly Fitz. It is based
+on the method of <em>Bandwidth-Enhanced Additive Synthesis</em>
+implemented in the <strong>Loris</strong> library for sound modeling and
+manipulation. For more information about <em>Bandwidth-Enhanced Additive
+Synthesis</em>, <em>Reassigned Bandwidth-Enhanced Additive Model</em>,
+and <strong>Loris</strong>, visit the <strong>Loris</strong> web site at <a
+href="www.cerlsoundgroup.org/Loris/">www.cerlsoundgroup.org/Loris/</a>
+</p>
+
+<h3>Examples</h3>
+<p>Example 1 (simple example)
+</p>
+<pre><em>; 
+; Play the partials in clarinet.sdif 
+; from 0 to 3 sec with 1 ms fadetime 
+; and no frequency , amplitude, or 
+; bandwidth modification.
+;</em>
+instr 1
+    ktime    <strong>linseg</strong>      0, p3, 3.0    <em>; linear time function from 0 to 3 seconds</em>
+    asig     <strong>lorisplay</strong>   ktime, "clarinet.sdif", 1, 1, 1, .001
+             <strong>out</strong>         asig
+endin
+</pre>
+
+<p>Example 2 (slightly more complex example)
+</p>
+<pre><em>; 
+; Play the partials in clarinet.sdif 
+; from 0 to 3 sec with 1 ms fadetime 
+; adding vibrato, increasing the 
+; "breathiness" (noisiness) and overall
+; amplitude, and adding a highpass filter.
+;</em>
+instr 2
+    ktime    <strong>linseg</strong>      0, p3, 3.0    <em>; linear time function from 0 to 3 seconds</em>
+
+    <em>; make a vibrato envelope</em>
+    kvenv    <strong>linseg</strong>      0, p3/6, 0, p3/6, .02, p3/3, .02, p3/6, 0, p3/6, 0
+    kvib     <strong>oscil</strong>       kvenv, 4, 1   <em>; table 1, sinusoid</em>
+
+    kbwenv   <strong>linseg</strong>      1, p3/6, 1, p3/6, 2, 2*p3/3, 2
+    a1       <strong>lorisplay</strong>   ktime, "clarinet.sdif", 1+kvib, 2, kbwenv, .001  
+    a2       <strong>atone</strong>       a1, 1000      <em>; highpass filter, cutoff 1000 Hz</em>
+             <strong>out</strong>         a2
+endin
+</pre>
+<p> The instrument in Example 1 synthesizes a clarinet tone from
+beginning to end using partials derived from reassigned
+bandwidth-enhanced analysis of a three-second clarinet tone, stored in a
+file, "clarinet.sdif." The instrument in Example 2 adds vibrato to the
+clarinet tone synthesized by <code>instr 1</code>, boosts its amplitde
+and noisiness, and applies a highpass filter to the result.
+</p>
+
+<h3>Authors</h3>
+<p>Corbin Champion and Kelly Fitz<br>
+WSU, Pullman<br>
+2002<br>
+email:<a href="mailto:loris@cerlsoundgroup.org">loris@cerlsoundgroup.org</a></p>
+
+<p>
+Last update: 9 May 2002
+</p>
+
+<hr size="2" color="#A9A9A9" noshade>
+<!--
+[[table  align="right" cellpadding="1" cellspacing="1" border="0"]]
+	[[tr]]
+		[[td width="45" align="right"]]
+			[[a href="../manual2.htm#contents" target="_parent"]][[img src="../toc.gif" width="38" height="18" alt="Use Non-Frames Version" border="0"]][[/a]]
+		[[/td]]
+		[[td width="10"]][[/td]]
+		[[td width="45" align="right"]]
+			[[a href="guiro.htm"]][[img src="../prev.gif" width="38" height="18" alt="Previous Page" border="0"]][[/a]]
+		[[/td]]
+		[[td width="45" align="right"]]
+			[[a href="pvread.htm"]][[img src="../next.gif" width="38" height="18" alt="Next Page" border="0"]][[/a]]
+		[[/td]]
+	[[/tr]]
+[[/table]]
+-->
+Signal Generators: Bandwidth-Enhanced Additive Resynthesis
+</body>
+
+</html>
