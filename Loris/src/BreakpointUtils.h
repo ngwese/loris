@@ -1,7 +1,11 @@
 #ifndef INCLUDE_BREAKPOINTUTILS_H
 #define INCLUDE_BREAKPOINTUTILS_H
 /*
- * Copyright (c) 1999-2000 Kelly Fitz and Lippold Haken
+ * This is the Loris C++ Class Library, implementing analysis, 
+ * manipulation, and synthesis of digitized sounds using the Reassigned 
+ * Bandwidth-Enhanced Additive Sound Model.
+ *
+ * Loris is Copyright (c) 1999-2000 by Kelly Fitz and Lippold Haken
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
