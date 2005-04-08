@@ -74,7 +74,7 @@ For more information, please visit
 //		include Loris headers needed to generate wrappers
 //
 %{
-	#include<loris.h>
+	#include <loris.h>
 	
 	#include <AiffFile.h>
 	#include <Analyzer.h>
@@ -82,6 +82,8 @@ For more information, please visit
 	#include <Exception.h>
 	#include <Marker.h>
 	#include <Partial.h>
+	#include <SdifFile.h>
+	#include <SpcFile.h>
 	#include <Synthesizer.h>
 
 	//	import the entire Loris namespace, because
@@ -92,7 +94,6 @@ For more information, please visit
 	// (This has probably been fixed by now.)
 	using namespace Loris;
 	
-	#include <list>
 	#include <stdexcept>
 	#include <vector>
 %}
@@ -103,10 +104,6 @@ For more information, please visit
 namespace std {
    %template(DoubleVector) vector< double >;
    %template(MarkerVector) vector< Marker >;
-
-//	try to make this work sometime, seems like
-//	its functional, but it might be very slow.
-//   %template(PartialList) list< Partial >;
 };
 
 // ----------------------------------------------------------------
@@ -1005,9 +1002,6 @@ instance.") Analyzer;
 //	values past either end of the breakpoint function have the 
 //	values at the nearest end).
 //
-%{
-	#include<BreakpointEnvelope.h>
-%}
 
 class BreakpointEnvelope
 {
@@ -1052,9 +1046,6 @@ public:
 //	data in a SDIF-format data file. Construction of an SdifFile 
 //	from a stream or filename automatically imports the Partial
 //	data. 
-%{
-	#include<SdifFile.h>
-%}
 
 
 %newobject SdifFile::partials;
@@ -1130,47 +1121,23 @@ public:
 		//	add members to access Markers
 		// 	now much improved to take advantage of 
 		// 	SWIG support for std::vector.
-		
-		int numMarkers( void ) { return self->markers().size(); }
-		
-		Marker * getMarker( int i )
-		{
-			if ( i < 0 || i >= self->markers().size() )
-			{
-				Throw( InvalidArgument, "Marker index out of range." );
-			}
-			return new Marker( self->markers()[i] );
-		}
-		
-		void removeMarker( int i )
-		{
-			if ( i < 0 || i >= self->markers().size() )
-			{
-				Throw( InvalidArgument, "Marker index out of range." );
-			}
-			self->markers().erase( self->markers().begin() + i );
-		}
-		
-		void addMarker( Marker m )
-		{
-			self->markers().push_back( m );
-		}
-		
-		void clearMarkers( void )
-		{
-			self->markers().clear();
-		}
-		
+%feature("docstring",
+"Return the (possibly empty) collection of Markers for 
+this SdifFile.") markers;
+
 		std::vector< Marker > markers( void )
 		{
 			return self->markers();
 		}
-		
-		void addMarkers( const std::vector< Marker > & markers )
+
+%feature("docstring",
+"Specify a new (possibly empty) collection of Markers for
+this SdifFile.") setMarkers;
+
+		void setMarkers( const std::vector< Marker > & markers )
 		{
-			self->markers().insert( self->markers().end(), 
-									markers.begin(), markers.end() );
-		}
+			self->markers().assign( markers.begin(), markers.end() );
+		}	
 	}	
 		 
 };	//	end of class SdifFile
@@ -1184,9 +1151,6 @@ public:
 //	Symbolic Sound Kyma Sound Design Workstation. Class SpcFile manages 
 //	file I/O and conversion between Partials and envelope parameter streams.
 //	
-%{
-	#include<SpcFile.h>
-%}
 
 %newobject SpcFile::partials;
 %newobject SpcFile::getMarker;
@@ -1325,49 +1289,22 @@ public:
 			allowable maximum.
 		 */
 		 
-		//	add members to access Markers
-		// 	now much improved to take advantage of 
-		// 	SWIG support for std::vector.
-		
-		int numMarkers( void ) { return self->markers().size(); }
-		
-		Marker * getMarker( int i )
-		{
-			if ( i < 0 || i >= self->markers().size() )
-			{
-				Throw( InvalidArgument, "Marker index out of range." );
-			}
-			return new Marker( self->markers()[i] );
-		}
-		
-		void removeMarker( int i )
-		{
-			if ( i < 0 || i >= self->markers().size() )
-			{
-				Throw( InvalidArgument, "Marker index out of range." );
-			}
-			self->markers().erase( self->markers().begin() + i );
-		}
-		
-		void addMarker( Marker m )
-		{
-			self->markers().push_back( m );
-		}
-		
-		void clearMarkers( void )
-		{
-			self->markers().clear();
-		}
-		
+%feature("docstring",
+"Return the (possibly empty) collection of Markers for 
+this SpcFile.") markers;
+
 		std::vector< Marker > markers( void )
 		{
 			return self->markers();
 		}
-		
-		void addMarkers( const std::vector< Marker > & markers )
+
+%feature("docstring",
+"Specify a new (possibly empty) collection of Markers for
+this SpcFile.") setMarkers;
+
+		void setMarkers( const std::vector< Marker > & markers )
 		{
-			self->markers().insert( self->markers().end(), 
-									markers.begin(), markers.end() );
+			self->markers().assign( markers.begin(), markers.end() );
 		}
 	}
 	

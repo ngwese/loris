@@ -59,5 +59,5 @@ SWIG_INTERFACE = loris.i
 
 wrapper: $(PYTHON_WRAPPER)
 
-$(PYTHON_WRAPPER): $(SWIG_INTERFACE)
+$(PYTHON_WRAPPER): loris.i lorisPartialList.i
 	$(SWIG) -python -c++ -module loris -o $(PYTHON_WRAPPER) $(SWIG_INTERFACE)

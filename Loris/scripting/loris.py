@@ -1090,33 +1090,23 @@ class SdifFile(_object):
         """addPartials(self, l)"""
         return _loris.SdifFile_addPartials(*args)
 
-    def numMarkers(*args): 
-        """numMarkers(self) -> int"""
-        return _loris.SdifFile_numMarkers(*args)
-
-    def getMarker(*args): 
-        """getMarker(self, i) -> Marker"""
-        return _loris.SdifFile_getMarker(*args)
-
-    def removeMarker(*args): 
-        """removeMarker(self, i)"""
-        return _loris.SdifFile_removeMarker(*args)
-
-    def addMarker(*args): 
-        """addMarker(self, m)"""
-        return _loris.SdifFile_addMarker(*args)
-
-    def clearMarkers(*args): 
-        """clearMarkers(self)"""
-        return _loris.SdifFile_clearMarkers(*args)
-
     def markers(*args): 
-        """markers(self) -> MarkerVector"""
+        """
+        markers(self) -> MarkerVector
+
+        Return the (possibly empty) collection of Markers for 
+        this SdifFile.
+        """
         return _loris.SdifFile_markers(*args)
 
-    def addMarkers(*args): 
-        """addMarkers(self, markers)"""
-        return _loris.SdifFile_addMarkers(*args)
+    def setMarkers(*args): 
+        """
+        setMarkers(self, markers)
+
+        Specify a new (possibly empty) collection of Markers for
+        this SdifFile.
+        """
+        return _loris.SdifFile_setMarkers(*args)
 
 
 class SdifFilePtr(SdifFile):
@@ -1189,33 +1179,23 @@ class SpcFile(_object):
         """addPartials(self, l)"""
         return _loris.SpcFile_addPartials(*args)
 
-    def numMarkers(*args): 
-        """numMarkers(self) -> int"""
-        return _loris.SpcFile_numMarkers(*args)
-
-    def getMarker(*args): 
-        """getMarker(self, i) -> Marker"""
-        return _loris.SpcFile_getMarker(*args)
-
-    def removeMarker(*args): 
-        """removeMarker(self, i)"""
-        return _loris.SpcFile_removeMarker(*args)
-
-    def addMarker(*args): 
-        """addMarker(self, m)"""
-        return _loris.SpcFile_addMarker(*args)
-
-    def clearMarkers(*args): 
-        """clearMarkers(self)"""
-        return _loris.SpcFile_clearMarkers(*args)
-
     def markers(*args): 
-        """markers(self) -> MarkerVector"""
+        """
+        markers(self) -> MarkerVector
+
+        Return the (possibly empty) collection of Markers for 
+        this SpcFile.
+        """
         return _loris.SpcFile_markers(*args)
 
-    def addMarkers(*args): 
-        """addMarkers(self, markers)"""
-        return _loris.SpcFile_addMarkers(*args)
+    def setMarkers(*args): 
+        """
+        setMarkers(self, markers)
+
+        Specify a new (possibly empty) collection of Markers for
+        this SpcFile.
+        """
+        return _loris.SpcFile_setMarkers(*args)
 
 
 class SpcFilePtr(SpcFile):
@@ -1241,10 +1221,6 @@ class NewPlistIterator(_object):
     def next(*args): 
         """next(self) -> Partial"""
         return _loris.NewPlistIterator_next(*args)
-
-    def partial(*args): 
-        """partial(self) -> Partial"""
-        return _loris.NewPlistIterator_partial(*args)
 
 
 class NewPlistIteratorPtr(NewPlistIterator):
@@ -1324,9 +1300,24 @@ class PartialList(_object):
         """__iter__(self) -> NewPlistIterator"""
         return _loris.PartialList___iter__(*args)
 
+    def __len__(*args): 
+        """__len__(self) -> unsigned long"""
+        return _loris.PartialList___len__(*args)
+
     def append(*args): 
-        """append(self, partial)"""
+        """
+        append(self, partial)
+        append(self, other)
+        """
         return _loris.PartialList_append(*args)
+
+    def insert(*args): 
+        """insert(self, position, partial) -> NewPlistIterator"""
+        return _loris.PartialList_insert(*args)
+
+    def erase(*args): 
+        """erase(self, partial)"""
+        return _loris.PartialList_erase(*args)
 
     def first(*args): 
         """first(self) -> Partial"""
@@ -1335,40 +1326,6 @@ class PartialList(_object):
     def last(*args): 
         """last(self) -> Partial"""
         return _loris.PartialList_last(*args)
-
-    def begin(*args): 
-        """begin(self) -> PartialListIterator"""
-        return _loris.PartialList_begin(*args)
-
-    def end(*args): 
-        """end(self) -> PartialListIterator"""
-        return _loris.PartialList_end(*args)
-
-    def erase(*args): 
-        """
-        erase(self, partial)
-        erase(self, position)
-        """
-        return _loris.PartialList_erase(*args)
-
-    def splice(*args): 
-        """
-        splice(self, other)
-        splice(self, position, list)
-        """
-        return _loris.PartialList_splice(*args)
-
-    def insert(*args): 
-        """
-        insert(self, position, partial) -> NewPlistIterator
-        insert(self, position, partial) -> PartialListIterator
-        insert(self, partial) -> PartialListIterator
-        """
-        return _loris.PartialList_insert(*args)
-
-    def copy(*args): 
-        """copy(self) -> PartialList"""
-        return _loris.PartialList_copy(*args)
 
 
 class PartialListPtr(PartialList):
@@ -1451,6 +1408,10 @@ class Partial(_object):
         """__iter__(self) -> NewPartialIterator"""
         return _loris.Partial___iter__(*args)
 
+    def erase(*args): 
+        """erase(self, pos)"""
+        return _loris.Partial_erase(*args)
+
     def first(*args): 
         """first(self) -> Breakpoint"""
         return _loris.Partial_first(*args)
@@ -1459,36 +1420,17 @@ class Partial(_object):
         """last(self) -> Breakpoint"""
         return _loris.Partial_last(*args)
 
-    def begin(*args): 
-        """begin(self) -> PartialIterator"""
-        return _loris.Partial_begin(*args)
-
-    def end(*args): 
-        """end(self) -> PartialIterator"""
-        return _loris.Partial_end(*args)
-
-    def erase(*args): 
-        """
-        erase(self, pos)
-        erase(self, pos)
-        """
-        return _loris.Partial_erase(*args)
-
     def insert(*args): 
-        """insert(self, time, bp) -> PartialIterator"""
+        """insert(self, time, bp) -> NewPartialIterator"""
         return _loris.Partial_insert(*args)
 
     def findAfter(*args): 
-        """findAfter(self, time) -> PartialIterator"""
+        """findAfter(self, time) -> NewPartialIterator"""
         return _loris.Partial_findAfter(*args)
 
     def findNearest(*args): 
-        """findNearest(self, time) -> PartialIterator"""
+        """findNearest(self, time) -> NewPartialIterator"""
         return _loris.Partial_findNearest(*args)
-
-    def copy(*args): 
-        """copy(self) -> Partial"""
-        return _loris.Partial_copy(*args)
 
 
 class PartialPtr(Partial):
@@ -1551,10 +1493,6 @@ class Breakpoint(_object):
     def setPhase(*args): 
         """setPhase(self, x)"""
         return _loris.Breakpoint_setPhase(*args)
-
-    def copy(*args): 
-        """copy(self) -> Breakpoint"""
-        return _loris.Breakpoint_copy(*args)
 
 
 class BreakpointPtr(Breakpoint):
@@ -1620,109 +1558,5 @@ class BreakpointPositionPtr(BreakpointPosition):
         if not hasattr(self,"thisown"): _swig_setattr(self, BreakpointPosition, 'thisown', 0)
         _swig_setattr(self, BreakpointPosition,self.__class__,BreakpointPosition)
 _loris.BreakpointPosition_swigregister(BreakpointPositionPtr)
-
-class PartialIterator(_object):
-    """Proxy of C++ PartialIterator class"""
-    __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, PartialIterator, name, value)
-    __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, PartialIterator, name)
-    def __repr__(self):
-        return "<%s.%s; proxy of C++ PartialIterator instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
-    def time(*args): 
-        """time(self) -> double"""
-        return _loris.PartialIterator_time(*args)
-
-    def breakpoint(*args): 
-        """breakpoint(self) -> Breakpoint"""
-        return _loris.PartialIterator_breakpoint(*args)
-
-    def copy(*args): 
-        """copy(self) -> PartialIterator"""
-        return _loris.PartialIterator_copy(*args)
-
-    def next(*args): 
-        """next(self) -> PartialIterator"""
-        return _loris.PartialIterator_next(*args)
-
-    def prev(*args): 
-        """prev(self) -> PartialIterator"""
-        return _loris.PartialIterator_prev(*args)
-
-    def equals(*args): 
-        """equals(self, other) -> int"""
-        return _loris.PartialIterator_equals(*args)
-
-    def isInRange(*args): 
-        """isInRange(self, begin, end) -> int"""
-        return _loris.PartialIterator_isInRange(*args)
-
-    def __init__(self, *args):
-        """__init__(self) -> PartialIterator"""
-        _swig_setattr(self, PartialIterator, 'this', _loris.new_PartialIterator(*args))
-        _swig_setattr(self, PartialIterator, 'thisown', 1)
-    def __del__(self, destroy=_loris.delete_PartialIterator):
-        """__del__(self)"""
-        try:
-            if self.thisown: destroy(self)
-        except: pass
-
-
-class PartialIteratorPtr(PartialIterator):
-    def __init__(self, this):
-        _swig_setattr(self, PartialIterator, 'this', this)
-        if not hasattr(self,"thisown"): _swig_setattr(self, PartialIterator, 'thisown', 0)
-        _swig_setattr(self, PartialIterator,self.__class__,PartialIterator)
-_loris.PartialIterator_swigregister(PartialIteratorPtr)
-
-class PartialListIterator(_object):
-    """Proxy of C++ PartialListIterator class"""
-    __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, PartialListIterator, name, value)
-    __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, PartialListIterator, name)
-    def __repr__(self):
-        return "<%s.%s; proxy of C++ PartialListIterator instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
-    def copy(*args): 
-        """copy(self) -> PartialListIterator"""
-        return _loris.PartialListIterator_copy(*args)
-
-    def next(*args): 
-        """next(self) -> PartialListIterator"""
-        return _loris.PartialListIterator_next(*args)
-
-    def prev(*args): 
-        """prev(self) -> PartialListIterator"""
-        return _loris.PartialListIterator_prev(*args)
-
-    def partial(*args): 
-        """partial(self) -> Partial"""
-        return _loris.PartialListIterator_partial(*args)
-
-    def equals(*args): 
-        """equals(self, other) -> int"""
-        return _loris.PartialListIterator_equals(*args)
-
-    def isInRange(*args): 
-        """isInRange(self, begin, end) -> int"""
-        return _loris.PartialListIterator_isInRange(*args)
-
-    def __init__(self, *args):
-        """__init__(self) -> PartialListIterator"""
-        _swig_setattr(self, PartialListIterator, 'this', _loris.new_PartialListIterator(*args))
-        _swig_setattr(self, PartialListIterator, 'thisown', 1)
-    def __del__(self, destroy=_loris.delete_PartialListIterator):
-        """__del__(self)"""
-        try:
-            if self.thisown: destroy(self)
-        except: pass
-
-
-class PartialListIteratorPtr(PartialListIterator):
-    def __init__(self, this):
-        _swig_setattr(self, PartialListIterator, 'this', this)
-        if not hasattr(self,"thisown"): _swig_setattr(self, PartialListIterator, 'thisown', 0)
-        _swig_setattr(self, PartialListIterator,self.__class__,PartialListIterator)
-_loris.PartialListIterator_swigregister(PartialListIteratorPtr)
 
 
