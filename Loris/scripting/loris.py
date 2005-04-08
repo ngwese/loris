@@ -846,6 +846,15 @@ class AiffFile(_object):
         """
         return _loris.AiffFile_markers(*args)
 
+    def addMarkers(*args): 
+        """
+        addMarkers(self, markers)
+
+        Append a collection of Markers for to the existing
+        set of Markers for this AiffFile.
+        """
+        return _loris.AiffFile_addMarkers(*args)
+
     def setMarkers(*args): 
         """
         setMarkers(self, markers)
@@ -1099,6 +1108,15 @@ class SdifFile(_object):
         """
         return _loris.SdifFile_markers(*args)
 
+    def addMarkers(*args): 
+        """
+        addMarkers(self, markers)
+
+        Append a collection of Markers for to the existing
+        set of Markers for this SdifFile.
+        """
+        return _loris.SdifFile_addMarkers(*args)
+
     def setMarkers(*args): 
         """
         setMarkers(self, markers)
@@ -1187,6 +1205,15 @@ class SpcFile(_object):
         this SpcFile.
         """
         return _loris.SpcFile_markers(*args)
+
+    def addMarkers(*args): 
+        """
+        addMarkers(self, markers)
+
+        Append a collection of Markers for to the existing
+        set of Markers for this SpcFile.
+        """
+        return _loris.SpcFile_addMarkers(*args)
 
     def setMarkers(*args): 
         """

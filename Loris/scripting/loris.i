@@ -878,6 +878,16 @@ this AiffFile.") markers;
 		}
 
 %feature("docstring",
+"Append a collection of Markers for to the existing
+set of Markers for this AiffFile.") addMarkers;
+
+		void addMarkers( const std::vector< Marker > & markers )
+		{
+			self->markers().insert( self->markers().end(),
+			                        markers.begin(), markers.end() );
+		}
+	
+%feature("docstring",
 "Specify a new (possibly empty) collection of Markers for
 this AiffFile.") setMarkers;
 
@@ -1131,6 +1141,16 @@ this SdifFile.") markers;
 		}
 
 %feature("docstring",
+"Append a collection of Markers for to the existing
+set of Markers for this SdifFile.") addMarkers;
+
+		void addMarkers( const std::vector< Marker > & markers )
+		{
+			self->markers().insert( self->markers().end(),
+			                        markers.begin(), markers.end() );
+		}
+	
+%feature("docstring",
 "Specify a new (possibly empty) collection of Markers for
 this SdifFile.") setMarkers;
 
@@ -1298,6 +1318,16 @@ this SpcFile.") markers;
 			return self->markers();
 		}
 
+%feature("docstring",
+"Append a collection of Markers for to the existing
+set of Markers for this SpcFile.") addMarkers;
+
+		void addMarkers( const std::vector< Marker > & markers )
+		{
+			self->markers().insert( self->markers().end(),
+			                        markers.begin(), markers.end() );
+		}
+	
 %feature("docstring",
 "Specify a new (possibly empty) collection of Markers for
 this SpcFile.") setMarkers;

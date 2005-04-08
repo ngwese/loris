@@ -2904,6 +2904,10 @@ static void AiffFile_addPartials__SWIG_0(AiffFile *self,PartialList *l,double fa
 static std::vector<Marker > AiffFile_markers(AiffFile *self){
 			return self->markers();
 		}
+static void AiffFile_addMarkers(AiffFile *self,std::vector<Marker > const &markers){
+			self->markers().insert( self->markers().end(),
+			                        markers.begin(), markers.end() );
+		}
 static void AiffFile_setMarkers(AiffFile *self,std::vector<Marker > const &markers){
 			self->markers().assign( markers.begin(), markers.end() );
 		}
@@ -2947,6 +2951,10 @@ static void SdifFile_addPartials(SdifFile *self,PartialList *l){
 		}
 static std::vector<Marker > SdifFile_markers(SdifFile *self){
 			return self->markers();
+		}
+static void SdifFile_addMarkers(SdifFile *self,std::vector<Marker > const &markers){
+			self->markers().insert( self->markers().end(),
+			                        markers.begin(), markers.end() );
 		}
 static void SdifFile_setMarkers(SdifFile *self,std::vector<Marker > const &markers){
 			self->markers().assign( markers.begin(), markers.end() );
@@ -3009,6 +3017,10 @@ static void SpcFile_addPartials(SpcFile *self,PartialList *l){
 		}
 static std::vector<Marker > SpcFile_markers(SpcFile *self){
 			return self->markers();
+		}
+static void SpcFile_addMarkers(SpcFile *self,std::vector<Marker > const &markers){
+			self->markers().insert( self->markers().end(),
+			                        markers.begin(), markers.end() );
 		}
 static void SpcFile_setMarkers(SpcFile *self,std::vector<Marker > const &markers){
 			self->markers().assign( markers.begin(), markers.end() );
@@ -8545,6 +8557,59 @@ static PyObject *_wrap_AiffFile_markers(PyObject *, PyObject *args) {
 }
 
 
+static PyObject *_wrap_AiffFile_addMarkers(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    AiffFile *arg1 = (AiffFile *) 0 ;
+    std::vector<Marker > *arg2 = 0 ;
+    int res2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:AiffFile_addMarkers",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_AiffFile, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        std::vector<Marker,std::allocator<Marker > > *ptr = (std::vector<Marker,std::allocator<Marker > > *)0;
+        res2 = swig::asptr(obj1, &ptr);
+        if (!res2) {
+            if (!PyErr_Occurred())
+            SWIG_type_error("std::vector<Marker >", obj1);
+        } else if (!ptr) {
+            SWIG_null_ref("std::vector<Marker >");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        arg2 = ptr;
+    }
+    {
+        try
+        {
+            AiffFile_addMarkers(arg1,(std::vector<Marker > const &)*arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    if (res2 == SWIG_NEWOBJ) delete arg2;
+    return resultobj;
+    fail:
+    if (res2 == SWIG_NEWOBJ) delete arg2;
+    return NULL;
+}
+
+
 static PyObject *_wrap_AiffFile_setMarkers(PyObject *, PyObject *args) {
     PyObject *resultobj;
     AiffFile *arg1 = (AiffFile *) 0 ;
@@ -10434,6 +10499,59 @@ static PyObject *_wrap_SdifFile_markers(PyObject *, PyObject *args) {
 }
 
 
+static PyObject *_wrap_SdifFile_addMarkers(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SdifFile *arg1 = (SdifFile *) 0 ;
+    std::vector<Marker > *arg2 = 0 ;
+    int res2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:SdifFile_addMarkers",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SdifFile, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        std::vector<Marker,std::allocator<Marker > > *ptr = (std::vector<Marker,std::allocator<Marker > > *)0;
+        res2 = swig::asptr(obj1, &ptr);
+        if (!res2) {
+            if (!PyErr_Occurred())
+            SWIG_type_error("std::vector<Marker >", obj1);
+        } else if (!ptr) {
+            SWIG_null_ref("std::vector<Marker >");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        arg2 = ptr;
+    }
+    {
+        try
+        {
+            SdifFile_addMarkers(arg1,(std::vector<Marker > const &)*arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    if (res2 == SWIG_NEWOBJ) delete arg2;
+    return resultobj;
+    fail:
+    if (res2 == SWIG_NEWOBJ) delete arg2;
+    return NULL;
+}
+
+
 static PyObject *_wrap_SdifFile_setMarkers(PyObject *, PyObject *args) {
     PyObject *resultobj;
     SdifFile *arg1 = (SdifFile *) 0 ;
@@ -11446,6 +11564,59 @@ static PyObject *_wrap_SpcFile_markers(PyObject *, PyObject *args) {
     }
     return resultobj;
     fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_SpcFile_addMarkers(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SpcFile *arg1 = (SpcFile *) 0 ;
+    std::vector<Marker > *arg2 = 0 ;
+    int res2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:SpcFile_addMarkers",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SpcFile, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        std::vector<Marker,std::allocator<Marker > > *ptr = (std::vector<Marker,std::allocator<Marker > > *)0;
+        res2 = swig::asptr(obj1, &ptr);
+        if (!res2) {
+            if (!PyErr_Occurred())
+            SWIG_type_error("std::vector<Marker >", obj1);
+        } else if (!ptr) {
+            SWIG_null_ref("std::vector<Marker >");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        arg2 = ptr;
+    }
+    {
+        try
+        {
+            SpcFile_addMarkers(arg1,(std::vector<Marker > const &)*arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    if (res2 == SWIG_NEWOBJ) delete arg2;
+    return resultobj;
+    fail:
+    if (res2 == SWIG_NEWOBJ) delete arg2;
     return NULL;
 }
 
@@ -14408,6 +14579,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"AiffFile_channels", _wrap_AiffFile_channels, METH_VARARGS, NULL},
 	 { (char *)"AiffFile_addPartials", _wrap_AiffFile_addPartials, METH_VARARGS, NULL},
 	 { (char *)"AiffFile_markers", _wrap_AiffFile_markers, METH_VARARGS, NULL},
+	 { (char *)"AiffFile_addMarkers", _wrap_AiffFile_addMarkers, METH_VARARGS, NULL},
 	 { (char *)"AiffFile_setMarkers", _wrap_AiffFile_setMarkers, METH_VARARGS, NULL},
 	 { (char *)"AiffFile_swigregister", AiffFile_swigregister, METH_VARARGS, NULL},
 	 { (char *)"new_Analyzer", _wrap_new_Analyzer, METH_VARARGS, NULL},
@@ -14446,6 +14618,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"SdifFile_partials", _wrap_SdifFile_partials, METH_VARARGS, NULL},
 	 { (char *)"SdifFile_addPartials", _wrap_SdifFile_addPartials, METH_VARARGS, NULL},
 	 { (char *)"SdifFile_markers", _wrap_SdifFile_markers, METH_VARARGS, NULL},
+	 { (char *)"SdifFile_addMarkers", _wrap_SdifFile_addMarkers, METH_VARARGS, NULL},
 	 { (char *)"SdifFile_setMarkers", _wrap_SdifFile_setMarkers, METH_VARARGS, NULL},
 	 { (char *)"SdifFile_swigregister", SdifFile_swigregister, METH_VARARGS, NULL},
 	 { (char *)"delete_SpcFile", _wrap_delete_SpcFile, METH_VARARGS, NULL},
@@ -14459,6 +14632,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"SpcFile_partials", _wrap_SpcFile_partials, METH_VARARGS, NULL},
 	 { (char *)"SpcFile_addPartials", _wrap_SpcFile_addPartials, METH_VARARGS, NULL},
 	 { (char *)"SpcFile_markers", _wrap_SpcFile_markers, METH_VARARGS, NULL},
+	 { (char *)"SpcFile_addMarkers", _wrap_SpcFile_addMarkers, METH_VARARGS, NULL},
 	 { (char *)"SpcFile_setMarkers", _wrap_SpcFile_setMarkers, METH_VARARGS, NULL},
 	 { (char *)"SpcFile_swigregister", SpcFile_swigregister, METH_VARARGS, NULL},
 	 { (char *)"NewPlistIterator_atEnd", _wrap_NewPlistIterator_atEnd, METH_VARARGS, NULL},
