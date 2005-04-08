@@ -1469,6 +1469,7 @@ static void SWIG_exception_(int code, const char *msg) {
 	#include<loris.h>
 	
 	#include <AiffFile.h>
+	#include <Analyzer.h>
 	#include <BreakpointEnvelope.h>
 	#include <Exception.h>
 	#include <Marker.h>
@@ -2901,45 +2902,11 @@ static int AiffFile_channels(AiffFile *self){ return 1; }
 static void AiffFile_addPartials__SWIG_0(AiffFile *self,PartialList *l,double fadeTime=0.001){
 			self->addPartials( l->begin(), l->end(), fadeTime );
 		}
-static int AiffFile_numMarkers(AiffFile *self){ return self->markers().size(); }
-static Marker *AiffFile_getMarker(AiffFile *self,int i){
-			if ( i < 0 || i >= self->markers().size() )
-			{
-				Throw( InvalidArgument, "Marker index out of range." );
-			}
-			return new Marker( self->markers()[i] );
-		}
-static void AiffFile_removeMarker(AiffFile *self,int i){
-			if ( i < 0 || i >= self->markers().size() )
-			{
-				Throw( InvalidArgument, "Marker index out of range." );
-			}
-			self->markers().erase( self->markers().begin() + i );
-		}
-static void AiffFile_addMarker(AiffFile *self,Marker m){
-			self->markers().push_back( m );
-		}
-static void AiffFile_clearMarkers(AiffFile *self){
-			self->markers().clear();
-		}
 static std::vector<Marker > AiffFile_markers(AiffFile *self){
 			return self->markers();
 		}
-static void AiffFile_addMarkers(AiffFile *self,std::vector<Marker > const &markers){
-			self->markers().insert( self->markers().end(), 
-									markers.begin(), markers.end() );
-		}
-
-	#include<Analyzer.h>
-	#include<Partial.h>
-
-static Analyzer *new_Analyzer__SWIG_0(double resolutionHz,double windowWidthHz=0.){
-			if ( windowWidthHz == 0. )
-				windowWidthHz = resolutionHz;
-			return new Analyzer( resolutionHz, windowWidthHz );
-		}
-static Analyzer *Analyzer_copy(Analyzer *self){
-			return new Analyzer( *self );
+static void AiffFile_setMarkers(AiffFile *self,std::vector<Marker > const &markers){
+			self->markers().assign( markers.begin(), markers.end() );
 		}
 static PartialList *Analyzer_analyze__SWIG_0(Analyzer *self,std::vector<double > const &vec,double srate){
 			PartialList * partials = new PartialList();
@@ -7405,6 +7372,42 @@ static PyObject *_wrap_new_Marker(PyObject *self, PyObject *args) {
 }
 
 
+static PyObject *_wrap_delete_Marker(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    Marker *arg1 = (Marker *) 0 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:delete_Marker",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_Marker, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        try
+        {
+            delete arg1;
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
 static PyObject *_wrap_Marker_name(PyObject *, PyObject *args) {
     PyObject *resultobj;
     Marker *arg1 = (Marker *) 0 ;
@@ -7540,42 +7543,6 @@ static PyObject *_wrap_Marker_setTime(PyObject *, PyObject *args) {
         try
         {
             (arg1)->setTime(arg2);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    Py_INCREF(Py_None); resultobj = Py_None;
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_delete_Marker(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    Marker *arg1 = (Marker *) 0 ;
-    PyObject * obj0 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"O:delete_Marker",&obj0)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_Marker, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    {
-        try
-        {
-            delete arg1;
             
         }
         catch( Loris::Exception & ex ) 
@@ -8655,194 +8622,6 @@ static PyObject *_wrap_AiffFile_addPartials(PyObject *self, PyObject *args) {
 }
 
 
-static PyObject *_wrap_AiffFile_numMarkers(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    AiffFile *arg1 = (AiffFile *) 0 ;
-    int result;
-    PyObject * obj0 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"O:AiffFile_numMarkers",&obj0)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_AiffFile, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    {
-        try
-        {
-            result = (int)AiffFile_numMarkers(arg1);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    {
-        resultobj = SWIG_From_int((int)(result)); 
-    }
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_AiffFile_getMarker(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    AiffFile *arg1 = (AiffFile *) 0 ;
-    int arg2 ;
-    Marker *result;
-    PyObject * obj0 = 0 ;
-    PyObject * obj1 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"OO:AiffFile_getMarker",&obj0,&obj1)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_AiffFile, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    {
-        arg2 = (int)(SWIG_As_int(obj1)); 
-        if (SWIG_arg_fail(2)) SWIG_fail;
-    }
-    {
-        try
-        {
-            result = (Marker *)AiffFile_getMarker(arg1,arg2);
-            
-        }
-        catch ( InvalidArgument & ex )
-        {
-            SWIG_exception(SWIG_ValueError, (char *)ex.what() );
-        }
-    }
-    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_Marker, 1);
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_AiffFile_removeMarker(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    AiffFile *arg1 = (AiffFile *) 0 ;
-    int arg2 ;
-    PyObject * obj0 = 0 ;
-    PyObject * obj1 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"OO:AiffFile_removeMarker",&obj0,&obj1)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_AiffFile, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    {
-        arg2 = (int)(SWIG_As_int(obj1)); 
-        if (SWIG_arg_fail(2)) SWIG_fail;
-    }
-    {
-        try
-        {
-            AiffFile_removeMarker(arg1,arg2);
-            
-        }
-        catch ( InvalidArgument & ex )
-        {
-            SWIG_exception(SWIG_ValueError, (char *)ex.what() );
-        }
-    }
-    Py_INCREF(Py_None); resultobj = Py_None;
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_AiffFile_addMarker(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    AiffFile *arg1 = (AiffFile *) 0 ;
-    Marker arg2 ;
-    PyObject * obj0 = 0 ;
-    PyObject * obj1 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"OO:AiffFile_addMarker",&obj0,&obj1)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_AiffFile, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    {
-        Marker * argp;
-        SWIG_Python_ConvertPtr(obj1, (void **)&argp, SWIGTYPE_p_Marker, SWIG_POINTER_EXCEPTION);
-        if (SWIG_arg_fail(2)) SWIG_fail;
-        if (argp == NULL) {
-            SWIG_null_ref("Marker");
-        }
-        if (SWIG_arg_fail(2)) SWIG_fail;
-        arg2 = *argp;
-    }
-    {
-        try
-        {
-            AiffFile_addMarker(arg1,arg2);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    Py_INCREF(Py_None); resultobj = Py_None;
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_AiffFile_clearMarkers(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    AiffFile *arg1 = (AiffFile *) 0 ;
-    PyObject * obj0 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"O:AiffFile_clearMarkers",&obj0)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_AiffFile, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    {
-        try
-        {
-            AiffFile_clearMarkers(arg1);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    Py_INCREF(Py_None); resultobj = Py_None;
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
 static PyObject *_wrap_AiffFile_markers(PyObject *, PyObject *args) {
     PyObject *resultobj;
     AiffFile *arg1 = (AiffFile *) 0 ;
@@ -8882,7 +8661,7 @@ static PyObject *_wrap_AiffFile_markers(PyObject *, PyObject *args) {
 }
 
 
-static PyObject *_wrap_AiffFile_addMarkers(PyObject *, PyObject *args) {
+static PyObject *_wrap_AiffFile_setMarkers(PyObject *, PyObject *args) {
     PyObject *resultobj;
     AiffFile *arg1 = (AiffFile *) 0 ;
     std::vector<Marker > *arg2 = 0 ;
@@ -8890,7 +8669,7 @@ static PyObject *_wrap_AiffFile_addMarkers(PyObject *, PyObject *args) {
     PyObject * obj0 = 0 ;
     PyObject * obj1 = 0 ;
     
-    if(!PyArg_ParseTuple(args,(char *)"OO:AiffFile_addMarkers",&obj0,&obj1)) goto fail;
+    if(!PyArg_ParseTuple(args,(char *)"OO:AiffFile_setMarkers",&obj0,&obj1)) goto fail;
     SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_AiffFile, SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail(1)) SWIG_fail;
     {
@@ -8908,7 +8687,7 @@ static PyObject *_wrap_AiffFile_addMarkers(PyObject *, PyObject *args) {
     {
         try
         {
-            AiffFile_addMarkers(arg1,(std::vector<Marker > const &)*arg2);
+            AiffFile_setMarkers(arg1,(std::vector<Marker > const &)*arg2);
             
         }
         catch( Loris::Exception & ex ) 
@@ -8945,24 +8724,18 @@ static PyObject * AiffFile_swigregister(PyObject *, PyObject *args) {
 static PyObject *_wrap_new_Analyzer__SWIG_0(PyObject *, PyObject *args) {
     PyObject *resultobj;
     double arg1 ;
-    double arg2 ;
     Analyzer *result;
     PyObject * obj0 = 0 ;
-    PyObject * obj1 = 0 ;
     
-    if(!PyArg_ParseTuple(args,(char *)"OO:new_Analyzer",&obj0,&obj1)) goto fail;
+    if(!PyArg_ParseTuple(args,(char *)"O:new_Analyzer",&obj0)) goto fail;
     {
         arg1 = (double)(SWIG_As_double(obj0)); 
         if (SWIG_arg_fail(1)) SWIG_fail;
     }
     {
-        arg2 = (double)(SWIG_As_double(obj1)); 
-        if (SWIG_arg_fail(2)) SWIG_fail;
-    }
-    {
         try
         {
-            result = (Analyzer *)new_Analyzer__SWIG_0(arg1,arg2);
+            result = (Analyzer *)new Analyzer(arg1);
             
         }
         catch( Loris::Exception & ex ) 
@@ -8990,87 +8763,24 @@ static PyObject *_wrap_new_Analyzer__SWIG_0(PyObject *, PyObject *args) {
 static PyObject *_wrap_new_Analyzer__SWIG_1(PyObject *, PyObject *args) {
     PyObject *resultobj;
     double arg1 ;
+    double arg2 ;
     Analyzer *result;
     PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
     
-    if(!PyArg_ParseTuple(args,(char *)"O:new_Analyzer",&obj0)) goto fail;
+    if(!PyArg_ParseTuple(args,(char *)"OO:new_Analyzer",&obj0,&obj1)) goto fail;
     {
         arg1 = (double)(SWIG_As_double(obj0)); 
         if (SWIG_arg_fail(1)) SWIG_fail;
     }
     {
-        try
-        {
-            result = (Analyzer *)new_Analyzer__SWIG_0(arg1);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
+        arg2 = (double)(SWIG_As_double(obj1)); 
+        if (SWIG_arg_fail(2)) SWIG_fail;
     }
-    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_Analyzer, 0);
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_new_Analyzer(PyObject *self, PyObject *args) {
-    int argc;
-    PyObject *argv[3];
-    int ii;
-    
-    argc = PyObject_Length(args);
-    for (ii = 0; (ii < argc) && (ii < 2); ii++) {
-        argv[ii] = PyTuple_GetItem(args,ii);
-    }
-    if (argc == 1) {
-        int _v;
-        _v = SWIG_Check_double(argv[0]);
-        if (_v) {
-            return _wrap_new_Analyzer__SWIG_1(self,args);
-        }
-    }
-    if (argc == 2) {
-        int _v;
-        _v = SWIG_Check_double(argv[0]);
-        if (_v) {
-            _v = SWIG_Check_double(argv[1]);
-            if (_v) {
-                return _wrap_new_Analyzer__SWIG_0(self,args);
-            }
-        }
-    }
-    
-    PyErr_SetString(PyExc_NotImplementedError,"No matching function for overloaded 'new_Analyzer'");
-    return NULL;
-}
-
-
-static PyObject *_wrap_Analyzer_copy(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    Analyzer *arg1 = (Analyzer *) 0 ;
-    Analyzer *result;
-    PyObject * obj0 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"O:Analyzer_copy",&obj0)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_Analyzer, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
     {
         try
         {
-            result = (Analyzer *)Analyzer_copy(arg1);
+            result = (Analyzer *)new Analyzer(arg1,arg2);
             
         }
         catch( Loris::Exception & ex ) 
@@ -9089,6 +8799,132 @@ static PyObject *_wrap_Analyzer_copy(PyObject *, PyObject *args) {
         }
     }
     resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_Analyzer, 1);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_new_Analyzer__SWIG_2(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    Analyzer *arg1 = 0 ;
+    Analyzer *result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:new_Analyzer",&obj0)) goto fail;
+    {
+        SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_Analyzer, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(1)) SWIG_fail;
+        if (arg1 == NULL) {
+            SWIG_null_ref("Analyzer");
+        }
+        if (SWIG_arg_fail(1)) SWIG_fail;
+    }
+    {
+        try
+        {
+            result = (Analyzer *)new Analyzer((Analyzer const &)*arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_Analyzer, 1);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_new_Analyzer(PyObject *self, PyObject *args) {
+    int argc;
+    PyObject *argv[3];
+    int ii;
+    
+    argc = PyObject_Length(args);
+    for (ii = 0; (ii < argc) && (ii < 2); ii++) {
+        argv[ii] = PyTuple_GetItem(args,ii);
+    }
+    if (argc == 1) {
+        int _v;
+        {
+            void *ptr = 0;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_Analyzer, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = (ptr != 0);
+            }
+        }
+        if (_v) {
+            return _wrap_new_Analyzer__SWIG_2(self,args);
+        }
+    }
+    if (argc == 1) {
+        int _v;
+        _v = SWIG_Check_double(argv[0]);
+        if (_v) {
+            return _wrap_new_Analyzer__SWIG_0(self,args);
+        }
+    }
+    if (argc == 2) {
+        int _v;
+        _v = SWIG_Check_double(argv[0]);
+        if (_v) {
+            _v = SWIG_Check_double(argv[1]);
+            if (_v) {
+                return _wrap_new_Analyzer__SWIG_1(self,args);
+            }
+        }
+    }
+    
+    PyErr_SetString(PyExc_NotImplementedError,"No matching function for overloaded 'new_Analyzer'");
+    return NULL;
+}
+
+
+static PyObject *_wrap_delete_Analyzer(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    Analyzer *arg1 = (Analyzer *) 0 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:delete_Analyzer",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_Analyzer, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        try
+        {
+            delete arg1;
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
     return resultobj;
     fail:
     return NULL;
@@ -9992,42 +9828,6 @@ static PyObject *_wrap_Analyzer_setBwRegionWidth(PyObject *, PyObject *args) {
         try
         {
             (arg1)->setBwRegionWidth(arg2);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    Py_INCREF(Py_None); resultobj = Py_None;
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_delete_Analyzer(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    Analyzer *arg1 = (Analyzer *) 0 ;
-    PyObject * obj0 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"O:delete_Analyzer",&obj0)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_Analyzer, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    {
-        try
-        {
-            delete arg1;
             
         }
         catch( Loris::Exception & ex ) 
@@ -16532,11 +16332,11 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"sortByLabel", _wrap_sortByLabel, METH_VARARGS, NULL},
 	 { (char *)"version", _wrap_version, METH_VARARGS, NULL},
 	 { (char *)"new_Marker", _wrap_new_Marker, METH_VARARGS, NULL},
+	 { (char *)"delete_Marker", _wrap_delete_Marker, METH_VARARGS, NULL},
 	 { (char *)"Marker_name", _wrap_Marker_name, METH_VARARGS, NULL},
 	 { (char *)"Marker_time", _wrap_Marker_time, METH_VARARGS, NULL},
 	 { (char *)"Marker_setName", _wrap_Marker_setName, METH_VARARGS, NULL},
 	 { (char *)"Marker_setTime", _wrap_Marker_setTime, METH_VARARGS, NULL},
-	 { (char *)"delete_Marker", _wrap_delete_Marker, METH_VARARGS, NULL},
 	 { (char *)"Marker_swigregister", Marker_swigregister, METH_VARARGS, NULL},
 	 { (char *)"delete_AiffFile", _wrap_delete_AiffFile, METH_VARARGS, NULL},
 	 { (char *)"AiffFile_sampleRate", _wrap_AiffFile_sampleRate, METH_VARARGS, NULL},
@@ -16549,16 +16349,11 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"AiffFile_samples", _wrap_AiffFile_samples, METH_VARARGS, NULL},
 	 { (char *)"AiffFile_channels", _wrap_AiffFile_channels, METH_VARARGS, NULL},
 	 { (char *)"AiffFile_addPartials", _wrap_AiffFile_addPartials, METH_VARARGS, NULL},
-	 { (char *)"AiffFile_numMarkers", _wrap_AiffFile_numMarkers, METH_VARARGS, NULL},
-	 { (char *)"AiffFile_getMarker", _wrap_AiffFile_getMarker, METH_VARARGS, NULL},
-	 { (char *)"AiffFile_removeMarker", _wrap_AiffFile_removeMarker, METH_VARARGS, NULL},
-	 { (char *)"AiffFile_addMarker", _wrap_AiffFile_addMarker, METH_VARARGS, NULL},
-	 { (char *)"AiffFile_clearMarkers", _wrap_AiffFile_clearMarkers, METH_VARARGS, NULL},
 	 { (char *)"AiffFile_markers", _wrap_AiffFile_markers, METH_VARARGS, NULL},
-	 { (char *)"AiffFile_addMarkers", _wrap_AiffFile_addMarkers, METH_VARARGS, NULL},
+	 { (char *)"AiffFile_setMarkers", _wrap_AiffFile_setMarkers, METH_VARARGS, NULL},
 	 { (char *)"AiffFile_swigregister", AiffFile_swigregister, METH_VARARGS, NULL},
 	 { (char *)"new_Analyzer", _wrap_new_Analyzer, METH_VARARGS, NULL},
-	 { (char *)"Analyzer_copy", _wrap_Analyzer_copy, METH_VARARGS, NULL},
+	 { (char *)"delete_Analyzer", _wrap_delete_Analyzer, METH_VARARGS, NULL},
 	 { (char *)"Analyzer_analyze", _wrap_Analyzer_analyze, METH_VARARGS, NULL},
 	 { (char *)"Analyzer_freqResolution", _wrap_Analyzer_freqResolution, METH_VARARGS, NULL},
 	 { (char *)"Analyzer_ampFloor", _wrap_Analyzer_ampFloor, METH_VARARGS, NULL},
@@ -16578,7 +16373,6 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"Analyzer_setHopTime", _wrap_Analyzer_setHopTime, METH_VARARGS, NULL},
 	 { (char *)"Analyzer_setCropTime", _wrap_Analyzer_setCropTime, METH_VARARGS, NULL},
 	 { (char *)"Analyzer_setBwRegionWidth", _wrap_Analyzer_setBwRegionWidth, METH_VARARGS, NULL},
-	 { (char *)"delete_Analyzer", _wrap_delete_Analyzer, METH_VARARGS, NULL},
 	 { (char *)"Analyzer_swigregister", Analyzer_swigregister, METH_VARARGS, NULL},
 	 { (char *)"new_BreakpointEnvelope", _wrap_new_BreakpointEnvelope, METH_VARARGS, NULL},
 	 { (char *)"delete_BreakpointEnvelope", _wrap_delete_BreakpointEnvelope, METH_VARARGS, NULL},

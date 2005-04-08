@@ -97,8 +97,8 @@ public:
 
 //	-- types --
 
-	//	underlying Breakpoint container type, used by 
-	//	the iterator types defined below:
+	//!	underlying Breakpoint container type, used by 
+	//!	the iterator types defined below:
 	typedef std::map< double, Breakpoint > container_type;
 	
 	//	typedef std::vector< std::pair< double, Breakpoint > > container_type;

@@ -361,7 +361,36 @@ WARN_LOGFILE           =
 # directories like "/usr/src/myproject". Separate the files or directories 
 # with spaces.
 
-INPUT                  = ../src 
+INPUT                  = ../src/AiffFile.h		\
+			../src/Analyzer.h		\
+			../src/BreakpointEnvelope.h	\
+			../src/Breakpoint.h	\
+			../src/BreakpointUtils.h	\
+			../src/Channelizer.h	\
+			../src/Dilator.h	\
+			../src/Distiller.h	\
+			../src/Envelope.h	\
+			../src/Exception.h	\
+			../src/Filter.h	\
+			../src/FourierTransform.h	\
+			../src/FrequencyReference.h \
+			../src/ImportLemur.h	\
+			../src/KaiserWindow.h	\
+			../src/Marker.h	\
+			../src/Morpher.h	\
+			../src/NoiseGenerator.h \
+			../src/Notifier.h	\
+			../src/Oscillator.h	\
+			../src/Partial.h	\
+			../src/PartialList.h	\
+			../src/PartialPtrs.h	\
+			../src/PartialUtils.h	\
+			../src/ReassignedSpectrum.h	\
+			../src/Resampler.h \
+			../src/SdifFile.h	\
+			../src/Sieve.h	\
+			../src/SpcFile.h	\
+			../src/Synthesizer.h
 
 # If the value of the INPUT tag contains directories, you can use the 
 # FILE_PATTERNS tag to specify one or more wildcard pattern (like *.cpp 
@@ -510,7 +539,7 @@ GENERATE_HTML          = YES
 # If a relative path is entered the value of OUTPUT_DIRECTORY will be 
 # put in front of it. If left blank `html' will be used as the default path.
 
-HTML_OUTPUT            = html
+HTML_OUTPUT            = cpp_html
 
 # The HTML_FILE_EXTENSION tag can be used to specify the file extension for 
 # each generated HTML page (for example: .htm,.php,.asp). If it is left blank 
@@ -662,7 +691,7 @@ LATEX_HEADER           =
 # contain links (just like the HTML output) instead of page references 
 # This makes the output suitable for online browsing using a pdf viewer.
 
-PDF_HYPERLINKS         = NO
+PDF_HYPERLINKS         = YES
 
 # If the USE_PDFLATEX tag is set to YES, pdflatex will be used instead of 
 # plain latex in the generated Makefile. Set this option to YES to get a 
@@ -732,7 +761,7 @@ RTF_EXTENSIONS_FILE    =
 # If the GENERATE_MAN tag is set to YES (the default) Doxygen will 
 # generate man pages
 
-GENERATE_MAN           = YES
+GENERATE_MAN           = NO
 
 # The MAN_OUTPUT tag is used to specify where the man pages will be put. 
 # If a relative path is entered the value of OUTPUT_DIRECTORY will be 

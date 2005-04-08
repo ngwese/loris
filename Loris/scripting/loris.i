@@ -77,6 +77,7 @@ For more information, please visit
 	#include<loris.h>
 	
 	#include <AiffFile.h>
+	#include <Analyzer.h>
 	#include <BreakpointEnvelope.h>
 	#include <Exception.h>
 	#include <Marker.h>
@@ -238,6 +239,7 @@ createFreqReference( PartialList * partials,
 	}
 %}
 
+
 %feature("docstring", 
 "Dilate Partials in a PartialList according to the given initial
 and target time points. Partial envelopes are stretched and
@@ -247,10 +249,14 @@ Partial envelopes are are only stretched and compressed, but
 breakpoints are not reordered. Duplicate time points are allowed.
 There must be the same number of initial and target time points.");
 
-//	dilate needs a contract
+
+//	dilate needs a contract to guarantee that the
+//	same number of initial and target points are
+//	provided.
 %contract dilate( PartialList * partials, 
                   const std::vector< double > & ivec, 
-                  const std::vector< double > & tvec ) {
+                  const std::vector< double > & tvec ) 
+{
 require:
 	ivec->size() == tvec->size();
 }
@@ -673,7 +679,7 @@ void sortByLabel( PartialList * partials );
 or a vector of samples. Collections of Markers (see the MarkerContainer
 definition below) are held by the File I/O classes in Loris (AiffFile,
 SdifFile, and SpcFile) to identify temporal features in imported
-and exported data.");
+and exported data.") Marker;
 
 class Marker
 {
@@ -681,20 +687,20 @@ public:
 //	-- construction --
 	
 %feature("docstring",
-"Default constructor - initialize a Marker at time zero with no label.");
+"Initialize a Marker with the specified time (in seconds) and name,
+or copy the time and name from another Marker. If unspecified, time 
+is zero and the label is empty.") Marker;
 
 	Marker( void );
 	 
-%feature("docstring",
-"Initialize a Marker with the specified time (in seconds) and name.");
-
-	Marker( double t, const char * s );
-	 
-%feature("docstring",
-"Initialize a Marker that is an exact copy of another Marker, that is,
-having the same time and name.");
+	Marker( double t, const char * s );	 
 
 	Marker( const Marker & other );
+	
+%feature("docstring",
+"Destroy this Marker.") Marker::~Marker;
+	~Marker( void );
+
 		 
 //	-- access --
 
@@ -730,13 +736,11 @@ having the same time and name.");
 //	class AiffFile
 //	
 %feature("docstring",
-"");
-//	An AiffFile represents a sample file (on disk) in the Audio Interchange
-//	File Format. The file is read from disk and the samples stored in memory
-//	upon construction of an AiffFile instance. The samples are accessed by 
-//	the samples() method, which converts them to double precision floats and
-//	returns them in a SampleVector.
-//
+"An AiffFile represents a sample file (on disk) in the Audio Interchange
+File Format. The file is read from disk and the samples stored in memory
+upon construction of an AiffFile instance. The samples are accessed by 
+the samples() method, which converts them to double precision floats and
+returns them in a vector.") AiffFile;
 
 %newobject AiffFile::samples;
 %newobject AiffFile::getMarker;
@@ -763,125 +767,126 @@ having the same time and name.");
 	}
 }
 
+%feature("docstring",
+"");
 
 class AiffFile
 {
 public:
+%feature("docstring",
+"An AiffFile instance can be initialized in any of the following ways:
+
+Initialize a new AiffFile from a vector of samples and sample rate.
+
+Initialize a new AiffFile using data read from a named file.
+
+Initialize an instance of AiffFile having the specified sample 
+rate, accumulating samples rendered at that sample rate from
+all Partials on the specified half-open (STL-style) range with
+the (optionally) specified Partial fade time (see Synthesizer.h
+for an examplanation of fade time). 
+") AiffFile;
+
 	AiffFile( const char * filename );
 	AiffFile( const std::vector< double > & vec, double samplerate );
 
+%feature("docstring",
+"Destroy this AiffFile.") ~AiffFile;
+
 	~AiffFile( void );
 	
+%feature("docstring",
+"Return the sample rate in Hz for this AiffFile.") sampleRate;
+
 	double sampleRate( void ) const;
+	
+%feature("docstring",
+"Return the MIDI note number for this AiffFile. The defaul
+note number is 60, corresponding to middle C.") midiNoteNumber;
+	
 	double midiNoteNumber( void ) const;
 
 	//	this has been renamed
+%feature("docstring",
+"Return the number of sample frames (equal to the number of samples
+in a single channel file) stored by this AiffFile.") numFrames;
+
 	%rename( sampleFrames ) numFrames;
 	unsigned long numFrames( void ) const;
 		
-	// int sampleSize( void ) const;
-	//	cannot implement sampleSize anymore, that
-	//	has only to do with writing, samples are
-	//	converted as they are read in now.
+%feature("docstring",
+"Render the specified Partial using the (optionally) specified
+Partial fade time, and accumulate the resulting samples into
+the sample vector for this AiffFile.") addPartial;
 
 	void addPartial( const Loris::Partial & p, double fadeTime = .001 /* 1 ms */ );
-	/*	Render the specified Partial using the (optionally) specified
-		Partial fade time, and accumulate the resulting samples into
-		the sample vector for this AiffFile.
-	 */
+
+%feature("docstring",
+"Set the fractional MIDI note number assigned to this AiffFile. 
+If the sound has no definable pitch, use note number 60.0 
+(the default).") setMidiNoteNumber;
 
 	void setMidiNoteNumber( double nn );
-	/*	Set the fractional MIDI note number assigned to this AiffFile. 
-		If the sound has no definable pitch, use note number 60.0 (the default).
-	 */
 		 
-	void write( const char * filename, unsigned int bps = 16 );
-	/*	Export the sample data represented by this AiffFile to
-		the file having the specified filename or path. Export
-		signed integer samples of the specified size, in bits
-		(8, 16, 24, or 32).
-	*/
+%feature("docstring",
+"Export the sample data represented by this AiffFile to
+the file having the specified filename or path. Export
+signed integer samples of the specified size, in bits
+(8, 16, 24, or 32).") write;
+
+void write( const char * filename, unsigned int bps = 16 );
 	
 	%extend 
 	{
+
 		AiffFile( PartialList * l, double sampleRate = 44100, double fadeTime = .001 ) 
 		{
 			return new AiffFile( l->begin(), l->end(), sampleRate, fadeTime );
 		}
-		/*	Initialize an instance of AiffFile having the specified sample 
-			rate, accumulating samples rendered at that sample rate from
-			all Partials on the specified half-open (STL-style) range with
-			the (optionally) specified Partial fade time (see Synthesizer.h
-			for an examplanation of fade time). 
-		 */
 	
-		//	return a copy of the sample vector 
-		//	from this AiffFile
+%feature("docstring",
+"Return a copy of the samples (as floating point numbers
+on the range -1,1) stored in this AiffFile.") samples; 
+
 		std::vector< double > samples( void )
 		{
 			return self->samples();
 		}
-		/*	Return a SampleVector containing the AIFF samples from this AIFF 
-			file as double precision floats on the range -1,1.
-		 */
+
 		 
-		//	Loris only deals in mono AiffFiles
+%feature("docstring",
+"The number of channels is always 1. 
+Loris only deals in mono AiffFiles") channels;
+
 		int channels( void ) { return 1; }
 
-		//	add a PartialList of Partials:
+%feature("docstring",
+"Render all Partials on the specified half-open (STL-style) range
+with the (optionally) specified Partial fade time (see Synthesizer.h
+for an examplanation of fade time), and accumulate the resulting 
+samples.") addPartials;
+
 		void addPartials( PartialList * l, double fadeTime = 0.001/* 1ms */ )
 		{
 			self->addPartials( l->begin(), l->end(), fadeTime );
 		}
-		/*	Render all Partials on the specified half-open (STL-style) range
-			with the (optionally) specified Partial fade time (see Synthesizer.h
-			for an examplanation of fade time), and accumulate the resulting 
-			samples. 
-		 */
-		 
-		//	add members to access Markers
-		// 	now much improved to take advantage of 
-		// 	SWIG support for std::vector.
 		
-		int numMarkers( void ) { return self->markers().size(); }
-		
-		Marker * getMarker( int i )
-		{
-			if ( i < 0 || i >= self->markers().size() )
-			{
-				Throw( InvalidArgument, "Marker index out of range." );
-			}
-			return new Marker( self->markers()[i] );
-		}
-		
-		void removeMarker( int i )
-		{
-			if ( i < 0 || i >= self->markers().size() )
-			{
-				Throw( InvalidArgument, "Marker index out of range." );
-			}
-			self->markers().erase( self->markers().begin() + i );
-		}
-		
-		void addMarker( Marker m )
-		{
-			self->markers().push_back( m );
-		}
-		
-		void clearMarkers( void )
-		{
-			self->markers().clear();
-		}
-		
+%feature("docstring",
+"Return the (possibly empty) collection of Markers for 
+this AiffFile.") markers;
+
 		std::vector< Marker > markers( void )
 		{
 			return self->markers();
 		}
-		
-		void addMarkers( const std::vector< Marker > & markers )
+
+%feature("docstring",
+"Specify a new (possibly empty) collection of Markers for
+this AiffFile.") setMarkers;
+
+		void setMarkers( const std::vector< Marker > & markers )
 		{
-			self->markers().insert( self->markers().end(), 
-									markers.begin(), markers.end() );
+			self->markers().assign( markers.begin(), markers.end() );
 		}
 	}
 };
@@ -889,56 +894,56 @@ public:
 // ---------------------------------------------------------------------------
 //	class Analyzer
 //	
-//	An Analyzer represents a configuration of parameters for
-//	performing Reassigned Bandwidth-Enhanced Additive Analysis
-//	of sampled waveforms. This analysis process yields a collection 
-//	of Partials, each having a trio of synchronous, non-uniformly-
-//	sampled breakpoint envelopes representing the time-varying 
-//	frequency, amplitude, and noisiness of a single bandwidth-
-//	enhanced sinusoid. 
-//
-//	For more information about Reassigned Bandwidth-Enhanced 
-//	Analysis and the Reassigned Bandwidth-Enhanced Additive Sound 
-//	Model, refer to the Loris website: www.cerlsoundgroup.org/Loris/
-//
 
-%{
-	#include<Analyzer.h>
-	#include<Partial.h>
-%}
+%feature("docstring",
+"An Analyzer represents a configuration of parameters for
+performing Reassigned Bandwidth-Enhanced Additive Analysis
+of sampled waveforms. This analysis process yields a collection 
+of Partials, each having a trio of synchronous, non-uniformly-
+sampled breakpoint envelopes representing the time-varying 
+frequency, amplitude, and noisiness of a single bandwidth-
+enhanced sinusoid. 
+
+For more information about Reassigned Bandwidth-Enhanced 
+Analysis and the Reassigned Bandwidth-Enhanced Additive Sound 
+Model, refer to the Loris website: 
+
+	http://www.cerlsoundgroup.org/Loris/
+") Analyzer;
+
 
 %newobject Analyzer::analyze;
 			
 class Analyzer
 {
 public:
+%feature("docstring",
+"Construct and return a new Analyzer configured with the given	
+frequency resolution (minimum instantaneous frequency	
+difference between Partials) and analysis window main 
+lobe width (between zeros). All other Analyzer parameters 	
+are computed from the specified resolution and window
+width. If the window width is not specified, 
+then it is assumed to be equal to the resolution.
+
+An Analyzer configuration can also be copied from another
+instance.") Analyzer;
+	 
+	Analyzer( double resolutionHz );
+	Analyzer( double resolutionHz, double windowWidthHz );
+	Analyzer( const Analyzer & another );
+
+%feature("docstring",
+"Destroy this Analyzer.") ~Analyzer;
+
+	~Analyzer( void );
+		
 	%extend 
 	{
-		//	construction:
-		Analyzer( double resolutionHz, double windowWidthHz = 0. )
-		{
-			if ( windowWidthHz == 0. )
-				windowWidthHz = resolutionHz;
-			return new Analyzer( resolutionHz, windowWidthHz );
-		}
-		/*	Construct and return a new Analyzer configured with the given	
-			frequency resolution (minimum instantaneous frequency	
-			difference between Partials) and analysis window main 
-			lobe width (between zeros). All other Analyzer parameters 	
-			are computed from the specified resolution and window
-			width. If the window width is not specified, or is 0,
-			then it is assumed to be equal to the resolution. 			
-		 */
-	
-		Analyzer * copy( void )
-		{
-			return new Analyzer( *self );
-		}
-		/*	Construct and return a new Analyzer having identical
-			parameter configuration to another Analyzer.			
-		 */
-	
-		//	analysis:
+%feature("docstring",
+"Analyze a vector of (mono) samples at the given sample rate 	  	
+(in Hz) and return the resulting Partials in a PartialList.") analyze;
+
 		PartialList * analyze( const std::vector< double > & vec, double srate )
 		{
 			PartialList * partials = new PartialList();
@@ -949,9 +954,6 @@ public:
 			partials->splice( partials->end(), self->partials() );
 			return partials;
 		}
-		/*	Analyze a SampleVector of (mono) samples at the given sample rate 	  	
-			(in Hz) and return the resulting Partials in a PartialList. 												
-		 */
 		 
 		PartialList * analyze( const std::vector< double > & vec, double srate, 
 							   BreakpointEnvelope * env )

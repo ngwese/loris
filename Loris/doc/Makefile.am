@@ -15,5 +15,29 @@ EXTRA_DIST = LorisCDoc.html LorisCppDoc.html \
 			 
 # add something to build docs using doxygen, if it is present
 
+CPP_HTML_DIR = cpp_html
+HTML = ${CPP_HTML_DIR}/index.html
+
+HTML: Doxyfile
+	${DOXYGEN} 
+
+PDF = Loris${LORIS_MAJOR_VERSION}.${LORIS_MINOR_VERSION}.pdf
+
+PDF: ${HTML}
+	cd latex; make pdf
+	cp latex/refman.pdf Loris${LORIS_MAJOR_VERSION}.${LORIS_MINOR_VERSION}.pdf
+
+pdf: ${PDF}
+
+pi:
+	cp ${top_srcdir}/src/loris.h .
+
+
+SCRIPTINGDIR = ${top_srcdir}/scripting
+
+py:
+	env PYTHONPATH=${SCRIPTINGDIR}:${SCRIPTINGDIR}/.libs pydoc -w loris; \
+		mv loris.html loris_pydoc.html
+
 MAINTAINERCLEANFILES = 	Makefile.in
 

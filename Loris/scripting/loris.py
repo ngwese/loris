@@ -499,11 +499,22 @@ class Marker(_object):
         __init__(self, t, s) -> Marker
         __init__(self, other) -> Marker
 
-        Initialize a Marker that is an exact copy of another Marker, that is,
-        having the same time and name.
+        Initialize a Marker with the specified time (in seconds) and name,
+        or copy the time and name from another Marker. If unspecified, time 
+        is zero and the label is empty.
         """
         _swig_setattr(self, Marker, 'this', _loris.new_Marker(*args))
         _swig_setattr(self, Marker, 'thisown', 1)
+    def __del__(self, destroy=_loris.delete_Marker):
+        """
+        __del__(self)
+
+        Return a string describing the Loris version number.
+        """
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
     def name(*args): 
         """
         name(self) -> char
@@ -535,20 +546,6 @@ class Marker(_object):
         Set the time (in seconds) associated with this Marker.
         """
         return _loris.Marker_setTime(*args)
-
-    def __del__(self, destroy=_loris.delete_Marker):
-        """
-        __del__(self)
-
-        Class Marker represents a labeled time point in a set of Partials
-        or a vector of samples. Collections of Markers (see the MarkerContainer
-        definition below) are held by the File I/O classes in Loris (AiffFile,
-        SdifFile, and SpcFile) to identify temporal features in imported
-        and exported data.
-        """
-        try:
-            if self.thisown: destroy(self)
-        except: pass
 
 
 class MarkerPtr(Marker):
@@ -703,7 +700,15 @@ def shiftPitch(*args):
     return _loris.shiftPitch(*args)
 
 class AiffFile(_object):
-    """Proxy of C++ AiffFile class"""
+    """
+    Proxy of C++ AiffFile class
+
+    An AiffFile represents a sample file (on disk) in the Audio Interchange
+    File Format. The file is read from disk and the samples stored in memory
+    upon construction of an AiffFile instance. The samples are accessed by 
+    the samples() method, which converts them to double precision floats and
+    returns them in a vector.
+    """
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, AiffFile, name, value)
     __swig_getmethods__ = {}
@@ -711,38 +716,71 @@ class AiffFile(_object):
     def __repr__(self):
         return "<%s.%s; proxy of C++ AiffFile instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     def __del__(self, destroy=_loris.delete_AiffFile):
-        """__del__(self)"""
+        """
+        __del__(self)
+
+        Destroy this AiffFile.
+        """
         try:
             if self.thisown: destroy(self)
         except: pass
 
     def sampleRate(*args): 
-        """sampleRate(self) -> double"""
+        """
+        sampleRate(self) -> double
+
+        Return the sample rate in Hz for this AiffFile.
+        """
         return _loris.AiffFile_sampleRate(*args)
 
     def midiNoteNumber(*args): 
-        """midiNoteNumber(self) -> double"""
+        """
+        midiNoteNumber(self) -> double
+
+        Return the MIDI note number for this AiffFile. The defaul
+        note number is 60, corresponding to middle C.
+        """
         return _loris.AiffFile_midiNoteNumber(*args)
 
     def sampleFrames(*args): 
-        """sampleFrames(self) -> unsigned long"""
+        """
+        sampleFrames(self) -> unsigned long
+
+        Return the number of sample frames (equal to the number of samples
+        in a single channel file) stored by this AiffFile.
+        """
         return _loris.AiffFile_sampleFrames(*args)
 
     def addPartial(*args): 
         """
         addPartial(self, p, fadeTime=.001)
         addPartial(self, p)
+
+        Render the specified Partial using the (optionally) specified
+        Partial fade time, and accumulate the resulting samples into
+        the sample vector for this AiffFile.
         """
         return _loris.AiffFile_addPartial(*args)
 
     def setMidiNoteNumber(*args): 
-        """setMidiNoteNumber(self, nn)"""
+        """
+        setMidiNoteNumber(self, nn)
+
+        Set the fractional MIDI note number assigned to this AiffFile. 
+        If the sound has no definable pitch, use note number 60.0 
+        (the default).
+        """
         return _loris.AiffFile_setMidiNoteNumber(*args)
 
     def write(*args): 
         """
         write(self, filename, bps=16)
         write(self, filename)
+
+        Export the sample data represented by this AiffFile to
+        the file having the specified filename or path. Export
+        signed integer samples of the specified size, in bits
+        (8, 16, 24, or 32).
         """
         return _loris.AiffFile_write(*args)
 
@@ -753,51 +791,69 @@ class AiffFile(_object):
         __init__(self, l, sampleRate=44100, fadeTime=.001) -> AiffFile
         __init__(self, l, sampleRate=44100) -> AiffFile
         __init__(self, l) -> AiffFile
+
+        An AiffFile instance can be initialized in any of the following ways:
+
+        Initialize a new AiffFile from a vector of samples and sample rate.
+
+        Initialize a new AiffFile using data read from a named file.
+
+        Initialize an instance of AiffFile having the specified sample 
+        rate, accumulating samples rendered at that sample rate from
+        all Partials on the specified half-open (STL-style) range with
+        the (optionally) specified Partial fade time (see Synthesizer.h
+        for an examplanation of fade time). 
+
         """
         _swig_setattr(self, AiffFile, 'this', _loris.new_AiffFile(*args))
         _swig_setattr(self, AiffFile, 'thisown', 1)
     def samples(*args): 
-        """samples(self) -> DoubleVector"""
+        """
+        samples(self) -> DoubleVector
+
+        Return a copy of the samples (as floating point numbers
+        on the range -1,1) stored in this AiffFile.
+        """
         return _loris.AiffFile_samples(*args)
 
     def channels(*args): 
-        """channels(self) -> int"""
+        """
+        channels(self) -> int
+
+        The number of channels is always 1. 
+        Loris only deals in mono AiffFiles
+        """
         return _loris.AiffFile_channels(*args)
 
     def addPartials(*args): 
         """
         addPartials(self, l, fadeTime=0.001)
         addPartials(self, l)
+
+        Render all Partials on the specified half-open (STL-style) range
+        with the (optionally) specified Partial fade time (see Synthesizer.h
+        for an examplanation of fade time), and accumulate the resulting 
+        samples.
         """
         return _loris.AiffFile_addPartials(*args)
 
-    def numMarkers(*args): 
-        """numMarkers(self) -> int"""
-        return _loris.AiffFile_numMarkers(*args)
-
-    def getMarker(*args): 
-        """getMarker(self, i) -> Marker"""
-        return _loris.AiffFile_getMarker(*args)
-
-    def removeMarker(*args): 
-        """removeMarker(self, i)"""
-        return _loris.AiffFile_removeMarker(*args)
-
-    def addMarker(*args): 
-        """addMarker(self, m)"""
-        return _loris.AiffFile_addMarker(*args)
-
-    def clearMarkers(*args): 
-        """clearMarkers(self)"""
-        return _loris.AiffFile_clearMarkers(*args)
-
     def markers(*args): 
-        """markers(self) -> MarkerVector"""
+        """
+        markers(self) -> MarkerVector
+
+        Return the (possibly empty) collection of Markers for 
+        this AiffFile.
+        """
         return _loris.AiffFile_markers(*args)
 
-    def addMarkers(*args): 
-        """addMarkers(self, markers)"""
-        return _loris.AiffFile_addMarkers(*args)
+    def setMarkers(*args): 
+        """
+        setMarkers(self, markers)
+
+        Specify a new (possibly empty) collection of Markers for
+        this AiffFile.
+        """
+        return _loris.AiffFile_setMarkers(*args)
 
 
 class AiffFilePtr(AiffFile):
@@ -808,7 +864,24 @@ class AiffFilePtr(AiffFile):
 _loris.AiffFile_swigregister(AiffFilePtr)
 
 class Analyzer(_object):
-    """Proxy of C++ Analyzer class"""
+    """
+    Proxy of C++ Analyzer class
+
+    An Analyzer represents a configuration of parameters for
+    performing Reassigned Bandwidth-Enhanced Additive Analysis
+    of sampled waveforms. This analysis process yields a collection 
+    of Partials, each having a trio of synchronous, non-uniformly-
+    sampled breakpoint envelopes representing the time-varying 
+    frequency, amplitude, and noisiness of a single bandwidth-
+    enhanced sinusoid. 
+
+    For more information about Reassigned Bandwidth-Enhanced 
+    Analysis and the Reassigned Bandwidth-Enhanced Additive Sound 
+    Model, refer to the Loris website: 
+
+    	http://www.cerlsoundgroup.org/Loris/
+
+    """
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, Analyzer, name, value)
     __swig_getmethods__ = {}
@@ -817,19 +890,40 @@ class Analyzer(_object):
         return "<%s.%s; proxy of C++ Analyzer instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     def __init__(self, *args):
         """
-        __init__(self, resolutionHz, windowWidthHz=0.) -> Analyzer
         __init__(self, resolutionHz) -> Analyzer
+        __init__(self, resolutionHz, windowWidthHz) -> Analyzer
+        __init__(self, another) -> Analyzer
+
+        Construct and return a new Analyzer configured with the given	
+        frequency resolution (minimum instantaneous frequency	
+        difference between Partials) and analysis window main 
+        lobe width (between zeros). All other Analyzer parameters 	
+        are computed from the specified resolution and window
+        width. If the window width is not specified, 
+        then it is assumed to be equal to the resolution.
+
+        An Analyzer configuration can also be copied from another
+        instance.
         """
         _swig_setattr(self, Analyzer, 'this', _loris.new_Analyzer(*args))
         _swig_setattr(self, Analyzer, 'thisown', 1)
-    def copy(*args): 
-        """copy(self) -> Analyzer"""
-        return _loris.Analyzer_copy(*args)
+    def __del__(self, destroy=_loris.delete_Analyzer):
+        """
+        __del__(self)
+
+        Destroy this Analyzer.
+        """
+        try:
+            if self.thisown: destroy(self)
+        except: pass
 
     def analyze(*args): 
         """
         analyze(self, vec, srate) -> PartialList
         analyze(self, vec, srate, env) -> PartialList
+
+        Analyze a vector of (mono) samples at the given sample rate 	  	
+        (in Hz) and return the resulting Partials in a PartialList.
         """
         return _loris.Analyzer_analyze(*args)
 
@@ -904,12 +998,6 @@ class Analyzer(_object):
     def setBwRegionWidth(*args): 
         """setBwRegionWidth(self, x)"""
         return _loris.Analyzer_setBwRegionWidth(*args)
-
-    def __del__(self, destroy=_loris.delete_Analyzer):
-        """__del__(self)"""
-        try:
-            if self.thisown: destroy(self)
-        except: pass
 
 
 class AnalyzerPtr(Analyzer):
