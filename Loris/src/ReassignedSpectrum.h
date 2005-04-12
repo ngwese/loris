@@ -59,11 +59,6 @@ private:
 	//	scale factors for correcting magnitudes:
 	double _windowMagnitudeScale;	
 	
-	//	slope of the phase of the (linear phase) bandpass
-	//	filter represented by the STFT, used to correct
-	//	phases for frequency reassignment:
-	double _phaseSlope;
-	
 //	-- public interface --
 public:
 //	construction:

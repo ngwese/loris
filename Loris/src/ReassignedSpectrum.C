@@ -40,6 +40,7 @@
 #include "Exception.h"
 #include <algorithm>
 #include <cstdlib>	//	for std::abs()
+#include <numeric>	//	for std::accumulate()
 
 #if defined(HAVE_M_PI) && (HAVE_M_PI)
 	#include <cmath>	//	for M_PI (except when its not there)
@@ -67,19 +68,6 @@ static void
 buildReassignmentWindow( RealWinIter winbegin, RealWinIter winend, 
 						 CplxWinIter rawinbegin );
 
-//	static helper function use to 
-//	compute the appropriate scale factor
-//	to report correct component magnitudes:
-static double
-computeWindowSum( const std::vector< double > & window );
-
-//	static helper function use to compute the 
-//	slope of the phase of the (linear phase) bandpass
-//	filter represented by the STFT, used to correct
-//	phases for frequency reassignment.
-static double
-computePhaseSlope( const std::vector< double > & window, unsigned long N );
-
 // ---------------------------------------------------------------------------
 //	ReassignedSpectrum constructor
 // ---------------------------------------------------------------------------
@@ -91,18 +79,9 @@ ReassignedSpectrum::ReassignedSpectrum( const std::vector< double > & window ) :
 	_ratransform( 1 << long( 1 + ceil( log((double)window.size()) / log(2.)) ) ),
 	_window( window ),
 	_rawindow( window.size(), 0. ),
-	_windowMagnitudeScale( 2. / computeWindowSum( window ) ),
-	_phaseSlope( computePhaseSlope( window, _transform.size() ) )
+	_windowMagnitudeScale( 2. / std::accumulate( _window.begin(), _window.end(), 0. ) )
 {
 	buildReassignmentWindow( _window.begin(), _window.end(), _rawindow.begin() );
-	
-	//	compute the appropriate scale factor
-	//	to report correct component magnitudes:
-	double winsum = 0;
-	for ( int i = 0; i < _window.size(); ++i ) {
-		winsum += _window[i];
-	}
-	_windowMagnitudeScale = 2. / winsum;
 	
 	debugger << "ReassignedSpectrum: length is " << _transform.size()
 			 << " mag scale is " << _windowMagnitudeScale << endl;
@@ -382,14 +361,12 @@ ReassignedSpectrum::reassignedPhase( long idx,
 	//
 	//  Phase ought to be linear anyway, so I should just be
 	//  able to use dumb old linear interpolation.
-	//
 	double slope = (fracFreqSample > idx) ? 
 	      ( arg( _transform[ idx+1 ] ) - phase ) : 
 	      ( phase - arg( _transform[ idx-1 ] ) );
 	double fcorr = fracFreqSample - idx;
 	double phase_corr = fcorr * slope;
 	phase += phase_corr;
-	//
 		
 	//	adjust phase according to the time correction:
 	phase += timeCorrection * fracFreqSample * 2. * Pi / _transform.size();
@@ -508,58 +485,6 @@ buildReassignmentWindow( RealWinIter winbegin, RealWinIter winend,
 	
 	std::transform( framp.begin(), framp.end(), tramp.begin(),
 					rawinbegin, make_complex< double >() );	
-}
-
-// ---------------------------------------------------------------------------
-//	computeWindowSum
-// ---------------------------------------------------------------------------
-//	Helper function use to compute the appropriate scale factor
-//	to report correct component magnitudes.
-static double
-computeWindowSum( const std::vector< double > & window )
-{
-	double winsum = 0;
-	for ( int i = 0; i < window.size(); ++i ) 
-	{
-		winsum += window[i];
-	}	
-	return winsum;
-}
-
-// ---------------------------------------------------------------------------
-//	computePhaseSlope
-// ---------------------------------------------------------------------------
-//	Helper function use to compute the slope of the phase of the (linear 
-//	phase) bandpass filter represented by the STFT, used to correct
-//	phases for frequency reassignment.
-static double
-computePhaseSlope( const std::vector< double > & window, unsigned long N )
-{
-	if ( N == 0 )
-	{
-		Throw( InvalidArgument, "ReassignedSpectrum cannot compute phase "
-								"slope for zero-length transform." );
-	}
-	
-	std::complex< double > H1 = 0;
-	int halfwin = window.size() / 2;
-	for ( int i = 0; i < window.size(); ++i )
-	{
-		// rotating the window seems sure to make
-		// the phase of H zero everywhere, because,
-		// for a symmetical window, every positive
-		// n is matched with a negative n having the
-		// same window function value, so H1 should 
-		// wind up real.
-		int n = i - halfwin;
-		std::complex< double > arg( 0, -2 * Pi * n / N );
-		H1 += window[i] * std::exp( arg );
-	}
-	
-	// notifier << "mag of H1 is " << std::abs( H1 ) << endl;
-	// notifier << "arg of H1 is " << std::arg( H1 ) << endl;
-	
-	return std::arg( H1 );
 }
 
 }	//	end of namespace Loris
