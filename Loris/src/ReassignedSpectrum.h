@@ -56,9 +56,6 @@ private:
 	std::vector< double > _window;
 	std::vector< std::complex< double > > _rawindow;
 	
-	//	scale factors for correcting magnitudes:
-	double _windowMagnitudeScale;	
-	
 //	-- public interface --
 public:
 //	construction:

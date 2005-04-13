@@ -38,7 +38,7 @@
 #include "ReassignedSpectrum.h"
 #include "Notifier.h"
 #include "Exception.h"
-#include <algorithm>
+#include <algorithm>	//	for std::transform(), others
 #include <cstdlib>	//	for std::abs()
 #include <numeric>	//	for std::accumulate()
 
@@ -78,14 +78,17 @@ ReassignedSpectrum::ReassignedSpectrum( const std::vector< double > & window ) :
 	_transform( 1 << long( 1 + ceil( log((double)window.size()) / log(2.)) ) ),
 	_ratransform( 1 << long( 1 + ceil( log((double)window.size()) / log(2.)) ) ),
 	_window( window ),
-	_rawindow( window.size(), 0. ),
-	_windowMagnitudeScale( 2. / std::accumulate( _window.begin(), _window.end(), 0. ) )
+	_rawindow( window.size(), 0. )
 {
-	buildReassignmentWindow( _window.begin(), _window.end(), _rawindow.begin() );
+	// scale the window so that the reported magnitudes
+	// are correct:
+	double winsum = std::accumulate( _window.begin(), _window.end(), 0. );
+	std::transform( _window.begin(), _window.end(), _window.begin(), 
+			std::bind1st( std::multiplies<double>(), 2/winsum ) );
 	
-	debugger << "ReassignedSpectrum: length is " << _transform.size()
-			 << " mag scale is " << _windowMagnitudeScale << endl;
-			 
+	buildReassignmentWindow( _window.begin(), _window.end(), _rawindow.begin() );
+
+	debugger << "ReassignedSpectrum: length is " << _transform.size() << endl;
 }
 
 // ---------------------------------------------------------------------------
@@ -311,7 +314,7 @@ ReassignedSpectrum::reassignedMagnitude( double /* fracBinNum */, long peakBinNu
 	
 	//	compute the nominal spectral amplitude by scaling
 	//	the peak spectral sample:
-	return _windowMagnitudeScale * abs( _transform[ peakBinNumber ] );
+	return abs( _transform[ peakBinNumber ] );
 	
 #else // defined(SMITHS_BRILLIANT_PARABOLAS)
 	
@@ -325,7 +328,7 @@ ReassignedSpectrum::reassignedMagnitude( double /* fracBinNum */, long peakBinNu
 	double peakXOffset = 0.5 * (dbLeft - dbRight) /
 						 (dbLeft - 2.0 * dbCandidate + dbRight);
 	double dbmag = dbCandidate - 0.25 * (dbLeft - dbRight) * peakXOffset;
-	double x = _windowMagnitudeScale * pow( 10., 0.05 * dbmag );
+	double x = pow( 10., 0.05 * dbmag );
 	
 	return x;
 	
