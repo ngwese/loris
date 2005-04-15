@@ -44,20 +44,24 @@ namespace Loris {
 // ---------------------------------------------------------------------------
 //	class Sieve
 //
-//!	Class Sieve represents an algorithm for identifying channelized (see
+//!	A Sieve eliminating temporal overlap among Partials.
+//!
+//!	Class Sieve represents an algorithm for identifying channelized (see also 
 //!	Channelizer) Partials that overlap in time, and selecting the longer
 //!	one to represent the channel. The identification of overlap includes 
 //!   the time needed for Partials to fade to and from zero amplitude in 
-//!   synthesis (\sa Synthesizer) or distillation. (\sa Distiller)
+//!   synthesis (see also  Synthesizer) or distillation. (see also Distiller)
 //!	
 //!	In some cases, the energy redistribution effected by the distiller
-//!	(see Distiller) is undesirable. In such cases, the partials can be
+//!	(see also Distiller) is undesirable. In such cases, the partials can be
 //!	sifted before distillation. The sifting process in Loris identifies
 //!	all the partials that would be rejected (and converted to noise
 //!	energy) by the distiller and assigns them a label of 0. These sifted
 //!	partials can then be identified and treated sepearately or removed
 //!	altogether, or they can be passed through the distiller unlabeled, and
-//!	crossfaded in the morphing process (\sa Morpher).
+//!	crossfaded in the morphing process (see also Morpher).
+//!
+//!   \sa Channelizer, Distiller, Morpher, Synthesizer
 //
 class Sieve
 {

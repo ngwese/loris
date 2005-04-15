@@ -44,20 +44,6 @@
 namespace Loris {
 	
 // ---------------------------------------------------------------------------
-//	class Envelope
-//
-//!	@class Envelope Envelope.h loris/Envelope.h
-//!
-//!	Class Envelope is an abstract base class, specifying interface for
-//!	prototypable (clonable) objects representing generic, real-valued
-//!	(double) functions of one real-valued (double) time argument. Derived
-//!	classes (like BreakpointEnvelope) must implement valueAt() and
-//!	clone(), the latter to support the Prototype pattern. Clients of
-//!	Envelope, like Morpher and Distiller, can use prototype Envelopes to
-//!	make their own private Envelopes.
-//
-
-// ---------------------------------------------------------------------------
 //	constructor
 // ---------------------------------------------------------------------------
 //

@@ -45,13 +45,17 @@ namespace Loris {
 
 // ---------------------------------------------------------------------------
 //	class Synthesizer
-//	
-//	Class Synthesizer represents an algorithm for rendering
-//	bandwidth-enhanced Partials as floating point (double) samples at a
-//	specified sampling rate, and accumulating them into a buffer. The
-//	Synthesizer does not own the sample buffer, the client is responsible
-//	for its construction and destruction, and many Synthesizers may share
-//	a buffer.
+//
+//!   A Synthesizer renders bandwidth-enhanced Partials into a buffer
+//!   of samples. 
+//!	
+//!	Class Synthesizer represents an algorithm for rendering
+//!	bandwidth-enhanced Partials as floating point (double) samples at a
+//!	specified sampling rate, and accumulating them into a buffer. 
+//!
+//!	The Synthesizer does not own the sample buffer, the client is responsible
+//!	for its construction and destruction, and many Synthesizers may share
+//!	a buffer.
 //
 class Synthesizer
 {
@@ -68,11 +72,11 @@ public:
 	//!	artifacts. If the fade time is unspecified, the default value of one
 	//!	millisecond (0.001 seconds) is used.
 	//!
-	//!	\param	samplerate The rate (Hz) at which to synthesize samples
-	//!			(must be positive).
+	//!	\param	srate The rate (Hz) at which to synthesize samples
+	//!			   (must be positive).
 	//!	\param	buffer The vector (of doubles) into which rendered samples
-	//!			should be accumulated.
-	//!	\param	fade The Partial fade time in seconds (must be non-negative).
+	//!			   should be accumulated.
+	//!	\param	fadeTime The Partial fade time in seconds (must be non-negative).
 	//!	\throw	InvalidArgument if the specfied sample rate is non-positive.
 	//!	\throw	InvalidArgument if the specified fade time is negative.
 	Synthesizer( double srate, std::vector<double> & buffer, double fadeTime = .001 );
@@ -91,14 +95,14 @@ public:
 	//!	including the fade out. Previous contents of the buffer are not
 	//!	overwritten. Partials with start times earlier than the Partial fade
 	//!	time will have shorter onset fades. Partials are not rendered at
-	//! frequencies above the half-sample rate. 
+	//!   frequencies above the half-sample rate. 
 	//!
-	//! \param 	p The Partial to synthesize.
-	//! \return Nothing.
-	//!	\pre	The partial must have non-negative start time.
-	//! \post	This Synthesizer's sample buffer (vector) has been 
-	//!			resized to accommodate the entire duration of the 
-	//!			Partial, p, including fade out at the end.
+	//!   \param 	p The Partial to synthesize.
+	//!   \return  Nothing.
+	//!	\pre     The partial must have non-negative start time.
+	//!   \post    This Synthesizer's sample buffer (vector) has been 
+	//!            resized to accommodate the entire duration of the 
+	//!            Partial, p, including fade out at the end.
 	//!	\throw	InvalidPartial if the Partial has negative start time.
 	void synthesize( const Partial & p );	
 	 
@@ -113,17 +117,17 @@ public:
 	//!	including the fade outs. Previous contents of the buffer are not
 	//!	overwritten. Partials with start times earlier than the Partial fade
 	//!	time will have shorter onset fades.  Partials are not rendered at
-	//! frequencies above the half-sample rate. 
+	//!   frequencies above the half-sample rate. 
 	//!
-	//! \param 	begin_partials The beginning of the range of Partials 
-	//!			to synthesize.
-	//! \param 	end_partials The end of the range of Partials 
-	//!			to synthesize.
-	//! \return Nothing.
-	//!	\pre	The partials must have non-negative start times.
-	//! \post	This Synthesizer's sample buffer (vector) has been 
-	//!			resized to accommodate the entire duration of all the 
-	//!			Partials including fade out at the ends.
+	//!   \param 	begin_partials The beginning of the range of Partials 
+	//!            to synthesize.
+	//!   \param 	end_partials The end of the range of Partials 
+	//!            to synthesize.
+	//!   \return  Nothing.
+	//!	\pre     The partials must have non-negative start times.
+	//!   \post    This Synthesizer's sample buffer (vector) has been 
+	//!            resized to accommodate the entire duration of all the 
+	//!            Partials including fade out at the ends.
 	//!	\throw	InvalidPartial if any Partial has negative start time.
 #if ! defined(NO_TEMPLATE_MEMBERS)
 	template< typename Iter >
@@ -173,8 +177,8 @@ public:
 private:
 	Oscillator osc;
 	std::vector< double > * sampleBuffer;	//	samples are computed and stored here
-	double tfade;							// 	Partial fade in/out time in seconds
-	double srate;							//	sample rate in Hz
+	double tfade;                          // Partial fade in/out time in seconds
+	double srate;                          //	sample rate in Hz
 	
 };	//	end of class Synthesizer
 
@@ -190,15 +194,15 @@ private:
 //!	overwritten. Partials with start times earlier than the Partial fade
 //!	time will have shorter onset fades.
 //!
-//! \param 	begin_partials The beginning of the range of Partials 
-//!			to synthesize.
-//! \param 	end_partials The end of the range of Partials 
-//!			to synthesize.
-//! \return Nothing.
-//!	\pre	The partials must have non-negative start times.
-//! \post	This Synthesizer's sample buffer (vector) has been 
-//!			resized to accommodate the entire duration of all the 
-//!			Partials including fade out at the ends.
+//!   \param 	begin_partials The beginning of the range of Partials 
+//!            to synthesize.
+//!   \param 	end_partials The end of the range of Partials 
+//!            to synthesize.
+//!   \return  Nothing.
+//!	\pre     The partials must have non-negative start times.
+//!   \post    This Synthesizer's sample buffer (vector) has been 
+//!            resized to accommodate the entire duration of all the 
+//!            Partials including fade out at the ends.
 //!	\throw	InvalidPartial if any Partial has negative start time.
 //
 #if ! defined(NO_TEMPLATE_MEMBERS)
@@ -216,10 +220,14 @@ Synthesizer::synthesize( PartialList::iterator begin_partials,
 	Sz_Type Nsamps = 1 +  
 		Sz_Type( PartialUtils::timeSpan( begin_partials, end_partials ).second * srate );
 	if ( sampleBuffer->size() < Nsamps )
-		sampleBuffer->resize( Nsamps );
-
+	{
+   	sampleBuffer->resize( Nsamps );
+   }
+   
 	while ( begin_partials != end_partials ) 
+   {
 		synthesize( *(begin_partials++) ); 
+   }
 }
 
 // ---------------------------------------------------------------------------
@@ -235,7 +243,7 @@ Synthesizer::operator() ( Iter begin_partials, Iter end_partials )
 #else
 inline void
 Synthesizer::operator() ( PartialList::iterator begin_partials, 
-						  PartialList::iterator end_partials ) 
+                          PartialList::iterator end_partials ) 
 #endif
 { 
 	synthesize( begin_partials, end_partials ); 

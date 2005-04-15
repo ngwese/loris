@@ -21,6 +21,8 @@ HTML = ${CPP_HTML_DIR}/index.html
 HTML: Doxyfile
 	${DOXYGEN} 
 
+html: ${HTML}
+
 PDF = Loris${LORIS_MAJOR_VERSION}.${LORIS_MINOR_VERSION}.pdf
 
 PDF: ${HTML}

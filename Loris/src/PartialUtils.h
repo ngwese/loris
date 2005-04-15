@@ -197,7 +197,7 @@ void scaleBandwidth( Partial & p, const Arg & arg )
 //	scaleBandwidth
 // ---------------------------------------------------------------------------
 //! Scale the bandwidth of a sequence of Partials according to
-//! an envelope representing a amplitude scale value or envelope.
+//! an envelope representing a bandwidth scale value or envelope.
 //!
 //! \param	b is the beginning of a sequence of Partials to mutate.
 //! \param	e is the end of a sequence of Partials to mutate.
@@ -214,21 +214,38 @@ void scaleBandwidth( Iter b, Iter e, const Arg & arg )
 	}
 }
 
-/*	Scale the frequency of the specified Partial according to
-	an envelope representing a time-varying frequency scale value.
- */
+// ---------------------------------------------------------------------------
+//	FrequencyScaler
+//	
+//! Scale the frequency of the specified Partial according to
+//! an envelope representing a time-varying bandwidth scale value.
+//
 class FrequencyScaler : public PartialMutator
 {
 public:
 
-	//	construction
+	//! Construct a new FrequencyScaler from a constant scale factor.
 	FrequencyScaler( double x ) : PartialMutator( x ) {}
+	
+   //! Construct a new FrequencyScaler from an Envelope representing
+	//! a time-varying scale factor.
 	FrequencyScaler( const Envelope & e ) : PartialMutator( e ) {}
 	
-	//	function call operator
+	//! Function call operator: apply a scale factor to the specified
+	//! Partial.
 	void operator()( Partial & p ) const;
 };
 
+// ---------------------------------------------------------------------------
+//	scaleFrequency
+// ---------------------------------------------------------------------------
+//! Scale the frequency of the specified Partial according to
+//! an envelope representing a frequency scale value or envelope.
+//!
+//! \param	p is a Partial to mutate.
+//! \param	arg is either a constant scale factor or an Envelope
+//!			describing the time-varying scale factor.
+//
 template< class Arg >
 void scaleFrequency( Partial & p, const Arg & arg )
 {
@@ -236,6 +253,17 @@ void scaleFrequency( Partial & p, const Arg & arg )
 	scaler( p );
 }
 
+// ---------------------------------------------------------------------------
+//	scaleFrequency
+// ---------------------------------------------------------------------------
+//! Scale the frequency of a sequence of Partials according to
+//! an envelope representing a frequency scale value or envelope.
+//!
+//! \param	b is the beginning of a sequence of Partials to mutate.
+//! \param	e is the end of a sequence of Partials to mutate.
+//! \param	arg is either a constant scale factor or an Envelope
+//!			describing the time-varying scale factor.
+//
 template< class Iter, class Arg >
 void scaleFrequency( Iter b, Iter e, const Arg & arg )
 {
@@ -246,22 +274,38 @@ void scaleFrequency( Iter b, Iter e, const Arg & arg )
 	}
 }
 
-/*	Scale the relative noise content of the specified Partial according 
-	to an envelope representing a (time-varying) noise energy 
-	scale value.
- */
+// ---------------------------------------------------------------------------
+//	NoiseRatioScaler
+//	
+//! Scale the relative noise content of the specified Partial according 
+//! to an envelope representing a time-varying bandwidth scale value.
+//
 class NoiseRatioScaler : public PartialMutator
 {
 public:
 
-	//	construction
+	//! Construct a new NoiseRatioScaler from a constant scale factor.
 	NoiseRatioScaler( double x ) : PartialMutator( x ) {}
+
+	//! Construct a new NoiseRatioScaler from an Envelope representing
+	//! a time-varying scale factor.
 	NoiseRatioScaler( const Envelope & e ) : PartialMutator( e ) {}
 	
-	//	function call operator
+	//! Function call operator: apply a scale factor to the specified
+	//! Partial.
 	void operator()( Partial & p ) const;
 };
 
+// ---------------------------------------------------------------------------
+//	scaleNoiseRatio
+// ---------------------------------------------------------------------------
+//! Scale the relative noise content of the specified Partial according to
+//! an envelope representing a scale value or envelope.
+//!
+//! \param	p is a Partial to mutate.
+//! \param	arg is either a constant scale factor or an Envelope
+//!			describing the time-varying scale factor.
+//
 template< class Arg >
 void scaleNoiseRatio( Partial & p, const Arg & arg )
 {
@@ -269,6 +313,17 @@ void scaleNoiseRatio( Partial & p, const Arg & arg )
 	scaler( p );
 }
 
+// ---------------------------------------------------------------------------
+//	scaleNoiseRatio
+// ---------------------------------------------------------------------------
+//! Scale the relative noise content of a sequence of Partials according to
+//! an envelope representing a scale value or envelope.
+//!
+//! \param	b is the beginning of a sequence of Partials to mutate.
+//! \param	e is the end of a sequence of Partials to mutate.
+//! \param	arg is either a constant scale factor or an Envelope
+//!			describing the time-varying scale factor.
+//
 template< class Iter, class Arg >
 void scaleNoiseRatio( Iter b, Iter e, const Arg & arg )
 {
@@ -279,22 +334,40 @@ void scaleNoiseRatio( Iter b, Iter e, const Arg & arg )
 	}
 }
 
-/*	Shift the pitch of the specified Partial according to
-	the given pitch envelope. The pitch envelope is assumed to have 
-	units of cents (1/100 of a halfstep).
- */
+// ---------------------------------------------------------------------------
+//	PitchShifter
+//	
+//! Shift the pitch of the specified Partial according to
+//! the given pitch envelope. The pitch envelope is assumed to have 
+//! units of cents (1/100 of a halfstep).
+//
 class PitchShifter : public PartialMutator
 {
 public:
 
-	//	construction
+	//! Construct a new PitchShifter from a constant scale factor.
 	PitchShifter( double x ) : PartialMutator( x ) {}
+
+   //! Construct a new PitchShifter from an Envelope representing
+	//! a time-varying scale factor.
 	PitchShifter( const Envelope & e ) : PartialMutator( e ) {}
 	
-	//	function call operator
+	//! Function call operator: apply a scale factor to the specified
+	//! Partial.
 	void operator()( Partial & p ) const;
 };
 
+// ---------------------------------------------------------------------------
+//	shiftPitch
+// ---------------------------------------------------------------------------
+//! Shift the pitch of the specified Partial according to
+//! an envelope representing a pitch value or envelope.
+//!
+//! \param	p is a Partial to mutate.
+//! \param	arg is either a constant pitch factor or an Envelope
+//!			describing the time-varying pitch factor in cents (1/100 of a 
+//!         halfstep).
+//
 template< class Arg >
 void shiftPitch( Partial & p, const Arg & arg )
 {
@@ -302,6 +375,18 @@ void shiftPitch( Partial & p, const Arg & arg )
 	shifter( p );
 }
 
+// ---------------------------------------------------------------------------
+//	shiftPitch
+// ---------------------------------------------------------------------------
+//! Shift the pitch of a sequence of Partials according to
+//! an envelope representing a pitch value or envelope.
+//!
+//! \param	b is the beginning of a sequence of Partials to mutate.
+//! \param	e is the end of a sequence of Partials to mutate.
+//! \param	arg is either a constant pitch factor or an Envelope
+//!			describing the time-varying pitch factor in cents (1/100 of a 
+//!         halfstep).
+//
 template< class Iter, class Arg >
 void shiftPitch( Iter b, Iter e, const Arg & arg )
 {
@@ -315,26 +400,43 @@ void shiftPitch( Iter b, Iter e, const Arg & arg )
 //	These ones are not derived from PartialMutator, because
 //	they don't use an Envelope and cannot be time-varying.
 
+// ---------------------------------------------------------------------------
+//	Cropper
+//	
 //! 	Trim a Partial by removing Breakpoints outside a specified time span.
 //!	Insert a Breakpoint at the boundary when cropping occurs.
 class Cropper
 {
 public:
 
-	//	construction
+	//! Construct a new Cropper from a pair of times (in seconds)
+   //! representing the span of time to which Partials should be
+   //! cropped.
 	Cropper( double t1, double t2 ) : 
 		minTime( std::min( t1, t2 ) ),
 		maxTime( std::max( t1, t2 ) )
 	{
 	}
 	
-	//	function call operator
+	//! Function call operator: crop the specified Partial.
 	void operator()( Partial & p ) const;
 	
 private:
 	double minTime, maxTime;
 };
 
+// ---------------------------------------------------------------------------
+//	crop
+// ---------------------------------------------------------------------------
+//! Trim a Partial by removing Breakpoints outside a specified time span.
+//! Insert a Breakpoint at the boundary when cropping occurs.
+//!
+//! \param	p is the Partial to crop.
+//! \param	t1 is the beginning of the time span to which the Partial
+//!         should be cropped.
+//! \param	t2 is the end of the time span to which the Partial
+//!         should be cropped.
+//
 inline
 void crop( Partial & p, double t1, double t2 )
 {
@@ -342,6 +444,19 @@ void crop( Partial & p, double t1, double t2 )
 	cropper( p );
 }
 
+// ---------------------------------------------------------------------------
+//	crop
+// ---------------------------------------------------------------------------
+//! Trim a sequence of Partials by removing Breakpoints outside a specified 
+//! time span. Insert a Breakpoint at the boundary when cropping occurs.
+//!
+//! \param	b is the beginning of a sequence of Partials to crop.
+//! \param	e is the end of a sequence of Partials to crop.
+//! \param	t1 is the beginning of the time span to which the Partials
+//!         should be cropped.
+//! \param	t2 is the end of the time span to which the Partials
+//!         should be cropped.
+//
 template< class Iter >
 void crop( Iter b, Iter e, double t1, double t2 )
 {
@@ -352,34 +467,57 @@ void crop( Iter b, Iter e, double t1, double t2 )
 	}
 }
 
-/*	Shift the time of all the Breakpoints in a Partial by a 
-	constant amount.
- */
+// ---------------------------------------------------------------------------
+//	TimeShifter
+//	
+//! Shift the time of all the Breakpoints in a Partial by a 
+//! constant amount.
+//
 class TimeShifter
 {
 public:
 
-	//	construction
+	//! Construct a new TimeShifter from a constant offset in seconds.
 	TimeShifter( double x ) : offset( x ) {}
 	
-	//	function call operator
+	//! Function call operator: apply a time shift to the specified
+	//! Partial.
 	void operator()( Partial & p ) const;
 	
 private:
 	double offset;
 };
 
+// ---------------------------------------------------------------------------
+//	shiftTime
+// ---------------------------------------------------------------------------
+//! Shift the time of all the Breakpoints in a Partial by a 
+//! constant amount.
+//!
+//! \param	p is a Partial to shift.
+//! \param	offset is a constant offset in seconds.
+//
 inline
-void shiftTime( Partial & p, double arg )
+void shiftTime( Partial & p, double offset )
 {
-	TimeShifter shifter( arg );
+	TimeShifter shifter( offset );
 	shifter( p );
 }
 
+// ---------------------------------------------------------------------------
+//	shiftTime
+// ---------------------------------------------------------------------------
+//! Shift the time of all the Breakpoints in a Partial by a 
+//! constant amount.
+//!
+//! \param	b is the beginning of a sequence of Partials to shift.
+//! \param	e is the end of a sequence of Partials to shift.
+//! \param	offset is a constant offset in seconds.
+//
 template< class Iter >
-void shiftTime( Iter b, Iter e, double arg )
+void shiftTime( Iter b, Iter e, double offset )
 {
-	TimeShifter shifter( arg );
+	TimeShifter shifter( offset );
 	while ( b != e )
 	{
 		shifter( *b++ );
@@ -387,10 +525,13 @@ void shiftTime( Iter b, Iter e, double arg )
 }
 
 	
-/*	Return the time (in seconds) spanned by a specified half-open
-	(STL-style) range of Partials as a std::pair composed of the earliest
-	Partial start time and latest Partial end time in the range.
- */
+// ---------------------------------------------------------------------------
+//	crop
+// ---------------------------------------------------------------------------
+//! Return the time (in seconds) spanned by a specified half-open
+//! range of Partials as a std::pair composed of the earliest
+//! Partial start time and latest Partial end time in the range.
+//
 template < typename Iterator >
 std::pair< double, double > 
 timeSpan( Iterator begin, Iterator end ) 
@@ -413,19 +554,23 @@ timeSpan( Iterator begin, Iterator end )
 	
 //	-- predicates --
 
-/*	Predicate functor returning true if the label of its Partial argument is
-	equal to the specified 32-bit label, and false otherwise.
- */
+// ---------------------------------------------------------------------------
+//	isLabelEqual
+//	
+//! Predicate functor returning true if the label of its Partial argument is
+//! equal to the specified 32-bit label, and false otherwise.
+//
 class isLabelEqual : public std::unary_function< const Partial, bool >
 {
 public:
-	//	construction:
+   //! Initialize a new instance with the specified label.
 	isLabelEqual( int l ) : label(l) {}
 	
-	//	function call operators
+	//! Function call operator: evaluate a Partial.
 	bool operator()( const Partial & p ) const 
 		{ return p.label() == label; }
 		
+	//! Function call operator: evaluate a Partial pointer.
 	bool operator()( const Partial * p ) const 
 		{ return p->label() == label; }
 
@@ -433,19 +578,23 @@ private:
 	int label;
 };
 	
-/*	Predicate functor returning true if the label of its Partial argument is
-	greater than the specified 32-bit label, and false otherwise.
- */
+// ---------------------------------------------------------------------------
+//	isLabelGreater
+//	
+//! Predicate functor returning true if the label of its Partial argument is
+//! greater than the specified 32-bit label, and false otherwise.
+//
 class isLabelGreater : public std::unary_function< const Partial, bool >
 {
 public:
-	//	construction:
+   //! Initialize a new instance with the specified label.
 	isLabelGreater( int l ) : label(l) {}
 	
-	//	function call operators
+	//! Function call operator: evaluate a Partial.
 	bool operator()( const Partial & p ) const 
 		{ return p.label() > label; }
 		
+	//! Function call operator: evaluate a Partial pointer.
 	bool operator()( const Partial * p ) const 
 		{ return p->label() > label; }
 
@@ -453,19 +602,23 @@ private:
 	int label;
 };
 		
-/*	Predicate functor returning true if the label of its Partial argument is
-	less than the specified 32-bit label, and false otherwise.
- */
+// ---------------------------------------------------------------------------
+//	isLabelLess
+//	
+//! Predicate functor returning true if the label of its Partial argument is
+//! less than the specified 32-bit label, and false otherwise.
+//
 class isLabelLess : public std::unary_function< const Partial, bool >
 {
 public:
-	//	construction:
+   //! Initialize a new instance with the specified label.
 	isLabelLess( int l ) : label(l) {}
 	
-	//	function call operators
+	//! Function call operator: evaluate a Partial.
 	bool operator()( const Partial & p ) const 
 		{ return p.label() < label; }
 		
+	//! Function call operator: evaluate a Partial pointer.
 	bool operator()( const Partial * p ) const 
 		{ return p->label() < label; }
 
@@ -475,51 +628,74 @@ private:
 		
 //	-- comparitors --
 
-/*	Comparitor (binary) functor returning true if its first Partial
-	argument has a label whose 32-bit integer representation is less than
-	that of the second Partial argument's label, and false otherwise.
-	
-	How about classes CompareLabelLess and IsLabelLess, etc?
-	Make it work for Partial pointers too.
- */
+// ---------------------------------------------------------------------------
+//	compareLabelLess
+//	
+//! Comparitor (binary) functor returning true if its first Partial
+//! argument has a label whose 32-bit integer representation is less than
+//! that of the second Partial argument's label, and false otherwise.
+//
 class compareLabelLess : 
 	public std::binary_function< const Partial, const Partial, bool >
 {
 public:
+   //! Compare two Partials, return true if its first Partial
+   //! argument has a label whose 32-bit integer representation is less than
+   //! that of the second Partial argument's label, and false otherwise.
 	bool operator()( const Partial & lhs, const Partial & rhs ) const 
 		{ return lhs.label() < rhs.label(); }
 
+   //! Compare two Partials, return true if its first Partial
+   //! argument has a label whose 32-bit integer representation is less than
+   //! that of the second Partial argument's label, and false otherwise.
 	bool operator()( const Partial * lhs, const Partial * rhs ) const 
 		{ return lhs->label() < rhs->label(); }
 };
 
-
-/*	Comparitor (binary) functor returning true if its first Partial
-	argument has duration less than that of the second Partial
-	argument, and false otherwise.
- */
+// ---------------------------------------------------------------------------
+//	compareDurationLess
+//	
+//! Comparitor (binary) functor returning true if its first Partial
+//! argument has duration less than that of the second Partial
+//! argument, and false otherwise.
+//
 class compareDurationLess : 
 	public std::binary_function< const Partial, const Partial, bool >
 {
 public:
+   //! Compare two Partials, return true if its first Partial
+   //! argument has duration less than that of the second Partial
+   //! argument, and false otherwise.
 	bool operator()( const Partial & lhs, const Partial & rhs ) const 
 		{ return lhs.duration() < rhs.duration(); }
 
+   //! Compare two Partials, return true if its first Partial
+   //! argument has duration less than that of the second Partial
+   //! argument, and false otherwise.
 	bool operator()( const Partial * lhs, const Partial * rhs ) const 
 		{ return lhs->duration() < rhs->duration(); }
 };
 
-/*	Comparitor (binary) functor returning true if its first Partial
-	argument has duration greater than that of the second Partial
-	argument, and false otherwise.
- */
+// ---------------------------------------------------------------------------
+//	compareDurationGreater
+//	
+//! Comparitor (binary) functor returning true if its first Partial
+//! argument has duration greater than that of the second Partial
+//! argument, and false otherwise.
+//
 class compareDurationGreater : 
 	public std::binary_function< const Partial, const Partial, bool >
 {
 public:
+   //! Compare two Partials, return true if its first Partial
+   //! argument has duration greater than that of the second Partial
+   //! argument, and false otherwise.
 	bool operator()( const Partial & lhs, const Partial & rhs ) const 
 		{ return lhs.duration() > rhs.duration(); }
 
+   //! Compare two Partials, return true if its first Partial
+   //! argument has duration greater than that of the second Partial
+   //! argument, and false otherwise.
 	bool operator()( const Partial * lhs, const Partial * rhs ) const 
 		{ return lhs->duration() > rhs->duration(); }
 };
