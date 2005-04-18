@@ -170,18 +170,18 @@ public:
 	//!
 	//!   \sa     crossfade, morphPartial
 	//!
-	//!	\param  beginSrc is the beginning of the sequence of Partials
-	//!			corresponding to a morph function value of 0.
-	//!	\param  endSrc is (one past) the end of the sequence of Partials
-	//!			corresponding to a morph function value of 0.
-	//!	\param  beginTgt is the beginning of the sequence of Partials
-	//!			corresponding to a morph function value of 1.
-	//!	\param  endTgt is (one past) the end of the sequence of Partials
-	//!			corresponding to a morph function value of 1.
+	//!	\param beginSrc is the beginning of the sequence of Partials
+	//!          corresponding to a morph function value of 0.
+	//!	\param endSrc is (one past) the end of the sequence of Partials
+	//!			 corresponding to a morph function value of 0.
+	//!	\param beginTgt is the beginning of the sequence of Partials
+	//!			 corresponding to a morph function value of 1.
+	//!	\param endTgt is (one past) the end of the sequence of Partials
+	//!			 corresponding to a morph function value of 1.
 	void morph( PartialList::const_iterator beginSrc, 
-				PartialList::const_iterator endSrc,
-				PartialList::const_iterator beginTgt, 
-				PartialList::const_iterator endTgt );
+               PartialList::const_iterator endSrc,
+               PartialList::const_iterator beginTgt, 
+               PartialList::const_iterator endTgt );
 
 	//!	Crossfade Partials with no correspondences.
 	//!
@@ -198,21 +198,21 @@ public:
 	//!
 	//!	The crossfaded Partials are stored in the Morpher's PartialList.
 	//!
-	//! \param   beginSrc is the beginning of the sequence of Partials
+	//!   \param beginSrc is the beginning of the sequence of Partials
 	//!			 corresponding to a morph function value of 0.
-	//!	\param   endSrc is (one past) the end of the sequence of Partials
+	//!	\param endSrc is (one past) the end of the sequence of Partials
 	//!			 corresponding to a morph function value of 0.
-	//!	\param   beginTgt is the beginning of the sequence of Partials
+	//!	\param beginTgt is the beginning of the sequence of Partials
 	//!			 corresponding to a morph function value of 1.
-	//!	\param   endTgt is (one past) the end of the sequence of Partials
+	//!	\param endTgt is (one past) the end of the sequence of Partials
 	//!			 corresponding to a morph function value of 1.
-	//! \param   label is the label to associate with unlabeled
-	//!            Partials (default is 0).
+	//!   \param label is the label to associate with unlabeled
+	//!          Partials (default is 0).
 	void crossfade( PartialList::const_iterator beginSrc, 
-					PartialList::const_iterator endSrc,
-					PartialList::const_iterator beginTgt, 
-					PartialList::const_iterator endTgt,
-					Partial::label_type label = 0 );
+                  PartialList::const_iterator endSrc,
+                  PartialList::const_iterator beginTgt, 
+                  PartialList::const_iterator endTgt,
+                  Partial::label_type label = 0 );
 
 
     //!    Compute morphed parameter values at the specified time, using
@@ -243,8 +243,8 @@ public:
     //!	\param 	tgtPartial is the Partial corresponding to a morph function
     //!		   	value of 1, evaluated at the specified time.
     //!	\param 	time is the time corresponding to srcBkpt (used
-    //!			to evaluate the morphing functions and tgtPartial).
-    //! \return the morphed Breakpoint
+    //!           to evaluate the morphing functions and tgtPartial).
+    //! \return   the morphed Breakpoint
     Breakpoint 
     morphSrcBreakpoint( const Breakpoint & bp, const Partial & tgtPartial, 
                         double time ) const;
@@ -261,8 +261,8 @@ public:
     //!	\param 	srcPartial is the Partial corresponding to a morph function
     //!		   	value of 0, evaluated at the specified time.
     //!	\param 	time is the time corresponding to srcBkpt (used
-    //!			to evaluate the morphing functions and tgtPartial).
-    //! \return the morphed Breakpoint
+    //!           to evaluate the morphing functions and tgtPartial).
+    //! \return   the morphed Breakpoint
     Breakpoint 
     morphTgtBreakpoint( const Breakpoint & bp, const Partial & srcPartial, 
                         double time ) const;

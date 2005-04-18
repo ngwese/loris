@@ -124,12 +124,6 @@ int main( )
 	std::cout << "Relies on Partial, Breakpoint, and BreakpointEnvelope." << endl << endl;
 	std::cout << "Built: " << __DATE__ << endl << endl;
 
-	// disable this test until it can be made to do something sensible
-	std::cout << "This test is disabled until is can be made compatible with "
-                 "changes to the Morpher class." << endl << endl;
-
-    return 0;
-#if 0
 	try 
 	{
 		//	construct Morphing envelopes:
@@ -139,23 +133,28 @@ int main( )
 		const int NUM_ENVPTS = 3;
 		const double MENV_TIMES[] = {0, .5, 1};
 		const double FENV_WEIGHTS[] = {0, 1, 1};
-		for (int i = 0; i < NUM_ENVPTS; ++i )
+		for ( int i = 0; i < NUM_ENVPTS; ++i )
+      {
 			fenv.insertBreakpoint( MENV_TIMES[i], FENV_WEIGHTS[i] );
-		
+		}
+      
 		//	amplitude envelope: (0,1), (.5, 0), (1,0)
 		const double AENV_WEIGHTS[] = {1, 0, 0};
-		for (int i = 0; i < NUM_ENVPTS; ++i )
-			aenv.insertBreakpoint( MENV_TIMES[i], AENV_WEIGHTS[i] );
+		for ( int i = 0; i < NUM_ENVPTS; ++i )
+		{
+      	aenv.insertBreakpoint( MENV_TIMES[i], AENV_WEIGHTS[i] );
+		}
 		
-		//	bandwidth envelope: (0,0), (.5, 1), (1,0)
+      //	bandwidth envelope: (0,0), (.5, 1), (1,0)
 		const double BWENV_WEIGHTS[] = {0, 1, 0};
-		for (int i = 0; i < NUM_ENVPTS; ++i )
-			bwenv.insertBreakpoint( MENV_TIMES[i], BWENV_WEIGHTS[i] );
-			
+		for ( int i = 0; i < NUM_ENVPTS; ++i )
+		{
+      	bwenv.insertBreakpoint( MENV_TIMES[i], BWENV_WEIGHTS[i] );
+		}
+      	
 		//	construct Morpher:
 		Morpher testM( fenv, aenv, bwenv );
 		testM.setAmplitudeShape( ALMOSTLINEAR );
-		
 		
 		/*                                                */
 		/*************** envelope tests *******************/
@@ -181,8 +180,10 @@ int main( )
 		//	other envelope: (0,.4), (.5, .2), (1,.3)
 		const double OTHERENV_WEIGHTS[] = {.4, .2, .3};
 		for (int i = 0; i < NUM_ENVPTS; ++i )
+      {
 			otherenv.insertBreakpoint( MENV_TIMES[i], OTHERENV_WEIGHTS[i] );
-		
+		}
+      
 		//	change:	
 		testM.setFrequencyFunction( otherenv );
 		
@@ -256,8 +257,10 @@ int main( )
 		const double P1_PHS[] = {-.8, .8}; 		//	.2 per .1 s
 		
 		for (int i = 0; i < NUM_BPTS; ++i )
+      {
 			p1.insert( P1_TIMES[i], Breakpoint( P1_FREQS[i], P1_AMPS[i], P1_BWS[i], P1_PHS[i] ) );
-			
+		}
+      	
 		const double P2_TIMES[] = {0.2, 1};
 		const double P2_FREQS[] = {200, 200};
 		const double P2_AMPS[] = {.1, .6};		//	.04 per .1 s
@@ -265,8 +268,10 @@ int main( )
 		const double P2_PHS[] = {0, 0}; 
 		
 		for (int i = 0; i < NUM_BPTS; ++i )
-			p2.insert( P2_TIMES[i], Breakpoint( P2_FREQS[i], P2_AMPS[i], P2_BWS[i], P2_PHS[i] ) );
-			
+		{
+      	p2.insert( P2_TIMES[i], Breakpoint( P2_FREQS[i], P2_AMPS[i], P2_BWS[i], P2_PHS[i] ) );
+		}
+      	
 		//	the morphed Partial should have as many Breakpoints 
 		//	as the combined Breakpoints of the constituent Partials:
         Partial pm_by_hand;
@@ -300,20 +305,20 @@ int main( )
 		SAME_PARAM_VALUES( pmorphed.bandwidthAt(0), pm_by_hand.bandwidthAt(0) );
 		SAME_PARAM_VALUES( pmorphed.phaseAt(0), pm_by_hand.phaseAt(0) );
 		
-		//SAME_PARAM_VALUES( pmorphed.frequencyAt(0.1), pm_by_hand.frequencyAt(0.1) );
+		SAME_PARAM_VALUES( pmorphed.frequencyAt(0.1), pm_by_hand.frequencyAt(0.1) );
 		SAME_PARAM_VALUES( pmorphed.amplitudeAt(0.1), pm_by_hand.amplitudeAt(0.1) );
 		SAME_PARAM_VALUES( pmorphed.bandwidthAt(0.1), pm_by_hand.bandwidthAt(0.1) );
-		// SAME_PARAM_VALUES( pmorphed.phaseAt(0.1), pm_by_hand.phaseAt(0.1) );
+		SAME_PARAM_VALUES( pmorphed.phaseAt(0.1), pm_by_hand.phaseAt(0.1) );
 		
-		//SAME_PARAM_VALUES( pmorphed.frequencyAt(0.3), pm_by_hand.frequencyAt(0.3) );
+		SAME_PARAM_VALUES( pmorphed.frequencyAt(0.3), pm_by_hand.frequencyAt(0.3) );
 		SAME_PARAM_VALUES( pmorphed.amplitudeAt(0.3), pm_by_hand.amplitudeAt(0.3) );
 		SAME_PARAM_VALUES( pmorphed.bandwidthAt(0.3), pm_by_hand.bandwidthAt(0.3) );
-		// SAME_PARAM_VALUES( pmorphed.phaseAt(0.3), pm_by_hand.phaseAt(0.3) );
+		SAME_PARAM_VALUES( pmorphed.phaseAt(0.3), pm_by_hand.phaseAt(0.3) );
 		
-		//SAME_PARAM_VALUES( pmorphed.frequencyAt(0.6), pm_by_hand.frequencyAt(0.6) );
+		SAME_PARAM_VALUES( pmorphed.frequencyAt(0.6), pm_by_hand.frequencyAt(0.6) );
 		SAME_PARAM_VALUES( pmorphed.amplitudeAt(0.6), pm_by_hand.amplitudeAt(0.6) );
 		SAME_PARAM_VALUES( pmorphed.bandwidthAt(0.6), pm_by_hand.bandwidthAt(0.6) );
-		//SAME_PARAM_VALUES( pmorphed.phaseAt(0.6), pm_by_hand.phaseAt(0.6) );
+		SAME_PARAM_VALUES( pmorphed.phaseAt(0.6), pm_by_hand.phaseAt(0.6) );
 		
 		SAME_PARAM_VALUES( pmorphed.frequencyAt(0.85), pm_by_hand.frequencyAt(0.85) );
 		SAME_PARAM_VALUES( pmorphed.amplitudeAt(0.85), pm_by_hand.amplitudeAt(0.85) );
@@ -324,6 +329,71 @@ int main( )
 		SAME_PARAM_VALUES( pmorphed.amplitudeAt(1), pm_by_hand.amplitudeAt(1) );
 		SAME_PARAM_VALUES( pmorphed.bandwidthAt(1), pm_by_hand.bandwidthAt(1) );
 		SAME_PARAM_VALUES( pmorphed.phaseAt(1), pm_by_hand.phaseAt(1) );
+		
+		/*                                                */
+		/********* parameter morphing tests ***************/
+		/*                                                */
+		
+		//	verify that morphing between two Partials at a given
+		//	time yields the same results as morphing between two
+		//	Breakpoints having the parameters of those two
+		//	Partials at that same time:
+		//
+		//	for each Breakpoint in each Partial
+		//		create a Breakpoint representing the parameters of
+		//			the other Partial at that time
+		//		morph the two Breakpoints
+		//		compare to a morph between the two Partials at that time
+		//
+		Partial::iterator it;
+		for ( it = p1.begin(); it != p1.end(); ++it )
+		{
+			//	get Breakpoints:
+			Breakpoint & bp1 = it.breakpoint();
+			double t = it.time();
+			Breakpoint bp2( p2.frequencyAt(t), p2.amplitudeAt(t), p2.bandwidthAt(t), p2.phaseAt(t) );
+			
+			//	do morphs:
+			Breakpoint m1, m2, m3;
+			m1 = testM.morphBreakpoints( bp1, bp2, t );
+			m2 = testM.morphSrcBreakpoint( bp1, p2, t );
+			m3 = testM.morphTgtBreakpoint( bp2, p1, t );
+			
+			//	verify results:
+			SAME_PARAM_VALUES( m1.frequency(), m2.frequency() );
+			SAME_PARAM_VALUES( m2.frequency(), m3.frequency() );
+			SAME_PARAM_VALUES( m1.amplitude(), m2.amplitude() );
+			SAME_PARAM_VALUES( m2.amplitude(), m3.amplitude() );
+			SAME_PARAM_VALUES( m1.bandwidth(), m2.bandwidth() );
+			SAME_PARAM_VALUES( m2.bandwidth(), m3.bandwidth() );
+			SAME_PARAM_VALUES( m1.phase(), m2.phase() );
+			SAME_PARAM_VALUES( m2.phase(), m3.phase() );
+		}
+
+		for ( it = p2.begin(); it != p2.end(); ++it )
+		{
+			//	get Breakpoints:
+			Breakpoint & bp2 = it.breakpoint();
+			double t = it.time();
+			Breakpoint bp1( p1.frequencyAt(t), p1.amplitudeAt(t), p1.bandwidthAt(t), p1.phaseAt(t) );
+			
+			//	do morphs:
+			Breakpoint m1, m2, m3;
+			m1 = testM.morphBreakpoints( bp1, bp2, t );
+			m2 = testM.morphSrcBreakpoint( bp1, p2, t );
+			m3 = testM.morphTgtBreakpoint( bp2, p1, t );
+			
+			//	verify results:
+			SAME_PARAM_VALUES( m1.frequency(), m2.frequency() );
+			SAME_PARAM_VALUES( m2.frequency(), m3.frequency() );
+			SAME_PARAM_VALUES( m1.amplitude(), m2.amplitude() );
+			SAME_PARAM_VALUES( m2.amplitude(), m3.amplitude() );
+			SAME_PARAM_VALUES( m1.bandwidth(), m2.bandwidth() );
+			SAME_PARAM_VALUES( m2.bandwidth(), m3.bandwidth() );
+			SAME_PARAM_VALUES( m1.phase(), m2.phase() );
+			SAME_PARAM_VALUES( m2.phase(), m3.phase() );
+		}
+
 		
 		/*                                                      */
 		/*********** dummy Partial morphing tests ***************/
@@ -360,15 +430,15 @@ int main( )
 		SAME_PARAM_VALUES( to_dummy.bandwidthAt(0), to_dummy_by_hand.bandwidthAt(0) );
 		SAME_PARAM_VALUES( to_dummy.phaseAt(0), to_dummy_by_hand.phaseAt(0) );
 		
-		//SAME_PARAM_VALUES( to_dummy.frequencyAt(0.1), to_dummy_by_hand.frequencyAt(0.1) );
+		SAME_PARAM_VALUES( to_dummy.frequencyAt(0.1), to_dummy_by_hand.frequencyAt(0.1) );
 		SAME_PARAM_VALUES( to_dummy.amplitudeAt(0.1), to_dummy_by_hand.amplitudeAt(0.1) );
 		SAME_PARAM_VALUES( to_dummy.bandwidthAt(0.1), to_dummy_by_hand.bandwidthAt(0.1) );
-		// SAME_PARAM_VALUES( to_dummy.phaseAt(0.1), to_dummy_by_hand.phaseAt(0.1) );
+		SAME_PARAM_VALUES( to_dummy.phaseAt(0.1), to_dummy_by_hand.phaseAt(0.1) );
 		
-		//SAME_PARAM_VALUES( to_dummy.frequencyAt(0.3), to_dummy_by_hand.frequencyAt(0.3) );
+		SAME_PARAM_VALUES( to_dummy.frequencyAt(0.3), to_dummy_by_hand.frequencyAt(0.3) );
 		SAME_PARAM_VALUES( to_dummy.amplitudeAt(0.3), to_dummy_by_hand.amplitudeAt(0.3) );
 		SAME_PARAM_VALUES( to_dummy.bandwidthAt(0.3), to_dummy_by_hand.bandwidthAt(0.3) );
-		// SAME_PARAM_VALUES( to_dummy.phaseAt(0.3), to_dummy_by_hand.phaseAt(0.3) );
+		SAME_PARAM_VALUES( to_dummy.phaseAt(0.3), to_dummy_by_hand.phaseAt(0.3) );
 		
 		SAME_PARAM_VALUES( to_dummy.frequencyAt(0.6), to_dummy_by_hand.frequencyAt(0.6) );
 		SAME_PARAM_VALUES( to_dummy.amplitudeAt(0.6), to_dummy_by_hand.amplitudeAt(0.6) );
@@ -419,12 +489,12 @@ int main( )
 		SAME_PARAM_VALUES( from_dummy.frequencyAt(0.1), from_dummy_by_hand.frequencyAt(0.1) );
 		SAME_PARAM_VALUES( from_dummy.amplitudeAt(0.1), from_dummy_by_hand.amplitudeAt(0.1) );
 		SAME_PARAM_VALUES( from_dummy.bandwidthAt(0.1), from_dummy_by_hand.bandwidthAt(0.1) );
-		// SAME_PARAM_VALUES( from_dummy.phaseAt(0.1), from_dummy_by_hand.phaseAt(0.1) );
+		SAME_PARAM_VALUES( from_dummy.phaseAt(0.1), from_dummy_by_hand.phaseAt(0.1) );
 		
 		SAME_PARAM_VALUES( from_dummy.frequencyAt(0.3), from_dummy_by_hand.frequencyAt(0.3) );
 		SAME_PARAM_VALUES( from_dummy.amplitudeAt(0.3), from_dummy_by_hand.amplitudeAt(0.3) );
 		SAME_PARAM_VALUES( from_dummy.bandwidthAt(0.3), from_dummy_by_hand.bandwidthAt(0.3) );
-		// SAME_PARAM_VALUES( from_dummy.phaseAt(0.3), from_dummy_by_hand.phaseAt(0.3) );
+		SAME_PARAM_VALUES( from_dummy.phaseAt(0.3), from_dummy_by_hand.phaseAt(0.3) );
 		
 		SAME_PARAM_VALUES( from_dummy.frequencyAt(0.6), from_dummy_by_hand.frequencyAt(0.6) );
 		SAME_PARAM_VALUES( from_dummy.amplitudeAt(0.6), from_dummy_by_hand.amplitudeAt(0.6) );
@@ -456,6 +526,5 @@ int main( )
 	//	return successfully
 	cout << "Morpher passed all tests." << endl;
 	return 0;
-#endif
 }
 

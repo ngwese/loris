@@ -58,6 +58,9 @@
 //    begin namespace
 namespace Loris {
 
+// new phase morphing compiled out for release
+// #define MORPH_PHASE_TRAVEL 1
+
 
 static const Partial::label_type DefaultReferenceLabel = 0;    
                                                  //  by default, don't use reference Partial
@@ -1353,6 +1356,7 @@ Morpher::appendMorphedSrc( const Breakpoint & srcBkpt, const Partial & tgtPartia
         Breakpoint morphed = interpolateParameters( srcBkpt, tgtBkpt, fweight, 
                                                     aweight, _ampMorphShape, bweight );
 
+#if defined( MORPH_PHASE_TRAVEL )
         // correct phase travel:
         if ( 0 != newp.numBreakpoints() )
         {
@@ -1363,7 +1367,8 @@ Morpher::appendMorphedSrc( const Breakpoint & srcBkpt, const Partial & tgtPartia
                                                        dt, fweight ) );
             morphPhaseTravel( newp.last(), morphed, dt, fweight );
         }
-    
+#endif
+ 
         newp.insert( time, morphed );
     }
 }
@@ -1408,6 +1413,7 @@ Morpher::appendMorphedTgt( const Breakpoint & tgtBkpt, const Partial & srcPartia
     Breakpoint morphed = interpolateParameters( srcBkpt, tgtBkpt, fweight, 
                                                 aweight, _ampMorphShape, bweight );
 
+#if defined( MORPH_PHASE_TRAVEL )
     // correct phase travel:
     if ( 0 != newp.numBreakpoints() )
     {
@@ -1418,6 +1424,7 @@ Morpher::appendMorphedTgt( const Breakpoint & tgtBkpt, const Partial & srcPartia
                                                    dt, fweight ) );
         morphPhaseTravel( newp.last(), morphed, dt, fweight );
     }
+#endif
 
     newp.insert( time, morphed );
 }
