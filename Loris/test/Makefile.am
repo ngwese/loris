@@ -12,77 +12,43 @@ EXTRA_DIST = clarinet.aiff flute.aiff fromKyma.spc morphtest.py
 
 MAINTAINERCLEANFILES = Makefile.in
 
-INCLUDES = -I$(top_srcdir)/src
+AM_CPPFLAGS = -I$(top_srcdir)/src
 
 # simple morphing test
 test_cpp_SOURCES = morphtest.C
-if DARWIN
-test_cpp_LDADD = $(top_builddir)/src/.libs/libloris.a $(LINK_FFTW)
-else
 test_cpp_LDADD = $(top_builddir)/src/libloris.la
-endif
 
 # procedural interface test
 test_pi_SOURCES = pitest.c
 # Darwin is special, dynamic linking sometimes seems to fail 
 # on this test, can't figure it out.
-if DARWIN
-test_pi_LDADD = $(top_builddir)/src/.libs/libloris.a $(LINK_FFTW) -lstdc++
-else
 test_pi_LDADD = $(top_builddir)/src/libloris.la -lstdc++
-endif
 
 # Morpher unit tests
 test_morpher_SOURCES = test_Morpher.C
 # Darwin is special, dynamic linking sometimes seems to fail 
 # on this test, can't figure it out.
-if DARWIN
-test_morpher_LDADD = $(top_builddir)/src/.libs/libloris.a
-else
 test_morpher_LDADD = $(top_builddir)/src/libloris.la
-endif
 
 # Partial unit tests
 test_partial_SOURCES = test_Partial.C
-# Darwin is special, dynamic linking sometimes seems to fail 
-# on this test, can't figure it out.
-if DARWIN
-test_partial_LDADD = $(top_builddir)/src/.libs/libloris.a
-else
 test_partial_LDADD = $(top_builddir)/src/libloris.la
-endif
 
 # Distiller unit tests
 test_distiller_SOURCES = test_Distiller.C
-if DARWIN
-test_distiller_LDADD = $(top_builddir)/src/.libs/libloris.a
-else
 test_distiller_LDADD = $(top_builddir)/src/libloris.la
-endif
 
 # SdifFile unit tests
 test_sdiffile_SOURCES = test_SdifFile.C
-if DARWIN
-test_sdiffile_LDADD = $(top_builddir)/src/.libs/libloris.a
-else
 test_sdiffile_LDADD = $(top_builddir)/src/libloris.la
-endif
 
 # AiffFile (and SpcFile) unit tests
 test_aiff_SOURCES = test_Aiff.C
-if DARWIN
-test_aiff_LDADD = $(top_builddir)/src/.libs/libloris.a $(LINK_FFTW)
-else
 test_aiff_LDADD = $(top_builddir)/src/libloris.la
-endif
 
 # synthesis/analysis identity test
 test_identity_SOURCES = test_Identity.C
-if DARWIN
-test_identity_LDADD = $(top_builddir)/src/.libs/libloris.a $(LINK_FFTW)
-else
 test_identity_LDADD = $(top_builddir)/src/libloris.la
-endif
 
 if BUILD_PYTHON
 PYTHON_TEST = run_pytest

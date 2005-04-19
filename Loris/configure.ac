@@ -279,12 +279,16 @@ if test "$USEPYTHON" == "yes" ; then
 		PYBINDIR="`AS_DIRNAME([$PYTHON])`"
 		PYPREFDIR="`AS_DIRNAME([$PYBINDIR])`"
 		PYINCLUDE="$PYPREFDIR/include/python$PYTHON_VERSION"  
+
+		dnl try compiling with $PYINCLUDE in the header path
+		SAVEFLAGS="$CPPFLAGS"
+		CPPFLAGS="-I$PYINCLUDE $CPPFLAGS"
 		AC_MSG_CHECKING(for Python.h header file)
-		AC_CHECK_HEADERS([$PYINCLUDE/Python.h],[
+		AC_CHECK_HEADERS([Python.h],[
 			dnl check whether this version of Python supports
 			dnl the new style of iterators
 			AC_MSG_CHECKING(for PyExc_StopIteration defined in Python.h)
-			AC_TRY_COMPILE(	[ #include <$PYINCLUDE/Python.h>;], 
+			AC_TRY_COMPILE(	[ #include <Python.h>;], 
 							[ PyErr_SetString( PyExc_StopIteration, ""); ], 
 				[
 					AC_MSG_RESULT(yep)
@@ -297,6 +301,7 @@ if test "$USEPYTHON" == "yes" ; then
 			AC_MSG_WARN([Cannot find Python headers. Python support disabled.])
 			PYTHON=
 		])
+		CPPFLAGS="$SAVEFLAGS"
 	else
 		AC_MSG_WARN([Cannot find Python. Python support disabled.])
 	fi
