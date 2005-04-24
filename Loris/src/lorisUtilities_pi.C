@@ -94,7 +94,7 @@ struct CallWithPointer : public std::unary_function< Partial, void >
 
 struct PredWithPointer : public std::unary_function< const Partial, bool >
 {
-	typedef bool (* Pred)( const Partial *, void * );
+	typedef int (* Pred)( const Partial *, void * );
 	Pred pred;
 	void * data;
 	
@@ -109,8 +109,8 @@ struct PredWithPointer : public std::unary_function< const Partial, bool >
 /* ---------------------------------------------------------------- */
 /*		utility functions
 /*
-/*	These procedures are generally useful but are not yet  
-	represented by classes in the Loris core.
+/*	Operations for transforming and manipulating collections
+   of Partials.
  */
  
 /* ---------------------------------------------------------------- */
@@ -118,13 +118,13 @@ struct PredWithPointer : public std::unary_function< const Partial, bool >
 /*	Append copies of Partials in the source PartialList satisfying the
 	specified predicate to the destination PartialList. The source list
 	is unmodified. The data parameter can be used to 
-    supply extra user-defined data to the function. Pass 0 if no 
-    additional data is needed.
+   supply extra user-defined data to the function. Pass 0 if no 
+   additional data is needed.
  */
 extern "C"
 void copyIf( const PartialList * src, PartialList * dst, 
-			 bool ( * predicate )( const Partial * p, void * data ),
-			 void * data )
+			    int ( * predicate )( const Partial * p, void * data ),
+			    void * data )
 {
 	try 
 	{
@@ -222,8 +222,8 @@ void crop( PartialList * partials, double t1, double t2 )
  */
 extern "C"
 void extractIf( PartialList * src, PartialList * dst, 
-			 	bool ( * predicate )( const Partial * p, void * data ),
-			 	void * data )
+                int ( * predicate )( const Partial * p, void * data ),
+			 	    void * data )
 {
 	try 
 	{
@@ -297,8 +297,8 @@ void extractLabeled( PartialList * src, long label, PartialList * dst )
 	forEachBreakpoint returns zero if all calls to func return zero.
  */
 int forEachBreakpoint( Partial * p,
-		 			   int ( * func )( Breakpoint * p, double time, void * data ),
-			 		   void * data )
+		 			        int ( * func )( Breakpoint * p, double time, void * data ),
+			 		        void * data )
 {
 	int result = 0;
 	try 
@@ -384,8 +384,8 @@ int forEachPartial( PartialList * src,
  */
 extern "C"
 void removeIf( PartialList * src, 
-			   bool ( * predicate )( const Partial * p, void * data ),
-			   void * data )
+			      int ( * predicate )( const Partial * p, void * data ),
+			      void * data )
 {
 	try 
 	{

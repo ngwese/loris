@@ -2929,15 +2929,8 @@ static PartialList *Analyzer_analyze__SWIG_1(Analyzer *self,std::vector<double >
 			partials->splice( partials->end(), self->partials() );
 			return partials;
 		}
-static BreakpointEnvelope *BreakpointEnvelope_copy(BreakpointEnvelope *self){
-			return new BreakpointEnvelope( *self );
-		}
 
-	BreakpointEnvelope *
-	BreakpointEnvelopeWithValue( double initialValue )
-	{
-		return new BreakpointEnvelope( initialValue );
-	}
+typedef BreakpointEnvelope LinearEnvelope;
 
 static SdifFile *new_SdifFile__SWIG_2(PartialList *l){
 			return new SdifFile( l->begin(), l->end() );
@@ -9843,6 +9836,49 @@ static PyObject *_wrap_new_BreakpointEnvelope__SWIG_0(PyObject *, PyObject *args
 
 static PyObject *_wrap_new_BreakpointEnvelope__SWIG_1(PyObject *, PyObject *args) {
     PyObject *resultobj;
+    BreakpointEnvelope *arg1 = 0 ;
+    BreakpointEnvelope *result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:new_BreakpointEnvelope",&obj0)) goto fail;
+    {
+        SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_BreakpointEnvelope, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(1)) SWIG_fail;
+        if (arg1 == NULL) {
+            SWIG_null_ref("BreakpointEnvelope");
+        }
+        if (SWIG_arg_fail(1)) SWIG_fail;
+    }
+    {
+        try
+        {
+            result = (BreakpointEnvelope *)new BreakpointEnvelope((BreakpointEnvelope const &)*arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_BreakpointEnvelope, 1);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_new_BreakpointEnvelope__SWIG_2(PyObject *, PyObject *args) {
+    PyObject *resultobj;
     double arg1 ;
     BreakpointEnvelope *result;
     PyObject * obj0 = 0 ;
@@ -9894,9 +9930,24 @@ static PyObject *_wrap_new_BreakpointEnvelope(PyObject *self, PyObject *args) {
     }
     if (argc == 1) {
         int _v;
-        _v = SWIG_Check_double(argv[0]);
+        {
+            void *ptr = 0;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_BreakpointEnvelope, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = (ptr != 0);
+            }
+        }
         if (_v) {
             return _wrap_new_BreakpointEnvelope__SWIG_1(self,args);
+        }
+    }
+    if (argc == 1) {
+        int _v;
+        _v = SWIG_Check_double(argv[0]);
+        if (_v) {
+            return _wrap_new_BreakpointEnvelope__SWIG_2(self,args);
         }
     }
     
@@ -9935,43 +9986,6 @@ static PyObject *_wrap_delete_BreakpointEnvelope(PyObject *, PyObject *args) {
         }
     }
     Py_INCREF(Py_None); resultobj = Py_None;
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_BreakpointEnvelope_copy(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    BreakpointEnvelope *arg1 = (BreakpointEnvelope *) 0 ;
-    BreakpointEnvelope *result;
-    PyObject * obj0 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"O:BreakpointEnvelope_copy",&obj0)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_BreakpointEnvelope, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    {
-        try
-        {
-            result = (BreakpointEnvelope *)BreakpointEnvelope_copy(arg1);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_BreakpointEnvelope, 1);
     return resultobj;
     fail:
     return NULL;
@@ -10078,21 +10092,15 @@ static PyObject * BreakpointEnvelope_swigregister(PyObject *, PyObject *args) {
     Py_INCREF(obj);
     return Py_BuildValue((char *)"");
 }
-static PyObject *_wrap_BreakpointEnvelopeWithValue(PyObject *, PyObject *args) {
+static PyObject *_wrap_new_LinearEnvelope__SWIG_0(PyObject *, PyObject *args) {
     PyObject *resultobj;
-    double arg1 ;
-    BreakpointEnvelope *result;
-    PyObject * obj0 = 0 ;
+    LinearEnvelope *result;
     
-    if(!PyArg_ParseTuple(args,(char *)"O:BreakpointEnvelopeWithValue",&obj0)) goto fail;
-    {
-        arg1 = (double)(SWIG_As_double(obj0)); 
-        if (SWIG_arg_fail(1)) SWIG_fail;
-    }
+    if(!PyArg_ParseTuple(args,(char *)":new_LinearEnvelope")) goto fail;
     {
         try
         {
-            result = (BreakpointEnvelope *)BreakpointEnvelopeWithValue(arg1);
+            result = (LinearEnvelope *)new LinearEnvelope();
             
         }
         catch( Loris::Exception & ex ) 
@@ -10117,6 +10125,264 @@ static PyObject *_wrap_BreakpointEnvelopeWithValue(PyObject *, PyObject *args) {
 }
 
 
+static PyObject *_wrap_new_LinearEnvelope__SWIG_1(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    LinearEnvelope *arg1 = 0 ;
+    LinearEnvelope *result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:new_LinearEnvelope",&obj0)) goto fail;
+    {
+        SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_BreakpointEnvelope, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(1)) SWIG_fail;
+        if (arg1 == NULL) {
+            SWIG_null_ref("LinearEnvelope");
+        }
+        if (SWIG_arg_fail(1)) SWIG_fail;
+    }
+    {
+        try
+        {
+            result = (LinearEnvelope *)new LinearEnvelope((BreakpointEnvelope const &)*arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_BreakpointEnvelope, 1);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_new_LinearEnvelope__SWIG_2(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    double arg1 ;
+    LinearEnvelope *result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:new_LinearEnvelope",&obj0)) goto fail;
+    {
+        arg1 = (double)(SWIG_As_double(obj0)); 
+        if (SWIG_arg_fail(1)) SWIG_fail;
+    }
+    {
+        try
+        {
+            result = (LinearEnvelope *)new LinearEnvelope(arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_BreakpointEnvelope, 1);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_new_LinearEnvelope(PyObject *self, PyObject *args) {
+    int argc;
+    PyObject *argv[2];
+    int ii;
+    
+    argc = PyObject_Length(args);
+    for (ii = 0; (ii < argc) && (ii < 1); ii++) {
+        argv[ii] = PyTuple_GetItem(args,ii);
+    }
+    if (argc == 0) {
+        return _wrap_new_LinearEnvelope__SWIG_0(self,args);
+    }
+    if (argc == 1) {
+        int _v;
+        {
+            void *ptr = 0;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_BreakpointEnvelope, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = (ptr != 0);
+            }
+        }
+        if (_v) {
+            return _wrap_new_LinearEnvelope__SWIG_1(self,args);
+        }
+    }
+    if (argc == 1) {
+        int _v;
+        _v = SWIG_Check_double(argv[0]);
+        if (_v) {
+            return _wrap_new_LinearEnvelope__SWIG_2(self,args);
+        }
+    }
+    
+    PyErr_SetString(PyExc_NotImplementedError,"No matching function for overloaded 'new_LinearEnvelope'");
+    return NULL;
+}
+
+
+static PyObject *_wrap_delete_LinearEnvelope(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    LinearEnvelope *arg1 = (LinearEnvelope *) 0 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:delete_LinearEnvelope",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_BreakpointEnvelope, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        try
+        {
+            delete arg1;
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_LinearEnvelope_insertBreakpoint(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    LinearEnvelope *arg1 = (LinearEnvelope *) 0 ;
+    double arg2 ;
+    double arg3 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    PyObject * obj2 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OOO:LinearEnvelope_insertBreakpoint",&obj0,&obj1,&obj2)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_BreakpointEnvelope, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        arg2 = (double)(SWIG_As_double(obj1)); 
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    {
+        arg3 = (double)(SWIG_As_double(obj2)); 
+        if (SWIG_arg_fail(3)) SWIG_fail;
+    }
+    {
+        try
+        {
+            (arg1)->insertBreakpoint(arg2,arg3);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_LinearEnvelope_valueAt(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    LinearEnvelope *arg1 = (LinearEnvelope *) 0 ;
+    double arg2 ;
+    double result;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:LinearEnvelope_valueAt",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_BreakpointEnvelope, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        arg2 = (double)(SWIG_As_double(obj1)); 
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    {
+        try
+        {
+            result = (double)((LinearEnvelope const *)arg1)->valueAt(arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    {
+        resultobj = SWIG_From_double((double)(result)); 
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject * LinearEnvelope_swigregister(PyObject *, PyObject *args) {
+    PyObject *obj;
+    if (!PyArg_ParseTuple(args,(char*)"O", &obj)) return NULL;
+    SWIG_TypeClientData(SWIGTYPE_p_BreakpointEnvelope, obj);
+    Py_INCREF(obj);
+    return Py_BuildValue((char *)"");
+}
 static PyObject *_wrap_new_SdifFile__SWIG_0(PyObject *, PyObject *args) {
     PyObject *resultobj;
     char *arg1 = (char *) 0 ;
@@ -14606,11 +14872,14 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"Analyzer_swigregister", Analyzer_swigregister, METH_VARARGS, NULL},
 	 { (char *)"new_BreakpointEnvelope", _wrap_new_BreakpointEnvelope, METH_VARARGS, NULL},
 	 { (char *)"delete_BreakpointEnvelope", _wrap_delete_BreakpointEnvelope, METH_VARARGS, NULL},
-	 { (char *)"BreakpointEnvelope_copy", _wrap_BreakpointEnvelope_copy, METH_VARARGS, NULL},
 	 { (char *)"BreakpointEnvelope_insertBreakpoint", _wrap_BreakpointEnvelope_insertBreakpoint, METH_VARARGS, NULL},
 	 { (char *)"BreakpointEnvelope_valueAt", _wrap_BreakpointEnvelope_valueAt, METH_VARARGS, NULL},
 	 { (char *)"BreakpointEnvelope_swigregister", BreakpointEnvelope_swigregister, METH_VARARGS, NULL},
-	 { (char *)"BreakpointEnvelopeWithValue", _wrap_BreakpointEnvelopeWithValue, METH_VARARGS, NULL},
+	 { (char *)"new_LinearEnvelope", _wrap_new_LinearEnvelope, METH_VARARGS, NULL},
+	 { (char *)"delete_LinearEnvelope", _wrap_delete_LinearEnvelope, METH_VARARGS, NULL},
+	 { (char *)"LinearEnvelope_insertBreakpoint", _wrap_LinearEnvelope_insertBreakpoint, METH_VARARGS, NULL},
+	 { (char *)"LinearEnvelope_valueAt", _wrap_LinearEnvelope_valueAt, METH_VARARGS, NULL},
+	 { (char *)"LinearEnvelope_swigregister", LinearEnvelope_swigregister, METH_VARARGS, NULL},
 	 { (char *)"delete_SdifFile", _wrap_delete_SdifFile, METH_VARARGS, NULL},
 	 { (char *)"SdifFile_write", _wrap_SdifFile_write, METH_VARARGS, NULL},
 	 { (char *)"SdifFile_write1TRC", _wrap_SdifFile_write1TRC, METH_VARARGS, NULL},
@@ -14721,7 +14990,7 @@ static swig_type_info _swigt__p_std__allocatorTdouble_t[] = {{"_p_std__allocator
 static swig_type_info _swigt__p_size_type[] = {{"_p_size_type", 0, "size_type *", 0, 0, 0, 0},{"_p_size_type", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_std__vectorTdouble_std__allocatorTdouble_t_t[] = {{"_p_std__vectorTdouble_std__allocatorTdouble_t_t", 0, "std::vector<double > *", 0, 0, 0, 0},{"_p_std__vectorTdouble_std__allocatorTdouble_t_t", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_char[] = {{"_p_char", 0, "char *", 0, 0, 0, 0},{"_p_char", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
-static swig_type_info _swigt__p_BreakpointEnvelope[] = {{"_p_BreakpointEnvelope", 0, "BreakpointEnvelope *", 0, 0, 0, 0},{"_p_BreakpointEnvelope", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_BreakpointEnvelope[] = {{"_p_BreakpointEnvelope", 0, "BreakpointEnvelope *|LinearEnvelope *", 0, 0, 0, 0},{"_p_BreakpointEnvelope", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_BreakpointPosition[] = {{"_p_BreakpointPosition", 0, "BreakpointPosition *", 0, 0, 0, 0},{"_p_BreakpointPosition", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_value_type[] = {{"_p_value_type", 0, "value_type *", 0, 0, 0, 0},{"_p_value_type", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_difference_type[] = {{"_p_difference_type", 0, "difference_type *", 0, 0, 0, 0},{"_p_difference_type", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
@@ -15113,8 +15382,8 @@ SWIGEXPORT(void) SWIG_init(void) {
     SWIG_InstallConstants(d,swig_const_table);
     
     
-    Loris::setNotifier( printf_notifier );
-    Loris::setExceptionHandler( throw_exception );
+    setNotifier( printf_notifier );
+    setExceptionHandler( throw_exception );
     
 }
 

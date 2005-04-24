@@ -933,6 +933,8 @@ class Analyzer(_object):
 
         Analyze a vector of (mono) samples at the given sample rate 	  	
         (in Hz) and return the resulting Partials in a PartialList.
+        If specified, use a frequency envelope as a fundamental reference for
+        Partial formation.
         """
         return _loris.Analyzer_analyze(*args)
 
@@ -1017,7 +1019,11 @@ class AnalyzerPtr(Analyzer):
 _loris.Analyzer_swigregister(AnalyzerPtr)
 
 class BreakpointEnvelope(_object):
-    """Proxy of C++ BreakpointEnvelope class"""
+    """
+    Proxy of C++ BreakpointEnvelope class
+
+    BreakpointEnvelope is deprecated, use LinearEnvelope instead.
+    """
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, BreakpointEnvelope, name, value)
     __swig_getmethods__ = {}
@@ -1027,7 +1033,10 @@ class BreakpointEnvelope(_object):
     def __init__(self, *args):
         """
         __init__(self) -> BreakpointEnvelope
+        __init__(self, ??) -> BreakpointEnvelope
         __init__(self, initialValue) -> BreakpointEnvelope
+
+        BreakpointEnvelope is deprecated, use LinearEnvelope instead.
         """
         _swig_setattr(self, BreakpointEnvelope, 'this', _loris.new_BreakpointEnvelope(*args))
         _swig_setattr(self, BreakpointEnvelope, 'thisown', 1)
@@ -1036,10 +1045,6 @@ class BreakpointEnvelope(_object):
         try:
             if self.thisown: destroy(self)
         except: pass
-
-    def copy(*args): 
-        """copy(self) -> BreakpointEnvelope"""
-        return _loris.BreakpointEnvelope_copy(*args)
 
     def insertBreakpoint(*args): 
         """insertBreakpoint(self, time, value)"""
@@ -1057,10 +1062,72 @@ class BreakpointEnvelopePtr(BreakpointEnvelope):
         _swig_setattr(self, BreakpointEnvelope,self.__class__,BreakpointEnvelope)
 _loris.BreakpointEnvelope_swigregister(BreakpointEnvelopePtr)
 
+class LinearEnvelope(_object):
+    """
+    Proxy of C++ LinearEnvelope class
 
-def BreakpointEnvelopeWithValue(*args):
-    """BreakpointEnvelopeWithValue(initialValue) -> BreakpointEnvelope"""
-    return _loris.BreakpointEnvelopeWithValue(*args)
+    A LinearEnvelope represents a linear segment breakpoint 
+    function with infinite extension at each end (that is, the 
+    values past either end of the breakpoint function have the 
+    values at the nearest end).
+    """
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, LinearEnvelope, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, LinearEnvelope, name)
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ LinearEnvelope instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    def __init__(self, *args):
+        """
+        __init__(self) -> LinearEnvelope
+        __init__(self, ??) -> LinearEnvelope
+        __init__(self, initialValue) -> LinearEnvelope
+
+        Construct and return a new LinearEnvelope, empty,
+        or having a single breakpoint at time 0 with the 
+        specified value.
+
+        An LinearEnvelope can also be copied from another
+        instance.
+        """
+        _swig_setattr(self, LinearEnvelope, 'this', _loris.new_LinearEnvelope(*args))
+        _swig_setattr(self, LinearEnvelope, 'thisown', 1)
+    def __del__(self, destroy=_loris.delete_LinearEnvelope):
+        """
+        __del__(self)
+
+        Destroy this LinearEnvelope.
+        """
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+    def insertBreakpoint(*args): 
+        """
+        insertBreakpoint(self, time, value)
+
+        Insert a new breakpoint into the envelope at the specified
+        time and value.
+        """
+        return _loris.LinearEnvelope_insertBreakpoint(*args)
+
+    def valueAt(*args): 
+        """
+        valueAt(self, x) -> double
+
+        Return the (linearly-interpolated) value of the envelope
+        at the specified time.
+        """
+        return _loris.LinearEnvelope_valueAt(*args)
+
+
+class LinearEnvelopePtr(LinearEnvelope):
+    def __init__(self, this):
+        _swig_setattr(self, LinearEnvelope, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, LinearEnvelope, 'thisown', 0)
+        _swig_setattr(self, LinearEnvelope,self.__class__,LinearEnvelope)
+_loris.LinearEnvelope_swigregister(LinearEnvelopePtr)
+
 class SdifFile(_object):
     """Proxy of C++ SdifFile class"""
     __swig_setmethods__ = {}

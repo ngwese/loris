@@ -667,8 +667,8 @@ Analyzer::setFreqResolution( double x )
 //	setSidelobeLevel
 // ---------------------------------------------------------------------------
 //!	Set the sidelobe attenutation level for the Kaiser analysis window in
-//!	positive dB. More negative numbers (e.g. -90) give very good sidelobe 
-//!	rejection but cause the window to be longer in time. Less negative 
+//!	positive dB. Higher numbers (e.g. 90) give very good sidelobe 
+//!	rejection but cause the window to be longer in time. Lower 
 //!	numbers raise the level of the sidelobes, increasing the likelihood
 //!	of frequency-domain interference, but allow the window to be shorter
 //!	in time.

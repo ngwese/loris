@@ -99,7 +99,7 @@ else:
 print "avg frequency of first distilled clarinet partial is", f/n
 
 print 'shifting pitch of clarinet'
-loris.shiftPitch( clar, loris.BreakpointEnvelopeWithValue( -600 ) )
+loris.shiftPitch( clar, loris.BreakpointEnvelope( -600 ) )
 
 # check clarinet synthesis:
 loris.exportAiff( 'clarOK.pytest.aiff', loris.synthesize( clar, samplerate ), samplerate, 16 )

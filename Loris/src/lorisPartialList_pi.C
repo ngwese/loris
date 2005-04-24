@@ -615,11 +615,11 @@ void partial_setLabel( Partial * p, int label )
  */ 
 
 /* ---------------------------------------------------------------- */
-/*        breakpoint_frequency        
+/*        breakpoint_getFrequency        
 /*
 /*	Return the frequency (Hz) of the specified Breakpoint.
  */
-double breakpoint_frequency( const Breakpoint * bp )
+double breakpoint_getFrequency( const Breakpoint * bp )
 {
     double ret = 0;
 	try 
@@ -630,13 +630,13 @@ double breakpoint_frequency( const Breakpoint * bp )
 	}
 	catch( Exception & ex ) 
 	{
-		std::string s("Loris exception in breakpoint_frequency(): " );
+		std::string s("Loris exception in breakpoint_getFrequency(): " );
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
 	catch( std::exception & ex ) 
 	{
-		std::string s("std C++ exception in breakpoint_frequency(): " );
+		std::string s("std C++ exception in breakpoint_getFrequency(): " );
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
@@ -644,11 +644,11 @@ double breakpoint_frequency( const Breakpoint * bp )
 }
 
 /* ---------------------------------------------------------------- */
-/*        breakpoint_amplitude        
+/*        breakpoint_getAmplitude        
 /*
 /* 	Return the (absolute) amplitude of the specified Breakpoint.
  */
-double breakpoint_amplitude( const Breakpoint * bp )
+double breakpoint_getAmplitude( const Breakpoint * bp )
 {
     double ret = 0;
 	try 
@@ -659,13 +659,13 @@ double breakpoint_amplitude( const Breakpoint * bp )
 	}
 	catch( Exception & ex ) 
 	{
-		std::string s("Loris exception in breakpoint_amplitude(): " );
+		std::string s("Loris exception in breakpoint_getAmplitude(): " );
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
 	catch( std::exception & ex ) 
 	{
-		std::string s("std C++ exception in breakpoint_amplitude(): " );
+		std::string s("std C++ exception in breakpoint_getAmplitude(): " );
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
@@ -673,11 +673,11 @@ double breakpoint_amplitude( const Breakpoint * bp )
 }
 
 /* ---------------------------------------------------------------- */
-/*        breakpoint_bandwidth        
+/*        breakpoint_getBandwidth        
 /*
 /*	Return the bandwidth coefficient of the specified Breakpoint.
  */
-double breakpoint_bandwidth( const Breakpoint * bp )
+double breakpoint_getBandwidth( const Breakpoint * bp )
 {
     double ret = 0;
 	try 
@@ -688,13 +688,13 @@ double breakpoint_bandwidth( const Breakpoint * bp )
 	}
 	catch( Exception & ex ) 
 	{
-		std::string s("Loris exception in breakpoint_bandwidth(): " );
+		std::string s("Loris exception in breakpoint_getBandwidth(): " );
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
 	catch( std::exception & ex ) 
 	{
-		std::string s("std C++ exception in breakpoint_bandwidth(): " );
+		std::string s("std C++ exception in breakpoint_getBandwidth(): " );
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
@@ -702,11 +702,11 @@ double breakpoint_bandwidth( const Breakpoint * bp )
 }
 
 /* ---------------------------------------------------------------- */
-/*        breakpoint_phase        
+/*        breakpoint_getPhase        
 /*
 /*	Return the phase (radians) of the specified Breakpoint.
  */
-double breakpoint_phase( const Breakpoint * bp )
+double breakpoint_getPhase( const Breakpoint * bp )
 {
     double ret = 0;
 	try 
@@ -717,13 +717,13 @@ double breakpoint_phase( const Breakpoint * bp )
 	}
 	catch( Exception & ex ) 
 	{
-		std::string s("Loris exception in breakpoint_phase(): " );
+		std::string s("Loris exception in breakpoint_getPhase(): " );
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
 	catch( std::exception & ex ) 
 	{
-		std::string s("std C++ exception in breakpoint_phase(): " );
+		std::string s("std C++ exception in breakpoint_getPhase(): " );
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}

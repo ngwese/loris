@@ -598,7 +598,7 @@ double analyzer_getFreqDrift( void )
    function.
  */
 extern "C"
-void analyzer_setFreqDrift( Analyzer * ptr_instance, double x )
+void analyzer_setFreqDrift( double x )
 {
    if ( 0 == ptr_instance )
    {

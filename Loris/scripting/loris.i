@@ -171,8 +171,8 @@ namespace std {
 
 %init 
 %{
-	Loris::setNotifier( printf_notifier );
-	Loris::setExceptionHandler( throw_exception );
+	setNotifier( printf_notifier );
+	setExceptionHandler( throw_exception );
 %}
 
 // ----------------------------------------------------------------
@@ -949,7 +949,9 @@ instance.") Analyzer;
 	{
 %feature("docstring",
 "Analyze a vector of (mono) samples at the given sample rate 	  	
-(in Hz) and return the resulting Partials in a PartialList.") analyze;
+(in Hz) and return the resulting Partials in a PartialList.
+If specified, use a frequency envelope as a fundamental reference for
+Partial formation.") analyze;
 
 		PartialList * analyze( const std::vector< double > & vec, double srate )
 		{
@@ -973,11 +975,6 @@ instance.") Analyzer;
 			partials->splice( partials->end(), self->partials() );
 			return partials;
 		}
-		/*	Analyze a vector of (mono) samples at the given sample rate 	  	
-			(in Hz) and return the resulting Partials in a PartialList. Use 
-			the specified frequency envelope as a fundamental reference for
-			Partial formation.
-		 */
 	}
 	
 	//	parameter access:
@@ -1005,49 +1002,73 @@ instance.") Analyzer;
 };	//	end of class Analyzer
 			
 // ---------------------------------------------------------------------------
-//	class BreakpointEnvelope
+//	class LinearEnvelope
 //
-//	A BreakpointEnvelope represents a linear segment breakpoint 
-//	function with infinite extension at each end (that is, the 
-//	values past either end of the breakpoint function have the 
-//	values at the nearest end).
-//
+// TODO: rename BreakpointEnvelope C++ class
+// to LinearEnvelope. For now, support both names
+// in scripting interface, but deprecate 
+// BreakpointEnvelope.
+
+%{
+typedef BreakpointEnvelope LinearEnvelope;
+%}
+
+%feature("docstring",
+"BreakpointEnvelope is deprecated, use LinearEnvelope instead.") BreakpointEnvelope;
 
 class BreakpointEnvelope
 {
 public:
-	//	construction:
 	BreakpointEnvelope( void );
+	BreakpointEnvelope( const BreakpointEnvelope & );
 	BreakpointEnvelope( double initialValue );
 	~BreakpointEnvelope( void );
-	
-	%extend 
-	{
-		BreakpointEnvelope * copy( void )
-		{
-			return new BreakpointEnvelope( *self );
-		}
-		/*	Construct and return a new BreakpointEnvelope that is
-			a copy of this BreapointEnvelope (has the same value
-			as this BreakpointEnvelope everywhere).			
-		 */
-	}
-
-	//	envelope access and mutation:
 	void insertBreakpoint( double time, double value );
 	double valueAt( double x ) const;		
+};
+
+%typedef BreakpointEnvelope LinearEnvelope;
+%feature("docstring",
+"A LinearEnvelope represents a linear segment breakpoint 
+function with infinite extension at each end (that is, the 
+values past either end of the breakpoint function have the 
+values at the nearest end).") LinearEnvelope;
+
+
+class LinearEnvelope
+{
+public:
+%feature("docstring",
+"Construct and return a new LinearEnvelope, empty,
+or having a single breakpoint at time 0 with the 
+specified value.
+
+An LinearEnvelope can also be copied from another
+instance.") LinearEnvelope;
+
+	LinearEnvelope( void );
+	LinearEnvelope( const LinearEnvelope & );
+	LinearEnvelope( double initialValue );
+   
+   
+%feature("docstring",
+"Destroy this LinearEnvelope.") ~LinearEnvelope;
+   
+	~LinearEnvelope( void );
+	
+%feature("docstring",
+"Insert a new breakpoint into the envelope at the specified
+time and value.") insertBreakpoint;
+
+	void insertBreakpoint( double time, double value );
+
+%feature("docstring",
+"Return the (linearly-interpolated) value of the envelope
+at the specified time.") valueAt; 
+
+	double valueAt( double x ) const;		
 	 
-};	//	end of class BreakpointEnvelope
-
-%newobject BreakpointEnvelopeWithValue;
-
-%inline %{
-	BreakpointEnvelope *
-	BreakpointEnvelopeWithValue( double initialValue )
-	{
-		return new BreakpointEnvelope( initialValue );
-	}
-%}
+};	//	end of class LinearEnvelope
 
 // ---------------------------------------------------------------------------
 //	class SdifFile

@@ -50,10 +50,10 @@ int main( void )
    
    PartialList * clar = createPartialList();
    PartialList * flut = createPartialList();
-   BreakpointEnvelope * reference = 0;
-   BreakpointEnvelope * pitchenv = createBreakpointEnvelope();
+   LinearEnvelope * reference = 0;
+   LinearEnvelope * pitchenv = createLinearEnvelope();
 
-   BreakpointEnvelope * morphenv = createBreakpointEnvelope();
+   LinearEnvelope * morphenv = createLinearEnvelope();
    PartialList * mrph = createPartialList();   
 
    double flute_times[] = {0.4, 1.};
@@ -87,7 +87,7 @@ int main( void )
    reference = createFreqReference( clar, 0, 1000, 20 );
    channelize( clar, reference, 1 );
    distill( clar );
-   destroyBreakpointEnvelope( reference );
+   destroyLinearEnvelope( reference );
    reference = 0;
    
    /* test SDIF import and export */
@@ -137,7 +137,7 @@ int main( void )
    reference = createFreqReference( flut, 0, 1000, 20 );
    channelize( flut, reference, 1 );
    distill( flut );
-   destroyBreakpointEnvelope( reference );
+   destroyLinearEnvelope( reference );
    reference = 0;
 
    /* check flute synthesis */

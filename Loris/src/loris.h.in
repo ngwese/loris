@@ -22,27 +22,25 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *
- *	loris.h
+ *    loris.h
  *
- *	Header specifying C-linkable procedural interface for Loris. 
+ *    Header specifying C-linkable procedural interface for Loris. 
  *
- *	Main components of this interface:
- *	- object interfaces - Analyzer, BreakpointEnvelope, PartialList, 
- *		and SampleVector need to be (opaque) objects in the interface, 
- * 		either because they hold state (e.g. Analyzer) or because they are 
- *		fundamental data types (e.g. Partial), so they need a procedural 
- *		interface to their member functions. All these things need to be 
- *		opaque pointers for the benefit of C.
- *	- non-object-based procedures - other classes in Loris are not so stateful,
- *		and have sufficiently narrow functionality that they need only 
- *		procedures, and no object representation.
- *	- utility functions - some procedures that are generally useful but are
- *		not part of the Loris core are also defined.
- *	- notification and exception handlers - all exceptions must be caught and
- *		handled internally, clients can specify an exception handler and 
- *		a notification function (the default one in Loris uses printf()).
+ *    Main components of this interface:
+ *    - version identification symbols
+ *    - type declarations
+ *    - Analyzer configuration
+ *    - LinearEnvelope (formerly BreakpointEnvelope) operations
+ *    - PartialList operations
+ *    - Partial operations
+ *    - Breakpoint operations
+ *    - sound modeling functions for preparing PartialLists
+ *    - utility functions for manipulating PartialLists
+ *    - notification and exception handlers (all exceptions must be caught and
+ *        handled internally, clients can specify an exception handler and 
+ *        a notification function. The default one in Loris uses printf()).
  *
- *	loris.h is generated automatically from loris.h.in. Do not modify loris.h
+ *    loris.h is generated automatically from loris.h.in. Do not modify loris.h
  *
  * Kelly Fitz, 4 Feb 2002
  * loris@cerlsoundgroup.org
@@ -52,9 +50,9 @@
  */
  
 /* ---------------------------------------------------------------- */
-/*		Loris version declarations
+/*      Version
 /*
-/*	Define symbols that facilitate version/release identification.
+/*  Define symbols that facilitate version/release identification.
  */
  
 #define LORIS_MAJOR_VERSION @LORIS_MAJOR_VERSION@
@@ -63,530 +61,545 @@
 #define LORIS_VERSION_STR "@LORIS_VERSION_STR@"
 
 /* ---------------------------------------------------------------- */
-/*		object type declarations
+/*      Types
 /*
-/*	The following opaque pointer types are exposed procedurally 
-	through this interface. Loris types and classes are all in the 
-	C++ namespace Loris. Collections from the standard namespace 
-	(namespace std) are also used.
+/* The (class) types Breakpoint, BreakpointEnvelope, Partial, 
+   and PartialList are imported from the Loris namespace.
+   The first three are classes, the latter is a typedef
+   for std::list< Loris::Partial >. 
  */
 #if defined(__cplusplus)
-	//	include std library headers, declaring template classes
-	//	is too painful and fragile:
-	#include <list>
-	
-	//	declare Loris classes in Loris namespace:
-	namespace Loris
-	{
-		class Breakpoint;
-		class BreakpointEnvelope;
-		class Partial;
-		//	this has to be copied from PartialList.h
-		typedef std::list< Loris::Partial > PartialList;
-	}
+    //    include std library list header, declaring templates
+    //    is too painful and fragile:
+    #include <list>
+    
+    //    declare Loris classes in Loris namespace:
+    namespace Loris
+    {
+        class Breakpoint;
+        class BreakpointEnvelope;
+        class Partial;
+      
+        //    this typedef has to be copied from PartialList.h
+        typedef std::list< Loris::Partial > PartialList;
+    }
+   
+   // import those names into the global namespace
+   using Loris::Breakpoint;
+   using Loris::BreakpointEnvelope;
+   typedef Loris::BreakpointEnvelope LinearEnvelope; 
+   using Loris::Partial;
+   using Loris::PartialList;
 #else 
-	/* no classes, just opaque C pointers */
-	typedef struct Breakpoint Breakpoint;
-	typedef struct BreakpointEnvelope BreakpointEnvelope;
-	typedef struct PartialList PartialList;
-	typedef struct Partial Partial;
+    /* no classes, just declare types and use
+      opaque C pointers 
+    */
+    typedef struct Breakpoint Breakpoint;
+    typedef struct LinearEnvelope LinearEnvelope;
+    typedef struct PartialList PartialList;
+    typedef struct Partial Partial;
 #endif
 
 /*
-	Maybe should also have loris_label_t and loris_size_t
-	defined, depending on configure.
+   TODO
+    Maybe should also have loris_label_t and loris_size_t
+    defined, depending on configure.
 */
 
 #if defined(__cplusplus)
-	namespace Loris {
-	extern "C" {
+    extern "C" {
 #endif
 
 /* ---------------------------------------------------------------- */
-/*		Analyzer object interface
+/*      Analyzer configuration
 /*
-/*	An Analyzer represents a configuration of parameters for
-	performing Reassigned Bandwidth-Enhanced Additive Analysis
-	of sampled waveforms. This analysis process yields a collection 
-	of Partials, each having a trio of synchronous, non-uniformly-
-	sampled breakpoint envelopes representing the time-varying 
-	frequency, amplitude, and noisiness of a single bandwidth-
-	enhanced sinusoid. 
+/*  An Analyzer represents a configuration of parameters for
+    performing Reassigned Bandwidth-Enhanced Additive Analysis
+    of sampled waveforms. This analysis process yields a collection 
+    of Partials, each having a trio of synchronous, non-uniformly-
+    sampled breakpoint envelopes representing the time-varying 
+    frequency, amplitude, and noisiness of a single bandwidth-
+    enhanced sinusoid. 
 
-	For more information about Reassigned Bandwidth-Enhanced 
-	Analysis and the Reassigned Bandwidth-Enhanced Additive Sound 
-	Model, refer to the Loris website: www.cerlsoundgroup.org/Loris/.
-	
-	In the procedural interface, there is only one Analyzer. 
-   It must be configured by calling analyzer_configure before
-   any of the other analyzer operations can be performed.
+    For more information about Reassigned Bandwidth-Enhanced 
+    Analysis and the Reassigned Bandwidth-Enhanced Additive Sound 
+    Model, refer to the Loris website: www.cerlsoundgroup.org/Loris/.
+    
+    In the procedural interface, there is only one Analyzer. 
+    It must be configured by calling analyzer_configure before
+    any of the other analyzer operations can be performed.
  */
 
-/*	Configure the sole Analyzer instance with the specified
-	frequency resolution (minimum instantaneous frequency	
-	difference between Partials). All other Analyzer parameters 	
-	are computed from the specified frequency resolution. 
-   
-   Construct the Analyzer instance if necessary.
-   
-	In the procedural interface, there is only one Analyzer. 
-   It must be configured by calling analyzer_configure before
-   any of the other analyzer operations can be performed.   
- */
-void analyzer_configure( double resolution, double windowWidth );
-
-/*	Analyze an array of bufferSize (mono) samples at the given sample rate 	  	
-	(in Hz) and append the extracted Partials to the given 
-	PartialList. 												
- */
 void analyze( const double * buffer, unsigned int bufferSize, 
               double srate, PartialList * partials );
+/*  Analyze an array of bufferSize (mono) samples at the given sample rate           
+    (in Hz) and append the extracted Partials to the given 
+    PartialList.                                                 
+ */
                        
-/*	Return the frequency resolution (minimum instantaneous frequency  		
-	difference between Partials) for this Analyzer. 	
+void analyzer_configure( double resolution, double windowWidth );
+/*  Configure the sole Analyzer instance with the specified
+    frequency resolution (minimum instantaneous frequency    
+    difference between Partials). All other Analyzer parameters     
+    are computed from the specified frequency resolution. 
+   
+    Construct the Analyzer instance if necessary.
+   
+    In the procedural interface, there is only one Analyzer. 
+    It must be configured by calling analyzer_configure before
+    any of the other analyzer operations can be performed.   
  */
-double analyzer_getFreqResolution( void );
 
-/*	Set the frequency resolution (minimum instantaneous frequency  		
-	difference between Partials) for this Analyzer. (Does not cause 	
-	other parameters to be recomputed.) 									
- */
-void analyzer_setFreqResolution( double x );
-
-/*	Return the amplitude floor (lowest detected spectral amplitude),  			
-	in (negative) dB, for this Analyzer. 				
- */
 double analyzer_getAmpFloor( void );
-
-/*	Set the amplitude floor (lowest detected spectral amplitude), in  			
-	(negative) dB, for this Analyzer. 				
+/*  Return the amplitude floor (lowest detected spectral amplitude),              
+    in (negative) dB, for this Analyzer.                 
  */
-void analyzer_setAmpFloor( double x );
 
-/*	Return the frequency-domain main lobe width (measured between 
-	zero-crossings) of the analysis window used by this Analyzer. 				
- */
-double analyzer_getWindowWidth( void );
-
-/*	Set the frequency-domain main lobe width (measured between 
-	zero-crossings) of the analysis window used by this Analyzer. 				
- */
-void analyzer_setWindowWidth( double x );
-
-/*	Return the sidelobe attenutation level for the Kaiser analysis window in
-	positive dB. More negative numbers (e.g. -90) give very good sidelobe 
-	rejection but cause the window to be longer in time. Less negative 
-	numbers raise the level of the sidelobes, increasing the likelihood
-	of frequency-domain interference, but allow the window to be shorter
-	in time.
- */
-double analyzer_getSidelobeLevel( void );
-
-/*	Set the sidelobe attenutation level for the Kaiser analysis window in
-	positive dB. More negative numbers (e.g. -90) give very good sidelobe 
-	rejection but cause the window to be longer in time. Less negative 
-	numbers raise the level of the sidelobes, increasing the likelihood
-	of frequency-domain interference, but allow the window to be shorter
-	in time.
- */
-void analyzer_setSidelobeLevel( double x );
-
-/*	Return the frequency floor (minimum instantaneous Partial  				
-	frequency), in Hz, for this Analyzer. 				
- */
-double analyzer_getFreqFloor( void );
-
-/*	Set the amplitude floor (minimum instantaneous Partial  				
-	frequency), in Hz, for this Analyzer.
- */
-void analyzer_setFreqFloor( double x );
-
-/*	Return the maximum allowable frequency difference between 					
-	consecutive Breakpoints in a Partial envelope for this Analyzer. 				
- */
-double analyzer_getFreqDrift( void );
-
-/*	Set the maximum allowable frequency difference between 					
-	consecutive Breakpoints in a Partial envelope for this Analyzer. 				
- */
-void analyzer_setFreqDrift( double x );
-
-/*	Return the hop time (which corresponds approximately to the 
-	average density of Partial envelope Breakpoint data) for this 
-	Analyzer.
- */
-double analyzer_getHopTime( void );
-
-/*	Set the hop time (which corresponds approximately to the average
-	density of Partial envelope Breakpoint data) for this Analyzer.
- */
-void analyzer_setHopTime( double x );
-
-/*	Return the crop time (maximum temporal displacement of a time-
-	frequency data point from the time-domain center of the analysis
-	window, beyond which data points are considered "unreliable")
-	for this Analyzer.
- */
-double analyzer_getCropTime( void );
-
-/*	Set the crop time (maximum temporal displacement of a time-
-	frequency data point from the time-domain center of the analysis
-	window, beyond which data points are considered "unreliable")
-	for this Analyzer.
- */
-void analyzer_setCropTime( double x );
-
-/*	Return the width (in Hz) of the Bandwidth Association regions
-	used by this Analyzer.
- */
 double analyzer_getBwRegionWidth( void );
-
-/*	Set the width (in Hz) of the Bandwidth Association regions
-	used by this Analyzer.
+/*  Return the width (in Hz) of the Bandwidth Association regions
+    used by this Analyzer.
  */
+
+double analyzer_getCropTime( void );
+/*  Return the crop time (maximum temporal displacement of a time-
+    frequency data point from the time-domain center of the analysis
+    window, beyond which data points are considered "unreliable")
+    for this Analyzer.
+ */
+
+double analyzer_getFreqDrift( void );
+/*  Return the maximum allowable frequency difference between                     
+    consecutive Breakpoints in a Partial envelope for this Analyzer.                 
+ */
+
+double analyzer_getFreqFloor( void );
+/*  Return the frequency floor (minimum instantaneous Partial                  
+    frequency), in Hz, for this Analyzer.                 
+ */
+
+double analyzer_getFreqResolution( void );
+/*  Return the frequency resolution (minimum instantaneous frequency          
+    difference between Partials) for this Analyzer.     
+ */
+
+double analyzer_getHopTime( void );
+/*  Return the hop time (which corresponds approximately to the 
+    average density of Partial envelope Breakpoint data) for this 
+    Analyzer.
+ */
+
+double analyzer_getSidelobeLevel( void );
+/*  Return the sidelobe attenutation level for the Kaiser analysis window in
+    positive dB. Higher numbers (e.g. 90) give very good sidelobe 
+    rejection but cause the window to be longer in time. Smaller 
+    numbers raise the level of the sidelobes, increasing the likelihood
+    of frequency-domain interference, but allow the window to be shorter
+    in time.
+ */
+
+double analyzer_getWindowWidth( void );
+/*  Return the frequency-domain main lobe width (measured between 
+    zero-crossings) of the analysis window used by this Analyzer.                 
+ */
+
+void analyzer_setAmpFloor( double x );
+/*  Set the amplitude floor (lowest detected spectral amplitude), in              
+    (negative) dB, for this Analyzer.                 
+ */
+
 void analyzer_setBwRegionWidth( double x );
+/*  Set the width (in Hz) of the Bandwidth Association regions
+    used by this Analyzer.
+ */
+
+void analyzer_setCropTime( double x );
+/*  Set the crop time (maximum temporal displacement of a time-
+    frequency data point from the time-domain center of the analysis
+    window, beyond which data points are considered "unreliable")
+    for this Analyzer.
+ */
+
+void analyzer_setFreqDrift( double x );
+/*  Set the maximum allowable frequency difference between                     
+    consecutive Breakpoints in a Partial envelope for this Analyzer.                 
+ */
+
+void analyzer_setFreqFloor( double x );
+/*  Set the amplitude floor (minimum instantaneous Partial                  
+    frequency), in Hz, for this Analyzer.
+ */
+
+void analyzer_setFreqResolution( double x );
+/*  Set the frequency resolution (minimum instantaneous frequency          
+    difference between Partials) for this Analyzer. (Does not cause     
+    other parameters to be recomputed.)                                     
+ */
+
+void analyzer_setHopTime( double x );
+/*  Set the hop time (which corresponds approximately to the average
+    density of Partial envelope Breakpoint data) for this Analyzer.
+ */
+
+void analyzer_setSidelobeLevel( double x );
+/*  Set the sidelobe attenutation level for the Kaiser analysis window in
+    positive dB. Larger numbers (e.g. 90) give very good sidelobe 
+    rejection but cause the window to be longer in time. Smaller 
+    numbers raise the level of the sidelobes, increasing the likelihood
+    of frequency-domain interference, but allow the window to be shorter
+    in time.
+ */
+
+void analyzer_setWindowWidth( double x );
+/*  Set the frequency-domain main lobe width (measured between 
+    zero-crossings) of the analysis window used by this Analyzer.                 
+ */
 
 /* ---------------------------------------------------------------- */
-/*		BreakpointEnvelope object interface								
+/*      LinearEnvelope object interface                                
 /*
-/*	A BreakpointEnvelope represents a linear segment breakpoint 
-	function with infinite extension at each end (that is, the 
-	values past either end of the breakpoint function have the 
-	values at the nearest end).
+/*  A LinearEnvelope represents a linear segment breakpoint 
+    function with infinite extension at each end (that is, the 
+    values past either end of the breakpoint function have the 
+    values at the nearest end).
 
-	In C++, a BreakpointEnvelope is a Loris::BreakpointEnvelope.
+    In C++, a LinearEnvelope is a Loris::BreakpointEnvelope.
  */
  
-BreakpointEnvelope * createBreakpointEnvelope( void );
-/*	Construct and return a new BreakpointEnvelope having no 
-	breakpoints and an implicit value of 0. everywhere, 
-	until the first breakpoint is inserted.			
+LinearEnvelope * createLinearEnvelope( void );
+/*  Construct and return a new LinearEnvelope having no 
+    breakpoints and an implicit value of 0. everywhere, 
+    until the first breakpoint is inserted.            
  */
 
-BreakpointEnvelope * copyBreakpointEnvelope( const BreakpointEnvelope * ptr_this );
-/*	Construct and return a new BreakpointEnvelope that is an
-	exact copy of the specified BreakpointEnvelopes, having 
-	an identical set of breakpoints.	
+LinearEnvelope * copyLinearEnvelope( const LinearEnvelope * ptr_this );
+/*  Construct and return a new LinearEnvelope that is an
+    exact copy of the specified LinearEnvelopes, having 
+    an identical set of breakpoints.    
  */
 
-void destroyBreakpointEnvelope( BreakpointEnvelope * ptr_this );
-/*	Destroy this BreakpointEnvelope. 								
+void destroyLinearEnvelope( LinearEnvelope * ptr_this );
+/*  Destroy this LinearEnvelope.                                 
  */
  
-void breakpointEnvelope_insertBreakpoint( BreakpointEnvelope * ptr_this,
-					double time, double val );
-/*	Insert a breakpoint representing the specified (time, value) 
-	pair into this BreakpointEnvelope. If there is already a 
-	breakpoint at the specified time, it will be replaced with 
-	the new breakpoint.
+void breakpointEnvelope_insertBreakpoint( LinearEnvelope * ptr_this,
+                                          double time, double val );
+/*  Insert a breakpoint representing the specified (time, value) 
+    pair into this LinearEnvelope. If there is already a 
+    breakpoint at the specified time, it will be replaced with 
+    the new breakpoint.
  */
 
-double breakpointEnvelope_valueAt( const BreakpointEnvelope * ptr_this, 
-								   double time );
-/*	Return the interpolated value of this BreakpointEnvelope at the 
-	specified time.							
+double breakpointEnvelope_valueAt( const LinearEnvelope * ptr_this, 
+                                   double time );
+/*  Return the interpolated value of this LinearEnvelope at the 
+    specified time.                            
  */
 
 /* ---------------------------------------------------------------- */
-/*		PartialList object interface
+/*      PartialList object interface
 /*
-/*	A PartialList represents a collection of Bandwidth-Enhanced 
-	Partials, each having a trio of synchronous, non-uniformly-
-	sampled breakpoint envelopes representing the time-varying 
-	frequency, amplitude, and noisiness of a single bandwidth-
-	enhanced sinusoid.
+/*  A PartialList represents a collection of Bandwidth-Enhanced 
+    Partials, each having a trio of synchronous, non-uniformly-
+    sampled breakpoint envelopes representing the time-varying 
+    frequency, amplitude, and noisiness of a single bandwidth-
+    enhanced sinusoid.
 
-	For more information about Bandwidth-Enhanced Partials and the  
-	Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
-	the Loris website: www.cerlsoundgroup.org/Loris/.
+    For more information about Bandwidth-Enhanced Partials and the  
+    Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
+    the Loris website: www.cerlsoundgroup.org/Loris/.
 
-	In C++, a PartialList is a Loris::PartialList.
+    In C++, a PartialList is a Loris::PartialList.
  */ 
 PartialList * createPartialList( void );
-/*	Return a new empty PartialList.
+/*  Return a new empty PartialList.
  */
+ 
 void destroyPartialList( PartialList * ptr_this );
-/*	Destroy this PartialList.
+/*  Destroy this PartialList.
  */
+ 
 void partialList_clear( PartialList * ptr_this );
-/*	Remove (and destroy) all the Partials from this PartialList,
-	leaving it empty.
+/*  Remove (and destroy) all the Partials from this PartialList,
+    leaving it empty.
  */
+ 
 void partialList_copy( PartialList * ptr_this, 
-					   const PartialList * src );
-/*	Make this PartialList a copy of the source PartialList by making
-	copies of all of the Partials in the source and adding them to 
-	this PartialList.
+                       const PartialList * src );
+/*  Make this PartialList a copy of the source PartialList by making
+    copies of all of the Partials in the source and adding them to 
+    this PartialList.
  */
+ 
 unsigned long partialList_size( const PartialList * ptr_this );
-/*	Return the number of Partials in this PartialList.
+/*  Return the number of Partials in this PartialList.
  */
+ 
 void partialList_splice( PartialList * ptr_this, 
-						 PartialList * src );
-/*	Splice all the Partials in the source PartialList onto the end of
-	this PartialList, leaving the source empty.
+                               PartialList * src );
+/*  Splice all the Partials in the source PartialList onto the end of
+    this PartialList, leaving the source empty.
  */
  
 /* ---------------------------------------------------------------- */
-/*		Partial object interface
+/*      Partial object interface
 /*
-/*	A Partial represents a single component in the
-	reassigned bandwidth-enhanced additive model. A Partial consists of a
-	chain of Breakpoints describing the time-varying frequency, amplitude,
-	and bandwidth (or noisiness) envelopes of the component, and a 4-byte
-	label. The Breakpoints are non-uniformly distributed in time. For more
-	information about Reassigned Bandwidth-Enhanced Analysis and the
-	Reassigned Bandwidth-Enhanced Additive Sound Model, refer to the Loris
-	website: www.cerlsoundgroup.org/Loris/.
+/*  A Partial represents a single component in the
+    reassigned bandwidth-enhanced additive model. A Partial consists of a
+    chain of Breakpoints describing the time-varying frequency, amplitude,
+    and bandwidth (or noisiness) envelopes of the component, and a 4-byte
+    label. The Breakpoints are non-uniformly distributed in time. For more
+    information about Reassigned Bandwidth-Enhanced Analysis and the
+    Reassigned Bandwidth-Enhanced Additive Sound Model, refer to the Loris
+    website: www.cerlsoundgroup.org/Loris/.
  */ 
 
-/*	Return the start time (seconds) for the specified Partial.
- */
 double partial_startTime( const Partial * p );
-
-/*	Return the end time (seconds) for the specified Partial.
+/*  Return the start time (seconds) for the specified Partial.
  */
+
 double partial_endTime( const Partial * p );
-
-/*	Return the duration (seconds) for the specified Partial.
+/*  Return the end time (seconds) for the specified Partial.
  */
+
 double partial_duration( const Partial * p );
-
-/*	Return the initial phase (radians) for the specified Partial.
+/*  Return the duration (seconds) for the specified Partial.
  */
+
 double partial_initialPhase( const Partial * p );
-
-/*	Return the integer label for the specified Partial.
+/*  Return the initial phase (radians) for the specified Partial.
  */
+
 int partial_label( const Partial * p );
-
-/*	Return the number of Breakpoints in the specified Partial.
+/*  Return the integer label for the specified Partial.
  */
+
 unsigned long partial_numBreakpoints( const Partial * p );
-
-/*	Return the frequency (Hz) of the specified Partial interpolated
-	at a particular time. It is an error to apply this function to
-	a Partial having no Breakpoints.
+/*  Return the number of Breakpoints in the specified Partial.
  */
+
 double partial_frequencyAt( const Partial * p, double t );
-
-/*	Return the bandwidth of the specified Partial interpolated
-	at a particular time. It is an error to apply this function to
-	a Partial having no Breakpoints.
+/*  Return the frequency (Hz) of the specified Partial interpolated
+    at a particular time. It is an error to apply this function to
+    a Partial having no Breakpoints.
  */
+
 double partial_bandwidthAt( const Partial * p, double t );
-
-/*	Return the phase (radians) of the specified Partial interpolated
-	at a particular time. It is an error to apply this function to
-	a Partial having no Breakpoints.
+/*  Return the bandwidth of the specified Partial interpolated
+    at a particular time. It is an error to apply this function to
+    a Partial having no Breakpoints.
  */
+
 double partial_phaseAt( const Partial * p, double t );
-
-/*	Return the (absolute) amplitude of the specified Partial interpolated
-	at a particular time. Partials are assumed to fade out
-	over 1 millisecond at the ends (rather than instantaneously).
-	It is an error to apply this function to a Partial having no Breakpoints.
+/*  Return the phase (radians) of the specified Partial interpolated
+    at a particular time. It is an error to apply this function to
+    a Partial having no Breakpoints.
  */
+
 double partial_amplitudeAt( const Partial * p, double t );
-
-/* 	Assign a new integer label to the specified Partial.
+/*  Return the (absolute) amplitude of the specified Partial interpolated
+    at a particular time. Partials are assumed to fade out
+    over 1 millisecond at the ends (rather than instantaneously).
+    It is an error to apply this function to a Partial having no Breakpoints.
  */
+
 void partial_setLabel( Partial * p, int label );
+/*   Assign a new integer label to the specified Partial.
+ */
 
 /* ---------------------------------------------------------------- */
-/*		Breakpoint object interface
+/*      Breakpoint object interface
 /*
-/*	A Breakpoint represents a single breakpoint in the
-	Partial parameter (frequency, amplitude, bandwidth) envelope.
-	Instantaneous phase is also stored, but is only used at the onset of 
-	a partial, or when it makes a transition from zero to nonzero amplitude.
-	
-	Loris Partials represent reassigned bandwidth-enhanced model components.
-	A Partial consists of a chain of Breakpoints describing the time-varying
-	frequency, amplitude, and bandwidth (noisiness) of the component.
-	For more information about Reassigned Bandwidth-Enhanced 
-	Analysis and the Reassigned Bandwidth-Enhanced Additive Sound 
-	Model, refer to the Loris website: 
-	www.cerlsoundgroup.org/Loris/.
+/*  A Breakpoint represents a single breakpoint in the
+    Partial parameter (frequency, amplitude, bandwidth) envelope.
+    Instantaneous phase is also stored, but is only used at the onset of 
+    a partial, or when it makes a transition from zero to nonzero amplitude.
+    
+    Loris Partials represent reassigned bandwidth-enhanced model components.
+    A Partial consists of a chain of Breakpoints describing the time-varying
+    frequency, amplitude, and bandwidth (noisiness) of the component.
+    For more information about Reassigned Bandwidth-Enhanced 
+    Analysis and the Reassigned Bandwidth-Enhanced Additive Sound 
+    Model, refer to the Loris website: 
+    www.cerlsoundgroup.org/Loris/.
  */ 
 
-/*	Return the frequency (Hz) of the specified Breakpoint.
+double breakpoint_getAmplitude( const Breakpoint * bp );
+/*   Return the (absolute) amplitude of the specified Breakpoint.
  */
-double breakpoint_frequency( const Breakpoint * bp );
 
-/* 	Return the (absolute) amplitude of the specified Breakpoint.
+double breakpoint_getBandwidth( const Breakpoint * bp );
+/*  Return the bandwidth coefficient of the specified Breakpoint.
  */
-double breakpoint_amplitude( const Breakpoint * bp );
 
-/*	Return the bandwidth coefficient of the specified Breakpoint.
+double breakpoint_getFrequency( const Breakpoint * bp );
+/*  Return the frequency (Hz) of the specified Breakpoint.
  */
-double breakpoint_bandwidth( const Breakpoint * bp );
 
-/*	Return the phase (radians) of the specified Breakpoint.
+double breakpoint_getPhase( const Breakpoint * bp );
+/*  Return the phase (radians) of the specified Breakpoint.
  */
-double breakpoint_phase( const Breakpoint * bp );
 
-/*	Assign a new frequency (Hz) to the specified Breakpoint.
- */
-void breakpoint_setFrequency( Breakpoint * bp, double f );
-
-/* 	Assign a new (absolute) amplitude to the specified Breakpoint.
- */
 void breakpoint_setAmplitude( Breakpoint * bp, double a );
-
-/*	Assign a new bandwidth coefficient to the specified Breakpoint.
+/*   Assign a new (absolute) amplitude to the specified Breakpoint.
  */
+
 void breakpoint_setBandwidth( Breakpoint * bp, double bw );
-
-/*	Assign a new phase (radians) to the specified Breakpoint.
+/*  Assign a new bandwidth coefficient to the specified Breakpoint.
  */
+
+void breakpoint_setFrequency( Breakpoint * bp, double f );
+/*  Assign a new frequency (Hz) to the specified Breakpoint.
+ */
+
 void breakpoint_setPhase( Breakpoint * bp, double phi );
+/*  Assign a new phase (radians) to the specified Breakpoint.
+ */
 
 /* ---------------------------------------------------------------- */
-/*		non-object-based procedures
+/*      non-object-based procedures
 /*
-/*	Operations in Loris that need not be accessed though object
-	interfaces are represented as simple functions.
+/*  Operations in Loris that need not be accessed though object
+    interfaces are represented as simple functions.
  */
 
 void channelize( PartialList * partials, 
-				     BreakpointEnvelope * refFreqEnvelope, int refLabel );
-/*	Label Partials in a PartialList with the integer nearest to
-	the amplitude-weighted average ratio of their frequency envelope
-	to a reference frequency envelope. The frequency spectrum is 
-	partitioned into non-overlapping channels whose time-varying 
-	center frequencies track the reference frequency envelope. 
-	The reference label indicates which channel's center frequency
-	is exactly equal to the reference envelope frequency, and other
-	channels' center frequencies are multiples of the reference 
-	envelope frequency divided by the reference label. Each Partial 
-	in the PartialList is labeled with the number of the channel
-	that best fits its frequency envelope. The quality of the fit
-	is evaluated at the breakpoints in the Partial envelope and
-	weighted by the amplitude at each breakpoint, so that high-
-	amplitude breakpoints contribute more to the channel decision.
-	Partials are labeled, but otherwise unmodified. In particular, 
-	their frequencies are not modified in any way.
+                 LinearEnvelope * refFreqEnvelope, int refLabel );
+/*  Label Partials in a PartialList with the integer nearest to
+    the amplitude-weighted average ratio of their frequency envelope
+    to a reference frequency envelope. The frequency spectrum is 
+    partitioned into non-overlapping channels whose time-varying 
+    center frequencies track the reference frequency envelope. 
+    The reference label indicates which channel's center frequency
+    is exactly equal to the reference envelope frequency, and other
+    channels' center frequencies are multiples of the reference 
+    envelope frequency divided by the reference label. Each Partial 
+    in the PartialList is labeled with the number of the channel
+    that best fits its frequency envelope. The quality of the fit
+    is evaluated at the breakpoints in the Partial envelope and
+    weighted by the amplitude at each breakpoint, so that high-
+    amplitude breakpoints contribute more to the channel decision.
+    Partials are labeled, but otherwise unmodified. In particular, 
+    their frequencies are not modified in any way.
  */
 
-BreakpointEnvelope * 
+LinearEnvelope * 
 createFreqReference( PartialList * partials, 
                      double minFreq, double maxFreq, long numSamps );
-/*	Return a newly-constructed BreakpointEnvelope by sampling the 
-	frequency envelope of the longest Partial in a PartialList. 
-	Only Partials whose frequency at the Partial's loudest (highest 
-	amplitude) breakpoint is within the given frequency range are 
-	considered. The envelope will have the specified number of samples.
-	If the specified number of samples is 0, then the
-	longest Partial's frequency envelope is sampled every 30 ms
-	(No fewer than 10 samples are used, so the sampling maybe more
-	dense for very short Partials.) 
-	
-	For very simple sounds, this frequency reference may be a 
-	good first approximation to a reference envelope for
-	channelization (see channelize()).
-	
-	Clients are responsible for disposing of the newly-constructed 
-	BreakpointEnvelope.
+/*  Return a newly-constructed LinearEnvelope by sampling the 
+    frequency envelope of the longest Partial in a PartialList. 
+    Only Partials whose frequency at the Partial's loudest (highest 
+    amplitude) breakpoint is within the given frequency range are 
+    considered. The envelope will have the specified number of samples.
+    If the specified number of samples is 0, then the
+    longest Partial's frequency envelope is sampled every 30 ms
+    (No fewer than 10 samples are used, so the sampling maybe more
+    dense for very short Partials.) 
+    
+    For very simple sounds, this frequency reference may be a 
+    good first approximation to a reference envelope for
+    channelization (see channelize()).
+    
+    Clients are responsible for disposing of the newly-constructed 
+    LinearEnvelope.
  */
  
 void dilate( PartialList * partials, 
-			    const double * initial, const double * target, int npts );
-/*	Dilate Partials in a PartialList according to the given 
-	initial and target time points. Partial envelopes are 
-	stretched and compressed so that temporal features at
-	the initial time points are aligned with the final time
-	points. Time points are sorted, so Partial envelopes are 
-	are only stretched and compressed, but breakpoints are not
-	reordered. Duplicate time points are allowed. There must be
-	the same number of initial and target time points.
+                const double * initial, const double * target, int npts );
+/*  Dilate Partials in a PartialList according to the given 
+    initial and target time points. Partial envelopes are 
+    stretched and compressed so that temporal features at
+    the initial time points are aligned with the final time
+    points. Time points are sorted, so Partial envelopes are 
+    are only stretched and compressed, but breakpoints are not
+    reordered. Duplicate time points are allowed. There must be
+    the same number of initial and target time points.
  */
 
 void distill( PartialList * partials );
-/*	Distill labeled (channelized)  Partials in a PartialList into a 
-	PartialList containing a single (labeled) Partial per label. 
-	The distilled PartialList will contain as many Partials as
-	there were non-zero labels in the original PartialList. Unlabeled 
-	(label 0) Partials are eliminated.
+/*  Distill labeled (channelized)  Partials in a PartialList into a 
+    PartialList containing a single (labeled) Partial per label. 
+    The distilled PartialList will contain as many Partials as
+    there were non-zero labels in the original PartialList. Unlabeled 
+    (label 0) Partials are eliminated.
  */
 
 void exportAiff( const char * path, const double * buffer, 
-				     unsigned int bufferSize, double samplerate, int bitsPerSamp );
-/*	Export mono audio samples stored in an array of size bufferSize to 
-	an AIFF file having the specified sample rate at the given file path 
-	(or name). The floating point samples in the buffer are clamped to the 
-	range (-1.,1.) and converted to integers having bitsPerSamp bits.
+                     unsigned int bufferSize, double samplerate, int bitsPerSamp );
+/*  Export mono audio samples stored in an array of size bufferSize to 
+    an AIFF file having the specified sample rate at the given file path 
+    (or name). The floating point samples in the buffer are clamped to the 
+    range (-1.,1.) and converted to integers having bitsPerSamp bits.
  */
-				 
+                 
 void exportSdif( const char * path, PartialList * partials );
-/*	Export Partials in a PartialList to a SDIF file at the specified
-	file path (or name). SDIF data is described by RBEM and RBEL 
-	matrices. 
-	For more information about SDIF, see the SDIF web site at:
-		www.ircam.fr/equipes/analyse-synthese/sdif/  
+/*  Export Partials in a PartialList to a SDIF file at the specified
+    file path (or name). SDIF data is described by RBEM and RBEL 
+    matrices. 
+    For more information about SDIF, see the SDIF web site at:
+        www.ircam.fr/equipes/analyse-synthese/sdif/  
  */
-				
+                
 void exportSpc( const char * path, PartialList * partials, double midiPitch, 
-				int enhanced, double endApproachTime );
-/*	Export Partials in a PartialList to a Spc file at the specified file
-	path (or name). The fractional MIDI pitch must be specified. The 
-	enhanced parameter defaults to true (for bandwidth-enhanced spc files), 
-	but an be specified false for pure-sines spc files. The endApproachTime 
-	parameter is in seconds. A nonzero endApproachTime indicates that the plist does 
-	not include a release, but rather ends in a static spectrum corresponding 
-	to the final breakpoint values of the partials. The endApproachTime
-	specifies how long before the end of the sound the amplitude, frequency, 
-	and bandwidth values are to be modified to make a gradual transition to 
-	the static spectrum.
+                int enhanced, double endApproachTime );
+/*  Export Partials in a PartialList to a Spc file at the specified file
+    path (or name). The fractional MIDI pitch must be specified. The 
+    enhanced parameter defaults to true (for bandwidth-enhanced spc files), 
+    but an be specified false for pure-sines spc files. The endApproachTime 
+    parameter is in seconds. A nonzero endApproachTime indicates that the plist does 
+    not include a release, but rather ends in a static spectrum corresponding 
+    to the final breakpoint values of the partials. The endApproachTime
+    specifies how long before the end of the sound the amplitude, frequency, 
+    and bandwidth values are to be modified to make a gradual transition to 
+    the static spectrum.
  */
  
 unsigned int importAiff( const char * path, double * buffer, unsigned int bufferSize, 
-						       double * samplerate );
-/*	Import audio samples stored in an AIFF file at the given file
-	path (or name). The samples are converted to floating point 
-	values on the range (-1.,1.) and stored in an array of doubles. 
-	The value returned is the number of samples in buffer, and it is at
-	most bufferSize. If samplerate is not a NULL pointer, 
-	then, on return, it points to the value of the sample rate (in
-	Hz) of the AIFF samples. The AIFF file must contain only a single
-	channel of audio data. The prior contents of buffer, if any, are 
-	overwritten.
+                               double * samplerate );
+/*  Import audio samples stored in an AIFF file at the given file
+    path (or name). The samples are converted to floating point 
+    values on the range (-1.,1.) and stored in an array of doubles. 
+    The value returned is the number of samples in buffer, and it is at
+    most bufferSize. If samplerate is not a NULL pointer, 
+    then, on return, it points to the value of the sample rate (in
+    Hz) of the AIFF samples. The AIFF file must contain only a single
+    channel of audio data. The prior contents of buffer, if any, are 
+    overwritten.
  */
 
 void importSdif( const char * path, PartialList * partials );
-/*	Import Partials from an SDIF file at the given file path (or 
-	name), and append them to a PartialList.
- */	
+/*  Import Partials from an SDIF file at the given file path (or 
+    name), and append them to a PartialList.
+ */    
 
 void importSpc( const char * path, PartialList * partials );
-/*	Import Partials from an Spc file at the given file path (or 
-	name), and return them in a PartialList.
- */	
+/*  Import Partials from an Spc file at the given file path (or 
+    name), and return them in a PartialList.
+ */    
 
 void morph( const PartialList * src0, const PartialList * src1, 
-			   const BreakpointEnvelope * ffreq, 
-			   const BreakpointEnvelope * famp, 
-			   const BreakpointEnvelope * fbw, 
-			   PartialList * dst );
-/*	Morph labeled Partials in two PartialLists according to the
-	given frequency, amplitude, and bandwidth (noisiness) morphing
-	envelopes, and append the morphed Partials to the destination 
-	PartialList. Loris morphs Partials by interpolating frequency,
-	amplitude, and bandwidth envelopes of corresponding Partials in 
-	the source PartialLists. For more information about the Loris
-	morphing algorithm, see the Loris website: 
-	www.cerlsoundgroup.org/Loris/
+               const LinearEnvelope * ffreq, 
+               const LinearEnvelope * famp, 
+               const LinearEnvelope * fbw, 
+               PartialList * dst );
+/*  Morph labeled Partials in two PartialLists according to the
+    given frequency, amplitude, and bandwidth (noisiness) morphing
+    envelopes, and append the morphed Partials to the destination 
+    PartialList. Loris morphs Partials by interpolating frequency,
+    amplitude, and bandwidth envelopes of corresponding Partials in 
+    the source PartialLists. For more information about the Loris
+    morphing algorithm, see the Loris website: 
+    www.cerlsoundgroup.org/Loris/
  */
 
 void resample( PartialList * partials, double interval );
 /*  Resample all Partials in a PartialList using the specified
-	sampling interval, so that the Breakpoints in the Partial 
-	envelopes will all lie on a common temporal grid.
-	The Breakpoint times in resampled Partials will comprise a  
-	contiguous sequence of integer multiples of the sampling interval,
-	beginning with the multiple nearest to the Partial's start time and
-	ending with the multiple nearest to the Partial's end time. Resampling
-	is performed in-place. 
+    sampling interval, so that the Breakpoints in the Partial 
+    envelopes will all lie on a common temporal grid.
+    The Breakpoint times in resampled Partials will comprise a  
+    contiguous sequence of integer multiples of the sampling interval,
+    beginning with the multiple nearest to the Partial's start time and
+    ending with the multiple nearest to the Partial's end time. Resampling
+    is performed in-place. 
 
  */
 
@@ -598,57 +611,57 @@ void sift( PartialList * partials );
 
  */ 
 
-unsigned int synthesize( const PartialList * partials,
-				     double * buffer, unsigned int bufferSize,
-				     double srate );
-/*	Synthesize Partials in a PartialList at the given sample
-	rate, and store the (floating point) samples in a buffer of
-	size bufferSize. The buffer is neither resized nor 
-	cleared before synthesis, so newly synthesized samples are
-	added to any previously computed samples in the buffer, and
-	samples beyond the end of the buffer are lost. Return the
-	number of samples synthesized, that is, the index of the
-	latest sample in the buffer that was modified.
+unsigned int 
+synthesize( const PartialList * partials,
+            double * buffer, unsigned int bufferSize,
+            double srate );
+/*  Synthesize Partials in a PartialList at the given sample
+    rate, and store the (floating point) samples in a buffer of
+    size bufferSize. The buffer is neither resized nor 
+    cleared before synthesis, so newly synthesized samples are
+    added to any previously computed samples in the buffer, and
+    samples beyond the end of the buffer are lost. Return the
+    number of samples synthesized, that is, the index of the
+    latest sample in the buffer that was modified.
  */
 
 /* ---------------------------------------------------------------- */
-/*		utility functions
+/*      utility functions
 /*
-/*	These procedures are generally useful but are not   
-	represented by classes in the Loris core.
+/*  Operations for transforming and manipulating collections
+    of Partials.
  */
  
 void copyIf( const PartialList * src, PartialList * dst, 
-			 int ( * predicate )( const Partial * p, void * data ),
-			 void * data );
-/*	Append copies of Partials in the source PartialList satisfying the
-	specified predicate to the destination PartialList. The source list
-	is unmodified. The data parameter can be used to 
+             int ( * predicate )( const Partial * p, void * data ),
+             void * data );
+/*  Append copies of Partials in the source PartialList satisfying the
+    specified predicate to the destination PartialList. The source list
+    is unmodified. The data parameter can be used to 
     supply extra user-defined data to the function. Pass 0 if no 
     additional data is needed.
  */
-			 
+             
 void copyLabeled( const PartialList * src, long label, PartialList * dst );
-/*	Append copies of Partials in the source PartialList having the
-	specified label to the destination PartialList. The source list
-	is unmodified.
+/*  Append copies of Partials in the source PartialList having the
+    specified label to the destination PartialList. The source list
+    is unmodified.
  */
 
 void crop( PartialList * partials, double t1, double t2 );
-/*	Trim Partials by removing Breakpoints outside a specified time span.
-	Insert a Breakpoint at the boundary when cropping occurs.
+/*  Trim Partials by removing Breakpoints outside a specified time span.
+    Insert a Breakpoint at the boundary when cropping occurs.
  */
 
 void extractIf( PartialList * src, PartialList * dst, 
-			 	int ( * predicate )( const Partial * p, void * data ),
-			 	void * data );
-/*	Remove Partials in the source PartialList satisfying the
-	specified predicate from the source list and append them to
+                int ( * predicate )( const Partial * p, void * data ),
+                void * data );
+/*  Remove Partials in the source PartialList satisfying the
+    specified predicate from the source list and append them to
     the destination PartialList. The data parameter can be used to 
     supply extra user-defined data to the function. Pass 0 if no 
     additional data is needed.
  */
-
 
 void extractLabeled( PartialList * src, long label, PartialList * dst );
 /*  Remove Partials in the source PartialList having the specified
@@ -657,39 +670,39 @@ void extractLabeled( PartialList * src, long label, PartialList * dst );
  */
 
 int forEachBreakpoint( Partial * p,
-		 			   int ( * func )( Breakpoint * p, double time, void * data ),
-			 		   void * data );
-/*	Apply a function to each Breakpoint in a Partial. The function
-	is called once for each Breakpoint in the source Partial. The
-	function may modify the Breakpoint (but should not otherwise attempt 
-	to modify the Partial). The data parameter can be used to supply extra
-	user-defined data to the function. Pass 0 if no additional data is needed.
-	The function should return 0 if successful. If the function returns
-	a non-zero value, then forEachBreakpoint immediately returns that value
-	without applying the function to any other Breakpoints in the Partial.
-	forEachBreakpoint returns zero if all calls to func return zero.
+                       int ( * func )( Breakpoint * p, double time, void * data ),
+                       void * data );
+/*  Apply a function to each Breakpoint in a Partial. The function
+    is called once for each Breakpoint in the source Partial. The
+    function may modify the Breakpoint (but should not otherwise attempt 
+    to modify the Partial). The data parameter can be used to supply extra
+    user-defined data to the function. Pass 0 if no additional data is needed.
+    The function should return 0 if successful. If the function returns
+    a non-zero value, then forEachBreakpoint immediately returns that value
+    without applying the function to any other Breakpoints in the Partial.
+    forEachBreakpoint returns zero if all calls to func return zero.
  */
-			 			
+                         
 int forEachPartial( PartialList * src,
-			 		int ( * func )( Partial * p, void * data ),
-			 		void * data );
-/*	Apply a function to each Partial in a PartialList. The function
-	is called once for each Partial in the source PartialList. The
-	function may modify the Partial (but should not attempt to modify
-	the PartialList). The data parameter can be used to supply extra
-	user-defined data to the function. Pass 0 if no additional data 
-	is needed. The function should return 0 if successful. If the 
-	function returns a non-zero value, then forEachPartial immediately 
-	returns that value without applying the function to any other 
-	Partials in the PartialList. forEachPartial returns zero if all 
-	calls to func return zero.
+                    int ( * func )( Partial * p, void * data ),
+                    void * data );
+/*  Apply a function to each Partial in a PartialList. The function
+    is called once for each Partial in the source PartialList. The
+    function may modify the Partial (but should not attempt to modify
+    the PartialList). The data parameter can be used to supply extra
+    user-defined data to the function. Pass 0 if no additional data 
+    is needed. The function should return 0 if successful. If the 
+    function returns a non-zero value, then forEachPartial immediately 
+    returns that value without applying the function to any other 
+    Partials in the PartialList. forEachPartial returns zero if all 
+    calls to func return zero.
  */
 
 void removeIf( PartialList * src, 
-			   int ( * predicate )( const Partial * p, void * data ),
-			   void * data );
-/*	Remove from a PartialList all Partials satisfying the
-	specified predicate. The data parameter can be used to 
+               int ( * predicate )( const Partial * p, void * data ),
+               void * data );
+/*  Remove from a PartialList all Partials satisfying the
+    specified predicate. The data parameter can be used to 
    supply extra user-defined data to the function. Pass 0 if no 
    additional data is needed.
  */
@@ -698,67 +711,65 @@ void removeLabeled( PartialList * src, long label );
 /*  Remove from a PartialList all Partials having the specified label.
  */
 
-void scaleAmp( PartialList * partials, BreakpointEnvelope * ampEnv );
-/*	Scale the amplitude of the Partials in a PartialList according 
-	to an envelope representing a time-varying amplitude scale value.
+void scaleAmp( PartialList * partials, LinearEnvelope * ampEnv );
+/*  Scale the amplitude of the Partials in a PartialList according 
+    to an envelope representing a time-varying amplitude scale value.
  */
-				 
-void scaleBandwidth( PartialList * partials, BreakpointEnvelope * bwEnv );
-/*	Scale the bandwidth of the Partials in a PartialList according 
-	to an envelope representing a time-varying bandwidth scale value.
+                 
+void scaleBandwidth( PartialList * partials, LinearEnvelope * bwEnv );
+/*  Scale the bandwidth of the Partials in a PartialList according 
+    to an envelope representing a time-varying bandwidth scale value.
  */
-				 
-void scaleFrequency( PartialList * partials, BreakpointEnvelope * freqEnv );
-/*	Scale the frequency of the Partials in a PartialList according 
-	to an envelope representing a time-varying frequency scale value.
+                 
+void scaleFrequency( PartialList * partials, LinearEnvelope * freqEnv );
+/*  Scale the frequency of the Partials in a PartialList according 
+    to an envelope representing a time-varying frequency scale value.
  */
-				 
-void scaleNoiseRatio( PartialList * partials, BreakpointEnvelope * noiseEnv );
-/*	Scale the relative noise content of the Partials in a PartialList 
-	according to an envelope representing a (time-varying) noise energy 
-	scale value.
+                 
+void scaleNoiseRatio( PartialList * partials, LinearEnvelope * noiseEnv );
+/*  Scale the relative noise content of the Partials in a PartialList 
+    according to an envelope representing a (time-varying) noise energy 
+    scale value.
  */
 
-void shiftPitch( PartialList * partials, BreakpointEnvelope * pitchEnv );
-/*	Shift the pitch of all Partials in a PartialList according to 
-	the given pitch envelope. The pitch envelope is assumed to have 
-	units of cents (1/100 of a halfstep).
+void shiftPitch( PartialList * partials, LinearEnvelope * pitchEnv );
+/*  Shift the pitch of all Partials in a PartialList according to 
+    the given pitch envelope. The pitch envelope is assumed to have 
+    units of cents (1/100 of a halfstep).
  */
 
 void shiftTime( PartialList * partials, double offset );
-/*	Shift the time of all the Breakpoints in a Partial by a 
-	constant amount.
+/*  Shift the time of all the Breakpoints in a Partial by a 
+    constant amount.
  */
 
 void sortByLabel( PartialList * partials );
-/*	Sort the Partials in a PartialList in order of increasing label.
- 	The sort is stable; Partials having the same label are not 
- 	reordered.
+/*  Sort the Partials in a PartialList in order of increasing label.
+    The sort is stable; Partials having the same label are not 
+    reordered.
  */
 
 
 /* ---------------------------------------------------------------- */
-/*		Notification and exception handlers							
+/*      Notification and exception handlers                            
 /*
-/*
-	An exception handler and a notifier may be specified. Both 
-	are functions taking a const char * argument and returning
-	void.
+/*  An exception handler and a notifier may be specified. Both 
+    are functions taking a const char * argument and returning
+    void.
  */
 
 void setExceptionHandler( void(*f)(const char *) );
-/*	Specify a function to call when reporting exceptions. The 
-	function takes a const char * argument, and returns void.
+/*  Specify a function to call when reporting exceptions. The 
+    function takes a const char * argument, and returns void.
  */
 
 void setNotifier( void(*f)(const char *) );
-/*	Specify a notification function. The function takes a 
-	const char * argument, and returns void.
+/*  Specify a notification function. The function takes a 
+    const char * argument, and returns void.
  */
 
 #if defined(__cplusplus)
-}	/* extern "C" 	*/
-}	/* end of namespace Loris */
+}    /* extern "C"     */
 #endif
 
-#endif	/* ndef INCLUDE_LORIS_H */
+#endif    /* ndef INCLUDE_LORIS_H */
