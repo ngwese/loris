@@ -1352,20 +1352,21 @@ SWIG_Python_GetTypeList() {
 #define  SWIGTYPE_p_std__allocatorTdouble_t swig_types[11] 
 #define  SWIGTYPE_p_size_type swig_types[12] 
 #define  SWIGTYPE_p_std__vectorTdouble_std__allocatorTdouble_t_t swig_types[13] 
-#define  SWIGTYPE_p_char swig_types[14] 
-#define  SWIGTYPE_p_BreakpointEnvelope swig_types[15] 
-#define  SWIGTYPE_p_BreakpointPosition swig_types[16] 
-#define  SWIGTYPE_p_value_type swig_types[17] 
-#define  SWIGTYPE_p_difference_type swig_types[18] 
-#define  SWIGTYPE_std__ptrdiff_t swig_types[19] 
-#define  SWIGTYPE_ptrdiff_t swig_types[20] 
-#define  SWIGTYPE_p_AiffFile swig_types[21] 
-#define  SWIGTYPE_p_std__allocatorTMarker_t swig_types[22] 
-#define  SWIGTYPE_p_SdifFile swig_types[23] 
-#define  SWIGTYPE_p_Marker swig_types[24] 
-#define  SWIGTYPE_p_NewPlistIterator swig_types[25] 
-#define  SWIGTYPE_p_NewPartialIterator swig_types[26] 
-static swig_type_info *swig_types[28];
+#define  SWIGTYPE_p_LinearEnvelope swig_types[14] 
+#define  SWIGTYPE_p_char swig_types[15] 
+#define  SWIGTYPE_p_BreakpointEnvelope swig_types[16] 
+#define  SWIGTYPE_p_BreakpointPosition swig_types[17] 
+#define  SWIGTYPE_p_value_type swig_types[18] 
+#define  SWIGTYPE_p_difference_type swig_types[19] 
+#define  SWIGTYPE_std__ptrdiff_t swig_types[20] 
+#define  SWIGTYPE_ptrdiff_t swig_types[21] 
+#define  SWIGTYPE_p_AiffFile swig_types[22] 
+#define  SWIGTYPE_p_std__allocatorTMarker_t swig_types[23] 
+#define  SWIGTYPE_p_SdifFile swig_types[24] 
+#define  SWIGTYPE_p_Marker swig_types[25] 
+#define  SWIGTYPE_p_NewPlistIterator swig_types[26] 
+#define  SWIGTYPE_p_NewPartialIterator swig_types[27] 
+static swig_type_info *swig_types[29];
 
 /* -------- TYPES TABLE (END) -------- */
 
@@ -1470,18 +1471,14 @@ static void SWIG_exception_(int code, const char *msg) {
 	#include <Analyzer.h>
 	#include <BreakpointEnvelope.h>
 	#include <Exception.h>
+	#include <LinearEnvelope.h>
 	#include <Marker.h>
 	#include <Partial.h>
 	#include <SdifFile.h>
 	#include <SpcFile.h>
 	#include <Synthesizer.h>
 
-	//	import the entire Loris namespace, because
-	//	SWIG does not seem to like to wrap functions
-	//	with qualified names (like Loris::channelize),
-	//	they simply get ignored.
-	//
-	// (This has probably been fixed by now.)
+	//	import the entire Loris namespace
 	using namespace Loris;
 	
 	#include <stdexcept>
@@ -2567,7 +2564,7 @@ SWIG_Check_int(PyObject* obj)
 }
 
 
-	BreakpointEnvelope * 
+	LinearEnvelope * 
 	createFreqReference( PartialList * partials, 
 						 double minFreq, double maxFreq )
 	{
@@ -2682,9 +2679,9 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch )
 
 
 	PartialList * morph( const PartialList * src0, const PartialList * src1, 
-						 const BreakpointEnvelope * ffreq, 
-						 const BreakpointEnvelope * famp, 
-						 const BreakpointEnvelope * fbw )
+                        const LinearEnvelope * ffreq, 
+                        const LinearEnvelope * famp, 
+                        const LinearEnvelope * fbw )
 	{
 		PartialList * dst = createPartialList();
 		morph( src0, src1, ffreq, famp, fbw, dst );
@@ -2699,11 +2696,11 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch )
 	}
 	
 	PartialList * morph( const PartialList * src0, const PartialList * src1, 
-						 double freqweight, 
-						 double ampweight, 
-						 double bwweight )
+                        double freqweight, 
+                        double ampweight, 
+                        double bwweight )
 	{
-		BreakpointEnvelope ffreq( freqweight ), famp( ampweight ), fbw( bwweight );
+		LinearEnvelope ffreq( freqweight ), famp( ampweight ), fbw( bwweight );
 		
 		PartialList * dst = createPartialList();
 		morph( src0, src1, &ffreq, &famp, &fbw, dst );
@@ -2759,35 +2756,35 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch )
 	
 	void scaleAmp( PartialList * partials, double val )
 	{
-		BreakpointEnvelope e( val );
+		LinearEnvelope e( val );
 		scaleAmp( partials, &e );
 	}
 	
 	
 	void scaleBandwidth( PartialList * partials, double val )
 	{
-		BreakpointEnvelope e( val );
+		LinearEnvelope e( val );
 		scaleBandwidth( partials, &e );
 	}
 	
 	
 	void scaleFrequency( PartialList * partials, double val )
 	{
-		BreakpointEnvelope e( val );
+		LinearEnvelope e( val );
 		scaleFrequency( partials, &e );
 	}
 	
 	
 	void scaleNoiseRatio( PartialList * partials, double val )
 	{
-		BreakpointEnvelope e( val );
+		LinearEnvelope e( val );
 		scaleNoiseRatio( partials, &e );
 	}
 	
 	
 	void shiftPitch( PartialList * partials, double val )
 	{
-		BreakpointEnvelope e( val );
+		LinearEnvelope e( val );
 		shiftPitch( partials, &e );
 	}
 
@@ -2920,7 +2917,7 @@ static PartialList *Analyzer_analyze__SWIG_0(Analyzer *self,std::vector<double >
 			partials->splice( partials->end(), self->partials() );
 			return partials;
 		}
-static PartialList *Analyzer_analyze__SWIG_1(Analyzer *self,std::vector<double > const &vec,double srate,BreakpointEnvelope *env){
+static PartialList *Analyzer_analyze__SWIG_1(Analyzer *self,std::vector<double > const &vec,double srate,LinearEnvelope *env){
 			PartialList * partials = new PartialList();
 			if ( ! vec.empty() )
 			{
@@ -2929,9 +2926,6 @@ static PartialList *Analyzer_analyze__SWIG_1(Analyzer *self,std::vector<double >
 			partials->splice( partials->end(), self->partials() );
 			return partials;
 		}
-
-typedef BreakpointEnvelope LinearEnvelope;
-
 static SdifFile *new_SdifFile__SWIG_2(PartialList *l){
 			return new SdifFile( l->begin(), l->end() );
 		}
@@ -5170,7 +5164,7 @@ static PyObject * MarkerVector_swigregister(PyObject *, PyObject *args) {
 static PyObject *_wrap_channelize(PyObject *, PyObject *args) {
     PyObject *resultobj;
     PartialList *arg1 = (PartialList *) 0 ;
-    BreakpointEnvelope *arg2 = (BreakpointEnvelope *) 0 ;
+    LinearEnvelope *arg2 = (LinearEnvelope *) 0 ;
     int arg3 ;
     PyObject * obj0 = 0 ;
     PyObject * obj1 = 0 ;
@@ -5179,7 +5173,7 @@ static PyObject *_wrap_channelize(PyObject *, PyObject *args) {
     if(!PyArg_ParseTuple(args,(char *)"OOO:channelize",&obj0,&obj1,&obj2)) goto fail;
     SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_PartialList, SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail(1)) SWIG_fail;
-    SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_BreakpointEnvelope, SWIG_POINTER_EXCEPTION | 0);
+    SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_LinearEnvelope, SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail(2)) SWIG_fail;
     {
         arg3 = (int)(SWIG_As_int(obj2)); 
@@ -5208,7 +5202,7 @@ static PyObject *_wrap_createFreqReference__SWIG_0(PyObject *, PyObject *args) {
     double arg2 ;
     double arg3 ;
     long arg4 ;
-    BreakpointEnvelope *result;
+    LinearEnvelope *result;
     PyObject * obj0 = 0 ;
     PyObject * obj1 = 0 ;
     PyObject * obj2 = 0 ;
@@ -5232,14 +5226,14 @@ static PyObject *_wrap_createFreqReference__SWIG_0(PyObject *, PyObject *args) {
     {
         char * err;
         clear_exception();
-        result = (BreakpointEnvelope *)createFreqReference(arg1,arg2,arg3,arg4);
+        result = (LinearEnvelope *)createFreqReference(arg1,arg2,arg3,arg4);
         
         if ( 0 != (err = check_exception()) )
         {
             SWIG_exception( SWIG_ValueError, err );
         }
     }
-    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_BreakpointEnvelope, 1);
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_LinearEnvelope, 1);
     return resultobj;
     fail:
     return NULL;
@@ -5251,7 +5245,7 @@ static PyObject *_wrap_createFreqReference__SWIG_1(PyObject *, PyObject *args) {
     PartialList *arg1 = (PartialList *) 0 ;
     double arg2 ;
     double arg3 ;
-    BreakpointEnvelope *result;
+    LinearEnvelope *result;
     PyObject * obj0 = 0 ;
     PyObject * obj1 = 0 ;
     PyObject * obj2 = 0 ;
@@ -5270,14 +5264,14 @@ static PyObject *_wrap_createFreqReference__SWIG_1(PyObject *, PyObject *args) {
     {
         char * err;
         clear_exception();
-        result = (BreakpointEnvelope *)createFreqReference(arg1,arg2,arg3);
+        result = (LinearEnvelope *)createFreqReference(arg1,arg2,arg3);
         
         if ( 0 != (err = check_exception()) )
         {
             SWIG_exception( SWIG_ValueError, err );
         }
     }
-    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_BreakpointEnvelope, 1);
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_LinearEnvelope, 1);
     return resultobj;
     fail:
     return NULL;
@@ -5932,9 +5926,9 @@ static PyObject *_wrap_morph__SWIG_0(PyObject *, PyObject *args) {
     PyObject *resultobj;
     PartialList *arg1 = (PartialList *) 0 ;
     PartialList *arg2 = (PartialList *) 0 ;
-    BreakpointEnvelope *arg3 = (BreakpointEnvelope *) 0 ;
-    BreakpointEnvelope *arg4 = (BreakpointEnvelope *) 0 ;
-    BreakpointEnvelope *arg5 = (BreakpointEnvelope *) 0 ;
+    LinearEnvelope *arg3 = (LinearEnvelope *) 0 ;
+    LinearEnvelope *arg4 = (LinearEnvelope *) 0 ;
+    LinearEnvelope *arg5 = (LinearEnvelope *) 0 ;
     PartialList *result;
     PyObject * obj0 = 0 ;
     PyObject * obj1 = 0 ;
@@ -5947,16 +5941,16 @@ static PyObject *_wrap_morph__SWIG_0(PyObject *, PyObject *args) {
     if (SWIG_arg_fail(1)) SWIG_fail;
     SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_PartialList, SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail(2)) SWIG_fail;
-    SWIG_Python_ConvertPtr(obj2, (void **)&arg3, SWIGTYPE_p_BreakpointEnvelope, SWIG_POINTER_EXCEPTION | 0);
+    SWIG_Python_ConvertPtr(obj2, (void **)&arg3, SWIGTYPE_p_LinearEnvelope, SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail(3)) SWIG_fail;
-    SWIG_Python_ConvertPtr(obj3, (void **)&arg4, SWIGTYPE_p_BreakpointEnvelope, SWIG_POINTER_EXCEPTION | 0);
+    SWIG_Python_ConvertPtr(obj3, (void **)&arg4, SWIGTYPE_p_LinearEnvelope, SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail(4)) SWIG_fail;
-    SWIG_Python_ConvertPtr(obj4, (void **)&arg5, SWIGTYPE_p_BreakpointEnvelope, SWIG_POINTER_EXCEPTION | 0);
+    SWIG_Python_ConvertPtr(obj4, (void **)&arg5, SWIGTYPE_p_LinearEnvelope, SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail(5)) SWIG_fail;
     {
         char * err;
         clear_exception();
-        result = (PartialList *)morph((PartialList const *)arg1,(PartialList const *)arg2,(BreakpointEnvelope const *)arg3,(BreakpointEnvelope const *)arg4,(BreakpointEnvelope const *)arg5);
+        result = (PartialList *)morph((PartialList const *)arg1,(PartialList const *)arg2,(LinearEnvelope const *)arg3,(LinearEnvelope const *)arg4,(LinearEnvelope const *)arg5);
         
         if ( 0 != (err = check_exception()) )
         {
@@ -6051,7 +6045,7 @@ static PyObject *_wrap_morph(PyObject *self, PyObject *args) {
             if (_v) {
                 {
                     void *ptr;
-                    if (SWIG_ConvertPtr(argv[2], &ptr, SWIGTYPE_p_BreakpointEnvelope, 0) == -1) {
+                    if (SWIG_ConvertPtr(argv[2], &ptr, SWIGTYPE_p_LinearEnvelope, 0) == -1) {
                         _v = 0;
                         PyErr_Clear();
                     } else {
@@ -6061,7 +6055,7 @@ static PyObject *_wrap_morph(PyObject *self, PyObject *args) {
                 if (_v) {
                     {
                         void *ptr;
-                        if (SWIG_ConvertPtr(argv[3], &ptr, SWIGTYPE_p_BreakpointEnvelope, 0) == -1) {
+                        if (SWIG_ConvertPtr(argv[3], &ptr, SWIGTYPE_p_LinearEnvelope, 0) == -1) {
                             _v = 0;
                             PyErr_Clear();
                         } else {
@@ -6071,7 +6065,7 @@ static PyObject *_wrap_morph(PyObject *self, PyObject *args) {
                     if (_v) {
                         {
                             void *ptr;
-                            if (SWIG_ConvertPtr(argv[4], &ptr, SWIGTYPE_p_BreakpointEnvelope, 0) == -1) {
+                            if (SWIG_ConvertPtr(argv[4], &ptr, SWIGTYPE_p_LinearEnvelope, 0) == -1) {
                                 _v = 0;
                                 PyErr_Clear();
                             } else {
@@ -6403,14 +6397,14 @@ static PyObject *_wrap_resample(PyObject *, PyObject *args) {
 static PyObject *_wrap_scaleAmp__SWIG_0(PyObject *, PyObject *args) {
     PyObject *resultobj;
     PartialList *arg1 = (PartialList *) 0 ;
-    BreakpointEnvelope *arg2 = (BreakpointEnvelope *) 0 ;
+    LinearEnvelope *arg2 = (LinearEnvelope *) 0 ;
     PyObject * obj0 = 0 ;
     PyObject * obj1 = 0 ;
     
     if(!PyArg_ParseTuple(args,(char *)"OO:scaleAmp",&obj0,&obj1)) goto fail;
     SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_PartialList, SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail(1)) SWIG_fail;
-    SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_BreakpointEnvelope, SWIG_POINTER_EXCEPTION | 0);
+    SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_LinearEnvelope, SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail(2)) SWIG_fail;
     {
         char * err;
@@ -6432,14 +6426,14 @@ static PyObject *_wrap_scaleAmp__SWIG_0(PyObject *, PyObject *args) {
 static PyObject *_wrap_scaleBandwidth__SWIG_0(PyObject *, PyObject *args) {
     PyObject *resultobj;
     PartialList *arg1 = (PartialList *) 0 ;
-    BreakpointEnvelope *arg2 = (BreakpointEnvelope *) 0 ;
+    LinearEnvelope *arg2 = (LinearEnvelope *) 0 ;
     PyObject * obj0 = 0 ;
     PyObject * obj1 = 0 ;
     
     if(!PyArg_ParseTuple(args,(char *)"OO:scaleBandwidth",&obj0,&obj1)) goto fail;
     SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_PartialList, SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail(1)) SWIG_fail;
-    SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_BreakpointEnvelope, SWIG_POINTER_EXCEPTION | 0);
+    SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_LinearEnvelope, SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail(2)) SWIG_fail;
     {
         char * err;
@@ -6461,14 +6455,14 @@ static PyObject *_wrap_scaleBandwidth__SWIG_0(PyObject *, PyObject *args) {
 static PyObject *_wrap_scaleFrequency__SWIG_0(PyObject *, PyObject *args) {
     PyObject *resultobj;
     PartialList *arg1 = (PartialList *) 0 ;
-    BreakpointEnvelope *arg2 = (BreakpointEnvelope *) 0 ;
+    LinearEnvelope *arg2 = (LinearEnvelope *) 0 ;
     PyObject * obj0 = 0 ;
     PyObject * obj1 = 0 ;
     
     if(!PyArg_ParseTuple(args,(char *)"OO:scaleFrequency",&obj0,&obj1)) goto fail;
     SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_PartialList, SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail(1)) SWIG_fail;
-    SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_BreakpointEnvelope, SWIG_POINTER_EXCEPTION | 0);
+    SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_LinearEnvelope, SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail(2)) SWIG_fail;
     {
         char * err;
@@ -6490,14 +6484,14 @@ static PyObject *_wrap_scaleFrequency__SWIG_0(PyObject *, PyObject *args) {
 static PyObject *_wrap_scaleNoiseRatio__SWIG_0(PyObject *, PyObject *args) {
     PyObject *resultobj;
     PartialList *arg1 = (PartialList *) 0 ;
-    BreakpointEnvelope *arg2 = (BreakpointEnvelope *) 0 ;
+    LinearEnvelope *arg2 = (LinearEnvelope *) 0 ;
     PyObject * obj0 = 0 ;
     PyObject * obj1 = 0 ;
     
     if(!PyArg_ParseTuple(args,(char *)"OO:scaleNoiseRatio",&obj0,&obj1)) goto fail;
     SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_PartialList, SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail(1)) SWIG_fail;
-    SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_BreakpointEnvelope, SWIG_POINTER_EXCEPTION | 0);
+    SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_LinearEnvelope, SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail(2)) SWIG_fail;
     {
         char * err;
@@ -6519,14 +6513,14 @@ static PyObject *_wrap_scaleNoiseRatio__SWIG_0(PyObject *, PyObject *args) {
 static PyObject *_wrap_shiftPitch__SWIG_0(PyObject *, PyObject *args) {
     PyObject *resultobj;
     PartialList *arg1 = (PartialList *) 0 ;
-    BreakpointEnvelope *arg2 = (BreakpointEnvelope *) 0 ;
+    LinearEnvelope *arg2 = (LinearEnvelope *) 0 ;
     PyObject * obj0 = 0 ;
     PyObject * obj1 = 0 ;
     
     if(!PyArg_ParseTuple(args,(char *)"OO:shiftPitch",&obj0,&obj1)) goto fail;
     SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_PartialList, SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail(1)) SWIG_fail;
-    SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_BreakpointEnvelope, SWIG_POINTER_EXCEPTION | 0);
+    SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_LinearEnvelope, SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail(2)) SWIG_fail;
     {
         char * err;
@@ -6599,7 +6593,7 @@ static PyObject *_wrap_scaleAmp(PyObject *self, PyObject *args) {
         if (_v) {
             {
                 void *ptr;
-                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_BreakpointEnvelope, 0) == -1) {
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_LinearEnvelope, 0) == -1) {
                     _v = 0;
                     PyErr_Clear();
                 } else {
@@ -6689,7 +6683,7 @@ static PyObject *_wrap_scaleBandwidth(PyObject *self, PyObject *args) {
         if (_v) {
             {
                 void *ptr;
-                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_BreakpointEnvelope, 0) == -1) {
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_LinearEnvelope, 0) == -1) {
                     _v = 0;
                     PyErr_Clear();
                 } else {
@@ -6779,7 +6773,7 @@ static PyObject *_wrap_scaleFrequency(PyObject *self, PyObject *args) {
         if (_v) {
             {
                 void *ptr;
-                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_BreakpointEnvelope, 0) == -1) {
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_LinearEnvelope, 0) == -1) {
                     _v = 0;
                     PyErr_Clear();
                 } else {
@@ -6869,7 +6863,7 @@ static PyObject *_wrap_scaleNoiseRatio(PyObject *self, PyObject *args) {
         if (_v) {
             {
                 void *ptr;
-                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_BreakpointEnvelope, 0) == -1) {
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_LinearEnvelope, 0) == -1) {
                     _v = 0;
                     PyErr_Clear();
                 } else {
@@ -6959,7 +6953,7 @@ static PyObject *_wrap_shiftPitch(PyObject *self, PyObject *args) {
         if (_v) {
             {
                 void *ptr;
-                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_BreakpointEnvelope, 0) == -1) {
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_LinearEnvelope, 0) == -1) {
                     _v = 0;
                     PyErr_Clear();
                 } else {
@@ -8938,7 +8932,7 @@ static PyObject *_wrap_Analyzer_analyze__SWIG_1(PyObject *, PyObject *args) {
     Analyzer *arg1 = (Analyzer *) 0 ;
     std::vector<double > *arg2 = 0 ;
     double arg3 ;
-    BreakpointEnvelope *arg4 = (BreakpointEnvelope *) 0 ;
+    LinearEnvelope *arg4 = (LinearEnvelope *) 0 ;
     PartialList *result;
     int res2 = 0 ;
     PyObject * obj0 = 0 ;
@@ -8965,7 +8959,7 @@ static PyObject *_wrap_Analyzer_analyze__SWIG_1(PyObject *, PyObject *args) {
         arg3 = (double)(SWIG_As_double(obj2)); 
         if (SWIG_arg_fail(3)) SWIG_fail;
     }
-    SWIG_Python_ConvertPtr(obj3, (void **)&arg4, SWIGTYPE_p_BreakpointEnvelope, SWIG_POINTER_EXCEPTION | 0);
+    SWIG_Python_ConvertPtr(obj3, (void **)&arg4, SWIGTYPE_p_LinearEnvelope, SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail(4)) SWIG_fail;
     {
         try
@@ -9045,7 +9039,7 @@ static PyObject *_wrap_Analyzer_analyze(PyObject *self, PyObject *args) {
                 if (_v) {
                     {
                         void *ptr;
-                        if (SWIG_ConvertPtr(argv[3], &ptr, SWIGTYPE_p_BreakpointEnvelope, 0) == -1) {
+                        if (SWIG_ConvertPtr(argv[3], &ptr, SWIGTYPE_p_LinearEnvelope, 0) == -1) {
                             _v = 0;
                             PyErr_Clear();
                         } else {
@@ -9801,6 +9795,345 @@ static PyObject * Analyzer_swigregister(PyObject *, PyObject *args) {
     Py_INCREF(obj);
     return Py_BuildValue((char *)"");
 }
+static PyObject *_wrap_new_LinearEnvelope__SWIG_0(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    LinearEnvelope *result;
+    
+    if(!PyArg_ParseTuple(args,(char *)":new_LinearEnvelope")) goto fail;
+    {
+        try
+        {
+            result = (LinearEnvelope *)new LinearEnvelope();
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_LinearEnvelope, 1);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_new_LinearEnvelope__SWIG_1(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    LinearEnvelope *arg1 = 0 ;
+    LinearEnvelope *result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:new_LinearEnvelope",&obj0)) goto fail;
+    {
+        SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_LinearEnvelope, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(1)) SWIG_fail;
+        if (arg1 == NULL) {
+            SWIG_null_ref("LinearEnvelope");
+        }
+        if (SWIG_arg_fail(1)) SWIG_fail;
+    }
+    {
+        try
+        {
+            result = (LinearEnvelope *)new LinearEnvelope((LinearEnvelope const &)*arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_LinearEnvelope, 1);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_new_LinearEnvelope__SWIG_2(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    double arg1 ;
+    LinearEnvelope *result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:new_LinearEnvelope",&obj0)) goto fail;
+    {
+        arg1 = (double)(SWIG_As_double(obj0)); 
+        if (SWIG_arg_fail(1)) SWIG_fail;
+    }
+    {
+        try
+        {
+            result = (LinearEnvelope *)new LinearEnvelope(arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_LinearEnvelope, 1);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_new_LinearEnvelope(PyObject *self, PyObject *args) {
+    int argc;
+    PyObject *argv[2];
+    int ii;
+    
+    argc = PyObject_Length(args);
+    for (ii = 0; (ii < argc) && (ii < 1); ii++) {
+        argv[ii] = PyTuple_GetItem(args,ii);
+    }
+    if (argc == 0) {
+        return _wrap_new_LinearEnvelope__SWIG_0(self,args);
+    }
+    if (argc == 1) {
+        int _v;
+        {
+            void *ptr = 0;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_LinearEnvelope, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = (ptr != 0);
+            }
+        }
+        if (_v) {
+            return _wrap_new_LinearEnvelope__SWIG_1(self,args);
+        }
+    }
+    if (argc == 1) {
+        int _v;
+        _v = SWIG_Check_double(argv[0]);
+        if (_v) {
+            return _wrap_new_LinearEnvelope__SWIG_2(self,args);
+        }
+    }
+    
+    PyErr_SetString(PyExc_NotImplementedError,"No matching function for overloaded 'new_LinearEnvelope'");
+    return NULL;
+}
+
+
+static PyObject *_wrap_delete_LinearEnvelope(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    LinearEnvelope *arg1 = (LinearEnvelope *) 0 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:delete_LinearEnvelope",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_LinearEnvelope, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        try
+        {
+            delete arg1;
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_LinearEnvelope_insertBreakpoint(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    LinearEnvelope *arg1 = (LinearEnvelope *) 0 ;
+    double arg2 ;
+    double arg3 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    PyObject * obj2 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OOO:LinearEnvelope_insertBreakpoint",&obj0,&obj1,&obj2)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_LinearEnvelope, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        arg2 = (double)(SWIG_As_double(obj1)); 
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    {
+        arg3 = (double)(SWIG_As_double(obj2)); 
+        if (SWIG_arg_fail(3)) SWIG_fail;
+    }
+    {
+        try
+        {
+            (arg1)->insertBreakpoint(arg2,arg3);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_LinearEnvelope_insert(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    LinearEnvelope *arg1 = (LinearEnvelope *) 0 ;
+    double arg2 ;
+    double arg3 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    PyObject * obj2 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OOO:LinearEnvelope_insert",&obj0,&obj1,&obj2)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_LinearEnvelope, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        arg2 = (double)(SWIG_As_double(obj1)); 
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    {
+        arg3 = (double)(SWIG_As_double(obj2)); 
+        if (SWIG_arg_fail(3)) SWIG_fail;
+    }
+    {
+        try
+        {
+            (arg1)->insert(arg2,arg3);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_LinearEnvelope_valueAt(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    LinearEnvelope *arg1 = (LinearEnvelope *) 0 ;
+    double arg2 ;
+    double result;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:LinearEnvelope_valueAt",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_LinearEnvelope, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        arg2 = (double)(SWIG_As_double(obj1)); 
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    {
+        try
+        {
+            result = (double)((LinearEnvelope const *)arg1)->valueAt(arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    {
+        resultobj = SWIG_From_double((double)(result)); 
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject * LinearEnvelope_swigregister(PyObject *, PyObject *args) {
+    PyObject *obj;
+    if (!PyArg_ParseTuple(args,(char*)"O", &obj)) return NULL;
+    SWIG_TypeClientData(SWIGTYPE_p_LinearEnvelope, obj);
+    Py_INCREF(obj);
+    return Py_BuildValue((char *)"");
+}
 static PyObject *_wrap_new_BreakpointEnvelope__SWIG_0(PyObject *, PyObject *args) {
     PyObject *resultobj;
     BreakpointEnvelope *result;
@@ -10086,297 +10419,6 @@ static PyObject *_wrap_BreakpointEnvelope_valueAt(PyObject *, PyObject *args) {
 
 
 static PyObject * BreakpointEnvelope_swigregister(PyObject *, PyObject *args) {
-    PyObject *obj;
-    if (!PyArg_ParseTuple(args,(char*)"O", &obj)) return NULL;
-    SWIG_TypeClientData(SWIGTYPE_p_BreakpointEnvelope, obj);
-    Py_INCREF(obj);
-    return Py_BuildValue((char *)"");
-}
-static PyObject *_wrap_new_LinearEnvelope__SWIG_0(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    LinearEnvelope *result;
-    
-    if(!PyArg_ParseTuple(args,(char *)":new_LinearEnvelope")) goto fail;
-    {
-        try
-        {
-            result = (LinearEnvelope *)new LinearEnvelope();
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_BreakpointEnvelope, 1);
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_new_LinearEnvelope__SWIG_1(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    LinearEnvelope *arg1 = 0 ;
-    LinearEnvelope *result;
-    PyObject * obj0 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"O:new_LinearEnvelope",&obj0)) goto fail;
-    {
-        SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_BreakpointEnvelope, SWIG_POINTER_EXCEPTION | 0);
-        if (SWIG_arg_fail(1)) SWIG_fail;
-        if (arg1 == NULL) {
-            SWIG_null_ref("LinearEnvelope");
-        }
-        if (SWIG_arg_fail(1)) SWIG_fail;
-    }
-    {
-        try
-        {
-            result = (LinearEnvelope *)new LinearEnvelope((BreakpointEnvelope const &)*arg1);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_BreakpointEnvelope, 1);
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_new_LinearEnvelope__SWIG_2(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    double arg1 ;
-    LinearEnvelope *result;
-    PyObject * obj0 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"O:new_LinearEnvelope",&obj0)) goto fail;
-    {
-        arg1 = (double)(SWIG_As_double(obj0)); 
-        if (SWIG_arg_fail(1)) SWIG_fail;
-    }
-    {
-        try
-        {
-            result = (LinearEnvelope *)new LinearEnvelope(arg1);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_BreakpointEnvelope, 1);
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_new_LinearEnvelope(PyObject *self, PyObject *args) {
-    int argc;
-    PyObject *argv[2];
-    int ii;
-    
-    argc = PyObject_Length(args);
-    for (ii = 0; (ii < argc) && (ii < 1); ii++) {
-        argv[ii] = PyTuple_GetItem(args,ii);
-    }
-    if (argc == 0) {
-        return _wrap_new_LinearEnvelope__SWIG_0(self,args);
-    }
-    if (argc == 1) {
-        int _v;
-        {
-            void *ptr = 0;
-            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_BreakpointEnvelope, 0) == -1) {
-                _v = 0;
-                PyErr_Clear();
-            } else {
-                _v = (ptr != 0);
-            }
-        }
-        if (_v) {
-            return _wrap_new_LinearEnvelope__SWIG_1(self,args);
-        }
-    }
-    if (argc == 1) {
-        int _v;
-        _v = SWIG_Check_double(argv[0]);
-        if (_v) {
-            return _wrap_new_LinearEnvelope__SWIG_2(self,args);
-        }
-    }
-    
-    PyErr_SetString(PyExc_NotImplementedError,"No matching function for overloaded 'new_LinearEnvelope'");
-    return NULL;
-}
-
-
-static PyObject *_wrap_delete_LinearEnvelope(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    LinearEnvelope *arg1 = (LinearEnvelope *) 0 ;
-    PyObject * obj0 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"O:delete_LinearEnvelope",&obj0)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_BreakpointEnvelope, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    {
-        try
-        {
-            delete arg1;
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    Py_INCREF(Py_None); resultobj = Py_None;
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_LinearEnvelope_insertBreakpoint(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    LinearEnvelope *arg1 = (LinearEnvelope *) 0 ;
-    double arg2 ;
-    double arg3 ;
-    PyObject * obj0 = 0 ;
-    PyObject * obj1 = 0 ;
-    PyObject * obj2 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"OOO:LinearEnvelope_insertBreakpoint",&obj0,&obj1,&obj2)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_BreakpointEnvelope, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    {
-        arg2 = (double)(SWIG_As_double(obj1)); 
-        if (SWIG_arg_fail(2)) SWIG_fail;
-    }
-    {
-        arg3 = (double)(SWIG_As_double(obj2)); 
-        if (SWIG_arg_fail(3)) SWIG_fail;
-    }
-    {
-        try
-        {
-            (arg1)->insertBreakpoint(arg2,arg3);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    Py_INCREF(Py_None); resultobj = Py_None;
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_LinearEnvelope_valueAt(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    LinearEnvelope *arg1 = (LinearEnvelope *) 0 ;
-    double arg2 ;
-    double result;
-    PyObject * obj0 = 0 ;
-    PyObject * obj1 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"OO:LinearEnvelope_valueAt",&obj0,&obj1)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_BreakpointEnvelope, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    {
-        arg2 = (double)(SWIG_As_double(obj1)); 
-        if (SWIG_arg_fail(2)) SWIG_fail;
-    }
-    {
-        try
-        {
-            result = (double)((LinearEnvelope const *)arg1)->valueAt(arg2);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    {
-        resultobj = SWIG_From_double((double)(result)); 
-    }
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject * LinearEnvelope_swigregister(PyObject *, PyObject *args) {
     PyObject *obj;
     if (!PyArg_ParseTuple(args,(char*)"O", &obj)) return NULL;
     SWIG_TypeClientData(SWIGTYPE_p_BreakpointEnvelope, obj);
@@ -14870,16 +14912,17 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"Analyzer_setCropTime", _wrap_Analyzer_setCropTime, METH_VARARGS, NULL},
 	 { (char *)"Analyzer_setBwRegionWidth", _wrap_Analyzer_setBwRegionWidth, METH_VARARGS, NULL},
 	 { (char *)"Analyzer_swigregister", Analyzer_swigregister, METH_VARARGS, NULL},
+	 { (char *)"new_LinearEnvelope", _wrap_new_LinearEnvelope, METH_VARARGS, NULL},
+	 { (char *)"delete_LinearEnvelope", _wrap_delete_LinearEnvelope, METH_VARARGS, NULL},
+	 { (char *)"LinearEnvelope_insertBreakpoint", _wrap_LinearEnvelope_insertBreakpoint, METH_VARARGS, NULL},
+	 { (char *)"LinearEnvelope_insert", _wrap_LinearEnvelope_insert, METH_VARARGS, NULL},
+	 { (char *)"LinearEnvelope_valueAt", _wrap_LinearEnvelope_valueAt, METH_VARARGS, NULL},
+	 { (char *)"LinearEnvelope_swigregister", LinearEnvelope_swigregister, METH_VARARGS, NULL},
 	 { (char *)"new_BreakpointEnvelope", _wrap_new_BreakpointEnvelope, METH_VARARGS, NULL},
 	 { (char *)"delete_BreakpointEnvelope", _wrap_delete_BreakpointEnvelope, METH_VARARGS, NULL},
 	 { (char *)"BreakpointEnvelope_insertBreakpoint", _wrap_BreakpointEnvelope_insertBreakpoint, METH_VARARGS, NULL},
 	 { (char *)"BreakpointEnvelope_valueAt", _wrap_BreakpointEnvelope_valueAt, METH_VARARGS, NULL},
 	 { (char *)"BreakpointEnvelope_swigregister", BreakpointEnvelope_swigregister, METH_VARARGS, NULL},
-	 { (char *)"new_LinearEnvelope", _wrap_new_LinearEnvelope, METH_VARARGS, NULL},
-	 { (char *)"delete_LinearEnvelope", _wrap_delete_LinearEnvelope, METH_VARARGS, NULL},
-	 { (char *)"LinearEnvelope_insertBreakpoint", _wrap_LinearEnvelope_insertBreakpoint, METH_VARARGS, NULL},
-	 { (char *)"LinearEnvelope_valueAt", _wrap_LinearEnvelope_valueAt, METH_VARARGS, NULL},
-	 { (char *)"LinearEnvelope_swigregister", LinearEnvelope_swigregister, METH_VARARGS, NULL},
 	 { (char *)"delete_SdifFile", _wrap_delete_SdifFile, METH_VARARGS, NULL},
 	 { (char *)"SdifFile_write", _wrap_SdifFile_write, METH_VARARGS, NULL},
 	 { (char *)"SdifFile_write1TRC", _wrap_SdifFile_write1TRC, METH_VARARGS, NULL},
@@ -14975,6 +15018,9 @@ static PyMethodDef SwigMethods[] = {
 
 /* -------- TYPE CONVERSION AND EQUIVALENCE RULES (BEGIN) -------- */
 
+static void *_p_BreakpointEnvelopeTo_p_LinearEnvelope(void *x) {
+    return (void *)((LinearEnvelope *)  ((BreakpointEnvelope *) x));
+}
 static swig_type_info _swigt__p_PartialList[] = {{"_p_PartialList", 0, "PartialList *", 0, 0, 0, 0},{"_p_PartialList", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__std__size_t[] = {{"_std__size_t", 0, "std::size_t", 0, 0, 0, 0},{"_std__size_t", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__size_t[] = {{"_size_t", 0, "size_t", 0, 0, 0, 0},{"_size_t", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
@@ -14989,8 +15035,9 @@ static swig_type_info _swigt__p_Partial[] = {{"_p_Partial", 0, "Partial *", 0, 0
 static swig_type_info _swigt__p_std__allocatorTdouble_t[] = {{"_p_std__allocatorTdouble_t", 0, "std::allocator<double > *|std::vector<double >::allocator_type *", 0, 0, 0, 0},{"_p_std__allocatorTdouble_t", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_size_type[] = {{"_p_size_type", 0, "size_type *", 0, 0, 0, 0},{"_p_size_type", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_std__vectorTdouble_std__allocatorTdouble_t_t[] = {{"_p_std__vectorTdouble_std__allocatorTdouble_t_t", 0, "std::vector<double > *", 0, 0, 0, 0},{"_p_std__vectorTdouble_std__allocatorTdouble_t_t", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_LinearEnvelope[] = {{"_p_LinearEnvelope", 0, "LinearEnvelope *", 0, 0, 0, 0},{"_p_LinearEnvelope", 0, 0, 0, 0, 0, 0},{"_p_BreakpointEnvelope", _p_BreakpointEnvelopeTo_p_LinearEnvelope, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_char[] = {{"_p_char", 0, "char *", 0, 0, 0, 0},{"_p_char", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
-static swig_type_info _swigt__p_BreakpointEnvelope[] = {{"_p_BreakpointEnvelope", 0, "BreakpointEnvelope *|LinearEnvelope *", 0, 0, 0, 0},{"_p_BreakpointEnvelope", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_BreakpointEnvelope[] = {{"_p_BreakpointEnvelope", 0, "BreakpointEnvelope *", 0, 0, 0, 0},{"_p_BreakpointEnvelope", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_BreakpointPosition[] = {{"_p_BreakpointPosition", 0, "BreakpointPosition *", 0, 0, 0, 0},{"_p_BreakpointPosition", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_value_type[] = {{"_p_value_type", 0, "value_type *", 0, 0, 0, 0},{"_p_value_type", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_difference_type[] = {{"_p_difference_type", 0, "difference_type *", 0, 0, 0, 0},{"_p_difference_type", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
@@ -15018,6 +15065,7 @@ _swigt__p_Partial,
 _swigt__p_std__allocatorTdouble_t, 
 _swigt__p_size_type, 
 _swigt__p_std__vectorTdouble_std__allocatorTdouble_t_t, 
+_swigt__p_LinearEnvelope, 
 _swigt__p_char, 
 _swigt__p_BreakpointEnvelope, 
 _swigt__p_BreakpointPosition, 

@@ -557,10 +557,10 @@ _loris.Marker_swigregister(MarkerPtr)
 
 def createFreqReference(*args):
     """
-    createFreqReference(partials, minFreq, maxFreq, numSamps) -> BreakpointEnvelope
-    createFreqReference(partials, minFreq, maxFreq) -> BreakpointEnvelope
+    createFreqReference(partials, minFreq, maxFreq, numSamps) -> LinearEnvelope
+    createFreqReference(partials, minFreq, maxFreq) -> LinearEnvelope
 
-    Return a newly-constructed BreakpointEnvelope by sampling the
+    Return a newly-constructed LinearEnvelope by sampling the
     frequency envelope of the longest Partial in a PartialList. Only
     Partials whose frequency at the Partial's loudest (highest
     amplitude) breakpoint is within the given frequency range are
@@ -1018,50 +1018,6 @@ class AnalyzerPtr(Analyzer):
         _swig_setattr(self, Analyzer,self.__class__,Analyzer)
 _loris.Analyzer_swigregister(AnalyzerPtr)
 
-class BreakpointEnvelope(_object):
-    """
-    Proxy of C++ BreakpointEnvelope class
-
-    BreakpointEnvelope is deprecated, use LinearEnvelope instead.
-    """
-    __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, BreakpointEnvelope, name, value)
-    __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, BreakpointEnvelope, name)
-    def __repr__(self):
-        return "<%s.%s; proxy of C++ BreakpointEnvelope instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
-    def __init__(self, *args):
-        """
-        __init__(self) -> BreakpointEnvelope
-        __init__(self, ??) -> BreakpointEnvelope
-        __init__(self, initialValue) -> BreakpointEnvelope
-
-        BreakpointEnvelope is deprecated, use LinearEnvelope instead.
-        """
-        _swig_setattr(self, BreakpointEnvelope, 'this', _loris.new_BreakpointEnvelope(*args))
-        _swig_setattr(self, BreakpointEnvelope, 'thisown', 1)
-    def __del__(self, destroy=_loris.delete_BreakpointEnvelope):
-        """__del__(self)"""
-        try:
-            if self.thisown: destroy(self)
-        except: pass
-
-    def insertBreakpoint(*args): 
-        """insertBreakpoint(self, time, value)"""
-        return _loris.BreakpointEnvelope_insertBreakpoint(*args)
-
-    def valueAt(*args): 
-        """valueAt(self, x) -> double"""
-        return _loris.BreakpointEnvelope_valueAt(*args)
-
-
-class BreakpointEnvelopePtr(BreakpointEnvelope):
-    def __init__(self, this):
-        _swig_setattr(self, BreakpointEnvelope, 'this', this)
-        if not hasattr(self,"thisown"): _swig_setattr(self, BreakpointEnvelope, 'thisown', 0)
-        _swig_setattr(self, BreakpointEnvelope,self.__class__,BreakpointEnvelope)
-_loris.BreakpointEnvelope_swigregister(BreakpointEnvelopePtr)
-
 class LinearEnvelope(_object):
     """
     Proxy of C++ LinearEnvelope class
@@ -1111,6 +1067,15 @@ class LinearEnvelope(_object):
         """
         return _loris.LinearEnvelope_insertBreakpoint(*args)
 
+    def insert(*args): 
+        """
+        insert(self, time, value)
+
+        Insert a new breakpoint into the envelope at the specified
+        time and value.
+        """
+        return _loris.LinearEnvelope_insert(*args)
+
     def valueAt(*args): 
         """
         valueAt(self, x) -> double
@@ -1128,8 +1093,71 @@ class LinearEnvelopePtr(LinearEnvelope):
         _swig_setattr(self, LinearEnvelope,self.__class__,LinearEnvelope)
 _loris.LinearEnvelope_swigregister(LinearEnvelopePtr)
 
+class BreakpointEnvelope(LinearEnvelope):
+    """
+    Proxy of C++ BreakpointEnvelope class
+
+    BreakpointEnvelope is deprecated, use LinearEnvelope instead.
+    """
+    __swig_setmethods__ = {}
+    for _s in [LinearEnvelope]: __swig_setmethods__.update(_s.__swig_setmethods__)
+    __setattr__ = lambda self, name, value: _swig_setattr(self, BreakpointEnvelope, name, value)
+    __swig_getmethods__ = {}
+    for _s in [LinearEnvelope]: __swig_getmethods__.update(_s.__swig_getmethods__)
+    __getattr__ = lambda self, name: _swig_getattr(self, BreakpointEnvelope, name)
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ BreakpointEnvelope instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    def __init__(self, *args):
+        """
+        __init__(self) -> BreakpointEnvelope
+        __init__(self, ??) -> BreakpointEnvelope
+        __init__(self, initialValue) -> BreakpointEnvelope
+
+        BreakpointEnvelope is deprecated, use LinearEnvelope instead.
+        """
+        _swig_setattr(self, BreakpointEnvelope, 'this', _loris.new_BreakpointEnvelope(*args))
+        _swig_setattr(self, BreakpointEnvelope, 'thisown', 1)
+    def __del__(self, destroy=_loris.delete_BreakpointEnvelope):
+        """__del__(self)"""
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+    def insertBreakpoint(*args): 
+        """
+        insertBreakpoint(self, time, value)
+
+        Insert a new breakpoint into the envelope at the specified
+        time and value.
+        """
+        return _loris.BreakpointEnvelope_insertBreakpoint(*args)
+
+    def valueAt(*args): 
+        """
+        valueAt(self, x) -> double
+
+        Return the (linearly-interpolated) value of the envelope
+        at the specified time.
+        """
+        return _loris.BreakpointEnvelope_valueAt(*args)
+
+
+class BreakpointEnvelopePtr(BreakpointEnvelope):
+    def __init__(self, this):
+        _swig_setattr(self, BreakpointEnvelope, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, BreakpointEnvelope, 'thisown', 0)
+        _swig_setattr(self, BreakpointEnvelope,self.__class__,BreakpointEnvelope)
+_loris.BreakpointEnvelope_swigregister(BreakpointEnvelopePtr)
+
 class SdifFile(_object):
-    """Proxy of C++ SdifFile class"""
+    """
+    Proxy of C++ SdifFile class
+
+    Class SdifFile represents reassigned bandwidth-enhanced Partial 
+    data in a SDIF-format data file. Construction of an SdifFile 
+    from a stream or filename automatically imports the Partial
+    data.
+    """
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, SdifFile, name, value)
     __swig_getmethods__ = {}
@@ -1155,6 +1183,11 @@ class SdifFile(_object):
         __init__(self, filename) -> SdifFile
         __init__(self) -> SdifFile
         __init__(self, l) -> SdifFile
+
+        Class SdifFile represents reassigned bandwidth-enhanced Partial 
+        data in a SDIF-format data file. Construction of an SdifFile 
+        from a stream or filename automatically imports the Partial
+        data.
         """
         _swig_setattr(self, SdifFile, 'this', _loris.new_SdifFile(*args))
         _swig_setattr(self, SdifFile, 'thisown', 1)

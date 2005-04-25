@@ -37,7 +37,7 @@
 
 #include "FrequencyReference.h"
 #include "Breakpoint.h"
-#include "BreakpointEnvelope.h"
+#include "LinearEnvelope.h"
 #include "Notifier.h"
 #include "Partial.h"
 #include "PartialList.h"
@@ -55,7 +55,7 @@ findLongestPartialInFreqRange( PartialList::const_iterator begin,
 							   PartialList::const_iterator end, 
 							   double minFreq, double maxFreq );
 static void
-buildEnvelopeFromPartial( BreakpointEnvelope & env, const Partial & p, long numsamps );							   
+buildEnvelopeFromPartial( LinearEnvelope & env, const Partial & p, long numsamps );							   
 
 // ---------------------------------------------------------------------------
 //	construction
@@ -68,7 +68,7 @@ FrequencyReference::FrequencyReference( PartialList::const_iterator begin,
 										PartialList::const_iterator end, 
 										double minFreq, double maxFreq,
 										long numSamps ) :
-	_env( new BreakpointEnvelope() )
+	_env( new LinearEnvelope() )
 {
 	if ( numSamps < 1 )
 		Throw( InvalidArgument, "A frequency reference envelope must have a positive number of samples." );
@@ -114,7 +114,7 @@ FrequencyReference::FrequencyReference( PartialList::const_iterator begin,
 FrequencyReference::FrequencyReference( PartialList::const_iterator begin, 
 										PartialList::const_iterator end, 
 										double minFreq, double maxFreq ) :
-	_env( new BreakpointEnvelope() )
+	_env( new LinearEnvelope() )
 {
 	//	sanity:
 	if ( maxFreq < minFreq )
@@ -195,10 +195,10 @@ FrequencyReference::valueAt( double x ) const
 // ---------------------------------------------------------------------------
 //	envelope
 // ---------------------------------------------------------------------------
-//	Conversion to BreakpointEnvelope return a BreakpointEnvelope that 
+//	Conversion to LinearEnvelope return a BreakpointEnvelope that 
 //	evaluates indentically to this FrequencyReference at all time.
 //
-BreakpointEnvelope 
+LinearEnvelope 
 FrequencyReference::envelope( void ) const 
 { 
     return *_env; 
@@ -291,7 +291,7 @@ findLongestPartialInFreqRange( PartialList::const_iterator begin,
 // ---------------------------------------------------------------------------
 //
 static void
-buildEnvelopeFromPartial( BreakpointEnvelope & env, const Partial & p, long numsamps )
+buildEnvelopeFromPartial( LinearEnvelope & env, const Partial & p, long numsamps )
 {
 	double dt = p.duration() / ( numsamps + 1 );
 	for ( long i = 0; i < numsamps; ++i ) 

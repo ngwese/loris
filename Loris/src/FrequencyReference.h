@@ -40,7 +40,7 @@
 //	begin namespace
 namespace Loris {
 
-class BreakpointEnvelope;
+class LinearEnvelope;
 
 // ---------------------------------------------------------------------------
 //	class FrequencyReference
@@ -57,7 +57,7 @@ class BreakpointEnvelope;
 class FrequencyReference : public Envelope
 {
 //	-- instance variables --
-	std::auto_ptr< BreakpointEnvelope > _env;
+	std::auto_ptr< LinearEnvelope > _env;
 	
 //	-- public interface --
 public:
@@ -94,9 +94,9 @@ public:
 	/* 	Destroy this FrequencyReference.
 	 */
 	 
-//	-- conversion to BreakpointEnvelope --
-	BreakpointEnvelope envelope( void ) const;
-    /*	Return a BreakpointEnvelope that evaluates indentically to this
+//	-- conversion to LinearEnvelope --
+	LinearEnvelope envelope( void ) const;
+    /*	Return a LinearEnvelope that evaluates indentically to this
 		FrequencyReference at all time.
      */
      

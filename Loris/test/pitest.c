@@ -106,7 +106,7 @@ int main( void )
    
    /* shift pitch of clarinet partials */
    printf( "shifting pitch of clarinet partials down by 600 cents\n" );
-   breakpointEnvelope_insertBreakpoint( pitchenv, 0, -600 );
+   linearEnvelope_insertBreakpoint( pitchenv, 0, -600 );
    shiftPitch( clar, pitchenv );
    
    /* check clarinet synthesis */
@@ -155,8 +155,8 @@ int main( void )
    
    /* perform morph */
    printf( "morphing clarinet with flute\n" );
-   breakpointEnvelope_insertBreakpoint( morphenv, 0.6, 0 );
-   breakpointEnvelope_insertBreakpoint( morphenv, 2, 1 );
+   linearEnvelope_insertBreakpoint( morphenv, 0.6, 0 );
+   linearEnvelope_insertBreakpoint( morphenv, 2, 1 );
    morph( clar, flut, morphenv, morphenv, morphenv, mrph );
    
    /* synthesize and export samples */

@@ -50,6 +50,18 @@ test_aiff_LDADD = $(top_builddir)/src/libloris.la
 test_identity_SOURCES = test_Identity.C
 test_identity_LDADD = $(top_builddir)/src/libloris.la
 
+####
+# PROBLEM
+# Under Darwin, at least, the loris dynamic library in 
+# $(top_builddir)/src is not the one linked when the
+# Python module is loaded! The will instead link an 
+# installed version of the library, or fail if the 
+# library cannot be found in the dynamic library path!
+#
+# This means that this test is NOT testing anything!
+#
+# Is this a libtool bug?
+####
 if BUILD_PYTHON
 PYTHON_TEST = run_pytest
 $(PYTHON_TEST):

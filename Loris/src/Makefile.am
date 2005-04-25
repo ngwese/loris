@@ -10,9 +10,6 @@
 
 lib_LTLIBRARIES = libloris.la
 
-INCLUDES = $(INCLUDE_FFTW) $(default_includes)
-
-
 # source code for Loris classes
 Loris_Classes = 	\
 		AiffData.C	\
@@ -24,9 +21,8 @@ Loris_Classes = 	\
 		AssociateBandwidth.C \
 		AssociateBandwidth.h \
 		Breakpoint.C \
-		BreakpointEnvelope.C \
-		BreakpointEnvelope.h \
 		Breakpoint.h \
+		BreakpointEnvelope.h \
 		BreakpointUtils.C \
 		BreakpointUtils.h \
 		Channelizer.C \
@@ -53,6 +49,8 @@ Loris_Classes = 	\
 		ImportLemur.h \
 		KaiserWindow.C \
 		KaiserWindow.h \
+		LinearEnvelope.C \
+		LinearEnvelope.h \
 		Marker.C	\
 		Marker.h	\
 		Morpher.C \
@@ -91,6 +89,7 @@ libloris_la_SOURCES = loris.h lorisAnalyzer_pi.C lorisBpEnvelope_pi.C \
  lorisException_pi.C lorisException_pi.h lorisNonObj_pi.C \
  lorisPartialList_pi.C lorisUtilities_pi.C \
  $(Loris_Classes)
+libloris_la_CPPFLAGS = $(INCLUDE_FFTW) $(default_includes)
 libloris_la_LIBADD = $(LINK_FFTW)
 
 if DARWIN
@@ -123,6 +122,7 @@ pkginclude_HEADERS = \
 				FrequencyReference.h \
 				ImportLemur.h	\
 				KaiserWindow.h	\
+            LinearEnvelope.h \
 				Marker.h	\
 				Morpher.h	\
 				NoiseGenerator.h \

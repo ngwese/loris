@@ -41,9 +41,6 @@
  *	This file defines the procedural interface for the Loris 
  *	BreakpointEnvelope class.
  *
- * TODO: rename this class in Loris `LinearEnvelope', to avoid
- * confusion with the Breakpoints in Partials.
- *
  * Kelly Fitz, 10 Nov 2000
  * loris@cerlsoundgroup.org
  *
@@ -58,12 +55,10 @@
 #include "loris.h"
 #include "lorisException_pi.h"
 
-#include "BreakpointEnvelope.h"
+#include "LinearEnvelope.h"
 #include "Notifier.h"
 
 using namespace Loris;
-
-typedef BreakpointEnvelope LinearEnvelope;
 
 /* ---------------------------------------------------------------- */
 /*		LinearEnvelope object interface								
@@ -87,7 +82,7 @@ LinearEnvelope * createLinearEnvelope( void )
 	try 
 	{
 		debugger << "creating LinearEnvelope" << endl;
-		return new BreakpointEnvelope();
+		return new LinearEnvelope();
 	}
 	catch( Exception & ex ) 
 	{
@@ -117,7 +112,7 @@ LinearEnvelope * copyLinearEnvelope( const LinearEnvelope * ptr_this )
 	try 
 	{
 		debugger << "copying LinearEnvelope" << endl;
-		return new BreakpointEnvelope( *ptr_this );
+		return new LinearEnvelope( *ptr_this );
 	}
 	catch( Exception & ex ) 
 	{
@@ -151,20 +146,20 @@ void destroyLinearEnvelope( LinearEnvelope * ptr_this )
 	}
 	catch( Exception & ex ) 
 	{
-		std::string s("Loris exception in destroyAnalyzer(): " );
+		std::string s("Loris exception in destroyLinearEnvelope(): " );
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
 	catch( std::exception & ex ) 
 	{
-		std::string s("std C++ exception in destroyAnalyzer(): " );
+		std::string s("std C++ exception in destroyLinearEnvelope(): " );
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
 }
 
 /* ---------------------------------------------------------------- */
-/*        breakpointEnvelope_insertBreakpoint      
+/*        linearEnvelope_insertBreakpoint      
 /*
 /*	Insert a breakpoint representing the specified (time, value) 
 	pair into this LinearEnvelope. If there is already a 
@@ -172,40 +167,40 @@ void destroyLinearEnvelope( LinearEnvelope * ptr_this )
 	the new breakpoint.
  */
 extern "C"
-void breakpointEnvelope_insertBreakpoint( LinearEnvelope * ptr_this,
-                                          double time, double val )
+void linearEnvelope_insertBreakpoint( LinearEnvelope * ptr_this,
+                                      double time, double val )
 {
 	try 
 	{
 		ThrowIfNull((LinearEnvelope *) ptr_this);
 		
 		debugger << "inserting point (" << time << ", " << val 
-				 << ") into LinearEnvelope" << endl;
+				   << ") into LinearEnvelope" << endl;
 		ptr_this->insertBreakpoint(time, val);
 	}
 	catch( Exception & ex ) 
 	{
-		std::string s("Loris exception in breakpointEnvelope_insertBreakpoint(): " );
+		std::string s("Loris exception in linearEnvelope_insertBreakpoint(): " );
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
 	catch( std::exception & ex ) 
 	{
-		std::string s("std C++ exception in breakpointEnvelope_insertBreakpoint(): " );
+		std::string s("std C++ exception in linearEnvelope_insertBreakpoint(): " );
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
 }
 
 /* ---------------------------------------------------------------- */
-/*        breakpointEnvelope_valueAt     
+/*        linearEnvelope_valueAt     
 /*
 /*	Return the interpolated value of this LinearEnvelope at the 
 	specified time.							
  */
 extern "C"
-double breakpointEnvelope_valueAt( const LinearEnvelope * ptr_this, 
-                                   double time )
+double linearEnvelope_valueAt( const LinearEnvelope * ptr_this, 
+                               double time )
 {
 	try 
 	{
@@ -214,13 +209,13 @@ double breakpointEnvelope_valueAt( const LinearEnvelope * ptr_this,
 	}
 	catch( Exception & ex ) 
 	{
-		std::string s("Loris exception in breakpointEnvelope_valueAt(): " );
+		std::string s("Loris exception in linearEnvelope_valueAt(): " );
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
 	catch( std::exception & ex ) 
 	{
-		std::string s("std C++ exception in breakpointEnvelope_valueAt(): " );
+		std::string s("std C++ exception in linearEnvelope_valueAt(): " );
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}

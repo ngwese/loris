@@ -80,18 +80,14 @@ For more information, please visit
 	#include <Analyzer.h>
 	#include <BreakpointEnvelope.h>
 	#include <Exception.h>
+	#include <LinearEnvelope.h>
 	#include <Marker.h>
 	#include <Partial.h>
 	#include <SdifFile.h>
 	#include <SpcFile.h>
 	#include <Synthesizer.h>
 
-	//	import the entire Loris namespace, because
-	//	SWIG does not seem to like to wrap functions
-	//	with qualified names (like Loris::channelize),
-	//	they simply get ignored.
-	//
-	// (This has probably been fixed by now.)
+	//	import the entire Loris namespace
 	using namespace Loris;
 	
 	#include <stdexcept>
@@ -203,11 +199,11 @@ breakpoints contribute more to the channel decision. Partials are
 labeled, but otherwise unmodified. In particular, their
 frequencies are not modified in any way.");
 void channelize( PartialList * partials, 
-				 BreakpointEnvelope * refFreqEnvelope, int refLabel );
+                 LinearEnvelope * refFreqEnvelope, int refLabel );
 
 
 %feature("docstring",
-"Return a newly-constructed BreakpointEnvelope by sampling the
+"Return a newly-constructed LinearEnvelope by sampling the
 frequency envelope of the longest Partial in a PartialList. Only
 Partials whose frequency at the Partial's loudest (highest
 amplitude) breakpoint is within the given frequency range are
@@ -223,12 +219,12 @@ first approximation to a reference envelope for channelization
 (see channelize).");
 
 %newobject createFreqReference;
-BreakpointEnvelope * 
+LinearEnvelope * 
 createFreqReference( PartialList * partials, 
 					 double minFreq, double maxFreq, long numSamps );
 %inline 
 %{
-	BreakpointEnvelope * 
+	LinearEnvelope * 
 	createFreqReference( PartialList * partials, 
 						 double minFreq, double maxFreq )
 	{
@@ -401,9 +397,9 @@ morphing algorithm, see the Loris website:
 %newobject morph;
 %inline %{
 	PartialList * morph( const PartialList * src0, const PartialList * src1, 
-						 const BreakpointEnvelope * ffreq, 
-						 const BreakpointEnvelope * famp, 
-						 const BreakpointEnvelope * fbw )
+                        const LinearEnvelope * ffreq, 
+                        const LinearEnvelope * famp, 
+                        const LinearEnvelope * fbw )
 	{
 		PartialList * dst = createPartialList();
 		morph( src0, src1, ffreq, famp, fbw, dst );
@@ -418,11 +414,11 @@ morphing algorithm, see the Loris website:
 	}
 	
 	PartialList * morph( const PartialList * src0, const PartialList * src1, 
-						 double freqweight, 
-						 double ampweight, 
-						 double bwweight )
+                        double freqweight, 
+                        double ampweight, 
+                        double bwweight )
 	{
-		BreakpointEnvelope ffreq( freqweight ), famp( ampweight ), fbw( bwweight );
+		LinearEnvelope ffreq( freqweight ), famp( ampweight ), fbw( bwweight );
 		
 		PartialList * dst = createPartialList();
 		morph( src0, src1, &ffreq, &famp, &fbw, dst );
@@ -526,66 +522,66 @@ void resample( PartialList * partials, double interval );
 "Scale the amplitude of the Partials in a PartialList according 
 to an envelope representing a time-varying amplitude scale value.");
 
-void scaleAmp( PartialList * partials, BreakpointEnvelope * ampEnv );
+void scaleAmp( PartialList * partials, LinearEnvelope * ampEnv );
 				 
 %feature("docstring",
 "Scale the bandwidth of the Partials in a PartialList according 
 to an envelope representing a time-varying bandwidth scale value.");
 
-void scaleBandwidth( PartialList * partials, BreakpointEnvelope * bwEnv );
+void scaleBandwidth( PartialList * partials, LinearEnvelope * bwEnv );
 				 
 %feature("docstring",
 "Scale the frequency of the Partials in a PartialList according 
 to an envelope representing a time-varying frequency scale value.");
 
-void scaleFrequency( PartialList * partials, BreakpointEnvelope * freqEnv );
+void scaleFrequency( PartialList * partials, LinearEnvelope * freqEnv );
 				 
 %feature("docstring",
 "Scale the relative noise content of the Partials in a PartialList 
 according to an envelope representing a (time-varying) noise energy 
 scale value.");
 
-void scaleNoiseRatio( PartialList * partials, BreakpointEnvelope * noiseEnv );
+void scaleNoiseRatio( PartialList * partials, LinearEnvelope * noiseEnv );
 
 %feature("docstring",
 "Shift the pitch of all Partials in a PartialList according to 
 the given pitch envelope. The pitch envelope is assumed to have 
 units of cents (1/100 of a halfstep).");
 
-void shiftPitch( PartialList * partials, BreakpointEnvelope * pitchEnv );
+void shiftPitch( PartialList * partials, LinearEnvelope * pitchEnv );
 
 %inline %{	
 	void scaleAmp( PartialList * partials, double val )
 	{
-		BreakpointEnvelope e( val );
+		LinearEnvelope e( val );
 		scaleAmp( partials, &e );
 	}
 	
 	
 	void scaleBandwidth( PartialList * partials, double val )
 	{
-		BreakpointEnvelope e( val );
+		LinearEnvelope e( val );
 		scaleBandwidth( partials, &e );
 	}
 	
 	
 	void scaleFrequency( PartialList * partials, double val )
 	{
-		BreakpointEnvelope e( val );
+		LinearEnvelope e( val );
 		scaleFrequency( partials, &e );
 	}
 	
 	
 	void scaleNoiseRatio( PartialList * partials, double val )
 	{
-		BreakpointEnvelope e( val );
+		LinearEnvelope e( val );
 		scaleNoiseRatio( partials, &e );
 	}
 	
 	
 	void shiftPitch( PartialList * partials, double val )
 	{
-		BreakpointEnvelope e( val );
+		LinearEnvelope e( val );
 		shiftPitch( partials, &e );
 	}
 %}	
@@ -965,7 +961,7 @@ Partial formation.") analyze;
 		}
 		 
 		PartialList * analyze( const std::vector< double > & vec, double srate, 
-							   BreakpointEnvelope * env )
+                             LinearEnvelope * env )
 		{
 			PartialList * partials = new PartialList();
 			if ( ! vec.empty() )
@@ -1004,30 +1000,7 @@ Partial formation.") analyze;
 // ---------------------------------------------------------------------------
 //	class LinearEnvelope
 //
-// TODO: rename BreakpointEnvelope C++ class
-// to LinearEnvelope. For now, support both names
-// in scripting interface, but deprecate 
-// BreakpointEnvelope.
 
-%{
-typedef BreakpointEnvelope LinearEnvelope;
-%}
-
-%feature("docstring",
-"BreakpointEnvelope is deprecated, use LinearEnvelope instead.") BreakpointEnvelope;
-
-class BreakpointEnvelope
-{
-public:
-	BreakpointEnvelope( void );
-	BreakpointEnvelope( const BreakpointEnvelope & );
-	BreakpointEnvelope( double initialValue );
-	~BreakpointEnvelope( void );
-	void insertBreakpoint( double time, double value );
-	double valueAt( double x ) const;		
-};
-
-%typedef BreakpointEnvelope LinearEnvelope;
 %feature("docstring",
 "A LinearEnvelope represents a linear segment breakpoint 
 function with infinite extension at each end (that is, the 
@@ -1063,6 +1036,12 @@ time and value.") insertBreakpoint;
 	void insertBreakpoint( double time, double value );
 
 %feature("docstring",
+"Insert a new breakpoint into the envelope at the specified
+time and value.") insert;
+
+	void insert( double time, double value );
+
+%feature("docstring",
 "Return the (linearly-interpolated) value of the envelope
 at the specified time.") valueAt; 
 
@@ -1070,13 +1049,37 @@ at the specified time.") valueAt;
 	 
 };	//	end of class LinearEnvelope
 
+
+%feature("docstring",
+"BreakpointEnvelope is deprecated, use LinearEnvelope instead.") BreakpointEnvelope;
+
+// BreakpointEnvelope is a typedef for LinearEnvelope, 
+// not a derived class, but I could not make SWIG
+// give two names to the same type, even using SWIG's
+// %typedef. BreakpointEnvelopes could not be passed
+// as arguments to functions expecting LinearEnvelopes.
+// This fake inheritance achieves what I want: two 
+// interchangeable types.
+class BreakpointEnvelope : public LinearEnvelope
+{
+public:
+	BreakpointEnvelope( void );
+	BreakpointEnvelope( const BreakpointEnvelope & );
+	BreakpointEnvelope( double initialValue );
+	~BreakpointEnvelope( void );
+	void insertBreakpoint( double time, double value );
+	double valueAt( double x ) const;		
+};
+
+
 // ---------------------------------------------------------------------------
 //	class SdifFile
 //
-//	Class SdifFile represents reassigned bandwidth-enhanced Partial 
-//	data in a SDIF-format data file. Construction of an SdifFile 
-//	from a stream or filename automatically imports the Partial
-//	data. 
+%feature("docstring",
+"Class SdifFile represents reassigned bandwidth-enhanced Partial 
+data in a SDIF-format data file. Construction of an SdifFile 
+from a stream or filename automatically imports the Partial
+data.") SdifFile;
 
 
 %newobject SdifFile::partials;
