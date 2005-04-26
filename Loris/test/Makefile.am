@@ -20,8 +20,6 @@ test_cpp_LDADD = $(top_builddir)/src/libloris.la
 
 # procedural interface test
 test_pi_SOURCES = pitest.c
-# Darwin is special, dynamic linking sometimes seems to fail 
-# on this test, can't figure it out.
 test_pi_LDADD = $(top_builddir)/src/libloris.la -lstdc++
 
 # Morpher unit tests
@@ -64,9 +62,16 @@ test_identity_LDADD = $(top_builddir)/src/libloris.la
 ####
 if BUILD_PYTHON
 PYTHON_TEST = run_pytest
+
+SET_PYTHON_ENV = "env PYTHONPATH=$(top_srcdir)/scripting:$(top_builddir)/scripting/.libs"
+
+if DARWIN
+SET_DARWIN_ENV = "env DYLD_LIBRARY_PATH=$(top_builddir)/src/.libs"
+endif
+
 $(PYTHON_TEST):
-	echo "env PYTHONPATH=$(top_srcdir)/scripting:$(top_builddir)/scripting/.libs \
-			$(PYTHON) $(top_srcdir)/test/morphtest.py" >> $@
+	echo "$(SET_PYTHON_ENV) $(SET_DARWIN_ENV) \
+              $(PYTHON) $(top_dir)/test/morphtest.py" >> $@
 	chmod +x $@
 endif
 

@@ -60,10 +60,10 @@ int main( void )
    double clar_times[] = {0.2, 1.};
    double tgt_times[] = {0.3, 1.2};
    
-	printf( "Loris procedural interface test.\n" );
-	printf( "Kelly Fitz 2005\n\n" );
-	printf( "Generates a simple linear morph between a \n" );
-   printf( "clarinet and a flute using the C++ library.\n\n" );
+   printf( "Loris procedural interface test.\n" );
+   printf( "Kelly Fitz 2005\n\n" );
+   printf( "Generates a simple linear morph between a \n" );
+   printf( "clarinet and a flute using the Loris library.\n\n" );
    
    /* import the clarinet samples */
    if ( 0 != path )

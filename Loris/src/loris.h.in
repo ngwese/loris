@@ -516,10 +516,7 @@ void dilate( PartialList * partials,
 
 void distill( PartialList * partials );
 /*  Distill labeled (channelized)  Partials in a PartialList into a 
-    PartialList containing a single (labeled) Partial per label. 
-    The distilled PartialList will contain as many Partials as
-    there were non-zero labels in the original PartialList. Unlabeled 
-    (label 0) Partials are eliminated.
+    PartialList containing at most one Partial per label. 
  */
 
 void exportAiff( const char * path, const double * buffer, 
@@ -603,10 +600,10 @@ void resample( PartialList * partials, double interval );
  */
 
 void sift( PartialList * partials );
-/*  Eliminate overlapping Partials having the same label
-    (except zero). If any two partials with same label
-    overlap in time, keep only the longer of the two.
-    Set the label of the shorter duration partial to zero.
+/*  Identify overlapping Partials having the same (nonzero)
+    label. If any two partials with same label
+    overlap in time, set the label of the weaker
+    (having less total energy) partial to zero.
 
  */ 
 

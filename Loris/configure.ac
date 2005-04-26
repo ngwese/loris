@@ -79,21 +79,21 @@ dnl  esac
 dnl  ])
 dnl  PATCH_LIBTOOL_ON_DARWIN_ZSH_OVERQUOTING
 dnl  
-dnl  dnl don't seem to need this anymore
-dnl  dnl scratch that, I think we do still need it
-dnl  dnl
-dnl  AC_DEFUN([KELLYS_GREAT_DARWIN_FIX],
-dnl  [# libtool just won't build the scripting modules under Darwin, do it by hand
-dnl  case "$host_os" in
-dnl  	*darwin*)
-dnl  		AC_MSG_RESULT(Using Darwin-specific kludges to avoid broken libtool.)
-dnl  		DARWIN=true
-dnl  	;;
-dnl  esac
-dnl  ])
-dnl  
-dnl  KELLYS_GREAT_DARWIN_FIX
-dnl  
+dnl don't seem to need this anymore
+dnl scratch that, I think we do still need it
+dnl
+AC_DEFUN([KELLYS_GREAT_DARWIN_FIX],
+[# libtool just won't build the scripting modules under Darwin, do it by hand
+case "$host_os" in
+*darwin*)
+AC_MSG_RESULT(Using Darwin-specific kludges to avoid broken libtool.)
+DARWIN=true
+;;
+esac
+])
+
+KELLYS_GREAT_DARWIN_FIX
+
 AM_CONDITIONAL(DARWIN, test -n "$DARWIN")
 
 dnl----------------------------------------------------------------
