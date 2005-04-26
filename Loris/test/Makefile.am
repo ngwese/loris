@@ -71,7 +71,7 @@ endif
 
 $(PYTHON_TEST):
 	echo "$(SET_PYTHON_ENV) $(SET_DARWIN_ENV) \
-              $(PYTHON) $(top_dir)/test/morphtest.py" >> $@
+              $(PYTHON) $(top_srcdir)/test/morphtest.py" >> $@
 	chmod +x $@
 endif
 
