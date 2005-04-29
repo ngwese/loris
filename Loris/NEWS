@@ -76,6 +76,13 @@ csound detection and building of the opcode librarty to
 autobuild process. This works most reliably with ABS
 distributions of Csound version 4.
 
+- Renamed BreakpointEnvelope to LinearEnvelope, to 
+eliminate confusion with the Breakpoint envelopes
+that make up Partials. BreakpointEnvelope is still
+around as a deprecated typedef, but related operations
+in the procedural and scripting interfaces have been 
+renamed. THIS BREAKS CODE.
+
 -------------------------------------------------------
 changes since 1.1 release:
 
