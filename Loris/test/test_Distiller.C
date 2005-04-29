@@ -33,6 +33,7 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
+#include "Collator.h"
 #include "Distiller.h"
 #include "Exception.h"
 #include "Partial.h"
@@ -443,8 +444,8 @@ static void test_collate( void )
 	l.push_back( p2 );
 
 	const double fade = .01; // 10 ms
-	Distiller d( fade );
-	d.distill( l );
+	Collator d( fade );
+	d.collate( l );
 
 	//	Fabricate the Partials that the distillation should 
 	//	produce.

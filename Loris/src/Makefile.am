@@ -27,6 +27,8 @@ Loris_Classes = 	\
 		BreakpointUtils.h \
 		Channelizer.C \
 		Channelizer.h \
+		Collator.C \
+		Collator.h \
 		Dilator.C \
 		Dilator.h \
 		Distiller.C \
@@ -113,6 +115,7 @@ pkginclude_HEADERS = \
 				Breakpoint.h	\
 				BreakpointUtils.h	\
 				Channelizer.h	\
+				Collator.h	\
 				Dilator.h	\
 				Distiller.h	\
 				Envelope.h	\
@@ -122,7 +125,7 @@ pkginclude_HEADERS = \
 				FrequencyReference.h \
 				ImportLemur.h	\
 				KaiserWindow.h	\
-            LinearEnvelope.h \
+				LinearEnvelope.h \
 				Marker.h	\
 				Morpher.h	\
 				NoiseGenerator.h \

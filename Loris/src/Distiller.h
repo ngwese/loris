@@ -57,17 +57,12 @@ namespace Loris {
 //!	leaving at most a single Partial per frequency channel and label.
 //!	Channels that contain no Partials are not represented in the distilled
 //!	data. Partials that are not labeled, that is, Partials having label 0,
-//!	are are "collated " into groups of non-overlapping (in time)
-//!   Partials, assigned an unused label (greater than the label associated
-//!   with any frequency channel), and fused into a single Partial per
-//!   group. "Collating" is a bit like "sifting" but non-overlapping
-//!   Partials are grouped without regard to frequency proximity. This
-//!   algorithm produces the smallest-possible number of collated Partials.
-//!   Thanks to Ulrike Axen for providing this optimal algorithm.
+//!	are are left unmodified at the end of the Partial sequence.
 //!	
 //!	Distillation modifies the Partial container (a PartialList). All
 //!	Partials in the distilled range having a common label are replaced by
-//!	a single Partial in the distillation process.
+//!	a single Partial in the distillation process. Only labeled
+//! Partials are affected by distillation. 
 //
 class Distiller
 {
@@ -101,7 +96,7 @@ public:
 	//!            0.0001 (one tenth of a millisecond).
 	explicit
 	Distiller( double partialFadeTime = 0.001    /* 1 ms */,
-              double partialSilentTime = 0.0001 /* .1 ms */ );
+               double partialSilentTime = 0.0001 /* .1 ms */ );
 	 
 	//	Use compiler-generated copy, assign, and destroy.
 	
@@ -131,8 +126,8 @@ public:
 	//!	If compiled with NO_TEMPLATE_MEMBERS defined, then partials
 	//!	must be a PartialList, otherwise it can be any container type
 	//!	storing Partials that supports at least bidirectional iterators.
-   //!
-   //!  \sa Distiller::distill( Container & partials )
+    //!
+    //!  \sa Distiller::distill( Container & partials )
 #if ! defined(NO_TEMPLATE_MEMBERS)
 	template< typename Container >
 	typename Container::iterator distill( Container & partials );
@@ -156,13 +151,13 @@ public:
    //!
    //! \post   All Partials in the collection are uniquely-labeled
    //! \param  partials is the collection of Partials to distill in-place
-   //! \param   partialFadeTime is the time (in seconds) over
-   //!          which Partials joined by distillation fade to
-   //!          and from zero amplitude.
-   //! \param   partialSilentTime is the minimum duration (in seconds) 
-   //!          of the silent (zero-amplitude) gap between two 
-   //!          Partials joined by distillation. (Default is
-   //!          0.0001 (one tenth of a millisecond).
+   //! \param  partialFadeTime is the time (in seconds) over
+   //!         which Partials joined by distillation fade to
+   //!         and from zero amplitude.
+   //! \param  partialSilentTime is the minimum duration (in seconds) 
+   //!         of the silent (zero-amplitude) gap between two 
+   //!         Partials joined by distillation. (Default is
+   //!         0.0001 (one tenth of a millisecond).
    //! \return the position of the end of the range of distilled Partials,
    //!         which is either the end of the collection, oor the position
    //!         of the first collated Partial, composed of unlabeled Partials
@@ -194,13 +189,6 @@ private:
     //! label is appended.
     void distillOne( PartialList & partials, Partial::label_type label,
                      PartialList & distilled );
-
-    //! Collate unlabeled (zero labeled) Partials into the smallest
-    //! possible number of Partials that does not combine any temporally
-    //! overlapping Partials. Give each collated Partial a label, starting
-    //! with startlabel, and incrementing. The unlabeled Partials are
-    //! collated in-place.
-    void collateUnlabeled( PartialList & unlabled, Partial::label_type startLabel );
 	
 };	//	end of class Distiller
 
@@ -260,13 +248,7 @@ PartialList::iterator Distiller::distill( PartialList & partials )
     //  all containers will work, but making it work on ranges
     //  requires an interface change.
     
-    
-    PartialList distilled, savezeros; //  temporary containers of Partials
-				  
-    //  remember the largest label ever used
-    //  in distilling, collated unlabeled Partials
-    //  will be assigned labels greater than this:
-	Partial::label_type maxlabel = 0;
+    PartialList distilled, savezeros; //  temporary containers of Partials				  
 	
 	Iterator lower = partials.begin();
 	while ( lower != partials.end() )
@@ -289,8 +271,6 @@ PartialList::iterator Distiller::distill( PartialList & partials )
 		//	are, and wind up at the front of the list):	
 		if ( label != 0 )
 		{
-		    maxlabel = std::max( label, maxlabel );
-		    
 			//	make a container of the Partials having the same 
 			//	label, and distill them:
 			PartialList samelabel( lower, upper );
@@ -303,7 +283,7 @@ PartialList::iterator Distiller::distill( PartialList & partials )
 			savezeros.insert( savezeros.begin(), lower, upper );
 		}
 
-        lower = upper;
+      lower = upper;
 	}
         
     //  copy the distilled Partials back into the source container,
@@ -317,30 +297,31 @@ PartialList::iterator Distiller::distill( PartialList & partials )
 	//  source collection:
 	if ( savezeros.empty() )
 	{
-	    //  remove extra Partials from the end of the source container,
+	    //  remove extra Partials from the end of the source container:
 	    //  update enddistilled, which may become invalid by
 	    //  erasure:
-	    enddistilled = partials.erase( enddistilled, partials.end() );
+	    partials.erase( enddistilled, partials.end() );
+        enddistilled = partials.end();
 	}
 	else
 	{
-	    //	collate unlabeled (zero-labeled) Partials:
-		collateUnlabeled( savezeros, std::max( maxlabel+1, 1 ) );
-
-        //  copy the collated Partials back into the source container
+        //  copy the unlabeled Partials back into the source container
         //  after the range of distilled Partials		
 	    //  (enddistilled is still the end of the distilled Partials):
-		Iterator endcollated = 
+		Iterator endzeros = 
 		    std::copy( savezeros.begin(), savezeros.end(), enddistilled );
 
 	    //  remove extra Partials from the end of the source container
 	    //  (enddistilled is still the end of the distilled Partials,
 	    //  because it is the position of the first collate Partial, and
 	    //  there is at least one collated Partial):
-		partials.erase( endcollated, partials.end() );
+		partials.erase( endzeros, partials.end() );
+        
+        //  return the end of the range of distilled Partials:
+        enddistilled = partials.begin();
+        std::advance( enddistilled, distilled.size() );
 	}
-	
-	return enddistilled;
+    return enddistilled;
 }
 
 // ---------------------------------------------------------------------------
@@ -371,13 +352,13 @@ PartialList::iterator Distiller::operator()( PartialList & partials )
 //!
 //! \post   All Partials in the collection are uniquely-labeled
 //! \param  partials is the collection of Partials to distill in-place
-//! \param   partialFadeTime is the time (in seconds) over
-//!          which Partials joined by distillation fade to
-//!          and from zero amplitude.
-//! \param   partialSilentTime is the minimum duration (in seconds) 
-//!          of the silent (zero-amplitude) gap between two 
-//!          Partials joined by distillation. (Default is
-//!          0.0001 (one tenth of a millisecond).
+//! \param  partialFadeTime is the time (in seconds) over
+//!         which Partials joined by distillation fade to
+//!         and from zero amplitude.
+//! \param  partialSilentTime is the minimum duration (in seconds) 
+//!         of the silent (zero-amplitude) gap between two 
+//!         Partials joined by distillation. (Default is
+//!         0.0001 (one tenth of a millisecond).
 //! \return the position of the end of the range of distilled Partials,
 //!         which is either the end of the collection, oor the position
 //!         of the first collated Partial, composed of unlabeled Partials
