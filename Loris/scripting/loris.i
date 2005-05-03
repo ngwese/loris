@@ -201,6 +201,26 @@ frequencies are not modified in any way.");
 void channelize( PartialList * partials, 
                  LinearEnvelope * refFreqEnvelope, int refLabel );
 
+%feature("docstring",
+"Collate unlabeled (zero-labeled) Partials into the smallest-possible 
+number of Partials that does not combine any overlapping Partials.
+Collated Partials assigned labels higher than any label in the original 
+list, and appear at the end of the sequence, after all previously-labeled
+Partials.") collate_duh;
+%rename( collate ) collate_duh;
+
+%inline 
+%{
+    // there seems to be a collision with a symbol name
+    // in localefwd.h (GNU) that is somehow getting
+    // imported
+    void collate_duh( PartialList * partials )
+    {
+        // make sure to find the collate that
+        // is not in std.
+        ::collate( partials );
+    }
+%}
 
 %feature("docstring",
 "Return a newly-constructed LinearEnvelope by sampling the
@@ -268,13 +288,10 @@ require:
 %}
 
 %feature("docstring",
-"Distill labeled (channelized)  Partials in a PartialList into a
-PartialList containing a single (labeled) Partial per label. The
-distilled PartialList will contain as many Partials as there were
-non-zero labels (non-empty channels) in the original PartialList.
-Additionally, unlabeled (label 0) Partials are \"collated\" into
-groups of temporally non-overlapping Partials, assigned an unused
-label, and fused into a single Partial per group.");
+"Distill labeled (channelized) Partials in a PartialList into a 
+PartialList containing at most one Partial per label. Unlabeled 
+(zero-labeled) Partials are left unmodified at the end of the 
+distilled Partials.") distill;
 void distill( PartialList * partials );
 
 
@@ -736,29 +753,6 @@ the samples() method, which converts them to double precision floats and
 returns them in a vector.") AiffFile;
 
 %newobject AiffFile::samples;
-%newobject AiffFile::getMarker;
-%exception AiffFile::getMarker
-{
-	try
-	{
-		$action
-	}
-	catch ( InvalidArgument & ex )
-	{
-		SWIG_exception(SWIG_ValueError, (char *)ex.what() );
-	}
-}
-%exception AiffFile::removeMarker
-{
-	try
-	{
-		$action
-	}
-	catch ( InvalidArgument & ex )
-	{
-		SWIG_exception(SWIG_ValueError, (char *)ex.what() );
-	}
-}
 
 %feature("docstring",
 "");
@@ -1083,54 +1077,37 @@ data.") SdifFile;
 
 
 %newobject SdifFile::partials;
-%newobject SdifFile::getMarker;
-%exception SdifFile::getMarker
-{
-	try
-	{
-		$action
-	}
-	catch ( InvalidArgument & ex )
-	{
-		SWIG_exception(SWIG_ValueError, (char *)ex.what() );
-	}
-}
-%exception SdifFile::removeMarker
-{
-	try
-	{
-		$action
-	}
-	catch ( InvalidArgument & ex )
-	{
-		SWIG_exception(SWIG_ValueError, (char *)ex.what() );
-	}
-}
 
 class SdifFile
 {
 public:
- 	SdifFile( const char * filename );
-	/*	Initialize an instance of SdifFile by importing Partial data from
-		the file having the specified filename or path.
-	*/
-  
+ %feature("docstring",
+"Initialize an instance of SdifFile by importing Partial data from
+the file having the specified filename or path, 
+or initialize an instance of SdifFile storing the Partials in
+the specified PartialList. If no PartialList is specified,
+construct an empty SdifFile.") SdifFile;
+
+	SdifFile( const char * filename );
 	SdifFile( void );
-	/*	Initialize an empty instance of SdifFile having no Partials.
-	 */
 	 
+%feature("docstring",
+"Destroy this SdifFile.") ~SdifFile;
+
 	 ~SdifFile( void );
 		
+%feature("docstring",
+"Export the Partials represented by this SdifFile to
+the file having the specified filename or path.") write; 
+
 	void write( const char * path );
-	/*	Export the envelope Partials represented by this SdifFile to
-		the file having the specified filename or path.
-	*/
+
+%feature("docstring",
+"Export the envelope Partials represented by this SdifFile to
+the file having the specified filename or path in the 1TRC
+format, resampled, and without phase or bandwidth information.") write1TRC;
 
 	void write1TRC( const char * path );
-	/*	Export the envelope Partials represented by this SdifFile to
-		the file having the specified filename or path in the 1TRC
-		format, resampled, and without phase or bandwidth information.
-	*/
 	
 	%extend 
 	{
@@ -1139,14 +1116,18 @@ public:
 			return new SdifFile( l->begin(), l->end() );
 		}
 	
-		//	return a copy of the Partials represented by this SdifFile.
+%feature("docstring",
+"Return a copy of the Partials represented by this SdifFile.") partials;
+
 		PartialList * partials( void )
 		{
 			PartialList * plist = new PartialList( self->partials() );
 			return plist;
 		}
 		 
-		//	add a PartialList of Partials:
+%feature("docstring",
+"Add all the Partials in a PartialList to this SdifFile.") addPartials;
+
 		void addPartials( PartialList * l )
 		{
 			self->addPartials( l->begin(), l->end() );
@@ -1189,112 +1170,95 @@ this SdifFile.") setMarkers;
 // ---------------------------------------------------------------------------
 //	class SpcFile
 //
-//	Class SpcFile represents a collection of reassigned bandwidth-enhanced
-//	Partial data in a SPC-format envelope stream data file, used by the
-//	real-time bandwidth-enhanced additive synthesizer implemented on the
-//	Symbolic Sound Kyma Sound Design Workstation. Class SpcFile manages 
-//	file I/O and conversion between Partials and envelope parameter streams.
-//	
+%feature("docstring",
+"Class SpcFile represents a collection of reassigned bandwidth-enhanced
+Partial data in a SPC-format envelope stream data file, used by the
+real-time bandwidth-enhanced additive synthesizer implemented on the
+Symbolic Sound Kyma Sound Design Workstation. Class SpcFile manages 
+file I/O and conversion between Partials and envelope parameter streams.") SpcFile;
 
 %newobject SpcFile::partials;
-%newobject SpcFile::getMarker;
-%exception SpcFile::getMarker
-{
-	try
-	{
-		$action
-	}
-	catch ( InvalidArgument & ex )
-	{
-		SWIG_exception(SWIG_ValueError, (char *)ex.what() );
-	}
-}
-%exception SpcFile::removeMarker
-{
-	try
-	{
-		$action
-	}
-	catch ( InvalidArgument & ex )
-	{
-		SWIG_exception(SWIG_ValueError, (char *)ex.what() );
-	}
-}
-
 
 class SpcFile
 {
 public:
-	SpcFile( const char * filename );
-	/*	Initialize an instance of SpcFile by importing envelope parameter 
-		streams from the file having the specified filename or path.
-	*/
-	
-	SpcFile( double midiNoteNum = 60 );
-	/*	Initialize an instance of SpcFile having the specified fractional
-		MIDI note number, and no Partials (or envelope parameter streams). 
-	*/
+%feature("docstring",
+"Construct and return a new SpcFile by importing envelope parameter 
+streams from the file having the specified filename or path, 
+or initialize an instance of SpcFile having the specified fractional
+MIDI note number. If a PartialList is specified, add those
+Partials to the file. Otherwise, the new SpcFile contains 
+no Partials (or envelope parameter streams).
+The default MIDI note number is 60 (middle C).") SpcFile;
 
+	SpcFile( const char * filename );
+	SpcFile( double midiNoteNum = 60 );
+
+%feature("docstring",
+"Destroy this SpcFile.") ~SpcFile;
+   
 	~SpcFile( void );
 	
+%feature("docstring",
+"Return the sample rate for this SpcFile in Hz.") sampleRate;
+
 	double sampleRate( void ) const;
+
+%feature("docstring",
+"Return the MIDI note number for this SpcFile.
+Note number 60 corresponds to middle C.") sampleRate;
+
 	double midiNoteNumber( void ) const;
 
+%feature("docstring",
+"Add the specified Partial to the enevelope parameter streams
+represented by this SpcFile. If a label is specified, use that
+label, instead of the Partial's label, for the Partial added to
+the SpcFile.
+
+A SpcFile can contain only one Partial having any given (non-zero) 
+label, so an added Partial will replace a Partial having the 
+same label, if such a Partial exists.
+
+This may throw an InvalidArgument exception if an attempt is made
+to add unlabeled Partials, or Partials labeled higher than the
+allowable maximum.") addPartial;
+
 	void addPartial( const Loris::Partial & p );
-	/*	Add the specified Partial to the enevelope parameter streams
-		represented by this SpcFile. 
-		
-		A SpcFile can contain only one Partial having any given (non-zero) 
-		label, so an added Partial will replace a Partial having the 
-		same label, if such a Partial exists.
-
-		This may throw an InvalidArgument exception if an attempt is made
-		to add unlabeled Partials, or Partials labeled higher than the
-		allowable maximum.
-	 */
-	 
 	void addPartial( const Loris::Partial & p, int label );
-	/*	Add a Partial, assigning it the specified label (and position in the
-		Spc data).
-		
-		A SpcFile can contain only one Partial having any given (non-zero) 
-		label, so an added Partial will replace a Partial having the 
-		same label, if such a Partial exists.
 
-		This may throw an InvalidArgument exception if an attempt is made
-		to add unlabeled Partials, or Partials labeled higher than the
-		allowable maximum.
-	 */
+%feature("docstring",
+"Set the fractional MIDI note number assigned to this SpcFile. 
+If the sound has no definable pitch, use note number 60.0 (the default).") setMidiNoteNumber;
 
 	void setMidiNoteNumber( double nn );
-	/*	Set the fractional MIDI note number assigned to this SpcFile. 
-		If the sound has no definable pitch, use note number 60.0 (the default).
-	 */
 	 
+%feature("docstring",
+"Set the sampling freqency in Hz for the spc data in this
+SpcFile. This is the rate at which Kyma must be running to ensure
+proper playback of bandwidth-enhanced Spc data.
+The default sample rate is 44100 Hz.") setSampleRate;
+
 	void setSampleRate( double rate );
-	/*	Set the sampling freqency in Hz for the spc data in this
-		SpcFile. This is the rate at which Kyma must be running to ensure
-		proper playback of bandwidth-enhanced Spc data.
-		
-		The default sample rate is 44100 Hz.
-	*/
 			 
+%feature("docstring",
+"Export the envelope parameter streams represented by this SpcFile to
+the file having the specified filename or path. Export phase-correct 
+bandwidth-enhanced envelope parameter streams if enhanced is true 
+(the default), or pure sinsoidal streams otherwise.
+
+A nonzero endApproachTime indicates that the Partials do not include a
+release or decay, but rather end in a static spectrum corresponding to the
+final Breakpoint values of the partials. The endApproachTime specifies how
+long before the end of the sound the amplitude, frequency, and bandwidth
+values are to be modified to make a gradual transition to the static spectrum.
+
+If the endApproachTime is not specified, it is assumed to be zero, 
+corresponding to Partials that decay or release normally.") write;
+
 	void write( const char * filename, bool enhanced = true,
 				double endApproachTime = 0 );
-	/*	Export the envelope parameter streams represented by this SpcFile to
-		the file having the specified filename or path. Export phase-correct 
-		bandwidth-enhanced envelope parameter streams if enhanced is true 
-		(the default), or pure sinsoidal streams otherwise.
-	
-		A nonzero endApproachTime indicates that the Partials do not include a
-		release or decay, but rather end in a static spectrum corresponding to the
-		final Breakpoint values of the partials. The endApproachTime specifies how
-		long before the end of the sound the amplitude, frequency, and bandwidth
-		values are to be modified to make a gradual transition to the static spectrum.
-		
-		If the endApproachTime is not specified, it is assumed to be zero, 
-		corresponding to Partials that decay or release normally.
-	*/
+
 	
 	%extend 
 	{
@@ -1302,36 +1266,31 @@ public:
 		{
 			return new SpcFile( l->begin(), l->end(), midiNoteNum );
 		}
-		/*	Initialize an instance of SpcFile with copies of the Partials
-			on the specified half-open (STL-style) range.
 	
-			If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
-			only PartialList::const_iterator arguments.
-		*/
-	
-		//	return a copy of the Partials represented by this SdifFile.
+%feature("docstring",
+"Return a copy of the Partials represented by this SdifFile.") partials;
+
 		PartialList * partials( void )
 		{
 			PartialList * plist = new PartialList( self->partials().begin(), self->partials().end() );
 			return plist;
 		}
 
-		//	add a PartialList of Partials:
+%feature("docstring",
+"Add all the Partials in a PartialList to this SpcFile.
+			
+A SpcFile can contain only one Partial having any given (non-zero) 
+label, so an added Partial will replace a Partial having the 
+same label, if such a Partial exists.
+
+This may throw an InvalidArgument exception if an attempt is made
+to add unlabeled Partials, or Partials labeled higher than the
+allowable maximum.") addPartials;
+
 		void addPartials( PartialList * l )
 		{
 			self->addPartials( l->begin(), l->end() );
 		}
-		/*	Add all Partials on the specified half-open (STL-style) range
-			to the enevelope parameter streams represented by this SpcFile. 
-			
-			A SpcFile can contain only one Partial having any given (non-zero) 
-			label, so an added Partial will replace a Partial having the 
-			same label, if such a Partial exists.
-	
-			This may throw an InvalidArgument exception if an attempt is made
-			to add unlabeled Partials, or Partials labeled higher than the
-			allowable maximum.
-		 */
 		 
 %feature("docstring",
 "Return the (possibly empty) collection of Markers for 

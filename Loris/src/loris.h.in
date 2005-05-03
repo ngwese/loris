@@ -481,6 +481,14 @@ void channelize( PartialList * partials,
     their frequencies are not modified in any way.
  */
 
+void collate( PartialList * partials );
+/*  Collate unlabeled (zero-labeled) Partials into the smallest-possible 
+    number of Partials that does not combine any overlapping Partials.
+    Collated Partials assigned labels higher than any label in the original 
+    list, and appear at the end of the sequence, after all previously-labeled
+    Partials.
+ */
+
 LinearEnvelope * 
 createFreqReference( PartialList * partials, 
                      double minFreq, double maxFreq, long numSamps );
@@ -515,8 +523,10 @@ void dilate( PartialList * partials,
  */
 
 void distill( PartialList * partials );
-/*  Distill labeled (channelized)  Partials in a PartialList into a 
-    PartialList containing at most one Partial per label. 
+/*  Distill labeled (channelized) Partials in a PartialList into a 
+    PartialList containing at most one Partial per label. Unlabeled 
+    (zero-labeled) Partials are left unmodified at the end of the 
+    distilled Partials.
  */
 
 void exportAiff( const char * path, const double * buffer, 

@@ -2564,6 +2564,17 @@ SWIG_Check_int(PyObject* obj)
 }
 
 
+    // there seems to be a collision with a symbol name
+    // in localefwd.h (GNU) that is somehow getting
+    // imported
+    void collate_duh( PartialList * partials )
+    {
+        // make sure to find the collate that
+        // is not in std.
+        ::collate( partials );
+    }
+
+
 	LinearEnvelope * 
 	createFreqReference( PartialList * partials, 
 						 double minFreq, double maxFreq )
@@ -5183,6 +5194,31 @@ static PyObject *_wrap_channelize(PyObject *, PyObject *args) {
         char * err;
         clear_exception();
         channelize(arg1,arg2,arg3);
+        
+        if ( 0 != (err = check_exception()) )
+        {
+            SWIG_exception( SWIG_ValueError, err );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_collate(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    PartialList *arg1 = (PartialList *) 0 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:collate",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_PartialList, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        char * err;
+        clear_exception();
+        collate_duh(arg1);
         
         if ( 0 != (err = check_exception()) )
         {
@@ -14844,6 +14880,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"delete_MarkerVector", _wrap_delete_MarkerVector, METH_VARARGS, NULL},
 	 { (char *)"MarkerVector_swigregister", MarkerVector_swigregister, METH_VARARGS, NULL},
 	 { (char *)"channelize", _wrap_channelize, METH_VARARGS, NULL},
+	 { (char *)"collate", _wrap_collate, METH_VARARGS, NULL},
 	 { (char *)"createFreqReference", _wrap_createFreqReference, METH_VARARGS, NULL},
 	 { (char *)"dilate", _wrap_dilate, METH_VARARGS, NULL},
 	 { (char *)"distill", _wrap_distill, METH_VARARGS, NULL},

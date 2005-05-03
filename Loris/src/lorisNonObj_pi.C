@@ -58,6 +58,7 @@
 #include "Analyzer.h"
 #include "BreakpointEnvelope.h"
 #include "Channelizer.h"
+#include "Collator.h"
 #include "Dilator.h"
 #include "Distiller.h"
 #include "Exception.h"
@@ -139,6 +140,42 @@ void channelize( PartialList * partials,
 	catch( std::exception & ex ) 
 	{
 		std::string s("std C++ exception in channelize(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+
+/* ---------------------------------------------------------------- */
+/*        collate        
+/*
+/*  Collate unlabeled (zero-labeled) Partials into the smallest-possible 
+    number of Partials that does not combine any overlapping Partials.
+    Collated Partials assigned labels higher than any label in the original 
+    list, and appear at the end of the sequence, after all previously-labeled
+    Partials.
+ */
+extern "C"
+void collate( PartialList * partials )
+{
+	try 
+	{
+		ThrowIfNull((PartialList *) partials);
+
+		notifier << "collating " << partials->size() << " Partials" << endl;
+		
+		// uses default fade time of 1 ms, should be parameter
+		Collator::collate( *partials, 0.001 );
+		
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in collate(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in collate(): " );
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
@@ -250,14 +287,10 @@ void dilate( PartialList * partials,
 /* ---------------------------------------------------------------- */
 /*        distill        
 /*
-/*	Distill labeled (channelized)  Partials in a PartialList into a 
-	PartialList containing a single (labeled) Partial per label. 
-	The distilled PartialList will contain as many Partials as
-	there were non-zero labels (non-empty channels) in the original 
-	PartialList. Additionally, unlabeled (label 0) Partials are 
-	"collated" into groups of temporally non-overlapping Partials,
-	assigned an unused label, and fused into a single Partial per
-	group.
+/*  Distill labeled (channelized) Partials in a PartialList into a 
+    PartialList containing at most one Partial per label. Unlabeled 
+    (zero-labeled) Partials are left unmodified at the end of the 
+    distilled Partials.
  */
 extern "C"
 void distill( PartialList * partials )

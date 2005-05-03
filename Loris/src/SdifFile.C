@@ -2056,7 +2056,7 @@ static void export_sdif( const std::string & filename,
 						 const SdifFile::markers_type &markers, const bool enhanced )
 {
 //
-// Initialize CNMSAT SDIF routines.
+// Initialize CNMAT SDIF routines.
 //
 	SDIFresult ret = SDIF_Init();
 	if (ret)
@@ -2070,7 +2070,7 @@ static void export_sdif( const std::string & filename,
 	ret = SDIF_OpenWrite(filename.c_str(), &out);
 	if (ret)
 	{
-		Throw( FileIOException, "Could not open SDIF file for writing." );
+		Throw( FileIOException, "Could not open SDIF file for writing: " + filename );
 	}
 	
 	// We are no longer defining frame types.

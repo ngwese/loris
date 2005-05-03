@@ -328,6 +328,18 @@ def channelize(*args):
     """
     return _loris.channelize(*args)
 
+def collate(*args):
+    """
+    collate(partials)
+
+    Collate unlabeled (zero-labeled) Partials into the smallest-possible 
+    number of Partials that does not combine any overlapping Partials.
+    Collated Partials assigned labels higher than any label in the original 
+    list, and appear at the end of the sequence, after all previously-labeled
+    Partials.
+    """
+    return _loris.collate(*args)
+
 def dilate(*args):
     """
     dilate(partials, ivec, tvec)
@@ -346,13 +358,10 @@ def distill(*args):
     """
     distill(partials)
 
-    Distill labeled (channelized)  Partials in a PartialList into a
-    PartialList containing a single (labeled) Partial per label. The
-    distilled PartialList will contain as many Partials as there were
-    non-zero labels (non-empty channels) in the original PartialList.
-    Additionally, unlabeled (label 0) Partials are "collated" into
-    groups of temporally non-overlapping Partials, assigned an unused
-    label, and fused into a single Partial per group.
+    Distill labeled (channelized) Partials in a PartialList into a 
+    PartialList containing at most one Partial per label. Unlabeled 
+    (zero-labeled) Partials are left unmodified at the end of the 
+    distilled Partials.
     """
     return _loris.distill(*args)
 
@@ -1165,17 +1174,32 @@ class SdifFile(_object):
     def __repr__(self):
         return "<%s.%s; proxy of C++ SdifFile instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     def __del__(self, destroy=_loris.delete_SdifFile):
-        """__del__(self)"""
+        """
+        __del__(self)
+
+        Destroy this SdifFile.
+        """
         try:
             if self.thisown: destroy(self)
         except: pass
 
     def write(*args): 
-        """write(self, path)"""
+        """
+        write(self, path)
+
+        Export the Partials represented by this SdifFile to
+        the file having the specified filename or path.
+        """
         return _loris.SdifFile_write(*args)
 
     def write1TRC(*args): 
-        """write1TRC(self, path)"""
+        """
+        write1TRC(self, path)
+
+        Export the envelope Partials represented by this SdifFile to
+        the file having the specified filename or path in the 1TRC
+        format, resampled, and without phase or bandwidth information.
+        """
         return _loris.SdifFile_write1TRC(*args)
 
     def __init__(self, *args):
@@ -1184,19 +1208,28 @@ class SdifFile(_object):
         __init__(self) -> SdifFile
         __init__(self, l) -> SdifFile
 
-        Class SdifFile represents reassigned bandwidth-enhanced Partial 
-        data in a SDIF-format data file. Construction of an SdifFile 
-        from a stream or filename automatically imports the Partial
-        data.
+        Initialize an instance of SdifFile by importing Partial data from
+        the file having the specified filename or path, 
+        or initialize an instance of SdifFile storing the Partials in
+        the specified PartialList. If no PartialList is specified,
+        construct an empty SdifFile.
         """
         _swig_setattr(self, SdifFile, 'this', _loris.new_SdifFile(*args))
         _swig_setattr(self, SdifFile, 'thisown', 1)
     def partials(*args): 
-        """partials(self) -> PartialList"""
+        """
+        partials(self) -> PartialList
+
+        Return a copy of the Partials represented by this SdifFile.
+        """
         return _loris.SdifFile_partials(*args)
 
     def addPartials(*args): 
-        """addPartials(self, l)"""
+        """
+        addPartials(self, l)
+
+        Add all the Partials in a PartialList to this SdifFile.
+        """
         return _loris.SdifFile_addPartials(*args)
 
     def markers(*args): 
@@ -1235,7 +1268,15 @@ class SdifFilePtr(SdifFile):
 _loris.SdifFile_swigregister(SdifFilePtr)
 
 class SpcFile(_object):
-    """Proxy of C++ SpcFile class"""
+    """
+    Proxy of C++ SpcFile class
+
+    Class SpcFile represents a collection of reassigned bandwidth-enhanced
+    Partial data in a SPC-format envelope stream data file, used by the
+    real-time bandwidth-enhanced additive synthesizer implemented on the
+    Symbolic Sound Kyma Sound Design Workstation. Class SpcFile manages 
+    file I/O and conversion between Partials and envelope parameter streams.
+    """
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, SpcFile, name, value)
     __swig_getmethods__ = {}
@@ -1243,13 +1284,21 @@ class SpcFile(_object):
     def __repr__(self):
         return "<%s.%s; proxy of C++ SpcFile instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     def __del__(self, destroy=_loris.delete_SpcFile):
-        """__del__(self)"""
+        """
+        __del__(self)
+
+        Destroy this SpcFile.
+        """
         try:
             if self.thisown: destroy(self)
         except: pass
 
     def sampleRate(*args): 
-        """sampleRate(self) -> double"""
+        """
+        sampleRate(self) -> double
+
+        Return the sample rate for this SpcFile in Hz.
+        """
         return _loris.SpcFile_sampleRate(*args)
 
     def midiNoteNumber(*args): 
@@ -1260,15 +1309,40 @@ class SpcFile(_object):
         """
         addPartial(self, p)
         addPartial(self, p, label)
+
+        Add the specified Partial to the enevelope parameter streams
+        represented by this SpcFile. If a label is specified, use that
+        label, instead of the Partial's label, for the Partial added to
+        the SpcFile.
+
+        A SpcFile can contain only one Partial having any given (non-zero) 
+        label, so an added Partial will replace a Partial having the 
+        same label, if such a Partial exists.
+
+        This may throw an InvalidArgument exception if an attempt is made
+        to add unlabeled Partials, or Partials labeled higher than the
+        allowable maximum.
         """
         return _loris.SpcFile_addPartial(*args)
 
     def setMidiNoteNumber(*args): 
-        """setMidiNoteNumber(self, nn)"""
+        """
+        setMidiNoteNumber(self, nn)
+
+        Set the fractional MIDI note number assigned to this SpcFile. 
+        If the sound has no definable pitch, use note number 60.0 (the default).
+        """
         return _loris.SpcFile_setMidiNoteNumber(*args)
 
     def setSampleRate(*args): 
-        """setSampleRate(self, rate)"""
+        """
+        setSampleRate(self, rate)
+
+        Set the sampling freqency in Hz for the spc data in this
+        SpcFile. This is the rate at which Kyma must be running to ensure
+        proper playback of bandwidth-enhanced Spc data.
+        The default sample rate is 44100 Hz.
+        """
         return _loris.SpcFile_setSampleRate(*args)
 
     def write(*args): 
@@ -1276,6 +1350,20 @@ class SpcFile(_object):
         write(self, filename, enhanced=True, endApproachTime=0)
         write(self, filename, enhanced=True)
         write(self, filename)
+
+        Export the envelope parameter streams represented by this SpcFile to
+        the file having the specified filename or path. Export phase-correct 
+        bandwidth-enhanced envelope parameter streams if enhanced is true 
+        (the default), or pure sinsoidal streams otherwise.
+
+        A nonzero endApproachTime indicates that the Partials do not include a
+        release or decay, but rather end in a static spectrum corresponding to the
+        final Breakpoint values of the partials. The endApproachTime specifies how
+        long before the end of the sound the amplitude, frequency, and bandwidth
+        values are to be modified to make a gradual transition to the static spectrum.
+
+        If the endApproachTime is not specified, it is assumed to be zero, 
+        corresponding to Partials that decay or release normally.
         """
         return _loris.SpcFile_write(*args)
 
@@ -1286,15 +1374,39 @@ class SpcFile(_object):
         __init__(self) -> SpcFile
         __init__(self, l, midiNoteNum=60) -> SpcFile
         __init__(self, l) -> SpcFile
+
+        Construct and return a new SpcFile by importing envelope parameter 
+        streams from the file having the specified filename or path, 
+        or initialize an instance of SpcFile having the specified fractional
+        MIDI note number. If a PartialList is specified, add those
+        Partials to the file. Otherwise, the new SpcFile contains 
+        no Partials (or envelope parameter streams).
+        The default MIDI note number is 60 (middle C).
         """
         _swig_setattr(self, SpcFile, 'this', _loris.new_SpcFile(*args))
         _swig_setattr(self, SpcFile, 'thisown', 1)
     def partials(*args): 
-        """partials(self) -> PartialList"""
+        """
+        partials(self) -> PartialList
+
+        Return a copy of the Partials represented by this SdifFile.
+        """
         return _loris.SpcFile_partials(*args)
 
     def addPartials(*args): 
-        """addPartials(self, l)"""
+        """
+        addPartials(self, l)
+
+        Add all the Partials in a PartialList to this SpcFile.
+        			
+        A SpcFile can contain only one Partial having any given (non-zero) 
+        label, so an added Partial will replace a Partial having the 
+        same label, if such a Partial exists.
+
+        This may throw an InvalidArgument exception if an attempt is made
+        to add unlabeled Partials, or Partials labeled higher than the
+        allowable maximum.
+        """
         return _loris.SpcFile_addPartials(*args)
 
     def markers(*args): 

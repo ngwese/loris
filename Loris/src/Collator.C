@@ -54,9 +54,8 @@ namespace Loris {
 // ---------------------------------------------------------------------------
 //	Collator constructor
 // ---------------------------------------------------------------------------
-//!	Construct a new Collator using the specified fade time
-//!	for gaps between Partials. When two non-overlapping Partials
-//!	are distilled into a single Partial, the distilled Partial
+//!	Construct a new Collator using the specified fade and gap times
+//!	between Partials. When two Partials are joined, the collated Partial
 //!	fades out at the end of the earlier Partial and back in again
 //!	at the onset of the later one. The fade time is the time over
 //!	which these fades occur. By default, use a 1 ms fade time.
@@ -67,12 +66,12 @@ namespace Loris {
 //!	inserted.
 //!
 //!   \param   partialFadeTime is the time (in seconds) over
-//!            which Partials joined by distillation fade to
+//!            which Partials joined by collating fade to
 //!            and from zero amplitude. Default is 0.001 (one
 //!            millisecond).
 //!   \param   partialSilentTime is the minimum duration (in seconds) 
 //!            of the silent (zero-amplitude) gap between two 
-//!            Partials joined by distillation. (Default is
+//!            Partials joined by collating. (Default is
 //!            0.0001 (one tenth of a millisecond).
 //
 Collator::Collator( double partialFadeTime, double partialSilentTime ) :
@@ -112,16 +111,16 @@ struct ends_before : public std::unary_function< const Partial, bool >
 //	collateAux
 // ---------------------------------------------------------------------------
 //	Collate unlabeled (zero labeled) Partials into the smallest
-// 	possible number of Partials that does not combine any temporally
+// possible number of Partials that does not combine any temporally
 //	overlapping Partials. Give each collated Partial a label, starting
 //	with startlabel, and incrementing. The unlabeled Partials are
-//  stored (and collated) in the savezeros list.
+// stored (and collated) in the savezeros list.
 //
 void Collator::collateAux( PartialList & unlabeled, 
                            Partial::label_type startlabel )
 {
 	debugger << "Collator found " << unlabeled.size() 
-			 << " unlabeled Partials, collating..." << endl;
+			   << " unlabeled Partials, collating..." << endl;
 	
 	// 	sort Partials by end time:
 	// 	thanks to Ulrike Axen for this optimal algorithm!
@@ -147,7 +146,7 @@ void Collator::collateAux( PartialList & unlabeled,
 		const double clearance = (2.*_fadeTime) + _gapTime;
 		PartialList::iterator it = 
 			std::find_if( unlabeled.begin(), endcollated, 
-						  ends_before( endcollated->startTime() - clearance) );
+                     ends_before( endcollated->startTime() - clearance) );
 						  
 		// 	if no such Partial exists, then this Partial
 		//	becomes one of the collated ones, otherwise, 

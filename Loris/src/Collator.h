@@ -47,21 +47,21 @@ namespace Loris {
 //
 //!	Class Collator represents an algorithm for reducing a collection
 //!	of Partials into the smallest collection of "equivalent" Partials
-//!   by joining non-overlapping Partials end to end.
+//! by joining non-overlapping Partials end to end.
 //!	
 //!	Partials that are not labeled, that is, Partials having label 0,
 //!	are are "collated " into groups of non-overlapping (in time)
-//!   Partials, assigned an unused label (greater than the label associated
-//!   with any labeled Partial), and fused into a single Partial per
-//!   group. "Collating" is a bit like "sifting" but non-overlapping
-//!   Partials are grouped without regard to frequency proximity. This
-//!   algorithm produces the smallest-possible number of collated Partials.
-//!   Thanks to Ulrike Axen for providing this optimal algorithm.
+//! Partials, assigned an unused label (greater than the label associated
+//! with any labeled Partial), and fused into a single Partial per
+//! group. "Collating" is a bit like "sifting" but non-overlapping
+//! Partials are grouped without regard to frequency proximity. This
+//! algorithm produces the smallest-possible number of collated Partials.
+//! Thanks to Ulrike Axen for providing this optimal algorithm.
 //!	
 //!	Collating modifies the Partial container (a PartialList). Only
 //!	unlabeled (labeled 0) Partials are affected by the collating
 //!	operation. Collated Partials are moved to the end of the 
-//!   collection of Partials.
+//! collection of Partials.
 //
 class Collator
 {
@@ -73,9 +73,8 @@ class Collator
 public:
 //	-- construction --
 
-	//!	Construct a new Collator using the specified fade time
-	//!	for gaps between Partials. When two non-overlapping Partials
-	//!	are collated into a single Partial, the collated Partial
+	//!	Construct a new Collator using the specified fade and gap times
+	//!	between Partials. When two Partials are joined, the collated Partial
 	//!	fades out at the end of the earlier Partial and back in again
 	//!	at the onset of the later one. The fade time is the time over
 	//!	which these fades occur. By default, use a 1 ms fade time.
@@ -101,24 +100,23 @@ public:
 	
 //	-- collating --
 
-	//!	Collate labeled Partials in a collection leaving only a single 
-	//!	Partial per non-zero label. 
-	//!
-	//!	Unlabeled (zero-labeled) Partials are collated into the smallest-possible 
-	//!	number of Partials that does not combine any overlapping Partials.
-	//!	Collated Partials assigned labels higher than any label in the original 
-	//!	list, and appear at the end of the collated Partials.
+    //!	Collate unlabeled (zero-labeled) Partials into the smallest-possible 
+    //!	number of Partials that does not combine any overlapping Partials.
+    //!	Collated Partials assigned labels higher than any label in the original 
+    //!	list, and appear at the end of the sequence, after all previously-labeled
+    //! Partials.
+    //!
 	//!
 	//!	Return an iterator refering to the position of the first collated Partial,
-	//!	of the end of the collated collection if there are no collated Partials.
-	//!   Since collating is in-place, the Partials collection may be smaller
-	//!   (fewer Partials) after collating, and any iterators on the collection
-	//!   may be invalidated.
+	//!	or the end of the collated collection if there are no collated Partials.
+	//! Since collating is in-place, the Partials collection may be smaller
+	//! (fewer Partials) after collating, and any iterators on the collection
+	//! may be invalidated.
 	//!
 	//!   \post   All Partials in the collection are uniquely-labeled
-	//!   \param  partials is the collection of Partials to distill in-place
+	//!   \param  partials is the collection of Partials to collate in-place
 	//!   \return the position of the end of the range of collated Partials,
-	//!           which is either the end of the collection, oor the position
+	//!           which is either the end of the collection, or the position
 	//!           of the first collated Partial, composed of unlabeled Partials
 	//!           in the original collection.
 	//!
@@ -145,22 +143,19 @@ public:
 	
    //! Static member that constructs an instance and applies
    //! it to a sequence of Partials. 
-   //! Construct a Collator using default parameters, 
-   //! and use it to collate a sequence of Partials. 
    //!
-   //! \post   All Partials in the collection are uniquely-labeled
+   //! \post   All Partials in the collection are labeled,
+   //!         collated Partials are all at the end of the collection
+   //!         (after all previously-labeled Partials).
    //! \param  partials is the collection of Partials to collate in-place
-   //! \param   partialFadeTime is the time (in seconds) over
-   //!          which Partials joined by collating fade to
-   //!          and from zero amplitude.
-   //! \param   partialSilentTime is the minimum duration (in seconds) 
-   //!          of the silent (zero-amplitude) gap between two 
-   //!          Partials joined by collating. (Default is
-   //!          0.0001 (one tenth of a millisecond).
-   //! \return the position of the end of the range of collated Partials,
-   //!         which is either the end of the collection, oor the position
-   //!         of the first collated Partial, composed of unlabeled Partials
-   //!         in the original collection.
+   //! \param  partialFadeTime is the time (in seconds) over
+   //!         which Partials joined by collating fade to
+   //!         and from zero amplitude.
+   //! \param  partialSilentTime is the minimum duration (in seconds) 
+   //!         of the silent (zero-amplitude) gap between two 
+   //!         Partials joined by collating. (Default is
+   //!         0.0001 (one tenth of a millisecond).
+   //! \return the position of the first collated Partial
    //!
    //!	If compiled with NO_TEMPLATE_MEMBERS defined, then partials
    //!	must be a PartialList, otherwise it can be any container type
@@ -193,24 +188,22 @@ private:
 // ---------------------------------------------------------------------------
 //	collate
 // ---------------------------------------------------------------------------
-//!	Collate labeled Partials in a collection leaving only a single 
-//!	Partial per non-zero label. 
-//!
-//!	Unlabeled (zero-labeled) Partials are collated into the smallest-possible 
+//!	Collate unlabeled (zero-labeled) Partials into the smallest-possible 
 //!	number of Partials that does not combine any overlapping Partials.
 //!	Collated Partials assigned labels higher than any label in the original 
-//!	list, and appear at the end of the collated Partials.
+//!	list, and appear at the end of the sequence, after all previously-labeled
+//! Partials.
 //!
 //!	Return an iterator refering to the position of the first collated Partial,
-//!	of the end of the collated collection if there are no collated Partials.
-//!   Since collating is in-place, the Partials collection may be smaller
-//!   (fewer Partials) after collating, and any iterators on the collection
-//!   may be invalidated.
+//!	or the end of the collated collection if there are no collated Partials.
+//! Since collating is in-place, the Partials collection may be smaller
+//! (fewer Partials) after collating, and any iterators on the collection
+//! may be invalidated.
 //!
 //!   \post   All Partials in the collection are uniquely-labeled
 //!   \param  partials is the collection of Partials to collate in-place
 //!   \return the position of the end of the range of collated Partials,
-//!           which is either the end of the collection, oor the position
+//!           which is either the end of the collection, or the position
 //!           of the first collated Partial, composed of unlabeled Partials
 //!           in the original collection.
 //!
@@ -233,38 +226,21 @@ PartialList::iterator Collator::collate( PartialList & partials )
     typedef PartialList::iterator Iterator;
 #endif
 
-    // Container::iterator dist_begin = partials.begin();
-    // Container::iterator dist_end = partials.end();
-    //
-    //  Using these iterators (as arguments) only makes sense
-    //  if collate is changed to return the end of the collated
-    //  Partials, rather than the end of the collated Partials.
-    //  In the current implementation, when there are collated
-    //  Partials, there is no way to find the end of the range 
-    //  of collated Partials after the call to collate, for 
-    //  all containers. Making the collate function generic to
-    //  all containers will work, but making it work on ranges
-    //  requires an interface change.
-    
-    // The way to do this is to partition the Partials
-    // into labeled and unlabeled, and collate the unlabeled
-    // ones and replace the unlabeled range.
+    // Partition the Partials into labeled and unlabeled, 
+    // and collate the unlabeled ones and replace the 
+    // unlabeled range.
     // (This requires bidirectional iterator support.)
-    Iterator begUnlabeled = 
+    Iterator beginUnlabeled = 
        std::stable_partition( partials.begin(), partials.end(), 
                               std::not1( PartialUtils::isLabelEqual(0) ) );
     
-    //  remember how many labeled Partials there are
-    typename Iterator::difference_type numLabeled = 
-        std::distance( partials.begin(), begUnlabeled );
-    
     // cannot splice if this operation is to be generic
     // with respect to container, have to copy:
-    PartialList collated( begUnlabeled, partials.end() );
-    // collated.splice( collated.end(), begUnlabeled, partials.end() );
+    PartialList collated( beginUnlabeled, partials.end() );
+    // collated.splice( collated.end(), beginUnlabeled, partials.end() );
     
     Partial::label_type maxlabel = 
-      std::max_element( partials.begin(), begUnlabeled, 
+      std::max_element( partials.begin(), beginUnlabeled, 
                         PartialUtils::compareLabelLess() )->label();
 
     //	collate unlabeled (zero-labeled) Partials:
@@ -272,20 +248,22 @@ PartialList::iterator Collator::collate( PartialList & partials )
     
     //  copy the collated Partials back into the source container
     //  after the range of labeled Partials		
-    Iterator endcollated = 
-        std::copy( collated.begin(), collated.end(), begUnlabeled );
+    Iterator endCollated = 
+        std::copy( collated.begin(), collated.end(), beginUnlabeled );
 
     //  remove extra Partials from the end of the source container
-    //  (endcollated is the end of the collated Partials):
-    partials.erase( endcollated, partials.end() );
+    if ( endCollated != partials.end() )
+    {
+        typename Iterator::difference_type numLabeled = 
+            std::distance( partials.begin(), beginUnlabeled );
 
-    //  what could be returned? Beginning of collated Partials
-    //  would be nice, but it would take linear search to find it.
-    //  Still, without that, how can the client possibly find 
-    //  the first collated?
-    begUnlabeled = partials.begin();
-    std::advance( begUnlabeled, numLabeled );
-    return begUnlabeled;
+        partials.erase( endCollated, partials.end() );
+
+        // restore beginUnlabeled:    
+        beginUnlabeled = partials.begin();
+        std::advance( beginUnlabeled, numLabeled );
+    }
+    return beginUnlabeled;
 }
 
 // ---------------------------------------------------------------------------
@@ -311,22 +289,19 @@ PartialList::iterator Collator::operator()( PartialList & partials )
 // ---------------------------------------------------------------------------
 //! Static member that constructs an instance and applies
 //! it to a sequence of Partials. 
-//! Construct a Collator using default parameters, 
-//! and use it to collate a sequence of Partials. 
 //!
-//! \post   All Partials in the collection are uniquely-labeled
+//! \post   All Partials in the collection are uniquely-labeled,
+//!         collated Partials are all at the end of the collection
+//!         (after all labeled Partials).
 //! \param  partials is the collection of Partials to collate in-place
-//! \param   partialFadeTime is the time (in seconds) over
-//!          which Partials joined by collating fade to
-//!          and from zero amplitude.
-//! \param   partialSilentTime is the minimum duration (in seconds) 
-//!          of the silent (zero-amplitude) gap between two 
-//!          Partials joined by collateation. (Default is
-//!          0.0001 (one tenth of a millisecond).
-//! \return the position of the end of the range of collated Partials,
-//!         which is either the end of the collection, oor the position
-//!         of the first collated Partial, composed of unlabeled Partials
-//!         in the original collection.
+//! \param  partialFadeTime is the time (in seconds) over
+//!         which Partials joined by collating fade to
+//!         and from zero amplitude.
+//! \param  partialSilentTime is the minimum duration (in seconds) 
+//!         of the silent (zero-amplitude) gap between two 
+//!         Partials joined by collateation. (Default is
+//!         0.0001 (one tenth of a millisecond).
+//! \return the position of the first collated Partial
 //!
 //!	If compiled with NO_TEMPLATE_MEMBERS defined, then partials
 //!	must be a PartialList, otherwise it can be any container type
