@@ -1364,8 +1364,8 @@ SWIG_Python_GetTypeList() {
 #define  SWIGTYPE_p_std__allocatorTMarker_t swig_types[23] 
 #define  SWIGTYPE_p_SdifFile swig_types[24] 
 #define  SWIGTYPE_p_Marker swig_types[25] 
-#define  SWIGTYPE_p_NewPlistIterator swig_types[26] 
-#define  SWIGTYPE_p_NewPartialIterator swig_types[27] 
+#define  SWIGTYPE_p_SwigPListIterator swig_types[26] 
+#define  SWIGTYPE_p_SwigPartialIterator swig_types[27] 
 static swig_type_info *swig_types[29];
 
 /* -------- TYPES TABLE (END) -------- */
@@ -1470,6 +1470,7 @@ static void SWIG_exception_(int code, const char *msg) {
 	#include <AiffFile.h>
 	#include <Analyzer.h>
 	#include <BreakpointEnvelope.h>
+	#include <Collator.h>
 	#include <Exception.h>
 	#include <LinearEnvelope.h>
 	#include <Marker.h>
@@ -2567,11 +2568,10 @@ SWIG_Check_int(PyObject* obj)
     // there seems to be a collision with a symbol name
     // in localefwd.h (GNU) that is somehow getting
     // imported
-    void collate_duh( PartialList * partials )
+    void collate_duh( PartialList * partials, int startLabel = 0 )
     {
-        // make sure to find the collate that
-        // is not in std.
-        ::collate( partials );
+        Collator c;
+        c.collate( *partials, startLabel );
     }
 
 
@@ -2800,6 +2800,26 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch )
 	}
 
 
+SWIGINTERN PyObject*
+t_output_helper(PyObject* target, PyObject* o) {
+  if (!target) {
+    target = o;
+  } else if (target == Py_None) {  
+    Py_DECREF(target);
+    target = o;
+  } else {
+    if (!PyList_Check(target)) {
+      PyObject *o2 = target;
+      target = PyList_New(1);
+      PyList_SetItem(target, 0, o2);
+    }
+    PyList_Append(target,o);
+    }
+  return target;
+}
+
+
+
 	const char * version( void )
 	{
 		static const char * vstr = LORIS_VERSION_STR;
@@ -3026,9 +3046,7 @@ static void SpcFile_setMarkers(SpcFile *self,std::vector<Marker > const &markers
 
 #include <Partial.h>
 #include <PartialList.h>
-#include <PartialUtils.h>
 #include <Notifier.h>
-#include <list>
 
 using Loris::debugger;
 using Loris::Partial;
@@ -3036,26 +3054,19 @@ using Loris::PartialList;
 using Loris::PartialListIterator;
 using Loris::Breakpoint;
 
-typedef Loris::Partial::iterator PartialIterator;
 
 /*	new iterator definitions
 
 	These are much better than the old things, more like the 
 	iterators in Python 2.2 and later, very much simpler.
-	The old iterators will be replaced entirely by the new
-	kind soon, very soon.
-	
-	Note: the only reason I cannot merge the new functionality 
-	into the old iterators is that the old iterators use the
-	next() method to advance and return another iterator. Duh.
 */
-struct NewPlistIterator
+struct SwigPListIterator
 {
 	PartialList & subject;
 	PartialList::iterator it;
 
-	NewPlistIterator( PartialList & l ) : subject( l ), it ( l.begin() ) {}
-	NewPlistIterator( PartialList & l, PartialList::iterator i ) : subject( l ), it ( i ) {}
+	SwigPListIterator( PartialList & l ) : subject( l ), it ( l.begin() ) {}
+	SwigPListIterator( PartialList & l, PartialList::iterator i ) : subject( l ), it ( i ) {}
 	
 	bool atEnd( void ) { return it == subject.end(); }
 	bool hasNext( void ) { return !atEnd(); }
@@ -3075,13 +3086,13 @@ struct NewPlistIterator
 
 typedef Partial::iterator BreakpointPosition;
 
-struct NewPartialIterator
+struct SwigPartialIterator
 {
 	Partial & subject;
 	Partial::iterator it;
 
-	NewPartialIterator( Partial & p ) : subject( p ), it ( p.begin() ) {}
-	NewPartialIterator( Partial & p, Partial::iterator i ) : subject( p ), it ( i ) {}
+	SwigPartialIterator( Partial & p ) : subject( p ), it ( p.begin() ) {}
+	SwigPartialIterator( Partial & p, Partial::iterator i ) : subject( p ), it ( i ) {}
 	
 	bool atEnd( void ) { return it == subject.end(); }
 	bool hasNext( void ) { return !atEnd(); }
@@ -3100,37 +3111,11 @@ struct NewPartialIterator
 };
 
 
-
-SWIGINTERN PyObject*
-t_output_helper(PyObject* target, PyObject* o) {
-  if (!target) {
-    target = o;
-  } else if (target == Py_None) {  
-    Py_DECREF(target);
-    target = o;
-  } else {
-    if (!PyList_Check(target)) {
-      PyObject *o2 = target;
-      target = PyList_New(1);
-      PyList_SetItem(target, 0, o2);
-    }
-    PyList_Append(target,o);
-    }
-  return target;
-}
-
-
-static void PartialList_timeSpan(PartialList *self,double *tmin_out,double *tmax_out){
-		 	std::pair<double, double> span = 
-		 		Loris::PartialUtils::timeSpan( self->begin(), self->end() );
-		 	*tmin_out = span.first;
-		 	*tmax_out = span.second;
-		 }
-static NewPlistIterator *PartialList_iterator(PartialList *self){
-			return new NewPlistIterator(*self);
+static SwigPListIterator *PartialList_iterator(PartialList *self){
+			return new SwigPListIterator(*self);
 		}
-static NewPlistIterator *PartialList___iter__(PartialList *self){
-			return new NewPlistIterator(*self);
+static SwigPListIterator *PartialList___iter__(PartialList *self){
+			return new SwigPListIterator(*self);
 		}
 static unsigned long PartialList___len__(PartialList *self){
 			return self->size();
@@ -3140,11 +3125,6 @@ static void PartialList_append__SWIG_0(PartialList *self,Partial *partial){
 		}
 static void PartialList_append__SWIG_1(PartialList *self,PartialList *other){
 			self->insert( self->end(), other->begin(), other->end() );
-		}
-static NewPlistIterator *PartialList_insert(PartialList *self,NewPlistIterator *position,Partial *partial){
-			if ( self != &(position->subject) )
-				return 0;
-			return new NewPlistIterator(*self, self->insert( position->it, *partial ) );
 		}
 static void PartialList_erase(PartialList *self,Partial *partial){
 			PartialList::iterator it = self->begin();
@@ -3184,11 +3164,11 @@ static Partial *PartialList_last(PartialList *self){
 #define SWIG_From_long PyInt_FromLong
 /*@@*/
 
-static NewPartialIterator *Partial_iterator(Partial *self){
-			return new NewPartialIterator(*self);
+static SwigPartialIterator *Partial_iterator(Partial *self){
+			return new SwigPartialIterator(*self);
 		}
-static NewPartialIterator *Partial___iter__(Partial *self){
-			return new NewPartialIterator(*self);
+static SwigPartialIterator *Partial___iter__(Partial *self){
+			return new SwigPartialIterator(*self);
 		}
 static void Partial_erase(Partial *self,BreakpointPosition *pos){
 			if ( *pos != self->end() )
@@ -3216,14 +3196,14 @@ static Breakpoint *Partial_last(Partial *self){
                 return &( self->last() );
             }
         }
-static NewPartialIterator *Partial_insert(Partial *self,double time,Breakpoint const &bp){
-			return new NewPartialIterator(*self, self->insert( time, bp ));
+static SwigPartialIterator *Partial_insert(Partial *self,double time,Breakpoint const &bp){
+			return new SwigPartialIterator(*self, self->insert( time, bp ));
 		}
-static NewPartialIterator *Partial_findAfter(Partial *self,double time){
-			return new NewPartialIterator(*self, self->findAfter( time ));
+static SwigPartialIterator *Partial_findAfter(Partial *self,double time){
+			return new SwigPartialIterator(*self, self->findAfter( time ));
 		}
-static NewPartialIterator *Partial_findNearest(Partial *self,double time){
-			return new NewPartialIterator(*self, self->findNearest( time ));
+static SwigPartialIterator *Partial_findNearest(Partial *self,double time){
+			return new SwigPartialIterator(*self, self->findNearest( time ));
 		}
 static double BreakpointPosition_time(BreakpointPosition *self){ 
 			return self->time(); 
@@ -5207,7 +5187,38 @@ static PyObject *_wrap_channelize(PyObject *, PyObject *args) {
 }
 
 
-static PyObject *_wrap_collate(PyObject *, PyObject *args) {
+static PyObject *_wrap_collate__SWIG_0(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    PartialList *arg1 = (PartialList *) 0 ;
+    int arg2 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:collate",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_PartialList, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        arg2 = (int)(SWIG_As_int(obj1)); 
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    {
+        char * err;
+        clear_exception();
+        collate_duh(arg1,arg2);
+        
+        if ( 0 != (err = check_exception()) )
+        {
+            SWIG_exception( SWIG_ValueError, err );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_collate__SWIG_1(PyObject *, PyObject *args) {
     PyObject *resultobj;
     PartialList *arg1 = (PartialList *) 0 ;
     PyObject * obj0 = 0 ;
@@ -5228,6 +5239,54 @@ static PyObject *_wrap_collate(PyObject *, PyObject *args) {
     Py_INCREF(Py_None); resultobj = Py_None;
     return resultobj;
     fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_collate(PyObject *self, PyObject *args) {
+    int argc;
+    PyObject *argv[3];
+    int ii;
+    
+    argc = PyObject_Length(args);
+    for (ii = 0; (ii < argc) && (ii < 2); ii++) {
+        argv[ii] = PyTuple_GetItem(args,ii);
+    }
+    if (argc == 1) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_PartialList, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            return _wrap_collate__SWIG_1(self,args);
+        }
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_PartialList, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            _v = SWIG_Check_int(argv[1]);
+            if (_v) {
+                return _wrap_collate__SWIG_0(self,args);
+            }
+        }
+    }
+    
+    PyErr_SetString(PyExc_NotImplementedError,"No matching function for overloaded 'collate'");
     return NULL;
 }
 
@@ -7100,6 +7159,43 @@ static PyObject *_wrap_sortByLabel(PyObject *, PyObject *args) {
         }
     }
     Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_timeSpan(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    PartialList *arg1 = (PartialList *) 0 ;
+    double *arg2 = (double *) 0 ;
+    double *arg3 = (double *) 0 ;
+    double temp2 ;
+    int res2 = 0 ;
+    double temp3 ;
+    int res3 = 0 ;
+    PyObject * obj0 = 0 ;
+    
+    arg2 = &temp2; res2 = SWIG_NEWOBJ;
+    arg3 = &temp3; res3 = SWIG_NEWOBJ;
+    if(!PyArg_ParseTuple(args,(char *)"O:timeSpan",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_PartialList, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        char * err;
+        clear_exception();
+        timeSpan(arg1,arg2,arg3);
+        
+        if ( 0 != (err = check_exception()) )
+        {
+            SWIG_exception( SWIG_ValueError, err );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    resultobj = t_output_helper(resultobj, ((res2 == SWIG_NEWOBJ) ?
+    SWIG_From_double((*arg2)) : SWIG_NewPointerObj((void*)(arg2), SWIGTYPE_p_double, 0)));
+    resultobj = t_output_helper(resultobj, ((res3 == SWIG_NEWOBJ) ?
+    SWIG_From_double((*arg3)) : SWIG_NewPointerObj((void*)(arg3), SWIGTYPE_p_double, 0)));
     return resultobj;
     fail:
     return NULL;
@@ -9095,45 +9191,6 @@ static PyObject *_wrap_Analyzer_analyze(PyObject *self, PyObject *args) {
 }
 
 
-static PyObject *_wrap_Analyzer_freqResolution(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    Analyzer *arg1 = (Analyzer *) 0 ;
-    double result;
-    PyObject * obj0 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"O:Analyzer_freqResolution",&obj0)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_Analyzer, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    {
-        try
-        {
-            result = (double)((Analyzer const *)arg1)->freqResolution();
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    {
-        resultobj = SWIG_From_double((double)(result)); 
-    }
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
 static PyObject *_wrap_Analyzer_ampFloor(PyObject *, PyObject *args) {
     PyObject *resultobj;
     Analyzer *arg1 = (Analyzer *) 0 ;
@@ -9147,240 +9204,6 @@ static PyObject *_wrap_Analyzer_ampFloor(PyObject *, PyObject *args) {
         try
         {
             result = (double)((Analyzer const *)arg1)->ampFloor();
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    {
-        resultobj = SWIG_From_double((double)(result)); 
-    }
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_Analyzer_windowWidth(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    Analyzer *arg1 = (Analyzer *) 0 ;
-    double result;
-    PyObject * obj0 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"O:Analyzer_windowWidth",&obj0)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_Analyzer, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    {
-        try
-        {
-            result = (double)((Analyzer const *)arg1)->windowWidth();
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    {
-        resultobj = SWIG_From_double((double)(result)); 
-    }
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_Analyzer_sidelobeLevel(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    Analyzer *arg1 = (Analyzer *) 0 ;
-    double result;
-    PyObject * obj0 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"O:Analyzer_sidelobeLevel",&obj0)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_Analyzer, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    {
-        try
-        {
-            result = (double)((Analyzer const *)arg1)->sidelobeLevel();
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    {
-        resultobj = SWIG_From_double((double)(result)); 
-    }
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_Analyzer_freqFloor(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    Analyzer *arg1 = (Analyzer *) 0 ;
-    double result;
-    PyObject * obj0 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"O:Analyzer_freqFloor",&obj0)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_Analyzer, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    {
-        try
-        {
-            result = (double)((Analyzer const *)arg1)->freqFloor();
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    {
-        resultobj = SWIG_From_double((double)(result)); 
-    }
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_Analyzer_hopTime(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    Analyzer *arg1 = (Analyzer *) 0 ;
-    double result;
-    PyObject * obj0 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"O:Analyzer_hopTime",&obj0)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_Analyzer, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    {
-        try
-        {
-            result = (double)((Analyzer const *)arg1)->hopTime();
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    {
-        resultobj = SWIG_From_double((double)(result)); 
-    }
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_Analyzer_freqDrift(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    Analyzer *arg1 = (Analyzer *) 0 ;
-    double result;
-    PyObject * obj0 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"O:Analyzer_freqDrift",&obj0)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_Analyzer, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    {
-        try
-        {
-            result = (double)((Analyzer const *)arg1)->freqDrift();
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    {
-        resultobj = SWIG_From_double((double)(result)); 
-    }
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_Analyzer_cropTime(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    Analyzer *arg1 = (Analyzer *) 0 ;
-    double result;
-    PyObject * obj0 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"O:Analyzer_cropTime",&obj0)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_Analyzer, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    {
-        try
-        {
-            result = (double)((Analyzer const *)arg1)->cropTime();
             
         }
         catch( Loris::Exception & ex ) 
@@ -9446,24 +9269,19 @@ static PyObject *_wrap_Analyzer_bwRegionWidth(PyObject *, PyObject *args) {
 }
 
 
-static PyObject *_wrap_Analyzer_setFreqResolution(PyObject *, PyObject *args) {
+static PyObject *_wrap_Analyzer_cropTime(PyObject *, PyObject *args) {
     PyObject *resultobj;
     Analyzer *arg1 = (Analyzer *) 0 ;
-    double arg2 ;
+    double result;
     PyObject * obj0 = 0 ;
-    PyObject * obj1 = 0 ;
     
-    if(!PyArg_ParseTuple(args,(char *)"OO:Analyzer_setFreqResolution",&obj0,&obj1)) goto fail;
+    if(!PyArg_ParseTuple(args,(char *)"O:Analyzer_cropTime",&obj0)) goto fail;
     SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_Analyzer, SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail(1)) SWIG_fail;
     {
-        arg2 = (double)(SWIG_As_double(obj1)); 
-        if (SWIG_arg_fail(2)) SWIG_fail;
-    }
-    {
         try
         {
-            (arg1)->setFreqResolution(arg2);
+            result = (double)((Analyzer const *)arg1)->cropTime();
             
         }
         catch( Loris::Exception & ex ) 
@@ -9481,7 +9299,243 @@ static PyObject *_wrap_Analyzer_setFreqResolution(PyObject *, PyObject *args) {
             SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
         }
     }
-    Py_INCREF(Py_None); resultobj = Py_None;
+    {
+        resultobj = SWIG_From_double((double)(result)); 
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Analyzer_freqDrift(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    Analyzer *arg1 = (Analyzer *) 0 ;
+    double result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:Analyzer_freqDrift",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_Analyzer, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        try
+        {
+            result = (double)((Analyzer const *)arg1)->freqDrift();
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    {
+        resultobj = SWIG_From_double((double)(result)); 
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Analyzer_freqFloor(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    Analyzer *arg1 = (Analyzer *) 0 ;
+    double result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:Analyzer_freqFloor",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_Analyzer, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        try
+        {
+            result = (double)((Analyzer const *)arg1)->freqFloor();
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    {
+        resultobj = SWIG_From_double((double)(result)); 
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Analyzer_freqResolution(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    Analyzer *arg1 = (Analyzer *) 0 ;
+    double result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:Analyzer_freqResolution",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_Analyzer, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        try
+        {
+            result = (double)((Analyzer const *)arg1)->freqResolution();
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    {
+        resultobj = SWIG_From_double((double)(result)); 
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Analyzer_hopTime(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    Analyzer *arg1 = (Analyzer *) 0 ;
+    double result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:Analyzer_hopTime",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_Analyzer, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        try
+        {
+            result = (double)((Analyzer const *)arg1)->hopTime();
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    {
+        resultobj = SWIG_From_double((double)(result)); 
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Analyzer_sidelobeLevel(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    Analyzer *arg1 = (Analyzer *) 0 ;
+    double result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:Analyzer_sidelobeLevel",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_Analyzer, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        try
+        {
+            result = (double)((Analyzer const *)arg1)->sidelobeLevel();
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    {
+        resultobj = SWIG_From_double((double)(result)); 
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Analyzer_windowWidth(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    Analyzer *arg1 = (Analyzer *) 0 ;
+    double result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:Analyzer_windowWidth",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_Analyzer, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        try
+        {
+            result = (double)((Analyzer const *)arg1)->windowWidth();
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    {
+        resultobj = SWIG_From_double((double)(result)); 
+    }
     return resultobj;
     fail:
     return NULL;
@@ -9530,14 +9584,14 @@ static PyObject *_wrap_Analyzer_setAmpFloor(PyObject *, PyObject *args) {
 }
 
 
-static PyObject *_wrap_Analyzer_setWindowWidth(PyObject *, PyObject *args) {
+static PyObject *_wrap_Analyzer_setBwRegionWidth(PyObject *, PyObject *args) {
     PyObject *resultobj;
     Analyzer *arg1 = (Analyzer *) 0 ;
     double arg2 ;
     PyObject * obj0 = 0 ;
     PyObject * obj1 = 0 ;
     
-    if(!PyArg_ParseTuple(args,(char *)"OO:Analyzer_setWindowWidth",&obj0,&obj1)) goto fail;
+    if(!PyArg_ParseTuple(args,(char *)"OO:Analyzer_setBwRegionWidth",&obj0,&obj1)) goto fail;
     SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_Analyzer, SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail(1)) SWIG_fail;
     {
@@ -9547,175 +9601,7 @@ static PyObject *_wrap_Analyzer_setWindowWidth(PyObject *, PyObject *args) {
     {
         try
         {
-            (arg1)->setWindowWidth(arg2);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    Py_INCREF(Py_None); resultobj = Py_None;
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_Analyzer_setSidelobeLevel(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    Analyzer *arg1 = (Analyzer *) 0 ;
-    double arg2 ;
-    PyObject * obj0 = 0 ;
-    PyObject * obj1 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"OO:Analyzer_setSidelobeLevel",&obj0,&obj1)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_Analyzer, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    {
-        arg2 = (double)(SWIG_As_double(obj1)); 
-        if (SWIG_arg_fail(2)) SWIG_fail;
-    }
-    {
-        try
-        {
-            (arg1)->setSidelobeLevel(arg2);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    Py_INCREF(Py_None); resultobj = Py_None;
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_Analyzer_setFreqFloor(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    Analyzer *arg1 = (Analyzer *) 0 ;
-    double arg2 ;
-    PyObject * obj0 = 0 ;
-    PyObject * obj1 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"OO:Analyzer_setFreqFloor",&obj0,&obj1)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_Analyzer, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    {
-        arg2 = (double)(SWIG_As_double(obj1)); 
-        if (SWIG_arg_fail(2)) SWIG_fail;
-    }
-    {
-        try
-        {
-            (arg1)->setFreqFloor(arg2);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    Py_INCREF(Py_None); resultobj = Py_None;
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_Analyzer_setFreqDrift(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    Analyzer *arg1 = (Analyzer *) 0 ;
-    double arg2 ;
-    PyObject * obj0 = 0 ;
-    PyObject * obj1 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"OO:Analyzer_setFreqDrift",&obj0,&obj1)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_Analyzer, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    {
-        arg2 = (double)(SWIG_As_double(obj1)); 
-        if (SWIG_arg_fail(2)) SWIG_fail;
-    }
-    {
-        try
-        {
-            (arg1)->setFreqDrift(arg2);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    Py_INCREF(Py_None); resultobj = Py_None;
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_Analyzer_setHopTime(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    Analyzer *arg1 = (Analyzer *) 0 ;
-    double arg2 ;
-    PyObject * obj0 = 0 ;
-    PyObject * obj1 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"OO:Analyzer_setHopTime",&obj0,&obj1)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_Analyzer, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    {
-        arg2 = (double)(SWIG_As_double(obj1)); 
-        if (SWIG_arg_fail(2)) SWIG_fail;
-    }
-    {
-        try
-        {
-            (arg1)->setHopTime(arg2);
+            (arg1)->setBwRegionWidth(arg2);
             
         }
         catch( Loris::Exception & ex ) 
@@ -9782,14 +9668,14 @@ static PyObject *_wrap_Analyzer_setCropTime(PyObject *, PyObject *args) {
 }
 
 
-static PyObject *_wrap_Analyzer_setBwRegionWidth(PyObject *, PyObject *args) {
+static PyObject *_wrap_Analyzer_setFreqDrift(PyObject *, PyObject *args) {
     PyObject *resultobj;
     Analyzer *arg1 = (Analyzer *) 0 ;
     double arg2 ;
     PyObject * obj0 = 0 ;
     PyObject * obj1 = 0 ;
     
-    if(!PyArg_ParseTuple(args,(char *)"OO:Analyzer_setBwRegionWidth",&obj0,&obj1)) goto fail;
+    if(!PyArg_ParseTuple(args,(char *)"OO:Analyzer_setFreqDrift",&obj0,&obj1)) goto fail;
     SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_Analyzer, SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail(1)) SWIG_fail;
     {
@@ -9799,7 +9685,217 @@ static PyObject *_wrap_Analyzer_setBwRegionWidth(PyObject *, PyObject *args) {
     {
         try
         {
-            (arg1)->setBwRegionWidth(arg2);
+            (arg1)->setFreqDrift(arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Analyzer_setFreqFloor(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    Analyzer *arg1 = (Analyzer *) 0 ;
+    double arg2 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Analyzer_setFreqFloor",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_Analyzer, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        arg2 = (double)(SWIG_As_double(obj1)); 
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    {
+        try
+        {
+            (arg1)->setFreqFloor(arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Analyzer_setFreqResolution(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    Analyzer *arg1 = (Analyzer *) 0 ;
+    double arg2 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Analyzer_setFreqResolution",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_Analyzer, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        arg2 = (double)(SWIG_As_double(obj1)); 
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    {
+        try
+        {
+            (arg1)->setFreqResolution(arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Analyzer_setHopTime(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    Analyzer *arg1 = (Analyzer *) 0 ;
+    double arg2 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Analyzer_setHopTime",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_Analyzer, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        arg2 = (double)(SWIG_As_double(obj1)); 
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    {
+        try
+        {
+            (arg1)->setHopTime(arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Analyzer_setSidelobeLevel(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    Analyzer *arg1 = (Analyzer *) 0 ;
+    double arg2 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Analyzer_setSidelobeLevel",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_Analyzer, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        arg2 = (double)(SWIG_As_double(obj1)); 
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    {
+        try
+        {
+            (arg1)->setSidelobeLevel(arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Analyzer_setWindowWidth(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    Analyzer *arg1 = (Analyzer *) 0 ;
+    double arg2 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Analyzer_setWindowWidth",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_Analyzer, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        arg2 = (double)(SWIG_As_double(obj1)); 
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    {
+        try
+        {
+            (arg1)->setWindowWidth(arg2);
             
         }
         catch( Loris::Exception & ex ) 
@@ -12025,14 +12121,14 @@ static PyObject * SpcFile_swigregister(PyObject *, PyObject *args) {
     Py_INCREF(obj);
     return Py_BuildValue((char *)"");
 }
-static PyObject *_wrap_NewPlistIterator_atEnd(PyObject *, PyObject *args) {
+static PyObject *_wrap_PartialListIterator_atEnd(PyObject *, PyObject *args) {
     PyObject *resultobj;
-    NewPlistIterator *arg1 = (NewPlistIterator *) 0 ;
+    SwigPListIterator *arg1 = (SwigPListIterator *) 0 ;
     bool result;
     PyObject * obj0 = 0 ;
     
-    if(!PyArg_ParseTuple(args,(char *)"O:NewPlistIterator_atEnd",&obj0)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_NewPlistIterator, SWIG_POINTER_EXCEPTION | 0);
+    if(!PyArg_ParseTuple(args,(char *)"O:PartialListIterator_atEnd",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SwigPListIterator, SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail(1)) SWIG_fail;
     {
         try
@@ -12064,14 +12160,14 @@ static PyObject *_wrap_NewPlistIterator_atEnd(PyObject *, PyObject *args) {
 }
 
 
-static PyObject *_wrap_NewPlistIterator_next(PyObject *, PyObject *args) {
+static PyObject *_wrap_PartialListIterator_next(PyObject *, PyObject *args) {
     PyObject *resultobj;
-    NewPlistIterator *arg1 = (NewPlistIterator *) 0 ;
+    SwigPListIterator *arg1 = (SwigPListIterator *) 0 ;
     Partial *result;
     PyObject * obj0 = 0 ;
     
-    if(!PyArg_ParseTuple(args,(char *)"O:NewPlistIterator_next",&obj0)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_NewPlistIterator, SWIG_POINTER_EXCEPTION | 0);
+    if(!PyArg_ParseTuple(args,(char *)"O:PartialListIterator_next",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SwigPListIterator, SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail(1)) SWIG_fail;
     {
         char * err;
@@ -12098,21 +12194,21 @@ static PyObject *_wrap_NewPlistIterator_next(PyObject *, PyObject *args) {
 }
 
 
-static PyObject * NewPlistIterator_swigregister(PyObject *, PyObject *args) {
+static PyObject * PartialListIterator_swigregister(PyObject *, PyObject *args) {
     PyObject *obj;
     if (!PyArg_ParseTuple(args,(char*)"O", &obj)) return NULL;
-    SWIG_TypeClientData(SWIGTYPE_p_NewPlistIterator, obj);
+    SWIG_TypeClientData(SWIGTYPE_p_SwigPListIterator, obj);
     Py_INCREF(obj);
     return Py_BuildValue((char *)"");
 }
-static PyObject *_wrap_NewPartialIterator_atEnd(PyObject *, PyObject *args) {
+static PyObject *_wrap_PartialIterator_atEnd(PyObject *, PyObject *args) {
     PyObject *resultobj;
-    NewPartialIterator *arg1 = (NewPartialIterator *) 0 ;
+    SwigPartialIterator *arg1 = (SwigPartialIterator *) 0 ;
     bool result;
     PyObject * obj0 = 0 ;
     
-    if(!PyArg_ParseTuple(args,(char *)"O:NewPartialIterator_atEnd",&obj0)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_NewPartialIterator, SWIG_POINTER_EXCEPTION | 0);
+    if(!PyArg_ParseTuple(args,(char *)"O:PartialIterator_atEnd",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SwigPartialIterator, SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail(1)) SWIG_fail;
     {
         try
@@ -12144,14 +12240,14 @@ static PyObject *_wrap_NewPartialIterator_atEnd(PyObject *, PyObject *args) {
 }
 
 
-static PyObject *_wrap_NewPartialIterator_hasNext(PyObject *, PyObject *args) {
+static PyObject *_wrap_PartialIterator_hasNext(PyObject *, PyObject *args) {
     PyObject *resultobj;
-    NewPartialIterator *arg1 = (NewPartialIterator *) 0 ;
+    SwigPartialIterator *arg1 = (SwigPartialIterator *) 0 ;
     bool result;
     PyObject * obj0 = 0 ;
     
-    if(!PyArg_ParseTuple(args,(char *)"O:NewPartialIterator_hasNext",&obj0)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_NewPartialIterator, SWIG_POINTER_EXCEPTION | 0);
+    if(!PyArg_ParseTuple(args,(char *)"O:PartialIterator_hasNext",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SwigPartialIterator, SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail(1)) SWIG_fail;
     {
         try
@@ -12183,14 +12279,14 @@ static PyObject *_wrap_NewPartialIterator_hasNext(PyObject *, PyObject *args) {
 }
 
 
-static PyObject *_wrap_NewPartialIterator_next(PyObject *, PyObject *args) {
+static PyObject *_wrap_PartialIterator_next(PyObject *, PyObject *args) {
     PyObject *resultobj;
-    NewPartialIterator *arg1 = (NewPartialIterator *) 0 ;
+    SwigPartialIterator *arg1 = (SwigPartialIterator *) 0 ;
     BreakpointPosition *result;
     PyObject * obj0 = 0 ;
     
-    if(!PyArg_ParseTuple(args,(char *)"O:NewPartialIterator_next",&obj0)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_NewPartialIterator, SWIG_POINTER_EXCEPTION | 0);
+    if(!PyArg_ParseTuple(args,(char *)"O:PartialIterator_next",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SwigPartialIterator, SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail(1)) SWIG_fail;
     {
         char * err;
@@ -12217,10 +12313,10 @@ static PyObject *_wrap_NewPartialIterator_next(PyObject *, PyObject *args) {
 }
 
 
-static PyObject * NewPartialIterator_swigregister(PyObject *, PyObject *args) {
+static PyObject * PartialIterator_swigregister(PyObject *, PyObject *args) {
     PyObject *obj;
     if (!PyArg_ParseTuple(args,(char*)"O", &obj)) return NULL;
-    SWIG_TypeClientData(SWIGTYPE_p_NewPartialIterator, obj);
+    SWIG_TypeClientData(SWIGTYPE_p_SwigPartialIterator, obj);
     Py_INCREF(obj);
     return Py_BuildValue((char *)"");
 }
@@ -12444,58 +12540,10 @@ static PyObject *_wrap_PartialList_size(PyObject *, PyObject *args) {
 }
 
 
-static PyObject *_wrap_PartialList_timeSpan(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    PartialList *arg1 = (PartialList *) 0 ;
-    double *arg2 = (double *) 0 ;
-    double *arg3 = (double *) 0 ;
-    double temp2 ;
-    int res2 = 0 ;
-    double temp3 ;
-    int res3 = 0 ;
-    PyObject * obj0 = 0 ;
-    
-    arg2 = &temp2; res2 = SWIG_NEWOBJ;
-    arg3 = &temp3; res3 = SWIG_NEWOBJ;
-    if(!PyArg_ParseTuple(args,(char *)"O:PartialList_timeSpan",&obj0)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_PartialList, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    {
-        try
-        {
-            PartialList_timeSpan(arg1,arg2,arg3);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    Py_INCREF(Py_None); resultobj = Py_None;
-    resultobj = t_output_helper(resultobj, ((res2 == SWIG_NEWOBJ) ?
-    SWIG_From_double((*arg2)) : SWIG_NewPointerObj((void*)(arg2), SWIGTYPE_p_double, 0)));
-    resultobj = t_output_helper(resultobj, ((res3 == SWIG_NEWOBJ) ?
-    SWIG_From_double((*arg3)) : SWIG_NewPointerObj((void*)(arg3), SWIGTYPE_p_double, 0)));
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
 static PyObject *_wrap_PartialList_iterator(PyObject *, PyObject *args) {
     PyObject *resultobj;
     PartialList *arg1 = (PartialList *) 0 ;
-    NewPlistIterator *result;
+    SwigPListIterator *result;
     PyObject * obj0 = 0 ;
     
     if(!PyArg_ParseTuple(args,(char *)"O:PartialList_iterator",&obj0)) goto fail;
@@ -12504,7 +12552,7 @@ static PyObject *_wrap_PartialList_iterator(PyObject *, PyObject *args) {
     {
         try
         {
-            result = (NewPlistIterator *)PartialList_iterator(arg1);
+            result = (SwigPListIterator *)PartialList_iterator(arg1);
             
         }
         catch( Loris::Exception & ex ) 
@@ -12522,7 +12570,7 @@ static PyObject *_wrap_PartialList_iterator(PyObject *, PyObject *args) {
             SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
         }
     }
-    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_NewPlistIterator, 1);
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_SwigPListIterator, 1);
     return resultobj;
     fail:
     return NULL;
@@ -12532,7 +12580,7 @@ static PyObject *_wrap_PartialList_iterator(PyObject *, PyObject *args) {
 static PyObject *_wrap_PartialList___iter__(PyObject *, PyObject *args) {
     PyObject *resultobj;
     PartialList *arg1 = (PartialList *) 0 ;
-    NewPlistIterator *result;
+    SwigPListIterator *result;
     PyObject * obj0 = 0 ;
     
     if(!PyArg_ParseTuple(args,(char *)"O:PartialList___iter__",&obj0)) goto fail;
@@ -12541,7 +12589,7 @@ static PyObject *_wrap_PartialList___iter__(PyObject *, PyObject *args) {
     {
         try
         {
-            result = (NewPlistIterator *)PartialList___iter__(arg1);
+            result = (SwigPListIterator *)PartialList___iter__(arg1);
             
         }
         catch( Loris::Exception & ex ) 
@@ -12559,7 +12607,7 @@ static PyObject *_wrap_PartialList___iter__(PyObject *, PyObject *args) {
             SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
         }
     }
-    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_NewPlistIterator, 1);
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_SwigPListIterator, 1);
     return resultobj;
     fail:
     return NULL;
@@ -12748,51 +12796,6 @@ static PyObject *_wrap_PartialList_append(PyObject *self, PyObject *args) {
     }
     
     PyErr_SetString(PyExc_NotImplementedError,"No matching function for overloaded 'PartialList_append'");
-    return NULL;
-}
-
-
-static PyObject *_wrap_PartialList_insert(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    PartialList *arg1 = (PartialList *) 0 ;
-    NewPlistIterator *arg2 = (NewPlistIterator *) 0 ;
-    Partial *arg3 = (Partial *) 0 ;
-    NewPlistIterator *result;
-    PyObject * obj0 = 0 ;
-    PyObject * obj1 = 0 ;
-    PyObject * obj2 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"OOO:PartialList_insert",&obj0,&obj1,&obj2)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_PartialList, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_NewPlistIterator, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(2)) SWIG_fail;
-    SWIG_Python_ConvertPtr(obj2, (void **)&arg3, SWIGTYPE_p_Partial, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(3)) SWIG_fail;
-    {
-        try
-        {
-            result = (NewPlistIterator *)PartialList_insert(arg1,arg2,arg3);
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_NewPlistIterator, 1);
-    return resultobj;
-    fail:
     return NULL;
 }
 
@@ -13511,7 +13514,7 @@ static PyObject *_wrap_Partial_phaseAt(PyObject *, PyObject *args) {
 static PyObject *_wrap_Partial_iterator(PyObject *, PyObject *args) {
     PyObject *resultobj;
     Partial *arg1 = (Partial *) 0 ;
-    NewPartialIterator *result;
+    SwigPartialIterator *result;
     PyObject * obj0 = 0 ;
     
     if(!PyArg_ParseTuple(args,(char *)"O:Partial_iterator",&obj0)) goto fail;
@@ -13520,7 +13523,7 @@ static PyObject *_wrap_Partial_iterator(PyObject *, PyObject *args) {
     {
         try
         {
-            result = (NewPartialIterator *)Partial_iterator(arg1);
+            result = (SwigPartialIterator *)Partial_iterator(arg1);
             
         }
         catch( Loris::Exception & ex ) 
@@ -13538,7 +13541,7 @@ static PyObject *_wrap_Partial_iterator(PyObject *, PyObject *args) {
             SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
         }
     }
-    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_NewPartialIterator, 1);
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_SwigPartialIterator, 1);
     return resultobj;
     fail:
     return NULL;
@@ -13548,7 +13551,7 @@ static PyObject *_wrap_Partial_iterator(PyObject *, PyObject *args) {
 static PyObject *_wrap_Partial___iter__(PyObject *, PyObject *args) {
     PyObject *resultobj;
     Partial *arg1 = (Partial *) 0 ;
-    NewPartialIterator *result;
+    SwigPartialIterator *result;
     PyObject * obj0 = 0 ;
     
     if(!PyArg_ParseTuple(args,(char *)"O:Partial___iter__",&obj0)) goto fail;
@@ -13557,7 +13560,7 @@ static PyObject *_wrap_Partial___iter__(PyObject *, PyObject *args) {
     {
         try
         {
-            result = (NewPartialIterator *)Partial___iter__(arg1);
+            result = (SwigPartialIterator *)Partial___iter__(arg1);
             
         }
         catch( Loris::Exception & ex ) 
@@ -13575,7 +13578,7 @@ static PyObject *_wrap_Partial___iter__(PyObject *, PyObject *args) {
             SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
         }
     }
-    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_NewPartialIterator, 1);
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_SwigPartialIterator, 1);
     return resultobj;
     fail:
     return NULL;
@@ -13701,7 +13704,7 @@ static PyObject *_wrap_Partial_insert(PyObject *, PyObject *args) {
     Partial *arg1 = (Partial *) 0 ;
     double arg2 ;
     Breakpoint *arg3 = 0 ;
-    NewPartialIterator *result;
+    SwigPartialIterator *result;
     PyObject * obj0 = 0 ;
     PyObject * obj1 = 0 ;
     PyObject * obj2 = 0 ;
@@ -13724,7 +13727,7 @@ static PyObject *_wrap_Partial_insert(PyObject *, PyObject *args) {
     {
         try
         {
-            result = (NewPartialIterator *)Partial_insert(arg1,arg2,(Breakpoint const &)*arg3);
+            result = (SwigPartialIterator *)Partial_insert(arg1,arg2,(Breakpoint const &)*arg3);
             
         }
         catch( Loris::Exception & ex ) 
@@ -13742,7 +13745,7 @@ static PyObject *_wrap_Partial_insert(PyObject *, PyObject *args) {
             SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
         }
     }
-    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_NewPartialIterator, 1);
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_SwigPartialIterator, 1);
     return resultobj;
     fail:
     return NULL;
@@ -13753,7 +13756,7 @@ static PyObject *_wrap_Partial_findAfter(PyObject *, PyObject *args) {
     PyObject *resultobj;
     Partial *arg1 = (Partial *) 0 ;
     double arg2 ;
-    NewPartialIterator *result;
+    SwigPartialIterator *result;
     PyObject * obj0 = 0 ;
     PyObject * obj1 = 0 ;
     
@@ -13767,7 +13770,7 @@ static PyObject *_wrap_Partial_findAfter(PyObject *, PyObject *args) {
     {
         try
         {
-            result = (NewPartialIterator *)Partial_findAfter(arg1,arg2);
+            result = (SwigPartialIterator *)Partial_findAfter(arg1,arg2);
             
         }
         catch( Loris::Exception & ex ) 
@@ -13785,7 +13788,7 @@ static PyObject *_wrap_Partial_findAfter(PyObject *, PyObject *args) {
             SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
         }
     }
-    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_NewPartialIterator, 1);
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_SwigPartialIterator, 1);
     return resultobj;
     fail:
     return NULL;
@@ -13796,7 +13799,7 @@ static PyObject *_wrap_Partial_findNearest(PyObject *, PyObject *args) {
     PyObject *resultobj;
     Partial *arg1 = (Partial *) 0 ;
     double arg2 ;
-    NewPartialIterator *result;
+    SwigPartialIterator *result;
     PyObject * obj0 = 0 ;
     PyObject * obj1 = 0 ;
     
@@ -13810,7 +13813,7 @@ static PyObject *_wrap_Partial_findNearest(PyObject *, PyObject *args) {
     {
         try
         {
-            result = (NewPartialIterator *)Partial_findNearest(arg1,arg2);
+            result = (SwigPartialIterator *)Partial_findNearest(arg1,arg2);
             
         }
         catch( Loris::Exception & ex ) 
@@ -13828,7 +13831,7 @@ static PyObject *_wrap_Partial_findNearest(PyObject *, PyObject *args) {
             SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
         }
     }
-    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_NewPartialIterator, 1);
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_SwigPartialIterator, 1);
     return resultobj;
     fail:
     return NULL;
@@ -14904,6 +14907,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"shiftTime", _wrap_shiftTime, METH_VARARGS, NULL},
 	 { (char *)"sift", _wrap_sift, METH_VARARGS, NULL},
 	 { (char *)"sortByLabel", _wrap_sortByLabel, METH_VARARGS, NULL},
+	 { (char *)"timeSpan", _wrap_timeSpan, METH_VARARGS, NULL},
 	 { (char *)"version", _wrap_version, METH_VARARGS, NULL},
 	 { (char *)"new_Marker", _wrap_new_Marker, METH_VARARGS, NULL},
 	 { (char *)"delete_Marker", _wrap_delete_Marker, METH_VARARGS, NULL},
@@ -14930,24 +14934,24 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"new_Analyzer", _wrap_new_Analyzer, METH_VARARGS, NULL},
 	 { (char *)"delete_Analyzer", _wrap_delete_Analyzer, METH_VARARGS, NULL},
 	 { (char *)"Analyzer_analyze", _wrap_Analyzer_analyze, METH_VARARGS, NULL},
-	 { (char *)"Analyzer_freqResolution", _wrap_Analyzer_freqResolution, METH_VARARGS, NULL},
 	 { (char *)"Analyzer_ampFloor", _wrap_Analyzer_ampFloor, METH_VARARGS, NULL},
-	 { (char *)"Analyzer_windowWidth", _wrap_Analyzer_windowWidth, METH_VARARGS, NULL},
-	 { (char *)"Analyzer_sidelobeLevel", _wrap_Analyzer_sidelobeLevel, METH_VARARGS, NULL},
-	 { (char *)"Analyzer_freqFloor", _wrap_Analyzer_freqFloor, METH_VARARGS, NULL},
-	 { (char *)"Analyzer_hopTime", _wrap_Analyzer_hopTime, METH_VARARGS, NULL},
-	 { (char *)"Analyzer_freqDrift", _wrap_Analyzer_freqDrift, METH_VARARGS, NULL},
-	 { (char *)"Analyzer_cropTime", _wrap_Analyzer_cropTime, METH_VARARGS, NULL},
 	 { (char *)"Analyzer_bwRegionWidth", _wrap_Analyzer_bwRegionWidth, METH_VARARGS, NULL},
-	 { (char *)"Analyzer_setFreqResolution", _wrap_Analyzer_setFreqResolution, METH_VARARGS, NULL},
+	 { (char *)"Analyzer_cropTime", _wrap_Analyzer_cropTime, METH_VARARGS, NULL},
+	 { (char *)"Analyzer_freqDrift", _wrap_Analyzer_freqDrift, METH_VARARGS, NULL},
+	 { (char *)"Analyzer_freqFloor", _wrap_Analyzer_freqFloor, METH_VARARGS, NULL},
+	 { (char *)"Analyzer_freqResolution", _wrap_Analyzer_freqResolution, METH_VARARGS, NULL},
+	 { (char *)"Analyzer_hopTime", _wrap_Analyzer_hopTime, METH_VARARGS, NULL},
+	 { (char *)"Analyzer_sidelobeLevel", _wrap_Analyzer_sidelobeLevel, METH_VARARGS, NULL},
+	 { (char *)"Analyzer_windowWidth", _wrap_Analyzer_windowWidth, METH_VARARGS, NULL},
 	 { (char *)"Analyzer_setAmpFloor", _wrap_Analyzer_setAmpFloor, METH_VARARGS, NULL},
-	 { (char *)"Analyzer_setWindowWidth", _wrap_Analyzer_setWindowWidth, METH_VARARGS, NULL},
-	 { (char *)"Analyzer_setSidelobeLevel", _wrap_Analyzer_setSidelobeLevel, METH_VARARGS, NULL},
-	 { (char *)"Analyzer_setFreqFloor", _wrap_Analyzer_setFreqFloor, METH_VARARGS, NULL},
-	 { (char *)"Analyzer_setFreqDrift", _wrap_Analyzer_setFreqDrift, METH_VARARGS, NULL},
-	 { (char *)"Analyzer_setHopTime", _wrap_Analyzer_setHopTime, METH_VARARGS, NULL},
-	 { (char *)"Analyzer_setCropTime", _wrap_Analyzer_setCropTime, METH_VARARGS, NULL},
 	 { (char *)"Analyzer_setBwRegionWidth", _wrap_Analyzer_setBwRegionWidth, METH_VARARGS, NULL},
+	 { (char *)"Analyzer_setCropTime", _wrap_Analyzer_setCropTime, METH_VARARGS, NULL},
+	 { (char *)"Analyzer_setFreqDrift", _wrap_Analyzer_setFreqDrift, METH_VARARGS, NULL},
+	 { (char *)"Analyzer_setFreqFloor", _wrap_Analyzer_setFreqFloor, METH_VARARGS, NULL},
+	 { (char *)"Analyzer_setFreqResolution", _wrap_Analyzer_setFreqResolution, METH_VARARGS, NULL},
+	 { (char *)"Analyzer_setHopTime", _wrap_Analyzer_setHopTime, METH_VARARGS, NULL},
+	 { (char *)"Analyzer_setSidelobeLevel", _wrap_Analyzer_setSidelobeLevel, METH_VARARGS, NULL},
+	 { (char *)"Analyzer_setWindowWidth", _wrap_Analyzer_setWindowWidth, METH_VARARGS, NULL},
 	 { (char *)"Analyzer_swigregister", Analyzer_swigregister, METH_VARARGS, NULL},
 	 { (char *)"new_LinearEnvelope", _wrap_new_LinearEnvelope, METH_VARARGS, NULL},
 	 { (char *)"delete_LinearEnvelope", _wrap_delete_LinearEnvelope, METH_VARARGS, NULL},
@@ -14984,23 +14988,21 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"SpcFile_addMarkers", _wrap_SpcFile_addMarkers, METH_VARARGS, NULL},
 	 { (char *)"SpcFile_setMarkers", _wrap_SpcFile_setMarkers, METH_VARARGS, NULL},
 	 { (char *)"SpcFile_swigregister", SpcFile_swigregister, METH_VARARGS, NULL},
-	 { (char *)"NewPlistIterator_atEnd", _wrap_NewPlistIterator_atEnd, METH_VARARGS, NULL},
-	 { (char *)"NewPlistIterator_next", _wrap_NewPlistIterator_next, METH_VARARGS, NULL},
-	 { (char *)"NewPlistIterator_swigregister", NewPlistIterator_swigregister, METH_VARARGS, NULL},
-	 { (char *)"NewPartialIterator_atEnd", _wrap_NewPartialIterator_atEnd, METH_VARARGS, NULL},
-	 { (char *)"NewPartialIterator_hasNext", _wrap_NewPartialIterator_hasNext, METH_VARARGS, NULL},
-	 { (char *)"NewPartialIterator_next", _wrap_NewPartialIterator_next, METH_VARARGS, NULL},
-	 { (char *)"NewPartialIterator_swigregister", NewPartialIterator_swigregister, METH_VARARGS, NULL},
+	 { (char *)"PartialListIterator_atEnd", _wrap_PartialListIterator_atEnd, METH_VARARGS, NULL},
+	 { (char *)"PartialListIterator_next", _wrap_PartialListIterator_next, METH_VARARGS, NULL},
+	 { (char *)"PartialListIterator_swigregister", PartialListIterator_swigregister, METH_VARARGS, NULL},
+	 { (char *)"PartialIterator_atEnd", _wrap_PartialIterator_atEnd, METH_VARARGS, NULL},
+	 { (char *)"PartialIterator_hasNext", _wrap_PartialIterator_hasNext, METH_VARARGS, NULL},
+	 { (char *)"PartialIterator_next", _wrap_PartialIterator_next, METH_VARARGS, NULL},
+	 { (char *)"PartialIterator_swigregister", PartialIterator_swigregister, METH_VARARGS, NULL},
 	 { (char *)"new_PartialList", _wrap_new_PartialList, METH_VARARGS, NULL},
 	 { (char *)"delete_PartialList", _wrap_delete_PartialList, METH_VARARGS, NULL},
 	 { (char *)"PartialList_clear", _wrap_PartialList_clear, METH_VARARGS, NULL},
 	 { (char *)"PartialList_size", _wrap_PartialList_size, METH_VARARGS, NULL},
-	 { (char *)"PartialList_timeSpan", _wrap_PartialList_timeSpan, METH_VARARGS, NULL},
 	 { (char *)"PartialList_iterator", _wrap_PartialList_iterator, METH_VARARGS, NULL},
 	 { (char *)"PartialList___iter__", _wrap_PartialList___iter__, METH_VARARGS, NULL},
 	 { (char *)"PartialList___len__", _wrap_PartialList___len__, METH_VARARGS, NULL},
 	 { (char *)"PartialList_append", _wrap_PartialList_append, METH_VARARGS, NULL},
-	 { (char *)"PartialList_insert", _wrap_PartialList_insert, METH_VARARGS, NULL},
 	 { (char *)"PartialList_erase", _wrap_PartialList_erase, METH_VARARGS, NULL},
 	 { (char *)"PartialList_first", _wrap_PartialList_first, METH_VARARGS, NULL},
 	 { (char *)"PartialList_last", _wrap_PartialList_last, METH_VARARGS, NULL},
@@ -15084,8 +15086,8 @@ static swig_type_info _swigt__p_AiffFile[] = {{"_p_AiffFile", 0, "AiffFile *", 0
 static swig_type_info _swigt__p_std__allocatorTMarker_t[] = {{"_p_std__allocatorTMarker_t", 0, "std::allocator<Marker > *|std::vector<Marker >::allocator_type *", 0, 0, 0, 0},{"_p_std__allocatorTMarker_t", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_SdifFile[] = {{"_p_SdifFile", 0, "SdifFile *", 0, 0, 0, 0},{"_p_SdifFile", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_Marker[] = {{"_p_Marker", 0, "Marker *", 0, 0, 0, 0},{"_p_Marker", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
-static swig_type_info _swigt__p_NewPlistIterator[] = {{"_p_NewPlistIterator", 0, "NewPlistIterator *", 0, 0, 0, 0},{"_p_NewPlistIterator", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
-static swig_type_info _swigt__p_NewPartialIterator[] = {{"_p_NewPartialIterator", 0, "NewPartialIterator *", 0, 0, 0, 0},{"_p_NewPartialIterator", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_SwigPListIterator[] = {{"_p_SwigPListIterator", 0, "SwigPListIterator *", 0, 0, 0, 0},{"_p_SwigPListIterator", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_SwigPartialIterator[] = {{"_p_SwigPartialIterator", 0, "SwigPartialIterator *", 0, 0, 0, 0},{"_p_SwigPartialIterator", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 
 static swig_type_info *swig_types_initial[] = {
 _swigt__p_PartialList, 
@@ -15114,8 +15116,8 @@ _swigt__p_AiffFile,
 _swigt__p_std__allocatorTMarker_t, 
 _swigt__p_SdifFile, 
 _swigt__p_Marker, 
-_swigt__p_NewPlistIterator, 
-_swigt__p_NewPartialIterator, 
+_swigt__p_SwigPListIterator, 
+_swigt__p_SwigPartialIterator, 
 0
 };
 

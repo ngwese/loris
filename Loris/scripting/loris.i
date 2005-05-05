@@ -79,6 +79,7 @@ For more information, please visit
 	#include <AiffFile.h>
 	#include <Analyzer.h>
 	#include <BreakpointEnvelope.h>
+	#include <Collator.h>
 	#include <Exception.h>
 	#include <LinearEnvelope.h>
 	#include <Marker.h>
@@ -204,9 +205,11 @@ void channelize( PartialList * partials,
 %feature("docstring",
 "Collate unlabeled (zero-labeled) Partials into the smallest-possible 
 number of Partials that does not combine any overlapping Partials.
-Collated Partials assigned labels higher than any label in the original 
-list, and appear at the end of the sequence, after all previously-labeled
-Partials.") collate_duh;
+Collated Partials appear at the end of the sequence, after all 
+labeled Partials.
+
+If startLabel is specified (and non-zero), collated Partials
+are assigned labels sequentially starting with startLabel.") collate_duh;
 %rename( collate ) collate_duh;
 
 %inline 
@@ -214,11 +217,10 @@ Partials.") collate_duh;
     // there seems to be a collision with a symbol name
     // in localefwd.h (GNU) that is somehow getting
     // imported
-    void collate_duh( PartialList * partials )
+    void collate_duh( PartialList * partials, int startLabel = 0 )
     {
-        // make sure to find the collate that
-        // is not in std.
-        ::collate( partials );
+        Collator c;
+        c.collate( *partials, startLabel );
     }
 %}
 
@@ -627,6 +629,13 @@ reordered.");
 void sortByLabel( PartialList * partials );
 
 %feature("docstring",
+"Return the minimum start time and maximum end time
+of all Partials in this PartialList.") timeSpan;
+
+%apply double * OUTPUT { double * tmin_out, double * tmax_out };
+void timeSpan( PartialList * partials, double * tmin_out, double * tmax_out );
+
+%feature("docstring",
 "Return a string describing the Loris version number.");
 
 %inline %{
@@ -675,11 +684,6 @@ void sortByLabel( PartialList * partials );
 		SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
 	}
 }
-
-// several classes define a copy member that
-// returns a new object:
-//
-%newobject *::copy;
 
 // ---------------------------------------------------------------------------
 //	class Marker
@@ -955,7 +959,7 @@ Partial formation.") analyze;
 		}
 		 
 		PartialList * analyze( const std::vector< double > & vec, double srate, 
-                             LinearEnvelope * env )
+                               LinearEnvelope * env )
 		{
 			PartialList * partials = new PartialList();
 			if ( ! vec.empty() )
@@ -967,27 +971,127 @@ Partial formation.") analyze;
 		}
 	}
 	
-	//	parameter access:
-	double freqResolution( void ) const;
+%feature("docstring",
+"Return the amplitude floor (lowest detected spectral amplitude),              
+in (negative) dB, for this Analyzer.");
+
 	double ampFloor( void ) const;
- 	double windowWidth( void ) const;
- 	double sidelobeLevel( void ) const;
- 	double freqFloor( void ) const;
-	double hopTime( void ) const;
- 	double freqDrift( void ) const;
- 	double cropTime( void ) const;
+
+%feature("docstring",
+"Return the width (in Hz) of the Bandwidth Association regions
+used by this Analyzer.");
+
 	double bwRegionWidth( void ) const;
+
+%feature("docstring",
+"Return the crop time (maximum temporal displacement of a time-
+frequency data point from the time-domain center of the analysis
+window, beyond which data points are considered \"unreliable\")
+for this Analyzer.");
+
+ 	double cropTime( void ) const;
+
+%feature("docstring",
+"Return the maximum allowable frequency difference between                     
+consecutive Breakpoints in a Partial envelope for this Analyzer.");
+
+ 	double freqDrift( void ) const;
+
+%feature("docstring",
+"Return the frequency floor (minimum instantaneous Partial                  
+frequency), in Hz, for this Analyzer.");
+
+ 	double freqFloor( void ) const;
+
+%feature("docstring",
+"Return the frequency resolution (minimum instantaneous frequency          
+difference between Partials) for this Analyzer.");
+
+	double freqResolution( void ) const;
+
+%feature("docstring",
+"Return the hop time (which corresponds approximately to the 
+average density of Partial envelope Breakpoint data) for this 
+Analyzer.");
+
+	double hopTime( void ) const;
+
+%feature("docstring",
+"Return the sidelobe attenutation level for the Kaiser analysis window in
+positive dB. Higher numbers (e.g. 90) give very good sidelobe 
+rejection but cause the window to be longer in time. Smaller 
+numbers raise the level of the sidelobes, increasing the likelihood
+of frequency-domain interference, but allow the window to be shorter
+in time.");
+
+  	double sidelobeLevel( void ) const;
+
+%feature("docstring",
+"Return the frequency-domain main lobe width (measured between 
+zero-crossings) of the analysis window used by this Analyzer.");
+
+	double windowWidth( void ) const;
 	
-	//	parameter mutation:
-	void setFreqResolution( double x );
+%feature("docstring",
+"Set the amplitude floor (lowest detected spectral amplitude), in              
+(negative) dB, for this Analyzer.");
+
 	void setAmpFloor( double x );
-	void setWindowWidth( double x );
-	void setSidelobeLevel( double x );
-	void setFreqFloor( double x );
-	void setFreqDrift( double x );
- 	void setHopTime( double x );
- 	void setCropTime( double x );
+	
+%feature("docstring",
+"Set the width (in Hz) of the Bandwidth Association regions
+used by this Analyzer.");
+
  	void setBwRegionWidth( double x );
+	
+%feature("docstring",
+"Set the crop time (maximum temporal displacement of a time-
+frequency data point from the time-domain center of the analysis
+window, beyond which data points are considered \"unreliable\")
+for this Analyzer.");
+
+ 	void setCropTime( double x );
+	
+%feature("docstring",
+"Set the maximum allowable frequency difference between                     
+consecutive Breakpoints in a Partial envelope for this Analyzer.");
+
+	void setFreqDrift( double x );
+	
+%feature("docstring",
+"Set the amplitude floor (minimum instantaneous Partial                  
+frequency), in Hz, for this Analyzer.");
+
+	void setFreqFloor( double x );
+	
+%feature("docstring",
+"Set the frequency resolution (minimum instantaneous frequency          
+difference between Partials) for this Analyzer. (Does not cause     
+other parameters to be recomputed.)");
+
+	void setFreqResolution( double x );
+	
+%feature("docstring",
+"Set the hop time (which corresponds approximately to the average
+density of Partial envelope Breakpoint data) for this Analyzer.");
+
+ 	void setHopTime( double x );
+	
+%feature("docstring",
+"Set the sidelobe attenutation level for the Kaiser analysis window in
+positive dB. Larger numbers (e.g. 90) give very good sidelobe 
+rejection but cause the window to be longer in time. Smaller 
+numbers raise the level of the sidelobes, increasing the likelihood
+of frequency-domain interference, but allow the window to be shorter
+in time.");
+
+	void setSidelobeLevel( double x );
+	
+%feature("docstring",
+"Set the frequency-domain main lobe width (measured between 
+zero-crossings) of the analysis window used by this Analyzer.");
+
+	void setWindowWidth( double x );
 
 };	//	end of class Analyzer
 			

@@ -151,34 +151,34 @@ void analyzer_configure( double resolution, double windowWidth );
 
 double analyzer_getAmpFloor( void );
 /*  Return the amplitude floor (lowest detected spectral amplitude),              
-    in (negative) dB, for this Analyzer.                 
+    in (negative) dB, for the Loris Analyzer.                 
  */
 
 double analyzer_getBwRegionWidth( void );
 /*  Return the width (in Hz) of the Bandwidth Association regions
-    used by this Analyzer.
+    used by the Loris Analyzer.
  */
 
 double analyzer_getCropTime( void );
 /*  Return the crop time (maximum temporal displacement of a time-
     frequency data point from the time-domain center of the analysis
     window, beyond which data points are considered "unreliable")
-    for this Analyzer.
+    for the Loris Analyzer.
  */
 
 double analyzer_getFreqDrift( void );
 /*  Return the maximum allowable frequency difference between                     
-    consecutive Breakpoints in a Partial envelope for this Analyzer.                 
+    consecutive Breakpoints in a Partial envelope for the Loris Analyzer.                 
  */
 
 double analyzer_getFreqFloor( void );
 /*  Return the frequency floor (minimum instantaneous Partial                  
-    frequency), in Hz, for this Analyzer.                 
+    frequency), in Hz, for the Loris Analyzer.                 
  */
 
 double analyzer_getFreqResolution( void );
 /*  Return the frequency resolution (minimum instantaneous frequency          
-    difference between Partials) for this Analyzer.     
+    difference between Partials) for the Loris Analyzer.     
  */
 
 double analyzer_getHopTime( void );
@@ -198,45 +198,45 @@ double analyzer_getSidelobeLevel( void );
 
 double analyzer_getWindowWidth( void );
 /*  Return the frequency-domain main lobe width (measured between 
-    zero-crossings) of the analysis window used by this Analyzer.                 
+    zero-crossings) of the analysis window used by the Loris Analyzer.                 
  */
 
 void analyzer_setAmpFloor( double x );
 /*  Set the amplitude floor (lowest detected spectral amplitude), in              
-    (negative) dB, for this Analyzer.                 
+    (negative) dB, for the Loris Analyzer.                 
  */
 
 void analyzer_setBwRegionWidth( double x );
 /*  Set the width (in Hz) of the Bandwidth Association regions
-    used by this Analyzer.
+    used by the Loris Analyzer.
  */
 
 void analyzer_setCropTime( double x );
 /*  Set the crop time (maximum temporal displacement of a time-
     frequency data point from the time-domain center of the analysis
     window, beyond which data points are considered "unreliable")
-    for this Analyzer.
+    for the Loris Analyzer.
  */
 
 void analyzer_setFreqDrift( double x );
 /*  Set the maximum allowable frequency difference between                     
-    consecutive Breakpoints in a Partial envelope for this Analyzer.                 
+    consecutive Breakpoints in a Partial envelope for the Loris Analyzer.                 
  */
 
 void analyzer_setFreqFloor( double x );
 /*  Set the amplitude floor (minimum instantaneous Partial                  
-    frequency), in Hz, for this Analyzer.
+    frequency), in Hz, for the Loris Analyzer.
  */
 
 void analyzer_setFreqResolution( double x );
 /*  Set the frequency resolution (minimum instantaneous frequency          
-    difference between Partials) for this Analyzer. (Does not cause     
+    difference between Partials) for the Loris Analyzer. (Does not cause     
     other parameters to be recomputed.)                                     
  */
 
 void analyzer_setHopTime( double x );
 /*  Set the hop time (which corresponds approximately to the average
-    density of Partial envelope Breakpoint data) for this Analyzer.
+    density of Partial envelope Breakpoint data) for the Loris Analyzer.
  */
 
 void analyzer_setSidelobeLevel( double x );
@@ -250,7 +250,7 @@ void analyzer_setSidelobeLevel( double x );
 
 void analyzer_setWindowWidth( double x );
 /*  Set the frequency-domain main lobe width (measured between 
-    zero-crossings) of the analysis window used by this Analyzer.                 
+    zero-crossings) of the analysis window used by the Loris Analyzer.                 
  */
 
 /* ---------------------------------------------------------------- */
@@ -484,9 +484,8 @@ void channelize( PartialList * partials,
 void collate( PartialList * partials );
 /*  Collate unlabeled (zero-labeled) Partials into the smallest-possible 
     number of Partials that does not combine any overlapping Partials.
-    Collated Partials assigned labels higher than any label in the original 
-    list, and appear at the end of the sequence, after all previously-labeled
-    Partials.
+    Collated Partials appear at the end of the sequence, after all 
+    labeled Partials.
  */
 
 LinearEnvelope * 
@@ -753,6 +752,13 @@ void sortByLabel( PartialList * partials );
 /*  Sort the Partials in a PartialList in order of increasing label.
     The sort is stable; Partials having the same label are not 
     reordered.
+ */
+
+void timeSpan( PartialList * partials, double * tmin, double * tmax );
+/* Return the minimum start time and maximum end time
+   in seconds of all Partials in this PartialList. The v
+   times are returned in the (non-null) pointers tmin
+   and tmax.
  */
 
 

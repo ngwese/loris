@@ -57,30 +57,21 @@
  *
  */
  
-%include typemaps.i
-%apply double * OUTPUT { double * tmin_out, double * tmax_out };
-
-%newobject *::copy;
-%newobject *::begin;
-%newobject *::end;
 %newobject *::insert;
-%newobject NewPartialIterator::next;
-	// but not NewPlistIterator::next
+%newobject SwigPartialIterator::next;
+	// but not SwigPListIterator::next
 %newobject *::__iter__;
 %newobject *::iterator;
 
 %newobject *::findAfter;
 %newobject *::findNearest;
-	//  these aren't actually needed yet
 	
 
 /* ***************** inserted C++ code ***************** */
 %{
 #include <Partial.h>
 #include <PartialList.h>
-#include <PartialUtils.h>
 #include <Notifier.h>
-#include <list>
 
 using Loris::debugger;
 using Loris::Partial;
@@ -88,26 +79,19 @@ using Loris::PartialList;
 using Loris::PartialListIterator;
 using Loris::Breakpoint;
 
-typedef Loris::Partial::iterator PartialIterator;
 
 /*	new iterator definitions
 
 	These are much better than the old things, more like the 
 	iterators in Python 2.2 and later, very much simpler.
-	The old iterators will be replaced entirely by the new
-	kind soon, very soon.
-	
-	Note: the only reason I cannot merge the new functionality 
-	into the old iterators is that the old iterators use the
-	next() method to advance and return another iterator. Duh.
 */
-struct NewPlistIterator
+struct SwigPListIterator
 {
 	PartialList & subject;
 	PartialList::iterator it;
 
-	NewPlistIterator( PartialList & l ) : subject( l ), it ( l.begin() ) {}
-	NewPlistIterator( PartialList & l, PartialList::iterator i ) : subject( l ), it ( i ) {}
+	SwigPListIterator( PartialList & l ) : subject( l ), it ( l.begin() ) {}
+	SwigPListIterator( PartialList & l, PartialList::iterator i ) : subject( l ), it ( i ) {}
 	
 	bool atEnd( void ) { return it == subject.end(); }
 	bool hasNext( void ) { return !atEnd(); }
@@ -127,13 +111,13 @@ struct NewPlistIterator
 
 typedef Partial::iterator BreakpointPosition;
 
-struct NewPartialIterator
+struct SwigPartialIterator
 {
 	Partial & subject;
 	Partial::iterator it;
 
-	NewPartialIterator( Partial & p ) : subject( p ), it ( p.begin() ) {}
-	NewPartialIterator( Partial & p, Partial::iterator i ) : subject( p ), it ( i ) {}
+	SwigPartialIterator( Partial & p ) : subject( p ), it ( p.begin() ) {}
+	SwigPartialIterator( Partial & p, Partial::iterator i ) : subject( p ), it ( i ) {}
 	
 	bool atEnd( void ) { return it == subject.end(); }
 	bool hasNext( void ) { return !atEnd(); }
@@ -193,7 +177,7 @@ struct NewPartialIterator
 }
 
 #ifdef LEGACY_ITERATOR_BEHAVIOR
-%exception NewPlistIterator::partial
+%exception SwigPListIterator::partial
 {
     char * err;
     clear_exception();
@@ -208,8 +192,9 @@ struct NewPartialIterator
 
 /* ***************** new PartialList iterator ****************** */
 
-%nodefault NewPlistIterator;
-class NewPlistIterator
+%rename (PartialListIterator) SwigPListIterator;
+%nodefault SwigPListIterator;
+class SwigPListIterator
 {
 public:
 	bool atEnd( void );
@@ -217,12 +202,12 @@ public:
 #ifdef SIWGPYTHON
     %extend
     {
-        NewPlistIterator * __iter__( void )
+        SwigPListIterator * __iter__( void )
         {
             return self;
         }
 
-        NewPlistIterator * iterator( void )
+        SwigPListIterator * iterator( void )
         {
             return self;
         }
@@ -249,8 +234,9 @@ public:
 
 /* ******************** new Partial iterator ******************* */
 
-%nodefault NewPartialIterator;
-class NewPartialIterator
+%rename (PartialIterator) SwigPartialIterator;
+%nodefault SwigPartialIterator;
+class SwigPartialIterator
 {
 public:
 	bool atEnd( void );
@@ -259,12 +245,12 @@ public:
 #ifdef SIWGPYTHON
     %extend
     {
-        NewPartialIterator * __iter__( void )
+        SwigPartialIterator * __iter__( void )
         {
             return self;
         }
 
-        NewPartialIterator * iterator( void )
+        SwigPartialIterator * iterator( void )
         {
             return self;
         }
@@ -276,18 +262,16 @@ public:
 
 /* ************************ PartialList ************************ */
 
-/*	PartialList
+%feature("docstring",
+"A PartialList represents a collection of Bandwidth-Enhanced 
+Partials, each having a trio of synchronous, non-uniformly-
+sampled breakpoint envelopes representing the time-varying 
+frequency, amplitude, and noisiness of a single bandwidth-
+enhanced sinusoid.
 
-	A PartialList represents a collection of Bandwidth-Enhanced 
-	Partials, each having a trio of synchronous, non-uniformly-
-	sampled breakpoint envelopes representing the time-varying 
-	frequency, amplitude, and noisiness of a single bandwidth-
-	enhanced sinusoid.
-
-	For more information about Bandwidth-Enhanced Partials and the  
-	Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
-	the Loris website: www.cerlsoundgroup.org/Loris/
-*/
+For more information about Bandwidth-Enhanced Partials and the  
+Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
+the Loris website: www.cerlsoundgroup.org/Loris/") PartialList;
 
 class PartialList
 {
@@ -303,26 +287,15 @@ public:
 
 	%extend
 	{
-		 //	wrapper for PartialUtils::timeSpan,
-		 // Return the minimum start time and maximum end time
-		 // of all Partials in this PartialList.
-		 void timeSpan( double * tmin_out, double * tmax_out )
-		 {
-		 	std::pair<double, double> span = 
-		 		Loris::PartialUtils::timeSpan( self->begin(), self->end() );
-		 	*tmin_out = span.first;
-		 	*tmax_out = span.second;
-		 }
-		  
 		//	(new-style) iterator access:
-		NewPlistIterator * iterator( void )
+		SwigPListIterator * iterator( void )
 		{
-			return new NewPlistIterator(*self);
+			return new SwigPListIterator(*self);
 		}
 		#ifdef SWIGPYTHON
-		NewPlistIterator * __iter__( void )
+		SwigPListIterator * __iter__( void )
 		{
-			return new NewPlistIterator(*self);
+			return new SwigPListIterator(*self);
 		}
 
 		unsigned long __len__( void ) 
@@ -341,15 +314,6 @@ public:
 			self->insert( self->end(), other->begin(), other->end() );
 		}
 	
-		//  insert acts like STL insert, returning position
-		//  of inserted element:
-		NewPlistIterator * insert( NewPlistIterator * position, Partial * partial )
-		{
-			if ( self != &(position->subject) )
-				return 0;
-			return new NewPlistIterator(*self, self->insert( position->it, *partial ) );
-		}
-
 		//  implement erase using a linear search to find
 		//  the Partial that should be removed -- slow and
 		//  gross, but the only straightforward way to make
@@ -404,6 +368,16 @@ public:
 
 /* ************************** Partial *************************** */
 
+%feature("docstring",
+"A Partial represents a single component in the
+reassigned bandwidth-enhanced additive model. A Partial consists of a
+chain of Breakpoints describing the time-varying frequency, amplitude,
+and bandwidth (or noisiness) envelopes of the component, and a 4-byte
+label. The Breakpoints are non-uniformly distributed in time. For more
+information about Reassigned Bandwidth-Enhanced Analysis and the
+Reassigned Bandwidth-Enhanced Additive Sound Model, refer to the Loris
+website: www.cerlsoundgroup.org/Loris/.
+") Partial;
 
 class Partial
 {
@@ -420,8 +394,6 @@ public:
 	double endTime( void );
 	double duration( void );
 	long numBreakpoints( void );
-	// Breakpoint & first( void );
-	// Breakpoint & last( void );
 	
 	void setLabel( int l );
 		
@@ -441,14 +413,14 @@ public:
 	%extend
 	{
 		//	new iterator access:
-		NewPartialIterator * iterator( void )
+		SwigPartialIterator * iterator( void )
 		{
-			return new NewPartialIterator(*self);
+			return new SwigPartialIterator(*self);
 		}
 		#ifdef SWIGPYTHON
-		NewPartialIterator * __iter__( void )
+		SwigPartialIterator * __iter__( void )
 		{
-			return new NewPartialIterator(*self);
+			return new SwigPartialIterator(*self);
 		}
 		#endif	
 
@@ -485,19 +457,19 @@ public:
             }
         }
 
-		NewPartialIterator * insert( double time, const Breakpoint & bp )
+		SwigPartialIterator * insert( double time, const Breakpoint & bp )
 		{
-			return new NewPartialIterator(*self, self->insert( time, bp ));
+			return new SwigPartialIterator(*self, self->insert( time, bp ));
 		}
 		
-		NewPartialIterator * findAfter( double time )
+		SwigPartialIterator * findAfter( double time )
 		{
-			return new NewPartialIterator(*self, self->findAfter( time ));
+			return new SwigPartialIterator(*self, self->findAfter( time ));
 		}
 	
-		NewPartialIterator * findNearest( double time )
+		SwigPartialIterator * findNearest( double time )
 		{
-			return new NewPartialIterator(*self, self->findNearest( time ));
+			return new SwigPartialIterator(*self, self->findNearest( time ));
 		}
 	}		
 };
@@ -506,20 +478,20 @@ public:
 
 /* ************************* Breakpoint ************************* */
 
-/*	Breakpoint
-	
-	A Breakpoint represents a single breakpoint in the time-varying
-	frequency, amplitude, and bandwidth envelope of a Reassigned 
-	Bandwidth-Enhanced Partial.
-	
-	Instantaneous phase is also stored, but is only used at the onset of 
-	a partial, or when it makes a transition from zero to nonzero amplitude.
+%feature("docstring",
+"A Breakpoint represents a single breakpoint in the time-varying
+frequency, amplitude, and bandwidth envelope of a Reassigned 
+Bandwidth-Enhanced Partial.
 
-	A Partial represents a Reassigned Bandwidth-Enhanced model component.
-	For more information about Bandwidth-Enhanced Partials and the  
-	Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
-	the Loris website: www.cerlsoundgroup.org/Loris/
- */
+Instantaneous phase is also stored, but is only used at the onset of 
+a partial, or when it makes a transition from zero to nonzero amplitude.
+
+A Partial represents a Reassigned Bandwidth-Enhanced model component.
+For more information about Bandwidth-Enhanced Partials and the  
+Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
+the Loris website: www.cerlsoundgroup.org/Loris/
+") Breakpoint;
+
 class Breakpoint
 {
 public:	
@@ -578,6 +550,10 @@ public:
 	 	
 };	//	//	end of SWIG interface class Breakpoint
 
+
+%feature("docstring",
+"A BreakpointPosition represents the position of a 
+Breakpoint within a Partial." ) BreakpointPosition;
 
 %nodefault BreakpointPosition;
 class BreakpointPosition

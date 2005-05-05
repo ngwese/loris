@@ -110,11 +110,12 @@ struct ends_before : public std::unary_function< const Partial, bool >
 // ---------------------------------------------------------------------------
 //	collateAux
 // ---------------------------------------------------------------------------
-//	Collate unlabeled (zero labeled) Partials into the smallest
-// possible number of Partials that does not combine any temporally
-//	overlapping Partials. Give each collated Partial a label, starting
-//	with startlabel, and incrementing. The unlabeled Partials are
-// stored (and collated) in the savezeros list.
+//! Collate unlabeled (zero labeled) Partials into the smallest
+//! possible number of Partials that does not combine any temporally
+//! overlapping Partials. Give each collated Partial a label, starting
+//! with startlabel, and incrementing. If startLabel is zero, then
+//! give each collated Partial the label zero. The unlabeled Partials are
+//! collated in-place.
 //
 void Collator::collateAux( PartialList & unlabeled, 
                            Partial::label_type startlabel )
@@ -129,7 +130,7 @@ void Collator::collateAux( PartialList & unlabeled,
 	//	the first (earliest-ending) Partial will be
 	//	the first collated Partial:
 	PartialList::iterator endcollated = unlabeled.begin();
-	(endcollated++)->setLabel( startlabel++ );
+	(endcollated++)->setLabel( (0 != startlabel) ? (startlabel++) : 0 );
 	
 	//	invariant:
 	//	Partials in the range [partials.begin(), endcollated)
@@ -154,7 +155,7 @@ void Collator::collateAux( PartialList & unlabeled,
 		//	the Breakpoints in this Partial:
 		if ( it == endcollated )
 		{
-			(endcollated++)->setLabel( startlabel++ );
+			(endcollated++)->setLabel( (0 != startlabel) ? (startlabel++) : 0 );
 		}
 		else
 		{	

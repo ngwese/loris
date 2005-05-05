@@ -328,18 +328,6 @@ def channelize(*args):
     """
     return _loris.channelize(*args)
 
-def collate(*args):
-    """
-    collate(partials)
-
-    Collate unlabeled (zero-labeled) Partials into the smallest-possible 
-    number of Partials that does not combine any overlapping Partials.
-    Collated Partials assigned labels higher than any label in the original 
-    list, and appear at the end of the sequence, after all previously-labeled
-    Partials.
-    """
-    return _loris.collate(*args)
-
 def dilate(*args):
     """
     dilate(partials, ivec, tvec)
@@ -479,6 +467,15 @@ def sortByLabel(*args):
     """
     return _loris.sortByLabel(*args)
 
+def timeSpan(*args):
+    """
+    timeSpan(partials, tmin_out, tmax_out)
+
+    Return the minimum start time and maximum end time
+    of all Partials in this PartialList.
+    """
+    return _loris.timeSpan(*args)
+
 def version(*args):
     """
     version() -> char
@@ -563,6 +560,21 @@ class MarkerPtr(Marker):
         if not hasattr(self,"thisown"): _swig_setattr(self, Marker, 'thisown', 0)
         _swig_setattr(self, Marker,self.__class__,Marker)
 _loris.Marker_swigregister(MarkerPtr)
+
+def collate(*args):
+    """
+    collate(partials, startLabel=0)
+    collate(partials)
+
+    Collate unlabeled (zero-labeled) Partials into the smallest-possible 
+    number of Partials that does not combine any overlapping Partials.
+    Collated Partials appear at the end of the sequence, after all 
+    labeled Partials.
+
+    If startLabel is specified (and non-zero), collated Partials
+    are assigned labels sequentially starting with startLabel.
+    """
+    return _loris.collate(*args)
 
 def createFreqReference(*args):
     """
@@ -947,77 +959,181 @@ class Analyzer(_object):
         """
         return _loris.Analyzer_analyze(*args)
 
-    def freqResolution(*args): 
-        """freqResolution(self) -> double"""
-        return _loris.Analyzer_freqResolution(*args)
-
     def ampFloor(*args): 
-        """ampFloor(self) -> double"""
+        """
+        ampFloor(self) -> double
+
+        Return the amplitude floor (lowest detected spectral amplitude),              
+        in (negative) dB, for this Analyzer.
+        """
         return _loris.Analyzer_ampFloor(*args)
 
-    def windowWidth(*args): 
-        """windowWidth(self) -> double"""
-        return _loris.Analyzer_windowWidth(*args)
-
-    def sidelobeLevel(*args): 
-        """sidelobeLevel(self) -> double"""
-        return _loris.Analyzer_sidelobeLevel(*args)
-
-    def freqFloor(*args): 
-        """freqFloor(self) -> double"""
-        return _loris.Analyzer_freqFloor(*args)
-
-    def hopTime(*args): 
-        """hopTime(self) -> double"""
-        return _loris.Analyzer_hopTime(*args)
-
-    def freqDrift(*args): 
-        """freqDrift(self) -> double"""
-        return _loris.Analyzer_freqDrift(*args)
-
-    def cropTime(*args): 
-        """cropTime(self) -> double"""
-        return _loris.Analyzer_cropTime(*args)
-
     def bwRegionWidth(*args): 
-        """bwRegionWidth(self) -> double"""
+        """
+        bwRegionWidth(self) -> double
+
+        Return the width (in Hz) of the Bandwidth Association regions
+        used by this Analyzer.
+        """
         return _loris.Analyzer_bwRegionWidth(*args)
 
-    def setFreqResolution(*args): 
-        """setFreqResolution(self, x)"""
-        return _loris.Analyzer_setFreqResolution(*args)
+    def cropTime(*args): 
+        """
+        cropTime(self) -> double
+
+        Return the crop time (maximum temporal displacement of a time-
+        frequency data point from the time-domain center of the analysis
+        window, beyond which data points are considered "unreliable")
+        for this Analyzer.
+        """
+        return _loris.Analyzer_cropTime(*args)
+
+    def freqDrift(*args): 
+        """
+        freqDrift(self) -> double
+
+        Return the maximum allowable frequency difference between                     
+        consecutive Breakpoints in a Partial envelope for this Analyzer.
+        """
+        return _loris.Analyzer_freqDrift(*args)
+
+    def freqFloor(*args): 
+        """
+        freqFloor(self) -> double
+
+        Return the frequency floor (minimum instantaneous Partial                  
+        frequency), in Hz, for this Analyzer.
+        """
+        return _loris.Analyzer_freqFloor(*args)
+
+    def freqResolution(*args): 
+        """
+        freqResolution(self) -> double
+
+        Return the frequency resolution (minimum instantaneous frequency          
+        difference between Partials) for this Analyzer.
+        """
+        return _loris.Analyzer_freqResolution(*args)
+
+    def hopTime(*args): 
+        """
+        hopTime(self) -> double
+
+        Return the hop time (which corresponds approximately to the 
+        average density of Partial envelope Breakpoint data) for this 
+        Analyzer.
+        """
+        return _loris.Analyzer_hopTime(*args)
+
+    def sidelobeLevel(*args): 
+        """
+        sidelobeLevel(self) -> double
+
+        Return the sidelobe attenutation level for the Kaiser analysis window in
+        positive dB. Higher numbers (e.g. 90) give very good sidelobe 
+        rejection but cause the window to be longer in time. Smaller 
+        numbers raise the level of the sidelobes, increasing the likelihood
+        of frequency-domain interference, but allow the window to be shorter
+        in time.
+        """
+        return _loris.Analyzer_sidelobeLevel(*args)
+
+    def windowWidth(*args): 
+        """
+        windowWidth(self) -> double
+
+        Return the frequency-domain main lobe width (measured between 
+        zero-crossings) of the analysis window used by this Analyzer.
+        """
+        return _loris.Analyzer_windowWidth(*args)
 
     def setAmpFloor(*args): 
-        """setAmpFloor(self, x)"""
+        """
+        setAmpFloor(self, x)
+
+        Set the amplitude floor (lowest detected spectral amplitude), in              
+        (negative) dB, for this Analyzer.
+        """
         return _loris.Analyzer_setAmpFloor(*args)
 
-    def setWindowWidth(*args): 
-        """setWindowWidth(self, x)"""
-        return _loris.Analyzer_setWindowWidth(*args)
+    def setBwRegionWidth(*args): 
+        """
+        setBwRegionWidth(self, x)
 
-    def setSidelobeLevel(*args): 
-        """setSidelobeLevel(self, x)"""
-        return _loris.Analyzer_setSidelobeLevel(*args)
-
-    def setFreqFloor(*args): 
-        """setFreqFloor(self, x)"""
-        return _loris.Analyzer_setFreqFloor(*args)
-
-    def setFreqDrift(*args): 
-        """setFreqDrift(self, x)"""
-        return _loris.Analyzer_setFreqDrift(*args)
-
-    def setHopTime(*args): 
-        """setHopTime(self, x)"""
-        return _loris.Analyzer_setHopTime(*args)
+        Set the width (in Hz) of the Bandwidth Association regions
+        used by this Analyzer.
+        """
+        return _loris.Analyzer_setBwRegionWidth(*args)
 
     def setCropTime(*args): 
-        """setCropTime(self, x)"""
+        """
+        setCropTime(self, x)
+
+        Set the crop time (maximum temporal displacement of a time-
+        frequency data point from the time-domain center of the analysis
+        window, beyond which data points are considered "unreliable")
+        for this Analyzer.
+        """
         return _loris.Analyzer_setCropTime(*args)
 
-    def setBwRegionWidth(*args): 
-        """setBwRegionWidth(self, x)"""
-        return _loris.Analyzer_setBwRegionWidth(*args)
+    def setFreqDrift(*args): 
+        """
+        setFreqDrift(self, x)
+
+        Set the maximum allowable frequency difference between                     
+        consecutive Breakpoints in a Partial envelope for this Analyzer.
+        """
+        return _loris.Analyzer_setFreqDrift(*args)
+
+    def setFreqFloor(*args): 
+        """
+        setFreqFloor(self, x)
+
+        Set the amplitude floor (minimum instantaneous Partial                  
+        frequency), in Hz, for this Analyzer.
+        """
+        return _loris.Analyzer_setFreqFloor(*args)
+
+    def setFreqResolution(*args): 
+        """
+        setFreqResolution(self, x)
+
+        Set the frequency resolution (minimum instantaneous frequency          
+        difference between Partials) for this Analyzer. (Does not cause     
+        other parameters to be recomputed.)
+        """
+        return _loris.Analyzer_setFreqResolution(*args)
+
+    def setHopTime(*args): 
+        """
+        setHopTime(self, x)
+
+        Set the hop time (which corresponds approximately to the average
+        density of Partial envelope Breakpoint data) for this Analyzer.
+        """
+        return _loris.Analyzer_setHopTime(*args)
+
+    def setSidelobeLevel(*args): 
+        """
+        setSidelobeLevel(self, x)
+
+        Set the sidelobe attenutation level for the Kaiser analysis window in
+        positive dB. Larger numbers (e.g. 90) give very good sidelobe 
+        rejection but cause the window to be longer in time. Smaller 
+        numbers raise the level of the sidelobes, increasing the likelihood
+        of frequency-domain interference, but allow the window to be shorter
+        in time.
+        """
+        return _loris.Analyzer_setSidelobeLevel(*args)
+
+    def setWindowWidth(*args): 
+        """
+        setWindowWidth(self, x)
+
+        Set the frequency-domain main lobe width (measured between 
+        zero-crossings) of the analysis window used by this Analyzer.
+        """
+        return _loris.Analyzer_setWindowWidth(*args)
 
 
 class AnalyzerPtr(Analyzer):
@@ -1444,62 +1560,74 @@ class SpcFilePtr(SpcFile):
         _swig_setattr(self, SpcFile,self.__class__,SpcFile)
 _loris.SpcFile_swigregister(SpcFilePtr)
 
-class NewPlistIterator(_object):
-    """Proxy of C++ NewPlistIterator class"""
+class PartialListIterator(_object):
+    """Proxy of C++ PartialListIterator class"""
     __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, NewPlistIterator, name, value)
+    __setattr__ = lambda self, name, value: _swig_setattr(self, PartialListIterator, name, value)
     __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, NewPlistIterator, name)
+    __getattr__ = lambda self, name: _swig_getattr(self, PartialListIterator, name)
     def __init__(self): raise RuntimeError, "No constructor defined"
     def __repr__(self):
-        return "<%s.%s; proxy of C++ NewPlistIterator instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+        return "<%s.%s; proxy of C++ SwigPListIterator instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     def atEnd(*args): 
         """atEnd(self) -> bool"""
-        return _loris.NewPlistIterator_atEnd(*args)
+        return _loris.PartialListIterator_atEnd(*args)
 
     def next(*args): 
         """next(self) -> Partial"""
-        return _loris.NewPlistIterator_next(*args)
+        return _loris.PartialListIterator_next(*args)
 
 
-class NewPlistIteratorPtr(NewPlistIterator):
+class PartialListIteratorPtr(PartialListIterator):
     def __init__(self, this):
-        _swig_setattr(self, NewPlistIterator, 'this', this)
-        if not hasattr(self,"thisown"): _swig_setattr(self, NewPlistIterator, 'thisown', 0)
-        _swig_setattr(self, NewPlistIterator,self.__class__,NewPlistIterator)
-_loris.NewPlistIterator_swigregister(NewPlistIteratorPtr)
+        _swig_setattr(self, PartialListIterator, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, PartialListIterator, 'thisown', 0)
+        _swig_setattr(self, PartialListIterator,self.__class__,PartialListIterator)
+_loris.PartialListIterator_swigregister(PartialListIteratorPtr)
 
-class NewPartialIterator(_object):
-    """Proxy of C++ NewPartialIterator class"""
+class PartialIterator(_object):
+    """Proxy of C++ PartialIterator class"""
     __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, NewPartialIterator, name, value)
+    __setattr__ = lambda self, name, value: _swig_setattr(self, PartialIterator, name, value)
     __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, NewPartialIterator, name)
+    __getattr__ = lambda self, name: _swig_getattr(self, PartialIterator, name)
     def __init__(self): raise RuntimeError, "No constructor defined"
     def __repr__(self):
-        return "<%s.%s; proxy of C++ NewPartialIterator instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+        return "<%s.%s; proxy of C++ SwigPartialIterator instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     def atEnd(*args): 
         """atEnd(self) -> bool"""
-        return _loris.NewPartialIterator_atEnd(*args)
+        return _loris.PartialIterator_atEnd(*args)
 
     def hasNext(*args): 
         """hasNext(self) -> bool"""
-        return _loris.NewPartialIterator_hasNext(*args)
+        return _loris.PartialIterator_hasNext(*args)
 
     def next(*args): 
         """next(self) -> BreakpointPosition"""
-        return _loris.NewPartialIterator_next(*args)
+        return _loris.PartialIterator_next(*args)
 
 
-class NewPartialIteratorPtr(NewPartialIterator):
+class PartialIteratorPtr(PartialIterator):
     def __init__(self, this):
-        _swig_setattr(self, NewPartialIterator, 'this', this)
-        if not hasattr(self,"thisown"): _swig_setattr(self, NewPartialIterator, 'thisown', 0)
-        _swig_setattr(self, NewPartialIterator,self.__class__,NewPartialIterator)
-_loris.NewPartialIterator_swigregister(NewPartialIteratorPtr)
+        _swig_setattr(self, PartialIterator, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, PartialIterator, 'thisown', 0)
+        _swig_setattr(self, PartialIterator,self.__class__,PartialIterator)
+_loris.PartialIterator_swigregister(PartialIteratorPtr)
 
 class PartialList(_object):
-    """Proxy of C++ PartialList class"""
+    """
+    Proxy of C++ PartialList class
+
+    A PartialList represents a collection of Bandwidth-Enhanced 
+    Partials, each having a trio of synchronous, non-uniformly-
+    sampled breakpoint envelopes representing the time-varying 
+    frequency, amplitude, and noisiness of a single bandwidth-
+    enhanced sinusoid.
+
+    For more information about Bandwidth-Enhanced Partials and the  
+    Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
+    the Loris website: www.cerlsoundgroup.org/Loris/
+    """
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, PartialList, name, value)
     __swig_getmethods__ = {}
@@ -1510,6 +1638,16 @@ class PartialList(_object):
         """
         __init__(self) -> PartialList
         __init__(self, rhs) -> PartialList
+
+        A PartialList represents a collection of Bandwidth-Enhanced 
+        Partials, each having a trio of synchronous, non-uniformly-
+        sampled breakpoint envelopes representing the time-varying 
+        frequency, amplitude, and noisiness of a single bandwidth-
+        enhanced sinusoid.
+
+        For more information about Bandwidth-Enhanced Partials and the  
+        Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
+        the Loris website: www.cerlsoundgroup.org/Loris/
         """
         _swig_setattr(self, PartialList, 'this', _loris.new_PartialList(*args))
         _swig_setattr(self, PartialList, 'thisown', 1)
@@ -1527,16 +1665,12 @@ class PartialList(_object):
         """size(self) -> unsigned long"""
         return _loris.PartialList_size(*args)
 
-    def timeSpan(*args): 
-        """timeSpan(self, tmin_out, tmax_out)"""
-        return _loris.PartialList_timeSpan(*args)
-
     def iterator(*args): 
-        """iterator(self) -> NewPlistIterator"""
+        """iterator(self) -> PartialListIterator"""
         return _loris.PartialList_iterator(*args)
 
     def __iter__(*args): 
-        """__iter__(self) -> NewPlistIterator"""
+        """__iter__(self) -> PartialListIterator"""
         return _loris.PartialList___iter__(*args)
 
     def __len__(*args): 
@@ -1549,10 +1683,6 @@ class PartialList(_object):
         append(self, other)
         """
         return _loris.PartialList_append(*args)
-
-    def insert(*args): 
-        """insert(self, position, partial) -> NewPlistIterator"""
-        return _loris.PartialList_insert(*args)
 
     def erase(*args): 
         """erase(self, partial)"""
@@ -1575,7 +1705,19 @@ class PartialListPtr(PartialList):
 _loris.PartialList_swigregister(PartialListPtr)
 
 class Partial(_object):
-    """Proxy of C++ Partial class"""
+    """
+    Proxy of C++ Partial class
+
+    A Partial represents a single component in the
+    reassigned bandwidth-enhanced additive model. A Partial consists of a
+    chain of Breakpoints describing the time-varying frequency, amplitude,
+    and bandwidth (or noisiness) envelopes of the component, and a 4-byte
+    label. The Breakpoints are non-uniformly distributed in time. For more
+    information about Reassigned Bandwidth-Enhanced Analysis and the
+    Reassigned Bandwidth-Enhanced Additive Sound Model, refer to the Loris
+    website: www.cerlsoundgroup.org/Loris/.
+
+    """
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, Partial, name, value)
     __swig_getmethods__ = {}
@@ -1586,6 +1728,16 @@ class Partial(_object):
         """
         __init__(self) -> Partial
         __init__(self, ??) -> Partial
+
+        A Partial represents a single component in the
+        reassigned bandwidth-enhanced additive model. A Partial consists of a
+        chain of Breakpoints describing the time-varying frequency, amplitude,
+        and bandwidth (or noisiness) envelopes of the component, and a 4-byte
+        label. The Breakpoints are non-uniformly distributed in time. For more
+        information about Reassigned Bandwidth-Enhanced Analysis and the
+        Reassigned Bandwidth-Enhanced Additive Sound Model, refer to the Loris
+        website: www.cerlsoundgroup.org/Loris/.
+
         """
         _swig_setattr(self, Partial, 'this', _loris.new_Partial(*args))
         _swig_setattr(self, Partial, 'thisown', 1)
@@ -1640,11 +1792,11 @@ class Partial(_object):
         return _loris.Partial_phaseAt(*args)
 
     def iterator(*args): 
-        """iterator(self) -> NewPartialIterator"""
+        """iterator(self) -> PartialIterator"""
         return _loris.Partial_iterator(*args)
 
     def __iter__(*args): 
-        """__iter__(self) -> NewPartialIterator"""
+        """__iter__(self) -> PartialIterator"""
         return _loris.Partial___iter__(*args)
 
     def erase(*args): 
@@ -1660,15 +1812,15 @@ class Partial(_object):
         return _loris.Partial_last(*args)
 
     def insert(*args): 
-        """insert(self, time, bp) -> NewPartialIterator"""
+        """insert(self, time, bp) -> PartialIterator"""
         return _loris.Partial_insert(*args)
 
     def findAfter(*args): 
-        """findAfter(self, time) -> NewPartialIterator"""
+        """findAfter(self, time) -> PartialIterator"""
         return _loris.Partial_findAfter(*args)
 
     def findNearest(*args): 
-        """findNearest(self, time) -> NewPartialIterator"""
+        """findNearest(self, time) -> PartialIterator"""
         return _loris.Partial_findNearest(*args)
 
 
@@ -1680,7 +1832,22 @@ class PartialPtr(Partial):
 _loris.Partial_swigregister(PartialPtr)
 
 class Breakpoint(_object):
-    """Proxy of C++ Breakpoint class"""
+    """
+    Proxy of C++ Breakpoint class
+
+    A Breakpoint represents a single breakpoint in the time-varying
+    frequency, amplitude, and bandwidth envelope of a Reassigned 
+    Bandwidth-Enhanced Partial.
+
+    Instantaneous phase is also stored, but is only used at the onset of 
+    a partial, or when it makes a transition from zero to nonzero amplitude.
+
+    A Partial represents a Reassigned Bandwidth-Enhanced model component.
+    For more information about Bandwidth-Enhanced Partials and the  
+    Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
+    the Loris website: www.cerlsoundgroup.org/Loris/
+
+    """
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, Breakpoint, name, value)
     __swig_getmethods__ = {}
@@ -1692,6 +1859,19 @@ class Breakpoint(_object):
         __init__(self, f, a, b, p=0.) -> Breakpoint
         __init__(self, f, a, b) -> Breakpoint
         __init__(self, rhs) -> Breakpoint
+
+        A Breakpoint represents a single breakpoint in the time-varying
+        frequency, amplitude, and bandwidth envelope of a Reassigned 
+        Bandwidth-Enhanced Partial.
+
+        Instantaneous phase is also stored, but is only used at the onset of 
+        a partial, or when it makes a transition from zero to nonzero amplitude.
+
+        A Partial represents a Reassigned Bandwidth-Enhanced model component.
+        For more information about Bandwidth-Enhanced Partials and the  
+        Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
+        the Loris website: www.cerlsoundgroup.org/Loris/
+
         """
         _swig_setattr(self, Breakpoint, 'this', _loris.new_Breakpoint(*args))
         _swig_setattr(self, Breakpoint, 'thisown', 1)
@@ -1742,7 +1922,12 @@ class BreakpointPtr(Breakpoint):
 _loris.Breakpoint_swigregister(BreakpointPtr)
 
 class BreakpointPosition(_object):
-    """Proxy of C++ BreakpointPosition class"""
+    """
+    Proxy of C++ BreakpointPosition class
+
+    A BreakpointPosition represents the position of a 
+    Breakpoint within a Partial.
+    """
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, BreakpointPosition, name, value)
     __swig_getmethods__ = {}

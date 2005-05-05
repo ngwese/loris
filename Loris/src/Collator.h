@@ -51,9 +51,8 @@ namespace Loris {
 //!	
 //!	Partials that are not labeled, that is, Partials having label 0,
 //!	are are "collated " into groups of non-overlapping (in time)
-//! Partials, assigned an unused label (greater than the label associated
-//! with any labeled Partial), and fused into a single Partial per
-//! group. "Collating" is a bit like "sifting" but non-overlapping
+//! Partials, and fused into a single Partial per group. 
+//! "Collating" is a bit like "distilling" but non-overlapping
 //! Partials are grouped without regard to frequency proximity. This
 //! algorithm produces the smallest-possible number of collated Partials.
 //! Thanks to Ulrike Axen for providing this optimal algorithm.
@@ -94,7 +93,7 @@ public:
 	//!            0.0001 (one tenth of a millisecond).
 	explicit
 	Collator( double partialFadeTime = 0.001    /* 1 ms */,
-             double partialSilentTime = 0.0001 /* .1 ms */ );
+              double partialSilentTime = 0.0001 /* .1 ms */ );
 	 
 	//	Use compiler-generated copy, assign, and destroy.
 	
@@ -113,9 +112,12 @@ public:
 	//! (fewer Partials) after collating, and any iterators on the collection
 	//! may be invalidated.
 	//!
-	//!   \post   All Partials in the collection are uniquely-labeled
-	//!   \param  partials is the collection of Partials to collate in-place
-	//!   \return the position of the end of the range of collated Partials,
+    //!   \param  partials is the collection of Partials to collate in-place
+    //!   \param  firstLabel is the label to use for the first collated
+    //!           Partial. Others are labeled sequentially. If firstLabel
+    //!           is zero (the default), then the collated Partials remain
+    //!           unlabeled.
+	//!   \return the position of the end of the range of labeled Partials,
 	//!           which is either the end of the collection, or the position
 	//!           of the first collated Partial, composed of unlabeled Partials
 	//!           in the original collection.
@@ -127,10 +129,12 @@ public:
    //!  \sa Collator::collate( Container & partials )
 #if ! defined(NO_TEMPLATE_MEMBERS)
 	template< typename Container >
-	typename Container::iterator collate( Container & partials );
+	typename Container::iterator collate( Container & partials, 
+                                          Partial::label_type firstLabel = 0 );
 #else
     inline
-	PartialList::iterator collate( PartialList & partials );
+	PartialList::iterator collate( PartialList & partials, 
+                                   Partial::label_type firstLabel = 0 );
 #endif
 
 	//!	Function call operator: same as collate( PartialList & partials ).
@@ -144,9 +148,6 @@ public:
    //! Static member that constructs an instance and applies
    //! it to a sequence of Partials. 
    //!
-   //! \post   All Partials in the collection are labeled,
-   //!         collated Partials are all at the end of the collection
-   //!         (after all previously-labeled Partials).
    //! \param  partials is the collection of Partials to collate in-place
    //! \param  partialFadeTime is the time (in seconds) over
    //!         which Partials joined by collating fade to
@@ -164,11 +165,11 @@ public:
 	template< typename Container >
 	static typename Container::iterator 
 	collate( Container & partials, double partialFadeTime,
-                                  double partialSilentTime = 0.0001 /* .1 ms */ );
+                                   double partialSilentTime = 0.0001 /* .1 ms */ );
 #else
 	static inline PartialList::iterator
 	collate( PartialList & partials, double partialFadeTime,
-                                    double partialSilentTime = 0.0001 /* .1 ms */ );
+                                     double partialSilentTime = 0.0001 /* .1 ms */ );
 #endif
 
 
@@ -179,7 +180,8 @@ private:
     //! Collate unlabeled (zero labeled) Partials into the smallest
     //! possible number of Partials that does not combine any temporally
     //! overlapping Partials. Give each collated Partial a label, starting
-    //! with startlabel, and incrementing. The unlabeled Partials are
+    //! with startlabel, and incrementing. If startLabel is zero, then
+    //! give each collated Partial the label zero. The unlabeled Partials are
     //! collated in-place.
     void collateAux( PartialList & unlabled, Partial::label_type startLabel );
 	
@@ -200,9 +202,12 @@ private:
 //! (fewer Partials) after collating, and any iterators on the collection
 //! may be invalidated.
 //!
-//!   \post   All Partials in the collection are uniquely-labeled
 //!   \param  partials is the collection of Partials to collate in-place
-//!   \return the position of the end of the range of collated Partials,
+//!   \param  firstLabel is the label to use for the first collated
+//!           Partial. Others are labeled sequentially. If firstLabel
+//!           is zero (the default), then the collated Partials remain
+//!           unlabeled.
+//!   \return the position of the end of the range of labeled Partials,
 //!           which is either the end of the collection, or the position
 //!           of the first collated Partial, composed of unlabeled Partials
 //!           in the original collection.
@@ -214,10 +219,14 @@ private:
 //
 #if ! defined(NO_TEMPLATE_MEMBERS)
 template< typename Container >
-typename Container::iterator Collator::collate( Container & partials )
+typename Container::iterator 
+Collator::collate( Container & partials,
+                   Partial::label_type firstLabel )
 #else
 inline
-PartialList::iterator Collator::collate( PartialList & partials )
+PartialList::iterator 
+Collator::collate( PartialList & partials,
+                   Partial::label_type firstLabel )
 #endif
 {
 #if ! defined(NO_TEMPLATE_MEMBERS)
@@ -239,12 +248,13 @@ PartialList::iterator Collator::collate( PartialList & partials )
     PartialList collated( beginUnlabeled, partials.end() );
     // collated.splice( collated.end(), beginUnlabeled, partials.end() );
     
-    Partial::label_type maxlabel = 
-      std::max_element( partials.begin(), beginUnlabeled, 
-                        PartialUtils::compareLabelLess() )->label();
+    // Partial::label_type maxlabel = 
+    //   std::max_element( partials.begin(), beginUnlabeled, 
+    //                     PartialUtils::compareLabelLess() )->label();
 
     //	collate unlabeled (zero-labeled) Partials:
-    collateAux( collated, std::max( maxlabel+1, 1 ) );
+    // collateAux( collated, std::max( maxlabel+1, 1 ) );
+    collateAux( collated, firstLabel );
     
     //  copy the collated Partials back into the source container
     //  after the range of labeled Partials		

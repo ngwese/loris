@@ -645,3 +645,26 @@ void sortByLabel( PartialList * partials )
 {
 	partials->sort( PartialUtils::compareLabelLess() );	
 }
+
+/* ---------------------------------------------------------------- */
+/*        timeSpan        
+/*
+/*	Return the minimum start time and maximum end time
+ *  in seconds of all Partials in this PartialList. The v
+ *  times are returned in the (non-null) pointers tmin
+ *  and tmax.
+ */
+extern "C"
+void timeSpan( PartialList * partials, double * tmin, double * tmax )
+{
+    std::pair< double, double > times = 
+        PartialUtils::timeSpan( partials->begin(), partials->end() );	
+    if ( 0 != tmin )
+    {
+        *tmin = times.first;
+    }
+    if ( 0 != tmax )
+    {
+        *tmax = times.second;
+    }
+}
