@@ -1753,7 +1753,7 @@ writeEnvelopeLabels( FILE * out, const ConstPartialPtrs & partialsVector )
 				// size of matrix header
 				+ sizeof(SDIF_MatrixHeader) 							
 				// size of matrix data plus any padding
-				+ 8 * ((partialsVector.size() * cols * sizeof(sdif_int32) + 7) / 8);	
+				+ 8 * ((partialsVector.size() * cols * sizeof(sdif_float64) + 7) / 8);	
 		fh.time = frameTime;
 		fh.streamID = streamID;
 		fh.matrixCount = 1;
