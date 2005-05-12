@@ -322,7 +322,7 @@ static SDIFresult SDIF_Write2(const void *block, size_t n, FILE *f) {
 	/* Too big for buffer */
 	int num = BUFSIZE >> 1;
 	if (r = SDIF_Write2(block, num, f)) return r;
-	return SDIF_Write2(((char *) block) + num, n-num, f);
+	return SDIF_Write2(((char *) block) + (num<<1), n-num, f);
     }
 
     for (i = 0; i < m; i += 2) {
@@ -349,7 +349,7 @@ static SDIFresult SDIF_Write4(const void *block, size_t n, FILE *f) {
     {
 		int num = BUFSIZE >> 2;
 		if (r = SDIF_Write4(block, num, f)) return r;
-		return SDIF_Write4(((char *) block) + num, n-num, f);
+		return SDIF_Write4(((char *) block) + (num<<2), n-num, f);
     }
 
     for (i = 0; i < m; i += 4) 
@@ -377,7 +377,7 @@ static SDIFresult SDIF_Write8(const void *block, size_t n, FILE *f) {
     if ((n << 3) > BUFSIZE) {
 	int num = BUFSIZE >> 3;
 	if (r = SDIF_Write8(block, num, f)) return r;
-	return SDIF_Write8(((char *) block) + num, n-num, f);
+	return SDIF_Write8(((char *) block) + (num<<3), n-num, f);
     }
 
     for (i = 0; i < m; i += 8) {
@@ -413,7 +413,7 @@ static SDIFresult SDIF_Read2(void *block, size_t n, FILE *f) {
     if ((n << 1) > BUFSIZE) {
 	int num = BUFSIZE >> 1;
 	if (r = SDIF_Read2(block, num, f)) return r;
-	return SDIF_Read2(((char *) block) + num, n-num, f);
+	return SDIF_Read2(((char *) block) + (num<<1), n-num, f);
     }
 
     if (fread(p,2,n,f) != n) return ESDIF_READ_FAILED;
@@ -440,7 +440,7 @@ static SDIFresult SDIF_Read4(void *block, size_t n, FILE *f) {
     if ((n << 2) > BUFSIZE) {
 	int num = BUFSIZE >> 2;
 	if (r = SDIF_Read4(block, num, f)) return r;
-	return SDIF_Read4(((char *) block) + num, n-num, f);
+	return SDIF_Read4(((char *) block) + (num<<2), n-num, f);
     }
 
     if (fread(p,4,n,f) != n) return ESDIF_READ_FAILED;
@@ -470,7 +470,7 @@ static SDIFresult SDIF_Read8(void *block, size_t n, FILE *f) {
     if ((n << 3) > BUFSIZE) {
 	int num = BUFSIZE >> 3;
 	if (r = SDIF_Read8(block, num, f)) return r;
-	return SDIF_Read8(((char *) block) + num, n-num, f);
+	return SDIF_Read8(((char *) block) + (num<<3), n-num, f);
     }
 
     if (fread(p,8,n,f) != n) return ESDIF_READ_FAILED;

@@ -25,7 +25,7 @@ pyexec_PYTHON = loris.py
 
 pythonsitepkg_LTLIBRARIES = _loris.la
 _loris_la_SOURCES = $(PYTHON_WRAPPER)
-_loris_la_CXXFLAGS = -I$(top_srcdir)/src $(PYFLAGS) -Wno-long-double
+_loris_la_CXXFLAGS = -I$(top_srcdir)/src $(PYFLAGS) 
 _loris_la_LIBADD = $(top_builddir)/src/libloris.la 
 _loris_la_LDFLAGS = -module -avoid-version $(EXTRA_LD_FLAGS)
 	
