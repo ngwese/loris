@@ -1561,7 +1561,13 @@ class SpcFilePtr(SpcFile):
 _loris.SpcFile_swigregister(SpcFilePtr)
 
 class PartialListIterator(_object):
-    """Proxy of C++ PartialListIterator class"""
+    """
+    Proxy of C++ PartialListIterator class
+
+    An iterator over a PartialList. Access Partials
+    in a PartialList by invoking next until atEnd 
+    returns true.
+    """
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, PartialListIterator, name, value)
     __swig_getmethods__ = {}
@@ -1570,11 +1576,20 @@ class PartialListIterator(_object):
     def __repr__(self):
         return "<%s.%s; proxy of C++ SwigPListIterator instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     def atEnd(*args): 
-        """atEnd(self) -> bool"""
+        """
+        atEnd(self) -> bool
+
+        Return true if there are no more Partials in the PartialList.
+        """
         return _loris.PartialListIterator_atEnd(*args)
 
     def next(*args): 
-        """next(self) -> Partial"""
+        """
+        next(self) -> Partial
+
+        Return the next Partial in the PartialList that has not yet
+        been returned by this iterator.
+        """
         return _loris.PartialListIterator_next(*args)
 
 
@@ -1595,15 +1610,20 @@ class PartialIterator(_object):
     def __repr__(self):
         return "<%s.%s; proxy of C++ SwigPartialIterator instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     def atEnd(*args): 
-        """atEnd(self) -> bool"""
+        """
+        atEnd(self) -> bool
+
+        Return true if there are no more Breakpoints in the Partial.
+        """
         return _loris.PartialIterator_atEnd(*args)
 
-    def hasNext(*args): 
-        """hasNext(self) -> bool"""
-        return _loris.PartialIterator_hasNext(*args)
-
     def next(*args): 
-        """next(self) -> BreakpointPosition"""
+        """
+        next(self) -> BreakpointPosition
+
+        Return the next Breakpoint in the Partial that has not yet
+        been returned by this iterator.
+        """
         return _loris.PartialIterator_next(*args)
 
 
@@ -1639,61 +1659,99 @@ class PartialList(_object):
         __init__(self) -> PartialList
         __init__(self, rhs) -> PartialList
 
-        A PartialList represents a collection of Bandwidth-Enhanced 
-        Partials, each having a trio of synchronous, non-uniformly-
-        sampled breakpoint envelopes representing the time-varying 
-        frequency, amplitude, and noisiness of a single bandwidth-
-        enhanced sinusoid.
-
-        For more information about Bandwidth-Enhanced Partials and the  
-        Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
-        the Loris website: www.cerlsoundgroup.org/Loris/
+        Construct a new empty PartialList, or a PartialList
+        that is a copy of another (containing identical copies
+        of the Partials in another).
         """
         _swig_setattr(self, PartialList, 'this', _loris.new_PartialList(*args))
         _swig_setattr(self, PartialList, 'thisown', 1)
     def __del__(self, destroy=_loris.delete_PartialList):
-        """__del__(self)"""
+        """
+        __del__(self)
+
+        Delete this PartialList.
+        """
         try:
             if self.thisown: destroy(self)
         except: pass
 
     def clear(*args): 
-        """clear(self)"""
+        """
+        clear(self)
+
+        Remove all the Partials from this PartialList.
+        """
         return _loris.PartialList_clear(*args)
 
     def size(*args): 
-        """size(self) -> unsigned long"""
+        """
+        size(self) -> unsigned long
+
+        Return the number of Partials in this PartialList.
+        """
         return _loris.PartialList_size(*args)
 
     def iterator(*args): 
-        """iterator(self) -> PartialListIterator"""
+        """
+        iterator(self) -> PartialListIterator
+
+        Return an iterator on the Partials in this PartialList.
+        """
         return _loris.PartialList_iterator(*args)
 
     def __iter__(*args): 
-        """__iter__(self) -> PartialListIterator"""
+        """
+        __iter__(self) -> PartialListIterator
+
+        Return an iterator on the Partials in this PartialList.
+        """
         return _loris.PartialList___iter__(*args)
 
     def __len__(*args): 
-        """__len__(self) -> unsigned long"""
+        """
+        __len__(self) -> unsigned long
+
+        Return the number of Partials in this PartialList.
+        """
         return _loris.PartialList___len__(*args)
 
     def append(*args): 
         """
         append(self, partial)
         append(self, other)
+
+        Append a copy of a Partial, or copies of all the Partials in
+        another PartialList, to this PartialList.
         """
         return _loris.PartialList_append(*args)
 
-    def erase(*args): 
-        """erase(self, partial)"""
-        return _loris.PartialList_erase(*args)
+    def remove(*args): 
+        """
+        remove(self, partial)
+
+        Remove the specified Partial from this PartialList. An
+        exception is raised if the specified Partial is not a member
+        of this PartialList. The Partial itself must be a member, not
+        merely identical to a Partial in this PartialList.
+        """
+        return _loris.PartialList_remove(*args)
 
     def first(*args): 
-        """first(self) -> Partial"""
+        """
+        first(self) -> Partial
+
+        Return the first Partial this PartialList, or 0 if this
+        PartialList is empty.
+        """
         return _loris.PartialList_first(*args)
 
     def last(*args): 
-        """last(self) -> Partial"""
+        """
+        last(self) -> Partial
+
+        Return the last Partial this PartialList, or 0 if this
+        PartialList is empty.
+        """
         return _loris.PartialList_last(*args)
 
 
@@ -1709,13 +1767,16 @@ class Partial(_object):
     Proxy of C++ Partial class
 
     A Partial represents a single component in the
-    reassigned bandwidth-enhanced additive model. A Partial consists of a
-    chain of Breakpoints describing the time-varying frequency, amplitude,
-    and bandwidth (or noisiness) envelopes of the component, and a 4-byte
-    label. The Breakpoints are non-uniformly distributed in time. For more
-    information about Reassigned Bandwidth-Enhanced Analysis and the
-    Reassigned Bandwidth-Enhanced Additive Sound Model, refer to the Loris
-    website: www.cerlsoundgroup.org/Loris/.
+    reassigned bandwidth-enhanced additive model. A Partial
+    consists of a chain of Breakpoints describing the
+    time-varying frequency, amplitude, and bandwidth (or
+    noisiness) envelopes of the component, and a 4-byte
+    label. The Breakpoints are non-uniformly distributed in
+    time. For more information about Reassigned
+    Bandwidth-Enhanced Analysis and the Reassigned
+    Bandwidth-Enhanced Additive Sound Model, refer to the
+    Loris website: 
+        www.cerlsoundgroup.org/Loris/
 
     """
     __swig_setmethods__ = {}
@@ -1729,98 +1790,219 @@ class Partial(_object):
         __init__(self) -> Partial
         __init__(self, ??) -> Partial
 
-        A Partial represents a single component in the
-        reassigned bandwidth-enhanced additive model. A Partial consists of a
-        chain of Breakpoints describing the time-varying frequency, amplitude,
-        and bandwidth (or noisiness) envelopes of the component, and a 4-byte
-        label. The Breakpoints are non-uniformly distributed in time. For more
-        information about Reassigned Bandwidth-Enhanced Analysis and the
-        Reassigned Bandwidth-Enhanced Additive Sound Model, refer to the Loris
-        website: www.cerlsoundgroup.org/Loris/.
-
+        Construct a new empty Partial, having no Breakpoints,
+        or a Partial that is a copy of another (containing
+        identical of the Breakpoints in another).
         """
         _swig_setattr(self, Partial, 'this', _loris.new_Partial(*args))
         _swig_setattr(self, Partial, 'thisown', 1)
     def __del__(self, destroy=_loris.delete_Partial):
-        """__del__(self)"""
+        """
+        __del__(self)
+
+        Delete this Partial.
+        """
         try:
             if self.thisown: destroy(self)
         except: pass
 
     def label(*args): 
-        """label(self) -> int"""
+        """
+        label(self) -> int
+
+        Return the label (an integer) for this Partial. The
+        default label is 0.
+        """
         return _loris.Partial_label(*args)
 
     def initialPhase(*args): 
-        """initialPhase(self) -> double"""
+        """
+        initialPhase(self) -> double
+
+        Return the starting phase (in radians) for this
+        Partial. An exception is raised if there are no
+        Breakpoints in this Partial.
+        """
         return _loris.Partial_initialPhase(*args)
 
     def startTime(*args): 
-        """startTime(self) -> double"""
+        """
+        startTime(self) -> double
+
+        Return the time (in seconds) of the first Breakpoint in
+        this Partial. An exception is raised if there are no
+        Breakpoints in this Partial.
+        """
         return _loris.Partial_startTime(*args)
 
     def endTime(*args): 
-        """endTime(self) -> double"""
+        """
+        endTime(self) -> double
+
+        Return the time (in seconds) of the last Breakpoint in
+        this Partial. An exception is raised if there are no
+        Breakpoints in this Partial.
+        """
         return _loris.Partial_endTime(*args)
 
     def duration(*args): 
-        """duration(self) -> double"""
+        """
+        duration(self) -> double
+
+        Return the difference in time (in seconds) between the 
+        first and last Breakpoints in this Partial.
+        """
         return _loris.Partial_duration(*args)
 
     def numBreakpoints(*args): 
-        """numBreakpoints(self) -> long"""
+        """
+        numBreakpoints(self) -> long
+
+        Return the number of Breakpoints in this Partial.
+        """
         return _loris.Partial_numBreakpoints(*args)
 
     def setLabel(*args): 
-        """setLabel(self, l)"""
+        """
+        setLabel(self, l)
+
+        Set the label (an integer) for this Partial. Unlabeled
+        Partials have the default label of 0.
+        """
         return _loris.Partial_setLabel(*args)
 
     def frequencyAt(*args): 
-        """frequencyAt(self, time) -> double"""
+        """
+        frequencyAt(self, time) -> double
+
+        Return the interpolated frequency (in Hz) of this
+        Partial at the specified time in seconds. The frequency
+        at times earlier than the first Breakpoint is the
+        frequency of the first Breakpoint. The frequency at
+        times later than the last Breakpoint is the frequency of
+        the last Breakpoint. An exception is raised if there are
+        no Breakpoints in this Partial.
+        """
         return _loris.Partial_frequencyAt(*args)
 
     def amplitudeAt(*args): 
-        """amplitudeAt(self, time) -> double"""
+        """
+        amplitudeAt(self, time) -> double
+
+        Return the interpolated amplitude of this Partial at
+        the specified time in seconds. The amplitude at times
+        earlier than the first Breakpoint and at times later
+        than the last Breakpoint is zero. An exception is raised
+        if there are no Breakpoints in this Partial.
+        """
         return _loris.Partial_amplitudeAt(*args)
 
     def bandwidthAt(*args): 
-        """bandwidthAt(self, time) -> double"""
+        """
+        bandwidthAt(self, time) -> double
+
+        Return the interpolated bandwidth (between 0 and 1) of
+        this Partial at the specified time in seconds. The
+        bandwidth at times earlier than the first Breakpoint and
+        at times later than the last Breakpoint is zero. An
+        exception is raised if there are no Breakpoints in this
+        Partial.
+        """
         return _loris.Partial_bandwidthAt(*args)
 
     def phaseAt(*args): 
-        """phaseAt(self, time) -> double"""
+        """
+        phaseAt(self, time) -> double
+
+        Return the interpolated phase (in radians) of this
+        Partial at the specified time in seconds. The phase at
+        times earlier than the first Breakpoint is extrapolated
+        from phase of the first Breakpoint assuming constant
+        frequency. The phase at times later than the last
+        Breakpoint is the extrapolated from the phase of the
+        last Breakpoint assuming constant frequency. An
+        exception is raised if there are no Breakpoints in this
+        Partial.
+        """
         return _loris.Partial_phaseAt(*args)
 
     def iterator(*args): 
-        """iterator(self) -> PartialIterator"""
+        """
+        iterator(self) -> PartialIterator
+
+        Return an iterator on the BreakpointPositions in this
+        Partial.
+        """
         return _loris.Partial_iterator(*args)
 
     def __iter__(*args): 
-        """__iter__(self) -> PartialIterator"""
+        """
+        __iter__(self) -> PartialIterator
+
+        Return an iterator on the BreakpointPositions in this 
+        Partial.
+        """
         return _loris.Partial___iter__(*args)
 
-    def erase(*args): 
-        """erase(self, pos)"""
-        return _loris.Partial_erase(*args)
+    def remove(*args): 
+        """
+        remove(self, pos)
+
+        Remove the specified Breakpoint from this Partial. An
+        exception is raised if the specified Breakpoint is not a
+        member of this Partial. The Breakpoint itself must be a
+        member, not merely identical to a Breakpoint in this
+        Partial.
+        """
+        return _loris.Partial_remove(*args)
 
     def first(*args): 
-        """first(self) -> Breakpoint"""
+        """
+        first(self) -> Breakpoint
+
+        Return the first Breakpoint this Partial, or 0 if this
+        Partial is empty.
+        """
         return _loris.Partial_first(*args)
 
     def last(*args): 
-        """last(self) -> Breakpoint"""
+        """
+        last(self) -> Breakpoint
+
+        Return the last Breakpoint this Partial, or 0 if this
+        Partial is empty.
+        """
         return _loris.Partial_last(*args)
 
     def insert(*args): 
-        """insert(self, time, bp) -> PartialIterator"""
+        """
+        insert(self, time, bp)
+
+        Insert a copy of the Breakpoint bp into this Partial at
+        the specified time in seconds. Return nothing.
+        """
         return _loris.Partial_insert(*args)
 
     def findAfter(*args): 
-        """findAfter(self, time) -> PartialIterator"""
+        """
+        findAfter(self, time) -> PartialIterator
+
+        Return an iterator of BreakpointPositions positioned at
+        the first Breakpoint in this Partial that is later than
+        the specified time. The iterator might be at its end
+        (return no more Breakpoints) if there are no Breakpoints
+        in this Partial later than the specified time.
+        """
         return _loris.Partial_findAfter(*args)
 
     def findNearest(*args): 
-        """findNearest(self, time) -> PartialIterator"""
+        """
+        findNearest(self, time) -> PartialIterator
+
+        Return an iterator of BreakpointPositions positioned at
+        the Breakpoint in this Partial that is nearest to the
+        specified time.
+        """
         return _loris.Partial_findNearest(*args)
 
 
@@ -1835,17 +2017,20 @@ class Breakpoint(_object):
     """
     Proxy of C++ Breakpoint class
 
-    A Breakpoint represents a single breakpoint in the time-varying
-    frequency, amplitude, and bandwidth envelope of a Reassigned 
-    Bandwidth-Enhanced Partial.
+    A Breakpoint represents a single breakpoint in the
+    time-varying frequency, amplitude, and bandwidth
+    envelope of a Reassigned Bandwidth-Enhanced Partial.
 
-    Instantaneous phase is also stored, but is only used at the onset of 
-    a partial, or when it makes a transition from zero to nonzero amplitude.
+    Instantaneous phase is also stored, but is only used at
+    the onset of a partial, or when it makes a transition
+    from zero to nonzero amplitude.
 
-    A Partial represents a Reassigned Bandwidth-Enhanced model component.
-    For more information about Bandwidth-Enhanced Partials and the  
-    Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
-    the Loris website: www.cerlsoundgroup.org/Loris/
+    A Partial represents a Reassigned Bandwidth-Enhanced
+    model component. For more information about
+    Bandwidth-Enhanced Partials and the Reassigned
+    Bandwidth-Enhanced Additive Sound Model, refer to the
+    Loris website:
+        www.cerlsoundgroup.org/Loris/
 
     """
     __swig_setmethods__ = {}
@@ -1860,57 +2045,98 @@ class Breakpoint(_object):
         __init__(self, f, a, b) -> Breakpoint
         __init__(self, rhs) -> Breakpoint
 
-        A Breakpoint represents a single breakpoint in the time-varying
-        frequency, amplitude, and bandwidth envelope of a Reassigned 
-        Bandwidth-Enhanced Partial.
+        A Breakpoint represents a single breakpoint in the
+        time-varying frequency, amplitude, and bandwidth
+        envelope of a Reassigned Bandwidth-Enhanced Partial.
 
-        Instantaneous phase is also stored, but is only used at the onset of 
-        a partial, or when it makes a transition from zero to nonzero amplitude.
+        Instantaneous phase is also stored, but is only used at
+        the onset of a partial, or when it makes a transition
+        from zero to nonzero amplitude.
 
-        A Partial represents a Reassigned Bandwidth-Enhanced model component.
-        For more information about Bandwidth-Enhanced Partials and the  
-        Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
-        the Loris website: www.cerlsoundgroup.org/Loris/
+        A Partial represents a Reassigned Bandwidth-Enhanced
+        model component. For more information about
+        Bandwidth-Enhanced Partials and the Reassigned
+        Bandwidth-Enhanced Additive Sound Model, refer to the
+        Loris website:
+            www.cerlsoundgroup.org/Loris/
 
         """
         _swig_setattr(self, Breakpoint, 'this', _loris.new_Breakpoint(*args))
         _swig_setattr(self, Breakpoint, 'thisown', 1)
     def __del__(self, destroy=_loris.delete_Breakpoint):
-        """__del__(self)"""
+        """
+        __del__(self)
+
+        Delete this Breakpoint.
+        """
         try:
             if self.thisown: destroy(self)
         except: pass
 
     def frequency(*args): 
-        """frequency(self) -> double"""
+        """
+        frequency(self) -> double
+
+        Return the frequency (in Hz) of this Breakpoint.
+        """
         return _loris.Breakpoint_frequency(*args)
 
     def amplitude(*args): 
-        """amplitude(self) -> double"""
+        """
+        amplitude(self) -> double
+
+        Return the amplitude (absolute) of this Breakpoint.
+        """
         return _loris.Breakpoint_amplitude(*args)
 
     def bandwidth(*args): 
-        """bandwidth(self) -> double"""
+        """
+        bandwidth(self) -> double
+
+        Return the bandwidth, or noisiness (0 to 1) of 
+        this Breakpoint.
+        """
         return _loris.Breakpoint_bandwidth(*args)
 
     def phase(*args): 
-        """phase(self) -> double"""
+        """
+        phase(self) -> double
+
+        Return the phase (in radians) of this Breakpoint.
+        """
         return _loris.Breakpoint_phase(*args)
 
     def setFrequency(*args): 
-        """setFrequency(self, x)"""
+        """
+        setFrequency(self, x)
+
+        Set the frequency (in Hz) of this Breakpoint.
+        """
         return _loris.Breakpoint_setFrequency(*args)
 
     def setAmplitude(*args): 
-        """setAmplitude(self, x)"""
+        """
+        setAmplitude(self, x)
+
+        Set the amplitude (absolute) of this Breakpoint.
+        """
         return _loris.Breakpoint_setAmplitude(*args)
 
     def setBandwidth(*args): 
-        """setBandwidth(self, x)"""
+        """
+        setBandwidth(self, x)
+
+        Set the bandwidth, or noisiness (0 to 1) of 
+        this Breakpoint.
+        """
         return _loris.Breakpoint_setBandwidth(*args)
 
     def setPhase(*args): 
-        """setPhase(self, x)"""
+        """
+        setPhase(self, x)
+
+        Set the phase (in radians) of this Breakpoint.
+        """
         return _loris.Breakpoint_setPhase(*args)
 
 
@@ -1936,43 +2162,93 @@ class BreakpointPosition(_object):
     def __repr__(self):
         return "<%s.%s; proxy of C++ BreakpointPosition instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     def time(*args): 
-        """time(self) -> double"""
+        """
+        time(self) -> double
+
+        Return the time (in seconds) of the Breakpoint at this
+        BreakpointPosition.
+        """
         return _loris.BreakpointPosition_time(*args)
 
     def breakpoint(*args): 
-        """breakpoint(self) -> Breakpoint"""
+        """
+        breakpoint(self) -> Breakpoint
+
+        Return the Breakpoint (not a copy!) at this
+        BreakpointPosition.
+        """
         return _loris.BreakpointPosition_breakpoint(*args)
 
     def frequency(*args): 
-        """frequency(self) -> double"""
+        """
+        frequency(self) -> double
+
+        Return the frequency (in Hz) of the Breakpoint at this
+        BreakpointPosition.
+        """
         return _loris.BreakpointPosition_frequency(*args)
 
     def amplitude(*args): 
-        """amplitude(self) -> double"""
+        """
+        amplitude(self) -> double
+
+        Return the amplitude (absolute) of the Breakpoint at this
+        BreakpointPosition.
+        """
         return _loris.BreakpointPosition_amplitude(*args)
 
     def bandwidth(*args): 
-        """bandwidth(self) -> double"""
+        """
+        bandwidth(self) -> double
+
+        Return the bandwidth, or noisiness (0 to 1) of the
+        Breakpoint at this BreakpointPosition.
+        """
         return _loris.BreakpointPosition_bandwidth(*args)
 
     def phase(*args): 
-        """phase(self) -> double"""
+        """
+        phase(self) -> double
+
+        Return the phase (in radians) of the Breakpoint at this
+        BreakpointPosition.
+        """
         return _loris.BreakpointPosition_phase(*args)
 
     def setFrequency(*args): 
-        """setFrequency(self, x)"""
+        """
+        setFrequency(self, x)
+
+        Set the frequency (in Hz) of the Breakpoint at this
+        BreakpointPosition.
+        """
         return _loris.BreakpointPosition_setFrequency(*args)
 
     def setAmplitude(*args): 
-        """setAmplitude(self, x)"""
+        """
+        setAmplitude(self, x)
+
+        Set the amplitude (absolute) of the Breakpoint at this
+        BreakpointPosition.
+        """
         return _loris.BreakpointPosition_setAmplitude(*args)
 
     def setBandwidth(*args): 
-        """setBandwidth(self, x)"""
+        """
+        setBandwidth(self, x)
+
+        Set the bandwidth, or noisiness (0 to 1) of the
+        Breakpoint at this BreakpointPosition.
+        """
         return _loris.BreakpointPosition_setBandwidth(*args)
 
     def setPhase(*args): 
-        """setPhase(self, x)"""
+        """
+        setPhase(self, x)
+
+        Set the phase (in radians) of the Breakpoint at this
+        BreakpointPosition.
+        """
         return _loris.BreakpointPosition_setPhase(*args)
 
 

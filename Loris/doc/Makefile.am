@@ -37,9 +37,15 @@ pi:
 
 SCRIPTINGDIR = ${top_srcdir}/scripting
 
+if DARWIN
+SET_DARWIN_ENV = env DYLD_LIBRARY_PATH=$(top_builddir)/src/.libs
+endif
+
+
 py:
-	env PYTHONPATH=${SCRIPTINGDIR}:${SCRIPTINGDIR}/.libs pydoc -w loris; \
-		mv loris.html loris_pydoc.html
+	env PYTHONPATH=${SCRIPTINGDIR}:${SCRIPTINGDIR}/.libs \
+	    ${SET_DARWIN_ENV} pydoc -w loris; \
+		mv loris.html python_module.html
 
 MAINTAINERCLEANFILES = 	Makefile.in
 

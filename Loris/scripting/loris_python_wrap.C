@@ -3126,7 +3126,7 @@ static void PartialList_append__SWIG_0(PartialList *self,Partial *partial){
 static void PartialList_append__SWIG_1(PartialList *self,PartialList *other){
 			self->insert( self->end(), other->begin(), other->end() );
 		}
-static void PartialList_erase(PartialList *self,Partial *partial){
+static void PartialList_remove(PartialList *self,Partial *partial){
 			PartialList::iterator it = self->begin();
 			while ( it != self->end() )
 			{
@@ -3170,7 +3170,7 @@ static SwigPartialIterator *Partial_iterator(Partial *self){
 static SwigPartialIterator *Partial___iter__(Partial *self){
 			return new SwigPartialIterator(*self);
 		}
-static void Partial_erase(Partial *self,BreakpointPosition *pos){
+static void Partial_remove(Partial *self,BreakpointPosition *pos){
 			if ( *pos != self->end() )
 			{
 				*pos = self->erase( *pos );
@@ -3196,8 +3196,9 @@ static Breakpoint *Partial_last(Partial *self){
                 return &( self->last() );
             }
         }
-static SwigPartialIterator *Partial_insert(Partial *self,double time,Breakpoint const &bp){
-			return new SwigPartialIterator(*self, self->insert( time, bp ));
+static void Partial_insert(Partial *self,double time,Breakpoint const &bp){
+			// return new SwigPartialIterator(*self, self->insert( time, bp ));
+			self->insert( time, bp );
 		}
 static SwigPartialIterator *Partial_findAfter(Partial *self,double time){
 			return new SwigPartialIterator(*self, self->findAfter( time ));
@@ -12240,45 +12241,6 @@ static PyObject *_wrap_PartialIterator_atEnd(PyObject *, PyObject *args) {
 }
 
 
-static PyObject *_wrap_PartialIterator_hasNext(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    SwigPartialIterator *arg1 = (SwigPartialIterator *) 0 ;
-    bool result;
-    PyObject * obj0 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"O:PartialIterator_hasNext",&obj0)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SwigPartialIterator, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    {
-        try
-        {
-            result = (bool)(arg1)->hasNext();
-            
-        }
-        catch( Loris::Exception & ex ) 
-        {
-            //	catch Loris::Exceptions:
-            std::string s("Loris exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-        catch( std::exception & ex ) 
-        {
-            //	catch std::exceptions:
-            std::string s("std C++ exception: " );
-            s.append( ex.what() );
-            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
-        }
-    }
-    {
-        resultobj = SWIG_From_bool((bool)(result)); 
-    }
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
 static PyObject *_wrap_PartialIterator_next(PyObject *, PyObject *args) {
     PyObject *resultobj;
     SwigPartialIterator *arg1 = (SwigPartialIterator *) 0 ;
@@ -12800,26 +12762,37 @@ static PyObject *_wrap_PartialList_append(PyObject *self, PyObject *args) {
 }
 
 
-static PyObject *_wrap_PartialList_erase(PyObject *, PyObject *args) {
+static PyObject *_wrap_PartialList_remove(PyObject *, PyObject *args) {
     PyObject *resultobj;
     PartialList *arg1 = (PartialList *) 0 ;
     Partial *arg2 = (Partial *) 0 ;
     PyObject * obj0 = 0 ;
     PyObject * obj1 = 0 ;
     
-    if(!PyArg_ParseTuple(args,(char *)"OO:PartialList_erase",&obj0,&obj1)) goto fail;
+    if(!PyArg_ParseTuple(args,(char *)"OO:PartialList_remove",&obj0,&obj1)) goto fail;
     SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_PartialList, SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail(1)) SWIG_fail;
     SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_Partial, SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail(2)) SWIG_fail;
     {
-        char * err;
-        clear_exception();
-        PartialList_erase(arg1,arg2);
-        
-        if ((err = check_exception()))
+        try
         {
-            SWIG_exception( SWIG_ValueError, err );
+            PartialList_remove(arg1,arg2);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
         }
     }
     Py_INCREF(Py_None); resultobj = Py_None;
@@ -13585,14 +13558,14 @@ static PyObject *_wrap_Partial___iter__(PyObject *, PyObject *args) {
 }
 
 
-static PyObject *_wrap_Partial_erase(PyObject *, PyObject *args) {
+static PyObject *_wrap_Partial_remove(PyObject *, PyObject *args) {
     PyObject *resultobj;
     Partial *arg1 = (Partial *) 0 ;
     BreakpointPosition *arg2 = (BreakpointPosition *) 0 ;
     PyObject * obj0 = 0 ;
     PyObject * obj1 = 0 ;
     
-    if(!PyArg_ParseTuple(args,(char *)"OO:Partial_erase",&obj0,&obj1)) goto fail;
+    if(!PyArg_ParseTuple(args,(char *)"OO:Partial_remove",&obj0,&obj1)) goto fail;
     SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_Partial, SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail(1)) SWIG_fail;
     SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_BreakpointPosition, SWIG_POINTER_EXCEPTION | 0);
@@ -13600,7 +13573,7 @@ static PyObject *_wrap_Partial_erase(PyObject *, PyObject *args) {
     {
         try
         {
-            Partial_erase(arg1,arg2);
+            Partial_remove(arg1,arg2);
             
         }
         catch( Loris::Exception & ex ) 
@@ -13704,7 +13677,6 @@ static PyObject *_wrap_Partial_insert(PyObject *, PyObject *args) {
     Partial *arg1 = (Partial *) 0 ;
     double arg2 ;
     Breakpoint *arg3 = 0 ;
-    SwigPartialIterator *result;
     PyObject * obj0 = 0 ;
     PyObject * obj1 = 0 ;
     PyObject * obj2 = 0 ;
@@ -13727,7 +13699,7 @@ static PyObject *_wrap_Partial_insert(PyObject *, PyObject *args) {
     {
         try
         {
-            result = (SwigPartialIterator *)Partial_insert(arg1,arg2,(Breakpoint const &)*arg3);
+            Partial_insert(arg1,arg2,(Breakpoint const &)*arg3);
             
         }
         catch( Loris::Exception & ex ) 
@@ -13745,7 +13717,7 @@ static PyObject *_wrap_Partial_insert(PyObject *, PyObject *args) {
             SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
         }
     }
-    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_SwigPartialIterator, 1);
+    Py_INCREF(Py_None); resultobj = Py_None;
     return resultobj;
     fail:
     return NULL;
@@ -14992,7 +14964,6 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"PartialListIterator_next", _wrap_PartialListIterator_next, METH_VARARGS, NULL},
 	 { (char *)"PartialListIterator_swigregister", PartialListIterator_swigregister, METH_VARARGS, NULL},
 	 { (char *)"PartialIterator_atEnd", _wrap_PartialIterator_atEnd, METH_VARARGS, NULL},
-	 { (char *)"PartialIterator_hasNext", _wrap_PartialIterator_hasNext, METH_VARARGS, NULL},
 	 { (char *)"PartialIterator_next", _wrap_PartialIterator_next, METH_VARARGS, NULL},
 	 { (char *)"PartialIterator_swigregister", PartialIterator_swigregister, METH_VARARGS, NULL},
 	 { (char *)"new_PartialList", _wrap_new_PartialList, METH_VARARGS, NULL},
@@ -15003,7 +14974,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"PartialList___iter__", _wrap_PartialList___iter__, METH_VARARGS, NULL},
 	 { (char *)"PartialList___len__", _wrap_PartialList___len__, METH_VARARGS, NULL},
 	 { (char *)"PartialList_append", _wrap_PartialList_append, METH_VARARGS, NULL},
-	 { (char *)"PartialList_erase", _wrap_PartialList_erase, METH_VARARGS, NULL},
+	 { (char *)"PartialList_remove", _wrap_PartialList_remove, METH_VARARGS, NULL},
 	 { (char *)"PartialList_first", _wrap_PartialList_first, METH_VARARGS, NULL},
 	 { (char *)"PartialList_last", _wrap_PartialList_last, METH_VARARGS, NULL},
 	 { (char *)"PartialList_swigregister", PartialList_swigregister, METH_VARARGS, NULL},
@@ -15022,7 +14993,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"Partial_phaseAt", _wrap_Partial_phaseAt, METH_VARARGS, NULL},
 	 { (char *)"Partial_iterator", _wrap_Partial_iterator, METH_VARARGS, NULL},
 	 { (char *)"Partial___iter__", _wrap_Partial___iter__, METH_VARARGS, NULL},
-	 { (char *)"Partial_erase", _wrap_Partial_erase, METH_VARARGS, NULL},
+	 { (char *)"Partial_remove", _wrap_Partial_remove, METH_VARARGS, NULL},
 	 { (char *)"Partial_first", _wrap_Partial_first, METH_VARARGS, NULL},
 	 { (char *)"Partial_last", _wrap_Partial_last, METH_VARARGS, NULL},
 	 { (char *)"Partial_insert", _wrap_Partial_insert, METH_VARARGS, NULL},

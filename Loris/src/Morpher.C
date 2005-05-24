@@ -58,8 +58,8 @@
 //    begin namespace
 namespace Loris {
 
-// new phase morphing compiled out for release
-// #define MORPH_PHASE_TRAVEL 1
+// new phase morphing compile out for release!
+#define MORPH_PHASE_TRAVEL 1
 
 
 static const Partial::label_type DefaultReferenceLabel = 0;    

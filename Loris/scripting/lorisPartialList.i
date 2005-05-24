@@ -22,33 +22,10 @@
  *
  *	lorisPartialList.i
  *
- *	SWIG interface file describing the PartialList class.
- *	A PartialList is a Loris::Handle<  >.
+ *	SWIG interface file describing the PartialList, Partial, and
+ *  Breakpoint classes, and iterators on Partials and PartialLists.
  *	Include this file in loris.i to include the PartialList class
- *	interface in the scripting module. (Can be used with the 
- *	-shadow option to SWIG to build a PartialList class in the 
- *	scripting interface.) This file does not support exactly the 
- *	public interface of the C++ std::list class, but has been 
- *	modified to better support SWIG and scripting languages.
- *
- *	--- CHANGES ---
- *	This interface has been modified (March 2001) to wrap the list
- *	access with Loris::Handles, and to include iterators on the lists,
- *	called Partial in the interface, and iterators on the Partials, 
- *	called Breakpoint in the interface. The iterators retain a counted
- *	reference to their collections (PartialList or Partial), and this 
- *	is the reason for wrapping those container class with Handles, so
- *	that an iterator that outlives its container in the interpreter
- *	doesn't wind up refering to an object that got garbage-collected.
- *	In this implementation, all references in the interpreter and all
- *	references in the interpreter to iterators have to be deleted 
- *	before the collection is finally released.
- *
- *	(April 2001) Guaranteeing the safety and validity of all these 
- *	iterators and collections is so costly and complicated that it
- *	cannot be worth the headaches and performance penalty. So for now,
- *	they come with no guarantees, and clients just have o be responsible,
- *	as in the C++ STL, with the added excitement of garbage collection. (!)
+ *	interface in the scripting module. 
  *
  * Kelly Fitz, 17 Nov 2000
  * loris@cerlsoundgroup.org
@@ -57,7 +34,6 @@
  *
  */
  
-%newobject *::insert;
 %newobject SwigPartialIterator::next;
 	// but not SwigPListIterator::next
 %newobject *::__iter__;
@@ -176,36 +152,45 @@ struct SwigPartialIterator
     }
 }
 
-#ifdef LEGACY_ITERATOR_BEHAVIOR
-%exception SwigPListIterator::partial
-{
-    char * err;
-    clear_exception();
-    $action
-    if ((err = check_exception()))
-    {
-        SWIG_exception( SWIG_ValueError, err );
-    }
-}
-#endif
 /* ******** end of exception handling for new iterators ******** */
 
 /* ***************** new PartialList iterator ****************** */
+
+%feature("docstring",
+"An iterator over a PartialList. Access Partials
+in a PartialList by invoking next until atEnd 
+returns true.") SwigPListIterator;
 
 %rename (PartialListIterator) SwigPListIterator;
 %nodefault SwigPListIterator;
 class SwigPListIterator
 {
 public:
+
+%feature("docstring",
+"Return true if there are no more Partials in the PartialList.") atEnd;
+
 	bool atEnd( void );
+
+%feature("docstring",
+"Return the next Partial in the PartialList that has not yet
+been returned by this iterator.") next;
+
 	Partial * next( void );
+
 #ifdef SIWGPYTHON
     %extend
     {
+%feature("docstring",
+"Return this iterator.") __iter__;
+
         SwigPListIterator * __iter__( void )
         {
             return self;
         }
+
+%feature("docstring",
+"Return this iterator.") iterator;
 
         SwigPListIterator * iterator( void )
         {
@@ -213,42 +198,46 @@ public:
         }
     }
 #endif
-#ifdef LEGACY_ITERATOR_BEHAVIOR
-	%extend
-	{
-		Partial * partial( void )
-		{
-			if ( self->atEnd() )
-			{
-				throw_exception("end of PartialList");
-				return 0;
-			}			
-			Partial & current = *(self->it);
-			return &current;
-		}
-	}
-#endif
 };
 
 /* ************** end of new PartialList iterator ************** */
 
 /* ******************** new Partial iterator ******************* */
+%feature("docstring",
+"An iterator over a Partial. Access Breakpoints
+in a Partial by invoking next until atEnd 
+returns true.") SwigPListIterator;
 
 %rename (PartialIterator) SwigPartialIterator;
 %nodefault SwigPartialIterator;
 class SwigPartialIterator
 {
 public:
+
+%feature("docstring",
+"Return true if there are no more Breakpoints in the Partial.") atEnd;
+
 	bool atEnd( void );
-	bool hasNext( void );
+
+%feature("docstring",
+"Return the next Breakpoint in the Partial that has not yet
+been returned by this iterator.") next;
+
 	BreakpointPosition * next( void );
+	
 #ifdef SIWGPYTHON
     %extend
     {
-        SwigPartialIterator * __iter__( void )
+ %feature("docstring",
+"Return this iterator.") __iter__;
+
+       SwigPartialIterator * __iter__( void )
         {
             return self;
         }
+
+%feature("docstring",
+"Return this iterator.") iterator;
 
         SwigPartialIterator * iterator( void )
         {
@@ -276,27 +265,52 @@ the Loris website: www.cerlsoundgroup.org/Loris/") PartialList;
 class PartialList
 {
 public:
-	//	PartialList construction:
+
+%feature("docstring",
+"Construct a new empty PartialList, or a PartialList
+that is a copy of another (containing identical copies
+of the Partials in another).") PartialList;
+
 	PartialList( void );
 	PartialList( const PartialList & rhs );
+	
+%feature("docstring",
+"Delete this PartialList.") ~PartialList;
+	
 	~PartialList( void );
 	
-	//	std::list methods:
+%feature("docstring",
+"Remove all the Partials from this PartialList.") clear;
+
 	void clear( void );	
+
+%feature("docstring",
+"Return the number of Partials in this PartialList.") size;
+
 	unsigned long size( void );
 
 	%extend
 	{
-		//	(new-style) iterator access:
+
+%feature("docstring",
+"Return an iterator on the Partials in this PartialList.") iterator;
+
 		SwigPListIterator * iterator( void )
 		{
 			return new SwigPListIterator(*self);
 		}
+
 		#ifdef SWIGPYTHON
+%feature("docstring",
+"Return an iterator on the Partials in this PartialList.") __iter__;
+
 		SwigPListIterator * __iter__( void )
 		{
 			return new SwigPListIterator(*self);
 		}
+
+%feature("docstring",
+"Return the number of Partials in this PartialList.") __len__;
 
 		unsigned long __len__( void ) 
 		{
@@ -304,7 +318,11 @@ public:
 		}
 		#endif	
 		
-		//  append does not return position of inserted element:
+
+%feature("docstring",
+"Append a copy of a Partial, or copies of all the Partials in
+another PartialList, to this PartialList.") append;
+
 		void append( Partial * partial )
 		{
 			self->insert( self->end(), *partial );
@@ -314,13 +332,23 @@ public:
 			self->insert( self->end(), other->begin(), other->end() );
 		}
 	
-		//  implement erase using a linear search to find
+		//  Implement remove using a linear search to find
 		//  the Partial that should be removed -- slow and
 		//  gross, but the only straightforward way to make
 		//  erase play nice with the new iterator paradigm
 		//  (especially in Python). Raise an exception if
 		//  the specified Partial is not in the list.
-		void erase( Partial * partial )
+		//
+		//  This is consistent with the behavior of remove
+		//	in Python lists.
+		
+%feature("docstring",
+"Remove the specified Partial from this PartialList. An
+exception is raised if the specified Partial is not a member
+of this PartialList. The Partial itself must be a member, not
+merely identical to a Partial in this PartialList.") remove;
+
+		void remove( Partial * partial )
 		{
 			PartialList::iterator it = self->begin();
 			while ( it != self->end() )
@@ -336,6 +364,10 @@ public:
 		}
 		 
 
+%feature("docstring",
+"Return the first Partial this PartialList, or 0 if this
+PartialList is empty.") first;
+
 		Partial * first( void )
 		{
 			if ( self->empty() )
@@ -347,6 +379,10 @@ public:
 				return &( self->front() );
 			}
 		}
+
+%feature("docstring",
+"Return the last Partial this PartialList, or 0 if this
+PartialList is empty.") last;
 
 		Partial * last( void )
 		{
@@ -370,53 +406,139 @@ public:
 
 %feature("docstring",
 "A Partial represents a single component in the
-reassigned bandwidth-enhanced additive model. A Partial consists of a
-chain of Breakpoints describing the time-varying frequency, amplitude,
-and bandwidth (or noisiness) envelopes of the component, and a 4-byte
-label. The Breakpoints are non-uniformly distributed in time. For more
-information about Reassigned Bandwidth-Enhanced Analysis and the
-Reassigned Bandwidth-Enhanced Additive Sound Model, refer to the Loris
-website: www.cerlsoundgroup.org/Loris/.
+reassigned bandwidth-enhanced additive model. A Partial
+consists of a chain of Breakpoints describing the
+time-varying frequency, amplitude, and bandwidth (or
+noisiness) envelopes of the component, and a 4-byte
+label. The Breakpoints are non-uniformly distributed in
+time. For more information about Reassigned
+Bandwidth-Enhanced Analysis and the Reassigned
+Bandwidth-Enhanced Additive Sound Model, refer to the
+Loris website: 
+    www.cerlsoundgroup.org/Loris/
 ") Partial;
 
 class Partial
 {
 public:
-	//	Partial construction:
+
+%feature("docstring",
+"Construct a new empty Partial, having no Breakpoints,
+or a Partial that is a copy of another (containing
+identical of the Breakpoints in another).") Partial;
+
 	Partial( void );
 	Partial( const Partial & );
+
+%feature("docstring",
+"Delete this Partial.") ~Partial;
+
 	~Partial( void );
 	
-	//	Partial access and mutation:
+%feature("docstring",
+"Return the label (an integer) for this Partial. The
+default label is 0.") label;
+
 	int label( void );
+	
+%feature("docstring",
+"Return the starting phase (in radians) for this
+Partial. An exception is raised if there are no
+Breakpoints in this Partial.") initialPhase;
+
 	double initialPhase( void );
+	
+%feature("docstring",
+"Return the time (in seconds) of the first Breakpoint in
+this Partial. An exception is raised if there are no
+Breakpoints in this Partial.") startTime;
+	
 	double startTime( void );
+
+%feature("docstring",
+"Return the time (in seconds) of the last Breakpoint in
+this Partial. An exception is raised if there are no
+Breakpoints in this Partial.") endTime;
+
 	double endTime( void );
+
+%feature("docstring",
+"Return the difference in time (in seconds) between the 
+first and last Breakpoints in this Partial.") duration;
+
 	double duration( void );
+	
+%feature("docstring",
+"Return the number of Breakpoints in this Partial.") numBreakpoints;
+	
 	long numBreakpoints( void );
 	
+%feature("docstring",
+"Set the label (an integer) for this Partial. Unlabeled
+Partials have the default label of 0.") setLabel;
+
 	void setLabel( int l );
 		
-	//	partial envelope interpolation/extrapolation:
-	//	Return the interpolated value of a partial parameter at
-	//	the specified time. At times beyond the ends of the
-	//	Partial, frequency and bandwidth hold their boundary values,
-	//	amplitude is zero, and phase is computed from frequency.
-	//	There is of sensible definition for any of these for Partials
-	//	having no Breakpoints, so they except (InvalidPartial) under 
-	//	that condition.
+%feature("docstring",
+"Return the interpolated frequency (in Hz) of this
+Partial at the specified time in seconds. The frequency
+at times earlier than the first Breakpoint is the
+frequency of the first Breakpoint. The frequency at
+times later than the last Breakpoint is the frequency of
+the last Breakpoint. An exception is raised if there are
+no Breakpoints in this Partial.") frequencyAt;
+	
 	double frequencyAt( double time );
+
+%feature("docstring",
+"Return the interpolated amplitude of this Partial at
+the specified time in seconds. The amplitude at times
+earlier than the first Breakpoint and at times later
+than the last Breakpoint is zero. An exception is raised
+if there are no Breakpoints in this Partial.")
+amplitudeAt;
+
 	double amplitudeAt( double time );
+
+%feature("docstring",
+"Return the interpolated bandwidth (between 0 and 1) of
+this Partial at the specified time in seconds. The
+bandwidth at times earlier than the first Breakpoint and
+at times later than the last Breakpoint is zero. An
+exception is raised if there are no Breakpoints in this
+Partial.") bandwidthAt;
+	
 	double bandwidthAt( double time );
+
+%feature("docstring",
+"Return the interpolated phase (in radians) of this
+Partial at the specified time in seconds. The phase at
+times earlier than the first Breakpoint is extrapolated
+from phase of the first Breakpoint assuming constant
+frequency. The phase at times later than the last
+Breakpoint is the extrapolated from the phase of the
+last Breakpoint assuming constant frequency. An
+exception is raised if there are no Breakpoints in this
+Partial.") phaseAt;
+
 	double phaseAt( double time );
 
 	%extend
 	{
-		//	new iterator access:
+
+%feature("docstring",
+"Return an iterator on the BreakpointPositions in this
+Partial.") iterator;
+
 		SwigPartialIterator * iterator( void )
 		{
 			return new SwigPartialIterator(*self);
 		}
+
+%feature("docstring",
+"Return an iterator on the BreakpointPositions in this 
+Partial.") __iter__;
+
 		#ifdef SWIGPYTHON
 		SwigPartialIterator * __iter__( void )
 		{
@@ -424,14 +546,24 @@ public:
 		}
 		#endif	
 
-		//	erase works nicely with the new iterators:
-		void erase( BreakpointPosition * pos )
+%feature("docstring",
+"Remove the specified Breakpoint from this Partial. An
+exception is raised if the specified Breakpoint is not a
+member of this Partial. The Breakpoint itself must be a
+member, not merely identical to a Breakpoint in this
+Partial.") remove;
+
+		void remove( BreakpointPosition * pos )
 		{
 			if ( *pos != self->end() )
 			{
 				*pos = self->erase( *pos );
 			}
 		}
+
+%feature("docstring",
+"Return the first Breakpoint this Partial, or 0 if this
+Partial is empty.") first;
 
         Breakpoint * first( void )
         {
@@ -445,6 +577,10 @@ public:
             }
         }
 
+%feature("docstring",
+"Return the last Breakpoint this Partial, or 0 if this
+Partial is empty.") last;
+
         Breakpoint * last( void )
         {
             if ( self->numBreakpoints() == 0 )
@@ -457,16 +593,34 @@ public:
             }
         }
 
-		SwigPartialIterator * insert( double time, const Breakpoint & bp )
+%feature("docstring",
+"Insert a copy of the Breakpoint bp into this Partial at
+the specified time in seconds. Return nothing.") insert;
+
+		void insert( double time, const Breakpoint & bp )
 		{
-			return new SwigPartialIterator(*self, self->insert( time, bp ));
+			// return new SwigPartialIterator(*self, self->insert( time, bp ));
+			self->insert( time, bp );
 		}
 		
+%feature("docstring",
+"Return an iterator of BreakpointPositions positioned at
+the first Breakpoint in this Partial that is later than
+the specified time. The iterator might be at its end
+(return no more Breakpoints) if there are no Breakpoints
+in this Partial later than the specified time.")
+findAfter;
+
 		SwigPartialIterator * findAfter( double time )
 		{
 			return new SwigPartialIterator(*self, self->findAfter( time ));
 		}
 	
+%feature("docstring",
+"Return an iterator of BreakpointPositions positioned at
+the Breakpoint in this Partial that is nearest to the
+specified time.") findNearest;
+
 		SwigPartialIterator * findNearest( double time )
 		{
 			return new SwigPartialIterator(*self, self->findNearest( time ));
@@ -479,74 +633,83 @@ public:
 /* ************************* Breakpoint ************************* */
 
 %feature("docstring",
-"A Breakpoint represents a single breakpoint in the time-varying
-frequency, amplitude, and bandwidth envelope of a Reassigned 
-Bandwidth-Enhanced Partial.
+"A Breakpoint represents a single breakpoint in the
+time-varying frequency, amplitude, and bandwidth
+envelope of a Reassigned Bandwidth-Enhanced Partial.
 
-Instantaneous phase is also stored, but is only used at the onset of 
-a partial, or when it makes a transition from zero to nonzero amplitude.
+Instantaneous phase is also stored, but is only used at
+the onset of a partial, or when it makes a transition
+from zero to nonzero amplitude.
 
-A Partial represents a Reassigned Bandwidth-Enhanced model component.
-For more information about Bandwidth-Enhanced Partials and the  
-Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
-the Loris website: www.cerlsoundgroup.org/Loris/
+A Partial represents a Reassigned Bandwidth-Enhanced
+model component. For more information about
+Bandwidth-Enhanced Partials and the Reassigned
+Bandwidth-Enhanced Additive Sound Model, refer to the
+Loris website:
+    www.cerlsoundgroup.org/Loris/
 ") Breakpoint;
 
 class Breakpoint
 {
 public:	
-//	construction:
-//
-	Breakpoint( double f, double a, double b, double p = 0. );
-	/*	Return a new Breakpoint having the specified frequency
-		amplitude, bandwidth, and (optionally, defaults to zero)
-		phase.
-	 */
 
+%feature("docstring",
+"Construct a new Breakkpoint having the specified
+frequency (in Hz), amplitude (absolute), bandwidth
+(between 0 and 1), and phase (in radians, default 0),
+or a Breakpoint that is a copy of another (having
+identical parameters another).") Breakpoints;
+
+	Breakpoint( double f, double a, double b, double p = 0. );
 	Breakpoint( const Breakpoint & rhs );
-	/*	Return a new Breakpoint that is a copy of this 
-		Breakpoint (i.e. has identical parameter values).
-	 */
+
+%feature("docstring",
+"Delete this Breakpoint.") ~Breakpoint;
 
 	~Breakpoint( void );
-	/*	Delete this Breakpoint.
-	 */
 
-//	attribute access:
-//
+
+%feature("docstring",
+"Return the frequency (in Hz) of this Breakpoint.") frequency;
+
 	double frequency( void );
-	/*	Return the frequency of this Breakpoint. 
-	 */
 	 
+%feature("docstring",
+"Return the amplitude (absolute) of this Breakpoint.") amplitude;
+
 	double amplitude( void );
-	/*	Return the amplitude of this Breakpoint. 
-	 */
 	 
+%feature("docstring",
+"Return the bandwidth, or noisiness (0 to 1) of 
+this Breakpoint.") bandwidth;
+
 	double bandwidth( void );
-	/*	Return the bandwidth of this Breakpoint. 
-	 */
 	 
+%feature("docstring",
+"Return the phase (in radians) of this Breakpoint.") phase;
+
 	double phase( void );
-	/*	Return the phase of this Breakpoint. 
-	 */
 	 	
-//	attribute mutation:
-//
+%feature("docstring",
+"Set the frequency (in Hz) of this Breakpoint.") setFrequency;
+
 	void setFrequency( double x );
-	/*	Assign the frequency of this Breakpoint. 
-	 */
+
+%feature("docstring",
+"Set the amplitude (absolute) of this Breakpoint.") setAmplitude;
 	 
 	void setAmplitude( double x );
-	/*	Assign the amplitude of this Breakpoint. 
-	 */
+
+%feature("docstring",
+"Set the bandwidth, or noisiness (0 to 1) of 
+this Breakpoint.") setBandwidth;
 	 
 	void setBandwidth( double x );
-	/*	Assign the bandwidth of this Breakpoint. 
-	 */
+
+%feature("docstring",
+"Set the phase (in radians) of this Breakpoint.") setPhase;
 	 
 	void setPhase( double x );
-	/*	Assign the phase of this Breakpoint. 
-	 */
 	 	
 };	//	//	end of SWIG interface class Breakpoint
 
@@ -561,10 +724,19 @@ class BreakpointPosition
 public:
 	%extend
 	{
+%feature("docstring",
+"Return the time (in seconds) of the Breakpoint at this
+BreakpointPosition.") time;
+
 		double time( void ) 
 		{ 
 			return self->time(); 
 		}
+
+%feature("docstring",
+"Return the Breakpoint (not a copy!) at this
+BreakpointPosition.") breakpoint;
+
 		Breakpoint * breakpoint( void ) 
 		{ 
 			return &(self->breakpoint());
@@ -574,38 +746,53 @@ public:
 		//	(not sure yet whether this is the right way)
 		//
 		
+%feature("docstring",
+"Return the frequency (in Hz) of the Breakpoint at this
+BreakpointPosition.") frequency;
+
 		double frequency( void ) { return self->breakpoint().frequency(); }
-		/*	Return the frequency of this Breakpoint. 
-		*/
+
+%feature("docstring",
+"Return the amplitude (absolute) of the Breakpoint at this
+BreakpointPosition.") amplitude;
 		
 		double amplitude( void ) { return self->breakpoint().amplitude(); }
-		/*	Return the amplitude of this Breakpoint. 
-		*/
+
+%feature("docstring",
+"Return the bandwidth, or noisiness (0 to 1) of the
+Breakpoint at this BreakpointPosition.") bandwidth;
 		
 		double bandwidth( void ) { return self->breakpoint().bandwidth(); }
-		/*	Return the bandwidth of this Breakpoint. 
-		*/
+
+%feature("docstring",
+"Return the phase (in radians) of the Breakpoint at this
+BreakpointPosition.") phase;
 		
 		double phase( void ) { return self->breakpoint().phase(); }
-		/*	Return the phase of this Breakpoint. 
-		*/
+
+%feature("docstring",
+"Set the frequency (in Hz) of the Breakpoint at this
+BreakpointPosition.") setFrequency;
 			
 		void setFrequency( double x ) { self->breakpoint().setFrequency( x ); }
-		/*	Assign the frequency of this Breakpoint. 
-		*/
+
+%feature("docstring",
+"Set the amplitude (absolute) of the Breakpoint at this
+BreakpointPosition.") setAmplitude;
 		
 		void setAmplitude( double x ) { self->breakpoint().setAmplitude( x ); }
-		/*	Assign the amplitude of this Breakpoint. 
-		*/
+
+%feature("docstring",
+"Set the bandwidth, or noisiness (0 to 1) of the
+Breakpoint at this BreakpointPosition.") setBandwidth;
 		
 		void setBandwidth( double x ) { self->breakpoint().setBandwidth( x ); }
-		/*	Assign the bandwidth of this Breakpoint. 
-		*/
+
+%feature("docstring",
+"Set the phase (in radians) of the Breakpoint at this
+BreakpointPosition.") setPhase;
 		
-		void setPhase( double x ) { self->breakpoint().setPhase( x ); }
-		/*	Assign the phase of this Breakpoint. 
-		*/
-		
+		void setPhase( double x ) { self->breakpoint().setPhase( x ); }		
 	}
 };
 
