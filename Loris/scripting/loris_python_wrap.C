@@ -2568,10 +2568,10 @@ SWIG_Check_int(PyObject* obj)
     // there seems to be a collision with a symbol name
     // in localefwd.h (GNU) that is somehow getting
     // imported
-    void collate_duh( PartialList * partials, int startLabel = 0 )
+    void collate_duh( PartialList * partials )
     {
         Collator c;
-        c.collate( *partials, startLabel );
+        c.collate( *partials );
     }
 
 
@@ -5188,38 +5188,7 @@ static PyObject *_wrap_channelize(PyObject *, PyObject *args) {
 }
 
 
-static PyObject *_wrap_collate__SWIG_0(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    PartialList *arg1 = (PartialList *) 0 ;
-    int arg2 ;
-    PyObject * obj0 = 0 ;
-    PyObject * obj1 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"OO:collate",&obj0,&obj1)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_PartialList, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    {
-        arg2 = (int)(SWIG_As_int(obj1)); 
-        if (SWIG_arg_fail(2)) SWIG_fail;
-    }
-    {
-        char * err;
-        clear_exception();
-        collate_duh(arg1,arg2);
-        
-        if ( 0 != (err = check_exception()) )
-        {
-            SWIG_exception( SWIG_ValueError, err );
-        }
-    }
-    Py_INCREF(Py_None); resultobj = Py_None;
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_collate__SWIG_1(PyObject *, PyObject *args) {
+static PyObject *_wrap_collate(PyObject *, PyObject *args) {
     PyObject *resultobj;
     PartialList *arg1 = (PartialList *) 0 ;
     PyObject * obj0 = 0 ;
@@ -5240,54 +5209,6 @@ static PyObject *_wrap_collate__SWIG_1(PyObject *, PyObject *args) {
     Py_INCREF(Py_None); resultobj = Py_None;
     return resultobj;
     fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_collate(PyObject *self, PyObject *args) {
-    int argc;
-    PyObject *argv[3];
-    int ii;
-    
-    argc = PyObject_Length(args);
-    for (ii = 0; (ii < argc) && (ii < 2); ii++) {
-        argv[ii] = PyTuple_GetItem(args,ii);
-    }
-    if (argc == 1) {
-        int _v;
-        {
-            void *ptr;
-            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_PartialList, 0) == -1) {
-                _v = 0;
-                PyErr_Clear();
-            } else {
-                _v = 1;
-            }
-        }
-        if (_v) {
-            return _wrap_collate__SWIG_1(self,args);
-        }
-    }
-    if (argc == 2) {
-        int _v;
-        {
-            void *ptr;
-            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_PartialList, 0) == -1) {
-                _v = 0;
-                PyErr_Clear();
-            } else {
-                _v = 1;
-            }
-        }
-        if (_v) {
-            _v = SWIG_Check_int(argv[1]);
-            if (_v) {
-                return _wrap_collate__SWIG_0(self,args);
-            }
-        }
-    }
-    
-    PyErr_SetString(PyExc_NotImplementedError,"No matching function for overloaded 'collate'");
     return NULL;
 }
 

@@ -163,8 +163,9 @@ void collate( PartialList * partials )
 
 		notifier << "collating " << partials->size() << " Partials" << endl;
 		
-		// uses default fade time of 1 ms, should be parameter
-		Collator::collate( *partials, 0.001 );
+		// Uses default fade time of 1 ms, and .1 ms gap, 
+		// should be parameters.
+		Collator::collate( *partials, 0.001, 0.0001 );
 		
 	}
 	catch( Exception & ex ) 

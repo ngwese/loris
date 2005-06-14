@@ -125,16 +125,14 @@ public:
 	//!	If compiled with NO_TEMPLATE_MEMBERS defined, then partials
 	//!	must be a PartialList, otherwise it can be any container type
 	//!	storing Partials that supports at least bidirectional iterators.
-   //!
-   //!  \sa Collator::collate( Container & partials )
+    //!
+    //!  \sa Collator::collate( Container & partials )
 #if ! defined(NO_TEMPLATE_MEMBERS)
 	template< typename Container >
-	typename Container::iterator collate( Container & partials, 
-                                          Partial::label_type firstLabel = 0 );
+	typename Container::iterator collate( Container & partials );
 #else
     inline
-	PartialList::iterator collate( PartialList & partials, 
-                                   Partial::label_type firstLabel = 0 );
+	PartialList::iterator collate( PartialList & partials );
 #endif
 
 	//!	Function call operator: same as collate( PartialList & partials ).
@@ -146,7 +144,9 @@ public:
 #endif
 	
    //! Static member that constructs an instance and applies
-   //! it to a sequence of Partials. 
+   //! it to a sequence of Partials.  Collated Partials are 
+   //! labeled beginning with the label one more than the
+   //! largest label in the orignal Partials.
    //!
    //! \param  partials is the collection of Partials to collate in-place
    //! \param  partialFadeTime is the time (in seconds) over
@@ -154,22 +154,21 @@ public:
    //!         and from zero amplitude.
    //! \param  partialSilentTime is the minimum duration (in seconds) 
    //!         of the silent (zero-amplitude) gap between two 
-   //!         Partials joined by collating. (Default is
-   //!         0.0001 (one tenth of a millisecond).
+   //!         Partials joined by collating. 
    //! \return the position of the first collated Partial
    //!
    //!	If compiled with NO_TEMPLATE_MEMBERS defined, then partials
    //!	must be a PartialList, otherwise it can be any container type
    //!	storing Partials that supports at least bidirectional iterators.
-   #if ! defined(NO_TEMPLATE_MEMBERS)
+#if ! defined(NO_TEMPLATE_MEMBERS)
 	template< typename Container >
 	static typename Container::iterator 
 	collate( Container & partials, double partialFadeTime,
-                                   double partialSilentTime = 0.0001 /* .1 ms */ );
+                                   double partialSilentTime );
 #else
 	static inline PartialList::iterator
 	collate( PartialList & partials, double partialFadeTime,
-                                     double partialSilentTime = 0.0001 /* .1 ms */ );
+                                     double partialSilentTime );
 #endif
 
 
@@ -183,7 +182,7 @@ private:
     //! with startlabel, and incrementing. If startLabel is zero, then
     //! give each collated Partial the label zero. The unlabeled Partials are
     //! collated in-place.
-    void collateAux( PartialList & unlabled, Partial::label_type startLabel );
+    void collateAux( PartialList & unlabled );
 	
 };	//	end of class Collator
 
@@ -203,10 +202,6 @@ private:
 //! may be invalidated.
 //!
 //!   \param  partials is the collection of Partials to collate in-place
-//!   \param  firstLabel is the label to use for the first collated
-//!           Partial. Others are labeled sequentially. If firstLabel
-//!           is zero (the default), then the collated Partials remain
-//!           unlabeled.
 //!   \return the position of the end of the range of labeled Partials,
 //!           which is either the end of the collection, or the position
 //!           of the first collated Partial, composed of unlabeled Partials
@@ -220,13 +215,11 @@ private:
 #if ! defined(NO_TEMPLATE_MEMBERS)
 template< typename Container >
 typename Container::iterator 
-Collator::collate( Container & partials,
-                   Partial::label_type firstLabel )
+Collator::collate( Container & partials )
 #else
 inline
 PartialList::iterator 
-Collator::collate( PartialList & partials,
-                   Partial::label_type firstLabel )
+Collator::collate( PartialList & partials )
 #endif
 {
 #if ! defined(NO_TEMPLATE_MEMBERS)
@@ -248,13 +241,27 @@ Collator::collate( PartialList & partials,
     PartialList collated( beginUnlabeled, partials.end() );
     // collated.splice( collated.end(), beginUnlabeled, partials.end() );
     
-    // Partial::label_type maxlabel = 
-    //   std::max_element( partials.begin(), beginUnlabeled, 
-    //                     PartialUtils::compareLabelLess() )->label();
+    //  determine the label for the first collated Partial:
+    Partial::label_type labelCollated = 1;
+    if ( partials.begin() != beginUnlabeled )
+    {
+       labelCollated = 
+        1 + std::max_element( partials.begin(), beginUnlabeled, 
+                              PartialUtils::compareLabelLess() )->label();
+    }
+    if ( labelCollated < 1 )
+    {
+        labelCollated = 1;
+    }
 
     //	collate unlabeled (zero-labeled) Partials:
-    // collateAux( collated, std::max( maxlabel+1, 1 ) );
-    collateAux( collated, firstLabel );
+    collateAux( collated );
+    
+    //  label the collated Partials:
+    for ( Iterator it = collated.begin(); it != collated.end(); ++it )
+    {
+        it->setLabel( labelCollated++ );
+    }
     
     //  copy the collated Partials back into the source container
     //  after the range of labeled Partials		
@@ -298,7 +305,9 @@ PartialList::iterator Collator::operator()( PartialList & partials )
 //	collate
 // ---------------------------------------------------------------------------
 //! Static member that constructs an instance and applies
-//! it to a sequence of Partials. 
+//! it to a sequence of Partials. Collated Partials are 
+//! labeled beginning with the label one more than the
+//! largest label in the orignal Partials.
 //!
 //! \post   All Partials in the collection are uniquely-labeled,
 //!         collated Partials are all at the end of the collection

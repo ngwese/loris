@@ -206,10 +206,9 @@ void channelize( PartialList * partials,
 "Collate unlabeled (zero-labeled) Partials into the smallest-possible 
 number of Partials that does not combine any overlapping Partials.
 Collated Partials appear at the end of the sequence, after all 
-labeled Partials.
+labeled Partials. Collated Partials are assigned labels sequentially 
+starting with startLabel.") collate_duh;
 
-If startLabel is specified (and non-zero), collated Partials
-are assigned labels sequentially starting with startLabel.") collate_duh;
 %rename( collate ) collate_duh;
 
 %inline 
@@ -217,10 +216,10 @@ are assigned labels sequentially starting with startLabel.") collate_duh;
     // there seems to be a collision with a symbol name
     // in localefwd.h (GNU) that is somehow getting
     // imported
-    void collate_duh( PartialList * partials, int startLabel = 0 )
+    void collate_duh( PartialList * partials )
     {
         Collator c;
-        c.collate( *partials, startLabel );
+        c.collate( *partials );
     }
 %}
 

@@ -328,6 +328,18 @@ def channelize(*args):
     """
     return _loris.channelize(*args)
 
+def collate(*args):
+    """
+    collate(partials)
+
+    Collate unlabeled (zero-labeled) Partials into the smallest-possible 
+    number of Partials that does not combine any overlapping Partials.
+    Collated Partials appear at the end of the sequence, after all 
+    labeled Partials. Collated Partials are assigned labels sequentially 
+    starting with startLabel.
+    """
+    return _loris.collate(*args)
+
 def dilate(*args):
     """
     dilate(partials, ivec, tvec)
@@ -560,21 +572,6 @@ class MarkerPtr(Marker):
         if not hasattr(self,"thisown"): _swig_setattr(self, Marker, 'thisown', 0)
         _swig_setattr(self, Marker,self.__class__,Marker)
 _loris.Marker_swigregister(MarkerPtr)
-
-def collate(*args):
-    """
-    collate(partials, startLabel=0)
-    collate(partials)
-
-    Collate unlabeled (zero-labeled) Partials into the smallest-possible 
-    number of Partials that does not combine any overlapping Partials.
-    Collated Partials appear at the end of the sequence, after all 
-    labeled Partials.
-
-    If startLabel is specified (and non-zero), collated Partials
-    are assigned labels sequentially starting with startLabel.
-    """
-    return _loris.collate(*args)
 
 def createFreqReference(*args):
     """

@@ -445,7 +445,7 @@ static void test_collate( void )
 
 	const double fade = .01; // 10 ms
 	Collator d( fade );
-	d.collate( l, 1 );
+	d.collate( l );
 
 	//	Fabricate the Partials that the distillation should 
 	//	produce.

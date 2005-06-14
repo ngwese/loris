@@ -112,29 +112,22 @@ struct ends_before : public std::unary_function< const Partial, bool >
 // ---------------------------------------------------------------------------
 //! Collate unlabeled (zero labeled) Partials into the smallest
 //! possible number of Partials that does not combine any temporally
-//! overlapping Partials. Give each collated Partial a label, starting
-//! with startlabel, and incrementing. If startLabel is zero, then
-//! give each collated Partial the label zero. The unlabeled Partials are
+//! overlapping Partials. The unlabeled Partials are
 //! collated in-place.
 //
-void Collator::collateAux( PartialList & unlabeled, 
-                           Partial::label_type startlabel )
+void Collator::collateAux( PartialList & unlabeled  )
 {
 	debugger << "Collator found " << unlabeled.size() 
-			   << " unlabeled Partials, collating..." << endl;
+			 << " unlabeled Partials, collating..." << endl;
 	
 	// 	sort Partials by end time:
 	// 	thanks to Ulrike Axen for this optimal algorithm!
 	unlabeled.sort( ends_earlier );
 	
-	//	the first (earliest-ending) Partial will be
-	//	the first collated Partial:
-	PartialList::iterator endcollated = unlabeled.begin();
-	(endcollated++)->setLabel( (0 != startlabel) ? (startlabel++) : 0 );
-	
 	//	invariant:
 	//	Partials in the range [partials.begin(), endcollated)
 	//	are the collated Partials.
+	PartialList::iterator endcollated = unlabeled.begin();
 	while ( endcollated != unlabeled.end() )
 	{
 		//	find a collated Partial that ends
@@ -147,18 +140,14 @@ void Collator::collateAux( PartialList & unlabeled,
 		const double clearance = (2.*_fadeTime) + _gapTime;
 		PartialList::iterator it = 
 			std::find_if( unlabeled.begin(), endcollated, 
-                     ends_before( endcollated->startTime() - clearance) );
+                          ends_before( endcollated->startTime() - clearance) );
 						  
 		// 	if no such Partial exists, then this Partial
 		//	becomes one of the collated ones, otherwise, 
 		//	insert two null Breakpoints, and then all
 		//	the Breakpoints in this Partial:
-		if ( it == endcollated )
+		if ( it != endcollated )
 		{
-			(endcollated++)->setLabel( (0 != startlabel) ? (startlabel++) : 0 );
-		}
-		else
-		{	
 			Partial & addme = *endcollated;
 			Partial & collated = *it;
 			Assert( &addme != &collated );
@@ -187,7 +176,11 @@ void Collator::collateAux( PartialList & unlabeled,
 			}
 			
 			//	remove this Partial from the list:
-			unlabeled.erase( endcollated++ );
+			endcollated = unlabeled.erase( endcollated );
+		}
+		else
+		{
+		    ++endcollated;
 		}
 	}
 	
