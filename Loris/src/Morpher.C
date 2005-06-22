@@ -58,9 +58,9 @@
 //    begin namespace
 namespace Loris {
 
-// new phase morphing compile out for release!
+// new morphing algorithms
 #define MORPH_PHASE_TRAVEL 1
-
+#define MORPH_NOISE_ENERGY 0
 
 static const Partial::label_type DefaultReferenceLabel = 0;    
                                                  //  by default, don't use reference Partial
@@ -1119,14 +1119,6 @@ Morpher::makePartialFromReference( Partial scaleMe, double fscale )
     return scaleMe;
 }
 
-// ---------------------------------------------------------------------------
-//    Helper function for computing individual morphed frequency values
-//
-static inline double 
-interpolateFrequencies( double f0, double f1, double alpha )
-{
-    return (alpha * f1) + ((1.-alpha) * f0);
-}
     
 // ---------------------------------------------------------------------------
 //    Helper function for computing individual morphed amplitude values
@@ -1161,14 +1153,30 @@ interpolateLogAmplitudes( double a0, double a1, double alpha, double shape )
         return 0;
     }
 }
-    
+#if 0
+
 // ---------------------------------------------------------------------------
-//    Helper function for computing individual morphed bandwidth values
+//    Helper function for computing individual morphed frequency values
 //
 static inline double 
-interpolateBandwidths( double bw0, double bw1, double alpha )
+interpolateFrequencies( double f0, double f1, double alpha )
 {
-    return (alpha * bw1) + ((1.-alpha) * bw0);
+    return (alpha * f1) + ((1.-alpha) * f0);
+}
+
+// ---------------------------------------------------------------------------
+// Helper function for computing individual morphed bandwidth values.
+// Instead of just interpolating the bandwidth envelopes, interpolate
+// the amount of noise energy. This makes more intuitive sense.
+//
+static inline double 
+interpolateBandwidths( const Breakpoint & bp0, const Breakpoint & bp1, 
+                       double alpha )
+{
+   double noise0 = bp0.bandwidth() * bp0.amplitude();
+   double noise1 = bp1.bandwidth() * bp1.amplitude();
+   
+   return 0; // (alpha * bw1) + ((1.-alpha) * bw0);
 }
     
 // ---------------------------------------------------------------------------
@@ -1190,6 +1198,7 @@ interpolatePhases( double phi0, double phi1, double alpha )
 
     return std::fmod( (alpha * phi1) + ((1.-alpha) * phi0), 2 * Pi );
 }
+#endif
 
 // ---------------------------------------------------------------------------
 //  Helper function for correcting the blandly-interpolated phase to 
@@ -1215,17 +1224,73 @@ interpolateParameters( const Breakpoint & srcBkpt, const Breakpoint & tgtBkpt,
                        double fweight, double aweight, double ashape, 
                        double bweight )
 {
-    // compute interpolated Breakpoint parameters:
-    Breakpoint morphed;
-    morphed.setFrequency( interpolateFrequencies( srcBkpt.frequency(), tgtBkpt.frequency(), 
-                                                  fweight ) );
-    morphed.setAmplitude( interpolateLogAmplitudes( srcBkpt.amplitude(), tgtBkpt.amplitude(), 
-                                                    aweight, ashape ) );
-    morphed.setBandwidth( interpolateBandwidths( srcBkpt.bandwidth(), tgtBkpt.bandwidth(), 
-                                                 bweight ) );
-    morphed.setPhase( interpolatePhases( srcBkpt.phase(), tgtBkpt.phase(), fweight ) );
-    
-    return morphed;
+   using std::pow;
+   using std::sqrt;
+
+   // compute interpolated Breakpoint parameters:
+   Breakpoint morphed;
+
+   // interpolate frequencies:
+   morphed.setFrequency( (fweight *  srcBkpt.frequency()) + 
+                       ((1.-fweight) * tgtBkpt.frequency()) );
+
+   // interpolate LOG amplitudes:
+   //    it is essential to add in a small Epsilon, so that 
+   //    occasional zero amplitudes do not introduce artifacts
+   //    (if amp is zero, then even if alpha is very small
+   //    the effect is to multiply by zero, because 0^x = 0).
+   //
+   //    When Epsilon is very small, the curve representing the
+   //    morphed amplitude is very steep, such that there is a 
+   //    huge difference between zero amplitude and very small
+   //    amplitude, and this causes audible artifacts. So instead
+   //    use a larger value that shapes the curve more nicely. 
+   //    Just have to subtract this value from the morphed 
+   //    amplitude to avoid raising the noise floor a whole lot.
+   double morphedAmp = 0;
+   static const double Epsilon = 1E-12;
+   if ( ( srcBkpt.amplitude() > Epsilon ) || ( tgtBkpt.amplitude() > Epsilon ) )
+   {
+      morphedAmp = ( pow( srcBkpt.amplitude() + ashape, (1.-aweight) ) * 
+                     pow( tgtBkpt.amplitude() + ashape, aweight ) ) - ashape;
+      morphedAmp = std::max( 0.0, morphedAmp );  
+     
+   }
+   morphed.setAmplitude( morphedAmp );
+   
+   // interpolate bandwidth: 
+   // Instead of just interpolating the bandwidth envelopes, interpolate
+   // the amount of noise energy. This makes more intuitive sense.
+   // Well, sort of, but only if you also morph sinusoidal energy instead
+   // of amplitude, and then we are really changing the way morphing works.
+   // We are no longer interpolating the paramaters of our model at all!
+   // Not sure that's what I want.
+   #if MORPH_NOISE_ENERGY
+   double srcNoise = srcBkpt.bandwidth() * srcBkpt.amplitude() * srcBkpt.amplitude();
+   double tgtNoise = tgtBkpt.bandwidth() * tgtBkpt.amplitude() * tgtBkpt.amplitude();   
+   double newnoise =  ((1.-bweight) * srcNoise) + (bweight * tgtNoise);
+   double morphedBW = (newnoise>0) ? ( newnoise / ( newnoise + (morphedAmp*morphedAmp) ) ) : 0;
+   #else
+   double morphedBW = (bweight * tgtBkpt.bandwidth()) + ((1.-bweight) * srcBkpt.bandwidth() );
+   #endif
+   morphed.setBandwidth( morphedBW );
+   
+   // interpolate the phase:
+   //    try to wrap the phase so that they are
+   //    as similar as possible:
+   double srcphase = srcBkpt.phase();
+   while ( ( srcphase - tgtBkpt.phase() ) > Pi )
+   {
+      srcphase -= 2 * Pi;
+   }
+   while ( ( tgtBkpt.phase() - srcphase ) > Pi )
+   {
+      srcphase += 2 * Pi;
+   }
+   double morphedPhase = (fweight * tgtBkpt.phase()) + ((1.-fweight) * srcphase);
+   morphed.setPhase( std::fmod( morphedPhase, 2 * Pi ) );
+
+   return morphed;
 }
 
 // ---------------------------------------------------------------------------
@@ -1242,7 +1307,7 @@ interpolateParameters( const Breakpoint & srcBkpt, const Breakpoint & tgtBkpt,
 // near one of the boundaries (1 or 0) relies only on the interpolated absolute
 // phase to determine the desired phase travel. The frequency of bp1 is updated 
 // according to this morphed phase travel, but the frequency correction is 
-// clamped to at most MaxFixPct. Finally, the phase of bp1 is updated to 
+// clamped to at most MaxFixPct (0.2%). Finally, the phase of bp1 is updated to 
 // match the phase travel between bp0 and bp1 with the updated frequency.
 //
 // bp0 is the Breakpoint that is already part of the morphed Partial
@@ -1358,13 +1423,26 @@ Morpher::appendMorphedSrc( const Breakpoint & srcBkpt, const Partial & tgtPartia
 
 #if defined( MORPH_PHASE_TRAVEL )
         // correct phase travel:
+        // (This is identical in the function below.)
         if ( 0 != newp.numBreakpoints() )
         {
             double dt = ( time - newp.endTime() );
+            // HEY I think that morphPhaseTravel completely 
+            // removes the effect of interpolateWholePeriods!!!!
+            // WAIT!!! No it doesn't, because interpolateWholePeriods
+            // does not add an integer number of whole periods, it
+            // interpolates the number of whole periods traveled.
             morphed.setPhase( morphed.phase() + 
                               interpolateWholePeriods( srcBkpt.frequency(), 
                                                        tgtBkpt.frequency(), 
                                                        dt, fweight ) );
+                                                       
+            // should really be called fixPhaseTravel, that's
+            // all it does, it doesn't really morph, since it
+            // doesn't see the src and tgt Breakpoints.
+            // This could be implemented as a post-process
+            // to the construction of the morphed Partial. 
+            // That would be way better!
             morphPhaseTravel( newp.last(), morphed, dt, fweight );
         }
 #endif
@@ -1415,6 +1493,7 @@ Morpher::appendMorphedTgt( const Breakpoint & tgtBkpt, const Partial & srcPartia
 
 #if defined( MORPH_PHASE_TRAVEL )
     // correct phase travel:
+    // (This is identical in the function above.)
     if ( 0 != newp.numBreakpoints() )
     {
         double dt = ( time - newp.endTime() );
