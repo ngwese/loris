@@ -205,9 +205,9 @@ void channelize( PartialList * partials,
 %feature("docstring",
 "Collate unlabeled (zero-labeled) Partials into the smallest-possible 
 number of Partials that does not combine any overlapping Partials.
-Collated Partials appear at the end of the sequence, after all 
-labeled Partials. Collated Partials are assigned labels sequentially 
-starting with startLabel.") collate_duh;
+Collated Partials assigned labels higher than any label in the original 
+list, and appear at the end of the sequence, after all previously-labeled
+Partials.") collate_duh;
 
 %rename( collate ) collate_duh;
 
@@ -215,11 +215,11 @@ starting with startLabel.") collate_duh;
 %{
     // there seems to be a collision with a symbol name
     // in localefwd.h (GNU) that is somehow getting
-    // imported
+    // imported, and using statements do not solve
+    // the problem as they should.
     void collate_duh( PartialList * partials )
     {
-        Collator c;
-        c.collate( *partials );
+        ::collate( partials );
     }
 %}
 
@@ -303,12 +303,16 @@ path (or name). The floating point samples in the vector are
 clamped to the range (-1.,1.) and converted to integers having
 bitsPerSamp bits. The default values for the sample rate and
 sample size, if unspecified, are 44100 Hz (CD quality) and 16 bits
-per sample, respectively.");
+per sample, respectively.
+
+Only mono files can be exported, the last argument is ignored, 
+and is included only for backward compatability") exportAiff;
 
 %inline 
 %{
 	void exportAiff( const char * path, const std::vector< double > & samples,
-					 double samplerate = 44100.0, int bitsPerSamp = 16 )
+					 double samplerate = 44100.0, int bitsPerSamp = 16, 
+					 int nchansignored = 1 )
 	{
 		exportAiff( path, &(samples.front()), samples.size(), 
 					samplerate, bitsPerSamp );
@@ -319,7 +323,7 @@ per sample, respectively.");
 "Export Partials in a PartialList to a SDIF file at the specified
 file path (or name). SDIF data is written in the Loris RBEP
 format. For more information about SDIF, see the SDIF website at:
-	www.ircam.fr/equipes/analyse-synthese/sdif/  ");
+	www.ircam.fr/equipes/analyse-synthese/sdif/  ") exportSdif;
 
 void exportSdif( const char * path, PartialList * partials );
 
@@ -1167,6 +1171,20 @@ public:
 	void insertBreakpoint( double time, double value );
 	double valueAt( double x ) const;		
 };
+
+
+%feature("docstring",
+"BreakpointEnvelopeWithValue is deprecated, use LinearEnvelope instead.") 
+BreakpointEnvelopeWithValue;
+
+%inline 
+%{
+	LinearEnvelope * 
+	BreakpointEnvelopeWithValue( double initialValue )
+	{
+		return new LinearEnvelope( initialValue );
+	}
+%}
 
 
 // ---------------------------------------------------------------------------

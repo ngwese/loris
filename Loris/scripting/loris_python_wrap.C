@@ -2567,11 +2567,11 @@ SWIG_Check_int(PyObject* obj)
 
     // there seems to be a collision with a symbol name
     // in localefwd.h (GNU) that is somehow getting
-    // imported
+    // imported, and using statements do not solve
+    // the problem as they should.
     void collate_duh( PartialList * partials )
     {
-        Collator c;
-        c.collate( *partials );
+        ::collate( partials );
     }
 
 
@@ -2595,7 +2595,8 @@ SWIG_Check_int(PyObject* obj)
 
 
 	void exportAiff( const char * path, const std::vector< double > & samples,
-					 double samplerate = 44100.0, int bitsPerSamp = 16 )
+					 double samplerate = 44100.0, int bitsPerSamp = 16, 
+					 int nchansignored = 1 )
 	{
 		exportAiff( path, &(samples.front()), samples.size(), 
 					samplerate, bitsPerSamp );
@@ -2957,6 +2958,13 @@ static PartialList *Analyzer_analyze__SWIG_1(Analyzer *self,std::vector<double >
 			partials->splice( partials->end(), self->partials() );
 			return partials;
 		}
+
+	LinearEnvelope * 
+	BreakpointEnvelopeWithValue( double initialValue )
+	{
+		return new LinearEnvelope( initialValue );
+	}
+
 static SdifFile *new_SdifFile__SWIG_2(PartialList *l){
 			return new SdifFile( l->begin(), l->end() );
 		}
@@ -5447,6 +5455,67 @@ static PyObject *_wrap_exportAiff__SWIG_0(PyObject *, PyObject *args) {
     std::vector<double > *arg2 = 0 ;
     double arg3 ;
     int arg4 ;
+    int arg5 ;
+    int res2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    PyObject * obj2 = 0 ;
+    PyObject * obj3 = 0 ;
+    PyObject * obj4 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OOOOO:exportAiff",&obj0,&obj1,&obj2,&obj3,&obj4)) goto fail;
+    if (!SWIG_AsCharPtr(obj0, (char**)&arg1)) {
+        SWIG_arg_fail(1);SWIG_fail;
+    }
+    {
+        std::vector<double,std::allocator<double > > *ptr = (std::vector<double,std::allocator<double > > *)0;
+        res2 = swig::asptr(obj1, &ptr);
+        if (!res2) {
+            if (!PyErr_Occurred())
+            SWIG_type_error("std::vector<double >", obj1);
+        } else if (!ptr) {
+            SWIG_null_ref("std::vector<double >");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        arg2 = ptr;
+    }
+    {
+        arg3 = (double)(SWIG_As_double(obj2)); 
+        if (SWIG_arg_fail(3)) SWIG_fail;
+    }
+    {
+        arg4 = (int)(SWIG_As_int(obj3)); 
+        if (SWIG_arg_fail(4)) SWIG_fail;
+    }
+    {
+        arg5 = (int)(SWIG_As_int(obj4)); 
+        if (SWIG_arg_fail(5)) SWIG_fail;
+    }
+    {
+        char * err;
+        clear_exception();
+        exportAiff((char const *)arg1,(std::vector<double > const &)*arg2,arg3,arg4,arg5);
+        
+        if ( 0 != (err = check_exception()) )
+        {
+            SWIG_exception( SWIG_ValueError, err );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    if (res2 == SWIG_NEWOBJ) delete arg2;
+    return resultobj;
+    fail:
+    if (res2 == SWIG_NEWOBJ) delete arg2;
+    return NULL;
+}
+
+
+static PyObject *_wrap_exportAiff__SWIG_1(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    char *arg1 = (char *) 0 ;
+    std::vector<double > *arg2 = 0 ;
+    double arg3 ;
+    int arg4 ;
     int res2 = 0 ;
     PyObject * obj0 = 0 ;
     PyObject * obj1 = 0 ;
@@ -5496,7 +5565,7 @@ static PyObject *_wrap_exportAiff__SWIG_0(PyObject *, PyObject *args) {
 }
 
 
-static PyObject *_wrap_exportAiff__SWIG_1(PyObject *, PyObject *args) {
+static PyObject *_wrap_exportAiff__SWIG_2(PyObject *, PyObject *args) {
     PyObject *resultobj;
     char *arg1 = (char *) 0 ;
     std::vector<double > *arg2 = 0 ;
@@ -5545,7 +5614,7 @@ static PyObject *_wrap_exportAiff__SWIG_1(PyObject *, PyObject *args) {
 }
 
 
-static PyObject *_wrap_exportAiff__SWIG_2(PyObject *, PyObject *args) {
+static PyObject *_wrap_exportAiff__SWIG_3(PyObject *, PyObject *args) {
     PyObject *resultobj;
     char *arg1 = (char *) 0 ;
     std::vector<double > *arg2 = 0 ;
@@ -5590,11 +5659,11 @@ static PyObject *_wrap_exportAiff__SWIG_2(PyObject *, PyObject *args) {
 
 static PyObject *_wrap_exportAiff(PyObject *self, PyObject *args) {
     int argc;
-    PyObject *argv[5];
+    PyObject *argv[6];
     int ii;
     
     argc = PyObject_Length(args);
-    for (ii = 0; (ii < argc) && (ii < 4); ii++) {
+    for (ii = 0; (ii < argc) && (ii < 5); ii++) {
         argv[ii] = PyTuple_GetItem(args,ii);
     }
     if (argc == 2) {
@@ -5603,7 +5672,7 @@ static PyObject *_wrap_exportAiff(PyObject *self, PyObject *args) {
         if (_v) {
             _v = swig::asptr(argv[1], (std::vector<double,std::allocator<double > >**)(0));
             if (_v) {
-                return _wrap_exportAiff__SWIG_2(self,args);
+                return _wrap_exportAiff__SWIG_3(self,args);
             }
         }
     }
@@ -5615,7 +5684,7 @@ static PyObject *_wrap_exportAiff(PyObject *self, PyObject *args) {
             if (_v) {
                 _v = SWIG_Check_double(argv[2]);
                 if (_v) {
-                    return _wrap_exportAiff__SWIG_1(self,args);
+                    return _wrap_exportAiff__SWIG_2(self,args);
                 }
             }
         }
@@ -5630,7 +5699,26 @@ static PyObject *_wrap_exportAiff(PyObject *self, PyObject *args) {
                 if (_v) {
                     _v = SWIG_Check_int(argv[3]);
                     if (_v) {
-                        return _wrap_exportAiff__SWIG_0(self,args);
+                        return _wrap_exportAiff__SWIG_1(self,args);
+                    }
+                }
+            }
+        }
+    }
+    if (argc == 5) {
+        int _v;
+        _v = SWIG_AsCharPtr(argv[0], (char **)(0));
+        if (_v) {
+            _v = swig::asptr(argv[1], (std::vector<double,std::allocator<double > >**)(0));
+            if (_v) {
+                _v = SWIG_Check_double(argv[2]);
+                if (_v) {
+                    _v = SWIG_Check_int(argv[3]);
+                    if (_v) {
+                        _v = SWIG_Check_int(argv[4]);
+                        if (_v) {
+                            return _wrap_exportAiff__SWIG_0(self,args);
+                        }
                     }
                 }
             }
@@ -10479,6 +10567,45 @@ static PyObject * BreakpointEnvelope_swigregister(PyObject *, PyObject *args) {
     Py_INCREF(obj);
     return Py_BuildValue((char *)"");
 }
+static PyObject *_wrap_BreakpointEnvelopeWithValue(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    double arg1 ;
+    LinearEnvelope *result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:BreakpointEnvelopeWithValue",&obj0)) goto fail;
+    {
+        arg1 = (double)(SWIG_As_double(obj0)); 
+        if (SWIG_arg_fail(1)) SWIG_fail;
+    }
+    {
+        try
+        {
+            result = (LinearEnvelope *)BreakpointEnvelopeWithValue(arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_LinearEnvelope, 0);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
 static PyObject *_wrap_new_SdifFile__SWIG_0(PyObject *, PyObject *args) {
     PyObject *resultobj;
     char *arg1 = (char *) 0 ;
@@ -14857,6 +14984,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"BreakpointEnvelope_insertBreakpoint", _wrap_BreakpointEnvelope_insertBreakpoint, METH_VARARGS, NULL},
 	 { (char *)"BreakpointEnvelope_valueAt", _wrap_BreakpointEnvelope_valueAt, METH_VARARGS, NULL},
 	 { (char *)"BreakpointEnvelope_swigregister", BreakpointEnvelope_swigregister, METH_VARARGS, NULL},
+	 { (char *)"BreakpointEnvelopeWithValue", _wrap_BreakpointEnvelopeWithValue, METH_VARARGS, NULL},
 	 { (char *)"delete_SdifFile", _wrap_delete_SdifFile, METH_VARARGS, NULL},
 	 { (char *)"SdifFile_write", _wrap_SdifFile_write, METH_VARARGS, NULL},
 	 { (char *)"SdifFile_write1TRC", _wrap_SdifFile_write1TRC, METH_VARARGS, NULL},

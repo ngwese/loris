@@ -334,9 +334,9 @@ def collate(*args):
 
     Collate unlabeled (zero-labeled) Partials into the smallest-possible 
     number of Partials that does not combine any overlapping Partials.
-    Collated Partials appear at the end of the sequence, after all 
-    labeled Partials. Collated Partials are assigned labels sequentially 
-    starting with startLabel.
+    Collated Partials assigned labels higher than any label in the original 
+    list, and appear at the end of the sequence, after all previously-labeled
+    Partials.
     """
     return _loris.collate(*args)
 
@@ -597,6 +597,8 @@ def createFreqReference(*args):
 
 def exportAiff(*args):
     """
+    exportAiff(path, samples, samplerate=44100.0, bitsPerSamp=16, 
+        nchansignored=1)
     exportAiff(path, samples, samplerate=44100.0, bitsPerSamp=16)
     exportAiff(path, samples, samplerate=44100.0)
     exportAiff(path, samples)
@@ -608,6 +610,9 @@ def exportAiff(*args):
     bitsPerSamp bits. The default values for the sample rate and
     sample size, if unspecified, are 44100 Hz (CD quality) and 16 bits
     per sample, respectively.
+
+    Only mono files can be exported, the last argument is ignored, 
+    and is included only for backward compatability
     """
     return _loris.exportAiff(*args)
 
@@ -1271,6 +1276,14 @@ class BreakpointEnvelopePtr(BreakpointEnvelope):
         _swig_setattr(self, BreakpointEnvelope,self.__class__,BreakpointEnvelope)
 _loris.BreakpointEnvelope_swigregister(BreakpointEnvelopePtr)
 
+
+def BreakpointEnvelopeWithValue(*args):
+    """
+    BreakpointEnvelopeWithValue(initialValue) -> LinearEnvelope
+
+    BreakpointEnvelopeWithValue is deprecated, use LinearEnvelope instead.
+    """
+    return _loris.BreakpointEnvelopeWithValue(*args)
 class SdifFile(_object):
     """
     Proxy of C++ SdifFile class
