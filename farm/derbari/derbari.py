@@ -21,7 +21,7 @@ notes from trial 2:
 	- got back some of that oomph, sounds much better, but still not like the
 	original
 
-Last updated: 27 May 2003 by Kelly Fitz
+Last updated: 26 July 2005 by Kelly Fitz
 """
 print __doc__
 
@@ -49,13 +49,13 @@ if trial == 1:
 	p = a.analyze( samples, rate )
 	praw = p
 	ref = loris.createFreqReference( p, 150, 300, 100 )
-	pdist = p.copy()
-	psift = p.copy()
+	pdist = loris.PartialList( p )
+	psift = loris.PartialList( p )
 	loris.channelize( pdist, ref, 1 )
 	loris.channelize( psift, ref, 1 )
 	
 	# collate
-	loris.distill( praw )
+	loris.collate( praw )
 	ofile = 'derbari.%i.%i.raw'%(res, mlw)
 	loris.exportAiff( ofile + '.aiff', loris.synthesize( praw, rate ), rate, 1, 16 )
 	loris.exportSpc( ofile + '.s.spc', praw, 58, 0 ) 
@@ -87,31 +87,35 @@ if trial == 2:
 	p = a.analyze( samples, rate )
 	praw = p
 	ref = loris.createFreqReference( p, 150, 300, 100 )
-	pdist = p.copy()
-	psift = p.copy()
+	pdist = loris.PartialList( p )
+	psift = loris.PartialList( p )
 	loris.channelize( pdist, ref, 1 )
 	loris.channelize( psift, ref, 1 )
 	
 	# collate
-	loris.distill( praw )
+	loris.collate( praw )
 	ofile = 'derbari.%i.%i.lo.raw'%(res, mlw)
-	loris.exportAiff( ofile + '.aiff', loris.synthesize( praw, rate ), rate, 1, 16 )
+	fout = loris.AiffFile( praw, rate )
+	fout.write( ofile + '.aiff' )
 	loris.exportSpc( ofile + '.s.spc', praw, 58, 0 ) 
 	loris.exportSpc( ofile + '.e.spc', praw, 58, 1 ) 
 
 	# distill
 	loris.distill( pdist )
+	loris.removeLabeled( pdist, 0 )
 	ofile = 'derbari.%i.%i.lo.d1'%(res, mlw)
-	loris.exportAiff( ofile + '.aiff', loris.synthesize( pdist, rate ), rate, 1, 16 )
+	fout = loris.AiffFile( pdist, rate )
+	fout.write( ofile + '.aiff' )
 	loris.exportSpc( ofile + '.s.spc', pdist, 58, 0 ) 
 	loris.exportSpc( ofile + '.e.spc', pdist, 58, 1 ) 
 
 	# sift
 	loris.sift( psift )
-	zeros = loris.extractLabeled( psift, 0 )
+	loris.removeLabeled( psift, 0 )
 	loris.distill( psift )
 	ofile = 'derbari.%i.%i.lo.s1'%(res, mlw)
-	loris.exportAiff( ofile + '.aiff', loris.synthesize( psift, rate ), rate, 1, 16 )
+	fout = loris.AiffFile( psift, rate )
+	fout.write( ofile + '.aiff' )
 	loris.exportSpc( ofile + '.s.spc', psift, 58, 0 ) 
 	loris.exportSpc( ofile + '.e.spc', psift, 58, 1 ) 
 

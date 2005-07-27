@@ -15,7 +15,7 @@ Niso bell:
 	are approximately 105 Hz (1), 271 Hz (2), 398 Hz (4), 541 Hz (5),
 	689 Hz (6).
 
-Last updated: 11 March 2003 by Kelly Fitz
+Last updated: 26 July 2005 by Kelly Fitz
 """
 print __doc__
 
@@ -35,42 +35,37 @@ print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
 p = anal.analyze( f.samples(), f.sampleRate() )
 
 # nisobell collated
-pcollate = p.copy()
-loris.distill( pcollate )
+pcollate = loris.PartialList( p )
+loris.collate( pcollate )
 print 'synthesizing raw (collated) %s (%s)'%(name, time.ctime(time.time()))
 samples = loris.synthesize( pcollate, orate )
 loris.exportAiff( name + '.raw.aiff', samples, orate )
 loris.exportSdif( name + '.raw.sdif', pcollate )
 
 # remove any Partials labeled greater than 512
-iter = pcollate.begin()
-end = pcollate.end()
-while not iter.equals(end):
-	next = iter.next()
-	if iter.partial().label() > 512:
-		pcollate.erase(iter)
-	iter = next
+pruneMe = -1
+for part in pcollate:
+	if part.label() > 512:
+		part.setLabel( pruneMe )
+loris.removeLabeled( pcollate, pruneMe )
 
 loris.exportSpc( name + '.raw.s.spc', pcollate, 36, 0 )
 loris.exportSpc( name + '.raw.e.spc', pcollate, 36, 1 )
 
 print 'pruning very short partials before .2 and after .5 seconds'
-it = p.begin()
-end = p.end()
-while not it.equals(end):
-	nxt = it.next()
-	part = it.partial()
+pruneMe = -1
+for part in p:
 	if (part.duration() < .2) and ((part.startTime() > .5) or (part.endTime() < .2)):
-		p.erase(it)
-	it = nxt
+		part.setLabel( pruneMe )
+loris.removeLabeled( p, pruneMe )
 
 # nisobell harmonically distilled at 110 Hz
-env = loris.BreakpointEnvelopeWithValue( 110 )
+env = loris.LinearEnvelope( 110 )
 loris.channelize( p, env, 1 )
 loris.distill( p )
 print 'synthesizing harmonically distilled (110 Hz) %s (%s)'%(name, time.ctime(time.time()))
 samples = loris.synthesize( p, orate )
-loris.exportAiff( name + '.recon.aiff', samples, orate )
+loris.exportAiff( name + '.cleaned.aiff', samples, orate )
 loris.exportSpc( name + '.s.spc', p, 45, 0 )
 loris.exportSpc( name + '.e.spc', p, 45, 1 )
 loris.exportSdif( name + '.sdif', p )

@@ -19,7 +19,7 @@ trial1:
 	better?
 
 
-Last updated: 27 May 2003 by Kelly Fitz
+Last updated: 8 Jun 2005 by Kelly Fitz
 """
 print __doc__
 
@@ -49,8 +49,12 @@ if trial == 1:
 	p = a.analyze( samples, rate )
 	ofile = 'threat.%i.%i.raw'%(res, mlw)
 	# collate
-	loris.distill( p )
+	loris.collate( p, 1 )
 	# export
-	loris.exportAiff( ofile + '.aiff', loris.synthesize( p, rate ), rate, 1, 16 )
-	loris.exportSpc( ofile + '.s.spc', p, 60, 0 ) 
-	loris.exportSpc( ofile + '.e.spc', p, 60, 1 ) 
+	fsamps = loris.AiffFile( p, rate )
+	fsamps.write( ofile + '.aiff' )
+	fpartials = loris.AiffFile( p )
+	fpartials.write( ofile + '.sdif' )
+	fspc = loris.SpcFile( p )
+	fspc.write( ofile + '.e.spc' )
+	fspc.write( ofile + '.s.spc', 0 )

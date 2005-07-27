@@ -32,7 +32,7 @@ Cello 69 Hz mezzo-forte:
 	These are not excellent, and would never pass same-difference tests,
 	particularly the low tones, but they are usable.
 
-Last updated: 11 March 2003 by Kelly Fitz
+Last updated: 25 March 2005 by Kelly Fitz
 """
 print __doc__
 
@@ -63,13 +63,11 @@ loris.exportAiff( name + '.recon.aiff', samples, orate )
 loris.exportSdif( name + '.sdif', p )
 
 # remove any Partials labeled greater than 512
-iter = p.begin()
-end = p.end()
-while not iter.equals(end):
-	next = iter.next()
-	if iter.partial().label() > 512:
-		p.erase(iter)
-	iter = next
+pruneMe = -1
+for part in p:
+	if part.label() > 512:
+		part.setLabel( pruneMe )
+loris.removeLabeled( p, pruneMe )
 
 loris.exportSpc( name + '.s.spc', p, 51, 0 )
 loris.exportSpc( name + '.e.spc', p, 51, 1 )
@@ -85,21 +83,19 @@ print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
 p = anal.analyze( f.samples(), f.sampleRate() )
 
 # 69.MF tone collated
-pcollate = p.copy()
-loris.distill( pcollate )
+pcollate = loris.PartialList( p )
+loris.collate( pcollate )
 print 'synthesizing raw (collated) %s (%s)'%(name, time.ctime(time.time()))
 samples = loris.synthesize( pcollate, orate )
 loris.exportAiff( name + '.raw.aiff', samples, orate )
 loris.exportSdif( name + '.raw.sdif', pcollate )
 
 # remove any Partials labeled greater than 512
-iter = pcollate.begin()
-end = pcollate.end()
-while not iter.equals(end):
-	next = iter.next()
-	if iter.partial().label() > 512:
-		pcollate.erase(iter)
-	iter = next
+pruneMe = -1
+for part in p:
+	if part.label() > 512:
+		part.setLabel( pruneMe )
+loris.removeLabeled( p, pruneMe )
 
 loris.exportSpc( name + '.raw.s.spc', pcollate, 37, 0 )
 loris.exportSpc( name + '.raw.e.spc', pcollate, 37, 1 )
@@ -114,13 +110,11 @@ loris.exportAiff( name + '.recon.aiff', samples, orate )
 loris.exportSdif( name + '.sdif', p )
 
 # remove any Partials labeled greater than 512
-iter = p.begin()
-end = p.end()
-while not iter.equals(end):
-	next = iter.next()
-	if iter.partial().label() > 512:
-		p.erase(iter)
-	iter = next
+pruneMe = -1
+for part in p:
+	if part.label() > 512:
+		part.setLabel( pruneMe )
+loris.removeLabeled( p, pruneMe )
 
 loris.exportSpc( name + '.s.spc', p, 37, 0 )
 loris.exportSpc( name + '.e.spc', p, 37, 1 )
@@ -136,21 +130,19 @@ print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
 p = anal.analyze( f.samples(), f.sampleRate() )
 
 # 69.MF tone collated
-pcollate = p.copy()
-loris.distill( pcollate )
+pcollate = loris.PartialList( p )
+loris.collate( pcollate )
 print 'synthesizing raw (collated) %s (%s)'%(name, time.ctime(time.time()))
 samples = loris.synthesize( pcollate, orate )
 loris.exportAiff( name + '.raw.aiff', samples, orate )
 loris.exportSdif( name + '.raw.sdif', pcollate )
 
 # remove any Partials labeled greater than 512
-iter = pcollate.begin()
-end = pcollate.end()
-while not iter.equals(end):
-	next = iter.next()
-	if iter.partial().label() > 512:
-		pcollate.erase(iter)
-	iter = next
+pruneMe = -1
+for part in p:
+	if part.label() > 512:
+		part.setLabel( pruneMe )
+loris.removeLabeled( p, pruneMe )
 
 loris.exportSpc( name + '.raw.s.spc', pcollate, 37, 0 )
 loris.exportSpc( name + '.raw.e.spc', pcollate, 37, 1 )
@@ -167,13 +159,11 @@ loris.exportAiff( name + '.recon.aiff', samples, orate )
 loris.exportSdif( name + '.sdif', p )
 
 # remove any Partials labeled greater than 512
-iter = p.begin()
-end = p.end()
-while not iter.equals(end):
-	next = iter.next()
-	if iter.partial().label() > 512:
-		p.erase(iter)
-	iter = next
+pruneMe = -1
+for part in p:
+	if part.label() > 512:
+		part.setLabel( pruneMe )
+loris.removeLabeled( p, pruneMe )
 
 loris.exportSpc( name + '.s.spc', p, 37, 0 )
 loris.exportSpc( name + '.e.spc', p, 37, 1 )

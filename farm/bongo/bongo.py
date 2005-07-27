@@ -19,7 +19,7 @@ trial 2:
 	- frequency floor at 200 is no different from floor at 300 hz
 	- 500 Hz window isn't quite right either
 
-Last updated: 11 June 2003 by Kelly Fitz
+Last updated: 26 july 2005 by Kelly Fitz
 """
 
 print __doc__
@@ -50,7 +50,7 @@ if trial == 1:
 			p = a.analyze( samples, rate )
 			# export raw
 			ofile = 'bongo.%i.%i.raw'%(r, w)
-			loris.distill( p )
+			loris.collate( p )
 			# export
 			loris.exportAiff( ofile + '.aiff', loris.synthesize( p, rate ), rate, 1, 24 )
 
@@ -66,16 +66,14 @@ if trial == 2:
 			p = a.analyze( samples, rate )
 			# export raw
 			ofile = 'bongo.%i.%i.raw'%(r, w)
-			loris.distill( p )
+			loris.collate( p )
 			# export
-			loris.exportAiff( ofile + '.aiff', loris.synthesize( p, rate ), rate, 1, 24 )
+			loris.exportAiff( ofile + '.aiff', loris.synthesize( p, rate ), rate, 16 )
 			loris.exportSdif( ofile + '.sdif', p  )
 			# prune before Spc export
-			iter = p.begin()
-			while not iter.equals( p.end() ):
-				next = iter.next()
-				if iter.partial().label() > 511:					
-					p.erase( iter )
-				iter = next
+			for part in p:
+				if part.label() > 511:					
+					part.setLabel( -1 )
+			loris.removeLabeled( p, -1 )
 			loris.exportSpc( ofile + '.s.spc', p, 60, 0 ) 
 			loris.exportSpc( ofile + '.e.spc', p, 60, 1 ) 

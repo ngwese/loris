@@ -11,7 +11,7 @@ Cats' meows (meow1 and meow3):
 	Analyze with 75 Hz resolution and 240 Hz window, distill at 5 Partials
 	per harmonic for meow1, and 3 Partials per harmonic for meow3.
 
-Last updated: 11 March 2003 by Kelly Fitz
+Last updated: 8 Jun 2005 by Kelly Fitz
 """
 
 print __doc__
@@ -31,21 +31,19 @@ print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
 p = anal.analyze( f.samples(), f.sampleRate() )
 
 # meow1 collated
-pcollate = p.copy()
-loris.distill( pcollate )
+pcollate = loris.PartialList( p )
+loris.collate( pcollate, 1 )
 print 'synthesizing raw (collated) %s (%s)'%(name, time.ctime(time.time()))
 samples = loris.synthesize( pcollate, orate )
 loris.exportAiff( name + '.raw.aiff', samples, orate )
 loris.exportSdif( name + '.raw.sdif', pcollate )
 
 # remove any Partials labeled greater than 512
-iter = pcollate.begin()
-end = pcollate.end()
-while not iter.equals(end):
-	next = iter.next()
-	if iter.partial().label() > 512:
-		pcollate.erase(iter)
-	iter = next
+pruneMe = -1
+for part in pcollate:
+	if part.label() > 512:
+		part.setLabel( pruneMe )
+loris.removeLabeled( pcollate, pruneMe )
 
 loris.exportSpc( name + '.raw.s.spc', pcollate, 36, 0 )
 loris.exportSpc( name + '.raw.e.spc', pcollate, 36, 1 )
@@ -54,6 +52,7 @@ loris.exportSpc( name + '.raw.e.spc', pcollate, 36, 1 )
 ref = loris.createFreqReference( p, 0, 1000, 100 )
 loris.channelize( p, ref, 5 )
 loris.distill( p )
+loris.removeLabeled( p, 0 )
 print 'synthesizing distilled (5 Partials per harmonic) %s (%s)'%(name, time.ctime(time.time()))
 samples = loris.synthesize( p, orate )
 loris.exportAiff( name + '.recon.aiff', samples, orate )
@@ -68,21 +67,19 @@ print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
 p = anal.analyze( f.samples(), f.sampleRate() )
 
 # meow3 collated
-pcollate = p.copy()
-loris.distill( pcollate )
+pcollate = loris.PartialList( p )
+loris.collate( pcollate, 1 )
 print 'synthesizing raw (collated) %s (%s)'%(name, time.ctime(time.time()))
 samples = loris.synthesize( pcollate, orate )
 loris.exportAiff( name + '.raw.aiff', samples, orate )
 loris.exportSdif( name + '.raw.sdif', pcollate )
 
 # remove any Partials labeled greater than 512
-iter = pcollate.begin()
-end = pcollate.end()
-while not iter.equals(end):
-	next = iter.next()
-	if iter.partial().label() > 512:
-		pcollate.erase(iter)
-	iter = next
+pruneMe = -1
+for part in pcollate:
+	if part.label() > 512:
+		part.setLabel( pruneMe )
+loris.removeLabeled( pcollate, pruneMe )
 
 loris.exportSpc( name + '.raw.s.spc', pcollate, 36, 0 )
 loris.exportSpc( name + '.raw.e.spc', pcollate, 36, 1 )
@@ -91,6 +88,7 @@ loris.exportSpc( name + '.raw.e.spc', pcollate, 36, 1 )
 ref = loris.createFreqReference( p, 0, 1000, 100 )
 loris.channelize( p, ref, 3 )
 loris.distill( p )
+loris.removeLabeled( p, 0 )
 print 'synthesizing distilled (3 Partials per harmonic) %s (%s)'%(name, time.ctime(time.time()))
 samples = loris.synthesize( p, orate )
 loris.exportAiff( name + '.recon.aiff', samples, orate )

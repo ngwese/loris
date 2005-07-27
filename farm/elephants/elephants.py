@@ -18,7 +18,7 @@ elephant3:
 These sound good individually, but to do the morph, need to distill/sift
 them to a common frequency, like 60 Hz.
 
-Last updated: 1 March 2005 by Kelly Fitz
+Last updated: 26 july 2005 by Kelly Fitz
 """
 
 print __doc__
@@ -37,7 +37,7 @@ print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
 p = anal.analyze( f.samples(), f.sampleRate() )
 
 # distilled at 60 Hz
-ref = loris.BreakpointEnvelopeWithValue( 60 )
+ref = loris.LinearEnvelope( 60 )
 loris.channelize( p, ref, 1 )
 loris.distill( p )
 print 'synthesizing distilled %s (%s)'%(name, time.ctime(time.time()))
@@ -64,7 +64,7 @@ print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
 p = anal.analyze( f.samples(), f.sampleRate() )
 
 # sifted at 60 Hz
-ref = loris.BreakpointEnvelopeWithValue( 60 )
+ref = loris.LinearEnvelope( 60 )
 loris.channelize( p, ref, 1 )
 loris.sift( p )
 zeros = loris.extractLabeled( p, 0 )

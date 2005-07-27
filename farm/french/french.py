@@ -54,8 +54,11 @@ notes from trial 5:
 notes from trial 6: 
 	- trying my fundamental estimator and the voiced/unvoiced detection 
 	scheme that I have been working on, this could be extremely slow
+	
+Updated 8 Jun 05 to work with Loris 1.3.
 
-Last updated: 22 Oct 2004 by Kelly Fitz
+
+Last updated: 8 Jun 2005 by Kelly Fitz
 """
 print __doc__
 
@@ -77,7 +80,7 @@ def makeSpc( fname, partials ):
 	spc = loris.PartialList()
 	for p in partials:
 		if p.label() <= N_SPC_PARTIALS:
-			spc.insert( p )
+			spc.append( p )
 	print 'exporting %i spc partials'%spc.size() 
 	loris.exportSpc( fname + '.s.spc', spc, 60, 0 )
 	loris.exportSpc( fname + '.e.spc', spc, 60, 1 )
@@ -229,11 +232,11 @@ def voice( vuv, t ):
 def makeReference( partials, fmin, fmax ):
 	from loris import *
 	import os,sys
-	wheresFund = os.getenv('HOME') + os.sep + 'Gumballs' + os.sep + 'Fundamental'
-	sys.path.append( wheresFund )
-	sys.path.append( wheresFund + os.sep + '.libs' )
+# 	wheresFund = os.getenv('HOME') + os.sep + 'Gumballs' + os.sep + 'Fundamental'
+# 	sys.path.append( wheresFund )
+# 	sys.path.append( wheresFund + os.sep + '.libs' )
 	import fundamental
-	ref = BreakpointEnvelope()
+	ref = LinearEnvelope()
 	lowOnes = PartialList()
 	for p in partials:
 		if p.frequencyAt(0) < 2500:
@@ -241,7 +244,7 @@ def makeReference( partials, fmin, fmax ):
 	est = fundamental.createEstimator( lowOnes, fmin, fmax )
 	est.setAmpThreshold( -45 )
 	print "constructing refrence frequency envelope..."
-	( tmin, tmax ) = lowOnes.timeSpan()
+	( tmin, tmax ) = timeSpan( lowOnes )
 	t = tmin
 	while t < tmax:
 		e = fundamental.energyDB( lowOnes, t )
@@ -264,8 +267,7 @@ def makeReference( partials, fmin, fmax ):
 	return ref
 	
 def addMarkers( markers, file ):
-	for m in markers:
-		file.addMarker( m )
+	file.setMarkers( markers )
 
 if trial == 6:
 	r = 60
@@ -273,7 +275,7 @@ if trial == 6:
 	a = loris.Analyzer( r, w )
 	# turn off BW association for now
 	a.setBwRegionWidth( 0 )
-	print 'performing raw analysis, no tracking'
+	print 'performing raw analysis, no, bandwidth, no tracking'
 	raw = a.analyze( samples, rate )
 	## construct a reference frequency envelope
 	ref = makeReference( raw, 60, 150 )
@@ -297,7 +299,7 @@ if trial == 6:
 	addMarkers( MarkVUV, ofile )
 	ofile.write( fnamebase + '.aiff' )
 	pfile = loris.SdifFile( p )
-	# addMarkers( MarkVUV, pfile )
+	addMarkers( MarkVUV, pfile )
 	pfile.write( fnamebase + '.sdif' )
 	makeSpc( fnamebase, p )
 	

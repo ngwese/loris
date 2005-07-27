@@ -26,13 +26,10 @@ notes from trial 1:
 notes from trial 2: 
 	all of these raw reconstructions are pretty much indistinguishible
 
-Last updated: 27 May 2003 by Kelly Fitz
+Last updated: 31 March 2005 by Kelly Fitz
 """
 print __doc__
 
-# import sys
-# sys.path.append( '/opt/lib/python2.2/site-packages' )
-# 
 import loris, time
 #from trials import *
 
@@ -74,6 +71,6 @@ if trial == 2:
 			# collate
 			loris.distill( p )
 			# export
-			loris.exportAiff( ofile + '.aiff', loris.synthesize( p, rate ), rate, 1, 16 )
+			loris.exportAiff( ofile + '.aiff', loris.synthesize( p, rate ), rate, 16 )
 			loris.exportSpc( ofile + '.s.spc', p, 60, 0 ) 
 			loris.exportSpc( ofile + '.e.spc', p, 60, 1 ) 

@@ -18,7 +18,7 @@ maybe 100 and 300 were better parameters.
 A fundamental frequency contour extracted in Kyma is in
 density.fund.qharm (an spc file).
 
-Last updated: 4 June 2003 by Kelly Fitz
+Last updated: 26 July 05 by Kelly Fitz
 """
 
 print __doc__
@@ -48,15 +48,15 @@ if trial == 1:
 			p = a.analyze( samples, rate )
 			# export raw
 			ofile = 'density.%i.%i.raw'%(r, w)
-			loris.distill( p )
+			loris.collate( p )
 			# export
-			loris.exportAiff( ofile + '.aiff', loris.synthesize( p, rate ), rate, 1, 24 )
-			# prune before Spc export
-			iter = p.begin()
-			while not iter.equals( p.end() ):
-				next = iter.next()
-				if iter.partial().label() > 511:					
-					p.erase( iter )
-				iter = next
+			fout = loris.AiffFile( p, rate )
+			fout.write( ofile + '.aiff' )
+			# remove any Partials labeled greater than 512
+			pruneMe = -1
+			for part in p:
+				if part.label() > 512:
+					part.setLabel( pruneMe )
+			loris.removeLabeled( p, pruneMe )
 			loris.exportSpc( ofile + '.s.spc', p, 60, 0 ) 
 			loris.exportSpc( ofile + '.e.spc', p, 60, 1 ) 

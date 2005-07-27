@@ -39,12 +39,12 @@ notes from trial 2 with Loris 1.2.0beta2:
 	distinguish, and they both need some attention to the noisy
 	parts.
 
-Last updated: 15 April 2004 by Kelly Fitz
+Last updated: 31 March 2005 by Kelly Fitz
 """
 print __doc__
 
 import loris, time
-from trials import *
+# from trials import *
 
 # use this trial counter to skip over
 # eariler trials
@@ -53,6 +53,10 @@ trial = 2
 print "running trial number", trial, time.ctime(time.time())
 
 source = 'moses.aiff'
+
+file = loris.AiffFile( source )
+samples = file.samples()
+rate = file.sampleRate()
 
 if trial == 1:
 	resolutions = (70,80,90,100)
@@ -68,8 +72,11 @@ if trial == 2:
     widths = ( 200,)
     for r in resolutions:
         for w in widths:
-            p = analyze( source, r, w )
-            ofile = 'moses.%i.%i.aiff'%(r, w)
-            synthesize( ofile, p )
-
+			a = loris.Analyzer( r, w )
+			p = a.analyze( samples, rate )
+			ofile = 'moses.%i.%i.aiff'%(r, w)
+			# collate
+			loris.distill( p )
+			# export
+			loris.exportAiff( ofile, loris.synthesize( p, rate ), rate, 16 )
 
