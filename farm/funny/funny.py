@@ -107,13 +107,14 @@ notes from trial 6:
 notes from trial 7:
 	- halving the hop time (with or without halving the crop time) doesn't
 	seem to make any difference
+	- updated here to work with Loris 1.3 (beta)
 
-Last updated: 11 June 2003 by Kelly Fitz
+Last updated: 27 July 2005 by Kelly Fitz
 """
 print __doc__
 
 import loris, time
-from trials import *
+# from trials import *
 print """
 Using Loris version %s
 """%loris.version()
@@ -121,7 +122,7 @@ Using Loris version %s
 
 # use this trial counter to skip over
 # eariler trials
-trial = 6
+trial = 7
 
 print "running trial number", trial, time.ctime(time.time())
 
@@ -491,22 +492,22 @@ if trial == 7:
 	# a.setCropTime( a.cropTime() * 0.5 )
 	p = a.analyze( sfile.samples(), sfile.sampleRate(), ref )
 	ofilebase = 'funny1.hires.%i.%i'%(r, w)
-	pcollate = p.copy()
-	loris.distill( pcollate )
-	synthesize( ofilebase + '.raw.aiff', pcollate )
+	pcollate = loris.PartialList( p ) 
+	loris.collate( pcollate )
+	loris.exportAiff( ofilebase + '.raw.aiff', loris.synthesize( pcollate ) )
 	loris.exportSdif( ofilebase + '.raw.sdif', pcollate )
-	pruneByLabel( pcollate, range(1,512) )
-	loris.exportSpc( ofilebase + '.raw.s.spc', pcollate, 60, 0 )
+# 	pruneByLabel( pcollate, range(1,512) )
+# 	loris.exportSpc( ofilebase + '.raw.s.spc', pcollate, 60, 0 )
 	h = 2
 	loris.channelize(p, ref, h)
-	ps = p.copy()
+	ps = loris.PartialList( p )
 	loris.sift( ps )
-	zeros = loris.extractLabeled( ps, 0 )
+	loris.removeLabeled( ps, 0 )
 	loris.distill( ps )
 	ofilebases = ofilebase + '.s%i'%h
 	loris.exportSdif( ofilebases + '.sdif', ps )
-	synthesize( ofilebases + '.aiff', ps )
-	pruneByLabel( ps, range(1,512) )
+	loris.exportAiff( ofilebases + '.aiff', loris.synthesize( ps ) )
+#	pruneByLabel( ps, range(1,512) )
 	loris.exportSpc( ofilebases + '.s.spc', ps, 60, 0 ) 
 	loris.exportSpc( ofilebases + '.e.spc', ps, 60, 1 ) 
 
@@ -523,22 +524,22 @@ if trial == 7:
 	#a.setCropTime( a.cropTime() * 0.5 )
 	p = a.analyze( sfile.samples(), sfile.sampleRate(), ref )
 	ofilebase = 'funny2.hires.%i.%i'%(r, w)
-	pcollate = p.copy()
-	loris.distill( pcollate )
-	synthesize( ofilebase + '.raw.aiff', pcollate )
+	pcollate = loris.PartialList( p )
+	loris.collate( pcollate )
+	loris.exportAiff( ofilebase + '.raw.aiff', loris.synthesize( pcollate ) )
 	loris.exportSdif( ofilebase + '.raw.sdif', pcollate )
-	pruneByLabel( pcollate, range(1,512) )
-	loris.exportSpc( ofilebase + '.raw.s.spc', pcollate, 60, 0 )
+# 	pruneByLabel( pcollate, range(1,512) )
+# 	loris.exportSpc( ofilebase + '.raw.s.spc', pcollate, 60, 0 )
 	h = 2
 	loris.channelize(p, ref, h)
-	ps = p.copy()
+	ps = loris.PartialList( p )
 	loris.sift( ps )
-	zeros = loris.extractLabeled( ps, 0 )
+	loris.removeLabeled( ps, 0 )
 	loris.distill( ps )
 	ofilebases = ofilebase + '.s%i'%h
 	loris.exportSdif( ofilebases + '.sdif', ps )
-	synthesize( ofilebases + '.aiff', ps )
-	pruneByLabel( ps, range(1,512) )
+	loris.exportAiff( ofilebases + '.aiff', loris.synthesize( ps ) )
+#	pruneByLabel( ps, range(1,512) )
 	loris.exportSpc( ofilebases + '.s.spc', ps, 60, 0 ) 
 	loris.exportSpc( ofilebases + '.e.spc', ps, 60, 1 ) 
 

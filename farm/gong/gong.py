@@ -26,12 +26,15 @@ notes from trial 1:
 notes from trial 2: 
 	all of these raw reconstructions are pretty much indistinguishible
 
-Last updated: 31 March 2005 by Kelly Fitz
+Last updated: 27 July 2005 by Kelly Fitz
 """
 print __doc__
 
 import loris, time
-#from trials import *
+
+print """
+Using Loris version %s
+"""%loris.version()
 
 # use this trial counter to skip over
 # eariler trials
@@ -69,7 +72,7 @@ if trial == 2:
 			p = a.analyze( samples, rate )
 			ofile = 'gong.%i.%i.raw'%(r, w)
 			# collate
-			loris.distill( p )
+			loris.collate( p )
 			# export
 			loris.exportAiff( ofile + '.aiff', loris.synthesize( p, rate ), rate, 16 )
 			loris.exportSpc( ofile + '.s.spc', p, 60, 0 ) 
