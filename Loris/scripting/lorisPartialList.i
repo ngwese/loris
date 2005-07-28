@@ -395,6 +395,20 @@ PartialList is empty.") last;
 				return &( self->back() );
 			}
 		}
+		
+%feature("docstring",
+"Construct a new a PartialList that is a copy of 
+another (containing identical copies of the Partials 
+in another). 
+
+This member is deprecated, use the normal copy constructor:
+   plist_copy = PartialList( plist )
+") copy;
+
+		PartialList * copy( void )
+		{
+			return new PartialList( *self );
+		}
 
 	}	//	end of added methods
 

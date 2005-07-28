@@ -83,6 +83,9 @@ around as a deprecated typedef, but related operations
 in the procedural and scripting interfaces have been 
 renamed. THIS BREAKS CODE.
 
+- Added experimental fundamental frequency estimator,
+called Fundamental.
+
 -------------------------------------------------------
 changes since 1.1 release:
 

@@ -3167,6 +3167,9 @@ static Partial *PartialList_last(PartialList *self){
 				return &( self->back() );
 			}
 		}
+static PartialList *PartialList_copy(PartialList *self){
+			return new PartialList( *self );
+		}
 
   /*@/usr/local/share/swig/1.3.24/python/pymacros.swg,66,SWIG_define@*/
 #define SWIG_From_long PyInt_FromLong
@@ -12924,6 +12927,43 @@ static PyObject *_wrap_PartialList_last(PyObject *, PyObject *args) {
 }
 
 
+static PyObject *_wrap_PartialList_copy(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    PartialList *arg1 = (PartialList *) 0 ;
+    PartialList *result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:PartialList_copy",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_PartialList, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        try
+        {
+            result = (PartialList *)PartialList_copy(arg1);
+            
+        }
+        catch( Loris::Exception & ex ) 
+        {
+            //	catch Loris::Exceptions:
+            std::string s("Loris exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+        catch( std::exception & ex ) 
+        {
+            //	catch std::exceptions:
+            std::string s("std C++ exception: " );
+            s.append( ex.what() );
+            SWIG_exception( SWIG_UnknownError, (char *) s.c_str() );
+        }
+    }
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_PartialList, 0);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
 static PyObject * PartialList_swigregister(PyObject *, PyObject *args) {
     PyObject *obj;
     if (!PyArg_ParseTuple(args,(char*)"O", &obj)) return NULL;
@@ -15026,6 +15066,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"PartialList_remove", _wrap_PartialList_remove, METH_VARARGS, NULL},
 	 { (char *)"PartialList_first", _wrap_PartialList_first, METH_VARARGS, NULL},
 	 { (char *)"PartialList_last", _wrap_PartialList_last, METH_VARARGS, NULL},
+	 { (char *)"PartialList_copy", _wrap_PartialList_copy, METH_VARARGS, NULL},
 	 { (char *)"PartialList_swigregister", PartialList_swigregister, METH_VARARGS, NULL},
 	 { (char *)"new_Partial", _wrap_new_Partial, METH_VARARGS, NULL},
 	 { (char *)"delete_Partial", _wrap_delete_Partial, METH_VARARGS, NULL},

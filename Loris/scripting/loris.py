@@ -1764,6 +1764,20 @@ class PartialList(_object):
         """
         return _loris.PartialList_last(*args)
 
+    def copy(*args): 
+        """
+        copy(self) -> PartialList
+
+        Construct a new a PartialList that is a copy of 
+        another (containing identical copies of the Partials 
+        in another). 
+
+        This member is deprecated, use the normal copy constructor:
+           plist_copy = PartialList( plist )
+
+        """
+        return _loris.PartialList_copy(*args)
+
 
 class PartialListPtr(PartialList):
     def __init__(self, this):

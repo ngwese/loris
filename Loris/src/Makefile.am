@@ -45,6 +45,8 @@ Loris_Classes = 	\
 		FourierTransform.h \
 		FrequencyReference.C \
 		FrequencyReference.h \
+		Fundamental.C \
+		Fundamental.h \
 		ieee.c \
 		ieee.h \
 		ImportLemur.C \
@@ -123,6 +125,7 @@ pkginclude_HEADERS = \
 				Filter.h	\
 				FourierTransform.h	\
 				FrequencyReference.h \
+				Fundamental.h \
 				ImportLemur.h	\
 				KaiserWindow.h	\
 				LinearEnvelope.h \
