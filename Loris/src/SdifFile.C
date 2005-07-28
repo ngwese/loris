@@ -295,9 +295,9 @@ static char *error_string_array[] = {
 //	which might be erroneously defined in some standard header.
 
 //  If we didn't run configure, try to make a good guess.
-#if !(HAVE_CONFIG_H)
+#if !(HAVE_CONFIG_H) && !defined(WORDS_BIGENDIAN)
     #ifndef _MSC_VER
-    #define WORDS_BIGENDIAN
+    #define WORDS_BIGENDIAN 1
     #endif
 #endif
 

@@ -313,6 +313,8 @@ FourierTransform::transform( void )
 //	non-existent console.
 static void fftw_die_Loris( const char * s )
 {
+	using namespace std; // exit might be hidden in there
+	
 	notifier << "The FFTW library used by Loris has encountered a fatal error: " << s << endl;
 	exit(EXIT_FAILURE);
 }

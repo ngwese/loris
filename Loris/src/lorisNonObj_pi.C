@@ -432,7 +432,28 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch,
 		
 		notifier << "exporting Spc partial data to " << path << endl;
 		
-		SpcFile fout( partials->begin(), partials->end(), midiPitch );
+		SpcFile fout( midiPitch );
+		PartialList::size_type countPartials = 0;
+		for ( PartialList::iterator iter = partials->begin(); iter != partials->end(); ++iter )
+		{
+			if ( iter->label() > 0 && iter->label() < 512 ) 
+				 // should have a symbol defined for 512!!!
+			{
+				fout.addPartial( *iter );
+				++countPartials;
+			}
+		}
+		
+		if ( countPartials != partials->size() )
+		{
+			notifier << "exporting " << countPartials << " of " 
+					 << partials->size() << " Partials having labels less than 512." << endl;
+		}
+		if ( countPartials == 0 )
+		{
+			Throw( InvalidObject, "No Partials in PartialList have valid Spc labels (1-511)." );
+		}
+		
 		if ( enhanced == 0 )
 		{
 			fout.writeSinusoidal( path, endApproachTime );
