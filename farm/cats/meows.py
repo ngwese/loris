@@ -11,7 +11,7 @@ Cats' meows (meow1 and meow3):
 	Analyze with 75 Hz resolution and 240 Hz window, distill at 5 Partials
 	per harmonic for meow1, and 3 Partials per harmonic for meow3.
 
-Last updated: 8 Jun 2005 by Kelly Fitz
+Last updated: 26 July 2005 by Kelly Fitz
 """
 
 print __doc__
@@ -32,7 +32,7 @@ p = anal.analyze( f.samples(), f.sampleRate() )
 
 # meow1 collated
 pcollate = loris.PartialList( p )
-loris.collate( pcollate, 1 )
+loris.collate( pcollate )
 print 'synthesizing raw (collated) %s (%s)'%(name, time.ctime(time.time()))
 samples = loris.synthesize( pcollate, orate )
 loris.exportAiff( name + '.raw.aiff', samples, orate )
@@ -68,7 +68,7 @@ p = anal.analyze( f.samples(), f.sampleRate() )
 
 # meow3 collated
 pcollate = loris.PartialList( p )
-loris.collate( pcollate, 1 )
+loris.collate( pcollate )
 print 'synthesizing raw (collated) %s (%s)'%(name, time.ctime(time.time()))
 samples = loris.synthesize( pcollate, orate )
 loris.exportAiff( name + '.raw.aiff', samples, orate )

@@ -38,7 +38,7 @@ trial 4:
 	- 160 resolution has a clunk near at the first dynamic peak, others are OK
 	- wider window (600) is still a bit smoother than narrower (450)
 
-Last updated: 13 May 2004 by Kelly Fitz
+Last updated: 28 July 2005 by Kelly Fitz
 """
 print __doc__
 
@@ -180,18 +180,18 @@ if trial == 4:
 		for mlw in ( 450, 600 ):
 			a = loris.Analyzer( res, mlw )
 			p = a.analyze( samples, rate, ref )
-			d1 = p.copy()
+			d1 = loris.PartialList( p )
 			
 			# export raw
-			loris.distill( p )
+			loris.collate( p )
 			ofile = 'shaku.%i.%i.raw'%(res, mlw)
 			fout = loris.AiffFile( p, rate )
 			fout.write( ofile + '.aiff' )
 			# prune before Spc export
-			for partial in p:
-				if partial.label() > 511:
-					partial.setLabel( -1 )
-			dump = loris.extractLabeled( p, -1 )
+# 			for partial in p:
+# 				if partial.label() > 511:
+# 					partial.setLabel( -1 )
+# 			dump = loris.extractLabeled( p, -1 )
 			loris.exportSpc( ofile + '.s.spc', p, 68, 0 ) 
 			loris.exportSpc( ofile + '.e.spc', p, 68, 1 ) 
 		
@@ -204,11 +204,11 @@ if trial == 4:
 			ofile = 'shaku.%i.%i.s1'%(res, mlw)
 			fout = loris.AiffFile( p, rate )
 			fout.write( ofile + '.aiff' )
-			# prune before Spc export
-			for partial in p:
-				if partial.label() > 511:
-					partial.setLabel( -1 )
-			dump = loris.extractLabeled( p, -1 )
+# 			prune before Spc export
+# 			for partial in p:
+# 				if partial.label() > 511:
+# 					partial.setLabel( -1 )
+# 			loris.removeLabeled( p, -1 )
 			loris.exportSpc( ofile + '.s.spc', p, 68, 0 ) 
 			loris.exportSpc( ofile + '.e.spc', p, 68, 1 ) 
 		

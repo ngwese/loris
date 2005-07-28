@@ -80,13 +80,13 @@ trial 9:
 	200 Hz and 150 Hz windows don't sound much different, nor do 70 Hz
 	and 50 Hz resolutions. Turning off BW, for now, seems to help.
 
-Last updated: 26 March 2003 by Kelly Fitz
+Last updated: 28 July 2005 by Kelly Fitz
 """
 
 print __doc__
 
 import loris, time
-from trials import *
+# from trials import *
 
 # use this trial counter to skip over
 # eariler trials
@@ -121,10 +121,10 @@ if trial == 2:
 				ofile = '%s.%i.%i.d%i.aiff'%(source[:-5], r, w, f)
 				synthesize( ofile, p2 )
 				
-env = buildEnvelope( [ (0,328), (.13, 276), (.37, 273), (.48, 248), (.51, 273), 
-	(.97, 238), (.99, 271), (1.56, 231), (2.14, 265), (2.35, 340), 
-	(2.75, 388), (3.5, 302), (4, 296), (4.1, 311), (4.7, 253), 
-	(4.9, 200), (6, 220) ] )
+# env = buildEnvelope( [ (0,328), (.13, 276), (.37, 273), (.48, 248), (.51, 273), 
+# 	(.97, 238), (.99, 271), (1.56, 231), (2.14, 265), (2.35, 340), 
+# 	(2.75, 388), (3.5, 302), (4, 296), (4.1, 311), (4.7, 253), 
+# 	(4.9, 200), (6, 220) ] )
 
 if trial == 3:
 	resolutions = ( 30, 50 )
@@ -254,7 +254,7 @@ if trial == 9: # try turning off bw enhancement (Loris 1.0.3)
 			f = loris.AiffFile( source )
 			p = an.analyze( f.samples(), f.sampleRate() )
 			# collate
-			loris.distill( p )
+			loris.collate( p )
 			v = loris.synthesize( p, f.sampleRate() )
-			loris.exportAiff( 'angry.%i.%i.raw.aiff'%(r, w), v, f.sampleRate(), 1, 16 )
+			loris.exportAiff( 'angry.%i.%i.raw.aiff'%(r, w), v, f.sampleRate() )
 

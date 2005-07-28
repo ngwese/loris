@@ -61,7 +61,7 @@ pianosax:
 	cd $@; $(PYTHONENV) $(PYTHON) pianosax.py
 
 sax: 
-	cd $@; $(PYTHONENV) $(PYTHON) sax.py
+	cd $@; $(PYTHONENV) $(PYTHON) saxriff.py
 
 shaku: 
 	cd $@; $(PYTHONENV) $(PYTHON) shaku.py

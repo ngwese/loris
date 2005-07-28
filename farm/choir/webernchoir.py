@@ -48,7 +48,7 @@ notes from trial 5:
 	- raising noise floor is bad, makes then all sound much worse, badly
 	lowpass filtered
 
-Last updated: 27 May 2003 by Kelly Fitz
+Last updated: 28 July 2005 by Kelly Fitz
 """
 
 print __doc__
@@ -142,8 +142,8 @@ if trial == 6:
 		p = a.analyze( samples, rate )
 		ofile = 'choir.%i.%i.raw'%(r, w)
 		# collate
-		loris.distill( p )
+		loris.collate( p )
 		# export
-		loris.exportAiff( ofile + '.aiff', loris.synthesize( p, rate ), rate, 1, 16 )
+		loris.exportAiff( ofile + '.aiff', loris.synthesize( p, rate ), rate )
 		loris.exportSpc( ofile + '.s.spc', p, 60, 0 ) 
 		loris.exportSpc( ofile + '.e.spc', p, 60, 1 ) 

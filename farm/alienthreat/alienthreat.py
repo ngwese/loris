@@ -19,7 +19,7 @@ trial1:
 	better?
 
 
-Last updated: 8 Jun 2005 by Kelly Fitz
+Last updated: 28 July 2005 by Kelly Fitz
 """
 print __doc__
 
@@ -49,7 +49,7 @@ if trial == 1:
 	p = a.analyze( samples, rate )
 	ofile = 'threat.%i.%i.raw'%(res, mlw)
 	# collate
-	loris.collate( p, 1 )
+	loris.collate( p )
 	# export
 	fsamps = loris.AiffFile( p, rate )
 	fsamps.write( ofile + '.aiff' )

@@ -61,12 +61,12 @@ notes from trial 5:
 	between-harmonic partials, but rather in the tails of harmonic partials.
 	
 
-Last updated: 16 May 2003 by Kelly Fitz
+Last updated: 28 July 2005 by Kelly Fitz
 """
 print __doc__
 
 import loris, time
-from trials import *
+# from trials import *
 
 # use this trial counter to skip over
 # eariler trials
@@ -75,6 +75,9 @@ trial = 5
 print "running trial number", trial, time.ctime(time.time())
 
 source = 'saxriff.aiff'
+f = loris.AiffFile(source)
+samples = f.samples()
+rate = f.sampleRate()
 
 if trial == 1:
 	resolutions = (65, 75, 90, 100, 110, 125)
@@ -151,24 +154,25 @@ if trial == 4:
 if trial == 5:
 	pref = loris.importSpc('saxriff.fund.qharm')
 	ref = loris.createFreqReference( pref, 50, 500 )
-	resolutions = (65, 90)
+	resolutions = ( 65, 90 )
 	widths = ( 200, 250 )
 	for r in resolutions:
 		for w in widths:
-			p = analyze( source, r, w )
+			a = loris.Analyzer( r, w )
+			p = a.analyze( samples, rate, ref )
 			ofilebase = 'sax.%i.%i'%(r,w)
 			loris.exportSdif( ofilebase + '.raw.sdif', p )
-			synthesize( ofilebase + '.raw.aiff', p )
+			loris.exportAiff( ofilebase + '.raw.aiff', loris.synthesize( p ) )
 			for h in (1,2):
 				loris.channelize(p, ref, h)
 				# distilled version
-				pd = p
+				pd = loris.PartialList( p )
 				loris.distill( pd )
-				setAllBandwidth( pd, 0 )
+				loris.scaleNoiseRatio( pd, 0 )
 				ofilebased = ofilebase + '.d%i'%h
 				loris.exportSdif( ofilebased + '.sdif', pd )
-				synthesize( ofilebased + '.aiff', pd )
-				pruneByLabel( pd, range(1,512) )
+				loris.exportAiff( ofilebased + '.aiff', loris.synthesize( pd ) )
+# 				pruneByLabel( pd, range(1,512) )
 				loris.exportSpc( ofilebased + '.s.spc', pd, 70, 0 ) 
 				loris.exportSpc( ofilebased + '.e.spc', pd, 70, 1 ) 
 

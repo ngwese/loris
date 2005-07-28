@@ -39,7 +39,7 @@ notes from trial 2 with Loris 1.2.0beta2:
 	distinguish, and they both need some attention to the noisy
 	parts.
 
-Last updated: 31 March 2005 by Kelly Fitz
+Last updated: 28 July 2005 by Kelly Fitz
 """
 print __doc__
 
@@ -76,7 +76,7 @@ if trial == 2:
 			p = a.analyze( samples, rate )
 			ofile = 'moses.%i.%i.aiff'%(r, w)
 			# collate
-			loris.distill( p )
+			loris.collate( p )
 			# export
 			loris.exportAiff( ofile, loris.synthesize( p, rate ), rate, 16 )
 

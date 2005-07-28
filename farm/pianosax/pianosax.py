@@ -34,7 +34,7 @@ trial 3:
 	- the crunch isn't actually noise, apparently, because it is still there
 	even if the noise energy in scaled to zero!
 
-Last updated: 4 June 2003 by Kelly Fitz
+Last updated: 28 July 2005 by Kelly Fitz
 """
 
 print __doc__
@@ -185,14 +185,14 @@ if trial == 4:
 	# scale noise to zero?
 	loris.scaleNoiseRatio( p, loris.BreakpointEnvelope(0) )
 	# export
-	loris.exportAiff( ofile + '.aiff', loris.synthesize( p, rate ), rate, 1, 24 )
-	# prune before Spc export
-	iter = p.begin()
-	while not iter.equals( p.end() ):
-		next = iter.next()
-		if iter.partial().label() > 511:					
-			p.erase( iter )
-		iter = next
+	loris.exportAiff( ofile + '.aiff', loris.synthesize( p, rate ), rate, 24 )
+# 	prune before Spc export
+# 	iter = p.begin()
+# 	while not iter.equals( p.end() ):
+# 		next = iter.next()
+# 		if iter.partial().label() > 511:					
+# 			p.erase( iter )
+# 		iter = next
 	loris.exportSpc( ofile + '.s.spc', p, 60, 0 ) 
 	loris.exportSpc( ofile + '.e.spc', p, 60, 1 ) 
 	

@@ -42,7 +42,7 @@ notes from trial 3:
 	all the artifacts
 	- 150 is slightly preferable
 
-Last updated: 27 May 2003 by Kelly Fitz
+Last updated: 28 July 2005 by Kelly Fitz
 """
 
 print __doc__
@@ -143,7 +143,7 @@ if trial == 4:
 		p = a.analyze( samples, rate )
 		# export raw
 		ofile = 'tbnflutter.%i.%i'%(r, w)
-		loris.exportAiff( ofile + '.raw.aiff', loris.synthesize( p, rate ), rate, 1, 16 )
+		loris.exportAiff( ofile + '.raw.aiff', loris.synthesize( p, rate ), rate )
 		p1 = p
 		p2 = p1.copy()
 		
@@ -152,7 +152,7 @@ if trial == 4:
 		loris.distill( p1 )
 		# export
 		ofile1 = ofile + '.d1'
-		loris.exportAiff( ofile1 + '.aiff', loris.synthesize( p1, rate ), rate, 1, 16 )
+		loris.exportAiff( ofile1 + '.aiff', loris.synthesize( p1, rate ), rate )
 		loris.exportSpc( ofile1 + '.s.spc', p1, 60, 0 ) 
 		loris.exportSpc( ofile1 + '.e.spc', p1, 60, 1 ) 
 				
@@ -161,7 +161,7 @@ if trial == 4:
 		loris.distill( p2 )
 		# export
 		ofile2 = ofile + '.d2'
-		loris.exportAiff( ofile2 + '.aiff', loris.synthesize( p2, rate ), rate, 1, 16 )
+		loris.exportAiff( ofile2 + '.aiff', loris.synthesize( p2, rate ), rate )
 		loris.exportSpc( ofile2 + '.s.spc', p2, 60, 0 ) 
 		loris.exportSpc( ofile2 + '.e.spc', p2, 60, 1 ) 
 
