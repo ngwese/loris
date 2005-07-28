@@ -3,63 +3,70 @@ PYTHONPATH = /usr/local/lib/python2.3/site-packages:..
 # PYTHONPATH = /Loris/scripting/.libs:/Loris/scripting
 PYTHONENV = env PYTHONPATH=$(PYTHONPATH)
 
-all: alienthreat bell bongo cats cellos choir density derbari elephants \
+DIRS = alienthreat bass bell bongo cats cellos choir density derbari elephants \
 	 flutes french funny gong moses pianosax sax shaku trombone \
 	 morphing
 
-alienthreat: Makefile
+all: $(DIRS) 
+
+.PHONY: $(DIRS) 
+
+alienthreat: 
 	cd $@; $(PYTHONENV) $(PYTHON) alienthreat.py
 	
-bell: Makefile
+bass: 
+	cd $@; $(PYTHONENV) $(PYTHON) bassD2.py
+	
+bell: 
 	cd $@; $(PYTHONENV) $(PYTHON) nisobell.py
 	
-bongo: Makefile
+bongo: 
 	cd $@; $(PYTHONENV) $(PYTHON) bongo.py	
 	
-cats: Makefile
+cats: 
 	cd $@; $(PYTHONENV) $(PYTHON) meows.py	
 
-cellos: Makefile
+cellos: 
 	cd $@; $(PYTHONENV) $(PYTHON) cellos.py	
 	
-choir: Makefile
+choir: 
 	cd $@; $(PYTHONENV) $(PYTHON) webernchoir.py
 	
-density: Makefile
+density: 
 	cd $@; $(PYTHONENV) $(PYTHON) density.py
 
-derbari: Makefile
+derbari: 
 	cd $@; $(PYTHONENV) $(PYTHON) derbari.py	
 	
-elephants: Makefile
+elephants: 
 	cd $@; $(PYTHONENV) $(PYTHON) elephants.py
 	
-flutes: Makefile
+flutes: 
 	cd $@; $(PYTHONENV) $(PYTHON) flute.py	
 	cd $@; $(PYTHONENV) $(PYTHON) flutter.py
 
-french: Makefile
+french: 
 	cd $@; $(PYTHONENV) $(PYTHON) french.py
 
-funny: Makefile
+funny:
 	cd $@; $(PYTHONENV) $(PYTHON) funny.py
 
-gong: Makefile
+gong: 
 	cd $@; $(PYTHONENV) $(PYTHON) gong.py
 
-moses: Makefile
+moses: 
 	cd $@; $(PYTHONENV) $(PYTHON) moses.py
 
-pianosax: Makefile
+pianosax: 
 	cd $@; $(PYTHONENV) $(PYTHON) pianosax.py
 
-sax: Makefile
+sax: 
 	cd $@; $(PYTHONENV) $(PYTHON) sax.py
 
-shaku: Makefile
+shaku: 
 	cd $@; $(PYTHONENV) $(PYTHON) shaku.py
 
-trombone: Makefile
+trombone: 
 	cd $@; $(PYTHONENV) $(PYTHON) tbnflutter.py
 
 morphing: elephants
