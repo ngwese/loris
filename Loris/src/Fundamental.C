@@ -150,26 +150,22 @@ Fundamental::estimateAt( double time ) const
 	vector<double> amps, freqs;
 	collect_ampsNfreqs( partials_.begin(), partials_.end(), time, 
 					   amps, freqs, ampThreshold_ );
-	
-	if ( ! amps.empty() )
-	{
-		double f0 = iterative_estimate( amps, freqs, freqMin_, freqMax_, 
-									  freqResolution_ );
-		if ( f0 > freqMin_ && f0 < freqMax_ )
-		{
-			return f0;
-		}
-		else
-		{
-			Throw( InvalidObject, "Cannot construct a reliable estimate "
-								  "on the specified range of frequencies." );
-		}	
-	}
-	else
+
+	if ( amps.empty() )
 	{
 		Throw( InvalidArgument, "No partials have significant energy at the "
-								"specified time." );
+								      "specified time." );
 	}
+   
+   double f0 = iterative_estimate( amps, freqs, freqMin_, freqMax_, 
+									        freqResolution_ );
+   if ( f0 <= freqMin_ || f0 >= freqMax_ )
+   {
+      Throw( InvalidObject, "Cannot construct a reliable estimate "
+                            "on the specified range of frequencies." );
+   }	
+
+   return f0;
 }
  
 // ---------------------------------------------------------------------------
