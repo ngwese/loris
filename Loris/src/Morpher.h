@@ -423,13 +423,13 @@ public:
    //!   (this is the traditional behavior or Loris).
    //!   Change from default using setSourceReferenceLabel
    //!   and setTargetReferenceLabel.
-   const Partial::label_type DefaultReferenceLabel;    
+   static const Partial::label_type DefaultReferenceLabel;    
 
    //!   Amplitude threshold (dB) below which 
    //!   Partial frequencies are corrected using
    //!   the reference Partial frequency envelope
    //!   (if specified).
-   const double DefaultFixThreshold;
+   static const double DefaultFixThreshold;
 
    //!   Default amplitude shaping parameter, used in
    //!   interpolateLogAmplitudes to perform logarithmic 
@@ -439,12 +439,12 @@ public:
    //!   legacy-style linear amplitude morphs by default.
    //!
    //!   Change from default using setAmplitudeShape.
-   const double DefaultAmpShape;    
+   static const double DefaultAmpShape;    
 
    //!   Default minimum time (sec) between Breakpoints in 
    //!   morphed Partials. 
    //!   Change from default using setMinBreakpointGap.
-   const double DefaultBreakpointGap;
+   static const double DefaultBreakpointGap;
 
 private:
 	

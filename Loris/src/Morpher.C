@@ -62,11 +62,11 @@ namespace Loris {
 #define MORPH_PHASE_TRAVEL 1
 #define MORPH_NOISE_ENERGY 0
 
-const Partial::label_type DefaultReferenceLabel = 0;    
+const Partial::label_type Morpher::DefaultReferenceLabel = 0;    
                                                  //  by default, don't use reference Partial
                                                  // (this is the traditional behavior or Loris)
 
-const double DefaultFixThreshold = -90;         // dB, very low by default
+const double Morpher::DefaultFixThreshold = -90; // dB, very low by default
 
 // shaping parameter, see interpolateLogAmplitudes:
 // compile with LINEAR_AMP_MORPHS defined for
@@ -75,12 +75,12 @@ const double DefaultFixThreshold = -90;         // dB, very low by default
 // setAmplitudeShape.
 //
 #if !defined(LINEAR_AMP_MORPHS) || !LINEAR_AMP_MORPHS
-   const double DefaultAmpShape = 1E-5;    
+   const double Morpher::DefaultAmpShape = 1E-5;    
 #else  
-   const double DefaultAmpShape = 1E5;    
+   const double Morpher::DefaultAmpShape = 1E5;    
 #endif
-const double DefaultBreakpointGap = 1E-4; // minimum time (sec) between Breakpoints in 
-                                          // morphed Partials
+const double Morpher::DefaultBreakpointGap = 1E-4; // minimum time (sec) between Breakpoints in 
+                                                   // morphed Partials
 
 // helper declarations
 static inline double interpolateFrequencies( double f0, double f1, double alpha );
