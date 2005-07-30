@@ -237,22 +237,41 @@ short Partials.)
 
 For very simple sounds, this frequency reference may be a good
 first approximation to a reference envelope for channelization
-(see channelize).");
+(see channelize).") createFreqReference;
 
 %newobject createFreqReference;
 LinearEnvelope * 
 createFreqReference( PartialList * partials, 
-					 double minFreq, double maxFreq, long numSamps );
+					      double minFreq, double maxFreq, long numSamps );
+
+// why can't I use default arguments to do this?
+// Because SWIG wants all default arguments to be
+// match the C++ function declaration with it is
+// processing C++ code. 
 %inline 
 %{
 	LinearEnvelope * 
 	createFreqReference( PartialList * partials, 
-						 double minFreq, double maxFreq )
+						      double minFreq, double maxFreq )
 	{
 		createFreqReference( partials, minFreq, maxFreq, 0 );
 	}
 %}
 
+%feature("docstring",
+"Return a newly-constructed LinearEnvelope that estimates
+the time-varying fundamental frequency of the sound
+represented by the Partials in a PartialList. This uses
+the experimental Fundamental class to construct an estimator
+of fundamental frequency, and returns a LinearEnvelope that
+samples the estimator at the specified time interval (in 
+seconds). Only estimates in the specified frequency range will 
+be considered valid, estimates outside this range will be 
+ignored.") createF0Estimate;
+   
+LinearEnvelope * 
+createF0Estimate( PartialList * partials, double minFreq, double maxFreq, 
+                  double interval );
 
 %feature("docstring", 
 "Dilate Partials in a PartialList according to the given initial

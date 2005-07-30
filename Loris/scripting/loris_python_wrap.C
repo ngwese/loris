@@ -2577,7 +2577,7 @@ SWIG_Check_int(PyObject* obj)
 
 	LinearEnvelope * 
 	createFreqReference( PartialList * partials, 
-						 double minFreq, double maxFreq )
+						      double minFreq, double maxFreq )
 	{
 		createFreqReference( partials, minFreq, maxFreq, 0 );
 	}
@@ -5362,6 +5362,50 @@ static PyObject *_wrap_createFreqReference(PyObject *self, PyObject *args) {
     }
     
     PyErr_SetString(PyExc_NotImplementedError,"No matching function for overloaded 'createFreqReference'");
+    return NULL;
+}
+
+
+static PyObject *_wrap_createF0Estimate(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    PartialList *arg1 = (PartialList *) 0 ;
+    double arg2 ;
+    double arg3 ;
+    double arg4 ;
+    LinearEnvelope *result;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    PyObject * obj2 = 0 ;
+    PyObject * obj3 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OOOO:createF0Estimate",&obj0,&obj1,&obj2,&obj3)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_PartialList, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        arg2 = (double)(SWIG_As_double(obj1)); 
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    {
+        arg3 = (double)(SWIG_As_double(obj2)); 
+        if (SWIG_arg_fail(3)) SWIG_fail;
+    }
+    {
+        arg4 = (double)(SWIG_As_double(obj3)); 
+        if (SWIG_arg_fail(4)) SWIG_fail;
+    }
+    {
+        char * err;
+        clear_exception();
+        result = (LinearEnvelope *)createF0Estimate(arg1,arg2,arg3,arg4);
+        
+        if ( 0 != (err = check_exception()) )
+        {
+            SWIG_exception( SWIG_ValueError, err );
+        }
+    }
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_LinearEnvelope, 0);
+    return resultobj;
+    fail:
     return NULL;
 }
 
@@ -14945,6 +14989,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"channelize", _wrap_channelize, METH_VARARGS, NULL},
 	 { (char *)"collate", _wrap_collate, METH_VARARGS, NULL},
 	 { (char *)"createFreqReference", _wrap_createFreqReference, METH_VARARGS, NULL},
+	 { (char *)"createF0Estimate", _wrap_createF0Estimate, METH_VARARGS, NULL},
 	 { (char *)"dilate", _wrap_dilate, METH_VARARGS, NULL},
 	 { (char *)"distill", _wrap_distill, METH_VARARGS, NULL},
 	 { (char *)"exportAiff", _wrap_exportAiff, METH_VARARGS, NULL},

@@ -63,6 +63,7 @@
 #include "Distiller.h"
 #include "Exception.h"
 #include "FrequencyReference.h"
+#include "Fundamental.h"
 #include "ImportLemur.h"
 #include "Morpher.h"
 #include "Notifier.h"
@@ -238,6 +239,54 @@ createFreqReference( PartialList * partials, double minFreq, double maxFreq,
 	catch( std::exception & ex ) 
 	{
 		std::string s("std C++ exception in createFreqReference(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	return NULL;
+}
+
+/* ---------------------------------------------------------------- */
+/*        createF0Estimate        
+/*
+/*	Return a newly-constructed LinearEnvelope that estimates
+   the time-varying fundamental frequency of the sound
+   represented by the Partials in a PartialList. This uses
+   the experimental Fundamental class to construct an estimator
+   of fundamental frequency, and returns a LinearEnvelope that
+   samples the estimator at the specified time interval (in 
+   seconds). Only estimates in the specified frequency range will 
+   be considered valid, estimates outside this range will be 
+   ignored.
+   
+   Clients are responsible for disposing of the newly-constructed 
+	LinearEnvelope.
+ */
+extern "C"
+LinearEnvelope * 
+createF0Estimate( PartialList * partials, double minFreq, double maxFreq, 
+                  double interval )
+{
+	try 
+	{
+		ThrowIfNull((PartialList *) partials);
+		
+		//	use auto_ptr to manage memory in case 
+		//	an exception is generated (hard to imagine):
+      Fundamental estimator( partials->begin(), partials->end(), minFreq, maxFreq );
+      LinearEnvelope * env_ptr = 
+         new LinearEnvelope( estimator.constructEnvelope( interval ) );
+		
+		return env_ptr;
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in createF0Estimate(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in createF0Estimate(): " );
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}

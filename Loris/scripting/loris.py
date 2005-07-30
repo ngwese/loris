@@ -340,6 +340,22 @@ def collate(*args):
     """
     return _loris.collate(*args)
 
+def createF0Estimate(*args):
+    """
+    createF0Estimate(partials, minFreq, maxFreq, interval) -> LinearEnvelope
+
+    Return a newly-constructed LinearEnvelope that estimates
+    the time-varying fundamental frequency of the sound
+    represented by the Partials in a PartialList. This uses
+    the experimental Fundamental class to construct an estimator
+    of fundamental frequency, and returns a LinearEnvelope that
+    samples the estimator at the specified time interval (in 
+    seconds). Only estimates in the specified frequency range will 
+    be considered valid, estimates outside this range will be 
+    ignored.
+    """
+    return _loris.createF0Estimate(*args)
+
 def dilate(*args):
     """
     dilate(partials, ivec, tvec)

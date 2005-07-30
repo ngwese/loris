@@ -40,9 +40,9 @@
 #include "Fundamental.h"
 
 #include "Breakpoint.h"
-#include "BreakpointEnvelope.h"
 #include "Collator.h"
 #include "Exception.h"
+#include "LinearEnvelope.h"
 #include "Partial.h"
 #include "PartialList.h"
 #include "PartialUtils.h"
@@ -171,7 +171,7 @@ Fundamental::estimateAt( double time ) const
 // ---------------------------------------------------------------------------
 //	constructEnvelope
 // ---------------------------------------------------------------------------
-//	Return a BreakpointEnvelope that evaluates to a linear
+//	Return a LinearEnvelope that evaluates to a linear
 //	envelope approximation to the fundamental frequency 
 //	estimate sampled at regular intervals. interval is the
 //	sampling interval in seconds. Throws InvalidArgument
@@ -181,7 +181,7 @@ Fundamental::estimateAt( double time ) const
 //	no likely estimate is found in the frequency range 
 //	(freqMin_, freqMax_).
 //
-BreakpointEnvelope 
+LinearEnvelope 
 Fundamental::constructEnvelope( double interval ) const
 {
 	std::pair< double, double > span =
@@ -192,7 +192,7 @@ Fundamental::constructEnvelope( double interval ) const
 // ---------------------------------------------------------------------------
 //	constructEnvelope
 // ---------------------------------------------------------------------------
-//	Return a BreakpointEnvelope that evaluates to a linear
+//	Return a LinearEnvelope that evaluates to a linear
 //	envelope approximation to the fundamental frequency 
 //	estimate sampled at regular intervals. Consider only
 //	the time between t1 and t2. interval is the
@@ -203,7 +203,7 @@ Fundamental::constructEnvelope( double interval ) const
 //	no likely estimate is found in the frequency range 
 //	(freqMin_, freqMax_).
 //
-BreakpointEnvelope 
+LinearEnvelope 
 Fundamental::constructEnvelope( double t1, double t2, double interval ) const
 {
 	//	make t1 the starting time and t2 the ending time:
@@ -212,7 +212,7 @@ Fundamental::constructEnvelope( double t1, double t2, double interval ) const
 		std::swap( t1, t2 );
 	}
 
-	BreakpointEnvelope env;
+	LinearEnvelope env;
 	vector<double> amps, freqs;
 	double t = t1;
 	bool found_energy = false;
@@ -229,12 +229,12 @@ Fundamental::constructEnvelope( double t1, double t2, double interval ) const
 		//	collect the Partial amplitudes and
 		//	frequencies at time t:
 		collect_ampsNfreqs( partials_.begin(), partials_.end(), t, 
-						   amps, freqs, ampThreshold_ );
+						        amps, freqs, ampThreshold_ );
 		
 		if ( ! amps.empty() )
 		{
 			double f0 = iterative_estimate( amps, freqs, freqMin_, freqMax_,
-										  freqResolution_ );
+                                         freqResolution_ );
 			//	reject boundary frequencies
 			if ( f0 > freqMin_ && f0 < freqMax_ )
 			{
@@ -248,12 +248,12 @@ Fundamental::constructEnvelope( double t1, double t2, double interval ) const
 	if ( ! found_energy )
 	{
 		Throw( InvalidObject, "No Partials have sufficient energy to "
-							  "estimate the fundamental." );
+							       "estimate the fundamental." );
 	}
 	else if ( env.size() == 0 )
 	{
 		Throw( InvalidObject, "Cannot construct a reliable estimate "
-							  "on the specified range of frequencies." );
+                            "on the specified range of frequencies." );
 	}
 	
 	//	apply a smoothing filter to the fundamental estimates:
