@@ -391,7 +391,9 @@ echo Using FFTW version $FFTW_VERSION.
 
 if test -n "$PYTHON" ; then
 	echo Python support: Enabled.
-	echo Installing Python extension modules in $pyexecdir.
+	echo Installing Python extension modules in $pyexecdir
+   echo You may need to add $pyexecdir to your PYTHONPATH 
+   echo before Python will be able to load them.
 else
 	echo Python support: Disabled.
 	echo Define PYTHON or add something to CPPFLAGS to enable.  
@@ -401,6 +403,8 @@ fi
 if test -n "$FOUND_CSOUND" ; then
 	echo Csound support: Enabled.
 	echo Installing opcodes in $CSOUND_PREFIX/lib/csound
+   echo To use them in your instruments, invoke csound with the argument:
+   echo   --opcode-lib=$CSOUND_PREFIX/lib/csound/lorisops.so
 else
 	echo Csound support: Disabled.
 	echo Define CSOUND_CONFIG or add something to CPPFLAGS to enable.  
