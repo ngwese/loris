@@ -8,7 +8,7 @@ in Loris.
 This script pertains to the raga singing sample that was included in the 
 ICMC 2000 bakeoff and called then "shafqat-derbari."
 
-More recently, I have used this sound in my demo at ICMC 2002, adn the 
+More recently, I have used this sound in my demo at ICMC 2002, and the 
 parameters I liked then were 180 Hz resolution and 350 Hz window. I tried
 sifting and distilling, and I think sifting (removing zeros) worked better.
 
@@ -21,7 +21,7 @@ notes from trial 2:
 	- got back some of that oomph, sounds much better, but still not like the
 	original
 
-Last updated: 26 July 2005 by Kelly Fitz
+Last updated: 30 July 2005 by Kelly Fitz
 """
 print __doc__
 
@@ -94,18 +94,20 @@ if trial == 2:
 	
 	# collate
 	loris.collate( praw )
-	ofile = 'derbari.%i.%i.lo.raw'%(res, mlw)
+	ofile = 'derbari.raw'
 	fout = loris.AiffFile( praw, rate )
 	fout.write( ofile + '.aiff' )
+	loris.exportSdif( ofile + '.sdif', praw )
 	loris.exportSpc( ofile + '.s.spc', praw, 58, 0 ) 
 	loris.exportSpc( ofile + '.e.spc', praw, 58, 1 ) 
 
 	# distill
 	loris.distill( pdist )
 	loris.removeLabeled( pdist, 0 )
-	ofile = 'derbari.%i.%i.lo.d1'%(res, mlw)
+	ofile = 'derbari.d1'
 	fout = loris.AiffFile( pdist, rate )
 	fout.write( ofile + '.aiff' )
+	loris.exportSdif( ofile + '.sdif', pdist )
 	loris.exportSpc( ofile + '.s.spc', pdist, 58, 0 ) 
 	loris.exportSpc( ofile + '.e.spc', pdist, 58, 1 ) 
 
@@ -113,9 +115,10 @@ if trial == 2:
 	loris.sift( psift )
 	loris.removeLabeled( psift, 0 )
 	loris.distill( psift )
-	ofile = 'derbari.%i.%i.lo.s1'%(res, mlw)
+	ofile = 'derbari.s1'
 	fout = loris.AiffFile( psift, rate )
 	fout.write( ofile + '.aiff' )
+	loris.exportSdif( ofile + '.sdif', psift )
 	loris.exportSpc( ofile + '.s.spc', psift, 58, 0 ) 
 	loris.exportSpc( ofile + '.e.spc', psift, 58, 1 ) 
 

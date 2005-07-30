@@ -3,9 +3,10 @@ PYTHONPATH = /usr/local/lib/python2.3/site-packages:..
 # PYTHONPATH = /Loris/scripting/.libs:/Loris/scripting
 PYTHONENV = env PYTHONPATH=$(PYTHONPATH)
 
-DIRS = alienthreat bass bell bongo cats cellos choir density derbari elephants \
-	 flutes french funny gong moses pianosax sax shaku trombone \
-	 morphing
+DIRS = alienthreat bass bassoon bell bongo cats cellos choir \
+	   density derbari elephants flutes french funny gong moses \
+	   pianosax sax shaku trombone \
+	   morphing
 
 all: $(DIRS) 
 
@@ -16,6 +17,9 @@ alienthreat:
 	
 bass: 
 	cd $@; $(PYTHONENV) $(PYTHON) bassD2.py
+	
+bassoon: 
+	cd $@; $(PYTHONENV) $(PYTHON) bassoonDb2.py
 	
 bell: 
 	cd $@; $(PYTHONENV) $(PYTHON) nisobell.py

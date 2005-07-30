@@ -42,7 +42,7 @@ notes from trial 3:
 	all the artifacts
 	- 150 is slightly preferable
 
-Last updated: 28 July 2005 by Kelly Fitz
+Last updated: 30 July 2005 by Kelly Fitz
 """
 
 print __doc__
@@ -153,6 +153,7 @@ if trial == 4:
 		# export
 		ofile1 = ofile + '.d1'
 		loris.exportAiff( ofile1 + '.aiff', loris.synthesize( p1, rate ), rate )
+		loris.exportSdif( ofile1 + '.sdif', p1 )
 		loris.exportSpc( ofile1 + '.s.spc', p1, 60, 0 ) 
 		loris.exportSpc( ofile1 + '.e.spc', p1, 60, 1 ) 
 				
@@ -162,6 +163,7 @@ if trial == 4:
 		# export
 		ofile2 = ofile + '.d2'
 		loris.exportAiff( ofile2 + '.aiff', loris.synthesize( p2, rate ), rate )
+		loris.exportSdif( ofile2 + '.sdif', p2 )
 		loris.exportSpc( ofile2 + '.s.spc', p2, 60, 0 ) 
 		loris.exportSpc( ofile2 + '.e.spc', p2, 60, 1 ) 
 
