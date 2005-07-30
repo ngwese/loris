@@ -415,7 +415,37 @@ public:
 
 	//!	Return a const reference to this Morpher's list of morphed Partials.
 	const PartialList & partials( void ) const; 
-					
+
+//	-- global morphing defaults and constants --
+
+   //!   Default reference partial label.
+   //!   By default, don't use reference Partial
+   //!   (this is the traditional behavior or Loris).
+   //!   Change from default using setSourceReferenceLabel
+   //!   and setTargetReferenceLabel.
+   const Partial::label_type DefaultReferenceLabel;    
+
+   //!   Amplitude threshold (dB) below which 
+   //!   Partial frequencies are corrected using
+   //!   the reference Partial frequency envelope
+   //!   (if specified).
+   const double DefaultFixThreshold;
+
+   //!   Default amplitude shaping parameter, used in
+   //!   interpolateLogAmplitudes to perform logarithmic 
+   //!   amplitude morphs. 
+   //!
+   //!   Compile Loris with LINEAR_AMP_MORPHS defined for
+   //!   legacy-style linear amplitude morphs by default.
+   //!
+   //!   Change from default using setAmplitudeShape.
+   const double DefaultAmpShape;    
+
+   //!   Default minimum time (sec) between Breakpoints in 
+   //!   morphed Partials. 
+   //!   Change from default using setMinBreakpointGap.
+   const double DefaultBreakpointGap;
+
 private:
 	
 //	-- helper --

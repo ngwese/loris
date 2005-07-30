@@ -9,7 +9,7 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 bin_PROGRAMS  = loris-analyze loris-synthesize loris-spewmarkers \
-                loris-mark loris-unmark
+                loris-mark loris-unmark loris-dilate
 
 # loris-analyze: a utility program to analyze
 # samples and store the partials in an SDIF file.
@@ -17,6 +17,14 @@ loris_analyze_SOURCES = loris_analyze.C
 loris_analyze_CXXFLAGS = -I$(top_srcdir)/src
 loris_analyze_LDADD = $(top_builddir)/src/libloris.la 
 loris_analyze_LDFLAGS = -static
+
+# loris-dilate: a utility program to dilate Partials
+# stored in a SDIF file, optionally with amplitude
+# and frequency scaling by a constant factor.
+loris_dilate_SOURCES = loris_dilate.C
+loris_dilate_CXXFLAGS = -I$(top_srcdir)/src
+loris_dilate_LDADD = $(top_builddir)/src/libloris.la
+loris_dilate_LDFLAGS = -static
 
 # loris-synthesize: a utility program to render Partials
 # stored in a SDIF file, optionally with dilation and amplitude

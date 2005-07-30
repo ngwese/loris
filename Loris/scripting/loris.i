@@ -429,11 +429,21 @@ name), and return them in a PartialList.");
 "Morph labeled Partials in two PartialLists according to the
 given frequency, amplitude, and bandwidth (noisiness) morphing
 envelopes, and return the morphed Partials in a PartialList.
+
+Optionally specify the labels of the Partials to be used as 
+reference Partial for the two morph sources. The reference 
+partial is used to compute frequencies for very low-amplitude 
+Partials whose frequency estimates are not considered reliable. 
+The reference Partial is considered to have good frequency 
+estimates throughout. A reference label of 0 indicates that 
+no reference Partial should be used for the corresponding
+morph source.
+
 Loris morphs Partials by interpolating frequency, amplitude,
 and bandwidth envelopes of corresponding Partials in the
 source PartialLists. For more information about the Loris
 morphing algorithm, see the Loris website:
-	www.cerlsoundgroup.org/Loris/");
+	www.cerlsoundgroup.org/Loris/") morph;
 
 %newobject morph;
 %inline %{
@@ -472,7 +482,76 @@ morphing algorithm, see the Loris website:
 		}
 		return dst;
 	}
+
+	PartialList * morph( const PartialList * src0, const PartialList * src1,
+	                     long src0RefLabel, long src1RefLabel,
+                        const LinearEnvelope * ffreq, 
+                        const LinearEnvelope * famp, 
+                        const LinearEnvelope * fbw )
+	{
+		PartialList * dst = createPartialList();
+		morphWithReference( src0, src1, src0RefLabel, src1RefLabel, ffreq, famp, fbw, dst );
+		
+		// check for exception:
+		if ( check_exception() )
+		{
+			destroyPartialList( dst );
+			dst = NULL;
+		}
+		return dst;
+	}
+	
+	PartialList * morph( const PartialList * src0, const PartialList * src1, 
+	                     long src0RefLabel, long src1RefLabel,
+                        double freqweight, 
+                        double ampweight, 
+                        double bwweight )
+	{
+		LinearEnvelope ffreq( freqweight ), famp( ampweight ), fbw( bwweight );
+		
+		PartialList * dst = createPartialList();
+		morphWithReference( src0, src1, src0RefLabel, src1RefLabel, &ffreq, &famp, &fbw, dst );
+		
+		// check for exception:
+		if ( check_exception() )
+		{
+			destroyPartialList( dst );
+			dst = NULL;
+		}
+		return dst;
+	}
 %}
+
+%feature("docstring",
+"Set the shaping parameter for the amplitude morphing
+function. This shaping parameter controls the slope of
+the amplitude morphing function, for values greater than
+1, this function gets nearly linear (like the old
+amplitude morphing function), for values much less than
+1 (e.g. 1E-5) the slope is gently curved and sounds
+pretty 'linear', for very small values (e.g. 1E-12) the
+curve is very steep and sounds un-natural because of the
+huge jump from zero amplitude to very small amplitude.
+
+Use LORIS_DEFAULT_AMPMORPHSHAPE to obtain the default
+amplitude morphing shape for Loris, (equal to 1E-5,
+which works well for many musical instrument morphs,
+unless Loris was compiled with the symbol
+LINEAR_AMP_MORPHS defined, in which case
+LORIS_DEFAULT_AMPMORPHSHAPE is equal to
+LORIS_LINEAR_AMPMORPHSHAPE).
+
+Use LORIS_LINEAR_AMPMORPHSHAPE to approximate the linear
+amplitude morphs performed by older versions of Loris.
+
+The amplitude shape must be positive.") morpher_setAmplitudeShape;
+
+%rename( setAmplitudeMorphShape ) morpher_setAmplitudeShape;
+
+void morpher_setAmplitudeShape( double shape );
+
+const double LORIS_DEFAULT_AMPMORPHSHAPE;    
+const double LORIS_LINEAR_AMPMORPHSHAPE;
 
 %feature("docstring",
 "Synthesize Partials in a PartialList at the given sample rate, and
@@ -480,7 +559,7 @@ return the (floating point) samples in a vector. The vector is
 sized to hold as many samples as are needed for the complete
 synthesis of all the Partials in the PartialList. If the sample
 rate is unspecified, the deault value of 44100 Hz (CD quality) is
-used.");
+used.") synthesize;
 
 %newobject synthesize;
 %inline %{

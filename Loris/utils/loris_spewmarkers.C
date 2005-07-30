@@ -69,6 +69,10 @@ int main( int argc, char* argv[] )
 		try
 		{
 			AiffFile f( filename );
+			cout << "AIFF samples file \"" << filename << "\":" << endl;
+			cout << f.numFrames() << " mono samples at " << f.sampleRate() << " Hz\n";
+			cout << "(Duration " << f.numFrames() / f.sampleRate() << " seconds)\n";
+			cout << "MIDI note number " << f.midiNoteNumber() << endl;
 			markers.insert( markers.begin(), f.markers().begin(), f.markers().end() );
 		}
 		catch( Exception & ex )
@@ -83,6 +87,11 @@ int main( int argc, char* argv[] )
 		try
 		{
 			SdifFile f( filename );
+			cout << "SDIF partials file \"" << filename << "\":" << endl;
+			std::pair< double, double > span = 
+				PartialUtils::timeSpan( f.partials().begin(), f.partials().end() );
+			cout << f.partials().size() << " partials spanning " << span.first;
+			cout << " to " << span.second << " seconds.\n";
 			markers.insert( markers.begin(), f.markers().begin(), f.markers().end() );
 		}
 		catch( Exception & ex )
@@ -97,6 +106,12 @@ int main( int argc, char* argv[] )
 		try
 		{
 			SpcFile f( filename );
+			cout << "Spc partials file \"" << filename << "\":" << endl;
+			std::pair< double, double > span = 
+				PartialUtils::timeSpan( f.partials().begin(), f.partials().end() );
+			cout << f.partials().size() << " partials spanning " << span.first;
+			cout << " to " << span.second << " seconds.\n";
+			cout << "MIDI note number " << f.midiNoteNumber() << endl;
 			markers.insert( markers.begin(), f.markers().begin(), f.markers().end() );
 		}
 		catch( Exception & ex )
@@ -118,6 +133,7 @@ int main( int argc, char* argv[] )
 	}
 	else
 	{
+		cout << "Features marked in " << filename << ":\n";
 		//	print out the markers:
 		std::vector< Marker >::iterator it;
 		for ( it = markers.begin(); it != markers.end(); ++it )

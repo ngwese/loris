@@ -51,7 +51,6 @@ using std::string;
 #include <vector>
 using std::vector;
 
-#include <AiffFile.h>
 #include <Dilator.h>
 #include <Marker.h>
 #include <PartialList.h>
@@ -65,15 +64,14 @@ void parseArguments( int nargs, char * args[] );
 void printUsage( const char * programName );
 
 //	global state
-double Rate = 44100;
 double FreqScale = 1.;
 double AmpScale = 1.;
-string Outname = "synth.aiff";
+string Outname = "dilated.sdif";
 vector< double > markers, times;
 
 int main( int argc, char * argv[] )
 {	
-	if ( argc < 2 )
+	if ( argc < 3 )
 	{
 		printUsage( argv[0] );
 		return 1;
@@ -93,57 +91,61 @@ int main( int argc, char * argv[] )
 		markers.push_back( fin.markers()[ i ].time() );
 	}
 	
-	if ( 0 < times.size() )
+	if ( 0 == times.size() )
 	{
-		if ( ! fin.markers().empty() )
-		{
-			cout << "Features marked in " << fname << " before dilating:\n";
-			//	print out the markers:
-			std::vector< Marker >::iterator it;
-			for ( it = fin.markers().begin(); it != fin.markers().end(); ++it )
-			{
-				cout << it->time() << "\t\"" << it->name() << "\"\n";
-			}
-		}
+		cout << "You must specify the times (in seconds) to be used for dilation." << endl;
+		printUsage( argv[0] );
+		return 1;
+	}
 
-		if ( times.size() == markers.size() )
+	if ( ! fin.markers().empty() )
+	{
+		cout << "Features marked in " << fname << " before dilating:\n";
+		//	print out the markers:
+		std::vector< Marker >::iterator it;
+		for ( it = fin.markers().begin(); it != fin.markers().end(); ++it )
 		{
-			cout << "Dilating partials using " << times.size() 
-			     << " marked features." << endl;
-			Dilator dilator( markers.begin(), markers.end(), times.begin() );
-			dilator.dilate( partials.begin(), partials.end() );
-			dilator.dilate( fin.markers().begin(), fin.markers().end() );
-		}
-		else if ( 1 == times.size() )
-		{
-			double dur = 
-				PartialUtils::timeSpan( partials.begin(), partials.end() ).second;
-			cout << "Scaling duration from " << dur << " to " << times.front() 
-			     << " seconds" << endl;
-			Dilator dilator( &dur, (&dur) + 1, times.begin() );
-			dilator.dilate( partials.begin(), partials.end() );
-			dilator.dilate( fin.markers().begin(), fin.markers().end() );
-		}
-		else
-		{
-		   cout << "Specified time points need to correspond to Markers "
-		        << "in " << fname << ", ignoring." << endl;
-			printUsage( argv[0] );
-			return 1;
-		}
-
-		if ( ! fin.markers().empty() )
-		{
-			cout << "Features marked in " << fname << " after dilating:\n";
-			//	print out the markers:
-			std::vector< Marker >::iterator it;
-			for ( it = fin.markers().begin(); it != fin.markers().end(); ++it )
-			{
-				cout << it->time() << "\t\"" << it->name() << "\"\n";
-			}
+			cout << it->time() << "\t\"" << it->name() << "\"\n";
 		}
 	}
 	
+	if ( times.size() == markers.size() )
+	{
+		cout << "Dilating partials using " << times.size() 
+			 << " marked features." << endl;
+		Dilator dilator( markers.begin(), markers.end(), times.begin() );
+		dilator.dilate( partials.begin(), partials.end() );
+		dilator.dilate( fin.markers().begin(), fin.markers().end() );
+	}
+	else if ( 1 == times.size() )
+	{
+		double dur = 
+			PartialUtils::timeSpan( partials.begin(), partials.end() ).second;
+		cout << "Scaling duration from " << dur << " to " << times.front() 
+			 << " seconds" << endl;
+		Dilator dilator( &dur, (&dur) + 1, times.begin() );
+		dilator.dilate( partials.begin(), partials.end() );
+		dilator.dilate( fin.markers().begin(), fin.markers().end() );
+	}
+	else
+	{
+	   cout << "Specified time points need to correspond to Markers "
+			<< "in " << fname << "." << endl;
+		printUsage( argv[0] );
+		return 1;
+	}
+
+	if ( ! fin.markers().empty() )
+	{
+		cout << "Features marked in " << fname << " after dilating:\n";
+		//	print out the markers:
+		std::vector< Marker >::iterator it;
+		for ( it = fin.markers().begin(); it != fin.markers().end(); ++it )
+		{
+			cout << it->time() << "\t\"" << it->name() << "\"\n";
+		}
+	}
+
 	if ( 1. != FreqScale )
 	{
 	   cout << "Scaling partial frequencies by " << FreqScale << endl;
@@ -155,13 +157,11 @@ int main( int argc, char * argv[] )
 	   PartialUtils::scaleAmplitude( partials.begin(), partials.end(), AmpScale );
 	}
 	//	render the Partials
-	cout << "Rendering " << partials.size() << " partials at "
-	     << Rate << " Hz." << endl;
-	AiffFile fout( partials.begin(), partials.end(), Rate );
+	cout << "Exporting " << partials.size() << " dilated partials to " << Outname << endl;
+	SdifFile fout( partials.begin(), partials.end() );
 	fout.markers() = fin.markers();
 	
 	//	export the samples 
-	cout << "Exporting to " << Outname << endl;
 	fout.write( Outname );	
 	
 	return 0;
@@ -189,13 +189,7 @@ void parseArguments( int nargs, char * args[] )
 			++args;
 			--nargs;
 			//	process an option
-			if ( arg == "-rate" )
-			{
-				Rate = getFloatArg( *args );
-				++args;
-				--nargs;
-			}
-			else if ( arg == "-freq" )
+			if  ( arg == "-freq" )
 			{
 				FreqScale = getFloatArg( *args );
 				++args;
@@ -237,17 +231,16 @@ void parseArguments( int nargs, char * args[] )
 
 void printUsage( const char * programName )
 {
-	cout << "usage: " << programName << " filename.sdif [options] [times]" << endl;
+	cout << "usage: " << programName << " filename.sdif [options] times" << endl;
 	cout << "options:" << endl;
-	cout << "-rate <sample rate in Hz>" << endl;
 	cout << "-freq <frequency scale factor>" << endl;
 	cout << "-amp <amplitude scale factor>" << endl;
-	cout << "-o <output AIFF file name, default is synth.aiff>" << endl;
-	cout << "\nOptional times (any number) are used for dilation." << endl;
-	cout << "If times are specified, they must all correspond to " << endl;
+	cout << "-o <output SDIF file name, default is dilated.sdif>" << endl;
+	cout << "\nTimes (any non-zero number) are used for dilation." << endl;
+	cout << "The specified times must all correspond to " << endl;
 	cout << "Markers in the SDIF file. If only a single time is" << endl;		
 	cout << "specified, and the SDIF file has no Markers or more" << endl;
-	cout << "than one, the specified time is used as the overall duration" << endl;
-	cout << "of the uniformly-dilated synthesis." << endl;
+	cout << "than one, the specified time is used as the overall " << endl;
+	cout << "duration of the uniformly-dilated partials." << endl;
 }
 

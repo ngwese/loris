@@ -413,6 +413,35 @@ def importSpc(*args):
     """
     return _loris.importSpc(*args)
 
+def setAmplitudeMorphShape(*args):
+    """
+    setAmplitudeMorphShape(shape)
+
+    Set the shaping parameter for the amplitude morphing
+    function. This shaping parameter controls the slope of
+    the amplitude morphing function, for values greater than
+    1, this function gets nearly linear (like the old
+    amplitude morphing function), for values much less than
+    1 (e.g. 1E-5) the slope is gently curved and sounds
+    pretty 'linear', for very small values (e.g. 1E-12) the
+    curve is very steep and sounds un-natural because of the
+    huge jump from zero amplitude to very small amplitude.
+
+    Use LORIS_DEFAULT_AMPMORPHSHAPE to obtain the default
+    amplitude morphing shape for Loris, (equal to 1E-5,
+    which works well for many musical instrument morphs,
+    unless Loris was compiled with the symbol
+    LINEAR_AMP_MORPHS defined, in which case
+    LORIS_DEFAULT_AMPMORPHSHAPE is equal to
+    LORIS_LINEAR_AMPMORPHSHAPE).
+
+    Use LORIS_LINEAR_AMPMORPHSHAPE to approximate the linear
+    amplitude morphs performed by older versions of Loris.
+
+    The amplitude shape must be positive.
+    """
+    return _loris.setAmplitudeMorphShape(*args)
+
 def crop(*args):
     """
     crop(partials, t1, t2)
@@ -657,10 +686,24 @@ def morph(*args):
     """
     morph(src0, src1, ffreq, famp, fbw) -> PartialList
     morph(src0, src1, freqweight, ampweight, bwweight) -> PartialList
+    morph(src0, src1, src0RefLabel, src1RefLabel, ffreq, famp, 
+        fbw) -> PartialList
+    morph(src0, src1, src0RefLabel, src1RefLabel, freqweight, 
+        ampweight, bwweight) -> PartialList
 
     Morph labeled Partials in two PartialLists according to the
     given frequency, amplitude, and bandwidth (noisiness) morphing
     envelopes, and return the morphed Partials in a PartialList.
+
+    Optionally specify the labels of the Partials to be used as 
+    reference Partial for the two morph sources. The reference 
+    partial is used to compute frequencies for very low-amplitude 
+    Partials whose frequency estimates are not considered reliable. 
+    The reference Partial is considered to have good frequency 
+    estimates throughout. A reference label of 0 indicates that 
+    no reference Partial should be used for the corresponding
+    morph source.
+
     Loris morphs Partials by interpolating frequency, amplitude,
     and bandwidth envelopes of corresponding Partials in the
     source PartialLists. For more information about the Loris
@@ -668,6 +711,9 @@ def morph(*args):
     	www.cerlsoundgroup.org/Loris/
     """
     return _loris.morph(*args)
+cvar = _loris.cvar
+LORIS_DEFAULT_AMPMORPHSHAPE = cvar.LORIS_DEFAULT_AMPMORPHSHAPE
+LORIS_LINEAR_AMPMORPHSHAPE = cvar.LORIS_LINEAR_AMPMORPHSHAPE
 
 def synthesize(*args):
     """

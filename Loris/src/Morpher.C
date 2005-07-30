@@ -62,14 +62,25 @@ namespace Loris {
 #define MORPH_PHASE_TRAVEL 1
 #define MORPH_NOISE_ENERGY 0
 
-static const Partial::label_type DefaultReferenceLabel = 0;    
+const Partial::label_type DefaultReferenceLabel = 0;    
                                                  //  by default, don't use reference Partial
                                                  // (this is the traditional behavior or Loris)
 
-static const double DefaultFixThreshold = -90;   // dB, very low by default
-static const double DefaultAmpShape = 1E-5;      // shaping parameter, see interpolateLogAmplitudes
-static const double DefaultBreakpointGap = 1E-4; // minimum time (sec) between Breakpoints in 
-                                                 // morphed Partials
+const double DefaultFixThreshold = -90;         // dB, very low by default
+
+// shaping parameter, see interpolateLogAmplitudes:
+// compile with LINEAR_AMP_MORPHS defined for
+// legacy-style linear amplitude morphs by default.
+// The default can always be overridden using 
+// setAmplitudeShape.
+//
+#if !defined(LINEAR_AMP_MORPHS) || !LINEAR_AMP_MORPHS
+   const double DefaultAmpShape = 1E-5;    
+#else  
+   const double DefaultAmpShape = 1E5;    
+#endif
+const double DefaultBreakpointGap = 1E-4; // minimum time (sec) between Breakpoints in 
+                                          // morphed Partials
 
 // helper declarations
 static inline double interpolateFrequencies( double f0, double f1, double alpha );
@@ -683,7 +694,7 @@ Morpher::targetReferenceLabel( void ) const
 // ---------------------------------------------------------------------------
 //    setSourceReferenceLabel
 // ---------------------------------------------------------------------------
-// Set the label of the Partial to be used as a reference
+//    Set the label of the Partial to be used as a reference
 //    Partial for the source sequence in a morph of two Partial
 //    sequences. The reference partial is used to compute 
 //    frequencies for very low-amplitude Partials whose frequency
@@ -701,7 +712,7 @@ Morpher::setSourceReferenceLabel( Partial::label_type l )
 // ---------------------------------------------------------------------------
 //    setTargetReferenceLabel
 // ---------------------------------------------------------------------------
-// Set the label of the Partial to be used as a reference
+//    Set the label of the Partial to be used as a reference
 //    Partial for the target sequence in a morph of two Partial
 //    sequences. The reference partial is used to compute 
 //    frequencies for very low-amplitude Partials whose frequency
@@ -741,8 +752,7 @@ double Morpher::amplitudeShape( void ) const
 //    setAmplitudeShape
 // ---------------------------------------------------------------------------
 //    Set the shaping parameter for the amplitude moprhing
-//    function (only used in new log-amplitude morphing).
-//    This shaping parameter controls the 
+//    function. This shaping parameter controls the 
 //    slope of the amplitude morphing function,
 //    for values greater than 1, this function
 //    gets nearly linear (like the old amplitude

@@ -2726,6 +2726,44 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch )
 		return dst;
 	}
 
+	PartialList * morph( const PartialList * src0, const PartialList * src1,
+	                     long src0RefLabel, long src1RefLabel,
+                        const LinearEnvelope * ffreq, 
+                        const LinearEnvelope * famp, 
+                        const LinearEnvelope * fbw )
+	{
+		PartialList * dst = createPartialList();
+		morphWithReference( src0, src1, src0RefLabel, src1RefLabel, ffreq, famp, fbw, dst );
+		
+		// check for exception:
+		if ( check_exception() )
+		{
+			destroyPartialList( dst );
+			dst = NULL;
+		}
+		return dst;
+	}
+	
+	PartialList * morph( const PartialList * src0, const PartialList * src1, 
+	                     long src0RefLabel, long src1RefLabel,
+                        double freqweight, 
+                        double ampweight, 
+                        double bwweight )
+	{
+		LinearEnvelope ffreq( freqweight ), famp( ampweight ), fbw( bwweight );
+		
+		PartialList * dst = createPartialList();
+		morphWithReference( src0, src1, src0RefLabel, src1RefLabel, &ffreq, &famp, &fbw, dst );
+		
+		// check for exception:
+		if ( check_exception() )
+		{
+			destroyPartialList( dst );
+			dst = NULL;
+		}
+		return dst;
+	}
+
 
 	std::vector<double> synthesize( const PartialList * partials, double srate = 44100.0 )
 	{
@@ -6164,13 +6202,127 @@ static PyObject *_wrap_morph__SWIG_1(PyObject *, PyObject *args) {
 }
 
 
+static PyObject *_wrap_morph__SWIG_2(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    PartialList *arg1 = (PartialList *) 0 ;
+    PartialList *arg2 = (PartialList *) 0 ;
+    long arg3 ;
+    long arg4 ;
+    LinearEnvelope *arg5 = (LinearEnvelope *) 0 ;
+    LinearEnvelope *arg6 = (LinearEnvelope *) 0 ;
+    LinearEnvelope *arg7 = (LinearEnvelope *) 0 ;
+    PartialList *result;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    PyObject * obj2 = 0 ;
+    PyObject * obj3 = 0 ;
+    PyObject * obj4 = 0 ;
+    PyObject * obj5 = 0 ;
+    PyObject * obj6 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OOOOOOO:morph",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_PartialList, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_PartialList, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(2)) SWIG_fail;
+    {
+        arg3 = (long)(SWIG_As_long(obj2)); 
+        if (SWIG_arg_fail(3)) SWIG_fail;
+    }
+    {
+        arg4 = (long)(SWIG_As_long(obj3)); 
+        if (SWIG_arg_fail(4)) SWIG_fail;
+    }
+    SWIG_Python_ConvertPtr(obj4, (void **)&arg5, SWIGTYPE_p_LinearEnvelope, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(5)) SWIG_fail;
+    SWIG_Python_ConvertPtr(obj5, (void **)&arg6, SWIGTYPE_p_LinearEnvelope, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(6)) SWIG_fail;
+    SWIG_Python_ConvertPtr(obj6, (void **)&arg7, SWIGTYPE_p_LinearEnvelope, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(7)) SWIG_fail;
+    {
+        char * err;
+        clear_exception();
+        result = (PartialList *)morph((PartialList const *)arg1,(PartialList const *)arg2,arg3,arg4,(LinearEnvelope const *)arg5,(LinearEnvelope const *)arg6,(LinearEnvelope const *)arg7);
+        
+        if ( 0 != (err = check_exception()) )
+        {
+            SWIG_exception( SWIG_ValueError, err );
+        }
+    }
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_PartialList, 1);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_morph__SWIG_3(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    PartialList *arg1 = (PartialList *) 0 ;
+    PartialList *arg2 = (PartialList *) 0 ;
+    long arg3 ;
+    long arg4 ;
+    double arg5 ;
+    double arg6 ;
+    double arg7 ;
+    PartialList *result;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    PyObject * obj2 = 0 ;
+    PyObject * obj3 = 0 ;
+    PyObject * obj4 = 0 ;
+    PyObject * obj5 = 0 ;
+    PyObject * obj6 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OOOOOOO:morph",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_PartialList, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_PartialList, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(2)) SWIG_fail;
+    {
+        arg3 = (long)(SWIG_As_long(obj2)); 
+        if (SWIG_arg_fail(3)) SWIG_fail;
+    }
+    {
+        arg4 = (long)(SWIG_As_long(obj3)); 
+        if (SWIG_arg_fail(4)) SWIG_fail;
+    }
+    {
+        arg5 = (double)(SWIG_As_double(obj4)); 
+        if (SWIG_arg_fail(5)) SWIG_fail;
+    }
+    {
+        arg6 = (double)(SWIG_As_double(obj5)); 
+        if (SWIG_arg_fail(6)) SWIG_fail;
+    }
+    {
+        arg7 = (double)(SWIG_As_double(obj6)); 
+        if (SWIG_arg_fail(7)) SWIG_fail;
+    }
+    {
+        char * err;
+        clear_exception();
+        result = (PartialList *)morph((PartialList const *)arg1,(PartialList const *)arg2,arg3,arg4,arg5,arg6,arg7);
+        
+        if ( 0 != (err = check_exception()) )
+        {
+            SWIG_exception( SWIG_ValueError, err );
+        }
+    }
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_PartialList, 1);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
 static PyObject *_wrap_morph(PyObject *self, PyObject *args) {
     int argc;
-    PyObject *argv[6];
+    PyObject *argv[8];
     int ii;
     
     argc = PyObject_Length(args);
-    for (ii = 0; (ii < argc) && (ii < 5); ii++) {
+    for (ii = 0; (ii < argc) && (ii < 7); ii++) {
         argv[ii] = PyTuple_GetItem(args,ii);
     }
     if (argc == 5) {
@@ -6267,9 +6419,174 @@ static PyObject *_wrap_morph(PyObject *self, PyObject *args) {
             }
         }
     }
+    if (argc == 7) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_PartialList, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *ptr;
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_PartialList, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                } else {
+                    _v = 1;
+                }
+            }
+            if (_v) {
+                _v = SWIG_Check_long(argv[2]);
+                if (_v) {
+                    _v = SWIG_Check_long(argv[3]);
+                    if (_v) {
+                        {
+                            void *ptr;
+                            if (SWIG_ConvertPtr(argv[4], &ptr, SWIGTYPE_p_LinearEnvelope, 0) == -1) {
+                                _v = 0;
+                                PyErr_Clear();
+                            } else {
+                                _v = 1;
+                            }
+                        }
+                        if (_v) {
+                            {
+                                void *ptr;
+                                if (SWIG_ConvertPtr(argv[5], &ptr, SWIGTYPE_p_LinearEnvelope, 0) == -1) {
+                                    _v = 0;
+                                    PyErr_Clear();
+                                } else {
+                                    _v = 1;
+                                }
+                            }
+                            if (_v) {
+                                {
+                                    void *ptr;
+                                    if (SWIG_ConvertPtr(argv[6], &ptr, SWIGTYPE_p_LinearEnvelope, 0) == -1) {
+                                        _v = 0;
+                                        PyErr_Clear();
+                                    } else {
+                                        _v = 1;
+                                    }
+                                }
+                                if (_v) {
+                                    return _wrap_morph__SWIG_2(self,args);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if (argc == 7) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_PartialList, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *ptr;
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_PartialList, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                } else {
+                    _v = 1;
+                }
+            }
+            if (_v) {
+                _v = SWIG_Check_long(argv[2]);
+                if (_v) {
+                    _v = SWIG_Check_long(argv[3]);
+                    if (_v) {
+                        _v = SWIG_Check_double(argv[4]);
+                        if (_v) {
+                            _v = SWIG_Check_double(argv[5]);
+                            if (_v) {
+                                _v = SWIG_Check_double(argv[6]);
+                                if (_v) {
+                                    return _wrap_morph__SWIG_3(self,args);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
     
     PyErr_SetString(PyExc_NotImplementedError,"No matching function for overloaded 'morph'");
     return NULL;
+}
+
+
+static PyObject *_wrap_setAmplitudeMorphShape(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    double arg1 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:setAmplitudeMorphShape",&obj0)) goto fail;
+    {
+        arg1 = (double)(SWIG_As_double(obj0)); 
+        if (SWIG_arg_fail(1)) SWIG_fail;
+    }
+    {
+        char * err;
+        clear_exception();
+        morpher_setAmplitudeShape(arg1);
+        
+        if ( 0 != (err = check_exception()) )
+        {
+            SWIG_exception( SWIG_ValueError, err );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static int _wrap_LORIS_DEFAULT_AMPMORPHSHAPE_set(PyObject *) {
+    PyErr_SetString(PyExc_TypeError,"Variable LORIS_DEFAULT_AMPMORPHSHAPE is read-only.");
+    return 1;
+}
+
+
+static PyObject *_wrap_LORIS_DEFAULT_AMPMORPHSHAPE_get(void) {
+    PyObject *pyobj;
+    
+    {
+        pyobj = SWIG_From_double((double)(LORIS_DEFAULT_AMPMORPHSHAPE)); 
+    }
+    return pyobj;
+}
+
+
+static int _wrap_LORIS_LINEAR_AMPMORPHSHAPE_set(PyObject *) {
+    PyErr_SetString(PyExc_TypeError,"Variable LORIS_LINEAR_AMPMORPHSHAPE is read-only.");
+    return 1;
+}
+
+
+static PyObject *_wrap_LORIS_LINEAR_AMPMORPHSHAPE_get(void) {
+    PyObject *pyobj;
+    
+    {
+        pyobj = SWIG_From_double((double)(LORIS_LINEAR_AMPMORPHSHAPE)); 
+    }
+    return pyobj;
 }
 
 
@@ -14998,6 +15315,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"importSdif", _wrap_importSdif, METH_VARARGS, NULL},
 	 { (char *)"importSpc", _wrap_importSpc, METH_VARARGS, NULL},
 	 { (char *)"morph", _wrap_morph, METH_VARARGS, NULL},
+	 { (char *)"setAmplitudeMorphShape", _wrap_setAmplitudeMorphShape, METH_VARARGS, NULL},
 	 { (char *)"synthesize", _wrap_synthesize, METH_VARARGS, NULL},
 	 { (char *)"crop", _wrap_crop, METH_VARARGS, NULL},
 	 { (char *)"copyLabeled", _wrap_copyLabeled, METH_VARARGS, NULL},
@@ -15578,5 +15896,8 @@ SWIGEXPORT(void) SWIG_init(void) {
     setNotifier( printf_notifier );
     setExceptionHandler( throw_exception );
     
+    PyDict_SetItemString(d,(char*)"cvar", SWIG_globals);
+    SWIG_addvarlink(SWIG_globals,(char*)"LORIS_DEFAULT_AMPMORPHSHAPE",_wrap_LORIS_DEFAULT_AMPMORPHSHAPE_get, _wrap_LORIS_DEFAULT_AMPMORPHSHAPE_set);
+    SWIG_addvarlink(SWIG_globals,(char*)"LORIS_LINEAR_AMPMORPHSHAPE",_wrap_LORIS_LINEAR_AMPMORPHSHAPE_get, _wrap_LORIS_LINEAR_AMPMORPHSHAPE_set);
 }
 

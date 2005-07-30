@@ -651,6 +651,55 @@ void importSpc( const char * path, PartialList * partials )
 }
 
 /* ---------------------------------------------------------------- */
+/*        morpher_setAmplitudeShape        
+/*
+/* Set the shaping parameter for the amplitude morphing
+   function. This shaping parameter controls the 
+   slope of the amplitude morphing function,
+   for values greater than 1, this function
+   gets nearly linear (like the old amplitude
+   morphing function), for values much less 
+   than 1 (e.g. 1E-5) the slope is gently
+   curved and sounds pretty "linear", for 
+   very small values (e.g. 1E-12) the curve
+   is very steep and sounds un-natural because
+   of the huge jump from zero amplitude to
+   very small amplitude.
+
+   Use LORIS_DEFAULT_AMPMORPHSHAPE to obtain the 
+   default amplitude morphing shape for Loris, 
+   (equal to 1E-5, which works well for many musical 
+   instrument morphs, unless Loris was compiled
+   with the symbol LINEAR_AMP_MORPHS defined, in
+   which case LORIS_DEFAULT_AMPMORPHSHAPE is equal 
+   to LORIS_LINEAR_AMPMORPHSHAPE).
+   
+   Use LORIS_LINEAR_AMPMORPHSHAPE to approximate 
+   the linear amplitude morphs performed by older
+   versions of Loris.
+
+   The amplitude shape must be positive.
+ */
+#if !defined(LINEAR_AMP_MORPHS) || !LINEAR_AMP_MORPHS
+   const double LORIS_DEFAULT_AMPMORPHSHAPE = 1E-5;    
+#else  
+   const double LORIS_DEFAULT_AMPMORPHSHAPE = 1E5;    
+#endif
+
+const double LORIS_LINEAR_AMPMORPHSHAPE = 1E5;
+
+static double PI_ampMorphShape = LORIS_DEFAULT_AMPMORPHSHAPE;
+extern "C"
+void morpher_setAmplitudeShape( double x )
+{
+   if ( x <= 0. )
+   {
+     Throw( InvalidArgument, "the amplitude morph shaping parameter must be positive");
+   }
+   PI_ampMorphShape = x;
+}
+
+/* ---------------------------------------------------------------- */
 /*        morph        
 /*
 /*	Morph labeled Partials in two PartialLists according to the
@@ -701,6 +750,92 @@ void morph( const PartialList * src0, const PartialList * src1,
 		handleException( s.c_str() );
 	}
 }
+
+/* ---------------------------------------------------------------- */
+/*        morphWithReference        
+/*
+/*	Morph labeled Partials in two PartialLists according to the
+	given frequency, amplitude, and bandwidth (noisiness) morphing
+	envelopes, and append the morphed Partials to the destination 
+	PartialList. Specify the labels of the Partials to be used as 
+	reference Partial for the two morph sources. The reference 
+	partial is used to compute frequencies for very low-amplitude 
+	Partials whose frequency estimates are not considered reliable. 
+	The reference Partial is considered to have good frequency 
+	estimates throughout. A reference label of 0 indicates that 
+	no reference Partial should be used for the corresponding
+	morph source.
+   
+	Loris morphs Partials by interpolating frequency,
+	amplitude, and bandwidth envelopes of corresponding Partials in 
+	the source PartialLists. For more information about the Loris
+	morphing algorithm, see the Loris website: 
+	www.cerlsoundgroup.org/Loris/
+ */
+extern "C"
+void morphWithReference( const PartialList * src0, 
+                         const PartialList * src1,
+                         long src0RefLabel, 
+                         long src1RefLabel,
+                         const LinearEnvelope * ffreq, 
+                         const LinearEnvelope * famp, 
+                         const LinearEnvelope * fbw, 
+                         PartialList * dst )
+{
+	try 
+	{
+		ThrowIfNull((PartialList *) src0);
+		ThrowIfNull((PartialList *) src1);
+		ThrowIfNull((PartialList *) dst);
+		ThrowIfNull((LinearEnvelope *) ffreq);
+		ThrowIfNull((LinearEnvelope *) famp);
+		ThrowIfNull((LinearEnvelope *) fbw);
+
+		notifier << "morphing " << src0->size() << " Partials with " <<
+					   src1->size() << " Partials" << endl;
+		if ( src0RefLabel != 0 )
+		{
+		   notifier << "using Partial labeled " << src0RefLabel;
+		   notifier << " as reference Partial for first morph source" << endl;
+		}
+		else
+		{
+		   notifier << "using no reference Partial for first morph source" << endl;
+		}
+
+		if ( src1RefLabel != 0 )
+		{
+		   notifier << "using Partial labeled " << src1RefLabel;
+		   notifier << " as reference Partial for second morph source" << endl;
+		}
+		else
+		{
+		   notifier << "using no reference Partial for second morph source" << endl;
+		}
+			
+		//	make a Morpher object and do it:
+		Morpher m( *ffreq, *famp, *fbw );
+		m.setSourceReferenceLabel( src0RefLabel );
+		m.setTargetReferenceLabel( src1RefLabel );
+		m.morph( src0->begin(), src0->end(), src1->begin(), src1->end() );
+				
+		//	splice the morphed Partials into dst:
+		dst->splice( dst->end(), m.partials() );
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in morphWithReference(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in morphWithReference(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+
 
 /* ---------------------------------------------------------------- */
 /*        resample
