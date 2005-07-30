@@ -54,11 +54,12 @@ notes from trial 5:
 notes from trial 6: 
 	- trying my fundamental estimator and the voiced/unvoiced detection 
 	scheme that I have been working on, this could be extremely slow
-	
-Updated 8 Jun 05 to work with Loris 1.3.
 
+notes from trial 7: 
+	- same as trial 6, but using the newly-integrated experimental 
+	fundamental estimator, and without the voicing stuff.
 
-Last updated: 8 Jun 2005 by Kelly Fitz
+Last updated: 29 July 05 by Kelly Fitz
 """
 print __doc__
 
@@ -66,7 +67,7 @@ import loris, time
 
 # use this trial counter to skip over
 # eariler trials
-trial = 6
+trial = 7
 
 print "running trial number", trial, time.ctime(time.time())
 
@@ -303,3 +304,36 @@ if trial == 6:
 	pfile.write( fnamebase + '.sdif' )
 	makeSpc( fnamebase, p )
 	
+if trial == 7:
+	r = 60
+	w = 150	
+	a = loris.Analyzer( r, w )
+	# turn off BW association for now
+	a.setBwRegionWidth( 0 )
+	print 'performing raw analysis, no, bandwidth, no tracking'
+	raw = a.analyze( samples, rate )
+	## construct a reference frequency envelope
+	ref = loris.createF0Estimate( raw, 60, 150, .02 )
+	print 'performing tracking analysis'
+	p = a.analyze( samples, rate, ref )
+	# export raw
+	fnamebase = 'french.est.raw'
+	ofile = loris.AiffFile( p, rate )
+	ofile.write( fnamebase + '.aiff' )
+	pfile = loris.SdifFile( p )
+	pfile.write( fnamebase + '.sdif' )
+	# channelize one partial per harmonic
+	loris.channelize( p, ref, 1 )
+	loris.sift( p )
+	zeros = loris.extractLabeled( p, 0 )
+	print 'sifted out', zeros.size(), 'partials'
+	loris.distill( p )
+	# export distilled
+	fnamebase = 'french.est'
+	ofile = loris.AiffFile( p, rate )
+	ofile.write( fnamebase + '.aiff' )
+	pfile = loris.SdifFile( p )
+	pfile.write( fnamebase + '.sdif' )
+	loris.exportSpc( fnamebase + '.s.spc', p, 60, 0 )
+	loris.exportSpc( fnamebase + '.e.spc', p, 60, 1 )
+		
