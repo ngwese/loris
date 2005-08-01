@@ -93,8 +93,12 @@ static inline Breakpoint interpolateParameters( const Breakpoint & srcBkpt, cons
                                                 double fweight, double aweight, double ashape, 
                                                 double bweight );
 
-static void morphPhaseTravel( const Breakpoint & bp0, Breakpoint & bp1, double dt, double alpha );
-
+static void fixPhaseTravel( const Breakpoint & bp0, Breakpoint & bp1, double dt, double alpha );
+   // BAD NAME
+   
+static double phaseTravel( double f0, double f1, double dt );
+static double wrapPi( double x );
+   
 #pragma mark -- construction --
 
 // ---------------------------------------------------------------------------
@@ -191,24 +195,78 @@ Morpher::operator= ( const Morpher & rhs )
 // ---------------------------------------------------------------------------
 //    morphPartial
 // ---------------------------------------------------------------------------
-//    Morph a pair of Partials to yield a new morphed Partial. 
-//    Dummy Partials (having no Breakpoints) don't contribute to the
-//    morph, except to cause their opposite to fade out. 
-//    Either (or neither) the source or target Partial may be a dummy 
-//    Partial (no Breakpoints), but not both. The morphed
-//    Partial has Breakpoints at times corresponding to every Breakpoint 
-//    in both source Partials. The morphed Partial is appended
-//    to the Morpher's PartialList, and a reference to it is returned.
-//    The morphed Partial is assigned the specified label.
+//!	Morph a pair of Partials to yield a new morphed Partial. 
+//!	Dummy Partials (having no Breakpoints) don't contribute to the
+//!	morph, except to cause their opposite to fade out. 
+//!	Either (or neither) the source or target Partial may be a dummy 
+//!	Partial (no Breakpoints), but not both. The morphed
+//!	Partial has Breakpoints at times corresponding to every Breakpoint 
+//!	in both source Partials, omitting Breakpoints that would be
+//!   closer than the minBreakpointGap to their predecessor. 
+//!	The new morphed Partial is assigned the specified label and returned.
+//!
+//!	\param 	src is the Partial corresponding to a morph function
+//!		   	value of 0, evaluated at the specified time.
+//!	\param 	tgt is the Partial corresponding to a morph function
+//!		   	value of 1, evaluated at the specified time.
+//!	\param 	assignLabel is the label assigned to the morphed Partial
+//!   \return  the morphed Partial
 //
 Partial
-Morpher::morphPartial( const Partial & src, const Partial & tgt, int assignLabel )
-{
+Morpher::morphPartial( Partial src, Partial tgt, int assignLabel )
+{  
     if ( (src.numBreakpoints() == 0) && (tgt.numBreakpoints() == 0) )
     {
         Throw( InvalidArgument, "Cannot morph two empty Partials," );
-    }
+    }    
     
+#if 0
+   // NO DON'T DO THIS
+   // Any kind of whole-period interpolation makes no sense
+   // in the general case where the Breakpoints in the two
+   // sources are all at different times! Phase interpolation
+   // cannot involve history! When we are trying to match phases,
+   // all that matters is the absolute analyzed phase. 
+
+   // Prepare the phases by unwrapping them, partially.
+   // Don't need the absolute unwrapped phase, just need
+   // to have the travel since the previous Breakpoint 
+   // represented in the phase so that when phases are
+   // interpolated in interpolateParameters, the whole 
+   // phase travel gets interpolated. This way, there
+   // is no need to try to make up for whole periods
+   // after interpolating absolute phases (takes care
+   // of the situation where, say, two Partials have 
+   // identical phases at some point, but different 
+   // frequencies, so that interpolated phase should not
+   // be the same as the phase of the two Partials).
+   //
+   // Very important:
+   // I MUST add only whole periods to the stored phase, 
+   // or else I will not be able to  recover the precise
+   // analyzed phases (which is the goal, when the morph
+   // envelope is at 0 or 1).
+   Partial::iterator nxt = src.begin();
+   double ph = nxt->phase();
+   for ( Partial::iterator prev = nxt++; nxt != src.end(); prev = nxt, ++nxt )
+   {
+      double travel = phaseTravel( prev->frequency(), nxt->frequency(), 
+                                   nxt.time() - prev.time() );
+      // subtract out travel that is not a whole number of periods:                             
+      travel -= std::fmod( travel, 2*Pi ); 
+      nxt->setPhase( wrapPi( nxt->phase() ) + travel );
+   }
+   nxt = tgt.begin();
+   ph = nxt->phase();
+   for ( Partial::iterator prev = nxt++; nxt != tgt.end(); prev = nxt, ++nxt )
+   {
+      double travel = phaseTravel( prev->frequency(), nxt->frequency(), 
+                                   nxt.time() - prev.time() ); 
+      // subtract out travel that is not a whole number of periods:                             
+      travel -= std::fmod( travel, 2*Pi ); 
+      nxt->setPhase( wrapPi( nxt->phase() ) + travel );
+   }
+#endif
     //    make a new Partial:
     Partial newp;
     newp.setLabel( assignLabel );
@@ -462,16 +520,32 @@ Morpher::morph( PartialList::const_iterator beginSrc,
 //!    \return the morphed Breakpoint
 //
 Breakpoint
-Morpher::morphBreakpoints( const Breakpoint & srcBkpt, const Breakpoint & tgtBkpt, 
+Morpher::morphBreakpoints( Breakpoint srcBkpt, Breakpoint tgtBkpt, 
                            double time  ) const
 {
-    double fweight = _freqFunction->valueAt( time );
-    double aweight = _ampFunction->valueAt( time );
-    double bweight = _bwFunction->valueAt( time );
-    
-    // compute interpolated Breakpoint parameters:
-    return interpolateParameters( srcBkpt, tgtBkpt, fweight, 
-                                  aweight, _ampMorphShape, bweight );
+   double fweight = _freqFunction->valueAt( time );
+   double aweight = _ampFunction->valueAt( time );
+   double bweight = _bwFunction->valueAt( time );
+
+   // wrap the phases so that they are
+   // as similar as possible, since we cannot
+   // do anything as clever as morphing phase
+   // travel or whole periods, as we do when 
+   // operating on the whole Partial:
+   double srcphase = srcBkpt.phase();
+   while ( ( srcphase - tgtBkpt.phase() ) > Pi )
+   {
+      srcphase -= 2 * Pi;
+   }
+   while ( ( tgtBkpt.phase() - srcphase ) > Pi )
+   {
+      srcphase += 2 * Pi;
+   }
+   srcBkpt.setPhase( srcphase );
+      
+   // compute interpolated Breakpoint parameters:
+   return interpolateParameters( srcBkpt, tgtBkpt, fweight, 
+                                 aweight, _ampMorphShape, bweight );
 }
 
 // ---------------------------------------------------------------------------
@@ -1241,8 +1315,8 @@ interpolateParameters( const Breakpoint & srcBkpt, const Breakpoint & tgtBkpt,
    Breakpoint morphed;
 
    // interpolate frequencies:
-   morphed.setFrequency( (fweight *  srcBkpt.frequency()) + 
-                       ((1.-fweight) * tgtBkpt.frequency()) );
+   morphed.setFrequency( ((1.-fweight) *  srcBkpt.frequency()) + 
+                         (fweight * tgtBkpt.frequency()) );
 
    // interpolate LOG amplitudes:
    //    it is essential to add in a small Epsilon, so that 
@@ -1281,30 +1355,29 @@ interpolateParameters( const Breakpoint & srcBkpt, const Breakpoint & tgtBkpt,
    double newnoise =  ((1.-bweight) * srcNoise) + (bweight * tgtNoise);
    double morphedBW = (newnoise>0) ? ( newnoise / ( newnoise + (morphedAmp*morphedAmp) ) ) : 0;
    #else
-   double morphedBW = (bweight * tgtBkpt.bandwidth()) + ((1.-bweight) * srcBkpt.bandwidth() );
+   double morphedBW = ((1.-bweight) * srcBkpt.bandwidth() ) + (bweight * tgtBkpt.bandwidth());
    #endif
    morphed.setBandwidth( morphedBW );
    
-   // interpolate the phase:
-   //    try to wrap the phase so that they are
-   //    as similar as possible:
-   double srcphase = srcBkpt.phase();
-   while ( ( srcphase - tgtBkpt.phase() ) > Pi )
-   {
-      srcphase -= 2 * Pi;
-   }
-   while ( ( tgtBkpt.phase() - srcphase ) > Pi )
-   {
-      srcphase += 2 * Pi;
-   }
-   double morphedPhase = (fweight * tgtBkpt.phase()) + ((1.-fweight) * srcphase);
+   // interpolate phase:
+   // Interpolate raw absolute phase values, because they have
+   // been prepared, depending on how this function was invoked.
+   // If the Morpher is morphing only a pair of Breakpoints, 
+   // the phases have been prepared by unwrapping their difference.
+   // If the Morpher is morphing a pair of Partials, then the
+   // phases have been prepared by adding to each one the phase
+   // travel accumulated since the previous Breakpoint, so that
+   // interpolating the phases interpolates also the phase travel.
+   //
+   // Wrap the computed phase onto an appropriate range.
+   double morphedPhase = ((1.-fweight) * srcBkpt.phase()) + (fweight * tgtBkpt.phase());
    morphed.setPhase( std::fmod( morphedPhase, 2 * Pi ) );
 
    return morphed;
 }
 
 // ---------------------------------------------------------------------------
-//    morphPhaseTravel
+//    fixPhaseTravel
 // ---------------------------------------------------------------------------
 // Helper function to update the frequency and phase of a morphed Breakpoint
 // to achieve a desired weighted interpolation of phase travel. The desired
@@ -1331,7 +1404,7 @@ interpolateParameters( const Breakpoint & srcBkpt, const Breakpoint & tgtBkpt,
 // from 0.5 (a halfway morph).
 // 
 static void
-morphPhaseTravel( const Breakpoint & bp0, Breakpoint & bp1, double dt, double alpha )
+fixPhaseTravel( const Breakpoint & bp0, Breakpoint & bp1, double dt, double alpha )
 {   
     // cannot do anything reasonable if dt == 0, since
     // there is no phase travel, should never happen:
@@ -1352,7 +1425,8 @@ morphPhaseTravel( const Breakpoint & bp0, Breakpoint & bp1, double dt, double al
     // absolute phases (might want to square this or something):
     double errorWeight = 2. * std::fabs(  0.5 - alpha );
     // errorWeight *= errorWeight;  // dunno whether to do this or not
-    travel += errorWeight * err;
+    travel += .5 * errorWeight * err;
+         // only try to correct HALF of the error, to avoid frequency oscillations
 
     // compute a new frequency for bp1 from the morphed
     // phase travel:
@@ -1431,29 +1505,37 @@ Morpher::appendMorphedSrc( const Breakpoint & srcBkpt, const Partial & tgtPartia
         Breakpoint morphed = interpolateParameters( srcBkpt, tgtBkpt, fweight, 
                                                     aweight, _ampMorphShape, bweight );
 
-#if defined( MORPH_PHASE_TRAVEL )
+#if MORPH_PHASE_TRAVEL
         // correct phase travel:
         // (This is identical in the function below.)
         if ( 0 != newp.numBreakpoints() )
         {
             double dt = ( time - newp.endTime() );
-            // HEY I think that morphPhaseTravel completely 
+            // HEY I think that fixPhaseTravel completely 
             // removes the effect of interpolateWholePeriods!!!!
             // WAIT!!! No it doesn't, because interpolateWholePeriods
             // does not add an integer number of whole periods, it
             // interpolates the number of whole periods traveled.
+            //
+            // No longer need this, phases are prepared so that
+            // whole period phase travel is interpolated in 
+            // interpolateParameters.
+            
+            // Whole-period interpolation is all WRONG! 
+            /*
             morphed.setPhase( morphed.phase() + 
                               interpolateWholePeriods( srcBkpt.frequency(), 
                                                        tgtBkpt.frequency(), 
                                                        dt, fweight ) );
-                                                       
+            */
+                                                    
             // should really be called fixPhaseTravel, that's
             // all it does, it doesn't really morph, since it
             // doesn't see the src and tgt Breakpoints.
             // This could be implemented as a post-process
             // to the construction of the morphed Partial. 
             // That would be way better!
-            morphPhaseTravel( newp.last(), morphed, dt, fweight );
+            fixPhaseTravel( newp.last(), morphed, dt, fweight );
         }
 #endif
  
@@ -1495,27 +1577,42 @@ Morpher::appendMorphedTgt( const Breakpoint & tgtBkpt, const Partial & srcPartia
     double aweight = _ampFunction->valueAt( time );
     double bweight = _bwFunction->valueAt( time );
     
-    Breakpoint srcBkpt = srcPartial.parametersAt( time );
-   
-    // compute interpolated Breakpoint parameters:           
-    Breakpoint morphed = interpolateParameters( srcBkpt, tgtBkpt, fweight, 
-                                                aweight, _ampMorphShape, bweight );
+   //    Don't insert Breakpoints at src times if all 
+   //    morph functions equal 0 (or < MinMorphParam).
+   const double MinMorphParam = .1;
+   if ( fweight > MinMorphParam ||
+        aweight > MinMorphParam ||
+        bweight > MinMorphParam )
+   {
+      Breakpoint srcBkpt = srcPartial.parametersAt( time );
+      
+      // compute interpolated Breakpoint parameters:           
+      Breakpoint morphed = interpolateParameters( srcBkpt, tgtBkpt, fweight, 
+                                                   aweight, _ampMorphShape, bweight );
 
-#if defined( MORPH_PHASE_TRAVEL )
-    // correct phase travel:
-    // (This is identical in the function above.)
-    if ( 0 != newp.numBreakpoints() )
-    {
-        double dt = ( time - newp.endTime() );
-        morphed.setPhase( morphed.phase() + 
-                          interpolateWholePeriods( srcBkpt.frequency(), 
-                                                   tgtBkpt.frequency(), 
-                                                   dt, fweight ) );
-        morphPhaseTravel( newp.last(), morphed, dt, fweight );
-    }
+#if MORPH_PHASE_TRAVEL
+     // correct phase travel:
+     // (This is identical in the function above.)
+     if ( 0 != newp.numBreakpoints() )
+     {
+         double dt = ( time - newp.endTime() );
+         // No longer need this, phases are prepared so that
+         // whole period phase travel is interpolated in 
+         // interpolateParameters.
+            
+         // Whole-period interpolation is all WRONG! 
+         /*
+         morphed.setPhase( morphed.phase() + 
+                           interpolateWholePeriods( srcBkpt.frequency(), 
+                                                    tgtBkpt.frequency(), 
+                                                    dt, fweight ) );
+         */                                                     
+         fixPhaseTravel( newp.last(), morphed, dt, fweight );
+      }
 #endif
 
-    newp.insert( time, morphed );
+      newp.insert( time, morphed );
+   }
 }
 
 }    //    end of namespace Loris

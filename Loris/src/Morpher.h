@@ -155,8 +155,7 @@ public:
 	//!		   	value of 1, evaluated at the specified time.
 	//!	\param 	assignLabel is the label assigned to the morphed Partial
 	//!   \return  the morphed Partial
-	Partial morphPartial( const Partial & src, const Partial & tgt, 
-                          int assignLabel );
+	Partial morphPartial( Partial src, Partial tgt, int assignLabel );
 
 	//!   Morph two sounds (collections of Partials labeled to indicate
 	//!   correspondences) into a single labeled collection of Partials.
@@ -209,10 +208,10 @@ public:
 	//!   \param label is the label to associate with unlabeled
 	//!          Partials (default is 0).
 	void crossfade( PartialList::const_iterator beginSrc, 
-                  PartialList::const_iterator endSrc,
-                  PartialList::const_iterator beginTgt, 
-                  PartialList::const_iterator endTgt,
-                  Partial::label_type label = 0 );
+                   PartialList::const_iterator endSrc,
+                   PartialList::const_iterator beginTgt, 
+                   PartialList::const_iterator endTgt,
+                   Partial::label_type label = 0 );
 
 
     //!    Compute morphed parameter values at the specified time, using
@@ -228,7 +227,7 @@ public:
     //!    \return the morphed Breakpoint
     //
     Breakpoint
-    morphBreakpoints( const Breakpoint & srcBkpt, const Breakpoint & tgtBkpt, 
+    morphBreakpoints( Breakpoint srcBkpt, Breakpoint tgtBkpt, 
                       double time  ) const;
                                
     //!	Compute morphed parameter values at the specified time, using
@@ -368,7 +367,7 @@ public:
 
 //	-- reference Partial label access/mutation --
 	
-	//! Return the label of the Partial to be used as a reference
+	//!   Return the label of the Partial to be used as a reference
 	//!	Partial for the source sequence in a morph of two Partial
 	//!	sequences. The reference partial is used to compute 
 	//!	frequencies for very low-amplitude Partials whose frequency
@@ -378,7 +377,7 @@ public:
 	//!	should be used for the source sequence.
 	Partial::label_type sourceReferenceLabel( void ) const;
 	
-	//! Return the label of the Partial to be used as a reference
+	//!   Return the label of the Partial to be used as a reference
 	//!	Partial for the target sequence in a morph of two Partial
 	//!	sequences. The reference partial is used to compute 
 	//!	frequencies for very low-amplitude Partials whose frequency
@@ -388,7 +387,7 @@ public:
 	//!	should be used for the target sequence.
 	Partial::label_type targetReferenceLabel( void ) const;
 	
-	//! Set the label of the Partial to be used as a reference
+	//!   Set the label of the Partial to be used as a reference
 	//!	Partial for the source sequence in a morph of two Partial
 	//!	sequences. The reference partial is used to compute 
 	//!	frequencies for very low-amplitude Partials whose frequency
@@ -398,7 +397,7 @@ public:
 	//!	Partial should be used for the source sequence.
 	void setSourceReferenceLabel( Partial::label_type l );
 	
-	//! Set the label of the Partial to be used as a reference
+	//!   Set the label of the Partial to be used as a reference
 	//!	Partial for the target sequence in a morph of two Partial
 	//!	sequences. The reference partial is used to compute 
 	//!	frequencies for very low-amplitude Partials whose frequency

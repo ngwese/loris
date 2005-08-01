@@ -641,7 +641,7 @@ void morphWithReference( const PartialList * src0,
  */
  
 void morpher_setAmplitudeShape( double shape );
-/* 	Set the shaping parameter for the amplitude morphing
+/* Set the shaping parameter for the amplitude morphing
 	function. This shaping parameter controls the slope of
 	the amplitude morphing function, for values greater than
 	1, this function gets nearly linear (like the old
