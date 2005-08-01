@@ -5,7 +5,7 @@ PYTHONENV = env PYTHONPATH=$(PYTHONPATH)
 
 DIRS = alienthreat bass bassoon bell bongo cats cellos choir \
 	   density derbari elephants flutes french funny gong moses \
-	   pianosax sax shaku trombone \
+	   piano pianosax sax shaku trombone \
 	   morphing
 
 all: $(DIRS) 
@@ -63,6 +63,11 @@ moses:
 
 pianosax: 
 	cd $@; $(PYTHONENV) $(PYTHON) pianosax.py
+
+piano: 
+	cd $@; $(PYTHONENV) $(PYTHON) pianoEb3.py
+	cd $@; $(PYTHONENV) $(PYTHON) pianoBb3.py
+	cd $@; $(PYTHONENV) $(PYTHON) pianoC4.py
 
 sax: 
 	cd $@; $(PYTHONENV) $(PYTHON) saxriff.py
