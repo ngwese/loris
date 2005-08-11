@@ -60,7 +60,7 @@ namespace Loris {
 
 // new morphing algorithms
 #define MORPH_PHASE_TRAVEL 1
-#define MORPH_NOISE_ENERGY 0
+#define NEW_BW_MORPH 0
 
 const Partial::label_type Morpher::DefaultReferenceLabel = 0;    
                                                  //  by default, don't use reference Partial
@@ -94,7 +94,6 @@ static inline Breakpoint interpolateParameters( const Breakpoint & srcBkpt, cons
                                                 double bweight );
 
 static void fixPhaseTravel( const Breakpoint & bp0, Breakpoint & bp1, double dt, double alpha );
-   // BAD NAME
    
 static double phaseTravel( double f0, double f1, double dt );
 static double wrapPi( double x );
@@ -527,22 +526,6 @@ Morpher::morphBreakpoints( Breakpoint srcBkpt, Breakpoint tgtBkpt,
    double aweight = _ampFunction->valueAt( time );
    double bweight = _bwFunction->valueAt( time );
 
-   // wrap the phases so that they are
-   // as similar as possible, since we cannot
-   // do anything as clever as morphing phase
-   // travel or whole periods, as we do when 
-   // operating on the whole Partial:
-   double srcphase = srcBkpt.phase();
-   while ( ( srcphase - tgtBkpt.phase() ) > Pi )
-   {
-      srcphase -= 2 * Pi;
-   }
-   while ( ( tgtBkpt.phase() - srcphase ) > Pi )
-   {
-      srcphase += 2 * Pi;
-   }
-   srcBkpt.setPhase( srcphase );
-      
    // compute interpolated Breakpoint parameters:
    return interpolateParameters( srcBkpt, tgtBkpt, fweight, 
                                  aweight, _ampMorphShape, bweight );
@@ -1349,28 +1332,43 @@ interpolateParameters( const Breakpoint & srcBkpt, const Breakpoint & tgtBkpt,
    // of amplitude, and then we are really changing the way morphing works.
    // We are no longer interpolating the paramaters of our model at all!
    // Not sure that's what I want.
-   #if MORPH_NOISE_ENERGY
-   double srcNoise = srcBkpt.bandwidth() * srcBkpt.amplitude() * srcBkpt.amplitude();
-   double tgtNoise = tgtBkpt.bandwidth() * tgtBkpt.amplitude() * tgtBkpt.amplitude();   
-   double newnoise =  ((1.-bweight) * srcNoise) + (bweight * tgtNoise);
-   double morphedBW = (newnoise>0) ? ( newnoise / ( newnoise + (morphedAmp*morphedAmp) ) ) : 0;
+   //
+   // probably morphing bandwidth logarithmically like ampliude is better.
+   #if NEW_BW_MORPH
+   double morphedBW =  0;
+   if ( ( srcBkpt.bandwidth() > Epsilon ) || ( tgtBkpt.bandwidth() > Epsilon ) )
+   {
+      morphedBW = ( pow( srcBkpt.bandwidth() + ashape, (1.-bweight) ) * 
+                     pow( tgtBkpt.bandwidth() + ashape, bweight ) ) - ashape;
+      morphedBW = std::max( 0.0, morphedBW );  
+     
+   }
    #else
    double morphedBW = ((1.-bweight) * srcBkpt.bandwidth() ) + (bweight * tgtBkpt.bandwidth());
    #endif
    morphed.setBandwidth( morphedBW );
    
    // interpolate phase:
-   // Interpolate raw absolute phase values, because they have
-   // been prepared, depending on how this function was invoked.
-   // If the Morpher is morphing only a pair of Breakpoints, 
-   // the phases have been prepared by unwrapping their difference.
-   // If the Morpher is morphing a pair of Partials, then the
-   // phases have been prepared by adding to each one the phase
-   // travel accumulated since the previous Breakpoint, so that
-   // interpolating the phases interpolates also the phase travel.
+   // Interpolate raw absolute phase values. If the interpolated
+   // phase matters at all (near the morphing function boudaries 0
+   // and 1) then that will give a good target phase value, and the
+   // frequency will be adjusted to match the phase. Otherwise,
+   // the phase will just be recomputed to match the interpolated
+   // frequency.
    //
    // Wrap the computed phase onto an appropriate range.
-   double morphedPhase = ((1.-fweight) * srcBkpt.phase()) + (fweight * tgtBkpt.phase());
+   // wrap the phases so that they are as similar as possible,
+   // so that phase interpolation is shift-invariant.
+   double srcphase = srcBkpt.phase();
+   while ( ( srcphase - tgtBkpt.phase() ) > Pi )
+   {
+      srcphase -= 2 * Pi;
+   }
+   while ( ( tgtBkpt.phase() - srcphase ) > Pi )
+   {
+      srcphase += 2 * Pi;
+   }
+   double morphedPhase = ((1.-fweight) * srcphase) + (fweight * tgtBkpt.phase());
    morphed.setPhase( std::fmod( morphedPhase, 2 * Pi ) );
 
    return morphed;
@@ -1408,47 +1406,53 @@ fixPhaseTravel( const Breakpoint & bp0, Breakpoint & bp1, double dt, double alph
 {   
     // cannot do anything reasonable if dt == 0, since
     // there is no phase travel, should never happen:
-    Assert( dt > 0 );    
-   
+    Assert( dt > 0 ); 
+    alpha = std::max( 0., alpha );   
+    alpha = std::min( 1., alpha );
+
     // compute the sinusoidal phase travel between the two Breakpoints:
     double travel = phaseTravel( bp0.frequency(), bp1.frequency(), dt ); 
 
-    // compute the error between the predicted (due to phase travel) phase
-    // and the phase of the target Breakpoint:
-    double err = wrapPi( bp1.phase() - ( bp0.phase() + travel ) );
-
-    // compute a morphed phase travel by weighting the error
-    // correct by the distance from a halfway morph, so that
+    // Compute a morphed phase travel by weighting the error
+    // correct by the distance from the nearest source, so that
     // near halfway (alpha == .5) we rely on the frequencies
     // to compute the morphed phase travel, and near the boundaries
     // of the morph (alpha near 1 or 0) we rely on the interpolated
-    // absolute phases (might want to square this or something):
-    double errorWeight = 2. * std::fabs(  0.5 - alpha );
-    // errorWeight *= errorWeight;  // dunno whether to do this or not
-    travel += .5 * errorWeight * err;
-         // only try to correct HALF of the error, to avoid frequency oscillations
+    // absolute phases. Only try to match phase near the boundaries.
+    static const double PHASE_MATCH_RANGE = 0.25;
+    if ( std::fabs( 0.5 - alpha ) > ( 0.5 - PHASE_MATCH_RANGE ) )
+    {
+        double errorWeight = ( std::fabs( 0.5 - alpha ) - ( 0.5 - PHASE_MATCH_RANGE ) ) / PHASE_MATCH_RANGE;
+   
+        // compute the error between the predicted (due to phase travel) phase
+        // and the phase of the target Breakpoint:
+        double err = wrapPi( bp1.phase() - ( bp0.phase() + travel ) );
 
-    // compute a new frequency for bp1 from the morphed
-    // phase travel:
-    double ftgt = ( travel / ( Pi * dt ) ) - bp0.frequency();
+        // only try to correct HALF of the error, to avoid frequency oscillations
+        travel += .5 * errorWeight * err;         
 
-    //    the maximum amount by which frequency can be changed to 
-    //    attempt to achieve correct phases:
-    static const double MaxFixPct = .2;
+        // compute a new frequency for bp1 from the morphed
+        // phase travel:
+        double ftgt = ( travel / ( Pi * dt ) ) - bp0.frequency();
 
-    //    if bp1 is not a null breakpoint, may need to 
-    //    clamp the amount of frequency correction:
-    if ( bp1.amplitude() != 0. )
-    {    
-       ftgt = std::min( ftgt, bp1.frequency() * ( 1 + (MaxFixPct*.01) ) );
-       ftgt = std::max( ftgt, bp1.frequency() * ( 1 - (MaxFixPct*.01) ) );
+        //    the maximum amount by which frequency can be changed to 
+        //    attempt to achieve correct phases:
+        static const double MaxFixPct = .2;
+
+        //    if bp1 is not a null breakpoint, may need to 
+        //    clamp the amount of frequency correction:
+        if ( bp1.amplitude() != 0. )
+        {    
+           ftgt = std::min( ftgt, bp1.frequency() * ( 1 + (MaxFixPct*.01) ) );
+           ftgt = std::max( ftgt, bp1.frequency() * ( 1 - (MaxFixPct*.01) ) );
+        }
+
+        // update the morphed frequency to achieve the desired
+        // morphed phase travel:
+        bp1.setFrequency( ftgt );
     }
-
-    // update the morphed frequency to achieve the desired
-    // morphed phase travel:
-    bp1.setFrequency( ftgt );
-
-    //    recompute the phase travel according to the new 
+    
+    //  recompute the phase travel according to the  
     //  frequency of bp1:
     travel = phaseTravel( bp0.frequency(), bp1.frequency(), dt );
 
@@ -1496,8 +1500,8 @@ Morpher::appendMorphedSrc( const Breakpoint & srcBkpt, const Partial & tgtPartia
     //    morph functions equal 1 (or > MaxMorphParam).
     const double MaxMorphParam = .9;
     if ( fweight < MaxMorphParam ||
-          aweight < MaxMorphParam ||
-          bweight < MaxMorphParam )
+         aweight < MaxMorphParam ||
+         bweight < MaxMorphParam )
     {
         Breakpoint tgtBkpt = tgtPartial.parametersAt( time );
         
