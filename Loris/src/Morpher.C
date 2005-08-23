@@ -301,6 +301,13 @@ Morpher::morphPartial( Partial src, Partial tgt, int assignLabel )
                     newp.insert( t, fadeSrcBreakpoint( src_iter.breakpoint(), t ) );
                 }
             }
+            /*
+            else
+            {
+                notifier << "skipping source Breakpoint at time " << t;
+                notifier << " (label " << assignLabel << ")" << endl;
+            }
+            */
             ++src_iter;
         }
         else 
@@ -324,6 +331,13 @@ Morpher::morphPartial( Partial src, Partial tgt, int assignLabel )
                     newp.insert( t, fadeTgtBreakpoint( tgt_iter.breakpoint(), t ) );
                 }
             }
+            /*
+            else
+            {
+                notifier << "skipping target Breakpoint at time " << t;
+                notifier << " (label " << assignLabel << ")" << endl;
+            }
+            */
             ++tgt_iter;
         }  
     }
@@ -1013,6 +1027,24 @@ static void fix_frequencies( Partial & fixme, const Partial & reference,
 }
 
 // ---------------------------------------------------------------------------
+//    partial_is_nonnull
+// ---------------------------------------------------------------------------
+//  Helper function to examine a morphed Partial and determine whether 
+//  it has any non-null Breakpoints. If not, there's no point in saving it.
+//
+static bool partial_is_nonnull( const Partial & p )
+{
+    for ( Partial::const_iterator it = p.begin(); it != p.end(); ++it )
+    {
+        if ( it.breakpoint().amplitude() != 0.0 )
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+// ---------------------------------------------------------------------------
 //    morph_aux
 // ---------------------------------------------------------------------------
 //    Helper function that performs the morph between corresponding pairs
@@ -1116,7 +1148,7 @@ void Morpher::morph_aux( PartialCorrespondence & correspondence  )
                    <<    " partials with label " <<    label << endl;
                    
         Partial newp = morphPartial( src, tgt, label );
-        if ( 0 < newp.numBreakpoints() )
+        if ( partial_is_nonnull( newp ) )
         {
             _partials.push_back( newp );
         }
@@ -1130,7 +1162,7 @@ void Morpher::morph_aux( PartialCorrespondence & correspondence  )
 // beginning at frequency f0 and changing linearly to frequency f1
 // over time dt. Return the total unwrapped phase travel.
 //
-static double phaseTravel( double f0, double f1, double dt )
+static double  phaseTravel( double f0, double f1, double dt )
 {
     double favg = .5 * ( f0 + f1 );
     return 2 * Pi * favg * dt;
@@ -1419,7 +1451,7 @@ fixPhaseTravel( const Breakpoint & bp0, Breakpoint & bp1, double dt, double alph
     // to compute the morphed phase travel, and near the boundaries
     // of the morph (alpha near 1 or 0) we rely on the interpolated
     // absolute phases. Only try to match phase near the boundaries.
-    static const double PHASE_MATCH_RANGE = 0.25;
+    static const double PHASE_MATCH_RANGE = 0.2;
     if ( std::fabs( 0.5 - alpha ) > ( 0.5 - PHASE_MATCH_RANGE ) )
     {
         double errorWeight = ( std::fabs( 0.5 - alpha ) - ( 0.5 - PHASE_MATCH_RANGE ) ) / PHASE_MATCH_RANGE;
