@@ -791,12 +791,17 @@ void morphWithReference( const PartialList * src0,
 		ThrowIfNull((LinearEnvelope *) famp);
 		ThrowIfNull((LinearEnvelope *) fbw);
 
-		notifier << "morphing " << src0->size() << " Partials with " <<
-					   src1->size() << " Partials" << endl;
+		notifier << "morphing " << src0->size() << " Partials with " 
+		         << src1->size() << " Partials" << endl;
+		         
+		//	make a Morpher object and do it:
+		Morpher m( *ffreq, *famp, *fbw );
+		
 		if ( src0RefLabel != 0 )
 		{
 		   notifier << "using Partial labeled " << src0RefLabel;
 		   notifier << " as reference Partial for first morph source" << endl;
+		   m.setSourceReferencePartial( *src0, src0RefLabel );
 		}
 		else
 		{
@@ -807,16 +812,13 @@ void morphWithReference( const PartialList * src0,
 		{
 		   notifier << "using Partial labeled " << src1RefLabel;
 		   notifier << " as reference Partial for second morph source" << endl;
+		   m.setTargetReferencePartial( *src1, src1RefLabel );
 		}
 		else
 		{
 		   notifier << "using no reference Partial for second morph source" << endl;
 		}
 			
-		//	make a Morpher object and do it:
-		Morpher m( *ffreq, *famp, *fbw );
-		m.setSourceReferenceLabel( src0RefLabel );
-		m.setTargetReferenceLabel( src1RefLabel );
 		m.morph( src0->begin(), src0->end(), src1->begin(), src1->end() );
 				
 		//	splice the morphed Partials into dst:

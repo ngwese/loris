@@ -74,35 +74,36 @@ class Morpher
 	
 	PartialList _partials;	                  //!	collect Partials here
 	
-	Partial::label_type _refLabel0;  //!	labels of the reference Partials
-	Partial::label_type _refLabel1;  //!	for source and target sounds when 
-												//!	morphing sequences of labeled Partials,
-												//!	default 0 implies no reference Partial
+	Partial _srcRefPartial;         //!	reference Partials
+	Partial _tgtRefPartial;			//!	for source and target sounds when 
+									//!	morphing sequences of labeled Partials,
+									//!	default (empty Partial) implies no 
+									//! reference Partial is used
 
-	double _freqFixThresholdDb;      //!	amplitude threshold below which Partial
-												//!	frequencies are corrected according to
-												//!	a reference Partial, if specified.
+	double _freqFixThresholdDb;		//!	amplitude threshold below which Partial
+									//!	frequencies are corrected according to
+									//!	a reference Partial, if specified.
 	
-	double _ampMorphShape;           //!	shaping parameter that controls the 
-												//!	slope of the amplitude morphing function,
-												//!	for values greater than 1, this function
-												//!	gets nearly linear (like the old amplitude
-												//!	morphing function), for values much less 
-												//!	than 1 (e.g. 1E-5) the slope is gently
-												//!	curved and sounds pretty "linear", for 
-												//!	very small values (e.g. 1E-12) the curve
-												//!	is very steep and sounds un-natural because
-												//!	of the huge jump from zero amplitude to
-												//!	very small amplitude.
-																		
-	double _minBreakpointGapSec;     //!	the minimum time gap between two Breakpoints
-												//!	in the morphed Partials. Morphing two
-												//!	Partials can generate a third Partial having
-												//!	Breakpoints arbitrarily close together in time,
-												//!	and this makes morphs huge. Raising this 
-												//!	threshold limits the Breakpoint density in
-												//!	the morphed Partials. 
-												//!	Default is 1/10 ms.
+	double _ampMorphShape;			//!	shaping parameter that controls the 
+									//!	slope of the amplitude morphing function,
+									//!	for values greater than 1, this function
+									//!	gets nearly linear (like the old amplitude
+									//!	morphing function), for values much less 
+									//!	than 1 (e.g. 1E-5) the slope is gently
+									//!	curved and sounds pretty "linear", for 
+									//!	very small values (e.g. 1E-12) the curve
+									//!	is very steep and sounds un-natural because
+									//!	of the huge jump from zero amplitude to
+									//!	very small amplitude.
+															
+	double _minBreakpointGapSec;	//!	the minimum time gap between two Breakpoints
+									//!	in the morphed Partials. Morphing two
+									//!	Partials can generate a third Partial having
+									//!	Breakpoints arbitrarily close together in time,
+									//!	and this makes morphs huge. Raising this 
+									//!	threshold limits the Breakpoint density in
+									//!	the morphed Partials. 
+									//!	Default is 1/10 ms.
 //	-- public interface --
 public:
 //	-- construction --
@@ -178,9 +179,9 @@ public:
 	//!	\param endTgt is (one past) the end of the sequence of Partials
 	//!			 corresponding to a morph function value of 1.
 	void morph( PartialList::const_iterator beginSrc, 
-               PartialList::const_iterator endSrc,
-               PartialList::const_iterator beginTgt, 
-               PartialList::const_iterator endTgt );
+                PartialList::const_iterator endSrc,
+                PartialList::const_iterator beginTgt, 
+                PartialList::const_iterator endTgt );
 
 	//!	Crossfade Partials with no correspondences.
 	//!
@@ -208,10 +209,10 @@ public:
 	//!   \param label is the label to associate with unlabeled
 	//!          Partials (default is 0).
 	void crossfade( PartialList::const_iterator beginSrc, 
-                   PartialList::const_iterator endSrc,
-                   PartialList::const_iterator beginTgt, 
-                   PartialList::const_iterator endTgt,
-                   Partial::label_type label = 0 );
+                    PartialList::const_iterator endSrc,
+                    PartialList::const_iterator beginTgt, 
+                    PartialList::const_iterator endTgt,
+                    Partial::label_type label = 0 );
 
 
     //!    Compute morphed parameter values at the specified time, using
@@ -367,45 +368,99 @@ public:
 
 //	-- reference Partial label access/mutation --
 	
-	//!   Return the label of the Partial to be used as a reference
+	//! Return the Partial to be used as a reference
 	//!	Partial for the source sequence in a morph of two Partial
 	//!	sequences. The reference partial is used to compute 
 	//!	frequencies for very low-amplitude Partials whose frequency
 	//!	estimates are not considered reliable. The reference Partial
 	//!	is considered to have good frequency estimates throughout.
-	//!	The default label of 0 indicates that no reference Partial
+	//!	A default (empty) Partial indicates that no reference Partial
 	//!	should be used for the source sequence.
-	Partial::label_type sourceReferenceLabel( void ) const;
+	const Partial & sourceReferencePartial( void ) const;
 	
-	//!   Return the label of the Partial to be used as a reference
-	//!	Partial for the target sequence in a morph of two Partial
-	//!	sequences. The reference partial is used to compute 
-	//!	frequencies for very low-amplitude Partials whose frequency
-	//!	estimates are not considered reliable. The reference Partial
-	//!	is considered to have good frequency estimates throughout.
-	//!	The default label of 0 indicates that no reference Partial
-	//!	should be used for the target sequence.
-	Partial::label_type targetReferenceLabel( void ) const;
-	
-	//!   Set the label of the Partial to be used as a reference
+	//! Return the Partial to be used as a reference
 	//!	Partial for the source sequence in a morph of two Partial
 	//!	sequences. The reference partial is used to compute 
 	//!	frequencies for very low-amplitude Partials whose frequency
 	//!	estimates are not considered reliable. The reference Partial
 	//!	is considered to have good frequency estimates throughout.
-	//!	Setting the reference label to 0 indicates that no reference 
-	//!	Partial should be used for the source sequence.
-	void setSourceReferenceLabel( Partial::label_type l );
+	//!	A default (empty) Partial indicates that no reference Partial
+	//!	should be used for the source sequence.
+	Partial & sourceReferencePartial( void );
 	
-	//!   Set the label of the Partial to be used as a reference
+	//! Return the Partial to be used as a reference
 	//!	Partial for the target sequence in a morph of two Partial
 	//!	sequences. The reference partial is used to compute 
 	//!	frequencies for very low-amplitude Partials whose frequency
 	//!	estimates are not considered reliable. The reference Partial
 	//!	is considered to have good frequency estimates throughout.
-	//!	Setting the reference label to 0 indicates that no reference 
+	//!	A default (empty) Partial indicates that no reference Partial
+	//!	should be used for the target sequence.
+	const Partial & targetReferencePartial( void ) const;
+
+	//! Return the Partial to be used as a reference
+	//!	Partial for the target sequence in a morph of two Partial
+	//!	sequences. The reference partial is used to compute 
+	//!	frequencies for very low-amplitude Partials whose frequency
+	//!	estimates are not considered reliable. The reference Partial
+	//!	is considered to have good frequency estimates throughout.
+	//!	A default (empty) Partial indicates that no reference Partial
+	//!	should be used for the target sequence.
+	Partial & targetReferencePartial( void );
+	
+	//! Specify the Partial to be used as a reference
+	//!	Partial for the source sequence in a morph of two Partial
+	//!	sequences. The reference partial is used to compute 
+	//!	frequencies for very low-amplitude Partials whose frequency
+	//!	estimates are not considered reliable. The reference Partial
+	//!	is considered to have good frequency estimates throughout.
+	//! The specified Partial must be labeled with its harmonic number.
+	//!	A default (empty) Partial indicates that no reference 
+	//!	Partial should be used for the source sequence.
+	void setSourceReferencePartial( const Partial & p = Partial() );
+	
+	//! Specify the Partial to be used as a reference
+	//!	Partial for the source sequence in a morph of two Partial
+	//!	sequences. The reference partial is used to compute 
+	//!	frequencies for very low-amplitude Partials whose frequency
+	//!	estimates are not considered reliable. The reference Partial
+	//!	is considered to have good frequency estimates throughout.
+	//!	A default (empty) Partial indicates that no reference 
+	//!	Partial should be used for the source sequence.
+	//!
+	//!	\param	partials a sequence of Partials to search
+	//!			for the reference Partial
+	//!	\param	refLabel the label of the Partial in partials
+	//!			that should be selected as the reference
+	void setSourceReferencePartial( const PartialList & partials, 
+									Partial::label_type refLabel );
+	
+	//! Specify the Partial to be used as a reference
+	//!	Partial for the target sequence in a morph of two Partial
+	//!	sequences. The reference partial is used to compute 
+	//!	frequencies for very low-amplitude Partials whose frequency
+	//!	estimates are not considered reliable. The reference Partial
+	//!	is considered to have good frequency estimates throughout.
+	//! The specified Partial must be labeled with its harmonic number.
+	//!	A default (empty) Partial indicates that no reference 
 	//!	Partial should be used for the target sequence.
-	void setTargetReferenceLabel( Partial::label_type l );
+	void setTargetReferencePartial( const Partial & p = Partial() );
+
+	//! Specify the Partial to be used as a reference
+	//!	Partial for the target sequence in a morph of two Partial
+	//!	sequences. The reference partial is used to compute 
+	//!	frequencies for very low-amplitude Partials whose frequency
+	//!	estimates are not considered reliable. The reference Partial
+	//!	is considered to have good frequency estimates throughout.
+	//!	A default (empty) Partial indicates that no reference 
+	//!	Partial should be used for the target sequence.
+	//!
+	//!	\param	partials a sequence of Partials to search
+	//!			for the reference Partial
+	//!	\param	refLabel the label of the Partial in partials
+	//!			that should be selected as the reference
+	void setTargetReferencePartial( const PartialList & partials, 
+									Partial::label_type refLabel );
 	
 //	-- PartialList access --
 
@@ -416,13 +471,6 @@ public:
 	const PartialList & partials( void ) const; 
 
 //	-- global morphing defaults and constants --
-
-   //!   Default reference partial label.
-   //!   By default, don't use reference Partial
-   //!   (this is the traditional behavior or Loris).
-   //!   Change from default using setSourceReferenceLabel
-   //!   and setTargetReferenceLabel.
-   static const Partial::label_type DefaultReferenceLabel;    
 
    //!   Amplitude threshold (dB) below which 
    //!   Partial frequencies are corrected using
@@ -492,7 +540,7 @@ private:
     //!    \param  newp is the morphed Partial under construction, the morphed
     //!            Breakpoint is added to this Partial.
     //
-    void appendMorphedSrc( const Breakpoint & srcBkpt, const Partial & tgtPartial, 
+    void appendMorphedSrc( Breakpoint srcBkpt, const Partial & tgtPartial, 
                            double time, Partial & newp  );
                            
     //!    Compute morphed parameter values at the specified time, using
@@ -513,7 +561,7 @@ private:
     //!    \param  newp is the morphed Partial under construction, the morphed
     //!            Breakpoint is added to this Partial.
     //
-    void appendMorphedTgt( const Breakpoint & tgtBkpt, const Partial & srcPartial, 
+    void appendMorphedTgt( Breakpoint tgtBkpt, const Partial & srcPartial, 
                            double time, Partial & newp  );
                            
 
