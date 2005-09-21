@@ -153,10 +153,35 @@ private:
 };
 
 // ---------------------------------------------------------------------------
+//	negative_time
+// ---------------------------------------------------------------------------
+//	functor used to identify peaks that have reassigned times 
+//	before 0:
+struct negative_time
+{
+	//	negative times occur when the reassigned time
+	// 	plus the current frame time is less than 0:
+	bool operator()( const Peaks::value_type & v )  const
+	{ 
+		return 0 > ( v.first + _frameTime );
+	}
+		
+	//	constructor:
+	negative_time( double t ) : 
+		_frameTime( t ) {}
+		
+	//	bounds:
+private:
+	double _frameTime;
+	
+};
+
+// ---------------------------------------------------------------------------
 //	thinPeaks
 // ---------------------------------------------------------------------------
 //	Reject peaks that are too quiet (low amplitude). Peaks that are retained,
 //	but are quiet enough to be in the specified fadeRange should be faded.
+//	Peaks having negative times are also rejected.
 //
 //	This is exactly the same as the basic peak selection strategy, there
 //	is no tracking here.
@@ -167,7 +192,7 @@ private:
 //
 Peaks::iterator 
 SpectralPeakSelector::thinPeaks( double ampFloordB, double fadeRangedB, 
-								 double /* frameTime not used */  )
+								 double frameTime  )
 {
 	//	compute absolute magnitude thresholds:
 	const double threshold = std::pow( 10., 0.05 * ampFloordB );
@@ -179,7 +204,10 @@ SpectralPeakSelector::thinPeaks( double ampFloordB, double fadeRangedB,
 	
 	Peaks::iterator it = peaks_.begin();
 	Peaks::iterator beginRejected = it;
-	while ( it != peaks_.end() ) 
+	Peaks::iterator bogusTimes = 
+		std::remove_if( peaks_.begin(), peaks_.end(), negative_time( frameTime ) );
+		
+	while ( it != bogusTimes ) 
 	{
 		Breakpoint & bp = it->second;
 		

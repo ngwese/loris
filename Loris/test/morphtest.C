@@ -154,8 +154,8 @@ int main( void )
 		
 		Morpher m( mf );
 		m.setMinBreakpointGap( 0.002 );
-		m.setSourceReferenceLabel( 3 );
-		m.setTargetReferenceLabel( 1 );
+		m.setSourceReferencePartial( clar, 3 );
+		m.setTargetReferencePartial( flut, 1 );
 		m.morph( clar.begin(), clar.end(), flut.begin(), flut.end() );
 
 
