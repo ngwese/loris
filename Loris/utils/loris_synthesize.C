@@ -35,6 +35,9 @@
 #include <algorithm>
 using std::for_each;
 
+#include <cmath>
+using std::log;
+
 #include <cstdlib>
 using std::strtod;
 
@@ -57,6 +60,7 @@ using std::vector;
 #include <PartialList.h>
 #include <PartialUtils.h>
 #include <SdifFile.h>
+#include <SpcFile.h>
 
 using namespace Loris;
 
@@ -64,12 +68,13 @@ using namespace Loris;
 void parseArguments( int nargs, char * args[] );
 void printUsage( const char * programName );
 
-//	global state
+//	global state 
+//  (Geez, this is lousy programming. I'd flunk my students for doing this.)
 double Rate = 44100;
 double FreqScale = 1.;
 double AmpScale = 1.;
 string Outname = "synth.aiff";
-vector< double > markers, times;
+vector< double > marker_times, cmdline_times;
 
 int main( int argc, char * argv[] )
 {	
@@ -79,65 +84,119 @@ int main( int argc, char * argv[] )
 		return 1;
 	}
 	
-	//	get the name of the file to synthesize
-	string fname = argv[1];
+	//	get the filename and its suffix
+	string filename( argv[1] );
+	string suffix = filename.substr( filename.rfind('.')+1 );
+
+	// ----------- read Partials and Markers ---------------	
+			
+	PartialList partials;
+	std::vector< Marker > markers;
+	double midiNN = 0;
+	
+	if ( suffix == "sdif" )
+	{
+		try
+		{
+			SdifFile f( filename );
+			cout << "SDIF partials file \"" << filename << "\":" << endl;
+			std::pair< double, double > span = 
+				PartialUtils::timeSpan( f.partials().begin(), f.partials().end() );
+			cout << f.partials().size() << " partials spanning " << span.first;
+			cout << " to " << span.second << " seconds.\n";
+			partials.insert( partials.begin(), f.partials().begin(), f.partials().end() );
+			markers.insert( markers.begin(), f.markers().begin(), f.markers().end() );
+		}
+		catch( Exception & ex )
+		{
+			cout << "Error reading markers from file: " << filename << "\n";
+			cout << ex.what() << "\n";
+			return 1;
+		}
+	}
+	else if ( suffix == "spc" )
+	{
+		try
+		{
+			SpcFile f( filename );
+			cout << "Spc partials file \"" << filename << "\":" << endl;
+			std::pair< double, double > span = 
+				PartialUtils::timeSpan( f.partials().begin(), f.partials().end() );
+			cout << f.partials().size() << " partials spanning " << span.first;
+			cout << " to " << span.second << " seconds.\n";
+			cout << "MIDI note number " << f.midiNoteNumber() << endl;
+			midiNN = f.midiNoteNumber();
+			partials.insert( partials.begin(), f.partials().begin(), f.partials().end() );
+			markers.insert( markers.begin(), f.markers().begin(), f.markers().end() );
+		}
+		catch( Exception & ex )
+		{
+			cout << "Error reading markers from file: " << filename << "\n";
+			cout << ex.what() << "\n";
+			return 1;
+		}
+	}
+	else
+	{
+		cout << "Error -- unrecognized suffix: " << suffix << "\n";
+		return 1;
+	}	
 	
 	//	parse the other arguments
 	parseArguments( argc - 2, argv + 2 );
 	
-	//	import and prepare the Partials
-	SdifFile fin( fname );
-	PartialList & partials = fin.partials();
-	for ( int i = 0; i < fin.markers().size(); ++i )
+	// ----------- dilate ---------------	
+
+	for ( int i = 0; i < markers.size(); ++i )
 	{
-		markers.push_back( fin.markers()[ i ].time() );
+		marker_times.push_back( markers[ i ].time() );
 	}
 	
-	if ( 0 < times.size() )
+	if ( 0 < cmdline_times.size() )
 	{
-		if ( ! fin.markers().empty() )
+		if ( ! markers.empty() )
 		{
-			cout << "Features marked in " << fname << " before dilating:\n";
-			//	print out the markers:
+			cout << "Features marked in " << filename << " before dilating:\n";
+			//	print out the marker_times:
 			std::vector< Marker >::iterator it;
-			for ( it = fin.markers().begin(); it != fin.markers().end(); ++it )
+			for ( it = markers.begin(); it != markers.end(); ++it )
 			{
 				cout << it->time() << "\t\"" << it->name() << "\"\n";
 			}
 		}
 
-		if ( times.size() == markers.size() )
+		if ( cmdline_times.size() == marker_times.size() )
 		{
-			cout << "Dilating partials using " << times.size() 
+			cout << "Dilating partials using " << cmdline_times.size() 
 			     << " marked features." << endl;
-			Dilator dilator( markers.begin(), markers.end(), times.begin() );
+			Dilator dilator( marker_times.begin(), marker_times.end(), cmdline_times.begin() );
 			dilator.dilate( partials.begin(), partials.end() );
-			dilator.dilate( fin.markers().begin(), fin.markers().end() );
+			dilator.dilate( markers.begin(), markers.end() );
 		}
-		else if ( 1 == times.size() )
+		else if ( 1 == cmdline_times.size() )
 		{
 			double dur = 
 				PartialUtils::timeSpan( partials.begin(), partials.end() ).second;
-			cout << "Scaling duration from " << dur << " to " << times.front() 
+			cout << "Scaling duration from " << dur << " to " << cmdline_times.front() 
 			     << " seconds" << endl;
-			Dilator dilator( &dur, (&dur) + 1, times.begin() );
+			Dilator dilator( &dur, (&dur) + 1, cmdline_times.begin() );
 			dilator.dilate( partials.begin(), partials.end() );
-			dilator.dilate( fin.markers().begin(), fin.markers().end() );
+			dilator.dilate( markers.begin(), markers.end() );
 		}
 		else
 		{
 		   cout << "Specified time points need to correspond to Markers "
-		        << "in " << fname << ", ignoring." << endl;
+		        << "in " << filename << ", ignoring." << endl;
 			printUsage( argv[0] );
 			return 1;
 		}
 
-		if ( ! fin.markers().empty() )
+		if ( ! markers.empty() )
 		{
-			cout << "Features marked in " << fname << " after dilating:\n";
-			//	print out the markers:
+			cout << "Features marked in " << filename << " after dilating:\n";
+			//	print out the marker_times:
 			std::vector< Marker >::iterator it;
-			for ( it = fin.markers().begin(); it != fin.markers().end(); ++it )
+			for ( it = markers.begin(); it != markers.end(); ++it )
 			{
 				cout << it->time() << "\t\"" << it->name() << "\"\n";
 			}
@@ -148,17 +207,31 @@ int main( int argc, char * argv[] )
 	{
 	   cout << "Scaling partial frequencies by " << FreqScale << endl;
 	   PartialUtils::scaleFrequency( partials.begin(), partials.end(), FreqScale );
+	   
+	   if ( 0 != midiNN )
+	   {
+	      double newNN = midiNN + 12 * ( log( FreqScale ) / log( 2.0 ) );
+	      cout << "Adjusting Midi Note Number from " << midiNN 
+	           << " to " << newNN << endl;
+	      midiNN = newNN;
+	   }
 	}
+	
 	if ( 1. != AmpScale )
 	{
 	   cout << "Scaling partial amplitudes by " << AmpScale << endl;
 	   PartialUtils::scaleAmplitude( partials.begin(), partials.end(), AmpScale );
 	}
+	
 	//	render the Partials
 	cout << "Rendering " << partials.size() << " partials at "
 	     << Rate << " Hz." << endl;
 	AiffFile fout( partials.begin(), partials.end(), Rate );
-	fout.markers() = fin.markers();
+	fout.markers() = markers;
+	if ( 0 != midiNN )
+	{
+	   fout.setMidiNoteNumber( midiNN );
+	}
 	
 	//	export the samples 
 	cout << "Exporting to " << Outname << endl;
@@ -223,10 +296,10 @@ void parseArguments( int nargs, char * args[] )
 		else
 		{
 			//	all the remaining command line args 
-			//	should be times
+			//	should be cmdline_times
 			while( nargs > 0 )
 			{
-				times.push_back( getFloatArg( *args ) );
+				cmdline_times.push_back( getFloatArg( *args ) );
 				++args;
 				--nargs;
 			}
@@ -237,14 +310,14 @@ void parseArguments( int nargs, char * args[] )
 
 void printUsage( const char * programName )
 {
-	cout << "usage: " << programName << " filename.sdif [options] [times]" << endl;
+	cout << "usage: " << programName << " filename.sdif [options] [cmdline_times]" << endl;
 	cout << "options:" << endl;
 	cout << "-rate <sample rate in Hz>" << endl;
 	cout << "-freq <frequency scale factor>" << endl;
 	cout << "-amp <amplitude scale factor>" << endl;
 	cout << "-o <output AIFF file name, default is synth.aiff>" << endl;
-	cout << "\nOptional times (any number) are used for dilation." << endl;
-	cout << "If times are specified, they must all correspond to " << endl;
+	cout << "\nOptional cmdline_times (any number) are used for dilation." << endl;
+	cout << "If cmdline_times are specified, they must all correspond to " << endl;
 	cout << "Markers in the SDIF file. If only a single time is" << endl;		
 	cout << "specified, and the SDIF file has no Markers or more" << endl;
 	cout << "than one, the specified time is used as the overall duration" << endl;
