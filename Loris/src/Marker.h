@@ -45,90 +45,118 @@ namespace Loris {
 // ---------------------------------------------------------------------------
 //	class Marker
 //
-//	Class Marker represents a labeled time point in a set of Partials
-//	or a vector of samples. Collections of Markers (see the MarkerContainer
-//	definition below) are held by the File I/O classes in Loris (AiffFile,
-//	SdifFile, and SpcFile) to identify temporal features in imported
-//	and exported data.
+//!	Class Marker represents a labeled time point in a set of Partials
+//!	or a vector of samples. Collections of Markers (see the MarkerContainer
+//!	definition below) are held by the File I/O classes in Loris (AiffFile,
+//!	SdifFile, and SpcFile) to identify temporal features in imported
+//!	and exported data.
 //
 class Marker
 {
-//	-- implementation --
-	double m_time;
-	std::string m_name;
-			
 //	-- public interface --
 public:
 //	-- construction --
+
+	//!	Default constructor - initialize a Marker at time zero with no label.
 	Marker( void );
-	/*	Default constructor - initialize a Marker at time zero with no label.
-	 */
 	 
+	//!	Initialize a Marker with the specified time (in seconds) and name.
+	//! 
+	//! \param  t is the time associated with the new Marker
+	//! \param  s is the name associated with the new Marker
 	Marker( double t, const std::string & s );
-	/*	Initialize a Marker with the specified time (in seconds) and name.
-	 */
 	 
+	//!	Initialize a Marker that is an exact copy of another Marker, that is,
+	//!	having the same time and name.
+	//!
+	//! \param  other is the Marker to copy from
 	Marker( const Marker & other );
-	/*	Initialize a Marker that is an exact copy of another Marker, that is,
-		having the same time and name.
-	 */
 	
+	//!	Make this Marker an exact copy, having the same time and name, 
+	//!	as the Marker rhs.
+	//!
+	//! \param  rhs is the Marker to assign from
+    //! \return reference to self
 	Marker & operator=( const Marker & rhs );
-	/*	Make this Marker an exact copy, having the same time and name, 
-		as the Marker rhs.
-	 */
 	 
 //	-- comparison --
+
+	//!	Return true if this Marker must appear earlier than rhs in a sorted
+	//!	collection of Markers, and false otherwise. 
+	//! (Markers are sorted by time.)
+	//!
+	//! \param  rhs is the Marker to compare with this Marker
+	//! \return true if this Marker's time is earlier than that of
+	//!         rhs, otherwise false 
 	bool operator< ( const Marker & rhs ) const;
-	/*	Return true if this Marker must appear earlier than rhs in a sorted
-		collection of Markers, and false otherwise. (Markers are sorted by time.)
-	 */
 	 
 //	-- access --
+    
+	//!	Return a reference to the name string
+	//!	for this Marker.
 	std::string & name( void );
+
+	//!	Return a const reference to the name string
+	//!	for this Marker.
 	const std::string & name( void ) const;
-	/*	Return a reference (or const reference) to the name string
-		for this Marker.
-	 */
 	 
+	//!	Return the time (in seconds) associated with this Marker.
 	double time( void ) const;
-	/*	Return the time (in seconds) associated with this Marker.
-	 */
+
 	 
 //	-- mutation --
+	//!	Set the name of the Marker.
 	void setName( const std::string & s );
-	/*	Set the name of the Marker.
-	 */
 	 
+	//! 	Set the time (in seconds) associated with this Marker.
 	void setTime( double t );
-	/* 	Set the time (in seconds) associated with this Marker.
-	 */
 
 //	-- comparitors --
-	/*	Comparitor (binary) functor returning true if its first Marker
-		argument should appear before the second in a range sorted
-		by Marker name.
-	 */
-	struct sortByName : 
+
+	//!	Comparitor (binary) functor returning true if its first Marker
+	//!	argument should appear before the second in a range sorted
+	//!	by Marker name.
+	struct compareNameLess : 
 		public std::binary_function< const Marker, const Marker, bool >
 	{
 		bool operator()( const Marker & lhs, const Marker & rhs ) const 
 			{ return lhs.name() < rhs.name(); }
 	};
+	typedef compareNameLess sortByName; //  old name, legacy support
 	
 	
-	/*	Comparitor (binary) functor returning true if its first Marker
-		argument should appear before the second in a range sorted
-		by Marker time.
-	 */
-	struct sortByTime : 
+	//!	Comparitor (binary) functor returning true if its first Marker
+	//!	argument should appear before the second in a range sorted
+	//!	by Marker time.
+	struct compareTimeLess : 
 		public std::binary_function< const Marker, const Marker, bool >
 	{
 		bool operator()( const Marker & lhs, const Marker & rhs ) const 
 			{ return lhs.time() < rhs.time(); }
 	};
+	typedef compareTimeLess sortByTime; //  old name, legacy support
 	
-	
+    //! Predicate functor returning true if the name of a Marker
+    //! equal to the specified string, and false otherwise.
+    //
+    class isNameEqual : public std::unary_function< const Marker, bool >
+    {
+    public:
+       //! Initialize a new instance with the specified name.
+    	isNameEqual( const std::string & s ) : name(s) {}
+    	
+    	//! Function call operator: evaluate a Marker.
+    	bool operator()( const Marker & m ) const 
+    		{ return m.name() == name; }
+    		
+    private:	
+    	std::string name;
+    };
+
+//	-- implementation --
+	double m_time;
+	std::string m_name;
+			
 };	//	end of class Marker
 
 }	//	end of namespace Loris
