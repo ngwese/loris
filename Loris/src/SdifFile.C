@@ -296,7 +296,9 @@ static char *error_string_array[] = {
 
 //  If we didn't run configure, try to make a good guess.
 #if !(HAVE_CONFIG_H) && !defined(WORDS_BIGENDIAN)
-    #ifndef _MSC_VER
+    #if defined(WIN32) || defined(LINUX)
+    #undef WORDS_BIGENDIAN
+    #else
     #define WORDS_BIGENDIAN 1
     #endif
 #endif

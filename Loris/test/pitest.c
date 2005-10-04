@@ -38,6 +38,12 @@
 #include <stdlib.h>
 #include <strings.h>
 
+static void notifyAndHalt( const char * msg )
+{
+   printf( "Loris encountered an error:\n%s\n\n", msg );
+   exit( 1 );
+}
+
 int main( void )
 {
    char filename[ 256 ];
@@ -64,6 +70,9 @@ int main( void )
    printf( "Kelly Fitz 2005\n\n" );
    printf( "Generates a simple linear morph between a \n" );
    printf( "clarinet and a flute using the Loris library.\n\n" );
+   
+   /* halt if something goes wrong */
+   setExceptionHandler( notifyAndHalt );
    
    /* import the clarinet samples */
    if ( 0 != path )

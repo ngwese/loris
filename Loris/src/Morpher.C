@@ -59,7 +59,7 @@
 namespace Loris {
 
 // new morphing algorithms
-#define MORPH_PHASE_TRAVEL 1
+#define MORPH_PHASE_TRAVEL 0
 #define NEW_BW_MORPH 1
 
 const double Morpher::DefaultFixThreshold = -90; // dB, very low by default
@@ -992,159 +992,26 @@ static void adjustFrequency( Breakpoint & bp, const Partial & ref,
                              double thresholdDb,
                              double time )
 {
-    //    compute absolute magnitude thresholds:
-    static const double FadeRangeDB = 10;
-    const double Threshold = std::pow( 10., 0.05 * thresholdDb );
-    const double BeginFade = std::pow( 10., 0.05 * (thresholdDb+FadeRangeDB) );
-    const double OneOverFadeSpan = 1. / ( BeginFade - Threshold );
-
-    double fscale = (double)harmonicNum / ref.label();
-    
-    if ( ref.numBreakpoints() != 0 && 
-         bp.amplitude() < BeginFade )
-    {
-        double alpha = std::min( ( BeginFade - bp.amplitude() ) * OneOverFadeSpan, 1. );
-        double fRef = ref.frequencyAt( time );
-        bp.setFrequency( ( alpha * ( fRef * fscale ) ) + 
-                             ( (1 - alpha) * bp.frequency() ) );
-    }
-}
-
-// ---------------------------------------------------------------------------
-//    apply_reference_partial
-// ---------------------------------------------------------------------------
-// Local helper function to correct the frequencies of low-amplitude
-// breakpoints using a reference Partial.
-//
-//  HEY
-// This funciton is no longer needed, can just apply a frequency
-// adjustment in morphSrc/TgtBreapoint.
-// Nulls are added at ends in morph_aux.
-#if 0
-static void apply_reference_partial( Partial & fixme, const Partial & reference, 
-                                     double thresholdDb )
-{
-    //    sanity
-    if ( 0 == reference.size() )
-    {
-        Throw( InvalidArgument, "reference Partial in apply_reference_partial must not be empty" );
-    }
-
-    //    nothing to do if fixme is the reference Partial:
-    if ( &fixme != &reference )
+    if ( ref.numBreakpoints() != 0 )
     {
         //    compute absolute magnitude thresholds:
-        const double FadeRangeDB = 10;
-        const double Threshold = std::pow( 10., 0.05 * thresholdDb );
+        static const double FadeRangeDB = 10;
         const double BeginFade = std::pow( 10., 0.05 * (thresholdDb+FadeRangeDB) );
-        const double OneOverFadeSpan = 1. / ( BeginFade - Threshold );
-        
-
-        double fscale = (double)fixme.label() / reference.label();
-        //    fix the frequency of every Breakpoint in fixme
-        //    that has amplitude below the reference frequency
-        //    threshold (called BeginFade).
-        //
-        //    invariant:
-        //    bpPos is the position of a Breakpoint in fixme,
-        //    all Breakpoints earlier in fixme than bpPos have
-        //    amplitudes greater than the reference frequency
-        //    threshold, or their frequencies have been "fixed".
-        
-        //  This can be done later, in the appendMorphed functions.
-#if 0        
-        for ( Partial::iterator bpPos = fixme.begin(); bpPos != fixme.end(); ++bpPos )
-        {   /*
-            if ( bpPos->amplitude() < BeginFade )
-            {
-                //    the new frequency is computed from a weighted
-                //    average of the original analyzed frequency and
-                //    the reference frequency:
-                double alpha = std::max( ( BeginFade - bpPos->amplitude() ) * OneOverFadeSpan, 1. );
-                double fRef = reference.frequencyAt( bpPos.time() );
-                bpPos->setFrequency( ( alpha * ( fRef * fscale ) ) + 
-                                     ( (1 - alpha ) * bpPos->frequency() ) );
-            }
-            */
-            adjustFrequency( bpPos.breakpoint(), reference, fixme.label(),
-                             thresholdDb, bpPos.time() );
-        }                
-#endif
                 
-        //    Breakpoints in the reference Partial that are before the
-        //    start of fixme should introduce zero-amplitude Breakpoints
-        //    in fixme.
-        //
-        //    invariant:
-        //    earlyBpPos is the position of a Breakpoint in the reference
-        //    Partial, all Breakpoints earlier than earlyBpPos have been 
-        //    added to fix me as zero amplitude Breakpoints at the 
-        //    appropriate frequency multiple (fscale, above)
-        
-//#define OLDWAY
-// %%%%%%% HEY LOOKIE HERE
-#if 1
-        Partial::const_iterator earlyBpPos = reference.findAfter( fixme.startTime() );
-        while( earlyBpPos != reference.begin() )
+        if ( bp.amplitude() < BeginFade )
         {
-            --earlyBpPos;
-            
-            #ifdef OLDWAY
-            Breakpoint silentBreakpoint = earlyBpPos.breakpoint();
-            silentBreakpoint.setAmplitude( 0 );
-            silentBreakpoint.setFrequency( silentBreakpoint.frequency() * fscale );
-            #else
-            Breakpoint silentBreakpoint = fixme.parametersAt( earlyBpPos.time() );
-            adjustFrequency( silentBreakpoint, reference, fixme.label(),
-                             thresholdDb, earlyBpPos.time() );
-            #endif
-            
-            fixme.insert( earlyBpPos.time(), silentBreakpoint );
-            
-            /*
-            debugger << "inserting silent Breakpoint at time " << earlyBpPos.time()
-                     << " and frequency " << silentBreakpoint.frequency()
-                     << " at front of Partial labeled " << fixme.label() << endl;
-            */
-        }
-#endif     
+            const double Threshold = std::pow( 10., 0.05 * thresholdDb );
+            const double OneOverFadeSpan = 1. / ( BeginFade - Threshold );
 
-        //    Breakpoints in the reference Partial that are after the
-        //    end of fixme should introduce zero-amplitude Breakpoints
-        //    in fixme.
-        //
-        //    invariant:
-        //    lateBpPos is the position of a Breakpoint in the reference
-        //    Partial, all Breakpoints later than lateBpPos have been 
-        //    added to fix me as zero amplitude Breakpoints at the 
-        //    appropriate frequency multiple (fscale, above)
-#if 0        
-        Partial::const_iterator lateBpPos = reference.findAfter( fixme.endTime() );
-        while( lateBpPos != reference.end() )
-        {
-            #ifdef OLDWAY
-            Breakpoint silentBreakpoint = lateBpPos.breakpoint();
-            silentBreakpoint.setAmplitude( 0 );
-            silentBreakpoint.setFrequency( silentBreakpoint.frequency() * fscale );
-            #else
-            Breakpoint silentBreakpoint = fixme.parametersAt( lateBpPos.time() );
-            adjustFrequency( silentBreakpoint, reference, fixme.label(),
-                             thresholdDb, lateBpPos.time() );
-            #endif
-                        
-            fixme.insert( lateBpPos.time(), silentBreakpoint );
-            
-            /*
-            debugger << "inserting silent Breakpoint at time " << lateBpPos.time()
-                     << " and frequency " << silentBreakpoint.frequency()
-                     << " at end of Partial labeled " << fixme.label() << endl;
-            */
-            ++lateBpPos;
+            double fscale = (double)harmonicNum / ref.label();
+
+            double alpha = std::min( ( BeginFade - bp.amplitude() ) * OneOverFadeSpan, 1. );
+            double fRef = ref.frequencyAt( time );
+            bp.setFrequency( ( alpha * ( fRef * fscale ) ) + 
+                             ( (1 - alpha) * bp.frequency() ) );
         }
-#endif      
     }
 }
-#endif
 
 // ---------------------------------------------------------------------------
 //    partial_is_nonnull
@@ -1198,14 +1065,6 @@ void Morpher::morph_aux( PartialCorrespondence & correspondence  )
         {
             //    use the Partial in the correspondence
             src = *p0;
-            
-            if ( _srcRefPartial.numBreakpoints() != 0 )
-            {
-                //    find quiet parts of the source Partial,
-                //    and use scaled reference frequencies for 
-                //    those Breakpoints:
-                //apply_reference_partial( src, _srcRefPartial, _freqFixThresholdDb );        
-            }
         }
         else if ( _srcRefPartial.numBreakpoints() != 0 )
         {
@@ -1221,14 +1080,6 @@ void Morpher::morph_aux( PartialCorrespondence & correspondence  )
         {
             //    use the Partial in the correspondence
             tgt = *p1;
-            
-            if ( _tgtRefPartial.numBreakpoints() != 0 )
-            {
-                //    find quiet parts of the target Partial,
-                //    and use scaled reference frequencies for 
-                //    those Breakpoints:
-                //apply_reference_partial( tgt, _tgtRefPartial, _freqFixThresholdDb );
-            }
         }
         else if ( _tgtRefPartial.numBreakpoints() != 0 )
         {
@@ -1243,7 +1094,9 @@ void Morpher::morph_aux( PartialCorrespondence & correspondence  )
                    << " partials with label " <<    label << endl;
                    
         //  &^)     HEY LOOKIE HERE!!!!!!!!!!!!!                   
-        // try this kludge:
+        // try this kludge to solve the problem of Nulls 
+        // getting left out of morphed Partials leading to
+        // eroneous non-zero amplitude segments:
         if ( src.numBreakpoints() != 0 )
         {
             if ( src.first().amplitude() != 0.0 && src.startTime() > _minBreakpointGapSec )
@@ -1709,7 +1562,8 @@ Morpher::appendMorphedSrc( Breakpoint srcBkpt, const Partial & tgtPartial,
         {
             Breakpoint tgtBkpt = tgtPartial.parametersAt( time );
             
-// %%%%%%% HEY LOOKIE HERE
+            // adjust Breakpoint frequencies according to the reference
+            // Partial (if a reference has been specified):
             adjustFrequency( srcBkpt, _srcRefPartial, newp.label(), _freqFixThresholdDb, time );
             adjustFrequency( tgtBkpt, _tgtRefPartial, newp.label(), _freqFixThresholdDb, time );
             
@@ -1796,7 +1650,8 @@ Morpher::appendMorphedTgt( Breakpoint tgtBkpt, const Partial & srcPartial,
         {
             Breakpoint srcBkpt = srcPartial.parametersAt( time );
 
-// %%%%%%% HEY LOOKIE HERE
+            // adjust Breakpoint frequencies according to the reference
+            // Partial (if a reference has been specified):
             adjustFrequency( srcBkpt, _srcRefPartial, newp.label(), _freqFixThresholdDb, time );
             adjustFrequency( tgtBkpt, _tgtRefPartial, newp.label(), _freqFixThresholdDb, time );
 
