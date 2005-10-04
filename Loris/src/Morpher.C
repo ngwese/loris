@@ -60,7 +60,7 @@ namespace Loris {
 
 // new morphing algorithms
 #define MORPH_PHASE_TRAVEL 1
-#define NEW_BW_MORPH 0
+#define NEW_BW_MORPH 1
 
 const double Morpher::DefaultFixThreshold = -90; // dB, very low by default
 
@@ -202,7 +202,7 @@ Morpher::operator= ( const Morpher & rhs )
 //!	\param 	tgt is the Partial corresponding to a morph function
 //!		   	value of 1, evaluated at the specified time.
 //!	\param 	assignLabel is the label assigned to the morphed Partial
-//!   \return  the morphed Partial
+//! \return the morphed Partial
 //
 Partial
 Morpher::morphPartial( Partial src, Partial tgt, int assignLabel )
@@ -212,12 +212,24 @@ Morpher::morphPartial( Partial src, Partial tgt, int assignLabel )
         Throw( InvalidArgument, "Cannot morph two empty Partials," );
     }    
     
-    //    make a new Partial:
-    Partial newp;
-    newp.setLabel( assignLabel );
-
     Partial::const_iterator src_iter = src.begin();
     Partial::const_iterator tgt_iter = tgt.begin();
+    
+    // find the earliest time that a Breakpoint
+    // could be added to the morph:
+    double dontAddBefore = 0;
+    if ( 0 < src.numBreakpoints() )
+    {
+        dontAddBefore = std::min( dontAddBefore, src_iter.time() );
+    }
+    if ( 0 < tgt.numBreakpoints() )
+    {
+        dontAddBefore = std::min( dontAddBefore, tgt_iter.time() );
+    }
+    
+    //  make a new Partial:
+    Partial newp;
+    newp.setLabel( assignLabel );
     
     //  Merge Breakpoints from the two Partials,
     //  loop until there are no more Breakpoints to
@@ -229,22 +241,13 @@ Morpher::morphPartial( Partial src, Partial tgt, int assignLabel )
         {
             //  Ran out of tgt Breakpoints, or 
             //  src Breakpoint is earlier, add it.
-            double t = src_iter.time();
-
+            //
             //  Don't insert Breakpoints arbitrarily close together, 
             //  only insert a new Breakpoint if it is later than
             //  the end of the new Partial by more than the gap time.
-            if ( 0 == newp.numBreakpoints() || 
-                _minBreakpointGapSec <= ( t - newp.endTime() ) )
+            if ( dontAddBefore <= src_iter.time() )
             {
-                if ( 0 < tgt.numBreakpoints() )
-                {
-                    appendMorphedSrc( src_iter.breakpoint(), tgt, t, newp );
-                }
-                else
-                {
-                    newp.insert( t, fadeSrcBreakpoint( src_iter.breakpoint(), t ) );
-                }
+                appendMorphedSrc( src_iter.breakpoint(), tgt, src_iter.time(), newp );
             }
             /*
             else
@@ -259,22 +262,13 @@ Morpher::morphPartial( Partial src, Partial tgt, int assignLabel )
         {
             //  Ran out of src Breakpoints, or
             //  tgt Breakpoint is earlier add it.
-            double t = tgt_iter.time();
-            
+            //
             //  Don't insert Breakpoints arbitrarily close together, 
             //  only insert a new Breakpoint if it is later than
             //  the end of the new Partial by more than the gap time.
-            if ( 0 == newp.numBreakpoints() || 
-                _minBreakpointGapSec <= ( t - newp.endTime() ) )
+            if ( dontAddBefore <= tgt_iter.time() )
             {
-                if ( 0 < src.numBreakpoints() )
-                {
-                    appendMorphedTgt( tgt_iter.breakpoint(), src, t, newp );
-                }
-                else
-                {
-                    newp.insert( t, fadeTgtBreakpoint( tgt_iter.breakpoint(), t ) );
-                }
+                appendMorphedTgt( tgt_iter.breakpoint(), src, tgt_iter.time(), newp );
             }
             /*
             else
@@ -285,6 +279,13 @@ Morpher::morphPartial( Partial src, Partial tgt, int assignLabel )
             */
             ++tgt_iter;
         }  
+        
+        if ( 0 != newp.numBreakpoints() )
+        {
+            // update the earliest time the next Breakpoint
+            // could be added to the morph:
+            dontAddBefore = newp.endTime() + _minBreakpointGapSec;
+        }          
     }
 
     return newp;
@@ -324,10 +325,11 @@ Morpher::crossfade( PartialList::const_iterator beginSrc,
     debugCounter = 0;
     for ( it = beginSrc; it != endSrc; ++it )
     {
-        if ( it->label() == label )
+        if ( it->label() == label && 0 != it->numBreakpoints() )
         {            
             Partial newp;
             newp.setLabel( label );
+            double dontAddBefore = it->startTime();
 
             for ( Partial::const_iterator bpPos = it->begin(); 
                   bpPos != it->end(); 
@@ -336,11 +338,11 @@ Morpher::crossfade( PartialList::const_iterator beginSrc,
                 //  Don't insert Breakpoints arbitrarily close together, 
                 //  only insert a new Breakpoint if it is later than
                 //  the end of the new Partial by more than the gap time.
-                if ( 0 == newp.numBreakpoints() || 
-                    _minBreakpointGapSec <= ( bpPos.time() - newp.endTime() ) )
+                if ( dontAddBefore <= bpPos.time() )
                 {
                     newp.insert( bpPos.time(), 
                                  fadeSrcBreakpoint( bpPos.breakpoint(), bpPos.time() ) );
+                    dontAddBefore = bpPos.time() + _minBreakpointGapSec;
                 }
             }
             
@@ -357,11 +359,11 @@ Morpher::crossfade( PartialList::const_iterator beginSrc,
     debugCounter = 0;
     for ( it = beginTgt; it != endTgt; ++it )
     {
-        if ( it->label() == label )
+        if ( it->label() == label && 0 != it->numBreakpoints() )
         {
             Partial newp;
             newp.setLabel( label );
-
+            double dontAddBefore = it->startTime();
                             
             for ( Partial::const_iterator bpPos = it->begin(); 
                   bpPos != it->end(); 
@@ -370,11 +372,11 @@ Morpher::crossfade( PartialList::const_iterator beginSrc,
                 //  Don't insert Breakpoints arbitrarily close together, 
                 //  only insert a new Breakpoint if it is later than
                 //  the end of the new Partial by more than the gap time.
-                if ( 0 == newp.numBreakpoints() || 
-                    _minBreakpointGapSec <= ( bpPos.time() - newp.endTime() ) )
+                if ( dontAddBefore <= bpPos.time() )
                 {
                     newp.insert( bpPos.time(),
                                  fadeTgtBreakpoint( bpPos.breakpoint(), bpPos.time() ) );           
+                    dontAddBefore = bpPos.time() + _minBreakpointGapSec;
                 }
             }
             
@@ -983,6 +985,8 @@ Morpher::partials( void ) const
 // ---------------------------------------------------------------------------
 //    adjustFrequency
 // ---------------------------------------------------------------------------
+// Leave the phase alone, because I don't know what we can do with it.
+//
 static void adjustFrequency( Breakpoint & bp, const Partial & ref, 
                              Partial::label_type harmonicNum,
                              double thresholdDb,
@@ -999,33 +1003,35 @@ static void adjustFrequency( Breakpoint & bp, const Partial & ref,
     if ( ref.numBreakpoints() != 0 && 
          bp.amplitude() < BeginFade )
     {
-        double alpha = std::max( ( BeginFade - bp.amplitude() ) * OneOverFadeSpan, 1. );
+        double alpha = std::min( ( BeginFade - bp.amplitude() ) * OneOverFadeSpan, 1. );
         double fRef = ref.frequencyAt( time );
         bp.setFrequency( ( alpha * ( fRef * fscale ) ) + 
-                             ( (1 - alpha ) * bp.frequency() ) );
+                             ( (1 - alpha) * bp.frequency() ) );
     }
 }
 
 // ---------------------------------------------------------------------------
-//    fix_frequencies
+//    apply_reference_partial
 // ---------------------------------------------------------------------------
-//    Local helper function to correct the frequencies of low-amplitude
-//    breakpoints using a reference Partial.
+// Local helper function to correct the frequencies of low-amplitude
+// breakpoints using a reference Partial.
 //
-// This needs a new name, because when we improve phase morphing, we
-// will have another kind of frequency fixing as well.
-//
-static void fix_frequencies( Partial & fixme, const Partial & reference, 
-                                    double thresholdDb )
+//  HEY
+// This funciton is no longer needed, can just apply a frequency
+// adjustment in morphSrc/TgtBreapoint.
+// Nulls are added at ends in morph_aux.
+#if 0
+static void apply_reference_partial( Partial & fixme, const Partial & reference, 
+                                     double thresholdDb )
 {
     //    sanity
     if ( 0 == reference.size() )
     {
-        Throw( InvalidArgument, "reference Partial in fix_frequencies must not be empty" );
+        Throw( InvalidArgument, "reference Partial in apply_reference_partial must not be empty" );
     }
 
     //    nothing to do if fixme is the reference Partial:
-    if ( true ) //&fixme != &reference )
+    if ( &fixme != &reference )
     {
         //    compute absolute magnitude thresholds:
         const double FadeRangeDB = 10;
@@ -1044,6 +1050,9 @@ static void fix_frequencies( Partial & fixme, const Partial & reference,
         //    all Breakpoints earlier in fixme than bpPos have
         //    amplitudes greater than the reference frequency
         //    threshold, or their frequencies have been "fixed".
+        
+        //  This can be done later, in the appendMorphed functions.
+#if 0        
         for ( Partial::iterator bpPos = fixme.begin(); bpPos != fixme.end(); ++bpPos )
         {   /*
             if ( bpPos->amplitude() < BeginFade )
@@ -1060,7 +1069,8 @@ static void fix_frequencies( Partial & fixme, const Partial & reference,
             adjustFrequency( bpPos.breakpoint(), reference, fixme.label(),
                              thresholdDb, bpPos.time() );
         }                
-        
+#endif
+                
         //    Breakpoints in the reference Partial that are before the
         //    start of fixme should introduce zero-amplitude Breakpoints
         //    in fixme.
@@ -1070,17 +1080,25 @@ static void fix_frequencies( Partial & fixme, const Partial & reference,
         //    Partial, all Breakpoints earlier than earlyBpPos have been 
         //    added to fix me as zero amplitude Breakpoints at the 
         //    appropriate frequency multiple (fscale, above)
-        //
-        //    Need to cache the start time of fixme, otherwise the
-        //    loop will always terminate after the fist iteration,
-        //    because the earliest Breakpoint is inserted first.
-        Partial::const_iterator earlyBpPos = reference.begin();
-        const double oldStartTime = fixme.startTime();
-        while ( ( earlyBpPos != reference.end() ) && ( earlyBpPos.time() < oldStartTime ) )
+        
+//#define OLDWAY
+// %%%%%%% HEY LOOKIE HERE
+#if 1
+        Partial::const_iterator earlyBpPos = reference.findAfter( fixme.startTime() );
+        while( earlyBpPos != reference.begin() )
         {
+            --earlyBpPos;
+            
+            #ifdef OLDWAY
             Breakpoint silentBreakpoint = earlyBpPos.breakpoint();
             silentBreakpoint.setAmplitude( 0 );
             silentBreakpoint.setFrequency( silentBreakpoint.frequency() * fscale );
+            #else
+            Breakpoint silentBreakpoint = fixme.parametersAt( earlyBpPos.time() );
+            adjustFrequency( silentBreakpoint, reference, fixme.label(),
+                             thresholdDb, earlyBpPos.time() );
+            #endif
+            
             fixme.insert( earlyBpPos.time(), silentBreakpoint );
             
             /*
@@ -1088,9 +1106,9 @@ static void fix_frequencies( Partial & fixme, const Partial & reference,
                      << " and frequency " << silentBreakpoint.frequency()
                      << " at front of Partial labeled " << fixme.label() << endl;
             */
-            ++earlyBpPos;
         }
-        
+#endif     
+
         //    Breakpoints in the reference Partial that are after the
         //    end of fixme should introduce zero-amplitude Breakpoints
         //    in fixme.
@@ -1100,17 +1118,20 @@ static void fix_frequencies( Partial & fixme, const Partial & reference,
         //    Partial, all Breakpoints later than lateBpPos have been 
         //    added to fix me as zero amplitude Breakpoints at the 
         //    appropriate frequency multiple (fscale, above)
-        //
-        //    Need to cache the end time of fixme, otherwise the
-        //    loop will always terminate after the fist iteration,
-        //    because the latest Breakpoint is inserted first.
-        Partial::const_iterator lateBpPos = --( reference.end() );
-        const double oldEndTime = fixme.endTime();
-        while ( lateBpPos.time() > oldEndTime )
+#if 0        
+        Partial::const_iterator lateBpPos = reference.findAfter( fixme.endTime() );
+        while( lateBpPos != reference.end() )
         {
+            #ifdef OLDWAY
             Breakpoint silentBreakpoint = lateBpPos.breakpoint();
             silentBreakpoint.setAmplitude( 0 );
             silentBreakpoint.setFrequency( silentBreakpoint.frequency() * fscale );
+            #else
+            Breakpoint silentBreakpoint = fixme.parametersAt( lateBpPos.time() );
+            adjustFrequency( silentBreakpoint, reference, fixme.label(),
+                             thresholdDb, lateBpPos.time() );
+            #endif
+                        
             fixme.insert( lateBpPos.time(), silentBreakpoint );
             
             /*
@@ -1118,14 +1139,12 @@ static void fix_frequencies( Partial & fixme, const Partial & reference,
                      << " and frequency " << silentBreakpoint.frequency()
                      << " at end of Partial labeled " << fixme.label() << endl;
             */
-            if ( lateBpPos == reference.begin() )
-            {
-                break;    // YIK! need to think of a better way
-            }
-            --lateBpPos;
+            ++lateBpPos;
         }
+#endif      
     }
 }
+#endif
 
 // ---------------------------------------------------------------------------
 //    partial_is_nonnull
@@ -1185,7 +1204,7 @@ void Morpher::morph_aux( PartialCorrespondence & correspondence  )
                 //    find quiet parts of the source Partial,
                 //    and use scaled reference frequencies for 
                 //    those Breakpoints:
-                fix_frequencies( src, _srcRefPartial, _freqFixThresholdDb );        
+                //apply_reference_partial( src, _srcRefPartial, _freqFixThresholdDb );        
             }
         }
         else if ( _srcRefPartial.numBreakpoints() != 0 )
@@ -1208,7 +1227,7 @@ void Morpher::morph_aux( PartialCorrespondence & correspondence  )
                 //    find quiet parts of the target Partial,
                 //    and use scaled reference frequencies for 
                 //    those Breakpoints:
-                fix_frequencies( tgt, _tgtRefPartial, _freqFixThresholdDb );
+                //apply_reference_partial( tgt, _tgtRefPartial, _freqFixThresholdDb );
             }
         }
         else if ( _tgtRefPartial.numBreakpoints() != 0 )
@@ -1219,10 +1238,44 @@ void Morpher::morph_aux( PartialCorrespondence & correspondence  )
         }
         //    else tgt is a dummy
         
-        debugger << "morphing " << ( ( 0 < src.size() )?( 1 ):( 0 ) )
-                   << " and " << ( ( 0 < tgt.size() )?( 1 ):( 0 ) )
+        debugger << "morphing " << ( ( 0 < src.numBreakpoints() )?( 1 ):( 0 ) )
+                   << " and " << ( ( 0 < tgt.numBreakpoints() )?( 1 ):( 0 ) )
                    << " partials with label " <<    label << endl;
                    
+        //  &^)     HEY LOOKIE HERE!!!!!!!!!!!!!                   
+        // try this kludge:
+        if ( src.numBreakpoints() != 0 )
+        {
+            if ( src.first().amplitude() != 0.0 && src.startTime() > _minBreakpointGapSec )
+            {
+                double t = src.startTime() - _minBreakpointGapSec;
+                Breakpoint null = src.parametersAt( t );
+                src.insert( t, null );
+            }
+            if ( src.last().amplitude() != 0.0 )
+            {
+                double t = src.endTime() + _minBreakpointGapSec;
+                Breakpoint null = src.parametersAt( t );
+                src.insert( t, null );
+            }
+        }
+        
+        if ( tgt.numBreakpoints() != 0 )
+        {            
+            if ( tgt.first().amplitude() != 0.0 && tgt.startTime() > _minBreakpointGapSec )
+            {
+                double t = tgt.startTime() - _minBreakpointGapSec;
+                Breakpoint null = tgt.parametersAt( t );
+                tgt.insert( t, null );
+            }
+            if ( tgt.last().amplitude() != 0.0 )
+            {
+                double t = tgt.endTime() + _minBreakpointGapSec;
+                Breakpoint null = tgt.parametersAt( t );
+                tgt.insert( t, null );
+            }
+        }
+                          
         Partial newp = morphPartial( src, tgt, label );
         if ( partial_is_nonnull( newp ) )
         {
@@ -1574,33 +1627,29 @@ fixPhaseTravel( const Breakpoint & bp0, Breakpoint & bp1, double dt, double alph
 // ---------------------------------------------------------------------------
 //    appendMorphedSrc
 // ---------------------------------------------------------------------------
-//!    Compute morphed parameter values at the specified time, using
-//!    the source Breakpoint (assumed to correspond exactly to the
-//!    specified time) and the target Partial (whose parameters are
-//!    examined at the specified time). Append the morphed Breakpoint
-//!    to newp only if the target should contribute to the morph at
-//!    the specified time.
+//! Compute morphed parameter values at the specified time, using
+//! the source Breakpoint (assumed to correspond exactly to the
+//! specified time) and the target Partial (whose parameters are
+//! examined at the specified time). Append the morphed Breakpoint
+//! to newp only if the source should contribute to the morph at
+//! the specified time.
 //!
-//!    \pre    the target Partial may not be a dummy Partial (no Breakpoints).
+//! If the target Partial is a dummy Partial (no Breakpoints), fade the
+//! source instead of morphing.
 //!
-//!    \param  srcBkpt is the Breakpoint corresponding to a morph function
-//!            value of 0.
-//!    \param  tgtPartial is the Partial corresponding to a morph function
-//!            value of 1, evaluated at the specified time.
-//!    \param  time is the time corresponding to srcBkpt (used
-//!            to evaluate the morphing functions and tgtPartial).
-//!    \param  newp is the morphed Partial under construction, the morphed
-//!            Breakpoint is added to this Partial.
+//! \param  srcBkpt is the Breakpoint corresponding to a morph function
+//!         value of 0.
+//! \param  tgtPartial is the Partial corresponding to a morph function
+//!         value of 1, evaluated at the specified time.
+//! \param  time is the time corresponding to srcBkpt (used
+//!         to evaluate the morphing functions and tgtPartial).
+//! \param  newp is the morphed Partial under construction, the morphed
+//!         Breakpoint is added to this Partial.
 //
 void
 Morpher::appendMorphedSrc( Breakpoint srcBkpt, const Partial & tgtPartial, 
                            double time, Partial & newp  )
 {
-    if ( 0 == tgtPartial.numBreakpoints() )
-    {
-        Throw( InvalidArgument, "morphSrcBreakpoint cannot morph with empty Partial" );
-    }
-    
     double fweight = _freqFunction->valueAt( time );
     double aweight = _ampFunction->valueAt( time );
     double bweight = _bwFunction->valueAt( time );
@@ -1612,91 +1661,178 @@ Morpher::appendMorphedSrc( Breakpoint srcBkpt, const Partial & tgtPartial,
          aweight < MaxMorphParam ||
          bweight < MaxMorphParam )
     {
-        Breakpoint tgtBkpt = tgtPartial.parametersAt( time );
-        
-       // adjustFrequency( srcBkpt, _srcRefPartial, newp.label(), _freqFixThresholdDb, time );
-        //adjustFrequency( tgtBkpt, _tgtRefPartial, newp.label(), _freqFixThresholdDb, time );
-        
-        // compute interpolated Breakpoint parameters:
-        Breakpoint morphed = interpolateParameters( srcBkpt, tgtBkpt, fweight, 
-                                                    aweight, _ampMorphShape, bweight );
+        if ( 0 == tgtPartial.numBreakpoints() )
+        {
+            // hey, can this ever happen?
+            // only if no tgt reference is used
+            if ( 0 == _tgtRefPartial.numBreakpoints() )
+            {
+                newp.insert( time, fadeSrcBreakpoint( srcBkpt, time ) );
+            }
+           else
+           {
+//////////////////////////
+#if 0
+                //  THIS IS NEW AND UNTESTED, AND WON'T EVER 
+                //  HAPPEN AS LONG AS MORPH_AUX IS CONSTRUCTING
+                //  FAKE PARTIALS FROM THE REFERENCE PARTIAL
+                Breakpoint tgtBkpt = _tgtRefPartial.parametersAt( time );
+                tgtBkpt.setFrequency( newp.label() * tgtBkpt.frequency() ); // label had better be right!
+                tgtBkpt.setAmplitude( 0 );
+                tgtBkpt.setBandwidth( 0 );
+                // no idea what phase should be! How about same as source????????
+                tgtBkpt.setPhase( srcBkpt.phase() );
+
+                
+                adjustFrequency( srcBkpt, _srcRefPartial, newp.label(), _freqFixThresholdDb, time );
+                
+                
+                // compute interpolated Breakpoint parameters:
+                Breakpoint morphed = interpolateParameters( srcBkpt, tgtBkpt, fweight, 
+                                                            aweight, _ampMorphShape, bweight );
+
+    #if MORPH_PHASE_TRAVEL
+                // correct phase travel:
+                if ( 0 != newp.numBreakpoints() )
+                {
+                    double dt = ( time - newp.endTime() );
+                    fixPhaseTravel( newp.last(), morphed, dt, fweight );
+                }
+    #endif
+     
+                newp.insert( time, morphed );
+#endif            
+////////////////////////////
+            }
+        }    
+        else
+        {
+            Breakpoint tgtBkpt = tgtPartial.parametersAt( time );
+            
+// %%%%%%% HEY LOOKIE HERE
+            adjustFrequency( srcBkpt, _srcRefPartial, newp.label(), _freqFixThresholdDb, time );
+            adjustFrequency( tgtBkpt, _tgtRefPartial, newp.label(), _freqFixThresholdDb, time );
+            
+            // compute interpolated Breakpoint parameters:
+            Breakpoint morphed = interpolateParameters( srcBkpt, tgtBkpt, fweight, 
+                                                        aweight, _ampMorphShape, bweight );
 
 #if MORPH_PHASE_TRAVEL
-        // correct phase travel:
-        // (This is identical in the function below.)
-        if ( 0 != newp.numBreakpoints() )
-        {
-            double dt = ( time - newp.endTime() );
-            fixPhaseTravel( newp.last(), morphed, dt, fweight );
-        }
+            // correct phase travel:
+            // (This is identical in the function below.)
+            //
+            //  HEY
+            //  maybe should toss out the interpolated phase and
+            //  replace it with the nearest source phase before
+            //  doing this fix?
+            //
+            //  Probably that makes no sense either.
+            if ( 0 != newp.numBreakpoints() )
+            {
+                /*
+                if ( fweight < .5 )
+                {
+                    morphed.setPhase( srcBkpt.phase() );
+                }
+                else
+                {
+                    morphed.setPhase( tgtBkpt.phase() );
+                }
+                */
+                double dt = ( time - newp.endTime() );
+                fixPhaseTravel( newp.last(), morphed, dt, fweight );
+            }
 #endif
  
-        newp.insert( time, morphed );
+            newp.insert( time, morphed );
+        }
     }
 }
 
 // ---------------------------------------------------------------------------
 //    appendMorphedTgt
 // ---------------------------------------------------------------------------
-//!    Compute morphed parameter values at the specified time, using
-//!    the target Breakpoint (assumed to correspond exactly to the
-//!    specified time) and the source Partial (whose parameters are
-//!    examined at the specified time). Append the morphed Breakpoint
-//!    to newp only if the target should contribute to the morph at
-//!    the specified time.
+//! Compute morphed parameter values at the specified time, using
+//! the target Breakpoint (assumed to correspond exactly to the
+//! specified time) and the source Partial (whose parameters are
+//! examined at the specified time). Append the morphed Breakpoint
+//! to newp only if the target should contribute to the morph at
+//! the specified time.
 //!
-//!    \pre    the source Partial may not be a dummy Partial (no Breakpoints).
+//! If the source Partial is a dummy Partial (no Breakpoints), fade the
+//! target instead of morphing.
 //!
-//!    \param  tgtBkpt is the Breakpoint corresponding to a morph function
-//!            value of 1.
-//!    \param  srcPartial is the Partial corresponding to a morph function
-//!            value of 0, evaluated at the specified time.
-//!    \param  time is the time corresponding to srcBkpt (used
-//!            to evaluate the morphing functions and srcPartial).
-//!    \param  newp is the morphed Partial under construction, the morphed
-//!            Breakpoint is added to this Partial.
+//! \param  tgtBkpt is the Breakpoint corresponding to a morph function
+//!         value of 1.
+//! \param  srcPartial is the Partial corresponding to a morph function
+//!         value of 0, evaluated at the specified time.
+//! \param  time is the time corresponding to srcBkpt (used
+//!         to evaluate the morphing functions and srcPartial).
+//! \param  newp is the morphed Partial under construction, the morphed
+//!         Breakpoint is added to this Partial.
 //
 void
 Morpher::appendMorphedTgt( Breakpoint tgtBkpt, const Partial & srcPartial, 
                            double time, Partial & newp  )
-{
-    if ( 0 == srcPartial.numBreakpoints() )
-    {
-        Throw( InvalidArgument, "morphTgtBreakpoint cannot morph with empty Partial" );
-    }
-    
+{    
     double fweight = _freqFunction->valueAt( time );
     double aweight = _ampFunction->valueAt( time );
     double bweight = _bwFunction->valueAt( time );
-    
-   //    Don't insert Breakpoints at src times if all 
-   //    morph functions equal 0 (or < MinMorphParam).
-   const double MinMorphParam = .1;
-   if ( fweight > MinMorphParam ||
-        aweight > MinMorphParam ||
-        bweight > MinMorphParam )
-   {
-      Breakpoint srcBkpt = srcPartial.parametersAt( time );
-      
-       // adjustFrequency( srcBkpt, _srcRefPartial, newp.label(), _freqFixThresholdDb, time );
-       // adjustFrequency( tgtBkpt, _tgtRefPartial, newp.label(), _freqFixThresholdDb, time );
 
-      // compute interpolated Breakpoint parameters:           
-      Breakpoint morphed = interpolateParameters( srcBkpt, tgtBkpt, fweight, 
-                                                   aweight, _ampMorphShape, bweight );
+    //    Don't insert Breakpoints at src times if all 
+    //    morph functions equal 0 (or < MinMorphParam).
+    const double MinMorphParam = .1;
+    if ( fweight > MinMorphParam ||
+         aweight > MinMorphParam ||
+         bweight > MinMorphParam )
+    {
+        if ( 0 == srcPartial.numBreakpoints() )
+        {
+            // hey, can this ever happen?
+            // only if no src reference is used.
+            newp.insert( time, fadeTgtBreakpoint( tgtBkpt, time ) );
+        }
+        else
+        {
+            Breakpoint srcBkpt = srcPartial.parametersAt( time );
+
+// %%%%%%% HEY LOOKIE HERE
+            adjustFrequency( srcBkpt, _srcRefPartial, newp.label(), _freqFixThresholdDb, time );
+            adjustFrequency( tgtBkpt, _tgtRefPartial, newp.label(), _freqFixThresholdDb, time );
+
+            // compute interpolated Breakpoint parameters:           
+            Breakpoint morphed = interpolateParameters( srcBkpt, tgtBkpt, fweight, 
+                                                        aweight, _ampMorphShape, bweight );
 
 #if MORPH_PHASE_TRAVEL
-     // correct phase travel:
-     // (This is identical in the function above.)
-     if ( 0 != newp.numBreakpoints() )
-     {
-         double dt = ( time - newp.endTime() );
-         fixPhaseTravel( newp.last(), morphed, dt, fweight );
-     }
+            // correct phase travel:
+            // (This is identical in the function above.)
+            //  HEY
+            //  maybe should toss out the interpolated phase and
+            //  replace it with the nearest source phase before
+            //  doing this fix?
+            //
+            //  Probably that makes no sense either.
+            if ( 0 != newp.numBreakpoints() )
+            {
+                /*
+                if ( fweight < .5 )
+                {
+                    morphed.setPhase( srcBkpt.phase() );
+                }
+                else
+                {
+                    morphed.setPhase( tgtBkpt.phase() );
+                }
+                */
+                double dt = ( time - newp.endTime() );
+                fixPhaseTravel( newp.last(), morphed, dt, fweight );
+            }
 #endif
 
-      newp.insert( time, morphed );
-   }
+            newp.insert( time, morphed );
+        }
+    }
 }
 
 }    //    end of namespace Loris
