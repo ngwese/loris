@@ -9,12 +9,81 @@ Please send Loris bug reports to loris@cerlsoundgroup.org.
 -------------------------------------------------------
 changes since 1.2 release:
 
-- fixed floating point rounding errors in SDIF export 
+Command-line utilities:
+
+Several command-line utility programs have been added to
+loris_analyze (now called loris-analyze) and
+loris_spewmarkers (now called loris-spewmarkers), which
+were introduced in Loris 1.2. The new utilities include:
+
+- loris-dilate - a utility for dilating partials stored
+in a SDIF file and saving the dilated partials in
+another SDIF file.
+
+- loris-mark and loris-unmark - utilities for adding and
+removing markers in AIFF, SDIIF, and Spc files.
+
+- loris-synthesize - a synthesis utility for rendering
+Partials stored in a SDIF file, optionally with dilation
+and constant amplitude and frequency scaling.
+
+Morphing improvements:
+
+- changed amplitude morphing to use a shaping parameter
+that allows much smoother-sounding morphs, by performing
+multiplicative (additiive in log scale) amplitude
+morphing. The old linear behavior can be achieved (or
+very-nearly approximated) by setting this parameter to
+something big (like 10000), but setting it to something
+on the order of 1E-5 often sounds more natural, and
+setting it very small like 1E-12 causes very
+abrupt-sounding transitions. Bandwidth is morphed using
+the same shaping scheme.
+
+- added frequency reference envelope parameter to
+Morpher, so that a strong reference Partial can be used
+to estimate frequencies of very weak ones (only works
+for harmonically-labeled Partials). A threshold
+parameter for idetifying weak Partials goes with this.
+
+- added a Morpher parameter for controlling the minimum
+time between Breakpoints in a morphed Partial, to reduce
+the abundance of Breakpoint data that the Morpher can
+generate.
+
+- extended morphing functionality in scripting and
+procedural interfaces to allow morphing with refernce
+envelopes and access to the amplitude morph shaping
+parameter.
+
+Csound opcode improvements:
+
+- updated Csound opcodes to be compatible with current
+versions of Csound that support dynamic loading of
+opcode libraries, so it is no longer necessary to
+rebuild the csound application to integrate the Loris
+opcodes. Added csound detection and building of the
+opcode librarty to autobuild process. This works most
+reliably with ABS distributions of Csound version 4.
+(Many thanks to Michael Gogins and John Ramsdell for
+making this possible.)
+
+- included versions of the opcode source that are
+compatible with Csound 5 (though these are not yet used
+in the build, they can be used to build an opcode
+library for Csound 5, many thanks to Michael Gogins for
+contributing these.)
+
+Bug fixes:
+
+- improved phase accuracy of synthesis.
+
+- fixed floating point rounding errors in SDIF export
 that were causing some breakpoints to be lost in the
-export process (thanks to Michael Klingbeil for help 
+export process (thanks to Michael Klingbeil for help
 finding these errors!). Part of this fix is to use
 double precision floating point numbers in SDIF files
-from now on, so Loris SDIF files are twice as big as 
+from now on, so Loris SDIF files are twice as big as
 they used to be. Old SDIF files (with single-precision
 floats) are still imported, but export is always double
 precision.
@@ -22,78 +91,33 @@ precision.
 - fixed phase interpolation in the phaseAt operation,
 and improved it in the Morpher.
 
-- changed amplitude morphing to use a shaping parameter
-that allows much smoother-sounding morphs, by performing
-multiplicative (additiive in log scale) amplitude morphing.
-The old linear behavior can be achieved (or very-nearly
-approximated) by setting this parameter to something big
-(like 10000), but setting it to something on the order of
-1E-5 often sounds more natural, and setting it very small
-like 1E-12 causes very abrupt-sounding transitions.
+Other changes and enhancements:
 
-- added frequency reference envelope parameter to 
-Morpher, so that a strong reference Partial can be used 
-to estimate frequencies of very weak ones (only works for
-harmonically-labeled Partials). A threshold parameter for
-idetifying weak Partials goes with this.
+- improved scripting interface to take advantage of new
+capabilities of SWIG, including support for C++ STL
+vectors. SampleVector is now just a DoubleVector, and it
+acts like a list in the native language, instead of
+having its own idiosyncratic behavior. THIS BREAKS OLD
+CODE, but makes it much easier to work with samples
+in the scripting interface.
 
-- added a Morpher parameter for controlling the minimum 
-time between Breakpoints in a morphed Partial, to reduce 
-the abundance of Breakpoint data that the Morpher can 
-generate.
-
-- improved scripting interface to take advantage of 
-new capabilities of SWIG, including support for C++
-STL vectors. SampleVector is now just a DoubleVector,
-and it acts like a list in the native language, instead
-of having its own idiosyncratic behavior. THIS BREAKS
-OLD CODE.
-
-- improved phase accuracy of synthesis.
-
-- Added a command line utility for adding markers to AIFF, 
-SDIIF, and Spc files, and another for removing markers
-(loris_mark and loris_unmark).
-
-- Overhauled PartialUtils. All functors have been renamed
-and all have corresponding functions. Names are now 
-consistent and predictable. THIS BREAKS OLD CODE, but the
-old PartialUtils were such a mess...
+- overhauled PartialUtils. All functors have been
+renamed and all have corresponding functions. Names are
+now consistent and predictable. THIS BREAKS OLD CODE,
+but the old PartialUtils were such a mess...
 
 - Dilator now can compute new times for Markers, using
 the same interface as for dilating Partials.
 
-- Added a simple command line synthesis utility for
-rendering Partials stored in a SDIF file, optionally
-with dilation and constant amplitude and frequency 
-scaling.
+- renamed BreakpointEnvelope to LinearEnvelope, to
+eliminate confusion with the Breakpoint envelopes that
+make up Partials. BreakpointEnvelope is still around as
+a deprecated typedef, but related operations in the
+procedural and scripting interfaces have been renamed.
+THIS BREAKS OLD CODE, but it is less confusing.
 
-- Updated Csound opcodes to be compatible with current
-versions of Csound that support dynamic loading of opcode
-libraries, so it is no longer necessary to rebuild the
-csound application to integrate the Loris opcodes. Added
-csound detection and building of the opcode librarty to 
-autobuild process. This works most reliably with ABS
-distributions of Csound version 4.
-
-- Renamed BreakpointEnvelope to LinearEnvelope, to 
-eliminate confusion with the Breakpoint envelopes
-that make up Partials. BreakpointEnvelope is still
-around as a deprecated typedef, but related operations
-in the procedural and scripting interfaces have been 
-renamed. THIS BREAKS CODE.
-
-- Added experimental fundamental frequency estimator,
+- added experimental fundamental frequency estimator,
 called Fundamental.
-
-- Added dilator utility for dilating partials stored 
-in a SDIF file and saving the dilated partials in another
-SDIF file.
-
-- Extended morphing functionality in scripting and
-procedural interfaces to allow morphing with refernce
-envelopes and access to the amplitude morph shaping 
-parameter.
 
 -------------------------------------------------------
 changes since 1.1 release:
