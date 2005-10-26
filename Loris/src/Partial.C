@@ -518,7 +518,9 @@ Partial::erase( iterator pos )
 {
 	if ( pos != end() )
 	{
-		pos = erase( pos, ++pos );
+		iterator b= pos;
+		iterator e = ++pos;
+		pos = erase( b, e );
 	}
 	return pos;
 }
