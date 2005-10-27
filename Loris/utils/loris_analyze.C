@@ -45,10 +45,13 @@
 #include "AiffFile.h"
 #include "Analyzer.h"
 #include "Channelizer.h"
+#include "Collator.h"
 #include "Distiller.h"
 #include "FrequencyReference.h"
+#include "PartialUtils.h"
 #include "Resampler.h"
 #include "SdifFile.h"
+#include "Sieve.h"
 
 using std::cout;
 using std::endl;
@@ -76,9 +79,12 @@ string gInFileName, gOutFileName = "partials.sdif", gTestFileName;
 Loris::Analyzer * gAnalyzer = 0;
 bool gCollate = false;
 double gDistill = 0;
+double gSift = 0;
 double gResample = 0;
 bool gVerbose = false;
 double gRate = 44100;
+
+double FadeTime = 0.002; // 2 ms Partial fade time, not configurable
 
 // ----------------------------------------------------------------
 //  command-line options string
@@ -264,11 +270,11 @@ public:
         cout << "* will collate partials" << endl;
 
         //  collation overrides distillation
-        if ( gCollate )
+        if ( gDistill || gSift )
         {
             cout << "* collate specification overrides "
-                    "distillation specification" << endl;                  
-            gDistill = 0;
+                    "distillation or sifting specification" << endl;                  
+            gDistill = gSift = 0;
         }
     }
 };
@@ -301,11 +307,50 @@ public:
         args.pop();
 
         //  distillation overrides collation
-        if ( gCollate )
+        if ( gCollate || gSift )
         {
             cout << "* distillation specification overrides "
-                    "collation specification" << endl;                 
+                    "collation and sifting specification" << endl;                 
             gCollate = false;
+				gSift = 0;
+        }
+    }
+};
+
+class SiftCommand : public Command
+{
+public:
+    //  set the global flag indicating that the
+    //  Partials should be distilled before export
+    void execute( Arguments & args ) const 
+    {
+        //  requires a numeric parameter
+        double x;
+        if ( args.empty() || !argIsNumber( args.top(), &x ) )
+        {
+            throw std::invalid_argument("sifting specification "
+                                        "requires a number");
+        }
+        
+        if ( x <= 0 )
+        {
+            throw std::invalid_argument("sifting specification "
+                                        "must be positive");
+        }
+
+        gSift = x;
+        cout << "* will sift partials assuming a fundamental of approximately " 
+             << gSift << " Hz" << endl;
+        
+        args.pop();
+
+        //  distillation overrides collation
+        if ( gCollate || gDistill )
+        {
+            cout << "* sifting specification overrides "
+                    "collation and distillation specification" << endl;                 
+            gCollate = false;
+				gDistill = 0;
         }
     }
 };
@@ -760,6 +805,7 @@ int main( int argc, char * argv[] )
     commands["-render"] = commands["-synth"] = new TestfileCommand();
     commands["-collate"] = new CollateCommand();
     commands["-distill"] = commands["-dist"] = new DistillCommand();
+    commands["-sift"] = new SiftCommand();
     commands["-resample"] = commands["-resamp"] = new ResampleCommand();
     commands["-hop"] = commands["-hoptime"] = new SetHopTimeCommand();
     commands["-crop"] = commands["-croptime"] = new SetCropTimeCommand();
@@ -852,28 +898,50 @@ int main( int argc, char * argv[] )
         gAnalyzer->analyze( samples, analysisRate );
         cout << "* analysis complete" << endl;  
         
-        if ( gDistill > 0 )
+        if ( gDistill > 0 || gSift > 0 )
         {
+				double refFreq = (gDistill!=0)?(gDistill):(gSift);
+				
             cout << "* extracting frequency reference envelope" << endl;
             Loris::FrequencyReference ref( gAnalyzer->partials().begin(), 
                                            gAnalyzer->partials().end(),
-                                           0.8 * gDistill, 1.2 * gDistill );
+                                           0.8 * refFreq, 1.2 * refFreq );
             Loris::Channelizer chan( ref, 1 );
             cout << "* channelizing " << gAnalyzer->partials().size() 
                  << " partials" << endl;
             chan.channelize( gAnalyzer->partials().begin(), 
                              gAnalyzer->partials().end() );
-            Loris::Distiller dist;
-            cout << "* distilling " << gAnalyzer->partials().size() 
-                 << " partials" << endl;
-            dist.distill( gAnalyzer->partials() );
+									  
+				if ( gDistill > 0 )
+				{
+					cout << "* distilling " << gAnalyzer->partials().size() 
+						  << " partials" << endl;
+					Loris::PartialList::iterator it = 			
+						std::remove_if( gAnalyzer->partials().begin(), gAnalyzer->partials().end(), 
+							             Loris::PartialUtils::isLabelEqual( 0 ) );
+					gAnalyzer->partials().erase( it, gAnalyzer->partials().end() );
+
+					Loris::Distiller::distill( gAnalyzer->partials(), FadeTime, FadeTime/2 );
+				}
+				else
+				{
+					cout << "* sifting " << gAnalyzer->partials().size() 
+						  << " partials" << endl;
+					Loris::Sieve::sift( gAnalyzer->partials().begin(), gAnalyzer->partials().end(), 
+											  FadeTime );
+					Loris::PartialList::iterator it = 			
+						std::remove_if( gAnalyzer->partials().begin(), gAnalyzer->partials().end(), 
+							             Loris::PartialUtils::isLabelEqual( 0 ) );
+					gAnalyzer->partials().erase( it, gAnalyzer->partials().end() );
+
+					Loris::Distiller::distill( gAnalyzer->partials(), FadeTime, FadeTime/2 );
+				}
         }
         else if ( gCollate )
         {
             cout << "* collating " << gAnalyzer->partials().size();
             cout << " partials" << endl;
-            Loris::Distiller dist;
-            dist.distill( gAnalyzer->partials() );
+            Loris::Collator::collate( gAnalyzer->partials(), FadeTime, FadeTime/2 );
         }
         
         if ( gResample > 0 )

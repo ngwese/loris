@@ -194,8 +194,8 @@ void Sieve::sift( PartialList::iterator sift_begin, PartialList::iterator sift_e
 //! fade time (in seconds), and use it to sift a
 //! sequence of Partials. 
 //!
-//!	\param sift_begin is the beginning of the range of Partials to sift
-//!	\param sift_end is (one-past) the end of the range of Partials to sift
+//!	\param	sift_begin is the beginning of the range of Partials to sift
+//!	\param	sift_end is (one-past) the end of the range of Partials to sift
 //!   \param   partialFadeTime is the extra time (in seconds)  
 //!            added to each end of a Partial to accomodate 
 //!            the fade to and from zero amplitude. The Partial fade time

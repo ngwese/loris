@@ -45,21 +45,21 @@ namespace Loris {
 // ---------------------------------------------------------------------------
 //	class Collator
 //
-//!	Class Collator represents an algorithm for reducing a collection
-//!	of Partials into the smallest collection of "equivalent" Partials
+//! Class Collator represents an algorithm for reducing a collection
+//! of Partials into the smallest collection of "equivalent" Partials
 //! by joining non-overlapping Partials end to end.
 //!	
-//!	Partials that are not labeled, that is, Partials having label 0,
-//!	are are "collated " into groups of non-overlapping (in time)
+//! Partials that are not labeled, that is, Partials having label 0,
+//! are are "collated " into groups of non-overlapping (in time)
 //! Partials, and fused into a single Partial per group. 
 //! "Collating" is a bit like "distilling" but non-overlapping
 //! Partials are grouped without regard to frequency proximity. This
 //! algorithm produces the smallest-possible number of collated Partials.
 //! Thanks to Ulrike Axen for providing this optimal algorithm.
 //!	
-//!	Collating modifies the Partial container (a PartialList). Only
-//!	unlabeled (labeled 0) Partials are affected by the collating
-//!	operation. Collated Partials are moved to the end of the 
+//! Collating modifies the Partial container (a PartialList). Only
+//! unlabeled (labeled 0) Partials are affected by the collating
+//! operation. Collated Partials are moved to the end of the 
 //! collection of Partials.
 //
 class Collator
