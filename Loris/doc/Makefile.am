@@ -8,7 +8,7 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-EXTRA_DIST = LorisCDoc.html index.html Doxyfile
+EXTRA_DIST = Doxyfile
 			 
 # add something to build docs using doxygen, if it is present
 
