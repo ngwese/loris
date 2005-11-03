@@ -8,11 +8,15 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-EXTRA_DIST = Doxyfile opcodes.html
+EXTRA_DIST = Doxyfile.in opcodes.html
 			 
-noinst_DATA = html 
+noinst_DATA = 
 
 # add something to build docs using doxygen, if it is present
+if HAVE_DOXYGEN
+
+noinst_DATA += html 
+
 
 CPP_HTML_DIR = html
 HTML = ${CPP_HTML_DIR}/index.html
@@ -30,21 +34,7 @@ ${PDF}: ${HTML}
 
 pdf: ${PDF}
 
-pi:
-	cp ${top_srcdir}/src/loris.h .
-
-
-SCRIPTINGDIR = ${top_srcdir}/scripting
-
-if DARWIN
-SET_DARWIN_ENV = env DYLD_LIBRARY_PATH=$(top_builddir)/src/.libs
 endif
 
-
-py:
-	env PYTHONPATH=${SCRIPTINGDIR}:${SCRIPTINGDIR}/.libs \
-	    ${SET_DARWIN_ENV} pydoc -w loris; \
-		mv loris.html python_module.html
-
-MAINTAINERCLEANFILES = 	Makefile.in
+MAINTAINERCLEANFILES = 	Makefile.in Doxyfile
 

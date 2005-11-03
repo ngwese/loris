@@ -33,13 +33,13 @@ dnl each release!!!!!
 LORIS_MAJOR_VERSION=1
 LORIS_MINOR_VERSION=3
 LORIS_SUBMINOR_VERSION=0
-LORIS_PRERELEASE_STR="beta9"
+LORIS_PRERELEASE_STR=""
 LORIS_VERSION_STR="$PACKAGE_STRING$LORIS_PRERELEASE_STR"
 AC_SUBST(LORIS_MAJOR_VERSION)
 AC_SUBST(LORIS_MINOR_VERSION)
 AC_SUBST(LORIS_SUBMINOR_VERSION)
 AC_SUBST(LORIS_VERSION_STR)
-AC_CONFIG_FILES([src/loris.h])
+AC_CONFIG_FILES([src/loris.h doc/Doxyfile])
 
 dnl----------------------------------------------------------------
 dnl Checks for programs.
@@ -51,11 +51,13 @@ AM_PROG_LIBTOOL
 AC_LIBTOOL_CXX
 
 AC_ARG_VAR([DOXYGEN], 
-	   [Path to doxygen when available])
+       [Path to doxygen when available])
 AC_PATH_PROG([DOXYGEN], [doxygen])
 
+AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])
+
 AC_ARG_VAR([SWIG], 
-	   [Path to swig when available])
+       [Path to swig when available])
 AC_PATH_PROG([SWIG], [swig])
 
 
@@ -140,10 +142,10 @@ AH_TEMPLATE([HAVE_M_PI],
             [Define 1 if M_PI defined in cmath, 0 otherwise.])
 AC_MSG_CHECKING(for M_PI defined in cmath)
 AC_TRY_COMPILE([ #include <cmath>;], [double pi = M_PI;], [
-	AC_MSG_RESULT(yep)
-	AC_DEFINE([HAVE_M_PI], 1) ], [
-	AC_MSG_RESULT(nope using local definition of pi)
-	AC_DEFINE([HAVE_M_PI], 0) ] )
+    AC_MSG_RESULT(yep)
+    AC_DEFINE([HAVE_M_PI], 1) ], [
+    AC_MSG_RESULT(nope using local definition of pi)
+    AC_DEFINE([HAVE_M_PI], 0) ] )
 
 
 dnl check whether template member functions should
@@ -152,21 +154,21 @@ AH_TEMPLATE([NO_TEMPLATE_MEMBERS],
             [Define for compilers that do not support template member functions.])
 AC_MSG_CHECKING(whether C++ compiler supports template member functions)
 AC_COMPILE_IFELSE([
-	AC_LANG_SOURCE([[
-		#include <vector>
-		struct C
-		{
-			int z;
-			template< class T >
-			C( T b, T e ) : z( e-b ) {}
-		};]], [[
-		std::vector< int > v(100, 1);
-		C c( v.begin(), v .end() );
-		return 0;
-		]])], [
-	AC_MSG_RESULT(yes)], [
-	AC_MSG_RESULT(no, not using template members)
-	AC_DEFINE([NO_TEMPLATE_MEMBERS])])
+    AC_LANG_SOURCE([[
+        #include <vector>
+        struct C
+        {
+            int z;
+            template< class T >
+            C( T b, T e ) : z( e-b ) {}
+        };]], [[
+        std::vector< int > v(100, 1);
+        C c( v.begin(), v .end() );
+        return 0;
+        ]])], [
+    AC_MSG_RESULT(yes)], [
+    AC_MSG_RESULT(no, not using template members)
+    AC_DEFINE([NO_TEMPLATE_MEMBERS])])
 
 dnl check whether the compiler can handle Alexandrescu's compile-time
 dnl assertions, which we use later to make sure that std::complex<double>
@@ -180,22 +182,22 @@ AH_TEMPLATE([NO_COMPILE_TIME_ASSERTIONS],
 AC_MSG_CHECKING(whether compiler supports compile-time assertions)
 
 AC_COMPILE_IFELSE( 
-	AC_LANG_SOURCE([[
-		//	Gnarly code adopted from Alexandrescu (Modern C++ Design) for compile-time
-		//	checking of type information. 
-		template<int> struct CompileTimeError;
-		template<> struct CompileTimeError<true> {};
-		#define STATIC_CHECK(expr, msg) \
-			{ CompileTimeError<((expr) != 0)> ERROR_##msg; (void)ERROR_##msg; }
-		
-		template <class T, class U> struct CompareTypes { enum { same = 0 }; };
-		template<class T> struct CompareTypes<T, T> { enum { same = 1 }; };
-		typedef int INT;
-		void f(void)
-		{
-			STATIC_CHECK((CompareTypes<int, INT>::same!=0), COMPILE_TIME_ASSERTIONS_FAIL);
-			STATIC_CHECK((CompareTypes<int, float>::same==0), COMPILE_TIME_ASSERTIONS_FAIL);
-		}
+    AC_LANG_SOURCE([[
+        //  Gnarly code adopted from Alexandrescu (Modern C++ Design) for compile-time
+        //  checking of type information. 
+        template<int> struct CompileTimeError;
+        template<> struct CompileTimeError<true> {};
+        #define STATIC_CHECK(expr, msg) \
+            { CompileTimeError<((expr) != 0)> ERROR_##msg; (void)ERROR_##msg; }
+        
+        template <class T, class U> struct CompareTypes { enum { same = 0 }; };
+        template<class T> struct CompareTypes<T, T> { enum { same = 1 }; };
+        typedef int INT;
+        void f(void)
+        {
+            STATIC_CHECK((CompareTypes<int, INT>::same!=0), COMPILE_TIME_ASSERTIONS_FAIL);
+            STATIC_CHECK((CompareTypes<int, float>::same==0), COMPILE_TIME_ASSERTIONS_FAIL);
+        }
   ]]),[
   NO_COMPILE_TIME_ASSERTIONS=false
   AC_MSG_RESULT(yes) ], [
@@ -222,27 +224,27 @@ dnl----------------------------------------------------------------
 AC_SEARCH_LIBS([sin], [m])
 
 AC_CHECK_LIB([fftw3], [fftw_execute], [ 
-		FFTW_VERSION=3
-		FFTW_HDR="fftw3.h"
-		LINK_FFTW=-lfftw3
-	],
-	AC_CHECK_LIB([fftw], [fftw_create_plan_specific],[
-			FFTW_VERSION=2
-			FFTW_HDR="fftw.h"
-			LINK_FFTW=-lfftw
-		],
-		AC_MSG_ERROR([Cannot find the FFTW library.  Add something to LDFLAGS.])))
+        FFTW_VERSION=3
+        FFTW_HDR="fftw3.h"
+        LINK_FFTW=-lfftw3
+    ],
+    AC_CHECK_LIB([fftw], [fftw_create_plan_specific],[
+            FFTW_VERSION=2
+            FFTW_HDR="fftw.h"
+            LINK_FFTW=-lfftw
+        ],
+        AC_MSG_ERROR([Cannot find the FFTW library.  Add something to LDFLAGS.])))
 
 if test "$FFTW_VERSION" == "3"; then
-	AC_CHECK_HEADERS([fftw3.h],,
-		AC_MSG_ERROR([Cannot find FFTW headers.  Add something to CPPFLAGS.]))
+    AC_CHECK_HEADERS([fftw3.h],,
+        AC_MSG_ERROR([Cannot find FFTW headers.  Add something to CPPFLAGS.]))
 else
-	AC_CHECK_HEADERS([fftw.h],,
-		AC_MSG_ERROR([Cannot find FFTW headers.  Add something to CPPFLAGS.]))
+    AC_CHECK_HEADERS([fftw.h],,
+        AC_MSG_ERROR([Cannot find FFTW headers.  Add something to CPPFLAGS.]))
 fi
 
 dnl AC_CHECK_HEADERS("$FFTW_HDR",,
-dnl	 AC_MSG_ERROR([Cannot find FFTW headers.  Add something to CPPFLAGS.]))
+dnl  AC_MSG_ERROR([Cannot find FFTW headers.  Add something to CPPFLAGS.]))
 
 AC_SUBST(LINK_FFTW)
 
@@ -260,51 +262,51 @@ dnl easier to maintain. Thanks to John Ramsdell for helping to
 dnl clean this up.
 
 AC_ARG_VAR([PYTHON], 
-	   [Path to python when available])
+       [Path to python when available])
 
 AC_ARG_WITH(python,
-	AC_HELP_STRING( [--with-python],
-					[build Python module (default is YES)] ),
-	[USEPYTHON="$withval"], [USEPYTHON="yes"])
+    AC_HELP_STRING( [--with-python],
+                    [build Python module (default is YES)] ),
+    [USEPYTHON="$withval"], [USEPYTHON="yes"])
 
 if test "$USEPYTHON" == "yes" ; then
-	AC_PATH_PROG([PYTHON], [python])
-	
-	if test -n "$PYTHON" ; then
-		dnl use automake tools for finding python, set 
-		dnl installation directory for extension modules
-		AM_PATH_PYTHON(1.5)
-		
-		dnl look for the header Python.h
-		PYBINDIR="`AS_DIRNAME([$PYTHON])`"
-		PYPREFDIR="`AS_DIRNAME([$PYBINDIR])`"
-		PYINCLUDE="$PYPREFDIR/include/python$PYTHON_VERSION"  
+    AC_PATH_PROG([PYTHON], [python])
+    
+    if test -n "$PYTHON" ; then
+        dnl use automake tools for finding python, set 
+        dnl installation directory for extension modules
+        AM_PATH_PYTHON(1.5)
+        
+        dnl look for the header Python.h
+        PYBINDIR="`AS_DIRNAME([$PYTHON])`"
+        PYPREFDIR="`AS_DIRNAME([$PYBINDIR])`"
+        PYINCLUDE="$PYPREFDIR/include/python$PYTHON_VERSION"  
 
-		dnl try compiling with $PYINCLUDE in the header path
-		SAVEFLAGS="$CPPFLAGS"
-		CPPFLAGS="-I$PYINCLUDE $CPPFLAGS"
-		AC_MSG_CHECKING(for Python.h header file)
-		AC_CHECK_HEADERS([Python.h],[
-			dnl check whether this version of Python supports
-			dnl the new style of iterators
-			AC_MSG_CHECKING(for PyExc_StopIteration defined in Python.h)
-			AC_TRY_COMPILE(	[ #include <Python.h>;], 
-							[ PyErr_SetString( PyExc_StopIteration, ""); ], 
-				[
-					AC_MSG_RESULT(yep)
-					PYFLAGS="-I$PYINCLUDE"	
-				], [
-					AC_MSG_RESULT(nope)
-					PYFLAGS="-I$PYINCLUDE -DNO_PYTHON_EXC_STOPITER"
-				] )		
-		],[
-			AC_MSG_WARN([Cannot find Python headers. Python support disabled.])
-			PYTHON=
-		])
-		CPPFLAGS="$SAVEFLAGS"
-	else
-		AC_MSG_WARN([Cannot find Python. Python support disabled.])
-	fi
+        dnl try compiling with $PYINCLUDE in the header path
+        SAVEFLAGS="$CPPFLAGS"
+        CPPFLAGS="-I$PYINCLUDE $CPPFLAGS"
+        AC_MSG_CHECKING(for Python.h header file)
+        AC_CHECK_HEADERS([Python.h],[
+            dnl check whether this version of Python supports
+            dnl the new style of iterators
+            AC_MSG_CHECKING(for PyExc_StopIteration defined in Python.h)
+            AC_TRY_COMPILE( [ #include <Python.h>;], 
+                            [ PyErr_SetString( PyExc_StopIteration, ""); ], 
+                [
+                    AC_MSG_RESULT(yep)
+                    PYFLAGS="-I$PYINCLUDE"  
+                ], [
+                    AC_MSG_RESULT(nope)
+                    PYFLAGS="-I$PYINCLUDE -DNO_PYTHON_EXC_STOPITER"
+                ] )     
+        ],[
+            AC_MSG_WARN([Cannot find Python headers. Python support disabled.])
+            PYTHON=
+        ])
+        CPPFLAGS="$SAVEFLAGS"
+    else
+        AC_MSG_WARN([Cannot find Python. Python support disabled.])
+    fi
 fi
 
 AM_CONDITIONAL(BUILD_PYTHON, test -n "$PYTHON")
@@ -319,33 +321,33 @@ dnl works for Csound GBS versions 4.23f12gbs.10 or later.
 dnl----------------------------------------------------------------
 
 AC_ARG_VAR([CSOUND_CONFIG], 
-	   [Path to the Csound configuration script when available])
+       [Path to the Csound configuration script when available])
 
 AC_ARG_WITH(csound,
-	AC_HELP_STRING( [--with-csound],
-					[build Csound 4 opcodes (default is YES)] ),
-	[USECSOUND="$withval"], [USECSOUND="yes"])
+    AC_HELP_STRING( [--with-csound],
+                    [build Csound 4 opcodes (default is YES)] ),
+    [USECSOUND="$withval"], [USECSOUND="yes"])
 
 if test "$USECSOUND" == "yes" ; then
-	AC_PATH_PROG([CSOUND_CONFIG], [csound-config])
-	FOUND_CSOUND="$CSOUND_CONFIG"
+    AC_PATH_PROG([CSOUND_CONFIG], [csound-config])
+    FOUND_CSOUND="$CSOUND_CONFIG"
 
-	dnl try to use csound config to get build flags
-	dnl for the csound opcodes
-	if test -n "$CSOUND_CONFIG"; then
-		CSOUND_CXXFLAGS="`$CSOUND_CONFIG --cflags`"
-		
-		dnl I don't think I need these next two, those are
-		dnl for linking csound binaries, not opcodes.
-		CSOUND_LDFLAGS="`$CSOUND_CONFIG --ldflags`"
-		CSOUND_LIBS="`$CSOUND_CONFIG --libs`"
-		
-		CSOUND_PREFIX="`$CSOUND_CONFIG --prefix`"  	
-	else
-		AC_CHECK_HEADERS([csound/cs.h],
-			FOUND_CSOUND="yes",
-			AC_MSG_WARN([Cannot find Csound headers. Csound support disabled.]))
-	fi
+    dnl try to use csound config to get build flags
+    dnl for the csound opcodes
+    if test -n "$CSOUND_CONFIG"; then
+        CSOUND_CXXFLAGS="`$CSOUND_CONFIG --cflags`"
+        
+        dnl I don't think I need these next two, those are
+        dnl for linking csound binaries, not opcodes.
+        CSOUND_LDFLAGS="`$CSOUND_CONFIG --ldflags`"
+        CSOUND_LIBS="`$CSOUND_CONFIG --libs`"
+        
+        CSOUND_PREFIX="`$CSOUND_CONFIG --prefix`"   
+    else
+        AC_CHECK_HEADERS([csound/cs.h],
+            FOUND_CSOUND="yes",
+            AC_MSG_WARN([Cannot find Csound headers. Csound support disabled.]))
+    fi
 fi
 AC_SUBST([CSOUND_CXXFLAGS])
 AC_SUBST([CSOUND_LDFLAGS])
@@ -358,21 +360,21 @@ dnl----------------------------------------------------------------
 dnl Check for Loris debugging flag
 dnl----------------------------------------------------------------
 AC_ARG_ENABLE(debugloris,
-	AC_HELP_STRING( [--enable-debugloris],
-					[enable internal Loris debugging code (not recommended)] ),
-	[DEBUG_LORIS="$enableval" ], [DEBUG_LORIS=] )
+    AC_HELP_STRING( [--enable-debugloris],
+                    [enable internal Loris debugging code (not recommended)] ),
+    [DEBUG_LORIS="$enableval" ], [DEBUG_LORIS=] )
 
 AH_TEMPLATE([Debug_Loris],
             [Define to enable internal Loris debugging code (not recommended).])
 
 if test -n "$DEBUG_LORIS"; then
-	if test "$DEBUG_LORIS"="yes"; then
-		AC_MSG_RESULT(enabling debugging code (defining Debug_Loris))
-		AC_DEFINE([Debug_Loris])
-	else
-		AC_MSG_RESULT(enabling debugging code (defining Debug_Loris to $DEBUG_LORIS))
-		AC_DEFINE([Debug_Loris], "$DEBUG_LORIS")
-	fi
+    if test "$DEBUG_LORIS"="yes"; then
+        AC_MSG_RESULT(enabling debugging code (defining Debug_Loris))
+        AC_DEFINE([Debug_Loris])
+    else
+        AC_MSG_RESULT(enabling debugging code (defining Debug_Loris to $DEBUG_LORIS))
+        AC_DEFINE([Debug_Loris], "$DEBUG_LORIS")
+    fi
 fi
 
 dnl----------------------------------------------------------------
@@ -390,25 +392,24 @@ AC_MSG_RESULT(----- Configuration Summary -----)
 echo Using FFTW version $FFTW_VERSION.
 
 if test -n "$PYTHON" ; then
-	echo Python support: Enabled.
-	echo Installing Python extension modules in $pyexecdir
-   echo You may need to add $pyexecdir to your PYTHONPATH 
-   echo before Python will be able to load them.
+    echo Python support: Enabled.
+    echo Installing Python extension modules in $pyexecdir
+    echo You may need to add $pyexecdir to your PYTHONPATH 
+    echo before Python will be able to load them.
 else
-	echo Python support: Disabled.
-	echo Define PYTHON or add something to CPPFLAGS to enable.  
-	echo See "./configure --help".
+    echo Python support: Disabled.
+    echo Define PYTHON or add something to CPPFLAGS to enable.  
+    echo See "./configure --help".
 fi
 
 if test -n "$FOUND_CSOUND" ; then
-	echo Csound support: Enabled.
-	echo Installing opcodes in $CSOUND_PREFIX/lib/csound
-   echo To use them in your instruments, invoke csound with the argument:
-   echo   --opcode-lib=$CSOUND_PREFIX/lib/csound/lorisops.so
+    echo Csound support: Enabled.
+    echo To use them in your instruments, invoke csound with the argument:
+    echo   --opcode-lib=$prefix/lib/libloris.so
 else
-	echo Csound support: Disabled.
-	echo Define CSOUND_CONFIG or add something to CPPFLAGS to enable.  
-	echo See "./configure --help".
+    echo Csound support: Disabled.
+    echo Define CSOUND_CONFIG or add something to CPPFLAGS to enable.  
+    echo See "./configure --help".
 fi
 
 AC_MSG_RESULT(----- End Of Configuration -----)
