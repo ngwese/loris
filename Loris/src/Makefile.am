@@ -8,11 +8,8 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-lib_LTLIBRARIES = libloris.la
-
 # source code for Loris classes
-Loris_Classes = 	\
-		AiffData.C	\
+CPP_SRC = AiffData.C	\
 		AiffData.h \
 		AiffFile.C \
 		AiffFile.h \
@@ -89,18 +86,20 @@ Loris_Classes = 	\
 		Synthesizer.C \
 		Synthesizer.h
 
-libloris_la_SOURCES = loris.h lorisAnalyzer_pi.C lorisBpEnvelope_pi.C \
+# source code for the procedural (C) interface
+PI_SRC = loris.h lorisAnalyzer_pi.C lorisBpEnvelope_pi.C \
  lorisException_pi.C lorisException_pi.h lorisNonObj_pi.C \
- lorisPartialList_pi.C lorisUtilities_pi.C \
- $(Loris_Classes)
-libloris_la_CPPFLAGS = $(INCLUDE_FFTW) $(default_includes)
-libloris_la_LIBADD = $(LINK_FFTW)
+ lorisPartialList_pi.C lorisUtilities_pi.C 
 
-if DARWIN
-# automake doesn't like the conditional definition of 
-# LDFLAGS, so use this to add Darwin-specific flags:
-EXTRA_LD_FLAGS = -prebind
+if HAVE_CSOUND
+# source code for the Csound opcodes
+CSOUND_SRC = lorisgens.C lorisgens.h
 endif
+
+lib_LTLIBRARIES = libloris.la
+libloris_la_SOURCES = $(CPP_SRC) $(PI_SRC) $(CSOUND_SRC) 
+libloris_la_CPPFLAGS = $(INCLUDE_FFTW) $(CSOUND_CXXFLAGS) $(default_includes)
+libloris_la_LIBADD = $(LINK_FFTW)
 
 # the library version for Loris 1.2 is 4:0:0
 libloris_la_LDFLAGS = -version-info 4:0:0 $(EXTRA_LD_FLAGS)

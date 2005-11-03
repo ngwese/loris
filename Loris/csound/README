@@ -1,7 +1,23 @@
-This document outlines the steps necessary to add Loris unit generators
-to Csound. You will need, in addition to Loris and the libraries on
-which it depends (FFTW), a copy of the Csound source code, available at, 
-for example
+This document outlines the steps necessary to add Loris opcodes to 
+OLD VERSIONS of Csound 4. If you install recent GBS (GNU build system)
+versions of Csound, then the Loris configure script can automatically 
+detect the presence of Csound, and build the opcodes into the Loris
+dynamic library, which you can then load into Csound using the
+--opcode-lib flag, as in
+
+  csound --opcode-lib=/usr/local/lib/libloris.so test.csd
+
+There are two csd files in this directory that demonstrate the 
+Loris opcodes. Please read them before running them, since they
+depend on SDIF files generated elsewhere.
+
+If you are using Csound5, then you can try replacing the lorisgens
+files in the src directory with the lorisgens5 files. This has not
+been tested though.
+
+You will need, in addition to Loris and the libraries on which 
+it depends (FFTW), a copy of the Csound source code, available at, 
+for example,
 
   ftp://ftp.maths.bath.ac.uk/pub/dream
 
@@ -9,24 +25,16 @@ or
 
   ftp://ftp.musique.umontreal.ca/pub/mirrors/dream
 
-Some versions of Csound (on some platforms) support dynamically-
-loaded modules, using the --opcode-lib command line flag. On these 
-platforms, Loris can be configured to automatically build a 
-dynamically-loadable module by using the --with-csound flag with
-the configure script to specify a path to the csound source code.
-For example:
-
-  ./configure  --with-csound=/usr/local/src/Csound-4.23
-
 Since the lorisgens code needs to include a header that is part
 of the Csound source code, you must have the Csound source code,
 and you must specify its location using the --with-csound flag
 when configuring Loris. Otherwise, the lorisgens module is not
-built. 
+build. 
 
 The remainder of this document describes the method for adding 
 the Loris generators to Csound by rebuilding the Csound program
-from source code. 
+from source code. The lorisgens sources can be found in the
+src directory.
 
 The Loris unit generators make use of some recent improvements to the
 Csound extension API (such as deinitialization routines and support for
