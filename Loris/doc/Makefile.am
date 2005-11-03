@@ -8,8 +8,10 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-EXTRA_DIST = Doxyfile
+EXTRA_DIST = Doxyfile opcodes.html
 			 
+noinst_DATA = html 
+
 # add something to build docs using doxygen, if it is present
 
 CPP_HTML_DIR = html
@@ -23,7 +25,7 @@ html: ${HTML}
 PDF = Loris${LORIS_MAJOR_VERSION}.${LORIS_MINOR_VERSION}.pdf
 
 ${PDF}: ${HTML}
-	cd latex; make pdf
+	cd latex; make 
 	cp latex/refman.pdf $@
 
 pdf: ${PDF}

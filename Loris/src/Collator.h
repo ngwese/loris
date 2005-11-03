@@ -113,10 +113,6 @@ public:
 	//! may be invalidated.
 	//!
     //!   \param  partials is the collection of Partials to collate in-place
-    //!   \param  firstLabel is the label to use for the first collated
-    //!           Partial. Others are labeled sequentially. If firstLabel
-    //!           is zero (the default), then the collated Partials remain
-    //!           unlabeled.
 	//!   \return the position of the end of the range of labeled Partials,
 	//!           which is either the end of the collection, or the position
 	//!           of the first collated Partial, composed of unlabeled Partials

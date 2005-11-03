@@ -1,3 +1,13 @@
-This directory contains documentation in html format (only for the
-c-linkable procedural interface and the Python, Tcl, and Perl scripting
-interfaces).
+The Loris C++ sources are _mostly_ documented using Doxygen. If you
+have doxygen installed, then html documentation will be
+generated in the build process. They are not installed however,
+you can install them in any convenient location.
+
+"make pdf" builds a pdf version of the C++ documentation.
+
+The Csound opcodes are documented in opcodes.html.
+
+Documentation for the Python module is available using pydoc.
+
+The procedural (C) interface is documented only in the
+header file loris.h.

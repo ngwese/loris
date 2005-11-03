@@ -171,7 +171,7 @@ KaiserWindow::computeShape( double atten )
 //	The main width of the main lobe must be normalized by the sample rate,
 //	that is, it is a fraction of the sample rate.
 //
-long
+unsigned long
 KaiserWindow::computeLength( double width, double alpha )
 {
 	//double alpha = computeShape( atten );

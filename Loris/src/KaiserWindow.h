@@ -35,33 +35,57 @@
 
 #include <vector>
 
-//	begin namespace
+//  begin namespace
 namespace Loris {
 
 // ---------------------------------------------------------------------------
-//	class KaiserWindow
+//  class KaiserWindow
 //
-//	Class KaiserWindow computes a Kaiser window function (see Kaiser and 
-//	Schafer, 1980) for windowing FFT data.
-//
-//	This _should_ _not_ be a class. Or should it? Could be a namespace like
-//	BreakpointUtils.
+//! Computes samples of a Kaiser window 
+//! function (see Kaiser and Schafer, 1980) for windowing FFT data.
 //
 class KaiserWindow
 {
-//	-- public interface --
+//  -- public interface --
 public:
-	static void create( std::vector< double > & samples, double shape );
-	
-	static double computeShape( double atten );
-	static long computeLength( double width, double alpha );
 
-//	construction is not allowed:
+    //! Build a new Kaiser analysis window having shaping
+    //! parameter shape.
+    //!
+    //! \param      samples is the vector that will store the window
+    //!             samples. The number of samples computed will be
+    //!             equal to the length of this vector. Any previous
+    //!             contents will be overwritten.
+    //! \param      shape is the Kaiser shaping parameter, controlling
+    //!             the sidelobe rejection level.
+    static void create( std::vector< double > & samples, double shape );
+    
+    //! Compute a shaping parameter that will achieve the specified
+    //! level of sidelobe rejection.
+    //!
+    //! \param      atten is the desired sidelobe attenuation in
+    //!             positive decibels (e.g. 65 dB)
+    //! \returns    the Kaiser shaping paramater
+    static double computeShape( double atten );
+
+    //! Compute the necessary length in samples of a Kaiser window
+    //! having the specified shaping parameter that has the
+    //! desired main lobe width.
+    //!
+    //! \param      width is the desired main lobe width expressed
+    //!             as a fraction of the sample rate.
+    //! \param      alpha is the Kaiser shaping parameter (the
+    //!             main lobe width is influenced primarily by the
+    //!             window length,but also by the shape).
+    //! \returns    the window length in samples
+    static unsigned long computeLength( double width, double alpha );
+
+//  construction is not allowed:
 private:
-	KaiserWindow( void );
-	
-};	// end of class KaiserWindow
+    KaiserWindow( void );
+    
+};  // end of class KaiserWindow
 
-}	//	end of namespace Loris
+}   //  end of namespace Loris
 
 #endif /* ndef INCLUDE_KAISERWINDOW_H */

@@ -58,7 +58,9 @@ class Envelope
 public:
 //	-- construction --
 
-	//! 	Destroy this Envelope (virtual to allow subclassing).
+    // allow compiler to generate constructors
+
+	//!	Destroy this Envelope (virtual to allow subclassing).
 	virtual ~Envelope( void );
 
 //	-- Envelope interface --
@@ -70,12 +72,6 @@ public:
 	//!	Return the value of this Envelope at the specified time. 	 
 	virtual double valueAt( double x ) const = 0;	
 	
-//	-- protected interface --
-protected:
-//	-- construction --
-	Envelope( void );
-	Envelope( const Envelope & );
-
 };	//	end of abstract class Envelope
 
 }	//	end of namespace Loris
