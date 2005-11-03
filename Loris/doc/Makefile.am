@@ -18,7 +18,7 @@ CPP_HTML_DIR = html
 HTML = ${CPP_HTML_DIR}/index.html
 
 ${HTML}: Doxyfile
-	${DOXYGEN} 
+	${DOXYGEN} ${top_srcdir}/doc/Doxyfile
 
 html: ${HTML}
 
