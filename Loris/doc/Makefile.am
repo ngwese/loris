@@ -8,26 +8,23 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-EXTRA_DIST = LorisCDoc.html LorisCppDoc.html \
-			 LorisPerlDoc.html LorisPythonDoc.html \
-			 LorisTclDoc.html index.html \
-			 Doxyfile
+EXTRA_DIST = LorisCDoc.html index.html Doxyfile
 			 
 # add something to build docs using doxygen, if it is present
 
-CPP_HTML_DIR = cpp_html
+CPP_HTML_DIR = html
 HTML = ${CPP_HTML_DIR}/index.html
 
-HTML: Doxyfile
+${HTML}: Doxyfile
 	${DOXYGEN} 
 
 html: ${HTML}
 
 PDF = Loris${LORIS_MAJOR_VERSION}.${LORIS_MINOR_VERSION}.pdf
 
-PDF: ${HTML}
+${PDF}: ${HTML}
 	cd latex; make pdf
-	cp latex/refman.pdf Loris${LORIS_MAJOR_VERSION}.${LORIS_MINOR_VERSION}.pdf
+	cp latex/refman.pdf $@
 
 pdf: ${PDF}
 
