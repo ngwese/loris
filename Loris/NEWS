@@ -21,7 +21,7 @@ in a SDIF file and saving the dilated partials in
 another SDIF file.
 
 - loris-mark and loris-unmark - utilities for adding and
-removing markers in AIFF, SDIIF, and Spc files.
+removing markers in AIFF, SDIF, and Spc files.
 
 - loris-synthesize - a synthesis utility for rendering
 Partials stored in a SDIF file, optionally with dilation
@@ -67,6 +67,10 @@ opcode librarty to autobuild process. This works most
 reliably with ABS distributions of Csound version 4.
 (Many thanks to Michael Gogins and John Ramsdell for
 making this possible.)
+
+- csound opcodes are built into the Loris library,
+when csound is available. No separate opcode library
+is needed. 
 
 - included versions of the opcode source that are
 compatible with Csound 5 (though these are not yet used
@@ -118,6 +122,11 @@ THIS BREAKS OLD CODE, but it is less confusing.
 
 - added experimental fundamental frequency estimator,
 called Fundamental.
+
+- C++ api is now mostly documented using doxygen,
+and HTML docs are build automatically when doxygen 
+is available. The Python module is fully documented
+using pydoc.
 
 -------------------------------------------------------
 changes since 1.1 release:
