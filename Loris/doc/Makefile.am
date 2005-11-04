@@ -36,5 +36,5 @@ pdf: ${PDF}
 
 endif
 
-MAINTAINERCLEANFILES = 	Makefile.in Doxyfile
-
+MAINTAINERCLEANFILES = 	Makefile.in 
+DISTCLEANFILES = latex/* html/* Doxyfile
