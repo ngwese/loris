@@ -44,6 +44,8 @@ CPP_SRC = AiffData.C	\
 		FrequencyReference.h \
 		Fundamental.C \
 		Fundamental.h \
+		Harmonifier.C \
+		Harmonifier.h \
 		ieee.c \
 		ieee.h \
 		ImportLemur.C \
@@ -70,6 +72,8 @@ CPP_SRC = AiffData.C	\
 		PartialPtrs.h \
 		PartialUtils.C \
 		PartialUtils.h \
+        phasefix.C	\
+        phasefix.h	\
 		ReassignedSpectrum.C \
 		ReassignedSpectrum.h \
 		Resampler.C \
@@ -125,6 +129,7 @@ pkginclude_HEADERS = \
 				FourierTransform.h	\
 				FrequencyReference.h \
 				Fundamental.h \
+				Harmonifier.h	\
 				ImportLemur.h	\
 				KaiserWindow.h	\
 				LinearEnvelope.h \
@@ -137,6 +142,7 @@ pkginclude_HEADERS = \
 				PartialList.h	\
 				PartialPtrs.h	\
 				PartialUtils.h	\
+				phasefix.h	\
 				ReassignedSpectrum.h	\
 				Resampler.h \
 				SdifFile.h	\

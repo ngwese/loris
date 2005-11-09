@@ -50,6 +50,11 @@
 #include "SpectralPeakSelector.h"
 #include "PartialBuilder.h"
 
+#define FIXFREQ 1
+#if FIXFREQ
+#include "phasefix.h"   //  HEY LOOKIE HERE - for new frequency/phase fixing at end of analysis
+#endif
+
 #include <algorithm>
 #include <cmath>
 #include <memory>
@@ -416,6 +421,13 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
 		
 		//	unwarp the Partial frequency envelopes:
 		builder.fixPartialFrequencies();
+		
+		//  HEY LOOKIE HERE, this is new:
+		//  fix the frequencies and phases to be consistent.
+		#if FIXFREQ
+		fixFrequency( builder.partials().begin(), builder.partials().end() );
+		#endif
+		
 		_imp->partials.splice( _imp->partials.end(), builder.partials() );
 	}
 	catch ( Exception & ex ) 

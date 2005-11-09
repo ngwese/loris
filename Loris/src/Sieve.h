@@ -96,7 +96,7 @@ public:
 	//!	only the longer of the two Partials. Set the label of the shorter
 	//!	duration partial to zero. No Partials are removed from the
 	//!	sequence and the sequence order is unaltered. 
-   //!
+    //!
   	//!	\param sift_begin is the beginning of the range of Partials to sift
 	//!	\param sift_end is (one-past) the end of the range of Partials to sift
 	//!	
@@ -119,13 +119,13 @@ public:
 	//! fade time (in seconds), and use it to sift a
 	//! sequence of Partials. 
 	//!
-  	//!	\param sift_begin is the beginning of the range of Partials to sift
-	//!	\param sift_end is (one-past) the end of the range of Partials to sift
-	//!   \param   partialFadeTime is the extra time (in seconds)  
-	//!            added to each end of a Partial to accomodate 
-	//!            the fade to and from zero amplitude. The Partial fade time
-	//!            must be non-negative.
-	//!   \throw   InvalidArgument if partialFadeTime is negative.
+  	//!	\param  sift_begin is the beginning of the range of Partials to sift
+	//!	\param  sift_end is (one-past) the end of the range of Partials to sift
+	//! \param  partialFadeTime is the extra time (in seconds)  
+	//!         added to each end of a Partial to accomodate 
+	//!         the fade to and from zero amplitude. The Partial fade time
+	//!         must be non-negative.
+	//! \throw  InvalidArgument if partialFadeTime is negative.
 	//!	
 	//!	If compiled with NO_TEMPLATE_MEMBERS defined, then begin and end
 	//!	must be PartialList::iterators, otherwise they can be any type

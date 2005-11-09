@@ -574,6 +574,18 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch,
     and bandwidth values are to be modified to make a gradual transition to 
     the static spectrum.
  */
+
+/*  Apply a reference Partial to fix the frequencies of Breakpoints
+    whose amplitude is below threshold_dB. 0 harmonifies full-amplitude
+    Partials, to apply only to quiet Partials, specify a lower 
+    threshold like -90). The reference Partial is the first Partial
+    in the PartialList labeled refLabel (usually 1). The LinearEnvelope 
+    is a time-varying weighting on the harmonifing process. When 1, 
+    harmonic frequencies are used, when 0, breakpoint frequencies are 
+    unmodified. 
+ */
+void harmonify( PartialList * partials, long refLabel,
+                const LinearEnvelope * env, double threshold_dB );
  
 unsigned int importAiff( const char * path, double * buffer, unsigned int bufferSize, 
                          double * samplerate );

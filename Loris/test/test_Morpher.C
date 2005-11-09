@@ -463,32 +463,32 @@ int main( )
         SAME_PARAM_VALUES( to_dummy.frequencyAt(0), to_dummy_by_hand.frequencyAt(0) );
         SAME_PARAM_VALUES( to_dummy.amplitudeAt(0), to_dummy_by_hand.amplitudeAt(0) );
         SAME_PARAM_VALUES( to_dummy.bandwidthAt(0), to_dummy_by_hand.bandwidthAt(0) );
-        SAME_PARAM_VALUES( to_dummy.phaseAt(0), to_dummy_by_hand.phaseAt(0) );
+        SAME_PARAM_VALUES( m2pi( to_dummy.phaseAt(0) ), m2pi( to_dummy_by_hand.phaseAt(0) ) );
         
         SAME_PARAM_VALUES( to_dummy.frequencyAt(0.1), to_dummy_by_hand.frequencyAt(0.1) );
         SAME_PARAM_VALUES( to_dummy.amplitudeAt(0.1), to_dummy_by_hand.amplitudeAt(0.1) );
         SAME_PARAM_VALUES( to_dummy.bandwidthAt(0.1), to_dummy_by_hand.bandwidthAt(0.1) );
-        SAME_PARAM_VALUES( to_dummy.phaseAt(0.1), to_dummy_by_hand.phaseAt(0.1) );
+        SAME_PARAM_VALUES( m2pi( to_dummy.phaseAt(0.1) ), m2pi( to_dummy_by_hand.phaseAt(0.1) ) );
         
         SAME_PARAM_VALUES( to_dummy.frequencyAt(0.3), to_dummy_by_hand.frequencyAt(0.3) );
         SAME_PARAM_VALUES( to_dummy.amplitudeAt(0.3), to_dummy_by_hand.amplitudeAt(0.3) );
         SAME_PARAM_VALUES( to_dummy.bandwidthAt(0.3), to_dummy_by_hand.bandwidthAt(0.3) );
-        SAME_PARAM_VALUES( to_dummy.phaseAt(0.3), to_dummy_by_hand.phaseAt(0.3) );
+        SAME_PARAM_VALUES( m2pi( to_dummy.phaseAt(0.3) ), m2pi( to_dummy_by_hand.phaseAt(0.3) ) );
         
         SAME_PARAM_VALUES( to_dummy.frequencyAt(0.6), to_dummy_by_hand.frequencyAt(0.6) );
         SAME_PARAM_VALUES( to_dummy.amplitudeAt(0.6), to_dummy_by_hand.amplitudeAt(0.6) );
         SAME_PARAM_VALUES( to_dummy.bandwidthAt(0.6), to_dummy_by_hand.bandwidthAt(0.6) );
-        SAME_PARAM_VALUES( to_dummy.phaseAt(0.6), to_dummy_by_hand.phaseAt(0.6) );
+        SAME_PARAM_VALUES( m2pi( to_dummy.phaseAt(0.6) ), m2pi( to_dummy_by_hand.phaseAt(0.6) ) );
         
         SAME_PARAM_VALUES( to_dummy.frequencyAt(0.85), to_dummy_by_hand.frequencyAt(0.85) );
         SAME_PARAM_VALUES( to_dummy.amplitudeAt(0.85), to_dummy_by_hand.amplitudeAt(0.85) );
         SAME_PARAM_VALUES( to_dummy.bandwidthAt(0.85), to_dummy_by_hand.bandwidthAt(0.85) );
-        SAME_PARAM_VALUES( to_dummy.phaseAt(0.85), to_dummy_by_hand.phaseAt(0.85) );
+        SAME_PARAM_VALUES( m2pi( to_dummy.phaseAt(0.85) ), m2pi( to_dummy_by_hand.phaseAt(0.85) ) );
         
         SAME_PARAM_VALUES( to_dummy.frequencyAt(1), to_dummy_by_hand.frequencyAt(1) );
         SAME_PARAM_VALUES( to_dummy.amplitudeAt(1), to_dummy_by_hand.amplitudeAt(1) );
         SAME_PARAM_VALUES( to_dummy.bandwidthAt(1), to_dummy_by_hand.bandwidthAt(1) );
-        SAME_PARAM_VALUES( to_dummy.phaseAt(1), to_dummy_by_hand.phaseAt(1) );
+        SAME_PARAM_VALUES( m2pi( to_dummy.phaseAt(1) ), m2pi( to_dummy_by_hand.phaseAt(1) ) );
         
         //  test morphing from a dummy Partial, should just fade the
         //  real Partial out (amp envelope starts at 1):
@@ -528,32 +528,32 @@ int main( )
         SAME_PARAM_VALUES( from_dummy.frequencyAt(0), from_dummy_by_hand.frequencyAt(0) );
         SAME_PARAM_VALUES( from_dummy.amplitudeAt(0), from_dummy_by_hand.amplitudeAt(0) );
         SAME_PARAM_VALUES( from_dummy.bandwidthAt(0), from_dummy_by_hand.bandwidthAt(0) );
-        SAME_PARAM_VALUES( from_dummy.phaseAt(0), from_dummy_by_hand.phaseAt(0) );
+        SAME_PARAM_VALUES( m2pi( from_dummy.phaseAt(0) ), m2pi( from_dummy_by_hand.phaseAt(0) ) );
         
         SAME_PARAM_VALUES( from_dummy.frequencyAt(0.1), from_dummy_by_hand.frequencyAt(0.1) );
         SAME_PARAM_VALUES( from_dummy.amplitudeAt(0.1), from_dummy_by_hand.amplitudeAt(0.1) );
         SAME_PARAM_VALUES( from_dummy.bandwidthAt(0.1), from_dummy_by_hand.bandwidthAt(0.1) );
-        SAME_PARAM_VALUES( from_dummy.phaseAt(0.1), from_dummy_by_hand.phaseAt(0.1) );
+        SAME_PARAM_VALUES( m2pi( from_dummy.phaseAt(0.1) ), m2pi( from_dummy_by_hand.phaseAt(0.1) ) );
         
         SAME_PARAM_VALUES( from_dummy.frequencyAt(0.3), from_dummy_by_hand.frequencyAt(0.3) );
         SAME_PARAM_VALUES( from_dummy.amplitudeAt(0.3), from_dummy_by_hand.amplitudeAt(0.3) );
         SAME_PARAM_VALUES( from_dummy.bandwidthAt(0.3), from_dummy_by_hand.bandwidthAt(0.3) );
-        SAME_PARAM_VALUES( from_dummy.phaseAt(0.3), from_dummy_by_hand.phaseAt(0.3) );
+        SAME_PARAM_VALUES( m2pi( from_dummy.phaseAt(0.3) ), m2pi( from_dummy_by_hand.phaseAt(0.3) ) );
         
         SAME_PARAM_VALUES( from_dummy.frequencyAt(0.6), from_dummy_by_hand.frequencyAt(0.6) );
         SAME_PARAM_VALUES( from_dummy.amplitudeAt(0.6), from_dummy_by_hand.amplitudeAt(0.6) );
         SAME_PARAM_VALUES( from_dummy.bandwidthAt(0.6), from_dummy_by_hand.bandwidthAt(0.6) );
-        SAME_PARAM_VALUES( from_dummy.phaseAt(0.6), from_dummy_by_hand.phaseAt(0.6) );
+        SAME_PARAM_VALUES( m2pi( from_dummy.phaseAt(0.6) ), m2pi( from_dummy_by_hand.phaseAt(0.6) ) );
         
         SAME_PARAM_VALUES( from_dummy.frequencyAt(0.85), from_dummy_by_hand.frequencyAt(0.85) );
         SAME_PARAM_VALUES( from_dummy.amplitudeAt(0.85), from_dummy_by_hand.amplitudeAt(0.85) );
         SAME_PARAM_VALUES( from_dummy.bandwidthAt(0.85), from_dummy_by_hand.bandwidthAt(0.85) );
-        SAME_PARAM_VALUES( from_dummy.phaseAt(0.85), from_dummy_by_hand.phaseAt(0.85) );
+        SAME_PARAM_VALUES( m2pi( from_dummy.phaseAt(0.85) ), m2pi( from_dummy_by_hand.phaseAt(0.85) ) );
         
         SAME_PARAM_VALUES( from_dummy.frequencyAt(1), from_dummy_by_hand.frequencyAt(1) );
         SAME_PARAM_VALUES( from_dummy.amplitudeAt(1), from_dummy_by_hand.amplitudeAt(1) );
         SAME_PARAM_VALUES( from_dummy.bandwidthAt(1), from_dummy_by_hand.bandwidthAt(1) );
-        SAME_PARAM_VALUES( from_dummy.phaseAt(1), from_dummy_by_hand.phaseAt(1) );
+        SAME_PARAM_VALUES( m2pi( from_dummy.phaseAt(1) ), m2pi( from_dummy_by_hand.phaseAt(1) ) );
     }
     catch( Exception & ex ) 
     {

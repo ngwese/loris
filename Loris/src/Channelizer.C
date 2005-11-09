@@ -50,19 +50,25 @@ namespace Loris {
 //	Channelizer constructor 
 // ---------------------------------------------------------------------------
 //!	Construct a new Channelizer using the specified reference
-//!	Envelope to represent the a numbered channel. 
+//!	Envelope to represent the a numbered channel. If the sound
+//! being channelized is known to have detuned harmonics, a 
+//! stretching factor can be specified (defaults to 0 for no 
+//! stretching). The stretching factor can be computed using
+//! the static member computeStretchFactor.
 //!	
 //!	\param 	refChanFreq is an Envelope representing the center frequency
-//!			   of a channel.
-//!	\param 	refChanLabel is the corresponding channel number (i.e. 1
-//!			   if refChanFreq is the lowest-frequency channel, and all 
-//!			   other channels are harmonics of refChanFreq, or 2 if  
-//!			   refChanFreq tracks the second harmonic, etc.).
-//!   \throw   InvalidArgument if refChanLabel is not positive.
-//
-Channelizer::Channelizer( const Envelope & refChanFreq, int refChanLabel ) :
+//!		    of a channel.
+//!	\param  refChanLabel is the corresponding channel number (i.e. 1
+//!		    if refChanFreq is the lowest-frequency channel, and all 
+//!		    other channels are harmonics of refChanFreq, or 2 if  
+//!		    refChanFreq tracks the second harmonic, etc.).
+//! \param  stretchFactor is a stretching factor to account for detuned 
+//!         harmonics, default is 0. 
+//! \throw  InvalidArgument if refChanLabel is not positive.
+Channelizer::Channelizer( const Envelope & refChanFreq, int refChanLabel, double stretchFactor ) :
 	_refChannelFreq( refChanFreq.clone() ),
-	_refChannelLabel( refChanLabel )
+	_refChannelLabel( refChanLabel ),
+	_stretchFactor( stretchFactor )
 {
 	if ( refChanLabel <= 0 )
 	{
@@ -81,7 +87,8 @@ Channelizer::Channelizer( const Envelope & refChanFreq, int refChanLabel ) :
 //
 Channelizer::Channelizer( const Channelizer & other ) :
 	_refChannelFreq( other._refChannelFreq->clone() ),
-	_refChannelLabel( other._refChannelLabel )
+	_refChannelLabel( other._refChannelLabel ),
+	_stretchFactor( other._stretchFactor )
 {
 }
 
@@ -101,6 +108,7 @@ Channelizer::operator=( const Channelizer & rhs )
 	{
 		_refChannelFreq.reset( rhs._refChannelFreq->clone() );
 		_refChannelLabel = rhs._refChannelLabel;
+		_stretchFactor = rhs._stretchFactor;
 	}
 	return *this;
 }
@@ -115,42 +123,65 @@ Channelizer::~Channelizer( void )
 }
 
 // ---------------------------------------------------------------------------
-//	loudestAt (STATIC)
+//	stretchFactor
 // ---------------------------------------------------------------------------
-//	Helper for finding the time at which a Partial
-//	attains its maximum amplitude.
-//
-//	Use sinusoidal amplitude, so that repeated channelizations and
-//	distillations yield identical results.
-//
-//	This may not be used at all, we may instead use a weighted
-//	average for determining channel number of a Partial, instead
-//	of evaluating it at its loudest Breakpoint. Unresolved at this
-//	time.
-//
-static double loudestAt( const Partial & p )
+//! Return the stretching factor used to account for detuned
+//! harmonics, as in a piano tone. Normally set to 0 for 
+//! in-tune harmonics.
+double Channelizer::stretchFactor( void ) const
 {
-	Partial::const_iterator env = p.begin();
-	double maxAmp = env.breakpoint().amplitude() * std::sqrt( 1. - env.breakpoint().bandwidth() );
-	double time = env.time();
-	
-	for ( ++env; env != p.end(); ++env ) 
-	{
-		double a = env.breakpoint().amplitude() * std::sqrt( 1. - env.breakpoint().bandwidth() );
-		if ( a > maxAmp ) 
-		{
-			maxAmp = a;
-			time = env.time();
-		}
-	}
-	return time;
+    return _stretchFactor;
+}
+
+// ---------------------------------------------------------------------------
+//	setStretchFactor
+// ---------------------------------------------------------------------------
+//! Set the stretching factor used to account for detuned
+//! harmonics, as in a piano tone. Normally set to 0 for 
+//! in-tune harmonics.
+void Channelizer::setStretchFactor( double stretch )
+{
+    _stretchFactor = stretch;
+}
+
+// ---------------------------------------------------------------------------
+//	giveMeN (STATIC)
+// ---------------------------------------------------------------------------
+//  Compute the (fractional) channel number for a frequency given a 
+//  reference frequency (corresponding to channel 1, the fundamental)
+//  and a stretch factor.
+//
+static double giveMeN( double fn, double fref, double stretch )
+{
+    using std::sqrt;
+    using std::pow;
+    
+    if ( 0 == stretch )
+    {
+        return fn / fref;
+    }
+    const double frefsqrd = fref*fref;
+    double num = sqrt( (frefsqrd*frefsqrd) + (4*stretch*frefsqrd*fn*fn) ) - (frefsqrd);
+    double denom = 2*stretch*frefsqrd;
+    return sqrt( num / denom );
+}
+
+// ---------------------------------------------------------------------------
+//	computeStretchFactor (STATIC)
+// ---------------------------------------------------------------------------
+double 
+Channelizer::computeStretchFactor( double fref, double fn, double n )
+{
+    double num = (fn*fn) - (n*n*fref*fref);
+    double denom = (n*n*n*n)*(fref*fref);
+    return num / denom;
 }
 
 // ---------------------------------------------------------------------------
 //	channelize (one Partial)
 // ---------------------------------------------------------------------------
-//!	Label a Partial with the number of the frequency channel containing
-//!	the greatest portion of its (the Partial's) energy.
+//!	Label a Partial with the number of the frequency channel corresponding to
+//!	the average frequency over all the Partial's Breakpoints.
 //!	
 //!	\param partial is the Partial to label.
 //
@@ -158,28 +189,38 @@ void
 Channelizer::channelize( Partial & partial ) const
 {
 	debugger << "channelizing Partial with " << partial.numBreakpoints() << " Breakpoints" << endl;
-		
+			
 	//	compute an amplitude-weighted average channel
 	//	label for each Partial:
-	double ampsum = 0.;
+	//double ampsum = 0.;
 	double weightedlabel = 0.;
 	Partial::const_iterator bp;
 	for ( bp = partial.begin(); bp != partial.end(); ++bp )
 	{
 		//	use sinusoidal amplitude:
-		double a = bp.breakpoint().amplitude() * std::sqrt( 1. - bp.breakpoint().bandwidth() );
+		//double a = bp.breakpoint().amplitude() * std::sqrt( 1. - bp.breakpoint().bandwidth() );
+		
+		//  This used to be an amplitude-weighted avg, but for many sounds, 
+		//  particularly those for which the weighted avg would be very
+		//  different from the simple avg, the amplitude-weighted avg
+		//  emphasized the part of the sound in which the frequency estimates
+		//  are least reliable (e.g. a piano tone). The unweighted 
+		//  average should give more intuitive results in most cases.
+				
 		double f = bp.breakpoint().frequency();
 		double t = bp.time();
 		
 		double refFreq = _refChannelFreq->valueAt( t ) / _refChannelLabel;
-		weightedlabel += a * (f / refFreq);
-		ampsum += a;
+		// weightedlabel += a * (f / refFreq);
+		weightedlabel += giveMeN( f, refFreq, _stretchFactor );
+		//ampsum += a;
 	}
 	
 	int label;
-	if ( ampsum > 0. )	
+	//if ( ampsum > 0. )	
+	if ( 0 < partial.numBreakpoints() )
 	{
-		label = (int)((weightedlabel / ampsum) + 0.5);
+		label = (int)((weightedlabel / partial.numBreakpoints()) + 0.5);
 	}
 	else	//	this should never happen, but just in case:
 	{

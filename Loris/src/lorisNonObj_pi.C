@@ -64,6 +64,7 @@
 #include "Exception.h"
 #include "FrequencyReference.h"
 #include "Fundamental.h"
+#include "Harmonifier.h"
 #include "ImportLemur.h"
 #include "Morpher.h"
 #include "Notifier.h"
@@ -521,6 +522,53 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch,
 	catch( std::exception & ex ) 
 	{
 		std::string s("std C++ exception in exportSdif(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+
+}
+
+/* ---------------------------------------------------------------- */
+/*        harmonify        
+/*
+/*  Apply a reference Partial to fix the frequencies of Breakpoints
+    whose amplitude is below threshold_dB. 0 harmonifies full-amplitude
+    Partials, to apply only to quiet Partials, specify a lower 
+    threshold like -90). The reference Partial is the first Partial
+    in the PartialList labeled refLabel (usually 1). The Envelope 
+    is a time-varying weighting on the harmonifing process. When 1, 
+    harmonic frequencies are used, when 0, breakpoint frequencies are 
+    unmodified. 
+ */
+extern "C"
+void harmonify( PartialList * partials, long refLabel,
+                const LinearEnvelope * env, double threshold_dB )
+{
+	try 
+	{
+		ThrowIfNull((PartialList *) partials);
+		ThrowIfNull((LinearEnvelope *) env);
+
+		if ( partials->size() == 0 )
+		{
+			Throw( InvalidObject, "No Partials in PartialList to harmonify." );
+		}
+		
+		notifier << "harmonifying " << partials->size() << " Partials" << endl;
+
+        Harmonifier::harmonify( partials->begin(), partials->end(), refLabel,
+                                *env, threshold_dB );
+                                
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in harmonify(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in harmonify(): " );
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}

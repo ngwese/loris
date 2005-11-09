@@ -59,6 +59,12 @@ test_identity_LDADD = $(top_builddir)/src/libloris.la
 # This means that this test is NOT testing anything!
 #
 # Is this a libtool bug?
+#
+# It certainly seems that it _would_ be, but it seems 
+# that it might have been fixed. Today, it is working,
+# linking the development version of the Loris library
+# (newly-added functions would prevent the old library 
+# from linking to the Python module at all).
 ####
 if BUILD_PYTHON
 PYTHON_TEST = run_pytest

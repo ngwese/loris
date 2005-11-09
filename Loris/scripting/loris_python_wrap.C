@@ -2660,6 +2660,14 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch )
 }
 
 
+    void harmonify( PartialList * partials, long refLabel, 
+                    double threshold_dB )
+    {
+        LinearEnvelope e( 1 );
+        harmonify( partials, refLabel, &e, threshold_dB );
+    }
+
+
 	PartialList * importSdif( const char * path )
 	{
 		PartialList * dst = createPartialList();
@@ -2691,9 +2699,9 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch )
 
 
 	PartialList * morph( const PartialList * src0, const PartialList * src1, 
-                        const LinearEnvelope * ffreq, 
-                        const LinearEnvelope * famp, 
-                        const LinearEnvelope * fbw )
+                         const LinearEnvelope * ffreq, 
+                         const LinearEnvelope * famp, 
+                         const LinearEnvelope * fbw )
 	{
 		PartialList * dst = createPartialList();
 		morph( src0, src1, ffreq, famp, fbw, dst );
@@ -2708,9 +2716,9 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch )
 	}
 	
 	PartialList * morph( const PartialList * src0, const PartialList * src1, 
-                        double freqweight, 
-                        double ampweight, 
-                        double bwweight )
+                         double freqweight, 
+                         double ampweight, 
+                         double bwweight )
 	{
 		LinearEnvelope ffreq( freqweight ), famp( ampweight ), fbw( bwweight );
 		
@@ -2728,9 +2736,9 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch )
 
 	PartialList * morph( const PartialList * src0, const PartialList * src1,
 	                     long src0RefLabel, long src1RefLabel,
-                        const LinearEnvelope * ffreq, 
-                        const LinearEnvelope * famp, 
-                        const LinearEnvelope * fbw )
+                         const LinearEnvelope * ffreq, 
+                         const LinearEnvelope * famp, 
+                         const LinearEnvelope * fbw )
 	{
 		PartialList * dst = createPartialList();
 		morphWithReference( src0, src1, src0RefLabel, src1RefLabel, ffreq, famp, fbw, dst );
@@ -2746,9 +2754,9 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch )
 	
 	PartialList * morph( const PartialList * src0, const PartialList * src1, 
 	                     long src0RefLabel, long src1RefLabel,
-                        double freqweight, 
-                        double ampweight, 
-                        double bwweight )
+                         double freqweight, 
+                         double ampweight, 
+                         double bwweight )
 	{
 		LinearEnvelope ffreq( freqweight ), famp( ampweight ), fbw( bwweight );
 		
@@ -6054,6 +6062,152 @@ static PyObject *_wrap_exportSpc(PyObject *self, PyObject *args) {
     }
     
     PyErr_SetString(PyExc_NotImplementedError,"No matching function for overloaded 'exportSpc'");
+    return NULL;
+}
+
+
+static PyObject *_wrap_harmonify__SWIG_0(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    PartialList *arg1 = (PartialList *) 0 ;
+    long arg2 ;
+    LinearEnvelope *arg3 = (LinearEnvelope *) 0 ;
+    double arg4 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    PyObject * obj2 = 0 ;
+    PyObject * obj3 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OOOO:harmonify",&obj0,&obj1,&obj2,&obj3)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_PartialList, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        arg2 = (long)(SWIG_As_long(obj1)); 
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    SWIG_Python_ConvertPtr(obj2, (void **)&arg3, SWIGTYPE_p_LinearEnvelope, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(3)) SWIG_fail;
+    {
+        arg4 = (double)(SWIG_As_double(obj3)); 
+        if (SWIG_arg_fail(4)) SWIG_fail;
+    }
+    {
+        char * err;
+        clear_exception();
+        harmonify(arg1,arg2,(LinearEnvelope const *)arg3,arg4);
+        
+        if ( 0 != (err = check_exception()) )
+        {
+            SWIG_exception( SWIG_ValueError, err );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_harmonify__SWIG_1(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    PartialList *arg1 = (PartialList *) 0 ;
+    long arg2 ;
+    double arg3 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    PyObject * obj2 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OOO:harmonify",&obj0,&obj1,&obj2)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_PartialList, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        arg2 = (long)(SWIG_As_long(obj1)); 
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    {
+        arg3 = (double)(SWIG_As_double(obj2)); 
+        if (SWIG_arg_fail(3)) SWIG_fail;
+    }
+    {
+        char * err;
+        clear_exception();
+        harmonify(arg1,arg2,arg3);
+        
+        if ( 0 != (err = check_exception()) )
+        {
+            SWIG_exception( SWIG_ValueError, err );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_harmonify(PyObject *self, PyObject *args) {
+    int argc;
+    PyObject *argv[5];
+    int ii;
+    
+    argc = PyObject_Length(args);
+    for (ii = 0; (ii < argc) && (ii < 4); ii++) {
+        argv[ii] = PyTuple_GetItem(args,ii);
+    }
+    if (argc == 3) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_PartialList, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            _v = SWIG_Check_long(argv[1]);
+            if (_v) {
+                _v = SWIG_Check_double(argv[2]);
+                if (_v) {
+                    return _wrap_harmonify__SWIG_1(self,args);
+                }
+            }
+        }
+    }
+    if (argc == 4) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_PartialList, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            _v = SWIG_Check_long(argv[1]);
+            if (_v) {
+                {
+                    void *ptr;
+                    if (SWIG_ConvertPtr(argv[2], &ptr, SWIGTYPE_p_LinearEnvelope, 0) == -1) {
+                        _v = 0;
+                        PyErr_Clear();
+                    } else {
+                        _v = 1;
+                    }
+                }
+                if (_v) {
+                    _v = SWIG_Check_double(argv[3]);
+                    if (_v) {
+                        return _wrap_harmonify__SWIG_0(self,args);
+                    }
+                }
+            }
+        }
+    }
+    
+    PyErr_SetString(PyExc_NotImplementedError,"No matching function for overloaded 'harmonify'");
     return NULL;
 }
 
@@ -15312,6 +15466,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"exportAiff", _wrap_exportAiff, METH_VARARGS, NULL},
 	 { (char *)"exportSdif", _wrap_exportSdif, METH_VARARGS, NULL},
 	 { (char *)"exportSpc", _wrap_exportSpc, METH_VARARGS, NULL},
+	 { (char *)"harmonify", _wrap_harmonify, METH_VARARGS, NULL},
 	 { (char *)"importSdif", _wrap_importSdif, METH_VARARGS, NULL},
 	 { (char *)"importSpc", _wrap_importSpc, METH_VARARGS, NULL},
 	 { (char *)"morph", _wrap_morph, METH_VARARGS, NULL},

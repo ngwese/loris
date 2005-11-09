@@ -44,10 +44,12 @@
 #include "PartialList.h"
 #include "PartialUtils.h"
 
+#include "phasefix.h"   //  LOOKIE HERE, NEW STUFF!!!!!
+
 #include <algorithm>
 #include <memory>
-#include <set>
 #include <cmath>
+#include <vector>
 
 #if defined(HAVE_M_PI) && (HAVE_M_PI)
     const double Pi = M_PI;
@@ -59,12 +61,36 @@
 namespace Loris {
 
 // new morphing algorithms
-#define MORPH_PHASE_TRAVEL 0
+#define FIX_PHASE 1
 #define NEW_BW_MORPH 1
+
+#if FIX_PHASE
+
+#include <utility> // for std::pair, and make_pair
+#include <vector>
+static std::vector< std::pair< double, double > > DEHR;
+typedef enum { SRC = 0, TGT, INTERP } MorphState;
+char * StateStrings[] = { "SOURCE", "TARGET", "INTERP" };
+
+MorphState CurrentState = SRC;
+
+static inline MorphState GetMorphState( double fweight )
+{
+    if ( fweight == 0 ) return SRC;
+    else if ( fweight == 1 ) return TGT;
+    else return INTERP;
+}
+/*
+static inline MorphState InitMorphState( Partial & p, double fweight );
+static inline MorphState UpdateMorphState( Partial & p, double fweight );
+static inline MorphState FinalizeMorphState( Partial & p, double fweight );
+*/
+
+#endif
 
 const double Morpher::DefaultFixThreshold = -90; // dB, very low by default
 
-// shaping parameter, see interpolateLogAmplitudes:
+// shaping parameter, see interpolateAmplitude:
 // compile with LINEAR_AMP_MORPHS defined for
 // legacy-style linear amplitude morphs by default.
 // The default can always be overridden using 
@@ -79,20 +105,21 @@ const double Morpher::DefaultBreakpointGap = 1E-4; // minimum time (sec) between
                                                    // morphed Partials
 
 // helper declarations
-static inline double interpolateFrequencies( double f0, double f1, double alpha );
-static inline double interpolateLogAmplitudes( double a0, double a1, double alpha, double shape );
-static inline double interpolateBandwidths( double bw0, double bw1, double alpha );
-static inline double interpolatePhases( double phi0, double phi1, double alpha );
-static inline double interpolateWholePeriods( double f0, double f1, double dt, double alpha );
+static inline bool partial_is_nonnull( const Partial & p );
 
-static inline Breakpoint interpolateParameters( const Breakpoint & srcBkpt, const Breakpoint & tgtBkpt,
-                                                double fweight, double aweight, double ashape, 
-                                                double bweight );
+static inline double 
+interpolateAmplitude( double srcAmp, double tgtAmp, double alpha, double shape );
+static inline double 
+interpolateBandwidth( double srcBw, double tgtBw, double alpha, double shape );
+static inline double 
+interpolateFrequency( double srcFreq, double tgtFreq, double alpha );
+static inline double 
+interpolatePhase( double srcPhase, double tgtPhase, double alpha );
 
-static void fixPhaseTravel( const Breakpoint & bp0, Breakpoint & bp1, double dt, double alpha );
-   
-static double phaseTravel( double f0, double f1, double dt );
-static double wrapPi( double x );
+static inline Breakpoint 
+interpolateParameters( const Breakpoint & srcBkpt, const Breakpoint & tgtBkpt,
+                       double fweight, double aweight, double ashape, double bweight );
+
    
 #pragma mark -- construction --
 
@@ -185,7 +212,7 @@ Morpher::operator= ( const Morpher & rhs )
 #pragma mark -- Partial morphing --
 
 // ---------------------------------------------------------------------------
-//    morphPartial
+//    morphPartials
 // ---------------------------------------------------------------------------
 //!	Morph a pair of Partials to yield a new morphed Partial. 
 //!	Dummy Partials (having no Breakpoints) don't contribute to the
@@ -205,7 +232,7 @@ Morpher::operator= ( const Morpher & rhs )
 //! \return the morphed Partial
 //
 Partial
-Morpher::morphPartial( Partial src, Partial tgt, int assignLabel )
+Morpher::morphPartials( Partial src, Partial tgt, int assignLabel )
 {  
     if ( (src.numBreakpoints() == 0) && (tgt.numBreakpoints() == 0) )
     {
@@ -226,11 +253,19 @@ Morpher::morphPartial( Partial src, Partial tgt, int assignLabel )
     {
         dontAddBefore = std::min( dontAddBefore, tgt_iter.time() );
     }
+
     
     //  make a new Partial:
     Partial newp;
     newp.setLabel( assignLabel );
     
+ #if FIX_PHASE
+    // InitMorphState( newp, _freqFunction->valueAt( dontAddBefore ) );
+    CurrentState = GetMorphState( _freqFunction->valueAt( dontAddBefore ) );
+    DEHR.clear();
+    DEHR.push_back( std::make_pair( dontAddBefore, _freqFunction->valueAt( dontAddBefore ) ) );
+#endif
+
     //  Merge Breakpoints from the two Partials,
     //  loop until there are no more Breakpoints to
     //  consider in either Partial.
@@ -287,6 +322,58 @@ Morpher::morphPartial( Partial src, Partial tgt, int assignLabel )
             dontAddBefore = newp.endTime() + _minBreakpointGapSec;
         }          
     }
+
+ #if 0
+    if ( 0 != newp.numBreakpoints() )
+    {
+        FinalizeMorphState( newp, _freqFunction->valueAt( newp.endTime() ) );
+    }
+    DEHR.clear();
+#endif
+
+ #if FIX_PHASE
+    if ( 0 != newp.numBreakpoints() )
+    {
+        // look at DEHR
+        std::vector< std::pair< double, double > >::iterator dehr_iter = DEHR.begin();
+        MorphState ms = GetMorphState( dehr_iter->second );
+        double last_time_phase_correct = 0;
+        
+        while ( dehr_iter != DEHR.end() )
+        {
+            if ( GetMorphState( (dehr_iter)->second ) != ms )
+            {
+                //  switch!
+                if ( INTERP != ms )
+                {
+                    // switch to INTERP
+                    fixPhaseForward( newp, last_time_phase_correct, dehr_iter->first );
+                }
+                else
+                {
+                    //  switch to SRC or TGT                
+                    if ( 0 == last_time_phase_correct  )
+                    {   
+                        //  first transition
+                        fixPhaseBefore( newp, dehr_iter->first );
+                    }
+                    else
+                    {
+                        //   not first transition
+                        fixPhaseBetween( newp, last_time_phase_correct, dehr_iter->first );
+                    }                
+                }
+                last_time_phase_correct = dehr_iter->first;            
+                    
+                ms = GetMorphState( dehr_iter->second );
+
+            }
+            ++dehr_iter;
+        }
+        fixPhaseAfter( newp, last_time_phase_correct );
+        DEHR.clear();
+    }
+#endif
 
     return newp;
 }
@@ -433,12 +520,12 @@ Morpher::morph( PartialList::const_iterator beginSrc,
         //    don't add the crossfade label to the set:
         if ( it->label() != 0 )
         {
-            PartialPtrPair & match = correspondence[ it->label() ];
-            if ( match.first != 0 )
+            MorphingPair & match = correspondence[ it->label() ];
+            if ( match.src.numBreakpoints() != 0 )
             {
-                Throw( InvalidArgument, "Partials must be distilled before morphing." );
+                Throw( InvalidArgument, "Source Partials must be distilled before morphing." );
             }
-            match.first = &(*it);
+            match.src = *it;
         }
     }
     
@@ -448,12 +535,12 @@ Morpher::morph( PartialList::const_iterator beginSrc,
         //    don't add the crossfade label to the set:
         if ( it->label() != 0 )
         {
-            PartialPtrPair & match = correspondence[ it->label() ];
-            if ( match.second != 0 )
+            MorphingPair & match = correspondence[ it->label() ];
+            if ( match.tgt.numBreakpoints() != 0 )
             {
-                Throw( InvalidArgument, "Partials must be distilled before morphing." );
+                Throw( InvalidArgument, "Target Partials must be distilled before morphing." );
             }
-            match.second = &(*it);
+            match.tgt = *it;
         }
     }
     
@@ -574,8 +661,8 @@ Breakpoint
 Morpher::fadeSrcBreakpoint( Breakpoint bp, double time ) const
 {
     double alpha = _ampFunction->valueAt( time );
-    bp.setAmplitude( interpolateLogAmplitudes( bp.amplitude(), 0, 
-                                               alpha, _ampMorphShape ) );
+    bp.setAmplitude( interpolateAmplitude( bp.amplitude(), 0, 
+                                           alpha, _ampMorphShape ) );
     return bp;
 }
 
@@ -597,8 +684,8 @@ Breakpoint
 Morpher::fadeTgtBreakpoint( Breakpoint bp, double time ) const
 {
     double alpha = _ampFunction->valueAt( time );
-    bp.setAmplitude( interpolateLogAmplitudes( 0, bp.amplitude(), 
-                                               alpha, _ampMorphShape ) );
+    bp.setAmplitude( interpolateAmplitude( 0, bp.amplitude(), 
+                                           alpha, _ampMorphShape ) );
     return bp;
 }
 
@@ -983,9 +1070,169 @@ Morpher::partials( void ) const
 #pragma mark -- helpers: morphed parameter computation --
 
 // ---------------------------------------------------------------------------
+//    morph_aux
+// ---------------------------------------------------------------------------
+//    Helper function that performs the morph between corresponding pairs
+//    of Partials identified in a PartialCorrespondence. Called by the
+//    morph() implementation accepting two sequences of Partials.
+//
+//    PartialCorrespondence represents a map from non-zero Partial 
+//    labels to pairs of Partials (MorphingPair) that should be morphed 
+//    into a single Partial that is assigned that label. 
+//
+void Morpher::morph_aux( PartialCorrespondence & correspondence  )
+{
+#if FIX_PHASE
+    DEHR.clear();
+#endif
+    PartialCorrespondence::const_iterator it;
+    for ( it = correspondence.begin(); it != correspondence.end(); ++it )
+    {
+        Partial::label_type label = it->first;
+        MorphingPair match = it->second;
+        Partial & src = match.src;
+        Partial & tgt = match.tgt;
+       
+        //  sanity check:
+        //  one of those Partials must have some Breakpoints
+        Assert( src.numBreakpoints() != 0 || tgt.numBreakpoints() != 0 );
+
+        debugger << "morphing " << ( ( 0 < src.numBreakpoints() )?( 1 ):( 0 ) )
+                   << " and " << ( ( 0 < tgt.numBreakpoints() )?( 1 ):( 0 ) )
+                   << " partials with label " <<    label << endl;
+                   
+        //  &^)     HEY LOOKIE HERE!!!!!!!!!!!!!                   
+        
+        //  ensure that Partials begin and end at zero
+        //  amplitude to solve the problem of Nulls 
+        //  getting left out of morphed Partials leading to
+        //  eroneous non-zero amplitude segments:
+        if ( src.numBreakpoints() != 0 )
+        {
+            if ( src.first().amplitude() != 0.0 && src.startTime() > _minBreakpointGapSec )
+            {
+                double t = src.startTime() - _minBreakpointGapSec;
+                Breakpoint null = src.parametersAt( t );
+                src.insert( t, null );
+            }
+            if ( src.last().amplitude() != 0.0 )
+            {
+                double t = src.endTime() + _minBreakpointGapSec;
+                Breakpoint null = src.parametersAt( t );
+                src.insert( t, null );
+            }
+        }
+        
+        if ( tgt.numBreakpoints() != 0 )
+        {            
+            if ( tgt.first().amplitude() != 0.0 && tgt.startTime() > _minBreakpointGapSec )
+            {
+                double t = tgt.startTime() - _minBreakpointGapSec;
+                Breakpoint null = tgt.parametersAt( t );
+                tgt.insert( t, null );
+            }
+            if ( tgt.last().amplitude() != 0.0 )
+            {
+                double t = tgt.endTime() + _minBreakpointGapSec;
+                Breakpoint null = tgt.parametersAt( t );
+                tgt.insert( t, null );
+            }
+        }
+        //  &^)     HEY LOOKIE HERE!!!!!!!!!!!!!                   
+        //  the question is: after sticking nulls on the ends,
+        //  should be strip nulls OFF the ends of the morphed
+        //  partial? If so, how many? (ans to second is one, 
+        //  cannot have both nulls appear at end of morphed,
+        //  because of min gap). If we unconditionally add
+        //  nulls to ends (regardless of starting and ending
+        //  amps), then we can (I think) be sure that taking
+        //  off one null from each end leaves the Partial in 
+        //  an unmolested state.... maybe. No, its possible that
+        //  the morphing function would skip over both artificial
+        //  nulls, so we cannot be sure. Hmmmmm....
+        //  For now, just leave the nulls on the ends,
+        //  the are relatively harmless.
+        //
+        //  Actually, a (klugey) solution is to remember the times 
+        //  of those artificial nulls, and then see if the
+        //  Partial begins or ends at one of those times.
+        //  No, cannot guarantee that one Partial doesn't
+        //  have a null at the time we put an artificial null
+        //  in the other one. Hmmmmm.....
+
+               
+        //  perform the morph between the two Partials, 
+        //  save the result if it has any Breakpoints
+        //  (it may not depending on the morphing functions):                          
+        Partial newp = morphPartials( src, tgt, label );
+        if ( partial_is_nonnull( newp ) )
+        {
+            _partials.push_back( newp );
+        }
+    }
+ 
+ #if 0 // FIX_PHASE
+ 
+ // can do this in morphPartials instead, cannot decide which is better?
+ 
+    // look at DEHR
+    std::sort( DEHR.begin(), DEHR.end() );  //  sort in time order
+    std::vector< std::pair< double, double > >::iterator dehr_iter = DEHR.begin();
+    MorphState ms = GetMorphState( dehr_iter->second );
+    double last_time_phase_correct = 0;
+    
+    notifier << "Morph starts at " << StateStrings[ ms ] << endl;
+    while ( dehr_iter != DEHR.end() )
+    {
+        if ( GetMorphState( (dehr_iter)->second ) != ms )
+        {
+            //  switch!
+            if ( INTERP != ms )
+            {
+                // switch to INTERP
+                notifier << "--- fix phase after " << last_time_phase_correct << " until " 
+                         << dehr_iter->first << " ---" << endl;
+                fixPhaseForward( _partials.begin(), _partials.end(), last_time_phase_correct, dehr_iter->first );
+            }
+            else
+            {
+                //  switch to SRC or TGT                
+                if ( 0 == last_time_phase_correct  )
+                {   
+                    //  first transition
+                    notifier << "--- fix phase before " << dehr_iter->first << " ---" << endl;
+                    fixPhaseBefore( _partials.begin(), _partials.end(), dehr_iter->first );
+                }
+                else
+                {
+                    //   not first transition
+                    notifier << "--- fix phase between " << last_time_phase_correct << " and " 
+                             << dehr_iter->first << " ---" << endl;
+                    fixPhaseBetween( _partials.begin(), _partials.end(), last_time_phase_correct, dehr_iter->first );
+                }                
+            }
+            last_time_phase_correct = dehr_iter->first;            
+                
+            ms = GetMorphState( dehr_iter->second );
+            notifier << "Morph switched to " << StateStrings[ ms ] 
+                     << " at " << dehr_iter->first << endl;
+
+        }
+        ++dehr_iter;
+    }
+    notifier << "--- fix phase after " << last_time_phase_correct << " ---" << endl;
+    fixPhaseAfter( _partials.begin(), _partials.end(), last_time_phase_correct );
+#endif
+}
+
+
+// ---------------------------------------------------------------------------
 //    adjustFrequency
 // ---------------------------------------------------------------------------
-// Leave the phase alone, because I don't know what we can do with it.
+//  Adjust frequency of low-amplitude Breakpoints to be harmonics of the
+//  reference Partial, if one has been specified.
+//
+//  Leave the phase alone, because I don't know what we can do with it.
 //
 static void adjustFrequency( Breakpoint & bp, const Partial & ref, 
                              Partial::label_type harmonicNum,
@@ -1019,7 +1266,7 @@ static void adjustFrequency( Breakpoint & bp, const Partial & ref,
 //  Helper function to examine a morphed Partial and determine whether 
 //  it has any non-null Breakpoints. If not, there's no point in saving it.
 //
-static bool partial_is_nonnull( const Partial & p )
+static inline bool partial_is_nonnull( const Partial & p )
 {
     for ( Partial::const_iterator it = p.begin(); it != p.end(); ++it )
     {
@@ -1032,181 +1279,11 @@ static bool partial_is_nonnull( const Partial & p )
 }
 
 // ---------------------------------------------------------------------------
-//    morph_aux
-// ---------------------------------------------------------------------------
-//    Helper function that performs the morph between corresponding pairs
-//    of Partials identified in a PartialCorrespondence. Called by the
-//    morph() implementation accepting two sequences of Partials.
-//
-//    PartialCorrespondence represents a map from non-zero Partial 
-//    labels to pairs of pointers to Partials that should be morphed 
-//    into a single Partial that is assigned that label. 
-//    PartialPtrPair is a pair of pointers to Partials that are
-//    initialized to zero, and it is the element type for the
-//    PartialCorrespondence map.
-//
-void Morpher::morph_aux( PartialCorrespondence & correspondence  )
-{
-    PartialCorrespondence::const_iterator it;
-    for ( it = correspondence.begin(); it != correspondence.end(); ++it )
-    {
-        Partial::label_type label = it->first;
-        PartialPtrPair match = it->second;
-        const Partial * p0 = match.first;
-        const Partial * p1 = match.second;
-
-        //    sanity check:
-        //    one of those Partials must exist
-        Assert( p0 != 0 || p1 != 0 );
-                    
-        // construct source Partial for morph:
-        Partial src;
-        if ( p0 != 0 )
-        {
-            //    use the Partial in the correspondence
-            src = *p0;
-        }
-        else if ( _srcRefPartial.numBreakpoints() != 0 )
-        {
-            //    fake it from the reference Partial:
-            double fscale = double(label) / _srcRefPartial.label();
-            src = makePartialFromReference( _srcRefPartial, fscale );
-        }
-        //    else src is a dummy
-        
-        // construct target Partial for morph:
-        Partial tgt;
-        if ( p1 != 0 )
-        {
-            //    use the Partial in the correspondence
-            tgt = *p1;
-        }
-        else if ( _tgtRefPartial.numBreakpoints() != 0 )
-        {
-            //    fake it from the reference Partial:
-            double fscale = double(label) / _tgtRefPartial.label();            
-            tgt = makePartialFromReference( _tgtRefPartial, fscale );
-        }
-        //    else tgt is a dummy
-        
-        debugger << "morphing " << ( ( 0 < src.numBreakpoints() )?( 1 ):( 0 ) )
-                   << " and " << ( ( 0 < tgt.numBreakpoints() )?( 1 ):( 0 ) )
-                   << " partials with label " <<    label << endl;
-                   
-        //  &^)     HEY LOOKIE HERE!!!!!!!!!!!!!                   
-        // try this kludge to solve the problem of Nulls 
-        // getting left out of morphed Partials leading to
-        // eroneous non-zero amplitude segments:
-        if ( src.numBreakpoints() != 0 )
-        {
-            if ( src.first().amplitude() != 0.0 && src.startTime() > _minBreakpointGapSec )
-            {
-                double t = src.startTime() - _minBreakpointGapSec;
-                Breakpoint null = src.parametersAt( t );
-                src.insert( t, null );
-            }
-            if ( src.last().amplitude() != 0.0 )
-            {
-                double t = src.endTime() + _minBreakpointGapSec;
-                Breakpoint null = src.parametersAt( t );
-                src.insert( t, null );
-            }
-        }
-        
-        if ( tgt.numBreakpoints() != 0 )
-        {            
-            if ( tgt.first().amplitude() != 0.0 && tgt.startTime() > _minBreakpointGapSec )
-            {
-                double t = tgt.startTime() - _minBreakpointGapSec;
-                Breakpoint null = tgt.parametersAt( t );
-                tgt.insert( t, null );
-            }
-            if ( tgt.last().amplitude() != 0.0 )
-            {
-                double t = tgt.endTime() + _minBreakpointGapSec;
-                Breakpoint null = tgt.parametersAt( t );
-                tgt.insert( t, null );
-            }
-        }
-                          
-        Partial newp = morphPartial( src, tgt, label );
-        if ( partial_is_nonnull( newp ) )
-        {
-            _partials.push_back( newp );
-        }
-    }
-}
-
-
-// ---------------------------------------------------------------------------
-//    phaseTravel
-// ---------------------------------------------------------------------------
-//    Compute the sinusoidal phase travel due to sinusoidal oscillation
-// beginning at frequency f0 and changing linearly to frequency f1
-// over time dt. Return the total unwrapped phase travel.
-//
-static double  phaseTravel( double f0, double f1, double dt )
-{
-    double favg = .5 * ( f0 + f1 );
-    return 2 * Pi * favg * dt;
-}
- 
-// ---------------------------------------------------------------------------
-//    wrapPi
-// ---------------------------------------------------------------------------
-//    Wrap an unwrapped phase value to the range (-pi,pi].
-//
-static double wrapPi( double x )
-{
-    x = std::fmod( x, 2*Pi );
-    
-    if ( x > Pi )
-    {
-        x = x - ( 2*Pi );
-    }
-    else if ( x < -Pi )
-    {
-        x = x + ( 2*Pi );
-    }
-    return x;
-}
-
-// ---------------------------------------------------------------------------
-//    makePartialFromReference
-// ---------------------------------------------------------------------------
-// Helper function to construct a Partial for morphing by scaling
-// the frequencies of the reference Partial. This is used when only
-// one of the sources in a morph has a Partial with a particular label.
-//
-Partial
-Morpher::makePartialFromReference( Partial scaleMe, double fscale )
-{
-   Partial::iterator prev = scaleMe.begin();    
-   
-   for ( Partial::iterator it = scaleMe.begin(); it != scaleMe.end(); ++it )
-    {
-        it.breakpoint().setAmplitude( 0 );
-        it.breakpoint().setFrequency( it.breakpoint().frequency() * fscale );
-        
-        if ( it != prev )
-        {
-           double travel = phaseTravel( prev.breakpoint().frequency(), 
-                                        it.breakpoint().frequency(),
-                                        it.time() - prev.time() );
-           it.breakpoint().setPhase( wrapPi( prev.breakpoint().phase() + travel ) );
-        
-           prev = it;
-        }
-    }
-    return scaleMe;
-}
-
-    
-// ---------------------------------------------------------------------------
-//    Helper function for computing individual morphed amplitude values
+//  Helper function for computing individual morphed amplitude values
+//  by interpolating LOG amplitude.
 //
 static inline double 
-interpolateLogAmplitudes( double a0, double a1, double alpha, double shape )
+interpolateAmplitude( double srcAmp, double tgtAmp, double alpha, double shape )
 {    
     //    log-amplitude morphing:
     //    it is essential to add in a small Epsilon, so that 
@@ -1223,11 +1300,11 @@ interpolateLogAmplitudes( double a0, double a1, double alpha, double shape )
     //    amplitude to avoid raising the noise floor a whole lot.
     using std::pow;
     static const double Epsilon = 1E-12;
-    if ( ( a0 > Epsilon ) || ( a1 > Epsilon ) )
+    if ( ( srcAmp > Epsilon ) || ( tgtAmp > Epsilon ) )
     {
-        double newamp = ( pow( a0 + shape, (1.-alpha) ) * 
-                              pow( a1 + shape, alpha ) ) - shape;
-        return std::max( 0.0, newamp );        
+        double morphedAmp = ( pow( srcAmp + shape, (1.-alpha) ) * 
+                              pow( tgtAmp + shape, alpha ) ) - shape;
+        return std::max( 0.0, morphedAmp );        
         
     }
     else
@@ -1235,68 +1312,71 @@ interpolateLogAmplitudes( double a0, double a1, double alpha, double shape )
         return 0;
     }
 }
-#if 0
 
 // ---------------------------------------------------------------------------
-//    Helper function for computing individual morphed frequency values
+//  Helper function for computing individual morphed bandwidth values
+//  by interpolating LOG bandwidth.
 //
 static inline double 
-interpolateFrequencies( double f0, double f1, double alpha )
-{
-    return (alpha * f1) + ((1.-alpha) * f0);
-}
-
-// ---------------------------------------------------------------------------
-// Helper function for computing individual morphed bandwidth values.
-// Instead of just interpolating the bandwidth envelopes, interpolate
-// the amount of noise energy. This makes more intuitive sense.
-//
-static inline double 
-interpolateBandwidths( const Breakpoint & bp0, const Breakpoint & bp1, 
-                       double alpha )
-{
-   double noise0 = bp0.bandwidth() * bp0.amplitude();
-   double noise1 = bp1.bandwidth() * bp1.amplitude();
-   
-   return 0; // (alpha * bw1) + ((1.-alpha) * bw0);
-}
-    
-// ---------------------------------------------------------------------------
-//    Helper function for computing individual morphed phase values
-//
-static inline double 
-interpolatePhases( double phi0, double phi1, double alpha )
-{
-    //    try to wrap the phase so that they are
-    //    as similar as possible:
-    while ( ( phi0 - phi1 ) > Pi )
+interpolateBandwidth( double srcBw, double tgtBw, double alpha, double shape )
+{    
+#if NEW_BW_MORPH
+    //    log-bandwidth morphing: as above,
+    //    it is essential to add in a small Epsilon.
+    using std::pow;
+    static const double Epsilon = 1E-12;
+    if ( ( srcBw > Epsilon ) || ( tgtBw > Epsilon ) )
     {
-        phi0 -= 2 * Pi;
+        double morphedBw = ( pow( srcBw + shape, (1.-alpha) ) * 
+                             pow( tgtBw + shape, alpha ) ) - shape;
+        return std::max( 0.0, morphedBw );        
+        
     }
-    while ( ( phi1 - phi0 ) > Pi )
+    else
     {
-        phi0 += 2 * Pi;
+        return 0;
     }
-
-    return std::fmod( (alpha * phi1) + ((1.-alpha) * phi0), 2 * Pi );
-}
+#else
+    return ( (1.-alpha) * srcBw ) + ( alpha * tgtBw );
 #endif
-
-// ---------------------------------------------------------------------------
-//  Helper function for correcting the blandly-interpolated phase to 
-//  account for different number of periods traveled over dt. This
-//  is probably not the final word on how to do this correctly,
-//  but probably we need something like this in order that
-//  the simplest cases of morphing work intuitively.
-static inline double 
-interpolateWholePeriods( double f0, double f1, double dt, double alpha )
-{
-    double periods0 = 2 * Pi * int(f0 * dt);
-    double periods1 = 2 * Pi * int(f1 * dt);
-    
-    return std::fmod( (alpha * periods1) + ((1.-alpha) * periods0), 2 * Pi );
 }
 
+// ---------------------------------------------------------------------------
+//  Helper function for computing individual morphed frequency values.
+//
+static inline double 
+interpolateFrequency( double srcFreq, double tgtFreq, double alpha )
+{    
+    return ( (1.-alpha) *  srcFreq ) + ( alpha * tgtFreq );
+}
+
+// ---------------------------------------------------------------------------
+//  Helper function for computing individual morphed phase values.
+//
+static inline double 
+interpolatePhase( double srcphase, double tgtphase, double alpha )
+{    
+    // Interpolate raw absolute phase values. If the interpolated
+    // phase matters at all (near the morphing function boudaries 0
+    // and 1) then that will give a good target phase value, and the
+    // frequency will be adjusted to match the phase. Otherwise,
+    // the phase will just be recomputed to match the interpolated
+    // frequency.
+    //
+    // Wrap the computed phase onto an appropriate range.
+    // wrap the phases so that they are as similar as possible,
+    // so that phase interpolation is shift-invariant.
+    while ( ( srcphase - tgtphase ) > Pi )
+    {
+      srcphase -= 2 * Pi;
+    }
+    while ( ( tgtphase - srcphase ) > Pi )
+    {
+      srcphase += 2 * Pi;
+    }
+    double morphedPhase = ( (1.-alpha) * srcphase ) + ( alpha * tgtphase );
+    return std::fmod( morphedPhase, 2 * Pi );
+}
 
 // ---------------------------------------------------------------------------
 //    Helper function for interpolating Breakpoint parameters
@@ -1306,175 +1386,28 @@ interpolateParameters( const Breakpoint & srcBkpt, const Breakpoint & tgtBkpt,
                        double fweight, double aweight, double ashape, 
                        double bweight )
 {
-   using std::pow;
-   using std::sqrt;
+    Breakpoint morphed;
 
-   // compute interpolated Breakpoint parameters:
-   Breakpoint morphed;
+    // interpolate frequencies:
+    morphed.setFrequency(
+        interpolateFrequency( srcBkpt.frequency(), tgtBkpt.frequency(),
+                              fweight ) );
 
-   // interpolate frequencies:
-   morphed.setFrequency( ((1.-fweight) *  srcBkpt.frequency()) + 
-                         (fweight * tgtBkpt.frequency()) );
+    // interpolate LOG amplitudes:
+    morphed.setAmplitude( 
+        interpolateAmplitude( srcBkpt.amplitude(), tgtBkpt.amplitude(), 
+                              aweight, ashape ) );
 
-   // interpolate LOG amplitudes:
-   //    it is essential to add in a small Epsilon, so that 
-   //    occasional zero amplitudes do not introduce artifacts
-   //    (if amp is zero, then even if alpha is very small
-   //    the effect is to multiply by zero, because 0^x = 0).
-   //
-   //    When Epsilon is very small, the curve representing the
-   //    morphed amplitude is very steep, such that there is a 
-   //    huge difference between zero amplitude and very small
-   //    amplitude, and this causes audible artifacts. So instead
-   //    use a larger value that shapes the curve more nicely. 
-   //    Just have to subtract this value from the morphed 
-   //    amplitude to avoid raising the noise floor a whole lot.
-   double morphedAmp = 0;
-   static const double Epsilon = 1E-12;
-   if ( ( srcBkpt.amplitude() > Epsilon ) || ( tgtBkpt.amplitude() > Epsilon ) )
-   {
-      morphedAmp = ( pow( srcBkpt.amplitude() + ashape, (1.-aweight) ) * 
-                     pow( tgtBkpt.amplitude() + ashape, aweight ) ) - ashape;
-      morphedAmp = std::max( 0.0, morphedAmp );  
-     
-   }
-   morphed.setAmplitude( morphedAmp );
-   
-   // interpolate bandwidth: 
-   // Instead of just interpolating the bandwidth envelopes, interpolate
-   // the amount of noise energy. This makes more intuitive sense.
-   // Well, sort of, but only if you also morph sinusoidal energy instead
-   // of amplitude, and then we are really changing the way morphing works.
-   // We are no longer interpolating the paramaters of our model at all!
-   // Not sure that's what I want.
-   //
-   // probably morphing bandwidth logarithmically like ampliude is better.
-   #if NEW_BW_MORPH
-   double morphedBW =  0;
-   if ( ( srcBkpt.bandwidth() > Epsilon ) || ( tgtBkpt.bandwidth() > Epsilon ) )
-   {
-      morphedBW = ( pow( srcBkpt.bandwidth() + ashape, (1.-bweight) ) * 
-                     pow( tgtBkpt.bandwidth() + ashape, bweight ) ) - ashape;
-      morphedBW = std::max( 0.0, morphedBW );  
-     
-   }
-   #else
-   double morphedBW = ((1.-bweight) * srcBkpt.bandwidth() ) + (bweight * tgtBkpt.bandwidth());
-   #endif
-   morphed.setBandwidth( morphedBW );
-   
-   // interpolate phase:
-   // Interpolate raw absolute phase values. If the interpolated
-   // phase matters at all (near the morphing function boudaries 0
-   // and 1) then that will give a good target phase value, and the
-   // frequency will be adjusted to match the phase. Otherwise,
-   // the phase will just be recomputed to match the interpolated
-   // frequency.
-   //
-   // Wrap the computed phase onto an appropriate range.
-   // wrap the phases so that they are as similar as possible,
-   // so that phase interpolation is shift-invariant.
-   double srcphase = srcBkpt.phase();
-   while ( ( srcphase - tgtBkpt.phase() ) > Pi )
-   {
-      srcphase -= 2 * Pi;
-   }
-   while ( ( tgtBkpt.phase() - srcphase ) > Pi )
-   {
-      srcphase += 2 * Pi;
-   }
-   double morphedPhase = ((1.-fweight) * srcphase) + (fweight * tgtBkpt.phase());
-   morphed.setPhase( std::fmod( morphedPhase, 2 * Pi ) );
+    // interpolate bandwidth: 
+    morphed.setBandwidth(  
+        interpolateBandwidth( srcBkpt.bandwidth(), tgtBkpt.bandwidth(), 
+                              bweight, ashape ) );
 
-   return morphed;
-}
+    // interpolate phase:
+    morphed.setPhase( 
+        interpolatePhase( srcBkpt.phase(), tgtBkpt.phase(), fweight ) );
 
-// ---------------------------------------------------------------------------
-//    fixPhaseTravel
-// ---------------------------------------------------------------------------
-// Helper function to update the frequency and phase of a morphed Breakpoint
-// to achieve a desired weighted interpolation of phase travel. The desired
-// travel is computed as a weighted function of the phase travel that would
-// exactly match the phase of bp1 and the travel that would exactly match the 
-// frequencies of the two breakpoints. These two values of the phase travel
-// are weighted by the magnitude of the difference between the value of the
-// frequency morph function and one half, so that a a halfway morph uses
-// only the frequencies to determine the desired phase travel and a morph
-// near one of the boundaries (1 or 0) relies only on the interpolated absolute
-// phase to determine the desired phase travel. The frequency of bp1 is updated 
-// according to this morphed phase travel, but the frequency correction is 
-// clamped to at most MaxFixPct (0.2%). Finally, the phase of bp1 is updated to 
-// match the phase travel between bp0 and bp1 with the updated frequency.
-//
-// bp0 is the Breakpoint that is already part of the morphed Partial
-// bp1 is the new morphed Breakpoint that is being computed
-// dt is the time between the two Breakpoints
-// alpha is the value of the frequency morphing function. 
-//
-// It doesn't matter whether the new Breakpoint is derived from a 
-// source or target Partial (0 or 1 value of morph function) since the 
-// only use of alpha is a measure of the magnitude of the difference 
-// from 0.5 (a halfway morph).
-// 
-static void
-fixPhaseTravel( const Breakpoint & bp0, Breakpoint & bp1, double dt, double alpha )
-{   
-    // cannot do anything reasonable if dt == 0, since
-    // there is no phase travel, should never happen:
-    Assert( dt > 0 ); 
-    alpha = std::max( 0., alpha );   
-    alpha = std::min( 1., alpha );
-
-    // compute the sinusoidal phase travel between the two Breakpoints:
-    double travel = phaseTravel( bp0.frequency(), bp1.frequency(), dt ); 
-
-    // Compute a morphed phase travel by weighting the error
-    // correct by the distance from the nearest source, so that
-    // near halfway (alpha == .5) we rely on the frequencies
-    // to compute the morphed phase travel, and near the boundaries
-    // of the morph (alpha near 1 or 0) we rely on the interpolated
-    // absolute phases. Only try to match phase near the boundaries.
-    static const double PHASE_MATCH_RANGE = 0.2;
-    if ( std::fabs( 0.5 - alpha ) > ( 0.5 - PHASE_MATCH_RANGE ) )
-    {
-        double errorWeight = ( std::fabs( 0.5 - alpha ) - ( 0.5 - PHASE_MATCH_RANGE ) ) / PHASE_MATCH_RANGE;
-   
-        // compute the error between the predicted (due to phase travel) phase
-        // and the phase of the target Breakpoint:
-        double err = wrapPi( bp1.phase() - ( bp0.phase() + travel ) );
-
-        // only try to correct HALF of the error, to avoid frequency oscillations
-        travel += .5 * errorWeight * err;         
-
-        // compute a new frequency for bp1 from the morphed
-        // phase travel:
-        double ftgt = ( travel / ( Pi * dt ) ) - bp0.frequency();
-
-        //    the maximum amount by which frequency can be changed to 
-        //    attempt to achieve correct phases:
-        static const double MaxFixPct = .2;
-
-        //    if bp1 is not a null breakpoint, may need to 
-        //    clamp the amount of frequency correction:
-        if ( bp1.amplitude() != 0. )
-        {    
-           ftgt = std::min( ftgt, bp1.frequency() * ( 1 + (MaxFixPct*.01) ) );
-           ftgt = std::max( ftgt, bp1.frequency() * ( 1 - (MaxFixPct*.01) ) );
-        }
-
-        // update the morphed frequency to achieve the desired
-        // morphed phase travel:
-        bp1.setFrequency( ftgt );
-    }
-    
-    //  recompute the phase travel according to the  
-    //  frequency of bp1:
-    travel = phaseTravel( bp0.frequency(), bp1.frequency(), dt );
-
-    // update the phase of bp1 to be correct according
-    // to the morphed frequencies, updated to achieve
-    // the desired morphed phase travel: 
-    bp1.setPhase( wrapPi( bp0.phase() + travel ) );
+    return morphed;
 }
 
 // ---------------------------------------------------------------------------
@@ -1507,97 +1440,77 @@ Morpher::appendMorphedSrc( Breakpoint srcBkpt, const Partial & tgtPartial,
     double aweight = _ampFunction->valueAt( time );
     double bweight = _bwFunction->valueAt( time );
     
-    //    Don't insert Breakpoints at src times if all 
-    //    morph functions equal 1 (or > MaxMorphParam).
+    //  Need to insert a null (0 amplitude) Breakpoint
+    //  if src and tgt are 0 amplitude but the morphed
+    //  Partial is not. In rare cases, it is possible
+    //  to miss a needed null if we don't check for it 
+    //  explicitly. 
+    bool needNull = ( newp.numBreakpoints() != 0 ) &&
+                    ( newp.last().amplitude() != 0 ) &&
+                    ( srcBkpt.amplitude() == 0) &&
+                    ( tgtPartial.numBreakpoints() != 0 ) &&
+                    ( tgtPartial.amplitudeAt( time ) == 0 );
+
+    //  Don't insert Breakpoints at src times if all 
+    //  morph functions equal 1 (or > MaxMorphParam),
+    //  and a null is not needed.
     const double MaxMorphParam = .9;
     if ( fweight < MaxMorphParam ||
          aweight < MaxMorphParam ||
-         bweight < MaxMorphParam )
+         bweight < MaxMorphParam ||
+         needNull )
     {
+ #if FIX_PHASE
+        if ( GetMorphState( fweight ) != CurrentState )
+        {
+            CurrentState = GetMorphState( fweight );
+            DEHR.push_back( std::make_pair( time, fweight ) );
+        }
+        //UpdateMorphState( newp, fweight );
+#endif
+
+        
+        // adjust source Breakpoint frequencies according to the reference
+        // Partial (if a reference has been specified):
+        adjustFrequency( srcBkpt, _srcRefPartial, newp.label(), _freqFixThresholdDb, time );
+            
         if ( 0 == tgtPartial.numBreakpoints() )
         {
-            // hey, can this ever happen?
-            // only if no tgt reference is used
+            //  no corresponding target Partial exists:
             if ( 0 == _tgtRefPartial.numBreakpoints() )
             {
+                //  no reference Partial specified for tgt,
+                //  fade src instead:
                 newp.insert( time, fadeSrcBreakpoint( srcBkpt, time ) );
             }
-           else
-           {
-//////////////////////////
-#if 0
-                //  THIS IS NEW AND UNTESTED, AND WON'T EVER 
-                //  HAPPEN AS LONG AS MORPH_AUX IS CONSTRUCTING
-                //  FAKE PARTIALS FROM THE REFERENCE PARTIAL
+            else
+            {
+                //  reference Partial has been provided for tgt,
+                //  use it to construct a fake Breakpoint to morph
+                //  with the src:
                 Breakpoint tgtBkpt = _tgtRefPartial.parametersAt( time );
-                tgtBkpt.setFrequency( newp.label() * tgtBkpt.frequency() ); // label had better be right!
+                double fscale = (double) newp.label() / _tgtRefPartial.label();
+                tgtBkpt.setFrequency( fscale * tgtBkpt.frequency() );
+                tgtBkpt.setPhase( fscale * tgtBkpt.phase() );
                 tgtBkpt.setAmplitude( 0 );
                 tgtBkpt.setBandwidth( 0 );
-                // no idea what phase should be! How about same as source????????
-                tgtBkpt.setPhase( srcBkpt.phase() );
-
-                
-                adjustFrequency( srcBkpt, _srcRefPartial, newp.label(), _freqFixThresholdDb, time );
-                
                 
                 // compute interpolated Breakpoint parameters:
-                Breakpoint morphed = interpolateParameters( srcBkpt, tgtBkpt, fweight, 
-                                                            aweight, _ampMorphShape, bweight );
-
-    #if MORPH_PHASE_TRAVEL
-                // correct phase travel:
-                if ( 0 != newp.numBreakpoints() )
-                {
-                    double dt = ( time - newp.endTime() );
-                    fixPhaseTravel( newp.last(), morphed, dt, fweight );
-                }
-    #endif
-     
-                newp.insert( time, morphed );
-#endif            
-////////////////////////////
+                newp.insert( time, interpolateParameters( srcBkpt, tgtBkpt, fweight, 
+                                                          aweight, _ampMorphShape, bweight ) );
             }
         }    
         else
         {
             Breakpoint tgtBkpt = tgtPartial.parametersAt( time );
             
-            // adjust Breakpoint frequencies according to the reference
+            // adjust target Breakpoint frequencies according to the reference
             // Partial (if a reference has been specified):
-            adjustFrequency( srcBkpt, _srcRefPartial, newp.label(), _freqFixThresholdDb, time );
             adjustFrequency( tgtBkpt, _tgtRefPartial, newp.label(), _freqFixThresholdDb, time );
             
             // compute interpolated Breakpoint parameters:
             Breakpoint morphed = interpolateParameters( srcBkpt, tgtBkpt, fweight, 
                                                         aweight, _ampMorphShape, bweight );
-
-#if MORPH_PHASE_TRAVEL
-            // correct phase travel:
-            // (This is identical in the function below.)
-            //
-            //  HEY
-            //  maybe should toss out the interpolated phase and
-            //  replace it with the nearest source phase before
-            //  doing this fix?
-            //
-            //  Probably that makes no sense either.
-            if ( 0 != newp.numBreakpoints() )
-            {
-                /*
-                if ( fweight < .5 )
-                {
-                    morphed.setPhase( srcBkpt.phase() );
-                }
-                else
-                {
-                    morphed.setPhase( tgtBkpt.phase() );
-                }
-                */
-                double dt = ( time - newp.endTime() );
-                fixPhaseTravel( newp.last(), morphed, dt, fweight );
-            }
-#endif
- 
             newp.insert( time, morphed );
         }
     }
@@ -1632,59 +1545,77 @@ Morpher::appendMorphedTgt( Breakpoint tgtBkpt, const Partial & srcPartial,
     double fweight = _freqFunction->valueAt( time );
     double aweight = _ampFunction->valueAt( time );
     double bweight = _bwFunction->valueAt( time );
+    
+    //  Need to insert a null (0 amplitude) Breakpoint
+    //  if src and tgt are 0 amplitude but the morphed
+    //  Partial is not. In rare cases, it is possible
+    //  to miss a needed null if we don't check for it 
+    //  explicitly. 
+    bool needNull = ( newp.numBreakpoints() != 0 ) &&
+                    ( newp.last().amplitude() != 0 ) &&
+                    ( tgtBkpt.amplitude() == 0) &&
+                    ( srcPartial.numBreakpoints() != 0 ) &&
+                    ( srcPartial.amplitudeAt( time ) == 0 );
 
-    //    Don't insert Breakpoints at src times if all 
-    //    morph functions equal 0 (or < MinMorphParam).
+    //  Don't insert Breakpoints at src times if all 
+    //  morph functions equal 0 (or < MinMorphParam),
+    //  and a null is not needed.
     const double MinMorphParam = .1;
     if ( fweight > MinMorphParam ||
          aweight > MinMorphParam ||
-         bweight > MinMorphParam )
+         bweight > MinMorphParam ||
+         needNull )
     {
+ #if FIX_PHASE
+        if ( GetMorphState( fweight ) != CurrentState )
+        {
+            CurrentState = GetMorphState( fweight );
+            DEHR.push_back( std::make_pair( time, fweight ) );
+        }
+        //UpdateMorphState( newp, fweight );
+#endif
+        
+        // adjust target Breakpoint frequencies according to the reference
+        // Partial (if a reference has been specified):
+        adjustFrequency( tgtBkpt, _tgtRefPartial, newp.label(), _freqFixThresholdDb, time );
+
         if ( 0 == srcPartial.numBreakpoints() )
         {
-            // hey, can this ever happen?
-            // only if no src reference is used.
-            newp.insert( time, fadeTgtBreakpoint( tgtBkpt, time ) );
+            //  no corresponding source Partial exists:
+            if ( 0 == _srcRefPartial.numBreakpoints() )
+            {
+                //  no reference Partial specified for src,
+                //  fade tgt instead:
+                newp.insert( time, fadeTgtBreakpoint( tgtBkpt, time ) );
+            }
+            else
+            {
+                //  reference Partial has been provided for src,
+                //  use it to construct a fake Breakpoint to morph
+                //  with the tgt:
+                Breakpoint srcBkpt = _srcRefPartial.parametersAt( time );
+                double fscale = (double) newp.label() / _srcRefPartial.label();
+                srcBkpt.setFrequency( fscale * srcBkpt.frequency() );
+                srcBkpt.setPhase( fscale * srcBkpt.phase() );
+                srcBkpt.setAmplitude( 0 );
+                srcBkpt.setBandwidth( 0 );
+
+                // compute interpolated Breakpoint parameters:
+                newp.insert( time, interpolateParameters( srcBkpt, tgtBkpt, fweight, 
+                                                          aweight, _ampMorphShape, bweight ) );
+            }
         }
         else
         {
             Breakpoint srcBkpt = srcPartial.parametersAt( time );
 
-            // adjust Breakpoint frequencies according to the reference
+            // adjust source Breakpoint frequencies according to the reference
             // Partial (if a reference has been specified):
             adjustFrequency( srcBkpt, _srcRefPartial, newp.label(), _freqFixThresholdDb, time );
-            adjustFrequency( tgtBkpt, _tgtRefPartial, newp.label(), _freqFixThresholdDb, time );
 
             // compute interpolated Breakpoint parameters:           
             Breakpoint morphed = interpolateParameters( srcBkpt, tgtBkpt, fweight, 
                                                         aweight, _ampMorphShape, bweight );
-
-#if MORPH_PHASE_TRAVEL
-            // correct phase travel:
-            // (This is identical in the function above.)
-            //  HEY
-            //  maybe should toss out the interpolated phase and
-            //  replace it with the nearest source phase before
-            //  doing this fix?
-            //
-            //  Probably that makes no sense either.
-            if ( 0 != newp.numBreakpoints() )
-            {
-                /*
-                if ( fweight < .5 )
-                {
-                    morphed.setPhase( srcBkpt.phase() );
-                }
-                else
-                {
-                    morphed.setPhase( tgtBkpt.phase() );
-                }
-                */
-                double dt = ( time - newp.endTime() );
-                fixPhaseTravel( newp.last(), morphed, dt, fweight );
-            }
-#endif
-
             newp.insert( time, morphed );
         }
     }

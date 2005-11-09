@@ -155,29 +155,33 @@ public:
 	//!	\param 	tgt is the Partial corresponding to a morph function
 	//!		   	value of 1, evaluated at the specified time.
 	//!	\param 	assignLabel is the label assigned to the morphed Partial
-	//!   \return  the morphed Partial
-	Partial morphPartial( Partial src, Partial tgt, int assignLabel );
+	//! \return the morphed Partial
+	Partial morphPartials( Partial src, Partial tgt, int assignLabel );
+	
+	//  Bad legacy name for morphPartials.
+	Partial morphPartial( Partial src, Partial tgt, int assignLabel )
+	    { return morphPartials( src, tgt, assignLabel ); }
 
-	//!   Morph two sounds (collections of Partials labeled to indicate
-	//!   correspondences) into a single labeled collection of Partials.
-	//!   Unlabeled Partials (having label 0) are crossfaded. The morphed
-	//!   and crossfaded Partials are stored in the Morpher's PartialList.
+	//!	Morph two sounds (collections of Partials labeled to indicate
+	//!	correspondences) into a single labeled collection of Partials.
+	//!	Unlabeled Partials (having label 0) are crossfaded. The morphed
+	//!	and crossfaded Partials are stored in the Morpher's PartialList.
 	//!
-	//!   The Partials in the first range are treated as components of the 
-	//!   source sound, corresponding to a morph function value of 0, and  
-	//!   those in the second are treated as components of the target sound, 
-	//!   corresponding to a morph function value of 1.
+	//!	The Partials in the first range are treated as components of the 
+	//!	source sound, corresponding to a morph function value of 0, and  
+	//!	those in the second are treated as components of the target sound, 
+	//!	corresponding to a morph function value of 1.
 	//!
-	//!   \sa     crossfade, morphPartial
+	//!	\sa     crossfade, morphPartials
 	//!
-	//!	\param beginSrc is the beginning of the sequence of Partials
-	//!          corresponding to a morph function value of 0.
-	//!	\param endSrc is (one past) the end of the sequence of Partials
-	//!			 corresponding to a morph function value of 0.
-	//!	\param beginTgt is the beginning of the sequence of Partials
-	//!			 corresponding to a morph function value of 1.
-	//!	\param endTgt is (one past) the end of the sequence of Partials
-	//!			 corresponding to a morph function value of 1.
+	//!	\param  beginSrc is the beginning of the sequence of Partials
+	//!	        corresponding to a morph function value of 0.
+	//!	\param  endSrc is (one past) the end of the sequence of Partials
+	//!		    corresponding to a morph function value of 0.
+	//!	\param  beginTgt is the beginning of the sequence of Partials
+	//!		    corresponding to a morph function value of 1.
+	//!	\param  endTgt is (one past) the end of the sequence of Partials
+	//!		    corresponding to a morph function value of 1.
 	void morph( PartialList::const_iterator beginSrc, 
                 PartialList::const_iterator endSrc,
                 PartialList::const_iterator beginTgt, 
@@ -198,16 +202,16 @@ public:
 	//!
 	//!	The crossfaded Partials are stored in the Morpher's PartialList.
 	//!
-	//!   \param beginSrc is the beginning of the sequence of Partials
-	//!			 corresponding to a morph function value of 0.
-	//!	\param endSrc is (one past) the end of the sequence of Partials
-	//!			 corresponding to a morph function value of 0.
-	//!	\param beginTgt is the beginning of the sequence of Partials
-	//!			 corresponding to a morph function value of 1.
-	//!	\param endTgt is (one past) the end of the sequence of Partials
-	//!			 corresponding to a morph function value of 1.
-	//!   \param label is the label to associate with unlabeled
-	//!          Partials (default is 0).
+	//!	\param  beginSrc is the beginning of the sequence of Partials
+	//!		    corresponding to a morph function value of 0.
+	//!	\param  endSrc is (one past) the end of the sequence of Partials
+	//!			corresponding to a morph function value of 0.
+	//!	\param  beginTgt is the beginning of the sequence of Partials
+	//!		    corresponding to a morph function value of 1.
+	//!	\param  endTgt is (one past) the end of the sequence of Partials
+	//!			corresponding to a morph function value of 1.
+	//!	\param  label is the label to associate with unlabeled
+	//!	        Partials (default is 0).
 	void crossfade( PartialList::const_iterator beginSrc, 
                     PartialList::const_iterator endSrc,
                     PartialList::const_iterator beginTgt, 
@@ -215,17 +219,17 @@ public:
                     Partial::label_type label = 0 );
 
 
-    //!    Compute morphed parameter values at the specified time, using
-    //!    the source and target Breakpoints (assumed to correspond exactly
-    //!    to the specified time).
+    //!	Compute morphed parameter values at the specified time, using
+    //!	the source and target Breakpoints (assumed to correspond exactly
+    //!	to the specified time).
     //!
-    //!    \param  srcBkpt is the Breakpoint corresponding to a morph function
-    //!            value of 0.
-    //!    \param  tgtBkpt is the Breakpoint corresponding to a morph function
-    //!            value of 1.
-    //!    \param  time is the time corresponding to srcBkpt (used
-    //!            to evaluate the morphing functions and tgtPartial).
-    //!    \return the morphed Breakpoint
+    //!	\param  srcBkpt is the Breakpoint corresponding to a morph function
+    //!	        value of 0.
+    //!	\param  tgtBkpt is the Breakpoint corresponding to a morph function
+    //!	        value of 1.
+    //!	\param  time is the time corresponding to srcBkpt (used
+    //!	        to evaluate the morphing functions and tgtPartial).
+    //!	\return the morphed Breakpoint
     //
     Breakpoint
     morphBreakpoints( Breakpoint srcBkpt, Breakpoint tgtBkpt, 
@@ -236,6 +240,8 @@ public:
     //!	specified time) and the target Partial (whose parameters are
     //!	examined at the specified time).
     //!
+    //! DEPRECATED do not use.
+    //!
     //!	\pre    the target Partial may not be a dummy Partial (no Breakpoints).
     //!
     //!	\param 	bp is the Breakpoint corresponding to a morph function
@@ -243,8 +249,8 @@ public:
     //!	\param 	tgtPartial is the Partial corresponding to a morph function
     //!		   	value of 1, evaluated at the specified time.
     //!	\param 	time is the time corresponding to srcBkpt (used
-    //!           to evaluate the morphing functions and tgtPartial).
-    //! \return   the morphed Breakpoint
+    //!	        to evaluate the morphing functions and tgtPartial).
+    //! \return the morphed Breakpoint
     Breakpoint 
     morphSrcBreakpoint( const Breakpoint & bp, const Partial & tgtPartial, 
                         double time ) const;
@@ -254,6 +260,8 @@ public:
     //!	specified time) and the source Partial (whose parameters are
     //!	examined at the specified time).
     //!
+    //! DEPRECATED do not use.
+    //!
     //!	\pre    the source Partial may not be a dummy Partial (no Breakpoints).
     //!
     //!	\param 	bp is the Breakpoint corresponding to a morph function
@@ -261,8 +269,8 @@ public:
     //!	\param 	srcPartial is the Partial corresponding to a morph function
     //!		   	value of 0, evaluated at the specified time.
     //!	\param 	time is the time corresponding to srcBkpt (used
-    //!           to evaluate the morphing functions and tgtPartial).
-    //! \return   the morphed Breakpoint
+    //!	        to evaluate the morphing functions and tgtPartial).
+    //! \return the morphed Breakpoint
     Breakpoint 
     morphTgtBreakpoint( const Breakpoint & bp, const Partial & srcPartial, 
                         double time ) const;
@@ -361,8 +369,8 @@ public:
 	//!	the morphed Partials. Default is 1/10 ms.
 	//!
 	//!	\param 	x is the new minimum gap in seconds, it must be 
-	//!			   positive
-	//!   \throw   InvalidArgument if the specified gap is not positive
+	//!			positive
+	//! \throw  InvalidArgument if the specified gap is not positive
 	void setMinBreakpointGap( double x );
 
 
@@ -472,25 +480,25 @@ public:
 
 //	-- global morphing defaults and constants --
 
-   //!   Amplitude threshold (dB) below which 
-   //!   Partial frequencies are corrected using
-   //!   the reference Partial frequency envelope
-   //!   (if specified).
+   //! Amplitude threshold (dB) below which 
+   //!	Partial frequencies are corrected using
+   //!	the reference Partial frequency envelope
+   //!	(if specified).
    static const double DefaultFixThreshold;
 
-   //!   Default amplitude shaping parameter, used in
-   //!   interpolateLogAmplitudes to perform logarithmic 
-   //!   amplitude morphs. 
+   //!	Default amplitude shaping parameter, used in
+   //!	interpolateLogAmplitudes to perform logarithmic 
+   //!	amplitude morphs. 
    //!
-   //!   Compile Loris with LINEAR_AMP_MORPHS defined for
-   //!   legacy-style linear amplitude morphs by default.
+   //!	Compile Loris with LINEAR_AMP_MORPHS defined for
+   //!	legacy-style linear amplitude morphs by default.
    //!
-   //!   Change from default using setAmplitudeShape.
+   //!	Change from default using setAmplitudeShape.
    static const double DefaultAmpShape;    
 
-   //!   Default minimum time (sec) between Breakpoints in 
-   //!   morphed Partials. 
-   //!   Change from default using setMinBreakpointGap.
+   //!	Default minimum time (sec) between Breakpoints in 
+   //!	morphed Partials. 
+   //!	Change from default using setMinBreakpointGap.
    static const double DefaultBreakpointGap;
 
 private:
@@ -500,66 +508,59 @@ private:
 	//	PartialCorrespondence represents a map from non-zero Partial 
 	//	labels to pairs of pointers to Partials that should be morphed 
 	//	into a single Partial that is assigned that label. 
-	//	PartialPtrPair is a pair of pointers to Partials that are
+	//	MorphingPair is a pair of pointers to Partials that are
 	//	initialized to zero, and it is the element type for the
 	//	PartialCorrespondence map.
-	struct PartialPtrPair
+	struct MorphingPair
 	{
-		const Partial * first;
-		const Partial * second;
-		PartialPtrPair( void ) : first(0), second(0) {}
-	
+		Partial src;
+		Partial tgt;	
 	};
-	typedef std::map< Partial::label_type, PartialPtrPair > PartialCorrespondence;
+	typedef std::map< Partial::label_type, MorphingPair > PartialCorrespondence;
 	
 	//!	Helper function that performs the morph between corresponding pairs
 	//!	of Partials identified in a PartialCorrespondence. Called by the
 	//!	morph() implementation accepting two sequences of Partials.
 	void morph_aux( PartialCorrespondence & correspondence );
 	
-   //! Helper function to construct a Partial for morphing by scaling
-   //! the frequencies of the reference Partial. This is used when only
-   //! one of the sources in a morph has a Partial with a particular label.
-	Partial makePartialFromReference( Partial scaleMe, double fscale );
-
-    //!    Compute morphed parameter values at the specified time, using
-    //!    the source Breakpoint (assumed to correspond exactly to the
-    //!    specified time) and the target Partial (whose parameters are
-    //!    examined at the specified time). Append the morphed Breakpoint
-    //!    to newp only if the target should contribute to the morph at
-    //!    the specified time.
+    //!	Compute morphed parameter values at the specified time, using
+    //!	the source Breakpoint (assumed to correspond exactly to the
+    //!	specified time) and the target Partial (whose parameters are
+    //!	examined at the specified time). Append the morphed Breakpoint
+    //!	to newp only if the target should contribute to the morph at
+    //!	the specified time.
     //!
-    //!    \pre    the target Partial may not be a dummy Partial (no Breakpoints).
+    //!	\pre    the target Partial may not be a dummy Partial (no Breakpoints).
     //!
-    //!    \param  srcBkpt is the Breakpoint corresponding to a morph function
-    //!            value of 0.
-    //!    \param  tgtPartial is the Partial corresponding to a morph function
-    //!            value of 1, evaluated at the specified time.
-    //!    \param  time is the time corresponding to srcBkpt (used
-    //!            to evaluate the morphing functions and tgtPartial).
-    //!    \param  newp is the morphed Partial under construction, the morphed
-    //!            Breakpoint is added to this Partial.
+    //!	\param  srcBkpt is the Breakpoint corresponding to a morph function
+    //!	        value of 0.
+    //!	\param  tgtPartial is the Partial corresponding to a morph function
+    //!	        value of 1, evaluated at the specified time.
+    //!	\param  time is the time corresponding to srcBkpt (used
+    //!	        to evaluate the morphing functions and tgtPartial).
+    //!	\param  newp is the morphed Partial under construction, the morphed
+    //!	        Breakpoint is added to this Partial.
     //
     void appendMorphedSrc( Breakpoint srcBkpt, const Partial & tgtPartial, 
                            double time, Partial & newp  );
                            
-    //!    Compute morphed parameter values at the specified time, using
-    //!    the target Breakpoint (assumed to correspond exactly to the
-    //!    specified time) and the source Partial (whose parameters are
-    //!    examined at the specified time). Append the morphed Breakpoint
-    //!    to newp only if the target should contribute to the morph at
-    //!    the specified time.
+    //!	Compute morphed parameter values at the specified time, using
+    //!	the target Breakpoint (assumed to correspond exactly to the
+    //!	specified time) and the source Partial (whose parameters are
+    //!	examined at the specified time). Append the morphed Breakpoint
+    //!	to newp only if the target should contribute to the morph at
+    //!	the specified time.
     //!
-    //!    \pre    the source Partial may not be a dummy Partial (no Breakpoints).
+    //!	\pre    the source Partial may not be a dummy Partial (no Breakpoints).
     //!
-    //!    \param  tgtBkpt is the Breakpoint corresponding to a morph function
-    //!            value of 1.
-    //!    \param  srcPartial is the Partial corresponding to a morph function
-    //!            value of 0, evaluated at the specified time.
-    //!    \param  time is the time corresponding to srcBkpt (used
-    //!            to evaluate the morphing functions and srcPartial).
-    //!    \param  newp is the morphed Partial under construction, the morphed
-    //!            Breakpoint is added to this Partial.
+    //!	\param  tgtBkpt is the Breakpoint corresponding to a morph function
+    //!	        value of 1.
+    //!	\param  srcPartial is the Partial corresponding to a morph function
+    //!	        value of 0, evaluated at the specified time.
+    //!	\param  time is the time corresponding to srcBkpt (used
+    //!	        to evaluate the morphing functions and srcPartial).
+    //!	\param  newp is the morphed Partial under construction, the morphed
+    //!	        Breakpoint is added to this Partial.
     //
     void appendMorphedTgt( Breakpoint tgtBkpt, const Partial & srcPartial, 
                            double time, Partial & newp  );

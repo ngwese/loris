@@ -346,8 +346,6 @@ format. For more information about SDIF, see the SDIF website at:
 
 void exportSdif( const char * path, PartialList * partials );
 
-
-
 %feature("docstring",
 "Export Partials in a PartialList to a Spc file at the specified
 file path (or name). The fractional MIDI pitch must be specified.
@@ -378,6 +376,27 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch )
 }
 %}
 
+%feature("docstring",
+"Apply a reference Partial to fix the frequencies of Breakpoints
+whose amplitude is below threshold_dB. 0 harmonifies full-amplitude
+Partials, to apply only to quiet Partials, specify a lower 
+threshold like -90). The reference Partial is the first Partial
+in the PartialList labeled refLabel (usually 1). The LinearEnvelope,
+iif specified, is a time-varying weighting on the harmonifing process. 
+When 1, harmonic frequencies are used, when 0, breakpoint frequencies are 
+unmodified. ") harmonify;
+
+void harmonify( PartialList * partials, long refLabel,
+                const LinearEnvelope * env, double threshold_dB );
+
+%inline %{
+    void harmonify( PartialList * partials, long refLabel, 
+                    double threshold_dB )
+    {
+        LinearEnvelope e( 1 );
+        harmonify( partials, refLabel, &e, threshold_dB );
+    }
+%}                        
 
 %feature("docstring",
 "Import Partials from an SDIF file at the given file path (or
@@ -448,9 +467,9 @@ morphing algorithm, see the Loris website:
 %newobject morph;
 %inline %{
 	PartialList * morph( const PartialList * src0, const PartialList * src1, 
-                        const LinearEnvelope * ffreq, 
-                        const LinearEnvelope * famp, 
-                        const LinearEnvelope * fbw )
+                         const LinearEnvelope * ffreq, 
+                         const LinearEnvelope * famp, 
+                         const LinearEnvelope * fbw )
 	{
 		PartialList * dst = createPartialList();
 		morph( src0, src1, ffreq, famp, fbw, dst );
@@ -465,9 +484,9 @@ morphing algorithm, see the Loris website:
 	}
 	
 	PartialList * morph( const PartialList * src0, const PartialList * src1, 
-                        double freqweight, 
-                        double ampweight, 
-                        double bwweight )
+                         double freqweight, 
+                         double ampweight, 
+                         double bwweight )
 	{
 		LinearEnvelope ffreq( freqweight ), famp( ampweight ), fbw( bwweight );
 		
@@ -485,9 +504,9 @@ morphing algorithm, see the Loris website:
 
 	PartialList * morph( const PartialList * src0, const PartialList * src1,
 	                     long src0RefLabel, long src1RefLabel,
-                        const LinearEnvelope * ffreq, 
-                        const LinearEnvelope * famp, 
-                        const LinearEnvelope * fbw )
+                         const LinearEnvelope * ffreq, 
+                         const LinearEnvelope * famp, 
+                         const LinearEnvelope * fbw )
 	{
 		PartialList * dst = createPartialList();
 		morphWithReference( src0, src1, src0RefLabel, src1RefLabel, ffreq, famp, fbw, dst );
@@ -503,9 +522,9 @@ morphing algorithm, see the Loris website:
 	
 	PartialList * morph( const PartialList * src0, const PartialList * src1, 
 	                     long src0RefLabel, long src1RefLabel,
-                        double freqweight, 
-                        double ampweight, 
-                        double bwweight )
+                         double freqweight, 
+                         double ampweight, 
+                         double bwweight )
 	{
 		LinearEnvelope ffreq( freqweight ), famp( ampweight ), fbw( bwweight );
 		

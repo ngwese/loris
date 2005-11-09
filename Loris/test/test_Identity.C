@@ -75,7 +75,7 @@ inline double mpi( double x )
 inline double env( double tau )
 {
 	double t = 2*(tau-.4);
-	return .3*exp( - pi * t * t );  
+	return (.1+.3*exp( - pi * t * t ))*min( 500*tau, 1.0 );  
 }
 
 static void float_rel_equal( double x, double y, double pct )
@@ -118,7 +118,7 @@ static void one_partial( void )
 {
     cout << "Single-partial analysis/synthesis identity check." << endl;
     
-	// make a constant-amplitude partial with 
+	// make a partial with 
 	// slowly-varying frequency
 	Partial p1;
 	p1.insert( .1, Breakpoint( 375, .2, 0, 0 ) );
@@ -144,6 +144,8 @@ static void one_partial( void )
 	anal.analyze( v, 44100 );
 	PartialList & partials = anal.partials();
 	
+	//  need to distill, because the fake partial fades out
+	//  and back in again
 	FrequencyReference ref( fake.begin(), fake.end(), 300, 600, 100 );
 	Channelizer chan( ref, 1 );
 	chan.channelize( partials.begin(), partials.end() );
@@ -231,8 +233,7 @@ static void two_partials( void )
 	p1.insert( .875, Breakpoint( 425, .2, 0, 0 ) );
 	
 	// make another Partial with fancier envelopes
-	Partial p2;
-	
+	Partial p2;	
 	
     double f = 1000;
     double phi = 0;
@@ -271,12 +272,15 @@ static void two_partials( void )
 	anal.analyze( v, 44100 );
 	PartialList & partials = anal.partials();
 	
+	/*
+	// no need to distill, these partials should pop right out
+	// of the analysis
 	FrequencyReference ref( fake.begin(), fake.end(), 300, 600, 100 );
 	Channelizer chan( ref, 1 );
 	chan.channelize( partials.begin(), partials.end() );
 	Distiller still;
 	still.distill( partials );
-	
+	*/
 	if ( partials.size() != 2 )
 	{
 		cout << "ERROR: should find only two Partials" << endl;
@@ -293,7 +297,7 @@ static void two_partials( void )
 	streamsize prec = cout.precision();
 	cout << setprecision(3);
 	
-	double hop = anal.hopTime();
+	double hop = anal.hopTime() * 2; // turns on too fast for 2.5 ms
 	cout << "START TIMES (p1 a1 p2 a2) (testing within " << hop*1000 << "ms)" << endl;
 	cout << p1.startTime() << "  " << a1.startTime() << "\t"
 	     << p2.startTime() << "  " << a2.startTime() << endl;
@@ -365,7 +369,7 @@ static void two_partials( void )
 	    if ( p2.amplitudeAt(t) > 0 )
 	    {
     		cout << mpi(p2.phaseAt(t))/pi << "  " << mpi(a2.phaseAt(t))/pi;
-    		float_abs_equal( p2.frequencyAt(t), a2.frequencyAt(t), 0.1 );
+    		float_abs_equal( mpi(p2.phaseAt(t))/pi, mpi(a2.phaseAt(t))/pi, 0.01*pi );
         }
         cout << endl;        
 

@@ -75,24 +75,36 @@ class Partial;
 class Channelizer
 {
 //	-- implementaion --
-	std::auto_ptr< Envelope > _refChannelFreq;
-	int _refChannelLabel;
-	
+	std::auto_ptr< Envelope > _refChannelFreq;  //! the reference frequency envelope
+	int _refChannelLabel;                       //! the channel number corresponding to the
+	                                            //! reference frequency (1 for the fundamental)
+	double _stretchFactor;                      //! stretching factor to account for 
+	                                            //! detuned harmonics, as in the case of the piano; 
+	                                            //! can be computed using the static member
+	                                            //! computeStretchFactor. Should be 0 for most
+	                                            //! (strongly harmonic) sounds.
+	    
 //	-- public interface --
 public:
 //	-- construction --
 
 	//!	Construct a new Channelizer using the specified reference
-	//!	Envelope to represent the a numbered channel. 
+	//!	Envelope to represent the a numbered channel. If the sound
+	//! being channelized is known to have detuned harmonics, a 
+	//! stretching factor can be specified (defaults to 0 for no 
+	//! stretching). The stretching factor can be computed using
+	//! the static member computeStretchFactor.
 	//!	
 	//!	\param 	refChanFreq is an Envelope representing the center frequency
-	//!			   of a channel.
-	//!	\param 	refChanLabel is the corresponding channel number (i.e. 1
-	//!			   if refChanFreq is the lowest-frequency channel, and all 
-	//!			   other channels are harmonics of refChanFreq, or 2 if  
-	//!			   refChanFreq tracks the second harmonic, etc.).
-   //!   \throw   InvalidArgument if refChanLabel is not positive.
-	Channelizer( const Envelope & refChanFreq, int refChanLabel );
+	//!		    of a channel.
+	//!	\param  refChanLabel is the corresponding channel number (i.e. 1
+	//!		    if refChanFreq is the lowest-frequency channel, and all 
+	//!		    other channels are harmonics of refChanFreq, or 2 if  
+	//!		    refChanFreq tracks the second harmonic, etc.).
+	//! \param  stretchFactor is a stretching factor to account for detuned 
+	//!         harmonics, default is 0. 
+    //! \throw  InvalidArgument if refChanLabel is not positive.
+	Channelizer( const Envelope & refChanFreq, int refChanLabel, double stretchFactor = 0 );
 	 
 	//!	Construct a new Channelizer that is an exact copy of another.
 	//!	The copy represents the same set of frequency channels, constructed
@@ -146,6 +158,19 @@ public:
 #endif
 		 { channelize( begin, end ); }
 		 
+//	-- access/mutation --
+		 
+    //! Return the stretching factor used to account for detuned
+    //! harmonics, as in a piano tone. Normally set to 0 for 
+    //! in-tune harmonics.
+    double stretchFactor( void ) const;
+        
+    //! Set the stretching factor used to account for detuned
+    //! harmonics, as in a piano tone. Normally set to 0 for 
+    //! in-tune harmonics.
+    void setStretchFactor( double stretch );    
+    
+		 
 // -- static members --
 
 	//! Static member that constructs an instance and applies
@@ -179,6 +204,19 @@ public:
 	void channelize( PartialList::iterator begin, PartialList::iterator end,
                      const Envelope & refChanFreq, int refChanLabel );
 #endif	 
+	 
+    //! Static member to compute the stretch factor for a sound having
+    //! (consistently) detuned harmonics, like piano tones.
+    //!
+    //! \param      fref is the reference (fundamental) frequency from which
+    //!             the harmonics are detuned.
+    //! \param      fn is the frequency of the Nth stretched harmonic
+    //! \param      n is the harmonic number of the harmonic whose frequnecy is fn
+    //! \returns    the stretching factor, usually a very small positive
+    //!             floating point number, or 0 for pefectly tuned harmonics
+    //!             (that is, if fn = n*f1).
+    //
+    static double computeStretchFactor( double fref, double fn, double n );
 	 
 };	//	end of class Channelizer
 

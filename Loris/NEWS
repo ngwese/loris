@@ -7,6 +7,20 @@ See the end for copying conditions.
 Please send Loris bug reports to loris@cerlsoundgroup.org.
 
 -------------------------------------------------------
+changes since 1.3 release:
+
+- phase/frequency correction incorporated into Analyzer
+and Morpher so that both now generate phase-correct
+Partials.
+
+- Channelizer made more reliable by using a non-weighted
+frequency average. Also added capability to channelize
+stretched harmonics, as in piano tones, by computing a
+strecthing factor and using it to align the frequency 
+channels on non-integer multiples of the fundamental 
+frequency.
+
+-------------------------------------------------------
 changes since 1.2 release:
 
 Command-line utilities:

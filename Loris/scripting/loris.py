@@ -682,6 +682,22 @@ def exportSpc(*args):
     """
     return _loris.exportSpc(*args)
 
+def harmonify(*args):
+    """
+    harmonify(partials, refLabel, env, threshold_dB)
+    harmonify(partials, refLabel, threshold_dB)
+
+    Apply a reference Partial to fix the frequencies of Breakpoints
+    whose amplitude is below threshold_dB. 0 harmonifies full-amplitude
+    Partials, to apply only to quiet Partials, specify a lower 
+    threshold like -90). The reference Partial is the first Partial
+    in the PartialList labeled refLabel (usually 1). The LinearEnvelope,
+    iif specified, is a time-varying weighting on the harmonifing process. 
+    When 1, harmonic frequencies are used, when 0, breakpoint frequencies are 
+    unmodified. 
+    """
+    return _loris.harmonify(*args)
+
 def morph(*args):
     """
     morph(src0, src1, ffreq, famp, fbw) -> PartialList
