@@ -800,9 +800,13 @@ void removeLabeled( PartialList * src, long label );
 /*  Remove from a PartialList all Partials having the specified label.
  */
 
-void scaleAmp( PartialList * partials, LinearEnvelope * ampEnv );
+void scaleAmplitude( PartialList * partials, LinearEnvelope * ampEnv );
 /*  Scale the amplitude of the Partials in a PartialList according 
     to an envelope representing a time-varying amplitude scale value.
+ */
+
+void scaleAmp( PartialList * partials, LinearEnvelope * ampEnv );
+/*  Bad old name for scaleAmplitude.
  */
                  
 void scaleBandwidth( PartialList * partials, LinearEnvelope * bwEnv );

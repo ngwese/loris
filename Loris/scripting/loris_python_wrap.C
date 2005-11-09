@@ -7046,6 +7046,35 @@ static PyObject *_wrap_scaleAmp__SWIG_0(PyObject *, PyObject *args) {
 }
 
 
+static PyObject *_wrap_scaleAmplitude(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    PartialList *arg1 = (PartialList *) 0 ;
+    LinearEnvelope *arg2 = (LinearEnvelope *) 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:scaleAmplitude",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_PartialList, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_LinearEnvelope, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(2)) SWIG_fail;
+    {
+        char * err;
+        clear_exception();
+        scaleAmplitude(arg1,arg2);
+        
+        if ( 0 != (err = check_exception()) )
+        {
+            SWIG_exception( SWIG_ValueError, err );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
 static PyObject *_wrap_scaleBandwidth__SWIG_0(PyObject *, PyObject *args) {
     PyObject *resultobj;
     PartialList *arg1 = (PartialList *) 0 ;
@@ -15477,6 +15506,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"extractLabeled", _wrap_extractLabeled, METH_VARARGS, NULL},
 	 { (char *)"removeLabeled", _wrap_removeLabeled, METH_VARARGS, NULL},
 	 { (char *)"resample", _wrap_resample, METH_VARARGS, NULL},
+	 { (char *)"scaleAmplitude", _wrap_scaleAmplitude, METH_VARARGS, NULL},
 	 { (char *)"scaleAmp", _wrap_scaleAmp, METH_VARARGS, NULL},
 	 { (char *)"scaleBandwidth", _wrap_scaleBandwidth, METH_VARARGS, NULL},
 	 { (char *)"scaleFrequency", _wrap_scaleFrequency, METH_VARARGS, NULL},

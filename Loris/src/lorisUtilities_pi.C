@@ -443,11 +443,22 @@ void removeLabeled( PartialList * src, long label )
 /* ---------------------------------------------------------------- */
 /*        scaleAmp        
 /*
+/*	Bad old name for scaleAmplitude.
+ */
+extern "C"
+void scaleAmp( PartialList * partials, BreakpointEnvelope * ampEnv )
+{
+    scaleAmplitude( partials, ampEnv );
+}
+
+/* ---------------------------------------------------------------- */
+/*        scaleAmplitude        
+/*
 /*	Scale the amplitude of the Partials in a PartialList according 
 	to an envelope representing a time-varying amplitude scale value.
  */
 extern "C"
-void scaleAmp( PartialList * partials, BreakpointEnvelope * ampEnv )
+void scaleAmplitude( PartialList * partials, BreakpointEnvelope * ampEnv )
 {
 	try
 	{
@@ -460,13 +471,13 @@ void scaleAmp( PartialList * partials, BreakpointEnvelope * ampEnv )
 	}
 	catch( Exception & ex ) 
 	{
-		std::string s("Loris exception in scaleAmp(): " );
+		std::string s("Loris exception in scaleAmplitude(): " );
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
 	catch( std::exception & ex ) 
 	{
-		std::string s("std C++ exception in scaleAmp(): " );
+		std::string s("std C++ exception in scaleAmplitude(): " );
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}

@@ -494,6 +494,15 @@ def resample(*args):
     """
     return _loris.resample(*args)
 
+def scaleAmplitude(*args):
+    """
+    scaleAmplitude(partials, ampEnv)
+
+    Scale the amplitude of the Partials in a PartialList according 
+    to an envelope representing a time-varying amplitude scale value.
+    """
+    return _loris.scaleAmplitude(*args)
+
 def shiftTime(*args):
     """
     shiftTime(partials, offset)
