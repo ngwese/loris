@@ -37,10 +37,12 @@
 
 #include "FrequencyReference.h"
 #include "Breakpoint.h"
+#include "Fundamental.h"
 #include "LinearEnvelope.h"
 #include "Notifier.h"
 #include "Partial.h"
 #include "PartialList.h"
+#include "PartialUtils.h"
 
 #include <algorithm>
 #include <cmath>
@@ -71,18 +73,22 @@ FrequencyReference::FrequencyReference( PartialList::const_iterator begin,
 	_env( new LinearEnvelope() )
 {
 	if ( numSamps < 1 )
+	{
 		Throw( InvalidArgument, "A frequency reference envelope must have a positive number of samples." );
-
+    }
+    
 	//	sanity:
 	if ( maxFreq < minFreq )
+	{
 		std::swap( minFreq, maxFreq );
-
+    }
+    
 #ifdef Loris_Debug
 	debugger << "Finding frequency reference envelope in range " <<
 	debugger << minFreq << " to " << maxFreq << " Hz, from " <<
 	debugger << std::distance(begin,end) << " Partials" << std::endl;
 #endif
-
+    /*
 	//	find the longest Partial in the specified frequency range:
 	PartialList::const_iterator longest  = 
 		findLongestPartialInFreqRange( begin, end, minFreq, maxFreq );
@@ -99,6 +105,12 @@ FrequencyReference::FrequencyReference( PartialList::const_iterator begin,
 		double f = longest->frequencyAt(t);
 		_env->insertBreakpoint( t, f );
 	}
+	*/
+	
+	Fundamental est( begin, end, minFreq, maxFreq );
+	std::pair< double, double > span = PartialUtils::timeSpan( begin, end );
+	double dt = ( span.second - span.first ) / ( numSamps + 1 );
+	*_env = est.constructEnvelope( span.first, span.second, dt );
 }
 
 

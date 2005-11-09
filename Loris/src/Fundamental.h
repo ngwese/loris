@@ -94,11 +94,11 @@ public:
 #if !defined(NO_TEMPLATE_MEMBERS)
     template<typename Iter>
     Fundamental( Iter begin_partials, Iter end_partials,
-                double fmin, double fmax  ); 
-#else
+                 double fmin, double fmax  ); 
+#else 
     Fundamental( PartialList::const_iterator begin_partials, 
-                PartialList::const_iterator end_partials,
-                double fmin, double fmax );
+                 PartialList::const_iterator end_partials,
+                 double fmin, double fmax );
 #endif
     
     //  copy, assign, and destroy are free, the 
@@ -115,6 +115,11 @@ public:
     //!
     //! \param  time is the time at which to estimate the fundamental
     //! \return the estimate of fundamental frequency in Hz
+    //! \throws InvalidObject if no likely estimate is found in the 
+    //!         frequency range (freqMin_, freqMax_) at the specified time.
+    //! \throws InvalidArgument if there are no Partials having 
+    //!         sufficient energy to contribute to an estimate of the 
+    //!         fundamental frequency at the specified time.
     double estimateAt( double time ) const;
 
     //! Function call operator, same as estimateAt, for
@@ -122,41 +127,58 @@ public:
     //! 
     //! \param  time is the time at which to estimate the fundamental
     //! \return the estimate of fundamental frequency in Hz
+    //! \throws InvalidObject if no likely estimate is found in the 
+    //!         frequency range (freqMin_, freqMax_) at the specified time.
+    //! \throws InvalidArgument if there are no Partials having 
+    //!         sufficient energy to contribute to an estimate of the 
+    //!         fundamental frequency at the specified time.
     double operator() ( double time ) const;
      
-   //! Return a LinearEnvelope that evaluates to a linear
-   //! envelope approximation to the fundamental frequency 
-   //! estimate sampled at regular intervals. interval is the
-   //! sampling interval in seconds. Throws InvalidArgument
-   //! if no Partials have sufficient energy to contribute
-   //! to an estimate of the fundamental frequency at any 
-   //! time in the range [t1,t2]. Throws InvalidObject if 
-   //! no likely estimate is found in the frequency range 
-   //! (freqMin_, freqMax_).
-   //!
-   //! \param  interval is the time between breakpoints in the
-   //!         fundamental envelope
-   //! \return a new LinearEnvelope
-   LinearEnvelope constructEnvelope( double interval ) const;
+    //! Return a LinearEnvelope that evaluates to a linear
+    //! envelope approximation to the fundamental frequency 
+    //! estimate sampled at regular intervals. interval is the
+    //! sampling interval in seconds. Throws InvalidArgument
+    //! if no Partials have sufficient energy to contribute
+    //! to an estimate of the fundamental frequency at any 
+    //! time in the range [t1,t2]. Throws InvalidObject if 
+    //! no likely estimate is found in the frequency range 
+    //! (freqMin_, freqMax_).
+    //!
+    //! \param  interval is the time between breakpoints in the
+    //!         fundamental envelope
+    //! \return a new LinearEnvelope
+    //! \throws InvalidObject if no likely estimate is found in the 
+    //!         frequency range (freqMin_, freqMax_) at any time.
+    //! \throws InvalidArgument if there are no Partials having 
+    //!         sufficient energy to contribute to an estimate of the 
+    //!         fundamental frequency at the specified time.
+    LinearEnvelope constructEnvelope( double interval ) const;
      
-   //! Return a LinearEnvelope that evaluates to a linear
-   //! envelope approximation to the fundamental frequency 
-   //! estimate sampled at regular intervals. Consider only
-   //! the time between t1 and t2. interval is the
-   //! sampling interval in seconds. Throws InvalidArgument
-   //! if no Partials have sufficient energy to contribute
-   //! to an estimate of the fundamental frequency at any 
-   //! time in the range [t1,t2]. Throws InvalidObject if 
-   //! no likely estimate is found in the frequency range 
-   //! (freqMin_, freqMax_).
-   //!
-   //! \param  t1 is the beginning of the time interval
-   //! \param  t2 is the end of the time interval
-   //! \param  interval is the time between breakpoints in the
-   //!         fundamental envelope
-   //! \return a new LinearEnvelope
-   LinearEnvelope 
-   constructEnvelope( double t1, double t2, double interval ) const;
+    //! Return a LinearEnvelope that evaluates to a linear
+    //! envelope approximation to the fundamental frequency 
+    //! estimate sampled at regular intervals. Consider only
+    //! the time between t1 and t2. interval is the
+    //! sampling interval in seconds. Throws InvalidArgument
+    //! if no Partials have sufficient energy to contribute
+    //! to an estimate of the fundamental frequency at any 
+    //! time in the range [t1,t2]. Throws InvalidObject if 
+    //! no likely estimate is found in the frequency range 
+    //! (freqMin_, freqMax_).
+    //!
+    //! \param  t1 is the beginning of the time interval
+    //! \param  t2 is the end of the time interval
+    //! \param  interval is the time between breakpoints in the
+    //!         fundamental envelope
+    //! \return a new LinearEnvelope
+    //! \throws InvalidObject if no likely estimate is found in the 
+    //!         frequency range (freqMin_, freqMax_) at any time
+    //!         during the specified range.
+    //! \throws InvalidArgument if there are no Partials having 
+    //!         sufficient energy to contribute to an estimate of the 
+    //!         fundamental frequency at any time during the specified 
+    //!         range.
+    LinearEnvelope 
+    constructEnvelope( double t1, double t2, double interval ) const;
  
 //  -- parameter access/mutation --
 

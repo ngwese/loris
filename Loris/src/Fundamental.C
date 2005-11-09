@@ -229,12 +229,12 @@ Fundamental::constructEnvelope( double t1, double t2, double interval ) const
 		//	collect the Partial amplitudes and
 		//	frequencies at time t:
 		collect_ampsNfreqs( partials_.begin(), partials_.end(), t, 
-						        amps, freqs, ampThreshold_ );
+						    amps, freqs, ampThreshold_ );
 		
 		if ( ! amps.empty() )
 		{
 			double f0 = iterative_estimate( amps, freqs, freqMin_, freqMax_,
-                                         freqResolution_ );
+                                            freqResolution_ );
 			//	reject boundary frequencies
 			if ( f0 > freqMin_ && f0 < freqMax_ )
 			{
@@ -248,12 +248,12 @@ Fundamental::constructEnvelope( double t1, double t2, double interval ) const
 	if ( ! found_energy )
 	{
 		Throw( InvalidObject, "No Partials have sufficient energy to "
-							       "estimate the fundamental." );
+							  "estimate the fundamental." );
 	}
 	else if ( env.size() == 0 )
 	{
 		Throw( InvalidObject, "Cannot construct a reliable estimate "
-                            "on the specified range of frequencies." );
+                              "on the specified range of frequencies." );
 	}
 	
 	//	apply a smoothing filter to the fundamental estimates:
