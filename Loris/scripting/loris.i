@@ -698,7 +698,13 @@ void shiftPitch( PartialList * partials, LinearEnvelope * pitchEnv );
 	void scaleAmp( PartialList * partials, double val )
 	{
 		LinearEnvelope e( val );
-		scaleAmp( partials, &e );
+		scaleAmplitude( partials, &e );
+	}
+	
+	void scaleAmplitude( PartialList * partials, double val )
+	{
+		LinearEnvelope e( val );
+		scaleAmplitude( partials, &e );
 	}
 	
 	

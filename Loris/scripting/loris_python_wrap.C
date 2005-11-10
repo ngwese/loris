@@ -2815,7 +2815,13 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch )
 	void scaleAmp( PartialList * partials, double val )
 	{
 		LinearEnvelope e( val );
-		scaleAmp( partials, &e );
+		scaleAmplitude( partials, &e );
+	}
+	
+	void scaleAmplitude( PartialList * partials, double val )
+	{
+		LinearEnvelope e( val );
+		scaleAmplitude( partials, &e );
 	}
 	
 	
@@ -7046,7 +7052,7 @@ static PyObject *_wrap_scaleAmp__SWIG_0(PyObject *, PyObject *args) {
 }
 
 
-static PyObject *_wrap_scaleAmplitude(PyObject *, PyObject *args) {
+static PyObject *_wrap_scaleAmplitude__SWIG_0(PyObject *, PyObject *args) {
     PyObject *resultobj;
     PartialList *arg1 = (PartialList *) 0 ;
     LinearEnvelope *arg2 = (LinearEnvelope *) 0 ;
@@ -7277,6 +7283,96 @@ static PyObject *_wrap_scaleAmp(PyObject *self, PyObject *args) {
     }
     
     PyErr_SetString(PyExc_NotImplementedError,"No matching function for overloaded 'scaleAmp'");
+    return NULL;
+}
+
+
+static PyObject *_wrap_scaleAmplitude__SWIG_1(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    PartialList *arg1 = (PartialList *) 0 ;
+    double arg2 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:scaleAmplitude",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_PartialList, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        arg2 = (double)(SWIG_As_double(obj1)); 
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    {
+        char * err;
+        clear_exception();
+        scaleAmplitude(arg1,arg2);
+        
+        if ( 0 != (err = check_exception()) )
+        {
+            SWIG_exception( SWIG_ValueError, err );
+        }
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_scaleAmplitude(PyObject *self, PyObject *args) {
+    int argc;
+    PyObject *argv[3];
+    int ii;
+    
+    argc = PyObject_Length(args);
+    for (ii = 0; (ii < argc) && (ii < 2); ii++) {
+        argv[ii] = PyTuple_GetItem(args,ii);
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_PartialList, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *ptr;
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_LinearEnvelope, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                } else {
+                    _v = 1;
+                }
+            }
+            if (_v) {
+                return _wrap_scaleAmplitude__SWIG_0(self,args);
+            }
+        }
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_PartialList, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            _v = SWIG_Check_double(argv[1]);
+            if (_v) {
+                return _wrap_scaleAmplitude__SWIG_1(self,args);
+            }
+        }
+    }
+    
+    PyErr_SetString(PyExc_NotImplementedError,"No matching function for overloaded 'scaleAmplitude'");
     return NULL;
 }
 
@@ -15506,8 +15602,8 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"extractLabeled", _wrap_extractLabeled, METH_VARARGS, NULL},
 	 { (char *)"removeLabeled", _wrap_removeLabeled, METH_VARARGS, NULL},
 	 { (char *)"resample", _wrap_resample, METH_VARARGS, NULL},
-	 { (char *)"scaleAmplitude", _wrap_scaleAmplitude, METH_VARARGS, NULL},
 	 { (char *)"scaleAmp", _wrap_scaleAmp, METH_VARARGS, NULL},
+	 { (char *)"scaleAmplitude", _wrap_scaleAmplitude, METH_VARARGS, NULL},
 	 { (char *)"scaleBandwidth", _wrap_scaleBandwidth, METH_VARARGS, NULL},
 	 { (char *)"scaleFrequency", _wrap_scaleFrequency, METH_VARARGS, NULL},
 	 { (char *)"scaleNoiseRatio", _wrap_scaleNoiseRatio, METH_VARARGS, NULL},

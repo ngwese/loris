@@ -494,15 +494,6 @@ def resample(*args):
     """
     return _loris.resample(*args)
 
-def scaleAmplitude(*args):
-    """
-    scaleAmplitude(partials, ampEnv)
-
-    Scale the amplitude of the Partials in a PartialList according 
-    to an envelope representing a time-varying amplitude scale value.
-    """
-    return _loris.scaleAmplitude(*args)
-
 def shiftTime(*args):
     """
     shiftTime(partials, offset)
@@ -764,6 +755,17 @@ def scaleAmp(*args):
     units of cents (1/100 of a halfstep).
     """
     return _loris.scaleAmp(*args)
+
+def scaleAmplitude(*args):
+    """
+    scaleAmplitude(partials, ampEnv)
+    scaleAmplitude(partials, val)
+
+    Shift the pitch of all Partials in a PartialList according to 
+    the given pitch envelope. The pitch envelope is assumed to have 
+    units of cents (1/100 of a halfstep).
+    """
+    return _loris.scaleAmplitude(*args)
 
 def scaleBandwidth(*args):
     """
