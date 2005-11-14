@@ -223,10 +223,12 @@ int main( )
         //  change each envelope, and verify that the changes are
         //  correctly registered:
         //  other envelope: (0,.4), (.5, .2), (1,.3)
+        const int OTHER_NUM_ENVPTS = 3;
+        const double OTHERENV_TIMES[] = {0, .5, 1};
         const double OTHERENV_WEIGHTS[] = {.4, .2, .3};
-        for (int i = 0; i < NUM_ENVPTS; ++i )
+        for (int i = 0; i < OTHER_NUM_ENVPTS; ++i )
         {
-            otherenv.insertBreakpoint( MENV_TIMES[i], OTHERENV_WEIGHTS[i] );
+            otherenv.insertBreakpoint( OTHERENV_TIMES[i], OTHERENV_WEIGHTS[i] );
         }
       
         //  change: 
