@@ -52,6 +52,17 @@
 namespace Loris {
 
 // ---------------------------------------------------------------------------
+//	global defaults and constants
+// ---------------------------------------------------------------------------
+//! Default time (in seconds) over which Partials joined by
+//! distillation fade to and from zero amplitude.
+const double Distiller::DefaultFadeTime = 0.005;    // 5 ms
+
+//! Default minimum duration (in seconds) of the silent 
+//! (zero-amplitude) gap between two Partials joined by distillation.
+const double Distiller::DefaultSilentTime = 0.001;  // 1 ms
+
+// ---------------------------------------------------------------------------
 //	Distiller constructor
 // ---------------------------------------------------------------------------
 //!	Construct a new Distiller using the specified fade time

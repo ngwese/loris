@@ -480,26 +480,26 @@ public:
 
 //	-- global morphing defaults and constants --
 
-   //! Amplitude threshold (dB) below which 
-   //!	Partial frequencies are corrected using
-   //!	the reference Partial frequency envelope
-   //!	(if specified).
-   static const double DefaultFixThreshold;
+    //! Amplitude threshold (dB) below which 
+    //! Partial frequencies are corrected using
+    //! the reference Partial frequency envelope
+    //!	(if specified).
+    static const double DefaultFixThreshold;
 
-   //!	Default amplitude shaping parameter, used in
-   //!	interpolateLogAmplitudes to perform logarithmic 
-   //!	amplitude morphs. 
-   //!
-   //!	Compile Loris with LINEAR_AMP_MORPHS defined for
-   //!	legacy-style linear amplitude morphs by default.
-   //!
-   //!	Change from default using setAmplitudeShape.
-   static const double DefaultAmpShape;    
+    //!	Default amplitude shaping parameter, used in
+    //!	interpolateLogAmplitudes to perform logarithmic 
+    //!	amplitude morphs. 
+    //!
+    //!	Compile Loris with LINEAR_AMP_MORPHS defined for
+    //!	legacy-style linear amplitude morphs by default.
+    //!
+    //!	Change from default using setAmplitudeShape.
+    static const double DefaultAmpShape;    
 
-   //!	Default minimum time (sec) between Breakpoints in 
-   //!	morphed Partials. 
-   //!	Change from default using setMinBreakpointGap.
-   static const double DefaultBreakpointGap;
+    //!	Default minimum time (sec) between Breakpoints in 
+    //!	morphed Partials. 
+    //!	Change from default using setMinBreakpointGap.
+    static const double DefaultBreakpointGap;
 
 private:
 	

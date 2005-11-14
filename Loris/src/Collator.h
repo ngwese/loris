@@ -50,7 +50,7 @@ namespace Loris {
 //! by joining non-overlapping Partials end to end.
 //!	
 //! Partials that are not labeled, that is, Partials having label 0,
-//! are are "collated " into groups of non-overlapping (in time)
+//! are "collated " into groups of non-overlapping (in time)
 //! Partials, and fused into a single Partial per group. 
 //! "Collating" is a bit like "distilling" but non-overlapping
 //! Partials are grouped without regard to frequency proximity. This

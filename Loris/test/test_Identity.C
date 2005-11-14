@@ -149,7 +149,7 @@ static void one_partial( void )
 	FrequencyReference ref( fake.begin(), fake.end(), 300, 600, 100 );
 	Channelizer chan( ref, 1 );
 	chan.channelize( partials.begin(), partials.end() );
-	Distiller still;
+	Distiller still( 0.001, 0.001 ); //  use 1 ms fade time for these tests
 	still.distill( partials );
 	
 	if ( partials.size() != 1 )
