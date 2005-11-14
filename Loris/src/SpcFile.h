@@ -55,11 +55,11 @@ namespace Loris {
 // ---------------------------------------------------------------------------
 //	class SpcFile
 //
-//	Class SpcFile represents a collection of reassigned bandwidth-enhanced
-//	Partial data in a SPC-format envelope stream data file, used by the
-//	real-time bandwidth-enhanced additive synthesizer implemented on the
-//	Symbolic Sound Kyma Sound Design Workstation. Class SpcFile manages 
-//	file I/O and conversion between Partials and envelope parameter streams.
+//!	Class SpcFile represents a collection of reassigned bandwidth-enhanced
+//!	Partial data in a SPC-format envelope stream data file, used by the
+//!	real-time bandwidth-enhanced additive synthesizer implemented on the
+//!	Symbolic Sound Kyma Sound Design Workstation. Class SpcFile manages 
+//!	file I/O and conversion between Partials and envelope parameter streams.
 //	
 class SpcFile
 {
@@ -67,15 +67,35 @@ class SpcFile
 public:
 
 //	-- types --
-	typedef std::vector< Marker > markers_type;
-	typedef std::vector< Partial > partials_type;
+
+	//! the type of the container of Markers
+	//! stored with an SpcFile
+	typedef std::vector< Marker > markers_type;		
+	
+	//! the type of the container of Partials
+	//! stored with an SpcFile
+	typedef std::vector< Partial > partials_type;	
 
 //	-- construction --
- 	explicit SpcFile( const std::string & filename );
-	/*	Initialize an instance of SpcFile by importing envelope parameter 
-		streams from the file having the specified filename or path.
-	*/
 
+	//!	Initialize an instance of SpcFile by importing envelope parameter 
+	//!	streams from the file having the specified filename or path.
+	//!
+	//! \param	filename the name of the file to import
+ 	explicit SpcFile( const std::string & filename );
+
+	//!	Initialize an instance of SpcFile with copies of the Partials
+	//!	on the specified half-open (STL-style) range.
+	//!
+	//!	If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
+	//!	only PartialList::const_iterator arguments.
+	//!
+	//! \param	begin_partials the beginning of a range of Partials to prepare
+	//!			for Spc export
+	//! \param	end_partials the end of a range of Partials to prepare
+	//!			for Spc export
+	//!	\param	midiNoteNum the fractional MIDI note number, if specified
+	//!			(default is 60)
 #if !defined(NO_TEMPLATE_MEMBERS)
 	template<typename Iter>
 	SpcFile( Iter begin_partials, Iter end_partials, double midiNoteNum = 60  );
@@ -84,69 +104,87 @@ public:
 			 PartialList::const_iterator end_partials,
 			 double midiNoteNum = 60  );
 #endif
-	/*	Initialize an instance of SpcFile with copies of the Partials
-		on the specified half-open (STL-style) range.
 
-		If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
-		only PartialList::const_iterator arguments.
-	*/
-
+	//!	Initialize an instance of SpcFile having the specified fractional
+	//!	MIDI note number, and no Partials (or envelope parameter streams). 
+	//!
+	//!	\param	midiNoteNum the fractional MIDI note number, if specified
+	//!			(default is 60)
 	explicit SpcFile( double midiNoteNum = 60 );
-	/*	Initialize an instance of SpcFile having the specified fractional
-		MIDI note number, and no Partials (or envelope parameter streams). 
-	*/
 	 
 	//	copy, assign, and delete are compiler-generated
 	
 //	-- access --
+
+	//!	Return a reference to the MarkerContainer (see Marker.h) for this SpcFile. 
 	markers_type & markers( void );
+	
+	//!	Return a reference to the MarkerContainer (see Marker.h) for this SpcFile. 
 	const markers_type & markers( void ) const;
-	/*	Return a reference to the MarkerContainer (see Marker.h) for this SpcFile. 
-	 */
 	 
+	//!	Return the fractional MIDI note number assigned to this SpcFile. 
+	//!	If the sound has no definable pitch, note number 60.0 is used.
 	double midiNoteNumber( void ) const;
-	/*	Return the fractional MIDI note number assigned to this SpcFile. 
-		If the sound has no definable pitch, note number 60.0 is used.
-	 */
 	
+	//!	Return a read-only (const) reference to the bandwidth-enhanced
+	//! Partials represented by the envelope parameter streams in this SpcFile.
 	const partials_type & partials( void ) const;
-	/*	Return a read-only (const) reference to the bandwidth-enhanced
-		Partials represented by the envelope parameter streams in this SpcFile.
-	 */
 	
+	//!	Return the sampling freqency in Hz for the spc data in this
+	//!	SpcFile. This is the rate at which Kyma must be running to ensure
+	//!	proper playback of bandwidth-enhanced Spc data.
  	double sampleRate( void ) const;
-	/*	Return the sampling freqency in Hz for the spc data in this
-		SpcFile. This is the rate at which Kyma must be running to ensure
-		proper playback of bandwidth-enhanced Spc data.
-	*/
 	
 //	-- mutation --
+
+	//!	Add the specified Partial to the enevelope parameter streams
+	//!	represented by this SpcFile. 
+	//!	
+	//!	A SpcFile can contain only one Partial having any given (non-zero) 
+	//!	label, so an added Partial will replace a Partial having the 
+	//!	same label, if such a Partial exists.
+	//!
+	//!	This may throw an InvalidArgument exception if an attempt is made
+	//!	to add unlabeled Partials, or Partials labeled higher than the
+	//!	allowable maximum.
+	//!
+	//!	\param	p the Partial to add to this SpcFile
 	void addPartial( const Loris::Partial & p );
-	/*	Add the specified Partial to the enevelope parameter streams
-		represented by this SpcFile. 
-		
-		A SpcFile can contain only one Partial having any given (non-zero) 
-		label, so an added Partial will replace a Partial having the 
-		same label, if such a Partial exists.
-
-		This may throw an InvalidArgument exception if an attempt is made
-		to add unlabeled Partials, or Partials labeled higher than the
-		allowable maximum.
-	 */
 	 
+	//!	Add a Partial, assigning it the specified label (and position in the
+	//!	Spc data).
+	//!	
+	//!	A SpcFile can contain only one Partial having any given (non-zero) 
+	//!	label, so an added Partial will replace a Partial having the 
+	//!	same label, if such a Partial exists.
+	//!
+	//!	This may throw an InvalidArgument exception if an attempt is made
+	//!	to add unlabeled Partials, or Partials labeled higher than the
+	//!	allowable maximum.
+	//!
+	//!	\param	p the Partial to add to this SpcFile
+	//! \param	label the label to associate with this Partial in 
+	//!			the Spc file (the Partial's own label is ignored).
 	void addPartial( const Loris::Partial & p, int label );
-	/*	Add a Partial, assigning it the specified label (and position in the
-		Spc data).
-		
-		A SpcFile can contain only one Partial having any given (non-zero) 
-		label, so an added Partial will replace a Partial having the 
-		same label, if such a Partial exists.
-
-		This may throw an InvalidArgument exception if an attempt is made
-		to add unlabeled Partials, or Partials labeled higher than the
-		allowable maximum.
-	 */
 	 
+	//!	Add all Partials on the specified half-open (STL-style) range
+	//!	to the enevelope parameter streams represented by this SpcFile. 
+	//!	
+	//!	A SpcFile can contain only one Partial having any given (non-zero) 
+	//!	label, so an added Partial will replace a Partial having the 
+	//!	same label, if such a Partial exists.
+	//!
+	//!	If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
+	//!	only PartialList::const_iterator arguments.
+	//!
+	//!	This may throw an InvalidArgument exception if an attempt is made
+	//!	to add unlabeled Partials, or Partials labeled higher than the
+	//!	allowable maximum.
+	//!
+	//! \param	begin_partials the beginning of a range of Partials
+	//!			to add to this Spc file
+	//! \param	end_partials the end of a range of Partials
+	//!			to add to this Spc file
 #if !defined(NO_TEMPLATE_MEMBERS)
 	template<typename Iter>
 	void addPartials( Iter begin_partials, Iter end_partials  );
@@ -154,94 +192,97 @@ public:
 	void addPartials( PartialList::const_iterator begin_partials, 
 					  PartialList::const_iterator end_partials  );
 #endif
-	/*	Add all Partials on the specified half-open (STL-style) range
-		to the enevelope parameter streams represented by this SpcFile. 
-		
-		A SpcFile can contain only one Partial having any given (non-zero) 
-		label, so an added Partial will replace a Partial having the 
-		same label, if such a Partial exists.
 
-		If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
-		only PartialList::const_iterator arguments.
-
-		This may throw an InvalidArgument exception if an attempt is made
-		to add unlabeled Partials, or Partials labeled higher than the
-		allowable maximum.
-	 */
-
+	//!	Set the fractional MIDI note number assigned to this SpcFile. 
+	//!	If the sound has no definable pitch, use note number 60.0 
+	//! (the default).
 	void setMidiNoteNumber( double nn );
-	/*	Set the fractional MIDI note number assigned to this SpcFile. 
-		If the sound has no definable pitch, use note number 60.0 (the default).
-	 */
-	 
+
+	//!	Set the sampling freqency in Hz for the spc data in this
+	//!	SpcFile. This is the rate at which Kyma must be running to ensure
+	//!	proper playback of bandwidth-enhanced Spc data.
+	//!	
+	//!	The default sample rate is 44100 Hz.
 	void setSampleRate( double rate );
-	/*	Set the sampling freqency in Hz for the spc data in this
-		SpcFile. This is the rate at which Kyma must be running to ensure
-		proper playback of bandwidth-enhanced Spc data.
-		
-		The default sample rate is 44100 Hz.
-	*/
 	 	
 //	-- export --
+
+	//!	Export the phase-correct bandwidth-enhanced envelope parameter 
+	//!	streams represented by this SpcFile to the file having the specified 
+	//!	filename or path. 
+	//!	
+	//!	A nonzero endApproachTime indicates that the Partials do not include a
+	//!	release or decay, but rather end in a static spectrum corresponding to the
+	//!	final Breakpoint values of the partials. The endApproachTime specifies how
+	//!	long before the end of the sound the amplitude, frequency, and bandwidth
+	//!	values are to be modified to make a gradual transition to the static spectrum.
+	//!	
+	//!	If the endApproachTime is not specified, it is assumed to be zero, 
+	//!	corresponding to Partials that decay or release normally.
+	//!
+	//! \param	filename the name of the file to create
+	//! \param	endApproachTime the duration in seconds of the gradual transition
+	//!			to a static spectrum at the end of the sound (default 0)
 	void write( const std::string & filename, double endApproachTime = 0 );
-	/*	Export the phase-correct bandwidth-enhanced envelope parameter 
-		streams represented by this SpcFile to the file having the specified 
-		filename or path. 
-		
-		A nonzero endApproachTime indicates that the Partials do not include a
-		release or decay, but rather end in a static spectrum corresponding to the
-		final Breakpoint values of the partials. The endApproachTime specifies how
-		long before the end of the sound the amplitude, frequency, and bandwidth
-		values are to be modified to make a gradual transition to the static spectrum.
-		
-		If the endApproachTime is not specified, it is assumed to be zero, 
-		corresponding to Partials that decay or release normally.
-	*/
 
+	//!	Export the pure sinsoidal (omitting phase and bandwidth data) envelope 
+	//!	parameter streams represented by this SpcFile to the file having the 
+	//!	specified filename or path. 
+	//!	
+	//!	A nonzero endApproachTime indicates that the Partials do not include a
+	//!	release or decay, but rather end in a static spectrum corresponding to the
+	//!	final Breakpoint values of the partials. The endApproachTime specifies how
+	//!	long before the end of the sound the amplitude, frequency, and bandwidth
+	//!	values are to be modified to make a gradual transition to the static spectrum.
+	//!	
+	//!	If the endApproachTime is not specified, it is assumed to be zero, 
+	//!	corresponding to Partials that decay or release normally.
+	//!
+	//! \param	filename the name of the file to create
+	//! \param	endApproachTime the duration in seconds of the gradual transition
+	//!			to a static spectrum at the end of the sound (default 0)
 	void writeSinusoidal( const std::string & filename, double endApproachTime = 0 );
-	/*	Export the pure sinsoidal (omitting phase and bandwidth data) envelope 
-		parameter streams represented by this SpcFile to the file having the 
-		specified filename or path. 
-		
-		A nonzero endApproachTime indicates that the Partials do not include a
-		release or decay, but rather end in a static spectrum corresponding to the
-		final Breakpoint values of the partials. The endApproachTime specifies how
-		long before the end of the sound the amplitude, frequency, and bandwidth
-		values are to be modified to make a gradual transition to the static spectrum.
-		
-		If the endApproachTime is not specified, it is assumed to be zero, 
-		corresponding to Partials that decay or release normally.
-	*/
 
+	//!	Export the envelope parameter streams represented by this SpcFile to
+	//!	the file having the specified filename or path. Export phase-correct 
+	//!	bandwidth-enhanced envelope parameter streams if enhanced is true 
+	//!	(the default), or pure sinsoidal streams otherwise.
+	//!
+	//!	A nonzero endApproachTime indicates that the Partials do not include a
+	//!	release or decay, but rather end in a static spectrum corresponding to the
+	//!	final Breakpoint values of the partials. The endApproachTime specifies how
+	//!	long before the end of the sound the amplitude, frequency, and bandwidth
+	//!	values are to be modified to make a gradual transition to the static spectrum.
+	//!	
+	//!	If the endApproachTime is not specified, it is assumed to be zero, 
+	//!	corresponding to Partials that decay or release normally.
+	//!	
+	//!	This version of write is deprecated, use the two-argument
+	//!	versions write and writeSinusoidal. 
+	//!
+	//! \param	filename the name of the file to create
+	//! \param	enhanced flag indicating whether to export enhanced (true)
+	//!			or sinusoidal (false) data
+	//! \param	endApproachTime the duration in seconds of the gradual transition
+	//!			to a static spectrum at the end of the sound (default 0)
 	void write( const std::string & filename, bool enhanced,
 				double endApproachTime = 0 );
-	/*	Export the envelope parameter streams represented by this SpcFile to
-		the file having the specified filename or path. Export phase-correct 
-		bandwidth-enhanced envelope parameter streams if enhanced is true 
-		(the default), or pure sinsoidal streams otherwise.
-	
-		A nonzero endApproachTime indicates that the Partials do not include a
-		release or decay, but rather end in a static spectrum corresponding to the
-		final Breakpoint values of the partials. The endApproachTime specifies how
-		long before the end of the sound the amplitude, frequency, and bandwidth
-		values are to be modified to make a gradual transition to the static spectrum.
-		
-		If the endApproachTime is not specified, it is assumed to be zero, 
-		corresponding to Partials that decay or release normally.
-		
-		This version of write is deprecated, use the two-argument
-		versions write and writeSinusoidal. 
-	*/
 
 private:
 //	-- implementation --
-	partials_type partials_;		//	Partials to store in Spc format
-	markers_type markers_;		// 	AIFF Markers
+	partials_type partials_;	//!	Partials to store in Spc format
+	markers_type markers_;		//!	AIFF Markers
 
-	double notenum_, rate_;		// MIDI note number and sample rate
+	double notenum_;			//! fractional MIDI note number
+	double rate_;				//! sample rate in Hz at which the data plays at the
+								//! correction default pitch
 	
-	static const int MinNumPartials;	//	32
-	static const double DefaultRate;	//	44kHz
+	static const int MinNumPartials;	//!	the minimum number of Partials to export (32)
+										//!	(if necessary, extra empty (silent) Partials
+										//! will be exported to make up the difference between
+										//!	the size of partials_ and the next larger power
+										//! of two, not less than MinNumPartials
+	static const double DefaultRate;	//!	the default Spc export sample rate in Hz (44kHz)
 
 //	-- helpers --
 	void readSpcData( const std::string & filename );
@@ -253,13 +294,18 @@ private:
 // ---------------------------------------------------------------------------
 //	constructor from Partial range
 // ---------------------------------------------------------------------------
-//	Initialize an instance of SpcFile with copies of the Partials
-//	on the specified half-open (STL-style) range. If the MIDI
-//	note number is not specified, then note number 60 is used.
-//
-//	If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
-//	only PartialList::const_iterator arguments.
-//
+//!	Initialize an instance of SpcFile with copies of the Partials
+//!	on the specified half-open (STL-style) range.
+//!
+//!	If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
+//!	only PartialList::const_iterator arguments.
+//!
+//! \param	begin_partials the beginning of a range of Partials to prepare
+//!			for Spc export
+//! \param	end_partials the end of a range of Partials to prepare
+//!			for Spc export
+//!	\param	midiNoteNum the fractional MIDI note number, if specified
+//!			(default is 60)
 #if !defined(NO_TEMPLATE_MEMBERS)
 template< typename Iter >
 SpcFile::SpcFile( Iter begin_partials, Iter end_partials, double midiNoteNum  ) :
@@ -279,20 +325,24 @@ SpcFile::SpcFile( PartialList::const_iterator begin_partials,
 // ---------------------------------------------------------------------------
 //	addPartials 
 // ---------------------------------------------------------------------------
-//	Add all Partials on the specified half-open (STL-style) range
-//	to the enevelope parameter streams represented by this SpcFile. 
-//	
-//	A SpcFile can contain only one Partial having any given (non-zero) 
-//	label, so an added Partial will replace a Partial having the 
-//	same label, if such a Partial exists.
-//
-//	If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
-//	only PartialList::const_iterator arguments.
-//
-//	This may throw an InvalidArgument exception if an attempt is made
-//	to add unlabeled Partials, or Partials labeled higher than the
-//	allowable maximum.
-//
+//!	Add all Partials on the specified half-open (STL-style) range
+//!	to the enevelope parameter streams represented by this SpcFile. 
+//!	
+//!	A SpcFile can contain only one Partial having any given (non-zero) 
+//!	label, so an added Partial will replace a Partial having the 
+//!	same label, if such a Partial exists.
+//!
+//!	If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
+//!	only PartialList::const_iterator arguments.
+//!
+//!	This may throw an InvalidArgument exception if an attempt is made
+//!	to add unlabeled Partials, or Partials labeled higher than the
+//!	allowable maximum.
+//!
+//! \param	begin_partials the beginning of a range of Partials
+//!			to add to this Spc file
+//! \param	end_partials the end of a range of Partials
+//!			to add to this Spc file
 #if !defined(NO_TEMPLATE_MEMBERS)
 template<typename Iter>
 void SpcFile::addPartials( Iter begin_partials, Iter end_partials  )

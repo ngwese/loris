@@ -158,7 +158,8 @@ public:
 	//! \return the morphed Partial
 	Partial morphPartials( Partial src, Partial tgt, int assignLabel );
 	
-	//  Bad legacy name for morphPartials.
+	//! Bad legacy name for morphPartials.
+	//! \deprecated Use morphPartials instead.
 	Partial morphPartial( Partial src, Partial tgt, int assignLabel )
 	    { return morphPartials( src, tgt, assignLabel ); }
 

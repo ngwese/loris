@@ -119,10 +119,16 @@ public:
 	struct compareNameLess : 
 		public std::binary_function< const Marker, const Marker, bool >
 	{
+		//! Function call operator, return true if the first Marker
+		//!	argument should appear before the second in a range sorted
+		//!	by Marker name.
 		bool operator()( const Marker & lhs, const Marker & rhs ) const 
 			{ return lhs.name() < rhs.name(); }
 	};
-	typedef compareNameLess sortByName; //  old name, legacy support
+	
+	//! old name for compareNameLess, legacy support
+	//! \deprecated Use compareNameLess instead.
+	typedef compareNameLess sortByName; 
 	
 	
 	//!	Comparitor (binary) functor returning true if its first Marker
@@ -131,18 +137,23 @@ public:
 	struct compareTimeLess : 
 		public std::binary_function< const Marker, const Marker, bool >
 	{
+		//! Function call operator, return true if the first Marker
+		//!	argument should appear before the second in a range sorted
+		//!	by Marker time.
 		bool operator()( const Marker & lhs, const Marker & rhs ) const 
 			{ return lhs.time() < rhs.time(); }
 	};
-	typedef compareTimeLess sortByTime; //  old name, legacy support
+	
+	//! old name for compareTimeLess, legacy support
+	//! \deprecated Use compareTimeLess instead
+	typedef compareTimeLess sortByTime; 
 	
     //! Predicate functor returning true if the name of a Marker
     //! equal to the specified string, and false otherwise.
-    //
     class isNameEqual : public std::unary_function< const Marker, bool >
     {
     public:
-       //! Initialize a new instance with the specified name.
+        //! Initialize a new instance with the specified name.
     	isNameEqual( const std::string & s ) : name(s) {}
     	
     	//! Function call operator: evaluate a Marker.
@@ -150,12 +161,15 @@ public:
     		{ return m.name() == name; }
     		
     private:	
-    	std::string name;
+    	std::string name;	//!	the name to compare against
     };
 
+private:
+
 //	-- implementation --
-	double m_time;
-	std::string m_name;
+
+	double m_time;			//! the time in seconds associated with the Marker
+	std::string m_name;		//! the name of the Marker
 			
 };	//	end of class Marker
 

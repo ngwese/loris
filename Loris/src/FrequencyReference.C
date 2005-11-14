@@ -62,9 +62,20 @@ buildEnvelopeFromPartial( LinearEnvelope & env, const Partial & p, long numsamps
 // ---------------------------------------------------------------------------
 //	construction
 // ---------------------------------------------------------------------------
-//	Create a reference frequency envelope from the longest Partial found in 
-//	a given iterator range and in a specified frequency range. The envelope
-//	will have the specified number of samples.
+//!	Construct a new fundamental FrequencyReference derived from the 
+//!	specified half-open (STL-style) range of Partials that lies
+//!	within the speficied average frequency range. Construct the 
+//!	reference envelope with approximately numSamps points.
+//!
+//! \param	begin The beginning of a range of Partials from which to
+//!			construct a frequency refence envelope.
+//! \param	end The end of a range of Partials from which to
+//!			construct a frequency refence envelope.
+//!	\param	minFreq The minimum expected fundamental frequency.
+//! \param	maxFreq The maximum expected fundamental frequency.
+//! \param	numSamps The approximate number of estimate of the 
+//!			fundamental frequency from which to construct the 
+//!			frequency reference envelope.
 //
 FrequencyReference::FrequencyReference( PartialList::const_iterator begin, 
 										PartialList::const_iterator end, 
@@ -113,15 +124,21 @@ FrequencyReference::FrequencyReference( PartialList::const_iterator begin,
 	*_env = est.constructEnvelope( span.first, span.second, dt );
 }
 
-
 // ---------------------------------------------------------------------------
 //	construction
 // ---------------------------------------------------------------------------
-//	Create a reference frequency envelope from the longest Partial found in 
-//	a given iterator range and in a specified frequency range.
-//
-//	When the number of envelope samples is not specified, sample the longest
-//	Partial's frequency envelope at every Breakpoint.
+//!	Construct a new fundamental FrequencyReference derived from the 
+//!	specified half-open (STL-style) range of Partials that lies
+//!	within the speficied average frequency range. Construct the 
+//!	reference envelope from fundamental estimates taken every
+//! five milliseconds.
+//!
+//! \param	begin The beginning of a range of Partials from which to
+//!			construct a frequency refence envelope.
+//! \param	end The end of a range of Partials from which to
+//!			construct a frequency refence envelope.
+//!	\param	minFreq The minimum expected fundamental frequency.
+//! \param	maxFreq The maximum expected fundamental frequency.
 //
 FrequencyReference::FrequencyReference( PartialList::const_iterator begin, 
 										PartialList::const_iterator end, 
@@ -130,27 +147,36 @@ FrequencyReference::FrequencyReference( PartialList::const_iterator begin,
 {
 	//	sanity:
 	if ( maxFreq < minFreq )
+	{
 		std::swap( minFreq, maxFreq );
-
+	}
+	
 #ifdef Loris_Debug
 	debugger << "Finding frequency reference envelope in range " <<
 	debugger << minFreq << " to " << maxFreq << " Hz, from " <<
 	debugger << std::distance(begin,end) << " Partials" << std::endl;
 #endif
 
+	/*
 	//	find the longest Partial in the specified frequency range:
 	PartialList::const_iterator longest  = 
 		findLongestPartialInFreqRange( begin, end, minFreq, maxFreq );
 		
 	if ( longest == end )
 		Throw( InvalidArgument, "No Partials attain their maximum sinusoidal energy within the specified frequency range." );
-	
+
 	//	build the Envelope by sampling the longest Partial's frequency
 	//	envelope at each Breakpoint:
 	for ( Partial::const_iterator it = longest->begin(); it != longest->end(); ++it )
 	{
 		_env->insertBreakpoint( it.time(), it.breakpoint().frequency() );
 	}
+	*/
+	
+	Fundamental est( begin, end, minFreq, maxFreq );
+	std::pair< double, double > span = PartialUtils::timeSpan( begin, end );
+	double interval = 0.005;
+	*_env = est.constructEnvelope( span.first, span.second, interval );
 }
 
 // ---------------------------------------------------------------------------

@@ -62,23 +62,43 @@ class FrequencyReference : public Envelope
 //	-- public interface --
 public:
 //	-- construction --
+
+	//!	Construct a new fundamental FrequencyReference derived from the 
+	//!	specified half-open (STL-style) range of Partials that lies
+	//!	within the speficied average frequency range. Construct the 
+	//!	reference envelope with approximately numSamps points.
+	//!
+	//! \param	begin The beginning of a range of Partials from which to
+	//!			construct a frequency refence envelope.
+	//! \param	end The end of a range of Partials from which to
+	//!			construct a frequency refence envelope.
+	//!	\param	minFreq The minimum expected fundamental frequency.
+	//! \param	maxFreq The maximum expected fundamental frequency.
+	//! \param	numSamps The approximate number of estimate of the 
+	//!			fundamental frequency from which to construct the 
+	//!			frequency reference envelope.
 	FrequencyReference( PartialList::const_iterator begin, 
 						PartialList::const_iterator end, 
 						double minFreq, double maxFreq, long numSamps );
-	/*	Construct a new FrequencyReference derived from the longest Partial
-		in the specified half-open (STL-style) range of Partials that lies
-		within the speficied average frequency range. Sample that longest
-		Partial at numSamps points to construct the reference envelope.
-	 */
 	 
+	//!	Construct a new fundamental FrequencyReference derived from the 
+	//!	specified half-open (STL-style) range of Partials that lies
+	//!	within the speficied average frequency range. Construct the 
+	//!	reference envelope from fundamental estimates taken every
+	//! five milliseconds.
+	//!
+	//! \param	begin The beginning of a range of Partials from which to
+	//!			construct a frequency refence envelope.
+	//! \param	end The end of a range of Partials from which to
+	//!			construct a frequency refence envelope.
+	//!	\param	minFreq The minimum expected fundamental frequency.
+	//! \param	maxFreq The maximum expected fundamental frequency.
+    //! \param  interval is the time in seconds between breakpoints in the
+    //!         reference envelope (default is 5 ms)	
 	FrequencyReference( PartialList::const_iterator begin, 
 						PartialList::const_iterator end, 
 						double minFreq, double maxFreq );
-	/*	Construct a new FrequencyReference derived from the longest Partial
-		in the specified half-open (STL-style) range of Partials that lies
-		within the speficied average frequency range. Sample that longest
-		Partial at every Breakpoint to construct the reference envelope.
-	 */
+
 	 
 	FrequencyReference( const FrequencyReference & other );
 	/*	Construct a new FrequencyReference that is an exact copy of the

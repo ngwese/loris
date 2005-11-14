@@ -434,6 +434,7 @@ private:
 class Partial_Iterator
 {
 //	-- instance variables --
+
 	typedef Partial::container_type BaseContainer;
 	typedef BaseContainer::iterator BaseIterator;
 	BaseIterator _iter;
@@ -441,10 +442,25 @@ class Partial_Iterator
 //	-- public interface --
 public:
 //	-- bidirectional iterator interface --
+
+	//! The iterator category, for copmpatibility with 
+	//! C++ standard library algorithms 
 	typedef BaseIterator::iterator_category	iterator_category;
+	
+	//! The type of element that can be accessed through this 
+	//! iterator (Breakpoint).
 	typedef Breakpoint     					value_type;
+	
+	//! The type representing the distance between two of these
+	//! iterators.
 	typedef BaseIterator::difference_type  	difference_type;
+	
+	//! The type of a pointer to the type of element that can 
+	//! be accessed through this iterator (Breakpoint *).
 	typedef Breakpoint *					pointer;
+
+	//! The type of a reference to the type of element that can 
+	//! be accessed through this iterator (Breakpoint &).
 	typedef Breakpoint &					reference;
 
 //	construction:
@@ -602,11 +618,26 @@ class Partial_ConstIterator
 //	-- public interface --
 public:
 //	-- bidirectional iterator interface --
+
+	//! The iterator category, for copmpatibility with 
+	//! C++ standard library algorithms 
 	typedef BaseIterator::iterator_category	iterator_category;
+	
+	//! The type of element that can be accessed through this 
+	//! iterator (Breakpoint).
 	typedef Breakpoint     					value_type;
+	
+	//! The type representing the distance between two of these
+	//! iterators.
 	typedef BaseIterator::difference_type  	difference_type;
-	typedef const Breakpoint *				pointer;
-	typedef const Breakpoint &				reference;
+	
+	//! The type of a pointer to the type of element that can 
+	//! be accessed through this iterator (const Breakpoint *).
+	typedef const Breakpoint *					pointer;
+
+	//! The type of a reference to the type of element that can 
+	//! be accessed through this iterator (const Breakpoint &).
+	typedef const Breakpoint &					reference;
 
 //	construction:
 

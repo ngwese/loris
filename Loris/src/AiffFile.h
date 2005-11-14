@@ -162,7 +162,8 @@ public:
 	//!	44100 Hz both have 44100 sample frames per second of audio samples).
  	size_type numFrames( void ) const;
 
-	//	Legacy name for numFrames.
+	//! Bad old legacy name for numFrames.
+	//! \deprecated Use numFrames instead.
 	size_type sampleFrames( void ) const { return numFrames(); }
 
 	//!	Return the sampling freqency in Hz for the sample data in this

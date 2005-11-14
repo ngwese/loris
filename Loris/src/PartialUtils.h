@@ -91,7 +91,10 @@ public:
 	virtual void operator()( Partial & p ) const = 0;
 
 protected:
-	Envelope * env;
+
+	//! pointer to an envelope that governs the 
+	//! time-varying mutation
+	Envelope * env;		
 };
 
 // ---------------------------------------------------------------------------
