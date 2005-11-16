@@ -45,14 +45,14 @@ class LinearEnvelope;
 // ---------------------------------------------------------------------------
 //	class FrequencyReference
 //
-//	Class FrequencyReference represents a reference frequency envelope
-//	derived from the longest Partial found in a given range of Partials,
-//	and in a specified (average) frequency range. This reference envelope
-//	can be used for channelizing the Partials in preparation for morphing
-//	(see Channelizer.h).
-//	
-//	FrequencyReference implements the Envelope interface (see
-//	Envelope.h).
+//!	Class FrequencyReference represents a reference frequency envelope
+//!	derived from an estimate of the fundamental frequency of a given range 
+//! of Partials within in a specified frequency range. This reference envelope
+//!	can be used for channelizing the Partials in preparation for morphing
+//!	(see Channelizer.h).
+//!	
+//!	FrequencyReference implements the Envelope interface (see
+//!	Envelope.h).
 //
 class FrequencyReference : public Envelope
 {
@@ -93,43 +93,37 @@ public:
 	//!			construct a frequency refence envelope.
 	//!	\param	minFreq The minimum expected fundamental frequency.
 	//! \param	maxFreq The maximum expected fundamental frequency.
-    //! \param  interval is the time in seconds between breakpoints in the
-    //!         reference envelope (default is 5 ms)	
 	FrequencyReference( PartialList::const_iterator begin, 
 						PartialList::const_iterator end, 
 						double minFreq, double maxFreq );
 
 	 
+	//!	Construct a new FrequencyReference that is an exact copy of the
+	//!	specified FrequencyReference.
 	FrequencyReference( const FrequencyReference & other );
-	/*	Construct a new FrequencyReference that is an exact copy of the
-		specified FrequencyReference.
-	 */
 	 
+	//!	Assignment operator: make this FrequencyReference an exact copy 
+	//! of the specified FrequencyReference.
 	FrequencyReference & operator= ( const FrequencyReference & other );
-	/* 	Assignment operator: make this FrequencyReference an exact copy 
-	of the specified FrequencyReference.
-	 */
 	 
+	//! Destroy this FrequencyReference.
 	~FrequencyReference();
-	/* 	Destroy this FrequencyReference.
-	 */
 	 
 //	-- conversion to LinearEnvelope --
+
+    //!	Return a LinearEnvelope that evaluates indentically to this
+	//!	FrequencyReference at all time.
 	LinearEnvelope envelope( void ) const;
-    /*	Return a LinearEnvelope that evaluates indentically to this
-		FrequencyReference at all time.
-     */
      
 //	-- Envelope interface --
+
+	//!	Return an exact copy of this FrequencyReference (following the
+	//!	Prototype pattern).
 	virtual FrequencyReference * clone( void ) const;
-	/*	Return an exact copy of this FrequencyReference (following the
-		Prototype pattern).
-	 */
 	
+	//!	Return the frequency value (in Hz) of this FrequencyReference at the
+	//!	specified time.
 	virtual double valueAt( double x ) const;	
-	/*	Return the frequency value (in Hz) of this FrequencyReference at the
-		specified time.
-	 */
 
 };	// end of class FrequencyReference
 
