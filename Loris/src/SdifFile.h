@@ -81,10 +81,10 @@ namespace Loris {
 //!
 //!	If markers are associated with the partials in Loris, then a RBEM frame
 //!	describing the markers will precede the first RBEP frame in the SDIF
-//!	file.  The RBEM frame contains two single-column RBEM matrices.  The
+//!	file. The RBEM frame contains two single-column RBEM matrices. The
 //!	first matrix contains 32-bit floats indicating the time (in seconds)
-//!	for each marker.  The second matrix contains UTF-8 data, the names of
-//!	each of the markers separated by '\0'.
+//!	for each marker. The second matrix contains UTF-8 data, the names of
+//!	each of the markers separated by the ASCII character 0.
 //!	
 //!	In addition to RBEP frames, Loris can also read and write SDIF 1TRC
 //!	frames (refer to IRCAM's SDIF web site, www.ircam.fr/sdif/, for

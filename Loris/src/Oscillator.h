@@ -34,7 +34,6 @@
  */
 
 #include "NoiseGenerator.h"
-#include <vector>
 
 //	begin namespace
 namespace Loris {
@@ -44,39 +43,36 @@ class Breakpoint;
 // ---------------------------------------------------------------------------
 //	class Oscillator
 //
-//	Class Oscillator represents the state of a single bandwidth-enhanced
-//	sinusoidal oscillator used for synthesizing sounds from Reassigned
-//	Bandwidth-Enhanced analysis data. Oscillator encapsulates the oscillator
-//	state, including the instantaneous radian frequency (radians per
-//	sample), amplitude, bandwidth coefficient, and phase, and a 
-//	bandlimited stochastic modulator. 
-//
-//	Class Synthesizer uses an instance of Oscillator to synthesize
-//	bandwidth-enhanced Partials.
+//!	Class Oscillator represents the state of a single bandwidth-enhanced
+//!	sinusoidal oscillator used for synthesizing sounds from Reassigned
+//!	Bandwidth-Enhanced analysis data. Oscillator encapsulates the oscillator
+//!	state, including the instantaneous radian frequency (radians per
+//!	sample), amplitude, bandwidth coefficient, and phase, and a 
+//!	bandlimited stochastic modulator. 
+//!
+//!	Class Synthesizer uses an instance of Oscillator to synthesize
+//!	bandwidth-enhanced Partials.
 //
 class Oscillator
 {
-//	--- implementation _--
+//	--- implementation ---
 
-	//	stochastic modulators:
-	NoiseGenerator bwModulator;
+	NoiseGenerator bwModulator;	//!	stochastic modulator
 	
 	//	instantaneous oscillator state:
-	double i_frequency;	//	radians per sample
-	double i_amplitude;	//	absolute
-	double i_bandwidth;	//	bandwidth coefficient (noise energy / total energy)
+	double i_frequency;			//!	radians per sample
+	double i_amplitude;			//!	absolute amplitude
+	double i_bandwidth;			//!	bandwidth coefficient (noise energy / total energy)
 	
 	//	accumulating phase state:
-	double determ_phase;	//	deterministic phase in radians
+	double determ_phase;		//!	deterministic phase in radians
 
 //	--- interface ---
 public:
-//	--- construction --_
+//	--- construction ---
+
+	//!	Construct a new Oscillator with all state parameters initialized to 0.
 	Oscillator( void );
-	/*	Construct a new Oscillator with all state parameters initialized
-		to 0.
-	 */
-	 
 	 
 	//	Copy, assignment, and destruction are free.
 	//
@@ -84,44 +80,43 @@ public:
 	//	variables and the filters have the same coefficients,
 	//	but the state of the filter delay lines is not copied.
 
-//	-- the new way --
+// --- oscillation ---
 	 
+	//!	Reset the instantaneous envelope parameters 
+	//!	(frequency, amplitude, bandwidth, and phase).
+	//!	The sample rate is needed to convert the 
+	//! Breakpoint frequency (Hz) to radians per sample.
 	void resetEnvelopes( const Breakpoint & bp, double srate );
-	/*	Reset the instantaneous envelope parameters 
-	 	(frequency, amplitude, bandwidth, and phase).
-	 	The sample rate is needed to convert the 
-	 	Breakpoint frequency (Hz) to radians per sample.
-	  */
 	  
+	//!	Reset the phase of the Oscillator to the specified
+	//!	value. This is done when the amplitude of a Partial 
+	//!	goes to zero, so that onsets are preserved in distilled
+	//!	and collated Partials.
 	void resetPhase( double ph );
-	/*	Reset the phase of the Oscillator to the specified
-		value, and clear the accumulated phase modulation. (?)
-		Or not.
-		This is done when the amplitude of a Partial goes to 
-		zero, so that onsets are preserved in distilled
-		and collated Partials.
-	 */
 
+	//!	Accumulate bandwidth-enhanced sinusoidal samples modulating the
+	//!	oscillator state from its current values of radian frequency, amplitude,
+	//!	and bandwidth to the specified target values. Accumulate samples into
+	//!	the half-open (STL-style) range of doubles, starting at begin, and
+	//!	ending before end (no sample is accumulated at end). The caller must
+	//!	insure that the indices are valid. Target frequency and bandwidth are
+	//!	checked to prevent aliasing and bogus bandwidth enhancement.
 	void oscillate( double * begin, double * end,
 					const Breakpoint & bp, double srate );
-	/*	Accumulate bandwidth-enhanced sinusoidal samples modulating the
-		oscillator state from its current values of radian frequency, amplitude,
-		and bandwidth to the specified target values. Accumulate samples into
-		the half-open (STL-style) range of doubles, starting at begin, and
-		ending before end (no sample is accumulated at end). The caller must
-		insure that the indices are valid. Target frequency and bandwidth are
-		checked to prevent aliasing and bogus bandwidth enhancement.
-	 */
 
-	/*	Access parameters of the Oscillator
-		(why were these removed?)
-	 */
+// --- accessors ---
+
+	//! Return the instantaneous amplitde of the Oscillator.
 	double amplitude( void ) const { return i_amplitude; }
+	
+	//! Return the instantaneous bandwidth of the Oscillator.
 	double bandwidth( void ) const { return i_bandwidth; }
+	
+	//! Return the instantaneous phase of the Oscillator.
 	double phase( void ) const { return determ_phase; }
+	
+	//! Return the instantaneous radian frequency of the Oscillator.
 	double radianFreq( void ) const { return i_frequency; }
-
-	/*	Used to allow state mutation too, why not anymore? */
 	 
 };	//	end of class Oscillator
 

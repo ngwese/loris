@@ -47,11 +47,18 @@ namespace Loris {
 // ---------------------------------------------------------------------------
 //	Class Harmonifier
 //
+//! A Harmonifier uses a reference frequency envelope to make the
+//! frequencies of labeled Partials harmonic. The amount of frequency
+//! adjustment can be controlled by a time-varying envelope, and a 
+//! threshold can be supplied so that only quiet Partials are affected.
+//
 class Harmonifier
 {
 //	-- instance variables --
 
-	Partial _refPartial;         
+	Partial _refPartial;				//! the Partial whose frequency supplies the
+										//! reference frequency envelope.
+										
 	double _freqFixThresholdDb;		    //!	amplitude threshold below which Partial
 									    //!	frequencies are corrected according to
 									    //!	a reference Partial, if specified.
