@@ -37,6 +37,8 @@
 
 #include "partialsPixmap.h"
 
+using std::list;
+
 // ---------------------------------------------------------------------------
 //      PartialsPixmap constructor
 // ---------------------------------------------------------------------------
@@ -210,7 +212,7 @@ void AmplitudePixmap::plotPartials(){
   
   // loop through all partials in the list 
   for(list<Loris::Partial>::const_iterator it = partialList->begin(); it != partialList->end(); it++){
-    PartialConstIterator pIt = it->begin();  // no line should be added to the
+    Partial_ConstIterator pIt = it->begin();  // no line should be added to the
     x = toX(pIt.time());                     // first breakpoint in a partial
     y = toY(pIt->amplitude());
     lastX = x;                   // to know where to connect the line.
@@ -271,7 +273,7 @@ void FrequencyPixmap::plotPartials(){
   // loop through all partials in the list and plot them connected with a line
   for(list<Partial>::const_iterator it = partialList->begin(); it != partialList->end(); it++){
     
-    PartialConstIterator pIt = it->begin();  // no line should be added to the
+    Partial_ConstIterator pIt = it->begin();  // no line should be added to the
     x = toX(pIt.time());                     // first breakpoint in a partial
     y = toY(pIt->frequency());
     lastX = x; 
@@ -328,7 +330,7 @@ void NoisePixmap::plotPartials(){
 
   // loop through all partials in the list and plot them connected with a line
   for(list<Partial>::const_iterator it = partialList->begin(); it != partialList->end(); it++){
-    PartialConstIterator pIt = it->begin();
+    Partial_ConstIterator pIt = it->begin();
     x = toX(pIt.time());
     y = toY(pIt->bandwidth());
     lastX = x; 

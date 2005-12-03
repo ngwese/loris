@@ -2,8 +2,7 @@
  * This is Fossa, a grapical control application for analysis, synthesis, 
  * and manipulations of digitized sounds using Loris (Fitz and Haken). 
  *
- * Fossa is Copyright (c) 2001-2 by Susanne Lefvert, 2003 by Donour Sizemore
- *
+ * Fossa is Copyright (c) 2001 - 2002 by Susanne Lefvert
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +25,7 @@
  * 
  *
  * Susanne Lefvert, 1 March 2002
+ *
  *
  */
 
@@ -55,14 +55,14 @@ FossaFrame::FossaFrame(QWidget* parent, const char* name, PartialsList* pList):Q
 // Contains Sidebar and CurrentPartialsView
 
 void FossaFrame::setGui(){
-  split               = new QSplitter(this);
   fossaFrameLayout    = new QGridLayout(this); 
-  sidebar             = new Sidebar(split, "Sidebar", partialsList);
-  currentPartialsView = new CurrentPartialsView(split, "currentPartialsView", partialsList);
+  sidebar             = new Sidebar(this, "Sidebar", partialsList);
+  currentPartialsView = new CurrentPartialsView(this, "currentPartialsView", partialsList);
    
   setSizePolicy(QSizePolicy((QSizePolicy::SizeType)3, (QSizePolicy::SizeType)3, sizePolicy().hasHeightForWidth()));
-  fossaFrameLayout->addWidget(split, 0, 0 );
-    
+
+  fossaFrameLayout->addWidget(sidebar, 0, 0 );
+  fossaFrameLayout->addWidget(currentPartialsView, 0, 1);
 }
 
 

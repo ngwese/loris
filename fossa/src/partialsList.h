@@ -78,7 +78,7 @@ class PartialsList:public QObject{
   QPixmap getCurrentFrequencyPixmap();
   QPixmap getCurrentNoisePixmap();
   Partials::State getCurrentState();  
-  list<Partial>* getCurrentPartials();
+  std::list<Partial>* getCurrentPartials();
   const Partials* getPartials(int position);//not be able to distill, channelize etc
   double getMorph1Duration();
   double getMorph2Duration();

@@ -46,7 +46,7 @@ class EmptyPixmap;
 class Axis;
 
 using namespace Loris;
-using std::list;
+
 // ---------------------------------------------------------------------------
 // class PartialsPixmap
 // Base class for AmplitudePixmap, FrequencyPixmap, and NoisePixmap classes.
@@ -56,7 +56,7 @@ using std::list;
 class PartialsPixmap:public QPixmap{
   
  public:
-  PartialsPixmap(list<Loris::Partial>* p, double x, double y);
+  PartialsPixmap(std::list<Loris::Partial>* p, double x, double y);
   
  private:
   double verticalIndex;
@@ -71,7 +71,7 @@ class PartialsPixmap:public QPixmap{
   int topMargin;
   int bottomMargin;
   QString text;
-  list<Loris::Partial>* partialList;
+  std::list<Loris::Partial>* partialList;
 
   bool inArea(int x, int y);
   double toX(double time);
@@ -87,7 +87,7 @@ class PartialsPixmap:public QPixmap{
 class AmplitudePixmap:public PartialsPixmap{
   
 public:
-   AmplitudePixmap(list<Loris::Partial>* p, double x, double y);
+   AmplitudePixmap(std::list<Loris::Partial>* p, double x, double y);
    void plotPartials();
 };
 
@@ -98,7 +98,7 @@ public:
 class FrequencyPixmap:public PartialsPixmap{
   
 public:
-  FrequencyPixmap(list<Loris::Partial>* p, double x, double y);
+  FrequencyPixmap(std::list<Loris::Partial>* p, double x, double y);
   void plotPartials();
 };
 
@@ -109,7 +109,7 @@ public:
 class NoisePixmap:public PartialsPixmap{
   
 public:
-  NoisePixmap(list<Loris::Partial>* p, double x, double y);
+  NoisePixmap(std::list<Loris::Partial>* p, double x, double y);
   void plotPartials();
 };
 
@@ -122,7 +122,7 @@ class EmptyPixmap:public PartialsPixmap{
   
 public:
   
-  EmptyPixmap(list<Loris::Partial>* p, double x, double y);
+  EmptyPixmap(std::list<Loris::Partial>* p, double x, double y);
   void plotPartials();
 };
 

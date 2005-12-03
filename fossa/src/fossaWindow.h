@@ -5,7 +5,7 @@
  * This is Fossa, a grapical control application for analysis, synthesis, 
  * and manipulations of digitized sounds using Loris (Fitz and Haken). 
  *
- * Fossa is Copyright (c) 2001-2 by Susanne Lefvert, 2003 by Donour Sizemore
+ * Fossa is Copyright (c) 2001 - 2002 by Susanne Lefvert
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -91,25 +91,25 @@ class FossaWindow:public QMainWindow{
   void manual();
         
  private:
-  FossaFrame        *fossaFrame;
-  PartialsList      *partialsList;
-  ImportDialog      *importDialog;
-  ChannelizeDialog  *channelizeDialog;
-  NewNameDialog     *newNameDialog;
-  MorphDialog       *morphDialog;
-  ExportDialog      *exportDialog;
+  FossaFrame* fossaFrame;
+  PartialsList* partialsList;
+  ImportDialog* importDialog;
+  ChannelizeDialog* channelizeDialog;
+  NewNameDialog* newNameDialog;
+  MorphDialog* morphDialog;
+  ExportDialog* exportDialog;
   
-  QGridLayout       *fossaLayout; 
-  QStatusBar        *statusbar;
-  
-  QMenuBar     *menubar;         // top menu
-  QPopupMenu   *fileMenu;        // in menubar
-  QPopupMenu   *importMenu;      // in fileMenu
-  QPopupMenu   *exportMenu;      // in fileMenu
-  QPopupMenu   *manipulateMenu;
-  QPopupMenu   *editMenu;        // in menubar
-  QPopupMenu   *helpMenu;        // in menubar
+  QGridLayout* fossaLayout; 
+  QStatusBar* statusbar;
   //QToolBar* toolbar; //later versions might want a toolbar   
+  QMenuBar* menubar;         // top menu
+  QPopupMenu* fileMenu;      // in menubar
+  QPopupMenu* importMenu;       // in fileMenu
+  QPopupMenu* exportMenu;       // in fileMenu
+  QPopupMenu* manipulateMenu;
+  QPopupMenu* editMenu;      // in menubar
+  QPopupMenu* helpMenu;      // in menubar
+
   int distillID;
   int channelizeID;
   int morphID;

@@ -57,17 +57,17 @@ class PointWithText;
 class PointWithText:public QCanvasRectangle{ 
 public:
 
-  const static double size = 4; 
-  PointWithText(MorphArea* morphArea, double ix, double iy, QCanvas* canvas, int id, QString& morph1, QString& morph2);
+  const static int size = 4; 
+  PointWithText(MorphArea* morphArea, int ix, int iy, QCanvas* canvas, int id, QString& morph1, QString& morph2);
   ~PointWithText();
   virtual void show() = 0;
   virtual void hide() = 0;
   virtual int rtti() const = 0;
-  virtual void moveLeftLine(double lastX, double lastY) = 0;
-  virtual void setLeftLine(double toX, double toY) = 0; 
-  double x() const;
-  double y() const;
-  void move(double x, double y);
+  virtual void moveLeftLine(int lastX, int lastY) = 0;
+  virtual void setLeftLine(int toX, int toY) = 0; 
+  int x() const;
+  int y() const;
+  void move(int x, int y);
   void drawShape(QPainter & painter);
   void setGui();
   void setPointText();
@@ -97,12 +97,12 @@ class AmplitudePoint:public PointWithText{
 public:
   const static int rttiNr = 2000;  
   QPen pen;
-  AmplitudePoint(MorphArea* m, double ix, double iy, QCanvas* canvas, int newPointIndex, QString& morph1,QString& morph2);
+  AmplitudePoint(MorphArea* m, int ix, int iy, QCanvas* canvas, int newPointIndex, QString& morph1,QString& morph2);
   int rtti() const;
   void hide();  
   void show();
-  void setLeftLine(double toX, double toY);
-  void moveLeftLine(double toX, double toY);
+  void setLeftLine(int toX, int toY);
+  void moveLeftLine(int toX, int toY);
 };
 
 // ---------------------------------------------------------------------------
@@ -115,12 +115,12 @@ class FrequencyPoint:public PointWithText{
 public:
   QPen pen;
   const static int rttiNr = 2001;
-  FrequencyPoint(MorphArea* m, double ix, double iy, QCanvas* canvas, int newPointIndex, QString& morph1, QString& morph2);
+  FrequencyPoint(MorphArea* m, int ix, int iy, QCanvas* canvas, int newPointIndex, QString& morph1, QString& morph2);
   int rtti() const;
   void hide();
   void show();  
-  void setLeftLine(double toX, double toY);
-  void moveLeftLine(double toX, double toY);
+  void setLeftLine(int toX, int toY);
+  void moveLeftLine(int toX, int toY);
 };
 
 // ---------------------------------------------------------------------------
@@ -134,12 +134,12 @@ public:
   const static int rttiNr = 2002;
   QPen pen;
 
-  NoisePoint(MorphArea* m, double ix, double iy, QCanvas* canvas, int newPointIndex, QString& morph1, QString& morph2 );
+  NoisePoint(MorphArea* m, int ix, int iy, QCanvas* canvas, int newPointIndex, QString& morph1, QString& morph2 );
   int rtti() const;
   void hide();
   void show();
-  void setLeftLine(double toX, double toY);
-  void moveLeftLine(double toX, double toY);
+  void setLeftLine(int toX, int toY);
+  void moveLeftLine(int toX, int toY);
 };
 
 #endif // POINT_WITH_TEXT_H

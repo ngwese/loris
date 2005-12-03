@@ -44,10 +44,10 @@
 #include <Notifier.h>
 #include <Exception.h>
 #include <FrequencyReference.h>
-#include <list>
 
 using namespace Loris;
 using std::list;
+
 // ---------------------------------------------------------------------------
 // class LorisInterface
 // The class handles operations requiring communication with the loris c++ 
@@ -59,13 +59,13 @@ class LorisInterface{
 
  public:
   LorisInterface();
-  list<Partial>* importAiff(const char* path, double resolution, double width);
+  std::list<Partial>* importAiff(const char* path, double resolution, double width);
   list<Partial>* importSdif(const char* path);
-  void channelize(int refLabel, double minFreq, double maxFreq, list<Partial>& partials);
-  list<Partial>* morph(BreakpointEnvelope& famp, BreakpointEnvelope& ffreq, BreakpointEnvelope& fbw, list<Partial> Partials1, list<Partial> partials2);
-  void distill(list<Partial>& partials); 
-  void exportAiff(double sampleRate, int bitsPerSample, const char* name, list<Partial> partials, double maxtime);
-  void exportSdif(const char* name, list<Partial> partials);
+  void channelize(int refLabel, double minFreq, double maxFreq, std::list<Partial>& partials);
+  std::list<Partial>* morph(BreakpointEnvelope& famp, BreakpointEnvelope& ffreq, BreakpointEnvelope& fbw, std::list<Partial> Partials1, std::list<Partial> partials2);
+  void distill(std::list<Partial>& partials); 
+  void exportAiff(double sampleRate, int bitsPerSample, const char* name, std::list<Partial> partials, double maxtime);
+  void exportSdif(const char* name, std::list<Partial> partials);
 };
 
 #endif // LORIS_INTERFACE_H

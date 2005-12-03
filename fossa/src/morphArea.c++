@@ -40,16 +40,20 @@
 #include <config.h>  // #define directives are placed in config.h by autoconf
 #endif
 
-#include <iostream>
 #include "morphArea.h"
-
 using namespace Loris;
-using std::cout;
+
 // ---------------------------------------------------------------------------
 //      MorphArea constructor
 // ---------------------------------------------------------------------------
 
-MorphArea::MorphArea(QCanvas* canvas, QWidget* parent,char* name,  PartialsList* pList, QStatusBar* status):QCanvasView(canvas,parent,name){
+MorphArea::MorphArea(
+	QCanvas* canvas, 
+	QWidget* parent,
+	char* name,  
+	PartialsList* pList, 
+	QStatusBar* status
+	):QCanvasView(canvas,parent,name){
 
   statusbar = status;
   state = all;
@@ -67,8 +71,8 @@ MorphArea::MorphArea(QCanvas* canvas, QWidget* parent,char* name,  PartialsList*
   tAxis = 0;
   setHorizontalAxis();
 
-  // the points are saved in lists which sorts the points after x-value
-  // because the canvas only return objects sorted after z-value.  
+  // the points are saved in lists which sort the points by x-value
+  // because the canvas only returns objects sorted by z-value.  
   aList.setAutoDelete(true); //qt deletes objects automatically
   fList.setAutoDelete(true);
   nList.setAutoDelete(true);
@@ -127,7 +131,7 @@ void MorphArea::contentsMousePressEvent(QMouseEvent* e){
 	    moving.append(*it);
 	  break;
 	  
-	default: cout<<"MorphArea::contentsMousePressEvent(QMouseEvent* e): have no state, weird"<<endl;
+	default: std::cout<<"MorphArea::contentsMousePressEvent(QMouseEvent* e): have no state, weird"<<endl;
 	}
       }
       
@@ -187,7 +191,7 @@ void MorphArea::contentsMousePressEvent(QMouseEvent* e){
 	      rightButtonHelp(nList, (NoisePoint*)(*it));
 	    break;
 
-	  default: cout<<"MorphArea::contentsMousePressEvent(): no state which is weird"<<endl;
+	  default: std::cout<<"MorphArea::contentsMousePressEvent(): no state which is weird"<<endl;
 	  }
 	  canvas()->update();
 	}
@@ -239,7 +243,7 @@ void MorphArea::contentsMouseMoveEvent(QMouseEvent* e){
 	case AmplitudePoint::rttiNr: moveHelp(aList, movingPoint, e->x(), e->y()); break; 
 	case FrequencyPoint::rttiNr: moveHelp(fList, movingPoint, e->x(), e->y()); break;
 	case NoisePoint::rttiNr: moveHelp(nList, movingPoint, e->x(), e->y()); break;
-	default: cout<<"MorphArea::contentsMouseMoveEvent(QMouseEvent* e): no point???"<<endl;
+	default: std::cout<<"MorphArea::contentsMouseMoveEvent(QMouseEvent* e): no point???"<<endl;
 	}
       }
       break;
@@ -253,7 +257,7 @@ void MorphArea::contentsMouseMoveEvent(QMouseEvent* e){
     case noise:   
       if(movingPoint->rtti()==NoisePoint::rttiNr)
 	moveHelp(nList, movingPoint, e->x(), e->y()); break;
-    default: cout<<"MorphArea::contentsMouseMoveEvent(QMouseEvent* e): no state?????"<<endl;
+    default: std::cout<<"MorphArea::contentsMouseMoveEvent(QMouseEvent* e): no state?????"<<endl;
     }
     canvas()->update();
   }
@@ -264,7 +268,7 @@ void MorphArea::contentsMouseMoveEvent(QMouseEvent* e){
 // ---------------------------------------------------------------------------
 // moves a point to (x,y)
 
-void MorphArea::moveHelp(QSortedList<PointWithText>& list, PointWithText* movingPoint, double x,double y){
+void MorphArea::moveHelp(QSortedList<PointWithText>& list, PointWithText* movingPoint, int x,int y){
   // the first point in list isn't included in findRef, why???
   if(list.findRef(movingPoint) || movingPoint->x() == list.at(0)->x()){ 
     int current = list.at();
@@ -316,7 +320,7 @@ void MorphArea::contentsMouseReleaseEvent(QMouseEvent* e){
 // ---------------------------------------------------------------------------
 // Checks if the given (x,y) coorinat is in the area between the axis.
 
-bool MorphArea::inArea(double x, double y){
+bool MorphArea::inArea(int x, int y){
   bool inX = x+1 >= leftMargin && x <= width-rightMargin; 
   bool inY = y+1 >= topMargin  && y <= height-bottomMargin; 
   return inX && inY;
@@ -327,7 +331,7 @@ bool MorphArea::inArea(double x, double y){
 // ---------------------------------------------------------------------------
 // Adds a new points to the area.
 
-void MorphArea::addPoint(double x, double y){
+void MorphArea::addPoint(int x, int y){
   if(inArea(x, y)){
     switch(state){
     case all:
@@ -411,7 +415,7 @@ void MorphArea::showHideClear(int buttonId){
     case amplitude: showHideList(aList, false); break;  
     case frequency: showHideList(fList, false); break;  //list = &fList; break;  
     case noise:  showHideList(nList, false); //list = &nList; break; 
-    default: cout<<"MorphArea::showHide(int buttonId): state is not set, something wrong"<<endl;
+    default: std::cout<<"MorphArea::showHide(int buttonId): state is not set, something wrong"<<endl;
     }
     
     // set new state and show points belonging to that state.
@@ -425,7 +429,7 @@ void MorphArea::showHideClear(int buttonId){
     case 1: state = amplitude; showHideList(aList, true); break; //list = aList; break;  
     case 2: state = frequency; showHideList(fList, true); break; //list = &fList; break;  
     case 3: state = noise; showHideList(nList, true); break; //list = &nList; break; 
-    default: cout<<"MorphArea::showHide(int buttonId): no button id matches"<<endl;
+    default: std::cout<<"MorphArea::showHide(int buttonId): no button id matches"<<endl;
     }
     
     canvas()->update();
@@ -490,8 +494,8 @@ void MorphArea::morph(){
   fillEnvelope(nList, noisePoints);
 
   try{
-    double time;
-    double percent;
+    int time;
+    int percent;
    
     partialsList->morph(amplitudePoints, frequencyPoints, noisePoints);
     clearAll();
@@ -507,8 +511,8 @@ void MorphArea::morph(){
 // Takes all points in the list and fills the envelope with the points.
 
 void MorphArea::fillEnvelope(QSortedList<PointWithText>& list, BreakpointEnvelope& env){
-  double time    = 0;
-  double percent = 1; // percent index relates to second sound
+  int time    = 0;
+  int percent = 1; // percent index relates to second sound
   int count      = 0;
   
   if(list.first()!=0){ //insert a zero point first if there are points in list.
@@ -517,8 +521,8 @@ void MorphArea::fillEnvelope(QSortedList<PointWithText>& list, BreakpointEnvelop
  
   for(PointWithText* point = list.first(); point != 0 ; point = list.next()){
     count++;
-    time    = toXAxisValue((int)point->x());
-    percent = 1-toYAxisValue((int)point->y())/100.0;  // percent index relates to second sound
+    time    = toXAxisValue(point->x());
+    percent = 1-toYAxisValue(point->y())/100.0;  // percent index relates to second sound
     env.insertBreakpoint(time, percent);
   }
 }
@@ -528,8 +532,8 @@ void MorphArea::fillEnvelope(QSortedList<PointWithText>& list, BreakpointEnvelop
 // ---------------------------------------------------------------------------
 // An x-value on the canvas is translated into corresponding value on x-axis.
 
-double MorphArea::toXAxisValue(int x){
-  return ((double(x) - leftMargin)  * tAxis->getIndex());
+int MorphArea::toXAxisValue(int x){
+  return ((int(x) - leftMargin)  * tAxis->getIndex());
 }
 
 // ---------------------------------------------------------------------------
@@ -604,9 +608,9 @@ void MorphArea::setMorph2(QString& name){
 
 void MorphArea::setHorizontalAxis(){
 
-  double time = 0;
-  double time1 = partialsList->getMorph1Duration();
-  double time2 = partialsList->getMorph2Duration();
+  int time = 0;
+  int time1 = partialsList->getMorph1Duration();
+  int time2 = partialsList->getMorph2Duration();
   
   if(time1 > time2){
     time = time1;
@@ -618,7 +622,7 @@ void MorphArea::setHorizontalAxis(){
   }
 
   tAxis = new HorizontalAxis(canvas(), leftMargin, height - bottomMargin, "time", 
-			     width-rightMargin-leftMargin, 30, 100,  double(0), time); 
+			     width-rightMargin-leftMargin, 30, 100,  int(0), time); 
   tAxis->show();
   canvas()->update();
 }

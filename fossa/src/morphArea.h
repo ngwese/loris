@@ -72,9 +72,9 @@ class MorphArea:public QCanvasView{
   void contentsMousePressEvent(QMouseEvent* e);
   void contentsMouseMoveEvent(QMouseEvent* e);
   void contentsMouseReleaseEvent(QMouseEvent* e);
-  void addPoint(double x, double y);
+  void addPoint(int x, int y);
   int rtti() const;
-  double toXAxisValue(int x);
+  int toXAxisValue(int x);
   int toYAxisValue(int y);
   const QPoint getOrigo() const;
  
@@ -111,11 +111,11 @@ class MorphArea:public QCanvasView{
   QSortedList<PointWithText> nList;
 
   void fillEnvelope(QSortedList<PointWithText>& list, BreakpointEnvelope& envelope);
-  bool inArea(double, double);
+  bool inArea(int, int);
   void showHideList(QSortedList<PointWithText>& list, bool show);
   void addpointHelp(QSortedList<PointWithText>& list, PointWithText* newPoint);
   void rightButtonHelp(QSortedList<PointWithText>& list, PointWithText* point);
-  void moveHelp(QSortedList<PointWithText>& list, PointWithText* movingPoint, double x, double y);
+  void moveHelp(QSortedList<PointWithText>& list, PointWithText* movingPoint, int x, int y);
   void setHorizontalAxis();
 };
 #endif // MORPH_AREA_H

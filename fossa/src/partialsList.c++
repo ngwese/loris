@@ -44,6 +44,7 @@
 #include "partialsList.h"
 
 using std::cout;
+
 // ---------------------------------------------------------------------------
 //	PartialsList constructor
 // ---------------------------------------------------------------------------
@@ -352,7 +353,7 @@ void PartialsList::setCurrentState(Partials::State s){
 
 double PartialsList::getCurrentMaxAmplitude(){
   if(inList(current)){
-    return partialsList.at(current)->getMaxAmplitude();
+    partialsList.at(current)->getMaxAmplitude();
   }
   else cout<<"PartialsList::getCurrentMaxAmplitude(): current not in list"<<endl;
 }
@@ -364,7 +365,7 @@ double PartialsList::getCurrentMaxAmplitude(){
 
 double PartialsList::getCurrentMaxFrequency(){
   if(inList(current)){
-    return partialsList.at(current)->getMaxFrequency();
+    partialsList.at(current)->getMaxFrequency();
   }
   else cout<<"PartialsList::getCurrentMaxFrequency(): current not in list"<<endl;
 }
@@ -376,7 +377,7 @@ double PartialsList::getCurrentMaxFrequency(){
 
 double PartialsList::getCurrentMaxNoise(){
   if(inList(current)){
-    return partialsList.at(current)->getMaxNoise();
+    partialsList.at(current)->getMaxNoise();
   }
   else cout<<"PartialsList::getCurrentMaxNoise(): current not in list"<<endl;
 }

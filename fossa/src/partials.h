@@ -62,10 +62,10 @@ class Partials{
  
  public:
   enum State{amplitude, frequency, noise};
-  Partials(list<Partial> p, QString  n, LorisInterface* interface);
+  Partials(std::list<Partial> p, QString  n, LorisInterface* interface);
   ~Partials();
   QString getName() const;
-  list<Partial>* getPartials() const;
+  std::list<Partial>* getPartials() const;
   double getMaxAmplitude() const;
   double getMaxFrequency() const;
   double getMaxNoise() const;
@@ -93,7 +93,7 @@ class Partials{
  
   int nrOfPartials;
   QString name;
-  list<Partial>* partialList;
+  std::list<Partial>* partialList;
   double maxAmplitude;
   double maxFrequency;
   double maxNoise;

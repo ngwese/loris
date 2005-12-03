@@ -45,6 +45,7 @@
 #include <math.h>
 #include <qpainter.h>
 
+
 // ---------------------------------------------------------------------------
 //      Axis constructor
 // ---------------------------------------------------------------------------
@@ -125,7 +126,7 @@ VerticalAxis::VerticalAxis(QCanvas* canvas, int x, int y, QString text, int l, i
   
   setX(x - width/2);
   setY(y - length);
-  setSize(width, (int)length);
+  setSize(width, length);
   
   if(left){         // axis places on the left side
     textX   = startX - 20;  // has text and numbers
@@ -146,19 +147,19 @@ void VerticalAxis::drawShape(QPainter & painter){
   QFont f( "helvetica", 10);
   painter.setFont(f);
   painter.setPen(Qt::black);
-  painter.drawLine((int)startX, (int)startY, (int)startX,(int)(startY - length) ); 
-  painter.drawText((int)textX - label.length(), (int)(startY - length - 20), label);
+  painter.drawLine(startX, startY, startX, startY - length); 
+  painter.drawText(textX - label.length(), startY - length - 20, label);
         
   double number = minVal;
     
   int thicker = 0;
     
   for(double y = startY; y > startY - length - stepLength; y = y - stepLength){
-    painter.drawLine((int)startX-2, (int)y, (int)startX+2, (int)y); 
+    painter.drawLine(startX-2, y, startX+2, y); 
       
     if(thicker%10==0){
-      painter.drawLine((int)startX - 5, (int)y, (int)startX + 2, (int)y); 
-      painter.drawText((int)numberX, (int)(y + stepLength), QString("%1 ").arg(number));
+      painter.drawLine(startX - 5, y, startX + 2, y); 
+      painter.drawText(numberX, y + stepLength, QString("%1 ").arg(number));
     }
     number = number + stepValue;
     thicker++;
@@ -175,7 +176,7 @@ HorizontalAxis::HorizontalAxis(QCanvas* canvas, int x, int y, QString text,int l
     
   setX(x);
   setY(y - width/2);
-  setSize((int)length, width);
+  setSize(length, width);
 }
 
 // ---------------------------------------------------------------------------
@@ -187,17 +188,17 @@ void HorizontalAxis::drawShape(QPainter & painter){
   QFont f( "helvetica", 10);
   painter.setFont(f);
   
-  painter.drawLine((int)startX, (int)startY, (int)(startX + length), (int)startY);
-  painter.drawText((int)(startX + length), (int)startY + 20, label);
+  painter.drawLine(startX, startY, startX + length, startY);
+  painter.drawText(startX + length, startY + 20, label);
   
   double number = minVal;
   int thicker = 0;
   
   for(double x = startX; x < length + startX + stepLength; x = x + stepLength){
-    painter.drawLine((int)x, (int)startY-2, (int)x, (int)startY+2); 
+    painter.drawLine(x, startY-2, x, startY+2); 
     if(thicker%10==0){
-      painter.drawLine((int)x, (int)startY - 5, (int)x, (int)startY + 2); 
-      painter.drawText((int)x-5,(int)startY+12, QString("%1").arg(number));
+      painter.drawLine(x, startY - 5, x, startY + 2); 
+      painter.drawText(x-5,startY+12, QString("%1").arg(number));
     }
     number = number + stepValue;
     thicker++;

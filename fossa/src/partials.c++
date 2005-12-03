@@ -39,9 +39,9 @@
 
 #include "partials.h"
 
-#define max(x,y)     (((x) > (y)) ? (x) : (y))
-
 using std::cout;
+
+
 // ---------------------------------------------------------------------------
 //	Partials constructor
 // ---------------------------------------------------------------------------
@@ -245,7 +245,7 @@ void Partials::rename(QString newName){
 void Partials::shiftAmplitude(double val){
   try{
     for(list<Partial>::iterator it = partialList->begin(); it != partialList->end(); it++){
-      for(PartialIterator pIt = it->begin(); pIt!=it->end(); pIt++){
+      for(Partial_Iterator pIt = it->begin(); pIt!=it->end(); pIt++){
 	pIt->setAmplitude(pIt->amplitude() * val);
       }
     }
@@ -269,7 +269,7 @@ void Partials::shiftAmplitude(double val){
 void Partials::shiftNoise(double val){
   try{
     for(list<Partial>::iterator it = partialList->begin(); it != partialList->end(); it++){
-      for(PartialIterator pIt = it->begin(); pIt!=it->end(); pIt++){
+      for(Partial_Iterator pIt = it->begin(); pIt!=it->end(); pIt++){
 	pIt->setBandwidth(pIt->bandwidth() * val);
       }
     }
@@ -296,7 +296,7 @@ void Partials::shiftFrequency(double cents){
   cout<<"Partials::shiftFrequency: shift frequency with scale of: "<<pscale<<endl;
   try{
     for(list<Partial>::iterator it = partialList->begin(); it != partialList->end(); ++it){
-      for(PartialIterator pIt = it->begin(); pIt!=it->end(); ++pIt){
+      for(Partial_Iterator pIt = it->begin(); pIt!=it->end(); ++pIt){
 	pIt->setFrequency(pIt->frequency() * pscale);
       }
     }
@@ -405,10 +405,10 @@ void Partials::setValues(){
     // loop through all partials in the list
     for(list<Partial>::const_iterator it = partialList->begin(); it != partialList->end(); it++){
       nrOfPartials ++;
-      maxTime = max(maxTime, it->endTime());
+      maxTime = std::max(maxTime, it->endTime());
       
       // loop through all breakpoints in a partial
-      for(PartialConstIterator pIt = it->begin(); pIt != it->end(); pIt++){
+      for(Partial_ConstIterator pIt = it->begin(); pIt != it->end(); pIt++){
 	amplitude = pIt->amplitude();
 	frequency = pIt->frequency();
 	noise     = pIt->bandwidth();

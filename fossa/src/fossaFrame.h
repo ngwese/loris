@@ -34,7 +34,6 @@
  */
 
 #include <qframe.h> 
-#include <qsplitter.h>
 
 class QGridLayout;
 class Sidebar;
@@ -53,12 +52,10 @@ class FossaFrame:public QFrame{
   FossaFrame(QWidget* parent, const char* name, PartialsList* partialsList);
     
  private:
-  QGridLayout         *fossaFrameLayout;
-  Sidebar             *sidebar;
-  PartialsList        *partialsList;
-  CurrentPartialsView *currentPartialsView;
-  
-  QSplitter           *split;
+  QGridLayout* fossaFrameLayout;
+  Sidebar* sidebar;
+  PartialsList* partialsList;
+  CurrentPartialsView* currentPartialsView;
 
   void setGui();
 };

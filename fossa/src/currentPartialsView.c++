@@ -41,8 +41,6 @@
 #include <config.h>
 #endif
 
-#include <iostream>
-
 #include "currentPartialsView.h"
 #include "partialsList.h"
 
@@ -59,7 +57,6 @@
 #include <qlineedit.h> 
 #include <qstring.h>
 
-using std::cout;
 
 // ---------------------------------------------------------------------------
 //	CurrentPartialsView constructor
@@ -112,7 +109,7 @@ void CurrentPartialsView::stateChanged(){
   case 0: state = Partials::amplitude; break;
   case 1: state = Partials::frequency; break;
   case 2: state = Partials::noise; break;
-  default: cout<<"CurrentPartialsView::stateChanged(): check the switch statement"<<endl;
+  default: std::cout<<"CurrentPartialsView::stateChanged(): check the switch statement"<<endl;
   }
   partialsList->setCurrentState(state);
 }
@@ -145,9 +142,6 @@ void CurrentPartialsView::setGui(){
 //	Tab constructor - Tab is a virtual base class so actual Tab objects can not be 
 //                        constructed, just subclasses of Tab.
 // ---------------------------------------------------------------------------
-//
-// FIXME: I don't really think this is true.  The constructor should be pure 
-// virtual. Plus, CurrentPartialsView has Tab elements. (CDS 5/9/03)
 
 Tab::Tab(QWidget* parent, char* name, PartialsList* pList):QWidget(parent, name){
   partialsList = pList;
@@ -230,8 +224,8 @@ void Tab::setGui(){
   shiftText = new QLabel( infoBox, "shiftText" );
   QFont shiftText_font(  shiftText->font() );
   shiftText->setFont( shiftText_font ); 
-  //shiftText->setMinimumSize(100,25); I don't reall think these are needed
-  //shiftText->setMaximumSize(100,25); (CDS 5/9/03)
+  shiftText->setMinimumSize(100,25);
+  shiftText->setMaximumSize(100,25);
   
   infoBoxLayout->addWidget( shiftText, 1, 3 );
 
@@ -257,8 +251,8 @@ void Tab::setGui(){
   maxText = new QLabel(infoBox, "maxText");
   QFont maxText_font(maxText->font());
   maxText->setFont(maxText_font); 
-  //maxText->setMinimumSize(82,25); I don't really think these are needed 
-  //maxText->setMaximumSize(82,25); (CDS 5/9/03)
+  maxText->setMinimumSize(82,25); 
+  maxText->setMaximumSize(82,25); 
 
   infoBoxLayout->addWidget(maxText, 1, 0 );
 
@@ -334,7 +328,7 @@ void AmplitudeTab::update(){
 // shift the amplitude values of current partials in partialsList.
 
 void AmplitudeTab::shiftValues(){
-  partialsList->shiftCurrentAmplitude((int)(shiftValue->text()).toDouble());
+  partialsList->shiftCurrentAmplitude((shiftValue->text()).toDouble());
 }
 
 /************************************************************************************/
@@ -370,7 +364,7 @@ void FrequencyTab::update(){
 // shift the frequency values of current partials in partialsList.
 
 void FrequencyTab::shiftValues(){
-  partialsList->shiftCurrentFrequency((int)(shiftValue->text()).toDouble());
+  partialsList->shiftCurrentFrequency((shiftValue->text()).toDouble());
 }
 
 /************************************************************************************/
@@ -391,7 +385,7 @@ NoiseTab::NoiseTab(QWidget* parent, char* name, PartialsList* partialsList):Tab(
 // shift the noise values of current partials in partialsList.
 
 void NoiseTab::shiftValues(){
-  partialsList->shiftCurrentNoise((int)(shiftValue->text()).toDouble());
+  partialsList->shiftCurrentNoise((shiftValue->text()).toDouble());
 }
 
 // ---------------------------------------------------------------------------

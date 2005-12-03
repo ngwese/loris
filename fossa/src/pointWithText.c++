@@ -47,9 +47,9 @@ using namespace Loris;
 // QCanvasRectangle itself is invisible, what is shown is the texts, line and 
 // the point which is placed inside the invisible rectangle.  A PointWithText is 
 // inserted to the canvas everytime the user clicks on an empty spot in the MorphArea 
-// and its components gets viewable. Points can be inserted between two points as 
+// and its components become viewable. Points can be inserted between two points as 
 // well after. If the user clicks on an already inserted PointWithText, the point 
-// gets movable and the user can drag it, between its neighbours, on the MorphArea.
+// becomes movable and the user can drag it, between its neighbours, on the MorphArea.
 // A PointWithText can be erased by right clicking on it.
 
 // ---------------------------------------------------------------------------
@@ -57,7 +57,7 @@ using namespace Loris;
 // ---------------------------------------------------------------------------
 // Creates a new point to place on the canvas. 
 
-PointWithText::PointWithText(MorphArea* morphArea, double ix, double iy, QCanvas* canvas, int id, QString& morph1, QString& morph2)
+PointWithText::PointWithText(MorphArea* morphArea, int ix, int iy, QCanvas* canvas, int id, QString& morph1, QString& morph2)
   :QCanvasRectangle(ix - size, iy - size, 2 * size, 2 * size, canvas){ 
   // a user clicks on the view with coordinates (ix,iy), a rectangele is created
   // around the coordinates, with width and height 2 * size.
@@ -115,7 +115,7 @@ PointWithText::~PointWithText(){
 // ---------------------------------------------------------------------------
 // Return x coordinate
 
-double PointWithText::x() const{
+int PointWithText::x() const{
   return QCanvasRectangle::x() + size;  // where the user originally clicked
 }
 
@@ -124,7 +124,7 @@ double PointWithText::x() const{
 // ---------------------------------------------------------------------------
 // Return y coordinate
   
-double PointWithText::y() const{
+int PointWithText::y() const{
   return QCanvasRectangle::y() + size;  // where the user originally clicked
 }
   
@@ -153,7 +153,7 @@ int PointWithText::operator>(PointWithText& right){
 // ---------------------------------------------------------------------------
 // Moves the point to new (x,y) coordinate
 
-void PointWithText::move(double x, double y){
+void PointWithText::move(int x, int y){
   QCanvasRectangle::move(x - size, y - size);
   percentLabel->move(x+7,y-25);
   timeLabel->move(x+7,y);
@@ -167,7 +167,7 @@ void PointWithText::move(double x, double y){
 // This method is virtual because I don't want lines to be exactly at the same
 // place. Each subclass places the left line slightly different.
 
-//void PointWithText::moveLeftLine(double lastX, double lastY) = 0;
+//void PointWithText::moveLeftLine(int lastX, int lastY) = 0;
 
 // ---------------------------------------------------------------------------
 //     setLeftLine
@@ -175,7 +175,7 @@ void PointWithText::move(double x, double y){
 // This method is virtual because I don't want lines to be exactly at the same
 // place. Each subclass places the left line slightly different.
 
-//void PointWithText::setLeftLine(double toX, double toY) = 0; 
+//void PointWithText::setLeftLine(int toX, int toY) = 0; 
   
 // ---------------------------------------------------------------------------
 //     drawShape
@@ -214,7 +214,7 @@ void PointWithText::setGui(){
 
 void PointWithText::setPointText(){
   int percent  = m->toYAxisValue(y());
-  double time  = m->toXAxisValue(x());
+  int time  = m->toXAxisValue(x());
   percentLabel ->setText(QString(partial1+": %1% \n"+partial2+": %2%").arg(percent).arg(100-percent));
   timeLabel    ->setText(QString("At time %1s").arg(time));
 }
@@ -247,7 +247,7 @@ void PointWithText::setMorph2(QString& name){
 //     AmplitudePoint constructor
 // ---------------------------------------------------------------------------
   
-AmplitudePoint::AmplitudePoint(MorphArea* m, double ix, double iy, QCanvas* canvas, int newPointIndex, QString& morph1,QString& morph2):
+AmplitudePoint::AmplitudePoint(MorphArea* m, int ix, int iy, QCanvas* canvas, int newPointIndex, QString& morph1,QString& morph2):
   PointWithText(m, ix, iy, canvas, newPointIndex, morph1, morph2){
   pen.setColor(QColor("red"));
   lineLeft->setPen(pen);
@@ -301,7 +301,7 @@ void AmplitudePoint::show(){
 // ---------------------------------------------------------------------------
 // Change the left line connecting this point to the closest left neighbour.
   
-void AmplitudePoint::setLeftLine(double toX, double toY){
+void AmplitudePoint::setLeftLine(int toX, int toY){
   lineLeft->setPoints(toX+1, toY, x()+1, y());
   lineLeft->show();
 }
@@ -313,7 +313,7 @@ void AmplitudePoint::setLeftLine(double toX, double toY){
 // We cannot use setLeftLine for this purpous since it uses x()+1 which will
 // continue adding the x value of the first end.
   
-void AmplitudePoint::moveLeftLine(double toX, double toY){
+void AmplitudePoint::moveLeftLine(int toX, int toY){
   lineLeft->setPoints(lineLeft->startPoint().x(), lineLeft->startPoint().y(), toX+1, toY);
   lineLeft->show();
 }
@@ -322,7 +322,7 @@ void AmplitudePoint::moveLeftLine(double toX, double toY){
 //     FrequencyPoint constructor
 // ---------------------------------------------------------------------------
 
-FrequencyPoint::FrequencyPoint(MorphArea* m, double ix, double iy, QCanvas* canvas, int newPointIndex, QString& morph1, QString& morph2):
+FrequencyPoint::FrequencyPoint(MorphArea* m, int ix, int iy, QCanvas* canvas, int newPointIndex, QString& morph1, QString& morph2):
   PointWithText(m, ix, iy, canvas, newPointIndex, morph1, morph2){
   pen.setColor(QColor("palegreen4"));
   lineLeft->setPen(pen);
@@ -376,7 +376,7 @@ void FrequencyPoint::show(){
 // ---------------------------------------------------------------------------
 // Change the left line connecting this point to the closest left neighbour.
   
-void FrequencyPoint::setLeftLine(double toX, double toY){
+void FrequencyPoint::setLeftLine(int toX, int toY){
   lineLeft->setPoints(toX-1, toY-1, x()-1, y()-1);
   lineLeft->show();
 }
@@ -388,7 +388,7 @@ void FrequencyPoint::setLeftLine(double toX, double toY){
 // We cannot use setLeftLine for this purpous since it uses x()-1 which will
 // continue subtracting the x value of the first end.
    
-void FrequencyPoint::moveLeftLine(double toX, double toY){
+void FrequencyPoint::moveLeftLine(int toX, int toY){
   lineLeft->setPoints(lineLeft->startPoint().x(), lineLeft->startPoint().y(), toX-1, toY-1);
   lineLeft->show();
 }
@@ -397,7 +397,7 @@ void FrequencyPoint::moveLeftLine(double toX, double toY){
 //     NoisePoint constructor
 // ---------------------------------------------------------------------------
 
-NoisePoint::NoisePoint(MorphArea* m, double ix, double iy, QCanvas* canvas, int newPointIndex, QString& morph1, QString& morph2 ):
+NoisePoint::NoisePoint(MorphArea* m, int ix, int iy, QCanvas* canvas, int newPointIndex, QString& morph1, QString& morph2 ):
   PointWithText(m, ix, iy, canvas, newPointIndex, morph1, morph2){
   pen.setColor(QColor("blue"));
   lineLeft->setPen(pen);
@@ -451,7 +451,7 @@ void NoisePoint::show(){
 // ---------------------------------------------------------------------------
 // Change the left line connecting this point to the closest left neighbour.
   
-void NoisePoint::setLeftLine(double toX, double toY){
+void NoisePoint::setLeftLine(int toX, int toY){
   lineLeft->setPoints(toX-1, toY+1, x()-1, y()+1);
   lineLeft->show();
 }
@@ -463,7 +463,7 @@ void NoisePoint::setLeftLine(double toX, double toY){
 // We cannot use setLeftLine for this purpous since it uses x()-1 y()-1 which will
 // continue subtracting the x and y value of the first end.
   
-void NoisePoint::moveLeftLine(double toX, double toY){  
+void NoisePoint::moveLeftLine(int toX, int toY){  
   lineLeft->setPoints(lineLeft->startPoint().x(), lineLeft->startPoint().y(), toX-1, toY+1);
   lineLeft->show();
 }
@@ -490,7 +490,7 @@ void NoisePoint::moveLeftLine(double toX, double toY){
 
     class PointWithText:public QCanvasRectangle{ 
     public:
-    const static double size = 4; 
+    const static int size = 4; 
 
 
     // ---------------------------------------------------------------------------
@@ -498,7 +498,7 @@ void NoisePoint::moveLeftLine(double toX, double toY){
     // ---------------------------------------------------------------------------
     // Creates a new point to place on the canvas. 
 
-    PointWithText(MorphArea* morphArea, double ix, double iy, QCanvas* canvas, int id, QString& morph1, QString& morph2)
+    PointWithText(MorphArea* morphArea, int ix, int iy, QCanvas* canvas, int id, QString& morph1, QString& morph2)
     :QCanvasRectangle(ix - size, iy - size, 2 * size, 2 * size, canvas){ 
     // a user clicks on the view with coordinates (ix,iy), a rectangele is created
     // around the coordinates, with width and height 2 * size.
@@ -556,7 +556,7 @@ void NoisePoint::moveLeftLine(double toX, double toY){
     // ---------------------------------------------------------------------------
     // Return x coordinate
 
-    double x() const{
+    int x() const{
     return QCanvasRectangle::x() + size;  // where the user originally clicked
     }
   
@@ -565,7 +565,7 @@ void NoisePoint::moveLeftLine(double toX, double toY){
     // ---------------------------------------------------------------------------
     // Return y coordinate
   
-    double y() const{
+    int y() const{
     return QCanvasRectangle::y() + size;  // where the user originally clicked
     }
   
@@ -594,7 +594,7 @@ void NoisePoint::moveLeftLine(double toX, double toY){
     // ---------------------------------------------------------------------------
     // Moves the point to new (x,y) coordinate
 
-    void move(double x, double y){
+    void move(int x, int y){
     QCanvasRectangle::move(x - size, y - size);
     percentLabel->move(x+7,y-25);
     timeLabel->move(x+7,y);
@@ -608,7 +608,7 @@ void NoisePoint::moveLeftLine(double toX, double toY){
     // This method is virtual because I don't want lines to be exactly at the same
     // place. Each subclass places the left line slightly different.
 
-    virtual void moveLeftLine(double lastX, double lastY) = 0;
+    virtual void moveLeftLine(int lastX, int lastY) = 0;
 
     // ---------------------------------------------------------------------------
     //     setLeftLine
@@ -616,7 +616,7 @@ void NoisePoint::moveLeftLine(double toX, double toY){
     // This method is virtual because I don't want lines to be exactly at the same
     // place. Each subclass places the left line slightly different.
   
-    virtual void setLeftLine(double toX, double toY) = 0; 
+    virtual void setLeftLine(int toX, int toY) = 0; 
   
     // ---------------------------------------------------------------------------
     //     drawShape
@@ -655,7 +655,7 @@ void NoisePoint::moveLeftLine(double toX, double toY){
 
     void setPointText(){
     int percent  = m->toYAxisValue(y());
-    double time  = m->toXAxisValue(x());
+    int time  = m->toXAxisValue(x());
     percentLabel ->setText(QString(partial1+": %1% \n"+partial2+": %2%").arg(percent).arg(100-percent));
     timeLabel    ->setText(QString("At time %1s").arg(time));
     }
@@ -709,7 +709,7 @@ void NoisePoint::moveLeftLine(double toX, double toY){
   //     AmplitudePoint constructor
   // ---------------------------------------------------------------------------
   
-  AmplitudePoint(MorphArea* m, double ix, double iy, QCanvas* canvas, int newPointIndex, QString& morph1,QString& morph2):
+  AmplitudePoint(MorphArea* m, int ix, int iy, QCanvas* canvas, int newPointIndex, QString& morph1,QString& morph2):
   PointWithText(m, ix, iy, canvas, newPointIndex, morph1, morph2){
   pen.setColor(QColor("red"));
   lineLeft->setPen(pen);
@@ -763,7 +763,7 @@ void NoisePoint::moveLeftLine(double toX, double toY){
   // ---------------------------------------------------------------------------
   // Change the left line connecting this point to the closest left neighbour.
   
-  void setLeftLine(double toX, double toY){
+  void setLeftLine(int toX, int toY){
   lineLeft->setPoints(toX+1, toY, x()+1, y());
   lineLeft->show();
   }
@@ -775,7 +775,7 @@ void NoisePoint::moveLeftLine(double toX, double toY){
   // We cannot use setLeftLine for this purpous since it uses x()+1 which will
   // continue adding the x value of the first end.
   
-  void moveLeftLine(double toX, double toY){
+  void moveLeftLine(int toX, int toY){
   lineLeft->setPoints(lineLeft->startPoint().x(), lineLeft->startPoint().y(), toX+1, toY);
   lineLeft->show();
   }
@@ -797,7 +797,7 @@ public:
   //     FrequencyPoint constructor
   // ---------------------------------------------------------------------------
   
-  FrequencyPoint(MorphArea* m, double ix, double iy, QCanvas* canvas, int newPointIndex, QString& morph1, QString& morph2):
+  FrequencyPoint(MorphArea* m, int ix, int iy, QCanvas* canvas, int newPointIndex, QString& morph1, QString& morph2):
     PointWithText(m, ix, iy, canvas, newPointIndex, morph1, morph2){
     pen.setColor(QColor("palegreen4"));
     lineLeft->setPen(pen);
@@ -851,7 +851,7 @@ public:
   // ---------------------------------------------------------------------------
   // Change the left line connecting this point to the closest left neighbour.
   
-  void setLeftLine(double toX, double toY){
+  void setLeftLine(int toX, int toY){
     lineLeft->setPoints(toX-1, toY-1, x()-1, y()-1);
     lineLeft->show();
   }
@@ -863,7 +863,7 @@ public:
   // We cannot use setLeftLine for this purpous since it uses x()-1 which will
   // continue subtracting the x value of the first end.
    
-  void moveLeftLine(double toX, double toY){
+  void moveLeftLine(int toX, int toY){
     lineLeft->setPoints(lineLeft->startPoint().x(), lineLeft->startPoint().y(), toX-1, toY-1);
     lineLeft->show();
   }
@@ -884,7 +884,7 @@ public:
   //     NoisePoint constructor
   // ---------------------------------------------------------------------------
 
-  NoisePoint(MorphArea* m, double ix, double iy, QCanvas* canvas, int newPointIndex, QString& morph1, QString& morph2 ):
+  NoisePoint(MorphArea* m, int ix, int iy, QCanvas* canvas, int newPointIndex, QString& morph1, QString& morph2 ):
     PointWithText(m, ix, iy, canvas, newPointIndex, morph1, morph2){
     pen.setColor(QColor("blue"));
     lineLeft->setPen(pen);
@@ -938,7 +938,7 @@ public:
   // ---------------------------------------------------------------------------
   // Change the left line connecting this point to the closest left neighbour.
   
-  void setLeftLine(double toX, double toY){
+  void setLeftLine(int toX, int toY){
     lineLeft->setPoints(toX-1, toY+1, x()-1, y()+1);
     lineLeft->show();
   }
@@ -950,7 +950,7 @@ public:
   // We cannot use setLeftLine for this purpous since it uses x()-1 y()-1 which will
   // continue subtracting the x and y value of the first end.
   
-  void moveLeftLine(double toX, double toY){  
+  void moveLeftLine(int toX, int toY){  
     lineLeft->setPoints(lineLeft->startPoint().x(), lineLeft->startPoint().y(), toX-1, toY+1);
     lineLeft->show();
     }
@@ -985,7 +985,7 @@ public:
 
 class PointWithText:public QCanvasRectangle{ 
 public:
-  const static double size = 4; 
+  const static int size = 4; 
 
 
   // ---------------------------------------------------------------------------
@@ -993,7 +993,7 @@ public:
   // ---------------------------------------------------------------------------
   // Creates a new point to place on the canvas. 
 
-  PointWithText(MorphArea* morphArea, double ix, double iy, QCanvas* canvas, int id, QString& morph1, QString& morph2)
+  PointWithText(MorphArea* morphArea, int ix, int iy, QCanvas* canvas, int id, QString& morph1, QString& morph2)
     :QCanvasRectangle(ix - size, iy - size, 2 * size, 2 * size, canvas){ 
     // a user clicks on the view with coordinates (ix,iy), a rectangele is created
     // around the coordinates, with width and height 2 * size.
@@ -1051,7 +1051,7 @@ public:
   // ---------------------------------------------------------------------------
   // Return x coordinate
 
-  double x() const{
+  int x() const{
     return QCanvasRectangle::x() + size;  // where the user originally clicked
   }
   
@@ -1060,7 +1060,7 @@ public:
   // ---------------------------------------------------------------------------
   // Return y coordinate
   
-  double y() const{
+  int y() const{
     return QCanvasRectangle::y() + size;  // where the user originally clicked
   }
   
@@ -1089,7 +1089,7 @@ public:
   // ---------------------------------------------------------------------------
   // Moves the point to new (x,y) coordinate
 
-  void move(double x, double y){
+  void move(int x, int y){
     QCanvasRectangle::move(x - size, y - size);
     percentLabel->move(x+7,y-25);
     timeLabel->move(x+7,y);
@@ -1103,7 +1103,7 @@ public:
   // This method is virtual because I don't want lines to be exactly at the same
   // place. Each subclass places the left line slightly different.
 
-  virtual void moveLeftLine(double lastX, double lastY) = 0;
+  virtual void moveLeftLine(int lastX, int lastY) = 0;
 
   // ---------------------------------------------------------------------------
   //     setLeftLine
@@ -1111,7 +1111,7 @@ public:
   // This method is virtual because I don't want lines to be exactly at the same
   // place. Each subclass places the left line slightly different.
   
-  virtual void setLeftLine(double toX, double toY) = 0; 
+  virtual void setLeftLine(int toX, int toY) = 0; 
   
   // ---------------------------------------------------------------------------
   //     drawShape
@@ -1150,7 +1150,7 @@ public:
 
   void setPointText(){
     int percent  = m->toYAxisValue(y());
-    double time  = m->toXAxisValue(x());
+    int time  = m->toXAxisValue(x());
     percentLabel ->setText(QString(partial1+": %1% \n"+partial2+": %2%").arg(percent).arg(100-percent));
     timeLabel    ->setText(QString("At time %1s").arg(time));
   }
@@ -1204,7 +1204,7 @@ public:
   //     AmplitudePoint constructor
   // ---------------------------------------------------------------------------
   
-  AmplitudePoint(MorphArea* m, double ix, double iy, QCanvas* canvas, int newPointIndex, QString& morph1,QString& morph2):
+  AmplitudePoint(MorphArea* m, int ix, int iy, QCanvas* canvas, int newPointIndex, QString& morph1,QString& morph2):
     PointWithText(m, ix, iy, canvas, newPointIndex, morph1, morph2){
     pen.setColor(QColor("red"));
     lineLeft->setPen(pen);
@@ -1258,7 +1258,7 @@ public:
   // ---------------------------------------------------------------------------
   // Change the left line connecting this point to the closest left neighbour.
   
-  void setLeftLine(double toX, double toY){
+  void setLeftLine(int toX, int toY){
     lineLeft->setPoints(toX+1, toY, x()+1, y());
     lineLeft->show();
   }
@@ -1270,7 +1270,7 @@ public:
   // We cannot use setLeftLine for this purpous since it uses x()+1 which will
   // continue adding the x value of the first end.
   
-  void moveLeftLine(double toX, double toY){
+  void moveLeftLine(int toX, int toY){
     lineLeft->setPoints(lineLeft->startPoint().x(), lineLeft->startPoint().y(), toX+1, toY);
     lineLeft->show();
   }
@@ -1292,7 +1292,7 @@ public:
   //     FrequencyPoint constructor
   // ---------------------------------------------------------------------------
   
-  FrequencyPoint(MorphArea* m, double ix, double iy, QCanvas* canvas, int newPointIndex, QString& morph1, QString& morph2):
+  FrequencyPoint(MorphArea* m, int ix, int iy, QCanvas* canvas, int newPointIndex, QString& morph1, QString& morph2):
     PointWithText(m, ix, iy, canvas, newPointIndex, morph1, morph2){
     pen.setColor(QColor("palegreen4"));
     lineLeft->setPen(pen);
@@ -1346,7 +1346,7 @@ public:
   // ---------------------------------------------------------------------------
   // Change the left line connecting this point to the closest left neighbour.
   
-  void setLeftLine(double toX, double toY){
+  void setLeftLine(int toX, int toY){
     lineLeft->setPoints(toX-1, toY-1, x()-1, y()-1);
     lineLeft->show();
   }
@@ -1358,7 +1358,7 @@ public:
   // We cannot use setLeftLine for this purpous since it uses x()-1 which will
   // continue subtracting the x value of the first end.
    
-  void moveLeftLine(double toX, double toY){
+  void moveLeftLine(int toX, int toY){
     lineLeft->setPoints(lineLeft->startPoint().x(), lineLeft->startPoint().y(), toX-1, toY-1);
     lineLeft->show();
   }
@@ -1379,7 +1379,7 @@ public:
   //     NoisePoint constructor
   // ---------------------------------------------------------------------------
 
-  NoisePoint(MorphArea* m, double ix, double iy, QCanvas* canvas, int newPointIndex, QString& morph1, QString& morph2 ):
+  NoisePoint(MorphArea* m, int ix, int iy, QCanvas* canvas, int newPointIndex, QString& morph1, QString& morph2 ):
     PointWithText(m, ix, iy, canvas, newPointIndex, morph1, morph2){
     pen.setColor(QColor("blue"));
     lineLeft->setPen(pen);
@@ -1433,7 +1433,7 @@ public:
   // ---------------------------------------------------------------------------
   // Change the left line connecting this point to the closest left neighbour.
   
-  void setLeftLine(double toX, double toY){
+  void setLeftLine(int toX, int toY){
     lineLeft->setPoints(toX-1, toY+1, x()-1, y()+1);
     lineLeft->show();
   }
@@ -1445,7 +1445,7 @@ public:
   // We cannot use setLeftLine for this purpous since it uses x()-1 y()-1 which will
   // continue subtracting the x and y value of the first end.
   
-  void moveLeftLine(double toX, double toY){  
+  void moveLeftLine(int toX, int toY){  
     lineLeft->setPoints(lineLeft->startPoint().x(), lineLeft->startPoint().y(), toX-1, toY+1);
     lineLeft->show();
   }
