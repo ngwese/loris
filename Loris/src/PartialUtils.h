@@ -526,10 +526,9 @@ void shiftTime( Iter b, Iter e, double offset )
 		shifter( *b++ );
 	}
 }
-
 	
 // ---------------------------------------------------------------------------
-//	crop
+//	timeSpan
 // ---------------------------------------------------------------------------
 //! Return the time (in seconds) spanned by a specified half-open
 //! range of Partials as a std::pair composed of the earliest
@@ -553,6 +552,284 @@ timeSpan( Iterator begin, Iterator end )
 		}
 	}
 	return std::make_pair( tmin, tmax );
+}
+
+//	-- phase maintenance functions --
+
+//	fixPhaseBefore
+//
+//! Recompute phases of all Breakpoints earlier than the specified time 
+//! so that the synthesize phases of those earlier Breakpoints matches 
+//! the stored phase, and the synthesized phase at the specified
+//! time matches the stored (not recomputed) phase.
+//! 
+//! Backward phase-fixing stops if a null (zero-amplitude) Breakpoint
+//! is encountered, because nulls are interpreted as phase reset points
+//! in Loris. If a null is encountered, the remainder of the Partial
+//! (the front part) is fixed in the forward direction, beginning at
+//! the start of the Partial.
+//!
+//! \param p    The Partial whose phases should be fixed.
+//! \param t    The time before which phases should be adjusted.
+//
+void fixPhaseBefore( Partial & p, double t );
+
+//	fixPhaseBefore (range)
+//
+//! Recompute phases of all Breakpoints earlier than the specified time 
+//! so that the synthesize phases of those earlier Breakpoints matches 
+//! the stored phase, and the synthesized phase at the specified
+//! time matches the stored (not recomputed) phase.
+//! 
+//! Backward phase-fixing stops if a null (zero-amplitude) Breakpoint
+//! is encountered, because nulls are interpreted as phase reset points
+//! in Loris. If a null is encountered, the remainder of the Partial
+//! (the front part) is fixed in the forward direction, beginning at
+//! the start of the Partial.
+//!
+//! \param b    The beginning of a range of Partials whose phases 
+//!             should be fixed.
+//! \param e    The end of a range of Partials whose phases 
+//!             should be fixed.
+//! \param t    The time before which phases should be adjusted.
+//
+template < class Iter >
+void fixPhaseBefore( Iter b, Iter e, double t )
+{
+    while ( b != e )
+    {
+        fixPhaseBefore( *b, t );
+        ++b;
+    }
+}
+
+//	fixPhaseAfter
+//
+//! Recompute phases of all Breakpoints later than the specified time 
+//! so that the synthesize phases of those later Breakpoints matches 
+//! the stored phase, as long as the synthesized phase at the specified
+//! time matches the stored (not recomputed) phase.
+//! 
+//! Phase fixing is only applied to non-null (nonzero-amplitude) Breakpoints,
+//! because null Breakpoints are interpreted as phase reset points in 
+//! Loris. If a null is encountered, its phase is simply left unmodified,
+//! and future phases wil be recomputed from that one.
+//!
+//! \param p    The Partial whose phases should be fixed.
+//! \param t    The time after which phases should be adjusted.
+//
+void fixPhaseAfter( Partial & p, double t );
+
+//	fixPhaseAfter (range)
+//
+//! Recompute phases of all Breakpoints later than the specified time 
+//! so that the synthesize phases of those later Breakpoints matches 
+//! the stored phase, as long as the synthesized phase at the specified
+//! time matches the stored (not recomputed) phase.
+//! 
+//! Phase fixing is only applied to non-null (nonzero-amplitude) Breakpoints,
+//! because null Breakpoints are interpreted as phase reset points in 
+//! Loris. If a null is encountered, its phase is simply left unmodified,
+//! and future phases wil be recomputed from that one.
+//!
+//! \param b    The beginning of a range of Partials whose phases 
+//!             should be fixed.
+//! \param e    The end of a range of Partials whose phases 
+//!             should be fixed.
+//! \param t    The time after which phases should be adjusted.
+//
+template < class Iter >
+void fixPhaseAfter( Iter b, Iter e, double t )
+{
+    while ( b != e )
+    {
+        fixPhaseAfter( *b, t );
+        ++b;
+    }
+}
+
+//	fixPhaseForward
+//
+//! Recompute phases of all Breakpoints later than the specified time 
+//! so that the synthesize phases of those later Breakpoints matches 
+//! the stored phase, as long as the synthesized phase at the specified
+//! time matches the stored (not recomputed) phase. Breakpoints later than
+//! tend are unmodified.
+//! 
+//! Phase fixing is only applied to non-null (nonzero-amplitude) Breakpoints,
+//! because null Breakpoints are interpreted as phase reset points in 
+//! Loris. If a null is encountered, its phase is simply left unmodified,
+//! and future phases wil be recomputed from that one.
+//!
+//! \param p    The Partial whose phases should be fixed.
+//! \param tbeg The phases and frequencies of Breakpoints later than the 
+//!             one nearest this time will be modified.
+//! \param tend The phases and frequencies of Breakpoints earlier than the 
+//!             one nearest this time will be modified. Should be greater 
+//!             than tbeg, or else they will be swapped.
+//
+void fixPhaseForward( Partial & p, double tbeg, double tend );
+
+//	fixPhaseForward (range)
+//
+//! Recompute phases of all Breakpoints later than the specified time 
+//! so that the synthesize phases of those later Breakpoints matches 
+//! the stored phase, as long as the synthesized phase at the specified
+//! time matches the stored (not recomputed) phase.
+//! 
+//! Phase fixing is only applied to non-null (nonzero-amplitude) Breakpoints,
+//! because null Breakpoints are interpreted as phase reset points in 
+//! Loris. If a null is encountered, its phase is simply left unmodified,
+//! and future phases wil be recomputed from that one.
+//!
+//! \param b    The beginning of a range of Partials whose phases 
+//!             should be fixed.
+//! \param e    The end of a range of Partials whose phases 
+//!             should be fixed.
+//! \param tbeg The phases and frequencies of Breakpoints later than the 
+//!             one nearest this time will be modified.
+//! \param tend The phases and frequencies of Breakpoints earlier than the 
+//!             one nearest this time will be modified. Should be greater 
+//!             than tbeg, or else they will be swapped.
+//
+template < class Iter >
+void fixPhaseForward( Iter b, Iter e, double tbeg, double tend )
+{
+    while ( b != e )
+    {
+        fixPhaseAfter( *b, tbeg, tend );
+        ++b;
+    }
+}
+
+
+//	fixPhaseAt
+//
+//! Recompute phases of all Breakpoints in a Partial
+//! so that the synthesize phases match the stored phases, 
+//! and the synthesized phase at (nearest) the specified
+//! time matches the stored (not recomputed) phase.
+//! 
+//! Backward phase-fixing stops if a null (zero-amplitude) Breakpoint
+//! is encountered, because nulls are interpreted as phase reset points
+//! in Loris. If a null is encountered, the remainder of the Partial
+//! (the front part) is fixed in the forward direction, beginning at
+//! the start of the Partial. Forward phase fixing is only applied 
+//! to non-null (nonzero-amplitude) Breakpoints. If a null is encountered, 
+//! its phase is simply left unmodified, and future phases wil be 
+//! recomputed from that one.
+//!
+//! \param p    The Partial whose phases should be fixed.
+//! \param t    The time at which phases should be made correct.
+//
+void fixPhaseAt( Partial & p, double t );
+
+//	fixPhaseAt (range)
+//
+//! Recompute phases of all Breakpoints in a Partial
+//! so that the synthesize phases match the stored phases, 
+//! and the synthesized phase at (nearest) the specified
+//! time matches the stored (not recomputed) phase.
+//! 
+//! Backward phase-fixing stops if a null (zero-amplitude) Breakpoint
+//! is encountered, because nulls are interpreted as phase reset points
+//! in Loris. If a null is encountered, the remainder of the Partial
+//! (the front part) is fixed in the forward direction, beginning at
+//! the start of the Partial. Forward phase fixing is only applied 
+//! to non-null (nonzero-amplitude) Breakpoints. If a null is encountered, 
+//! its phase is simply left unmodified, and future phases wil be 
+//! recomputed from that one.
+//!
+//! \param b    The beginning of a range of Partials whose phases 
+//!             should be fixed.
+//! \param e    The end of a range of Partials whose phases 
+//!             should be fixed.
+//! \param t    The time at which phases should be made correct.
+//
+template < class Iter >
+void fixPhaseAt( Iter b, Iter e, double t )
+{
+    while ( b != e )
+    {
+        fixPhaseAt( *b, t );
+        ++b;
+    }
+}
+
+//	fixPhaseBetween
+//
+//!	Fix the phase travel between two times by adjusting the
+//!	frequency and phase of Breakpoints between those two times.
+//!
+//!	This algorithm assumes that there is nothing interesting about the
+//!	phases of the intervening Breakpoints, and modifies their frequencies 
+//!	as little as possible to achieve the correct amount of phase travel 
+//!	such that the frequencies and phases at the specified times
+//!	match the stored values. The phases of all the Breakpoints between 
+//! the specified times are recomputed.
+//!
+//! THIS DOES NOT YET TREAT NULL BREAKPOINTS DIFFERENTLY FROM OTHERS.
+//!
+//! \pre      Thre must be at least one Breakpoint in the
+//!           Partial between the specified times t1 and t2.
+//!           If this condition is not met, the Partial is
+//!           unmodified.
+//! \post     The phases and frequencies of the Breakpoints in the 
+//!           range have been recomputed such that an oscillator
+//!           initialized to the parameters of the first Breakpoint
+//!           will arrive at the parameters of the last Breakpoint,
+//!           and all the intervening Breakpoints will be matched.
+//!	\param p  The partial whose phases and frequencies will be recomputed. 
+//!           The Breakpoint at this position is unaltered.
+//! \param t1 The time before which Partial frequencies and phases will 
+//!           not be modified.
+//! \param t2 The time after which Partial frequencies and phases will 
+//!           not be modified. Should be greater than t1, or else they
+//!           will be swapped.
+//
+void fixPhaseBetween( Partial & p, double t1, double t2 );
+
+//	fixPhaseBetween (range)
+//
+//!	Fix the phase travel between two times by adjusting the
+//!	frequency and phase of Breakpoints between those two times.
+//!
+//!	This algorithm assumes that there is nothing interesting about the
+//!	phases of the intervening Breakpoints, and modifies their frequencies 
+//!	as little as possible to achieve the correct amount of phase travel 
+//!	such that the frequencies and phases at the specified times
+//!	match the stored values. The phases of all the Breakpoints between 
+//! the specified times are recomputed.
+//!
+//! THIS DOES NOT YET TREAT NULL BREAKPOINTS DIFFERENTLY FROM OTHERS.
+//!
+//! \pre        Thre must be at least one Breakpoint in each
+//!             Partial between the specified times t1 and t2.
+//!             If this condition is not met, the Partial is
+//!             unmodified.
+//! \post       The phases and frequencies of the Breakpoints in the 
+//!             range have been recomputed such that an oscillator
+//!             initialized to the parameters of the first Breakpoint
+//!             will arrive at the parameters of the last Breakpoint,
+//!             and all the intervening Breakpoints will be matched.
+//! \param b    The beginning of a range of Partials whose phases 
+//!             should be fixed.
+//! \param e    The end of a range of Partials whose phases 
+//!             should be fixed.
+//! \param t1   The time before which Partial frequencies and phases will 
+//!             not be modified.
+//! \param t2   The time after which Partial frequencies and phases will 
+//!             not be modified. Should be greater than t1, or else they
+//!             will be swapped.
+//
+template < class Iter >
+void fixPhaseBetween( Iter b, Iter e, double t1, double t2 )
+{
+    while ( b != e )
+    {
+        fixPhaseBetween( *b, t1, t2 );
+        ++b;
+    }
 }
 	
 //	-- predicates --

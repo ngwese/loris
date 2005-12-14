@@ -20,6 +20,10 @@ strecthing factor and using it to align the frequency
 channels on non-integer multiples of the fundamental 
 frequency.
 
+- made Resampler preserve phases by making small frequency 
+adjustments so that the resampled phases are matched as nearly
+as possible. Resampler now generates phase-correct Partials.
+
 -------------------------------------------------------
 changes since 1.2 release:
 

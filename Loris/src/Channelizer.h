@@ -69,6 +69,13 @@ class Partial;
 //!	reference Envelope can be constructed explcitly, point by point
 //!	(using, for example, the BreakpointEnvelope class), or constructed
 //!	automatically using the FrequencyReference class. 
+//!
+//! The Channelizer can be configured with a stretch factor, to accomodate
+//! detuned harmonics, as in the case of piano tones. The static member
+//! computeStretchFactor can compute the apppropriate stretch factor, given
+//! a pair of partials. This computation is based on formulae given in 
+//! "Understanding the complex nature of the piano tone" by Martin Keane
+//! at the Acoustics Research Centre at the University of Aukland (Feb 2004).
 //!	
 //!	Channelizer is a leaf class, do not subclass.
 //

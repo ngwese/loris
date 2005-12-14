@@ -44,6 +44,8 @@
 #include "Envelope.h"
 #include "Partial.h"
 
+#include "phasefix.h"
+
 #include <algorithm>
 #include <cmath>
 #include <functional>
@@ -249,7 +251,138 @@ TimeShifter::operator()( Partial & p ) const
 	p = result;
 }
 
+
 }	//	end of namespace PartialUtils
 
 }	//	end of namespace Loris
 
+//	-- phase maintenance functions --
+
+// ---------------------------------------------------------------------------
+//	fixPhaseBefore
+//
+//! Recompute phases of all Breakpoints earlier than the specified time 
+//! so that the synthesize phases of those earlier Breakpoints matches 
+//! the stored phase, and the synthesized phase at the specified
+//! time matches the stored (not recomputed) phase.
+//! 
+//! Backward phase-fixing stops if a null (zero-amplitude) Breakpoint
+//! is encountered, because nulls are interpreted as phase reset points
+//! in Loris. If a null is encountered, the remainder of the Partial
+//! (the front part) is fixed in the forward direction, beginning at
+//! the start of the Partial.
+//!
+//! \param p    The Partial whose phases should be fixed.
+//! \param t    The time before which phases should be adjusted.
+//
+void Loris::PartialUtils::fixPhaseBefore( Loris::Partial & p, double t )
+{
+	Loris::fixPhaseBefore( p, t );
+}
+
+// ---------------------------------------------------------------------------
+//	fixPhaseAfter
+//
+//! Recompute phases of all Breakpoints later than the specified time 
+//! so that the synthesize phases of those later Breakpoints matches 
+//! the stored phase, as long as the synthesized phase at the specified
+//! time matches the stored (not recomputed) phase.
+//! 
+//! Phase fixing is only applied to non-null (nonzero-amplitude) Breakpoints,
+//! because null Breakpoints are interpreted as phase reset points in 
+//! Loris. If a null is encountered, its phase is simply left unmodified,
+//! and future phases wil be recomputed from that one.
+//!
+//! \param p    The Partial whose phases should be fixed.
+//! \param t    The time after which phases should be adjusted.
+//
+void Loris::PartialUtils::fixPhaseAfter( Loris::Partial & p, double t )
+{
+	Loris::fixPhaseAfter( p, t );
+}
+
+// ---------------------------------------------------------------------------
+//	fixPhaseForward
+//
+//! Recompute phases of all Breakpoints later than the specified time 
+//! so that the synthesize phases of those later Breakpoints matches 
+//! the stored phase, as long as the synthesized phase at the specified
+//! time matches the stored (not recomputed) phase. Breakpoints later than
+//! tend are unmodified.
+//! 
+//! Phase fixing is only applied to non-null (nonzero-amplitude) Breakpoints,
+//! because null Breakpoints are interpreted as phase reset points in 
+//! Loris. If a null is encountered, its phase is simply left unmodified,
+//! and future phases wil be recomputed from that one.
+//!
+//! \param p    The Partial whose phases should be fixed.
+//! \param tbeg The phases and frequencies of Breakpoints later than the 
+//!             one nearest this time will be modified.
+//! \param tend The phases and frequencies of Breakpoints earlier than the 
+//!             one nearest this time will be modified. Should be greater 
+//!             than tbeg, or else they will be swapped.
+//
+void Loris::PartialUtils::fixPhaseForward( Loris::Partial & p, double tbeg, double tend )
+{
+	Loris::fixPhaseForward( p, tbeg, tend );
+}
+
+// ---------------------------------------------------------------------------
+//	fixPhaseAt
+//
+//! Recompute phases of all Breakpoints in a Partial
+//! so that the synthesize phases match the stored phases, 
+//! and the synthesized phase at (nearest) the specified
+//! time matches the stored (not recomputed) phase.
+//! 
+//! Backward phase-fixing stops if a null (zero-amplitude) Breakpoint
+//! is encountered, because nulls are interpreted as phase reset points
+//! in Loris. If a null is encountered, the remainder of the Partial
+//! (the front part) is fixed in the forward direction, beginning at
+//! the start of the Partial. Forward phase fixing is only applied 
+//! to non-null (nonzero-amplitude) Breakpoints. If a null is encountered, 
+//! its phase is simply left unmodified, and future phases wil be 
+//! recomputed from that one.
+//!
+//! \param p    The Partial whose phases should be fixed.
+//! \param t    The time at which phases should be made correct.
+//
+void Loris::PartialUtils::fixPhaseAt( Loris::Partial & p, double t )
+{
+	Loris::fixPhaseAt( p, t );
+}
+
+// ---------------------------------------------------------------------------
+//  fixPhaseBetween
+//
+//!	Fix the phase travel between two times by adjusting the
+//!	frequency and phase of Breakpoints between those two times.
+//!
+//!	This algorithm assumes that there is nothing interesting about the
+//!	phases of the intervening Breakpoints, and modifies their frequencies 
+//!	as little as possible to achieve the correct amount of phase travel 
+//!	such that the frequencies and phases at the specified times
+//!	match the stored values. The phases of all the Breakpoints between 
+//! the specified times are recomputed.
+//!
+//! THIS DOES NOT YET TREAT NULL BREAKPOINTS DIFFERENTLY FROM OTHERS.
+//!
+//! \pre        There must be at least one Breakpoint in the
+//!             Partial between the specified times tbeg and tend.
+//! \post       The phases and frequencies of the Breakpoints in the 
+//!             range have been recomputed such that an oscillator
+//!             initialized to the parameters of the first Breakpoint
+//!             will arrive at the parameters of the last Breakpoint,
+//!             and all the intervening Breakpoints will be matched.
+//!	\param p    The partial whose phases and frequencies will be recomputed. 
+//!             The Breakpoint at this position is unaltered.
+//! \param tbeg The phases and frequencies of Breakpoints later than the 
+//!             one nearest this time will be modified.
+//! \param tend The phases and frequencies of Breakpoints earlier than the 
+//!             one nearest this time will be modified. Should be greater 
+//!             than tbeg, or else they will be swapped.
+//
+void Loris::PartialUtils::fixPhaseBetween( Loris::Partial & p, double tbeg, double tend )
+{
+	Loris::fixPhaseBetween( p, tbeg, tend );
+}

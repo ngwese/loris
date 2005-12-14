@@ -142,7 +142,6 @@ pkginclude_HEADERS = \
 				PartialList.h	\
 				PartialPtrs.h	\
 				PartialUtils.h	\
-				phasefix.h	\
 				ReassignedSpectrum.h	\
 				Resampler.h \
 				SdifFile.h	\

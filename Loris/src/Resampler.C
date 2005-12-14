@@ -33,6 +33,8 @@
  *
  * http://www.cerlsoundgroup.org/Loris/
  *
+ *
+ * Phase correction added by Kelly 13 Dec 2005.
  */
 #if HAVE_CONFIG_H
 	#include "config.h"
@@ -43,6 +45,9 @@
 #include "Exception.h"
 #include "Notifier.h"
 #include "Partial.h"
+
+#include "phasefix.h"
+#define PHASE_CORRECT
 
 //	begin namespace
 namespace Loris {
@@ -83,7 +88,7 @@ void
 Resampler::resample( Partial & p ) const
 {
 	debugger << "resampling Partial having " << p.numBreakpoints() 
-			   << " Breakpoints" << endl;
+			 << " Breakpoints" << endl;
 
 	//	create the new Partial:
 	Partial newp;
@@ -94,12 +99,21 @@ Resampler::resample( Partial & p ) const
 	double lastTime  = interval_ * int( 0.5 + p.endTime()   / interval_ );
 	
 	//  resample:
-	for ( double tim = firstTime; 
+	for (  double tim = firstTime; 
 		   tim < p.endTime() + ( 0.5 * interval_) ; 
 		   tim += interval_ ) 
 	{
 		Breakpoint newbp( p.frequencyAt( tim ), p.amplitudeAt( tim ), 
 						  p.bandwidthAt( tim ), p.phaseAt( tim ) );
+						  
+		#if defined(PHASE_CORRECT)	
+		if ( newp.numBreakpoints() != 0 )
+		{			  
+			//	correct frequency to match phase:
+			matchPhaseFwd( newp.last(), newbp, interval_, 1.0 );			
+		}
+		#endif
+		
 		newp.insert( tim, newbp );
 	}
 

@@ -64,7 +64,7 @@ namespace Loris {
 //	wrapPi
 //	Wrap an unwrapped phase value to the range (-pi,pi].
 //
-static double wrapPi( double x )
+inline double wrapPi( double x )
 {
 	x = std::fmod( x, 2*Pi );
 	
@@ -94,8 +94,26 @@ static bool isNonNull( const Breakpoint & bp )
 //	Compute the sinusoidal phase travel between two Breakpoints.
 //	Return the total unwrapped phase travel.
 //
+inline double phaseTravel( const Breakpoint & bp0, const Breakpoint & bp1, 
+						   double dt )
+{
+	double f0 = bp0.frequency();
+	double f1 = bp1.frequency();
+	double favg = .5 * ( f0 + f1 );
+	return 2 * Pi * favg * dt;
+}
+
+// ---------------------------------------------------------------------------
+//	phaseTravel
+//
+//	Compute the sinusoidal phase travel between two Breakpoints.
+//	Return the total unwrapped phase travel.
+//
 static double phaseTravel( Partial::const_iterator bp0, Partial::const_iterator bp1 )
 {
+	return phaseTravel( bp0.breakpoint(), bp1.breakpoint(), 
+	                    bp1.time() - bp0.time() );
+	/*
 	double f0 = bp0->frequency();
 	double t0 = bp0.time();
 	double f1 = bp1->frequency();
@@ -103,6 +121,7 @@ static double phaseTravel( Partial::const_iterator bp0, Partial::const_iterator 
 	double favg = .5 * ( f0 + f1 );
 	double dt = t1 - t0;
 	return 2 * Pi * favg * dt;
+	*/
 }
 
 #pragma mark -- phase correction -- 
@@ -410,22 +429,47 @@ void fixPhaseBetween( Partial & p, double tbeg, double tend )
     }
 }
 
-#pragma mark -- retrieve these later --
 // ---------------------------------------------------------------------------
-//	helper: fixFrequencyFwd
+//	matchPhaseFwd
 //
-//	Compute the target frequency that will affect the
-//	predicted (by the Breakpoint phases) amount of
-//	sinusoidal phase travel between two breakpoints, 
-//	and assign that frequency to the target Breakpoint.
+//!	Compute the target frequency that will affect the
+//!	predicted (by the Breakpoint phases) amount of
+//!	sinusoidal phase travel between two breakpoints, 
+//!	and assign that frequency to the target Breakpoint.
+//!	After computing the new frequency, update the phase of
+//!	the later Breakpoint.
+//!
+//! The most common kinds of errors are local (or burst) errors in 
+//! frequency and phase. These errors are best corrected by correcting
+//! less than half the detected error at any time. Correcting more
+//! than that will produce frequency oscillations for the remainder of
+//! the Partial, in the case of a single bad frequency (as is common
+//! at the onset of a tone). Any damping factor less then one will 
+//! converge eventually, .5 or less will converge without oscillating.
+//! Use the damping argument to control the damping of the correction.
+//!	Specify 1 for no damping.
+//!
+//! \pre		The two Breakpoints are assumed to be consecutive in
+//!				a Partial.
+//! \param		bp0	The earlier Breakpoint.
+//! \param		bp1	The later Breakpoint.
+//! \param		dt The time (in seconds) between bp0 and bp1.
+//! \param		damping The fraction of the amount of phase error that will
+//!				be corrected (.5 or less will prevent frequency oscilation 
+//!				due to burst errors in phase). 
+//! \param		maxFixPct The maximum amount of frequency adjustment
+//!				that can be made to the frequency of bp1, expressed
+//!				as a precentage of the unmodified frequency of bp1.
+//!				If the necessary amount of frequency adjustment exceeds
+//!				this amount, then the phase will not be matched, 
+//!				but will be updated as well to be consistent with
+//!				the frequencies. (default is 0.2%)
 //
-//	After computing the new frequency, update the phase.
-//
-static void fixFrequencyFwd( Partial::const_iterator bp0, Partial::iterator bp1,
-                             double maxFixPct )
+void matchPhaseFwd( const Breakpoint & bp0, Breakpoint & bp1,
+				    double dt, double damping, double maxFixPct )
 {
-	double travel = phaseTravel( bp0, bp1 ); 
-	double err = wrapPi( bp1.breakpoint().phase() - ( bp0.breakpoint().phase() + travel ) );
+	double travel = phaseTravel( bp0, bp1, dt ); 
+	double err = wrapPi( bp1.phase() - ( bp0.phase() + travel ) );
 	
 	//  The most common kinds of errors are local (or burst) errors in 
 	//  frequency and phase. These errors are best corrected by correcting
@@ -434,34 +478,41 @@ static void fixFrequencyFwd( Partial::const_iterator bp0, Partial::iterator bp1,
 	//  the Partial, in the case of a single bad frequency (as is common
 	//  at the onset of a tone). Any damping factor less then one will 
 	//  converge eventually, .5 or less will converge without oscillating.
-	#define DAMPING 0.5
-	travel += DAMPING * err;
+	//  #define DAMPING .5
+	travel += damping * err;
 	
-	double dt = bp1.time() - bp0.time();
-	double f0 = bp0.breakpoint().frequency();
+	double f0 = bp0.frequency();
 	double ftgt = ( travel / ( Pi * dt ) ) - f0;
+	
+	#ifdef Loris_Debug
+	debugger << "matchPhaseFwd: correcting " << bp1.frequency() << " to " << ftgt 
+			 << " (phase " << wrapPi( bp1.phase() ) << "), ";
+	#endif
 	
 	//	If the target is not a null breakpoint, may need to 
 	//	clamp the amount of frequency modification.
-	if ( bp1.breakpoint().amplitude() != 0. )
+	if ( bp1.amplitude() != 0. )
 	{	
-		if ( ftgt > bp1.breakpoint().frequency() * ( 1 + (maxFixPct*.01) ) )
+		if ( ftgt > bp1.frequency() * ( 1 + (maxFixPct*.01) ) )
 		{
-			ftgt = bp1.breakpoint().frequency() * ( 1 + (maxFixPct*.01) );
+			ftgt = bp1.frequency() * ( 1 + (maxFixPct*.01) );
 		}
-		else if ( ftgt < bp1.breakpoint().frequency() * ( 1 - (maxFixPct*.01) ) )
+		else if ( ftgt < bp1.frequency() * ( 1 - (maxFixPct*.01) ) )
 		{
-			ftgt = bp1.breakpoint().frequency() * ( 1 - (maxFixPct*.01) );
+			ftgt = bp1.frequency() * ( 1 - (maxFixPct*.01) );
 		}
 	}
-	bp1.breakpoint().setFrequency( ftgt );
+	bp1.setFrequency( ftgt );
 	
 	//	Recompute the phase according to the new frequency.
-	double phi = bp0.breakpoint().phase() + phaseTravel( bp0, bp1 );
-	bp1.breakpoint().setPhase( phi );
+	double phi = wrapPi( bp0.phase() + phaseTravel( bp0, bp1, dt ) );
+	bp1.setPhase( phi );
+
+	#ifdef Loris_Debug
+	debugger << "achieved " << ftgt << " (phase " << phi << ")" << endl;
+	#endif
 }
 
-	
 // ---------------------------------------------------------------------------
 //	fixFrequency
 //
@@ -488,7 +539,8 @@ void fixFrequency( Partial & partial, double maxFixPct )
 		Partial::iterator prev = next++;
 		while ( next != partial.end() )		
 		{
-			fixFrequencyFwd( prev, next, maxFixPct );
+			matchPhaseFwd( prev.breakpoint(), next.breakpoint(), 
+						   next.time() - prev.time(), 0.5, maxFixPct );
 			prev = next++;
 		}
     }
