@@ -663,8 +663,8 @@ def exportAiff(*args):
 
 def exportSpc(*args):
     """
-    exportSpc(path, partials, midiPitch, enhanced, endApproachTime)
-    exportSpc(path, partials, midiPitch, enhanced)
+    exportSpc(path, partials, midiPitch, enhanced=1, endApproachTime=0.)
+    exportSpc(path, partials, midiPitch, enhanced=1)
     exportSpc(path, partials, midiPitch)
 
     Export Partials in a PartialList to a Spc file at the specified

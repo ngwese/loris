@@ -257,7 +257,7 @@ public:
 	//!	If the endApproachTime is not specified, it is assumed to be zero, 
 	//!	corresponding to Partials that decay or release normally.
 	//!	
-	//!	This version of write is deprecated, use the two-argument
+	//!	\deprecated This version of write is deprecated, use the two-argument
 	//!	versions write and writeSinusoidal. 
 	//!
 	//! \param	filename the name of the file to create

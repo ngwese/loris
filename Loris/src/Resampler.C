@@ -47,7 +47,7 @@
 #include "Partial.h"
 
 #include "phasefix.h"
-#define PHASE_CORRECT
+#undef PHASE_CORRECT
 
 //	begin namespace
 namespace Loris {

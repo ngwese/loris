@@ -226,7 +226,7 @@ SpcFile::writeSinusoidal( const std::string & filename, double endApproachTime )
 void
 SpcFile::write( const std::string & filename, bool enhanced, double endApproachTime )
 {
-	if ( endApproachTime < 0 )
+    if ( endApproachTime < 0 )
 		Throw( InvalidArgument, "End Approach Time may not be negative." );
 
 	std::ofstream s( filename.c_str(), std::ofstream::binary );
@@ -262,6 +262,7 @@ SpcFile::write( const std::string & filename, bool enhanced, double endApproachT
 		dataSize += markerChunk.header.size + sizeof(CkHeader);
 	}
 
+/*    
 	SosEnvelopesCk soseChunk;
 	configureSosEnvelopesCk( soseChunk );
 	dataSize += soseChunk.header.size + sizeof(CkHeader);
@@ -286,6 +287,7 @@ SpcFile::write( const std::string & filename, bool enhanced, double endApproachT
 		ex.append( " Failed to write Spc file." );
 		throw;
 	}
+*/
 }
 
 #pragma mark -- access --
@@ -364,10 +366,6 @@ SpcFile::sampleRate( void ) const
 void 
 SpcFile::addPartial( const Partial & p )
 {
-	if ( p.label() == 0 )
-	{
-		Throw( InvalidArgument, "Spc Partials must be labeled." );
-	}
 	addPartial( p, p.label() );
 }
 
@@ -388,6 +386,10 @@ SpcFile::addPartial( const Partial & p )
 void 
 SpcFile::addPartial( const Partial & p, int label  )
 {
+	if ( p.label() == 0 )
+	{
+		Throw( InvalidArgument, "Spc Partials must be labeled." );
+	}
 	if ( label < 1 )
 	{
 		Throw( InvalidArgument, "Spc Partials must have positive labels." );

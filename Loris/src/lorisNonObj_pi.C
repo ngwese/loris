@@ -469,7 +469,7 @@ void exportSdif( const char * path, PartialList * partials )
  */
 extern "C"
 void exportSpc( const char * path, PartialList * partials, double midiPitch, 
-				    int enhanced, double endApproachTime )
+				int enhanced, double endApproachTime )
 {
 	try 
 	{
@@ -481,7 +481,7 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch,
 		}
 		
 		notifier << "exporting Spc partial data to " << path << endl;
-		
+
 		SpcFile fout( midiPitch );
 		PartialList::size_type countPartials = 0;
 		for ( PartialList::iterator iter = partials->begin(); iter != partials->end(); ++iter )
@@ -504,7 +504,7 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch,
 			Throw( InvalidObject, "No Partials in PartialList have valid Spc labels (1-511)." );
 		}
 		
-		if ( enhanced == 0 )
+		if ( 0 == enhanced )
 		{
 			fout.writeSinusoidal( path, endApproachTime );
 		}

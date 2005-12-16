@@ -242,7 +242,7 @@ first approximation to a reference envelope for channelization
 %newobject createFreqReference;
 LinearEnvelope * 
 createFreqReference( PartialList * partials, 
-					      double minFreq, double maxFreq, long numSamps );
+					 double minFreq, double maxFreq, long numSamps );
 
 // why can't I use default arguments to do this?
 // Because SWIG wants all default arguments to be
@@ -252,7 +252,7 @@ createFreqReference( PartialList * partials,
 %{
 	LinearEnvelope * 
 	createFreqReference( PartialList * partials, 
-						      double minFreq, double maxFreq )
+						 double minFreq, double maxFreq )
 	{
 		createFreqReference( partials, minFreq, maxFreq, 0 );
 	}
@@ -361,7 +361,11 @@ frequency, and bandwidth values are to be modified to make a
 gradual transition to the static spectrum.");
 
 void exportSpc( const char * path, PartialList * partials, double midiPitch, 
-				int enhanced, double endApproachTime );
+				int enhanced = 1, double endApproachTime = 0. );
+
+// Need these two also, because SWIG changed the way it handles
+// default arguments when writing C++ wrappers.
+//
 %inline %{
 void exportSpc( const char * path, PartialList * partials, double midiPitch,
 			    int enhanced )

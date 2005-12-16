@@ -2577,7 +2577,7 @@ SWIG_Check_int(PyObject* obj)
 
 	LinearEnvelope * 
 	createFreqReference( PartialList * partials, 
-						      double minFreq, double maxFreq )
+						 double minFreq, double maxFreq )
 	{
 		createFreqReference( partials, minFreq, maxFreq, 0 );
 	}
