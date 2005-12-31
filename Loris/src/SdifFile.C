@@ -1500,7 +1500,7 @@ static double getNextFrameTime( const double frameTime,
 	double nextFrameTime = frameTime;
 	std::vector< long > partialsWithBreakpointsInFrame;
 	
-	const std::list< BreakpointTime >::iterator & first = bpTimeIter;
+	// const std::list< BreakpointTime >::iterator & first = bpTimeIter;
 	
 	//	invariant:
 	//	Breakpoints in allBreakpoints before the position
@@ -1838,7 +1838,8 @@ writeMarkers( FILE * out, const SdifFile::markers_type &markers )
             fh.time = frameTime;
             fh.streamID = streamID;
             fh.matrixCount = 2;
-            SDIFresult ret = SDIF_WriteFrameHeader(&fh, out);
+            // SDIFresult ret = return value never checked!
+				SDIF_WriteFrameHeader(&fh, out);
     }
 	
 	// Write the numeric (marker times) matrix.

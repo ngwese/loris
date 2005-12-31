@@ -692,6 +692,15 @@ scale value.");
 void scaleNoiseRatio( PartialList * partials, LinearEnvelope * noiseEnv );
 
 %feature("docstring",
+"Scale the amplitudes of a set of Partials by applying 
+a spectral suface constructed from another set.
+Strecth the spectral surface in time and frequency
+using the specified stretch factors.");
+
+void shapeSpectrum( PartialList * partials, PartialList * surface,
+                    double stretchFreq, double stretchTime );
+
+%feature("docstring",
 "Shift the pitch of all Partials in a PartialList according to 
 the given pitch envelope. The pitch envelope is assumed to have 
 units of cents (1/100 of a halfstep).");

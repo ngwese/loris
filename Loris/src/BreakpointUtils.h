@@ -171,6 +171,23 @@ public:
 //! \deprecated use compareAmplitudeGreater instead.
 typedef compareAmplitudeGreater greater_amplitude;
 
+// ---------------------------------------------------------------------------
+//	compareAmplitudeLess
+//	
+//!	Comparitor (binary) functor returning true if its first Breakpoint
+//!	argument has amplitude less than that of its second Breakpoint argument,
+//!	and false otherwise.
+//
+class compareAmplitudeLess : 
+	public std::binary_function< const Breakpoint, const Breakpoint, bool >
+{
+public:
+	//!	Return true if its first Breakpoint argument has amplitude greater 
+	//!	than that of its second Breakpoint argument, and false otherwise.
+	bool operator()( const Breakpoint & lhs, const Breakpoint & rhs ) const
+		{ return lhs.amplitude() < rhs.amplitude(); }
+};	
+
 }	//	end of namespace BreakpointUtils
 
 }	//	end of namespace Loris

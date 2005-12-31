@@ -692,6 +692,14 @@ void resample( PartialList * partials, double interval );
 
  */
 
+void shapeSpectrum( PartialList * partials, PartialList * surface,
+                    double stretchFreq, double stretchTime );
+/*  Scale the amplitudes of a set of Partials by applying 
+    a spectral suface constructed from another set.
+    Strecth the spectral surface in time and frequency
+    using the specified stretch factors. 
+ */
+
 void sift( PartialList * partials );
 /*  Identify overlapping Partials having the same (nonzero)
     label. If any two partials with same label

@@ -12,6 +12,42 @@ EXTRA_DIST = Doxyfile.in opcodes.html
 			 
 noinst_DATA = 
 
+
+INPUT                  = @top_srcdir@/src/AiffFile.h		\
+			@top_srcdir@/src/Analyzer.h		\
+			@top_srcdir@/src/Breakpoint.h	\
+			@top_srcdir@/src/BreakpointUtils.h	\
+			@top_srcdir@/src/Channelizer.h	\
+			@top_srcdir@/src/Collator.h	\
+			@top_srcdir@/src/Dilator.h	\
+			@top_srcdir@/src/Distiller.h	\
+			@top_srcdir@/src/Envelope.h	\
+			@top_srcdir@/src/Exception.h	\
+			@top_srcdir@/src/Filter.h	\
+			@top_srcdir@/src/FourierTransform.h	\
+			@top_srcdir@/src/FrequencyReference.h \
+			@top_srcdir@/src/Fundamental.h	\
+			@top_srcdir@/src/Harmonifier.h	\
+			@top_srcdir@/src/ImportLemur.h	\
+			@top_srcdir@/src/KaiserWindow.h	\
+			@top_srcdir@/src/LinearEnvelope.h	\
+			@top_srcdir@/src/Marker.h	\
+			@top_srcdir@/src/Morpher.h	\
+			@top_srcdir@/src/NoiseGenerator.h \
+			@top_srcdir@/src/Notifier.h	\
+			@top_srcdir@/src/Oscillator.h	\
+			@top_srcdir@/src/Partial.h	\
+			@top_srcdir@/src/PartialList.h	\
+			@top_srcdir@/src/PartialPtrs.h	\
+			@top_srcdir@/src/PartialUtils.h	\
+			@top_srcdir@/src/ReassignedSpectrum.h	\
+			@top_srcdir@/src/Resampler.h \
+			@top_srcdir@/src/SdifFile.h	\
+			@top_srcdir@/src/Sieve.h	\
+			@top_srcdir@/src/SpcFile.h	\
+			@top_srcdir@/src/SpectralSurface.h	\
+			@top_srcdir@/src/Synthesizer.h
+
 # add something to build docs using doxygen, if it is present
 if HAVE_DOXYGEN
 
@@ -21,7 +57,7 @@ noinst_DATA += html
 CPP_HTML_DIR = html
 HTML = ${CPP_HTML_DIR}/index.html
 
-${HTML}: Doxyfile
+${HTML}: Doxyfile ${INPUT}
 	${DOXYGEN} 
 
 html: ${HTML}

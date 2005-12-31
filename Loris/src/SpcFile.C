@@ -1229,7 +1229,7 @@ SpcFile::readSpcData( const std::string & filename )
 	
 	//	all the chunks have been read, use them to initialize
 	//	the SpcFile members:
-	double rate = commonChunk.srate;
+	rate_ = commonChunk.srate;
 	
 	if ( instrumentChunk.header.id )
 	{

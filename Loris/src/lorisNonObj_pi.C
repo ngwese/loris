@@ -74,6 +74,7 @@
 #include "SdifFile.h"
 #include "Sieve.h"
 #include "SpcFile.h"
+#include "SpectralSurface.h"
 #include "Synthesizer.h"
 
 #include <cmath>
@@ -925,7 +926,46 @@ void resample( PartialList * partials, double interval )
     }
 }
 
+/* ---------------------------------------------------------------- */
+/*        shapeSpectrum
+/*  Scale the amplitudes of a set of Partials by applying 
+    a spectral suface constructed from another set.
+    Strecth the spectral surface in time and frequency
+    using the specified stretch factors. 
+ */
+extern "C"
+void shapeSpectrum( PartialList * partials, PartialList * surface,
+                    double stretchFreq, double stretchTime )
+{
+	try 
+	{
+        ThrowIfNull((PartialList *) partials);
+        ThrowIfNull((PartialList *) surface);
+		
+        notifier << "shaping " << partials->size() << " Partials using "
+                 << "spectral surface created from " << surface->size() 
+                 << " Partials" << Loris::endl;
 
+        // uses default fade time of 1 ms, should be parameter
+        SpectralSurface surf( surface->begin(), surface->end() );
+        surf.setFrequencyStretch( stretchFreq );
+        surf.setTimeStretch( stretchTime );
+        surf.setEffect( 1.0 );  // should this be a parameter?
+        surf.scaleAmplitudes( partials->begin(), partials->end() );
+	}
+	catch( Exception & ex )
+    {
+        std::string s("Loris exception in shapeSpectrum(): " );
+        s.append( ex.what() );
+        handleException( s.c_str() );
+    }
+    catch( std::exception & ex )
+    {
+        std::string s("std C++ exception in shapeSpectrum(): " );
+        s.append( ex.what() );
+        handleException( s.c_str() );
+    }
+}
 /* ---------------------------------------------------------------- */
 /*        sift
 /*  Eliminate overlapping Partials having the same label
@@ -939,12 +979,12 @@ void sift( PartialList * partials )
 {
 	try 
 	{
-		ThrowIfNull((PartialList *) partials);
+        ThrowIfNull((PartialList *) partials);
 		
-      notifier << "sifting " << partials->size() << " Partials" << Loris::endl;
+        notifier << "sifting " << partials->size() << " Partials" << Loris::endl;
 
-      // uses default fade time of 1 ms, should be parameter
-      Sieve::sift( partials->begin(), partials->end(), 0.001 );
+        // uses default fade time of 1 ms, should be parameter
+        Sieve::sift( partials->begin(), partials->end(), 0.001 );
 	}
 	catch( Exception & ex )
     {

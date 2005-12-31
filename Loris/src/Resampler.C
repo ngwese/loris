@@ -96,7 +96,7 @@ Resampler::resample( Partial & p ) const
 
 	//  find time of first and last breakpoint for the resampled envelope:
 	double firstTime = interval_ * int( 0.5 + p.startTime() / interval_ );
-	double lastTime  = interval_ * int( 0.5 + p.endTime()   / interval_ );
+	// double lastTime  = interval_ * int( 0.5 + p.endTime()   / interval_ );
 	
 	//  resample:
 	for (  double tim = firstTime; 

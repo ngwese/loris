@@ -243,7 +243,7 @@ ReassignedSpectrum::timeCorrection( long idx ) const
 	//	need to scale by the oversampling factor?
 	//	No, seems to sound bad, why?
 	//	(try alienthreat)
-	double oversampling = (double)_ratransform.size() / _rawindow.size();
+	// double oversampling = (double)_ratransform.size() / _rawindow.size();
 	return num / magSquared;
 }
 

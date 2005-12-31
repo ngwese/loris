@@ -72,8 +72,8 @@ CPP_SRC = AiffData.C	\
 		PartialPtrs.h \
 		PartialUtils.C \
 		PartialUtils.h \
-        phasefix.C	\
-        phasefix.h	\
+		phasefix.C	\
+		phasefix.h	\
 		ReassignedSpectrum.C \
 		ReassignedSpectrum.h \
 		Resampler.C \
@@ -87,6 +87,8 @@ CPP_SRC = AiffData.C	\
 		SpectralPeaks.h \
 		SpectralPeakSelector.C \
 		SpectralPeakSelector.h \
+		SpectralSurface.C \
+		SpectralSurface.h \
 		Synthesizer.C \
 		Synthesizer.h
 
@@ -147,6 +149,7 @@ pkginclude_HEADERS = \
 				SdifFile.h	\
 				Sieve.h	\
 				SpcFile.h	\
+				SpectralSurface.h	\
 				Synthesizer.h
 
 MAINTAINERCLEANFILES = Makefile.in
