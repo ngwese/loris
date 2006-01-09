@@ -229,13 +229,15 @@ void SpectralSurface::setAmplitudes( Partial & p )
     for ( iter = p.begin(); iter != p.end(); ++iter )
     {
         Breakpoint & bp = iter.breakpoint();	
-        double f = bp.frequency();
-        double t = iter.time();	
-            
-        double surfaceAmp = surfaceAt( FreqScale * f, TimeScale * t, mPartials );
-
-        double a = ( bp.amplitude()*(1.-mEffect) ) + ( mEffect*surfaceAmp );
-        bp.setAmplitude( a );
+        if ( 0 != bp.amplitude() )
+        {
+            double f = bp.frequency();
+            double t = iter.time();	
+                
+            double surfaceAmp = surfaceAt( FreqScale * f, TimeScale * t, mPartials );
+            double a = ( bp.amplitude()*(1.-mEffect) ) + ( mEffect*surfaceAmp );
+            bp.setAmplitude( a );
+        }
     }
 }
 

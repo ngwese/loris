@@ -254,7 +254,7 @@ createFreqReference( PartialList * partials,
 	createFreqReference( PartialList * partials, 
 						 double minFreq, double maxFreq )
 	{
-		createFreqReference( partials, minFreq, maxFreq, 0 );
+		return createFreqReference( partials, minFreq, maxFreq, 0 );
 	}
 %}
 
