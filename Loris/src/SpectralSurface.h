@@ -50,6 +50,10 @@ namespace Loris {
 // ---------------------------------------------------------------------------
 //	Class SpectralSurface
 //
+//! SpectralSurface represents a smoothed time-frequency surface that 
+//! can be used to perform cross-synthesis, the filtering of one sound 
+//! by the time-varying spectrum of another.
+//
 class SpectralSurface
 {
 //	-- public interface --

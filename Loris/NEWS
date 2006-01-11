@@ -24,6 +24,20 @@ frequency.
 adjustments so that the resampled phases are matched as nearly
 as possible. Resampler now generates phase-correct Partials.
 
+- added a class Harmonifier that uses a reference frequency 
+envelope to make the frequencies of labeled Partials harmonic.
+
+- added phase correction utilities to the PartialUtils
+namespace, for restoring phase-correctness to Partials
+after modification.
+
+- added a class SpectralSurface representing a smoothed 
+time-frequency surface that can be used to perform 
+cross-synthesis, the filtering of one sound by the
+time-varying spectrum of another. Can also be used to
+perform formant-corrected pitch shifting.
+
+
 -------------------------------------------------------
 changes since 1.2 release:
 

@@ -60,6 +60,7 @@ AC_ARG_VAR([SWIG],
        [Path to swig when available])
 AC_PATH_PROG([SWIG], [swig])
 
+AM_CONDITIONAL([HAVE_SWIG], [test -n "$SWIG"])
 
 dnl----------------------------------------------------------------
 dnl Perform special libtool checks under Darwin.
@@ -85,7 +86,11 @@ dnl don't seem to need this anymore
 dnl scratch that, I think we do still need it
 dnl
 AC_DEFUN([KELLYS_GREAT_DARWIN_FIX],
-[# libtool just won't build the scripting modules under Darwin, do it by hand
+[
+dnl Still need this because the dynamic library path is not set correctly
+dnl under Darwin, so the tests don't find and link the uninstalled library 
+dnl unless I set DYLD_LIBRARY_PATH before launching them.
+dnl See test/Makefile.am.
 case "$host_os" in
 *darwin*)
 AC_MSG_RESULT(Using Darwin-specific kludges to avoid broken libtool.)
