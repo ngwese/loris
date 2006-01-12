@@ -694,11 +694,21 @@ void scaleNoiseRatio( PartialList * partials, LinearEnvelope * noiseEnv );
 %feature("docstring",
 "Scale the amplitudes of a set of Partials by applying 
 a spectral suface constructed from another set.
-Strecth the spectral surface in time and frequency
-using the specified stretch factors.");
+If frequency and time stretch factors are specified,
+then the spectral surface is stretched by those 
+factors before the surface is used to shape the 
+Partial amplitudes.");
 
 void shapeSpectrum( PartialList * partials, PartialList * surface,
                     double stretchFreq, double stretchTime );
+
+%inline %{	
+	void shapeSpectrum( PartialList * partials, PartialList * surface )
+	{
+		shapeSpectrum( partials, surface, 1.0, 1.0 );
+	}
+%}	
+                    
 
 %feature("docstring",
 "Shift the pitch of all Partials in a PartialList according to 
