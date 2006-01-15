@@ -66,7 +66,11 @@ class CurrentPartialsView:public QFrame{
   Q_OBJECT
 
  public:
-  CurrentPartialsView(QWidget* parent, char* name,  PartialsList* partialsList);
+  CurrentPartialsView(
+	QWidget*	parent,
+	char*		name,
+	PartialsList*	partialsList
+);
  
   public slots:
     void drawCurrent();
@@ -90,39 +94,43 @@ class CurrentPartialsView:public QFrame{
 // class Tab
 //
 // A tab has usual widgets for displaying information about current collection of 
-// partials in the partialsList. It also shows current partials pixmap, a plot of a partials
-// parameter envelopes against time.
+// partials in the partialsList. It also shows current partials pixmap, a plot of
+// a partials parameter envelopes against time.
 //	
 class Tab:public QWidget{
  Q_OBJECT
 
  public:
-  Tab(QWidget* parent, char* name, PartialsList* partialsList);
+  Tab(
+	QWidget*	parent,
+	char*		name,
+	PartialsList*	partialsList
+  );
   virtual void update();
   
  private:
-  QVBoxLayout* tabLayout;
-  QGroupBox* box;
-  QGridLayout* boxLayout;
-  QFrame* infoBox;
-  QLabel* stateText;
-  QLabel* nrOfPartialsText;
-  QLabel* durationText;
-  QPushButton* okPushButton;
-  QGridLayout* infoBoxLayout;
+  QVBoxLayout*	tabLayout;
+  QGroupBox*	box;
+  QGridLayout*	boxLayout;
+  QFrame*	infoBox;
+  QLabel*	stateText;
+  QLabel*	nrOfPartialsText;
+  QLabel*	durationText;
+  QPushButton*	okPushButton;
+  QGridLayout*	infoBoxLayout;
   
   void setGui();
   
  private slots:
-   virtual void shiftValues() = 0;
+   virtual void	shiftValues() = 0;
 
  protected:
-  QLabel* maxNumber;
-  QLineEdit* shiftValue;
-  QLabel* shiftText; 
-  QLabel* maxText;
-  QLabel* partialsView;
-  PartialsList* partialsList;
+  QLabel*	maxNumber;
+  QLineEdit*	shiftValue;
+  QLabel*	shiftText;
+  QLabel*	maxText;
+  QLabel*	partialsView;
+  PartialsList*	partialsList;
 };
 
 // ---------------------------------------------------------------------------
@@ -134,7 +142,11 @@ class Tab:public QWidget{
 class AmplitudeTab:public Tab{
   
  public:
-  AmplitudeTab(QWidget* parent, char* name, PartialsList* partialsList);
+  AmplitudeTab(
+	QWidget*	parent,
+	char*		name,
+	PartialsList*	partialsList
+  );
   void update();
   void shiftValues();
 };
@@ -148,7 +160,11 @@ class AmplitudeTab:public Tab{
 class FrequencyTab:public Tab{
   
  public:
-  FrequencyTab(QWidget* parent, char* name, PartialsList* partialsList);
+  FrequencyTab(
+	QWidget*	parent,
+	char*		name,
+	PartialsList*	partialsList
+  );
   void update();
   void shiftValues();
 };
@@ -162,7 +178,11 @@ class FrequencyTab:public Tab{
 class NoiseTab:public Tab{
   
  public:
-  NoiseTab(QWidget* parent, char* name, PartialsList* partialsList);
+  NoiseTab(
+	QWidget*	parent,
+	char*		name,
+	PartialsList*	partialsList
+  );
   void update();
   void shiftValues();
 };

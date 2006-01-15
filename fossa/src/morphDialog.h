@@ -48,71 +48,71 @@ class QCanvas;
 class PartialsList;
 class MorphArea;
 
-// ---------------------------------------------------------------------------
-// class MorphDialog
-// Provides a dialog for performing a morph between two sounds. The two 
-// collections of partials are selected from listboxes and are morphed 
-// together according to breakpoints specified by user mouse clicks on the
-// morphArea.
+/*
+--------------------------------------------------------------------------------
+class MorphDialog
+Provides a dialog for performing a morph between two sounds. The two 
+collections of partials are selected from listboxes and are morphed 
+together according to breakpoints specified by user mouse clicks on the
+morphArea.
+*/
 
 class MorphDialog:public QDialog{ 
- 
   Q_OBJECT
 
- public:
-  int i;
-  MorphDialog(QWidget* parent, char* name, PartialsList* pList, QStatusBar* statusbar);
+  public:
+    int i;
+    MorphDialog(
+	QWidget*	parent,
+	char*		name,
+	PartialsList*	pList,
+	QStatusBar*	statusbar
+    );
  
- private slots:
-  void updateMorph1(int pos);
-  void updateMorph2(int pos);
+  private slots:
+    void		updateMorph1(int pos);
+    void		updateMorph2(int pos);
 
- private:
-  QCanvas* canvas;
-  QStatusBar* statusbar;
-  PartialsList* partialsList;
-  MorphArea* morphArea;        // This is the area where breakpoints
-  QGridLayout* dialogLayout;   // for a morph gets specified.
-  QGroupBox* morphBox;
-  QGridLayout* morphBoxLayout;
-  QGroupBox* partialsBox;
-  QGridLayout* partialsBoxLayout; 
-  QLabel* partial1Label;
-  QComboBox* partial2List;
-  QComboBox* partial1List;
-  QLabel* partial2Label;
-  QLabel* name1Label;
-  QLabel* name2Label;
-  QPushButton* morphButton;
+  private:
+    QCanvas*		canvas;
+    QStatusBar*		statusbar;
+    PartialsList*	partialsList;
+    MorphArea*		morphArea;
+    QGridLayout*	dialogLayout;
+    QGroupBox*		morphBox;
+    QGridLayout*	morphBoxLayout;
+    QGroupBox*		partialsBox;
+    QGridLayout*	partialsBoxLayout; 
 
-  QButtonGroup* onOffBox;
-  QGridLayout* onOffBoxLayout;
-  QFrame* line;
-  QRadioButton* allButton;
-  QRadioButton* amplitudeButton;
-  QRadioButton* frequencyButton;
-  QRadioButton* noiseButton;
+    QLabel*		partial1Label;
+    QComboBox*		partial2List;
+    QComboBox*		partial1List;
+    QLabel*		partial2Label;
+
+    QLabel*		name1Label;
+    QLabel*		name2Label;
+    QPushButton*	morphButton;
+
+    QButtonGroup*	onOffBox;
+    QGridLayout*	onOffBoxLayout;
+    QFrame*		line;
+    QRadioButton*	allButton;
+    QRadioButton*	amplitudeButton;
+    QRadioButton*	frequencyButton;
+    QRadioButton*	noiseButton;
   
-  QGridLayout* morphSideLayout;
-  QPushButton* clearNoiseButton;
-  QPushButton* clearFreqButton;
-  QPushButton* clearAmpButton;
-  QPushButton* clearAllButton;
-  QPushButton* cancelButton;
+    QGridLayout*	morphSideLayout;
+    QPushButton*	clearNoiseButton;
+    QPushButton*	clearFreqButton;
+    QPushButton*	clearAmpButton;
+    QPushButton*	clearAllButton;
+    QPushButton*	cancelButton;
   
-  QString morph1;
-  QString morph2;
+    QString		morph1;
+    QString		morph2;
   
-  void setConnections();
-  void setLists();
-  void setGui();
+    void		setConnections();
+    void		setLists();
+    void		setGui();
 };
 #endif // MORPH_DIALOG_H
-
-
-
-
-
-
-
-

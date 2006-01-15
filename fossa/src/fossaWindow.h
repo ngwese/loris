@@ -47,6 +47,7 @@ class ImportSdifDialog;
 class ChannelizeDialog;
 class NewNameDialog;
 class MorphDialog;
+class DilateDialog;
 class ExportDialog;
 class ExportAiffDialog;
 class ExportSdifDialog;
@@ -64,72 +65,70 @@ class LorisInterface;
 // parameters need to be specified, fossaWindow communicates straight to 
 // the partialsList.
 //	
-
 class FossaWindow:public QMainWindow{ 
   Q_OBJECT
-    
- public:
-  FossaWindow(QWidget* parent, const char* name);
-  FossaWindow::~FossaWindow();
 
- public slots:
-  void updateMenuOptions();  
- 
- private slots:  // responds to mouse clicks in the menu.
-  void openImportAiffDialog();
-  void openImportSdifDialog();
-  void openChannelizeDialog();
-  void distill();  
-  void openMorphDialog();
-  void openExportAiffDialog();
-  void openExportSdifDialog();
-  void openNewNameDialog();
-  void copy();
-  void remove();
-  void whatIsThis();
-  void about();
-  void manual();
-        
- private:
-  FossaFrame* fossaFrame;
-  PartialsList* partialsList;
-  ImportDialog* importDialog;
-  ChannelizeDialog* channelizeDialog;
-  NewNameDialog* newNameDialog;
-  MorphDialog* morphDialog;
-  ExportDialog* exportDialog;
-  
-  QGridLayout* fossaLayout; 
-  QStatusBar* statusbar;
-  //QToolBar* toolbar; //later versions might want a toolbar   
-  QMenuBar* menubar;         // top menu
-  QPopupMenu* fileMenu;      // in menubar
-  QPopupMenu* importMenu;       // in fileMenu
-  QPopupMenu* exportMenu;       // in fileMenu
-  QPopupMenu* manipulateMenu;
-  QPopupMenu* editMenu;      // in menubar
-  QPopupMenu* helpMenu;      // in menubar
+  public:
+    FossaWindow(
+	QWidget*	parent,
+	const char*	name
+    );
+    FossaWindow::~FossaWindow();
 
-  int distillID;
-  int channelizeID;
-  int morphID;
-  int exportID;
-  int deleteId;
-  int renameId; 
-  int copyId;
-  int playId;
- 
-  void setMenuBar();
-  void setConnections();
-  void addWhatIsThis();
-  void addToolTips();
+  public slots:
+    void	updateMenuOptions();  
+
+  private slots:
+    void		openImportAiffDialog();
+    void		openImportSdifDialog();
+    void		openChannelizeDialog();
+    void		distill();  
+    void		openDilateDialog();
+    void		openMorphDialog();
+    void		openExportAiffDialog();
+    void		openExportSdifDialog();
+    void		openNewNameDialog();
+    void		copy();
+    void		remove();
+    void		whatIsThis();
+    void		about();
+    void		manual();
+
+  private:
+    FossaFrame*		fossaFrame;
+    PartialsList*	partialsList;
+    ImportDialog*	importDialog;
+    ChannelizeDialog*	channelizeDialog;
+    NewNameDialog*	newNameDialog;
+    MorphDialog*	morphDialog;
+    DilateDialog*	dilateDialog;
+    ExportDialog*	exportDialog;
+
+    QGridLayout*	fossaLayout; 
+    QStatusBar*		statusbar;
+    //QToolBar*		toolbar;	//later versions might want a toolbar   
+    QMenuBar*		menubar;
+    QPopupMenu*		fileMenu;
+    QPopupMenu*		importMenu;
+    QPopupMenu*		exportMenu;
+    QPopupMenu*		manipulateMenu;
+    QPopupMenu*		editMenu;
+    QPopupMenu*		helpMenu;
+
+    int			distillID;
+    int			channelizeID;
+    int			morphID;
+    int			dilateID;
+    int			exportID;
+    int			deleteId;
+    int			renameId; 
+    int			copyId;
+    int			playId;
+
+    void		setMenuBar();
+    void		setConnections();
+    void		addWhatIsThis();
+    void		addToolTips();
 };
 
 #endif // FOSSA_WINDOW_H
-
-
-
-
-
-
-

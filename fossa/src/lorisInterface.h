@@ -35,7 +35,7 @@
 #include <Analyzer.h>
 #include <AiffFile.h>
 #include <SdifFile.h>
-#include <BreakpointEnvelope.h> 
+#include <LinearEnvelope.h> 
 #include <Channelizer.h>
 #include <Distiller.h>
 #include <Morpher.h>
@@ -56,32 +56,45 @@ using std::list;
 // else LorisInterface is the only class which includes Loris headers.
 
 class LorisInterface{
+  public:
+    LorisInterface();
+    std::list<Partial>* importAiff(
+	const char*	path,
+	double		resolution,
+	double		width
+    );
 
- public:
-  LorisInterface();
-  std::list<Partial>* importAiff(const char* path, double resolution, double width);
-  list<Partial>* importSdif(const char* path);
-  void channelize(int refLabel, double minFreq, double maxFreq, std::list<Partial>& partials);
-  std::list<Partial>* morph(BreakpointEnvelope& famp, BreakpointEnvelope& ffreq, BreakpointEnvelope& fbw, std::list<Partial> Partials1, std::list<Partial> partials2);
-  void distill(std::list<Partial>& partials); 
-  void exportAiff(double sampleRate, int bitsPerSample, const char* name, std::list<Partial> partials, double maxtime);
-  void exportSdif(const char* name, std::list<Partial> partials);
+    list<Partial>* importSdif(const char* path);
+
+    void channelize(
+	int			refLabel, 
+	double			minFreq, 
+	double			maxFreq, 
+	std::list<Partial>&	partials
+    );
+
+    std::list<Partial>* morph(
+	LinearEnvelope&		famp,
+	LinearEnvelope&		ffreq,
+	LinearEnvelope&		fbw,
+	std::list<Partial>	Partials1,
+	std::list<Partial>	partials2
+    );
+
+    void distill(std::list<Partial>& partials); 
+
+    void exportAiff(
+	double			sampleRate, 
+	int			bitsPerSample, 
+	const			char* name, 
+	std::list<Partial>	partials, 
+	double maxtime
+    );
+
+    void exportSdif(
+	const char*		name,
+	std::list<Partial>	partials
+    );
 };
 
 #endif // LORIS_INTERFACE_H
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

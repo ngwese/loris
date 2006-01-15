@@ -47,42 +47,39 @@ class PartialsList;
 // class  ChannelizeDialog
 //
 // Dialog for specifying channelization parameters. 
-
 class ChannelizeDialog : public QDialog{ 
   Q_OBJECT
       
- public:
-  ChannelizeDialog(QWidget* parent, const char* name, PartialsList* partialsList, QStatusBar* status);
+  public:
+    ChannelizeDialog(
+	QWidget*	parent, 
+	const char* 	name, 
+	PartialsList*	partialsList, 
+	QStatusBar*	status
+    );
     
   private slots:
-    void channelizing();
+    void	 channelizing();
 
- private:
-  QStatusBar* statusbar;
-  QGroupBox* paramBox;
-  QSpinBox* maxSpinBox;
-  QLabel* maxLabel;
-  QLabel* minLabel;
-  QLabel* nrLabel;
-  QSpinBox* refSpinBox;
-  QSpinBox* nrSpinBox;
-  QSpinBox* minSpinBox;
-  QLabel* refLabel;
-  QPushButton* channelizeButton;
-  QPushButton* cancelButton;
-  QGridLayout* ChannelizationLayout;
-  QGridLayout* paramBoxLayout;
+  private:
+    QStatusBar*		statusbar;
+    QGroupBox*		paramBox;
+    QSpinBox*		maxSpinBox;
+    QLabel*		maxLabel;
+    QLabel*		minLabel;
+    QLabel*		nrLabel;
+    QSpinBox*		refSpinBox;
+    QSpinBox*		nrSpinBox;
+    QSpinBox*		minSpinBox;
+    QLabel*		refLabel;
+    QPushButton*	channelizeButton;
+    QPushButton*	cancelButton;
+    QGridLayout*	ChannelizationLayout;
+    QGridLayout*	paramBoxLayout;
  
-  PartialsList* partialsList;
+    PartialsList*	partialsList;
  
-  void setGui();
-  void setConnections();
+    void		setGui();
+    void		setConnections();
 };
-
 #endif // CHANNELIZATION_H
-
-
-
-
-
-

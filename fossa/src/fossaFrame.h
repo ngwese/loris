@@ -47,17 +47,21 @@ class PartialsList;
 //	
 class FossaFrame:public QFrame{ 
   Q_OBJECT
-    
- public:
-  FossaFrame(QWidget* parent, const char* name, PartialsList* partialsList);
-    
- private:
-  QGridLayout* fossaFrameLayout;
-  Sidebar* sidebar;
-  PartialsList* partialsList;
-  CurrentPartialsView* currentPartialsView;
 
-  void setGui();
+  public:
+    FossaFrame(
+	QWidget*		parent,
+	const char*		name,
+	PartialsList*		partialsList
+    );
+    
+  private:
+    QGridLayout*		fossaFrameLayout;
+    Sidebar*			sidebar;
+    PartialsList*		partialsList;
+    CurrentPartialsView*	currentPartialsView;
+
+    void			setGui();
 };
 
 #endif // FOSSA_FRAME_H

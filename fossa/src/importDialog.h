@@ -24,8 +24,8 @@
  *
  * importDialog.h++
  *
- * Definition of class ImportDialog, ImportAiffDialog, ImportSdifDialog, 
- * and AnalyzerWidget. ImportDialog is basically a class made to avoid
+ * Defines classes ImportDialog, ImportAiffDialog, ImportSdifDialog, 
+ * and AnalyzerWidget. ImportDialog basically avoids
  * unnecessary repetition of code in ImportAiffDialog and ImportSdifDialog.
  * AnalyzerWidget is inserted in ImportAiffDialog to enable the user to 
  * specify the analysis parameters, frequency resolution and window width.
@@ -57,39 +57,49 @@ class PartialsList;
 //
 // Contains the sliders for specifying the analysis parameters, frequency resolution 
 // and window width.
-
 class AnalyzeAiffWidget:public QWidget{ 
- 
   Q_OBJECT
 
- public:
-  AnalyzeAiffWidget(QWidget* parent, char* name, PartialsList* pList);
-      
-  double getResolution();
-  double getWidth();
+  public:
+    AnalyzeAiffWidget(
+	QWidget*	parent,
+	char*		name,
+	PartialsList*	pList
+    );
 
- private:
- QGridLayout* layout;
- QGroupBox* parameterGroup;
- QGridLayout* parameterGroupLayout;
- QGridLayout* sliderLayout;
- 
- QSpinBox* resolutionSpinBox;
- QSlider* resolutionSlider;
- QLabel* resolutionLabel;
- 
- QFrame* sliderLine;
- 
- QSlider* widthSlider;
- QLabel* widthLabel;
- QSpinBox* widthSpinBox;
+    double		getResolution();
+    double		getWidth();
 
- QStatusBar* statusbar;
+  private:
+    QGridLayout*	layout;
+    QGroupBox*		parameterGroup;
+    QGridLayout*	parameterGroupLayout;
+    QGridLayout*	sliderLayout;
 
- void setGui();
- void addToolTips();
- void addWhatIsThis();
- void setSliders(QSlider* s, QSpinBox* sp, int minVal, int maxVal, int def, QLabel* l, char* text);
+    QSpinBox*		resolutionSpinBox;
+    QSlider*		resolutionSlider;
+    QLabel*		resolutionLabel;
+
+    QFrame*		sliderLine;
+
+    QSlider*		widthSlider;
+    QLabel*		widthLabel;
+    QSpinBox*		widthSpinBox;
+
+    QStatusBar*		statusbar;
+
+    void		setGui();
+    void		addToolTips();
+    void		addWhatIsThis();
+    void		setSliders(
+	QSlider*	s,
+	QSpinBox*	sp,
+	int		minVal,
+	int		maxVal,
+	int		def,
+	QLabel*		l,
+	char*		text
+    );
 };
 
 // ---------------------------------------------------------------------------
@@ -97,21 +107,24 @@ class AnalyzeAiffWidget:public QWidget{
 //
 // Provided to implement common code used in both ImportAiffDialog and 
 // ImportSdifDialog
-
 class ImportDialog:public QFileDialog{ 
-
   Q_OBJECT  
-  
- public:
-  ImportDialog(QWidget* parent,  char* name, PartialsList* pList, QStatusBar* status);
- 
- protected:
-  QStringList filter;
-  QString path;
-  QString name;
-  QStatusBar* statusbar;
-  
-  bool startDialog();
+
+  public:
+    ImportDialog(
+	QWidget*	parent,
+	char*		name,
+	PartialsList*	pList,
+	QStatusBar*	status
+    );
+
+  protected:
+    QStringList		 filter;
+    QString		 path;
+    QString		 name;
+    QStatusBar*		 statusbar;
+
+    bool		 startDialog();
 };
 
 // ---------------------------------------------------------------------------
@@ -119,46 +132,43 @@ class ImportDialog:public QFileDialog{
 //
 // A Dialog which lets the user import an aiff file and at the same time analyse
 // the file samples with given parameters, frequency resolution and window width.
-
 class ImportAiffDialog:public ImportDialog{ 
-
   Q_OBJECT  
   
- public:
-  ImportAiffDialog(QWidget* parent,  char* name, PartialsList* pList, QStatusBar* status);
-  void importAiffFile(QString path, QString name, double resolution, double width);
+  public:
+    ImportAiffDialog(
+	QWidget*	parent,
+	char*		name,
+	PartialsList*	pList,
+	QStatusBar*	status
+    );
+
+    void importAiffFile(
+	QString		path,
+	QString		name,
+	double		resolution,
+	double		width
+    );
 };
 
 // ---------------------------------------------------------------------------
 // class ImportSdifDialog
 //
 // A Dialog which lets the user import an sdif file 
-
 class ImportSdifDialog:public ImportDialog{ 
-
   Q_OBJECT  
   
- public:
-  ImportSdifDialog(QWidget* parent,  char* name, PartialsList* pList, QStatusBar* status);
-  void importSdifFile(QString path, QString name);
+  public:
+    ImportSdifDialog(
+	QWidget*	parent,
+	char*		name,
+	PartialsList*	pList,
+	QStatusBar*	status
+    );
+
+    void importSdifFile(
+	QString		path,
+	QString		name
+    );
 };
-
-
 #endif // IMPORT_DIALOG_H
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

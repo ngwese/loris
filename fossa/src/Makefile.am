@@ -10,14 +10,11 @@ FFTW_LIB     = -L/$(FFTW_PACKAGE)/lib -lfftw
 QT_INCLUDE   = -I/$(QT_PACKAGE)/include
 QT_LIB       = -L/$(QT_PACKAGE)/lib -lqt -Wl,-rpath=/opt/qt/qt-2.3.1/lib
 
-SDIF_INCLUDE = -I/$(SDIF_PACKAGE)/include
-SDIF_LIB     = -L/$(SDIF_PACKAGE)/lib -lsdif
-
 LORIS_INCLUDE = -I/$(LORIS_PACKAGE)/include/loris
 LORIS_LIB     = -L/$(LORIS_PACKAGE)/lib -lloris
 
-INCLUDES = $(LORIS_INCLUDE) $(FFTW_INCLUDE) $(QT_INCLUDE) $(SDIF_INCLUDE)
-LIBS     = $(LORIS_LIB)     $(FFTW_LIB)     $(QT_LIB)     $(SDIF_LIB)
+INCLUDES = $(LORIS_INCLUDE) $(FFTW_INCLUDE) $(QT_INCLUDE)
+LIBS     = $(LORIS_LIB)     $(FFTW_LIB)     $(QT_LIB)
 
 fossa_SOURCES = $(MAIN_SOURCES) $(MOC_SOURCES) 
 

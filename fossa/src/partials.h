@@ -59,87 +59,65 @@ using namespace Loris;
 // to preform modifications of the list of Loris::Partial.
 
 class Partials{
- 
- public:
-  enum State{amplitude, frequency, noise};
-  Partials(std::list<Partial> p, QString  n, LorisInterface* interface);
-  ~Partials();
-  QString getName() const;
-  std::list<Partial>* getPartials() const;
-  double getMaxAmplitude() const;
-  double getMaxFrequency() const;
-  double getMaxNoise() const;
-  double getDuration() const;
-  State getState() const;
-  int getNumberOfPartials() const;
-  QPixmap getAmplitudePixmap() const;
-  QPixmap getFrequencyPixmap() const;
-  QPixmap getNoisePixmap() const;
-  bool isDistilled() const;
-  bool isChannelized() const;
+  public:
+    enum	State{amplitude, frequency, noise};
+    Partials(
+	std::list<Partial>	p,
+	QString			n,
+	LorisInterface*		interface
+    );
+    ~Partials();
+    QString		getName() const;
+    std::list<Partial>*	getPartials() const;
+    double		getMaxAmplitude() const;
+    double		getMaxFrequency() const;
+    double		getMaxNoise() const;
+    double		getDuration() const;
+    State		getState() const;
+    int			getNumberOfPartials() const;
+    QPixmap		getAmplitudePixmap() const;
+    QPixmap		getFrequencyPixmap() const;
+    QPixmap		getNoisePixmap() const;
+    bool		isDistilled() const;
+    bool		isChannelized() const;
   
-  void rename(QString newName);
-  void play();
-  void setState(State newState);
-  void shiftFrequency(double val);
-  void shiftNoise(double val);
-  void shiftAmplitude(double val);
-  void channelize(int refLabel, double minFreq, double maxFreq);
-  void distill();
-  void exportToAiff(double sampleRate, int sampleBits, const char* name);
-  void exportToSdif(const char* name);
+    void		rename(QString newName);
+    void		play();
+    void		setState(State newState);
+    void		shiftFrequency(double val);
+    void		shiftNoise(double val);
+    void		shiftAmplitude(double val);
+    void		channelize(
+	int	refLabel,
+	double	minFreq,
+	double	maxFreq
+    );
+    void		distill();
+    void		exportToAiff(
+	double	sampleRate,
+	int	sampleBits,
+	const	char* name
+    );
+    void		exportToSdif(const char* name);
  
- private:
- 
-  int nrOfPartials;
-  QString name;
-  std::list<Partial>* partialList;
-  double maxAmplitude;
-  double maxFrequency;
-  double maxNoise;
-  double maxTime;
-  bool channelized;
-  bool distilled;
-  LorisInterface* interface;
-  QPixmap* amplitudePixmap;
-  QPixmap* frequencyPixmap;
-  QPixmap* noisePixmap;
-  State state;
+  private:
+    int	nrOfPartials;
+    QString		name;
+    std::list<Partial>*	partialList;
+    double		maxAmplitude;
+    double		maxFrequency;
+    double		maxNoise;
+    double		maxTime;
+    bool		channelized;
+    bool		distilled;
+    LorisInterface*	interface;
+    QPixmap*		amplitudePixmap;
+    QPixmap*		frequencyPixmap;
+    QPixmap*		noisePixmap;
+    State		state;
   
-  void setValues();
-  void updatePixmap();
+    void		setValues();
+    void		updatePixmap();
 };
 
 #endif // PARTIALS_H
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

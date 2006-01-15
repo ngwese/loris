@@ -15,26 +15,30 @@ class QStatusBar;
 class QPushButton;
 
 class NewNameDialog : public QDialog{ 
-    Q_OBJECT
+  Q_OBJECT
 
-public:
-
-    NewNameDialog( QWidget* parent, const char* name, PartialsList* partialsList, QStatusBar* statusbar);
+  public:
+    NewNameDialog( 
+	QWidget*	parent, 
+	const char*	name, 
+	PartialsList*	partialsList, 
+	QStatusBar*	statusbar
+    );
    
- private slots:
-      void rename();
+  private slots:
+    void 		rename();
 
- private:
-    QLabel* newNameText;
-    QLineEdit* newNameInput;
-    QGridLayout* newNameDialogLayout;
-    PartialsList* partialsList;
-    QStatusBar* statusbar;
-    QPushButton* okButton;
-    QPushButton* cancelButton;
+  private:
+    QLabel*		newNameText;
+    QLineEdit*		newNameInput;
+    QGridLayout*	newNameDialogLayout;
+    PartialsList*	partialsList;
+    QStatusBar*		statusbar;
+    QPushButton*	okButton;
+    QPushButton*	cancelButton;
 
-    void setGui();
-    void setConnections();
+    void		setGui();
+    void		setConnections();
 };
 
 #endif // NEW_NAME_DIALOG_H

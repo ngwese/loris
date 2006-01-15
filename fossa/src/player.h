@@ -48,30 +48,30 @@ class QPushButton;
 // is not implemented yet.
 
 class Player : public QWidget{ 
-    Q_OBJECT
+  Q_OBJECT
 
-public:
-    Player(QWidget* parent, const char* name, PartialsList* partialsList);
+  public:
+    Player(
+	QWidget*	parent,
+	const char*	name,
+	PartialsList*	partialsList
+    );
     
-private slots:
+  private slots:
     void play();
 
-private:
-    QLabel* playTimeText;       // not used yet
-    QProgressBar* progressBar;  // not used yet
-    QLabel* pbParText;
-    QPushButton* stopButton;    // not used yet
-    QPushButton* playButton;
-    QGridLayout* playerLayout;
+  private:
+    QLabel*		playTimeText;		// not implemented
+    QProgressBar*	progressBar;		// not implemented
+    QLabel*		pbParText;
+    QPushButton*	stopButton;		// not implemented
+    QPushButton*	playButton;
+    QGridLayout*	playerLayout;
     
-    PartialsList* partialsList;
+    PartialsList*	partialsList;
     
-    void setGui();
-    void setConnections();
+    void		setGui();
+    void		setConnections();
 };
 
 #endif // PLAYER_H
-
-
-
-

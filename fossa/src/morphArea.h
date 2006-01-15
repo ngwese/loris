@@ -32,7 +32,7 @@
  *
  */
 
-#include "BreakpointEnvelope.h"
+#include "LinearEnvelope.h"
 #include "axis.h"
 #include "partialsList.h"
 #include "pointWithText.h"
@@ -53,91 +53,98 @@ class FrequencyPoint;
 class AmplitudePoint;
 class NoisePoint;
 
-// ---------------------------------------------------------------------------
-// class MorphArea
-// MorphArea inherits QCanvasView and lets a user insert and direct manipulate 
-// amplitude, frequency, and noise breakpoints into the canvas and are visible
-// on the QCanvasView. The  breakpoints represents the morphing function between 
-// two sounds. The MorphArea has 4 states; amplitude, frequency, noise, and all three 
-// states combined, which is the default state. When we are in a certain state, 
-// for example amplitude, we can insert, remove, and dragg amplitude points.  
+/*
+--------------------------------------------------------------------------------
+class MorphArea
+MorphArea inherits QCanvasView and lets a user insert and direct manipulate 
+amplitude, frequency, and noise breakpoints into the canvas and are visible
+on the QCanvasView. The  breakpoints represents the morphing function between 
+two sounds. The MorphArea has 4 states; amplitude, frequency, noise, and all three 
+states combined, which is the default state. When we are in a certain state, 
+for example amplitude, we can insert, remove, and drag amplitude points.  
+*/
 
 class MorphArea:public QCanvasView{ 
-  
   Q_OBJECT
 
- public:
+  public:
+    MorphArea(
+	QCanvas*	canvas,
+	QWidget*	parent,
+	char*		name,
+	PartialsList*	partialsList,
+	QStatusBar*	statusbar
+    );
+    void		contentsMousePressEvent(QMouseEvent* e);
+    void		contentsMouseMoveEvent(QMouseEvent* e);
+    void		contentsMouseReleaseEvent(QMouseEvent* e);
+    void		addPoint(int x, int y);
+    int			rtti() const;
+    int			toXAxisValue(int x);
+    int			toYAxisValue(int y);
+    const QPoint	getOrigo() const;
  
-  MorphArea(QCanvas* canvas, QWidget* parent, char* name, PartialsList* partialsList, QStatusBar* statusbar);
-  void contentsMousePressEvent(QMouseEvent* e);
-  void contentsMouseMoveEvent(QMouseEvent* e);
-  void contentsMouseReleaseEvent(QMouseEvent* e);
-  void addPoint(int x, int y);
-  int rtti() const;
-  int toXAxisValue(int x);
-  int toYAxisValue(int y);
-  const QPoint getOrigo() const;
+  public slots:
+    void		clearAll();
+    void		showHideClear(int buttonId);
+    void		morph();
+    void		setMorph1(QString& name);
+    void		setMorph2(QString& name);
+
+  private:
+    enum		State {all, amplitude, frequency, noise};
+    State		state;
+    VerticalAxis*	lAxis;
+    VerticalAxis*	rAxis;
+    HorizontalAxis*	tAxis;
+    QStatusBar*		statusbar;
+    QList<QCanvasItem>	moving;
+    PartialsList*	partialsList;
  
- public slots:
-  void clearAll();
-  void showHideClear(int buttonId);
-  void morph();
-  void setMorph1(QString& name);
-  void setMorph2(QString& name);
+    QString		morph1;
+    QString		morph2;
 
- private:
-  enum State {all, amplitude, frequency, noise};
-  State state;
-  VerticalAxis* lAxis;
-  VerticalAxis* rAxis;
-  HorizontalAxis* tAxis;
-  QStatusBar* statusbar;
-  QList<QCanvasItem> moving;
-  PartialsList* partialsList;
- 
-  QString morph1;
-  QString morph2;
+    int			leftMargin;
+    int			rightMargin;
+    int			topMargin;
+    int			bottomMargin;
+    int			width;
+    int			height;
+    int			newPointIndex;
 
-  int leftMargin;
-  int rightMargin;
-  int topMargin;
-  int bottomMargin;
-  int width;
-  int height;
-  int newPointIndex;
-  
-  QSortedList<PointWithText> aList;
-  QSortedList<PointWithText> fList;
-  QSortedList<PointWithText> nList;
+    QSortedList<PointWithText>	aList;
+    QSortedList<PointWithText>	fList;
+    QSortedList<PointWithText>	nList;
 
-  void fillEnvelope(QSortedList<PointWithText>& list, BreakpointEnvelope& envelope);
-  bool inArea(int, int);
-  void showHideList(QSortedList<PointWithText>& list, bool show);
-  void addpointHelp(QSortedList<PointWithText>& list, PointWithText* newPoint);
-  void rightButtonHelp(QSortedList<PointWithText>& list, PointWithText* point);
-  void moveHelp(QSortedList<PointWithText>& list, PointWithText* movingPoint, int x, int y);
-  void setHorizontalAxis();
+    bool	inArea(int, int);
+
+    void	fillEnvelope(
+			QSortedList<PointWithText>&	list,
+			LinearEnvelope&			envelope
+    );
+
+    void	showHideList(
+			QSortedList<PointWithText>&	list,
+			bool				show
+    );
+
+    void	addpointHelp(
+			QSortedList<PointWithText>&	list,
+			PointWithText*			newPoint
+    );
+
+    void	rightButtonHelp(
+			QSortedList<PointWithText>&	list,
+			PointWithText*			point
+    );
+
+    void	moveHelp(
+			QSortedList<PointWithText>&	list,
+			PointWithText*			movingPoint,
+			int				x,
+			int				y
+    );
+
+    void	setHorizontalAxis();
 };
 #endif // MORPH_AREA_H
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

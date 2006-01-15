@@ -58,74 +58,81 @@ using namespace Loris;
 // 
 
 class PartialsList:public QObject{
- 
   Q_OBJECT;
  
- public:
+  public:
+    PartialsList();
+    ~PartialsList();
+    QString		getCurrentName();
+    int			getCurrentIndex();
+    double		getCurrentDuration();
+    double		getCurrentMaxAmplitude();
+    double		getCurrentMaxFrequency();
+    double		getCurrentMaxNoise();
+    int			getCurrentNrOfPartials();
+    bool		isCurrentDistilled();
+    bool		isCurrentChannelized();
+    QPixmap		getCurrentAmplitudePixmap();
+    QPixmap		getCurrentFrequencyPixmap();
+    QPixmap		getCurrentNoisePixmap();
+    Partials::State	getCurrentState();  
+    std::list<Partial>*	getCurrentPartials();
+    const Partials*	getPartials(int position);//not be able to distill, channelize etc
+    double		getMorph1Duration();
+    double		getMorph2Duration();
+    bool		isEmpty();
+    int			getLength();
+    void		setCurrentPartials(int position);
+    void		setMorphPartials1(int position);
+    void		setMorphPartials2(int position);
+    void		shiftCurrentAmplitude(int value); 
+    void		shiftCurrentFrequency(int value);
+    void		shiftCurrentNoise(int value); 
+    void		setCurrentState(Partials::State state);  
+    void		distillCurrent();
+    void importAiff(
+	QString	path,
+	QString	name,
+	double	resolution,
+	double	width
+    );
+    void importSdif(
+	QString path,
+	QString name
+    );
+    void channelizeCurrent(
+	int refLabel,
+	double minFreq,
+	double maxFreq
+    );
+    void exportAiff(
+	double sampleRate,
+	int sampleBits,
+	const char* name
+    );
+    void		exportSdif(const char* name);
+    void		renameCurrent(QString newName);
+    void		copyCurrent();
+    void		removeCurrent();
+    void		playCurrent();
+    void morph(
+	LinearEnvelope&		amp,
+	LinearEnvelope&		fre,
+	LinearEnvelope&		noise
+    );
+  
+    //void		dilate() should be implemented!
+  
+  signals:
+    void		listChanged();
+    void		currentChanged();
 
-  PartialsList();
-  ~PartialsList();
-  QString getCurrentName();
-  int getCurrentIndex();
-  double getCurrentDuration();
-  double getCurrentMaxAmplitude();
-  double getCurrentMaxFrequency();
-  double getCurrentMaxNoise();
-  int getCurrentNrOfPartials();
-  bool isCurrentDistilled();
-  bool isCurrentChannelized();
-  QPixmap getCurrentAmplitudePixmap();
-  QPixmap getCurrentFrequencyPixmap();
-  QPixmap getCurrentNoisePixmap();
-  Partials::State getCurrentState();  
-  std::list<Partial>* getCurrentPartials();
-  const Partials* getPartials(int position);//not be able to distill, channelize etc
-  double getMorph1Duration();
-  double getMorph2Duration();
-  bool isEmpty();
-  int getLength();
-  void setCurrentPartials(int position);
-  void setMorphPartials1(int position);
-  void setMorphPartials2(int position);
-  void importAiff(QString path, QString name, double resolution, double width);
-  void importSdif(QString path, QString name);
-  void shiftCurrentAmplitude(int value); 
-  void shiftCurrentFrequency(int value);
-  void shiftCurrentNoise(int value); 
-  void setCurrentState(Partials::State state);  
-  void channelizeCurrent(int refLabel, double minFreq, double maxFreq);
-  void distillCurrent();
-  void exportAiff(double sampleRate, int sampleBits, const char* name);
-  void exportSdif(const char* name);
-  void renameCurrent(QString newName);
-  void copyCurrent();
-  void removeCurrent();
-  void playCurrent();
-  void morph(BreakpointEnvelope& amp, BreakpointEnvelope& fre, BreakpointEnvelope& noise);
-  
-  //void dilate() should be implemented!
-  
- signals:
-  
-  void listChanged();
-  void currentChanged();
-
- private:
-  
-  QList<Partials> partialsList;
-  int morph1;
-  int morph2;
-  int current;
-  LorisInterface* interface;
-  bool inList(int position);
+   private:
+     QList<Partials>	partialsList;
+     int		morph1;
+     int		morph2;
+     int		current;
+     LorisInterface*	interface;
+     bool		inList(int position);
 };
-  
 #endif
-
-
-  
-  
-
-
-
-

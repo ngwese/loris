@@ -52,57 +52,32 @@ class QBoxLayout;
 // partials, see class Player. 
 
 class Sidebar:public QFrame{ 
- 
   Q_OBJECT
 
- public:
-  Sidebar(QWidget* parent, const char* name, PartialsList* pList);
+  public:
+    Sidebar(
+	QWidget*	parent,
+	const char*	name,
+	PartialsList*	pList
+    );
  
- public slots:
+  public slots:
     void updatePartialsListView();  // updates the view over partialsList
 
- private slots:
+  private slots:
     void setCurrentPartials(int);
 
- private:
-  QBoxLayout* sidebarLayout;
-  QGroupBox* playerGroup;
-  QBoxLayout* playerGroupLayout;
-  QGroupBox* partialsListGroup;
-  QBoxLayout* partialsListGroupLayout;
-  QListBox* partialsListView;
-  PartialsList* partialsList;
-  Player* player;
+  private:
+    QBoxLayout*		sidebarLayout;
+    QGroupBox*		playerGroup;
+    QBoxLayout*		playerGroupLayout;
+    QGroupBox*		partialsListGroup;
+    QBoxLayout*		partialsListGroupLayout;
+    QListBox*		partialsListView;
+    PartialsList*	partialsList;
+    Player*		player;
   
-  void setGui();
-  void setConnections();
-  
+    void		setGui();
+    void		setConnections();
 };
 #endif // SIDEBAR_H
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  

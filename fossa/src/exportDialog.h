@@ -49,7 +49,6 @@ class QGroupBox;
 
 class PartialsList;
 
-
 // ---------------------------------------------------------------------------
 // class ExportAiffWidget
 //
@@ -57,27 +56,26 @@ class PartialsList;
 // of sample bits for synthesis of a collection of partials.
 
 class ExportAiffWidget:public QWidget{ 
- 
   Q_OBJECT
 
- public:
-  ExportAiffWidget(QWidget* parent, char* name);
-  int getSampleRate();
-  int getNbOfBits();
-  bool getFileType(); //aiff = true;
+  public:
+    ExportAiffWidget(QWidget* parent, char* name);
+    int			getSampleRate();
+    int			getNbOfBits();
+    bool		getFileType(); //aiff = true;
 
- private:
-  void setGui();
+  private:
+    void		setGui();
 
-  QGridLayout* thisLayout;
-  QVBoxLayout* paramLayout;
-  QGridLayout* audioParamBoxLayout;
-  
-  QGroupBox* audioParamBox;
-   QSpinBox* nbOfBitsSpinBox;
-  QSpinBox* sampleRateSpinBox;
-  QLabel* sampleRateLabel;
-  QLabel* nbOfBitsLabel;
+    QGridLayout*	thisLayout;
+    QVBoxLayout*	paramLayout;
+    QGridLayout*	audioParamBoxLayout;
+
+    QGroupBox*		audioParamBox;
+    QSpinBox*		nbOfBitsSpinBox;
+    QSpinBox*		sampleRateSpinBox;
+    QLabel*		sampleRateLabel;
+    QLabel*		nbOfBitsLabel;
 };
 
 // class ExportDialog
@@ -86,18 +84,22 @@ class ExportAiffWidget:public QWidget{
 // ExportSdifDialog
 
 class ExportDialog:public QFileDialog{ 
-
   Q_OBJECT  
-  
- public:
-  ExportDialog(QWidget* parent, char* name, PartialsList* partialsList, QStatusBar* statusbar);
- 
- protected:
-  QStringList filter;
-  QString path;
-  QString ending;
-  QStatusBar* statusbar;
-  bool startDialog(QString fileType);
+
+  public:
+    ExportDialog(
+	QWidget*	parent,
+	char*		name,
+	PartialsList*	partialsList,
+	QStatusBar*	statusbar
+    );
+
+  protected:
+    QStringList filter;
+    QString path;
+    QString ending;
+    QStatusBar* statusbar;
+    bool startDialog(QString fileType);
 };
 
 // ---------------------------------------------------------------------------
@@ -106,16 +108,19 @@ class ExportDialog:public QFileDialog{
 // A Dialog which lets the user export partials to an aiff file
 
 class ExportAiffDialog:public ExportDialog{ 
-
   Q_OBJECT  
-    
- public:
-  ExportAiffDialog(QWidget* parent, char* name, PartialsList* partialsList, QStatusBar* statusbar);
-  
- signals: 
-  void exportAiff(double, int, int, const char* name);
-};
 
+  public:
+    ExportAiffDialog(
+	QWidget*	parent,
+	char*		name,
+	PartialsList*	partialsList,
+	QStatusBar*	statusbar
+	);
+
+  signals: 
+    void exportAiff(double, int, int, const char* name);
+};
 
 // ---------------------------------------------------------------------------
 // class ExportSdifDialog
@@ -123,61 +128,18 @@ class ExportAiffDialog:public ExportDialog{
 // A Dialog which lets the user export partials to an sdif file
 
 class ExportSdifDialog:public ExportDialog{ 
-
   Q_OBJECT  
-    
- public:
-  ExportSdifDialog(QWidget* parent,  char* name, PartialsList* partialsList, QStatusBar* statusbar);
-  
- signals:
-  void exportSdif(const char* name);
+
+  public:
+    ExportSdifDialog(
+	QWidget*	parent,
+	char*		name,
+	PartialsList*	partialsList,
+	QStatusBar*	statusbar
+    );
+
+  signals:
+    void exportSdif(const char* name);
 };
 
-
-
 #endif // EXPORT_DIALOG_H
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

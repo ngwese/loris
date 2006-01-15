@@ -54,64 +54,95 @@ using namespace Loris;
 // can get plotted over time. Subclasses have to implement plotPartials().
 
 class PartialsPixmap:public QPixmap{
+  public:
+    PartialsPixmap(
+	std::list<Loris::Partial>*
+		p,
+	double	x,
+	double	y
+    );
   
- public:
-  PartialsPixmap(std::list<Loris::Partial>* p, double x, double y);
+  private:
+    double	verticalIndex;
+    double	horizontalIndex;
+    double	adjustValue(double value);
   
- private:
-  double verticalIndex;
-  double horizontalIndex;
-  double adjustValue(double value);
-  
- protected:
-  double maxTime;
-  double maxY;
-  int leftMargin;
-  int rightMargin;
-  int topMargin;
-  int bottomMargin;
-  QString text;
-  std::list<Loris::Partial>* partialList;
+  protected:
+    double	maxTime;
+    double	maxY;
+    int		leftMargin;
+    int		rightMargin;
+    int		topMargin;
+    int		bottomMargin;
+    QString	text;
+    std::list<Loris::Partial>*
+		partialList;
 
-  bool inArea(int x, int y);
-  double toX(double time);
-  double toY(double value);
-  virtual void plotPartials() = 0;
-  void addAxis(double startX, double startY, QString label, double length, int width, double ticks, double minVal, double maxVal, bool vertical);
+    bool	inArea(int x, int y);
+    double	toX(double time);
+    double	toY(double value);
+    virtual	void plotPartials() = 0;
+    void	addAxis(
+	double	startX,
+	double	startY,
+	QString	label,
+	double	length,
+	int	width,
+	double	ticks,
+	double	minVal,
+	double	maxVal,
+	bool	vertical
+    );
 };
+
 
 // ---------------------------------------------------------------------------
 // class AmplitudePixmap
 // Inherits PartialsPixmap.
 
 class AmplitudePixmap:public PartialsPixmap{
-  
-public:
-   AmplitudePixmap(std::list<Loris::Partial>* p, double x, double y);
-   void plotPartials();
+  public:
+    AmplitudePixmap(
+	std::list<Loris::Partial>*
+		p,
+	double	x,
+	double	y
+    );
+    void plotPartials();
 };
+
 
 // ---------------------------------------------------------------------------
 // class FrequencyPixmap
 // Inherits PartialsPixmap.
 
 class FrequencyPixmap:public PartialsPixmap{
-  
-public:
-  FrequencyPixmap(std::list<Loris::Partial>* p, double x, double y);
-  void plotPartials();
+  public:
+    FrequencyPixmap(
+	std::list<Loris::Partial>*
+		p,
+	double	x,
+	double	y
+    );
+    void plotPartials();
 };
+
 
 // ---------------------------------------------------------------------------
 // class NoisePixmap
 // Inherits PartialsPixmap.
 
 class NoisePixmap:public PartialsPixmap{
-  
-public:
-  NoisePixmap(std::list<Loris::Partial>* p, double x, double y);
-  void plotPartials();
+  public:
+    NoisePixmap(
+	std::list<Loris::Partial>*
+		p,
+	double	x,
+	double	y
+    );
+    void plotPartials();
 };
+
 
 // ---------------------------------------------------------------------------
 // class EmptyPixmap
@@ -119,19 +150,14 @@ public:
 // empty. Inherits ParialsPixmap.
 
 class EmptyPixmap:public PartialsPixmap{
-  
-public:
-  
-  EmptyPixmap(std::list<Loris::Partial>* p, double x, double y);
-  void plotPartials();
+  public:
+    EmptyPixmap(
+	std::list<Loris::Partial>*
+		p,
+	double	x,
+	double	y
+    );
+    void plotPartials();
 };
 
-
 #endif //PARTIALS_PIXMAP_H
-
-
-
-
-
-
-
