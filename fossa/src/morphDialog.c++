@@ -19,17 +19,10 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *
- * partialsList.c++
+ * morphDialog.c++
  *
- * The PartialsList class is the main model of the application, ie. changes in 
- * PartialsList will trigger updates in view classes. This class has a list
- * containing imported partials and partials produced from different 
- * manipulations. One partials in the list is always set to current partials, 
- * and modifications can be made only to current partials. 
- * PartialsList also keeps track of two partials which are selected when 
- * the user decides to make a morph between two sounds. The class 
- * communicates with LorisInterface for necessary operations on partials.
- * 
+ * GUI container for the morphArea view window and controls for morphing
+ * sounds.
  *
  * Susanne Lefvert, 1 March 2002
  *
@@ -59,13 +52,17 @@
 // ---------------------------------------------------------------------------
 //      MorphDialog constructor
 // ---------------------------------------------------------------------------
-
-MorphDialog::MorphDialog(QWidget* parent, char* name, PartialsList* pList, QStatusBar* status):QDialog(parent, name, TRUE){
-  statusbar    = status;
-  partialsList = pList;
-  canvas       = new QCanvas(735,350); 
-  morph1 = "";
-  morph2 = "";
+MorphDialog::MorphDialog(
+	QWidget*	parent,
+	char*		name,
+	PartialsList*	pList,
+	QStatusBar*	status
+):QDialog(parent, name, TRUE){
+  statusbar	= status;
+  partialsList	= pList;
+  canvas	= new QCanvas(735, 350); 
+  morph1	= "";
+  morph2	= "";
   setGui();
   setConnections();
   setLists();
@@ -78,7 +75,6 @@ MorphDialog::MorphDialog(QWidget* parent, char* name, PartialsList* pList, QStat
 // ---------------------------------------------------------------------------
 // Every time a new morphDialog is created the pop-up lists for selecting
 // partials to be morphed have to be filled.
-
 void MorphDialog::setLists(){
   partial1List->clear();
   partial2List->clear();
@@ -108,7 +104,6 @@ void MorphDialog::setLists(){
 //     setConnections
 // ---------------------------------------------------------------------------
 // Sets all connections which handles GUI events.
-
 void MorphDialog::setConnections(){
   // the integer sent represents one of the elements in the button group
   // which changes state or clears some of the breakpoints.
@@ -129,7 +124,6 @@ void MorphDialog::setConnections(){
 // changes all gui elements when morph1 is changed, and changes  
 // morph1 partials in partialslist. I didn't see the need in using model/view
 // pattern here since the messages will just go back and forth.
-
 void MorphDialog::updateMorph1(int pos){
   partialsList->setMorphPartials1(pos);
   morph1 = partial1List->text(pos);
@@ -144,7 +138,6 @@ void MorphDialog::updateMorph1(int pos){
 // changes all gui elements when morph2 is changed, and changes 
 // morph2 partials in partialslist. I didn't see the need in using model/view
 // pattern here since the messages will just go back and forth.
-
 void MorphDialog::updateMorph2(int pos){
   partialsList->setMorphPartials2(pos);
   morph2 = partial2List->text(pos);
@@ -157,8 +150,17 @@ void MorphDialog::updateMorph2(int pos){
 //     setGui
 // ---------------------------------------------------------------------------
 // Sets all GUI components of the dialog
-
 void MorphDialog::setGui(){
+  QSpacerItem* spacer_0;
+  QSpacerItem* spacer_12;
+  QSpacerItem* spacer_13;
+  QSpacerItem* spacer_14;
+  QSpacerItem* spacer_16;
+  QSpacerItem* spacer_17;
+  QSpacerItem* spacer_19;
+  QSpacerItem* spacer_20;
+  QSpacerItem* spacer_21;
+
   dialogLayout = new QGridLayout(this); 
   dialogLayout->setSpacing(6);
   dialogLayout->setMargin(20);
@@ -170,10 +172,30 @@ void MorphDialog::setGui(){
   morphBoxLayout->setAlignment(Qt::AlignTop);
   morphBoxLayout->setSpacing(6);
   morphBoxLayout->setMargin(11);
-  QSpacerItem* spacer_0 = new QSpacerItem(150, 20, QSizePolicy::Minimum, QSizePolicy::Expanding);
+  spacer_0 = new QSpacerItem(
+	150,
+	20,
+	QSizePolicy::Minimum,
+	QSizePolicy::Expanding
+  );
+
   dialogLayout->addItem(spacer_0, 2, 1);
-  morphArea = new MorphArea(canvas, morphBox, "morphArea", partialsList, statusbar);
-  morphArea->setSizePolicy(QSizePolicy( (QSizePolicy::SizeType)0, (QSizePolicy::SizeType)0, morphArea->sizePolicy().hasHeightForWidth()));
+  morphArea = new MorphArea(
+	canvas,
+	morphBox,
+	"morphArea",
+	partialsList,
+	statusbar
+  );
+
+  morphArea->setSizePolicy(
+	QSizePolicy(
+		(QSizePolicy::SizeType)0,
+		(QSizePolicy::SizeType)0,
+		morphArea->sizePolicy().hasHeightForWidth()
+	)
+  );
+
   morphArea->setMinimumSize(QSize(740, 356));
   morphArea->setMaximumSize(QSize(740, 356));
   morphBoxLayout->addWidget(morphArea, 1, 0);
@@ -188,7 +210,14 @@ void MorphDialog::setGui(){
   morphSideLayout->setSpacing(6);
   morphSideLayout->setMargin(0);
   onOffBox = new QButtonGroup(morphBox, "onOffBox");
-  onOffBox->setSizePolicy(QSizePolicy( (QSizePolicy::SizeType)0, (QSizePolicy::SizeType)0, onOffBox->sizePolicy().hasHeightForWidth()));
+  onOffBox->setSizePolicy(
+	QSizePolicy(
+		(QSizePolicy::SizeType)0,
+		(QSizePolicy::SizeType)0,
+		onOffBox->sizePolicy().hasHeightForWidth()
+	)
+  );
+
   onOffBox->setColumnLayout(0, Qt::Vertical);
   onOffBox->layout()->setSpacing(0);
   onOffBox->layout()->setMargin(0);
@@ -198,7 +227,14 @@ void MorphDialog::setGui(){
   onOffBoxLayout->setMargin(11);
 
   allButton = new QRadioButton( onOffBox, "allButton" );
-  allButton->setSizePolicy( QSizePolicy( (QSizePolicy::SizeType)0, (QSizePolicy::SizeType)0, allButton->sizePolicy().hasHeightForWidth() ) );
+  allButton->setSizePolicy(
+	QSizePolicy(
+		(QSizePolicy::SizeType)0,
+		(QSizePolicy::SizeType)0,
+		allButton->sizePolicy().hasHeightForWidth()
+	)
+  );
+
   allButton->setMaximumSize( QSize(90, 19 ) );
    
   QPalette pal;
@@ -223,7 +259,14 @@ void MorphDialog::setGui(){
   onOffBoxLayout->addMultiCellWidget(line, 1, 1, 0, 1 );
  
   amplitudeButton = new QRadioButton( onOffBox, "amplitudeButton" );
-  amplitudeButton->setSizePolicy( QSizePolicy( (QSizePolicy::SizeType)0, (QSizePolicy::SizeType)0, amplitudeButton->sizePolicy().hasHeightForWidth() ) );
+  amplitudeButton->setSizePolicy(
+	QSizePolicy(
+		(QSizePolicy::SizeType)0,
+		(QSizePolicy::SizeType)0,
+		amplitudeButton->sizePolicy().hasHeightForWidth()
+	)
+  );
+
   amplitudeButton->setMaximumSize( QSize( 90, 19 ) );
   cg = amplitudeButton->colorGroup();
   cg.setColor( QColorGroup::Foreground, QColor("red") );
@@ -238,7 +281,14 @@ void MorphDialog::setGui(){
   onOffBoxLayout->addWidget( amplitudeButton, 2, 0 );
 
   frequencyButton = new QRadioButton( onOffBox, "frequencyButton" );
-  frequencyButton->setSizePolicy( QSizePolicy( (QSizePolicy::SizeType)0, (QSizePolicy::SizeType)0, frequencyButton->sizePolicy().hasHeightForWidth() ) );
+  frequencyButton->setSizePolicy(
+	QSizePolicy(
+		(QSizePolicy::SizeType)0,
+		(QSizePolicy::SizeType)0,
+		frequencyButton->sizePolicy().hasHeightForWidth()
+	)
+  );
+
   frequencyButton->setMaximumSize( QSize( 90, 19 ) );
   cg = frequencyButton->colorGroup();
   cg.setColor( QColorGroup::Foreground, QColor("darkgreen") );
@@ -253,7 +303,14 @@ void MorphDialog::setGui(){
 
   onOffBoxLayout->addWidget( frequencyButton, 3, 0 );
   noiseButton = new QRadioButton(onOffBox, "noiseButton");
-  noiseButton->setSizePolicy(QSizePolicy((QSizePolicy::SizeType)0, (QSizePolicy::SizeType)0, noiseButton->sizePolicy().hasHeightForWidth()));
+  noiseButton->setSizePolicy(	
+	QSizePolicy(
+		(QSizePolicy::SizeType)0,
+		(QSizePolicy::SizeType)0,
+		noiseButton->sizePolicy().hasHeightForWidth()
+	)
+  );
+
   noiseButton->setMaximumSize(QSize( 90, 19 ));
   cg = noiseButton->colorGroup();
   cg.setColor( QColorGroup::Foreground, QColor("blue") );
@@ -269,7 +326,14 @@ void MorphDialog::setGui(){
   onOffBoxLayout->addWidget( noiseButton, 4, 0 );
 
   clearAllButton = new QPushButton( onOffBox, "clearAllButton" );
-  clearAllButton->setSizePolicy( QSizePolicy( (QSizePolicy::SizeType)0, (QSizePolicy::SizeType)0, clearAllButton->sizePolicy().hasHeightForWidth() ) );
+  clearAllButton->setSizePolicy(
+	QSizePolicy(
+		(QSizePolicy::SizeType)0,
+		(QSizePolicy::SizeType)0,
+		clearAllButton->sizePolicy().hasHeightForWidth()
+	)
+  );
+
   clearAllButton->setMaximumSize( QSize( 37, 25 ) );
   QFont clearAllButton_font(  clearAllButton->font() );
   clearAllButton_font.setPointSize( 10 );
@@ -279,7 +343,14 @@ void MorphDialog::setGui(){
   onOffBoxLayout->addWidget( clearAllButton, 0, 1 );
 
   clearAmpButton = new QPushButton( onOffBox, "clearAmpButton" );
-  clearAmpButton->setSizePolicy( QSizePolicy( (QSizePolicy::SizeType)0, (QSizePolicy::SizeType)0, clearAmpButton->sizePolicy().hasHeightForWidth() ) );
+  clearAmpButton->setSizePolicy(
+	QSizePolicy(
+		(QSizePolicy::SizeType)0,
+		(QSizePolicy::SizeType)0,
+		clearAmpButton->sizePolicy().hasHeightForWidth()
+	)
+  );
+
   clearAmpButton->setMaximumSize( QSize( 37, 25 ) );
   QFont clearAmpButton_font(  clearAmpButton->font() );
   clearAmpButton_font.setPointSize( 10 );
@@ -289,7 +360,14 @@ void MorphDialog::setGui(){
   onOffBoxLayout->addWidget( clearAmpButton, 2, 1 );
   
   clearFreqButton = new QPushButton( onOffBox, "clearFreqButton" );
-  clearFreqButton->setSizePolicy( QSizePolicy( (QSizePolicy::SizeType)0, (QSizePolicy::SizeType)0, clearFreqButton->sizePolicy().hasHeightForWidth() ) );
+  clearFreqButton->setSizePolicy(
+	QSizePolicy(
+		(QSizePolicy::SizeType)0,
+		(QSizePolicy::SizeType)0,
+		clearFreqButton->sizePolicy().hasHeightForWidth()
+	)
+  );
+
   clearFreqButton->setMinimumSize( QSize( 0, 0 ) );
   clearFreqButton->setMaximumSize( QSize( 37, 25 ) );
   QFont clearFreqButton_font(  clearFreqButton->font() );
@@ -299,8 +377,15 @@ void MorphDialog::setGui(){
 
   onOffBoxLayout->addWidget( clearFreqButton, 3, 1 );
   
- clearNoiseButton = new QPushButton( onOffBox, "clearNoiseButton" );
-  clearNoiseButton->setSizePolicy( QSizePolicy( (QSizePolicy::SizeType)0, (QSizePolicy::SizeType)0, clearNoiseButton->sizePolicy().hasHeightForWidth() ) );
+  clearNoiseButton = new QPushButton( onOffBox, "clearNoiseButton" );
+  clearNoiseButton->setSizePolicy(
+	QSizePolicy(
+		(QSizePolicy::SizeType)0,
+		(QSizePolicy::SizeType)0,
+		clearNoiseButton->sizePolicy().hasHeightForWidth()
+	)
+  );
+
   clearNoiseButton->setMinimumSize( QSize( 3, 25 ) );
   clearNoiseButton->setMaximumSize( QSize( 37, 25 ) );
   QFont clearNoiseButton_font(  clearNoiseButton->font() );
@@ -319,10 +404,20 @@ void MorphDialog::setGui(){
 
   morphSideLayout->addWidget( morphButton, 4, 0 );
   
-  QSpacerItem* spacer_12 = new QSpacerItem( 20, 20, QSizePolicy::Expanding, QSizePolicy::Minimum );
-  morphSideLayout->addMultiCell( spacer_12, 5, 5, 0, 1 );
+  spacer_12 = new QSpacerItem(
+	20,
+	20,
+	QSizePolicy::Expanding,
+	QSizePolicy::Minimum
+  );
+  morphSideLayout->addMultiCell( spacer_12, 5, 5, 0, 1);
   
-  QSpacerItem* spacer_13 = new QSpacerItem( 20, 60, QSizePolicy::Minimum, QSizePolicy::Expanding );
+  spacer_13 = new QSpacerItem(
+	20,
+	60,
+	QSizePolicy::Minimum,
+	QSizePolicy::Expanding
+  );
   morphSideLayout->addItem( spacer_13, 2, 0 );
   
   cancelButton = new QPushButton( morphBox, "cancelButton" );
@@ -344,7 +439,13 @@ void MorphDialog::setGui(){
   morphBoxLayout->addWidget( name2Label, 2, 0 );
  
   dialogLayout->addMultiCellWidget(morphBox, 3, 7, 0, 2);
-  QSpacerItem* spacer_14 = new QSpacerItem( 20, 20, QSizePolicy::Minimum, QSizePolicy::Expanding );
+  spacer_14 = new QSpacerItem(
+	20,
+	20,
+	QSizePolicy::Minimum,
+	QSizePolicy::Expanding
+  );
+
   dialogLayout->addItem( spacer_14, 0, 0 );
   partialsBox = new QGroupBox(this, "partialsBox" );
   QFont partialsBox_font(  partialsBox->font() );
@@ -360,13 +461,27 @@ void MorphDialog::setGui(){
   partialsBoxLayout->setMargin( 11 );
   
   partial1List = new QComboBox( FALSE, partialsBox, "partial1List" );
-  partial1List->setSizePolicy( QSizePolicy( (QSizePolicy::SizeType)7, (QSizePolicy::SizeType)0, partial1List->sizePolicy().hasHeightForWidth() ) );
+  partial1List->setSizePolicy(
+	QSizePolicy(
+		(QSizePolicy::SizeType)7,
+		(QSizePolicy::SizeType)0,
+		partial1List->sizePolicy().hasHeightForWidth()
+	)
+  );
+
   partial1List->setMaximumSize( QSize( 32767, 20 ) );
   
   partialsBoxLayout->addWidget( partial1List, 1, 2 );
     
   partial2List = new QComboBox( FALSE, partialsBox, "partial2List" );
-  partial2List->setSizePolicy( QSizePolicy( (QSizePolicy::SizeType)7, (QSizePolicy::SizeType)0, partial2List->sizePolicy().hasHeightForWidth() ) );
+  partial2List->setSizePolicy(
+	QSizePolicy(
+		(QSizePolicy::SizeType)7,
+		(QSizePolicy::SizeType)0,
+		partial2List->sizePolicy().hasHeightForWidth()
+	)
+  );
+
   partial2List->setMaximumSize( QSize( 32767, 20 ) );
 
   partialsBoxLayout->addWidget( partial2List, 1, 6 );
@@ -385,25 +500,46 @@ void MorphDialog::setGui(){
   partial2Label->setFont( partial2Label_font ); 
   partial2Label->setText( tr( "with" ) );
   partialsBoxLayout->addWidget( partial2Label, 1, 4 );
-  QSpacerItem* spacer_16 = new QSpacerItem( 21, 20, QSizePolicy::Fixed, QSizePolicy::Minimum );
+
+  spacer_16 = new QSpacerItem(
+	21,
+	20,
+	QSizePolicy::Fixed,
+	QSizePolicy::Minimum
+  );
   partialsBoxLayout->addMultiCell( spacer_16, 1, 2, 1, 1 );
-  QSpacerItem* spacer_17 = new QSpacerItem( 21, 20, QSizePolicy::Fixed, QSizePolicy::Minimum );
+
+  spacer_17 = new QSpacerItem(
+	21,
+	20,
+	QSizePolicy::Fixed,
+	QSizePolicy::Minimum
+  );
   partialsBoxLayout->addMultiCell( spacer_17, 1, 2, 3, 3 );
-  QSpacerItem* spacer_21 = new QSpacerItem( 21, 20, QSizePolicy::Fixed, QSizePolicy::Minimum );
+
+  spacer_21 = new QSpacerItem(
+	21,
+	20,
+	QSizePolicy::Fixed,
+	QSizePolicy::Minimum
+  );
   partialsBoxLayout->addMultiCell( spacer_21, 1, 2, 5, 5 );
-  QSpacerItem* spacer_19 = new QSpacerItem( 20, 20, QSizePolicy::Minimum, QSizePolicy::Expanding );
+
+  spacer_19 = new QSpacerItem(
+	20,
+	20,
+	QSizePolicy::Minimum,
+	QSizePolicy::Expanding
+	);
   partialsBoxLayout->addItem( spacer_19, 2, 6 );
-  QSpacerItem* spacer_20 = new QSpacerItem( 20, 20, QSizePolicy::Minimum, QSizePolicy::Expanding );
+
+  spacer_20 = new QSpacerItem(
+	20,
+	20,
+	QSizePolicy::Minimum,
+	QSizePolicy::Expanding
+  );
   partialsBoxLayout->addItem( spacer_20, 0, 6 );
 
   dialogLayout->addWidget(partialsBox, 1, 0);
 }
-
-
-
-
-
-
-
-
-

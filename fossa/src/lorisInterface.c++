@@ -63,7 +63,11 @@ LorisInterface::LorisInterface(){}
 // with default parameters.  Check parameters to decide which format to 
 // import. 
 
-list<Partial>* LorisInterface::importAiff(const char* path, double resolution, double width){ 
+list<Partial>* LorisInterface::importAiff(
+	const char*	path,
+	double		resolution,
+	double		width
+){ 
   try{
     list<Partial>* partials = new list<Partial>;  // deleted in partialslist
     AiffFile file(path);
@@ -113,12 +117,17 @@ list<Partial>* LorisInterface::importSdif(const char* path){
 // Channelize list of Partial with given frequency label, 
 // minimum frequency, and mximum frequency.
 
-void LorisInterface::channelize(int refLabel, double minFreq, double maxFreq, list<Partial>& partials){ 
+void LorisInterface::channelize(
+	int		refLabel,
+	double		minFreq,
+	double		maxFreq,
+	list<Partial>&	partials
+){ 
   try{
     list<Partial>::const_iterator begin = partials.begin();
     list<Partial>::const_iterator end   = partials.end();
     FrequencyReference freRef(begin, end, minFreq, maxFreq);
-    BreakpointEnvelope referenceEnvelope = freRef.envelope();
+    LinearEnvelope referenceEnvelope = freRef.envelope();
     Channelizer channelizer(referenceEnvelope, refLabel);
     channelizer.channelize(partials.begin(), partials.end());
   }
@@ -133,7 +142,6 @@ void LorisInterface::channelize(int refLabel, double minFreq, double maxFreq, li
 // Distill list of Partial
 
 void LorisInterface::distill(list<Partial>& partials){
-  
   try{
   Distiller distiller;
   distiller.distill(partials);
@@ -150,11 +158,22 @@ void LorisInterface::distill(list<Partial>& partials){
 // Morph 2 lists of Partial with given frequency, amplitude, and noise
 // envelopes.
 
-list<Partial>* LorisInterface::morph(BreakpointEnvelope& famp, BreakpointEnvelope& ffreq, BreakpointEnvelope& fbw,  list<Partial> partials1, list<Partial> partials2){
+list<Partial>* LorisInterface::morph(
+	LinearEnvelope&		famp,
+	LinearEnvelope&		ffreq,
+	LinearEnvelope&		fbw,
+	list<Partial>		partials1,
+	list<Partial>		partials2
+){
  
   try{
     Morpher morpher(ffreq, famp, fbw);
-    morpher.morph(partials1.begin(), partials1.end(), partials2.begin(), partials2.end());
+    morpher.morph(
+	partials1.begin(),
+	partials1.end(),
+	partials2.begin(),
+	partials2.end()
+    );
     
     // is deleted in partialsList;
     list<Partial>* morphResult = new list<Partial>;
@@ -172,19 +191,32 @@ list<Partial>* LorisInterface::morph(BreakpointEnvelope& famp, BreakpointEnvelop
 // ---------------------------------------------------------------------------
 // Export list of Partial to aiff file format
 
-void LorisInterface::exportAiff(double sampleRate, int bitsPerSample, const char* name, list<Partial> partials, double maxtime){
+void LorisInterface::exportAiff(
+	double sampleRate,
+	int bitsPerSample,
+	const char* name,
+	list<Partial> partials,
+	double maxtime
+){
   
   try{
-    // insuring a long enough buffer for synthesized partials
-	const double Padding = .01;	//	10ms is more than enough
+    //Have to ensure a long enough buffer for synthesized partials
+    //10ms is more than enough
+    const double Padding = .01;
     double time = ((maxtime + Padding) * sampleRate);
     vector<double> sampleVector = vector<double>(time);
     Synthesizer synthesizer(sampleRate, sampleVector);
     AiffFile file(partials.begin(), partials.end(), time);
-
    
     // Loris can only synthesise mono files (channels = 1)
-    //AiffFile::Export(name, sampleRate, 1, bitsPerSample, sampleVector.begin(), sampleVector.end());
+    /*AiffFile::Export(
+	name,
+	sampleRate,
+	1,
+	bitsPerSample,
+	sampleVector.begin(),
+	sampleVector.end()
+    );*/
     file.write(name, bitsPerSample);
   }
   

@@ -61,8 +61,11 @@
 // ---------------------------------------------------------------------------
 // Creates a widget with 2 sliders and 2 spinboxes, available for users to 
 // specify analysis parameters frequency resolution and window width.
-
-AnalyzeAiffWidget::AnalyzeAiffWidget(QWidget* parent, char* name, PartialsList* pList):QWidget(parent,name){
+AnalyzeAiffWidget::AnalyzeAiffWidget(
+	QWidget*	parent,
+	char*		name,
+	PartialsList*	pList
+):QWidget(parent,name){
   setGui();
   addWhatIsThis();
 }
@@ -70,11 +73,11 @@ AnalyzeAiffWidget::AnalyzeAiffWidget(QWidget* parent, char* name, PartialsList* 
 // ---------------------------------------------------------------------------
 //	getResolution
 // ---------------------------------------------------------------------------
-// Returns the frequency resolution specified by the resolutionSlider and ResolutionSpinbox. 
-// Used for analysis.
-
+// Returns the frequency resolution specified by the resolutionSlider and 
+// ResolutionSpinbox.  Used for analysis.
 double AnalyzeAiffWidget::getResolution(){
-  return (resolutionSpinBox->text()).toDouble();  //value() method is not always correct
+  //value() method is not always correct
+  return (resolutionSpinBox->text()).toDouble();
 }
 
 // ---------------------------------------------------------------------------
@@ -82,7 +85,6 @@ double AnalyzeAiffWidget::getResolution(){
 // ---------------------------------------------------------------------------
 // Returns the window width specified by the widthSlider and widthSpinbox. 
 // Used for analysis.
-
 double AnalyzeAiffWidget::getWidth(){
   return (widthSpinBox->text()).toDouble();  //value() method is not always correct
 }
@@ -91,7 +93,6 @@ double AnalyzeAiffWidget::getWidth(){
 //	setGui
 // ---------------------------------------------------------------------------
 // Adds all GUI components of the widget.
-
 void AnalyzeAiffWidget::setGui(){
   resize(200,200);
  
@@ -100,7 +101,13 @@ void AnalyzeAiffWidget::setGui(){
   layout->setMargin(0);
   
   parameterGroup = new QGroupBox(this, "parameterGroup");
-  parameterGroup->setSizePolicy(QSizePolicy((QSizePolicy::SizeType)7,(QSizePolicy::SizeType)7, parameterGroup->sizePolicy().hasHeightForWidth()));
+  parameterGroup->setSizePolicy(
+	QSizePolicy(
+		(QSizePolicy::SizeType)7,
+		(QSizePolicy::SizeType)7,
+		parameterGroup->sizePolicy().hasHeightForWidth()
+	)
+  );
   parameterGroup->setTitle( tr( "parameter configuration for analysis"));
   parameterGroup->setColumnLayout(0, Qt::Vertical );
   parameterGroup->layout()->setSpacing(0);
@@ -123,7 +130,15 @@ void AnalyzeAiffWidget::setGui(){
   sliderLayout->addWidget(resolutionSlider, 0, 0);
   sliderLayout->addWidget(resolutionSpinBox, 0, 1);
   sliderLayout->addWidget(resolutionLabel, 0, 2 );
-  setSliders(resolutionSlider,resolutionSpinBox, 0, 1000, 100, resolutionLabel, "Resolution (Hz)");
+  setSliders(
+	resolutionSlider,
+	resolutionSpinBox,
+	0,
+	1000,
+	100,
+	resolutionLabel,
+	"Resolution (Hz)"
+  );
 
   widthSlider = new QSlider(parameterGroup, "widthSlider");
   widthSpinBox = new QSpinBox(parameterGroup, "widthSpinBox");
@@ -131,7 +146,15 @@ void AnalyzeAiffWidget::setGui(){
   sliderLayout->addWidget(widthSlider, 3, 0 );
   sliderLayout->addWidget(widthSpinBox, 3, 1);
   sliderLayout->addWidget( widthLabel, 3, 2 );
-  setSliders(widthSlider, widthSpinBox, 0, 1000, 100, widthLabel, "Window Width (Hz)");
+  setSliders(
+	widthSlider,
+	widthSpinBox,
+	0,
+	1000,
+	100,
+	widthLabel,
+	"Window Width (Hz)"
+  );
 
   parameterGroupLayout->addMultiCellLayout(sliderLayout, 2, 2, 0, 1);
  
@@ -143,10 +166,23 @@ void AnalyzeAiffWidget::setGui(){
 // ---------------------------------------------------------------------------
 // Help method for setting the characteristics of the sliders and spinboxes, and the
 // connection between them.
-
-void AnalyzeAiffWidget::setSliders(QSlider* s, QSpinBox* sp, int minVal, int maxVal, int def, QLabel* l, char* t){
+void AnalyzeAiffWidget::setSliders(
+	QSlider*	s,
+	QSpinBox*	sp,
+	int		minVal,
+	int		maxVal,
+	int		def,
+	QLabel*		l,
+	char*		t
+){
  
-  s->setSizePolicy( QSizePolicy( (QSizePolicy::SizeType)7, (QSizePolicy::SizeType)0, s->sizePolicy().hasHeightForWidth()));
+  s->setSizePolicy(
+	QSizePolicy(
+		(QSizePolicy::SizeType)7,
+		(QSizePolicy::SizeType)0,
+		s->sizePolicy().hasHeightForWidth()
+	)
+  );
   s->setMinimumSize(QSize(250, 20));
   s->setMaximumSize(QSize(2000, 20));
   QFont slidFont(s->font());
@@ -160,7 +196,13 @@ void AnalyzeAiffWidget::setSliders(QSlider* s, QSpinBox* sp, int minVal, int max
   s->setTickInterval((maxVal-minVal)/20);
   s->setTracking(true);
 
-  sp->setSizePolicy(QSizePolicy((QSizePolicy::SizeType)0, (QSizePolicy::SizeType)4, sp->sizePolicy().hasHeightForWidth()));
+  sp->setSizePolicy(
+	QSizePolicy(
+		(QSizePolicy::SizeType)0,
+		(QSizePolicy::SizeType)4,
+		sp->sizePolicy().hasHeightForWidth()
+	)
+  );
   sp->setMinimumSize(QSize(60, 20));
   sp->setMaximumSize(QSize(60, 20));
   sp->setMinValue(minVal);
@@ -170,7 +212,13 @@ void AnalyzeAiffWidget::setSliders(QSlider* s, QSpinBox* sp, int minVal, int max
   spinFont.setPointSize(12);
   sp->setFont(spinFont); 
 
-  l->setSizePolicy( QSizePolicy( (QSizePolicy::SizeType)7, (QSizePolicy::SizeType)7, l->sizePolicy().hasHeightForWidth()));
+  l->setSizePolicy(
+	QSizePolicy(
+		(QSizePolicy::SizeType)7,
+		(QSizePolicy::SizeType)7,
+		l->sizePolicy().hasHeightForWidth()
+	)
+  );
   QFont l_font(l->font());
   l_font.setPointSize(12);
   l->setFont(l_font); 
@@ -187,7 +235,6 @@ void AnalyzeAiffWidget::setSliders(QSlider* s, QSpinBox* sp, int minVal, int max
 // Adds text to the GUI shown when whatIsThis mode is enabled in the help menu.
 // For the moment the dialogs are modal and the text can not be reached, if the
 // dialogs would be none modal we make more use of this functionality.
-
 void AnalyzeAiffWidget::addWhatIsThis(){
   QString resolutionText = "The frequency resolution controls the frequency density of partials.  Two partials will differ in frequency by no less than the specified frequency resolution.  The frequency should be slightly less than the anticipated partial frequency density. For quasi-harmonic sounds, the anticipated partial frequency density is equal to the fundamental frequency, and the frequency resolution is typically set to 70% to 85% of the fundamental frequency. For non-harmonic sounds, some experimentation may be necessary, and intuition can offen be obtained using a spectrogram tool";
   
@@ -205,7 +252,6 @@ void AnalyzeAiffWidget::addWhatIsThis(){
 //	addToolTips
 // ---------------------------------------------------------------------------
 // Not implemented yet.
-
 void AnalyzeAiffWidget::addToolTips(){}
 
 // ---------------------------------------------------------------------------
@@ -214,8 +260,12 @@ void AnalyzeAiffWidget::addToolTips(){}
 // This class is implemented to avoid repeated code in ImportAiffDialog and 
 // ImportSdifDialog. (Might be unnecessary). The dialog is modal, the user have
 // to finish the operation before selecting another window.
-
-ImportDialog::ImportDialog(QWidget* parent, char* name, PartialsList* partialsList, QStatusBar* status):QFileDialog(parent, name, TRUE){
+ImportDialog::ImportDialog(
+	QWidget*	parent,
+	char*		name,
+	PartialsList*	partialsList,
+	QStatusBar*	status
+):QFileDialog(parent, name, TRUE){
   statusbar = status;
   QStringList filter;
   setFilters(filter);
@@ -228,7 +278,6 @@ ImportDialog::ImportDialog(QWidget* parent, char* name, PartialsList* partialsLi
 // ---------------------------------------------------------------------------
 // If the user has selected a file when the open button the path and name of 
 // the file is set and the method returns true. 
-
 bool ImportDialog::startDialog(){
   if(exec() == QDialog::Accepted){
     QString dir  = dirPath();
@@ -247,8 +296,12 @@ bool ImportDialog::startDialog(){
 // ---------------------------------------------------------------------------
 // Inherits ImportDialog and provides the user with a dialog for importing
 // and analyzing aiff files. 
-
-ImportAiffDialog::ImportAiffDialog(QWidget* parent, char* name, PartialsList* partialsList, QStatusBar* status):ImportDialog(parent, name, partialsList, status){
+ImportAiffDialog::ImportAiffDialog(
+	QWidget*	parent,
+	char*		name,
+	PartialsList*	partialsList,
+	QStatusBar*	status
+):ImportDialog(parent, name, partialsList, status){
   AnalyzeAiffWidget* widget = new AnalyzeAiffWidget(this,"ok", partialsList);
 
   addWidgets(0, widget, 0);
@@ -259,13 +312,33 @@ ImportAiffDialog::ImportAiffDialog(QWidget* parent, char* name, PartialsList* pa
       double resolution = widget->getResolution();
       double width      = widget->getWidth();
       QString temp = "";
-      statusbar->message("Importing and analyzing "+ImportDialog::name+", with frequency resolution: " 
-			 + temp.setNum(resolution)+ " and window width: " + temp.setNum(width));
-      partialsList->importAiff(ImportDialog::path, ImportDialog::name, resolution, width);
-      statusbar->message("Imported "+ImportDialog::name+" successfully.", 5000);
+      statusbar->message(
+	"Importing and analyzing "
+	+ImportDialog::name
+	+", with frequency resolution: " 
+	+ temp.setNum(resolution)
+	+ " and window width: " 
+	+ temp.setNum(width)
+      );
+
+      partialsList->importAiff(
+	ImportDialog::path,
+	ImportDialog::name,
+	resolution,
+	width
+      );
+
+      statusbar->message("Imported "
+	+ImportDialog::name
+	+" successfully.", 5000);
     }
+
     catch(...){
-      statusbar->message("Could not open "+ImportDialog::name+", please try again.");
+      statusbar->message(
+	"Could not open "
+	+ImportDialog::name
+	+", please try again."
+      );
     }
   }
 }  
@@ -275,9 +348,12 @@ ImportAiffDialog::ImportAiffDialog(QWidget* parent, char* name, PartialsList* pa
 // ---------------------------------------------------------------------------
 // Inherits ImportDialog and provides the user with a dialog for importing
 // sdif files. 
-
-ImportSdifDialog::ImportSdifDialog(QWidget* parent, char* name, PartialsList* partialsList, QStatusBar* status):ImportDialog(parent, name, partialsList, status){
-
+ImportSdifDialog::ImportSdifDialog(
+	QWidget*	parent,
+	char*		name,
+	PartialsList*	partialsList,
+	QStatusBar*	status
+):ImportDialog(parent, name, partialsList, status){
   resize(500, 300);
   addFilter("Audio file (*.sdif)");
   
@@ -287,22 +363,11 @@ ImportSdifDialog::ImportSdifDialog(QWidget* parent, char* name, PartialsList* pa
       statusbar->message("Imported "+ImportDialog::name+" successfully.", 5000);
     }
     catch(...){
-      statusbar->message("Could not open "+ImportDialog::name+", please try again.");
+      statusbar->message(
+	"Could not open "
+	+ImportDialog::name
+	+", please try again."
+      );
     }
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

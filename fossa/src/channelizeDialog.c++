@@ -51,8 +51,12 @@
 //	ChannelizeDialog constructor
 // ---------------------------------------------------------------------------
 // Creates a modal dialog to let the user specify channelization parameters. 
-
-ChannelizeDialog::ChannelizeDialog( QWidget* parent,  const char* name, PartialsList* list, QStatusBar* status): QDialog( parent, name, TRUE){
+ChannelizeDialog::ChannelizeDialog( 
+	QWidget*	parent,
+	const char*	name, 
+	PartialsList*	list, 
+	QStatusBar*	status
+	): QDialog( parent, name, TRUE){
  
   statusbar = status;
   partialsList = list;
@@ -66,9 +70,7 @@ ChannelizeDialog::ChannelizeDialog( QWidget* parent,  const char* name, Partials
 //	setConnections
 // ---------------------------------------------------------------------------
 // Specifies how cancel and channelize buttons react when clicked.
-
 void ChannelizeDialog::setConnections(){
-
   connect(cancelButton, SIGNAL(clicked()), this, SLOT(hide()));
   connect(channelizeButton, SIGNAL(clicked()), this, SLOT(channelizing()));
 }
@@ -77,9 +79,7 @@ void ChannelizeDialog::setConnections(){
 //	channelizing
 // ---------------------------------------------------------------------------
 // Is called when a user clicks on the channelize button.
-
 void ChannelizeDialog::channelizing(){
-
   double refLabel = refSpinBox->text().toDouble();  //value() doesn't work too good!
   double max = maxSpinBox->text().toInt();
   double min = minSpinBox->text().toInt();
@@ -87,7 +87,12 @@ void ChannelizeDialog::channelizing(){
 
   if(max > min){
     try{
-      statusbar->message("Channelizing partials with minimum frequency: "+temp.setNum(min)+", maximum frequency: "+temp.setNum(max)+", and reference label: "+temp.setNum(refLabel));
+      statusbar->message("Channelizing partials with minimum frequency: "
+			+temp.setNum(min)
+			+", maximum frequency: "
+			+temp.setNum(max)
+			+", and reference label: "
+			+temp.setNum(refLabel));
       partialsList->channelizeCurrent((int)refLabel, min, max);
       statusbar->message("Channelized partials successfully.", 5000);
     }
@@ -95,11 +100,15 @@ void ChannelizeDialog::channelizing(){
       statusbar->message(ex.what());
     }
     catch(...){
-      statusbar->message("Could not channelize partials, are the parameters correct?.");
+      statusbar->message(
+	"Could not channelize partials, are the parameters correct?."
+      );
     }
   }
   else {
-    statusbar->message("Maximum Frequency is greater than minimum frequency, please try again.");
+    statusbar->message(
+	"Maximum Frequency is greater than minimum frequency, please try again."
+    );
   }
   hide();
 }
@@ -108,8 +117,15 @@ void ChannelizeDialog::channelizing(){
 //	setGui
 // ---------------------------------------------------------------------------
 // Sets GUI components of this dialog.
-
 void ChannelizeDialog::setGui(){
+  QSpacerItem* spacer;
+  QSpacerItem* spacer_2;
+  QSpacerItem* spacer_3;
+  QSpacerItem* spacer_4;
+  QSpacerItem* spacer_5;
+  QSpacerItem* spacer_6;
+  QSpacerItem* spacer_7;
+
   resize( 641, 209 ); 
 
   ChannelizationLayout = new QGridLayout( this ); 
@@ -117,7 +133,13 @@ void ChannelizeDialog::setGui(){
   ChannelizationLayout->setMargin( 11 );
 
   paramBox = new QGroupBox( this, "paramBox" );
-  paramBox->setSizePolicy( QSizePolicy( (QSizePolicy::SizeType)7, (QSizePolicy::SizeType)7, paramBox->sizePolicy().hasHeightForWidth() ) );
+  paramBox->setSizePolicy( 
+	QSizePolicy( 
+		(QSizePolicy::SizeType)7, 
+		(QSizePolicy::SizeType)7, 
+		paramBox->sizePolicy().hasHeightForWidth() 
+	)
+  );
   QFont paramBox_font(  paramBox->font() );
   paramBox_font.setFamily( "helvetica" );
   paramBox_font.setPointSize( 14 );
@@ -130,9 +152,9 @@ void ChannelizeDialog::setGui(){
   paramBoxLayout->setAlignment( Qt::AlignTop );
   paramBoxLayout->setSpacing( 6 );
   paramBoxLayout->setMargin( 11 );
-  QSpacerItem* spacer = new QSpacerItem( 20, 20, QSizePolicy::Minimum, QSizePolicy::Expanding );
+  spacer = new QSpacerItem(20, 20, QSizePolicy::Minimum, QSizePolicy::Expanding);
   paramBoxLayout->addItem( spacer, 2, 1 );
-  QSpacerItem* spacer_2 = new QSpacerItem( 20, 20, QSizePolicy::Minimum, QSizePolicy::Expanding );
+  spacer_2 = new QSpacerItem(20, 20, QSizePolicy::Minimum, QSizePolicy::Expanding);
   paramBoxLayout->addItem( spacer_2, 0, 1 );
 
   maxSpinBox = new QSpinBox( paramBox, "maxSpinBox" );
@@ -143,11 +165,17 @@ void ChannelizeDialog::setGui(){
   maxSpinBox->setValue(1000); 
 
   paramBoxLayout->addWidget( maxSpinBox, 1, 5 );
-  QSpacerItem* spacer_3 = new QSpacerItem( 20, 20, QSizePolicy::Minimum, QSizePolicy::Expanding );
-  paramBoxLayout->addItem( spacer_3, 6, 1 );
+  spacer_3 = new QSpacerItem(20, 20, QSizePolicy::Minimum, QSizePolicy::Expanding);
+  paramBoxLayout->addItem(spacer_3, 6, 1);
 
   maxLabel = new QLabel( paramBox, "maxLabel" );
-  maxLabel->setSizePolicy( QSizePolicy( (QSizePolicy::SizeType)7, (QSizePolicy::SizeType)1, maxLabel->sizePolicy().hasHeightForWidth() ) );
+  maxLabel->setSizePolicy( 
+	QSizePolicy( 
+		(QSizePolicy::SizeType)7, 
+		(QSizePolicy::SizeType)1, 
+		maxLabel->sizePolicy().hasHeightForWidth() 
+	) 
+  );
   QFont maxLabel_font(  maxLabel->font() );
   maxLabel_font.setPointSize( 12 );
   maxLabel->setFont( maxLabel_font ); 
@@ -155,15 +183,21 @@ void ChannelizeDialog::setGui(){
  
 
   paramBoxLayout->addWidget( maxLabel, 1, 4 );
-  QSpacerItem* spacer_4 = new QSpacerItem( 20, 20, QSizePolicy::Minimum, QSizePolicy::Expanding );
+  spacer_4 = new QSpacerItem( 20, 20, QSizePolicy::Minimum, QSizePolicy::Expanding );
   paramBoxLayout->addItem( spacer_4, 4, 1 );
-  QSpacerItem* spacer_5 = new QSpacerItem( 20, 20, QSizePolicy::Expanding, QSizePolicy::Minimum );
+  spacer_5 = new QSpacerItem( 20, 20, QSizePolicy::Expanding, QSizePolicy::Minimum );
   paramBoxLayout->addItem( spacer_5, 1, 6 );
-  QSpacerItem* spacer_6 = new QSpacerItem( 20, 20, QSizePolicy::Expanding, QSizePolicy::Minimum );
+  spacer_6 = new QSpacerItem( 20, 20, QSizePolicy::Expanding, QSizePolicy::Minimum );
   paramBoxLayout->addItem( spacer_6, 1, 3 );
 
   minLabel = new QLabel( paramBox, "minLabel" );
-  minLabel->setSizePolicy( QSizePolicy( (QSizePolicy::SizeType)7, (QSizePolicy::SizeType)1, minLabel->sizePolicy().hasHeightForWidth() ) );
+  minLabel->setSizePolicy( 
+	QSizePolicy( 
+		(QSizePolicy::SizeType)7, 
+		(QSizePolicy::SizeType)1, 
+		minLabel->sizePolicy().hasHeightForWidth() 
+	) 
+  );
   QFont minLabel_font(  minLabel->font() );
   minLabel_font.setPointSize( 12 );
   minLabel->setFont( minLabel_font ); 
@@ -189,7 +223,13 @@ void ChannelizeDialog::setGui(){
   paramBoxLayout->addWidget( minSpinBox, 1, 2 );
 
   refLabel = new QLabel( paramBox, "refLabel" );
-  refLabel->setSizePolicy( QSizePolicy( (QSizePolicy::SizeType)7, (QSizePolicy::SizeType)1, refLabel->sizePolicy().hasHeightForWidth() ) );
+  refLabel->setSizePolicy( 
+	QSizePolicy( 
+		(QSizePolicy::SizeType)7, 
+		(QSizePolicy::SizeType)1, 
+		refLabel->sizePolicy().hasHeightForWidth() 
+	) 
+  );
   QFont refLabel_font(  refLabel->font() );
   refLabel_font.setPointSize( 12 );
   refLabel->setFont( refLabel_font ); 
@@ -208,16 +248,6 @@ void ChannelizeDialog::setGui(){
   cancelButton->setText( tr( "Cancel" ) );
 
   ChannelizationLayout->addWidget( cancelButton, 2, 1 );
-  QSpacerItem* spacer_7 = new QSpacerItem( 20, 20, QSizePolicy::Minimum, QSizePolicy::Expanding );
+  spacer_7 = new QSpacerItem( 20, 20, QSizePolicy::Minimum, QSizePolicy::Expanding );
   ChannelizationLayout->addItem( spacer_7, 0, 1 );
 }
-
-
-
-
-
-
-
-
-
-

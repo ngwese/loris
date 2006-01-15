@@ -42,6 +42,7 @@
 #include "importDialog.h"
 #include "exportDialog.h"
 #include "morphDialog.h"
+#include "dilateDialog.h"
 #include "channelizeDialog.h"
 #include "newNameDialog.h"
 #include "partialsList.h"
@@ -60,9 +61,10 @@
 // ---------------------------------------------------------------------------
 //	FossaWindow constructor
 // ---------------------------------------------------------------------------
-FossaWindow::FossaWindow(QWidget* parent, const char* name)
-  :QMainWindow(parent,name){
-  
+FossaWindow::FossaWindow(
+	QWidget*	parent,
+	const char*	name
+):QMainWindow(parent,name){
   partialsList = new PartialsList();
   fossaFrame   = new FossaFrame(this, "FossaFrame", partialsList);
   //  toolbar      = new QToolBar("test", this);   // later versions might want 
@@ -74,8 +76,8 @@ FossaWindow::FossaWindow(QWidget* parent, const char* name)
   newNameDialog     = 0;
   morphDialog       = 0;
   exportDialog      = 0;
-  // QWhatsThis::whatsThisButton(toolbar);  later versions might want to implement
-  // a toolbar.
+  // later versions might want to implement a toolbar.
+  // QWhatsThis::whatsThisButton(toolbar);
 
   setCaption("Fossa");
   setCentralWidget(fossaFrame);
@@ -89,7 +91,6 @@ FossaWindow::FossaWindow(QWidget* parent, const char* name)
 // ---------------------------------------------------------------------------
 //	FossaWindow destructor
 // ---------------------------------------------------------------------------
-
 FossaWindow::~FossaWindow(){
   delete partialsList;
 }
@@ -98,9 +99,7 @@ FossaWindow::~FossaWindow(){
 //	 updateMenuOptions. 
 // ---------------------------------------------------------------------------
 // SLOT which enables and disables menu options. 
-
 void FossaWindow::updateMenuOptions(){
-
   // If we have partials we should be able to do operation - enable options 
   if(!partialsList->isEmpty()){  
     fileMenu->setItemEnabled(exportID    , TRUE);
@@ -121,7 +120,15 @@ void FossaWindow::updateMenuOptions(){
     manipulateMenu->setItemEnabled(distillID   , FALSE);
   }
 
-  bool okToMorph = false; // not ok if no partials in partialsList are channelized & distilled
+  //There must be 2 or more partials in order to dilate.
+  if( partialsList->getLength() == 1 ){
+    manipulateMenu->setItemEnabled(dilateID, FALSE);
+  }else{
+    manipulateMenu->setItemEnabled(dilateID, TRUE);
+  }
+
+  //not ok if no partials in partialsList are channelized & distilled
+  bool okToMorph = false;
  
   for(int i = 0; i<partialsList->getLength(); i++){
     const Partials* p = partialsList->getPartials(i);
@@ -133,8 +140,7 @@ void FossaWindow::updateMenuOptions(){
   
   if(okToMorph){
     manipulateMenu->setItemEnabled(morphID, TRUE);
-  }
-  else{
+  }else{
     manipulateMenu->setItemEnabled(morphID, FALSE);
   }
 }
@@ -143,7 +149,6 @@ void FossaWindow::updateMenuOptions(){
 //	setConnections. 
 // ---------------------------------------------------------------------------
 // Menu options are updated when partialsList is changed.
-
 void FossaWindow::setConnections(){
   connect(partialsList, SIGNAL(listChanged()), this , SLOT(updateMenuOptions()));
   connect(partialsList, SIGNAL(currentChanged()), this , SLOT(updateMenuOptions()));
@@ -153,7 +158,6 @@ void FossaWindow::setConnections(){
 //     setMenuBar
 // ---------------------------------------------------------------------------
 //  sets menus and menu options in the menuBar. 
-
 void FossaWindow::setMenuBar(){
   fileMenu       = new QPopupMenu(this);
   importMenu     = new QPopupMenu(fileMenu);
@@ -163,12 +167,34 @@ void FossaWindow::setMenuBar(){
   helpMenu       = new QPopupMenu(this);
 
   // options for import menu in file menu.
-  importMenu->insertItem("&Import Aiff", this, SLOT(openImportAiffDialog()), CTRL+Key_A);
-  importMenu->insertItem("&Import Sdif", this, SLOT(openImportSdifDialog()), CTRL+Key_S);
+  importMenu->insertItem(
+	"Import Ai&ff",
+	this,
+	SLOT(openImportAiffDialog()),
+	CTRL+Key_F
+  );
+
+  importMenu->insertItem(
+	"&Import Sdif",
+	this,
+	SLOT(openImportSdifDialog()),
+	CTRL+Key_S
+  );
   
   // options for export menu in file menu.
-  exportMenu->insertItem("&Export Aiff", this, SLOT(openExportAiffDialog()), CTRL+Key_A);
-  exportMenu->insertItem("&Export Sdif", this, SLOT(openExportSdifDialog()), CTRL+Key_S);
+  exportMenu->insertItem(
+	"&Export Aiff",
+	this,
+	SLOT(openExportAiffDialog()),
+	CTRL+Key_A
+  );
+
+  exportMenu->insertItem(
+	"&Export Sdif",
+	this,
+	SLOT(openExportSdifDialog()),
+	CTRL+Key_S
+  );
   
   // insert import and export menu in file menu.
   fileMenu->insertItem("Import", importMenu);
@@ -177,24 +203,79 @@ void FossaWindow::setMenuBar(){
   fileMenu->insertItem("E&xit",qApp, SLOT(quit()),CTRL+Key_X);
   
   // options for edit menu.
-  deleteId = editMenu->insertItem("&Delete", this, SLOT(remove())            , CTRL+Key_D);
-  renameId = editMenu->insertItem("&Rename", this, SLOT(openNewNameDialog()) , CTRL+Key_R);
-  copyId   = editMenu->insertItem("&Copy"  , this, SLOT(copy())              , CTRL+Key_C);
+  deleteId = editMenu->insertItem(
+	"&Delete",
+	this,
+	SLOT(remove()),
+	CTRL+Key_D);
+  renameId = editMenu->insertItem(
+	"&Rename",
+	this,
+	SLOT(openNewNameDialog()),
+	CTRL+Key_R
+  );
+
+  copyId   = editMenu->insertItem(
+	"&Copy",
+	this,
+	SLOT(copy()),
+	CTRL+Key_C
+  );
   
   // options for manipulate menu.
-  channelizeID   = manipulateMenu->insertItem("&Channelize", this,SLOT(openChannelizeDialog()),CTRL+Key_C);
-  distillID      = manipulateMenu->insertItem("&Distill"   , this, SLOT(distill()), CTRL+Key_D);
-  morphID        = manipulateMenu->insertItem("&Morph"     , this, SLOT(openMorphDialog()),CTRL+Key_M);
+  channelizeID = manipulateMenu->insertItem(
+	"&Channelize",
+	this,
+	SLOT(openChannelizeDialog()),
+	CTRL+Key_H
+  );
+
+  distillID = manipulateMenu->insertItem(
+	"&Distill",
+	this,
+	SLOT(distill()),
+	CTRL+Key_D
+  );
+
+  morphID = manipulateMenu->insertItem(
+	"&Morph",
+	this,
+	SLOT(openMorphDialog()),
+	CTRL+Key_M
+  );
+
+  dilateID = manipulateMenu->insertItem(
+	"Dilate",
+	this,
+	SLOT(openDilateDialog()),
+	CTRL+Key_L
+  );
   
   // options for help menu.
-  helpMenu->insertItem("&What is this", this, SLOT(whatIsThis()), CTRL+Key_W);
-  helpMenu->insertItem("&Manual"      , this, SLOT(manual())    , CTRL+Key_M);
-  helpMenu->insertItem("&About Fossa" , this, SLOT(about())    , CTRL+Key_A);
+  helpMenu->insertItem(
+	"&What is this",
+	this,
+	SLOT(whatIsThis()),
+	CTRL+Key_W
+  );
+
+  helpMenu->insertItem(
+	"&Manual",
+	this,
+	SLOT(manual()),
+	CTRL+Key_M
+  );
+
+  helpMenu->insertItem(
+	"&About Fossa",
+	this,
+	SLOT(about()), CTRL+Key_A
+  );
   
   // insert menus in menubar
   menubar->insertItem("File"        , fileMenu);
-  menubar->insertItem("Manipulate"  , manipulateMenu);
   menubar->insertItem("Edit"        , editMenu);
+  menubar->insertItem("Manipulate"  , manipulateMenu);
   menubar->insertItem("Help"        , helpMenu);
   
   updateMenuOptions();
@@ -203,63 +284,64 @@ void FossaWindow::setMenuBar(){
 // ---------------------------------------------------------------------------
 //      addWhatIsThis
 // ---------------------------------------------------------------------------
-// Adds whatIsThis messages to gui elements, visible when WhatIsThisMode is entered.
-
+// Adds whatIsThis messages to gui elements, visible when WhatIsThisMode is
+// entered.
 void FossaWindow::addWhatIsThis(){
- QWhatsThis::add(statusbar, "I tell you what is going on");
+  QWhatsThis::add(statusbar, "I tell you what is going on");
 }
 
 // ---------------------------------------------------------------------------
 //      addToolTips
 // ---------------------------------------------------------------------------
 // Adds addToolTips messages to gui elements, visible when tooltip is enabled.
-
 void FossaWindow::addToolTips(){
-   QToolTip::add(statusbar, "statusbar");
+  QToolTip::add(statusbar, "statusbar");
 }
 
 // ---------------------------------------------------------------------------
 //      openImportAiffDialog
 // ---------------------------------------------------------------------------
 //  opens the import dialog for aiff file format
- 
 void FossaWindow::openImportAiffDialog(){
-  if(importDialog){
-    delete importDialog; 
-    importDialog = new ImportAiffDialog(this, "importDialog", partialsList, statusbar);
-  }
-  else{
-    importDialog = new ImportAiffDialog(this, "importDialog", partialsList, statusbar);
-  }
+  if(importDialog) delete importDialog; 
+
+  importDialog = new ImportAiffDialog(
+	this,
+	"importAiffDialog",
+	partialsList,
+	statusbar
+  );
 }
+
 // ---------------------------------------------------------------------------
 //      openImportSdifDialog
 // ---------------------------------------------------------------------------
 //  opens the import dialog for sdif file format
-
 void FossaWindow::openImportSdifDialog(){
-  if(importDialog){
-    delete importDialog; 
-    importDialog = new ImportSdifDialog(this, "importSdifDialog", partialsList, statusbar);
-  }
-  else{
-    importDialog = new ImportSdifDialog(this, "importSdifDialog", partialsList, statusbar);
-  }
+  if(importDialog) delete importDialog; 
+
+  importDialog = new ImportSdifDialog(
+	this,
+	"importSdifDialog",
+	partialsList,
+	statusbar
+  );
 }
 
 // ---------------------------------------------------------------------------
-//      openImportSdifDialog
+//      openChannelizeDialog
 // ---------------------------------------------------------------------------
 //  opens the dialog for performing channelization of current partials
-
 void FossaWindow::openChannelizeDialog(){
   if(!partialsList->isEmpty()){
-    if(channelizeDialog){
-      channelizeDialog->show();
-    }
-    else{
-      channelizeDialog = new ChannelizeDialog(this,"channelizeDialog", partialsList, statusbar);
-    }
+    if(channelizeDialog) channelizeDialog->show();
+
+    channelizeDialog = new ChannelizeDialog(
+	this,
+	"channelizeDialog",
+	partialsList,
+	statusbar
+    );
   }
 }
 
@@ -267,7 +349,6 @@ void FossaWindow::openChannelizeDialog(){
 //      distill
 // ---------------------------------------------------------------------------
 //  distill current partials. No parameters for distillation - no dialog is needed
-
 void FossaWindow::distill(){ 
   try{
     partialsList->distillCurrent();
@@ -279,36 +360,55 @@ void FossaWindow::distill(){
 }
 
 // ---------------------------------------------------------------------------
-//      morph
+//      openMorphDialog
 // ---------------------------------------------------------------------------
 //  open dialog for performing a sound morph.
-
 void FossaWindow::openMorphDialog(){
   if(!partialsList->isEmpty()){
-    if(morphDialog){
-      delete morphDialog;
-      morphDialog = new MorphDialog(this, "morphDialog", partialsList, statusbar);
-    }
-    else{ 
-      morphDialog = new MorphDialog(this, "morphDialog", partialsList, statusbar);
-    }
+    if(morphDialog) delete morphDialog;
+
+    morphDialog = new MorphDialog(
+	this,
+	"morphDialog",
+	partialsList,
+	statusbar
+    );
   }
+}
+
+// ---------------------------------------------------------------------------
+//      openDilateDialog
+// ---------------------------------------------------------------------------
+//  opens the dilate dialog
+void FossaWindow::openDilateDialog(){
+/*
+  if(!partialsList->isEmpty()){
+    if(dilateDialog) delete dilateDialog;
+
+    dilateDialog = new DilateDialog(
+	this,
+	"dilateDialog",
+	partialsList,
+	statusbar
+    );
+  }
+*/
 }
 
 // ---------------------------------------------------------------------------
 //      openExportAiffDialog
 // ---------------------------------------------------------------------------
 //  opens the dialog for exporting current partials to aiff file
-
 void FossaWindow::openExportAiffDialog(){
   if(!partialsList->isEmpty()){
-    if(exportDialog){
-      delete exportDialog;
-      exportDialog = new ExportAiffDialog(this, "exportDialog", partialsList, statusbar);
-    }
-    else{ 
-      exportDialog = new ExportAiffDialog(this, "exportDialog", partialsList, statusbar);
-    }
+    if(exportDialog) delete exportDialog;
+
+    exportDialog = new ExportAiffDialog(
+	this,
+	"exportDialog",
+	partialsList,
+	statusbar
+    );
   }
 }
 
@@ -316,16 +416,16 @@ void FossaWindow::openExportAiffDialog(){
 //      openExportSdifDialog
 // ---------------------------------------------------------------------------
 //  opens the dialog for exporting current partials to sdif file
-
 void FossaWindow::openExportSdifDialog(){
   if(!partialsList->isEmpty()){
-    if(exportDialog){
-      delete exportDialog;
-      exportDialog = new ExportSdifDialog(this, "exportDialog", partialsList, statusbar);
-    }
-    else{ 
-      exportDialog = new ExportSdifDialog(this, "exportDialog", partialsList, statusbar);
-    }
+    if(exportDialog) delete exportDialog;
+
+    exportDialog = new ExportSdifDialog(
+	this,
+	"exportDialog",
+	partialsList,
+	statusbar
+    );
   }
 }
 
@@ -333,16 +433,16 @@ void FossaWindow::openExportSdifDialog(){
 //      openNewNameDialog
 // ---------------------------------------------------------------------------
 //  Dialog for renaming current partials
-
 void FossaWindow::openNewNameDialog(){
   if(!partialsList->isEmpty()){
-    if(newNameDialog){
-      delete newNameDialog;
-      newNameDialog = new NewNameDialog(this, "exportDialog", partialsList, statusbar);
-    }
-    else{ 
-      newNameDialog = new NewNameDialog(this, "exportDialog", partialsList, statusbar);
-    }
+    if(newNameDialog) delete newNameDialog;
+
+    newNameDialog = new NewNameDialog(
+	this,
+	"exportDialog",
+	partialsList,
+	statusbar
+    );
   }
 }
 
@@ -350,7 +450,6 @@ void FossaWindow::openNewNameDialog(){
 //      copy
 // ---------------------------------------------------------------------------
 // copy current partials - no dialog is needed
-
 void FossaWindow::copy(){
   partialsList->copyCurrent();
 }
@@ -359,7 +458,6 @@ void FossaWindow::copy(){
 //      remove
 // ---------------------------------------------------------------------------
 // remove current partials - no dialog is needed
-
 void FossaWindow::remove(){
   partialsList->removeCurrent();
 }
@@ -368,7 +466,6 @@ void FossaWindow::remove(){
 //      whatIsThis
 // ---------------------------------------------------------------------------
 // Enters WhatsThisMode which shows descriptions of gui elements when clicked on.
-
 void FossaWindow::whatIsThis(){
   QWhatsThis::enterWhatsThisMode();
 }
@@ -378,7 +475,6 @@ void FossaWindow::whatIsThis(){
 //      about - NOT IMPLEMENTED YET!
 // ---------------------------------------------------------------------------
 // Opens the about window for Fossa.
-
 void FossaWindow::about(){
 }
 
@@ -386,18 +482,4 @@ void FossaWindow::about(){
 //      manual - NOT IMPLEMENTED YET!
 // ---------------------------------------------------------------------------
 // Opens the manual of Fossa.
-
-void FossaWindow::manual(){
-}
-
-
-
-
-
-
-
-
-
-
-
-
+void FossaWindow::manual(){ }

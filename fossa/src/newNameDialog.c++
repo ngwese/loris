@@ -13,13 +13,17 @@
 #endif
 
 
-NewNameDialog::NewNameDialog( QWidget* parent, const char* name,  PartialsList* pList, QStatusBar* sBar): QDialog( parent, name, TRUE){
-  
+NewNameDialog::NewNameDialog(
+	QWidget*	parent,
+	const char*	name,
+	PartialsList*	pList,
+	QStatusBar*	sBar
+): QDialog( parent, name, TRUE){
   partialsList = pList;
   statusbar    = sBar;
 
-  if ( !name )
-    setName( "newNameDialog" );
+  if ( !name ) setName( "newNameDialog" );
+
   resize(450, 80); 
   setGui();
   setConnections();
@@ -63,7 +67,3 @@ void NewNameDialog::setGui(){
   
   newNameDialogLayout->addWidget( cancelButton, 0, 3 );
 }
-
-
-
-

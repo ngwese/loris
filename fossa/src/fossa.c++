@@ -39,10 +39,12 @@
 //	Main method of program, starts the application.
 // ---------------------------------------------------------------------------
 int main( int argc, char **argv ){
-  QApplication a(argc, argv);                //QApplication manages the GUI application's 
-  FossaWindow fossaWindow(0,"FossaWindow");  //control flow and main settings
+  //QApplication manages the GUI application's 
+  QApplication a(argc, argv);
+
+  //control flow and main settings
+  FossaWindow fossaWindow(0,"FossaWindow");
   a.setMainWidget(&fossaWindow);
   fossaWindow.show();
   return a.exec();
 }
-

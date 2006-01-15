@@ -48,9 +48,11 @@
 //	Player constructor
 // ---------------------------------------------------------------------------
 
-Player::Player(QWidget* parent,  const char* name, PartialsList* pList)
-    : QWidget(parent, name){
-
+Player::Player(
+	QWidget*	parent,
+	const char*	name,
+	PartialsList*	pList
+):QWidget(parent, name){
   partialsList = pList;
   
   setGui();
@@ -80,7 +82,13 @@ void Player::play(){
 
 void Player::setGui(){
   resize( 188, 242 ); 
-  setSizePolicy( QSizePolicy( (QSizePolicy::SizeType)5, (QSizePolicy::SizeType)0, sizePolicy().hasHeightForWidth() ) );
+  setSizePolicy(
+	QSizePolicy(
+		(QSizePolicy::SizeType)5,
+		(QSizePolicy::SizeType)0,
+		sizePolicy().hasHeightForWidth()
+	)
+  );
   
   playerLayout = new QGridLayout( this ); 
   playerLayout->setSpacing( 6 );
@@ -99,7 +107,13 @@ void Player::setGui(){
   playerLayout->addMultiCellWidget( progressBar, 1, 1, 0, 1 );
 
   stopButton = new QPushButton( this, "stopButton" );
-  stopButton->setSizePolicy( QSizePolicy( (QSizePolicy::SizeType)0, (QSizePolicy::SizeType)0, stopButton->sizePolicy().hasHeightForWidth() ) );
+  stopButton->setSizePolicy(
+	QSizePolicy(
+		(QSizePolicy::SizeType)0,
+		(QSizePolicy::SizeType)0,
+		stopButton->sizePolicy().hasHeightForWidth()
+	)
+  );
   stopButton->setText( tr( "stop" ) );
 
   playerLayout->addWidget( stopButton, 2, 0 );
@@ -107,13 +121,14 @@ void Player::setGui(){
   /****************************************************************************/
 
   playButton = new QPushButton( this, "playButton" );
-  playButton->setSizePolicy( QSizePolicy( (QSizePolicy::SizeType)0, (QSizePolicy::SizeType)0, playButton->sizePolicy().hasHeightForWidth() ) );
+  playButton->setSizePolicy(
+	QSizePolicy(
+		(QSizePolicy::SizeType)0,
+		(QSizePolicy::SizeType)0,
+		playButton->sizePolicy().hasHeightForWidth()
+	)
+  );
   playButton->setText( tr( "play" ) );
 
   playerLayout->addWidget( playButton, 2, 1 );
 }
-
-
-
-
-

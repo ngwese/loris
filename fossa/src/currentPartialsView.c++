@@ -62,7 +62,11 @@
 //	CurrentPartialsView constructor
 // ---------------------------------------------------------------------------
 
-CurrentPartialsView::CurrentPartialsView(QWidget* parent, char* name, PartialsList* list):QFrame(parent,name){
+CurrentPartialsView::CurrentPartialsView(
+	QWidget*	parent,
+	char*		name,
+	PartialsList*	list
+):QFrame(parent,name){
   partialsList = list;
   setGui(); 
   setConnections();
@@ -109,7 +113,9 @@ void CurrentPartialsView::stateChanged(){
   case 0: state = Partials::amplitude; break;
   case 1: state = Partials::frequency; break;
   case 2: state = Partials::noise; break;
-  default: std::cout<<"CurrentPartialsView::stateChanged(): check the switch statement"<<endl;
+  default: std::cout<<
+	"CurrentPartialsView::stateChanged(): check the switch statement"
+	<<endl;
   }
   partialsList->setCurrentState(state);
 }
@@ -120,7 +126,6 @@ void CurrentPartialsView::stateChanged(){
 // Basically just adds the gui components to the class.
 
 void CurrentPartialsView::setGui(){
- 
   layout       = new QGridLayout(this); 
   tab          = new QTabWidget(this, "tab");
   amplitudeTab = new AmplitudeTab(tab, "amplitudeTab", partialsList);
@@ -143,7 +148,11 @@ void CurrentPartialsView::setGui(){
 //                        constructed, just subclasses of Tab.
 // ---------------------------------------------------------------------------
 
-Tab::Tab(QWidget* parent, char* name, PartialsList* pList):QWidget(parent, name){
+Tab::Tab(
+	QWidget*	parent,
+	char*		name,
+	PartialsList*	pList
+):QWidget(parent, name){
   partialsList = pList;
   setGui();
   connect(okPushButton, SIGNAL(clicked()), this, SLOT(shiftValues())); 
@@ -163,7 +172,8 @@ void Tab::update(){
   QString max = "";
   QString name = partialsList->getCurrentName();
   
-  if(!partialsList->isEmpty()){            // setNum -> bad way to convert double to string
+  // setNum -> bad way to convert double to string
+  if(!partialsList->isEmpty()){
     duration.append(temp.setNum(partialsList->getCurrentDuration()));
     nrOfPartials.append(temp.setNum(partialsList->getCurrentNrOfPartials()));
 
@@ -189,6 +199,10 @@ void Tab::update(){
 // sets all gui components of the Tab class
 
 void Tab::setGui(){
+  QSpacerItem* spacer_5;
+  QSpacerItem* spacer_6;
+  QSpacerItem* spacer_7;
+
   tabLayout = new QVBoxLayout(this); 
   tabLayout->setSpacing( 6 );
   tabLayout->setMargin( 11 );
@@ -203,7 +217,13 @@ void Tab::setGui(){
   boxLayout->setAlignment( Qt::AlignTop );
   boxLayout->setSpacing( 6 );
   boxLayout->setMargin( 11 );
-  QSpacerItem* spacer = new QSpacerItem( 20, 20, QSizePolicy::Minimum, QSizePolicy::Expanding );
+  QSpacerItem* spacer = 
+	new QSpacerItem(
+		20,
+		20,
+		QSizePolicy::Minimum,
+		QSizePolicy::Expanding
+	);
   boxLayout->addItem( spacer, 1, 0 );
   
   partialsView = new QLabel(box, "label");
@@ -224,13 +244,20 @@ void Tab::setGui(){
   shiftText = new QLabel( infoBox, "shiftText" );
   QFont shiftText_font(  shiftText->font() );
   shiftText->setFont( shiftText_font ); 
-  shiftText->setMinimumSize(100,25);
-  shiftText->setMaximumSize(100,25);
+  shiftText->setMinimumSize(120,25);
+  shiftText->setMaximumSize(120,25);
   
   infoBoxLayout->addWidget( shiftText, 1, 3 );
 
   shiftValue = new QLineEdit( infoBox, "shiftValue" );
-  shiftValue->setSizePolicy( QSizePolicy( (QSizePolicy::SizeType)0, (QSizePolicy::SizeType)0, shiftValue->sizePolicy().hasHeightForWidth() ) );
+  shiftValue->setSizePolicy(
+	QSizePolicy(
+		(QSizePolicy::SizeType)0,
+		(QSizePolicy::SizeType)0,
+		shiftValue->sizePolicy().hasHeightForWidth()
+	)
+  );
+
   QFont shiftValue_font(shiftValue->font() );
   shiftValue->setFont(shiftValue_font ); 
   shiftValue->setMaxLength(40);
@@ -251,13 +278,20 @@ void Tab::setGui(){
   maxText = new QLabel(infoBox, "maxText");
   QFont maxText_font(maxText->font());
   maxText->setFont(maxText_font); 
-  maxText->setMinimumSize(82,25); 
-  maxText->setMaximumSize(82,25); 
+  maxText->setMinimumSize(110,25); 
+  maxText->setMaximumSize(110,25); 
 
   infoBoxLayout->addWidget(maxText, 1, 0 );
 
   maxNumber = new QLabel( infoBox, "maxNumber" );
-  maxNumber->setSizePolicy( QSizePolicy( (QSizePolicy::SizeType)1, (QSizePolicy::SizeType)1, maxNumber->sizePolicy().hasHeightForWidth() ) );
+  maxNumber->setSizePolicy(
+	QSizePolicy(
+		(QSizePolicy::SizeType)1,
+		(QSizePolicy::SizeType)1,
+		maxNumber->sizePolicy().hasHeightForWidth()
+	)
+  );
+
   QFont maxNumber_font(  maxNumber->font() );
   maxNumber->setFont( maxNumber_font ); 
   maxNumber->setMinimumSize(150,25);
@@ -272,15 +306,22 @@ void Tab::setGui(){
   durationText->setMaximumSize(135,16);
   
   infoBoxLayout->addWidget( durationText, 0, 7);
-  QSpacerItem* spacer_5 = new QSpacerItem( 20, 20, QSizePolicy::Expanding, QSizePolicy::Minimum );
+  spacer_5 = new QSpacerItem( 20, 20, QSizePolicy::Expanding, QSizePolicy::Minimum );
   infoBoxLayout->addItem( spacer_5, 1, 6 );
-  QSpacerItem* spacer_6 = new QSpacerItem( 20, 20, QSizePolicy::Expanding, QSizePolicy::Minimum );
+  spacer_6 = new QSpacerItem( 20, 20, QSizePolicy::Expanding, QSizePolicy::Minimum );
   infoBoxLayout->addItem( spacer_6, 1, 2 );
-  QSpacerItem* spacer_7 = new QSpacerItem( 20, 20, QSizePolicy::Expanding, QSizePolicy::Minimum );
+  spacer_7 = new QSpacerItem( 20, 20, QSizePolicy::Expanding, QSizePolicy::Minimum );
   infoBoxLayout->addItem( spacer_7, 1, 8 );
 
   okPushButton = new QPushButton( infoBox, "okPushButton" );
-  okPushButton->setSizePolicy( QSizePolicy( (QSizePolicy::SizeType)0, (QSizePolicy::SizeType)0, okPushButton->sizePolicy().hasHeightForWidth() ) );
+  okPushButton->setSizePolicy(
+	QSizePolicy(
+		(QSizePolicy::SizeType)0,
+		(QSizePolicy::SizeType)0,
+		okPushButton->sizePolicy().hasHeightForWidth()
+	)
+  );
+
   okPushButton->setMaximumSize( QSize( 30, 25 ) );
   okPushButton->setText( tr( "OK" ) );
 
@@ -296,8 +337,11 @@ void Tab::setGui(){
 //	AmplitudeTab constructor
 // ---------------------------------------------------------------------------
 // sets all specific parameters for amplitude in a tab
-
-AmplitudeTab::AmplitudeTab(QWidget* parent, char* name, PartialsList* partialsList):Tab(parent, name, partialsList){
+AmplitudeTab::AmplitudeTab(
+	QWidget*	parent,
+	char*		name,
+	PartialsList*	partialsList
+):Tab(parent, name, partialsList){
   shiftText->setText( tr( "scale amplitude" ) );
   maxText->setText( tr( "max amplitude: " ) );
   QPixmap pixmap = partialsList->getCurrentAmplitudePixmap();
@@ -312,12 +356,11 @@ AmplitudeTab::AmplitudeTab(QWidget* parent, char* name, PartialsList* partialsLi
 // ---------------------------------------------------------------------------
 // is called whenever current partials in partialsList is changed and the tab
 // needs to get updated.
-
 void AmplitudeTab::update(){
   Tab::update();
-  partialsView->setPixmap(partialsList->getCurrentAmplitudePixmap()); // amplitude plot
+  partialsView->setPixmap(partialsList->getCurrentAmplitudePixmap());
   if(!partialsList->isEmpty()){
-    QString s = "";                     // lazy way to convert from double to string
+    QString s = "";
     maxNumber->setText(s.setNum(partialsList->getCurrentMaxAmplitude())); 
   }
 }
@@ -326,14 +369,16 @@ void AmplitudeTab::update(){
 //      shiftValues
 // ---------------------------------------------------------------------------
 // shift the amplitude values of current partials in partialsList.
-
 void AmplitudeTab::shiftValues(){
   partialsList->shiftCurrentAmplitude((shiftValue->text()).toDouble());
 }
 
 /************************************************************************************/
-
-FrequencyTab::FrequencyTab(QWidget* parent, char* name, PartialsList* partialsList):Tab(parent, name, partialsList){
+FrequencyTab::FrequencyTab(
+	QWidget* parent,
+	char* name,
+	PartialsList* partialsList
+):Tab(parent, name, partialsList){
   shiftText->setText(tr("scale frequency"));
   maxText->setText(tr("max frequency: "));
   QPixmap pixmap = partialsList->getCurrentFrequencyPixmap();
@@ -348,12 +393,11 @@ FrequencyTab::FrequencyTab(QWidget* parent, char* name, PartialsList* partialsLi
 // ---------------------------------------------------------------------------
 // is called whenever current partials in partialsList is changed and the tab
 // needs to get updated.
-
 void FrequencyTab::update(){
   Tab::update();
   partialsView->setPixmap(partialsList->getCurrentFrequencyPixmap()); 
   if(!partialsList->isEmpty()){
-    QString s = "";                    // lazy way to convert from double to string
+    QString s = "";
     maxNumber->setText(s.setNum(partialsList->getCurrentMaxFrequency()));
   }
 }
@@ -362,14 +406,16 @@ void FrequencyTab::update(){
 //      shiftValues
 // ---------------------------------------------------------------------------
 // shift the frequency values of current partials in partialsList.
-
 void FrequencyTab::shiftValues(){
   partialsList->shiftCurrentFrequency((shiftValue->text()).toDouble());
 }
 
 /************************************************************************************/
-
-NoiseTab::NoiseTab(QWidget* parent, char* name, PartialsList* partialsList):Tab(parent, name, partialsList){
+NoiseTab::NoiseTab(
+	QWidget* parent,
+	char* name,
+	PartialsList* partialsList
+):Tab(parent, name, partialsList){
   shiftText->setText(tr("scale noise"));
   maxText->setText(tr("max noise: "));
   QPixmap pixmap = partialsList->getCurrentNoisePixmap();
@@ -383,7 +429,6 @@ NoiseTab::NoiseTab(QWidget* parent, char* name, PartialsList* partialsList):Tab(
 //      shiftValues
 // ---------------------------------------------------------------------------
 // shift the noise values of current partials in partialsList.
-
 void NoiseTab::shiftValues(){
   partialsList->shiftCurrentNoise((shiftValue->text()).toDouble());
 }
@@ -397,15 +442,7 @@ void NoiseTab::update(){
   Tab::update();
   partialsView->setPixmap(partialsList->getCurrentNoisePixmap()); 
   if(!partialsList->isEmpty()){
-    QString s = "";                       // lazy way to convert from double to string
+    QString s = "";
     maxNumber->setText(s.setNum(partialsList->getCurrentMaxNoise()));
   }
 }
-
-
-
-
-
-
-
-

@@ -44,7 +44,11 @@
 //	FossaFrame constructor
 // ---------------------------------------------------------------------------
 
-FossaFrame::FossaFrame(QWidget* parent, const char* name, PartialsList* pList):QFrame(parent, name){
+FossaFrame::FossaFrame(
+	QWidget*	parent,
+	const char*	name,
+	PartialsList*	pList
+):QFrame(parent, name){
   partialsList = pList; 
   setGui();
 }
@@ -57,17 +61,20 @@ FossaFrame::FossaFrame(QWidget* parent, const char* name, PartialsList* pList):Q
 void FossaFrame::setGui(){
   fossaFrameLayout    = new QGridLayout(this); 
   sidebar             = new Sidebar(this, "Sidebar", partialsList);
-  currentPartialsView = new CurrentPartialsView(this, "currentPartialsView", partialsList);
+  currentPartialsView = new CurrentPartialsView(
+	this,
+	"currentPartialsView",
+	partialsList
+  );
    
-  setSizePolicy(QSizePolicy((QSizePolicy::SizeType)3, (QSizePolicy::SizeType)3, sizePolicy().hasHeightForWidth()));
+  setSizePolicy(
+	QSizePolicy(
+		(QSizePolicy::SizeType)3,
+		(QSizePolicy::SizeType)3,
+		sizePolicy().hasHeightForWidth()
+	)
+  );
 
   fossaFrameLayout->addWidget(sidebar, 0, 0 );
   fossaFrameLayout->addWidget(currentPartialsView, 0, 1);
 }
-
-
-
-
-
-
-

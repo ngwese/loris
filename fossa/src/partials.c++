@@ -49,8 +49,11 @@ using std::cout;
 // It contains state information and has plots over its frequency, amplitude, and 
 // noise envelopes over time. Partials communicates with lorisInterface in order
 // to preform modifications of the list of Loris::Partial.
-
-Partials::Partials(list<Loris::Partial> p, QString  n, LorisInterface* inter){ 
+Partials::Partials(
+	list<Loris::Partial>	p,
+	QString			n,
+	LorisInterface*		inter
+){ 
   name        = n;
   interface   = inter;
   partialList = new list<Loris::Partial>(p);  // a list of Loris::Partial, the
@@ -69,7 +72,6 @@ Partials::Partials(list<Loris::Partial> p, QString  n, LorisInterface* inter){
 // ---------------------------------------------------------------------------
 //	Partials destructor
 // ---------------------------------------------------------------------------
-
 Partials::~Partials(){
   delete partialList; 
 }
@@ -78,7 +80,6 @@ Partials::~Partials(){
 //	setState
 // ---------------------------------------------------------------------------
 // state can be amplitude, frequency, and noise.
-
 void Partials::setState(State newState){
   state = newState;
 }
@@ -87,7 +88,6 @@ void Partials::setState(State newState){
 //	getName
 // ---------------------------------------------------------------------------
 // Gives the name of the partials
-
 QString Partials::getName() const  { 
   return name; 
 }
@@ -96,7 +96,6 @@ QString Partials::getName() const  {
 //	getName
 // ---------------------------------------------------------------------------
 // Returns number of partials
-
 int Partials::getNumberOfPartials() const{
   return nrOfPartials;
 }
@@ -105,7 +104,6 @@ int Partials::getNumberOfPartials() const{
 //	getAmplitudePixmap
 // ---------------------------------------------------------------------------
 // Returns the amplitued envelope plotted against time in form of a pixmap
-
 QPixmap Partials::getAmplitudePixmap() const{
   return *amplitudePixmap;
 }
@@ -114,7 +112,6 @@ QPixmap Partials::getAmplitudePixmap() const{
 //	getFrequencyPixmap
 // ---------------------------------------------------------------------------
 // Returns the frequency envelope plotted against time in form of a pixmap
-
 QPixmap Partials::getFrequencyPixmap() const{
   return *frequencyPixmap;
 }
@@ -123,7 +120,6 @@ QPixmap Partials::getFrequencyPixmap() const{
 //	getNoisePixmap
 // ---------------------------------------------------------------------------
 // Returns the noise envelope plotted against time in form of a pixmap
-
 QPixmap Partials::getNoisePixmap() const{
   return *noisePixmap;
 }
@@ -132,7 +128,6 @@ QPixmap Partials::getNoisePixmap() const{
 //	getNoisePixmap
 // ---------------------------------------------------------------------------
 // Returns a list of Loris::Partial, the actual result of a sound analysis
-
 list<Loris::Partial>* Partials::getPartials() const{
   return partialList;
 }
@@ -141,7 +136,6 @@ list<Loris::Partial>* Partials::getPartials() const{
 //	getState
 // ---------------------------------------------------------------------------
 // State can be amplitude, frequency, and noise
-
 Partials::State Partials::getState() const{
   return state;
 }
@@ -150,7 +144,6 @@ Partials::State Partials::getState() const{
 //	getDuration
 // ---------------------------------------------------------------------------
 // Returns the time in seconds of the longest partial in the list
-
 double Partials::getDuration() const{
   return maxTime;
 }
@@ -159,7 +152,6 @@ double Partials::getDuration() const{
 //	getMaxAmplitude
 // ---------------------------------------------------------------------------
 // Returns the maximum amplitude of partials in the list
-
 double Partials::getMaxAmplitude() const{
   return maxAmplitude;
 }
@@ -168,7 +160,6 @@ double Partials::getMaxAmplitude() const{
 //	getMaxFrequency
 // ---------------------------------------------------------------------------
 // Returns the maximum frequency of partials in the list
-
 double Partials::getMaxFrequency() const{
   return maxFrequency;
 }
@@ -177,7 +168,6 @@ double Partials::getMaxFrequency() const{
 //	getMaxNoise
 // ---------------------------------------------------------------------------
 // Returns the maximum noise of partials in the list
-
 double Partials::getMaxNoise() const{
   return maxNoise;
 }
@@ -186,7 +176,6 @@ double Partials::getMaxNoise() const{
 //      isChannelized
 // ---------------------------------------------------------------------------
 // Returns true if partials are channelized
-
 bool Partials::isChannelized() const{
   return channelized;
 }
@@ -195,7 +184,6 @@ bool Partials::isChannelized() const{
 //      isDistilled
 // ---------------------------------------------------------------------------
 // Returns true if partials are distilled
-
 bool Partials::isDistilled() const{
   return distilled;
 }
@@ -208,7 +196,6 @@ bool Partials::isDistilled() const{
 // another way.  Ideally, partials should be synthsized everytime an
 // modification action is performed (for example channelize, distill)
 // and the result saved. Audition of the result would then be much quicker.
-
 void Partials::play(){
   try{
     // do a synthesise instead and save the result in a temporary file 
@@ -231,7 +218,6 @@ void Partials::play(){
 //      rename
 // ---------------------------------------------------------------------------
 // Change the name
-
 void Partials::rename(QString newName){
   name = newName;
 }
@@ -241,11 +227,13 @@ void Partials::rename(QString newName){
 //      shiftAmplitude
 // ---------------------------------------------------------------------------
 // scales partials amplitude with the given argument value 
-
 void Partials::shiftAmplitude(double val){
+  list<Partial>::iterator it;
+  Partial_Iterator pIt;
+
   try{
-    for(list<Partial>::iterator it = partialList->begin(); it != partialList->end(); it++){
-      for(Partial_Iterator pIt = it->begin(); pIt!=it->end(); pIt++){
+    for(it = partialList->begin(); it != partialList->end(); it++){
+      for(pIt = it->begin(); pIt!=it->end(); pIt++){
 	pIt->setAmplitude(pIt->amplitude() * val);
       }
     }
@@ -265,11 +253,13 @@ void Partials::shiftAmplitude(double val){
 //      shiftNoise
 // ---------------------------------------------------------------------------
 // scales partials noise with the given argument value 
-
 void Partials::shiftNoise(double val){
+  list<Partial>::iterator it;
+  Partial_Iterator pIt;
+
   try{
-    for(list<Partial>::iterator it = partialList->begin(); it != partialList->end(); it++){
-      for(Partial_Iterator pIt = it->begin(); pIt!=it->end(); pIt++){
+    for(it = partialList->begin(); it != partialList->end(); it++){
+      for(pIt = it->begin(); pIt!=it->end(); pIt++){
 	pIt->setBandwidth(pIt->bandwidth() * val);
       }
     }
@@ -289,14 +279,16 @@ void Partials::shiftNoise(double val){
 //      shiftFrequency (shift pitch)
 // ---------------------------------------------------------------------------
 // scales partials frequency with the given argument value 
-
 void Partials::shiftFrequency(double cents){
+  list<Partial>::iterator it;
+  Partial_Iterator pIt;
+
   double pscale = pow(2., (0.01* cents) / 12.);   
   
-  cout<<"Partials::shiftFrequency: shift frequency with scale of: "<<pscale<<endl;
+  //cout<<"Partials::shiftFrequency: shift frequency with scale of: "<<pscale<<endl;
   try{
-    for(list<Partial>::iterator it = partialList->begin(); it != partialList->end(); ++it){
-      for(Partial_Iterator pIt = it->begin(); pIt!=it->end(); ++pIt){
+    for(it = partialList->begin(); it != partialList->end(); ++it){
+      for(pIt = it->begin(); pIt!=it->end(); ++pIt){
 	pIt->setFrequency(pIt->frequency() * pscale);
       }
     }
@@ -319,10 +311,18 @@ void Partials::shiftFrequency(double cents){
 // Channelize Loris::Partials by communicating with lorisInterface.
 // After channelization, max values have to be recalculated and the plots
 // need to be updated
-
-void Partials::channelize(int refLabel, double minFreq, double maxFreq){
+void Partials::channelize(
+	int	refLabel,
+	double	minFreq,
+	double	maxFreq
+){
   try{
-    interface -> channelize(refLabel, minFreq, maxFreq, *partialList);
+    interface -> channelize(
+	refLabel,
+	minFreq,
+	maxFreq,
+	*partialList
+    );
     channelized = true;
     setValues();
     updatePixmap();
@@ -338,7 +338,6 @@ void Partials::channelize(int refLabel, double minFreq, double maxFreq){
 // Distill Loris::Partials by communicating with lorisInterface.
 // After distillation, max values have to be recalculated and the plots
 // need to be updated
-
 void Partials::distill(){
   try{
     interface -> distill(*partialList);
@@ -355,10 +354,19 @@ void Partials::distill(){
 //      exportToAiff
 // ---------------------------------------------------------------------------
 // Export Loris::Partials to aiff file format by communicating with lorisInterface
-
-void Partials::exportToAiff(double sampleRate, int sampleBits, const char* name){
+void Partials::exportToAiff(
+	double	sampleRate,
+	int	sampleBits,
+	const	char* name
+){
   try{
-    interface->exportAiff(sampleRate, sampleBits, name, *partialList, maxTime);
+    interface->exportAiff(
+	sampleRate,
+	sampleBits,
+	name,
+	*partialList,
+	maxTime
+    );
   }
   catch(...){
     throw;
@@ -369,7 +377,6 @@ void Partials::exportToAiff(double sampleRate, int sampleBits, const char* name)
 //      exportToSdif
 // ---------------------------------------------------------------------------
 // Export Loris::Partials to sdif file format by communicating with lorisInterface
-
 void Partials::exportToSdif(const char* name){
   try{
     interface->exportSdif(name, *partialList);
@@ -388,9 +395,10 @@ void Partials::exportToSdif(const char* name){
 // longest partial and number of partials are recalculated. This is done when the
 // Loris::Partials changes and not when they are requested to avoid unneccessary 
 // delays in the GUI.
-//
-
 void Partials::setValues(){
+  list<Partial>::iterator it;
+  Partial_Iterator pIt;
+
   double amplitude;
   double frequency;
   double noise;
@@ -403,12 +411,12 @@ void Partials::setValues(){
   
   try{
     // loop through all partials in the list
-    for(list<Partial>::const_iterator it = partialList->begin(); it != partialList->end(); it++){
+    for(it = partialList->begin(); it != partialList->end(); it++){
       nrOfPartials ++;
       maxTime = std::max(maxTime, it->endTime());
       
       // loop through all breakpoints in a partial
-      for(Partial_ConstIterator pIt = it->begin(); pIt != it->end(); pIt++){
+      for(pIt = it->begin(); pIt != it->end(); pIt++){
 	amplitude = pIt->amplitude();
 	frequency = pIt->frequency();
 	noise     = pIt->bandwidth();
@@ -428,7 +436,7 @@ void Partials::setValues(){
     }
   }
   catch(...){
-    cout<<"Partials::setValues(): caught any exception, does not throw it again...is that stupid???"<<endl;
+    throw;
   }
 }
 
@@ -437,40 +445,21 @@ void Partials::setValues(){
 // ---------------------------------------------------------------------------
 // Maybe the delete operations are unneccessary but it solves the problem. 
 // updatePixmap is called whenever a modification has occured in the partials
-// which will change the plots. This is done when the Loris::Partials changes 
+// which will change the plots. This is done when Loris::Partials changes 
 // and not when they are requested to avoid unneccessary delays in the GUI.
-//
-
 void Partials::updatePixmap(){
- 
   if(amplitudePixmap){
     delete amplitudePixmap;
-    amplitudePixmap = new AmplitudePixmap(getPartials(), maxTime, maxAmplitude);
+    amplitudePixmap = new AmplitudePixmap(partialList, maxTime, maxAmplitude);
   }
   
   if(frequencyPixmap){
     delete frequencyPixmap;
-    frequencyPixmap = new FrequencyPixmap(getPartials(), maxTime, maxFrequency);
+    frequencyPixmap = new FrequencyPixmap(partialList, maxTime, maxFrequency);
   }
   
   if(noisePixmap){
     delete noisePixmap;
-    noisePixmap = new NoisePixmap(getPartials(), maxTime, maxNoise);
+    noisePixmap = new NoisePixmap(partialList, maxTime, maxNoise);
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

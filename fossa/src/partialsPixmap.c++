@@ -43,31 +43,44 @@ using std::list;
 //      PartialsPixmap constructor
 // ---------------------------------------------------------------------------
 // Takes a list of partials to be plotted over time, and the maximum x and y value
+PartialsPixmap::PartialsPixmap(
+	list<Loris::Partial>*	p,
+	double			x,
+	double			y
+):QPixmap(800,450){
+  maxTime	= x;
+  maxY		= y;
+  partialList	= p;
+  text		= "";
 
-PartialsPixmap::PartialsPixmap(list<Loris::Partial>* p, double x, double y):QPixmap(800,450){
-  maxTime  = x;
-  maxY     = y;
-  partialList = p;
-  text = "";
-
-  leftMargin   = 40;
-  rightMargin  = 30;
-  topMargin    = 30;
-  bottomMargin = 20;
+  leftMargin	= 40;
+  rightMargin	= 30;
+  topMargin	= 30;
+  bottomMargin	= 20;
   fill(QColor("white"));
 }
 
 // ---------------------------------------------------------------------------
 //      addAxis
 // ---------------------------------------------------------------------------
-// adds axis to the area, given start x and y positions, the length and width of the axis, 
-// number of tickmarks, minimum and maximum value, and if the axis should be horisontal
-// or vertical.
+// adds axis to the area, given start x and y positions, the length and width 
+// of the axis, number of tickmarks, minimum and maximum value, and if the axis 
+// should be horizontal or vertical.
+void PartialsPixmap::addAxis(
+	double	startX, 
+	double	startY, 
+	QString	label, 
+	double	length, 
+	int	width, 
+	double	ticks, 
+	double	minVal, 
+	double	maxVal, 
+	bool	vertical){
+  //Rounds up to the next largest power of 10.
+  maxVal = adjustValue(maxVal);
 
-void PartialsPixmap::addAxis(double startX, double startY, QString label, double length, int width, double ticks, double minVal, double maxVal, bool vertical){
-  
-  maxVal = adjustValue(maxVal);  // rounds up the maximum value  0.006 -> 0.01
-  double stepValue  = (maxVal - minVal)/ticks; // the actual value between two consecutive
+  // the actual value between two consecutive
+  double stepValue  = (maxVal - minVal)/ticks;
   double stepLength = length/ticks;            // tickmarks
   double textX      = 0;       // start position of text
   double numberX    = 0;       // start position of axis numbers 
@@ -79,32 +92,46 @@ void PartialsPixmap::addAxis(double startX, double startY, QString label, double
 
   if(vertical){ 
     textX   = startX - 20;
-    numberX = startX - 30;
+    numberX = startX - 40;
       
+    //Print the axis line and label.
+    painter.drawLine(startX, startY, startX, startY - length); 
     painter.setFont(f);
     painter.setPen(Qt::black);
-    painter.drawLine(startX, startY, startX, startY - length); 
     painter.drawText(textX - label.length(), startY - length - 20, label);
     
+    //Print the numerical values
     number = minVal;
     thicker = 0;
-   
-    for(double y = startY; y > startY - length - stepLength; y = y - stepLength){
+    for(
+	double y = startY;
+	y > startY - length - stepLength;
+	y -= stepLength
+    ){
       painter.drawLine(startX-2, y, startX+2, y); 
       
-      if(thicker%10==0){
+      if(thicker%10 == 0){
 	painter.drawLine(startX - 5, y, startX + 2, y); 
-	painter.drawText(numberX, y + stepLength, QString("%1 ").arg(number));
+        if( number < 10 ){
+          painter.drawText(
+		numberX,
+		y + stepLength,
+		QString("%1").arg(number, 5, 'f', 3)
+          );
+        } else {
+          painter.drawText(
+		numberX,
+		y + stepLength,
+		QString("%1").arg(number, 5, 'g', 5)
+          );
+        }
       }
       number = number + stepValue;
       thicker++;
     }
 
     verticalIndex = stepValue/stepLength;
-  }
- 
-  else{  // horisontal
-    
+  }else{  // horizontal
     painter.drawLine(startX, startY, startX + length, startY);
     painter.drawText(startX + length, startY + 20, label);
     
@@ -128,33 +155,31 @@ void PartialsPixmap::addAxis(double startX, double startY, QString label, double
 //      adjustValue
 // ---------------------------------------------------------------------------
 // Rounds up the given value. Example 0.006 would become 0.01.
-// This is used to know what the maximum value should be on the axis.
-
+// This is used in determining the maximum value on the axis.
 double PartialsPixmap::adjustValue(double value){
   double i      = 1;
   double result = 0;
   
   if(value != 0){
-    
     if(value >= 1){           // else 0.006 would become 1   
       result = ceil(value);         
     }
     
     else{
-      for(value; value < 1; value = value * 10){ // i for 0.006 = 100
+      for(; value < 1; value = value * 10){ // i for 0.006 = 100
 	i = i * 10;                              
       }
       result = ceil(value)/i;  // 1/100 = 0.01                      
     } 
-    return result;
   }
+
+  return result;
 }
 
 // ---------------------------------------------------------------------------
 //      toX
 // ---------------------------------------------------------------------------
 // Translates an actual time value into the corresponding value on the pixmap.  
-
 double PartialsPixmap::toX(double time){
   return ((time / horizontalIndex)  + leftMargin);
 }
@@ -163,9 +188,8 @@ double PartialsPixmap::toX(double time){
 //      toY
 // ---------------------------------------------------------------------------
 // Translates an actual y value into the corresponding value on the pixmap.  
-
 double PartialsPixmap::toY(double value){
-  return-((value / verticalIndex) - height() + bottomMargin);
+  return -((value / verticalIndex) - height() + bottomMargin);
 }
 
 // ---------------------------------------------------------------------------
@@ -183,15 +207,37 @@ bool PartialsPixmap::inArea(int x, int y){
 //      AmplitudePixmap constructor
 // ---------------------------------------------------------------------------
 
-AmplitudePixmap::AmplitudePixmap(list<Loris::Partial>* p, double x, double y):PartialsPixmap(p, x, y){
+AmplitudePixmap::AmplitudePixmap(
+	list<Loris::Partial>*	p,
+	double			x,
+	double			y
+):PartialsPixmap(p, x, y){
   PartialsPixmap::text = "amplitude";
+
    // y axis
-  addAxis(leftMargin, height() - bottomMargin, text, 
-	  height()-bottomMargin-topMargin, 30, 100,  0, maxY, true); 
+  addAxis(
+	leftMargin,
+	height() - bottomMargin,
+	text,
+	height()-bottomMargin-topMargin,
+	30,
+	100,
+	0,
+	maxY,
+	true
+  ); 
   
   //x axis
-  addAxis(leftMargin, height() - bottomMargin, "time", 
-	  width()-rightMargin-leftMargin, 30, 100,  0, maxTime, false);
+  addAxis(
+	leftMargin,
+	height() - bottomMargin,
+	"time",
+	width()-rightMargin-leftMargin,
+	30,
+	100,
+	0,
+	maxTime,
+	false);
   
   plotPartials();
 }
@@ -202,7 +248,9 @@ AmplitudePixmap::AmplitudePixmap(list<Loris::Partial>* p, double x, double y):Pa
 // have to be implemented when class is subclassing PartialsPixmap.
 
 void AmplitudePixmap::plotPartials(){ 
-  
+  list<Loris::Partial>::const_iterator it;
+  Partial_ConstIterator pIt;
+
   double x;
   double y;
   double lastX;
@@ -211,14 +259,16 @@ void AmplitudePixmap::plotPartials(){
   painter.setPen(Qt::black);
   
   // loop through all partials in the list 
-  for(list<Loris::Partial>::const_iterator it = partialList->begin(); it != partialList->end(); it++){
-    Partial_ConstIterator pIt = it->begin();  // no line should be added to the
-    x = toX(pIt.time());                     // first breakpoint in a partial
+  for( it = partialList->begin(); it != partialList->end(); it++){
+    // no line should be added to the first breakpoint in a partial
+    pIt = it->begin();
+    x = toX(pIt.time());
     y = toY(pIt->amplitude());
-    lastX = x;                   // to know where to connect the line.
+    lastX = x;
     lastY = y;
     
-    painter.drawRect (x-1, y-1, 2, 2);  // the rect is painted around x and y values.
+    // the rect is painted around x and y values.
+    painter.drawRect (x-1, y-1, 2, 2);
       
     pIt++;
   
@@ -229,8 +279,10 @@ void AmplitudePixmap::plotPartials(){
       y = toY(pIt->amplitude());
       painter.setPen(Qt::black);
       painter.drawRect (x-1, y-1, 2, 2); 
-      painter.setPen(Qt::red);                      
-      painter.drawLine (lastX-1, lastY-1, x-1, y-1); // draw a read line connecting breakpoints
+      painter.setPen(Qt::blue);                      
+
+      // draw a read line connecting breakpoints
+      painter.drawLine (lastX-1, lastY-1, x-1, y-1); 
       lastX = x; 
       lastY = y;
     } 
@@ -241,16 +293,38 @@ void AmplitudePixmap::plotPartials(){
 //      FrequencyPixmap constructor
 // ---------------------------------------------------------------------------
 
-FrequencyPixmap::FrequencyPixmap(list<Loris::Partial>* p, double x, double y):PartialsPixmap(p, x, y){
+FrequencyPixmap::FrequencyPixmap(
+	list<Loris::Partial>*	p,
+	double			x,
+	double			y
+):PartialsPixmap(p, x, y){
   PartialsPixmap::text = "frequency";
   
   //y axis
-  addAxis(leftMargin, height() - bottomMargin, text, 
-	  height()-bottomMargin-topMargin, 30, 100,  0, maxY, true); 
+  addAxis(
+	leftMargin,
+	height() - bottomMargin,
+	text,
+	height()-bottomMargin-topMargin,
+	30,
+	100,
+	0,
+	maxY,
+	true
+  ); 
   
   //x axis
-  addAxis(leftMargin, height() - bottomMargin, "time", 
-	  width()-rightMargin-leftMargin, 30, 100,  0, maxTime, false);
+  addAxis(
+	leftMargin,
+	height() - bottomMargin,
+	"time",
+	width()-rightMargin-leftMargin,
+	30,
+	100,
+	0,
+	maxTime,
+	false
+  );
  
   plotPartials();
 }
@@ -261,6 +335,8 @@ FrequencyPixmap::FrequencyPixmap(list<Loris::Partial>* p, double x, double y):Pa
 // have to be implemented when class is subclassing PartialsPixmap.
 
 void FrequencyPixmap::plotPartials(){ 
+  list<Loris::Partial>::const_iterator it;
+  Partial_ConstIterator pIt;
  
   QPainter painter(this);
   double x;
@@ -271,14 +347,13 @@ void FrequencyPixmap::plotPartials(){
   painter.setPen(pen);
 
   // loop through all partials in the list and plot them connected with a line
-  for(list<Partial>::const_iterator it = partialList->begin(); it != partialList->end(); it++){
-    
-    Partial_ConstIterator pIt = it->begin();  // no line should be added to the
-    x = toX(pIt.time());                     // first breakpoint in a partial
+  for(it = partialList->begin(); it != partialList->end(); it++){
+    pIt = it->begin();
+    x = toX(pIt.time());
     y = toY(pIt->frequency());
-    lastX = x; 
+    lastX = x;
     lastY = y;
-    painter.drawRect (x-1, y-1, 2, 2); 
+    painter.drawRect (x-1, y-1, 2, 2);
     
     pIt++;
     
@@ -290,7 +365,9 @@ void FrequencyPixmap::plotPartials(){
       painter.setPen(Qt::black);
       painter.drawRect (x-1, y-1, 2, 2); 
       painter.setPen(Qt::red);
-      painter.drawLine (lastX-1, lastY-1, x-1, y-1); // draw a read line connecting breakpoints
+
+      // draw a read line connecting breakpoints
+      painter.drawLine (lastX-1, lastY-1, x-1, y-1); 
       
       lastX = x; 
       lastY = y;
@@ -302,16 +379,39 @@ void FrequencyPixmap::plotPartials(){
 //      NoisePixmap constructor
 // ---------------------------------------------------------------------------
 
-NoisePixmap::NoisePixmap(list<Loris::Partial>* p, double x, double y):PartialsPixmap(p, x, y){
+NoisePixmap::NoisePixmap(
+	list<Loris::Partial>*	p,
+	double			x,
+	double			y
+):PartialsPixmap(p, x, y){
   PartialsPixmap::text = "noise";
   
   //y axis 
-  addAxis(leftMargin, height() - bottomMargin, text, 
-	  height()-bottomMargin-topMargin, 30, 100,  0, maxY, true); 
+  addAxis(
+	leftMargin,
+	height() - bottomMargin,
+	text,
+	height()-bottomMargin-topMargin,
+	30,
+	100,
+	0,
+	maxY,
+	true
+  ); 
   
   //x axis
-  addAxis(leftMargin, height() - bottomMargin, "time", 
-	  width()-rightMargin-leftMargin, 30, 100,  0, maxTime, false);
+  addAxis(
+	leftMargin,
+	height() - bottomMargin,
+	"time",
+	width()-rightMargin-leftMargin,
+	30,
+	100,
+	0,
+	maxTime,
+	false
+  );
+
   plotPartials();
 }
 
@@ -321,21 +421,24 @@ NoisePixmap::NoisePixmap(list<Loris::Partial>* p, double x, double y):PartialsPi
 // have to be implemented when class is subclassing PartialsPixmap.
 
 void NoisePixmap::plotPartials(){ 
+  list<Loris::Partial>::const_iterator it;
+  Partial_ConstIterator pIt;
+ 
   QPainter painter(this);
   double x;
   double y;
   double lastX;
   double lastY;
-  painter.setPen(QColor("black"));
+  painter.setPen(Qt::black);
 
   // loop through all partials in the list and plot them connected with a line
-  for(list<Partial>::const_iterator it = partialList->begin(); it != partialList->end(); it++){
-    Partial_ConstIterator pIt = it->begin();
+  for(it = partialList->begin(); it != partialList->end(); it++){
+    pIt = it->begin();
     x = toX(pIt.time());
     y = toY(pIt->bandwidth());
     lastX = x; 
     lastY = y;
-    painter.drawRect (x+1, y+1, 2, 2); 
+    painter.drawRect (x-1, y-1, 2, 2); 
     
     pIt++;
     
@@ -347,8 +450,10 @@ void NoisePixmap::plotPartials(){
       
       painter.setPen(Qt::black);
       painter.drawRect (x-1, y-1, 2, 2); 
+
+      // draw a read line connecting breakpoints
       painter.setPen(Qt::red);
-      painter.drawLine (lastX-1, lastY-1, x-1, y-1); // draw a read line connecting breakpoints
+      painter.drawLine (lastX-1, lastY-1, x-1, y-1); 
       
       lastX = x; 
       lastY = y;
@@ -361,7 +466,11 @@ void NoisePixmap::plotPartials(){
 // ---------------------------------------------------------------------------
 // Class used when PartialsList is empty.
 
-EmptyPixmap::EmptyPixmap(list<Loris::Partial>* p, double x, double y):PartialsPixmap(p, x, y){
+EmptyPixmap::EmptyPixmap(
+	list<Loris::Partial>*	p,
+	double			x,
+	double			y
+):PartialsPixmap(p, x, y){
   PartialsPixmap::text = "";
   plotPartials();
 }
@@ -377,18 +486,3 @@ void EmptyPixmap::plotPartials(){
   QPen pen(QColor("black"));
   painter.setPen(pen);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

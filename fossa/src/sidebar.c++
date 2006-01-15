@@ -48,7 +48,11 @@
 //	Sidebar constructor
 // ---------------------------------------------------------------------------
 
-Sidebar::Sidebar(QWidget* parent, const char* name, PartialsList* pList):QFrame(parent, name){
+Sidebar::Sidebar(
+	QWidget*	parent, 
+	const char*	name, 
+	PartialsList*	pList
+	):QFrame(parent, name){
  
   partialsList = pList;
     
@@ -106,7 +110,13 @@ void Sidebar::setGui(){
   sidebarLayout->setMargin(11);
 
   playerGroup = new QGroupBox(this,"playerGroup");
-  playerGroup->setSizePolicy(QSizePolicy((QSizePolicy::SizeType)7,(QSizePolicy::SizeType)1,playerGroup->sizePolicy().hasHeightForWidth()));
+  playerGroup->setSizePolicy(
+	QSizePolicy(
+		(QSizePolicy::SizeType)7,
+		(QSizePolicy::SizeType)1,
+		playerGroup->sizePolicy().hasHeightForWidth()
+	)
+  );
   
   QFont playerGroup_font(playerGroup->font());
   playerGroup_font.setFamily( "helvetica" );
@@ -130,7 +140,13 @@ void Sidebar::setGui(){
   sidebarLayout->addWidget(playerGroup);
   
   partialsListGroup = new QGroupBox(this, "partialsListGroup");
-  partialsListGroup->setSizePolicy(QSizePolicy((QSizePolicy::SizeType)7,(QSizePolicy::SizeType)7, partialsListGroup->sizePolicy().hasHeightForWidth()));
+  partialsListGroup->setSizePolicy(
+	QSizePolicy(
+		(QSizePolicy::SizeType)7,
+		(QSizePolicy::SizeType)7, 
+		partialsListGroup->sizePolicy().hasHeightForWidth()
+	)
+  );
   QFont partialsListGroup_font(partialsListGroup->font() );
   partialsListGroup_font.setFamily( "helvetica" );
   partialsListGroup_font.setPointSize( 12 );
@@ -148,127 +164,3 @@ void Sidebar::setGui(){
   partialsListGroupLayout->addWidget(partialsListView);
   sidebarLayout->addWidget(partialsListGroup);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

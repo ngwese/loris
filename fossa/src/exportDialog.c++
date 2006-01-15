@@ -19,21 +19,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *
- * importDialog.c++ 
+ * exportDialog.c++ 
  *
- *
- * The ImportAiff class provides the user with a dialog for importing aiff file formats
- * into a collection of partials. When importing an aiff file, the file samples
- * gets analyzed according to user specified parameters. Inherits ImportDialog.
- *
- * ImportSdif differs from the ImportAiff class only in the lack of user specified
- * parameters.  Sdif files need not to be analysed since they already are a
- * collection of partials. Inherits ImportDialog.
- *
- * The AnalyzeAiffWidget consists of 2 sliders and 2 spinboxes for specifying 
- * analysis parameters and are used in the importAiffDialog.  
- *
- * Susanne Lefvert, 1 March 2002
  *
  *
  */
@@ -58,7 +45,10 @@
 // parameters, samplerate, and numer of sample bits, when exporting to 
 // an aiff file. 
 
-ExportAiffWidget::ExportAiffWidget(QWidget* parent, char* name):QWidget(parent,name){
+ExportAiffWidget::ExportAiffWidget(
+	QWidget*	parent,
+	char*		name
+):QWidget(parent,name){
   setGui();
 }
 
@@ -85,6 +75,12 @@ int ExportAiffWidget::getNbOfBits(){
 // Sets all GUI elements for the widget.
 
 void ExportAiffWidget::setGui(){
+  QSpacerItem* spacer_13;
+  QSpacerItem* spacer_14;
+  QSpacerItem* spacer_15;
+  QSpacerItem* spacer_16;
+  QSpacerItem* spacer_17;
+
   thisLayout = new QGridLayout(this ); 
  
   setMinimumSize(400,120);
@@ -96,7 +92,13 @@ void ExportAiffWidget::setGui(){
   audioParamBox->setTitle( tr( "Set audio playback parameters" ) );
   audioParamBox->setColumnLayout(0, Qt::Vertical );
   audioParamBox->setGeometry( QRect( 11, 11, 800, 588 ) ); 
-  audioParamBox->setSizePolicy( QSizePolicy( (QSizePolicy::SizeType)7, (QSizePolicy::SizeType)7, audioParamBox->sizePolicy().hasHeightForWidth() ) );
+  audioParamBox->setSizePolicy(
+	QSizePolicy(
+		(QSizePolicy::SizeType)7,
+		(QSizePolicy::SizeType)7,
+		audioParamBox->sizePolicy().hasHeightForWidth()
+	)
+  );
   audioParamBoxLayout = new QGridLayout( audioParamBox->layout() );
   audioParamBoxLayout->setAlignment( Qt::AlignTop );
  
@@ -125,15 +127,15 @@ void ExportAiffWidget::setGui(){
   audioParamBoxLayout->addWidget( nbOfChanLabel, 1, 2 );
   */
 
-  QSpacerItem* spacer_13 = new QSpacerItem( 20, 20, QSizePolicy::Minimum, QSizePolicy::Expanding );
+  spacer_13 = new QSpacerItem( 20, 20, QSizePolicy::Minimum, QSizePolicy::Expanding );
   audioParamBoxLayout->addItem( spacer_13, 2, 2 );
-  QSpacerItem* spacer_14 = new QSpacerItem( 20, 20, QSizePolicy::Minimum, QSizePolicy::Expanding );
+  spacer_14 = new QSpacerItem( 20, 20, QSizePolicy::Minimum, QSizePolicy::Expanding );
   audioParamBoxLayout->addItem( spacer_14, 4, 2 );
-  QSpacerItem* spacer_15 = new QSpacerItem( 20, 20, QSizePolicy::Minimum, QSizePolicy::Expanding );
+  spacer_15 = new QSpacerItem( 20, 20, QSizePolicy::Minimum, QSizePolicy::Expanding );
   audioParamBoxLayout->addItem( spacer_15, 6, 2 );
-  QSpacerItem* spacer_16 = new QSpacerItem( 20, 20, QSizePolicy::Minimum, QSizePolicy::Expanding );
+  spacer_16 = new QSpacerItem( 20, 20, QSizePolicy::Minimum, QSizePolicy::Expanding );
   audioParamBoxLayout->addItem( spacer_16, 0, 2 );
-  QSpacerItem* spacer_17 = new QSpacerItem( 20, 20, QSizePolicy::Fixed, QSizePolicy::Minimum );
+  spacer_17 = new QSpacerItem( 20, 20, QSizePolicy::Fixed, QSizePolicy::Minimum );
   audioParamBoxLayout->addItem( spacer_17, 3, 0 );
  
   nbOfBitsSpinBox = new QSpinBox( audioParamBox, "nbOfBitsSpinBox" );
@@ -147,7 +149,7 @@ void ExportAiffWidget::setGui(){
 
   sampleRateSpinBox = new QSpinBox( audioParamBox, "sampleRateSpinBox" );
   sampleRateSpinBox->setMaximumSize( QSize( 80, 20 ) );
-   sampleRateSpinBox->setMaxValue(100000);
+  sampleRateSpinBox->setMaxValue(100000);
   sampleRateSpinBox->setMinValue(44100);
   sampleRateSpinBox->setLineStep(100);
 
@@ -163,7 +165,12 @@ void ExportAiffWidget::setGui(){
 // ExportSdifDialog. (Might be unnecessary). The dialog is modal, the user have
 // to finish the operation before selecting another window.
 
-ExportDialog::ExportDialog(QWidget* parent, char* name, PartialsList* partialsList, QStatusBar* status):QFileDialog(parent, name, TRUE){
+ExportDialog::ExportDialog(
+	QWidget*	parent,
+	char*		name,
+	PartialsList*	partialsList,
+	QStatusBar*	status
+):QFileDialog(parent, name, TRUE){
   statusbar = status;
   QStringList filter;
   setFilters(filter);
@@ -179,43 +186,45 @@ ExportDialog::ExportDialog(QWidget* parent, char* name, PartialsList* partialsLi
 // and name of the file is set and the method returns true. 
 
 bool ExportDialog::startDialog(QString fileType){
-  
   if(exec() == QDialog::Accepted){
     QString dir  = dirPath();
     path         = selectedFile();
     ending       = path;
-    
+
     ending.remove(0, ending.length()-5);
-   
+
     if(ending != fileType){
       path.append(fileType);
     }
-    
+
     return true;
   }
   else
     return false;
 }
-  
+
 // ---------------------------------------------------------------------------
 //	ExportAiffDialog
 // ---------------------------------------------------------------------------
 // Inherits ExportDialog and provides the user with a dialog for exporting
 // partials to an aiff file. 
 
-ExportAiffDialog::ExportAiffDialog(QWidget* parent, char* name, PartialsList* partialsList, QStatusBar* status)
-  :ExportDialog(parent, name, partialsList, status){
-  
+ExportAiffDialog::ExportAiffDialog(
+	QWidget*	parent,
+	char*		name,
+	PartialsList*	partialsList,
+	QStatusBar*	status
+):ExportDialog(parent, name, partialsList, status){
   ExportAiffWidget* exportAiffWidget = new ExportAiffWidget(this,"ok");
-  
+
   addWidgets(0, exportAiffWidget, 0);
   resize(400,300);
   addFilter("Audio file (*.aiff)");
-  
+
   if(startDialog(".aiff")){ 
     double sampleRate = exportAiffWidget->getSampleRate();
     int bitsPerSamp   = exportAiffWidget->getNbOfBits();
-    
+
     try{
       partialsList->exportAiff(sampleRate, bitsPerSamp, path);
       statusbar->message("Export partials to "+path+", successfully.");
@@ -232,9 +241,12 @@ ExportAiffDialog::ExportAiffDialog(QWidget* parent, char* name, PartialsList* pa
 // Inherits ExportDialog and provides the user with a dialog for exporting
 // partials to a sdif file. 
 
-ExportSdifDialog::ExportSdifDialog(QWidget* parent, char* name, PartialsList* partialsList, QStatusBar* status)
-  :ExportDialog(parent, name, partialsList, status){
-  
+ExportSdifDialog::ExportSdifDialog(
+	QWidget*	parent,
+	char*		name,
+	PartialsList*	partialsList,
+	QStatusBar*	status
+):ExportDialog(parent, name, partialsList, status){
   addFilter("Partials file (*.sdif)");
  
   if(startDialog(".sdif")){ 

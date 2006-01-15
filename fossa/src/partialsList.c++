@@ -48,7 +48,6 @@ using std::cout;
 // ---------------------------------------------------------------------------
 //	PartialsList constructor
 // ---------------------------------------------------------------------------
-
 PartialsList::PartialsList(){
   partialsList.setAutoDelete(TRUE);  // QList will delete objects automatically
   morph1    = -1;
@@ -60,7 +59,6 @@ PartialsList::PartialsList(){
 // ---------------------------------------------------------------------------
 //	PartialsList destructor
 // ---------------------------------------------------------------------------
-
 PartialsList::~PartialsList(){
   delete interface;
 }
@@ -68,7 +66,6 @@ PartialsList::~PartialsList(){
 // ---------------------------------------------------------------------------
 //	getPartials
 // ---------------------------------------------------------------------------
-
 const Partials* PartialsList::getPartials(int pos){
   return partialsList.at(pos);
 }
@@ -81,17 +78,20 @@ const Partials* PartialsList::getPartials(int pos){
 // Consider combining importAiff and importSdif since they are so similar.  
 // By providing resolution and width with default parameters a check of 
 // parameters can be made in order to figure out what format to import.
-// 
-void PartialsList::importAiff(QString path, QString name, double resolution, double width){
- 
+void PartialsList::importAiff(
+	QString		path,
+	QString		name,
+	double		resolution,
+	double		width
+){
   try{
-    name.remove(name.length()-5, name.length());  // take away ending, what if no ending????
+    //take away ending, what if no ending????
+    name.remove(name.length()-5, name.length());
     list<Loris::Partial>* p = interface->importAiff(path, resolution, width); 
     Partials* newPartials = new Partials(*p, name, interface); 
-    partialsList.append(newPartials);           // insert result in list
+    partialsList.append(newPartials);
     
     Partials::State state; 
-  
     state   = getCurrentState();
     current = partialsList.count()-1;  
     setCurrentState(state);   // we want to start at same state as last current
@@ -104,20 +104,22 @@ void PartialsList::importAiff(QString path, QString name, double resolution, dou
 }
 
 // ---------------------------------------------------------------------------
-//      importAiffSdif
+//      importSdif
 // ---------------------------------------------------------------------------
 // Communicates with lorisInterface in order to import a partials file.
 // Consider combining importAiff and importSdif since they are so similar. 
-// By providing resolution and width with  default parameters a check 
+// By providing resolution and width with default parameters a check 
 // of parameters can be made in order to figure out what format to import.
-
-void PartialsList::importSdif(QString path, QString name){
- 
+void PartialsList::importSdif(
+	QString		path,
+	QString		name
+){
   try{
-    name.remove(name.length()-5, name.length()); // take away ending, what if no ending????
+    // take away ending, what if no ending????
+    name.remove(name.length()-5, name.length());
     list<Loris::Partial>* p = interface->importSdif(path);
     Partials* newPartials = new Partials(*p, name, interface);
-    partialsList.append(newPartials);           // insert result in list
+    partialsList.append(newPartials);
     
     Partials::State state; 
     state   = getCurrentState();
@@ -136,23 +138,37 @@ void PartialsList::importSdif(QString path, QString name){
 // ---------------------------------------------------------------------------
 // Morph 2 partials from the list with given breakpointsenvelopes for 
 // amplitude, frequency, and noise.
-
-void PartialsList::morph(BreakpointEnvelope& famp, BreakpointEnvelope& ffreq, BreakpointEnvelope& fbw){
- 
+void PartialsList::morph(
+	LinerEnvelope&		famp,
+	LinerEnvelope&		ffreq,
+	LinerEnvelope&		fbw
+){
   list<Loris::Partial> list1 = *partialsList.at(morph1)->getPartials();
   list<Loris::Partial> list2 = *partialsList.at(morph2)->getPartials();
   QString name1       = partialsList.at(morph1)->getName();
   QString name2       = partialsList.at(morph2)->getName();
   
   try{
-    
-    list<Loris::Partial>* morphedPartials = interface->morph(famp, ffreq, fbw, list1, list2);
+    list<Loris::Partial>* morphedPartials = interface->morph(
+	famp,
+	ffreq,
+	fbw,
+	list1,
+	list2
+    );
     QString morphedPartialsName = name1 + name2;
-    partialsList.append(new Partials(*morphedPartials, morphedPartialsName, interface));
+    partialsList.append(
+	new Partials(
+		*morphedPartials,
+		morphedPartialsName,
+		interface
+	)
+    );
+
     Partials::State state; 
     state   = getCurrentState();
     current =  partialsList.count()-1;
-    setCurrentState(state);  // we want to start at same state as last current
+    setCurrentState(state);
     emit currentChanged(); 
     emit listChanged();             // model changed -> update views
   }
@@ -165,7 +181,6 @@ void PartialsList::morph(BreakpointEnvelope& famp, BreakpointEnvelope& ffreq, Br
 //      removeCurrent
 // ---------------------------------------------------------------------------
 // Remove current partials from the list
-
 void PartialsList::removeCurrent(){
   if(inList(current)){
     partialsList.remove(current);
@@ -187,7 +202,6 @@ void PartialsList::removeCurrent(){
 //      isEmpty
 // ---------------------------------------------------------------------------
 // Returns true if partialsList is empty.
-
 bool PartialsList::isEmpty(){
   return !inList(current);
 }
@@ -196,7 +210,6 @@ bool PartialsList::isEmpty(){
 //      getCurrentIndex
 // ---------------------------------------------------------------------------
 // Returns the position of current partials. 
-
 int PartialsList::getCurrentIndex(){
   return current;
 }
@@ -205,7 +218,6 @@ int PartialsList::getCurrentIndex(){
 //      getCurrentNrOfPartials
 // ---------------------------------------------------------------------------
 // Returns number of partials in current partials 
-
 int PartialsList::getCurrentNrOfPartials(){
   if(inList(current)){
     return partialsList.at(current)->getNumberOfPartials();
@@ -219,7 +231,6 @@ int PartialsList::getCurrentNrOfPartials(){
 //      isCurrentDistilled
 // ---------------------------------------------------------------------------
 // Returns true if current partials are distilled
-
 bool PartialsList::isCurrentDistilled(){
   if(inList(current)){
     return partialsList.at(current)->isDistilled();
@@ -233,7 +244,6 @@ bool PartialsList::isCurrentDistilled(){
 //      isCurrentChannelized
 // ---------------------------------------------------------------------------
 // Returns true if current partials are channelized
-
 bool PartialsList::isCurrentChannelized(){
   if(inList(current)){
     return partialsList.at(current)->isChannelized();
@@ -246,8 +256,7 @@ bool PartialsList::isCurrentChannelized(){
 // ---------------------------------------------------------------------------
 //      setCurrentPartials
 // ---------------------------------------------------------------------------
-// change current 
-
+// change current
 void PartialsList::setCurrentPartials(int pos){
   if(inList(pos)){
     Partials::State state;
@@ -264,6 +273,10 @@ void PartialsList::setCurrentPartials(int pos){
   else cout<<"PartialsList::setCurrentPartials(int pos): pos not valid"<<endl;
 }
 
+// ---------------------------------------------------------------------------
+//      getLength
+// ---------------------------------------------------------------------------
+// Returns the number of samples in the list.
 int PartialsList::getLength(){
   return partialsList.count();
 }
@@ -273,8 +286,7 @@ int PartialsList::getLength(){
 // ---------------------------------------------------------------------------
 // set first partials to be morphed with second morph partials. This occurs
 // when the user selects a collection of partials from listboxes in the
-// morphDialog
-
+// morphDialog.
 void PartialsList::setMorphPartials1(int pos){
   if(inList(pos)){
     morph1 = pos;
@@ -289,7 +301,6 @@ void PartialsList::setMorphPartials1(int pos){
 // set second partials to be morphed with first morph partials. This occurs
 // when the user selects a collection of partials from listboxes in the
 // morphDialog
-
 void PartialsList::setMorphPartials2(int pos){
   if(inList(pos)){
     morph2 = pos;
@@ -302,15 +313,11 @@ void PartialsList::setMorphPartials2(int pos){
 //      getMorph1Duration
 // ---------------------------------------------------------------------------
 // get the maximum time of the longest partial in first partials to be morphed
-
 double PartialsList::getMorph1Duration(){
- 
   if(!isEmpty()){
     if(inList(morph1)){
       return partialsList.at(morph1)->getDuration();
-    }
-    
-    else{
+    }else{
       morph1 = 0;     // no morph1 specified so set to 0
       return partialsList.at(morph1)->getDuration();
     }
@@ -321,13 +328,11 @@ double PartialsList::getMorph1Duration(){
 //      getMorph2Duration
 // ---------------------------------------------------------------------------
 // get the maximum time of the longest partial in second partials to be morphed
-
 double PartialsList::getMorph2Duration(){
   if(!isEmpty()){
     if(inList(morph2)){
       return partialsList.at(morph2)->getDuration();
-    }
-    else{
+    }else{
       morph2 = 0;   // no morph2 specified so set to 0
       return partialsList.at(morph2)->getDuration();
     }
@@ -338,7 +343,6 @@ double PartialsList::getMorph2Duration(){
 //      setCurrentState
 // ---------------------------------------------------------------------------
 // Set the state of current partials (amplitude, frequency, or noise)
-
 void PartialsList::setCurrentState(Partials::State s){
   if(inList(current)){
     partialsList.at(current)->setState(s);
@@ -350,7 +354,6 @@ void PartialsList::setCurrentState(Partials::State s){
 //     getCurrentMaxAmplitude
 // ---------------------------------------------------------------------------
 // get the maximum amplitude of current partials
-
 double PartialsList::getCurrentMaxAmplitude(){
   if(inList(current)){
     partialsList.at(current)->getMaxAmplitude();
@@ -362,7 +365,6 @@ double PartialsList::getCurrentMaxAmplitude(){
 //     getCurrentMaxFrequency
 // ---------------------------------------------------------------------------
 // get the maximum frequency of current partials
-
 double PartialsList::getCurrentMaxFrequency(){
   if(inList(current)){
     partialsList.at(current)->getMaxFrequency();
@@ -374,7 +376,6 @@ double PartialsList::getCurrentMaxFrequency(){
 //     getCurrentMaxNoise
 // ---------------------------------------------------------------------------
 // get the maximum noise of current partials
-
 double PartialsList::getCurrentMaxNoise(){
   if(inList(current)){
     partialsList.at(current)->getMaxNoise();
@@ -386,7 +387,6 @@ double PartialsList::getCurrentMaxNoise(){
 //     getCurrentDuration
 // ---------------------------------------------------------------------------
 // get the duration of current partials
-
 double PartialsList::getCurrentDuration(){
   if(inList(current)){
     return partialsList.at(current)->getDuration();
@@ -398,7 +398,6 @@ double PartialsList::getCurrentDuration(){
 //     getCurrentState
 // ---------------------------------------------------------------------------
 // get the state of current partials (amplitude, frequency, or noise)
-
 Partials::State PartialsList::getCurrentState(){
   if(inList(current)){
     return partialsList.at(current)->getState();
@@ -412,7 +411,6 @@ Partials::State PartialsList::getCurrentState(){
 //     shiftCurrentFrequency
 // ---------------------------------------------------------------------------
 // scale frequency of current partials with given parameter value.
-
 void PartialsList::shiftCurrentFrequency(int val){
   if(inList(current)){
     try{
@@ -431,7 +429,6 @@ void PartialsList::shiftCurrentFrequency(int val){
 //     shiftCurrentNoise
 // ---------------------------------------------------------------------------
 // scale noise of current partials with given parameter value.
-
 void PartialsList::shiftCurrentNoise(int val){
   if(inList(current)){
     try{
@@ -450,7 +447,6 @@ void PartialsList::shiftCurrentNoise(int val){
 //     shiftCurrentAmplitude
 // ---------------------------------------------------------------------------
 // scale amplitude of current partials with given parameter value.
-
 void PartialsList::shiftCurrentAmplitude(int val){
   if(inList(current)){
     try{
@@ -469,7 +465,6 @@ void PartialsList::shiftCurrentAmplitude(int val){
 //     shiftCurrentAmplitude
 // ---------------------------------------------------------------------------
 // Retrurns a list of Loris::Partial 
-
 list<Partial>* PartialsList::getCurrentPartials(){
   if(inList(current)){
     partialsList.at(current)->getPartials();
@@ -481,7 +476,6 @@ list<Partial>* PartialsList::getCurrentPartials(){
 //     getCurrentAmplitudePixmap
 // ---------------------------------------------------------------------------
 // Returns the amplitude plot of current partials
-
 QPixmap PartialsList::getCurrentAmplitudePixmap(){
   if(inList(current)){
     return partialsList.at(current)->getAmplitudePixmap();
@@ -495,7 +489,6 @@ QPixmap PartialsList::getCurrentAmplitudePixmap(){
 //     getCurrentFrequencyPixmap
 // ---------------------------------------------------------------------------
 // Returns the frequency plot of current partials
-
 QPixmap PartialsList::getCurrentFrequencyPixmap(){
   if(inList(current)){
     return partialsList.at(current)->getFrequencyPixmap();
@@ -509,7 +502,6 @@ QPixmap PartialsList::getCurrentFrequencyPixmap(){
 //     getCurrentNoisePixmap
 // ---------------------------------------------------------------------------
 // Returns the noise plot of current partials
-
 QPixmap PartialsList::getCurrentNoisePixmap(){
   if(inList(current)){
     return partialsList.at(current)->getNoisePixmap();
@@ -524,11 +516,15 @@ QPixmap PartialsList::getCurrentNoisePixmap(){
 // ---------------------------------------------------------------------------
 // Channelize current partials with given parameters, reference label, 
 // minimum frequency, and maximum frequency
-
-void PartialsList::channelizeCurrent(int refLabel, double minFreq, double maxFreq){
+void PartialsList::channelizeCurrent(
+	int refLabel,
+	double minFreq,
+	double maxFreq
+){
   if(inList(current)){
     partialsList.at(current)->channelize(refLabel, minFreq, maxFreq);
-    emit currentChanged();   // model changed -> update views
+    // model changed -> update views
+    emit currentChanged();
   }
   else cout<<"PartialsList::channelizeCurrent(): current not in list"<<endl;
 }
@@ -537,7 +533,6 @@ void PartialsList::channelizeCurrent(int refLabel, double minFreq, double maxFre
 //     distillCurrent
 // ---------------------------------------------------------------------------
 // Distill current partials 
-
 void PartialsList::distillCurrent(){
   if(inList(current)){
     partialsList.at(current)->distill();
@@ -550,8 +545,11 @@ void PartialsList::distillCurrent(){
 //     exportAiff
 // ---------------------------------------------------------------------------
 // Export current partials to aiff file format. 
-
-void PartialsList::exportAiff(double sampleRate, int sampleBits, const char* name){
+void PartialsList::exportAiff(
+	double sampleRate,
+	int sampleBits,
+	const char* name
+){
   if(inList(current))
     partialsList.at(current)->exportToAiff(sampleRate, sampleBits, name);
 }
@@ -560,7 +558,6 @@ void PartialsList::exportAiff(double sampleRate, int sampleBits, const char* nam
 //     exportSdif
 // ---------------------------------------------------------------------------
 // Export current partials to sdif file format. 
-
 void PartialsList::exportSdif(const char* name){
   if(inList(current))
     partialsList.at(current)->exportToSdif(name);
@@ -572,11 +569,14 @@ void PartialsList::exportSdif(const char* name){
 //     copyCurrent
 // ---------------------------------------------------------------------------
 // Copy current partials and insert the result into the list 
-
 void PartialsList::copyCurrent(){
   if(inList(current)){
     Partials* currentPartials = partialsList.at(current);
-    Partials* partialsCopy = new Partials(*currentPartials->getPartials(), currentPartials->getName(), interface);
+    Partials* partialsCopy = new Partials(
+	*currentPartials->getPartials(),
+	currentPartials->getName(),
+	interface
+    );
     partialsList.append(partialsCopy);
     current ++;
     emit listChanged();  // model changed -> update views
@@ -589,7 +589,6 @@ void PartialsList::copyCurrent(){
 //     renameCurrent
 // ---------------------------------------------------------------------------
 // Rename current partials  
-
 void PartialsList::renameCurrent(QString newName){
   if(inList(current)){
     partialsList.at(current)->rename(newName);
@@ -603,7 +602,6 @@ void PartialsList::renameCurrent(QString newName){
 //     getCurrentName
 // ---------------------------------------------------------------------------
 // Return the name of current partials
-
 QString PartialsList::getCurrentName(){
   if(inList(current))
     return partialsList.at(current)->getName();
@@ -614,7 +612,6 @@ QString PartialsList::getCurrentName(){
 //     playCurrent
 // ---------------------------------------------------------------------------
 // Plays current partials
-
 void PartialsList::playCurrent(){
   if(inList(current))
     partialsList.at(current)->play();
@@ -625,21 +622,9 @@ void PartialsList::playCurrent(){
 //     inList
 // ---------------------------------------------------------------------------
 // Returns true if partials at given position are in the list
-
 bool PartialsList::inList(int pos){
   if(pos > -1 & pos < partialsList.count()){
     return true;
   }
   else return false;
 }
-
-
-
-
-
-
-
-
-
-
-
