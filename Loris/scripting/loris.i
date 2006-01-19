@@ -325,16 +325,38 @@ sample size, if unspecified, are 44100 Hz (CD quality) and 16 bits
 per sample, respectively.
 
 Only mono files can be exported, the last argument is ignored, 
-and is included only for backward compatability") exportAiff;
+and is included only for backward compatability") moo_exportAiff;
 
+%rename( exportAiff ) moo_exportAiff;
+
+// Need this junk, because SWIG changed the way it handles
+// default arguments when writing C++ wrappers.
+//
 %inline 
 %{
-	void exportAiff( const char * path, const std::vector< double > & samples,
-					 double samplerate = 44100.0, int bitsPerSamp = 16, 
-					 int nchansignored = 1 )
+	void moo_exportAiff( const char * path, const std::vector< double > & samples,
+					 double samplerate, int bitsPerSamp, 
+					 int nchansignored )
 	{
 		exportAiff( path, &(samples.front()), samples.size(), 
 					samplerate, bitsPerSamp );
+	}
+	void moo_exportAiff( const char * path, const std::vector< double > & samples,
+					 double samplerate, int bitsPerSamp )
+	{
+		exportAiff( path, &(samples.front()), samples.size(), 
+					samplerate, bitsPerSamp );
+	}
+	void moo_exportAiff( const char * path, const std::vector< double > & samples,
+					 double samplerate )
+	{
+		exportAiff( path, &(samples.front()), samples.size(), 
+					samplerate, 16 );
+	}
+	void moo_exportAiff( const char * path, const std::vector< double > & samples )
+	{
+		exportAiff( path, &(samples.front()), samples.size(), 
+					44100, 16 );
 	}
 %}
 
@@ -361,7 +383,7 @@ frequency, and bandwidth values are to be modified to make a
 gradual transition to the static spectrum.");
 
 void exportSpc( const char * path, PartialList * partials, double midiPitch, 
-				int enhanced = 1, double endApproachTime = 0. );
+				int enhanced, double endApproachTime );
 
 // Need these two also, because SWIG changed the way it handles
 // default arguments when writing C++ wrappers.
