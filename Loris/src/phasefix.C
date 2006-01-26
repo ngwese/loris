@@ -230,19 +230,21 @@ void fixPhaseForward( Partial & p, double tbeg, double tend )
     {
         Partial::iterator pos = p.findNearest( tbeg );
         Partial::const_iterator stopHere = p.findAfter( tend );
+            // use findAfter to ensure that stopHere cannot
+            // be earlier than pos.
         if ( pos != stopHere )
         {
             --stopHere;
-        }
-        while ( pos != stopHere )
-        {
-            Partial::iterator posPrev = pos++;
-            if ( isNonNull( pos.breakpoint() ) )
+            while ( pos != stopHere )
             {
-                double travel = phaseTravel( posPrev, pos );
-                pos.breakpoint().setPhase( wrapPi( posPrev.breakpoint().phase() + travel ) );
+                Partial::iterator posPrev = pos++;
+                if ( isNonNull( pos.breakpoint() ) )
+                {
+                    double travel = phaseTravel( posPrev, pos );
+                    pos.breakpoint().setPhase( wrapPi( posPrev.breakpoint().phase() + travel ) );
+                }
             }
-        }
+         }
     }
 }
 

@@ -811,6 +811,81 @@ of all Partials in this PartialList.") timeSpan;
 %apply double * OUTPUT { double * tmin_out, double * tmax_out };
 void timeSpan( PartialList * partials, double * tmin_out, double * tmax_out );
 
+
+%feature("docstring",
+"Recompute phases of all Breakpoints later than the specified 
+time so that the synthesized phases of those later Breakpoints 
+matches the stored phase, as long as the synthesized phase at 
+the specified time matches the stored (not recomputed) phase.
+
+Phase fixing is only applied to non-null (nonzero-amplitude) 
+Breakpoints, because null Breakpoints are interpreted as phase 
+reset points in Loris. If a null is encountered, its phase is 
+simply left unmodified, and future phases wil be recomputed 
+from that one.") fixPhaseAfter;
+
+void fixPhaseAfter( PartialList * partials, double time );
+
+%feature("docstring",
+"Recompute phases of all Breakpoints in a Partial
+so that the synthesized phases match the stored phases, 
+and the synthesized phase at (nearest) the specified
+time matches the stored (not recomputed) phase.
+
+Backward phase-fixing stops if a null (zero-amplitude) 
+Breakpoint is encountered, because nulls are interpreted as 
+phase reset points in Loris. If a null is encountered, the 
+remainder of the Partial (the front part) is fixed in the 
+forward direction, beginning at the start of the Partial. 
+Forward phase fixing is only applied to non-null 
+(nonzero-amplitude) Breakpoints. If a null is encountered, 
+its phase is simply left unmodified, and future phases wil be 
+recomputed from that one.") fixPhaseAt;
+
+void fixPhaseAt( PartialList * partials, double time );
+
+%feature("docstring",
+"Recompute phases of all Breakpoints earlier than the specified 
+time so that the synthesized phases of those earlier Breakpoints 
+matches the stored phase, and the synthesized phase at the 
+specified time matches the stored (not recomputed) phase.
+
+Backward phase-fixing stops if a null (zero-amplitude) Breakpoint
+is encountered, because nulls are interpreted as phase reset 
+points in Loris. If a null is encountered, the remainder of the 
+Partial (the front part) is fixed in the forward direction, 
+beginning at the start of the Partial.") fixPhaseBefore;
+
+void fixPhaseBefore( PartialList * partials, double time );
+
+%feature("docstring",
+"Fix the phase travel between two times by adjusting the
+frequency and phase of Breakpoints between those two times.
+
+This algorithm assumes that there is nothing interesting 
+about the phases of the intervening Breakpoints, and modifies 
+their frequencies as little as possible to achieve the correct 
+amount of phase travel such that the frequencies and phases at 
+the specified times match the stored values. The phases of all 
+the Breakpoints between the specified times are recomputed.") fixPhaseBetween;
+
+void fixPhaseBetween( PartialList * partials, double tbeg, double tend );
+
+%feature("docstring",
+"Recompute phases of all Breakpoints later than the specified 
+time so that the synthesized phases of those later Breakpoints 
+matches the stored phase, as long as the synthesized phase at 
+the specified time matches the stored (not recomputed) phase. 
+Breakpoints later than tend are unmodified.
+
+Phase fixing is only applied to non-null (nonzero-amplitude) 
+Breakpoints, because null Breakpoints are interpreted as phase 
+reset points in Loris. If a null is encountered, its phase is 
+simply left unmodified, and future phases wil be recomputed 
+from that one.") fixPhaseForward;
+
+void fixPhaseForward( PartialList * partials, double tbeg, double tend );
+
 %feature("docstring",
 "Return a string describing the Loris version number.");
 

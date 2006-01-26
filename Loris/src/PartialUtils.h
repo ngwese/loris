@@ -559,7 +559,7 @@ timeSpan( Iterator begin, Iterator end )
 //	fixPhaseBefore
 //
 //! Recompute phases of all Breakpoints earlier than the specified time 
-//! so that the synthesize phases of those earlier Breakpoints matches 
+//! so that the synthesized phases of those earlier Breakpoints matches 
 //! the stored phase, and the synthesized phase at the specified
 //! time matches the stored (not recomputed) phase.
 //! 
@@ -577,7 +577,7 @@ void fixPhaseBefore( Partial & p, double t );
 //	fixPhaseBefore (range)
 //
 //! Recompute phases of all Breakpoints earlier than the specified time 
-//! so that the synthesize phases of those earlier Breakpoints matches 
+//! so that the synthesized phases of those earlier Breakpoints matches 
 //! the stored phase, and the synthesized phase at the specified
 //! time matches the stored (not recomputed) phase.
 //! 
@@ -606,7 +606,7 @@ void fixPhaseBefore( Iter b, Iter e, double t )
 //	fixPhaseAfter
 //
 //! Recompute phases of all Breakpoints later than the specified time 
-//! so that the synthesize phases of those later Breakpoints matches 
+//! so that the synthesized phases of those later Breakpoints matches 
 //! the stored phase, as long as the synthesized phase at the specified
 //! time matches the stored (not recomputed) phase.
 //! 
@@ -623,7 +623,7 @@ void fixPhaseAfter( Partial & p, double t );
 //	fixPhaseAfter (range)
 //
 //! Recompute phases of all Breakpoints later than the specified time 
-//! so that the synthesize phases of those later Breakpoints matches 
+//! so that the synthesized phases of those later Breakpoints matches 
 //! the stored phase, as long as the synthesized phase at the specified
 //! time matches the stored (not recomputed) phase.
 //! 
@@ -697,7 +697,7 @@ void fixPhaseForward( Iter b, Iter e, double tbeg, double tend )
 {
     while ( b != e )
     {
-        fixPhaseAfter( *b, tbeg, tend );
+        fixPhaseForward( *b, tbeg, tend );
         ++b;
     }
 }
@@ -706,7 +706,7 @@ void fixPhaseForward( Iter b, Iter e, double tbeg, double tend )
 //	fixPhaseAt
 //
 //! Recompute phases of all Breakpoints in a Partial
-//! so that the synthesize phases match the stored phases, 
+//! so that the synthesized phases match the stored phases, 
 //! and the synthesized phase at (nearest) the specified
 //! time matches the stored (not recomputed) phase.
 //! 

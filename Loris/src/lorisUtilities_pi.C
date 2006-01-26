@@ -284,6 +284,194 @@ void extractLabeled( PartialList * src, long label, PartialList * dst )
 }
 
 /* ---------------------------------------------------------------- */
+/*        fixPhaseAfter 
+/*
+/*  Recompute phases of all Breakpoints later than the specified 
+    time so that the synthesized phases of those later Breakpoints 
+    matches the stored phase, as long as the synthesized phase at 
+    the specified time matches the stored (not recomputed) phase.
+    
+    Phase fixing is only applied to non-null (nonzero-amplitude) 
+    Breakpoints, because null Breakpoints are interpreted as phase 
+    reset points in Loris. If a null is encountered, its phase is 
+    simply left unmodified, and future phases wil be recomputed 
+    from that one.
+ */
+extern "C"
+void fixPhaseAfter( PartialList * partials, double time )
+{
+	try 
+	{
+		ThrowIfNull((PartialList *) partials);
+		PartialUtils::fixPhaseAfter( partials->begin(), partials->end(), time );
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in fixPhaseAfter(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in fixPhaseAfter(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+ 
+/* ---------------------------------------------------------------- */
+/*        fixPhaseAt 
+/*
+/*  Recompute phases of all Breakpoints in a Partial
+    so that the synthesized phases match the stored phases, 
+    and the synthesized phase at (nearest) the specified
+    time matches the stored (not recomputed) phase.
+    
+    Backward phase-fixing stops if a null (zero-amplitude) 
+    Breakpoint is encountered, because nulls are interpreted as 
+    phase reset points in Loris. If a null is encountered, the 
+    remainder of the Partial (the front part) is fixed in the 
+    forward direction, beginning at the start of the Partial. 
+    Forward phase fixing is only applied to non-null 
+    (nonzero-amplitude) Breakpoints. If a null is encountered, 
+    its phase is simply left unmodified, and future phases wil be 
+    recomputed from that one.
+ */
+extern "C"
+void fixPhaseAt( PartialList * partials, double time )
+{
+	try 
+	{
+		ThrowIfNull((PartialList *) partials);
+		PartialUtils::fixPhaseAt( partials->begin(), partials->end(), time );
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in fixPhaseAt(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in fixPhaseAt(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+ 
+/* ---------------------------------------------------------------- */
+/*        fixPhaseBefore 
+/*
+/*  Recompute phases of all Breakpoints earlier than the specified 
+    time so that the synthesized phases of those earlier Breakpoints 
+    matches the stored phase, and the synthesized phase at the 
+    specified time matches the stored (not recomputed) phase.
+
+    Backward phase-fixing stops if a null (zero-amplitude) Breakpoint
+    is encountered, because nulls are interpreted as phase reset 
+    points in Loris. If a null is encountered, the remainder of the 
+    Partial (the front part) is fixed in the forward direction, 
+    beginning at the start of the Partial.
+ */
+extern "C"
+void fixPhaseBefore( PartialList * partials, double time )
+{
+	try 
+	{
+		ThrowIfNull((PartialList *) partials);
+		PartialUtils::fixPhaseBefore( partials->begin(), partials->end(), time );
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in fixPhaseBefore(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in fixPhaseBefore(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+
+/* ---------------------------------------------------------------- */
+/*        fixPhaseBetween 
+/*
+    Fix the phase travel between two times by adjusting the
+    frequency and phase of Breakpoints between those two times.
+    
+    This algorithm assumes that there is nothing interesting 
+    about the phases of the intervening Breakpoints, and modifies 
+    their frequencies as little as possible to achieve the correct 
+    amount of phase travel such that the frequencies and phases at 
+    the specified times match the stored values. The phases of all 
+    the Breakpoints between the specified times are recomputed.
+ */
+extern "C"
+void fixPhaseBetween( PartialList * partials, double tbeg, double tend )
+{
+	try 
+	{
+		ThrowIfNull((PartialList *) partials);
+		PartialUtils::fixPhaseBetween( partials->begin(), partials->end(), 
+		                               tbeg, tend );
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in fixPhaseBetween(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in fixPhaseBetween(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+ 
+ 
+/* ---------------------------------------------------------------- */
+/*        fixPhaseForward
+/*
+/*  Recompute phases of all Breakpoints later than the specified 
+    time so that the synthesized phases of those later Breakpoints 
+    matches the stored phase, as long as the synthesized phase at 
+    the specified time matches the stored (not recomputed) phase. 
+    Breakpoints later than tend are unmodified.
+    
+    Phase fixing is only applied to non-null (nonzero-amplitude) 
+    Breakpoints, because null Breakpoints are interpreted as phase 
+    reset points in Loris. If a null is encountered, its phase is 
+    simply left unmodified, and future phases wil be recomputed 
+    from that one.
+ */
+extern "C"
+void fixPhaseForward( PartialList * partials, double tbeg, double tend )
+{
+	try 
+	{
+		ThrowIfNull((PartialList *) partials);
+		PartialUtils::fixPhaseForward( partials->begin(), partials->end(), 
+		                               tbeg, tend );
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in fixPhaseForward(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in fixPhaseForward(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+ 
+ 
+/* ---------------------------------------------------------------- */
 /*        forEachBreakpoint        
 /*
 /*	Apply a function to each Breakpoint in a Partial. The function
@@ -297,8 +485,8 @@ void extractLabeled( PartialList * src, long label, PartialList * dst )
 	forEachBreakpoint returns zero if all calls to func return zero.
  */
 int forEachBreakpoint( Partial * p,
-		 			        int ( * func )( Breakpoint * p, double time, void * data ),
-			 		        void * data )
+		 			   int ( * func )( Breakpoint * p, double time, void * data ),
+			 		   void * data )
 {
 	int result = 0;
 	try 

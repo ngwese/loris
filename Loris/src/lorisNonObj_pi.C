@@ -250,7 +250,7 @@ createFreqReference( PartialList * partials, double minFreq, double maxFreq,
 /* ---------------------------------------------------------------- */
 /*        createF0Estimate        
 /*
-/*	Return a newly-constructed LinearEnvelope that estimates
+/* Return a newly-constructed LinearEnvelope that estimates
    the time-varying fundamental frequency of the sound
    represented by the Partials in a PartialList. This uses
    the experimental Fundamental class to construct an estimator
@@ -261,7 +261,7 @@ createFreqReference( PartialList * partials, double minFreq, double maxFreq,
    ignored.
    
    Clients are responsible for disposing of the newly-constructed 
-	LinearEnvelope.
+   LinearEnvelope.
  */
 extern "C"
 LinearEnvelope * 
