@@ -47,7 +47,7 @@
 #include "Partial.h"
 
 #include "phasefix.h"
-#undef PHASE_CORRECT
+#define PHASE_CORRECT
 
 //	begin namespace
 namespace Loris {
@@ -96,12 +96,25 @@ Resampler::resample( Partial & p ) const
 
 	//  find time of first and last breakpoint for the resampled envelope:
 	double firstTime = interval_ * int( 0.5 + p.startTime() / interval_ );
-	// double lastTime  = interval_ * int( 0.5 + p.endTime()   / interval_ );
+	double stopTime  = p.endTime() + ( 0.5 * interval_ );
+	
+	// To damp or not to damp?
+	// When correcting phase, use damping if the resamping
+	// interval is less than the length of a period, otherwise
+	// don't damp the correction.
+	//
+	// No, maybe damping is always needed for small intervals?
+	// This smooth fade is a kludge that seems to work. 
+	double damping = 0.5;
+	const double MAGICKLUDGE = 0.012;
+	if ( interval_  > MAGICKLUDGE )
+	{
+		damping += std::min( 0.5, 100 * (interval_ - MAGICKLUDGE) );
+	}
+	// debugger << "damping is " << damping << endl;
 	
 	//  resample:
-	for (  double tim = firstTime; 
-		   tim < p.endTime() + ( 0.5 * interval_) ; 
-		   tim += interval_ ) 
+	for (  double tim = firstTime; tim < stopTime; tim += interval_ ) 
 	{
 		Breakpoint newbp( p.frequencyAt( tim ), p.amplitudeAt( tim ), 
 						  p.bandwidthAt( tim ), p.phaseAt( tim ) );
@@ -110,7 +123,7 @@ Resampler::resample( Partial & p ) const
 		if ( newp.numBreakpoints() != 0 )
 		{			  
 			//	correct frequency to match phase:
-			matchPhaseFwd( newp.last(), newbp, interval_, 1.0 );			
+			matchPhaseFwd( newp.last(), newbp, interval_, damping );			
 		}
 		#endif
 		
