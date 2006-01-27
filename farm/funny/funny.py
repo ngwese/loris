@@ -109,7 +109,11 @@ notes from trial 7:
 	seem to make any difference
 	- updated here to work with Loris 1.3 (beta)
 
-Last updated: 27 July 2005 by Kelly Fitz
+notes from trial 8:
+	- try using the fundamental tracker instead of the hand-constructed
+	fundamental estimate, seems to be no worse.
+	
+Last updated: 27 Jan 2006 by Kelly Fitz
 """
 print __doc__
 
@@ -122,7 +126,7 @@ Using Loris version %s
 
 # use this trial counter to skip over
 # eariler trials
-trial = 7
+trial = 8
 
 print "running trial number", trial, time.ctime(time.time())
 
@@ -542,4 +546,60 @@ if trial == 7:
 #	pruneByLabel( ps, range(1,512) )
 	loris.exportSpc( ofilebases + '.s.spc', ps, 60, 0 ) 
 	loris.exportSpc( ofilebases + '.e.spc', ps, 60, 1 ) 
+
+
+if trial == 8:
+	source = 'funnyLoud1.aiff'
+	r = 155
+	w = 400
+	sfile = loris.AiffFile( source )
+	print 'analyzing %s (%s)'%(source, time.ctime(time.time()))
+	a = loris.Analyzer( r, w )
+	a.setBwRegionWidth( 0 ) # disable BW assoication
+	p = a.analyze( sfile.samples(), sfile.sampleRate() )
+	ref = loris.createF0Estimate( p, 50, 1000, 0.01 )
+	print 'analyzing %s with tracking (%s)'%(source, time.ctime(time.time()))
+	p = a.analyze( sfile.samples(), sfile.sampleRate(), ref )
+	ofilebase = 'funny1.%i.%i'%(r, w)
+	pcollate = loris.PartialList( p ) 
+	loris.collate( pcollate )
+	loris.exportAiff( ofilebase + '.raw.aiff', loris.synthesize( pcollate ) )
+	loris.exportSdif( ofilebase + '.raw.sdif', pcollate )
+	h = 2
+	loris.channelize(p, ref, h)
+	loris.sift( p )
+	loris.removeLabeled( p, 0 )
+	loris.distill( p )
+	ofilebases = ofilebase + '.s%i'%h
+	loris.exportSdif( ofilebases + '.sdif', p )
+	loris.exportAiff( ofilebases + '.aiff', loris.synthesize( p ) )
+	loris.exportSpc( ofilebases + '.s.spc', p, 60, 0 ) 
+	loris.exportSpc( ofilebases + '.e.spc', p, 60, 1 ) 
+
+	source = 'funnyLoud2.aiff'
+	r = 170
+	w = 400
+	sfile = loris.AiffFile( source )
+	print 'analyzing %s (%s)'%(source, time.ctime(time.time()))
+	a = loris.Analyzer( r, w )
+	a.setBwRegionWidth( 0 ) # disable BW assoication
+	p = a.analyze( sfile.samples(), sfile.sampleRate() )
+	ref = loris.createF0Estimate( p, 50, 1000, 0.01 )
+	print 'analyzing %s with tracking (%s)'%(source, time.ctime(time.time()))
+	p = a.analyze( sfile.samples(), sfile.sampleRate(), ref )
+	ofilebase = 'funny2.%i.%i'%(r, w)
+	pcollate = loris.PartialList( p )
+	loris.collate( pcollate )
+	loris.exportAiff( ofilebase + '.raw.aiff', loris.synthesize( pcollate ) )
+	loris.exportSdif( ofilebase + '.raw.sdif', pcollate )
+	h = 2
+	loris.channelize(p, ref, h)
+	loris.sift( p )
+	loris.removeLabeled( p, 0 )
+	loris.distill( p )
+	ofilebases = ofilebase + '.s%i'%h
+	loris.exportSdif( ofilebases + '.sdif', p )
+	loris.exportAiff( ofilebases + '.aiff', loris.synthesize( p ) )
+	loris.exportSpc( ofilebases + '.s.spc', p, 60, 0 ) 
+	loris.exportSpc( ofilebases + '.e.spc', p, 60, 1 ) 
 
