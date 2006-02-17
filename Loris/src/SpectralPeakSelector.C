@@ -48,6 +48,12 @@
 #include "ReassignedSpectrum.h"
 #include "SpectralPeakSelector.h"
 
+// define this to use local minima in frequency
+// reassignment to detect "peaks", otherwise 
+// magnitude peaks are used.
+#define USE_REASSIGNMENT_MINS 1
+
+//#define ENABLE_EXPERIMENTAL_BW 1
 
 //	begin namespace
 namespace Loris {
@@ -82,10 +88,62 @@ SpectralPeakSelector::extractPeaks( ReassignedSpectrum & spectrum,
 	
 	peaks_.clear();
 	
-	for ( int j = 1; j < (spectrum.size() / 2) - 1; ++j ) 
+	int start_j = 1, end_j = (spectrum.size() / 2) - 2;
+	
+	double fsample = start_j;
+	do 
 	{
-		if ( abs(spectrum[j]) > abs(spectrum[j-1]) && 
-			 abs(spectrum[j]) > abs(spectrum[j+1])) 
+	    fsample = spectrum.reassignedFrequency( start_j++ );
+	} while( fsample < minFreqSample );
+	
+	for ( int j = start_j; j < end_j; ++j ) 
+	{	 
+	#if defined(USE_REASSIGNMENT_MINS) && USE_REASSIGNMENT_MINS
+	    // look for changes in the frequency reassignment,
+	    // from positive to negative correction, indicating
+	    // a concentration of energy in the spectrum:
+	    double next_fsample = spectrum.reassignedFrequency( j+1 );
+	    if ( fsample > j && next_fsample < j + 1 )
+	    {
+	        //  choose the smaller correction of fsample or next_fsample:
+	        // (could also choose the larger magnitude?)
+	        double freq;
+	        int peakidx;
+	        if ( (fsample-j) < (j+1-next_fsample) )
+	        {
+	            freq = fsample * sampsToHz;
+	            peakidx = j;
+	        }
+	        else
+	        {
+	            freq = next_fsample * sampsToHz;
+	            peakidx = j+1;
+	        }
+	         
+			//	keep only peaks with small time corrections:
+			double timeCorrectionSamps = spectrum.reassignedTime( peakidx );
+			if ( fabs(timeCorrectionSamps) < maxCorrectionSamples )
+			{
+    			double mag = spectrum.reassignedMagnitude( peakidx );
+    			double phase = spectrum.reassignedPhase( peakidx );
+    			
+                //  EXPERIMENTAL
+                double bw = 0;
+                #ifdef ENABLE_EXPERIMENTAL_BW
+    			bw = spectrum.reassignedBandwidth( j );
+    			#endif
+
+    			//	also store the corrected peak time in seconds, won't
+    			//	be able to compute it later:
+    			double time = timeCorrectionSamps * oneOverSR;
+    			Breakpoint bp ( freq, mag, bw, phase );
+    			peaks_.push_back( std::make_pair( time, bp ) );
+			}	        
+	    }
+	    fsample = next_fsample;
+	#else
+		if ( spectrum.reassignedMagnitude(j) > spectrum.reassignedMagnitude(j-1) && 
+			 spectrum.reassignedMagnitude(j) > spectrum.reassignedMagnitude(j+1) ) 
 		{				
 			//	skip low-frequency peaks:
 			double fsample = spectrum.reassignedFrequency( j );
@@ -97,19 +155,23 @@ SpectralPeakSelector::extractPeaks( ReassignedSpectrum & spectrum,
 			if ( fabs(timeCorrectionSamps) > maxCorrectionSamples )
 				continue;
 				
-			double mag = spectrum.reassignedMagnitude( fsample, j );
+			double mag = spectrum.reassignedMagnitude( j );
+			double phase = spectrum.reassignedPhase( j );
 
-			//	(reassignedPhase() must be called with time correction 
-			//	in samples!)
-			double phase = spectrum.reassignedPhase( j, fsample, timeCorrectionSamps );
+            //  EXPERIMENTAL
+            double bw = 0;
+            #ifdef ENABLE_EXPERIMENTAL_BW
+			bw = spectrum.reassignedBandwidth( j );
+			#endif
 			
 			//	also store the corrected peak time in seconds, won't
 			//	be able to compute it later:
 			double time = timeCorrectionSamps * oneOverSR;
-			Breakpoint bp ( fsample * sampsToHz, mag, 0., phase );
+			Breakpoint bp ( fsample * sampsToHz, mag, bw, phase );
 			peaks_.push_back( std::make_pair( time, bp ) );
 						
 		}	//	end if itsa peak
+	#endif
 	}
 	
 	debugger << "extractPeaks found " << peaks_.size() << endl;

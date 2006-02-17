@@ -85,7 +85,7 @@ namespace Loris {
 //  can't we change this? Seems like we could, but 
 //  its part of the size of the magic junk in the 
 //  Sose chunk.
-const int LargestLabel = 512;   // max number of partials for SPC file
+const int LargestLabel = 256;   // max number of partials for SPC file
 
     //  1 Mar 05
     //  Found that this cannot actually be 512 for enhanced
@@ -227,8 +227,10 @@ void
 SpcFile::write( const std::string & filename, bool enhanced, double endApproachTime )
 {
     if ( endApproachTime < 0 )
+    {
         Throw( InvalidArgument, "End Approach Time may not be negative." );
-
+    }
+    
     std::ofstream s( filename.c_str(), std::ofstream::binary );
     if ( ! s )
     {
@@ -261,8 +263,7 @@ SpcFile::write( const std::string & filename, bool enhanced, double endApproachT
         configureSosMarkerCk( markerChunk, markers_ );
         dataSize += markerChunk.header.size + sizeof(CkHeader);
     }
-
-/*    
+    
     SosEnvelopesCk soseChunk;
     configureSosEnvelopesCk( soseChunk );
     dataSize += soseChunk.header.size + sizeof(CkHeader);
@@ -287,7 +288,6 @@ SpcFile::write( const std::string & filename, bool enhanced, double endApproachT
         ex.append( " Failed to write Spc file." );
         throw;
     }
-*/
 }
 
 #pragma mark -- access --
@@ -396,7 +396,7 @@ SpcFile::addPartial( const Partial & p, int label  )
     }
     if ( label > LargestLabel )
     {
-        Throw( InvalidArgument, "Spc Partial label is too large, cannot have more than 512." );
+        Throw( InvalidArgument, "Spc Partial label is too large, cannot have more than 256." );
     }
 
     if ( label > partials_.size() )

@@ -54,7 +54,7 @@ private:
 	
 	//	windows:
 	std::vector< double > _window;
-	std::vector< std::complex< double > > _rawindow;
+	std::vector< std::complex< double > > _rawindow, _rawindow2;
 	
 //	-- public interface --
 public:
@@ -73,14 +73,12 @@ public:
 	const std::vector< double > & window( void ) const { return _window; }
 	
 //	reassigned spectral data access:		
-	double reassignedFrequency( unsigned long idx ) const;
-	double reassignedTime( unsigned long idx ) const;
-	double reassignedPhase( long idx, double fracFreqSample, double timeCorrection ) const;	
-	double reassignedMagnitude( double fracBinNum, long intBinNumber ) const;
+	double reassignedFrequency( long idx ) const;
+	double reassignedTime( long idx ) const;
+	double reassignedPhase( long idx ) const;	
+	double reassignedMagnitude( long idx ) const;
+	double reassignedBandwidth( long idx ) const;
 	
-	const std::complex< double > & operator[]( unsigned long idx ) const 
-		{ return _transform[idx]; }
-
 //	time and frequency corrections 
 //	at transform sample indices:
 	double frequencyCorrection( long sample ) const;

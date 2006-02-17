@@ -353,7 +353,13 @@ void SpcFile::addPartials( PartialList::const_iterator begin_partials,
 {
 	while ( begin_partials != end_partials )
 	{
-		addPartial( *(begin_partials++) );
+	    // do not try to add unlabeled Partials, or 
+	    // Partials labeled beyond 256:
+	    if ( 0 != begin_partials->label() && 257 > begin_partials->label() )
+	    {
+		    addPartial( *begin_partials );
+		}
+		++begin_partials;
 	}
 }
 

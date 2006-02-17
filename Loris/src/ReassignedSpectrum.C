@@ -42,8 +42,8 @@
 #include <cstdlib>	//	for std::abs()
 #include <numeric>	//	for std::accumulate()
 
+#include <cmath>	//	for M_PI (except when its not there), fmod, fabs
 #if defined(HAVE_M_PI) && (HAVE_M_PI)
-	#include <cmath>	//	for M_PI (except when its not there)
 	const double Pi = M_PI;
 #else
 	const double Pi = 3.14159265358979324;
@@ -65,8 +65,8 @@ namespace Loris {
 // 	static function for building fancy reassignment window:
 template < typename RealWinIter, typename CplxWinIter >
 static void 
-buildReassignmentWindow( RealWinIter winbegin, RealWinIter winend, 
-						 CplxWinIter rawinbegin );
+buildReassignmentWindows( RealWinIter winbegin, RealWinIter winend, 
+						  CplxWinIter rawinbegin, CplxWinIter raw2inbegin );
 
 // ---------------------------------------------------------------------------
 //	ReassignedSpectrum constructor
@@ -77,16 +77,18 @@ buildReassignmentWindow( RealWinIter winbegin, RealWinIter winend,
 ReassignedSpectrum::ReassignedSpectrum( const std::vector< double > & window ) :
 	_transform( 1 << long( 1 + ceil( log((double)window.size()) / log(2.)) ) ),
 	_ratransform( 1 << long( 1 + ceil( log((double)window.size()) / log(2.)) ) ),
-	_window( window ),
-	_rawindow( window.size(), 0. )
+	_window( window.begin(), window.end() ),
+	_rawindow( window.size(), 0. ),
+	_rawindow2( window.size(), 0. )
 {
 	// scale the window so that the reported magnitudes
 	// are correct:
 	double winsum = std::accumulate( _window.begin(), _window.end(), 0. );
 	std::transform( _window.begin(), _window.end(), _window.begin(), 
-			std::bind1st( std::multiplies<double>(), 2/winsum ) );
+			        std::bind1st( std::multiplies<double>(), 2/winsum ) );
 	
-	buildReassignmentWindow( _window.begin(), _window.end(), _rawindow.begin() );
+	buildReassignmentWindows( _window.begin(), _window.end(), 
+	                         _rawindow.begin(), _rawindow2.begin() );
 
 	debugger << "ReassignedSpectrum: length is " << _transform.size() << endl;
 }
@@ -140,8 +142,8 @@ ReassignedSpectrum::transform( const double * sampsBegin, const double * sampCen
 	//	window and rotate input and compute normal transform:
 	//	window the samples into the FT buffer:
 	FourierTransform::iterator it = 
-		std::transform( sampsBegin, sampsEnd, _window.begin() + winBeginOffset, 
-						_transform.begin(), std::multiplies<double>() );
+		std::transform( sampsBegin, sampsEnd, _rawindow2.begin() + winBeginOffset, 
+						_transform.begin(), std::multiplies< std::complex< double > >() );
 	//	fill the rest with zeros:
 	std::fill( it, _transform.end(), 0. );
 	//	rotate to align phase:
@@ -164,6 +166,80 @@ ReassignedSpectrum::transform( const double * sampsBegin, const double * sampCen
 	_ratransform.transform();
 }
 
+
+// ---------------------------------------------------------------------------
+//	circEvenPartAt - helper
+// ---------------------------------------------------------------------------
+// Extract the circular even part from Fourier transform data.
+// Used for computing two real transforms using a single complex transform.
+//
+template< class TransformData >
+static std::complex<double>
+circEvenPartAt( const TransformData & td, long idx )
+{
+    const long N = td.size();
+    while( idx < 0 )
+    {
+        idx += N;
+    }
+    while( idx >= N )
+    {
+        idx -= N;
+    }
+
+ 	long flip_idx;
+	if ( idx != 0 )
+	{
+		flip_idx = N - idx;
+	}
+	else
+    {
+		flip_idx = idx;
+	}
+		
+	return 0.5*( td[idx] + std::conj( td[flip_idx] ) );
+}   
+
+// ---------------------------------------------------------------------------
+//	circOddPartAt - helper
+// ---------------------------------------------------------------------------
+// Extract the circular odd part divided by j from Fourier transform data.
+// Used for computing two real transforms using a single complex transform.
+//
+template< class TransformData >
+static std::complex<double>
+circOddPartAt( const TransformData & td, long idx )
+{
+    const long N = td.size();
+    while( idx < 0 )
+    {
+        idx += N;
+    }
+    while( idx >= N )
+    {
+        idx -= N;
+    }
+
+ 	long flip_idx;
+	if ( idx != 0 )
+	{
+		flip_idx = N - idx;
+	}
+	else
+    {
+		flip_idx = idx;
+	}
+
+	/*
+	const std::complex<double> minus_j(0,-1);
+	std::complex<double> tra_part = minus_j * 0.5 * 
+									( td[idx] - std::conj( td[flip_idx] ) );
+	*/
+	//	can compute this without complex multiplies:
+	std::complex<double> tmp = td[idx] - std::conj( td[flip_idx] );
+	return std::complex<double>( 0.5*tmp.imag(), -0.5*tmp.real() );
+}   
+
 // ---------------------------------------------------------------------------
 //	frequencyCorrection
 // ---------------------------------------------------------------------------
@@ -180,22 +256,13 @@ ReassignedSpectrum::transform( const double * sampsBegin, const double * sampCen
 double
 ReassignedSpectrum::frequencyCorrection( long idx ) const
 {
-	Assert( idx >= 0 );
+	std::complex<double> X_h = circEvenPartAt( _transform, idx );
+    std::complex<double> X_Dh = circEvenPartAt( _ratransform, idx );
 	
-	long flip_idx;
-	if (idx>0)
-		flip_idx = _ratransform.size() - idx;
-	else
-		flip_idx = idx;
-		
-	//	the freq RA FT is the circular even part
-	//	of the reassignment transform:
-	std::complex<double> fra_part = 0.5*( _ratransform[idx] + std::conj( _ratransform[flip_idx] ) );
+	double num = X_h.real() * X_Dh.imag() -
+				 X_h.imag() * X_Dh.real();
 	
-	double num = _transform[idx].real() * fra_part.imag() -
-				 _transform[idx].imag() * fra_part.real();
-	
-	double magSquared = std::norm( _transform[idx] );
+	double magSquared = std::norm( X_h );
 
 	//	need to scale by the oversampling factor?
 	double oversampling = (double)_ratransform.size() / _rawindow.size();
@@ -209,36 +276,15 @@ ReassignedSpectrum::frequencyCorrection( long idx ) const
 //	Correction is computed in fractional samples, because
 //	that's the kind of ramp we used on our window.
 //
-//	sample is the frequency sample index, the nominal component 
-//	frequency in samples. 
-//
 double
 ReassignedSpectrum::timeCorrection( long idx ) const
 {
-	long flip_idx;
-	if (idx>0)
-	{
-		flip_idx = _ratransform.size() - idx;
-	}
-	else
-	{
-		flip_idx = idx;
-	}
-		
-	//	the time RA FT is the circular odd part 
-	//	of the reassignment transform divided by j:
-	/*
-	const std::complex<double> minus_j(0,-1);
-	std::complex<double> tra_part = minus_j * 0.5 * 
-									( _ratransform[idx] - std::conj( _ratransform[flip_idx] ) );
-	*/
-	//	can compute this without complex multiplies:
-	std::complex<double> tmp = _ratransform[idx] - std::conj( _ratransform[flip_idx] );
-	std::complex<double> tra_part( 0.5*tmp.imag(), -0.5*tmp.real() );
+	std::complex<double> X_h = circEvenPartAt( _transform, idx );
+	std::complex<double> X_Th = circOddPartAt( _ratransform, idx ); 
 
-	double num = _transform[idx].real() * tra_part.real() +
-		  		 _transform[idx].imag() * tra_part.imag();
-	double magSquared = norm( _transform[idx] );
+	double num = X_h.real() * X_Th.real() +
+		  		 X_h.imag() * X_Th.imag();
+	double magSquared = norm( X_h );
 	
 	//	need to scale by the oversampling factor?
 	//	No, seems to sound bad, why?
@@ -254,7 +300,7 @@ ReassignedSpectrum::timeCorrection( long idx ) const
 //	for the specified index.
 //
 double
-ReassignedSpectrum::reassignedFrequency( unsigned long idx ) const
+ReassignedSpectrum::reassignedFrequency( long idx ) const
 {
 #if ! defined(SMITHS_BRILLIANT_PARABOLAS)
 
@@ -262,9 +308,9 @@ ReassignedSpectrum::reassignedFrequency( unsigned long idx ) const
 	
 #else // defined(SMITHS_BRILLIANT_PARABOLAS)
 
-	double dbLeft = 20. * log10( abs( _transform[idx-1] ) );
-	double dbCandidate = 20. * log10( abs( _transform[idx] ) );
-	double dbRight = 20. * log10( abs( _transform[idx+1] ) );
+	double dbLeft = 20. * log10( abs( circEvenPartAt( _transform, idx-1 ) ) );
+	double dbCandidate = 20. * log10( abs( circEvenPartAt( _transform, idx ) ) );
+	double dbRight = 20. * log10( abs( circEvenPartAt( _transform, idx+1 ) ) );
 	
 	double peakXOffset = 0.5 * (dbLeft - dbRight) /
 						 (dbLeft - 2.0 * dbCandidate + dbRight);
@@ -281,7 +327,7 @@ ReassignedSpectrum::reassignedFrequency( unsigned long idx ) const
 //	the transformed buffer is available.
 //
 double
-ReassignedSpectrum::reassignedTime( unsigned long idx ) const
+ReassignedSpectrum::reassignedTime( long idx ) const
 {
 	return timeCorrection( idx );
 }
@@ -301,29 +347,22 @@ ReassignedSpectrum::reassignedTime( unsigned long idx ) const
 //	in separately. fracBinNum is no longer used, we just use the peak magnitude.
 //	
 double
-ReassignedSpectrum::reassignedMagnitude( double /* fracBinNum */, long peakBinNumber ) const
+ReassignedSpectrum::reassignedMagnitude( long idx ) const
 {
-	// 	don't need to check fracBinNum since we don't use it,
-	//	could check peakBinNumber though:
-	if( peakBinNumber < 0 )
-	{
-		Throw( InvalidArgument, "fractional bin number must be non-negative in reassignedMagnitude" );
-    }
-    
 #if ! defined(SMITHS_BRILLIANT_PARABOLAS)
 	
 	//	compute the nominal spectral amplitude by scaling
 	//	the peak spectral sample:
-	return abs( _transform[ peakBinNumber ] );
+	return abs( circEvenPartAt( _transform, idx ) );
 	
 #else // defined(SMITHS_BRILLIANT_PARABOLAS)
 	
 	//	keep this parabolic interpolation computation around
 	//	only for sake of comparison, it is unlikely to yield
 	//	good results with bandwidth association:
-	double dbLeft = 20. * log10( abs( _transform[peakBinNumber-1] ) );
-	double dbCandidate = 20. * log10( abs( _transform[peakBinNumber] ) );
-	double dbRight = 20. * log10( abs( _transform[peakBinNumber+1] ) );
+	double dbLeft = 20. * log10( abs( circEvenPartAt( _transform, idx-1 ) ) );
+	double dbCandidate = 20. * log10( abs( circEvenPartAt( _transform, idx ) ) );
+	double dbRight = 20. * log10( abs( circEvenPartAt( _transform, idx+1 ) ) );
 	
 	double peakXOffset = 0.5 * (dbLeft - dbRight) /
 						 (dbLeft - 2.0 * dbCandidate + dbRight);
@@ -343,11 +382,12 @@ ReassignedSpectrum::reassignedMagnitude( double /* fracBinNum */, long peakBinNu
 //	corrected frequency (in fractional frequency samples).
 //
 double
-ReassignedSpectrum::reassignedPhase( long idx,
-									 double fracFreqSample, 
-									 double timeCorrection ) const
+ReassignedSpectrum::reassignedPhase( long idx ) const
 {
-	double phase = arg( _transform[ idx ] );
+	double phase = arg( circEvenPartAt( _transform, idx ) );
+	
+	const double offsetTime = timeCorrection( idx );
+	const double offsetFreq = frequencyCorrection( idx );
 	
 	//	adjust phase according to the frequency correction:
 	//	first compute H(1):
@@ -364,19 +404,42 @@ ReassignedSpectrum::reassignedPhase( long idx,
 	//
 	//  Phase ought to be linear anyway, so I should just be
 	//  able to use dumb old linear interpolation.
-	double slope = (fracFreqSample > idx) ? 
-	      ( arg( _transform[ idx+1 ] ) - phase ) : 
-	      ( phase - arg( _transform[ idx-1 ] ) );
-	double fcorr = fracFreqSample - idx;
-	double phase_corr = fcorr * slope;
-	phase += phase_corr;
+	double slope = (offsetFreq > 0) ? 
+	      ( arg( circEvenPartAt( _transform, idx+1 ) ) - phase ) : 
+	      ( phase - arg( circEvenPartAt( _transform, idx-1 ) ) );
+	phase += offsetFreq * slope;
 		
 	//	adjust phase according to the time correction:
-	phase += timeCorrection * fracFreqSample * 2. * Pi / _transform.size();
+	const double fracFreqSample = idx + offsetFreq; 
+	phase += offsetTime * fracFreqSample * 2. * Pi / _transform.size();
 	
 	return fmod( phase, 2. * Pi );
 }
 
+// ---------------------------------------------------------------------------
+//	reassignedBandwidth
+// ---------------------------------------------------------------------------
+//  Experimental new bandwidth calculation based on mixed partial
+//  derivative of phase. Have no idea whether this works yet.
+//
+double
+ReassignedSpectrum::reassignedBandwidth( long idx ) const
+{
+  	std::complex<double> X_h = circEvenPartAt( _transform, idx );
+	std::complex<double> X_Th = circOddPartAt( _ratransform, idx ); 
+    std::complex<double> X_Dh = circEvenPartAt( _ratransform, idx );
+    std::complex<double> X_TDh = circOddPartAt( _transform, idx );
+
+	double term1 = (X_TDh * conj(X_h)).real() / norm( X_h );
+	double term2 = ((X_Th * X_Dh) / (X_h * X_h)).real();
+		  		  
+	double scaleBy = 2. * Pi / _rawindow.size();
+
+    double bw = fabs( 1.0 + (scaleBy * (term1 - term2)) );
+    bw = min( 1.0, bw );
+    
+    return bw;  
+}
 
 // ---------------------------------------------------------------------------
 //	make_complex
@@ -464,7 +527,8 @@ static inline void applyTimeRamp( vector< double > & w )
 	//	need a fractional value for even-length windows, a
 	//	whole number for odd-length windows:
 	double offset = 0.5 * ( w.size() - 1 );
-	for ( int k = 0 ; k < w.size(); ++k ) {
+	for ( int k = 0 ; k < w.size(); ++k ) 
+	{
 		w[ k ] *= ( k - offset );
 	}
 }
@@ -477,17 +541,24 @@ static inline void applyTimeRamp( vector< double > & w )
 //
 template < typename RealWinIter, typename CplxWinIter >
 static void 
-buildReassignmentWindow( RealWinIter winbegin, RealWinIter winend, 
-						 CplxWinIter rawinbegin )
+buildReassignmentWindows( RealWinIter winbegin, RealWinIter winend, 
+						 CplxWinIter rawinbegin, CplxWinIter raw2inbegin )
 {
 	std::vector< double > tramp( winbegin, winend );
 	applyTimeRamp( tramp );
 	
 	std::vector< double > framp( winbegin, winend );
 	applyFreqRamp( framp );
+
+	std::vector< double > tframp( framp.size(), 0. );
+	tframp = framp; // do this or not
+	applyTimeRamp( tframp );
 	
 	std::transform( framp.begin(), framp.end(), tramp.begin(),
 					rawinbegin, make_complex< double >() );	
+    
+	std::transform( winbegin, winend, tframp.begin(),
+					raw2inbegin, make_complex< double >() );	
 }
 
 }	//	end of namespace Loris
