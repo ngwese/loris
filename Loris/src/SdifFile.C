@@ -1602,7 +1602,7 @@ static double getNextFrameTime( const double frameTime,
 		{
 			std::cout << "end" << std::endl;
 		}
-		std::cout << first->time << ", index " << first->index << std::endl;
+		// std::cout << first->time << ", index " << first->index << std::endl;
 		std::cout << nextFrameTime << std::endl;
 		std::cout << frameTime << std::endl;
 		std::cout << partialsWithBreakpointsInFrame.size() << std::endl;
