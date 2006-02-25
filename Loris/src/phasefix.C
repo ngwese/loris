@@ -64,7 +64,7 @@ namespace Loris {
 //	wrapPi
 //	Wrap an unwrapped phase value to the range (-pi,pi].
 //
-inline double wrapPi( double x )
+double wrapPi( double x )
 {
 	x = std::fmod( x, 2*Pi );
 	
@@ -94,8 +94,8 @@ static bool isNonNull( const Breakpoint & bp )
 //	Compute the sinusoidal phase travel between two Breakpoints.
 //	Return the total unwrapped phase travel.
 //
-inline double phaseTravel( const Breakpoint & bp0, const Breakpoint & bp1, 
-						   double dt )
+double phaseTravel( const Breakpoint & bp0, const Breakpoint & bp1, 
+					double dt )
 {
 	double f0 = bp0.frequency();
 	double f1 = bp1.frequency();
@@ -182,7 +182,7 @@ void fixPhaseBefore( Partial & p, double t )
 //
 void fixPhaseAfter( Partial & p, double t )
 {
-    fixPhaseForward( p, t, p.endTime() );
+    fixPhaseForward( p, t, p.endTime() + 1 );
 /*
     if ( 1 < p.numBreakpoints() )
     {
@@ -232,19 +232,19 @@ void fixPhaseForward( Partial & p, double tbeg, double tend )
         Partial::const_iterator stopHere = p.findAfter( tend );
             // use findAfter to ensure that stopHere cannot
             // be earlier than pos.
-        if ( pos != stopHere )
+        if ( pos != stopHere && pos != p.end() )
         {
             --stopHere;
-            while ( pos != stopHere )
+        }
+        while ( pos != stopHere )
+        {
+            Partial::iterator posPrev = pos++;
+            if ( isNonNull( pos.breakpoint() ) )
             {
-                Partial::iterator posPrev = pos++;
-                if ( isNonNull( pos.breakpoint() ) )
-                {
-                    double travel = phaseTravel( posPrev, pos );
-                    pos.breakpoint().setPhase( wrapPi( posPrev.breakpoint().phase() + travel ) );
-                }
+                double travel = phaseTravel( posPrev, pos );
+                pos.breakpoint().setPhase( wrapPi( posPrev.breakpoint().phase() + travel ) );
             }
-         }
+        }
     }
 }
 
