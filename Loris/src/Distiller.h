@@ -72,6 +72,17 @@ class Distiller
 		
 //	-- public interface --
 public:
+
+//	-- global defaults and constants --
+
+    //! Default time (in seconds) over which Partials joined by
+    //! distillation fade to and from zero amplitude.
+    static const double DefaultFadeTime;
+    
+    //! Default minimum duration (in seconds) of the silent 
+    //! (zero-amplitude) gap between two Partials joined by distillation.
+    static const double DefaultSilentTime;
+
 //	-- construction --
 
 	//!	Construct a new Distiller using the specified fade time
@@ -175,16 +186,6 @@ public:
              double partialSilentTime = Distiller::DefaultSilentTime );
 #endif
 
-//	-- global defaults and constants --
-
-    //! Default time (in seconds) over which Partials joined by
-    //! distillation fade to and from zero amplitude.
-    static const double DefaultFadeTime;
-    
-    //! Default minimum duration (in seconds) of the silent 
-    //! (zero-amplitude) gap between two Partials joined by distillation.
-    static const double DefaultSilentTime;
-    
 private:
 
 //	-- helpers --

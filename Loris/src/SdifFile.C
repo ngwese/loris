@@ -83,6 +83,7 @@ SDIF spec: http://www.cnmat.berkeley.edu/SDIF/
 #include "PartialList.h"
 #include "PartialPtrs.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <list>

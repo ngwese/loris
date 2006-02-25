@@ -39,8 +39,9 @@
 #include "Notifier.h"
 #include "Exception.h"
 #include <algorithm>	//	for std::transform(), others
-#include <cstdlib>	//	for std::abs()
-#include <numeric>	//	for std::accumulate()
+#include <functional>	//	for bind1st, multiplies, etc.
+#include <cstdlib>	    //	for std::abs()
+#include <numeric>	    //	for std::accumulate()
 
 #include <cmath>	//	for M_PI (except when its not there), fmod, fabs
 #if defined(HAVE_M_PI) && (HAVE_M_PI)
