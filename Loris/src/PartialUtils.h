@@ -835,6 +835,31 @@ void fixPhaseBetween( Iter b, Iter e, double t1, double t2 )
 //	-- predicates --
 
 // ---------------------------------------------------------------------------
+//	isDurationLess
+//	
+//! Predicate functor returning true if the duration of its 
+//! Partial argument is less than the specified duration in
+//! seconds, and false otherwise.
+//
+class isDurationLess : public std::unary_function< const Partial, bool >
+{
+public:
+    //! Initialize a new instance with the specified label.
+	isDurationLess( double x ) : mDurationSecs(x) {}
+
+	//! Function call operator: evaluate a Partial.
+	bool operator()( const Partial & p ) const 
+		{ return p.duration() < mDurationSecs; }
+		
+	//! Function call operator: evaluate a Partial pointer.
+	bool operator()( const Partial * p ) const 
+		{ return p->duration() < mDurationSecs; }
+        
+private:	
+	double mDurationSecs;
+};
+
+// ---------------------------------------------------------------------------
 //	isLabelEqual
 //	
 //! Predicate functor returning true if the label of its Partial argument is
@@ -843,7 +868,7 @@ void fixPhaseBetween( Iter b, Iter e, double t1, double t2 )
 class isLabelEqual : public std::unary_function< const Partial, bool >
 {
 public:
-   //! Initialize a new instance with the specified label.
+    //! Initialize a new instance with the specified label.
 	isLabelEqual( int l ) : label(l) {}
 	
 	//! Function call operator: evaluate a Partial.
