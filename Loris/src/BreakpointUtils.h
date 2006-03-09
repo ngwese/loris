@@ -127,6 +127,28 @@ private:
 //! \deprecated use isFrequencyBetween instead.
 typedef isFrequencyBetween frequency_between;
 
+// ---------------------------------------------------------------------------
+//	isNonNull
+//
+//!	Predicate functor returning true if a Breakpoint has non-zero 
+//! amplitude, false otherwise.
+//
+static bool isNonNull( const Breakpoint & bp )
+{
+	return bp.amplitude() != 0.;
+}
+
+// ---------------------------------------------------------------------------
+//	isNull
+//
+//!	Predicate functor returning true if a Breakpoint has zero 
+//! amplitude, false otherwise.
+//
+static bool isNull( const Breakpoint & bp )
+{
+	return ! isNonNull( bp );
+}
+
 //	-- comparitors --
 
 // ---------------------------------------------------------------------------

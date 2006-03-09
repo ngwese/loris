@@ -41,6 +41,7 @@
 
 #include "Breakpoint.h"
 #include "BreakpointEnvelope.h"
+#include "BreakpointUtils.h"
 #include "Envelope.h"
 #include "Partial.h"
 
@@ -277,7 +278,13 @@ TimeShifter::operator()( Partial & p ) const
 //
 void Loris::PartialUtils::fixPhaseBefore( Loris::Partial & p, double t )
 {
-	Loris::fixPhaseBefore( p, t );
+    if ( 1 < p.numBreakpoints() )
+    {
+        Partial::iterator pos = p.findNearest( t );
+        Assert( pos != p.end() );
+
+        fixPhaseBackward( p.begin(), pos );
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -298,7 +305,15 @@ void Loris::PartialUtils::fixPhaseBefore( Loris::Partial & p, double t )
 //
 void Loris::PartialUtils::fixPhaseAfter( Loris::Partial & p, double t )
 {
-	Loris::fixPhaseAfter( p, t );
+    //  nothing to do it there are not at least
+    //  two Breakpoints in the Partial   
+    if ( 1 < p.numBreakpoints() )
+    {
+        Partial::iterator pos = p.findNearest( t );
+        Assert( pos != p.end() );
+
+        fixPhaseForward( pos, --p.end() );
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -315,6 +330,8 @@ void Loris::PartialUtils::fixPhaseAfter( Loris::Partial & p, double t )
 //! Loris. If a null is encountered, its phase is simply left unmodified,
 //! and future phases wil be recomputed from that one.
 //!
+//! HEY Is this interesting, in general? Why would you want to do this?
+//!
 //! \param p    The Partial whose phases should be fixed.
 //! \param tbeg The phases and frequencies of Breakpoints later than the 
 //!             one nearest this time will be modified.
@@ -324,7 +341,27 @@ void Loris::PartialUtils::fixPhaseAfter( Loris::Partial & p, double t )
 //
 void Loris::PartialUtils::fixPhaseForward( Loris::Partial & p, double tbeg, double tend )
 {
-	Loris::fixPhaseForward( p, tbeg, tend );
+    if ( tbeg > tend )
+    {
+        std::swap( tbeg, tend );
+    }
+    
+    //  nothing to do it there are not at least
+    //  two Breakpoints in the Partial   
+    if ( 1 < p.numBreakpoints() )
+    {
+        //  find the positions nearest tbeg and tend
+        Partial::iterator posbeg = p.findNearest( tbeg );
+        Partial::iterator posend = p.findNearest( tend );
+        
+        //  if the positions are different, and tend is
+        //  the end, back it up
+        if ( posbeg != posend && posend == p.end() )
+        {
+            --posend;
+        }
+        fixPhaseForward( posbeg, posend );
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -349,7 +386,14 @@ void Loris::PartialUtils::fixPhaseForward( Loris::Partial & p, double tbeg, doub
 //
 void Loris::PartialUtils::fixPhaseAt( Loris::Partial & p, double t )
 {
-	Loris::fixPhaseAt( p, t );
+    if ( 1 < p.numBreakpoints() )
+    {
+        Partial::iterator pos = p.findNearest( t );
+        Assert( pos != p.end() );
+
+        fixPhaseForward( pos, --p.end() );
+        fixPhaseBackward( p.begin(), pos );
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -384,5 +428,43 @@ void Loris::PartialUtils::fixPhaseAt( Loris::Partial & p, double t )
 //
 void Loris::PartialUtils::fixPhaseBetween( Loris::Partial & p, double tbeg, double tend )
 {
-	Loris::fixPhaseBetween( p, tbeg, tend );
+    if ( tbeg > tend )
+    {
+        std::swap( tbeg, tend );
+    }
+
+    // for Partials that do not extend over the entire
+    // specified time range, just recompute phases from
+    // beginning or end of the range:
+    if ( p.endTime() < tend )
+    {
+        // OK if start time is also after tbeg, will
+        // just recompute phases from start of p.
+        fixPhaseAfter( p, tbeg );
+    }
+    else if ( p.startTime() > tbeg )
+    {
+        fixPhaseBefore( p, tend );
+    }
+    else
+    {
+        // invariant:
+        // p begins before tbeg and ends after tend.
+        Partial::iterator b = p.findNearest( tbeg );
+        Partial::iterator e = p.findNearest( tend );
+
+        // if there is a null Breakpoint n between b and e, then
+        // should fix forward from b to n, and backward from
+        // e to n. Otherwise, do this complicated thing.
+        Partial::iterator nullbp = std::find_if( b, e, BreakpointUtils::isNull );
+        if ( nullbp != e )
+        {
+            fixPhaseForward( b, nullbp );
+            fixPhaseBackward( nullbp, e );
+        }
+        else
+        {
+            fixPhaseBetween( b, e );
+        }
+    }
 }

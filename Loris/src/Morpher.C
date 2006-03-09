@@ -65,6 +65,7 @@ namespace Loris {
 #define NEW_BW_MORPH 1
 
 #if FIX_PHASE
+// wow, is this ever ugly.
 
 #include <utility> // for std::pair, and make_pair
 #include <vector>
@@ -80,11 +81,6 @@ static inline MorphState GetMorphState( double fweight )
     else if ( fweight == 1 ) return TGT;
     else return INTERP;
 }
-/*
-static inline MorphState InitMorphState( Partial & p, double fweight );
-static inline MorphState UpdateMorphState( Partial & p, double fweight );
-static inline MorphState FinalizeMorphState( Partial & p, double fweight );
-*/
 
 #endif
 
@@ -323,17 +319,53 @@ Morpher::morphPartials( Partial src, Partial tgt, int assignLabel )
         }          
     }
 
- #if 0
-    if ( 0 != newp.numBreakpoints() )
-    {
-        FinalizeMorphState( newp, _freqFunction->valueAt( newp.endTime() ) );
-    }
-    DEHR.clear();
-#endif
-
  #if FIX_PHASE
     if ( 0 != newp.numBreakpoints() )
     {
+        //  set the initial morph state according to the value of the
+        //  frequency function at the time of the first Breakpoint in 
+        //  the morphed partial
+        Partial::iterator bppos = newp.begin();
+        Partial::iterator lastPosCorrect = bppos;
+        MorphState curstate = GetMorphState( _freqFunction->valueAt( bppos.time() ) );
+        
+        //  consider each Breakpoint, look for a change in the
+        //  morph state at the time of each Breakpoint
+        while( ++bppos != newp.end() )
+        {
+            MorphState nxtstate = GetMorphState( _freqFunction->valueAt( bppos.time() ) );   
+            if ( nxtstate != curstate )
+            {
+                //  switch!
+                if ( INTERP != curstate )
+                {
+                    // switch to INTERP
+                    fixPhaseForward( lastPosCorrect, bppos );
+                }
+                else
+                {
+                    //  switch to SRC or TGT                
+                    if ( newp.begin() == lastPosCorrect  )
+                    {   
+                        //  first transition
+                        fixPhaseBackward( lastPosCorrect, bppos );
+                    }
+                    else
+                    {
+                        //   not first transition
+                        fixPhaseBetween( lastPosCorrect, bppos );
+                    }                
+                }
+                lastPosCorrect = bppos;            
+                    
+                curstate = nxtstate;
+
+            }            
+        }
+        
+        // fix the remaining phases
+        fixPhaseForward( lastPosCorrect, --bppos );
+        /*
         // look at DEHR
         std::vector< std::pair< double, double > >::iterator dehr_iter = DEHR.begin();
         MorphState ms = GetMorphState( dehr_iter->second );
@@ -372,6 +404,7 @@ Morpher::morphPartials( Partial src, Partial tgt, int assignLabel )
         }
         fixPhaseAfter( newp, last_time_phase_correct );
         DEHR.clear();
+        */
     }
 #endif
 
@@ -1170,59 +1203,6 @@ void Morpher::morph_aux( PartialCorrespondence & correspondence  )
             _partials.push_back( newp );
         }
     }
- 
- #if 0 // FIX_PHASE
- 
- // can do this in morphPartials instead, cannot decide which is better?
- 
-    // look at DEHR
-    std::sort( DEHR.begin(), DEHR.end() );  //  sort in time order
-    std::vector< std::pair< double, double > >::iterator dehr_iter = DEHR.begin();
-    MorphState ms = GetMorphState( dehr_iter->second );
-    double last_time_phase_correct = 0;
-    
-    notifier << "Morph starts at " << StateStrings[ ms ] << endl;
-    while ( dehr_iter != DEHR.end() )
-    {
-        if ( GetMorphState( (dehr_iter)->second ) != ms )
-        {
-            //  switch!
-            if ( INTERP != ms )
-            {
-                // switch to INTERP
-                notifier << "--- fix phase after " << last_time_phase_correct << " until " 
-                         << dehr_iter->first << " ---" << endl;
-                fixPhaseForward( _partials.begin(), _partials.end(), last_time_phase_correct, dehr_iter->first );
-            }
-            else
-            {
-                //  switch to SRC or TGT                
-                if ( 0 == last_time_phase_correct  )
-                {   
-                    //  first transition
-                    notifier << "--- fix phase before " << dehr_iter->first << " ---" << endl;
-                    fixPhaseBefore( _partials.begin(), _partials.end(), dehr_iter->first );
-                }
-                else
-                {
-                    //   not first transition
-                    notifier << "--- fix phase between " << last_time_phase_correct << " and " 
-                             << dehr_iter->first << " ---" << endl;
-                    fixPhaseBetween( _partials.begin(), _partials.end(), last_time_phase_correct, dehr_iter->first );
-                }                
-            }
-            last_time_phase_correct = dehr_iter->first;            
-                
-            ms = GetMorphState( dehr_iter->second );
-            notifier << "Morph switched to " << StateStrings[ ms ] 
-                     << " at " << dehr_iter->first << endl;
-
-        }
-        ++dehr_iter;
-    }
-    notifier << "--- fix phase after " << last_time_phase_correct << " ---" << endl;
-    fixPhaseAfter( _partials.begin(), _partials.end(), last_time_phase_correct );
-#endif
 }
 
 
@@ -1466,9 +1446,7 @@ Morpher::appendMorphedSrc( Breakpoint srcBkpt, const Partial & tgtPartial,
             CurrentState = GetMorphState( fweight );
             DEHR.push_back( std::make_pair( time, fweight ) );
         }
-        //UpdateMorphState( newp, fweight );
 #endif
-
         
         // adjust source Breakpoint frequencies according to the reference
         // Partial (if a reference has been specified):
@@ -1572,7 +1550,6 @@ Morpher::appendMorphedTgt( Breakpoint tgtBkpt, const Partial & srcPartial,
             CurrentState = GetMorphState( fweight );
             DEHR.push_back( std::make_pair( time, fweight ) );
         }
-        //UpdateMorphState( newp, fweight );
 #endif
         
         // adjust target Breakpoint frequencies according to the reference

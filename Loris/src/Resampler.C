@@ -122,7 +122,6 @@ Resampler::resample( Partial & p ) const
 		#if defined(PHASE_CORRECT)	
 		if ( newp.numBreakpoints() != 0 )
 		{			  
-			//	correct frequency to match phase:
 			matchPhaseFwd( newp.last(), newbp, interval_, damping );			
 		}
 		#endif

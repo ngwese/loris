@@ -773,8 +773,8 @@ void fixPhaseAfter( PartialList * partials, double time );
     Phase fixing is only applied to non-null (nonzero-amplitude) 
     Breakpoints, because null Breakpoints are interpreted as phase 
     reset points in Loris. If a null is encountered, its phase is 
-    simply left unmodified, and future phases wil be recomputed 
-    from that one.
+    corrected from its non-Null successor, if it has one, otherwise 
+    it is unmodified.
  */
 
 void fixPhaseAt( PartialList * partials, double time );
@@ -790,8 +790,8 @@ void fixPhaseAt( PartialList * partials, double time );
     forward direction, beginning at the start of the Partial. 
     Forward phase fixing is only applied to non-null 
     (nonzero-amplitude) Breakpoints. If a null is encountered, 
-    its phase is simply left unmodified, and future phases wil be 
-    recomputed from that one.
+    its phase is corrected from its non-Null successor, if 
+    it has one, otherwise it is unmodified.
  */
 
 void fixPhaseBefore( PartialList * partials, double time );
@@ -830,8 +830,8 @@ void fixPhaseForward( PartialList * partials, double tbeg, double tend );
     Phase fixing is only applied to non-null (nonzero-amplitude) 
     Breakpoints, because null Breakpoints are interpreted as phase 
     reset points in Loris. If a null is encountered, its phase is 
-    simply left unmodified, and future phases wil be recomputed 
-    from that one.
+    corrected from its non-Null successor, if it has one, otherwise 
+    it is unmodified.
  */
 
 int forEachBreakpoint( Partial * p,

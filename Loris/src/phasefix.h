@@ -24,9 +24,9 @@
  *
  * phasefix.h
  *
- * Declares a phase correction algorithm that perturbs slightly the 
- * frequencies or Breakpoints in a Partial so that the rendered Partial 
- * will achieve (or be closer to) the analyzed Breakpoint phases.
+ * Functions for correcting Breakpoint phases and frequencies so that
+ * stored phases match the phases that would be synthesized using the
+ * Loris Synthesizer.
  *
  * Kelly Fitz, 23 Sept 04
  * loris@cerlsoundgroup.org
@@ -41,88 +41,63 @@ namespace Loris {
 
 //  FUNCTION PROTOYPES
 
-//	fixPhaseBefore
+//	fixPhaseBackward
 //
-//! Recompute phases of all Breakpoints earlier than the specified time 
-//! so that the synthesize phases of those earlier Breakpoints matches 
-//! the stored phase, and the synthesized phase at the specified
-//! time matches the stored (not recomputed) phase.
-//! 
+//! Recompute phases of all Breakpoints on the half-open range [stopHere, pos)
+//! so that the synthesized phases of those Breakpoints matches 
+//! the stored phase, as long as the synthesized phase at stopHere
+//! matches the stored (not recomputed) phase.
+//!
+//! The phase is corrected beginning at the end of the range, maintaining
+//! the stored phase in the Breakpoint at pos.
+//!
 //! Backward phase-fixing stops if a null (zero-amplitude) Breakpoint
 //! is encountered, because nulls are interpreted as phase reset points
-//! in Loris. If a null is encountered, the remainder of the Partial
+//! in Loris. If a null is encountered, the remainder of the range
 //! (the front part) is fixed in the forward direction, beginning at
-//! the start of the Partial.
+//! the start of the stopHere.
 //!
-//! \param p    The Partial whose phases should be fixed.
-//! \param t    The time before which phases should be adjusted.
+//! \pre    pos and stopHere are iterators on the same Partial, and
+//!         pos must be not later than stopHere.
+//! \pre    pos cannot be end of the Partial, it must be the postion
+//!         of a valid Breakpoint.
+//! \param  stopHere the position of the earliest Breakpoint whose phase might be
+//!         recomputed.
+//! \param  pos the position of a (later) Breakpoint whose phase is to be matched.
+//!         The phase at pos is not modified.
 //
-void fixPhaseBefore( Partial & p, double t );
-
-//	fixPhaseAfter
-//
-//! Recompute phases of all Breakpoints later than the specified time 
-//! so that the synthesize phases of those later Breakpoints matches 
-//! the stored phase, as long as the synthesized phase at the specified
-//! time matches the stored (not recomputed) phase.
-//! 
-//! Phase fixing is only applied to non-null (nonzero-amplitude) Breakpoints,
-//! because null Breakpoints are interpreted as phase reset points in 
-//! Loris. If a null is encountered, its phase is simply left unmodified,
-//! and future phases wil be recomputed from that one.
-//!
-//! \param p    The Partial whose phases should be fixed.
-//! \param t    The time after which phases should be adjusted.
-//
-void fixPhaseAfter( Partial & p, double t );
+void fixPhaseBackward( Partial::iterator stopHere, Partial::iterator pos );
 
 //	fixPhaseForward
 //
-//! Recompute phases of all Breakpoints later than the specified time 
-//! so that the synthesize phases of those later Breakpoints matches 
-//! the stored phase, as long as the synthesized phase at the specified
-//! time matches the stored (not recomputed) phase. Breakpoints later than
-//! tend are unmodified.
+//! Recompute phases of all Breakpoints on the closed range [pos, stopHere]
+//! so that the synthesized phases of those Breakpoints matches 
+//! the stored phase, as long as the synthesized phase at pos
+//! matches the stored (not recomputed) phase. The phase at pos 
+//! is modified only if pos is the position of a null Breakpoint
+//! and the Breakpoint that follows is non-null.
 //! 
 //! Phase fixing is only applied to non-null (nonzero-amplitude) Breakpoints,
 //! because null Breakpoints are interpreted as phase reset points in 
-//! Loris. If a null is encountered, its phase is simply left unmodified,
-//! and future phases wil be recomputed from that one.
+//! Loris. If a null is encountered, its phase is corrected from its non-Null
+//! successor, if it has one, otherwise it is unmodified.
 //!
-//! \param p    The Partial whose phases should be fixed.
-//! \param tbeg The phases and frequencies of Breakpoints later than the 
-//!             one nearest this time will be modified.
-//! \param tend The phases and frequencies of Breakpoints earlier than the 
-//!             one nearest this time will be modified. Should be greater 
-//!             than tbeg, or else they will be swapped.
+//! \pre    pos and stopHere are iterators on the same Partial, and
+//!         pos must be not later than stopHere.
+//! \pre    stopHere cannot be end of the Partial, it must be the postion
+//!         of a valid Breakpoint.
+//! \param  pos the position of the first Breakpoint whose phase might be
+//!         recomputed.
+//! \param  stopHere the position of the last Breakpoint whose phase might
+//!         be modified.
 //
-void fixPhaseForward( Partial & p, double tbeg, double tend );
+void fixPhaseForward( Partial::iterator pos, Partial::iterator stopHere );
 
-//	fixPhaseAt
+// ---------------------------------------------------------------------------
+//  fixPhaseBetween
 //
-//! Recompute phases of all Breakpoints in a Partial
-//! so that the synthesize phases match the stored phases, 
-//! and the synthesized phase at (nearest) the specified
-//! time matches the stored (not recomputed) phase.
-//! 
-//! Backward phase-fixing stops if a null (zero-amplitude) Breakpoint
-//! is encountered, because nulls are interpreted as phase reset points
-//! in Loris. If a null is encountered, the remainder of the Partial
-//! (the front part) is fixed in the forward direction, beginning at
-//! the start of the Partial. Forward phase fixing is only applied 
-//! to non-null (nonzero-amplitude) Breakpoints. If a null is encountered, 
-//! its phase is simply left unmodified, and future phases wil be 
-//! recomputed from that one.
-//!
-//! \param p    The Partial whose phases should be fixed.
-//! \param t    The time at which phases should be made correct.
-//
-void fixPhaseAt( Partial & p, double t );
-
-//	fixPhaseBetween
-//
-//!	Fix the phase travel between two times by adjusting the
-//!	frequency and phase of Breakpoints between those two times.
+//!	Fix the phase travel between two Breakpoints by adjusting the
+//!	frequency and phase of Breakpoints between those two.
 //!
 //!	This algorithm assumes that there is nothing interesting about the
 //!	phases of the intervening Breakpoints, and modifies their frequencies 
@@ -131,26 +106,23 @@ void fixPhaseAt( Partial & p, double t );
 //!	match the stored values. The phases of all the Breakpoints between 
 //! the specified times are recomputed.
 //!
-//! THIS DOES NOT YET TREAT NULL BREAKPOINTS DIFFERENTLY FROM OTHERS.
+//! Null Breakpoints are treated the same as non-null Breakpoints.
 //!
-//! \pre      Thre must be at least one Breakpoint in the
-//!           Partial between the specified times t1 and t2.
-//!           If this condition is not met, the Partial is
-//!           unmodified.
-//! \post     The phases and frequencies of the Breakpoints in the 
-//!           range have been recomputed such that an oscillator
-//!           initialized to the parameters of the first Breakpoint
-//!           will arrive at the parameters of the last Breakpoint,
-//!           and all the intervening Breakpoints will be matched.
-//!	\param p  The partial whose phases and frequencies will be recomputed. 
-//!           The Breakpoint at this position is unaltered.
-//! \param t1 The time before which Partial frequencies and phases will 
-//!           not be modified.
-//! \param t2 The time after which Partial frequencies and phases will 
-//!           not be modified. Should be greater than t1, or else they
-//!           will be swapped.
+//! \pre        b and e are iterators on the same Partials, and
+//!             e must not preceed b in that Partial.
+//! \pre        There must be at least one Breakpoint in the
+//!             Partial between b and e.
+//! \post       The phases and frequencies of the Breakpoints in the 
+//!             range have been recomputed such that an oscillator
+//!             initialized to the parameters of the first Breakpoint
+//!             will arrive at the parameters of the last Breakpoint,
+//!             and all the intervening Breakpoints will be matched.
+//! \param b    The phases and frequencies of Breakpoints later than
+//!             this one may be modified.
+//! \param e    The phases and frequencies of Breakpoints earlier than  
+//!             this one may be modified.
 //
-void fixPhaseBetween( Partial & p, double t1, double t2 );
+void fixPhaseBetween( Partial::iterator b, Partial::iterator e );
 
 //	fixFrequency
 //
@@ -159,8 +131,6 @@ void fixPhaseBetween( Partial & p, double t1, double t2 );
 //!	achieves (or matches as nearly as possible, within 
 //!	the constraint of the maximum allowable frequency
 //! alteration) the analyzed phases. 
-//!
-//! THIS DOES NOT YET TREAT NULL BREAKPOINTS DIFFERENTLY FROM OTHERS.
 //!
 //!  \param     partial The Partial whose frequencies,
 //!             and possibly phases (if the frequencies
@@ -178,8 +148,6 @@ void fixFrequency( Partial & partial, double maxFixPct = 0.2 );
 //!	achieves (or matches as nearly as possible, within 
 //!	the constraint of the maximum allowable frequency
 //! alteration) the analyzed phases. 
-//!
-//! THIS DOES NOT YET TREAT NULL BREAKPOINTS DIFFERENTLY FROM OTHERS.
 //!
 //! \param		b The beginning of a range of Partials whose 
 //!             frequencies should be fixed.
@@ -236,7 +204,7 @@ void fixFrequency( Iter b, Iter e, double maxFixPct = 0.2 )
 //!				but will be updated as well to be consistent with
 //!				the frequencies. (default is 0.2%)
 //
-void matchPhaseFwd( const Breakpoint & bp0, Breakpoint & bp1,
+void matchPhaseFwd( Breakpoint & bp0, Breakpoint & bp1,
 				    double dt, double damping, double maxFixPct = 0.2 );
 
 //	phaseTravel
