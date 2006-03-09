@@ -72,59 +72,65 @@ buildReassignmentWindows( RealWinIter winbegin, RealWinIter winend,
 // ---------------------------------------------------------------------------
 //	ReassignedSpectrum constructor
 // ---------------------------------------------------------------------------
-//	Transform lengths are the smallest power of two greater than twice the
-//	window length.
+//! Construct a new instance using the specified short-time window.
+//!	Transform lengths are the smallest power of two greater than twice the
+//!	window length.
 //
 ReassignedSpectrum::ReassignedSpectrum( const std::vector< double > & window ) :
-	_transform( 1 << long( 1 + ceil( log((double)window.size()) / log(2.)) ) ),
-	_ratransform( 1 << long( 1 + ceil( log((double)window.size()) / log(2.)) ) ),
-	_window( window.begin(), window.end() ),
-	_rawindow( window.size(), 0. ),
-	_rawindow2( window.size(), 0. )
+	mMagnitudeTransform( 1 << long( 1 + ceil( log((double)window.size()) / log(2.)) ) ),
+	mCorrectionTransform( 1 << long( 1 + ceil( log((double)window.size()) / log(2.)) ) ),
+	mWindow( window.begin(), window.end() ),
+	mMagnitudeTransformWindow( window.size(), 0. ),
+	mCorrectionTransformWindow( window.size(), 0. )
 {
 	// scale the window so that the reported magnitudes
 	// are correct:
-	double winsum = std::accumulate( _window.begin(), _window.end(), 0. );
-	std::transform( _window.begin(), _window.end(), _window.begin(), 
+	double winsum = std::accumulate( mWindow.begin(), mWindow.end(), 0. );
+	std::transform( mWindow.begin(), mWindow.end(), mWindow.begin(), 
 			        std::bind1st( std::multiplies<double>(), 2/winsum ) );
 	
-	buildReassignmentWindows( _window.begin(), _window.end(), 
-	                         _rawindow.begin(), _rawindow2.begin() );
+	buildReassignmentWindows( mWindow.begin(), mWindow.end(), 
+	                         mMagnitudeTransformWindow.begin(), mCorrectionTransformWindow.begin() );
 
-	debugger << "ReassignedSpectrum: length is " << _transform.size() << endl;
-}
-
-// ---------------------------------------------------------------------------
-//	ReassignedSpectrum destructor
-// ---------------------------------------------------------------------------
-//
-ReassignedSpectrum::~ReassignedSpectrum( void )
-{
+	debugger << "ReassignedSpectrum: length is " << mMagnitudeTransform.size() << endl;
 }
 
 // ---------------------------------------------------------------------------
 //	transform
 // ---------------------------------------------------------------------------
-//	Compute the reassigned Fourier transform of the samples on the half open
-//	range [sampsBegin, sampsEnd), aligning sampCenter with the center of
-//	the analysis window.
-//
-//	Clients must ensure that the samples beyond the window boundaries are not 
-//	requested. Note that it is not sufficient to check that sampsEnd - sampsBegin
-//	is no greater than the window length, since sampCenter might not be in the
-//	center of that range.
+//!	Compute the reassigned Fourier transform of the samples on the half open
+//!	range [sampsBegin, sampsEnd), aligning sampCenter with the center of
+//!	the analysis window.
+//!
+//! \param  sampsBegin pointer representing the beginning of 
+//!         the (half-open) range of samples to transform
+//! \param  sampCenter the sample in the range that is to be 
+//!         aligned with the center of the analysis window
+//! \param  sampsEnd pointer representing the end of 
+//!         the (half-open) range of samples to transform
+//!
+//! \pre    sampsBegin must not be past sampCenter
+//! \pre    sampsEnd must be past sampCenter
+//! \post   the transform buffers store the reassigned 
+//!         short-time transform data for the specified 
+//!         samples
 //
 void
-ReassignedSpectrum::transform( const double * sampsBegin, const double * sampCenter, const double * sampsEnd )
+ReassignedSpectrum::transform( const double * sampsBegin, 
+                               const double * sampCenter, 
+                               const double * sampsEnd )
 {
-#ifdef Debug_Loris
-	Assert( sampCenter >= sampsBegin );
-	Assert( sampCenter < sampsEnd );
+    if ( sampCenter < sampsBegin ||  sampCenter >= sampsEnd )
+    {
+        Throw( InvalidArgument, "Invalid sample range boundaries." );
+    }
+
 	const long firstHalfWinLength = window().size() / 2;
 	const long secondHalfWinLength = (window().size() - 1) / 2;
-	Assert( sampCenter - sampsBegin <= firstHalfWinLength );
-	Assert( sampsEnd - sampCenter <= secondHalfWinLength + 1 );
-#endif
+	    
+    //  ensure that samples outside the window are not used:
+    sampsBegin = std::max( sampsBegin, sampCenter - firstHalfWinLength );
+    sampsEnd = std::min( sampsEnd, sampCenter + secondHalfWinLength + 1 );
 		
 	//	we will skip the beginning of the window
 	//	only if pos is too close to the start of 
@@ -133,8 +139,7 @@ ReassignedSpectrum::transform( const double * sampsBegin, const double * sampCen
 	if ( sampCenter - sampsBegin < (window().size() / 2) )
 	{
 		winBeginOffset = (window().size() / 2) - ( sampCenter - sampsBegin );
-	}
-			
+	}			
 		
 	//	to get phase right, we will rotate the Fourier transform 
 	//	input by pos - sampsBegin samples:
@@ -143,30 +148,53 @@ ReassignedSpectrum::transform( const double * sampsBegin, const double * sampCen
 	//	window and rotate input and compute normal transform:
 	//	window the samples into the FT buffer:
 	FourierTransform::iterator it = 
-		std::transform( sampsBegin, sampsEnd, _rawindow2.begin() + winBeginOffset, 
-						_transform.begin(), std::multiplies< std::complex< double > >() );
+		std::transform( sampsBegin, sampsEnd, mCorrectionTransformWindow.begin() + winBeginOffset, 
+						mMagnitudeTransform.begin(), std::multiplies< std::complex< double > >() );
 	//	fill the rest with zeros:
-	std::fill( it, _transform.end(), 0. );
+	std::fill( it, mMagnitudeTransform.end(), 0. );
 	//	rotate to align phase:
-	std::rotate( _transform.begin(), _transform.begin() + rotateBy, _transform.end() );
+	std::rotate( mMagnitudeTransform.begin(), mMagnitudeTransform.begin() + rotateBy, mMagnitudeTransform.end() );
 
 	//	compute transform:
-	_transform.transform();
+	mMagnitudeTransform.transform();
 
 	//	compute the dual reassignment transform:
 	//	window the samples into the reassignment FT buffer,
 	//	using the complex-valued reassignment window:
-	it = std::transform( sampsBegin, sampsEnd, _rawindow.begin() + winBeginOffset, 
-						_ratransform.begin(), std::multiplies< std::complex<double> >() );
+	it = std::transform( sampsBegin, sampsEnd, mMagnitudeTransformWindow.begin() + winBeginOffset, 
+						mCorrectionTransform.begin(), std::multiplies< std::complex<double> >() );
 	
 	//	fill the rest with zeros:
-	std::fill( it, _ratransform.end(), 0. );
+	std::fill( it, mCorrectionTransform.end(), 0. );
 	//	rotate to align phase:
-	std::rotate( _ratransform.begin(), _ratransform.begin() + rotateBy, _ratransform.end() );
+	std::rotate( mCorrectionTransform.begin(), mCorrectionTransform.begin() + rotateBy, mCorrectionTransform.end() );
 	//	compute the transform:
-	_ratransform.transform();
+	mCorrectionTransform.transform();
 }
 
+// ---------------------------------------------------------------------------
+//	size
+// ---------------------------------------------------------------------------
+//! Return the length of the Fourier transforms.
+//
+ReassignedSpectrum::size_type 
+ReassignedSpectrum::size( void ) const 
+{ 
+    return mMagnitudeTransform.size(); 
+}
+
+// ---------------------------------------------------------------------------
+//	window
+// ---------------------------------------------------------------------------
+//! Return read access to the short-time window samples.
+//!	(Peers may need to know about the analysis window
+//!	or about the scale factors in introduces.)
+//
+const std::vector< double > &
+ReassignedSpectrum::window( void ) const 
+{ 
+    return mWindow; 
+}
 
 // ---------------------------------------------------------------------------
 //	circEvenPartAt - helper
@@ -244,11 +272,14 @@ circOddPartAt( const TransformData & td, long idx )
 // ---------------------------------------------------------------------------
 //	frequencyCorrection
 // ---------------------------------------------------------------------------
-//	Equation 14 from the Trans ASP correspondence.
-//	Correction is computed in fractional frequency samples, because
-//	that's the kind of frequency domain ramp we used on our window.
-//	sample is the frequency sample index, the nominal component 
-//	frequency in samples. 
+//!	Compute the frequency correction at the specified frequency sample
+//! using the method of Auger and Flandrin to evaluate the partial
+//! derivative of spectrum phase w.r.t. time.
+//!
+//!	Correction is computed in fractional frequency samples, because
+//!	that's the kind of frequency domain ramp we used on our window.
+//!	sample is the frequency sample index, the nominal component 
+//!	frequency in samples. 
 //
 //	Parabolic interpolation can be tried too (see reassignedFrequency()) 
 //	but it appears to give slightly worse results, for example, with 
@@ -257,8 +288,8 @@ circOddPartAt( const TransformData & td, long idx )
 double
 ReassignedSpectrum::frequencyCorrection( long idx ) const
 {
-	std::complex<double> X_h = circEvenPartAt( _transform, idx );
-    std::complex<double> X_Dh = circEvenPartAt( _ratransform, idx );
+	std::complex<double> X_h = circEvenPartAt( mMagnitudeTransform, idx );
+    std::complex<double> X_Dh = circEvenPartAt( mCorrectionTransform, idx );
 	
 	double num = X_h.real() * X_Dh.imag() -
 				 X_h.imag() * X_Dh.real();
@@ -266,22 +297,25 @@ ReassignedSpectrum::frequencyCorrection( long idx ) const
 	double magSquared = std::norm( X_h );
 
 	//	need to scale by the oversampling factor?
-	double oversampling = (double)_ratransform.size() / _rawindow.size();
+	double oversampling = (double)mCorrectionTransform.size() / mMagnitudeTransformWindow.size();
 	return - oversampling * num / magSquared;
 }
 
 // ---------------------------------------------------------------------------
 //	timeCorrection
 // ---------------------------------------------------------------------------
-//	Equation ??? from the Trans ASP correspondence.
-//	Correction is computed in fractional samples, because
-//	that's the kind of ramp we used on our window.
+//!	Compute the time correction at the specified frequency sample
+//! using the method of Auger and Flandrin to evaluate the partial
+//! derivative of spectrum phase w.r.t. frequency.
+//!
+//!	Correction is computed in fractional samples, because
+//!	that's the kind of ramp we used on our window.
 //
 double
 ReassignedSpectrum::timeCorrection( long idx ) const
 {
-	std::complex<double> X_h = circEvenPartAt( _transform, idx );
-	std::complex<double> X_Th = circOddPartAt( _ratransform, idx ); 
+	std::complex<double> X_h = circEvenPartAt( mMagnitudeTransform, idx );
+	std::complex<double> X_Th = circOddPartAt( mCorrectionTransform, idx ); 
 
 	double num = X_h.real() * X_Th.real() +
 		  		 X_h.imag() * X_Th.imag();
@@ -290,15 +324,18 @@ ReassignedSpectrum::timeCorrection( long idx ) const
 	//	need to scale by the oversampling factor?
 	//	No, seems to sound bad, why?
 	//	(try alienthreat)
-	// double oversampling = (double)_ratransform.size() / _rawindow.size();
+	// double oversampling = (double)mCorrectionTransform.size() / mMagnitudeTransformWindow.size();
 	return num / magSquared;
 }
 
 // ---------------------------------------------------------------------------
 //	reassignedFrequency
 // ---------------------------------------------------------------------------
-//	Return the reassigned, fractional frequency sample 
-//	for the specified index.
+//! Return the reassigned frequency in fractional frequency 
+//! samples computed at the specified transform index.
+//!
+//! \param  idx the frequency sample at which to evaluate the
+//!         transform
 //
 double
 ReassignedSpectrum::reassignedFrequency( long idx ) const
@@ -309,9 +346,9 @@ ReassignedSpectrum::reassignedFrequency( long idx ) const
 	
 #else // defined(SMITHS_BRILLIANT_PARABOLAS)
 
-	double dbLeft = 20. * log10( abs( circEvenPartAt( _transform, idx-1 ) ) );
-	double dbCandidate = 20. * log10( abs( circEvenPartAt( _transform, idx ) ) );
-	double dbRight = 20. * log10( abs( circEvenPartAt( _transform, idx+1 ) ) );
+	double dbLeft = 20. * log10( abs( circEvenPartAt( mMagnitudeTransform, idx-1 ) ) );
+	double dbCandidate = 20. * log10( abs( circEvenPartAt( mMagnitudeTransform, idx ) ) );
+	double dbRight = 20. * log10( abs( circEvenPartAt( mMagnitudeTransform, idx+1 ) ) );
 	
 	double peakXOffset = 0.5 * (dbLeft - dbRight) /
 						 (dbLeft - 2.0 * dbCandidate + dbRight);
@@ -324,8 +361,11 @@ ReassignedSpectrum::reassignedFrequency( long idx ) const
 // ---------------------------------------------------------------------------
 //	reassignedTime
 // ---------------------------------------------------------------------------
-//	The nominal time is 0 (samples) since no other temporal information about 
-//	the transformed buffer is available.
+//! Return the reassigned time in fractional samples
+//! computed at the specified transform index.
+//!
+//! \param  idx the frequency sample at which to evaluate the
+//!         transform
 //
 double
 ReassignedSpectrum::reassignedTime( long idx ) const
@@ -336,17 +376,12 @@ ReassignedSpectrum::reassignedTime( long idx ) const
 // ---------------------------------------------------------------------------
 //	reassignedMagnitude
 // ---------------------------------------------------------------------------
-//	The magnitude is not "reassigned", it is only scaled to account for
-//	the analysis window. 
-//	
-//	Two magnitude corrections that used to be performed have been removed:
-//	- main lobe oversampling to improve magnitude estimates
-//	- ad-hoc chirp correction
-
-//	peakBinNumber may not (often is not, except for very well-behaved sounds)
-//	be the nearest integer bin number to fracBinNum, so it has to be passed 
-//	in separately. fracBinNum is no longer used, we just use the peak magnitude.
-//	
+//! Return the spectrum magnitude (absolute)
+//! computed at the specified transform index.
+//!
+//! \param  idx the frequency sample at which to evaluate the
+//!         transform
+//
 double
 ReassignedSpectrum::reassignedMagnitude( long idx ) const
 {
@@ -354,16 +389,16 @@ ReassignedSpectrum::reassignedMagnitude( long idx ) const
 	
 	//	compute the nominal spectral amplitude by scaling
 	//	the peak spectral sample:
-	return abs( circEvenPartAt( _transform, idx ) );
+	return abs( circEvenPartAt( mMagnitudeTransform, idx ) );
 	
 #else // defined(SMITHS_BRILLIANT_PARABOLAS)
 	
 	//	keep this parabolic interpolation computation around
 	//	only for sake of comparison, it is unlikely to yield
 	//	good results with bandwidth association:
-	double dbLeft = 20. * log10( abs( circEvenPartAt( _transform, idx-1 ) ) );
-	double dbCandidate = 20. * log10( abs( circEvenPartAt( _transform, idx ) ) );
-	double dbRight = 20. * log10( abs( circEvenPartAt( _transform, idx+1 ) ) );
+	double dbLeft = 20. * log10( abs( circEvenPartAt( mMagnitudeTransform, idx-1 ) ) );
+	double dbCandidate = 20. * log10( abs( circEvenPartAt( mMagnitudeTransform, idx ) ) );
+	double dbRight = 20. * log10( abs( circEvenPartAt( mMagnitudeTransform, idx+1 ) ) );
 	
 	double peakXOffset = 0.5 * (dbLeft - dbRight) /
 						 (dbLeft - 2.0 * dbCandidate + dbRight);
@@ -378,14 +413,17 @@ ReassignedSpectrum::reassignedMagnitude( long idx ) const
 // ---------------------------------------------------------------------------
 //	reassignedPhase
 // ---------------------------------------------------------------------------
-//	The reassigned phase is shifted to account for the time
-//	correction (in fractional time samples) according to the 
-//	corrected frequency (in fractional frequency samples).
+//! Return the phase in radians computed at the specified transform index.
+//!	The reassigned phase is shifted to account for the time
+//!	correction according to the corrected frequency.
+//!
+//! \param  idx the frequency sample at which to evaluate the
+//!         transform
 //
 double
 ReassignedSpectrum::reassignedPhase( long idx ) const
 {
-	double phase = arg( circEvenPartAt( _transform, idx ) );
+	double phase = arg( circEvenPartAt( mMagnitudeTransform, idx ) );
 	
 	const double offsetTime = timeCorrection( idx );
 	const double offsetFreq = frequencyCorrection( idx );
@@ -406,13 +444,13 @@ ReassignedSpectrum::reassignedPhase( long idx ) const
 	//  Phase ought to be linear anyway, so I should just be
 	//  able to use dumb old linear interpolation.
 	double slope = (offsetFreq > 0) ? 
-	      ( arg( circEvenPartAt( _transform, idx+1 ) ) - phase ) : 
-	      ( phase - arg( circEvenPartAt( _transform, idx-1 ) ) );
+	      ( arg( circEvenPartAt( mMagnitudeTransform, idx+1 ) ) - phase ) : 
+	      ( phase - arg( circEvenPartAt( mMagnitudeTransform, idx-1 ) ) );
 	phase += offsetFreq * slope;
 		
 	//	adjust phase according to the time correction:
 	const double fracFreqSample = idx + offsetFreq; 
-	phase += offsetTime * fracFreqSample * 2. * Pi / _transform.size();
+	phase += offsetTime * fracFreqSample * 2. * Pi / mMagnitudeTransform.size();
 	
 	return fmod( phase, 2. * Pi );
 }
@@ -420,26 +458,45 @@ ReassignedSpectrum::reassignedPhase( long idx ) const
 // ---------------------------------------------------------------------------
 //	reassignedBandwidth
 // ---------------------------------------------------------------------------
-//  Experimental new bandwidth calculation based on mixed partial
-//  derivative of phase. Have no idea whether this works yet.
+//! Return the bandwidth factor computed at 
+//! the specified transform index. (Experimental,
+//! computed from the mixed partial derivative of
+//! spectrum phase, not used in BW enhanced analysis.)
+//!
+//! \param  idx the frequency sample at which to evaluate the
+//!         transform
 //
 double
 ReassignedSpectrum::reassignedBandwidth( long idx ) const
 {
-  	std::complex<double> X_h = circEvenPartAt( _transform, idx );
-	std::complex<double> X_Th = circOddPartAt( _ratransform, idx ); 
-    std::complex<double> X_Dh = circEvenPartAt( _ratransform, idx );
-    std::complex<double> X_TDh = circOddPartAt( _transform, idx );
+  	std::complex<double> X_h = circEvenPartAt( mMagnitudeTransform, idx );
+	std::complex<double> X_Th = circOddPartAt( mCorrectionTransform, idx ); 
+    std::complex<double> X_Dh = circEvenPartAt( mCorrectionTransform, idx );
+    std::complex<double> X_TDh = circOddPartAt( mMagnitudeTransform, idx );
 
 	double term1 = (X_TDh * conj(X_h)).real() / norm( X_h );
 	double term2 = ((X_Th * X_Dh) / (X_h * X_h)).real();
 		  		  
-	double scaleBy = 2. * Pi / _rawindow.size();
+	double scaleBy = 2. * Pi / mMagnitudeTransformWindow.size();
 
     double bw = fabs( 1.0 + (scaleBy * (term1 - term2)) );
     bw = min( 1.0, bw );
     
     return bw;  
+}
+
+// ---------------------------------------------------------------------------
+//	subscript operator (deprecated)
+// ---------------------------------------------------------------------------
+//  Included to support old code.
+//  The signature has changed, can no longer return a reference,
+//  but since the reference returned was const, this version should 
+//  keep most old code working, if not all.
+//
+std::complex< double >
+ReassignedSpectrum::operator[]( unsigned long idx ) const
+{
+    return circEvenPartAt( mMagnitudeTransform, idx );
 }
 
 // ---------------------------------------------------------------------------
@@ -451,16 +508,11 @@ template <class T>
 struct make_complex
 	: binary_function< T, T, std::complex<T> >
 {
-	std::complex<T> operator()(const T& re, const T& im) const;
+	std::complex<T> operator()(const T& re, const T& im) const
+    {
+    	return std::complex<T>( re, im );
+    }
 };
-
-template <class T>
-inline
-std::complex<T>
-make_complex<T>::operator()(const T& re, const T& im) const
-{
-	return std::complex<T>( re, im );
-}
 
 // ---------------------------------------------------------------------------
 //	applyFreqRamp
@@ -519,7 +571,7 @@ static inline void applyFreqRamp( vector< double > & w  )
 // ---------------------------------------------------------------------------
 //	applyTimeRamp
 // ---------------------------------------------------------------------------
-//	Make a copy of _window scaled by a ramp from -N/2 to N/2 for computing
+//	Make a copy of mWindow scaled by a ramp from -N/2 to N/2 for computing
 //	time corrections in samples.
 //
 static inline void applyTimeRamp( vector< double > & w )
