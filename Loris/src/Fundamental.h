@@ -151,7 +151,7 @@ public:
     //!         frequency range (freqMin_, freqMax_) at any time.
     //! \throws InvalidArgument if there are no Partials having 
     //!         sufficient energy to contribute to an estimate of the 
-    //!         fundamental frequency at the specified time.
+    //!         fundamental frequency at any time.
     LinearEnvelope constructEnvelope( double interval ) const;
      
     //! Return a LinearEnvelope that evaluates to a linear

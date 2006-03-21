@@ -97,12 +97,12 @@ public:
 	//!	time will have shorter onset fades. Partials are not rendered at
 	//!   frequencies above the half-sample rate. 
 	//!
-	//!   \param 	p The Partial to synthesize.
-	//!   \return  Nothing.
-	//!	\pre     The partial must have non-negative start time.
-	//!   \post    This Synthesizer's sample buffer (vector) has been 
-	//!            resized to accommodate the entire duration of the 
-	//!            Partial, p, including fade out at the end.
+	//! \param  p The Partial to synthesize.
+	//! \return Nothing.
+	//!	\pre    The partial must have non-negative start time.
+	//! \post   This Synthesizer's sample buffer (vector) has been 
+	//!         resized to accommodate the entire duration of the 
+	//!         Partial, p, including fade out at the end.
 	//!	\throw	InvalidPartial if the Partial has negative start time.
 	void synthesize( const Partial & p );	
 	 
@@ -117,17 +117,17 @@ public:
 	//!	including the fade outs. Previous contents of the buffer are not
 	//!	overwritten. Partials with start times earlier than the Partial fade
 	//!	time will have shorter onset fades.  Partials are not rendered at
-	//!   frequencies above the half-sample rate. 
+	//! frequencies above the half-sample rate. 
 	//!
-	//!   \param 	begin_partials The beginning of the range of Partials 
-	//!            to synthesize.
-	//!   \param 	end_partials The end of the range of Partials 
-	//!            to synthesize.
-	//!   \return  Nothing.
-	//!	\pre     The partials must have non-negative start times.
-	//!   \post    This Synthesizer's sample buffer (vector) has been 
-	//!            resized to accommodate the entire duration of all the 
-	//!            Partials including fade out at the ends.
+	//! \param  begin_partials The beginning of the range of Partials 
+	//!         to synthesize.
+	//! \param 	end_partials The end of the range of Partials 
+	//!         to synthesize.
+	//! \return Nothing.
+	//!	\pre    The partials must have non-negative start times.
+	//! \post   This Synthesizer's sample buffer (vector) has been 
+	//!         resized to accommodate the entire duration of all the 
+	//!         Partials including fade out at the ends.
 	//!	\throw	InvalidPartial if any Partial has negative start time.
 #if ! defined(NO_TEMPLATE_MEMBERS)
 	template< typename Iter >
@@ -158,11 +158,11 @@ public:
 
 	//!	Return a const reference to the sample buffer used (not
 	//!	owned) by this Synthesizer.
-	const std::vector<double> samples( void ) const;
+	const std::vector<double> & samples( void ) const;
 
 	//!	Return a reference to the sample buffer used (not
 	//!	owned) by this Synthesizer.
-	std::vector<double> samples( void );
+	std::vector<double> & samples( void );
 	
 //	-- mutation --
 
@@ -176,8 +176,8 @@ public:
 //	-- implementation --
 private:
 	Oscillator osc;
-	std::vector< double > * sampleBuffer;	//	samples are computed and stored here
-	double tfade;                          // Partial fade in/out time in seconds
+	std::vector< double > * sampleBuffer;  //	samples are computed and stored here
+	double tfade;                          //   Partial fade in/out time in seconds
 	double srate;                          //	sample rate in Hz
 	
 };	//	end of class Synthesizer
@@ -194,15 +194,15 @@ private:
 //!	overwritten. Partials with start times earlier than the Partial fade
 //!	time will have shorter onset fades.
 //!
-//!   \param 	begin_partials The beginning of the range of Partials 
-//!            to synthesize.
-//!   \param 	end_partials The end of the range of Partials 
-//!            to synthesize.
-//!   \return  Nothing.
-//!	\pre     The partials must have non-negative start times.
-//!   \post    This Synthesizer's sample buffer (vector) has been 
-//!            resized to accommodate the entire duration of all the 
-//!            Partials including fade out at the ends.
+//! \param  begin_partials The beginning of the range of Partials 
+//!         to synthesize.
+//! \param 	end_partials The end of the range of Partials 
+//!         to synthesize.
+//! \return Nothing.
+//!	\pre    The partials must have non-negative start times.
+//! \post   This Synthesizer's sample buffer (vector) has been 
+//!         resized to accommodate the entire duration of all the 
+//!         Partials including fade out at the ends.
 //!	\throw	InvalidPartial if any Partial has negative start time.
 //
 #if ! defined(NO_TEMPLATE_MEMBERS)

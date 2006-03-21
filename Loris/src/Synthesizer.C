@@ -232,7 +232,7 @@ Synthesizer::sampleRate( void ) const
 // ---------------------------------------------------------------------------
 //!	Return a const reference to the sample buffer used (not
 //!	owned) by this Synthesizer.
-const std::vector<double>
+const std::vector<double> &
 Synthesizer::samples( void ) const 
 {
 	return *sampleBuffer;
@@ -243,7 +243,7 @@ Synthesizer::samples( void ) const
 // ---------------------------------------------------------------------------
 //!	Return a reference to the sample buffer used (not
 //!	owned) by this Synthesizer.
-std::vector<double>
+std::vector<double> &
 Synthesizer::samples( void )  
 {
 	return *sampleBuffer;

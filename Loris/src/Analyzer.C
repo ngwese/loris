@@ -55,9 +55,14 @@
 #include "phasefix.h"   //  HEY LOOKIE HERE - for new frequency/phase fixing at end of analysis
 #endif
 
+// not for release yet
+#define FIND_RMS_PEAK_TIME 1
+
 #include <algorithm>
 #include <cmath>
+#include <functional>   //  for std::plus
 #include <memory>
+#include <numeric>      //  for std::inner_product
 #include <utility>
 #include <vector>
 
@@ -328,6 +333,19 @@ Analyzer::analyze( const std::vector<double> & vec, double srate,
 	analyze( &(vec[0]),  &(vec[0]) + vec.size(), srate, reference ); 
 }
 
+#if defined(FIND_RMS_PEAK_TIME) && FIND_RMS_PEAK_TIME
+// ---------------------------------------------------------------------------
+//	windowedSquare
+// ---------------------------------------------------------------------------
+//  Helper for computing windowed RMS peak time.
+//
+static 
+double windowedSquare( double signal, double window )
+{
+    return signal * signal * window;
+}
+#endif
+
 // ---------------------------------------------------------------------------
 //	analyze
 // ---------------------------------------------------------------------------
@@ -384,11 +402,16 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
 	{ 
 		//	loop over short-time analysis frames:
 		const double * winMiddle = bufBegin; 
+
+        #if defined(FIND_RMS_PEAK_TIME) && FIND_RMS_PEAK_TIME
+        double peakVal = 0, peakTime = 0.;
+        #endif
+        
 		while ( winMiddle < bufEnd )
 		{
 			//	compute the time of this analysis frame:
 			double currentFrameTime = long(winMiddle - bufBegin) / srate;
-			 
+            
 			//	compute reassigned spectrum:
 			//  sampsBegin is the position of the first sample to be transformed,
 			//	sampsEnd is the position after the last sample to be transformed.
@@ -397,6 +420,19 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
 			const double * sampsEnd = std::min( winMiddle + (winlen / 2) + 1, bufEnd );
 			spectrum.transform( sampsBegin, winMiddle, sampsEnd );
 			
+            #if defined(FIND_RMS_PEAK_TIME) && FIND_RMS_PEAK_TIME
+            double ip = std::inner_product( sampsBegin, sampsEnd, 
+                                            window.begin() + (winlen / 2) - (winMiddle - sampsBegin),
+                                            0.,
+                                            std::plus<double>(),
+                                            windowedSquare );
+            if ( ip > peakVal )
+            {
+                peakVal = ip;
+                peakTime = currentFrameTime;
+            }
+            #endif
+			 
 			//	extract peaks from the spectrum, thin and 
 			//	fade quiet peaks out over 10 dB:
 			#define FADE 10.
@@ -429,6 +465,10 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
 		#endif
 		
 		_imp->partials.splice( _imp->partials.end(), builder.partials() );
+        
+        #if defined(FIND_RMS_PEAK_TIME) && FIND_RMS_PEAK_TIME
+        notifier << "peak time is " << peakTime << " second" << endl;
+        #endif
 	}
 	catch ( Exception & ex ) 
 	{

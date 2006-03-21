@@ -1005,6 +1005,31 @@ public:
 		{ return lhs->duration() > rhs->duration(); }
 };
 
+// ---------------------------------------------------------------------------
+//	compareStartTimeLess
+//	
+//! Comparitor (binary) functor returning true if its first Partial
+//! argument has start time earlier than that of the second Partial
+//! argument, and false otherwise.
+//
+class compareStartTimeLess : 
+	public std::binary_function< const Partial, const Partial, bool >
+{
+public:
+   //! Compare two Partials, return true if its first Partial
+   //! argument has start time earlier than that of the second Partial
+   //! argument, and false otherwise.
+	bool operator()( const Partial & lhs, const Partial & rhs ) const 
+		{ return lhs.startTime() < rhs.startTime(); }
+
+   //! Compare two Partials, return true if its first Partial
+   //! argument has start time earlier than that of the second Partial
+   //! argument, and false otherwise.
+	bool operator()( const Partial * lhs, const Partial * rhs ) const 
+		{ return lhs->startTime() < rhs->startTime(); }
+};
+
+
 
 }	//	end of namespace PartialUtils
 
