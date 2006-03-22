@@ -23,12 +23,12 @@
  *
  *
  * The ImportAiff class provides the user with a dialog for importing aiff file formats
- * into a collection of partials. When importing an aiff file, the file samples
+ * into a collection of sound. When importing an aiff file, the file samples
  * gets analyzed according to user specified parameters. Inherits ImportDialog.
  *
  * ImportSdif differs from the ImportAiff class only in the lack of user specified
  * parameters.  Sdif files need not to be analysed since they already are a
- * collection of partials. Inherits ImportDialog.
+ * collection of sound. Inherits ImportDialog.
  *
  * The AnalyzeAiffWidget consists of 2 sliders and 2 spinboxes for specifying 
  * analysis parameters and are used in the importAiffDialog.  
@@ -43,7 +43,7 @@
 #endif
 
 #include "importDialog.h"
-#include "partialsList.h"
+#include "soundList.h"
 
 #include <qlayout.h>
 #include <qframe.h>
@@ -64,7 +64,7 @@
 AnalyzeAiffWidget::AnalyzeAiffWidget(
 	QWidget*	parent,
 	char*		name,
-	PartialsList*	pList
+	SoundList*	pList
 ):QWidget(parent,name){
   setGui();
   addWhatIsThis();
@@ -236,7 +236,7 @@ void AnalyzeAiffWidget::setSliders(
 // For the moment the dialogs are modal and the text can not be reached, if the
 // dialogs would be none modal we make more use of this functionality.
 void AnalyzeAiffWidget::addWhatIsThis(){
-  QString resolutionText = "The frequency resolution controls the frequency density of partials.  Two partials will differ in frequency by no less than the specified frequency resolution.  The frequency should be slightly less than the anticipated partial frequency density. For quasi-harmonic sounds, the anticipated partial frequency density is equal to the fundamental frequency, and the frequency resolution is typically set to 70% to 85% of the fundamental frequency. For non-harmonic sounds, some experimentation may be necessary, and intuition can offen be obtained using a spectrogram tool";
+  QString resolutionText = "The frequency resolution controls the frequency density of sound.  Two sound will differ in frequency by no less than the specified frequency resolution.  The frequency should be slightly less than the anticipated partial frequency density. For quasi-harmonic sounds, the anticipated partial frequency density is equal to the fundamental frequency, and the frequency resolution is typically set to 70% to 85% of the fundamental frequency. For non-harmonic sounds, some experimentation may be necessary, and intuition can offen be obtained using a spectrogram tool";
   
   QString widthText = "For quasi-harmonic sounds, the window width is set equal to the fundamental frequency, but it is rarely necessary to use windows wider than than 500Hz. Similarly, for very low-frequency quasi-harmonic sounds, best results are often obtained using windows as wide as 120Hz.";
 
@@ -263,7 +263,7 @@ void AnalyzeAiffWidget::addToolTips(){}
 ImportDialog::ImportDialog(
 	QWidget*	parent,
 	char*		name,
-	PartialsList*	partialsList,
+	SoundList*	soundList,
 	QStatusBar*	status
 ):QFileDialog(parent, name, TRUE){
   statusbar = status;
@@ -299,10 +299,10 @@ bool ImportDialog::startDialog(){
 ImportAiffDialog::ImportAiffDialog(
 	QWidget*	parent,
 	char*		name,
-	PartialsList*	partialsList,
+	SoundList*	soundList,
 	QStatusBar*	status
-):ImportDialog(parent, name, partialsList, status){
-  AnalyzeAiffWidget* widget = new AnalyzeAiffWidget(this,"ok", partialsList);
+):ImportDialog(parent, name, soundList, status){
+  AnalyzeAiffWidget* widget = new AnalyzeAiffWidget(this,"ok", soundList);
 
   addWidgets(0, widget, 0);
   addFilter("Audio file (*.aiff)");
@@ -321,7 +321,7 @@ ImportAiffDialog::ImportAiffDialog(
 	+ temp.setNum(width)
       );
 
-      partialsList->importAiff(
+      soundList->importAiff(
 	ImportDialog::path,
 	ImportDialog::name,
 	resolution,
@@ -351,15 +351,15 @@ ImportAiffDialog::ImportAiffDialog(
 ImportSdifDialog::ImportSdifDialog(
 	QWidget*	parent,
 	char*		name,
-	PartialsList*	partialsList,
+	SoundList*	soundList,
 	QStatusBar*	status
-):ImportDialog(parent, name, partialsList, status){
+):ImportDialog(parent, name, soundList, status){
   resize(500, 300);
   addFilter("Audio file (*.sdif)");
   
   if(startDialog()){ 
     try{
-      partialsList->importSdif(ImportDialog::path, ImportDialog::name);
+      soundList->importSdif(ImportDialog::path, ImportDialog::name);
       statusbar->message("Imported "+ImportDialog::name+" successfully.", 5000);
     }
     catch(...){

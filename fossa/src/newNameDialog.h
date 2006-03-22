@@ -4,7 +4,7 @@
 #include <qvariant.h>
 #include <qdialog.h>
 
-#include "partialsList.h"
+#include "soundList.h"
 
 class QVBoxLayout; 
 class QHBoxLayout; 
@@ -21,7 +21,7 @@ class NewNameDialog : public QDialog{
     NewNameDialog( 
 	QWidget*	parent, 
 	const char*	name, 
-	PartialsList*	partialsList, 
+	SoundList*	soundList, 
 	QStatusBar*	statusbar
     );
    
@@ -32,7 +32,7 @@ class NewNameDialog : public QDialog{
     QLabel*		newNameText;
     QLineEdit*		newNameInput;
     QGridLayout*	newNameDialogLayout;
-    PartialsList*	partialsList;
+    SoundList*	soundList;
     QStatusBar*		statusbar;
     QPushButton*	okButton;
     QPushButton*	cancelButton;

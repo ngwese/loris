@@ -19,17 +19,6 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *
- * partialsList.c++
- *
- * The PartialsList class is the main model of the application, ie. changes in 
- * PartialsList will trigger updates in view classes. This class has a list
- * containing imported partials and partials produced from different 
- * manipulations. One partials in the list is always set to current partials, 
- * and modifications can be made only to current partials. 
- * PartialsList also keeps track of two partials which are selected when 
- * the user decides to make a morph between two sounds. The class 
- * communicates with LorisInterface for necessary operations on partials.
- * 
  *
  * Susanne Lefvert, 1 March 2002
  *
@@ -37,7 +26,7 @@
  */
 
 #if HAVE_CONFIG_H
-#include <config.h>  // #define directives are placed in config.h by autoconf
+#include <config.h>
 #endif
 
 #include "lorisInterface.h"
@@ -51,7 +40,6 @@ using std::string;
 // ---------------------------------------------------------------------------
 //      LorisInterface constructor
 // ---------------------------------------------------------------------------
-
 LorisInterface::LorisInterface(){}
 
 // ---------------------------------------------------------------------------
@@ -62,14 +50,13 @@ LorisInterface::LorisInterface(){}
 // Consider combining importSdif and importAiff providing resolution and width 
 // with default parameters.  Check parameters to decide which format to 
 // import. 
-
 list<Partial>* LorisInterface::importAiff(
 	const char*	path,
 	double		resolution,
 	double		width
 ){ 
   try{
-    list<Partial>* partials = new list<Partial>;  // deleted in partialslist
+    list<Partial>* sound = new list<Partial>;  // deleted in soundlist
     AiffFile file(path);
     vector<double> sampleVector(file.numFrames());
     sampleVector = file.samples();
@@ -80,8 +67,8 @@ list<Partial>* LorisInterface::importAiff(
     analyzer.setFreqDrift(resolution);
 
     analyzer.analyze(sampleVector, file.sampleRate());
-    partials->splice(partials->end(), analyzer.partials());
-    return partials;
+    sound->splice(sound->end(), analyzer.partials());
+    return sound;
   }
 
   catch(...){
@@ -96,14 +83,12 @@ list<Partial>* LorisInterface::importAiff(
 // Concider combining importSdif and importAiff providing resolution and width 
 // with default parameters.  Check parameters to decide which format to 
 // import. 
-
 list<Partial>* LorisInterface::importSdif(const char* path){ 
-  
   try{
     SdifFile* file = new SdifFile(string(path));
-    list<Partial>* partials = new list<Partial>;
-    partials->splice(partials->end(), file->partials());
-    return partials;
+    list<Partial>* sound = new list<Partial>;
+    sound->splice(sound->end(), file->partials());
+    return sound;
   }
 
   catch(...){
@@ -116,20 +101,19 @@ list<Partial>* LorisInterface::importSdif(const char* path){
 // ---------------------------------------------------------------------------
 // Channelize list of Partial with given frequency label, 
 // minimum frequency, and mximum frequency.
-
 void LorisInterface::channelize(
 	int		refLabel,
 	double		minFreq,
 	double		maxFreq,
-	list<Partial>&	partials
+	list<Partial>&	sound
 ){ 
   try{
-    list<Partial>::const_iterator begin = partials.begin();
-    list<Partial>::const_iterator end   = partials.end();
+    list<Partial>::const_iterator begin = sound.begin();
+    list<Partial>::const_iterator end   = sound.end();
     FrequencyReference freRef(begin, end, minFreq, maxFreq);
     LinearEnvelope referenceEnvelope = freRef.envelope();
     Channelizer channelizer(referenceEnvelope, refLabel);
-    channelizer.channelize(partials.begin(), partials.end());
+    channelizer.channelize(sound.begin(), sound.end());
   }
   catch(...){
     throw;
@@ -140,11 +124,10 @@ void LorisInterface::channelize(
 //     distill
 // ---------------------------------------------------------------------------
 // Distill list of Partial
-
-void LorisInterface::distill(list<Partial>& partials){
+void LorisInterface::distill(list<Partial>& sound){
   try{
-  Distiller distiller;
-  distiller.distill(partials);
+    Distiller distiller;
+    distiller.distill(sound);
   }
 
   catch(...){
@@ -157,25 +140,23 @@ void LorisInterface::distill(list<Partial>& partials){
 // ---------------------------------------------------------------------------
 // Morph 2 lists of Partial with given frequency, amplitude, and noise
 // envelopes.
-
 list<Partial>* LorisInterface::morph(
 	LinearEnvelope&		famp,
 	LinearEnvelope&		ffreq,
 	LinearEnvelope&		fbw,
-	list<Partial>		partials1,
-	list<Partial>		partials2
+	list<Partial>		sound1,
+	list<Partial>		sound2
 ){
- 
   try{
     Morpher morpher(ffreq, famp, fbw);
     morpher.morph(
-	partials1.begin(),
-	partials1.end(),
-	partials2.begin(),
-	partials2.end()
+	sound1.begin(),
+	sound1.end(),
+	sound2.begin(),
+	sound2.end()
     );
     
-    // is deleted in partialsList;
+    // is deleted in soundList;
     list<Partial>* morphResult = new list<Partial>;
     morphResult->splice(morphResult->end(), morpher.partials());
     return morphResult;
@@ -190,23 +171,21 @@ list<Partial>* LorisInterface::morph(
 //     exportAiff
 // ---------------------------------------------------------------------------
 // Export list of Partial to aiff file format
-
 void LorisInterface::exportAiff(
 	double sampleRate,
 	int bitsPerSample,
 	const char* name,
-	list<Partial> partials,
+	list<Partial> sound,
 	double maxtime
 ){
-  
   try{
-    //Have to ensure a long enough buffer for synthesized partials
+    //Have to ensure a long enough buffer for synthesized sound
     //10ms is more than enough
     const double Padding = .01;
     double time = ((maxtime + Padding) * sampleRate);
     vector<double> sampleVector = vector<double>(time);
     Synthesizer synthesizer(sampleRate, sampleVector);
-    AiffFile file(partials.begin(), partials.end(), time);
+    AiffFile file(sound.begin(), sound.end(), time);
    
     // Loris can only synthesise mono files (channels = 1)
     /*AiffFile::Export(
@@ -229,10 +208,9 @@ void LorisInterface::exportAiff(
 //     exportSdif
 // ---------------------------------------------------------------------------
 // Export list of Partial to sdif file format
-
-void LorisInterface::exportSdif(const char* name, list<Partial> partials){
+void LorisInterface::exportSdif(const char* name, list<Partial> sound){
   try{
-    SdifFile::Export(name, partials);
+    SdifFile::Export(name, sound);
   }
   
   catch(...){

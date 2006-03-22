@@ -28,7 +28,7 @@
  *
  */
 
-#include "partialsList.h"
+#include "soundList.h"
 #include <qdialog.h>
 
 class QGridLayout;
@@ -42,7 +42,7 @@ class QComboBox;
 class QLabel;
 class QCanvas;
 
-class PartialsList;
+class SoundList;
 class DilateArea;
 
 /*
@@ -61,7 +61,7 @@ class DilateDialog:public QDialog{
     DilateDialog(
 	QWidget*	parent,
 	char*		name,
-	PartialsList*	list,
+	SoundList*	list,
 	QStatusBar*	status
     );
 
@@ -73,7 +73,7 @@ class DilateDialog:public QDialog{
   private:
     QCanvas*		canvas;
     QStatusBar*		statusbar;
-    PartialsList*	partialsList;
+    SoundList*	soundList;
     DilateArea*		dilateArea;
     QGridLayout*	dialogLayout;
 

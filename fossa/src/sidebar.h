@@ -33,9 +33,9 @@
  */
 
 #include <qframe.h>
-#include "partialsList.h"
+#include "soundList.h"
 
-class PartialsList;
+class SoundList;
 class Player;
 
 class QFrame;
@@ -46,10 +46,10 @@ class QBoxLayout;
 // ---------------------------------------------------------------------------
 // class Sidebar
 //
-// Sidebar provides a view over PartialsList, the container class of all 
-// collections of partials which has been imported or produced by manipulations. 
+// Sidebar provides a view over SoundList, the container class of all 
+// collections of sound which has been imported or produced by manipulations. 
 // Sidebar also has a player, which makes it possible for the user to audit current 
-// partials, see class Player. 
+// sound, see class Player. 
 
 class Sidebar:public QFrame{ 
   Q_OBJECT
@@ -58,23 +58,23 @@ class Sidebar:public QFrame{
     Sidebar(
 	QWidget*	parent,
 	const char*	name,
-	PartialsList*	pList
+	SoundList*	pList
     );
  
   public slots:
-    void updatePartialsListView();  // updates the view over partialsList
+    void updateSoundListView();  // updates the view over soundList
 
   private slots:
-    void setCurrentPartials(int);
+    void setCurrentSound(int);
 
   private:
     QBoxLayout*		sidebarLayout;
     QGroupBox*		playerGroup;
     QBoxLayout*		playerGroupLayout;
-    QGroupBox*		partialsListGroup;
-    QBoxLayout*		partialsListGroupLayout;
-    QListBox*		partialsListView;
-    PartialsList*	partialsList;
+    QGroupBox*		soundListGroup;
+    QBoxLayout*		soundListGroupLayout;
+    QListBox*		soundListView;
+    SoundList*	soundList;
     Player*		player;
   
     void		setGui();

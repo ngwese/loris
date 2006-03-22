@@ -21,10 +21,10 @@
  *
  * sidebar.c++
  *
- * The Sidebar class provides a view over PartialsList, the container class 
- * of all collections of partials which has been imported or produced by 
+ * The Sidebar class provides a view over SoundList, the container class 
+ * of all collections of sound which has been imported or produced by 
  * manipulations. Sidebar also has a player which makes it possible for the user
- * to audit current partials, see class Player. 
+ * to audit current sound, see class Player. 
  * 
  * 
  *
@@ -47,61 +47,63 @@
 // ---------------------------------------------------------------------------
 //	Sidebar constructor
 // ---------------------------------------------------------------------------
-
 Sidebar::Sidebar(
 	QWidget*	parent, 
 	const char*	name, 
-	PartialsList*	pList
-	):QFrame(parent, name){
- 
-  partialsList = pList;
+	SoundList*	pList
+):QFrame(parent, name){
+  soundList = pList;
     
   setGui();
   setConnections();
 }
 
 // ---------------------------------------------------------------------------
-//	updatePartialsListView
+//	setCurrentSound
 // ---------------------------------------------------------------------------
-// Every time the partialsList is changed the partialsListView gets updated.
+// When a user clicks on an item in the list, current sound are changed in
+// soundList;
+void Sidebar::setCurrentSound(int pos){
+  soundList->setCurrentSound(pos);
+}
 
-void Sidebar::updatePartialsListView(){
-  partialsListView->clear();
-  int listLength = partialsList->getLength();
+// ---------------------------------------------------------------------------
+//	updateSoundListView
+// ---------------------------------------------------------------------------
+// Every time the soundList is changed the soundListView gets updated.
+void Sidebar::updateSoundListView(){
+  soundListView->clear();
+  int listLength = soundList->getLength();
   if(listLength>0){
     for(int i = 0; i<listLength ; i++){
-      const Partials* p = partialsList->getPartials(i);
-      partialsListView->insertItem(p->getName());
+      const Sound* p = soundList->getSound(i);
+      soundListView->insertItem(p->getName());
     }
-    partialsListView->setCurrentItem(partialsList->getCurrentIndex());
+printf("sidebar current item is %d.\n", soundListView->currentItem());
+    soundListView->setCurrentItem(soundList->getCurrentIndex());
+    soundListView->triggerUpdate(true);
+printf("Just set sidebar current sound to %d\n", soundList->getCurrentIndex());
+printf("sidebar current item is %d.\n", soundListView->currentItem());
   }
 }
 
 // ---------------------------------------------------------------------------
 //	setConnections
 // ---------------------------------------------------------------------------
-
+// There are 2 directions here - the first call sets it up so that if the
+// user clicks on a new sound in the sidebar it tells the soundList (main
+// model class) to set a new current sound. The second sets it up the other
+// way, so that if the soundList changes current, then the sidebar updates.
 void Sidebar::setConnections(){
-  connect(partialsListView, SIGNAL(highlighted(int)), 
-	  this, SLOT(setCurrentPartials(int)));    
-  connect(partialsList, SIGNAL(listChanged()),// When partialsList is changed 
-	  this, SLOT(updatePartialsListView()));    // the view gets updated.
-}
-
-// ---------------------------------------------------------------------------
-//	setCurrentPartials
-// ---------------------------------------------------------------------------
-// When a user clicks on an item in the list, current partials are changed in
-// partialsList;
-
-void Sidebar::setCurrentPartials(int pos){
-  partialsList->setCurrentPartials(pos);
+  connect(soundListView, SIGNAL(highlighted(int)), 
+	  this, SLOT(setCurrentSound(int)));    
+  connect(soundList, SIGNAL(listChanged()),
+	  this, SLOT(updateSoundListView()));
 }
 
 // ---------------------------------------------------------------------------
 //	setGui
 // ---------------------------------------------------------------------------
-
 void Sidebar::setGui(){
   setFrameShape(QFrame::WinPanel);
   setFrameShadow(QFrame::Raised);
@@ -130,7 +132,7 @@ void Sidebar::setGui(){
   playerGroupLayout->setSpacing( 6 );
   playerGroupLayout->setMargin( 11 );
   
-  player = new Player(playerGroup, "player", partialsList);
+  player = new Player(playerGroup, "player", soundList);
   QFont player_font(player->font() );
   player_font.setPointSize( 12 );
   player->setFont(player_font );
@@ -139,28 +141,28 @@ void Sidebar::setGui(){
   playerGroupLayout->addWidget(player);
   sidebarLayout->addWidget(playerGroup);
   
-  partialsListGroup = new QGroupBox(this, "partialsListGroup");
-  partialsListGroup->setSizePolicy(
+  soundListGroup = new QGroupBox(this, "soundListGroup");
+  soundListGroup->setSizePolicy(
 	QSizePolicy(
 		(QSizePolicy::SizeType)7,
 		(QSizePolicy::SizeType)7, 
-		partialsListGroup->sizePolicy().hasHeightForWidth()
+		soundListGroup->sizePolicy().hasHeightForWidth()
 	)
   );
-  QFont partialsListGroup_font(partialsListGroup->font() );
-  partialsListGroup_font.setFamily( "helvetica" );
-  partialsListGroup_font.setPointSize( 12 );
-  partialsListGroup->setFont( partialsListGroup_font ); 
-  partialsListGroup->setTitle( tr( "List of partials" ) );
-  partialsListGroup->setColumnLayout(0, Qt::Vertical );
-  partialsListGroup->layout()->setSpacing( 0 );
-  partialsListGroup->layout()->setMargin( 0 );
-  partialsListGroupLayout = new QVBoxLayout( partialsListGroup->layout() );
-  partialsListGroupLayout->setAlignment( Qt::AlignTop );
-  partialsListGroupLayout->setSpacing( 6 );
-  partialsListGroupLayout->setMargin( 11 );
+  QFont soundListGroup_font(soundListGroup->font() );
+  soundListGroup_font.setFamily( "helvetica" );
+  soundListGroup_font.setPointSize( 12 );
+  soundListGroup->setFont( soundListGroup_font ); 
+  soundListGroup->setTitle( tr( "Currently loaded sounds" ) );
+  soundListGroup->setColumnLayout(0, Qt::Vertical );
+  soundListGroup->layout()->setSpacing( 0 );
+  soundListGroup->layout()->setMargin( 0 );
+  soundListGroupLayout = new QVBoxLayout( soundListGroup->layout() );
+  soundListGroupLayout->setAlignment( Qt::AlignTop );
+  soundListGroupLayout->setSpacing( 6 );
+  soundListGroupLayout->setMargin( 11 );
 
-  partialsListView = new QListBox(partialsListGroup,"partialsListView");
-  partialsListGroupLayout->addWidget(partialsListView);
-  sidebarLayout->addWidget(partialsListGroup);
+  soundListView = new QListBox(soundListGroup,"soundListView");
+  soundListGroupLayout->addWidget(soundListView);
+  sidebarLayout->addWidget(soundListGroup);
 }

@@ -32,6 +32,15 @@
  *
  */
 
+#include "morphArea.h"
+#include <qpainter.h>
+
+class AmplitudePoint;
+class FrequencyPoint;
+class NoisePoint;
+class MorphArea;
+class PointWithText;
+
 // ---------------------------------------------------------------------------
 // class PointWithText
 //
@@ -45,15 +54,6 @@
 // well after. If the user clicks on an already inserted PointWithText, the point 
 // gets movable and the user can drag it, between its neighbours, on the MorphArea.
 // A PointWithText can be erased by right clicking on it.
-
-#include "morphArea.h"
-
-class AmplitudePoint;
-class FrequencyPoint;
-class NoisePoint;
-class MorphArea;
-class PointWithText;
-
 class PointWithText:public QCanvasRectangle{ 
   public:
     const static int	size = 4; 
@@ -98,7 +98,6 @@ class PointWithText:public QCanvasRectangle{
 // class AmplitudePoint
 //
 // Inherits PointWithText and represents an amplitude point on the canvas.
-
 class AmplitudePoint:public PointWithText{
   public:
     const static int	rttiNr = 2000;  
@@ -123,7 +122,6 @@ class AmplitudePoint:public PointWithText{
 // class FrequencyPoint
 //
 // Inherits PointWithText and represents a frequency point on the canvas.
-
 class FrequencyPoint:public PointWithText{
   public:
     QPen		pen;
@@ -148,7 +146,6 @@ class FrequencyPoint:public PointWithText{
 // class NoisePoint
 //
 // Inherits PointWithText and represents a noise point on the canvas.
-
 class NoisePoint:public PointWithText{
   public:
     const static int	rttiNr = 2002;

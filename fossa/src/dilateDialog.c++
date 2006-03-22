@@ -36,7 +36,7 @@
 
 #include "dilateDialog.h"
 #include "dilateArea.h"
-#include "partialsList.h"
+#include "soundList.h"
 
 #include <qlayout.h>
 #include <qframe.h>
@@ -58,11 +58,11 @@
 DilateDialog::DilateDialog(
 	QWidget*	parent,
 	char*		name,
-	PartialsList*	pList,
+	SoundList*	pList,
 	QStatusBar*	status
 ):QDialog(parent, name, TRUE){
   statusbar = status;
-  partialsList = pList;
+  soundList = pList;
   canvs = new QCanvas(735, 350);
   sample1 = "";
   sample2 = "";
@@ -85,12 +85,12 @@ void DilateDialog::setLists(){
   sample1List->clear();
   sample2List->clear();
 
-  for(i=0; i<partialsList->getLength(); i++){
-    sample1List->insertItem(partialsList->getPartials(i)0>getName(), i);
-    sample2List->insertItem(partialsList->getPartials(i)0>getName(), i);
+  for(i=0; i<soundList->getLength(); i++){
+    sample1List->insertItem(soundList->getSound(i)0>getName(), i);
+    sample2List->insertItem(soundList->getSound(i)0>getName(), i);
   }
 
-  current = partialsList->getCurrentIndex();
+  current = soundList->getCurrentIndex();
 
   sample1List->setCurrentItem(current);
   sample2List->setCurrentItem(current);

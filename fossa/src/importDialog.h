@@ -48,7 +48,7 @@ class QFileDialog;
 class QStatusBar;
 
 class AnalyzeDialog;
-class PartialsList;
+class SoundList;
 
 #include <qfiledialog.h> 
 
@@ -64,7 +64,7 @@ class AnalyzeAiffWidget:public QWidget{
     AnalyzeAiffWidget(
 	QWidget*	parent,
 	char*		name,
-	PartialsList*	pList
+	SoundList*	pList
     );
 
     double		getResolution();
@@ -114,7 +114,7 @@ class ImportDialog:public QFileDialog{
     ImportDialog(
 	QWidget*	parent,
 	char*		name,
-	PartialsList*	pList,
+	SoundList*	pList,
 	QStatusBar*	status
     );
 
@@ -139,7 +139,7 @@ class ImportAiffDialog:public ImportDialog{
     ImportAiffDialog(
 	QWidget*	parent,
 	char*		name,
-	PartialsList*	pList,
+	SoundList*	pList,
 	QStatusBar*	status
     );
 
@@ -162,7 +162,7 @@ class ImportSdifDialog:public ImportDialog{
     ImportSdifDialog(
 	QWidget*	parent,
 	char*		name,
-	PartialsList*	pList,
+	SoundList*	pList,
 	QStatusBar*	status
     );
 

@@ -45,14 +45,14 @@ class QComboBox;
 class QLabel;
 class QCanvas;
 
-class PartialsList;
+class SoundList;
 class MorphArea;
 
 /*
 --------------------------------------------------------------------------------
 class MorphDialog
 Provides a dialog for performing a morph between two sounds. The two 
-collections of partials are selected from listboxes and are morphed 
+collections of sound are selected from listboxes and are morphed 
 together according to breakpoints specified by user mouse clicks on the
 morphArea.
 */
@@ -65,7 +65,7 @@ class MorphDialog:public QDialog{
     MorphDialog(
 	QWidget*	parent,
 	char*		name,
-	PartialsList*	pList,
+	SoundList*	pList,
 	QStatusBar*	statusbar
     );
  
@@ -76,13 +76,13 @@ class MorphDialog:public QDialog{
   private:
     QCanvas*		canvas;
     QStatusBar*		statusbar;
-    PartialsList*	partialsList;
+    SoundList*	soundList;
     MorphArea*		morphArea;
     QGridLayout*	dialogLayout;
     QGroupBox*		morphBox;
     QGridLayout*	morphBoxLayout;
-    QGroupBox*		partialsBox;
-    QGridLayout*	partialsBoxLayout; 
+    QGroupBox*		soundBox;
+    QGridLayout*	soundBoxLayout; 
 
     QLabel*		partial1Label;
     QComboBox*		partial2List;

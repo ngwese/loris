@@ -29,7 +29,7 @@
  * unnecessary repetition of code in ExportAiffDialog and ExportSdifDialog.
  * ExportAiffWidget is inserted in ExportAiffDialog to enable the user to 
  * specify sample rate, number of channels, and number of sample bits, of
- * synthesized partials.
+ * synthesized sound.
  * 
  *
  * Susanne Lefvert, 1 March 2002
@@ -47,13 +47,13 @@ class QStatusBar;
 class QSpinBox;
 class QGroupBox;
 
-class PartialsList;
+class SoundList;
 
 // ---------------------------------------------------------------------------
 // class ExportAiffWidget
 //
 // Contains the GUI for specifying sample rate, and number
-// of sample bits for synthesis of a collection of partials.
+// of sample bits for synthesis of a collection of sound.
 
 class ExportAiffWidget:public QWidget{ 
   Q_OBJECT
@@ -90,7 +90,7 @@ class ExportDialog:public QFileDialog{
     ExportDialog(
 	QWidget*	parent,
 	char*		name,
-	PartialsList*	partialsList,
+	SoundList*	soundList,
 	QStatusBar*	statusbar
     );
 
@@ -105,7 +105,7 @@ class ExportDialog:public QFileDialog{
 // ---------------------------------------------------------------------------
 // class ExportAiffDialog
 //
-// A Dialog which lets the user export partials to an aiff file
+// A Dialog which lets the user export sound to an aiff file
 
 class ExportAiffDialog:public ExportDialog{ 
   Q_OBJECT  
@@ -114,7 +114,7 @@ class ExportAiffDialog:public ExportDialog{
     ExportAiffDialog(
 	QWidget*	parent,
 	char*		name,
-	PartialsList*	partialsList,
+	SoundList*	soundList,
 	QStatusBar*	statusbar
 	);
 
@@ -125,7 +125,7 @@ class ExportAiffDialog:public ExportDialog{
 // ---------------------------------------------------------------------------
 // class ExportSdifDialog
 //
-// A Dialog which lets the user export partials to an sdif file
+// A Dialog which lets the user export sound to an sdif file
 
 class ExportSdifDialog:public ExportDialog{ 
   Q_OBJECT  
@@ -134,7 +134,7 @@ class ExportSdifDialog:public ExportDialog{
     ExportSdifDialog(
 	QWidget*	parent,
 	char*		name,
-	PartialsList*	partialsList,
+	SoundList*	soundList,
 	QStatusBar*	statusbar
     );
 

@@ -29,7 +29,7 @@
  */
 
 #include "axis.h"
-#include "partialsList.h"
+#include "soundList.h"
 #include "pointWithText.h"
 
 #include <qcanvas.h>
@@ -38,7 +38,7 @@
 
 class QStatusBar;
 
-class PartialsList;
+class SoundList;
 
 class VerticalAxis;
 class HorizontalAxis;
@@ -58,7 +58,7 @@ class DilateArea:public QCanvasView{
 	QCanvas*	canvas,
 	QWidget*	parent,
 	char*		name,
-	PartialsList*	partialsList,
+	SoundList*	soundList,
 	QStatusBar*	statusbar
     );
     void		contentsMousePressEvent(QMouseEvent* e);
@@ -72,19 +72,19 @@ class DilateArea:public QCanvasView{
 
   public slots:
     void		dilate();
-    void		setDilate1(QString& name);
-    void		setDilate2(QString& name);
+    void		setSound1(QString& name);
+    void		setSound2(QString& name);
 
   private:
     VerticalAxis*       lAxis;
     VerticalAxis*       rAxis;
     HorizontalAxis*     tAxis;
-    QStatusBar*         statusbar;
+    QStatusBar*		statusbar;
     QList<QCanvasItem>  moving;
-    PartialsList*       partialsList;
+    SoundList*		soundList;
 
-    QString             sample1;
-    QString             sample2;
+    QString             sound1;
+    QString             sound2;
     int			dilate1Index;
     int			dilate2Index;
 

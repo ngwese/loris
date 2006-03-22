@@ -41,11 +41,11 @@ DilateArea::DilateArea(
 	QCanvas*	canvas,
 	QWidget*	parent,
 	char*		name,
-	PartialsList*	pList,
+	SoundList*	pList,
 	QStatusBar*	status
 ):QCanvasView(canvas, parent, name){
   statusbar = status;
-  partialsList = pList;
+  soundList = pList;
 
   newPointIndex = 5;
   leftMargin = 30;
@@ -97,8 +97,8 @@ might have to grow or shrink depending on which sample is shown.
 */
 void MorphArea::updateTimeAxis(){
   int time = 0;
-  int time1 = partialsList->at(dilate1Index)->getDuration();
-  int time2 = partialsList->at(dilate2Index)->getDuration();
+  int time1 = soundList->at(dilate1Index)->getDuration();
+  int time2 = soundList->at(dilate2Index)->getDuration();
 
   if(time1 > ime2){
     time = time1;
@@ -127,19 +127,19 @@ void MorphArea::updateTimeAxis(){
 }
 /*
 --------------------------------------------------------------------------------
-	setSample1
+	setSound1
 --------------------------------------------------------------------------------
 Tells the DilateArea to update itself to the first sample.
 */
-void DilateArea::setSample1(QString& name){
-  sample1 = name;
+void DilateArea::setSound1(QString& name){
+  sound1 = name;
 
   if(!dilateList.isEmpty()){
     for(point = dilateList.first();
 	point != 0;
 	point = dilateList.next()
     ){
-      point->setSampe1(name);
+      point->setSound1(name);
     }
   }
 
@@ -148,10 +148,44 @@ void DilateArea::setSample1(QString& name){
 
 /*
 --------------------------------------------------------------------------------
-	setSample2
+	setSound2
 --------------------------------------------------------------------------------
 Tells the DilateArea to update itself to the first sample.
 */
-void DilateArea::setSample2(QString& name){}
+void DilateArea::setSound2(QString& name){
+  sound2 = name;
+
+  if(!dilateList.isEmpty()){
+    for(point = dilateList.first();
+	point != 0;
+	point = dilateList.next()
+    ){
+      point->setSound2(name);
+    }
+  }
+
+  updateTimeAxis();
+}
 
 
+
+/*
+--------------------------------------------------------------------------------
+	contentsMousePressEvent
+--------------------------------------------------------------------------------
+*/
+void DilateArea::contentsMousePressEvent(QMouseEvent* e){}
+
+/*
+--------------------------------------------------------------------------------
+	contentsMouseMoveEvent
+--------------------------------------------------------------------------------
+*/
+void DilateArea::contentsMouseMoveEvent(QMouseEvent* e){}
+
+/*
+--------------------------------------------------------------------------------
+	contentsMouseReleaseEvent
+--------------------------------------------------------------------------------
+*/
+void DilateArea::contentsMouseReleaseEvent(QMouseEvent* e){}

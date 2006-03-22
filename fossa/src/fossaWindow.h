@@ -51,8 +51,8 @@ class DilateDialog;
 class ExportDialog;
 class ExportAiffDialog;
 class ExportSdifDialog;
-class PartialsList;
-class Partials;
+class SoundList;
+class Sound;
 class LorisInterface;
 
 // ---------------------------------------------------------------------------
@@ -60,10 +60,10 @@ class LorisInterface;
 //
 // The main window of the application, including gui element such as statusbar, 
 // menubar, and fossaFrame. Also creates the non-gui models of the application, 
-// LorisInterface and PartialsList. 
+// LorisInterface and SoundList. 
 // When selecting menu options appropriate dialogs are opened or, when no 
 // parameters need to be specified, fossaWindow communicates straight to 
-// the partialsList.
+// the soundList.
 //	
 class FossaWindow:public QMainWindow{ 
   Q_OBJECT
@@ -96,7 +96,7 @@ class FossaWindow:public QMainWindow{
 
   private:
     FossaFrame*		fossaFrame;
-    PartialsList*	partialsList;
+    SoundList*	soundList;
     ImportDialog*	importDialog;
     ChannelizeDialog*	channelizeDialog;
     NewNameDialog*	newNameDialog;

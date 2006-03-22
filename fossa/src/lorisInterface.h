@@ -51,10 +51,9 @@ using std::list;
 // ---------------------------------------------------------------------------
 // class LorisInterface
 // The class handles operations requiring communication with the loris c++ 
-// library.  <Partial.h> is included in the PartialsList and Partial classes, 
-// in order to be able to encapsulate Loris::Partials into the datastructure, 
+// library.  <Partial.h> is included in the SoundList and Partial classes, 
+// in order to be able to encapsulate Loris::Sound into the datastructure, 
 // else LorisInterface is the only class which includes Loris headers.
-
 class LorisInterface{
   public:
     LorisInterface();
@@ -70,30 +69,30 @@ class LorisInterface{
 	int			refLabel, 
 	double			minFreq, 
 	double			maxFreq, 
-	std::list<Partial>&	partials
+	std::list<Partial>&	sound
     );
 
     std::list<Partial>* morph(
 	LinearEnvelope&		famp,
 	LinearEnvelope&		ffreq,
 	LinearEnvelope&		fbw,
-	std::list<Partial>	Partials1,
-	std::list<Partial>	partials2
+	std::list<Partial>	Sound1,
+	std::list<Partial>	sound2
     );
 
-    void distill(std::list<Partial>& partials); 
+    void distill(std::list<Partial>& sound); 
 
     void exportAiff(
 	double			sampleRate, 
 	int			bitsPerSample, 
 	const			char* name, 
-	std::list<Partial>	partials, 
+	std::list<Partial>	sound, 
 	double maxtime
     );
 
     void exportSdif(
 	const char*		name,
-	std::list<Partial>	partials
+	std::list<Partial>	sound
     );
 };
 

@@ -23,10 +23,10 @@
  *
  * The main window of Fossa, including gui element such as statusbar, menubar, 
  * and fossaFrame. Also creates the models of the application, LorisInterface 
- * and PartialsList which are non-gui components. 
+ * and SoundList which are non-gui components. 
  * When selecting menu options appropriate dialogs are opened or, when no 
  * parameters need to be specified, fossaWindow communicates straight to 
- * the partialsList.
+ * the soundList.
  *
  * Susanne Lefvert, 1 March 2002
  *
@@ -45,8 +45,8 @@
 #include "dilateDialog.h"
 #include "channelizeDialog.h"
 #include "newNameDialog.h"
-#include "partialsList.h"
-#include "partials.h"
+#include "soundList.h"
+#include "sound.h"
 #include "lorisInterface.h"
 
 #include <qlayout.h> 
@@ -65,17 +65,17 @@ FossaWindow::FossaWindow(
 	QWidget*	parent,
 	const char*	name
 ):QMainWindow(parent,name){
-  partialsList = new PartialsList();
-  fossaFrame   = new FossaFrame(this, "FossaFrame", partialsList);
-  //  toolbar      = new QToolBar("test", this);   // later versions might want 
-  menubar      = menuBar();                        // to implement a toolbar.
-  statusbar    = statusBar();
+  soundList		= new SoundList();
+  fossaFrame		= new FossaFrame(this, "FossaFrame", soundList);
+  //  toolbar		= new QToolBar("test", this);	// later versions might want 
+  menubar		= menuBar(); 			// to implement a toolbar.
+  statusbar		= statusBar();
 
-  importDialog      = 0;
-  channelizeDialog  = 0;
-  newNameDialog     = 0;
-  morphDialog       = 0;
-  exportDialog      = 0;
+  importDialog		= 0;
+  channelizeDialog	= 0;
+  newNameDialog		= 0;
+  morphDialog		= 0;
+  exportDialog		= 0;
   // later versions might want to implement a toolbar.
   // QWhatsThis::whatsThisButton(toolbar);
 
@@ -92,7 +92,7 @@ FossaWindow::FossaWindow(
 //	FossaWindow destructor
 // ---------------------------------------------------------------------------
 FossaWindow::~FossaWindow(){
-  delete partialsList;
+  delete soundList;
 }
 
 // ---------------------------------------------------------------------------
@@ -100,8 +100,8 @@ FossaWindow::~FossaWindow(){
 // ---------------------------------------------------------------------------
 // SLOT which enables and disables menu options. 
 void FossaWindow::updateMenuOptions(){
-  // If we have partials we should be able to do operation - enable options 
-  if(!partialsList->isEmpty()){  
+  // If we have sound we should be able to do operation - enable options 
+  if(!soundList->isEmpty()){  
     fileMenu->setItemEnabled(exportID    , TRUE);
     editMenu->setItemEnabled(deleteId    , TRUE);
     editMenu->setItemEnabled(renameId    , TRUE);
@@ -110,7 +110,7 @@ void FossaWindow::updateMenuOptions(){
     manipulateMenu->setItemEnabled(distillID   , TRUE);
   }
 
-  // Disables menu options if we don't have any partials is partialsList 
+  // Disables menu options if we don't have any sound is soundList 
   else{
     fileMenu->setItemEnabled(exportID    , FALSE);
     editMenu->setItemEnabled(deleteId    , FALSE);
@@ -120,25 +120,24 @@ void FossaWindow::updateMenuOptions(){
     manipulateMenu->setItemEnabled(distillID   , FALSE);
   }
 
-  //There must be 2 or more partials in order to dilate.
-  if( partialsList->getLength() == 1 ){
+  //There must be 2 or more sounds in order to dilate.
+  if( soundList->getLength() == 1 ){
     manipulateMenu->setItemEnabled(dilateID, FALSE);
   }else{
     manipulateMenu->setItemEnabled(dilateID, TRUE);
   }
 
-  //not ok if no partials in partialsList are channelized & distilled
-  bool okToMorph = false;
+  //not ok if less than 2 sounds in soundList are channelized & distilled
+  int okToMorph = 0;
  
-  for(int i = 0; i<partialsList->getLength(); i++){
-    const Partials* p = partialsList->getPartials(i);
+  for(int i = 0; i<soundList->getLength(); i++){
+    const Sound* p = soundList->getSound(i);
     if (p->isDistilled() && p->isChannelized()){
-      okToMorph = true;
-      break;
+      okToMorph++;
     }
   }
   
-  if(okToMorph){
+  if(okToMorph >= 2){
     manipulateMenu->setItemEnabled(morphID, TRUE);
   }else{
     manipulateMenu->setItemEnabled(morphID, FALSE);
@@ -148,10 +147,10 @@ void FossaWindow::updateMenuOptions(){
 // ---------------------------------------------------------------------------
 //	setConnections. 
 // ---------------------------------------------------------------------------
-// Menu options are updated when partialsList is changed.
+// Menu options are updated when soundList is changed.
 void FossaWindow::setConnections(){
-  connect(partialsList, SIGNAL(listChanged()), this , SLOT(updateMenuOptions()));
-  connect(partialsList, SIGNAL(currentChanged()), this , SLOT(updateMenuOptions()));
+  connect(soundList, SIGNAL(listChanged()), this , SLOT(updateMenuOptions()));
+  connect(soundList, SIGNAL(currentChanged()), this , SLOT(updateMenuOptions()));
 }
 
 // ---------------------------------------------------------------------------
@@ -308,7 +307,7 @@ void FossaWindow::openImportAiffDialog(){
   importDialog = new ImportAiffDialog(
 	this,
 	"importAiffDialog",
-	partialsList,
+	soundList,
 	statusbar
   );
 }
@@ -323,7 +322,7 @@ void FossaWindow::openImportSdifDialog(){
   importDialog = new ImportSdifDialog(
 	this,
 	"importSdifDialog",
-	partialsList,
+	soundList,
 	statusbar
   );
 }
@@ -331,15 +330,15 @@ void FossaWindow::openImportSdifDialog(){
 // ---------------------------------------------------------------------------
 //      openChannelizeDialog
 // ---------------------------------------------------------------------------
-//  opens the dialog for performing channelization of current partials
+//  opens the dialog for performing channelization of current sound
 void FossaWindow::openChannelizeDialog(){
-  if(!partialsList->isEmpty()){
+  if(!soundList->isEmpty()){
     if(channelizeDialog) channelizeDialog->show();
 
     channelizeDialog = new ChannelizeDialog(
 	this,
 	"channelizeDialog",
-	partialsList,
+	soundList,
 	statusbar
     );
   }
@@ -348,14 +347,14 @@ void FossaWindow::openChannelizeDialog(){
 // ---------------------------------------------------------------------------
 //      distill
 // ---------------------------------------------------------------------------
-//  distill current partials. No parameters for distillation - no dialog is needed
+//  distill current sound. No parameters for distillation - no dialog is needed
 void FossaWindow::distill(){ 
   try{
-    partialsList->distillCurrent();
-    statusbar->message("Distilled partials successfully.", 5000);
+    soundList->distillCurrent();
+    statusbar->message("Distilled sound successfully.", 5000);
   }
   catch(...){
-    statusbar->message("Partials could not be distilled.");
+    statusbar->message("Sound could not be distilled.");
   }
 }
 
@@ -364,13 +363,13 @@ void FossaWindow::distill(){
 // ---------------------------------------------------------------------------
 //  open dialog for performing a sound morph.
 void FossaWindow::openMorphDialog(){
-  if(!partialsList->isEmpty()){
+  if(!soundList->isEmpty()){
     if(morphDialog) delete morphDialog;
 
     morphDialog = new MorphDialog(
 	this,
 	"morphDialog",
-	partialsList,
+	soundList,
 	statusbar
     );
   }
@@ -379,16 +378,16 @@ void FossaWindow::openMorphDialog(){
 // ---------------------------------------------------------------------------
 //      openDilateDialog
 // ---------------------------------------------------------------------------
-//  opens the dilate dialog
+//  opens a dialog for dilating one sound onto another.
 void FossaWindow::openDilateDialog(){
 /*
-  if(!partialsList->isEmpty()){
+  if(!soundList->isEmpty()){
     if(dilateDialog) delete dilateDialog;
 
     dilateDialog = new DilateDialog(
 	this,
 	"dilateDialog",
-	partialsList,
+	soundList,
 	statusbar
     );
   }
@@ -398,15 +397,15 @@ void FossaWindow::openDilateDialog(){
 // ---------------------------------------------------------------------------
 //      openExportAiffDialog
 // ---------------------------------------------------------------------------
-//  opens the dialog for exporting current partials to aiff file
+//  opens the dialog for exporting current sound to aiff file
 void FossaWindow::openExportAiffDialog(){
-  if(!partialsList->isEmpty()){
+  if(!soundList->isEmpty()){
     if(exportDialog) delete exportDialog;
 
     exportDialog = new ExportAiffDialog(
 	this,
 	"exportDialog",
-	partialsList,
+	soundList,
 	statusbar
     );
   }
@@ -415,15 +414,15 @@ void FossaWindow::openExportAiffDialog(){
 // ---------------------------------------------------------------------------
 //      openExportSdifDialog
 // ---------------------------------------------------------------------------
-//  opens the dialog for exporting current partials to sdif file
+//  opens the dialog for exporting current sound to sdif file
 void FossaWindow::openExportSdifDialog(){
-  if(!partialsList->isEmpty()){
+  if(!soundList->isEmpty()){
     if(exportDialog) delete exportDialog;
 
     exportDialog = new ExportSdifDialog(
 	this,
 	"exportDialog",
-	partialsList,
+	soundList,
 	statusbar
     );
   }
@@ -432,15 +431,15 @@ void FossaWindow::openExportSdifDialog(){
 // ---------------------------------------------------------------------------
 //      openNewNameDialog
 // ---------------------------------------------------------------------------
-//  Dialog for renaming current partials
+//  Dialog for renaming current sound
 void FossaWindow::openNewNameDialog(){
-  if(!partialsList->isEmpty()){
+  if(!soundList->isEmpty()){
     if(newNameDialog) delete newNameDialog;
 
     newNameDialog = new NewNameDialog(
 	this,
 	"exportDialog",
-	partialsList,
+	soundList,
 	statusbar
     );
   }
@@ -449,17 +448,17 @@ void FossaWindow::openNewNameDialog(){
 // ---------------------------------------------------------------------------
 //      copy
 // ---------------------------------------------------------------------------
-// copy current partials - no dialog is needed
+// copy current sound - no dialog is needed
 void FossaWindow::copy(){
-  partialsList->copyCurrent();
+  soundList->copyCurrent();
 }
 
 // ---------------------------------------------------------------------------
 //      remove
 // ---------------------------------------------------------------------------
-// remove current partials - no dialog is needed
+// remove current sound - no dialog is needed
 void FossaWindow::remove(){
-  partialsList->removeCurrent();
+  soundList->removeCurrent();
 }
 
 // ---------------------------------------------------------------------------

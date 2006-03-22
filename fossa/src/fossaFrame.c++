@@ -21,7 +21,7 @@
  *
  * fossaWindow.c++
  *
- * Frame containing the views, Sidebar and CurrentPartialsView, of the application model.
+ * Frame containing the views, Sidebar and CurrentSoundView, of the application model.
  * 
  *
  * Susanne Lefvert, 1 March 2002
@@ -35,8 +35,8 @@
 
 #include "fossaFrame.h"
 #include "sidebar.h"
-#include "currentPartialsView.h"
-#include "partialsList.h"
+#include "currentSoundView.h"
+#include "soundList.h"
 
 #include <qlayout.h>
 
@@ -47,24 +47,24 @@
 FossaFrame::FossaFrame(
 	QWidget*	parent,
 	const char*	name,
-	PartialsList*	pList
+	SoundList*	pList
 ):QFrame(parent, name){
-  partialsList = pList; 
+  soundList = pList; 
   setGui();
 }
 
 // ---------------------------------------------------------------------------
 //	setGui
 // ---------------------------------------------------------------------------
-// Contains Sidebar and CurrentPartialsView
+// Contains Sidebar and CurrentSoundView
 
 void FossaFrame::setGui(){
   fossaFrameLayout    = new QGridLayout(this); 
-  sidebar             = new Sidebar(this, "Sidebar", partialsList);
-  currentPartialsView = new CurrentPartialsView(
+  sidebar             = new Sidebar(this, "Sidebar", soundList);
+  currentSoundView = new CurrentSoundView(
 	this,
-	"currentPartialsView",
-	partialsList
+	"currentSoundView",
+	soundList
   );
    
   setSizePolicy(
@@ -76,5 +76,5 @@ void FossaFrame::setGui(){
   );
 
   fossaFrameLayout->addWidget(sidebar, 0, 0 );
-  fossaFrameLayout->addWidget(currentPartialsView, 0, 1);
+  fossaFrameLayout->addWidget(currentSoundView, 0, 1);
 }

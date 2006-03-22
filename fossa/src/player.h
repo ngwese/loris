@@ -24,7 +24,7 @@
  *
  * player.h++
  *
- * Definition of class Player used for auditing current partials. Contains 
+ * Definition of class Player used for auditing current sound. Contains 
  * unimplemented parts.
  * 
  *
@@ -34,7 +34,7 @@
  */
 
 #include <qwidget.h>
-#include "partialsList.h"
+#include "soundList.h"
 
 class QGridLayout; 
 class QLabel;
@@ -44,7 +44,7 @@ class QPushButton;
 // ---------------------------------------------------------------------------
 // class Player
 //
-// Used for auditing current partials. Stop button, play time, and the progessbar
+// Used for auditing current sound. Stop button, play time, and the progessbar
 // is not implemented yet.
 
 class Player : public QWidget{ 
@@ -54,7 +54,7 @@ class Player : public QWidget{
     Player(
 	QWidget*	parent,
 	const char*	name,
-	PartialsList*	partialsList
+	SoundList*	soundList
     );
     
   private slots:
@@ -68,7 +68,7 @@ class Player : public QWidget{
     QPushButton*	playButton;
     QGridLayout*	playerLayout;
     
-    PartialsList*	partialsList;
+    SoundList*	soundList;
     
     void		setGui();
     void		setConnections();

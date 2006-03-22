@@ -24,8 +24,8 @@
  *
  * fossaFrame.h++
  *
- * Definition of class FossaFrame, the main view of the partialsList model, 
- * including Sidebar and CurrentPartialsView.
+ * Definition of class FossaFrame, the main view of the soundList model, 
+ * including Sidebar and CurrentSoundView.
  * 
  *
  * Susanne Lefvert, 1 March 2002
@@ -37,13 +37,13 @@
 
 class QGridLayout;
 class Sidebar;
-class CurrentPartialsView;
-class PartialsList;
+class CurrentSoundView;
+class SoundList;
 
 // ---------------------------------------------------------------------------
 // class FossaFrame
 //
-// Contains the views, Sidebar and CurrentPartialsView, of the application model.
+// Contains the views, Sidebar and CurrentSoundView, of the application model.
 //	
 class FossaFrame:public QFrame{ 
   Q_OBJECT
@@ -52,14 +52,14 @@ class FossaFrame:public QFrame{
     FossaFrame(
 	QWidget*		parent,
 	const char*		name,
-	PartialsList*		partialsList
+	SoundList*		soundList
     );
     
   private:
     QGridLayout*		fossaFrameLayout;
     Sidebar*			sidebar;
-    PartialsList*		partialsList;
-    CurrentPartialsView*	currentPartialsView;
+    SoundList*		soundList;
+    CurrentSoundView*	currentSoundView;
 
     void			setGui();
 };

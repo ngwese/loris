@@ -38,11 +38,11 @@
 // ---------------------------------------------------------------------------
 //	Main method of program, starts the application.
 // ---------------------------------------------------------------------------
+// This basically makes the application a QT application.
 int main( int argc, char **argv ){
-  //QApplication manages the GUI application's 
   QApplication a(argc, argv);
 
-  //control flow and main settings
+  //Note: No parent wdiget...
   FossaWindow fossaWindow(0,"FossaWindow");
   a.setMainWidget(&fossaWindow);
   fossaWindow.show();

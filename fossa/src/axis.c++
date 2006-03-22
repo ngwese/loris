@@ -30,6 +30,7 @@
 #include "axis.h"
 #include <qpen.h> 
 #include <math.h>
+#include <qcanvas.h>
 #include <qpainter.h>
 
 
@@ -45,17 +46,37 @@ Axis::Axis(
 	int		width,
 	int		nbOfTicks,
 	double		min,
-	double		max
+	double		max,
+	bool		VH,
+	bool		LR
 ):QCanvasRectangle(canvas){
-  ticks  = nbOfTicks;   
-  label  = text;
-  startX = x;
-  startY = y;
-  length = l;
-  minVal = min;                  
-  maxVal = adjustValue(max);   
-  stepLength = length/ticks;
-  stepValue  = (maxVal - minVal)/ticks;
+  ticks		= nbOfTicks;
+  label		= text;
+  startX	= x;
+  startY	= y;
+  length	= l;
+  minVal	= min;
+  maxVal	= max; //adjustValue(max);
+  stepLength	= length/ticks;		//Value in terms of unit pixel.
+  stepValue	= double((maxVal - minVal)/ticks);
+  vertical	= VH;
+  left		= LR;
+
+  if( vertical ){
+    setX(x - width/2);
+    setY(y - length);
+    setSize(width, length);
+  
+    textX   = startX - 20;
+
+    if(left) numberX = maxVal > 10 ? startX - 45 : startX - 40;
+    else numberX = startX + 5;
+
+  } else {
+    setX(x);
+    setY(y - width/2);
+    setSize(length, width);
+  }
 }
   
 // ---------------------------------------------------------------------------
@@ -108,114 +129,70 @@ double Axis::getLength() const{
 }
 
 // ---------------------------------------------------------------------------
-//      VerticalAxis constructor
-// ---------------------------------------------------------------------------
-VerticalAxis::VerticalAxis(
-	QCanvas*	canvas, 
-	int		x, 
-	int		y, 
-	QString		text, 
-	int		l, 
-	int		width, 
-	int		nbOfTicks, 
-	double		min,
-	double		max,
-	bool		left
-):Axis(canvas, x, y, text, l, width, nbOfTicks, min, max){
-  setX(x - width/2);
-  setY(y - length);
-  setSize(width, length);
-  
-  if(left){			// axis placed on the left side
-    textX   = startX - 20;	// has text and numbers
-    numberX = startX - 30;	// places different than
-  }				// axis on the right side.
-  else{
-    textX   = startX - 20;	//label.length()/2.0; 
-    numberX = startX + 5;
-  }
-}
-
-// ---------------------------------------------------------------------------
 //      drawShape
 // ---------------------------------------------------------------------------
 // Should be implemented by classes inheriting QCanvasItems. Draws the axis.
-void VerticalAxis::drawShape(QPainter & painter){
+// 
+// Evidently, the way this works is that you call axis->show() which is
+// inherited from (probably) QCanvasItem which then calls drawShape; Fossa
+// does not call this directly, it just implements it as a call-back. -Chris H.
+void Axis::drawShape(QPainter & painter){
   QFont f( "helvetica", 10);
+  QString numberText;
   painter.setFont(f);
   painter.setPen(Qt::black);
-  painter.drawLine(startX, startY, startX, startY - length); 
-  painter.drawText(textX - label.length(), startY - length - 20, label);
-        
+
   double number = minVal;
   int thicker = 0;
-  double y;
+  int x, y;
+  double xVal, yVal;
 
-  for(
-	y = startY;
-	y > startY - length - stepLength;
-	y -= stepLength
-  ){
-    painter.drawLine(startX-2, y, startX+2, y); 
+  if( vertical ){
+    painter.drawLine(startX, startY, startX, startY - length); 
+    painter.drawText(textX - label.length(), startY - length - 20, label);
+
+    for(
+	yVal = minVal;
+	yVal <= maxVal;
+	yVal += stepValue
+    ){
+      y = startY - (int)((yVal/(maxVal-minVal)) * length);
+      painter.drawLine(startX-2, y, startX+2, y); 
       
-    if(thicker%10 == 0){
-      painter.drawLine(startX - 5, y, startX + 2, y); 
-      painter.drawText(
-	numberX,
-	y + stepLength,
-	QString("%1").arg(number, 0, 'g', 5)
-      );
+      /*Every 10 ticks draw a long tick with a number by it.*/
+      if(thicker%10 == 0){
+        //Helps make sure tick vals are shown to the right # of sig figs. -Chris H.
+        if( number < 10 ) numberText = QString("%1").arg(number, 5, 'f', 3);
+        else numberText = QString("%1").arg(number, 5, 'g', 5);
+
+        painter.drawLine(startX - 5, y, startX + 2, y); 
+        painter.drawText( numberX, y + stepLength, numberText );
+      }
+
+      number = number + stepValue;
+      thicker++;
     }
-    number = number + stepValue;
-    thicker++;
-  }
-}
+  } else {
+    painter.drawLine(startX, startY, startX + length, startY);
+    painter.drawText(startX + length - 40, startY + 20, label);
 
+    for(
+	xVal = minVal;
+	xVal <= maxVal;
+	xVal += stepValue
+    ){
+      x = startX + (int)((xVal/(maxVal-minVal)) * length);
+      painter.drawLine(x, startY-2, x, startY+2); 
 
-// ---------------------------------------------------------------------------
-//      HorizontalAxis constructor
-// ---------------------------------------------------------------------------
-HorizontalAxis::HorizontalAxis(
-	QCanvas*	canvas,
-	int		x,
-	int		y,
-	QString		text,
-	int		l,
-	int		width,
-	int		nbOfTicks,
-	double		min,
-	double		max
-):Axis(canvas, x, y, text, l, width, nbOfTicks, min, max){
-  setX(x);
-  setY(y - width/2);
-  setSize(length, width);
-}
+      /*Every 10 ticks draw a long tick with a number by it.*/
+      if(thicker%10==0){
+        painter.drawLine(x, startY - 2, x, startY + 5); 
+        painter.drawText( x-8, startY+12, QString("%1").arg(number, 3, 'f', 3) );
+      }
 
-// ---------------------------------------------------------------------------
-//      drawShape
-// ---------------------------------------------------------------------------
-// Should be implemented by classes inheriting QCanvasItems. Draws the axis.
-void HorizontalAxis::drawShape(QPainter & painter){
-  QFont f( "helvetica", 10);
-  painter.setFont(f);
-  painter.setPen(Qt::black);
-  painter.drawLine(startX, startY, startX + length, startY);
-  painter.drawText(startX + length, startY + 20, label);
-  
-  double number = minVal;
-  int thicker = 0;
-  
-  for(
-	double x = startX;
-	x < length + startX + stepLength;
-	x += stepLength
-  ){
-    painter.drawLine(x, startY-2, x, startY+2); 
-    if(thicker%10==0){
-      painter.drawLine(x, startY - 5, x, startY + 2); 
-      painter.drawText(x-5,startY+12, QString("%1").arg(number));
+      number += stepValue;
+      thicker++;
     }
-    number += stepValue;
-    thicker++;
   }
+
 }

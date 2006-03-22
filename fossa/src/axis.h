@@ -35,10 +35,6 @@
 #include <qcanvas.h>
 #include <iostream>
 
-class VerticalAxis;
-class HorizontalAxis;
-class PointWithText;
-
 
 // ---------------------------------------------------------------------------
 // class Axis
@@ -54,71 +50,35 @@ class Axis:public QCanvasRectangle{
 	int		width, 
 	int		nbOfTicks, 
 	double		min, 
-	double		max
+	double		max,
+	bool		VH,
+	bool		LR
     );
 
-    int		rtti() const;
-    double	getIndex() const;
-    double	getLength() const;
+    int			rtti() const;
+    double		getIndex() const;
+    double		getLength() const;
+
+    void		drawShape(QPainter & painter);
   
   protected:
-    double	ticks;
-    QString	label;
-    double	minVal;
-    double	maxVal;
-    double	startX;
-    double	startY;
-    double	length;
-    double	stepValue;
-    double	stepLength;
+    QString		label;
+    int			ticks;
+    int			startX;
+    int			startY;
+    int			length;
+    int			stepLength;	//Value in terms of pixels.
+    double		minVal;
+    double		maxVal;
+    double		stepValue;	//Value in terms of real domain f/a/n.
+
+    int			textX;
+    int			numberX;
 
   private:
-    double	adjustValue(double value);
+    double		adjustValue(double value);
+    bool		vertical;
+    bool		left;
 };
 
-// ---------------------------------------------------------------------------
-// class VerticalAxis
-// Allows for creation of a vertical axis on a canvas. 
-class VerticalAxis:public Axis{
-  public:  
-    VerticalAxis(
-	QCanvas*	canvas,
-	int		x, 
-	int		y, 
-	QString		text,
-	int		l, 
-	int		width,
-	int		nbOfTicks,
-	double		min,
-	double		max,
-	bool		left
-	);
-  
-    void	drawShape(QPainter & painter);
-  
-  private:
-    double	textX; 
-    double	numberX;
-};
-
-
-// ---------------------------------------------------------------------------
-// class HorizontalAxis
-// Allows for creation of a horizontal axis on a canvas. 
-class HorizontalAxis:public Axis{
-  public:
-    HorizontalAxis(
-	QCanvas*	canvas, 
-	int		x, 
-	int		y, 
-	QString		text,
-	int		l, 
-	int		width, 
-	int		nbOfTicks, 
-	double		min, 
-	double		max
-	);
-
-    void	drawShape(QPainter & painter);
-};
 #endif // AXIS_H

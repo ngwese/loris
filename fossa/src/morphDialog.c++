@@ -35,7 +35,7 @@
 
 #include "morphDialog.h"
 #include "morphArea.h"
-#include "partialsList.h"
+#include "soundList.h"
 
 #include <qlayout.h>
 #include <qframe.h>
@@ -55,11 +55,11 @@
 MorphDialog::MorphDialog(
 	QWidget*	parent,
 	char*		name,
-	PartialsList*	pList,
+	SoundList*	pList,
 	QStatusBar*	status
 ):QDialog(parent, name, TRUE){
   statusbar	= status;
-  partialsList	= pList;
+  soundList	= pList;
   canvas	= new QCanvas(735, 350); 
   morph1	= "";
   morph2	= "";
@@ -74,30 +74,30 @@ MorphDialog::MorphDialog(
 //      setLists
 // ---------------------------------------------------------------------------
 // Every time a new morphDialog is created the pop-up lists for selecting
-// partials to be morphed have to be filled.
+// sound to be morphed have to be filled.
 void MorphDialog::setLists(){
   partial1List->clear();
   partial2List->clear();
   
-  // fill pop-up lists for selection of morph partials.
+  // fill pop-up lists for selection of morph sound.
   // First I just inserted the channelized and distilled ones 
-  // but then I couldn't keep track of their position in partialsList
-  // and couldn't communicate correctly which partials should actually
+  // but then I couldn't keep track of their position in soundList
+  // and couldn't communicate correctly which sound should actually
   // be morphed. Find out a way to do that! If you morph without 
   // channelizing and distilling first the morph will just result
   // in a cross fade.
 
-  for(int i = 0; i<partialsList->getLength(); i++){
-    partial1List->insertItem(partialsList->getPartials(i)->getName(), i);
-    partial2List->insertItem(partialsList->getPartials(i)->getName(), i);
+  for(int i = 0; i<soundList->getLength(); i++){
+    partial1List->insertItem(soundList->getSound(i)->getName(), i);
+    partial2List->insertItem(soundList->getSound(i)->getName(), i);
   }
   
-  int current = partialsList->getCurrentIndex();
+  int current = soundList->getCurrentIndex();
   
   partial1List->setCurrentItem(current);
   partial2List->setCurrentItem(current);
   updateMorph1(current);  // default should be
-  updateMorph2(current);  // current partials
+  updateMorph2(current);  // current sound
 }
 
 // ---------------------------------------------------------------------------
@@ -122,10 +122,9 @@ void MorphDialog::setConnections(){
 //     updateMorph1
 // ---------------------------------------------------------------------------
 // changes all gui elements when morph1 is changed, and changes  
-// morph1 partials in partialslist. I didn't see the need in using model/view
+// morph1 sound in soundlist. I didn't see the need in using model/view
 // pattern here since the messages will just go back and forth.
 void MorphDialog::updateMorph1(int pos){
-  partialsList->setMorphPartials1(pos);
   morph1 = partial1List->text(pos);
   name1Label->setText(morph1);
   morphArea->setMorph1(morph1);
@@ -136,10 +135,9 @@ void MorphDialog::updateMorph1(int pos){
 //     updateMorph2
 // ---------------------------------------------------------------------------
 // changes all gui elements when morph2 is changed, and changes 
-// morph2 partials in partialslist. I didn't see the need in using model/view
+// morph2 sound in soundlist. I didn't see the need in using model/view
 // pattern here since the messages will just go back and forth.
 void MorphDialog::updateMorph2(int pos){
-  partialsList->setMorphPartials2(pos);
   morph2 = partial2List->text(pos);
   name2Label->setText(morph2); 
   morphArea->setMorph2(morph2);
@@ -164,10 +162,12 @@ void MorphDialog::setGui(){
   dialogLayout = new QGridLayout(this); 
   dialogLayout->setSpacing(6);
   dialogLayout->setMargin(20);
+
   morphBox = new QGroupBox(this, "morphBox" );
   morphBox->setColumnLayout(0, Qt::Vertical);
   morphBox->layout()->setSpacing(0);
   morphBox->layout()->setMargin(0);
+
   morphBoxLayout = new QGridLayout(morphBox->layout());
   morphBoxLayout->setAlignment(Qt::AlignTop);
   morphBoxLayout->setSpacing(6);
@@ -184,7 +184,7 @@ void MorphDialog::setGui(){
 	canvas,
 	morphBox,
 	"morphArea",
-	partialsList,
+	soundList,
 	statusbar
   );
 
@@ -196,6 +196,7 @@ void MorphDialog::setGui(){
 	)
   );
 
+  //Note: QCanvas size is 735 x 350
   morphArea->setMinimumSize(QSize(740, 356));
   morphArea->setMaximumSize(QSize(740, 356));
   morphBoxLayout->addWidget(morphArea, 1, 0);
@@ -447,20 +448,20 @@ void MorphDialog::setGui(){
   );
 
   dialogLayout->addItem( spacer_14, 0, 0 );
-  partialsBox = new QGroupBox(this, "partialsBox" );
-  QFont partialsBox_font(  partialsBox->font() );
-  partialsBox_font.setPointSize( 12 );
-  partialsBox->setFont( partialsBox_font ); 
-  partialsBox->setTitle( tr( "Select partials to morph" ) );
-  partialsBox->setColumnLayout(0, Qt::Vertical );
-  partialsBox->layout()->setSpacing( 0 );
-  partialsBox->layout()->setMargin( 0 );
-  partialsBoxLayout = new QGridLayout( partialsBox->layout() );
-  partialsBoxLayout->setAlignment( Qt::AlignTop );
-  partialsBoxLayout->setSpacing( 6 );
-  partialsBoxLayout->setMargin( 11 );
+  soundBox = new QGroupBox(this, "soundBox" );
+  QFont soundBox_font(  soundBox->font() );
+  soundBox_font.setPointSize( 12 );
+  soundBox->setFont( soundBox_font ); 
+  soundBox->setTitle( tr( "Select sound to morph" ) );
+  soundBox->setColumnLayout(0, Qt::Vertical );
+  soundBox->layout()->setSpacing( 0 );
+  soundBox->layout()->setMargin( 0 );
+  soundBoxLayout = new QGridLayout( soundBox->layout() );
+  soundBoxLayout->setAlignment( Qt::AlignTop );
+  soundBoxLayout->setSpacing( 6 );
+  soundBoxLayout->setMargin( 11 );
   
-  partial1List = new QComboBox( FALSE, partialsBox, "partial1List" );
+  partial1List = new QComboBox( FALSE, soundBox, "partial1List" );
   partial1List->setSizePolicy(
 	QSizePolicy(
 		(QSizePolicy::SizeType)7,
@@ -471,9 +472,9 @@ void MorphDialog::setGui(){
 
   partial1List->setMaximumSize( QSize( 32767, 20 ) );
   
-  partialsBoxLayout->addWidget( partial1List, 1, 2 );
+  soundBoxLayout->addWidget( partial1List, 1, 2 );
     
-  partial2List = new QComboBox( FALSE, partialsBox, "partial2List" );
+  partial2List = new QComboBox( FALSE, soundBox, "partial2List" );
   partial2List->setSizePolicy(
 	QSizePolicy(
 		(QSizePolicy::SizeType)7,
@@ -484,22 +485,22 @@ void MorphDialog::setGui(){
 
   partial2List->setMaximumSize( QSize( 32767, 20 ) );
 
-  partialsBoxLayout->addWidget( partial2List, 1, 6 );
+  soundBoxLayout->addWidget( partial2List, 1, 6 );
 
-  partial1Label = new QLabel( partialsBox, "partial1Label" );
+  partial1Label = new QLabel( soundBox, "partial1Label" );
   QFont partial1Label_font(  partial1Label->font() );
   partial1Label_font.setPointSize( 12 );
   partial1Label->setFont( partial1Label_font ); 
   partial1Label->setText( tr( "Morph" ) );
 
-  partialsBoxLayout->addWidget( partial1Label, 1, 0 );
+  soundBoxLayout->addWidget( partial1Label, 1, 0 );
 
-  partial2Label = new QLabel( partialsBox, "partial2Label" );
+  partial2Label = new QLabel( soundBox, "partial2Label" );
   QFont partial2Label_font(  partial2Label->font() );
   partial2Label_font.setPointSize( 12 );
   partial2Label->setFont( partial2Label_font ); 
   partial2Label->setText( tr( "with" ) );
-  partialsBoxLayout->addWidget( partial2Label, 1, 4 );
+  soundBoxLayout->addWidget( partial2Label, 1, 4 );
 
   spacer_16 = new QSpacerItem(
 	21,
@@ -507,7 +508,7 @@ void MorphDialog::setGui(){
 	QSizePolicy::Fixed,
 	QSizePolicy::Minimum
   );
-  partialsBoxLayout->addMultiCell( spacer_16, 1, 2, 1, 1 );
+  soundBoxLayout->addMultiCell( spacer_16, 1, 2, 1, 1 );
 
   spacer_17 = new QSpacerItem(
 	21,
@@ -515,7 +516,7 @@ void MorphDialog::setGui(){
 	QSizePolicy::Fixed,
 	QSizePolicy::Minimum
   );
-  partialsBoxLayout->addMultiCell( spacer_17, 1, 2, 3, 3 );
+  soundBoxLayout->addMultiCell( spacer_17, 1, 2, 3, 3 );
 
   spacer_21 = new QSpacerItem(
 	21,
@@ -523,7 +524,7 @@ void MorphDialog::setGui(){
 	QSizePolicy::Fixed,
 	QSizePolicy::Minimum
   );
-  partialsBoxLayout->addMultiCell( spacer_21, 1, 2, 5, 5 );
+  soundBoxLayout->addMultiCell( spacer_21, 1, 2, 5, 5 );
 
   spacer_19 = new QSpacerItem(
 	20,
@@ -531,7 +532,7 @@ void MorphDialog::setGui(){
 	QSizePolicy::Minimum,
 	QSizePolicy::Expanding
 	);
-  partialsBoxLayout->addItem( spacer_19, 2, 6 );
+  soundBoxLayout->addItem( spacer_19, 2, 6 );
 
   spacer_20 = new QSpacerItem(
 	20,
@@ -539,7 +540,7 @@ void MorphDialog::setGui(){
 	QSizePolicy::Minimum,
 	QSizePolicy::Expanding
   );
-  partialsBoxLayout->addItem( spacer_20, 0, 6 );
+  soundBoxLayout->addItem( spacer_20, 0, 6 );
 
-  dialogLayout->addWidget(partialsBox, 1, 0);
+  dialogLayout->addWidget(soundBox, 1, 0);
 }

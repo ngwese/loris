@@ -16,10 +16,10 @@
 NewNameDialog::NewNameDialog(
 	QWidget*	parent,
 	const char*	name,
-	PartialsList*	pList,
+	SoundList*	pList,
 	QStatusBar*	sBar
 ): QDialog( parent, name, TRUE){
-  partialsList = pList;
+  soundList = pList;
   statusbar    = sBar;
 
   if ( !name ) setName( "newNameDialog" );
@@ -37,8 +37,8 @@ void NewNameDialog::setConnections(){
 }
 
 void NewNameDialog::rename(){
-  if(!partialsList->isEmpty()){
-    partialsList->renameCurrent(newNameInput->text());
+  if(!soundList->isEmpty()){
+    soundList->renameCurrent(newNameInput->text());
   }
 }
 

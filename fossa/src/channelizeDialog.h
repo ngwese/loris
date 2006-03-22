@@ -41,7 +41,7 @@ class QLabel;
 class QPushButton;
 class QSpinBox;
 class QStatusBar;
-class PartialsList;
+class SoundList;
 
 // ---------------------------------------------------------------------------
 // class  ChannelizeDialog
@@ -54,7 +54,7 @@ class ChannelizeDialog : public QDialog{
     ChannelizeDialog(
 	QWidget*	parent, 
 	const char* 	name, 
-	PartialsList*	partialsList, 
+	SoundList*	soundList, 
 	QStatusBar*	status
     );
     
@@ -77,7 +77,7 @@ class ChannelizeDialog : public QDialog{
     QGridLayout*	ChannelizationLayout;
     QGridLayout*	paramBoxLayout;
  
-    PartialsList*	partialsList;
+    SoundList*	soundList;
  
     void		setGui();
     void		setConnections();

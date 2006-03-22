@@ -30,7 +30,7 @@
 #endif
 
 #include "exportDialog.h"
-#include "partialsList.h"
+#include "soundList.h"
 
 #include <qgroupbox.h>
 #include <qlabel.h>
@@ -168,7 +168,7 @@ void ExportAiffWidget::setGui(){
 ExportDialog::ExportDialog(
 	QWidget*	parent,
 	char*		name,
-	PartialsList*	partialsList,
+	SoundList*	soundList,
 	QStatusBar*	status
 ):QFileDialog(parent, name, TRUE){
   statusbar = status;
@@ -176,7 +176,7 @@ ExportDialog::ExportDialog(
   setFilters(filter);
   QFileDialog::Mode mode = QFileDialog::AnyFile;
   setMode(mode);
-  setSelection(partialsList->getCurrentName());
+  setSelection(soundList->getCurrentName());
 }
 
 // ---------------------------------------------------------------------------
@@ -207,14 +207,14 @@ bool ExportDialog::startDialog(QString fileType){
 //	ExportAiffDialog
 // ---------------------------------------------------------------------------
 // Inherits ExportDialog and provides the user with a dialog for exporting
-// partials to an aiff file. 
+// sound to an aiff file. 
 
 ExportAiffDialog::ExportAiffDialog(
 	QWidget*	parent,
 	char*		name,
-	PartialsList*	partialsList,
+	SoundList*	soundList,
 	QStatusBar*	status
-):ExportDialog(parent, name, partialsList, status){
+):ExportDialog(parent, name, soundList, status){
   ExportAiffWidget* exportAiffWidget = new ExportAiffWidget(this,"ok");
 
   addWidgets(0, exportAiffWidget, 0);
@@ -226,11 +226,11 @@ ExportAiffDialog::ExportAiffDialog(
     int bitsPerSamp   = exportAiffWidget->getNbOfBits();
 
     try{
-      partialsList->exportAiff(sampleRate, bitsPerSamp, path);
-      statusbar->message("Export partials to "+path+", successfully.");
+      soundList->exportAiff(sampleRate, bitsPerSamp, path);
+      statusbar->message("Export sound to "+path+", successfully.");
     }
     catch(...){
-      statusbar->message("could not export partials to "+path+", please try again");
+      statusbar->message("could not export sound to "+path+", please try again");
     }
   }
 }
@@ -239,19 +239,19 @@ ExportAiffDialog::ExportAiffDialog(
 //	ExportSdifDialog
 // ---------------------------------------------------------------------------
 // Inherits ExportDialog and provides the user with a dialog for exporting
-// partials to a sdif file. 
+// sound to a sdif file. 
 
 ExportSdifDialog::ExportSdifDialog(
 	QWidget*	parent,
 	char*		name,
-	PartialsList*	partialsList,
+	SoundList*	soundList,
 	QStatusBar*	status
-):ExportDialog(parent, name, partialsList, status){
-  addFilter("Partials file (*.sdif)");
+):ExportDialog(parent, name, soundList, status){
+  addFilter("Sound file (*.sdif)");
  
   if(startDialog(".sdif")){ 
     try{
-       partialsList->exportSdif(path);
+       soundList->exportSdif(path);
      }
      catch(...){
        statusbar->message("could not export file to sdif file, please try again");

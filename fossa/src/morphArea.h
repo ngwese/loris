@@ -34,20 +34,18 @@
 
 #include "LinearEnvelope.h"
 #include "axis.h"
-#include "partialsList.h"
+#include "soundList.h"
 #include "pointWithText.h"
 
 #include <qcanvas.h>
 #include <qsortedlist.h> 
 #include <qlist.h> 
 
+class PointWithText;
 class QStatusBar;
 
-class PartialsList;
-
-class VerticalAxis;
-class HorizontalAxis;
-class PointWithText;
+class SoundList;
+class Axis;
 
 class FrequencyPoint;
 class AmplitudePoint;
@@ -72,7 +70,7 @@ class MorphArea:public QCanvasView{
 	QCanvas*	canvas,
 	QWidget*	parent,
 	char*		name,
-	PartialsList*	partialsList,
+	SoundList*	soundList,
 	QStatusBar*	statusbar
     );
     void		contentsMousePressEvent(QMouseEvent* e);
@@ -80,8 +78,8 @@ class MorphArea:public QCanvasView{
     void		contentsMouseReleaseEvent(QMouseEvent* e);
     void		addPoint(int x, int y);
     int			rtti() const;
-    int			toXAxisValue(int x);
-    int			toYAxisValue(int y);
+    double		toXAxisValue(int x);
+    double		toYAxisValue(int y);
     const QPoint	getOrigo() const;
  
   public slots:
@@ -94,12 +92,12 @@ class MorphArea:public QCanvasView{
   private:
     enum		State {all, amplitude, frequency, noise};
     State		state;
-    VerticalAxis*	lAxis;
-    VerticalAxis*	rAxis;
-    HorizontalAxis*	tAxis;
+    Axis*		lAxis;
+    Axis*		rAxis;
+    Axis*		bAxis;
     QStatusBar*		statusbar;
     QList<QCanvasItem>	moving;
-    PartialsList*	partialsList;
+    SoundList*		soundList;
  
     QString		morph1;
     QString		morph2;

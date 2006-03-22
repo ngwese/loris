@@ -21,7 +21,7 @@
  *
  * player.c++
  *
- * When clicking on the play button current partials are synthesized and played
+ * When clicking on the play button current sound are synthesized and played
  * 
  * 
  *
@@ -51,9 +51,9 @@
 Player::Player(
 	QWidget*	parent,
 	const char*	name,
-	PartialsList*	pList
+	SoundList*	pList
 ):QWidget(parent, name){
-  partialsList = pList;
+  soundList = pList;
   
   setGui();
   setConnections();
@@ -70,10 +70,10 @@ void Player::setConnections(){
 // ---------------------------------------------------------------------------
 //	play
 // ---------------------------------------------------------------------------
-// Plays current partials in partialsList
+// Plays current sound in soundList
 
 void Player::play(){
-  partialsList->playCurrent();
+  soundList->playCurrent();
 }
 
 // ---------------------------------------------------------------------------

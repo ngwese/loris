@@ -36,7 +36,7 @@
 #endif
 
 #include "channelizeDialog.h"
-#include "partialsList.h"
+#include "soundList.h"
 
 #include <qlayout.h>
 #include <qspinbox.h>
@@ -54,12 +54,12 @@
 ChannelizeDialog::ChannelizeDialog( 
 	QWidget*	parent,
 	const char*	name, 
-	PartialsList*	list, 
+	SoundList*	list, 
 	QStatusBar*	status
 	): QDialog( parent, name, TRUE){
  
   statusbar = status;
-  partialsList = list;
+  soundList = list;
 
   setGui();
   setConnections();
@@ -87,21 +87,21 @@ void ChannelizeDialog::channelizing(){
 
   if(max > min){
     try{
-      statusbar->message("Channelizing partials with minimum frequency: "
+      statusbar->message("Channelizing sound with minimum frequency: "
 			+temp.setNum(min)
 			+", maximum frequency: "
 			+temp.setNum(max)
 			+", and reference label: "
 			+temp.setNum(refLabel));
-      partialsList->channelizeCurrent((int)refLabel, min, max);
-      statusbar->message("Channelized partials successfully.", 5000);
+      soundList->channelizeCurrent((int)refLabel, min, max);
+      statusbar->message("Channelized sound successfully.", 5000);
     }
     catch(InvalidArgument& ex){
       statusbar->message(ex.what());
     }
     catch(...){
       statusbar->message(
-	"Could not channelize partials, are the parameters correct?."
+	"Could not channelize sound, are the parameters correct?."
       );
     }
   }
