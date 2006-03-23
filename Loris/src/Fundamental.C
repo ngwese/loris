@@ -149,7 +149,7 @@ Fundamental::estimateAt( double time ) const
 	//	frequencies at `time':
 	vector<double> amps, freqs;
 	collect_ampsNfreqs( partials_.begin(), partials_.end(), time, 
-					   amps, freqs, ampThreshold_ );
+					    amps, freqs, ampThreshold_ );
 
 	if ( amps.empty() )
 	{

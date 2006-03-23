@@ -246,9 +246,14 @@ PartialList::iterator Distiller::distill( PartialList & partials )
     // labeled range.
     // (This requires bidirectional iterator support.)
     Iterator beginUnlabeled = 
-        std::stable_partition( partials.begin(), partials.end(), 
-                               std::not1( PartialUtils::isLabelEqual(0) ) );
-
+        std::partition( partials.begin(), partials.end(), 
+                        std::not1( PartialUtils::isLabelEqual(0) ) );
+        //  this used to be a stable partition, which 
+        //  is slower and seems unnecessary
+        //
+        //  HEY figure out why I get slightly different results
+        //  when I use stable_partition.
+        
     PartialList distilled; //  temporary container of Partials				  
 	
 	Iterator lower = partials.begin();
@@ -261,8 +266,14 @@ PartialList::iterator Distiller::distill( PartialList & partials )
         //  sorted by label, and cannot be sorted easily,
         //  if we don't know the capabilities of the container)
 	    Iterator upper = 
-	        std::stable_partition( lower, beginUnlabeled,
-                                   PartialUtils::isLabelEqual( label ) );
+	        std::partition( lower, beginUnlabeled,
+                            PartialUtils::isLabelEqual( label ) );
+            //  this used to be a stable partition, which 
+            //  is slower and seems unnecessary
+            //
+            //  HEY figure out why I get slightly different results
+            //  when I use stable_partition.
+        
                             
         //  upper is the first Partial after lower whose label is not
         //  equal to that of lower.

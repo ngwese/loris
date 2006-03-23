@@ -229,9 +229,11 @@ Collator::collate( PartialList & partials )
     // unlabeled range.
     // (This requires bidirectional iterator support.)
     Iterator beginUnlabeled = 
-       std::stable_partition( partials.begin(), partials.end(), 
+       std::partition( partials.begin(), partials.end(), 
                               std::not1( PartialUtils::isLabelEqual(0) ) );
-    
+        //  this used to be a stable partition, which 
+        //  is very much slower and seems unnecessary
+        
     // cannot splice if this operation is to be generic
     // with respect to container, have to copy:
     PartialList collated( beginUnlabeled, partials.end() );

@@ -68,6 +68,7 @@ struct SwigPListIterator
 
 	SwigPListIterator( PartialList & l ) : subject( l ), it ( l.begin() ) {}
 	SwigPListIterator( PartialList & l, PartialList::iterator i ) : subject( l ), it ( i ) {}
+	~SwigPListIterator( void ) {}
 	
 	bool atEnd( void ) { return it == subject.end(); }
 	bool hasNext( void ) { return !atEnd(); }
@@ -94,6 +95,7 @@ struct SwigPartialIterator
 
 	SwigPartialIterator( Partial & p ) : subject( p ), it ( p.begin() ) {}
 	SwigPartialIterator( Partial & p, Partial::iterator i ) : subject( p ), it ( i ) {}
+	~SwigPartialIterator( void ) {}
 	
 	bool atEnd( void ) { return it == subject.end(); }
 	bool hasNext( void ) { return !atEnd(); }

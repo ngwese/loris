@@ -694,8 +694,9 @@ void shapeSpectrum( PartialList * partials, PartialList * surface,
                     double stretchFreq, double stretchTime );
 /*  Scale the amplitudes of a set of Partials by applying 
     a spectral suface constructed from another set.
-    Strecth the spectral surface in time and frequency
-    using the specified stretch factors. 
+    Stretch the spectral surface in time and frequency
+    using the specified stretch factors. Set the stretch
+    factors to one for no stretching.
  */
 
 void sift( PartialList * partials );
@@ -868,8 +869,8 @@ void removeIf( PartialList * src,
                void * data );
 /*  Remove from a PartialList all Partials satisfying the
     specified predicate. The data parameter can be used to 
-   supply extra user-defined data to the function. Pass 0 if no 
-   additional data is needed.
+    supply extra user-defined data to the function. Pass 0 if no 
+    additional data is needed.
  */
 
 void removeLabeled( PartialList * src, long label );
