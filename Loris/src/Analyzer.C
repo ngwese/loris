@@ -56,7 +56,7 @@
 #endif
 
 // not for release yet
-#define FIND_RMS_PEAK_TIME 1
+//#define FIND_RMS_PEAK_TIME 1
 
 #include <algorithm>
 #include <cmath>
@@ -203,7 +203,7 @@ Analyzer::~Analyzer( void )
 {
 }
 
-#pragma mark -- configuration --
+// -- configuration --
 
 // ---------------------------------------------------------------------------
 //	configure
@@ -277,7 +277,7 @@ Analyzer::configure( double resolutionHz, double windowWidthHz )
 	setBwRegionWidth( 2000. );
 }
 
-#pragma mark -- analysis --
+// -- analysis --
 // ---------------------------------------------------------------------------
 //	analyze
 // ---------------------------------------------------------------------------
@@ -347,6 +347,21 @@ double windowedSquare( double signal, double window )
 #endif
 
 // ---------------------------------------------------------------------------
+//	helpers
+// ---------------------------------------------------------------------------
+static double accumPeakSquaredAmps( double init, 
+                                    const Peaks::const_iterator::value_type & timeBpPair )
+{
+    return init + (timeBpPair.second.amplitude() * timeBpPair.second.amplitude());
+}
+
+template < class Pair >
+static double compare2nd( const Pair & p1, const Pair & p2 )
+{
+    return p1.second < p2.second;
+}
+
+// ---------------------------------------------------------------------------
 //	analyze
 // ---------------------------------------------------------------------------
 //!	Analyze a range of (mono) samples at the given sample rate 	  	
@@ -398,6 +413,13 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
 		debugger << "Bandwidth association disabled" << endl;
 	}
 
+    //  try building up an amplitude envelope:
+    LinearEnvelope  ampEnv;
+
+    //  try building a fundamental frequency envelope too
+    //LinearEnvelope fundEnv;
+    //std::vector< double > amplitudes, frequencies;
+
 	try 
 	{ 
 		//	loop over short-time analysis frames:
@@ -446,6 +468,31 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
 			
 			//	remove rejected Breakpoints:
 			peaks.erase( rejected, peaks.end() );
+            
+            //  estimate the amplitude in this frame:
+            double x = std::accumulate( peaks.begin(), peaks.end(), 0.0, accumPeakSquaredAmps );
+            ampEnv.insert( currentFrameTime, std::sqrt( x ) );
+            
+            //  collect amplitudes and frequencies and try to 
+            //  estimate the fundamental
+            #if 0
+            amplitudes.clear();
+            frequencies.clear();
+            for ( Peaks::iterator spkpos = peaks.begin(); spkpos != peaks.end(); ++spkpos )
+            {
+                amplitudes.push_back( spkpos->second.amplitude() );
+                frequencies.push_back( spkpos->second.frequency() );
+            }
+            try
+            {
+                //  estimate f0
+                //  add breakpoint to fundamental envelope
+            }
+            catch(...)
+            {
+                // do nothing
+            }                
+            #endif
 
 			//	form Partials from the extracted Breakpoints:
 			builder.formPartials( peaks, currentFrameTime );
@@ -458,12 +505,24 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
 		//	unwarp the Partial frequency envelopes:
 		builder.fixPartialFrequencies();
 		
-		//  HEY LOOKIE HERE, this is new:
 		//  fix the frequencies and phases to be consistent.
 		#if FIXFREQ
 		fixFrequency( builder.partials().begin(), builder.partials().end() );
 		#endif
 		
+        
+        //  for debugging:
+        #if 0
+        if ( ! ampEnv.empty() )
+        {
+            LinearEnvelope::iterator peakpos = 
+                std::max_element( ampEnv.begin(), ampEnv.end(), 
+                                  compare2nd<LinearEnvelope::iterator::value_type> );
+            notifier << "HEY analyzer found amp peak at time : " << peakpos->first
+                     << " value: " << peakpos->second << endl;
+        }
+        #endif
+        
 		_imp->partials.splice( _imp->partials.end(), builder.partials() );
         
         #if defined(FIND_RMS_PEAK_TIME) && FIND_RMS_PEAK_TIME
@@ -477,7 +536,7 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
 	}
 }
 
-#pragma mark -- parameter access --
+// -- parameter access --
 
 // ---------------------------------------------------------------------------
 //	ampFloor
@@ -610,7 +669,7 @@ Analyzer::windowWidth( void ) const
 	return _imp->windowWidth; 
 }
 
-#pragma mark -- parameter mutation --
+// -- parameter mutation --
 
 #define VERIFY_ARG(func, test)											\
 	do {																\
@@ -764,7 +823,7 @@ Analyzer::setWindowWidth( double x )
 	_imp->windowWidth = x; 
 }
 
-#pragma mark -- PartialList access --
+// -- PartialList access --
 
 // ---------------------------------------------------------------------------
 //	partials
