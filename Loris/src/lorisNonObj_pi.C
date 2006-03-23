@@ -743,7 +743,9 @@ void morpher_setAmplitudeShape( double x )
 {
    if ( x <= 0. )
    {
-     Throw( InvalidArgument, "the amplitude morph shaping parameter must be positive");
+     std::string s("Loris exception in morpher_setAmplitudeShape(): " );
+     s.append( "Invalid Argument: the amplitude morph shaping parameter must be positive" );
+     handleException( s.c_str() );
    }
    PI_ampMorphShape = x;
 }
