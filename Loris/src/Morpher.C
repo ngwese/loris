@@ -117,7 +117,7 @@ interpolateParameters( const Breakpoint & srcBkpt, const Breakpoint & tgtBkpt,
                        double fweight, double aweight, double ashape, double bweight );
 
    
-#pragma mark -- construction --
+// -- construction --
 
 // ---------------------------------------------------------------------------
 //    Morpher constructor (single morph function)
@@ -205,7 +205,7 @@ Morpher::operator= ( const Morpher & rhs )
 
 
 
-#pragma mark -- Partial morphing --
+// -- Partial morphing --
 
 // ---------------------------------------------------------------------------
 //    morphPartials
@@ -722,7 +722,7 @@ Morpher::fadeTgtBreakpoint( Breakpoint bp, double time ) const
     return bp;
 }
 
-#pragma mark -- morphing function access/mutation --
+// -- morphing function access/mutation --
 
 // ---------------------------------------------------------------------------
 //    setFrequencyFunction
@@ -791,7 +791,7 @@ Morpher::bandwidthFunction( void ) const
 }
 
 
-#pragma mark -- reference Partial label access/mutation --
+// -- reference Partial label access/mutation --
 
 // ---------------------------------------------------------------------------
 //    sourceReferencePartial
@@ -1076,7 +1076,7 @@ void Morpher::setMinBreakpointGap( double x )
     _minBreakpointGapSec = x;
 }
 
-#pragma mark -- PartialList access --
+// -- PartialList access --
 
 // ---------------------------------------------------------------------------
 //    partials
@@ -1100,7 +1100,7 @@ Morpher::partials( void ) const
     return _partials; 
 }
 
-#pragma mark -- helpers: morphed parameter computation --
+// -- helpers: morphed parameter computation --
 
 // ---------------------------------------------------------------------------
 //    morph_aux

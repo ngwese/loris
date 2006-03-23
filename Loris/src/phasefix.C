@@ -59,7 +59,7 @@
 //	begin namespace
 namespace Loris {
 
-#pragma mark -- local helpers -- 
+// -- local helpers -- 
 
 // ---------------------------------------------------------------------------
 //	wrapPi
@@ -116,7 +116,7 @@ static double phaseTravel( Partial::const_iterator bp0, Partial::const_iterator 
 	*/
 }
 
-#pragma mark -- phase correction -- 
+// -- phase correction -- 
 
 // ---------------------------------------------------------------------------
 //	fixPhaseBackward

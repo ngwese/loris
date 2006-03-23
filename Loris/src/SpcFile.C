@@ -131,7 +131,7 @@ static unsigned long getNumSampleFrames( void );
 const int SpcFile::MinNumPartials = 32;
 const double SpcFile::DefaultRate = 44100.;
 
-#pragma mark -- construction --
+// -- construction --
 // ---------------------------------------------------------------------------
 //  SpcFile constructor from filename
 // ---------------------------------------------------------------------------
@@ -290,7 +290,7 @@ SpcFile::write( const std::string & filename, bool enhanced, double endApproachT
     }
 }
 
-#pragma mark -- access --
+// -- access --
 
 // ---------------------------------------------------------------------------
 //  markers 
@@ -347,7 +347,7 @@ SpcFile::sampleRate( void ) const
     return rate_;
 }
 
-#pragma mark -- mutation --
+// -- mutation --
 
 // ---------------------------------------------------------------------------
 //  addPartial 
@@ -441,7 +441,7 @@ SpcFile::setSampleRate( double rate )
     rate_ = rate;
 }
 
-#pragma mark -- helpers --
+// -- helpers --
 
 // ---------------------------------------------------------------------------
 //  growPartials 
@@ -469,7 +469,7 @@ SpcFile::growPartials( partials_type::size_type sz )
     }
 }
 
-#pragma mark -- export structures --
+// -- export structures --
 
 // ---------------------------------------------------------------------------
 //  Export Structures
@@ -502,7 +502,7 @@ struct SpcExportInfo
 static struct SpcExportInfo spcEI;      // yikky global spc Export information
 
 
-#pragma mark -- export helpers by Lippold --
+// -- export helpers by Lippold --
 
 // ---------------------------------------------------------------------------
 //  fileNumPartials
@@ -1049,7 +1049,7 @@ static unsigned long getNumSampleFrames( void )
     return frames * spcEI.fileNumPartials * ( spcEI.enhanced ? 2 : 1 );
 }
 
-#pragma mark -- import helpers by Lippold --
+// -- import helpers by Lippold --
 // ---------------------------------------------------------------------------
 //  processEnhancedPoint
 // ---------------------------------------------------------------------------

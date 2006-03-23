@@ -100,7 +100,7 @@ Distiller::Distiller( double partialFadeTime, double partialSilentTime ) :
 	}
 }
 
-#pragma mark -- helpers --
+// -- helpers --
 
 // ---------------------------------------------------------------------------
 //	merge	(STATIC)

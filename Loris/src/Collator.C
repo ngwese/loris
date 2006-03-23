@@ -88,7 +88,7 @@ Collator::Collator( double partialFadeTime, double partialSilentTime ) :
 	}
 }
 
-#pragma mark -- helpers --
+// -- helpers --
 
 // ---------------------------------------------------------------------------
 //	helper predicates

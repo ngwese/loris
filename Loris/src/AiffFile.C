@@ -57,7 +57,7 @@
 namespace Loris {
 
 
-#pragma mark -- construction --
+// -- construction --
 
 // ---------------------------------------------------------------------------
 //	AiffFile constructor from filename
@@ -174,7 +174,7 @@ AiffFile::operator= ( const AiffFile & rhs )
 	return *this;
 }
 
-#pragma mark -- export --
+// -- export --
 
 // ---------------------------------------------------------------------------
 //	write 
@@ -250,7 +250,7 @@ AiffFile::write( const std::string & filename, unsigned int bps )
 	}
 }
 
-#pragma mark -- access --
+// -- access --
 
 // ---------------------------------------------------------------------------
 //	markers 
@@ -332,7 +332,7 @@ AiffFile::samples( void ) const
 	return samples_;
 }
 
-#pragma mark -- mutation --
+// -- mutation --
 
 // ---------------------------------------------------------------------------
 //	addPartial 
@@ -371,7 +371,7 @@ AiffFile::setMidiNoteNumber( double nn )
 	notenum_ = nn;
 }
 
-#pragma mark -- helpers --
+// -- helpers --
 
 // ---------------------------------------------------------------------------
 //	configureSynthesizer 

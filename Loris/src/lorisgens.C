@@ -90,8 +90,6 @@ static double Lorisgens_Srate = 0;
 static double Lorisgens_Krate = 0;
 static int Lorisgens_Ksamps = 0;
 
-#pragma mark -- static helpers --
-
 // ---------------------------------------------------------------------------
 //	setup_globals
 // ---------------------------------------------------------------------------
@@ -302,7 +300,6 @@ static inline void convert_samples( const double * src, float * tgt, int nn )
 	} while(--nn);
 }
 
-#pragma mark -- EnvelopeReader --
 // ---------------------------------------------------------------------------
 //	EnvelopeReader definition
 // ---------------------------------------------------------------------------
@@ -383,8 +380,6 @@ EnvelopeReader::Find( INSDS * owner, int idx )
 		return NULL;
 	}
 }
-
-#pragma mark -- ImportedPartials --
 
 // ---------------------------------------------------------------------------
 //	ImportedPartials definition
@@ -482,9 +477,6 @@ ImportedPartials::GetPartials( const string & sdiffilname, double fadetime )
 	
 	return *it;
 }		
-
-
-#pragma mark -- LorisReader --
 
 // ---------------------------------------------------------------------------
 //	LorisReader definition
@@ -587,8 +579,6 @@ LorisReader::updateEnvelopePoints( double time, double fscale, double ascale, do
 	return countActive;
 }
 
-#pragma mark -- lorisread generator functions --
-
 static void lorisread_cleanup(void * p);
 
 // ---------------------------------------------------------------------------
@@ -662,7 +652,7 @@ void lorisread_cleanup(void * p)
 	tp->imp = 0;
 }
 
-#pragma mark -- LorisPlayer --
+#// --- mark -- LorisPlayer --
 
 // ---------------------------------------------------------------------------
 //	LorisPlayer definition
@@ -694,7 +684,7 @@ LorisPlayer::LorisPlayer( LORISPLAY * params ) :
 		std::cerr << "** Could not find lorisplay source with index " << (int)*(params->readerIdx) << std::endl;
 }
 
-#pragma mark -- lorisplay generator functions --
+#// --- mark -- lorisplay generator functions --
 
 static void lorisplay_cleanup(void * p);
 
@@ -762,7 +752,7 @@ void lorisplay_cleanup(void * p)
 	tp->imp = 0;
 }
 
-#pragma mark -- LorisMorpher --
+#// --- mark -- LorisMorpher --
 
 // ---------------------------------------------------------------------------
 //	LorisMorpher definition
@@ -1056,7 +1046,7 @@ LorisMorpher::updateEnvelopes( void )
 	return morphed_envelopes.size();
 }
 
-#pragma mark -- lorismorph generator functions --
+#// --- mark -- lorismorph generator functions --
 
 static void lorismorph_cleanup(void * p);
 // ---------------------------------------------------------------------------

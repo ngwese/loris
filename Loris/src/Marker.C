@@ -41,7 +41,7 @@
 //	begin namespace
 namespace Loris {
 
-#pragma mark -- construction --
+// -- construction --
 
 // ---------------------------------------------------------------------------
 //	Marker - default constructor
@@ -100,7 +100,7 @@ Marker::operator=( const Marker & rhs )
 	return *this;
 }
 
-#pragma mark -- comparison --
+// -- comparison --
 
 // ---------------------------------------------------------------------------
 //	less-than operator (operator <)
@@ -114,7 +114,7 @@ Marker::operator< ( const Marker & rhs ) const
 	return m_time < rhs.m_time;
 }	 
 
-#pragma mark -- access --
+// -- access --
 
 // ---------------------------------------------------------------------------
 //	name
@@ -149,7 +149,7 @@ Marker::time( void ) const
 	return m_time;
 }
 
-#pragma mark -- mutation --
+// -- mutation --
 
 // ---------------------------------------------------------------------------
 //	setName

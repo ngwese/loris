@@ -79,7 +79,7 @@ bool order_by_time( const Partial_value_type & x, const Partial_value_type & y )
 #undef USE_VECTOR
 
 
-#pragma mark -- construction --
+// -- construction --
 
 // ---------------------------------------------------------------------------
 //	Partial constructor
@@ -147,7 +147,7 @@ Partial::operator=( const Partial & rhs )
 	return *this;
 }
 
-#pragma mark -- container-dependent implementation --
+// -- container-dependent implementation --
 
 // ---------------------------------------------------------------------------
 //	begin
@@ -399,7 +399,7 @@ Partial::last( void ) const
 #endif
 }
 
-#pragma mark -- container-independent implementation --
+// -- container-independent implementation --
 
 // ---------------------------------------------------------------------------
 //	initialPhase

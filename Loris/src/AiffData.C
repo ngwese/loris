@@ -52,7 +52,7 @@
 //	begin namespace
 namespace Loris {
 
-#pragma mark -- AIFF import --
+// -- AIFF import --
 
 // ---------------------------------------------------------------------------
 //	readChunkHeader
@@ -346,7 +346,7 @@ readSampleData( std::istream & s, SoundDataCk & ck, unsigned long chunkSize )
 	return s;
 }
 
-#pragma mark -- Chunk construction --
+// -- Chunk construction --
 
 // ---------------------------------------------------------------------------
 //	configureCommonCk
@@ -509,7 +509,7 @@ configureSoundDataCk( SoundDataCk & ck, const std::vector< double > & samples,
 }
 
 
-#pragma mark -- AIFF export --
+// -- AIFF export --
 
 // ---------------------------------------------------------------------------
 //	writeCommon
@@ -718,7 +718,7 @@ writeSampleData( std::ostream & s, const SoundDataCk & ck )
 	return s;
 }
 
-#pragma mark -- sample conversion --
+// -- sample conversion --
 
 // ---------------------------------------------------------------------------
 //	convertBytesToSamples

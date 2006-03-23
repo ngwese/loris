@@ -205,7 +205,7 @@ Synthesizer::synthesize( const Partial & p )
 	
 }
 	
-#pragma mark -- access --
+// -- access --
 
 // ---------------------------------------------------------------------------
 //	fadeTime
@@ -249,7 +249,7 @@ Synthesizer::samples( void )
 	return *sampleBuffer;
 }
 
-#pragma mark -- mutation --
+// -- mutation --
 
 // ---------------------------------------------------------------------------
 //	setFadeTime

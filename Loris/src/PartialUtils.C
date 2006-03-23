@@ -58,7 +58,7 @@ namespace Loris {
 namespace PartialUtils {
 
 
-#pragma mark -- base class --
+// -- base class --
 
 // ---------------------------------------------------------------------------
 //	PartialMutator constructor from double
@@ -106,7 +106,7 @@ PartialMutator::operator=( const PartialMutator & rhs )
 	return *this;
 }
 	
-#pragma mark -- amplitude scaling --
+// -- amplitude scaling --
 	
 // ---------------------------------------------------------------------------
 //	AmplitudeScaler function call operator

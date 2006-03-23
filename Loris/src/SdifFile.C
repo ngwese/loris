@@ -101,7 +101,7 @@ using namespace std;
 //	begin namespace
 namespace Loris {
 
-#pragma mark -- CNMAT SDIF definitions --
+// -- CNMAT SDIF definitions --
 // ---------------------------------------------------------------------------
 //	CNMAT SDIF types
 // ---------------------------------------------------------------------------
@@ -247,7 +247,7 @@ typedef enum {
    Find the size in bytes of the data type indicated by "d" */
 #define SDIF_GetMatrixDataTypeSize(d) ((d) & 0xff)
 
-#pragma mark -- CNMAT SDIF errors --
+// -- CNMAT SDIF errors --
 // ---------------------------------------------------------------------------
 //	CNMAT SDIF error handling machinery.
 // ---------------------------------------------------------------------------
@@ -286,7 +286,7 @@ static char *error_string_array[] = {
     "Frame has two matrices with the same MatrixType"
 };
 
-#pragma mark -- CNMAT SDIF endian --
+// -- CNMAT SDIF endian --
 // ---------------------------------------------------------------------------
 //	CNMAT SDIF little endian machinery.
 // ---------------------------------------------------------------------------
@@ -496,7 +496,7 @@ static SDIFresult SDIF_Read8(void *block, size_t n, FILE *f) {
 #endif
 }
 
-#pragma mark -- CNMAT SDIF intialization --
+// -- CNMAT SDIF intialization --
 // ---------------------------------------------------------------------------
 //	CNMAT SDIF initialization.
 // ---------------------------------------------------------------------------
@@ -539,7 +539,7 @@ static SDIFresult SDIF_Init(void) {
 	return ESDIF_SUCCESS;
 }
 
-#pragma mark -- CNMAT SDIF frame header --
+// -- CNMAT SDIF frame header --
 // ---------------------------------------------------------------------------
 //	CNMAT SDIF frame headers.
 // ---------------------------------------------------------------------------
@@ -672,7 +672,7 @@ static SDIFresult SDIF_SkipFrame(const SDIF_FrameHeader *head, FILE *f) {
     return SkipBytes(f, bytesToSkip);
 }
 
-#pragma mark -- CNMAT SDIF matrix header --
+// -- CNMAT SDIF matrix header --
 // ---------------------------------------------------------------------------
 //	CNMAT SDIF matrix headers.
 // ---------------------------------------------------------------------------
@@ -732,7 +732,7 @@ static int SDIF_PaddingRequired(const SDIF_MatrixHeader *m) {
     }
 }
 
-#pragma mark -- CNMAT SDIF matrix data --
+// -- CNMAT SDIF matrix data --
 // ---------------------------------------------------------------------------
 //	CNMAT SDIF matrix data.
 // ---------------------------------------------------------------------------
@@ -791,7 +791,7 @@ static SDIFresult SDIF_WriteMatrixData(FILE *f, const SDIF_MatrixHeader *head, v
     return SDIF_WriteMatrixPadding(f, head);
 }
 
-#pragma mark -- CNMAT SDIF open and close --
+// -- CNMAT SDIF open and close --
 // ---------------------------------------------------------------------------
 //	CNMAT SDIF file open and close.
 // ---------------------------------------------------------------------------
@@ -889,7 +889,7 @@ static SDIFresult SDIF_CloseRead(FILE *f) {
     }
 }
 
-#pragma mark -- construction --
+// -- construction --
 						 
 // ---------------------------------------------------------------------------
 //	SdifFile construction helpers
@@ -926,7 +926,7 @@ SdifFile::SdifFile( void )
 {
 }
 
-#pragma mark -- access --
+// -- access --
 // ---------------------------------------------------------------------------
 //	markers
 // ---------------------------------------------------------------------------
@@ -956,7 +956,7 @@ const SdifFile::partials_type & SdifFile::partials( void ) const
 	return partials_; 
 }
 
-#pragma mark -- mutation --
+// -- mutation --
 // ---------------------------------------------------------------------------
 //	addPartial
 // ---------------------------------------------------------------------------
@@ -995,7 +995,7 @@ void SdifFile::write1TRC( const std::string & path )
 }
 
 
-#pragma mark -- Loris SDIF definitions --
+// -- Loris SDIF definitions --
 // ---------------------------------------------------------------------------
 //	Loris SDIF types
 // ---------------------------------------------------------------------------
@@ -1054,7 +1054,7 @@ public:
 		}																		\
 	}	
 
-#pragma mark -- SDIF reading helpers --
+// -- SDIF reading helpers --
 // ---------------------------------------------------------------------------
 //	processRow64
 // ---------------------------------------------------------------------------
@@ -1434,7 +1434,7 @@ static void import_sdif( const std::string &infilename,
 	
 }
 
-#pragma mark -- SDIF writing helpers --
+// -- SDIF writing helpers --
 // ---------------------------------------------------------------------------
 //	makeSortedBreakpointTimes
 // ---------------------------------------------------------------------------

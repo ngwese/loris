@@ -42,7 +42,7 @@
 //	begin namespace
 namespace Loris {
 
-#pragma mark --- construction ---
+// --- construction ---
 
 // ---------------------------------------------------------------------------
 //	default constructor
@@ -84,7 +84,7 @@ NoiseGenerator::reset( double newSeed )
 	filter.clear();
 }
 
-#pragma mark --- random number generation ---
+// --- random number generation ---
 
 // ---------------------------------------------------------------------------
 //	dirt-cheap random number generator
@@ -188,7 +188,7 @@ NoiseGenerator::gaussian_normal( void )
 	}
 }
 
-#pragma mark --- sample generation ---
+// --- sample generation ---
 
 // ---------------------------------------------------------------------------
 //	next

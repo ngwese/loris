@@ -248,7 +248,7 @@ private:
 
 };	//	end of class AiffFile
 
-#pragma mark -- template members --
+// -- template members --
 
 // ---------------------------------------------------------------------------
 //	constructor from Partial range

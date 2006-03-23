@@ -43,8 +43,8 @@
 namespace Loris {
 
 
-#pragma mark -
-#pragma mark construction
+// -
+// construction
 
 // ---------------------------------------------------------------------------
 //	Breakpoint default constructor

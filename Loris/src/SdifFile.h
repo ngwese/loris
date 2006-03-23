@@ -199,7 +199,7 @@ private:
 	
 };	//	end of class SdifFile
 
-#pragma mark -- template members --
+// -- template members --
 
 // ---------------------------------------------------------------------------
 //	constructor from Partial range

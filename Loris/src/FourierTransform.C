@@ -94,7 +94,7 @@ using std::vector;
 // die hook defined below:
 static void fftw_die_Loris( const char * s );
 
-#pragma mark --- private implementation class ---
+// --- private implementation class ---
 
 // ---------------------------------------------------------------------------
 //  FTimpl
@@ -185,7 +185,7 @@ public:
    }
 }; // end of class FTimpl
 
-#pragma mark --- FourierTransform members ---
+// --- FourierTransform members ---
 
 // ---------------------------------------------------------------------------
 //	FourierTransform constructor
