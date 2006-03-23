@@ -168,6 +168,7 @@ returns true.") SwigPListIterator;
 class SwigPListIterator
 {
 public:
+	~SwigPListIterator( void );
 
 %feature("docstring",
 "Return true if there are no more Partials in the PartialList.") atEnd;
@@ -215,6 +216,7 @@ returns true.") SwigPListIterator;
 class SwigPartialIterator
 {
 public:
+	~SwigPartialIterator( void );
 
 %feature("docstring",
 "Return true if there are no more Breakpoints in the Partial.") atEnd;
@@ -738,6 +740,8 @@ Breakpoint within a Partial." ) BreakpointPosition;
 class BreakpointPosition
 {
 public:
+	~BreakpointPosition( void );
+
 	%extend
 	{
 %feature("docstring",
