@@ -373,3 +373,4 @@ void SpectralSurface::addPartialAux( const Partial & p )
 
 
 }	//end namespace
+

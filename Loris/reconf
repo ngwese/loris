@@ -24,5 +24,5 @@ autoconf
 echo "- autoheader."
 autoheader
 echo "- automake."
-automake --foreign --add-missing
+automake --foreign --add-missing --copy
 exit

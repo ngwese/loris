@@ -367,3 +367,4 @@ void SpectralSurface::setAmplitudes( PartialList::iterator b,
 }	// namespace Loris
 
 #endif /* ndef INCLUDE_SPECTRALSURFACE_H */
+
