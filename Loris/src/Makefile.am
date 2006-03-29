@@ -34,6 +34,8 @@ CPP_SRC = AiffData.C	\
 		Endian.h \
 		Envelope.C \
 		Envelope.h \
+		estimateF0.C \
+		estimateF0.h \
 		Exception.C \
 		Exception.h \
 		Filter.C \

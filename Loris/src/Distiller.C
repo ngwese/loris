@@ -295,6 +295,13 @@ void Distiller::distillOne( PartialList & partials, Partial::label_type label,
     				newp.absorb( absorbMe );
     			}
 
+				//	HEY
+				//	couldn't there be a non-contributing part
+				//	at the beginning of the Partial too? 
+				//	Shouldn't we check whether cb == it->begin()?
+				//	In fact, couldn't there be more than one
+				//	contributing segment ina Partial? 
+
     			// merge the contributing part:
     			merge( cb, ce, newp, _fadeTime, _gapTime );
     		}
