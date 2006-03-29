@@ -56,6 +56,14 @@
 #define SMITHS_BRILLIANT_PARABOLAS
 #endif
 
+//  Could compute the mixed partial derivative of
+//  phase, for use in bandwidth computation, using
+//  the extra, unused half-transform in here, but
+//  it might corrupt the magnitude transform
+//  slightly, so don't do it until we are actually
+//  going to use it.
+#undef COMPUTE_MIXED_DERIVATIVE
+
 //	there's a freakin' ton of std in here, 
 //	just import the whole namespace
 using namespace std;
@@ -469,6 +477,8 @@ ReassignedSpectrum::reassignedPhase( long idx ) const
 double
 ReassignedSpectrum::reassignedBandwidth( long idx ) const
 {
+#if defined(COMPUTE_MIXED_DERIVATIVE) && COMPUTE_MIXED_DERIVATIVE
+
   	std::complex<double> X_h = circEvenPartAt( mMagnitudeTransform, idx );
 	std::complex<double> X_Th = circOddPartAt( mCorrectionTransform, idx ); 
     std::complex<double> X_Dh = circEvenPartAt( mCorrectionTransform, idx );
@@ -481,7 +491,11 @@ ReassignedSpectrum::reassignedBandwidth( long idx ) const
 
     double bw = fabs( 1.0 + (scaleBy * (term1 - term2)) );
     bw = min( 1.0, bw );
-    
+
+#else
+    double bw = 0;
+#endif
+     
     return bw;  
 }
 
@@ -604,8 +618,14 @@ buildReassignmentWindows( RealWinIter winbegin, RealWinIter winend,
 	applyFreqRamp( framp );
 
 	std::vector< double > tframp( framp.size(), 0. );
-	tframp = framp; // do this or not
+	
+#if defined(COMPUTE_MIXED_DERIVATIVE) && COMPUTE_MIXED_DERIVATIVE	
+    //  Do this only if we are computing the mixed 
+    //  partial derivative of phase, otherwise, leave
+    //  that vector empty.
+	tframp = framp;
 	applyTimeRamp( tframp );
+#endif
 	
 	std::transform( framp.begin(), framp.end(), tramp.begin(),
 					rawinbegin, make_complex< double >() );	

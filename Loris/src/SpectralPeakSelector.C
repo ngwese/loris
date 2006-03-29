@@ -52,6 +52,7 @@
 // reassignment to detect "peaks", otherwise 
 // magnitude peaks are used.
 #define USE_REASSIGNMENT_MINS 1
+//#undef USE_REASSIGNMENT_MINS
 
 //#define ENABLE_EXPERIMENTAL_BW 1
 
@@ -98,7 +99,8 @@ SpectralPeakSelector::extractPeaks( ReassignedSpectrum & spectrum,
 	
 	for ( int j = start_j; j < end_j; ++j ) 
 	{	 
-	#if defined(USE_REASSIGNMENT_MINS) && USE_REASSIGNMENT_MINS
+#if defined(USE_REASSIGNMENT_MINS) && USE_REASSIGNMENT_MINS
+
 	    // look for changes in the frequency reassignment,
 	    // from positive to negative correction, indicating
 	    // a concentration of energy in the spectrum:
@@ -141,7 +143,9 @@ SpectralPeakSelector::extractPeaks( ReassignedSpectrum & spectrum,
 			}	        
 	    }
 	    fsample = next_fsample;
-	#else
+	    
+#else
+
 		if ( spectrum.reassignedMagnitude(j) > spectrum.reassignedMagnitude(j-1) && 
 			 spectrum.reassignedMagnitude(j) > spectrum.reassignedMagnitude(j+1) ) 
 		{				
@@ -171,7 +175,8 @@ SpectralPeakSelector::extractPeaks( ReassignedSpectrum & spectrum,
 			peaks_.push_back( std::make_pair( time, bp ) );
 						
 		}	//	end if itsa peak
-	#endif
+		
+#endif
 	}
 	
 	debugger << "extractPeaks found " << peaks_.size() << endl;

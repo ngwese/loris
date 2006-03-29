@@ -252,7 +252,7 @@ PartialList::iterator Distiller::distill( PartialList & partials )
         //  is slower and seems unnecessary
         //
         //  HEY figure out why I get slightly different results
-        //  when I use stable_partition.
+        //  when I use stable_partition. And WHEN!
         
     PartialList distilled; //  temporary container of Partials				  
 	
@@ -272,7 +272,7 @@ PartialList::iterator Distiller::distill( PartialList & partials )
             //  is slower and seems unnecessary
             //
             //  HEY figure out why I get slightly different results
-            //  when I use stable_partition.
+            //  when I use stable_partition. And WHEN!
         
                             
         //  upper is the first Partial after lower whose label is not

@@ -152,13 +152,13 @@ public:
    // dump the plan.
    ~FTimpl( void )
    {
-   	if ( 0 != plan )
-   	{
-   		fftw_destroy_plan( plan );
-   	}         
-   	
-   	fftw_free( ftIn );
-      fftw_free( ftOut );
+    if ( 0 != plan )
+    {
+     fftw_destroy_plan( plan );
+    }         
+
+    fftw_free( ftIn );
+    fftw_free( ftOut );
    }
    
    // Copy complex< double >'s from a buffer into ftIn, 
