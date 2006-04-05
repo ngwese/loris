@@ -98,7 +98,8 @@ ReassignedSpectrum::ReassignedSpectrum( const std::vector< double > & window ) :
 			        std::bind1st( std::multiplies<double>(), 2/winsum ) );
 	
 	buildReassignmentWindows( mWindow.begin(), mWindow.end(), 
-	                         mMagnitudeTransformWindow.begin(), mCorrectionTransformWindow.begin() );
+	                          mMagnitudeTransformWindow.begin(), 
+	                          mCorrectionTransformWindow.begin() );
 
 	debugger << "ReassignedSpectrum: length is " << mMagnitudeTransform.size() << endl;
 }
@@ -156,7 +157,7 @@ ReassignedSpectrum::transform( const double * sampsBegin,
 	//	window and rotate input and compute normal transform:
 	//	window the samples into the FT buffer:
 	FourierTransform::iterator it = 
-		std::transform( sampsBegin, sampsEnd, mCorrectionTransformWindow.begin() + winBeginOffset, 
+		std::transform( sampsBegin, sampsEnd, mMagnitudeTransformWindow.begin() + winBeginOffset, 
 						mMagnitudeTransform.begin(), std::multiplies< std::complex< double > >() );
 	//	fill the rest with zeros:
 	std::fill( it, mMagnitudeTransform.end(), 0. );
@@ -169,7 +170,7 @@ ReassignedSpectrum::transform( const double * sampsBegin,
 	//	compute the dual reassignment transform:
 	//	window the samples into the reassignment FT buffer,
 	//	using the complex-valued reassignment window:
-	it = std::transform( sampsBegin, sampsEnd, mMagnitudeTransformWindow.begin() + winBeginOffset, 
+	it = std::transform( sampsBegin, sampsEnd, mCorrectionTransformWindow.begin() + winBeginOffset, 
 						mCorrectionTransform.begin(), std::multiplies< std::complex<double> >() );
 	
 	//	fill the rest with zeros:
@@ -609,7 +610,7 @@ static inline void applyTimeRamp( vector< double > & w )
 template < typename RealWinIter, typename CplxWinIter >
 static void 
 buildReassignmentWindows( RealWinIter winbegin, RealWinIter winend, 
-						 CplxWinIter rawinbegin, CplxWinIter raw2inbegin )
+						  CplxWinIter rawinbegin, CplxWinIter raw2inbegin )
 {
 	std::vector< double > tramp( winbegin, winend );
 	applyTimeRamp( tramp );
@@ -628,10 +629,10 @@ buildReassignmentWindows( RealWinIter winbegin, RealWinIter winend,
 #endif
 	
 	std::transform( framp.begin(), framp.end(), tramp.begin(),
-					rawinbegin, make_complex< double >() );	
+					raw2inbegin, make_complex< double >() );	
     
 	std::transform( winbegin, winend, tframp.begin(),
-					raw2inbegin, make_complex< double >() );	
+					rawinbegin, make_complex< double >() );	
 }
 
 }	//	end of namespace Loris
