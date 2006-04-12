@@ -64,8 +64,8 @@ DilateDialog::DilateDialog(
   statusbar = status;
   soundList = pList;
   canvs = new QCanvas(735, 350);
-  sample1 = "";
-  sample2 = "";
+  sound1 = "";
+  sound2 = "";
   setGui();
   setConnections();
   setLists()
@@ -76,24 +76,24 @@ DilateDialog::DilateDialog(
 --------------------------------------------------------------------------------
 	setLists
 --------------------------------------------------------------------------------
-Initialize the popup lists which select samples to be dilated.
+Initialize the popup lists which select sounds to be dilated.
 */
 void DilateDialog::setLists(){
   int i;
   int current;
 
-  sample1List->clear();
-  sample2List->clear();
+  sound1List->clear();
+  sound2List->clear();
 
   for(i=0; i<soundList->getLength(); i++){
-    sample1List->insertItem(soundList->getSound(i)0>getName(), i);
-    sample2List->insertItem(soundList->getSound(i)0>getName(), i);
+    sound1List->insertItem(soundList->getSound(i)0>getName(), i);
+    sound2List->insertItem(soundList->getSound(i)0>getName(), i);
   }
 
   current = soundList->getCurrentIndex();
 
-  sample1List->setCurrentItem(current);
-  sample2List->setCurrentItem(current);
+  sound1List->setCurrentItem(current);
+  sound2List->setCurrentItem(current);
   updateSample1(current);
   updateSample2(current);
 }
@@ -111,9 +111,9 @@ void DilateDialog::setConnections(){
   connect(dilateButton,SIGNAL(clicked()), dilateArea, SLOT(dilate()));
   connect(dilateButton,SIGNAL(clicked()), this, SLOT(hide()));
   connect(cancelButton, SIGNAL(clicked()), this, SLOT(hide()));
-  connect(sample1List, SIGNAL(highlighted(int)),
+  connect(sound1List, SIGNAL(highlighted(int)),
           this, SLOT(updateDilate1(int)));
-  connect(sample2List, SIGNAL(highlighted(int)),
+  connect(sound2List, SIGNAL(highlighted(int)),
           this, SLOT(updateDilate2(int)));
 }
 
@@ -122,14 +122,14 @@ void DilateDialog::setConnections(){
 --------------------------------------------------------------------------------
 	updateDilate1
 --------------------------------------------------------------------------------
-Selects a new sample for dilation, and updates all GUI elements in MorphDialog
+Selects a new sound for dilation, and updates all GUI elements in MorphDialog
 to reflect the change.
 */
 void DilateDialog::updateSample1(int pos){
-  sample1 = sample1List->text(pos);
-  name1Label->setText(sample1);
-  dilateArea->setSample1(sample1);
-  dilateBox->setTitle(QString("Dilate "+sample1+" onto "+sample2));
+  sound1 = sound1List->text(pos);
+  name1Label->setText(sound1);
+  dilateArea->setSample1(sound1);
+  dilateBox->setTitle(QString("Dilate "+sound1+" onto "+sound2));
 }
 
 
@@ -137,14 +137,14 @@ void DilateDialog::updateSample1(int pos){
 --------------------------------------------------------------------------------
 	updateDilate2
 --------------------------------------------------------------------------------
-Selects a new sample for dilation, and updates all GUI elements in MorphDialog
+Selects a new sound for dilation, and updates all GUI elements in MorphDialog
 to reflect the change.
 */
 void DilateDialog::updateSample2(int pos){
-  sample2 = sample2List->text(pos);
-  name2Label->setText(sample2);
-  dilateArea->setSample2(sample2);
-  dilateBox->setTitle(QString("Dilate "+sample1+" onto "+sample2));
+  sound2 = sound2List->text(pos);
+  name2Label->setText(sound2);
+  dilateArea->setSample2(sound2);
+  dilateBox->setTitle(QString("Dilate "+sound1+" onto "+sound2));
 }
 
 

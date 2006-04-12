@@ -104,6 +104,8 @@ class SoundList:public QObject{
     void		removeCurrent();
     void		playCurrent();
     void morph(
+	int			morphPos1,
+	int			morphPos2,
 	LinearEnvelope&		amp,
 	LinearEnvelope&		fre,
 	LinearEnvelope&		noise

@@ -53,6 +53,8 @@ MorphArea::MorphArea(
   
   width  = canvas->width(); 
   height = canvas->height();
+
+  morphPos1 = morphPos2 = -1;
   
   lAxis = new Axis(
 	canvas,
@@ -87,7 +89,6 @@ MorphArea::MorphArea(
 
   lAxis->show();
   rAxis->show();
-  bAxis->show();
 
   // the points are saved in lists which sort the points by x-value
   // because the canvas only returns objects sorted by z-value.  
@@ -249,14 +250,14 @@ void MorphArea::rightButtonHelp(
 // ---------------------------------------------------------------------------
 //      contentsMouseMoveEvent
 // ---------------------------------------------------------------------------
-// Is called when the user dragg the mouse pointer in the area, causes all items
-// in moving to move.
+// Called when the user drags the mouse pointer in the area, causing all items
+// in moving array to move.
 void MorphArea::contentsMouseMoveEvent(QMouseEvent* e){
   // if left button clicked on one or several points and the 
   // click is in the area, move objects.
   if(!moving.isEmpty() && inArea(e->x(), e->y())){ 
     PointWithText* movingPoint = (PointWithText*)moving.first();
-    
+
     QSortedList<PointWithText>* list = 0;
     switch(state){
       case all: 
@@ -266,37 +267,22 @@ void MorphArea::contentsMouseMoveEvent(QMouseEvent* e){
         ){
           switch(movingPoint->rtti()){
             case AmplitudePoint::rttiNr:
-              moveHelp(
-                aList,
-                movingPoint,
-                e->x(),
-                e->y()
-              );
+              moveHelp( aList, movingPoint, e->x(), e->y() );
               break; 
 
             case FrequencyPoint::rttiNr:
-              moveHelp(
-                fList,
-                movingPoint,
-                e->x(),
-                e->y()
-              );
+              moveHelp( fList, movingPoint, e->x(), e->y() );
               break;
 
             case NoisePoint::rttiNr:
-              moveHelp(
-                nList,
-                movingPoint,
-                e->x(),
-                e->y()
-              );
+              moveHelp( nList, movingPoint, e->x(), e->y() );
               break;
 
             default: std::cout<<"ContentsMouseMoveEvent: no point???"<<endl;
           }
         }
       break;
-      
+
       case amplitude: 
         if(movingPoint->rtti()== AmplitudePoint::rttiNr)
           moveHelp(aList, movingPoint, e->x(), e->y()); break;
@@ -621,20 +607,16 @@ const QPoint MorphArea::getOrigo() const{
 // ---------------------------------------------------------------------------
 // Morph button in morphArea is clicked
 void MorphArea::morph(){
-  LinearEnvelope amplitudePoints;
-  LinearEnvelope frequencyPoints;
-  LinearEnvelope noisePoints;
-  
-  fillEnvelope(aList, amplitudePoints);
-  fillEnvelope(fList, frequencyPoints);
-  fillEnvelope(nList, noisePoints);
+  LinearEnvelope famp;
+  LinearEnvelope ffreq;
+  LinearEnvelope fbw;
+
+  fillEnvelope(aList, famp);
+  fillEnvelope(fList, ffreq);
+  fillEnvelope(nList, fbw);
 
   try{
-    soundList->morph(
-	amplitudePoints,
-	frequencyPoints,
-	noisePoints
-    );
+    soundList->morph(morphPos1, morphPos2, famp, ffreq, fbw);
     clearAll();
   }
   
@@ -651,18 +633,16 @@ void MorphArea::fillEnvelope(
 	LinearEnvelope& env
 ){
   PointWithText*	point;
-  double time	= 0;
+  double time		= 0;
   double percent	= 1; // percent index relates to second sound
   
   //insert a zero point first if there are points in list.
-  if(list.first()!=0)
-    env.insertBreakpoint(time, percent);  
+  if(list.first()!=0) env.insertBreakpoint(time, percent);  
  
   for(	point = list.first();
 	point != 0;
 	point = list.next()
   ){
-    //Note that we are passing int values to something than expects doubles...
     time = toXAxisValue(point->x());
     percent = 1-toYAxisValue(point->y())/100;
     env.insertBreakpoint(time, percent);
@@ -689,9 +669,10 @@ double MorphArea::toYAxisValue(int y){
 //    setMorph1
 // ---------------------------------------------------------------------------
 // Changes all point captions to show the name of the sound chosen as Morph1.
-void MorphArea::setMorph1(QString& name){
+void MorphArea::setMorph1(int Pos, QString& name){
   PointWithText* point;
 
+  morphPos1 = Pos;
   morph1 = name;
   if(!aList.isEmpty()){
     for(point = aList.first(); point!=0; point = aList.next()){
@@ -719,9 +700,10 @@ void MorphArea::setMorph1(QString& name){
 //    setMorph2
 // ---------------------------------------------------------------------------
 // Changes all point captions to show the name of the sound chosen as Morph2.
-void MorphArea::setMorph2(QString& name){
+void MorphArea::setMorph2(int Pos, QString& name){
   PointWithText* point;
 
+  morphPos2 = Pos;
   morph2 = name;
   if(!aList.isEmpty()){
     for(point = aList.first(); point!=0; point = aList.next()){
@@ -751,8 +733,12 @@ void MorphArea::setMorph2(QString& name){
 // Adds the horizontal axis to the area.
 void MorphArea::setHorizontalAxis(){
   double time = 0;
-  double time1 = soundList->getMorph1Duration();
-  double time2 = soundList->getMorph2Duration();
+
+  if( morphPos1 < 0 || morphPos2 < 0 ) return;
+
+  /*Have to check that morphPos[12] actually points to a sound.*/
+  double time1 = soundList->getSound(morphPos1)->getDuration();
+  double time2 = soundList->getSound(morphPos2)->getDuration();
   
   if(time1 > time2) time = time1;
   else time = time2;

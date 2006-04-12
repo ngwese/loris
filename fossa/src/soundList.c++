@@ -132,14 +132,16 @@ void SoundList::importSdif(
 // Morph 2 sound from the list with given breakpointsenvelopes for 
 // amplitude, frequency, and noise.
 void SoundList::morph(
+	int			morphPos1,
+	int			morphPos2,
 	LinearEnvelope&		famp,
 	LinearEnvelope&		ffreq,
 	LinearEnvelope&		fbw
 ){
-  list<Loris::Partial> list1 = *soundList.at(morph1)->getPartials();
-  list<Loris::Partial> list2 = *soundList.at(morph2)->getPartials();
-  QString name1       = soundList.at(morph1)->getName();
-  QString name2       = soundList.at(morph2)->getName();
+  list<Loris::Partial> list1 = *soundList.at(morphPos1)->getPartials();
+  list<Loris::Partial> list2 = *soundList.at(morphPos2)->getPartials();
+  QString name1       = soundList.at(morphPos1)->getName();
+  QString name2       = soundList.at(morphPos2)->getName();
   
   try{
     list<Loris::Partial>* morphedSound = interface->morph(
@@ -157,6 +159,8 @@ void SoundList::morph(
 		interface
 	)
     );
+
+    current = soundList.count();
 
     emit currentChanged(); 
     emit listChanged();             // model changed -> update views
@@ -252,36 +256,6 @@ void SoundList::setCurrentSound(int pos){
 // Returns the number of samples in the list.
 int SoundList::getLength(){
   return soundList.count();
-}
-
-// ---------------------------------------------------------------------------
-//      getMorph1Duration
-// ---------------------------------------------------------------------------
-// get the maximum time of the longest partial in first sound to be morphed
-double SoundList::getMorph1Duration(){
-  if(!isEmpty()){
-    if(inList(morph1)){
-      return soundList.at(morph1)->getDuration();
-    } else {
-      morph1 = 0;     // no morph1 specified so set to 0
-      return soundList.at(morph1)->getDuration();
-    }
-  }
-}
-
-// ---------------------------------------------------------------------------
-//      getMorph2Duration
-// ---------------------------------------------------------------------------
-// get the maximum time of the longest partial in second sound to be morphed
-double SoundList::getMorph2Duration(){
-  if(!isEmpty()){
-    if(inList(morph2)){
-      return soundList.at(morph2)->getDuration();
-    } else {
-      morph2 = 0;   // no morph2 specified so set to 0
-      return soundList.at(morph2)->getDuration();
-    }
-  }
 }
 
 // ---------------------------------------------------------------------------

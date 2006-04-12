@@ -19,6 +19,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *
+ * The DilateArea is a 
+ *
  * dilateArea.c++
  *
  * 
@@ -47,7 +49,6 @@ DilateArea::DilateArea(
   statusbar = status;
   soundList = pList;
 
-  newPointIndex = 5;
   leftMargin = 30;
   rightMargin = 30;
   topMargin = 30;
@@ -83,28 +84,24 @@ DilateArea::DilateArea(
   );
 
   
-  updateTimeAxis();
+  setHorizontalAxis();
 
 };
 
 
 /*
 --------------------------------------------------------------------------------
-	updateTimeAxis
+	setHorizontalAxis
 --------------------------------------------------------------------------------
 Instead of just having one axis over the life of the DilateArea, the time axis
-might have to grow or shrink depending on which sample is shown.
+might have to grow or shrink depending on which sound is shown.
 */
-void MorphArea::updateTimeAxis(){
+void MorphArea::setHorizontalAxis(){
   int time = 0;
   int time1 = soundList->at(dilate1Index)->getDuration();
   int time2 = soundList->at(dilate2Index)->getDuration();
 
-  if(time1 > ime2){
-    time = time1;
-  }else{
-    time = time2;
-  }
+  time = (time1 > time2) ? time1 : time2;
 
   if(tAxis){
     delete tAxis;
@@ -129,7 +126,7 @@ void MorphArea::updateTimeAxis(){
 --------------------------------------------------------------------------------
 	setSound1
 --------------------------------------------------------------------------------
-Tells the DilateArea to update itself to the first sample.
+Tells the DilateArea to update itself to the first sound.
 */
 void DilateArea::setSound1(QString& name){
   sound1 = name;
@@ -143,14 +140,14 @@ void DilateArea::setSound1(QString& name){
     }
   }
 
-  updateTimeAxis();
+  setHorizontalAxis();
 }
 
 /*
 --------------------------------------------------------------------------------
 	setSound2
 --------------------------------------------------------------------------------
-Tells the DilateArea to update itself to the first sample.
+Tells the DilateArea to update itself to the first sound.
 */
 void DilateArea::setSound2(QString& name){
   sound2 = name;
@@ -164,7 +161,7 @@ void DilateArea::setSound2(QString& name){
     }
   }
 
-  updateTimeAxis();
+  setHorizontalAxis();
 }
 
 
@@ -189,3 +186,10 @@ void DilateArea::contentsMouseMoveEvent(QMouseEvent* e){}
 --------------------------------------------------------------------------------
 */
 void DilateArea::contentsMouseReleaseEvent(QMouseEvent* e){}
+
+/*
+--------------------------------------------------------------------------------
+	dilate
+--------------------------------------------------------------------------------
+*/
+void DilateArea::dilate(){}

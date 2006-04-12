@@ -63,6 +63,7 @@ MorphDialog::MorphDialog(
   canvas	= new QCanvas(735, 350); 
   morph1	= "";
   morph2	= "";
+  morphPos1 = morphPos2 = -1;
   setGui();
   setConnections();
   setLists();
@@ -126,8 +127,9 @@ void MorphDialog::setConnections(){
 // pattern here since the messages will just go back and forth.
 void MorphDialog::updateMorph1(int pos){
   morph1 = partial1List->text(pos);
+  morphPos1 = pos;
   name1Label->setText(morph1);
-  morphArea->setMorph1(morph1);
+  morphArea->setMorph1(morphPos1, morph1);
   morphBox->setTitle(QString("Morph "+morph1+" with "+morph2));
 }
   
@@ -139,8 +141,9 @@ void MorphDialog::updateMorph1(int pos){
 // pattern here since the messages will just go back and forth.
 void MorphDialog::updateMorph2(int pos){
   morph2 = partial2List->text(pos);
+  morphPos2 = pos;
   name2Label->setText(morph2); 
-  morphArea->setMorph2(morph2);
+  morphArea->setMorph2(morphPos2, morph2);
   morphBox->setTitle(QString("Morph "+morph1+" with "+morph2));
 }
 

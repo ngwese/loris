@@ -42,6 +42,7 @@
 #include <qpixmap.h> 
 #include <qcanvas.h> 
 #include <qlist.h>
+#include <qsortedlist.h>
 
 #include <Partial.h>
 #include "axis.h"
@@ -67,10 +68,21 @@ class SoundPlot:public QCanvasView{
 	Tab::TabType		t
     );
 
+  double			toX(double value);
+  double			toY(double value);
+  void				plotPartials();
+
   bool				isEmpty();
-  void				updatePixmap();
+  void				updatePlot();
   void				setType(Tab::TabType t);
+  Tab::TabType			getType();
+  void				clearAll();
+  void				clearHilighted();
   QPixmap*			getPixmap();
+  void				hilight(int p);
+
+  public slots:
+    void			rePlot();
   
   private:
     QCanvas*			canvas;
@@ -79,11 +91,15 @@ class SoundPlot:public QCanvasView{
     Axis*			lAxis;
     Axis*			bAxis;
     Tab::TabType		type;
-  
+
+    int				hilighted;
+
     int				leftMargin;
     int				rightMargin;
     int				topMargin;
     int				bottomMargin;
+    double			verticalIndex;
+    double			horizontalIndex;
     QString			text;
 };
 #endif //SOUND_PLOT_H

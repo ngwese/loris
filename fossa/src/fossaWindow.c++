@@ -121,7 +121,7 @@ void FossaWindow::updateMenuOptions(){
   }
 
   //There must be 2 or more sounds in order to dilate.
-  if( soundList->getLength() == 1 ){
+  if( soundList->getLength() <= 1 ){
     manipulateMenu->setItemEnabled(dilateID, FALSE);
   }else{
     manipulateMenu->setItemEnabled(dilateID, TRUE);

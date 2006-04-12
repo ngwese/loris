@@ -86,8 +86,8 @@ class MorphArea:public QCanvasView{
     void		clearAll();
     void		showHideClear(int buttonId);
     void		morph();
-    void		setMorph1(QString& name);
-    void		setMorph2(QString& name);
+    void		setMorph1(int Pos, QString& name);
+    void		setMorph2(int Pos, QString& name);
 
   private:
     enum		State {all, amplitude, frequency, noise};
@@ -101,6 +101,9 @@ class MorphArea:public QCanvasView{
  
     QString		morph1;
     QString		morph2;
+
+    int			morphPos1;
+    int			morphPos2;
 
     int			leftMargin;
     int			rightMargin;

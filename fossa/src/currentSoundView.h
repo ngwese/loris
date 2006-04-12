@@ -34,6 +34,8 @@
 
 #include <qframe.h> 
 #include <qcanvas.h>
+#include <qslider.h>
+#include <qlcdnumber.h>
 
 class QVBoxLayout; 
 class QHBoxLayout; 
@@ -60,7 +62,7 @@ class SoundPlot;
 //
 // The view has three tabs representing the amplitude, frequency, and noise
 // plots for the current collection of partials in the soundList. Whenever the
-// current sound changes drawCurrent() is called and the plots are updated.
+// current sound changes reText() is called to update the text labels.
 class CurrentSoundView:public QFrame{
   Q_OBJECT
 
@@ -72,7 +74,8 @@ class CurrentSoundView:public QFrame{
     );
  
   public slots:
-    void		drawCurrent();
+    void		redraw();
+    void		update();
   
   private:
     QGridLayout*	layout;
@@ -105,8 +108,11 @@ class Tab:public QWidget{
 	TabType		t
     );
 
-    void update();
+    void		update(bool redraw);
   
+  public slots:
+    void		hilight(int p);
+
   private:
     QVBoxLayout*	tabLayout;
     QGroupBox*		box;
@@ -117,6 +123,8 @@ class Tab:public QWidget{
     QLabel*		durationText;
     QPushButton*	okPushButton;
     QGridLayout*	infoBoxLayout;
+    QSlider*		pSelect;
+    QLCDNumber*		pIndicator;
 
     TabType		type;
   
@@ -126,6 +134,7 @@ class Tab:public QWidget{
     void		shiftValues();
 
   protected:
+    bool		plotted;
     QLabel*		maxNumber;
     QLineEdit*		shiftValue;
     QLabel*		shiftText;

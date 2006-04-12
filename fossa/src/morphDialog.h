@@ -110,6 +110,8 @@ class MorphDialog:public QDialog{
   
     QString		morph1;
     QString		morph2;
+    int			morphPos1;
+    int			morphPos2;
   
     void		setConnections();
     void		setLists();

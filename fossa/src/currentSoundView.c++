@@ -23,7 +23,7 @@
  *
  * Class CurrentSoundView has three tabs representing the amplitude, 
  * frequency, and noise plots for current collection of partials in the 
- * soundList. Whenever current sound changes drawCurrent() is called 
+ * soundList. Whenever current sound changes reText() is called 
  * and the plots are updated.
  *
  * Class Tab displays current partial's envelopes
@@ -96,24 +96,41 @@ void CurrentSoundView::setGui(){
 //	setConnections
 // ---------------------------------------------------------------------------
 void CurrentSoundView::setConnections(){
-  connect(soundList, SIGNAL(currentChanged()), this, SLOT(drawCurrent()));
-  connect(tab, SIGNAL(currentChanged(QWidget*)), this, SLOT(drawCurrent()));
+  connect(soundList, SIGNAL(currentChanged()), this, SLOT(redraw()));
+  connect(tab, SIGNAL(currentChanged(QWidget*)), this, SLOT(update()));
 }
 
 // ---------------------------------------------------------------------------
-//	drawCurrent
+//	update
 // ---------------------------------------------------------------------------
-// Update tabs and set correct tab to be selected and visible, happens when
-// current sound changes in soundList.
-void CurrentSoundView::drawCurrent(){
+// Update tabs and set correct tab to be selected and visible.
+void CurrentSoundView::update(){
   int currentType = tab->currentPageIndex();
   
   switch(currentType){
-    case 0: amplitudeTab->update(); break;
-    case 1: frequencyTab->update(); break;
-    case 2: noiseTab->update(); break;
+    case 0: amplitudeTab->update(false); break;
+    case 1: frequencyTab->update(false); break;
+    case 2: noiseTab->update(false); break;
   }
+}
 
+// ---------------------------------------------------------------------------
+//	redraw
+// ---------------------------------------------------------------------------
+// Same as update, but redo the plot as well.
+void CurrentSoundView::redraw(){
+  int currentType = tab->currentPageIndex();
+  
+/*
+  switch(currentType){
+    case 0: amplitudeTab->update(true); break;
+    case 1: frequencyTab->update(true); break;
+    case 2: noiseTab->update(true); break;
+  }
+*/
+   amplitudeTab->update(true);
+   frequencyTab->update(true);
+   noiseTab->update(true);
 }
 
 
@@ -133,11 +150,14 @@ Tab::Tab(
 
   soundList = pList;
   type = t;
+  plotted = false;
 
   canvas  = new QCanvas(800, 450);
 
   setGui();
   connect(okPushButton, SIGNAL(clicked()), this, SLOT(shiftValues())); 
+  connect(pSelect, SIGNAL(valueChanged(int)), pIndicator, SLOT(display(int)));
+  connect(pSelect, SIGNAL(valueChanged(int)), this, SLOT(hilight(int))); 
 
   switch( type ){
     case empty:
@@ -165,14 +185,19 @@ Tab::Tab(
 }
 
 // ---------------------------------------------------------------------------
+//	hilight
+// ---------------------------------------------------------------------------
+// Wrapper for partialsView->hilight()
+void Tab::hilight(int p){ partialsView->hilight(p-1); }
+
+// ---------------------------------------------------------------------------
 //	update
 // ---------------------------------------------------------------------------
-// update() is called when current sound in soundList is changed and the tab
-// needs to be updated.
-void Tab::update(){
+// The purpose here is really to refresh the text fields in the tab. This is
+// called whenever the user clicks fr
+void Tab::update(bool redraw){
 
   /**********************/
-  /*The first part updates the text fields.*/
   QString state = "";
   QString duration = "Duration: "; 
   QString nrOfPartials = "Number of Partials: "; 
@@ -205,16 +230,24 @@ void Tab::update(){
   durationText->setText(duration);
   nrOfPartialsText->setText(nrOfPartials);
 
+  //Check that the plot needs to be updated.
+  if(soundList->isEmpty() || soundList->getCurrentIndex() == -1){
+    pSelect->setRange(0, 0);
+    pSelect->setValue(0);
 
-  /********************/
-  /*Now update the SoundPlot.*/
-  if(! soundList->isEmpty() ){
-    partialsView->setType(type);
+    if(plotted){
+      partialsView->setType(empty);
+      plotted = false;
+    }
   }else{
-    partialsView->setType( empty );
-  }
+    pSelect->setRange(0, soundList->getCurrentNrOfPartials());
+    pSelect->setValue(0);
 
-  partialsView->updatePixmap();
+    if(!plotted || redraw){
+      partialsView->setType(type);
+      plotted = true;
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -238,6 +271,7 @@ void Tab::setGui(){
   box->setColumnLayout(0, Qt::Vertical );
   box->layout()->setSpacing( 0 );
   box->layout()->setMargin( 0 );
+
 
   boxLayout = new QGridLayout( box->layout() );
   boxLayout->setAlignment( Qt::AlignTop );
@@ -348,17 +382,31 @@ void Tab::setGui(){
   okPushButton->setMaximumSize( QSize( 30, 25 ) );
   okPushButton->setText( tr( "OK" ) );
 
-  infoBoxLayout->addMultiCellWidget( stateText, 0, 1, 0, 2 );
-  infoBoxLayout->addWidget( durationText, 0, 0);
+  /*Set up the slider which selects which partial to hilight.*/
+  pSelect = new QSlider(Horizontal, infoBox, "partialSelect");
+  pSelect->setRange(0,0);
+  pSelect->setValue(0);
+  pIndicator = new QLCDNumber( 4, infoBox, "partialIndicator" );
+
+  /* ****************************************
+   * The tab has 3 parts - the infobox in top with all the labels, a spacer,
+   * and the SoundPlot.
+  */
+  infoBoxLayout->addWidget( durationText, 0, 0 );
+  infoBoxLayout->addItem( spacer_5, 0, 2 );
+  infoBoxLayout->addWidget( stateText, 0, 2 );
 
   infoBoxLayout->addWidget(maxText, 1, 0 );
   infoBoxLayout->addWidget( maxNumber, 1, 1 );
-  infoBoxLayout->addItem( spacer_6, 1, 2 );
+//  infoBoxLayout->addItem( spacer_6, 1, 2 );
   infoBoxLayout->addWidget( nrOfPartialsText, 1, 3 );
 
   infoBoxLayout->addWidget( shiftText, 2, 0 );
   infoBoxLayout->addWidget( shiftValue, 2, 1 );
   infoBoxLayout->addWidget( okPushButton, 2, 2 );
+
+  infoBoxLayout->addWidget( pSelect, 3, 0 );
+  infoBoxLayout->addWidget( pIndicator, 3, 1 );
 
   boxLayout->addWidget( infoBox, 0, 0 );
 

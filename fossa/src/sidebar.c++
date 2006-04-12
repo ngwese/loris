@@ -53,7 +53,7 @@ Sidebar::Sidebar(
 	SoundList*	pList
 ):QFrame(parent, name){
   soundList = pList;
-    
+
   setGui();
   setConnections();
 }
@@ -79,11 +79,8 @@ void Sidebar::updateSoundListView(){
       const Sound* p = soundList->getSound(i);
       soundListView->insertItem(p->getName());
     }
-printf("sidebar current item is %d.\n", soundListView->currentItem());
-    soundListView->setCurrentItem(soundList->getCurrentIndex());
-    soundListView->triggerUpdate(true);
-printf("Just set sidebar current sound to %d\n", soundList->getCurrentIndex());
-printf("sidebar current item is %d.\n", soundListView->currentItem());
+
+    soundListView->setCurrentItem(soundList->getCurrentIndex() - 1);
   }
 }
 
@@ -163,6 +160,7 @@ void Sidebar::setGui(){
   soundListGroupLayout->setMargin( 11 );
 
   soundListView = new QListBox(soundListGroup,"soundListView");
+  soundListView->setSelectionMode(QListBox::Single);
   soundListGroupLayout->addWidget(soundListView);
   sidebarLayout->addWidget(soundListGroup);
 }

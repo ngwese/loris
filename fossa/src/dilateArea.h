@@ -76,12 +76,13 @@ class DilateArea:public QCanvasView{
     void		setSound2(QString& name);
 
   private:
+    SoundList*		soundList;
+
     VerticalAxis*       lAxis;
     VerticalAxis*       rAxis;
     HorizontalAxis*     tAxis;
     QStatusBar*		statusbar;
     QList<QCanvasItem>  moving;
-    SoundList*		soundList;
 
     QString             sound1;
     QString             sound2;
@@ -94,7 +95,6 @@ class DilateArea:public QCanvasView{
     int                 bottomMargin;
     int                 width;
     int                 height;
-    int                 newPointIndex;
 
     QSortedList<PointWithText>  dilateList;
 

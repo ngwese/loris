@@ -49,9 +49,9 @@ class DilateArea;
 --------------------------------------------------------------------------------
 class DilateDialog
 This is the dialog window which contains the dilation view object, and which
-allows the user to dilate (timewise)one sample onto another one. The user
+allows the user to dilate (timewise)one sound onto another one. The user
 selects points in time by clicking on the dilateArea. The points are then matched
-from one sample to the other.
+from one sound to the other.
 */
 /*
 class DilateDialog:public QDialog{
@@ -73,20 +73,20 @@ class DilateDialog:public QDialog{
   private:
     QCanvas*		canvas;
     QStatusBar*		statusbar;
-    SoundList*	soundList;
+    SoundList*		soundList;
     DilateArea*		dilateArea;
     QGridLayout*	dialogLayout;
 
-    QLabel*		sample1Label;
-    QLabel*		sample2Label;
-    QComboBox*		sample1List;
-    QComboBox*		sample2List;
+    QLabel*		sound1Label;
+    QLabel*		sound2Label;
+    QComboBox*		sound1List;
+    QComboBox*		sound2List;
 
     QPushButton*	dilateButton;
     QPushButton*	cancelButton;
 
-    QString		sample1;
-    QString		sample2;
+    QString		sound1;
+    QString		sound2;
 
     void		setConnections;
     void		setLists;
