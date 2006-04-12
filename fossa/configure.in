@@ -58,12 +58,9 @@ AC_MSG_RESULT(-------- Check for libraries --------)
 dnl makes it possible for the maintainter to specify paths for additional
 dnl packages. The default path is user/local/*
 
-SDIF_PACKAGE=/usr/local
 FFTW_PACKAGE=/usr/local
 LORIS_PACKAGE=/usr/local
 QT_PACKAGE=/usr/local/qt
-
-AC_ARG_WITH(sdif, [  --with-sdif=path    Set prefix of SDIF package, default is "usr/local/sdif"]], [SDIF_PACKAGE="$withval"], [AC_MSG_RESULT("default sdif path will be used: $SDIF_PACKAGE")])
 
 AC_ARG_WITH(fftw, [  --with-fftw=path    Set prefix of FFTW package, default is "usr/local/fftw"], [FFTW_PACKAGE="$withval"], [AC_MSG_RESULT("default fftw path will be used: $FFTW_PACKAGE")])
 
@@ -71,17 +68,15 @@ AC_ARG_WITH(loris, [  --with-loris=path  Set prefix of loris package, default is
 
 AC_ARG_WITH(qt, [  --with-qt=path Set prefix of qt package], [QT_PACKAGE="$withval"], [AC_MSG_RESULT("default qt path will be used: $QT_PACKAGE")])
 
-AC_SUBST(SDIF_PACKAGE)
 AC_SUBST(FFTW_PACKAGE)
 AC_SUBST(LORIS_PACKAGE)
 AC_SUBST(QT_PACKAGE)
 
 dnl Kelly's hack to get the library tests to link
-LIBS="$LIBS -L$SDIF_PACKAGE/lib -L$FFTW_PACKAGE/lib -L$LORIS_PACKAGE/lib -L$QT_PACKAGE/lib"
+LIBS="$LIBS -L$FFTW_PACKAGE/lib -L$LORIS_PACKAGE/lib -L$QT_PACKAGE/lib"
 dnl AC_MSG_RESULT(LIBS is $LIBS)
 
 AC_CHECK_LIB(fftw, main, :, AC_MSG_ERROR(please install fftw library))
-AC_CHECK_LIB(sdif, main, :, AC_MSG_ERROR(please install sdif library))
 AC_CHECK_LIB(qt, main, :, AC_MSG_ERROR(please install qt library))
 AC_CHECK_LIB(loris, main, :, AC_MSG_ERROR(please install loris library))
 
