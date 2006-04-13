@@ -120,6 +120,27 @@ int main( void )
         a.analyze( f.samples(), f.sampleRate() );
         PartialList flut = a.partials();
 
+#if defined(ESTIMATE_F0) && ESTIMATE_F0
+#if defined(ESTIMATE_AMP) && ESTIMATE_AMP
+		//  generate a sinusoid that tracks the fundamental
+		//	and amplitude envelopes obtained during analysis
+		Partial boo;
+		LinearEnvelope fund = a.fundamentalEnv();
+		LinearEnvelope::iterator it;
+		for ( it = fund.begin(); it != fund.end(); ++it )
+		{
+			Breakpoint bp( it->second, a.ampEnv().valueAt( it->first ), 0, 0 );
+			boo.insert( it->first, bp );
+		}
+		
+		PartialList boolist;
+		boolist.push_back( boo );
+		AiffFile boofile( boolist.begin(), boolist.end(), 44100 );
+		boofile.write( "flutefundamental.aiff" );
+
+#endif
+#endif
+
         // channelize and distill
         cout << "distilling" << endl;
         FrequencyReference flutRef( flut.begin(), flut.end(), 291*.8, 291*1.2, 50 );

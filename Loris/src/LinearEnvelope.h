@@ -123,6 +123,7 @@ public:
 
     using std::map< double, double >::size;
     using std::map< double, double >::empty;
+    using std::map< double, double >::clear;
     using std::map< double, double >::begin;
     using std::map< double, double >::end;
     using std::map< double, double >::size_type;

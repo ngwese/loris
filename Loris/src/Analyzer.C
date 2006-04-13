@@ -55,17 +55,9 @@
 #include "phasefix.h"   //  HEY LOOKIE HERE - for new frequency/phase fixing at end of analysis
 #endif
 
-// not for release yet
-//#define FIND_RMS_PEAK_TIME 1
-
-// construct a F0 envelopes
-//#define ESTIMATE_F0 1
 #ifdef ESTIMATE_F0
 #include "estimateF0.h"
 #endif
-
-// construct an amplitude envelopes
-//#define ESTIMATE_AMP 1
 
 #include <algorithm>
 #include <cmath>
@@ -180,6 +172,15 @@ Analyzer::Analyzer( double resolutionHz, double windowWidthHz ) :
 //! \param other is the Analyzer to copy.   
 //
 Analyzer::Analyzer( const Analyzer & other ) :
+#if defined(ESTIMATE_RMS) && ESTIMATE_RMS
+    mRmsEnv( other.mRmsEnv ),
+#endif
+#if defined(ESTIMATE_F0) && ESTIMATE_F0
+    mF0Env( other.mF0Env ),
+#endif
+#if defined(ESTIMATE_AMP) && ESTIMATE_AMP
+    mAmpEnv( other.mAmpEnv ),
+#endif
     _imp( new Analyzer_imp( *other._imp ) )
 {
 }
@@ -198,6 +199,19 @@ Analyzer::operator=( const Analyzer & rhs )
 {
     if ( this != & rhs ) 
     {
+    #if defined(ESTIMATE_RMS) && ESTIMATE_RMS
+        mRmsEnv = rhs.mRmsEnv;
+    #endif
+                
+    #if defined(ESTIMATE_F0) && ESTIMATE_F0
+        mF0Env = rhs.mF0Env;
+    #endif
+                
+    #if defined(ESTIMATE_AMP) && ESTIMATE_AMP
+        mAmpEnv = rhs.mAmpEnv;
+    #endif
+                
+    
         *_imp = *rhs._imp;
     }
     return *this;
@@ -342,7 +356,7 @@ Analyzer::analyze( const std::vector<double> & vec, double srate,
     analyze( &(vec[0]),  &(vec[0]) + vec.size(), srate, reference ); 
 }
 
-#if defined(FIND_RMS_PEAK_TIME) && FIND_RMS_PEAK_TIME
+#if defined(ESTIMATE_RMS) && ESTIMATE_RMS
 // ---------------------------------------------------------------------------
 //  windowedSquare
 // ---------------------------------------------------------------------------
@@ -424,24 +438,24 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
 
     #if defined(ESTIMATE_AMP) && ESTIMATE_AMP
     //  try building up an amplitude envelope:
-    LinearEnvelope  ampEnv;
+    mAmpEnv.clear();
     #endif
 
-    //  try building a fundamental frequency envelope too
     #if defined(ESTIMATE_F0) && ESTIMATE_F0
-    LinearEnvelope fundEnv;
+    //  try building a fundamental frequency envelope too
+    mF0Env.clear();
     std::vector< double > amplitudes, frequencies;
     #endif
 
+    #if defined(ESTIMATE_RMS) && ESTIMATE_RMS
+    mRmsEnv.clear();
+    #endif
+        
     try 
     { 
         //  loop over short-time analysis frames:
         const double * winMiddle = bufBegin; 
 
-        #if defined(FIND_RMS_PEAK_TIME) && FIND_RMS_PEAK_TIME
-        double peakVal = 0, peakTime = 0., previousRMS = 0.;
-        #endif
-        
         while ( winMiddle < bufEnd )
         {
             //  compute the time of this analysis frame:
@@ -455,12 +469,16 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
             const double * sampsEnd = std::min( winMiddle + (winlen / 2) + 1, bufEnd );
             spectrum.transform( sampsBegin, winMiddle, sampsEnd );
             
-            #if defined(FIND_RMS_PEAK_TIME) && FIND_RMS_PEAK_TIME
-            double rms = std::inner_product( sampsBegin, sampsEnd, 
-                                             window.begin() + (winlen / 2) - (winMiddle - sampsBegin),
-                                             0.,
-                                             std::plus<double>(),
-                                             windowedSquare );
+            #if defined(ESTIMATE_RMS) && ESTIMATE_RMS
+            double sum = 
+                std::inner_product( sampsBegin, sampsEnd, 
+                                    window.begin() + (winlen / 2) - (winMiddle - sampsBegin),
+                                    0.,
+                                    std::plus<double>(),
+                                    windowedSquare );
+            double rms = std::sqrt( sum / (sampsEnd - sampsBegin) );
+            mRmsEnv.insert( currentFrameTime, rms );
+            /*
             // tune this to track RMS peak only when it is changing
             // quickly, as at the onset of a tone, but not throughout
             if ( rms > previousRMS * 1.05 && rms > peakVal )
@@ -469,6 +487,7 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
                 peakTime = currentFrameTime;
             }
             previousRMS = rms; // remember for next time
+            */
             #endif
              
             //  extract peaks from the spectrum, thin and 
@@ -488,7 +507,7 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
             #if defined(ESTIMATE_AMP) && ESTIMATE_AMP
             //  estimate the amplitude in this frame:
             double x = std::accumulate( peaks.begin(), peaks.end(), 0.0, accumPeakSquaredAmps );
-            ampEnv.insert( currentFrameTime, std::sqrt( x ) );
+            mAmpEnv.insert( currentFrameTime, std::sqrt( x ) );
             #endif
             
             //  collect amplitudes and frequencies and try to 
@@ -518,7 +537,7 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
                                                     0.1 );
                     // notifier << "f0 is " << f0 << endl;
                     //  add breakpoint to fundamental envelope
-                    fundEnv.insert( currentFrameTime, f0 );
+                    mF0Env.insert( currentFrameTime, f0 );
                 }
             }
             catch(...)
@@ -546,18 +565,25 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
         
         //  for debugging:
         #if defined(ESTIMATE_AMP) && ESTIMATE_AMP
-        if ( ! ampEnv.empty() )
+        if ( ! mAmpEnv.empty() )
         {
             LinearEnvelope::iterator peakpos = 
-                std::max_element( ampEnv.begin(), ampEnv.end(), 
+                std::max_element( mAmpEnv.begin(), mAmpEnv.end(), 
                                   compare2nd<LinearEnvelope::iterator::value_type> );
             notifier << "HEY analyzer found amp peak at time : " << peakpos->first
                      << " value: " << peakpos->second << endl;
         }
         #endif
         
-        #if defined(FIND_RMS_PEAK_TIME) && FIND_RMS_PEAK_TIME
-        notifier << "RMS peak time is " << peakTime << " second" << endl;
+        #if defined(ESTIMATE_RMS) && ESTIMATE_RMS
+        if ( ! mRmsEnv.empty() )
+        {
+            LinearEnvelope::iterator peakpos = 
+                std::max_element( mRmsEnv.begin(), mRmsEnv.end(), 
+                                  compare2nd<LinearEnvelope::iterator::value_type> );
+            notifier << "HEY analyzer found RMS peak at time : " << peakpos->first
+                     << " value: " << peakpos->second << endl;
+        }
         #endif
         
         _imp->partials.splice( _imp->partials.end(), builder.partials() );
