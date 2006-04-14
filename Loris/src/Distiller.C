@@ -294,13 +294,14 @@ void Distiller::distillOne( PartialList & partials, Partial::label_type label,
     				Partial absorbMe( --Partial::iterator(ce), it->end() );
     				newp.absorb( absorbMe );
     			}
-
+    			
 				//	HEY
 				//	couldn't there be a non-contributing part
 				//	at the beginning of the Partial too? 
 				//	Shouldn't we check whether cb == it->begin()?
 				//	In fact, couldn't there be more than one
 				//	contributing segment ina Partial? 
+
 
     			// merge the contributing part:
     			merge( cb, ce, newp, _fadeTime, _gapTime );
@@ -312,6 +313,80 @@ void Distiller::distillOne( PartialList & partials, Partial::label_type label,
     		}		
     	}
     }	
+}
+
+// ---------------------------------------------------------------------------
+//	distill_list
+// ---------------------------------------------------------------------------
+//! Distill labeled Partials in a PartialList leaving only a single 
+//!	Partial per non-zero label. 
+//!
+//!	Unlabeled (zero-labeled) Partials are left unmodified at 
+//! the end of the distilled Partials.
+//!
+//!	Return an iterator refering to the position of the first unlabeled Partial,
+//!	or the end of the distilled collection if there are no unlabeled Partials.
+//! Since distillation is in-place, the Partials collection may be smaller
+//! (fewer Partials) after distillation, and any iterators on the collection
+//! may be invalidated.
+//!
+//! \post   All labeled Partials in the collection are uniquely-labeled,
+//!         and all unlabeled Partials have been moved to the end of the
+//!         sequence.
+//! \param  partials is the collection of Partials to distill in-place
+//! \return the position of the end of the range of distilled Partials,
+//!         which is either the end of the collection, or the position
+//!         or the first unlabeled Partial.
+//
+PartialList::iterator Distiller::distill_list( PartialList & partials )
+{  
+    //  sort the Partials by label, this is why it
+    //  is so much better to distill a list!    
+    partials.sort( PartialUtils::compareLabelLess() );
+
+    //  temporary container of distilled Partials:
+    PartialList distilled; 
+	
+	PartialList::iterator lower = partials.begin();
+	while ( lower != partials.end() )
+	{
+		Partial::label_type label = lower->label();
+
+        //  identify a sequence of Partials having the same label:
+	    PartialList::iterator upper = 
+	        std::find_if( lower, partials.end(),
+	                      std::not1( PartialUtils::isLabelEqual( label ) ) );
+                            
+        //  upper is the first Partial after lower whose label is not
+        //  equal to that of lower.
+		//	[lower, upper) is a range of all the
+		//	partials labeled `label'.
+
+        if ( 0 != label )
+        {
+            //	make a container of the Partials having the same 
+            //	label, and distill them:
+            PartialList samelabel;
+            samelabel.splice( samelabel.begin(), partials, lower, upper );
+            distillOne( samelabel, label, distilled );
+        }
+        lower = upper;
+    }
+        
+#if defined(Debug_Loris) && Debug_Loris
+    // only unlabeled Partials should remain in partials:
+    Assert( partials.end() ==
+            std::find_if( partials.begin(), partials.end(), 
+                          std::not1( PartialUtils::isLabelEqual( 0 ) ) ) );
+#endif    
+    
+    //  remember where the unlabeled Partials start:
+    PartialList::iterator beginUnlabeled = partials.begin(); 
+    
+    //  splice in the distilled Partials at the beginning:
+    partials.splice( partials.begin(), distilled );
+
+    return beginUnlabeled;
 }
 
 }	//	end of namespace Loris

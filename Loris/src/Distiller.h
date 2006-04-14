@@ -37,6 +37,8 @@
 #include "PartialList.h"
 #include "PartialUtils.h"
 
+#include "Notifier.h"   //  for debugging only
+
 #include <algorithm>
 
 //	begin namespace
@@ -175,7 +177,7 @@ public:
     //!	If compiled with NO_TEMPLATE_MEMBERS defined, then partials
     //!	must be a PartialList, otherwise it can be any container type
     //!	storing Partials that supports at least bidirectional iterators.
-   #if ! defined(NO_TEMPLATE_MEMBERS)
+#if ! defined(NO_TEMPLATE_MEMBERS)
 	template< typename Container >
 	static typename Container::iterator 
 	distill( Container & partials, double partialFadeTime,
@@ -189,6 +191,27 @@ public:
 private:
 
 //	-- helpers --
+
+    //! Distill labeled Partials in a PartialList leaving only a single 
+    //!	Partial per non-zero label. 
+    //!
+    //!	Unlabeled (zero-labeled) Partials are left unmodified at 
+    //! the end of the distilled Partials.
+    //!
+    //!	Return an iterator refering to the position of the first unlabeled Partial,
+    //!	or the end of the distilled collection if there are no unlabeled Partials.
+    //! Since distillation is in-place, the Partials collection may be smaller
+    //! (fewer Partials) after distillation, and any iterators on the collection
+    //! may be invalidated.
+    //!
+    //! \post   All labeled Partials in the collection are uniquely-labeled,
+    //!         and all unlabeled Partials have been moved to the end of the
+    //!         sequence.
+    //! \param  partials is the collection of Partials to distill in-place
+    //! \return the position of the end of the range of distilled Partials,
+    //!         which is either the end of the collection, or the position
+    //!         or the first unlabeled Partial.
+	PartialList::iterator distill_list( PartialList & partials );
 
     //! Distill a list of Partials having a common label
     //! into a single Partial with that label, and append it
@@ -231,83 +254,48 @@ private:
 #if ! defined(NO_TEMPLATE_MEMBERS)
 template< typename Container >
 typename Container::iterator Distiller::distill( Container & partials )
+{
+    //  This can be done so much more easily and
+    //  efficiently on a list than on other containers
+    //  that it is worth copying the Partials to a
+    //  list for distillation, and then transfering
+    //  them back.
+    //
+    //  See below for a specialization for the case
+    //  of the Container being a list, so no copy
+    //  is needed.
+    PartialList pl( partials.begin(), partials.end() );
+    PartialList::iterator it = distill_list( pl );
+        
+    //  pl has distilled Partials at beginning, and
+    //  unlabeled Partials at end:
+    typename Container::iterator beginUnlabeled = 
+        std::copy( pl.begin(), it, partials.begin() );
+    
+    typename Container::iterator endUnlabeled = 
+        std::copy( it, pl.end(), beginUnlabeled );
+
+    
+    partials.erase( endUnlabeled, partials.end() );
+    
+    return beginUnlabeled;
+}
+
+//  specialization for PartialList container
+template< >
+inline
+PartialList::iterator Distiller::distill( PartialList & partials )
+{
+    debugger << "using PartialList version of distill to avoid copying" << endl;
+    return distill_list( partials );
+}
 #else
 inline
 PartialList::iterator Distiller::distill( PartialList & partials )
-#endif
 {
-#if ! defined(NO_TEMPLATE_MEMBERS)
-    typedef typename Container::iterator Iterator;
-#else
-    typedef PartialList::iterator Iterator;
-#endif
-    // Partition the Partials into labeled and unlabeled, 
-    // and distill the labeled ones and replace the 
-    // labeled range.
-    // (This requires bidirectional iterator support.)
-    Iterator beginUnlabeled = 
-        std::partition( partials.begin(), partials.end(), 
-                        std::not1( PartialUtils::isLabelEqual(0) ) );
-        //  this used to be a stable partition, which 
-        //  is slower and seems unnecessary
-        //
-        //  HEY figure out why I get slightly different results
-        //  when I use stable_partition. And WHEN!
-        
-    PartialList distilled; //  temporary container of Partials				  
-	
-	Iterator lower = partials.begin();
-	while ( lower != beginUnlabeled )
-	{
-		Partial::label_type label = lower->label();
-
-        //  arrange a sequence of Partials having the same label:
-        //  (need to partition because the Partials are not
-        //  sorted by label, and cannot be sorted easily,
-        //  if we don't know the capabilities of the container)
-	    Iterator upper = 
-	        std::partition( lower, beginUnlabeled,
-                            PartialUtils::isLabelEqual( label ) );
-            //  this used to be a stable partition, which 
-            //  is slower and seems unnecessary
-            //
-            //  HEY figure out why I get slightly different results
-            //  when I use stable_partition. And WHEN!
-        
-                            
-        //  upper is the first Partial after lower whose label is not
-        //  equal to that of lower.
-		//	[lower, upper) is a range of all the
-		//	partials labeled `label'.
-
-        Assert( label != 0 );  // unlabeled Partials are at end
-
-        //	make a container of the Partials having the same 
-        //	label, and distill them:
-        PartialList samelabel( lower, upper );
-        distillOne( samelabel, label, distilled );
-
-        lower = upper;
-    }
-        
-    //  Copy the distilled Partials back into the source container,
-	//  endDistilled is the end of the range of distilled Partials.
-	Iterator endDistilled =
-	    std::copy( distilled.begin(), distilled.end(), partials.begin() );
-
-    //  remove extra Partials from the source container
-    if ( endDistilled != beginUnlabeled )
-    {
-        partials.erase( endDistilled, beginUnlabeled );
-        
-        // restore beginUnlabeled:    
-        typename Iterator::difference_type numDistilled = distilled.size();
-        beginUnlabeled = partials.begin();
-        std::advance( beginUnlabeled, numDistilled );
-    }
-
-    return beginUnlabeled;
+    return distill_list( partials );
 }
+#endif
 
 // ---------------------------------------------------------------------------
 //	Function call operator 
