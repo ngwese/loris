@@ -237,6 +237,32 @@ findContribution( Partial & pshort, const Partial & plong,
 }
 
 // ---------------------------------------------------------------------------
+//	distillSorter (static helper)
+// ---------------------------------------------------------------------------
+//  Helper for sorting Partials for distilling.
+//
+static bool distillSorter( const Partial & lhs, const Partial & rhs )
+{
+    double ldur = lhs.duration(), rdur = rhs.duration();
+    if ( ldur != rdur )
+    {        
+        return ldur > rdur;      
+    }
+    else
+    {
+        //  What to do for same-duration Partials?
+        //  Need to do something consistent, should look
+        //  for energy?
+        return lhs.startTime() < rhs.startTime();
+        /*
+        double lpeak = PartialUtils::peakAmp( lhs );
+        double rpeak = PartialUtils::peakAmp( rhs );
+        return lhs > rhs;
+        */
+    }
+}
+
+// ---------------------------------------------------------------------------
 //	distillOne
 // ---------------------------------------------------------------------------
 //	Distill a list of Partials having a common label
@@ -251,6 +277,7 @@ void Distiller::distillOne( PartialList & partials, Partial::label_type label,
 	debugger << "Distiller found " << partials.size() 
 			 << " Partials labeled " << label << endl;
 
+    /*
     //  make a new Partial in the distilled collection,
     //  insert it in label order:
     Partial empty;
@@ -260,7 +287,10 @@ void Distiller::distillOne( PartialList & partials, Partial::label_type label,
                                             empty, 
                                             PartialUtils::compareLabelLess() ),
                           empty );
-	Partial & newp = *pos;
+	Partial newp = *pos;
+	*/
+	Partial newp;
+    newp.setLabel( label );
 
     if ( partials.size() == 1 )
     {
@@ -270,7 +300,7 @@ void Distiller::distillOne( PartialList & partials, Partial::label_type label,
     {	
     	//	sort Partials by duration, longer
     	//	Partials will be prefered:
-    	partials.sort( PartialUtils::compareDurationGreater() );
+    	partials.sort( distillSorter );
     	
     	// keep the longest Partial:
     	PartialList::iterator it = partials.begin();
@@ -313,6 +343,13 @@ void Distiller::distillOne( PartialList & partials, Partial::label_type label,
     		}		
     	}
     }	
+    
+    //  insert the new Partial in the distilled collection 
+    //  in label order:
+    distilled.insert( std::lower_bound( distilled.begin(), distilled.end(), 
+                                        newp, 
+                                        PartialUtils::compareLabelLess() ),
+                      newp );
 }
 
 // ---------------------------------------------------------------------------
