@@ -554,10 +554,22 @@ timeSpan( Iterator begin, Iterator end )
 	return std::make_pair( tmin, tmax );
 }
 
+// ---------------------------------------------------------------------------
+//	peakAmplitude
+// ---------------------------------------------------------------------------
+//! Return the maximum amplitude achieved by a partial. 
+//!  
+//! \param  p is the Partial to evaluate
+//! \return the maximum (absolute) amplitude achieved by 
+//!         the partial p
+//
+double peakAmplitude( const Partial & p );
+
 //	-- phase maintenance functions --
 
+// ---------------------------------------------------------------------------
 //	fixPhaseBefore
-//
+// ---------------------------------------------------------------------------
 //! Recompute phases of all Breakpoints earlier than the specified time 
 //! so that the synthesized phases of those earlier Breakpoints matches 
 //! the stored phase, and the synthesized phase at the specified
@@ -574,8 +586,9 @@ timeSpan( Iterator begin, Iterator end )
 //
 void fixPhaseBefore( Partial & p, double t );
 
+// ---------------------------------------------------------------------------
 //	fixPhaseBefore (range)
-//
+// ---------------------------------------------------------------------------
 //! Recompute phases of all Breakpoints earlier than the specified time 
 //! so that the synthesized phases of those earlier Breakpoints matches 
 //! the stored phase, and the synthesized phase at the specified
@@ -603,8 +616,9 @@ void fixPhaseBefore( Iter b, Iter e, double t )
     }
 }
 
+// ---------------------------------------------------------------------------
 //	fixPhaseAfter
-//
+// ---------------------------------------------------------------------------
 //! Recompute phases of all Breakpoints later than the specified time 
 //! so that the synthesized phases of those later Breakpoints matches 
 //! the stored phase, as long as the synthesized phase at the specified
@@ -620,8 +634,9 @@ void fixPhaseBefore( Iter b, Iter e, double t )
 //
 void fixPhaseAfter( Partial & p, double t );
 
+// ---------------------------------------------------------------------------
 //	fixPhaseAfter (range)
-//
+// ---------------------------------------------------------------------------
 //! Recompute phases of all Breakpoints later than the specified time 
 //! so that the synthesized phases of those later Breakpoints matches 
 //! the stored phase, as long as the synthesized phase at the specified
@@ -648,8 +663,9 @@ void fixPhaseAfter( Iter b, Iter e, double t )
     }
 }
 
+// ---------------------------------------------------------------------------
 //	fixPhaseForward
-//
+// ---------------------------------------------------------------------------
 //! Recompute phases of all Breakpoints later than the specified time 
 //! so that the synthesize phases of those later Breakpoints matches 
 //! the stored phase, as long as the synthesized phase at the specified
@@ -670,8 +686,9 @@ void fixPhaseAfter( Iter b, Iter e, double t )
 //
 void fixPhaseForward( Partial & p, double tbeg, double tend );
 
+// ---------------------------------------------------------------------------
 //	fixPhaseForward (range)
-//
+// ---------------------------------------------------------------------------
 //! Recompute phases of all Breakpoints later than the specified time 
 //! so that the synthesize phases of those later Breakpoints matches 
 //! the stored phase, as long as the synthesized phase at the specified
@@ -703,8 +720,9 @@ void fixPhaseForward( Iter b, Iter e, double tbeg, double tend )
 }
 
 
+// ---------------------------------------------------------------------------
 //	fixPhaseAt
-//
+// ---------------------------------------------------------------------------
 //! Recompute phases of all Breakpoints in a Partial
 //! so that the synthesized phases match the stored phases, 
 //! and the synthesized phase at (nearest) the specified
@@ -724,8 +742,9 @@ void fixPhaseForward( Iter b, Iter e, double tbeg, double tend )
 //
 void fixPhaseAt( Partial & p, double t );
 
+// ---------------------------------------------------------------------------
 //	fixPhaseAt (range)
-//
+// ---------------------------------------------------------------------------
 //! Recompute phases of all Breakpoints in a Partial
 //! so that the synthesize phases match the stored phases, 
 //! and the synthesized phase at (nearest) the specified
@@ -756,8 +775,9 @@ void fixPhaseAt( Iter b, Iter e, double t )
     }
 }
 
+// ---------------------------------------------------------------------------
 //	fixPhaseBetween
-//
+// ---------------------------------------------------------------------------
 //!	Fix the phase travel between two times by adjusting the
 //!	frequency and phase of Breakpoints between those two times.
 //!
@@ -789,8 +809,9 @@ void fixPhaseAt( Iter b, Iter e, double t )
 //
 void fixPhaseBetween( Partial & p, double t1, double t2 );
 
+// ---------------------------------------------------------------------------
 //	fixPhaseBetween (range)
-//
+// ---------------------------------------------------------------------------
 //!	Fix the phase travel between two times by adjusting the
 //!	frequency and phase of Breakpoints between those two times.
 //!
@@ -931,6 +952,31 @@ private:
 	int label;
 };
 		
+// ---------------------------------------------------------------------------
+//	isPeakLess
+//	
+//! Predicate functor returning true if the peak amplitude achieved by its 
+//! Partial argument is less than the specified absolute amplitude, and 
+//! false otherwise.
+//
+class isPeakLess : public std::unary_function< const Partial, bool >
+{
+public:
+    //! Initialize a new instance with the specified peak amplitude.
+	isPeakLess( double x ) : thresh(x) {}
+
+	//! Function call operator: evaluate a Partial.
+	bool operator()( const Partial & p ) const 
+		{ return peakAmplitude( p ) < thresh; }
+        
+	//! Function call operator: evaluate a Partial pointer.
+	bool operator()( const Partial * p ) const 
+		{ return peakAmplitude( *p ) < thresh; }
+
+private:	
+	double thresh;
+};
+
 //	-- comparitors --
 
 // ---------------------------------------------------------------------------

@@ -252,10 +252,26 @@ TimeShifter::operator()( Partial & p ) const
 	p = result;
 }
 
-
-}	//	end of namespace PartialUtils
-
-}	//	end of namespace Loris
+// ---------------------------------------------------------------------------
+//	peakAmplitude
+// ---------------------------------------------------------------------------
+//! Return the maximum amplitude achieved by a partial. 
+//!  
+//! \param  p is the Partial to evaluate
+//! \return the maximum (absolute) amplitude achieved by 
+//!         the partial p
+//
+double peakAmplitude( const Partial & p )
+{
+    double peak = 0;
+    for ( Partial::const_iterator it = p.begin();
+          it != p.end();
+          ++it )
+    {
+        peak = std::max( peak, it->amplitude() );
+    }
+    return peak;
+}
 
 //	-- phase maintenance functions --
 
@@ -276,7 +292,7 @@ TimeShifter::operator()( Partial & p ) const
 //! \param p    The Partial whose phases should be fixed.
 //! \param t    The time before which phases should be adjusted.
 //
-void Loris::PartialUtils::fixPhaseBefore( Loris::Partial & p, double t )
+void fixPhaseBefore( Partial & p, double t )
 {
     if ( 1 < p.numBreakpoints() )
     {
@@ -303,7 +319,7 @@ void Loris::PartialUtils::fixPhaseBefore( Loris::Partial & p, double t )
 //! \param p    The Partial whose phases should be fixed.
 //! \param t    The time after which phases should be adjusted.
 //
-void Loris::PartialUtils::fixPhaseAfter( Loris::Partial & p, double t )
+void fixPhaseAfter( Partial & p, double t )
 {
     //  nothing to do it there are not at least
     //  two Breakpoints in the Partial   
@@ -339,7 +355,7 @@ void Loris::PartialUtils::fixPhaseAfter( Loris::Partial & p, double t )
 //!             one nearest this time will be modified. Should be greater 
 //!             than tbeg, or else they will be swapped.
 //
-void Loris::PartialUtils::fixPhaseForward( Loris::Partial & p, double tbeg, double tend )
+void fixPhaseForward( Partial & p, double tbeg, double tend )
 {
     if ( tbeg > tend )
     {
@@ -384,7 +400,7 @@ void Loris::PartialUtils::fixPhaseForward( Loris::Partial & p, double tbeg, doub
 //! \param p    The Partial whose phases should be fixed.
 //! \param t    The time at which phases should be made correct.
 //
-void Loris::PartialUtils::fixPhaseAt( Loris::Partial & p, double t )
+void fixPhaseAt( Partial & p, double t )
 {
     if ( 1 < p.numBreakpoints() )
     {
@@ -426,7 +442,7 @@ void Loris::PartialUtils::fixPhaseAt( Loris::Partial & p, double t )
 //!             one nearest this time will be modified. Should be greater 
 //!             than tbeg, or else they will be swapped.
 //
-void Loris::PartialUtils::fixPhaseBetween( Loris::Partial & p, double tbeg, double tend )
+void fixPhaseBetween( Partial & p, double tbeg, double tend )
 {
     if ( tbeg > tend )
     {
@@ -468,3 +484,8 @@ void Loris::PartialUtils::fixPhaseBetween( Loris::Partial & p, double tbeg, doub
         }
     }
 }
+
+}	//	end of namespace PartialUtils
+
+}	//	end of namespace Loris
+
