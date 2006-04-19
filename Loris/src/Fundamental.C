@@ -208,7 +208,6 @@ Fundamental::constructEnvelope( double t1, double t2, double interval ) const
 	//	time, even if it was deemed unreliable, or false otherwise.
 	while ( t <=t2 )
 	{
-		found_energy = true;
 		//	collect the Partial amplitudes and
 		//	frequencies at time t:
 		collect_ampsNfreqs( partials_.begin(), partials_.end(), t, 
@@ -216,6 +215,7 @@ Fundamental::constructEnvelope( double t1, double t2, double interval ) const
 		
 		if ( ! amps.empty() )
 		{
+			found_energy = true;
 			double f0 = iterative_estimate( amps, freqs, freqMin_, freqMax_,
                                             freqResolution_ );
 			//	reject boundary frequencies

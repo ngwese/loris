@@ -154,6 +154,7 @@ compute_eval_freqs( double fmin, double fmax,
 		*it++ = f;
 		f += delta;
 	}
+	eval_freqs.back() = fmax;
 }
 
 //	evaluate_Q
