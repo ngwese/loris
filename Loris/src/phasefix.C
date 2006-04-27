@@ -56,6 +56,16 @@
 	const double Pi = 3.14159265358979324;
 #endif
 
+//  Define for special Loris treatment of Null Breakpoints, 
+//  to treat all Breakpoints the same, do NOT define this.
+//  (See fixPhaseForward and fixPhaseBackward.)
+#define NULLS_ARE_SPECIAL
+#ifdef NULLS_ARE_SPECIAL
+static const bool NoNulls = false;
+#else
+static const bool NoNulls = true;
+#endif
+
 //	begin namespace
 namespace Loris {
 
@@ -146,7 +156,8 @@ static double phaseTravel( Partial::const_iterator bp0, Partial::const_iterator 
 //
 void fixPhaseBackward( Partial::iterator stopHere, Partial::iterator pos )
 {
-    while ( pos != stopHere && BreakpointUtils::isNonNull( pos.breakpoint() ) )
+    while ( pos != stopHere && 
+            ( NoNulls || BreakpointUtils::isNonNull( pos.breakpoint() ) ) )
     {
         // pos is not the first Breakpoint in the Partial, 
         // and pos is not a Null Breakpoint.
@@ -205,12 +216,12 @@ void fixPhaseForward( Partial::iterator pos, Partial::iterator stopHere )
     while ( pos != stopHere )
     {
         Partial::iterator posPrev = pos++;
-        if ( BreakpointUtils::isNonNull( pos.breakpoint() ) )
+        if ( NoNulls || BreakpointUtils::isNonNull( pos.breakpoint() ) )
         {
             // pos is the position of a non-Null Breakpoint
             double travel = phaseTravel( posPrev, pos );
             
-            if ( BreakpointUtils::isNonNull( posPrev.breakpoint() ) )
+            if ( NoNulls || BreakpointUtils::isNonNull( posPrev.breakpoint() ) )
             {                        
                 // if its predecessor of pos is non-Null, then fix
                 // the phase of the Breakpoint at pos.

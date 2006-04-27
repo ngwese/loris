@@ -61,35 +61,47 @@ class Resampler
 public:
 //	--- lifecycle ---
 
-	//! Construct a new Resampler using the specified sampling
-	//! interval.
-	//!
-	//! \param  sampleInterval is the resampling interval in seconds, 
-	//!         Breakpoint data is computed at integer multiples of
-	//!         sampleInterval seconds.
-	//! \throw  InvalidArgument if sampleInterval is not positive.
-	explicit Resampler( double sampleInterval );
-   
-	// use compiler-generated copy/assign/destroy
+    //! Construct a new Resampler using the specified sampling
+    //! interval and sparse resampling.
+    //!
+    //! \param  sampleInterval is the resampling interval in seconds, 
+    //!         Breakpoint data is computed at integer multiples of
+    //!         sampleInterval seconds.
+    //! \throw  InvalidArgument if sampleInterval is not positive.
+    explicit Resampler( double sampleInterval );
+
+    // use compiler-generated copy/assign/destroy
+    
+//  --- parameters ---
+
+    //! Select dense or sparse resampling.
+    //!
+    //! \param  useDense is a boolean flag indicating that dense
+    //!         resamping (Breakpoint at every integer multiple of the 
+    //!         resampling interval) should be performed. If false (the
+    //!         default), sparse resampling (Breakpoints only at multiples
+    //!         of the resampling interval near Breakpoint times in the
+    //!         original Partial) is performed.
+    void setDenseResampling( bool useDense );
 	
 //	--- resampling ---
 
-	//! Resample a Partial using this Resampler's stored sampling interval.
-	//! The Breakpoint times in the resampled Partial will comprise a  
-   //! contiguous sequence of integer multiples of the sampling interval,
-	//! beginning with the multiple nearest to the Partial's start time and
-	//! ending with the multiple nearest to the Partial's end time. Resampling
-   //! is performed in-place. 
-   //!
-   //! \param  p is the Partial to resample
-	void resample( Partial & p ) const;
-	
-	 
-	//! Function call operator: same as resample( p ).
-	void operator() ( Partial & p ) const 
-	{ 
-	   resample( p ); 
-	}
+    //! Resample a Partial using this Resampler's stored sampling interval.
+    //! The Breakpoint times in the resampled Partial will comprise a  
+    //! contiguous sequence of integer multiples of the sampling interval,
+    //! beginning with the multiple nearest to the Partial's start time and
+    //! ending with the multiple nearest to the Partial's end time. Resampling
+    //! is performed in-place. 
+    //!
+    //! \param  p is the Partial to resample
+    void resample( Partial & p ) const;
+
+
+    //! Function call operator: same as resample( p ).
+    void operator() ( Partial & p ) const 
+    { 
+        resample( p ); 
+    }
 	 
 	//! Resample all Partials in the specified (half-open) range using this
 	//! Resampler's stored sampling interval, so that the Breakpoints in 
@@ -124,7 +136,7 @@ public:
 	{ 
 	   resample( begin, end ); 
 	}
-	 
+    	 
 // -- static members --
 
 	//! Static member that constructs an instance and applies
@@ -139,6 +151,12 @@ public:
 	//! \param  sampleInterval is the resampling interval in seconds, 
 	//!         Breakpoint data is computed at integer multiples of
 	//!         sampleInterval seconds.
+    //! \param  denseResampling is a boolean flag indicating that dense
+    //!         resamping (Breakpoint at every integer multiple of the 
+    //!         resampling interval) should be performed. If false (the
+    //!         default), sparse resampling (Breakpoints only at multiples
+    //!         of the resampling interval near Breakpoint times in the
+    //!         original Partial) is performed.
 	//! \throw  InvalidArgument if sampleInterval is not positive.
 	//!	
 	//!	If compiled with NO_TEMPLATE_MEMBERS defined, then begin and end
@@ -147,18 +165,22 @@ public:
 #if ! defined(NO_TEMPLATE_MEMBERS)
 	template< typename Iter >
 	static 
-	void resample( Iter begin, Iter end, double sampleInterval );
+	void resample( Iter begin, Iter end, double sampleInterval, 
+	               bool denseResampling = false );
 #else
 	static inline 
 	void resample( PartialList::iterator begin, PartialList::iterator end,
-                  double sampleInterval );
+                  double sampleInterval, bool denseResampling = false );
 #endif	 
 
 //	--- instance variables ---
 private:
 
-   //!   the resampling interval in seconds
-	double interval_;	
+    //!  the resampling interval in seconds
+    double interval_;	
+
+    //!  boolean selecting dense or sparse resampling
+    bool dense_;
 	
 };	//	end of class Resampler
 
@@ -210,6 +232,12 @@ void Resampler::resample( PartialList::iterator begin, PartialList::iterator end
 //! \param  sampleInterval is the resampling interval in seconds, 
 //!         Breakpoint data is computed at integer multiples of
 //!         sampleInterval seconds.
+//! \param  denseResampling is a boolean flag indicating that dense
+//!         resamping (Breakpoint at every integer multiple of the 
+//!         resampling interval) should be performed. If false (the
+//!         default), sparse resampling (Breakpoints only at multiples
+//!         of the resampling interval near Breakpoint times in the
+//!         original Partial) is performed.
 //! \throw  InvalidArgument if sampleInterval is not positive.
 //!	
 //!	If compiled with NO_TEMPLATE_MEMBERS defined, then begin and end
@@ -218,15 +246,17 @@ void Resampler::resample( PartialList::iterator begin, PartialList::iterator end
 //
 #if ! defined(NO_TEMPLATE_MEMBERS)
 template< typename Iter >
-void Resampler::resample( Iter begin, Iter end, double sampleInterval )
+void Resampler::resample( Iter begin, Iter end, double sampleInterval, 
+                          bool denseResampling )
 #else
 inline
 void Resampler::resample( PartialList::iterator begin, PartialList::iterator end,
-                          double sampleInterval )
+                          double sampleInterval, bool denseResampling )
 #endif	 
 {
-   Resampler instance( sampleInterval );
-   instance.resample( begin, end );
+    Resampler instance( sampleInterval );
+    instance.setDenseResampling( denseResampling ); 
+    instance.resample( begin, end );
 }
 
 }	//	end of namespace Loris

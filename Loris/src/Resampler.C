@@ -52,11 +52,15 @@
 //	begin namespace
 namespace Loris {
 
+//  helper declarations:
+static void resample_dense( Partial & p, double interval );
+static void resample_sparse( Partial & p, double interval );
+
 // ---------------------------------------------------------------------------
 //	constructor
 // ---------------------------------------------------------------------------
 //! Construct a new Resampler using the specified sampling
-//! interval.
+//! interval and sparse resampling.
 //!
 //! \param  sampleInterval is the resampling interval in seconds, 
 //!         Breakpoint data is computed at integer multiples of
@@ -64,12 +68,30 @@ namespace Loris {
 //! \throw  InvalidArgument if sampleInterval is not positive.
 //
 Resampler::Resampler( double sampleInterval ) :
-   interval_( sampleInterval )
+   interval_( sampleInterval ),
+   dense_( false )
 {
    if ( sampleInterval <= 0. )
    {
       Throw( InvalidArgument, "Resampler sample interval must be positive." );
    }
+}
+
+// ---------------------------------------------------------------------------
+//	setDenseResampling
+// ---------------------------------------------------------------------------
+//! Select dense or sparse resampling.
+//!
+//! \param  useDense is a boolean flag indicating that dense
+//!         resamping (Breakpoint at every integer multiple of the 
+//!         resampling interval) should be performed. If false (the
+//!         default), sparse resampling (Breakpoints only at multiples
+//!         of the resampling interval near Breakpoint times in the
+//!         original Partial) is performed.
+//
+void Resampler::setDenseResampling( bool useDense )
+{
+    dense_ = useDense;
 }
 
 // ---------------------------------------------------------------------------
@@ -87,7 +109,33 @@ Resampler::Resampler( double sampleInterval ) :
 void 
 Resampler::resample( Partial & p ) const
 {
-	debugger << "resampling Partial having " << p.numBreakpoints() 
+    if ( dense_ )
+    {
+        resample_dense( p, interval_ );
+    }
+    else
+    {
+        resample_sparse( p, interval_ );
+    }
+}
+
+// ---------------------------------------------------------------------------
+//	resample_dense
+// ---------------------------------------------------------------------------
+//! Helper function to perform dense resampling at a specified interval.
+//! The Breakpoint times in the resampled Partial will comprise a  
+//! contiguous sequence of integer multiples of the sampling interval,
+//! beginning with the multiple nearest to the Partial's start time and
+//! ending with the multiple nearest to the Partial's end time. Resampling
+//! is performed in-place. 
+//!
+//! \param  p is the Partial to resample
+//! \param  interval is the resamping interval in seconds
+//
+static void resample_dense( Partial & p, double interval ) 
+{
+	debugger << "resampling Partial labeled " << p.label()
+	         << " having " << p.numBreakpoints() 
 			 << " Breakpoints" << endl;
 
 	//	create the new Partial:
@@ -95,11 +143,12 @@ Resampler::resample( Partial & p ) const
 	newp.setLabel( p.label() );
 
 	//  find time of first and last breakpoint for the resampled envelope:
-	double firstTime = interval_ * int( 0.5 + p.startTime() / interval_ );
-	double stopTime  = p.endTime() + ( 0.5 * interval_ );
+	double firstTime = interval * int( 0.5 + p.startTime() / interval );
+	double stopTime  = p.endTime() + ( 0.5 * interval );
 	
+	#if defined(PHASE_CORRECT)
 	// To damp or not to damp?
-	// When correcting phase, use damping if the resamping
+	// When correcting phase, use damping if the resampling
 	// interval is less than the length of a period, otherwise
 	// don't damp the correction.
 	//
@@ -107,14 +156,15 @@ Resampler::resample( Partial & p ) const
 	// This smooth fade is a kludge that seems to work. 
 	double damping = 0.5;
 	const double MAGICKLUDGE = 0.012;
-	if ( interval_  > MAGICKLUDGE )
+	if ( interval  > MAGICKLUDGE )
 	{
-		damping += std::min( 0.5, 100 * (interval_ - MAGICKLUDGE) );
+		damping += std::min( 0.5, 100 * (interval - MAGICKLUDGE) );
 	}
 	// debugger << "damping is " << damping << endl;
+	#endif
 	
 	//  resample:
-	for (  double tim = firstTime; tim < stopTime; tim += interval_ ) 
+	for (  double tim = firstTime; tim < stopTime; tim += interval ) 
 	{
 		Breakpoint newbp( p.frequencyAt( tim ), p.amplitudeAt( tim ), 
 						  p.bandwidthAt( tim ), p.phaseAt( tim ) );
@@ -122,12 +172,117 @@ Resampler::resample( Partial & p ) const
 		#if defined(PHASE_CORRECT)	
 		if ( newp.numBreakpoints() != 0 )
 		{			  
-			matchPhaseFwd( newp.last(), newbp, interval_, damping );			
+			matchPhaseFwd( newp.last(), newbp, interval, damping );			
 		}
 		#endif
 		
 		newp.insert( tim, newbp );
 	}
+
+	debugger << "resamplied Partial has " << newp.numBreakpoints() 
+			 << " Breakpoints" << endl;
+
+	//	store the new Partial:
+	p = newp;
+}
+
+// ---------------------------------------------------------------------------
+//	resample_sparse
+// ---------------------------------------------------------------------------
+//! Helper function to perform sparse resampling at a specified interval.
+//! The Breakpoint times in the resampled Partial will comprise a  
+//! sparse sequence of integer multiples of the sampling interval,
+//! beginning with the multiple nearest to the Partial's start time and
+//! ending with the multiple nearest to the Partial's end time, and including
+//! only multiples that are near to Breakpoint times in the original Partial.
+//! Resampling is performed in-place. 
+//!
+//! \param  p is the Partial to resample
+//! \param  interval is the resamping interval in seconds
+//
+static void resample_sparse( Partial & p, double interval ) 
+{
+	debugger << "resampling Partial labeled " << p.label()
+	         << " having " << p.numBreakpoints() 
+			 << " Breakpoints" << endl;
+
+	//	create the new Partial:
+	Partial newp;
+	newp.setLabel( p.label() );
+
+	#if defined(PHASE_CORRECT)
+	// To damp or not to damp?
+	// When correcting phase, use damping if the resampling
+	// interval is less than the length of a period, otherwise
+	// don't damp the correction.
+	//
+	// No, maybe damping is always needed for small intervals?
+	// This smooth fade is a kludge that seems to work. 
+	double damping = 0.5;
+	const double MAGICKLUDGE = 0.012;
+	if ( interval  > MAGICKLUDGE )
+	{
+		damping += std::min( 0.5, 100 * (interval - MAGICKLUDGE) );
+	}
+	// debugger << "damping is " << damping << endl;
+	#endif
+	
+	//  resample:
+	double curtime = 0;
+	double halfstep = .5 * interval;
+	Partial::const_iterator iter = p.begin();
+	while( iter != p.end() )
+	{
+	    double bpt = iter.time();
+	    if ( bpt < curtime - halfstep )
+	    {
+	        //  advance Breakpoint iterator:
+	        ++iter;
+	    }    
+	    else if ( curtime < bpt - halfstep )
+	    {
+	        //  advance current time:
+	        curtime += interval;
+	    }
+	    else
+	    {
+	        //  make a resampled Breakpoint:
+		    Breakpoint newbp( p.frequencyAt( curtime ), p.amplitudeAt( curtime ), 
+						      p.bandwidthAt( curtime ), p.phaseAt( curtime ) );
+	        
+    		#if defined(PHASE_CORRECT)	
+    		if ( newp.numBreakpoints() != 0 )
+    		{			  
+    		    double dt = curtime - newp.endTime();
+
+            	// To damp or not to damp?
+            	// When correcting phase, use damping if the resampling
+            	// interval is less than the length of a period, otherwise
+            	// don't damp the correction.
+            	//
+            	// No, maybe damping is always needed for small intervals?
+            	// This smooth fade is a kludge that seems to work. 
+            	double damping = 0.5;
+            	const double MAGICKLUDGE = 0.012;
+            	if ( dt  > MAGICKLUDGE )
+            	{
+            		damping += std::min( 0.5, 100 * (dt - MAGICKLUDGE) );
+            	}
+
+    			matchPhaseFwd( newp.last(), newbp, dt, damping );			
+    		}
+    		#endif
+    		
+    		newp.insert( curtime, newbp );
+    		
+    		//  advance the Breakpoint iterator and the current time:
+    		++iter;
+    		curtime += interval;
+        }  	
+  	}
+	
+	debugger << "resampled Partial has " << newp.numBreakpoints() 
+			 << " Breakpoints" << endl;
 
 	//	store the new Partial:
 	p = newp;
