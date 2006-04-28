@@ -61,7 +61,7 @@ using namespace Loris;
 int main( void )
 {
 	cout << "Loris C++ API test" << endl;
-	cout << "Kelly Fitz 2000" << endl << endl;
+	cout << "Kelly Fitz 2006" << endl << endl;
 	cout << "Generates a simple linear morph between a " << endl;
 	cout << "clarinet and a flute using the C++ library." << endl << endl;
 	
@@ -117,13 +117,40 @@ int main( void )
         // analyze the flute
         cout << "analyzing flute 4D" << endl;
         a = Analyzer( 270 );
+#if defined(ESTIMATE_F0) && ESTIMATE_F0
+		cout << "Analyzer will build a fundamental frequency estimate for the flute" << endl;
+        a.buildFundamentalEnv( 270, 310 );
+#endif
+#if defined(ESTIMATE_AMP) && ESTIMATE_AMP
+		a.buildAmpEnv( true );
+#endif
         a.analyze( f.samples(), f.sampleRate() );
         PartialList flut = a.partials();
+
+        // channelize and distill
+        cout << "distilling" << endl;
+#if defined(ESTIMATE_F0) && ESTIMATE_F0
+		const LinearEnvelope & flutRef = a.fundamentalEnv();	
+		double est_time = flutRef.begin()->first;
+		cout << "flute fundamental envelope starts at time " << est_time << endl;
+		while ( est_time < 2 )
+		{
+			cout << "flute fundamental estimate at time " 
+				 << est_time << " is " << flutRef.valueAt( est_time ) << endl;
+			est_time += 0.35;
+		}		
+#else        
+        FrequencyReference flutRef( flut.begin(), flut.end(), 291*.8, 291*1.2, 50 );
+#endif
+        Channelizer::channelize( flut.begin(), flut.end(), flutRef, 1 );
+        Distiller::distill( flut, 0.001 );
+        cout << "obtained " << flut.size() << " distilled flute Partials" << endl;
 
 #if defined(ESTIMATE_F0) && ESTIMATE_F0
 #if defined(ESTIMATE_AMP) && ESTIMATE_AMP
 		//  generate a sinusoid that tracks the fundamental
 		//	and amplitude envelopes obtained during analysis
+		cout << "synthesizing sinusoid from flute amp and fundamental estimates" << endl;
 		Partial boo;
 		LinearEnvelope fund = a.fundamentalEnv();
 		LinearEnvelope::iterator it;
@@ -141,12 +168,8 @@ int main( void )
 #endif
 #endif
 
-        // channelize and distill
-        cout << "distilling" << endl;
-        FrequencyReference flutRef( flut.begin(), flut.end(), 291*.8, 291*1.2, 50 );
-        Channelizer::channelize( flut.begin(), flut.end(), flutRef.envelope(), 1 );
-        Distiller::distill( flut, 0.001 );
-        cout << "obtained " << flut.size() << " distilled flute Partials" << endl;
+        cout << "exporting " << flut.size() << " partials to SDIF file" << endl;
+        SdifFile::Export( "flute.ctest.sdif", flut );
 
         // check flute synthesis:
         cout << "checking flute synthesis" << endl;

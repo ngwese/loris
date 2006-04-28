@@ -59,6 +59,7 @@ namespace Loris {
 
 class Analyzer_imp;
 class Envelope;
+class LinearEnvelopeBuilder;
 
 // ---------------------------------------------------------------------------
 //  class Analyzer
@@ -84,21 +85,6 @@ class Envelope;
 //
 class Analyzer
 {
-//  -- instance variables --
-    #if defined(ESTIMATE_RMS) && ESTIMATE_RMS
-    LinearEnvelope mRmsEnv;
-    #endif
-                
-    #if defined(ESTIMATE_F0) && ESTIMATE_F0
-    LinearEnvelope mF0Env;
-    #endif
-                
-    #if defined(ESTIMATE_AMP) && ESTIMATE_AMP
-    LinearEnvelope mAmpEnv;
-    #endif
-                
-    std::auto_ptr< Analyzer_imp > _imp;     //! insulating implementation class
-
 //  -- public interface --
 public:
 
@@ -158,7 +144,7 @@ public:
     //! - the window width and params that are usually related to (or
     //! identical to) the window width (hop and crop times)
     //! - independent parameters (bw region width and amp floor)
-        void configure( double resolutionHz, double windowWidthHz );
+    void configure( double resolutionHz, double windowWidthHz );
 
 //  -- analysis --
 
@@ -341,14 +327,38 @@ public:
 #endif
 
 #if defined(ESTIMATE_F0) && ESTIMATE_F0
-    const LinearEnvelope & fundamentalEnv( void ) const
-        { return mF0Env; }
+    const LinearEnvelope & fundamentalEnv( void ) const;
+        
+    void buildFundamentalEnv( bool TF = true );
+    void buildFundamentalEnv( double fmin, double fmax, 
+                              double threshDb = -60, double threshHz = 8000 );
 #endif
 
 #if defined(ESTIMATE_AMP) && ESTIMATE_AMP
-    const LinearEnvelope & ampEnv( void ) const
-        { return mAmpEnv; }
+    const LinearEnvelope & ampEnv( void ) const;
+    
+    void buildAmpEnv( bool TF = true );
 #endif
+
+//  -- private member variables --
+
+private:
+
+    #if defined(ESTIMATE_RMS) && ESTIMATE_RMS
+    LinearEnvelope mRmsEnv;
+    #endif
+                
+    #if defined(ESTIMATE_F0) && ESTIMATE_F0
+    LinearEnvelope mF0Env;
+    std::auto_ptr< LinearEnvelopeBuilder > mF0Builder;
+    #endif
+                
+    #if defined(ESTIMATE_AMP) && ESTIMATE_AMP
+    LinearEnvelope mAmpEnv;
+    std::auto_ptr< LinearEnvelopeBuilder > mAmpEnvBuilder;
+    #endif
+                
+    std::auto_ptr< Analyzer_imp > _imp;     //! insulating implementation class
 
 };  //  end of class Analyzer
 

@@ -78,6 +78,101 @@ using namespace std;
 //  begin namespace
 namespace Loris {
 
+
+class LinearEnvelopeBuilder
+{
+public:
+    virtual ~LinearEnvelopeBuilder( void ) {}
+    virtual LinearEnvelopeBuilder * clone( void ) const = 0;
+    virtual void build( const Peaks & peaks, double frameTime, LinearEnvelope & env ) = 0;
+};
+
+#if defined(ESTIMATE_F0) && ESTIMATE_F0
+class FundamentalBuilder : public LinearEnvelopeBuilder
+{
+    double mFmin, mFmax, mAmpThresh, mFreqThresh;
+    std::vector< double > amplitudes, frequencies;
+    
+public:
+    FundamentalBuilder( double fmin, double fmax, double threshDb = -60, double threshHz = 8000 ) :
+        mFmin( fmin ), 
+        mFmax( fmax ), 
+        mAmpThresh( std::pow( 10., 0.05*(threshDb) ) ),
+        mFreqThresh( threshHz )
+        {}
+		
+	FundamentalBuilder * clone( void ) const { return new FundamentalBuilder(*this); }
+	
+    void build( const Peaks & peaks, double frameTime, LinearEnvelope & env );
+};
+
+void FundamentalBuilder::build( const Peaks & peaks, double frameTime, 
+	 							LinearEnvelope & env )
+{
+    amplitudes.clear();
+    frequencies.clear();
+    for ( Peaks::const_iterator spkpos = peaks.begin(); spkpos != peaks.end(); ++spkpos )
+    {
+        if ( spkpos->second.amplitude() > mAmpThresh &&
+             spkpos->second.frequency() < mFreqThresh )
+        {
+            amplitudes.push_back( spkpos->second.amplitude() );
+            frequencies.push_back( spkpos->second.frequency() );
+        }
+    }
+    if ( ! amplitudes.empty() )
+    {
+        //  estimate f0
+        double f0 = iterative_estimate( amplitudes, frequencies, 
+                                        mFmin,
+                                        mFmax,
+                                        0.1 );
+        
+        if ( f0 > mFmin && f0 < mFmax )
+        {
+            // notifier << "f0 is " << f0 << endl;
+            //  add breakpoint to fundamental envelope
+            env.insert( frameTime, f0 );
+        }
+    }
+    
+}
+
+#endif
+
+#if defined(ESTIMATE_AMP) && ESTIMATE_AMP
+class AmpEnvBuilder : public LinearEnvelopeBuilder
+{
+public:
+    AmpEnvBuilder( void ) {}
+		
+	AmpEnvBuilder * clone( void ) const { return new AmpEnvBuilder(*this); }
+	
+    void build( const Peaks & peaks, double frameTime, LinearEnvelope & env );
+
+    //  helper
+    static double 
+    accumPeakSquaredAmps( double init, 
+                          const Peaks::const_iterator::value_type & timeBpPair );
+};
+
+void AmpEnvBuilder::build( const Peaks & peaks, double frameTime, 
+                           LinearEnvelope & env )
+{
+    double x = std::accumulate( peaks.begin(), peaks.end(), 0.0, accumPeakSquaredAmps );
+    env.insert( frameTime, std::sqrt( x ) );
+}
+
+//  static helper
+double 
+AmpEnvBuilder::accumPeakSquaredAmps( double init, 
+                                     const Peaks::const_iterator::value_type & timeBpPair )
+{
+    return init + (timeBpPair.second.amplitude() * timeBpPair.second.amplitude());
+}
+
+#endif
+
 // ---------------------------------------------------------------------------
 //  Analyzer_imp definition
 // ---------------------------------------------------------------------------
@@ -183,6 +278,19 @@ Analyzer::Analyzer( const Analyzer & other ) :
 #endif
     _imp( new Analyzer_imp( *other._imp ) )
 {
+#if defined(ESTIMATE_F0) && ESTIMATE_F0
+    if ( 0 != other.mF0Builder.get() )
+    {
+        mF0Builder.reset( other.mF0Builder->clone() );
+    }
+#endif
+
+#if defined(ESTIMATE_AMP) && ESTIMATE_AMP
+    if ( 0 != other.mAmpEnvBuilder.get() )
+    {
+        mAmpEnvBuilder.reset( other.mAmpEnvBuilder->clone() );
+    }
+#endif
 }
 
 // ---------------------------------------------------------------------------
@@ -205,10 +313,18 @@ Analyzer::operator=( const Analyzer & rhs )
                 
     #if defined(ESTIMATE_F0) && ESTIMATE_F0
         mF0Env = rhs.mF0Env;
+        if ( 0 != rhs.mF0Builder.get() )
+        {
+            mF0Builder.reset( rhs.mF0Builder->clone() );
+        }
     #endif
                 
     #if defined(ESTIMATE_AMP) && ESTIMATE_AMP
         mAmpEnv = rhs.mAmpEnv;
+        if ( 0 != rhs.mAmpEnvBuilder.get() )
+        {
+            mAmpEnvBuilder.reset( rhs.mAmpEnvBuilder->clone() );
+        }
     #endif
                 
     
@@ -298,6 +414,15 @@ Analyzer::configure( double resolutionHz, double windowWidthHz )
     //  defaults to 2 kHz, corresponding to 
     //  1 kHz region center spacing:
     setBwRegionWidth( 2000. );
+
+#if defined(ESTIMATE_F0) && ESTIMATE_F0
+    if ( 0 != mF0Builder.get() )
+    {
+        //  configure the fundamental tracker using default 
+        //  parameters:
+        buildFundamentalEnv( true );
+    }
+#endif
 }
 
 // -- analysis --
@@ -444,7 +569,6 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
     #if defined(ESTIMATE_F0) && ESTIMATE_F0
     //  try building a fundamental frequency envelope too
     mF0Env.clear();
-    std::vector< double > amplitudes, frequencies;
     #endif
 
     #if defined(ESTIMATE_RMS) && ESTIMATE_RMS
@@ -506,44 +630,19 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
             
             #if defined(ESTIMATE_AMP) && ESTIMATE_AMP
             //  estimate the amplitude in this frame:
-            double x = std::accumulate( peaks.begin(), peaks.end(), 0.0, accumPeakSquaredAmps );
-            mAmpEnv.insert( currentFrameTime, std::sqrt( x ) );
+            if ( 0 != mAmpEnvBuilder.get() )
+            {
+                mAmpEnvBuilder->build( peaks, currentFrameTime, mAmpEnv );
+            }
             #endif
             
             //  collect amplitudes and frequencies and try to 
             //  estimate the fundamental
             #if defined(ESTIMATE_F0) && ESTIMATE_F0
-            amplitudes.clear();
-            frequencies.clear();
-            for ( Peaks::iterator spkpos = peaks.begin(); spkpos != peaks.end(); ++spkpos )
+            if ( 0 != mF0Builder.get() )
             {
-                static const double F0EstAmpThresh = std::pow( 10., 0.05*(-60) );
-                static const double F0EstFreqThresh = 8000;
-                if ( spkpos->second.amplitude() > F0EstAmpThresh &&
-                     spkpos->second.frequency() < F0EstFreqThresh )
-                {
-                    amplitudes.push_back( spkpos->second.amplitude() );
-                    frequencies.push_back( spkpos->second.frequency() );
-                }
+                mF0Builder->build( peaks, currentFrameTime, mF0Env );
             }
-            try
-            {
-                if ( ! amplitudes.empty() )
-                {
-                    //  estimate f0
-                    double f0 = iterative_estimate( amplitudes, frequencies, 
-                                                    _imp->freqResolution,
-                                                    _imp->freqResolution * 2.0,
-                                                    0.1 );
-                    // notifier << "f0 is " << f0 << endl;
-                    //  add breakpoint to fundamental envelope
-                    mF0Env.insert( currentFrameTime, f0 );
-                }
-            }
-            catch(...)
-            {
-                // do nothing
-            }                
             #endif
 
             //  form Partials from the extracted Breakpoints:
@@ -907,5 +1006,98 @@ Analyzer::partials( void ) const
 { 
     return _imp->partials; 
 }
+
+#if defined(ESTIMATE_F0) && ESTIMATE_F0
+
+// ---------------------------------------------------------------------------
+//  buildFundamentalEnv
+// ---------------------------------------------------------------------------
+void Analyzer::buildFundamentalEnv( bool TF )
+{
+    if ( TF )
+    {
+        //  configure with default parameters
+        buildFundamentalEnv( _imp->freqResolution,
+    			             2 * _imp->freqResolution,
+    			             -60, 
+    			             8000 );
+    }
+    else
+    {
+        // disable
+        mF0Builder.reset( 0 );
+    }
+}
+
+// ---------------------------------------------------------------------------
+//  buildFundamentalEnv
+// ---------------------------------------------------------------------------
+void Analyzer::buildFundamentalEnv( double fmin, double fmax, 
+                                    double threshDb, double threshHz )
+{
+    mF0Builder.reset( 
+        new FundamentalBuilder( fmin, fmax, threshDb, threshHz ) );
+}
+
+// ---------------------------------------------------------------------------
+//  fundamentalEnv
+// ---------------------------------------------------------------------------
+const LinearEnvelope & 
+Analyzer::fundamentalEnv( void ) const
+{   
+    /*
+    //  raise an exception if the fundamental estimate was not built,
+    //  nothing good can come of returning the empty envelope:
+    //  but on the other hand, checking the state of the builder
+    //  does not tell anything about whether an envelope has been 
+    //  constructed, or whether an analysis has even occurred.
+    if ( 0 == mF0Builder.get() )
+    {
+        Throw( InvalidObject, "No fundamental envelope was built." );
+    }
+    */
+    return mF0Env; 
+}
+
+#endif
+
+#if defined(ESTIMATE_AMP) && ESTIMATE_AMP
+// ---------------------------------------------------------------------------
+//  buildAmpEnv
+// ---------------------------------------------------------------------------
+void Analyzer::buildAmpEnv( bool TF )
+{
+    if ( TF )
+    {
+        mAmpEnvBuilder.reset( new AmpEnvBuilder );
+    }
+    else
+    {
+        // disable
+        mAmpEnvBuilder.reset( 0 );
+    }
+    
+}
+
+// ---------------------------------------------------------------------------
+//  ampEnv
+// ---------------------------------------------------------------------------
+const LinearEnvelope & Analyzer::ampEnv( void ) const
+{ 
+    /*
+    //  raise an exception if the amplitude estimate was not built,
+    //  nothing good can come of returning the empty envelope,
+    //  but on the other hand, checking the state of the builder
+    //  does not tell anything about whether an envelope has been 
+    //  constructed, or whether an analysis has even occurred.
+    if ( 0 == mAmpEnvBuilder.get() )
+    {
+        Throw( InvalidObject, "No amplitude envelope was built." );
+    }
+    */
+    return mAmpEnv; 
+}
+#endif
+
 
 }   //  end of namespace Loris
