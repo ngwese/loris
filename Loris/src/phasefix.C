@@ -59,11 +59,13 @@
 //  Define for special Loris treatment of Null Breakpoints, 
 //  to treat all Breakpoints the same, do NOT define this.
 //  (See fixPhaseForward and fixPhaseBackward.)
-#define NULLS_ARE_SPECIAL
-#ifdef NULLS_ARE_SPECIAL
-static const bool NoNulls = false;
+#if !defined(NULLS_ARE_SPECIAL)
+    #define NULLS_ARE_SPECIAL 1
+#endif
+#if defined(NULLS_ARE_SPECIAL) && NULLS_ARE_SPECIAL
+    static const bool NoNulls = false;
 #else
-static const bool NoNulls = true;
+    static const bool NoNulls = true;
 #endif
 
 //	begin namespace
