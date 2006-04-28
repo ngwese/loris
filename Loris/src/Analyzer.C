@@ -174,55 +174,6 @@ AmpEnvBuilder::accumPeakSquaredAmps( double init,
 #endif
 
 // ---------------------------------------------------------------------------
-//  Analyzer_imp definition
-// ---------------------------------------------------------------------------
-//  Definition of an implementation class that insulates clients from
-//  the implementation and representation details of Analyzer parameters.
-//
-class Analyzer_imp
-{
-public:
-    double freqResolution;  //  in Hz, minimum instantaneous frequency distance;
-                            //  this is the core parameter, others are, by default,
-                            //  computed from this one
-    
-    double ampFloor;        //  dB, relative to full amplitude sine wave, absolute
-                            //  amplitude threshold (negative)
-    
-    double windowWidth;     //  in Hz, width of main lobe; this might be more
-                            //  conveniently presented as window length, but
-                            //  the main lobe width more explicitly highlights
-                            //  the critical interaction with resolution
-    
-    double freqFloor;       //  lowest frequency (Hz) component extracted
-                            //  in spectral analysis
-    
-    double freqDrift;       //  the maximum frequency (Hz) difference between two 
-                            //  consecutive Breakpoints that will be linked to
-                            //  form a Partial
-    
-    double hopTime;         //  in seconds, time between analysis windows in
-                            //  successive spectral analyses
-    
-    double cropTime;        //  in seconds, maximum time correction for a spectral
-                            //  component to be considered reliable, and to be eligible
-                            //  for extraction and for Breakpoint formation
-    
-    double bwRegionWidth;   //  width in Hz of overlapping bandwidth 
-                            //  association regions, or zero if bandwidth association
-                            //  is disabled
-                                                        
-    double sidelobeLevel;   //  sidelobe attenutation level for the Kaiser analysis 
-                            //  window, in positive dB
-                            
-    PartialList partials;   //  collect Partials here
-    
-    //  parameter verification, except if parameters are invalid:
-    void verify_params( void ) const;
-
-};
-
-// ---------------------------------------------------------------------------
 //  Analyzer constructor - frequency resolution only
 // ---------------------------------------------------------------------------
 //! Construct a new Analyzer configured with the given  
@@ -232,8 +183,7 @@ public:
 //! 
 //! \param resolutionHz is the frequency resolution in Hz.
 //
-Analyzer::Analyzer( double resolutionHz ) :
-    _imp( new Analyzer_imp )
+Analyzer::Analyzer( double resolutionHz )
 {
     configure( resolutionHz, resolutionHz );
 }
@@ -251,8 +201,7 @@ Analyzer::Analyzer( double resolutionHz ) :
 //! \param windowWidthHz is the main lobe width of the Kaiser
 //! analysis window in Hz.
 //
-Analyzer::Analyzer( double resolutionHz, double windowWidthHz ) :
-    _imp( new Analyzer_imp )
+Analyzer::Analyzer( double resolutionHz, double windowWidthHz )
 {
     configure( resolutionHz, windowWidthHz );
 }
@@ -276,7 +225,16 @@ Analyzer::Analyzer( const Analyzer & other ) :
 #if defined(ESTIMATE_AMP) && ESTIMATE_AMP
     mAmpEnv( other.mAmpEnv ),
 #endif
-    _imp( new Analyzer_imp( *other._imp ) )
+    m_freqResolution( other.m_freqResolution ),
+    m_ampFloor( other.m_ampFloor ),
+    m_windowWidth( other.m_windowWidth ),
+    m_freqFloor( other.m_freqFloor ),
+    m_freqDrift( other.m_freqDrift ),
+    m_hopTime( other.m_hopTime ),
+    m_cropTime( other.m_cropTime ),
+    m_bwRegionWidth( other.m_bwRegionWidth ),
+    m_sidelobeLevel( other.m_sidelobeLevel ),
+    m_partials( other.m_partials )
 {
 #if defined(ESTIMATE_F0) && ESTIMATE_F0
     if ( 0 != other.mF0Builder.get() )
@@ -307,6 +265,17 @@ Analyzer::operator=( const Analyzer & rhs )
 {
     if ( this != & rhs ) 
     {
+        m_freqResolution = rhs.m_freqResolution;
+        m_ampFloor = rhs.m_ampFloor;
+        m_windowWidth = rhs.m_windowWidth;
+        m_freqFloor = rhs.m_freqFloor;  
+        m_freqDrift = rhs.m_freqDrift;
+        m_hopTime = rhs.m_hopTime;
+        m_cropTime = rhs.m_cropTime;
+        m_bwRegionWidth = rhs.m_bwRegionWidth;
+        m_sidelobeLevel = rhs.m_sidelobeLevel;
+        m_partials = rhs.m_partials;
+
     #if defined(ESTIMATE_RMS) && ESTIMATE_RMS
         mRmsEnv = rhs.mRmsEnv;
     #endif
@@ -327,8 +296,6 @@ Analyzer::operator=( const Analyzer & rhs )
         }
     #endif
                 
-    
-        *_imp = *rhs._imp;
     }
     return *this;
 }
@@ -367,8 +334,6 @@ Analyzer::~Analyzer( void )
 void
 Analyzer::configure( double resolutionHz, double windowWidthHz )
 {
-    Assert( _imp.get() != 0 );
-        
     //  use specified resolution:
     setFreqResolution( resolutionHz );
     
@@ -382,33 +347,33 @@ Analyzer::configure( double resolutionHz, double windowWidthHz )
     
     //  the Kaiser window sidelobe level can be the same
     //  as the amplitude floor (except in positive dB):
-    setSidelobeLevel( - _imp->ampFloor );
+    setSidelobeLevel( - m_ampFloor );
     
     //  for the minimum frequency, below which no data is kept,
     //  use the frequency resolution by default (this makes 
     //  Lip happy, and is always safe?) and allow the client 
     //  to change it to anything at all.
-    setFreqFloor( _imp->freqResolution );
+    setFreqFloor( m_freqResolution );
     
     //  frequency drift in Hz is the maximum difference
     //  in frequency between consecutive Breakpoints in
     //  a Partial, by default, make it equal to one half
     //  the frequency resolution:
-    setFreqDrift( .5 * _imp->freqResolution );
+    setFreqDrift( .5 * m_freqResolution );
     
     //  hop time (in seconds) is the inverse of the
     //  window width....really. Smith and Serra (1990) cite 
     //  Allen (1977) saying: a good choice of hop is the window 
     //  length divided by the main lobe width in frequency samples,
     //  which turns out to be just the inverse of the width.
-    setHopTime( 1. / _imp->windowWidth );
+    setHopTime( 1. / m_windowWidth );
     
     //  crop time (in seconds) is the maximum allowable time
     //  correction, beyond which a reassigned spectral component
     //  is considered unreliable, and not considered eligible for
     //  Breakpoint formation in extractPeaks(). By default, use
     //  the hop time (should it be half that?):
-    setCropTime( _imp->hopTime );
+    setCropTime( m_hopTime );
     
     //  bandwidth association region width 
     //  defaults to 2 kHz, corresponding to 
@@ -418,7 +383,7 @@ Analyzer::configure( double resolutionHz, double windowWidthHz )
 #if defined(ESTIMATE_F0) && ESTIMATE_F0
     if ( 0 != mF0Builder.get() )
     {
-        //  configure the fundamental tracker using default 
+        //  (re)configure the fundamental tracker using default 
         //  parameters:
         buildFundamentalEnv( true );
     }
@@ -544,8 +509,8 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
     ReassignedSpectrum spectrum( window );
     
     //  configure the peak selection and partial formation policies:
-    SpectralPeakSelector selector( srate, _imp->freqResolution );
-    PartialBuilder builder( _imp->freqDrift, reference );
+    SpectralPeakSelector selector( srate, m_freqResolution );
+    PartialBuilder builder( m_freqDrift, reference );
     
     //  configure bw association policy, unless
     //  bandwidth association is disabled:
@@ -617,8 +582,8 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
             //  extract peaks from the spectrum, thin and 
             //  fade quiet peaks out over 10 dB:
             #define FADE 10.
-            Peaks & peaks = selector.extractPeaks( spectrum, _imp->freqFloor, _imp->cropTime ); 
-            Peaks::iterator rejected = selector.thinPeaks( _imp->ampFloor, FADE, currentFrameTime );
+            Peaks & peaks = selector.extractPeaks( spectrum, m_freqFloor, m_cropTime ); 
+            Peaks::iterator rejected = selector.thinPeaks( m_ampFloor, FADE, currentFrameTime );
 
             if ( associateBandwidth() )
             {
@@ -649,7 +614,7 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
             builder.formPartials( peaks, currentFrameTime );
             
             //  slide the analysis window:
-            winMiddle += long( _imp->hopTime * srate ); //  hop in samples, truncated
+            winMiddle += long( m_hopTime * srate ); //  hop in samples, truncated
 
         }   //  end of loop over short-time frames
         
@@ -685,7 +650,7 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
         }
         #endif
         
-        _imp->partials.splice( _imp->partials.end(), builder.partials() );
+        m_partials.splice( m_partials.end(), builder.partials() );
     }
     catch ( Exception & ex ) 
     {
@@ -705,7 +670,7 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
 double 
 Analyzer::ampFloor( void ) const 
 { 
-    return _imp->ampFloor; 
+    return m_ampFloor; 
 }
 
 // ---------------------------------------------------------------------------
@@ -719,7 +684,7 @@ Analyzer::ampFloor( void ) const
 bool 
 Analyzer::associateBandwidth( void ) const 
 { 
-    return _imp->bwRegionWidth > 0.; 
+    return m_bwRegionWidth > 0.; 
 }
 
 // ---------------------------------------------------------------------------
@@ -732,7 +697,7 @@ double
 Analyzer::bwRegionWidth( void ) const
 { 
     // debugger << "Analyzer::bwRegionWidth() is a deprecated member, and will be removed in a future Loris release." << endl;
-    return _imp->bwRegionWidth; 
+    return m_bwRegionWidth; 
 }
 
 // ---------------------------------------------------------------------------
@@ -747,7 +712,7 @@ double
 Analyzer::cropTime( void ) const 
 { 
     // debugger << "Analyzer::cropTime() is a deprecated member, and will be removed in a future Loris release." << endl;
-    return _imp->cropTime; 
+    return m_cropTime; 
 }
 
 // ---------------------------------------------------------------------------
@@ -759,7 +724,7 @@ Analyzer::cropTime( void ) const
 double 
 Analyzer::freqDrift( void ) const 
 { 
-    return _imp->freqDrift;
+    return m_freqDrift;
 }
 
 // ---------------------------------------------------------------------------
@@ -771,7 +736,7 @@ Analyzer::freqDrift( void ) const
 double 
 Analyzer::freqFloor( void ) const 
 { 
-    return _imp->freqFloor; 
+    return m_freqFloor; 
 }
 
 // ---------------------------------------------------------------------------
@@ -783,7 +748,7 @@ Analyzer::freqFloor( void ) const
 double 
 Analyzer::freqResolution( void ) const 
 { 
-    return _imp->freqResolution; 
+    return m_freqResolution; 
 }
 
 // ---------------------------------------------------------------------------
@@ -796,7 +761,7 @@ Analyzer::freqResolution( void ) const
 double 
 Analyzer::hopTime( void ) const 
 { 
-    return _imp->hopTime; 
+    return m_hopTime; 
 }
 
 // ---------------------------------------------------------------------------
@@ -812,7 +777,7 @@ Analyzer::hopTime( void ) const
 double 
 Analyzer::sidelobeLevel( void ) const 
 { 
-    return _imp->sidelobeLevel; 
+    return m_sidelobeLevel; 
 }
 
 // ---------------------------------------------------------------------------
@@ -824,7 +789,7 @@ Analyzer::sidelobeLevel( void ) const
 double 
 Analyzer::windowWidth( void ) const 
 { 
-    return _imp->windowWidth; 
+    return m_windowWidth; 
 }
 
 // -- parameter mutation --
@@ -848,7 +813,7 @@ void
 Analyzer::setAmpFloor( double x ) 
 { 
     VERIFY_ARG( setAmpFloor, x < 0 );
-    _imp->ampFloor = x; 
+    m_ampFloor = x; 
 }
 
 // ---------------------------------------------------------------------------
@@ -865,7 +830,7 @@ Analyzer::setBwRegionWidth( double x )
 { 
     VERIFY_ARG( setBwRegionWidth, x >= 0 );
    // debugger << "Analyzer::setBwRegionWidth() is a deprecated member, and will be removed in a future Loris release." << endl;
-    _imp->bwRegionWidth = x; 
+    m_bwRegionWidth = x; 
 }   
 
 // ---------------------------------------------------------------------------
@@ -883,7 +848,7 @@ Analyzer::setCropTime( double x )
 { 
     VERIFY_ARG( setCropTime, x > 0 );
    // debugger << "Analyzer::setCropTime() is a deprecated member, and will be removed in a future Loris release." << endl;
-    _imp->cropTime = x; 
+    m_cropTime = x; 
 }
 
 // ---------------------------------------------------------------------------
@@ -898,7 +863,7 @@ void
 Analyzer::setFreqDrift( double x ) 
 { 
     VERIFY_ARG( setFreqDrift, x > 0 );
-    _imp->freqDrift = x; 
+    m_freqDrift = x; 
 }
 
 // ---------------------------------------------------------------------------
@@ -913,7 +878,7 @@ void
 Analyzer::setFreqFloor( double x ) 
 { 
     VERIFY_ARG( setFreqFloor, x >= 0 );
-    _imp->freqFloor = x; 
+    m_freqFloor = x; 
 }
 
 // ---------------------------------------------------------------------------
@@ -929,7 +894,7 @@ void
 Analyzer::setFreqResolution( double x ) 
 { 
     VERIFY_ARG( setFreqResolution, x > 0 );
-    _imp->freqResolution = x; 
+    m_freqResolution = x; 
 }
 
 // ---------------------------------------------------------------------------
@@ -948,7 +913,7 @@ void
 Analyzer::setSidelobeLevel( double x ) 
 { 
     VERIFY_ARG( setSidelobeLevel, x > 0 );
-    _imp->sidelobeLevel = x; 
+    m_sidelobeLevel = x; 
 }
 
 // ---------------------------------------------------------------------------
@@ -963,7 +928,7 @@ void
 Analyzer::setHopTime( double x ) 
 { 
     VERIFY_ARG( setHopTime, x > 0 );
-    _imp->hopTime = x; 
+    m_hopTime = x; 
 }
 
 // ---------------------------------------------------------------------------
@@ -978,7 +943,7 @@ void
 Analyzer::setWindowWidth( double x ) 
 { 
     VERIFY_ARG( setWindowWidth, x > 0 );
-    _imp->windowWidth = x; 
+    m_windowWidth = x; 
 }
 
 // -- PartialList access --
@@ -992,7 +957,7 @@ Analyzer::setWindowWidth( double x )
 PartialList & 
 Analyzer::partials( void ) 
 { 
-    return _imp->partials; 
+    return m_partials; 
 }
 
 // ---------------------------------------------------------------------------
@@ -1004,7 +969,7 @@ Analyzer::partials( void )
 const PartialList & 
 Analyzer::partials( void ) const
 { 
-    return _imp->partials; 
+    return m_partials; 
 }
 
 #if defined(ESTIMATE_F0) && ESTIMATE_F0
@@ -1017,8 +982,8 @@ void Analyzer::buildFundamentalEnv( bool TF )
     if ( TF )
     {
         //  configure with default parameters
-        buildFundamentalEnv( _imp->freqResolution,
-    			             2 * _imp->freqResolution,
+        buildFundamentalEnv( m_freqResolution,
+    			             2 * m_freqResolution,
     			             -60, 
     			             8000 );
     }

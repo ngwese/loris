@@ -57,7 +57,6 @@
 //  begin namespace
 namespace Loris {
 
-class Analyzer_imp;
 class Envelope;
 class LinearEnvelopeBuilder;
 
@@ -344,6 +343,43 @@ public:
 
 private:
 
+    double m_freqResolution;  	//!  in Hz, minimum instantaneous frequency distance;
+                            	//!  this is the core parameter, others are, by default,
+                            	//!  computed from this one
+    
+    double m_ampFloor;        	//!  dB, relative to full amplitude sine wave, absolute
+                            	//!  amplitude threshold (negative)
+    
+    double m_windowWidth;     	//!  in Hz, width of main lobe; this might be more
+                            	//!  conveniently presented as window length, but
+                            	//!  the main lobe width more explicitly highlights
+                            	//!  the critical interaction with resolution
+    
+    double m_freqFloor;       	//!  lowest frequency (Hz) component extracted
+                            	//!  in spectral analysis
+    
+    double m_freqDrift;       	//!  the maximum frequency (Hz) difference between two 
+                            	//!  consecutive Breakpoints that will be linked to
+                            	//!  form a Partial
+    
+    double m_hopTime;         	//!  in seconds, time between analysis windows in
+                            	//!  successive spectral analyses
+    
+    double m_cropTime;        	//!  in seconds, maximum time correction for a spectral
+                            	//!  component to be considered reliable, and to be eligible
+                            	//!  for extraction and for Breakpoint formation
+    
+    double m_bwRegionWidth;   	//!  width in Hz of overlapping bandwidth 
+                            	//!  association regions, or zero if bandwidth association
+                            	//!  is disabled
+                                                        
+    double m_sidelobeLevel;   	//!  sidelobe attenutation level for the Kaiser analysis 
+                            	//!  window, in positive dB
+                            
+    PartialList m_partials;  	//!  collect Partials here
+    
+
+
     #if defined(ESTIMATE_RMS) && ESTIMATE_RMS
     LinearEnvelope mRmsEnv;
     #endif
@@ -358,7 +394,7 @@ private:
     std::auto_ptr< LinearEnvelopeBuilder > mAmpEnvBuilder;
     #endif
                 
-    std::auto_ptr< Analyzer_imp > _imp;     //! insulating implementation class
+   // std::auto_ptr< Analyzer_imp > _imp;     //! insulating implementation class
 
 };  //  end of class Analyzer
 
