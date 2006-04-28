@@ -37,6 +37,9 @@ cross-synthesis, the filtering of one sound by the
 time-varying spectrum of another. Can also be used to
 perform formant-corrected pitch shifting.
 
+- Resampler can now perform dense (Breakpoint every 
+interval) or sparse (Breakpoints only at intervals
+near to original Breakpoints) resampling.
 
 -------------------------------------------------------
 changes since 1.2 release:

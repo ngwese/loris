@@ -494,6 +494,7 @@ ReassignedSpectrum::reassignedBandwidth( long idx ) const
     bw = min( 1.0, bw );
 
 #else
+    idx = idx;
     double bw = 0;
 #endif
      
