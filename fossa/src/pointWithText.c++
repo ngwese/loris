@@ -220,22 +220,22 @@ void PointWithText::setPointText(){
 }
 
 // ---------------------------------------------------------------------------
-//      setMorph1
+//      setSound1
 // ---------------------------------------------------------------------------
 // Sets all GUI components depending on the first collection of sound to 
 // the new name and updates the view.
-void PointWithText::setMorph1(QString& name){
+void PointWithText::setSound1(QString& name){
   partial1 = name;
   setPointText();
   canvas()->update();
 }
   
 // ---------------------------------------------------------------------------
-//      setMorph2
+//      setSound2
 // ---------------------------------------------------------------------------
 // Sets all GUI components depending on the second collection of sound to 
 // the new name and updates the view.
-void PointWithText::setMorph2(QString& name){
+void PointWithText::setSound2(QString& name){
   partial2 = name;
   setPointText();
   canvas()->update();

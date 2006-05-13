@@ -46,8 +46,8 @@ MorphArea::MorphArea(
   state = all;
   newPointIndex = 5;
   soundList = pList;
-  leftMargin = 30;
-  rightMargin = 30;
+  leftMargin = 45;
+  rightMargin = 45;
   topMargin = 30;
   bottomMargin = 30;
   
@@ -153,10 +153,10 @@ void MorphArea::contentsMousePressEvent(QMouseEvent* e){
           }
         }
       
-      if(moving.isEmpty()){
-        // the user clicked in an empty area - add point.
-        addPoint(e->x(), e->y()); 
-      }
+        if(moving.isEmpty()){
+          // the user clicked in an empty area - add point.
+          addPoint(e->x(), e->y()); 
+        }
      
       break;
       
@@ -676,19 +676,19 @@ void MorphArea::setMorph1(int Pos, QString& name){
   morph1 = name;
   if(!aList.isEmpty()){
     for(point = aList.first(); point!=0; point = aList.next()){
-      point->setMorph1(name);
+      point->setSound1(name);
     }
   }
   
   if(!fList.isEmpty()){
     for(point = fList.first(); point!=0; point = fList.next()){
-      point->setMorph1(name);
+      point->setSound1(name);
     }
   }
 
   if(!nList.isEmpty()){
     for(point = nList.first(); point!=0; point = nList.next()){
-      point->setMorph1(name);
+      point->setSound1(name);
     }
   }
 
@@ -707,19 +707,19 @@ void MorphArea::setMorph2(int Pos, QString& name){
   morph2 = name;
   if(!aList.isEmpty()){
     for(point = aList.first(); point!=0; point = aList.next()){
-      point->setMorph2(name);
+      point->setSound2(name);
     }
   }
   
   if(!fList.isEmpty()){
     for(point = fList.first(); point!=0; point = fList.next()){
-      point->setMorph2(name);
+      point->setSound2(name);
     }
   }
 
   if(!nList.isEmpty()){
     for(point = nList.first(); point!=0; point = nList.next()){
-      point->setMorph2(name);
+      point->setSound2(name);
     }
   }
 

@@ -59,9 +59,9 @@
 #include <qstring.h>
 
 
-// ---------------------------------------------------------------------------
-//	CurrentSoundView constructor
-// ---------------------------------------------------------------------------
+/* ---------------------------------------------------------------------------
+	CurrentSoundView constructor
+--------------------------------------------------------------------------- */
 CurrentSoundView::CurrentSoundView(
 	QWidget*	parent,
 	char*		name,
@@ -72,10 +72,10 @@ CurrentSoundView::CurrentSoundView(
   setConnections();
 }
 
-// ---------------------------------------------------------------------------
-//	setGui
-// ---------------------------------------------------------------------------
-// Basically just adds the gui components to the class.
+/* ---------------------------------------------------------------------------
+	setGui
+---------------------------------------------------------------------------
+Basically just adds the gui components to the class. */
 void CurrentSoundView::setGui(){
   layout	= new QGridLayout(this);
   tab		= new QTabWidget(this, "tab");
@@ -92,18 +92,18 @@ void CurrentSoundView::setGui(){
   layout->addWidget(tab, 1, 0);
 }
 
-// ---------------------------------------------------------------------------
-//	setConnections
-// ---------------------------------------------------------------------------
+/* ---------------------------------------------------------------------------
+	setConnections
+--------------------------------------------------------------------------- */
 void CurrentSoundView::setConnections(){
   connect(soundList, SIGNAL(currentChanged()), this, SLOT(redraw()));
   connect(tab, SIGNAL(currentChanged(QWidget*)), this, SLOT(update()));
 }
 
-// ---------------------------------------------------------------------------
-//	update
-// ---------------------------------------------------------------------------
-// Update tabs and set correct tab to be selected and visible.
+/* ---------------------------------------------------------------------------
+	update
+---------------------------------------------------------------------------
+Update tabs and set correct tab to be selected and visible. */
 void CurrentSoundView::update(){
   int currentType = tab->currentPageIndex();
   
@@ -114,10 +114,10 @@ void CurrentSoundView::update(){
   }
 }
 
-// ---------------------------------------------------------------------------
-//	redraw
-// ---------------------------------------------------------------------------
-// Same as update, but redo the plot as well.
+/* ---------------------------------------------------------------------------
+	redraw
+---------------------------------------------------------------------------
+Same as update, but redo the plot as well. */
 void CurrentSoundView::redraw(){
   int currentType = tab->currentPageIndex();
   
@@ -137,9 +137,9 @@ void CurrentSoundView::redraw(){
 /*********************************************************************************/
 
 
-// ---------------------------------------------------------------------------
-//	Tab constructor
-// ---------------------------------------------------------------------------
+/* ---------------------------------------------------------------------------
+	Tab constructor
+--------------------------------------------------------------------------- */
 Tab::Tab(
 	QWidget*	parent,
 	char*		name,
@@ -155,9 +155,7 @@ Tab::Tab(
   canvas  = new QCanvas(800, 450);
 
   setGui();
-  connect(okPushButton, SIGNAL(clicked()), this, SLOT(shiftValues())); 
-  connect(pSelect, SIGNAL(valueChanged(int)), pIndicator, SLOT(display(int)));
-  connect(pSelect, SIGNAL(valueChanged(int)), this, SLOT(hilight(int))); 
+  setConnections();
 
   switch( type ){
     case empty:
@@ -184,17 +182,17 @@ Tab::Tab(
 
 }
 
-// ---------------------------------------------------------------------------
-//	hilight
-// ---------------------------------------------------------------------------
-// Wrapper for partialsView->hilight()
+/* ---------------------------------------------------------------------------
+	hilight
+---------------------------------------------------------------------------
+Wrapper for partialsView->hilight() */
 void Tab::hilight(int p){ partialsView->hilight(p-1); }
 
-// ---------------------------------------------------------------------------
-//	update
-// ---------------------------------------------------------------------------
-// The purpose here is really to refresh the text fields in the tab. This is
-// called whenever the user clicks fr
+/* ---------------------------------------------------------------------------
+	update
+---------------------------------------------------------------------------
+The purpose here is really to refresh the text fields in the tab. This is
+called whenever the user clicks fr */
 void Tab::update(bool redraw){
 
   /**********************/
@@ -230,6 +228,17 @@ void Tab::update(bool redraw){
   durationText->setText(duration);
   nrOfPartialsText->setText(nrOfPartials);
 
+  /*Make the slider visible or invisible depending on whether the current
+   *sound is channelized and distilled. */
+  if( ! soundList->isEmpty() &&
+	soundList->isCurrentChannelized() && soundList->isCurrentDistilled() ){
+    pSelect->show();
+    pIndicator->show();
+  } else {
+    pSelect->hide();
+    pIndicator->hide();
+  }
+
   //Check that the plot needs to be updated.
   if(soundList->isEmpty() || soundList->getCurrentIndex() == -1){
     pSelect->setRange(0, 0);
@@ -250,10 +259,19 @@ void Tab::update(bool redraw){
   }
 }
 
-// ---------------------------------------------------------------------------
-//	setGui
-// ---------------------------------------------------------------------------
-// sets all gui components of the Tab class
+/* ---------------------------------------------------------------------------
+	setConnections
+--------------------------------------------------------------------------- */
+void Tab::setConnections(){
+  connect(okPushButton, SIGNAL(clicked()), this, SLOT(shiftValues())); 
+  connect(pSelect, SIGNAL(valueChanged(int)), pIndicator, SLOT(display(int)));
+  connect(pSelect, SIGNAL(valueChanged(int)), this, SLOT(hilight(int))); 
+}
+
+/* ---------------------------------------------------------------------------
+	setGui
+---------------------------------------------------------------------------
+sets all gui components of the Tab class */
 void Tab::setGui(){
   QSpacerItem* spacer;
   QSpacerItem* spacer_5;
@@ -382,15 +400,20 @@ void Tab::setGui(){
   okPushButton->setMaximumSize( QSize( 30, 25 ) );
   okPushButton->setText( tr( "OK" ) );
 
+
   /*Set up the slider which selects which partial to hilight.*/
   pSelect = new QSlider(Horizontal, infoBox, "partialSelect");
   pSelect->setRange(0,0);
   pSelect->setValue(0);
+  pSelect->hide();
   pIndicator = new QLCDNumber( 4, infoBox, "partialIndicator" );
+  pIndicator->hide();
+
 
   /* ****************************************
    * The tab has 3 parts - the infobox in top with all the labels, a spacer,
-   * and the SoundPlot.
+   * and the SoundPlot. They've already been allocated, now we just put them
+   * in the layout.
   */
   infoBoxLayout->addWidget( durationText, 0, 0 );
   infoBoxLayout->addItem( spacer_5, 0, 2 );
@@ -430,7 +453,8 @@ void Tab::setGui(){
 	box,
 	"partialsView",
 	soundList,
-	empty
+	empty,
+	-1
   );
   partialsView->setMinimumSize(QSize(5+canvas->width(), 5+canvas->height()));
   partialsView->setMaximumSize(QSize(5+canvas->width(), 5+canvas->height()));
@@ -448,10 +472,10 @@ void Tab::setGui(){
 }
 
 
-// ---------------------------------------------------------------------------
-//      shiftValues
-// ---------------------------------------------------------------------------
-// shift the amplitude values of current sound in soundList.
+/* ---------------------------------------------------------------------------
+	shiftValues
+---------------------------------------------------------------------------
+shift the amplitude values of current sound in soundList. */
 void Tab::shiftValues(){
   switch(type){
     case amplitude:

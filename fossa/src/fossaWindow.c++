@@ -76,6 +76,8 @@ FossaWindow::FossaWindow(
   newNameDialog		= 0;
   morphDialog		= 0;
   exportDialog		= 0;
+  dilateDialog		= 0;
+
   // later versions might want to implement a toolbar.
   // QWhatsThis::whatsThisButton(toolbar);
 
@@ -380,7 +382,6 @@ void FossaWindow::openMorphDialog(){
 // ---------------------------------------------------------------------------
 //  opens a dialog for dilating one sound onto another.
 void FossaWindow::openDilateDialog(){
-/*
   if(!soundList->isEmpty()){
     if(dilateDialog) delete dilateDialog;
 
@@ -391,7 +392,6 @@ void FossaWindow::openDilateDialog(){
 	statusbar
     );
   }
-*/
 }
 
 // ---------------------------------------------------------------------------

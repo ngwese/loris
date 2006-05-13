@@ -26,9 +26,11 @@
  *
  * Chris Hinrichs, 1/10/2006
  *
+ *
  */
 
-#include "soundList.h"
+
+
 #include <qdialog.h>
 
 class QGridLayout;
@@ -53,7 +55,6 @@ allows the user to dilate (timewise)one sound onto another one. The user
 selects points in time by clicking on the dilateArea. The points are then matched
 from one sound to the other.
 */
-/*
 class DilateDialog:public QDialog{
   Q_OBJECT
 
@@ -65,32 +66,48 @@ class DilateDialog:public QDialog{
 	QStatusBar*	status
     );
 
+  public slots:
+    void		dilate();
+
   private slots:
     void                updateDilate1(int pos);
     void                updateDilate2(int pos);
 
 
   private:
-    QCanvas*		canvas;
+    QCanvas*		canvas1;
+    QCanvas*		canvas2;
     QStatusBar*		statusbar;
     SoundList*		soundList;
-    DilateArea*		dilateArea;
+
+    //GUI elements
+    DilateArea*		dilateArea1;
+    DilateArea*		dilateArea2;
     QGridLayout*	dialogLayout;
+    QGroupBox*		dilateBox;
+    QGridLayout*	dilateBoxLayout;
+    QGroupBox*		soundBox;
+    QGridLayout*	soundBoxLayout;
 
     QLabel*		sound1Label;
     QLabel*		sound2Label;
     QComboBox*		sound1List;
     QComboBox*		sound2List;
 
+    QLabel*		name1Label;
+    QLabel*		name2Label;
+
     QPushButton*	dilateButton;
     QPushButton*	cancelButton;
 
     QString		sound1;
     QString		sound2;
+    int			dilatePos1;
+    int			dilatePos2;
 
-    void		setConnections;
-    void		setLists;
-    void		setGui;
+    void		setConnections();
+    void		setLists();
+    void		setGui();
 };
-*/
+
 #endif // DILATE_DIALOG_H

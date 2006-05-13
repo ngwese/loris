@@ -19,7 +19,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *
- * The DilateArea is a 
+ * The DilateArea is a QCanvasView that shows the plot of a sound, and lets the
+ * user set and move breakpoints by clicking in it.
  *
  * dilateArea.c++
  *
@@ -32,19 +33,35 @@
 #endif
 
 #include "dilateArea.h"
+#include "currentSoundView.h"
+#include <qcanvas.h>
+
 using namespace Loris;
 
-/*
---------------------------------------------------------------------------------
+DilatePoint::DilatePoint(
+	QCanvas* canvas,
+	int x,
+	int height,
+	int bottomMargin
+):QCanvasLine(canvas){
+  setPoints(0, height, 0, bottomMargin);
+  move(x, 0);
+}
+
+/* --------------------------------------------------------------------------------
 	DilateArea construtor
 --------------------------------------------------------------------------------
-*/
+It might be a bit confusing that DilateArea IS A QCanvasView and yet also 
+HAS A SoundPlot which IS also A QCanvasView. This works because more than one
+QCanvasView can view the same QCanvas; SoundPlot can clutter it up with points
+and lines while DilateArea manages the BreakPoints. Or at least it's supposed to.*/
 DilateArea::DilateArea(
 	QCanvas*	canvas,
 	QWidget*	parent,
 	char*		name,
 	SoundList*	pList,
-	QStatusBar*	status
+	QStatusBar*	status,
+	int		which
 ):QCanvasView(canvas, parent, name){
   statusbar = status;
   soundList = pList;
@@ -57,139 +74,152 @@ DilateArea::DilateArea(
   width = canvas->width();
   height = canvas->height();
 
-  lAxis = new VerticalAxis(
-	canvas,
-	leftMargin,
-	height - bottomMargin,
-	"Amplitude",
-	height - bottomMargin - topMargin,
-	30,
-	100,
-	0,
-	100,
-	true
+  dilatePlot = new SoundPlot(
+    canvas,
+    this,
+    "dilatePlot",
+    pList,
+    Tab::empty,
+    -1
   );
 
-  rAxis = new VerticalAxis(
-	canvas,
-	width - rightMargin,
-	height - bottomMargin,
-	"Amplitude",
-	height - bottomMargin - topMargin,
-	30,
-	100,
-	0,
-	100,
-	false
+  dilatePlot->setMinimumSize(QSize(canvas->width() + 4, canvas->height() + 4));
+  dilatePlot->setMaximumSize(QSize(canvas->width() + 4, canvas->height() + 4));
+  dilatePlot->setBackgroundColor("white");
+  dilatePlot->setSizePolicy(
+        QSizePolicy(
+                (QSizePolicy::SizeType)0,
+                (QSizePolicy::SizeType)0,
+                dilatePlot->sizePolicy().hasHeightForWidth()
+        )
   );
 
-  
-  setHorizontalAxis();
+  dilatePlot->hide();
 
-};
-
-
-/*
---------------------------------------------------------------------------------
-	setHorizontalAxis
---------------------------------------------------------------------------------
-Instead of just having one axis over the life of the DilateArea, the time axis
-might have to grow or shrink depending on which sound is shown.
-*/
-void MorphArea::setHorizontalAxis(){
-  int time = 0;
-  int time1 = soundList->at(dilate1Index)->getDuration();
-  int time2 = soundList->at(dilate2Index)->getDuration();
-
-  time = (time1 > time2) ? time1 : time2;
-
-  if(tAxis){
-    delete tAxis;
-  }
-
-  tAxis = new HorizontalAxis(
-	canvas,
-	leftMargin,
-	height - bottomMargin,
-	"time",
-	width - rightMargin - leftMargin,
-	30,
-	100,
-	0,
-	time
-  );
-
-  tAxis->show();
-  canvas->update();
-}
-/*
---------------------------------------------------------------------------------
-	setSound1
---------------------------------------------------------------------------------
-Tells the DilateArea to update itself to the first sound.
-*/
-void DilateArea::setSound1(QString& name){
-  sound1 = name;
-
-  if(!dilateList.isEmpty()){
-    for(point = dilateList.first();
-	point != 0;
-	point = dilateList.next()
-    ){
-      point->setSound1(name);
-    }
-  }
-
-  setHorizontalAxis();
-}
-
-/*
---------------------------------------------------------------------------------
-	setSound2
---------------------------------------------------------------------------------
-Tells the DilateArea to update itself to the first sound.
-*/
-void DilateArea::setSound2(QString& name){
-  sound2 = name;
-
-  if(!dilateList.isEmpty()){
-    for(point = dilateList.first();
-	point != 0;
-	point = dilateList.next()
-    ){
-      point->setSound2(name);
-    }
-  }
-
-  setHorizontalAxis();
 }
 
 
+/* --------------------------------------------------------------------------------
+	~DilateArea
+-------------------------------------------------------------------------------- */
+DilateArea::~DilateArea(){
+}
 
-/*
+
+/* --------------------------------------------------------------------------------
+	setSound
 --------------------------------------------------------------------------------
+Tells the DilateArea to update itself to the specified sound.  */
+void DilateArea::setSound(QString& name, int pos){
+  sound = name;
+
+  //Next update the soundPlot.
+  dilatePlot->setSelected(pos);
+  dilatePlot->setType(Tab::amplitude);	//This automatically updates the plot.
+}
+
+
+/* --------------------------------------------------------------------------------
+	addBreakPoint
+--------------------------------------------------------------------------------
+Create a BreakPoint for matching the 2 sounds against each other.*/
+void DilateArea::addBreakPoint(int x, int y){
+  DilatePoint* newPoint = new DilatePoint(
+	canvas(),
+	x,
+	height-topMargin,
+	bottomMargin
+  );
+
+  moving.push_front(newPoint);
+  newPoint->show();
+}
+
+/* --------------------------------------------------------------------------------
+	inArea
+-------------------------------------------------------------------------------- */
+bool DilateArea::inArea(int x, int y){
+  bool inX = x+1 >= leftMargin && x <= width-rightMargin;
+  bool inY = y+1 >= topMargin  && y <= height-bottomMargin;
+  return inX && inY;
+}
+
+
+/* --------------------------------------------------------------------------------
 	contentsMousePressEvent
---------------------------------------------------------------------------------
-*/
-void DilateArea::contentsMousePressEvent(QMouseEvent* e){}
+-------------------------------------------------------------------------------- */
+void DilateArea::contentsMousePressEvent(QMouseEvent* e){
+  int found = 0;
+  QCanvasItemList::iterator it;
+  ButtonState buttonState;
+  QCanvasItemList allItemsHit;
 
-/*
---------------------------------------------------------------------------------
+  if( inArea(e->x(), e->y()) ){
+    buttonState = e->button();
+
+    //Get all items colliding with a vertical line where the click occurred.
+    allItemsHit = canvas()->collisions(
+	QRect( e->x(), height, 3, height )
+    );
+    moving.clear();
+
+    //If the user left-clicked on a point, drag it around with the mouse.
+    //If the user right-clicked on a point, remove it.
+    if (!allItemsHit.isEmpty()){
+      for(it = allItemsHit.begin();
+          it != allItemsHit.end();
+          it++)
+        if((*it)->rtti() == DilatePoint::rttiNr)
+          switch(buttonState){
+            case LeftButton:
+              moving.push_front( *it );
+              found++;
+              printf("Moving point at %d, %d.\n", e->x(), e->y());
+              break;
+
+            case RightButton:
+              dilateList.remove( *it );
+              delete *it;
+              printf("Removing point at %d, %d.\n", e->x(), e->y());
+              break;
+          }
+
+      //There could have been collisions with datapoints, but not with any lines.
+      if(!found && buttonState == LeftButton) addBreakPoint(e->x(), e->y());
+    } else if(buttonState == LeftButton){
+      //If there is no point there, create one.
+      addBreakPoint(e->x(), e->y());
+    }
+
+    canvas()->update();
+  }
+}
+
+/* --------------------------------------------------------------------------------
 	contentsMouseMoveEvent
---------------------------------------------------------------------------------
-*/
-void DilateArea::contentsMouseMoveEvent(QMouseEvent* e){}
+-------------------------------------------------------------------------------- */
+void DilateArea::contentsMouseMoveEvent(QMouseEvent* e){
+  std::list<QCanvasItem*>::iterator it;
 
-/*
---------------------------------------------------------------------------------
+  //Typically there should only be one moving item, but there may be more...
+  if(inArea(e->x(), e->y()))
+    for(it = moving.begin();
+        it != moving.end();
+        it++
+    )
+      (*it)->move(e->x(), 0);
+
+  canvas()->update();
+}
+
+/* --------------------------------------------------------------------------------
 	contentsMouseReleaseEvent
---------------------------------------------------------------------------------
-*/
-void DilateArea::contentsMouseReleaseEvent(QMouseEvent* e){}
+-------------------------------------------------------------------------------- */
+void DilateArea::contentsMouseReleaseEvent(QMouseEvent* e){
+  moving.clear();
+}
 
-/*
---------------------------------------------------------------------------------
+/* --------------------------------------------------------------------------------
 	dilate
---------------------------------------------------------------------------------
-*/
+-------------------------------------------------------------------------------- */
 void DilateArea::dilate(){}

@@ -48,27 +48,28 @@
 
 using std::list;
 
-// ---------------------------------------------------------------------------
-//      SoundPlot constructor
-// ---------------------------------------------------------------------------
-// Takes a of sound to be plotted over time, and the maximum x and y value
+/* ---------------------------------------------------------------------------
+	SoundPlot constructor
+---------------------------------------------------------------------------
+Takes a of sound to be plotted over time, and the maximum x and y value */
 SoundPlot::SoundPlot(
 	QCanvas*		c,
 	QWidget*		parent,
 	char*			name,
 	SoundList*		pList,
-	Tab::TabType		t
+	Tab::TabType		t,
+	int			sel
 ):QCanvasView(c, parent, name){
   canvas	= c;
   soundList	= pList;
   type		= t;
 
-  /*For some reason, without this delete is called on NULL resulting in SIGSEGV.*/
+  /*Without this initialization delete could be called on uninitialized values.*/
   pixmap	= 0;
   lAxis		= 0;
   bAxis		= 0;
 
-  hilighted	= -1;
+  selected	= sel;
 
   leftMargin	= 45;
   rightMargin	= 10;
@@ -93,46 +94,85 @@ SoundPlot::SoundPlot(
     case Tab::empty:
       text = "";
       break;
-
   }
 
-  //On startup there has to be an empty Plot. Just in case, though try updating.
+  //On startup there has to be an empty Plot. Just in case though, try updating.
   if( type != Tab::empty ){
     this->updatePlot();
   }
 
-  setBackgroundMode(Qt::FixedPixmap);
+//  setBackgroundMode(Qt::FixedPixmap);
 }
 
-// ---------------------------------------------------------------------------
-//	getType
-// ---------------------------------------------------------------------------
-Tab::TabType SoundPlot::getType(){
-  return type;
+/* ---------------------------------------------------------------------------
+	contentsMousePressEvent
+---------------------------------------------------------------------------
+Just pass the event on to the DilateArea if one is utilizing this plot.*/
+void SoundPlot::contentsMousePressEvent(QMouseEvent* e){
+//  if(selected >= 0);
 }
 
-// ---------------------------------------------------------------------------
-//	setType
-// ---------------------------------------------------------------------------
-// If the type changes, then redraw the plot. As of 4/9/06, this is the
-// only entry point to updatePlot...
+
+/* ---------------------------------------------------------------------------
+	contentsMouseMoveEvent
+---------------------------------------------------------------------------
+Just pass the event on to the DilateArea if one is utilizing this plot.*/
+void SoundPlot::contentsMouseMoveEvent(QMouseEvent* e){
+//  if(selected >= 0);
+}
+
+
+/* ---------------------------------------------------------------------------
+	contentsMouseReleaseEvent
+---------------------------------------------------------------------------
+Just pass the event on to the DilateArea if one is utilizing this plot.*/
+void SoundPlot::contentsMouseReleaseEvent(QMouseEvent* e){
+//  if(selected >= 0);
+}
+
+
+/* ---------------------------------------------------------------------------
+	setSelected
+---------------------------------------------------------------------------
+Tell the SoundPlot which sound in the SoundList to plot, if other than the
+current.  */
+void SoundPlot::setSelected(int sel){
+  selected = sel;
+}
+
+/* ---------------------------------------------------------------------------
+	getSelected
+--------------------------------------------------------------------------- */
+int SoundPlot::getSelected(){ return selected; }
+
+
+/* ---------------------------------------------------------------------------
+	setType
+---------------------------------------------------------------------------
+If the type changes, then redraw the plot. As of 4/9/06, this is the
+only entry point to updatePlot...  */
 void SoundPlot::setType(Tab::TabType t){
   type = t;
   updatePlot();
 }
 
-// ---------------------------------------------------------------------------
-//	getPixmap
-// ---------------------------------------------------------------------------
-// return the SountPixmap object.
-QPixmap* SoundPlot::getPixmap(){
-  return pixmap;
-}
+/* ---------------------------------------------------------------------------
+	getType
+--------------------------------------------------------------------------- */
+Tab::TabType SoundPlot::getType(){ return type; }
 
-// ---------------------------------------------------------------------------
-//	clearAll
-// ---------------------------------------------------------------------------
-// Clear all QCanvasItems from the canvas.
+
+/* ---------------------------------------------------------------------------
+	getPixmap
+---------------------------------------------------------------------------
+return the SountPixmap object.  */
+QPixmap* SoundPlot::getPixmap(){ return pixmap; }
+
+
+/* ---------------------------------------------------------------------------
+	clearAll
+---------------------------------------------------------------------------
+Clear all QCanvasItems from the canvas.  */
 void SoundPlot::clearAll(){
   QCanvasItemList list = canvas->allItems();
   QCanvasItemList::Iterator  it = list.begin();
@@ -140,40 +180,57 @@ void SoundPlot::clearAll(){
     if ( *it )
       delete *it;
   }
+
+  canvas->update();
 }
 
-// ---------------------------------------------------------------------------
-//	clearHilighted
-// ---------------------------------------------------------------------------
-// Redraw the previously hilighted partial with regular lines.
+/* ---------------------------------------------------------------------------
+	clearHilighted
+---------------------------------------------------------------------------
+Redraw the previously hilighted partial with regular lines.  */
 void SoundPlot::clearHilighted(){
   QCanvasItemList list = canvas->allItems();
-  QCanvasItemList::Iterator it = list.at(hilighted);
+  QCanvasItemList::Iterator  it = list.begin();
+  for (; it != list.end(); ++it) {
+    if ( (*it)->rtti() == QCanvasItem::Rtti_Line )
+      delete *it;
+  }
 
-  if(*it ) delete *it;
+  canvas->update();
 }
 
-// ---------------------------------------------------------------------------
-//	hilight
-// ---------------------------------------------------------------------------
-// Use the QSlider to select a partial to hilight.
+/* ---------------------------------------------------------------------------
+	hilight
+---------------------------------------------------------------------------
+Use the QSlider to select a partial to hilight.  */
 void SoundPlot::hilight(int p){
-  std::list<Loris::Partial>*  partialList = soundList->getCurrentPartials();
+  std::list<Loris::Partial>*  partialList;
   QCanvasLine* hLine;
 
   list<Loris::Partial>::const_iterator it;
   Partial_ConstIterator pIt;
   int i;
 
+  if(selected > soundList->getLength()){
+    printf(
+	"SoundPlot: selected index %d greater than SoundList length.\n",
+	selected
+    );
+    exit(-1);
+  }
+  if(selected < 0) partialList = soundList->getCurrentPartials();
+  else partialList = soundList->getSound(selected)->getPartials();
+
   double x, y;
   double lastX, lastY;
 
-//  if( hilighted >= 0 ) clearHilighted();
 
   if( p >= 0 && type != Tab::empty && ! soundList->isEmpty() ){
-    QPen ampLinePen(Qt::red);
-    QPen freqLinePen(Qt::green);
-    QPen bwLinePen(Qt::blue);
+    QPen ampLinePen(Qt::darkRed);
+    QPen freqLinePen(Qt::darkGreen);
+    QPen bwLinePen(Qt::darkBlue);
+
+    clearHilighted();
 
     /*Have to manually advance the iterator because std::list does not support at()
      * like QList does.*/
@@ -195,6 +252,8 @@ void SoundPlot::hilight(int p){
           hLine->setPoints((int)lastX, (int)lastY, (int)x, (int)y);
           hLine->show();
 
+          highlines.append(hLine);
+
           lastX = x;
           lastY = y;
         }
@@ -212,6 +271,8 @@ void SoundPlot::hilight(int p){
           hLine->setPen(freqLinePen);
           hLine->setPoints((int)lastX, (int)lastY, (int)x, (int)y);
           hLine->show();
+
+          highlines.append(hLine);
 
           lastX = x;
           lastY = y;
@@ -231,6 +292,8 @@ void SoundPlot::hilight(int p){
           hLine->setPoints((int)lastX, (int)lastY, (int)x, (int)y);
           hLine->show();
 
+          highlines.append(hLine);
+
           lastX = x;
           lastY = y;
         }
@@ -243,11 +306,14 @@ void SoundPlot::hilight(int p){
   
 }
 
-// ---------------------------------------------------------------------------
-//	updatePlot
-// ---------------------------------------------------------------------------
-// Create a pixmap, have it plot its partials, and save it for later.
+/* ---------------------------------------------------------------------------
+	updatePlot
+---------------------------------------------------------------------------
+Create a pixmap, have it plot its partials, and save it for later.  */
 void SoundPlot::updatePlot(){
+  double maxX;
+  double maxY;
+
   /*Start off by getting rid of the graphical items.*/
   if(lAxis){
     delete lAxis;
@@ -281,8 +347,23 @@ void SoundPlot::updatePlot(){
   canvas->setBackgroundPixmap( *pixmap );
 */
 
-  double maxX = soundList->getCurrentDuration();
-  double maxY = soundList->getCurrentMax((Sound::ValType)type);
+  /*If there is a selected value use that one, otherwise use the soundList
+	current sound.*/
+  if(selected < 0){
+    maxX = soundList->getCurrentDuration();
+    maxY = soundList->getCurrentMax((Sound::ValType)type);
+  } else {
+    if(selected > soundList->getLength()){
+      printf(
+	"SoundPlot: selected index %d greater than SoundList length.\n",
+	selected
+      );
+      exit(-1);
+    }
+
+    maxX = soundList->getSound(selected)->getDuration();
+    maxY = soundList->getSound(selected)->getMax((Sound::ValType)type);
+  }
 
   horizontalIndex = maxX / (width() - leftMargin - rightMargin);
   verticalIndex = maxY / (height() - topMargin - bottomMargin);
@@ -298,7 +379,7 @@ void SoundPlot::updatePlot(){
         text,
         height()-bottomMargin-topMargin,
         30,
-        101,
+        canvas->height() / 5,
         0.0,
         maxY,
         true,
@@ -313,7 +394,7 @@ void SoundPlot::updatePlot(){
         "time",
         width()-rightMargin-leftMargin,
         30,
-        101,
+        canvas->height() / 5,
         0.0,
         maxX,
         false,
@@ -326,51 +407,64 @@ void SoundPlot::updatePlot(){
   canvas->update();
 }
 
-// ---------------------------------------------------------------------------
-//      toX
-// ---------------------------------------------------------------------------
-// Translates an actual time value into the corresponding value on the pixmap
-// into a pixel coordinate.
+/* ---------------------------------------------------------------------------
+	toX
+---------------------------------------------------------------------------
+Translates an actual time value into the corresponding value on the pixmap
+into a pixel coordinate.  */
 double SoundPlot::toX(double time){
   return (time / horizontalIndex)  + (double)leftMargin;
 }
 
-// ---------------------------------------------------------------------------
-//      toY
-// ---------------------------------------------------------------------------
-// Translates an actual y value into the corresponding value on the pixmap
-// into a pixel coordinate.
+/* ---------------------------------------------------------------------------
+	toY
+---------------------------------------------------------------------------
+Translates an actual y value into the corresponding value on the pixmap
+into a pixel coordinate.  */
 double SoundPlot::toY(double value){
   return height() - (value / verticalIndex) - (double)bottomMargin;
 }
 
-// ---------------------------------------------------------------------------
-//	plotPartials
-// ---------------------------------------------------------------------------
-// Do the work of plotting the partials as QCanvasRectangles with lines 
-// between them.
+/* ---------------------------------------------------------------------------
+	plotPartials
+---------------------------------------------------------------------------
+Do the work of plotting the partials as QCanvasRectangles with lines 
+between them.  */
 void SoundPlot::plotPartials(){
-  std::list<Loris::Partial>*
-                        partialList = soundList->getCurrentPartials();
+  std::list<Loris::Partial>* partialList;
 
   list<Loris::Partial>::const_iterator it;
   Partial_ConstIterator pIt;
 
   QCanvasRectangle* rect;
   QCanvasLine* line;
-  QPen ampPen(Qt::darkRed);
-  QPen ampLinePen(Qt::red);
+  QPen ampLinePen(Qt::darkRed);
+  QPen ampPen(Qt::red);
 
-  QPen freqPen(Qt::darkGreen);
-  QPen freqLinePen(Qt::green);
+  QPen freqLinePen(Qt::darkGreen);
+  QPen freqPen(Qt::green);
 
-  QPen bwPen(Qt::darkBlue);
-  QPen bwLinePen(Qt::blue);
+  QPen bwLinePen(Qt::darkBlue);
+  QPen bwPen(Qt::blue);
+
+  if(selected > soundList->getLength()){
+    printf(
+	"SoundPlot: selected index %d greater than SoundList length.\n",
+	selected
+    );
+    exit(-1);
+  }
+  if(selected < 0) partialList = soundList->getCurrentPartials();
+  else partialList = soundList->getSound(selected)->getPartials();
 
   double x;
   double y;
   double lastX;
   double lastY;
+
+  int drawLines = 
+	(selected < 0 && ! soundList->isCurrentDistilled()) ||
+	(selected >= 0 && ! soundList->getSound(selected)->isDistilled());
 
   if( type == Tab::empty ) return;
 
@@ -401,7 +495,7 @@ void SoundPlot::plotPartials(){
           rect->show();
 
           // draw a read line connecting breakpoints
-          if(! soundList->isCurrentDistilled() ){
+          if( drawLines ){
             line = new QCanvasLine(canvas);
             line->setPen(ampLinePen);
             line->setPoints((int)lastX, (int)lastY, (int)x, (int)y);
@@ -432,7 +526,7 @@ void SoundPlot::plotPartials(){
           rect->show();
 
           // draw a read line connecting breakpoints
-          if(! soundList->isCurrentDistilled() ){
+          if( drawLines ){
             line = new QCanvasLine(canvas);
             line->setPen(freqLinePen);
             line->setPoints((int)lastX, (int)lastY, (int)x, (int)y);
@@ -463,7 +557,7 @@ void SoundPlot::plotPartials(){
           rect->show();
 
           // draw a read line connecting breakpoints
-          if(! soundList->isCurrentDistilled() ){
+          if( drawLines ){
             line = new QCanvasLine(canvas);
             line->setPen(bwLinePen);
             line->setPoints((int)lastX, (int)lastY, (int)x, (int)y);
@@ -479,9 +573,7 @@ void SoundPlot::plotPartials(){
   }
 }
 
-// ---------------------------------------------------------------------------
-//	isEmpty
-// ---------------------------------------------------------------------------
-bool SoundPlot::isEmpty(){
-  return type == Tab::empty;
-}
+/* ---------------------------------------------------------------------------
+	isEmpty
+--------------------------------------------------------------------------- */
+bool SoundPlot::isEmpty(){ return type == Tab::empty; }

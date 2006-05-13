@@ -28,21 +28,32 @@
  *
  */
 
+#include "LinearEnvelope.h"
 #include "axis.h"
 #include "soundList.h"
 #include "pointWithText.h"
+#include "soundPlot.h"
 
 #include <qcanvas.h>
-#include <qsortedlist.h>
 #include <qlist.h>
+
+#include <list>
+
+using std::list;
 
 class QStatusBar;
 
 class SoundList;
+class Axis;
 
-class VerticalAxis;
-class HorizontalAxis;
-class PointWithText;
+//Use this class instead of QCanvasLine for breakpoints.
+class DilatePoint:public QCanvasLine{
+  public:
+    DilatePoint(QCanvas* canvas, int x, int height, int bottomMargin);
+    int rtti(){return rttiNr;}
+    const static int rttiNr = 2003;
+};
+
 
 /*
 --------------------------------------------------------------------------------
@@ -59,36 +70,35 @@ class DilateArea:public QCanvasView{
 	QWidget*	parent,
 	char*		name,
 	SoundList*	soundList,
-	QStatusBar*	statusbar
+	QStatusBar*	statusbar,
+	int		w
     );
+
+    ~DilateArea();
+
     void		contentsMousePressEvent(QMouseEvent* e);
     void		contentsMouseMoveEvent(QMouseEvent* e);
     void		contentsMouseReleaseEvent(QMouseEvent* e);
-    void		addPoint(int x, int y);
+    void		addBreakPoint(int x, int y);
     int			rtti() const;
     int			toXAxisValue(int x);
     int			toYAxisValue(int y);
-    const QPoint	getOrigo() const;
 
   public slots:
     void		dilate();
-    void		setSound1(QString& name);
-    void		setSound2(QString& name);
+    void		setSound(QString& name, int pos);
 
   private:
     SoundList*		soundList;
+    SoundPlot*		dilatePlot;
 
-    VerticalAxis*       lAxis;
-    VerticalAxis*       rAxis;
-    HorizontalAxis*     tAxis;
-    QStatusBar*		statusbar;
-    QList<QCanvasItem>  moving;
 
-    QString             sound1;
-    QString             sound2;
-    int			dilate1Index;
-    int			dilate2Index;
+    //Identifiers for the sound to be plotted.
+    QString             sound;
+    int			dilateIndex;
+    int			which;		//Which of the 2 DilateAreas is this one?
 
+    //Dimensions
     int                 leftMargin;
     int                 rightMargin;
     int                 topMargin;
@@ -96,16 +106,19 @@ class DilateArea:public QCanvasView{
     int                 width;
     int                 height;
 
-    QSortedList<PointWithText>  dilateList;
+    //List of all Breakpoints and a sublist of moving points.
+    std::list<QCanvasItem*>  dilateList;
+    std::list<QCanvasItem*>  moving;
 
+    //Helpers
     bool	inArea(int, int);
-
     void	fillEnvelope(
-			QSortedList<PointWithText>&	list,
+			std::list<DilatePoint*>	list,
 			LinearEnvelope&			envelope
     );
 
-    void	setHorizontalAxis();
-}
+    //For future use.
+    QStatusBar*		statusbar;
+};
 
 #endif // DILATE_AREA_H

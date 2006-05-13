@@ -128,7 +128,8 @@ class Tab:public QWidget{
 
     TabType		type;
   
-    void setGui();
+    void		setGui();
+    void		setConnections();
   
   private slots:
     void		shiftValues();

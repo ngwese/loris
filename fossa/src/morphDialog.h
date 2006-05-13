@@ -61,7 +61,6 @@ class MorphDialog:public QDialog{
   Q_OBJECT
 
   public:
-    int i;
     MorphDialog(
 	QWidget*	parent,
 	char*		name,
@@ -76,7 +75,9 @@ class MorphDialog:public QDialog{
   private:
     QCanvas*		canvas;
     QStatusBar*		statusbar;
-    SoundList*	soundList;
+    SoundList*		soundList;
+
+    //GUI elements
     MorphArea*		morphArea;
     QGridLayout*	dialogLayout;
     QGroupBox*		morphBox;
@@ -84,13 +85,14 @@ class MorphDialog:public QDialog{
     QGroupBox*		soundBox;
     QGridLayout*	soundBoxLayout; 
 
-    QLabel*		partial1Label;
-    QComboBox*		partial2List;
-    QComboBox*		partial1List;
-    QLabel*		partial2Label;
+    QLabel*		sound1Label;
+    QLabel*		sound2Label;
+    QComboBox*		sound1List;
+    QComboBox*		sound2List;
 
     QLabel*		name1Label;
     QLabel*		name2Label;
+
     QPushButton*	morphButton;
 
     QButtonGroup*	onOffBox;

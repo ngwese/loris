@@ -65,34 +65,54 @@ class SoundPlot:public QCanvasView{
 	QWidget*		parent,
 	char*			name,
 	SoundList*		pList,
-	Tab::TabType		t
+	Tab::TabType		t,
+	int			sel
     );
 
-  double			toX(double value);
-  double			toY(double value);
-  void				plotPartials();
+    /*These exist so that they can be passed on to the parent DilateArea.*/
+    void			contentsMousePressEvent(QMouseEvent* e);
+    void			contentsMouseMoveEvent(QMouseEvent* e);
+    void			contentsMouseReleaseEvent(QMouseEvent* e);
 
-  bool				isEmpty();
-  void				updatePlot();
-  void				setType(Tab::TabType t);
-  Tab::TabType			getType();
-  void				clearAll();
-  void				clearHilighted();
-  QPixmap*			getPixmap();
-  void				hilight(int p);
+
+    double			toX(double value);
+    double			toY(double value);
+    void			plotPartials();
+    void			hilight(int p);
+    void			clearAll();
+    void			clearHilighted();
+
+    bool			isEmpty();
+    void			updatePlot();
+    void			setSelected(int sel);
+    int				getSelected();
+    void			setType(Tab::TabType t);
+    Tab::TabType		getType();
+
+    QPixmap*			getPixmap();
+
+
+/*
+  public signals:
+    void			press();
+    void			move();
+    void			release();
+*/
 
   public slots:
     void			rePlot();
   
+
   private:
     QCanvas*			canvas;
+    QList<QCanvasItem>		highlines;
     SoundList*			soundList;
     SoundPixmap*		pixmap;
     Axis*			lAxis;
     Axis*			bAxis;
     Tab::TabType		type;
 
-    int				hilighted;
+    int				selected;
 
     int				leftMargin;
     int				rightMargin;

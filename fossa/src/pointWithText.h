@@ -78,8 +78,8 @@ class PointWithText:public QCanvasRectangle{
     void		drawShape(QPainter & painter);
     void		setGui();
     void		setPointText();
-    void		setMorph1(QString& name);
-    void		setMorph2(QString& name);
+    void		setSound1(QString& name);
+    void		setSound2(QString& name);
     int			operator==(PointWithText& right);
     int			operator!=(PointWithText& right);
     int			operator<(PointWithText& right);

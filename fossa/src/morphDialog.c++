@@ -38,8 +38,6 @@
 #include "soundList.h"
 
 #include <qlayout.h>
-#include <qframe.h>
-#include <qgroupbox.h>
 #include <qbuttongroup.h>
 #include <qpushbutton.h>
 #include <qradiobutton.h>
@@ -49,9 +47,11 @@
 #include <qwhatsthis.h>
 #include <qlabel.h>
 
-// ---------------------------------------------------------------------------
-//      MorphDialog constructor
-// ---------------------------------------------------------------------------
+/*
+---------------------------------------------------------------------------
+     MorphDialog constructor
+---------------------------------------------------------------------------
+*/
 MorphDialog::MorphDialog(
 	QWidget*	parent,
 	char*		name,
@@ -63,22 +63,28 @@ MorphDialog::MorphDialog(
   canvas	= new QCanvas(735, 350); 
   morph1	= "";
   morph2	= "";
+
   morphPos1 = morphPos2 = -1;
+
   setGui();
   setConnections();
   setLists();
   show();
-  i = 0;
 }
 
-// ---------------------------------------------------------------------------
-//      setLists
-// ---------------------------------------------------------------------------
-// Every time a new morphDialog is created the pop-up lists for selecting
-// sound to be morphed have to be filled.
+/*
+---------------------------------------------------------------------------
+     setLists
+---------------------------------------------------------------------------
+Every time a new morphDialog is created the pop-up lists for selecting
+sound to be morphed have to be filled.
+*/
 void MorphDialog::setLists(){
-  partial1List->clear();
-  partial2List->clear();
+  int i;
+  int current;
+
+  sound1List->clear();
+  sound2List->clear();
   
   // fill pop-up lists for selection of morph sound.
   // First I just inserted the channelized and distilled ones 
@@ -88,23 +94,25 @@ void MorphDialog::setLists(){
   // channelizing and distilling first the morph will just result
   // in a cross fade.
 
-  for(int i = 0; i<soundList->getLength(); i++){
-    partial1List->insertItem(soundList->getSound(i)->getName(), i);
-    partial2List->insertItem(soundList->getSound(i)->getName(), i);
+  for(i = 0; i<soundList->getLength(); i++){
+    sound1List->insertItem(soundList->getSound(i)->getName(), i);
+    sound2List->insertItem(soundList->getSound(i)->getName(), i);
   }
   
-  int current = soundList->getCurrentIndex();
+  current = soundList->getCurrentIndex();
   
-  partial1List->setCurrentItem(current);
-  partial2List->setCurrentItem(current);
+  sound1List->setCurrentItem(current);
+  sound2List->setCurrentItem(current);
   updateMorph1(current);  // default should be
   updateMorph2(current);  // current sound
 }
 
-// ---------------------------------------------------------------------------
-//     setConnections
-// ---------------------------------------------------------------------------
-// Sets all connections which handles GUI events.
+/*
+---------------------------------------------------------------------------
+    setConnections
+---------------------------------------------------------------------------
+Sets all connections which handles GUI events.
+*/
 void MorphDialog::setConnections(){
   // the integer sent represents one of the elements in the button group
   // which changes state or clears some of the breakpoints.
@@ -113,44 +121,50 @@ void MorphDialog::setConnections(){
   connect(morphButton,SIGNAL(clicked()), morphArea, SLOT(morph()));
   connect(morphButton,SIGNAL(clicked()), this, SLOT(hide()));
   connect(cancelButton, SIGNAL(clicked()), this, SLOT(hide()));
-  connect(partial1List, SIGNAL(highlighted(int)), 
+  connect(sound1List, SIGNAL(highlighted(int)), 
 	  this, SLOT(updateMorph1(int)));
-  connect(partial2List, SIGNAL(highlighted(int)), 
+  connect(sound2List, SIGNAL(highlighted(int)), 
 	  this, SLOT(updateMorph2(int)));
 }
 
-// ---------------------------------------------------------------------------
-//     updateMorph1
-// ---------------------------------------------------------------------------
-// changes all gui elements when morph1 is changed, and changes  
-// morph1 sound in soundlist. I didn't see the need in using model/view
-// pattern here since the messages will just go back and forth.
+/*
+---------------------------------------------------------------------------
+    updateMorph1
+---------------------------------------------------------------------------
+changes all gui elements when morph1 is changed, and changes  
+morph1 sound in soundlist. I didn't see the need in using model/view
+pattern here since the messages will just go back and forth.
+*/
 void MorphDialog::updateMorph1(int pos){
-  morph1 = partial1List->text(pos);
+  morph1 = sound1List->text(pos);
   morphPos1 = pos;
   name1Label->setText(morph1);
   morphArea->setMorph1(morphPos1, morph1);
   morphBox->setTitle(QString("Morph "+morph1+" with "+morph2));
 }
   
-// ---------------------------------------------------------------------------
-//     updateMorph2
-// ---------------------------------------------------------------------------
-// changes all gui elements when morph2 is changed, and changes 
-// morph2 sound in soundlist. I didn't see the need in using model/view
-// pattern here since the messages will just go back and forth.
+/*
+---------------------------------------------------------------------------
+    updateMorph2
+---------------------------------------------------------------------------
+changes all gui elements when morph2 is changed, and changes 
+morph2 sound in soundlist. I didn't see the need in using model/view
+pattern here since the messages will just go back and forth.
+*/
 void MorphDialog::updateMorph2(int pos){
-  morph2 = partial2List->text(pos);
+  morph2 = sound2List->text(pos);
   morphPos2 = pos;
   name2Label->setText(morph2); 
   morphArea->setMorph2(morphPos2, morph2);
   morphBox->setTitle(QString("Morph "+morph1+" with "+morph2));
 }
 
-// ---------------------------------------------------------------------------
-//     setGui
-// ---------------------------------------------------------------------------
-// Sets all GUI components of the dialog
+/*
+---------------------------------------------------------------------------
+    setGui
+---------------------------------------------------------------------------
+Sets all GUI components of the dialog
+*/
 void MorphDialog::setGui(){
   QSpacerItem* spacer_0;
   QSpacerItem* spacer_12;
@@ -162,10 +176,144 @@ void MorphDialog::setGui(){
   QSpacerItem* spacer_20;
   QSpacerItem* spacer_21;
 
+  QPalette pal;
+  QColorGroup cg;
+
   dialogLayout = new QGridLayout(this); 
   dialogLayout->setSpacing(6);
   dialogLayout->setMargin(20);
 
+
+  //Put a spacer at the top.
+  spacer_14 = new QSpacerItem(
+	20,
+	20,
+	QSizePolicy::Minimum,
+	QSizePolicy::Expanding
+  );
+  dialogLayout->addItem( spacer_14, 0, 0 );
+
+
+  //Below that put the box around the 2 ComboBoxes where the sounds are chosen.
+  soundBox = new QGroupBox(this, "soundBox" );
+  QFont soundBox_font(  soundBox->font() );
+  soundBox_font.setPointSize( 12 );
+  soundBox->setFont( soundBox_font ); 
+  soundBox->setTitle( tr( "Select sounds to morph" ) );
+  soundBox->setColumnLayout(0, Qt::Vertical );
+  soundBox->layout()->setSpacing( 0 );
+  soundBox->layout()->setMargin( 0 );
+
+  soundBoxLayout = new QGridLayout( soundBox->layout() );
+  soundBoxLayout->setAlignment( Qt::AlignTop );
+  soundBoxLayout->setSpacing( 6 );
+  soundBoxLayout->setMargin( 11 );
+  
+
+  //Set up the 2 ComboBoxes.
+  sound1List = new QComboBox( FALSE, soundBox, "sound1List" );
+  sound1List->setSizePolicy(
+	QSizePolicy(
+		(QSizePolicy::SizeType)7,
+		(QSizePolicy::SizeType)0,
+		sound1List->sizePolicy().hasHeightForWidth()
+	)
+  );
+
+  sound1List->setMaximumSize( QSize( 32767, 20 ) );
+  
+  soundBoxLayout->addWidget( sound1List, 1, 2 );
+    
+  sound2List = new QComboBox( FALSE, soundBox, "sound2List" );
+  sound2List->setSizePolicy(
+	QSizePolicy(
+		(QSizePolicy::SizeType)7,
+		(QSizePolicy::SizeType)0,
+		sound2List->sizePolicy().hasHeightForWidth()
+	)
+  );
+
+  sound2List->setMaximumSize( QSize( 32767, 20 ) );
+
+  soundBoxLayout->addWidget( sound2List, 1, 6 );
+
+  //Label that says "Morph" to the left of the first ComboBox.
+  sound1Label = new QLabel( soundBox, "sound1Label" );
+  QFont sound1Label_font(  sound1Label->font() );
+  sound1Label_font.setPointSize( 12 );
+  sound1Label->setFont( sound1Label_font ); 
+  sound1Label->setText( tr( "Morph" ) );
+
+  soundBoxLayout->addWidget( sound1Label, 1, 0 );
+
+  //Label that says "with" to the right of the first ComboBox.
+  sound2Label = new QLabel( soundBox, "sound2Label" );
+  QFont sound2Label_font(  sound2Label->font() );
+  sound2Label_font.setPointSize( 12 );
+  sound2Label->setFont( sound2Label_font ); 
+  sound2Label->setText( tr( "with" ) );
+  soundBoxLayout->addWidget( sound2Label, 1, 4 );
+
+  //Spacer to the right of the Sound Box. Directly below the spacer is where
+  //the radio buttons are.
+  spacer_16 = new QSpacerItem(
+	21,
+	20,
+	QSizePolicy::Fixed,
+	QSizePolicy::Minimum
+  );
+  soundBoxLayout->addMultiCell( spacer_16, 1, 2, 1, 1 );
+
+  spacer_17 = new QSpacerItem(
+	21,
+	20,
+	QSizePolicy::Fixed,
+	QSizePolicy::Minimum
+  );
+  soundBoxLayout->addMultiCell( spacer_17, 1, 2, 3, 3 );
+
+  spacer_21 = new QSpacerItem(
+	21,
+	20,
+	QSizePolicy::Fixed,
+	QSizePolicy::Minimum
+  );
+  soundBoxLayout->addMultiCell( spacer_21, 1, 2, 5, 5 );
+
+  spacer_19 = new QSpacerItem(
+	20,
+	20,
+	QSizePolicy::Minimum,
+	QSizePolicy::Expanding
+	);
+  soundBoxLayout->addItem( spacer_19, 2, 6 );
+
+  spacer_20 = new QSpacerItem(
+	20,
+	20,
+	QSizePolicy::Minimum,
+	QSizePolicy::Expanding
+  );
+  soundBoxLayout->addItem( spacer_20, 0, 6 );
+
+
+  //And that's it, put the soundBox in the dialogLayout.
+  dialogLayout->addWidget(soundBox, 1, 0);
+
+
+
+  //Add another spacer between the soundBox and the morphBox
+  spacer_0 = new QSpacerItem(
+	150,
+	20,
+	QSizePolicy::Minimum,
+	QSizePolicy::Expanding
+  );
+  dialogLayout->addItem(spacer_0, 2, 1);
+
+
+
+  //Below the soundBox is the main view of the envelopes, the morphBox.
   morphBox = new QGroupBox(this, "morphBox" );
   morphBox->setColumnLayout(0, Qt::Vertical);
   morphBox->layout()->setSpacing(0);
@@ -175,14 +323,7 @@ void MorphDialog::setGui(){
   morphBoxLayout->setAlignment(Qt::AlignTop);
   morphBoxLayout->setSpacing(6);
   morphBoxLayout->setMargin(11);
-  spacer_0 = new QSpacerItem(
-	150,
-	20,
-	QSizePolicy::Minimum,
-	QSizePolicy::Expanding
-  );
 
-  dialogLayout->addItem(spacer_0, 2, 1);
   morphArea = new MorphArea(
 	canvas,
 	morphBox,
@@ -199,17 +340,33 @@ void MorphDialog::setGui(){
 	)
   );
 
-  //Note: QCanvas size is 735 x 350
-  morphArea->setMinimumSize(QSize(740, 356));
-  morphArea->setMaximumSize(QSize(740, 356));
-  morphBoxLayout->addWidget(morphArea, 1, 0);
+
+  //This label has the name of the first sound, and goes above the morphArea.
   name1Label = new QLabel(morphBox, "name1Label");
   QFont name1Label_font(name1Label->font());
   name1Label_font.setPointSize(10);
   name1Label->setFont(name1Label_font); 
-   
+  name1Label->setAlignment( int( QLabel::AlignVCenter | QLabel::AlignRight ) );
   morphBoxLayout->addWidget(name1Label, 0, 0);
   
+
+  //Note: QCanvas size is 735 x 350
+  morphArea->setMinimumSize(QSize(740, 356));
+  morphArea->setMaximumSize(QSize(740, 356));
+  morphBoxLayout->addWidget(morphArea, 1, 0);
+
+
+  //This label has the name of the second sound, and goes below the morphArea.
+  name2Label = new QLabel( morphBox, "name2Label" );
+  QFont name2Label_font(  name2Label->font() );
+  name2Label_font.setPointSize(10);
+  name2Label->setFont(name2Label_font); 
+  name2Label->setAlignment( int( QLabel::AlignVCenter | QLabel::AlignRight ) );
+  morphBoxLayout->addWidget( name2Label, 2, 0 );
+ 
+
+  /*The side layout has the 3 radio buttons and the morph / cancel buttons.
+	The setup for this thing is huge...*/
   morphSideLayout = new QGridLayout; 
   morphSideLayout->setSpacing(6);
   morphSideLayout->setMargin(0);
@@ -241,8 +398,6 @@ void MorphDialog::setGui(){
 
   allButton->setMaximumSize( QSize(90, 19 ) );
    
-  QPalette pal;
-  QColorGroup cg;
   cg = allButton->colorGroup();
   cg.setColor( QColorGroup::Foreground, QColor("black"));
   pal.setActive(cg);
@@ -434,116 +589,7 @@ void MorphDialog::setGui(){
 
   morphBoxLayout->addMultiCellLayout( morphSideLayout, 1, 2, 1, 1 );
 
-  name2Label = new QLabel( morphBox, "name2Label" );
-  QFont name2Label_font(  name2Label->font() );
-  name2Label_font.setPointSize(10);
-  name2Label->setFont(name2Label_font); 
-  name2Label->setAlignment( int( QLabel::AlignVCenter | QLabel::AlignRight ) );
 
-  morphBoxLayout->addWidget( name2Label, 2, 0 );
- 
+  //That's it, add the dilateBox to the dialog layout.
   dialogLayout->addMultiCellWidget(morphBox, 3, 7, 0, 2);
-  spacer_14 = new QSpacerItem(
-	20,
-	20,
-	QSizePolicy::Minimum,
-	QSizePolicy::Expanding
-  );
-
-  dialogLayout->addItem( spacer_14, 0, 0 );
-  soundBox = new QGroupBox(this, "soundBox" );
-  QFont soundBox_font(  soundBox->font() );
-  soundBox_font.setPointSize( 12 );
-  soundBox->setFont( soundBox_font ); 
-  soundBox->setTitle( tr( "Select sound to morph" ) );
-  soundBox->setColumnLayout(0, Qt::Vertical );
-  soundBox->layout()->setSpacing( 0 );
-  soundBox->layout()->setMargin( 0 );
-  soundBoxLayout = new QGridLayout( soundBox->layout() );
-  soundBoxLayout->setAlignment( Qt::AlignTop );
-  soundBoxLayout->setSpacing( 6 );
-  soundBoxLayout->setMargin( 11 );
-  
-  partial1List = new QComboBox( FALSE, soundBox, "partial1List" );
-  partial1List->setSizePolicy(
-	QSizePolicy(
-		(QSizePolicy::SizeType)7,
-		(QSizePolicy::SizeType)0,
-		partial1List->sizePolicy().hasHeightForWidth()
-	)
-  );
-
-  partial1List->setMaximumSize( QSize( 32767, 20 ) );
-  
-  soundBoxLayout->addWidget( partial1List, 1, 2 );
-    
-  partial2List = new QComboBox( FALSE, soundBox, "partial2List" );
-  partial2List->setSizePolicy(
-	QSizePolicy(
-		(QSizePolicy::SizeType)7,
-		(QSizePolicy::SizeType)0,
-		partial2List->sizePolicy().hasHeightForWidth()
-	)
-  );
-
-  partial2List->setMaximumSize( QSize( 32767, 20 ) );
-
-  soundBoxLayout->addWidget( partial2List, 1, 6 );
-
-  partial1Label = new QLabel( soundBox, "partial1Label" );
-  QFont partial1Label_font(  partial1Label->font() );
-  partial1Label_font.setPointSize( 12 );
-  partial1Label->setFont( partial1Label_font ); 
-  partial1Label->setText( tr( "Morph" ) );
-
-  soundBoxLayout->addWidget( partial1Label, 1, 0 );
-
-  partial2Label = new QLabel( soundBox, "partial2Label" );
-  QFont partial2Label_font(  partial2Label->font() );
-  partial2Label_font.setPointSize( 12 );
-  partial2Label->setFont( partial2Label_font ); 
-  partial2Label->setText( tr( "with" ) );
-  soundBoxLayout->addWidget( partial2Label, 1, 4 );
-
-  spacer_16 = new QSpacerItem(
-	21,
-	20,
-	QSizePolicy::Fixed,
-	QSizePolicy::Minimum
-  );
-  soundBoxLayout->addMultiCell( spacer_16, 1, 2, 1, 1 );
-
-  spacer_17 = new QSpacerItem(
-	21,
-	20,
-	QSizePolicy::Fixed,
-	QSizePolicy::Minimum
-  );
-  soundBoxLayout->addMultiCell( spacer_17, 1, 2, 3, 3 );
-
-  spacer_21 = new QSpacerItem(
-	21,
-	20,
-	QSizePolicy::Fixed,
-	QSizePolicy::Minimum
-  );
-  soundBoxLayout->addMultiCell( spacer_21, 1, 2, 5, 5 );
-
-  spacer_19 = new QSpacerItem(
-	20,
-	20,
-	QSizePolicy::Minimum,
-	QSizePolicy::Expanding
-	);
-  soundBoxLayout->addItem( spacer_19, 2, 6 );
-
-  spacer_20 = new QSpacerItem(
-	20,
-	20,
-	QSizePolicy::Minimum,
-	QSizePolicy::Expanding
-  );
-  soundBoxLayout->addItem( spacer_20, 0, 6 );
-
-  dialogLayout->addWidget(soundBox, 1, 0);
 }
