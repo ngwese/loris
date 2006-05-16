@@ -247,7 +247,8 @@ static void resample_sparse( Partial & p, double interval )
 	    else
 	    {
 	        //  make a resampled Breakpoint:
-		    Breakpoint newbp( p.frequencyAt( curtime ), p.amplitudeAt( curtime ), 
+		    Breakpoint newbp( p.frequencyAt( curtime ), p.amplitudeAt( curtime, interval ), 
+                              //p.findNearest( curtime ).breakpoint().amplitude(),
 						      p.bandwidthAt( curtime ), p.phaseAt( curtime ) );
 	        
     		#if defined(PHASE_CORRECT)	

@@ -652,8 +652,10 @@ static void pack( double amp, double freq, double bw, double phase,
 
 // Make phase into range 0..1.  
     phase = std::fmod( phase, 2. * Pi );
-    if ( phase < 0. )
+    while ( phase < 0. ) 	// used to be if, I think it should be while
+    {						// -kel 12 May 2006
         phase += 2. * Pi; 
+    }
     double zeroToOnePhase = phase / (2. * Pi);
 
 // Make frequency into range 0..1.
