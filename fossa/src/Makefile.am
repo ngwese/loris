@@ -72,7 +72,9 @@ MOC_SOURCES = 	moc_fossaWindow.c++\
 		moc_morphDialog.c++\
 		moc_exportDialog.c++\
 		moc_newNameDialog.c++\
-		moc_SoundList.c++
+		moc_soundList.c++\
+		moc_dilateDialog.c++\
+		moc_dilateArea.c++
 
 CLEANFILES = $(MOC_SOURCES) 
 
@@ -88,7 +90,7 @@ moc_sidebar.c++: sidebar.h
 moc_importDialog.c++: importDialog.h
 	$(MOC) $< -o $@
 
-moc_SoundList.c++: soundList.h
+moc_soundList.c++: soundList.h
 	$(MOC) $< -o $@
 
 moc_morphDialog.c++: morphDialog.h
@@ -110,4 +112,10 @@ moc_player.c++: player.h
 	$(MOC) $< -o $@
 
 moc_newNameDialog.c++: newNameDialog.h
+	$(MOC) $< -o $@
+
+moc_dilateDialog.c++: dilateDialog.h
+	$(MOC) $< -o $@
+
+moc_dilateArea.c++: dilateArea.h
 	$(MOC) $< -o $@
