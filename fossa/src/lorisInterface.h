@@ -39,6 +39,7 @@
 #include <Channelizer.h>
 #include <Distiller.h>
 #include <Morpher.h>
+#include <Dilator.h>
 #include <Partial.h>
 #include <Synthesizer.h>
 #include <Notifier.h>
@@ -71,6 +72,13 @@ class LorisInterface{
 	double			maxFreq, 
 	std::list<Partial>&	sound
     );
+
+    void LorisInterface::dilate(
+        list<Partial>*		sound,
+        list<double>*		source,
+        list<double>*		target
+    );
+
 
     std::list<Partial>* morph(
 	LinearEnvelope&		famp,

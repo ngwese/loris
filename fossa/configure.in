@@ -94,18 +94,3 @@ dnl *****************************************************************
 AC_MSG_RESULT(-------- Creating Output Files --------)
 
 AC_OUTPUT(Makefile src/Makefile)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

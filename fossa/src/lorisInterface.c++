@@ -37,19 +37,23 @@ using std::list;
 using std::vector;
 using std::string;
 
-// ---------------------------------------------------------------------------
-//      LorisInterface constructor
-// ---------------------------------------------------------------------------
+/*
+---------------------------------------------------------------------------
+	LorisInterface constructor
+---------------------------------------------------------------------------
+*/
 LorisInterface::LorisInterface(){}
 
-// ---------------------------------------------------------------------------
-//      importAiff
-// ---------------------------------------------------------------------------
-// Import and analyze aiff file with given frequency resolution and window
-// width.
-// Consider combining importSdif and importAiff providing resolution and width 
-// with default parameters.  Check parameters to decide which format to 
-// import. 
+/*
+---------------------------------------------------------------------------
+	importAiff
+---------------------------------------------------------------------------
+Import and analyze aiff file with given frequency resolution and window
+width.
+Consider combining importSdif and importAiff providing resolution and width 
+with default parameters.  Check parameters to decide which format to 
+import. 
+*/
 list<Partial>* LorisInterface::importAiff(
 	const char*	path,
 	double		resolution,
@@ -76,13 +80,15 @@ list<Partial>* LorisInterface::importAiff(
   }
 }
 
-// ---------------------------------------------------------------------------
-//      importSdif
-// ---------------------------------------------------------------------------
-// Import sdif file 
-// Concider combining importSdif and importAiff providing resolution and width 
-// with default parameters.  Check parameters to decide which format to 
-// import. 
+/*
+---------------------------------------------------------------------------
+	importSdif
+---------------------------------------------------------------------------
+Import sdif file 
+Concider combining importSdif and importAiff providing resolution and width 
+with default parameters.  Check parameters to decide which format to 
+import. 
+*/
 list<Partial>* LorisInterface::importSdif(const char* path){ 
   try{
     SdifFile* file = new SdifFile(string(path));
@@ -96,11 +102,13 @@ list<Partial>* LorisInterface::importSdif(const char* path){
   }
 }
 
-// ---------------------------------------------------------------------------
-//     channelize
-// ---------------------------------------------------------------------------
-// Channelize list of Partial with given frequency label, 
-// minimum frequency, and mximum frequency.
+/*
+---------------------------------------------------------------------------
+	channelize
+---------------------------------------------------------------------------
+Channelize list of Partial with given frequency label, 
+minimum frequency, and mximum frequency.
+*/
 void LorisInterface::channelize(
 	int		refLabel,
 	double		minFreq,
@@ -120,10 +128,12 @@ void LorisInterface::channelize(
   }
 }
 
-// ---------------------------------------------------------------------------
-//     distill
-// ---------------------------------------------------------------------------
-// Distill list of Partial
+/*
+---------------------------------------------------------------------------
+	distill
+---------------------------------------------------------------------------
+Distill list of Partial
+*/
 void LorisInterface::distill(list<Partial>& sound){
   try{
     Distiller distiller;
@@ -135,11 +145,36 @@ void LorisInterface::distill(list<Partial>& sound){
   }
 }
 
-// ---------------------------------------------------------------------------
-//     morph
-// ---------------------------------------------------------------------------
-// Morph 2 lists of Partial with given frequency, amplitude, and noise
-// envelopes.
+/*
+---------------------------------------------------------------------------
+	dilate
+---------------------------------------------------------------------------
+Dilate one sound onto timepoints specified relative to another.
+*/
+void LorisInterface::dilate(
+	list<Partial>* sound,
+	list<double>* source,
+	list<double>* target
+){
+  try{
+    Loris::Dilator::dilate(
+	sound->begin(),
+	sound->end(),
+	source->begin(),
+	source->end(),
+	target->begin()
+    );
+  }catch(...){ throw; }
+}
+
+
+/*
+---------------------------------------------------------------------------
+	morph
+---------------------------------------------------------------------------
+Morph 2 lists of Partial with given frequency, amplitude, and noise
+envelopes.
+*/
 list<Partial>* LorisInterface::morph(
 	LinearEnvelope&		famp,
 	LinearEnvelope&		ffreq,
@@ -167,10 +202,12 @@ list<Partial>* LorisInterface::morph(
   }
 }
 
-// ---------------------------------------------------------------------------
-//     exportAiff
-// ---------------------------------------------------------------------------
-// Export list of Partial to aiff file format
+/*
+---------------------------------------------------------------------------
+	exportAiff
+---------------------------------------------------------------------------
+Export list of Partial to aiff file format
+*/
 void LorisInterface::exportAiff(
 	double sampleRate,
 	int bitsPerSample,
@@ -204,10 +241,12 @@ void LorisInterface::exportAiff(
   }
 }
 
-// ---------------------------------------------------------------------------
-//     exportSdif
-// ---------------------------------------------------------------------------
-// Export list of Partial to sdif file format
+/*
+---------------------------------------------------------------------------
+	exportSdif
+---------------------------------------------------------------------------
+Export list of Partial to sdif file format
+*/
 void LorisInterface::exportSdif(const char* name, list<Partial> sound){
   try{
     SdifFile::Export(name, sound);

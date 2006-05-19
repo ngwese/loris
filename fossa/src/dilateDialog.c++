@@ -126,9 +126,15 @@ void DilateDialog::setConnections(){
 --------------------------------------------------------------------------------
 */
 void DilateDialog::dilate(){
-  int i=0;
+  statusbar->message("Dilating " + sound2 + " to match " + sound1 + ".");
 
-  i++;
+  SoundList::dilate(
+	dilatePos2,
+	dilateArea2->getTimes(),
+	dilateArea1->getTimes()
+    );
+
+  statusbar->message("Dilated successfully.");
 
   return;
 }

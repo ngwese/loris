@@ -59,9 +59,11 @@
 #include <qstring.h>
 
 
-/* ---------------------------------------------------------------------------
+/*
+---------------------------------------------------------------------------
 	CurrentSoundView constructor
---------------------------------------------------------------------------- */
+---------------------------------------------------------------------------
+*/
 CurrentSoundView::CurrentSoundView(
 	QWidget*	parent,
 	char*		name,
@@ -72,10 +74,12 @@ CurrentSoundView::CurrentSoundView(
   setConnections();
 }
 
-/* ---------------------------------------------------------------------------
+/*
+---------------------------------------------------------------------------
 	setGui
 ---------------------------------------------------------------------------
-Basically just adds the gui components to the class. */
+Basically just adds the gui components to the class.
+*/
 void CurrentSoundView::setGui(){
   layout	= new QGridLayout(this);
   tab		= new QTabWidget(this, "tab");
@@ -92,18 +96,22 @@ void CurrentSoundView::setGui(){
   layout->addWidget(tab, 1, 0);
 }
 
-/* ---------------------------------------------------------------------------
+/*
+---------------------------------------------------------------------------
 	setConnections
---------------------------------------------------------------------------- */
+---------------------------------------------------------------------------
+*/
 void CurrentSoundView::setConnections(){
   connect(soundList, SIGNAL(currentChanged()), this, SLOT(redraw()));
   connect(tab, SIGNAL(currentChanged(QWidget*)), this, SLOT(update()));
 }
 
-/* ---------------------------------------------------------------------------
+/*
+---------------------------------------------------------------------------
 	update
 ---------------------------------------------------------------------------
-Update tabs and set correct tab to be selected and visible. */
+Update tabs and set correct tab to be selected and visible.
+*/
 void CurrentSoundView::update(){
   int currentType = tab->currentPageIndex();
   
@@ -114,10 +122,12 @@ void CurrentSoundView::update(){
   }
 }
 
-/* ---------------------------------------------------------------------------
+/*
+---------------------------------------------------------------------------
 	redraw
 ---------------------------------------------------------------------------
-Same as update, but redo the plot as well. */
+Same as update, but redo the plot as well.
+*/
 void CurrentSoundView::redraw(){
   int currentType = tab->currentPageIndex();
   
@@ -137,9 +147,11 @@ void CurrentSoundView::redraw(){
 /*********************************************************************************/
 
 
-/* ---------------------------------------------------------------------------
+/*
+---------------------------------------------------------------------------
 	Tab constructor
---------------------------------------------------------------------------- */
+---------------------------------------------------------------------------
+*/
 Tab::Tab(
 	QWidget*	parent,
 	char*		name,
@@ -182,17 +194,21 @@ Tab::Tab(
 
 }
 
-/* ---------------------------------------------------------------------------
+/*
+---------------------------------------------------------------------------
 	hilight
 ---------------------------------------------------------------------------
-Wrapper for partialsView->hilight() */
+Wrapper for partialsView->hilight()
+*/
 void Tab::hilight(int p){ partialsView->hilight(p-1); }
 
-/* ---------------------------------------------------------------------------
+/*
+---------------------------------------------------------------------------
 	update
 ---------------------------------------------------------------------------
 The purpose here is really to refresh the text fields in the tab. This is
-called whenever the user clicks fr */
+called whenever the user clicks fr
+*/
 void Tab::update(bool redraw){
 
   /**********************/
@@ -259,19 +275,23 @@ void Tab::update(bool redraw){
   }
 }
 
-/* ---------------------------------------------------------------------------
+/*
+---------------------------------------------------------------------------
 	setConnections
---------------------------------------------------------------------------- */
+---------------------------------------------------------------------------
+*/
 void Tab::setConnections(){
   connect(okPushButton, SIGNAL(clicked()), this, SLOT(shiftValues())); 
   connect(pSelect, SIGNAL(valueChanged(int)), pIndicator, SLOT(display(int)));
   connect(pSelect, SIGNAL(valueChanged(int)), this, SLOT(hilight(int))); 
 }
 
-/* ---------------------------------------------------------------------------
+/*
+---------------------------------------------------------------------------
 	setGui
 ---------------------------------------------------------------------------
-sets all gui components of the Tab class */
+sets all gui components of the Tab class
+*/
 void Tab::setGui(){
   QSpacerItem* spacer;
   QSpacerItem* spacer_5;
@@ -472,10 +492,12 @@ void Tab::setGui(){
 }
 
 
-/* ---------------------------------------------------------------------------
+/*
+---------------------------------------------------------------------------
 	shiftValues
 ---------------------------------------------------------------------------
-shift the amplitude values of current sound in soundList. */
+shift the amplitude values of current sound in soundList.
+*/
 void Tab::shiftValues(){
   switch(type){
     case amplitude:

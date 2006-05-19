@@ -84,6 +84,8 @@ class DilateArea:public QCanvasView{
     int			toXAxisValue(int x);
     int			toYAxisValue(int y);
 
+    list<double>*	getTimes();
+
   public slots:
     void		dilate();
     void		setSound(QString& name, int pos);

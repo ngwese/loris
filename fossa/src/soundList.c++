@@ -43,9 +43,11 @@
 
 using std::cout;
 
-// ---------------------------------------------------------------------------
-//	SoundList constructor
-// ---------------------------------------------------------------------------
+/*
+---------------------------------------------------------------------------
+	SoundList constructor
+---------------------------------------------------------------------------
+*/
 SoundList::SoundList(){
   soundList.setAutoDelete(TRUE);  // QList will delete objects automatically
   morph1    = -1;
@@ -54,28 +56,34 @@ SoundList::SoundList(){
   interface = new LorisInterface();
 }
 
-// ---------------------------------------------------------------------------
-//	SoundList destructor
-// ---------------------------------------------------------------------------
+/*
+---------------------------------------------------------------------------
+	SoundList destructor
+---------------------------------------------------------------------------
+*/
 SoundList::~SoundList(){
   delete interface;
 }
 
-// ---------------------------------------------------------------------------
-//	getSound
-// ---------------------------------------------------------------------------
+/*
+---------------------------------------------------------------------------
+	getSound
+---------------------------------------------------------------------------
+*/
 const Sound* SoundList::getSound(int pos){
   return soundList.at(pos);
 }
 
-// ---------------------------------------------------------------------------
-//      importAiff
-// ---------------------------------------------------------------------------
-// Communicates with lorisInterface in order to import and analyse a sound file
-// with given frequency resolution and window width.
-// Consider combining importAiff and importSdif since they are so similar.  
-// By providing resolution and width with default parameters a check of 
-// parameters can be made in order to figure out what format to import.
+/*
+---------------------------------------------------------------------------
+	importAiff
+---------------------------------------------------------------------------
+Communicates with lorisInterface in order to import and analyse a sound file
+with given frequency resolution and window width.
+Consider combining importAiff and importSdif since they are so similar.  
+By providing resolution and width with default parameters a check of 
+parameters can be made in order to figure out what format to import.
+*/
 void SoundList::importAiff(
 	QString		path,
 	QString		name,
@@ -99,13 +107,15 @@ void SoundList::importAiff(
   }
 }
 
-// ---------------------------------------------------------------------------
-//      importSdif
-// ---------------------------------------------------------------------------
-// Communicates with lorisInterface in order to import a sound file.
-// Consider combining importAiff and importSdif since they are so similar. 
-// By providing resolution and width with default parameters a check 
-// of parameters can be made in order to figure out what format to import.
+/*
+---------------------------------------------------------------------------
+	importSdif
+---------------------------------------------------------------------------
+Communicates with lorisInterface in order to import a sound file.
+Consider combining importAiff and importSdif since they are so similar. 
+By providing resolution and width with default parameters a check 
+of parameters can be made in order to figure out what format to import.
+*/
 void SoundList::importSdif(
 	QString		path,
 	QString		name
@@ -126,11 +136,35 @@ void SoundList::importSdif(
   }
 }
 
-// ---------------------------------------------------------------------------
-//      morph
-// ---------------------------------------------------------------------------
-// Morph 2 sound from the list with given breakpointsenvelopes for 
-// amplitude, frequency, and noise.
+/*
+---------------------------------------------------------------------------
+	dilate
+---------------------------------------------------------------------------
+Dilate one sound to match a set of timepoints derived from another. Do it
+in SoundList so as to add it to the list in the same step, and emit the
+signals needed to update the views.
+*/
+void SoundList::dilate(
+	int pos,
+	list<double>* source,
+	list<double>* target
+){
+  try{
+    interface->dilate(
+	soundList.at(pos)->getPartials(),
+	source,
+	target
+    );
+  }catch(...){ throw; }
+}
+
+/*
+---------------------------------------------------------------------------
+	morph
+---------------------------------------------------------------------------
+Morph 2 sound from the list with given breakpointsenvelopes for 
+amplitude, frequency, and noise.
+*/
 void SoundList::morph(
 	int			morphPos1,
 	int			morphPos2,
@@ -170,10 +204,12 @@ void SoundList::morph(
   }
 }
 
-// ---------------------------------------------------------------------------
-//      removeCurrent
-// ---------------------------------------------------------------------------
-// Remove current sound from the list
+/*
+---------------------------------------------------------------------------
+	removeCurrent
+---------------------------------------------------------------------------
+Remove current sound from the list
+*/
 void SoundList::removeCurrent(){
   if(inList(current)){
     soundList.remove(current);
@@ -189,26 +225,32 @@ void SoundList::removeCurrent(){
   }
 }
 
-// ---------------------------------------------------------------------------
-//      isEmpty
-// ---------------------------------------------------------------------------
-// Returns true if soundList is empty.
+/*
+---------------------------------------------------------------------------
+	isEmpty
+---------------------------------------------------------------------------
+Returns true if soundList is empty.
+*/
 bool SoundList::isEmpty(){
   return !inList(current);
 }
 
-// ---------------------------------------------------------------------------
-//      getCurrentIndex
-// ---------------------------------------------------------------------------
-// Returns the position of current sound. 
+/*
+---------------------------------------------------------------------------
+	getCurrentIndex
+---------------------------------------------------------------------------
+Returns the position of current sound. 
+*/
 int SoundList::getCurrentIndex(){
   return current;
 }
 
-// ---------------------------------------------------------------------------
-//      getCurrentNrOfPartials
-// ---------------------------------------------------------------------------
-// Returns number of partials in current sound 
+/*
+---------------------------------------------------------------------------
+	getCurrentNrOfPartials
+---------------------------------------------------------------------------
+Returns number of partials in current sound 
+*/
 int SoundList::getCurrentNrOfPartials(){
   if(inList(current))
     return soundList.at(current)->getNumberOfPartials();
@@ -216,10 +258,12 @@ int SoundList::getCurrentNrOfPartials(){
     cout<<"SoundList::getCurrentNrOfPartials(): current not in list"<<endl;
 }
 
-// ---------------------------------------------------------------------------
-//      isCurrentDistilled
-// ---------------------------------------------------------------------------
-// Returns true if current sound are distilled
+/*
+---------------------------------------------------------------------------
+	isCurrentDistilled
+---------------------------------------------------------------------------
+Returns true if current sound are distilled
+*/
 bool SoundList::isCurrentDistilled(){
   if(inList(current))
     return soundList.at(current)->isDistilled();
@@ -227,10 +271,12 @@ bool SoundList::isCurrentDistilled(){
     cout<<"SoundList::isCurrentDistilled(): current not in list"<<endl;
 }
 
-// ---------------------------------------------------------------------------
-//      isCurrentChannelized
-// ---------------------------------------------------------------------------
-// Returns true if current sound are channelized
+/*
+---------------------------------------------------------------------------
+	isCurrentChannelized
+---------------------------------------------------------------------------
+Returns true if current sound are channelized
+*/
 bool SoundList::isCurrentChannelized(){
   if(inList(current))
     return soundList.at(current)->isChannelized();
@@ -238,10 +284,12 @@ bool SoundList::isCurrentChannelized(){
     cout<<"SoundList::isCurrentChannelized(): current not in list"<<endl;
 }
 
-// ---------------------------------------------------------------------------
-//      setCurrentSound
-// ---------------------------------------------------------------------------
-// change current
+/*
+---------------------------------------------------------------------------
+	setCurrentSound
+---------------------------------------------------------------------------
+change current
+*/
 void SoundList::setCurrentSound(int pos){
   if(inList(pos)){
     current = pos; 
@@ -250,19 +298,23 @@ void SoundList::setCurrentSound(int pos){
     cout<<"SoundList::setCurrentSound(int pos): pos not valid"<<endl;
 }
 
-// ---------------------------------------------------------------------------
-//      getLength
-// ---------------------------------------------------------------------------
-// Returns the number of samples in the list.
+/*
+---------------------------------------------------------------------------
+	getLength
+---------------------------------------------------------------------------
+Returns the number of samples in the list.
+*/
 int SoundList::getLength(){
   return soundList.count();
 }
 
-// ---------------------------------------------------------------------------
-//	getCurrentMax
-// ---------------------------------------------------------------------------
-// get the maximum of amplitude/frequency/noise of the current sound
-// depending on t
+/*
+---------------------------------------------------------------------------
+	getCurrentMax
+---------------------------------------------------------------------------
+get the maximum of amplitude/frequency/noise of the current sound
+depending on t
+*/
 double SoundList::getCurrentMax(Sound::ValType t){
   if(inList(current)){
     return soundList.at(current)->getMax(t);
@@ -270,10 +322,12 @@ double SoundList::getCurrentMax(Sound::ValType t){
     cout<<"SoundList::getCurrentMax(): current not in list"<<endl;
 }
 
-// ---------------------------------------------------------------------------
-//     getCurrentDuration
-// ---------------------------------------------------------------------------
-// get the duration of current sound
+/*
+---------------------------------------------------------------------------
+	getCurrentDuration
+---------------------------------------------------------------------------
+get the duration of current sound
+*/
 double SoundList::getCurrentDuration(){
   if(inList(current)){
     return soundList.at(current)->getDuration();
@@ -281,10 +335,12 @@ double SoundList::getCurrentDuration(){
     cout<<"SoundList::getCurrentDuration(): current not in list"<<endl;
 }
 
-// ---------------------------------------------------------------------------
-//     shiftCurrentFrequency
-// ---------------------------------------------------------------------------
-// scale frequency of current sound with given parameter value.
+/*
+---------------------------------------------------------------------------
+	shiftCurrentFrequency
+---------------------------------------------------------------------------
+scale frequency of current sound with given parameter value.
+*/
 void SoundList::shiftCurrentFrequency(double val){
   if(inList(current)){
     try{
@@ -299,10 +355,12 @@ void SoundList::shiftCurrentFrequency(double val){
     cout<<"SoundList::shiftCurrentFrequency(): current not in list"<<endl;
 }
 
-// ---------------------------------------------------------------------------
-//     shiftCurrentNoise
-// ---------------------------------------------------------------------------
-// scale noise of current sound with given parameter value.
+/*
+---------------------------------------------------------------------------
+	shiftCurrentNoise
+---------------------------------------------------------------------------
+scale noise of current sound with given parameter value.
+*/
 void SoundList::shiftCurrentNoise(double val){
   if(inList(current)){
     try{
@@ -317,10 +375,12 @@ void SoundList::shiftCurrentNoise(double val){
     cout<<"SoundList::shiftCurrentNoise(): current not in list"<<endl;
 }  
 
-// ---------------------------------------------------------------------------
-//     shiftCurrentAmplitude
-// ---------------------------------------------------------------------------
-// scale amplitude of current sound with given parameter value.
+/*
+---------------------------------------------------------------------------
+	shiftCurrentAmplitude
+---------------------------------------------------------------------------
+scale amplitude of current sound with given parameter value.
+*/
 void SoundList::shiftCurrentAmplitude(double val){
   if(inList(current)){
     try{
@@ -335,10 +395,12 @@ void SoundList::shiftCurrentAmplitude(double val){
     cout<<"SoundList::shiftCurrentAmplitude(): current not in list"<<endl;
 }
 
-// ---------------------------------------------------------------------------
-//    getCurrentPartials
-// ---------------------------------------------------------------------------
-// Retrurns a list of Loris::Partial 
+/*
+---------------------------------------------------------------------------
+	getCurrentPartials
+---------------------------------------------------------------------------
+Retrurns a list of Loris::Partial 
+*/
 list<Partial>* SoundList::getCurrentPartials(){
   if(inList(current)){
     soundList.at(current)->getPartials();
@@ -346,11 +408,13 @@ list<Partial>* SoundList::getCurrentPartials(){
     cout<<"SoundList::getCurrentPartials(): current not in list"<<endl;
 }
 
-// ---------------------------------------------------------------------------
-//     channelizeCurrent
-// ---------------------------------------------------------------------------
-// Channelize current sound with given parameters, reference label, 
-// minimum frequency, and maximum frequency
+/*
+---------------------------------------------------------------------------
+	channelizeCurrent
+---------------------------------------------------------------------------
+Channelize current sound with given parameters, reference label, 
+minimum frequency, and maximum frequency
+*/
 void SoundList::channelizeCurrent(
 	int refLabel,
 	double minFreq,
@@ -364,10 +428,12 @@ void SoundList::channelizeCurrent(
     cout<<"SoundList::channelizeCurrent(): current not in list"<<endl;
 }
 
-// ---------------------------------------------------------------------------
-//     distillCurrent
-// ---------------------------------------------------------------------------
-// Distill current sound 
+/*
+---------------------------------------------------------------------------
+	distillCurrent
+---------------------------------------------------------------------------
+Distill current sound 
+*/
 void SoundList::distillCurrent(){
   if(inList(current)){
     soundList.at(current)->distill();
@@ -376,10 +442,12 @@ void SoundList::distillCurrent(){
     cout<<"SoundList::distillCurrent(): current not in list"<<endl;
 }
 
-// ---------------------------------------------------------------------------
-//     exportAiff
-// ---------------------------------------------------------------------------
-// Export current sound to aiff file format. 
+/*
+---------------------------------------------------------------------------
+	exportAiff
+---------------------------------------------------------------------------
+Export current sound to aiff file format. 
+*/
 void SoundList::exportAiff(
 	double sampleRate,
 	int sampleBits,
@@ -389,10 +457,12 @@ void SoundList::exportAiff(
     soundList.at(current)->exportToAiff(sampleRate, sampleBits, name);
 }
 
-// ---------------------------------------------------------------------------
-//     exportSdif
-// ---------------------------------------------------------------------------
-// Export current sound to sdif file format. 
+/*
+---------------------------------------------------------------------------
+	exportSdif
+---------------------------------------------------------------------------
+Export current sound to sdif file format. 
+*/
 void SoundList::exportSdif(const char* name){
   if(inList(current))
     soundList.at(current)->exportToSdif(name);
@@ -400,10 +470,12 @@ void SoundList::exportSdif(const char* name){
     cout<<"SoundList::exportCurrentToSdif(): current not in list"<<endl;
 }
 
-// ---------------------------------------------------------------------------
-//     copyCurrent
-// ---------------------------------------------------------------------------
-// Copy current sound and insert the result into the list 
+/*
+---------------------------------------------------------------------------
+	copyCurrent
+---------------------------------------------------------------------------
+Copy current sound and insert the result into the list 
+*/
 void SoundList::copyCurrent(){
   if(inList(current)){
     Sound* currentSound = soundList.at(current);
@@ -420,10 +492,12 @@ void SoundList::copyCurrent(){
     cout<<"SoundList::copyCurrent(): current not in list"<<endl;
 }
 
-// ---------------------------------------------------------------------------
-//     renameCurrent
-// ---------------------------------------------------------------------------
-// Rename current sound  
+/*
+---------------------------------------------------------------------------
+	renameCurrent
+---------------------------------------------------------------------------
+Rename current sound  
+*/
 void SoundList::renameCurrent(QString newName){
   if(inList(current)){
     soundList.at(current)->rename(newName);
@@ -433,10 +507,12 @@ void SoundList::renameCurrent(QString newName){
     cout<<"SoundList::renameCurrent(): current not in list"<<endl;
 }
 
-// ---------------------------------------------------------------------------
-//     getCurrentName
-// ---------------------------------------------------------------------------
-// Return the name of current sound
+/*
+---------------------------------------------------------------------------
+	getCurrentName
+---------------------------------------------------------------------------
+Return the name of current sound
+*/
 QString SoundList::getCurrentName(){
   if(inList(current))
     return soundList.at(current)->getName();
@@ -444,10 +520,12 @@ QString SoundList::getCurrentName(){
     return "";
 }
 
-// ---------------------------------------------------------------------------
-//     playCurrent
-// ---------------------------------------------------------------------------
-// Plays current sound
+/*
+---------------------------------------------------------------------------
+	playCurrent
+---------------------------------------------------------------------------
+Plays current sound
+*/
 void SoundList::playCurrent(){
   if(inList(current))
     soundList.at(current)->play();
@@ -455,10 +533,12 @@ void SoundList::playCurrent(){
     cout<<"SoundList::playCurrent(): current not in list"<<endl;
 }
 
-// ---------------------------------------------------------------------------
-//     inList
-// ---------------------------------------------------------------------------
-// Returns true if sound at given position are in the list
+/*
+---------------------------------------------------------------------------
+	inList
+---------------------------------------------------------------------------
+Returns true if sound at given position are in the list
+*/
 bool SoundList::inList(int pos){
   if(pos > -1 & pos < soundList.count()){
     return true;

@@ -23,8 +23,8 @@
  *
  *
  * The ImportAiff class provides the user with a dialog for importing aiff file formats
- * into a collection of sound. When importing an aiff file, the file samples
- * gets analyzed according to user specified parameters. Inherits ImportDialog.
+ * into a collection of partials. When importing an aiff file, the file samples
+ * get analyzed according to user specified parameters. Inherits ImportDialog.
  *
  * ImportSdif differs from the ImportAiff class only in the lack of user specified
  * parameters.  Sdif files need not to be analysed since they already are a
@@ -56,11 +56,13 @@
 #include <qwidget.h>
 #include <qwhatsthis.h>
 
-// ---------------------------------------------------------------------------
-//	AnalyzeAiffWidget constructor
-// ---------------------------------------------------------------------------
-// Creates a widget with 2 sliders and 2 spinboxes, available for users to 
-// specify analysis parameters frequency resolution and window width.
+/*
+---------------------------------------------------------------------------
+	AnalyzeAiffWidget constructor
+---------------------------------------------------------------------------
+Creates a widget with 2 sliders and 2 spinboxes, available for users to 
+specify analysis parameters frequency resolution and window width.
+*/
 AnalyzeAiffWidget::AnalyzeAiffWidget(
 	QWidget*	parent,
 	char*		name,
@@ -70,29 +72,35 @@ AnalyzeAiffWidget::AnalyzeAiffWidget(
   addWhatIsThis();
 }
 
-// ---------------------------------------------------------------------------
-//	getResolution
-// ---------------------------------------------------------------------------
-// Returns the frequency resolution specified by the resolutionSlider and 
-// ResolutionSpinbox.  Used for analysis.
+/*
+---------------------------------------------------------------------------
+	getResolution
+---------------------------------------------------------------------------
+Returns the frequency resolution specified by the resolutionSlider and 
+ResolutionSpinbox.  Used for analysis.
+*/
 double AnalyzeAiffWidget::getResolution(){
   //value() method is not always correct
   return (resolutionSpinBox->text()).toDouble();
 }
 
-// ---------------------------------------------------------------------------
-//	getWidth
-// ---------------------------------------------------------------------------
-// Returns the window width specified by the widthSlider and widthSpinbox. 
-// Used for analysis.
+/*
+---------------------------------------------------------------------------
+	getWidth
+---------------------------------------------------------------------------
+Returns the window width specified by the widthSlider and widthSpinbox. 
+Used for analysis.
+*/
 double AnalyzeAiffWidget::getWidth(){
   return (widthSpinBox->text()).toDouble();  //value() method is not always correct
 }
 
-// ---------------------------------------------------------------------------
-//	setGui
-// ---------------------------------------------------------------------------
-// Adds all GUI components of the widget.
+/*
+---------------------------------------------------------------------------
+	setGui
+---------------------------------------------------------------------------
+Adds all GUI components of the widget.
+*/
 void AnalyzeAiffWidget::setGui(){
   resize(200,200);
  
@@ -161,11 +169,13 @@ void AnalyzeAiffWidget::setGui(){
   layout->addMultiCellWidget( parameterGroup, 1, 2, 0, 4 );
 }
 
-// ---------------------------------------------------------------------------
-//	setSliders
-// ---------------------------------------------------------------------------
-// Help method for setting the characteristics of the sliders and spinboxes, and the
-// connection between them.
+/*
+---------------------------------------------------------------------------
+	setSliders
+---------------------------------------------------------------------------
+Help method for setting the characteristics of the sliders and spinboxes, and the
+connection between them.
+*/
 void AnalyzeAiffWidget::setSliders(
 	QSlider*	s,
 	QSpinBox*	sp,
@@ -229,14 +239,16 @@ void AnalyzeAiffWidget::setSliders(
   connect(s, SIGNAL(valueChanged(int)), sp, SLOT(setValue(int)));
 }
 
-// ---------------------------------------------------------------------------
-//	addWhatIsThis
-// ---------------------------------------------------------------------------
-// Adds text to the GUI shown when whatIsThis mode is enabled in the help menu.
-// For the moment the dialogs are modal and the text can not be reached, if the
-// dialogs would be none modal we make more use of this functionality.
+/*
+---------------------------------------------------------------------------
+	addWhatIsThis
+---------------------------------------------------------------------------
+Adds text to the GUI shown when whatIsThis mode is enabled in the help menu.
+For the moment the dialogs are modal and the text can not be reached, if the
+dialogs would be none modal we make more use of this functionality.
+*/
 void AnalyzeAiffWidget::addWhatIsThis(){
-  QString resolutionText = "The frequency resolution controls the frequency density of sound.  Two sound will differ in frequency by no less than the specified frequency resolution.  The frequency should be slightly less than the anticipated partial frequency density. For quasi-harmonic sounds, the anticipated partial frequency density is equal to the fundamental frequency, and the frequency resolution is typically set to 70% to 85% of the fundamental frequency. For non-harmonic sounds, some experimentation may be necessary, and intuition can offen be obtained using a spectrogram tool";
+  QString resolutionText = "The frequency resolution controls the frequency density of partials.  Two partials will differ in frequency by no less than the specified frequency resolution.  The frequency should be slightly less than the anticipated partial frequency density. For quasi-harmonic sounds, the anticipated partial frequency density is equal to the fundamental frequency, and the frequency resolution is typically set to 70% to 85% of the fundamental frequency. For non-harmonic sounds, some experimentation may be necessary, and intuition can offen be obtained using a spectrogram tool";
   
   QString widthText = "For quasi-harmonic sounds, the window width is set equal to the fundamental frequency, but it is rarely necessary to use windows wider than than 500Hz. Similarly, for very low-frequency quasi-harmonic sounds, best results are often obtained using windows as wide as 120Hz.";
 
@@ -248,18 +260,22 @@ void AnalyzeAiffWidget::addWhatIsThis(){
   QWhatsThis::add(widthLabel, widthText);
 }
 
-// ---------------------------------------------------------------------------
-//	addToolTips
-// ---------------------------------------------------------------------------
-// Not implemented yet.
+/*
+---------------------------------------------------------------------------
+	addToolTips
+---------------------------------------------------------------------------
+Not implemented yet.
+*/
 void AnalyzeAiffWidget::addToolTips(){}
 
-// ---------------------------------------------------------------------------
-//	ImportDialog constructor
-// ---------------------------------------------------------------------------
-// This class is implemented to avoid repeated code in ImportAiffDialog and 
-// ImportSdifDialog. (Might be unnecessary). The dialog is modal, the user have
-// to finish the operation before selecting another window.
+/*
+---------------------------------------------------------------------------
+	ImportDialog constructor
+---------------------------------------------------------------------------
+This class is implemented to avoid repeated code in ImportAiffDialog and 
+ImportSdifDialog. (Might be unnecessary). The dialog is modal, the user have
+to finish the operation before selecting another window.
+*/
 ImportDialog::ImportDialog(
 	QWidget*	parent,
 	char*		name,
@@ -273,11 +289,13 @@ ImportDialog::ImportDialog(
   setMode(mode);
 }
 
-// ---------------------------------------------------------------------------
-//	startDialog
-// ---------------------------------------------------------------------------
-// If the user has selected a file when the open button the path and name of 
-// the file is set and the method returns true. 
+/*
+---------------------------------------------------------------------------
+	startDialog
+---------------------------------------------------------------------------
+If the user has selected a file when the open button the path and name of 
+the file is set and the method returns true. 
+*/
 bool ImportDialog::startDialog(){
   if(exec() == QDialog::Accepted){
     QString dir  = dirPath();
@@ -291,11 +309,13 @@ bool ImportDialog::startDialog(){
     return false;
 };
 
-// ---------------------------------------------------------------------------
-//	ImportAiffDialog
-// ---------------------------------------------------------------------------
-// Inherits ImportDialog and provides the user with a dialog for importing
-// and analyzing aiff files. 
+/*
+---------------------------------------------------------------------------
+	ImportAiffDialog
+---------------------------------------------------------------------------
+Inherits ImportDialog and provides the user with a dialog for importing
+and analyzing aiff files. 
+*/
 ImportAiffDialog::ImportAiffDialog(
 	QWidget*	parent,
 	char*		name,
@@ -341,13 +361,15 @@ ImportAiffDialog::ImportAiffDialog(
       );
     }
   }
-}  
+}
 
-// ---------------------------------------------------------------------------
-//	ImportSdifDialog
-// ---------------------------------------------------------------------------
-// Inherits ImportDialog and provides the user with a dialog for importing
-// sdif files. 
+/*
+---------------------------------------------------------------------------
+	ImportSdifDialog
+---------------------------------------------------------------------------
+Inherits ImportDialog and provides the user with a dialog for importing
+sdif files. 
+*/
 ImportSdifDialog::ImportSdifDialog(
 	QWidget*	parent,
 	char*		name,

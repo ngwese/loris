@@ -48,13 +48,15 @@ DilatePoint::DilatePoint(
   move(x, 0);
 }
 
-/* --------------------------------------------------------------------------------
+/*
+--------------------------------------------------------------------------------
 	DilateArea construtor
 --------------------------------------------------------------------------------
 It might be a bit confusing that DilateArea IS A QCanvasView and yet also 
 HAS A SoundPlot which IS also A QCanvasView. This works because more than one
 QCanvasView can view the same QCanvas; SoundPlot can clutter it up with points
-and lines while DilateArea manages the BreakPoints. Or at least it's supposed to.*/
+and lines while DilateArea manages the BreakPoints. Or at least it's supposed to.
+*/
 DilateArea::DilateArea(
 	QCanvas*	canvas,
 	QWidget*	parent,
@@ -99,30 +101,62 @@ DilateArea::DilateArea(
 }
 
 
-/* --------------------------------------------------------------------------------
+/*
+--------------------------------------------------------------------------------
 	~DilateArea
--------------------------------------------------------------------------------- */
+--------------------------------------------------------------------------------
+*/
 DilateArea::~DilateArea(){
 }
 
 
-/* --------------------------------------------------------------------------------
+/*
+--------------------------------------------------------------------------------
 	setSound
 --------------------------------------------------------------------------------
-Tells the DilateArea to update itself to the specified sound.  */
+Tells the DilateArea to update itself to the specified sound. 
+*/
 void DilateArea::setSound(QString& name, int pos){
   sound = name;
+
+  dilateIndex = pos;
 
   //Next update the soundPlot.
   dilatePlot->setSelected(pos);
   dilatePlot->setType(Tab::amplitude);	//This automatically updates the plot.
 }
 
+/*
+--------------------------------------------------------------------------------
+	getTimes
+--------------------------------------------------------------------------------
+Return a list of times where the user has placed markers.
+*/
+list<double>* DilateArea::getTimes(){
+  list<double>* newList = new list<double>;
+  list<QCanvasItem*>::Iterator it;
 
-/* --------------------------------------------------------------------------------
+  double factor = soundList->getSound(dilateIndex)->getDuration();
+  factor /= (width - leftMargin - rightMargin);
+
+  for(	it = dilateList->begin();
+	it != dilateList->end();
+	it++
+  ){
+    newList->push_front( factor * (*it)->x() );
+  }
+
+  new_list->sort();
+
+  return newList;
+}
+
+/*
+--------------------------------------------------------------------------------
 	addBreakPoint
 --------------------------------------------------------------------------------
-Create a BreakPoint for matching the 2 sounds against each other.*/
+Create a BreakPoint for matching the 2 sounds against each other.
+*/
 void DilateArea::addBreakPoint(int x, int y){
   DilatePoint* newPoint = new DilatePoint(
 	canvas(),
@@ -131,13 +165,16 @@ void DilateArea::addBreakPoint(int x, int y){
 	bottomMargin
   );
 
+  dilateList.push_front(newPoint);
   moving.push_front(newPoint);
   newPoint->show();
 }
 
-/* --------------------------------------------------------------------------------
+/*
+--------------------------------------------------------------------------------
 	inArea
--------------------------------------------------------------------------------- */
+--------------------------------------------------------------------------------
+*/
 bool DilateArea::inArea(int x, int y){
   bool inX = x+1 >= leftMargin && x <= width-rightMargin;
   bool inY = y+1 >= topMargin  && y <= height-bottomMargin;
@@ -145,9 +182,11 @@ bool DilateArea::inArea(int x, int y){
 }
 
 
-/* --------------------------------------------------------------------------------
+/*
+--------------------------------------------------------------------------------
 	contentsMousePressEvent
--------------------------------------------------------------------------------- */
+--------------------------------------------------------------------------------
+*/
 void DilateArea::contentsMousePressEvent(QMouseEvent* e){
   int found = 0;
   QCanvasItemList::iterator it;
@@ -195,9 +234,11 @@ void DilateArea::contentsMousePressEvent(QMouseEvent* e){
   }
 }
 
-/* --------------------------------------------------------------------------------
+/*
+--------------------------------------------------------------------------------
 	contentsMouseMoveEvent
--------------------------------------------------------------------------------- */
+--------------------------------------------------------------------------------
+*/
 void DilateArea::contentsMouseMoveEvent(QMouseEvent* e){
   std::list<QCanvasItem*>::iterator it;
 
@@ -212,14 +253,18 @@ void DilateArea::contentsMouseMoveEvent(QMouseEvent* e){
   canvas()->update();
 }
 
-/* --------------------------------------------------------------------------------
+/*
+--------------------------------------------------------------------------------
 	contentsMouseReleaseEvent
--------------------------------------------------------------------------------- */
+--------------------------------------------------------------------------------
+*/
 void DilateArea::contentsMouseReleaseEvent(QMouseEvent* e){
   moving.clear();
 }
 
-/* --------------------------------------------------------------------------------
+/*
+--------------------------------------------------------------------------------
 	dilate
--------------------------------------------------------------------------------- */
+--------------------------------------------------------------------------------
+*/
 void DilateArea::dilate(){}

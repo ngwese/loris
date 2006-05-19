@@ -103,6 +103,13 @@ class SoundList:public QObject{
     void		copyCurrent();
     void		removeCurrent();
     void		playCurrent();
+
+    void		dilate(
+        int			pos,
+        list<double>*		source,
+        list<double>*		target
+    );
+
     void morph(
 	int			morphPos1,
 	int			morphPos2,
