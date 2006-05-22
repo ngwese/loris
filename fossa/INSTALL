@@ -1,0 +1,9 @@
+To build Fossa, you need to follow these steps:
+1. Install Loris [www.sourceforge.net/projects/loris]
+2. Install QT 3.3 [www.trolltech.com]
+3. Run ./reconf
+4. Run ./configure --with-loris=[path to Loris] --with-qt=[path to QT]
+5. Run make
+
+
+There is currently no make install. You just run Fossa from where you build it.
