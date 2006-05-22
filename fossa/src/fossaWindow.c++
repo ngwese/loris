@@ -58,9 +58,11 @@
 #include <qwhatsthis.h>
 #include <qtooltip.h>
 
-// ---------------------------------------------------------------------------
-//	FossaWindow constructor
-// ---------------------------------------------------------------------------
+/*
+---------------------------------------------------------------------------
+	FossaWindow constructor
+---------------------------------------------------------------------------
+*/
 FossaWindow::FossaWindow(
 	QWidget*	parent,
 	const char*	name
@@ -90,17 +92,22 @@ FossaWindow::FossaWindow(
   QToolTip::setEnabled(true); 
 }
 
-// ---------------------------------------------------------------------------
-//	FossaWindow destructor
-// ---------------------------------------------------------------------------
+/*
+---------------------------------------------------------------------------
+	FossaWindow destructor
+---------------------------------------------------------------------------
+*/
 FossaWindow::~FossaWindow(){
   delete soundList;
 }
 
-// ---------------------------------------------------------------------------
-//	 updateMenuOptions. 
-// ---------------------------------------------------------------------------
-// SLOT which enables and disables menu options. 
+/*
+---------------------------------------------------------------------------
+	updateMenuOptions. 
+---------------------------------------------------------------------------
+SLOT which enables and disables menu options depending on the contents of the
+soundList.
+*/
 void FossaWindow::updateMenuOptions(){
   // If we have sound we should be able to do operation - enable options 
   if(!soundList->isEmpty()){  
@@ -112,7 +119,7 @@ void FossaWindow::updateMenuOptions(){
     manipulateMenu->setItemEnabled(distillID   , TRUE);
   }
 
-  // Disables menu options if we don't have any sound is soundList 
+  // Disables menu options if no sounds in soundList 
   else{
     fileMenu->setItemEnabled(exportID    , FALSE);
     editMenu->setItemEnabled(deleteId    , FALSE);
@@ -146,19 +153,23 @@ void FossaWindow::updateMenuOptions(){
   }
 }
 
-// ---------------------------------------------------------------------------
-//	setConnections. 
-// ---------------------------------------------------------------------------
-// Menu options are updated when soundList is changed.
+/*
+---------------------------------------------------------------------------
+	setConnections. 
+---------------------------------------------------------------------------
+Menu options are updated when soundList is changed.
+*/
 void FossaWindow::setConnections(){
   connect(soundList, SIGNAL(listChanged()), this , SLOT(updateMenuOptions()));
   connect(soundList, SIGNAL(currentChanged()), this , SLOT(updateMenuOptions()));
 }
 
-// ---------------------------------------------------------------------------
-//     setMenuBar
-// ---------------------------------------------------------------------------
-//  sets menus and menu options in the menuBar. 
+/*
+---------------------------------------------------------------------------
+	setMenuBar
+---------------------------------------------------------------------------
+ sets menus and menu options in the menuBar. 
+*/
 void FossaWindow::setMenuBar(){
   fileMenu       = new QPopupMenu(this);
   importMenu     = new QPopupMenu(fileMenu);
@@ -208,7 +219,9 @@ void FossaWindow::setMenuBar(){
 	"&Delete",
 	this,
 	SLOT(remove()),
-	CTRL+Key_D);
+	CTRL+Key_D
+  );
+
   renameId = editMenu->insertItem(
 	"&Rename",
 	this,
@@ -216,7 +229,7 @@ void FossaWindow::setMenuBar(){
 	CTRL+Key_R
   );
 
-  copyId   = editMenu->insertItem(
+  copyId = editMenu->insertItem(
 	"&Copy",
 	this,
 	SLOT(copy()),
@@ -225,17 +238,17 @@ void FossaWindow::setMenuBar(){
   
   // options for manipulate menu.
   channelizeID = manipulateMenu->insertItem(
-	"&Channelize",
+	"c&Hannelize",
 	this,
 	SLOT(openChannelizeDialog()),
 	CTRL+Key_H
   );
 
   distillID = manipulateMenu->insertItem(
-	"&Distill",
+	"dist&Ill",
 	this,
 	SLOT(distill()),
-	CTRL+Key_D
+	CTRL+Key_I
   );
 
   morphID = manipulateMenu->insertItem(
@@ -246,7 +259,7 @@ void FossaWindow::setMenuBar(){
   );
 
   dilateID = manipulateMenu->insertItem(
-	"Dilate",
+	"di&Late",
 	this,
 	SLOT(openDilateDialog()),
 	CTRL+Key_L
@@ -282,27 +295,33 @@ void FossaWindow::setMenuBar(){
   updateMenuOptions();
 }
 
-// ---------------------------------------------------------------------------
-//      addWhatIsThis
-// ---------------------------------------------------------------------------
-// Adds whatIsThis messages to gui elements, visible when WhatIsThisMode is
-// entered.
+/*
+---------------------------------------------------------------------------
+	addWhatIsThis
+---------------------------------------------------------------------------
+Adds whatIsThis messages to gui elements, visible when WhatIsThisMode is
+entered.
+*/
 void FossaWindow::addWhatIsThis(){
   QWhatsThis::add(statusbar, "I tell you what is going on");
 }
 
-// ---------------------------------------------------------------------------
-//      addToolTips
-// ---------------------------------------------------------------------------
-// Adds addToolTips messages to gui elements, visible when tooltip is enabled.
+/*
+---------------------------------------------------------------------------
+	addToolTips
+---------------------------------------------------------------------------
+Adds addToolTips messages to gui elements, visible when tooltip is enabled.
+*/
 void FossaWindow::addToolTips(){
   QToolTip::add(statusbar, "statusbar");
 }
 
-// ---------------------------------------------------------------------------
-//      openImportAiffDialog
-// ---------------------------------------------------------------------------
-//  opens the import dialog for aiff file format
+/*
+---------------------------------------------------------------------------
+	openImportAiffDialog
+---------------------------------------------------------------------------
+opens the import dialog for aiff file format
+*/
 void FossaWindow::openImportAiffDialog(){
   if(importDialog) delete importDialog; 
 
@@ -314,10 +333,12 @@ void FossaWindow::openImportAiffDialog(){
   );
 }
 
-// ---------------------------------------------------------------------------
-//      openImportSdifDialog
-// ---------------------------------------------------------------------------
-//  opens the import dialog for sdif file format
+/*
+---------------------------------------------------------------------------
+	openImportSdifDialog
+---------------------------------------------------------------------------
+opens the import dialog for sdif file format
+*/
 void FossaWindow::openImportSdifDialog(){
   if(importDialog) delete importDialog; 
 
@@ -329,29 +350,36 @@ void FossaWindow::openImportSdifDialog(){
   );
 }
 
-// ---------------------------------------------------------------------------
-//      openChannelizeDialog
-// ---------------------------------------------------------------------------
-//  opens the dialog for performing channelization of current sound
+/*
+---------------------------------------------------------------------------
+	openChannelizeDialog
+---------------------------------------------------------------------------
+opens the dialog for performing channelization of current sound
+*/
 void FossaWindow::openChannelizeDialog(){
   if(!soundList->isEmpty()){
     if(channelizeDialog) channelizeDialog->show();
-
-    channelizeDialog = new ChannelizeDialog(
+    else{
+      channelizeDialog = new ChannelizeDialog(
 	this,
 	"channelizeDialog",
 	soundList,
 	statusbar
-    );
+      );
+    }
   }
 }
 
-// ---------------------------------------------------------------------------
-//      distill
-// ---------------------------------------------------------------------------
-//  distill current sound. No parameters for distillation - no dialog is needed
+/*
+---------------------------------------------------------------------------
+	distill
+---------------------------------------------------------------------------
+distill current sound. No parameters for distillation - no dialog is needed
+*/
 void FossaWindow::distill(){ 
+
   try{
+    statusbar->message("Distilling "+soundList->getCurrentName());
     soundList->distillCurrent();
     statusbar->message("Distilled sound successfully.", 5000);
   }
@@ -360,10 +388,12 @@ void FossaWindow::distill(){
   }
 }
 
-// ---------------------------------------------------------------------------
-//      openMorphDialog
-// ---------------------------------------------------------------------------
-//  open dialog for performing a sound morph.
+/*
+---------------------------------------------------------------------------
+	openMorphDialog
+---------------------------------------------------------------------------
+open dialog for performing a sound morph.
+*/
 void FossaWindow::openMorphDialog(){
   if(!soundList->isEmpty()){
     if(morphDialog) delete morphDialog;
@@ -377,10 +407,12 @@ void FossaWindow::openMorphDialog(){
   }
 }
 
-// ---------------------------------------------------------------------------
-//      openDilateDialog
-// ---------------------------------------------------------------------------
-//  opens a dialog for dilating one sound onto another.
+/*
+---------------------------------------------------------------------------
+	openDilateDialog
+---------------------------------------------------------------------------
+opens a dialog for dilating one sound onto another.
+*/
 void FossaWindow::openDilateDialog(){
   if(!soundList->isEmpty()){
     if(dilateDialog) delete dilateDialog;
@@ -394,10 +426,12 @@ void FossaWindow::openDilateDialog(){
   }
 }
 
-// ---------------------------------------------------------------------------
-//      openExportAiffDialog
-// ---------------------------------------------------------------------------
-//  opens the dialog for exporting current sound to aiff file
+/*
+---------------------------------------------------------------------------
+	openExportAiffDialog
+---------------------------------------------------------------------------
+opens the dialog for exporting current sound to aiff file
+*/
 void FossaWindow::openExportAiffDialog(){
   if(!soundList->isEmpty()){
     if(exportDialog) delete exportDialog;
@@ -411,10 +445,12 @@ void FossaWindow::openExportAiffDialog(){
   }
 }
 
-// ---------------------------------------------------------------------------
-//      openExportSdifDialog
-// ---------------------------------------------------------------------------
-//  opens the dialog for exporting current sound to sdif file
+/*
+---------------------------------------------------------------------------
+	openExportSdifDialog
+---------------------------------------------------------------------------
+opens the dialog for exporting current sound to sdif file
+*/
 void FossaWindow::openExportSdifDialog(){
   if(!soundList->isEmpty()){
     if(exportDialog) delete exportDialog;
@@ -428,10 +464,12 @@ void FossaWindow::openExportSdifDialog(){
   }
 }
 
-// ---------------------------------------------------------------------------
-//      openNewNameDialog
-// ---------------------------------------------------------------------------
-//  Dialog for renaming current sound
+/*
+---------------------------------------------------------------------------
+	openNewNameDialog
+---------------------------------------------------------------------------
+Dialog for renaming current sound
+*/
 void FossaWindow::openNewNameDialog(){
   if(!soundList->isEmpty()){
     if(newNameDialog) delete newNameDialog;
@@ -445,40 +483,50 @@ void FossaWindow::openNewNameDialog(){
   }
 }
 
-// ---------------------------------------------------------------------------
-//      copy
-// ---------------------------------------------------------------------------
-// copy current sound - no dialog is needed
+/*
+---------------------------------------------------------------------------
+	copy
+---------------------------------------------------------------------------
+Copy current sound - no dialog is needed
+*/
 void FossaWindow::copy(){
   soundList->copyCurrent();
 }
 
-// ---------------------------------------------------------------------------
-//      remove
-// ---------------------------------------------------------------------------
-// remove current sound - no dialog is needed
+/*
+---------------------------------------------------------------------------
+	remove
+---------------------------------------------------------------------------
+remove current sound - no dialog is needed
+*/
 void FossaWindow::remove(){
   soundList->removeCurrent();
 }
 
-// ---------------------------------------------------------------------------
-//      whatIsThis
-// ---------------------------------------------------------------------------
-// Enters WhatsThisMode which shows descriptions of gui elements when clicked on.
+/*
+---------------------------------------------------------------------------
+	whatIsThis
+---------------------------------------------------------------------------
+Enters WhatsThisMode which shows descriptions of gui elements when clicked on.
+*/
 void FossaWindow::whatIsThis(){
   QWhatsThis::enterWhatsThisMode();
 }
 
 
-// ---------------------------------------------------------------------------
-//      about - NOT IMPLEMENTED YET!
-// ---------------------------------------------------------------------------
-// Opens the about window for Fossa.
+/*
+---------------------------------------------------------------------------
+	about - NOT IMPLEMENTED YET!
+---------------------------------------------------------------------------
+Opens the about window for Fossa.
+*/
 void FossaWindow::about(){
 }
 
-// ---------------------------------------------------------------------------
-//      manual - NOT IMPLEMENTED YET!
-// ---------------------------------------------------------------------------
-// Opens the manual of Fossa.
+/*
+---------------------------------------------------------------------------
+	manual - NOT IMPLEMENTED YET!
+---------------------------------------------------------------------------
+Opens the manual of Fossa.
+*/
 void FossaWindow::manual(){ }

@@ -50,7 +50,7 @@ class Axis;
 class DilatePoint:public QCanvasLine{
   public:
     DilatePoint(QCanvas* canvas, int x, int height, int bottomMargin);
-    int rtti(){return rttiNr;}
+    int rtti() const;
     const static int rttiNr = 2003;
 };
 
@@ -85,6 +85,9 @@ class DilateArea:public QCanvasView{
     int			toYAxisValue(int y);
 
     list<double>*	getTimes();
+
+    void		resetAxis(double max);
+    void		updatePlot();
 
   public slots:
     void		dilate();

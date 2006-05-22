@@ -110,7 +110,6 @@ void DilateDialog::setLists(){
 Connect SLOTs to SOCKETs so that QT GUI objects can pass each other messages.
 */
 void DilateDialog::setConnections(){
-
   connect(dilateButton,SIGNAL(clicked()), this, SLOT(dilate()));
   connect(dilateButton,SIGNAL(clicked()), this, SLOT(hide()));
   connect(cancelButton, SIGNAL(clicked()), this, SLOT(hide()));
@@ -120,6 +119,7 @@ void DilateDialog::setConnections(){
           this, SLOT(updateDilate2(int)));
 }
 
+
 /*
 --------------------------------------------------------------------------------
 	dilate
@@ -128,7 +128,7 @@ void DilateDialog::setConnections(){
 void DilateDialog::dilate(){
   statusbar->message("Dilating " + sound2 + " to match " + sound1 + ".");
 
-  SoundList::dilate(
+  soundList->dilate(
 	dilatePos2,
 	dilateArea2->getTimes(),
 	dilateArea1->getTimes()
@@ -142,6 +142,29 @@ void DilateDialog::dilate(){
 
 /*
 --------------------------------------------------------------------------------
+	resetAxes
+--------------------------------------------------------------------------------
+*/
+void DilateDialog::resetAxes(){
+  double dur1;
+  double dur2;
+  double max;
+
+  /*Don't try this unless both sounds are meaningfully chosen.*/
+  if(dilatePos1 < 0 or dilatePos2 < 0) return;
+
+  /*Determine which of the chosen plots has a longer time axis, and set each
+	plot to use that scale as the length of its horizontal axis.*/
+  dur1 = soundList->getSound(dilatePos1)->getDuration();
+  dur2 = soundList->getSound(dilatePos2)->getDuration();
+  max = ( dur1 > dur2) ? dur1 : dur2;
+
+  dilateArea1->resetAxis(max);
+  dilateArea2->resetAxis(max);
+}
+
+/*
+--------------------------------------------------------------------------------
 	updateDilate1
 --------------------------------------------------------------------------------
 Selects a new sound for dilation, and updates all GUI elements in DilateDialog
@@ -149,9 +172,14 @@ to reflect the change.
 */
 void DilateDialog::updateDilate1(int pos){
   dilatePos1 = pos;
+
   sound1 = sound1List->text(pos);
   name1Label->setText(sound1);
+
   dilateArea1->setSound(sound1, pos);
+  resetAxes();
+  dilateArea1->updatePlot();
+
   dilateBox->setTitle(QString("Dilate "+sound2+" onto "+sound1));
 }
 
@@ -165,9 +193,14 @@ to reflect the change.
 */
 void DilateDialog::updateDilate2(int pos){
   dilatePos2 = pos;
+
   sound2 = sound2List->text(pos);
   name2Label->setText(sound2);
+
   dilateArea2->setSound(sound2, pos);
+  resetAxes();
+  dilateArea2->updatePlot();
+
   dilateBox->setTitle(QString("Dilate "+sound2+" onto "+sound1));
 }
 

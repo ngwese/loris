@@ -32,6 +32,7 @@
 
 
 #include <qdialog.h>
+#include <qstatusbar.h>
 
 class QGridLayout;
 class QFrame;
@@ -105,6 +106,7 @@ class DilateDialog:public QDialog{
     int			dilatePos1;
     int			dilatePos2;
 
+    void		resetAxes();
     void		setConnections();
     void		setLists();
     void		setGui();

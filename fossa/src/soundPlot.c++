@@ -106,45 +106,53 @@ SoundPlot::SoundPlot(
 //  setBackgroundMode(Qt::FixedPixmap);
 }
 
-/*
----------------------------------------------------------------------------
-	contentsMousePressEvent
----------------------------------------------------------------------------
-Just pass the event on to the DilateArea if one is utilizing this plot.
-*/
-void SoundPlot::contentsMousePressEvent(QMouseEvent* e){
-//  if(selected >= 0);
-}
-
 
 /*
 ---------------------------------------------------------------------------
-	contentsMouseMoveEvent
+	resetAxis
 ---------------------------------------------------------------------------
-Just pass the event on to the DilateArea if one is utilizing this plot.
+When plotting 2 sounds next to each other they have to have the same time
+scale.
 */
-void SoundPlot::contentsMouseMoveEvent(QMouseEvent* e){
-//  if(selected >= 0);
+void SoundPlot::resetAxis(double max){
+  /*If the scale makes the plot grow, ignore it - the other plot will shrink 
+    correspondingly.*/
+  double scale = soundList->getSound(selected)->getDuration();
+  scale /= max;
+  if(scale == 1) return;
+
+  QWMatrix wm = worldMatrix();
+  wm.scale(scale, 1);
+  setWorldMatrix(wm);
+
+printf("Just scaled to a ratio of %f with max %f\n", scale, max);
+
+
+  delete bAxis;
+
+  bAxis = new Axis (
+        canvas,
+        leftMargin,
+        height() - bottomMargin,
+        "time",
+        width()-rightMargin-leftMargin,
+        30,
+        canvas->height() / 5,
+        0.0,
+        max,
+        false,
+        false
+  );
+
+  bAxis->show();
 }
-
-
-/*
----------------------------------------------------------------------------
-	contentsMouseReleaseEvent
----------------------------------------------------------------------------
-Just pass the event on to the DilateArea if one is utilizing this plot.
-*/
-void SoundPlot::contentsMouseReleaseEvent(QMouseEvent* e){
-//  if(selected >= 0);
-}
-
 
 /*
 ---------------------------------------------------------------------------
 	setSelected
 ---------------------------------------------------------------------------
 Tell the SoundPlot which sound in the SoundList to plot, if other than the
-current. 
+one selected as current in the SoundList. 
 */
 void SoundPlot::setSelected(int sel){
   selected = sel;
@@ -162,12 +170,10 @@ int SoundPlot::getSelected(){ return selected; }
 ---------------------------------------------------------------------------
 	setType
 ---------------------------------------------------------------------------
-If the type changes, then redraw the plot. As of 4/9/06, this is the
-only entry point to updatePlot... 
+If the type changes, then redraw the plot.
 */
 void SoundPlot::setType(Tab::TabType t){
   type = t;
-  updatePlot();
 }
 
 /*
@@ -334,7 +340,7 @@ void SoundPlot::hilight(int p){
 ---------------------------------------------------------------------------
 	updatePlot
 ---------------------------------------------------------------------------
-Create a pixmap, have it plot its partials, and save it for later. 
+Redraw all canvas elements.
 */
 void SoundPlot::updatePlot(){
   double maxX;

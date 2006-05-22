@@ -34,9 +34,11 @@
 #include <qpainter.h>
 
 
-// ---------------------------------------------------------------------------
-//      Axis constructor
-// ---------------------------------------------------------------------------
+/*
+---------------------------------------------------------------------------
+	Axis constructor
+---------------------------------------------------------------------------
+*/
 Axis::Axis(
 	QCanvas*	canvas,
 	int		x,
@@ -79,10 +81,12 @@ Axis::Axis(
   }
 }
   
-// ---------------------------------------------------------------------------
-//      adjustValue
-// ---------------------------------------------------------------------------
-// Rounds up a value to the next largest order of magnitude.
+/*
+---------------------------------------------------------------------------
+	adjustValue
+---------------------------------------------------------------------------
+Rounds up a value to the next largest order of magnitude.
+*/
 double Axis::adjustValue(double value){
   double i      = 1;
   double result = 0;
@@ -103,39 +107,46 @@ double Axis::adjustValue(double value){
   }
 }
 
-// ---------------------------------------------------------------------------
-//      rtti
-// ---------------------------------------------------------------------------
-// Returns a Run Time Type Identification value to make it possible to 
-// distinguish between objects returned by QCanvas::at(). 
+/*
+---------------------------------------------------------------------------
+	rtti
+---------------------------------------------------------------------------
+Returns a Run Time Type Identification value to make it possible to 
+distinguish between objects returned by QCanvas::at(). 
+*/
 int Axis::rtti() const{
   return 2020;
 }
 
-// ---------------------------------------------------------------------------
-//      getIndex
-// ---------------------------------------------------------------------------
-// Returns actual value per canvas unit.
+/*
+---------------------------------------------------------------------------
+	getIndex
+---------------------------------------------------------------------------
+Returns actual value per canvas unit.
+*/
 double Axis::getIndex() const{
   return stepValue/stepLength;
 }
 
-// ---------------------------------------------------------------------------
-//      getLength
-// ---------------------------------------------------------------------------
-// Retruns length of axis
+/* ---------------------------------------------------------------------------
+	getLength
+---------------------------------------------------------------------------
+Retruns length of axis
+*/
 double Axis::getLength() const{
   return length;
 }
 
-// ---------------------------------------------------------------------------
-//      drawShape
-// ---------------------------------------------------------------------------
-// Should be implemented by classes inheriting QCanvasItems. Draws the axis.
-// 
-// Evidently, the way this works is that you call axis->show() which is
-// inherited from (probably) QCanvasItem which then calls drawShape; Fossa
-// does not call this directly, it just implements it as a call-back. -Chris H.
+/*
+---------------------------------------------------------------------------
+	drawShape
+---------------------------------------------------------------------------
+Should be implemented by classes inheriting QCanvasItems. Draws the axis.
+
+The way this works is that you call axis->show() which is
+inherited from (probably) QCanvasItem which then calls drawShape; Fossa
+does not call this directly, it just implements it as a call-back.
+*/
 void Axis::drawShape(QPainter & painter){
   QFont f( "helvetica", 10);
   QString numberText;

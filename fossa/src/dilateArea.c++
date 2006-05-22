@@ -48,6 +48,8 @@ DilatePoint::DilatePoint(
   move(x, 0);
 }
 
+int DilatePoint::rtti() const {return 2003;}
+
 /*
 --------------------------------------------------------------------------------
 	DilateArea construtor
@@ -112,6 +114,23 @@ DilateArea::~DilateArea(){
 
 /*
 --------------------------------------------------------------------------------
+	resetAxis
+--------------------------------------------------------------------------------
+Wrapper funtion to tell the SoundPlot to reset its axis.
+*/
+void DilateArea::resetAxis(double max){ dilatePlot->resetAxis(max); }
+
+/*
+--------------------------------------------------------------------------------
+	updatePlot
+--------------------------------------------------------------------------------
+Wrapper function to tell the SoundPlot to update itself.
+*/
+void DilateArea::updatePlot(){dilatePlot->updatePlot();}
+
+
+/*
+--------------------------------------------------------------------------------
 	setSound
 --------------------------------------------------------------------------------
 Tells the DilateArea to update itself to the specified sound. 
@@ -134,19 +153,19 @@ Return a list of times where the user has placed markers.
 */
 list<double>* DilateArea::getTimes(){
   list<double>* newList = new list<double>;
-  list<QCanvasItem*>::Iterator it;
+  list<QCanvasItem*>::iterator it;
 
   double factor = soundList->getSound(dilateIndex)->getDuration();
   factor /= (width - leftMargin - rightMargin);
 
-  for(	it = dilateList->begin();
-	it != dilateList->end();
+  for(	it = dilateList.begin();
+	it != dilateList.end();
 	it++
   ){
     newList->push_front( factor * (*it)->x() );
   }
 
-  new_list->sort();
+  newList->sort();
 
   return newList;
 }
@@ -198,7 +217,7 @@ void DilateArea::contentsMousePressEvent(QMouseEvent* e){
 
     //Get all items colliding with a vertical line where the click occurred.
     allItemsHit = canvas()->collisions(
-	QRect( e->x(), height, 3, height )
+	QRect( (e->x())-1, topMargin, 3, height )
     );
     moving.clear();
 
@@ -213,13 +232,11 @@ void DilateArea::contentsMousePressEvent(QMouseEvent* e){
             case LeftButton:
               moving.push_front( *it );
               found++;
-              printf("Moving point at %d, %d.\n", e->x(), e->y());
               break;
 
             case RightButton:
-              dilateList.remove( *it );
               delete *it;
-              printf("Removing point at %d, %d.\n", e->x(), e->y());
+              dilateList.remove( *it );
               break;
           }
 
@@ -267,4 +284,7 @@ void DilateArea::contentsMouseReleaseEvent(QMouseEvent* e){
 	dilate
 --------------------------------------------------------------------------------
 */
-void DilateArea::dilate(){}
+void DilateArea::dilate(){
+
+
+}

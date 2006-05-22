@@ -73,10 +73,14 @@ class MorphArea:public QCanvasView{
 	SoundList*	soundList,
 	QStatusBar*	statusbar
     );
+
+    /*Mouse interaction handlers.*/
     void		contentsMousePressEvent(QMouseEvent* e);
     void		contentsMouseMoveEvent(QMouseEvent* e);
     void		contentsMouseReleaseEvent(QMouseEvent* e);
+
     void		addPoint(int x, int y);
+
     int			rtti() const;
     double		toXAxisValue(int x);
     double		toYAxisValue(int y);

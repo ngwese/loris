@@ -47,17 +47,18 @@
 #include <qtooltip.h>
 #include <qwhatsthis.h>
 
-// ---------------------------------------------------------------------------
-//	ChannelizeDialog constructor
-// ---------------------------------------------------------------------------
-// Creates a modal dialog to let the user specify channelization parameters. 
+/*
+---------------------------------------------------------------------------
+	ChannelizeDialog constructor
+---------------------------------------------------------------------------
+Creates a modal dialog to let the user specify channelization parameters. 
+*/
 ChannelizeDialog::ChannelizeDialog( 
 	QWidget*	parent,
 	const char*	name, 
 	SoundList*	list, 
 	QStatusBar*	status
-	): QDialog( parent, name, TRUE){
- 
+): QDialog( parent, name, TRUE){
   statusbar = status;
   soundList = list;
 
@@ -66,21 +67,26 @@ ChannelizeDialog::ChannelizeDialog(
   show();
 }
 
-// ---------------------------------------------------------------------------
-//	setConnections
-// ---------------------------------------------------------------------------
-// Specifies how cancel and channelize buttons react when clicked.
+/*
+---------------------------------------------------------------------------
+	setConnections
+---------------------------------------------------------------------------
+Specifies how cancel and channelize buttons react when clicked.
+*/
 void ChannelizeDialog::setConnections(){
   connect(cancelButton, SIGNAL(clicked()), this, SLOT(hide()));
   connect(channelizeButton, SIGNAL(clicked()), this, SLOT(channelizing()));
 }
 
-// ---------------------------------------------------------------------------
-//	channelizing
-// ---------------------------------------------------------------------------
-// Is called when a user clicks on the channelize button.
+/*
+---------------------------------------------------------------------------
+	channelizing
+---------------------------------------------------------------------------
+Is called when a user clicks on the channelize button.
+*/
 void ChannelizeDialog::channelizing(){
-  double refLabel = refSpinBox->text().toDouble();  //value() doesn't work too good!
+  //value() doesn't work so well!
+  double refLabel = refSpinBox->text().toDouble();
   double max = maxSpinBox->text().toInt();
   double min = minSpinBox->text().toInt();
   QString temp = "";
@@ -113,10 +119,12 @@ void ChannelizeDialog::channelizing(){
   hide();
 }
 
-// ---------------------------------------------------------------------------
-//	setGui
-// ---------------------------------------------------------------------------
-// Sets GUI components of this dialog.
+/*
+---------------------------------------------------------------------------
+	setGui
+---------------------------------------------------------------------------
+Sets GUI components of this dialog.
+*/
 void ChannelizeDialog::setGui(){
   QSpacerItem* spacer;
   QSpacerItem* spacer_2;

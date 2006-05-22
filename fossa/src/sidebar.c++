@@ -44,9 +44,11 @@
 #include <qlistbox.h>
 #include <qgroupbox.h>
 
-// ---------------------------------------------------------------------------
-//	Sidebar constructor
-// ---------------------------------------------------------------------------
+/*
+---------------------------------------------------------------------------
+	Sidebar constructor
+---------------------------------------------------------------------------
+*/
 Sidebar::Sidebar(
 	QWidget*	parent, 
 	const char*	name, 
@@ -58,19 +60,23 @@ Sidebar::Sidebar(
   setConnections();
 }
 
-// ---------------------------------------------------------------------------
-//	setCurrentSound
-// ---------------------------------------------------------------------------
-// When a user clicks on an item in the list, current sound are changed in
-// soundList;
+/*
+---------------------------------------------------------------------------
+	setCurrentSound
+---------------------------------------------------------------------------
+When a user clicks on an item in the list, current sound are changed in
+soundList;
+*/
 void Sidebar::setCurrentSound(int pos){
   soundList->setCurrentSound(pos);
 }
 
-// ---------------------------------------------------------------------------
-//	updateSoundListView
-// ---------------------------------------------------------------------------
-// Every time the soundList is changed the soundListView gets updated.
+/*
+---------------------------------------------------------------------------
+	updateSoundListView
+---------------------------------------------------------------------------
+Every time the soundList is changed the soundListView gets updated.
+*/
 void Sidebar::updateSoundListView(){
   soundListView->clear();
   int listLength = soundList->getLength();
@@ -84,13 +90,15 @@ void Sidebar::updateSoundListView(){
   }
 }
 
-// ---------------------------------------------------------------------------
-//	setConnections
-// ---------------------------------------------------------------------------
-// There are 2 directions here - the first call sets it up so that if the
-// user clicks on a new sound in the sidebar it tells the soundList (main
-// model class) to set a new current sound. The second sets it up the other
-// way, so that if the soundList changes current, then the sidebar updates.
+/*
+---------------------------------------------------------------------------
+	setConnections
+---------------------------------------------------------------------------
+There are 2 directions here - the first call sets it up so that if the
+user clicks on a new sound in the sidebar it tells the soundList (main
+model class) to set a new current sound. The second sets it up the other
+way, so that if the soundList changes current, then the sidebar updates.
+*/
 void Sidebar::setConnections(){
   connect(soundListView, SIGNAL(highlighted(int)), 
 	  this, SLOT(setCurrentSound(int)));    
@@ -98,9 +106,11 @@ void Sidebar::setConnections(){
 	  this, SLOT(updateSoundListView()));
 }
 
-// ---------------------------------------------------------------------------
-//	setGui
-// ---------------------------------------------------------------------------
+/*
+---------------------------------------------------------------------------
+	setGui
+---------------------------------------------------------------------------
+*/
 void Sidebar::setGui(){
   setFrameShape(QFrame::WinPanel);
   setFrameShadow(QFrame::Raised);

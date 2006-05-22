@@ -35,10 +35,12 @@
 #include <qapplication.h> 
 #include "fossaWindow.h"
 
-// ---------------------------------------------------------------------------
-//	Main method of program, starts the application.
-// ---------------------------------------------------------------------------
-// This basically makes the application a QT application.
+/*
+---------------------------------------------------------------------------
+	Main method of program, starts the application.
+---------------------------------------------------------------------------
+This basically makes the application a QT application.
+*/
 int main( int argc, char **argv ){
   QApplication a(argc, argv);
 

@@ -32,9 +32,11 @@
 #include "morphArea.h"
 using namespace Loris;
 
-// ---------------------------------------------------------------------------
-//      MorphArea constructor
-// ---------------------------------------------------------------------------
+/*
+---------------------------------------------------------------------------
+	MorphArea constructor
+---------------------------------------------------------------------------
+*/
 MorphArea::MorphArea(
 	QCanvas*	canvas,
 	QWidget*	parent,
@@ -99,10 +101,12 @@ MorphArea::MorphArea(
   canvas->update();
 }  
 
-// ---------------------------------------------------------------------------
-//      MorphArea contentsMousePressEvent
-// ---------------------------------------------------------------------------
-// Is called when the user clicks with the mouse in the area.
+/*
+---------------------------------------------------------------------------
+	MorphArea contentsMousePressEvent
+---------------------------------------------------------------------------
+Is called when the user clicks with the mouse in the area.
+*/
 void MorphArea::contentsMousePressEvent(QMouseEvent* e){
   if (inArea(e->x(), e->y())){
     ButtonState buttonState = e->button();
@@ -225,11 +229,13 @@ void MorphArea::contentsMousePressEvent(QMouseEvent* e){
   }
 }
 
-// ---------------------------------------------------------------------------
-//      rightButtonHelp
-// ---------------------------------------------------------------------------
-// deletes a point from the list and sets the left line of the point after the 
-// deleted point.
+/*
+---------------------------------------------------------------------------
+	rightButtonHelp
+---------------------------------------------------------------------------
+deletes a point from the list and sets the left line of the point after the 
+deleted point.
+*/
 void MorphArea::rightButtonHelp(
 	QSortedList<PointWithText>& list,
 	PointWithText* point
@@ -247,11 +253,13 @@ void MorphArea::rightButtonHelp(
   }
 }
 
-// ---------------------------------------------------------------------------
-//      contentsMouseMoveEvent
-// ---------------------------------------------------------------------------
-// Called when the user drags the mouse pointer in the area, causing all items
-// in moving array to move.
+/*
+---------------------------------------------------------------------------
+	contentsMouseMoveEvent
+---------------------------------------------------------------------------
+Called when the user drags the mouse pointer in the area, causing all items
+in moving array to move.
+*/
 void MorphArea::contentsMouseMoveEvent(QMouseEvent* e){
   // if left button clicked on one or several points and the 
   // click is in the area, move objects.
@@ -299,10 +307,12 @@ void MorphArea::contentsMouseMoveEvent(QMouseEvent* e){
   }
 }
 
-// ---------------------------------------------------------------------------
-//      moveHelp
-// ---------------------------------------------------------------------------
-// Helper method which does the book-keeping involved with moving a point.
+/*
+---------------------------------------------------------------------------
+	moveHelp
+---------------------------------------------------------------------------
+Helper method which does the book-keeping involved with moving a point.
+*/
 void MorphArea::moveHelp(
         QSortedList<PointWithText>&	list,
 	PointWithText*		movingPoint,
@@ -344,28 +354,34 @@ void MorphArea::moveHelp(
   }
 }
 
-// ---------------------------------------------------------------------------
-//      contentsMouseReleaseEvent
-// ---------------------------------------------------------------------------
-// Is called when the user releases the mouse buttons.
+/*
+---------------------------------------------------------------------------
+	contentsMouseReleaseEvent
+---------------------------------------------------------------------------
+Is called when the user releases the mouse buttons.
+*/
 void MorphArea::contentsMouseReleaseEvent(QMouseEvent* e){
   moving.clear();
 }
 
-// ---------------------------------------------------------------------------
-//      inArea
-// ---------------------------------------------------------------------------
-// Checks if the given (x,y) coorinat is in the area between the axis.
+/*
+---------------------------------------------------------------------------
+	inArea
+---------------------------------------------------------------------------
+Checks if the given (x,y) coorinat is in the area between the axis.
+*/
 bool MorphArea::inArea(int x, int y){
   bool inX = x+1 >= leftMargin && x <= width-rightMargin; 
   bool inY = y+1 >= topMargin  && y <= height-bottomMargin; 
   return inX && inY;
 }
 
-// ---------------------------------------------------------------------------
-//    addPoint
-// ---------------------------------------------------------------------------
-// Adds a new points to the area.
+/*
+---------------------------------------------------------------------------
+	addPoint
+---------------------------------------------------------------------------
+Adds a new points to the area.
+*/
 void MorphArea::addPoint(int x, int y){
   if(inArea(x, y)){
     switch(state){
@@ -461,10 +477,12 @@ void MorphArea::addPoint(int x, int y){
   }
 }
 
-// ---------------------------------------------------------------------------
-//    addPointHelp
-// ---------------------------------------------------------------------------
-// Adds a new point to the area.
+/*
+---------------------------------------------------------------------------
+	addPointHelp
+---------------------------------------------------------------------------
+Adds a new point to the area.
+*/
 void MorphArea::addpointHelp(
 	QSortedList<PointWithText>& list,
 	PointWithText* newPoint
@@ -491,10 +509,12 @@ void MorphArea::addpointHelp(
   newPoint->show();
 }
 
-// ---------------------------------------------------------------------------
-//    clearAll
-// ---------------------------------------------------------------------------
-// Removes all points from the area.
+/*
+---------------------------------------------------------------------------
+	clearAll
+---------------------------------------------------------------------------
+Removes all points from the area.
+*/
 void MorphArea::clearAll(){
   aList.clear();
   fList.clear();
@@ -502,11 +522,13 @@ void MorphArea::clearAll(){
   canvas()->update();
 }
 
-// ---------------------------------------------------------------------------
-//    showHideClear
-// ---------------------------------------------------------------------------
-// Takes care of two different operations, show/hide and clear, depending on
-// buttonId from morphDialog.
+/*
+---------------------------------------------------------------------------
+	showHideClear
+---------------------------------------------------------------------------
+Takes care of two different operations, show/hide and clear, depending on
+buttonId from morphDialog.
+*/
 void MorphArea::showHideClear(int buttonId){
   // show/hide buttons are clicked in morphDialog
   if(buttonId>-1 && buttonId < 4){
@@ -574,10 +596,12 @@ void MorphArea::showHideClear(int buttonId){
   newPointIndex = 3;
 }
 
-// ---------------------------------------------------------------------------
-//    showHideList
-// ---------------------------------------------------------------------------
-// shows or hides all items in a list.
+/*
+---------------------------------------------------------------------------
+	showHideList
+---------------------------------------------------------------------------
+shows or hides all items in a list.
+*/
 void MorphArea::showHideList(QSortedList<PointWithText>& list, bool show){
   PointWithText* point;
 
@@ -594,18 +618,22 @@ void MorphArea::showHideList(QSortedList<PointWithText>& list, bool show){
   }
 }
 
-// ---------------------------------------------------------------------------
-//    getOrigo
-// ---------------------------------------------------------------------------
-// retruns where the axis crosses.
+/*
+---------------------------------------------------------------------------
+	getOrigo
+---------------------------------------------------------------------------
+retruns where the axis crosses.
+*/
 const QPoint MorphArea::getOrigo() const{
   return QPoint(leftMargin, height - bottomMargin);
 }
 
-// ---------------------------------------------------------------------------
-//    morph
-// ---------------------------------------------------------------------------
-// Morph button in morphArea is clicked
+/*
+---------------------------------------------------------------------------
+	morph
+---------------------------------------------------------------------------
+Morph button in morphArea is clicked
+*/
 void MorphArea::morph(){
   LinearEnvelope famp;
   LinearEnvelope ffreq;
@@ -624,10 +652,12 @@ void MorphArea::morph(){
   }
 }
 
-// ---------------------------------------------------------------------------
-//    fillEnvelope
-// ---------------------------------------------------------------------------
-// Takes all points in the list and fills the envelope with the points.
+/*
+---------------------------------------------------------------------------
+	fillEnvelope
+---------------------------------------------------------------------------
+Takes all points in the list and fills the envelope with the points.
+*/
 void MorphArea::fillEnvelope(
 	QSortedList<PointWithText>& list,
 	LinearEnvelope& env
@@ -649,26 +679,32 @@ void MorphArea::fillEnvelope(
   }
 }
 
-// ---------------------------------------------------------------------------
-//    toXAxisValue
-// ---------------------------------------------------------------------------
-// An x-value on the canvas is translated into corresponding value on x-axis.
+/*
+---------------------------------------------------------------------------
+	toXAxisValue
+---------------------------------------------------------------------------
+An x-value on the canvas is translated into corresponding value on x-axis.
+*/
 double MorphArea::toXAxisValue(int x){
   return (double)(x - leftMargin) * bAxis->getIndex();
 }
 
-// ---------------------------------------------------------------------------
-//    toYAxisValue
-// ---------------------------------------------------------------------------
-// A y-value on the canvas is translated into corresponding value on y-axis.
+/*
+---------------------------------------------------------------------------
+	toYAxisValue
+---------------------------------------------------------------------------
+A y-value on the canvas is translated into corresponding value on y-axis.
+*/
 double MorphArea::toYAxisValue(int y){
   return (double)(height-bottomMargin - y) * lAxis->getIndex();
 }
 
-// ---------------------------------------------------------------------------
-//    setMorph1
-// ---------------------------------------------------------------------------
-// Changes all point captions to show the name of the sound chosen as Morph1.
+/*
+---------------------------------------------------------------------------
+	setMorph1
+---------------------------------------------------------------------------
+Changes all point captions to show the name of the sound chosen as Morph1.
+*/
 void MorphArea::setMorph1(int Pos, QString& name){
   PointWithText* point;
 
@@ -696,10 +732,12 @@ void MorphArea::setMorph1(int Pos, QString& name){
   setHorizontalAxis();
 }
 
-// ---------------------------------------------------------------------------
-//    setMorph2
-// ---------------------------------------------------------------------------
-// Changes all point captions to show the name of the sound chosen as Morph2.
+/*
+---------------------------------------------------------------------------
+	setMorph2
+---------------------------------------------------------------------------
+Changes all point captions to show the name of the sound chosen as Morph2.
+*/
 void MorphArea::setMorph2(int Pos, QString& name){
   PointWithText* point;
 
@@ -727,10 +765,12 @@ void MorphArea::setMorph2(int Pos, QString& name){
   setHorizontalAxis();
 }
 
-// ---------------------------------------------------------------------------
-//    setHorizontalAxis
-// ---------------------------------------------------------------------------
-// Adds the horizontal axis to the area.
+/*
+---------------------------------------------------------------------------
+	setHorizontalAxis
+---------------------------------------------------------------------------
+Adds the horizontal axis to the area.
+*/
 void MorphArea::setHorizontalAxis(){
   double time = 0;
 

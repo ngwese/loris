@@ -38,13 +38,14 @@
 #include <qlayout.h>
 #include <qstatusbar.h>
 
-// ---------------------------------------------------------------------------
-//	ExportAiffWidget constructor
-// ---------------------------------------------------------------------------
-// Creates a widget which makes it possible for a user to specify the 
-// parameters, samplerate, and numer of sample bits, when exporting to 
-// an aiff file. 
-
+/*
+---------------------------------------------------------------------------
+	ExportAiffWidget constructor
+---------------------------------------------------------------------------
+Creates a widget which makes it possible for a user to specify the 
+parameters, samplerate, and numer of sample bits, when exporting to 
+an aiff file. 
+*/
 ExportAiffWidget::ExportAiffWidget(
 	QWidget*	parent,
 	char*		name
@@ -52,28 +53,32 @@ ExportAiffWidget::ExportAiffWidget(
   setGui();
 }
 
-// ---------------------------------------------------------------------------
-//	getSampleRate
-// ---------------------------------------------------------------------------
-// Returns the samplerate specified by the user.
-
+/*
+---------------------------------------------------------------------------
+	getSampleRate
+---------------------------------------------------------------------------
+Returns the samplerate specified by the user.
+*/
 int ExportAiffWidget::getSampleRate(){
   return sampleRateSpinBox->value();
 } 
 
-// ---------------------------------------------------------------------------
-//	getNbOfBits
-// ---------------------------------------------------------------------------
-// Returns number the number of sample bits specified by the user.
-
+/*
+---------------------------------------------------------------------------
+	getNbOfBits
+---------------------------------------------------------------------------
+Returns number the number of sample bits specified by the user.
+*/
 int ExportAiffWidget::getNbOfBits(){
   return nbOfBitsSpinBox->value();
 }
-// ---------------------------------------------------------------------------
-//	setGui
-// ---------------------------------------------------------------------------
-// Sets all GUI elements for the widget.
 
+/*
+---------------------------------------------------------------------------
+	setGui
+---------------------------------------------------------------------------
+Sets all GUI elements for the widget.
+*/
 void ExportAiffWidget::setGui(){
   QSpacerItem* spacer_13;
   QSpacerItem* spacer_14;
@@ -158,13 +163,15 @@ void ExportAiffWidget::setGui(){
   thisLayout->addWidget( audioParamBox, 0, 0 ); 
 }
 
-// ---------------------------------------------------------------------------
-//	ExportDialog constructor
-// ---------------------------------------------------------------------------
-// This class is implemented to avoid repeated code in ExportAiffDialog and 
-// ExportSdifDialog. (Might be unnecessary). The dialog is modal, the user have
-// to finish the operation before selecting another window.
 
+/*
+---------------------------------------------------------------------------
+	ExportDialog constructor
+---------------------------------------------------------------------------
+This class is implemented to avoid repeated code in ExportAiffDialog and 
+ExportSdifDialog. (Might be unnecessary). The dialog is modal, the user have
+to finish the operation before selecting another window.
+*/
 ExportDialog::ExportDialog(
 	QWidget*	parent,
 	char*		name,
@@ -179,12 +186,13 @@ ExportDialog::ExportDialog(
   setSelection(soundList->getCurrentName());
 }
 
-// ---------------------------------------------------------------------------
-//	startDialog
-// ---------------------------------------------------------------------------
-// If the user has specified a file name when clicking on save button, the path 
-// and name of the file is set and the method returns true. 
-
+/* 
+--------------------------------------------------------------------------
+	startDialog
+---------------------------------------------------------------------------
+If the user has specified a file name when clicking on save button, the path 
+and name of the file is set and the method returns true. 
+*/
 bool ExportDialog::startDialog(QString fileType){
   if(exec() == QDialog::Accepted){
     QString dir  = dirPath();
@@ -203,12 +211,13 @@ bool ExportDialog::startDialog(QString fileType){
     return false;
 }
 
-// ---------------------------------------------------------------------------
-//	ExportAiffDialog
-// ---------------------------------------------------------------------------
-// Inherits ExportDialog and provides the user with a dialog for exporting
-// sound to an aiff file. 
-
+/*
+---------------------------------------------------------------------------
+	ExportAiffDialog
+---------------------------------------------------------------------------
+Inherits ExportDialog and provides the user with a dialog for exporting
+sound to an aiff file. 
+*/
 ExportAiffDialog::ExportAiffDialog(
 	QWidget*	parent,
 	char*		name,
@@ -235,12 +244,13 @@ ExportAiffDialog::ExportAiffDialog(
   }
 }
 
-// ---------------------------------------------------------------------------
-//	ExportSdifDialog
-// ---------------------------------------------------------------------------
-// Inherits ExportDialog and provides the user with a dialog for exporting
-// sound to a sdif file. 
-
+/*
+---------------------------------------------------------------------------
+	ExportSdifDialog
+---------------------------------------------------------------------------
+Inherits ExportDialog and provides the user with a dialog for exporting
+sound to a sdif file. 
+*/
 ExportSdifDialog::ExportSdifDialog(
 	QWidget*	parent,
 	char*		name,

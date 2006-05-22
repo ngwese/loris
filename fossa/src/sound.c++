@@ -39,17 +39,19 @@
 using std::cout;
 
 
-// ---------------------------------------------------------------------------
-//	Sound constructor
-// ---------------------------------------------------------------------------
-// A Sound has a name, and a list of actual Loris partials.
-// Sound communicates with lorisInterface in
-// order to preform modifications of the list of Loris::Partial.
+/*
+---------------------------------------------------------------------------
+	Sound constructor
+---------------------------------------------------------------------------
+A Sound has a name, and a list of actual Loris partials.
+Sound communicates with lorisInterface in
+order to preform modifications of the list of Loris::Partial.
+*/
 Sound::Sound(
 	list<Loris::Partial>	p,
 	QString			n,
 	LorisInterface*		inter
-){ 
+){
   name        = n;
   interface   = inter;
   partialList = new list<Loris::Partial>(p);
@@ -59,49 +61,61 @@ Sound::Sound(
   channelized = false;
 }
 
-// ---------------------------------------------------------------------------
-//	Sound destructor
-// ---------------------------------------------------------------------------
+/*
+---------------------------------------------------------------------------
+	Sound destructor
+---------------------------------------------------------------------------
+*/
 Sound::~Sound(){
   delete partialList; 
 }
 
-// ---------------------------------------------------------------------------
-//	getName
-// ---------------------------------------------------------------------------
-// Gives the name of the sound
-QString Sound::getName() const  { 
+/*
+---------------------------------------------------------------------------
+	getName
+---------------------------------------------------------------------------
+Gives the name of the sound
+*/
+QString Sound::getName() const  {
   return name; 
 }
 
-// ---------------------------------------------------------------------------
-//	getNumberOfPartials
-// ---------------------------------------------------------------------------
-// Returns number of sound
+/*
+---------------------------------------------------------------------------
+	getNumberOfPartials
+---------------------------------------------------------------------------
+Returns number of sound
+*/
 int Sound::getNumberOfPartials() const{
   return nrOfPartials;
 }
 
-// ---------------------------------------------------------------------------
-//	getPartials
-// ---------------------------------------------------------------------------
-// Returns a list of Loris::Partial, the actual result of a sound analysis
+/*
+---------------------------------------------------------------------------
+	getPartials
+---------------------------------------------------------------------------
+Returns a list of Loris::Partial, the actual result of a sound analysis
+*/
 list<Loris::Partial>* Sound::getPartials() const{
   return partialList;
 }
 
-// ---------------------------------------------------------------------------
-//	getDuration
-// ---------------------------------------------------------------------------
-// Returns the time in seconds of the longest partial in the list
+/*
+---------------------------------------------------------------------------
+	getDuration
+---------------------------------------------------------------------------
+Returns the time in seconds of the longest partial in the list
+*/
 double Sound::getDuration() const{
   return maxTime;
 }
 
-// ---------------------------------------------------------------------------
-//	getMax
-// ---------------------------------------------------------------------------
-// Returns the max of either amplitude, frequency or noise depending on t.
+/*
+---------------------------------------------------------------------------
+	getMax
+---------------------------------------------------------------------------
+Returns the max of either amplitude, frequency or noise depending on t.
+*/
 double Sound::getMax(ValType t) const{
   switch(t){
     case amplitude:
@@ -116,30 +130,36 @@ double Sound::getMax(ValType t) const{
   }
 }
   
-// ---------------------------------------------------------------------------
-//      isChannelized
-// ---------------------------------------------------------------------------
-// Returns true if sound are channelized
+/*
+---------------------------------------------------------------------------
+	isChannelized
+---------------------------------------------------------------------------
+Returns true if sound are channelized
+*/
 bool Sound::isChannelized() const{
   return channelized;
 }
 
-// ---------------------------------------------------------------------------
-//      isDistilled
-// ---------------------------------------------------------------------------
-// Returns true if sound are distilled
+/*
+---------------------------------------------------------------------------
+	isDistilled
+---------------------------------------------------------------------------
+Returns true if sound are distilled
+*/
 bool Sound::isDistilled() const{
   return distilled;
 }
 
-// ---------------------------------------------------------------------------
-//      play
-// ---------------------------------------------------------------------------
-// Plays sound 
-// This operation produces delays in the gui and should be solved in 
-// another way.  Ideally, sound should be synthsized everytime an
-// modification action is performed (for example channelize, distill)
-// and the result saved. Audition of the result would then be much quicker.
+/* 
+--------------------------------------------------------------------------
+	play
+---------------------------------------------------------------------------
+Plays sound 
+This operation produces delays in the gui and should be solved in 
+another way. Ideally, sound should be synthsized every time an
+modification action is performed (for example channelize, distill)
+and the result saved. Audition of the result would then be much quicker.
+*/
 void Sound::play(){
   try{
     // do a synthesise instead and save the result in a temporary file 
@@ -158,19 +178,23 @@ void Sound::play(){
   }
 }
 
-// ---------------------------------------------------------------------------
-//      rename
-// ---------------------------------------------------------------------------
-// Change the name
+/*
+---------------------------------------------------------------------------
+	rename
+---------------------------------------------------------------------------
+Change the name
+*/
 void Sound::rename(QString newName){
   name = newName;
 }
 
 
-// ---------------------------------------------------------------------------
-//      shiftAmplitude
-// ---------------------------------------------------------------------------
-// scales sound amplitude with the given argument value 
+/*
+---------------------------------------------------------------------------
+	shiftAmplitude
+---------------------------------------------------------------------------
+scales sound amplitude with the given argument value 
+*/
 void Sound::shiftAmplitude(double val){
   list<Partial>::iterator it;
   Partial_Iterator pIt;
@@ -192,10 +216,12 @@ void Sound::shiftAmplitude(double val){
   setValues();
 }
 
-// ---------------------------------------------------------------------------
-//      shiftNoise
-// ---------------------------------------------------------------------------
-// scales sound noise with the given argument value 
+/*
+---------------------------------------------------------------------------
+	shiftNoise
+---------------------------------------------------------------------------
+scales sound noise with the given argument value 
+*/
 void Sound::shiftNoise(double val){
   list<Partial>::iterator it;
   Partial_Iterator pIt;
@@ -217,10 +243,12 @@ void Sound::shiftNoise(double val){
   setValues();
 }
 
-// ---------------------------------------------------------------------------
-//      shiftFrequency (shift pitch)
-// ---------------------------------------------------------------------------
-// scales sound frequency with the given argument value 
+/*
+---------------------------------------------------------------------------
+	shiftFrequency (shift pitch)
+---------------------------------------------------------------------------
+scales sound frequency with the given argument value 
+*/
 void Sound::shiftFrequency(double cents){
   list<Partial>::iterator it;
   Partial_Iterator pIt;
@@ -246,12 +274,14 @@ void Sound::shiftFrequency(double cents){
   setValues();
 }
 
-// ---------------------------------------------------------------------------
-//      channelize
-// ---------------------------------------------------------------------------
-// Channelize Loris::Sound by communicating with lorisInterface.
-// After channelization, max values have to be recalculated and the plots
-// need to be updated
+/*
+---------------------------------------------------------------------------
+	channelize
+---------------------------------------------------------------------------
+Channelize a list of Loris::Partials by communicating with lorisInterface.
+After channelization, max values have to be recalculated and the plots
+need to be updated
+*/
 void Sound::channelize(
 	int	refLabel,
 	double	minFreq,
@@ -272,12 +302,14 @@ void Sound::channelize(
   }
 }
 
-// ---------------------------------------------------------------------------
-//      distill
-// ---------------------------------------------------------------------------
-// Distill Loris::Sound by communicating with lorisInterface.
-// After distillation, max values have to be recalculated and the plots
-// need to be updated
+/*
+---------------------------------------------------------------------------
+	distill
+---------------------------------------------------------------------------
+Distill Loris::Partials by communicating with lorisInterface.
+After distillation, max values have to be recalculated and the plots
+need to be updated.
+*/
 void Sound::distill(){
   try{
     interface -> distill(*partialList);
@@ -289,10 +321,12 @@ void Sound::distill(){
   }
 }
 
-// ---------------------------------------------------------------------------
-//      exportToAiff
-// ---------------------------------------------------------------------------
-// Export Loris::Sound to aiff file format by communicating with lorisInterface
+/*
+---------------------------------------------------------------------------
+	exportToAiff
+---------------------------------------------------------------------------
+Export Loris::Sound to aiff file format by communicating with lorisInterface
+*/
 void Sound::exportToAiff(
 	double	sampleRate,
 	int	sampleBits,
@@ -312,10 +346,12 @@ void Sound::exportToAiff(
   }
 }
 
-// ---------------------------------------------------------------------------
-//      exportToSdif
-// ---------------------------------------------------------------------------
-// Export Loris::Sound to sdif file format by communicating with lorisInterface
+/*
+---------------------------------------------------------------------------
+	exportToSdif
+---------------------------------------------------------------------------
+Export Loris::Sound to sdif file format by communicating with lorisInterface
+*/
 void Sound::exportToSdif(const char* name){
   try{
     interface->exportSdif(name, *partialList);
@@ -327,13 +363,15 @@ void Sound::exportToSdif(const char* name){
 
 /************************ helpers *****************************/
 
-// ---------------------------------------------------------------------------
-//      setValues
-// ---------------------------------------------------------------------------
-// The variables containing maximum amplitude, frequency, and noise, as well as
-// longest partial and number of sound are recalculated. This is done when the
-// Loris::Sound changes and not when they are requested to avoid unneccessary 
-// delays in the GUI.
+/*
+---------------------------------------------------------------------------
+	setValues
+---------------------------------------------------------------------------
+The variables containing maximum amplitude, frequency, and noise, as well as
+longest partial and number of sound are recalculated. This is done when the
+Loris::Sound changes and not when they are requested to avoid unneccessary 
+delays in the GUI.
+*/
 void Sound::setValues(){
   list<Partial>::iterator it;
   Partial_Iterator pIt;

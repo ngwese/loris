@@ -262,6 +262,7 @@ void Tab::update(bool redraw){
 
     if(plotted){
       partialsView->setType(empty);
+      partialsView->updatePlot();
       plotted = false;
     }
   }else{
@@ -270,6 +271,7 @@ void Tab::update(bool redraw){
 
     if(!plotted || redraw){
       partialsView->setType(type);
+      partialsView->updatePlot();
       plotted = true;
     }
   }

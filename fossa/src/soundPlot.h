@@ -41,6 +41,7 @@
  */
 #include <qpixmap.h> 
 #include <qcanvas.h> 
+#include <qwmatrix.h>
 #include <qlist.h>
 #include <qsortedlist.h>
 
@@ -69,11 +70,6 @@ class SoundPlot:public QCanvasView{
 	int			sel
     );
 
-    /*These exist so that they can be passed on to the parent DilateArea.*/
-    void			contentsMousePressEvent(QMouseEvent* e);
-    void			contentsMouseMoveEvent(QMouseEvent* e);
-    void			contentsMouseReleaseEvent(QMouseEvent* e);
-
 
     double			toX(double value);
     double			toY(double value);
@@ -81,6 +77,8 @@ class SoundPlot:public QCanvasView{
     void			hilight(int p);
     void			clearAll();
     void			clearHilighted();
+
+    void			resetAxis(double max);
 
     bool			isEmpty();
     void			updatePlot();
@@ -91,17 +89,6 @@ class SoundPlot:public QCanvasView{
 
     QPixmap*			getPixmap();
 
-
-/*
-  public signals:
-    void			press();
-    void			move();
-    void			release();
-*/
-
-  public slots:
-    void			rePlot();
-  
 
   private:
     QCanvas*			canvas;
