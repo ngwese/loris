@@ -18,8 +18,11 @@ trial1:
 	- sounds about the same as the best we did in CU, maybe even a little 
 	better?
 
+trial 2: 
+	- checked various window widths, 160 Hz seems to be the best out of
+	110, 120, 140, 160
 
-Last updated: 28 July 2005 by Kelly Fitz
+Last updated: 26 May 2006 by Kelly Fitz
 """
 print __doc__
 
@@ -38,23 +41,17 @@ f = loris.AiffFile(src+'.aiff')
 samples = f.samples()
 rate = f.sampleRate()
 
-if trial == 1:
-	res = 60
-	floor = -80
-	mlw = 160
-	a = loris.Analyzer( res, mlw )
-	a.setAmpFloor( floor )
-	# turn off BW association
-	a.setBwRegionWidth( 0 )
-	p = a.analyze( samples, rate )
-	ofile = 'threat.%i.%i.raw'%(res, mlw)
-	# collate
-	loris.collate( p )
-	# export
-	fsamps = loris.AiffFile( p, rate )
-	fsamps.write( ofile + '.aiff' )
-	fpartials = loris.AiffFile( p )
-	fpartials.write( ofile + '.sdif' )
-	fspc = loris.SpcFile( p )
-	fspc.write( ofile + '.e.spc' )
-	fspc.write( ofile + '.s.spc', 0 )
+a = loris.Analyzer( 60, 160 )
+a.setAmpFloor( -80 )
+# turn off BW association
+a.setBwRegionWidth( 0 )
+
+p = a.analyze( samples, rate )
+ofile = 'threat.raw'
+# collate
+loris.collate( p )
+# export
+fsamps = loris.AiffFile( p, rate )
+fsamps.write( ofile + '.aiff' )
+fpartials = loris.AiffFile( p )
+fpartials.write( ofile + '.sdif' )
