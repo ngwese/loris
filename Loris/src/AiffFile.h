@@ -114,7 +114,8 @@ public:
 	//!        unspecified, no samples are preallocated.
     //! \param numChannels is the number of channels of audio data
     //!        to preallocate (default 1 channel)
-	explicit AiffFile( double samplerate, size_type numFrames = 0, unsigned int numChannels = 1 );
+	AiffFile( double samplerate, size_type numFrames = 0, 
+              unsigned int numChannels = 1 );
 	
 	//!	Initialize an instance of AiffFile from a buffer of sample
 	//!	data, with the specified sample rate.
@@ -317,7 +318,8 @@ template< typename Iter >
 #endif
 //	initializers:
 	notenum_( 60 ),
-	rate_( samplerate )
+	rate_( samplerate ),
+    numchans_( 1 )
 {
 	addPartials( begin_partials, end_partials, fadeTime );
 }
