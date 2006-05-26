@@ -80,6 +80,7 @@ For more information, please visit
 	#include <Analyzer.h>
 	#include <BreakpointEnvelope.h>
 	#include <Collator.h>
+	#include <Distiller.h>
 	#include <Exception.h>
 	#include <LinearEnvelope.h>
 	#include <Marker.h>
@@ -308,8 +309,25 @@ require:
 "Distill labeled (channelized) Partials in a PartialList into a 
 PartialList containing at most one Partial per label. Unlabeled 
 (zero-labeled) Partials are left unmodified at the end of the 
-distilled Partials.") distill;
-void distill( PartialList * partials );
+distilled Partials. Optionally specify the fade and gap times, 
+defaults are 1ms and 0.1ms.
+") moo_distill;
+
+//void distill( PartialList * partials );
+
+%rename( distill ) moo_distill;
+
+%inline
+%{
+	void moo_distill( PartialList * partials, 
+				  double fadeTime = 0.001, double gapTime = 0.0001 )
+	{
+		Distiller d( fadeTime, gapTime );
+		d.distill( *partials );
+	}
+%}
+
+
 
 
 %feature("docstring",
