@@ -33,7 +33,7 @@ dnl each release!!!!!
 LORIS_MAJOR_VERSION=1
 LORIS_MINOR_VERSION=4
 LORIS_SUBMINOR_VERSION=0
-LORIS_PRERELEASE_STR="beta12"
+LORIS_PRERELEASE_STR="beta13"
 LORIS_VERSION_STR="$PACKAGE_STRING$LORIS_PRERELEASE_STR"
 AC_SUBST(LORIS_MAJOR_VERSION)
 AC_SUBST(LORIS_MINOR_VERSION)
@@ -223,10 +223,84 @@ AC_MSG_RESULT(----- Library Checks -----)
 dnl----------------------------------------------------------------
 dnl Look for FFTW
 dnl
-dnl Remember that fftw library won't link without -lm.
 dnl----------------------------------------------------------------
 
+dnl Remember that fftw library won't link without -lm.
 AC_SEARCH_LIBS([sin], [m])
+
+dnl AC_ARG_WITH( fftw3,
+dnl     AC_HELP_STRING( [--with-fftw3],
+dnl                     [use FFTW3 (default is NO)] ),
+dnl     dnl execute this block if -with-fftw3 is specified
+dnl     [
+dnl     	dnl AC_MSG_WARN([hey --with-fftw3 specified])
+dnl     	
+dnl     	dnl check for fftw3 library
+dnl     	AC_CHECK_LIB([fftw3], [fftw_execute],
+dnl     	dnl if found:
+dnl     	[
+dnl             LINK_FFTW="$LINK_FFTW -lfftw3"
+dnl         ],
+dnl         dnl if not found
+dnl         [
+dnl         	AC_MSG_ERROR([Cannot find the FFTW3 library.  Add something to LDFLAGS.])
+dnl         ])
+dnl     	
+dnl     	dnl check for fftw header
+dnl     	AC_CHECK_HEADERS([fftw3.h],
+dnl     	dnl if found:
+dnl     	[
+dnl     	],
+dnl     	dnl if not found:
+dnl     	[
+dnl         	AC_MSG_ERROR([Cannot find FFTW3 header.  Add something to CPPFLAGS.])
+dnl         ])
+dnl         
+dnl         FFT_LIB="FFTW3"
+dnl     ], 
+dnl     dnl execute this block if -with-fftw3 is not specified
+dnl     [ 
+dnl     	dnl AC_MSG_WARN([hey --with-fftw3 NOT specified])
+dnl     ])
+dnl 
+dnl AC_ARG_WITH( fftw,
+dnl     AC_HELP_STRING( [--with-fftw],
+dnl                     [use FFTW (version 2) (default is NO)] ),
+dnl     dnl execute this block if -with-fftw is specified
+dnl     [
+dnl     	dnl AC_MSG_WARN([hey --with-fftw specified])
+dnl     	
+dnl     	dnl make sure that multiple FFT libraries have not been specified
+dnl     	if test -n "$FFT_LIB"; then
+dnl     		AC_MSG_ERROR([You cannot specify more than one FFT library. Pick one.])
+dnl 		fi
+dnl 		
+dnl     	dnl check for fftw library
+dnl     	AC_CHECK_LIB([fftw], [fftw_create_plan_specific],
+dnl     	dnl if found:
+dnl     	[
+dnl             LINK_FFTW="$LINK_FFTW -lfftw"
+dnl         ],
+dnl         dnl if not found
+dnl         [
+dnl         	AC_MSG_ERROR([Cannot find the FFTW library.  Add something to LDFLAGS.])
+dnl         ])
+dnl     	
+dnl     	dnl check for fftw header
+dnl     	AC_CHECK_HEADERS([fftw.h],
+dnl     	dnl if found:
+dnl     	[
+dnl     	],
+dnl     	dnl if not found:
+dnl     	[
+dnl         	AC_MSG_ERROR([Cannot find FFTW header.  Add something to CPPFLAGS.])
+dnl         ])
+dnl         FFT_LIB="FFTW"
+dnl     ], 
+dnl     dnl execute this block if -with-fftw is not specified
+dnl     [ 
+dnl     	dnl AC_MSG_WARN([hey --with-fftw NOT specified])
+dnl     ])
 
 AC_CHECK_LIB([fftw3], [fftw_execute], [ 
         FFTW_VERSION=3
@@ -247,9 +321,6 @@ else
     AC_CHECK_HEADERS([fftw.h],,
         AC_MSG_ERROR([Cannot find FFTW headers.  Add something to CPPFLAGS.]))
 fi
-
-dnl AC_CHECK_HEADERS("$FFTW_HDR",,
-dnl  AC_MSG_ERROR([Cannot find FFTW headers.  Add something to CPPFLAGS.]))
 
 AC_SUBST(LINK_FFTW)
 

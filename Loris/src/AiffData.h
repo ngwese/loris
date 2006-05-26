@@ -302,14 +302,6 @@ configureSoundDataCk( SoundDataCk & ck, const std::vector< double > & samples,
 					  unsigned int bps  );
 
 // ---------------------------------------------------------------------------
-//	configureSoundDataCk
-// ---------------------------------------------------------------------------
-//
-void 
-configureSoundDataCk( SoundDataCk & ck, const std::vector< double > & samples, 
-					  unsigned int bps  );
-
-// ---------------------------------------------------------------------------
 //	writeCommon
 // ---------------------------------------------------------------------------
 //

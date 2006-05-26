@@ -83,19 +83,34 @@ public:
     //!         of the resampling interval near Breakpoint times in the
     //!         original Partial) is performed.
     void setDenseResampling( bool useDense );
-	
+    
+    //! Specify phase-corrected resampling, or not. If phase
+    //! correct, Partial frequencies are altered slightly
+    //! to match, as nearly as possible, the Breakpoint 
+    //! phases after resampling. Phases are updated so that
+    //! the Partial frequencies and phases are consistent after
+    //! resampling.
+    //!
+    //! \param  correctPhase is a boolean flag specifying that 
+    //!         (if true) frequency/phase correction should be
+    //!         applied after resampling.
+    void setPhaseCorrect( bool correctPhase );
+    	
 //	--- resampling ---
 
-    //! Resample a Partial using this Resampler's stored sampling interval.
-    //! The Breakpoint times in the resampled Partial will comprise a  
-    //! contiguous sequence of integer multiples of the sampling interval,
-    //! beginning with the multiple nearest to the Partial's start time and
-    //! ending with the multiple nearest to the Partial's end time. Resampling
+    //! Resample a Partial using this Resampler's stored quanitization interval.
+    //! If sparse resampling (the default) has be selected, Breakpoint times
+    //! are quantized to integer multiples of the resampling interval.
+    //! If dense resampling is selected, a Breakpoint will be provided at
+    //! every integer multiple of the resampling interval in the time span of
+    //! the Partial, starting and ending with the nearest multiples to the
+    //! ends of the Partial. Frequencies and phases are corrected to be in 
+    //! agreement and to match as nearly as possible the resampled phases if
+    //! phase correct resampling is specified (the default). Resampling
     //! is performed in-place. 
     //!
     //! \param  p is the Partial to resample
     void resample( Partial & p ) const;
-
 
     //! Function call operator: same as resample( p ).
     void operator() ( Partial & p ) const 
@@ -104,13 +119,16 @@ public:
     }
 	 
 	//! Resample all Partials in the specified (half-open) range using this
-	//! Resampler's stored sampling interval, so that the Breakpoints in 
-	//! the Partial envelopes will all lie on a common temporal grid.
-	//! The Breakpoint times in the resampled Partial will comprise a  
-	//! contiguous sequence of integer multiples of the sampling interval,
-	//! beginning with the multiple nearest to the Partial's start time and
-	//! ending with the multiple nearest to the Partial's end time. Resampling
-	//! is performed in-place. 
+	//! Resampler's stored quanitization interval.
+    //! If sparse resampling (the default) has be selected, Breakpoint times
+    //! are quantized to integer multiples of the resampling interval.
+    //! If dense resampling is selected, a Breakpoint will be provided at
+    //! every integer multiple of the resampling interval in the time span of
+    //! the Partial, starting and ending with the nearest multiples to the
+    //! ends of the Partial. Frequencies and phases are corrected to be in 
+    //! agreement and to match as nearly as possible the resampled phases if
+    //! phase correct resampling is specified (the default). Resampling
+    //! is performed in-place. 
 	//!	
 	//!	\param begin is the beginning of the range of Partials to resample
 	//!	\param end is (one-past) the end of the range of Partials to resample
@@ -176,11 +194,16 @@ public:
 //	--- instance variables ---
 private:
 
-    //!  the resampling interval in seconds
+    //! the resampling interval in seconds
     double interval_;	
 
-    //!  boolean selecting dense or sparse resampling
+    //! boolean selecting dense or sparse resampling
+    //! (default is false)
     bool dense_;
+    
+    //! boolean flag selecting phase-corrected resampling
+    //! (default is true)
+    bool phaseCorrect_;
 	
 };	//	end of class Resampler
 
@@ -221,7 +244,7 @@ void Resampler::resample( PartialList::iterator begin, PartialList::iterator end
 //	resample (static)
 // ---------------------------------------------------------------------------
 //! Static member that constructs an instance and applies
-//! it to a sequence of Partials. 
+//! phase-correct resampling to a sequence of Partials. 
 //! Construct a Resampler using the specified resampling
 //! interval, and use it to channelize a sequence of Partials. 
 //!

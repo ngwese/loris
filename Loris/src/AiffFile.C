@@ -69,7 +69,8 @@ namespace Loris {
 //
 AiffFile::AiffFile( const std::string & filename ) :
 	notenum_( 60 ),
-	rate_( 1 )		// rate will be overwritten on import
+	rate_( 1 ),		// rate will be overwritten on import
+    numchans_( 1 )
 {
 	readAiffData( filename );
 }
@@ -84,10 +85,12 @@ AiffFile::AiffFile( const std::string & filename ) :
 //!	\param numFrames is the initial number of (zero) samples. If
 //!	unspecified, no samples are preallocated.
 //
-AiffFile::AiffFile( double samplerate, size_type numFrames /* = 0 */ ) :
+AiffFile::AiffFile( double samplerate, size_type numFrames /* = 0 */, 
+                    unsigned int numChannels /* = 1 */ ) :
 	notenum_( 60 ),
 	rate_( samplerate ),
-	samples_( numFrames, 0 )
+    numchans_( numChannels ),
+	samples_( numFrames * numChannels, 0 )
 {
 }
 
@@ -103,11 +106,41 @@ AiffFile::AiffFile( double samplerate, size_type numFrames /* = 0 */ ) :
 //
 AiffFile::AiffFile( const double * buffer, size_type bufferlength, double samplerate ) :
 	notenum_( 60 ),
-	rate_( samplerate )
+	rate_( samplerate ),
+    numchans_( 1 )
 {
 	samples_.insert( samples_.begin(), buffer, buffer+bufferlength );
 }
 
+// ---------------------------------------------------------------------------
+//	AiffFile constructor from stereo sample data
+// ---------------------------------------------------------------------------
+//!	Initialize an instance of AiffFile from two buffers of sample
+//!	data, with the specified sample rate. Both buffers must store
+//! the same number (bufferLength) of samples.
+//!
+//!	\param buffer_left is a pointer to a buffer of floating point samples 
+//!        representing the left channel samples.
+//!	\param buffer_right is a pointer to a buffer of floating point samples 
+//!        representing the right channel samples.
+//!	\param bufferlength is the number of samples in the buffer.
+//!	\param samplerate is the sample rate of the samples in the buffer.
+//
+AiffFile::AiffFile( const double * buffer_left, const double * buffer_right, 
+                    size_type bufferlength, double samplerate ) :
+	notenum_( 60 ),
+	rate_( samplerate ),
+    numchans_( 2 )
+{
+    //  interleave the two channels in samples_
+    samples_.resize( 2*bufferlength, 0. );
+    size_type idx = 0;
+    while( idx < samples_.size() )
+    {
+        samples_[ idx++ ] = *buffer_left++;
+        samples_[ idx++ ] = *buffer_right++;
+    }    
+}
 
 // ---------------------------------------------------------------------------
 //	AiffFile constructor from sample data
@@ -121,8 +154,48 @@ AiffFile::AiffFile( const double * buffer, size_type bufferlength, double sample
 AiffFile::AiffFile( const std::vector< double > & vec, double samplerate ) :
 	notenum_( 60 ),
 	rate_( samplerate ),
+    numchans_( 1 ),
 	samples_( vec.begin(), vec.end() )
 {
+}
+
+// ---------------------------------------------------------------------------
+//	AiffFile constructor from stereo sample data
+// ---------------------------------------------------------------------------
+//!	Initialize an instance of AiffFile from two vectors of sample
+//!	data, with the specified sample rate. If the two vectors have different
+//! lengths, the shorter one is padded with zeros.
+//!
+//!	\param vec_left is a vector of floating point samples representing the 
+//!        left channel samples.
+//!	\param vec_right is a vector of floating point samples representing the 
+//!        right channel samples.
+//!	\param samplerate is the sample rate of the samples in the vectors.
+//
+AiffFile::AiffFile( const std::vector< double > & vec_left,
+                    const std::vector< double > & vec_right, 
+                    double samplerate ) :
+	notenum_( 60 ),
+	rate_( samplerate ),
+    numchans_( 2 ),
+	samples_( 2 * std::max( vec_left.size(), vec_right.size() ), 0. )
+{
+    //  interleave the two channels in samples_
+    size_type idx = 0;
+    std::vector< double >::const_iterator iter_left = vec_left.begin();
+    std::vector< double >::const_iterator iter_right= vec_right.begin();
+    while( idx < samples_.size() )
+    {
+        if ( iter_left != vec_left.end() )
+        {
+            samples_[ idx ] = *iter_left++;
+        }
+        if ( iter_right != vec_right.end() )
+        {
+            samples_[ idx+1 ] = *iter_right++;
+        }
+        idx += 2;
+    }    
 }
 
 // ---------------------------------------------------------------------------
@@ -136,6 +209,7 @@ AiffFile::AiffFile( const std::vector< double > & vec, double samplerate ) :
 AiffFile::AiffFile( const AiffFile & other ) :
 	notenum_( other.notenum_ ),
 	rate_( other.rate_ ),
+    numchans_( other.numchans_ ),
 	markers_( other.markers_ ),
 	samples_( other.samples_ )
 {
@@ -162,6 +236,7 @@ AiffFile::operator= ( const AiffFile & rhs )
 	
 		notenum_ = rhs.notenum_;
 		rate_ = rhs.rate_;
+        numchans_ = rhs.numchans_;
 		markers_ = rhs.markers_;
 		samples_ = rhs.samples_;
 		
@@ -211,7 +286,7 @@ AiffFile::write( const std::string & filename, unsigned int bps )
 	unsigned long dataSize = 0;
 
 	CommonCk commonChunk;
-	configureCommonCk( commonChunk, samples_.size(), 1 /* channel */, bps, rate_ );
+	configureCommonCk( commonChunk, samples_.size() / numchans_, numchans_, bps, rate_ );
 	dataSize += commonChunk.header.size + sizeof(CkHeader);
 	
 	SoundDataCk soundDataChunk;
@@ -283,6 +358,18 @@ double
 AiffFile::midiNoteNumber( void ) const
 {
 	return notenum_;
+}
+
+// ---------------------------------------------------------------------------
+//	numChannels 
+// ---------------------------------------------------------------------------
+//!	Return the number of channels of audio samples represented by
+//! this AiffFile, 1 for mono, 2 for stereo.
+//
+unsigned int 
+AiffFile::numChannels( void ) const
+{
+    return numchans_;
 }
 
 // ---------------------------------------------------------------------------

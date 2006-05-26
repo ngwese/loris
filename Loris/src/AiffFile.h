@@ -111,8 +111,10 @@ public:
 	//!
 	//!	\param samplerate is the rate at which Partials are rendered
 	//!	\param numFrames is the initial number of (zero) samples. If
-	//!	unspecified, no samples are preallocated.
-	explicit AiffFile( double samplerate, size_type numFrames = 0 );
+	//!        unspecified, no samples are preallocated.
+    //! \param numChannels is the number of channels of audio data
+    //!        to preallocate (default 1 channel)
+	explicit AiffFile( double samplerate, size_type numFrames = 0, unsigned int numChannels = 1 );
 	
 	//!	Initialize an instance of AiffFile from a buffer of sample
 	//!	data, with the specified sample rate.
@@ -121,6 +123,20 @@ public:
 	//!	\param bufferlength is the number of samples in the buffer.
 	//!	\param samplerate is the sample rate of the samples in the buffer.
 	AiffFile( const double * buffer, size_type bufferlength, double samplerate );
+
+    //!	Initialize an instance of AiffFile from two buffers of sample
+    //!	data, with the specified sample rate. Both buffers must store
+    //! the same number (bufferLength) of samples.
+    //!
+    //!	\param buffer_left is a pointer to a buffer of floating point samples 
+    //!        representing the left channel samples.
+    //!	\param buffer_right is a pointer to a buffer of floating point samples 
+    //!        representing the right channel samples.
+    //!	\param bufferlength is the number of samples in the buffer.
+    //!	\param samplerate is the sample rate of the samples in the buffer.
+    //
+    AiffFile::AiffFile( const double * buffer_left, const double * buffer_right, 
+                        size_type bufferlength, double samplerate );
 	 
 	//!	Initialize an instance of AiffFile from a vector of sample
 	//!	data, with the specified sample rate.
@@ -128,6 +144,20 @@ public:
 	//!	\param vec is a vector of floating point samples.
 	//!	\param samplerate is the sample rate of the samples in the vector.
 	AiffFile( const std::vector< double > & vec, double samplerate );
+    
+    //!	Initialize an instance of AiffFile from two vectors of sample
+    //!	data, with the specified sample rate. If the two vectors have different
+    //! lengths, the shorter one is padded with zeros.
+    //!
+    //!	\param vec_left is a vector of floating point samples representing the 
+    //!        left channel samples.
+    //!	\param vec_right is a vector of floating point samples representing the 
+    //!        right channel samples.
+    //!	\param samplerate is the sample rate of the samples in the vectors.
+    //
+    AiffFile::AiffFile( const std::vector< double > & vec_left,
+                        const std::vector< double > & vec_right, 
+                        double samplerate );    
 	 
 	//!	Initialize this and AiffFile that is an exact copy, having
 	//!	all the same sample data, as another AiffFile.
@@ -155,6 +185,10 @@ public:
 	//!	Return the fractional MIDI note number assigned to this AiffFile. 
 	//!	If the sound has no definable pitch, note number 60.0 is used.
 	double midiNoteNumber( void ) const;
+
+	//!	Return the number of channels of audio samples represented by
+    //! this AiffFile, 1 for mono, 2 for stereo.
+	unsigned int numChannels( void ) const;
 
 	//!	Return the number of sample frames represented in this AiffFile.
 	//!	A sample frame contains one sample per channel for a single sample
@@ -236,6 +270,7 @@ public:
 private:
 //	-- implementation --
 	double notenum_, rate_;		// MIDI note number and sample rate
+    unsigned int numchans_;
 	markers_type markers_;		// AIFF Markers
 	samples_type samples_;		// floating point samples [-1.0, 1.0]
 

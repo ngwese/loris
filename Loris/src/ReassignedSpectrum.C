@@ -171,8 +171,7 @@ ReassignedSpectrum::transform( const double * sampsBegin,
 	//	window the samples into the reassignment FT buffer,
 	//	using the complex-valued reassignment window:
 	it = std::transform( sampsBegin, sampsEnd, mCorrectionTransformWindow.begin() + winBeginOffset, 
-						mCorrectionTransform.begin(), std::multiplies< std::complex<double> >() );
-	
+						 mCorrectionTransform.begin(), std::multiplies< std::complex<double> >() );
 	//	fill the rest with zeros:
 	std::fill( it, mCorrectionTransform.end(), 0. );
 	//	rotate to align phase:

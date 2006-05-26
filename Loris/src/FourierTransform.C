@@ -49,41 +49,40 @@
 #endif
 
 // ===========================================================================
-//	No longer matters that fftw and this class use the same floating point
-//	data format. The insulating implementation class now does its job of
+// No longer matters that fftw and this class use the same floating point
+// data format. The insulating implementation class now does its job of
 // really insulating clients completely from FFTW, by copying data between
 // buffers of std::complex< double > and fftw_complex, rather than 
 // relying on those two complex types to have the same memory layout.
 // The overhead of copying is probably not significant, compared to 
-// the expense of computing the spectra. 
+// the expense of computing the transform. 
 //
-//	about complex math functions for fftw_complex:
+// about complex math functions for fftw_complex:
 //
-//	These functions are all defined as templates in <complex>.
-//	Regrettably, they are all implemented using real() and 
-//	imag() _member_ functions of the template argument, T. 
-//	If they had instead been implemented in terms of the real()
-//	and imag() (template) free functions, then I could just specialize
-//	those two for the fftw complex data type, and the other template
-//	functions would work. Instead, I have to specialize _all_ of
-//	those functions that I want to use. I hope this was a learning 
-//	experience for someone... In the mean time, the alternative I 
-//	have is to take advantage of the fact that fftw_complex and 
-//	std::complex<double> have the same footprint, so I can just
-//	cast back and forth between the two types. Its icky, but it 
-//	works, and its a lot faster than converting, and more palatable
-//	than redefining all those operators.
+// These functions are all defined as templates in <complex>.
+// Regrettably, they are all implemented using real() and 
+// imag() _member_ functions of the template argument, T. 
+// If they had instead been implemented in terms of the real()
+// and imag() (template) free functions, then I could just specialize
+// those two for the fftw complex data type, and the other template
+// functions would work. Instead, I have to specialize _all_ of
+// those functions that I want to use. I hope this was a learning 
+// experience for someone... In the mean time, the alternative I 
+// have is to take advantage of the fact that fftw_complex and 
+// std::complex<double> have the same footprint, so I can just
+// cast back and forth between the two types. Its icky, but it 
+// works, and its a lot faster than converting, and more palatable
+// than redefining all those operators.
 //
-//	On the subject of brilliant designs, fftw_complex is defined as
-//	a typedef of an anonymous struct, as in typedef struct {...} fftw_complex,
-//	so I cannot forward-declare that type.
+// On the subject of brilliant designs, fftw_complex is defined as
+// a typedef of an anonymous struct, as in typedef struct {...} fftw_complex,
+// so I cannot forward-declare that type.
 //
 // In other good news, the planning structure got a slight name change
 // in version 3, making it even more important to remove all traces of
 // FFTW from the FourierTransform class definition.
 //
 // ===========================================================================
-
 
 //	begin namespace
 namespace Loris {
@@ -103,7 +102,7 @@ static void fftw_die_Loris( const char * s );
 // completely from everything about the interaction between
 // Loris and FFTW. There is more copying of data between buffers,
 // but this is not the expensive part of computing Fourier transforms
-// and we don't have to do unsavry things that require std::complex
+// and we don't have to do unsavory things that require std::complex
 // and fftw_complex to have the same memory layout (we could even get
 // by with single-precision floats in FFTW if necessary). Also got
 // rid of lots of shared buffer stuff that just made the implementation
@@ -113,76 +112,76 @@ static void fftw_die_Loris( const char * s );
 class FTimpl
 {
 public:
-   fftw_plan plan;
-   FourierTransform::size_type N;
-   fftw_complex * ftIn;    // actually, these can be the same for FFTW3
-   fftw_complex * ftOut;
+	fftw_plan plan;
+	FourierTransform::size_type N;
+	fftw_complex * ftIn;    // actually, these can be the same for FFTW3
+	fftw_complex * ftOut;
    
-   // Construct an implementation instance:
-   // allocate an input buffer, and an output buffer
-   // and make a plan.
-   FTimpl( FourierTransform::size_type sz ) : 
-      plan( 0 ), N( sz ), ftIn( 0 ), ftOut( 0 ) 
-   {      
-      // allocate buffers:
-      ftIn = (fftw_complex *)fftw_malloc( sizeof( fftw_complex ) * N );
-      ftOut = (fftw_complex *)fftw_malloc( sizeof( fftw_complex ) * N );
-      if ( 0 == ftIn || 0 == ftOut )
-      {
-         fftw_free( ftIn );
-         fftw_free( ftOut );
-         throw RuntimeError( "cannot allocate Fourier transform buffers" );
-      }
-      
-   	//	create a plan:
-   #if defined(HAVE_FFTW3_H)
-   	plan = fftw_plan_dft_1d( N, ftIn, ftOut, FFTW_FORWARD, FFTW_ESTIMATE );
-   #else
-   	plan = fftw_create_plan_specific( N, FFTW_FORWARD, FFTW_ESTIMATE,
-   									          ftIn, 1, ftOut, 1 );
-   #endif									   
-   	//	verify:
-   	if ( 0 == plan )
-   	{
-   		Throw( RuntimeError, "FourierTransform could not make a (fftw) plan." );
-   	}
-   }
+	// Construct an implementation instance:
+	// allocate an input buffer, and an output buffer
+	// and make a plan.
+	FTimpl( FourierTransform::size_type sz ) : 
+	  plan( 0 ), N( sz ), ftIn( 0 ), ftOut( 0 ) 
+	{      
+		// allocate buffers:
+		ftIn = (fftw_complex *)fftw_malloc( sizeof( fftw_complex ) * N );
+		ftOut = (fftw_complex *)fftw_malloc( sizeof( fftw_complex ) * N );
+		if ( 0 == ftIn || 0 == ftOut )
+		{
+			fftw_free( ftIn );
+			fftw_free( ftOut );
+			throw RuntimeError( "cannot allocate Fourier transform buffers" );
+		}
+	  
+		//	create a plan:
+		#if defined(HAVE_FFTW3_H)
+		plan = fftw_plan_dft_1d( N, ftIn, ftOut, FFTW_FORWARD, FFTW_ESTIMATE );
+		#else
+		plan = fftw_create_plan_specific( N, FFTW_FORWARD, FFTW_ESTIMATE,
+												  ftIn, 1, ftOut, 1 );
+		#endif									   
+		//	verify:
+		if ( 0 == plan )
+		{
+			Throw( RuntimeError, "FourierTransform could not make a (fftw) plan." );
+		}
+	}
    
-   // Destroy the implementation instance:
-   // dump the plan.
-   ~FTimpl( void )
-   {
-    if ( 0 != plan )
-    {
-     fftw_destroy_plan( plan );
-    }         
-
-    fftw_free( ftIn );
-    fftw_free( ftOut );
-   }
+	// Destroy the implementation instance:
+	// dump the plan.
+	~FTimpl( void )
+	{
+		if ( 0 != plan )
+		{
+		fftw_destroy_plan( plan );
+		}         
+		
+		fftw_free( ftIn );
+		fftw_free( ftOut );
+	}
+	
+	// Copy complex< double >'s from a buffer into ftIn, 
+	// the buffer must be as long as ftIn.
+	void loadInput( const complex< double > * bufPtr )
+	{
+		for ( FourierTransform::size_type k = 0; k < N; ++k )
+		{
+			c_re( ftIn[ k ] ) = bufPtr->real();
+			c_im( ftIn[ k ] ) = bufPtr->imag();
+			++bufPtr;
+		}
+	}
    
-   // Copy complex< double >'s from a buffer into ftIn, 
-   // the buffer must be as long as ftIn.
-   void loadInput( const complex< double > * bufPtr )
-   {
-      for ( FourierTransform::size_type k = 0; k < N; ++k )
-      {
-         c_re( ftIn[ k ] ) = bufPtr->real();
-         c_im( ftIn[ k ] ) = bufPtr->imag();
-         ++bufPtr;
-      }
-   }
-   
-   // Copy complex< double >'s from ftOut into a buffer,
-   // which must be as long as ftOut.
-   void copyOutput( complex< double > * bufPtr ) const
-   {
-      for ( FourierTransform::size_type k = 0; k < N; ++k )
-      {
-         *bufPtr = complex< double >( c_re( ftOut[ k ] ), c_im( ftOut[ k ] ) );
-         ++bufPtr;
-      }
-   }
+	// Copy complex< double >'s from ftOut into a buffer,
+	// which must be as long as ftOut.
+	void copyOutput( complex< double > * bufPtr ) const
+	{
+		for ( FourierTransform::size_type k = 0; k < N; ++k )
+		{
+			*bufPtr = complex< double >( c_re( ftOut[ k ] ), c_im( ftOut[ k ] ) );
+			++bufPtr;
+		}
+	}
 }; // end of class FTimpl
 
 // --- FourierTransform members ---
