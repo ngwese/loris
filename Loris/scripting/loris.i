@@ -86,6 +86,7 @@ For more information, please visit
 	#include <Marker.h>
 	#include <Partial.h>
 	#include <SdifFile.h>
+	#include <Sieve.h>
 	#include <SpcFile.h>
 	#include <Synthesizer.h>
 
@@ -208,7 +209,8 @@ void channelize( PartialList * partials,
 number of Partials that does not combine any overlapping Partials.
 Collated Partials assigned labels higher than any label in the original 
 list, and appear at the end of the sequence, after all previously-labeled
-Partials.") collate_duh;
+Partials. Optionally specify the fade and gap times, 
+defaults are 1ms and 0.1ms.") collate_duh;
 
 %rename( collate ) collate_duh;
 
@@ -218,9 +220,11 @@ Partials.") collate_duh;
     // in localefwd.h (GNU) that is somehow getting
     // imported, and using statements do not solve
     // the problem as they should.
-    void collate_duh( PartialList * partials )
+    void collate_duh( PartialList * partials, 
+				  	  double fadeTime = 0.001, double gapTime = 0.0001 )
     {
-        ::collate( partials );
+    	Collator c( fadeTime, gapTime );
+        c.collate( *partials );
     }
 %}
 
@@ -328,8 +332,6 @@ defaults are 1ms and 0.1ms.
 %}
 
 
-
-
 %feature("docstring",
 "Export audio samples stored in a vector to an AIFF file having the
 specified number of channels and sample rate at the given file
@@ -338,6 +340,9 @@ clamped to the range (-1.,1.) and converted to integers having
 bitsPerSamp bits. The default values for the sample rate and
 sample size, if unspecified, are 44100 Hz (CD quality) and 16 bits
 per sample, respectively.
+
+If a PartialList is specified, the Partials are rendered at the
+specified sample rate and then exported.
 
 Only mono files can be exported, the last argument is ignored, 
 and is included only for backward compatability") moo_exportAiff;
@@ -350,20 +355,21 @@ and is included only for backward compatability") moo_exportAiff;
 %inline 
 %{
 	void moo_exportAiff( const char * path, const std::vector< double > & samples,
-					 double samplerate, int bitsPerSamp, 
-					 int nchansignored )
+					     double samplerate = 44100, int bitsPerSamp = 16, 
+					     int nchansignored = 1 )
+	{
+		exportAiff( path, &(samples.front()), samples.size(), 
+					samplerate, bitsPerSamp );
+	}
+	/*
+	void moo_exportAiff( const char * path, const std::vector< double > & samples,
+					     double samplerate, int bitsPerSamp )
 	{
 		exportAiff( path, &(samples.front()), samples.size(), 
 					samplerate, bitsPerSamp );
 	}
 	void moo_exportAiff( const char * path, const std::vector< double > & samples,
-					 double samplerate, int bitsPerSamp )
-	{
-		exportAiff( path, &(samples.front()), samples.size(), 
-					samplerate, bitsPerSamp );
-	}
-	void moo_exportAiff( const char * path, const std::vector< double > & samples,
-					 double samplerate )
+					     double samplerate )
 	{
 		exportAiff( path, &(samples.front()), samples.size(), 
 					samplerate, 16 );
@@ -373,6 +379,14 @@ and is included only for backward compatability") moo_exportAiff;
 		exportAiff( path, &(samples.front()), samples.size(), 
 					44100, 16 );
 	}
+	*/
+	void moo_exportAiff( const char * path, PartialList * partials,
+					     double samplerate = 44100, int bitsPerSamp = 16 )
+	{
+	    AiffFile fout( partials->begin(), partials->end(), samplerate );
+	    fout.write( path );
+	}
+	
 %}
 
 %feature("docstring",
@@ -808,9 +822,23 @@ void shiftTime( PartialList * partials, double offset );
 "Eliminate overlapping Partials having the same label
 (except zero). If any two partials with same label
 overlap in time, keep only the longer of the two.
-Set the label of the shorter duration partial to zero.");
+Set the label of the shorter duration partial to zero.
+Optionally specify the fade time, default is 1ms.") moo_sift;
 
-void sift( PartialList * partials );
+//void sift( PartialList * partials );
+
+%rename( sift ) moo_sift;
+
+%inline
+%{
+	void moo_sift( PartialList * partials, 
+				  double fadeTime = 0.001 )
+	{
+		Sieve s( fadeTime );
+		s.sift( *partials );
+	}
+%}
+
 
 %feature("docstring",
 "Sort the Partials in a PartialList in order of increasing label.

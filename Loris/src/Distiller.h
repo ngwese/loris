@@ -41,41 +41,41 @@
 
 #include <algorithm>
 
-//	begin namespace
+//  begin namespace
 namespace Loris {
 
 // ---------------------------------------------------------------------------
-//	class Distiller
+//  class Distiller
 //
-//!	Class Distiller represents an algorithm for "distilling" a group of
-//!	Partials that logically represent a single component into a single
-//!	Partial.
-//!	
-//!	The sound morphing algorithm in Loris requires that Partials in a
-//!	given source be labeled uniquely, that is, no two Partials can have
-//!	the same label. The Distiller enforces this condition. All Partials
-//!	identified with a particular frequency channel (see Channelizer), and,
-//!	therefore, having a common label, are distilled into a single Partial,
-//!	leaving at most a single Partial per frequency channel and label.
-//!	Channels that contain no Partials are not represented in the distilled
-//!	data. Partials that are not labeled, that is, Partials having label 0,
-//!	are are left unmodified at the end of the Partial sequence.
-//!	
-//!	Distillation modifies the Partial container (a PartialList). All
-//!	Partials in the distilled range having a common label are replaced by
-//!	a single Partial in the distillation process. Only labeled
+//! Class Distiller represents an algorithm for "distilling" a group of
+//! Partials that logically represent a single component into a single
+//! Partial.
+//! 
+//! The sound morphing algorithm in Loris requires that Partials in a
+//! given source be labeled uniquely, that is, no two Partials can have
+//! the same label. The Distiller enforces this condition. All Partials
+//! identified with a particular frequency channel (see Channelizer), and,
+//! therefore, having a common label, are distilled into a single Partial,
+//! leaving at most a single Partial per frequency channel and label.
+//! Channels that contain no Partials are not represented in the distilled
+//! data. Partials that are not labeled, that is, Partials having label 0,
+//! are are left unmodified at the end of the Partial sequence.
+//! 
+//! Distillation modifies the Partial container (a PartialList). All
+//! Partials in the distilled range having a common label are replaced by
+//! a single Partial in the distillation process. Only labeled
 //! Partials are affected by distillation. 
 //
 class Distiller
 {
-//	-- instance variables --
+//  -- instance variables --
 
-	double _fadeTime, _gapTime;         // distillation parameters
-		
-//	-- public interface --
+    double _fadeTime, _gapTime;         // distillation parameters
+        
+//  -- public interface --
 public:
 
-//	-- global defaults and constants --
+//  -- global defaults and constants --
 
     //! Default time (in seconds) over which Partials joined by
     //! distillation fade to and from zero amplitude.
@@ -85,44 +85,44 @@ public:
     //! (zero-amplitude) gap between two Partials joined by distillation.
     static const double DefaultSilentTime;
 
-//	-- construction --
+//  -- construction --
 
-	//!	Construct a new Distiller using the specified fade time
-	//!	for gaps between Partials. When two non-overlapping Partials
-	//!	are distilled into a single Partial, the distilled Partial
-	//!	fades out at the end of the earlier Partial and back in again
-	//!	at the onset of the later one. The fade time is the time over
-	//!	which these fades occur. By default, use a 1 ms fade time.
-	//!	The gap time is the additional time over which a Partial faded
-	//!	out must remain at zero amplitude before it can fade back in.
-	//!	By default, use a gap time of one tenth of a millisecond, to 
-	//!	prevent a pair of arbitrarily close null Breakpoints being
-	//!	inserted.
-	//!
-	//!   \param   partialFadeTime is the time (in seconds) over
-	//!            which Partials joined by distillation fade to
-	//!            and from zero amplitude. (Default is 
-	//!            Distiller::DefaultFadeTime).
-	//!   \param   partialSilentTime is the minimum duration (in seconds) 
-	//!            of the silent (zero-amplitude) gap between two 
-	//!            Partials joined by distillation. (Default is
-	//!            Distiller::DefaultSilentTime).
-	explicit
-	Distiller( double partialFadeTime = Distiller::DefaultFadeTime,
-               double partialSilentTime = Distiller::DefaultSilentTime );
-	 
-	//	Use compiler-generated copy, assign, and destroy.
-	
-//	-- distillation --
-
-    //!	Distill labeled Partials in a collection leaving only a single 
-    //!	Partial per non-zero label. 
+    //! Construct a new Distiller using the specified fade time
+    //! for gaps between Partials. When two non-overlapping Partials
+    //! are distilled into a single Partial, the distilled Partial
+    //! fades out at the end of the earlier Partial and back in again
+    //! at the onset of the later one. The fade time is the time over
+    //! which these fades occur. By default, use a 1 ms fade time.
+    //! The gap time is the additional time over which a Partial faded
+    //! out must remain at zero amplitude before it can fade back in.
+    //! By default, use a gap time of one tenth of a millisecond, to 
+    //! prevent a pair of arbitrarily close null Breakpoints being
+    //! inserted.
     //!
-    //!	Unlabeled (zero-labeled) Partials are left unmodified at 
+    //!   \param   partialFadeTime is the time (in seconds) over
+    //!            which Partials joined by distillation fade to
+    //!            and from zero amplitude. (Default is 
+    //!            Distiller::DefaultFadeTime).
+    //!   \param   partialSilentTime is the minimum duration (in seconds) 
+    //!            of the silent (zero-amplitude) gap between two 
+    //!            Partials joined by distillation. (Default is
+    //!            Distiller::DefaultSilentTime).
+    explicit
+    Distiller( double partialFadeTime = Distiller::DefaultFadeTime,
+               double partialSilentTime = Distiller::DefaultSilentTime );
+     
+    //  Use compiler-generated copy, assign, and destroy.
+    
+//  -- distillation --
+
+    //! Distill labeled Partials in a collection leaving only a single 
+    //! Partial per non-zero label. 
+    //!
+    //! Unlabeled (zero-labeled) Partials are left unmodified at 
     //! the end of the distilled Partials.
     //!
-    //!	Return an iterator refering to the position of the first unlabeled Partial,
-    //!	or the end of the distilled collection if there are no unlabeled Partials.
+    //! Return an iterator refering to the position of the first unlabeled Partial,
+    //! or the end of the distilled collection if there are no unlabeled Partials.
     //! Since distillation is in-place, the Partials collection may be smaller
     //! (fewer Partials) after distillation, and any iterators on the collection
     //! may be invalidated.
@@ -135,27 +135,27 @@ public:
     //!         which is either the end of the collection, or the position
     //!         or the first unlabeled Partial.
     //!
-    //!	If compiled with NO_TEMPLATE_MEMBERS defined, then partials
-    //!	must be a PartialList, otherwise it can be any container type
-    //!	storing Partials that supports at least bidirectional iterators.
+    //! If compiled with NO_TEMPLATE_MEMBERS defined, then partials
+    //! must be a PartialList, otherwise it can be any container type
+    //! storing Partials that supports at least bidirectional iterators.
     //!
     //! \sa Distiller::distill( Container & partials )
 #if ! defined(NO_TEMPLATE_MEMBERS)
-	template< typename Container >
-	typename Container::iterator distill( Container & partials );
+    template< typename Container >
+    typename Container::iterator distill( Container & partials );
 #else
     inline
-	PartialList::iterator distill( PartialList & partials );
+    PartialList::iterator distill( PartialList & partials );
 #endif
 
-	//!	Function call operator: same as distill( PartialList & partials ).
+    //! Function call operator: same as distill( PartialList & partials ).
 #if ! defined(NO_TEMPLATE_MEMBERS)
-	template< typename Container >
-	typename Container::iterator operator() ( Container & partials );
+    template< typename Container >
+    typename Container::iterator operator() ( Container & partials );
 #else
-	PartialList::iterator operator() ( PartialList & partials );
+    PartialList::iterator operator() ( PartialList & partials );
 #endif
-	
+    
     //! Static member that constructs an instance and applies
     //! it to a sequence of Partials. 
     //!
@@ -174,32 +174,32 @@ public:
     //!         which is either the end of the collection, or the position
     //!         or the first unlabeled Partial.
     //!
-    //!	If compiled with NO_TEMPLATE_MEMBERS defined, then partials
-    //!	must be a PartialList, otherwise it can be any container type
-    //!	storing Partials that supports at least bidirectional iterators.
+    //! If compiled with NO_TEMPLATE_MEMBERS defined, then partials
+    //! must be a PartialList, otherwise it can be any container type
+    //! storing Partials that supports at least bidirectional iterators.
 #if ! defined(NO_TEMPLATE_MEMBERS)
-	template< typename Container >
-	static typename Container::iterator 
-	distill( Container & partials, double partialFadeTime,
+    template< typename Container >
+    static typename Container::iterator 
+    distill( Container & partials, double partialFadeTime,
              double partialSilentTime = Distiller::DefaultSilentTime );
 #else
-	static inline PartialList::iterator
-	distill( PartialList & partials, double partialFadeTime,
+    static inline PartialList::iterator
+    distill( PartialList & partials, double partialFadeTime,
              double partialSilentTime = Distiller::DefaultSilentTime );
 #endif
 
 private:
 
-//	-- helpers --
+//  -- helpers --
 
     //! Distill labeled Partials in a PartialList leaving only a single 
-    //!	Partial per non-zero label. 
+    //! Partial per non-zero label. 
     //!
-    //!	Unlabeled (zero-labeled) Partials are left unmodified at 
+    //! Unlabeled (zero-labeled) Partials are left unmodified at 
     //! the end of the distilled Partials.
     //!
-    //!	Return an iterator refering to the position of the first unlabeled Partial,
-    //!	or the end of the distilled collection if there are no unlabeled Partials.
+    //! Return an iterator refering to the position of the first unlabeled Partial,
+    //! or the end of the distilled collection if there are no unlabeled Partials.
     //! Since distillation is in-place, the Partials collection may be smaller
     //! (fewer Partials) after distillation, and any iterators on the collection
     //! may be invalidated.
@@ -211,7 +211,7 @@ private:
     //! \return the position of the end of the range of distilled Partials,
     //!         which is either the end of the collection, or the position
     //!         or the first unlabeled Partial.
-	PartialList::iterator distill_list( PartialList & partials );
+    PartialList::iterator distill_list( PartialList & partials );
 
     //! Distill a list of Partials having a common label
     //! into a single Partial with that label, and append it
@@ -220,20 +220,20 @@ private:
     //! label is appended.
     void distillOne( PartialList & partials, Partial::label_type label,
                      PartialList & distilled );
-	
-};	//	end of class Distiller
+    
+};  //  end of class Distiller
 
 // ---------------------------------------------------------------------------
-//	distill
+//  distill
 // ---------------------------------------------------------------------------
 //! Distill labeled Partials in a collection leaving only a single 
-//!	Partial per non-zero label. 
+//! Partial per non-zero label. 
 //!
-//!	Unlabeled (zero-labeled) Partials are left unmodified at 
+//! Unlabeled (zero-labeled) Partials are left unmodified at 
 //! the end of the distilled Partials.
 //!
-//!	Return an iterator refering to the position of the first unlabeled Partial,
-//!	or the end of the distilled collection if there are no unlabeled Partials.
+//! Return an iterator refering to the position of the first unlabeled Partial,
+//! or the end of the distilled collection if there are no unlabeled Partials.
 //! Since distillation is in-place, the Partials collection may be smaller
 //! (fewer Partials) after distillation, and any iterators on the collection
 //! may be invalidated.
@@ -246,9 +246,9 @@ private:
 //!           which is either the end of the collection, or the position
 //!           or the first unlabeled Partial.
 //!
-//!	If compiled with NO_TEMPLATE_MEMBERS defined, then partials
-//!	must be a PartialList, otherwise it can be any container type
-//!	storing Partials that supports at least bidirectional iterators.
+//! If compiled with NO_TEMPLATE_MEMBERS defined, then partials
+//! must be a PartialList, otherwise it can be any container type
+//! storing Partials that supports at least bidirectional iterators.
 //!
 //
 #if ! defined(NO_TEMPLATE_MEMBERS)
@@ -298,10 +298,10 @@ PartialList::iterator Distiller::distill( PartialList & partials )
 #endif
 
 // ---------------------------------------------------------------------------
-//	Function call operator 
+//  Function call operator 
 // ---------------------------------------------------------------------------
-//!	Function call operator: same as distill( PartialList & partials ).
-//!	
+//! Function call operator: same as distill( PartialList & partials ).
+//! 
 //! \sa Distiller::distill( Container & partials )
 //
 #if ! defined(NO_TEMPLATE_MEMBERS)
@@ -312,11 +312,11 @@ inline
 PartialList::iterator Distiller::operator()( PartialList & partials )
 #endif
 { 
-	return distill( partials );
+    return distill( partials );
 }
 
 // ---------------------------------------------------------------------------
-//	distill
+//  distill
 // ---------------------------------------------------------------------------
 //! Static member that constructs an instance and applies
 //! it to a sequence of Partials. 
@@ -336,9 +336,9 @@ PartialList::iterator Distiller::operator()( PartialList & partials )
 //!           which is either the end of the collection, or the position
 //!           or the first unlabeled Partial.
 //!
-//!	If compiled with NO_TEMPLATE_MEMBERS defined, then partials
-//!	must be a PartialList, otherwise it can be any container type
-//!	storing Partials that supports at least bidirectional iterators.
+//! If compiled with NO_TEMPLATE_MEMBERS defined, then partials
+//! must be a PartialList, otherwise it can be any container type
+//! storing Partials that supports at least bidirectional iterators.
 //
 #if ! defined(NO_TEMPLATE_MEMBERS)
 template< typename Container >
@@ -356,6 +356,6 @@ Distiller::distill( PartialList & partials, double partialFadeTime,
     return instance.distill( partials );
 }
 
-}	//	end of namespace Loris
+}   //  end of namespace Loris
 
 #endif /* ndef INCLUDE_DISTILLER_H */
