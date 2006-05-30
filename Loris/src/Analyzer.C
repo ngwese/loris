@@ -79,6 +79,15 @@ using namespace std;
 namespace Loris {
 
 
+// ---------------------------------------------------------------------------
+//  LinearEnvelopeBuilder
+// ---------------------------------------------------------------------------
+//  Base class for envelope builders that add a point (possibly) at each
+//  analysis frame. 
+//
+//  TODO: make a dictionary of these things and allow clients to add their
+//  own envelope builders and builder functions, and retrieve them after
+//  analysis.
 class LinearEnvelopeBuilder
 {
 public:
@@ -88,6 +97,9 @@ public:
 };
 
 #if defined(ESTIMATE_F0) && ESTIMATE_F0
+// ---------------------------------------------------------------------------
+//  FundamentalBuilder - for constructing an F0 envelope during analysis
+// ---------------------------------------------------------------------------
 class FundamentalBuilder : public LinearEnvelopeBuilder
 {
     double mFmin, mFmax, mAmpThresh, mFreqThresh;
@@ -106,6 +118,10 @@ public:
     void build( const Peaks & peaks, double frameTime, LinearEnvelope & env );
 };
 
+// ---------------------------------------------------------------------------
+//  FundamentalBuilder::build
+// ---------------------------------------------------------------------------
+//
 void FundamentalBuilder::build( const Peaks & peaks, double frameTime, 
 	 							LinearEnvelope & env )
 {
@@ -141,6 +157,9 @@ void FundamentalBuilder::build( const Peaks & peaks, double frameTime,
 #endif
 
 #if defined(ESTIMATE_AMP) && ESTIMATE_AMP
+// ---------------------------------------------------------------------------
+//  AmpEnvBuilder - for constructing an amplitude envelope during analysis
+// ---------------------------------------------------------------------------
 class AmpEnvBuilder : public LinearEnvelopeBuilder
 {
 public:
@@ -156,6 +175,10 @@ public:
                           const Peaks::const_iterator::value_type & timeBpPair );
 };
 
+// ---------------------------------------------------------------------------
+//  AmpEnvBuilder::build
+// ---------------------------------------------------------------------------
+//
 void AmpEnvBuilder::build( const Peaks & peaks, double frameTime, 
                            LinearEnvelope & env )
 {
@@ -163,7 +186,11 @@ void AmpEnvBuilder::build( const Peaks & peaks, double frameTime,
     env.insert( frameTime, std::sqrt( x ) );
 }
 
-//  static helper
+// ---------------------------------------------------------------------------
+//  accumPeakSquaredAmps
+// ---------------------------------------------------------------------------
+//  static helper used to construct an amplitude envelope.
+//
 double 
 AmpEnvBuilder::accumPeakSquaredAmps( double init, 
                                      const Peaks::const_iterator::value_type & timeBpPair )

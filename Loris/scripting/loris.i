@@ -723,24 +723,86 @@ to an envelope representing a time-varying amplitude scale value.");
 
 void scaleAmplitude( PartialList * partials, LinearEnvelope * ampEnv );
 				 
+%inline %{	
+
+    void scaleAmp( PartialList * partials, double val )
+	{
+		LinearEnvelope e( val );
+		scaleAmplitude( partials, &e );
+	}
+	
+	void scaleAmplitude( PartialList * partials, double val )
+	{
+		LinearEnvelope e( val );
+		scaleAmplitude( partials, &e );
+	}
+	
+%}
+
 %feature("docstring",
 "Scale the bandwidth of the Partials in a PartialList according 
 to an envelope representing a time-varying bandwidth scale value.");
 
 void scaleBandwidth( PartialList * partials, LinearEnvelope * bwEnv );
 				 
+%inline %{	
+
+	void scaleBandwidth( PartialList * partials, double val )
+	{
+		LinearEnvelope e( val );
+		scaleBandwidth( partials, &e );
+	}
+	
+%}
+
 %feature("docstring",
 "Scale the frequency of the Partials in a PartialList according 
 to an envelope representing a time-varying frequency scale value.");
 
 void scaleFrequency( PartialList * partials, LinearEnvelope * freqEnv );
 				 
+%inline %{	
+
+	void scaleFrequency( PartialList * partials, double val )
+	{
+		LinearEnvelope e( val );
+		scaleFrequency( partials, &e );
+	}
+	
+%}
+
 %feature("docstring",
 "Scale the relative noise content of the Partials in a PartialList 
 according to an envelope representing a (time-varying) noise energy 
 scale value.");
 
 void scaleNoiseRatio( PartialList * partials, LinearEnvelope * noiseEnv );
+
+%inline %{	
+
+	void scaleNoiseRatio( PartialList * partials, double val )
+	{
+		LinearEnvelope e( val );
+		scaleNoiseRatio( partials, &e );
+	}
+	
+%}
+
+%feature("docstring",
+"Set the bandwidth of the Partials in a PartialList according 
+to an envelope representing a time-varying bandwidth value.");
+
+void setBandwidth( PartialList * partials, LinearEnvelope * bwEnv );
+
+%inline %{	
+
+	void setBandwidth( PartialList * partials, double val )
+	{
+		LinearEnvelope e( val );
+		setBandwidth( partials, &e );
+	}
+	
+%}
 
 %feature("docstring",
 "Scale the amplitudes of a set of Partials by applying 
@@ -758,8 +820,7 @@ void shapeSpectrum( PartialList * partials, PartialList * surface,
 	{
 		shapeSpectrum( partials, surface, 1.0, 1.0 );
 	}
-%}	
-                    
+%}	          
 
 %feature("docstring",
 "Shift the pitch of all Partials in a PartialList according to 
@@ -769,48 +830,14 @@ units of cents (1/100 of a halfstep).");
 void shiftPitch( PartialList * partials, LinearEnvelope * pitchEnv );
 
 %inline %{	
-	void scaleAmp( PartialList * partials, double val )
-	{
-		LinearEnvelope e( val );
-		scaleAmplitude( partials, &e );
-	}
-	
-	void scaleAmplitude( PartialList * partials, double val )
-	{
-		LinearEnvelope e( val );
-		scaleAmplitude( partials, &e );
-	}
-	
-	
-	void scaleBandwidth( PartialList * partials, double val )
-	{
-		LinearEnvelope e( val );
-		scaleBandwidth( partials, &e );
-	}
-	
-	
-	void scaleFrequency( PartialList * partials, double val )
-	{
-		LinearEnvelope e( val );
-		scaleFrequency( partials, &e );
-	}
-	
-	
-	void scaleNoiseRatio( PartialList * partials, double val )
-	{
-		LinearEnvelope e( val );
-		scaleNoiseRatio( partials, &e );
-	}
-	
-	
+
 	void shiftPitch( PartialList * partials, double val )
 	{
 		LinearEnvelope e( val );
 		shiftPitch( partials, &e );
 	}
-%}	
 	
-
+%}
 
 %feature("docstring",
 "Shift the time of all the Breakpoints in a Partial by a constant

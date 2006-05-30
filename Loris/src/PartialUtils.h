@@ -218,6 +218,66 @@ void scaleBandwidth( Iter b, Iter e, const Arg & arg )
 }
 
 // ---------------------------------------------------------------------------
+//	BandwidthSetter
+//	
+//! Set the bandwidth of the specified Partial according to
+//! an envelope representing a time-varying bandwidth value.
+//
+class BandwidthSetter : public PartialMutator
+{
+public:
+
+	//! Construct a new BandwidthSetter from a constant bw factor.
+	BandwidthSetter( double x ) : PartialMutator( x ) {}
+
+	//! Construct a new BandwidthSetter from an Envelope representing
+	//! a time-varying bw factor.
+	BandwidthSetter( const Envelope & e ) : PartialMutator( e ) {}
+	
+	//! Function call operator: assign a bw factor to the specified
+	//! Partial.
+	void operator()( Partial & p ) const;
+};
+
+// ---------------------------------------------------------------------------
+//	setBandwidth
+// ---------------------------------------------------------------------------
+//! Set the bandwidth of the specified Partial according to
+//! an envelope representing a amplitude scale value or envelope.
+//!
+//! \param	p is a Partial to mutate.
+//! \param	arg is either a constant scale factor or an Envelope
+//!			describing the time-varying bw factor.
+//
+template< class Arg >
+void setBandwidth( Partial & p, const Arg & arg )
+{
+	BandwidthSetter setter( arg );
+	setter( p );
+}
+
+// ---------------------------------------------------------------------------
+//	setBandwidth
+// ---------------------------------------------------------------------------
+//! Set the bandwidth of a sequence of Partials according to
+//! an envelope representing a bandwidth value or envelope.
+//!
+//! \param	b is the beginning of a sequence of Partials to mutate.
+//! \param	e is the end of a sequence of Partials to mutate.
+//! \param	arg is either a constant scale factor or an Envelope
+//!			describing the time-varying scale factor.
+//
+template< class Iter, class Arg >
+void setBandwidth( Iter b, Iter e, const Arg & arg )
+{
+	BandwidthSetter setter( arg );
+	while ( b != e )
+	{
+		setter( *b++ );
+	}
+}
+
+// ---------------------------------------------------------------------------
 //	FrequencyScaler
 //	
 //! Scale the frequency of the specified Partial according to

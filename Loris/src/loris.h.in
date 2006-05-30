@@ -902,6 +902,11 @@ void scaleNoiseRatio( PartialList * partials, LinearEnvelope * noiseEnv );
     scale value.
  */
 
+void setBandwidth( PartialList * partials, LinearEnvelope * bwEnv );
+/*  Set the bandwidth of the Partials in a PartialList according 
+    to an envelope representing a time-varying bandwidth value.
+ */
+                 
 void shiftPitch( PartialList * partials, LinearEnvelope * pitchEnv );
 /*  Shift the pitch of all Partials in a PartialList according to 
     the given pitch envelope. The pitch envelope is assumed to have 

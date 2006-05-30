@@ -141,6 +141,21 @@ BandwidthScaler::operator()( Partial & p ) const
 }
 
 // ---------------------------------------------------------------------------
+//	BandwidthSetter function call operator
+// ---------------------------------------------------------------------------
+//	Set the bandwidth of the specified Partial according to
+//	an envelope representing a time-varying bandwidth value.
+//
+void 
+BandwidthSetter::operator()( Partial & p ) const
+{
+	for ( Partial::iterator pos = p.begin(); pos != p.end(); ++pos ) 
+	{		
+		pos.breakpoint().setBandwidth( env->valueAt( pos.time() ) );
+	}	
+}
+
+// ---------------------------------------------------------------------------
 //	FrequencyScaler function call operator
 // ---------------------------------------------------------------------------
 //	Scale the frequency of the specified Partial according to

@@ -49,10 +49,10 @@
 // #define ESTIMATE_RMS 1
 
 // construct a F0 envelopes
-// #define ESTIMATE_F0 1
+#define ESTIMATE_F0 1
 
 // construct an amplitude envelopes
-// #define ESTIMATE_AMP 1
+#define ESTIMATE_AMP 1
 
 //  begin namespace
 namespace Loris {
@@ -394,8 +394,6 @@ private:
     std::auto_ptr< LinearEnvelopeBuilder > mAmpEnvBuilder;
     #endif
                 
-   // std::auto_ptr< Analyzer_imp > _imp;     //! insulating implementation class
-
 };  //  end of class Analyzer
 
 }   //  end of namespace Loris

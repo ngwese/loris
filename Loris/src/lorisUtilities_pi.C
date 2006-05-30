@@ -229,11 +229,30 @@ void extractIf( PartialList * src, PartialList * dst,
 	{
 		ThrowIfNull((PartialList *) src);
 		ThrowIfNull((PartialList *) dst);
-
+        
+        /*
 		std::list< Partial >::iterator it = 
 			std::stable_partition( src->begin(), src->end(), 
 								   std::not1( PredWithPointer( predicate, data ) ) );
+		
+		stable_partition should work, but seems sometimes to hang, 
+		especially when there are lots and lots of Partials. Do it
+		efficiently by hand instead.
+		
 		dst->splice( dst->end(), *src, it, src->end() );
+		*/
+		std::list< Partial >::iterator it;
+		for ( it = std::find_if( src->begin(), src->end(), PredWithPointer( predicate, data ) );
+		      it != src->end(); 
+		      it = std::find_if( it, src->end(), PredWithPointer( predicate, data ) ) )
+	    {
+	        //  the iterator passed to splice is a copy of it
+	        //  before the increment, so it is not corrupted
+	        //  by the splice, it is advanced to the next
+	        //  position before the splice is performed.
+	        dst->splice( dst->end(), *src, it++ );
+	    }
+		
 	}
 	catch( Exception & ex ) 
 	{
@@ -263,11 +282,29 @@ void extractLabeled( PartialList * src, long label, PartialList * dst )
 	{
 		ThrowIfNull((PartialList *) src);
 		ThrowIfNull((PartialList *) dst);
-
+    
+        /*
 		std::list< Partial >::iterator it = 
 			std::stable_partition( src->begin(), src->end(), 
 								        std::not1( PartialUtils::isLabelEqual(label) ) );
+		
+		stable_partition should work, but seems sometimes to hang, 
+		especially when there are lots and lots of Partials. Do it
+		efficiently by hand instead.
+		
 		dst->splice( dst->end(), *src, it, src->end() );
+		*/
+		std::list< Partial >::iterator it;
+		for ( it = std::find_if( src->begin(), src->end(), PartialUtils::isLabelEqual(label) );
+		      it != src->end(); 
+		      it = std::find_if( it, src->end(), PartialUtils::isLabelEqual(label) ) )
+	    {
+	        //  the iterator passed to splice is a copy of it
+	        //  before the increment, so it is not corrupted
+	        //  by the splice, it is advanced to the next
+	        //  position before the splice is performed.
+	        dst->splice( dst->end(), *src, it++ );
+	    }
 	}
 	catch( Exception & ex ) 
 	{
@@ -698,6 +735,38 @@ void scaleBandwidth( PartialList * partials, BreakpointEnvelope * bwEnv )
 	catch( std::exception & ex ) 
 	{
 		std::string s("std C++ exception in scaleBandwidth(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+
+/* ---------------------------------------------------------------- */
+/*        setBandwidth        
+/*
+/*	Assign the bandwidth of the Partials in a PartialList according 
+	to an envelope representing a time-varying bandwidth scale value.
+ */
+extern "C"
+void setBandwidth( PartialList * partials, BreakpointEnvelope * bwEnv )
+{
+	try
+	{
+		ThrowIfNull((PartialList *) partials);
+		ThrowIfNull((BreakpointEnvelope *) bwEnv);
+
+		notifier << "setting bandwidth of " << partials->size() << " Partials" << endl;
+
+		PartialUtils::setBandwidth( partials->begin(), partials->end(), *bwEnv );
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in setBandwidth(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in setBandwidth(): " );
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
