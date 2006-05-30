@@ -22,19 +22,18 @@ trial 2:
 	- checked various window widths, 160 Hz seems to be the best out of
 	110, 120, 140, 160
 
-Last updated: 26 May 2006 by Kelly Fitz
+
+There is important information between harmonics, but not that much of it.
+Sfiting and retaining the unlabeled Partials give a good set of harmonic
+Partials and still sounds good in reconstruction. The harmonic Partials
+alone are usable but the reconstruction is slightly un-natural sounding.
+
+Last updated: 30 May 2006 by Kelly Fitz
 """
 print __doc__
 
 import loris, time
 print "using Loris version", loris.version()
-
-
-# use this trial counter to skip over
-# eariler trials
-trial = 1
-print "running trial number", trial, time.ctime(time.time())
-
 
 src = 'alienthreat'
 f = loris.AiffFile(src+'.aiff')
@@ -47,11 +46,49 @@ a.setAmpFloor( -80 )
 a.setBwRegionWidth( 0 )
 
 p = a.analyze( samples, rate )
-ofile = 'threat.raw'
-# collate
-loris.collate( p )
-# export
-fsamps = loris.AiffFile( p, rate )
-fsamps.write( ofile + '.aiff' )
-fpartials = loris.AiffFile( p )
+
+
+# sift and distill
+print 'sifting %i Partials (%s)'%(p.size(), time.ctime(time.time()))
+ref = loris.createFreqReference( p, 70, 140 )
+loris.channelize( p, ref, 1 )
+loris.sift( p )
+Fade = 0.001
+loris.distill( p, Fade )
+
+# export sifted
+# print 'exporting %i sifted partials (%s)'%(p.size(), time.ctime(time.time()))
+# ofile = 'threat'
+# fpartials = loris.SdifFile( p )
+# fpartials.write( ofile + '.sdif' )
+# 
+# print 'rendering sifted partials (%s)'%(time.ctime(time.time()))
+# fsamps = loris.AiffFile( p, rate )
+# print 'writing %s (%s)'%(ofile + '.recon.aiff', time.ctime(time.time()))
+# fsamps.write( ofile + '.recon.aiff' )
+
+# export harmonics only
+print 'isolating harmonic partials (%s)'%(time.ctime(time.time()))
+junk = loris.extractLabeled( p, 0 )
+# ofile = 'threat.harms'
+# print 'exporting %i harmonic partials (%s)'%(p.size(), time.ctime(time.time()))
+# fpartials = loris.SdifFile( p )
+# fpartials.write( ofile + '.sdif' )
+# 
+# print 'rendering harmonic partials (%s)'%(time.ctime(time.time()))
+# fsamps = loris.AiffFile( p, rate )
+# print 'writing %s (%s)'%(ofile + '.recon.aiff', time.ctime(time.time()))
+# fsamps.write( ofile + '.recon.aiff' )
+
+# export non-harmonic junk only
+ofile = 'threat.junk'
+print 'exporting %i non-harmonic junk partials (%s)'%(junk.size(), time.ctime(time.time()))
+loris.setBandwidth( junk, 1 )
+fpartials = loris.SdifFile( junk )
 fpartials.write( ofile + '.sdif' )
+
+print 'rendering non-harmonic junk partials (%s)'%(time.ctime(time.time()))
+fsamps = loris.AiffFile( junk, rate )
+print 'writing %s (%s)'%(ofile + '.recon.aiff', time.ctime(time.time()))
+fsamps.write( ofile + '.recon.aiff' )
+
