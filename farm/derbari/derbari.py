@@ -21,104 +21,62 @@ notes from trial 2:
 	- got back some of that oomph, sounds much better, but still not like the
 	original
 
-Last updated: 30 July 2005 by Kelly Fitz
+
+There is something going on at high-ish frequencies that might best be captured
+as noise, but bandwidth enhancement and distilling doesn't get it. Sounds a
+little better if the zero-labeled partials are retained.
+
+Last updated: 30 May 2006 by Kelly Fitz
 """
 print __doc__
 
 import loris, time
 print "using Loris version", loris.version()
 
-
-# use this trial counter to skip over
-# eariler trials
-trial = 2
-print "running trial number", trial, time.ctime(time.time())
-
-
 src = 'derbari'
 f = loris.AiffFile(src+'.aiff')
 samples = f.samples()
 rate = f.sampleRate()
 
-if trial == 1:
-	res = 180
-	mlw = 350
-	a = loris.Analyzer( res, mlw )
-	# turn off BW association for now
-	a.setBwRegionWidth( 0 )
-	p = a.analyze( samples, rate )
-	praw = p
-	ref = loris.createFreqReference( p, 150, 300, 100 )
-	pdist = loris.PartialList( p )
-	psift = loris.PartialList( p )
-	loris.channelize( pdist, ref, 1 )
-	loris.channelize( psift, ref, 1 )
-	
-	# collate
-	loris.collate( praw )
-	ofile = 'derbari.%i.%i.raw'%(res, mlw)
-	loris.exportAiff( ofile + '.aiff', loris.synthesize( praw, rate ), rate, 1, 16 )
-	loris.exportSpc( ofile + '.s.spc', praw, 58, 0 ) 
-	loris.exportSpc( ofile + '.e.spc', praw, 58, 1 ) 
+print "analyzing", time.ctime(time.time())
+a = loris.Analyzer( 140, 280 )
+# turn off BW association for now
+a.setBwRegionWidth( 0 )
+a.setFreqFloor( 100 )
+a.setFreqDrift( 20 )
 
-	# distill
-	loris.distill( pdist )
-	ofile = 'derbari.%i.%i.d1'%(res, mlw)
-	loris.exportAiff( ofile + '.aiff', loris.synthesize( pdist, rate ), rate, 1, 16 )
-	loris.exportSpc( ofile + '.s.spc', pdist, 58, 0 ) 
-	loris.exportSpc( ofile + '.e.spc', pdist, 58, 1 ) 
+p = a.analyze( samples, rate )
+ref = loris.createFreqReference( p, 140, 330 )
 
-	# sift
-	loris.sift( psift )
-	zeros = loris.extractLabeled( psift, 0 )
-	loris.distill( psift )
-	ofile = 'derbari.%i.%i.s1'%(res, mlw)
-	loris.exportAiff( ofile + '.aiff', loris.synthesize( psift, rate ), rate, 1, 16 )
-	loris.exportSpc( ofile + '.s.spc', psift, 58, 0 ) 
-	loris.exportSpc( ofile + '.e.spc', psift, 58, 1 ) 
+# distill
+print "distilling", time.ctime(time.time())
+pdist = loris.PartialList( p )
+loris.channelize( pdist, ref, 1 )
+loris.distill( pdist )
+# loris.removeLabeled( pdist, 0 )
+ofile = src+'.distill'
+fout = loris.AiffFile( pdist, rate )
+fout.write( ofile + '.aiff' )
+loris.exportSdif( ofile + '.sdif', pdist )
 
-if trial == 2:
-	res = 180
-	mlw = 350
-	a = loris.Analyzer( res, mlw )
-	# turn off BW association for now
-	a.setBwRegionWidth( 0 )
-	a.setFreqFloor( 50 )
-	p = a.analyze( samples, rate )
-	praw = p
-	ref = loris.createFreqReference( p, 150, 300, 100 )
-	pdist = loris.PartialList( p )
-	psift = loris.PartialList( p )
-	loris.channelize( pdist, ref, 1 )
-	loris.channelize( psift, ref, 1 )
-	
-	# collate
-	loris.collate( praw )
-	ofile = 'derbari.raw'
-	fout = loris.AiffFile( praw, rate )
-	fout.write( ofile + '.aiff' )
-	loris.exportSdif( ofile + '.sdif', praw )
-	loris.exportSpc( ofile + '.s.spc', praw, 58, 0 ) 
-	loris.exportSpc( ofile + '.e.spc', praw, 58, 1 ) 
+# sift
+print "sifting", time.ctime(time.time())
+psift = loris.PartialList( p )
+loris.channelize( psift, ref, 1 )
+loris.sift( psift )
+# loris.removeLabeled( psift, 0 )
+loris.distill( psift )
+ofile = src+'.sift'
+fout = loris.AiffFile( psift, rate )
+fout.write( ofile + '.aiff' )
+loris.exportSdif( ofile + '.sdif', psift )
 
-	# distill
-	loris.distill( pdist )
-	loris.removeLabeled( pdist, 0 )
-	ofile = 'derbari.d1'
-	fout = loris.AiffFile( pdist, rate )
-	fout.write( ofile + '.aiff' )
-	loris.exportSdif( ofile + '.sdif', pdist )
-	loris.exportSpc( ofile + '.s.spc', pdist, 58, 0 ) 
-	loris.exportSpc( ofile + '.e.spc', pdist, 58, 1 ) 
-
-	# sift
-	loris.sift( psift )
-	loris.removeLabeled( psift, 0 )
-	loris.distill( psift )
-	ofile = 'derbari.s1'
-	fout = loris.AiffFile( psift, rate )
-	fout.write( ofile + '.aiff' )
-	loris.exportSdif( ofile + '.sdif', psift )
-	loris.exportSpc( ofile + '.s.spc', psift, 58, 0 ) 
-	loris.exportSpc( ofile + '.e.spc', psift, 58, 1 ) 
+# collate
+print "collating", time.ctime(time.time())
+praw = p
+loris.collate( praw )
+ofile = src+'.raw'
+fout = loris.AiffFile( praw, rate )
+fout.write( ofile + '.aiff' )
+loris.exportSdif( ofile + '.sdif', praw )
 

@@ -13,7 +13,7 @@ I have used this bassoon extensively in morphing with a bass
 sound.
 
 
-Last updated: 30 July 2005 by Kelly Fitz
+Last updated: 30 May 2006 by Kelly Fitz
 """
 print __doc__
 
@@ -32,17 +32,16 @@ f = loris.AiffFile( name + '.aiff' )
 print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
 fHz = 69.69
 anal = loris.Analyzer( .7*fHz, 1.8*fHz )
-anal.setFreqDrift( .2*fHz )
+anal.setFreqDrift( 10 )
 p = anal.analyze( f.samples(), f.sampleRate() )
 
 print 'distilling %s (%s)'%(name, time.ctime(time.time()))
-ref = loris.createFreqReference( p, .7*fHz, 1.3*fHz )
+ref = loris.createFreqReference( p, .9*fHz, 1.1*fHz )
 loris.channelize( p, ref, 1 )
-#loris.sift( p )
-#loris.removeLabeled( p, 0 )
-loris.distill( p )
+Fade = 0.01
+loris.distill( p, Fade )
 
-print 'synthesizing sifted %s (%s)'%(name, time.ctime(time.time()))
+print 'synthesizing distilled %s (%s)'%(name, time.ctime(time.time()))
 out_sfile = loris.AiffFile( p, orate )
 
 print 'writing %s (%s)'%(name + '.recon.aiff', time.ctime(time.time()))
@@ -54,10 +53,5 @@ print 'writing %s (%s)'%(name + '.sdif', time.ctime(time.time()))
 out_pfile = loris.SdifFile( p )
 out_pfile.setMarkers( f.markers() )
 out_pfile.write( name + '.sdif' )
-
-print 'writing %s (%s)'%(name + '.s.spc', time.ctime(time.time()))
-out_sinefile = loris.SpcFile( p )
-out_sinefile.setMidiNoteNumber( 37.11 )
-out_sinefile.write( name + '.s.spc', 0 )
 
 print 'Done. (%s)'%(time.ctime(time.time()))
