@@ -478,11 +478,6 @@ void SoundPlot::plotPartials(){
 
   if( type == Tab::empty ) return;
 
-  QWMatrix wm;
-  wm.scale(plotScale, 1);
-
-  setWorldMatrix(wm);
-
   // loop through all partials in the list
   for( it = partialList->begin(); it != partialList->end(); it++){
     pIt = it->begin();
