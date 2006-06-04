@@ -22,7 +22,7 @@
  * soundPlot.c++
  *
  * This all started when I noticed that Axis reimplements code that is used by
- * soundPixmap (formerly PartialsPixmap) to draw its axes. I decided that this
+ * SoundPixmap (formerly PartialsPixmap) to draw its axes. I decided that this
  * class should be used in both places. The problem is, the Pixmap likes to draw
  * things once, then save a bitmap of them while a QCanvasView likes to keep
  * track of graphical objects in real time in case you want to dynamically redraw
@@ -65,6 +65,7 @@ SoundPlot::SoundPlot(
   canvas	= c;
   soundList	= pList;
   type		= t;
+  plotScale	= 1;
 
   /*Without this initialization delete could be called on uninitialized values.*/
   pixmap	= 0;
@@ -115,36 +116,7 @@ When plotting 2 sounds next to each other they have to have the same time
 scale.
 */
 void SoundPlot::resetAxis(double max){
-  /*If the scale makes the plot grow, ignore it - the other plot will shrink 
-    correspondingly.*/
-  double scale = soundList->getSound(selected)->getDuration();
-  scale /= max;
-  if(scale == 1) return;
-
-  QWMatrix wm = worldMatrix();
-  wm.scale(scale, 1);
-  setWorldMatrix(wm);
-
-printf("Just scaled to a ratio of %f with max %f\n", scale, max);
-
-
-  delete bAxis;
-
-  bAxis = new Axis (
-        canvas,
-        leftMargin,
-        height() - bottomMargin,
-        "time",
-        width()-rightMargin-leftMargin,
-        30,
-        canvas->height() / 5,
-        0.0,
-        max,
-        false,
-        false
-  );
-
-  bAxis->show();
+  plotScale = soundList->getSound(selected)->getDuration() / max;
 }
 
 /*
@@ -428,7 +400,7 @@ void SoundPlot::updatePlot(){
         30,
         canvas->height() / 5,
         0.0,
-        maxX,
+        maxX / plotScale,
         false,
         false
   );
@@ -447,7 +419,7 @@ Translates an actual time value into the corresponding value on the pixmap
 into a pixel coordinate. 
 */
 double SoundPlot::toX(double time){
-  return (time / horizontalIndex)  + (double)leftMargin;
+  return plotScale * (time / horizontalIndex)  + (double)leftMargin;
 }
 
 /*
@@ -505,6 +477,11 @@ void SoundPlot::plotPartials(){
 	(selected >= 0 && ! soundList->getSound(selected)->isDistilled());
 
   if( type == Tab::empty ) return;
+
+  QWMatrix wm;
+  wm.scale(plotScale, 1);
+
+  setWorldMatrix(wm);
 
   // loop through all partials in the list
   for( it = partialList->begin(); it != partialList->end(); it++){

@@ -100,6 +100,7 @@ class SoundPlot:public QCanvasView{
     Tab::TabType		type;
 
     int				selected;
+    double			plotScale;
 
     int				leftMargin;
     int				rightMargin;

@@ -179,6 +179,7 @@ void DilateDialog::updateDilate1(int pos){
   dilateArea1->setSound(sound1, pos);
   resetAxes();
   dilateArea1->updatePlot();
+  dilateArea2->updatePlot();
 
   dilateBox->setTitle(QString("Dilate "+sound2+" onto "+sound1));
 }
@@ -199,6 +200,7 @@ void DilateDialog::updateDilate2(int pos){
 
   dilateArea2->setSound(sound2, pos);
   resetAxes();
+  dilateArea1->updatePlot();
   dilateArea2->updatePlot();
 
   dilateBox->setTitle(QString("Dilate "+sound2+" onto "+sound1));
