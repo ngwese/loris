@@ -38,7 +38,15 @@ trial 4:
 	- 160 resolution has a clunk near at the first dynamic peak, others are OK
 	- wider window (600) is still a bit smoother than narrower (450)
 
-Last updated: 28 July 2005 by Kelly Fitz
+
+Breath at the end isn't so good, and the hum is lost, but otherwise sounds
+pretty good. Even though this recording is extremely noisy, the non-harmonic
+partials don't add much. Only the breath at the end is really objectionable.
+Retaining only the harmonic partials, 400 and 600 Hz wide windows are 
+indistinguishible.
+
+Last updated: 5 June 2006 by Kelly Fitz
+
 """
 print __doc__
 
@@ -46,169 +54,59 @@ import loris, time
 print "using Loris version", loris.version()
 
 
-# use this trial counter to skip over
-# eariler trials
-trial = 4
-print "running trial number", trial, time.ctime(time.time())
-
-
 src = 'shaku'
 f = loris.AiffFile(src+'.aiff')
 samples = f.samples()
 rate = f.sampleRate()
+		    
+res = 340
+mlw = 600
+a = loris.Analyzer( res, mlw )
+a.buildFundamentalEnv( 350, 550 )
+print 'analyzing (%s)'%(time.ctime(time.time()))
+# p = a.analyze( samples, rate, ref )
+p = a.analyze( samples, rate )
+ref = a.fundamentalEnv()
 
-if trial == 1:
-	res = 80
-	mlw = 300
-	a = loris.Analyzer( res, mlw )
-	p = a.analyze( samples, rate )
-	ofile = 'shaku.%i.%i.raw'%(res, mlw)
-	# collate
-	loris.distill( p )
-	# export
-	loris.exportAiff( ofile + '.aiff', loris.synthesize( p, rate ), rate, 1, 16 )
-	loris.exportSpc( ofile + '.s.spc', p, 60, 0 ) 
-	loris.exportSpc( ofile + '.e.spc', p, 60, 1 ) 
+# sift and distill, one partial per harmonic
+print 'sifting %i partials (%s)'%(p.size(), time.ctime(time.time()))
+loris.channelize( p, ref, 1 )
+loris.sift( p )
+loris.distill( p )
 
-if trial == 2:
-	resolutions = ( 80, 160, 240, 320 )
-	pref = loris.importSpc('shaku.fund.qharm')
-	ref = loris.createFreqReference( pref, 50, 1000 )
-	for res in resolutions:
-		for mlw in ( 300, 450, 600 ):
-			a = loris.Analyzer( res, mlw )
-			p = a.analyze( samples, rate )
-			d1 = p.copy()
-			d2 = p.copy()
-			
-			# export raw
-			loris.distill( p )
-			ofile = 'shaku.%i.%i.raw'%(res, mlw)
-			loris.exportAiff( ofile + '.aiff', loris.synthesize( p, rate ), rate, 1, 16 )
-			# prune before Spc export
-			iter = p.begin()
-			while not iter.equals( p.end() ):
-				if iter.partial().label() > 511:
-					next = iter.next()
-					p.erase( iter )
-					iter = next
-				else:
-					iter = iter.next()
-			loris.exportSpc( ofile + '.s.spc', p, 68, 0 ) 
-			loris.exportSpc( ofile + '.e.spc', p, 68, 1 ) 
-		
-			# distill one partial per harmonic
-			loris.channelize( d1, ref, 1 )
-			loris.distill( d1 )
-			# export
-			ofile = 'shaku.%i.%i.d1'%(res, mlw)
-			loris.exportAiff( ofile + '.aiff', loris.synthesize( d1, rate ), rate, 1, 16 )
-			# prune before Spc export
-			iter = d1.begin()
-			while not iter.equals( d1.end() ):
-				if iter.partial().label() > 511:
-					next = iter.next()
-					d1.erase( iter )
-					iter = next
-				else:
-					iter = iter.next()
-			loris.exportSpc( ofile + '.s.spc', d1, 68, 0 ) 
-			loris.exportSpc( ofile + '.e.spc', d1, 68, 1 ) 
-		
-			# distill two partials per harmonic
-			loris.channelize( d2, ref, 2 )
-			loris.distill( d2 )
-			# export
-			ofile = 'shaku.%i.%i.d2'%(res, mlw)
-			loris.exportAiff( ofile + '.aiff', loris.synthesize( d2, rate ), rate, 1, 16 )
-			# prune before Spc export
-			iter = d2.begin()
-			while not iter.equals( d2.end() ):
-				if iter.partial().label() > 511:
-					next = iter.next()
-					d2.erase( iter )
-					iter = next
-				else:
-					iter = iter.next()
-			loris.exportSpc( ofile + '.s.spc', d2, 68, 0 ) 
-			loris.exportSpc( ofile + '.e.spc', d2, 68, 1 ) 
-		
-if trial == 3:
-	resolutions = ( 160, 240, 320 )
-	pref = loris.importSpc('shaku.fund.qharm')
-	ref = loris.createFreqReference( pref, 50, 1000 )
-	for res in resolutions:
-		for mlw in ( 450, 600 ):
-			a = loris.Analyzer( res, mlw )
-			p = a.analyze( samples, rate, ref )
-			d1 = p.copy()
-			
-			# export raw
-			loris.distill( p )
-			ofile = 'shaku.%i.%i.raw'%(res, mlw)
-			fout = loris.AiffFile( p, rate )
-			fout.write( ofile + '.aiff' )
-			# prune before Spc export
-			for partial in p:
-				if partial.label() > 511:
-					partial.setLabel( -1 )
-			dump = loris.extractLabeled( p, -1 )
-			loris.exportSpc( ofile + '.s.spc', p, 68, 0 ) 
-			loris.exportSpc( ofile + '.e.spc', p, 68, 1 ) 
-		
-			# distill one partial per harmonic
-			p = d1
-			loris.channelize( p, ref, 1 )
-			loris.distill( p )
-			# export
-			ofile = 'shaku.%i.%i.d1'%(res, mlw)
-			fout = loris.AiffFile( p, rate )
-			fout.write( ofile + '.aiff' )
-			# prune before Spc export
-			for partial in p:
-				if partial.label() > 511:
-					partial.setLabel( -1 )
-			dump = loris.extractLabeled( p, -1 )
-			loris.exportSpc( ofile + '.s.spc', p, 68, 0 ) 
-			loris.exportSpc( ofile + '.e.spc', p, 68, 1 ) 
-		
-if trial == 4:
-	resolutions = ( 160, 240, 320 )
-	pref = loris.importSpc('shaku.fund.qharm')
-	ref = loris.createFreqReference( pref, 50, 1000 )
-	for res in resolutions:
-		for mlw in ( 450, 600 ):
-			a = loris.Analyzer( res, mlw )
-			p = a.analyze( samples, rate, ref )
-			d1 = loris.PartialList( p )
-			
-			# export raw
-			loris.collate( p )
-			ofile = 'shaku.%i.%i.raw'%(res, mlw)
-			fout = loris.AiffFile( p, rate )
-			fout.write( ofile + '.aiff' )
-			# prune before Spc export
-# 			for partial in p:
-# 				if partial.label() > 511:
-# 					partial.setLabel( -1 )
-# 			dump = loris.extractLabeled( p, -1 )
-			loris.exportSpc( ofile + '.s.spc', p, 68, 0 ) 
-			loris.exportSpc( ofile + '.e.spc', p, 68, 1 ) 
-		
-			# distill one partial per harmonic
-			p = d1
-			loris.channelize( p, ref, 1 )
-			loris.sift( p )
-			loris.distill( p )
-			# export
-			ofile = 'shaku.%i.%i.s1'%(res, mlw)
-			fout = loris.AiffFile( p, rate )
-			fout.write( ofile + '.aiff' )
-# 			prune before Spc export
-# 			for partial in p:
-# 				if partial.label() > 511:
-# 					partial.setLabel( -1 )
-# 			loris.removeLabeled( p, -1 )
-			loris.exportSpc( ofile + '.s.spc', p, 68, 0 ) 
-			loris.exportSpc( ofile + '.e.spc', p, 68, 1 ) 
-		
+# export sifted
+# print 'exporting %i sifted partials (%s)'%(p.size(), time.ctime(time.time()))
+# ofile = 'shaku'
+# fpartials = loris.SdifFile( p )
+# fpartials.write( ofile + '.sdif' )
+# 
+# print 'rendering sifted partials (%s)'%(time.ctime(time.time()))
+# fsamps = loris.AiffFile( p, rate )
+# print 'writing %s (%s)'%(ofile + '.recon.aiff', time.ctime(time.time()))
+# fsamps.write( ofile + '.recon.aiff' )
+
+# export harmonics only
+print 'isolating harmonic partials (%s)'%(time.ctime(time.time()))
+junk = loris.extractLabeled( p, 0 )
+ofile = 'shaku.harms'
+print 'exporting %i harmonic partials (%s)'%(p.size(), time.ctime(time.time()))
+fpartials = loris.SdifFile( p )
+fpartials.write( ofile + '.sdif' )
+
+print 'rendering harmonic partials (%s)'%(time.ctime(time.time()))
+fsamps = loris.AiffFile( p, rate )
+print 'writing %s (%s)'%(ofile + '.recon.aiff', time.ctime(time.time()))
+fsamps.write( ofile + '.recon.aiff' )
+
+# export non-harmonic junk only
+# ofile = 'shaku.junk'
+# print 'exporting %i non-harmonic junk partials (%s)'%(junk.size(), time.ctime(time.time()))
+# loris.setBandwidth( junk, 1 )
+# fpartials = loris.SdifFile( junk )
+# fpartials.write( ofile + '.sdif' )
+# 
+# print 'rendering non-harmonic junk partials (%s)'%(time.ctime(time.time()))
+# fsamps = loris.AiffFile( junk, rate )
+# print 'writing %s (%s)'%(ofile + '.recon.aiff', time.ctime(time.time()))
+# fsamps.write( ofile + '.recon.aiff' )
+
