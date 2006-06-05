@@ -38,22 +38,6 @@
 #include "Partial.h"
 #include "PartialList.h"
 
-// ---------------------------------------------------------------------------
-//  new Analyzer features, not for release yet
-//
-//  All of these things are somewhat inconsistent with the
-//  idea of an Analyzer being reusable,inasmuch as they all
-//  need to reset themselves at the beginning of an analysis.
-
-// find and store the time of the RMS peak
-// #define ESTIMATE_RMS 1
-
-// construct a F0 envelopes
-#define ESTIMATE_F0 1
-
-// construct an amplitude envelopes
-#define ESTIMATE_AMP 1
-
 //  begin namespace
 namespace Loris {
 
@@ -320,24 +304,55 @@ public:
 
 //  -- envelope access --
 
-#if defined(ESTIMATE_RMS) && ESTIMATE_RMS
-    const LinearEnvelope & rmsEnv( void ) const
-        { return mRmsEnv; }
-#endif
-
-#if defined(ESTIMATE_F0) && ESTIMATE_F0
+    //! Return the fundamental frequency estimate envelope constructed
+    //! during the most recent analysis performed by this Analyzer.
+    //! Will be empty unless buildFundamentalEnv was invoked to enable the
+    //! construction of this envelope during analysis.
     const LinearEnvelope & fundamentalEnv( void ) const;
         
+    //! Indicate whether the fundamental frequency envelope of the analyzed
+    //! sound should be estimated during analysis. If true (the
+    //! default), then the fundamental frequency estimate can be accessed by
+    //! fundamentalEnv() after the analysis is complete. Default
+    //! parameters for fundamental estimation are used. To set those
+    //! parameters, use buildFundamentalEnv( fmin, fmax, threshDb, threshHz )
+    //! instead.
+    //!
+    //! \param  TF is a flag indicating whether or not to construct
+    //!         the fundamental frequency envelope during analysis
     void buildFundamentalEnv( bool TF = true );
+
+    //! Specify parameters for constructing a fundamental frequency 
+    //! envelope for the analyzed sound during analysis. The fundamental 
+    //! frequency estimate can be accessed by fundamentalEnv() after the 
+    //! analysis is complete. 
+    //!
+    //! \param  fmin is the lower bound on the fundamental frequency estimate
+    //! \param  fmax is the upper bound on the fundamental frequency estimate
+    //! \param  threshDb is the lower bound on the amplitude of a spectral peak
+    //!         that will constribute to the fundamental frequency estimate (very
+    //!         low amplitude peaks tend to have less reliable frequency estimates).
+    //!         Default is -60 dB.
+    //! \param  threshHz is the upper bound on the frequency of a spectral
+    //!         peak that will constribute to the fundamental frequency estimate.
+    //!         Default is 8 kHz.
     void buildFundamentalEnv( double fmin, double fmax, 
                               double threshDb = -60, double threshHz = 8000 );
-#endif
 
-#if defined(ESTIMATE_AMP) && ESTIMATE_AMP
+    //! Return the overall amplitude estimate envelope constructed
+    //! during the most recent analysis performed by this Analyzer.
+    //! Will be empty unless buildAmpEnv was invoked to enable the
+    //! construction of this envelope during analysis.
     const LinearEnvelope & ampEnv( void ) const;
     
+    //! Indicate whether the amplitude envelope of the analyzed
+    //! sound should be estimated during analysis. If true (the
+    //! default), then the amplitude estimate can be accessed by
+    //! ampEnv() after the analysis is complete.
+    //!
+    //! \param  TF is a flag indicating whether or not to construct
+    //!         the amplitude envelope during analysis
     void buildAmpEnv( bool TF = true );
-#endif
 
 //  -- private member variables --
 
@@ -379,20 +394,17 @@ private:
     PartialList m_partials;  	//!  collect Partials here
     
 
-
-    #if defined(ESTIMATE_RMS) && ESTIMATE_RMS
-    LinearEnvelope mRmsEnv;
-    #endif
-                
-    #if defined(ESTIMATE_F0) && ESTIMATE_F0
-    LinearEnvelope mF0Env;
+    LinearEnvelope mF0Env;      //! fundamental frequency estimate constructed during analysis
+    
+    //! builder object for constructing a fundamental frequency
+    //! estimate during analysis
     std::auto_ptr< LinearEnvelopeBuilder > mF0Builder;
-    #endif
-                
-    #if defined(ESTIMATE_AMP) && ESTIMATE_AMP
-    LinearEnvelope mAmpEnv;
+
+    LinearEnvelope mAmpEnv;     //! ampitude estimate constructed during analysis
+    
+    //! builder object for constructing an amplitude
+    //! estimate during analysis
     std::auto_ptr< LinearEnvelopeBuilder > mAmpEnvBuilder;
-    #endif
                 
 };  //  end of class Analyzer
 

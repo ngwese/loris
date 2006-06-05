@@ -1414,6 +1414,62 @@ zero-crossings) of the analysis window used by this Analyzer.");
 
 	void setWindowWidth( double x );
 
+%feature("docstring",
+"Return the fundamental frequency estimate envelope constructed
+during the most recent analysis performed by this Analyzer.
+Will be empty unless buildFundamentalEnv was invoked to enable the
+construction of this envelope during analysis.") fundamentalEnv;
+
+    const LinearEnvelope & fundamentalEnv( void ) const;
+        
+%feature("docstring",
+"Indicate whether the fundamental frequency envelope of the analyzed
+sound should be estimated during analysis. If true (the
+default), then the fundamental frequency estimate can be accessed by
+fundamentalEnv() after the analysis is complete. Default
+parameters for fundamental estimation are used. To set those
+parameters, use buildFundamentalEnv( fmin, fmax, threshDb, threshHz )
+instead.
+
+TF is a flag indicating whether or not to construct
+the fundamental frequency envelope during analysis, using 
+default parameters.
+
+fmin is the lower bound on the fundamental frequency estimate.
+fmax is the upper bound on the fundamental frequency estimate
+threshDb is the lower bound on the amplitude of a spectral peak
+that will constribute to the fundamental frequency estimate (very
+low amplitude peaks tend to have less reliable frequency estimates).
+Default is -60 dB.
+threshHz is the upper bound on the frequency of a spectral
+peak that will constribute to the fundamental frequency estimate.
+Default is 8 kHz.") buildFundamentalEnv;
+
+    void buildFundamentalEnv( bool TF = true );
+
+    void buildFundamentalEnv( double fmin, double fmax, 
+                              double threshDb = -60, double threshHz = 8000 );
+
+%feature("docstring",
+"Return the overall amplitude estimate envelope constructed
+during the most recent analysis performed by this Analyzer.
+Will be empty unless buildAmpEnv was invoked to enable the
+construction of this envelope during analysis.") ampEnv;
+
+    const LinearEnvelope & ampEnv( void ) const;
+    
+%feature("docstring",
+"Indicate whether the amplitude envelope of the analyzed
+sound should be estimated during analysis. If true (the
+default), then the amplitude estimate can be accessed by
+ampEnv() after the analysis is complete.
+
+TF is a flag indicating whether or not to construct
+the amplitude envelope during analysis.") buildAmpEnv;
+
+    void buildAmpEnv( bool TF = true );
+
+
 };	//	end of class Analyzer
 			
 // ---------------------------------------------------------------------------

@@ -55,9 +55,7 @@
 #include "phasefix.h"   //  HEY LOOKIE HERE - for new frequency/phase fixing at end of analysis
 #endif
 
-#ifdef ESTIMATE_F0
 #include "estimateF0.h"
-#endif
 
 #include <algorithm>
 #include <cmath>
@@ -96,7 +94,6 @@ public:
     virtual void build( const Peaks & peaks, double frameTime, LinearEnvelope & env ) = 0;
 };
 
-#if defined(ESTIMATE_F0) && ESTIMATE_F0
 // ---------------------------------------------------------------------------
 //  FundamentalBuilder - for constructing an F0 envelope during analysis
 // ---------------------------------------------------------------------------
@@ -154,9 +151,6 @@ void FundamentalBuilder::build( const Peaks & peaks, double frameTime,
     
 }
 
-#endif
-
-#if defined(ESTIMATE_AMP) && ESTIMATE_AMP
 // ---------------------------------------------------------------------------
 //  AmpEnvBuilder - for constructing an amplitude envelope during analysis
 // ---------------------------------------------------------------------------
@@ -198,7 +192,6 @@ AmpEnvBuilder::accumPeakSquaredAmps( double init,
     return init + (timeBpPair.second.amplitude() * timeBpPair.second.amplitude());
 }
 
-#endif
 
 // ---------------------------------------------------------------------------
 //  Analyzer constructor - frequency resolution only
@@ -243,15 +236,8 @@ Analyzer::Analyzer( double resolutionHz, double windowWidthHz )
 //! \param other is the Analyzer to copy.   
 //
 Analyzer::Analyzer( const Analyzer & other ) :
-#if defined(ESTIMATE_RMS) && ESTIMATE_RMS
-    mRmsEnv( other.mRmsEnv ),
-#endif
-#if defined(ESTIMATE_F0) && ESTIMATE_F0
     mF0Env( other.mF0Env ),
-#endif
-#if defined(ESTIMATE_AMP) && ESTIMATE_AMP
     mAmpEnv( other.mAmpEnv ),
-#endif
     m_freqResolution( other.m_freqResolution ),
     m_ampFloor( other.m_ampFloor ),
     m_windowWidth( other.m_windowWidth ),
@@ -263,19 +249,15 @@ Analyzer::Analyzer( const Analyzer & other ) :
     m_sidelobeLevel( other.m_sidelobeLevel ),
     m_partials( other.m_partials )
 {
-#if defined(ESTIMATE_F0) && ESTIMATE_F0
     if ( 0 != other.mF0Builder.get() )
     {
         mF0Builder.reset( other.mF0Builder->clone() );
     }
-#endif
 
-#if defined(ESTIMATE_AMP) && ESTIMATE_AMP
     if ( 0 != other.mAmpEnvBuilder.get() )
     {
         mAmpEnvBuilder.reset( other.mAmpEnvBuilder->clone() );
     }
-#endif
 }
 
 // ---------------------------------------------------------------------------
@@ -303,25 +285,17 @@ Analyzer::operator=( const Analyzer & rhs )
         m_sidelobeLevel = rhs.m_sidelobeLevel;
         m_partials = rhs.m_partials;
 
-    #if defined(ESTIMATE_RMS) && ESTIMATE_RMS
-        mRmsEnv = rhs.mRmsEnv;
-    #endif
-                
-    #if defined(ESTIMATE_F0) && ESTIMATE_F0
         mF0Env = rhs.mF0Env;
         if ( 0 != rhs.mF0Builder.get() )
         {
             mF0Builder.reset( rhs.mF0Builder->clone() );
         }
-    #endif
-                
-    #if defined(ESTIMATE_AMP) && ESTIMATE_AMP
+
         mAmpEnv = rhs.mAmpEnv;
         if ( 0 != rhs.mAmpEnvBuilder.get() )
         {
             mAmpEnvBuilder.reset( rhs.mAmpEnvBuilder->clone() );
         }
-    #endif
                 
     }
     return *this;
@@ -407,14 +381,12 @@ Analyzer::configure( double resolutionHz, double windowWidthHz )
     //  1 kHz region center spacing:
     setBwRegionWidth( 2000. );
 
-#if defined(ESTIMATE_F0) && ESTIMATE_F0
     if ( 0 != mF0Builder.get() )
     {
         //  (re)configure the fundamental tracker using default 
         //  parameters:
         buildFundamentalEnv( true );
     }
-#endif
 }
 
 // -- analysis --
@@ -472,19 +444,6 @@ Analyzer::analyze( const std::vector<double> & vec, double srate,
 { 
     analyze( &(vec[0]),  &(vec[0]) + vec.size(), srate, reference ); 
 }
-
-#if defined(ESTIMATE_RMS) && ESTIMATE_RMS
-// ---------------------------------------------------------------------------
-//  windowedSquare
-// ---------------------------------------------------------------------------
-//  Helper for computing windowed RMS peak time.
-//
-static 
-double windowedSquare( double signal, double window )
-{
-    return signal * signal * window;
-}
-#endif
 
 // ---------------------------------------------------------------------------
 //  helpers
@@ -553,19 +512,9 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
         debugger << "Bandwidth association disabled" << endl;
     }
 
-    #if defined(ESTIMATE_AMP) && ESTIMATE_AMP
-    //  try building up an amplitude envelope:
+    //  reset envelopes:
     mAmpEnv.clear();
-    #endif
-
-    #if defined(ESTIMATE_F0) && ESTIMATE_F0
-    //  try building a fundamental frequency envelope too
     mF0Env.clear();
-    #endif
-
-    #if defined(ESTIMATE_RMS) && ESTIMATE_RMS
-    mRmsEnv.clear();
-    #endif
         
     try 
     { 
@@ -585,26 +534,6 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
             const double * sampsEnd = std::min( winMiddle + (winlen / 2) + 1, bufEnd );
             spectrum.transform( sampsBegin, winMiddle, sampsEnd );
             
-            #if defined(ESTIMATE_RMS) && ESTIMATE_RMS
-            double sum = 
-                std::inner_product( sampsBegin, sampsEnd, 
-                                    window.begin() + (winlen / 2) - (winMiddle - sampsBegin),
-                                    0.,
-                                    std::plus<double>(),
-                                    windowedSquare );
-            double rms = std::sqrt( sum / (sampsEnd - sampsBegin) );
-            mRmsEnv.insert( currentFrameTime, rms );
-            /*
-            // tune this to track RMS peak only when it is changing
-            // quickly, as at the onset of a tone, but not throughout
-            if ( rms > previousRMS * 1.05 && rms > peakVal )
-            {
-                peakVal = rms;
-                peakTime = currentFrameTime;
-            }
-            previousRMS = rms; // remember for next time
-            */
-            #endif
              
             //  extract peaks from the spectrum, thin and 
             //  fade quiet peaks out over 10 dB:
@@ -620,22 +549,18 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
             //  remove rejected Breakpoints:
             peaks.erase( rejected, peaks.end() );
             
-            #if defined(ESTIMATE_AMP) && ESTIMATE_AMP
             //  estimate the amplitude in this frame:
             if ( 0 != mAmpEnvBuilder.get() )
             {
                 mAmpEnvBuilder->build( peaks, currentFrameTime, mAmpEnv );
             }
-            #endif
             
             //  collect amplitudes and frequencies and try to 
             //  estimate the fundamental
-            #if defined(ESTIMATE_F0) && ESTIMATE_F0
             if ( 0 != mF0Builder.get() )
             {
                 mF0Builder->build( peaks, currentFrameTime, mF0Env );
             }
-            #endif
 
             //  form Partials from the extracted Breakpoints:
             builder.formPartials( peaks, currentFrameTime );
@@ -655,7 +580,6 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
         
         
         //  for debugging:
-        #if defined(ESTIMATE_AMP) && ESTIMATE_AMP
         if ( ! mAmpEnv.empty() )
         {
             LinearEnvelope::iterator peakpos = 
@@ -664,18 +588,6 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
             notifier << "HEY analyzer found amp peak at time : " << peakpos->first
                      << " value: " << peakpos->second << endl;
         }
-        #endif
-        
-        #if defined(ESTIMATE_RMS) && ESTIMATE_RMS
-        if ( ! mRmsEnv.empty() )
-        {
-            LinearEnvelope::iterator peakpos = 
-                std::max_element( mRmsEnv.begin(), mRmsEnv.end(), 
-                                  compare2nd<LinearEnvelope::iterator::value_type> );
-            notifier << "HEY analyzer found RMS peak at time : " << peakpos->first
-                     << " value: " << peakpos->second << endl;
-        }
-        #endif
         
         m_partials.splice( m_partials.end(), builder.partials() );
     }
@@ -999,11 +911,20 @@ Analyzer::partials( void ) const
     return m_partials; 
 }
 
-#if defined(ESTIMATE_F0) && ESTIMATE_F0
-
 // ---------------------------------------------------------------------------
 //  buildFundamentalEnv
 // ---------------------------------------------------------------------------
+//! Indicate whether the fundamental frequency envelope of the analyzed
+//! sound should be estimated during analysis. If true (the
+//! default), then the fundamental frequency estimate can be accessed by
+//! fundamentalEnv() after the analysis is complete. Default
+//! parameters for fundamental estimation are used. To set those
+//! parameters, use buildFundamentalEnv( fmin, fmax, threshDb, threshHz )
+//! instead.
+//!
+//! \param  TF is a flag indicating whether or not to construct
+//!         the fundamental frequency envelope during analysis
+//
 void Analyzer::buildFundamentalEnv( bool TF )
 {
     if ( TF )
@@ -1024,6 +945,21 @@ void Analyzer::buildFundamentalEnv( bool TF )
 // ---------------------------------------------------------------------------
 //  buildFundamentalEnv
 // ---------------------------------------------------------------------------
+//! Specify parameters for constructing a fundamental frequency 
+//! envelope for the analyzed sound during analysis. The fundamental 
+//! frequency estimate can be accessed by fundamentalEnv() after the 
+//! analysis is complete. 
+//!
+//! \param  fmin is the lower bound on the fundamental frequency estimate
+//! \param  fmax is the upper bound on the fundamental frequency estimate
+//! \param  threshDb is the lower bound on the amplitude of a spectral peak
+//!         that will constribute to the fundamental frequency estimate (very
+//!         low amplitude peaks tend to have less reliable frequency estimates).
+//!         Default is -60 dB.
+//! \param  threshHz is the upper bound on the frequency of a spectral
+//!         peak that will constribute to the fundamental frequency estimate.
+//!         Default is 8 kHz.
+//
 void Analyzer::buildFundamentalEnv( double fmin, double fmax, 
                                     double threshDb, double threshHz )
 {
@@ -1034,6 +970,11 @@ void Analyzer::buildFundamentalEnv( double fmin, double fmax,
 // ---------------------------------------------------------------------------
 //  fundamentalEnv
 // ---------------------------------------------------------------------------
+//! Return the fundamental frequency estimate envelope constructed
+//! during the most recent analysis performed by this Analyzer.
+//! Will be empty unless buildFundamentalEnv was invoked to enable the
+//! construction of this envelope during analysis.
+//
 const LinearEnvelope & 
 Analyzer::fundamentalEnv( void ) const
 {   
@@ -1051,12 +992,18 @@ Analyzer::fundamentalEnv( void ) const
     return mF0Env; 
 }
 
-#endif
 
-#if defined(ESTIMATE_AMP) && ESTIMATE_AMP
 // ---------------------------------------------------------------------------
 //  buildAmpEnv
 // ---------------------------------------------------------------------------
+//! Indicate whether the amplitude envelope of the analyzed
+//! sound should be estimated during analysis. If true (the
+//! default), then the amplitude estimate can be accessed by
+//! ampEnv() after the analysis is complete.
+//!
+//! \param  TF is a flag indicating whether or not to construct
+//!         the amplitude envelope during analysis
+//
 void Analyzer::buildAmpEnv( bool TF )
 {
     if ( TF )
@@ -1074,6 +1021,11 @@ void Analyzer::buildAmpEnv( bool TF )
 // ---------------------------------------------------------------------------
 //  ampEnv
 // ---------------------------------------------------------------------------
+//! Return the overall amplitude estimate envelope constructed
+//! during the most recent analysis performed by this Analyzer.
+//! Will be empty unless buildAmpEnv was invoked to enable the
+//! construction of this envelope during analysis.
+//
 const LinearEnvelope & Analyzer::ampEnv( void ) const
 { 
     /*
@@ -1089,7 +1041,5 @@ const LinearEnvelope & Analyzer::ampEnv( void ) const
     */
     return mAmpEnv; 
 }
-#endif
-
 
 }   //  end of namespace Loris
