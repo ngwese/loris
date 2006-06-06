@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 """
-bassD2.py
+bass.py
 
 Python script for analyzing and reconstructing one of a variety 
 of sounds used to test the analysis/modification/synthesis routines 
