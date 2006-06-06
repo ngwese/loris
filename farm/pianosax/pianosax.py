@@ -34,7 +34,12 @@ trial 3:
 	- the crunch isn't actually noise, apparently, because it is still there
 	even if the noise energy in scaled to zero!
 
-Last updated: 28 July 2005 by Kelly Fitz
+
+Can now get a decent analysis and fundamental tracking. Definitely need 
+some non-harmonic low frequency partials to reconstruct the piano thunks.
+There's still a little cruch, but not to much.
+
+Last updated: 6 June 2006 by Kelly Fitz
 """
 
 print __doc__
@@ -42,158 +47,33 @@ print __doc__
 import loris, time
 print "using Loris version", loris.version()
 
-# use this trial counter to skip over
-# eariler trials
-trial = 4
-
-print "running trial number", trial, time.ctime(time.time())
-
-source = 'pianosax.aiff'
-file = loris.AiffFile( source )
+name = 'pianosax.aiff'
+file = loris.AiffFile( name )
 samples = file.samples()
 rate = file.sampleRate()
-pref = loris.importSpc('pianosax.fund.qharm')
-ref = loris.createFreqReference( pref, 50, 1000 )
 
-if trial == 1:
-	resolutions = ( 90, 150 )
-	widths = ( 300, )
-	for r in resolutions:
-		for w in widths:
-			a = loris.Analyzer( r, w )
-			# turn off BW association for now
-			# a.setBwRegionWidth( 0 )
-			p = a.analyze( samples, rate )
-			# export raw
-			ofile = 'pianosax.%i.%i.raw'%(r, w)
-			loris.distill( p )
-			# export
-			loris.exportAiff( ofile + '.aiff', loris.synthesize( p, rate ), rate, 1, 24 )
-			# prune before Spc export
-			iter = p.begin()
-			while not iter.equals( p.end() ):
-				next = iter.next()
-				if iter.partial().label() > 511:					
-					p.erase( iter )
-				iter = next
-			loris.exportSpc( ofile + '.s.spc', p, 60, 0 ) 
-			loris.exportSpc( ofile + '.e.spc', p, 60, 1 ) 
+print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
+res = 250
+width = 600
+a = loris.Analyzer( res, width )
+a.setFreqFloor( 90 )
+a.setFreqDrift( 20 )
+a.setBwRegionWidth( 0 ) # no BW association
+a.buildFundamentalEnv( 300, 720 )
 
-if trial == 2:
-	resolutions = ( 90, 150 )
-	width = 300
-	for res in resolutions:
-		# do normal analysis
-		a = loris.Analyzer( res, width )
-		a.setFreqFloor( 90 )
-		p = a.analyze( samples, rate )
-		# export
-		ofile = 'pianosax.%i.%i.raw'%(res, width)
-		loris.distill( p )
-		# export
-		loris.exportAiff( ofile + '.aiff', loris.synthesize( p, rate ), rate, 1, 24 )
-		# prune before Spc export
-		iter = p.begin()
-		while not iter.equals( p.end() ):
-			next = iter.next()
-			if iter.partial().label() > 511:					
-				p.erase( iter )
-			iter = next
-		loris.exportSpc( ofile + '.s.spc', p, 60, 0 ) 
-		loris.exportSpc( ofile + '.e.spc', p, 60, 1 ) 
-		
-		# do tracking analysis
-		a = loris.Analyzer( res, width )
-		a.setFreqFloor( 90 )
-		p = a.analyze( samples, rate, ref )
-		# export
-		ofile = 'pianosax.%i.%i.trk'%(res, width)
-		loris.channelize(p, ref, 1)
-		loris.sift( p )
-		loris.distill( p )
-		# export
-		loris.exportAiff( ofile + '.aiff', loris.synthesize( p, rate ), rate, 1, 24 )
-		# prune before Spc export
-		iter = p.begin()
-		while not iter.equals( p.end() ):
-			next = iter.next()
-			if iter.partial().label() > 511:					
-				p.erase( iter )
-			iter = next
-		loris.exportSpc( ofile + '.s.spc', p, 60, 0 ) 
-		loris.exportSpc( ofile + '.e.spc', p, 60, 1 ) 
-		
-if trial == 3:
-	res = 150
-	width = 300
-	# do tracking analysis
-	a = loris.Analyzer( res, width )
-	a.setFreqFloor( 90 )
-	# turn off BW association for now
-	a.setBwRegionWidth( 0 )
-	p = a.analyze( samples, rate, ref )
-	# export
-	ofile = 'pianosax.%i.%i.trk'%(res, width)
-	loris.channelize(p, ref, 2)
-	loris.sift( p )
-	zeros = loris.extractLabeled( p, 0 )
-	loris.distill( p )
-	# scale noise to zero?
-	loris.scaleNoiseRatio( p, loris.BreakpointEnvelope(0) )
-	# export
-	loris.exportAiff( ofile + '.aiff', loris.synthesize( p, rate ), rate, 1, 24 )
-	# prune before Spc export
-	iter = p.begin()
-	while not iter.equals( p.end() ):
-		next = iter.next()
-		if iter.partial().label() > 511:					
-			p.erase( iter )
-		iter = next
-	loris.exportSpc( ofile + '.s.spc', p, 60, 0 ) 
-	loris.exportSpc( ofile + '.e.spc', p, 60, 1 ) 
-	
-if trial == 4:
-	res = 150
-	width = 300
-	# do tracking analysis with high amp floor
-	a = loris.Analyzer( res, width )
-	a.setFreqFloor( 90 )
-	a.setAmpFloor( -40 )
-	# turn off BW association for now
-	a.setBwRegionWidth( 0 )
-	p = a.analyze( samples, rate, ref )
-	
-	# use this analysis to create another reference env
-	loris.channelize(p, ref, 1)
-	loris.distill( p )
-	newref = loris.createFreqReference( p, 100, 500 )
-	
-	# let's look at these partials
-	loris.exportSpc( 'whoppee.s.spc', p, 60, 0 ) 
-	
-	# re-analyze with the new reference and
-	# a normal amp floor:
-	a.setAmpFloor( -90 )
-	p = a.analyze( samples, rate, newref )
-	
-	# export
-	ofile = 'pianosax.%i.%i.trk'%(res, width)
-	loris.channelize(p, newref, 2)
-	loris.sift( p )
-	# zeros = loris.extractLabeled( p, 0 )
-	loris.distill( p )
-	# scale noise to zero?
-	loris.scaleNoiseRatio( p, loris.BreakpointEnvelope(0) )
-	# export
-	loris.exportAiff( ofile + '.aiff', loris.synthesize( p, rate ), rate, 24 )
-# 	prune before Spc export
-# 	iter = p.begin()
-# 	while not iter.equals( p.end() ):
-# 		next = iter.next()
-# 		if iter.partial().label() > 511:					
-# 			p.erase( iter )
-# 		iter = next
-	loris.exportSpc( ofile + '.s.spc', p, 60, 0 ) 
-	loris.exportSpc( ofile + '.e.spc', p, 60, 1 ) 
-	
+p = a.analyze( samples, rate )
+
+print 'sifting and distilling %i partials (%s)'%(p.size(), time.ctime(time.time()))
+ref = a.fundamentalEnv()
+loris.channelize(p, ref, 1)
+loris.sift( p )
+loris.distill( p )
+
+# export
+ofile = 'pianosax'
+print 'writing %s (%s)'%(ofile + '.recon.aiff', time.ctime(time.time()))
+loris.exportAiff( ofile + '.recon.aiff', p, rate )
+
+print 'writing %s (%s)'%(ofile + '.sdif', time.ctime(time.time()))
+loris.exportSdif( ofile + '.sdif', p ) 
 
