@@ -79,6 +79,10 @@ class Sound{
 	double	minFreq,
 	double	maxFreq
     );
+    void		dilate(
+	list<double>* source,
+        list<double>* target
+    );
     void		distill();
     void		exportToAiff(
 	double	sampleRate,

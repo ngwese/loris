@@ -140,22 +140,16 @@ void SoundList::importSdif(
 ---------------------------------------------------------------------------
 	dilate
 ---------------------------------------------------------------------------
-Dilate one sound to match a set of timepoints derived from another. Do it
-in SoundList so as to add it to the list in the same step, and emit the
-signals needed to update the views.
+Dilate one sound to match a set of timepoints derived from another.
 */
 void SoundList::dilate(
 	int pos,
 	list<double>* source,
 	list<double>* target
 ){
-  try{
-    interface->dilate(
-	soundList.at(pos)->getPartials(),
-	source,
-	target
-    );
-  }catch(...){ throw; }
+  soundList.at(pos)->dilate(source, target);
+
+  emit currentChanged();
 }
 
 /*

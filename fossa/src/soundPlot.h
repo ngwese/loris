@@ -41,7 +41,6 @@
  */
 #include <qpixmap.h> 
 #include <qcanvas.h> 
-#include <qwmatrix.h>
 #include <qlist.h>
 #include <qsortedlist.h>
 

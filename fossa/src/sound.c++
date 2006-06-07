@@ -304,6 +304,26 @@ void Sound::channelize(
 
 /*
 ---------------------------------------------------------------------------
+	dilate
+---------------------------------------------------------------------------
+*/
+void Sound::dilate(
+        list<double>* source,
+        list<double>* target
+){
+  try{
+    interface->dilate(
+        getPartials(),
+        source,
+        target
+    );
+  }catch(...){ throw; }
+
+  setValues();
+}
+
+/*
+---------------------------------------------------------------------------
 	distill
 ---------------------------------------------------------------------------
 Distill Loris::Partials by communicating with lorisInterface.
