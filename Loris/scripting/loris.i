@@ -1420,7 +1420,7 @@ during the most recent analysis performed by this Analyzer.
 Will be empty unless buildFundamentalEnv was invoked to enable the
 construction of this envelope during analysis.") fundamentalEnv;
 
-    const LinearEnvelope & fundamentalEnv( void ) const;
+    LinearEnvelope fundamentalEnv( void ) const;
         
 %feature("docstring",
 "Indicate whether the fundamental frequency envelope of the analyzed
@@ -1456,7 +1456,7 @@ during the most recent analysis performed by this Analyzer.
 Will be empty unless buildAmpEnv was invoked to enable the
 construction of this envelope during analysis.") ampEnv;
 
-    const LinearEnvelope & ampEnv( void ) const;
+    LinearEnvelope ampEnv( void ) const;
     
 %feature("docstring",
 "Indicate whether the amplitude envelope of the analyzed
