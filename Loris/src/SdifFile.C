@@ -1649,11 +1649,11 @@ collectActiveIndices( const ConstPartialPtrs & partialsVector,
                       const double nextFrameTime,
                       std::vector< int > & activeIndices )
 {
-#if Debug_Loris		
+#if 1 //Debug_Loris		
 	if ( ! ( nextFrameTime > frameTime ) ) 
 	{
-		std::cout << nextFrameTime << std:: endl;
-		std::cout << "amp 128 : " << partialsVector[128]->amplitudeAt( frameTime ) << std::endl;
+		std::cout << nextFrameTime << " <= " << frameTime << std:: endl;
+		//std::cout << "amp 128 : " << partialsVector[128]->amplitudeAt( frameTime ) << std::endl;
 		
 	} 
 #endif

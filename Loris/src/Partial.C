@@ -271,11 +271,49 @@ Partial::insert( double time, const Breakpoint & bp )
 	}
 	return insertHere;
 #else
+    /*
+    //  this allows Breakpoints to be inserted arbitrarily
+    //  cloase together, which is no good, can cause trouble later:
+    
 	std::pair< container_type::iterator, bool > result = 
 		_breakpoints.insert( container_type::value_type(time, bp) );
 	if ( ! result.second )
+    {
 		result.first->second = bp;
+    }
 	return result.first;
+    */
+    
+    //  do not insert a Breakpoint closer than 1ns away
+    //  from the nearest existing Breakpoint:
+    static const double MinTimeDif = 1.0E-9; // 1 ns
+    
+    //  find the insertion point for this time
+    container_type::iterator pos = _breakpoints.lower_bound( time );
+    
+    //  the time of pos is either equal to or greater
+    //  than the insertion time, if this is too close, 
+    //  remove the Breakpoint at pos:
+    if ( _breakpoints.end() != pos && MinTimeDif > pos->first - time )
+    {
+        _breakpoints.erase( pos++ );
+    }
+    //  otherwise, if the preceding position is too clase, 
+    //  remove the Breakpoint at that position
+    else if ( _breakpoints.begin() != pos && MinTimeDif > time - (--pos)->first )
+    {
+        _breakpoints.erase( pos++ );
+    }
+
+    //  now pos is at most one position away from the insertion point
+    //  so insertion can be performed in constant time, and the new
+    //  Breakpoint is at least 1ns away from any other Breakpoint:
+    pos = _breakpoints.insert( pos, container_type::value_type(time, bp) );
+
+    Assert( pos->first == time );
+
+	return pos;
+
 #endif
 }
 

@@ -1287,10 +1287,8 @@ interpolateAmplitude( double srcAmp, double tgtAmp, double alpha, double shape )
         return std::max( 0.0, morphedAmp );        
         
     }
-    else
-    {
-        return 0;
-    }
+    //else
+    return 0;
 }
 
 // ---------------------------------------------------------------------------
@@ -1312,10 +1310,8 @@ interpolateBandwidth( double srcBw, double tgtBw, double alpha, double shape )
         return std::max( 0.0, morphedBw );        
         
     }
-    else
-    {
-        return 0;
-    }
+    //else
+    return 0;
 #else
     return ( (1.-alpha) * srcBw ) + ( alpha * tgtBw );
 #endif

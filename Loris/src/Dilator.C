@@ -239,10 +239,14 @@ Dilator::dilate( Partial & p ) const
 	//	each other, since our Breakpoints are non-uniformly distributed in time:
 	for ( idx = 0; idx < _initial.size(); ++ idx )
 	{
-		if ( _initial[idx] < p.startTime() )
+		if ( _initial[idx] <= p.startTime() )
+        {
 			continue;
-		else if ( _initial[idx] > p.endTime() )
+        }
+		else if ( _initial[idx] >= p.endTime() )
+        {
 			break;
+        }
 		else
 		{
 			newp.insert( _target[idx], 
