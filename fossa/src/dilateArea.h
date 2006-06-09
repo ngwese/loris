@@ -111,6 +111,8 @@ class DilateArea:public QCanvasView{
     int                 width;
     int                 height;
 
+    double		plotScale;
+
     //List of all Breakpoints and a sublist of moving points.
     std::list<QCanvasItem*>  dilateList;
     std::list<QCanvasItem*>  moving;

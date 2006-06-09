@@ -65,15 +65,17 @@ DilateArea::DilateArea(
 	char*		name,
 	SoundList*	pList,
 	QStatusBar*	status,
-	int		which
+	int		w
 ):QCanvasView(canvas, parent, name){
+  which = w;
   statusbar = status;
   soundList = pList;
 
   leftMargin = 30;
-  rightMargin = 30;
-  topMargin = 30;
+  rightMargin = 0;
+  topMargin = 10;
   bottomMargin = 20;
+  plotScale = 1.0;
 
   width = canvas->width();
   height = canvas->height();
@@ -118,7 +120,11 @@ DilateArea::~DilateArea(){
 --------------------------------------------------------------------------------
 Wrapper funtion to tell the SoundPlot to reset its axis.
 */
-void DilateArea::resetAxis(double max){ dilatePlot->resetAxis(max); }
+void DilateArea::resetAxis(double max){
+  plotScale = soundList->getSound(dilateIndex)->getDuration() / max;
+
+  dilatePlot->resetAxis(max); 
+}
 
 /*
 --------------------------------------------------------------------------------
@@ -154,15 +160,20 @@ Return a list of times where the user has placed markers.
 list<double>* DilateArea::getTimes(){
   list<double>* newList = new list<double>;
   list<QCanvasItem*>::iterator it;
+  double time; 
 
   double factor = soundList->getSound(dilateIndex)->getDuration();
   factor /= (width - leftMargin - rightMargin);
+
 
   for(	it = dilateList.begin();
 	it != dilateList.end();
 	it++
   ){
-    newList->push_front( factor * (*it)->x() );
+    time = (*it)->x();
+    time *= factor;
+    time /= plotScale;
+    newList->push_front( time );
   }
 
   newList->sort();
