@@ -184,7 +184,7 @@ static void merge( Partial::const_iterator beg,
 	}
 	
 	//	remove the Breakpoints in the merge range from destPartial:
-    double rbt = removeBegin.time();
+    double rbt = (removeBegin != destPartial.end())?(removeBegin.time()):(destPartial.endTime());
     double ret = (removeEnd != destPartial.end())?(removeEnd.time()):(destPartial.endTime());
     Assert( rbt <= ret );
 	destPartial.erase( removeBegin, removeEnd );

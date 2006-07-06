@@ -62,19 +62,17 @@ namespace Loris {
 std::istream & 
 readChunkHeader( std::istream & s, CkHeader & h )
 {	
-	try
+    ID id = 0;
+    Uint_32 sz = 0;
+    BigEndian::read( s, 1, sizeof(ID), (char *)&id );
+    BigEndian::read( s, 1, sizeof(Uint_32), (char *)&sz );
+    
+	if ( s )
 	{
-		ID id = 0;
-		Uint_32 sz = 0;
-		BigEndian::read( s, 1, sizeof(ID), (char *)&id );
-		BigEndian::read( s, 1, sizeof(Uint_32), (char *)&sz );
 		h.id = id;
 		h.size = sz;
 	}
-	catch( FileIOException & ex )
-	{
-		// just go on, maybe its okay
-	}	
+
 	return s;
 }
 
@@ -90,35 +88,32 @@ readChunkHeader( std::istream & s, CkHeader & h )
 std::istream & 
 readApplicationSpecifcData( std::istream & s, SosEnvelopesCk & ck, unsigned long chunkSize )
 {
-	try 
-	{
-		Int_32 tmp_signature;
-		BigEndian::read( s, 1, sizeof(Int_32), (char *)&tmp_signature );
-		
-		if ( tmp_signature == SosEnvelopesId )
-		{
-			ck.header.id = ApplicationSpecificId;	
-			ck.header.size = chunkSize;
-			ck.signature = SosEnvelopesId; 
-			
-			//	lookout! The format of this chunk is a mess, due
-			//	to obsolete stuff lying around!
-			BigEndian::read( s, 1, sizeof(Int_32), (char *)&ck.enhanced );
-			BigEndian::read( s, 1, sizeof(Int_32), (char *)&ck.validPartials );
-			s.ignore( ck.validPartials * sizeof(Int_32) );
-			BigEndian::read( s, 1, sizeof(Int_32), (char *)&ck.resolution );
-			s.ignore( chunkSize - (4 + ck.validPartials) * sizeof(Int_32) );
-		}
-		else
-		{
-			s.ignore( chunkSize - sizeof(Int_32) );
-		}
-	}
-	catch( FileIOException & ex ) 
-	{
-		ex.append( " Failed to read badly-formatted AIFF file (bad ApplicationSpecific chunk)." );
-		throw;
-	}
+    Int_32 tmp_signature;
+    BigEndian::read( s, 1, sizeof(Int_32), (char *)&tmp_signature );
+    
+    if ( tmp_signature == SosEnvelopesId )
+    {
+        ck.header.id = ApplicationSpecificId;	
+        ck.header.size = chunkSize;
+        ck.signature = SosEnvelopesId; 
+        
+        //	lookout! The format of this chunk is a mess, due
+        //	to obsolete stuff lying around!
+        BigEndian::read( s, 1, sizeof(Int_32), (char *)&ck.enhanced );
+        BigEndian::read( s, 1, sizeof(Int_32), (char *)&ck.validPartials );
+        s.ignore( ck.validPartials * sizeof(Int_32) );
+        BigEndian::read( s, 1, sizeof(Int_32), (char *)&ck.resolution );
+        s.ignore( chunkSize - (4 + ck.validPartials) * sizeof(Int_32) );
+    }
+    else
+    {
+        s.ignore( chunkSize - sizeof(Int_32) );
+    }
+
+    if ( !s )
+    {
+        Throw( FileIOException, "Failed to read badly-formatted AIFF file (bad ApplicationSpecific chunk)." );
+    }
 	
 	return s;
 }
@@ -132,25 +127,23 @@ readApplicationSpecifcData( std::istream & s, SosEnvelopesCk & ck, unsigned long
 std::istream & 
 readCommonData( std::istream & s, CommonCk & ck, unsigned long chunkSize )
 {
+    BigEndian::read( s, 1, sizeof(Int_16), (char *)&ck.channels );
+    BigEndian::read( s, 1, sizeof(Int_32), (char *)&ck.sampleFrames );
+    BigEndian::read( s, 1, sizeof(Int_16), (char *)&ck.bitsPerSample );
+    
+    if ( !s )
+    {
+        Throw( FileIOException, "Failed to read badly-formatted AIFF file (bad Common chunk)." );
+    }
+                        
 	ck.header.id = CommonId;	
 	ck.header.size = chunkSize;
-	try 
-	{
-		BigEndian::read( s, 1, sizeof(Int_16), (char *)&ck.channels );
-		BigEndian::read( s, 1, sizeof(Int_32), (char *)&ck.sampleFrames );
-		BigEndian::read( s, 1, sizeof(Int_16), (char *)&ck.bitsPerSample );
-		
-		//	don't let this get byte-reversed:
-		IEEE::extended80 read_rate;
-		BigEndian::read( s, sizeof(IEEE::extended80), sizeof(char), (char *)&read_rate );
-		ck.srate = read_rate;
-	}
-	catch( FileIOException & ex ) 
-	{
-		ex.append( " Failed to read badly-formatted AIFF file (bad Common chunk)." );
-		throw;
-	}
-							
+
+    //	don't let this get byte-reversed:
+    IEEE::extended80 read_rate;
+    BigEndian::read( s, sizeof(IEEE::extended80), sizeof(char), (char *)&read_rate );
+    ck.srate = read_rate;
+
 	return s;
 }
 
@@ -163,16 +156,13 @@ readContainer( std::istream & s, ContainerCk & ck, unsigned long chunkSize )
 {
 	ck.header.id = ContainerId;	
 	ck.header.size = chunkSize;
-	try 
-	{
-		//	read in the chunk data:
-		BigEndian::read( s, 1, sizeof(ID), (char *)&ck.formType );
-	}
-	catch( FileIOException & ex ) 
-	{
-		ex.append( " Failed to read badly-formatted AIFF file (bad Container chunk)." );
-		throw;
-	}
+
+    //	read in the chunk data:
+    BigEndian::read( s, 1, sizeof(ID), (char *)&ck.formType );
+    if ( !s )
+    {
+        Throw( FileIOException, "Failed to read badly-formatted AIFF file (bad Container chunk)." );
+    }
 
 	//	make sure its really AIFF:
 	if ( ck.formType != AiffType )
@@ -194,30 +184,28 @@ readInstrumentData( std::istream & s, InstrumentCk & ck, unsigned long chunkSize
 {
 	ck.header.id = InstrumentId;	
 	ck.header.size = chunkSize;
-	try 
-	{
-		BigEndian::read( s, 1, sizeof(Byte), (char *)&ck.baseNote );
-		BigEndian::read( s, 1, sizeof(Byte), (char *)&ck.detune );
-		BigEndian::read( s, 1, sizeof(Byte), (char *)&ck.lowNote );
-		BigEndian::read( s, 1, sizeof(Byte), (char *)&ck.highNote );
-		BigEndian::read( s, 1, sizeof(Byte), (char *)&ck.lowVelocity );
-		BigEndian::read( s, 1, sizeof(Byte), (char *)&ck.highVelocity );
-		BigEndian::read( s, 1, sizeof(Int_16), (char *)&ck.gain );
 
-		//	AIFFLoop is three Int_16s:
-		BigEndian::read( s, 1, sizeof(Uint_16), (char *)&ck.sustainLoop.playMode );
-		BigEndian::read( s, 1, sizeof(Int_16), (char *)&ck.sustainLoop.beginLoop );
-		BigEndian::read( s, 1, sizeof(Int_16), (char *)&ck.sustainLoop.endLoop );
-		
-		BigEndian::read( s, 1, sizeof(Uint_16), (char *)&ck.releaseLoop.playMode );
-		BigEndian::read( s, 1, sizeof(Int_16), (char *)&ck.releaseLoop.beginLoop );
-		BigEndian::read( s, 1, sizeof(Int_16), (char *)&ck.releaseLoop.endLoop );
-	}
-	catch( FileIOException & ex ) 
-	{
-		ex.append( " Failed to read badly-formatted AIFF file (bad Common chunk)." );
-		throw;
-	}
+    BigEndian::read( s, 1, sizeof(Byte), (char *)&ck.baseNote );
+    BigEndian::read( s, 1, sizeof(Byte), (char *)&ck.detune );
+    BigEndian::read( s, 1, sizeof(Byte), (char *)&ck.lowNote );
+    BigEndian::read( s, 1, sizeof(Byte), (char *)&ck.highNote );
+    BigEndian::read( s, 1, sizeof(Byte), (char *)&ck.lowVelocity );
+    BigEndian::read( s, 1, sizeof(Byte), (char *)&ck.highVelocity );
+    BigEndian::read( s, 1, sizeof(Int_16), (char *)&ck.gain );
+
+    //	AIFFLoop is three Int_16s:
+    BigEndian::read( s, 1, sizeof(Uint_16), (char *)&ck.sustainLoop.playMode );
+    BigEndian::read( s, 1, sizeof(Int_16), (char *)&ck.sustainLoop.beginLoop );
+    BigEndian::read( s, 1, sizeof(Int_16), (char *)&ck.sustainLoop.endLoop );
+    
+    BigEndian::read( s, 1, sizeof(Uint_16), (char *)&ck.releaseLoop.playMode );
+    BigEndian::read( s, 1, sizeof(Int_16), (char *)&ck.releaseLoop.beginLoop );
+    BigEndian::read( s, 1, sizeof(Int_16), (char *)&ck.releaseLoop.endLoop );
+
+    if ( !s )
+    {
+        Throw( FileIOException, "Failed to read badly-formatted AIFF file (bad Common chunk)." );
+    }
 							
 	return s;
 }
@@ -231,65 +219,62 @@ readMarkerData( std::istream & s, MarkerCk & ck, unsigned long chunkSize )
 {
 	ck.header.id = MarkerId;	
 	ck.header.size = chunkSize;
-	try 
-	{
-		Uint_32 bytesToRead = chunkSize;
-		
-		//	read in the number of Markers
-		BigEndian::read( s, 1, sizeof(Uint_16), (char *)&ck.numMarkers );
-		bytesToRead -= sizeof(Uint_16);
-		
-		for ( int i = 0; i < ck.numMarkers; ++i )
-		{
-			MarkerCk::Marker marker;
-			BigEndian::read( s, 1, sizeof(Uint_16), (char *)&marker.markerID );
-			bytesToRead -= sizeof(Uint_16);
-			
-			BigEndian::read( s, 1, sizeof(Uint_32), (char *)&marker.position );
-			bytesToRead -= sizeof(Uint_32);
-			
-			//	read the size of the name string, then the characters:
-			unsigned char namelength;
-			BigEndian::read( s, 1, sizeof(unsigned char), (char *)&namelength );
-			bytesToRead -= sizeof(unsigned char);
-			
-			//	need to add one to the length, because, like C-strings,
-			//	Pascal strings are null-terminated, but the null character
-			//	is _not_ counted in the length.
-			//
-			//	Correction? At least one web source says that Pascal strings
-			//	are _not_ null terminated, but are padded (with an extra byte
-			//	that is not part of the count) if necessary to make the total 
-			//	number of bytes even (that is, the char bytes, _plus_ the count). 
-			//
-			//	This way seems to work with all the files I have tried (Kyma and 
-			//	Peak, mostly) for AIFF and Spc.
-			int ncharbytes = namelength;
-			if ( ncharbytes%2 == 0 )
-				++ncharbytes;
-			static char tmpChars[256];
-			BigEndian::read( s, ncharbytes, sizeof(char), tmpChars );
-			bytesToRead -= ncharbytes * sizeof(char);
-			tmpChars[ namelength ] = '\0';
-		
-			//	convert to a string:
-			marker.markerName = std::string( tmpChars );
-			
-			debugger << "Found marker named " << marker.markerName
-					 << " at position " << marker.position << endl;
-			
-			ck.markers.push_back( marker );
-		}
-		
-		if ( bytesToRead > 0 )
-			s.ignore( bytesToRead );
-	}
-	catch( FileIOException & ex ) 
-	{
-		ex.append( " Failed to read badly-formatted AIFF file (bad Marker chunk)." );
-		throw;
-	}
 
+    Uint_32 bytesToRead = chunkSize;
+    
+    //	read in the number of Markers
+    BigEndian::read( s, 1, sizeof(Uint_16), (char *)&ck.numMarkers );
+    bytesToRead -= sizeof(Uint_16);
+    
+    for ( int i = 0; i < ck.numMarkers; ++i )
+    {
+        MarkerCk::Marker marker;
+        BigEndian::read( s, 1, sizeof(Uint_16), (char *)&marker.markerID );
+        bytesToRead -= sizeof(Uint_16);
+        
+        BigEndian::read( s, 1, sizeof(Uint_32), (char *)&marker.position );
+        bytesToRead -= sizeof(Uint_32);
+        
+        //	read the size of the name string, then the characters:
+        unsigned char namelength;
+        BigEndian::read( s, 1, sizeof(unsigned char), (char *)&namelength );
+        bytesToRead -= sizeof(unsigned char);
+        
+        //	need to add one to the length, because, like C-strings,
+        //	Pascal strings are null-terminated, but the null character
+        //	is _not_ counted in the length.
+        //
+        //	Correction? At least one web source says that Pascal strings
+        //	are _not_ null terminated, but are padded (with an extra byte
+        //	that is not part of the count) if necessary to make the total 
+        //	number of bytes even (that is, the char bytes, _plus_ the count). 
+        //
+        //	This way seems to work with all the files I have tried (Kyma and 
+        //	Peak, mostly) for AIFF and Spc.
+        int ncharbytes = namelength;
+        if ( ncharbytes%2 == 0 )
+            ++ncharbytes;
+        static char tmpChars[256];
+        BigEndian::read( s, ncharbytes, sizeof(char), tmpChars );
+        bytesToRead -= ncharbytes * sizeof(char);
+        tmpChars[ namelength ] = '\0';
+    
+        //	convert to a string:
+        marker.markerName = std::string( tmpChars );
+        
+        ck.markers.push_back( marker );
+    }
+    
+    if ( bytesToRead > 0 )
+    {
+        s.ignore( bytesToRead );
+    }
+
+    if ( !s )
+    {
+        Throw( FileIOException, "Failed to read badly-formatted AIFF file (bad Marker chunk)." );
+    }
+        
 	return s;
 }	
 
@@ -320,28 +305,26 @@ readSampleData( std::istream & s, SoundDataCk & ck, unsigned long chunkSize )
 {
 	ck.header.id = SoundDataId;	
 	ck.header.size = chunkSize;
-	try 
-	{
-		BigEndian::read( s, 1, sizeof(Uint_32), (char *)&ck.offset );
-		BigEndian::read( s, 1, sizeof(Uint_32), (char *)&ck.blockSize );
-		
-		//	compute the actual number of bytes that
-		//	can be read from this chunk:
-		//	(chunkSize is everything after the header)
-		const unsigned long howManyBytes = 
-			( chunkSize - ck.offset ) - (2 * sizeof(Uint_32));
-			
-		ck.sampleBytes.resize( howManyBytes, 0 );		//	could throw bad_alloc
 
-		//	skip ahead to the samples and read them:
-		s.ignore( ck.offset );
-		readSamples( s, ck.sampleBytes );
-	}
-	catch( FileIOException & ex ) 
-	{
-		ex.append( "Failed to read badly-formatted AIFF file (bad Sound Data chunk)." );
-		throw;
-	}
+    BigEndian::read( s, 1, sizeof(Uint_32), (char *)&ck.offset );
+    BigEndian::read( s, 1, sizeof(Uint_32), (char *)&ck.blockSize );
+    
+    //	compute the actual number of bytes that
+    //	can be read from this chunk:
+    //	(chunkSize is everything after the header)
+    const unsigned long howManyBytes = 
+        ( chunkSize - ck.offset ) - (2 * sizeof(Uint_32));
+        
+    ck.sampleBytes.resize( howManyBytes, 0 );		//	could throw bad_alloc
+
+    //	skip ahead to the samples and read them:
+    s.ignore( ck.offset );
+    readSamples( s, ck.sampleBytes );
+
+    if ( !s )
+    {
+        Throw( FileIOException, "Failed to read badly-formatted AIFF file (bad Sound Data chunk)." );
+    }
 	
 	return s;
 }
@@ -409,8 +392,8 @@ configureInstrumentCk( InstrumentCk & ck, double midiNoteNum )
 			2 * sizeof(Uint_16) +		// beginLoop for sustainLoop and releaseLoop
 			2 * sizeof(Uint_16);		// loopEnd for sustainLoop and releaseLoop
 
-	ck.baseNote = long( midiNoteNum );
-	ck.detune = long( 100 * midiNoteNum ) % 100;
+	ck.baseNote = Byte( midiNoteNum );
+	ck.detune = Byte(long( 100 * midiNoteNum ) % 100);
 	if (ck.detune > 50)
 	{
 		ck.baseNote++;
@@ -444,7 +427,7 @@ configureMarkerCk( MarkerCk & ck, const std::vector< Marker > & markers, double 
 	
 	ck.numMarkers = markers.size();
 	ck.markers.resize( markers.size() );
-	for ( int j = 0; j < markers.size(); ++j )
+	for ( unsigned int j = 0; j < markers.size(); ++j )
 	{
 		MarkerCk::Marker & m = ck.markers[j];
 		m.markerID = j+1;
@@ -626,7 +609,7 @@ writeMarkerData( std::ostream & s, const MarkerCk & ck )
 		BigEndian::write( s, 1, sizeof(Uint_16), (char *)&ck.numMarkers );
 		
 		int markerbytes = 0;
-		for ( int j = 0; j < ck.markers.size(); ++j )
+		for ( unsigned int j = 0; j < ck.markers.size(); ++j )
 		{
 			const MarkerCk::Marker & m = ck.markers[j];
 			BigEndian::write( s, 1, sizeof(Uint_16), (char *)&m.markerID );
