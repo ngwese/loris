@@ -502,7 +502,7 @@ Partial::absorb( const Partial & other )
 	while ( it != end() && !(it.time() > other.endTime()) )
 	{
 		//	only non-null (non-zero-amplitude) Breakpoints
-		//	abosrb noise energym because null Breakpoints
+		//	abosrb noise energy because null Breakpoints
 		//	are used especially to reset the Partial phase,
 		//	and are not part of the normal analyasis data:
 		if ( it->amplitude() > 0 )

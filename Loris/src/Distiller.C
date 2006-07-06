@@ -103,13 +103,37 @@ Distiller::Distiller( double partialFadeTime, double partialSilentTime ) :
 // -- helpers --
 
 // ---------------------------------------------------------------------------
+//	fadeInAndOut		(STATIC)
+// ---------------------------------------------------------------------------
+//  Add zero-amplitude Breakpoints to the ends of a Partial if necessary.
+//  Do this to all Partials before distilling to make distillation easier.
+//
+static void fadeInAndOut( Partial & p, double fadeTime )
+{
+    if ( p.first().amplitude() != 0 )
+    {
+        p.insert( 
+            p.startTime() - fadeTime,
+            BreakpointUtils::makeNullBefore( p.first(), fadeTime ) );
+    }
+    
+    if ( p.last().amplitude() != 0 )
+    {
+        p.insert( 
+            p.endTime() + fadeTime,
+            BreakpointUtils::makeNullAfter( p.last(), fadeTime ) );
+    }
+}
+
+// ---------------------------------------------------------------------------
 //	merge	(STATIC)
 // ---------------------------------------------------------------------------
 //	Merge the Breakpoints in the specified iterator range into the
 //	distilled Partial. The beginning of the range may overlap, and 
 //	will replace, some non-zero-amplitude portion of the distilled
 //	Partial. Assume that there is no such overlap at the end of the 
-//	range (could check).
+//	range (could check), because findContribution only leaves overlap
+//  at the beginning of the range.
 //
 static void merge( Partial::const_iterator beg, 
 				   Partial::const_iterator end, 
@@ -119,67 +143,84 @@ static void merge( Partial::const_iterator beg,
 	//	absorb energy in distilled Partial that overlaps the
 	//	range to merge:
 	Partial toMerge( beg, end );
-	toMerge.absorb( destPartial );
-	
-	// debugger << "merging in " << toMerge.startTime() << "," << toMerge.endTime() << endl;
-	
-	//	fade out and in at end of merge if nececssary:
-	//	(assumes that insert and erase do not invalidate
-	//	other iterators!)
-	double clearance = fadeTime + gapTime;
-	Partial::iterator removeEnd = destPartial.findAfter( toMerge.endTime() + clearance );
-	if ( removeEnd != destPartial.end() )
-	{
-		if ( toMerge.last().amplitude() > 0 )
-		{
-			toMerge.insert( toMerge.endTime() + fadeTime, 
-							BreakpointUtils::makeNullAfter(toMerge.last(), fadeTime) );
-		}
+	toMerge.absorb( destPartial );  
+    fadeInAndOut( toMerge, fadeTime );
 
-		if ( removeEnd.breakpoint().amplitude() > 0 )
-		{
-			//	update removeEnd so that we don't remove this 
-			//	null we are inserting:
-			removeEnd = destPartial.insert( removeEnd.time() - fadeTime, 
-											BreakpointUtils::makeNullBefore( removeEnd.breakpoint(), fadeTime ) );
-		}		
-	}
-	
-	//	fade out and in at beginning of merge if necessary:
-	//	(assumes that insert and erase do not invalidate
-	//	other iterators!)
-	Partial::iterator removeBegin = destPartial.findAfter( toMerge.startTime() - clearance );
-	if ( removeBegin != destPartial.begin() )
+		
+    //  find the first Breakpoint in destPartial that is after the
+    //  range of merged Breakpoints, plus the required gap:
+	Partial::iterator removeEnd = destPartial.findAfter( toMerge.endTime() + gapTime );
+    
+    //  if this Breakpoint has non-zero amplitude, need to leave time
+    //  for a fade in:
+	while ( removeEnd != destPartial.end() &&
+            removeEnd.breakpoint().amplitude() != 0 &&
+            removeEnd.time() < toMerge.endTime() + gapTime + fadeTime )
+    {
+        ++removeEnd;
+    }   
+    
+	//	find the first Breakpoint in the destination Partial that needs
+    //  to be removed because it is in the overlap region:
+	Partial::iterator removeBegin = destPartial.findAfter( toMerge.startTime() - gapTime );
+        
+    //  if beforeMerge has non-zero amplitude, need to leave time
+    //  for a fade out:
+    if ( removeBegin != destPartial.begin() )
 	{
-		if ( toMerge.first().amplitude() > 0 )
-		{
-			toMerge.insert( toMerge.startTime() - fadeTime, 
-							BreakpointUtils::makeNullBefore( toMerge.first(), fadeTime ) );
-		}
-
-		Partial::iterator beforeMerge = --Partial::iterator(removeBegin);
-		if ( beforeMerge.breakpoint().amplitude() > 0 )
-		{
-			destPartial.insert( beforeMerge.time() + fadeTime, 
-								BreakpointUtils::makeNullAfter( beforeMerge.breakpoint(), fadeTime ) );
-		}		
+        Partial::iterator beforeMerge = --Partial::iterator(removeBegin);
+        
+        while ( removeBegin != destPartial.begin() &&
+                beforeMerge.breakpoint().amplitude() != 0 &&
+                beforeMerge.time() > toMerge.startTime() - gapTime - fadeTime )
+        {
+            --removeBegin;
+            if ( beforeMerge != destPartial.begin() )
+            {
+                --beforeMerge;
+            }
+        }   
+        
 	}
 	
 	//	remove the Breakpoints in the merge range from destPartial:
+    double rbt = removeBegin.time();
+    double ret = (removeEnd != destPartial.end())?(removeEnd.time()):(destPartial.endTime());
+    Assert( rbt <= ret );
 	destPartial.erase( removeBegin, removeEnd );
 
-	//	insert the Breakpoints in the range:
+    //  how about doing the fades here instead?
+    //  fade in if necessary:
+	if ( removeEnd != destPartial.end() &&
+         removeEnd.breakpoint().amplitude() != 0 )
+	{
+        Assert( removeEnd.time() - fadeTime > toMerge.endTime() );
+
+        //	update removeEnd so that we don't remove this 
+        //	null we are inserting:
+        destPartial.insert( 
+            removeEnd.time() - fadeTime, 
+            BreakpointUtils::makeNullBefore( removeEnd.breakpoint(), fadeTime ) );
+	}
+
+    if ( removeEnd != destPartial.begin() )
+    {
+        Partial::iterator beforeMerge = --Partial::iterator(removeEnd);
+        if ( beforeMerge.breakpoint().amplitude() > 0 )
+        {
+            Assert( beforeMerge.time() + fadeTime < toMerge.startTime() );
+            
+            destPartial.insert( 
+                beforeMerge.time() + fadeTime, 
+                BreakpointUtils::makeNullAfter( beforeMerge.breakpoint(), fadeTime ) );
+        }
+    }		
+    
+    //	insert the Breakpoints in the range:
 	for ( Partial::const_iterator insert = toMerge.begin(); insert != toMerge.end(); ++insert )
 	{
 		destPartial.insert( insert.time(), insert.breakpoint() );
 	}
-		
-/*	debugger << "CHECK" << endl;
-	for ( Partial::iterator distit = destPartial.begin(); distit != destPartial.end(); ++distit )
-	{
-		debugger << distit.time() << " " << distit.breakpoint().frequency()<< " " << distit.breakpoint().amplitude() << endl;
-	}
-*/
 }
 
 // ---------------------------------------------------------------------------
@@ -188,8 +229,8 @@ static void merge( Partial::const_iterator beg,
 //	Find and return an iterator range delimiting the portion of pshort that
 // 	should be spliced into the distilled Partial plong. If any Breakpoint 
 //	falls in a zero-amplitude region of plong, then pshort should contribute,
-//	and its onset should be retained. Therefore, if cbeg is not equal to cend, 
-//	then cbeg is pshort.begin().
+//	AND its onset should be retained (!!! This is the weird part!!!). 
+//  Therefore, if cbeg is not equal to cend, then cbeg is pshort.begin().
 //
 std::pair< Partial::iterator, Partial::iterator >
 findContribution( Partial & pshort, const Partial & plong, 
@@ -203,7 +244,12 @@ findContribution( Partial & pshort, const Partial & plong,
 	//	at cbeg.time() + clearance anyway, so the fade 
 	//	in must occur after that, and already be part of 
 	//	plong):
-	double clearance = fadeTime + gapTime;
+    //
+    //  WRONG if cbeg is before the start of plong.
+    //  Changed so that all Partials are faded in and
+    //  out before distilling, so now the clearance 
+    //  need only be the gap time:
+	double clearance = gapTime; // fadeTime + gapTime;
 	
 	Partial::iterator cbeg = pshort.begin();
 	while ( cbeg != pshort.end() && 
@@ -277,23 +323,12 @@ void Distiller::distillOne( PartialList & partials, Partial::label_type label,
 	debugger << "Distiller found " << partials.size() 
 			 << " Partials labeled " << label << endl;
 
-    /*
-    //  make a new Partial in the distilled collection,
-    //  insert it in label order:
-    Partial empty;
-    empty.setLabel( label );
-    PartialList::iterator pos = 
-        distilled.insert( std::lower_bound( distilled.begin(), distilled.end(), 
-                                            empty, 
-                                            PartialUtils::compareLabelLess() ),
-                          empty );
-	Partial newp = *pos;
-	*/
 	Partial newp;
     newp.setLabel( label );
 
     if ( partials.size() == 1 )
     {
+        //  trivial if there is only one partial to distill
         newp = partials.front();
     }
 	else if ( partials.size() > 0 )  //  it will be an empty Partial otherwise
@@ -305,13 +340,20 @@ void Distiller::distillOne( PartialList & partials, Partial::label_type label,
     	// keep the longest Partial:
     	PartialList::iterator it = partials.begin();
     	newp = *it;
-    		
-    	//	iterate over remaining partials:
+    	fadeInAndOut( newp, _fadeTime );
+        	
+    	//	Iterate over remaining Partials:
     	for ( ++it; it != partials.end(); ++it )
-    	{
+    	{            
+            fadeInAndOut( *it, _fadeTime );
+            
     		std::pair< Partial::iterator, Partial::iterator > range = 
     			findContribution( *it, newp, _fadeTime, _gapTime );
     		Partial::iterator cb = range.first, ce = range.second;
+
+            //  There can only be one contributing regions because
+            //  (and only because) the partials are sorted by length
+            //  first!
     		
     		//	merge Breakpoints into the new Partial, if
     		//	there are any that contribute, otherwise
@@ -322,16 +364,18 @@ void Distiller::distillOne( PartialList & partials, Partial::label_type label,
     			if ( ce != it->end() )
     			{
     				Partial absorbMe( --Partial::iterator(ce), it->end() );
+    				    //  shouldn't this just be ce?
     				newp.absorb( absorbMe );
-    			}
     			
-				//	HEY
-				//	couldn't there be a non-contributing part
-				//	at the beginning of the Partial too? 
-				//	Shouldn't we check whether cb == it->begin()?
-				//	In fact, couldn't there be more than one
-				//	contributing segment ina Partial? 
-
+                    //	There cannot be a non-contributing part
+                    //	at the beginning of the Partial too, because
+                    //  we always retain the beginning of the Partial.
+                    //  If findContribution were changed, then 
+                    //  we might also want to absorb the beginning.
+                    //
+    				// Partial absorbMeToo( it->begin(), cb );
+    				// newp.absorb( absorbMeToo );
+    			}
 
     			// merge the contributing part:
     			merge( cb, ce, newp, _fadeTime, _gapTime );
@@ -343,6 +387,19 @@ void Distiller::distillOne( PartialList & partials, Partial::label_type label,
     		}		
     	}
     }	
+
+    //  take the null Breakpoints off the ends
+    //  should check whether this is appropriate?
+    if ( 0 == newp.begin().breakpoint().amplitude() )
+    {
+        newp.erase( newp.begin() );
+    }
+    
+    Partial::iterator lastBpPos = --(Partial::iterator(newp.end()));
+    if ( 0 == lastBpPos.breakpoint().amplitude() )
+    {
+        newp.erase( lastBpPos );
+    }
     
     //  insert the new Partial in the distilled collection 
     //  in label order:
