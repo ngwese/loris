@@ -494,8 +494,14 @@ AiffFile::readAiffData( const std::string & filename )
 	
 		//	the Container chunk must be first, read it:
 		readChunkHeader( s, containerChunk.header );
-		if( containerChunk.header.id != ContainerId )
+        if ( !s )
+        {
+			Throw( FileIOException, "File not found, or corrupted." );
+        }
+		if ( containerChunk.header.id != ContainerId )
+        {
 			Throw( FileIOException, "Found no Container chunk." );
+        }
 		readContainer( s, containerChunk, containerChunk.header.size );
 		
 		//	read other chunks, we are only interested in

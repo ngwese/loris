@@ -41,6 +41,12 @@ perform formant-corrected pitch shifting.
 interval) or sparse (Breakpoints only at intervals
 near to original Breakpoints) resampling.
 
+- fixed bug in Distiller that caused occassional unpredictable
+behavior.
+
+- added platform-neutral FourierTransform implementation,
+in case FFTW is not available.
+
 -------------------------------------------------------
 changes since 1.2 release:
 

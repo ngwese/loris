@@ -186,31 +186,6 @@ AH_TEMPLATE([NO_COMPILE_TIME_ASSERTIONS],
             [Define for compilers that do not support compile-time assertions.])
 AC_MSG_CHECKING(whether compiler supports compile-time assertions)
 
-AC_COMPILE_IFELSE( 
-    AC_LANG_SOURCE([[
-        //  Gnarly code adopted from Alexandrescu (Modern C++ Design) for compile-time
-        //  checking of type information. 
-        template<int> struct CompileTimeError;
-        template<> struct CompileTimeError<true> {};
-        #define STATIC_CHECK(expr, msg) \
-            { CompileTimeError<((expr) != 0)> ERROR_##msg; (void)ERROR_##msg; }
-        
-        template <class T, class U> struct CompareTypes { enum { same = 0 }; };
-        template<class T> struct CompareTypes<T, T> { enum { same = 1 }; };
-        typedef int INT;
-        void f(void)
-        {
-            STATIC_CHECK((CompareTypes<int, INT>::same!=0), COMPILE_TIME_ASSERTIONS_FAIL);
-            STATIC_CHECK((CompareTypes<int, float>::same==0), COMPILE_TIME_ASSERTIONS_FAIL);
-        }
-  ]]),[
-  NO_COMPILE_TIME_ASSERTIONS=false
-  AC_MSG_RESULT(yes) ], [
-  NO_COMPILE_TIME_ASSERTIONS=true
-  AC_MSG_RESULT(no)
-  AC_DEFINE([NO_COMPILE_TIME_ASSERTIONS])
-  ] )
-
 dnl restore this
 AC_LANG_RESTORE
 
@@ -225,99 +200,34 @@ dnl Look for FFTW
 dnl
 dnl----------------------------------------------------------------
 
-dnl Remember that fftw library won't link without -lm.
-AC_SEARCH_LIBS([sin], [m])
+AC_ARG_WITH(fftw,
+    AC_HELP_STRING( [--with-fftw],
+                    [use FFTW library if available (default is YES)] ),
+    [TRYFFTW="$withval"], [TRYFFTW="yes"])
 
-dnl AC_ARG_WITH( fftw3,
-dnl     AC_HELP_STRING( [--with-fftw3],
-dnl                     [use FFTW3 (default is NO)] ),
-dnl     dnl execute this block if -with-fftw3 is specified
-dnl     [
-dnl     	dnl AC_MSG_WARN([hey --with-fftw3 specified])
-dnl     	
-dnl     	dnl check for fftw3 library
-dnl     	AC_CHECK_LIB([fftw3], [fftw_execute],
-dnl     	dnl if found:
-dnl     	[
-dnl             LINK_FFTW="$LINK_FFTW -lfftw3"
-dnl         ],
-dnl         dnl if not found
-dnl         [
-dnl         	AC_MSG_ERROR([Cannot find the FFTW3 library.  Add something to LDFLAGS.])
-dnl         ])
-dnl     	
-dnl     	dnl check for fftw header
-dnl     	AC_CHECK_HEADERS([fftw3.h],
-dnl     	dnl if found:
-dnl     	[
-dnl     	],
-dnl     	dnl if not found:
-dnl     	[
-dnl         	AC_MSG_ERROR([Cannot find FFTW3 header.  Add something to CPPFLAGS.])
-dnl         ])
-dnl         
-dnl         FFT_LIB="FFTW3"
-dnl     ], 
-dnl     dnl execute this block if -with-fftw3 is not specified
-dnl     [ 
-dnl     	dnl AC_MSG_WARN([hey --with-fftw3 NOT specified])
-dnl     ])
-dnl 
-dnl AC_ARG_WITH( fftw,
-dnl     AC_HELP_STRING( [--with-fftw],
-dnl                     [use FFTW (version 2) (default is NO)] ),
-dnl     dnl execute this block if -with-fftw is specified
-dnl     [
-dnl     	dnl AC_MSG_WARN([hey --with-fftw specified])
-dnl     	
-dnl     	dnl make sure that multiple FFT libraries have not been specified
-dnl     	if test -n "$FFT_LIB"; then
-dnl     		AC_MSG_ERROR([You cannot specify more than one FFT library. Pick one.])
-dnl 		fi
-dnl 		
-dnl     	dnl check for fftw library
-dnl     	AC_CHECK_LIB([fftw], [fftw_create_plan_specific],
-dnl     	dnl if found:
-dnl     	[
-dnl             LINK_FFTW="$LINK_FFTW -lfftw"
-dnl         ],
-dnl         dnl if not found
-dnl         [
-dnl         	AC_MSG_ERROR([Cannot find the FFTW library.  Add something to LDFLAGS.])
-dnl         ])
-dnl     	
-dnl     	dnl check for fftw header
-dnl     	AC_CHECK_HEADERS([fftw.h],
-dnl     	dnl if found:
-dnl     	[
-dnl     	],
-dnl     	dnl if not found:
-dnl     	[
-dnl         	AC_MSG_ERROR([Cannot find FFTW header.  Add something to CPPFLAGS.])
-dnl         ])
-dnl         FFT_LIB="FFTW"
-dnl     ], 
-dnl     dnl execute this block if -with-fftw is not specified
-dnl     [ 
-dnl     	dnl AC_MSG_WARN([hey --with-fftw NOT specified])
-dnl     ])
+if test "$TRYFFTW" == "yes" ; then
+    dnl Look for FFTW library, prefer version 3.
+    
+    dnl Remember that fftw library won't link without -lm.
+    AC_SEARCH_LIBS([sin], [m])
 
-AC_CHECK_LIB([fftw3], [fftw_execute], [ 
-        FFTW_VERSION=3
-        FFTW_HDR="fftw3.h"
-        LINK_FFTW=-lfftw3
-    ],
-    AC_CHECK_LIB([fftw], [fftw_create_plan_specific],[
-            FFTW_VERSION=2
-            FFTW_HDR="fftw.h"
-            LINK_FFTW=-lfftw
+    AC_CHECK_LIB([fftw3], [fftw_execute], [ 
+            FFTW_VERSION=3
+            FFTW_HDR="fftw3.h"
+            LINK_FFTW=-lfftw3
         ],
-        AC_MSG_ERROR([Cannot find the FFTW library.  Add something to LDFLAGS.])))
+        AC_CHECK_LIB([fftw], [fftw_create_plan_specific],[
+                FFTW_VERSION=2
+                FFTW_HDR="fftw.h"
+                LINK_FFTW=-lfftw
+            ],
+            AC_MSG_WARN([Not using the FFTW library.  Infrequent non-power-of-two DFTs will be slow.])))
+fi
 
 if test "$FFTW_VERSION" == "3"; then
     AC_CHECK_HEADERS([fftw3.h],,
-        AC_MSG_ERROR([Cannot find FFTW headers.  Add something to CPPFLAGS.]))
-else
+        AC_MSG_ERROR([Cannot find FFTW3 headers.  Add something to CPPFLAGS.]))
+elif test "$FFTW_VERSION" == "2"; then
     AC_CHECK_HEADERS([fftw.h],,
         AC_MSG_ERROR([Cannot find FFTW headers.  Add something to CPPFLAGS.]))
 fi
@@ -465,7 +375,14 @@ utils/Makefile )
 
 AC_MSG_RESULT(----- Configuration Summary -----)
 
-echo Using FFTW version $FFTW_VERSION.
+if test -n "$FFTW_VERSION" ; then
+    echo FFTW support: Enabled, using version $FFTW_VERSION.
+else
+    echo FFTW support: Disabled.
+    echo Add something to CPPFLAGS and LDFLAGS to enable.  
+    echo See "./configure --help".
+fi
+
 
 if test -n "$PYTHON" ; then
     echo Python support: Enabled.

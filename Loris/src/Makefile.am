@@ -48,8 +48,6 @@ CPP_SRC = AiffData.C	\
 		Fundamental.h \
 		Harmonifier.C \
 		Harmonifier.h \
-		ieee.c \
-		ieee.h \
 		ImportLemur.C \
 		ImportLemur.h \
 		KaiserWindow.C \
@@ -92,7 +90,9 @@ CPP_SRC = AiffData.C	\
 		SpectralSurface.C \
 		SpectralSurface.h \
 		Synthesizer.C \
-		Synthesizer.h
+		Synthesizer.h \
+        fft4g_double.c
+
 
 # source code for the procedural (C) interface
 PI_SRC = loris.h lorisAnalyzer_pi.C lorisBpEnvelope_pi.C \

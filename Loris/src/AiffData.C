@@ -42,8 +42,6 @@
 #include "Marker.h"
 #include "Notifier.h"
 
-#include "ieee.h"
-
 #include <climits>
 #include <cmath>
 #include <fstream>
@@ -51,6 +49,32 @@
 
 //	begin namespace
 namespace Loris {
+
+
+// ---------------------------------------------------------------------------
+//	extended80
+// ---------------------------------------------------------------------------
+//  IEEE floating point conversions, functions defined at end of file
+//  (used to be in a separate file, but they aren't used anywhere else).
+//
+
+/*	struct extended80 defined below 	*/
+struct extended80;
+
+/*	conversion functions				*/
+extern void ConvertToIeeeExtended(double num, extended80 * x) ;
+extern double ConvertFromIeeeExtended(const extended80 * x) ;
+
+/*	struct extended80 definition, with 
+	constructors and conversion to double 								
+ */
+struct extended80 
+{
+	char data[10];
+	
+	extended80( double x = 0. ) { ConvertToIeeeExtended( x, this ); }
+	operator double( void ) const { return ConvertFromIeeeExtended( this ); }	
+};
 
 // -- AIFF import --
 
@@ -140,8 +164,8 @@ readCommonData( std::istream & s, CommonCk & ck, unsigned long chunkSize )
 	ck.header.size = chunkSize;
 
     //	don't let this get byte-reversed:
-    IEEE::extended80 read_rate;
-    BigEndian::read( s, sizeof(IEEE::extended80), sizeof(char), (char *)&read_rate );
+    extended80 read_rate;
+    BigEndian::read( s, sizeof(extended80), sizeof(char), (char *)&read_rate );
     ck.srate = read_rate;
 
 	return s;
@@ -344,13 +368,13 @@ configureCommonCk( CommonCk & ck, unsigned long nFrames, unsigned int nChans,
 	ck.header.size = sizeof(Int_16) + 			//	num channels
 					 sizeof(Int_32) + 			//	num frames
 					 sizeof(Int_16) + 			//	bits per sample
-					 sizeof(IEEE::extended80);	//	sample rate
+					 sizeof(extended80);	//	sample rate
 					 
 	ck.channels = nChans;
 	ck.sampleFrames = nFrames;
 	ck.bitsPerSample = bps;
 	ck.srate = srate;
-	// IEEE::ConvertToIeeeExtended( srate, &ck.srate );
+	// ConvertToIeeeExtended( srate, &ck.srate );
 	
 }
 
@@ -520,10 +544,10 @@ writeCommonData( std::ostream & s, const CommonCk & ck )
 		BigEndian::write( s, 1, sizeof(Int_32), (char *)&ck.sampleFrames );
 		BigEndian::write( s, 1, sizeof(Int_16), (char *)&ck.bitsPerSample );
 		//	don't let this get byte-reversed:
-		IEEE::extended80 write_rate( ck.srate );
-		//IEEE::ConvertToIeeeExtended( &ck.srate, write_rate );
+		extended80 write_rate( ck.srate );
+		//ConvertToIeeeExtended( &ck.srate, write_rate );
 
-		BigEndian::write( s, sizeof(IEEE::extended80), sizeof(char), (char *)&write_rate );
+		BigEndian::write( s, sizeof(extended80), sizeof(char), (char *)&write_rate );
 	}
 	catch( FileIOException & ex ) 
 	{
@@ -806,6 +830,125 @@ convertSamplesToBytes( const std::vector< double > & samples,
 			*(bytePos++) = 0xFF & (samp >> (8*(j-1)));
 		}
 	}
+}
+
+// ---------------------------------------------------------------------------
+//	extended80
+// ---------------------------------------------------------------------------
+//  IEEE floating point conversions.
+//
+
+#ifndef HUGE_VAL
+# define HUGE_VAL HUGE
+#endif							/* HUGE_VAL */
+
+#define FloatToUnsigned(f)((int)(((int)(f - 2147483648.0)) + 2147483647L) + 1)
+
+void ConvertToIeeeExtended(double num, extended80 * x)
+{
+	int sign;
+	int expon;
+	double fMant, fsMant;
+	int hiMant, loMant;
+	char * bytes = x->data;
+
+	if (num < 0) {
+		sign = 0x8000;
+		num *= -1;
+	} else
+		sign = 0;
+
+	if (num == 0) {
+		expon = 0;
+		hiMant = 0;
+		loMant = 0;
+	} else {
+		fMant = frexp(num, &expon);
+		if ((expon > 16384) || !(fMant < 1)) {	/* Infinity or NaN */
+			expon = sign | 0x7FFF;
+			hiMant = 0;
+			loMant = 0;
+		}
+		 /* infinity */ 
+		else {					/* Finite */
+			expon += 16382;
+			if (expon < 0) {	/* denormalized */
+				fMant = ldexp(fMant, expon);
+				expon = 0;
+			}
+			expon |= sign;
+			fMant = ldexp(fMant, 32);
+			fsMant = floor(fMant);
+			hiMant = FloatToUnsigned(fsMant);
+			fMant = ldexp(fMant - fsMant, 32);
+			fsMant = floor(fMant);
+			loMant = FloatToUnsigned(fsMant);
+		}
+	}
+
+	bytes[0] = expon >> 8;
+	bytes[1] = expon;
+
+	bytes[2] = hiMant >> 24;
+	bytes[3] = hiMant >> 16;
+	bytes[4] = hiMant >> 8;
+	bytes[5] = hiMant;
+
+	bytes[6] = loMant >> 24;
+	bytes[7] = loMant >> 16;
+	bytes[8] = loMant >> 8;
+	bytes[9] = loMant;
+	
+}
+
+#ifndef HUGE_VAL
+# define HUGE_VAL HUGE
+#endif							/* HUGE_VAL */
+
+# define UnsignedToFloat(u)(((double)((long)(u - 2147483647L - 1))) + 2147483648.0)
+
+/****************************************************************
+ * Extended precision IEEE floating-point conversion routine.
+ ****************************************************************/
+
+double ConvertFromIeeeExtended(const extended80 * x)
+{								/* LCN */ /* ? */
+	double f;
+	int expon;
+	int hiMant, loMant;
+	const char * bytes = x->data;
+
+	expon = ((bytes[0] & 0x7F) << 8) | (bytes[1] & 0xFF);
+	hiMant = ((int)(bytes[2] & 0xFF) << 24)
+		| ((int)(bytes[3] & 0xFF) << 16)
+		| ((int)(bytes[4] & 0xFF) << 8)
+		| ((int)(bytes[5] & 0xFF));
+	loMant = ((int)(bytes[6] & 0xFF) << 24)
+		| ((int)(bytes[7] & 0xFF) << 16)
+		| ((int)(bytes[8] & 0xFF) << 8)
+		| ((int)(bytes[9] & 0xFF));
+
+	if (expon == 0 && hiMant == 0 && loMant == 0)
+		f = 0;
+	else {
+		if (expon == 0x7FFF)	/* Infinity or NaN */
+			f = HUGE_VAL;
+		else {
+			expon -= 16383;
+			f = ldexp(UnsignedToFloat(hiMant), expon -= 31);
+			f += ldexp(UnsignedToFloat(loMant), expon -= 32);
+		}
+	}
+
+	if (bytes[0] & 0x80)
+		f = -f;
+#if 0	//	CW6 optimizer doesn't like this, internal compiler error!
+		return -f;
+	else
+		return f;
+#endif
+
+	return f;
 }
 
 
