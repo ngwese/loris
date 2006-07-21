@@ -91,7 +91,7 @@ CPP_SRC = AiffData.C	\
 		SpectralSurface.h \
 		Synthesizer.C \
 		Synthesizer.h \
-        fft4g_double.c
+        fftsg.c
 
 
 # source code for the procedural (C) interface

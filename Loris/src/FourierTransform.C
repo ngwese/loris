@@ -321,15 +321,15 @@ public:
 
 #else
 
-//  function prototype, definition in fft4g_double.c
-extern "C" void cdft_double(int, int, double *, int *, double *);
+//  function prototype, definition in fftsg.c
+extern "C" void cdft(int, int, double *, int *, double *);
 
 //  function prototype, definition below
 static void slowDFT( double * in, double * out, int N );
 
 //  Uses General Purpose FFT (Fast Fourier/Cosine/Sine Transform) Package
 //  by Takuya OOURA, http://momonga.t.u-tokyo.ac.jp/~ooura/fft.html defined
-//  in fft4g_double.c.
+//  in fftsg.c.
 //
 //  In the event that the size is not a power of two, uses a (very) slow
 //  direct DFT computation, defined below. In this case, the workspace
@@ -438,7 +438,7 @@ public:
     {        
         if ( mIsPO2 )
         {
-            cdft_double( 2*N, -1, mTxInOut, mWorkspace, mTwiddle );
+            cdft( 2*N, -1, mTxInOut, mWorkspace, mTwiddle );
         }
         else
         {
