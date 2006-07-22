@@ -228,6 +228,14 @@ public:
     //! zero-crossings) of the analysis window used by this Analyzer.               
     double windowWidth( void ) const;
      
+    //! Return true if the phases and frequencies of the constructed
+    //! partials should be modified to be consistent at the end of the
+    //! analysis, and false otherwise. (Default is true.)
+    //!
+    //! \param  TF is a flag indicating whether or not to construct
+    //!         phase-corrected Partials
+    bool phaseCorrect( void ) const;
+
 //  -- parameter mutation --
 
     //! Set the amplitude floor (lowest detected spectral amplitude), in            
@@ -291,6 +299,14 @@ public:
     //! 
     //! \param x is the new value of this parameter.            
     void setWindowWidth( double x );
+
+    //! Indicate whether the phases and frequencies of the constructed
+    //! partials should be modified to be consistent at the end of the
+    //! analysis. (Default is true.)
+    //!
+    //! \param  TF is a flag indicating whether or not to construct
+    //!         phase-corrected Partials
+    void setPhaseCorrect( bool TF = true );
 
 //  -- PartialList access --
 
@@ -390,6 +406,9 @@ private:
                                                         
     double m_sidelobeLevel;   	//!  sidelobe attenutation level for the Kaiser analysis 
                             	//!  window, in positive dB
+                            	
+    bool m_phaseCorrect;        //!  flag indicating that phases/frequencies should be
+                                //!  made consistent at the end of the analysis
                             
     PartialList m_partials;  	//!  collect Partials here
     

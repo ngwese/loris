@@ -50,10 +50,7 @@
 #include "SpectralPeakSelector.h"
 #include "PartialBuilder.h"
 
-#define FIXFREQ 1
-#if FIXFREQ
 #include "phasefix.h"   //  HEY LOOKIE HERE - for new frequency/phase fixing at end of analysis
-#endif
 
 #include "estimateF0.h"
 
@@ -247,6 +244,7 @@ Analyzer::Analyzer( const Analyzer & other ) :
     m_cropTime( other.m_cropTime ),
     m_bwRegionWidth( other.m_bwRegionWidth ),
     m_sidelobeLevel( other.m_sidelobeLevel ),
+    m_phaseCorrect( other.m_phaseCorrect ),
     m_partials( other.m_partials )
 {
     if ( 0 != other.mF0Builder.get() )
@@ -283,6 +281,7 @@ Analyzer::operator=( const Analyzer & rhs )
         m_cropTime = rhs.m_cropTime;
         m_bwRegionWidth = rhs.m_bwRegionWidth;
         m_sidelobeLevel = rhs.m_sidelobeLevel;
+        m_phaseCorrect = rhs.m_phaseCorrect;
         m_partials = rhs.m_partials;
 
         mF0Env = rhs.mF0Env;
@@ -387,6 +386,9 @@ Analyzer::configure( double resolutionHz, double windowWidthHz )
         //  parameters:
         buildFundamentalEnv( true );
     }
+    
+    //  enable phase-correct Partial construction:
+    m_phaseCorrect = true;
 }
 
 // -- analysis --
@@ -574,9 +576,10 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
         builder.fixPartialFrequencies();
         
         //  fix the frequencies and phases to be consistent.
-        #if FIXFREQ
-        fixFrequency( builder.partials().begin(), builder.partials().end() );
-        #endif
+        if ( m_phaseCorrect )
+        {
+            fixFrequency( builder.partials().begin(), builder.partials().end() );
+        }
         
         
         //  for debugging:
@@ -731,6 +734,21 @@ Analyzer::windowWidth( void ) const
     return m_windowWidth; 
 }
 
+// ---------------------------------------------------------------------------
+//  windowWidth
+// ---------------------------------------------------------------------------
+//! Return true if the phases and frequencies of the constructed
+//! partials should be modified to be consistent at the end of the
+//! analysis, and false otherwise. (Default is true.)
+//!
+//! \param  TF is a flag indicating whether or not to construct
+//!         phase-corrected Partials
+bool 
+Analyzer::phaseCorrect( void ) const
+{
+    return m_phaseCorrect;
+}
+
 // -- parameter mutation --
 
 #define VERIFY_ARG(func, test)                                          \
@@ -883,6 +901,21 @@ Analyzer::setWindowWidth( double x )
 { 
     VERIFY_ARG( setWindowWidth, x > 0 );
     m_windowWidth = x; 
+}
+
+// ---------------------------------------------------------------------------
+//  setPhaseCorrect
+// ---------------------------------------------------------------------------
+//! Indicate whether the phases and frequencies of the constructed
+//! partials should be modified to be consistent at the end of the
+//! analysis. (Default is true.)
+//!
+//! \param  TF is a flag indicating whether or not to construct
+//!         phase-corrected Partials
+void 
+Analyzer::setPhaseCorrect( bool TF )
+{
+    m_phaseCorrect = TF;
 }
 
 // -- PartialList access --
