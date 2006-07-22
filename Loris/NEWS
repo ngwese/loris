@@ -47,6 +47,10 @@ behavior.
 - added platform-neutral FourierTransform implementation,
 in case FFTW is not available.
 
+- added optional fundamental tracking during analysis,
+and improved the old frequency reference and fundamental
+tracking algorithms.
+
 -------------------------------------------------------
 changes since 1.2 release:
 
