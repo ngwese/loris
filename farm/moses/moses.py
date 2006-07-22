@@ -39,44 +39,27 @@ notes from trial 2 with Loris 1.2.0beta2:
 	distinguish, and they both need some attention to the noisy
 	parts.
 
-Last updated: 28 July 2005 by Kelly Fitz
+Last updated: 22 July 2006 by Kelly Fitz
 """
 print __doc__
 
 import loris, time
-# from trials import *
 
-# use this trial counter to skip over
-# eariler trials
-trial = 2
+name = 'moses'
 
-print "running trial number", trial, time.ctime(time.time())
-
-source = 'moses.aiff'
-
-file = loris.AiffFile( source )
+file = loris.AiffFile( name + '.aiff' )
 samples = file.samples()
 rate = file.sampleRate()
 
-if trial == 1:
-	resolutions = (70,80,90,100)
-	widths = ( 100,200,300 )
-	for r in resolutions:
-		for w in widths:
-			p = analyze( source, r, w )
-			ofile = 'moses.%i.%i.aiff'%(r, w)
-			synthesize( ofile, p )
+print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
+a = loris.Analyzer( 80, 200 )
+p = a.analyze( samples, rate )
 
-if trial == 2:
-    resolutions = (70,80)
-    widths = ( 200,)
-    for r in resolutions:
-        for w in widths:
-			a = loris.Analyzer( r, w )
-			p = a.analyze( samples, rate )
-			ofile = 'moses.%i.%i.aiff'%(r, w)
-			# collate
-			loris.collate( p )
-			# export
-			loris.exportAiff( ofile, loris.synthesize( p, rate ), rate, 16 )
+print 'synthesizing raw (collated) %s (%s)'%(name, time.ctime(time.time()))
+loris.collate( p )
+samples = loris.synthesize( p, rate )
+
+print 'exporting raw (collated) %s (%s)'%(name + '.raw', time.ctime(time.time()))
+loris.exportAiff( name + '.raw.aiff', samples, rate )
+loris.exportSdif( name + '.raw.sdif', p )
 
