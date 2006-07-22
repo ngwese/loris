@@ -41,7 +41,7 @@ loris.channelize( p, ref, 1 )
 Fade = 0.01
 loris.distill( p, Fade )
 
-print 'synthesizing distilled %s (%s)'%(name, time.ctime(time.time()))
+print 'exporting distilled %s (%s)'%(name, time.ctime(time.time()))
 out_sfile = loris.AiffFile( p, orate )
 
 print 'writing %s (%s)'%(name + '.recon.aiff', time.ctime(time.time()))

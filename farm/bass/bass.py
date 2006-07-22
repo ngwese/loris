@@ -91,4 +91,37 @@ out_pfile = loris.SdifFile( p )
 out_pfile.setMarkers( f.markers() )
 out_pfile.write( name + tag + '.sdif' )
 
+
+name = 'bass.Db2.arco'
+f = loris.AiffFile( name + '.aiff' )
+
+print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
+fHz = 69.3
+anal = loris.Analyzer( .85*fHz, 1.65*fHz )
+anal.setFreqDrift( .2*fHz )
+anal.setBwRegionWidth( 0 )
+anal.buildFundamentalEnv( .9*fHz, 1.1*fHz )
+p = anal.analyze( f.samples(), f.sampleRate() )
+
+print 'distilling %s (%s)'%(name, time.ctime(time.time()))
+ref = anal.fundamentalEnv()
+loris.channelize( p, ref, 1 )
+#loris.sift( p )
+#loris.removeLabeled( p, 0 )
+loris.distill( p, 0.01 )
+
+print 'synthesizing %i distilled partials (%s)'%(p.size(), time.ctime(time.time()))
+out_sfile = loris.AiffFile( p, orate )
+
+print 'writing %s (%s)'%(name + tag + '.recon.aiff', time.ctime(time.time()))
+out_sfile.setMidiNoteNumber( 37 )
+out_sfile.setMarkers( f.markers() )
+out_sfile.write( name + tag + '.recon.aiff' )
+
+print 'writing %s (%s)'%(name + tag + '.sdif', time.ctime(time.time()))
+out_pfile = loris.SdifFile( p )
+out_pfile.setMarkers( f.markers() )
+out_pfile.write( name + tag + '.sdif' )
+
+
 print 'Done. (%s)'%(time.ctime(time.time()))
