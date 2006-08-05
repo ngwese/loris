@@ -175,17 +175,6 @@ AC_COMPILE_IFELSE([
     AC_MSG_RESULT(no, not using template members)
     AC_DEFINE([NO_TEMPLATE_MEMBERS])])
 
-dnl check whether the compiler can handle Alexandrescu's compile-time
-dnl assertions, which we use later to make sure that std::complex<double>
-dnl and fftw_complex are identical:
-dnl
-dnl no longer needed, really, we don't require std::complex< double > and 
-dnl fftw_complex to be identical anymore.
-dnl
-AH_TEMPLATE([NO_COMPILE_TIME_ASSERTIONS],
-            [Define for compilers that do not support compile-time assertions.])
-AC_MSG_CHECKING(whether compiler supports compile-time assertions)
-
 dnl restore this
 AC_LANG_RESTORE
 
