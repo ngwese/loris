@@ -41,307 +41,307 @@
 #include <string>
 #include <vector>
 
-//	begin namespace
+//  begin namespace
 namespace Loris {
 
 class Partial;
 
 // ---------------------------------------------------------------------------
-//	class AiffFile
+//  class AiffFile
 //
-//!	Class AiffFile represents sample data in a AIFF-format samples 
-//!	file, and manages file I/O and sample conversion. Since the sound
-//!	analysis and synthesis algorithms in Loris and the reassigned
-//!	bandwidth-enhanced representation are monaural, AiffFile manages
-//!	only monaural (single channel) AIFF-format samples files.
-//	
+//! Class AiffFile represents sample data in a AIFF-format samples 
+//! file, and manages file I/O and sample conversion. Since the sound
+//! analysis and synthesis algorithms in Loris and the reassigned
+//! bandwidth-enhanced representation are monaural, AiffFile manages
+//! only monaural (single channel) AIFF-format samples files.
+//  
 class AiffFile
 {
-//	-- public interface --
+//  -- public interface --
 public:
 
-//	-- types --
+//  -- types --
 
-	//!	The type of the sample storage in an AiffFile.
-	typedef std::vector< double > samples_type;
-	
-	//! The type of all size parameters for AiffFile.
-	typedef samples_type::size_type size_type;
-	
-	//! The type of AIFF marker storage in an AiffFile.
-	typedef std::vector< Marker > markers_type;
+    //! The type of the sample storage in an AiffFile.
+    typedef std::vector< double > samples_type;
+    
+    //! The type of all size parameters for AiffFile.
+    typedef samples_type::size_type size_type;
+    
+    //! The type of AIFF marker storage in an AiffFile.
+    typedef std::vector< Marker > markers_type;
 
-//	-- construction --
+//  -- construction --
 
-	//!	Initialize an instance of AiffFile by importing sample data from
-	//!	the file having the specified filename or path.
-	//!
-	//!	\param filename is the name or path of an AIFF samples file
- 	explicit AiffFile( const std::string & filename );
+    //! Initialize an instance of AiffFile by importing sample data from
+    //! the file having the specified filename or path.
+    //!
+    //! \param filename is the name or path of an AIFF samples file
+    explicit AiffFile( const std::string & filename );
 
-	//!	Initialize an instance of AiffFile with samples rendered
-	//!	from a sequnence of Partials. The Partials in the
-	//!	specified half-open (STL-style) range are rendered at 
-	//!	the specified sample rate, using the (optionally) 
-	//!	specified Partial fade time (see Synthesizer.h
-	//!	for an examplanation of fade time). 
-	//!
-	//!	\param begin_partials is the beginning of a sequence of Partials
-	//!	\param end_partials is (one-past) the end of a sequence of
-	//!	Partials
-	//!	\param samplerate is the rate at which Partials are rendered
-	//!	\param fadeTime is the Partial fade time for rendering
-	//!	the Partials on the specified range. If unspecified, the
-	//!	default fade time is 1 ms.
-	//!
-	//!	If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
-	//!	only PartialList::const_iterator arguments.
+    //! Initialize an instance of AiffFile with samples rendered
+    //! from a sequnence of Partials. The Partials in the
+    //! specified half-open (STL-style) range are rendered at 
+    //! the specified sample rate, using the (optionally) 
+    //! specified Partial fade time (see Synthesizer.h
+    //! for an examplanation of fade time). 
+    //!
+    //! \param begin_partials is the beginning of a sequence of Partials
+    //! \param end_partials is (one-past) the end of a sequence of
+    //! Partials
+    //! \param samplerate is the rate at which Partials are rendered
+    //! \param fadeTime is the Partial fade time for rendering
+    //! the Partials on the specified range. If unspecified, the
+    //! default fade time is 1 ms.
+    //!
+    //! If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
+    //! only PartialList::const_iterator arguments.
 #if !defined(NO_TEMPLATE_MEMBERS)
-	template<typename Iter>
-	AiffFile( Iter begin_partials, Iter end_partials, 
-			  double samplerate, double fadeTime = .001 ); // default fade is 1ms
+    template<typename Iter>
+    AiffFile( Iter begin_partials, Iter end_partials, 
+              double samplerate, double fadeTime = .001 ); // default fade is 1ms
 #else
-	AiffFile( PartialList::const_iterator begin_partials, 
-			  PartialList::const_iterator end_partials,
-			  double samplerate, double fadeTime = .001 ); // default fade is 1ms
+    AiffFile( PartialList::const_iterator begin_partials, 
+              PartialList::const_iterator end_partials,
+              double samplerate, double fadeTime = .001 ); // default fade is 1ms
 #endif
 
-	//!	Initialize an instance of AiffFile having the specified sample 
-	//!	rate, preallocating numFrames samples, initialized to zero.
-	//!
-	//!	\param samplerate is the rate at which Partials are rendered
-	//!	\param numFrames is the initial number of (zero) samples. If
-	//!        unspecified, no samples are preallocated.
+    //! Initialize an instance of AiffFile having the specified sample 
+    //! rate, preallocating numFrames samples, initialized to zero.
+    //!
+    //! \param samplerate is the rate at which Partials are rendered
+    //! \param numFrames is the initial number of (zero) samples. If
+    //!        unspecified, no samples are preallocated.
     //! \param numChannels is the number of channels of audio data
     //!        to preallocate (default 1 channel)
-	AiffFile( double samplerate, size_type numFrames = 0, 
+    AiffFile( double samplerate, size_type numFrames = 0, 
               unsigned int numChannels = 1 );
-	
-	//!	Initialize an instance of AiffFile from a buffer of sample
-	//!	data, with the specified sample rate.
-	//!
-	//!	\param buffer is a pointer to a buffer of floating point samples.
-	//!	\param bufferlength is the number of samples in the buffer.
-	//!	\param samplerate is the sample rate of the samples in the buffer.
-	AiffFile( const double * buffer, size_type bufferlength, double samplerate );
+    
+    //! Initialize an instance of AiffFile from a buffer of sample
+    //! data, with the specified sample rate.
+    //!
+    //! \param buffer is a pointer to a buffer of floating point samples.
+    //! \param bufferlength is the number of samples in the buffer.
+    //! \param samplerate is the sample rate of the samples in the buffer.
+    AiffFile( const double * buffer, size_type bufferlength, double samplerate );
 
-    //!	Initialize an instance of AiffFile from two buffers of sample
-    //!	data, with the specified sample rate. Both buffers must store
+    //! Initialize an instance of AiffFile from two buffers of sample
+    //! data, with the specified sample rate. Both buffers must store
     //! the same number (bufferLength) of samples.
     //!
-    //!	\param buffer_left is a pointer to a buffer of floating point samples 
+    //! \param buffer_left is a pointer to a buffer of floating point samples 
     //!        representing the left channel samples.
-    //!	\param buffer_right is a pointer to a buffer of floating point samples 
+    //! \param buffer_right is a pointer to a buffer of floating point samples 
     //!        representing the right channel samples.
-    //!	\param bufferlength is the number of samples in the buffer.
-    //!	\param samplerate is the sample rate of the samples in the buffer.
+    //! \param bufferlength is the number of samples in the buffer.
+    //! \param samplerate is the sample rate of the samples in the buffer.
     //
-    AiffFile::AiffFile( const double * buffer_left, const double * buffer_right, 
-                        size_type bufferlength, double samplerate );
-	 
-	//!	Initialize an instance of AiffFile from a vector of sample
-	//!	data, with the specified sample rate.
-	//!
-	//!	\param vec is a vector of floating point samples.
-	//!	\param samplerate is the sample rate of the samples in the vector.
-	AiffFile( const std::vector< double > & vec, double samplerate );
+    AiffFile( const double * buffer_left, const double * buffer_right, 
+              size_type bufferlength, double samplerate );
+     
+    //! Initialize an instance of AiffFile from a vector of sample
+    //! data, with the specified sample rate.
+    //!
+    //! \param vec is a vector of floating point samples.
+    //! \param samplerate is the sample rate of the samples in the vector.
+    AiffFile( const std::vector< double > & vec, double samplerate );
     
-    //!	Initialize an instance of AiffFile from two vectors of sample
-    //!	data, with the specified sample rate. If the two vectors have different
+    //! Initialize an instance of AiffFile from two vectors of sample
+    //! data, with the specified sample rate. If the two vectors have different
     //! lengths, the shorter one is padded with zeros.
     //!
-    //!	\param vec_left is a vector of floating point samples representing the 
+    //! \param vec_left is a vector of floating point samples representing the 
     //!        left channel samples.
-    //!	\param vec_right is a vector of floating point samples representing the 
+    //! \param vec_right is a vector of floating point samples representing the 
     //!        right channel samples.
-    //!	\param samplerate is the sample rate of the samples in the vectors.
+    //! \param samplerate is the sample rate of the samples in the vectors.
     //
-    AiffFile::AiffFile( const std::vector< double > & vec_left,
-                        const std::vector< double > & vec_right, 
-                        double samplerate );    
-	 
-	//!	Initialize this and AiffFile that is an exact copy, having
-	//!	all the same sample data, as another AiffFile.
-	//!
-	//!	\param other is the AiffFile to copy
-	AiffFile( const AiffFile & other );
-	 
-	//!	Assignment operator: change this AiffFile to be an exact copy
-	//!	of the specified AiffFile, rhs, that is, having the same sample
-	//!	data.
-	//!
-	//!	\param rhs is the AiffFile to replicate
-	AiffFile & operator= ( const AiffFile & rhs );
+    AiffFile( const std::vector< double > & vec_left,
+              const std::vector< double > & vec_right, 
+              double samplerate );    
+     
+    //! Initialize this and AiffFile that is an exact copy, having
+    //! all the same sample data, as another AiffFile.
+    //!
+    //! \param other is the AiffFile to copy
+    AiffFile( const AiffFile & other );
+     
+    //! Assignment operator: change this AiffFile to be an exact copy
+    //! of the specified AiffFile, rhs, that is, having the same sample
+    //! data.
+    //!
+    //! \param rhs is the AiffFile to replicate
+    AiffFile & operator= ( const AiffFile & rhs );
 
-//	-- access --
+//  -- access --
 
-	//!	Return a reference to the Marker (see Marker.h) container 
-	//!	for this AiffFile. 
-	markers_type & markers( void );
+    //! Return a reference to the Marker (see Marker.h) container 
+    //! for this AiffFile. 
+    markers_type & markers( void );
 
-	//!	Return a const reference to the Marker (see Marker.h) container 
-	//!	for this AiffFile. 
-	const markers_type & markers( void ) const;
-	 
-	//!	Return the fractional MIDI note number assigned to this AiffFile. 
-	//!	If the sound has no definable pitch, note number 60.0 is used.
-	double midiNoteNumber( void ) const;
+    //! Return a const reference to the Marker (see Marker.h) container 
+    //! for this AiffFile. 
+    const markers_type & markers( void ) const;
+     
+    //! Return the fractional MIDI note number assigned to this AiffFile. 
+    //! If the sound has no definable pitch, note number 60.0 is used.
+    double midiNoteNumber( void ) const;
 
-	//!	Return the number of channels of audio samples represented by
+    //! Return the number of channels of audio samples represented by
     //! this AiffFile, 1 for mono, 2 for stereo.
-	unsigned int numChannels( void ) const;
+    unsigned int numChannels( void ) const;
 
-	//!	Return the number of sample frames represented in this AiffFile.
-	//!	A sample frame contains one sample per channel for a single sample
-	//!	interval (e.g. mono and stereo samples files having a sample rate of
-	//!	44100 Hz both have 44100 sample frames per second of audio samples).
- 	size_type numFrames( void ) const;
+    //! Return the number of sample frames represented in this AiffFile.
+    //! A sample frame contains one sample per channel for a single sample
+    //! interval (e.g. mono and stereo samples files having a sample rate of
+    //! 44100 Hz both have 44100 sample frames per second of audio samples).
+    size_type numFrames( void ) const;
 
-	//! Bad old legacy name for numFrames.
-	//! \deprecated Use numFrames instead.
-	size_type sampleFrames( void ) const { return numFrames(); }
+    //! Bad old legacy name for numFrames.
+    //! \deprecated Use numFrames instead.
+    size_type sampleFrames( void ) const { return numFrames(); }
 
-	//!	Return the sampling freqency in Hz for the sample data in this
-	//!	AiffFile.
- 	double sampleRate( void ) const;
-	
-	//!	Return a reference (or const reference) to the vector containing
-	//!	the floating-point sample data for this AiffFile.
-	samples_type & samples( void );
+    //! Return the sampling freqency in Hz for the sample data in this
+    //! AiffFile.
+    double sampleRate( void ) const;
+    
+    //! Return a reference (or const reference) to the vector containing
+    //! the floating-point sample data for this AiffFile.
+    samples_type & samples( void );
 
-	//!	Return a const reference (or const reference) to the vector containing
-	//!	the floating-point sample data for this AiffFile.
-	const samples_type & samples( void ) const;
+    //! Return a const reference (or const reference) to the vector containing
+    //! the floating-point sample data for this AiffFile.
+    const samples_type & samples( void ) const;
 
-//	-- mutation --
+//  -- mutation --
 
-	//!	Render the specified Partial using the (optionally) specified
-	//!	Partial fade time, and accumulate the resulting samples into
-	//!	the sample vector for this AiffFile.
-	//!
-	//!	\param p is the partial to render into this AiffFile
-	//!	\param fadeTime is the Partial fade time for rendering
-	//!	the Partials on the specified range. If unspecified, the
-	//!	default fade time is 1 ms.
-	void addPartial( const Loris::Partial & p, double fadeTime = .001 /* 1 ms */ );
-	 
-	//!	Accumulate samples rendered from a sequence of Partials.
-	//!	The Partials in the specified half-open (STL-style) range 
-	//!	are rendered at this AiffFile's sample rate, using the (optionally) 
-	//!	specified Partial fade time (see Synthesizer.h
-	//!	for an examplanation of fade time). 
-	//!
-	//!	\param begin_partials is the beginning of a sequence of Partials
-	//!	\param end_partials is (one-past) the end of a sequence of
-	//!	Partials
-	//!	\param fadeTime is the Partial fade time for rendering
-	//!	the Partials on the specified range. If unspecified, the
-	//!	default fade time is 1 ms.
-	//!	
-	//!	If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
-	//!	only PartialList::const_iterator arguments.
+    //! Render the specified Partial using the (optionally) specified
+    //! Partial fade time, and accumulate the resulting samples into
+    //! the sample vector for this AiffFile.
+    //!
+    //! \param p is the partial to render into this AiffFile
+    //! \param fadeTime is the Partial fade time for rendering
+    //! the Partials on the specified range. If unspecified, the
+    //! default fade time is 1 ms.
+    void addPartial( const Loris::Partial & p, double fadeTime = .001 /* 1 ms */ );
+     
+    //! Accumulate samples rendered from a sequence of Partials.
+    //! The Partials in the specified half-open (STL-style) range 
+    //! are rendered at this AiffFile's sample rate, using the (optionally) 
+    //! specified Partial fade time (see Synthesizer.h
+    //! for an examplanation of fade time). 
+    //!
+    //! \param begin_partials is the beginning of a sequence of Partials
+    //! \param end_partials is (one-past) the end of a sequence of
+    //! Partials
+    //! \param fadeTime is the Partial fade time for rendering
+    //! the Partials on the specified range. If unspecified, the
+    //! default fade time is 1 ms.
+    //! 
+    //! If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
+    //! only PartialList::const_iterator arguments.
 #if !defined(NO_TEMPLATE_MEMBERS)
-	template<typename Iter>
-	void addPartials( Iter begin_partials, Iter end_partials, double fadeTime = .001 /* 1 ms */  );
+    template<typename Iter>
+    void addPartials( Iter begin_partials, Iter end_partials, double fadeTime = .001 /* 1 ms */  );
 #else
-	void addPartials( PartialList::const_iterator begin_partials, 
-					  PartialList::const_iterator end_partials,
-					  double fadeTime = .001 /* 1 ms */  );
+    void addPartials( PartialList::const_iterator begin_partials, 
+                      PartialList::const_iterator end_partials,
+                      double fadeTime = .001 /* 1 ms */  );
 #endif
 
-	//!	Set the fractional MIDI note number assigned to this AiffFile. 
-	//!	If the sound has no definable pitch, use note number 60.0 (the default).
-	//!
-	//!	\param nn is a fractional MIDI note number, 60 is middle C.
-	void setMidiNoteNumber( double nn );
-	 
-//	-- export --
+    //! Set the fractional MIDI note number assigned to this AiffFile. 
+    //! If the sound has no definable pitch, use note number 60.0 (the default).
+    //!
+    //! \param nn is a fractional MIDI note number, 60 is middle C.
+    void setMidiNoteNumber( double nn );
+     
+//  -- export --
 
-	//!	Export the sample data represented by this AiffFile to
-	//!	the file having the specified filename or path. Export
-	//!	signed integer samples of the specified size, in bits
-	//!	(8, 16, 24, or 32).
-	//!
-	//!	\param filename is the name or path of the AIFF samples file
-	//!	to be created or overwritten.
-	//!	\param bps is the number of bits per sample to store in the
-	//!	samples file (8, 16, 24, or 32).If unspeicified, 16 bits
-	void write( const std::string & filename, unsigned int bps = 16 );
+    //! Export the sample data represented by this AiffFile to
+    //! the file having the specified filename or path. Export
+    //! signed integer samples of the specified size, in bits
+    //! (8, 16, 24, or 32).
+    //!
+    //! \param filename is the name or path of the AIFF samples file
+    //! to be created or overwritten.
+    //! \param bps is the number of bits per sample to store in the
+    //! samples file (8, 16, 24, or 32).If unspeicified, 16 bits
+    void write( const std::string & filename, unsigned int bps = 16 );
 
 private:
-//	-- implementation --
-	double notenum_, rate_;		// MIDI note number and sample rate
+//  -- implementation --
+    double notenum_, rate_;     // MIDI note number and sample rate
     unsigned int numchans_;
-	markers_type markers_;		// AIFF Markers
-	samples_type samples_;		// floating point samples [-1.0, 1.0]
+    markers_type markers_;      // AIFF Markers
+    samples_type samples_;      // floating point samples [-1.0, 1.0]
 
-	std::auto_ptr< Synthesizer > psynth_;	//	Synthesizer for rendering Partials,
-											//	lazy-initialized (not until needed)
+    std::auto_ptr< Synthesizer > psynth_;   //  Synthesizer for rendering Partials,
+                                            //  lazy-initialized (not until needed)
 
-//	-- helpers --
-	void configureSynthesizer( double fadeTime );
-	void readAiffData( const std::string & filename );
+//  -- helpers --
+    void configureSynthesizer( double fadeTime );
+    void readAiffData( const std::string & filename );
 
-};	//	end of class AiffFile
+};  //  end of class AiffFile
 
 // -- template members --
 
 // ---------------------------------------------------------------------------
-//	constructor from Partial range
+//  constructor from Partial range
 // ---------------------------------------------------------------------------
-//!	Initialize an instance of AiffFile with samples rendered
-//!	from a sequnence of Partials. The Partials in the
-//!	specified half-open (STL-style) range are rendered at 
-//!	the specified sample rate, using the (optionally) 
-//!	specified Partial fade time (see Synthesizer.h
-//!	for an examplanation of fade time). 
+//! Initialize an instance of AiffFile with samples rendered
+//! from a sequnence of Partials. The Partials in the
+//! specified half-open (STL-style) range are rendered at 
+//! the specified sample rate, using the (optionally) 
+//! specified Partial fade time (see Synthesizer.h
+//! for an examplanation of fade time). 
 //!
-//!	\param begin_partials is the beginning of a sequence of Partials
-//!	\param end_partials is (one-past) the end of a sequence of
-//!	Partials
-//!	\param samplerate is the rate at which Partials are rendered
-//!	\param fadeTime is the Partial fade time for rendering
-//!	the Partials on the specified range. If unspecified, the
-//!	default fade time is 1 ms.
+//! \param begin_partials is the beginning of a sequence of Partials
+//! \param end_partials is (one-past) the end of a sequence of
+//! Partials
+//! \param samplerate is the rate at which Partials are rendered
+//! \param fadeTime is the Partial fade time for rendering
+//! the Partials on the specified range. If unspecified, the
+//! default fade time is 1 ms.
 //!
-//!	If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
-//!	only PartialList::const_iterator arguments.
+//! If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
+//! only PartialList::const_iterator arguments.
 //
 #if !defined(NO_TEMPLATE_MEMBERS)
 template< typename Iter >
  AiffFile::AiffFile( Iter begin_partials, Iter end_partials, 
-					 double samplerate, double fadeTime ) : // default fade is 1ms
+                     double samplerate, double fadeTime ) : // default fade is 1ms
 #else
  AiffFile::AiffFile( PartialList::const_iterator begin_partials, 
-					 PartialList::const_iterator end_partials,
-					 double samplerate, double fadeTime ) : // default fade is 1ms
+                     PartialList::const_iterator end_partials,
+                     double samplerate, double fadeTime ) : // default fade is 1ms
 #endif
-//	initializers:
-	notenum_( 60 ),
-	rate_( samplerate ),
+//  initializers:
+    notenum_( 60 ),
+    rate_( samplerate ),
     numchans_( 1 )
 {
-	addPartials( begin_partials, end_partials, fadeTime );
+    addPartials( begin_partials, end_partials, fadeTime );
 }
 
 // ---------------------------------------------------------------------------
-//	addPartials 
+//  addPartials 
 // ---------------------------------------------------------------------------
-//!	Accumulate samples rendered from a sequence of Partials.
-//!	The Partials in the specified half-open (STL-style) range 
-//!	are rendered at this AiffFile's sample rate, using the (optionally) 
-//!	specified Partial fade time (see Synthesizer.h
-//!	for an examplanation of fade time). 
+//! Accumulate samples rendered from a sequence of Partials.
+//! The Partials in the specified half-open (STL-style) range 
+//! are rendered at this AiffFile's sample rate, using the (optionally) 
+//! specified Partial fade time (see Synthesizer.h
+//! for an examplanation of fade time). 
 //!
-//!	\param begin_partials is the beginning of a sequence of Partials
-//!	\param end_partials is (one-past) the end of a sequence of
-//!	Partials
-//!	\param fadeTime is the Partial fade time for rendering
-//!	the Partials on the specified range. If unspecified, the
-//!	default fade time is 1 ms.
-//!	
-//!	If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
-//!	only PartialList::const_iterator arguments.
+//! \param begin_partials is the beginning of a sequence of Partials
+//! \param end_partials is (one-past) the end of a sequence of
+//! Partials
+//! \param fadeTime is the Partial fade time for rendering
+//! the Partials on the specified range. If unspecified, the
+//! default fade time is 1 ms.
+//! 
+//! If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
+//! only PartialList::const_iterator arguments.
 //
 #if !defined(NO_TEMPLATE_MEMBERS)
 template< typename Iter >
@@ -350,12 +350,12 @@ void
 #else
 void 
  AiffFile::addPartials( PartialList::const_iterator begin_partials, 
-						PartialList::const_iterator end_partials,
-						double fadeTime /* = .001 1 ms */  )
+                        PartialList::const_iterator end_partials,
+                        double fadeTime /* = .001 1 ms */  )
 #endif
 { 
-	configureSynthesizer( fadeTime );
-	psynth_->synthesize( begin_partials, end_partials );
+    configureSynthesizer( fadeTime );
+    psynth_->synthesize( begin_partials, end_partials );
 } 
 
-}	//	end of namespace Loris
+}   //  end of namespace Loris
