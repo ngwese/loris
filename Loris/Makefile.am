@@ -1,4 +1,4 @@
-# Copyright (C) 1999-2004, Kelly Fitz and Lippold Haken <loris@cerlsoundgroup.org>
+# Copyright (c) 1999-2006, Kelly Fitz and Lippold Haken <loris@cerlsoundgroup.org>
 #  
 # This file is free software; as a special exception the author gives
 # unlimited permission to copy and/or distribute it, with or without 
@@ -8,7 +8,7 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = src scripting csound test utils doc
+SUBDIRS = src scripting utils csound doc test
 
 MAINTAINERCLEANFILES = 	Makefile.in aclocal.m4 configure config.h.in \
 						stamp-h.in \

@@ -5,7 +5,7 @@
  * manipulation, and synthesis of digitized sounds using the Reassigned 
  * Bandwidth-Enhanced Additive Sound Model.
  *
- * Loris is Copyright (c) 1999-2004 by Kelly Fitz and Lippold Haken
+ * Loris is Copyright (c) 1999-2006 by Kelly Fitz and Lippold Haken
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
  *
  * Fundamental.h
  *
- * Definition of class Fundamenal for computing an estimate of 
+ * Definition of class Fundamental for computing an estimate of 
  * fundamental frequency from a sequence of Partials using a 
  * maximum likelihood algorithm.
  *

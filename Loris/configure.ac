@@ -1,4 +1,4 @@
-dnl Copyright (C) 1999-2004, Kelly Fitz and Lippold Haken <loris@cerlsoundgroup.org>
+dnl Copyright (c) 1999-2006, Kelly Fitz and Lippold Haken <loris@cerlsoundgroup.org>
 dnl  
 dnl This file is free software; as a special exception the author gives
 dnl unlimited permission to copy and/or distribute it, with or without 
@@ -33,7 +33,7 @@ dnl each release!!!!!
 LORIS_MAJOR_VERSION=1
 LORIS_MINOR_VERSION=4
 LORIS_SUBMINOR_VERSION=1
-LORIS_PRERELEASE_STR="beta1"
+LORIS_PRERELEASE_STR="beta2"
 LORIS_VERSION_STR="$PACKAGE_STRING$LORIS_PRERELEASE_STR"
 AC_SUBST(LORIS_MAJOR_VERSION)
 AC_SUBST(LORIS_MINOR_VERSION)

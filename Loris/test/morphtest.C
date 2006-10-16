@@ -3,7 +3,7 @@
  * manipulation, and synthesis of digitized sounds using the Reassigned 
  * Bandwidth-Enhanced Additive Sound Model.
  *
- * Loris is Copyright (c) 1999-2004 by Kelly Fitz and Lippold Haken
+ * Loris is Copyright (c) 1999-2006 by Kelly Fitz and Lippold Haken
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,6 +47,8 @@
 #include "PartialUtils.h"
 #include "SdifFile.h"
 
+#include "loris.h"  // just for version string
+
 #include <iostream>
 #include <list>
 #include <cstdlib>
@@ -60,7 +62,7 @@ using namespace Loris;
 
 int main( void )
 {
-	cout << "Loris C++ API test" << endl;
+	cout << "Loris C++ API test, using " << LORIS_VERSION_STR << endl;
 	cout << "Kelly Fitz 2006" << endl << endl;
 	cout << "Generates a simple linear morph between a " << endl;
 	cout << "clarinet and a flute using the C++ library." << endl << endl;
