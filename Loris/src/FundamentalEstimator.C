@@ -42,7 +42,7 @@
 
 #include "FundamentalEstimator.h"
 
-#include "Exception.h"
+#include "LorisExceptions.h"
 #include "KaiserWindow.h"
 #include "LinearEnvelope.h"
 #include "PartialUtils.h"

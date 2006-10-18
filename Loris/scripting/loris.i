@@ -81,7 +81,7 @@ For more information, please visit
 	#include <BreakpointEnvelope.h>
 	#include <Collator.h>
 	#include <Distiller.h>
-	#include <Exception.h>
+	#include <LorisExceptions.h>
 	#include <LinearEnvelope.h>
 	#include <Marker.h>
 	#include <Partial.h>

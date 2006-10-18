@@ -33,7 +33,7 @@
  *
  */
 #include "Envelope.h" 
-#include "Exception.h" 
+#include "LorisExceptions.h" 
 #include "Partial.h"
 #include "PartialUtils.h"
 

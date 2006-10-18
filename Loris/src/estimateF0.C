@@ -43,7 +43,7 @@
 
 #include "estimateF0.h"
 
-#include "Exception.h"	// for Assert
+#include "LorisExceptions.h"	// for Assert
 
 #include <algorithm>
 #include <cmath>

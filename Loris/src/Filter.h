@@ -33,7 +33,7 @@
  *
  */
 
-#include "Exception.h"
+#include "LorisExceptions.h"
 #include "Notifier.h"
 
 #include <algorithm>

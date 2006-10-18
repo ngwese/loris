@@ -38,7 +38,7 @@
 
 #include "ImportLemur.h"
 #include "Endian.h"
-#include "Exception.h"
+#include "LorisExceptions.h"
 #include "Partial.h"
 #include "PartialList.h"
 #include "Breakpoint.h"

@@ -77,7 +77,7 @@ SDIF spec: http://www.cnmat.berkeley.edu/SDIF/
 #endif
 
 #include "SdifFile.h"
-#include "Exception.h"
+#include "LorisExceptions.h"
 #include "Notifier.h"
 #include "Partial.h"
 #include "PartialList.h"

@@ -59,7 +59,7 @@
 #include "lorisException_pi.h"
 
 #include "BreakpointEnvelope.h"
-#include "Exception.h"
+#include "LorisExceptions.h"
 #include "Notifier.h"
 #include "Partial.h"
 #include "PartialUtils.h"

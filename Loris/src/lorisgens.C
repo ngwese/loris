@@ -55,7 +55,7 @@
 
 #include "Breakpoint.h"
 #include "Envelope.h"
-#include "Exception.h"
+#include "LorisExceptions.h"
 #include "Morpher.h"
 #include "Oscillator.h"
 #include "Partial.h"

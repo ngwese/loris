@@ -61,7 +61,7 @@
 #include "Collator.h"
 #include "Dilator.h"
 #include "Distiller.h"
-#include "Exception.h"
+#include "LorisExceptions.h"
 #include "FrequencyReference.h"
 #include "Fundamental.h"
 #include "Harmonifier.h"

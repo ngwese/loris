@@ -43,7 +43,7 @@
 #include "AiffFile.h"
 
 #include "AiffData.h"
-#include "Exception.h"
+#include "LorisExceptions.h"
 #include "Marker.h"
 #include "Notifier.h"
 #include "Synthesizer.h"

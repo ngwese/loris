@@ -37,7 +37,7 @@
  */
 
 #include "Breakpoint.h"
-#include "Exception.h"
+#include "LorisExceptions.h"
 
 #include <map>
 //#include <utility>

@@ -36,7 +36,7 @@
 #endif
 
 #include "KaiserWindow.h"
-#include "Exception.h"
+#include "LorisExceptions.h"
 #include <cmath>
 
 #if defined(HAVE_M_PI) && (HAVE_M_PI)

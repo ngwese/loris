@@ -38,7 +38,7 @@
 #endif
 
 #include "FourierTransform.h"
-#include "Exception.h"
+#include "LorisExceptions.h"
 #include "Notifier.h"
 
 #include <cmath>

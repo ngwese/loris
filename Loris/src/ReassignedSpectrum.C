@@ -37,7 +37,7 @@
 
 #include "ReassignedSpectrum.h"
 #include "Notifier.h"
-#include "Exception.h"
+#include "LorisExceptions.h"
 #include <algorithm>	//	for std::transform(), others
 #include <functional>	//	for bind1st, multiplies, etc.
 #include <cstdlib>	    //	for std::abs()

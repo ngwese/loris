@@ -38,7 +38,7 @@
 #include "AiffData.h"
 
 #include "Endian.h"
-#include "Exception.h"
+#include "LorisExceptions.h"
 #include "Marker.h"
 #include "Notifier.h"
 

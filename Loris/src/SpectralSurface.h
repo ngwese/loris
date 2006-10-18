@@ -36,7 +36,7 @@
  *
  */
 
-#include "Exception.h"
+#include "LorisExceptions.h"
 #include "Partial.h"
 #include "PartialList.h"
 #include "PartialUtils.h"   // for compareLabelLess

@@ -35,7 +35,7 @@
  *
  */
 
-#include "Exception.h"
+#include "LorisExceptions.h"
 #include "Envelope.h"
 #include "LinearEnvelope.h"
 #include "PartialList.h"

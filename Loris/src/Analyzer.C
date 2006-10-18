@@ -41,7 +41,7 @@
 #include "Breakpoint.h"
 #include "BreakpointEnvelope.h"
 #include "Envelope.h"
-#include "Exception.h"
+#include "LorisExceptions.h"
 #include "KaiserWindow.h"
 #include "Notifier.h"
 #include "Partial.h"

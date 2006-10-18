@@ -36,8 +36,8 @@ CPP_SRC = AiffData.C	\
 		Envelope.h \
 		estimateF0.C \
 		estimateF0.h \
-		Exception.C \
-		Exception.h \
+		LorisExceptions.C \
+		LorisExceptions.h \
 		Filter.C \
 		Filter.h \
 		FourierTransform.C \
@@ -137,6 +137,7 @@ pkginclude_HEADERS = \
 				ImportLemur.h	\
 				KaiserWindow.h	\
 				LinearEnvelope.h \
+				LorisExceptions.h	\
 				Marker.h	\
 				Morpher.h	\
 				NoiseGenerator.h \

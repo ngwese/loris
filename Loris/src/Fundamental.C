@@ -41,7 +41,7 @@
 
 #include "Breakpoint.h"
 #include "Collator.h"
-#include "Exception.h"
+#include "LorisExceptions.h"
 #include "LinearEnvelope.h"
 #include "Partial.h"
 #include "PartialList.h"

@@ -37,7 +37,7 @@
 
 #include "Partial.h"
 #include "Breakpoint.h"
-#include "Exception.h"
+#include "LorisExceptions.h"
 #include "Notifier.h"
 
 #include <algorithm>

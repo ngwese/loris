@@ -36,7 +36,7 @@
 #include "SpectralSurface.h"
 
 #include "BreakpointUtils.h"
-#include "Exception.h"
+#include "LorisExceptions.h"
 #include "Notifier.h"
 #include "Partial.h"
 

@@ -36,7 +36,7 @@
 #endif
 
 #include "Breakpoint.h"
-#include "Exception.h"
+#include "LorisExceptions.h"
 #include <cmath>
 
 //	begin namespace

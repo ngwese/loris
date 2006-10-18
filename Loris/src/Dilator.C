@@ -37,7 +37,7 @@
 
 #include "Dilator.h"
 #include "Breakpoint.h"
-#include "Exception.h"
+#include "LorisExceptions.h"
 #include "Marker.h"
 #include "Notifier.h"
 #include "Partial.h"

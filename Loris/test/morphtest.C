@@ -38,7 +38,7 @@
 #include "Channelizer.h"
 #include "Dilator.h"
 #include "Distiller.h"
-#include "Exception.h"
+#include "LorisExceptions.h"
 #include "FrequencyReference.h"
 #include "Morpher.h"
 #include "Notifier.h"

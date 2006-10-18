@@ -20,11 +20,17 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *
- * Exception.C
+ * LorisExceptions.C
  *
  * Implementation of class Exception, a generic exception class.
  *
- * Kelly Fitz, 17 Aug 1999
+ * This file was formerly called Exception.C, and had a corresponding header
+ * called Exception.h but that filename caused build problems on case-insensitive 
+ * systems that sometimes had system headers called exception.h. So the header
+ * name was changed to LorisExceptions.h, and this source files name was
+ * changed to match. 
+ *
+ * Kelly Fitz, 17 Oct 2006
  * loris@cerlsoundgroup.org
  *
  * http://www.cerlsoundgroup.org/Loris/
@@ -35,7 +41,7 @@
 	#include "config.h"
 #endif
 
-#include "Exception.h"
+#include "LorisExceptions.h"
 #include <string>
 
 //	begin namespace

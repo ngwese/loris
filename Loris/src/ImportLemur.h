@@ -35,7 +35,7 @@
  */
 
 #include "PartialList.h"
-#include "Exception.h"
+#include "LorisExceptions.h"
 #include <string>
 
 //	begin namespace
