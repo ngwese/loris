@@ -37,7 +37,7 @@
 #endif
 
 #include "ImportLemur.h"
-#include "Endian.h"
+#include "BigEndian.h"
 #include "LorisExceptions.h"
 #include "Partial.h"
 #include "PartialList.h"

@@ -17,6 +17,8 @@ CPP_SRC = AiffData.C	\
 		Analyzer.h \
 		AssociateBandwidth.C \
 		AssociateBandwidth.h \
+		BigEndian.C \
+		BigEndian.h \
 		Breakpoint.C \
 		Breakpoint.h \
 		BreakpointEnvelope.h \
@@ -30,8 +32,6 @@ CPP_SRC = AiffData.C	\
 		Dilator.h \
 		Distiller.C \
 		Distiller.h \
-		Endian.C \
-		Endian.h \
 		Envelope.C \
 		Envelope.h \
 		estimateF0.C \
