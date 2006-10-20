@@ -617,13 +617,47 @@ timeSpan( Iterator begin, Iterator end )
 // ---------------------------------------------------------------------------
 //	peakAmplitude
 // ---------------------------------------------------------------------------
-//! Return the maximum amplitude achieved by a partial. 
+//! Return the maximum amplitude achieved by a Partial. 
 //!  
 //! \param  p is the Partial to evaluate
 //! \return the maximum (absolute) amplitude achieved by 
 //!         the partial p
 //
 double peakAmplitude( const Partial & p );
+
+// ---------------------------------------------------------------------------
+//	avgAmplitude
+// ---------------------------------------------------------------------------
+//! Return the average amplitude over all Breakpoints in this Partial.
+//! Return zero if the Partial has no Breakpoints.
+//!  
+//! \param  p is the Partial to evaluate
+//! \return the average amplitude of Breakpoints in the Partial p
+//
+double avgAmplitude( const Partial & p );
+
+// ---------------------------------------------------------------------------
+//	avgFrequency
+// ---------------------------------------------------------------------------
+//! Return the average frequency over all Breakpoints in this Partial.
+//! Return zero if the Partial has no Breakpoints.
+//!  
+//! \param  p is the Partial to evaluate
+//! \return the average frequency (Hz) of Breakpoints in the Partial p
+//
+double avgFrequency( const Partial & p );
+
+// ---------------------------------------------------------------------------
+//	weightedAvgFrequency
+// ---------------------------------------------------------------------------
+//! Return the average frequency over all Breakpoints in this Partial, 
+//! weighted by the Breakpoint amplitudes.
+//! Return zero if the Partial has no Breakpoints.
+//!  
+//! \param  p is the Partial to evaluate
+//! \return the average frequency (Hz) of Breakpoints in the Partial p
+//
+double weightedAvgFrequency( const Partial & p );
 
 //	-- phase maintenance functions --
 

@@ -727,7 +727,17 @@ synthesize( const PartialList * partials,
 /*  Operations for transforming and manipulating collections
     of Partials.
  */
- 
+
+double avgAmplitude( const Partial * p );
+/*  Return the average amplitude over all Breakpoints in this Partial.
+    Return zero if the Partial has no Breakpoints.
+ */
+
+double avgFrequency( const Partial * p );
+/*  Return the average frequency over all Breakpoints in this Partial.
+    Return zero if the Partial has no Breakpoints.
+ */
+
 void copyIf( const PartialList * src, PartialList * dst, 
              int ( * predicate )( const Partial * p, void * data ),
              void * data );
@@ -864,6 +874,10 @@ int forEachPartial( PartialList * src,
     calls to func return zero.
  */
 
+double peakAmplitude( const Partial * p );
+/*  Return the maximum amplitude achieved by a Partial.
+ */
+
 void removeIf( PartialList * src, 
                int ( * predicate )( const Partial * p, void * data ),
                void * data );
@@ -931,7 +945,12 @@ void timeSpan( PartialList * partials, double * tmin, double * tmax );
    and tmax.
  */
 
-
+double weightedAvgFrequency( const Partial * p );
+/*  Return the average frequency over all Breakpoints in this Partial, 
+    weighted by the Breakpoint amplitudes. Return zero if the Partial 
+    has no Breakpoints.
+ */
+ 
 /* ---------------------------------------------------------------- */
 /*      Notification and exception handlers                            
 /*

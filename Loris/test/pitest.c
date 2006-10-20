@@ -89,6 +89,8 @@ int main( void )
    /* analyze the clarinet */
    printf( "analyzing clarinet 4G#\n" );
    analyzer_configure( 415*.8, 415*1.6 );
+   analyzer_setFreqDrift( 30 );
+   analyzer_setAmpFloor( -80 );
    analyze( samples, N, srate, clar );
    
    /* channelize and distill */
@@ -139,6 +141,7 @@ int main( void )
     /* analyze the flute */
    printf( "analyzing flute 4D\n" );
    analyzer_configure( 270, 270 );
+   analyzer_setFreqDrift( 30 );
    analyze( samples, N, srate, flut );
    
     /* channelize and distill */

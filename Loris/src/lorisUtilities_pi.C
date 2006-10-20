@@ -112,9 +112,67 @@ struct PredWithPointer : public std::unary_function< const Partial, bool >
 /*	Operations for transforming and manipulating collections
    of Partials.
  */
+
+/* ---------------------------------------------------------------- */
+/*        avgAmplitude 
+/*       
+/*  Return the average amplitude over all Breakpoints in this Partial.
+    Return zero if the Partial has no Breakpoints.
+ */
+extern "C"
+double avgAmplitude( const Partial * p )
+{
+    try
+    {
+        ThrowIfNull((Partial *) p);
+        return PartialUtils::avgAmplitude( *p );
+    }
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in avgAmplitude(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in avgAmplitude(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}    
+}
+
+/* ---------------------------------------------------------------- */
+/*        avgFrequency 
+/*       
+/*  Return the average frequency over all Breakpoints in this Partial.
+    Return zero if the Partial has no Breakpoints.
+ */
+extern "C"
+double avgFrequency( const Partial * p )
+{
+    try
+    {
+        ThrowIfNull((Partial *) p);
+        return PartialUtils::avgFrequency( *p );
+    }
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in avgFrequency(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in avgFrequency(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}    
+}
+
  
 /* ---------------------------------------------------------------- */
 /*        copyIf        
+/*
 /*	Append copies of Partials in the source PartialList satisfying the
 	specified predicate to the destination PartialList. The source list
 	is unmodified. The data parameter can be used to 
@@ -600,6 +658,33 @@ int forEachPartial( PartialList * src,
 			 		
 
 /* ---------------------------------------------------------------- */
+/*        peakAmplitude        
+/*
+/*  Return the maximum amplitude achieved by a Partial.
+ */
+extern "C"
+double peakAmplitude( const Partial * p )
+{
+    try
+    {
+        ThrowIfNull((Partial *) p);
+        return PartialUtils::peakAmplitude( *p );
+    }
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in peakAmplitude(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in peakAmplitude(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}    
+}
+
+/* ---------------------------------------------------------------- */
 /*        removeIf        
 /*
 /*	Remove from a PartialList all Partials satisfying the
@@ -935,4 +1020,33 @@ void timeSpan( PartialList * partials, double * tmin, double * tmax )
     {
         *tmax = times.second;
     }
+}
+
+/* ---------------------------------------------------------------- */
+/*        weightedAvgFrequency 
+/*       
+/*  Return the average frequency over all Breakpoints in this Partial, 
+    weighted by the Breakpoint amplitudes. Return zero if the Partial 
+    has no Breakpoints.
+ */
+extern "C"
+double weightedAvgFrequency( const Partial * p )
+{
+    try
+    {
+        ThrowIfNull((Partial *) p);
+        return PartialUtils::weightedAvgFrequency( *p );
+    }
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in weightedAvgFrequency(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in weightedAvgFrequency(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}    
 }

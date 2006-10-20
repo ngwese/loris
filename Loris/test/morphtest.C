@@ -55,6 +55,9 @@
 #include <string>
 #include <stdexcept>
 
+#define ESTIMATE_F0 1
+#define ESTIMATE_AMP 0
+
 using std::cout;
 using std::endl;
 

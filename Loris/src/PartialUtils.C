@@ -288,6 +288,96 @@ double peakAmplitude( const Partial & p )
     return peak;
 }
 
+// ---------------------------------------------------------------------------
+//	avgAmplitude
+// ---------------------------------------------------------------------------
+//! Return the average amplitude over all Breakpoints in this Partial.
+//! Return zero if the Partial has no Breakpoints.
+//!  
+//! \param  p is the Partial to evaluate
+//! \return the average amplitude of Breakpoints in the Partial p
+//
+double avgAmplitude( const Partial & p )
+{
+    double avg = 0;
+    for ( Partial::const_iterator it = p.begin();
+          it != p.end();
+          ++it )
+    {
+        avg += it->amplitude();
+    }
+    
+    if ( avg != 0 )
+    {
+        avg /= p.numBreakpoints();
+    }
+    
+    return avg;
+}
+
+
+// ---------------------------------------------------------------------------
+//	avgFrequency
+// ---------------------------------------------------------------------------
+//! Return the average frequency over all Breakpoints in this Partial.
+//! Return zero if the Partial has no Breakpoints.
+//!  
+//! \param  p is the Partial to evaluate
+//! \return the average frequency (Hz) of Breakpoints in the Partial p
+//
+double avgFrequency( const Partial & p )
+{
+    double avg = 0;
+    for ( Partial::const_iterator it = p.begin();
+          it != p.end();
+          ++it )
+    {
+        avg += it->frequency();
+    }
+    
+    if ( avg != 0 )
+    {
+        avg /= p.numBreakpoints();
+    }
+    
+    return avg;
+}
+
+
+// ---------------------------------------------------------------------------
+//	weightedAvgFrequency
+// ---------------------------------------------------------------------------
+//! Return the average frequency over all Breakpoints in this Partial, 
+//! weighted by the Breakpoint amplitudes.
+//! Return zero if the Partial has no Breakpoints.
+//!  
+//! \param  p is the Partial to evaluate
+//! \return the average frequency (Hz) of Breakpoints in the Partial p
+//
+double weightedAvgFrequency( const Partial & p )
+{
+    double avg = 0;
+    double ampsum = 0;
+    for ( Partial::const_iterator it = p.begin();
+          it != p.end();
+          ++it )
+    {
+        avg += it->amplitude() * it->frequency();
+        ampsum += it->amplitude();
+    }
+    
+    if ( avg != 0 && ampsum != 0 )
+    {
+        avg /= ampsum;
+    }
+    else
+    {
+        avg = 0;
+    }
+    
+    return avg;
+}
+
 //	-- phase maintenance functions --
 
 // ---------------------------------------------------------------------------

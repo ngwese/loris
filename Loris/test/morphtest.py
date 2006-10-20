@@ -56,6 +56,8 @@ print '(looking for sources in %s)' % path
 #
 print 'analyzing clarinet 4G# (%s)' % time.ctime(time.time())
 a = loris.Analyzer( 390 )
+a.setFreqDrift( 30 )
+a.setAmpFloor( -80 )
 
 cf = loris.AiffFile( os.path.join(path, 'clarinet.aiff') )
 v = cf.samples()
@@ -75,7 +77,7 @@ except:
 	import sys
 	print 'caught:', sys.exc_type, sys.exc_value
 
-loris.channelize( clar, loris.createFreqReference( clar, 0, 1000 ), 1 )
+loris.channelize( clar, loris.createFreqReference( clar, 415*.8, 415*1.2 ), 1 )
 loris.distill( clar )
 
 # just for fun, print out the average 
@@ -109,14 +111,21 @@ loris.exportAiff( 'clarOK.pytest.aiff', loris.synthesize( clar, samplerate ), sa
 #
 print 'analyzing flute 4D (%s)' % time.ctime(time.time())
 a = loris.Analyzer( 270 )		# reconfigure Analyzer
+a.setFreqDrift( 30 )
 v = loris.AiffFile( os.path.join(path, 'flute.aiff') ).samples()
 flut = a.analyze( v, samplerate )
 
-loris.channelize( flut, loris.createFreqReference( flut, 0, 1000 ), 1 )
+loris.channelize( flut, loris.createFreqReference( flut, 291*.8, 291*1.2, 50 ), 1 )
 loris.distill( flut )
 
 # check flute synthesis:
 loris.exportAiff( 'flutOK.pytest.aiff', loris.synthesize( flut, samplerate ), samplerate, 16 )
+
+# just for fun, print out the average 
+# frequency of the first partial in the
+# flute analysis:
+fund = loris.copyLabeled( flut, 1 );
+print "avg frequency of first distilled flute partial is", loris.weightedAvgFrequency( fund.first() )
 
 #
 #	perform temporal dilation

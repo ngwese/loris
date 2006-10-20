@@ -238,8 +238,8 @@ samples the estimator at the specified time interval (in
 seconds). Only estimates in the specified frequency range will 
 be considered valid, estimates outside this range will be 
 ignored. The envelope will have approximately the specified 
-number of samples. If the specified number of samples is 0, 
-fundamental is estimated every 5 ms.") createFreqReference;
+number of samples. If the specified number of samples is 0 or
+unspecified, the fundamental is estimated every 5 ms.") createFreqReference;
 
 %newobject createFreqReference;
 LinearEnvelope * 
@@ -282,7 +282,7 @@ compressed so that temporal features at the initial time points
 are aligned with the final time points. Time points are sorted, so
 Partial envelopes are are only stretched and compressed, but
 breakpoints are not reordered. Duplicate time points are allowed.
-There must be the same number of initial and target time points.");
+There must be the same number of initial and target time points.") dilate;
 
 
 //	dilate needs a contract to guarantee that the
@@ -875,12 +875,35 @@ reordered.");
 void sortByLabel( PartialList * partials );
 
 %feature("docstring",
+"Return the average amplitude over all Breakpoints in this Partial.
+Return zero if the Partial has no Breakpoints.") avgAmplitude;
+
+double avgAmplitude( const Partial * p );
+
+%feature("docstring",
+"Return the average frequency over all Breakpoints in this Partial.
+Return zero if the Partial has no Breakpoints.") avgFrequency;
+
+double avgFrequency( const Partial * p );
+
+%feature("docstring",
+"Return the maximum amplitude achieved by a Partial.") peakAmplitude;
+
+double peakAmplitude( const Partial * p );
+
+%feature("docstring",
 "Return the minimum start time and maximum end time
 of all Partials in this PartialList.") timeSpan;
 
 %apply double * OUTPUT { double * tmin_out, double * tmax_out };
 void timeSpan( PartialList * partials, double * tmin_out, double * tmax_out );
 
+%feature("docstring",
+"Return the average frequency over all Breakpoints in this Partial, 
+weighted by the Breakpoint amplitudes. Return zero if the Partial 
+has no Breakpoints.") weightedAvgFrequency;
+
+double weightedAvgFrequency( const Partial * p );
 
 %feature("docstring",
 "Recompute phases of all Breakpoints later than the specified 

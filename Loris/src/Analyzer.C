@@ -357,9 +357,9 @@ Analyzer::configure( double resolutionHz, double windowWidthHz )
     
     //  frequency drift in Hz is the maximum difference
     //  in frequency between consecutive Breakpoints in
-    //  a Partial, by default, make it equal to one half
+    //  a Partial, by default, make it equal to one fifth
     //  the frequency resolution:
-    setFreqDrift( .5 * m_freqResolution );
+    setFreqDrift( .2 * m_freqResolution );
     
     //  hop time (in seconds) is the inverse of the
     //  window width....really. Smith and Serra (1990) cite 
