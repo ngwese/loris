@@ -32,7 +32,7 @@
  */
 
 #if HAVE_CONFIG_H
-	#include "config.h"
+    #include "config.h"
 #endif
 
 #include "KaiserWindow.h"
@@ -40,148 +40,154 @@
 #include <cmath>
 
 #if defined(HAVE_M_PI) && (HAVE_M_PI)
-	const double Pi = M_PI;
+    const double Pi = M_PI;
 #else
-	const double Pi = 3.14159265358979324;
+    const double Pi = 3.14159265358979324;
 #endif
 
 using namespace std;
 
-//	begin namespace
+//  begin namespace
 namespace Loris {
 
-//	prototypes for static helpers, defined below
+//  prototypes for static helpers, defined below
 static double factorial( double );
 static double zeroethOrderBessel( double );
 
 // ---------------------------------------------------------------------------
-//	create
+//  create
 // ---------------------------------------------------------------------------
-//	Compute a Kaiser window length samples long and using control parameter 
-//	alpha. See Oppenheim and Schafer:  "Digital Signal Processing" (1975), 
-//	p. 452 for further explanation of the Kaiser window. Also, see Kaiser 
-//	and Schafer, 1980.
+//  Compute a Kaiser window length samples long and using control parameter 
+//  alpha. See Oppenheim and Schafer:  "Digital Signal Processing" (1975), 
+//  p. 452 for further explanation of the Kaiser window. Also, see Kaiser 
+//  and Schafer, 1980.
 //
-//	This could be a template function taking iterators in place of 
-//	the vector.
+//  This could be a template function taking iterators in place of 
+//  the vector.
 //
 void
 KaiserWindow::create( vector< double > & samples, double shape )
 {   
- 	long length = samples.size();
- 	if ( length == 0 ) 
- 		return;
- 	
-//	Compute the window bounds:
-	double offset = -0.5 * (length - 1);
+    const long length = samples.size();
+    if ( length == 0 ) 
+    {
+        return;
+    }
+    
+//  Compute the window bounds:
+    const double offset = -0.5 * (length - 1);
 
-//	Pre-compute the denominator in the kaiser equation.	
-	double denom = zeroethOrderBessel( shape );
-	
-//	Pre-compute the square of half of one less than the window length.
-	double Z( pow( ((length - 1.) / 2.), 2.) );
+//  Pre-compute the denominator in the kaiser equation. 
+    const double denom = zeroethOrderBessel( shape );
+    
+//  Pre-compute the square of half of one less than the window length.
+//  (equals square of offset, computed above)
+    const double Z = offset * offset;
+                    // = 0.25 * (length - 1.) * (length - 1.);
 
-//	Compute the window samples.
-	for ( long i = 0; i < length; ++i )
-	{
-		double x( i + offset );
-		
-		//	sanity:
-		Assert( x * x <= Z );
-		
-		double arg = sqrt(1.0 - (x * x / Z));
-		samples[i] = zeroethOrderBessel( shape * arg ) / denom;
-	}
+//  Compute the window samples.
+    for ( long i = 0; i < length; ++i )
+    {
+        const double x = double( i + offset );
+        
+        //  sanity:
+        Assert( x * x <= Z );
+        
+        double arg = sqrt(1.0 - (x * x / Z));
+        samples[i] = zeroethOrderBessel( shape * arg ) / denom;
+    }
 }
 
 // ---------------------------------------------------------------------------
-//	factorial
+//  factorial
 // ---------------------------------------------------------------------------
 //
 static double factorial( double val )
 {
-	double outval = 1.0;	//	could initialize with val--, right?
+    double outval = 1.0;    //  could initialize with val--, right?
     while (val > 1) 
-    	outval *= val--;
+    {
+        outval *= val--;
+    }
     return outval;
 }
 
 // ---------------------------------------------------------------------------
-//	zeroethOrderBessel
+//  zeroethOrderBessel
 // ---------------------------------------------------------------------------
-//	Compute the zeroeth order Bessel function at val using the series expansion.
+//  Compute the zeroeth order Bessel function at val using the series expansion.
 //
 static double zeroethOrderBessel( double val )
 {
-	double besselValue = 1.0;
-	double term;
-	int	i = 1;
+    double besselValue = 1.0;
+    double term;
+    int i = 1;
 
-	do
-	{
-		term = pow(0.5 * val, double(i)) / factorial(i);
-		besselValue += (term * term);
-		i++;
-	} while (term  > .000001 * besselValue);
-	
-	return besselValue;
+    do
+    {
+        term = pow(0.5 * val, double(i)) / factorial(i);
+        besselValue += (term * term);
+        i++;
+    } while (term  > .000001 * besselValue);
+    
+    return besselValue;
 }
 
 // ---------------------------------------------------------------------------
-//	computeShape
+//  computeShape
 // ---------------------------------------------------------------------------
-//	Compute the Kaiser window shaping parameter from the specified attenuation 
-//	of side lobes. This algorithm is given in Kaiser an Schafer,1980 and is 
-//	supposed to give better than 0.36% accuracy (Kaiser and Schafer 1980).
+//  Compute the Kaiser window shaping parameter from the specified attenuation 
+//  of side lobes. This algorithm is given in Kaiser an Schafer,1980 and is 
+//  supposed to give better than 0.36% accuracy (Kaiser and Schafer 1980).
 //
 double
 KaiserWindow::computeShape( double atten )
 {
-	if ( atten < 0. )
-		Throw( InvalidArgument, "Kaiser window shape must be computed from positive (> 0dB) sidelobe attenuation. (receied attenuation < 0)" );
+    if ( atten < 0. )
+        Throw( InvalidArgument, "Kaiser window shape must be computed from positive (> 0dB) sidelobe attenuation. (received attenuation < 0)" );
 
-	double alpha;
-	
-	if ( atten > 60.0 )
-	{
-		alpha = 0.12438 * (atten + 6.3);
-	}
-	else if ( atten > 13.26 )
-	{
-		alpha =	0.76609L * ( pow((atten - 13.26), 0.4) ) + 
-							0.09834L * (atten - 13.26L);
-	}
-	else
-	{
-		//	can't have less than 13dB.
-		alpha = 0.0;
-	}
-	
-	return alpha;
+    double alpha;
+    
+    if ( atten > 60.0 )
+    {
+        alpha = 0.12438 * (atten + 6.3);
+    }
+    else if ( atten > 13.26 )
+    {
+        alpha = 0.76609L * ( pow((atten - 13.26), 0.4) ) + 
+                            0.09834L * (atten - 13.26L);
+    }
+    else
+    {
+        //  can't have less than 13dB.
+        alpha = 0.0;
+    }
+    
+    return alpha;
 }
 // ---------------------------------------------------------------------------
-//	computeLength
+//  computeLength
 // ---------------------------------------------------------------------------
-//	Compute the length (in samples) of the Kaiser window from the desired 
-//	(approximate) main lobe width and the control parameter. Of course, since 
-//	the window must be an integer number of samples in length, your actual 
-//	lobal mileage may vary. This equation appears in Kaiser and Schafer 1980
-//	(on the use of the I0 window class for spectral analysis) as Equation 9.
+//  Compute the length (in samples) of the Kaiser window from the desired 
+//  (approximate) main lobe width and the control parameter. Of course, since 
+//  the window must be an integer number of samples in length, your actual 
+//  lobal mileage may vary. This equation appears in Kaiser and Schafer 1980
+//  (on the use of the I0 window class for spectral analysis) as Equation 9.
 //
-//	The main width of the main lobe must be normalized by the sample rate,
-//	that is, it is a fraction of the sample rate.
+//  The main width of the main lobe must be normalized by the sample rate,
+//  that is, it is a fraction of the sample rate.
 //
 unsigned long
 KaiserWindow::computeLength( double width, double alpha )
 {
-	//double alpha = computeShape( atten );
+    //double alpha = computeShape( atten );
 
-	//	The last 0.5 is cheap rounding.
-	//	But I think I don't need cheap rounding because the equation 
-	//	from Kaiser and Schafer has a +1 that appears to be a cheap
-	//	ceiling function.
-	return long(1.0 + (2. * sqrt((Pi*Pi) + (alpha*alpha)) / (Pi * width)) /* + 0.5 */);
+    //  The last 0.5 is cheap rounding.
+    //  But I think I don't need cheap rounding because the equation 
+    //  from Kaiser and Schafer has a +1 that appears to be a cheap
+    //  ceiling function.
+    return long(1.0 + (2. * sqrt((Pi*Pi) + (alpha*alpha)) / (Pi * width)) /* + 0.5 */);
 }
 
-}	//	end of namespace Loris
+}   //  end of namespace Loris
 
