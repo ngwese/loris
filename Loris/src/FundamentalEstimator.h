@@ -41,6 +41,21 @@
  *
  */
 
+
+/*
+	HEY HEY HEY 
+	The interface for this thing is not really that great. Ideally, 
+	I think, one would construct one of these things from either a
+	sequence of Partials or a sequence of samples, and then could
+	be queried at any time (provking an analysis that would yield
+	an estimate, or an exception), or could contruct a LinearEnvelope
+	by a sequence of queries. This would require only two different 
+	mechanisms for collecting amps and frequencies, the rest is common.
+	
+	Idea: integrate the functionality provided by this class into 
+	the Fundamental class, which _is_ part of the distribution.
+*/
+
 #include "Envelope.h"
 #include "LinearEnvelope.h"
 #include "PartialList.h"
@@ -55,9 +70,9 @@ namespace Loris {
 //!	Class FundamentalEstimator represents an algorithm for 
 //! time-varying fundamental frequency estimation based on
 //! time-frequency reassigned spectral analysis. This class
-//! is adapted from the FundamentalEstimator class (see 
-//! FundamentalEstimator.h), and performs the same spectral 
-//! analysis and peak extraction, but does not form Partials.
+//! is adapted from the Analyzer class (see Analyzer.h), and 
+//! performs the same spectral analysis and peak extraction, 
+//! but does not form Partials.
 //!	
 //!	For more information about Reassigned Bandwidth-Enhanced 
 //!	Analysis and the Reassigned Bandwidth-Enhanced Additive Sound 

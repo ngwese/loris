@@ -95,14 +95,20 @@ public:
 
 //	--- reassigned transform access ---
         
-    //! Return the bandwidth factor computed at 
-    //! the specified transform index. (Experimental,
-    //! computed from the mixed partial derivative of
-    //! spectrum phase, not used in BW enhanced analysis.)
+    //! EXPERIMENTAL,
+    //! Compute and return the mixed partial derivative of
+    //! spectrum phase (not yet used in BW enhanced analysis).
+    //!
+    //! DO NOT USE THIS
+    //! It will certainly disappear in a future release.
+    //! Returns ZERO unless compiled with the flag
+    //! COMPUTE_MIXED_DERIVATIVE defined non-zero.
+    //! See ReassignedSpectrum.C
     //!
     //! \param  idx the frequency sample at which to evaluate the
     //!         transform
-	double reassignedBandwidth( long idx ) const;
+	//double reassignedBandwidth( long idx ) const;
+	double mixedPartialDerivative( long idx ) const;
 
     //! Return the reassigned frequency in fractional frequency 
     //! samples computed at the specified transform index.

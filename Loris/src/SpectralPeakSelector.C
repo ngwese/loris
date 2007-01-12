@@ -54,7 +54,9 @@
 #define USE_REASSIGNMENT_MINS 1
 //#undef USE_REASSIGNMENT_MINS
 
-//#define ENABLE_EXPERIMENTAL_BW 1
+#if defined(COMPUTE_MIXED_DERIVATIVE) && COMPUTE_MIXED_DERIVATIVE
+	#define ENABLE_EXPERIMENTAL_BW 1
+#endif
 
 //	begin namespace
 namespace Loris {
@@ -132,7 +134,7 @@ SpectralPeakSelector::extractPeaks( ReassignedSpectrum & spectrum,
                 //  EXPERIMENTAL
                 double bw = 0;
                 #ifdef ENABLE_EXPERIMENTAL_BW
-    			bw = spectrum.reassignedBandwidth( j );
+    			bw = spectrum.mixedPartialDerivative( j );
     			#endif
 
     			//	also store the corrected peak time in seconds, won't

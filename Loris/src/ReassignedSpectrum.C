@@ -62,7 +62,9 @@
 //  it might corrupt the magnitude transform
 //  slightly, so don't do it until we are actually
 //  going to use it.
-#undef COMPUTE_MIXED_DERIVATIVE
+#if !defined(COMPUTE_MIXED_DERIVATIVE)
+	#define COMPUTE_MIXED_DERIVATIVE 0
+#endif
 
 //	there's a freakin' ton of std in here, 
 //	just import the whole namespace
@@ -464,18 +466,23 @@ ReassignedSpectrum::reassignedPhase( long idx ) const
 }
 
 // ---------------------------------------------------------------------------
-//	reassignedBandwidth
+//	mixedPartialDerivative
 // ---------------------------------------------------------------------------
-//! Return the bandwidth factor computed at 
-//! the specified transform index. (Experimental,
-//! computed from the mixed partial derivative of
-//! spectrum phase, not used in BW enhanced analysis.)
+//! EXPERIMENTAL,
+//! Compute and return the mixed partial derivative of
+//! spectrum phase (not yet used in BW enhanced analysis).
+//!
+//! DO NOT USE THIS
+//! It will certainly disappear in a future release.
+//! Returns ZERO unless compiled with the flag
+//! COMPUTE_MIXED_DERIVATIVE defined non-zero.
+//! See ReassignedSpectrum.C
 //!
 //! \param  idx the frequency sample at which to evaluate the
 //!         transform
 //
 double
-ReassignedSpectrum::reassignedBandwidth( long idx ) const
+ReassignedSpectrum::mixedPartialDerivative( long idx ) const
 {
 #if defined(COMPUTE_MIXED_DERIVATIVE) && COMPUTE_MIXED_DERIVATIVE
 
