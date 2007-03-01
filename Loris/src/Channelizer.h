@@ -76,6 +76,11 @@ class Partial;
 //! a pair of partials. This computation is based on formulae given in 
 //! "Understanding the complex nature of the piano tone" by Martin Keane
 //! at the Acoustics Research Centre at the University of Aukland (Feb 2004).
+//! The stretching factor must be non-negative (and is zero for perfectly
+//! tunes harmonics). Even in the case of stretched harmonics, the
+//! reference frequency envelope is assumed to track the frequency of
+//! one of the partials, and the center frequency of the corresponding
+//! channel, even though it may represent a stretched harmonic.
 //!	
 //!	Channelizer is a leaf class, do not subclass.
 //
@@ -83,14 +88,22 @@ class Channelizer
 {
 //	-- implementaion --
 	std::auto_ptr< Envelope > _refChannelFreq;  //! the reference frequency envelope
+    
 	int _refChannelLabel;                       //! the channel number corresponding to the
 	                                            //! reference frequency (1 for the fundamental)
+                                                
 	double _stretchFactor;                      //! stretching factor to account for 
 	                                            //! detuned harmonics, as in the case of the piano; 
 	                                            //! can be computed using the static member
 	                                            //! computeStretchFactor. Should be 0 for most
 	                                            //! (strongly harmonic) sounds.
-	    
+
+    double _ampWeighting;                       //! exponent for amplitude weighting in channel
+                                                //! computation, 0 for no weighting, 1 for linear
+                                                //! amplitude weighting, 2 for power weighting, etc.
+                                                //! default is 0, amplitude weighting is a bad idea
+                                                //! for many sounds
+    
 //	-- public interface --
 public:
 //	-- construction --
@@ -165,19 +178,151 @@ public:
 #endif
 		 { channelize( begin, end ); }
 		 
+    //! Compute the center frequency of one a channel at the specified
+    //! time. For non-stretched harmonics, this is simply the value
+    //! of the reference envelope scaled by the ratio of the specified
+    //! channel number to the reference channel number. For stretched
+    //! harmonics, the channel center frequency is computed using the
+    //! stretch factor. See Martin Keane, "Understanding
+    //! the complex nature of the piano tone", 2004, for a discussion
+    //! and the source of the mode frequency stretching algorithms 
+    //! implemented here.
+    //!
+    //! \param  time is the time (in seconds) at which to evalute 
+    //!         the reference envelope
+    //! \param  channel is the frequency channel (or harmonic, or vibrational     
+    //!         mode) number whose frequency is to be determined
+    //! \return the center frequency in Hz of the specified frequency channel
+    //!         at the specified time
+    double channelFrequencyAt( double time, int channel ) const;
+
+    //! Compute the (fractional) channel number estimate for a Partial having a
+    //! given frequency at a specified time. For ordinary harmonics, this
+    //! is simply the ratio of the specified frequency to the reference
+    //! frequency at the specified time. For stretched harmonics (as in 
+    //! a piano), the stretching factor is used to compute the frequency
+    //! of the corresponding modes of a massy string. See Martin Keane, 
+    //! "Understanding the complex nature of the piano tone", 2004, for 
+    //! the source of the mode frequency stretching algorithms 
+    //! implemented here.
+    //! 
+    //! \param  time is the time (in seconds) at which to evalute 
+    //!         the reference envelope
+    //! \param  frequency is the frequency (in Hz) for wihch the channel
+    //!         number is to be determined
+    //! \return the channel number corresponding to the specified
+    //!         frequency and time
+    int computeChannelNumber( double time, double frequency ) const;
+    
+    //! Compute the (fractional) channel number estimate for a Partial having a
+    //! given frequency at a specified time. For ordinary harmonics, this
+    //! is simply the ratio of the specified frequency to the reference
+    //! frequency at the specified time. For stretched harmonics (as in 
+    //! a piano), the stretching factor is used to compute the frequency
+    //! of the corresponding modes of a massy string. See Martin Keane, 
+    //! "Understanding the complex nature of the piano tone", 2004, for 
+    //! the source of the mode frequency stretching algorithms 
+    //! implemented here.
+    //!
+    //! The fractional channel number is used internally to determine
+    //! a best estimate for the channel number (label) for a Partial
+    //! having time-varying frequency. 
+    //! 
+    //! \param  time is the time (in seconds) at which to evalute 
+    //!         the reference envelope
+    //! \param  frequency is the frequency (in Hz) for wihch the channel
+    //!         number is to be determined
+    //! \return the fractional channel number corresponding to the specified
+    //!         frequency and time
+    double computeFractionalChannelNumber( double time, double frequency ) const;
+    
+    
+    //! Compute the reference frequency at the specified time. For non-stretched 
+    //! harmonics, this is simply the ratio of the reference envelope evaluated 
+    //! at that time to the reference channel number, and is the center frequecy
+    //! for the lowest channel. For stretched harmonics, the reference frequency 
+    //! is NOT equal to the center frequency of any of the channels, and is also
+    //! a function of the stretch factor. 
+    //!
+    //! \param  time is the time (in seconds) at which to evalute 
+    //!         the reference envelope
+    double referenceFrequencyAt( double time ) const;
+
 //	-- access/mutation --
 		 
+    //! Return the exponent applied to amplitude before weighting
+    //! the instantaneous estimate of the frequency channel number
+    //! for a Partial. zero (default) for no weighting, 1 for linear
+    //! amplitude weighting, 2 for power weighting, etc.
+    //! Amplitude weighting is a bad idea for many sounds, particularly
+    //! those with transients, for which it may emphasize the part of
+    //! the Partial having the least reliable frequency estimate.
+    double amplitudeWeighting( void ) const;
+
+    //! Set the exponent applied to amplitude before weighting
+    //! the instantaneous estimate of the frequency channel number
+    //! for a Partial. zero (default) for no weighting, 1 for linear
+    //! amplitude weighting, 2 for power weighting, etc.
+    //! Amplitude weighting is a bad idea for many sounds, particularly
+    //! those with transients, for which it may emphasize the part of
+    //! the Partial having the least reliable frequency estimate.
+    void setAmplitudeWeighting( double expon );
+
     //! Return the stretching factor used to account for detuned
     //! harmonics, as in a piano tone. Normally set to 0 for 
     //! in-tune harmonics.
+    //!
+    //! The stretching factor is a small positive number for 
+    //! heavy vibrating strings (as in pianos) for which the
+    //! mass of the string significantly affects the frequency
+    //! of the vibrating modes. See Martin Keane, "Understanding
+    //! the complex nature of the piano tone", 2004, for a discussion
+    //! and the source of the mode frequency stretching algorithms 
+    //! implemented here.
     double stretchFactor( void ) const;
         
     //! Set the stretching factor used to account for detuned
     //! harmonics, as in a piano tone. Normally set to 0 for 
-    //! in-tune harmonics.
+    //! in-tune harmonics. The stretching factor for massy 
+    //! vibrating strings (like pianos) can be computed from 
+    //! the physical characteristics of the string, or using 
+    //! computeStretchFactor(). 
+    //!
+    //! The stretching factor is a small positive number for 
+    //! heavy vibrating strings (as in pianos) for which the
+    //! mass of the string significantly affects the frequency
+    //! of the vibrating modes. See Martin Keane, "Understanding
+    //! the complex nature of the piano tone", 2004, for a discussion
+    //! and the source of the mode frequency stretching algorithms 
+    //! implemented here.
+    //!
+    //! \throw  InvalidArgument if stretch is negative.
     void setStretchFactor( double stretch );    
-    
 		 
+    //! Set the stretching factor used to account for (consistently) 
+    //! detuned harmonics, as in a piano tone, from a pair of 
+    //! mode (harmonic) frequencies and numbers.
+    //!
+    //! The stretching factor is a small positive number for 
+    //! heavy vibrating strings (as in pianos) for which the
+    //! mass of the string significantly affects the frequency
+    //! of the vibrating modes. See Martin Keane, "Understanding
+    //! the complex nature of the piano tone", 2004, for a discussion
+    //! and the source of the mode frequency stretching algorithms 
+    //! implemented here.
+    //!
+    //! The stretching factor is computed using computeStretchFactor,
+    //! but only a valid stretch factor will ever be assigned. If an
+    //! invalid (negative) stretching factor is computed for the
+    //! specified frequencies and mode numbers, the stretch factor
+    //! will be set to zero.
+    //!
+    //! \param      fm is the frequency of the Mth stretched harmonic
+    //! \param      m is the harmonic number of the harmonic whose frequnecy is fm
+    //! \param      fn is the frequency of the Nth stretched harmonic
+    //! \param      n is the harmonic number of the harmonic whose frequnecy is fn
+    void setStretchFactor( double fm, int m, double fn, int n );
+    
 // -- static members --
 
 	//! Static member that constructs an instance and applies
@@ -215,16 +360,42 @@ public:
     //! Static member to compute the stretch factor for a sound having
     //! (consistently) detuned harmonics, like piano tones.
     //!
-    //! \param      fref is the reference (fundamental) frequency from which
-    //!             the harmonics are detuned.
+    //! The stretching factor is a small positive number for 
+    //! heavy vibrating strings (as in pianos) for which the
+    //! mass of the string significantly affects the frequency
+    //! of the vibrating modes. See Martin Keane, "Understanding
+    //! the complex nature of the piano tone", 2004, for a discussion
+    //! and the source of the mode frequency stretching algorithms 
+    //! implemented here.
+    //!
+    //! The value returned by this function MAY NOT be a valid stretch
+    //! factor. If this function returns a negative stretch factor,
+    //! then the specified pair of frequencies and mode numbers cannot
+    //! be used to estimate the effects of string mass on mode frequency
+    //! (because the negative stretch factor implies a physical 
+    //! impossibility, like negative mass or negative length). 
+    //!
+    //! \param      fm is the frequency of the Mth stretched harmonic
+    //! \param      m is the harmonic number of the harmonic whose frequnecy is fm
     //! \param      fn is the frequency of the Nth stretched harmonic
     //! \param      n is the harmonic number of the harmonic whose frequnecy is fn
     //! \returns    the stretching factor, usually a very small positive
     //!             floating point number, or 0 for pefectly tuned harmonics
     //!             (that is, if fn = n*f1).
-    //
-    static double computeStretchFactor( double fref, double fn, double n );
+    static double computeStretchFactor( double fm, int m, double fn, int n );
 	 
+    //! Static member to compute the stretch factor for a sound having
+    //! (consistently) detuned harmonics, like piano tones. Legacy version
+    //! that assumes the first argument corresponds to the first partial.
+    //!
+    //! \param      f1 is the frequency of the lowest numbered (1) partial.
+    //! \param      fn is the frequency of the Nth stretched harmonic
+    //! \param      n is the harmonic number of the harmonic whose frequnecy is fn
+    //! \returns    the stretching factor, usually a very small positive
+    //!             floating point number, or 0 for pefectly tuned harmonics
+    //!             (that is, for harmonic frequencies fn = n*f1).
+    static double computeStretchFactor( double fref, double fn, double n );
+    
 };	//	end of class Channelizer
 
 // ---------------------------------------------------------------------------
@@ -296,8 +467,6 @@ void Channelizer::channelize( PartialList::iterator begin, PartialList::iterator
 		instance.channelize( *begin++ );
 	}
 }
-
-
 
 }	//	end of namespace Loris
 

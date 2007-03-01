@@ -76,6 +76,10 @@ collect_ampsNfreqs( PartialList::const_iterator begin,
 const double Fundamental::DefaultThreshold = -60;
 const double Fundamental::DefaultResolution = .1;
 
+//  HEY need to make this a parameter
+const double MinConfidence = 0.9;   //  require at least 90% confidence
+
+
 // ---------------------------------------------------------------------------
 //	setAmpThreshold
 // ---------------------------------------------------------------------------
@@ -128,27 +132,29 @@ Fundamental::setFreqResolution( double x )
 double 
 Fundamental::estimateAt( double time ) const
 {
-	//	collect the Partial amplitudes and
-	//	frequencies at `time':
-	vector<double> amps, freqs;
-	collect_ampsNfreqs( partials_.begin(), partials_.end(), time, 
-					    amps, freqs, ampThreshold_ );
+    //	collect the Partial amplitudes and
+    //	frequencies at `time':
+    vector<double> amps, freqs;
+    collect_ampsNfreqs( partials_.begin(), partials_.end(), time, 
+                        amps, freqs, ampThreshold_ );
 
-	if ( amps.empty() )
-	{
-		Throw( InvalidArgument, "No partials have significant energy at the "
-								      "specified time." );
-	}
-   
-   double f0 = iterative_estimate( amps, freqs, freqMin_, freqMax_, 
-									        freqResolution_ );
-   if ( f0 <= freqMin_ || f0 >= freqMax_ )
-   {
-      Throw( InvalidObject, "Cannot construct a reliable estimate "
-                            "on the specified range of frequencies." );
-   }	
+    if ( amps.empty() )
+    {
+        Throw( InvalidArgument, "No partials have significant energy at the "
+                                "specified time." );
+    }
 
-   return f0;
+    F0estimate est = iterative_estimate( amps, freqs, freqMin_, freqMax_, 
+                                         freqResolution_ );
+
+    if ( est.confidence < MinConfidence ||
+         est.frequency <= freqMin_ || est.frequency >= freqMax_ )
+    {
+        Throw( InvalidObject, "Cannot construct a reliable estimate "
+                              "on the specified range of frequencies." );
+    }	
+
+    return est.frequency;
 }
  
 // ---------------------------------------------------------------------------
@@ -216,12 +222,13 @@ Fundamental::constructEnvelope( double t1, double t2, double interval ) const
 		if ( ! amps.empty() )
 		{
 			found_energy = true;
-			double f0 = iterative_estimate( amps, freqs, freqMin_, freqMax_,
-                                            freqResolution_ );
+			F0estimate est = iterative_estimate( amps, freqs, freqMin_, freqMax_,
+                                                 freqResolution_ );
 			//	reject boundary frequencies
-			if ( f0 > freqMin_ && f0 < freqMax_ )
+			if ( est.confidence >= MinConfidence &&
+                 est.frequency > freqMin_ && est.frequency < freqMax_ )
 			{
-				env.insertBreakpoint( t, f0 );
+				env.insertBreakpoint( t, est.frequency );
 			}
 		}
 		

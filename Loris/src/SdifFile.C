@@ -297,10 +297,10 @@ static char *error_string_array[] = {
 
 //  If we didn't run configure, try to make a good guess.
 #if !(HAVE_CONFIG_H) && !defined(WORDS_BIGENDIAN)
-    #if defined(WIN32) || defined(LINUX)
-    #undef WORDS_BIGENDIAN
-    #else
+    #if (defined(__ppc__) || defined(__ppc64__))
     #define WORDS_BIGENDIAN 1
+    #else
+    #undef WORDS_BIGENDIAN
     #endif
 #endif
 

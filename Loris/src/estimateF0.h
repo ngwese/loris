@@ -42,7 +42,18 @@
 //	begin namespace
 namespace Loris {
 
-double 
+struct F0estimate
+{
+    double frequency;   //  estimated fundamental frequency in Hz
+    double confidence;  //  normalized confidence for this estimate, 
+                        //  equal to 1.0 when all frequencies are perfect
+                        //  harmonics of this estimate's frequency
+                        
+    F0estimate( void ) : frequency( 0 ), confidence( 0 ) {}
+    F0estimate( double f, double c ) : frequency( f ), confidence( c ) {}
+};                        
+
+F0estimate 
 iterative_estimate( const std::vector<double> & amps, 
 					const std::vector<double> & freqs, 
 					double fmin, double fmax,

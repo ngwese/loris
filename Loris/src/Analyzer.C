@@ -99,12 +99,16 @@ class FundamentalBuilder : public LinearEnvelopeBuilder
     double mFmin, mFmax, mAmpThresh, mFreqThresh;
     std::vector< double > amplitudes, frequencies;
     
+    const double mMinConfidence;    // 0.9, this could be made a parameter, 
+                                    // or raised to make estimates smoother
+    
 public:
     FundamentalBuilder( double fmin, double fmax, double threshDb = -60, double threshHz = 8000 ) :
         mFmin( fmin ), 
         mFmax( fmax ), 
         mAmpThresh( std::pow( 10., 0.05*(threshDb) ) ),
-        mFreqThresh( threshHz )
+        mFreqThresh( threshHz ),
+        mMinConfidence( 0.9 )
         {}
 		
 	FundamentalBuilder * clone( void ) const { return new FundamentalBuilder(*this); }
@@ -133,16 +137,17 @@ void FundamentalBuilder::build( const Peaks & peaks, double frameTime,
     if ( ! amplitudes.empty() )
     {
         //  estimate f0
-        double f0 = iterative_estimate( amplitudes, frequencies, 
-                                        mFmin,
-                                        mFmax,
-                                        0.1 );
+        F0estimate est = iterative_estimate( amplitudes, frequencies, 
+                                             mFmin,
+                                             mFmax,
+                                             0.1 );
         
-        if ( f0 > mFmin && f0 < mFmax )
+        if ( est.confidence >= mMinConfidence &&
+             est.frequency > mFmin && est.frequency < mFmax  )
         {
-            // notifier << "f0 is " << f0 << endl;
+            // notifier << "f0 is " << est.frequency << endl;
             //  add breakpoint to fundamental envelope
-            env.insert( frameTime, f0 );
+            env.insert( frameTime, est.frequency );
         }
     }
     

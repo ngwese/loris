@@ -52,6 +52,11 @@
 #include <vector>
 using std::vector;
 
+
+#include <iostream> //  for debugging
+using std::cout;
+using std::endl;
+
 #if defined(HAVE_M_PI) && (HAVE_M_PI)
 	const double Pi = M_PI;
 #else
@@ -79,14 +84,16 @@ choose_peak( const vector<double> & Q );
 //	at a range of frequencies around the peak likelihood.
 //	Return the maximum value when the range of likelihood
 //	values computed is less than the specified resolution.
-double 
+//  Return the frequency and the normalized value of the 
+//  likelihood function at that frequency (1.0 indicates that
+//  all the peaks are perfect harmonics of the estimated
+//  frequency).
+F0estimate 
 iterative_estimate( const vector<double> & amps, 
 					const vector<double> & freqs, 
 			        double fmin, double fmax,
 			        double resolution )
 {
-	//static const double NinetyNinePercent = .99; // stop when within 1% of maximum
-	
 	//	never consider DC (0 Hz) to be a valid fundamental
 	fmin = std::max( 1., fmin );
 	
@@ -99,6 +106,8 @@ iterative_estimate( const vector<double> & amps,
 	int Nsamps = std::max( 8, (int)std::ceil((fmax-fmin)*0.5) );
 	vector<double> eval_freqs, Q;
 	double peak_freq = fmin, peak_Q = 1;
+	
+//cout << "Q = [";
 	
 	//	invariant:
 	//	the likelihood function for the estimate of the fundamental
@@ -132,7 +141,11 @@ iterative_estimate( const vector<double> & amps,
 	} while ( (fmax - fmin) > resolution );
 	//while( (*std::min_element( Q.begin(), Q.end() ) / peak_Q) < NinetyNinePercent );
 		
-	return peak_freq;
+//cout << "]" << endl;
+		
+// cout << "peak Q value: " << peak_Q << endl;
+
+	return F0estimate( peak_freq, peak_Q );
 }
 
 //	compute_eval_freqs
@@ -186,6 +199,23 @@ evaluate_Q( const vector<double> & amps,
 	Assert( eval_freqs.size() == Q.size() );
 	Assert( amps.size() == freqs.size() );
 	
+    //  compute a normalization factor equal to the total
+    //  energy represented by all the peaks passed in
+    //  amps and freqs, so that the value of the likelihood
+    //  function does not depend on the overall signal 
+    //  amplitude, but instead depends only on the quality
+    //  of the estimate, or the confidence in the result, 
+    //  and the quality of the final estimate can be evaluated
+    //  by the value of the likelihood function (should be greater
+    //  than 0.9 or more)
+    double etotal = 0;
+    vector<double>::const_iterator it;
+    for ( it = amps.begin(); it != amps.end(); ++it )
+    {
+        etotal += *it * *it;
+    }
+	double norm = 1 / etotal;
+    
 	//	iterate over the frequencies at which to 
 	//	evaluate the likelihood function:
 	vector<double>::const_iterator freq_it = eval_freqs.begin();
@@ -198,7 +228,10 @@ evaluate_Q( const vector<double> & amps,
 								    0.,
 								    std::plus< double >(),
 								    Qterm( *freq_it ) );
-		*Q_it++ = result;
+                                    
+//cout << *freq_it << ", " << result * norm << ";\n";
+                                    
+		*Q_it++ = result * norm;
 		++freq_it;
 	}
 }
