@@ -37,6 +37,7 @@
 
 #include "Channelizer.h"
 #include "Envelope.h"
+#include "LinearEnvelope.h"
 #include "Partial.h"
 #include "PartialList.h"
 #include "Notifier.h"
@@ -47,7 +48,7 @@
 namespace Loris {
 
 // ---------------------------------------------------------------------------
-//	Channelizer constructor 
+//	Channelizer constructor from reference envelope
 // ---------------------------------------------------------------------------
 //!	Construct a new Channelizer using the specified reference
 //!	Envelope to represent the a numbered channel. If the sound
@@ -64,7 +65,9 @@ namespace Loris {
 //!		    refChanFreq tracks the second harmonic, etc.).
 //! \param  stretchFactor is a stretching factor to account for detuned 
 //!         harmonics, default is 0. 
+//!
 //! \throw  InvalidArgument if refChanLabel is not positive.
+//! \throw  InvalidArgument if stretchFactor is negative.
 //
 Channelizer::Channelizer( const Envelope & refChanFreq, int refChanLabel, double stretchFactor ) :
 	_refChannelFreq( refChanFreq.clone() ),
@@ -76,7 +79,42 @@ Channelizer::Channelizer( const Envelope & refChanFreq, int refChanLabel, double
 	{
 		Throw( InvalidArgument, "Channelizer reference label must be positive." );
 	}
+ 	if ( stretchFactor < 0. )
+	{
+		Throw( InvalidArgument, "Channelizer stretch factor must be non-negative." );
+	}
 }
+
+// ---------------------------------------------------------------------------
+//	Channelizer constructor from constant reference frequency
+// ---------------------------------------------------------------------------
+//!	Construct a new Channelizer having a constant reference frequency.
+//!	The specified frequency is the center frequency of the lowest-frequency
+//!	channel (for a harmonic sound, the channel containing the fundamental 
+//!	Partial.
+//!
+//!	\param	refFreq is the reference frequency (in Hz) corresponding
+//!			to the first frequency channel.
+//! \param  stretchFactor is a stretching factor to account for detuned 
+//!         harmonics, default is 0. 
+//!
+//!	\throw	InvalidArgument is the reference frequency is not positive
+Channelizer::Channelizer( double refFreq, double stretchFactor ) :
+	_refChannelFreq( new LinearEnvelope( refFreq ) ),
+	_refChannelLabel( 1 ),
+	_stretchFactor( stretchFactor ),
+    _ampWeighting( 0 )
+{
+	if ( refFreq <= 0 )
+	{
+		Throw( InvalidArgument, "Channelizer reference frequency must be positive." );
+	}
+ 	if ( stretchFactor < 0. )
+	{
+		Throw( InvalidArgument, "Channelizer stretch factor must be non-negative." );
+	}
+}
+
 
 // ---------------------------------------------------------------------------
 //	Channelizer copy constructor 

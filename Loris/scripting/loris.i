@@ -79,6 +79,7 @@ For more information, please visit
 	#include <AiffFile.h>
 	#include <Analyzer.h>
 	#include <BreakpointEnvelope.h>
+	#include <Channelizer.h>
 	#include <Collator.h>
 	#include <Distiller.h>
 	#include <LorisExceptions.h>
@@ -1850,4 +1851,65 @@ this SpcFile.") setMarkers;
 //	This stuff is kind of big, so it lives in its own interface
 //	file.
 %include lorisPartialList.i
+
+// ----------------------------------------------------------------
+//		experiment: wrap Channelizer class
+//
+class Channelizer
+{
+public:
+//	-- construction --
+	%extend
+	{
+		Channelizer( const LinearEnvelope * refChanFreq, int refChanLabel, double stretchFactor = 0 )
+		{
+			return new Channelizer( *refChanFreq, refChanLabel, stretchFactor );
+		}
+	}
+	
+	Channelizer( double refFreq, double stretchFactor = 0 );
+	 
+	~Channelizer( void );
+	 
+//	-- channelizing --
+
+	void channelize( Partial & partial ) const;
+
+	%extend 
+	{
+		void channelize( PartialList * partials ) const
+		{
+			self->channelize( partials->begin(), partials->end() );
+		}
+	}
+		 
+    double channelFrequencyAt( double time, int channel ) const;
+
+    int computeChannelNumber( double time, double frequency ) const;
+    
+    double computeFractionalChannelNumber( double time, double frequency ) const;
+    
+    
+    double referenceFrequencyAt( double time ) const;
+
+//	-- access/mutation --
+		 
+    double amplitudeWeighting( void ) const;
+
+    void setAmplitudeWeighting( double expon );
+
+    double stretchFactor( void ) const;
+        
+    void setStretchFactor( double stretch );    
+		 
+    void setStretchFactor( double fm, int m, double fn, int n );
+    
+// -- static members --
+
+	 
+    static double computeStretchFactor( double fm, int m, double fn, int n );
+	 
+    static double computeStretchFactor( double fref, double fn, double n );
+    
+};	//	end of class Channelizer
 

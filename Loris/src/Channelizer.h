@@ -123,9 +123,25 @@ public:
 	//!		    refChanFreq tracks the second harmonic, etc.).
 	//! \param  stretchFactor is a stretching factor to account for detuned 
 	//!         harmonics, default is 0. 
-    //! \throw  InvalidArgument if refChanLabel is not positive.
+	//!
+	//! \throw  InvalidArgument if refChanLabel is not positive.
+	//! \throw  InvalidArgument if stretchFactor is negative.
 	Channelizer( const Envelope & refChanFreq, int refChanLabel, double stretchFactor = 0 );
 	 
+	//!	Construct a new Channelizer having a constant reference frequency.
+	//!	The specified frequency is the center frequency of the lowest-frequency
+	//!	channel (for a harmonic sound, the channel containing the fundamental 
+	//!	Partial.
+	//!
+	//!	\param	refFreq is the reference frequency (in Hz) corresponding
+	//!			to the first frequency channel.
+	//! \param  stretchFactor is a stretching factor to account for detuned 
+	//!         harmonics, default is 0. 
+	//!
+	//! \throw  InvalidArgument if refChanLabel is not positive.
+	//! \throw  InvalidArgument if stretchFactor is negative.
+	Channelizer( double refFreq, double stretchFactor = 0 );
+		 
 	//!	Construct a new Channelizer that is an exact copy of another.
 	//!	The copy represents the same set of frequency channels, constructed
 	//!	from the same reference Envelope and channel number.

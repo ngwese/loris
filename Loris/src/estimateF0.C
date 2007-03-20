@@ -52,11 +52,6 @@
 #include <vector>
 using std::vector;
 
-
-#include <iostream> //  for debugging
-using std::cout;
-using std::endl;
-
 #if defined(HAVE_M_PI) && (HAVE_M_PI)
 	const double Pi = M_PI;
 #else
@@ -97,17 +92,15 @@ iterative_estimate( const vector<double> & amps,
 	//	never consider DC (0 Hz) to be a valid fundamental
 	fmin = std::max( 1., fmin );
 	
-	//	when the frequency range is small, few samples are
-	//	needed, but initially make sure to sample at least
-	//	every 20 Hz. 
-   // Scratch that, 20 Hz isn't fine enough, could miss a 
-   // peak that way, try 2 Hz. There might be some room to
-   // adjust this parameter to trade off speed for robustness.
+    //	when the frequency range is small, few samples are
+    //	needed, but initially make sure to sample at least
+    //	every 20 Hz. 
+    // Scratch that, 20 Hz isn't fine enough, could miss a 
+    // peak that way, try 2 Hz. There might be some room to
+    // adjust this parameter to trade off speed for robustness.
 	int Nsamps = std::max( 8, (int)std::ceil((fmax-fmin)*0.5) );
 	vector<double> eval_freqs, Q;
 	double peak_freq = fmin, peak_Q = 1;
-	
-//cout << "Q = [";
 	
 	//	invariant:
 	//	the likelihood function for the estimate of the fundamental
@@ -139,11 +132,6 @@ iterative_estimate( const vector<double> & amps,
 		Nsamps = std::max( 8, (int)std::ceil((fmax-fmin)*0.05) );
 		
 	} while ( (fmax - fmin) > resolution );
-	//while( (*std::min_element( Q.begin(), Q.end() ) / peak_Q) < NinetyNinePercent );
-		
-//cout << "]" << endl;
-		
-// cout << "peak Q value: " << peak_Q << endl;
 
 	return F0estimate( peak_freq, peak_Q );
 }

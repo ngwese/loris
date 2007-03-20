@@ -546,11 +546,17 @@ Partial.") phaseAt;
 
 %feature("docstring",
 "Return an iterator on the BreakpointPositions in this
-Partial.") iterator;
+Partial. Optionally, specify the initial BreakpointPosition
+for the new iterator.") iterator;
 
 		SwigPartialIterator * iterator( void )
 		{
 			return new SwigPartialIterator(*self);
+		}
+		
+		SwigPartialIterator * iterator( BreakpointPosition * startHere )
+		{
+			return new SwigPartialIterator(*self, *startHere );
 		}
 
 %feature("docstring",
@@ -622,26 +628,34 @@ the specified time in seconds. Return nothing.") insert;
 		}
 		
 %feature("docstring",
-"Return an iterator of BreakpointPositions positioned at
+"Return a BreakpointPosition positioned at
 the first Breakpoint in this Partial that is later than
 the specified time. The iterator might be at its end
 (return no more Breakpoints) if there are no Breakpoints
 in this Partial later than the specified time.")
 findAfter;
 
-		SwigPartialIterator * findAfter( double time )
+		BreakpointPosition * findAfter( double time )
 		{
-			return new SwigPartialIterator(*self, self->findAfter( time ));
+			BreakpointPosition p = self->findAfter( time );
+			if ( p != self->end() )
+			{
+				return new BreakpointPosition( p );
+			}
+			else
+			{
+				return NULL;
+			}
 		}
 	
 %feature("docstring",
-"Return an iterator of BreakpointPositions positioned at
+"Return a BreakpointPosition positioned at
 the Breakpoint in this Partial that is nearest to the
 specified time.") findNearest;
 
-		SwigPartialIterator * findNearest( double time )
+		BreakpointPosition * findNearest( double time )
 		{
-			return new SwigPartialIterator(*self, self->findNearest( time ));
+			return new BreakpointPosition( self->findNearest( time ) );
 		}
 	}		
 };
@@ -729,7 +743,7 @@ this Breakpoint.") setBandwidth;
 	 
 	void setPhase( double x );
 	 	
-};	//	//	end of SWIG interface class Breakpoint
+};	//	end of SWIG interface class Breakpoint
 
 
 %feature("docstring",
