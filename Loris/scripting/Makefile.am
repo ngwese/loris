@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2006, Kelly Fitz and Lippold Haken <loris@cerlsoundgroup.org>
+# Copyright (c) 1999-2007, Kelly Fitz and Lippold Haken <loris@cerlsoundgroup.org>
 #  
 # This file is free software; as a special exception the author gives
 # unlimited permission to copy and/or distribute it, with or without 
@@ -8,12 +8,15 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-EXTRA_DIST = loris.py loris.i lorisPartialList.i 
+PYTHON_WRAPPER = loris_python_wrap.C
+SWIG_INTERFACE = loris.i
 
-CLEANFILES = loris.pyo loris.pyc $(PYTHON_CMODULE)
+
+EXTRA_DIST = loris.i lorisPartialList.i 
+
+CLEANFILES = loris.py loris.pyo loris.pyc $(PYTHON_WRAPPER)
 MAINTAINERCLEANFILES = Makefile.in
 
-PYTHON_WRAPPER = loris_python_wrap.C
 
 #----------------------------------------------------------------
 # If Python is available, define a target for building and
@@ -28,8 +31,6 @@ _loris_la_SOURCES = $(PYTHON_WRAPPER)
 _loris_la_CXXFLAGS = -I$(top_srcdir)/src $(PYFLAGS) 
 _loris_la_LIBADD = $(top_builddir)/src/libloris.la 
 _loris_la_LDFLAGS = -module -avoid-version 
-   # $(EXTRA_LD_FLAGS)
-   # what was this for?
 
 endif
 
@@ -37,7 +38,6 @@ endif
 # Define a target for building the
 # wrapper from swig interface files.
 #
-SWIG_INTERFACE = loris.i
 
 wrapper: $(PYTHON_WRAPPER)
 

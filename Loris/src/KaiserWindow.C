@@ -3,7 +3,7 @@
  * manipulation, and synthesis of digitized sounds using the Reassigned 
  * Bandwidth-Enhanced Additive Sound Model.
  *
- * Loris is Copyright (c) 1999-2006 by Kelly Fitz and Lippold Haken
+ * Loris is Copyright (c) 1999-2007 by Kelly Fitz and Lippold Haken
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -144,8 +144,12 @@ double
 KaiserWindow::computeShape( double atten )
 {
     if ( atten < 0. )
-        Throw( InvalidArgument, "Kaiser window shape must be computed from positive (> 0dB) sidelobe attenuation. (received attenuation < 0)" );
-
+    {
+        Throw( InvalidArgument, 
+        	   "Kaiser window shape must be computed from positive (> 0dB)"
+        	   " sidelobe attenuation. (received attenuation < 0)" );
+	}
+	
     double alpha;
     
     if ( atten > 60.0 )

@@ -1,4 +1,4 @@
-dnl Copyright (c) 1999-2006, Kelly Fitz and Lippold Haken <loris@cerlsoundgroup.org>
+dnl Copyright (c) 1999-2007, Kelly Fitz and Lippold Haken <loris@cerlsoundgroup.org>
 dnl  
 dnl This file is free software; as a special exception the author gives
 dnl unlimited permission to copy and/or distribute it, with or without 
@@ -61,6 +61,10 @@ AC_ARG_VAR([SWIG],
 AC_PATH_PROG([SWIG], [swig])
 
 AM_CONDITIONAL([HAVE_SWIG], [test -n "$SWIG"])
+
+if test -n "$SWIG" ; then
+        AC_MSG_WARN([Cannot find SWIG. Python module cannot be built.])
+fi
 
 dnl----------------------------------------------------------------
 dnl Perform special libtool checks under Darwin.
@@ -243,6 +247,10 @@ AC_ARG_WITH(python,
     AC_HELP_STRING( [--with-python],
                     [build Python module (default is YES)] ),
     [USEPYTHON="$withval"], [USEPYTHON="yes"])
+
+if test -z "$SWIG" ; then
+	USEPYTHON="no"      
+fi
 
 if test "$USEPYTHON" == "yes" ; then
     AC_PATH_PROG([PYTHON], [python])

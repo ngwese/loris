@@ -1,6 +1,6 @@
 Loris -- History of visible changes.
 
-Loris is Copyright (c) 1999-2006 by Kelly Fitz and Lippold Haken 
+Loris is Copyright (c) 1999-2007 by Kelly Fitz and Lippold Haken 
 <loris@cerlsoundgroup.org>.
 See the end for copying conditions.
 
@@ -11,6 +11,19 @@ changes since 1.4 release:
 
 - fixed typos in AiffFile.h that prevented compiling on 
 some systems.
+
+- added option in Channelizer to use amplitude weighting
+in the computation of the apropriate channel for a Partial.
+
+- added Channelizer members for computing channel center
+frequencies and channel numbers corresponding to a
+specified frequency.
+
+- improved accuracy of stretched harmonic channelization.
+
+- improved fundamental estimation algorithm to use estimator
+confidence level to determine the validity of f0 estimates
+(used in FrequencyReference and Analyzer).
 
 -------------------------------------------------------
 changes since 1.3 release:

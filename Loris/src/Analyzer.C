@@ -3,7 +3,7 @@
  * manipulation, and synthesis of digitized sounds using the Reassigned 
  * Bandwidth-Enhanced Additive Sound Model.
  *
- * Loris is Copyright (c) 1999-2006 by Kelly Fitz and Lippold Haken
+ * Loris is Copyright (c) 1999-2007 by Kelly Fitz and Lippold Haken
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -531,7 +531,7 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
         while ( winMiddle < bufEnd )
         {
             //  compute the time of this analysis frame:
-            double currentFrameTime = long(winMiddle - bufBegin) / srate;
+            const double currentFrameTime = long(winMiddle - bufBegin) / srate;
             
             //  compute reassigned spectrum:
             //  sampsBegin is the position of the first sample to be transformed,
@@ -544,9 +544,9 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
              
             //  extract peaks from the spectrum, thin and 
             //  fade quiet peaks out over 10 dB:
-            #define FADE 10.
+            const double Fade = 10.0;
             Peaks & peaks = selector.extractPeaks( spectrum, m_freqFloor, m_cropTime ); 
-            Peaks::iterator rejected = selector.thinPeaks( m_ampFloor, FADE, currentFrameTime );
+            Peaks::iterator rejected = selector.thinPeaks( m_ampFloor, Fade, currentFrameTime );
 
             if ( associateBandwidth() )
             {
