@@ -37,6 +37,7 @@
 #include "LinearEnvelope.h"
 #include "Partial.h"
 #include "PartialList.h"
+#include "SpectralPeaks.h"
 
 //  begin namespace
 namespace Loris {
@@ -424,6 +425,17 @@ private:
     //! builder object for constructing an amplitude
     //! estimate during analysis
     std::auto_ptr< LinearEnvelopeBuilder > mAmpEnvBuilder;
+
+//  -- private helper functions --
+
+	//	Reject peaks that are too close in frequency to a louder peak that is
+	//	being retained, and peaks that are too quiet. Peaks that are retained,
+	//	but are quiet enough to be in the specified fadeRange should be faded.
+	//	
+	//	Rejected peaks are placed at the end of the peak collection.
+	//	Return the first position in the collection containing a rejected peak,
+	//	or the end of the collection if no peaks are rejected.
+	Peaks::iterator thinPeaks( Peaks & peaks, double frameTime  );
                 
 };  //  end of class Analyzer
 

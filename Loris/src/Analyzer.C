@@ -542,11 +542,9 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
             spectrum.transform( sampsBegin, winMiddle, sampsEnd );
             
              
-            //  extract peaks from the spectrum, thin and 
-            //  fade quiet peaks out over 10 dB:
-            const double Fade = 10.0;
-            Peaks & peaks = selector.extractPeaks( spectrum, m_freqFloor, m_cropTime ); 
-            Peaks::iterator rejected = selector.thinPeaks( m_ampFloor, Fade, currentFrameTime );
+            //  extract peaks from the spectrum, and thin
+            Peaks peaks = selector.selectPeaks( spectrum, m_freqFloor, m_cropTime ); 
+			Peaks::iterator rejected = thinPeaks( peaks, currentFrameTime );
 
             if ( associateBandwidth() )
             {
@@ -554,6 +552,7 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
             }
             
             //  remove rejected Breakpoints:
+            //	(should to this in thinPeaks)
             peaks.erase( rejected, peaks.end() );
             
             //  estimate the amplitude in this frame:
@@ -1079,5 +1078,144 @@ const LinearEnvelope & Analyzer::ampEnv( void ) const
     */
     return mAmpEnv; 
 }
+
+// -- private helpers --
+
+// ---------------------------------------------------------------------------
+//	sort_peaks_greater_amplitude
+// ---------------------------------------------------------------------------
+//	predicate used for sorting peaks in order of decreasing amplitude:
+static bool sort_peaks_greater_amplitude( const Peaks::value_type & lhs, 
+										  const Peaks::value_type & rhs )
+{ 
+	return lhs.second.amplitude() > rhs.second.amplitude(); 
+}
+
+// ---------------------------------------------------------------------------
+//	can_mask
+// ---------------------------------------------------------------------------
+//	functor used for identying peaks that are too close
+//	in frequency to another louder peak:
+struct can_mask
+{
+	//	masking occurs if any (louder) peak falls
+	//	in the frequency range delimited by fmin and fmax:
+	bool operator()( const Peaks::value_type & v )  const
+	{ 
+		return	( v.second.frequency() > _fmin ) && 
+				( v.second.frequency() < _fmax ); 
+	}
+		
+	//	constructor:
+	can_mask( double x, double y ) : 
+		_fmin( x ), _fmax( y ) 
+		{ if (x>y) std::swap(x,y); }
+		
+	//	bounds:
+private:
+	double _fmin, _fmax;
+};
+
+// ---------------------------------------------------------------------------
+//	negative_time
+// ---------------------------------------------------------------------------
+//	functor used to identify peaks that have reassigned times 
+//	before 0:
+struct negative_time
+{
+	//	negative times occur when the reassigned time
+	// 	plus the current frame time is less than 0:
+	bool operator()( const Peaks::value_type & v )  const
+	{ 
+		return 0 > ( v.first + _frameTime );
+	}
+		
+	//	constructor:
+	negative_time( double t ) : 
+		_frameTime( t ) {}
+		
+	//	bounds:
+private:
+	double _frameTime;
+	
+};
+
+
+// ---------------------------------------------------------------------------
+//	thinPeaks
+// ---------------------------------------------------------------------------
+//	Reject peaks that are too quiet (low amplitude). Peaks that are retained,
+//	but are quiet enough to be in the specified fadeRange should be faded.
+//	Peaks having negative times are also rejected.
+//
+//	This is exactly the same as the basic peak selection strategy, there
+//	is no tracking here.
+//	
+//	Rejected peaks are placed at the end of the peak collection.
+//	Return the first position in the collection containing a rejected peak,
+//	or the end of the collection if no peaks are rejected.
+//
+//	This used to be part of SpectralPeakSelector, but it really had no place
+//	there. It _should_ remove the rejected peaks, but for now, those are needed
+//	by the bandwidth association strategy.
+//
+Peaks::iterator 
+Analyzer::thinPeaks( Peaks & peaks, double frameTime  )
+{
+	const double ampFloordB = m_ampFloor;
+
+	//  fade quiet peaks out over 10 dB:
+	const double fadeRangedB = 10.0;
+
+	//	compute absolute magnitude thresholds:
+	const double threshold = std::pow( 10., 0.05 * ampFloordB );
+	const double beginFade = std::pow( 10., 0.05 * (ampFloordB+fadeRangedB) );
+
+	//	louder peaks are preferred, so consider them 
+	//	in order of louder magnitude:
+	std::sort( peaks.begin(), peaks.end(), sort_peaks_greater_amplitude );
+	
+	Peaks::iterator it = peaks.begin();
+	Peaks::iterator beginRejected = it;
+	Peaks::iterator bogusTimes = 
+		std::remove_if( peaks.begin(), peaks.end(), negative_time( frameTime ) );
+		
+	while ( it != bogusTimes ) 
+	{
+		Breakpoint & bp = it->second;
+		
+		//	keep this peak if it is loud enough and not
+		//	 too near in frequency to a louder one:
+		double lower = bp.frequency() - m_freqResolution;
+		double upper = bp.frequency() + m_freqResolution;
+		if ( bp.amplitude() > threshold &&
+			 beginRejected == std::find_if( peaks.begin(), beginRejected, can_mask(lower, upper) ) )
+		{
+			//	this peak is a keeper, fade its
+			//	amplitude if it is too quiet:
+			if ( bp.amplitude() < beginFade )
+			{
+				double alpha = (beginFade - bp.amplitude())/(beginFade - threshold);
+				bp.setAmplitude( bp.amplitude() * (1. - alpha) );
+			}
+			
+			//	keep retained peaks at the front of the collection:
+			if ( it != beginRejected )
+			{
+				std::swap( *it, *beginRejected );
+			}
+			++beginRejected;
+		}
+		++it;
+	}
+	
+	debugger << "thinPeaks retained " << std::distance( peaks.begin(), beginRejected ) << endl;
+
+	//  remove rejected Breakpoints:
+	//peaks.erase( beginRejected, peaks.end() );
+	
+	return beginRejected;
+}
+
 
 }   //  end of namespace Loris

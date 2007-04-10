@@ -34,19 +34,17 @@
  *
  */
  
-#include "Partial.h"
 #include "SpectralPeaks.h"
 
 //	begin namespace
 namespace Loris {
 
-class Envelope;
 class ReassignedSpectrum;
 
 // ---------------------------------------------------------------------------
 //	class SpectralPeakSelector
 //
-//	A class representing the process of selecting and thinning
+//	A class representing the process of selecting 
 //	peaks (ridges) on a reassigned time-frequency surface.
 //
 class SpectralPeakSelector
@@ -59,24 +57,11 @@ public:
 	//	Collect and return magnitude peaks in the lower half of the spectrum, 
 	//	ignoring those having frequencies below the specified minimum, and
 	//	those having large time corrections.
-	Peaks & extractPeaks( ReassignedSpectrum & spectrum, 
-						  double minFrequency, double maxTimeOffset );
-						  
-	//	Reject peaks that are too close in frequency to a louder peak that is
-	//	being retained, and peaks that are too quiet. Peaks that are retained,
-	//	but are quiet enough to be in the specified fadeRange should be faded.
-	//	
-	//	Rejected peaks are placed at the end of the peak collection.
-	//	Return the first position in the collection containing a rejected peak,
-	//	or the end of the collection if no peaks are rejected.
-	Peaks::iterator thinPeaks( double ampFloordB, double fadeRangedB, double frameTime );
-
-	//	peak access:
-	Peaks & peaks( void ) { return peaks_; }
+	Peaks selectPeaks( ReassignedSpectrum & spectrum, 
+					   double minFrequency, double maxTimeOffset );
 	
 // --- implementation ---
 private:
-	Peaks peaks_;	//	collect peaks here
 	
 	double freqResolution;
 	double sampleRate;

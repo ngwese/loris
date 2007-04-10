@@ -36,6 +36,8 @@
 	#include "config.h"
 #endif
 
+#include "SpectralPeakSelector.h"
+
 #include <algorithm>
 #include <cmath>
 #include <utility>
@@ -44,9 +46,8 @@
 #include "Breakpoint.h"
 #include "Envelope.h"
 #include "Notifier.h"
-#include "Partial.h"	//	yuk, just for label type
+// #include "Partial.h"	//	yuk, just for label type
 #include "ReassignedSpectrum.h"
-#include "SpectralPeakSelector.h"
 
 // define this to use local minima in frequency
 // reassignment to detect "peaks", otherwise 
@@ -77,10 +78,10 @@ SpectralPeakSelector::SpectralPeakSelector( double srate, double res ) :
 //	ignoring those having frequencies below the specified minimum, and
 //	those having large time corrections.
 //
-Peaks & 
-SpectralPeakSelector::extractPeaks( ReassignedSpectrum & spectrum, 
-									double minFrequency,
-									double maxTimeOffset )
+Peaks
+SpectralPeakSelector::selectPeaks( ReassignedSpectrum & spectrum, 
+								   double minFrequency,
+								   double maxTimeOffset )
 {
 	using namespace std; // for abs and fabs
 
@@ -89,7 +90,7 @@ SpectralPeakSelector::extractPeaks( ReassignedSpectrum & spectrum,
 	const double minFreqSample = minFrequency / sampsToHz;
 	const double maxCorrectionSamples = maxTimeOffset * sampleRate;
 	
-	peaks_.clear();
+	Peaks peaks;
 	
 	int start_j = 1, end_j = (spectrum.size() / 2) - 2;
 	
@@ -141,7 +142,7 @@ SpectralPeakSelector::extractPeaks( ReassignedSpectrum & spectrum,
     			//	be able to compute it later:
     			double time = timeCorrectionSamps * oneOverSR;
     			Breakpoint bp ( freq, mag, bw, phase );
-    			peaks_.push_back( std::make_pair( time, bp ) );
+    			peaks.push_back( std::make_pair( time, bp ) );
 			}	        
 	    }
 	    fsample = next_fsample;
@@ -174,153 +175,17 @@ SpectralPeakSelector::extractPeaks( ReassignedSpectrum & spectrum,
 			//	be able to compute it later:
 			double time = timeCorrectionSamps * oneOverSR;
 			Breakpoint bp ( fsample * sampsToHz, mag, bw, phase );
-			peaks_.push_back( std::make_pair( time, bp ) );
+			peaks.push_back( std::make_pair( time, bp ) );
 						
 		}	//	end if itsa peak
 		
 #endif
 	}
 	
-	debugger << "extractPeaks found " << peaks_.size() << endl;
+	debugger << "extractPeaks found " << peaks.size() << endl;
 		
-	return peaks_;
+	return peaks;
 }
 
-// ---------------------------------------------------------------------------
-//	sort_peaks_greater_amplitude
-// ---------------------------------------------------------------------------
-//	predicate used for sorting peaks in order of decreasing amplitude:
-static bool sort_peaks_greater_amplitude( const Peaks::value_type & lhs, 
-										  const Peaks::value_type & rhs )
-{ 
-	return lhs.second.amplitude() > rhs.second.amplitude(); 
-}
-
-// ---------------------------------------------------------------------------
-//	can_mask
-// ---------------------------------------------------------------------------
-//	functor used for identying peaks that are too close
-//	in frequency to another louder peak:
-struct can_mask
-{
-	//	masking occurs if any (louder) peak falls
-	//	in the frequency range delimited by fmin and fmax:
-	bool operator()( const Peaks::value_type & v )  const
-	{ 
-		return	( v.second.frequency() > _fmin ) && 
-				( v.second.frequency() < _fmax ); 
-	}
-		
-	//	constructor:
-	can_mask( double x, double y ) : 
-		_fmin( x ), _fmax( y ) 
-		{ if (x>y) std::swap(x,y); }
-		
-	//	bounds:
-private:
-	double _fmin, _fmax;
-};
-
-// ---------------------------------------------------------------------------
-//	negative_time
-// ---------------------------------------------------------------------------
-//	functor used to identify peaks that have reassigned times 
-//	before 0:
-struct negative_time
-{
-	//	negative times occur when the reassigned time
-	// 	plus the current frame time is less than 0:
-	bool operator()( const Peaks::value_type & v )  const
-	{ 
-		return 0 > ( v.first + _frameTime );
-	}
-		
-	//	constructor:
-	negative_time( double t ) : 
-		_frameTime( t ) {}
-		
-	//	bounds:
-private:
-	double _frameTime;
-	
-};
-
-// ---------------------------------------------------------------------------
-//	thinPeaks
-// ---------------------------------------------------------------------------
-//	Reject peaks that are too quiet (low amplitude). Peaks that are retained,
-//	but are quiet enough to be in the specified fadeRange should be faded.
-//	Peaks having negative times are also rejected.
-//
-//	This is exactly the same as the basic peak selection strategy, there
-//	is no tracking here.
-//	
-//	Rejected peaks are placed at the end of the peak collection.
-//	Return the first position in the collection containing a rejected peak,
-//	or the end of the collection if no peaks are rejected.
-//
-Peaks::iterator 
-SpectralPeakSelector::thinPeaks( double ampFloordB, double fadeRangedB, 
-								 double frameTime  )
-{
-	//	compute absolute magnitude thresholds:
-	const double threshold = std::pow( 10., 0.05 * ampFloordB );
-	const double beginFade = std::pow( 10., 0.05 * (ampFloordB+fadeRangedB) );
-
-	//	louder peaks are preferred, so consider them 
-	//	in order of louder magnitude:
-	std::sort( peaks_.begin(), peaks_.end(), sort_peaks_greater_amplitude );
-	
-	Peaks::iterator it = peaks_.begin();
-	Peaks::iterator beginRejected = it;
-	Peaks::iterator bogusTimes = 
-		std::remove_if( peaks_.begin(), peaks_.end(), negative_time( frameTime ) );
-		
-	while ( it != bogusTimes ) 
-	{
-		Breakpoint & bp = it->second;
-		
-		//	keep this peak if it is loud enough and not
-		//	 too near in frequency to a louder one:
-		double lower = bp.frequency() - freqResolution;
-		double upper = bp.frequency() + freqResolution;
-		if ( bp.amplitude() > threshold &&
-			 beginRejected == std::find_if( peaks_.begin(), beginRejected, can_mask(lower, upper) ) )
-		{
-			//	this peak is a keeper, fade its
-			//	amplitude if it is too quiet:
-			if ( bp.amplitude() < beginFade )
-			{
-				double alpha = (beginFade - bp.amplitude())/(beginFade - threshold);
-				bp.setAmplitude( bp.amplitude() * (1. - alpha) );
-			}
-			
-			//	keep retained peaks at the front of the collection:
-			if ( it != beginRejected )
-			{
-				std::swap( *it, *beginRejected );
-			}
-			++beginRejected;
-		}
-		++it;
-	}
-	
-	debugger << "thinPeaks retained " << std::distance( peaks_.begin(), beginRejected ) << endl;
-	/*
-	it = peaks_.begin();
-	while ( it != beginRejected )
-	{
-		debugger << it->second.frequency() << endl;
-		++it;
-	}
-	debugger << "thinPeaks rejected " << std::distance( beginRejected, peaks_.end() ) << endl;
-	while ( it != peaks_.end() )
-	{
-		debugger << it->second.frequency() << endl;
-		++it;
-	}
-	*/
-	return beginRejected;
-}
 
 }	//	end of namespace Loris
