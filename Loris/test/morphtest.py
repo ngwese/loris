@@ -21,10 +21,10 @@
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #  
 #  
-#	morphtest.py
+#   morphtest.py
 #
-#	Very simple Loris instrument tone morphing demonstration using a
-#	dynamically-loaded Python module.
+#   Very simple Loris instrument tone morphing demonstration using a
+#   dynamically-loaded Python module.
 #
 #   Kelly Fitz, 13 Dec 2000
 #   loris@cerlsoundgroup.org
@@ -45,14 +45,14 @@ import loris, os, time
 
 path = os.getcwd()
 print '(in %s)' % path
-try:	
-	path = os.environ['srcdir']
+try:    
+    path = os.environ['srcdir']
 except:
-	path = os.path.join(os.pardir, 'test')
+    path = os.path.join(os.pardir, 'test')
 print '(looking for sources in %s)' % path
 
 #
-#	analyze clarinet tone
+#   analyze clarinet tone
 #
 print 'analyzing clarinet 4G# (%s)' % time.ctime(time.time())
 a = loris.Analyzer( 390 )
@@ -70,12 +70,12 @@ loris.exportSdif( 'clarinet.pytest.sdif', clar )
 clar = loris.importSdif( 'clarinet.pytest.sdif' )
 
 try:
-	print 'making a bogus attempt at writing an Spc file'
-	print 'WARNING: this will fail because the Partials are unchannelized'
-	loris.exportSpc( 'bad_spc_file.pytest.spc', clar, 90 )
+    print 'making a bogus attempt at writing an Spc file'
+    print 'WARNING: this will fail because the Partials are unchannelized'
+    loris.exportSpc( 'bad_spc_file.pytest.spc', clar, 90 )
 except:
-	import sys
-	print 'caught:', sys.exc_type, sys.exc_value
+    import sys
+    print 'caught:', sys.exc_type, sys.exc_value
 
 loris.channelize( clar, loris.createFreqReference( clar, 415*.8, 415*1.2 ), 1 )
 loris.distill( clar )
@@ -87,30 +87,30 @@ f = 0
 n = 0
 import sys
 if float(sys.version[:3]) >= 2.2:
-	p = clar.first()
-	for pos in p:
-		f = f + pos.frequency()
-		n = n + 1
+    p = clar.first()
+    for pos in p:
+        f = f + pos.frequency()
+        n = n + 1
 else:
-	p = clar.iterator().next()
-	it = p.iterator()
-	while not it.atEnd():
-		f = f + it.next().frequency()
-		n = n + 1
-		
+    p = clar.iterator().next()
+    it = p.iterator()
+    while not it.atEnd():
+        f = f + it.next().frequency()
+        n = n + 1
+        
 print "avg frequency of first distilled clarinet partial is", f/n
 
 print 'shifting pitch of clarinet'
-loris.shiftPitch( clar, loris.BreakpointEnvelope( -600 ) )
+loris.shiftPitch( clar, loris.LinearEnvelope( -600 ) )
 
 # check clarinet synthesis:
 loris.exportAiff( 'clarOK.pytest.aiff', loris.synthesize( clar, samplerate ), samplerate, 16 )
 
 #
-#	analyze flute tone (reuse Analyzer)
+#   analyze flute tone (reuse Analyzer)
 #
 print 'analyzing flute 4D (%s)' % time.ctime(time.time())
-a = loris.Analyzer( 270 )		# reconfigure Analyzer
+a = loris.Analyzer( 270 )       # reconfigure Analyzer
 a.setFreqDrift( 30 )
 v = loris.AiffFile( os.path.join(path, 'flute.aiff') ).samples()
 flut = a.analyze( v, samplerate )
@@ -128,7 +128,7 @@ fund = loris.copyLabeled( flut, 1 );
 print "avg frequency of first distilled flute partial is", loris.weightedAvgFrequency( fund.first() )
 
 #
-#	perform temporal dilation
+#   perform temporal dilation
 #
 flute_times = [0.4, 1.]
 clar_times = [0.2, 1.]
@@ -141,15 +141,15 @@ print 'clarinet times:', clar_times
 loris.dilate( clar, clar_times, tgt_times )
 
 #
-#	perform morph
+#   perform morph
 #
 print 'morphing flute and clarinet (%s)' % time.ctime(time.time())
-mf = loris.BreakpointEnvelope()
+mf = loris.LinearEnvelope()
 mf.insertBreakpoint( 0.6, 0 )
 mf.insertBreakpoint( 2, 1 )
 m = loris.morph( clar, flut, mf, mf, mf )
 loris.exportAiff( 'morph.pytest.aiff', 
-				  loris.synthesize( m, samplerate ), 
-				  samplerate, 16 )
+                  loris.synthesize( m, samplerate ), 
+                  samplerate, 16 )
 
 print 'done (%s)' % time.ctime(time.time())

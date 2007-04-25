@@ -43,8 +43,9 @@
  */
 
 %include exception.i 
-%include "std_vector.i"
-%include "std_list.i"
+%include typemaps.i 
+%include std_vector.i
+%include std_list.i
 
 // ----------------------------------------------------------------
 //		docstring for the Loris module (Python)
@@ -78,7 +79,6 @@ For more information, please visit
 	
 	#include <AiffFile.h>
 	#include <Analyzer.h>
-	#include <BreakpointEnvelope.h>
 	#include <Channelizer.h>
 	#include <Collator.h>
 	#include <Distiller.h>
@@ -316,16 +316,17 @@ PartialList containing at most one Partial per label. Unlabeled
 (zero-labeled) Partials are left unmodified at the end of the 
 distilled Partials. Optionally specify the fade and gap times, 
 defaults are 1ms and 0.1ms.
-") moo_distill;
+") fake_distill;
 
 //void distill( PartialList * partials );
 
-%rename( distill ) moo_distill;
+%rename( distill ) fake_distill;
 
 %inline
 %{
-	void moo_distill( PartialList * partials, 
-				  double fadeTime = 0.001, double gapTime = 0.0001 )
+	void fake_distill( PartialList * partials, 
+				      double fadeTime = 0.001, 
+				      double gapTime = 0.0001 )
 	{
 		Distiller d( fadeTime, gapTime );
 		d.distill( *partials );
@@ -346,16 +347,16 @@ If a PartialList is specified, the Partials are rendered at the
 specified sample rate and then exported.
 
 Only mono files can be exported, the last argument is ignored, 
-and is included only for backward compatability") moo_exportAiff;
+and is included only for backward compatability") fake_exportAiff;
 
-%rename( exportAiff ) moo_exportAiff;
+%rename( exportAiff ) fake_exportAiff;
 
 // Need this junk, because SWIG changed the way it handles
 // default arguments when writing C++ wrappers.
 //
 %inline 
 %{
-	void moo_exportAiff( const char * path, const std::vector< double > & samples,
+	void fake_exportAiff( const char * path, const std::vector< double > & samples,
 					     double samplerate = 44100, int bitsPerSamp = 16, 
 					     int nchansignored = 1 )
 	{
@@ -363,25 +364,25 @@ and is included only for backward compatability") moo_exportAiff;
 					samplerate, bitsPerSamp );
 	}
 	/*
-	void moo_exportAiff( const char * path, const std::vector< double > & samples,
+	void fake_exportAiff( const char * path, const std::vector< double > & samples,
 					     double samplerate, int bitsPerSamp )
 	{
 		exportAiff( path, &(samples.front()), samples.size(), 
 					samplerate, bitsPerSamp );
 	}
-	void moo_exportAiff( const char * path, const std::vector< double > & samples,
+	void fake_exportAiff( const char * path, const std::vector< double > & samples,
 					     double samplerate )
 	{
 		exportAiff( path, &(samples.front()), samples.size(), 
 					samplerate, 16 );
 	}
-	void moo_exportAiff( const char * path, const std::vector< double > & samples )
+	void fake_exportAiff( const char * path, const std::vector< double > & samples )
 	{
 		exportAiff( path, &(samples.front()), samples.size(), 
 					44100, 16 );
 	}
 	*/
-	void moo_exportAiff( const char * path, PartialList * partials,
+	void fake_exportAiff( const char * path, PartialList * partials,
 					     double samplerate = 44100, int bitsPerSamp = 16 )
 	{
 	    AiffFile fout( partials->begin(), partials->end(), samplerate );
@@ -851,15 +852,15 @@ void shiftTime( PartialList * partials, double offset );
 (except zero). If any two partials with same label
 overlap in time, keep only the longer of the two.
 Set the label of the shorter duration partial to zero.
-Optionally specify the fade time, default is 1ms.") moo_sift;
+Optionally specify the fade time, default is 1ms.") fake_sift;
 
 //void sift( PartialList * partials );
 
-%rename( sift ) moo_sift;
+%rename( sift ) fake_sift;
 
 %inline
 %{
-	void moo_sift( PartialList * partials, 
+	void fake_sift( PartialList * partials, 
 				  double fadeTime = 0.001 )
 	{
 		Sieve s( fadeTime );
@@ -1548,41 +1549,45 @@ at the specified time.") valueAt;
 	 
 };	//	end of class LinearEnvelope
 
-
-%feature("docstring",
-"BreakpointEnvelope is deprecated, use LinearEnvelope instead.") BreakpointEnvelope;
-
-// BreakpointEnvelope is a typedef for LinearEnvelope, 
-// not a derived class, but I could not make SWIG
-// give two names to the same type, even using SWIG's
-// %typedef. BreakpointEnvelopes could not be passed
-// as arguments to functions expecting LinearEnvelopes.
-// This fake inheritance achieves what I want: two 
-// interchangeable types.
-class BreakpointEnvelope : public LinearEnvelope
-{
-public:
-	BreakpointEnvelope( void );
-	BreakpointEnvelope( const BreakpointEnvelope & );
-	BreakpointEnvelope( double initialValue );
-	~BreakpointEnvelope( void );
-	void insertBreakpoint( double time, double value );
-	double valueAt( double x ) const;		
-};
-
-
-%feature("docstring",
-"BreakpointEnvelopeWithValue is deprecated, use LinearEnvelope instead.") 
-BreakpointEnvelopeWithValue;
-
-%inline 
-%{
-	LinearEnvelope * 
-	BreakpointEnvelopeWithValue( double initialValue )
+#if 0
+	//	remove this stuff if possible, it is causing SWIG problems
+	
+	%feature("docstring",
+	"BreakpointEnvelope is deprecated, use LinearEnvelope instead.") BreakpointEnvelope;
+	
+	// BreakpointEnvelope is a typedef for LinearEnvelope, 
+	// not a derived class, but I could not make SWIG
+	// give two names to the same type, even using SWIG's
+	// %typedef. BreakpointEnvelopes could not be passed
+	// as arguments to functions expecting LinearEnvelopes.
+	// This fake inheritance achieves what I want: two 
+	// interchangeable types.
+	class BreakpointEnvelope : public LinearEnvelope
 	{
-		return new LinearEnvelope( initialValue );
-	}
-%}
+	public:
+		BreakpointEnvelope( void );
+		BreakpointEnvelope( const BreakpointEnvelope & );
+		BreakpointEnvelope( double initialValue );
+		~BreakpointEnvelope( void );
+		void insertBreakpoint( double time, double value );
+		double valueAt( double x ) const;		
+	};
+	
+	
+	%feature("docstring",
+	"BreakpointEnvelopeWithValue is deprecated, use LinearEnvelope instead.") 
+	BreakpointEnvelopeWithValue;
+	
+	%inline 
+	%{
+		LinearEnvelope * 
+		BreakpointEnvelopeWithValue( double initialValue )
+		{
+			return new LinearEnvelope( initialValue );
+		}
+	%}
+
+#endif
 
 
 // ---------------------------------------------------------------------------
