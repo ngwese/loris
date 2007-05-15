@@ -62,7 +62,7 @@ AC_PATH_PROG([SWIG], [swig])
 
 AM_CONDITIONAL([HAVE_SWIG], [test -n "$SWIG"])
 
-if test -n "$SWIG" ; then
+if test -z "$SWIG" ; then
         AC_MSG_WARN([Cannot find SWIG. Python module cannot be built.])
 fi
 
