@@ -715,13 +715,14 @@ void resample( PartialList * partials, double interval );
 
  
 %feature("docstring",
-"Bad old name for scaleAmplitude.");
+"Bad old name for scaleAmplitude.") scaleAmp;
 
 void scaleAmp( PartialList * partials, LinearEnvelope * ampEnv );
 
 %feature("docstring",
 "Scale the amplitude of the Partials in a PartialList according 
-to an envelope representing a time-varying amplitude scale value.");
+to an envelope representing a time-varying amplitude scale value.")
+scaleAmplitude;
 
 void scaleAmplitude( PartialList * partials, LinearEnvelope * ampEnv );
 				 

@@ -9,10 +9,11 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 PYTHON_WRAPPER = loris_python_wrap.C
-SWIG_INTERFACE = loris.i
+SWIG_INTERFACE = $(top_srcdir)/scripting/loris.i
+ALL_IFILES = $(SWIG_INTERFACE) $(top_srcdir)/scripting/lorisPartialList.i
 
 
-EXTRA_DIST = loris.i lorisPartialList.i 
+EXTRA_DIST = $(ALL_IFILES) 
 
 CLEANFILES = loris.py loris.pyo loris.pyc $(PYTHON_WRAPPER)
 MAINTAINERCLEANFILES = Makefile.in
@@ -27,7 +28,7 @@ pythonsitepkgdir = $(pyexecdir)
 pyexec_PYTHON = loris.py
 
 pythonsitepkg_LTLIBRARIES = _loris.la
-_loris_la_SOURCES = $(PYTHON_WRAPPER)
+nodist__loris_la_SOURCES = $(PYTHON_WRAPPER)
 _loris_la_CXXFLAGS = -I$(top_srcdir)/src $(PYFLAGS) 
 _loris_la_LIBADD = $(top_builddir)/src/libloris.la 
 _loris_la_LDFLAGS = -module -avoid-version 
@@ -41,5 +42,6 @@ endif
 
 wrapper: $(PYTHON_WRAPPER)
 
-$(PYTHON_WRAPPER): loris.i lorisPartialList.i
+
+$(PYTHON_WRAPPER): $(ALL_IFILES)
 	$(SWIG) -python -c++ -module loris -o $(PYTHON_WRAPPER) $(SWIG_INTERFACE)
