@@ -90,11 +90,11 @@ static Analyzer * ptr_instance = 0;
 	difference between Partials). All other Analyzer parameters 	
 	are computed from the specified frequency resolution. 
    
-   Construct the Analyzer instance if necessary.
+  	Construct the Analyzer instance if necessary.
    
 	In the procedural interface, there is only one Analyzer. 
-   It must be configured by calling analyzer_configure before
-   any of the other analyzer operations can be performed.   
+   	It must be configured by calling analyzer_configure before
+   	any of the other analyzer operations can be performed.   
  */
 extern "C"
 void analyzer_configure( double resolution, double windowWidth )
@@ -133,18 +133,18 @@ void analyzer_configure( double resolution, double windowWidth )
 	sample rate (in Hz) and append the extracted Partials to the 
 	given PartialList. 							
    
-   analyzer_configure must be called before any other analyzer 
-   function.
+   	analyzer_configure must be called before any other analyzer 
+   	function.
  */
 extern "C"
 void analyze( const double * buffer, unsigned int bufferSize, 
               double srate, PartialList * partials )
 {
-   if ( 0 == ptr_instance )
-   {
-      handleException( "analyzer_configure must be called before any other analyzer function." );
-      return;
-   }
+	if ( 0 == ptr_instance )
+	{
+		handleException( "analyzer_configure must be called before any other analyzer function." );
+		return;
+	}
 
 	try 
 	{
@@ -183,17 +183,17 @@ void analyze( const double * buffer, unsigned int bufferSize,
 /*	Return the frequency resolution (minimum instantaneous frequency  		
 	difference between Partials) for this Analyzer. 	
 
-   analyzer_configure must be called before any other analyzer 
-   function.
+	analyzer_configure must be called before any other analyzer 
+	function.
  */
 extern "C"
 double analyzer_getFreqResolution( void )
 {
-   if ( 0 == ptr_instance )
-   {
-      handleException( "analyzer_configure must be called before any other analyzer function." );
-      return 0;
-   }
+	if ( 0 == ptr_instance )
+	{
+		handleException( "analyzer_configure must be called before any other analyzer function." );
+		return 0;
+	}
 
 	try  
 	{
@@ -221,17 +221,17 @@ double analyzer_getFreqResolution( void )
 	difference between Partials) for this Analyzer. (Does not cause 	
 	other parameters to be recomputed.) 									
 
-   analyzer_configure must be called before any other analyzer 
-   function.
+	analyzer_configure must be called before any other analyzer 
+	function.
  */
 extern "C"
 void analyzer_setFreqResolution( double x )
 {
-   if ( 0 == ptr_instance )
-   {
-      handleException( "analyzer_configure must be called before any other analyzer function." );
-      return;
-   }
+	if ( 0 == ptr_instance )
+	{
+		handleException( "analyzer_configure must be called before any other analyzer function." );
+		return;
+	}
 
 	try  
 	{
@@ -257,17 +257,17 @@ void analyzer_setFreqResolution( double x )
 /*	Return the amplitude floor (lowest detected spectral amplitude),  			
 	in (negative) dB, for this Analyzer. 				
 
-   analyzer_configure must be called before any other analyzer 
-   function.
+	analyzer_configure must be called before any other analyzer 
+	function.
  */
 extern "C"
 double analyzer_getAmpFloor( void )
 {
-   if ( 0 == ptr_instance )
-   {
-      handleException( "analyzer_configure must be called before any other analyzer function." );
-      return 0;
-   }
+	if ( 0 == ptr_instance )
+	{
+		handleException( "analyzer_configure must be called before any other analyzer function." );
+		return 0;
+	}
 
 	try  
 	{
@@ -294,17 +294,17 @@ double analyzer_getAmpFloor( void )
 /*	Set the amplitude floor (lowest detected spectral amplitude), in  			
 	(negative) dB, for this Analyzer. 				
 
-   analyzer_configure must be called before any other analyzer 
-   function.
+	analyzer_configure must be called before any other analyzer 
+	function.
  */
 extern "C"
 void analyzer_setAmpFloor( double x )
 {
-   if ( 0 == ptr_instance )
-   {
-      handleException( "analyzer_configure must be called before any other analyzer function." );
-      return;
-   }
+	if ( 0 == ptr_instance )
+	{
+		handleException( "analyzer_configure must be called before any other analyzer function." );
+		return;
+	}
 
 	try  
 	{
@@ -330,17 +330,17 @@ void analyzer_setAmpFloor( double x )
 /*	Return the frequency-domain main lobe width (measured between 
 	zero-crossings) of the analysis window used by this Analyzer. 				
 
-   analyzer_configure must be called before any other analyzer 
-   function.
+	analyzer_configure must be called before any other analyzer 
+	function.
  */
 extern "C"
 double analyzer_getWindowWidth( void )
 {
-   if ( 0 == ptr_instance )
-   {
-      handleException( "analyzer_configure must be called before any other analyzer function." );
-      return 0;
-   }
+	if ( 0 == ptr_instance )
+	{
+		handleException( "analyzer_configure must be called before any other analyzer function." );
+		return 0;
+	}
 
 	try  
 	{
@@ -367,17 +367,17 @@ double analyzer_getWindowWidth( void )
 /*	Set the frequency-domain main lobe width (measured between 
 	zero-crossings) of the analysis window used by this Analyzer. 				
 
-   analyzer_configure must be called before any other analyzer 
-   function.
+	analyzer_configure must be called before any other analyzer 
+	function.
  */
 extern "C"
 void analyzer_setWindowWidth( double x )
 {
-   if ( 0 == ptr_instance )
-   {
-      handleException( "analyzer_configure must be called before any other analyzer function." );
-      return;
-   }
+	if ( 0 == ptr_instance )
+	{
+		handleException( "analyzer_configure must be called before any other analyzer function." );
+		return;
+	}
 
 	try  
 	{
@@ -407,17 +407,17 @@ void analyzer_setWindowWidth( double x )
 	of frequency-domain interference, but allow the window to be shorter
 	in time.
 
-   analyzer_configure must be called before any other analyzer 
-   function.
+	analyzer_configure must be called before any other analyzer 
+	function.
  */
 extern "C"
 double analyzer_getSidelobeLevel( void )
 {
-   if ( 0 == ptr_instance )
-   {
-      handleException( "analyzer_configure must be called before any other analyzer function." );
-      return 0;
-   }
+	if ( 0 == ptr_instance )
+	{
+		handleException( "analyzer_configure must be called before any other analyzer function." );
+		return 0;
+	}
 
 	try  
 	{
@@ -448,17 +448,17 @@ double analyzer_getSidelobeLevel( void )
 	of frequency-domain interference, but allow the window to be shorter
 	in time.
 
-   analyzer_configure must be called before any other analyzer 
-   function.
+	analyzer_configure must be called before any other analyzer 
+	function.
  */
 extern "C"
 void analyzer_setSidelobeLevel( double x )
 {
-   if ( 0 == ptr_instance )
-   {
-      handleException( "analyzer_configure must be called before any other analyzer function." );
-      return;
-   }
+	if ( 0 == ptr_instance )
+	{
+		handleException( "analyzer_configure must be called before any other analyzer function." );
+		return;
+	}
 
 	try  
 	{
@@ -484,17 +484,17 @@ void analyzer_setSidelobeLevel( double x )
 /*	Return the frequency floor (minimum instantaneous Partial  				
 	frequency), in Hz, for this Analyzer. 				
    
-   analyzer_configure must be called before any other analyzer 
-   function.
+	analyzer_configure must be called before any other analyzer 
+	function.
  */
 extern "C"
 double analyzer_getFreqFloor( void )
 {
-   if ( 0 == ptr_instance )
-   {
-      handleException( "analyzer_configure must be called before any other analyzer function." );
-      return 0;
-   }
+	if ( 0 == ptr_instance )
+	{
+		handleException( "analyzer_configure must be called before any other analyzer function." );
+		return 0;
+	}
 
 	try  
 	{
@@ -521,17 +521,17 @@ double analyzer_getFreqFloor( void )
 /*	Set the amplitude floor (minimum instantaneous Partial  				
 	frequency), in Hz, for this Analyzer.
    
-   analyzer_configure must be called before any other analyzer 
-   function.
+	analyzer_configure must be called before any other analyzer 
+	function.
  */
 extern "C"
 void analyzer_setFreqFloor( double x )
 {
-   if ( 0 == ptr_instance )
-   {
-      handleException( "analyzer_configure must be called before any other analyzer function." );
-      return;
-   }
+	if ( 0 == ptr_instance )
+	{
+		handleException( "analyzer_configure must be called before any other analyzer function." );
+		return;
+	}
 
 	try  
 	{
@@ -557,17 +557,17 @@ void analyzer_setFreqFloor( double x )
 /*	Return the maximum allowable frequency difference between 					
 	consecutive Breakpoints in a Partial envelope for this Analyzer. 				
    
-   analyzer_configure must be called before any other analyzer 
-   function.
+	analyzer_configure must be called before any other analyzer 
+	function.
  */
 extern "C"
 double analyzer_getFreqDrift( void )
 {
-   if ( 0 == ptr_instance )
-   {
-      handleException( "analyzer_configure must be called before any other analyzer function." );
-      return 0;
-   }
+	if ( 0 == ptr_instance )
+	{
+		handleException( "analyzer_configure must be called before any other analyzer function." );
+		return 0;
+	}
 
 	try  
 	{
@@ -594,17 +594,17 @@ double analyzer_getFreqDrift( void )
 /*	Set the maximum allowable frequency difference between 					
 	consecutive Breakpoints in a Partial envelope for this Analyzer. 				
    
-   analyzer_configure must be called before any other analyzer 
-   function.
+	analyzer_configure must be called before any other analyzer 
+	function.
  */
 extern "C"
 void analyzer_setFreqDrift( double x )
 {
-   if ( 0 == ptr_instance )
-   {
-      handleException( "analyzer_configure must be called before any other analyzer function." );
-      return;
-   }
+	if ( 0 == ptr_instance )
+	{
+		handleException( "analyzer_configure must be called before any other analyzer function." );
+		return;
+	}
 
 	try  
 	{
@@ -631,17 +631,17 @@ void analyzer_setFreqDrift( double x )
 	average density of Partial envelope Breakpoint data) for this 
 	Analyzer.
    
-   analyzer_configure must be called before any other analyzer 
-   function.
+	analyzer_configure must be called before any other analyzer 
+	function.
  */
 extern "C"
 double analyzer_getHopTime( void )
 {
-   if ( 0 == ptr_instance )
-   {
-      handleException( "analyzer_configure must be called before any other analyzer function." );
-      return 0;
-   }
+	if ( 0 == ptr_instance )
+	{
+		handleException( "analyzer_configure must be called before any other analyzer function." );
+		return 0;
+	}
 
 	try  
 	{
@@ -669,17 +669,17 @@ double analyzer_getHopTime( void )
 /*	Set the hop time (which corresponds approximately to the average
 	density of Partial envelope Breakpoint data) for this Analyzer.
    
-   analyzer_configure must be called before any other analyzer 
-   function.
+	analyzer_configure must be called before any other analyzer 
+	function.
  */
 extern "C"
 void analyzer_setHopTime( double x )
 {
-   if ( 0 == ptr_instance )
-   {
-      handleException( "analyzer_configure must be called before any other analyzer function." );
-      return;
-   }
+	if ( 0 == ptr_instance )
+	{
+		handleException( "analyzer_configure must be called before any other analyzer function." );
+		return;
+	}
 
 	try 
 	{
@@ -706,17 +706,17 @@ void analyzer_setHopTime( double x )
 	window, beyond which data points are considered "unreliable")
 	for this Analyzer.
    
-   analyzer_configure must be called before any other analyzer 
-   function.
+	analyzer_configure must be called before any other analyzer 
+	function.
  */
 extern "C"
 double analyzer_getCropTime( void )
 {
-   if ( 0 == ptr_instance )
-   {
-      handleException( "analyzer_configure must be called before any other analyzer function." );
-      return 0;
-   }
+	if ( 0 == ptr_instance )
+	{
+		handleException( "analyzer_configure must be called before any other analyzer function." );
+		return 0;
+	}
 
 	try 
 	{
@@ -745,17 +745,17 @@ double analyzer_getCropTime( void )
 	window, beyond which data points are considered "unreliable")
 	for this Analyzer.
    
-   analyzer_configure must be called before any other analyzer 
-   function.
+   	analyzer_configure must be called before any other analyzer 
+   	function.
  */
 extern "C"
 void analyzer_setCropTime( double x )
 {
-   if ( 0 == ptr_instance )
-   {
-      handleException( "analyzer_configure must be called before any other analyzer function." );
-      return;
-   }
+	if ( 0 == ptr_instance )
+	{
+		handleException( "analyzer_configure must be called before any other analyzer function." );
+		return;
+	}
 
 	try 
 	{
@@ -781,17 +781,17 @@ void analyzer_setCropTime( double x )
 /*	Return the width (in Hz) of the Bandwidth Association regions
 	used by this Analyzer.
 
-   analyzer_configure must be called before any other analyzer 
-   function.
+   	analyzer_configure must be called before any other analyzer 
+   	function.
  */
 extern "C"
 double analyzer_getBwRegionWidth( void )
 {
-   if ( 0 == ptr_instance )
-   {
-      handleException( "analyzer_configure must be called before any other analyzer function." );
-      return 0;
-   }
+	if ( 0 == ptr_instance )
+	{
+		handleException( "analyzer_configure must be called before any other analyzer function." );
+		return 0;
+	}
 
 	try 
 	{
@@ -818,17 +818,17 @@ double analyzer_getBwRegionWidth( void )
 /*	Set the width (in Hz) of the Bandwidth Association regions
 	used by this Analyzer.
 
-   analyzer_configure must be called before any other analyzer 
-   function.
+   	analyzer_configure must be called before any other analyzer 
+   	function.
  */
 extern "C"
 void analyzer_setBwRegionWidth( double x )
 {
-   if ( 0 == ptr_instance )
-   {
-      handleException( "analyzer_configure must be called before any other analyzer function." );
-      return;
-   }
+	if ( 0 == ptr_instance )
+	{
+		handleException( "analyzer_configure must be called before any other analyzer function." );
+		return;
+	}
 
 	try 
 	{
@@ -847,4 +847,165 @@ void analyzer_setBwRegionWidth( double x )
 		handleException( s.c_str() );
 	}
 }
+
+/* ---------------------------------------------------------------- */
+/*        analyzer_setStoreResidueBandwidth
+/*
+/*	Construct Partial bandwidth envelopes during analysis
+	by associating residual energy in the spectrum (after
+	peak extraction) with the selected spectral peaks that
+	are used to construct Partials. 
+	
+	regionWidth is the width (in Hz) of the bandwidth 
+	association regions used by this process, must be positive.
+
+   	analyzer_configure must be called before any other analyzer 
+   	function.
+ */
+extern "C"
+void analyzer_setStoreResidueBandwidth( double regionWidth )
+{
+	if ( 0 == ptr_instance )
+	{
+		handleException( "analyzer_configure must be called before any other analyzer function." );
+		return;
+	}
+
+	try 
+	{
+		ptr_instance->storeResidueBandwidth( regionWidth );
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in analyzer_setStoreResidueBandwidth(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in analyzer_setStoreResidueBandwidth(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+
+/* ---------------------------------------------------------------- */
+/*        analyzer_setStoreConvergenceBandwidth
+/*
+/*	Construct Partial bandwidth envelopes during analysis
+	by storing the mixed derivative of short-time phase, 
+	scaled and shifted so that a value of 0 corresponds
+	to a pure sinusoid, and a value of 1 corresponds to a
+	bandwidth-enhanced sinusoid with maximal energy spread.
+	
+	tolerancePct is the amount of range over which the 
+	mixed derivative indicator should be allowed to drift away 
+	from a pure sinusoid before saturating. This range is mapped
+	to bandwidth values on the range [0,1]. Must be positive and 
+	not greater than 100%.
+
+   	analyzer_configure must be called before any other analyzer 
+   	function.
+ */
+extern "C"
+void analyzer_setStoreConvergenceBandwidth( double tolerancePct )
+{
+	if ( 0 == ptr_instance )
+	{
+		handleException( "analyzer_configure must be called before any other analyzer function." );
+		return;
+	}
+
+	try 
+	{
+		ptr_instance->storeConvergenceBandwidth( tolerancePct );
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in analyzer_setStoreConvergenceBandwidth(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in analyzer_setStoreConvergenceBandwidth(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+
+/* ---------------------------------------------------------------- */
+/*        analyzer_setStoreNoBandwidth
+/*
+/*	Disable bandwidth envelope construction. Bandwidth 
+	will be zero for all Breakpoints in all Partials.
+
+   	analyzer_configure must be called before any other analyzer 
+   	function.
+ */
+extern "C"
+void analyzer_setStoreNoBandwidth( void )
+{
+	if ( 0 == ptr_instance )
+	{
+		handleException( "analyzer_configure must be called before any other analyzer function." );
+		return;
+	}
+
+	try 
+	{
+		ptr_instance->storeNoBandwidth();
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in analyzer_setStoreNoBandwidth(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in analyzer_setStoreNoBandwidth(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+
+/* ---------------------------------------------------------------- */
+/*        analyzer_getBwConvergenceTolerance
+/*
+/*	Return the mixed derivative convergence tolerance (percent)
+	only if the convergence indicator is used to compute
+	bandwidth envelopes. Return zero if the spectral residue
+	method is used or if no bandwidth is computed.
+ */
+extern "C"
+double analyzer_getBwConvergenceTolerance( void )
+{
+	if ( 0 == ptr_instance )
+	{
+		handleException( "analyzer_configure must be called before any other analyzer function." );
+		return 0;
+	}
+
+	try 
+	{
+		return ptr_instance->bwConvergenceTolerance();
+	}
+	catch( Exception & ex ) 
+	{
+		std::string s("Loris exception in analyzer_getBwConvergenceTolerance(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+	catch( std::exception & ex ) 
+	{
+		std::string s("std C++ exception in analyzer_getBwConvergenceTolerance(): " );
+		s.append( ex.what() );
+		handleException( s.c_str() );
+	}
+}
+
+
+
+
 

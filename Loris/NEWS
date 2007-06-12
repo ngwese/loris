@@ -9,6 +9,16 @@ Please send Loris bug reports to loris@cerlsoundgroup.org.
 -------------------------------------------------------
 changes since 1.4 release:
 
+- enabled fundamental estimation by default in Analyzer
+
+- added mixed phase derivative estimator option for 
+bandwidth association. Added corresponding Analyzer member
+functions for selecting a bandwidth association option:
+storeResidueBandwidth (bandwidth association algorithm 
+in previous versions of Loris), storeConvergenceBandwidth
+(mixed derivative), or storeNoBandwidth (no bandwidth 
+association). 
+
 - fixed typos in AiffFile.h that prevented compiling on 
 some systems.
 

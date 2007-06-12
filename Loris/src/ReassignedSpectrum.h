@@ -95,20 +95,14 @@ public:
 
 //	--- reassigned transform access ---
         
-    //! EXPERIMENTAL,
-    //! Compute and return the mixed partial derivative of
-    //! spectrum phase (not yet used in BW enhanced analysis).
-    //!
-    //! DO NOT USE THIS
-    //! It will certainly disappear in a future release.
-    //! Returns ZERO unless compiled with the flag
-    //! COMPUTE_MIXED_DERIVATIVE defined non-zero.
-    //! See ReassignedSpectrum.C
+	//! Compute and return the convergence indicator, computed from the 
+	//!	mixed partial derivative of spectral phase, optionally used in 
+	//!	BW enhanced analysis as a convergence indicator. The convergence
+	//!	value is on the range [0,1], 0 for a sinusoid, and 1 for an impulse.
     //!
     //! \param  idx the frequency sample at which to evaluate the
     //!         transform
-	//double reassignedBandwidth( long idx ) const;
-	double mixedPartialDerivative( long idx ) const;
+	double convergence( long idx ) const;
 
     //! Return the reassigned frequency in fractional frequency 
     //! samples computed at the specified transform index.

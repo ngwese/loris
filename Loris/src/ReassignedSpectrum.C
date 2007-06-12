@@ -51,19 +51,9 @@
 #endif
 
 // old quadratic interpolation code is still around, in case
-// we ever want o use it for comparison, Lemur used to use that.
+// we ever want to use it for comparison, Lemur used to use that.
 #if defined(Like_Lemur)
 #define SMITHS_BRILLIANT_PARABOLAS
-#endif
-
-//  Could compute the mixed partial derivative of
-//  phase, for use in bandwidth computation, using
-//  the extra, unused half-transform in here, but
-//  it might corrupt the magnitude transform
-//  slightly, so don't do it until we are actually
-//  going to use it.
-#if !defined(COMPUTE_MIXED_DERIVATIVE)
-	#define COMPUTE_MIXED_DERIVATIVE 0
 #endif
 
 //	there's a freakin' ton of std in here, 
@@ -466,26 +456,19 @@ ReassignedSpectrum::reassignedPhase( long idx ) const
 }
 
 // ---------------------------------------------------------------------------
-//	mixedPartialDerivative
+//	convergence
 // ---------------------------------------------------------------------------
-//! EXPERIMENTAL,
-//! Compute and return the mixed partial derivative of
-//! spectrum phase (not yet used in BW enhanced analysis).
-//!
-//! DO NOT USE THIS
-//! It will certainly disappear in a future release.
-//! Returns ZERO unless compiled with the flag
-//! COMPUTE_MIXED_DERIVATIVE defined non-zero.
-//! See ReassignedSpectrum.C
+//! Compute and return the convergence indicator, computed from the 
+//!	mixed partial derivative of spectral phase, optionally used in 
+//!	BW enhanced analysis as a convergence indicator. The convergence
+//!	value is on the range [0,1], 0 for a sinusoid, and 1 for an impulse.
 //!
 //! \param  idx the frequency sample at which to evaluate the
 //!         transform
 //
 double
-ReassignedSpectrum::mixedPartialDerivative( long idx ) const
+ReassignedSpectrum::convergence( long idx ) const
 {
-#if defined(COMPUTE_MIXED_DERIVATIVE) && COMPUTE_MIXED_DERIVATIVE
-
   	std::complex<double> X_h = circEvenPartAt( mMagnitudeTransform, idx );
 	std::complex<double> X_Th = circOddPartAt( mCorrectionTransform, idx ); 
     std::complex<double> X_Dh = circEvenPartAt( mCorrectionTransform, idx );
@@ -498,11 +481,6 @@ ReassignedSpectrum::mixedPartialDerivative( long idx ) const
 
     double bw = fabs( 1.0 + (scaleBy * (term1 - term2)) );
     bw = min( 1.0, bw );
-
-#else
-    idx = idx;
-    double bw = 0;
-#endif
      
     return bw;  
 }
@@ -627,13 +605,11 @@ buildReassignmentWindows( RealWinIter winbegin, RealWinIter winend,
 
 	std::vector< double > tframp( framp.size(), 0. );
 	
-#if defined(COMPUTE_MIXED_DERIVATIVE) && COMPUTE_MIXED_DERIVATIVE	
     //  Do this only if we are computing the mixed 
     //  partial derivative of phase, otherwise, leave
     //  that vector empty.
 	tframp = framp;
 	applyTimeRamp( tframp );
-#endif
 	
 	std::transform( framp.begin(), framp.end(), tramp.begin(),
 					raw2inbegin, make_complex< double >() );	

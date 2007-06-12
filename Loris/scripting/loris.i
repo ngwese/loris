@@ -1272,7 +1272,7 @@ difference between Partials) and analysis window main
 lobe width (between zeros). All other Analyzer parameters 	
 are computed from the specified resolution and window
 width. If the window width is not specified, 
-then it is assumed to be equal to the resolution.
+then it is set to twice the resolution.
 
 An Analyzer configuration can also be copied from another
 instance.") Analyzer;
@@ -1324,11 +1324,6 @@ in (negative) dB, for this Analyzer.");
 
 	double ampFloor( void ) const;
 
-%feature("docstring",
-"Return the width (in Hz) of the Bandwidth Association regions
-used by this Analyzer.");
-
-	double bwRegionWidth( void ) const;
 
 %feature("docstring",
 "Return the crop time (maximum temporal displacement of a time-
@@ -1386,8 +1381,7 @@ zero-crossings) of the analysis window used by this Analyzer.");
 	void setAmpFloor( double x );
 	
 %feature("docstring",
-"Set the width (in Hz) of the Bandwidth Association regions
-used by this Analyzer.");
+"Deprecated, use storeResidueBandwidth instead.");
 
  	void setBwRegionWidth( double x );
 	
@@ -1439,6 +1433,72 @@ in time.");
 zero-crossings) of the analysis window used by this Analyzer.");
 
 	void setWindowWidth( double x );
+	
+	
+%feature("docstring",
+"Construct Partial bandwidth envelopes during analysis
+by associating residual energy in the spectrum (after
+peak extraction) with the selected spectral peaks that
+are used to construct Partials. 
+
+regionWidth is the width (in Hz) of the bandwidth 
+association regions used by this process, must be positive.
+If unspecified, a default value is used.");
+
+	void storeResidueBandwidth( double regionWidth = Analyzer::Default_ResidueBandwidth_RegionWidth );
+	
+%feature("docstring",
+"Construct Partial bandwidth envelopes during analysis
+by storing the mixed derivative of short-time phase, 
+scaled and shifted so that a value of 0 corresponds
+to a pure sinusoid, and a value of 1 corresponds to a
+bandwidth-enhanced sinusoid with maximal energy spread.
+
+tolerancePct is the amount of range over which the 
+mixed derivative indicator should be allowed to drift away 
+from a pure sinusoid before saturating. This range is mapped
+to bandwidth values on the range [0,1]. Must be positive and 
+not greater than 100%. If unspecified, a default
+value is used.");
+	
+	void storeConvergenceBandwidth( double tolerancePct = Analyzer::Default_ConvergenceBandwidth_TolerancePct  );
+
+%feature("docstring",
+"Disable bandwidth envelope construction. Bandwidth 
+will be zero for all Breakpoints in all Partials.");
+	
+	void storeNoBandwidth( void );
+
+%feature("docstring",
+"Return true if this Analyzer is configured to compute
+bandwidth envelopes using the spectral residue after
+peaks have been identified, and false otherwise.");
+
+	bool storeResidueBandwidth( void ) const;
+
+%feature("docstring",
+"Return true if this Analyzer is configured to compute
+bandwidth envelopes using the mixed derivative convergence
+indicator, and false otherwise.");
+
+	bool storeConvergenceBandwidth( void ) const;
+
+%feature("docstring",
+"Return the width (in Hz) of the Bandwidth Association regions
+used by this Analyzer, only if the spectral residue method is
+used to compute bandwidth envelopes. Return zero if the mixed
+derivative method is used, or if no bandwidth is computed.");
+
+	double bwRegionWidth( void ) const;
+
+%feature("docstring",
+"Return the mixed derivative convergence tolerance (percent)
+only if the convergence indicator is used to compute
+bandwidth envelopes. Return zero if the spectral residue
+method is used or if no bandwidth is computed.");
+
+	double bwConvergenceTolerance( void ) const;
+
 
 %feature("docstring",
 "Return the fundamental frequency estimate envelope constructed

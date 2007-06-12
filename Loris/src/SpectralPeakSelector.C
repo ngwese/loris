@@ -55,9 +55,7 @@
 #define USE_REASSIGNMENT_MINS 1
 //#undef USE_REASSIGNMENT_MINS
 
-#if defined(COMPUTE_MIXED_DERIVATIVE) && COMPUTE_MIXED_DERIVATIVE
-	#define ENABLE_EXPERIMENTAL_BW 1
-#endif
+#define ENABLE_EXPERIMENTAL_BW 1
 
 //	begin namespace
 namespace Loris {
@@ -130,18 +128,19 @@ SpectralPeakSelector::selectPeaks( ReassignedSpectrum & spectrum,
 			if ( fabs(timeCorrectionSamps) < maxCorrectionSamples )
 			{
     			double mag = spectrum.reassignedMagnitude( peakidx );
-    			double phase = spectrum.reassignedPhase( peakidx );
-    			
-                //  EXPERIMENTAL
-                double bw = 0;
-                #ifdef ENABLE_EXPERIMENTAL_BW
-    			bw = spectrum.mixedPartialDerivative( j );
-    			#endif
+    			double phase = spectrum.reassignedPhase( peakidx );    			
+
+				//	this will be overwritten later in analysis, 
+				//	might be ignored altogether, only used if the
+				//	mixed derivative convergence indicator is stored
+				//	as bandwidth in Analyzer:
+				double bw = spectrum.convergence( j );
+
 
     			//	also store the corrected peak time in seconds, won't
     			//	be able to compute it later:
     			double time = timeCorrectionSamps * oneOverSR;
-    			Breakpoint bp ( freq, mag, bw, phase );
+    			Breakpoint bp( freq, mag, bw, phase );
     			peaks.push_back( std::make_pair( time, bp ) );
 			}	        
 	    }
@@ -164,12 +163,12 @@ SpectralPeakSelector::selectPeaks( ReassignedSpectrum & spectrum,
 				
 			double mag = spectrum.reassignedMagnitude( j );
 			double phase = spectrum.reassignedPhase( j );
-
-            //  EXPERIMENTAL
-            double bw = 0;
-            #ifdef ENABLE_EXPERIMENTAL_BW
-			bw = spectrum.reassignedBandwidth( j );
-			#endif
+			
+			//	this will be overwritten later in analysis, 
+			//	might be ignored altogether, only used if the
+			//	mixed derivative convergence indicator is stored
+			//	as bandwidth in Analyzer:
+			double bw = spectrum.convergence( j );
 			
 			//	also store the corrected peak time in seconds, won't
 			//	be able to compute it later:

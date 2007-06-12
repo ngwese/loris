@@ -113,6 +113,15 @@ public:
 //  -- configuration --
 
     //! Configure this Analyzer with the given frequency resolution 
+    //! (minimum instantaneous frequency difference between Partials, 
+    //! in Hz). All other Analyzer parameters are (re-)computed from the 
+    //! frequency resolution, including the window width, which is
+    //! twice the resolution.      
+    //! 
+    //! \param resolutionHz is the frequency resolution in Hz.
+    void configure( double resolutionHz );
+
+    //! Configure this Analyzer with the given frequency resolution 
     //! (minimum instantaneous frequency difference between Partials)
     //! and analysis window width (main lobe, zero-to-zero, in Hz). 
     //! All other Analyzer parameters are (re-)computed from the 
@@ -129,7 +138,7 @@ public:
     //! identical to) the window width (hop and crop times)
     //! - independent parameters (bw region width and amp floor)
     void configure( double resolutionHz, double windowWidthHz );
-
+    
 //  -- analysis --
 
     //! Analyze a vector of (mono) samples at the given sample rate         
@@ -183,17 +192,6 @@ public:
     //! in (negative) dB, for this Analyzer.                
     double ampFloor( void ) const;
 
-    //! Return true if this Analyzer is configured to peform bandwidth
-    //! association to distribute noise energy among extracted Partials, 
-    //! and false if noise energy will be collected in noise Partials,
-    //! labeled -1 in this Analyzer's PartialList.
-    bool associateBandwidth( void ) const;
-
-    //! Return the width (in Hz) of the Bandwidth Association regions
-    //! used by this Analyzer. If zero, bandwidth enhancement is
-    //! disabled.
-    double bwRegionWidth( void ) const;
-
     //! Return the crop time (maximum temporal displacement of a time-
     //! frequency data point from the time-domain center of the analysis
     //! window, beyond which data points are considered "unreliable")
@@ -237,6 +235,7 @@ public:
     //!         phase-corrected Partials
     bool phaseCorrect( void ) const;
 
+
 //  -- parameter mutation --
 
     //! Set the amplitude floor (lowest detected spectral amplitude), in            
@@ -244,13 +243,6 @@ public:
     //! 
     //! \param x is the new value of this parameter.            
     void setAmpFloor( double x );
-
-    //! Set the width (in Hz) of the Bandwidth Association regions
-    //! used by this Analyzer. If zero, bandwidth enhancement is 
-    //! disabled.
-    //! 
-    //! \param x is the new value of this parameter.            
-    void setBwRegionWidth( double x );
 
     //! Set the crop time (maximum temporal displacement of a time-
     //! frequency data point from the time-domain center of the analysis
@@ -308,6 +300,80 @@ public:
     //! \param  TF is a flag indicating whether or not to construct
     //!         phase-corrected Partials
     void setPhaseCorrect( bool TF = true );
+    
+    
+//  -- bandwidth envelope specification --
+
+    enum { Default_ResidueBandwidth_RegionWidth = 2000,
+           Default_ConvergenceBandwidth_TolerancePct = 10 };
+           
+    //! Construct Partial bandwidth envelopes during analysis
+    //! by associating residual energy in the spectrum (after
+    //! peak extraction) with the selected spectral peaks that
+    //! are used to construct Partials. 
+    //! 
+    //! \param regionWidth is the width (in Hz) of the bandwidth 
+    //! association regions used by this process, must be positive.
+    //! If unspecified, a default value is used.
+    void storeResidueBandwidth( double regionWidth = Default_ResidueBandwidth_RegionWidth );
+    
+    //! Construct Partial bandwidth envelopes during analysis
+    //! by storing the mixed derivative of short-time phase, 
+    //! scaled and shifted so that a value of 0 corresponds
+    //! to a pure sinusoid, and a value of 1 corresponds to a
+    //! bandwidth-enhanced sinusoid with maximal energy spread.
+    //!
+    //! \param tolerancePct is the amount of range over which the 
+    //! mixed derivative indicator should be allowed to drift away 
+    //! from a pure sinusoid before saturating. This range is mapped
+    //! to bandwidth values on the range [0,1]. Must be positive and 
+    //! not greater than 100%. If unspecified, a default
+    //! value is used.
+    void storeConvergenceBandwidth( double tolerancePct = Default_ConvergenceBandwidth_TolerancePct  );
+    
+    //! Disable bandwidth envelope construction. Bandwidth 
+    //! will be zero for all Breakpoints in all Partials.
+    void storeNoBandwidth( void );
+    
+    //! Return true if this Analyzer is configured to compute
+    //! bandwidth envelopes using the spectral residue after
+    //! peaks have been identified, and false otherwise.
+    bool storeResidueBandwidth( void ) const;
+    
+    //! Return true if this Analyzer is configured to compute
+    //! bandwidth envelopes using the mixed derivative convergence
+    //! indicator, and false otherwise.
+    bool storeConvergenceBandwidth( void ) const;
+    
+    //! Return the width (in Hz) of the Bandwidth Association regions
+    //! used by this Analyzer, only if the spectral residue method is
+    //! used to compute bandwidth envelopes. Return zero if the mixed
+    //! derivative method is used, or if no bandwidth is computed.
+    double bwRegionWidth( void ) const;
+
+    //! Return the mixed derivative convergence tolerance (percent)
+    //! only if the convergence indicator is used to compute
+    //! bandwidth envelopes. Return zero if the spectral residue
+    //! method is used or if no bandwidth is computed.
+    double bwConvergenceTolerance( void ) const;
+
+    //! Deprecated, use storeResidueBandwidth instead.
+    bool associateBandwidth( void ) const
+        { return storeResidueBandwidth(); }
+
+    //! Deprecated, use storeResidueBandwidth instead.            
+    void setBwRegionWidth( double x ) 
+        { 
+            if ( x != 0 )
+            {
+                storeResidueBandwidth( x ); 
+            }
+            else
+            {
+                storeNoBandwidth();
+            }
+        }
+           
 
 //  -- PartialList access --
 
@@ -321,10 +387,15 @@ public:
 
 //  -- envelope access --
 
+    enum { Default_FundamentalEnv_ThreshDb = -60, 
+           Default_FundamentalEnv_ThreshHz = 8000 };
+
     //! Return the fundamental frequency estimate envelope constructed
     //! during the most recent analysis performed by this Analyzer.
-    //! Will be empty unless buildFundamentalEnv was invoked to enable the
-    //! construction of this envelope during analysis.
+    //! Will be empty if fundamental estimation eas disabled.
+    //!
+    //! By default, a fundamental envelope is estimated during analysis
+    //! between the frequency resolution and 1.5 times the resolution.
     const LinearEnvelope & fundamentalEnv( void ) const;
         
     //! Indicate whether the fundamental frequency envelope of the analyzed
@@ -335,6 +406,9 @@ public:
     //! parameters, use buildFundamentalEnv( fmin, fmax, threshDb, threshHz )
     //! instead.
     //!
+    //! By default, a fundamental envelope is estimated during analysis
+    //! between the frequency resolution and 1.5 times the resolution.
+    //!
     //! \param  TF is a flag indicating whether or not to construct
     //!         the fundamental frequency envelope during analysis
     void buildFundamentalEnv( bool TF = true );
@@ -343,6 +417,9 @@ public:
     //! envelope for the analyzed sound during analysis. The fundamental 
     //! frequency estimate can be accessed by fundamentalEnv() after the 
     //! analysis is complete. 
+    //!
+    //! By default, a fundamental envelope is estimated during analysis
+    //! between the frequency resolution and 1.5 times the resolution.
     //!
     //! \param  fmin is the lower bound on the fundamental frequency estimate
     //! \param  fmax is the upper bound on the fundamental frequency estimate
@@ -354,7 +431,10 @@ public:
     //!         peak that will constribute to the fundamental frequency estimate.
     //!         Default is 8 kHz.
     void buildFundamentalEnv( double fmin, double fmax, 
-                              double threshDb = -60, double threshHz = 8000 );
+                              double threshDb = Default_FundamentalEnv_ThreshDb, 
+                              double threshHz = Default_FundamentalEnv_ThreshHz );       
+                              
+
 
     //! Return the overall amplitude estimate envelope constructed
     //! during the most recent analysis performed by this Analyzer.
@@ -375,68 +455,80 @@ public:
 
 private:
 
-    double m_freqResolution;  	//!  in Hz, minimum instantaneous frequency distance;
-                            	//!  this is the core parameter, others are, by default,
-                            	//!  computed from this one
+    double m_freqResolution;    //!  in Hz, minimum instantaneous frequency distance;
+                                //!  this is the core parameter, others are, by default,
+                                //!  computed from this one
     
-    double m_ampFloor;        	//!  dB, relative to full amplitude sine wave, absolute
-                            	//!  amplitude threshold (negative)
+    double m_ampFloor;          //!  dB, relative to full amplitude sine wave, absolute
+                                //!  amplitude threshold (negative)
     
-    double m_windowWidth;     	//!  in Hz, width of main lobe; this might be more
-                            	//!  conveniently presented as window length, but
-                            	//!  the main lobe width more explicitly highlights
-                            	//!  the critical interaction with resolution
+    double m_windowWidth;       //!  in Hz, width of main lobe; this might be more
+                                //!  conveniently presented as window length, but
+                                //!  the main lobe width more explicitly highlights
+                                //!  the critical interaction with resolution
     
-    double m_freqFloor;       	//!  lowest frequency (Hz) component extracted
-                            	//!  in spectral analysis
+    double m_freqFloor;         //!  lowest frequency (Hz) component extracted
+                                //!  in spectral analysis
     
-    double m_freqDrift;       	//!  the maximum frequency (Hz) difference between two 
-                            	//!  consecutive Breakpoints that will be linked to
-                            	//!  form a Partial
+    double m_freqDrift;         //!  the maximum frequency (Hz) difference between two 
+                                //!  consecutive Breakpoints that will be linked to
+                                //!  form a Partial
     
-    double m_hopTime;         	//!  in seconds, time between analysis windows in
-                            	//!  successive spectral analyses
+    double m_hopTime;           //!  in seconds, time between analysis windows in
+                                //!  successive spectral analyses
     
-    double m_cropTime;        	//!  in seconds, maximum time correction for a spectral
-                            	//!  component to be considered reliable, and to be eligible
-                            	//!  for extraction and for Breakpoint formation
+    double m_cropTime;          //!  in seconds, maximum time correction for a spectral
+                                //!  component to be considered reliable, and to be eligible
+                                //!  for extraction and for Breakpoint formation
     
-    double m_bwRegionWidth;   	//!  width in Hz of overlapping bandwidth 
-                            	//!  association regions, or zero if bandwidth association
-                            	//!  is disabled
+    double m_bwRegionWidth;     //!  formerly, width in Hz of overlapping bandwidth 
+                                //!  association regions, or zero if bandwidth association
+                                //!  is disabled, now a catch-all bandwidth association
+                                //!  parameter that, if negative, indicates the tolerance (%)
+                                //!  level used to construct bandwidth envelopes from the
+                                //!  mixed phase derivative indicator
                                                         
-    double m_sidelobeLevel;   	//!  sidelobe attenutation level for the Kaiser analysis 
-                            	//!  window, in positive dB
-                            	
+    double m_sidelobeLevel;     //!  sidelobe attenutation level for the Kaiser analysis 
+                                //!  window, in positive dB
+                                
     bool m_phaseCorrect;        //!  flag indicating that phases/frequencies should be
                                 //!  made consistent at the end of the analysis
                             
-    PartialList m_partials;  	//!  collect Partials here
+    PartialList m_partials;     //!  collect Partials here
     
 
-    LinearEnvelope mF0Env;      //! fundamental frequency estimate constructed during analysis
+    LinearEnvelope m_f0Env;      //! fundamental frequency estimate constructed during analysis
     
     //! builder object for constructing a fundamental frequency
     //! estimate during analysis
-    std::auto_ptr< LinearEnvelopeBuilder > mF0Builder;
+    std::auto_ptr< LinearEnvelopeBuilder > m_f0Builder;
 
-    LinearEnvelope mAmpEnv;     //! ampitude estimate constructed during analysis
+    LinearEnvelope m_ampEnv;     //! ampitude estimate constructed during analysis
     
     //! builder object for constructing an amplitude
     //! estimate during analysis
-    std::auto_ptr< LinearEnvelopeBuilder > mAmpEnvBuilder;
+    std::auto_ptr< LinearEnvelopeBuilder > m_ampEnvBuilder;
 
 //  -- private helper functions --
 
-	//	Reject peaks that are too close in frequency to a louder peak that is
-	//	being retained, and peaks that are too quiet. Peaks that are retained,
-	//	but are quiet enough to be in the specified fadeRange should be faded.
-	//	
-	//	Rejected peaks are placed at the end of the peak collection.
-	//	Return the first position in the collection containing a rejected peak,
-	//	or the end of the collection if no peaks are rejected.
-	Peaks::iterator thinPeaks( Peaks & peaks, double frameTime  );
+    //  Reject peaks that are too close in frequency to a louder peak that is
+    //  being retained, and peaks that are too quiet. Peaks that are retained,
+    //  but are quiet enough to be in the specified fadeRange should be faded.
+    //  
+    //  Rejected peaks are placed at the end of the peak collection.
+    //  Return the first position in the collection containing a rejected peak,
+    //  or the end of the collection if no peaks are rejected.
+    Peaks::iterator thinPeaks( Peaks & peaks, double frameTime  );
                 
+    //  Fix the bandwidth value stored in the specified Peaks. 
+    //  This function is invoked if the spectral residue method is
+    //  not used to compute bandwidth (that method overwrites the
+    //  bandwidth already). If the convergence method is used to 
+    //  compute bandwidth, the appropriate scaling is applied
+    //  to the stored mixed phase derivative. Otherwise, the
+    //  Peak bandwidth is set to zero.
+    void fixBandwidth( Peaks & peaks );
+                    
 };  //  end of class Analyzer
 
 }   //  end of namespace Loris

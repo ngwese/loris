@@ -207,7 +207,7 @@ AmpEnvBuilder::accumPeakSquaredAmps( double init,
 //
 Analyzer::Analyzer( double resolutionHz )
 {
-    configure( resolutionHz, resolutionHz );
+    configure( resolutionHz, 2.0 * resolutionHz );
 }
 
 // ---------------------------------------------------------------------------
@@ -238,8 +238,8 @@ Analyzer::Analyzer( double resolutionHz, double windowWidthHz )
 //! \param other is the Analyzer to copy.   
 //
 Analyzer::Analyzer( const Analyzer & other ) :
-    mF0Env( other.mF0Env ),
-    mAmpEnv( other.mAmpEnv ),
+    m_f0Env( other.m_f0Env ),
+    m_ampEnv( other.m_ampEnv ),
     m_freqResolution( other.m_freqResolution ),
     m_ampFloor( other.m_ampFloor ),
     m_windowWidth( other.m_windowWidth ),
@@ -252,14 +252,14 @@ Analyzer::Analyzer( const Analyzer & other ) :
     m_phaseCorrect( other.m_phaseCorrect ),
     m_partials( other.m_partials )
 {
-    if ( 0 != other.mF0Builder.get() )
+    if ( 0 != other.m_f0Builder.get() )
     {
-        mF0Builder.reset( other.mF0Builder->clone() );
+        m_f0Builder.reset( other.m_f0Builder->clone() );
     }
 
-    if ( 0 != other.mAmpEnvBuilder.get() )
+    if ( 0 != other.m_ampEnvBuilder.get() )
     {
-        mAmpEnvBuilder.reset( other.mAmpEnvBuilder->clone() );
+        m_ampEnvBuilder.reset( other.m_ampEnvBuilder->clone() );
     }
 }
 
@@ -289,16 +289,16 @@ Analyzer::operator=( const Analyzer & rhs )
         m_phaseCorrect = rhs.m_phaseCorrect;
         m_partials = rhs.m_partials;
 
-        mF0Env = rhs.mF0Env;
-        if ( 0 != rhs.mF0Builder.get() )
+        m_f0Env = rhs.m_f0Env;
+        if ( 0 != rhs.m_f0Builder.get() )
         {
-            mF0Builder.reset( rhs.mF0Builder->clone() );
+            m_f0Builder.reset( rhs.m_f0Builder->clone() );
         }
 
-        mAmpEnv = rhs.mAmpEnv;
-        if ( 0 != rhs.mAmpEnvBuilder.get() )
+        m_ampEnv = rhs.m_ampEnv;
+        if ( 0 != rhs.m_ampEnvBuilder.get() )
         {
-            mAmpEnvBuilder.reset( rhs.mAmpEnvBuilder->clone() );
+            m_ampEnvBuilder.reset( rhs.m_ampEnvBuilder->clone() );
         }
                 
     }
@@ -315,6 +315,23 @@ Analyzer::~Analyzer( void )
 }
 
 // -- configuration --
+
+// ---------------------------------------------------------------------------
+//  configure
+// ---------------------------------------------------------------------------
+//! Configure this Analyzer with the given frequency resolution 
+//! (minimum instantaneous frequency difference between Partials, 
+//! in Hz). All other Analyzer parameters are (re-)computed from the 
+//! frequency resolution, including the window width, which is
+//!	twice the resolution.      
+//! 
+//! \param resolutionHz is the frequency resolution in Hz.
+//
+void
+Analyzer::configure( double resolutionHz )
+{
+	configure( resolutionHz, 2.0 * resolutionHz );
+}
 
 // ---------------------------------------------------------------------------
 //  configure
@@ -383,14 +400,11 @@ Analyzer::configure( double resolutionHz, double windowWidthHz )
     //  bandwidth association region width 
     //  defaults to 2 kHz, corresponding to 
     //  1 kHz region center spacing:
-    setBwRegionWidth( 2000. );
+    storeResidueBandwidth( );
 
-    if ( 0 != mF0Builder.get() )
-    {
-        //  (re)configure the fundamental tracker using default 
-        //  parameters:
-        buildFundamentalEnv( true );
-    }
+	//  (re)configure the fundamental tracker using default 
+	//  parameters:
+	buildFundamentalEnv( true );
     
     //  enable phase-correct Partial construction:
     m_phaseCorrect = true;
@@ -508,7 +522,7 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
     //  configure bw association policy, unless
     //  bandwidth association is disabled:
     std::auto_ptr< AssociateBandwidth > bwAssociator;
-    if( associateBandwidth() )
+    if( m_bwRegionWidth > 0 )
     {
         debugger << "Using bandwidth association regions of width " 
                  << bwRegionWidth() << " Hz" << endl;
@@ -520,8 +534,8 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
     }
 
     //  reset envelopes:
-    mAmpEnv.clear();
-    mF0Env.clear();
+    m_ampEnv.clear();
+    m_f0Env.clear();
         
     try 
     { 
@@ -546,7 +560,7 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
             Peaks peaks = selector.selectPeaks( spectrum, m_freqFloor, m_cropTime ); 
 			Peaks::iterator rejected = thinPeaks( peaks, currentFrameTime );
 
-            if ( associateBandwidth() )
+            if ( m_bwRegionWidth > 0 )
             {
                 bwAssociator->associateBandwidth( peaks.begin(), rejected, peaks.end() );
             }
@@ -555,17 +569,20 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
             //	(should to this in thinPeaks)
             peaks.erase( rejected, peaks.end() );
             
+            //	fix the stored bandwidth values
+            fixBandwidth( peaks );
+            
             //  estimate the amplitude in this frame:
-            if ( 0 != mAmpEnvBuilder.get() )
+            if ( 0 != m_ampEnvBuilder.get() )
             {
-                mAmpEnvBuilder->build( peaks, currentFrameTime, mAmpEnv );
+                m_ampEnvBuilder->build( peaks, currentFrameTime, m_ampEnv );
             }
             
             //  collect amplitudes and frequencies and try to 
             //  estimate the fundamental
-            if ( 0 != mF0Builder.get() )
+            if ( 0 != m_f0Builder.get() )
             {
-                mF0Builder->build( peaks, currentFrameTime, mF0Env );
+                m_f0Builder->build( peaks, currentFrameTime, m_f0Env );
             }
 
             //  form Partials from the extracted Breakpoints:
@@ -587,10 +604,10 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
         
         
         //  for debugging:
-        if ( ! mAmpEnv.empty() )
+        if ( ! m_ampEnv.empty() )
         {
             LinearEnvelope::iterator peakpos = 
-                std::max_element( mAmpEnv.begin(), mAmpEnv.end(), 
+                std::max_element( m_ampEnv.begin(), m_ampEnv.end(), 
                                   compare2nd<LinearEnvelope::iterator::value_type> );
             notifier << "HEY analyzer found amp peak at time : " << peakpos->first
                      << " value: " << peakpos->second << endl;
@@ -617,33 +634,6 @@ double
 Analyzer::ampFloor( void ) const 
 { 
     return m_ampFloor; 
-}
-
-// ---------------------------------------------------------------------------
-//  associateBandwidth
-// ---------------------------------------------------------------------------
-//! Return true if this Analyzer is configured to peform bandwidth
-//! association to distribute noise energy among extracted Partials, 
-//! and false if noise energy will be collected in noise Partials,
-//! labeled -1 in this Analyzer's PartialList.
-//
-bool 
-Analyzer::associateBandwidth( void ) const 
-{ 
-    return m_bwRegionWidth > 0.; 
-}
-
-// ---------------------------------------------------------------------------
-//  bwRegionWidth
-// ---------------------------------------------------------------------------
-//! Return the width (in Hz) of the Bandwidth Association regions
-//! used by this Analyzer.
-//
-double 
-Analyzer::bwRegionWidth( void ) const
-{ 
-    // debugger << "Analyzer::bwRegionWidth() is a deprecated member, and will be removed in a future Loris release." << endl;
-    return m_bwRegionWidth; 
 }
 
 // ---------------------------------------------------------------------------
@@ -777,22 +767,6 @@ Analyzer::setAmpFloor( double x )
     m_ampFloor = x; 
 }
 
-// ---------------------------------------------------------------------------
-//  setBwRegionWidth
-// ---------------------------------------------------------------------------
-//! Set the width (in Hz) of the Bandwidth Association regions
-//! used by this Analyzer. If zero, bandwidth enhancement is 
-//! disabled.
-//! 
-//! \param x is the new value of this parameter.
-//
-void 
-Analyzer::setBwRegionWidth( double x ) 
-{ 
-    VERIFY_ARG( setBwRegionWidth, x >= 0 );
-   // debugger << "Analyzer::setBwRegionWidth() is a deprecated member, and will be removed in a future Loris release." << endl;
-    m_bwRegionWidth = x; 
-}   
 
 // ---------------------------------------------------------------------------
 //  setCropTime
@@ -922,6 +896,123 @@ Analyzer::setPhaseCorrect( bool TF )
     m_phaseCorrect = TF;
 }
 
+//  -- bandwidth envelope specification --
+
+
+// ---------------------------------------------------------------------------
+//  storeResidueBandwidth
+// ---------------------------------------------------------------------------
+//!	Construct Partial bandwidth envelopes during analysis
+//!	by associating residual energy in the spectrum (after
+//! peak extraction) with the selected spectral peaks that
+//!	are used to construct Partials. 
+//!	
+//!	\param regionWidth is the width (in Hz) of the bandwidth 
+//!	association regions used by this process, must be positive.
+//!	If unspecified, a default value is used.
+//
+void 
+Analyzer::storeResidueBandwidth( double regionWidth ) 
+{ 
+    VERIFY_ARG( storeResidueBandwidth, regionWidth > 0 );
+    m_bwRegionWidth = regionWidth; 
+}   
+
+// ---------------------------------------------------------------------------
+//  storeConvergenceBandwidth
+// ---------------------------------------------------------------------------
+//!	Construct Partial bandwidth envelopes during analysis
+//!	by storing the mixed derivative of short-time phase, 
+//!	scaled and shifted so that a value of 0 corresponds
+//!	to a pure sinusoid, and a value of 1 corresponds to a
+//! bandwidth-enhanced sinusoid with maximal energy spread.
+//!
+//!	\param tolerancePct is the amount of range over which the 
+//!	mixed derivative indicator should be allowed to drift away 
+//!	from a pure sinusoid before saturating. This range is mapped
+//!	to bandwidth values on the range [0,1]. Must be positive and 
+//!	not greater than 100%. If unspecified, a default
+//!	value is used.
+//
+void 
+Analyzer::storeConvergenceBandwidth( double tolerancePct ) 
+{ 
+    VERIFY_ARG( storeConvergenceBandwidth, 
+    			(tolerancePct > 0) && (tolerancePct <= 100) );
+    			
+	//	store a negative value so that it can be 
+	//	identified when used:
+    m_bwRegionWidth = -tolerancePct; 
+}   
+
+// ---------------------------------------------------------------------------
+//  storeNoBandwidth
+// ---------------------------------------------------------------------------
+//!	Disable bandwidth envelope construction. Bandwidth 
+//!	will be zero for all Breakpoints in all Partials.
+//
+void 
+Analyzer::storeNoBandwidth( void ) 
+{ 
+    m_bwRegionWidth = 0; 
+}   
+
+// ---------------------------------------------------------------------------
+//!	Return true if this Analyzer is configured to compute
+//! bandwidth envelopes using the spectral residue after
+//! peaks have been identified, and false otherwise.
+// ---------------------------------------------------------------------------
+bool 
+Analyzer::storeResidueBandwidth( void ) const
+{ 
+    return m_bwRegionWidth > 0.; 
+}
+
+// ---------------------------------------------------------------------------
+//!	Return true if this Analyzer is configured to compute
+//!	bandwidth envelopes using the mixed derivative convergence
+//!	indicator, and false otherwise.
+// ---------------------------------------------------------------------------
+bool 
+Analyzer::storeConvergenceBandwidth( void ) const
+{ 
+    return m_bwRegionWidth < 0.; 
+}
+
+
+// ---------------------------------------------------------------------------
+//! Return the width (in Hz) of the Bandwidth Association regions
+//! used by this Analyzer, only if the spectral residue method is
+//!	used to compute bandwidth envelopes. Return zero if the mixed
+//! derivative method is used, or if no bandwidth is computed.
+// ---------------------------------------------------------------------------
+double 
+Analyzer::bwRegionWidth( void ) const
+{
+	if ( m_bwRegionWidth > 0 )
+	{
+		return m_bwRegionWidth;
+	}
+	return 0;
+}
+
+// ---------------------------------------------------------------------------
+//!	Return the mixed derivative convergence tolerance (percent)
+//!	only if the convergence indicator is used to compute
+//!	bandwidth envelopes. Return zero if the spectral residue
+//!	method is used or if no bandwidth is computed.
+// ---------------------------------------------------------------------------
+double 
+Analyzer::bwConvergenceTolerance( void ) const
+{
+	if ( m_bwRegionWidth < 0 )
+	{
+		return - m_bwRegionWidth;
+	}
+	return 0;
+}
+
+
 // -- PartialList access --
 
 // ---------------------------------------------------------------------------
@@ -967,15 +1058,15 @@ void Analyzer::buildFundamentalEnv( bool TF )
     if ( TF )
     {
         //  configure with default parameters
-        buildFundamentalEnv( m_freqResolution,
-    			             2 * m_freqResolution,
+        buildFundamentalEnv( 0.99 * m_freqResolution,
+    			             1.5 * m_freqResolution,
     			             -60, 
     			             8000 );
     }
     else
     {
         // disable
-        mF0Builder.reset( 0 );
+        m_f0Builder.reset( 0 );
     }
 }
 
@@ -1000,7 +1091,7 @@ void Analyzer::buildFundamentalEnv( bool TF )
 void Analyzer::buildFundamentalEnv( double fmin, double fmax, 
                                     double threshDb, double threshHz )
 {
-    mF0Builder.reset( 
+    m_f0Builder.reset( 
         new FundamentalBuilder( fmin, fmax, threshDb, threshHz ) );
 }
 
@@ -1021,12 +1112,12 @@ Analyzer::fundamentalEnv( void ) const
     //  but on the other hand, checking the state of the builder
     //  does not tell anything about whether an envelope has been 
     //  constructed, or whether an analysis has even occurred.
-    if ( 0 == mF0Builder.get() )
+    if ( 0 == m_f0Builder.get() )
     {
         Throw( InvalidObject, "No fundamental envelope was built." );
     }
     */
-    return mF0Env; 
+    return m_f0Env; 
 }
 
 
@@ -1045,12 +1136,12 @@ void Analyzer::buildAmpEnv( bool TF )
 {
     if ( TF )
     {
-        mAmpEnvBuilder.reset( new AmpEnvBuilder );
+        m_ampEnvBuilder.reset( new AmpEnvBuilder );
     }
     else
     {
         // disable
-        mAmpEnvBuilder.reset( 0 );
+        m_ampEnvBuilder.reset( 0 );
     }
     
 }
@@ -1071,12 +1162,12 @@ const LinearEnvelope & Analyzer::ampEnv( void ) const
     //  but on the other hand, checking the state of the builder
     //  does not tell anything about whether an envelope has been 
     //  constructed, or whether an analysis has even occurred.
-    if ( 0 == mAmpEnvBuilder.get() )
+    if ( 0 == m_ampEnvBuilder.get() )
     {
         Throw( InvalidObject, "No amplitude envelope was built." );
     }
     */
-    return mAmpEnv; 
+    return m_ampEnv; 
 }
 
 // -- private helpers --
@@ -1142,7 +1233,7 @@ private:
 
 
 // ---------------------------------------------------------------------------
-//	thinPeaks
+//	thinPeaks (HELPER)
 // ---------------------------------------------------------------------------
 //	Reject peaks that are too quiet (low amplitude). Peaks that are retained,
 //	but are quiet enough to be in the specified fadeRange should be faded.
@@ -1217,5 +1308,38 @@ Analyzer::thinPeaks( Peaks & peaks, double frameTime  )
 	return beginRejected;
 }
 
+// ---------------------------------------------------------------------------
+//	fixBandwidth (HELPER)
+// ---------------------------------------------------------------------------
+//	Fix the bandwidth value stored in the specified Peaks. 
+//	This function is invoked if the spectral residue method is
+//	not used to compute bandwidth (that method overwrites the
+//	bandwidth already). If the convergence method is used to 
+//	compute bandwidth, the appropriate scaling is applied
+//	to the stored mixed phase derivative. Otherwise, the
+//	Peak bandwidth is set to zero.
+void Analyzer::fixBandwidth( Peaks & peaks )
+{
+	
+	if ( m_bwRegionWidth < 0 )
+	{
+		double scale = 1.0 / (- m_bwRegionWidth * 0.01);	
+			// m_bwRegionWidth is stored as percent
+	
+		for ( Peaks::iterator it = peaks.begin(); it != peaks.end(); ++it )
+		{
+			Breakpoint & bp = it->second;
+			bp.setBandwidth( std::min( 1.0, scale * bp.bandwidth() ) );
+		}
+	}
+	else if ( m_bwRegionWidth == 0 )
+	{
+		for ( Peaks::iterator it = peaks.begin(); it != peaks.end(); ++it )
+		{
+			Breakpoint & bp = it->second;
+			bp.setBandwidth( 0 );
+		}
+	}
+}
 
 }   //  end of namespace Loris
