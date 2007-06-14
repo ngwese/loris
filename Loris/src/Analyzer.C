@@ -560,6 +560,13 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
             Peaks peaks = selector.selectPeaks( spectrum, m_freqFloor, m_cropTime ); 
 			Peaks::iterator rejected = thinPeaks( peaks, currentFrameTime );
 
+            //	fix the stored bandwidth values
+            //	KLUDGE: need to do this before the bandwidth
+            //	associator tries to do its job, because the mixed
+            //	derivative is temporarily stored in the Breakpoint 
+            //	bandwidth!!! FIX!!!!
+            fixBandwidth( peaks );
+            
             if ( m_bwRegionWidth > 0 )
             {
                 bwAssociator->associateBandwidth( peaks.begin(), rejected, peaks.end() );
@@ -568,9 +575,6 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
             //  remove rejected Breakpoints:
             //	(should to this in thinPeaks)
             peaks.erase( rejected, peaks.end() );
-            
-            //	fix the stored bandwidth values
-            fixBandwidth( peaks );
             
             //  estimate the amplitude in this frame:
             if ( 0 != m_ampEnvBuilder.get() )
@@ -1332,7 +1336,7 @@ void Analyzer::fixBandwidth( Peaks & peaks )
 			bp.setBandwidth( std::min( 1.0, scale * bp.bandwidth() ) );
 		}
 	}
-	else if ( m_bwRegionWidth == 0 )
+	else // if ( m_bwRegionWidth == 0 )
 	{
 		for ( Peaks::iterator it = peaks.begin(); it != peaks.end(); ++it )
 		{

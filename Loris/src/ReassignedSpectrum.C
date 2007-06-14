@@ -56,6 +56,9 @@
 #define SMITHS_BRILLIANT_PARABOLAS
 #endif
 
+//	define this symbol to compute the mixed phase derivative
+#define COMPUTE_MIXED_PHASE_DERIVATIVE 1
+
 //	there's a freakin' ton of std in here, 
 //	just import the whole namespace
 using namespace std;
@@ -469,6 +472,8 @@ ReassignedSpectrum::reassignedPhase( long idx ) const
 double
 ReassignedSpectrum::convergence( long idx ) const
 {
+#if defined(COMPUTE_MIXED_PHASE_DERIVATIVE)
+
   	std::complex<double> X_h = circEvenPartAt( mMagnitudeTransform, idx );
 	std::complex<double> X_Th = circOddPartAt( mCorrectionTransform, idx ); 
     std::complex<double> X_Dh = circEvenPartAt( mCorrectionTransform, idx );
@@ -481,7 +486,11 @@ ReassignedSpectrum::convergence( long idx ) const
 
     double bw = fabs( 1.0 + (scaleBy * (term1 - term2)) );
     bw = min( 1.0, bw );
-     
+
+#else
+	double bw = 0.;
+#endif
+
     return bw;  
 }
 
@@ -605,12 +614,16 @@ buildReassignmentWindows( RealWinIter winbegin, RealWinIter winend,
 
 	std::vector< double > tframp( framp.size(), 0. );
 	
+#if defined(COMPUTE_MIXED_PHASE_DERIVATIVE)
+
     //  Do this only if we are computing the mixed 
     //  partial derivative of phase, otherwise, leave
     //  that vector empty.
 	tframp = framp;
 	applyTimeRamp( tframp );
 	
+#endif
+
 	std::transform( framp.begin(), framp.end(), tramp.begin(),
 					raw2inbegin, make_complex< double >() );	
     
