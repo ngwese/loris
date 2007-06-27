@@ -1610,45 +1610,45 @@ at the specified time.") valueAt;
 	 
 };	//	end of class LinearEnvelope
 
-#if 0
-	//	remove this stuff if possible, it is causing SWIG problems
-	
-	%feature("docstring",
-	"BreakpointEnvelope is deprecated, use LinearEnvelope instead.") BreakpointEnvelope;
-	
-	// BreakpointEnvelope is a typedef for LinearEnvelope, 
-	// not a derived class, but I could not make SWIG
-	// give two names to the same type, even using SWIG's
-	// %typedef. BreakpointEnvelopes could not be passed
-	// as arguments to functions expecting LinearEnvelopes.
-	// This fake inheritance achieves what I want: two 
-	// interchangeable types.
-	class BreakpointEnvelope : public LinearEnvelope
-	{
-	public:
-		BreakpointEnvelope( void );
-		BreakpointEnvelope( const BreakpointEnvelope & );
-		BreakpointEnvelope( double initialValue );
-		~BreakpointEnvelope( void );
-		void insertBreakpoint( double time, double value );
-		double valueAt( double x ) const;		
-	};
-	
-	
-	%feature("docstring",
-	"BreakpointEnvelopeWithValue is deprecated, use LinearEnvelope instead.") 
-	BreakpointEnvelopeWithValue;
-	
-	%inline 
-	%{
-		LinearEnvelope * 
-		BreakpointEnvelopeWithValue( double initialValue )
-		{
-			return new LinearEnvelope( initialValue );
-		}
-	%}
 
-#endif
+
+	
+%feature("docstring",
+"BreakpointEnvelope is deprecated, use LinearEnvelope instead.") BreakpointEnvelope;
+
+%inline 
+%{
+
+	LinearEnvelope * BreakpointEnvelope( void ) 
+	{
+		return new LinearEnvelope();
+	}
+	LinearEnvelope * BreakpointEnvelope( const LinearEnvelope *rhs )
+	{
+		return new LinearEnvelope( *rhs );
+	}
+	LinearEnvelope * BreakpointEnvelope( double initialValue )
+	{
+		return new LinearEnvelope( initialValue );
+	}
+
+%}
+
+
+%feature("docstring",
+"BreakpointEnvelopeWithValue is deprecated, use LinearEnvelope instead.") 
+BreakpointEnvelopeWithValue;
+
+%inline 
+%{
+	LinearEnvelope * 
+	BreakpointEnvelopeWithValue( double initialValue )
+	{
+		return new LinearEnvelope( initialValue );
+	}
+%}
+
+
 
 
 // ---------------------------------------------------------------------------
