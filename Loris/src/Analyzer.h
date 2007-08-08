@@ -509,8 +509,33 @@ private:
     //! estimate during analysis
     std::auto_ptr< LinearEnvelopeBuilder > m_ampEnvBuilder;
 
-//  -- private helper functions --
+//  -- private auxiliary functions --
+//	future development
+/*
 
+	//	These members make up the sequence of operations in an
+	//	analysis. If analysis were ever to be made into a 
+	//	template method, these would be the operations that
+	//	derived classes could override. Or each of these could
+	//	be represented by a strategy class.
+
+	//!	Compute the spectrum of the next sequence of samples.
+	void computeSpectrum( void );
+	
+	//!	Identify and select the spectral components that will be
+	//!	used to form Partials. 
+	void selectPeaks( void );
+	
+	//!	Compute the bandwidth coefficients for the Breakpoints
+	//!	that are going to be used to form Partials. 
+	void associateBandwidth( void );
+	
+	//!	Construct Partials from extracted spectral components.
+	//!	Partials are built up frame by frame by appending
+	//!	Breakpoints to Partials under construction, and giving
+	//!	birth to new Partials using unmatched Peaks.
+	void formPartials( Peaks & peaks );
+*/
     //  Reject peaks that are too close in frequency to a louder peak that is
     //  being retained, and peaks that are too quiet. Peaks that are retained,
     //  but are quiet enough to be in the specified fadeRange should be faded.

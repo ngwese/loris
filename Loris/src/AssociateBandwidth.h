@@ -60,7 +60,7 @@ class AssociateBandwidth
 	std::vector< double > _weights;	//	weights vector for recording 
 									//	frequency distribution of retained
 									//	sinusoids
-	 std::vector< double > _surplus;//	surplus (noise) energy vector for
+	std::vector< double > _surplus; //	surplus (noise) energy vector for
 	 								//	accumulating the distribution of
 	 								//	spectral energy to be distributed 
 	 								//	as noise

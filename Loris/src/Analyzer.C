@@ -379,9 +379,9 @@ Analyzer::configure( double resolutionHz, double windowWidthHz )
     
     //  frequency drift in Hz is the maximum difference
     //  in frequency between consecutive Breakpoints in
-    //  a Partial, by default, make it equal to one fifth
+    //  a Partial, by default, make it equal to one half
     //  the frequency resolution:
-    setFreqDrift( .2 * m_freqResolution );
+    setFreqDrift( .5 * m_freqResolution );
     
     //  hop time (in seconds) is the inverse of the
     //  window width....really. Smith and Serra (1990) cite 
@@ -507,7 +507,9 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
     double winshape = KaiserWindow::computeShape( sidelobeLevel() );
     long winlen = KaiserWindow::computeLength( windowWidth() / srate, winshape );    
     if (! (winlen % 2)) 
+    {
         ++winlen;
+    }
     debugger << "Using Kaiser window of length " << winlen << endl;
     
     std::vector< double > window( winlen );
@@ -539,9 +541,9 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
         
     try 
     { 
-        //  loop over short-time analysis frames:
         const double * winMiddle = bufBegin; 
 
+        //  loop over short-time analysis frames:
         while ( winMiddle < bufEnd )
         {
             //  compute the time of this analysis frame:
