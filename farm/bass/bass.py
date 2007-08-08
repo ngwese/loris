@@ -3,125 +3,160 @@
 """
 bass.py
 
-Python script for analyzing and reconstructing one of a variety 
-of sounds used to test the analysis/modification/synthesis routines 
-in Loris.
+Analyze single acoustic bass tones, plucked and 
+arco, taken from the Iowa samples. 
 
-This script pertains to the double bass open D string
-(D two octaves below middle C), taken from the Iowa samples.
-I have used this bass extensively in morphing with a bassoon
-sound.
+- plucked open D string (D two octaves below middle C)
+- plucked G on the D string (G two octaves below middle C)
+- bowed Db on the A string (?) (Db two octaves below middle C)
 
-Extended to do the G2 note as well.
-
-Last updated: 5 June 2006 by Kelly Fitz
+Last updated: 24 July 2007 by Kelly Fitz
 """
-print __doc__
 
-import loris, time
-
-print """
-Using Loris version %s
-"""%loris.version()
+import loris, time, os
 
 orate = 44100
 
 tag = ''
 
-name = 'bass.D2'
-f = loris.AiffFile( name + '.aiff' )
+stuff = {}
 
-print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
-fHz = 73.41
-anal = loris.Analyzer( .7*fHz, 1.8*fHz )
-anal.setFreqDrift( .2*fHz )
-anal.setAmpFloor(-75)
-anal.buildFundamentalEnv( .9*fHz, 1.1*fHz )
-p = anal.analyze( f.samples(), f.sampleRate() )
+# ----------------------------------------------------------------------------
 
-print 'distilling %s (%s)'%(name, time.ctime(time.time()))
-ref = anal.fundamentalEnv()
-loris.channelize( p, ref, 1 )
-#loris.sift( p )
-#loris.removeLabeled( p, 0 )
-loris.distill( p )
+def doBassD2( exportDir = '' ):
+	name = 'bass.D2'
+	f = loris.AiffFile( name + '.aiff' )
+	
+	print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
+	fHz = 73.41
+	anal = loris.Analyzer( .7*fHz, 1.8*fHz )
+	anal.setFreqDrift( .2*fHz )
+	anal.setAmpFloor(-75)
+	anal.buildFundamentalEnv( .9*fHz, 1.1*fHz )
+	p = anal.analyze( f.samples(), f.sampleRate() )
+	
+	print 'distilling %s (%s)'%(name, time.ctime(time.time()))
+	ref = anal.fundamentalEnv()
+	loris.channelize( p, ref, 1 )
+	#loris.sift( p )
+	#loris.removeLabeled( p, 0 )
+	loris.distill( p )	
+	
+	if exportDir:
+		print 'synthesizing %i distilled partials (%s)'%(p.size(), time.ctime(time.time()))
+		out_sfile = loris.AiffFile( p, orate )
+		
+		opath = os.path.join( exportDir, name + tag + '.recon.aiff' ) 
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_sfile.setMidiNoteNumber( 38 )
+		out_sfile.setMarkers( f.markers() )
+		out_sfile.write( opath )
+		
+		opath = os.path.join( exportDir, name + tag + '.sdif' )
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_pfile = loris.SdifFile( p )
+		out_pfile.setMarkers( f.markers() )
+		out_pfile.write( opath )
 
-print 'synthesizing %i distilled partials (%s)'%(p.size(), time.ctime(time.time()))
-out_sfile = loris.AiffFile( p, orate )
+	stuff[ name ] = ( p, anal )
+	
+	print 'Done. (%s)'%(time.ctime(time.time()))
 
-print 'writing %s (%s)'%(name + tag + '.recon.aiff', time.ctime(time.time()))
-out_sfile.setMidiNoteNumber( 38 )
-out_sfile.setMarkers( f.markers() )
-out_sfile.write( name + tag + '.recon.aiff' )
+# ----------------------------------------------------------------------------
 
-print 'writing %s (%s)'%(name + tag + '.sdif', time.ctime(time.time()))
-out_pfile = loris.SdifFile( p )
-out_pfile.setMarkers( f.markers() )
-out_pfile.write( name + tag + '.sdif' )
+def doBassG2( exportDir = '' ):
+	name = 'bass.G2'
+	f = loris.AiffFile( name + '.aiff' )
+	
+	print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
+	fHz = 97
+	anal = loris.Analyzer( .7*fHz, 1.8*fHz )
+	anal.setFreqDrift( .2*fHz )
+	anal.setAmpFloor(-75)
+	anal.buildFundamentalEnv( .9*fHz, 1.1*fHz )
+	p = anal.analyze( f.samples(), f.sampleRate() )
+	
+	print 'distilling %s (%s)'%(name, time.ctime(time.time()))
+	ref = anal.fundamentalEnv()
+	loris.channelize( p, ref, 1 )
+	#loris.sift( p )
+	#loris.removeLabeled( p, 0 )
+	loris.distill( p )
+	
+	if exportDir:
+		print 'synthesizing %i distilled partials (%s)'%(p.size(), time.ctime(time.time()))
+		out_sfile = loris.AiffFile( p, orate )
+		
+		opath = os.path.join( exportDir, name + tag + '.recon.aiff' ) 
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_sfile.setMidiNoteNumber( 43 )
+		out_sfile.setMarkers( f.markers() )
+		out_sfile.write( opath )
+		
+		opath = os.path.join( exportDir, name + tag + '.sdif' )
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_pfile = loris.SdifFile( p )
+		out_pfile.setMarkers( f.markers() )
+		out_pfile.write( opath )
 
-
-name = 'bass.G2'
-f = loris.AiffFile( name + '.aiff' )
-
-print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
-fHz = 97
-anal = loris.Analyzer( .7*fHz, 1.8*fHz )
-anal.setFreqDrift( .2*fHz )
-anal.setAmpFloor(-75)
-anal.buildFundamentalEnv( .9*fHz, 1.1*fHz )
-p = anal.analyze( f.samples(), f.sampleRate() )
-
-print 'distilling %s (%s)'%(name, time.ctime(time.time()))
-ref = anal.fundamentalEnv()
-loris.channelize( p, ref, 1 )
-#loris.sift( p )
-#loris.removeLabeled( p, 0 )
-loris.distill( p )
-
-print 'synthesizing %i distilled partials (%s)'%(p.size(), time.ctime(time.time()))
-out_sfile = loris.AiffFile( p, orate )
-
-print 'writing %s (%s)'%(name + tag + '.recon.aiff', time.ctime(time.time()))
-out_sfile.setMidiNoteNumber( 43 )
-out_sfile.setMarkers( f.markers() )
-out_sfile.write( name + tag + '.recon.aiff' )
-
-print 'writing %s (%s)'%(name + tag + '.sdif', time.ctime(time.time()))
-out_pfile = loris.SdifFile( p )
-out_pfile.setMarkers( f.markers() )
-out_pfile.write( name + tag + '.sdif' )
-
-
-name = 'bass.Db2.arco'
-f = loris.AiffFile( name + '.aiff' )
-
-print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
-fHz = 69.3
-anal = loris.Analyzer( .85*fHz, 1.65*fHz )
-anal.setFreqDrift( .2*fHz )
-anal.setBwRegionWidth( 0 )
-anal.buildFundamentalEnv( .9*fHz, 1.1*fHz )
-p = anal.analyze( f.samples(), f.sampleRate() )
-
-print 'distilling %s (%s)'%(name, time.ctime(time.time()))
-ref = anal.fundamentalEnv()
-loris.channelize( p, ref, 1 )
-#loris.sift( p )
-#loris.removeLabeled( p, 0 )
-loris.distill( p, 0.01 )
-
-print 'synthesizing %i distilled partials (%s)'%(p.size(), time.ctime(time.time()))
-out_sfile = loris.AiffFile( p, orate )
-
-print 'writing %s (%s)'%(name + tag + '.recon.aiff', time.ctime(time.time()))
-out_sfile.setMidiNoteNumber( 37 )
-out_sfile.setMarkers( f.markers() )
-out_sfile.write( name + tag + '.recon.aiff' )
-
-print 'writing %s (%s)'%(name + tag + '.sdif', time.ctime(time.time()))
-out_pfile = loris.SdifFile( p )
-out_pfile.setMarkers( f.markers() )
-out_pfile.write( name + tag + '.sdif' )
+	stuff[ name ] = ( p, anal )
+	
+	print 'Done. (%s)'%(time.ctime(time.time()))
 
 
-print 'Done. (%s)'%(time.ctime(time.time()))
+# ----------------------------------------------------------------------------
+
+def doBassDb2Arco( exportDir = '' ):
+	name = 'bass.Db2.arco'
+	f = loris.AiffFile( name + '.aiff' )
+	
+	print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
+	fHz = 69.3
+	anal = loris.Analyzer( .85*fHz, 1.65*fHz )
+	anal.setFreqDrift( .2*fHz )
+	anal.setBwRegionWidth(0)
+	anal.buildFundamentalEnv( .9*fHz, 1.1*fHz )
+	p = anal.analyze( f.samples(), f.sampleRate() )
+	
+	print 'distilling %s (%s)'%(name, time.ctime(time.time()))
+	ref = anal.fundamentalEnv()
+	loris.channelize( p, ref, 1 )
+	#loris.sift( p )
+	#loris.removeLabeled( p, 0 )
+	loris.distill( p, 0.01 )
+	
+	if exportDir:
+		print 'synthesizing %i distilled partials (%s)'%(p.size(), time.ctime(time.time()))
+		out_sfile = loris.AiffFile( p, orate )
+		
+		opath = os.path.join( exportDir, name + tag + '.recon.aiff' ) 
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_sfile.setMidiNoteNumber( 37 )
+		out_sfile.setMarkers( f.markers() )
+		out_sfile.write( opath )
+		
+		opath = os.path.join( exportDir, name + tag + '.sdif' )
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_pfile = loris.SdifFile( p )
+		out_pfile.setMarkers( f.markers() )
+		out_pfile.write( opath )	
+
+	stuff[ name ] = ( p, anal )
+	
+	print 'Done. (%s)'%(time.ctime(time.time()))
+
+# ----------------------------------------------------------------------------
+
+if __name__ == '__main__':
+	print __doc__
+
+	print 'Using Loris version %s'%( loris.version() )
+
+	import sys
+	odir = os.curdir
+	if len( sys.argv ) > 1:
+		tag = '.' + sys.argv[1]
+		
+	doBassD2( odir )
+	doBassG2( odir )
+	doBassDb2Arco( odir )
