@@ -122,6 +122,13 @@ SpectralPeakSelector::selectPeaks( ReassignedSpectrum & spectrum,
 	            freq = next_fsample * sampsToHz;
 	            peakidx = j+1;
 	        }
+            
+            //  still possible that the frequency winds up being
+            //  below the specified minimum
+            if ( freq < minFrequency )
+            {
+                continue;   //  this control flow could be better!
+            }
 	         
 			//	keep only peaks with small time corrections:
 			double timeCorrectionSamps = spectrum.reassignedTime( peakidx );
