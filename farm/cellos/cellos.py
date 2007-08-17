@@ -39,143 +39,235 @@ Cello 69 Hz mezzo-forte:
 	they used to be, and it no longer seems necessary to use the gain
 	normalized MF tone, the original works OK too. The attack could use 
 	some help, but otherwise OK.
+	
+	Fixed lousy Ab2 by realizing that it was actually Gb2! Also 
+	checked tuning of the other notes. Better now.
 
-Last updated: 26 May 2006 by Kelly Fitz
+Last updated: 15 Aug 2007 by Kelly Fitz
+
 """
-print __doc__
-
-import loris, time
-
-print """
-Using Loris version %s
-"""%loris.version()
+import loris, time, os
 
 orate = 44100
 
+tag = ''
 
+stuff = {}
+
+# ----------------------------------------------------------------------------
 #
 # 154.F tone
 #
-name = 'cello154.F'
-anal = loris.Analyzer( 123, 154 )
-f = loris.AiffFile( name + '.aiff' )
-print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
-p = anal.analyze( f.samples(), f.sampleRate() )
+def doCello154F( exportDir = '' ):
+	name = 'cello154.F'
+	anal = loris.Analyzer( 123, 154 )
+	f = loris.AiffFile( name + '.aiff' )
+	print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
+	p = anal.analyze( f.samples(), f.sampleRate() )
+	
+	# cello154.F distilled using 3d harmonic
+	ref = loris.createFreqReference( p, 154*0.9, 1541.1 )
+	loris.channelize( p, ref, 1 )
+	loris.distill( p )
+	print 'synthesizing distilled %s (%s)'%(name, time.ctime(time.time()))
 
-# cello154.F distilled using 3d harmonic
-ref = loris.createFreqReference( p, 154*0.9, 1541.1 )
-loris.channelize( p, ref, 1 )
-loris.distill( p )
-print 'synthesizing distilled %s (%s)'%(name, time.ctime(time.time()))
-samples = loris.synthesize( p, orate )
-loris.exportAiff( name + '.recon.aiff', samples, orate )
-loris.exportSdif( name + '.sdif', p )
+	if exportDir:
+		print 'synthesizing %i distilled partials (%s)'%(p.size(), time.ctime(time.time()))
+		out_sfile = loris.AiffFile( p, orate )
+		
+		opath = os.path.join( exportDir, name + tag + '.recon.aiff' ) 
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_sfile.setMarkers( f.markers() )
+		out_sfile.write( opath )
+		
+		opath = os.path.join( exportDir, name + tag + '.sdif' )
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_pfile = loris.SdifFile( p )
+		out_pfile.setMarkers( f.markers() )
+		out_pfile.write( opath )
 
-
+	stuff[ name ] = ( p, ref, anal )
+	
+	
+	
+# ----------------------------------------------------------------------------
 #
 # 69.F tone	
 #
-name = 'cello69.F'
-anal = loris.Analyzer( 20, 69 )
-f = loris.AiffFile( name + '.aiff' )
-print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
-p = anal.analyze( f.samples(), f.sampleRate() )
+def doCello69F( exportDir = '' ):
+	name = 'cello69.F'
+	anal = loris.Analyzer( 20, 69 )
+	anal.setFreqFloor( 50 )
+	f = loris.AiffFile( name + '.aiff' )
+	print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
+	p = anal.analyze( f.samples(), f.sampleRate() )
+	
+	# 69.F tone collated
+	print 'collating %s (%s)'%(name, time.ctime(time.time()))
+	pcollate = loris.PartialList( p )
+	loris.collate( pcollate )	
+	
+	# distill using two partials per harmonic
+	print 'distilling %s at two partials per harmonic (%s)'%(name, time.ctime(time.time()))
+	ref = loris.createFreqReference( p, 69*0.9, 69*1.1 )
+	loris.channelize( p, ref, 2 )
+	loris.distill( p )
 
-# 69.MF tone collated
-pcollate = loris.PartialList( p )
-loris.collate( pcollate )
-print 'synthesizing raw (collated) %s (%s)'%(name, time.ctime(time.time()))
-samples = loris.synthesize( pcollate, orate )
-loris.exportAiff( name + '.raw.aiff', samples, orate )
-loris.exportSdif( name + '.raw.sdif', pcollate )
+	if exportDir:
+		print 'synthesizing %i collated partials (%s)'%(p.size(), time.ctime(time.time()))
+		out_sfile = loris.AiffFile( pcollate, orate )
+		
+		opath = os.path.join( exportDir, name + tag + '.raw.aiff' ) 
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_sfile.setMarkers( f.markers() )
+		out_sfile.write( opath )
+		
+		opath = os.path.join( exportDir, name + tag + '.raw.sdif' )
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_pfile = loris.SdifFile( pcollate )
+		out_pfile.setMarkers( f.markers() )
+		out_pfile.write( opath )
+		
+		
+		print 'synthesizing %i distilled partials (%s)'%(p.size(), time.ctime(time.time()))
+		out_sfile = loris.AiffFile( p, orate )
+		
+		opath = os.path.join( exportDir, name + tag + '.recon.aiff' ) 
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_sfile.setMarkers( f.markers() )
+		out_sfile.write( opath )
+		
+		opath = os.path.join( exportDir, name + tag + '.sdif' )
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_pfile = loris.SdifFile( p )
+		out_pfile.setMarkers( f.markers() )
+		out_pfile.write( opath )
+
+	stuff[ name ] = ( p, pcollate, ref, anal )
 
 
-# distill using two partials per harmonic
-ref = loris.createFreqReference( p, 69*0.9, 69*1.1 )
-loris.channelize( p, ref, 2 )
-loris.distill( p )
-print 'synthesizing distilled %s (%s)'%(name, time.ctime(time.time()))
-samples = loris.synthesize( p, orate )
-loris.exportAiff( name + '.recon.aiff', samples, orate )
-loris.exportSdif( name + '.sdif', p )
-
+# ----------------------------------------------------------------------------
 #
 # 69.MF tone	
 #
-name = 'cello69.MF'
-anal = loris.Analyzer( 34, 138 )
-f = loris.AiffFile( name + '.aiff' )
-print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
-p = anal.analyze( f.samples(), f.sampleRate() )
+def doCello69MF( exportDir = '' ):
+	name = 'cello69.MF'
+	anal = loris.Analyzer( 34, 138 )
+	f = loris.AiffFile( name + '.aiff' )
+	print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
+	p = anal.analyze( f.samples(), f.sampleRate() )
+	
+	# 69.MF tone collated
+	print 'collating %s (%s)'%(name, time.ctime(time.time()))
+	pcollate = loris.PartialList( p )
+	loris.collate( pcollate )
+	
+	
+	# distill using two partials per harmonic
+	print 'distilling %s at two partials per harmonic (%s)'%(name, time.ctime(time.time()))
+	ref = loris.createFreqReference( p, 69*0.9, 69*1.1 )
+	loris.channelize( p, ref, 2 )
+	loris.sift( p )
+	zeros = loris.extractLabeled( p, 0 )
+	loris.distill( p )
 
-# 69.MF tone collated
-pcollate = loris.PartialList( p )
-loris.collate( pcollate )
-print 'synthesizing raw (collated) %s (%s)'%(name, time.ctime(time.time()))
-samples = loris.synthesize( pcollate, orate )
-loris.exportAiff( name + '.raw.aiff', samples, orate )
-loris.exportSdif( name + '.raw.sdif', pcollate )
+	if exportDir:
+		print 'synthesizing %i collated partials (%s)'%(p.size(), time.ctime(time.time()))
+		out_sfile = loris.AiffFile( pcollate, orate )
+		
+		opath = os.path.join( exportDir, name + tag + '.raw.aiff' ) 
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_sfile.setMarkers( f.markers() )
+		out_sfile.write( opath )
+		
+		opath = os.path.join( exportDir, name + tag + '.raw.sdif' )
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_pfile = loris.SdifFile( pcollate )
+		out_pfile.setMarkers( f.markers() )
+		out_pfile.write( opath )
+		
+		
+		print 'synthesizing %i distilled partials (%s)'%(p.size(), time.ctime(time.time()))
+		out_sfile = loris.AiffFile( p, orate )
+		
+		opath = os.path.join( exportDir, name + tag + '.recon.aiff' ) 
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_sfile.setMarkers( f.markers() )
+		out_sfile.write( opath )
+		
+		opath = os.path.join( exportDir, name + tag + '.sdif' )
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_pfile = loris.SdifFile( p )
+		out_pfile.setMarkers( f.markers() )
+		out_pfile.write( opath )
 
+	stuff[ name ] = ( p, pcollate, ref, anal )
+	
 
-# distill using two partials per harmonic
-ref = loris.createFreqReference( p, 69*0.9, 69*1.1 )
-loris.channelize( p, ref, 2 )
-loris.sift( p )
-zeros = loris.extractLabeled( p, 0 )
-loris.distill( p )
-print 'synthesizing distilled %s (%s)'%(name, time.ctime(time.time()))
-samples = loris.synthesize( p, orate )
-loris.exportAiff( name + '.recon.aiff', samples, orate )
-loris.exportSdif( name + '.sdif', p )
-
-
+# ----------------------------------------------------------------------------
 #
 # arco cellos (new May 2006)
 #
-def nnToHz( nn ):
-	import math
-	pshift = (nn-69)/12.0
-	hz = 440.0 * math.pow( 2.0, pshift )
-	return hz
 
-def analyze_arco( name, midiNN ):
-	from loris import *
+def analyze_arco( name, midiNN, exportDir = ''  ):
+	import math
 	
-	fHz = nnToHz( midiNN )
+	# compute note fundamental frequency in Hz
+	fHz = 440.0 * math.pow( 2.0, ((midiNN-69)/12.0) )
+	
 	Fade = 0.01
 	
 	print "analyzing", name + ".aiff", "at fundamental", fHz, "Hz", time.ctime(time.time())
-	f = AiffFile( name + ".aiff" )
+	f = loris.AiffFile( name + ".aiff" )
 	
-	anal = Analyzer( .85*fHz, 1.65*fHz )
+	anal = loris.Analyzer( .85*fHz, 1.65*fHz )
 	anal.setBwRegionWidth( 0 )
 	
 	p = anal.analyze( f.samples(), f.sampleRate() )
 
 	print "distilling", name, ",", p.size()," partials, fade time ", Fade * 1000, "ms"
-	ref = createFreqReference( p, .9*fHz, 1.1*fHz );
-	channelize( p, ref, 1 )
-	distill( p, Fade )
+	ref = loris.createFreqReference( p, .9*fHz, 1.1*fHz );
+	loris.channelize( p, ref, 1 )
+	loris.distill( p, Fade )
 	
 	# chop off any times before 0
-	crop( p, 0, 20 )
+	loris.crop( p, 0, 20 )
 	
-	print "synthesizing", name,  ",", p.size(), "partials"
-	out_sfile = AiffFile( p, orate )
-
-	print "writing", name + ".recon.aiff"
-	out_sfile.setMidiNoteNumber( midiNN )
-	out_sfile.addMarkers( f.markers() )
-	out_sfile.write( name + ".recon.aiff" );
-
-	print "writing", name + ".sdif"
-	out_pfile = SdifFile( p )
-	out_pfile.addMarkers( f.markers() )
-	out_pfile.write( name + ".sdif" );
+	if exportDir:
+		print 'synthesizing %i distilled partials (%s)'%(p.size(), time.ctime(time.time()))
+		out_sfile = loris.AiffFile( p, orate )
+		
+		opath = os.path.join( exportDir, name + tag + '.recon.aiff' ) 
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_sfile.setMarkers( f.markers() )
+		out_sfile.write( opath )
+		
+		opath = os.path.join( exportDir, name + tag + '.sdif' )
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_pfile = loris.SdifFile( p )
+		out_pfile.setMarkers( f.markers() )
+		out_pfile.write( opath )
 	
+	stuff[ name ] = ( p, ref, anal )
 
-analyze_arco( "cello.sulA.B3", 59 )
-analyze_arco( "cello.sulC.Ab2", 44 )	# lousy
-analyze_arco( "cello.sulC.Db2", 37 )
-analyze_arco( "cello.sulD.Bb3", 58 )	# mediocre
+# ----------------------------------------------------------------------------
 
+if __name__ == '__main__':
+	print __doc__
+
+	print 'Using Loris version %s'%( loris.version() )
+
+	import sys
+	odir = os.curdir
+	if len( sys.argv ) > 1:
+		tag = '.' + sys.argv[1]
+		
+	doCello154F( odir )
+	doCello69F( odir )
+	doCello69MF( odir )
+
+	analyze_arco( "cello.sulA.B3", 58.7, odir )
+	analyze_arco( "cello.sulC.Gb2", 42, odir )
+	analyze_arco( "cello.sulC.Db2", 36.9, odir )
+	analyze_arco( "cello.sulD.Bb3", 57.8, odir )	# mediocre
+	

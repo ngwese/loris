@@ -1,79 +1,84 @@
+#!/usr/bin/python
 """
 pianosax.py
 
-Python script for analyzing and reconstructing one of a variety 
-of sounds used to test the analysis/modification/synthesis routines 
-in Loris.
 
-This script pertains to the piano/soprano sax duet that I used in 
-my dissertation work. I also used this sound to test the frequency 
-tracking analysis, developed after release 1.0.2, but didn't work long 
-enough at it to make it sound good. We once liked to configure the
-analyzer with resolution and window width at 300Hz, but then needed
-to lower the frequency floor to about 90 Hz. For testing the frequency
-tracking analysis, I used resolution 150 Hz (or maybe 90?), and 
-window width 300 Hz.
+Analyze and reconstruct the piano/soprano sax duet that I used in my
+dissertation work. Sifting but leaving the zeros in sounds crunchy,
+removing the zeros sounds anemic and bubbly. The crunch isn't actually
+noise, apparently, because it is still there even if the noise energy in
+scaled to zero.
 
-A fundamental frequency envelope traced in Kyma is in 
-pianosax.fund.qharm.
+Two partials per harmonic restores some of the sound, but also leaves in
+some crunch or whoosh, can't figure out where it comes from.
 
-trial 1:
-	- must have been using 90 Hz resolution (more importantly, 90 Hz
-	frequency floor) to get the thuds in the piano notes.
-	
-trial 2:
-	- setting frequency floor to 90 Hz is adequate, don't need resolution
-	that low
-	- tracking analyses are crunchy, try turning off BW association
+Can  get a decent analysis and fundamental tracking. Definitely need
+some non-harmonic low frequency partials to reconstruct the piano
+thunks. There's still a little cruch, but not to much.
 
-trial 3:
-	- sifting but leaving the zeros in still sounds crunchy, removing
-	the zeros sounds anemic and bubbly
-	- two partials per harmonic restores some of the sound, but also leaves
-	in some crunch or whoosh, can't figure out where it comes from.
-	- the crunch isn't actually noise, apparently, because it is still there
-	even if the noise energy in scaled to zero!
-
-
-Can now get a decent analysis and fundamental tracking. Definitely need 
-some non-harmonic low frequency partials to reconstruct the piano thunks.
-There's still a little cruch, but not to much.
-
-Last updated: 6 June 2006 by Kelly Fitz
+Last updated: 16 Aug 2007 by Kelly Fitz
 """
 
-print __doc__
+import loris, time, os
 
-import loris, time
-print "using Loris version", loris.version()
+orate = 44100
 
-name = 'pianosax.aiff'
-file = loris.AiffFile( name )
-samples = file.samples()
-rate = file.sampleRate()
+tag = ''
 
-print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
-res = 250
-width = 600
-a = loris.Analyzer( res, width )
-a.setFreqFloor( 90 )
-a.setFreqDrift( 20 )
-a.setBwRegionWidth( 0 ) # no BW association
-a.buildFundamentalEnv( 300, 720 )
+stuff = {}
 
-p = a.analyze( samples, rate )
+# ----------------------------------------------------------------------------
 
-print 'sifting and distilling %i partials (%s)'%(p.size(), time.ctime(time.time()))
-ref = a.fundamentalEnv()
-loris.channelize(p, ref, 1)
-loris.sift( p )
-loris.distill( p )
+def doPianoSax( exportDir = '' ):
 
-# export
-ofile = 'pianosax'
-print 'writing %s (%s)'%(ofile + '.recon.aiff', time.ctime(time.time()))
-loris.exportAiff( ofile + '.recon.aiff', p, rate )
+	name = 'pianosax'
+	f = loris.AiffFile( name + '.aiff' )
+	
+	print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
+	anal = loris.Analyzer( 250, 600 )
+	anal.setFreqFloor( 90 )
+	anal.setFreqDrift( 20 )
+	anal.setBwRegionWidth( 0 )
+	anal.buildFundamentalEnv( 300, 720 )
+	p = anal.analyze( f.samples(), f.sampleRate() )
 
-print 'writing %s (%s)'%(ofile + '.sdif', time.ctime(time.time()))
-loris.exportSdif( ofile + '.sdif', p ) 
+	
+	print 'sifting and distilling %i partials (%s)'%(p.size(), time.ctime(time.time()))
+	ref = anal.fundamentalEnv()
+	loris.channelize( p, ref, 1 )
+	loris.sift( p )
+	loris.distill( p )
+	
+	if exportDir:
+	
+		print 'synthesizing %i distilled partials (%s)'%(p.size(), time.ctime(time.time()))
+		out_sfile = loris.AiffFile( p, orate )
+		
+		opath = os.path.join( exportDir, name + tag + '.recon.aiff' ) 
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_sfile.setMarkers( f.markers() )
+		out_sfile.write( opath )
+		
+		opath = os.path.join( exportDir, name + tag + '.sdif' )
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_pfile = loris.SdifFile( p )
+		out_pfile.setMarkers( f.markers() )
+		out_pfile.write( opath )
+
+	stuff[ name ] = ( p, anal )
+	
+	
+# ----------------------------------------------------------------------------
+
+if __name__ == '__main__':
+	print __doc__
+
+	print 'Using Loris version %s'%( loris.version() )
+
+	import sys
+	odir = os.curdir
+	if len( sys.argv ) > 1:
+		tag = '.' + sys.argv[1]
+		
+	doPianoSax( odir )
 

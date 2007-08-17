@@ -1,60 +1,104 @@
+#!/usr/bin/python
+
 """
 bongo.py
 
-Python script for analyzing and reconstructing one of a variety 
-of sounds used to test the analysis/modification/synthesis routines 
-in Loris.
+Analyze the bongo drum roll that was used in my
+dissertation work, and was part of the ICMC 2000 bakeoff.
 
-This script pertains to the bongo drum roll that was used in my
-dissertation work, and was part of the ICMC 2000 bakeoff. A the 
-time of the bakeoff, we liked to use 300 Hz resolution, a 800 Hz
-window, and frequency floor at 200 Hz. 
-
-trial 1:
-	- 400 Hz resolution just sounds wrong, almost like the wrong pitch
-	- 200 and 300 Hz resolutions sound very similar
-	- different windows are pretty hard to distinguish too
-
-trial 2: 
-	- frequency floor at 200 is no different from floor at 300 hz
-	- 500 Hz window isn't quite right either
+200 and 300 Hz resolutions sound very similar
+frequency floor at 200 is no different from floor at 300 hz
 
 Can distill this with fixed-frequency (200 Hz) channels without 
-destroying it too.
+destroying it.
 
-Last updated: 26 May 2006 by Kelly Fitz
+Last updated: 10 Aug 2007 by Kelly Fitz
 """
 
-print __doc__
+import loris, time, os
 
-import loris, time
-print "using Loris version", loris.version()
+orate = 44100
 
-source = 'bongoroll.aiff'
-file = loris.AiffFile( source )
-samples = file.samples()
-rate = file.sampleRate()
+tag = ''
 
-a = loris.Analyzer( 300, 800 )
-a.setBwRegionWidth( 0 )
-a.setFreqFloor( 200 )
-a.setFreqDrift( 50 )
+stuff = {}
 
-p = a.analyze( samples, rate )
-loris.crop( p, 0, 20 )
+# ----------------------------------------------------------------------------
 
-praw = loris.PartialList( p )
-loris.collate( praw )
+def doBongo( exportDir = '' ):
 
-# export raw
-loris.exportAiff( 'bongo.raw.recon.aiff', praw, rate )
-loris.exportSdif( 'bongo.raw.sdif', praw  )
+	name = 'bongoroll'
+	f = loris.AiffFile( name + '.aiff' )
+	
+	print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
+	anal = loris.Analyzer( 300, 800 )
+	anal.setFreqFloor( 200 )
+	anal.setFreqDrift( 50 )
+	anal.setBwRegionWidth( 0 )
+	p = anal.analyze( f.samples(), f.sampleRate() )
+
+	print 'cropping %s (%s)'%(name, time.ctime(time.time()))
+	loris.crop( p, 0, 20 )
+	
+	print 'collating %s (%s)'%(name, time.ctime(time.time()))
+	pcollate = loris.PartialList( p )
+	loris.collate( pcollate )
+
+	print 'distilling %s at 200 Hz (%s)'%(name, time.ctime(time.time()))
+	env = loris.LinearEnvelope( 200 )
+	loris.channelize( p, env, 1 )
+	loris.distill( p, 0.001 )
+
+	
+	if exportDir:
+		print 'synthesizing %i collated partials (%s)'%(pcollate.size(), time.ctime(time.time()))
+		out_sfile = loris.AiffFile( pcollate, orate )
+		
+		opath = os.path.join( exportDir, name + tag + '.raw.aiff' ) 
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_sfile.setMarkers( f.markers() )
+		out_sfile.write( opath )
+		
+		opath = os.path.join( exportDir, name + tag + '.raw.sdif' )
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_pfile = loris.SdifFile( pcollate )
+		out_pfile.setMarkers( f.markers() )
+		out_pfile.write( opath )
+		
+
+		print 'synthesizing %i distilled partials (%s)'%(p.size(), time.ctime(time.time()))
+		out_sfile = loris.AiffFile( p, orate )
+		
+		opath = os.path.join( exportDir, name + tag + '.recon.aiff' ) 
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_sfile.setMarkers( f.markers() )
+		out_sfile.write( opath )
+		
+		opath = os.path.join( exportDir, name + tag + '.sdif' )
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_pfile = loris.SdifFile( p )
+		out_pfile.setMarkers( f.markers() )
+		out_pfile.write( opath )
+
+	stuff[ name ] = ( p, pcollate, anal )
+	
+	print 'Done. (%s)'%(time.ctime(time.time()))
+
+	
 
 
-ref = loris.LinearEnvelope( 200 )
-loris.channelize( p, ref, 1 )
-loris.distill( p, 0.001 )
+# ----------------------------------------------------------------------------
 
-# export distilled
-loris.exportAiff( 'bongo.recon.aiff', p, rate )
-loris.exportSdif( 'bongo.sdif', p  )
+if __name__ == '__main__':
+	print __doc__
+
+	print 'Using Loris version %s'%( loris.version() )
+
+	import sys
+	odir = os.curdir
+	if len( sys.argv ) > 1:
+		tag = '.' + sys.argv[1]
+		
+	doBongo( odir )
+
+
