@@ -3,67 +3,87 @@
 """
 tuba.py
 
-Python script for analyzing and reconstructing one of a variety 
-of sounds used to test the analysis/modification/synthesis routines 
-in Loris.
+Analyze and reconstruct a low tuba note C2.
 
-This script pertains to a difficult low tuba note C2.
-
-
-Last updated: 22 July 2006 by Kelly Fitz
+Last updated: 17 Aug 2007 by Kelly Fitz
 """
-print __doc__
 
-import loris, time
-
-print """
-Using Loris version %s
-"""%loris.version()
+import loris, time, os
 
 orate = 44100
 
 tag = ''
 
-name = 'tuba.C2'
-f = loris.AiffFile( name + '.aiff' )
+stuff = {}
 
-print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
-fHz = 65.4
-anal = loris.Analyzer( 62, 120 )
-anal.setFreqDrift( .2*fHz )
-anal.setBwRegionWidth(0)
-anal.buildFundamentalEnv( 60, 70 )
-p = anal.analyze( f.samples(), f.sampleRate() )
+# ----------------------------------------------------------------------------
 
-print 'distilling %s (%s)'%(name, time.ctime(time.time()))
-ref = anal.fundamentalEnv()
-loris.channelize( p, ref, 1 )
-#loris.sift( p )
-#loris.removeLabeled( p, 0 )
-loris.distill( p )
+def doTuba( exportDir = '' ):
 
-print 'synthesizing %i distilled partials (%s)'%(p.size(), time.ctime(time.time()))
-samps = loris.synthesize( p, orate )
+	name = 'tuba.C2'
+	f = loris.AiffFile( name + '.aiff' )
+	
+	print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
+	fHz = 65.4
+	anal = loris.Analyzer( 62, 120 )
+	anal.setFreqDrift( .2*fHz )
+	anal.setBwRegionWidth(0)
+	anal.buildFundamentalEnv( 60, 70 )
+	p = anal.analyze( f.samples(), f.sampleRate() )
+	
+	print 'distilling %s (%s)'%(name, time.ctime(time.time()))
+	ref = anal.fundamentalEnv()
+	loris.channelize( p, ref, 1 )
+	loris.distill( p )
+	
+	if exportDir:
 
-print 'writing %s (%s)'%(name + tag + '.recon.aiff', time.ctime(time.time()))
-out_sfile = loris.AiffFile( samps, orate )
-out_sfile.setMidiNoteNumber( 36 )
-out_sfile.setMarkers( f.markers() )
-out_sfile.write( name + tag + '.recon.aiff' )
+		print 'synthesizing %i distilled partials (%s)'%(p.size(), time.ctime(time.time()))
+		samps = loris.synthesize( p, orate )
+		
+		opath = os.path.join( exportDir, name + tag + '.recon.aiff' ) 
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_sfile = loris.AiffFile( samps, orate )
+		out_sfile.setMidiNoteNumber( 36 )
+		out_sfile.setMarkers( f.markers() )
+		out_sfile.write( name + tag + '.recon.aiff' )
+		
+
+		opath = os.path.join( exportDir, name + tag + '.sdif' )
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_pfile = loris.SdifFile( p )
+		out_pfile.setMarkers( f.markers() )
+		out_pfile.write( opath )
+
+		
+		print 'computing residual signal (%s)'%(time.ctime(time.time()))
+		resid = list(f.samples())
+		for k in range(len(resid)):
+			if k < len(samps):
+				resid[k] = resid[k] - samps[k]
+
+		opath = os.path.join( exportDir, name + tag + '.residual.aiff' )
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_sfile = loris.AiffFile( resid, orate )
+		out_sfile.setMidiNoteNumber( 36 )
+		out_sfile.setMarkers( f.markers() )
+		out_sfile.write( name + tag + '.residual.aiff' )
+
+	stuff[ name ] = ( p, anal )
+	
+	print 'Done. (%s)'%(time.ctime(time.time()))
 
 
-print 'writing %s (%s)'%(name + tag + '.sdif', time.ctime(time.time()))
-out_pfile = loris.SdifFile( p )
-out_pfile.setMarkers( f.markers() )
-out_pfile.write( name + tag + '.sdif' )
+# ----------------------------------------------------------------------------
 
-print 'computing residual signal (%s)'%(time.ctime(time.time()))
-resid = list(f.samples())
-for k in range(len(resid)):
-    if k < len(samps):
-        resid[k] = resid[k] - samps[k]
-        
-print 'writing %s (%s)'%(name + tag + '.residual.aiff', time.ctime(time.time()))
-out_sfile.setMidiNoteNumber( 36 )
-out_sfile.setMarkers( f.markers() )
-out_sfile.write( name + tag + '.residual.aiff' )
+if __name__ == '__main__':
+	print __doc__
+
+	print 'Using Loris version %s'%( loris.version() )
+
+	import sys
+	odir = os.curdir
+	if len( sys.argv ) > 1:
+		tag = '.' + sys.argv[1]
+		
+	doTuba( odir )

@@ -18,7 +18,7 @@ elephant3:
 These sound good individually, but to do the morph, need to distill/sift
 them to a common frequency, like 60 Hz.
 
-Last updated: 26 july 2005 by Kelly Fitz
+Last updated: 5 June 2007 by Kelly Fitz
 """
 
 print __doc__
@@ -39,20 +39,24 @@ p = anal.analyze( f.samples(), f.sampleRate() )
 # distilled at 60 Hz
 ref = loris.LinearEnvelope( 60 )
 loris.channelize( p, ref, 1 )
+loris.sift( p )
 loris.distill( p )
+
+loris.setBandwidth( p, 0 )
+
 print 'synthesizing distilled %s (%s)'%(name, time.ctime(time.time()))
 samples = loris.synthesize( p, orate )
 loris.exportAiff( name + '.recon.aiff', samples, orate )
 loris.exportSdif( name + '.sdif', p )
 
 # remove any Partials labeled greater than 256
-for partial in p:
-	if partial.label() > 256:
-		partial.setLabel( 0 )
-loris.removeLabeled( p, 0 )
-
-loris.exportSpc( name + '.s.spc', p, 60, 0 )
-loris.exportSpc( name + '.e.spc', p, 60, 1 )
+# for partial in p:
+# 	if partial.label() > 256:
+# 		partial.setLabel( 0 )
+# loris.removeLabeled( p, 0 )
+# 
+# loris.exportSpc( name + '.s.spc', p, 60, 0 )
+# loris.exportSpc( name + '.e.spc', p, 60, 1 )
 
 #
 # elephant3
@@ -69,19 +73,22 @@ loris.channelize( p, ref, 1 )
 loris.sift( p )
 zeros = loris.extractLabeled( p, 0 )
 loris.distill( p )
+
+loris.setBandwidth( p, 0 )
+
 print 'synthesizing sifted %s (%s)'%(name, time.ctime(time.time()))
 samples = loris.synthesize( p, orate )
 loris.exportAiff( name + '.recon.aiff', samples, orate )
 loris.exportSdif( name + '.sdif', p )
 
 # remove any Partials labeled greater than 256
-for partial in p:
-	if partial.label() > 256:
-		partial.setLabel( 0 )
-loris.removeLabeled( p, 0 )
+# for partial in p:
+# 	if partial.label() > 256:
+# 		partial.setLabel( 0 )
+# loris.removeLabeled( p, 0 )
 
-loris.exportSpc( name + '.s.spc', p, 60, 0 )
-loris.exportSpc( name + '.e.spc', p, 60, 1 )
+# loris.exportSpc( name + '.s.spc', p, 60, 0 )
+# loris.exportSpc( name + '.e.spc', p, 60, 1 )
 
 
 ##
