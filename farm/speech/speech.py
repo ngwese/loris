@@ -17,6 +17,8 @@ Two partials per harmonic are always necessary for decent
 sound, and the sound doesn't improve with the improved tracking.
 One partial per harmonic is completely unlistenable.
 
+The "funny people" analyses were also being reanalyzed with tracking,
+but it does not make much difference. 
 
 Last updated: 23 Aug 2007 by Kelly Fitz
 """
@@ -117,8 +119,12 @@ def do_funnyPeeple1( exportDir = '' ):
 	anal.buildFundamentalEnv( 100, 400 )
 	
 	p = anal.analyze( f.samples(), f.sampleRate() )
-	# ref = anal.fundamentalEnv()
-	ref = loris.createF0Estimate( p, 50, 1000, 0.01 )
+	ref = anal.fundamentalEnv()
+	# ref = loris.createF0Estimate( p, 50, 1000, 0.01 )
+	
+	# re-analyze with tracking?
+	print 're-analyzing with tracking'
+	p = anal.analyze( f.samples(), f.sampleRate(), ref )
 	
 	# distill at N Partials per harmonic
 	print 'distilling %i partials (%s)'%(p.size(), time.ctime(time.time()))
@@ -162,8 +168,12 @@ def do_funnyPeeple2( exportDir = '' ):
 	anal.buildFundamentalEnv( 100, 400 )
 	
 	p = anal.analyze( f.samples(), f.sampleRate() )
-	# ref = anal.fundamentalEnv()
-	ref = loris.createF0Estimate( p, 50, 1000, 0.01 )
+	ref = anal.fundamentalEnv()
+	# ref = loris.createF0Estimate( p, 50, 1000, 0.01 )
+	
+	# re-analyze with tracking?
+	print 're-analyzing with tracking'
+	p = anal.analyze( f.samples(), f.sampleRate(), ref )
 	
 	# distill at N Partials per harmonic
 	print 'distilling %i partials (%s)'%(p.size(), time.ctime(time.time()))
