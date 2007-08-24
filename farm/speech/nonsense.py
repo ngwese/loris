@@ -1,95 +1,116 @@
+#!/usr/bin/python
+
 """
 nonsense.py
 
-Python script for analyzing and reconstructing one of a variety 
-of sounds used to test the analysis/modification/synthesis routines 
-in Loris.
-
-This script pertains to a fried vocal sample sent by Ben Gillett.
+Analyze and reconstruct the fried vocal sample sent by Ben Gillett.
 
 This sound definitely gives better harmonic tracking when reanalyzed
 using the tracking analysis and the fundamental extracted in the first
-analysis. But two partials per harmonic are always necessary for decent
+analysis, BUT the reconstruction is a little bit worse in that case. 
+
+Two partials per harmonic are always necessary for decent
 sound, and the sound doesn't improve with the improved tracking.
-
-Tracking the low-pitched aside is difficult, and degrades with the
-improved harmonic tracking.
+One partial per harmonic is completely unlistenable.
 
 
-Last updated: 8 June 2006 by Kelly Fitz
+Last updated: 23 Aug 2007 by Kelly Fitz
 """
-print __doc__
 
-import loris, time
-print "using Loris version", loris.version()
+import loris, time, os
 
-name = 'nonsense'
-file = loris.AiffFile( name + '.aiff' )
-samples = file.samples()
-rate = file.sampleRate()
+orate = 44100
 
-print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
-res = 50
-width = 180
-a = loris.Analyzer( res, width )
-a.setFreqFloor( 50 )
-a.setFreqDrift( 40 )
-a.setBwRegionWidth( 0 ) # no BW association
-a.buildFundamentalEnv( 40, 155 )
+tag = ''
 
-p = a.analyze( samples, rate )
-ref = a.fundamentalEnv()
+stuff = {}
 
-# distill at N Partials per harmonic
-print 'sifting and distilling %i partials (%s)'%(p.size(), time.ctime(time.time()))
-N = 2
-loris.channelize( p, ref, N )
-loris.sift( p )
-loris.distill( p )
+# ----------------------------------------------------------------------------
 
-# export N Partials per harmonic,
-print 'exporting %i distilled Partials per harmonic (%s)'%(N, time.ctime(time.time()))
-loris.exportAiff( name + '.%i.recon.aiff'%(N), p, rate )
-loris.exportSdif( name + '.%i.sdif'%(N), p )
+def doNonsense( exportDir = '' ):
 
-# export 1 Partial per harmonic,
-# remove in-between harmonic partials
-for part in p:
-    if 0 == part.label()%N:
-        part.setLabel( part.label() / N )
-    else:
-        part.setLabel( 0 )
-loris.removeLabeled( p, 0 )
-print 'exporting 1 distilled Partials per harmonic (%s)'%(time.ctime(time.time()))
-loris.exportAiff( name + '.1.recon.aiff', p, rate )
-loris.exportSdif( name + '.1.sdif', p )
+	name = 'nonsense'
+	f = loris.AiffFile( name + '.aiff' )
+	
+	print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
+	res = 50
+	width = 180
+	anal = loris.Analyzer( res, width )
+	anal.setFreqFloor( 50 )
+	anal.setFreqDrift( 40 )
+	anal.setBwRegionWidth( 0 ) # no BW association
+	anal.buildFundamentalEnv( 40, 155 )
+	
+	p = anal.analyze( f.samples(), f.sampleRate() )
+	ref = anal.fundamentalEnv()
+	
+	# distill at 2 Partials per harmonic
+	print 'sifting and distilling %i partials (%s)'%(p.size(), time.ctime(time.time()))
+	N = 2
+	loris.channelize( p, ref, N )
+	loris.sift( p )
+	loris.distill( p )
 
-# try reanalyzing, using tracking
-a.buildFundamentalEnv( 0 )
-print 're-analyzing with fundamental track %s (%s)'%(name, time.ctime(time.time()))
-p = a.analyze( samples, rate, ref )
+# 	
+# 	# reanalyze using tracking
+# 	print 're-analyzing %s with fundamental track (%s)'%(name, time.ctime(time.time()))
+# 	ptk = anal.analyze( f.samples(), f.sampleRate(), ref )
+# 	
+# 	# distill at N Partials per harmonic
+# 	print 'sifting and distilling %i partials (%s)'%(p.size(), time.ctime(time.time()))
+# 	loris.channelize( ptk, ref, N )
+# 	loris.sift( ptk )
+# 	loris.distill( ptk )
+# 	
+	
+	if exportDir:
+	
+		print 'synthesizing %i distilled partials, %i per harmonic (%s)'%(p.size(), N, time.ctime(time.time()))
+		out_sfile = loris.AiffFile( p, orate )
+		
+		opath = os.path.join( exportDir, name + tag + '.%i.recon.aiff'%(N) ) 
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_sfile.setMarkers( f.markers() )
+		out_sfile.write( opath )
+		
+		opath = os.path.join( exportDir, name + tag + '.%i.sdif'%(N) )
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_pfile = loris.SdifFile( p )
+		out_pfile.setMarkers( f.markers() )
+		out_pfile.write( opath )	
+				
 
-# distill at N Partials per harmonic
-print 'sifting and distilling %i partials (%s)'%(p.size(), time.ctime(time.time()))
-loris.channelize( p, ref, N )
-loris.sift( p )
-loris.distill( p )
+# 		print 'synthesizing %i distilled tracked partials, %i per harmonic (%s)'%(ptk.size(), N, time.ctime(time.time()))
+# 		out_sfile = loris.AiffFile( ptk, orate )
+# 		
+# 		opath = os.path.join( exportDir, name + tag + '.tk%i.recon.aiff'%(N) ) 
+# 		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+# 		out_sfile.setMarkers( f.markers() )
+# 		out_sfile.write( opath )
+# 		
+# 		opath = os.path.join( exportDir, name + tag + '.tk%i.sdif'%(N) )
+# 		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+# 		out_pfile = loris.SdifFile( ptk )
+# 		out_pfile.setMarkers( f.markers() )
+# 		out_pfile.write( opath )	
+# 
 
-# export N Partials per harmonic
-name = name + '.tk'
-print 'exporting %i distilled Partials per harmonic (%s)'%(N, time.ctime(time.time()))
-loris.exportAiff( name + '.%i.recon.aiff'%(N), p, rate )
-loris.exportSdif( name + '.%i.sdif'%(N), p )
+	stuff[ name ] = ( p, ref, anal )
+	
+	print 'Done. (%s)'%(time.ctime(time.time()))		
 
-# export 1 Partial per harmonic,
-# remove in-between harmonic partials
-for part in p:
-    if 0 == part.label()%N:
-        part.setLabel( part.label() / N )
-    else:
-        part.setLabel( 0 )
-loris.removeLabeled( p, 0 )
-print 'exporting 1 distilled Partials per harmonic (%s)'%(time.ctime(time.time()))
-loris.exportAiff( name + '.1.recon.aiff', p, rate )
-loris.exportSdif( name + '.1.sdif', p )
 
+# ----------------------------------------------------------------------------
+
+if __name__ == '__main__':
+	print __doc__
+
+	print 'Using Loris version %s'%( loris.version() )
+
+	import sys
+	odir = os.curdir
+	if len( sys.argv ) > 1:
+		tag = '.' + sys.argv[1]
+		
+	doNonsense( odir )
+	
