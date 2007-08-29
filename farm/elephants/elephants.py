@@ -3,10 +3,22 @@
 """
 elephants.py
 
-Python script for analyzing and reconstructing one of a variety 
-of sounds used to test the analysis/modification/synthesis routines 
-in Loris.
+Analyze and reconstruct elephant sounds used for morphing. Really.
 
+
+Last updated: 29 Aug 2007 by Kelly Fitz
+"""
+
+import loris, time, os
+
+orate = 44100
+
+tag = ''
+
+stuff = {}
+
+
+"""
 elephant1:
 	Use 40 Hz resolution and 130 Hz window, distill at 40 Hz (can use
 	higher fundamental in a pinch).
@@ -18,77 +30,111 @@ elephant3:
 These sound good individually, but to do the morph, need to distill/sift
 them to a common frequency, like 60 Hz.
 
-Last updated: 5 June 2007 by Kelly Fitz
 """
 
-print __doc__
+# ----------------------------------------------------------------------------
 
-import loris, time
+def do_elephant1( exportDir = '' ):
 
-orate = 44100
+	name = 'elephant1'
+	f = loris.AiffFile( name + '.aiff' )
+	
+	print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
+	anal = loris.Analyzer( 40, 130 )
+	anal.setBwRegionWidth( 0 ) # no BW association
+	
+	p = anal.analyze( f.samples(), f.sampleRate() )
+	
+	freq = 60
+	ref = loris.LinearEnvelope( freq )
+	print 'sifting and distilling %i partials at %f Hz (%s)'%(p.size(), freq, time.ctime(time.time()))
+	loris.channelize( p, ref, 1 )
+	loris.sift( p )
+	loris.distill( p )
+	
+	loris.setBandwidth( p, 0 )
+	
+	if exportDir:
+	
+		print 'synthesizing %i distilled partials (%s)'%(p.size(), time.ctime(time.time()))
+		out_sfile = loris.AiffFile( p, orate )
+		
+		opath = os.path.join( exportDir, name + tag + '.recon.aiff' ) 
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_sfile.setMarkers( f.markers() )
+		out_sfile.write( opath )
+		
+		opath = os.path.join( exportDir, name + tag + '.sdif' )
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_pfile = loris.SdifFile( p )
+		out_pfile.setMarkers( f.markers() )
+		out_pfile.write( opath )
+		
+	stuff[ name ] = ( p, ref, anal )
+	
+	print 'Done. (%s)'%(time.ctime(time.time()))			
+	
+	
 
-#
-# elephant1
-#
-name = 'elephant1'
-anal = loris.Analyzer( 40, 130 )
-f = loris.AiffFile( name + '.aiff' )
-print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
-p = anal.analyze( f.samples(), f.sampleRate() )
+# ----------------------------------------------------------------------------
 
-# distilled at 60 Hz
-ref = loris.LinearEnvelope( 60 )
-loris.channelize( p, ref, 1 )
-loris.sift( p )
-loris.distill( p )
+def do_elephant3( exportDir = '' ):
 
-loris.setBandwidth( p, 0 )
+	name = 'elephant3'
+	f = loris.AiffFile( name + '.aiff' )
+	
+	print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
+	anal = loris.Analyzer( 30, 80 )
+	anal.setBwRegionWidth( 0 ) # no BW association
+	
+	p = anal.analyze( f.samples(), f.sampleRate() )
+	
+	freq = 60
+	ref = loris.LinearEnvelope( freq )
+	print 'sifting and distilling %i partials at %f Hz (%s)'%(p.size(), freq, time.ctime(time.time()))
+	loris.channelize( p, ref, 1 )
+	loris.sift( p )
+	loris.distill( p )
+	
+	loris.setBandwidth( p, 0 )
+	
+	if exportDir:
+	
+		print 'synthesizing %i distilled partials (%s)'%(p.size(), time.ctime(time.time()))
+		out_sfile = loris.AiffFile( p, orate )
+		
+		opath = os.path.join( exportDir, name + tag + '.recon.aiff' ) 
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_sfile.setMarkers( f.markers() )
+		out_sfile.write( opath )
+		
+		opath = os.path.join( exportDir, name + tag + '.sdif' )
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_pfile = loris.SdifFile( p )
+		out_pfile.setMarkers( f.markers() )
+		out_pfile.write( opath )
+		
+	stuff[ name ] = ( p, ref, anal )
+	
+	print 'Done. (%s)'%(time.ctime(time.time()))			
 
-print 'synthesizing distilled %s (%s)'%(name, time.ctime(time.time()))
-samples = loris.synthesize( p, orate )
-loris.exportAiff( name + '.recon.aiff', samples, orate )
-loris.exportSdif( name + '.sdif', p )
 
-# remove any Partials labeled greater than 256
-# for partial in p:
-# 	if partial.label() > 256:
-# 		partial.setLabel( 0 )
-# loris.removeLabeled( p, 0 )
-# 
-# loris.exportSpc( name + '.s.spc', p, 60, 0 )
-# loris.exportSpc( name + '.e.spc', p, 60, 1 )
+# ----------------------------------------------------------------------------
 
-#
-# elephant3
-#
-name = 'elephant3'
-anal = loris.Analyzer( 30, 80 )
-f = loris.AiffFile( name + '.aiff' )
-print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
-p = anal.analyze( f.samples(), f.sampleRate() )
+if __name__ == '__main__':
+	print __doc__
 
-# sifted at 60 Hz
-ref = loris.LinearEnvelope( 60 )
-loris.channelize( p, ref, 1 )
-loris.sift( p )
-zeros = loris.extractLabeled( p, 0 )
-loris.distill( p )
+	print 'Using Loris version %s'%( loris.version() )
 
-loris.setBandwidth( p, 0 )
-
-print 'synthesizing sifted %s (%s)'%(name, time.ctime(time.time()))
-samples = loris.synthesize( p, orate )
-loris.exportAiff( name + '.recon.aiff', samples, orate )
-loris.exportSdif( name + '.sdif', p )
-
-# remove any Partials labeled greater than 256
-# for partial in p:
-# 	if partial.label() > 256:
-# 		partial.setLabel( 0 )
-# loris.removeLabeled( p, 0 )
-
-# loris.exportSpc( name + '.s.spc', p, 60, 0 )
-# loris.exportSpc( name + '.e.spc', p, 60, 1 )
+	import sys
+	odir = os.curdir
+	if len( sys.argv ) > 1:
+		tag = '.' + sys.argv[1]
+		
+	do_elephant1( odir )
+	do_elephant3( odir )
+	
+# ----------------------------------------------------------------------------
 
 
 ##
