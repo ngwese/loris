@@ -390,15 +390,23 @@ void Distiller::distillOne( PartialList & partials, Partial::label_type label,
 
     //  take the null Breakpoints off the ends
     //  should check whether this is appropriate?
-    if ( 0 == newp.begin().breakpoint().amplitude() )
+    //
+    // 	This is a bit of a kludge here, sometimes we must
+    //	be inserting more than one null Breakpoint at the
+    //	front end (at least), sometimes shows up as a Partial
+    //	that begins before 0. The idea is to have no nulls at
+    //	the ends, so just remove all nulls at the ends.
+	while ( 0 < newp.numBreakpoints() &&
+			0 == newp.begin().breakpoint().amplitude() )
+	{
+		newp.erase( newp.begin() );
+	}
+
+    Partial::iterator lastBpPos = newp.end();
+    while ( 0 < newp.numBreakpoints() &&
+			0 == (--lastBpPos).breakpoint().amplitude() )
     {
-        newp.erase( newp.begin() );
-    }
-    
-    Partial::iterator lastBpPos = --(Partial::iterator(newp.end()));
-    if ( 0 == lastBpPos.breakpoint().amplitude() )
-    {
-        newp.erase( lastBpPos );
+        lastBpPos = newp.erase( lastBpPos );
     }
     
     //  insert the new Partial in the distilled collection 

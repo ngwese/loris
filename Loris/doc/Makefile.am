@@ -13,7 +13,7 @@ EXTRA_DIST = Doxyfile.in opcodes.html
 noinst_DATA = 
 
 
-INPUT                  = @top_srcdir@/src/AiffFile.h		\
+INPUT     = @top_srcdir@/src/AiffFile.h		\
 			@top_srcdir@/src/Analyzer.h		\
 			@top_srcdir@/src/Breakpoint.h	\
 			@top_srcdir@/src/BreakpointUtils.h	\
