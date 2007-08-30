@@ -10,6 +10,8 @@ Analyze and reconstruct a variety of speech sounds, including:
 	  Loris for many years
 	- Kenneth Branagh speaking in a low, slow half-whisper, 
 	  speaking the name "Moses"
+	- excerpt from a French radio broadcast, included on the 
+	  Pierre Schaeffer collection, of a very low (male) voice.
 	
 
 Last updated: 29 Aug 2007 by Kelly Fitz
@@ -283,6 +285,88 @@ def do_moses( exportDir = '' ):
 
 # ----------------------------------------------------------------------------
 
+"""
+The parameters we once liked for this are resolution 60 and
+window width 200 Hz.
+
+Tracking analysis definitely sounds worse, we have to do a better
+job of tracking the fundamental in this sound. Improved by changing 
+fundamental tracking bound to 200 Hz, but still imperfect.
+
+Still has a reverberant quality in the reconstruction.
+
+"""
+
+def do_french( exportDir = '' ):
+
+	name = 'french'
+	f = loris.AiffFile( name + '.aiff' )
+	
+	print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
+	anal = loris.Analyzer( 60, 150 )
+	anal.setBwRegionWidth( 0 ) # no BW association
+	anal.buildFundamentalEnv( 60, 200 )
+	
+	p = anal.analyze( f.samples(), f.sampleRate() )
+	ref = anal.fundamentalEnv()
+	
+	# distill at N Partials per harmonic
+	print 'distilling %i partials (%s)'%(p.size(), time.ctime(time.time()))
+	N = 1
+	loris.channelize( p, ref, N )
+	loris.sift( p )
+	loris.distill( p )
+	
+	print 'performing tracking analysis'
+	ptk = anal.analyze( f.samples(), f.sampleRate(), ref )
+
+	# distill
+	print 'distilling %i partials (%s)'%(p.size(), time.ctime(time.time()))
+	loris.channelize( ptk, ref, 1 )
+	loris.sift( ptk )
+	loris.removeLabeled( ptk, 0 )
+	loris.distill( ptk )
+	
+	
+	if exportDir:
+	
+		print 'synthesizing %i distilled partials (%s)'%(p.size(), time.ctime(time.time()))
+		out_sfile = loris.AiffFile( p, orate )
+		
+		opath = os.path.join( exportDir, name + tag + '.%i.recon.aiff'%(N) ) 
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_sfile.setMarkers( f.markers() )
+		out_sfile.write( opath )
+		
+		opath = os.path.join( exportDir, name + tag + '.%i.sdif'%(N) )
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_pfile = loris.SdifFile( p )
+		out_pfile.setMarkers( f.markers() )
+		out_pfile.write( opath )
+		
+
+		print 'synthesizing %i distilled, tracked partials (%s)'%(ptk.size(), time.ctime(time.time()))
+		out_sfile = loris.AiffFile( ptk, orate )
+		
+		opath = os.path.join( exportDir, name + tag + '.tk.recon.aiff' ) 
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_sfile.setMarkers( f.markers() )
+		out_sfile.write( opath )
+		
+		opath = os.path.join( exportDir, name + tag + '.tk.sdif' )
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_pfile = loris.SdifFile( ptk )
+		out_pfile.setMarkers( f.markers() )
+		out_pfile.write( opath )
+		
+		
+	stuff[ name ] = ( p, ptk, ref, anal )
+	
+	print 'Done. (%s)'%(time.ctime(time.time()))			
+
+
+# ----------------------------------------------------------------------------
+
 if __name__ == '__main__':
 	print __doc__
 
@@ -297,4 +381,4 @@ if __name__ == '__main__':
 	do_funnyPeeple1( odir )
 	do_funnyPeeple2( odir )
 	do_moses( odir )
-	
+	do_french( odir )
