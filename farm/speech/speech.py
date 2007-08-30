@@ -11,7 +11,8 @@ Analyze and reconstruct a variety of speech sounds, including:
 	- Kenneth Branagh speaking in a low, slow half-whisper, 
 	  speaking the name "Moses"
 	- excerpt from a French radio broadcast, included on the 
-	  Pierre Schaeffer collection, of a very low (male) voice.
+	  Pierre Schaeffer collection, of a very low (male) voice
+	- the "alien threat" sample of Kurt Hebel's voice
 	
 
 Last updated: 29 Aug 2007 by Kelly Fitz
@@ -367,6 +368,101 @@ def do_french( exportDir = '' ):
 
 # ----------------------------------------------------------------------------
 
+"""
+This sample was used to compare our analysis/synthesis with the 
+analysis/synthesis tools in Kyma, the subject of my visit
+to CU in March 2003.
+
+Notes: 
+
+- Checked various window widths, 160 Hz seems to be the 
+best out of 110, 120, 140, 160.
+
+- There is important information between harmonics, but not that much of it.
+Sifting and retaining the unlabeled Partials give a good set of harmonic
+Partials and still sounds good in reconstruction. The harmonic Partials
+alone are usable but the reconstruction is slightly un-natural sounding.
+
+"""
+
+def doAlien( exportDir = '' ):
+
+	name = 'alienthreat'
+	f = loris.AiffFile( name + '.aiff' )
+	
+	print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
+	anal = loris.Analyzer( 60, 160 )
+	anal.setAmpFloor( -80 )
+	# turn off BW association
+	anal.setBwRegionWidth( 0 )
+	anal.setFreqDrift( 30 )
+	anal.buildFundamentalEnv( 70, 140 )
+	p = anal.analyze( f.samples(), f.sampleRate() )
+	ref = anal.fundamentalEnv()
+	
+	# sift and distill
+	print 'sifting %i Partials (%s)'%(p.size(), time.ctime(time.time()))
+	ref = loris.createFreqReference( p, 70, 140 )
+	loris.channelize( p, ref, 1 )
+	loris.sift( p )
+	Fade = 0.001
+	loris.distill( p, Fade )
+	
+	loris.setBandwidth( p, 0 )
+	
+	print 'isolating harmonic partials (%s)'%(time.ctime(time.time()))
+	pharm = loris.PartialList( p )
+	junk = loris.extractLabeled( pharm, 0 )
+	loris.setBandwidth( junk, 1 )
+
+	
+	# export sifted
+	if exportDir:
+		print 'exporting %i sifted partials (%s)'%(p.size(), time.ctime(time.time()))
+		ofile = name
+		opath = os.path.join( exportDir, ofile + tag + '.sdif' ) 
+		fpartials = loris.SdifFile( p )
+		fpartials.write( opath )
+		
+		print 'rendering sifted partials (%s)'%(time.ctime(time.time()))
+		fsamps = loris.AiffFile( p, orate )
+		opath = os.path.join( exportDir, ofile + tag + '.recon.aiff' ) 
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		fsamps.write( opath )
+		
+		# export harmonics only
+		ofile = name + '-harms'
+		opath = os.path.join( exportDir, ofile + tag + '.sdif' ) 
+		print 'exporting %i harmonic partials (%s)'%(pharm.size(), time.ctime(time.time()))
+		fpartials = loris.SdifFile( pharm )
+		fpartials.write( opath )
+		
+		print 'rendering harmonic partials (%s)'%(time.ctime(time.time()))
+		fsamps = loris.AiffFile( p, orate )
+		opath = os.path.join( exportDir, ofile + tag + '.recon.aiff' ) 
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		fsamps.write( opath )
+		
+		# export non-harmonic junk only
+		ofile = name + '-junk'
+		opath = os.path.join( exportDir, ofile + tag + '.sdif' ) 
+		print 'exporting %i non-harmonic junk partials (%s)'%(junk.size(), time.ctime(time.time()))
+		fpartials = loris.SdifFile( junk )
+		fpartials.write( opath )
+		
+		print 'rendering non-harmonic junk partials (%s)'%(time.ctime(time.time()))
+		fsamps = loris.AiffFile( junk, orate )
+		opath = os.path.join( exportDir, ofile + tag + '.recon.aiff' ) 
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		fsamps.write( opath )
+
+	stuff[ name ] = ( p, pharm, junk, anal, ref )
+
+	print 'Done. (%s)'%(time.ctime(time.time()))
+	
+	
+# ----------------------------------------------------------------------------
+
 if __name__ == '__main__':
 	print __doc__
 
@@ -382,3 +478,4 @@ if __name__ == '__main__':
 	do_funnyPeeple2( odir )
 	do_moses( odir )
 	do_french( odir )
+	doAlien( odir )
