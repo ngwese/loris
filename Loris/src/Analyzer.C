@@ -969,7 +969,7 @@ Analyzer::storeNoBandwidth( void )
 //! peaks have been identified, and false otherwise.
 // ---------------------------------------------------------------------------
 bool 
-Analyzer::storeResidueBandwidth( void ) const
+Analyzer::bandwidthIsResidue( void ) const
 { 
     return m_bwRegionWidth > 0.; 
 }
@@ -980,7 +980,7 @@ Analyzer::storeResidueBandwidth( void ) const
 //!	indicator, and false otherwise.
 // ---------------------------------------------------------------------------
 bool 
-Analyzer::storeConvergenceBandwidth( void ) const
+Analyzer::bandwidthIsConvergence( void ) const
 { 
     return m_bwRegionWidth < 0.; 
 }

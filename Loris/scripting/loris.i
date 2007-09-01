@@ -1474,14 +1474,14 @@ will be zero for all Breakpoints in all Partials.");
 bandwidth envelopes using the spectral residue after
 peaks have been identified, and false otherwise.");
 
-	bool storeResidueBandwidth( void ) const;
+	bool bandwidthIsResidue( void ) const;
 
 %feature("docstring",
 "Return true if this Analyzer is configured to compute
 bandwidth envelopes using the mixed derivative convergence
 indicator, and false otherwise.");
 
-	bool storeConvergenceBandwidth( void ) const;
+	bool bandwidthIsConvergence( void ) const;
 
 %feature("docstring",
 "Return the width (in Hz) of the Bandwidth Association regions

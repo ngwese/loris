@@ -338,12 +338,12 @@ public:
     //! Return true if this Analyzer is configured to compute
     //! bandwidth envelopes using the spectral residue after
     //! peaks have been identified, and false otherwise.
-    bool storeResidueBandwidth( void ) const;
+    bool bandwidthIsResidue( void ) const;
     
     //! Return true if this Analyzer is configured to compute
     //! bandwidth envelopes using the mixed derivative convergence
     //! indicator, and false otherwise.
-    bool storeConvergenceBandwidth( void ) const;
+    bool bandwidthIsConvergence( void ) const;
     
     //! Return the width (in Hz) of the Bandwidth Association regions
     //! used by this Analyzer, only if the spectral residue method is
@@ -359,7 +359,7 @@ public:
 
     //! Deprecated, use storeResidueBandwidth instead.
     bool associateBandwidth( void ) const
-        { return storeResidueBandwidth(); }
+        { return bandwidthIsResidue(); }
 
     //! Deprecated, use storeResidueBandwidth instead.            
     void setBwRegionWidth( double x ) 
