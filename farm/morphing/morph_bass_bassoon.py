@@ -3,9 +3,7 @@
 """
 morph_bass_bassoon.py
 
-Python script for testing the morphing capabilities in Loris. 
-
-This script morphs a bassoon tone (D flat 2) with an acoustic
+Morph a bassoon tone (D flat 2) with an acoustic
 bass tone (D 2). This is the poster child for phase accuracy
 in morphing, owing to the sensitivity of the bassoon sound to
 accurate phase maintenance.
@@ -15,7 +13,7 @@ experiments in C++ is that I am not fixing the frequencies here,
 but I think that we don't need to anymore, now that the Morpher
 has been "improved".
 
-Last updated: 30 July 2005 by Kelly Fitz
+Last updated: 10 Sep 2007 by Kelly Fitz
 """
 print __doc__
 
@@ -76,6 +74,7 @@ loris.scaleNoiseRatio( m, 0 )
 
 print "--- rendering ---"
 fout = loris.AiffFile( m, 44100 )
+fout.setMidiNoteNumber( 37.11 )
 fout.write( "bass-oon.morph.aiff" )
 
 # export the dilated data as spc files for Kyma morphing.
@@ -83,11 +82,7 @@ print "--- exporting Spc files for Kyma morphing ---"
 
 ofilebase = "bass.aligned"
 loris.exportSdif( ofilebase + ".sdif", bass )
-loris.exportSpc( ofilebase + '.s.spc', bass, 37.11, 0 ) 
-loris.exportSpc( ofilebase + '.e.spc', bass, 37.11, 1 ) 
 
 ofilebase = "bassoon.aligned"
 loris.exportSdif( ofilebase + ".sdif", bassoon )
-loris.exportSpc( ofilebase + '.s.spc', bassoon, 37.11, 0 ) 
-loris.exportSpc( ofilebase + '.e.spc', bassoon, 37.11, 1 ) 
 

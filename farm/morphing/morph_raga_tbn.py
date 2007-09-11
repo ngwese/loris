@@ -1,16 +1,14 @@
 #!/usr/bin/python
 
 """
-morph_bass_bassoon.py
+morph_raga_tbn.py
 
-Python script for testing the morphing capabilities in Loris. 
+Morph a raga singer with a flutter-tongued trombone.
+Makes a progressive sequence of three morphs.
 
-This script morphs a raga singer with a flutter-tongued
-trombone sequence. I have used this in many demos (e.g.
-ICMC 2002).
-
-Last updated: 30 July 2005 by Kelly Fitz
+Last updated: 10 Sep 2007 by Kelly Fitz
 """
+
 print __doc__
 
 import loris, time
@@ -22,11 +20,11 @@ Using Loris version %s
 from os import path
 dir = path.join( path.pardir, "trombone" )
 print "--- importing trombone from %s ---"%(dir)
-tbn = loris.importSdif( path.join( dir, "tbnflutter.150.600.d1.sdif" ) )
+tbn = loris.importSdif( path.join( dir, "tbnflutter.sdif" ) )
 
 dir = path.join( path.pardir, "derbari" )
 print "--- importing raga singer from %s ---"%(dir)
-raga = loris.importSdif( path.join( dir, "derbari.d1.sdif" ) )
+raga = loris.importSdif( path.join( dir, "derbari.distill.sdif" ) )
 
 print "--- dilating raga singer ---"
 tbntimes = ( 0, 2.39 )

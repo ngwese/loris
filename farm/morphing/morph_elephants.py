@@ -1,12 +1,10 @@
 """
 morph_elephants.py
 
-Python script for testing the morphing capabilities in Loris. 
-
-This script morphs two elephant sounds.
+Morphs two elephant sounds.
 The elephants have to be distilled with a common frequency.
 
-Last updated: 30 July 2005 by Kelly Fitz
+Last updated: 10 Sep 2007 by Kelly Fitz
 """
 print __doc__
 
@@ -54,15 +52,11 @@ ofilebase = "elephant1.aligned"
 loris.exportSdif( ofilebase + ".sdif", e1 )
 fout = loris.AiffFile( e1 )
 fout.write( ofilebase + ".aiff" )
-loris.exportSpc( ofilebase + '.s.spc', e1, 60, 0 ) 
-loris.exportSpc( ofilebase + '.e.spc', e1, 60, 1 ) 
 
 ofilebase = "elephant3.aligned"
 loris.exportSdif( ofilebase + ".sdif", e3 )
 fout = loris.AiffFile( e3 )
 fout.write( ofilebase + ".aiff" )
-loris.exportSpc( ofilebase + '.s.spc', e3, 60, 0 ) 
-loris.exportSpc( ofilebase + '.e.spc', e3, 60, 1 ) 
 
 
 
