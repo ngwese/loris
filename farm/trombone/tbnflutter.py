@@ -52,6 +52,14 @@ def do_tbnflutter( exportDir = '' ):
 	loris.channelize( p, ref, N )
 	loris.distill( p )
 	
+	# relabel the partials so that they can still
+	# be used for morphing, esp. with harmonic sounds
+	for part in p:
+		if 0 == part.label()%N:
+			part.setLabel( part.label() / N )
+		else:
+			part.setLabel( 0 )
+	
 	if exportDir:
 	
 		print 'synthesizing %i distilled partials (%s)'%(p.size(), time.ctime(time.time()))
