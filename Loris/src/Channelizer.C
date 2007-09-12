@@ -358,7 +358,7 @@ Channelizer::computeStretchFactor( double fm, int m, double fn, int n )
 double 
 Channelizer::computeStretchFactor( double f1, double fn, double n )
 {
-    return computeStretchFactor( f1, 1, fn, n );
+    return computeStretchFactor( f1, 1, fn, int(n + 0.5) );
 }
 
 // ---------------------------------------------------------------------------
