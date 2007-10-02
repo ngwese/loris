@@ -896,19 +896,20 @@ void analyzer_setStoreResidueBandwidth( double regionWidth )
 	by storing the mixed derivative of short-time phase, 
 	scaled and shifted so that a value of 0 corresponds
 	to a pure sinusoid, and a value of 1 corresponds to a
-	bandwidth-enhanced sinusoid with maximal energy spread.
+	bandwidth-enhanced sinusoid with maximal energy spread
+	(minimum sinusoidal convergence).
 	
-	tolerancePct is the amount of range over which the 
+	tolerance is the amount of range over which the 
 	mixed derivative indicator should be allowed to drift away 
 	from a pure sinusoid before saturating. This range is mapped
 	to bandwidth values on the range [0,1]. Must be positive and 
-	not greater than 100%.
+	not greater than 1.
 
    	analyzer_configure must be called before any other analyzer 
    	function.
  */
 extern "C"
-void analyzer_setStoreConvergenceBandwidth( double tolerancePct )
+void analyzer_setStoreConvergenceBandwidth( double tolerance )
 {
 	if ( 0 == ptr_instance )
 	{
@@ -918,7 +919,7 @@ void analyzer_setStoreConvergenceBandwidth( double tolerancePct )
 
 	try 
 	{
-		ptr_instance->storeConvergenceBandwidth( tolerancePct );
+		ptr_instance->storeConvergenceBandwidth( tolerance );
 	}
 	catch( Exception & ex ) 
 	{
@@ -973,7 +974,7 @@ void analyzer_setStoreNoBandwidth( void )
 /* ---------------------------------------------------------------- */
 /*        analyzer_getBwConvergenceTolerance
 /*
-/*	Return the mixed derivative convergence tolerance (percent)
+/*	Return the mixed derivative convergence tolerance
 	only if the convergence indicator is used to compute
 	bandwidth envelopes. Return zero if the spectral residue
 	method is used or if no bandwidth is computed.

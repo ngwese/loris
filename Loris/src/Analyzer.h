@@ -57,11 +57,40 @@ class LinearEnvelopeBuilder;
 //! enhanced sinusoid. These Partials are accumulated in the
 //! Analyzer.
 //!
-//! The core analysis parameter is the frequency resolution, the minimum
-//! instantaneous frequency spacing between partials. All other
-//! parameters are initially configured according to this parameter
-//! (and the analysis window width, if specified).
+//! The core analysis parameter is the frequency resolution, the 
+//! minimum instantaneous frequency spacing between partials. Most 
+//! other parameters are initially configured according to this 
+//! parameter (and the analysis window width, if specified).
 //! Subsequent parameter mutations are independent.
+//! 
+//! Bandwidth enhancement:
+//! Two different strategies are available for computing bandwidth
+//! (or noisiness) envelope: 
+//! 
+//! One strategy is to construct bandwidth envelopes during analysis
+//! by associating residual energy in the spectrum (after peak 
+//! extraction) with the selected spectral peaks that are used 
+//! to construct Partials. This is the original bandwidth enhancement
+//! algorithm, and bandwidth envelopes constructed in this way may
+//! be suitable for use in bandwidth-enhanced synthesis. 
+//! 
+//! Another stategy is to construct bandwidth envelopes during 
+//! analysis by storing the mixed derivative of short-time phase, 
+//! scaled and shifted so that a value of 0 corresponds
+//! to a pure sinusoid, and a value of 1 corresponds to a
+//! bandwidth-enhanced sinusoid with maximal energy spread
+//! (minimum convergence in frequency). These bandwidth envelopes
+//! are not suitable for bandwidth-enhanced synthesis, be sure
+//! to set the bandwidth to 0, or to disable bandwidth enhancement
+//! before rendering.
+//! 
+//! The Analyzer may be configured to use either of these two
+//! strategies for bandwidth-enhanced analysis, or to construct
+//! no bandwidth envelopes at all. If unspecified, the default
+//! Analyzer configuration uses spectral residue to construct
+//! bandwidth envelopes.
+//! 
+//! \sa storeResidueBandwidth, storeConvergenceBandwidth, storeNoBandwidth
 //! 
 //! For more information about Reassigned Bandwidth-Enhanced 
 //! Analysis and the Reassigned Bandwidth-Enhanced Additive Sound 
@@ -311,25 +340,28 @@ public:
     //! by associating residual energy in the spectrum (after
     //! peak extraction) with the selected spectral peaks that
     //! are used to construct Partials. 
+    //!
+    //!	This is the default bandwidth-enhancement strategy.
     //! 
     //! \param regionWidth is the width (in Hz) of the bandwidth 
     //! association regions used by this process, must be positive.
     //! If unspecified, a default value is used.
     void storeResidueBandwidth( double regionWidth = Default_ResidueBandwidth_RegionWidth );
     
-    //! Construct Partial bandwidth envelopes during analysis
-    //! by storing the mixed derivative of short-time phase, 
-    //! scaled and shifted so that a value of 0 corresponds
-    //! to a pure sinusoid, and a value of 1 corresponds to a
-    //! bandwidth-enhanced sinusoid with maximal energy spread.
-    //!
-    //! \param tolerancePct is the amount of range over which the 
-    //! mixed derivative indicator should be allowed to drift away 
-    //! from a pure sinusoid before saturating. This range is mapped
-    //! to bandwidth values on the range [0,1]. Must be positive and 
-    //! not greater than 100%. If unspecified, a default
-    //! value is used.
-    void storeConvergenceBandwidth( double tolerancePct = Default_ConvergenceBandwidth_TolerancePct  );
+	//!	Construct Partial bandwidth envelopes during analysis
+	//!	by storing the mixed derivative of short-time phase, 
+	//!	scaled and shifted so that a value of 0 corresponds
+	//!	to a pure sinusoid, and a value of 1 corresponds to a
+	//! bandwidth-enhanced sinusoid with maximal energy spread
+	//! (minimum sinusoidal convergence).
+	//!
+	//!	\param tolerance is the amount of range over which the 
+	//!	mixed derivative indicator should be allowed to drift away 
+	//!	from a pure sinusoid before saturating. This range is mapped
+	//!	to bandwidth values on the range [0,1]. Must be positive and 
+	//!	not greater than 1. If unspecified, a default value is used.
+    void storeConvergenceBandwidth( double tolerancePct = 
+    		0.01 * (double)Default_ConvergenceBandwidth_TolerancePct );
     
     //! Disable bandwidth envelope construction. Bandwidth 
     //! will be zero for all Breakpoints in all Partials.
@@ -357,11 +389,14 @@ public:
     //! method is used or if no bandwidth is computed.
     double bwConvergenceTolerance( void ) const;
 
-    //! Deprecated, use storeResidueBandwidth instead.
+    //! Return true if bandwidth envelopes are to be constructed
+    //!	by any means, that is, if either bandwidthIsResidue() or 
+    //!	bandwidthIsConvergence() are true. Otherwise, return
+    //! false.
     bool associateBandwidth( void ) const
-        { return bandwidthIsResidue(); }
+        { return bandwidthIsResidue() || bandwidthIsConvergence(); }
 
-    //! Deprecated, use storeResidueBandwidth instead.            
+    //! Deprecated, use storeResidueBandwidth or storeNoBandwidth instead.            
     void setBwRegionWidth( double x ) 
         { 
             if ( x != 0 )

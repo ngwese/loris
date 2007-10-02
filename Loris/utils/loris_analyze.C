@@ -119,11 +119,20 @@ options:\n\
         Requires a positive numeric parameter. Default is the \n\
         inverse of the analysis window width.\n\
     \n\
-    -bw,-bwregionwidth : set the bandwidth association region width \n\
-        parameter for the Analyzer. Requires a non-negative numeric \n\
-        parameter, 0 indicates disable bandwidth association. \n\
-        Default is 2 kHz.\n\
-        \n\
+    -bw,-bwregionwidth, -bwresidue : use the original spectral residue \n\
+    	method of bandwidth association, constructing bandwidth envelopes \n\
+    	that are (may be) suitable for bandwidth-enhanced synthesis. \n\
+    	Set the bandwidth association region width parameter for the \n\
+        Analyzer. Requires a non-negative numeric parameter, the region \n\
+        width in Hz, or 0 to indicate that bandwidth association should be \n\
+        disabled altogether. Default is 2000 Hz.\n\
+    \n\
+    -bwconvergence : use the mixed derivative of phase to compute sinusoidal \n\
+    	\"convergence\" and store this quantity in the bandwidth envelope of \n\
+    	the analyzed partials. Requires a positive number representing the \n\
+    	convergence tolerance, must be positive and less than 1.0 (0.1 is a \n\
+    	reasonable number).\n\
+    \n\
     -drift,-freqdrift : set the frequency drift parameter for the \n\
         Analyzer. Requires a positive numeric parameter.\n\
         Default is half the frequency resolution.\n\
@@ -207,7 +216,7 @@ public:
         if ( args.empty() || argIsFlag( args.top() ) )
         {
             throw std::invalid_argument("input file specification "
-                                       "requires a filename");
+                                        "requires a filename");
         }
         
         gInFileName = args.top();
@@ -227,7 +236,7 @@ public:
         if ( args.empty() || argIsFlag( args.top() ) )
         {
             throw std::invalid_argument("output file specification "
-                                       "requires a filename");
+                                        "requires a filename");
         }
         
         gOutFileName = args.top();
@@ -269,7 +278,7 @@ public:
         gCollate = true;
         cout << "* will collate partials" << endl;
 
-        //  collation overrides distillation
+        //  collation overrides distillation and sifting
         if ( gDistill || gSift )
         {
             cout << "* collate specification overrides "
@@ -291,13 +300,13 @@ public:
         if ( args.empty() || !argIsNumber( args.top(), &x ) )
         {
             throw std::invalid_argument("distillation specification "
-                                       "requires a number");
+                                        "requires a number");
         }
         
         if ( x <= 0 )
         {
             throw std::invalid_argument("distillation specification "
-                                       "must be positive");
+                                        "must be positive");
         }
 
         gDistill = x;
@@ -306,13 +315,13 @@ public:
         
         args.pop();
 
-        //  distillation overrides collation
+        //  distillation overrides collation and sifting
         if ( gCollate || gSift )
         {
             cout << "* distillation specification overrides "
                     "collation and sifting specification" << endl;                 
             gCollate = false;
-				gSift = 0;
+            gSift = 0;
         }
     }
 };
@@ -321,7 +330,7 @@ class SiftCommand : public Command
 {
 public:
     //  set the global flag indicating that the
-    //  Partials should be distilled before export
+    //  Partials should be sifted and distilled before export
     void execute( Arguments & args ) const 
     {
         //  requires a numeric parameter
@@ -339,18 +348,18 @@ public:
         }
 
         gSift = x;
-        cout << "* will sift partials assuming a fundamental of approximately " 
+        cout << "* will sift and distill partials assuming a fundamental of approximately " 
              << gSift << " Hz" << endl;
         
         args.pop();
 
-        //  distillation overrides collation
+        //  sifting overrides distillation and collation
         if ( gCollate || gDistill )
         {
             cout << "* sifting specification overrides "
                     "collation and distillation specification" << endl;                 
             gCollate = false;
-				gDistill = 0;
+            gDistill = 0;
         }
     }
 };
@@ -442,7 +451,7 @@ public:
     }
 };
     
-class SetRegionWidthCommand : public Command
+class SetBwResidueCommand : public Command
 {
 public:
     //  set the BWRegionWidth parameter of the global
@@ -454,18 +463,55 @@ public:
         if ( args.empty() || !argIsNumber( args.top(), &x ) )
         {
             throw std::invalid_argument("BW region width specification "
-                                       "requires a number");
+                                        "requires a number");
         }
         
         if ( x < 0 )
         {
             throw std::invalid_argument("BW region width specification "
-                                      "must be non-negative");
+                                        "must be non-negative");
         }
         
-        gAnalyzer->setBwRegionWidth( x );
-        cout << "* setting analysis BW region width to: ";
-        cout << gAnalyzer->bwRegionWidth() << " Hz" << endl;
+        if ( 0 < x )
+        {
+			gAnalyzer->storeResidueBandwidth( x );
+			cout << "* setting analysis BW region width to: ";
+			cout << gAnalyzer->bwRegionWidth() << " Hz" << endl;
+		}
+		else
+		{
+			gAnalyzer->storeNoBandwidth();
+			cout << "* disabling bandwidth association" << endl;
+		}
+        args.pop();
+    }
+};
+
+    
+class SetBwConvergenceCommand : public Command
+{
+public:
+    //  set the BWRegionWidth parameter of the global
+    //  Loris Analyzer
+    void execute( Arguments & args ) const 
+    {
+        //  requires a numeric parameter
+        double x;
+        if ( args.empty() || !argIsNumber( args.top(), &x ) )
+        {
+            throw std::invalid_argument("BW convergence specification "
+                                        "requires a number");
+        }
+        
+        if ( x <= 0 || x > 1 )
+        {
+            throw std::invalid_argument("BW convergence specification "
+                                        "must be positive and less than 1");
+        }
+        
+        gAnalyzer->storeConvergenceBandwidth( x );
+        cout << "* setting analysis BW convergence tolerance to: ";
+        cout << gAnalyzer->bwConvergenceTolerance() << " Hz" << endl;
 
         args.pop();
     }
@@ -483,13 +529,13 @@ public:
         if ( args.empty() || !argIsNumber( args.top(), &x ) )
         {
             throw std::invalid_argument("frequency drift specification "
-                                       "requires a number");
+                                        "requires a number");
         }
         
         if ( x <= 0 )
         {
             throw std::invalid_argument("frequency drift specification "
-                                      "must be positive");
+                                        "must be positive");
         }
         
         gAnalyzer->setFreqDrift( x );
@@ -512,13 +558,13 @@ public:
         if ( args.empty() || !argIsNumber( args.top(), &x ) )
         {
             throw std::invalid_argument("amplitude floor specification "
-                                       "requires a number");
+                                        "requires a number");
         }
         
         if ( x >= 0 )
         {
             throw std::invalid_argument("amplitude floor specification "
-                                      "must be negative");
+                                        "must be negative");
         }
         
         gAnalyzer->setAmpFloor( x );
@@ -541,13 +587,13 @@ public:
         if ( args.empty() || !argIsNumber( args.top(), &x ) )
         {
             throw std::invalid_argument("frequency floor specification "
-                                       "requires a number");
+                                        "requires a number");
         }
         
         if ( x <= 0 )
         {
             throw std::invalid_argument("frequency floor specification "
-                                      "must be positive");
+                                        "must be positive");
         }
         
         gAnalyzer->setFreqFloor( x );
@@ -570,13 +616,13 @@ public:
         if ( args.empty() || !argIsNumber( args.top(), &x ) )
         {
             throw std::invalid_argument("sidelobe attenuation specification "
-                                       "requires a number");
+                                        "requires a number");
         }
         
         if ( x <= 0 )
         {
             throw std::invalid_argument("sidelobe attenuation specification "
-                                      "must be positive");
+                                        "must be positive");
         }
         
         gAnalyzer->setSidelobeLevel( x );
@@ -599,13 +645,13 @@ public:
         if ( args.empty() || !argIsNumber( args.top(), &x ) )
         {
             throw std::invalid_argument("frequency resolution specification "
-                                       "requires a number");
+                                        "requires a number");
         }
         
         if ( x <= 0 )
         {
             throw std::invalid_argument("frequency resolution specification "
-                                      "must be positive");
+                                        "must be positive");
         }
         
         gAnalyzer->setFreqResolution( x );
@@ -628,13 +674,13 @@ public:
         if ( args.empty() || !argIsNumber( args.top(), &x ) )
         {
             throw std::invalid_argument("window width specification "
-                                       "requires a number");
+                                        "requires a number");
         }
         
         if ( x <= 0 )
         {
             throw std::invalid_argument("window width specification "
-                                      "must be positive");
+                                        "must be positive");
         }
         
         gAnalyzer->setWindowWidth( x );
@@ -657,13 +703,13 @@ public:
         if ( args.empty() || !argIsNumber( args.top(), &x ) )
         {
             throw std::invalid_argument("sample rate specification "
-                                       "requires a number");
+                                        "requires a number");
         }
         
         if ( x <= 0 )
         {
             throw std::invalid_argument("sample rate specification "
-                                      "must be positive");
+                                        "must be positive");
         }
         
         gRate = x;
@@ -809,7 +855,9 @@ int main( int argc, char * argv[] )
     commands["-resample"] = commands["-resamp"] = new ResampleCommand();
     commands["-hop"] = commands["-hoptime"] = new SetHopTimeCommand();
     commands["-crop"] = commands["-croptime"] = new SetCropTimeCommand();
-    commands["-bw"] = commands["-bwregionwidth"] = new SetRegionWidthCommand();
+    commands["-bw"] = commands["-bwregionwidth"]  = commands["-bwresidue"] = 
+    	new SetBwResidueCommand();
+    commands["-bwconvergence"] = new SetBwConvergenceCommand();
     commands["-drift"] = commands["-freqdrift"] = new SetDriftCommand();
     commands["-ampfloor"] = new SetAmpFloorCommand();
     commands["-freqfloor"] = new SetFreqFloorCommand();
@@ -859,8 +907,34 @@ int main( int argc, char * argv[] )
         cout << "*\tmaximum partial frequency drift: " << gAnalyzer->freqDrift() 
              << " Hz\n";
         cout << "*\tcrop time: " << 1000*gAnalyzer->cropTime() << " ms\n";
-        cout << "*\tbandwidth association region width: " 
-             << gAnalyzer->bwRegionWidth() << " Hz\n";
+        
+        if ( gAnalyzer->associateBandwidth() )
+        {
+        	if ( gAnalyzer->bandwidthIsResidue() )
+        	{
+        		cout << "*\tspectral residue bandwidth association region width: " 
+             		 << gAnalyzer->bwRegionWidth() << " Hz\n";
+            }
+            else
+            {
+            	cout << "*\tsinusoidal convergence bandwidth tolerance: "
+            		 << gAnalyzer->bwConvergenceTolerance() << "\n";
+            }
+       	}
+       	else
+       	{
+       		cout << "*\tstoring no bandwidth\n";
+      	}
+      	
+      	if ( 0 != gDistill )
+      	{
+      		cout << "*\tdistilling partials at approximately " << gDistill << " Hz channel resolution\n";
+      	}
+      	else if ( 0 != gSift )
+      	      	{
+      		cout << "*\tsifting and distilling partials at approximately " << gSift << " Hz channel resolution\n";
+      	}
+      	
         cout << endl;
     }
     
@@ -894,48 +968,68 @@ int main( int argc, char * argv[] )
             cout << "read " << samples.size() << " samples" << endl;
         }
         
+        //	if distilling or sifting, then estimate the fundamental
+        //	during analysis, otherwise disable this feature:
+        if ( gDistill > 0 || gSift > 0 )
+        {
+        	double f0Nominal = (gDistill >0)?(gDistill):(gSift);
+        	gAnalyzer->buildFundamentalEnv( 0.95 * f0Nominal, 1.05 * f0Nominal );
+        }
+        else
+        {
+        	gAnalyzer->buildFundamentalEnv( false );
+        }
+        
         cout << "* performing analysis" << endl;
         gAnalyzer->analyze( samples, analysisRate );
         cout << "* analysis complete" << endl;  
         
+        //	check or distilling or sifting
         if ( gDistill > 0 || gSift > 0 )
         {
-				double refFreq = (gDistill!=0)?(gDistill):(gSift);
-				
-            cout << "* extracting frequency reference envelope" << endl;
-            Loris::FrequencyReference ref( gAnalyzer->partials().begin(), 
-                                           gAnalyzer->partials().end(),
-                                           0.8 * refFreq, 1.2 * refFreq );
+            Loris::LinearEnvelope ref = gAnalyzer->fundamentalEnv();    
+            
             Loris::Channelizer chan( ref, 1 );
             cout << "* channelizing " << gAnalyzer->partials().size() 
                  << " partials" << endl;
             chan.channelize( gAnalyzer->partials().begin(), 
                              gAnalyzer->partials().end() );
-									  
-				if ( gDistill > 0 )
-				{
-					cout << "* distilling " << gAnalyzer->partials().size() 
-						  << " partials" << endl;
-					Loris::PartialList::iterator it = 			
-						std::remove_if( gAnalyzer->partials().begin(), gAnalyzer->partials().end(), 
-							             Loris::PartialUtils::isLabelEqual( 0 ) );
-					gAnalyzer->partials().erase( it, gAnalyzer->partials().end() );
+								  
+			if ( gDistill > 0 )
+			{
+				/*
+				cout << "* removing unlabeled partials" << endl;
+					  
+				Loris::PartialList::iterator it =           
+					std::remove_if( gAnalyzer->partials().begin(), 
+									gAnalyzer->partials().end(), 
+									Loris::PartialUtils::isLabelEqual( 0 ) );
+									
+				gAnalyzer->partials().erase( it, gAnalyzer->partials().end() );
+				*/
+				cout << "* distilling " << gAnalyzer->partials().size() 
+					  << " partials" << endl;
+				Loris::Distiller::distill( gAnalyzer->partials(), FadeTime, FadeTime/2 );
+			}
+			else
+			{
+				cout << "* sifting " << gAnalyzer->partials().size() 
+					  << " partials" << endl;
+				Loris::Sieve::sift( gAnalyzer->partials().begin(), 
+									gAnalyzer->partials().end(), 
+									FadeTime );
+									
+				cout << "* removing unlabeled partials" << endl;
+				Loris::PartialList::iterator it =           
+					std::remove_if( gAnalyzer->partials().begin(), gAnalyzer->partials().end(), 
+									Loris::PartialUtils::isLabelEqual( 0 ) );
+									
+				gAnalyzer->partials().erase( it, gAnalyzer->partials().end() );
 
-					Loris::Distiller::distill( gAnalyzer->partials(), FadeTime, FadeTime/2 );
-				}
-				else
-				{
-					cout << "* sifting " << gAnalyzer->partials().size() 
-						  << " partials" << endl;
-					Loris::Sieve::sift( gAnalyzer->partials().begin(), gAnalyzer->partials().end(), 
-											  FadeTime );
-					Loris::PartialList::iterator it = 			
-						std::remove_if( gAnalyzer->partials().begin(), gAnalyzer->partials().end(), 
-							             Loris::PartialUtils::isLabelEqual( 0 ) );
-					gAnalyzer->partials().erase( it, gAnalyzer->partials().end() );
-
-					Loris::Distiller::distill( gAnalyzer->partials(), FadeTime, FadeTime/2 );
-				}
+				cout << "* distilling " << gAnalyzer->partials().size() 
+					  << " partials" << endl;
+				Loris::Distiller::distill( gAnalyzer->partials(), FadeTime, FadeTime/2 );
+			}
         }
         else if ( gCollate )
         {

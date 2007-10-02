@@ -1,10 +1,55 @@
-Loris -- History of visible changes.
+Loris is an open source library implementing sound analysis,
+synthesis, and morphing, developed by Kelly Fitz and Lippold Haken
+at the CERL Sound Group. Loris includes a C++ class library, a
+Python module, a C-linkable interface, and documentation.
 
-Loris is Copyright (c) 1999-2007 by Kelly Fitz and Lippold Haken 
-<loris@cerlsoundgroup.org>.
-See the end for copying conditions.
+Loris 1.5 offers bug fixes and new features, relative to Loris 1.4.
+Among the new features, an option has been added to the Analyzer to
+compute bandwidth envelopes using sinusoidality (or convergence)
+estimator based on the mixed partial derivative of the phase
+spectrum; fundamental frequency tracking has been improved; the
+Channelizer interface has been expanded, and the accuracy of
+stretched harmonic channelization (for piano tones) has been
+improved.
 
-Please send Loris bug reports to loris@cerlsoundgroup.org.
+Some of the changes in Loris 1.5 are incompatible with older Loris
+versions, and may require changes to existing program code.
+
+Loris can be downloaded from http://sourceforge.net/projects/loris
+
+For more information about Loris, contact the developers at
+loris@cersloundgroup.org, or visit them at
+http://www.cerlsoundgroup.org/Loris
+
+Please send bug reports to loris@cerlsoundgroup.org
+
+Loris is free software. Please see the file COPYING for details.
+
+Loris is Copyright (c) 1999-2007 by Kelly Fitz and Lippold Haken.
+
+
+History of visible changes, organized by relase number:
+
+-------------------------------------------------------
+changes since 1.5 release:
+
+- updated command-line analysis utility (loris-analyze)
+to estimate the fundamental frequency reference envelope
+during analysis when distilling or sifting.
+
+- updated command-line analysis utility (loris-analyze)
+to provide a choice between spectral residue (-bwresidue)
+and sinusoidal convergence (mixed derivative of phase)
+(-bwconvergence) algorithms for computing bandwidth 
+envelopes.
+
+- changed parameter for specifying convergence bandwidth
+tolerance from percent (0 to 100) to absolute (0 to 1)
+to be more intuitive and consistent with the rest of
+Loris (which doesn't use percent anywhere). Affects
+C++, Python, and C interfaces. For now, a value greater
+than one is scaled down by 1/100 with a notification of
+the change.
 
 -------------------------------------------------------
 changes since 1.4 release:
@@ -665,7 +710,7 @@ for the Python module is included, and posted to SourceForge
 -------------------------------------------------------
 Copying information:
 
-Copyright (C) 1999-2004, Kelly Fitz and Lippold Haken 
+Copyright (C) 1999-2007, Kelly Fitz and Lippold Haken 
 <loris@cerlsoundgroup.org>
 
    Permission is granted to anyone to make or distribute verbatim copies

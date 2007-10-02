@@ -435,11 +435,11 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch )
 
 %feature("docstring",
 "Apply a reference Partial to fix the frequencies of Breakpoints
-whose amplitude is below threshold_dB. 0 harmonifies full-amplitude
-Partials, to apply only to quiet Partials, specify a lower 
-threshold like -90). The reference Partial is the first Partial
+whose amplitude is below threshold_dB. Threshold 0 harmonifies all
+Partials. To apply only to quiet Partials, specify a lower 
+threshold (like -90). The reference Partial is the first Partial
 in the PartialList labeled refLabel (usually 1). The LinearEnvelope,
-iif specified, is a time-varying weighting on the harmonifing process. 
+if specified, is a time-varying weighting on the harmonifing process. 
 When 1, harmonic frequencies are used, when 0, breakpoint frequencies are 
 unmodified. ") harmonify;
 
@@ -1452,16 +1452,16 @@ If unspecified, a default value is used.");
 by storing the mixed derivative of short-time phase, 
 scaled and shifted so that a value of 0 corresponds
 to a pure sinusoid, and a value of 1 corresponds to a
-bandwidth-enhanced sinusoid with maximal energy spread.
+bandwidth-enhanced sinusoid with maximal energy spread
+(minimum sinusoidal convergence).
 
-tolerancePct is the amount of range over which the 
+tolerance is the amount of range over which the 
 mixed derivative indicator should be allowed to drift away 
 from a pure sinusoid before saturating. This range is mapped
 to bandwidth values on the range [0,1]. Must be positive and 
-not greater than 100%. If unspecified, a default
-value is used.");
+not greater than 1. If unspecified, a default value is used.");
 	
-	void storeConvergenceBandwidth( double tolerancePct = Analyzer::Default_ConvergenceBandwidth_TolerancePct  );
+	void storeConvergenceBandwidth( double tolerance = 0.01 * Analyzer::Default_ConvergenceBandwidth_TolerancePct );
 
 %feature("docstring",
 "Disable bandwidth envelope construction. Bandwidth 
@@ -1492,7 +1492,7 @@ derivative method is used, or if no bandwidth is computed.");
 	double bwRegionWidth( void ) const;
 
 %feature("docstring",
-"Return the mixed derivative convergence tolerance (percent)
+"Return the mixed derivative convergence tolerance
 only if the convergence indicator is used to compute
 bandwidth envelopes. Return zero if the spectral residue
 method is used or if no bandwidth is computed.");

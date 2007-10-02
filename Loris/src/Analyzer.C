@@ -50,9 +50,10 @@
 #include "SpectralPeakSelector.h"
 #include "PartialBuilder.h"
 
-#include "phasefix.h"   //  HEY LOOKIE HERE - for new frequency/phase fixing at end of analysis
-
 #include "estimateF0.h"
+#include "phasefix.h"   //  for frequency/phase fixing at end of analysis
+
+
 
 #include <algorithm>
 #include <cmath>
@@ -400,7 +401,7 @@ Analyzer::configure( double resolutionHz, double windowWidthHz )
     //  bandwidth association region width 
     //  defaults to 2 kHz, corresponding to 
     //  1 kHz region center spacing:
-    storeResidueBandwidth( );
+    storeResidueBandwidth();
 
 	//  (re)configure the fundamental tracker using default 
 	//  parameters:
@@ -931,24 +932,33 @@ Analyzer::storeResidueBandwidth( double regionWidth )
 //!	by storing the mixed derivative of short-time phase, 
 //!	scaled and shifted so that a value of 0 corresponds
 //!	to a pure sinusoid, and a value of 1 corresponds to a
-//! bandwidth-enhanced sinusoid with maximal energy spread.
+//! bandwidth-enhanced sinusoid with maximal energy spread
+//! (minimum sinusoidal convergence).
 //!
-//!	\param tolerancePct is the amount of range over which the 
+//!	\param tolerance is the amount of range over which the 
 //!	mixed derivative indicator should be allowed to drift away 
 //!	from a pure sinusoid before saturating. This range is mapped
 //!	to bandwidth values on the range [0,1]. Must be positive and 
-//!	not greater than 100%. If unspecified, a default
-//!	value is used.
+//!	not greater than 1. If unspecified, a default value is used.
 //
 void 
-Analyzer::storeConvergenceBandwidth( double tolerancePct ) 
+Analyzer::storeConvergenceBandwidth( double tolerance ) 
 { 
+	if ( 1.0 < tolerance )
+	{
+		//	notify and scale, in Loris 1.5, tolerance was
+		//	specified as a percent
+		notifier << "Analyzer::storeConvergenceBandwidth, conergence tolerance "
+					"should be positive and less than 1.0, scaling by 1/100" << endl;
+		tolerance *= 0.01;
+	}
+	
     VERIFY_ARG( storeConvergenceBandwidth, 
-    			(tolerancePct > 0) && (tolerancePct <= 100) );
+    			(tolerance > 0) && (tolerance <= 1) );
     			
 	//	store a negative value so that it can be 
 	//	identified when used:
-    m_bwRegionWidth = -tolerancePct; 
+    m_bwRegionWidth = -tolerance; 
 }   
 
 // ---------------------------------------------------------------------------
@@ -1329,8 +1339,8 @@ void Analyzer::fixBandwidth( Peaks & peaks )
 	
 	if ( m_bwRegionWidth < 0 )
 	{
-		double scale = 1.0 / (- m_bwRegionWidth * 0.01);	
-			// m_bwRegionWidth is stored as percent
+		double scale = 1.0 / (- m_bwRegionWidth);	
+			// m_bwRegionWidth is stored as negative tolerance
 	
 		for ( Peaks::iterator it = peaks.begin(); it != peaks.end(); ++it )
 		{
