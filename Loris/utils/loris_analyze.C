@@ -84,7 +84,6 @@ double gResample = 0;
 bool gVerbose = false;
 double gRate = 44100;
 
-double FadeTime = 0.002; // 2 ms Partial fade time, not configurable
 
 // ----------------------------------------------------------------
 //  command-line options string
@@ -997,19 +996,22 @@ int main( int argc, char * argv[] )
 								  
 			if ( gDistill > 0 )
 			{
-				/*
-				cout << "* removing unlabeled partials" << endl;
-					  
 				Loris::PartialList::iterator it =           
 					std::remove_if( gAnalyzer->partials().begin(), 
 									gAnalyzer->partials().end(), 
 									Loris::PartialUtils::isLabelEqual( 0 ) );
 									
-				gAnalyzer->partials().erase( it, gAnalyzer->partials().end() );
-				*/
+				if ( it != gAnalyzer->partials().end() )
+				{
+					cout << "* removing unlabeled partials" << endl;
+					gAnalyzer->partials().erase( it, gAnalyzer->partials().end() );
+				}
+				
 				cout << "* distilling " << gAnalyzer->partials().size() 
 					  << " partials" << endl;
-				Loris::Distiller::distill( gAnalyzer->partials(), FadeTime, FadeTime/2 );
+				Loris::Distiller::distill( gAnalyzer->partials(),
+										   Loris::Distiller::DefaultFadeTime, 
+										   Loris::Distiller::DefaultSilentTime );
 			}
 			else
 			{
@@ -1017,25 +1019,33 @@ int main( int argc, char * argv[] )
 					  << " partials" << endl;
 				Loris::Sieve::sift( gAnalyzer->partials().begin(), 
 									gAnalyzer->partials().end(), 
-									FadeTime );
-									
-				cout << "* removing unlabeled partials" << endl;
+									Loris::Sieve::DefaultFadeTime );
+													
 				Loris::PartialList::iterator it =           
-					std::remove_if( gAnalyzer->partials().begin(), gAnalyzer->partials().end(), 
+					std::remove_if( gAnalyzer->partials().begin(), 
+									gAnalyzer->partials().end(), 
 									Loris::PartialUtils::isLabelEqual( 0 ) );
 									
-				gAnalyzer->partials().erase( it, gAnalyzer->partials().end() );
-
+				if ( it != gAnalyzer->partials().end() )
+				{
+					cout << "* removing unlabeled partials" << endl;
+					gAnalyzer->partials().erase( it, gAnalyzer->partials().end() );
+				}
+				
 				cout << "* distilling " << gAnalyzer->partials().size() 
 					  << " partials" << endl;
-				Loris::Distiller::distill( gAnalyzer->partials(), FadeTime, FadeTime/2 );
+				Loris::Distiller::distill( gAnalyzer->partials(),
+										   Loris::Distiller::DefaultFadeTime, 
+										   Loris::Distiller::DefaultSilentTime );
 			}
         }
         else if ( gCollate )
         {
             cout << "* collating " << gAnalyzer->partials().size();
             cout << " partials" << endl;
-            Loris::Collator::collate( gAnalyzer->partials(), FadeTime, FadeTime/2 );
+            Loris::Collator::collate( gAnalyzer->partials(),
+								      Loris::Collator::DefaultFadeTime, 
+									  Loris::Collator::DefaultSilentTime );
         }
         
         if ( gResample > 0 )

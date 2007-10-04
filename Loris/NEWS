@@ -51,6 +51,15 @@ C++, Python, and C interfaces. For now, a value greater
 than one is scaled down by 1/100 with a notification of
 the change.
 
+- made Distiller, Sieve, and Collator default fade and
+gap (silent) times consistent, and made those defaults
+consistent in all contexts (Python, C++, and the 
+command line utilities). 
+
+- added bandwidth scaling option to synthesis command
+line utility (good for turning off bandwidth-enhanced
+synthesis, scale by 0).
+
 -------------------------------------------------------
 changes since 1.4 release:
 

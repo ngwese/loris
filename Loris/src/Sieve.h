@@ -49,8 +49,8 @@ namespace Loris {
 //! Class Sieve represents an algorithm for identifying channelized (see also 
 //! Channelizer) Partials that overlap in time, and selecting the longer
 //! one to represent the channel. The identification of overlap includes 
-//!   the time needed for Partials to fade to and from zero amplitude in 
-//!   synthesis (see also  Synthesizer) or distillation. (see also Distiller)
+//! the time needed for Partials to fade to and from zero amplitude in 
+//!  synthesis (see also  Synthesizer) or distillation. (see also Distiller)
 //! 
 //! In some cases, the energy redistribution effected by the distiller
 //! (see also Distiller) is undesirable. In such cases, the partials can be
@@ -73,19 +73,26 @@ class Sieve
     
 //  -- public interface --
 public:
+
+//  -- global defaults and constants --
+
+    //! Default time (in seconds) over which Partials joined by
+    //! distillation fade to and from zero amplitude.
+    static const double DefaultFadeTime;
+    
 //  -- construction --
 
     //! Construct a new Sieve using the specified partial fade
-    //! time. If unspecified, the fade time defaults to one 
-    //! millisecond (0.001 s).
+    //! time. If unspecified, the default fade time (same as the   
+    //! default fade time for the Distiller) is used.
     //!
     //!   \param   partialFadeTime is the extra time (in seconds)  
     //!            added to each end of a Partial to accomodate 
-    //!            the fade to and from zero amplitude. Default is
-    //!            0.001 (one millisecond). The Partial fade time
-    //!            must be non-negative.
+    //!            the fade to and from zero amplitude. Fade time
+    //!            must be non-negative. A default value is used
+    //!			   if unspecified.
     //!   \throw  InvalidArgument if partialFadeTime is negative.
-    explicit Sieve( double partialFadeTime = 0.001 /* 1 ms */ );
+    explicit Sieve( double partialFadeTime = Sieve::DefaultFadeTime );
      
     //  Use compiler-generated copy, assign, and destroy.
     

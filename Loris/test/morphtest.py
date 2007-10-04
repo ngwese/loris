@@ -107,7 +107,7 @@ loris.shiftPitch( clar, loris.LinearEnvelope( -600 ) )
 loris.exportAiff( 'clarOK.pytest.aiff', loris.synthesize( clar, samplerate ), samplerate, 16 )
 
 #
-#   analyze flute tone (reuse Analyzer)
+#   analyze flute tone
 #
 print 'analyzing flute 4D (%s)' % time.ctime(time.time())
 a = loris.Analyzer( 270 )       # reconfigure Analyzer

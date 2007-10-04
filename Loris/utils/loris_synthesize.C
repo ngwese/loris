@@ -73,6 +73,7 @@ void printUsage( const char * programName );
 double Rate = 44100;
 double FreqScale = 1.;
 double AmpScale = 1.;
+double BwScale = 1.;
 string Outname = "synth.aiff";
 vector< double > marker_times, cmdline_times;
 
@@ -223,6 +224,12 @@ int main( int argc, char * argv[] )
        PartialUtils::scaleAmplitude( partials.begin(), partials.end(), AmpScale );
     }
     
+    if ( 1. != BwScale )
+    {
+       cout << "Scaling partial bandwidths by " << BwScale << endl;
+       PartialUtils::scaleBandwidth( partials.begin(), partials.end(), BwScale );
+    }
+    
     //  render the Partials
     cout << "Rendering " << partials.size() << " partials at "
          << Rate << " Hz." << endl;
@@ -281,6 +288,12 @@ void parseArguments( int nargs, char * args[] )
                 ++args;
                 --nargs;
             }
+            else if ( arg == "-bw" )
+            {
+                BwScale = getFloatArg( *args );
+                ++args;
+                --nargs;
+            }
             else if ( arg == "-o" )
             {
                 Outname = *args;
@@ -316,6 +329,7 @@ void printUsage( const char * programName )
     cout << "-rate <sample rate in Hz>" << endl;
     cout << "-freq <frequency scale factor>" << endl;
     cout << "-amp <amplitude scale factor>" << endl;
+    cout << "-bw <bandwidth scale factor>" << endl;
     cout << "-o <output AIFF file name, default is synth.aiff>" << endl;
     cout << "\nOptional cmdline_times (any number) are used for dilation." << endl;
     cout << "If cmdline_times are specified, they must all correspond to " << endl;

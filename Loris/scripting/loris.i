@@ -210,8 +210,8 @@ void channelize( PartialList * partials,
 number of Partials that does not combine any overlapping Partials.
 Collated Partials assigned labels higher than any label in the original 
 list, and appear at the end of the sequence, after all previously-labeled
-Partials. Optionally specify the fade and gap times, 
-defaults are 1ms and 0.1ms.") collate_duh;
+Partials. Optionally specify the fade and gap times, else default values
+are used.") collate_duh;
 
 %rename( collate ) collate_duh;
 
@@ -222,7 +222,8 @@ defaults are 1ms and 0.1ms.") collate_duh;
     // imported, and using statements do not solve
     // the problem as they should.
     void collate_duh( PartialList * partials, 
-				  	  double fadeTime = 0.001, double gapTime = 0.0001 )
+				  	  double fadeTime = Collator::DefaultFadeTime, 
+				  	  double gapTime = Collator::DefaultSilentTime )
     {
     	Collator c( fadeTime, gapTime );
         c.collate( *partials );
@@ -315,7 +316,7 @@ require:
 PartialList containing at most one Partial per label. Unlabeled 
 (zero-labeled) Partials are left unmodified at the end of the 
 distilled Partials. Optionally specify the fade and gap times, 
-defaults are 1ms and 0.1ms.
+defaults are 5ms and 1ms.
 ") fake_distill;
 
 //void distill( PartialList * partials );
@@ -325,8 +326,8 @@ defaults are 1ms and 0.1ms.
 %inline
 %{
 	void fake_distill( PartialList * partials, 
-				      double fadeTime = 0.001, 
-				      double gapTime = 0.0001 )
+				      double fadeTime = Distiller::DefaultFadeTime, 
+				      double gapTime = Distiller::DefaultSilentTime )
 	{
 		Distiller d( fadeTime, gapTime );
 		d.distill( *partials );
@@ -862,7 +863,7 @@ Optionally specify the fade time, default is 1ms.") fake_sift;
 %inline
 %{
 	void fake_sift( PartialList * partials, 
-				  double fadeTime = 0.001 )
+				    double fadeTime = Sieve::DefaultFadeTime )
 	{
 		Sieve s( fadeTime );
 		s.sift( *partials );

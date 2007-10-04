@@ -70,30 +70,41 @@ class Collator
         
 //  -- public interface --
 public:
+
+//  -- global defaults and constants --
+
+    //! Default time (in seconds) over which Partials joined by
+    //! distillation fade to and from zero amplitude.
+    static const double DefaultFadeTime;
+    
+    //! Default minimum duration (in seconds) of the silent 
+    //! (zero-amplitude) gap between two Partials joined by distillation.
+    static const double DefaultSilentTime;
+    
 //  -- construction --
 
     //! Construct a new Collator using the specified fade and gap times
     //! between Partials. When two Partials are joined, the collated Partial
     //! fades out at the end of the earlier Partial and back in again
     //! at the onset of the later one. The fade time is the time over
-    //! which these fades occur. By default, use a 1 ms fade time.
-    //! The gap time is the additional time over which a Partial faded
-    //! out must remain at zero amplitude before it can fade back in.
-    //! By default, use a gap time of one tenth of a millisecond, to 
-    //! prevent a pair of arbitrarily close null Breakpoints being
-    //! inserted.
-    //!
-    //!   \param   partialFadeTime is the time (in seconds) over
-    //!            which Partials joined by collating fade to
-    //!            and from zero amplitude. Default is 0.001 (one
-    //!            millisecond).
-    //!   \param   partialSilentTime is the minimum duration (in seconds) 
-    //!            of the silent (zero-amplitude) gap between two 
-    //!            Partials joined by collating. (Default is
-    //!            0.0001 (one tenth of a millisecond).
+    //! which these fades occur. By default, use a 5 ms fade time.
+	//!	The gap time is the additional time over which a Partial faded
+	//!	out must remain at zero amplitude before it can fade back in.
+	//!	By default, use a gap time of one millisecond, to 
+	//!	prevent a pair of arbitrarily close null Breakpoints being
+	//!	inserted. (Defaults are copied from the Distiller.)
+	//!
+	//!   \param   partialFadeTime is the time (in seconds) over
+	//!            which Partials joined by distillation fade to
+	//!            and from zero amplitude. Default is 0.005 (one
+	//!            millisecond).
+	//!   \param   partialSilentTime is the minimum duration (in seconds) 
+	//!            of the silent (zero-amplitude) gap between two 
+	//!            Partials joined by distillation. (Default is
+	//!            0.001 (one millisecond).
     explicit
-    Collator( double partialFadeTime = 0.001    /* 1 ms */,
-              double partialSilentTime = 0.0001 /* .1 ms */ );
+    Collator( double partialFadeTime = Collator::DefaultFadeTime,
+              double partialSilentTime = Collator::DefaultSilentTime );
      
     //  Use compiler-generated copy, assign, and destroy.
     
