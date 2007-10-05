@@ -3,6 +3,13 @@ synthesis, and morphing, developed by Kelly Fitz and Lippold Haken
 at the CERL Sound Group. Loris includes a C++ class library, a
 Python module, a C-linkable interface, and documentation.
 
+Loris 1.5.1 is a minor upgrade to Loris 1.5, offering enhancements
+to the command line analysis and synthesis tools to support the
+mixed derivative (convergence) bandwidth analysis introduced
+in Loris 1.5, and improving the consistency between some related
+modules, and between their default behavior in different interfaces
+(C++ and Python and the command line utilities).
+
 Loris 1.5 offers bug fixes and new features, relative to Loris 1.4.
 Among the new features, an option has been added to the Analyzer to
 compute bandwidth envelopes using sinusoidality (or convergence)
