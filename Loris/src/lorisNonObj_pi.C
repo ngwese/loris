@@ -118,7 +118,7 @@ using namespace Loris;
  */
 extern "C"
 void channelize( PartialList * partials, 
-				     LinearEnvelope * refFreqEnvelope, int refLabel )
+				 LinearEnvelope * refFreqEnvelope, int refLabel )
 {
 	try 
 	{

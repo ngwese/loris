@@ -202,8 +202,19 @@ by the amplitude at each breakpoint, so that high- amplitude
 breakpoints contribute more to the channel decision. Partials are
 labeled, but otherwise unmodified. In particular, their
 frequencies are not modified in any way.");
-void channelize( PartialList * partials, 
-                 LinearEnvelope * refFreqEnvelope, int refLabel );
+
+%inline
+%{
+
+	void channelize( PartialList * partials, 
+                     Envelope * refFreqEnvelope, int refLabel )
+    {
+		Channelizer::channelize( partials->begin(), partials->end(), 
+		                         *refFreqEnvelope, refLabel );
+    }
+                 
+%}
+                
 
 %feature("docstring",
 "Collate unlabeled (zero-labeled) Partials into the smallest-possible 
@@ -358,33 +369,15 @@ and is included only for backward compatability") fake_exportAiff;
 %inline 
 %{
 	void fake_exportAiff( const char * path, const std::vector< double > & samples,
-					     double samplerate = 44100, int bitsPerSamp = 16, 
-					     int nchansignored = 1 )
+					      double samplerate = 44100, int bitsPerSamp = 16, 
+					      int nchansignored = 1 )
 	{
 		exportAiff( path, &(samples.front()), samples.size(), 
 					samplerate, bitsPerSamp );
 	}
-	/*
-	void fake_exportAiff( const char * path, const std::vector< double > & samples,
-					     double samplerate, int bitsPerSamp )
-	{
-		exportAiff( path, &(samples.front()), samples.size(), 
-					samplerate, bitsPerSamp );
-	}
-	void fake_exportAiff( const char * path, const std::vector< double > & samples,
-					     double samplerate )
-	{
-		exportAiff( path, &(samples.front()), samples.size(), 
-					samplerate, 16 );
-	}
-	void fake_exportAiff( const char * path, const std::vector< double > & samples )
-	{
-		exportAiff( path, &(samples.front()), samples.size(), 
-					44100, 16 );
-	}
-	*/
+	
 	void fake_exportAiff( const char * path, PartialList * partials,
-					     double samplerate = 44100, int bitsPerSamp = 16 )
+					      double samplerate = 44100, int bitsPerSamp = 16 )
 	{
 	    AiffFile fout( partials->begin(), partials->end(), samplerate );
 	    fout.write( path );
@@ -444,15 +437,25 @@ if specified, is a time-varying weighting on the harmonifing process.
 When 1, harmonic frequencies are used, when 0, breakpoint frequencies are 
 unmodified. ") harmonify;
 
-void harmonify( PartialList * partials, long refLabel,
-                const LinearEnvelope * env, double threshold_dB );
+
+%{
+#include "Harmonifier.h"
+%}
 
 %inline %{
+	void harmonify( PartialList * partials, long refLabel,
+                    const Envelope * env, double threshold_dB )
+	{
+		Harmonifier::harmonify( partials->begin(), partials->end(), 
+                                refLabel, *env, threshold_dB );
+	}
+
     void harmonify( PartialList * partials, long refLabel, 
                     double threshold_dB )
     {
         LinearEnvelope e( 1 );
-        harmonify( partials, refLabel, &e, threshold_dB );
+        Harmonifier::harmonify( partials->begin(), partials->end(), 
+                                refLabel, e, threshold_dB );
     }
 %}                        
 
@@ -522,18 +525,32 @@ source PartialLists. For more information about the Loris
 morphing algorithm, see the Loris website:
 	www.cerlsoundgroup.org/Loris/") morph;
 
+%{
+#include "Morpher.h"
+%}
+
 %newobject morph;
 %inline %{
 	PartialList * morph( const PartialList * src0, const PartialList * src1, 
-                         const LinearEnvelope * ffreq, 
-                         const LinearEnvelope * famp, 
-                         const LinearEnvelope * fbw )
+                         const Envelope * ffreq, 
+                         const Envelope * famp, 
+                         const Envelope * fbw )
 	{
 		PartialList * dst = createPartialList();
-		morph( src0, src1, ffreq, famp, fbw, dst );
+		//	morph( src0, src1, ffreq, famp, fbw, dst );
 		
-		// check for exception:
-		if ( check_exception() )
+		notifier << "morphing " << src0->size() << " Partials with " <<
+					src1->size() << " Partials" << endl;
+		try
+		{			
+			//	make a Morpher object and do it:
+			Morpher m( *ffreq, *famp, *fbw );
+			m.morph( src0->begin(), src0->end(), src1->begin(), src1->end() );
+					
+			//	splice the morphed Partials into dst:
+			dst->splice( dst->end(), m.partials() );
+		}
+		catch (...)
 		{
 			destroyPartialList( dst );
 			dst = NULL;
@@ -549,28 +566,75 @@ morphing algorithm, see the Loris website:
 		LinearEnvelope ffreq( freqweight ), famp( ampweight ), fbw( bwweight );
 		
 		PartialList * dst = createPartialList();
-		morph( src0, src1, &ffreq, &famp, &fbw, dst );
+		//	morph( src0, src1, ffreq, famp, fbw, dst );
 		
-		// check for exception:
-		if ( check_exception() )
+		notifier << "morphing " << src0->size() << " Partials with " <<
+					src1->size() << " Partials" << endl;
+		try
+		{			
+			//	make a Morpher object and do it:
+			Morpher m( ffreq, famp, fbw );
+			m.morph( src0->begin(), src0->end(), src1->begin(), src1->end() );
+					
+			//	splice the morphed Partials into dst:
+			dst->splice( dst->end(), m.partials() );
+		}
+		catch (...)
 		{
 			destroyPartialList( dst );
 			dst = NULL;
+			
+			//	let the exception propogate up the stack.
+			throw;
 		}
 		return dst;
 	}
 
 	PartialList * morph( const PartialList * src0, const PartialList * src1,
 	                     long src0RefLabel, long src1RefLabel,
-                         const LinearEnvelope * ffreq, 
-                         const LinearEnvelope * famp, 
-                         const LinearEnvelope * fbw )
+                         const Envelope * ffreq, 
+                         const Envelope * famp, 
+                         const Envelope * fbw )
 	{
 		PartialList * dst = createPartialList();
-		morphWithReference( src0, src1, src0RefLabel, src1RefLabel, ffreq, famp, fbw, dst );
+		// morphWithReference( src0, src1, src0RefLabel, src1RefLabel, ffreq, famp, fbw, dst );
 		
-		// check for exception:
-		if ( check_exception() )
+		notifier << "morphing " << src0->size() << " Partials with " <<
+					src1->size() << " Partials" << endl;
+		try
+		{			
+			//	make a Morpher object and do it:
+			Morpher m( *ffreq, *famp, *fbw );
+
+			if ( src0RefLabel != 0 )
+			{
+			   notifier << "using Partial labeled " << src0RefLabel;
+			   notifier << " as reference Partial for first morph source" << endl;
+			   m.setSourceReferencePartial( *src0, src0RefLabel );
+			}
+			else
+			{
+			   notifier << "using no reference Partial for first morph source" << endl;
+			}
+
+			if ( src1RefLabel != 0 )
+			{
+			   notifier << "using Partial labeled " << src1RefLabel;
+			   notifier << " as reference Partial for second morph source" << endl;
+			   m.setTargetReferencePartial( *src1, src1RefLabel );
+			}
+			else
+			{
+			   notifier << "using no reference Partial for second morph source" << endl;
+			}			
+			
+			
+			m.morph( src0->begin(), src0->end(), src1->begin(), src1->end() );
+					
+			//	splice the morphed Partials into dst:
+			dst->splice( dst->end(), m.partials() );
+		}
+		catch (...)
 		{
 			destroyPartialList( dst );
 			dst = NULL;
@@ -587,10 +651,44 @@ morphing algorithm, see the Loris website:
 		LinearEnvelope ffreq( freqweight ), famp( ampweight ), fbw( bwweight );
 		
 		PartialList * dst = createPartialList();
-		morphWithReference( src0, src1, src0RefLabel, src1RefLabel, &ffreq, &famp, &fbw, dst );
+		// morphWithReference( src0, src1, src0RefLabel, src1RefLabel, ffreq, famp, fbw, dst );
 		
-		// check for exception:
-		if ( check_exception() )
+		notifier << "morphing " << src0->size() << " Partials with " <<
+					src1->size() << " Partials" << endl;
+		try
+		{			
+			//	make a Morpher object and do it:
+			Morpher m( ffreq, famp, fbw );
+
+			if ( src0RefLabel != 0 )
+			{
+			   notifier << "using Partial labeled " << src0RefLabel;
+			   notifier << " as reference Partial for first morph source" << endl;
+			   m.setSourceReferencePartial( *src0, src0RefLabel );
+			}
+			else
+			{
+			   notifier << "using no reference Partial for first morph source" << endl;
+			}
+
+			if ( src1RefLabel != 0 )
+			{
+			   notifier << "using Partial labeled " << src1RefLabel;
+			   notifier << " as reference Partial for second morph source" << endl;
+			   m.setTargetReferencePartial( *src1, src1RefLabel );
+			}
+			else
+			{
+			   notifier << "using no reference Partial for second morph source" << endl;
+			}			
+			
+			
+			m.morph( src0->begin(), src0->end(), src1->begin(), src1->end() );
+					
+			//	splice the morphed Partials into dst:
+			dst->splice( dst->end(), m.partials() );
+		}
+		catch (...)
 		{
 			destroyPartialList( dst );
 			dst = NULL;
@@ -714,31 +812,42 @@ performed in-place.");
 
 void resample( PartialList * partials, double interval );
 
+
+%{
+#include "PartialUtils.h"
+%}
  
 %feature("docstring",
 "Bad old name for scaleAmplitude.") scaleAmp;
-
-void scaleAmp( PartialList * partials, LinearEnvelope * ampEnv );
 
 %feature("docstring",
 "Scale the amplitude of the Partials in a PartialList according 
 to an envelope representing a time-varying amplitude scale value.")
 scaleAmplitude;
-
-void scaleAmplitude( PartialList * partials, LinearEnvelope * ampEnv );
 				 
-%inline %{	
+%inline 
+%{	
+
+	void scaleAmp( PartialList * partials, Envelope * ampEnv )
+	{
+		PartialUtils::scaleAmplitude( partials->begin(), partials->end(), *ampEnv );
+	}
+	
+	void scaleAmplitude( PartialList * partials, Envelope * ampEnv )
+	{
+		PartialUtils::scaleAmplitude( partials->begin(), partials->end(), *ampEnv );
+	}
 
     void scaleAmp( PartialList * partials, double val )
 	{
 		LinearEnvelope e( val );
-		scaleAmplitude( partials, &e );
+		PartialUtils::scaleAmplitude( partials->begin(), partials->end(), e );
 	}
 	
 	void scaleAmplitude( PartialList * partials, double val )
 	{
 		LinearEnvelope e( val );
-		scaleAmplitude( partials, &e );
+		PartialUtils::scaleAmplitude( partials->begin(), partials->end(), e );
 	}
 	
 %}
@@ -747,14 +856,18 @@ void scaleAmplitude( PartialList * partials, LinearEnvelope * ampEnv );
 "Scale the bandwidth of the Partials in a PartialList according 
 to an envelope representing a time-varying bandwidth scale value.");
 
-void scaleBandwidth( PartialList * partials, LinearEnvelope * bwEnv );
-				 
 %inline %{	
+
+	void scaleBandwidth( PartialList * partials, Envelope * bwEnv )
+	{
+		PartialUtils::scaleBandwidth( partials->begin(), partials->end(), *bwEnv );
+	}
+				 
 
 	void scaleBandwidth( PartialList * partials, double val )
 	{
 		LinearEnvelope e( val );
-		scaleBandwidth( partials, &e );
+		PartialUtils::scaleBandwidth( partials->begin(), partials->end(), e );
 	}
 	
 %}
@@ -762,15 +875,18 @@ void scaleBandwidth( PartialList * partials, LinearEnvelope * bwEnv );
 %feature("docstring",
 "Scale the frequency of the Partials in a PartialList according 
 to an envelope representing a time-varying frequency scale value.");
-
-void scaleFrequency( PartialList * partials, LinearEnvelope * freqEnv );
 				 
 %inline %{	
+
+	void scaleFrequency( PartialList * partials, Envelope * freqEnv )
+	{
+		PartialUtils::scaleFrequency( partials->begin(), partials->end(), *freqEnv );
+	}
 
 	void scaleFrequency( PartialList * partials, double val )
 	{
 		LinearEnvelope e( val );
-		scaleFrequency( partials, &e );
+		PartialUtils::scaleFrequency( partials->begin(), partials->end(), e );
 	}
 	
 %}
@@ -780,14 +896,19 @@ void scaleFrequency( PartialList * partials, LinearEnvelope * freqEnv );
 according to an envelope representing a (time-varying) noise energy 
 scale value.");
 
-void scaleNoiseRatio( PartialList * partials, LinearEnvelope * noiseEnv );
 
-%inline %{	
+%inline 
+%{	
+
+	void scaleNoiseRatio( PartialList * partials, Envelope * noiseEnv )
+	{
+		PartialUtils::scaleNoiseRatio( partials->begin(), partials->end(), *noiseEnv );
+	}
 
 	void scaleNoiseRatio( PartialList * partials, double val )
 	{
 		LinearEnvelope e( val );
-		scaleNoiseRatio( partials, &e );
+		PartialUtils::scaleNoiseRatio( partials->begin(), partials->end(), e );
 	}
 	
 %}
@@ -796,14 +917,18 @@ void scaleNoiseRatio( PartialList * partials, LinearEnvelope * noiseEnv );
 "Set the bandwidth of the Partials in a PartialList according 
 to an envelope representing a time-varying bandwidth value.");
 
-void setBandwidth( PartialList * partials, LinearEnvelope * bwEnv );
+%inline 
+%{	
 
-%inline %{	
-
+	void setBandwidth( PartialList * partials, Envelope * bwEnv )
+	{
+		PartialUtils::setBandwidth( partials->begin(), partials->end(), *bwEnv );
+	}
+	
 	void setBandwidth( PartialList * partials, double val )
 	{
 		LinearEnvelope e( val );
-		setBandwidth( partials, &e );
+		PartialUtils::setBandwidth( partials->begin(), partials->end(), e );
 	}
 	
 %}
@@ -831,14 +956,18 @@ void shapeSpectrum( PartialList * partials, PartialList * surface,
 the given pitch envelope. The pitch envelope is assumed to have 
 units of cents (1/100 of a halfstep).");
 
-void shiftPitch( PartialList * partials, LinearEnvelope * pitchEnv );
 
-%inline %{	
-
+%inline 
+%{	
+	void shiftPitch( PartialList * partials, Envelope * pitchEnv )
+	{
+		PartialUtils::shiftPitch( partials->begin(), partials->end(), *pitchEnv );	
+	}
+	
 	void shiftPitch( PartialList * partials, double val )
 	{
 		LinearEnvelope e( val );
-		shiftPitch( partials, &e );
+		PartialUtils::shiftPitch( partials->begin(), partials->end(), e );
 	}
 	
 %}
@@ -1307,7 +1436,7 @@ Partial formation.") analyze;
 		}
 		 
 		PartialList * analyze( const std::vector< double > & vec, double srate, 
-                               LinearEnvelope * env )
+                               Envelope * env )
 		{
 			PartialList * partials = new PartialList();
 			if ( ! vec.empty() )
@@ -1558,6 +1687,32 @@ the amplitude envelope during analysis.") buildAmpEnv;
 
 
 };	//	end of class Analyzer
+
+// ---------------------------------------------------------------------------
+//	class Envelope
+//
+		
+%feature("docstring",
+"Envelope is an abstract base class for all time-varying envelopes
+and parameters, representing a single-valued funtion of one variable
+(usually time).") Envelope;
+
+class Envelope
+{
+public:
+
+%extend
+{
+	Envelope * Envelope( const Envelope * other )
+	{
+		return other->clone();
+	}
+}
+
+
+	
+
+};
 			
 // ---------------------------------------------------------------------------
 //	class LinearEnvelope
