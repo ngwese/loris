@@ -1708,8 +1708,6 @@ public:
 		return other->clone();
 	}
 }
-
-
 	
 
 };
@@ -1725,7 +1723,7 @@ values past either end of the breakpoint function have the
 values at the nearest end).") LinearEnvelope;
 
 
-class LinearEnvelope
+class LinearEnvelope : public Envelope
 {
 public:
 %feature("docstring",
