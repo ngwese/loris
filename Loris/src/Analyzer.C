@@ -97,7 +97,12 @@ public:
 // ---------------------------------------------------------------------------
 class FundamentalBuilder : public LinearEnvelopeBuilder
 {
-    double mFmin, mFmax, mAmpThresh, mFreqThresh;
+    std::auto_ptr< Envelope > mFminEnv;
+    std::auto_ptr< Envelope > mFmaxEnv; 
+    
+    // double mFmin, mFmax;
+    double mAmpThresh, mFreqThresh;
+    
     std::vector< double > amplitudes, frequencies;
     
     const double mMinConfidence;    // 0.9, this could be made a parameter, 
@@ -105,13 +110,30 @@ class FundamentalBuilder : public LinearEnvelopeBuilder
     
 public:
     FundamentalBuilder( double fmin, double fmax, double threshDb = -60, double threshHz = 8000 ) :
-        mFmin( fmin ), 
-        mFmax( fmax ), 
+        mFminEnv( new LinearEnvelope( fmin ) ), 
+        mFmaxEnv( new LinearEnvelope( fmax ) ), 
         mAmpThresh( std::pow( 10., 0.05*(threshDb) ) ),
         mFreqThresh( threshHz ),
         mMinConfidence( 0.9 )
         {}
-		
+
+    FundamentalBuilder( Envelope & fmin, Envelope & fmax, double threshDb = -60, double threshHz = 8000 ) :
+        mFminEnv( fmin.clone() ), 
+        mFmaxEnv( fmax.clone() ), 
+        mAmpThresh( std::pow( 10., 0.05*(threshDb) ) ),
+        mFreqThresh( threshHz ),
+        mMinConfidence( 0.9 )
+        {}
+        	
+    FundamentalBuilder( const FundamentalBuilder & rhs ) :
+        mFminEnv( rhs.mFminEnv->clone() ), 
+        mFmaxEnv( rhs.mFmaxEnv->clone() ), 
+        mAmpThresh( rhs.mAmpThresh ),
+        mFreqThresh( rhs.mFreqThresh ),
+        mMinConfidence( rhs.mMinConfidence )
+        {}
+    
+        
 	FundamentalBuilder * clone( void ) const { return new FundamentalBuilder(*this); }
 	
     void build( const Peaks & peaks, double frameTime, LinearEnvelope & env );
@@ -137,14 +159,17 @@ void FundamentalBuilder::build( const Peaks & peaks, double frameTime,
     }
     if ( ! amplitudes.empty() )
     {
+        const double fmin = mFminEnv->valueAt( frameTime );
+        const double fmax = mFmaxEnv->valueAt( frameTime );
+        
         //  estimate f0
         F0estimate est = iterative_estimate( amplitudes, frequencies, 
-                                             mFmin,
-                                             mFmax,
+                                             fmin,
+                                             fmax,
                                              0.1 );
         
         if ( est.confidence >= mMinConfidence &&
-             est.frequency > mFmin && est.frequency < mFmax  )
+             est.frequency > fmin && est.frequency < fmax  )
         {
             // notifier << "f0 is " << est.frequency << endl;
             //  add breakpoint to fundamental envelope
@@ -519,7 +544,7 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
     ReassignedSpectrum spectrum( window );
     
     //  configure the peak selection and partial formation policies:
-    SpectralPeakSelector selector( srate, m_freqResolution );
+    SpectralPeakSelector selector( srate, m_freqFloor, m_cropTime );
     PartialBuilder builder( m_freqDrift, reference );
     
     //  configure bw association policy, unless
@@ -560,7 +585,7 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
             
              
             //  extract peaks from the spectrum, and thin
-            Peaks peaks = selector.selectPeaks( spectrum, m_freqFloor, m_cropTime ); 
+            Peaks peaks = selector.selectPeaks( spectrum ); 
 			Peaks::iterator rejected = thinPeaks( peaks, currentFrameTime );
 
             //	fix the stored bandwidth values
@@ -616,7 +641,7 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
             LinearEnvelope::iterator peakpos = 
                 std::max_element( m_ampEnv.begin(), m_ampEnv.end(), 
                                   compare2nd<LinearEnvelope::iterator::value_type> );
-            notifier << "HEY analyzer found amp peak at time : " << peakpos->first
+            notifier << "Analyzer found amp peak at time : " << peakpos->first
                      << " value: " << peakpos->second << endl;
         }
         
@@ -1287,14 +1312,16 @@ Analyzer::thinPeaks( Peaks & peaks, double frameTime  )
 	Peaks::iterator bogusTimes = 
 		std::remove_if( peaks.begin(), peaks.end(), negative_time( frameTime ) );
 		
+        
+    const double freqResolution = m_freqResolution; //  could be time-varying
 	while ( it != bogusTimes ) 
 	{
 		Breakpoint & bp = it->second;
 		
 		//	keep this peak if it is loud enough and not
 		//	 too near in frequency to a louder one:
-		double lower = bp.frequency() - m_freqResolution;
-		double upper = bp.frequency() + m_freqResolution;
+		double lower = bp.frequency() - freqResolution;
+		double upper = bp.frequency() + freqResolution;
 		if ( bp.amplitude() > threshold &&
 			 beginRejected == std::find_if( peaks.begin(), beginRejected, can_mask(lower, upper) ) )
 		{
