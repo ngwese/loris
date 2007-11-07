@@ -61,13 +61,17 @@
 namespace Loris {
 
 // ---------------------------------------------------------------------------
-//	construction
+//	construction - constant resolution
 // ---------------------------------------------------------------------------
-SpectralPeakSelector::SpectralPeakSelector( double srate, double res ) :
-	freqResolution( res ),
-	sampleRate( srate )
+SpectralPeakSelector::SpectralPeakSelector( double srate, double minFrequency, 
+                                            double maxTimeCorrection ) :
+	mSampleRate( srate ),
+    mMinFreq( minFrequency ),
+    mMaxTimeOffset( maxTimeCorrection )
 {
 }
+
+
 
 // ---------------------------------------------------------------------------
 //	extractPeaks
@@ -77,16 +81,14 @@ SpectralPeakSelector::SpectralPeakSelector( double srate, double res ) :
 //	those having large time corrections.
 //
 Peaks
-SpectralPeakSelector::selectPeaks( ReassignedSpectrum & spectrum, 
-								   double minFrequency,
-								   double maxTimeOffset )
+SpectralPeakSelector::selectPeaks( ReassignedSpectrum & spectrum )
 {
 	using namespace std; // for abs and fabs
 
-	const double sampsToHz = sampleRate / spectrum.size();
-	const double oneOverSR = 1. / sampleRate;
-	const double minFreqSample = minFrequency / sampsToHz;
-	const double maxCorrectionSamples = maxTimeOffset * sampleRate;
+	const double sampsToHz = mSampleRate / spectrum.size();
+	const double oneOverSR = 1. / mSampleRate;
+	const double minFreqSample = mMinFreq / sampsToHz;
+	const double maxCorrectionSamples = mMaxTimeOffset * mSampleRate;
 	
 	Peaks peaks;
 	
@@ -125,7 +127,7 @@ SpectralPeakSelector::selectPeaks( ReassignedSpectrum & spectrum,
             
             //  still possible that the frequency winds up being
             //  below the specified minimum
-            if ( freq < minFrequency )
+            if ( freq < mMinFreq )
             {
                 continue;   //  this control flow could be better!
             }

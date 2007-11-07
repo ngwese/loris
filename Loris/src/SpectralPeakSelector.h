@@ -52,20 +52,22 @@ class SpectralPeakSelector
 // --- interface ---
 public:
 	//	construction:
-	SpectralPeakSelector( double srate, double res );
+	SpectralPeakSelector( double srate, double minFrequency, 
+                          double maxTimeCorrection );
+    
 
 	//	Collect and return magnitude peaks in the lower half of the spectrum, 
 	//	ignoring those having frequencies below the specified minimum, and
 	//	those having large time corrections.
-	Peaks selectPeaks( ReassignedSpectrum & spectrum, 
-					   double minFrequency, double maxTimeOffset );
+	Peaks selectPeaks( ReassignedSpectrum & spectrum );
 	
 // --- implementation ---
 private:
 	
-	double freqResolution;
-	double sampleRate;
-	
+	double mSampleRate;
+	double mMinFreq;
+	double mMaxTimeOffset;
+
 	
 };	//	end of class SpectralPeakSelector
 
