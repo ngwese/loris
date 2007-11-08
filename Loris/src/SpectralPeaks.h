@@ -34,15 +34,25 @@
  *
  */
  
-#include <utility>
-#include <vector>
 #include "Breakpoint.h"
+
+#include <vector>
 
 //	begin namespace
 namespace Loris {
 
+//  define a spectral peak data structure
+
+struct SpectralPeak
+{
+    double time;
+    Breakpoint breakpoint;
+    
+    SpectralPeak( double t, const Breakpoint & bp ) : time( t ), breakpoint( bp ) {}
+};
+
 //	define the structure used to collect spectral peaks:
-typedef std::vector< std::pair< double, Breakpoint > > Peaks;
+typedef std::vector< SpectralPeak > Peaks;
 
 }	//	end of namespace Loris
 

@@ -133,7 +133,7 @@ better_match( const Partial & part1, const Breakpoint & bp1,
 //
 static double peak_frequency( const Peaks::value_type & p )
 {
-	return p.second.frequency();
+	return p.breakpoint.frequency();
 }
 
 // ---------------------------------------------------------------------------
@@ -178,8 +178,8 @@ PartialBuilder::formPartials( Peaks & peaks, double frameTime )
 	//	reference envelope -- do this before sorting!
 	for ( Peaks::iterator bpIter = peaks.begin(); bpIter != peaks.end(); ++bpIter ) 
 	{
-		Breakpoint & bp = bpIter->second;
-		const double peakTime = frameTime + bpIter->first;
+		Breakpoint & bp = bpIter->breakpoint;
+		const double peakTime = frameTime + bpIter->time;
 		bp.setFrequency( bp.frequency() / reference.valueAt( peakTime ) );
 	}
 		
@@ -193,8 +193,8 @@ PartialBuilder::formPartials( Peaks & peaks, double frameTime )
 	PartialPtrs::iterator eligible = eligiblePartials.begin();
 	for ( Peaks::iterator bpIter = peaks.begin(); bpIter != peaks.end(); ++bpIter ) 
 	{
-		const Breakpoint & bp = bpIter->second;
-		const double peakTime = frameTime + bpIter->first;
+		const Breakpoint & bp = bpIter->breakpoint;
+		const double peakTime = frameTime + bpIter->time;
 		
 		// 	find the Partial that is nearest in frequency to the Peak:
 		PartialPtrs::iterator nextEligible = eligible;
@@ -242,7 +242,7 @@ PartialBuilder::formPartials( Peaks & peaks, double frameTime )
 		if ( eligible == eligiblePartials.end() ||
 			 freq_distance( **eligible, bp ) > normalizedDrift ||
 			 ( nextPeak != peaks.end() &&
-			   better_match( **eligible, nextPeak->second, **eligible, bp ) ) )
+			   better_match( **eligible, nextPeak->breakpoint, **eligible, bp ) ) )
 		{
 			Partial p;
 			p.insert( peakTime, bp );

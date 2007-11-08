@@ -74,6 +74,20 @@ using namespace std;
 //  begin namespace
 namespace Loris {
 
+// ---------------------------------------------------------------------------
+//  helpers, used below
+// ---------------------------------------------------------------------------
+static double accumPeakSquaredAmps( double init, 
+                                    const SpectralPeak & pk )
+{
+    return init + (pk.breakpoint.amplitude() * pk.breakpoint.amplitude());
+}
+
+template < class Pair >
+static double compare2nd( const Pair & p1, const Pair & p2 )
+{
+    return p1.second < p2.second;
+}
 
 // ---------------------------------------------------------------------------
 //  LinearEnvelopeBuilder
@@ -150,11 +164,11 @@ void FundamentalBuilder::build( const Peaks & peaks, double frameTime,
     frequencies.clear();
     for ( Peaks::const_iterator spkpos = peaks.begin(); spkpos != peaks.end(); ++spkpos )
     {
-        if ( spkpos->second.amplitude() > mAmpThresh &&
-             spkpos->second.frequency() < mFreqThresh )
+        if ( spkpos->breakpoint.amplitude() > mAmpThresh &&
+             spkpos->breakpoint.frequency() < mFreqThresh )
         {
-            amplitudes.push_back( spkpos->second.amplitude() );
-            frequencies.push_back( spkpos->second.frequency() );
+            amplitudes.push_back( spkpos->breakpoint.amplitude() );
+            frequencies.push_back( spkpos->breakpoint.frequency() );
         }
     }
     if ( ! amplitudes.empty() )
@@ -191,10 +205,6 @@ public:
 	
     void build( const Peaks & peaks, double frameTime, LinearEnvelope & env );
 
-    //  helper
-    static double 
-    accumPeakSquaredAmps( double init, 
-                          const Peaks::const_iterator::value_type & timeBpPair );
 };
 
 // ---------------------------------------------------------------------------
@@ -206,18 +216,6 @@ void AmpEnvBuilder::build( const Peaks & peaks, double frameTime,
 {
     double x = std::accumulate( peaks.begin(), peaks.end(), 0.0, accumPeakSquaredAmps );
     env.insert( frameTime, std::sqrt( x ) );
-}
-
-// ---------------------------------------------------------------------------
-//  accumPeakSquaredAmps
-// ---------------------------------------------------------------------------
-//  static helper used to construct an amplitude envelope.
-//
-double 
-AmpEnvBuilder::accumPeakSquaredAmps( double init, 
-                                     const Peaks::const_iterator::value_type & timeBpPair )
-{
-    return init + (timeBpPair.second.amplitude() * timeBpPair.second.amplitude());
 }
 
 
@@ -441,8 +439,8 @@ Analyzer::configure( double resolutionHz, double windowWidthHz )
 //  analyze
 // ---------------------------------------------------------------------------
 //! Analyze a vector of (mono) samples at the given sample rate         
-//! (in Hz) and append the extracted Partials to Analyzer's 
-//! PartialList (std::list of Partials).    
+//! (in Hz) and store the extracted Partials in the Analyzer's
+//! PartialList (std::list of Partials). 
 //! 
 //! \param vec is a vector of floating point samples
 //! \param srate is the sample rate of the samples in the vector 
@@ -458,7 +456,8 @@ Analyzer::analyze( const std::vector<double> & vec, double srate )
 //  analyze
 // ---------------------------------------------------------------------------
 //! Analyze a range of (mono) samples at the given sample rate      
-//! (in Hz) and collect the resulting Partials. 
+//! (in Hz) and store the extracted Partials in the Analyzer's
+//! PartialList (std::list of Partials). 
 //! 
 //! \param bufBegin is a pointer to a buffer of floating point samples
 //! \param bufEnd is (one-past) the end of a buffer of floating point 
@@ -476,7 +475,7 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate 
 //  analyze
 // ---------------------------------------------------------------------------
 //! Analyze a vector of (mono) samples at the given sample rate         
-//! (in Hz) and append the extracted Partials to Analyzer's 
+//! (in Hz) and store the extracted Partials in the Analyzer's
 //! PartialList (std::list of Partials). Use the specified envelope
 //! as a frequency reference for Partial tracking.
 //!
@@ -492,26 +491,12 @@ Analyzer::analyze( const std::vector<double> & vec, double srate,
     analyze( &(vec[0]),  &(vec[0]) + vec.size(), srate, reference ); 
 }
 
-// ---------------------------------------------------------------------------
-//  helpers
-// ---------------------------------------------------------------------------
-static double accumPeakSquaredAmps( double init, 
-                                    const Peaks::const_iterator::value_type & timeBpPair )
-{
-    return init + (timeBpPair.second.amplitude() * timeBpPair.second.amplitude());
-}
-
-template < class Pair >
-static double compare2nd( const Pair & p1, const Pair & p2 )
-{
-    return p1.second < p2.second;
-}
 
 // ---------------------------------------------------------------------------
 //  analyze
 // ---------------------------------------------------------------------------
 //! Analyze a range of (mono) samples at the given sample rate      
-//! (in Hz) and append the extracted Partials to Analyzer's 
+//! (in Hz) and store the extracted Partials in the Analyzer's
 //! PartialList (std::list of Partials). Use the specified envelope
 //! as a frequency reference for Partial tracking.
 //! 
@@ -564,6 +549,8 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
     //  reset envelopes:
     m_ampEnv.clear();
     m_f0Env.clear();
+    
+    m_partials.clear();
         
     try 
     { 
@@ -761,7 +748,7 @@ Analyzer::windowWidth( void ) const
 }
 
 // ---------------------------------------------------------------------------
-//  windowWidth
+//  phaseCorrect
 // ---------------------------------------------------------------------------
 //! Return true if the phases and frequencies of the constructed
 //! partials should be modified to be consistent at the end of the
@@ -1217,10 +1204,10 @@ const LinearEnvelope & Analyzer::ampEnv( void ) const
 //	sort_peaks_greater_amplitude
 // ---------------------------------------------------------------------------
 //	predicate used for sorting peaks in order of decreasing amplitude:
-static bool sort_peaks_greater_amplitude( const Peaks::value_type & lhs, 
-										  const Peaks::value_type & rhs )
+static bool sort_peaks_greater_amplitude( const SpectralPeak & lhs, 
+										  const SpectralPeak & rhs )
 { 
-	return lhs.second.amplitude() > rhs.second.amplitude(); 
+	return lhs.breakpoint.amplitude() > rhs.breakpoint.amplitude(); 
 }
 
 // ---------------------------------------------------------------------------
@@ -1232,10 +1219,10 @@ struct can_mask
 {
 	//	masking occurs if any (louder) peak falls
 	//	in the frequency range delimited by fmin and fmax:
-	bool operator()( const Peaks::value_type & v )  const
+	bool operator()( const SpectralPeak & v )  const
 	{ 
-		return	( v.second.frequency() > _fmin ) && 
-				( v.second.frequency() < _fmax ); 
+		return	( v.breakpoint.frequency() > _fmin ) && 
+				( v.breakpoint.frequency() < _fmax ); 
 	}
 		
 	//	constructor:
@@ -1259,7 +1246,7 @@ struct negative_time
 	// 	plus the current frame time is less than 0:
 	bool operator()( const Peaks::value_type & v )  const
 	{ 
-		return 0 > ( v.first + _frameTime );
+		return 0 > ( v.time + _frameTime );
 	}
 		
 	//	constructor:
@@ -1307,16 +1294,20 @@ Analyzer::thinPeaks( Peaks & peaks, double frameTime  )
 	//	in order of louder magnitude:
 	std::sort( peaks.begin(), peaks.end(), sort_peaks_greater_amplitude );
 	
-	Peaks::iterator it = peaks.begin();
-	Peaks::iterator beginRejected = it;
+    //  negative times are not real, but still might represent
+    //  a noisy part of the spectrum
 	Peaks::iterator bogusTimes = 
 		std::remove_if( peaks.begin(), peaks.end(), negative_time( frameTime ) );
-		
+    peaks.erase( bogusTimes, peaks.end() );
         
+    
+	Peaks::iterator it = peaks.begin();
+	Peaks::iterator beginRejected = it;
+
     const double freqResolution = m_freqResolution; //  could be time-varying
 	while ( it != bogusTimes ) 
 	{
-		Breakpoint & bp = it->second;
+		Breakpoint & bp = it->breakpoint;
 		
 		//	keep this peak if it is loud enough and not
 		//	 too near in frequency to a louder one:
@@ -1343,7 +1334,7 @@ Analyzer::thinPeaks( Peaks & peaks, double frameTime  )
 		++it;
 	}
 	
-	debugger << "thinPeaks retained " << std::distance( peaks.begin(), beginRejected ) << endl;
+	// debugger << "thinPeaks retained " << std::distance( peaks.begin(), beginRejected ) << endl;
 
 	//  remove rejected Breakpoints:
 	//peaks.erase( beginRejected, peaks.end() );
@@ -1361,17 +1352,25 @@ Analyzer::thinPeaks( Peaks & peaks, double frameTime  )
 //	compute bandwidth, the appropriate scaling is applied
 //	to the stored mixed phase derivative. Otherwise, the
 //	Peak bandwidth is set to zero.
+//
+//  The convergence value is on the range [0,1], 0 for a sinusoid, 
+//  and 1 for an impulse. If convergence tolerance is specified (as
+//  a negative value in m_bwRegionWidth), it should be positive and 
+//  less than 1, and specifies the convergence value that is to 
+//  correspond to bandwidth equal to 1.0. This is achieved by scaling
+//  the convergence by the inverse of the tolerance, and saturating
+//  at 1.0.
 void Analyzer::fixBandwidth( Peaks & peaks )
 {
 	
 	if ( m_bwRegionWidth < 0 )
 	{
 		double scale = 1.0 / (- m_bwRegionWidth);	
-			// m_bwRegionWidth is stored as negative tolerance
+			// m_bwRegionWidth stores negative tolerance
 	
 		for ( Peaks::iterator it = peaks.begin(); it != peaks.end(); ++it )
 		{
-			Breakpoint & bp = it->second;
+			Breakpoint & bp = it->breakpoint;
 			bp.setBandwidth( std::min( 1.0, scale * bp.bandwidth() ) );
 		}
 	}
@@ -1379,7 +1378,7 @@ void Analyzer::fixBandwidth( Peaks & peaks )
 	{
 		for ( Peaks::iterator it = peaks.begin(); it != peaks.end(); ++it )
 		{
-			Breakpoint & bp = it->second;
+			Breakpoint & bp = it->breakpoint;
 			bp.setBandwidth( 0 );
 		}
 	}

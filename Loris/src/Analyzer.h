@@ -171,7 +171,7 @@ public:
 //  -- analysis --
 
     //! Analyze a vector of (mono) samples at the given sample rate         
-    //! (in Hz) and append the extracted Partials to Analyzer's 
+    //! (in Hz) and store the extracted Partials in the Analyzer's 
     //! PartialList (std::list of Partials).    
     //! 
     //! \param  vec is a vector of floating point samples
@@ -179,7 +179,8 @@ public:
     void analyze( const std::vector<double> & vec, double srate );
     
     //! Analyze a range of (mono) samples at the given sample rate      
-    //! (in Hz) and collect the resulting Partials. 
+    //! (in Hz) and store the extracted Partials in the Analyzer's
+    //! PartialList (std::list of Partials).    
     //! 
     //! \param  bufBegin is a pointer to a buffer of floating point samples
     //! \param  bufEnd is (one-past) the end of a buffer of floating point 
@@ -190,7 +191,7 @@ public:
 //  -- tracking analysis --
 
     //! Analyze a vector of (mono) samples at the given sample rate         
-    //! (in Hz) and append the extracted Partials to Analyzer's 
+    //! (in Hz) and store the extracted Partials in the Analyzer's
     //! PartialList (std::list of Partials). Use the specified envelope
     //! as a frequency reference for Partial tracking.
     //!
@@ -202,7 +203,7 @@ public:
                   const Envelope & reference );
     
     //! Analyze a range of (mono) samples at the given sample rate      
-    //! (in Hz) and append the extracted Partials to Analyzer's 
+    //! (in Hz) and store the extracted Partials in the Analyzer's
     //! PartialList (std::list of Partials). Use the specified envelope
     //! as a frequency reference for Partial tracking.
     //! 

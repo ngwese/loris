@@ -293,19 +293,19 @@ AssociateBandwidth::associateBandwidth( Peaks::iterator begin, 		//	beginning of
 	//	accumulate retained Breakpoints as sinusoids, 
 	for ( Peaks::iterator it = begin; it != rejected; ++it )
 	{
-		accumulateSinusoid( it->second.frequency(), it->second.amplitude() );
+		accumulateSinusoid( it->breakpoint.frequency(), it->breakpoint.amplitude() );
 	}
 	
 	//	accumulate rejected breakpoints as noise:
 	for ( Peaks::iterator it = rejected; it != end; ++it )
 	{
-		accumulateNoise( it->second.frequency(), it->second.amplitude() );
+		accumulateNoise( it->breakpoint.frequency(), it->breakpoint.amplitude() );
 	}
 
 	//	associate bandwidth with each retained Breakpoint:
 	for ( Peaks::iterator it = begin; it != rejected; ++it )
 	{
-		associate( it->second );
+		associate( it->breakpoint );
 	}
 	
 	//	reset after association, yuk:

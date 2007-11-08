@@ -54,15 +54,26 @@ public:
 	//	construction:
 	SpectralPeakSelector( double srate, double minFrequency, 
                           double maxTimeCorrection );
-    
 
 	//	Collect and return magnitude peaks in the lower half of the spectrum, 
 	//	ignoring those having frequencies below the specified minimum, and
 	//	those having large time corrections.
 	Peaks selectPeaks( ReassignedSpectrum & spectrum );
-	
+    
+    	
 // --- implementation ---
 private:
+
+    //  There are two strategies for doing. Probably each one should be a 
+    //  separate class, but for now, they are just separate functions.
+    //
+    //  Currently, the reassignment minima are used.
+    
+    Peaks selectReassignmentMinima( ReassignedSpectrum & spectrum );
+    Peaks selectMagnitudePeaks( ReassignedSpectrum & spectrum );
+        
+
+// --- member data ---
 	
 	double mSampleRate;
 	double mMinFreq;

@@ -38,16 +38,14 @@
 
 #include "SpectralPeakSelector.h"
 
-#include <algorithm>
-#include <cmath>
-#include <utility>
-#include <vector>
 
 #include "Breakpoint.h"
-#include "Envelope.h"
 #include "Notifier.h"
-// #include "Partial.h"	//	yuk, just for label type
 #include "ReassignedSpectrum.h"
+
+
+#include <cmath>    //  for abs and fabs
+
 
 // define this to use local minima in frequency
 // reassignment to detect "peaks", otherwise 
@@ -55,7 +53,6 @@
 #define USE_REASSIGNMENT_MINS 1
 //#undef USE_REASSIGNMENT_MINS
 
-#define ENABLE_EXPERIMENTAL_BW 1
 
 //	begin namespace
 namespace Loris {
@@ -71,17 +68,35 @@ SpectralPeakSelector::SpectralPeakSelector( double srate, double minFrequency,
 {
 }
 
-
-
 // ---------------------------------------------------------------------------
-//	extractPeaks
+//	selectPeaks
 // ---------------------------------------------------------------------------
 //	Collect and return magnitude peaks in the lower half of the spectrum, 
 //	ignoring those having frequencies below the specified minimum, and
 //	those having large time corrections.
 //
+//  There are two strategies for doing. Probably each one should be a 
+//  separate class, but for now, they are just separate functions.
+
 Peaks
 SpectralPeakSelector::selectPeaks( ReassignedSpectrum & spectrum )
+{
+#if defined(USE_REASSIGNMENT_MINS) && USE_REASSIGNMENT_MINS
+
+    return selectReassignmentMinima( spectrum );
+    
+#else
+
+    return selectMagnitudePeaks( spectrum );
+    
+#endif
+}
+
+// ---------------------------------------------------------------------------
+//	selectReassignmentMinima (private)
+// ---------------------------------------------------------------------------
+Peaks
+SpectralPeakSelector::selectReassignmentMinima( ReassignedSpectrum & spectrum )
 {
 	using namespace std; // for abs and fabs
 
@@ -102,7 +117,6 @@ SpectralPeakSelector::selectPeaks( ReassignedSpectrum & spectrum )
 	
 	for ( int j = start_j; j < end_j; ++j ) 
 	{	 
-#if defined(USE_REASSIGNMENT_MINS) && USE_REASSIGNMENT_MINS
 
 	    // look for changes in the frequency reassignment,
 	    // from positive to negative correction, indicating
@@ -150,13 +164,43 @@ SpectralPeakSelector::selectPeaks( ReassignedSpectrum & spectrum )
     			//	be able to compute it later:
     			double time = timeCorrectionSamps * oneOverSR;
     			Breakpoint bp( freq, mag, bw, phase );
-    			peaks.push_back( std::make_pair( time, bp ) );
+    			peaks.push_back( SpectralPeak( time, bp ) );
 			}	        
 	    }
 	    fsample = next_fsample;
-	    
-#else
+	}
+	
+	debugger << "extractPeaks found " << peaks.size() << endl;
+		
+	return peaks;
 
+}
+
+// ---------------------------------------------------------------------------
+//	selectMagnitudePeaks (private)
+// ---------------------------------------------------------------------------
+Peaks
+SpectralPeakSelector::selectMagnitudePeaks( ReassignedSpectrum & spectrum )
+{
+	using namespace std; // for abs and fabs
+
+	const double sampsToHz = mSampleRate / spectrum.size();
+	const double oneOverSR = 1. / mSampleRate;
+	const double minFreqSample = mMinFreq / sampsToHz;
+	const double maxCorrectionSamples = mMaxTimeOffset * mSampleRate;
+	
+	Peaks peaks;
+	
+	int start_j = 1, end_j = (spectrum.size() / 2) - 2;
+	
+	double fsample = start_j;
+	do 
+	{
+	    fsample = spectrum.reassignedFrequency( start_j++ );
+	} while( fsample < minFreqSample );
+	
+	for ( int j = start_j; j < end_j; ++j ) 
+	{	 
 		if ( spectrum.reassignedMagnitude(j) > spectrum.reassignedMagnitude(j-1) && 
 			 spectrum.reassignedMagnitude(j) > spectrum.reassignedMagnitude(j+1) ) 
 		{				
@@ -183,11 +227,9 @@ SpectralPeakSelector::selectPeaks( ReassignedSpectrum & spectrum )
 			//	be able to compute it later:
 			double time = timeCorrectionSamps * oneOverSR;
 			Breakpoint bp ( fsample * sampsToHz, mag, bw, phase );
-			peaks.push_back( std::make_pair( time, bp ) );
+			peaks.push_back( SpectralPeak( time, bp ) );
 						
 		}	//	end if itsa peak
-		
-#endif
 	}
 	
 	debugger << "extractPeaks found " << peaks.size() << endl;
