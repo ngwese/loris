@@ -103,7 +103,16 @@ class LinearEnvelopeBuilder
 public:
     virtual ~LinearEnvelopeBuilder( void ) {}
     virtual LinearEnvelopeBuilder * clone( void ) const = 0;
-    virtual void build( const Peaks & peaks, double frameTime, LinearEnvelope & env ) = 0;
+    virtual void build( const Peaks & peaks, double frameTime ) = 0;
+    
+    const LinearEnvelope & envelope( void ) const { return mEnvelope; }
+    
+    //  reset (clear) envelope, override if necesssary:
+    virtual void reset( void ) { mEnvelope.clear(); }
+    
+protected:
+
+    LinearEnvelope mEnvelope;   //  build this
 };
 
 // ---------------------------------------------------------------------------
@@ -114,7 +123,6 @@ class FundamentalBuilder : public LinearEnvelopeBuilder
     std::auto_ptr< Envelope > mFminEnv;
     std::auto_ptr< Envelope > mFmaxEnv; 
     
-    // double mFmin, mFmax;
     double mAmpThresh, mFreqThresh;
     
     std::vector< double > amplitudes, frequencies;
@@ -150,15 +158,14 @@ public:
         
 	FundamentalBuilder * clone( void ) const { return new FundamentalBuilder(*this); }
 	
-    void build( const Peaks & peaks, double frameTime, LinearEnvelope & env );
+    void build( const Peaks & peaks, double frameTime );
 };
 
 // ---------------------------------------------------------------------------
 //  FundamentalBuilder::build
 // ---------------------------------------------------------------------------
 //
-void FundamentalBuilder::build( const Peaks & peaks, double frameTime, 
-	 							LinearEnvelope & env )
+void FundamentalBuilder::build( const Peaks & peaks, double frameTime )
 {
     amplitudes.clear();
     frequencies.clear();
@@ -187,7 +194,7 @@ void FundamentalBuilder::build( const Peaks & peaks, double frameTime,
         {
             // notifier << "f0 is " << est.frequency << endl;
             //  add breakpoint to fundamental envelope
-            env.insert( frameTime, est.frequency );
+            mEnvelope.insert( frameTime, est.frequency );
         }
     }
     
@@ -203,7 +210,7 @@ public:
 		
 	AmpEnvBuilder * clone( void ) const { return new AmpEnvBuilder(*this); }
 	
-    void build( const Peaks & peaks, double frameTime, LinearEnvelope & env );
+    void build( const Peaks & peaks, double frameTime );
 
 };
 
@@ -211,11 +218,10 @@ public:
 //  AmpEnvBuilder::build
 // ---------------------------------------------------------------------------
 //
-void AmpEnvBuilder::build( const Peaks & peaks, double frameTime, 
-                           LinearEnvelope & env )
+void AmpEnvBuilder::build( const Peaks & peaks, double frameTime )
 {
     double x = std::accumulate( peaks.begin(), peaks.end(), 0.0, accumPeakSquaredAmps );
-    env.insert( frameTime, std::sqrt( x ) );
+    mEnvelope.insert( frameTime, std::sqrt( x ) );
 }
 
 
@@ -262,8 +268,6 @@ Analyzer::Analyzer( double resolutionHz, double windowWidthHz )
 //! \param other is the Analyzer to copy.   
 //
 Analyzer::Analyzer( const Analyzer & other ) :
-    m_f0Env( other.m_f0Env ),
-    m_ampEnv( other.m_ampEnv ),
     m_freqResolution( other.m_freqResolution ),
     m_ampFloor( other.m_ampFloor ),
     m_windowWidth( other.m_windowWidth ),
@@ -276,15 +280,8 @@ Analyzer::Analyzer( const Analyzer & other ) :
     m_phaseCorrect( other.m_phaseCorrect ),
     m_partials( other.m_partials )
 {
-    if ( 0 != other.m_f0Builder.get() )
-    {
-        m_f0Builder.reset( other.m_f0Builder->clone() );
-    }
-
-    if ( 0 != other.m_ampEnvBuilder.get() )
-    {
-        m_ampEnvBuilder.reset( other.m_ampEnvBuilder->clone() );
-    }
+    m_f0Builder.reset( other.m_f0Builder->clone() );
+    m_ampEnvBuilder.reset( other.m_ampEnvBuilder->clone() );
 }
 
 // ---------------------------------------------------------------------------
@@ -313,17 +310,8 @@ Analyzer::operator=( const Analyzer & rhs )
         m_phaseCorrect = rhs.m_phaseCorrect;
         m_partials = rhs.m_partials;
 
-        m_f0Env = rhs.m_f0Env;
-        if ( 0 != rhs.m_f0Builder.get() )
-        {
-            m_f0Builder.reset( rhs.m_f0Builder->clone() );
-        }
-
-        m_ampEnv = rhs.m_ampEnv;
-        if ( 0 != rhs.m_ampEnvBuilder.get() )
-        {
-            m_ampEnvBuilder.reset( rhs.m_ampEnvBuilder->clone() );
-        }
+        m_f0Builder.reset( rhs.m_f0Builder->clone() );
+        m_ampEnvBuilder.reset( rhs.m_ampEnvBuilder->clone() );
                 
     }
     return *this;
@@ -426,9 +414,11 @@ Analyzer::configure( double resolutionHz, double windowWidthHz )
     //  1 kHz region center spacing:
     storeResidueBandwidth();
 
-	//  (re)configure the fundamental tracker using default 
+	//  configure the envelope builders using default 
 	//  parameters:
-	buildFundamentalEnv( true );
+	buildFundamentalEnv( 0.99 * m_freqResolution,
+                         1.5 * m_freqResolution );
+    m_ampEnvBuilder.reset( new AmpEnvBuilder );
     
     //  enable phase-correct Partial construction:
     m_phaseCorrect = true;
@@ -546,9 +536,9 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
         debugger << "Bandwidth association disabled" << endl;
     }
 
-    //  reset envelopes:
-    m_ampEnv.clear();
-    m_f0Env.clear();
+    //  reset envelope builders:
+    m_ampEnvBuilder->reset();
+    m_f0Builder->reset();
     
     m_partials.clear();
         
@@ -594,18 +584,18 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
             //  estimate the amplitude in this frame:
             if ( 0 != m_ampEnvBuilder.get() )
             {
-                m_ampEnvBuilder->build( peaks, currentFrameTime, m_ampEnv );
+                m_ampEnvBuilder->build( peaks, currentFrameTime );
             }
             
             //  collect amplitudes and frequencies and try to 
             //  estimate the fundamental
             if ( 0 != m_f0Builder.get() )
             {
-                m_f0Builder->build( peaks, currentFrameTime, m_f0Env );
+                m_f0Builder->build( peaks, currentFrameTime );
             }
 
             //  form Partials from the extracted Breakpoints:
-            builder.formPartials( peaks, currentFrameTime );
+            builder.buildPartials( peaks, currentFrameTime );
             
             //  slide the analysis window:
             winMiddle += long( m_hopTime * srate ); //  hop in samples, truncated
@@ -613,16 +603,17 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
         }   //  end of loop over short-time frames
         
         //  unwarp the Partial frequency envelopes:
-        builder.fixPartialFrequencies();
+        builder.finishBuilding( m_partials );
         
         //  fix the frequencies and phases to be consistent.
         if ( m_phaseCorrect )
         {
-            fixFrequency( builder.partials().begin(), builder.partials().end() );
+            fixFrequency( m_partials.begin(), m_partials.end() );
         }
         
         
         //  for debugging:
+        /*
         if ( ! m_ampEnv.empty() )
         {
             LinearEnvelope::iterator peakpos = 
@@ -631,8 +622,7 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
             notifier << "Analyzer found amp peak at time : " << peakpos->first
                      << " value: " << peakpos->second << endl;
         }
-        
-        m_partials.splice( m_partials.end(), builder.partials() );
+        */
     }
     catch ( Exception & ex ) 
     {
@@ -1070,37 +1060,6 @@ Analyzer::partials( void ) const
 // ---------------------------------------------------------------------------
 //  buildFundamentalEnv
 // ---------------------------------------------------------------------------
-//! Indicate whether the fundamental frequency envelope of the analyzed
-//! sound should be estimated during analysis. If true (the
-//! default), then the fundamental frequency estimate can be accessed by
-//! fundamentalEnv() after the analysis is complete. Default
-//! parameters for fundamental estimation are used. To set those
-//! parameters, use buildFundamentalEnv( fmin, fmax, threshDb, threshHz )
-//! instead.
-//!
-//! \param  TF is a flag indicating whether or not to construct
-//!         the fundamental frequency envelope during analysis
-//
-void Analyzer::buildFundamentalEnv( bool TF )
-{
-    if ( TF )
-    {
-        //  configure with default parameters
-        buildFundamentalEnv( 0.99 * m_freqResolution,
-    			             1.5 * m_freqResolution,
-    			             -60, 
-    			             8000 );
-    }
-    else
-    {
-        // disable
-        m_f0Builder.reset( 0 );
-    }
-}
-
-// ---------------------------------------------------------------------------
-//  buildFundamentalEnv
-// ---------------------------------------------------------------------------
 //! Specify parameters for constructing a fundamental frequency 
 //! envelope for the analyzed sound during analysis. The fundamental 
 //! frequency estimate can be accessed by fundamentalEnv() after the 
@@ -1131,48 +1090,12 @@ void Analyzer::buildFundamentalEnv( double fmin, double fmax,
 //! Will be empty unless buildFundamentalEnv was invoked to enable the
 //! construction of this envelope during analysis.
 //
-const LinearEnvelope & 
+const LinearEnvelope &
 Analyzer::fundamentalEnv( void ) const
 {   
-    /*
-    //  raise an exception if the fundamental estimate was not built,
-    //  nothing good can come of returning the empty envelope:
-    //  but on the other hand, checking the state of the builder
-    //  does not tell anything about whether an envelope has been 
-    //  constructed, or whether an analysis has even occurred.
-    if ( 0 == m_f0Builder.get() )
-    {
-        Throw( InvalidObject, "No fundamental envelope was built." );
-    }
-    */
-    return m_f0Env; 
+    return m_f0Builder->envelope(); 
 }
 
-
-// ---------------------------------------------------------------------------
-//  buildAmpEnv
-// ---------------------------------------------------------------------------
-//! Indicate whether the amplitude envelope of the analyzed
-//! sound should be estimated during analysis. If true (the
-//! default), then the amplitude estimate can be accessed by
-//! ampEnv() after the analysis is complete.
-//!
-//! \param  TF is a flag indicating whether or not to construct
-//!         the amplitude envelope during analysis
-//
-void Analyzer::buildAmpEnv( bool TF )
-{
-    if ( TF )
-    {
-        m_ampEnvBuilder.reset( new AmpEnvBuilder );
-    }
-    else
-    {
-        // disable
-        m_ampEnvBuilder.reset( 0 );
-    }
-    
-}
 
 // ---------------------------------------------------------------------------
 //  ampEnv
@@ -1182,20 +1105,10 @@ void Analyzer::buildAmpEnv( bool TF )
 //! Will be empty unless buildAmpEnv was invoked to enable the
 //! construction of this envelope during analysis.
 //
-const LinearEnvelope & Analyzer::ampEnv( void ) const
+const LinearEnvelope & 
+Analyzer::ampEnv( void ) const
 { 
-    /*
-    //  raise an exception if the amplitude estimate was not built,
-    //  nothing good can come of returning the empty envelope,
-    //  but on the other hand, checking the state of the builder
-    //  does not tell anything about whether an envelope has been 
-    //  constructed, or whether an analysis has even occurred.
-    if ( 0 == m_ampEnvBuilder.get() )
-    {
-        Throw( InvalidObject, "No amplitude envelope was built." );
-    }
-    */
-    return m_ampEnv; 
+    return m_ampEnvBuilder->envelope(); 
 }
 
 // -- private helpers --

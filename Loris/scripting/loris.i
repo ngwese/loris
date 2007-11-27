@@ -1639,17 +1639,7 @@ construction of this envelope during analysis.") fundamentalEnv;
     LinearEnvelope fundamentalEnv( void ) const;
         
 %feature("docstring",
-"Indicate whether the fundamental frequency envelope of the analyzed
-sound should be estimated during analysis. If true (the
-default), then the fundamental frequency estimate can be accessed by
-fundamentalEnv() after the analysis is complete. Default
-parameters for fundamental estimation are used. To set those
-parameters, use buildFundamentalEnv( fmin, fmax, threshDb, threshHz )
-instead.
-
-TF is a flag indicating whether or not to construct
-the fundamental frequency envelope during analysis, using 
-default parameters.
+"Configure the fundamental frequency estimator.
 
 fmin is the lower bound on the fundamental frequency estimate.
 fmax is the upper bound on the fundamental frequency estimate
@@ -1659,7 +1649,11 @@ low amplitude peaks tend to have less reliable frequency estimates).
 Default is -60 dB.
 threshHz is the upper bound on the frequency of a spectral
 peak that will constribute to the fundamental frequency estimate.
-Default is 8 kHz.") buildFundamentalEnv;
+Default is 8 kHz.
+
+The fundamental frequency estimate can be accessed by
+fundamentalEnv() after the analysis is complete.
+") buildFundamentalEnv;
 
     void buildFundamentalEnv( bool TF = true );
 
@@ -1675,13 +1669,8 @@ construction of this envelope during analysis.") ampEnv;
     LinearEnvelope ampEnv( void ) const;
     
 %feature("docstring",
-"Indicate whether the amplitude envelope of the analyzed
-sound should be estimated during analysis. If true (the
-default), then the amplitude estimate can be accessed by
-ampEnv() after the analysis is complete.
-
-TF is a flag indicating whether or not to construct
-the amplitude envelope during analysis.") buildAmpEnv;
+"Legacy support, do not use. The amplitude envelope
+is always estimated.") buildAmpEnv;
 
     void buildAmpEnv( bool TF = true );
 

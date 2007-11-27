@@ -45,6 +45,8 @@
 #include "PartialPtrs.h"
 #include "SpectralPeaks.h"
 
+#include <memory>
+
 //	begin namespace
 namespace Loris {
 
@@ -58,32 +60,72 @@ class Envelope;
 //
 class PartialBuilder
 {
-// --- interface ---
+// --- public interface ---
+
 public:
-	//	construction:
-	explicit PartialBuilder( double drift );
-	PartialBuilder( double drift, const Envelope & env );
-	
-	//	Append the peaks (Breakpoint) extracted from a reassigned time-frequency
-	//	spectrum to eligible Partials, where possible. Peaks that cannot
-	//	be used to extend eliglble Partials spawn new Partials.
-	void formPartials( Peaks & peaks, double frameTime );
 
-	//	Undo the freuqency normalization performed in formPartials, return a
-	//	reference to the partials.
-	PartialList & fixPartialFrequencies( void );
-
-	//	Partial access:
-	PartialList & partials( void ) { return partials_; }
+	//	constructor
+    //
+    //  Construct a new builder that constrains Partial frequnecy
+    //  drift by the specified drift value in Hz.
+	explicit PartialBuilder( double drift );    
+    
+	//	constructor
+    //
+    //  Construct a new builder that constrains Partial frequnecy
+    //  drift by the specified drift value in Hz. The frequency
+    //  warping envelope is applied to the spectral peak frequencies
+    //  and the frequency drift parameter in each frame before peaks
+    //  are linked to eligible Partials. All the Partial frequencies
+    //  need to be un-warped at the ned of the building process, by
+    //  calling finishBuilding().
+	PartialBuilder( double drift, const Envelope & freqWarpEnv );
 	
-// --- implementation ---
+    //  buildPartials
+    //
+    //	Append spectral peaks, extracted from a reassigned time-frequency
+    //	spectrum, to eligible Partials, where possible. Peaks that cannot
+    //	be used to extend eliglble Partials spawn new Partials.
+    //
+    //	This is similar to the basic MQ partial formation strategy, except that
+    //	before matching, all frequencies are normalized by the value of the 
+    //	warping envelope at the time of the current frame. This means that
+    //	the frequency envelopes of all the Partials are warped, and need to 
+    //	be un-normalized by calling finishBuilding at the end of the building
+    //  process.
+	void buildPartials( Peaks & peaks, double frameTime );
+
+    //  finishBuilding
+    //
+	//	Un-do the frequency warping performed in buildPartials, and return 
+	//	the Partials that were built. After calling finishBuilding, the
+    //  builder is returned to its initial state, and ready to build another
+    //  set of Partials. Partials are returned by appending them to the 
+    //  supplied PartialList.
+	void finishBuilding( PartialList & product );
+
 private:
-	PartialList partials_;	//	collect partials here
+
+// --- collected partials ---
+
+	PartialList mCollectedPartials;             //	collect partials here
+
+// --- builder state variables ---
 		
-	PartialPtrs eligiblePartials, newlyEligible;// 	keep track of eligible partials here	
-	const Envelope & reference;					//	reference envelope
-	double freqDrift;
+	PartialPtrs mEligiblePartials;
+    PartialPtrs mNewlyEligible;                 // 	keep track of eligible partials here
+
+// --- parameters ---
+    	
+	std::auto_ptr< Envelope > mFreqWarping;	//	reference envelope
+    
+	double mFreqDrift;
 	
+// --- disallow copy and assignment ---
+    
+    PartialBuilder( const PartialBuilder & );
+    PartialBuilder& operator=( const PartialBuilder & );
+    
 };	//	end of class PartialBuilder
 
 }	//	end of namespace Loris

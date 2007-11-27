@@ -426,29 +426,6 @@ public:
     enum { Default_FundamentalEnv_ThreshDb = -60, 
            Default_FundamentalEnv_ThreshHz = 8000 };
 
-    //! Return the fundamental frequency estimate envelope constructed
-    //! during the most recent analysis performed by this Analyzer.
-    //! Will be empty if fundamental estimation eas disabled.
-    //!
-    //! By default, a fundamental envelope is estimated during analysis
-    //! between the frequency resolution and 1.5 times the resolution.
-    const LinearEnvelope & fundamentalEnv( void ) const;
-        
-    //! Indicate whether the fundamental frequency envelope of the analyzed
-    //! sound should be estimated during analysis. If true (the
-    //! default), then the fundamental frequency estimate can be accessed by
-    //! fundamentalEnv() after the analysis is complete. Default
-    //! parameters for fundamental estimation are used. To set those
-    //! parameters, use buildFundamentalEnv( fmin, fmax, threshDb, threshHz )
-    //! instead.
-    //!
-    //! By default, a fundamental envelope is estimated during analysis
-    //! between the frequency resolution and 1.5 times the resolution.
-    //!
-    //! \param  TF is a flag indicating whether or not to construct
-    //!         the fundamental frequency envelope during analysis
-    void buildFundamentalEnv( bool TF = true );
-
     //! Specify parameters for constructing a fundamental frequency 
     //! envelope for the analyzed sound during analysis. The fundamental 
     //! frequency estimate can be accessed by fundamentalEnv() after the 
@@ -468,9 +445,16 @@ public:
     //!         Default is 8 kHz.
     void buildFundamentalEnv( double fmin, double fmax, 
                               double threshDb = Default_FundamentalEnv_ThreshDb, 
-                              double threshHz = Default_FundamentalEnv_ThreshHz );       
-                              
+                              double threshHz = Default_FundamentalEnv_ThreshHz );                                     
 
+
+    //! Return the fundamental frequency estimate envelope constructed
+    //! during the most recent analysis performed by this Analyzer.
+    //! Will be empty if fundamental estimation eas disabled.
+    //!
+    //! By default, a fundamental envelope is estimated during analysis
+    //! between the frequency resolution and 1.5 times the resolution.
+    const LinearEnvelope & fundamentalEnv( void ) const;
 
     //! Return the overall amplitude estimate envelope constructed
     //! during the most recent analysis performed by this Analyzer.
@@ -478,14 +462,14 @@ public:
     //! construction of this envelope during analysis.
     const LinearEnvelope & ampEnv( void ) const;
     
-    //! Indicate whether the amplitude envelope of the analyzed
-    //! sound should be estimated during analysis. If true (the
-    //! default), then the amplitude estimate can be accessed by
-    //! ampEnv() after the analysis is complete.
-    //!
-    //! \param  TF is a flag indicating whether or not to construct
-    //!         the amplitude envelope during analysis
-    void buildAmpEnv( bool TF = true );
+    
+//  -- legacy support --
+    
+    //  Fundamental and amplitude envelopes are always constructed during
+    //  analysis, these members do nothing, and are retained for backwards
+    //  compatibility.
+    void buildAmpEnv( bool TF = true ) { TF = TF; }
+    void buildFundamentalEnv( bool TF = true ) { TF = TF; }
 
 //  -- private member variables --
 
@@ -531,16 +515,11 @@ private:
                                 //!  made consistent at the end of the analysis
                             
     PartialList m_partials;     //!  collect Partials here
-    
-
-    LinearEnvelope m_f0Env;      //! fundamental frequency estimate constructed during analysis
-    
+        
     //! builder object for constructing a fundamental frequency
     //! estimate during analysis
     std::auto_ptr< LinearEnvelopeBuilder > m_f0Builder;
 
-    LinearEnvelope m_ampEnv;     //! ampitude estimate constructed during analysis
-    
     //! builder object for constructing an amplitude
     //! estimate during analysis
     std::auto_ptr< LinearEnvelopeBuilder > m_ampEnvBuilder;

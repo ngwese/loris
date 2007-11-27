@@ -26,14 +26,14 @@
  * extracted from a reassigned time-frequency spectrum to form ridges
  * and construct Partials.
  *
- * This strategy attemps to follow a reference frequency envelope when 
+ * This strategy attemps to follow a mFreqWarping frequency envelope when 
  * forming Partials, by prewarping all peak frequencies according to the
- * (inverse of) frequency reference envelope. At the end of the analysis, 
+ * (inverse of) frequency mFreqWarping envelope. At the end of the analysis, 
  * Partial frequencies need to be un-warped by calling fixPartialFrequencies().
  *
  * The first attempt was the same as the basic partial formation strategy, 
  * but for purposes of matching, peak frequencies are scaled by the ratio
- * of the reference envelope's value at the previous frame to its value
+ * of the mFreqWarping envelope's value at the previous frame to its value
  * at the current frame. This was not adequate, didn't store enough history
  * so it wasn't really following the reference envelope, just using it to
  * make a local decision about how frequency should drift from one frame to
@@ -69,18 +69,29 @@ namespace Loris {
 // ---------------------------------------------------------------------------
 //	construction
 // ---------------------------------------------------------------------------
+//  Construct a new builder that constrains Partial frequnecy
+//  drift by the specified drift value in Hz.
+//
 PartialBuilder::PartialBuilder( double drift ) :
-	reference( BreakpointEnvelope(1.0) ),
-	freqDrift( drift )
+	mFreqWarping( new BreakpointEnvelope(1.0) ),
+	mFreqDrift( drift )
 {
 }
 
 // ---------------------------------------------------------------------------
 //	construction
 // ---------------------------------------------------------------------------
+//  Construct a new builder that constrains Partial frequnecy
+//  drift by the specified drift value in Hz. The frequency
+//  warping envelope is applied to the spectral peak frequencies
+//  and the frequency drift parameter in each frame before peaks
+//  are linked to eligible Partials. All the Partial frequencies
+//  need to be un-warped at the ned of the building process, by
+//  calling finishBuilding().
+//
 PartialBuilder::PartialBuilder( double drift, const Envelope & env ) :
-	reference( env ),
-	freqDrift( drift )
+	mFreqWarping( env.clone() ),
+	mFreqDrift( drift )
 {
 }
 
@@ -149,38 +160,38 @@ static bool sort_increasing_freq( const Peaks::value_type & lhs,
 }
 
 // ---------------------------------------------------------------------------
-//	formPartials
+//	buildPartials
 // ---------------------------------------------------------------------------
-//	Append the peaks (Breakpoint) extracted from a reassigned time-frequency
-//	spectrum to eligible Partials, where possible. Peaks that cannot
+//	Append spectral peaks, extracted from a reassigned time-frequency
+//	spectrum, to eligible Partials, where possible. Peaks that cannot
 //	be used to extend eliglble Partials spawn new Partials.
 //
-//	This is the same as the basic partial formation strategy, except that
+//	This is similar to the basic MQ partial formation strategy, except that
 //	before matching, all frequencies are normalized by the value of the 
-//	reference envelope at the time of the current frame. This means that
-//	the frequency envelopes of all the Partials are goofey, and need to 
-//	be un-normalized by calling fixPartialFrequencies (below) at the end
-//	of the analysis.
+//	warping envelope at the time of the current frame. This means that
+//	the frequency envelopes of all the Partials are warped, and need to 
+//	be un-normalized by calling finishBuilding at the end of the building
+//  process.
 //
 void 
-PartialBuilder::formPartials( Peaks & peaks, double frameTime )
+PartialBuilder::buildPartials( Peaks & peaks, double frameTime )
 {
-	const double refValue = reference.valueAt( frameTime );
+	const double refValue = mFreqWarping->valueAt( frameTime );
 	Assert( refValue > 0 );
 	
-	double normalizedDrift = freqDrift / refValue;
+	double normalizedDrift = mFreqDrift / refValue;
 	
-	newlyEligible.clear();
+	mNewlyEligible.clear();
 	
 	unsigned int matchCount = 0;	//	for debugging
 	
 	//	normalize all peak frequencies according to the frequency
-	//	reference envelope -- do this before sorting!
+	//	mFreqWarping envelope -- do this before sorting!
 	for ( Peaks::iterator bpIter = peaks.begin(); bpIter != peaks.end(); ++bpIter ) 
 	{
 		Breakpoint & bp = bpIter->breakpoint;
 		const double peakTime = frameTime + bpIter->time;
-		bp.setFrequency( bp.frequency() / reference.valueAt( peakTime ) );
+		bp.setFrequency( bp.frequency() / mFreqWarping->valueAt( peakTime ) );
 	}
 		
 	
@@ -190,7 +201,7 @@ PartialBuilder::formPartials( Peaks & peaks, double frameTime )
 	//	peaks this way)
 	std::sort( peaks.begin(), peaks.end(), sort_increasing_freq );
 	
-	PartialPtrs::iterator eligible = eligiblePartials.begin();
+	PartialPtrs::iterator eligible = mEligiblePartials.begin();
 	for ( Peaks::iterator bpIter = peaks.begin(); bpIter != peaks.end(); ++bpIter ) 
 	{
 		const Breakpoint & bp = bpIter->breakpoint;
@@ -198,18 +209,18 @@ PartialBuilder::formPartials( Peaks & peaks, double frameTime )
 		
 		// 	find the Partial that is nearest in frequency to the Peak:
 		PartialPtrs::iterator nextEligible = eligible;
-		if ( eligible != eligiblePartials.end() &&
+		if ( eligible != mEligiblePartials.end() &&
 			 end_frequency( **eligible ) < bp.frequency() )
 		{
 			++nextEligible;
-			while ( nextEligible != eligiblePartials.end() &&
+			while ( nextEligible != mEligiblePartials.end() &&
 					end_frequency( **nextEligible ) < bp.frequency() )
 			{
 				++nextEligible;
 				++eligible;
 			}
 			
-			if ( nextEligible != eligiblePartials.end() &&
+			if ( nextEligible != mEligiblePartials.end() &&
 				 better_match( **nextEligible, bp, **eligible, bp ) )
 			{
 				eligible = nextEligible;
@@ -219,13 +230,13 @@ PartialBuilder::formPartials( Peaks & peaks, double frameTime )
 		// 	INVARIANT:
 		//
 		//	eligible is the position of the nearest (in frequency)
-		//	eligible Partial (pointer) or it is eligiblePartials.end().
+		//	eligible Partial (pointer) or it is mEligiblePartials.end().
 		//
 		//	nextEligible is the eligible Partial with frequency 
-		//	greater than bp, or it is eligiblePartials.end().
+		//	greater than bp, or it is mEligiblePartials.end().
 			
 		/*
-		if ( nextEligible != eligiblePartials.end() )
+		if ( nextEligible != mEligiblePartials.end() )
 		{
 			debugger << matchFrequency << "( " << end_frequency( **eligible )
 					 << ", " << end_frequency( **nextEligible ) << ")" << endl;
@@ -239,58 +250,67 @@ PartialBuilder::formPartials( Peaks & peaks, double frameTime )
 		//	Partial:
 		Peaks::iterator nextPeak = Peaks::iterator( bpIter ); ++nextPeak;
 								  // ++Peaks::iterator( bpIter );
-		if ( eligible == eligiblePartials.end() ||
+		if ( eligible == mEligiblePartials.end() ||
 			 freq_distance( **eligible, bp ) > normalizedDrift ||
 			 ( nextPeak != peaks.end() &&
 			   better_match( **eligible, nextPeak->breakpoint, **eligible, bp ) ) )
 		{
 			Partial p;
 			p.insert( peakTime, bp );
-			partials_.push_back( p );
-			newlyEligible.push_back( & partials_.back() );
+			mCollectedPartials.push_back( p );
+			mNewlyEligible.push_back( & mCollectedPartials.back() );
 		}		
 		else 
 		{
 			(*eligible)->insert( peakTime, bp );
-			newlyEligible.push_back( *eligible );
+			mNewlyEligible.push_back( *eligible );
 			
 			++matchCount;
 		}
 		
 		//	update eligible, nextEligible is the eligible Partial
-		//	with frequency greater than bp, or it is eligiblePartials.end():
+		//	with frequency greater than bp, or it is mEligiblePartials.end():
 		eligible = nextEligible;
 	}			 
 	 	
-	eligiblePartials = newlyEligible;
+	mEligiblePartials = mNewlyEligible;
 	
 	debugger << "formPartials() matched " << matchCount << endl;
-	debugger << newlyEligible.size() << " newly eligible partials" << endl;
+	debugger << mNewlyEligible.size() << " newly eligible partials" << endl;
 }
 
 // ---------------------------------------------------------------------------
-//	fixPartialFrequencies
+//	finishBuilding
 // ---------------------------------------------------------------------------
-//	Undo the frequency normalization performed in formPartials, return a
-//	reference to the partials.
+//	Un-do the frequency warping performed in buildPartials, and return 
+//	the Partials that were built. After calling finishBuilding, the
+//  builder is returned to its initial state, and ready to build another
+//  set of Partials. Partials are returned by appending them to the 
+//  supplied PartialList.
 //
-PartialList &
-PartialBuilder::fixPartialFrequencies( void )
+void
+PartialBuilder::finishBuilding( PartialList & product )
 {
-	for ( PartialList::iterator part = partials_.begin(); 
-		  part != partials_.end();
+    //  unwarp all Breakpoint frequencies:
+	for ( PartialList::iterator part = mCollectedPartials.begin(); 
+		  part != mCollectedPartials.end();
 		  ++part )
 	{
 		for ( Partial::iterator bp = part->begin();
 			  bp != part->end();
 			  ++bp )
 		{
-			double f = bp.breakpoint().frequency() * reference.valueAt( bp.time() );
+			double f = bp.breakpoint().frequency() * mFreqWarping->valueAt( bp.time() );
 			bp.breakpoint().setFrequency( f );
 		}
 	}
 	
-	return partials_;
+    //  append the collected Partials to the product list:
+	product.splice( product.end(), mCollectedPartials );
+    
+    //  reset the builder state:
+    mEligiblePartials.clear();
+    mNewlyEligible.clear();
 }
 
 

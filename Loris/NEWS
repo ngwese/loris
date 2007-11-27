@@ -40,6 +40,8 @@ History of visible changes, organized by relase number:
 -------------------------------------------------------
 changes since 1.5.1 release:
 
+- Analyzer always constructs amplitude and fundamental
+frequency envelopes during analysis (cannot disable).
 
 -------------------------------------------------------
 changes since 1.5 release:
