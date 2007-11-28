@@ -95,6 +95,55 @@ LinearEnvelope::insert( double time, double value )
 }
 
 // ---------------------------------------------------------------------------
+//	operator+=
+// ---------------------------------------------------------------------------
+//! Add a constant value to this LinearEnvelope and return a reference
+//! to self.
+//!
+//! \param  offset is the value to add to all points in the envelope
+LinearEnvelope & LinearEnvelope::operator+=( double offset )
+{
+    for ( iterator it = begin(); it != end(); ++it )
+    {
+        it->second += offset;
+    }
+    return *this;
+}
+
+// ---------------------------------------------------------------------------
+//	operator*=
+// ---------------------------------------------------------------------------
+//! Scale this LinearEnvelope by a constant value and return a reference
+//! to self.
+//!
+//! \param  scale is the value by which to multiply to all points in 
+//!         the envelope
+LinearEnvelope & LinearEnvelope::operator*=( double scale )
+{
+    for ( iterator it = begin(); it != end(); ++it )
+    {
+        it->second *= scale;
+    }
+    return *this;
+}
+
+// ---------------------------------------------------------------------------
+//	operator/ (non-member binary operator)
+// ---------------------------------------------------------------------------
+//! Divide constant value by a LinearEnvelope and return a new 
+//! LinearEnvelope. No shortcut implementation for this one, 
+//! don't inline.
+LinearEnvelope operator/( double num, LinearEnvelope env )
+{
+    for ( LinearEnvelope::iterator it = env.begin(); it != env.end(); ++it )
+    {
+        it->second = num / it->second;
+    }
+    
+    return env;
+}
+
+// ---------------------------------------------------------------------------
 //	valueAt
 // ---------------------------------------------------------------------------
 //!	Return the linearly-interpolated value of this LinearEnvelope at 

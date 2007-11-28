@@ -118,7 +118,40 @@ public:
     //! \param   value is the value of the new breakpoint
     void insertBreakpoint( double time, double value ) 
          { insert( time, value ); }
-     
+         
+         
+    //! Add a constant value to this LinearEnvelope and return a reference
+    //! to self.
+    //!
+    //! \param  offset is the value to add to all points in the envelope
+    LinearEnvelope & operator+=( double offset );
+
+    //! Subtract a constant value from this LinearEnvelope and return a reference
+    //! to self.
+    //!
+    //! \param  offset is the value to subtract from all points in the envelope
+    LinearEnvelope & operator-=( double offset )
+    {
+        return operator+=( -offset );
+    }
+
+    //! Scale this LinearEnvelope by a constant value and return a reference
+    //! to self.
+    //!
+    //! \param  scale is the value by which to multiply to all points in 
+    //!         the envelope
+    LinearEnvelope & operator*=( double scale );
+
+    //! Divide this LinearEnvelope by a constant value and return a reference
+    //! to self.
+    //!
+    //! \param  div is the value by which to divide to all points in 
+    //!         the envelope
+    LinearEnvelope & operator/=( double div )
+    {
+        return operator*=( 1.0 / div );
+    }
+
 //  -- interface inherited from std::map --
 
     using std::map< double, double >::size;
@@ -132,6 +165,79 @@ public:
     using std::map< double, double >::const_iterator;
 
 };  //  end of class LinearEnvelope
+
+
+//  --  binary operators (inline nonmembers) --
+
+//! Add a constant value to a LinearEnvelope and return a new 
+//! LinearEnvelope.
+inline
+LinearEnvelope operator+( LinearEnvelope env, double offset )
+{
+    env += offset;
+    return env;
+}
+
+//! Add a constant value to a LinearEnvelope and return a new 
+//! LinearEnvelope.
+inline
+LinearEnvelope operator+( double offset, LinearEnvelope env )
+{
+    env += offset;
+    return env;
+}
+
+//! Subtract a constant value from a LinearEnvelope and return a new 
+//! LinearEnvelope.
+inline
+LinearEnvelope operator-( LinearEnvelope env, double offset )
+{
+    env -= offset;
+    return env;
+}
+
+//! Subtract a LinearEnvelope from a constant value and return a new 
+//! LinearEnvelope.
+inline
+LinearEnvelope operator-( double offset, LinearEnvelope env )
+{
+    env *= -1.0;
+    env += offset;
+    return env;
+}
+
+//! Scale a LinearEnvelope by a constant value and return a new 
+//! LinearEnvelope.
+inline
+LinearEnvelope operator*( LinearEnvelope env, double scale )
+{
+    env *= scale;
+    return env;
+}
+
+//! Scale a LinearEnvelope by a constant value and return a new 
+//! LinearEnvelope.
+inline
+LinearEnvelope operator*( double scale, LinearEnvelope env )
+{
+    env *= scale;
+    return env;
+}
+
+//! Divide a LinearEnvelope by a constant value and return a new 
+//! LinearEnvelope.
+inline
+LinearEnvelope operator/( LinearEnvelope env, double div )
+{
+    env /= div;
+    return env;
+}
+
+//! Divide constant value by a LinearEnvelope and return a new 
+//! LinearEnvelope. No shortcut implementation for this one, 
+//! don't inline.
+LinearEnvelope operator/( double scale, LinearEnvelope env );
+
 
 }   //  end of namespace Loris
 

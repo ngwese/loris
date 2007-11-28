@@ -75,21 +75,21 @@ For more information, please visit
 //		include Loris headers needed to generate wrappers
 //
 %{
-	#include <loris.h>
+	#include "loris.h"
 	
-	#include <AiffFile.h>
-	#include <Analyzer.h>
-	#include <Channelizer.h>
-	#include <Collator.h>
-	#include <Distiller.h>
-	#include <LorisExceptions.h>
-	#include <LinearEnvelope.h>
-	#include <Marker.h>
-	#include <Partial.h>
-	#include <SdifFile.h>
-	#include <Sieve.h>
-	#include <SpcFile.h>
-	#include <Synthesizer.h>
+	#include "AiffFile.h"
+	#include "Analyzer.h"
+	#include "Channelizer.h"
+	#include "Collator.h"
+	#include "Distiller.h"
+	#include "LorisExceptions.h"
+	#include "LinearEnvelope.h"
+	#include "Marker.h"
+	#include "Partial.h"
+	#include "SdifFile.h"
+	#include "Sieve.h"
+	#include "SpcFile.h"
+	#include "Synthesizer.h"
 
 	//	import the entire Loris namespace
 	using namespace Loris;
@@ -432,7 +432,7 @@ void exportSpc( const char * path, PartialList * partials, double midiPitch )
 whose amplitude is below threshold_dB. Threshold 0 harmonifies all
 Partials. To apply only to quiet Partials, specify a lower 
 threshold (like -90). The reference Partial is the first Partial
-in the PartialList labeled refLabel (usually 1). The LinearEnvelope,
+in the PartialList labeled refLabel (usually 1). The Envelope,
 if specified, is a time-varying weighting on the harmonifing process. 
 When 1, harmonic frequencies are used, when 0, breakpoint frequencies are 
 unmodified. ") harmonify;
@@ -1750,7 +1750,82 @@ time and value.") insert;
 at the specified time.") valueAt; 
 
 	double valueAt( double x ) const;		
-	 
+
+%feature("docstring",
+"Add a constant value to this LinearEnvelope and return a reference
+to self.") operator+=;
+
+    LinearEnvelope & operator+=( double offset );
+
+%feature("docstring",
+"Subtract a constant value from this LinearEnvelope and return a reference
+to self.") operator-=;
+
+    LinearEnvelope & operator-=( double offset );
+        
+%feature("docstring",
+"Scale this LinearEnvelope by a constant value and return a reference
+to self.") operator*=;
+
+     LinearEnvelope & operator*=( double scale );
+
+%feature("docstring",
+"Divide this LinearEnvelope by a constant value and return a reference
+to self.") operator*=;
+
+     LinearEnvelope & operator/=( double div );
+
+
+//  Add members for binary addition and multiplication operators.
+
+%extend 
+{
+%feature("docstring",
+"Add a constant value to a LinearEnvelope and return a new 
+LinearEnvelope.") operator+;
+
+    LinearEnvelope operator+( double offset )
+    {
+        LinearEnvelope env = *self; 
+        env += offset;
+        return env;
+    }
+
+%feature("docstring",
+"Subtract a constant value from a LinearEnvelope and return a new 
+LinearEnvelope.") operator-;
+
+    LinearEnvelope operator-( double offset )
+    {
+        LinearEnvelope env = *self; 
+        env -= offset;
+        return env;
+    }
+
+%feature("docstring",
+"Scale a LinearEnvelope by a constant value and return a new 
+LinearEnvelope.") operator*;
+
+    LinearEnvelope operator*( double scale )
+    {
+        LinearEnvelope env = *self; 
+        env *= scale;
+        return env;
+    }
+
+%feature("docstring",
+"Divide a LinearEnvelope by a constant value and return a new 
+LinearEnvelope.") operator/;
+
+    LinearEnvelope operator/( double div )
+    {
+        LinearEnvelope env = *self; 
+        env /= div;
+        return env;
+    }
+
+}   //  end of extend
+     	 
 };	//	end of class LinearEnvelope
 
 
