@@ -1287,7 +1287,7 @@ in a single channel file) stored by this AiffFile.") numFrames;
 Partial fade time, and accumulate the resulting samples into
 the sample vector for this AiffFile.") addPartial;
 
-	void addPartial( const Loris::Partial & p, double fadeTime = .001 /* 1 ms */ );
+	void addPartial( const Partial & p, double fadeTime = .001 /* 1 ms */ );
 
 %feature("docstring",
 "Set the fractional MIDI note number assigned to this AiffFile. 
@@ -2025,10 +2025,11 @@ same label, if such a Partial exists.
 
 This may throw an InvalidArgument exception if an attempt is made
 to add unlabeled Partials, or Partials labeled higher than the
-allowable maximum.") addPartial;
+allowable maximum.   
+") addPartial;
 
-	void addPartial( const Loris::Partial & p );
-	void addPartial( const Loris::Partial & p, int label );
+	void addPartial( const Partial & p );
+	void addPartial( const Partial & p, int label );
 
 %feature("docstring",
 "Set the fractional MIDI note number assigned to this SpcFile. 
@@ -2126,6 +2127,7 @@ this SpcFile.") setMarkers;
 	
 };	//	end of class SpcFile
 
+
 // ----------------------------------------------------------------
 //		wrap PartialList classes
 //
@@ -2134,7 +2136,13 @@ this SpcFile.") setMarkers;
 //
 //	This stuff is kind of big, so it lives in its own interface
 //	file.
+//	
+//	This might need to be earlier in the SWIG interface file than
+//	functions like SpcFile::addPartial, which use Partial?
+//	
 %include lorisPartialList.i
+
+
 
 // ----------------------------------------------------------------
 //		experiment: wrap Channelizer class

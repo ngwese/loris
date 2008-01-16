@@ -582,17 +582,11 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
             peaks.erase( rejected, peaks.end() );
             
             //  estimate the amplitude in this frame:
-            if ( 0 != m_ampEnvBuilder.get() )
-            {
-                m_ampEnvBuilder->build( peaks, currentFrameTime );
-            }
-            
+            m_ampEnvBuilder->build( peaks, currentFrameTime );
+                        
             //  collect amplitudes and frequencies and try to 
             //  estimate the fundamental
-            if ( 0 != m_f0Builder.get() )
-            {
-                m_f0Builder->build( peaks, currentFrameTime );
-            }
+            m_f0Builder->build( peaks, currentFrameTime );          
 
             //  form Partials from the extracted Breakpoints:
             builder.buildPartials( peaks, currentFrameTime );

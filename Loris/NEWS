@@ -43,6 +43,9 @@ changes since 1.5.1 release:
 - Analyzer always constructs amplitude and fundamental
 frequency envelopes during analysis (cannot disable).
 
+- fixed broken SpcFile::addPartial members in Python 
+interface.
+
 -------------------------------------------------------
 changes since 1.5 release:
 
