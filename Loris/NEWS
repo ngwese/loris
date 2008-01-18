@@ -46,6 +46,11 @@ frequency envelopes during analysis (cannot disable).
 - fixed broken SpcFile::addPartial members in Python 
 interface.
 
+- improved resampling in the Python interface, now
+have options for sparse (default) and dense (good 
+for use with CNMAT sinusoids~ external for Max/MSP)
+resampling.
+
 -------------------------------------------------------
 changes since 1.5 release:
 

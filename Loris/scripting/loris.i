@@ -328,20 +328,25 @@ PartialList containing at most one Partial per label. Unlabeled
 (zero-labeled) Partials are left unmodified at the end of the 
 distilled Partials. Optionally specify the fade and gap times, 
 defaults are 5ms and 1ms.
-") fake_distill;
+") wrap_distill;
 
-//void distill( PartialList * partials );
-
-%rename( distill ) fake_distill;
+%rename( distill ) wrap_distill;
 
 %inline
 %{
-	void fake_distill( PartialList * partials, 
+	void wrap_distill( PartialList * partials, 
 				      double fadeTime = Distiller::DefaultFadeTime, 
 				      double gapTime = Distiller::DefaultSilentTime )
 	{
-		Distiller d( fadeTime, gapTime );
-		d.distill( *partials );
+		try
+		{
+			Distiller d( fadeTime, gapTime );
+			d.distill( *partials );
+		}
+		catch ( std::exception & ex )
+		{
+			throw_exception( ex.what() );
+		}
 	}
 %}
 
@@ -359,16 +364,16 @@ If a PartialList is specified, the Partials are rendered at the
 specified sample rate and then exported.
 
 Only mono files can be exported, the last argument is ignored, 
-and is included only for backward compatability") fake_exportAiff;
+and is included only for backward compatability") wrap_exportAiff;
 
-%rename( exportAiff ) fake_exportAiff;
+%rename( exportAiff ) wrap_exportAiff;
 
 // Need this junk, because SWIG changed the way it handles
 // default arguments when writing C++ wrappers.
 //
 %inline 
 %{
-	void fake_exportAiff( const char * path, const std::vector< double > & samples,
+	void wrap_exportAiff( const char * path, const std::vector< double > & samples,
 					      double samplerate = 44100, int bitsPerSamp = 16, 
 					      int nchansignored = 1 )
 	{
@@ -376,11 +381,18 @@ and is included only for backward compatability") fake_exportAiff;
 					samplerate, bitsPerSamp );
 	}
 	
-	void fake_exportAiff( const char * path, PartialList * partials,
+	void wrap_exportAiff( const char * path, PartialList * partials,
 					      double samplerate = 44100, int bitsPerSamp = 16 )
 	{
-	    AiffFile fout( partials->begin(), partials->end(), samplerate );
-	    fout.write( path );
+		try
+		{
+			AiffFile fout( partials->begin(), partials->end(), samplerate );
+			fout.write( path );
+		}
+		catch ( std::exception & ex )
+		{
+			throw_exception( ex.what() );
+		}
 	}
 	
 %}
@@ -446,16 +458,30 @@ unmodified. ") harmonify;
 	void harmonify( PartialList * partials, long refLabel,
                     const Envelope * env, double threshold_dB )
 	{
-		Harmonifier::harmonify( partials->begin(), partials->end(), 
-                                refLabel, *env, threshold_dB );
+		try
+		{
+			Harmonifier::harmonify( partials->begin(), partials->end(), 
+									refLabel, *env, threshold_dB );
+		}
+		catch ( std::exception & ex )
+		{
+			throw_exception( ex.what() );
+		}
 	}
 
     void harmonify( PartialList * partials, long refLabel, 
                     double threshold_dB )
     {
         LinearEnvelope e( 1 );
-        Harmonifier::harmonify( partials->begin(), partials->end(), 
-                                refLabel, e, threshold_dB );
+        try
+		{
+			Harmonifier::harmonify( partials->begin(), partials->end(), 
+                                	refLabel, e, threshold_dB );
+		}
+		catch ( std::exception & ex )
+		{
+			throw_exception( ex.what() );
+		}
     }
 %}                        
 
@@ -537,7 +563,6 @@ morphing algorithm, see the Loris website:
                          const Envelope * fbw )
 	{
 		PartialList * dst = createPartialList();
-		//	morph( src0, src1, ffreq, famp, fbw, dst );
 		
 		notifier << "morphing " << src0->size() << " Partials with " <<
 					src1->size() << " Partials" << endl;
@@ -550,8 +575,10 @@ morphing algorithm, see the Loris website:
 			//	splice the morphed Partials into dst:
 			dst->splice( dst->end(), m.partials() );
 		}
-		catch (...)
+		catch ( std::exception & ex )
 		{
+			throw_exception( ex.what() );
+
 			destroyPartialList( dst );
 			dst = NULL;
 		}
@@ -566,7 +593,6 @@ morphing algorithm, see the Loris website:
 		LinearEnvelope ffreq( freqweight ), famp( ampweight ), fbw( bwweight );
 		
 		PartialList * dst = createPartialList();
-		//	morph( src0, src1, ffreq, famp, fbw, dst );
 		
 		notifier << "morphing " << src0->size() << " Partials with " <<
 					src1->size() << " Partials" << endl;
@@ -579,13 +605,12 @@ morphing algorithm, see the Loris website:
 			//	splice the morphed Partials into dst:
 			dst->splice( dst->end(), m.partials() );
 		}
-		catch (...)
+		catch ( std::exception & ex )
 		{
+			throw_exception( ex.what() );
+
 			destroyPartialList( dst );
 			dst = NULL;
-			
-			//	let the exception propogate up the stack.
-			throw;
 		}
 		return dst;
 	}
@@ -597,7 +622,6 @@ morphing algorithm, see the Loris website:
                          const Envelope * fbw )
 	{
 		PartialList * dst = createPartialList();
-		// morphWithReference( src0, src1, src0RefLabel, src1RefLabel, ffreq, famp, fbw, dst );
 		
 		notifier << "morphing " << src0->size() << " Partials with " <<
 					src1->size() << " Partials" << endl;
@@ -634,8 +658,10 @@ morphing algorithm, see the Loris website:
 			//	splice the morphed Partials into dst:
 			dst->splice( dst->end(), m.partials() );
 		}
-		catch (...)
+		catch ( std::exception & ex )
 		{
+			throw_exception( ex.what() );
+
 			destroyPartialList( dst );
 			dst = NULL;
 		}
@@ -651,7 +677,6 @@ morphing algorithm, see the Loris website:
 		LinearEnvelope ffreq( freqweight ), famp( ampweight ), fbw( bwweight );
 		
 		PartialList * dst = createPartialList();
-		// morphWithReference( src0, src1, src0RefLabel, src1RefLabel, ffreq, famp, fbw, dst );
 		
 		notifier << "morphing " << src0->size() << " Partials with " <<
 					src1->size() << " Partials" << endl;
@@ -688,8 +713,10 @@ morphing algorithm, see the Loris website:
 			//	splice the morphed Partials into dst:
 			dst->splice( dst->end(), m.partials() );
 		}
-		catch (...)
+		catch ( std::exception & ex )
 		{
+			throw_exception( ex.what() );
+
 			destroyPartialList( dst );
 			dst = NULL;
 		}
@@ -741,8 +768,15 @@ used.") synthesize;
 	std::vector<double> synthesize( const PartialList * partials, double srate = 44100.0 )
 	{
 		std::vector<double> dst;
-		Synthesizer synth( srate, dst );
-		synth.synthesize( partials->begin(), partials->end() );
+		try
+		{
+			Synthesizer synth( srate, dst );
+			synth.synthesize( partials->begin(), partials->end() );
+		}
+				catch ( std::exception & ex )
+		{
+			throw_exception( ex.what() );
+		}
 		return dst;
 	}
 %}
@@ -798,6 +832,7 @@ label and return them in a new PartialList.");
 
 %feature("docstring",
 "Remove from a PartialList all Partials having the specified label.");
+
 void removeLabeled( PartialList * partials, long label );
 
 %feature("docstring",
@@ -808,10 +843,47 @@ times in resampled Partials will comprise a contiguous sequence of
 integer multiples of the sampling interval, beginning with the
 multiple nearest to the Partial's start time and ending with the
 multiple nearest to the Partial's end time. Resampling is
-performed in-place.");
+performed in-place.
 
-void resample( PartialList * partials, double interval );
+If dense resampling is selected, the Breakpoint times in densely
+resampled Partials will comprise a contiguous sequence of ALL
+integer multiples of the sampling interval (very large, but useful
+for some third-party tools, like the CNMAT sinusoids~ external for
+Max/MSP). Default is sparse (not dense) resampling.
 
+If phase correct resampling is selected, Partial frequencies are
+altered slightly to match, as nearly as possible, the Breakpoint
+phases after resampling. Phases are updated so that the Partial
+frequencies and phases are consistent after resampling. The
+default is phase correct resampling.")  wrap_resample;
+
+%rename( resample ) wrap_resample;
+
+
+%{
+#include "Resampler.h"
+%}
+
+
+%inline %{
+	void wrap_resample( PartialList * partials, double interval, 
+				   		bool denseResampling = false,
+				     	bool phaseCorrect = true )
+	{
+			
+		try
+		{		
+			Resampler r( interval );
+			r.setDenseResampling( denseResampling );
+			r.setPhaseCorrect( phaseCorrect );
+			r.resample( partials->begin(), partials->end() );
+		}
+		catch ( std::exception & ex )
+		{
+			throw_exception( ex.what() );
+		}
+	}
+%}
 
 %{
 #include "PartialUtils.h"
