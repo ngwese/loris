@@ -386,8 +386,13 @@ and is included only for backward compatability") wrap_exportAiff;
 	{
 		try
 		{
-			AiffFile fout( partials->begin(), partials->end(), samplerate );
-			fout.write( path );
+			std::vector< double > vec;
+			Synthesizer synth( samplerate, vec );
+			synth.synthesize( partials->begin(), partials->end() );
+		
+			exportAiff( path, &(vec.front()), vec.size(), 
+					    samplerate, bitsPerSamp );
+					
 		}
 		catch ( std::exception & ex )
 		{
@@ -773,7 +778,7 @@ used.") synthesize;
 			Synthesizer synth( srate, dst );
 			synth.synthesize( partials->begin(), partials->end() );
 		}
-				catch ( std::exception & ex )
+		catch ( std::exception & ex )
 		{
 			throw_exception( ex.what() );
 		}

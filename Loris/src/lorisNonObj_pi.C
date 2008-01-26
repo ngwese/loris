@@ -1044,7 +1044,7 @@ unsigned int synthesize( const PartialList * partials,
 
 		//	accumulate into the buffer:
 		std::transform( buffer, buffer + howMany, vec.begin(), 
-						    buffer, std::plus< double >() );
+						buffer, std::plus< double >() );
 						    
 
 	}

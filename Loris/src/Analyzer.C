@@ -139,7 +139,8 @@ public:
         mMinConfidence( 0.9 )
         {}
 
-    FundamentalBuilder( Envelope & fmin, Envelope & fmax, double threshDb = -60, double threshHz = 8000 ) :
+    FundamentalBuilder( const Envelope & fmin, const Envelope & fmax, 
+    					double threshDb = -60, double threshHz = 8000 ) :
         mFminEnv( fmin.clone() ), 
         mFmaxEnv( fmax.clone() ), 
         mAmpThresh( std::pow( 10., 0.05*(threshDb) ) ),
@@ -268,7 +269,7 @@ Analyzer::Analyzer( double resolutionHz, double windowWidthHz )
 //! \param other is the Analyzer to copy.   
 //
 Analyzer::Analyzer( const Analyzer & other ) :
-    m_freqResolution( other.m_freqResolution ),
+    m_freqResolutionEnv( other.m_freqResolutionEnv->clone() ),
     m_ampFloor( other.m_ampFloor ),
     m_windowWidth( other.m_windowWidth ),
     m_freqFloor( other.m_freqFloor ),
@@ -298,7 +299,7 @@ Analyzer::operator=( const Analyzer & rhs )
 {
     if ( this != & rhs ) 
     {
-        m_freqResolution = rhs.m_freqResolution;
+        m_freqResolutionEnv.reset( rhs.m_freqResolutionEnv->clone() );
         m_ampFloor = rhs.m_ampFloor;
         m_windowWidth = rhs.m_windowWidth;
         m_freqFloor = rhs.m_freqFloor;  
@@ -387,13 +388,13 @@ Analyzer::configure( double resolutionHz, double windowWidthHz )
     //  use the frequency resolution by default (this makes 
     //  Lip happy, and is always safe?) and allow the client 
     //  to change it to anything at all.
-    setFreqFloor( m_freqResolution );
+    setFreqFloor( resolutionHz );
     
     //  frequency drift in Hz is the maximum difference
     //  in frequency between consecutive Breakpoints in
     //  a Partial, by default, make it equal to one half
     //  the frequency resolution:
-    setFreqDrift( .5 * m_freqResolution );
+    setFreqDrift( .5 * resolutionHz );
     
     //  hop time (in seconds) is the inverse of the
     //  window width....really. Smith and Serra (1990) cite 
@@ -416,8 +417,96 @@ Analyzer::configure( double resolutionHz, double windowWidthHz )
 
 	//  configure the envelope builders using default 
 	//  parameters:
-	buildFundamentalEnv( 0.99 * m_freqResolution,
-                         1.5 * m_freqResolution );
+	buildFundamentalEnv( 0.99 * resolutionHz,
+                         1.5 * resolutionHz );
+    m_ampEnvBuilder.reset( new AmpEnvBuilder );
+    
+    //  enable phase-correct Partial construction:
+    m_phaseCorrect = true;
+}
+
+// ---------------------------------------------------------------------------
+//  configure
+// ---------------------------------------------------------------------------
+//! Configure this Analyzer with the given time-varying frequency resolution 
+//! (minimum instantaneous frequency difference between Partials)
+//! and analysis window width (main lobe, zero-to-zero, in Hz). 
+//! All other Analyzer parameters are (re-)computed from the 
+//! frequency resolution and window width.      
+//! 
+//! \param resolutionEnv is the time-varying frequency resolution 
+//!	in Hz.
+//! \param windowWidthHz is the main lobe width of the Kaiser
+//! analysis window in Hz.
+//!     
+//! There are three categories of analysis parameters:
+//! - the resolution, and params that are usually related to (or
+//! identical to) the resolution (frequency floor and drift)
+//! - the window width and params that are usually related to (or
+//! identical to) the window width (hop and crop times)
+//! - independent parameters (bw region width and amp floor)
+//
+void
+Analyzer::configure( const Envelope & resolutionEnv, double windowWidthHz )
+{
+    //  use specified resolution:
+    setFreqResolution( resolutionEnv );
+    
+    //  floor defaults to -90 dB:
+    setAmpFloor( -90. );
+    
+    //  window width should generally be approximately 
+    //  equal to, and never more than twice the 
+    //  frequency resolution:
+    setWindowWidth( windowWidthHz );
+    
+    //  the Kaiser window sidelobe level can be the same
+    //  as the amplitude floor (except in positive dB):
+    setSidelobeLevel( - m_ampFloor );
+    
+    //  for the minimum frequency, below which no data is kept,
+    //  use the frequency resolution by default (this makes 
+    //  Lip happy, and is always safe?) and allow the client 
+    //  to change it to anything at all.
+    setFreqFloor( windowWidthHz * 0.5 );		//	!!!!!
+    
+    //  frequency drift in Hz is the maximum difference
+    //  in frequency between consecutive Breakpoints in
+    //  a Partial, by default, make it equal to one half
+    //  the frequency resolution:
+    setFreqDrift( windowWidthHz * 0.25 );		//	!!!!!
+    
+    //  hop time (in seconds) is the inverse of the
+    //  window width....really. Smith and Serra (1990) cite 
+    //  Allen (1977) saying: a good choice of hop is the window 
+    //  length divided by the main lobe width in frequency samples,
+    //  which turns out to be just the inverse of the width.
+    setHopTime( 1. / m_windowWidth );
+    
+    //  crop time (in seconds) is the maximum allowable time
+    //  correction, beyond which a reassigned spectral component
+    //  is considered unreliable, and not considered eligible for
+    //  Breakpoint formation in extractPeaks(). By default, use
+    //  the hop time (should it be half that?):
+    setCropTime( m_hopTime );
+    
+    //  bandwidth association region width 
+    //  defaults to 2 kHz, corresponding to 
+    //  1 kHz region center spacing:
+    storeResidueBandwidth();
+
+	//  configure the envelope builders using default 
+	//  parameters:
+	/*
+	buildFundamentalEnv( *m_freqResolutionEnv * 0.99,
+                         *m_freqResolutionEnv * 1.5 );
+      
+     */	//	!!!!!!!
+	m_f0Builder.reset( 
+        new FundamentalBuilder( *m_freqResolutionEnv * 0.99,
+        						*m_freqResolutionEnv * 1.5,
+        						-60., 8000. ) );
+        
     m_ampEnvBuilder.reset( new AmpEnvBuilder );
     
     //  enable phase-correct Partial construction:
@@ -682,12 +771,17 @@ Analyzer::freqFloor( void ) const
 //  freqResolution
 // ---------------------------------------------------------------------------
 //! Return the frequency resolution (minimum instantaneous frequency        
-//! difference between Partials) for this Analyzer.
+//! difference between Partials) for this Analyzer at the specified
+//! time in seconds. If no time is specified, then the initial resolution
+//!	(at 0 seconds) is returned.
+//! 
+//! \param time is the time in seconds at which to evaluate the 
+//!		   frequency resolution
 //
 double 
-Analyzer::freqResolution( void ) const 
+Analyzer::freqResolution( double time /* = 0.0 */ ) const 
 { 
-    return m_freqResolution; 
+    return m_freqResolutionEnv->valueAt( time ); 
 }
 
 // ---------------------------------------------------------------------------
@@ -820,7 +914,7 @@ Analyzer::setFreqFloor( double x )
 }
 
 // ---------------------------------------------------------------------------
-//  setFreqResolution
+//  setFreqResolution (constant)
 // ---------------------------------------------------------------------------
 //! Set the frequency resolution (minimum instantaneous frequency       
 //! difference between Partials) for this Analyzer. (Does not cause     
@@ -832,7 +926,25 @@ void
 Analyzer::setFreqResolution( double x ) 
 { 
     VERIFY_ARG( setFreqResolution, x > 0 );
-    m_freqResolution = x; 
+    m_freqResolutionEnv.reset( new LinearEnvelope( x ) ); 
+}
+
+// ---------------------------------------------------------------------------
+//  setFreqResolution (envelope)
+// ---------------------------------------------------------------------------
+//! Set the time-varying frequency resolution (minimum instantaneous frequency       
+//! difference between Partials) for this Analyzer. (Does not cause     
+//! other parameters to be recomputed.)                                     
+//! 
+//! \param e is the envelope to copy for this parameter.                                        
+//
+void 
+Analyzer::setFreqResolution( const Envelope & e ) 
+{ 
+	//	No mechanism exists to verify that the envelope never
+	//	drops below zero, this can only be checked at analysis-time.
+    // VERIFY_ARG( setFreqResolution, x > 0 );
+    m_freqResolutionEnv.reset( e.clone() ); 
 }
 
 // ---------------------------------------------------------------------------
@@ -1211,7 +1323,10 @@ Analyzer::thinPeaks( Peaks & peaks, double frameTime  )
 	Peaks::iterator it = peaks.begin();
 	Peaks::iterator beginRejected = it;
 
-    const double freqResolution = m_freqResolution; //  could be time-varying
+    const double freqResolution = 
+    	std::max( m_freqResolutionEnv->valueAt( frameTime ), 0.0 ); 
+    
+    
 	while ( it != bogusTimes ) 
 	{
 		Breakpoint & bp = it->breakpoint;

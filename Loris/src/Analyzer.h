@@ -167,6 +167,26 @@ public:
     //! identical to) the window width (hop and crop times)
     //! - independent parameters (bw region width and amp floor)
     void configure( double resolutionHz, double windowWidthHz );
+
+	//! Configure this Analyzer with the given time-varying frequency resolution 
+	//! (minimum instantaneous frequency difference between Partials)
+	//! and analysis window width (main lobe, zero-to-zero, in Hz). 
+	//! All other Analyzer parameters are (re-)computed from the 
+	//! frequency resolution and window width.      
+	//! 
+	//! \param resolutionEnv is the time-varying frequency resolution 
+	//!	in Hz.
+	//! \param windowWidthHz is the main lobe width of the Kaiser
+	//! analysis window in Hz.
+	//!     
+	//! There are three categories of analysis parameters:
+	//! - the resolution, and params that are usually related to (or
+	//! identical to) the resolution (frequency floor and drift)
+	//! - the window width and params that are usually related to (or
+	//! identical to) the window width (hop and crop times)
+	//! - independent parameters (bw region width and amp floor)
+	//
+	void configure( const Envelope & resolutionEnv, double windowWidthHz );    
     
 //  -- analysis --
 
@@ -235,10 +255,15 @@ public:
     //! Return the frequency floor (minimum instantaneous Partial               
     //! frequency), in Hz, for this Analyzer.               
     double freqFloor( void ) const;
-
-    //! Return the frequency resolution (minimum instantaneous frequency        
-    //! difference between Partials) for this Analyzer.     
-    double freqResolution( void ) const;
+	
+	//! Return the frequency resolution (minimum instantaneous frequency        
+	//! difference between Partials) for this Analyzer at the specified
+	//! time in seconds. If no time is specified, then the initial resolution
+	//!	(at 0 seconds) is returned.
+	//! 
+	//! \param time is the time in seconds at which to evaluate the 
+	//!		   frequency resolution
+	double freqResolution( double time = 0.0 ) const; 
 
     //! Return the hop time (which corresponds approximately to the 
     //! average density of Partial envelope Breakpoint data) for this 
@@ -300,6 +325,13 @@ public:
     //! 
     //! \param x is the new value of this parameter.            
     void setFreqResolution( double x );
+    
+	//! Set the time-varying frequency resolution (minimum instantaneous frequency       
+	//! difference between Partials) for this Analyzer. (Does not cause     
+	//! other parameters to be recomputed.)                                     
+	//! 
+	//! \param e is the envelope to copy for this parameter.                                        
+	void setFreqResolution( const Envelope & e );    
 
     //! Set the hop time (which corresponds approximately to the average
     //! density of Partial envelope Breakpoint data) for this Analyzer.
@@ -475,7 +507,8 @@ public:
 
 private:
 
-    double m_freqResolution;    //!  in Hz, minimum instantaneous frequency distance;
+    std::auto_ptr< Envelope > m_freqResolutionEnv;    
+    							//!  in Hz, minimum instantaneous frequency distance;
                                 //!  this is the core parameter, others are, by default,
                                 //!  computed from this one
     

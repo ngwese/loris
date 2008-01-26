@@ -33,6 +33,8 @@
  *
  */
 
+#include <memory>	//	 for autoptr
+
 //	begin namespace
 namespace Loris {
 
@@ -73,6 +75,91 @@ public:
 	virtual double valueAt( double x ) const = 0;	
 	
 };	//	end of abstract class Envelope
+
+
+// ---------------------------------------------------------------------------
+//	class ScaleAndOffsetEnvelope
+//
+//! ScaleAndOffsetEnvelope is an derived Envelope class for objects 
+//! representing envelopes having a scale and offset applied (in that order).
+
+class ScaleAndOffsetEnvelope : public Envelope
+{
+//	-- public interface --
+public:
+//	-- construction --
+
+    //! Construct a new envelope that is a scaled and offset 
+    //! version of another.
+    ScaleAndOffsetEnvelope( const Envelope & e, double scale, double offset ) :
+    	m_env( e.clone() ),
+    	m_scale( scale ),
+    	m_offset( offset )
+    {
+    }
+
+	//!	Construct a copy of an envelope.
+	ScaleAndOffsetEnvelope( const ScaleAndOffsetEnvelope & rhs ) :
+		m_env( rhs.m_env->clone() ),
+    	m_scale( rhs.m_scale ),
+    	m_offset( rhs.m_offset )
+    {
+    }
+
+	//!	Assignment from another envelope.
+	ScaleAndOffsetEnvelope & 
+	operator=( const ScaleAndOffsetEnvelope & rhs )
+	{
+		m_env.reset( rhs.m_env->clone() );
+    	m_scale = rhs.m_scale;
+    	m_offset = rhs.m_offset;
+    }
+
+//	-- Envelope interface --
+
+	//!	Return an exact copy of this Envelope (following the Prototype
+	//!	pattern).
+	ScaleAndOffsetEnvelope * clone( void ) const 
+	{
+		return new ScaleAndOffsetEnvelope( *this );
+	}
+
+	//!	Return the value of this Envelope at the specified time. 	 
+	virtual double valueAt( double x ) const
+	{
+		return m_offset + ( m_scale * m_env->valueAt( x ) );
+	}
+	
+//  -- private member variables --
+
+private:
+
+    std::auto_ptr< Envelope > m_env;   	
+    double m_scale, m_offset;
+	
+};	//	end of class ScaleAndOffsetEnvelope
+
+
+// ---------------------------------------------------------------------------
+//	math operators
+// ---------------------------------------------------------------------------
+
+inline
+ScaleAndOffsetEnvelope
+operator*( const Envelope & e, double x )
+{
+	return ScaleAndOffsetEnvelope( e, x, 0 );
+}
+
+inline
+ScaleAndOffsetEnvelope
+operator*( double x, const Envelope & e )
+{
+	return e * x;
+}
+
+
+
 
 }	//	end of namespace Loris
 
