@@ -122,6 +122,17 @@ public:
     //! analysis window in Hz.
     Analyzer( double resolutionHz, double windowWidthHz );
 
+    //! Construct a new Analyzer configured with the given time-varying
+    //! frequency resolution (minimum instantaneous frequency   
+    //! difference between Partials) and analysis window width
+    //! (main lobe, zero-to-zero). All other Analyzer parameters    
+    //! are computed from the specified resolution and window width.    
+    //! 
+    //! \param resolutionHz is the frequency resolution in Hz.
+    //! \param windowWidthHz is the main lobe width of the Kaiser
+    //! analysis window in Hz.
+    Analyzer( const Envelope & resolutionEnv, double windowWidthHz );
+
     //! Construct  a new Analyzer having identical
     //! parameter configuration to another Analyzer. 
     //! The list of collected Partials is not copied.       

@@ -110,9 +110,13 @@ public:
 	ScaleAndOffsetEnvelope & 
 	operator=( const ScaleAndOffsetEnvelope & rhs )
 	{
-		m_env.reset( rhs.m_env->clone() );
-    	m_scale = rhs.m_scale;
-    	m_offset = rhs.m_offset;
+        if ( &rhs != this )
+        {
+            m_env.reset( rhs.m_env->clone() );
+            m_scale = rhs.m_scale;
+            m_offset = rhs.m_offset;
+        }
+        return *this;
     }
 
 //	-- Envelope interface --

@@ -1479,13 +1479,16 @@ difference between Partials) and analysis window main
 lobe width (between zeros). All other Analyzer parameters 	
 are computed from the specified resolution and window
 width. If the window width is not specified, 
-then it is set to twice the resolution.
+then it is set to twice the resolution. If an envelope is
+provided for the frequency resolution, then it describes
+the time-varying analysis resolution in Hz. 
 
 An Analyzer configuration can also be copied from another
 instance.") Analyzer;
 	 
 	Analyzer( double resolutionHz );
 	Analyzer( double resolutionHz, double windowWidthHz );
+	Analyzer( const Envelope & resolutionEnv, double windowWidthHz );	
 	Analyzer( const Analyzer & another );
 
 %feature("docstring",
@@ -1554,9 +1557,11 @@ frequency), in Hz, for this Analyzer.");
 
 %feature("docstring",
 "Return the frequency resolution (minimum instantaneous frequency          
-difference between Partials) for this Analyzer.");
+difference between Partials) for this Analyzer at the specified
+time in seconds. If no time is specified, then the initial resolution
+(at 0 seconds) is returned.");
 
-	double freqResolution( void ) const;
+	double freqResolution( double time = 0.0 ) const;
 
 %feature("docstring",
 "Return the hop time (which corresponds approximately to the 
@@ -1618,6 +1623,7 @@ difference between Partials) for this Analyzer. (Does not cause
 other parameters to be recomputed.)");
 
 	void setFreqResolution( double x );
+	void setFreqResolution( const Envelope & e );  
 	
 %feature("docstring",
 "Set the hop time (which corresponds approximately to the average
