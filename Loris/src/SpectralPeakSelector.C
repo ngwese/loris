@@ -60,10 +60,8 @@ namespace Loris {
 // ---------------------------------------------------------------------------
 //	construction - constant resolution
 // ---------------------------------------------------------------------------
-SpectralPeakSelector::SpectralPeakSelector( double srate, double minFrequency, 
-                                            double maxTimeCorrection ) :
+SpectralPeakSelector::SpectralPeakSelector( double srate, double maxTimeCorrection ) :
 	mSampleRate( srate ),
-    mMinFreq( minFrequency ),
     mMaxTimeOffset( maxTimeCorrection )
 {
 }
@@ -75,19 +73,22 @@ SpectralPeakSelector::SpectralPeakSelector( double srate, double minFrequency,
 //	ignoring those having frequencies below the specified minimum, and
 //	those having large time corrections.
 //
+//  If the minimumFrequency is unspecified, 0 Hz is used.
+//
 //  There are two strategies for doing. Probably each one should be a 
 //  separate class, but for now, they are just separate functions.
 
 Peaks
-SpectralPeakSelector::selectPeaks( ReassignedSpectrum & spectrum )
+SpectralPeakSelector::selectPeaks( ReassignedSpectrum & spectrum, 
+                                   double minFrequency )
 {
 #if defined(USE_REASSIGNMENT_MINS) && USE_REASSIGNMENT_MINS
 
-    return selectReassignmentMinima( spectrum );
+    return selectReassignmentMinima( spectrum, minFrequency );
     
 #else
 
-    return selectMagnitudePeaks( spectrum );
+    return selectMagnitudePeaks( spectrum, minFrequency );
     
 #endif
 }
@@ -96,13 +97,14 @@ SpectralPeakSelector::selectPeaks( ReassignedSpectrum & spectrum )
 //	selectReassignmentMinima (private)
 // ---------------------------------------------------------------------------
 Peaks
-SpectralPeakSelector::selectReassignmentMinima( ReassignedSpectrum & spectrum )
+SpectralPeakSelector::selectReassignmentMinima( ReassignedSpectrum & spectrum, 
+                                                double minFrequency )
 {
 	using namespace std; // for abs and fabs
 
 	const double sampsToHz = mSampleRate / spectrum.size();
 	const double oneOverSR = 1. / mSampleRate;
-	const double minFreqSample = mMinFreq / sampsToHz;
+	const double minFreqSample = minFrequency / sampsToHz;
 	const double maxCorrectionSamples = mMaxTimeOffset * mSampleRate;
 	
 	Peaks peaks;
@@ -141,7 +143,7 @@ SpectralPeakSelector::selectReassignmentMinima( ReassignedSpectrum & spectrum )
             
             //  still possible that the frequency winds up being
             //  below the specified minimum
-            if ( freq < mMinFreq )
+            if ( freq < minFrequency )
             {
                 continue;   //  this control flow could be better!
             }
@@ -180,13 +182,14 @@ SpectralPeakSelector::selectReassignmentMinima( ReassignedSpectrum & spectrum )
 //	selectMagnitudePeaks (private)
 // ---------------------------------------------------------------------------
 Peaks
-SpectralPeakSelector::selectMagnitudePeaks( ReassignedSpectrum & spectrum )
+SpectralPeakSelector::selectMagnitudePeaks( ReassignedSpectrum & spectrum,
+                                            double minFrequency )
 {
 	using namespace std; // for abs and fabs
 
 	const double sampsToHz = mSampleRate / spectrum.size();
 	const double oneOverSR = 1. / mSampleRate;
-	const double minFreqSample = mMinFreq / sampsToHz;
+	const double minFreqSample = minFrequency / sampsToHz;
 	const double maxCorrectionSamples = mMaxTimeOffset * mSampleRate;
 	
 	Peaks peaks;

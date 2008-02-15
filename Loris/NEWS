@@ -38,6 +38,12 @@ Loris is Copyright (c) 1999-2007 by Kelly Fitz and Lippold Haken.
 History of visible changes, organized by relase number:
 
 -------------------------------------------------------
+changes since 1.5.2 release:
+
+- Analyzer can have time-varying frequency resolution
+specified by an Envelope.
+
+-------------------------------------------------------
 changes since 1.5.1 release:
 
 - Analyzer always constructs amplitude and fundamental

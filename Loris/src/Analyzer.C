@@ -626,7 +626,7 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
     ReassignedSpectrum spectrum( window );
     
     //  configure the peak selection and partial formation policies:
-    SpectralPeakSelector selector( srate, m_freqFloor, m_cropTime );
+    SpectralPeakSelector selector( srate, m_cropTime );
     PartialBuilder builder( m_freqDrift, reference );
     
     //  configure bw association policy, unless
@@ -669,7 +669,7 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
             
              
             //  extract peaks from the spectrum, and thin
-            Peaks peaks = selector.selectPeaks( spectrum ); 
+            Peaks peaks = selector.selectPeaks( spectrum, m_freqFloor ); 
 			Peaks::iterator rejected = thinPeaks( peaks, currentFrameTime );
 
             //	fix the stored bandwidth values

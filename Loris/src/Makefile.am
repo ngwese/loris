@@ -109,8 +109,9 @@ libloris_la_SOURCES = $(CPP_SRC) $(PI_SRC) $(CSOUND_SRC)
 libloris_la_CPPFLAGS = $(INCLUDE_FFTW) $(CSOUND_CXXFLAGS) $(default_includes)
 libloris_la_LIBADD = $(LINK_FFTW)
 
-# the library version for Loris 1.5.2 is 8:0:0
-libloris_la_LDFLAGS = -version-info 8:0:0 $(EXTRA_LD_FLAGS)
+# the library version for Loris 1.5.3 is 9:0:1
+# it is compatible but extended from Loris 1.5.2 
+libloris_la_LDFLAGS = -version-info 9:0:1 $(EXTRA_LD_FLAGS)
 
 # loris.h is generated automatically from loris.h.in
 nodist_include_HEADERS = loris.h
