@@ -34,8 +34,8 @@ CPP_SRC = AiffData.C	\
 		Distiller.h \
 		Envelope.C \
 		Envelope.h \
-		estimateF0.C \
-		estimateF0.h \
+		F0Estimate.C \
+		F0Estimate.h \
 		LorisExceptions.C \
 		LorisExceptions.h \
 		Filter.C \
@@ -130,6 +130,7 @@ pkginclude_HEADERS = \
 				Distiller.h	\
 				Envelope.h	\
 				Exception.h	\
+                F0Estimate.h \
 				Filter.h	\
 				FourierTransform.h	\
 				FrequencyReference.h \
