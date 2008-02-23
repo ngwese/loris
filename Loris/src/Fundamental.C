@@ -46,7 +46,7 @@
 #include "Partial.h"
 #include "PartialList.h"
 #include "PartialUtils.h"
-#include "estimateF0.h"
+#include "F0estimate.h"
 
 #include <cmath>
 #include <utility>
@@ -144,17 +144,16 @@ Fundamental::estimateAt( double time ) const
                                 "specified time." );
     }
 
-    F0estimate est = iterative_estimate( amps, freqs, freqMin_, freqMax_, 
-                                         freqResolution_ );
+    F0estimate est( amps, freqs, freqMin_, freqMax_, freqResolution_ );
 
-    if ( est.confidence < MinConfidence ||
-         est.frequency <= freqMin_ || est.frequency >= freqMax_ )
+    if ( est.confidence() < MinConfidence ||
+         est.frequency() <= freqMin_ || est.frequency() >= freqMax_ )
     {
         Throw( InvalidObject, "Cannot construct a reliable estimate "
                               "on the specified range of frequencies." );
     }	
 
-    return est.frequency;
+    return est.frequency();
 }
  
 // ---------------------------------------------------------------------------
@@ -222,13 +221,13 @@ Fundamental::constructEnvelope( double t1, double t2, double interval ) const
 		if ( ! amps.empty() )
 		{
 			found_energy = true;
-			F0estimate est = iterative_estimate( amps, freqs, freqMin_, freqMax_,
-                                                 freqResolution_ );
+			F0estimate est( amps, freqs, freqMin_, freqMax_, freqResolution_ );
+            
 			//	reject boundary frequencies
-			if ( est.confidence >= MinConfidence &&
-                 est.frequency > freqMin_ && est.frequency < freqMax_ )
+			if ( est.confidence() >= MinConfidence &&
+                 est.frequency() > freqMin_ && est.frequency() < freqMax_ )
 			{
-				env.insertBreakpoint( t, est.frequency );
+				env.insertBreakpoint( t, est.frequency() );
 			}
 		}
 		

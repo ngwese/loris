@@ -41,6 +41,7 @@
 #include "Breakpoint.h"
 #include "BreakpointEnvelope.h"
 #include "Envelope.h"
+#include "F0estimate.h"
 #include "LorisExceptions.h"
 #include "KaiserWindow.h"
 #include "Notifier.h"
@@ -50,7 +51,6 @@
 #include "SpectralPeakSelector.h"
 #include "PartialBuilder.h"
 
-#include "estimateF0.h"
 #include "phasefix.h"   //  for frequency/phase fixing at end of analysis
 
 
@@ -185,17 +185,14 @@ void FundamentalBuilder::build( const Peaks & peaks, double frameTime )
         const double fmax = mFmaxEnv->valueAt( frameTime );
         
         //  estimate f0
-        F0estimate est = iterative_estimate( amplitudes, frequencies, 
-                                             fmin,
-                                             fmax,
-                                             0.1 );
+        F0estimate est( amplitudes, frequencies, fmin, fmax, 0.1 );
         
-        if ( est.confidence >= mMinConfidence &&
-             est.frequency > fmin && est.frequency < fmax  )
+        if ( est.confidence() >= mMinConfidence &&
+             est.frequency() > fmin && est.frequency() < fmax  )
         {
             // notifier << "f0 is " << est.frequency << endl;
             //  add breakpoint to fundamental envelope
-            mEnvelope.insert( frameTime, est.frequency );
+            mEnvelope.insert( frameTime, est.frequency() );
         }
     }
     
