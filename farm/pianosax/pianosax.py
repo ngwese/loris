@@ -12,11 +12,17 @@ scaled to zero.
 Two partials per harmonic restores some of the sound, but also leaves in
 some crunch or whoosh, can't figure out where it comes from.
 
-Can  get a decent analysis and fundamental tracking. Definitely need
+Can get a decent analysis and fundamental tracking. Definitely need
 some non-harmonic low frequency partials to reconstruct the piano
-thunks. There's still a little cruch, but not to much.
+thunks. There's still a little crunch, but not too much.
 
-Last updated: 16 Aug 2007 by Kelly Fitz
+The fade time used for sifting and distilling is important in this sound. 
+Using the (Distiller) default fade time of 5 ms for sifting causes the
+lowest partial to fail to track the pitch changes. Need to use a shorter
+fade time, at least for sifting. 1 ms for both sifting and distilling seems 
+to work well. 
+
+Last updated: 17 March 2008 by Kelly Fitz
 """
 
 import loris, time, os
@@ -42,12 +48,12 @@ def doPianoSax( exportDir = '' ):
 	anal.buildFundamentalEnv( 300, 720 )
 	p = anal.analyze( f.samples(), f.sampleRate() )
 
-	
-	print 'sifting and distilling %i partials (%s)'%(p.size(), time.ctime(time.time()))
+	Fade = 0.001
+	print 'sifting and distilling %i partials at %i ms (%s)'%(p.size(), Fade*1000, time.ctime(time.time()))
 	ref = anal.fundamentalEnv()
 	loris.channelize( p, ref, 1 )
-	loris.sift( p )
-	loris.distill( p )
+	loris.sift( p, Fade )
+	loris.distill( p, Fade )
 	
 	if exportDir:
 	
