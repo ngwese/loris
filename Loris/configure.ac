@@ -1,4 +1,4 @@
-dnl Copyright (c) 1999-2007, Kelly Fitz and Lippold Haken <loris@cerlsoundgroup.org>
+dnl Copyright (c) 1999-2008, Kelly Fitz and Lippold Haken <loris@cerlsoundgroup.org>
 dnl  
 dnl This file is free software; as a special exception the author gives
 dnl unlimited permission to copy and/or distribute it, with or without 

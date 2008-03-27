@@ -3,7 +3,7 @@
  * manipulation, and synthesis of digitized sounds using the Reassigned 
  * Bandwidth-Enhanced Additive Sound Model.
  *
- * Loris is Copyright (c) 1999-2007 by Kelly Fitz and Lippold Haken
+ * Loris is Copyright (c) 1999-2008 by Kelly Fitz and Lippold Haken
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1010,8 +1010,8 @@ int main( int argc, char * argv[] )
 				cout << "* distilling " << gAnalyzer->partials().size() 
 					  << " partials" << endl;
 				Loris::Distiller::distill( gAnalyzer->partials(),
-										   Loris::Distiller::DefaultFadeTime, 
-										   Loris::Distiller::DefaultSilentTime );
+										   Loris::Distiller::DefaultFadeTimeMs/1000.0, 
+										   Loris::Distiller::DefaultSilentTimeMs/1000.0 );
 			}
 			else
 			{
@@ -1019,7 +1019,7 @@ int main( int argc, char * argv[] )
 					  << " partials" << endl;
 				Loris::Sieve::sift( gAnalyzer->partials().begin(), 
 									gAnalyzer->partials().end(), 
-									Loris::Sieve::DefaultFadeTime );
+									Loris::Sieve::DefaultFadeTimeMs/1000.0 );
 													
 				Loris::PartialList::iterator it =           
 					std::remove_if( gAnalyzer->partials().begin(), 
@@ -1035,8 +1035,8 @@ int main( int argc, char * argv[] )
 				cout << "* distilling " << gAnalyzer->partials().size() 
 					  << " partials" << endl;
 				Loris::Distiller::distill( gAnalyzer->partials(),
-										   Loris::Distiller::DefaultFadeTime, 
-										   Loris::Distiller::DefaultSilentTime );
+										   Loris::Distiller::DefaultFadeTimeMs/1000.0, 
+										   Loris::Distiller::DefaultSilentTimeMs/1000.0 );
 			}
         }
         else if ( gCollate )
@@ -1044,8 +1044,8 @@ int main( int argc, char * argv[] )
             cout << "* collating " << gAnalyzer->partials().size();
             cout << " partials" << endl;
             Loris::Collator::collate( gAnalyzer->partials(),
-								      Loris::Collator::DefaultFadeTime, 
-									  Loris::Collator::DefaultSilentTime );
+								      Loris::Collator::DefaultFadeTimeMs/1000.0, 
+									  Loris::Collator::DefaultSilentTimeMs/1000.0 );
         }
         
         if ( gResample > 0 )

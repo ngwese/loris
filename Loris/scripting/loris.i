@@ -3,7 +3,7 @@
  * manipulation, and synthesis of digitized sounds using the Reassigned 
  * Bandwidth-Enhanced Additive Sound Model.
  *
- * Loris is Copyright (c) 1999-2007 by Kelly Fitz and Lippold Haken
+ * Loris is Copyright (c) 1999-2008 by Kelly Fitz and Lippold Haken
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -233,8 +233,8 @@ are used.") collate_duh;
     // imported, and using statements do not solve
     // the problem as they should.
     void collate_duh( PartialList * partials, 
-				  	  double fadeTime = Collator::DefaultFadeTime, 
-				  	  double gapTime = Collator::DefaultSilentTime )
+				  	  double fadeTime = Collator::DefaultFadeTimeMs/1000.0, 
+				  	  double gapTime = Collator::DefaultSilentTimeMs/1000.0 )
     {
     	Collator c( fadeTime, gapTime );
         c.collate( *partials );
@@ -335,8 +335,8 @@ defaults are 5ms and 1ms.
 %inline
 %{
 	void wrap_distill( PartialList * partials, 
-				      double fadeTime = Distiller::DefaultFadeTime, 
-				      double gapTime = Distiller::DefaultSilentTime )
+				      double fadeTime = Distiller::DefaultFadeTimeMs/1000.0, 
+				      double gapTime = Distiller::DefaultSilentTimeMs/1000.0 )
 	{
 		try
 		{
@@ -1069,7 +1069,7 @@ Optionally specify the fade time, default is 1ms.") fake_sift;
 %inline
 %{
 	void fake_sift( PartialList * partials, 
-				    double fadeTime = Sieve::DefaultFadeTime )
+				    double fadeTime = Sieve::DefaultFadeTimeMs/1000.0 )
 	{
 		Sieve s( fadeTime );
 		s.sift( *partials );

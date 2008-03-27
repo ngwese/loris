@@ -3,7 +3,7 @@
  * manipulation, and synthesis of digitized sounds using the Reassigned 
  * Bandwidth-Enhanced Additive Sound Model.
  *
- * Loris is Copyright (c) 1999-2007 by Kelly Fitz and Lippold Haken
+ * Loris is Copyright (c) 1999-2008 by Kelly Fitz and Lippold Haken
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,21 +50,26 @@
 	const double Pi = 3.14159265358979324;
 #endif
 
-// old quadratic interpolation code is still around, in case
+// The old quadratic interpolation code is still around, in case
 // we ever want to use it for comparison, Lemur used to use that.
 #if defined(Like_Lemur)
-#define SMITHS_BRILLIANT_PARABOLAS
+#define USE_PARABOLIC_INTERPOLATION
 #endif
 
 //	define this symbol to compute the mixed phase derivative
 #define COMPUTE_MIXED_PHASE_DERIVATIVE 1
 
-//	there's a freakin' ton of std in here, 
-//	just import the whole namespace
+//	there's a lot of std in here, 
+//	import the whole namespace, as ugly as that is.
 using namespace std;
 
 //	begin namespace
 namespace Loris {
+
+static unsigned long nextPO2( unsigned long N )
+{
+    return ceil( log( double(N) ) / log( 2. ) );
+}
                           
 // ---------------------------------------------------------------------------
 //	ReassignedSpectrum constructor
@@ -74,8 +79,8 @@ namespace Loris {
 //!	window length.
 //
 ReassignedSpectrum::ReassignedSpectrum( const std::vector< double > & window ) :
-	mMagnitudeTransform( 1 << long( 1 + ceil( log((double)window.size()) / log(2.)) ) ),
-	mCorrectionTransform( 1 << long( 1 + ceil( log((double)window.size()) / log(2.)) ) )
+	mMagnitudeTransform( 1 << ( 1 + nextPO2( window.size() ) ) ),
+	mCorrectionTransform( 1 << ( 1 + nextPO2( window.size() ) ) )
 {	
     //  Build and store the window functions.
 	buildReassignmentWindows( window );                        
@@ -92,8 +97,8 @@ ReassignedSpectrum::ReassignedSpectrum( const std::vector< double > & window ) :
 //!	window length.
 ReassignedSpectrum::ReassignedSpectrum( const std::vector< double > & window,
                                         const std::vector< double > & windowDerivative ) :
-	mMagnitudeTransform( 1 << long( 1 + ceil( log((double)window.size()) / log(2.)) ) ),
-	mCorrectionTransform( 1 << long( 1 + ceil( log((double)window.size()) / log(2.)) ) )
+	mMagnitudeTransform( 1 << ( 1 + nextPO2( window.size() ) ) ),
+	mCorrectionTransform( 1 << ( 1 + nextPO2( window.size() ) ) )
 {
     //  Build and store the window functions.
 	buildReassignmentWindows( window, windowDerivative );  
@@ -302,7 +307,7 @@ ReassignedSpectrum::frequencyCorrection( long idx ) const
 	
 	double magSquared = std::norm( X_h );
 
-	//	need to scale by the oversampling factor?
+	//	need to scale by the oversampling factor
 	double oversampling = (double)mCorrectionTransform.size() / mCplxWin_W_Wtd.size();
 	return - oversampling * num / magSquared;
 }
@@ -327,7 +332,7 @@ ReassignedSpectrum::timeCorrection( long idx ) const
 		  		 X_h.imag() * X_Th.imag();
 	double magSquared = norm( X_h );
 	
-	//	need to scale by the oversampling factor?
+	//	No need to scale by the oversampling factor.
 	//	No, seems to sound bad, why?
 	//	(try alienthreat)
 	// double oversampling = (double)mCorrectionTransform.size() / mCplxWin_W_Wtd.size();
@@ -346,11 +351,11 @@ ReassignedSpectrum::timeCorrection( long idx ) const
 double
 ReassignedSpectrum::reassignedFrequency( long idx ) const
 {
-#if ! defined(SMITHS_BRILLIANT_PARABOLAS)
+#if ! defined(USE_PARABOLIC_INTERPOLATION)
 
 	return double(idx) + frequencyCorrection( idx );
 	
-#else // defined(SMITHS_BRILLIANT_PARABOLAS)
+#else // defined(USE_PARABOLIC_INTERPOLATION)
 
 	double dbLeft = 20. * log10( abs( circEvenPartAt( mMagnitudeTransform, idx-1 ) ) );
 	double dbCandidate = 20. * log10( abs( circEvenPartAt( mMagnitudeTransform, idx ) ) );
@@ -361,7 +366,7 @@ ReassignedSpectrum::reassignedFrequency( long idx ) const
 
 	return idx + peakXOffset;
 	
-#endif	//	defined SMITHS_BRILLIANT_PARABOLAS
+#endif	//	defined USE_PARABOLIC_INTERPOLATION
 }
 
 // ---------------------------------------------------------------------------
@@ -391,13 +396,13 @@ ReassignedSpectrum::reassignedTime( long idx ) const
 double
 ReassignedSpectrum::reassignedMagnitude( long idx ) const
 {
-#if ! defined(SMITHS_BRILLIANT_PARABOLAS)
+#if ! defined(USE_PARABOLIC_INTERPOLATION)
 	
 	//	compute the nominal spectral amplitude by scaling
 	//	the peak spectral sample:
 	return abs( circEvenPartAt( mMagnitudeTransform, idx ) );
 	
-#else // defined(SMITHS_BRILLIANT_PARABOLAS)
+#else // defined(USE_PARABOLIC_INTERPOLATION)
 	
 	//	keep this parabolic interpolation computation around
 	//	only for sake of comparison, it is unlikely to yield
@@ -413,7 +418,7 @@ ReassignedSpectrum::reassignedMagnitude( long idx ) const
 	
 	return x;
 	
-#endif	//	defined SMITHS_BRILLIANT_PARABOLAS
+#endif	//	defined USE_PARABOLIC_INTERPOLATION
 }
 
 // ---------------------------------------------------------------------------
