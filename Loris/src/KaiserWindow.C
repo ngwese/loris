@@ -51,84 +51,134 @@ using namespace std;
 namespace Loris {
 
 //  prototypes for static helpers, defined below
-static double factorial( double );
-static double zeroethOrderBessel( double );
+static double zeroethOrderBessel( double x );
+static double firstOrderBessel( double x );
 
 // ---------------------------------------------------------------------------
-//  create
+//  buildWindow
 // ---------------------------------------------------------------------------
-//  Compute a Kaiser window length samples long and using control parameter 
-//  alpha. See Oppenheim and Schafer:  "Digital Signal Processing" (1975), 
-//  p. 452 for further explanation of the Kaiser window. Also, see Kaiser 
-//  and Schafer, 1980.
-//
-//  This could be a template function taking iterators in place of 
-//  the vector.
+//! Build a new Kaiser analysis window having the specified shaping
+//! parameter. See Oppenheim and Schafer:  "Digital Signal Processing" 
+//! (1975), p. 452 for further explanation of the Kaiser window. Also, 
+//! see Kaiser and Schafer, 1980.
+//!
+//! \param      win is the vector that will store the window
+//!             samples. The number of samples computed will be
+//!             equal to the length of this vector. Any previous
+//!             contents will be overwritten.
+//! \param      shape is the Kaiser shaping parameter, controlling
+//!             the sidelobe rejection level.
 //
 void
-KaiserWindow::create( vector< double > & samples, double shape )
+KaiserWindow::buildWindow( vector< double > & win, double shape )
 {   
-    const long length = samples.size();
-    if ( length == 0 ) 
-    {
-        return;
-    }
+    //  Pre-compute the shared denominator in the Kaiser equation. 
+    const double oneOverDenom = 1.0 / zeroethOrderBessel( shape );
+  
+    const unsigned int N = win.size() - 1;
+    const double oneOverN = 1.0 / N;
     
-//  Compute the window bounds:
-    const double offset = -0.5 * (length - 1);
-
-//  Pre-compute the denominator in the kaiser equation. 
-    const double denom = zeroethOrderBessel( shape );
-    
-//  Pre-compute the square of half of one less than the window length.
-//  (equals square of offset, computed above)
-    const double Z = offset * offset;
-                    // = 0.25 * (length - 1.) * (length - 1.);
-
-//  Compute the window samples.
-    for ( long i = 0; i < length; ++i )
+    for ( unsigned int n = 0; n <= N; ++n )
     {
-        const double x = double( i + offset );
+        const double K = (2.0 * n * oneOverN) - 1.0;
+        const double arg = sqrt( 1.0 - (K * K) );
         
-        //  sanity:
-        Assert( x * x <= Z );
-        
-        double arg = sqrt(1.0 - (x * x / Z));
-        samples[i] = zeroethOrderBessel( shape * arg ) / denom;
+        win[n] = zeroethOrderBessel( shape * arg ) * oneOverDenom;
     }
 }
 
 // ---------------------------------------------------------------------------
-//  factorial
+//  createDerivativeWindow
 // ---------------------------------------------------------------------------
+//! Build a new time-derivative Kaiser analysis window having the
+//! specified shaping parameter, for computing frequency reassignment.
+//! The closed form for the time derivative can be obtained from the
+//! property of modified Bessel functions that the derivative of the
+//! zeroeth order function is equal to the first order function.
+//!
+//! \param      win is the vector that will store the window
+//!             samples. The number of samples computed will be
+//!             equal to the length of this vector. Any previous
+//!             contents will be overwritten.
+//! \param      shape is the Kaiser shaping parameter, controlling
+//!             the sidelobe rejection level.
 //
-static double factorial( double val )
-{
-    double outval = 1.0;    //  could initialize with val--, right?
-    while (val > 1) 
+void
+KaiserWindow::buildTimeDerivativeWindow( vector< double > & win, double shape )
+{   
+    //  Pre-compute the common factor that does not depend on n.
+    const unsigned int N = win.size() - 1;
+    const double oneOverN = 1.0 / N;
+    
+    const double commonFac = - 2.0 * shape / (N * zeroethOrderBessel( shape ) );
+  
+    //  w'[0] = w'[N] = 0
+    win[0] = win[N] = 0.0;
+    
+    for ( unsigned int n = 1; n < N; ++n )
     {
-        outval *= val--;
+        const double K = (2.0 * n * oneOverN) - 1.0;
+        const double arg = sqrt( 1.0 - (K * K) );
+        
+        win[n] = commonFac * firstOrderBessel( shape * arg ) * K / arg;
     }
-    return outval;
 }
+
 
 // ---------------------------------------------------------------------------
 //  zeroethOrderBessel
 // ---------------------------------------------------------------------------
-//  Compute the zeroeth order Bessel function at val using the series expansion.
+//  Compute the zeroeth order modified Bessel function of the first kind 
+//  at x using the series expansion, used to compute the Kasier window
+//  function.
 //
-static double zeroethOrderBessel( double val )
+static double zeroethOrderBessel( double x )
 {
-    double besselValue = 1.0;
-    double term;
-    int i = 1;
-
-    do
+    const double eps = 0.000001;
+    
+    //  initialize the series term for m=0 and the result
+    double besselValue = 0;
+    double term = 1;
+    double m = 0;
+    
+    //  accumulate terms as long as they are significant
+    while(term  > eps * besselValue)
     {
-        term = pow(0.5 * val, double(i)) / factorial(i);
-        besselValue += (term * term);
-        i++;
-    } while (term  > .000001 * besselValue);
+        besselValue += term;
+        
+        //  update the term
+        ++m;
+        term *= (x*x) / (4*m*m);
+    }
+    
+    return besselValue;
+}
+
+// ---------------------------------------------------------------------------
+//  firstOrderBessel
+// ---------------------------------------------------------------------------
+//  Compute the first order modified Bessel function of the first kind 
+//  at x using the series expansion, used to compute the time derivative
+//  of the Kasier window function for computing frequency reassignment.
+//
+static double firstOrderBessel( double x )
+{
+    const double eps = 0.000001;
+    
+    //  initialize the series term for m=0 and the result
+    double besselValue = 0;
+    double term = .5*x;
+    double m = 0;
+    
+    //  accumulate terms as long as they are significant
+    while(term  > eps * besselValue)
+    {
+        besselValue += term;
+        
+        //  update the term
+        ++m;
+        term *= (x*x) / (4*m*(m+1));
+    }
     
     return besselValue;
 }
