@@ -38,7 +38,6 @@
 #include "Collator.h"
 #include "Breakpoint.h"
 #include "BreakpointUtils.h"
-#include "Distiller.h"	//	only for its default fade time and silent time
 #include "LorisExceptions.h"
 #include "Partial.h"
 #include "PartialList.h"
@@ -51,17 +50,6 @@
 
 //	begin namespace
 namespace Loris {
-
-// ---------------------------------------------------------------------------
-//	global defaults and constants
-// ---------------------------------------------------------------------------
-//! Default time (in seconds) over which Partials joined by
-//! distillation fade to and from zero amplitude.
-const double Collator::DefaultFadeTime = Distiller::DefaultFadeTime;    // 5 ms
-
-//! Default minimum duration (in seconds) of the silent 
-//! (zero-amplitude) gap between two Partials joined by distillation.
-const double Collator::DefaultSilentTime = Distiller::DefaultSilentTime;  // 1 ms
 
 
 // ---------------------------------------------------------------------------

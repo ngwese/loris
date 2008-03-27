@@ -77,13 +77,22 @@ public:
 
 //  -- global defaults and constants --
 
-    //! Default time (in seconds) over which Partials joined by
-    //! distillation fade to and from zero amplitude.
-    static const double DefaultFadeTime;
-    
-    //! Default minimum duration (in seconds) of the silent 
-    //! (zero-amplitude) gap between two Partials joined by distillation.
-    static const double DefaultSilentTime;
+	enum 
+	{
+	
+		//! Default time in milliseconds over which Partials joined by
+		//! distillation fade to and from zero amplitude. Divide by 
+		//!	1000 to use as a member function parameter. This parameter
+		//!	should be the same in Distiller, Sieve, and Collator.
+		DefaultFadeTimeMs = 5,
+		
+		//! Default minimum duration in milliseconds of the silent 
+		//! (zero-amplitude) gap between two Partials joined by 
+		//!	distillation. Divide by 1000 to use as a member function 
+		//!	parameter. This parameter should be the same in Distiller, 
+		//!	Sieve, and Collator.
+		DefaultSilentTimeMs = 1
+    };
 
 //  -- construction --
 
@@ -108,8 +117,8 @@ public:
     //!            Partials joined by distillation. (Default is
     //!            Distiller::DefaultSilentTime).
     explicit
-    Distiller( double partialFadeTime = Distiller::DefaultFadeTime,
-               double partialSilentTime = Distiller::DefaultSilentTime );
+    Distiller( double partialFadeTime = Distiller::DefaultFadeTimeMs/1000.0,
+               double partialSilentTime = Distiller::DefaultSilentTimeMs/1000.0 );
      
     //  Use compiler-generated copy, assign, and destroy.
     
@@ -181,11 +190,11 @@ public:
     template< typename Container >
     static typename Container::iterator 
     distill( Container & partials, double partialFadeTime,
-             double partialSilentTime = Distiller::DefaultSilentTime );
+             double partialSilentTime = DefaultSilentTimeMs/1000.0 );
 #else
     static inline PartialList::iterator
     distill( PartialList & partials, double partialFadeTime,
-             double partialSilentTime = Distiller::DefaultSilentTime );
+             double partialSilentTime = DefaultSilentTimeMs/1000.0 );
 #endif
 
 private:

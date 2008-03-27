@@ -32,6 +32,9 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
+ 
+#include "Distiller.h"	//	for default fade time and silent time
+ 
 #if defined(NO_TEMPLATE_MEMBERS)
 #include "PartialList.h"
 #endif
@@ -76,9 +79,22 @@ public:
 
 //  -- global defaults and constants --
 
-    //! Default time (in seconds) over which Partials joined by
-    //! distillation fade to and from zero amplitude.
-    static const double DefaultFadeTime;
+	enum 
+	{
+	
+		//! Default time in milliseconds over which Partials joined by
+		//! distillation fade to and from zero amplitude. Divide by 
+		//!	1000 to use as a member function parameter. This parameter
+		//!	should be the same in Distiller, Sieve, and Collator.
+		DefaultFadeTimeMs = Distiller::DefaultFadeTimeMs,
+		
+		//! Default minimum duration in milliseconds of the silent 
+		//! (zero-amplitude) gap between two Partials joined by 
+		//!	distillation. Divide by 1000 to use as a member function 
+		//!	parameter. This parameter should be the same in Distiller, 
+		//!	Sieve, and Collator.
+		DefaultSilentTimeMs = Distiller::DefaultSilentTimeMs
+    };
     
 //  -- construction --
 
@@ -92,7 +108,7 @@ public:
     //!            must be non-negative. A default value is used
     //!			   if unspecified.
     //!   \throw  InvalidArgument if partialFadeTime is negative.
-    explicit Sieve( double partialFadeTime = Sieve::DefaultFadeTime );
+    explicit Sieve( double partialFadeTime = Sieve::DefaultFadeTimeMs/1000.0 );
      
     //  Use compiler-generated copy, assign, and destroy.
     

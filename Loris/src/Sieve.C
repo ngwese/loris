@@ -37,7 +37,6 @@
 
 #include "Sieve.h"
 #include "Breakpoint.h"
-#include "Distiller.h"	//	only for its default fade time
 #include "LorisExceptions.h"
 #include "Notifier.h"
 #include "Partial.h"
@@ -48,15 +47,6 @@
 
 //	begin namespace
 namespace Loris {
-
-// ---------------------------------------------------------------------------
-//	global defaults and constants
-// ---------------------------------------------------------------------------
-//! Default extra time (in seconds) added to each end of a Partial to  
-//! accomodate the fade to and from zero amplitude during distillation.
-
-const double Sieve::DefaultFadeTime = Distiller::DefaultFadeTime;
-
 
 
 // ---------------------------------------------------------------------------

@@ -33,6 +33,7 @@
  *
  */
 
+#include "Distiller.h"	//	for default fade time and silent time
 #include "Partial.h"
 #include "PartialList.h"
 #include "PartialUtils.h"
@@ -73,13 +74,22 @@ public:
 
 //  -- global defaults and constants --
 
-    //! Default time (in seconds) over which Partials joined by
-    //! distillation fade to and from zero amplitude.
-    static const double DefaultFadeTime;
-    
-    //! Default minimum duration (in seconds) of the silent 
-    //! (zero-amplitude) gap between two Partials joined by distillation.
-    static const double DefaultSilentTime;
+	enum 
+	{
+	
+		//! Default time in milliseconds over which Partials joined by
+		//! distillation fade to and from zero amplitude. Divide by 
+		//!	1000 to use as a member function parameter. This parameter
+		//!	should be the same in Distiller, Sieve, and Collator.
+		DefaultFadeTimeMs = Distiller::DefaultFadeTimeMs,
+		
+		//! Default minimum duration in milliseconds of the silent 
+		//! (zero-amplitude) gap between two Partials joined by 
+		//!	distillation. Divide by 1000 to use as a member function 
+		//!	parameter. This parameter should be the same in Distiller, 
+		//!	Sieve, and Collator.
+		DefaultSilentTimeMs = Distiller::DefaultSilentTimeMs
+    };
     
 //  -- construction --
 
@@ -103,8 +113,8 @@ public:
 	//!            Partials joined by distillation. (Default is
 	//!            0.001 (one millisecond).
     explicit
-    Collator( double partialFadeTime = Collator::DefaultFadeTime,
-              double partialSilentTime = Collator::DefaultSilentTime );
+    Collator( double partialFadeTime = Collator::DefaultFadeTimeMs/1000.0,
+              double partialSilentTime = Collator::DefaultSilentTimeMs/1000.0 );
      
     //  Use compiler-generated copy, assign, and destroy.
     
