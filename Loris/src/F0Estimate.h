@@ -45,7 +45,7 @@
 namespace Loris {
 
 // ---------------------------------------------------------------------------
-//  class F0estimate
+//  class F0Estimate
 //
 //  Represents a configuration of an iterative alrogithm for computing an 
 //  estimate of fundamental frequency from a sequence of sinusoidal
@@ -55,7 +55,7 @@ namespace Loris {
 //  have already been identified and extracted in the analysis/modeling
 //  process.
 
-class F0estimate
+class F0Estimate
 {
 private:
 
@@ -80,13 +80,13 @@ public:
     //  all the peaks are perfect harmonics of the estimated
     //  frequency).
 
-    F0estimate ( const std::vector<double> & amps, 
+    F0Estimate ( const std::vector<double> & amps, 
                  const std::vector<double> & freqs, 
                  double fmin, double fmax,
                  double resolution );
 
-    // F0estimate( void ) : m_frequency( 0 ), m_confidence( 0 ) {}
-    // F0estimate( double f, double c ) : m_frequency( f ), m_confidence( c ) {}
+    // F0Estimate( void ) : m_frequency( 0 ), m_confidence( 0 ) {}
+    // F0Estimate( double f, double c ) : m_frequency( f ), m_confidence( c ) {}
     
     //  --- accessors ---
     
@@ -98,7 +98,7 @@ public:
     //  harmonics of this estimate's frequency    
     double confidence( void ) const { return m_confidence; }
     
-};  //  end of class F0estimate
+};  //  end of class F0Estimate
 
 
 }	//	end of namespace Loris

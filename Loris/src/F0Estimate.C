@@ -75,7 +75,7 @@ choose_peak( const vector<double> & Q );
 
 
 // ---------------------------------------------------------------------------
-//  F0estimate constructor
+//  F0Estimate constructor
 // ---------------------------------------------------------------------------
 //  Construct from parameters of the iterative F0 estimation 
 //  algorithm.
@@ -89,7 +89,7 @@ choose_peak( const vector<double> & Q );
 //  all the peaks are perfect harmonics of the estimated
 //  frequency).
 
-F0estimate::F0estimate( const vector<double> & amps, 
+F0Estimate::F0Estimate( const vector<double> & amps, 
                         const vector<double> & freqs, 
                         double fmin, double fmax,
                         double resolution ) :
@@ -192,9 +192,9 @@ struct Qterm
 
 static void
 evaluate_Q( const vector<double> & amps, 
-			  const vector<double> & freqs, 
-			  const vector<double> & eval_freqs, 
-			  vector<double> & Q )
+            const vector<double> & freqs, 
+            const vector<double> & eval_freqs, 
+            vector<double> & Q )
 {
 	Assert( eval_freqs.size() == Q.size() );
 	Assert( amps.size() == freqs.size() );
@@ -224,13 +224,11 @@ evaluate_Q( const vector<double> & amps,
 	{
 		double result = 
 			std::inner_product( amps.begin(), amps.end(),
-								    freqs.begin(),
-								    0.,
-								    std::plus< double >(),
-								    Qterm( *freq_it ) );
-                                    
-//cout << *freq_it << ", " << result * norm << ";\n";
-                                    
+                                freqs.begin(),
+                                0.,
+                                std::plus< double >(),
+                                Qterm( *freq_it ) );
+                                                                        
 		*Q_it++ = result * norm;
 		++freq_it;
 	}
