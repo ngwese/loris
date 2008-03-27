@@ -60,6 +60,13 @@ public:
     //!	window length.
 	ReassignedSpectrum( const std::vector< double > & window );
 
+    //! Construct a new instance using the specified short-time window and
+    //! its time derivative.
+    //!	Transform lengths are the smallest power of two greater than twice the
+    //!	window length.
+	ReassignedSpectrum( const std::vector< double > & window,
+                        const std::vector< double > & windowDerivative );
+    
 	// compiler-generated copy, assign, and destroy are sufficient
 
 //	--- operations ---
@@ -173,6 +180,29 @@ public:
     std::complex< double > operator[]( unsigned long idx ) const;
 	
 private:
+
+//	-- window building helpers --
+
+    //	Build a pair of complex-valued windows, one having the frequency-ramp 
+    //  (time-derivative) window in the real part and the time-ramp window in the 
+    //  imagnary part, and the other having the unmodified window in the real part
+    //  and, if computing mixed deriviatives, the time-ramp time-derivative window
+    //  in the imaginary part.
+    //
+    //  Input is the unmodified window function.
+    void buildReassignmentWindows( const std::vector< double > & window );
+    
+    //	Build a pair of complex-valued windows, one having the frequency-ramp 
+    //  (time-derivative) window in the real part and the time-ramp window in the 
+    //  imagnary part, and the other having the unmodified window in the real part
+    //  and, if computing mixed deriviatives, the time-ramp time-derivative window
+    //  in the imaginary part.
+    //
+    //  Input is the unmodified window function and its time derivative, so the
+    //  DFT kludge is unnecessary.
+    void buildReassignmentWindows( const std::vector< double > & window,
+                                   const std::vector< double > & windowDerivative );    
+
 //	-- instance variables --
 
 	//! the FourierTransform for computing magnitude and phase
@@ -182,13 +212,15 @@ private:
 	FourierTransform mCorrectionTransform;
 	
 	//! the original short-time analysis window samples
-	std::vector< double > mWindow;
+	std::vector< double > mWindow;                          //  W(n)
 	
-	//! the complex window used to compute the magnitude/phase transform
-	std::vector< std::complex< double > > mMagnitudeTransformWindow;
+	//! the complex window used to compute the 
+    //! magnitude/phase transform
+	std::vector< std::complex< double > > mCplxWin_W_Wtd;   //  real W(n), imag nW'(n)
 
-	//! the complex window used to compute the time/frequency correction transform
-	std::vector< std::complex< double > > mCorrectionTransformWindow;
+	//! the complex window used to compute the 
+    //! time/frequency correction transform
+	std::vector< std::complex< double > > mCplxWin_Wd_Wt;   //  real W'(n), imag nW(n)
 		
 };	//	end of class ReassignedSpectrum
 

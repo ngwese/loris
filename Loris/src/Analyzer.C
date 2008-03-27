@@ -41,7 +41,7 @@
 #include "Breakpoint.h"
 #include "BreakpointEnvelope.h"
 #include "Envelope.h"
-#include "F0estimate.h"
+#include "F0Estimate.h"
 #include "LorisExceptions.h"
 #include "KaiserWindow.h"
 #include "Notifier.h"
@@ -185,7 +185,7 @@ void FundamentalBuilder::build( const Peaks & peaks, double frameTime )
         const double fmax = mFmaxEnv->valueAt( frameTime );
         
         //  estimate f0
-        F0estimate est( amplitudes, frequencies, fmin, fmax, 0.1 );
+        F0Estimate est( amplitudes, frequencies, fmin, fmax, 0.1 );
         
         if ( est.confidence() >= mMinConfidence &&
              est.frequency() > fmin && est.frequency() < fmax  )
@@ -618,9 +618,12 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
     debugger << "Using Kaiser window of length " << winlen << endl;
     
     std::vector< double > window( winlen );
-    KaiserWindow::create( window, winshape );
-   
-    ReassignedSpectrum spectrum( window );
+    KaiserWindow::buildWindow( window, winshape );
+    
+    std::vector< double > windowDeriv( winlen );
+    KaiserWindow::buildTimeDerivativeWindow( windowDeriv, winshape );
+       
+    ReassignedSpectrum spectrum( window, windowDeriv );   
     
     //  configure the peak selection and partial formation policies:
     SpectralPeakSelector selector( srate, m_cropTime );

@@ -65,13 +65,7 @@ using namespace std;
 
 //	begin namespace
 namespace Loris {
-
-// 	static function for building fancy reassignment window:
-template < typename RealWinIter, typename CplxWinIter >
-static void 
-buildReassignmentWindows( RealWinIter winbegin, RealWinIter winend, 
-						  CplxWinIter rawinbegin, CplxWinIter raw2inbegin );
-
+                          
 // ---------------------------------------------------------------------------
 //	ReassignedSpectrum constructor
 // ---------------------------------------------------------------------------
@@ -81,23 +75,32 @@ buildReassignmentWindows( RealWinIter winbegin, RealWinIter winend,
 //
 ReassignedSpectrum::ReassignedSpectrum( const std::vector< double > & window ) :
 	mMagnitudeTransform( 1 << long( 1 + ceil( log((double)window.size()) / log(2.)) ) ),
-	mCorrectionTransform( 1 << long( 1 + ceil( log((double)window.size()) / log(2.)) ) ),
-	mWindow( window.begin(), window.end() ),
-	mMagnitudeTransformWindow( window.size(), 0. ),
-	mCorrectionTransformWindow( window.size(), 0. )
-{
-	// scale the window so that the reported magnitudes
-	// are correct:
-	double winsum = std::accumulate( mWindow.begin(), mWindow.end(), 0. );
-	std::transform( mWindow.begin(), mWindow.end(), mWindow.begin(), 
-			        std::bind1st( std::multiplies<double>(), 2/winsum ) );
-	
-	buildReassignmentWindows( mWindow.begin(), mWindow.end(), 
-	                          mMagnitudeTransformWindow.begin(), 
-	                          mCorrectionTransformWindow.begin() );
+	mCorrectionTransform( 1 << long( 1 + ceil( log((double)window.size()) / log(2.)) ) )
+{	
+    //  Build and store the window functions.
+	buildReassignmentWindows( window );                        
 
 	debugger << "ReassignedSpectrum: length is " << mMagnitudeTransform.size() << endl;
 }
+
+// ---------------------------------------------------------------------------
+//	ReassignedSpectrum constructor
+// ---------------------------------------------------------------------------
+//! Construct a new instance using the specified short-time window and
+//! its time derivative.
+//!	Transform lengths are the smallest power of two greater than twice the
+//!	window length.
+ReassignedSpectrum::ReassignedSpectrum( const std::vector< double > & window,
+                                        const std::vector< double > & windowDerivative ) :
+	mMagnitudeTransform( 1 << long( 1 + ceil( log((double)window.size()) / log(2.)) ) ),
+	mCorrectionTransform( 1 << long( 1 + ceil( log((double)window.size()) / log(2.)) ) )
+{
+    //  Build and store the window functions.
+	buildReassignmentWindows( window, windowDerivative );  
+
+	debugger << "ReassignedSpectrum: length is " << mMagnitudeTransform.size() << endl;
+}
+
 
 // ---------------------------------------------------------------------------
 //	transform
@@ -152,7 +155,7 @@ ReassignedSpectrum::transform( const double * sampsBegin,
 	//	window and rotate input and compute normal transform:
 	//	window the samples into the FT buffer:
 	FourierTransform::iterator it = 
-		std::transform( sampsBegin, sampsEnd, mMagnitudeTransformWindow.begin() + winBeginOffset, 
+		std::transform( sampsBegin, sampsEnd, mCplxWin_W_Wtd.begin() + winBeginOffset, 
 						mMagnitudeTransform.begin(), std::multiplies< std::complex< double > >() );
 	//	fill the rest with zeros:
 	std::fill( it, mMagnitudeTransform.end(), 0. );
@@ -165,7 +168,7 @@ ReassignedSpectrum::transform( const double * sampsBegin,
 	//	compute the dual reassignment transform:
 	//	window the samples into the reassignment FT buffer,
 	//	using the complex-valued reassignment window:
-	it = std::transform( sampsBegin, sampsEnd, mCorrectionTransformWindow.begin() + winBeginOffset, 
+	it = std::transform( sampsBegin, sampsEnd, mCplxWin_Wd_Wt.begin() + winBeginOffset, 
 						 mCorrectionTransform.begin(), std::multiplies< std::complex<double> >() );
 	//	fill the rest with zeros:
 	std::fill( it, mCorrectionTransform.end(), 0. );
@@ -300,7 +303,7 @@ ReassignedSpectrum::frequencyCorrection( long idx ) const
 	double magSquared = std::norm( X_h );
 
 	//	need to scale by the oversampling factor?
-	double oversampling = (double)mCorrectionTransform.size() / mMagnitudeTransformWindow.size();
+	double oversampling = (double)mCorrectionTransform.size() / mCplxWin_W_Wtd.size();
 	return - oversampling * num / magSquared;
 }
 
@@ -327,7 +330,7 @@ ReassignedSpectrum::timeCorrection( long idx ) const
 	//	need to scale by the oversampling factor?
 	//	No, seems to sound bad, why?
 	//	(try alienthreat)
-	// double oversampling = (double)mCorrectionTransform.size() / mMagnitudeTransformWindow.size();
+	// double oversampling = (double)mCorrectionTransform.size() / mCplxWin_W_Wtd.size();
 	return num / magSquared;
 }
 
@@ -482,7 +485,7 @@ ReassignedSpectrum::convergence( long idx ) const
 	double term1 = (X_TDh * conj(X_h)).real() / norm( X_h );
 	double term2 = ((X_Th * X_Dh) / (X_h * X_h)).real();
 		  		  
-	double scaleBy = 2. * Pi / mMagnitudeTransformWindow.size();
+	double scaleBy = 2. * Pi / mCplxWin_W_Wtd.size();
 
     double bw = fabs( 1.0 + (scaleBy * (term1 - term2)) );
     bw = min( 1.0, bw );
@@ -527,6 +530,10 @@ struct make_complex
 //	applyFreqRamp
 // ---------------------------------------------------------------------------
 //	Adapted from the FrequencyReassignment constructor in Lemur 5.
+//  
+//  This function computes an estimate of the time derivative of the 
+//  specified window function, scaled by N/2pi, appropriate for computing
+//  frequency reassignment.
 //
 static inline void applyFreqRamp( vector< double > & w  )
 {
@@ -596,23 +603,36 @@ static inline void applyTimeRamp( vector< double > & w )
 }
 
 // ---------------------------------------------------------------------------
-//	buildReassignmentWindow
+//	buildReassignmentWindows (private)
 // ---------------------------------------------------------------------------
-//	Build a complex-valued window with the frequency-ramp window in
-//	the real part and the time-ramp window in the imagnary part.
+//	Build a pair of complex-valued windows, one having the frequency-ramp 
+//  (time-derivative) window in the real part and the time-ramp window in the 
+//  imagnary part, and the other having the unmodified window in the real part
+//  and, if computing mixed deriviatives, the time-ramp time-derivative window
+//  in the imaginary part.
 //
-template < typename RealWinIter, typename CplxWinIter >
-static void 
-buildReassignmentWindows( RealWinIter winbegin, RealWinIter winend, 
-						  CplxWinIter rawinbegin, CplxWinIter raw2inbegin )
+//  Input is the unmodified window function.
+//
+void 
+ReassignedSpectrum::buildReassignmentWindows( const std::vector< double > & window )
 {
-	std::vector< double > tramp( winbegin, winend );
+    mWindow.resize( window.size(), 0. );
+	
+    // Scale the window so that the reported magnitudes
+	// are correct.
+	double winsum = std::accumulate( window.begin(), window.end(), 0. );    
+    std::transform( window.begin(), window.end(), mWindow.begin(), 
+			        std::bind1st( std::multiplies<double>(), 2/winsum ) );                    
+    
+
+    //  Construct the ramped windows from the scaled window.
+	std::vector< double > tramp = mWindow;
 	applyTimeRamp( tramp );
 	
-	std::vector< double > framp( winbegin, winend );
+	std::vector< double > framp = mWindow;
 	applyFreqRamp( framp );
 
-	std::vector< double > tframp( framp.size(), 0. );
+	std::vector< double > tframp( mWindow.size(), 0. );
 	
 #if defined(COMPUTE_MIXED_PHASE_DERIVATIVE)
 
@@ -624,11 +644,81 @@ buildReassignmentWindows( RealWinIter winbegin, RealWinIter winend,
 	
 #endif
 
+    //  Copy the windows into real and imaginary parts of 
+    //  complex window vectors.
+    mCplxWin_W_Wtd.resize( mWindow.size(), 0. );
+    mCplxWin_Wd_Wt.resize( mWindow.size(), 0. );
+
 	std::transform( framp.begin(), framp.end(), tramp.begin(),
-					raw2inbegin, make_complex< double >() );	
+					mCplxWin_Wd_Wt.begin(), make_complex< double >() );	
     
-	std::transform( winbegin, winend, tframp.begin(),
-					rawinbegin, make_complex< double >() );	
+	std::transform( mWindow.begin(), mWindow.end(), tframp.begin(),
+					mCplxWin_W_Wtd.begin(), make_complex< double >() );	
 }
+
+// ---------------------------------------------------------------------------
+//	buildReassignmentWindows
+// ---------------------------------------------------------------------------
+//	Build a pair of complex-valued windows, one having the frequency-ramp 
+//  (time-derivative) window in the real part and the time-ramp window in the 
+//  imagnary part, and the other having the unmodified window in the real part
+//  and, if computing mixed deriviatives, the time-ramp time-derivative window
+//  in the imaginary part.
+//
+//  Input is the unmodified window function and its time derivative, so the
+//  DFT kludge is unnecessary.
+//
+
+void 
+ReassignedSpectrum::buildReassignmentWindows( const std::vector< double > & window,
+                                              const std::vector< double > & windowDerivative )  
+{
+
+    mWindow.resize( window.size(), 0. );
+	
+    // Scale the windows so that the reported magnitudes
+	// are correct.
+	double winsum = std::accumulate( window.begin(), window.end(), 0. );    
+    std::transform( window.begin(), window.end(), mWindow.begin(), 
+			        std::bind1st( std::multiplies<double>(), 2/winsum ) ); 
+                    
+                        
+    //  The fancy frequency reassignment window needs to scale the
+    //  time derivative window by N (its length) / 2pi, in addition
+    //  to scaling by 2/winsum to match the amplitude scaling above.
+    const double fancyScale = windowDerivative.size() / ( winsum * Pi );
+	std::vector< double > framp( windowDerivative.size(), 0 );
+	std::transform( windowDerivative.begin(), windowDerivative.end(), framp.begin(), 
+			        std::bind1st( std::multiplies<double>(), fancyScale ) );
+                    
+
+    //  Construct the ramped windows from the scaled window.
+	std::vector< double > tramp = mWindow;
+	applyTimeRamp( tramp );
+	
+	std::vector< double > tframp( mWindow.size(), 0. );	
+	
+#if defined(COMPUTE_MIXED_PHASE_DERIVATIVE)
+
+    //  Do this only if we are computing the mixed 
+    //  partial derivative of phase, otherwise, leave
+    //  that vector empty.
+	tframp = framp;
+	applyTimeRamp( tframp );
+	
+#endif
+
+    //  Copy the windows into real and imaginary parts of 
+    //  complex window vectors.
+    mCplxWin_W_Wtd.resize( mWindow.size(), 0. );
+    mCplxWin_Wd_Wt.resize( mWindow.size(), 0. );
+
+	std::transform( framp.begin(), framp.end(), tramp.begin(),
+					mCplxWin_Wd_Wt.begin(), make_complex< double >() );	
+    
+	std::transform( mWindow.begin(), mWindow.end(), tframp.begin(),
+					mCplxWin_W_Wtd.begin(), make_complex< double >() );	
+}
+
 
 }	//	end of namespace Loris

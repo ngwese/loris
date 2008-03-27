@@ -531,6 +531,7 @@ private:
                                 //!  the main lobe width more explicitly highlights
                                 //!  the critical interaction with resolution
     
+    // std::auto_ptr< Envelope > m_freqFloorEnv; 
     double m_freqFloor;         //!  lowest frequency (Hz) component extracted
                                 //!  in spectral analysis
     
