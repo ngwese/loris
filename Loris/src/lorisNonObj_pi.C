@@ -271,13 +271,18 @@ createF0Estimate( PartialList * partials, double minFreq, double maxFreq,
 	try 
 	{
 		ThrowIfNull((PartialList *) partials);
-		
-		//	use auto_ptr to manage memory in case 
-		//	an exception is generated (hard to imagine):
-      Fundamental estimator( partials->begin(), partials->end(), minFreq, maxFreq );
-      LinearEnvelope * env_ptr = 
-         new LinearEnvelope( estimator.constructEnvelope( interval ) );
-		
+
+        FundamentalFromPartials est( 0.1 /* precision in Hz */ );
+        
+        std::pair< double, double > span = 
+            PartialUtils::timeSpan( partials->begin(), partials->end() );
+            
+        LinearEnvelope * env_ptr = 
+         new LinearEnvelope( est.buildEnvelope( partials->begin(), 
+                                                partials->end(), 
+                                                span.first, span.second, interval,
+                                                minFreq, maxFreq,
+                                                0.9 /* confidence */ ) );                                            
 		return env_ptr;
 	}
 	catch( Exception & ex ) 
