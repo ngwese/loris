@@ -3,7 +3,7 @@
  * manipulation, and synthesis of digitized sounds using the Reassigned 
  * Bandwidth-Enhanced Additive Sound Model.
  *
- * Loris is Copyright (c) 1999-2007 by Kelly Fitz and Lippold Haken
+ * Loris is Copyright (c) 1999-2008 by Kelly Fitz and Lippold Haken
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,11 +22,12 @@
  *
  * Fundamental.C
  *
- * Implementation of class Fundamenal for computing an estimate of 
- * fundamental frequency from a sequence of Partials using a 
- * maximum likelihood algorithm.
+ * Definition of classes for computing an estimate of time-varying
+ * fundamental frequency from either a sequence of samples or a
+ * collection of Partials using a frequency domain maximum likelihood 
+ * algorithm adapted from Quatieri's speech signal processing textbook. 
  *
- * Kelly Fitz, 10 June 2004
+ * Kelly Fitz, 25 March 2008
  * loris@cerlsoundgroup.org
  *
  * http://www.cerlsoundgroup.org/Loris/
@@ -39,20 +40,21 @@
 
 #include "Fundamental.h"
 
-#include "Breakpoint.h"
-#include "Collator.h"
 #include "LorisExceptions.h"
+#include "KaiserWindow.h"
 #include "LinearEnvelope.h"
-#include "Partial.h"
-#include "PartialList.h"
+#include "Notifier.h"
 #include "PartialUtils.h"
-#include "F0estimate.h"
+#include "ReassignedSpectrum.h"
+#include "SpectralPeakSelector.h"
 
+#include "F0Estimate.h" 
+
+#include <algorithm>
 #include <cmath>
-#include <utility>
-
 #include <vector>
-using std::vector;
+
+using namespace std;
 
 #if defined(HAVE_M_PI) && (HAVE_M_PI)
 	const double Pi = M_PI;
@@ -63,252 +65,607 @@ using std::vector;
 //	begin namespace
 namespace Loris {
 
-//	forward declarations for helper, defined below:
-static void 
-collect_ampsNfreqs( PartialList::const_iterator begin, 
-					PartialList::const_iterator end,  
-					double t,
-					vector<double> & amps, 
-					vector<double> & freqs,
-					double threshold );
 
-//	default parameters:
-const double Fundamental::DefaultThreshold = -60;
-const double Fundamental::DefaultResolution = .1;
 
-//  HEY need to make this a parameter
-const double MinConfidence = 0.9;   //  require at least 90% confidence
+#define VERIFY_ARG(func, test)											\
+	do {																\
+		if (!(test)) 													\
+			Throw( Loris::InvalidArgument, #func ": " #test  );			\
+	} while (false)
 
 
 // ---------------------------------------------------------------------------
-//	setAmpThreshold
 // ---------------------------------------------------------------------------
-//	Set the minimum Partial amplitude in dB (relative to a full amplitude
-//	sine wave), quieter Partials are ignored when estimating the fundamental.
-//
-void 
-Fundamental::setAmpThreshold( double x )
+//  FundamentalEstimator members
+// ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+
+
+//  -- lifecycle --
+
+// ---------------------------------------------------------------------------
+//  constructor (protected)
+// ---------------------------------------------------------------------------
+//! Construct a new estimator with specified precision and
+//! other parameters given default values.
+//!
+//! The specified precision is used to terminate the iterative
+//! estimation procedure. 
+//!
+//! \param precisionHz is the precision in Hz with which the 
+//! fundamental estimates will be made.
+
+FundamentalEstimator::FundamentalEstimator( double precisionHz ) :
+    m_precision( precisionHz ),
+    m_ampFloor( DefaultAmpFloor ),
+    m_ampRange( DefaultAmpRange ),
+    m_freqCeiling( DefaultFreqCeiling )
 {
-	if ( x > 0 )
-	{
-		Throw( InvalidArgument, "amplitude threshold must be expressed in (negative) "
-							   "dB relative to a full amplitude sine wave" );
-	}
-	ampThreshold_ = x;
+	VERIFY_ARG( FundamentalEstimator, precisionHz > 0 );
 }
-	
-// ---------------------------------------------------------------------------
-//	setFreqResolution
-// ---------------------------------------------------------------------------
-//	Set the resolution of the fundamental frequency estimates. 
-//	Estimates of fundamental frequency are computed iteratively until within 
-//	this many Hz of the local most likely value.
-//
-void 
-Fundamental::setFreqResolution( double x )
-{
-	if ( x <= 0 )
-	{
-		Throw( InvalidArgument, "frequency resolution (Hz) must be positiive" );
-	}
-	freqResolution_ = x;
-}
-	
 
 // ---------------------------------------------------------------------------
-//	estimateAt
+//  destructor
 // ---------------------------------------------------------------------------
-//	Return the estimate of the fundamental frequency
-//	at the specified time. Throws InvalidArgument if
-//	there are no Partials having sufficient energy to
-//	contribute to an estimate of the fundamental frequency
-//	at the specified time. Throws InvalidObject if no likely 
-//	estimate is found in the frequency range (freqMin_, freqMax_). 
-//	
-//	Smoothing of these estimates is not necessary or productive,
-//	because, like the Partial parameters from which they are
-//	derived, they are pretty slowly-varying.
+    
+FundamentalEstimator::~FundamentalEstimator( void )
+{
+}
+
+//  -- spectral analysis parameter access --
+
+// ---------------------------------------------------------------------------
+//	ampFloor
+// ---------------------------------------------------------------------------
+//! Return the absolute amplitude threshold in (negative) dB, 
+//! below which spectral peaks will not be considered in the 
+//! estimation of the fundamental (default is 30 dB).            
+double 
+FundamentalEstimator::ampFloor( void ) const
+{ 
+    return m_ampFloor; 
+}
+
+// ---------------------------------------------------------------------------
+//	ampRange
+// ---------------------------------------------------------------------------
+//!	Return the amplitude range in dB, 
+//! relative to strongest peak in a frame, floating
+//! amplitude threshold below which spectral
+//! peaks will not be considered in the estimation of 
+//! the fundamental (default is 30 dB).			
 //
 double 
-Fundamental::estimateAt( double time ) const
-{
-    //	collect the Partial amplitudes and
-    //	frequencies at `time':
-    vector<double> amps, freqs;
-    collect_ampsNfreqs( partials_.begin(), partials_.end(), time, 
-                        amps, freqs, ampThreshold_ );
+FundamentalEstimator::ampRange( void ) const 
+{ 
+    return m_ampRange; 
+}
 
-    if ( amps.empty() )
+// ---------------------------------------------------------------------------
+//	freqCeiling
+// ---------------------------------------------------------------------------
+//!	Return the frequency ceiling in Hz, the
+//! frequency threshold above which spectral
+//! peaks will not be considered in the estimation of 
+//! the fundamental (default is 10 kHz).			
+//
+double 
+FundamentalEstimator::freqCeiling( void ) const 
+{ 
+    return m_freqCeiling; 
+}
+
+// ---------------------------------------------------------------------------
+//	precision
+// ---------------------------------------------------------------------------
+//!	Return the precision of the estimate in Hz, the
+//! fundamental frequency will be estimated to 
+//! within this range (default is 0.1 Hz).
+//
+double 
+FundamentalEstimator::precision( void ) const 
+{ 
+    return m_precision; 
+}
+
+                       
+//  -- spectral analysis parameter mutation --
+
+// ---------------------------------------------------------------------------
+//	setAmpFloor
+// ---------------------------------------------------------------------------
+//! Set the absolute amplitude threshold in (negative) dB, 
+//! below which spectral peaks will not be considered in the 
+//! estimation of the fundamental (default is 30 dB).            
+//! 
+//! \param x is the new value of this parameter.            
+void 
+FundamentalEstimator::setAmpFloor( double x )
+{ 
+	VERIFY_ARG( setAmpFloor, x < 0 );
+    m_ampFloor = x; 
+}
+
+// ---------------------------------------------------------------------------
+//	setAmpRange
+// ---------------------------------------------------------------------------
+//!	Set the amplitude range in dB, 
+//! relative to strongest peak in a frame, floating
+//! amplitude threshold (negative) below which spectral
+//! peaks will not be considered in the estimation of 
+//! the fundamental (default is 30 dB).	
+//!	
+//!	\param x is the new value of this parameter. 				
+//
+void 
+FundamentalEstimator::setAmpRange( double x ) 
+{ 
+	VERIFY_ARG( setAmpRange, x > 0 );
+    m_ampRange = x; 
+}
+
+// ---------------------------------------------------------------------------
+//	setFreqCeiling
+// ---------------------------------------------------------------------------
+//!	Set the frequency ceiling in Hz, the
+//! frequency threshold above which spectral
+//! peaks will not be considered in the estimation of 
+//! the fundamental (default is 10 kHz). Must be
+//! greater than the lower bound.
+//!	
+//!	\param x is the new value of this parameter. 				
+//
+void 
+FundamentalEstimator::setFreqCeiling( double x ) 
+{ 
+    m_freqCeiling = x; 
+}
+
+// ---------------------------------------------------------------------------
+//	setPrecision
+// ---------------------------------------------------------------------------
+//!	Set the precision of the estimate in Hz, the
+//! fundamental frequency will be estimated to 
+//! within this range (default is 0.1 Hz).
+//!	
+//!	\param x is the new value of this parameter. 				
+//
+void 
+FundamentalEstimator::setPrecision( double x ) 
+{ 
+	VERIFY_ARG( setPrecision, x > 0 );
+    m_precision = x; 
+}
+
+
+// ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+//  FundamentalFromSamples members
+// ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+
+//  -- lifecycle --
+
+// ---------------------------------------------------------------------------
+//  constructor
+// ---------------------------------------------------------------------------
+//! Construct a new estimator configured with the given  
+//! analysis window width (main lobe, zero-to-zero). All other 
+//! spectrum analysis parameters are computed from the specified 
+//! window width. 
+//!
+//! The specified precision is used to terminate the iterative
+//! estimation procedure. If unspecified, the default value,
+//! DefaultPrecisionOver100 * 100 is used. 
+//! 
+//! \param windowWidthHz is the main lobe width of the Kaiser
+//! analysis window in Hz.
+//!
+//! \param precisionHz is the precision in Hz with which the 
+//! fundamental estimates will be made.
+
+FundamentalFromSamples::FundamentalFromSamples( double winWidthHz, 
+                                                double precisionHz ) :
+    m_cacheSampleRate( 0 ),
+    m_windowWidth( winWidthHz ), 
+    FundamentalEstimator( precisionHz )
+{
+	VERIFY_ARG( FundamentalFromSamples, winWidthHz > 0 );
+}
+
+// ---------------------------------------------------------------------------
+//  destructor
+// ---------------------------------------------------------------------------
+    
+FundamentalFromSamples::~FundamentalFromSamples( void )
+{
+}
+
+//  -- fundamental frequency estimation --
+
+
+
+// ---------------------------------------------------------------------------
+//  buildEnvelope
+// ---------------------------------------------------------------------------
+//! Construct a linear envelope from fundamental frequency 
+//! estimates taken at the specified interval in seconds.
+//! 
+
+LinearEnvelope 
+FundamentalFromSamples::buildEnvelope( const double * sampsBeg, 
+                                       const double * sampsEnd, 
+                                       double sampleRate, 
+                                       double tbeg, double tend, 
+                                       double interval,
+                                       double lowerFreqBound, double upperFreqBound, 
+                                       double confidenceThreshold )
+{
+    //  sanity check
+    if ( tbeg > tend )
     {
-        Throw( InvalidArgument, "No partials have significant energy at the "
-                                "specified time." );
+        std::swap( tbeg, tend );
     }
 
-    F0estimate est( amps, freqs, freqMin_, freqMax_, freqResolution_ );
+    LinearEnvelope env;
+    
+    std::vector< double > amplitudes, frequencies;
 
-    if ( est.confidence() < MinConfidence ||
-         est.frequency() <= freqMin_ || est.frequency() >= freqMax_ )
+    double time = tbeg;
+    while ( time < tend )
     {
-        Throw( InvalidObject, "Cannot construct a reliable estimate "
-                              "on the specified range of frequencies." );
-    }	
+        collectFreqsAndAmps( sampsBeg, sampsEnd-sampsBeg, sampleRate,
+                             frequencies, amplitudes, time );
+                             
+        F0Estimate est( amplitudes, frequencies, lowerFreqBound, upperFreqBound, 
+                        m_precision );
+    
+        if ( est.confidence() >= confidenceThreshold )
+        {   
+            env.insert( time, est.frequency() );
+        }
 
-    return est.frequency();
-}
- 
+        time += interval;
+    }
+    
+    return env;            
+}                                       
+                             
+                             
 // ---------------------------------------------------------------------------
-//	constructEnvelope
+//  estimateAt
 // ---------------------------------------------------------------------------
-//	Return a LinearEnvelope that evaluates to a linear
-//	envelope approximation to the fundamental frequency 
-//	estimate sampled at regular intervals. interval is the
-//	sampling interval in seconds. Throws InvalidArgument
-//	if no Partials have sufficient energy to contribute
-//	to an estimate of the fundamental frequency at any 
-//	time in the range [t1,t2]. Throws InvalidObject if 
-//	no likely estimate is found in the frequency range 
-//	(freqMin_, freqMax_).
-//
-LinearEnvelope 
-Fundamental::constructEnvelope( double interval ) const
+//! Return an estimate of the fundamental frequency computed 
+//! at the specified time. 
+
+FundamentalFromSamples::value_type 
+FundamentalFromSamples::estimateAt( const double * sampsBeg, 
+                                    const double * sampsEnd, 
+                                    double sampleRate, 
+                                    double time,
+                                    double lowerFreqBound, double upperFreqBound )
 {
-	std::pair< double, double > span =
-		PartialUtils::timeSpan( partials_.begin(), partials_.end() );
-	return constructEnvelope( span.first, span.second, interval );
+    std::vector< double > amplitudes, frequencies;
+    
+    collectFreqsAndAmps( sampsBeg, sampsEnd-sampsEnd, sampleRate,
+                         frequencies, amplitudes, time );
+                         
+    F0Estimate est( amplitudes, frequencies, lowerFreqBound, upperFreqBound, m_precision );
+
+    return est;
+}                                    
+
+//  -- spectral analysis parameter access/mutation --
+
+// ---------------------------------------------------------------------------
+//  windowWidth
+// ---------------------------------------------------------------------------
+//! Return the frequency-domain main lobe width (in Hz) (measured between 
+//! zero-crossings) of the analysis window used in spectral
+//! analysis.               
+double FundamentalFromSamples::windowWidth( void ) const
+{
+    return m_windowWidth;
 }
 
 // ---------------------------------------------------------------------------
-//	constructEnvelope
+//  setWindowWidth
 // ---------------------------------------------------------------------------
-//	Return a LinearEnvelope that evaluates to a linear
-//	envelope approximation to the fundamental frequency 
-//	estimate sampled at regular intervals. Consider only
-//	the time between t1 and t2. interval is the
-//	sampling interval in seconds. Throws InvalidArgument
-//	if no Partials have sufficient energy to contribute
-//	to an estimate of the fundamental frequency at any 
-//	time in the range [t1,t2]. Throws InvalidObject if 
-//	no likely estimate is found in the frequency range 
-//	(freqMin_, freqMax_).
-//
-LinearEnvelope 
-Fundamental::constructEnvelope( double t1, double t2, double interval ) const
+//! Set the frequency-domain main lobe width (in Hz) (measured between 
+//! zero-crossings) of the analysis window used in spectral
+//! analysis.   
+//! 
+//! \param x is the new value of this parameter.            
+void FundamentalFromSamples::setWindowWidth( double x )
 {
-	//	make t1 the starting time and t2 the ending time:
-	if ( t1 > t2 )
-	{
-		std::swap( t1, t2 );
-	}
+	VERIFY_ARG( setWindowWidth, x > 0 );
+    m_windowWidth = x; 
+}
 
-	LinearEnvelope env;
-	vector<double> amps, freqs;
-	double t = t1;
-	bool found_energy = false;
-	
-	//	invariant:
-	//	t is a time on the range [t1,t2] at which the fundamental
-	//	should be estimated, env contains all previous estimates
-	//	that were deemed reliable (not boundaries), found_energy
-	//	is true if any estimate has been computed at any prioir
-	//	time, even if it was deemed unreliable, or false otherwise.
-	while ( t <=t2 )
-	{
-		//	collect the Partial amplitudes and
-		//	frequencies at time t:
-		collect_ampsNfreqs( partials_.begin(), partials_.end(), t, 
-						    amps, freqs, ampThreshold_ );
-		
-		if ( ! amps.empty() )
-		{
-			found_energy = true;
-			F0estimate est( amps, freqs, freqMin_, freqMax_, freqResolution_ );
+
+
+//  -- private auxiliary functions --
+
+// ---------------------------------------------------------------------------
+//  buildSpectrumAnalyzer
+// ---------------------------------------------------------------------------
+//! Construct the ReassignedSpectrum that will be used to perform
+//! spectral analysis from which peak frequencies and amplitudes 
+//! will be drawn. This construction is performed in a lazy fashion,
+//! and needs to be done again when certain of the parameters change.
+//!
+//! The spectrum analyzer cannot be constructed without knowledge of
+//! the sample rate, specified in Hz, which is needed to determine the
+//! parameters of the analysis window. (The sample rate is cached in
+//! this class in order that it be possible to determine whether the
+//! spectrum analyzer can be reused from one estimate to another.)
+//
+void 
+FundamentalFromSamples::buildSpectrumAnalyzer( double srate )
+{
+ 	//	configure the reassigned spectral analyzer, 
+    //	always use odd-length windows:
+    const double sidelobeLevel = - m_ampFloor; // amp floor is negative
+    double winshape = KaiserWindow::computeShape( sidelobeLevel );
+    long winlen = KaiserWindow::computeLength( m_windowWidth / srate, winshape );    
+    if ( 1 != (winlen % 2) ) 
+    {
+        ++winlen;
+    }
+    
+    std::vector< double > window( winlen );
+    KaiserWindow::buildWindow( window, winshape );
+    
+    std::vector< double > windowDeriv( winlen );
+    KaiserWindow::buildTimeDerivativeWindow( windowDeriv, winshape );
+   
+    m_spectrum.reset( new ReassignedSpectrum( window, windowDeriv ) );    
+    
+    //  remember the sample rate used to build this spectrum
+    //  analyzer:
+    m_cacheSampleRate = srate;
+}
+
+// ---------------------------------------------------------------------------
+//	sort_peaks_greater_amplitude
+// ---------------------------------------------------------------------------
+//	predicate used for sorting peaks in order of decreasing amplitude:
+static bool sort_peaks_greater_amplitude( const SpectralPeak & lhs, 
+										  const SpectralPeak & rhs )
+{ 
+	return lhs.breakpoint.amplitude() > rhs.breakpoint.amplitude(); 
+}
+
+// ---------------------------------------------------------------------------
+//  collectFreqsAndAmps
+// ---------------------------------------------------------------------------
+//! Perform spectral analysis on a sequence of samples, using
+//! an analysis window centered at the specified time in seconds.
+//! Collect the frequencies and amplitudes of the peaks and return
+//! them in the vectors provided. 
+//
+   
+void 
+FundamentalFromSamples::collectFreqsAndAmps( const double * samps,
+                                             unsigned long nsamps,
+                                             double sampleRate,
+                                             std::vector< double > & frequencies, 
+                                             std::vector< double > & amplitudes,
+                                             double time )
+{
+    amplitudes.clear();
+    frequencies.clear();
+
+    //  build the spectrum analyzer if necessary:
+    if ( m_cacheSampleRate != sampleRate ||
+         0 == m_spectrum.get() )
+    {
+        buildSpectrumAnalyzer( sampleRate );
+    }
+    
+    
+    //	configure the peak selection and partial formation policies:    
+    unsigned long winlen = m_spectrum->window().size();
+    const double maxTimeCorrection = 0.25 * winlen / sampleRate;   //  one-quarter the window width
+    SpectralPeakSelector selector( sampleRate, maxTimeCorrection );  
+ 	
+    
+     
+    //	compute reassigned spectrum:
+    //  sampsBegin is the position of the first sample to be transformed,
+    //	sampsEnd is the position after the last sample to be transformed.
+    //	(these computations work for odd length windows only)
+    unsigned long winMiddle = (unsigned long)( sampleRate * time );
+    unsigned long sampsBegin = std::max( long(winMiddle) - long(winlen / 2), 0L );
+    unsigned long sampsEnd = std::min( winMiddle + (winlen / 2) + 1, nsamps );
+    
+    if ( winMiddle < sampsEnd )
+    {
+        m_spectrum->transform( samps + sampsBegin, samps + winMiddle, samps + sampsEnd );
+                     
+        //	extract peaks from the spectrum, no fading:
+        Peaks peaks = selector.selectPeaks( *m_spectrum ); 
+       
+        //  sort the peaks in order of decreasing amplitude
+        //
+        //  (HEY is there any reason to do this, other than to find the largest?)
+        std::sort( peaks.begin(), peaks.end(), sort_peaks_greater_amplitude );
+        
+        //  determine the floating amplitude threshold
+        const double thresh = 
+            std::max( std::pow( 10.0, - 0.05 * - m_ampFloor ), 
+                      std::pow( 10.0, - 0.05 * m_ampRange ) * peaks.front().breakpoint.amplitude() );
+                    
+        //  collect amplitudes and frequencies and try to 
+        //  estimate the fundamental
+        for ( Peaks::const_iterator spkpos = peaks.begin(); spkpos != peaks.end(); ++spkpos )
+        {
+            if ( spkpos->breakpoint.amplitude() > thresh &&
+                 spkpos->breakpoint.frequency() < m_freqCeiling )
+            {
+                amplitudes.push_back( spkpos->breakpoint.amplitude() );
+                frequencies.push_back( spkpos->breakpoint.frequency() );
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+//  FundamentalFromPartials members
+// ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+//  constructor
+// ---------------------------------------------------------------------------
+//! Construct a new estimator configured with the given precision.
+//! The specified precision is used to terminate the iterative
+//! estimation procedure. If unspecified, the default value,
+//! DefaultPrecisionOver100 * 100 is used. 
+//!
+//! \param precisionHz is the precision in Hz with which the 
+//! fundamental estimates will be made.
+
+FundamentalFromPartials::FundamentalFromPartials( double precisionHz ) :
+    FundamentalEstimator( precisionHz )
+{
+}
+
+// ---------------------------------------------------------------------------
+//  destructor
+// ---------------------------------------------------------------------------
+    
+FundamentalFromPartials::~FundamentalFromPartials( void )
+{
+}
+
+//  -- fundamental frequency estimation --
+
+// ---------------------------------------------------------------------------
+//  buildEnvelope
+// ---------------------------------------------------------------------------
+//! Construct a linear envelope from fundamental frequency 
+//! estimates taken at the specified interval in seconds.
+//! 
+
+LinearEnvelope 
+FundamentalFromPartials::buildEnvelope( PartialList::const_iterator begin_partials, 
+                                        PartialList::const_iterator end_partials,
+                                        double tbeg, double tend, 
+                                        double interval,
+                                        double lowerFreqBound, double upperFreqBound, 
+                                        double confidenceThreshold )
+{
+    //  sanity check
+    if ( tbeg > tend )
+    {
+        std::swap( tbeg, tend );
+    }
+
+    LinearEnvelope env;
+    
+    std::vector< double > amplitudes, frequencies;
+
+    double time = tbeg;
+    while ( time < tend )
+    {
+        collectFreqsAndAmps( begin_partials, end_partials, frequencies, amplitudes, time );
+                             
+        F0Estimate est( amplitudes, frequencies, lowerFreqBound, upperFreqBound, 
+                        m_precision );
+    
+        if ( est.confidence() >= confidenceThreshold )
+        {   
+            env.insert( time, est.frequency() );
+        }
+
+        time += interval;
+    }
+    
+    return env;            
+}                         
+
+// ---------------------------------------------------------------------------
+//  estimateAt
+// ---------------------------------------------------------------------------
+//! Return an estimate of the fundamental frequency computed 
+//! at the specified time. 
+
+FundamentalFromPartials::value_type 
+FundamentalFromPartials::estimateAt( PartialList::const_iterator begin_partials, 
+                                     PartialList::const_iterator end_partials,
+                                     double time,
+                                     double lowerFreqBound, double upperFreqBound )
+{
+    std::vector< double > amplitudes, frequencies;
+    
+    collectFreqsAndAmps( begin_partials, end_partials, frequencies, amplitudes, time );
+                         
+    F0Estimate est( amplitudes, frequencies, lowerFreqBound, upperFreqBound, m_precision );
+
+    return est;
+}  
+
+
+//  -- private auxiliary functions --
+
+// ---------------------------------------------------------------------------
+//  collectFreqsAndAmps
+// ---------------------------------------------------------------------------
+//! Perform spectral analysis on a sequence of samples, using
+//! an analysis window centered at the specified time in seconds.
+//! Collect the frequencies and amplitudes of the peaks and return
+//! them in the vectors provided. 
+//
+   
+void 
+FundamentalFromPartials::collectFreqsAndAmps( PartialList::const_iterator begin_partials, 
+                                              PartialList::const_iterator end_partials,
+                                              std::vector< double > & frequencies, 
+                                              std::vector< double > & amplitudes,
+                                              double time )
+{
+    amplitudes.clear();
+    frequencies.clear();
+    
+    if ( begin_partials != end_partials )
+    {
+        //  determine the largest amplitude
+        PartialList::const_iterator it = begin_partials;
+        
+        //  compute the sinusoidal amplitude (without bandwidth energy)
+        //  with a 5 ms fade time
+        double max_amp = std::sqrt(1 - it->bandwidthAt( time )) * it->amplitudeAt( time, 0.005 );        
+        
+        while( ++it != end_partials )
+        {
+            double a = std::sqrt(1 - it->bandwidthAt( time )) * it->amplitudeAt( time, 0.005 );        
+            max_amp = std::max( a, max_amp );                        
+        }
+
+        //  determine the floating amplitude threshold
+        const double thresh = 
+            std::max( std::pow( 10.0, - 0.05 * - m_ampFloor ), 
+                      std::pow( 10.0, - 0.05 * m_ampRange ) * max_amp );
+        
+        
+        for ( it = begin_partials; it != end_partials; ++it )
+        {
+            //  compute the sinusoidal amplitude (without bandwidth energy)
+            //  with a 5 ms fade time
+            double sine_amp = std::sqrt(1 - it->bandwidthAt( time )) * it->amplitudeAt( time, 0.005 );        
+            double freq = it->frequencyAt( time );
             
-			//	reject boundary frequencies
-			if ( est.confidence() >= MinConfidence &&
-                 est.frequency() > freqMin_ && est.frequency() < freqMax_ )
-			{
-				env.insertBreakpoint( t, est.frequency() );
-			}
-		}
-		
-		t += interval;		
-	}
-	
-	if ( ! found_energy )
-	{
-		Throw( InvalidObject, "No Partials have sufficient energy to "
-							  "estimate the fundamental." );
-	}
-	else if ( env.size() == 0 )
-	{
-		Throw( InvalidObject, "Cannot construct a reliable estimate "
-                              "on the specified range of frequencies." );
-	}
-	
-	//	apply a smoothing filter to the fundamental estimates:
-	//	median_filter( env.begin(), env.end(), SmoothingNPts );
-	//
-	//	no reason to do this, the estimates, like the Partial
-	//	parameters from which they are derived, are slowly-varying.
-	
-	return env;
+            if ( sine_amp > thresh &&
+                 freq < m_freqCeiling )
+            {
+                amplitudes.push_back( sine_amp );
+                frequencies.push_back( freq );
+            }
+        }
+    }
+    
 }
 
-// ---------------------------------------------------------------------------
-//	preparePartials
-// ---------------------------------------------------------------------------
-//	Private helper to reduce the Partials in order to speed up the 
-//	estimation process.
-//
-void
-Fundamental::preparePartials( void )
-{
-	//	remove all labels first, only want to collate the Partials:
-	PartialList::iterator it;
-	for ( it = partials_.begin(); it != partials_.end(); ++it )
-	{
-		it->setLabel( 0 );
-	}
-	
-	//	collate the partials
-	Collator coll;
-	coll.collate( partials_ );
-}				   
-
-// ---------------------------------------------------------------------------
-// ---------- helper for new fundamental estimation method ------------------
-// ---------------------------------------------------------------------------
-//	collect_ampsNfreqs
-//
-//	Collect the amplitudes and frequnecies of all
-//	Partials having sufficient amplitude at time t.
-//
-static void 
-collect_ampsNfreqs( PartialList::const_iterator begin, 
-					PartialList::const_iterator end, 
-					double t,
-					vector<double> & amps, 
-					vector<double> & freqs,
-					double threshold )
-{
-	//	only consider Partials having amplitude above 
-	//	a certain threshold (-60 dB?):
-	const double absThreshold = std::pow( 10.0, threshold*.05 );
-	
-	amps.clear();
-	freqs.clear();
-	
-	PartialList::const_iterator it;
-	for ( it = begin; it != end; ++it )
-	{
-		double a = it->amplitudeAt(t);
-		if ( a > absThreshold )
-		{
-			double sine_amp = std::sqrt(1 - it->bandwidthAt(t)) * a;
-			amps.push_back( sine_amp );
-			freqs.push_back( it->frequencyAt(t) );
-		}
-	}
-}
-
-}	//	end of namespace Loris
+}   //  end of namespace Loris

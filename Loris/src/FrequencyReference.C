@@ -99,29 +99,15 @@ FrequencyReference::FrequencyReference( PartialList::const_iterator begin,
 	debugger << minFreq << " to " << maxFreq << " Hz, from " <<
 	debugger << std::distance(begin,end) << " Partials" << std::endl;
 #endif
-    /*
-	//	find the longest Partial in the specified frequency range:
-	PartialList::const_iterator longest  = 
-		findLongestPartialInFreqRange( begin, end, minFreq, maxFreq );
-		
-	if ( longest == end )
-		Throw( InvalidArgument, "No Partials attain their maximum sinusoidal energy within the specified frequency range." );
+
 	
-	//	build the Envelope by sampling the longest Partial's frequency
-	//	envelope numSamps times:
-	double dt = longest->duration() / ( numSamps + 1 );
-	for ( long i = 0; i < numSamps; ++i ) 
-	{
-		double t = longest->startTime() + ((i+1) * dt);
-		double f = longest->frequencyAt(t);
-		_env->insertBreakpoint( t, f );
-	}
-	*/
-	
-	Fundamental est( begin, end, minFreq, maxFreq );
+	FundamentalFromPartials est( 0.1 /* precision in Hz */ );
 	std::pair< double, double > span = PartialUtils::timeSpan( begin, end );
 	double dt = ( span.second - span.first ) / ( numSamps + 1 );
-	*_env = est.constructEnvelope( span.first, span.second, dt );
+	*_env = est.buildEnvelope( begin, end, 
+                               span.first, span.second, dt,
+                               minFreq, maxFreq,
+                               0.9 /* confidence */ );
 }
 
 // ---------------------------------------------------------------------------
@@ -156,27 +142,15 @@ FrequencyReference::FrequencyReference( PartialList::const_iterator begin,
 	debugger << minFreq << " to " << maxFreq << " Hz, from " <<
 	debugger << std::distance(begin,end) << " Partials" << std::endl;
 #endif
-
-	/*
-	//	find the longest Partial in the specified frequency range:
-	PartialList::const_iterator longest  = 
-		findLongestPartialInFreqRange( begin, end, minFreq, maxFreq );
-		
-	if ( longest == end )
-		Throw( InvalidArgument, "No Partials attain their maximum sinusoidal energy within the specified frequency range." );
-
-	//	build the Envelope by sampling the longest Partial's frequency
-	//	envelope at each Breakpoint:
-	for ( Partial::const_iterator it = longest->begin(); it != longest->end(); ++it )
-	{
-		_env->insertBreakpoint( it.time(), it.breakpoint().frequency() );
-	}
-	*/
-	
-	Fundamental est( begin, end, minFreq, maxFreq );
+    
+	FundamentalFromPartials est( 0.1 /* precision in Hz */ );
 	std::pair< double, double > span = PartialUtils::timeSpan( begin, end );
 	double interval = 0.005;
-	*_env = est.constructEnvelope( span.first, span.second, interval );
+	*_env = est.buildEnvelope( begin, end, 
+                               span.first, span.second, interval,
+                               minFreq, maxFreq,
+                               0.9 /* confidence */ );
+    
 }
 
 // ---------------------------------------------------------------------------
