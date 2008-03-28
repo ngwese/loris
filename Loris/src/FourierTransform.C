@@ -22,11 +22,13 @@
  *
  * FourierTransform.C
  *
- * Implementation of class Loris::FourierTransform. Several different 
- * implementations are supported, including FFTW and FFTW3, if available,
- * and a fallback platform neutral implementation by Ooura.
+ * Implementation of class Loris::FourierTransform, providing a simplified
+ * uniform interface to the FFTW library (www.fftw.org), version 2.1.3
+ * or newer (including version 3), or to the General Purpose FFT package
+ * by Takuya OOURA, http://momonga.t.u-tokyo.ac.jp/~ooura/fft.html if
+ * FFTW is unavailable. 
  *
- * Kelly Fitz, 14 Feb 2000
+ * Kelly Fitz, 2 Jun 2006
  * loris@cerlsoundgroup.org
  *
  * http://www.cerlsoundgroup.org/Loris/
@@ -321,6 +323,8 @@ public:
 
 #else
 
+#define SORRY_NO_FFTW  1
+
 //  function prototype, definition in fftsg.c
 extern "C" void cdft(int, int, double *, int *, double *);
 
@@ -557,16 +561,23 @@ FourierTransform::transform( void )
 	_impl->copyOutput( &_buffer.front() );
 }
 
+
+// --- slow non-power-of-two DFT implementation ---
+
+#if defined(SORRY_NO_FFTW) 
+
 // ---------------------------------------------------------------------------
 //	slowDFT
 // ---------------------------------------------------------------------------
 //  Non-power-of-two DFT implementation. in and out cannot be the same,
 //  and each is 2*N long, storing interleaved complex numbers.
+//  This version is only used when FFTW is unavailable.
 //
 static
 void slowDFT( double * in, double * out, int N )
 {
-#if 1 // slow DFT 
+#if 1 
+      // slow DFT 
       // This version of the direct DFT computation is tolerably
       // speedy, even for rather long transforms (like 8k).
       // There is only one expensive call to std::polar, and
@@ -594,7 +605,8 @@ void slowDFT( double * in, double * out, int N )
         Wn *= eminj2pioN;
     }
 
-#else // very, very slow
+#else 
+      // very, very slow
       // This version of the direct DFT computation is slightly
       // more accurate, increasingly so for longer transforms, 
       // but it is so much slower (4-5x) that the small improvement
@@ -621,5 +633,7 @@ void slowDFT( double * in, double * out, int N )
     
 #endif    
 }
+
+#endif  //  defined(SORRY_NO_FFTW)
 
 }	//	end of namespace Loris
