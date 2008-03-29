@@ -546,7 +546,7 @@ private:
                                 //!  component to be considered reliable, and to be eligible
                                 //!  for extraction and for Breakpoint formation
     
-    double m_bwRegionWidth;     //!  formerly, width in Hz of overlapping bandwidth 
+    double m_bwAssocParam;      //!  formerly, width in Hz of overlapping bandwidth 
                                 //!  association regions, or zero if bandwidth association
                                 //!  is disabled, now a catch-all bandwidth association
                                 //!  parameter that, if negative, indicates the tolerance (%)

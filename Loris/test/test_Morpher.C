@@ -165,7 +165,7 @@ static Partial makep2( void )
 int main( )
 {
     std::cout << "Unit test for Morpher class." << endl;
-    std::cout << "Relies on Partial, Breakpoint, and BreakpointEnvelope." << endl << endl;
+    std::cout << "Relies on Partial, Breakpoint, and LinearEnvelope." << endl << endl;
     std::cout << "Built: " << __DATE__ << endl << endl;
 
 

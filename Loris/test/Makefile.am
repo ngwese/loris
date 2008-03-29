@@ -48,6 +48,10 @@ test_aiff_LDADD = $(top_builddir)/src/libloris.la
 test_identity_SOURCES = test_Identity.C
 test_identity_LDADD = $(top_builddir)/src/libloris.la
 
+# fundamental frequency estimation tests
+test_fundamental_SOURCES = test_Fundamental.C
+test_fundamental_LDADD = $(top_builddir)/src/libloris.la
+
 ####
 # PROBLEM
 # Under Darwin, at least, the loris dynamic library in 
@@ -82,7 +86,7 @@ $(PYTHON_TEST):
 endif
 
 check_PROGRAMS = test_cpp test_pi test_aiff test_partial test_distiller \
-                 test_sdiffile test_morpher test_identity
+                 test_sdiffile test_morpher test_identity test_fundamental
 
 check_SCRIPTS = $(PYTHON_TEST)
 

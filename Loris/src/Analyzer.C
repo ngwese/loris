@@ -291,7 +291,7 @@ Analyzer::Analyzer( const Analyzer & other ) :
     m_freqDrift( other.m_freqDrift ),
     m_hopTime( other.m_hopTime ),
     m_cropTime( other.m_cropTime ),
-    m_bwRegionWidth( other.m_bwRegionWidth ),
+    m_bwAssocParam( other.m_bwAssocParam ),
     m_sidelobeLevel( other.m_sidelobeLevel ),
     m_phaseCorrect( other.m_phaseCorrect ),
     m_partials( other.m_partials )
@@ -321,7 +321,7 @@ Analyzer::operator=( const Analyzer & rhs )
         m_freqDrift = rhs.m_freqDrift;
         m_hopTime = rhs.m_hopTime;
         m_cropTime = rhs.m_cropTime;
-        m_bwRegionWidth = rhs.m_bwRegionWidth;
+        m_bwAssocParam = rhs.m_bwAssocParam;
         m_sidelobeLevel = rhs.m_sidelobeLevel;
         m_phaseCorrect = rhs.m_phaseCorrect;
         m_partials = rhs.m_partials;
@@ -632,7 +632,7 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
     //  configure bw association policy, unless
     //  bandwidth association is disabled:
     std::auto_ptr< AssociateBandwidth > bwAssociator;
-    if( m_bwRegionWidth > 0 )
+    if( m_bwAssocParam > 0 )
     {
         debugger << "Using bandwidth association regions of width " 
                  << bwRegionWidth() << " Hz" << endl;
@@ -679,13 +679,13 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
             //	bandwidth!!! FIX!!!!
             fixBandwidth( peaks );
             
-            if ( m_bwRegionWidth > 0 )
+            if ( m_bwAssocParam > 0 )
             {
                 bwAssociator->associateBandwidth( peaks.begin(), rejected, peaks.end() );
             }
             
-            //  remove rejected Breakpoints:
-            //	(should to this in thinPeaks)
+            //  remove rejected Breakpoints (needed above to 
+            //  compute bandwidth envelopes):
             peaks.erase( rejected, peaks.end() );
             
             //  estimate the amplitude in this frame:
@@ -1048,7 +1048,7 @@ void
 Analyzer::storeResidueBandwidth( double regionWidth ) 
 { 
     VERIFY_ARG( storeResidueBandwidth, regionWidth > 0 );
-    m_bwRegionWidth = regionWidth; 
+    m_bwAssocParam = regionWidth; 
 }   
 
 // ---------------------------------------------------------------------------
@@ -1084,7 +1084,7 @@ Analyzer::storeConvergenceBandwidth( double tolerance )
     			
 	//	store a negative value so that it can be 
 	//	identified when used:
-    m_bwRegionWidth = -tolerance; 
+    m_bwAssocParam = -tolerance; 
 }   
 
 // ---------------------------------------------------------------------------
@@ -1096,7 +1096,7 @@ Analyzer::storeConvergenceBandwidth( double tolerance )
 void 
 Analyzer::storeNoBandwidth( void ) 
 { 
-    m_bwRegionWidth = 0; 
+    m_bwAssocParam = 0; 
 }   
 
 // ---------------------------------------------------------------------------
@@ -1107,7 +1107,7 @@ Analyzer::storeNoBandwidth( void )
 bool 
 Analyzer::bandwidthIsResidue( void ) const
 { 
-    return m_bwRegionWidth > 0.; 
+    return m_bwAssocParam > 0.; 
 }
 
 // ---------------------------------------------------------------------------
@@ -1118,7 +1118,7 @@ Analyzer::bandwidthIsResidue( void ) const
 bool 
 Analyzer::bandwidthIsConvergence( void ) const
 { 
-    return m_bwRegionWidth < 0.; 
+    return m_bwAssocParam < 0.; 
 }
 
 
@@ -1131,9 +1131,9 @@ Analyzer::bandwidthIsConvergence( void ) const
 double 
 Analyzer::bwRegionWidth( void ) const
 {
-	if ( m_bwRegionWidth > 0 )
+	if ( m_bwAssocParam > 0 )
 	{
-		return m_bwRegionWidth;
+		return m_bwAssocParam;
 	}
 	return 0;
 }
@@ -1147,9 +1147,9 @@ Analyzer::bwRegionWidth( void ) const
 double 
 Analyzer::bwConvergenceTolerance( void ) const
 {
-	if ( m_bwRegionWidth < 0 )
+	if ( m_bwAssocParam < 0 )
 	{
-		return - m_bwRegionWidth;
+		return - m_bwAssocParam;
 	}
 	return 0;
 }
@@ -1395,7 +1395,7 @@ Analyzer::thinPeaks( Peaks & peaks, double frameTime  )
 //
 //  The convergence value is on the range [0,1], 0 for a sinusoid, 
 //  and 1 for an impulse. If convergence tolerance is specified (as
-//  a negative value in m_bwRegionWidth), it should be positive and 
+//  a negative value in m_bwAssocParam), it should be positive and 
 //  less than 1, and specifies the convergence value that is to 
 //  correspond to bandwidth equal to 1.0. This is achieved by scaling
 //  the convergence by the inverse of the tolerance, and saturating
@@ -1403,10 +1403,10 @@ Analyzer::thinPeaks( Peaks & peaks, double frameTime  )
 void Analyzer::fixBandwidth( Peaks & peaks )
 {
 	
-	if ( m_bwRegionWidth < 0 )
+	if ( m_bwAssocParam < 0 )
 	{
-		double scale = 1.0 / (- m_bwRegionWidth);	
-			// m_bwRegionWidth stores negative tolerance
+		double scale = 1.0 / (- m_bwAssocParam);	
+			// m_bwAssocParam stores negative tolerance
 	
 		for ( Peaks::iterator it = peaks.begin(); it != peaks.end(); ++it )
 		{
@@ -1414,7 +1414,7 @@ void Analyzer::fixBandwidth( Peaks & peaks )
 			bp.setBandwidth( std::min( 1.0, scale * bp.bandwidth() ) );
 		}
 	}
-	else // if ( m_bwRegionWidth == 0 )
+	else if ( m_bwAssocParam == 0 )
 	{
 		for ( Peaks::iterator it = peaks.begin(); it != peaks.end(); ++it )
 		{
