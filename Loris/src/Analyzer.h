@@ -37,13 +37,18 @@
 #include "LinearEnvelope.h"
 #include "Partial.h"
 #include "PartialList.h"
-#include "SpectralPeaks.h"
+// #include "SpectralPeaks.h"
 
 //  begin namespace
 namespace Loris {
 
 class Envelope;
 class LinearEnvelopeBuilder;
+// class Peaks;
+// class Peaks::iterator;
+//  oooo, this is nasty, need to fix it!
+class SpectralPeak;
+typedef std::vector< SpectralPeak > Peaks;
 
 // ---------------------------------------------------------------------------
 //  class Analyzer
