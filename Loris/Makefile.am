@@ -8,7 +8,7 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = src scripting utils csound doc test
+SUBDIRS = csound src scripting utils doc test
 
 MAINTAINERCLEANFILES = 	Makefile.in aclocal.m4 configure config.h.in \
 						stamp-h.in \

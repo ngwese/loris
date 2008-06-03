@@ -99,15 +99,17 @@ PI_SRC = loris.h lorisAnalyzer_pi.C lorisBpEnvelope_pi.C \
  lorisException_pi.C lorisException_pi.h lorisNonObj_pi.C \
  lorisPartialList_pi.C lorisUtilities_pi.C 
 
+
+# convenience library containing Csound opcodes 
 if HAVE_CSOUND
-# source code for the Csound opcodes
-CSOUND_SRC = lorisgens.C lorisgens.h
+CSOUND_LIB = $(top_builddir)/csound/liblorisops.la
 endif
 
+
 lib_LTLIBRARIES = libloris.la
-libloris_la_SOURCES = $(CPP_SRC) $(PI_SRC) $(CSOUND_SRC) 
-libloris_la_CPPFLAGS = $(INCLUDE_FFTW) $(CSOUND_CXXFLAGS) $(default_includes)
-libloris_la_LIBADD = $(LINK_FFTW)
+libloris_la_SOURCES = $(CPP_SRC) $(PI_SRC)
+libloris_la_CPPFLAGS = $(INCLUDE_FFTW) $(default_includes)
+libloris_la_LIBADD = $(LINK_FFTW) $(CSOUND_LIB)
 
 # the library version for Loris 1.5.3 is 10:0:0
 # it is not fully compatible with Loris 1.5.2 

@@ -38,10 +38,8 @@ fundamental from the spectral peaks, and FundamentalFromPartials
 estimates the fundamental from the frequency and amplitude
 envelopes of a collection of Partials.
 
-- Changed default gap times and fade times for Collator 
-and Sieve classes to match those of he Distller class.
-This may require changes to some programs that relied on 
-the default values. 
+- Look for Csound5 headers at config time, and prefer to
+build Csound5 opcode library, fall back to Csound4. 
 
 -------------------------------------------------------
 changes since 1.5.1 release:

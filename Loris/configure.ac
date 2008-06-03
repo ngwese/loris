@@ -299,45 +299,69 @@ dnl----------------------------------------------------------------
 dnl Look for csound.
 dnl
 dnl If csound is available, then prepare to build the csound 
-dnl opcodes. This configure code, parts provided by John Ramsdell,
-dnl works for Csound GBS versions 4.23f12gbs.10 or later.
+dnl opcodes. Prefer Csound5.
 dnl----------------------------------------------------------------
 
+AC_ARG_WITH(csound5,
+    AC_HELP_STRING( [--with-csound5],
+                    [build Csound5 opcodes (default is YES)] ),
+    [USECSOUND5="$withval"], [USECSOUND5="yes"])
+    
+if test "$USECSOUND5" == "yes" ; then
+	AC_CHECK_HEADERS([csdl.h],
+				FOUND_CSOUND5="yes",
+				AC_MSG_WARN([Cannot find Csound5 headers. Csound5 support disabled.]))
+fi
+
+AM_CONDITIONAL([HAVE_CSOUND5], [test -n "$FOUND_CSOUND5"])
+
 AC_ARG_VAR([CSOUND_CONFIG], 
-       [Path to the Csound configuration script when available])
+       [Path to the Csound4 configuration script when available])
+
+
+dnl This configure code, parts provided by John Ramsdell,
+dnl works for Csound GBS versions 4.23f12gbs.10 or later.
 
 AC_ARG_WITH(csound,
-    AC_HELP_STRING( [--with-csound],
-                    [build Csound 4 opcodes (default is YES)] ),
-    [USECSOUND="$withval"], [USECSOUND="yes"])
+    AC_HELP_STRING( [--with-csound4],
+                    [build Csound 4 opcodes (default is NO)] ),
+    [USECSOUND4="$withval"], [USECSOUND4="no"])
 
-if test "$USECSOUND" == "yes" ; then
+if test "$FOUND_CSOUND5" == "yes" ; then
+	USECSOUND4="no"
+fi
+
+if test "$USECSOUND4" == "yes" ; then
     AC_PATH_PROG([CSOUND_CONFIG], [csound-config])
-    FOUND_CSOUND="$CSOUND_CONFIG"
+    FOUND_CSOUND4="$CSOUND_CONFIG"
 
     dnl try to use csound config to get build flags
     dnl for the csound opcodes
     if test -n "$CSOUND_CONFIG"; then
         CSOUND_CXXFLAGS="`$CSOUND_CONFIG --cflags`"
         
-        dnl I don't think I need these next two, those are
-        dnl for linking csound binaries, not opcodes.
-        CSOUND_LDFLAGS="`$CSOUND_CONFIG --ldflags`"
-        CSOUND_LIBS="`$CSOUND_CONFIG --libs`"
-        
         CSOUND_PREFIX="`$CSOUND_CONFIG --prefix`"   
     else
         AC_CHECK_HEADERS([csound/cs.h],
-            FOUND_CSOUND="yes",
-            AC_MSG_WARN([Cannot find Csound headers. Csound support disabled.]))
+            FOUND_CSOUND4="yes",
+            AC_MSG_WARN([Cannot find Csound4 headers. Csound4 support disabled.]))
     fi
 fi
 AC_SUBST([CSOUND_CXXFLAGS])
-AC_SUBST([CSOUND_LDFLAGS])
-AC_SUBST([CSOUND_LIBS])
 AC_SUBST([CSOUND_PREFIX])
 
-AM_CONDITIONAL([HAVE_CSOUND], [test -n "$FOUND_CSOUND"])
+AM_CONDITIONAL([HAVE_CSOUND4], [test -n "$FOUND_CSOUND4"])
+
+if test "$FOUND_CSOUND5" == "yes" ; then
+	HAVE_CSOUND="yes"
+fi
+if test "$FOUND_CSOUND4" == "yes" ; then
+	HAVE_CSOUND="yes"
+fi
+
+AM_CONDITIONAL([HAVE_CSOUND], [test -n "$HAVE_CSOUND"])
+
+
 
 dnl----------------------------------------------------------------
 dnl Check for Loris debugging flag
@@ -392,14 +416,16 @@ else
     echo See "./configure --help".
 fi
 
-if test -n "$FOUND_CSOUND" ; then
+if test -n "$HAVE_CSOUND" ; then
     echo Csound support: Enabled.
-    echo To use them in your instruments, invoke csound with the argument:
+    echo To use Loris opcodes in your instruments, invoke csound with the argument:
     echo   --opcode-lib=$prefix/lib/libloris.so
+    echo   or libloris.dylib on Mac OS X
 else
     echo Csound support: Disabled.
     echo Define CSOUND_CONFIG or add something to CPPFLAGS to enable.  
-    echo See "./configure --help".
+	echo See "./configure --help".
 fi
+
 
 AC_MSG_RESULT(----- End Of Configuration -----)
