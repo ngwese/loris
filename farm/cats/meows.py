@@ -13,7 +13,7 @@ background hiss and rumble. A slightly more natural sound is produced
 using two partials per harmonic, bandwidth enhancement doesn't seem to help.
 This is more important for meow1 than meow3.
 
-Last updated: 10 Aug 2007 by Kelly Fitz
+Last updated: 4 June 2008 by Kelly Fitz
 """
 
 import loris, time, os
@@ -23,7 +23,35 @@ orate = 44100
 tag = ''
 
 stuff = {}
-
+# 
+# # ----------------------------------------------------------------------------
+# # DEBUGGING
+# 
+# def exportReference( env, fname ):
+# 	print 'EXPORTING REFERENCE ENVELOPE', fname
+# 	p =loris.Partial()
+# 	t = 0
+# 	while t < 1.10:
+# 		p.insert( t, loris.Breakpoint( env.valueAt( t ), 0.1, 0, 0 ) )
+# 		t = t + 0.001
+# 	l = loris.PartialList()
+# 	l.append( p )
+# 	
+# 	f = loris.SdifFile( l )
+# 	f.write( fname )
+# 
+# def importReference( fname ):
+# 	print 'IMPORTING REFERENCE ENVELOPE', fname
+# 	f = loris.SdifFile( fname )
+# 	l = f.partials()
+# 	p = l.first()
+# 	
+# 	env = loris.LinearEnvelope()
+# 	for bp in p:
+# 		env.insert( bp.time(), bp.frequency() )
+# 		
+# 	return env
+# 
 # ----------------------------------------------------------------------------
 
 def doMeow1( exportDir = '' ):
@@ -46,7 +74,16 @@ def doMeow1( exportDir = '' ):
 	N = 2
 	ref = loris.createFreqReference( p, 470, 620 )
 	loris.channelize( p, ref, N )
-	loris.distill( p )
+ 	
+ 	# Need to specify non-default value for gap time to achieve
+ 	# good results (as in Loris 1.4)
+ 	Fade = 0.005
+ 	Gap = 0.0001
+ 	loris.distill( p, Fade, Gap )
+ 	
+ 	# problem in older versions of Loris
+ 	loris.crop( p, 0, 100 )
+ 	
 	loris.scaleBandwidth( p, 0 )
 	
 	# relabel the partials so that they can still
@@ -57,6 +94,7 @@ def doMeow1( exportDir = '' ):
 		else:
 			part.setLabel( 0 )
 			
+	
 	if exportDir:
 		print 'synthesizing %i distilled Partials per harmonic (%s)'%(N, time.ctime(time.time()))
 		out_sfile = loris.AiffFile( p, orate )
@@ -111,7 +149,16 @@ def doMeow3( exportDir = '' ):
 	N = 2
 	ref = loris.createFreqReference( p, 400, 600 )
 	loris.channelize( p, ref, N )
-	loris.distill( p )
+	
+ 	# Need to specify non-default value for gap time to achieve
+ 	# good results (as in Loris 1.4)
+ 	Fade = 0.005
+ 	Gap = 0.0001
+ 	loris.distill( p, Fade, Gap )
+ 	
+	# problem in older versions of Loris
+ 	loris.crop( p, 0, 100 )
+ 	
 	loris.scaleBandwidth( p, 0 )
 	
 	# relabel the partials so that they can still
