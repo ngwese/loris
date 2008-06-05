@@ -4,13 +4,14 @@
 bass.py
 
 Analyze single acoustic bass tones, plucked and 
-arco, taken from the Iowa samples. 
+arco, taken from the Iowa samples. Channelized with
+fundamental extracted during analysis.
 
 - plucked open D string (D two octaves below middle C)
 - plucked G on the D string (G two octaves below middle C)
 - bowed Db on the A string (?) (Db two octaves below middle C)
 
-Last updated: 24 July 2007 by Kelly Fitz
+Last updated: 4 June 2008 by Kelly Fitz
 """
 
 import loris, time, os
