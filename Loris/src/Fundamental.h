@@ -560,6 +560,13 @@ public:
 
     //! Destructor    
     ~FundamentalFromPartials( void );
+    
+    //! Construct a copy of an estimator. Nothing much to do since this class
+    //! has no data members.
+    FundamentalFromPartials( const FundamentalFromPartials & );
+    
+    //! Pass the assignment opertion up to the base class.
+    FundamentalFromPartials & operator= ( const FundamentalFromPartials & );
 
 //  -- fundamental frequency estimation --
 
@@ -715,13 +722,6 @@ private:
                               double time );
 
 
-
-        
-    
-//  disallow these until they are implemented
-
-    FundamentalFromPartials( const FundamentalFromPartials & );
-    FundamentalFromPartials & operator= ( const FundamentalFromPartials & );
 
 };   //  end of class FundamentalFromPartials
 

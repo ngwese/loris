@@ -36,6 +36,7 @@
 #endif
 
 #include "FrequencyReference.h"
+
 #include "Breakpoint.h"
 #include "Fundamental.h"
 #include "LinearEnvelope.h"
@@ -51,13 +52,34 @@
 namespace Loris {
 
 
-//	forward declarations for helpers, defined below:
-static PartialList::const_iterator
-findLongestPartialInFreqRange( PartialList::const_iterator begin, 
-							   PartialList::const_iterator end, 
-							   double minFreq, double maxFreq );
-static void
-buildEnvelopeFromPartial( LinearEnvelope & env, const Partial & p, long numsamps );							   
+// ---------------------------------------------------------------------------
+//	createEstimator (static)
+// ---------------------------------------------------------------------------
+//  This class is now a wrapper providing the legacy interface to an improved
+//  and more flexible fundamental frequency estimator. This function 
+//  constructs and configures an instance of the new estimator that 
+//  provides the functionality of the older (Loris 1.4 through 1.5.2) 
+//  FrequencyReference class.
+//
+
+static const double Range = 50;
+static const double Ceiling = 20000;
+static const double Floor = -60;
+static const double Precision = 0.1;
+static const double Confidence = 0.9;
+static const double Interval = 0.01;
+
+FundamentalFromPartials createEstimator( void )
+{
+    FundamentalFromPartials eparts;
+    
+    eparts.setAmpFloor( Floor );
+    eparts.setAmpRange( Range );
+    eparts.setFreqCeiling( Ceiling );
+    eparts.setPrecision( Precision );
+    
+    return eparts;
+}
 
 // ---------------------------------------------------------------------------
 //	construction
@@ -101,13 +123,13 @@ FrequencyReference::FrequencyReference( PartialList::const_iterator begin,
 #endif
 
 	
-	FundamentalFromPartials est( 0.1 /* precision in Hz */ );
+	FundamentalFromPartials est = createEstimator();
 	std::pair< double, double > span = PartialUtils::timeSpan( begin, end );
 	double dt = ( span.second - span.first ) / ( numSamps + 1 );
 	*_env = est.buildEnvelope( begin, end, 
                                span.first, span.second, dt,
                                minFreq, maxFreq,
-                               0.9 /* confidence */ );
+                               Confidence );
 }
 
 // ---------------------------------------------------------------------------
@@ -143,13 +165,12 @@ FrequencyReference::FrequencyReference( PartialList::const_iterator begin,
 	debugger << std::distance(begin,end) << " Partials" << std::endl;
 #endif
     
-	FundamentalFromPartials est( 0.1 /* precision in Hz */ );
+	FundamentalFromPartials est = createEstimator();
 	std::pair< double, double > span = PartialUtils::timeSpan( begin, end );
-	double interval = 0.005;
 	*_env = est.buildEnvelope( begin, end, 
-                               span.first, span.second, interval,
+                               span.first, span.second, Interval,
                                minFreq, maxFreq,
-                               0.9 /* confidence */ );
+                               Confidence );
     
 }
 
@@ -267,51 +288,6 @@ struct IsInFrequencyRange
 	}
 };
 
-// ---------------------------------------------------------------------------
-//	findLongestPartialInFreqRange (static helper function)
-// ---------------------------------------------------------------------------
-//	Return the longest Partial in the half open range [begin, end)
-//	that attains its maximum sinusoidal energy at a frequency within 
-//	a specified range.
-//
-static PartialList::const_iterator
-findLongestPartialInFreqRange( PartialList::const_iterator begin, 
-							   PartialList::const_iterator end, 
-							   double minFreq, double maxFreq )
-{
-	PartialList::const_iterator it = 
-		std::find_if( begin, end, IsInFrequencyRange(minFreq, maxFreq) );
-	
-	//	there may be no Partials in the specified frequency range:
-	if ( it == end )
-		return it;
-		
-	PartialList::const_iterator longest = it;
-	for ( it = std::find_if( ++it, end, IsInFrequencyRange(minFreq, maxFreq) );
-		  it != end;
-		  it = std::find_if( ++it, end, IsInFrequencyRange(minFreq, maxFreq) ) )
-	{
-		if ( it->duration() > longest->duration() )
-			longest = it;
-	}
-		
-	return longest;
-}
-
-// ---------------------------------------------------------------------------
-//	buildEnvelopeFromPartial (static helper function)
-// ---------------------------------------------------------------------------
-//
-static void
-buildEnvelopeFromPartial( LinearEnvelope & env, const Partial & p, long numsamps )
-{
-	double dt = p.duration() / ( numsamps + 1 );
-	for ( long i = 0; i < numsamps; ++i ) 
-	{
-		double t = p.startTime() + ((i+1) * dt);
-		double f = p.frequencyAt(t);
-		env.insertBreakpoint( t, f );
-	}
-}					   
+				   
 
 }	//	end of namespace Loris

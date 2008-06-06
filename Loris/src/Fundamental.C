@@ -316,15 +316,17 @@ FundamentalFromSamples::buildEnvelope( const double * sampsBeg,
     {
         collectFreqsAndAmps( sampsBeg, sampsEnd-sampsBeg, sampleRate,
                              frequencies, amplitudes, time );
-                             
-        F0Estimate est( amplitudes, frequencies, lowerFreqBound, upperFreqBound, 
-                        m_precision );
-    
-        if ( est.confidence() >= confidenceThreshold )
-        {   
-            env.insert( time, est.frequency() );
-        }
+        if ( ! amplitudes.empty() )
+        {
+            F0Estimate est( amplitudes, frequencies, lowerFreqBound, upperFreqBound, 
+                            m_precision );
 
+            if ( est.confidence() >= confidenceThreshold )
+            {   
+                env.insert( time, est.frequency() );
+            }
+        }
+        
         time += interval;
     }
     
@@ -533,11 +535,37 @@ FundamentalFromPartials::FundamentalFromPartials( double precisionHz ) :
 }
 
 // ---------------------------------------------------------------------------
+//  copy constructor
+// ---------------------------------------------------------------------------
+//! Construct a copy of an estimator. Nothing much to do since this class
+//! has no data members.
+//
+
+FundamentalFromPartials::FundamentalFromPartials( const FundamentalFromPartials & rhs ) :
+    FundamentalEstimator( rhs )
+{
+}
+
+// ---------------------------------------------------------------------------
 //  destructor
 // ---------------------------------------------------------------------------
     
 FundamentalFromPartials::~FundamentalFromPartials( void )
 {
+}
+
+// ---------------------------------------------------------------------------
+//  assignment
+// ---------------------------------------------------------------------------
+//! Pass the assignment opertion up to the base class.
+//
+
+FundamentalFromPartials &
+FundamentalFromPartials::operator=( const FundamentalFromPartials & rhs )
+{
+    FundamentalEstimator::operator=( rhs );
+    
+    return *this;
 }
 
 //  -- fundamental frequency estimation --
@@ -571,15 +599,18 @@ FundamentalFromPartials::buildEnvelope( PartialList::const_iterator begin_partia
     while ( time < tend )
     {
         collectFreqsAndAmps( begin_partials, end_partials, frequencies, amplitudes, time );
-                             
-        F0Estimate est( amplitudes, frequencies, lowerFreqBound, upperFreqBound, 
-                        m_precision );
-    
-        if ( est.confidence() >= confidenceThreshold )
-        {   
-            env.insert( time, est.frequency() );
+                  
+        if (! amplitudes.empty() )
+        {
+            F0Estimate est( amplitudes, frequencies, lowerFreqBound, upperFreqBound, 
+                            m_precision );
+        
+            if ( est.confidence() >= confidenceThreshold )
+            {   
+                env.insert( time, est.frequency() );
+            }
         }
-
+        
         time += interval;
     }
     
@@ -630,31 +661,15 @@ FundamentalFromPartials::collectFreqsAndAmps( PartialList::const_iterator begin_
     frequencies.clear();
     
     if ( begin_partials != end_partials )
-    {
-        //  determine the largest amplitude
-        PartialList::const_iterator it = begin_partials;
+    {            
+        //  determine the absolute amplitude threshold 
+        double thresh = std::pow( 10.0, - 0.05 * - m_ampFloor );
         
-        //  compute the sinusoidal amplitude (without bandwidth energy)
-        //  with a 5 ms fade time
-        double max_amp = std::sqrt(1 - it->bandwidthAt( time )) * it->amplitudeAt( time, 0.005 );        
-        
-        while( ++it != end_partials )
-        {
-            double a = std::sqrt(1 - it->bandwidthAt( time )) * it->amplitudeAt( time, 0.005 );        
-            max_amp = std::max( a, max_amp );                        
-        }
-
-        //  determine the floating amplitude threshold
-        const double thresh = 
-            std::max( std::pow( 10.0, - 0.05 * - m_ampFloor ), 
-                      std::pow( 10.0, - 0.05 * m_ampRange ) * max_amp );
-        
-        
-        for ( it = begin_partials; it != end_partials; ++it )
+        double max_amp = 0;        
+        for ( PartialList::const_iterator it = begin_partials; it != end_partials; ++it )
         {
             //  compute the sinusoidal amplitude (without bandwidth energy)
-            //  with a 5 ms fade time
-            double sine_amp = std::sqrt(1 - it->bandwidthAt( time )) * it->amplitudeAt( time, 0.005 );        
+            double sine_amp = std::sqrt(1 - it->bandwidthAt( time )) * it->amplitudeAt( time );        
             double freq = it->frequencyAt( time );
             
             if ( sine_amp > thresh &&
@@ -662,6 +677,28 @@ FundamentalFromPartials::collectFreqsAndAmps( PartialList::const_iterator begin_
             {
                 amplitudes.push_back( sine_amp );
                 frequencies.push_back( freq );
+            }
+            
+            max_amp = std::max( sine_amp, max_amp );                        
+        }
+        
+        //  remove quietest ones - this isn't very efficient, 
+        //  but it is much faster than making two passes (and 
+        //  computing two sequences of sinusoidal amplitudes).
+        thresh = std::pow( 10.0, - 0.05 * m_ampRange ) * max_amp;
+        vector< double >::size_type N = amplitudes.size();
+        vector< double >::size_type k = 0;
+        while ( k < N )
+        {
+            if ( amplitudes[k] < thresh )
+            {
+                amplitudes.erase( amplitudes.begin() + k );
+                frequencies.erase( frequencies.begin() + k );
+                --N;
+            }
+            else
+            {
+                ++k;
             }
         }
     }

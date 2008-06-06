@@ -166,7 +166,7 @@ Channelizer::~Channelizer( void )
 }
 
 // ---------------------------------------------------------------------------
-//	setStretchFactor
+//	amplitudeWeighting
 // ---------------------------------------------------------------------------
 //! Return the exponent applied to amplitude before weighting
 //! the instantaneous estimate of the frequency channel number

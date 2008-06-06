@@ -242,17 +242,19 @@ are used.") collate_duh;
 %}
 
 %feature("docstring",
-"Return a newly-constructed LinearEnvelope that estimates
-the time-varying fundamental frequency of the sound
-represented by the Partials in a PartialList. This uses
-the Fundamental class to construct an estimator
-of fundamental frequency, and returns a LinearEnvelope that
-samples the estimator at the specified time interval (in 
-seconds). Only estimates in the specified frequency range will 
-be considered valid, estimates outside this range will be 
-ignored. The envelope will have approximately the specified 
-number of samples. If the specified number of samples is 0 or
-unspecified, the fundamental is estimated every 5 ms.") createFreqReference;
+"Return a newly-constructed LinearEnvelope using the legacy 
+FrequencyReference class. The envelope will have approximately
+the specified number of samples. The specified number of samples 
+must be greater than 1. Uses the FundamentalEstimator 
+(FundamentalFromPartials) class to construct an estimator of 
+fundamental frequency, configured to emulate the behavior of
+the FrequencyReference class in Loris 1.4-1.5.2. If numSamps
+is unspecified, construct the reference envelope from fundamental 
+estimates taken every five milliseconds.
+
+For simple sounds, this frequency reference may be a 
+good first approximation to a reference envelope for
+channelization (see channelize()).") createFreqReference;
 
 %newobject createFreqReference;
 LinearEnvelope * 
@@ -277,12 +279,16 @@ createFreqReference( PartialList * partials,
 "Return a newly-constructed LinearEnvelope that estimates
 the time-varying fundamental frequency of the sound
 represented by the Partials in a PartialList. This uses
-the experimental Fundamental class to construct an estimator
-of fundamental frequency, and returns a LinearEnvelope that
-samples the estimator at the specified time interval (in 
-seconds). Only estimates in the specified frequency range will 
-be considered valid, estimates outside this range will be 
-ignored.") createF0Estimate;
+the FundamentalEstimator (FundamentalFromPartials) 
+class to construct an estimator of fundamental frequency, 
+and returns a LinearEnvelope that samples the estimator at the 
+specified time interval (in seconds). Default values are used 
+to configure the estimator. Only estimates in the specified 
+frequency range will be considered valid, estimates outside this 
+range will be ignored.
+
+Clients are responsible for disposing of the newly-constructed 
+LinearEnvelope.") createF0Estimate;
    
 LinearEnvelope * 
 createF0Estimate( PartialList * partials, double minFreq, double maxFreq, 
