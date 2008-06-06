@@ -22,7 +22,7 @@ lowest partial to fail to track the pitch changes. Need to use a shorter
 fade time, at least for sifting. 1 ms for both sifting and distilling seems 
 to work well. 
 
-Last updated: 17 March 2008 by Kelly Fitz
+Last updated: 5 June 2008 by Kelly Fitz
 """
 
 import loris, time, os
@@ -49,11 +49,13 @@ def doPianoSax( exportDir = '' ):
 	p = anal.analyze( f.samples(), f.sampleRate() )
 
 	Fade = 0.001
+	Gap = 0.0001
+	
 	print 'sifting and distilling %i partials at %i ms (%s)'%(p.size(), Fade*1000, time.ctime(time.time()))
 	ref = anal.fundamentalEnv()
 	loris.channelize( p, ref, 1 )
 	loris.sift( p, Fade )
-	loris.distill( p, Fade )
+	loris.distill( p, Fade, Gap )
 	
 	if exportDir:
 	
