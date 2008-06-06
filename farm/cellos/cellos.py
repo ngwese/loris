@@ -42,8 +42,13 @@ Cello 69 Hz mezzo-forte:
 	
 	Fixed lousy Ab2 by realizing that it was actually Gb2! Also 
 	checked tuning of the other notes. Better now.
-
-Last updated: 15 Aug 2007 by Kelly Fitz
+	
+	Added a new analysis function at two partials per harmonic, keeping 
+	in-between partials around to improve the attacks, makes a huge difference
+	on sounds like sulD.Bb3!
+	
+	
+Last updated: 5 June 2008 by Kelly Fitz
 
 """
 import loris, time, os
@@ -54,6 +59,15 @@ tag = ''
 
 stuff = {}
 
+# Set these distillation parameters globally for all notes.
+Fade = 0.005 	# 5 ms
+Gap = 0.001 	# 1 ms 
+
+# The old cellos sound much better with these old values.
+SmallGap = 0.0001 # 0.1 ms, old gap time
+SmallFade = 0.001 # 1 ms	
+
+
 # ----------------------------------------------------------------------------
 #
 # 154.F tone
@@ -61,6 +75,7 @@ stuff = {}
 def doCello154F( exportDir = '' ):
 	name = 'cello154.F'
 	anal = loris.Analyzer( 123, 154 )
+
 	f = loris.AiffFile( name + '.aiff' )
 	print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
 	p = anal.analyze( f.samples(), f.sampleRate() )
@@ -68,7 +83,7 @@ def doCello154F( exportDir = '' ):
 	# cello154.F distilled using 3d harmonic
 	ref = loris.createFreqReference( p, 154*0.9, 1541.1 )
 	loris.channelize( p, ref, 1 )
-	loris.distill( p )
+	loris.distill( p, SmallFade, SmallGap )
 	print 'synthesizing distilled %s (%s)'%(name, time.ctime(time.time()))
 
 	if exportDir:
@@ -97,7 +112,8 @@ def doCello154F( exportDir = '' ):
 def doCello69F( exportDir = '' ):
 	name = 'cello69.F'
 	anal = loris.Analyzer( 20, 69 )
-	anal.setFreqFloor( 50 )
+	anal.setFreqFloor( 34 )
+
 	f = loris.AiffFile( name + '.aiff' )
 	print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
 	p = anal.analyze( f.samples(), f.sampleRate() )
@@ -105,14 +121,22 @@ def doCello69F( exportDir = '' ):
 	# 69.F tone collated
 	print 'collating %s (%s)'%(name, time.ctime(time.time()))
 	pcollate = loris.PartialList( p )
-	loris.collate( pcollate )	
+	loris.collate( pcollate, SmallFade, SmallGap )	
 	
 	# distill using two partials per harmonic
 	print 'distilling %s at two partials per harmonic (%s)'%(name, time.ctime(time.time()))
 	ref = loris.createFreqReference( p, 69*0.9, 69*1.1 )
-	loris.channelize( p, ref, 2 )
-	loris.distill( p )
+	loris.channelize( p, ref, 2 )	
+	loris.distill( p, SmallFade, SmallGap )
 
+	# relabel the partials so that they can still
+	# be used for morphing, esp. with harmonic sounds
+	for part in p:
+		if 0 == part.label()%2:
+			part.setLabel( part.label() / 2 )
+		else:
+			part.setLabel( 0 )
+			
 	if exportDir:
 		print 'synthesizing %i collated partials (%s)'%(p.size(), time.ctime(time.time()))
 		out_sfile = loris.AiffFile( pcollate, orate )
@@ -153,6 +177,7 @@ def doCello69F( exportDir = '' ):
 def doCello69MF( exportDir = '' ):
 	name = 'cello69.MF'
 	anal = loris.Analyzer( 34, 138 )
+
 	f = loris.AiffFile( name + '.aiff' )
 	print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
 	p = anal.analyze( f.samples(), f.sampleRate() )
@@ -160,17 +185,25 @@ def doCello69MF( exportDir = '' ):
 	# 69.MF tone collated
 	print 'collating %s (%s)'%(name, time.ctime(time.time()))
 	pcollate = loris.PartialList( p )
-	loris.collate( pcollate )
+	loris.collate( pcollate, SmallFade, SmallGap )
 	
 	
 	# distill using two partials per harmonic
 	print 'distilling %s at two partials per harmonic (%s)'%(name, time.ctime(time.time()))
 	ref = loris.createFreqReference( p, 69*0.9, 69*1.1 )
 	loris.channelize( p, ref, 2 )
-	loris.sift( p )
-	zeros = loris.extractLabeled( p, 0 )
-	loris.distill( p )
+	loris.sift( p, SmallFade )
+	loris.removeLabeled( p, 0 )
+	loris.distill( p, SmallFade, SmallGap )
 
+	# relabel the partials so that they can still
+	# be used for morphing, esp. with harmonic sounds
+	for part in p:
+		if 0 == part.label()%2:
+			part.setLabel( part.label() / 2 )
+		else:
+			part.setLabel( 0 )
+			
 	if exportDir:
 		print 'synthesizing %i collated partials (%s)'%(p.size(), time.ctime(time.time()))
 		out_sfile = loris.AiffFile( pcollate, orate )
@@ -215,7 +248,7 @@ def analyze_arco( name, midiNN, exportDir = ''  ):
 	# compute note fundamental frequency in Hz
 	fHz = 440.0 * math.pow( 2.0, ((midiNN-69)/12.0) )
 	
-	Fade = 0.01
+	ArcoFade = 0.01
 	
 	print "analyzing", name + ".aiff", "at fundamental", fHz, "Hz", time.ctime(time.time())
 	f = loris.AiffFile( name + ".aiff" )
@@ -225,10 +258,10 @@ def analyze_arco( name, midiNN, exportDir = ''  ):
 	
 	p = anal.analyze( f.samples(), f.sampleRate() )
 
-	print "distilling", name, ",", p.size()," partials, fade time ", Fade * 1000, "ms"
+	print "distilling", name, ",", p.size()," partials, fade time ", ArcoFade * 1000, "ms"
 	ref = loris.createFreqReference( p, .9*fHz, 1.1*fHz );
 	loris.channelize( p, ref, 1 )
-	loris.distill( p, Fade )
+	loris.distill( p, ArcoFade, Gap )
 	
 	# chop off any times before 0
 	loris.crop( p, 0, 20 )
@@ -251,6 +284,64 @@ def analyze_arco( name, midiNN, exportDir = ''  ):
 	stuff[ name ] = ( p, ref, anal )
 
 # ----------------------------------------------------------------------------
+#
+# analysis at two partials per harmonic, with in-betweens
+#
+
+def analyze_at2( name, midiNN, exportDir = ''  ):
+	import math
+	
+	# compute note fundamental frequency in Hz
+	fHz = 440.0 * math.pow( 2.0, ((midiNN-69)/12.0) )
+	
+	
+	print "analyzing", name + ".aiff", "at fundamental", fHz, "Hz", time.ctime(time.time())
+	f = loris.AiffFile( name + ".aiff" )
+	
+	anal = loris.Analyzer( .45*fHz, 1.65*fHz )
+	anal.setBwRegionWidth( 0 )
+	
+	p = anal.analyze( f.samples(), f.sampleRate() )
+
+	print "distilling", name, ",", p.size()," partials, fade time ", Fade * 1000, "ms"
+	ref = loris.createFreqReference( p, .9*fHz, 1.1*fHz );
+	loris.channelize( p, ref, 2 )
+	loris.distill( p, Fade, Gap )
+	
+	
+ 	# problem in older versions of Loris
+ 	loris.crop( p, 0, 20 )
+ 	
+	loris.scaleBandwidth( p, 0 )
+	
+	# relabel the partials so that they can still
+	# be used for morphing, esp. with harmonic sounds
+	for part in p:
+		if 0 == part.label()%2:
+			part.setLabel( part.label() / 2 )
+		else:
+			part.setLabel( 0 )
+			
+	exportname = name + '.2'
+	if exportDir:
+		print 'synthesizing %i distilled partials, two per harmonic (%s)'%(p.size(), time.ctime(time.time()))
+		out_sfile = loris.AiffFile( p, orate )
+		
+		opath = os.path.join( exportDir, exportname + tag + '.recon.aiff' ) 
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_sfile.setMarkers( f.markers() )
+		out_sfile.write( opath )
+		
+		opath = os.path.join( exportDir, exportname + tag + '.sdif' )
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_pfile = loris.SdifFile( p )
+		out_pfile.setMarkers( f.markers() )
+		out_pfile.write( opath )
+	
+	stuff[ exportname ] = ( p, ref, anal )
+	
+	
+# ----------------------------------------------------------------------------
 
 if __name__ == '__main__':
 	print __doc__
@@ -270,4 +361,5 @@ if __name__ == '__main__':
 	analyze_arco( "cello.sulC.Gb2", 42, odir )
 	analyze_arco( "cello.sulC.Db2", 36.9, odir )
 	analyze_arco( "cello.sulD.Bb3", 57.8, odir )	# mediocre
+	analyze_at2( "cello.sulD.Bb3", 57.8, odir )		# vastly improved!
 	
