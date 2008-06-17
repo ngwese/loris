@@ -12,7 +12,7 @@ frequency floor at 200 is no different from floor at 300 hz
 Can distill this with fixed-frequency (200 Hz) channels without 
 destroying it.
 
-Last updated: 10 Aug 2007 by Kelly Fitz
+Last updated: 16 June 2008 by Kelly Fitz
 """
 
 import loris, time, os
@@ -40,14 +40,18 @@ def doBongo( exportDir = '' ):
 	print 'cropping %s (%s)'%(name, time.ctime(time.time()))
 	loris.crop( p, 0, 20 )
 	
-	print 'collating %s (%s)'%(name, time.ctime(time.time()))
+ 	# Need to specify non-default value for gap time to achieve
+ 	# good results (as in Loris 1.4)
+ 	Fade = 0.001
+ 	Gap = 0.0001
+ 	print 'collating %s (%s)'%(name, time.ctime(time.time()))
 	pcollate = loris.PartialList( p )
-	loris.collate( pcollate )
+	loris.collate( pcollate, Fade, Gap )
 
 	print 'distilling %s at 200 Hz (%s)'%(name, time.ctime(time.time()))
 	env = loris.LinearEnvelope( 200 )
 	loris.channelize( p, env, 1 )
-	loris.distill( p, 0.001 )
+	loris.distill( p, Fade, Gap )
 
 	
 	if exportDir:
