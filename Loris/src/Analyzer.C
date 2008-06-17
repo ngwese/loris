@@ -1332,10 +1332,13 @@ Analyzer::thinPeaks( Peaks & peaks, double frameTime  )
 	std::sort( peaks.begin(), peaks.end(), sort_peaks_greater_amplitude );
 	
     //  negative times are not real, but still might represent
-    //  a noisy part of the spectrum
+    //  a noisy part of the spectrum...
 	Peaks::iterator bogusTimes = 
 		std::remove_if( peaks.begin(), peaks.end(), negative_time( frameTime ) );
+		
+	//	...get rid of them anyway
     peaks.erase( bogusTimes, peaks.end() );
+    bogusTimes = peaks.end();
         
     
 	Peaks::iterator it = peaks.begin();
@@ -1345,7 +1348,7 @@ Analyzer::thinPeaks( Peaks & peaks, double frameTime  )
     	std::max( m_freqResolutionEnv->valueAt( frameTime ), 0.0 ); 
     
     
-	while ( it != bogusTimes ) 
+	while ( it != peaks.end() ) 
 	{
 		Breakpoint & bp = it->breakpoint;
 		

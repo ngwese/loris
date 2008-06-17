@@ -305,6 +305,7 @@ AssociateBandwidth::associateBandwidth( Peaks::iterator begin, 		//	beginning of
 	//	associate bandwidth with each retained Breakpoint:
 	for ( Peaks::iterator it = begin; it != rejected; ++it )
 	{
+		it->breakpoint.setBandwidth( 0 );	
 		associate( it->breakpoint );
 	}
 	
