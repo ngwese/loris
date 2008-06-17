@@ -6,8 +6,7 @@ tbnflutter.py
 Analyze and reconstruct the flutter-tongued trombone tone that was
 part of the ICMC 2000 bake-off, called conant-trombone-flutter.aiff.
 
-
-Last updated: 30 Aug 2007 by Kelly Fitz
+Last updated: 16 June 2008 by Kelly Fitz
 """
 
 import loris, time, os
@@ -33,6 +32,10 @@ Distilling at 2 partials per harmonic eliminates pretty much
 all artifacts of distillation.
 """
 
+# Need to specify non-default value for gap time to achieve
+# good results (as in Loris 1.4)
+Fade = 0.001
+Gap = 0.0001
 
 def do_tbnflutter( exportDir = '' ):
 
@@ -50,7 +53,7 @@ def do_tbnflutter( exportDir = '' ):
 	print 'distilling %i partials (%s)'%(p.size(), time.ctime(time.time()))
 	N = 2
 	loris.channelize( p, ref, N )
-	loris.distill( p )
+ 	loris.distill( p, Fade, Gap )
 	
 	# relabel the partials so that they can still
 	# be used for morphing, esp. with harmonic sounds
