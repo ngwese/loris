@@ -10,7 +10,7 @@ flutter-tongued flute tone.
 Used to use much narrower windows for the flute, doesn't seem to improve
 things any.
 
-Last updated: 17 Aug 2007 by Kelly Fitz
+Last updated: 17 Jun 2008 by Kelly Fitz
 """
 
 import loris, time, os
@@ -20,6 +20,11 @@ orate = 44100
 tag = ''
 
 stuff = {}
+
+# Set these distillation parameters globally to the old values.
+Fade = 0.005 	# 5 ms
+Gap = 0.0001 	# 1 ms 
+
 
 # ----------------------------------------------------------------------------
 
@@ -37,7 +42,7 @@ def doFlute( exportDir = '' ):
 	# distilled using one partial per harmonic
 	ref =  anal.fundamentalEnv()
 	loris.channelize( p, ref, 1 )
-	loris.distill( p )
+	loris.distill( p, Fade, Gap )
 	
 	if exportDir:
 	
@@ -75,7 +80,7 @@ def doFlutter( exportDir = '' ):
 	# distilled using one partial per harmonic
 	ref =  anal.fundamentalEnv()
 	loris.channelize( p, ref, 1 )
-	loris.distill( p )
+	loris.distill( p, Fade, Gap )
 	
 	if exportDir:
 
