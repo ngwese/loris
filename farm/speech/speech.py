@@ -15,7 +15,7 @@ Analyze and reconstruct a variety of speech sounds, including:
 	- the "alien threat" sample of Kurt Hebel's voice
 	
 
-Last updated: 29 Aug 2007 by Kelly Fitz
+Last updated: 1 July 2008 by Kelly Fitz
 """
 
 import loris, time, os
@@ -26,17 +26,18 @@ tag = ''
 
 stuff = {}
 
+
 # ----------------------------------------------------------------------------
 
-"""
-The fried vocal ("nonsense") definitely gives better harmonic tracking when 
-reanalyzed using the tracking analysis and the fundamental extracted in the 
-first analysis, BUT the reconstruction is a little bit worse in that case. 
 
-Two partials per harmonic are always necessary for decent
-sound, and the sound doesn't improve with the improved tracking.
-One partial per harmonic is completely unlistenable.
-"""
+# The fried vocal ("nonsense") definitely gives better harmonic tracking when 
+# reanalyzed using the tracking analysis and the fundamental extracted in the 
+# first analysis, BUT the reconstruction is a little bit worse in that case. 
+# 
+# Two partials per harmonic are always necessary for decent
+# sound, and the sound doesn't improve with the improved tracking.
+# One partial per harmonic is completely unlistenable.
+
 
 def doNonsense( exportDir = '' ):
 
@@ -56,11 +57,13 @@ def doNonsense( exportDir = '' ):
 	ref = anal.fundamentalEnv()
 	
 	# distill at 2 Partials per harmonic
-	print 'sifting and distilling %i partials (%s)'%(p.size(), time.ctime(time.time()))
+ 	Fade = 0.001
+ 	Gap = 0.0001
+ 	print 'sifting and distilling %i partials (%s)'%(p.size(), time.ctime(time.time()))
 	N = 2
 	loris.channelize( p, ref, N )
-	loris.sift( p )
-	loris.distill( p )
+	loris.sift( p, Fade )
+	loris.distill( p, Fade, Gap )
 
 # 	
 # 	# reanalyze using tracking
@@ -113,10 +116,10 @@ def doNonsense( exportDir = '' ):
 
 # ----------------------------------------------------------------------------
 
-"""
-The "funny people" analyses were also being reanalyzed with tracking,
-but it does not make much difference. 
-"""
+
+# The "funny people" analyses were also being reanalyzed with tracking,
+# but it does not make much difference. 
+
 
 def do_funnyPeeple1( exportDir = '' ):
 
@@ -125,24 +128,42 @@ def do_funnyPeeple1( exportDir = '' ):
 	
 	print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
 	anal = loris.Analyzer( 155, 400 )
+	anal.setFreqFloor( 100 )
 	anal.setBwRegionWidth( 0 ) # no BW association
 	anal.buildFundamentalEnv( 100, 400 )
 	
 	p = anal.analyze( f.samples(), f.sampleRate() )
-	ref = anal.fundamentalEnv()
-	# ref = loris.createF0Estimate( p, 50, 1000, 0.01 )
 	
-	# re-analyze with tracking?
-	print 're-analyzing with tracking'
-	p = anal.analyze( f.samples(), f.sampleRate(), ref )
+	ref = anal.fundamentalEnv()	
+	# ref = loris.createF0Estimate( p, 100, 400, 0.01 )
 	
-	# distill at N Partials per harmonic
+	
+	# re-analyze with tracking? no, that is worse.
+	# print 're-analyzing with tracking'
+	# p = anal.analyze( f.samples(), f.sampleRate(), ref )
+	
+	# Need to specify non-default value for gap time to achieve
+ 	# good results (as in Loris 1.4)
+ 	Fade = 0.001
+ 	Gap = 0.0001
+ 	
+ 	# distill at N Partials per harmonic
+ 	# (one seems to work, almost, two is better)
 	print 'distilling %i partials (%s)'%(p.size(), time.ctime(time.time()))
 	N = 2
 	loris.channelize( p, ref, N )
-	loris.sift( p )
-	loris.removeLabeled( p, 0 )
-	loris.distill( p )
+	loris.distill( p, Fade, Gap )
+	
+	# relabel the partials so that they can still
+	# be used for morphing, esp. with harmonic sounds
+	# (but don't remove the zeros, sounds terrible, 
+	# worse than one-per-harmonic distillation)
+	for part in p:
+		if 0 == part.label()%N:
+			part.setLabel( part.label() / N )
+		else:
+			part.setLabel( 0 )	
+				
 	
 	if exportDir:
 	
@@ -174,24 +195,40 @@ def do_funnyPeeple2( exportDir = '' ):
 	
 	print 'analyzing %s (%s)'%(name, time.ctime(time.time()))
 	anal = loris.Analyzer( 170, 400 )
+	anal.setFreqFloor( 100 )
 	anal.setBwRegionWidth( 0 ) # no BW association
 	anal.buildFundamentalEnv( 100, 400 )
 	
 	p = anal.analyze( f.samples(), f.sampleRate() )
+	
 	ref = anal.fundamentalEnv()
 	# ref = loris.createF0Estimate( p, 50, 1000, 0.01 )
+
+	# re-analyze with tracking? no, that is worse.
+	# print 're-analyzing with tracking'
+	# p = anal.analyze( f.samples(), f.sampleRate(), ref )
 	
-	# re-analyze with tracking?
-	print 're-analyzing with tracking'
-	p = anal.analyze( f.samples(), f.sampleRate(), ref )
-	
-	# distill at N Partials per harmonic
+	# Need to specify non-default value for gap time to achieve
+ 	# good results (as in Loris 1.4)
+ 	Fade = 0.001
+ 	Gap = 0.0001
+ 	
+ 	# distill at N Partials per harmonic
+ 	# (one seems to work, almost, two is better)
 	print 'distilling %i partials (%s)'%(p.size(), time.ctime(time.time()))
 	N = 2
 	loris.channelize( p, ref, N )
-	loris.sift( p )
-	loris.removeLabeled( p, 0 )
-	loris.distill( p )
+	loris.distill( p, Fade, Gap )
+	
+	# relabel the partials so that they can still
+	# be used for morphing, esp. with harmonic sounds
+	# (but don't remove the zeros, sounds terrible, 
+	# worse than one-per-harmonic distillation)
+	for part in p:
+		if 0 == part.label()%N:
+			part.setLabel( part.label() / N )
+		else:
+			part.setLabel( 0 )	
 	
 	if exportDir:
 	
@@ -215,17 +252,17 @@ def do_funnyPeeple2( exportDir = '' ):
 	
 # ----------------------------------------------------------------------------
 
-"""
-The parameters we once liked for this are resolution 90 and
-window width 200 Hz. More recently, 70 or 80 Hz resolution 
-have sounded better.
 
-Found that crunchiness is made _worse_ by increasing Distiller 
-fade time. With the default (1 ms), distilled sounds about the 
-same as raw.
+# The parameters we once liked for this are resolution 90 and
+# window width 200 Hz. More recently, 70 or 80 Hz resolution 
+# have sounded better.
+# 
+# Found that crunchiness is made _worse_ by increasing Distiller 
+# fade time. With the default (1 ms), distilled sounds about the 
+# same as raw.
+# 
+# Tracking analysis makes little difference.
 
-Tracking analysis makes little difference.
-"""
 
 
 def do_moses( exportDir = '' ):
@@ -243,12 +280,14 @@ def do_moses( exportDir = '' ):
 
 	
 	# distill at N Partials per harmonic
-	print 'distilling %i partials (%s)'%(p.size(), time.ctime(time.time()))
+ 	Fade = 0.001
+ 	Gap = 0.0001
+ 	print 'distilling %i partials (%s)'%(p.size(), time.ctime(time.time()))
 	N = 1
 	loris.channelize( p, ref, N )
-	loris.sift( p )
+	loris.sift( p, Fade )
 	loris.removeLabeled( p, 0 )
-	loris.distill( p, 0.001 )
+	loris.distill( p, Fade, Gap )
 	# loris.crop( p, 0, 10 )	# no longer needed as of Loris 1.5
 	
 
@@ -286,17 +325,16 @@ def do_moses( exportDir = '' ):
 
 # ----------------------------------------------------------------------------
 
-"""
-The parameters we once liked for this are resolution 60 and
-window width 200 Hz.
 
-Tracking analysis definitely sounds worse, we have to do a better
-job of tracking the fundamental in this sound. Improved by changing 
-fundamental tracking bound to 200 Hz, but still imperfect.
+# The parameters we once liked for this are resolution 60 and
+# window width 200 Hz.
+# 
+# Tracking analysis definitely sounds worse, we have to do a better
+# job of tracking the fundamental in this sound. Improved by changing 
+# fundamental tracking bound to 200 Hz, but still imperfect.
+# 
+# Still has a reverberant quality in the reconstruction.
 
-Still has a reverberant quality in the reconstruction.
-
-"""
 
 def do_french( exportDir = '' ):
 
@@ -322,11 +360,13 @@ def do_french( exportDir = '' ):
 	ptk = anal.analyze( f.samples(), f.sampleRate(), ref )
 
 	# distill
-	print 'distilling %i partials (%s)'%(p.size(), time.ctime(time.time()))
+ 	Fade = 0.001
+ 	Gap = 0.0001
+ 	print 'distilling %i partials (%s)'%(p.size(), time.ctime(time.time()))
 	loris.channelize( ptk, ref, 1 )
-	loris.sift( ptk )
+	loris.sift( ptk, Fade )
 	loris.removeLabeled( ptk, 0 )
-	loris.distill( ptk )
+	loris.distill( ptk, Fade, Gap )
 	
 	
 	if exportDir:
@@ -368,22 +408,21 @@ def do_french( exportDir = '' ):
 
 # ----------------------------------------------------------------------------
 
-"""
-This sample was used to compare our analysis/synthesis with the 
-analysis/synthesis tools in Kyma, the subject of my visit
-to CU in March 2003.
+# This sample was used to compare our analysis/synthesis with the 
+# analysis/synthesis tools in Kyma, the subject of my visit
+# to CU in March 2003.
+# 
+# Notes: 
+# 
+# - Checked various window widths, 160 Hz seems to be the 
+# best out of 110, 120, 140, 160.
+# 
+# - There is important information between harmonics, but not that much of it.
+# Sifting and retaining the unlabeled Partials give a good set of harmonic
+# Partials and still sounds good in reconstruction. The harmonic Partials
+# alone are usable but the reconstruction is slightly un-natural sounding.
 
-Notes: 
 
-- Checked various window widths, 160 Hz seems to be the 
-best out of 110, 120, 140, 160.
-
-- There is important information between harmonics, but not that much of it.
-Sifting and retaining the unlabeled Partials give a good set of harmonic
-Partials and still sounds good in reconstruction. The harmonic Partials
-alone are usable but the reconstruction is slightly un-natural sounding.
-
-"""
 
 def doAlien( exportDir = '' ):
 
@@ -401,12 +440,13 @@ def doAlien( exportDir = '' ):
 	ref = anal.fundamentalEnv()
 	
 	# sift and distill
-	print 'sifting %i Partials (%s)'%(p.size(), time.ctime(time.time()))
+ 	Fade = 0.001
+ 	Gap = 0.0001
+ 	print 'sifting %i Partials (%s)'%(p.size(), time.ctime(time.time()))
 	ref = loris.createFreqReference( p, 70, 140 )
 	loris.channelize( p, ref, 1 )
-	loris.sift( p )
-	Fade = 0.001
-	loris.distill( p, Fade )
+	loris.sift( p, Fade )
+	loris.distill( p, Fade, Gap )
 	
 	loris.setBandwidth( p, 0 )
 	
@@ -473,9 +513,9 @@ if __name__ == '__main__':
 	if len( sys.argv ) > 1:
 		tag = '.' + sys.argv[1]
 		
-	doNonsense( odir )
-	do_funnyPeeple1( odir )
-	do_funnyPeeple2( odir )
-	do_moses( odir )
-	do_french( odir )
-	doAlien( odir )
+ 	doNonsense( odir )
+ 	do_funnyPeeple1( odir )
+ 	do_funnyPeeple2( odir )
+  	do_moses( odir )
+ 	do_french( odir )
+ 	doAlien( odir )
