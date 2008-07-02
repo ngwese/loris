@@ -349,7 +349,7 @@ FundamentalFromSamples::estimateAt( const double * sampsBeg,
 {
     std::vector< double > amplitudes, frequencies;
     
-    collectFreqsAndAmps( sampsBeg, sampsEnd-sampsEnd, sampleRate,
+    collectFreqsAndAmps( sampsBeg, sampsEnd-sampsBeg, sampleRate,
                          frequencies, amplitudes, time );
                          
     F0Estimate est( amplitudes, frequencies, lowerFreqBound, upperFreqBound, m_precision );

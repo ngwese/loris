@@ -80,10 +80,10 @@ public:
     //  all the peaks are perfect harmonics of the estimated
     //  frequency).
 
-    F0Estimate ( const std::vector<double> & amps, 
-                 const std::vector<double> & freqs, 
-                 double fmin, double fmax,
-                 double resolution );
+    F0Estimate( const std::vector<double> & amps, 
+                const std::vector<double> & freqs, 
+                double fmin, double fmax,
+                double resolution );
 
     // F0Estimate( void ) : m_frequency( 0 ), m_confidence( 0 ) {}
     // F0Estimate( double f, double c ) : m_frequency( f ), m_confidence( c ) {}
@@ -98,6 +98,20 @@ public:
     //  harmonics of this estimate's frequency    
     double confidence( void ) const { return m_confidence; }
     
+private:
+
+    //  --- construction helpers ---    
+    
+    void construct_iterative_method( const std::vector<double> & amps, 
+                                     const std::vector<double> & freqs, 
+                                     double fmin, double fmax,
+                                     double resolution );
+    
+    void construct_secant_method( const std::vector<double> & amps, 
+                                  const std::vector<double> & freqs, 
+                                  double fmin, double fmax,
+                                  double resolution );
+                    
 };  //  end of class F0Estimate
 
 
