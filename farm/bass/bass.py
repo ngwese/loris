@@ -11,7 +11,7 @@ fundamental extracted during analysis.
 - plucked G on the D string (G two octaves below middle C)
 - bowed Db on the A string (?) (Db two octaves below middle C)
 
-Last updated: 4 June 2008 by Kelly Fitz
+Last updated: 1 July 2008 by Kelly Fitz
 """
 
 import loris, time, os
@@ -116,15 +116,19 @@ def doBassDb2Arco( exportDir = '' ):
 	anal = loris.Analyzer( .85*fHz, 1.65*fHz )
 	anal.setFreqDrift( .2*fHz )
 	anal.setBwRegionWidth(0)
-	anal.buildFundamentalEnv( .9*fHz, 1.1*fHz )
+	# anal.buildFundamentalEnv( .9*fHz, 1.1*fHz )
 	p = anal.analyze( f.samples(), f.sampleRate() )
 	
 	print 'distilling %s (%s)'%(name, time.ctime(time.time()))
-	ref = anal.fundamentalEnv()
+	# ref = anal.fundamentalEnv()
+	ref = loris.createF0Estimate( p, .9*fHz, 1.1*fHz, 0.01 )
 	loris.channelize( p, ref, 1 )
+	
+	Fade = 0.01
+	Gap = 0.005
 	#loris.sift( p )
 	#loris.removeLabeled( p, 0 )
-	loris.distill( p, 0.01 )
+	loris.distill( p, Fade, Gap )
 	
 	if exportDir:
 		print 'synthesizing %i distilled partials (%s)'%(p.size(), time.ctime(time.time()))
