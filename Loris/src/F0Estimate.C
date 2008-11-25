@@ -243,12 +243,12 @@ F0Estimate::F0Estimate( const vector<double> & amps,
                                      resolution );
 
 
-        notifier << "best candidate is : " << bestFreq
-                 << " Hz, Q: " << bestQ << endl;
-        notifier << "secant method found : " << m_frequency
-                 << " Hz, Q: " 
-                 << evaluate_Q( amps, freqs, m_frequency, normalization ) << endl;
-                 
+//        notifier << "best candidate is : " << bestFreq
+//                 << " Hz, Q: " << bestQ << endl;
+//        notifier << "secant method found : " << m_frequency
+//                 << " Hz, Q: " 
+//                 << evaluate_Q( amps, freqs, m_frequency, normalization ) << endl;
+//                 
         
         //  What if the secant method flies off to some other root? 
         //  Check that the root is still between fmin and fmax.

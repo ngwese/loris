@@ -1444,7 +1444,7 @@ static void import_sdif( const std::string &infilename,
 struct BreakpointTime
 {
 	long index;			// index identifying which partial has the breakpoint
-	float time;			// time of the breakpoint
+	double time;        // time of the breakpoint
 };
 
 struct earlier_time
@@ -1533,8 +1533,16 @@ static double getNextFrameTime( const double frameTime,
 		//	coincident Breakpoints can be added to the current frame (that is,
 		//	that none of them are from Partials that already have a Breakpoint
 		//	in this frame).
+        //
+        //  epsilon controls how close together in time two breakpoints can be.        
+        //  Keep this large enough that double-precision floating point math
+        //  can find a time between two breakpoints close in time. One nanosecond
+        //  ought to be plenty close.
 		++it;
-		if ( ( it == allBreakpoints.end() ) || ( it->time > ( bpTimeIter->time ) ) )
+        double dtime = it->time - bpTimeIter->time;
+        const double epsilon = 1e-9;
+		if ( ( it == allBreakpoints.end() ) || ( dtime > epsilon ) )
+		//if ( ( it == allBreakpoints.end() ) || ( it->time > ( bpTimeIter->time ) ) )
 		{
 			bpTimeIter = it;
 		}
@@ -1568,14 +1576,23 @@ static double getNextFrameTime( const double frameTime,
 		//	This seems to be sensitive to floating point error,
 		//	probably because times are stored in 32 bit floats.
 		//	We need the error to round toward the later time.
+        //
+        //  Note: times are no longer stored in 32 bit floats, 
+        //  why is this still so flakey?
 		nextFrameTime = bpTimeIter->time - ( 0.5 * ( bpTimeIter->time - prev->time ) );
+        /*
+        notifier << "next frame time " << nextFrameTime << endl;
+        notifier << " bp time " << bpTimeIter->time << endl;
+        notifier << " prev time " << prev->time << endl;
+        notifier << " diff = " << bpTimeIter->time - prev->time << endl;
+        */
 		Assert( bpTimeIter->time >= nextFrameTime );
 		Assert( nextFrameTime > prev->time );
 		
 		//	Try to make frame times whole milliseconds.
 		//	MUST use 32-bit floats for time, or else floating
 		//	point rounding errors cause us to drop breakpoints!
-		float nextFramePrevRnd = 0.001 * std::floor( 1000. * nextFrameTime );
+		double nextFramePrevRnd = 0.001 * std::floor( 1000. * nextFrameTime );
 		if ( ( nextFramePrevRnd < nextFrameTime ) && ( nextFramePrevRnd > prev->time ) )
 		{
 			nextFrameTime = nextFramePrevRnd;
@@ -1590,6 +1607,8 @@ static double getNextFrameTime( const double frameTime,
 			}
 		}			
 	}
+    
+    // notifier << "   returning next frame time " << nextFrameTime << endl;
 
 #if Debug_Loris		
 	if ( ! ( nextFrameTime > frameTime ) )

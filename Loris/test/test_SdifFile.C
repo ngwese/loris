@@ -148,6 +148,7 @@ static void test_markedPartials( void )
 		for ( int i = 0; i < 6; ++i )
 		{
 			double t = times[i] + (k*0.1);
+            std::cout << "  breakpoint time: " << t << endl;
 			Breakpoint b( ((1+k)*100) + (10*t), t, t, t );
 			p.insert( t, b );
 		}
