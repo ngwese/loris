@@ -2225,13 +2225,16 @@ this SpcFile.") setMarkers;
 //
 //	This stuff is kind of big, so it lives in its own interface
 //	file.
-//	
-//	This might need to be earlier in the SWIG interface file than
-//	functions like SpcFile::addPartial, which use Partial?
-//	
+
 %include lorisPartialList.i
 
 
+// ----------------------------------------------------------------
+//		wrap FundamentalEstimator classes
+//
+//	(FundamentalFromSamples and FundamentalFromPartials)
+
+%include lorisFundamental.i
 
 // ----------------------------------------------------------------
 //		experiment: wrap Channelizer class
