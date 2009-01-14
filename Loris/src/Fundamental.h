@@ -5,7 +5,7 @@
  * manipulation, and synthesis of digitized sounds using the Reassigned 
  * Bandwidth-Enhanced Additive Sound Model.
  *
- * Loris is Copyright (c) 1999-2008 by Kelly Fitz and Lippold Haken
+ * Loris is Copyright (c) 1999-2009 by Kelly Fitz and Lippold Haken
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -538,6 +538,11 @@ private:
 
 // ---------------------------------------------------------------------------
 //  class FundamentalFromPartials
+//
+//! Class FundamentalFromPartials represents an algorithm for 
+//! time-varying fundamental frequency estimation from instantaneous
+//! Partial amplitudes and frequencies based on a likelihood
+//!	estimator adapted from Quatieri's Speech Signal Processing text
 
 class FundamentalFromPartials : public FundamentalEstimator
 {

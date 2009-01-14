@@ -5,7 +5,7 @@
  * manipulation, and synthesis of digitized sounds using the Reassigned 
  * Bandwidth-Enhanced Additive Sound Model.
  *
- * Loris is Copyright (c) 1999-2008 by Kelly Fitz and Lippold Haken
+ * Loris is Copyright (c) 1999-2009 by Kelly Fitz and Lippold Haken
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -107,7 +107,7 @@ public:
     //  default copy/assign/destroy are OK
 
 
-    //  Not sure whether or why these wuld be useful.
+    //  Not sure whether or why these would be useful.
     //
     // F0Estimate( void ) : m_frequency( 0 ), m_confidence( 0 ) {}
     // F0Estimate( double f, double c ) : m_frequency( f ), m_confidence( c ) {}
