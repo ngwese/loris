@@ -20,7 +20,7 @@ Please send bug reports to loris@cerlsoundgroup.org
 
 Loris is free software. Please see the file COPYING for details.
 
-Loris is Copyright (c) 1999-2008 by Kelly Fitz and Lippold Haken.
+Loris is Copyright (c) 1999-2009 by Kelly Fitz and Lippold Haken.
 
 
 History of visible changes, organized by relase number:
@@ -37,6 +37,8 @@ performs reassigned spectral analysis and estimates the
 fundamental from the spectral peaks, and FundamentalFromPartials
 estimates the fundamental from the frequency and amplitude
 envelopes of a collection of Partials.
+
+- Added Fundamental classes to scripting (Python) interface.
 
 - Look for Csound5 headers at config time, and prefer to
 build Csound5 opcode library, fall back to Csound4. 

@@ -1680,6 +1680,8 @@ from a pure sinusoid before saturating. This range is mapped
 to bandwidth values on the range [0,1]. Must be positive and 
 not greater than 1. If unspecified, a default value is used.");
 	
+%feature("compactdefaultargs") storeConvergenceBandwidth;
+	
 	void storeConvergenceBandwidth( double tolerance = 0.01 * Analyzer::Default_ConvergenceBandwidth_TolerancePct );
 
 %feature("docstring",
