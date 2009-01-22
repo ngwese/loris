@@ -60,6 +60,17 @@ using std::vector;
 	const double Pi = 3.14159265358979324;
 #endif
 
+#if defined(HAVE_ISFINITE) && (HAVE_ISFINITE)
+    using std::isfinite;
+#else
+    //  Visual C++ lacks this, of course.
+    //  Need to add check for isfinite to configure.ac.
+    #include <float.h>
+	#define isfinite(x) _finite(x) 
+#endif
+
+
+
 //	begin namespace
 namespace Loris {
 
@@ -521,14 +532,14 @@ secant_method( const vector<double> & amps,
         fxnm1 = fxn;
 
 	} 	while( // fabs( deltax ) > precision && 
-               std::isfinite( deltax )  &&
+               isfinite( deltax )  &&
                ++iters < MaxIters );
     
     
     //  Check whether delta blew up. If it did, revert to the
     //  previous value of x.
     
-    if ( ! std::isfinite( deltax )  )
+    if ( ! isfinite( deltax )  )
     {
         xn = xnm1;
     }
