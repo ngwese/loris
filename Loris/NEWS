@@ -43,6 +43,9 @@ envelopes of a collection of Partials.
 - Look for Csound5 headers at config time, and prefer to
 build Csound5 opcode library, fall back to Csound4. 
 
+- Added Visual Studio 2008 projects for building the simple
+morphing test and the Python module under windows.
+
 -------------------------------------------------------
 changes since 1.5.1 release:
 
