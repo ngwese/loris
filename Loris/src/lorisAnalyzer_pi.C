@@ -1004,6 +1004,8 @@ double analyzer_getBwConvergenceTolerance( void )
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
+
+    return 0;
 }
 
 
