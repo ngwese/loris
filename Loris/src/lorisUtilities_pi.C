@@ -139,6 +139,8 @@ double avgAmplitude( const Partial * p )
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}    
+
+    return 0;
 }
 
 /* ---------------------------------------------------------------- */
@@ -167,7 +169,8 @@ double avgFrequency( const Partial * p )
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}    
-}
+
+    return 0;}
 
  
 /* ---------------------------------------------------------------- */
@@ -682,6 +685,8 @@ double peakAmplitude( const Partial * p )
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}    
+
+    return 0;
 }
 
 /* ---------------------------------------------------------------- */
@@ -1049,4 +1054,6 @@ double weightedAvgFrequency( const Partial * p )
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}    
+
+    return 0;
 }
