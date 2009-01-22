@@ -143,6 +143,17 @@ AC_CHECK_SIZEOF(float)
 dnl SIZEOF_DOUBLE, should always be 8 I think
 AC_CHECK_SIZEOF(double)
 
+dnl Check for isfinite macro (C99 standard, not in Visual Studio).
+AH_TEMPLATE([HAVE_ISFINITE],
+            [Define 1 if the isfinite macro is defined in cmath, 0 otherwise.])
+AC_MSG_CHECKING(for isfinite defined in cmath)
+AC_TRY_COMPILE([ #include <cmath>;], [bool b = std::isfinite(0);], [
+    AC_MSG_RESULT(yep)
+    AC_DEFINE([HAVE_ISFINITE], 1) ], [
+    AC_MSG_RESULT(nope using local definition of infinite)
+    AC_DEFINE([HAVE_ISFINITE], 0) ] )
+
+
 dnl Check for endian-ness of system.
 AC_C_BIGENDIAN()
 
