@@ -47,7 +47,7 @@ class LinearEnvelopeBuilder;
 // class Peaks;
 // class Peaks::iterator;
 //  oooo, this is nasty, need to fix it!
-class SpectralPeak;
+struct SpectralPeak;
 typedef std::vector< SpectralPeak > Peaks;
 
 // ---------------------------------------------------------------------------
