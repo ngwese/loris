@@ -1539,10 +1539,8 @@ static double getNextFrameTime( const double frameTime,
         //  can find a time between two breakpoints close in time. One nanosecond
         //  ought to be plenty close.
 		++it;
-        double dtime = it->time - bpTimeIter->time;
         const double epsilon = 1e-9;
-		if ( ( it == allBreakpoints.end() ) || ( dtime > epsilon ) )
-		//if ( ( it == allBreakpoints.end() ) || ( it->time > ( bpTimeIter->time ) ) )
+		if ( ( it == allBreakpoints.end() ) || ( (it->time - bpTimeIter->time) > epsilon ) )
 		{
 			bpTimeIter = it;
 		}
