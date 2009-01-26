@@ -44,7 +44,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;..\..\src&quot;;&quot;..\..&quot;;&quot;$(PYTHON_INCLUDE)&quot;"
+				AdditionalIncludeDirectories="&quot;..\src&quot;;&quot;..\..&quot;;&quot;$(PYTHON_INCLUDE)&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;EXAMPLE_EXPORTS;NOMINMAX"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -65,7 +65,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="&quot;$(PYTHON_LIB)&quot;"
-				OutputFile="_loris.pyd"
+				OutputFile="..\scripting\_loris.pyd"
 				LinkIncremental="1"
 				GenerateDebugInformation="false"
 				SubSystem="1"
@@ -73,7 +73,7 @@
 				EnableCOMDATFolding="2"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
-				ImportLibrary=".\Release/_loris.lib"
+				ImportLibrary=".\PythonBuild/_loris.lib"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -108,18 +108,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\src\AiffData.C"
+				RelativePath="..\src\AiffData.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -128,18 +120,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\AiffFile.C"
+				RelativePath="..\src\AiffFile.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -148,18 +132,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\Analyzer.C"
+				RelativePath="..\src\Analyzer.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -168,18 +144,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\AssociateBandwidth.C"
+				RelativePath="..\src\AssociateBandwidth.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -188,18 +156,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\BigEndian.C"
+				RelativePath="..\src\BigEndian.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -208,18 +168,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\Breakpoint.C"
+				RelativePath="..\src\Breakpoint.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -228,18 +180,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\BreakpointUtils.C"
+				RelativePath="..\src\BreakpointUtils.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -248,18 +192,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\Channelizer.C"
+				RelativePath="..\src\Channelizer.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -268,18 +204,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\Collator.C"
+				RelativePath="..\src\Collator.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -288,18 +216,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\Dilator.C"
+				RelativePath="..\src\Dilator.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -308,18 +228,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\Distiller.C"
+				RelativePath="..\src\Distiller.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -328,18 +240,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\Envelope.C"
+				RelativePath="..\src\Envelope.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -348,18 +252,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\F0Estimate.C"
+				RelativePath="..\src\F0Estimate.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -368,18 +264,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\fftsg.c"
+				RelativePath="..\src\fftsg.c"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -388,18 +276,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\Filter.C"
+				RelativePath="..\src\Filter.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -408,18 +288,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\FourierTransform.C"
+				RelativePath="..\src\FourierTransform.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -428,18 +300,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\FrequencyReference.C"
+				RelativePath="..\src\FrequencyReference.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -448,18 +312,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\Fundamental.C"
+				RelativePath="..\src\Fundamental.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -468,18 +324,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\Harmonifier.C"
+				RelativePath="..\src\Harmonifier.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -488,18 +336,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\ImportLemur.C"
+				RelativePath="..\src\ImportLemur.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -508,18 +348,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\KaiserWindow.C"
+				RelativePath="..\src\KaiserWindow.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -528,18 +360,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\LinearEnvelope.C"
+				RelativePath="..\src\LinearEnvelope.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -548,22 +372,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\scripting\loris_wrap.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\lorisAnalyzer_pi.C"
+				RelativePath="..\scripting\loris_wrap.cxx"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -572,18 +384,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\lorisBpEnvelope_pi.C"
+				RelativePath="..\src\lorisAnalyzer_pi.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -592,18 +396,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\lorisException_pi.C"
+				RelativePath="..\src\lorisBpEnvelope_pi.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -612,18 +408,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\LorisExceptions.C"
+				RelativePath="..\src\lorisException_pi.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -632,18 +420,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\lorisNonObj_pi.C"
+				RelativePath="..\src\LorisExceptions.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -652,18 +432,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\lorisPartialList_pi.C"
+				RelativePath="..\src\lorisNonObj_pi.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -672,18 +444,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\lorisUtilities_pi.C"
+				RelativePath="..\src\lorisPartialList_pi.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -692,18 +456,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\Marker.C"
+				RelativePath="..\src\lorisUtilities_pi.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -712,18 +468,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\Morpher.C"
+				RelativePath="..\src\Marker.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -732,18 +480,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\NoiseGenerator.C"
+				RelativePath="..\src\Morpher.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -752,18 +492,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\Notifier.C"
+				RelativePath="..\src\NoiseGenerator.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -772,18 +504,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\Oscillator.C"
+				RelativePath="..\src\Notifier.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -792,18 +516,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\Partial.C"
+				RelativePath="..\src\Oscillator.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -812,18 +528,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\PartialBuilder.C"
+				RelativePath="..\src\Partial.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -832,18 +540,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\PartialUtils.C"
+				RelativePath="..\src\PartialBuilder.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -852,18 +552,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\phasefix.C"
+				RelativePath="..\src\PartialUtils.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -872,18 +564,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\ReassignedSpectrum.C"
+				RelativePath="..\src\phasefix.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -892,18 +576,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\Resampler.C"
+				RelativePath="..\src\ReassignedSpectrum.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -912,18 +588,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\SdifFile.C"
+				RelativePath="..\src\Resampler.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -932,18 +600,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\Sieve.C"
+				RelativePath="..\src\SdifFile.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -952,18 +612,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\SpcFile.C"
+				RelativePath="..\src\Sieve.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -972,18 +624,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\SpectralPeakSelector.C"
+				RelativePath="..\src\SpcFile.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -992,18 +636,10 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\SpectralSurface.C"
+				RelativePath="..\src\SpectralPeakSelector.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1012,18 +648,22 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\Synthesizer.C"
+				RelativePath="..\src\SpectralSurface.C"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
 						CompileAs="2"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\src\Synthesizer.C"
+				>
 				<FileConfiguration
-					Name="Release|Win32"
+					Name="PythonBuild|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1038,43 +678,43 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\..\src\AiffData.h"
+				RelativePath="..\src\AiffData.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\AiffFile.h"
+				RelativePath="..\src\AiffFile.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\Analyzer.h"
+				RelativePath="..\src\Analyzer.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\AssociateBandwidth.h"
+				RelativePath="..\src\AssociateBandwidth.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\BigEndian.h"
+				RelativePath="..\src\BigEndian.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\Breakpoint.h"
+				RelativePath="..\src\Breakpoint.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\BreakpointEnvelope.h"
+				RelativePath="..\src\BreakpointEnvelope.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\BreakpointUtils.h"
+				RelativePath="..\src\BreakpointUtils.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\Channelizer.h"
+				RelativePath="..\src\Channelizer.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\Collator.h"
+				RelativePath="..\src\Collator.h"
 				>
 			</File>
 			<File
@@ -1082,147 +722,147 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\Dilator.h"
+				RelativePath="..\src\Dilator.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\Distiller.h"
+				RelativePath="..\src\Distiller.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\Envelope.h"
+				RelativePath="..\src\Envelope.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\Exception.h"
+				RelativePath="..\src\Exception.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\F0Estimate.h"
+				RelativePath="..\src\F0Estimate.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\Filter.h"
+				RelativePath="..\src\Filter.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\FourierTransform.h"
+				RelativePath="..\src\FourierTransform.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\FrequencyReference.h"
+				RelativePath="..\src\FrequencyReference.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\Fundamental.h"
+				RelativePath="..\src\Fundamental.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\Harmonifier.h"
+				RelativePath="..\src\Harmonifier.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\ImportLemur.h"
+				RelativePath="..\src\ImportLemur.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\KaiserWindow.h"
+				RelativePath="..\src\KaiserWindow.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\LinearEnvelope.h"
+				RelativePath="..\src\LinearEnvelope.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\loris.h"
+				RelativePath="..\src\loris.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\lorisException_pi.h"
+				RelativePath="..\src\lorisException_pi.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\LorisExceptions.h"
+				RelativePath="..\src\LorisExceptions.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\Marker.h"
+				RelativePath="..\src\Marker.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\Morpher.h"
+				RelativePath="..\src\Morpher.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\NoiseGenerator.h"
+				RelativePath="..\src\NoiseGenerator.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\Notifier.h"
+				RelativePath="..\src\Notifier.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\Oscillator.h"
+				RelativePath="..\src\Oscillator.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\Partial.h"
+				RelativePath="..\src\Partial.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\PartialBuilder.h"
+				RelativePath="..\src\PartialBuilder.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\PartialList.h"
+				RelativePath="..\src\PartialList.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\PartialPtrs.h"
+				RelativePath="..\src\PartialPtrs.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\PartialUtils.h"
+				RelativePath="..\src\PartialUtils.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\phasefix.h"
+				RelativePath="..\src\phasefix.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\ReassignedSpectrum.h"
+				RelativePath="..\src\ReassignedSpectrum.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\Resampler.h"
+				RelativePath="..\src\Resampler.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\SdifFile.h"
+				RelativePath="..\src\SdifFile.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\Sieve.h"
+				RelativePath="..\src\Sieve.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\SpcFile.h"
+				RelativePath="..\src\SpcFile.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\SpectralPeaks.h"
+				RelativePath="..\src\SpectralPeaks.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\SpectralPeakSelector.h"
+				RelativePath="..\src\SpectralPeakSelector.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\SpectralSurface.h"
+				RelativePath="..\src\SpectralSurface.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\Synthesizer.h"
+				RelativePath="..\src\Synthesizer.h"
 				>
 			</File>
 		</Filter>
@@ -1233,10 +873,10 @@
 			>
 		</Filter>
 		<File
-			RelativePath="..\..\scripting\loris.i"
+			RelativePath="..\scripting\loris.i"
 			>
 			<FileConfiguration
-				Name="Release|Win32"
+				Name="PythonBuild|Win32"
 				>
 				<Tool
 					Name="VCCustomBuildTool"
