@@ -1329,6 +1329,9 @@ public:
 
 Initialize a new AiffFile from a vector of samples and sample rate.
 
+Initialize a new AiffFile from two vectors of samples, for left and right
+channels, and sample rate.
+
 Initialize a new AiffFile using data read from a named file.
 
 Initialize an instance of AiffFile having the specified sample 
@@ -1340,6 +1343,9 @@ for an examplanation of fade time).
 
 	AiffFile( const char * filename );
 	AiffFile( const std::vector< double > & vec, double samplerate );
+    AiffFile( const std::vector< double > & vec_left,
+              const std::vector< double > & vec_right, 
+              double samplerate );    
 
 %feature("docstring",
 "Destroy this AiffFile.") ~AiffFile;

@@ -17,6 +17,9 @@ AC_SUBST(ac_aux_dir)
 AM_INIT_AUTOMAKE(1.6)
 AM_CONFIG_HEADER(config.h)
 
+LT_INIT
+AC_SUBST([LIBTOOL_DEPS])
+
 dnl----------------------------------------------------------------
 dnl Package Name And Version
 dnl----------------------------------------------------------------
