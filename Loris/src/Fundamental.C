@@ -487,26 +487,30 @@ FundamentalFromSamples::collectFreqsAndAmps( const double * samps,
                      
         //	extract peaks from the spectrum, no fading:
         Peaks peaks = selector.selectPeaks( *m_spectrum ); 
-       
-        //  sort the peaks in order of decreasing amplitude
-        //
-        //  (HEY is there any reason to do this, other than to find the largest?)
-        std::sort( peaks.begin(), peaks.end(), sort_peaks_greater_amplitude );
         
-        //  determine the floating amplitude threshold
-        const double thresh = 
-            std::max( std::pow( 10.0, - 0.05 * - m_ampFloor ), 
-                      std::pow( 10.0, - 0.05 * m_ampRange ) * peaks.front().breakpoint.amplitude() );
-                    
-        //  collect amplitudes and frequencies and try to 
-        //  estimate the fundamental
-        for ( Peaks::const_iterator spkpos = peaks.begin(); spkpos != peaks.end(); ++spkpos )
+        if ( ! peaks.empty() )
         {
-            if ( spkpos->breakpoint.amplitude() > thresh &&
-                 spkpos->breakpoint.frequency() < m_freqCeiling )
+            //  sort the peaks in order of decreasing amplitude
+            //
+            //  (HEY is there any reason to do this, other than to find the largest?)
+            //std::sort( peaks.begin(), peaks.end(), sort_peaks_greater_amplitude );
+            Peaks::iterator maxpos = std::max_element( peaks.begin(), peaks.end(), sort_peaks_greater_amplitude );
+            
+            //  determine the floating amplitude threshold
+            const double thresh = 
+                std::max( std::pow( 10.0, - 0.05 * - m_ampFloor ), 
+                          std::pow( 10.0, - 0.05 * m_ampRange ) * maxpos->breakpoint.amplitude() );
+                        
+            //  collect amplitudes and frequencies and try to 
+            //  estimate the fundamental
+            for ( Peaks::const_iterator spkpos = peaks.begin(); spkpos != peaks.end(); ++spkpos )
             {
-                amplitudes.push_back( spkpos->breakpoint.amplitude() );
-                frequencies.push_back( spkpos->breakpoint.frequency() );
+                if ( spkpos->breakpoint.amplitude() > thresh &&
+                     spkpos->breakpoint.frequency() < m_freqCeiling )
+                {
+                    amplitudes.push_back( spkpos->breakpoint.amplitude() );
+                    frequencies.push_back( spkpos->breakpoint.frequency() );
+                }
             }
         }
     }
