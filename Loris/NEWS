@@ -7,6 +7,10 @@ Loris 1.5.3 is a minor upgrade to Loris 1.5.2, offering enhancements
 to the Analyzer class and improved fundamental frequency estimation
 capabilities.
 
+64-bit compatibility has been improved (BIG thanks to Bruce McCosar
+for 64-bit assistance and testing), and Visual Studio (2008) projects
+are provided for building the Loris Python module under windows. 
+
 Some of the changes in Loris 1.5.3 are incompatible with older Loris
 versions, and may require changes to existing program code.
 
@@ -45,6 +49,8 @@ build Csound5 opcode library, fall back to Csound4.
 
 - Added Visual Studio 2008 projects for building the simple
 morphing test and the Python module under windows.
+
+- Improved 64-bit compatibility.
 
 -------------------------------------------------------
 changes since 1.5.1 release:

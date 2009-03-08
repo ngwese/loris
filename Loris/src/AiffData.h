@@ -89,7 +89,7 @@ enum
 	MarkerId = 0x4d41524b					// 'MARK'
 };
 
-typedef unsigned long ID;
+typedef Uint_32 ID;
 typedef char Byte;
 
 struct CkHeader 

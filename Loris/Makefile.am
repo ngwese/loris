@@ -29,6 +29,9 @@ DEMO_DIST_FILES =	Loris/demo/Makefile \
 					Loris/demo/source \
 					Loris/demo/reference
 
+EXTRA_DIST = win/Loris_MorphTest.vcproj win/Loris_PythonModule.vcproj win/loris.h win/config.h
+
+
 dist-demo:
 	cd $(top_srcdir)/demo; tar zxf morphsources.tgz; tar zxf morphreference.tgz
 	cd $(top_srcdir)/..; tar zcf Loris/$(PACKAGE)-demo-$(VERSION_STR).tgz $(DEMO_DIST_FILES)

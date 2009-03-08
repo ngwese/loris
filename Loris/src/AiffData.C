@@ -842,14 +842,14 @@ convertSamplesToBytes( const std::vector< double > & samples,
 # define HUGE_VAL HUGE
 #endif							/* HUGE_VAL */
 
-#define FloatToUnsigned(f)((int)(((int)(f - 2147483648.0)) + 2147483647L) + 1)
+#define FloatToUnsigned(f)((Int_32)((Int_32(f - 2147483648.0)) + (Int_32)(2147483647)) + 1)
 
 void ConvertToIeeeExtended(double num, extended80 * x)
 {
 	int sign;
 	int expon;
 	double fMant, fsMant;
-	int hiMant, loMant;
+	Int_32 hiMant, loMant;
 	char * bytes = x->data;
 
 	if (num < 0) {
@@ -905,7 +905,7 @@ void ConvertToIeeeExtended(double num, extended80 * x)
 # define HUGE_VAL HUGE
 #endif							/* HUGE_VAL */
 
-# define UnsignedToFloat(u)(((double)((long)(u - 2147483647L - 1))) + 2147483648.0)
+# define UnsignedToFloat(u)(((double)((Int_32)(u - (Int_32)(2147483647) - 1))) + 2147483648.0)
 
 /****************************************************************
  * Extended precision IEEE floating-point conversion routine.
@@ -915,7 +915,7 @@ double ConvertFromIeeeExtended(const extended80 * x)
 {								/* LCN */ /* ? */
 	double f;
 	int expon;
-	int hiMant, loMant;
+	Int_32 hiMant, loMant;
 	const char * bytes = x->data;
 
 	expon = ((bytes[0] & 0x7F) << 8) | (bytes[1] & 0xFF);
@@ -941,13 +941,10 @@ double ConvertFromIeeeExtended(const extended80 * x)
 	}
 
 	if (bytes[0] & 0x80)
+	{
 		f = -f;
-#if 0	//	CW6 optimizer doesn't like this, internal compiler error!
-		return -f;
-	else
-		return f;
-#endif
-
+	}
+	
 	return f;
 }
 
