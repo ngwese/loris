@@ -1,20 +1,15 @@
-This directory contains a demonstration of sound morphing
+This package contains a demonstration of sound morphing
 using Python and the Loris library. To run this demo, you 
 must have Python in your path, and the Loris module in your
 PYTHONPATH. 
 
 	make demo
 	
-runs the demo, 
+runs the demo, or else simply run the demo script in the Python 
+interpreter
 
-	make refs
+	python morphdemo.py
 	
-untars the reference files (to compare with those generated
-by running the demo, they should sound very similar).
-
-	make all
-	
-does both of the above.
 
 Loris is an Open Source C++ class library implementing analysis, 
 manipulation, and synthesis of digitized sounds using the 

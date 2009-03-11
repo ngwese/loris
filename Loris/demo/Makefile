@@ -1,4 +1,4 @@
-# Copyright (C) 1999-2002, Kelly Fitz and Lippold Haken <loris@cerlsoundgroup.org>
+# Copyright (C) 1999-2009, Kelly Fitz and Lippold Haken <loris@cerlsoundgroup.org>
 #  
 # This file is free software; as a special exception the author gives
 # unlimited permission to copy and/or distribute it, with or without 
@@ -9,9 +9,9 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 demo_sources = source/flute.source.aiff source/clarinet.source.aiff source/cello.source.aiff
-demo_source_tarball = morphsources.tgz
-demo_refs_tarball = morphreference.tgz
-demoscript = morphdemo.py
+demo_script = morphdemo.py
+
+demo_tarball = loris-demo-1.5.3.tgz
 
 demo_output = cello.dilated.aiff \
 	cello.dilated.sdif \
@@ -32,13 +32,15 @@ demo_output = cello.dilated.aiff \
 
 scriptingdir = ../scripting
 
-env_run = env PYTHONPATH=$(scriptingdir):$(scriptingdir)/.libs python $(demoscript)
-noenv_run = python $(demoscript)
+env_run = env PYTHONPATH=$(scriptingdir):$(scriptingdir)/.libs python $(demo_script)
+noenv_run = python $(demo_script)
 
 GACK = "!!! cannot run the demos script without the sound sources !!!"
+
+
 # targets:
 
-all: demo refs
+all: demo
 
 demo:
 	-test -f $(demo_source_tarball) && tar zxf $(demo_source_tarball)
@@ -50,16 +52,17 @@ demo:
 	&& echo "using Loris distribution" \
 	&& $(env_run) ) || \
 	$(noenv_run)
+
 	
-# - test -d $(scriptingdir) && setenv PYTHONPATH $(scriptingdir):$(scriptingdir)/.libs \
-#python $(demoscript)) || echo $(GACK)
 	
-refs: 
-	tar zxf $(demo_refs_tarball)
+$(demo_tarball): Makefile README $(demo_script)
+	tar cvf $(demo_tarball) Makefile README $(demo_script) $(demo_sources)
+	
+	
+dist: $(demo_tarball)	
 
 clean:
 	rm -f $(demo_output)
 	
 distclean: clean
-	-rm -fr source 
-	-rm -fr reference
+	-rm $(demo_tarball)

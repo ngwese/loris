@@ -31,18 +31,17 @@
 #  
 #   http://www.cerlsoundgroup.org/Loris/
 #
-#	updated 7 May 2002 by kel
+#	updated 10 March 2009 for Loris 1.5.3 by Kelly Fitz
 #  
 """
 Welcome to the Loris morphing demo!
-Kelly Fitz 2002
+Kelly Fitz 2009
 
 Generates several morphs between a clarinet, 
-a flute, and a cello. The results can be compared
-to those in the "reference" directory.
+a flute, and a cello.
 
-In order to run this demo, the Loris module (loris.py 
-and _loris.so) must be in your PYTHONPATH.
+In order to run this demo, the Loris module must be 
+in your PYTHONPATH.
 """
 print __doc__
 
@@ -60,7 +59,7 @@ srcdir = 'source'
 # - configure the analyzer (the flute and clarinet use the
 # same analyzer configuration)
 # - analyze, yielding a collection of partials
-# - extract a reference envelope and distill partials
+# - construct a constant reference envelope and distill partials
 # (this reduces the number of partials considerably by 
 # connecting and condensing related partials; for example, 
 # in quasi-harmonic sounds, the distillation process yields
@@ -75,9 +74,9 @@ ff = loris.AiffFile( os.path.join(srcdir, 'flute.source.aiff') )
 v = ff.samples()
 samplerate = ff.sampleRate()
 flut = a.analyze( v, samplerate )
-print 'using fundamental as reference'
-flut_env = loris.createFreqReference( flut, 250, 500, 20 )
-loris.channelize( flut, flut_env, 1 )
+print 'using 291 Hz as reference frequency for channelization'
+flut_ref = loris.LinearEnvelope( 291 )
+loris.channelize( flut, flut_ref, 1 )
 loris.distill( flut )
 
 #
@@ -89,14 +88,14 @@ cf = loris.AiffFile( os.path.join(srcdir, 'clarinet.source.aiff') )
 v = cf.samples()
 samplerate = cf.sampleRate()
 clar = a.analyze( v, samplerate )
-print 'using fundamental as reference'
-env = loris.createFreqReference( clar, 350, 500, 20 )
+print 'using estimated fundamental as reference'
+env = a.fundamentalEnv()
 loris.channelize( clar, env, 1 )
 loris.distill( clar )
 print 'shifting clarinet pitch down by six half steps'
-loris.shiftPitch( clar, loris.BreakpointEnvelopeWithValue( -600 ) )
+loris.shiftPitch( clar, loris.LinearEnvelope( -600 ) )
 print 'doubling amplitude'
-loris.scaleAmp( clar, loris.BreakpointEnvelopeWithValue( 2 ) )
+loris.scaleAmp( clar, loris.LinearEnvelope( 2 ) )
 
 #
 #	analyze cello tone
@@ -107,9 +106,11 @@ celf = loris.AiffFile( os.path.join(srcdir, 'cello.source.aiff') )
 v = celf.samples()
 samplerate = celf.sampleRate()
 cel = a.analyze( v, samplerate )
-print 'using third harmonic as reference'
-third = loris.createFreqReference( cel, 400, 500, 20 )
-loris.channelize( cel, third, 3 )
+print 'estimate fundamental from partials as reference'
+est = loris.FundamentalFromPartials()
+tspan = loris.timeSpan( cel )
+cel_ref = est.buildEnvelope( cel, tspan[0], tspan[1], 0.01, 100, 200, 0.95 ) 
+loris.channelize( cel, cel_ref, 1 )
 loris.distill( cel )
 
 #
@@ -128,11 +129,11 @@ tgt_times = [0., 0.19, 3., 3.25]
 
 print 'dilating sounds to match', tgt_times, '(%s)' % time.ctime(time.time())
 print 'flute times:', flute_times
-loris.dilate( flut, str(flute_times), str(tgt_times) )
+loris.dilate( flut, flute_times, tgt_times )
 print 'clarinet times:', clar_times
-loris.dilate( clar, str(clar_times), str(tgt_times) )
+loris.dilate( clar, clar_times, tgt_times )
 print 'cello times:', cel_times
-loris.dilate( cel, str(cel_times), str(tgt_times) )
+loris.dilate( cel, cel_times, tgt_times )
 
 #
 #	synthesize and save dilated sources
@@ -142,21 +143,21 @@ loris.dilate( cel, str(cel_times), str(tgt_times) )
 #
 fname = 'flute.dilated.aiff'
 print 'synthesizing', fname, '(%s)' % time.ctime(time.time())
-loris.exportAiff( fname, loris.synthesize( flut, samplerate ), samplerate, 1, 16 )
+loris.exportAiff( fname, loris.synthesize( flut, samplerate ), samplerate, 16 )
 fname = 'flute.dilated.sdif'
 print 'exporting sdif file:', fname, '(%s)' % time.ctime(time.time())
 loris.exportSdif( fname, flut )
 
 fname = 'clar.dilated.aiff'
 print 'synthesizing', fname, '(%s)' % time.ctime(time.time())
-loris.exportAiff( fname, loris.synthesize( clar, samplerate ), samplerate, 1, 16 )
+loris.exportAiff( fname, loris.synthesize( clar, samplerate ), samplerate, 16 )
 fname = 'clarinet.dilated.sdif'
 print 'exporting sdif file:', fname, '(%s)' % time.ctime(time.time())
 loris.exportSdif( fname, clar )
 
 fname = 'cello.dilated.aiff'
 print 'synthesizing', fname, '(%s)' % time.ctime(time.time())
-loris.exportAiff( fname, loris.synthesize( cel, samplerate ), samplerate, 1, 16 )
+loris.exportAiff( fname, loris.synthesize( cel, samplerate ), samplerate, 16 )
 fname = 'cello.dilated.sdif'
 print 'exporting sdif file:', fname, '(%s)' % time.ctime(time.time())
 loris.exportSdif( fname, cel )
@@ -168,7 +169,7 @@ loris.exportSdif( fname, cel )
 # Morphs are from the first sound to the 
 # second over the time 0.6 to 1.6 seconds.
 #
-mf = loris.BreakpointEnvelope()
+mf = loris.LinearEnvelope()
 mf.insertBreakpoint( 0.6, 0 )
 mf.insertBreakpoint( 1.6, 1 )
 
@@ -176,57 +177,65 @@ samplerate = 44100.
 
 print 'morphing flute and clarinet (%s)' % time.ctime(time.time())
 m = loris.morph( clar, flut, mf, mf, mf )
-loris.exportAiff( 'clariflute.aiff', 
-				  loris.synthesize( m, samplerate ), 
-				  samplerate, 1, 16 )
+# render samples, and export to AIFF
+samps = loris.synthesize( m, samplerate )
+loris.exportAiff( 'clariflute.aiff', samps,
+				  samplerate, 16 )
+				  
 print 'exporting sdif file clariflute.aiff', '(%s)' % time.ctime(time.time())
 loris.exportSdif( 'clariflute.sdif', m )
 	  
-			
-loris.exportAiff( 'flutinet.aiff', 
-				  loris.synthesize( loris.morph( flut, clar, mf, mf, mf ), samplerate ), 
-				  samplerate, 1, 16 )
+# morph and render samples	  
+m = loris.morph( flut, clar, mf, mf, mf )
+fout = loris.AiffFile( m, samplerate )
+fout.write( 'flutinet.aiff' )
+
 
 print 'morphing flute and cello (%s)' % time.ctime(time.time())
 print 'shifting flute pitch down by eleven half steps'
 flut_low = flut.copy()
-loris.shiftPitch( flut_low, loris.BreakpointEnvelopeWithValue( -1100 ) )
-loris.exportAiff( 'cellute.aiff', 
-				  loris.synthesize( loris.morph( cel, flut_low, mf, mf, mf ), samplerate ), 
-				  samplerate, 1, 16 )
-loris.exportAiff( 'flutello.aiff', 
-				  loris.synthesize( loris.morph( flut_low, cel, mf, mf, mf ), samplerate ), 
-				  samplerate, 1, 16 )
+loris.shiftPitch( flut_low, loris.LinearEnvelope( -1100 ) )
+
+m = loris.morph( cel, flut_low, mf, mf, mf )
+fout = loris.AiffFile( m, samplerate )
+fout.write( 'cellute.aiff' )
+
+m = loris.morph( flut_low, cel, mf, mf, mf )
+fout = loris.AiffFile( m, samplerate )
+fout.write( 'flutello.aiff' )
+
 
 print 'morphing flute and cello again (%s)' % time.ctime(time.time())
 print 'shifting flute pitch up by one half step'
-loris.shiftPitch( flut, loris.BreakpointEnvelopeWithValue( 100 ) )
+loris.shiftPitch( flut, loris.LinearEnvelope( 100 ) )
 
 # double all labels:
-it = flut.begin()
-while not it.equals(flut.end()):
-	it.partial().setLabel( it.partial().label()*2)
-	it = it.next()
+for p in flut:
+	p.setLabel( p.label() * 2 )
+	
 
 print 'exporting Spc files for pre-morphed flute and cello sounds.'
+print '(Spc files can be used to drive oscillator banks in Kyma)'
+
 print 'exporting Spc file flute.premorph.spc', '(%s)' % time.ctime(time.time())
 loris.exportSpc('flute.premorph.spc', flut, 62, 0)
 print 'exporting Spc file cello.premorph.spc', '(%s)' % time.ctime(time.time())
 loris.exportSpc('cello.premorph.spc', cel, 50, 0)
 
 m = loris.morph( cel, flut, mf, mf, mf )
-loris.exportAiff( 'cellute2.aiff', 
-				  loris.synthesize( m, samplerate ), 
-				  samplerate, 1, 16 )			  
+fout = loris.AiffFile( m, samplerate )
+fout.write( 'cellute2.aiff' )
+
 
 print 'exporting Spc file for second flute and cello morph.'
 print 'exporting Spc file cellute2.spc', '(%s)' % time.ctime(time.time())
 loris.exportSpc('cellute2.spc', m, 50, 0)
 
 m = loris.morph( flut, cel, mf, mf, mf )
-loris.exportAiff( 'flutello2.aiff', 
-				  loris.synthesize( m, samplerate ), 
-				  samplerate, 1, 16 )
+fout = loris.AiffFile( m, samplerate )
+fout.write( 'flutello2.aiff' )
+
+
 
 # all done
 print 'hey, I\'m spent. (%s)' % time.ctime(time.time())
