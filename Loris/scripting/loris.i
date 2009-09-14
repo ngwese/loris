@@ -1597,6 +1597,14 @@ in time.");
 zero-crossings) of the analysis window used by this Analyzer.");
 
 	double windowWidth( void ) const;
+
+%feature("docstring",
+"Return true if the phases and frequencies of the constructed
+ partials should be modified to be consistent at the end of the
+ analysis, and false otherwise. (Default is true.)");
+ 
+    bool phaseCorrect( void ) const;
+    
 	
 %feature("docstring",
 "Set the amplitude floor (lowest detected spectral amplitude), in              
@@ -1659,7 +1667,14 @@ zero-crossings) of the analysis window used by this Analyzer.");
 
 	void setWindowWidth( double x );
 	
-	
+%feature("docstring",
+"Indicate whether the phases and frequencies of the constructed
+ partials should be modified to be consistent at the end of the
+ analysis. (Default is true.)");
+
+    void setPhaseCorrect( bool TF = true );
+    
+    
 %feature("docstring",
 "Construct Partial bandwidth envelopes during analysis
 by associating residual energy in the spectrum (after
@@ -1752,25 +1767,23 @@ The fundamental frequency estimate can be accessed by
 fundamentalEnv() after the analysis is complete.
 ") buildFundamentalEnv;
 
-    void buildFundamentalEnv( bool TF = true );
 
     void buildFundamentalEnv( double fmin, double fmax, 
                               double threshDb = -60, double threshHz = 8000 );
 
 %feature("docstring",
 "Return the overall amplitude estimate envelope constructed
-during the most recent analysis performed by this Analyzer.
-Will be empty unless buildAmpEnv was invoked to enable the
-construction of this envelope during analysis.") ampEnv;
+during the most recent analysis performed by this Analyzer.") ampEnv;
 
     LinearEnvelope ampEnv( void ) const;
     
 %feature("docstring",
-"Legacy support, do not use. The amplitude envelope
-is always estimated.") buildAmpEnv;
+"Legacy support, do not use. The amplitude and frequency envelopes
+are always estimated.") buildAmpEnv;
 
     void buildAmpEnv( bool TF = true );
 
+    void buildFundamentalEnv( bool TF = true );
 
 };	//	end of class Analyzer
 
