@@ -1100,13 +1100,3 @@ LINKAGE
 
 }
 
-/*
-  This works:
-
-  ../libtool --mode=compile g++ -DHAVE_CONFIG_H -I.. -I../src -I/usr/local/src/Csound-4.23 -g -O2 -c -o lorisgens.lo lorisgens.C
-
-  ../libtool --mode=link g++ -o lorisgens.la -rpath /usr/local/lib -module -avoid-version lorisgens.lo ../src/libloris.la -lstdc++
-
-  csound --opcode-lib=.libs/lorisgens.so tryit.csd
-*/
-
