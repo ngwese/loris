@@ -42,17 +42,69 @@
 namespace Loris {
 
 //  define a spectral peak data structure
+//
+//  HEY
+//  Clean this mess up! Upgrade this struct into a class that can 
+//  store more kinds of information (like reassignment values), and 
+//  creates a Breakpoint when needed.
 
-struct SpectralPeak
+class SpectralPeak
 {
-    double time;
-    Breakpoint breakpoint;
+private:
+
+    double m_time;
+    Breakpoint m_breakpoint;
+
+public:
+
+    //  --- lifecycle ---
     
-    SpectralPeak( double t, const Breakpoint & bp ) : time( t ), breakpoint( bp ) {}
+    SpectralPeak( double t, const Breakpoint & bp ) : m_time( t ), m_breakpoint( bp ) {}
+    
+    
+    //  --- access ---
+    
+    double time( void ) const { return m_time; }
+    
+    double amplitude( void ) const { return m_breakpoint.amplitude(); }
+    double frequency( void ) const { return m_breakpoint.frequency(); }
+    double bandwidth( void ) const { return m_breakpoint.bandwidth(); }
+    
+    //  --- mutation ---
+    
+    void setAmplitude( double x ) { m_breakpoint.setAmplitude(x); }
+    void setBandwidth( double x ) { m_breakpoint.setBandwidth(x); }
+    
+    //  this REALLY shouldn't be in here...
+    void addNoiseEnergy( double enoise ) { m_breakpoint.addNoiseEnergy(enoise); }
+    
+    //  --- Breakpoint creation ---
+    
+    Breakpoint createBreakpoint( void ) const { return m_breakpoint; }
+    
+    //  --- comparitors ---
+    
+    //	Comparitor for sorting spectral peaks in order of 
+    //	increasing frequency, or finding maximum frequency.
+
+    static bool sort_increasing_freq( const SpectralPeak & lhs, 
+                                      const SpectralPeak & rhs )
+    { 
+        return lhs.frequency()  < rhs.frequency(); 
+    }
+
+    //	predicate used for sorting peaks in order of decreasing amplitude:
+    static bool sort_greater_amplitude( const SpectralPeak & lhs, 
+                                        const SpectralPeak & rhs )
+    { 
+        return lhs.amplitude() > rhs.amplitude(); 
+    }
 };
 
 //	define the structure used to collect spectral peaks:
 typedef std::vector< SpectralPeak > Peaks;
+
+
 
 }	//	end of namespace Loris
 

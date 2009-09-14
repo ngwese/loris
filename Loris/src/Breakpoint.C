@@ -99,8 +99,10 @@ Breakpoint::addNoiseEnergy( double enoise )
 	//	Assert( e >= n );
 	//	could complain, but its recoverable, just fix it:
 	if ( e < n )
+    {
 		e = n;
-	
+	}
+    
 	//	guard against divide-by-zero, and don't allow
 	//	the sinusoidal energy to decrease:
 	if ( n + enoise > 0. ) 

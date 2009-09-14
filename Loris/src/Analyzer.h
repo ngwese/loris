@@ -301,9 +301,6 @@ public:
     //! Return true if the phases and frequencies of the constructed
     //! partials should be modified to be consistent at the end of the
     //! analysis, and false otherwise. (Default is true.)
-    //!
-    //! \param  TF is a flag indicating whether or not to construct
-    //!         phase-corrected Partials
     bool phaseCorrect( void ) const;
 
 
@@ -498,7 +495,6 @@ public:
 
     //! Return the fundamental frequency estimate envelope constructed
     //! during the most recent analysis performed by this Analyzer.
-    //! Will be empty if fundamental estimation eas disabled.
     //!
     //! By default, a fundamental envelope is estimated during analysis
     //! between the frequency resolution and 1.5 times the resolution.
@@ -506,8 +502,6 @@ public:
 
     //! Return the overall amplitude estimate envelope constructed
     //! during the most recent analysis performed by this Analyzer.
-    //! Will be empty unless buildAmpEnv was invoked to enable the
-    //! construction of this envelope during analysis.
     const LinearEnvelope & ampEnv( void ) const;
     
     

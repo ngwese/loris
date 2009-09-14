@@ -60,14 +60,26 @@ using std::vector;
 	const double Pi = 3.14159265358979324;
 #endif
 
-#if defined(HAVE_ISFINITE) && (HAVE_ISFINITE)
-    using std::isfinite;
-#else
-    //  Visual C++ lacks this, of course.
-    //  Need to add check for isfinite to configure.ac.
-    #include <float.h>
-	#define isfinite(x) _finite(x) 
-#endif
+// #if defined(HAVE_ISFINITE) && (HAVE_ISFINITE)
+//     using std::isfinite;
+//    
+//	isfinite is not, after all, part of the standard, 
+//	it is an extension. If it is not provided, the following
+//	checks for NaN and finite-ness.
+//
+//	Use this instead.
+// 	This code is taken from 
+//		http://www.johndcook.com/IEEE_exceptions_in_cpp.html
+
+#include <float.h>
+inline bool IsFiniteNumber( double x )
+{
+	//	DBL_MAX is defined in float.h.
+	//	Comparisons with NaN always fail. 
+	
+    return (x <= DBL_MAX && x >= -DBL_MAX);		
+}
+	
 
 
 
@@ -532,14 +544,14 @@ secant_method( const vector<double> & amps,
         fxnm1 = fxn;
 
 	} 	while( // fabs( deltax ) > precision && 
-               isfinite( deltax )  &&
+               IsFiniteNumber( deltax )  &&
                ++iters < MaxIters );
     
     
     //  Check whether delta blew up. If it did, revert to the
     //  previous value of x.
     
-    if ( ! isfinite( deltax )  )
+    if ( ! IsFiniteNumber( deltax )  )
     {
         xn = xnm1;
     }

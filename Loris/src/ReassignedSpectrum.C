@@ -454,14 +454,31 @@ ReassignedSpectrum::reassignedPhase( long idx ) const
 	//
 	//  Phase ought to be linear anyway, so I should just be
 	//  able to use dumb old linear interpolation.
-	double slope = (offsetFreq > 0) ? 
-	      ( arg( circEvenPartAt( mMagnitudeTransform, idx+1 ) ) - phase ) : 
-	      ( phase - arg( circEvenPartAt( mMagnitudeTransform, idx-1 ) ) );
-	phase += offsetFreq * slope;
+    //  offsetFreq is in fractional frequency samples
+    if ( offsetFreq > 0 )
+    {
+        double nextphase = arg( circEvenPartAt( mMagnitudeTransform, idx+1 ) );
+        double slope = nextphase - phase;
+        phase += offsetFreq * slope;
+    }
+    else
+    {   
+        double prevphase = arg( circEvenPartAt( mMagnitudeTransform, idx-1 ) );
+        double slope = phase - prevphase;
+        phase += offsetFreq * slope;
+    }
+    
 		
 	//	adjust phase according to the time correction:
 	const double fracFreqSample = idx + offsetFreq; 
 	phase += offsetTime * fracFreqSample * 2. * Pi / mMagnitudeTransform.size();
+    
+    //  NOTICE
+    //  This could be pretty much anything -- a sample reassigned by a
+    //  millisecond at 1000 Hz in a 1024 FFT at 44k sample rate is 
+    //  adjusted by 2Pi.
+    //  
+    //  What if the frequency estimate is bad? Corrupts the phase estimate too!
 	
 	return fmod( phase, 2. * Pi );
 }

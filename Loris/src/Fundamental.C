@@ -435,7 +435,7 @@ FundamentalFromSamples::buildSpectrumAnalyzer( double srate )
 static bool sort_peaks_greater_amplitude( const SpectralPeak & lhs, 
 										  const SpectralPeak & rhs )
 { 
-	return lhs.breakpoint.amplitude() > rhs.breakpoint.amplitude(); 
+	return lhs.amplitude() > rhs.amplitude(); 
 }
 
 // ---------------------------------------------------------------------------
@@ -499,17 +499,17 @@ FundamentalFromSamples::collectFreqsAndAmps( const double * samps,
             //  determine the floating amplitude threshold
             const double thresh = 
                 std::max( std::pow( 10.0, - 0.05 * - m_ampFloor ), 
-                          std::pow( 10.0, - 0.05 * m_ampRange ) * maxpos->breakpoint.amplitude() );
+                          std::pow( 10.0, - 0.05 * m_ampRange ) * maxpos->amplitude() );
                         
             //  collect amplitudes and frequencies and try to 
             //  estimate the fundamental
             for ( Peaks::const_iterator spkpos = peaks.begin(); spkpos != peaks.end(); ++spkpos )
             {
-                if ( spkpos->breakpoint.amplitude() > thresh &&
-                     spkpos->breakpoint.frequency() < m_freqCeiling )
+                if ( spkpos->amplitude() > thresh &&
+                     spkpos->frequency() < m_freqCeiling )
                 {
-                    amplitudes.push_back( spkpos->breakpoint.amplitude() );
-                    frequencies.push_back( spkpos->breakpoint.frequency() );
+                    amplitudes.push_back( spkpos->amplitude() );
+                    frequencies.push_back( spkpos->frequency() );
                 }
             }
         }

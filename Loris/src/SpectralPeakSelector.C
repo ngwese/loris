@@ -143,37 +143,39 @@ SpectralPeakSelector::selectReassignmentMinima( ReassignedSpectrum & spectrum,
             
             //  still possible that the frequency winds up being
             //  below the specified minimum
-            if ( freq < minFrequency )
-            {
-                continue;   //  this control flow could be better!
+            if ( freq >= minFrequency )
+            {            	         
+                //	keep only peaks with small time corrections:
+                double timeCorrectionSamps = spectrum.reassignedTime( peakidx );
+                if ( fabs(timeCorrectionSamps) < maxCorrectionSamples )
+                {
+                    double mag = spectrum.reassignedMagnitude( peakidx );
+                    double phase = spectrum.reassignedPhase( peakidx );    			
+
+                    //	this will be overwritten later in analysis, 
+                    //	might be ignored altogether, only used if the
+                    //	mixed derivative convergence indicator is stored
+                    //	as bandwidth in Analyzer:
+                    double bw = spectrum.convergence( j );
+
+
+                    //	also store the corrected peak time in seconds, won't
+                    //	be able to compute it later:
+                    double time = timeCorrectionSamps * oneOverSR;
+                    Breakpoint bp( freq, mag, bw, phase );
+                    peaks.push_back( SpectralPeak( time, bp ) );
+                }
             }
-	         
-			//	keep only peaks with small time corrections:
-			double timeCorrectionSamps = spectrum.reassignedTime( peakidx );
-			if ( fabs(timeCorrectionSamps) < maxCorrectionSamples )
-			{
-    			double mag = spectrum.reassignedMagnitude( peakidx );
-    			double phase = spectrum.reassignedPhase( peakidx );    			
-
-				//	this will be overwritten later in analysis, 
-				//	might be ignored altogether, only used if the
-				//	mixed derivative convergence indicator is stored
-				//	as bandwidth in Analyzer:
-				double bw = spectrum.convergence( j );
-
-
-    			//	also store the corrected peak time in seconds, won't
-    			//	be able to compute it later:
-    			double time = timeCorrectionSamps * oneOverSR;
-    			Breakpoint bp( freq, mag, bw, phase );
-    			peaks.push_back( SpectralPeak( time, bp ) );
-			}	        
+                	        
 	    }
 	    fsample = next_fsample;
 	}
-	
-	debugger << "extractPeaks found " << peaks.size() << endl;
-		
+    
+	/*
+	debugger << "SpectralPeakSelector::selectReassignmentMinima: found " 
+             << peaks.size() << " peaks" << endl;
+	*/
+    	
 	return peaks;
 
 }
@@ -235,8 +237,10 @@ SpectralPeakSelector::selectMagnitudePeaks( ReassignedSpectrum & spectrum,
 		}	//	end if itsa peak
 	}
 	
-	debugger << "extractPeaks found " << peaks.size() << endl;
-		
+    /*
+	debugger << "SpectralPeakSelector::selectMagnitudePeaks: found " 
+             << peaks.size() << " peaks" << endl;
+    */         		
 	return peaks;
 }
 

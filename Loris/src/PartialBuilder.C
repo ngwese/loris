@@ -63,6 +63,12 @@
 #include <algorithm>
 #include <cmath>
 
+// ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+//  HEY - remove mMaxTimeOffset and the hopTime argument, these are wrong
+// ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+
 //	begin namespace
 namespace Loris {
 
@@ -95,6 +101,8 @@ PartialBuilder::PartialBuilder( double drift, const Envelope & env ) :
 {
 }
 
+// --- local helpers for Partial building ---
+
 // ---------------------------------------------------------------------------
 //	end_frequency
 // ---------------------------------------------------------------------------
@@ -112,52 +120,48 @@ static inline double end_frequency( const Partial & partial )
 //	Returns the (positive) frequency distance between a Breakpoint 
 //	and the last Breakpoint in a Partial.
 //
-static inline double 
-freq_distance( const Partial & partial, const Breakpoint & bp )
+inline double 
+PartialBuilder::freq_distance( const Partial & partial, const SpectralPeak & pk )
 {
-	return std::fabs( end_frequency( partial ) - bp.frequency() );
+    double normBpFreq = pk.frequency() / mFreqWarping->valueAt( pk.time() );
+    
+    double normPartialEndFreq = 
+        partial.last().frequency() / mFreqWarping->valueAt( partial.endTime() );
+    
+	return std::fabs( normPartialEndFreq - normBpFreq );
 }
 
 // ---------------------------------------------------------------------------
 //	better_match
 // ---------------------------------------------------------------------------
-//	predicate for choosing the better of two proposed
-//	Partial-to-Breakpoint matches.
+//	Predicate for choosing the better of two proposed
+//	Partial-to-Breakpoint matches. Note: sometimes this
+//  is used to compare two candidate Breakpoint matches
+//  to the same Partial, other times to candidate Partials
+//  to the same Breakpoint.
 //
 //	Return true if the first match is better, otherwise
 //	return false.
 //
-static bool 
-better_match( const Partial & part1, const Breakpoint & bp1,
-			  const Partial & part2, const Breakpoint & bp2 )
+
+bool PartialBuilder::better_match( const Partial & part, const SpectralPeak & pk1,
+                                   const SpectralPeak & pk2 )
+{
+	Assert( part.numBreakpoints() > 0 );
+	
+	return freq_distance( part, pk1 ) < freq_distance( part, pk2 );
+}	                                   
+                                   
+bool PartialBuilder::better_match( const Partial & part1, 
+                                   const Partial & part2, const SpectralPeak & pk )
 {
 	Assert( part1.numBreakpoints() > 0 );
 	Assert( part2.numBreakpoints() > 0 );
 	
-	return freq_distance( part1, bp1 ) < freq_distance( part2, bp2 );
-}			 
+	return freq_distance( part1, pk ) < freq_distance( part2, pk );
+}	
 
-// ---------------------------------------------------------------------------
-//	peak_frequency
-// ---------------------------------------------------------------------------
-//	Helper for finding the Breakpoint frequency for a spectral peak.
-//
-static double peak_frequency( const Peaks::value_type & p )
-{
-	return p.breakpoint.frequency();
-}
-
-// ---------------------------------------------------------------------------
-//	sort_increasing_freq
-// ---------------------------------------------------------------------------
-//	Comparitor for sorting spectral peaks in order of 
-//	increasing frequency, or finding maximum frequency.
-//
-static bool sort_increasing_freq( const Peaks::value_type & lhs, 
-								  const Peaks::value_type & rhs )
-{ 
-	return peak_frequency( lhs ) < peak_frequency( rhs ); 
-}
+// --- Partial building members ---
 
 // ---------------------------------------------------------------------------
 //	buildPartials
@@ -175,53 +179,38 @@ static bool sort_increasing_freq( const Peaks::value_type & lhs,
 //
 void 
 PartialBuilder::buildPartials( Peaks & peaks, double frameTime )
-{
-	const double refValue = mFreqWarping->valueAt( frameTime );
-	Assert( refValue > 0 );
-	
-	double normalizedDrift = mFreqDrift / refValue;
-	
+{	
 	mNewlyEligible.clear();
 	
 	unsigned int matchCount = 0;	//	for debugging
-	
-	//	normalize all peak frequencies according to the frequency
-	//	mFreqWarping envelope -- do this before sorting!
-	for ( Peaks::iterator bpIter = peaks.begin(); bpIter != peaks.end(); ++bpIter ) 
-	{
-		Breakpoint & bp = bpIter->breakpoint;
-		const double peakTime = frameTime + bpIter->time;
-		bp.setFrequency( bp.frequency() / mFreqWarping->valueAt( peakTime ) );
-	}
 		
-	
 	//	frequency-sort the spectral peaks:
 	//	(the eligible partials are always sorted by
 	//	increasing frequency if we always sort the
 	//	peaks this way)
-	std::sort( peaks.begin(), peaks.end(), sort_increasing_freq );
+	std::sort( peaks.begin(), peaks.end(), SpectralPeak::sort_increasing_freq );
 	
 	PartialPtrs::iterator eligible = mEligiblePartials.begin();
 	for ( Peaks::iterator bpIter = peaks.begin(); bpIter != peaks.end(); ++bpIter ) 
 	{
-		const Breakpoint & bp = bpIter->breakpoint;
-		const double peakTime = frameTime + bpIter->time;
+		//const Breakpoint & bp = bpIter->breakpoint;
+		const double peakTime = frameTime + bpIter->time();
 		
 		// 	find the Partial that is nearest in frequency to the Peak:
 		PartialPtrs::iterator nextEligible = eligible;
 		if ( eligible != mEligiblePartials.end() &&
-			 end_frequency( **eligible ) < bp.frequency() )
+			 end_frequency( **eligible ) < bpIter->frequency() )
 		{
 			++nextEligible;
 			while ( nextEligible != mEligiblePartials.end() &&
-					end_frequency( **nextEligible ) < bp.frequency() )
+					end_frequency( **nextEligible ) < bpIter->frequency() )
 			{
 				++nextEligible;
 				++eligible;
 			}
 			
 			if ( nextEligible != mEligiblePartials.end() &&
-				 better_match( **nextEligible, bp, **eligible, bp ) )
+				 better_match( **nextEligible, **eligible, *bpIter ) )
 			{
 				eligible = nextEligible;
 			}
@@ -233,41 +222,65 @@ PartialBuilder::buildPartials( Peaks & peaks, double frameTime )
 		//	eligible Partial (pointer) or it is mEligiblePartials.end().
 		//
 		//	nextEligible is the eligible Partial with frequency 
-		//	greater than bp, or it is mEligiblePartials.end().
-			
-		/*
+		//	greater than bp, or it is mEligiblePartials.end().  
+              
+#if defined(Debug_Loris) and Debug_Loris
+        /*
 		if ( nextEligible != mEligiblePartials.end() )
 		{
 			debugger << matchFrequency << "( " << end_frequency( **eligible )
 					 << ", " << end_frequency( **nextEligible ) << ")" << endl;
 		}
-		*/
+        */
+#endif
 								
-		//	create a new Partial is there is no eligible Partial,
+		//	create a new Partial if there is no eligible Partial,
 		//	or the frequency difference to the eligible Partial is 
 		//	too great, or the next peak is a better match for the 
 		//	eligible Partial, otherwise add this peak to the eligible
 		//	Partial:
-		Peaks::iterator nextPeak = Peaks::iterator( bpIter ); ++nextPeak;
-								  // ++Peaks::iterator( bpIter );
-		if ( eligible == mEligiblePartials.end() ||
-			 freq_distance( **eligible, bp ) > normalizedDrift ||
-			 ( nextPeak != peaks.end() &&
-			   better_match( **eligible, nextPeak->breakpoint, **eligible, bp ) ) )
-		{
-			Partial p;
-			p.insert( peakTime, bp );
-			mCollectedPartials.push_back( p );
-			mNewlyEligible.push_back( & mCollectedPartials.back() );
-		}		
-		else 
-		{
-			(*eligible)->insert( peakTime, bp );
+		Peaks::iterator nextPeak = //Peaks::iterator( bpIter ); ++nextPeak;
+								   ++Peaks::iterator( bpIter ); //  some compilers choke on this?
+
+        //  decide whether this match should be made:
+        //  - can only make the match if eligible is not the end of the list
+        //  - the match is only good if it is close enough in frequency
+        //  - even if the match is good, only match if the next one is not better
+        bool makeMatch = false;
+        if ( eligible != mEligiblePartials.end() )
+        {
+            bool matchIsGood =  mFreqDrift > 
+                std::fabs( end_frequency( **eligible ) - bpIter->frequency() );
+            if ( matchIsGood )
+            {
+                bool nextIsBetter = ( nextPeak != peaks.end() &&
+                                      better_match( **eligible, *nextPeak, *bpIter ) ); 
+                if ( ! nextIsBetter )
+                {
+                    makeMatch = true;
+                }
+            }                       
+        }
+        
+        Breakpoint bp = bpIter->createBreakpoint();
+        
+        if ( makeMatch )
+        {
+            //  invariant:
+            //  if makeMatch is true, then eligible is the position of a valid Partial
+            (*eligible)->insert( peakTime, bp );
 			mNewlyEligible.push_back( *eligible );
 			
 			++matchCount;
-		}
-		
+        }
+        else
+        {
+            Partial p;
+            p.insert( peakTime, bp );
+            mCollectedPartials.push_back( p );
+            mNewlyEligible.push_back( & mCollectedPartials.back() );
+        }
+        
 		//	update eligible, nextEligible is the eligible Partial
 		//	with frequency greater than bp, or it is mEligiblePartials.end():
 		eligible = nextEligible;
@@ -275,8 +288,10 @@ PartialBuilder::buildPartials( Peaks & peaks, double frameTime )
 	 	
 	mEligiblePartials = mNewlyEligible;
 	
-	debugger << "formPartials() matched " << matchCount << endl;
-	debugger << mNewlyEligible.size() << " newly eligible partials" << endl;
+    /*
+	debugger << "PartialBuilder::buildPartials: matched " << matchCount << endl;
+	debugger << "PartialBuilder::buildPartials: " << mNewlyEligible.size() << " newly eligible partials" << endl;
+    */
 }
 
 // ---------------------------------------------------------------------------
@@ -290,21 +305,7 @@ PartialBuilder::buildPartials( Peaks & peaks, double frameTime )
 //
 void
 PartialBuilder::finishBuilding( PartialList & product )
-{
-    //  unwarp all Breakpoint frequencies:
-	for ( PartialList::iterator part = mCollectedPartials.begin(); 
-		  part != mCollectedPartials.end();
-		  ++part )
-	{
-		for ( Partial::iterator bp = part->begin();
-			  bp != part->end();
-			  ++bp )
-		{
-			double f = bp.breakpoint().frequency() * mFreqWarping->valueAt( bp.time() );
-			bp.breakpoint().setFrequency( f );
-		}
-	}
-	
+{	
     //  append the collected Partials to the product list:
 	product.splice( product.end(), mCollectedPartials );
     

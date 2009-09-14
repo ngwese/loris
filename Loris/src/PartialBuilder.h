@@ -68,7 +68,7 @@ public:
     //
     //  Construct a new builder that constrains Partial frequnecy
     //  drift by the specified drift value in Hz.
-	explicit PartialBuilder( double drift );    
+	PartialBuilder( double drift );    
     
 	//	constructor
     //
@@ -106,6 +106,16 @@ public:
 
 private:
 
+// --- auxiliary member functions ---
+
+    double freq_distance( const Partial & partial, const SpectralPeak & pk );
+
+    bool better_match( const Partial & part, const SpectralPeak & pk1,
+		   	           const SpectralPeak & pk2 );
+    bool better_match( const Partial & part1, 
+	  		           const Partial & part2, const SpectralPeak & pk );                       
+                       
+                       
 // --- collected partials ---
 
 	PartialList mCollectedPartials;             //	collect partials here
@@ -120,7 +130,7 @@ private:
 	std::auto_ptr< Envelope > mFreqWarping;	//	reference envelope
     
 	double mFreqDrift;
-	
+    	
 // --- disallow copy and assignment ---
     
     PartialBuilder( const PartialBuilder & );

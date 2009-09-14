@@ -175,7 +175,10 @@ public:
 	 
 //	-- implementation --
 private:
-	Oscillator osc;
+
+	Oscillator osc;     //  the Synthesizer has-a Oscillator that it uses to render
+                        //  all the Partials one by one. 
+    
 	std::vector< double > * sampleBuffer;  //	samples are computed and stored here
 	double tfade;                          //   Partial fade in/out time in seconds
 	double srate;                          //	sample rate in Hz

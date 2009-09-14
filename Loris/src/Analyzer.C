@@ -80,7 +80,7 @@ namespace Loris {
 static double accumPeakSquaredAmps( double init, 
                                     const SpectralPeak & pk )
 {
-    return init + (pk.breakpoint.amplitude() * pk.breakpoint.amplitude());
+    return init + (pk.amplitude() * pk.amplitude());
 }
 
 template < class Pair >
@@ -172,11 +172,11 @@ void FundamentalBuilder::build( const Peaks & peaks, double frameTime )
     frequencies.clear();
     for ( Peaks::const_iterator spkpos = peaks.begin(); spkpos != peaks.end(); ++spkpos )
     {
-        if ( spkpos->breakpoint.amplitude() > mAmpThresh &&
-             spkpos->breakpoint.frequency() < mFreqThresh )
+        if ( spkpos->amplitude() > mAmpThresh &&
+             spkpos->frequency() < mFreqThresh )
         {
-            amplitudes.push_back( spkpos->breakpoint.amplitude() );
-            frequencies.push_back( spkpos->breakpoint.frequency() );
+            amplitudes.push_back( spkpos->amplitude() );
+            frequencies.push_back( spkpos->frequency() );
         }
     }
     if ( ! amplitudes.empty() )
@@ -1238,16 +1238,6 @@ Analyzer::ampEnv( void ) const
 // -- private helpers --
 
 // ---------------------------------------------------------------------------
-//	sort_peaks_greater_amplitude
-// ---------------------------------------------------------------------------
-//	predicate used for sorting peaks in order of decreasing amplitude:
-static bool sort_peaks_greater_amplitude( const SpectralPeak & lhs, 
-										  const SpectralPeak & rhs )
-{ 
-	return lhs.breakpoint.amplitude() > rhs.breakpoint.amplitude(); 
-}
-
-// ---------------------------------------------------------------------------
 //	can_mask
 // ---------------------------------------------------------------------------
 //	functor used for identying peaks that are too close
@@ -1258,8 +1248,8 @@ struct can_mask
 	//	in the frequency range delimited by fmin and fmax:
 	bool operator()( const SpectralPeak & v )  const
 	{ 
-		return	( v.breakpoint.frequency() > _fmin ) && 
-				( v.breakpoint.frequency() < _fmax ); 
+		return	( v.frequency() > _fmin ) && 
+				( v.frequency() < _fmax ); 
 	}
 		
 	//	constructor:
@@ -1283,7 +1273,7 @@ struct negative_time
 	// 	plus the current frame time is less than 0:
 	bool operator()( const Peaks::value_type & v )  const
 	{ 
-		return 0 > ( v.time + _frameTime );
+		return 0 > ( v.time() + _frameTime );
 	}
 		
 	//	constructor:
@@ -1329,7 +1319,7 @@ Analyzer::thinPeaks( Peaks & peaks, double frameTime  )
 
 	//	louder peaks are preferred, so consider them 
 	//	in order of louder magnitude:
-	std::sort( peaks.begin(), peaks.end(), sort_peaks_greater_amplitude );
+	std::sort( peaks.begin(), peaks.end(), SpectralPeak::sort_greater_amplitude );
 	
     //  negative times are not real, but still might represent
     //  a noisy part of the spectrum...
@@ -1350,21 +1340,21 @@ Analyzer::thinPeaks( Peaks & peaks, double frameTime  )
     
 	while ( it != peaks.end() ) 
 	{
-		Breakpoint & bp = it->breakpoint;
+		SpectralPeak & pk = *it;
 		
 		//	keep this peak if it is loud enough and not
 		//	 too near in frequency to a louder one:
-		double lower = bp.frequency() - freqResolution;
-		double upper = bp.frequency() + freqResolution;
-		if ( bp.amplitude() > threshold &&
+		double lower = pk.frequency() - freqResolution;
+		double upper = pk.frequency() + freqResolution;
+		if ( pk.amplitude() > threshold &&
 			 beginRejected == std::find_if( peaks.begin(), beginRejected, can_mask(lower, upper) ) )
 		{
 			//	this peak is a keeper, fade its
 			//	amplitude if it is too quiet:
-			if ( bp.amplitude() < beginFade )
+			if ( pk.amplitude() < beginFade )
 			{
-				double alpha = (beginFade - bp.amplitude())/(beginFade - threshold);
-				bp.setAmplitude( bp.amplitude() * (1. - alpha) );
+				double alpha = (beginFade - pk.amplitude())/(beginFade - threshold);
+				pk.setAmplitude( pk.amplitude() * (1. - alpha) );
 			}
 			
 			//	keep retained peaks at the front of the collection:
@@ -1413,16 +1403,16 @@ void Analyzer::fixBandwidth( Peaks & peaks )
 	
 		for ( Peaks::iterator it = peaks.begin(); it != peaks.end(); ++it )
 		{
-			Breakpoint & bp = it->breakpoint;
-			bp.setBandwidth( std::min( 1.0, scale * bp.bandwidth() ) );
+            SpectralPeak & pk = *it;
+			pk.setBandwidth( std::min( 1.0, scale * pk.bandwidth() ) );
 		}
 	}
 	else if ( m_bwAssocParam == 0 )
 	{
 		for ( Peaks::iterator it = peaks.begin(); it != peaks.end(); ++it )
 		{
-			Breakpoint & bp = it->breakpoint;
-			bp.setBandwidth( 0 );
+            SpectralPeak & pk = *it;
+			pk.setBandwidth( 0 );
 		}
 	}
 }
