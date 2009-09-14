@@ -30,6 +30,12 @@ Loris is Copyright (c) 1999-2009 by Kelly Fitz and Lippold Haken.
 History of visible changes, organized by relase number:
 
 -------------------------------------------------------
+changes since 1.5.3 release:
+
+- Fixed a bug involving the use of the nonstandard extension
+std::isfinite that prevented compilation with some compilers.
+
+-------------------------------------------------------
 changes since 1.5.2 release:
 
 - Analyzer can have time-varying frequency resolution

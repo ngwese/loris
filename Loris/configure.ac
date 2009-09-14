@@ -10,7 +10,7 @@ dnl implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 
 dnl initialization
-AC_INIT(Loris, 1.5.3, loris@cerlsoundgroup.org, loris)
+AC_INIT(Loris, 1.5.4, loris@cerlsoundgroup.org, loris)
 
 AC_CONFIG_AUX_DIR(config)
 AC_SUBST(ac_aux_dir)
@@ -36,8 +36,8 @@ dnl in AC_INIT above, and make sure to check them before
 dnl each release!!!!!
 LORIS_MAJOR_VERSION=1
 LORIS_MINOR_VERSION=5
-LORIS_SUBMINOR_VERSION=3
-LORIS_PRERELEASE_STR=""
+LORIS_SUBMINOR_VERSION=4
+LORIS_PRERELEASE_STR="beta2"
 LORIS_VERSION_STR="$PACKAGE_STRING$LORIS_PRERELEASE_STR"
 AC_SUBST(LORIS_MAJOR_VERSION)
 AC_SUBST(LORIS_MINOR_VERSION)
