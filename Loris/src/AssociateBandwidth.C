@@ -246,19 +246,21 @@ AssociateBandwidth::accumulateNoise( double freq, double amp )
 	//	at frequency f, don't mess with negative 
 	//	frequencies:
 	if ( freq > 0. )
+    {
 		distribute( binFrequency( freq, _regionRate ), amp * amp, _surplus  );
+    }
 }
 
 // ---------------------------------------------------------------------------
 //	associate
 // ---------------------------------------------------------------------------
-//	Associate bandwidth with a single Breakpoint.
-//	Both strategies call this.
+//	Associate bandwidth with a single SpectralPeak.
 //
 void 
-AssociateBandwidth::associate( Breakpoint & bp )
+AssociateBandwidth::associate( SpectralPeak & pk )
 {		
-	BreakpointUtils::addNoiseEnergy( bp, computeNoiseEnergy( bp.frequency(), bp.amplitude() ) );
+    pk.setBandwidth(0);
+    pk.addNoiseEnergy( computeNoiseEnergy( pk.frequency(), pk.amplitude() ) );
 }
 
 // ---------------------------------------------------------------------------
@@ -293,20 +295,20 @@ AssociateBandwidth::associateBandwidth( Peaks::iterator begin, 		//	beginning of
 	//	accumulate retained Breakpoints as sinusoids, 
 	for ( Peaks::iterator it = begin; it != rejected; ++it )
 	{
-		accumulateSinusoid( it->breakpoint.frequency(), it->breakpoint.amplitude() );
+		accumulateSinusoid( it->frequency(), it->amplitude() );
 	}
 	
 	//	accumulate rejected breakpoints as noise:
 	for ( Peaks::iterator it = rejected; it != end; ++it )
 	{
-		accumulateNoise( it->breakpoint.frequency(), it->breakpoint.amplitude() );
+		accumulateNoise( it->frequency(), it->amplitude() );
 	}
 
 	//	associate bandwidth with each retained Breakpoint:
 	for ( Peaks::iterator it = begin; it != rejected; ++it )
 	{
-		it->breakpoint.setBandwidth( 0 );	
-		associate( it->breakpoint );
+        //  sets bandwidth to zero, then calls addNoiseEnergy()
+		associate( *it );
 	}
 	
 	//	reset after association, yuk:

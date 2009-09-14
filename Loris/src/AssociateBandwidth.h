@@ -96,7 +96,7 @@ private:
 	void accumulateSinusoid( double freq, double amp  );	
 	
 	//	bandwidth assocation:
-	void associate( Breakpoint & bp );
+	void associate( SpectralPeak & pk );
 	
 	//	call this to wipe out the accumulated energy to 
 	//	prepare for the next frame (yuk):
