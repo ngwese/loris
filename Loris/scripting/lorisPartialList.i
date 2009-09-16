@@ -36,8 +36,10 @@
  
 %newobject SwigPartialIterator::next;
 	// but not SwigPListIterator::next
-%newobject *::__iter__;
-%newobject *::iterator;
+%newobject Partial::__iter__;
+%newobject PartialList::__iter__;
+%newobject Partial::iterator;
+%newobject PartialList::iterator;
 
 %newobject *::findAfter;
 %newobject *::findNearest;

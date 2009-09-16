@@ -1787,194 +1787,7 @@ are always estimated.") buildAmpEnv;
 
 };	//	end of class Analyzer
 
-// ---------------------------------------------------------------------------
-//	class Envelope
-//
-		
-%feature("docstring",
-"Envelope is an abstract base class for all time-varying envelopes
-and parameters, representing a single-valued funtion of one variable
-(usually time).") Envelope;
 
-class Envelope
-{
-public:
-
-%extend
-{
-	Envelope * Envelope( const Envelope * other )
-	{
-		return other->clone();
-	}
-}
-	
-
-};
-			
-// ---------------------------------------------------------------------------
-//	class LinearEnvelope
-//
-
-%feature("docstring",
-"A LinearEnvelope represents a linear segment breakpoint 
-function with infinite extension at each end (that is, the 
-values past either end of the breakpoint function have the 
-values at the nearest end).") LinearEnvelope;
-
-
-class LinearEnvelope : public Envelope
-{
-public:
-%feature("docstring",
-"Construct and return a new LinearEnvelope, empty,
-or having a single breakpoint at time 0 with the 
-specified value.
-
-An LinearEnvelope can also be copied from another
-instance.") LinearEnvelope;
-
-	LinearEnvelope( void );
-	LinearEnvelope( const LinearEnvelope & );
-	LinearEnvelope( double initialValue );
-   
-   
-%feature("docstring",
-"Destroy this LinearEnvelope.") ~LinearEnvelope;
-   
-	~LinearEnvelope( void );
-	
-%feature("docstring",
-"Insert a new breakpoint into the envelope at the specified
-time and value.") insertBreakpoint;
-
-	void insertBreakpoint( double time, double value );
-
-%feature("docstring",
-"Insert a new breakpoint into the envelope at the specified
-time and value.") insert;
-
-	void insert( double time, double value );
-
-%feature("docstring",
-"Return the (linearly-interpolated) value of the envelope
-at the specified time.") valueAt; 
-
-	double valueAt( double x ) const;		
-
-%feature("docstring",
-"Add a constant value to this LinearEnvelope and return a reference
-to self.") operator+=;
-
-    LinearEnvelope & operator+=( double offset );
-
-%feature("docstring",
-"Subtract a constant value from this LinearEnvelope and return a reference
-to self.") operator-=;
-
-    LinearEnvelope & operator-=( double offset );
-        
-%feature("docstring",
-"Scale this LinearEnvelope by a constant value and return a reference
-to self.") operator*=;
-
-     LinearEnvelope & operator*=( double scale );
-
-%feature("docstring",
-"Divide this LinearEnvelope by a constant value and return a reference
-to self.") operator*=;
-
-     LinearEnvelope & operator/=( double div );
-
-
-//  Add members for binary addition and multiplication operators.
-
-%extend 
-{
-%feature("docstring",
-"Add a constant value to a LinearEnvelope and return a new 
-LinearEnvelope.") operator+;
-
-    LinearEnvelope operator+( double offset )
-    {
-        LinearEnvelope env = *self; 
-        env += offset;
-        return env;
-    }
-
-%feature("docstring",
-"Subtract a constant value from a LinearEnvelope and return a new 
-LinearEnvelope.") operator-;
-
-    LinearEnvelope operator-( double offset )
-    {
-        LinearEnvelope env = *self; 
-        env -= offset;
-        return env;
-    }
-
-%feature("docstring",
-"Scale a LinearEnvelope by a constant value and return a new 
-LinearEnvelope.") operator*;
-
-    LinearEnvelope operator*( double scale )
-    {
-        LinearEnvelope env = *self; 
-        env *= scale;
-        return env;
-    }
-
-%feature("docstring",
-"Divide a LinearEnvelope by a constant value and return a new 
-LinearEnvelope.") operator/;
-
-    LinearEnvelope operator/( double div )
-    {
-        LinearEnvelope env = *self; 
-        env /= div;
-        return env;
-    }
-
-}   //  end of extend
-     	 
-};	//	end of class LinearEnvelope
-
-
-
-	
-%feature("docstring",
-"BreakpointEnvelope is deprecated, use LinearEnvelope instead.") BreakpointEnvelope;
-
-%inline 
-%{
-
-	LinearEnvelope * BreakpointEnvelope( void ) 
-	{
-		return new LinearEnvelope();
-	}
-	LinearEnvelope * BreakpointEnvelope( const LinearEnvelope *rhs )
-	{
-		return new LinearEnvelope( *rhs );
-	}
-	LinearEnvelope * BreakpointEnvelope( double initialValue )
-	{
-		return new LinearEnvelope( initialValue );
-	}
-
-%}
-
-
-%feature("docstring",
-"BreakpointEnvelopeWithValue is deprecated, use LinearEnvelope instead.") 
-BreakpointEnvelopeWithValue;
-
-%inline 
-%{
-	LinearEnvelope * 
-	BreakpointEnvelopeWithValue( double initialValue )
-	{
-		return new LinearEnvelope( initialValue );
-	}
-%}
 
 
 
@@ -2256,6 +2069,17 @@ this SpcFile.") setMarkers;
 //	(FundamentalFromSamples and FundamentalFromPartials)
 
 %include lorisFundamental.i
+
+
+// ----------------------------------------------------------------
+//		wrap LinearEnvelope classes
+//
+//	LinearEnvelope, LinearEnvelopeIterator, and LinearEnvelopePosition,
+//	as well as Envelope (abstract) and BreakpointEnvelope (deprecated)
+//
+
+%include lorisEnvelope.i
+
 
 // ----------------------------------------------------------------
 //		experiment: wrap Channelizer class

@@ -11,7 +11,8 @@
 PYTHON_WRAPPER = loris_python_wrap.C
 SWIG_INTERFACE = $(top_srcdir)/scripting/loris.i
 ALL_IFILES = $(SWIG_INTERFACE) $(top_srcdir)/scripting/lorisPartialList.i \
-             $(top_srcdir)/scripting/lorisFundamental.i
+             $(top_srcdir)/scripting/lorisFundamental.i \
+             $(top_srcdir)/scripting/lorisEnvelope.i
 
 
 EXTRA_DIST = $(ALL_IFILES) 

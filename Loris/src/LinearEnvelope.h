@@ -98,6 +98,7 @@ public:
     //! \param  t is the time at which to evaluate this 
     //!         LinearEnvelope.
     virtual double valueAt( double t ) const;   
+        
     
 //  -- envelope composition --
 
@@ -187,6 +188,35 @@ LinearEnvelope operator+( double offset, LinearEnvelope env )
     return env;
 }
 
+//! Add two LinearEnvelopes and return a new LinearEnvelope.
+inline
+LinearEnvelope operator+( const LinearEnvelope & e1, const LinearEnvelope & e2 )
+{
+	LinearEnvelope ret;
+	
+	//	For each breakpoint in e1, insert a breakpoint having a value
+	//	equal to the sum of the two envelopes at that time.
+	for ( LinearEnvelope::const_iterator it = e1.begin(); it != e1.end(); ++it )
+	{
+		double t = it->first;
+		double v = it->second;
+			
+		ret.insert( t, v + e2.valueAt( t ) );
+	}
+	
+	//	For each breakpoint in e2, insert a breakpoint having a value
+	//	equal to the sum of the two envelopes at that time.
+	for ( LinearEnvelope::const_iterator it = e2.begin(); it != e2.end(); ++it )
+	{
+		double t = it->first;
+		double v = it->second;
+			
+		ret.insert( t, v + e1.valueAt( t ) );
+	}
+
+    return ret;
+}
+
 //! Subtract a constant value from a LinearEnvelope and return a new 
 //! LinearEnvelope.
 inline
@@ -204,6 +234,35 @@ LinearEnvelope operator-( double offset, LinearEnvelope env )
     env *= -1.0;
     env += offset;
     return env;
+}
+
+//! Subtract two LinearEnvelopes and return a new LinearEnvelope.
+inline
+LinearEnvelope operator-( const LinearEnvelope & e1, const LinearEnvelope & e2 )
+{
+	LinearEnvelope ret;
+	
+	//	For each breakpoint in e1, insert a breakpoint having a value
+	//	equal to the difference between the two envelopes at that time.
+	for ( LinearEnvelope::const_iterator it = e1.begin(); it != e1.end(); ++it )
+	{
+		double t = it->first;
+		double v = it->second;
+			
+		ret.insert( t, v - e2.valueAt( t ) );
+	}
+	
+	//	For each breakpoint in e2, insert a breakpoint having a value
+	//	equal to the difference between the two envelopes at that time.
+	for ( LinearEnvelope::const_iterator it = e2.begin(); it != e2.end(); ++it )
+	{
+		double t = it->first;
+		double v = it->second;
+			
+		ret.insert( t, e1.valueAt( t ) - v );
+	}
+
+    return ret;
 }
 
 //! Scale a LinearEnvelope by a constant value and return a new 
