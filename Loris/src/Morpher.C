@@ -62,10 +62,10 @@ namespace Loris {
 
 // new morphing algorithms
 #define FIX_PHASE 1
-#define NEW_BW_MORPH 1
 
 #if FIX_PHASE
 // wow, is this ever ugly.
+//	TODO: clean up this mess!
 
 #include <utility> // for std::pair, and make_pair
 #include <vector>
@@ -365,46 +365,6 @@ Morpher::morphPartials( Partial src, Partial tgt, int assignLabel )
         
         // fix the remaining phases
         fixPhaseForward( lastPosCorrect, --bppos );
-        /*
-        // look at DEHR
-        std::vector< std::pair< double, double > >::iterator dehr_iter = DEHR.begin();
-        MorphState ms = GetMorphState( dehr_iter->second );
-        double last_time_phase_correct = 0;
-        
-        while ( dehr_iter != DEHR.end() )
-        {
-            if ( GetMorphState( (dehr_iter)->second ) != ms )
-            {
-                //  switch!
-                if ( INTERP != ms )
-                {
-                    // switch to INTERP
-                    fixPhaseForward( newp, last_time_phase_correct, dehr_iter->first );
-                }
-                else
-                {
-                    //  switch to SRC or TGT                
-                    if ( 0 == last_time_phase_correct  )
-                    {   
-                        //  first transition
-                        fixPhaseBefore( newp, dehr_iter->first );
-                    }
-                    else
-                    {
-                        //   not first transition
-                        fixPhaseBetween( newp, last_time_phase_correct, dehr_iter->first );
-                    }                
-                }
-                last_time_phase_correct = dehr_iter->first;            
-                    
-                ms = GetMorphState( dehr_iter->second );
-
-            }
-            ++dehr_iter;
-        }
-        fixPhaseAfter( newp, last_time_phase_correct );
-        DEHR.clear();
-        */
     }
 #endif
 
@@ -1265,6 +1225,8 @@ static inline bool partial_is_nonnull( const Partial & p )
 static inline double 
 interpolateAmplitude( double srcAmp, double tgtAmp, double alpha, double shape )
 {    
+	double res = 0;	
+
     //    log-amplitude morphing:
     //    it is essential to add in a small Epsilon, so that 
     //    occasional zero amplitudes do not introduce artifacts
@@ -1282,13 +1244,18 @@ interpolateAmplitude( double srcAmp, double tgtAmp, double alpha, double shape )
     static const double Epsilon = 1E-12;
     if ( ( srcAmp > Epsilon ) || ( tgtAmp > Epsilon ) )
     {
-        double morphedAmp = ( pow( srcAmp + shape, (1.-alpha) ) * 
-                              pow( tgtAmp + shape, alpha ) ) - shape;
-        return std::max( 0.0, morphedAmp );        
-        
+        // double morphedAmp = ( pow( srcAmp + shape, (1.-alpha) ) * 
+        //                       pow( tgtAmp + shape, alpha ) ) - shape;
+                              
+		double s = srcAmp + shape;
+		double t = tgtAmp + shape;
+		double morphedAmp = ( s * pow( t / s, alpha ) ) - shape;
+		
+		//	Partial amplitudes should never be negative
+        res = std::max( 0.0, morphedAmp );                
     }
-    //else
-    return 0;
+
+    return res;
 }
 
 // ---------------------------------------------------------------------------
@@ -1298,23 +1265,28 @@ interpolateAmplitude( double srcAmp, double tgtAmp, double alpha, double shape )
 static inline double 
 interpolateBandwidth( double srcBw, double tgtBw, double alpha, double shape )
 {    
-#if NEW_BW_MORPH
+	double res = 0;
+	
     //    log-bandwidth morphing: as above,
     //    it is essential to add in a small Epsilon.
     using std::pow;
     static const double Epsilon = 1E-12;
     if ( ( srcBw > Epsilon ) || ( tgtBw > Epsilon ) )
     {
-        double morphedBw = ( pow( srcBw + shape, (1.-alpha) ) * 
-                             pow( tgtBw + shape, alpha ) ) - shape;
-        return std::max( 0.0, morphedBw );        
-        
+        // double morphedBw = ( pow( srcBw + shape, (1.-alpha) ) * 
+        //                      pow( tgtBw + shape, alpha ) ) - shape;
+                             
+		double s = srcBw + shape;
+		double t = tgtBw + shape;
+		double morphedBw = ( s * pow( t / s, alpha ) ) - shape;
+                             
+                             
+		//	Partial bandwidths should never be negative                             
+        res = std::max( 0.0, morphedBw );                
     }
-    //else
-    return 0;
-#else
-    return ( (1.-alpha) * srcBw ) + ( alpha * tgtBw );
-#endif
+
+
+	return res;
 }
 
 // ---------------------------------------------------------------------------
