@@ -37,7 +37,7 @@ dnl each release!!!!!
 LORIS_MAJOR_VERSION=1
 LORIS_MINOR_VERSION=5
 LORIS_SUBMINOR_VERSION=4
-LORIS_PRERELEASE_STR="beta2"
+LORIS_PRERELEASE_STR=""
 LORIS_VERSION_STR="$PACKAGE_STRING$LORIS_PRERELEASE_STR"
 AC_SUBST(LORIS_MAJOR_VERSION)
 AC_SUBST(LORIS_MINOR_VERSION)
@@ -331,7 +331,7 @@ fi
 AM_CONDITIONAL([HAVE_CSOUND5], [test -n "$FOUND_CSOUND5"])
 
 AC_ARG_VAR([CSOUND_CONFIG], 
-       [Path to the Csound4 configuration script when available])
+       [Path to the Csound4 configuration script when available (Linux only)])
 
 
 dnl This configure code, parts provided by John Ramsdell,

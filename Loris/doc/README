@@ -1,7 +1,6 @@
-The Loris C++ sources are _mostly_ documented using Doxygen. If you
-have doxygen installed, then html documentation will be
-generated in the build process. They are not installed however,
-you can install them in any convenient location.
+The Loris C++ sources are documented using Doxygen, if available.
+
+"make html" builds a HTML version of the C++ documentation.
 
 "make pdf" builds a pdf version of the C++ documentation.
 
