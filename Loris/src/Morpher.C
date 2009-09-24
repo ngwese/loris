@@ -1219,37 +1219,72 @@ static inline bool partial_is_nonnull( const Partial & p )
 }
 
 // ---------------------------------------------------------------------------
+//  Helper function for performing log-domain interpolation
+//	(originally was for amplitude only). 
+//
+//	alpha == 0 returns x, alpha == 1 returns y
+//
+//  It is essential to add in a small epsilon, so that 
+//  occasional zero amplitudes do not introduce artifacts
+//  (if amp is zero, then even if alpha is very small
+//  the effect is to multiply by zero, because 0^x = 0).
+//	This shaping parameter affects the shape of the morph
+//	curve only when it is of the same order of magnitude as
+//	one of the sources (x or y) and the other is much larger.
+//
+//  When shape is very small, the curve representing the
+//  morphed amplitude is very steep, such that there is a 
+//  huge difference between zero amplitude and very small
+//  amplitude, and this causes audible artifacts. So instead
+//  use a larger value that shapes the curve more nicely. 
+//  Just have to subtract this value from the morphed 
+//  amplitude to avoid raising the noise floor a whole lot.
+//
+static inline double 
+interpolateLog( double x, double y, double alpha, double shape )
+{
+	using std::pow;
+
+	double s = x + shape;
+	double t = y + shape;
+	
+	double v = ( s * pow( t / s, alpha ) ) - shape;
+	
+	return v;
+}
+
+// ---------------------------------------------------------------------------
+//  Helper function for performing linear interpolation
+//	(used to be the only kind we supported).
+//
+//	alpha == 0 returns x, alpha == 1 returns y
+//
+static inline double 
+interpolateLinear( double x, double y, double alpha )
+{
+	double v = (x * (1-alpha)) + (y * alpha);
+	
+	return v;
+}
+
+
+// ---------------------------------------------------------------------------
 //  Helper function for computing individual morphed amplitude values
 //  by interpolating LOG amplitude.
+//
+//	HEY, should enable linear interpolation too.
 //
 static inline double 
 interpolateAmplitude( double srcAmp, double tgtAmp, double alpha, double shape )
 {    
 	double res = 0;	
 
-    //    log-amplitude morphing:
-    //    it is essential to add in a small Epsilon, so that 
-    //    occasional zero amplitudes do not introduce artifacts
-    //    (if amp is zero, then even if alpha is very small
-    //    the effect is to multiply by zero, because 0^x = 0).
-    //
-    //    When Epsilon is very small, the curve representing the
-    //    morphed amplitude is very steep, such that there is a 
-    //    huge difference between zero amplitude and very small
-    //    amplitude, and this causes audible artifacts. So instead
-    //    use a larger value that shapes the curve more nicely. 
-    //    Just have to subtract this value from the morphed 
-    //    amplitude to avoid raising the noise floor a whole lot.
-    using std::pow;
+	//	if both are small, just return 0
+	//	HEY, is this really what we want?
     static const double Epsilon = 1E-12;
     if ( ( srcAmp > Epsilon ) || ( tgtAmp > Epsilon ) )
     {
-        // double morphedAmp = ( pow( srcAmp + shape, (1.-alpha) ) * 
-        //                       pow( tgtAmp + shape, alpha ) ) - shape;
-                              
-		double s = srcAmp + shape;
-		double t = tgtAmp + shape;
-		double morphedAmp = ( s * pow( t / s, alpha ) ) - shape;
+		double morphedAmp = interpolateLog( srcAmp, tgtAmp, alpha, shape );
 		
 		//	Partial amplitudes should never be negative
         res = std::max( 0.0, morphedAmp );                
@@ -1262,23 +1297,19 @@ interpolateAmplitude( double srcAmp, double tgtAmp, double alpha, double shape )
 //  Helper function for computing individual morphed bandwidth values
 //  by interpolating LOG bandwidth.
 //
+//	HEY, should enable linear interpolation too.
+//
 static inline double 
 interpolateBandwidth( double srcBw, double tgtBw, double alpha, double shape )
 {    
 	double res = 0;
 	
-    //    log-bandwidth morphing: as above,
-    //    it is essential to add in a small Epsilon.
-    using std::pow;
+	//	if both are small, just return 0
+	//	HEY, is this really what we want?
     static const double Epsilon = 1E-12;
     if ( ( srcBw > Epsilon ) || ( tgtBw > Epsilon ) )
     {
-        // double morphedBw = ( pow( srcBw + shape, (1.-alpha) ) * 
-        //                      pow( tgtBw + shape, alpha ) ) - shape;
-                             
-		double s = srcBw + shape;
-		double t = tgtBw + shape;
-		double morphedBw = ( s * pow( t / s, alpha ) ) - shape;
+		double morphedBw = interpolateLog( srcBw, tgtBw, alpha, shape );
                              
                              
 		//	Partial bandwidths should never be negative                             
@@ -1295,7 +1326,9 @@ interpolateBandwidth( double srcBw, double tgtBw, double alpha, double shape )
 static inline double 
 interpolateFrequency( double srcFreq, double tgtFreq, double alpha )
 {    
-    return ( (1.-alpha) *  srcFreq ) + ( alpha * tgtFreq );
+	//	HEY add capability to morphg freqs in log domain!
+	
+    return interpolateLinear( srcFreq, tgtFreq, alpha );
 }
 
 // ---------------------------------------------------------------------------
@@ -1322,7 +1355,9 @@ interpolatePhase( double srcphase, double tgtphase, double alpha )
     {
       srcphase += 2 * Pi;
     }
-    double morphedPhase = ( (1.-alpha) * srcphase ) + ( alpha * tgtphase );
+
+    double morphedPhase = interpolateLinear( srcphase, tgtphase, alpha );
+
     return std::fmod( morphedPhase, 2 * Pi );
 }
 

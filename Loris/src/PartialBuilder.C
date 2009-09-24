@@ -224,7 +224,7 @@ PartialBuilder::buildPartials( Peaks & peaks, double frameTime )
 		//	nextEligible is the eligible Partial with frequency 
 		//	greater than bp, or it is mEligiblePartials.end().  
               
-#if defined(Debug_Loris) and Debug_Loris
+#if defined(Debug_Loris) && Debug_Loris
         /*
 		if ( nextEligible != mEligiblePartials.end() )
 		{

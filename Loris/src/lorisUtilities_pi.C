@@ -102,7 +102,7 @@ struct PredWithPointer : public std::unary_function< const Partial, bool >
 	
 	bool operator()( const Partial & partial ) const
 	{
-		return pred( &partial, data );
+		return 0 != pred( &partial, data );
 	}
 };
 

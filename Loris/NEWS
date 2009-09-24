@@ -3,15 +3,11 @@ synthesis, and morphing, developed by Kelly Fitz and Lippold Haken
 at the CERL Sound Group. Loris includes a C++ class library, a
 Python module, a C-linkable interface, and documentation.
 
-Loris 1.5.3 is a minor upgrade to Loris 1.5.2, offering enhancements
-to the Analyzer class and improved fundamental frequency estimation
-capabilities.
+Loris 1.5.4 is a minor upgrade to Loris 1.5.3, offering enhancements
+to the LinearEnvelope class and minor bug fixes.
 
-64-bit compatibility has been improved (BIG thanks to Bruce McCosar
-for 64-bit assistance and testing), and Visual Studio (2008) projects
-are provided for building the Loris Python module under windows. 
-
-Some of the changes in Loris 1.5.3 are incompatible with older Loris
+The changes in Loris 1.5.4 are fully backwards-compatible with Loris
+1.5.3 but some changes in Loris 1.5.3 are incompatible with older Loris
 versions, and may require changes to existing program code.
 
 Loris can be downloaded from http://sourceforge.net/projects/loris

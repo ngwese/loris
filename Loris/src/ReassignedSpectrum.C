@@ -68,7 +68,7 @@ namespace Loris {
 
 static unsigned long nextPO2( unsigned long N )
 {
-    return ceil( log( double(N) ) / log( 2. ) );
+    return (unsigned long)ceil( log( double(N) ) / log( 2. ) );
 }
                           
 // ---------------------------------------------------------------------------
