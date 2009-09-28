@@ -87,36 +87,16 @@ static inline MorphState GetMorphState( double fweight )
 const double Morpher::DefaultFixThreshold = -90; // dB, very low by default
 
 // shaping parameter, see interpolateAmplitude:
-// compile with LINEAR_AMP_MORPHS defined for
-// legacy-style linear amplitude morphs by default.
-// The default can always be overridden using 
-// setAmplitudeShape.
-//
-#if !defined(LINEAR_AMP_MORPHS) || !LINEAR_AMP_MORPHS
-   const double Morpher::DefaultAmpShape = 1E-5;    
-#else  
-   const double Morpher::DefaultAmpShape = 1E5;    
-#endif
+const double Morpher::DefaultAmpShape = 1E-5;    
+
 const double Morpher::DefaultBreakpointGap = 1E-4; // minimum time (sec) between Breakpoints in 
                                                    // morphed Partials
 
 // helper declarations
 static inline bool partial_is_nonnull( const Partial & p );
 
-static inline double 
-interpolateAmplitude( double srcAmp, double tgtAmp, double alpha, double shape );
-static inline double 
-interpolateBandwidth( double srcBw, double tgtBw, double alpha, double shape );
-static inline double 
-interpolateFrequency( double srcFreq, double tgtFreq, double alpha );
-static inline double 
-interpolatePhase( double srcPhase, double tgtPhase, double alpha );
 
-static inline Breakpoint 
-interpolateParameters( const Breakpoint & srcBkpt, const Breakpoint & tgtBkpt,
-                       double fweight, double aweight, double ashape, double bweight );
 
-   
 // -- construction --
 
 // ---------------------------------------------------------------------------
@@ -130,8 +110,10 @@ Morpher::Morpher( const Envelope & f ) :
     _ampFunction( f.clone() ),
     _bwFunction( f.clone() ),
     _freqFixThresholdDb( DefaultFixThreshold ),
-    _ampMorphShape( DefaultAmpShape ),
-    _minBreakpointGapSec( DefaultBreakpointGap )
+    _logMorphShape( DefaultAmpShape ),
+    _minBreakpointGapSec( DefaultBreakpointGap ),
+    _doLogAmpMorphing( true ),
+    _doLogFreqMorphing( false )
 {
 }
 
@@ -146,8 +128,10 @@ Morpher::Morpher( const Envelope & ff, const Envelope & af, const Envelope & bwf
     _ampFunction( af.clone() ),
     _bwFunction( bwf.clone() ),
     _freqFixThresholdDb( DefaultFixThreshold ),
-    _ampMorphShape( DefaultAmpShape ),
-    _minBreakpointGapSec( DefaultBreakpointGap )
+    _logMorphShape( DefaultAmpShape ),
+    _minBreakpointGapSec( DefaultBreakpointGap ),
+    _doLogAmpMorphing( true ),
+    _doLogFreqMorphing( false )
 {
 }
 
@@ -164,8 +148,10 @@ Morpher::Morpher( const Morpher & rhs ) :
     _srcRefPartial( rhs._srcRefPartial ),
     _tgtRefPartial( rhs._tgtRefPartial ),
     _freqFixThresholdDb( rhs._freqFixThresholdDb ),
-    _ampMorphShape( rhs._ampMorphShape ),
-    _minBreakpointGapSec( rhs._minBreakpointGapSec )
+    _logMorphShape( rhs._logMorphShape ),
+    _minBreakpointGapSec( rhs._minBreakpointGapSec ),
+    _doLogAmpMorphing( rhs._doLogAmpMorphing ),
+    _doLogFreqMorphing( rhs._doLogFreqMorphing )
 {
 }
 
@@ -197,8 +183,12 @@ Morpher::operator= ( const Morpher & rhs )
         _tgtRefPartial = rhs._tgtRefPartial;
         
         _freqFixThresholdDb = rhs._freqFixThresholdDb;
-        _ampMorphShape = rhs._ampMorphShape;
+        _logMorphShape = rhs._logMorphShape;
         _minBreakpointGapSec = rhs._minBreakpointGapSec;
+        
+	    _doLogAmpMorphing = rhs._doLogAmpMorphing;
+    	_doLogFreqMorphing = rhs._doLogFreqMorphing;
+        
     }
     return *this;
 }
@@ -569,7 +559,7 @@ Morpher::morphBreakpoints( Breakpoint srcBkpt, Breakpoint tgtBkpt,
 
    // compute interpolated Breakpoint parameters:
    return interpolateParameters( srcBkpt, tgtBkpt, fweight, 
-                                 aweight, _ampMorphShape, bweight );
+                                 aweight, bweight );
 }
 
 // ---------------------------------------------------------------------------
@@ -655,7 +645,7 @@ Morpher::fadeSrcBreakpoint( Breakpoint bp, double time ) const
 {
     double alpha = _ampFunction->valueAt( time );
     bp.setAmplitude( interpolateAmplitude( bp.amplitude(), 0, 
-                                           alpha, _ampMorphShape ) );
+                                           alpha ) );
     return bp;
 }
 
@@ -678,7 +668,7 @@ Morpher::fadeTgtBreakpoint( Breakpoint bp, double time ) const
 {
     double alpha = _ampFunction->valueAt( time );
     bp.setAmplitude( interpolateAmplitude( 0, bp.amplitude(), 
-                                           alpha, _ampMorphShape ) );
+                                           alpha ) );
     return bp;
 }
 
@@ -970,7 +960,7 @@ Morpher::setTargetReferencePartial( const PartialList & partials,
 //    very small amplitude.
 double Morpher::amplitudeShape( void ) const
 {
-    return _ampMorphShape;
+    return _logMorphShape;
 }
 
 // ---------------------------------------------------------------------------
@@ -996,7 +986,7 @@ void Morpher::setAmplitudeShape( double x )
     {
         Throw( InvalidArgument, "the amplitude morph shaping parameter must be positive");
     }
-    _ampMorphShape = x;
+    _logMorphShape = x;
 }
 
 // ---------------------------------------------------------------------------
@@ -1224,10 +1214,12 @@ static inline bool partial_is_nonnull( const Partial & p )
 //
 //	alpha == 0 returns x, alpha == 1 returns y
 //
-//  It is essential to add in a small epsilon, so that 
+//  It is essential to add in a small offset, so that 
 //  occasional zero amplitudes do not introduce artifacts
 //  (if amp is zero, then even if alpha is very small
-//  the effect is to multiply by zero, because 0^x = 0).
+//  the effect is to multiply by zero, because 0^x = 0, 
+//	or note that log(0) is -infinity).
+//
 //	This shaping parameter affects the shape of the morph
 //	curve only when it is of the same order of magnitude as
 //	one of the sources (x or y) and the other is much larger.
@@ -1269,53 +1261,60 @@ interpolateLinear( double x, double y, double alpha )
 
 
 // ---------------------------------------------------------------------------
-//  Helper function for computing individual morphed amplitude values
-//  by interpolating LOG amplitude.
+//  Helper function for computing individual morphed amplitude values.
 //
-//	HEY, should enable linear interpolation too.
-//
-static inline double 
-interpolateAmplitude( double srcAmp, double tgtAmp, double alpha, double shape )
+inline double 
+Morpher::interpolateAmplitude( double srcAmp, double tgtAmp, double alpha ) const
 {    
-	double res = 0;	
+	double morphedAmp = 0;	
 
-	//	if both are small, just return 0
-	//	HEY, is this really what we want?
-    static const double Epsilon = 1E-12;
-    if ( ( srcAmp > Epsilon ) || ( tgtAmp > Epsilon ) )
-    {
-		double morphedAmp = interpolateLog( srcAmp, tgtAmp, alpha, shape );
-		
-		//	Partial amplitudes should never be negative
-        res = std::max( 0.0, morphedAmp );                
-    }
+	if ( _doLogAmpMorphing )
+	{
+		//	if both are small, just return 0
+		//	HEY, is this really what we want?
+		static const double Epsilon = 1E-12;
+		if ( ( srcAmp > Epsilon ) || ( tgtAmp > Epsilon ) )
+		{
+			morphedAmp = interpolateLog( srcAmp, tgtAmp, alpha, _logMorphShape );
+		}
+	}
+	else
+	{
+		morphedAmp = interpolateLinear( srcAmp, tgtAmp, alpha );
+	}
+
+	//	Partial amplitudes should never be negative
+	double res = std::max( 0.0, morphedAmp );                
 
     return res;
 }
 
 // ---------------------------------------------------------------------------
-//  Helper function for computing individual morphed bandwidth values
-//  by interpolating LOG bandwidth.
+//  Helper function for computing individual morphed bandwidth values.
 //
-//	HEY, should enable linear interpolation too.
-//
-static inline double 
-interpolateBandwidth( double srcBw, double tgtBw, double alpha, double shape )
+inline double 
+Morpher::interpolateBandwidth( double srcBw, double tgtBw, double alpha ) const
 {    
-	double res = 0;
-	
-	//	if both are small, just return 0
-	//	HEY, is this really what we want?
-    static const double Epsilon = 1E-12;
-    if ( ( srcBw > Epsilon ) || ( tgtBw > Epsilon ) )
-    {
-		double morphedBw = interpolateLog( srcBw, tgtBw, alpha, shape );
-                             
-                             
-		//	Partial bandwidths should never be negative                             
-        res = std::max( 0.0, morphedBw );                
-    }
+	double morphedBw = 0;
+	    
+	if ( _doLogAmpMorphing )
+	{
+		//	if both are small, just return 0
+		//	HEY, is this really what we want?
+		static const double Epsilon = 1E-12;
+		if ( ( srcBw > Epsilon ) || ( tgtBw > Epsilon ) )
+		{
+			morphedBw = interpolateLog( srcBw, tgtBw, alpha, _logMorphShape );
+		}
+	}
+	else
+	{
+		morphedBw = interpolateLinear( srcBw, tgtBw, alpha );
+	}
 
+	//	Partial bandwidths should never be negative
+	double res = std::max( 0.0, morphedBw );                
+    
 
 	return res;
 }
@@ -1323,19 +1322,35 @@ interpolateBandwidth( double srcBw, double tgtBw, double alpha, double shape )
 // ---------------------------------------------------------------------------
 //  Helper function for computing individual morphed frequency values.
 //
-static inline double 
-interpolateFrequency( double srcFreq, double tgtFreq, double alpha )
-{    
-	//	HEY add capability to morphg freqs in log domain!
+inline double 
+Morpher::interpolateFrequency( double srcFreq, double tgtFreq, double alpha ) const
+{   
+	double morphedFreq = 1;
+	    
+	if ( _doLogFreqMorphing )
+	{		
+		//	guard against the extremely unlikely possibility that
+		//	one of the frequencies is zero
+		double shape = 0;
+		if ( 0 == srcFreq || 0 == tgtFreq  )
+		{
+			shape = Morpher::DefaultAmpShape;
+		}
+		morphedFreq = interpolateLog( srcFreq, tgtFreq, alpha, shape );
+	}
+	else
+	{
+		morphedFreq = interpolateLinear( srcFreq, tgtFreq, alpha );
+	}
 	
-    return interpolateLinear( srcFreq, tgtFreq, alpha );
+    return morphedFreq;
 }
 
 // ---------------------------------------------------------------------------
 //  Helper function for computing individual morphed phase values.
 //
-static inline double 
-interpolatePhase( double srcphase, double tgtphase, double alpha )
+inline double 
+Morpher::interpolatePhase( double srcphase, double tgtphase, double alpha ) const
 {    
     // Interpolate raw absolute phase values. If the interpolated
     // phase matters at all (near the morphing function boudaries 0
@@ -1364,10 +1379,9 @@ interpolatePhase( double srcphase, double tgtphase, double alpha )
 // ---------------------------------------------------------------------------
 //    Helper function for interpolating Breakpoint parameters
 //
-static inline Breakpoint 
-interpolateParameters( const Breakpoint & srcBkpt, const Breakpoint & tgtBkpt,
-                       double fweight, double aweight, double ashape, 
-                       double bweight )
+inline Breakpoint 
+Morpher::interpolateParameters( const Breakpoint & srcBkpt, const Breakpoint & tgtBkpt,
+         		                double fweight, double aweight, double bweight ) const
 {
     Breakpoint morphed;
 
@@ -1379,12 +1393,12 @@ interpolateParameters( const Breakpoint & srcBkpt, const Breakpoint & tgtBkpt,
     // interpolate LOG amplitudes:
     morphed.setAmplitude( 
         interpolateAmplitude( srcBkpt.amplitude(), tgtBkpt.amplitude(), 
-                              aweight, ashape ) );
+                              aweight ) );
 
     // interpolate bandwidth: 
     morphed.setBandwidth(  
         interpolateBandwidth( srcBkpt.bandwidth(), tgtBkpt.bandwidth(), 
-                              bweight, ashape ) );
+                              bweight ) );
 
     // interpolate phase:
     morphed.setPhase( 
@@ -1478,7 +1492,7 @@ Morpher::appendMorphedSrc( Breakpoint srcBkpt, const Partial & tgtPartial,
                 
                 // compute interpolated Breakpoint parameters:
                 newp.insert( time, interpolateParameters( srcBkpt, tgtBkpt, fweight, 
-                                                          aweight, _ampMorphShape, bweight ) );
+                                                          aweight, bweight ) );
             }
         }    
         else
@@ -1491,7 +1505,7 @@ Morpher::appendMorphedSrc( Breakpoint srcBkpt, const Partial & tgtPartial,
             
             // compute interpolated Breakpoint parameters:
             Breakpoint morphed = interpolateParameters( srcBkpt, tgtBkpt, fweight, 
-                                                        aweight, _ampMorphShape, bweight );
+                                                        aweight, bweight );
             newp.insert( time, morphed );
         }
     }
@@ -1582,7 +1596,7 @@ Morpher::appendMorphedTgt( Breakpoint tgtBkpt, const Partial & srcPartial,
 
                 // compute interpolated Breakpoint parameters:
                 newp.insert( time, interpolateParameters( srcBkpt, tgtBkpt, fweight, 
-                                                          aweight, _ampMorphShape, bweight ) );
+                                                          aweight, bweight ) );
             }
         }
         else
@@ -1595,7 +1609,7 @@ Morpher::appendMorphedTgt( Breakpoint tgtBkpt, const Partial & srcPartial,
 
             // compute interpolated Breakpoint parameters:           
             Breakpoint morphed = interpolateParameters( srcBkpt, tgtBkpt, fweight, 
-                                                        aweight, _ampMorphShape, bweight );
+                                                        aweight, bweight );
             newp.insert( time, morphed );
         }
     }

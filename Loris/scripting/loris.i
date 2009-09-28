@@ -542,6 +542,39 @@ name), and return them in a PartialList.");
 	}
 %}
 
+
+%{
+#include "Morpher.h"
+
+//	Assign these flags the same default values used by the Morpher class.
+static bool DoLogAmplitudeMorphing = true;
+static bool DoLogFrequencyMorphing = false;
+
+%}
+
+%feature("docstring",
+"Enable or disable log-domain amplitude and bandwidth morphing.") enableLogAmpMorphing;
+
+%feature("docstring",
+"Enable or disable log-domain frequency morphing.") enableLogFreqMorphing;
+
+
+%inline %{
+
+	void enableLogAmpMorphing( bool enableFlag )
+	{
+		DoLogAmplitudeMorphing = enableFlag;
+	}
+	
+	void enableLogFreqMorphing( bool enableFlag )
+	{
+		DoLogFrequencyMorphing = enableFlag;
+	}
+	
+
+%}
+
+
 %feature("docstring",
 "Morph labeled Partials in two PartialLists according to the
 given frequency, amplitude, and bandwidth (noisiness) morphing
@@ -562,10 +595,6 @@ source PartialLists. For more information about the Loris
 morphing algorithm, see the Loris website:
 	www.cerlsoundgroup.org/Loris/") morph;
 
-%{
-#include "Morpher.h"
-%}
-
 %newobject morph;
 %inline %{
 	PartialList * morph( const PartialList * src0, const PartialList * src1, 
@@ -581,6 +610,9 @@ morphing algorithm, see the Loris website:
 		{			
 			//	make a Morpher object and do it:
 			Morpher m( *ffreq, *famp, *fbw );
+			m.enableLogAmpMorphing( DoLogAmplitudeMorphing );
+			m.enableLogFreqMorphing( DoLogFrequencyMorphing );
+			
 			m.morph( src0->begin(), src0->end(), src1->begin(), src1->end() );
 					
 			//	splice the morphed Partials into dst:
@@ -611,6 +643,9 @@ morphing algorithm, see the Loris website:
 		{			
 			//	make a Morpher object and do it:
 			Morpher m( ffreq, famp, fbw );
+			m.enableLogAmpMorphing( DoLogAmplitudeMorphing );
+			m.enableLogFreqMorphing( DoLogFrequencyMorphing );
+			
 			m.morph( src0->begin(), src0->end(), src1->begin(), src1->end() );
 					
 			//	splice the morphed Partials into dst:
@@ -640,6 +675,9 @@ morphing algorithm, see the Loris website:
 		{			
 			//	make a Morpher object and do it:
 			Morpher m( *ffreq, *famp, *fbw );
+			m.enableLogAmpMorphing( DoLogAmplitudeMorphing );
+			m.enableLogFreqMorphing( DoLogFrequencyMorphing );
+			
 
 			if ( src0RefLabel != 0 )
 			{
@@ -695,6 +733,9 @@ morphing algorithm, see the Loris website:
 		{			
 			//	make a Morpher object and do it:
 			Morpher m( ffreq, famp, fbw );
+			m.enableLogAmpMorphing( DoLogAmplitudeMorphing );
+			m.enableLogFreqMorphing( DoLogFrequencyMorphing );
+			
 
 			if ( src0RefLabel != 0 )
 			{
@@ -737,31 +778,18 @@ morphing algorithm, see the Loris website:
 
 %feature("docstring",
 "Set the shaping parameter for the amplitude morphing
-function. This shaping parameter controls the slope of
-the amplitude morphing function, for values greater than
-1, this function gets nearly linear (like the old
-amplitude morphing function), for values much less than
-1 (e.g. 1E-5) the slope is gently curved and sounds
-pretty 'linear', for very small values (e.g. 1E-12) the
-curve is very steep and sounds un-natural because of the
-huge jump from zero amplitude to very small amplitude.
+function. 
 
-Use LORIS_DEFAULT_AMPMORPHSHAPE to obtain the default
-amplitude morphing shape for Loris, (equal to 1E-5,
-which works well for many musical instrument morphs,
-unless Loris was compiled with the symbol
-LINEAR_AMP_MORPHS defined, in which case
-LORIS_DEFAULT_AMPMORPHSHAPE is equal to
-LORIS_LINEAR_AMPMORPHSHAPE).
-
-Use LORIS_LINEAR_AMPMORPHSHAPE to approximate the linear
-amplitude morphs performed by older versions of Loris.
-
-The amplitude shape must be positive.") morpher_setAmplitudeShape;
+DEPRECATED - DO NOT USE
+") morpher_setAmplitudeShape;
 
 %rename( setAmplitudeMorphShape ) morpher_setAmplitudeShape;
 
 void morpher_setAmplitudeShape( double shape );
+
+
+
+
 
 const double LORIS_DEFAULT_AMPMORPHSHAPE;    
 const double LORIS_LINEAR_AMPMORPHSHAPE;

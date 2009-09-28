@@ -26,6 +26,16 @@ Loris is Copyright (c) 1999-2009 by Kelly Fitz and Lippold Haken.
 History of visible changes, organized by relase number:
 
 -------------------------------------------------------
+changes since 1.5.4 release:
+
+- Added capability to perform logarithmic frequency morphing --
+log or linear morphing can be selected independently for both 
+amplitude/bandwidth and frequency envelopes. (This might be 
+especially useful if you are morphing two different pitches to
+obtain a third pitch.)
+
+
+-------------------------------------------------------
 changes since 1.5.3 release:
 
 - Fixed a bug involving the use of the nonstandard extension
