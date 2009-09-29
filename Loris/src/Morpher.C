@@ -44,7 +44,7 @@
 #include "PartialList.h"
 #include "PartialUtils.h"
 
-#include "phasefix.h"   //  LOOKIE HERE, NEW STUFF!!!!!
+#include "phasefix.h" 
 
 #include <algorithm>
 #include <memory>
@@ -60,29 +60,6 @@
 //    begin namespace
 namespace Loris {
 
-// new morphing algorithms
-#define FIX_PHASE 1
-
-#if FIX_PHASE
-// wow, is this ever ugly.
-//	TODO: clean up this mess!
-
-#include <utility> // for std::pair, and make_pair
-#include <vector>
-static std::vector< std::pair< double, double > > DEHR;
-typedef enum { SRC = 0, TGT, INTERP } MorphState;
-char * StateStrings[] = { "SOURCE", "TARGET", "INTERP" };
-
-MorphState CurrentState = SRC;
-
-static inline MorphState GetMorphState( double fweight )
-{
-    if ( fweight == 0 ) return SRC;
-    else if ( fweight == 1 ) return TGT;
-    else return INTERP;
-}
-
-#endif
 
 const double Morpher::DefaultFixThreshold = -90; // dB, very low by default
 
@@ -186,8 +163,8 @@ Morpher::operator= ( const Morpher & rhs )
         _logMorphShape = rhs._logMorphShape;
         _minBreakpointGapSec = rhs._minBreakpointGapSec;
         
-	    _doLogAmpMorphing = rhs._doLogAmpMorphing;
-    	_doLogFreqMorphing = rhs._doLogFreqMorphing;
+        _doLogAmpMorphing = rhs._doLogAmpMorphing;
+        _doLogFreqMorphing = rhs._doLogFreqMorphing;
         
     }
     return *this;
@@ -200,21 +177,21 @@ Morpher::operator= ( const Morpher & rhs )
 // ---------------------------------------------------------------------------
 //    morphPartials
 // ---------------------------------------------------------------------------
-//!	Morph a pair of Partials to yield a new morphed Partial. 
-//!	Dummy Partials (having no Breakpoints) don't contribute to the
-//!	morph, except to cause their opposite to fade out. 
-//!	Either (or neither) the source or target Partial may be a dummy 
-//!	Partial (no Breakpoints), but not both. The morphed
-//!	Partial has Breakpoints at times corresponding to every Breakpoint 
-//!	in both source Partials, omitting Breakpoints that would be
+//! Morph a pair of Partials to yield a new morphed Partial. 
+//! Dummy Partials (having no Breakpoints) don't contribute to the
+//! morph, except to cause their opposite to fade out. 
+//! Either (or neither) the source or target Partial may be a dummy 
+//! Partial (no Breakpoints), but not both. The morphed
+//! Partial has Breakpoints at times corresponding to every Breakpoint 
+//! in both source Partials, omitting Breakpoints that would be
 //!   closer than the minBreakpointGap to their predecessor. 
-//!	The new morphed Partial is assigned the specified label and returned.
+//! The new morphed Partial is assigned the specified label and returned.
 //!
-//!	\param 	src is the Partial corresponding to a morph function
-//!		   	value of 0, evaluated at the specified time.
-//!	\param 	tgt is the Partial corresponding to a morph function
-//!		   	value of 1, evaluated at the specified time.
-//!	\param 	assignLabel is the label assigned to the morphed Partial
+//! \param  src is the Partial corresponding to a morph function
+//!         value of 0, evaluated at the specified time.
+//! \param  tgt is the Partial corresponding to a morph function
+//!         value of 1, evaluated at the specified time.
+//! \param  assignLabel is the label assigned to the morphed Partial
 //! \return the morphed Partial
 //
 Partial
@@ -245,12 +222,6 @@ Morpher::morphPartials( Partial src, Partial tgt, int assignLabel )
     Partial newp;
     newp.setLabel( assignLabel );
     
- #if FIX_PHASE
-    // InitMorphState( newp, _freqFunction->valueAt( dontAddBefore ) );
-    CurrentState = GetMorphState( _freqFunction->valueAt( dontAddBefore ) );
-    DEHR.clear();
-    DEHR.push_back( std::make_pair( dontAddBefore, _freqFunction->valueAt( dontAddBefore ) ) );
-#endif
 
     //  Merge Breakpoints from the two Partials,
     //  loop until there are no more Breakpoints to
@@ -270,13 +241,7 @@ Morpher::morphPartials( Partial src, Partial tgt, int assignLabel )
             {
                 appendMorphedSrc( src_iter.breakpoint(), tgt, src_iter.time(), newp );
             }
-            /*
-            else
-            {
-                notifier << "skipping source Breakpoint at time " << t;
-                notifier << " (label " << assignLabel << ")" << endl;
-            }
-            */
+
             ++src_iter;
         }
         else 
@@ -291,13 +256,7 @@ Morpher::morphPartials( Partial src, Partial tgt, int assignLabel )
             {
                 appendMorphedTgt( tgt_iter.breakpoint(), src, tgt_iter.time(), newp );
             }
-            /*
-            else
-            {
-                notifier << "skipping target Breakpoint at time " << t;
-                notifier << " (label " << assignLabel << ")" << endl;
-            }
-            */
+
             ++tgt_iter;
         }  
         
@@ -309,7 +268,46 @@ Morpher::morphPartials( Partial src, Partial tgt, int assignLabel )
         }          
     }
 
- #if FIX_PHASE
+	//	Recompute the phases to match the sources when the frequency 
+	//	morphing function is 0 or 1.
+    fixMorphedPhases( newp );
+    
+    return newp;
+}
+
+
+// ---------------------------------------------------------------------------
+//    helper - GetMorphState
+// ---------------------------------------------------------------------------
+
+typedef enum { SRC = 0, TGT, INTERP } MorphState;
+
+static inline MorphState GetMorphState( double fweight )
+{
+    if ( fweight <= 0 ) 
+    {
+        return SRC;
+    }
+    else if ( fweight >= 1 ) 
+    {
+        return TGT;
+    }
+    else 
+    {
+        return INTERP;
+    }
+}
+
+// ---------------------------------------------------------------------------
+//    fixMorphedPhases (helper)
+// ---------------------------------------------------------------------------
+//  Recompute phases for a morphed Partial, so that the synthesized phases 
+//  match the source phases as closesly as possible at times when the 
+//  frequency morphing function is equal to 0 or 1. 
+
+void 
+Morpher::fixMorphedPhases( Partial & newp ) const
+{
     if ( 0 != newp.numBreakpoints() )
     {
         //  set the initial morph state according to the value of the
@@ -356,10 +354,8 @@ Morpher::morphPartials( Partial src, Partial tgt, int assignLabel )
         // fix the remaining phases
         fixPhaseForward( lastPosCorrect, --bppos );
     }
-#endif
-
-    return newp;
 }
+
 
 // ---------------------------------------------------------------------------
 //    crossfade
@@ -747,13 +743,13 @@ Morpher::bandwidthFunction( void ) const
 //    sourceReferencePartial
 // ---------------------------------------------------------------------------
 //! Return the Partial to be used as a reference
-//!	Partial for the source sequence in a morph of two Partial
-//!	sequences. The reference partial is used to compute 
-//!	frequencies for very low-amplitude Partials whose frequency
-//!	estimates are not considered reliable. The reference Partial
-//!	is considered to have good frequency estimates throughout.
-//!	A default (empty) Partial indicates that no reference Partial
-//!	should be used for the source sequence.
+//! Partial for the source sequence in a morph of two Partial
+//! sequences. The reference partial is used to compute 
+//! frequencies for very low-amplitude Partials whose frequency
+//! estimates are not considered reliable. The reference Partial
+//! is considered to have good frequency estimates throughout.
+//! A default (empty) Partial indicates that no reference Partial
+//! should be used for the source sequence.
 //
 const Partial &
 Morpher::sourceReferencePartial( void ) const
@@ -765,13 +761,13 @@ Morpher::sourceReferencePartial( void ) const
 //    sourceReferencePartial
 // ---------------------------------------------------------------------------
 //! Return the Partial to be used as a reference
-//!	Partial for the source sequence in a morph of two Partial
-//!	sequences. The reference partial is used to compute 
-//!	frequencies for very low-amplitude Partials whose frequency
-//!	estimates are not considered reliable. The reference Partial
-//!	is considered to have good frequency estimates throughout.
-//!	A default (empty) Partial indicates that no reference Partial
-//!	should be used for the source sequence.
+//! Partial for the source sequence in a morph of two Partial
+//! sequences. The reference partial is used to compute 
+//! frequencies for very low-amplitude Partials whose frequency
+//! estimates are not considered reliable. The reference Partial
+//! is considered to have good frequency estimates throughout.
+//! A default (empty) Partial indicates that no reference Partial
+//! should be used for the source sequence.
 //
 Partial &
 Morpher::sourceReferencePartial( void )
@@ -783,13 +779,13 @@ Morpher::sourceReferencePartial( void )
 //    targetReferenceLabel
 // ---------------------------------------------------------------------------
 //! Return the Partial to be used as a reference
-//!	Partial for the target sequence in a morph of two Partial
-//!	sequences. The reference partial is used to compute 
-//!	frequencies for very low-amplitude Partials whose frequency
-//!	estimates are not considered reliable. The reference Partial
-//!	is considered to have good frequency estimates throughout.
-//!	A default (empty) Partial indicates that no reference Partial
-//!	should be used for the target sequence.
+//! Partial for the target sequence in a morph of two Partial
+//! sequences. The reference partial is used to compute 
+//! frequencies for very low-amplitude Partials whose frequency
+//! estimates are not considered reliable. The reference Partial
+//! is considered to have good frequency estimates throughout.
+//! A default (empty) Partial indicates that no reference Partial
+//! should be used for the target sequence.
 //
 const Partial &
 Morpher::targetReferencePartial( void ) const
@@ -801,13 +797,13 @@ Morpher::targetReferencePartial( void ) const
 //    targetReferenceLabel
 // ---------------------------------------------------------------------------
 //! Return the Partial to be used as a reference
-//!	Partial for the target sequence in a morph of two Partial
-//!	sequences. The reference partial is used to compute 
-//!	frequencies for very low-amplitude Partials whose frequency
-//!	estimates are not considered reliable. The reference Partial
-//!	is considered to have good frequency estimates throughout.
-//!	A default (empty) Partial indicates that no reference Partial
-//!	should be used for the target sequence.
+//! Partial for the target sequence in a morph of two Partial
+//! sequences. The reference partial is used to compute 
+//! frequencies for very low-amplitude Partials whose frequency
+//! estimates are not considered reliable. The reference Partial
+//! is considered to have good frequency estimates throughout.
+//! A default (empty) Partial indicates that no reference Partial
+//! should be used for the target sequence.
 //
 Partial &
 Morpher::targetReferencePartial( void ) 
@@ -819,126 +815,126 @@ Morpher::targetReferencePartial( void )
 //    setSourceReferencePartial
 // ---------------------------------------------------------------------------
 //! Specify the Partial to be used as a reference
-//!	Partial for the source sequence in a morph of two Partial
-//!	sequences. The reference partial is used to compute 
-//!	frequencies for very low-amplitude Partials whose frequency
-//!	estimates are not considered reliable. The reference Partial
-//!	is considered to have good frequency estimates throughout.
+//! Partial for the source sequence in a morph of two Partial
+//! sequences. The reference partial is used to compute 
+//! frequencies for very low-amplitude Partials whose frequency
+//! estimates are not considered reliable. The reference Partial
+//! is considered to have good frequency estimates throughout.
 //! The specified Partial must be labeled with its harmonic number.
-//!	A default (empty) Partial indicates that no reference 
-//!	Partial should be used for the source sequence.
+//! A default (empty) Partial indicates that no reference 
+//! Partial should be used for the source sequence.
 //
 void 
 Morpher::setSourceReferencePartial( const Partial & p )
 {
-	if ( p.label() == 0 )
-	{
-		Throw( InvalidArgument, 
-			   "the morphing source reference Partial must be "
-			   "labeled with its harmonic number" );
-	}
-	_srcRefPartial = p;
+    if ( p.label() == 0 )
+    {
+        Throw( InvalidArgument, 
+               "the morphing source reference Partial must be "
+               "labeled with its harmonic number" );
+    }
+    _srcRefPartial = p;
 }
 
 // ---------------------------------------------------------------------------
 //    setSourceReferencePartial
 // ---------------------------------------------------------------------------
 //! Specify the Partial to be used as a reference
-//!	Partial for the source sequence in a morph of two Partial
-//!	sequences. The reference partial is used to compute 
-//!	frequencies for very low-amplitude Partials whose frequency
-//!	estimates are not considered reliable. The reference Partial
-//!	is considered to have good frequency estimates throughout.
-//!	A default (empty) Partial indicates that no reference 
-//!	Partial should be used for the source sequence.
+//! Partial for the source sequence in a morph of two Partial
+//! sequences. The reference partial is used to compute 
+//! frequencies for very low-amplitude Partials whose frequency
+//! estimates are not considered reliable. The reference Partial
+//! is considered to have good frequency estimates throughout.
+//! A default (empty) Partial indicates that no reference 
+//! Partial should be used for the source sequence.
 //!
-//!	\param	partials a sequence of Partials to search
-//!			for the reference Partial
-//!	\param	refLabel the label of the Partial in partials
-//!			that should be selected as the reference
+//! \param  partials a sequence of Partials to search
+//!         for the reference Partial
+//! \param  refLabel the label of the Partial in partials
+//!         that should be selected as the reference
 //
 void 
 Morpher::setSourceReferencePartial( const PartialList & partials, 
-									Partial::label_type refLabel )
+                                    Partial::label_type refLabel )
 {
-	if ( refLabel != 0 )
-	{
-		PartialList::const_iterator pos = 
-			std::find_if( partials.begin(), partials.end(), 
-						  PartialUtils::isLabelEqual( refLabel ) );
-		if ( pos == partials.end() )
-		{
-			Throw( InvalidArgument, "no Partial has the specified reference label" );
-		}
-		_srcRefPartial = *pos;
-	}
-	else
-	{
-		_srcRefPartial = Partial();
-	}
+    if ( refLabel != 0 )
+    {
+        PartialList::const_iterator pos = 
+            std::find_if( partials.begin(), partials.end(), 
+                          PartialUtils::isLabelEqual( refLabel ) );
+        if ( pos == partials.end() )
+        {
+            Throw( InvalidArgument, "no Partial has the specified reference label" );
+        }
+        _srcRefPartial = *pos;
+    }
+    else
+    {
+        _srcRefPartial = Partial();
+    }
 }
 
 // ---------------------------------------------------------------------------
 //    setTargetReferencePartial
 // ---------------------------------------------------------------------------
 //! Specify the Partial to be used as a reference
-//!	Partial for the target sequence in a morph of two Partial
-//!	sequences. The reference partial is used to compute 
-//!	frequencies for very low-amplitude Partials whose frequency
-//!	estimates are not considered reliable. The reference Partial
-//!	is considered to have good frequency estimates throughout.
+//! Partial for the target sequence in a morph of two Partial
+//! sequences. The reference partial is used to compute 
+//! frequencies for very low-amplitude Partials whose frequency
+//! estimates are not considered reliable. The reference Partial
+//! is considered to have good frequency estimates throughout.
 //! The specified Partial must be labeled with its harmonic number.
-//!	A default (empty) Partial indicates that no reference 
-//!	Partial should be used for the target sequence.
+//! A default (empty) Partial indicates that no reference 
+//! Partial should be used for the target sequence.
 //
 void 
 Morpher::setTargetReferencePartial( const Partial & p )
 {
-	if ( p.label() == 0 )
-	{
-		Throw( InvalidArgument, 
-			   "the morphing target reference Partial must be "
-			   "labeled with its harmonic number" );
-	}
-	_tgtRefPartial = p;
+    if ( p.label() == 0 )
+    {
+        Throw( InvalidArgument, 
+               "the morphing target reference Partial must be "
+               "labeled with its harmonic number" );
+    }
+    _tgtRefPartial = p;
 }
 
 // ---------------------------------------------------------------------------
 //    setTargetReferencePartial
 // ---------------------------------------------------------------------------
 //! Specify the Partial to be used as a reference
-//!	Partial for the target sequence in a morph of two Partial
-//!	sequences. The reference partial is used to compute 
-//!	frequencies for very low-amplitude Partials whose frequency
-//!	estimates are not considered reliable. The reference Partial
-//!	is considered to have good frequency estimates throughout.
-//!	A default (empty) Partial indicates that no reference 
-//!	Partial should be used for the target sequence.
+//! Partial for the target sequence in a morph of two Partial
+//! sequences. The reference partial is used to compute 
+//! frequencies for very low-amplitude Partials whose frequency
+//! estimates are not considered reliable. The reference Partial
+//! is considered to have good frequency estimates throughout.
+//! A default (empty) Partial indicates that no reference 
+//! Partial should be used for the target sequence.
 //!
-//!	\param	partials a sequence of Partials to search
-//!			for the reference Partial
-//!	\param	refLabel the label of the Partial in partials
-//!			that should be selected as the reference
+//! \param  partials a sequence of Partials to search
+//!         for the reference Partial
+//! \param  refLabel the label of the Partial in partials
+//!         that should be selected as the reference
 //
 void 
 Morpher::setTargetReferencePartial( const PartialList & partials, 
-									Partial::label_type refLabel )
+                                    Partial::label_type refLabel )
 {
-	if ( refLabel != 0 )
-	{
-		PartialList::const_iterator pos = 
-			std::find_if( partials.begin(), partials.end(), 
-						  PartialUtils::isLabelEqual( refLabel ) );
-		if ( pos == partials.end() )
-		{
-			Throw( InvalidArgument, "no Partial has the specified reference label" );
-		}
-		_tgtRefPartial = *pos;
-	}
-	else
-	{
-		_tgtRefPartial = Partial();
-	}
+    if ( refLabel != 0 )
+    {
+        PartialList::const_iterator pos = 
+            std::find_if( partials.begin(), partials.end(), 
+                          PartialUtils::isLabelEqual( refLabel ) );
+        if ( pos == partials.end() )
+        {
+            Throw( InvalidArgument, "no Partial has the specified reference label" );
+        }
+        _tgtRefPartial = *pos;
+    }
+    else
+    {
+        _tgtRefPartial = Partial();
+    }
 }
 
 
@@ -1065,9 +1061,6 @@ Morpher::partials( void ) const
 //
 void Morpher::morph_aux( PartialCorrespondence & correspondence  )
 {
-#if FIX_PHASE
-    DEHR.clear();
-#endif
     PartialCorrespondence::const_iterator it;
     for ( it = correspondence.begin(); it != correspondence.end(); ++it )
     {
@@ -1089,7 +1082,7 @@ void Morpher::morph_aux( PartialCorrespondence & correspondence  )
         //  ensure that Partials begin and end at zero
         //  amplitude to solve the problem of Nulls 
         //  getting left out of morphed Partials leading to
-        //  eroneous non-zero amplitude segments:
+        //  erroneous non-zero amplitude segments:
         if ( src.numBreakpoints() != 0 )
         {
             if ( src.first().amplitude() != 0.0 && src.startTime() > _minBreakpointGapSec )
@@ -1210,19 +1203,19 @@ static inline bool partial_is_nonnull( const Partial & p )
 
 // ---------------------------------------------------------------------------
 //  Helper function for performing log-domain interpolation
-//	(originally was for amplitude only). 
+//  (originally was for amplitude only). 
 //
-//	alpha == 0 returns x, alpha == 1 returns y
+//  alpha == 0 returns x, alpha == 1 returns y
 //
 //  It is essential to add in a small offset, so that 
 //  occasional zero amplitudes do not introduce artifacts
 //  (if amp is zero, then even if alpha is very small
 //  the effect is to multiply by zero, because 0^x = 0, 
-//	or note that log(0) is -infinity).
+//  or note that log(0) is -infinity).
 //
-//	This shaping parameter affects the shape of the morph
-//	curve only when it is of the same order of magnitude as
-//	one of the sources (x or y) and the other is much larger.
+//  This shaping parameter affects the shape of the morph
+//  curve only when it is of the same order of magnitude as
+//  one of the sources (x or y) and the other is much larger.
 //
 //  When shape is very small, the curve representing the
 //  morphed amplitude is very steep, such that there is a 
@@ -1235,28 +1228,28 @@ static inline bool partial_is_nonnull( const Partial & p )
 static inline double 
 interpolateLog( double x, double y, double alpha, double shape )
 {
-	using std::pow;
+    using std::pow;
 
-	double s = x + shape;
-	double t = y + shape;
-	
-	double v = ( s * pow( t / s, alpha ) ) - shape;
-	
-	return v;
+    double s = x + shape;
+    double t = y + shape;
+    
+    double v = ( s * pow( t / s, alpha ) ) - shape;
+    
+    return v;
 }
 
 // ---------------------------------------------------------------------------
 //  Helper function for performing linear interpolation
-//	(used to be the only kind we supported).
+//  (used to be the only kind we supported).
 //
-//	alpha == 0 returns x, alpha == 1 returns y
+//  alpha == 0 returns x, alpha == 1 returns y
 //
 static inline double 
 interpolateLinear( double x, double y, double alpha )
 {
-	double v = (x * (1-alpha)) + (y * alpha);
-	
-	return v;
+    double v = (x * (1-alpha)) + (y * alpha);
+    
+    return v;
 }
 
 
@@ -1266,25 +1259,25 @@ interpolateLinear( double x, double y, double alpha )
 inline double 
 Morpher::interpolateAmplitude( double srcAmp, double tgtAmp, double alpha ) const
 {    
-	double morphedAmp = 0;	
+    double morphedAmp = 0;  
 
-	if ( _doLogAmpMorphing )
-	{
-		//	if both are small, just return 0
-		//	HEY, is this really what we want?
-		static const double Epsilon = 1E-12;
-		if ( ( srcAmp > Epsilon ) || ( tgtAmp > Epsilon ) )
-		{
-			morphedAmp = interpolateLog( srcAmp, tgtAmp, alpha, _logMorphShape );
-		}
-	}
-	else
-	{
-		morphedAmp = interpolateLinear( srcAmp, tgtAmp, alpha );
-	}
+    if ( _doLogAmpMorphing )
+    {
+        //  if both are small, just return 0
+        //  HEY, is this really what we want?
+        static const double Epsilon = 1E-12;
+        if ( ( srcAmp > Epsilon ) || ( tgtAmp > Epsilon ) )
+        {
+            morphedAmp = interpolateLog( srcAmp, tgtAmp, alpha, _logMorphShape );
+        }
+    }
+    else
+    {
+        morphedAmp = interpolateLinear( srcAmp, tgtAmp, alpha );
+    }
 
-	//	Partial amplitudes should never be negative
-	double res = std::max( 0.0, morphedAmp );                
+    //  Partial amplitudes should never be negative
+    double res = std::max( 0.0, morphedAmp );                
 
     return res;
 }
@@ -1295,28 +1288,28 @@ Morpher::interpolateAmplitude( double srcAmp, double tgtAmp, double alpha ) cons
 inline double 
 Morpher::interpolateBandwidth( double srcBw, double tgtBw, double alpha ) const
 {    
-	double morphedBw = 0;
-	    
-	if ( _doLogAmpMorphing )
-	{
-		//	if both are small, just return 0
-		//	HEY, is this really what we want?
-		static const double Epsilon = 1E-12;
-		if ( ( srcBw > Epsilon ) || ( tgtBw > Epsilon ) )
-		{
-			morphedBw = interpolateLog( srcBw, tgtBw, alpha, _logMorphShape );
-		}
-	}
-	else
-	{
-		morphedBw = interpolateLinear( srcBw, tgtBw, alpha );
-	}
+    double morphedBw = 0;
+        
+    if ( _doLogAmpMorphing )
+    {
+        //  if both are small, just return 0
+        //  HEY, is this really what we want?
+        static const double Epsilon = 1E-12;
+        if ( ( srcBw > Epsilon ) || ( tgtBw > Epsilon ) )
+        {
+            morphedBw = interpolateLog( srcBw, tgtBw, alpha, _logMorphShape );
+        }
+    }
+    else
+    {
+        morphedBw = interpolateLinear( srcBw, tgtBw, alpha );
+    }
 
-	//	Partial bandwidths should never be negative
-	double res = std::max( 0.0, morphedBw );                
+    //  Partial bandwidths should never be negative
+    double res = std::max( 0.0, morphedBw );                
     
 
-	return res;
+    return res;
 }
 
 // ---------------------------------------------------------------------------
@@ -1325,24 +1318,24 @@ Morpher::interpolateBandwidth( double srcBw, double tgtBw, double alpha ) const
 inline double 
 Morpher::interpolateFrequency( double srcFreq, double tgtFreq, double alpha ) const
 {   
-	double morphedFreq = 1;
-	    
-	if ( _doLogFreqMorphing )
-	{		
-		//	guard against the extremely unlikely possibility that
-		//	one of the frequencies is zero
-		double shape = 0;
-		if ( 0 == srcFreq || 0 == tgtFreq  )
-		{
-			shape = Morpher::DefaultAmpShape;
-		}
-		morphedFreq = interpolateLog( srcFreq, tgtFreq, alpha, shape );
-	}
-	else
-	{
-		morphedFreq = interpolateLinear( srcFreq, tgtFreq, alpha );
-	}
-	
+    double morphedFreq = 1;
+        
+    if ( _doLogFreqMorphing )
+    {       
+        //  guard against the extremely unlikely possibility that
+        //  one of the frequencies is zero
+        double shape = 0;
+        if ( 0 == srcFreq || 0 == tgtFreq  )
+        {
+            shape = Morpher::DefaultAmpShape;
+        }
+        morphedFreq = interpolateLog( srcFreq, tgtFreq, alpha, shape );
+    }
+    else
+    {
+        morphedFreq = interpolateLinear( srcFreq, tgtFreq, alpha );
+    }
+    
     return morphedFreq;
 }
 
@@ -1381,7 +1374,7 @@ Morpher::interpolatePhase( double srcphase, double tgtphase, double alpha ) cons
 //
 inline Breakpoint 
 Morpher::interpolateParameters( const Breakpoint & srcBkpt, const Breakpoint & tgtBkpt,
-         		                double fweight, double aweight, double bweight ) const
+                                double fweight, double aweight, double bweight ) const
 {
     Breakpoint morphed;
 
@@ -1457,13 +1450,6 @@ Morpher::appendMorphedSrc( Breakpoint srcBkpt, const Partial & tgtPartial,
          bweight < MaxMorphParam ||
          needNull )
     {
- #if FIX_PHASE
-        if ( GetMorphState( fweight ) != CurrentState )
-        {
-            CurrentState = GetMorphState( fweight );
-            DEHR.push_back( std::make_pair( time, fweight ) );
-        }
-#endif
         
         // adjust source Breakpoint frequencies according to the reference
         // Partial (if a reference has been specified):
@@ -1561,13 +1547,6 @@ Morpher::appendMorphedTgt( Breakpoint tgtBkpt, const Partial & srcPartial,
          bweight > MinMorphParam ||
          needNull )
     {
- #if FIX_PHASE
-        if ( GetMorphState( fweight ) != CurrentState )
-        {
-            CurrentState = GetMorphState( fweight );
-            DEHR.push_back( std::make_pair( time, fweight ) );
-        }
-#endif
         
         // adjust target Breakpoint frequencies according to the reference
         // Partial (if a reference has been specified):

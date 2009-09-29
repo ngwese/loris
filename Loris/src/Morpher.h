@@ -577,7 +577,11 @@ private:
 	double interpolateFrequency( double srcFreq, double tgtFreq, double alpha ) const;
 	double interpolatePhase( double srcphase, double tgtphase, double alpha ) const;
 	
-                           
+
+	//	Recompute phases for a morphed Partial, so that the synthesized phases 
+	//	match the source phases as closesly as possible at times when the 
+	//	frequency morphing function is equal to 0 or 1. 
+	void fixMorphedPhases( Partial & newp ) const;                           
 
 };  //  end of class Morpher
 

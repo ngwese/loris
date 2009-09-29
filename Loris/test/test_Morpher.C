@@ -112,10 +112,6 @@ static double m2pi( double phi )
 static void computePhaseFwd( Partial::iterator b, Partial::iterator e ); // at bottom
 
 
-//  define a amplitude shaping parameter that gives nearly linear morphs
-//  (the non-linear ones are too hard to predict and test)
-const double ALMOSTLINEAR = 1E5;
-
 static Partial makep1( void )
 {
    Partial p1;
@@ -197,9 +193,10 @@ int main( )
         bwenv.insertBreakpoint( MENV_TIMES[i], BWENV_WEIGHTS[i] );
         }
         
-        //  construct Morpher:
+        //  construct Morpher, use linear morphing:
         Morpher testM( fenv, aenv, bwenv );
-        testM.setAmplitudeShape( ALMOSTLINEAR );
+        testM.enableLogAmpMorphing( false );
+        testM.enableLogFreqMorphing( false );
         
         /*                                                */
         /*************** envelope tests *******************/
