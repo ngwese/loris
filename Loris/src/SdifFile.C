@@ -268,7 +268,7 @@ typedef enum {
     ESDIF_OUT_OF_MEMORY=13,  /* Used only by sdif-mem.c */
     ESDIF_DUPLICATE_MATRIX_TYPE_IN_FRAME=14
 } SDIFresult;
-static char *error_string_array[] = {
+static const char *error_string_array[] = {
     "Everything's cool",
     "This program should display strerror(errno) instead of this string", 
     "Bad SDIF header",
@@ -505,22 +505,22 @@ static int SizeofSanityCheck(void) {
     static char errorMessage[sizeof("sizeof(sdif_float64) is 999!!!")];
 
     if (sizeof(sdif_int16) != 2) {
-    	sprintf(errorMessage, "sizeof(sdif_int16) is %d!", sizeof(sdif_int16));
+    	sprintf(errorMessage, "sizeof(sdif_int16) is %d!", (int)sizeof(sdif_int16));
 		OK = 0;
     }
 
     if (sizeof(sdif_int32) != 4) {
-    	sprintf(errorMessage, "sizeof(sdif_int32) is %d!", sizeof(sdif_int32));
+    	sprintf(errorMessage, "sizeof(sdif_int32) is %d!", (int)sizeof(sdif_int32));
 		OK = 0;
     }
 
     if (sizeof(sdif_float32) != 4) {
-		sprintf(errorMessage, "sizeof(sdif_float32) is %d!", sizeof(sdif_float32));
+		sprintf(errorMessage, "sizeof(sdif_float32) is %d!", (int)sizeof(sdif_float32));
 		OK = 0;
     }
 
     if (sizeof(sdif_float64) != 8) {
-		sprintf(errorMessage, "sizeof(sdif_float64) is %d!", sizeof(sdif_float64));
+		sprintf(errorMessage, "sizeof(sdif_float64) is %d!", (int)sizeof(sdif_float64));
 		OK = 0;
     }
 
@@ -1043,7 +1043,7 @@ public:
 #define ThrowIfSdifError( errNum, report )										\
 	if (errNum)																	\
 	{																			\
-		char* errPtr = error_string_array[errNum];								\
+		const char* errPtr = error_string_array[errNum];								\
 		if (errPtr)																\
 		{																		\
 	        debugger << "SDIF error " << errPtr << endl;						\
