@@ -32,8 +32,7 @@
 #   http://www.cerlsoundgroup.org/Loris/
 #
 """
-Welcome to the very simple Loris morphing test!
-Kelly Fitz 2000
+--- Welcome to the very simple Loris morphing test ---
 
 Generates a simple linear morph between a 
 clarinet and a flute using the Loris
@@ -42,6 +41,8 @@ extension module for Python.
 print __doc__
 
 import loris, os, time
+
+print ' Using Loris version', loris.version()
 
 path = os.getcwd()
 print '(in %s)' % path
@@ -70,12 +71,14 @@ loris.exportSdif( 'clarinet.pytest.sdif', clar )
 clar = loris.importSdif( 'clarinet.pytest.sdif' )
 
 try:
-    print 'making a bogus attempt at writing an Spc file'
-    print 'WARNING: this will fail because the Partials are unchannelized'
+    print 'making a bogus attempt at writing an Spc file --'
+    print 'this will fail because the Partials are unchannelized'
     loris.exportSpc( 'bad_spc_file.pytest.spc', clar, 90 )
 except:
     import sys
-    print 'caught:', sys.exc_type, sys.exc_value
+    print 'caught:', sys.exc_type
+    print 'error is:' , sys.exc_value
+    print 'OK, moving on!'
 
 loris.channelize( clar, loris.createFreqReference( clar, 415*.8, 415*1.2 ), 1 )
 loris.distill( clar )
@@ -151,5 +154,51 @@ m = loris.morph( clar, flut, mf, mf, mf )
 loris.exportAiff( 'morph.pytest.aiff', 
                   loris.synthesize( m, samplerate ), 
                   samplerate, 16 )
+                  
+#
+# 	sanity check on the morph
+#
+# check the number and labeling of partials
+# (this will fail for very old versions of Python without sets I suppose)
+
+clarlabels = set()
+for p in clar:
+	clarlabels.add( p.label() )
+flutlabels = set()
+for p in flut:
+	flutlabels.add( p.label() )
+morphlabels = set()
+for p in m:
+	morphlabels.add( p.label() )
+print 'found', len(morphlabels), 'labeled partials in the morph'
+
+# use set algebra to check that all labels in the sources
+# appear in the morph, and no others do
+print 'checking Partial labels in morph...'
+x = ( clarlabels | flutlabels ) ^ morphlabels
+if len(x) > 0:
+	raise 'ERROR in morphtest: morph does not have the right partial labels'
+else:
+	print 'all partial labels present in the sources are found in the morph'
+	print 'and all the labels in the morph are in (at least) one of the sources'
+		
+
+[clbeg, clend] = loris.timeSpan( clar )
+[flbeg, flend] = loris.timeSpan( flut )
+[mbeg, mend] = loris.timeSpan( m )
+
+# huge kludge!
+# no way to determine the breakpoint gap used by the Morpher!
+# Fix!
+DefaultBreakpointGap = 1E-4
+mbeg = mbeg + DefaultBreakpointGap
+mend = mend - DefaultBreakpointGap
+
+if not ( mbeg == clbeg ):
+	raise 'ERROR in morphtest: morph begin (%f) not equal to clar begin (%f)'%(mbeg, cbeg)
+if not ( mend == flend ):
+	raise 'ERROR in morphtest: morph end (%f) not equal to flute end (%f)'%(mend,flend)
+	
+print 'morphed partials pass sanity tests'
 
 print 'done (%s)' % time.ctime(time.time())
