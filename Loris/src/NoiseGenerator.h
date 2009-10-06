@@ -24,17 +24,16 @@
  *
  * NoiseGenerator.h
  *
- * Definition of a class representing a filtered noise generator, used 
- * as a modulator in bandwidth-enhanced synthesis.
+ * Definition of a class representing a gaussian noise generator, filtered and 
+ * used as a modulator in bandwidth-enhanced synthesis.
  *
  * Kelly Fitz, 5 June 2003
+ * revised 5 October 2009
  * loris@cerlsoundgroup.org
  *
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
-
-#include "Filter.h"
 
 //	begin namespace
 namespace Loris {
@@ -45,36 +44,47 @@ namespace Loris {
 class NoiseGenerator
 {
 //	--- interface ---
-public:
-	//	construction
-	//	copy and assign are free
-	explicit NoiseGenerator( double initSeed = 1.0 );
-	NoiseGenerator( const Filter & f, double initSeed = 1.0 );
 
-	//	seed the random number generator and clear the filter's
-	//	delay line:
+public:
+
+	//!	Create a new noise generator with the (optionally) specified
+	//! seed (default is 1.0).
+	//!
+	//!	\param initSeed is the initial seed for the random number generator
+	explicit NoiseGenerator( double initSeed = 1.0 );
+
+
+	//	copy and assign are free
+	
+	
+	//!	Re-seed the random number generator.
+	//!
+	//!	\param newSeed is the new seed for the random number generator
 	void reset( double newSeed );
 	
-	//	return the most-recently generated sample:
-	double current( void ) const { return sample; }
+	//!	Generate and return a new sample of noise.
+	double nextSample( void );
 	
-	//	generate and return a new sample of 
-	//	filtered noise:
-	double next( void );
-	double operator() ( void ) { return next(); }
+	//! Function call operator, same as calling nextSample().
+	double operator() ( void ) 
+		{ return nextSample(); }
 	
-	double next( double mean, double stddev = 1. );
-	double operator() ( double mean, double stddev = 1. ) { return next( mean, stddev ); }
+	//!	Generate and return a new sample of noise with the specified mean
+	//!	and standard deviation.
+	double nextSample( double mean, double stddev = 1. );
+
+	//! Function call operator, same as calling nextSample(mean, stddev).
+	double operator() ( double mean, double stddev = 1. ) 
+		{ return nextSample( mean, stddev ); }
 
 
 //	--- implementation ---
 private:
-	//	random number 
+
+	//	random number generation
 	inline double uniform( void );
 	inline double gaussian_normal( void );
 
-	double sample;	//	the most recently-computed noise sample
-	Filter filter;	//	filter applied to random number generator
 
 	// random number generator implementation:
 	double u_seed;

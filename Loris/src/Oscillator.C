@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *
- * Oscillator.c++
+ * Oscillator.C
  *
  * Implementation of class Loris::Oscillator, a Bandwidth-Enhanced Oscillator.
  *
@@ -96,11 +96,12 @@ static Filter one_pole_filter( double feedback )
 //	Initialize stochastic modulators and state variables.
 //
 Oscillator::Oscillator( void ) :
-	bwModulator( prototype_filter() ),
-	i_frequency( 0 ),
-	i_amplitude( 0 ),
-	i_bandwidth( 0 ),
-	determ_phase( 0 )
+	m_modulator( 1.0 /* seed */ ),
+	m_filter( prototype_filter() ),
+	m_instfrequency( 0 ),
+	m_instamplitude( 0 ),
+	m_instbandwidth( 0 ),
+	m_determphase( 0 )
 {
 }
 
@@ -117,29 +118,33 @@ Oscillator::resetEnvelopes( const Breakpoint & bp, double srate )
 {
 	//	Remember that the oscillator only knows about 
 	//	radian frequency! Convert!
-	i_frequency = bp.frequency() * TwoPi / srate;
-	i_amplitude = bp.amplitude();
-	i_bandwidth = bp.bandwidth();
-	determ_phase = bp.phase();
+	m_instfrequency = bp.frequency() * TwoPi / srate;
+	m_instamplitude = bp.amplitude();
+	m_instbandwidth = bp.bandwidth();
+	m_determphase = bp.phase();
 	
  	//	clamp bandwidth:
-	if ( i_bandwidth > 1. )
+	if ( m_instbandwidth > 1. )
 	{
 		debugger << "clamping bandwidth at 1." << endl;
-		i_bandwidth = 1.;
+		m_instbandwidth = 1.;
 	}
-	else if ( i_bandwidth < 0. )
+	else if ( m_instbandwidth < 0. )
 	{ 
 		debugger << "clamping bandwidth at 0." << endl;
-		i_bandwidth = 0.;
+		m_instbandwidth = 0.;
 	}
 
 	//	don't alias:
-	if ( i_frequency > Pi )
+	if ( m_instfrequency > Pi )
 	{ 
 		debugger << "fading out aliasing Partial" << endl;
-		i_amplitude = 0.;
+		m_instamplitude = 0.;
 	}
+	
+	//	Reset the fitler state too.
+	m_filter.clear();
+	
 }
 
 // ---------------------------------------------------------------------------
@@ -155,7 +160,7 @@ Oscillator::resetEnvelopes( const Breakpoint & bp, double srate )
 void 
 Oscillator::resetPhase( double ph )
 {
-	determ_phase = ph;
+	m_determphase = ph;
 }
 
 // ---------------------------------------------------------------------------
@@ -210,14 +215,14 @@ Oscillator::oscillate( double * begin, double * end,
 
 	//	compute trajectories:
 	const double dTime = 1. / (end - begin);
-	const double dFreq = (targetFreq - i_frequency) * dTime;
-	const double dAmp = (targetAmp - i_amplitude)  * dTime;
-	const double dBw = (targetBw - i_bandwidth)  * dTime;
+	const double dFreq = (targetFreq - m_instfrequency) * dTime;
+	const double dAmp = (targetAmp - m_instamplitude)  * dTime;
+	const double dBw = (targetBw - m_instbandwidth)  * dTime;
 
 	//	could use temporary local variables for speed... nah!
 	//	Cannot possibly be worth it when I am computing square roots 
 	//	and cosines!
-	double am;
+	double am, nz;
 	for ( double * putItHere = begin; putItHere != end; ++putItHere )
 	{
 		//	use math functions in namespace std:
@@ -231,18 +236,21 @@ Oscillator::oscillate( double * begin, double * end,
 		//	carrier amp: sqrt( 1. - bandwidth ) * amp
 		//	modulation index: sqrt( 2. * bandwidth ) * amp
 		//
-		am = sqrt( 1. - i_bandwidth ) + ( bwModulator() * sqrt( 2. * i_bandwidth ) );	
+		nz = m_filter.sample( m_modulator.nextSample() );
+		am = sqrt( 1. - m_instbandwidth ) + ( nz * sqrt( 2. * m_instbandwidth ) );	
 				
 		//	compute a sample and add it into the buffer:
-		*putItHere += am * i_amplitude * cos( determ_phase );
+		*putItHere += am * m_instamplitude * cos( m_determphase );
 			
 		//	update the instantaneous oscillator state:
-		determ_phase += i_frequency;	//	frequency is radians per sample
-		i_frequency += dFreq;
-		i_amplitude += dAmp;
-		i_bandwidth += dBw;
-		if (i_bandwidth < 0.)
-			i_bandwidth = 0.;
+		m_determphase += m_instfrequency;	//	frequency is radians per sample
+		m_instfrequency += dFreq;
+		m_instamplitude += dAmp;
+		m_instbandwidth += dBw;
+		if (m_instbandwidth < 0.)
+		{
+			m_instbandwidth = 0.;
+		}
 			
 	}	// end of sample computation loop
 	
@@ -250,15 +258,15 @@ Oscillator::oscillate( double * begin, double * end,
 	//	high oscillation frequencies:
 	//	(Doesn't really matter much exactly how we wrap it, 
 	//	as long as it brings the phase nearer to zero.)
-	determ_phase = m2pi( determ_phase );
+	m_determphase = m2pi( m_determphase );
 	
 	//	set the state variables to their target values,
 	//	just in case they didn't arrive exactly (overshooting
 	//	amplitude or, especially, bandwidth, could be bad, and
 	//	it does happen):
-	i_frequency = targetFreq;
-	i_amplitude = targetAmp;
-	i_bandwidth = targetBw;
+	m_instfrequency = targetFreq;
+	m_instamplitude = targetAmp;
+	m_instbandwidth = targetBw;
 }
 
 }	//	end of namespace Loris

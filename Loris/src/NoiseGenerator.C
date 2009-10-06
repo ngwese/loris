@@ -20,12 +20,13 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *
- * NoiseGenerator.c++
+ * NoiseGenerator.C
  *
- * Implementation of a class representing a filtered noise generator, used 
- * as a modulator in bandwidth-enhanced synthesis.
+ * Implementation of a class representing a gaussian noise generator, filtered and 
+ * used as a modulator in bandwidth-enhanced synthesis.
  *
  * Kelly Fitz, 5 June 2003
+ * revised 5 October 2009
  * loris@cerlsoundgroup.org
  *
  * http://www.cerlsoundgroup.org/Loris/
@@ -38,6 +39,8 @@
 
 #include "NoiseGenerator.h"
 #include <cmath>
+#include <numeric>
+
 
 //	begin namespace
 namespace Loris {
@@ -45,26 +48,14 @@ namespace Loris {
 // --- construction ---
 
 // ---------------------------------------------------------------------------
-//	default constructor
+//	(default) constructor
 // ---------------------------------------------------------------------------
-//	Use the default Filter (no filtering). Seed defaults to 1.
+//!	Create a new noise generator with the (optionally) specified
+//! seed (default is 1.0).
+//!
+//!	\param initSeed is the initial seed for the random number generator
 //
 NoiseGenerator::NoiseGenerator( double initSeed ) :
-	sample( 0. ),
-	u_seed( initSeed ),
-	gset( 0 ),
-	iset( false )
-{
-}
-
-// ---------------------------------------------------------------------------
-//	initialized constructor
-// ---------------------------------------------------------------------------
-//	Use the specified Filter. Seed defaults to 1.
-//
-NoiseGenerator::NoiseGenerator( const Filter & f, double initSeed ) :
-	sample( 0. ),
-	filter( f ),
 	u_seed( initSeed ),
 	gset( 0 ),
 	iset( false )
@@ -74,31 +65,17 @@ NoiseGenerator::NoiseGenerator( const Filter & f, double initSeed ) :
 // ---------------------------------------------------------------------------
 //	reset
 // ---------------------------------------------------------------------------
-//	Seed the random number generator and clear the filter's
-//	delay line.
+//!	Re-seed the random number generator.
+//!
+//!	\param newSeed is the new seed for the random number generator
 //
 void 
 NoiseGenerator::reset( double newSeed )
 {
 	u_seed = newSeed;
-	filter.clear();
 }
 
 // --- random number generation ---
-
-// ---------------------------------------------------------------------------
-//	dirt-cheap random number generator
-// ---------------------------------------------------------------------------
-//	Not using this, but could probably get by using it for the
-//	stochastic AM. (?)
-//
-#include <cstdlib>
-static inline double
-cheapo( void )
-{
-	using namespace std;
-	return (2.0 * rand() / RAND_MAX) - 1.0;
-}
 
 // ---------------------------------------------------------------------------
 //	uniform random number generator
@@ -138,12 +115,9 @@ NoiseGenerator::uniform( void )
 	static const double a = 16807.L;
 	static const double m = 2147483647.L;	// == LONG_MAX
 	static const double oneOverM = 1.L / m;
-	//static double seed = 1.0L;
 
 	double temp = a * u_seed;
-	// seed = temp - m * trunc( temp / m );
 	u_seed = temp - m * trunc( temp * oneOverM );
-	// return seed / m;
 	return u_seed * oneOverM;
 }
 
@@ -191,28 +165,28 @@ NoiseGenerator::gaussian_normal( void )
 // --- sample generation ---
 
 // ---------------------------------------------------------------------------
-//	next
+//	nextSampleSample
 // ---------------------------------------------------------------------------
-//	Generate and return a new sample of filtered noise.
+//!	Generate and return a new sample of noise.
 //
 double 
-NoiseGenerator::next( void )
+NoiseGenerator::nextSample( void )
 {
-	sample = filter( gaussian_normal() );
+	double sample = gaussian_normal();
 	return sample;
 }
 
 
 // ---------------------------------------------------------------------------
-//	next
+//	nextSample
 // ---------------------------------------------------------------------------
-//	Generate and return a new sample of filtered noise, using the specified
-//	mean and standard deviation.
+//!	Generate and return a new sample of noise with the specified mean
+//!	and standard deviation.
 //
 double 
-NoiseGenerator::next( double mean, double stddev )
+NoiseGenerator::nextSample( double mean, double stddev )
 {
-	sample = filter( (stddev * gaussian_normal()) + mean );
+	double sample = (stddev * gaussian_normal()) + mean;
 	return sample;
 }
 

@@ -34,6 +34,7 @@
  */
 
 #include "NoiseGenerator.h"
+#include "Filter.h"
 
 //	begin namespace
 namespace Loris {
@@ -57,15 +58,16 @@ class Oscillator
 {
 //	--- implementation ---
 
-	NoiseGenerator bwModulator;	//!	stochastic modulator
+	NoiseGenerator m_modulator;		//!	stochastic modulator
+	Filter m_filter;				//! filter applied to the noise generator
 	
 	//	instantaneous oscillator state:
-	double i_frequency;			//!	radians per sample
-	double i_amplitude;			//!	absolute amplitude
-	double i_bandwidth;			//!	bandwidth coefficient (noise energy / total energy)
+	double m_instfrequency;			//!	radians per sample
+	double m_instamplitude;			//!	absolute amplitude
+	double m_instbandwidth;			//!	bandwidth coefficient (noise energy / total energy)
 	
 	//	accumulating phase state:
-	double determ_phase;		//!	deterministic phase in radians
+	double m_determphase;		//!	deterministic phase in radians
 
 //	--- interface ---
 public:
@@ -107,16 +109,16 @@ public:
 // --- accessors ---
 
 	//! Return the instantaneous amplitde of the Oscillator.
-	double amplitude( void ) const { return i_amplitude; }
+	double amplitude( void ) const { return m_instamplitude; }
 	
 	//! Return the instantaneous bandwidth of the Oscillator.
-	double bandwidth( void ) const { return i_bandwidth; }
+	double bandwidth( void ) const { return m_instbandwidth; }
 	
 	//! Return the instantaneous phase of the Oscillator.
-	double phase( void ) const { return determ_phase; }
+	double phase( void ) const { return m_determphase; }
 	
 	//! Return the instantaneous radian frequency of the Oscillator.
-	double radianFreq( void ) const { return i_frequency; }
+	double radianFreq( void ) const { return m_instfrequency; }
 	 
 };	//	end of class Oscillator
 
