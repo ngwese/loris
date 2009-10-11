@@ -72,14 +72,14 @@ public:
 	//!	artifacts. If the fade time is unspecified, the default value of one
 	//!	millisecond (0.001 seconds) is used.
 	//!
-	//!	\param	srate The rate (Hz) at which to synthesize samples
+	//!	\param	m_srateHz The rate (Hz) at which to synthesize samples
 	//!			   (must be positive).
 	//!	\param	buffer The vector (of doubles) into which rendered samples
 	//!			   should be accumulated.
 	//!	\param	fadeTime The Partial fade time in seconds (must be non-negative).
 	//!	\throw	InvalidArgument if the specfied sample rate is non-positive.
 	//!	\throw	InvalidArgument if the specified fade time is negative.
-	Synthesizer( double srate, std::vector<double> & buffer, double fadeTime = .001 );
+	Synthesizer( double m_srateHz, std::vector<double> & buffer, double fadeTime = .001 );
 	
 	// 	Compiler can generate copy, assign, and destroy.
 	//	Synthesizer( const Synthesizer & other );
@@ -164,6 +164,13 @@ public:
 	//!	owned) by this Synthesizer.
 	std::vector<double> & samples( void );
 	
+	//! Return access to the Filter used by this Synthesizer's 
+	//! Oscillator to implement bandwidth-enhanced sinusoidal 
+	//! synthesis. (Can use this access to make changes to the
+	//! filter coefficients.)
+	Filter & filter( void );
+	
+	
 //	-- mutation --
 
 	//!	Set this Synthesizer's fade time to the specified value 
@@ -176,12 +183,12 @@ public:
 //	-- implementation --
 private:
 
-	Oscillator osc;     //  the Synthesizer has-a Oscillator that it uses to render
+	Oscillator m_osc; 	//  the Synthesizer has-a Oscillator that it uses to render
                         //  all the Partials one by one. 
     
-	std::vector< double > * sampleBuffer;  //	samples are computed and stored here
-	double tfade;                          //   Partial fade in/out time in seconds
-	double srate;                          //	sample rate in Hz
+	std::vector< double > * m_sampleBuffer;	//	samples are computed and stored here
+	double m_fadeTimeSec;               	//  Partial fade in/out time in seconds
+	double m_srateHz;                     	//	sample rate in Hz
 	
 };	//	end of class Synthesizer
 
@@ -221,10 +228,10 @@ Synthesizer::synthesize( PartialList::iterator begin_partials,
 	//	grow the sample buffer if necessary
 	typedef std::vector< double >::size_type Sz_Type;
 	Sz_Type Nsamps = 1 +  
-		Sz_Type( PartialUtils::timeSpan( begin_partials, end_partials ).second * srate );
-	if ( sampleBuffer->size() < Nsamps )
+		Sz_Type( PartialUtils::timeSpan( begin_partials, end_partials ).second * m_srateHz );
+	if ( m_sampleBuffer->size() < Nsamps )
 	{
-   	sampleBuffer->resize( Nsamps );
+   	m_sampleBuffer->resize( Nsamps );
    }
    
 	while ( begin_partials != end_partials ) 

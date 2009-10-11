@@ -71,7 +71,7 @@ static const Filter & prototype_filter( void )
 	static const double Gain = 4.663939184e+04;
 	static const double ExtraScaling = 6.;
 	static const double MaCoefs[] = { 1., 3., 3., 1. }; 
-	static const double ArCoefs[] = { 1., 2.9258684252, -2.8580608586, 0.9320209046 };
+	static const double ArCoefs[] = { 1., -2.9258684252, 2.8580608586, -0.9320209046 };
 
 	static const Filter proto( MaCoefs, MaCoefs + 4, ArCoefs, ArCoefs + 4, ExtraScaling/Gain );
 	return proto;
@@ -86,7 +86,9 @@ static const Filter & prototype_filter( void )
 static Filter one_pole_filter( double feedback )
 {
 	double b[] = {1};
-	double a[] = {1, feedback };
+	double a[] = {1, 0 };
+	a[1] = -feedback; 
+	
 	return Filter( b, b+1, a, a+2, 1 - feedback );
 }
 
@@ -148,22 +150,6 @@ Oscillator::resetEnvelopes( const Breakpoint & bp, double srate )
 }
 
 // ---------------------------------------------------------------------------
-//	resetPhase
-// ---------------------------------------------------------------------------
-//	Reset the phase of the Oscillator to the specified
-//	value, and clear the accumulated phase modulation. (?)
-//	Or not.
-//	This is done when the amplitude of a Partial goes to 
-//	zero, so that onsets are preserved in distilled
-//	and collated Partials.
-//
-void 
-Oscillator::resetPhase( double ph )
-{
-	m_determphase = ph;
-}
-
-// ---------------------------------------------------------------------------
 //	m2pi
 // ---------------------------------------------------------------------------
 //	O'Donnell's phase wrapping function.
@@ -173,6 +159,22 @@ static inline double m2pi( double x )
 	using namespace std; //	floor should be in std
 	#define ROUND(x) (floor(.5 + (x)))
 	return x + ( TwoPi * ROUND(-x/TwoPi) );
+}
+
+// ---------------------------------------------------------------------------
+//	setPhase
+// ---------------------------------------------------------------------------
+//	Reset the phase of the Oscillator to the specified
+//	value, and clear the accumulated phase modulation. (?)
+//	Or not.
+//	This is done when the amplitude of a Partial goes to 
+//	zero, so that onsets are preserved in distilled
+//	and collated Partials.
+//
+void 
+Oscillator::setPhase( double ph )
+{
+	m_determphase = m2pi(ph);
 }
 
 // ---------------------------------------------------------------------------

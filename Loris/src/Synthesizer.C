@@ -78,19 +78,19 @@ namespace Loris {
 //!	\throw	InvalidArgument if the specified fade time is negative.
 Synthesizer::Synthesizer( double samplerate, std::vector<double> & buffer, 
 						  double fade ) :
-	sampleBuffer( & buffer ),
-	tfade( fade ),
-	srate( samplerate )
+	m_sampleBuffer( & buffer ),
+	m_fadeTimeSec( fade ),
+	m_srateHz( samplerate )
 {
 	//	check to make sure that the sample rate is valid:
-	if ( srate <= 0. ) 
+	if ( m_srateHz <= 0. ) 
 	{
 		Throw( InvalidArgument, "Synthesizer sample rate must be positive." );
 	}
 
 	//	check to make sure that the specified fade time
 	//	is valid:
-	if ( tfade < 0. )
+	if ( m_fadeTimeSec < 0. )
 	{
 		Throw( InvalidArgument, 
 			   "Synthesizer Partial fade time must be non-negative." );
@@ -131,27 +131,27 @@ Synthesizer::synthesize( const Partial & p )
 		Throw( InvalidPartial, "Tried to synthesize a Partial having start time less than 0." );
 	}
 
-	debugger << "synthesizing Partial from " << p.startTime() * srate 
-			 << " to " << p.endTime() * srate << " starting phase "
+	debugger << "synthesizing Partial from " << p.startTime() * m_srateHz 
+			 << " to " << p.endTime() * m_srateHz << " starting phase "
 			 << p.initialPhase() << " starting frequency " 
 			 << p.first().frequency() << endl;
 
 	//	resize the sample buffer if necessary:
 	typedef unsigned long index_type;
-	index_type endSamp = index_type( ( p.endTime() + tfade ) * srate );
-	if ( endSamp+1 > sampleBuffer->size() )
+	index_type endSamp = index_type( ( p.endTime() + m_fadeTimeSec ) * m_srateHz );
+	if ( endSamp+1 > m_sampleBuffer->size() )
 	{
 		//	pad by one sample:
-		sampleBuffer->resize( endSamp+1 );
+		m_sampleBuffer->resize( endSamp+1 );
 	}
 	
 	//	compute the starting time for synthesis of this Partial,
-	//	tfade before the Partial's startTime, but not before 0:
-	double itime = ( tfade < p.startTime() ) ? ( p.startTime() - tfade ) : 0.;
-	index_type currentSamp = index_type( itime * srate );
+	//	m_fadeTimeSec before the Partial's startTime, but not before 0:
+	double itime = ( m_fadeTimeSec < p.startTime() ) ? ( p.startTime() - m_fadeTimeSec ) : 0.;
+	index_type currentSamp = index_type( itime * m_srateHz );
 	
 	//	reset the oscillator:
-	osc.resetEnvelopes( BreakpointUtils::makeNullBefore( p.first(), p.startTime() - itime ), srate );
+	m_osc.resetEnvelopes( BreakpointUtils::makeNullBefore( p.first(), p.startTime() - itime ), m_srateHz );
 
 	//	cache the previous frequency (in Hz) so that it
 	//	can be used to reset the phase when necessary
@@ -161,14 +161,14 @@ Synthesizer::synthesize( const Partial & p )
 	double prevFrequency = p.first().frequency();	
 	
 	//	better to compute this only once:
-	const double OneOverSrate = 1. / srate;
+	const double OneOverSrate = 1. / m_srateHz;
 	
 	//	synthesize linear-frequency segments until 
 	// 	there aren't any more Breakpoints to make segments:
-	double * bufferBegin = &( sampleBuffer->front() );
+	double * bufferBegin = &( m_sampleBuffer->front() );
 	for ( Partial::const_iterator it = p.begin(); it != p.end(); ++it )
 	{
-		index_type tgtSamp = index_type( it.time() * srate );
+		index_type tgtSamp = index_type( it.time() * m_srateHz );
 		Assert( tgtSamp >= currentSamp );
 		
 		//	if the current oscillator amplitude is
@@ -176,7 +176,7 @@ Synthesizer::synthesize( const Partial & p )
 		//	is not, reset the oscillator phase so that
 		//	it matches exactly the target Breakpoint 
 		//	phase at tgtSamp:
-		if ( osc.amplitude() == 0. )
+		if ( m_osc.amplitude() == 0. )
 		{
 			//	recompute the phase so that it is correct
 			//	at the target Breakpoint (need to do this
@@ -185,23 +185,23 @@ Synthesizer::synthesize( const Partial & p )
 			//	it might be inaccurate):
 			//
 			//	double favg = 0.5 * ( prevFrequency + it.breakpoint().frequency() );
-			//	double dphase = 2 * Pi * favg * ( tgtSamp - currentSamp ) / srate;
+			//	double dphase = 2 * Pi * favg * ( tgtSamp - currentSamp ) / m_srateHz;
 			//
 			double dphase = Pi * ( prevFrequency + it.breakpoint().frequency() ) 
 							   * ( tgtSamp - currentSamp ) * OneOverSrate;
-			osc.resetPhase( it.breakpoint().phase() - dphase );
+			m_osc.setPhase( it.breakpoint().phase() - dphase );
 		}
 
-		osc.oscillate( bufferBegin + currentSamp, bufferBegin + tgtSamp,
-					   it.breakpoint(), srate );
+		m_osc.oscillate( bufferBegin + currentSamp, bufferBegin + tgtSamp,
+					   it.breakpoint(), m_srateHz );
 		
 		currentSamp = tgtSamp;
 		prevFrequency = it.breakpoint().frequency();
 	}
 
 	//	render a fade out segment:	
-	osc.oscillate( bufferBegin + currentSamp, bufferBegin + endSamp,
-				   BreakpointUtils::makeNullAfter( p.last(), tfade ), srate );
+	m_osc.oscillate( bufferBegin + currentSamp, bufferBegin + endSamp,
+				   BreakpointUtils::makeNullAfter( p.last(), m_fadeTimeSec ), m_srateHz );
 	
 }
 	
@@ -214,7 +214,7 @@ Synthesizer::synthesize( const Partial & p )
 double 
 Synthesizer::fadeTime( void ) const 
 {
-	return tfade;
+	return m_fadeTimeSec;
 }
 
 // ---------------------------------------------------------------------------
@@ -224,7 +224,7 @@ Synthesizer::fadeTime( void ) const
 double 
 Synthesizer::sampleRate( void ) const 
 {
-	return srate;
+	return m_srateHz;
 }
 
 // ---------------------------------------------------------------------------
@@ -235,7 +235,7 @@ Synthesizer::sampleRate( void ) const
 const std::vector<double> &
 Synthesizer::samples( void ) const 
 {
-	return *sampleBuffer;
+	return *m_sampleBuffer;
 }
 
 // ---------------------------------------------------------------------------
@@ -246,7 +246,20 @@ Synthesizer::samples( void ) const
 std::vector<double> &
 Synthesizer::samples( void )  
 {
-	return *sampleBuffer;
+	return *m_sampleBuffer;
+}
+
+// ---------------------------------------------------------------------------
+//	sampleRate
+// ---------------------------------------------------------------------------
+//! Return access to the Filter used by this Synthesizer's 
+//! Oscillator to implement bandwidth-enhanced sinusoidal 
+//! synthesis. (Can use this access to make changes to the
+//! filter coefficients.)
+Filter & 
+Synthesizer::filter( void ) 
+{
+	return m_osc.filter(); 
 }
 
 // -- mutation --
@@ -269,7 +282,7 @@ Synthesizer::setFadeTime( double partialFadeTime )
 		Throw( InvalidArgument, "Synthesizer Partial fade time must be non-negative." );
 	}
 
-	tfade = partialFadeTime;
+	m_fadeTimeSec = partialFadeTime;
 }
 
 }	//	end of namespace Loris

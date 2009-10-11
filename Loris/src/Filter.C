@@ -22,9 +22,11 @@
  *
  * Filter.C
  *
- * Implementation of class Loris::Filter, a generic ARMA digital filter.
+ * Implementation of class Loris::Filter, a generic digital filter of 
+ * arbitrary order having both feed-forward and feedback coefficients. 
  *
  * Kelly Fitz, 1 Sept 1999
+ * revised 9 Oct 2009
  * loris@cerlsoundgroup.org
  *
  * http://www.cerlsoundgroup.org/Loris/
@@ -32,95 +34,116 @@
  */
 
 #if HAVE_CONFIG_H
-	#include "config.h"
+    #include "config.h"
 #endif
 
 #include "Filter.h"
 
 #include <algorithm>
+#include <numeric>
 
-//	begin namespace
+//  begin namespace
 namespace Loris {
 
 // ---------------------------------------------------------------------------
-//	default construction
+//  default construction
 // ---------------------------------------------------------------------------
+//! Construct a filter with an all-pass unity gain response.    
 //
 Filter::Filter( void ) :
-	_maCoefs( 1, 1.0 ),
-	_arCoefs( 1, 1.0 ),
-	_delayline( 1, 0 ),
-	_gain( 1.0 )
+    m_ffwdcoefs( 1, 1.0 ),
+    m_fbackcoefs( 1, 1.0 ),
+    m_delayline( 1, 0 ),
+    m_gain( 1.0 )
 {
 }
 
 // ---------------------------------------------------------------------------
-//	copy construction
+//  copy construction
 // ---------------------------------------------------------------------------
-//	Do not copy delay line.
+//! Make a copy of another digital filter. 
+//! Do not copy the filter state (delay line).
 //
 Filter::Filter( const Filter & other ) :
-	_delayline( other._delayline.size(), 0. ),
-	_maCoefs( other._maCoefs ),
-	_arCoefs( other._arCoefs ),
-	_gain( other._gain )
+    m_delayline( other.m_delayline.size(), 0. ),
+    m_ffwdcoefs( other.m_ffwdcoefs ),
+    m_fbackcoefs( other.m_fbackcoefs ),
+    m_gain( other.m_gain )
 {
-	Assert( _delayline.size() >= _maCoefs.size() - 1 );
-	Assert( _delayline.size() >= _arCoefs.size() - 1 );
+    Assert( m_delayline.size() >= m_ffwdcoefs.size() - 1 );
+    Assert( m_delayline.size() >= m_fbackcoefs.size() - 1 );
 }
 
 // ---------------------------------------------------------------------------
-//	assignment
+//  assignment
 // ---------------------------------------------------------------------------
-//	Do not copy delay line.
+//! Make a copy of another digital filter. 
+//! Do not copy the filter state (delay line).
 //
 Filter &
 Filter::operator=( const Filter & rhs )
 {
-	if ( &rhs != this )
-	{
-		_delayline.resize( rhs._delayline.size() );
-		std::fill( _delayline.begin(), _delayline.end(), 0 );
-		_maCoefs = rhs._maCoefs;
-		_arCoefs = rhs._arCoefs;
-		_gain = rhs._gain;
+    if ( &rhs != this )
+    {
+        m_delayline.resize( rhs.m_delayline.size() );
+        clear();
+        
+        m_ffwdcoefs = rhs.m_ffwdcoefs;
+        m_fbackcoefs = rhs.m_fbackcoefs;
+        m_gain = rhs.m_gain;
 
-		Assert( _delayline.size() >= _maCoefs.size() - 1 );
-		Assert( _delayline.size() >= _arCoefs.size() - 1 );
-	}
-	return *this;
+        Assert( m_delayline.size() >= m_ffwdcoefs.size() - 1 );
+        Assert( m_delayline.size() >= m_fbackcoefs.size() - 1 );
+    }
+    return *this;
 }
 
 // ---------------------------------------------------------------------------
-//	clear
+//  destructor
 // ---------------------------------------------------------------------------
-//	Clear the delay line.
+//! Destructor is virtual to enable subclassing. Subclasses may specialize
+//! construction, and may add functionality, but for efficiency, the filtering
+//! operation is non-virtual.
+//
+Filter::~Filter( void )
+{
+}
+
+
+// ---------------------------------------------------------------------------
+//  clear
+// ---------------------------------------------------------------------------
+//! Clear the filter state. 
 //
 void
 Filter::clear( void )
 {
-	std::fill( _delayline.begin(), _delayline.end(), 0 );
-	Assert( _delayline.size() >= _maCoefs.size() - 1 );
-	Assert( _delayline.size() >= _arCoefs.size() - 1 );
+    std::fill( m_delayline.begin(), m_delayline.end(), 0 );
 }
 
 // ---------------------------------------------------------------------------
-//	sample
+//  sample
 // ---------------------------------------------------------------------------
-//	Implement recurrence relation. _maCoefs holds the MA coefficients, _arCoefs
-//	holds the AR coeffs. The coefficient vectors and delay lines are ordered
-//	by increasing age.
-//
+//! Compute a filtered sample from the next input sample.
+//!
+//! Implement recurrence relation. m_ffwdcoefs holds the feed-forward
+//! coefficients, m_fbackcoefs holds the feedback coeffs. The coefficient
+//! vectors and delay lines are ordered by increasing age.
 //
 double
 Filter::sample( double input )
 { 
-	double wn = std::inner_product( _arCoefs.begin()+1, _arCoefs.end(), _delayline.begin(), input );
-	_delayline.push_front( wn );
-	double output = std::inner_product( _maCoefs.begin(), _maCoefs.end(), _delayline.begin(), 0. );
-	_delayline.pop_back();
-		
-	return output * _gain;
+    double wn = - std::inner_product( m_fbackcoefs.begin()+1, m_fbackcoefs.end(), 
+                                      m_delayline.begin(), -input );
+        //  negate input, then negate the inner product
+        
+    m_delayline.push_front( wn );
+    
+    double output = std::inner_product( m_ffwdcoefs.begin(), m_ffwdcoefs.end(), 
+                                        m_delayline.begin(), 0. );
+    m_delayline.pop_back();
+        
+    return output * m_gain;
 }
 
-}	//	end of namespace Loris
+}   //  end of namespace Loris

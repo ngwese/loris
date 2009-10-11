@@ -94,7 +94,7 @@ public:
 	//!	value. This is done when the amplitude of a Partial 
 	//!	goes to zero, so that onsets are preserved in distilled
 	//!	and collated Partials.
-	void resetPhase( double ph );
+	void setPhase( double ph );
 
 	//!	Accumulate bandwidth-enhanced sinusoidal samples modulating the
 	//!	oscillator state from its current values of radian frequency, amplitude,
@@ -119,6 +119,11 @@ public:
 	
 	//! Return the instantaneous radian frequency of the Oscillator.
 	double radianFreq( void ) const { return m_instfrequency; }
+	
+	//! Return access to the Filter used by this oscillator to 
+	//! implement bandwidth-enhanced sinusoidal synthesis.
+	Filter & filter( void ) { return m_filter; }
+	
 	 
 };	//	end of class Oscillator
 

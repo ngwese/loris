@@ -34,6 +34,9 @@ amplitude/bandwidth and frequency envelopes. (This might be
 especially useful if you are morphing two different pitches to
 obtain a third pitch.)
 
+- Cleaned up Filter interface and implementation, made it more
+consistent with other common tools (like Matlab and scipy). 
+
 
 -------------------------------------------------------
 changes since 1.5.3 release:
