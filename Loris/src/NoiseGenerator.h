@@ -28,7 +28,7 @@
  * used as a modulator in bandwidth-enhanced synthesis.
  *
  * Kelly Fitz, 5 June 2003
- * revised 5 October 2009
+ * revised 11 October 2009
  * loris@cerlsoundgroup.org
  *
  * http://www.cerlsoundgroup.org/Loris/
@@ -60,36 +60,36 @@ public:
 	//!	Re-seed the random number generator.
 	//!
 	//!	\param newSeed is the new seed for the random number generator
-	void reset( double newSeed );
+	void seed( double newSeed );
 	
-	//!	Generate and return a new sample of noise.
-	double nextSample( void );
+	//	sample
+	//
+	//!	Generate and return a new sample of Gaussian noise having zero
+	//! mean and unity standard deviation. Approximate the normal distribution 
+	//!	using the Box-Muller transformation applied to a uniform random number 
+	//!	generator taken from "Random Number Generators: Good Ones Are Hard To Find," 
+	//!	Stephen Park and Keith Miller, Communications of the ACM, October 1988,
+	//! vol. 31, Number 10.
+	double sample( void );
 	
-	//! Function call operator, same as calling nextSample().
-	double operator() ( void ) 
-		{ return nextSample(); }
+	//! Function call operator, same as calling sample().
+	//!	
+	//!	\sa sample
+	double operator() ( void ) 	{ return sample(); }
 	
-	//!	Generate and return a new sample of noise with the specified mean
-	//!	and standard deviation.
-	double nextSample( double mean, double stddev = 1. );
-
-	//! Function call operator, same as calling nextSample(mean, stddev).
-	double operator() ( double mean, double stddev = 1. ) 
-		{ return nextSample( mean, stddev ); }
-
 
 //	--- implementation ---
 private:
 
-	//	random number generation
+	//	random number generation helpers
 	inline double uniform( void );
 	inline double gaussian_normal( void );
 
 
-	// random number generator implementation:
-	double u_seed;
-	double gset;
-	bool iset;
+	// random number generator state variables
+	double m_useed;
+	double m_gset;
+	bool m_iset;
 	
 };
 

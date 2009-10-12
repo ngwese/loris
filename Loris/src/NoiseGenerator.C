@@ -26,7 +26,7 @@
  * used as a modulator in bandwidth-enhanced synthesis.
  *
  * Kelly Fitz, 5 June 2003
- * revised 5 October 2009
+ * revised 11 October 2009
  * loris@cerlsoundgroup.org
  *
  * http://www.cerlsoundgroup.org/Loris/
@@ -56,23 +56,23 @@ namespace Loris {
 //!	\param initSeed is the initial seed for the random number generator
 //
 NoiseGenerator::NoiseGenerator( double initSeed ) :
-	u_seed( initSeed ),
-	gset( 0 ),
-	iset( false )
+	m_useed( initSeed ),
+	m_gset( 0 ),
+	m_iset( false )
 {
 }
 
 // ---------------------------------------------------------------------------
-//	reset
+//	seed
 // ---------------------------------------------------------------------------
 //!	Re-seed the random number generator.
 //!
 //!	\param newSeed is the new seed for the random number generator
 //
 void 
-NoiseGenerator::reset( double newSeed )
+NoiseGenerator::seed( double newSeed )
 {
-	u_seed = newSeed;
+	m_useed = newSeed;
 }
 
 // --- random number generation ---
@@ -116,9 +116,9 @@ NoiseGenerator::uniform( void )
 	static const double m = 2147483647.L;	// == LONG_MAX
 	static const double oneOverM = 1.L / m;
 
-	double temp = a * u_seed;
-	u_seed = temp - m * trunc( temp * oneOverM );
-	return u_seed * oneOverM;
+	double temp = a * m_useed;
+	m_useed = temp - m * trunc( temp * oneOverM );
+	return m_useed * oneOverM;
 }
 
 // ---------------------------------------------------------------------------
@@ -126,18 +126,19 @@ NoiseGenerator::uniform( void )
 // ---------------------------------------------------------------------------
 //	Approximate the normal distribution using the Box-Muller transformation.
 //	This is a better approximation and faster algorithm than the 12 u.v. sum.
+//
 //	This is slightly different than the thing I got off the web, I (have to)
 //	assume (for now) that I knew what I was doing when I altered it.
 //
 inline double 
 NoiseGenerator::gaussian_normal( void )
 {
-	//static int iset = 0;	//	boolean really, 
-	//static double gset;
+	//static int m_iset = 0;	//	boolean really, now member variables
+	//static double m_gset;
 
 	double r = 1., fac, v1, v2;
 	
-	if ( ! iset )
+	if ( ! m_iset )
 	{
 		v1 = 2. * uniform() - 1.;
 		v2 = 2. * uniform() - 1.;
@@ -151,43 +152,35 @@ NoiseGenerator::gaussian_normal( void )
 		}
 
 		fac = std::sqrt( -2. * std::log(r) / r );
-		gset = v1 * fac;
-		iset = true;
+		m_gset = v1 * fac;
+		m_iset = true;
 		return v2 * fac;
 	}
 	else
 	{
-		iset = false;
-		return gset;
+		m_iset = false;
+		return m_gset;
 	}
 }
 
 // --- sample generation ---
 
 // ---------------------------------------------------------------------------
-//	nextSampleSample
+//	sample
 // ---------------------------------------------------------------------------
-//!	Generate and return a new sample of noise.
+//!	Generate and return a new sample of Gaussian noise having zero
+//! mean and unity standard deviation. Approximate the normal distribution 
+//!	using the Box-Muller transformation applied to a uniform random number 
+//!	generator taken from "Random Number Generators: Good Ones Are Hard To Find," 
+//!	Stephen Park and Keith Miller, Communications of the ACM, October 1988,
+//! vol. 31, Number 10.
 //
 double 
-NoiseGenerator::nextSample( void )
+NoiseGenerator::sample( void )
 {
 	double sample = gaussian_normal();
 	return sample;
 }
 
-
-// ---------------------------------------------------------------------------
-//	nextSample
-// ---------------------------------------------------------------------------
-//!	Generate and return a new sample of noise with the specified mean
-//!	and standard deviation.
-//
-double 
-NoiseGenerator::nextSample( double mean, double stddev )
-{
-	double sample = (stddev * gaussian_normal()) + mean;
-	return sample;
-}
 
 }	//	end of namespace Loris

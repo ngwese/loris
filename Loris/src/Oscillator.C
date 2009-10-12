@@ -238,7 +238,7 @@ Oscillator::oscillate( double * begin, double * end,
 		//	carrier amp: sqrt( 1. - bandwidth ) * amp
 		//	modulation index: sqrt( 2. * bandwidth ) * amp
 		//
-		nz = m_filter.sample( m_modulator.nextSample() );
+		nz = m_filter.sample( m_modulator.sample() );
 		am = sqrt( 1. - m_instbandwidth ) + ( nz * sqrt( 2. * m_instbandwidth ) );	
 				
 		//	compute a sample and add it into the buffer:
