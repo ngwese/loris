@@ -2080,93 +2080,16 @@ this SpcFile.") setMarkers;
 
 
 // ----------------------------------------------------------------
-//		wrap PartialList classes
-//
-//	(PartialList, PartialListIterator, Partial, PartialIterator, 
-//	and Breakpoint)
-//
-//	This stuff is kind of big, so it lives in its own interface
-//	file.
+//	Include auxiliary SWIG interface files.
 
 %include lorisPartialList.i
 
-
-// ----------------------------------------------------------------
-//		wrap FundamentalEstimator classes
-//
-//	(FundamentalFromSamples and FundamentalFromPartials)
-
 %include lorisFundamental.i
-
-
-// ----------------------------------------------------------------
-//		wrap LinearEnvelope classes
-//
-//	LinearEnvelope, LinearEnvelopeIterator, and LinearEnvelopePosition,
-//	as well as Envelope (abstract) and BreakpointEnvelope (deprecated)
-//
 
 %include lorisEnvelope.i
 
+%include lorisSynthesizer.i
 
-// ----------------------------------------------------------------
-//		experiment: wrap Channelizer class
-//
-class Channelizer
-{
-public:
-//	-- construction --
-	%extend
-	{
-		Channelizer( const LinearEnvelope * refChanFreq, int refChanLabel, double stretchFactor = 0 )
-		{
-			return new Channelizer( *refChanFreq, refChanLabel, stretchFactor );
-		}
-	}
-	
-	Channelizer( double refFreq, double stretchFactor = 0 );
-	 
-	~Channelizer( void );
-	 
-//	-- channelizing --
+%include lorisChannelizer.i
 
-	void channelize( Partial & partial ) const;
-
-	%extend 
-	{
-		void channelize( PartialList * partials ) const
-		{
-			self->channelize( partials->begin(), partials->end() );
-		}
-	}
-		 
-    double channelFrequencyAt( double time, int channel ) const;
-
-    int computeChannelNumber( double time, double frequency ) const;
-    
-    double computeFractionalChannelNumber( double time, double frequency ) const;
-    
-    
-    double referenceFrequencyAt( double time ) const;
-
-//	-- access/mutation --
-		 
-    double amplitudeWeighting( void ) const;
-
-    void setAmplitudeWeighting( double expon );
-
-    double stretchFactor( void ) const;
-        
-    void setStretchFactor( double stretch );    
-		 
-    void setStretchFactor( double fm, int m, double fn, int n );
-    
-// -- static members --
-
-	 
-    static double computeStretchFactor( double fm, int m, double fn, int n );
-	 
-    static double computeStretchFactor( double fref, double fn, double n );
-    
-};	//	end of class Channelizer
 
