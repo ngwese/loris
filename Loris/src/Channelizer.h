@@ -39,36 +39,36 @@
 
 #include <memory>
 
-//	begin namespace
+//  begin namespace
 namespace Loris {
 
 class Envelope;
 class Partial;
 
 // ---------------------------------------------------------------------------
-//	Channelizer
-//	
-//!	Class Channelizer represents an algorithm for automatic labeling of
-//!	a sequence of Partials. Partials must be labeled in
-//!	preparation for morphing (see Morpher) to establish correspondences
-//!	between Partials in the morph source and target sounds. 
-//!	
-//!	Channelized partials are labeled according to their adherence to a
-//!	harmonic frequency structure with a time-varying fundamental
-//!	frequency. The frequency spectrum is partitioned into
-//!	non-overlapping channels having time-varying center frequencies that
-//!	are harmonic (integer) multiples of a specified reference frequency
-//!	envelope, and each channel is identified by a unique label equal to
-//!	its harmonic number. Each Partial is assigned the label
-//!	corresponding to the channel containing the greatest portion of its
-//!	(the Partial's) energy. 
-//!	
-//!	A reference frequency Envelope for channelization and the channel
-//!	number to which it corresponds (1 for an Envelope that tracks the
-//!	Partial at the fundamental frequency) must be specified. The
-//!	reference Envelope can be constructed explcitly, point by point
-//!	(using, for example, the BreakpointEnvelope class), or constructed
-//!	automatically using the FrequencyReference class. 
+//  Channelizer
+//  
+//! Class Channelizer represents an algorithm for automatic labeling of
+//! a sequence of Partials. Partials must be labeled in
+//! preparation for morphing (see Morpher) to establish correspondences
+//! between Partials in the morph source and target sounds. 
+//! 
+//! Channelized partials are labeled according to their adherence to a
+//! harmonic frequency structure with a time-varying fundamental
+//! frequency. The frequency spectrum is partitioned into
+//! non-overlapping channels having time-varying center frequencies that
+//! are harmonic (integer) multiples of a specified reference frequency
+//! envelope, and each channel is identified by a unique label equal to
+//! its harmonic number. Each Partial is assigned the label
+//! corresponding to the channel containing the greatest portion of its
+//! (the Partial's) energy. 
+//! 
+//! A reference frequency Envelope for channelization and the channel
+//! number to which it corresponds (1 for an Envelope that tracks the
+//! Partial at the fundamental frequency) must be specified. The
+//! reference Envelope can be constructed explcitly, point by point
+//! (using, for example, the BreakpointEnvelope class), or constructed
+//! automatically using the FrequencyReference class. 
 //!
 //! The Channelizer can be configured with a stretch factor, to accomodate
 //! detuned harmonics, as in the case of piano tones. The static member
@@ -81,22 +81,22 @@ class Partial;
 //! reference frequency envelope is assumed to track the frequency of
 //! one of the partials, and the center frequency of the corresponding
 //! channel, even though it may represent a stretched harmonic.
-//!	
-//!	Channelizer is a leaf class, do not subclass.
+//! 
+//! Channelizer is a leaf class, do not subclass.
 //
 class Channelizer
 {
-//	-- implementaion --
-	std::auto_ptr< Envelope > _refChannelFreq;  //! the reference frequency envelope
+//  -- implementaion --
+    std::auto_ptr< Envelope > _refChannelFreq;  //! the reference frequency envelope
     
-	int _refChannelLabel;                       //! the channel number corresponding to the
-	                                            //! reference frequency (1 for the fundamental)
+    int _refChannelLabel;                       //! the channel number corresponding to the
+                                                //! reference frequency (1 for the fundamental)
                                                 
-	double _stretchFactor;                      //! stretching factor to account for 
-	                                            //! detuned harmonics, as in the case of the piano; 
-	                                            //! can be computed using the static member
-	                                            //! computeStretchFactor. Should be 0 for most
-	                                            //! (strongly harmonic) sounds.
+    double _stretchFactor;                      //! stretching factor to account for 
+                                                //! detuned harmonics, as in the case of the piano; 
+                                                //! can be computed using the static member
+                                                //! computeStretchFactor. Should be 0 for most
+                                                //! (strongly harmonic) sounds.
 
     double _ampWeighting;                       //! exponent for amplitude weighting in channel
                                                 //! computation, 0 for no weighting, 1 for linear
@@ -104,96 +104,96 @@ class Channelizer
                                                 //! default is 0, amplitude weighting is a bad idea
                                                 //! for many sounds
     
-//	-- public interface --
+//  -- public interface --
 public:
-//	-- construction --
+//  -- construction --
 
-	//!	Construct a new Channelizer using the specified reference
-	//!	Envelope to represent the a numbered channel. If the sound
-	//! being channelized is known to have detuned harmonics, a 
-	//! stretching factor can be specified (defaults to 0 for no 
-	//! stretching). The stretching factor can be computed using
-	//! the static member computeStretchFactor.
-	//!	
-	//!	\param 	refChanFreq is an Envelope representing the center frequency
-	//!		    of a channel.
-	//!	\param  refChanLabel is the corresponding channel number (i.e. 1
-	//!		    if refChanFreq is the lowest-frequency channel, and all 
-	//!		    other channels are harmonics of refChanFreq, or 2 if  
-	//!		    refChanFreq tracks the second harmonic, etc.).
-	//! \param  stretchFactor is a stretching factor to account for detuned 
-	//!         harmonics, default is 0. 
-	//!
-	//! \throw  InvalidArgument if refChanLabel is not positive.
-	//! \throw  InvalidArgument if stretchFactor is negative.
-	Channelizer( const Envelope & refChanFreq, int refChanLabel, double stretchFactor = 0 );
-	 
-	//!	Construct a new Channelizer having a constant reference frequency.
-	//!	The specified frequency is the center frequency of the lowest-frequency
-	//!	channel (for a harmonic sound, the channel containing the fundamental 
-	//!	Partial.
-	//!
-	//!	\param	refFreq is the reference frequency (in Hz) corresponding
-	//!			to the first frequency channel.
-	//! \param  stretchFactor is a stretching factor to account for detuned 
-	//!         harmonics, default is 0. 
-	//!
-	//! \throw  InvalidArgument if refChanLabel is not positive.
-	//! \throw  InvalidArgument if stretchFactor is negative.
-	Channelizer( double refFreq, double stretchFactor = 0 );
-		 
-	//!	Construct a new Channelizer that is an exact copy of another.
-	//!	The copy represents the same set of frequency channels, constructed
-	//!	from the same reference Envelope and channel number.
-	//!	
-	//!	\param other is the Channelizer to copy
-	Channelizer( const Channelizer & other );
-	 
-	//!	Assignment operator: make this Channelizer an exact copy of another. 
-	//!	This Channelizer is made to represent the same set of frequency channels, 
-	//!	constructed from the same reference Envelope and channel number as rhs.
-	//!
-	//!	\param rhs is the Channelizer to copy
-	Channelizer & operator=( const Channelizer & rhs );
-	 
-	//!	Destroy this Channelizer.
-	~Channelizer( void );
-	 
-//	-- channelizing --
+    //! Construct a new Channelizer using the specified reference
+    //! Envelope to represent the a numbered channel. If the sound
+    //! being channelized is known to have detuned harmonics, a 
+    //! stretching factor can be specified (defaults to 0 for no 
+    //! stretching). The stretching factor can be computed using
+    //! the static member computeStretchFactor.
+    //! 
+    //! \param  refChanFreq is an Envelope representing the center frequency
+    //!         of a channel.
+    //! \param  refChanLabel is the corresponding channel number (i.e. 1
+    //!         if refChanFreq is the lowest-frequency channel, and all 
+    //!         other channels are harmonics of refChanFreq, or 2 if  
+    //!         refChanFreq tracks the second harmonic, etc.).
+    //! \param  stretchFactor is a stretching factor to account for detuned 
+    //!         harmonics, default is 0. 
+    //!
+    //! \throw  InvalidArgument if refChanLabel is not positive.
+    //! \throw  InvalidArgument if stretchFactor is negative.
+    Channelizer( const Envelope & refChanFreq, int refChanLabel, double stretchFactor = 0 );
+     
+    //! Construct a new Channelizer having a constant reference frequency.
+    //! The specified frequency is the center frequency of the lowest-frequency
+    //! channel (for a harmonic sound, the channel containing the fundamental 
+    //! Partial.
+    //!
+    //! \param  refFreq is the reference frequency (in Hz) corresponding
+    //!         to the first frequency channel.
+    //! \param  stretchFactor is a stretching factor to account for detuned 
+    //!         harmonics, default is 0. 
+    //!
+    //! \throw  InvalidArgument if refChanLabel is not positive.
+    //! \throw  InvalidArgument if stretchFactor is negative.
+    Channelizer( double refFreq, double stretchFactor = 0 );
+         
+    //! Construct a new Channelizer that is an exact copy of another.
+    //! The copy represents the same set of frequency channels, constructed
+    //! from the same reference Envelope and channel number.
+    //! 
+    //! \param other is the Channelizer to copy
+    Channelizer( const Channelizer & other );
+     
+    //! Assignment operator: make this Channelizer an exact copy of another. 
+    //! This Channelizer is made to represent the same set of frequency channels, 
+    //! constructed from the same reference Envelope and channel number as rhs.
+    //!
+    //! \param rhs is the Channelizer to copy
+    Channelizer & operator=( const Channelizer & rhs );
+     
+    //! Destroy this Channelizer.
+    ~Channelizer( void );
+     
+//  -- channelizing --
 
-	//!	Label a Partial with the number of the frequency channel containing
-	//!	the greatest portion of its (the Partial's) energy.
-	//!	
-	//!	\param partial is the Partial to label.
-	void channelize( Partial & partial ) const;
+    //! Label a Partial with the number of the frequency channel containing
+    //! the greatest portion of its (the Partial's) energy.
+    //! 
+    //! \param partial is the Partial to label.
+    void channelize( Partial & partial ) const;
 
-	//!	Assign each Partial in the specified half-open (STL-style) range
-	//!	the label corresponding to the frequency channel containing the
-	//!	greatest portion of its (the Partial's) energy.
-	//!	
-	//!	\param begin is the beginning of the range of Partials to channelize
-	//!	\param end is (one-past) the end of the range of Partials to channelize
-	//!	
-	//!	If compiled with NO_TEMPLATE_MEMBERS defined, then begin and end
-	//!	must be PartialList::iterators, otherwise they can be any type
-	//!	of iterators over a sequence of Partials.
+    //! Assign each Partial in the specified half-open (STL-style) range
+    //! the label corresponding to the frequency channel containing the
+    //! greatest portion of its (the Partial's) energy.
+    //! 
+    //! \param begin is the beginning of the range of Partials to channelize
+    //! \param end is (one-past) the end of the range of Partials to channelize
+    //! 
+    //! If compiled with NO_TEMPLATE_MEMBERS defined, then begin and end
+    //! must be PartialList::iterators, otherwise they can be any type
+    //! of iterators over a sequence of Partials.
 #if ! defined(NO_TEMPLATE_MEMBERS)
-	template<typename Iter>
-	void channelize( Iter begin, Iter end ) const;
+    template<typename Iter>
+    void channelize( Iter begin, Iter end ) const;
 #else
-	void channelize( PartialList::iterator begin, PartialList::iterator end ) const;
-#endif	 
+    void channelize( PartialList::iterator begin, PartialList::iterator end ) const;
+#endif   
 
-	//!	Function call operator: same as channelize().
+    //! Function call operator: same as channelize().
 #if ! defined(NO_TEMPLATE_MEMBERS)
-	template<typename Iter>
-	void operator() ( Iter begin, Iter end ) const
+    template<typename Iter>
+    void operator() ( Iter begin, Iter end ) const
 #else
     inline
-	void operator() ( PartialList::iterator begin, PartialList::iterator end ) const
+    void operator() ( PartialList::iterator begin, PartialList::iterator end ) const
 #endif
-		 { channelize( begin, end ); }
-		 
+         { channelize( begin, end ); }
+         
     //! Compute the center frequency of one a channel at the specified
     //! time. For non-stretched harmonics, this is simply the value
     //! of the reference envelope scaled by the ratio of the specified
@@ -264,8 +264,8 @@ public:
     //!         the reference envelope
     double referenceFrequencyAt( double time ) const;
 
-//	-- access/mutation --
-		 
+//  -- access/mutation --
+         
     //! Return the exponent applied to amplitude before weighting
     //! the instantaneous estimate of the frequency channel number
     //! for a Partial. zero (default) for no weighting, 1 for linear
@@ -314,65 +314,10 @@ public:
     //!
     //! \throw  InvalidArgument if stretch is negative.
     void setStretchFactor( double stretch );    
-		 
-    //! Set the stretching factor used to account for (consistently) 
-    //! detuned harmonics, as in a piano tone, from a pair of 
-    //! mode (harmonic) frequencies and numbers.
-    //!
-    //! The stretching factor is a small positive number for 
-    //! heavy vibrating strings (as in pianos) for which the
-    //! mass of the string significantly affects the frequency
-    //! of the vibrating modes. See Martin Keane, "Understanding
-    //! the complex nature of the piano tone", 2004, for a discussion
-    //! and the source of the mode frequency stretching algorithms 
-    //! implemented here.
-    //!
-    //! The stretching factor is computed using computeStretchFactor,
-    //! but only a valid stretch factor will ever be assigned. If an
-    //! invalid (negative) stretching factor is computed for the
-    //! specified frequencies and mode numbers, the stretch factor
-    //! will be set to zero.
-    //!
-    //! \param      fm is the frequency of the Mth stretched harmonic
-    //! \param      m is the harmonic number of the harmonic whose frequnecy is fm
-    //! \param      fn is the frequency of the Nth stretched harmonic
-    //! \param      n is the harmonic number of the harmonic whose frequnecy is fn
-    void setStretchFactor( double fm, int m, double fn, int n );
-    
+         
 // -- static members --
 
-	//! Static member that constructs an instance and applies
-	//! it to a sequence of Partials. 
-	//! Construct a Channelizer using the specified Envelope
-	//! and reference label, and use it to channelize a
-	//! sequence of Partials. 
-	//!
-	//! \param  begin is the beginning of a sequence of Partials to 
-	//!         channelize.
-	//! \param  end is the end of a sequence of Partials to 
-	//!         channelize.
-	//! \param 	refChanFreq is an Envelope representing the center frequency
-	//!         of a channel.
-	//! \param 	refChanLabel is the corresponding channel number (i.e. 1
-	//!         if refChanFreq is the lowest-frequency channel, and all 
-	//!         other channels are harmonics of refChanFreq, or 2 if  
-	//!         refChanFreq tracks the second harmonic, etc.).
-	//! \throw  InvalidArgument if refChanLabel is not positive.
-	//!	
-	//!	If compiled with NO_TEMPLATE_MEMBERS defined, then begin and end
-	//!	must be PartialList::iterators, otherwise they can be any type
-	//!	of iterators over a sequence of Partials.
-#if ! defined(NO_TEMPLATE_MEMBERS)
-	template< typename Iter >
-	static 
-	void channelize( Iter begin, Iter end, 
-                     const Envelope & refChanFreq, int refChanLabel );
-#else
-	static inline 
-	void channelize( PartialList::iterator begin, PartialList::iterator end,
-                     const Envelope & refChanFreq, int refChanLabel );
-#endif	 
-	 
+     
     //! Static member to compute the stretch factor for a sound having
     //! (consistently) detuned harmonics, like piano tones.
     //!
@@ -399,7 +344,74 @@ public:
     //!             floating point number, or 0 for pefectly tuned harmonics
     //!             (that is, if fn = n*f1).
     static double computeStretchFactor( double fm, int m, double fn, int n );
-	 
+
+
+// -- DEPRECATED members --
+
+    //! DEPRECATED
+    //!
+    //! Set the stretching factor used to account for (consistently) 
+    //! detuned harmonics, as in a piano tone, from a pair of 
+    //! mode (harmonic) frequencies and numbers.
+    //!
+    //! The stretching factor is a small positive number for 
+    //! heavy vibrating strings (as in pianos) for which the
+    //! mass of the string significantly affects the frequency
+    //! of the vibrating modes. See Martin Keane, "Understanding
+    //! the complex nature of the piano tone", 2004, for a discussion
+    //! and the source of the mode frequency stretching algorithms 
+    //! implemented here.
+    //!
+    //! The stretching factor is computed using computeStretchFactor,
+    //! but only a valid stretch factor will ever be assigned. If an
+    //! invalid (negative) stretching factor is computed for the
+    //! specified frequencies and mode numbers, the stretch factor
+    //! will be set to zero.
+    //!
+    //! \param      fm is the frequency of the Mth stretched harmonic
+    //! \param      m is the harmonic number of the harmonic whose frequnecy is fm
+    //! \param      fn is the frequency of the Nth stretched harmonic
+    //! \param      n is the harmonic number of the harmonic whose frequnecy is fn
+    void setStretchFactor( double fm, int m, double fn, int n );
+    
+
+    //! DEPRECATED
+    //!
+    //! Static member that constructs an instance and applies
+    //! it to a sequence of Partials. 
+    //! Construct a Channelizer using the specified Envelope
+    //! and reference label, and use it to channelize a
+    //! sequence of Partials. 
+    //!
+    //! \param  begin is the beginning of a sequence of Partials to 
+    //!         channelize.
+    //! \param  end is the end of a sequence of Partials to 
+    //!         channelize.
+    //! \param  refChanFreq is an Envelope representing the center frequency
+    //!         of a channel.
+    //! \param  refChanLabel is the corresponding channel number (i.e. 1
+    //!         if refChanFreq is the lowest-frequency channel, and all 
+    //!         other channels are harmonics of refChanFreq, or 2 if  
+    //!         refChanFreq tracks the second harmonic, etc.).
+    //! \throw  InvalidArgument if refChanLabel is not positive.
+    //! 
+    //! If compiled with NO_TEMPLATE_MEMBERS defined, then begin and end
+    //! must be PartialList::iterators, otherwise they can be any type
+    //! of iterators over a sequence of Partials.
+#if ! defined(NO_TEMPLATE_MEMBERS)
+    template< typename Iter >
+    static 
+    void channelize( Iter begin, Iter end, 
+                     const Envelope & refChanFreq, int refChanLabel );
+#else
+    static inline 
+    void channelize( PartialList::iterator begin, PartialList::iterator end,
+                     const Envelope & refChanFreq, int refChanLabel );
+#endif   
+
+     
+    //! DEPRECATED
+    //!
     //! Static member to compute the stretch factor for a sound having
     //! (consistently) detuned harmonics, like piano tones. Legacy version
     //! that assumes the first argument corresponds to the first partial.
@@ -410,23 +422,23 @@ public:
     //! \returns    the stretching factor, usually a very small positive
     //!             floating point number, or 0 for pefectly tuned harmonics
     //!             (that is, for harmonic frequencies fn = n*f1).
-    static double computeStretchFactor( double fref, double fn, double n );
+    static double computeStretchFactor( double f1, double fn, double n );
     
-};	//	end of class Channelizer
+};  //  end of class Channelizer
 
 // ---------------------------------------------------------------------------
-//	channelize (sequence of Partials)
+//  channelize (sequence of Partials)
 // ---------------------------------------------------------------------------
-//!	Assign each Partial in the specified half-open (STL-style) range
-//!	the label corresponding to the frequency channel containing the
-//!	greatest portion of its (the Partial's) energy.
-//!	
-//!	\param begin is the beginning of the range of Partials to channelize
-//!	\param end is (one-past) the end of the range of Partials o channelize
-//!	
-//!	If compiled with NO_TEMPLATE_MEMBERS defined, then begin and end
-//!	must be PartialList::iterators, otherwise they can be any type
-//!	of iterators over a sequence of Partials.
+//! Assign each Partial in the specified half-open (STL-style) range
+//! the label corresponding to the frequency channel containing the
+//! greatest portion of its (the Partial's) energy.
+//! 
+//! \param begin is the beginning of the range of Partials to channelize
+//! \param end is (one-past) the end of the range of Partials o channelize
+//! 
+//! If compiled with NO_TEMPLATE_MEMBERS defined, then begin and end
+//! must be PartialList::iterators, otherwise they can be any type
+//! of iterators over a sequence of Partials.
 //
 #if ! defined(NO_TEMPLATE_MEMBERS)
 template<typename Iter>
@@ -436,15 +448,17 @@ inline
 void Channelizer::channelize( PartialList::iterator begin, PartialList::iterator end ) const
 #endif
 {
-	while ( begin != end )
-	{
-		channelize( *begin++ );
-	}
+    while ( begin != end )
+    {
+        channelize( *begin++ );
+    }
 }
 
 // ---------------------------------------------------------------------------
-//	channelize (static)
+//  channelize (static)
 // ---------------------------------------------------------------------------
+//! DEPRECATED
+//!
 //!   Static member that constructs an instance and applies
 //!   it to a sequence of Partials. 
 //!   Construct a Channelizer using the specified Envelope
@@ -455,17 +469,17 @@ void Channelizer::channelize( PartialList::iterator begin, PartialList::iterator
 //!            channelize.
 //!   \param   end is the end of a sequence of Partials to 
 //!            channelize.
-//!	  \param 	refChanFreq is an Envelope representing the center frequency
-//!				of a channel.
-//!	  \param 	refChanLabel is the corresponding channel number (i.e. 1
-//!				if refChanFreq is the lowest-frequency channel, and all 
-//!				other channels are harmonics of refChanFreq, or 2 if  
-//!				refChanFreq tracks the second harmonic, etc.).
+//!   \param    refChanFreq is an Envelope representing the center frequency
+//!             of a channel.
+//!   \param    refChanLabel is the corresponding channel number (i.e. 1
+//!             if refChanFreq is the lowest-frequency channel, and all 
+//!             other channels are harmonics of refChanFreq, or 2 if  
+//!             refChanFreq tracks the second harmonic, etc.).
 //!   \throw   InvalidArgument if refChanLabel is not positive.
-//!	
-//!	If compiled with NO_TEMPLATE_MEMBERS defined, then begin and end
-//!	must be PartialList::iterators, otherwise they can be any type
-//!	of iterators over a sequence of Partials.
+//! 
+//! If compiled with NO_TEMPLATE_MEMBERS defined, then begin and end
+//! must be PartialList::iterators, otherwise they can be any type
+//! of iterators over a sequence of Partials.
 //
 #if ! defined(NO_TEMPLATE_MEMBERS)
 template< typename Iter >
@@ -475,15 +489,15 @@ void Channelizer::channelize( Iter begin, Iter end,
 inline
 void Channelizer::channelize( PartialList::iterator begin, PartialList::iterator end,
                               const Envelope & refChanFreq, int refChanLabel )
-#endif	 
+#endif   
 {
    Channelizer instance( refChanFreq, refChanLabel );
-	while ( begin != end )
-	{
-		instance.channelize( *begin++ );
-	}
+    while ( begin != end )
+    {
+        instance.channelize( *begin++ );
+    }
 }
 
-}	//	end of namespace Loris
+}   //  end of namespace Loris
 
 #endif /* ndef INCLUDE_CHANNELIZER_H */

@@ -111,28 +111,18 @@ Filter::~Filter( void )
 
 
 // ---------------------------------------------------------------------------
-//  clear
-// ---------------------------------------------------------------------------
-//! Clear the filter state. 
-//
-void
-Filter::clear( void )
-{
-    std::fill( m_delayline.begin(), m_delayline.end(), 0 );
-}
-
-// ---------------------------------------------------------------------------
-//  sample
+//  apply
 // ---------------------------------------------------------------------------
 //! Compute a filtered sample from the next input sample.
 //!
-//! Implement recurrence relation. m_ffwdcoefs holds the feed-forward
-//! coefficients, m_fbackcoefs holds the feedback coeffs. The coefficient
-//! vectors and delay lines are ordered by increasing age.
 //
 double
-Filter::sample( double input )
+Filter::apply( double input )
 { 
+    // Implement the recurrence relation. m_ffwdcoefs holds the feed-forward
+    // coefficients, m_fbackcoefs holds the feedback coeffs. The coefficient
+    // vectors and delay lines are ordered by increasing age.
+
     double wn = - std::inner_product( m_fbackcoefs.begin()+1, m_fbackcoefs.end(), 
                                       m_delayline.begin(), -input );
         //  negate input, then negate the inner product
@@ -144,6 +134,71 @@ Filter::sample( double input )
     m_delayline.pop_back();
         
     return output * m_gain;
+}
+
+//  --- access/mutation ---
+
+// ---------------------------------------------------------------------------
+//  numerator
+// ---------------------------------------------------------------------------
+//! Provide access to the numerator (feed-forward) coefficients
+//! of this filter. The coefficients are stored in order of increasing
+//! delay (lowest order coefficient first).
+
+std::vector< double > 
+Filter::numerator( void )
+{
+    return m_ffwdcoefs;
+}
+
+// ---------------------------------------------------------------------------
+//  numerator
+// ---------------------------------------------------------------------------
+//! Provide access to the numerator (feed-forward) coefficients
+//! of this filter. The coefficients are stored in order of increasing
+//! delay (lowest order coefficient first).
+
+const std::vector< double > 
+Filter::numerator( void ) const
+{
+    return m_ffwdcoefs;
+}
+
+// ---------------------------------------------------------------------------
+//  denominator
+// ---------------------------------------------------------------------------
+//! Provide access to the denominator (feedback) coefficients
+//! of this filter. The coefficients are stored in order of increasing
+//! delay (lowest order coefficient first).
+
+std::vector< double > 
+Filter::denominator( void )
+{
+    return m_fbackcoefs;
+}
+
+// ---------------------------------------------------------------------------
+//  denominator
+// ---------------------------------------------------------------------------
+//! Provide access to the denominator (feedback) coefficients
+//! of this filter. The coefficients are stored in order of increasing
+//! delay (lowest order coefficient first).
+
+const std::vector< double > 
+Filter::denominator( void ) const
+{
+    return m_fbackcoefs;
+}
+
+// ---------------------------------------------------------------------------
+//  clear
+// ---------------------------------------------------------------------------
+//! Clear the filter state. 
+//
+void
+Filter::clear( void )
+{
+    std::fill( m_delayline.begin(), m_delayline.end(), 0 );
 }
 
 }   //  end of namespace Loris

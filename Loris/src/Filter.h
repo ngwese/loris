@@ -52,15 +52,15 @@ namespace Loris {
 //! applied to the filter output (defaults to 1.). Coefficients are
 //! specified and stored in order of increasing delay.
 //!
-//!	Implements the rational transfer function
+//! Implements the rational transfer function
 //!
-//! 							  -1               -nb
-//! 				  b[0] + b[1]z  + ... + b[nb] z
-//! 		Y(z) = G ---------------------------------- X(z)
-//! 							  -1               -na
-//! 				  a[0] + a[1]z  + ... + a[na] z
+//!                               -1               -nb
+//!                   b[0] + b[1]z  + ... + b[nb] z
+//!         Y(z) = G ---------------------------------- X(z)
+//!                               -1               -na
+//!                   a[0] + a[1]z  + ... + a[na] z
 //!
-//!	where b[k] are the feed forward coefficients, and a[k] are the feedback 
+//! where b[k] are the feed forward coefficients, and a[k] are the feedback 
 //! coefficients. If a[0] is not 1, then both a and b are normalized by a[0].
 //! G is the additional filter gain, and is unity if unspecified.
 //!
@@ -129,15 +129,41 @@ public:
 
     //! Compute a filtered sample from the next input sample.
     //!
-    //! Implement recurrence relation. m_ffwdcoefs holds the feed-forward
-    //! coefficients, m_fbackcoefs holds the feedback coeffs. The coefficient
-    //! vectors and delay lines are ordered by increasing age.
-    double sample( double input );
+    //!	\param input is the next input sample
+    //! \return the next output sample
+    double apply( double input );
 
     //! Function call operator, same as sample().
     //!
-    //! \sa sample
-    double operator() ( double input ) { return sample(input); }
+    //! \sa apply
+    double operator() ( double input ) { return apply(input); }    
+
+//  --- access/mutation ---
+
+	//!	Provide access to the numerator (feed-forward) coefficients
+	//! of this filter. The coefficients are stored in order of increasing
+	//! delay (lowest order coefficient first).
+	
+	std::vector< double > numerator( void );
+
+	//!	Provide access to the numerator (feed-forward) coefficients
+	//! of this filter. The coefficients are stored in order of increasing
+	//! delay (lowest order coefficient first).
+	
+	const std::vector< double > numerator( void ) const;
+    
+	//!	Provide access to the denominator (feedback) coefficients
+	//! of this filter. The coefficients are stored in order of increasing
+	//! delay (lowest order coefficient first).
+	
+	std::vector< double > denominator( void );
+
+	//!	Provide access to the denominator (feedback) coefficients
+	//! of this filter. The coefficients are stored in order of increasing
+	//! delay (lowest order coefficient first).
+	
+	const std::vector< double > denominator( void ) const;
+	
     
     //! Clear the filter state. 
     void clear( void );
@@ -203,11 +229,6 @@ Filter::Filter( const double * ffwdbegin, const double * ffwdend, //    feed-for
                "Tried to create a Filter with feeback coefficient at zero delay equal to 0.0" );
     }
 
-    debugger << "constructing a Filter with " << m_ffwdcoefs.size();
-    debugger << " feed-forward coefficients and " << m_fbackcoefs.size();
-    debugger << " feedback coefficients, with a delay line of length ";
-    debugger << m_delayline.size() << std::endl;
-    
     //  normalize the coefficients by 1/a[0], if a[0] is not equal to 1.0
     //  (already checked for a[0] == 0 above)
     if ( *fbackbegin != 1. )
@@ -219,10 +240,6 @@ Filter::Filter( const double * ffwdbegin, const double * ffwdend, //    feed-for
                         std::bind2nd( std::divides<double>(), *fbackbegin ) );
         m_fbackcoefs[0] = 1.;
     }
-    debugger << m_ffwdcoefs[0] << " " << m_ffwdcoefs[1] << " " << m_ffwdcoefs[2] << " " << m_ffwdcoefs[3] << "... " << std::endl;
-    debugger << m_fbackcoefs[0] << " " << m_fbackcoefs[2] << " " << m_fbackcoefs[2] << " " << m_fbackcoefs[3] << "... " << std::endl;
-    debugger << "filter gain is " << m_gain << std::endl;
-
 }
 
 
