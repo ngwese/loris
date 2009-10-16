@@ -551,4 +551,40 @@ Channelizer::channelize( Partial & partial ) const
 
 }
 
+// -- simplified interface --
+
+
+// ---------------------------------------------------------------------------
+//	channelize (static simplified interface)
+// ---------------------------------------------------------------------------
+//! Static member that constructs an instance and applies
+//! it to a PartialList (simplified interface). 
+//!
+//! Construct a Channelizer using the specified Envelope
+//! and reference label, and use it to channelize a
+//! sequence of Partials. 
+//!
+//! \param  partials is the sequence of Partials to 
+//!         channelize.
+//! \param  refChanFreq is an Envelope representing the center frequency
+//!         of a channel.
+//! \param  refChanLabel is the corresponding channel number (i.e. 1
+//!         if refChanFreq is the lowest-frequency channel, and all 
+//!         other channels are harmonics of refChanFreq, or 2 if  
+//!         refChanFreq tracks the second harmonic, etc.).
+//! \throw  InvalidArgument if refChanLabel is not positive.
+//
+void 
+Channelizer::channelize( PartialList & partials,
+                         const Envelope & refChanFreq, int refChanLabel )
+{
+    Channelizer instance( refChanFreq, refChanLabel );
+
+    for ( PartialList::iterator it = partials.begin(); it != partials.end(); ++it )
+    {
+        instance.channelize( *it );
+    }
+}
+
+
 }	//	end of namespace Loris

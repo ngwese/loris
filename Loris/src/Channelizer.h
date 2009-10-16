@@ -33,9 +33,7 @@
  *
  */
 
-#if defined(NO_TEMPLATE_MEMBERS)
 #include "PartialList.h"
-#endif
 
 #include <memory>
 
@@ -314,6 +312,7 @@ public:
     //!
     //! \throw  InvalidArgument if stretch is negative.
     void setStretchFactor( double stretch );    
+    
          
 // -- static members --
 
@@ -345,6 +344,30 @@ public:
     //!             (that is, if fn = n*f1).
     static double computeStretchFactor( double fm, int m, double fn, int n );
 
+
+// -- simplified interface --
+
+    //! Static member that constructs an instance and applies
+    //! it to a PartialList (simplified interface). 
+    //!
+    //! Construct a Channelizer using the specified Envelope
+    //! and reference label, and use it to channelize a
+    //! sequence of Partials. 
+    //!
+    //! \param  partials is the sequence of Partials to 
+    //!         channelize.
+    //! \param  refChanFreq is an Envelope representing the center frequency
+    //!         of a channel.
+    //! \param  refChanLabel is the corresponding channel number (i.e. 1
+    //!         if refChanFreq is the lowest-frequency channel, and all 
+    //!         other channels are harmonics of refChanFreq, or 2 if  
+    //!         refChanFreq tracks the second harmonic, etc.).
+    //! \throw  InvalidArgument if refChanLabel is not positive.
+    static 
+    void channelize( PartialList & partials,
+                     const Envelope & refChanFreq, int refChanLabel );
+
+     
 
 // -- DEPRECATED members --
 
