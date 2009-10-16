@@ -131,8 +131,7 @@ void channelize( PartialList * partials,
 		}
 		notifier << "channelizing " << partials->size() << " Partials" << endl;
 
-		Channelizer::channelize( partials->begin(), partials->end(), 
-		                         *refFreqEnvelope, refLabel );		
+		Channelizer::channelize( *partials, *refFreqEnvelope, refLabel );		
 	}
 	catch( Exception & ex ) 
 	{

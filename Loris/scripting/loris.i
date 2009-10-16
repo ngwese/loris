@@ -201,19 +201,21 @@ evaluated at the breakpoints in the Partial envelope and weighted
 by the amplitude at each breakpoint, so that high- amplitude
 breakpoints contribute more to the channel decision. Partials are
 labeled, but otherwise unmodified. In particular, their
-frequencies are not modified in any way.");
+frequencies are not modified in any way.") channelize;
 
-%inline
-%{
+void channelize( PartialList * partials, 
+                 LinearEnvelope * refFreqEnvelope, int refLabel );
 
-	void channelize( PartialList * partials, 
-                     Envelope * refFreqEnvelope, int refLabel )
-    {
-		Channelizer::channelize( partials->begin(), partials->end(), 
-		                         *refFreqEnvelope, refLabel );
-    }
-                 
-%}
+// %inline
+// %{
+// 
+// 	void channelize( PartialList * partials, 
+//                      Envelope * refFreqEnvelope, int refLabel )
+//     {
+// 		Channelizer::channelize( partials, *refFreqEnvelope, refLabel );
+//     }
+//                  
+// %}
                 
 
 %feature("docstring",

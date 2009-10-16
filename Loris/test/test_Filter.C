@@ -100,19 +100,19 @@ static int random_input_check_output( void )
     Filter f1( B1, B1+N, A1, A1+N );
     for ( unsigned int k = 0; k < NSAMPS; ++k )
     {
-        float_abs_equal( f1.sample( x[k] ), y1ref[k], EPS );
+        float_abs_equal( f1.apply( x[k] ), y1ref[k], EPS );
     }
     cout << "--- filter 2 ---" << endl;
     Filter f2( B2, B2+N, A2, A2+N );
     for ( unsigned int k = 0; k < NSAMPS; ++k )
     {
-        float_abs_equal( f2.sample( x[k] ), y2ref[k], EPS );
+        float_abs_equal( f2.apply( x[k] ), y2ref[k], EPS );
     }
     cout << "--- filter 3 ---" << endl;
     Filter f3( B3, B3+N, A3, A3+N );
     for ( unsigned int k = 0; k < NSAMPS; ++k )
     {
-        float_abs_equal( f3.sample( x[k] ), y3ref[k], EPS );
+        float_abs_equal( f3.apply( x[k] ), y3ref[k], EPS );
     }
     
     cout << "Done." << endl;

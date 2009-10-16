@@ -92,7 +92,7 @@ int main( void )
         // channelize and distill
         cout << "distilling" << endl;
         FrequencyReference clarRef( clar.begin(), clar.end(), 415*.8, 415*1.2, 50 );
-        Channelizer::channelize( clar.begin(), clar.end(), clarRef , 1 );		
+        Channelizer::channelize( clar, clarRef , 1 );		
         Distiller::distill( clar, 0.001 );
 
         //	test SDIF import and export
@@ -147,7 +147,7 @@ int main( void )
 #else        
         FrequencyReference flutRef( flut.begin(), flut.end(), 291*.8, 291*1.2, 50 );
 #endif
-        Channelizer::channelize( flut.begin(), flut.end(), flutRef, 1 );
+        Channelizer::channelize( flut, flutRef, 1 );
         Distiller::distill( flut, 0.001 );
         cout << "obtained " << flut.size() << " distilled flute Partials" << endl;
 
