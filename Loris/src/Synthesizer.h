@@ -72,14 +72,14 @@ public:
 	//!	artifacts. If the fade time is unspecified, the default value of one
 	//!	millisecond (0.001 seconds) is used.
 	//!
-	//!	\param	m_srateHz The rate (Hz) at which to synthesize samples
+	//!	\param	srate The rate (Hz) at which to synthesize samples
 	//!			   (must be positive).
 	//!	\param	buffer The vector (of doubles) into which rendered samples
 	//!			   should be accumulated.
 	//!	\param	fadeTime The Partial fade time in seconds (must be non-negative).
 	//!	\throw	InvalidArgument if the specfied sample rate is non-positive.
 	//!	\throw	InvalidArgument if the specified fade time is negative.
-	Synthesizer( double m_srateHz, std::vector<double> & buffer, double fadeTime = .001 );
+	Synthesizer( double srate, std::vector<double> & buffer, double fadeTime = .001 );
 	
 	// 	Compiler can generate copy, assign, and destroy.
 	//	Synthesizer( const Synthesizer & other );
@@ -150,6 +150,7 @@ public:
 #endif
 	
 //	-- access --
+
 	//!	Return this Synthesizer's Partial fade time, in seconds.
 	double fadeTime( void ) const;
 	 
@@ -168,7 +169,7 @@ public:
 	//! Oscillator to implement bandwidth-enhanced sinusoidal 
 	//! synthesis. (Can use this access to make changes to the
 	//! filter coefficients.)
-	Filter & filter( void );
+	Filter & bwEnhancementFilter( void );
 	
 	
 //	-- mutation --

@@ -250,14 +250,14 @@ Synthesizer::samples( void )
 }
 
 // ---------------------------------------------------------------------------
-//	sampleRate
+//	bwEnhancementFilter
 // ---------------------------------------------------------------------------
 //! Return access to the Filter used by this Synthesizer's 
 //! Oscillator to implement bandwidth-enhanced sinusoidal 
 //! synthesis. (Can use this access to make changes to the
 //! filter coefficients.)
 Filter & 
-Synthesizer::filter( void ) 
+Synthesizer::bwEnhancementFilter( void ) 
 {
 	return m_osc.filter(); 
 }
