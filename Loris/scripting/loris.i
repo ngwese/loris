@@ -366,7 +366,8 @@ path (or name). The floating point samples in the vector are
 clamped to the range (-1.,1.) and converted to integers having
 bitsPerSamp bits. The default values for the sample rate and
 sample size, if unspecified, are 44100 Hz (CD quality) and 16 bits
-per sample, respectively.
+per sample, respectively. If neither is specified, then the 
+default synthesis parameters (see SynthesisParameters) are used.
 
 If a PartialList is specified, the Partials are rendered at the
 specified sample rate and then exported.
@@ -390,12 +391,15 @@ and is included only for backward compatability") wrap_exportAiff;
 	}
 	
 	void wrap_exportAiff( const char * path, PartialList * partials,
-					      double samplerate = 44100, int bitsPerSamp = 16 )
+					      double samplerate, int bitsPerSamp = 16 )
 	{
 		try
 		{
 			std::vector< double > vec;
-			Synthesizer synth( samplerate, vec );
+			
+			Synthesizer::Parameters params = Synthesizer::DefaultParameters();
+			params.sampleRate = samplerate;		
+			Synthesizer synth( params, vec );			
 			synth.synthesize( partials->begin(), partials->end() );
 		
 			exportAiff( path, &(vec.front()), vec.size(), 
@@ -796,42 +800,18 @@ void morpher_setAmplitudeShape( double shape );
 const double LORIS_DEFAULT_AMPMORPHSHAPE;    
 const double LORIS_LINEAR_AMPMORPHSHAPE;
 
-%feature("docstring",
-"Synthesize Partials in a PartialList at the given sample rate, and
-return the (floating point) samples in a vector. The vector is
-sized to hold as many samples as are needed for the complete
-synthesis of all the Partials in the PartialList. If the sample
-rate is unspecified, the deault value of 44100 Hz (CD quality) is
-used.") synthesize;
-
-%newobject synthesize;
-%inline %{
-	std::vector<double> synthesize( const PartialList * partials, double srate = 44100.0 )
-	{
-		std::vector<double> dst;
-		try
-		{
-			Synthesizer synth( srate, dst );
-			synth.synthesize( partials->begin(), partials->end() );
-		}
-		catch ( std::exception & ex )
-		{
-			throw_exception( ex.what() );
-		}
-		return dst;
-	}
-%}
 
 %feature("docstring",
 "Trim Partials by removing Breakpoints outside a specified time span.
 Insert a Breakpoint at the boundary when cropping occurs.
-");
+") crop;
+
 void crop( PartialList * partials, double t1, double t2 );
 
 %feature("docstring",
 "Copy Partials in the source PartialList having the specified label
 into a new PartialList. The source PartialList is unmodified.
-");
+") copyLabeled;
 
 %newobject copyLabeled;
 %inline %{
@@ -852,7 +832,7 @@ into a new PartialList. The source PartialList is unmodified.
 
 %feature("docstring",
 "Extract Partials in the source PartialList having the specified
-label and return them in a new PartialList.");
+label and return them in a new PartialList.") extractLabeled;
 
 %newobject extractLabeled;
 %inline %{
@@ -872,7 +852,7 @@ label and return them in a new PartialList.");
 %}
 
 %feature("docstring",
-"Remove from a PartialList all Partials having the specified label.");
+"Remove from a PartialList all Partials having the specified label.") removeLabeled;
 
 void removeLabeled( PartialList * partials, long label );
 
@@ -1366,9 +1346,9 @@ Initialize a new AiffFile using data read from a named file.
 
 Initialize an instance of AiffFile having the specified sample 
 rate, accumulating samples rendered at that sample rate from
-all Partials on the specified half-open (STL-style) range with
-the (optionally) specified Partial fade time (see Synthesizer.h
-for an examplanation of fade time). 
+all Partials in the specified PartialList with the (optionally) 
+specified Partial fade time (see Synthesizer.h for an explanation 
+of fade time). 
 ") AiffFile;
 
 	AiffFile( const char * filename );
@@ -1377,6 +1357,15 @@ for an examplanation of fade time).
               const std::vector< double > & vec_right, 
               double samplerate );    
 
+	%extend 
+	{
+
+		AiffFile( PartialList * l, double sampleRate = 44100, double fadeTime = .001 ) 
+		{
+			return new AiffFile( l->begin(), l->end(), sampleRate, fadeTime );
+		}
+	}
+	
 %feature("docstring",
 "Destroy this AiffFile.") ~AiffFile;
 
@@ -1425,11 +1414,6 @@ void write( const char * filename, unsigned int bps = 16 );
 	
 	%extend 
 	{
-
-		AiffFile( PartialList * l, double sampleRate = 44100, double fadeTime = .001 ) 
-		{
-			return new AiffFile( l->begin(), l->end(), sampleRate, fadeTime );
-		}
 	
 %feature("docstring",
 "Return a copy of the samples (as floating point numbers

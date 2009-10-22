@@ -54,43 +54,6 @@ const double TwoPi = 2*Pi;
 //  begin namespace
 namespace Loris {
 
-// ---------------------------------------------------------------------------
-//  protoype filter
-// ---------------------------------------------------------------------------
-//  Static local function for obtaining a prototype Filter
-//  to use in Oscillator construction. Eventually, allow
-//  external (client) specification of the Filter prototype.
-//
-static const Filter & prototype_filter( void )
-{
-    //  Chebychev order 3, cutoff 500, ripple -1.
-    //
-    //  Coefficients obtained from http://www.cs.york.ac.uk/~fisher/mkfilter/
-    //  Digital filter designed by mkfilter/mkshape/gencode   A.J. Fisher
-    //
-    static const double Gain = 4.663939184e+04;
-    static const double ExtraScaling = 6.;
-    static const double MaCoefs[] = { 1., 3., 3., 1. }; 
-    static const double ArCoefs[] = { 1., -2.9258684252, 2.8580608586, -0.9320209046 };
-
-    static const Filter proto( MaCoefs, MaCoefs + 4, ArCoefs, ArCoefs + 4, ExtraScaling/Gain );
-    return proto;
-}
-
-// ---------------------------------------------------------------------------
-//  one_pole_filter
-// ---------------------------------------------------------------------------
-//  Construct a single pole filter with the specified feedback coefficient  
-//  and automatically-computed gain .
-//
-static Filter one_pole_filter( double feedback )
-{
-    double b[] = {1};
-    double a[] = {1, 0 };
-    a[1] = -feedback; 
-    
-    return Filter( b, b+1, a, a+2, 1 - feedback );
-}
 
 // ---------------------------------------------------------------------------
 //  Oscillator construction
@@ -270,5 +233,31 @@ Oscillator::oscillate( double * begin, double * end,
     m_instamplitude = targetAmp;
     m_instbandwidth = targetBw;
 }
+
+// ---------------------------------------------------------------------------
+//  protoype filter (static member)
+// ---------------------------------------------------------------------------
+//  Static local function for obtaining a prototype Filter
+//  to use in Oscillator construction. Eventually, allow
+//  external (client) specification of the Filter prototype.
+//
+const Filter & 
+Oscillator::prototype_filter( void )
+{
+    //  Chebychev order 3, cutoff 500, ripple -1.
+    //
+    //  Coefficients obtained from http://www.cs.york.ac.uk/~fisher/mkfilter/
+    //  Digital filter designed by mkfilter/mkshape/gencode   A.J. Fisher
+    //
+    static const double Gain = 4.663939184e+04;
+    static const double ExtraScaling = 6.;
+    static const double MaCoefs[] = { 1., 3., 3., 1. }; 
+    static const double ArCoefs[] = { 1., -2.9258684252, 2.8580608586, -0.9320209046 };
+
+    static const Filter proto( MaCoefs, MaCoefs + 4, ArCoefs, ArCoefs + 4, ExtraScaling/Gain );
+    return proto;
+}
+
+
 
 }   //  end of namespace Loris
