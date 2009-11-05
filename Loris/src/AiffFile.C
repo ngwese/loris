@@ -239,12 +239,6 @@ AiffFile::operator= ( const AiffFile & rhs )
         numchans_ = rhs.numchans_;
 		markers_ = rhs.markers_;
 		samples_ = rhs.samples_;
-		
-		//	don't copy the Synthesizer, it doesn't
-		//	have any state that needs to be preserved,
-		//	reset the auto_ptr, and another Synthesizer
-		//	will be constructed if it is needed:
-		psynth_.reset();
 	}
 	return *this;
 }
@@ -431,13 +425,13 @@ AiffFile::samples( void ) const
 //!	\param p is the partial to render into this AiffFile
 //!	\param fadeTime is the Partial fade time for rendering
 //!	the Partials on the specified range. If unspecified, the
-//!	default fade time is 1 ms.
+//! fade time is taken from the Synthesizer DefaultParameters.
 //
 void 
 AiffFile::addPartial( const Loris::Partial & p, double fadeTime )
 {
-	configureSynthesizer( fadeTime );
-	psynth_->synthesize( p );
+    Synthesizer synth = configureSynthesizer( fadeTime );    
+	synth.synthesize( p );
 }
 
 // ---------------------------------------------------------------------------
@@ -463,21 +457,28 @@ AiffFile::setMidiNoteNumber( double nn )
 // ---------------------------------------------------------------------------
 //	configureSynthesizer 
 // ---------------------------------------------------------------------------
-//	Construct a Synthesizer if necessary, and set its fadeTime.
+//	Construct a Synthesizer for rendering Partials and set its fadeTime.
+//	Modify the default synthesizer parameters with this file's sample rate
+//	and, if specified (not equal to FadeTimeUnspecified), the fade time.
 //
-void 
+Synthesizer 
 AiffFile::configureSynthesizer( double fadeTime )
 {
-	if ( psynth_.get() == 0 )
+	Synthesizer::Parameters params;
+	params.sampleRate = rate_;
+	
+	if ( FadeTimeUnspecified != fadeTime )
 	{
-		psynth_.reset( new Synthesizer( rate_, samples_ ) );
+		params.fadeTime = fadeTime;
 	}
-	psynth_->setFadeTime( fadeTime );
+	
+	return Synthesizer( params, samples_ );
 }
 
 // ---------------------------------------------------------------------------
 //	readAiffData
 // ---------------------------------------------------------------------------
+//	Import data from an AIFF file on disk.
 //
 void 
 AiffFile::readAiffData( const std::string & filename )

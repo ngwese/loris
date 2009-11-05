@@ -39,7 +39,8 @@ consistent with other common tools (like Matlab and scipy).
 
 - Added a Parameters struct to the Synthesizer class that can
 be used to specify a full configuration of the Synthesizer. 
-Also added a default parameter set to the class, which can be
+
+- Added a default parameter set to the class, which can be
 modified to change the default Synthesizer configuration (used
 by AiffFile, for example, to render Partials). 
 
@@ -47,6 +48,9 @@ by AiffFile, for example, to render Partials).
 Oscillators through the Synthesizer class, as well as the
 Oscillator class, so that different filters can be designed
 and employed in bandwidth enhanced synthesis.
+
+- Added access to global default synthesis parameters through
+loris.SynthesisParameters in the Python interface.
 
 -------------------------------------------------------
 changes since 1.5.3 release:

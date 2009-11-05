@@ -52,8 +52,10 @@ class Partial;
 //! Class AiffFile represents sample data in a AIFF-format samples 
 //! file, and manages file I/O and sample conversion. Since the sound
 //! analysis and synthesis algorithms in Loris and the reassigned
-//! bandwidth-enhanced representation are monaural, AiffFile manages
-//! only monaural (single channel) AIFF-format samples files.
+//! bandwidth-enhanced representation are monaural, AiffFile imports
+//! only monaural (single channel) AIFF-format samples files, though
+//!	it can create and export a new two-channel file from a pair of 
+//!	sample vectors.
 //  
 class AiffFile
 {
@@ -84,26 +86,29 @@ public:
     //! specified half-open (STL-style) range are rendered at 
     //! the specified sample rate, using the (optionally) 
     //! specified Partial fade time (see Synthesizer.h
-    //! for an examplanation of fade time). 
+    //! for an examplanation of fade time). Other synthesis 
+	//!	parameters are taken from the Synthesizer DefaultParameters.
+	//!	
+	//!	\sa Synthesizer::DefaultParameters
     //!
     //! \param begin_partials is the beginning of a sequence of Partials
     //! \param end_partials is (one-past) the end of a sequence of
     //! Partials
-    //! \param samplerate is the rate at which Partials are rendered
-    //! \param fadeTime is the Partial fade time for rendering
+    //! \param samplerate is the rate (Hz) at which Partials are rendered
+    //! \param fadeTime is the Partial fade time (seconds) for rendering
     //! the Partials on the specified range. If unspecified, the
-    //! default fade time is 1 ms.
+    //! fade time is taken from the Synthesizer DefaultParameters.
     //!
     //! If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
     //! only PartialList::const_iterator arguments.
 #if !defined(NO_TEMPLATE_MEMBERS)
     template<typename Iter>
     AiffFile( Iter begin_partials, Iter end_partials, 
-              double samplerate, double fadeTime = .001 ); // default fade is 1ms
+              double samplerate, double fadeTime = FadeTimeUnspecified );
 #else
     AiffFile( PartialList::const_iterator begin_partials, 
               PartialList::const_iterator end_partials,
-              double samplerate, double fadeTime = .001 ); // default fade is 1ms
+              double samplerate, double fadeTime = FadeTimeUnspecified ); 
 #endif
 
     //! Initialize an instance of AiffFile having the specified sample 
@@ -222,31 +227,35 @@ public:
     //! \param p is the partial to render into this AiffFile
     //! \param fadeTime is the Partial fade time for rendering
     //! the Partials on the specified range. If unspecified, the
-    //! default fade time is 1 ms.
-    void addPartial( const Loris::Partial & p, double fadeTime = .001 /* 1 ms */ );
+	//! fade time is taken from the Synthesizer DefaultParameters.
+    void addPartial( const Loris::Partial & p, double fadeTime = FadeTimeUnspecified );
      
-    //! Accumulate samples rendered from a sequence of Partials.
-    //! The Partials in the specified half-open (STL-style) range 
-    //! are rendered at this AiffFile's sample rate, using the (optionally) 
-    //! specified Partial fade time (see Synthesizer.h
-    //! for an examplanation of fade time). 
-    //!
-    //! \param begin_partials is the beginning of a sequence of Partials
-    //! \param end_partials is (one-past) the end of a sequence of
-    //! Partials
-    //! \param fadeTime is the Partial fade time for rendering
-    //! the Partials on the specified range. If unspecified, the
-    //! default fade time is 1 ms.
-    //! 
-    //! If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
-    //! only PartialList::const_iterator arguments.
+	//! Accumulate samples rendered from a sequence of Partials.
+	//! The Partials in the specified half-open (STL-style) range are
+	//! rendered at this AiffFile's sample rate, using the (optionally) 
+	//! specified Partial fade time (see Synthesizer.h for an examplanation 
+	//!	of fade time). Other synthesis parameters are taken from the 
+	//!	Synthesizer DefaultParameters.
+	//!	
+	//!	\sa Synthesizer::DefaultParameters
+	//!
+	//! \param begin_partials is the beginning of a sequence of Partials
+	//! \param end_partials is (one-past) the end of a sequence of
+	//! Partials
+	//! \param fadeTime is the Partial fade time for rendering
+	//! the Partials on the specified range. If unspecified, the
+	//! fade time is taken from the Synthesizer DefaultParameters.
+	//! 
+	//! If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
+	//! only PartialList::const_iterator arguments.
 #if !defined(NO_TEMPLATE_MEMBERS)
     template<typename Iter>
-    void addPartials( Iter begin_partials, Iter end_partials, double fadeTime = .001 /* 1 ms */  );
+    void addPartials( Iter begin_partials, Iter end_partials, 
+    				  double fadeTime = FadeTimeUnspecified  );
 #else
     void addPartials( PartialList::const_iterator begin_partials, 
                       PartialList::const_iterator end_partials,
-                      double fadeTime = .001 /* 1 ms */  );
+                      double fadeTime = FadeTimeUnspecified  );
 #endif
 
     //! Set the fractional MIDI note number assigned to this AiffFile. 
@@ -275,12 +284,20 @@ private:
     markers_type markers_;      // AIFF Markers
     samples_type samples_;      // floating point samples [-1.0, 1.0]
 
-    std::auto_ptr< Synthesizer > psynth_;   //  Synthesizer for rendering Partials,
-                                            //  lazy-initialized (not until needed)
 
 //  -- helpers --
-    void configureSynthesizer( double fadeTime );
+
+	//	Construct a Synthesizer for rendering Partials and set its fadeTime.
+	//	Modify the default synthesizer parameters with this file's sample rate
+	//	and, if specified (not equal to FadeTimeUnspecified), the fade time.
+	Synthesizer configureSynthesizer( double fadeTime );
+
+	//	Import data from an AIFF file on disk.
     void readAiffData( const std::string & filename );
+    
+    enum { FadeTimeUnspecified = -9999999 };
+    //	This is not pretty, but it is better (perhaps) than defining two 
+    //	of every member having an optional fade time parameter.
 
 };  //  end of class AiffFile
 
@@ -294,15 +311,18 @@ private:
 //! specified half-open (STL-style) range are rendered at 
 //! the specified sample rate, using the (optionally) 
 //! specified Partial fade time (see Synthesizer.h
-//! for an examplanation of fade time). 
+//! for an examplanation of fade time). Other synthesis 
+//!	parameters are taken from the Synthesizer DefaultParameters.
+//!	
+//!	\sa Synthesizer::DefaultParameters
 //!
 //! \param begin_partials is the beginning of a sequence of Partials
 //! \param end_partials is (one-past) the end of a sequence of
 //! Partials
-//! \param samplerate is the rate at which Partials are rendered
-//! \param fadeTime is the Partial fade time for rendering
+//! \param samplerate is the rate (Hz) at which Partials are rendered
+//! \param fadeTime is the Partial fade time (seconds) for rendering
 //! the Partials on the specified range. If unspecified, the
-//! default fade time is 1 ms.
+//! fade time is taken from the Synthesizer DefaultParameters.
 //!
 //! If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
 //! only PartialList::const_iterator arguments.
@@ -310,11 +330,11 @@ private:
 #if !defined(NO_TEMPLATE_MEMBERS)
 template< typename Iter >
  AiffFile::AiffFile( Iter begin_partials, Iter end_partials, 
-                     double samplerate, double fadeTime ) : // default fade is 1ms
+                     double samplerate, double fadeTime ) :
 #else
  AiffFile::AiffFile( PartialList::const_iterator begin_partials, 
                      PartialList::const_iterator end_partials,
-                     double samplerate, double fadeTime ) : // default fade is 1ms
+                     double samplerate, double fadeTime ) :
 #endif
 //  initializers:
     notenum_( 60 ),
@@ -328,17 +348,20 @@ template< typename Iter >
 //  addPartials 
 // ---------------------------------------------------------------------------
 //! Accumulate samples rendered from a sequence of Partials.
-//! The Partials in the specified half-open (STL-style) range 
-//! are rendered at this AiffFile's sample rate, using the (optionally) 
-//! specified Partial fade time (see Synthesizer.h
-//! for an examplanation of fade time). 
+//! The Partials in the specified half-open (STL-style) range are
+//! rendered at this AiffFile's sample rate, using the (optionally) 
+//! specified Partial fade time (see Synthesizer.h for an examplanation 
+//!	of fade time). Other synthesis parameters are taken from the 
+//!	Synthesizer DefaultParameters.
+//!	
+//!	\sa Synthesizer::DefaultParameters
 //!
 //! \param begin_partials is the beginning of a sequence of Partials
 //! \param end_partials is (one-past) the end of a sequence of
 //! Partials
 //! \param fadeTime is the Partial fade time for rendering
 //! the Partials on the specified range. If unspecified, the
-//! default fade time is 1 ms.
+//! fade time is taken from the Synthesizer DefaultParameters.
 //! 
 //! If compiled with NO_TEMPLATE_MEMBERS defined, this member accepts
 //! only PartialList::const_iterator arguments.
@@ -346,16 +369,16 @@ template< typename Iter >
 #if !defined(NO_TEMPLATE_MEMBERS)
 template< typename Iter >
 void 
- AiffFile::addPartials( Iter begin_partials, Iter end_partials, double fadeTime /*= .001  1 ms */  )
+ AiffFile::addPartials( Iter begin_partials, Iter end_partials, double fadeTime )
 #else
 void 
  AiffFile::addPartials( PartialList::const_iterator begin_partials, 
                         PartialList::const_iterator end_partials,
-                        double fadeTime /* = .001 1 ms */  )
+                        double fadeTime )
 #endif
 { 
-    configureSynthesizer( fadeTime );
-    psynth_->synthesize( begin_partials, end_partials );
+    Synthesizer synth = configureSynthesizer( fadeTime );    
+    synth.synthesize( begin_partials, end_partials );
 } 
 
 }   //  end of namespace Loris

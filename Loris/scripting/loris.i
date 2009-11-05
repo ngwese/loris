@@ -391,15 +391,15 @@ and is included only for backward compatability") wrap_exportAiff;
 	}
 	
 	void wrap_exportAiff( const char * path, PartialList * partials,
-					      double samplerate, int bitsPerSamp = 16 )
+					      double samplerate = 44100, int bitsPerSamp = 16 )
 	{
 		try
 		{
 			std::vector< double > vec;
 			
-			Synthesizer::Parameters params = Synthesizer::DefaultParameters();
-			params.sampleRate = samplerate;		
-			Synthesizer synth( params, vec );			
+			//Synthesizer::Parameters params = Synthesizer::DefaultParameters();
+			//params.sampleRate = samplerate;		
+			Synthesizer synth( samplerate, vec );			
 			synth.synthesize( partials->begin(), partials->end() );
 		
 			exportAiff( path, &(vec.front()), vec.size(), 

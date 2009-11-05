@@ -22,34 +22,20 @@
  *
  *  lorisSynthesizer.i
  *
- *  SWIG interface file describing classes associated with Loris bandwidth-
- *  enhanced sinusoidal synthesis, including the Synthesizer, Oscillator,
- *  and Filter classes. Include this file in loris.i to include thse classes 
- *  in the scripting module. 
+ *  SWIG interface file describing functions associated with Loris bandwidth-
+ *  enhanced sinusoidal synthesis. Include this file in loris.i to include 
+ *  these classes in the scripting module. 
  *
- * Kelly Fitz, 13 Oct 2009
+ * Kelly Fitz, 4 Nov 2009
  * loris@cerlsoundgroup.org
  *
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
  
-/*
-	TODO:
-	
-	No need to provide access to all these classes, just define a 
-	parameters structure that is used by all invocations of synthesize().
-	
-	Possibly allow a new instance of the struct to be created and configured
-	and passed to synthesize. 
-	
-	Params should include fade time, sample rate, filter coefficients, 
-	and a flag for whether or not to render with BW enhancement. 
-*/
-
 
  
-/* ***************** inserted C++ code ***************** */
+/* ******************** inserted C++ code ******************** */
 %{
 
 #include <LorisExceptions.h>
@@ -60,7 +46,7 @@ using Loris::Filter;
 using Loris::Oscillator;
 using Loris::Synthesizer;
 
-typedef Loris::Synthesizer::Parameters SynthesisParameters;
+//typedef Loris::Synthesizer::Parameters SynthesisParameters;
 
 /*
 enum SynthesisEnhancementFlag
@@ -74,6 +60,193 @@ enum SynthesisEnhancementFlag
 /* ***************** end of inserted C++ code ***************** */
 
 /* *************** synthesis parameters struct **************** */
+
+%feature("docstring",
+"Access to Loris bandwidth-enhanced sinusoidal synthesis parameters. 
+Parameters assigned here are the default parameters used in Loris 
+synthesis. Some functions allow these parameters to be overridden
+(see e.g. loris.synthesize).") 
+SynthesisParameters;
+
+
+%feature("docstring",
+"Return the Loris Synthesizer's Partial fade time, in seconds.") 
+SynthesisParameters::fadeTime;
+
+%feature("docstring",
+"Return the sampling rate (in Hz) for the Loris Synthesizer.") 
+SynthesisParameters::sampleRate;
+
+%feature("docstring",
+"Set the Loris Synthesizer's fade time to the specified value 
+(in seconds, must be non-negative).
+
+	t is the new Partial fade time in seconds.
+") 
+SynthesisParameters::setFadeTime;
+
+%feature("docstring",
+"Set the Loris Synthesizer's sample rate to the specified value 
+(in Hz, must be positive).
+
+	rate is the new synthesis sample rate.
+") 
+SynthesisParameters::setSampleRate;
+
+%feature("docstring",
+"Return the numerator coefficients in the filter used by the Loris 
+Synthesizer in bandwidth-enhanced sinusoidal synthesis.") 
+SynthesisParameters::filterCoefsNumerator;
+
+%feature("docstring",
+"Return the denominator coefficients in the filter used by the Loris 
+Synthesizer in bandwidth-enhanced sinusoidal synthesis.") 
+SynthesisParameters::filterCoefsDenominator;
+
+%feature("docstring",
+"Set the coefficients in the filter used by the Loris 
+Synthesizer in bandwidth-enhanced sinusoidal synthesis.
+
+    num is the new numerator coefficients
+    den is the new denominator coefficients
+    
+The zeroeth denominator coefficient must be non-zero. If it is not
+equal to 1.0, all the other coefficients are scaled by its inverse.
+") 
+SynthesisParameters::setFilterCoefs;
+
+
+//  This class does not exist, really, it is just a collection of 
+//  accessors and mutators for the global default Synthesizer 
+//  parameters.
+
+%nodefault SynthesisParameters;
+
+%inline
+%{
+    class SynthesisParameters
+    {
+    public:
+    
+        static double fadeTime( void ) 
+        {
+            return Synthesizer::DefaultParameters().fadeTime;
+        }
+    
+    
+        static double sampleRate( void ) 
+        {
+            return Synthesizer::DefaultParameters().sampleRate;
+        }
+    
+    
+        static void setFadeTime( double t )
+        {
+            Synthesizer::Parameters params = 
+                Synthesizer::DefaultParameters();
+            params.fadeTime = t;
+            Synthesizer::SetDefaultParameters( params );
+        }
+    
+    
+        static void setSampleRate( double rate )    
+        {
+            Synthesizer::Parameters params = 
+                Synthesizer::DefaultParameters();
+            params.sampleRate = rate;
+            Synthesizer::SetDefaultParameters( params );        
+        }
+    
+        //  -- filter access and mutation --
+        
+        static std::vector< double > filterCoefsNumerator( void ) 
+        {
+            return Synthesizer::DefaultParameters().filter.numerator();
+        }
+        
+        static std::vector< double > filterCoefsDenominator( void )
+        {
+            return Synthesizer::DefaultParameters().filter.denominator();
+        }                
+        
+        static void setFilterCoefs( std::vector< double > num, std::vector< double > den )
+        {
+            if ( 0. == den[0] )
+            {
+                Throw( InvalidArgument, 
+                       "Zeroeth feedback coefficient must be non-zero." );
+            }
+        
+            Synthesizer::Parameters params = 
+                Synthesizer::DefaultParameters();
+            params.filter.numerator() = num;
+            params.filter.denominator() = den;
+            Synthesizer::SetDefaultParameters( params );        
+        }
+    
+    };
+
+%}
+
+
+
+
+/* ******************** synthesis functions ******************** */
+
+
+%feature("docstring",
+"Synthesize Partials in a PartialList at the given sample rate, and
+return the (floating point) samples in a vector. The vector is
+sized to hold as many samples as are needed for the complete
+synthesis of all the Partials in the PartialList. 
+
+If the sample rate is unspecified, the sample rate in the default 
+SynthesisParameters is used. (See loris.SynthesisParameters.)") 
+synthesize;
+
+
+%newobject synthesize;
+%inline 
+%{
+	std::vector<double> synthesize( const PartialList * partials, double srate )
+	{
+		std::vector<double> dst;
+		try
+		{
+			Synthesizer synth( srate, dst );
+			synth.synthesize( partials->begin(), partials->end() );
+		}
+		catch ( std::exception & ex )
+		{
+			throw_exception( ex.what() );
+		}
+		return dst;
+	}
+	
+	std::vector<double> synthesize( const PartialList * partials )
+	{
+		std::vector<double> dst;
+		try
+		{
+			Synthesizer synth( dst );
+			synth.synthesize( partials->begin(), partials->end() );
+		}
+		catch ( std::exception & ex )
+		{
+			throw_exception( ex.what() );
+		}
+		return dst;
+	}
+%}
+
+
+
+
+
+// ----------------- get rid of everything below here -----------------
+
+#if 0
+
 /*
 //  Both of these methods are supposed to create read-only variables
 //  in the scripting interface, but as of SWIG 1.3.39, neither one
@@ -89,14 +262,51 @@ enum
 // %constant BwEnhancedSynthesis = (int)Loris::Synthesizer::BwEnhanced;
 */
 
+%nodefault SynthesisParameters;
+
+%feature("docstring",
+"Structure storing a configuration of Synthesizer parameters.
+Elements in this struct can be freely modified, the configuration
+is validated before it can be used to construct a Synthesizer.") SynthesisParameters;
+
 
 class SynthesisParameters
 {
 public:
+        double fadeTime;
+		double sampleRate;
 
-    double fadeTime;
-    double sampleRate;
-    
+/*
+%feature("docstring",
+"Return this Synthesizer's Partial fade time, in seconds.") fadeTime;
+
+	double fadeTime( void ) const;
+
+%feature("docstring",
+"Return the sampling rate (in Hz) for this Synthesizer.") sampleRate;
+
+	double sampleRate( void ) const;
+
+%feature("docstring",
+"Set this Synthesizer's fade time to the specified value 
+(in seconds, must be non-negative).
+
+	t is the new Partial fade time in seconds.
+") setFadeTime;
+
+void setFadeTime( double t );    
+
+
+%feature("docstring",
+"Set this Synthesizer's sample rate to the specified value 
+(in Hz, must be positive).
+
+	rate is the new synthesis sample rate.
+") setSampleRate;
+
+    void setSampleRate( double rate );
+*/
+
     %extend
     {
         //  -- filter access and mutation --
@@ -163,277 +373,5 @@ public:
         Synthesizer::SetDefaultParameters( params );
     }
 %}
-
-
-
-%feature("docstring",
-"Synthesize Partials in a PartialList at the given sample rate, and
-return the (floating point) samples in a vector. The vector is
-sized to hold as many samples as are needed for the complete
-synthesis of all the Partials in the PartialList. 
-
-If the samplerate is unspecified, the sample rate in the default 
-SynthesisParameters is used.") synthesize;
-
-%newobject synthesize;
-%inline 
-%{
-	std::vector<double> synthesize( const PartialList * partials, double srate )
-	{
-		std::vector<double> dst;
-		try
-		{
-		    Synthesizer::Parameters params = Synthesizer::DefaultParameters();
-		    params.sampleRate = srate;		    
-			Synthesizer synth( params, dst );
-			synth.synthesize( partials->begin(), partials->end() );
-		}
-		catch ( std::exception & ex )
-		{
-			throw_exception( ex.what() );
-		}
-		return dst;
-	}
-	
-	std::vector<double> synthesize( const PartialList * partials )
-	{
-		std::vector<double> dst;
-		try
-		{
-			Synthesizer synth( dst );
-			synth.synthesize( partials->begin(), partials->end() );
-		}
-		catch ( std::exception & ex )
-		{
-			throw_exception( ex.what() );
-		}
-		return dst;
-	}
-%}
-
-
-#if 0
-
-// ---------------------------------------------------------------------------
-//  class Filter
-
-%feature("docstring",
-"Filter is an Direct Form II realization of a filter specified
-by its difference equation coefficients and (optionally) gain,  
-applied to the filter output (defaults to 1.). Coefficients are
-specified and stored in order of increasing delay.
-
-    Implements the rational transfer function
-
-                              -1               -nb
-                  b[0] + b[1]z  + ... + b[nb] z
-        Y(z) = G ---------------------------------- X(z)
-                              -1               -na
-                  a[0] + a[1]z  + ... + a[na] z
-
-    where b[k] are the feed forward coefficients, and a[k] are the feedback 
-coefficients. If a[0] is not 1, then both a and b are normalized by a[0].
-G is the additional filter gain, and is unity if unspecified.
-
-
-Filter is implemented using a std::deque to store the filter state, 
-and relies on the efficiency of that class. If deque is not implemented
-using some sort of circular buffer (as it should be -- deque is guaranteed
-to be efficient for repeated insertion and removal at both ends), then
-this filter class will be slow.") Filter;
-
-class Filter
-{
-public:
-
-//  --- lifecycle ---
-
-
-%extend
-{
-
-%feature("docstring",
-"Initialize a Filter having the specified coefficients, and
-order equal to the larger of the two coefficient ranges.
-Coefficients in the sequences are stored in increasing order
-(lowest order coefficient first).
-
-If template members are allowed, then the coefficients
-can be stored in any kind of iterator range, otherwise,
-they must be in an array of doubles.
-
-    ffwdcoefs is a sequence of feed-forward coefficients
-    fbackcoefs is a sequence of feedback coefficients
-    gain is an optional gain scale applied to the filtered signal
-") Filter;
-
-    Filter( const std::vector< double > & ffwdcoefs,
-            const std::vector< double > & fbackcoefs,
-            double gain = 1 )
-    {
-        return new Filter( &ffwdcoefs[0], &ffwdcoefs[0] + ffwdcoefs.size(),
-                           &fbackcoefs[0], &fbackcoefs[0] + fbackcoefs.size(),
-                           gain );
-    }
-    
-}
-
-%feature("docstring",
-"Make a copy of another digital filter. 
-Do not copy the filter state (delay line).") Filter;
-
-    Filter( const Filter & other );
-    
-
-%feature("docstring",
-"Destroy this Filter.") ~Filter;
-
-    ~Filter( void );
-
-//  --- filtering ---
-
-%feature("docstring",
-"Compute a filtered sample from the next input sample.") apply;
-
-    double apply( double input );
-
-
-//  --- access/mutation ---
-
-
-%feature("docstring",
-"Provide access to the numerator (feed-forward) coefficients
-of this filter. The coefficients are stored in order of increasing
-delay (lowest order coefficient first).") numerator;
-	
-	std::vector< double > numerator( void );
-
-    
-%feature("docstring",
-"Provide access to the denominator (feedback) coefficients
-of this filter. The coefficients are stored in order of increasing
-delay (lowest order coefficient first).") denominator;
-	
-	std::vector< double > denominator( void );
-
-	
-%feature("docstring",
-"Clear the filter state.") clear;
-
-    void clear( void );
-
-
-};
-
-
-
-// ---------------------------------------------------------------------------
-//	class Synthesizer
-//
-
-%feature("docstring",
-"A Synthesizer renders bandwidth-enhanced Partials into a buffer
-of samples. 
-
-Class Synthesizer represents an algorithm for rendering
-bandwidth-enhanced Partials as floating point (double) samples at a
-specified sampling rate, and accumulating them into a buffer. 
-
-The Synthesizer does not own the sample buffer, the client is responsible
-for its construction and destruction, and many Synthesizers may share
-a buffer.") Synthesizer;
-
-class Synthesizer
-{
-public:
-
-%feature("docstring",
-"Construct a Synthesizer using the specified sampling rate, sample
-buffer (a standard library vector), and Partial
-fade time (in seconds). Since Partials generated by the Loris Analyzer
-generally begin and end at non-zero amplitude, zero-amplitude
-Breakpoints are inserted at either end of the Partial, at a temporal
-distance equal to the fade time, to reduce turn-on and turn-off
-artifacts. If the fade time is unspecified, the default value of one
-millisecond (0.001 seconds) is used.
-
-	srate is the rate (Hz) at which to synthesize samples
-		  (must be positive).
-	buffer is the buffer into which rendered samples
-		   should be accumulated.
-	fadeTime is the Partial fade time in seconds (must be non-negative, 
-			 default is 0.001).
-") Synthesizer;
-
-	Synthesizer( double srate, std::vector<double> & buffer, double fadeTime = .001 );
-
-
-%feature("docstring",
-"Synthesize a bandwidth-enhanced sinusoidal Partial. Zero-amplitude
-Breakpoints are inserted at either end of the Partial to reduce
-turn-on and turn-off artifacts, as described above. The synthesizer
-will resize the buffer as necessary to accommodate all the samples,
-including the fade out. Previous contents of the buffer are not
-overwritten. Partials with start times earlier than the Partial fade
-time will have shorter onset fades. Partials are not rendered at
-frequencies above the half-sample rate.") synthesize;
-
-	void synthesize( const Partial & p );
-	
-%extend
-{
-
-%feature("docstring",
-"Synthesize all Partials on the specified half-open (STL-style) range.
-Null Breakpoints are inserted at either end of the Partial to reduce
-turn-on and turn-off artifacts, as described above. The synthesizer
-will resize the buffer as necessary to accommodate all the samples,
-including the fade outs. Previous contents of the buffer are not
-overwritten. Partials with start times earlier than the Partial fade
-time will have shorter onset fades.  Partials are not rendered at
-frequencies above the half-sample rate. ") synthesize;
-
-	void synthesize( const PartialList & plist )
-	{
-		self->synthesize( plist.begin(), plist.end() );
-	}
-	
-}
-
-%feature("docstring",
-"Return this Synthesizer's Partial fade time, in seconds.") fadeTime;
-
-	double fadeTime( void ) const;
-
-%feature("docstring",
-"Return the sampling rate (in Hz) for this Synthesizer.") sampleRate;
-
-	double sampleRate( void ) const;
-
-
-%feature("docstring",
-"Return a reference to the sample buffer used (not
-owned) by this Synthesizer.") samples;
-	
-	std::vector<double> & samples( void );
-
-%feature("docstring",
-"Return access to the Filter used by this Synthesizer's 
-Oscillator to implement bandwidth-enhanced sinusoidal 
-synthesis. (Can use this access to make changes to the
-filter coefficients.)") bwEnhancementFilter;
-
-	Filter & bwEnhancementFilter( void );
-
-%feature("docstring",
-"Set this Synthesizer's fade time to the specified value 
-(in seconds, must be non-negative).
-
-	t is the new Partial fade time in seconds.
-") setFadeTime;
-
-	void setFadeTime( double t );
-
-};
 
 #endif
