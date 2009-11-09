@@ -418,9 +418,13 @@ AiffFile::samples( void ) const
 // ---------------------------------------------------------------------------
 //	addPartial 
 // ---------------------------------------------------------------------------
-//!	Render the specified Partial using the (optionally) specified
-//!	Partial fade time, and accumulate the resulting samples into
-//!	the sample vector for this AiffFile.
+//! Render the specified Partial using the (optionally) specified
+//! Partial fade time (see Synthesizer.h for an examplanation 
+//!	of fade time), and accumulate the resulting samples into
+//! the sample vector for this AiffFile. Other synthesis parameters 
+//!	are taken from the Synthesizer DefaultParameters.
+//!
+//!	\sa Synthesizer::DefaultParameters
 //!
 //!	\param p is the partial to render into this AiffFile
 //!	\param fadeTime is the Partial fade time for rendering

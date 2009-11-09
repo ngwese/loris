@@ -397,8 +397,6 @@ and is included only for backward compatability") wrap_exportAiff;
 		{
 			std::vector< double > vec;
 			
-			//Synthesizer::Parameters params = Synthesizer::DefaultParameters();
-			//params.sampleRate = samplerate;		
 			Synthesizer synth( samplerate, vec );			
 			synth.synthesize( partials->begin(), partials->end() );
 		

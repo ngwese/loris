@@ -34,27 +34,14 @@
  */
  
 
- 
 /* ******************** inserted C++ code ******************** */
 %{
 
 #include <LorisExceptions.h>
-#include <Filter.h>
 #include <Synthesizer.h>
 
-using Loris::Filter;
-using Loris::Oscillator;
 using Loris::Synthesizer;
 
-//typedef Loris::Synthesizer::Parameters SynthesisParameters;
-
-/*
-enum SynthesisEnhancementFlag
-{ 
-    SinusoidalSynthesis = (int)Loris::Synthesizer::Sinusoidal,  
-    BwEnhancedSynthesis = (int)Loris::Synthesizer::BwEnhanced 
-};
-*/
 
 %}
 /* ***************** end of inserted C++ code ***************** */
@@ -128,15 +115,11 @@ SynthesisParameters::setFilterCoefs;
     {
     public:
     
+        //  -- default fade time access and mutation --
+        
         static double fadeTime( void ) 
         {
             return Synthesizer::DefaultParameters().fadeTime;
-        }
-    
-    
-        static double sampleRate( void ) 
-        {
-            return Synthesizer::DefaultParameters().sampleRate;
         }
     
     
@@ -146,6 +129,14 @@ SynthesisParameters::setFilterCoefs;
                 Synthesizer::DefaultParameters();
             params.fadeTime = t;
             Synthesizer::SetDefaultParameters( params );
+        }
+    
+    
+        //  -- default sample rate access and mutation --
+        
+        static double sampleRate( void ) 
+        {
+            return Synthesizer::DefaultParameters().sampleRate;
         }
     
     
@@ -240,138 +231,3 @@ synthesize;
 %}
 
 
-
-
-
-// ----------------- get rid of everything below here -----------------
-
-#if 0
-
-/*
-//  Both of these methods are supposed to create read-only variables
-//  in the scripting interface, but as of SWIG 1.3.39, neither one
-//  prevents assigning new values to these 'constants', rendering
-//  them useless.
-enum 
-{ 
-    SinusoidalSynthesis,  
-    BwEnhancedSynthesis
-};
-
-// %constant SinusoidalSynthesis = (int)Loris::Synthesizer::Sinusoidal;  
-// %constant BwEnhancedSynthesis = (int)Loris::Synthesizer::BwEnhanced;
-*/
-
-%nodefault SynthesisParameters;
-
-%feature("docstring",
-"Structure storing a configuration of Synthesizer parameters.
-Elements in this struct can be freely modified, the configuration
-is validated before it can be used to construct a Synthesizer.") SynthesisParameters;
-
-
-class SynthesisParameters
-{
-public:
-        double fadeTime;
-		double sampleRate;
-
-/*
-%feature("docstring",
-"Return this Synthesizer's Partial fade time, in seconds.") fadeTime;
-
-	double fadeTime( void ) const;
-
-%feature("docstring",
-"Return the sampling rate (in Hz) for this Synthesizer.") sampleRate;
-
-	double sampleRate( void ) const;
-
-%feature("docstring",
-"Set this Synthesizer's fade time to the specified value 
-(in seconds, must be non-negative).
-
-	t is the new Partial fade time in seconds.
-") setFadeTime;
-
-void setFadeTime( double t );    
-
-
-%feature("docstring",
-"Set this Synthesizer's sample rate to the specified value 
-(in Hz, must be positive).
-
-	rate is the new synthesis sample rate.
-") setSampleRate;
-
-    void setSampleRate( double rate );
-*/
-
-    %extend
-    {
-        //  -- filter access and mutation --
-        
-        std::vector< double > filterCoefsNumerator( void ) 
-        {
-            return self->filter.numerator();
-        }
-        
-        std::vector< double > filterCoefsDenominator( void )
-        {
-            return self->filter.denominator();
-        }                
-        
-        void setFilterCoefs( std::vector< double > b, std::vector< double > a )
-        {
-            if ( 0. == a[0] )
-            {
-                Throw( InvalidArgument, 
-                       "Zeroeth feedback coefficient must be non-zero." );
-            }
-        
-            self->filter.numerator() = b;
-            self->filter.denominator() = a;
-        }
-        
-        /*
-        //  -- bw enhancement policy access and mutation --
-        
-        int enhancement( void )
-        {
-            return self->enhancement;
-        }
-        
-        void setEnhancement( int flag )
-        {
-            switch (flag)
-            {
-                case SinusoidalSynthesis:
-                    self->enhancement = Loris::Synthesizer::Sinusoidal;
-                    break;
-                case BwEnhancedSynthesis:
-                    self->enhancement = Loris::Synthesizer::BwEnhanced;
-                    break;
-                default:
-                    Throw( Loris::InvalidArgument, 
-                        "argument to setEnhancement must be one of SinusoidalSynthesis or BwEnhancedSynthesis" );
-            }
-        }
-        */
-    }    
-};
-
-
-%inline
-%{
-    SynthesisParameters DefaultSynthesisParameters( void )
-    {
-        return Synthesizer::DefaultParameters();
-    }
-    
-    void SetDefaultSynthesisParameters( const SynthesisParameters & params )
-    {
-        Synthesizer::SetDefaultParameters( params );
-    }
-%}
-
-#endif
