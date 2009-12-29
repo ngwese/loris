@@ -912,7 +912,7 @@ default is phase correct resampling.")  wrap_resample;
 "Bad old name for scaleAmplitude.") scaleAmp;
 
 %feature("docstring",
-"Scale the amplitude of the Partials in a PartialList according 
+"Scale the amplitude of a Partial, or all Partials in a PartialList, according 
 to an envelope representing a time-varying amplitude scale value.")
 scaleAmplitude;
 				 
@@ -929,6 +929,11 @@ scaleAmplitude;
 		PartialUtils::scaleAmplitude( partials->begin(), partials->end(), *ampEnv );
 	}
 
+    void scaleAmplitude( Partial * p, Envelope * ampEnv )
+	{
+		PartialUtils::scaleAmplitude( *p, *ampEnv );
+	}
+
     void scaleAmp( PartialList * partials, double val )
 	{
 		LinearEnvelope e( val );
@@ -941,10 +946,15 @@ scaleAmplitude;
 		PartialUtils::scaleAmplitude( partials->begin(), partials->end(), e );
 	}
 	
+	void scaleAmplitude( Partial * p, double val )
+	{
+		LinearEnvelope e( val );
+		PartialUtils::scaleAmplitude( *p, e );
+	}
 %}
 
 %feature("docstring",
-"Scale the bandwidth of the Partials in a PartialList according 
+"Scale the bandwidth of a Partial, or all Partials in a PartialList, according 
 to an envelope representing a time-varying bandwidth scale value.");
 
 %inline %{	
@@ -961,10 +971,21 @@ to an envelope representing a time-varying bandwidth scale value.");
 		PartialUtils::scaleBandwidth( partials->begin(), partials->end(), e );
 	}
 	
+	void scaleBandwidth( Partial * p, Envelope * bwEnv )
+	{
+		PartialUtils::scaleBandwidth( *p, *bwEnv );
+	}
+				 
+
+	void scaleBandwidth( Partial * p, double val )
+	{
+		LinearEnvelope e( val );
+		PartialUtils::scaleBandwidth( *p, e );
+	}	
 %}
 
 %feature("docstring",
-"Scale the frequency of the Partials in a PartialList according 
+"Scale the frequency of a Partial, or all Partials in a PartialList, according 
 to an envelope representing a time-varying frequency scale value.");
 				 
 %inline %{	
@@ -980,10 +1001,21 @@ to an envelope representing a time-varying frequency scale value.");
 		PartialUtils::scaleFrequency( partials->begin(), partials->end(), e );
 	}
 	
+	void scaleFrequency( Partial * p, Envelope * freqEnv )
+	{
+		PartialUtils::scaleFrequency( *p, *freqEnv );
+	}
+
+	void scaleFrequency( Partial * p, double val )
+	{
+		LinearEnvelope e( val );
+		PartialUtils::scaleFrequency( *p, e );
+	}
+	
 %}
 
 %feature("docstring",
-"Scale the relative noise content of the Partials in a PartialList 
+"Scale the relative noise content of a Partial, or all Partials in a PartialList,
 according to an envelope representing a (time-varying) noise energy 
 scale value.");
 
@@ -1002,10 +1034,20 @@ scale value.");
 		PartialUtils::scaleNoiseRatio( partials->begin(), partials->end(), e );
 	}
 	
+	void scaleNoiseRatio( Partial * p, Envelope * noiseEnv )
+	{
+		PartialUtils::scaleNoiseRatio( *p, *noiseEnv );
+	}
+
+	void scaleNoiseRatio( Partial * p, double val )
+	{
+		LinearEnvelope e( val );
+		PartialUtils::scaleNoiseRatio( *p, e );
+	}
 %}
 
 %feature("docstring",
-"Set the bandwidth of the Partials in a PartialList according 
+"Set the bandwidth of a Partial, or all Partials in a PartialList, according 
 to an envelope representing a time-varying bandwidth value.");
 
 %inline 
@@ -1022,6 +1064,16 @@ to an envelope representing a time-varying bandwidth value.");
 		PartialUtils::setBandwidth( partials->begin(), partials->end(), e );
 	}
 	
+	void setBandwidth( Partial * p, Envelope * bwEnv )
+	{
+		PartialUtils::setBandwidth( *p, *bwEnv );
+	}
+	
+	void setBandwidth( Partial * p, double val )
+	{
+		LinearEnvelope e( val );
+		PartialUtils::setBandwidth( *p, e );
+	}
 %}
 
 %feature("docstring",
