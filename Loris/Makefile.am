@@ -1,4 +1,5 @@
-# Copyright (c) 1999-2009, Kelly Fitz and Lippold Haken <loris@cerlsoundgroup.org>
+# Loris is Copyright (c) 1999-2010 by Kelly Fitz and Lippold Haken
+# <loris@cerlsoundgroup.org>
 #  
 # This file is free software; as a special exception the author gives
 # unlimited permission to copy and/or distribute it, with or without 

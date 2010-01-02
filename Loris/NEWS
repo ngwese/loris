@@ -20,7 +20,7 @@ Please send bug reports to loris@cerlsoundgroup.org
 
 Loris is free software. Please see the file COPYING for details.
 
-Loris is Copyright (c) 1999-2009 by Kelly Fitz and Lippold Haken.
+Loris is Copyright (c) 1999-2010 by Kelly Fitz and Lippold Haken.
 
 
 History of visible changes, organized by relase number:
@@ -789,8 +789,9 @@ for the Python module is included, and posted to SourceForge
 -------------------------------------------------------
 Copying information:
 
-Copyright (C) 1999-2007, Kelly Fitz and Lippold Haken 
+Loris is Copyright (c) 1999-2010 by Kelly Fitz and Lippold Haken
 <loris@cerlsoundgroup.org>
+
 
    Permission is granted to anyone to make or distribute verbatim copies
    of this document as received, in any medium, provided that the
