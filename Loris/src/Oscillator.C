@@ -141,7 +141,7 @@ Oscillator::setPhase( double ph )
 }
 
 // ---------------------------------------------------------------------------
-//  generateSamples
+//  oscillate
 // ---------------------------------------------------------------------------
 //  Accumulate bandwidth-enhanced sinusoidal samples modulating the 
 //  oscillator state from its current values of radian frequency,
@@ -155,9 +155,9 @@ void
 Oscillator::oscillate( double * begin, double * end,
                        const Breakpoint & bp, double srate )
 {
-    double targetFreq = bp.frequency() * TwoPi / srate, 
-           targetAmp = bp.amplitude(), 
-           targetBw = bp.bandwidth();
+    double targetFreq = bp.frequency() * TwoPi / srate;     //  radians per sample
+    double targetAmp = bp.amplitude(); 
+    double targetBw = bp.bandwidth();
     
     //  clamp bandwidth:
     if ( targetBw > 1. )
@@ -180,50 +180,92 @@ Oscillator::oscillate( double * begin, double * end,
 
     //  compute trajectories:
     const double dTime = 1. / (end - begin);
-    const double dFreq = (targetFreq - m_instfrequency) * dTime;
+    const double dFreqOver2 = 0.5 * (targetFreq - m_instfrequency) * dTime;
+    	//	split frequency update in two steps, update phase using average
+    	//	frequency, after adding only half the frequency step
+    	
     const double dAmp = (targetAmp - m_instamplitude)  * dTime;
     const double dBw = (targetBw - m_instbandwidth)  * dTime;
 
-    //  could use temporary local variables for speed... nah!
-    //  Cannot possibly be worth it when I am computing square roots 
-    //  and cosines!
-    double am, nz;
-    for ( double * putItHere = begin; putItHere != end; ++putItHere )
+    //  Use temporary local variables for speed.
+    //  Probably not worth it when I am computing square roots 
+    //  and cosines...
+    double ph = m_determphase;
+    double f = m_instfrequency;
+    double a = m_instamplitude;
+    double bw = m_instbandwidth;
+    
+    //	Also use a more efficient sample loop when the bandwidth is zero.
+    if ( 0 < bw || 0 < dBw )
     {
-        //  use math functions in namespace std:
-        using namespace std;
-
-        //  compute amplitude modulation due to bandwidth:
-        //
-        //  This will give the right amplitude modulation when scaled
-        //  by the Partial amplitude:
-        //
-        //  carrier amp: sqrt( 1. - bandwidth ) * amp
-        //  modulation index: sqrt( 2. * bandwidth ) * amp
-        //
-        nz = m_filter.apply( m_modulator.sample() );
-        am = sqrt( 1. - m_instbandwidth ) + ( nz * sqrt( 2. * m_instbandwidth ) );  
-                
-        //  compute a sample and add it into the buffer:
-        *putItHere += am * m_instamplitude * cos( m_determphase );
-            
-        //  update the instantaneous oscillator state:
-        m_determphase += m_instfrequency;   //  frequency is radians per sample
-        m_instfrequency += dFreq;
-        m_instamplitude += dAmp;
-        m_instbandwidth += dBw;
-        if (m_instbandwidth < 0.)
-        {
-            m_instbandwidth = 0.;
-        }
-            
-    }   // end of sample computation loop
+		double am, nz;
+		for ( double * putItHere = begin; putItHere != end; ++putItHere )
+		{
+			//  use math functions in namespace std:
+			using namespace std;
+	
+			//  compute amplitude modulation due to bandwidth:
+			//
+			//  This will give the right amplitude modulation when scaled
+			//  by the Partial amplitude:
+			//
+			//  carrier amp: sqrt( 1. - bandwidth ) * amp
+			//  modulation index: sqrt( 2. * bandwidth ) * amp
+			//
+			nz = m_filter.apply( m_modulator.sample() );
+			am = sqrt( 1. - bw ) + ( nz * sqrt( 2. * bw ) );  
+					
+			//  compute a sample and add it into the buffer:
+			*putItHere += am * a * cos( ph );
+				
+			//  update the instantaneous oscillator state:
+			f += dFreqOver2;
+			ph += f;   //  frequency is radians per sample
+			f += dFreqOver2;
+			a += dAmp;
+			bw += dBw;
+			if (bw < 0.)
+			{
+				bw = 0.;
+			}				
+		}   // end of sample computation loop
+	}
+	else
+	{
+		for ( double * putItHere = begin; putItHere != end; ++putItHere )
+		{
+			//  use math functions in namespace std:
+			using namespace std;
+	
+			//	no modulation when there is no bandwidth
+			
+			//  compute a sample and add it into the buffer:
+			*putItHere += a * cos( ph );
+				
+			//  update the instantaneous oscillator state:
+			f += dFreqOver2;
+			ph += f;   //  frequency is radians per sample
+			f += dFreqOver2;
+			a += dAmp;
+		}   // end of sample computation loop
+	
+	}
+	
+	
+    //	copy out of the local variables?
+    //	no need because we are assigning to the target
+    //	values below:
+    /*
+    m_instfrequency = f;
+    m_instamplitude = a;
+    m_instbandwidth = bw;
+    */
     
     //  wrap phase to prevent eventual loss of precision at
     //  high oscillation frequencies:
     //  (Doesn't really matter much exactly how we wrap it, 
     //  as long as it brings the phase nearer to zero.)
-    m_determphase = m2pi( m_determphase );
+    m_determphase = m2pi( ph );
     
     //  set the state variables to their target values,
     //  just in case they didn't arrive exactly (overshooting
