@@ -103,7 +103,7 @@ static void test_parametersAt( void )
 	const double P1_FREQS[] = {100, 100, 120};
 	const double P1_AMPS[] = {.2, .2, .4};
 	const double P1_BWS[] = {0, 0, .2};			
-	const double P1_PHS[] = {-.8, .8, .8}; // std::fmod( .8 + (2 * Pi * (0.2*110)), 2. * Pi )};
+	const double P1_PHS[] = {.8, .8, .8}; // std::fmod( .8 + (2 * Pi * (0.2*110)), 2. * Pi )};
 		
 	for (int i = 0; i < NUM_BPTS; ++i )
 	{
@@ -196,7 +196,7 @@ static void test_absorb( void )
 	const double P1_FREQS[] = {180, 180, 180};
 	const double P1_AMPS[] = {.2, .2, .4};
 	const double P1_BWS[] = {0, 0, .2};			
-	const double P1_PHS[] = {-.8, .8, -1.2}; 	
+	const double P1_PHS[] = {.8, .8, -1.2}; 	
 		
 	for (int i = 0; i < NUM_BPTS; ++i )
 		p1.insert( P1_TIMES[i], Breakpoint( P1_FREQS[i], P1_AMPS[i], P1_BWS[i], P1_PHS[i] ) );

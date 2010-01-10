@@ -273,7 +273,7 @@ Partial::insert( double time, const Breakpoint & bp )
 #else
     /*
     //  this allows Breakpoints to be inserted arbitrarily
-    //  cloase together, which is no good, can cause trouble later:
+    //  close together, which is no good, can cause trouble later:
     
 	std::pair< container_type::iterator, bool > result = 
 		_breakpoints.insert( container_type::value_type(time, bp) );
@@ -763,6 +763,20 @@ Partial::amplitudeAt( double time, double fadeTime ) const
 	}
 }
 
+
+// ---------------------------------------------------------------------------
+//  wrapPi
+// ---------------------------------------------------------------------------
+//  O'Donnell's phase wrapping function.
+//
+static inline double wrapPi( double x )
+{
+    using namespace std; // floor should be in std
+    #define ROUND(x) (floor(.5 + (x)))
+    const double TwoPi = 2.0*Pi;
+    return x + ( TwoPi * ROUND(-x/TwoPi) );
+}
+
 // ---------------------------------------------------------------------------
 //	phaseAt
 // ---------------------------------------------------------------------------
@@ -789,23 +803,23 @@ Partial::phaseAt( double time ) const
 	//	compute phase:
 	if ( it == begin() ) 
 	{
-	//	time is before the onset of the Partial:
+	    //	time is before the onset of the Partial:
 		double dp = 2. * Pi * (it.time() - time) * it.breakpoint().frequency();
-		return std::fmod( it.breakpoint().phase() - dp, 2. * Pi);
+		return wrapPi( it.breakpoint().phase() - dp );
 	}
 	else if (it == end() ) 
 	{
-	//	time is past the end of the Partial:
-	//	( first decrement iterator to get the tail Breakpoint)
+        //	time is past the end of the Partial:
+        //	( first decrement iterator to get the tail Breakpoint)
 		--it;
 		
 		double dp = 2. * Pi * (time - it.time()) * it.breakpoint().frequency();
-		return std::fmod( it.breakpoint().phase() + dp, 2. * Pi );
+		return wrapPi( it.breakpoint().phase() + dp );
 	}
 	else 
 	{
-	//	interpolate between it and its predeccessor
-	//	(we checked already that it is not begin):
+        //	interpolate between it and its predeccessor
+        //	(we checked already that it is not begin):
 		const Breakpoint & hi = it.breakpoint();
 		double hitime = it.time();
 		const Breakpoint & lo = (--it).breakpoint();
@@ -814,22 +828,14 @@ Partial::phaseAt( double time ) const
 		double finterp = ( alpha * hi.frequency() ) + 
 						 ( ( 1. - alpha ) * lo.frequency() );
 
-		//	need to keep fmod in here because other stuff 
-		//	(Spc export and sdif export, for example) rely 
-		//	on it:
-		if ( alpha < 0.5 )
-		{
-			double favg = 0.5 * ( lo.frequency() + finterp );
-			double dp = 2. * Pi * (time - lotime) * favg;
-			return std::fmod( lo.phase() + dp, 2. * Pi );
-		}
-		else
-		{
-			double favg = 0.5 * ( hi.frequency() + finterp );
-			double dp = 2. * Pi * (hitime - time) * favg;
-			return std::fmod( hi.phase() - dp, 2. * Pi );
-		}
-
+        //  frequency is interpolated to the specified time, 
+        //  interpolated phase is computed from the frequency 
+        //  and offset from the phase of the preceding Breakpoint:
+        double favg = 0.5 * ( lo.frequency() + finterp );
+        double dp = 2. * Pi * (time - lotime) * favg;
+        
+        //  wrap phase, because other code depends on it:
+        return wrapPi( lo.phase() + dp );
 	}
 }
 
@@ -918,7 +924,7 @@ Partial::parametersAt( double time, double fadeTime ) const
 		double amp = alpha * it.breakpoint().amplitude();
 
 		double dp = 2. * Pi * (it.time() - time) * it.breakpoint().frequency();
-		double ph = std::fmod( it.breakpoint().phase() - dp, 2. * Pi);
+		double ph = wrapPi( it.breakpoint().phase() - dp );
 		
 		return Breakpoint( it.breakpoint().frequency(), amp, 
 						   it.breakpoint().bandwidth(), ph );
@@ -940,7 +946,7 @@ Partial::parametersAt( double time, double fadeTime ) const
 		double amp = alpha * it.breakpoint().amplitude();
 
 		double dp = 2. * Pi * (time - it.time()) * it.breakpoint().frequency();
-		double ph = std::fmod( it.breakpoint().phase() + dp, 2. * Pi );
+		double ph = wrapPi( it.breakpoint().phase() + dp );
 
 		return Breakpoint( it.breakpoint().frequency(), amp, 
 						   it.breakpoint().bandwidth(), ph );
@@ -966,13 +972,13 @@ Partial::parametersAt( double time, double fadeTime ) const
 		{
 			double favg = 0.5 * ( lo.frequency() + finterp );
 			double dp = 2. * Pi * (time - lotime) * favg;
-			ph = std::fmod( lo.phase() + dp, 2. * Pi );
+			ph = wrapPi( lo.phase() + dp );
 		}
 		else
 		{
 			double favg = 0.5 * ( hi.frequency() + finterp );
 			double dp = 2. * Pi * (hitime - time) * favg;
-			ph = std::fmod( hi.phase() - dp, 2. * Pi );
+			ph = wrapPi( hi.phase() - dp );
 		}
 
 		return Breakpoint( (alpha * hi.frequency()) + ((1. - alpha) * lo.frequency()),

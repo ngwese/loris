@@ -159,7 +159,7 @@ public:
 	//!         resized to accommodate the entire duration of the 
 	//!         Partial, p, including fade out at the end.
 	//!	\throw	InvalidPartial if the Partial has negative start time.
-	void synthesize( const Partial & p );	
+	void synthesize( Partial p );	
 	 
 	//!	Function call operator: same as synthesize( p ).
 	void operator() ( const Partial & p ) { synthesize( p ) ; }

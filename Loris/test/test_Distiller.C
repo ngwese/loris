@@ -45,10 +45,17 @@
 using namespace Loris;
 using namespace std;
 
+
+#if defined(HAVE_M_PI) && (HAVE_M_PI)
+	const double Pi = M_PI;
+#else
+	const double Pi = 3.14159265358979324;
+#endif
+
 // --- macros ---
 
 //  define this to see pages and pages of spew
-// #define VERBOSE
+//#define VERBOSE
 #ifdef VERBOSE                                  
     #define TEST(invariant)                                 \
         do {                                                    \
@@ -88,6 +95,20 @@ static bool float_equal( double x, double y )
 }
 
 #define SAME_PARAM_VALUES(x,y) TEST( float_equal((x),(y)) )
+
+// ---------------------------------------------------------------------------
+//  wrapPi
+// ---------------------------------------------------------------------------
+//  O'Donnell's phase wrapping function.
+//
+static inline double wrapPi( double x )
+{
+    using namespace std; // floor should be in std
+    #define ROUND(x) (floor(.5 + (x)))
+    const double TwoPi = 2.0*Pi;
+    return x + ( TwoPi * ROUND(-x/TwoPi) );
+}
+
 
 // ----------- test_distill_manylabels -----------
 //
@@ -422,7 +443,7 @@ static void test_distill_overlapping3( void )
         SAME_PARAM_VALUES( distit->frequency(), compareit->frequency() );
         SAME_PARAM_VALUES( distit->amplitude(), compareit->amplitude() );
         SAME_PARAM_VALUES( distit->bandwidth(), compareit->bandwidth() );
-        SAME_PARAM_VALUES( distit->phase(), compareit->phase() );
+        SAME_PARAM_VALUES( wrapPi( distit->phase() ), wrapPi( compareit->phase() ) );
         
         ++compareit;
         ++distit;

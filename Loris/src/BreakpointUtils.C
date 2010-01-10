@@ -60,7 +60,7 @@ BreakpointUtils::makeNullBefore( const Breakpoint & bp, double fadeTime )
 	Breakpoint ret( bp );
 	// adjust phase
 	double dp = 2. * Pi * fadeTime * bp.frequency();
-	ret.setPhase( std::fmod( ret.phase() - dp, 2. * Pi ) );
+	ret.setPhase( std::fmod( bp.phase() - dp, 2. * Pi ) );
 	ret.setAmplitude(0.);
 	ret.setBandwidth(0.);
 	
@@ -79,7 +79,7 @@ BreakpointUtils::makeNullAfter( const Breakpoint & bp, double fadeTime )
 	Breakpoint ret( bp );
 	// adjust phase
 	double dp = 2. * Pi * fadeTime * bp.frequency();
-	ret.setPhase( std::fmod( ret.phase() + dp, 2. * Pi ) );
+	ret.setPhase( std::fmod( bp.phase() + dp, 2. * Pi ) );
 	ret.setAmplitude(0.);
 	ret.setBandwidth(0.);
 

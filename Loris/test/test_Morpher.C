@@ -79,7 +79,7 @@ static bool float_equal( double x, double y )
     #endif
     #define EPSILON .01 // VERY lax with morphing, should be more rigorous
     bool ret = false;
-    if ( std::fabs(x) > 0. )
+    if ( std::fabs(x) > EPSILON )
     {
         ret = std::fabs((x-y)/x) < EPSILON;
     }

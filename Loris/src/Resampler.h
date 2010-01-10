@@ -38,6 +38,7 @@
  */
 
 #include "PartialList.h"
+#include "LinearEnvelope.h"
 
 //	begin namespace
 namespace Loris {
@@ -61,29 +62,73 @@ class Resampler
 public:
 //	--- lifecycle ---
 
-    //! Construct a new Resampler using the specified sampling
-    //! interval and sparse resampling.
+    //! Initialize a Resampler having the specified uniform sampling
+    //! interval. Enable phase-correct resampling, in which frequencies
+    //! of resampled Partials are modified (using fixFrequency) such 
+    //! that the resampled phases are achieved in synthesis. Phase-
+    //! correct resampling can be disabled using setPhaseCorrect.
+    //!
+    //! Resampled Partials will be composed of Breakpoints at every 
+    //! integer multiple of the resampling interval.
+    //!
+    //! \sa setPhaseCorrect
+    //! \sa fixFrequency
     //!
     //! \param  sampleInterval is the resampling interval in seconds, 
     //!         Breakpoint data is computed at integer multiples of
     //!         sampleInterval seconds.
+    //!
     //! \throw  InvalidArgument if sampleInterval is not positive.
     explicit Resampler( double sampleInterval );
 
-    // use compiler-generated copy/assign/destroy
+    //! Initialize a Resampler having the specified timing envelope.
+    //! The timing envelope represents a map of Breakpoint times in  
+    //! resampled Partials onto parameter sampling instants in the 
+    //! original Partials. Phase-correct resampling is not generally
+    //! possible using a nontrivial timing envelope, use the functions
+    //! declared in phasefix.h to correct the phases and frequencies
+    //! of resampled Partials.
+    //!
+    //! Resampled Partials will be composed of Breakpoints at times
+    //! corresponding to the timing envelope breakpoints.
+    //!
+    //! \param  timingEnv is the timing envelope, a map of Breakpoint 
+    //!         times in resampled Partials onto parameter sampling 
+    //!         instants in the original Partials.
+    //!
+    //! \throw  InvalidArgument if timingEnv has any negative breakpoint
+    //!         times or values.
+    explicit Resampler( const LinearEnvelope & timingEnv );
+
+    //! Initialize a Resampler having the specified timing envelope,
+    //! uniformly sampled at the sampling interval.
+    //! The timing envelope represents a map of Breakpoint times in  
+    //! resampled Partials onto parameter sampling instants in the 
+    //! original Partials. Phase-correct resampling is not generally
+    //! possible using a nontrivial timing envelope, use the functions
+    //! declared in phasefix.h to correct the phases and frequencies
+    //! of resampled Partials.
+    //!
+    //! Resampled Partials will be composed of Breakpoints at every 
+    //! integer multiple of the resampling interval.
+    //!
+    //! \param  timingEnv is the timing envelope, a map of Breakpoint 
+    //!         times in resampled Partials onto parameter sampling 
+    //!         instants in the original Partials.
+    //! \param  sampleInterval is the resampling interval in seconds, 
+    //!         Breakpoint data is computed at integer multiples of
+    //!         sampleInterval seconds.
+    //!
+    //! \throw  InvalidArgument if sampleInterval is not positive.
+    //! \throw  InvalidArgument if timingEnv has any negative breakpoint
+    //!         times or values.
+    Resampler( const LinearEnvelope & timingEnv, double sampleInterval );
+
+
+    // --- use compiler-generated copy/assign/destroy ---
     
 //  --- parameters ---
 
-    //! Select dense or sparse resampling.
-    //!
-    //! \param  useDense is a boolean flag indicating that dense
-    //!         resamping (Breakpoint at every integer multiple of the 
-    //!         resampling interval) should be performed. If false (the
-    //!         default), sparse resampling (Breakpoints only at multiples
-    //!         of the resampling interval near Breakpoint times in the
-    //!         original Partial) is performed.
-    void setDenseResampling( bool useDense );
-    
     //! Specify phase-corrected resampling, or not. If phase
     //! correct, Partial frequencies are altered slightly
     //! to match, as nearly as possible, the Breakpoint 
@@ -117,6 +162,19 @@ public:
     { 
         resample( p ); 
     }
+    
+    
+    //! DCUMENT ME
+    //! The Breakpoint times in the resampled Partial will comprise a  
+    //! sparse sequence of integer multiples of the sampling interval,
+    //! beginning with the multiple nearest to the Partial's start time and
+    //! ending with the multiple nearest to the Partial's end time, and including
+    //! only multiples that are near to Breakpoint times in the original Partial.
+    //! Resampling is performed in-place. 
+    //!
+    //! \param  p is the Partial to resample
+    void quantize( Partial & p ) const;
+
 	 
 	//! Resample all Partials in the specified (half-open) range using this
 	//! Resampler's stored quanitization interval.
@@ -154,7 +212,32 @@ public:
 	{ 
 	   resample( begin, end ); 
 	}
-    	 
+ 
+
+    //! DOCUMENT ME
+    //! Quantize all Partials in the specified (half-open) range using this
+    //! Resampler's stored sampling interval, 
+    //! The Breakpoint times in the resampled Partial will comprise a  
+    //! sparse sequence of integer multiples of the sampling interval,
+    //! beginning with the multiple nearest to the Partial's start time and
+    //! ending with the multiple nearest to the Partial's end time, and including
+    //! only multiples that are near to Breakpoint times in the original Partial.
+    //! Resampling is performed in-place. 
+    //!	
+    //!	\param begin is the beginning of the range of Partials to quantize
+    //!	\param end is (one-past) the end of the range of Partials to quantize
+    //!	
+    //!	If compiled with NO_TEMPLATE_MEMBERS defined, then begin and end
+    //!	must be PartialList::iterators, otherwise they can be any type
+    //!	of iterators over a sequence of Partials.
+#if ! defined(NO_TEMPLATE_MEMBERS)
+	template<typename Iter>
+	void quantize( Iter begin, Iter end ) const;
+#else
+   inline 
+	void quantize( PartialList::iterator begin, PartialList::iterator end  ) const;
+#endif	 
+   	 
 // -- static members --
 
 	//! Static member that constructs an instance and applies
@@ -194,12 +277,11 @@ public:
 //	--- instance variables ---
 private:
 
+    //! the timing envelope for resampling
+    LinearEnvelope timing_;
+    
     //! the resampling interval in seconds
     double interval_;	
-
-    //! boolean selecting dense or sparse resampling
-    //! (default is false)
-    bool dense_;
     
     //! boolean flag selecting phase-corrected resampling
     //! (default is true)
@@ -241,6 +323,41 @@ void Resampler::resample( PartialList::iterator begin, PartialList::iterator end
 }
 
 // ---------------------------------------------------------------------------
+//	quantize (sequence of Partials)
+// ---------------------------------------------------------------------------
+//! DOCUMENT ME
+//! Quantize all Partials in the specified (half-open) range using this
+//! Resampler's stored sampling interval, 
+//! The Breakpoint times in the resampled Partial will comprise a  
+//! sparse sequence of integer multiples of the sampling interval,
+//! beginning with the multiple nearest to the Partial's start time and
+//! ending with the multiple nearest to the Partial's end time, and including
+//! only multiples that are near to Breakpoint times in the original Partial.
+//! Resampling is performed in-place. 
+//!	
+//!	\param begin is the beginning of the range of Partials to quantize
+//!	\param end is (one-past) the end of the range of Partials to quantize
+//!	
+//!	If compiled with NO_TEMPLATE_MEMBERS defined, then begin and end
+//!	must be PartialList::iterators, otherwise they can be any type
+//!	of iterators over a sequence of Partials.
+//
+#if ! defined(NO_TEMPLATE_MEMBERS)
+template<typename Iter>
+void Resampler::quantize( Iter begin, Iter end ) const
+#else
+inline 
+void Resampler::quantize( PartialList::iterator begin, PartialList::iterator end  ) const
+#endif	 
+{
+	while ( begin != end )
+	{
+		quantize( *begin++ );
+	}
+}
+
+
+// ---------------------------------------------------------------------------
 //	resample (static)
 // ---------------------------------------------------------------------------
 //! Static member that constructs an instance and applies
@@ -278,8 +395,15 @@ void Resampler::resample( PartialList::iterator begin, PartialList::iterator end
 #endif	 
 {
     Resampler instance( sampleInterval );
-    instance.setDenseResampling( denseResampling ); 
-    instance.resample( begin, end );
+    
+    if ( denseResampling )
+    {
+        instance.resample( begin, end );
+    }
+    else
+    {
+        instance.quantize( begin, end );
+    }
 }
 
 }	//	end of namespace Loris

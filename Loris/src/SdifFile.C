@@ -1913,12 +1913,24 @@ assembleMatrixData( sdif_float64 *data, const bool enhanced,
 		
 		// For enhanced format we use exact timing; the activeIndices only includes
 		// partials that have breakpoints in this frame.
-		// For sine-only format we resample at frame times.
+		// For sine-only format we resample at frame times, for enhanced, use
+		// the Breakpoints themselves.
 		Assert( par->endTime() >= frameTime );
-		double tim = enhanced ? par->findAfter( frameTime ).time() : frameTime;
-		
+		double tim = frameTime;		
+		Breakpoint params;
+		if ( enhanced )
+		{
+		    Partial::const_iterator pos = par->findAfter( frameTime );
+		    tim = pos.time();
+		    params = pos.breakpoint();
+		}
+		else
+		{
+		    params = par->parametersAt( frameTime );
+		}
+				
 		// Must have phase between 0 and 2*Pi.
-		double phas = par->phaseAt( tim );
+		double phas = params.phase(); 
 		if (phas < 0)
 		{
 			phas += 2. * Pi; 
@@ -1926,12 +1938,12 @@ assembleMatrixData( sdif_float64 *data, const bool enhanced,
 		
 		// Fill in values for this row of matrix data.
 		*rowDataPtr++ = index;							// first row of matrix   (standard)
-		*rowDataPtr++ = par->frequencyAt( tim );		// second row of matrix  (standard)
-		*rowDataPtr++ = par->amplitudeAt( tim );		// third row of matrix   (standard)
+		*rowDataPtr++ = params.frequency(); 		    // second row of matrix  (standard)
+		*rowDataPtr++ = params.amplitude();		        // third row of matrix   (standard)
 		*rowDataPtr++ = phas;							// fourth row of matrix  (standard)
 		if (enhanced)
 		{
-			*rowDataPtr++ = par->bandwidthAt( tim );	// fifth row of matrix   (loris)
+			*rowDataPtr++ = params.bandwidth();	        // fifth row of matrix   (loris)
 			*rowDataPtr++ = tim - frameTime;			// sixth row of matrix   (loris)
 		}
 	}
