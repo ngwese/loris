@@ -73,24 +73,21 @@ namespace Loris {
 
 // -- local helpers -- 
 
+
 // ---------------------------------------------------------------------------
-//	wrapPi
-//	Wrap an unwrapped phase value to the range (-pi,pi].
+//  wrapPi
+//	Wrap an unwrapped phase value to the range [-pi,pi] using
+//  O'Donnell's phase wrapping function.
 //
 double wrapPi( double x )
 {
-	x = std::fmod( x, 2*Pi );
-	
-	if ( x > Pi )
-	{
-		x = x - ( 2*Pi );
-	}
-	else if ( x < -Pi )
-	{
-		x = x + ( 2*Pi );
-	}
-	return x;
+    using namespace std; // floor should be in std
+    #define ROUND(x) (floor(.5 + (x)))
+    const double TwoPi = 2.0*Pi;
+    return x + ( TwoPi * ROUND(-x/TwoPi) );
 }
+
+
 
 // ---------------------------------------------------------------------------
 //	phaseTravel
@@ -290,14 +287,6 @@ void fixPhaseBetween( Partial::iterator b, Partial::iterator e )
         double deviation = wrapPi( e.breakpoint().phase() - ( b.breakpoint().phase() + travel ) );
         double desired = travel + deviation;
         
-        /*
-        debugger << "---------- fixing breakpoint frequencies over time ( " 
-                 << b.time() << " , " << e.time() << " )" << endl;
-             
-        debugger << "desired travel: " << desired << endl;
-        debugger << "actual travel: " << travel << endl;
-        */
-        
         //	Compute the amount by which to perturb the frequencies of
         //	all the null Breakpoints between b and e.
         //
@@ -325,32 +314,17 @@ void fixPhaseBetween( Partial::iterator b, Partial::iterator e )
         double delta = ( 2 * ( desired - travel ) / ( tN + tNm1 - t1 - t0 ) ) / ( 2 * Pi );
         
         //	Perturb the Breakpoint frequencies.
-        double DEBUGtravel = 0;
         next = b;
         Partial::iterator prev = next++;
         while ( next != e )
         {
-            //debugger << "changing frequency from " << next.breakpoint().frequency();
             next.breakpoint().setFrequency( next.breakpoint().frequency() + delta );
-            //debugger << " to " << next.breakpoint().frequency() << endl;
             
-            double newtravel = phaseTravel( prev, next );
-            DEBUGtravel += newtravel;
-            
-            //debugger << "changing phase from " << wrapPi( next.breakpoint().phase() );
+            double newtravel = phaseTravel( prev, next );            
             next.breakpoint().setPhase( wrapPi( prev.breakpoint().phase() + newtravel ) );
-            //debugger << " to " << next.breakpoint().phase() << endl;
             
             prev = next++;
         }
-        DEBUGtravel += phaseTravel( prev, next );
-        /*
-        debugger << "travel: " << DEBUGtravel << endl;
-        
-        debugger << "desired: " << e.breakpoint().phase() << endl;
-        debugger << "got: " << wrapPi( prev.breakpoint().phase() + phaseTravel( prev, next ) ) << endl;
-        debugger << "---------- done." << endl;
-        */
     }
     else
     {
