@@ -864,11 +864,11 @@ multiple nearest to the Partial's start time and ending with the
 multiple nearest to the Partial's end time. Resampling is
 performed in-place.
 
-If dense resampling is selected, the Breakpoint times in densely
-resampled Partials will comprise a contiguous sequence of ALL
-integer multiples of the sampling interval (very large, but useful
-for some third-party tools, like the CNMAT sinusoids~ external for
-Max/MSP). Default is sparse (not dense) resampling.
+The Breakpoint times in densely resampled Partials will comprise a
+contiguous sequence of ALL integer multiples of the sampling interval
+(very large, but useful for some third-party tools, like the CNMAT
+sinusoids~ external for Max/MSP). Default is sparse (not dense)
+resampling.
 
 If phase correct resampling is selected, Partial frequencies are
 altered slightly to match, as nearly as possible, the Breakpoint
@@ -878,6 +878,11 @@ default is phase correct resampling.")  wrap_resample;
 
 %rename( resample ) wrap_resample;
 
+%feature("docstring",
+"Quantize the breakpoint times in the specified Partials.
+In previous versions of Loris, this was called sparse resampling.
+DOCUMENT ME.") quantizeBreakpointTimes;
+
 
 %{
 #include "Resampler.h"
@@ -886,14 +891,11 @@ default is phase correct resampling.")  wrap_resample;
 
 %inline %{
 	void wrap_resample( PartialList * partials, double interval, 
-				   		bool denseResampling = false,
 				     	bool phaseCorrect = true )
-	{
-			
+	{		
 		try
 		{		
 			Resampler r( interval );
-			r.setDenseResampling( denseResampling );
 			r.setPhaseCorrect( phaseCorrect );
 			r.resample( partials->begin(), partials->end() );
 		}
@@ -901,6 +903,44 @@ default is phase correct resampling.")  wrap_resample;
 		{
 			throw_exception( ex.what() );
 		}
+	}
+	
+	void wrap_resample( PartialList * partials, LinearEnvelope * timing )
+	{			
+		try
+		{		
+			Resampler r( *timing );
+			// r.setPhaseCorrect( phaseCorrect );
+			r.resample( partials->begin(), partials->end() );
+		}
+		catch ( std::exception & ex )
+		{
+			throw_exception( ex.what() );
+		}
+	}
+	
+
+	void wrap_resample( PartialList * partials, LinearEnvelope * timing, 
+	                    double interval ) 
+	{			
+		try
+		{		
+			Resampler r( *timing, interval );
+			// r.setPhaseCorrect( phaseCorrect );
+			r.resample( partials->begin(), partials->end() );
+		}
+		catch ( std::exception & ex )
+		{
+			throw_exception( ex.what() );
+		}
+	}
+	
+	
+	void quantizeBreakpointTimes( PartialList * partials, double interval )
+	{
+	    Resampler r( interval );
+        r.setPhaseCorrect( true );
+	    r.quantize( partials->begin(), partials->end() );
 	}
 %}
 
@@ -1254,6 +1294,25 @@ corrected from its non-Null successor, if it has one, otherwise
 it is unmodified.") fixPhaseForward;
 
 void fixPhaseForward( PartialList * partials, double tbeg, double tend );
+
+/*
+%feature("docstring",
+"Adjust frequencies of the Breakpoints in the 
+ specified Partial such that the rendered Partial 
+achieves (or matches as nearly as possible, within 
+the constraint of the maximum allowable frequency
+alteration) the analyzed phases. 
+
+partial The Partial whose frequencies,
+and possibly phases (if the frequencies
+cannot be sufficiently altered to match
+the phases), will be recomputed.
+
+maxFixPct The maximum allowable frequency 
+alteration, default is 0.2%.") fixFrequency;
+
+void fixFrequency( Partial & partial, double maxFixPct = 0.2 );
+*/
 
 %feature("docstring",
 "Return a string describing the Loris version number.");
