@@ -857,18 +857,17 @@ void removeLabeled( PartialList * partials, long label );
 %feature("docstring",
 "Resample all Partials in a PartialList using the specified
 sampling interval, so that the Breakpoints in the Partial
-envelopes will all lie on a common temporal grid. The Breakpoint
-times in resampled Partials will comprise a contiguous sequence of
-integer multiples of the sampling interval, beginning with the
-multiple nearest to the Partial's start time and ending with the
-multiple nearest to the Partial's end time. Resampling is
-performed in-place.
+envelopes will all lie on a common temporal grid. 
 
 The Breakpoint times in densely resampled Partials will comprise a
 contiguous sequence of ALL integer multiples of the sampling interval
 (very large, but useful for some third-party tools, like the CNMAT
-sinusoids~ external for Max/MSP). Default is sparse (not dense)
-resampling.
+sinusoids~ external for Max/MSP). 
+
+The Breakpoint times in sparsely resampled Partials are simply quantized
+to integer multiples of the of the sampling interval.
+
+Default is sparse (not dense) resampling.
 
 If phase correct resampling is selected, Partial frequencies are
 altered slightly to match, as nearly as possible, the Breakpoint
@@ -878,11 +877,12 @@ default is phase correct resampling.")  wrap_resample;
 
 %rename( resample ) wrap_resample;
 
+/*
 %feature("docstring",
 "Quantize the breakpoint times in the specified Partials.
 In previous versions of Loris, this was called sparse resampling.
 DOCUMENT ME.") quantizeBreakpointTimes;
-
+*/
 
 %{
 #include "Resampler.h"
@@ -890,6 +890,32 @@ DOCUMENT ME.") quantizeBreakpointTimes;
 
 
 %inline %{
+
+    void wrap_resample( PartialList * partials, double interval, 
+				   		bool denseResampling = false,
+				     	bool phaseCorrect = true )
+	{
+			
+		try
+		{		
+			Resampler r( interval );
+			r.setPhaseCorrect( phaseCorrect );
+			if ( denseResampling )
+			{
+                r.resample( partials->begin(), partials->end() );
+            }
+            else
+            {
+                r.quantize( partials->begin(), partials->end() );
+            }
+		}
+		catch ( std::exception & ex )
+		{
+			throw_exception( ex.what() );
+		}
+	}
+	
+	/*
 	void wrap_resample( PartialList * partials, double interval, 
 				     	bool phaseCorrect = true )
 	{		
@@ -942,6 +968,7 @@ DOCUMENT ME.") quantizeBreakpointTimes;
         r.setPhaseCorrect( true );
 	    r.quantize( partials->begin(), partials->end() );
 	}
+	*/
 %}
 
 %{

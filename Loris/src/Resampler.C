@@ -80,6 +80,11 @@ static void insert_resampled_at( Partial & newp, const Partial & p,
     NEXT STEP
     Revisit the default values for parameters, and define necessary
     constructors and members related to the timing envelope.
+    
+    
+    version 1.6 - the timing envelope implementation is not yet ready 
+    for prime time, delay until after this release, which focusses on 
+    the phase-correct synthesis bugs
 */
 
 
@@ -112,6 +117,8 @@ Resampler::Resampler( double sampleInterval ) :
       Throw( InvalidArgument, "Resampler sample interval must be positive." );
     }
 }
+
+#if 0
 
 // ---------------------------------------------------------------------------
 //	constructor - timing envelope
@@ -185,6 +192,7 @@ Resampler::Resampler( const LinearEnvelope & timingEnv, double sampleInterval ) 
     */
 }
 
+#endif
 
 // ---------------------------------------------------------------------------
 //	setPhaseCorrect
@@ -270,18 +278,30 @@ resample_dense( Partial & p, const LinearEnvelope & env, double interval )
 	newp.setLabel( p.label() );
 
 	//  find time of first and last breakpoint for the resampled envelope:
-	double firstTime = interval * int( 0.5 + p.startTime() / interval );
-	double stopTime  = p.endTime() + ( 0.5 * interval );
+	double firstSampleTime = interval * int( 0.5 + p.startTime() / interval );
+	double lastSampleTime  = p.endTime() + ( 0.5 * interval );
 	
+	//  find the extent of the timing envelope, if specified, otherwise
+	//  the insert time range is the same as the sample time range:
+	double firstInsertTime = firstSampleTime;
+	double lastInsertTime = lastSampleTime;
+	if ( 0 != env.size() )
+	{
+	    firstInsertTime = interval * int( 0.5 + env.begin()->first / interval );
+	    lastInsertTime = (--env.end())->first + ( 0.5 * interval );
+	}
 	
 	//  resample:
-	for (  double tins = firstTime; tins < stopTime; tins += interval ) 
+	for (  double tins = firstInsertTime; tins <= lastInsertTime; tins += interval ) 
 	{
+	    //  sample time is obtained from the timing envelope, if specified, 
+	    //  otherwise same as the insert time:
 	    double tsamp = tins;
 	    if ( 0 != env.size() )
 	    {
 	        tsamp = env.valueAt( tins );
 	    }
+	    
         insert_resampled_at( newp, p, tsamp, tins );        
 	}
 	

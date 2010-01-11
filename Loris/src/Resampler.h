@@ -81,6 +81,7 @@ public:
     //! \throw  InvalidArgument if sampleInterval is not positive.
     explicit Resampler( double sampleInterval );
 
+/*
     //! Initialize a Resampler having the specified timing envelope.
     //! The timing envelope represents a map of Breakpoint times in  
     //! resampled Partials onto parameter sampling instants in the 
@@ -124,7 +125,7 @@ public:
     //!         times or values.
     Resampler( const LinearEnvelope & timingEnv, double sampleInterval );
 
-
+*/
     // --- use compiler-generated copy/assign/destroy ---
     
 //  --- parameters ---
