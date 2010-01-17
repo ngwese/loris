@@ -45,7 +45,7 @@ using namespace Loris;
 using namespace std;
 
 //  define this to see pages and pages of spew
-// #define VERBOSE
+//#define VERBOSE
 #ifdef VERBOSE                                  
     #define TEST(invariant)                                 \
         do {                                                    \

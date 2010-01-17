@@ -56,8 +56,8 @@ namespace Loris {
 //  helper declarations:
 static void resample_dense( Partial & p, const LinearEnvelope & env, double interval );
 static void resample_sparse( Partial & p, const LinearEnvelope & env );
-static void insert_resampled_at( Partial & newp, const Partial & p, 
-                                 double sampleTime, double insertTime );
+static Partial::iterator insert_resampled_at( Partial & newp, const Partial & p, 
+                                              double sampleTime, double insertTime );
 
 /*
     new ideas
@@ -378,7 +378,9 @@ void Resampler::quantize( Partial & p ) const
 			 << " Breakpoints" << endl;
 
     //  for phase-correct quantization, first make the phases correct by
-    //  fixing them from the initial phase, then quantize the Breakpoint
+    //  fixing them from the initial phase (ideally this should have
+    //  no effect but there's no way to be phase-correct after quantization
+    //  unless the phases start correct), then quantize the Breakpoint
     //  times, then afterwards, adjust the frequencies to match
     //  the interpolated phases:
     if ( phaseCorrect_ )
@@ -390,39 +392,64 @@ void Resampler::quantize( Partial & p ) const
 	Partial newp;
 	newp.setLabel( p.label() );
 	
-	//  resample:
-	double curtime = 0;
-	double halfstep = .5 * interval_;
-	Partial::const_iterator iter = p.begin();
-        
+	Partial::const_iterator iter = p.begin();        
 	while( iter != p.end() )
 	{            
+	    const Breakpoint & bp = iter.breakpoint();
 	    double bpt = iter.time();
-	    if ( bpt < curtime - halfstep )
-	    {
-	        //  advance Breakpoint iterator, no new Breakpoint:
-	        ++iter;
-        }    
-	    else if (curtime < bpt - halfstep)
+	    
+	    //  find the nearest multiple of the quantization interval:
+        long qstep = 0.5 + ( bpt / interval_ );
+        
+        long endstep = qstep-1; //  guarantee first insertion
+        if ( newp.numBreakpoints() != 0 )
         {
-            //  advance current time, no new Breakpoint:
-            curtime += interval_;
+            endstep = 0.5 + ( newp.endTime() / interval_ );
         }
-        else
-        {
-            //  insert another Breakpoints and advance the Breakpoint 
+        
+        //  insert a new Breakpoint if it does not duplicate
+        //  a previous insertion, or if it is a Null (needed
+        //  for phase-correction):
+        if ( (endstep != qstep) || (0 == bp.amplitude()) )
+        {        
+	        double qt = interval_ * qstep; 
+            
+            //  insert another Breakpoint and advance the Breakpoint 
             //  iterator and the current time:
-            insert_resampled_at( newp, p, curtime, curtime );                                               
-            ++iter;
-            curtime += interval_;            
+            //
+            //  sample the Partial with a long fade time so that 
+            //  the amplitudes at the ends keep their original values:
+            const double a_long_time = 1.;
+            Breakpoint newbp = p.parametersAt( qt, a_long_time );
+            Partial::iterator new_pos = newp.insert( qt, newbp );
+            
+            //  tricky: if the quantized position (iter) is a null Breakpoint, 
+            //  we had better made the new position a null also, very important
+            //  for making phase resets happen at synthesis time. 
+            //
+            //  Also, if new_pos is earlier than iter, the phase should be rolled 
+            //  back from iter, rather than interpolated. If new_pos is later
+            //  than iter, then its phase will have been correctly interpolated.
+            if ( 0 == bp.amplitude() )
+            {
+                new_pos.breakpoint().setAmplitude( 0 );
+
+                if ( new_pos.time() < bpt )
+                {
+                    double dp = phaseTravel( new_pos.breakpoint(), bp,
+                                             bpt - new_pos.time() );
+                    new_pos.breakpoint().setPhase( bp.phase() - dp );
+                } 
+            }
         }
+        ++iter;
     }
     
     //  for phase-correct quantization, adjust the frequencies to match
     //  the interpolated phases:
     if ( phaseCorrect_ )
     {
-        fixFrequency( newp, 1 );
+        fixFrequency( newp, 5 );
     }
     
     
@@ -436,9 +463,8 @@ void Resampler::quantize( Partial & p ) const
 // ---------------------------------------------------------------------------
 //	insert_resampled_at (helper)
 // ---------------------------------------------------------------------------
-//  Sparse resampling helper for inserting a resampled Breakpoint.
 //
-static void 
+static Partial::iterator 
 insert_resampled_at( Partial & newp, const Partial & p, 
                      double sampleTime, double insertTime )
 {
@@ -456,10 +482,12 @@ insert_resampled_at( Partial & newp, const Partial & p,
     }
    
     
-    newp.insert( insertTime, newbp );
+    Partial::iterator ret_pos = newp.insert( insertTime, newbp );
     
     debugger << "inserted Breakpoint having amplitude " << newbp.amplitude() 
              << " at time " << insertTime << endl;
+             
+    return ret_pos;             
 }
 
 }	//	end of namespace Loris

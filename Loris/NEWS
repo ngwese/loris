@@ -25,7 +25,8 @@ History of visible changes, organized by release number:
 -------------------------------------------------------
 changes since 1.5.4 release:
 
-- Corrected several sources of phase errors in synthesis.
+- Corrected several sources of significant phase errors in 
+synthesis, and in phase reporting from analysis data.
 
 - Improved the Resampler implementation of Breakpoint time
 quantization (previously called "sparse resampling"), no longer

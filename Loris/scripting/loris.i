@@ -961,14 +961,14 @@ DOCUMENT ME.") quantizeBreakpointTimes;
 		}
 	}
 	
-	
+	*/	
 	void quantizeBreakpointTimes( PartialList * partials, double interval )
 	{
 	    Resampler r( interval );
         r.setPhaseCorrect( true );
 	    r.quantize( partials->begin(), partials->end() );
 	}
-	*/
+
 %}
 
 %{

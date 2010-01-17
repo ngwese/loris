@@ -47,8 +47,11 @@
 #include "Distiller.h"
 #include "FrequencyReference.h"
 #include "Partial.h"
+#include "PartialUtils.h"
 #include "PartialList.h"
 #include "Synthesizer.h"
+
+#include "Exception.h"
 
 using namespace std;
 using namespace Loris;
@@ -57,6 +60,10 @@ const double pi = 3.14159265358979324;
 
 //  tacky global error variable
 int ERR = 0;
+	
+// #define VERBOSE
+
+// #define FAIL_ON_ERROR
 	
 // --- helpers ---
 
@@ -96,6 +103,10 @@ static void float_rel_equal( double x, double y, double pct )
 	         << pct*100 << "%" << endl;
 	    ERR = 1;
 	}
+	
+	#ifdef FAIL_ON_ERROR
+	Assert( 0 == ERR );
+	#endif
 }
 
 static void float_abs_equal( double x, double y, double eps )
@@ -110,6 +121,11 @@ static void float_abs_equal( double x, double y, double eps )
 	         << eps << endl;
 	    ERR = 1;
 	}
+
+	#ifdef FAIL_ON_ERROR
+	Assert( 0 == ERR );
+	#endif
+	
 }
 
 // ----------- one_partial -----------
@@ -128,14 +144,14 @@ static void one_partial( void )
 	p1.insert( .9, Breakpoint( 500, .3, 0, 0 ) );
 	p1.insert( 1.1, Breakpoint( 520, .3, 0, 0 ) );
 	
-	PartialList fake;
-	fake.push_back( p1 );
+	PartialUtils::fixPhaseAfter( p1, 0 );
+	
 	
 	// synthesize the fake partial
 	vector< double > v;
 	Synthesizer synth( 44100, v );
-	synth.synthesize( fake.begin(), fake.end() );
-	
+	synth.synthesize( p1 );
+
 	// analyze the synthesized partial
 	Analyzer anal( 300, 400 );
 	anal.setAmpFloor( -50 );
@@ -146,6 +162,8 @@ static void one_partial( void )
 	
 	//  need to distill, because the fake partial fades out
 	//  and back in again
+	PartialList fake;
+	fake.push_back( p1 );
 	FrequencyReference ref( fake.begin(), fake.end(), 300, 600, 100 );
 	Channelizer chan( ref, 1 );
 	chan.channelize( partials.begin(), partials.end() );
@@ -203,7 +221,7 @@ static void one_partial( void )
 	{
 	    if ( p1.amplitudeAt(t) > 0 )
 	    {
-    		cout << t << "\t" << mpi(p1.phaseAt(t))/pi << "  " << mpi(a1.phaseAt(t))/pi << endl;
+    		cout << t << "\t" << mpi(p1.phaseAt(t))/pi << " " << mpi(a1.phaseAt(t))/pi << endl;
     		float_abs_equal( mpi(p1.phaseAt(t))/pi, mpi(a1.phaseAt(t))/pi, 0.01*pi );
         }
 		t = t + dt;

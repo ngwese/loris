@@ -90,6 +90,18 @@ static bool float_equal( double x, double y )
 
 #define SAME_PARAM_VALUES(x,y) TEST( float_equal((x),(y)) )
 
+inline double m2pi( double x )
+{   
+    const double EPS = .01;
+    x += EPS;
+	x = fmod( x, 2*Pi );
+	if ( x < 0 )
+		x = x + (2*Pi);
+	return x - EPS;
+}
+
+#define SAME_PHASE_VALUES(x,y) SAME_PARAM_VALUES(m2pi(x),m2pi(y))
+
 // ----------- test_parametersAt -----------
 //
 static void test_parametersAt( void )
@@ -115,33 +127,33 @@ static void test_parametersAt( void )
 	SAME_PARAM_VALUES( p1.frequencyAt(t), P1_FREQS[0] );
 	SAME_PARAM_VALUES( p1.amplitudeAt(t), P1_AMPS[0] );
 	SAME_PARAM_VALUES( p1.bandwidthAt(t), P1_BWS[0] );
-	SAME_PARAM_VALUES( p1.phaseAt(t), P1_PHS[0] );
+	SAME_PHASE_VALUES( p1.phaseAt(t), P1_PHS[0] );
 	SAME_PARAM_VALUES( p1.parametersAt(t).frequency(), P1_FREQS[0] );
 	SAME_PARAM_VALUES( p1.parametersAt(t).amplitude(), P1_AMPS[0] );
 	SAME_PARAM_VALUES( p1.parametersAt(t).bandwidth(), P1_BWS[0] );
-	SAME_PARAM_VALUES( p1.parametersAt(t).phase(), P1_PHS[0] );
+	SAME_PHASE_VALUES( p1.parametersAt(t).phase(), P1_PHS[0] );
 
 	// check parameters at t = 0.8
 	t = 0.8;
 	SAME_PARAM_VALUES( p1.frequencyAt(t), P1_FREQS[1] );
 	SAME_PARAM_VALUES( p1.amplitudeAt(t), P1_AMPS[1] );
 	SAME_PARAM_VALUES( p1.bandwidthAt(t), P1_BWS[1] );
-	SAME_PARAM_VALUES( p1.phaseAt(t), P1_PHS[1] );
+	SAME_PHASE_VALUES( p1.phaseAt(t), P1_PHS[1] );
 	SAME_PARAM_VALUES( p1.parametersAt(t).frequency(), P1_FREQS[1] );
 	SAME_PARAM_VALUES( p1.parametersAt(t).amplitude(), P1_AMPS[1] );
 	SAME_PARAM_VALUES( p1.parametersAt(t).bandwidth(), P1_BWS[1] );
-	SAME_PARAM_VALUES( p1.parametersAt(t).phase(), P1_PHS[1] );
+	SAME_PHASE_VALUES( p1.parametersAt(t).phase(), P1_PHS[1] );
 
 	// check parameters at t = 1.0
 	t = 1.0;
 	SAME_PARAM_VALUES( p1.frequencyAt(t), P1_FREQS[2] );
 	SAME_PARAM_VALUES( p1.amplitudeAt(t), P1_AMPS[2] );
 	SAME_PARAM_VALUES( p1.bandwidthAt(t), P1_BWS[2] );
-	SAME_PARAM_VALUES( p1.phaseAt(t), P1_PHS[2] );
+	SAME_PHASE_VALUES( p1.phaseAt(t), P1_PHS[2] );
 	SAME_PARAM_VALUES( p1.parametersAt(t).frequency(), P1_FREQS[2] );
 	SAME_PARAM_VALUES( p1.parametersAt(t).amplitude(), P1_AMPS[2] );
 	SAME_PARAM_VALUES( p1.parametersAt(t).bandwidth(), P1_BWS[2] );
-	SAME_PARAM_VALUES( p1.parametersAt(t).phase(), P1_PHS[2] );
+	SAME_PHASE_VALUES( p1.parametersAt(t).phase(), P1_PHS[2] );
 
 	// check parameters at t = 0.1
 	t = 0.1;
@@ -149,25 +161,24 @@ static void test_parametersAt( void )
 	SAME_PARAM_VALUES( p1.amplitudeAt(t), 0 );
 	SAME_PARAM_VALUES( p1.bandwidthAt(t), P1_BWS[0] );
 	// no phase change, exactly ten periods
-	SAME_PARAM_VALUES( p1.phaseAt(t), P1_PHS[0] );
+	SAME_PHASE_VALUES( p1.phaseAt(t), P1_PHS[0] );
 	SAME_PARAM_VALUES( p1.parametersAt(t).frequency(), P1_FREQS[0] );
 	SAME_PARAM_VALUES( p1.parametersAt(t).amplitude(), 0 );
 	SAME_PARAM_VALUES( p1.parametersAt(t).bandwidth(), P1_BWS[0] );
-	SAME_PARAM_VALUES( p1.parametersAt(t).phase(), P1_PHS[0] );
+	SAME_PHASE_VALUES( p1.parametersAt(t).phase(), P1_PHS[0] );
 	
 	// check parameters at t = 0.9
 	t = 0.9;
 	SAME_PARAM_VALUES( p1.frequencyAt(t), .5 * (P1_FREQS[1] + P1_FREQS[2]) );
 	SAME_PARAM_VALUES( p1.amplitudeAt(t), .5 * (P1_AMPS[1] + P1_AMPS[2]) );
 	SAME_PARAM_VALUES( p1.bandwidthAt(t), .5 * (P1_BWS[1] + P1_BWS[2]) );
-	// no phase change, exactly eleven periods (off by Pi? Why?)
 	// .1 s at avg 105 Hz equals 10.5 periods, half a period (Pi)
 	// different from phase at 0.8
-	SAME_PARAM_VALUES( p1.phaseAt(t), P1_PHS[1] - Pi );
+	SAME_PHASE_VALUES( p1.phaseAt(t), P1_PHS[1] + Pi );
 	SAME_PARAM_VALUES( p1.parametersAt(t).frequency(), .5 * (P1_FREQS[1] + P1_FREQS[2]) );
 	SAME_PARAM_VALUES( p1.parametersAt(t).amplitude(), .5 * (P1_AMPS[1] + P1_AMPS[2]) );
 	SAME_PARAM_VALUES( p1.parametersAt(t).bandwidth(), .5 * (P1_BWS[1] + P1_BWS[2]) );
-	SAME_PARAM_VALUES( p1.parametersAt(t).phase(), P1_PHS[1] - Pi );
+	SAME_PHASE_VALUES( p1.parametersAt(t).phase(), P1_PHS[1] + Pi );
 
 	// check parameters at t = 1.1
 	t = 1.1;
@@ -175,11 +186,11 @@ static void test_parametersAt( void )
 	SAME_PARAM_VALUES( p1.amplitudeAt(t), 0 );
 	SAME_PARAM_VALUES( p1.bandwidthAt(t), P1_BWS[2] );
 	// no phase change, exactly eleven periods
-	SAME_PARAM_VALUES( p1.phaseAt(t), P1_PHS[2] );
+	SAME_PHASE_VALUES( p1.phaseAt(t), P1_PHS[2] );
 	SAME_PARAM_VALUES( p1.parametersAt(t).frequency(), P1_FREQS[2] );
 	SAME_PARAM_VALUES( p1.parametersAt(t).amplitude(), 0 );
 	SAME_PARAM_VALUES( p1.parametersAt(t).bandwidth(), P1_BWS[2] );
-	SAME_PARAM_VALUES( p1.parametersAt(t).phase(), P1_PHS[2] );
+	SAME_PHASE_VALUES( p1.parametersAt(t).phase(), P1_PHS[2] );
 }
 
 // ----------- test_absorb -----------

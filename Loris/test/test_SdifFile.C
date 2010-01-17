@@ -157,9 +157,13 @@ static void test_markedPartials( void )
 	
 	//	create a SdifFile and add Markers to it:
 	SdifFile fout( l.begin(), l.end() );
+	#ifdef VERBOSE
 	std::cout << "adding Marker \"Marker 1\" at time .2\n";
+	#endif
 	fout.markers().push_back( Marker( .2, "Marker 1" ) );
+	#ifdef VERBOSE
 	std::cout << "adding Marker \"Marker2\" at time .1\n";
+	#endif
 	fout.markers().push_back( Marker( .1, "Marker2" ) );
 	
 	char * name = "tmp.sdif";
@@ -172,10 +176,12 @@ static void test_markedPartials( void )
 	
 	int k = 0;
 	PartialList::iterator it;
-	std::cout << "start times:\n";
+	std::cout << "checking start times:\n";
 	for ( it = f.partials().begin(); it != f.partials().end(); ++it )
 	{
+		#ifdef VERBOSE
 		std::cout << it->startTime() << "\n";
+		#endif
 		SAME_PARAM_VALUES( it->startTime(), times[0] + (k*0.1) );
 		++k;
 	}
@@ -186,7 +192,9 @@ static void test_markedPartials( void )
 		  ++it )
 	{
 		Marker & m = *it;
+		#ifdef VERBOSE
 		std::cout << m.name() << " at time " << m.time() << "\n";
+		#endif
 	}
 }
 

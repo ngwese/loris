@@ -56,17 +56,6 @@
 	const double Pi = 3.14159265358979324;
 #endif
 
-//  Define for special Loris treatment of Null Breakpoints, 
-//  to treat all Breakpoints the same, do NOT define this.
-//  (See fixPhaseForward and fixPhaseBackward.)
-#if !defined(NULLS_ARE_SPECIAL)
-    #define NULLS_ARE_SPECIAL 1
-#endif
-#if defined(NULLS_ARE_SPECIAL) && NULLS_ARE_SPECIAL
-    static const bool NoNulls = false;
-#else
-    static const bool NoNulls = true;
-#endif
 
 //	begin namespace
 namespace Loris {
@@ -114,15 +103,6 @@ static double phaseTravel( Partial::const_iterator bp0, Partial::const_iterator 
 {
 	return phaseTravel( bp0.breakpoint(), bp1.breakpoint(), 
 	                    bp1.time() - bp0.time() );
-	/*
-	double f0 = bp0->frequency();
-	double t0 = bp0.time();
-	double f1 = bp1->frequency();
-	double t1 = bp1.time();
-	double favg = .5 * ( f0 + f1 );
-	double dt = t1 - t0;
-	return 2 * Pi * favg * dt;
-	*/
 }
 
 // -- phase correction -- 
@@ -156,7 +136,7 @@ static double phaseTravel( Partial::const_iterator bp0, Partial::const_iterator 
 void fixPhaseBackward( Partial::iterator stopHere, Partial::iterator pos )
 {
     while ( pos != stopHere && 
-            ( NoNulls || BreakpointUtils::isNonNull( pos.breakpoint() ) ) )
+            BreakpointUtils::isNonNull( pos.breakpoint() ) )
     {
         // pos is not the first Breakpoint in the Partial, 
         // and pos is not a Null Breakpoint.
@@ -186,7 +166,7 @@ void fixPhaseBackward( Partial::iterator stopHere, Partial::iterator pos )
     }
 }
 
-// ---------------------------------------------------------------------------
+// ----------------------------------------------------------------------- ----
 //	fixPhaseForward
 //
 //! Recompute phases of all Breakpoints on the closed range [pos, stopHere]
@@ -215,12 +195,16 @@ void fixPhaseForward( Partial::iterator pos, Partial::iterator stopHere )
     while ( pos != stopHere )
     {
         Partial::iterator posPrev = pos++;
-        if ( NoNulls || BreakpointUtils::isNonNull( pos.breakpoint() ) )
+        
+        //  update phase based on the phase travel between 
+        //  posPrev and pos UNLESS pos is Null:
+        if ( BreakpointUtils::isNonNull( pos.breakpoint() ) )
         {
-            // pos is the position of a non-Null Breakpoint
+            // pos is the position of a non-Null Breakpoint, 
+            // posPrev is its predecessor:            
             double travel = phaseTravel( posPrev, pos );
             
-            if ( NoNulls || BreakpointUtils::isNonNull( posPrev.breakpoint() ) )
+            if ( BreakpointUtils::isNonNull( posPrev.breakpoint() ) )
             {                        
                 // if its predecessor of pos is non-Null, then fix
                 // the phase of the Breakpoint at pos.
@@ -384,9 +368,10 @@ void matchPhaseFwd( Breakpoint & bp0, Breakpoint & bp1,
     
     if ( ! BreakpointUtils::isNonNull( bp1 ) )
     {
-        // if bp1 is null, just compute a new phase,
-        // no need to match it.
-        bp1.setPhase( wrapPi( bp0.phase() + travel ) );
+        // if bp1 is null, DON'T compute a new phase,
+        // because Nulls are phase reset points.
+
+        // bp1.setPhase( wrapPi( bp0.phase() + travel ) );
     }
     else if ( ! BreakpointUtils::isNonNull( bp0 ) )
     {
@@ -424,25 +409,15 @@ void matchPhaseFwd( Breakpoint & bp0, Breakpoint & bp1,
         
         //	If the target is not a null breakpoint, may need to 
         //	clamp the amount of frequency modification.
-        //
-        //  Actually, should probably always clamp the amount
-        //  of modulation, should never have arbitrarily large
-        //  frequency adjustments. 
-        //
-        //  Really, should never call this function if bp1
-        //  is a null Breakpoint, because we don't care about 
-        //  those phases in Loris. 
-        if ( true ) //  bp1.amplitude() != 0. )
-        {	
-            if ( ftgt > bp1.frequency() * ( 1 + (maxFixPct*.01) ) )
-            {
-                ftgt = bp1.frequency() * ( 1 + (maxFixPct*.01) );
-            }
-            else if ( ftgt < bp1.frequency() * ( 1 - (maxFixPct*.01) ) )
-            {
-                ftgt = bp1.frequency() * ( 1 - (maxFixPct*.01) );
-            }
+        if ( ftgt > bp1.frequency() * ( 1 + (maxFixPct*.01) ) )
+        {
+            ftgt = bp1.frequency() * ( 1 + (maxFixPct*.01) );
         }
+        else if ( ftgt < bp1.frequency() * ( 1 - (maxFixPct*.01) ) )
+        {
+            ftgt = bp1.frequency() * ( 1 - (maxFixPct*.01) );
+        }
+
         bp1.setFrequency( ftgt );
         
         //	Recompute the phase according to the new frequency.
@@ -482,8 +457,11 @@ void fixFrequency( Partial & partial, double maxFixPct )
 		Partial::iterator prev = next++;
 		while ( next != partial.end() )		
 		{
-			matchPhaseFwd( prev.breakpoint(), next.breakpoint(), 
-						   next.time() - prev.time(), 0.5, maxFixPct );
+		    if ( BreakpointUtils::isNonNull( next.breakpoint() ) )
+		    {
+			    matchPhaseFwd( prev.breakpoint(), next.breakpoint(), 
+				    		   next.time() - prev.time(), 0.5, maxFixPct );
+		    }
 			prev = next++;
 		}
     }

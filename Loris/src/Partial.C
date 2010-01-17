@@ -662,37 +662,8 @@ Partial::findNearest( double time )
 double
 Partial::frequencyAt( double time ) const
 {
-	if ( numBreakpoints() == 0 )
-	{
-		Throw( InvalidPartial, "Tried to interpolate a Partial with no Breakpoints." );
-	}
-	
-	//	lower_bound returns a reference to the lowest
-	//	position that would be higher than an element
-	//	having key equal to time:
-	Partial::const_iterator it = findAfter( time );
-		
-	if ( it == begin() ) 
-	{
-	//	time is before the onset of the Partial:
-		return it.breakpoint().frequency();
-	}
-	else if ( it == end() ) 
-	{
-	//	time is past the end of the Partial:
-		return (--it).breakpoint().frequency();
-	}
-	else 
-	{
-	//	interpolate between it and its predeccessor
-	//	(we checked already that it is not begin):
-		const Breakpoint & hi = it.breakpoint();
-		double hitime = it.time();
-		const Breakpoint & lo = (--it).breakpoint();
-		double lotime = it.time();
-		double alpha = (time - lotime) / (hitime - lotime);
-		return (alpha * hi.frequency()) + ((1. - alpha) * lo.frequency());
-	}
+    Breakpoint bp = parametersAt( time );
+    return bp.frequency();
 }
 
 // ---------------------------------------------------------------------------
@@ -719,50 +690,46 @@ const double Partial::ShortestSafeFadeTime = 1.0E-9;
 double
 Partial::amplitudeAt( double time, double fadeTime ) const
 {
-	if ( numBreakpoints() == 0 )
-		Throw( InvalidPartial, "Tried to interpolate a Partial with no Breakpoints." );
-
-	//	findAfter returns the position of the earliest
-	//	Breakpoint later than time, or the end
-	//	position if no such Breakpoint exists:
-	Partial::const_iterator it = findAfter( time );
-		
-	if ( it == begin() ) 
-	{
-		double alpha =  (time < it.time()) ? 0. : 1.;
-		if ( fadeTime > 0 )
-		{
-			//	fade in ampltude if time is before the onset of the Partial:
-			alpha = std::max(0., 1. - ((it.time() - time) / fadeTime) );
-		}
-		return alpha * it.breakpoint().amplitude();
-	}
-	else if ( it == end() ) 
-	{
-		//	( first decrement iterator to get the tail Breakpoint)
-		--it;
-		
-		double alpha =  (time > it.time()) ? 0. : 1.;
-		if ( fadeTime > 0 )
-		{
-			//	fade out ampltude if time is past the end of the Partial:
-			alpha = std::max(0., 1. - ((time - it.time()) / fadeTime) );
-		}
-		return alpha * it.breakpoint().amplitude();
-	}
-	else 
-	{
-	//	interpolate between it and its predeccessor
-	//	(we checked already that it is not begin):
-		const Breakpoint & hi = it.breakpoint();
-		double hitime = it.time();
-		const Breakpoint & lo = (--it).breakpoint();
-		double lotime = it.time();
-		double alpha = (time - lotime) / (hitime - lotime);
-		return (alpha * hi.amplitude()) + ((1. - alpha) * lo.amplitude());
-	}
+    Breakpoint bp = parametersAt( time, fadeTime );
+    return bp.amplitude();
 }
 
+
+// ---------------------------------------------------------------------------
+//	phaseAt
+// ---------------------------------------------------------------------------
+//!	Return the interpolated phase (in radians) of this Partial at
+//!	the specified time. At times beyond the ends of the Partial,
+//!	return the extrapolated from the nearest envelope endpoint
+//!	(assuming constant frequency, as reported by frequencyAt()).
+//!	
+//! \param time is the time in seconds at which to evaluate the phase
+//!
+//! \throw Throw an InvalidPartial exception if this Partial has no
+//!	Breakpoints.
+//	
+double
+Partial::phaseAt( double time ) const
+{
+    Breakpoint bp = parametersAt( time );
+    return bp.phase();
+}
+
+// ---------------------------------------------------------------------------
+//	bandwidthAt
+// ---------------------------------------------------------------------------
+//!	Return the interpolated bandwidth (noisiness) coefficient of
+//!	this Partial at the specified time. At times beyond the ends of
+//!	the Partial, return the bandwidth coefficient at the nearest
+//!	envelope endpoint. Throw an InvalidPartial exception if this
+//!	Partial has no Breakpoints.
+//	
+double
+Partial::bandwidthAt( double time ) const
+{
+    Breakpoint bp = parametersAt( time );
+    return bp.bandwidth();
+}
 
 // ---------------------------------------------------------------------------
 //  wrapPi
@@ -778,123 +745,14 @@ static inline double wrapPi( double x )
 }
 
 // ---------------------------------------------------------------------------
-//	phaseAt
-// ---------------------------------------------------------------------------
-//!	Return the interpolated phase (in radians) of this Partial at
-//!	the specified time. At times beyond the ends of the Partial,
-//!	return the extrapolated from the nearest envelope endpoint
-//!	(assuming constant frequency, as reported by frequencyAt()).
-//!	Throw an InvalidPartial exception if this Partial has no
-//!	Breakpoints.
-//	
-double
-Partial::phaseAt( double time ) const
-{
-	if ( numBreakpoints() == 0 )
-	{
-		Throw( InvalidPartial, "Tried to interpolate a Partial with no Breakpoints." );
-	}
-	
-	//	findAfter returns the position of the earliest
-	//	Breakpoint later than time, or the end
-	//	position if no such Breakpoint exists:
-	Partial::const_iterator it = findAfter( time );
-		
-	//	compute phase:
-	if ( it == begin() ) 
-	{
-	    //	time is before the onset of the Partial:
-		double dp = 2. * Pi * (it.time() - time) * it.breakpoint().frequency();
-		return wrapPi( it.breakpoint().phase() - dp );
-	}
-	else if (it == end() ) 
-	{
-        //	time is past the end of the Partial:
-        //	( first decrement iterator to get the tail Breakpoint)
-		--it;
-		
-		double dp = 2. * Pi * (time - it.time()) * it.breakpoint().frequency();
-		return wrapPi( it.breakpoint().phase() + dp );
-	}
-	else 
-	{
-        //	interpolate between it and its predeccessor
-        //	(we checked already that it is not begin):
-		const Breakpoint & hi = it.breakpoint();
-		double hitime = it.time();
-		const Breakpoint & lo = (--it).breakpoint();
-		double lotime = it.time();
-		double alpha = (time - lotime) / (hitime - lotime);
-		double finterp = ( alpha * hi.frequency() ) + 
-						 ( ( 1. - alpha ) * lo.frequency() );
-
-        //  frequency is interpolated to the specified time, 
-        //  interpolated phase is computed from the frequency 
-        //  and offset from the phase of the preceding Breakpoint:
-        double favg = 0.5 * ( lo.frequency() + finterp );
-        double dp = 2. * Pi * (time - lotime) * favg;
-        
-        //  wrap phase, because other code depends on it:
-        return wrapPi( lo.phase() + dp );
-	}
-}
-
-// ---------------------------------------------------------------------------
-//	bandwidthAt
-// ---------------------------------------------------------------------------
-//!	Return the interpolated bandwidth (noisiness) coefficient of
-//!	this Partial at the specified time. At times beyond the ends of
-//!	the Partial, return the bandwidth coefficient at the nearest
-//!	envelope endpoint. Throw an InvalidPartial exception if this
-//!	Partial has no Breakpoints.
-//	
-double
-Partial::bandwidthAt( double time ) const
-{
-	if ( numBreakpoints() == 0 )
-	{
-		Throw( InvalidPartial, "Tried to interpolate a Partial with no Breakpoints." );
-	}
-	
-	//	findAfter returns the position of the earliest
-	//	Breakpoint later than time, or the end
-	//	position if no such Breakpoint exists:
-	Partial::const_iterator it = findAfter( time );
-		
-	if ( it == begin() ) 
-	{
-	//	time is before the onset of the Partial:
-		return it.breakpoint().bandwidth();
-	}
-	else if (it == end() ) 
-	{
-	//	time is past the end of the Partial:
-		return (--it).breakpoint().bandwidth();
-	}
-	else 
-	{
-	//	interpolate between it and its predeccessor
-	//	(we checked already that it is not begin):
-		const Breakpoint & hi = it.breakpoint();
-		double hitime = it.time();
-		const Breakpoint & lo = (--it).breakpoint();
-		double lotime = it.time();
-		double alpha = (time - lotime) / (hitime - lotime);
-		return (alpha * hi.bandwidth()) + ((1. - alpha) * lo.bandwidth());
-	}
-}
-
-// ---------------------------------------------------------------------------
 //	parametersAt
 // ---------------------------------------------------------------------------
 //!	Return the interpolated parameters of this Partial at
-//!	the specified time, same as building a Breakpoint from
-//!	the results of frequencyAt, ampitudeAt, bandwidthAt, and
-//!	phaseAt, but performs only one Breakpoint envelope search.
-//!	Throw an InvalidPartial exception if this Partial has no
-//!	Breakpoints. If non-zero fadeTime is specified, then the
+//!	the specified time. If non-zero fadeTime is specified, then the
 //!	amplitude at the ends of the Partial is coomputed using a 
 //!	linear fade. The default fadeTime is ShortestSafeFadeTime.
+//!	Throw an InvalidPartial exception if this Partial has no
+//!	Breakpoints. 
 //
 Breakpoint
 Partial::parametersAt( double time, double fadeTime ) const 
@@ -904,89 +762,99 @@ Partial::parametersAt( double time, double fadeTime ) const
 		Throw( InvalidPartial, "Tried to interpolate a Partial with no Breakpoints." );
 	}
 	
-	//	findAfter returns the position of the earliest
-	//	Breakpoint later than time, or the end
-	//	position if no such Breakpoint exists:
-	Partial::const_iterator it = findAfter( time );
-		
-	if ( it == begin() ) 
+	double freq, amp, bw, ph;			
+	if ( startTime() >= time ) 
 	{
 		//	time is before the onset of the Partial:
 		//	frequency is starting frequency, 
 		//	amplitude is 0 (or fading), bandwidth is starting 
 		//	bandwidth, and phase is rolled back.
-		double alpha =  (time < it.time()) ? 0. : 1.;
-		if ( fadeTime > 0 )
+		
+		const Breakpoint & bp = first();
+		double tstart = startTime();
+		
+		//  frequency:
+		freq = bp.frequency();
+		
+		//  amplitude:
+		amp = 0;
+		if ( (fadeTime > 0) && ((tstart - time) < fadeTime) )
 		{
 			//	fade in ampltude if time is before the onset of the Partial:
-			alpha = std::max(0., 1. - ((it.time() - time) / fadeTime) );
+			double alpha = 1. - ((tstart - time) / fadeTime);
+			amp = alpha * bp.amplitude();
 		}
-		double amp = alpha * it.breakpoint().amplitude();
-
-		double dp = 2. * Pi * (it.time() - time) * it.breakpoint().frequency();
-		double ph = wrapPi( it.breakpoint().phase() - dp );
 		
-		return Breakpoint( it.breakpoint().frequency(), amp, 
-						   it.breakpoint().bandwidth(), ph );
+        //  bandwidth:
+        bw = bp.bandwidth();
+        
+		//  phase:
+        double dp = 2. * Pi * (startTime() - time) * bp.frequency();
+		ph = wrapPi( bp.phase() - dp );
+
 	}
-	else if (it == end() ) 
+	else if ( endTime() <= time ) 
 	{
 		//	time is past the end of the Partial:
 		//	frequency is ending frequency, 
 		//	amplitude is 0 (or fading), bandwidth is ending 
 		//	bandwidth, and phase is rolled forward.
-		--it; 
+		const Breakpoint & bp = last();	
+        double tend = endTime();
+
+		//  frequency:
+		freq = bp.frequency();
 		
-		double alpha =  (time > it.time()) ? 0. : 1.;
-		if ( fadeTime > 0 )
+		//  amplitude:		
+		amp = 0;
+		if ( (fadeTime > 0) && ((time - tend) < fadeTime) )
 		{
 			//	fade out ampltude if time is past the end of the Partial:
-			alpha = std::max(0., 1. - ((time - it.time()) / fadeTime) );
+			double alpha = 1. - ((time - tend) / fadeTime);
+			amp = alpha * bp.amplitude();
 		}
-		double amp = alpha * it.breakpoint().amplitude();
 
-		double dp = 2. * Pi * (time - it.time()) * it.breakpoint().frequency();
-		double ph = wrapPi( it.breakpoint().phase() + dp );
-
-		return Breakpoint( it.breakpoint().frequency(), amp, 
-						   it.breakpoint().bandwidth(), ph );
+        //  bandwidth:
+        bw = bp.bandwidth();
+        
+        //  phase:
+		double dp = 2. * Pi * (time - endTime()) * bp.frequency();
+		ph = wrapPi( bp.phase() + dp );
 	}
 	else 
 	{
-	//	interpolate between it and its predeccessor
-	//	(we checked already that it is not begin):
-		const Breakpoint & hi = it.breakpoint();
+        //	findAfter returns the position of the earliest
+        //	Breakpoint later than time, or the end
+        //	position if no such Breakpoint exists:
+        Partial::const_iterator it = findAfter( time );
+	
+        //	interpolate between it and its predeccessor
+        //	(we checked already that it is not begin or end):
+        const Breakpoint & hi = it.breakpoint();
 		double hitime = it.time();
-		const Breakpoint & lo = (--it).breakpoint();
-		double lotime = it.time();
-		double alpha = (time - lotime) / (hitime - lotime);
+        const Breakpoint & lo = (--it).breakpoint();
+        double lotime = it.time();
+        
+        double alpha = (time - lotime) / (hitime - lotime);
+		
+        //  frequency:
+        freq = (alpha * hi.frequency()) + ((1. - alpha) * lo.frequency());
+			   
+        //  amplitude:	
+        amp = (alpha * hi.amplitude()) + ((1. - alpha) * lo.amplitude());
 
-		double finterp = ( alpha * hi.frequency() ) + 
-						 ( ( 1. - alpha ) * lo.frequency() );
-
-		//	need to keep fmod in here because other stuff 
-		//	(Spc export and sdif export, for example) rely 
-		//	on it:
-		double ph = 0;
-		if ( alpha < 0.5 )
-		{
-			double favg = 0.5 * ( lo.frequency() + finterp );
-			double dp = 2. * Pi * (time - lotime) * favg;
-			ph = wrapPi( lo.phase() + dp );
-		}
-		else
-		{
-			double favg = 0.5 * ( hi.frequency() + finterp );
-			double dp = 2. * Pi * (hitime - time) * favg;
-			ph = wrapPi( hi.phase() - dp );
-		}
-
-		return Breakpoint( (alpha * hi.frequency()) + ((1. - alpha) * lo.frequency()),
-						   (alpha * hi.amplitude()) + ((1. - alpha) * lo.amplitude()),
-						   (alpha * hi.bandwidth()) + ((1. - alpha) * lo.bandwidth()),
-						   ph );
-				
+        //  bandwidth:
+        bw = (alpha * hi.bandwidth()) + ((1. - alpha) * lo.bandwidth());
+        
+        //  phase:
+        //  interpolated phase is computed from the interpolated frequency 
+        //  and offset from the phase of the preceding Breakpoint:
+        double favg = 0.5 * ( lo.frequency() + freq ); // + hi.frequency() );
+        double dp = 2. * Pi * (time - lotime) * favg;                   
+        ph = wrapPi( lo.phase() + dp );                        	
 	}
+	
+	return Breakpoint( freq, amp, bw, ph );
 }
 
 }	//	end of namespace Loris
