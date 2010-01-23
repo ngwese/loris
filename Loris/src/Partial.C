@@ -466,7 +466,7 @@ Partial::startTime( void ) const
 {
 	if ( numBreakpoints() == 0 )
 	{
-		Throw( InvalidPartial, "Tried find start time of a Partial with no Breakpoints." );
+		Throw( InvalidPartial, "Tried to find start time of a Partial with no Breakpoints." );
 	}
 	return begin().time();
 }
@@ -482,7 +482,7 @@ Partial::endTime( void ) const
 {
 	if ( numBreakpoints() == 0 )
 	{
-		Throw( InvalidPartial, "Tried find end time of a Partial with no Breakpoints." );
+		Throw( InvalidPartial, "Tried to find end time of a Partial with no Breakpoints." );
 	}
 	return (--end()).time();
 }

@@ -175,10 +175,13 @@ Dilator::dilate( Partial & p ) const
 	//	sanity check:
 	Assert( _initial.size() == _target.size() );
 	
-	//	don't dilate if there's no time points:
-	if ( _initial.size() == 0 )
+	//	don't dilate if there's no time points, or no Breakpoints:
+	if ( 0 == _initial.size() ||
+	     0 == p.numBreakpoints() )
+	{
 		return;
-
+    }
+    
 	//	create the new Partial:
 	Partial newp;
 	newp.setLabel( p.label() );
