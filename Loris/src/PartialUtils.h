@@ -466,15 +466,15 @@ void shiftPitch( Iter b, Iter e, const Arg & arg )
 // ---------------------------------------------------------------------------
 //	Cropper
 //	
-//! 	Trim a Partial by removing Breakpoints outside a specified time span.
+//! Trim a Partial by removing Breakpoints outside a specified time span.
 //!	Insert a Breakpoint at the boundary when cropping occurs.
 class Cropper
 {
 public:
 
-	//! Construct a new Cropper from a pair of times (in seconds)
-   //! representing the span of time to which Partials should be
-   //! cropped.
+    //! Construct a new Cropper from a pair of times (in seconds)
+    //! representing the span of time to which Partials should be
+    //! cropped.
 	Cropper( double t1, double t2 ) : 
 		minTime( std::min( t1, t2 ) ),
 		maxTime( std::max( t1, t2 ) )
@@ -482,6 +482,9 @@ public:
 	}
 	
 	//! Function call operator: crop the specified Partial.
+    //! Trim a Partial by removing Breakpoints outside the span offset
+    //! [minTime, maxTime]. Insert a Breakpoint at the boundary when 
+    //! cropping occurs.
 	void operator()( Partial & p ) const;
 	
 private:
@@ -493,6 +496,9 @@ private:
 // ---------------------------------------------------------------------------
 //! Trim a Partial by removing Breakpoints outside a specified time span.
 //! Insert a Breakpoint at the boundary when cropping occurs.
+//! 
+//! This operation may leave the Partial empty, if it previously had
+//! no Breakpoints in the span [t1,t2]. 
 //!
 //! \param	p is the Partial to crop.
 //! \param	t1 is the beginning of the time span to which the Partial
@@ -512,6 +518,9 @@ void crop( Partial & p, double t1, double t2 )
 // ---------------------------------------------------------------------------
 //! Trim a sequence of Partials by removing Breakpoints outside a specified 
 //! time span. Insert a Breakpoint at the boundary when cropping occurs.
+//! 
+//! This operation may leave some empty Partials, if they previously had
+//! no Breakpoints in the span [t1,t2]. 
 //!
 //! \param	b is the beginning of a sequence of Partials to crop.
 //! \param	e is the end of a sequence of Partials to crop.

@@ -229,20 +229,27 @@ Cropper::operator()( Partial & p ) const
 {
 	//	crop beginning of Partial
 	Partial::iterator it = p.findAfter( minTime );
-	if ( it != p.begin() )
+	if ( it != p.begin() )    // Partial begins earlier than minTime
 	{
-		Breakpoint bp = p.parametersAt( minTime );
-		it = p.insert( minTime, bp );
+	    if ( it != p.end() ) // Partial ends later than minTime
+	    {
+            Breakpoint bp = p.parametersAt( minTime );
+            it = p.insert( minTime, bp );
+        }
 		it = p.erase( p.begin(), it );
 	}
 	
 	//	crop end of Partial
 	it = p.findAfter( maxTime );
-	if ( it != p.end() )
+	if ( it != p.end() ) // Partial ends later than maxTime
 	{
-		Breakpoint bp = p.parametersAt( maxTime );
-		it = p.insert( maxTime, bp );
-		it = p.erase( ++it, p.end() );
+	    if ( it != p.begin() )   // Partial begins earlier than maxTime
+	    {
+	    	Breakpoint bp = p.parametersAt( maxTime );
+    		it = p.insert( maxTime, bp );
+    		++it;   //  advance, we don't want to cut this one off
+		}
+		it = p.erase( it, p.end() );
 	}
 }
 

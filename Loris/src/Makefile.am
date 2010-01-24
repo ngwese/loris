@@ -113,9 +113,9 @@ libloris_la_CPPFLAGS = $(INCLUDE_FFTW) $(default_includes)
 libloris_la_LIBADD = $(LINK_FFTW) $(CSOUND_LIB)
 
 # the library version for Loris 1.6 is 11:0:0
-# it is incompatible with the Loris 1.5.4 interface
-# (changed NoiseGenerator and Resampler interface)
-libloris_la_LDFLAGS = -version-info 11:0:0 $(EXTRA_LD_FLAGS)
+# changes since vesion 1.6:
+# - improved cropping behavior
+libloris_la_LDFLAGS = -version-info 11:1:0 $(EXTRA_LD_FLAGS)
 
 # loris.h is generated automatically from loris.h.in
 nodist_include_HEADERS = loris.h

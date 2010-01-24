@@ -798,7 +798,9 @@ void copyLabeled( const PartialList * src, long label, PartialList * dst );
 
 void crop( PartialList * partials, double t1, double t2 );
 /*  Trim Partials by removing Breakpoints outside a specified time span.
-    Insert a Breakpoint at the boundary when cropping occurs.
+    Insert a Breakpoint at the boundary when cropping occurs. Remove
+	any Partials that are left empty after cropping (Partials having no
+	Breakpoints between t1 and t2).
  */
 
 void extractIf( PartialList * src, PartialList * dst, 

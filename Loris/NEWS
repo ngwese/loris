@@ -23,6 +23,17 @@ Loris is Copyright (c) 1999-2010 by Kelly Fitz and Lippold Haken.
 History of visible changes, organized by release number:
 
 -------------------------------------------------------
+changes since 1.6 release:
+
+- Improved behavior of cropping in Python and procedural interfaces
+such that Partials left empty after cropping are removed from the
+PartialList. 
+
+- Corrected a logic error in Cropper that caused Breakpoints to be 
+introduced into Partials that should be left empty by cropping (no 
+Breakpoints in the cropping range).
+
+-------------------------------------------------------
 changes since 1.5.4 release:
 
 - Corrected several sources of significant phase errors in 

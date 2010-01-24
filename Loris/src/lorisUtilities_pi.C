@@ -245,7 +245,9 @@ void copyLabeled( const PartialList * src, long label, PartialList * dst )
 /*        crop        
 /*
 /*	Trim Partials by removing Breakpoints outside a specified time span.
-	Insert a Breakpoint at the boundary when cropping occurs.
+	Insert a Breakpoint at the boundary when cropping occurs. Remove
+	any Partials that are left empty after cropping (Partials having no
+	Breakpoints between t1 and t2).
  */
 extern "C"
 void crop( PartialList * partials, double t1, double t2 )
@@ -257,6 +259,20 @@ void crop( PartialList * partials, double t1, double t2 )
 		notifier << "cropping " << partials->size() << " Partials" << endl;
 
 		PartialUtils::crop( partials->begin(), partials->end(), t1, t2 );	
+		
+		//  remove empty Partials:
+		PartialList::iterator it = partials->begin();
+		while ( it != partials->end() )
+		{
+		    if ( 0 == it->numBreakpoints() )
+		    {
+		        it = partials->erase( it );
+		    }
+		    else
+		    {
+		        ++it;
+		    }
+		}
 	}
 	catch( Exception & ex ) 
 	{
