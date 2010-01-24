@@ -40,6 +40,7 @@
 #include <cmath>
 #include <iostream>
 #include <vector>
+#include <cstdlib>
 
 using namespace Loris;
 using namespace std;
@@ -97,7 +98,14 @@ static void test_synth_phase( void )
 	cout << "\t--- testing synthesis phase accuracy using a single Partial... ---\n\n";
 
 	//	Import the test Partial:
-	SdifFile f( "one_synth_phase_test.sdif" );
+	std::string path(""); 
+	if ( std::getenv("srcdir") ) 
+	{
+		path = std::getenv("srcdir");
+		path = path + "/";
+	}
+	
+	SdifFile f( path + "one_synth_phase_test.sdif" );
 	Partial p1 = f.partials().front();
 	
 	vector< double > v;
