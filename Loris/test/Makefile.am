@@ -9,7 +9,7 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-EXTRA_DIST = clarinet.aiff flute.aiff fromKyma.spc morphtest.py
+EXTRA_DIST = clarinet.aiff flute.aiff fromKyma.spc morphtest.py one_synth_phase_test.sdif
 
 MAINTAINERCLEANFILES = Makefile.in
 
