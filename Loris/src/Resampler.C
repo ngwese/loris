@@ -54,7 +54,8 @@
 namespace Loris {
 
 //  helper declarations:
-static void resample_dense( Partial & p, const LinearEnvelope & env, double interval );
+static void resample_dense( Partial & p, double interval );
+static void resample_warped( Partial & p, const LinearEnvelope & env, double interval );
 static void resample_sparse( Partial & p, const LinearEnvelope & env );
 static Partial::iterator insert_resampled_at( Partial & newp, const Partial & p, 
                                               double sampleTime, double insertTime );
@@ -118,82 +119,6 @@ Resampler::Resampler( double sampleInterval ) :
     }
 }
 
-#if 0
-
-// ---------------------------------------------------------------------------
-//	constructor - timing envelope
-// ---------------------------------------------------------------------------
-//! Initialize a Resampler having the specified timing envelope.
-//! The timing envelope represents a map of Breakpoint times in  
-//! resampled Partials onto parameter sampling instants in the 
-//! original Partials. Phase-correct resampling is not generally
-//! possible using a nontrivial timing envelope, use the functions
-//! declared in phasefix.h to correct the phases and frequencies
-//! of resampled Partials.
-//!
-//! Resampled Partials will be composed of Breakpoints at times
-//! corresponding to the timing envelope breakpoints.
-//!
-//! \param  timingEnv is the timing envelope, a map of Breakpoint 
-//!         times in resampled Partials onto parameter sampling 
-//!         instants in the original Partials.
-//! \throw  InvalidArgument if timingEnv has any negative breakpoint
-//!         times or values.
-//
-Resampler::Resampler( const LinearEnvelope & timingEnv ) :
-    timing_( timingEnv ),
-    interval_( 0 ),
-    phaseCorrect_( false )
-{
-    //  check the timing envelope for negative times or values
-}
-    
-// ---------------------------------------------------------------------------
-//	constructor - timing envelope and sampling interval
-// ---------------------------------------------------------------------------
-//! Initialize a Resampler having the specified timing envelope,
-//! uniformly sampled at the sampling interval.
-//! The timing envelope represents a map of Breakpoint times in  
-//! resampled Partials onto parameter sampling instants in the 
-//! original Partials. Phase-correct resampling is not generally
-//! possible using a nontrivial timing envelope, use the functions
-//! declared in phasefix.h to correct the phases and frequencies
-//! of resampled Partials.
-//!
-//! Resampled Partials will be composed of Breakpoints at every 
-//! integer multiple of the resampling interval.
-//!
-//! \param  timingEnv is the timing envelope, a map of Breakpoint 
-//!         times in resampled Partials onto parameter sampling 
-//!         instants in the original Partials.
-//! \param  sampleInterval is the resampling interval in seconds, 
-//!         Breakpoint data is computed at integer multiples of
-//!         sampleInterval seconds.
-//!
-//! \throw  InvalidArgument if sampleInterval is not positive.
-//! \throw  InvalidArgument if timingEnv has any negative breakpoint
-//!         times or values.
-Resampler::Resampler( const LinearEnvelope & timingEnv, double sampleInterval ) :
-    timing_( timingEnv ),
-    interval_( sampleInterval ),
-    phaseCorrect_( false )
-{
-    if ( sampleInterval <= 0. )
-    {
-      Throw( InvalidArgument, "Resampler sample interval must be positive." );
-    }
-   
-    //  HEY!!! check the timing envelope for negative times or values
-    /*
-    if ( 0 > timingEnv.begin()->first )
-    {
-      Throw( InvalidArgument, "Resampler timing envelope must not have negative." );    
-    }
-    */
-}
-
-#endif
-
 // ---------------------------------------------------------------------------
 //	setPhaseCorrect
 // ---------------------------------------------------------------------------
@@ -236,14 +161,25 @@ Resampler::resample( Partial & p ) const
 			 << " Breakpoints" << endl;
 
 
-    if ( 0 != interval_ )
-    {
-        resample_dense( p, timing_, interval_ );
-    }
-    else
-    {
-        resample_sparse( p, timing_  );
-    }
+	//	create the new Partial:
+	Partial newp;
+	newp.setLabel( p.label() );
+
+	//  find time of first and last breakpoint for the resampled envelope:
+	double firstInsertTime = interval_ * int( 0.5 + p.startTime() / interval_ );
+	double lastInsertTime  = p.endTime() + ( 0.5 * interval_ );
+		
+	//  resample:
+	for (  double tins = firstInsertTime; tins <= lastInsertTime; tins += interval_ ) 
+	{
+	    //  sample time is obtained from the timing envelope, if specified, 
+	    //  otherwise same as the insert time:
+	    double tsamp = tins;
+        insert_resampled_at( newp, p, tins, tins );        
+	}
+	
+	//	store the new Partial:
+	p = newp;
     
 	debugger << "resampled Partial has " << p.numBreakpoints() 
 			 << " Breakpoints" << endl;
@@ -256,108 +192,94 @@ Resampler::resample( Partial & p ) const
 }
 
 // ---------------------------------------------------------------------------
-//	resample_dense
+//	resample
 // ---------------------------------------------------------------------------
-//! Helper function to perform dense resampling at a specified interval.
-//! The Breakpoint times in the resampled Partial will comprise a  
-//! contiguous sequence of integer multiples of the sampling interval,
-//! beginning with the multiple nearest to the Partial's start time and
-//! ending with the multiple nearest to the Partial's end time. Resampling
+//! Resample a Partial using this Resampler's stored quanitization interval.
+//! If sparse resampling (the default) has be selected, Breakpoint times
+//! are quantized to integer multiples of the resampling interval.
+//! If dense resampling is selected, a Breakpoint will be provided at
+//! every integer multiple of the resampling interval in the time span of
+//! the Partial, starting and ending with the nearest multiples to the
+//! ends of the Partial. Frequencies and phases are corrected to be in 
+//! agreement and to match as nearly as possible the resampled phases if
+//! phase correct resampling is specified (the default). Resampling
 //! is performed in-place. 
 //!
 //! \param  p is the Partial to resample
-//! \param  env is the timing envelope
-//! \param  interval is the resamping interval in seconds
+//!
+//! \param  timingEnv is the timing envelope, a map of Breakpoint 
+//!         times in resampled Partials onto parameter sampling 
+//!         instants in the original Partials.
+//!
+//! \throw  InvalidArgument if timingEnv has any negative breakpoint
+//!         times or values.
 //
-static 
 void 
-resample_dense( Partial & p, const LinearEnvelope & env, double interval ) 
+Resampler::resample( Partial & p, const LinearEnvelope & timingEnv ) const
 {
+	debugger << "resampling Partial labeled " << p.label()
+	         << " having " << p.numBreakpoints() 
+			 << " Breakpoints" << endl;
+
+
+    Assert(  0 != timingEnv.size() );
+    
 	//	create the new Partial:
 	Partial newp;
 	newp.setLabel( p.label() );
 
-	//  find time of first and last breakpoint for the resampled envelope:
-	double firstSampleTime = interval * int( 0.5 + p.startTime() / interval );
-	double lastSampleTime  = p.endTime() + ( 0.5 * interval );
-	
 	//  find the extent of the timing envelope, if specified, otherwise
 	//  the insert time range is the same as the sample time range:
-	double firstInsertTime = firstSampleTime;
-	double lastInsertTime = lastSampleTime;
-	if ( 0 != env.size() )
-	{
-	    firstInsertTime = interval * int( 0.5 + env.begin()->first / interval );
-	    lastInsertTime = (--env.end())->first + ( 0.5 * interval );
-	}
+	double firstInsertTime = interval_ * int( 0.5 + timingEnv.begin()->first / interval_ );
+    double lastInsertTime = (--timingEnv.end())->first + ( 0.5 * interval_ );
 	
 	//  resample:
-	for (  double tins = firstInsertTime; tins <= lastInsertTime; tins += interval ) 
+	for (  double insertTime = firstInsertTime; 
+	       insertTime <= lastInsertTime; 
+	       insertTime += interval_ ) 
 	{
 	    //  sample time is obtained from the timing envelope, if specified, 
 	    //  otherwise same as the insert time:
-	    double tsamp = tins;
-	    if ( 0 != env.size() )
-	    {
-	        tsamp = env.valueAt( tins );
-	    }
-	    
-        insert_resampled_at( newp, p, tsamp, tins );        
+	    double sampleTime = timingEnv.valueAt( insertTime );	    	            
+        
+        //  make a resampled Breakpoint:
+        Breakpoint newbp = p.parametersAt( sampleTime );
+                
+        Partial::iterator ret_pos = newp.insert( insertTime, newbp );
+                
 	}
 	
-	//	store the new Partial:
-	p = newp;
-}
-
-// ---------------------------------------------------------------------------
-//	resample_sparse
-// ---------------------------------------------------------------------------
-//! Helper function to perform sparse resampling at a specified interval.
-//! Sample the origial Partial only at breakpoints in the timing envelope.
-//! \param  p is the Partial to resample
-//! \param  env is the timing envelope
-//! \param  interval is the resamping interval in seconds
-//
-static 
-void 
-resample_sparse( Partial & p, const LinearEnvelope & env ) 
-{
-    if ( 0 == env.size() )
-    {
-        Throw( InvalidArgument, 
-               "Sparse resampling requires a timing envelope specification." );
-    }              
-
-	//	create the new Partial:
-	Partial newp;
-	newp.setLabel( p.label() );
-
-	//  find time of first breakpoint for the resampled envelope:
-	LinearEnvelope::const_iterator it = env.begin();
-	while( it->first < p.startTime() )
+	//  remove excess null Breakpoints at the ends of the newly-formed
+	//  Partial, no simple way to anticipate these, without evaluating
+	//  the timing envelope at all points.
+	//
+	//  Also runs of nulls in the middle?
+	Partial::iterator it = newp.begin();
+	while( it != newp.end() && 0 == it->amplitude() )
 	{
 	    ++it;
-	}		
-	
-	//  resample:
-	while (  it != env.end() ) 
-	{
-        double tins = it->first;	    
-	    double tsamp = tins;
-	    if ( 0 != env.size() )
-	    {
-	        tsamp = env.valueAt( tins );
-	    }
-        insert_resampled_at( newp, p, tsamp, tins );
-        
-        ++it;
 	}
-
+	newp.erase( newp.begin(), it );
+	
+	it = newp.end();
+	while( it != newp.begin() && 0 == (--it)->amplitude() )
+	{
+    }
+    newp.erase( ++it, newp.end() );
+	
 	//	store the new Partial:
 	p = newp;
+    
+
+    //  is this a good idea?
+	if ( phaseCorrect_ )
+    {
+        fixFrequency( p ); // use default maxFixPct
+    }
+    
+	debugger << "resampled Partial has " << p.numBreakpoints() 
+			 << " Breakpoints" << endl;
 }
-
-
 
 // ---------------------------------------------------------------------------
 //	quantize

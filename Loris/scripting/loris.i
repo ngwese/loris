@@ -859,30 +859,33 @@ void removeLabeled( PartialList * partials, long label );
 sampling interval, so that the Breakpoints in the Partial
 envelopes will all lie on a common temporal grid. 
 
-The Breakpoint times in densely resampled Partials will comprise a
+The Breakpoint times in resampled Partials will comprise a
 contiguous sequence of ALL integer multiples of the sampling interval
-(very large, but useful for some third-party tools, like the CNMAT
+(a lot of data, but useful for some third-party tools, like the CNMAT
 sinusoids~ external for Max/MSP). 
 
-The Breakpoint times in sparsely resampled Partials are simply quantized
-to integer multiples of the of the sampling interval.
-
-Default is sparse (not dense) resampling.
+If a timing envelope is specified, then that envelope represents
+a warping of the time axis that is applied during resampling. The
+Breakpoint times in resampled Partials will a comprise contiguous 
+sequence of all integer multiples of the sampling interval between 
+the first and last breakpoints in the timing envelope, and each 
+Breakpoint will represent the parameters of the original Partial 
+at the time that is the value of the timing envelope at that instant.
+This can be used to achieve effects similar to dilation (see dilate),
+but can also be used to achieve time-reveral and scrubbing effects.
 
 If phase correct resampling is selected, Partial frequencies are
 altered slightly to match, as nearly as possible, the Breakpoint
 phases after resampling. Phases are updated so that the Partial
 frequencies and phases are consistent after resampling. The
-default is phase correct resampling.")  wrap_resample;
+default is phase correct resampling, unless a timing envelope
+is specified, in which case it is better to explcitly match
+phases at known critical points.
+
+See also quantize, which was previously described as sparse
+resampling.")  wrap_resample;
 
 %rename( resample ) wrap_resample;
-
-/*
-%feature("docstring",
-"Quantize the breakpoint times in the specified Partials.
-In previous versions of Loris, this was called sparse resampling.
-DOCUMENT ME.") quantizeBreakpointTimes;
-*/
 
 %{
 #include "Resampler.h"
@@ -914,55 +917,37 @@ DOCUMENT ME.") quantizeBreakpointTimes;
 			throw_exception( ex.what() );
 		}
 	}
-	
-	/*
-	void wrap_resample( PartialList * partials, double interval, 
-				     	bool phaseCorrect = true )
-	{		
+
+	void wrap_resample( PartialList * partials, LinearEnvelope * timing, 
+	                    double interval,
+				     	bool phaseCorrect = false )
+	{			
 		try
 		{		
 			Resampler r( interval );
 			r.setPhaseCorrect( phaseCorrect );
-			r.resample( partials->begin(), partials->end() );
+			r.resample( partials->begin(), partials->end(), *timing );
 		}
 		catch ( std::exception & ex )
 		{
 			throw_exception( ex.what() );
 		}
 	}
-	
-	void wrap_resample( PartialList * partials, LinearEnvelope * timing )
-	{			
-		try
-		{		
-			Resampler r( *timing );
-			// r.setPhaseCorrect( phaseCorrect );
-			r.resample( partials->begin(), partials->end() );
-		}
-		catch ( std::exception & ex )
-		{
-			throw_exception( ex.what() );
-		}
-	}
-	
+%}
 
-	void wrap_resample( PartialList * partials, LinearEnvelope * timing, 
-	                    double interval ) 
-	{			
-		try
-		{		
-			Resampler r( *timing, interval );
-			// r.setPhaseCorrect( phaseCorrect );
-			r.resample( partials->begin(), partials->end() );
-		}
-		catch ( std::exception & ex )
-		{
-			throw_exception( ex.what() );
-		}
-	}
+
+%feature("docstring",
+"Quantize the Breakpoint times in the specified Partials.
+Each Breakpoint in the Partials is replaced by a Breakpoint
+constructed by resampling the Partial at the nearest
+integer multiple of the of the resampling interval.
+
+In previous versions of Loris, this was called sparse resampling.
+") quantize;
 	
-	*/	
-	void quantizeBreakpointTimes( PartialList * partials, double interval )
+%inline %{
+
+	void quantize( PartialList * partials, double interval )
 	{
 	    Resampler r( interval );
         r.setPhaseCorrect( true );

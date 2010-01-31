@@ -81,51 +81,7 @@ public:
     //! \throw  InvalidArgument if sampleInterval is not positive.
     explicit Resampler( double sampleInterval );
 
-/*
-    //! Initialize a Resampler having the specified timing envelope.
-    //! The timing envelope represents a map of Breakpoint times in  
-    //! resampled Partials onto parameter sampling instants in the 
-    //! original Partials. Phase-correct resampling is not generally
-    //! possible using a nontrivial timing envelope, use the functions
-    //! declared in phasefix.h to correct the phases and frequencies
-    //! of resampled Partials.
-    //!
-    //! Resampled Partials will be composed of Breakpoints at times
-    //! corresponding to the timing envelope breakpoints.
-    //!
-    //! \param  timingEnv is the timing envelope, a map of Breakpoint 
-    //!         times in resampled Partials onto parameter sampling 
-    //!         instants in the original Partials.
-    //!
-    //! \throw  InvalidArgument if timingEnv has any negative breakpoint
-    //!         times or values.
-    explicit Resampler( const LinearEnvelope & timingEnv );
 
-    //! Initialize a Resampler having the specified timing envelope,
-    //! uniformly sampled at the sampling interval.
-    //! The timing envelope represents a map of Breakpoint times in  
-    //! resampled Partials onto parameter sampling instants in the 
-    //! original Partials. Phase-correct resampling is not generally
-    //! possible using a nontrivial timing envelope, use the functions
-    //! declared in phasefix.h to correct the phases and frequencies
-    //! of resampled Partials.
-    //!
-    //! Resampled Partials will be composed of Breakpoints at every 
-    //! integer multiple of the resampling interval.
-    //!
-    //! \param  timingEnv is the timing envelope, a map of Breakpoint 
-    //!         times in resampled Partials onto parameter sampling 
-    //!         instants in the original Partials.
-    //! \param  sampleInterval is the resampling interval in seconds, 
-    //!         Breakpoint data is computed at integer multiples of
-    //!         sampleInterval seconds.
-    //!
-    //! \throw  InvalidArgument if sampleInterval is not positive.
-    //! \throw  InvalidArgument if timingEnv has any negative breakpoint
-    //!         times or values.
-    Resampler( const LinearEnvelope & timingEnv, double sampleInterval );
-
-*/
     // --- use compiler-generated copy/assign/destroy ---
     
 //  --- parameters ---
@@ -164,8 +120,29 @@ public:
         resample( p ); 
     }
     
+    //! Resample a Partial using this Resampler's stored quanitization interval.
+    //! If sparse resampling (the default) has be selected, Breakpoint times
+    //! are quantized to integer multiples of the resampling interval.
+    //! If dense resampling is selected, a Breakpoint will be provided at
+    //! every integer multiple of the resampling interval in the time span of
+    //! the Partial, starting and ending with the nearest multiples to the
+    //! ends of the Partial. Frequencies and phases are corrected to be in 
+    //! agreement and to match as nearly as possible the resampled phases if
+    //! phase correct resampling is specified (the default). Resampling
+    //! is performed in-place. 
+    //!
+    //! \param  p is the Partial to resample
+    //!
+    //! \param  timingEnv is the timing envelope, a map of Breakpoint 
+    //!         times in resampled Partials onto parameter sampling 
+    //!         instants in the original Partials.
+    //!
+    //! \throw  InvalidArgument if timingEnv has any negative breakpoint
+    //!         times or values.
+    //
+    void resample( Partial & p, const LinearEnvelope & timingEnv ) const;
     
-    //! DCUMENT ME
+    //! DOCUMENT ME
     //! The Breakpoint times in the resampled Partial will comprise a  
     //! sparse sequence of integer multiples of the sampling interval,
     //! beginning with the multiple nearest to the Partial's start time and
@@ -214,6 +191,35 @@ public:
 	   resample( begin, end ); 
 	}
  
+	//! Resample all Partials in the specified (half-open) range using this
+	//! Resampler's stored quanitization interval.
+    //! If sparse resampling (the default) has be selected, Breakpoint times
+    //! are quantized to integer multiples of the resampling interval.
+    //! If dense resampling is selected, a Breakpoint will be provided at
+    //! every integer multiple of the resampling interval in the time span of
+    //! the Partial, starting and ending with the nearest multiples to the
+    //! ends of the Partial. Frequencies and phases are corrected to be in 
+    //! agreement and to match as nearly as possible the resampled phases if
+    //! phase correct resampling is specified (the default). Resampling
+    //! is performed in-place. 
+	//!	
+	//!	\param begin is the beginning of the range of Partials to resample
+	//!	\param end is (one-past) the end of the range of Partials to resample
+    //! \param  timingEnv is the timing envelope, a map of Breakpoint 
+    //!         times in resampled Partials onto parameter sampling 
+    //!         instants in the original Partials.
+	//!	
+	//!	If compiled with NO_TEMPLATE_MEMBERS defined, then begin and end
+	//!	must be PartialList::iterators, otherwise they can be any type
+	//!	of iterators over a sequence of Partials.
+#if ! defined(NO_TEMPLATE_MEMBERS)
+	template<typename Iter>
+	void resample( Iter begin, Iter end, const LinearEnvelope & timingEnv ) const;
+#else
+   inline 
+	void resample( PartialList::iterator begin, PartialList::iterator end,
+	               const LinearEnvelope & timingEnv) const;
+#endif	 
 
     //! DOCUMENT ME
     //! Quantize all Partials in the specified (half-open) range using this
@@ -277,9 +283,6 @@ public:
 
 //	--- instance variables ---
 private:
-
-    //! the timing envelope for resampling
-    LinearEnvelope timing_;
     
     //! the resampling interval in seconds
     double interval_;	
@@ -320,6 +323,43 @@ void Resampler::resample( PartialList::iterator begin, PartialList::iterator end
 	while ( begin != end )
 	{
 		resample( *begin++ );
+	}
+}
+
+// ---------------------------------------------------------------------------
+//	resample (sequence of Partials, with timing envelope)
+// ---------------------------------------------------------------------------
+//! Resample all Partials in the specified (half-open) range using this
+//! Resampler's stored sampling interval, so that the Breakpoints in 
+//! the Partial envelopes will all lie on a common temporal grid.
+//! The Breakpoint times in the resampled Partial will comprise a  
+//! contiguous sequence of integer multiples of the sampling interval,
+//! beginning with the multiple nearest to the Partial's start time and
+//! ending with the multiple nearest to the Partial's end time. Resampling
+//! is performed in-place. 
+//!	
+//!	\param begin is the beginning of the range of Partials to resample
+//!	\param end is (one-past) the end of the range of Partials to resample
+//! \param  timingEnv is the timing envelope, a map of Breakpoint 
+//!         times in resampled Partials onto parameter sampling 
+//!         instants in the original Partials.
+//!	
+//!	If compiled with NO_TEMPLATE_MEMBERS defined, then begin and end
+//!	must be PartialList::iterators, otherwise they can be any type
+//!	of iterators over a sequence of Partials.
+//
+#if ! defined(NO_TEMPLATE_MEMBERS)
+template<typename Iter>
+void Resampler::resample( Iter begin, Iter end, const LinearEnvelope & timingEnv ) const
+#else
+inline 
+void Resampler::resample( PartialList::iterator begin, PartialList::iterator end, 
+                          const LinearEnvelope & timingEnv  ) const
+#endif	 
+{
+	while ( begin != end )
+	{
+		resample( *begin++, timingEnv );
 	}
 }
 
