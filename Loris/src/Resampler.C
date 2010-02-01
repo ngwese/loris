@@ -54,38 +54,18 @@
 namespace Loris {
 
 //  helper declarations:
-static void resample_dense( Partial & p, double interval );
-static void resample_warped( Partial & p, const LinearEnvelope & env, double interval );
-static void resample_sparse( Partial & p, const LinearEnvelope & env );
 static Partial::iterator insert_resampled_at( Partial & newp, const Partial & p, 
                                               double sampleTime, double insertTime );
 
 /*
-    new ideas
+TODO
+    - remove empties
     
-    use linear envelope to specify timing (possibly warped, line slope 1
-    for plain old uniform resampling)
+    - remove insert_resampled_at
     
-    dense resampling samples then envelope uniformly at the specified interval, 
-    envelope determines the time at which the original partial is sampled
+    - phase correct with timing?
     
-    sparse resampling samples only the breakpoints in the envelope (interval
-    is zero in this case)
-    
-    sparse sampling, by this definition, makes no sense without an envelope
-    specification
-
-    This is a different definition of sparse resampling from the old one.
-    What the hell good was the old one? Could that be useful for anything? 
-    
-    NEXT STEP
-    Revisit the default values for parameters, and define necessary
-    constructors and members related to the timing envelope.
-    
-    
-    version 1.6 - the timing envelope implementation is not yet ready 
-    for prime time, delay until after this release, which focusses on 
-    the phase-correct synthesis bugs
+    - fade time (for amplitude envelope sampling) - equal to interval?
 */
 
 
@@ -248,7 +228,7 @@ Resampler::resample( Partial & p, const LinearEnvelope & timingEnv ) const
         Partial::iterator ret_pos = newp.insert( insertTime, newbp );
                 
 	}
-	
+		
 	//  remove excess null Breakpoints at the ends of the newly-formed
 	//  Partial, no simple way to anticipate these, without evaluating
 	//  the timing envelope at all points.
@@ -265,19 +245,21 @@ Resampler::resample( Partial & p, const LinearEnvelope & timingEnv ) const
 	while( it != newp.begin() && 0 == (--it)->amplitude() )
 	{
     }
-    newp.erase( ++it, newp.end() );
-	
-	//	store the new Partial:
-	p = newp;
-    
-
-    //  is this a good idea?
-	if ( phaseCorrect_ )
+    if ( it != newp.end() )
     {
-        fixFrequency( p ); // use default maxFixPct
+        newp.erase( ++it, newp.end() );
+    }
+	
+	//  is this a good idea? generally not.
+	if ( phaseCorrect_ && ( 0 != newp.numBreakpoints() ) )
+    {
+        fixFrequency( newp ); // use default maxFixPct
     }
     
-	debugger << "resampled Partial has " << p.numBreakpoints() 
+	//	store the new Partial:
+    p = newp;
+    
+    debugger << "resampled Partial has " << p.numBreakpoints() 
 			 << " Breakpoints" << endl;
 }
 
