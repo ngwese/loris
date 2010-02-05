@@ -52,6 +52,12 @@
 	const double Pi = std::acos( -1.0 );
 #endif
 
+#if defined(HAVE_FFTW3_H) && HAVE_FFTW3_H
+    #include <fftw3.h>
+#elif defined(HAVE_FFTW_H) && HAVE_FFTW_H
+    #include <fftw.h>
+#endif
+
 // ---------------------------------------------------------------------------
 //	isPO2 - return true if N is a power of two
 // ---------------------------------------------------------------------------
@@ -133,8 +139,6 @@ using std::vector;
 //
 
 #if defined(HAVE_FFTW3_H) && HAVE_FFTW3_H
-
-#include <fftw3.h>
 
 class FTimpl    //  FFTW version 3
 {
@@ -219,8 +223,6 @@ public:
 
 #elif defined(HAVE_FFTW_H) && HAVE_FFTW_H
 
-#include <fftw.h>
-
 //	"die hook" for FFTW, which otherwise try to write to a
 //	non-existent console.
 static void fftw_die_Loris( const char * s )
@@ -255,7 +257,7 @@ public:
 		{
 			fftw_free( ftIn );
 			fftw_free( ftOut );
-			throw RuntimeError( "cannot allocate Fourier transform buffers" );
+			Throw( RuntimeError, "cannot allocate Fourier transform buffers" );
 		}
 	  
 		//	create a plan:
@@ -551,14 +553,14 @@ FourierTransform::size( void ) const
 void
 FourierTransform::transform( void )
 {
-   // copy data into the transform input buffer:
-   _impl->loadInput( &_buffer.front() );
-
-   //	crunch:	
-   _impl->forward();
-
-	// copy the data out of the transform output buffer:
-	_impl->copyOutput( &_buffer.front() );
+    // copy data into the transform input buffer:
+    _impl->loadInput( &_buffer.front() );
+    
+    //	crunch:	
+    _impl->forward();
+    
+    // copy the data out of the transform output buffer:
+    _impl->copyOutput( &_buffer.front() );
 }
 
 
@@ -577,15 +579,15 @@ static
 void slowDFT( double * in, double * out, int N )
 {
 #if 1 
-      // slow DFT 
-      // This version of the direct DFT computation is tolerably
-      // speedy, even for rather long transforms (like 8k).
-      // There is only one expensive call to std::polar, and
-      // twiddle factors are updated by multiplying. This
-      // causes some loss in numerical accuracy, worse for
-      // longer transforms, but even for 10k long transforms,
-      // accuracy is within hundredths of a percent in my experiments.
-      
+    // slow DFT 
+    // This version of the direct DFT computation is tolerably
+    // speedy, even for rather long transforms (like 8k).
+    // There is only one expensive call to std::polar, and
+    // twiddle factors are updated by multiplying. This
+    // causes some loss in numerical accuracy, worse for
+    // longer transforms, but even for 10k long transforms,
+    // accuracy is within hundredths of a percent in my experiments.
+    
     const std::complex< double > eminj2pioN = 
         std::polar( 1.0, -2.0 * Pi / N );
               
@@ -606,17 +608,17 @@ void slowDFT( double * in, double * out, int N )
     }
 
 #else 
-      // very, very slow
-      // This version of the direct DFT computation is slightly
-      // more accurate, increasingly so for longer transforms, 
-      // but it is so much slower (4-5x) that the small improvement
-      // in accuracy is probably not worth the extra wait. For
-      // short transforms, the accuracy of both algorithms is
-      // very high, and for long transforms, this algorithm is
-      // too slow.
-      //
-      // Both algorithms are retained here, so that this 
-      // tradeoff can be re-evaluated if necessary.
+    // very, very slow
+    // This version of the direct DFT computation is slightly
+    // more accurate, increasingly so for longer transforms, 
+    // but it is so much slower (4-5x) that the small improvement
+    // in accuracy is probably not worth the extra wait. For
+    // short transforms, the accuracy of both algorithms is
+    // very high, and for long transforms, this algorithm is
+    // too slow.
+    //
+    // Both algorithms are retained here, so that this 
+    // tradeoff can be re-evaluated if necessary.
 
     for ( int n = 0; n < N; ++n )
     {
