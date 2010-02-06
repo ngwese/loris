@@ -911,6 +911,19 @@ resampling.")  wrap_resample;
             {
                 r.quantize( partials->begin(), partials->end() );
             }
+            
+            PartialList::iterator it = partials->begin();
+            while ( it != partials->end() )
+            {
+            	if ( 0 == it->numBreakpoints() )
+            	{
+            		it = partials->erase( it );
+            	}
+            	else
+            	{
+            		++it;
+            	}
+            }
 		}
 		catch ( std::exception & ex )
 		{
@@ -927,6 +940,19 @@ resampling.")  wrap_resample;
 			Resampler r( interval );
 			r.setPhaseCorrect( phaseCorrect );
 			r.resample( partials->begin(), partials->end(), *timing );
+
+            PartialList::iterator it = partials->begin();
+            while ( it != partials->end() )
+            {
+            	if ( 0 == it->numBreakpoints() )
+            	{
+            		it = partials->erase( it );
+            	}
+            	else
+            	{
+            		++it;
+            	}
+            }
 		}
 		catch ( std::exception & ex )
 		{
@@ -949,9 +975,29 @@ In previous versions of Loris, this was called sparse resampling.
 
 	void quantize( PartialList * partials, double interval )
 	{
-	    Resampler r( interval );
-        r.setPhaseCorrect( true );
-	    r.quantize( partials->begin(), partials->end() );
+		try
+		{		
+			Resampler r( interval );
+			r.setPhaseCorrect( true );
+			r.quantize( partials->begin(), partials->end() );
+
+            PartialList::iterator it = partials->begin();
+            while ( it != partials->end() )
+            {
+            	if ( 0 == it->numBreakpoints() )
+            	{
+            		it = partials->erase( it );
+            	}
+            	else
+            	{
+            		++it;
+            	}
+            }
+		}
+		catch ( std::exception & ex )
+		{
+			throw_exception( ex.what() );
+		}
 	}
 
 %}

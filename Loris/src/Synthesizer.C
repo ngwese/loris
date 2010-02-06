@@ -45,7 +45,7 @@
 #include "Notifier.h"
 #include "Partial.h"
 #include "Resampler.h"
-#include "phaseFix.h"
+#include "phasefix.h"
 
 #include <algorithm>
 #include <cmath>

@@ -65,7 +65,7 @@ TODO
     
     - phase correct with timing?
     
-    - fade time (for amplitude envelope sampling) - equal to interval?
+    - fade time (for amplitude envelope sampling) - equal to interval? half?
 */
 
 

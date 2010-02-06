@@ -921,17 +921,31 @@ void resample( PartialList * partials, double interval )
 		notifier << "resampling " << partials->size() << " Partials" << Loris::endl;
 
       	Resampler::resample( partials->begin(), partials->end(), interval );
-      	
+
+        //  remove any resulting empty Partials
+        PartialList::iterator it = partials->begin();
+        while ( it != partials->end() )
+        {
+            if ( 0 == it->numBreakpoints() )
+            {
+                it = partials->erase( it );
+            }
+            else
+            {
+                ++it;
+            }
+        }
+
 	}
 	catch( Exception & ex )
     {
-        std::string s("Loris exception in resample(): " );
+        std::string s( "Loris exception in resample(): " );
         s.append( ex.what() );
         handleException( s.c_str() );
     }
     catch( std::exception & ex )
     {
-        std::string s("std C++ exception in resample(): " );
+        std::string s( "std C++ exception in resample(): " );
         s.append( ex.what() );
         handleException( s.c_str() );
     }
