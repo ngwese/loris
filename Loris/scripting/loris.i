@@ -895,7 +895,7 @@ resampling.")  wrap_resample;
 %inline %{
 
     void wrap_resample( PartialList * partials, double interval, 
-				   		bool denseResampling = false,
+				   		bool denseResampling = true,
 				     	bool phaseCorrect = true )
 	{
 			
