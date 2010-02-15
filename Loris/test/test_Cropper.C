@@ -47,7 +47,7 @@ using namespace std;
 // --- macros ---
 
 //	define this to see pages and pages of spew
-#define VERBOSE
+// #define VERBOSE
 #ifdef VERBOSE									
 	#define TEST(invariant)									\
 		do {													\
@@ -96,7 +96,7 @@ static void test_Cropper( void )
 	cout << "\t--- testing Cropper class in PartialUtils... ---\n\n";
 	
 	
-	//  build four Partials
+	//  build five Partials
     Partial p1;
     p1.insert( 0.5, Breakpoint( 100, 0.1, 0, 0 ) );
     p1.insert( 1.5, Breakpoint( 100, 0.1, 0, 0 ) );

@@ -65,6 +65,9 @@ test_synthesizer_LDADD = $(top_builddir)/src/libloris.la
 test_crop_SOURCES = test_Cropper.C
 test_crop_LDADD = $(top_builddir)/src/libloris.la
 
+# Resampler unit tests
+test_resample_SOURCES = test_Resampler.C
+test_resample_LDADD = $(top_builddir)/src/libloris.la
 
 ####
 # PROBLEM
@@ -101,7 +104,7 @@ endif
 
 check_PROGRAMS = test_cpp test_pi test_aiff test_partial test_distiller \
                  test_sdiffile test_morpher test_identity test_fundamental \
-                 test_filter test_synthesizer test_crop
+                 test_filter test_synthesizer test_crop test_resample
 
 check_SCRIPTS = $(PYTHON_TEST)
 
