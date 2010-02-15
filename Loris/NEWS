@@ -3,9 +3,9 @@ synthesis, and morphing, developed by Kelly Fitz and Lippold Haken
 at the CERL Sound Group. Loris includes a C++ class library, a
 Python module, a C-linkable interface, and documentation.
 
-Loris 1.6 fixes long-standing phase errors in synthesis and enhances 
-the Python interface. A detailed list of major changes is given in
-the change history, below. 
+Loris 1.7 enhances Partial resampling behavior and fixes minor 
+bugs. A detailed list of major changes is given in the change 
+history, below. 
 
 Loris can be downloaded from http://sourceforge.net/projects/loris
 
@@ -32,6 +32,13 @@ PartialList.
 - Corrected a logic error in Cropper that caused Breakpoints to be 
 introduced into Partials that should be left empty by cropping (no 
 Breakpoints in the cropping range).
+
+- Added support for resampling according to a timing envelope
+to the Resampler class. This allows time reversal and scrubbing 
+effects, in addition to straightforware time dilation.
+
+- Fixed a header inclusion error that prevented building with some
+compilers.
 
 -------------------------------------------------------
 changes since 1.5.4 release:
