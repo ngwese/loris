@@ -6,16 +6,10 @@ morph_raga_tbn.py
 Morph a raga singer with a flutter-tongued trombone.
 Makes a progressive sequence of three morphs.
 
-Last updated: 17 Jan 2010 by Kelly Fitz
+Last updated: 18 Jan 2010 by Kelly Fitz
 """
 
-print __doc__
-
 import loris, time, os
-
-print """
-Using Loris version %s
-"""%loris.version()
 
 orate = 44100
 

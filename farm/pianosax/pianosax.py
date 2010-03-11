@@ -22,7 +22,7 @@ lowest partial to fail to track the pitch changes. Need to use a shorter
 fade time, at least for sifting. 1 ms for both sifting and distilling seems 
 to work well. 
 
-Last updated: 5 June 2008 by Kelly Fitz
+Last updated: 28 Dec 2009 by Kelly Fitz
 """
 
 import loris, time, os
@@ -57,15 +57,32 @@ def doPianoSax( exportDir = '' ):
 	loris.sift( p, Fade )
 	loris.distill( p, Fade, Gap )
 	
+	psinonly = loris.PartialList( p )
+	MinDurSinusoid = 0.003
+	print 'adding bandwidth to short partials (< %i ms) (%s)'%(MinDurSinusoid*1000., time.ctime(time.time()))
+	ctr = 0
+	for part in p:
+		if part.duration() < MinDurSinusoid:
+			loris.setBandwidth( part, 1.0 )
+			ctr = ctr + 1
+	print '(added bw to %i partials)'%(ctr)
+			
+	
 	if exportDir:
 	
 		print 'synthesizing %i distilled partials (%s)'%(p.size(), time.ctime(time.time()))
-		out_sfile = loris.AiffFile( p, orate )
-		
 		opath = os.path.join( exportDir, name + tag + '.recon.aiff' ) 
 		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_sfile = loris.AiffFile( psinonly, orate )		
 		out_sfile.setMarkers( f.markers() )
 		out_sfile.write( opath )
+		
+		opath = os.path.join( exportDir, name + tag + '.bwe.aiff' ) 
+		print 'writing %s (%s)'%(opath, time.ctime(time.time()))
+		out_sfile = loris.AiffFile( p, orate )		
+		out_sfile.setMarkers( f.markers() )
+		out_sfile.write( opath )
+		
 		
 		opath = os.path.join( exportDir, name + tag + '.sdif' )
 		print 'writing %s (%s)'%(opath, time.ctime(time.time()))

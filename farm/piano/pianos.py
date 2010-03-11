@@ -9,6 +9,8 @@ Analyze and reconstruct piano tones taken from the Iowa samples:
 - E flat 3 (E flat below middle C)
 - C 4 (middle C)
 
+Might need to take advantage of the harmonic stretching capabilities
+of the Channelizer to make these work better.
 
 Last updated: 10 Sep 2007 by Kelly Fitz
 """
@@ -21,6 +23,8 @@ tag = ''
 
 stuff = {}
 
+Fade = 0.001
+Gap = 0.0001
 
 # ----------------------------------------------------------------------------
 
@@ -42,7 +46,7 @@ def do_pianoBb3( exportDir = '' ):
 	print 'distilling %i partials (%s)'%(p.size(), time.ctime(time.time()))
 	N = 1
 	loris.channelize( p, ref, N )
-	loris.distill( p )
+	loris.distill( p, Fade, Gap )
 	
 	if exportDir:
 	
@@ -87,7 +91,7 @@ def do_pianoEb3( exportDir = '' ):
 	print 'distilling %i partials (%s)'%(p.size(), time.ctime(time.time()))
 	N = 1
 	loris.channelize( p, ref, N )
-	loris.distill( p )
+	loris.distill( p, Fade, Gap )
 	
 	if exportDir:
 	
@@ -130,7 +134,7 @@ def do_pianoC4( exportDir = '' ):
 	print 'distilling %i partials (%s)'%(p.size(), time.ctime(time.time()))
 	N = 1
 	loris.channelize( p, ref, N )
-	loris.distill( p )
+	loris.distill( p, Fade, Gap )
 	
 	if exportDir:
 	
@@ -174,7 +178,7 @@ def do_pianoDb2( exportDir = '' ):
 	print 'distilling %i partials (%s)'%(p.size(), time.ctime(time.time()))
 	N = 1
 	loris.channelize( p, ref, N )
-	loris.distill( p )
+	loris.distill( p, Fade, Gap )
 	
 	if exportDir:
 	

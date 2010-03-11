@@ -14,7 +14,7 @@ partials don't add much. Only the breath at the end is really objectionable.
 Retaining only the harmonic partials, 400 and 600 Hz wide windows are 
 indistinguishible.
 
-Last updated: 17 Aug 2007 by Kelly Fitz
+Last updated: 12 Nov 2008 by Kelly Fitz
 
 """
 
@@ -75,9 +75,16 @@ def doShaku( exportDir = '' ):
 	# sift and distill, one partial per harmonic
 	print 'sifting %i partials (%s)'%(p.size(), time.ctime(time.time()))
 	ref = anal.fundamentalEnv()
+	
+	# distill at 1 Partial per harmonic
+	# need to use short fade/gap times to keep harmonics from breaking apart
+	# and pieces showing up in the "junk"
+ 	Fade = 0.001
+ 	Gap = 0.0001
+ 	print 'sifting and distilling %i partials (%s)'%(p.size(), time.ctime(time.time()))
 	loris.channelize( p, ref, 1 )
-	loris.sift( p )
-	loris.distill( p )
+	loris.sift( p, Fade )
+	loris.distill( p, Fade, Gap )
 	
 	pall = loris.PartialList( p )
 	junk = loris.extractLabeled( p, 0 )
