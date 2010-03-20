@@ -849,7 +849,7 @@ void analyzer_setBwRegionWidth( double x )
 }
 
 /* ---------------------------------------------------------------- */
-/*        analyzer_setStoreResidueBandwidth
+/*        analyzer_storeResidueBandwidth
 /*
 /*	Construct Partial bandwidth envelopes during analysis
 	by associating residual energy in the spectrum (after
@@ -863,7 +863,7 @@ void analyzer_setBwRegionWidth( double x )
    	function.
  */
 extern "C"
-void analyzer_setStoreResidueBandwidth( double regionWidth )
+void analyzer_storeResidueBandwidth( double regionWidth )
 {
 	if ( 0 == ptr_instance )
 	{
@@ -877,20 +877,20 @@ void analyzer_setStoreResidueBandwidth( double regionWidth )
 	}
 	catch( Exception & ex ) 
 	{
-		std::string s("Loris exception in analyzer_setStoreResidueBandwidth(): " );
+		std::string s("Loris exception in analyzer_storeResidueBandwidth(): " );
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
 	catch( std::exception & ex ) 
 	{
-		std::string s("std C++ exception in analyzer_setStoreResidueBandwidth(): " );
+		std::string s("std C++ exception in analyzer_storeResidueBandwidth(): " );
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
 }
 
 /* ---------------------------------------------------------------- */
-/*        analyzer_setStoreConvergenceBandwidth
+/*        analyzer_storeConvergenceBandwidth
 /*
 /*	Construct Partial bandwidth envelopes during analysis
 	by storing the mixed derivative of short-time phase, 
@@ -909,7 +909,7 @@ void analyzer_setStoreResidueBandwidth( double regionWidth )
    	function.
  */
 extern "C"
-void analyzer_setStoreConvergenceBandwidth( double tolerance )
+void analyzer_storeConvergenceBandwidth( double tolerance )
 {
 	if ( 0 == ptr_instance )
 	{
@@ -923,20 +923,20 @@ void analyzer_setStoreConvergenceBandwidth( double tolerance )
 	}
 	catch( Exception & ex ) 
 	{
-		std::string s("Loris exception in analyzer_setStoreConvergenceBandwidth(): " );
+		std::string s("Loris exception in analyzer_storeConvergenceBandwidth(): " );
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
 	catch( std::exception & ex ) 
 	{
-		std::string s("std C++ exception in analyzer_setStoreConvergenceBandwidth(): " );
+		std::string s("std C++ exception in analyzer_storeConvergenceBandwidth(): " );
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
 }
 
 /* ---------------------------------------------------------------- */
-/*        analyzer_setStoreNoBandwidth
+/*        analyzer_storeNoBandwidth
 /*
 /*	Disable bandwidth envelope construction. Bandwidth 
 	will be zero for all Breakpoints in all Partials.
@@ -945,7 +945,7 @@ void analyzer_setStoreConvergenceBandwidth( double tolerance )
    	function.
  */
 extern "C"
-void analyzer_setStoreNoBandwidth( void )
+void analyzer_storeNoBandwidth( void )
 {
 	if ( 0 == ptr_instance )
 	{
@@ -959,13 +959,13 @@ void analyzer_setStoreNoBandwidth( void )
 	}
 	catch( Exception & ex ) 
 	{
-		std::string s("Loris exception in analyzer_setStoreNoBandwidth(): " );
+		std::string s("Loris exception in analyzer_storeNoBandwidth(): " );
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}
 	catch( std::exception & ex ) 
 	{
-		std::string s("std C++ exception in analyzer_setStoreNoBandwidth(): " );
+		std::string s("std C++ exception in analyzer_storeNoBandwidth(): " );
 		s.append( ex.what() );
 		handleException( s.c_str() );
 	}

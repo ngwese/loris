@@ -202,7 +202,7 @@ void analyzer_setAmpFloor( double x );
  */
 
 void analyzer_setBwRegionWidth( double x );
-/*  Deprecated, use analyzer_setStoreResidueBandwidth instead.
+/*  Deprecated, use analyzer_storeResidueBandwidth instead.
  */
 
 void analyzer_setCropTime( double x );
@@ -247,7 +247,7 @@ void analyzer_setWindowWidth( double x );
     zero-crossings) of the analysis window used by the Loris Analyzer.                 
  */
  
-void analyzer_setStoreResidueBandwidth( double regionWidth );
+void analyzer_storeResidueBandwidth( double regionWidth );
 /*	Construct Partial bandwidth envelopes during analysis
 	by associating residual energy in the spectrum (after
 	peak extraction) with the selected spectral peaks that
@@ -257,7 +257,7 @@ void analyzer_setStoreResidueBandwidth( double regionWidth );
 	association regions used by this process, must be positive.
  */
  
-void analyzer_setStoreConvergenceBandwidth( double tolerancePct );
+void analyzer_storeConvergenceBandwidth( double tolerancePct );
 /*	Construct Partial bandwidth envelopes during analysis
 	by storing the mixed derivative of short-time phase, 
 	scaled and shifted so that a value of 0 corresponds
@@ -272,7 +272,7 @@ void analyzer_setStoreConvergenceBandwidth( double tolerancePct );
 	not greater than 1.
  */
 
-void analyzer_setStoreNoBandwidth( void );
+void analyzer_storeNoBandwidth( void );
 /*	Disable bandwidth envelope construction. Bandwidth 
 	will be zero for all Breakpoints in all Partials.
  */
