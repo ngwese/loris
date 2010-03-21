@@ -188,34 +188,38 @@ namespace std {
 %feature("docstring", 
 "Label Partials in a PartialList with the integer nearest to the
 amplitude-weighted average ratio of their frequency envelope to a
-reference frequency envelope. The frequency spectrum is
-partitioned into non-overlapping channels whose time-varying
-center frequencies track the reference frequency envelope. The
-reference label indicates which channel's center frequency is
-exactly equal to the reference envelope frequency, and other
-channels' center frequencies are multiples of the reference
-envelope frequency divided by the reference label. Each Partial in
-the PartialList is labeled with the number of the channel that
-best fits its frequency envelope. The quality of the fit is
-evaluated at the breakpoints in the Partial envelope and weighted
-by the amplitude at each breakpoint, so that high- amplitude
-breakpoints contribute more to the channel decision. Partials are
-labeled, but otherwise unmodified. In particular, their
-frequencies are not modified in any way.") channelize;
+reference frequency envelope. If a reference frequency is specified,
+then the reference envelope is constant at that frequency.
+
+The frequency spectrum is partitioned into non-overlapping channels
+whose time-varying center frequencies track the reference frequency
+envelope. The reference label indicates which channel's center
+frequency is exactly equal to the reference envelope frequency, and
+other channels' center frequencies are multiples of the reference
+envelope frequency divided by the reference label. Each Partial in the
+PartialList is labeled with the number of the channel that best fits
+its frequency envelope. Partials are labeled, but otherwise
+unmodified.
+
+For finer control over channelization, including harmonic stretching
+for stiff strings, and amplitude weighting for determining the
+best-fitting channel, use the Channelizer class."
+) channelize;
 
 void channelize( PartialList * partials, 
                  LinearEnvelope * refFreqEnvelope, int refLabel );
 
-// %inline
-// %{
-// 
-// 	void channelize( PartialList * partials, 
-//                      Envelope * refFreqEnvelope, int refLabel )
-//     {
-// 		Channelizer::channelize( partials, *refFreqEnvelope, refLabel );
-//     }
-//                  
-// %}
+%inline
+%{
+
+	void channelize( PartialList * partials, double refFreq )
+    {
+    	//	create a constant envelope at refFreq
+    	LinearEnvelope env( refFreq );    	
+		Channelizer::channelize( *partials, env, 1 );
+    }
+                 
+%}
                 
 
 %feature("docstring",

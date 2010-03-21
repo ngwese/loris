@@ -23,6 +23,15 @@ Loris is Copyright (c) 1999-2010 by Kelly Fitz and Lippold Haken.
 History of visible changes, organized by release number:
 
 -------------------------------------------------------
+changes since 1.7 release:
+
+- Enabled channelization with a constant reference frequency
+specification in Python interface.
+
+- Fixed errors in the names of some analyzer bandwidth enhancement
+configuration functions in the C interface. 
+
+-------------------------------------------------------
 changes since 1.6 release:
 
 - Improved behavior of cropping in Python and procedural interfaces

@@ -80,7 +80,7 @@ except:
     print 'error is:' , sys.exc_value
     print 'OK, moving on!'
 
-loris.channelize( clar, loris.createFreqReference( clar, 415*.8, 415*1.2 ), 1 )
+loris.channelize( clar, 415 )
 loris.distill( clar )
 
 # just for fun, print out the average 
@@ -118,7 +118,9 @@ a.setFreqDrift( 30 )
 v = loris.AiffFile( os.path.join(path, 'flute.aiff') ).samples()
 flut = a.analyze( v, samplerate )
 
-loris.channelize( flut, loris.createFreqReference( flut, 291*.8, 291*1.2, 50 ), 1 )
+# loris.channelize( flut, loris.createFreqReference( flut, 291*.8, 291*1.2, 50 ), 1 )
+refenv = a.fundamentalEnv()
+loris.channelize( flut, refenv, 1 )
 loris.distill( flut )
 
 # check flute synthesis:
