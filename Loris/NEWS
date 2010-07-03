@@ -31,6 +31,11 @@ specification in Python interface.
 - Fixed errors in the names of some analyzer bandwidth enhancement
 configuration functions in the C interface. 
 
+- Improved data type size specification in SdifFile.C -- can now
+define symbols like SIZEOF_INT during build to specify the
+sizes of 2- and 4- byte integer types (if not using the 
+autotools, which do this automatically). 
+
 -------------------------------------------------------
 changes since 1.6 release:
 
