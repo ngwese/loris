@@ -40,17 +40,6 @@
  *
  */
 
-#include <cmath>
-/* why is this here, you ask? Well, Csound's prototyp.h, as of
-   version 4.21, declares modf, and does so differently from
-   the math header.
-
-   double modf(double, double *);   // not included in math.h
-
-   The difference is in the throw() specification. Including
-   cmath here seems to suppress the compiler errors that
-   are the result of this bad idea.
-*/
 #include "lorisgens5.h"
 #include "string.h"
 
@@ -957,46 +946,46 @@ LorisMorpher::~LorisMorpher( void )
 long
 LorisMorpher::updateEnvelopes( void )
 {
-  //    first render all the labeled (morphed) Partials:
-  // std::cerr << "** Morphing Partials labeled " << labelMap.begin()->first;
-  // std::cerr << " to " << (--labelMap.end())->first << std::endl;
-
-  long envidx = 0;
-  LabelMap::iterator it;
-  for( it = labelMap.begin(); it != labelMap.end(); ++it, ++envidx )
+    //    first render all the labeled (morphed) Partials:
+    // std::cerr << "** Morphing Partials labeled " << labelMap.begin()->first;
+    // std::cerr << " to " << (--labelMap.end())->first << std::endl;
+    
+    long envidx = 0;
+    LabelMap::iterator it;
+    for( it = labelMap.begin(); it != labelMap.end(); ++it, ++envidx )
     {
-      std::pair<long, long> & indices = it->second;
-      Breakpoint bp = morphed_envelopes.valueAt(envidx);
-
-      long isrc = indices.first;
-      long itgt = indices.second;
-
-      //        this should not happen:
-      if ( itgt < 0 && isrc < 0 )
+        std::pair<long, long> & indices = it->second;
+        Breakpoint & bp = morphed_envelopes.valueAt(envidx);
+        
+        long isrc = indices.first;
+        long itgt = indices.second;
+        
+        //        this should not happen:
+        if ( itgt < 0 && isrc < 0 )
         {
 #ifdef DEBUG_LORISGENS
-          std::cerr << "HEY!!!! The labelMap had a pair of bogus indices in it at pos " << envidx << std::endl;
+            std::cerr << "HEY!!!! The labelMap had a pair of bogus indices in it at pos " << envidx << std::endl;
 #endif
-          continue;
+            continue;
         }
 
-      //        note: the time argument for all these morphParameters calls
-      //        is irrelevant, since it is only used to index the morphing
-      //        functions, which, as defined above, do not use the time
-      //        argument, they can only return their current value.
-      if ( itgt < 0 )
+        //        note: the time argument for all these morphParameters calls
+        //        is irrelevant, since it is only used to index the morphing
+        //        functions, which, as defined above, do not use the time
+        //        argument, they can only return their current value.
+        if ( itgt < 0 )
         {
           //    morph from the source to a dummy:
           // std::cerr << "** Fading from source " << envidx << std::endl;
           bp = morpher.fadeSrcBreakpoint( src_reader->valueAt(isrc), 0.0 );
         }
-      else if ( isrc < 0 )
+        else if ( isrc < 0 )
         {
           //    morph from a dummy to the target:
           // std::cerr << "** Fading to target " << envidx << std::endl;
           bp = morpher.fadeTgtBreakpoint( tgt_reader->valueAt(itgt), 0.0 );
         }
-      else
+        else
         {
           //    morph from the source to the target:
           // std::cerr << "** Morphing source to target " << envidx << std::endl;
@@ -1004,30 +993,30 @@ LorisMorpher::updateEnvelopes( void )
         }
     }
 
-  //    render unlabeled source Partials:
-  // std::cerr << "** Crossfading " << src_unlabeled.size();
-  // std::cerr << " unlabeled source Partials" << std::endl;
-  for( size_t i = 0; i < src_unlabeled.size(); ++i, ++envidx )
+    //    render unlabeled source Partials:
+    // std::cerr << "** Crossfading " << src_unlabeled.size();
+    // std::cerr << " unlabeled source Partials" << std::endl;
+    for( size_t i = 0; i < src_unlabeled.size(); ++i, ++envidx )
     {
-      //        fade from the source:
-      Breakpoint & bp = morphed_envelopes.valueAt(envidx);
-      bp = morpher.fadeSrcBreakpoint( src_reader->valueAt( src_unlabeled[i] ), 0.0 );
+        //        fade from the source:
+        Breakpoint & bp = morphed_envelopes.valueAt(envidx);
+        bp = morpher.fadeSrcBreakpoint( src_reader->valueAt( src_unlabeled[i] ), 0.0 );
     }
 
-  //    render unlabeled target Partials:
-  // std::cerr << "** Crossfading " << tgt_unlabeled.size();
-  // std::cerr << " unlabeled target Partials" << std::endl;
-  for( size_t i = 0; i < tgt_unlabeled.size(); ++i, ++envidx )
+    //    render unlabeled target Partials:
+    // std::cerr << "** Crossfading " << tgt_unlabeled.size();
+    // std::cerr << " unlabeled target Partials" << std::endl;
+    for( size_t i = 0; i < tgt_unlabeled.size(); ++i, ++envidx )
     {
-      //        fade to the target:
-      Breakpoint & bp = morphed_envelopes.valueAt(envidx);
-      bp = morpher.fadeTgtBreakpoint( tgt_reader->valueAt( tgt_unlabeled[i] ), 0.0 );
+        //        fade to the target:
+        Breakpoint & bp = morphed_envelopes.valueAt(envidx);
+        bp = morpher.fadeTgtBreakpoint( tgt_reader->valueAt( tgt_unlabeled[i] ), 0.0 );
     }
 
-  //    tag these envelopes:
-  EnvelopeReader::Tags()[ tag ] = &morphed_envelopes;
-
-  return morphed_envelopes.size();
+    //    tag these envelopes:
+    EnvelopeReader::Tags()[ tag ] = &morphed_envelopes;
+    
+    return morphed_envelopes.size();
 }
 
 #pragma mark -- lorismorph generator functions --

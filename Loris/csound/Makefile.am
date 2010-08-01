@@ -11,7 +11,7 @@
 
 EXTRA_DIST = tryit.csd trymorph.csd lorisgens5.C lorisgens5.h lorisgens4.C lorisgens4.h
 
-MAINTAINERCLEANFILES = 	Makefile.in
+MAINTAINERCLEANFILES = Makefile.in
 
 if HAVE_CSOUND5
 # source code for the Csound5 opcodes
@@ -30,14 +30,3 @@ noinst_LTLIBRARIES = liblorisops.la
 liblorisops_la_SOURCES = $(CSOUND_SRC)
 liblorisops_la_CXXFLAGS = $(CSOUND_CXXFLAGS) $(AM_CXXFLAGS) -I$(top_srcdir)/src
 endif
-
-#################################################################################
-# very old
-# if HAVE_CSOUND
-# csoundlibdir = $(libdir)/csound
-# csoundlib_LTLIBRARIES = lorisops.la
-# lorisops_la_SOURCES = lorisgens.C lorisgens.h
-# lorisops_la_CXXFLAGS = $(CSOUND_CXXFLAGS) $(AM_CXXFLAGS) -I$(top_srcdir)/src
-# lorisops_la_LDFLAGS = -module -avoid-version -no-undefined
-# lorisops_la_LIBADD = $(top_builddir)/src/libloris.la
-# endif

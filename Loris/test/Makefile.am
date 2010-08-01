@@ -9,7 +9,8 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-EXTRA_DIST = clarinet.aiff flute.aiff fromKyma.spc morphtest.py one_synth_phase_test.sdif
+EXTRA_DIST = clarinet.aiff flute.aiff fromKyma.spc morphtest.py \
+			 one_synth_phase_test.sdif csound_test.csd
 
 MAINTAINERCLEANFILES = Makefile.in
 
@@ -69,24 +70,7 @@ test_crop_LDADD = $(top_builddir)/src/libloris.la
 test_resample_SOURCES = test_Resampler.C
 test_resample_LDADD = $(top_builddir)/src/libloris.la
 
-####
-# PROBLEM
-# Under Darwin, at least, the loris dynamic library in 
-# $(top_builddir)/src is not the one linked when the
-# Python module is loaded! The will instead link an 
-# installed version of the library, or fail if the 
-# library cannot be found in the dynamic library path!
-#
-# This means that this test is NOT testing anything!
-#
-# Is this a libtool bug?
-#
-# It certainly seems that it _would_ be, but it seems 
-# that it might have been fixed. Today, it is working,
-# linking the development version of the Loris library
-# (newly-added functions would prevent the old library 
-# from linking to the Python module at all).
-####
+# Test Python module only if that module was built.
 if BUILD_PYTHON
 PYTHON_TEST = run_pytest
 
@@ -102,15 +86,31 @@ $(PYTHON_TEST):
 	chmod +x $@
 endif
 
+# Test Csound if Csound opcodes were built into the library.
+if HAVE_CSOUND
+CSOUND_TEST = run_csound_test
+
+
+if DARWIN
+CSOUND_OPCODELIB = "--opcode-lib=$(top_builddir)/src/.libs/libloris.dylib"
+else
+CSOUND_OPCODELIB = "--opcode-lib=$(top_builddir)/src/.libs/libloris.so"
+endif
+	
+$(CSOUND_TEST):
+	echo "$(CSOUND) $(CSOUND_OPCODELIB) $(DARWIN_CSOUND_OPCODELIB) $(top_srcdir)/test/csound_test.csd" >> $@
+	chmod +x $@
+endif
+
 check_PROGRAMS = test_cpp test_pi test_aiff test_partial test_distiller \
                  test_sdiffile test_morpher test_identity test_fundamental \
                  test_filter test_synthesizer test_crop test_resample
 
-check_SCRIPTS = $(PYTHON_TEST)
+check_SCRIPTS = $(PYTHON_TEST) $(CSOUND_TEST)
 
 TESTS = $(check_PROGRAMS) $(check_SCRIPTS) 
 
-CLEANFILES = $(PYTHON_TEST) 
+CLEANFILES = $(PYTHON_TEST) $(CSOUND_TEST)
 
 clean-local:
-	-rm -fr *.ctest.* *.pytest.* *.pi.* tmp.sdif 
+	-rm -fr *.ctest.* *.pytest.* *.pi.* tmp.sdif csound_opcode_test.aiff

@@ -314,11 +314,11 @@ AC_SUBST(PYFLAGS)
 dnl----------------------------------------------------------------
 dnl Look for csound.
 dnl
-dnl If csound is available, then prepare to build the csound 
+dnl If csound (header) is available, then prepare to build the csound 
 dnl opcodes. Prefer Csound5.
 dnl----------------------------------------------------------------
 
-AC_ARG_WITH(csound5,
+AC_ARG_WITH(csound,
     AC_HELP_STRING( [--with-csound5],
                     [build Csound5 opcodes (default is YES)] ),
     [USECSOUND5="$withval"], [USECSOUND5="yes"])
@@ -338,7 +338,7 @@ AC_ARG_VAR([CSOUND_CONFIG],
 dnl This configure code, parts provided by John Ramsdell,
 dnl works for Csound GBS versions 4.23f12gbs.10 or later.
 
-AC_ARG_WITH(csound,
+AC_ARG_WITH(csound4,
     AC_HELP_STRING( [--with-csound4],
                     [build Csound 4 opcodes (default is NO)] ),
     [USECSOUND4="$withval"], [USECSOUND4="no"])
@@ -373,6 +373,10 @@ if test "$FOUND_CSOUND5" == "yes" ; then
 fi
 if test "$FOUND_CSOUND4" == "yes" ; then
 	HAVE_CSOUND="yes"
+fi
+
+if test "$HAVE_CSOUND" == "yes" ; then
+	AC_PATH_PROG([CSOUND], [csound])
 fi
 
 AM_CONDITIONAL([HAVE_CSOUND], [test -n "$HAVE_CSOUND"])

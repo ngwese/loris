@@ -36,6 +36,9 @@ define symbols like SIZEOF_INT during build to specify the
 sizes of 2- and 4- byte integer types (if not using the 
 autotools, which do this automatically). 
 
+- Fixed a bug in the Csound5 opcodes that prevented morphing 
+from producing any output.
+
 -------------------------------------------------------
 changes since 1.6 release:
 
