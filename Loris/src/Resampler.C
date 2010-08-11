@@ -59,7 +59,7 @@ static Partial::iterator insert_resampled_at( Partial & newp, const Partial & p,
 
 /*
 TODO
-    - remove empties
+    - remove empties (currently handled automatically in the Python module
     
     - remove insert_resampled_at
     
@@ -303,12 +303,12 @@ void Resampler::quantize( Partial & p ) const
 	    double bpt = iter.time();
 	    
 	    //  find the nearest multiple of the quantization interval:
-        long qstep = 0.5 + ( bpt / interval_ );
+        long qstep = long( 0.5 + ( bpt / interval_ ) );
         
         long endstep = qstep-1; //  guarantee first insertion
         if ( newp.numBreakpoints() != 0 )
         {
-            endstep = 0.5 + ( newp.endTime() / interval_ );
+            endstep = long( 0.5 + ( newp.endTime() / interval_ ) );
         }
         
         //  insert a new Breakpoint if it does not duplicate
