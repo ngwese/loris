@@ -107,7 +107,19 @@ namespace Loris {
 // ---------------------------------------------------------------------------
 
 //	try to use the information gathered by configure -- if not using 
-//  config.h, then these have to be 
+//  config.h, then pick some (hopefully-) reasonable values for
+//	these things and hope for the best...
+#if ! defined( SIZEOF_SHORT )
+#define SIZEOF_SHORT 2
+#endif
+
+#if ! defined( SIZEOF_INT )
+#define SIZEOF_INT 4
+#endif
+
+#if ! defined( SIZEOF_LONG )
+#define SIZEOF_LONG 4	
+#endif
 
 #if defined(SIZEOF_SHORT) && (SIZEOF_SHORT == 2)
 typedef unsigned short  sdif_unicode;
