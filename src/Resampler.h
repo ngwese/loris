@@ -98,7 +98,7 @@ public:
     //!         applied after resampling.
     void setPhaseCorrect( bool correctPhase );
     	
-//	--- resampling ---
+//	--- resampling individual Partials ---
 
 	//! Resample the specified Partial using the stored quanitization interval. 
 	//! The Breakpoint times will comprise a contiguous sequence of all integer 
@@ -155,8 +155,9 @@ public:
     //! \param  p is the Partial to resample
     void quantize( Partial & p ) const;
 
-	 
-	//! Resample all Partials in the specified (half-open) range using this
+//	--- resampling PartialLists ---
+
+	//! Resample all Partials in the specified PartialList using this
 	//! Resampler's stored quanitization interval. The Breakpoint times in 
 	//! resampled Partials will comprise a contiguous sequence of all integer 
 	//! multiples of the sampling interval, starting and ending with the nearest 
@@ -164,34 +165,20 @@ public:
 	//! specified (the default)≤ frequencies and phases are corrected to be in 
     //! agreement and to match as nearly as possible the resampled phases. 
     //! 
-    //! Resampling is performed in-place. 
+    //! Resampling is performed in-place (the PartialList is modified). 
 	//!	
-	//!	\param begin is the beginning of the range of Partials to resample
-	//!	\param end is (one-past) the end of the range of Partials to resample
-	//!	
-	//!	If compiled with NO_TEMPLATE_MEMBERS defined, then begin and end
-	//!	must be PartialList::iterators, otherwise they can be any type
-	//!	of iterators over a sequence of Partials.
-#if ! defined(NO_TEMPLATE_MEMBERS)
-	template<typename Iter>
-	void resample( Iter begin, Iter end ) const;
-#else
-   inline 
-	void resample( PartialList::iterator begin, PartialList::iterator end  ) const;
-#endif	 
+	//!	\param plist is the container of Partials to resample
 
-	//!	Function call operator: same as resample( begin, end ).
-#if ! defined(NO_TEMPLATE_MEMBERS)
-	template<typename Iter>
-	void operator()( Iter begin, Iter end ) const
-#else
-	void operator()( PartialList::iterator begin, PartialList::iterator end  ) const
-#endif	 
+	void resample( PartialList & plist  ) const;
+
+	//!	Function call operator: same as resample( plist ).
+
+	void operator()( PartialList & plist  ) const
 	{ 
-	   resample( begin, end ); 
+	   resample( plist ); 
 	}
  
-	//! Resample all Partials in the specified (half-open) range using this
+	//! Resample all Partials in the specified PartialList using this
 	//! Resampler's stored quanitization interval. The Breakpoint times in 
 	//! resampled Partials will comprise a contiguous sequence of all integer 
 	//! multiples of the sampling interval, starting and ending with the nearest 
@@ -209,78 +196,23 @@ public:
     //! 
     //! Resampling is performed in-place. 
 	//!	
-	//!	\param  begin is the beginning of the range of Partials to resample
-	//!	\param  end is (one-past) the end of the range of Partials to resample
+	//!	\param plist is the container of Partials to resample
     //! \param  timingEnv is the timing envelope, a map of Breakpoint 
     //!         times in resampled Partials onto parameter sampling 
     //!         instants in the original Partials.
-	//!	
-	//!	If compiled with NO_TEMPLATE_MEMBERS defined, then begin and end
-	//!	must be PartialList::iterators, otherwise they can be any type
-	//!	of iterators over a sequence of Partials.
-#if ! defined(NO_TEMPLATE_MEMBERS)
-	template<typename Iter>
-	void resample( Iter begin, Iter end, const LinearEnvelope & timingEnv ) const;
-#else
-   inline 
-	void resample( PartialList::iterator begin, PartialList::iterator end,
-	               const LinearEnvelope & timingEnv) const;
-#endif	 
 
-    //! Quantize all Partials in the specified (half-open) range.
+	void resample( PartialList & plist,
+	               const LinearEnvelope & timingEnv ) const;
+
+    //! Quantize all Partials in the specified PartialList.
     //! Each Breakpoint in the Partials is replaced by a Breakpoint
     //! constructed by resampling the Partial at the nearest
     //! integer multiple of the of the resampling interval.
     //!	
-    //!	\param begin is the beginning of the range of Partials to quantize
-    //!	\param end is (one-past) the end of the range of Partials to quantize
-    //!	
-    //!	If compiled with NO_TEMPLATE_MEMBERS defined, then begin and end
-    //!	must be PartialList::iterators, otherwise they can be any type
-    //!	of iterators over a sequence of Partials.
-#if ! defined(NO_TEMPLATE_MEMBERS)
-	template<typename Iter>
-	void quantize( Iter begin, Iter end ) const;
-#else
-   inline 
-	void quantize( PartialList::iterator begin, PartialList::iterator end  ) const;
-#endif	 
-   	 
-// -- static members --
+	//!	\param plist is the container of Partials to quantize
 
-	//! Static member that constructs an instance and applies
-	//! it to a sequence of Partials. 
-	//! Construct a Resampler using the specified resampling
-	//! interval, and use it to channelize a sequence of Partials. 
-	//!
-	//! \param  begin is the beginning of a sequence of Partials to 
-	//!         resample.
-	//! \param  end is the end of a sequence of Partials to 
-	//!         resample.
-	//! \param  sampleInterval is the resampling interval in seconds, 
-	//!         Breakpoint data is computed at integer multiples of
-	//!         sampleInterval seconds.
-    //! \param  denseResampling is a boolean flag indicating that dense
-    //!         resamping (Breakpoint at every integer multiple of the 
-    //!         resampling interval) should be performed. If false (the
-    //!         default), sparse resampling (Breakpoints only at multiples
-    //!         of the resampling interval near Breakpoint times in the
-    //!         original Partial) is performed.
-	//! \throw  InvalidArgument if sampleInterval is not positive.
-	//!	
-	//!	If compiled with NO_TEMPLATE_MEMBERS defined, then begin and end
-	//!	must be PartialList::iterators, otherwise they can be any type
-	//!	of iterators over a sequence of Partials.
-#if ! defined(NO_TEMPLATE_MEMBERS)
-	template< typename Iter >
-	static 
-	void resample( Iter begin, Iter end, double sampleInterval, 
-	               bool denseResampling = false );
-#else
-	static inline 
-	void resample( PartialList::iterator begin, PartialList::iterator end,
-                  double sampleInterval, bool denseResampling = false );
-#endif	 
+	void quantize( PartialList & plist  ) const;
+   	 
 
 //	--- instance variables ---
 private:
@@ -294,154 +226,7 @@ private:
 	
 };	//	end of class Resampler
 
-// ---------------------------------------------------------------------------
-//	resample (sequence of Partials)
-// ---------------------------------------------------------------------------
-//! Resample all Partials in the specified (half-open) range using this
-//! Resampler's stored sampling interval, so that the Breakpoints in 
-//! the Partial envelopes will all lie on a common temporal grid.
-//! The Breakpoint times in the resampled Partial will comprise a  
-//! contiguous sequence of integer multiples of the sampling interval,
-//! beginning with the multiple nearest to the Partial's start time and
-//! ending with the multiple nearest to the Partial's end time. Resampling
-//! is performed in-place. 
-//!	
-//!	\param begin is the beginning of the range of Partials to resample
-//!	\param end is (one-past) the end of the range of Partials to resample
-//!	
-//!	If compiled with NO_TEMPLATE_MEMBERS defined, then begin and end
-//!	must be PartialList::iterators, otherwise they can be any type
-//!	of iterators over a sequence of Partials.
-//
-#if ! defined(NO_TEMPLATE_MEMBERS)
-template<typename Iter>
-void Resampler::resample( Iter begin, Iter end ) const
-#else
-inline 
-void Resampler::resample( PartialList::iterator begin, PartialList::iterator end  ) const
-#endif	 
-{
-	while ( begin != end )
-	{
-		resample( *begin++ );
-	}
-}
 
-// ---------------------------------------------------------------------------
-//	resample (sequence of Partials, with timing envelope)
-// ---------------------------------------------------------------------------
-//! Resample all Partials in the specified (half-open) range using this
-//! Resampler's stored sampling interval, so that the Breakpoints in 
-//! the Partial envelopes will all lie on a common temporal grid.
-//! The Breakpoint times in the resampled Partial will comprise a  
-//! contiguous sequence of integer multiples of the sampling interval,
-//! beginning with the multiple nearest to the Partial's start time and
-//! ending with the multiple nearest to the Partial's end time. Resampling
-//! is performed in-place. 
-//!	
-//!	\param begin is the beginning of the range of Partials to resample
-//!	\param end is (one-past) the end of the range of Partials to resample
-//! \param  timingEnv is the timing envelope, a map of Breakpoint 
-//!         times in resampled Partials onto parameter sampling 
-//!         instants in the original Partials.
-//!	
-//!	If compiled with NO_TEMPLATE_MEMBERS defined, then begin and end
-//!	must be PartialList::iterators, otherwise they can be any type
-//!	of iterators over a sequence of Partials.
-//
-#if ! defined(NO_TEMPLATE_MEMBERS)
-template<typename Iter>
-void Resampler::resample( Iter begin, Iter end, const LinearEnvelope & timingEnv ) const
-#else
-inline 
-void Resampler::resample( PartialList::iterator begin, PartialList::iterator end, 
-                          const LinearEnvelope & timingEnv  ) const
-#endif	 
-{
-	while ( begin != end )
-	{
-		resample( *begin++, timingEnv );
-	}
-}
-
-// ---------------------------------------------------------------------------
-//	quantize (sequence of Partials)
-// ---------------------------------------------------------------------------
-//! Quantize all Partials in the specified (half-open) range.
-//! Each Breakpoint in the Partials is replaced by a Breakpoint
-//! constructed by resampling the Partial at the nearest
-//! integer multiple of the of the resampling interval.
-//!	
-//!	\param begin is the beginning of the range of Partials to quantize
-//!	\param end is (one-past) the end of the range of Partials to quantize
-//!	
-//!	If compiled with NO_TEMPLATE_MEMBERS defined, then begin and end
-//!	must be PartialList::iterators, otherwise they can be any type
-//!	of iterators over a sequence of Partials.
-//
-#if ! defined(NO_TEMPLATE_MEMBERS)
-template<typename Iter>
-void Resampler::quantize( Iter begin, Iter end ) const
-#else
-inline 
-void Resampler::quantize( PartialList::iterator begin, PartialList::iterator end  ) const
-#endif	 
-{
-	while ( begin != end )
-	{
-		quantize( *begin++ );
-	}
-}
-
-
-// ---------------------------------------------------------------------------
-//	resample (static)
-// ---------------------------------------------------------------------------
-//! Static member that constructs an instance and applies
-//! phase-correct resampling to a sequence of Partials. 
-//! Construct a Resampler using the specified resampling
-//! interval, and use it to channelize a sequence of Partials. 
-//!
-//! \param  begin is the beginning of a sequence of Partials to 
-//!         resample.
-//! \param  end is the end of a sequence of Partials to 
-//!         resample.
-//! \param  sampleInterval is the resampling interval in seconds, 
-//!         Breakpoint data is computed at integer multiples of
-//!         sampleInterval seconds.
-//! \param  denseResampling is a boolean flag indicating that dense
-//!         resamping (Breakpoint at every integer multiple of the 
-//!         resampling interval) should be performed. If false (the
-//!         default), sparse resampling (Breakpoints only at multiples
-//!         of the resampling interval near Breakpoint times in the
-//!         original Partial) is performed.
-//! \throw  InvalidArgument if sampleInterval is not positive.
-//!	
-//!	If compiled with NO_TEMPLATE_MEMBERS defined, then begin and end
-//!	must be PartialList::iterators, otherwise they can be any type
-//!	of iterators over a sequence of Partials.
-//
-#if ! defined(NO_TEMPLATE_MEMBERS)
-template< typename Iter >
-void Resampler::resample( Iter begin, Iter end, double sampleInterval, 
-                          bool denseResampling )
-#else
-inline
-void Resampler::resample( PartialList::iterator begin, PartialList::iterator end,
-                          double sampleInterval, bool denseResampling )
-#endif	 
-{
-    Resampler instance( sampleInterval );
-    
-    if ( denseResampling )
-    {
-        instance.resample( begin, end );
-    }
-    else
-    {
-        instance.quantize( begin, end );
-    }
-}
 
 }	//	end of namespace Loris
 

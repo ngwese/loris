@@ -47,7 +47,7 @@ using namespace std;
 // --- macros ---
 
 //	define this to see pages and pages of spew
-// #define VERBOSE
+//#define VERBOSE
 #ifdef VERBOSE									
 	#define TEST(invariant)									\
 		do {													\
@@ -160,7 +160,7 @@ static void test_dense_resample_list( void )
     
     //  resample
     Resampler R( 0.3 );
-    R.resample( l.begin(), l.end() );
+    R.resample( l );
 
     
     //  check each Partial for correct resampling
@@ -240,7 +240,7 @@ static void test_resample_with_timing( void )
     
     //  resample
     Resampler R( 0.2 );
-    R.resample( l.begin(), l.end(), env );
+    R.resample( l, env );
     
     //  check each Partial for correct resampling
     PartialList::iterator iter = l.begin();
@@ -254,10 +254,12 @@ static void test_resample_with_timing( void )
     TEST_SAME_TIMES( cp1.endTime(), 3.0 );
 
     //  #2
-    //  should be empty
+    //  should be empty, and therefore have been removed
+    /*
     Partial & cp2 = *iter++;
     TEST_VALUE( cp2.label(), 2 );
     TEST_VALUE( cp2.numBreakpoints(), 0 );
+    */
     
     //  #3
     //  should have 10 Breakpoints, starting at .6, ending 2.4
@@ -283,11 +285,13 @@ static void test_resample_with_timing( void )
     TEST_SAME_TIMES( cp4.endTime(), 3.0 );
 
     //  #5
-    //  should be empty
+    //  should be empty, and therefore have been removed
+    /*
     Partial & cp5 = *iter++;
     TEST_VALUE( cp5.label(), 5 );
     TEST_VALUE( cp5.numBreakpoints(), 0 );
-    
+    */
+    TEST( iter == l.end() );
 }    
 
 // ----------- test_quantize_list -----------
@@ -314,7 +318,7 @@ static void test_quantize_list( void )
     
     //  resample
     Resampler R( 0.4 );
-    R.quantize( l.begin(), l.end() );
+    R.quantize( l );
 
     //  check each Partial for correct quantizing
     PartialList::iterator iter = l.begin();

@@ -1053,8 +1053,7 @@ int main( int argc, char * argv[] )
             Loris::Resampler resamp( gResample );
             cout << "* resampling " << gAnalyzer->partials().size() 
                  << " partials at " << 1000*gResample << " ms intervals" << endl;
-            resamp.resample( gAnalyzer->partials().begin(), 
-                             gAnalyzer->partials().end() );
+            resamp.resample( gAnalyzer->partials() );
         }
             
         cout << "* exporting " << gAnalyzer->partials().size(); 

@@ -35,6 +35,7 @@
  *
  *
  * Phase correction added by Kelly 13 Dec 2005.
+ * Interface updated by Kelly Aug 2010.
  */
 #if HAVE_CONFIG_H
 	#include "config.h"
@@ -48,24 +49,30 @@
 #include "Partial.h"
 #include "phasefix.h"
 
+#include <algorithm>
 #include <cmath>
 
 //	begin namespace
 namespace Loris {
 
-//  helper declarations:
-static Partial::iterator insert_resampled_at( Partial & newp, const Partial & p, 
-                                              double sampleTime, double insertTime );
-
 /*
 TODO
-    - remove empties (currently handled automatically in the Python module
+    X remove empties (currently handled automatically in the Python module)
     
-    - remove insert_resampled_at
+    X simplify interface, operate on containers, not iterator ranges
+        - only two operations, resample and quantize, taking either a
+        Partial or a PartialList, remove the static member too
+    
+    X remove insert_resampled_at (??)
     
     - phase correct with timing?
     
+    - timing envelope as class member? Like morphing envelopes?
+    
+    - in-place operation? 
+    
     - fade time (for amplitude envelope sampling) - equal to interval? half?
+        wtf???
 */
 
 
@@ -150,12 +157,20 @@ Resampler::resample( Partial & p ) const
 	double lastInsertTime  = p.endTime() + ( 0.5 * interval_ );
 		
 	//  resample:
-	for (  double tins = firstInsertTime; tins <= lastInsertTime; tins += interval_ ) 
+	for (  double insertTime = firstInsertTime; 
+	       insertTime <= lastInsertTime; 
+	       insertTime += interval_ ) 
 	{
-	    //  sample time is obtained from the timing envelope, if specified, 
-	    //  otherwise same as the insert time:
-	    double tsamp = tins;
-        insert_resampled_at( newp, p, tins, tins );        
+	    //  sample time is same as the insert time:
+	    double sampleTime = insertTime;
+	    
+        //  make a resampled Breakpoint:
+        Breakpoint newbp = p.parametersAt( sampleTime );
+                
+        newp.insert( insertTime, newbp );
+
+        debugger << "inserted Breakpoint having amplitude " << newbp.amplitude() 
+                 << " at time " << insertTime << endl;
 	}
 	
 	//	store the new Partial:
@@ -218,15 +233,17 @@ Resampler::resample( Partial & p, const LinearEnvelope & timingEnv ) const
 	       insertTime <= lastInsertTime; 
 	       insertTime += interval_ ) 
 	{
-	    //  sample time is obtained from the timing envelope, if specified, 
-	    //  otherwise same as the insert time:
+	    //  sample time is obtained from the timing envelope:
 	    double sampleTime = timingEnv.valueAt( insertTime );	    	            
         
         //  make a resampled Breakpoint:
         Breakpoint newbp = p.parametersAt( sampleTime );
                 
-        Partial::iterator ret_pos = newp.insert( insertTime, newbp );
-                
+        newp.insert( insertTime, newbp );                
+
+        debugger << "inserted Breakpoint having amplitude " << newbp.amplitude() 
+                 << " at time " << insertTime << endl;
+
 	}
 		
 	//  remove excess null Breakpoints at the ends of the newly-formed
@@ -365,33 +382,103 @@ void Resampler::quantize( Partial & p ) const
 }
 
 // ---------------------------------------------------------------------------
-//	insert_resampled_at (helper)
+//	is_empty_Partial (helper)
 // ---------------------------------------------------------------------------
-//
-static Partial::iterator 
-insert_resampled_at( Partial & newp, const Partial & p, 
-                     double sampleTime, double insertTime )
+// Predicate returning true if a Partial has no Breakpoints, used to prune 
+// away empties after resampling.
+
+static bool is_empty_Partial( Partial & p )
 {
-    //  make a resampled Breakpoint:
-    Breakpoint newbp = p.parametersAt( sampleTime );
-    
-    //  handle end points to reduce error at ends
-    if ( sampleTime < p.startTime() )
-    {
-        newbp.setAmplitude( p.first().amplitude() );
-    }
-    else if ( sampleTime > p.endTime() )
-    {
-        newbp.setAmplitude( p.last().amplitude() );
-    }
-   
-    
-    Partial::iterator ret_pos = newp.insert( insertTime, newbp );
-    
-    debugger << "inserted Breakpoint having amplitude " << newbp.amplitude() 
-             << " at time " << insertTime << endl;
-             
-    return ret_pos;             
+    return 0 == p.numBreakpoints();
+}    
+
+// ---------------------------------------------------------------------------
+//	resample (sequence of Partials)
+// ---------------------------------------------------------------------------
+//! Resample all Partials in the specified PartialList using this
+//! Resampler's stored quanitization interval. The Breakpoint times in 
+//! resampled Partials will comprise a contiguous sequence of all integer 
+//! multiples of the sampling interval, starting and ending with the nearest 
+//! multiples to the ends of the Partial. If phase correct resampling is 
+//! specified (the default)≤ frequencies and phases are corrected to be in 
+//! agreement and to match as nearly as possible the resampled phases. 
+//! 
+//! Resampling is performed in-place (the PartialList is modified). 
+//!	
+//!	\param plist is the container of Partials to resample
+//
+void Resampler::resample( PartialList & plist  ) const
+{
+    std::for_each( plist.begin(), plist.end(), *this );
+    /*
+	for ( PartialList::iterator it = plist.begin(); it != plist.end(); ++ it )
+	{
+		resample( *it );
+	}
+	*/
+	
+	//  prune away empties
+	plist.erase( 
+	    std::remove_if( plist.begin(), plist.end(), is_empty_Partial ),
+	    plist.end() );
+}
+
+// ---------------------------------------------------------------------------
+//	resample (sequence of Partials, with timing envelope)
+// ---------------------------------------------------------------------------
+//! Resample all Partials in the specified PartialList using this
+//! Resampler's stored sampling interval, so that the Breakpoints in 
+//! the Partial envelopes will all lie on a common temporal grid.
+//! The Breakpoint times in the resampled Partial will comprise a  
+//! contiguous sequence of integer multiples of the sampling interval,
+//! beginning with the multiple nearest to the Partial's start time and
+//! ending with the multiple nearest to the Partial's end time. Resampling
+//! is performed in-place. 
+//!	
+//!	\param plist is the container of Partials to resample
+//! \param  timingEnv is the timing envelope, a map of Breakpoint 
+//!         times in resampled Partials onto parameter sampling 
+//!         instants in the original Partials.
+//!	
+//
+void Resampler::resample( PartialList & plist,
+	               const LinearEnvelope & timingEnv ) const
+{
+	for ( PartialList::iterator it = plist.begin(); it != plist.end(); ++it )
+	{
+		resample( *it, timingEnv );
+	}
+
+	//  prune away empties
+	plist.erase( 
+	    std::remove_if( plist.begin(), plist.end(), is_empty_Partial ),
+	    plist.end() );
+	
+}
+
+// ---------------------------------------------------------------------------
+//	quantize (sequence of Partials)
+// ---------------------------------------------------------------------------
+//! Quantize all Partials in the specified PartialList.
+//! Each Breakpoint in the Partials is replaced by a Breakpoint
+//! constructed by resampling the Partial at the nearest
+//! integer multiple of the of the resampling interval.
+//!	
+//!	\param plist is the container of Partials to quantize
+//!	
+// 
+void Resampler::quantize( PartialList & plist  ) const	 
+{
+	for ( PartialList::iterator it = plist.begin(); it != plist.end(); ++it )
+	{
+		quantize( *it );
+	}
+	
+	//  prune away empties
+	plist.erase( 
+	    std::remove_if( plist.begin(), plist.end(), is_empty_Partial ),
+	    plist.end() );
+	
 }
 
 }	//	end of namespace Loris

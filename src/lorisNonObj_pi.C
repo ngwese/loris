@@ -920,7 +920,8 @@ void resample( PartialList * partials, double interval )
 		
 		notifier << "resampling " << partials->size() << " Partials" << Loris::endl;
 
-      	Resampler::resample( partials->begin(), partials->end(), interval );
+      	Resampler r( interval );
+      	r.resample( *partials );
 
         //  remove any resulting empty Partials
         PartialList::iterator it = partials->begin();
@@ -954,8 +955,8 @@ void resample( PartialList * partials, double interval )
 /* ---------------------------------------------------------------- */
 /*        shapeSpectrum
 /*  Scale the amplitudes of a set of Partials by applying 
-    a spectral suface constructed from another set.
-    Strecth the spectral surface in time and frequency
+    a spectral surface constructed from another set.
+    Stretch the spectral surface in time and frequency
     using the specified stretch factors. 
  */
 extern "C"

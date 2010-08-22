@@ -166,11 +166,11 @@ static void test_markedPartials( void )
 	#endif
 	fout.markers().push_back( Marker( .1, "Marker2" ) );
 	
-	char * name = "tmp.sdif";
+	const char * name = "tmp.sdif";
 	std::cout << "writing " << name << "\n";
-	fout.write( "tmp.sdif" );
+	fout.write( name );
 	std::cout << "reading " << name << "\n";
-	SdifFile f( "tmp.sdif" );
+	SdifFile f( name );
 
 	std::cout << "found " << f.partials().size() << " partials.\n";
 	
