@@ -55,9 +55,6 @@
 #include <string>
 #include <stdexcept>
 
-#define ESTIMATE_F0 1
-#define ESTIMATE_AMP 0
-
 using std::cout;
 using std::endl;
 
@@ -66,7 +63,7 @@ using namespace Loris;
 int main( void )
 {
 	cout << "Loris C++ API test, using " << LORIS_VERSION_STR << endl;
-	cout << "Kelly Fitz 2006" << endl << endl;
+	cout << "Kelly Fitz 2011" << endl << endl;
 	cout << "Generates a simple linear morph between a " << endl;
 	cout << "clarinet and a flute using the C++ library." << endl << endl;
 	
@@ -81,11 +78,13 @@ int main( void )
 	{
         //	analyze clarinet tone
         cout << "importing clarinet samples" << endl;
-        Analyzer a( 415*.8, 415*1.6 );
         AiffFile f( path + "clarinet.aiff" );
 
         // analyze the clarinet 
         cout << "analyzing clarinet 4G#" << endl;
+        Analyzer a( 415*.8, 415*1.6 );
+        a.setFreqDrift( 30 );
+        a.setAmpFloor( -90 );
         a.analyze( f.samples(), f.sampleRate() );
         PartialList clar = a.partials();
 
@@ -122,56 +121,47 @@ int main( void )
         // analyze the flute
         cout << "analyzing flute 4D" << endl;
         a = Analyzer( 270 );
-#if defined(ESTIMATE_F0) && ESTIMATE_F0
+
 		cout << "Analyzer will build a fundamental frequency estimate for the flute" << endl;
         a.buildFundamentalEnv( 270, 310 );
-#endif
-#if defined(ESTIMATE_AMP) && ESTIMATE_AMP
 		a.buildAmpEnv( true );
-#endif
         a.analyze( f.samples(), f.sampleRate() );
         PartialList flut = a.partials();
 
-        // channelize and distill
-        cout << "distilling" << endl;
-#if defined(ESTIMATE_F0) && ESTIMATE_F0
-		const LinearEnvelope & flutRef = a.fundamentalEnv();	
-		double est_time = flutRef.begin()->first;
+		LinearEnvelope fund = a.fundamentalEnv();
+		double est_time = fund.begin()->first;
 		cout << "flute fundamental envelope starts at time " << est_time << endl;
 		while ( est_time < 2 )
 		{
 			cout << "flute fundamental estimate at time " 
-				 << est_time << " is " << flutRef.valueAt( est_time ) << endl;
+				 << est_time << " is " << fund.valueAt( est_time ) << endl;
 			est_time += 0.35;
 		}		
-#else        
-        FrequencyReference flutRef( flut.begin(), flut.end(), 291*.8, 291*1.2, 50 );
-#endif
-        Channelizer::channelize( flut, flutRef, 1 );
-        Distiller::distill( flut, 0.001 );
-        cout << "obtained " << flut.size() << " distilled flute Partials" << endl;
 
-#if defined(ESTIMATE_F0) && ESTIMATE_F0
-#if defined(ESTIMATE_AMP) && ESTIMATE_AMP
 		//  generate a sinusoid that tracks the fundamental
 		//	and amplitude envelopes obtained during analysis
 		cout << "synthesizing sinusoid from flute amp and fundamental estimates" << endl;
-		Partial boo;
-		LinearEnvelope fund = a.fundamentalEnv();
+		Partial f1;
 		LinearEnvelope::iterator it;
 		for ( it = fund.begin(); it != fund.end(); ++it )
 		{
 			Breakpoint bp( it->second, a.ampEnv().valueAt( it->first ), 0, 0 );
-			boo.insert( it->first, bp );
-		}
-		
-		PartialList boolist;
-		boolist.push_back( boo );
-		AiffFile boofile( boolist.begin(), boolist.end(), 44100 );
-		boofile.write( "flutefundamental.aiff" );
+			f1.insert( it->first, bp );
+		}		
+		AiffFile fundfile( 44100 );
+        fundfile.addPartial( f1 );
+		fundfile.write( "flutefundamental.aiff" );
 
-#endif
-#endif
+
+        // channelize and distill
+        cout << "distilling" << endl;
+        FrequencyReference flutRef( flut.begin(), flut.end(), 291*.8, 291*1.2, 50 );
+        //LinearEnvelope flutRef = a.fundamentalEnv();	
+		
+        Channelizer::channelize( flut, flutRef, 1 );
+        Distiller::distill( flut, 0.001 );
+        cout << "obtained " << flut.size() << " distilled flute Partials" << endl;
+        
 
         cout << "exporting " << flut.size() << " partials to SDIF file" << endl;
         SdifFile::Export( "flute.ctest.sdif", flut );

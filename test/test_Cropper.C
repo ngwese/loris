@@ -33,8 +33,10 @@
  */
 
 #include "Partial.h"
+#include "PartialList.h"
 #include "PartialUtils.h"
 #include "Exception.h"
+
 
 #include "loris.h"
 

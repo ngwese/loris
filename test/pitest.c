@@ -67,7 +67,7 @@ int main( void )
    double tgt_times[] = {0.3, 1.2};
    
    printf( "Loris procedural interface test.\n" );
-   printf( "Kelly Fitz 2005\n\n" );
+   printf( "Kelly Fitz 2011\n\n" );
    printf( "Generates a simple linear morph between a \n" );
    printf( "clarinet and a flute using the Loris library.\n\n" );
    
@@ -90,12 +90,12 @@ int main( void )
    printf( "analyzing clarinet 4G#\n" );
    analyzer_configure( 415*.8, 415*1.6 );
    analyzer_setFreqDrift( 30 );
-   analyzer_setAmpFloor( -80 );
+   analyzer_setAmpFloor( -90 );
    analyze( samples, N, srate, clar );
    
    /* channelize and distill */
    printf( "distilling\n" );
-   reference = createFreqReference( clar, 0, 1000, 20 );
+   reference = createFreqReference( clar, 415*.8, 415*1.2, 50 );
    channelize( clar, reference, 1 );
    distill( clar );
    destroyLinearEnvelope( reference );
@@ -141,12 +141,12 @@ int main( void )
     /* analyze the flute */
    printf( "analyzing flute 4D\n" );
    analyzer_configure( 270, 270 );
-   analyzer_setFreqDrift( 30 );
+   /* analyzer_setFreqDrift( 30 ); */
    analyze( samples, N, srate, flut );
    
     /* channelize and distill */
    printf( "distilling\n" );
-   reference = createFreqReference( flut, 0, 1000, 20 );
+   reference = createFreqReference( flut, 291*.8, 291*1.2, 50 );
    channelize( flut, reference, 1 );
    distill( flut );
    destroyLinearEnvelope( reference );

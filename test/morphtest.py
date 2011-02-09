@@ -67,8 +67,10 @@ samplerate = cf.sampleRate()
 clar = a.analyze( v, samplerate )
 
 print 'checking SDIF export/import'
+print clar.size() , "partials to export"
 loris.exportSdif( 'clarinet.pytest.sdif', clar )
 clar = loris.importSdif( 'clarinet.pytest.sdif' )
+print clar.size() , "partials imported"
 
 try:
     print 'making a bogus attempt at writing an Spc file --'
@@ -82,6 +84,7 @@ except:
 
 loris.channelize( clar, 415 )
 loris.distill( clar )
+
 
 # just for fun, print out the average 
 # frequency of the first partial in the
