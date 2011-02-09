@@ -91,19 +91,16 @@ Oscillator::resetEnvelopes( const Breakpoint & bp, double srate )
     //  clamp bandwidth:
     if ( m_instbandwidth > 1. )
     {
-        debugger << "clamping bandwidth at 1." << endl;
         m_instbandwidth = 1.;
     }
     else if ( m_instbandwidth < 0. )
     { 
-        debugger << "clamping bandwidth at 0." << endl;
         m_instbandwidth = 0.;
     }
 
     //  don't alias:
     if ( m_instfrequency > Pi )
     { 
-        debugger << "fading out aliasing Partial" << endl;
         m_instamplitude = 0.;
     }
     
@@ -162,19 +159,16 @@ Oscillator::oscillate( double * begin, double * end,
     //  clamp bandwidth:
     if ( targetBw > 1. )
     {
-        debugger << "clamping bandwidth at 1." << endl;
         targetBw = 1.;
     }
     else if ( targetBw < 0. )
     { 
-        debugger << "clamping bandwidth at 0." << endl;
         targetBw = 0.;
     }
         
     //  don't alias:
     if ( targetFreq > Pi )  //  radian Nyquist rate
     {
-        debugger << "fading out Partial above Nyquist rate" << endl;
         targetAmp = 0.;
     }
 

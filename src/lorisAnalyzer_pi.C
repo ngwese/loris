@@ -160,7 +160,8 @@ void analyze( const double * buffer, unsigned int bufferSize,
 			ptr_instance->analyze( buffer, buffer + bufferSize, srate );
 		
 			//	splice the Partials into the destination list:
-			partials->splice( partials->end(), ptr_instance->partials() );
+        	partials->absorb( partials->end(), ptr_instance->partials() );
+            
 		}
 	}
 	catch( Exception & ex ) 

@@ -79,9 +79,7 @@
         class Breakpoint;
         class LinearEnvelope;
         class Partial;
-      
-        //    this typedef has to be copied from PartialList.h
-        typedef std::list< Loris::Partial > PartialList;
+        class PartialList;
     }
    
    // import those names into the global namespace

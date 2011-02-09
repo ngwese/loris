@@ -506,7 +506,7 @@ Channelizer::channelize( Partial & partial ) const
 {
     using std::pow;
 
-	debugger << "channelizing Partial with " << partial.numBreakpoints() << " Breakpoints" << endl;
+	// debugger << "channelizing Partial with " << partial.numBreakpoints() << " Breakpoints" << endl;
 			
 	//	compute an amplitude-weighted average channel
 	//	label for each Partial:

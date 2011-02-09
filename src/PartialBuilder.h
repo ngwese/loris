@@ -77,7 +77,7 @@ public:
     //  warping envelope is applied to the spectral peak frequencies
     //  and the frequency drift parameter in each frame before peaks
     //  are linked to eligible Partials. All the Partial frequencies
-    //  need to be un-warped at the ned of the building process, by
+    //  need to be un-warped at the end of the building process, by
     //  calling finishBuilding().
 	PartialBuilder( double drift, const Envelope & freqWarpEnv );
 	
@@ -100,9 +100,8 @@ public:
 	//	Un-do the frequency warping performed in buildPartials, and return 
 	//	the Partials that were built. After calling finishBuilding, the
     //  builder is returned to its initial state, and ready to build another
-    //  set of Partials. Partials are returned by appending them to the 
-    //  supplied PartialList.
-	void finishBuilding( PartialList & product );
+    //  set of Partials. 
+	PartialList finishBuilding( void );
 
 private:
 

@@ -661,7 +661,7 @@ void importSdif( const char * path, PartialList * partials )
 
 		notifier << "importing Partials from " << path << endl;
 		SdifFile imp( path );
-		partials->splice( partials->end(), imp.partials() );
+		partials->absorb( partials->end(), imp.partials() );
 	}
 	catch( Exception & ex ) 
 	{
@@ -690,7 +690,14 @@ void importSpc( const char * path, PartialList * partials )
 	{
 		Loris::notifier << "importing Partials from " << path << Loris::endl;
 		Loris::SpcFile imp( path );
-		partials->insert( partials->end(), imp.partials().begin(), imp.partials().end() );
+        for ( Loris::SpcFile::partials_type::const_iterator it = imp.partials().begin();
+              it != imp.partials().end();
+              ++it )
+        {
+            partials->insert( partials->end(), *it );
+        }
+        //  works even with NO_TEMPLATE_MEMBERS defined, the following does not
+		// partials->insert( partials->end(), imp.partials().begin(), imp.partials().end() );
 
 	}
 	catch( Exception & ex ) 
@@ -794,7 +801,8 @@ void morph( const PartialList * src0, const PartialList * src1,
 		m.morph( src0->begin(), src0->end(), src1->begin(), src1->end() );
 				
 		//	splice the morphed Partials into dst:
-		dst->splice( dst->end(), m.partials() );
+        dst->absorb( dst->end(), m.partials() );
+
 	}
 	catch( Exception & ex ) 
 	{
@@ -881,7 +889,7 @@ void morphWithReference( const PartialList * src0,
 		m.morph( src0->begin(), src0->end(), src1->begin(), src1->end() );
 				
 		//	splice the morphed Partials into dst:
-		dst->splice( dst->end(), m.partials() );
+        dst->absorb( dst->end(), m.partials() );
 	}
 	catch( Exception & ex ) 
 	{

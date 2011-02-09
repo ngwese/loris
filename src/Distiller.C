@@ -300,20 +300,21 @@ static bool distillSorter( const Partial & lhs, const Partial & rhs )
 // ---------------------------------------------------------------------------
 //	distillOne
 // ---------------------------------------------------------------------------
-//	Distill a list of Partials having a common label
-// 	into a single Partial with that label, and append it
-//  to the distilled collection. If an empty list of Partials
-//  is passed, then an empty Partial having the specified
-//  label is appended.
-//
-void Distiller::distillOne( PartialList & partials, Partial::label_type label,
-                            PartialList & distilled )
+//	Distill a list of Partials into a single Partial and return it.
+//  Assign it the label of the first Partial in the list (they should
+//  all have the same label, or no label).
+//  If an empty list of Partials is passed, then an empty Partial
+//  is returned.
+//                            
+Partial 
+Distiller::distillOne( PartialList & partials )                            
 {
-	debugger << "Distiller found " << partials.size() 
-			 << " Partials labeled " << label << endl;
+    
+	debugger << "Distiller found " << partials.size()
+			 << " Partials labeled " << partials.front().label() << endl;
 
 	Partial newp;
-    newp.setLabel( label );
+    newp.setLabel( partials.front().label() );
 
     if ( partials.size() == 1 )
     {
@@ -398,12 +399,18 @@ void Distiller::distillOne( PartialList & partials, Partial::label_type label,
         lastBpPos = newp.erase( lastBpPos );
     }
     
-    //  insert the new Partial in the distilled collection 
-    //  in label order:
-    distilled.insert( std::lower_bound( distilled.begin(), distilled.end(), 
-                                        newp, 
-                                        PartialUtils::compareLabelLess() ),
-                      newp );
+
+    //  return the distilled Partial:
+    return newp;
+}
+
+// ---------------------------------------------------------------------------
+//	local_compare_label_less
+// ---------------------------------------------------------------------------
+static bool local_compare_label_less( const Partial & lhs, const Partial & rhs )
+{
+    static PartialUtils::compareLabelLess c;
+    return c( lhs, rhs );
 }
 
 // ---------------------------------------------------------------------------
@@ -431,12 +438,14 @@ void Distiller::distillOne( PartialList & partials, Partial::label_type label,
 //
 PartialList::iterator Distiller::distill_list( PartialList & partials )
 {  
+    debugger << "--- in distill_list" << endl; 
+
     //  sort the Partials by label, this is why it
     //  is so much better to distill a list!    
-    partials.sort( PartialUtils::compareLabelLess() );
+    partials.sort( local_compare_label_less );
 
-    //  temporary container of distilled Partials:
-    PartialList distilled; 
+    //  temporary containers of distilled and unlabeled Partials:
+    PartialList distilled, unlabeled; 
 	
 	PartialList::iterator lower = partials.begin();
 	while ( lower != partials.end() )
@@ -457,25 +466,38 @@ PartialList::iterator Distiller::distill_list( PartialList & partials )
         {
             //	make a container of the Partials having the same 
             //	label, and distill them:
-            PartialList samelabel;
-            samelabel.splice( samelabel.begin(), partials, lower, upper );
-            distillOne( samelabel, label, distilled );
+            PartialList samelabel = partials.extract( lower, upper );
+            Partial newp = distillOne( samelabel );
+            newp.setLabel( label );
+            
+            //  append the new Partial to the distilled list, the Partials
+            //  are already sorted in label order (above):
+            distilled.insert( distilled.end(), newp );
+
+        }
+        else
+        {
+            //  make a container of Partials that are unlabeled, they 
+            //  will be appended to the distilled list at the end
+            unlabeled = partials.extract( lower, upper );
         }
         lower = upper;
     }
         
-#if defined(Debug_Loris) && Debug_Loris
-    // only unlabeled Partials should remain in partials:
-    Assert( partials.end() ==
-            std::find_if( partials.begin(), partials.end(), 
-                          std::not1( PartialUtils::isLabelEqual( 0 ) ) ) );
-#endif    
+    //  invariant:
+    //  the PartialList should be empty, all labeled Partials having been
+    //  extracted and distilled, and unlabled Partials extracted to 
+    //  the list "unlabeled"
+    Assert( partials.empty() );
+
+        
+    //  absorb the distilled Partials:
+    partials.clear();
+    partials.absorb( partials.begin(), distilled );
     
     //  remember where the unlabeled Partials start:
-    PartialList::iterator beginUnlabeled = partials.begin(); 
-    
-    //  splice in the distilled Partials at the beginning:
-    partials.splice( partials.begin(), distilled );
+    PartialList::iterator beginUnlabeled = partials.end(); 
+    partials.absorb( beginUnlabeled, unlabeled );
 
     return beginUnlabeled;
 }

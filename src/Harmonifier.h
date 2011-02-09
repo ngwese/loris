@@ -35,6 +35,7 @@
 #include "Envelope.h" 
 #include "LorisExceptions.h" 
 #include "Partial.h"
+#include "PartialList.h"
 #include "PartialUtils.h"
 
 #include <algorithm>    // for find

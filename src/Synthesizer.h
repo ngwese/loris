@@ -189,8 +189,8 @@ public:
 	void synthesize( Iter begin_partials, Iter end_partials );
 #else
     inline
-	void synthesize( PartialList::iterator begin_partials, 
-					 PartialList::iterator end_partials );	
+	void synthesize( PartialList::const_iterator begin_partials, 
+					 PartialList::const_iterator end_partials );	
 #endif
 	 
 	//!	Function call operator: same as 
@@ -200,8 +200,8 @@ public:
 	void operator() ( Iter begin_partials, Iter end_partials );
 #else
     inline
-	void operator() ( PartialList::iterator begin_partials, 
-					  PartialList::iterator end_partials );
+	void operator() ( PartialList::const_iterator begin_partials, 
+					  PartialList::const_iterator end_partials );
 #endif
 	
 //	-- sample access --
@@ -344,8 +344,8 @@ void
 Synthesizer::synthesize( Iter begin_partials, Iter end_partials ) 
 #else
 inline void 
-Synthesizer::synthesize( PartialList::iterator begin_partials, 
-						 PartialList::iterator end_partials ) 
+Synthesizer::synthesize( PartialList::const_iterator begin_partials, 
+						 PartialList::const_iterator end_partials ) 
 #endif
 { 
     //	grow the sample buffer, if necessary, to accommodate the latest
@@ -379,8 +379,8 @@ void
 Synthesizer::operator() ( Iter begin_partials, Iter end_partials ) 
 #else
 inline void
-Synthesizer::operator() ( PartialList::iterator begin_partials, 
-                          PartialList::iterator end_partials ) 
+Synthesizer::operator() ( PartialList::const_iterator begin_partials, 
+                          PartialList::const_iterator end_partials ) 
 #endif
 { 
 	synthesize( begin_partials, end_partials ); 

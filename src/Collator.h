@@ -241,8 +241,10 @@ Collator::collate( PartialList & partials )
 {
 #if ! defined(NO_TEMPLATE_MEMBERS)
     typedef typename Container::iterator Iterator;
+    typedef typename Iterator::difference_type DiffType;
 #else
     typedef PartialList::iterator Iterator;
+    typedef Iterator::difference_type DiffType;
 #endif
 
     // Partition the Partials into labeled and unlabeled, 
@@ -290,7 +292,7 @@ Collator::collate( PartialList & partials )
     //  remove extra Partials from the end of the source container
     if ( endCollated != partials.end() )
     {
-        typename Iterator::difference_type numLabeled = 
+        DiffType numLabeled = 
             std::distance( partials.begin(), beginUnlabeled );
 
         partials.erase( endCollated, partials.end() );

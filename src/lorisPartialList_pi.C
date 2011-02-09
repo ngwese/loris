@@ -58,9 +58,8 @@
 #include "lorisException_pi.h"
 
 #include "Partial.h"
+#include "PartialList.h"
 #include "Notifier.h"
-
-#include <list>
 
 using namespace Loris;
 
@@ -92,7 +91,7 @@ PartialList * createPartialList( void )
 	try 
 	{
 		debugger << "creating empty PartialList" << endl;
-		return new std::list< Partial >;
+		return new PartialList;
 	}
 	catch( Exception & ex ) 
 	{
@@ -242,7 +241,9 @@ void partialList_splice( PartialList * dst, PartialList * src )
 
 		debugger << "splicing PartialList containing " << src->size() << " Partials" 
 				 << " into PartialList containing " << dst->size() << " Partials"<< endl;
-		dst->splice( dst->end(), *src );
+
+        dst->absorb( dst->end(), *src );
+
 	}
 	catch( Exception & ex ) 
 	{

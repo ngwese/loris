@@ -333,10 +333,11 @@ private:
 //
 #if !defined(NO_TEMPLATE_MEMBERS)
 template< typename Iter >
- AiffFile::AiffFile( Iter begin_partials, Iter end_partials, 
+AiffFile::AiffFile( Iter begin_partials, Iter end_partials, 
                      double samplerate, double fadeTime ) :
 #else
- AiffFile::AiffFile( PartialList::const_iterator begin_partials, 
+inline
+AiffFile::AiffFile( PartialList::const_iterator begin_partials, 
                      PartialList::const_iterator end_partials,
                      double samplerate, double fadeTime ) :
 #endif
@@ -373,10 +374,11 @@ template< typename Iter >
 #if !defined(NO_TEMPLATE_MEMBERS)
 template< typename Iter >
 void 
- AiffFile::addPartials( Iter begin_partials, Iter end_partials, double fadeTime )
+AiffFile::addPartials( Iter begin_partials, Iter end_partials, double fadeTime )
 #else
+inline
 void 
- AiffFile::addPartials( PartialList::const_iterator begin_partials, 
+AiffFile::addPartials( PartialList::const_iterator begin_partials, 
                         PartialList::const_iterator end_partials,
                         double fadeTime )
 #endif

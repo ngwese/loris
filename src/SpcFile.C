@@ -1035,8 +1035,8 @@ configureExportStruct( const SpcFile::partials_type & plist, double midipitch,
     if ( spcEI.numPartials < 1 || spcEI.numPartials > LargestLabel )
         Throw( FileIOException, "Partials must be distilled and labeled between 1 and 512." );
 
-    debugger << "startTime = " << spcEI.startTime << " endTime = " << spcEI.endTime 
-             << " hop = " << spcEI.hop << " partials = " << spcEI.numPartials << endl;
+    // debugger << "startTime = " << spcEI.startTime << " endTime = " << spcEI.endTime 
+    //         << " hop = " << spcEI.hop << " partials = " << spcEI.numPartials << endl;
 }
 
 // ---------------------------------------------------------------------------

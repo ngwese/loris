@@ -227,8 +227,13 @@ private:
     //! to the distilled collection. If an empty list of Partials
     //! is passed, then an empty Partial having the specified
     //! label is appended.
-    void distillOne( PartialList & partials, Partial::label_type label,
-                     PartialList & distilled );
+    //void distillOne( PartialList & partials, Partial::label_type label,
+    //                 PartialList & distilled );
+
+    //!	Distill a list of Partials into a single Partial and return it.
+    //! If an empty list of Partials is passed, then an empty Partial
+    //! is returned.
+    Partial distillOne( PartialList & partials );                        
     
 };  //  end of class Distiller
 

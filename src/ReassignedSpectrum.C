@@ -84,8 +84,6 @@ ReassignedSpectrum::ReassignedSpectrum( const std::vector< double > & window ) :
 {	
     //  Build and store the window functions.
 	buildReassignmentWindows( window );                        
-
-	debugger << "ReassignedSpectrum: length is " << mMagnitudeTransform.size() << endl;
 }
 
 // ---------------------------------------------------------------------------
@@ -102,8 +100,6 @@ ReassignedSpectrum::ReassignedSpectrum( const std::vector< double > & window,
 {
     //  Build and store the window functions.
 	buildReassignmentWindows( window, windowDerivative );  
-
-	debugger << "ReassignedSpectrum: length is " << mMagnitudeTransform.size() << endl;
 }
 
 

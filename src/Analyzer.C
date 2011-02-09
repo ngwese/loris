@@ -615,7 +615,7 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
     {
         ++winlen;
     }
-    debugger << "Using Kaiser window of length " << winlen << endl;
+    // debugger << "Using Kaiser window of length " << winlen << endl;
     
     std::vector< double > window( winlen );
     KaiserWindow::buildWindow( window, winshape );
@@ -634,13 +634,7 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
     std::auto_ptr< AssociateBandwidth > bwAssociator;
     if( m_bwAssocParam > 0 )
     {
-        debugger << "Using bandwidth association regions of width " 
-                 << bwRegionWidth() << " Hz" << endl;
         bwAssociator.reset( new AssociateBandwidth( bwRegionWidth(), srate ) );
-    }
-    else
-    {
-        debugger << "Bandwidth association disabled" << endl;
     }
 
     //  reset envelope builders:
@@ -704,7 +698,7 @@ Analyzer::analyze( const double * bufBegin, const double * bufEnd, double srate,
         }   //  end of loop over short-time frames
         
         //  unwarp the Partial frequency envelopes:
-        builder.finishBuilding( m_partials );
+        m_partials = builder.finishBuilding();
         
         //  fix the frequencies and phases to be consistent.
         if ( m_phaseCorrect )
@@ -1367,8 +1361,6 @@ Analyzer::thinPeaks( Peaks & peaks, double frameTime  )
 		++it;
 	}
 	
-	// debugger << "thinPeaks retained " << std::distance( peaks.begin(), beginRejected ) << endl;
-
 	//  remove rejected Breakpoints:
 	//peaks.erase( beginRejected, peaks.end() );
 	

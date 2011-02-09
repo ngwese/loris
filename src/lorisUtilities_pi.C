@@ -62,6 +62,7 @@
 #include "LorisExceptions.h"
 #include "Notifier.h"
 #include "Partial.h"
+#include "PartialList.h"
 #include "PartialUtils.h"
 
 #include <algorithm>
@@ -300,7 +301,7 @@ void crop( PartialList * partials, double t1, double t2 )
 extern "C"
 void extractIf( PartialList * src, PartialList * dst, 
                 int ( * predicate )( const Partial * p, void * data ),
-			 	    void * data )
+                void * data )
 {
 	try 
 	{
@@ -327,7 +328,7 @@ void extractIf( PartialList * src, PartialList * dst,
 	        //  before the increment, so it is not corrupted
 	        //  by the splice, it is advanced to the next
 	        //  position before the splice is performed.
-	        dst->splice( dst->end(), *src, it++ );
+	        dst->absorb( dst->end(), *src, it++ );
 	    }
 		
 	}
@@ -380,7 +381,7 @@ void extractLabeled( PartialList * src, long label, PartialList * dst )
 	        //  before the increment, so it is not corrupted
 	        //  by the splice, it is advanced to the next
 	        //  position before the splice is performed.
-	        dst->splice( dst->end(), *src, it++ );
+	        dst->absorb( dst->end(), *src, it++ );
 	    }
 	}
 	catch( Exception & ex ) 
@@ -1008,6 +1009,15 @@ void shiftTime( PartialList * partials, double offset )
 }
 
 /* ---------------------------------------------------------------- */
+/* local_compare_label_less
+ */
+static bool local_compare_label_less( const Partial & lhs, const Partial & rhs )
+{
+    static PartialUtils::compareLabelLess c;
+    return c( lhs, rhs );
+}
+
+/* ---------------------------------------------------------------- */
 /*        sortByLabel        
 /*
 /*	Sort the Partials in a PartialList in order of increasing label.
@@ -1017,7 +1027,7 @@ void shiftTime( PartialList * partials, double offset )
 extern "C"
 void sortByLabel( PartialList * partials )
 {
-	partials->sort( PartialUtils::compareLabelLess() );	
+	partials->sort( local_compare_label_less );	
 }
 
 /* ---------------------------------------------------------------- */

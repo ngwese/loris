@@ -287,11 +287,7 @@ PartialBuilder::buildPartials( Peaks & peaks, double frameTime )
 	}			 
 	 	
 	mEligiblePartials = mNewlyEligible;
-	
-    /*
-	debugger << "PartialBuilder::buildPartials: matched " << matchCount << endl;
-	debugger << "PartialBuilder::buildPartials: " << mNewlyEligible.size() << " newly eligible partials" << endl;
-    */
+
 }
 
 // ---------------------------------------------------------------------------
@@ -300,18 +296,20 @@ PartialBuilder::buildPartials( Peaks & peaks, double frameTime )
 //	Un-do the frequency warping performed in buildPartials, and return 
 //	the Partials that were built. After calling finishBuilding, the
 //  builder is returned to its initial state, and ready to build another
-//  set of Partials. Partials are returned by appending them to the 
-//  supplied PartialList.
+//  set of Partials. 
 //
-void
-PartialBuilder::finishBuilding( PartialList & product )
+PartialList
+PartialBuilder::finishBuilding( void )
 {	
-    //  append the collected Partials to the product list:
-	product.splice( product.end(), mCollectedPartials );
+    //  return the collected Partials:
+	PartialList product( mCollectedPartials );
     
     //  reset the builder state:
+    mCollectedPartials.clear();
     mEligiblePartials.clear();
     mNewlyEligible.clear();
+    
+    return product;
 }
 
 

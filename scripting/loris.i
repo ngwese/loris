@@ -623,8 +623,8 @@ morphing algorithm, see the Loris website:
 			
 			m.morph( src0->begin(), src0->end(), src1->begin(), src1->end() );
 					
-			//	splice the morphed Partials into dst:
-			dst->splice( dst->end(), m.partials() );
+			//	absorb the morphed Partials into dst:
+			dst->absorb( dst->end(), m.partials() );
 		}
 		catch ( std::exception & ex )
 		{
@@ -656,8 +656,8 @@ morphing algorithm, see the Loris website:
 			
 			m.morph( src0->begin(), src0->end(), src1->begin(), src1->end() );
 					
-			//	splice the morphed Partials into dst:
-			dst->splice( dst->end(), m.partials() );
+			//	absorb the morphed Partials into dst:
+			dst->absorb( dst->end(), m.partials() );
 		}
 		catch ( std::exception & ex )
 		{
@@ -712,8 +712,8 @@ morphing algorithm, see the Loris website:
 			
 			m.morph( src0->begin(), src0->end(), src1->begin(), src1->end() );
 					
-			//	splice the morphed Partials into dst:
-			dst->splice( dst->end(), m.partials() );
+			//	absorb the morphed Partials into dst:
+			dst->absorb( dst->end(), m.partials() );
 		}
 		catch ( std::exception & ex )
 		{
@@ -770,8 +770,8 @@ morphing algorithm, see the Loris website:
 			
 			m.morph( src0->begin(), src0->end(), src1->begin(), src1->end() );
 					
-			//	splice the morphed Partials into dst:
-			dst->splice( dst->end(), m.partials() );
+			//	absorb the morphed Partials into dst:
+			dst->absorb( dst->end(), m.partials() );
 		}
 		catch ( std::exception & ex )
 		{
@@ -1669,7 +1669,7 @@ Partial formation.") analyze;
 			{
 				self->analyze( vec, srate );
 			}
-			partials->splice( partials->end(), self->partials() );
+			partials->absorb( partials->end(), self->partials() );
 			return partials;
 		}
 		 
@@ -1681,7 +1681,7 @@ Partial formation.") analyze;
 			{
 				self->analyze( vec, srate, *env );
 			}
-			partials->splice( partials->end(), self->partials() );
+			partials->absorb( partials->end(), self->partials() );
 			return partials;
 		}
 	}

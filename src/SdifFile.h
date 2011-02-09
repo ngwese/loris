@@ -214,6 +214,7 @@ private:
 template< typename Iter >
 SdifFile::SdifFile( Iter begin_partials, Iter end_partials  )
 #else
+inline
 SdifFile::SdifFile( PartialList::const_iterator begin_partials, 
 					PartialList::const_iterator end_partials )
 #endif
@@ -234,6 +235,7 @@ SdifFile::SdifFile( PartialList::const_iterator begin_partials,
 template<typename Iter>
 void SdifFile::addPartials( Iter begin_partials, Iter end_partials  )
 #else
+inline
 void SdifFile::addPartials( PartialList::const_iterator begin_partials, 
 							PartialList::const_iterator end_partials  )
 #endif

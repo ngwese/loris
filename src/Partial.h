@@ -40,8 +40,6 @@
 #include "LorisExceptions.h"
 
 #include <map>
-//#include <utility>
-//#include <vector>
 
 //	begin namespace
 namespace Loris {
@@ -780,6 +778,7 @@ public:
 		InvalidObject( std::string("Invalid Partial -- ").append( str ), where ) {}
 		
 };	//	end of class InvalidPartial
+
 
 }	//	end of namespace Loris
 

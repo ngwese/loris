@@ -140,7 +140,7 @@ find_overlapping( Partial & p, double minGapTime, Iter start, Iter end)
 			//	are sorted by duration)
 			Assert( p.duration() <= (*it)->duration() );
 			
-#if Debug_Loris
+/*
 			debugger << "Partial starting " << p.startTime() << ", " 
 					 << p.begin().breakpoint().frequency() << " ending " 
 					 << p.endTime()  << ", " << (--p.end()).breakpoint().frequency() 
@@ -148,7 +148,7 @@ find_overlapping( Partial & p, double minGapTime, Iter start, Iter end)
 					 << (*it)->startTime() << ", " << (*it)->begin().breakpoint().frequency()
 					 << " ending " << (*it)->endTime() << ", " 
 					 << (--(*it)->end()).breakpoint().frequency()  << endl;
-#endif
+*/
 			return it;
 		}
 	}

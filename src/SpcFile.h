@@ -41,10 +41,7 @@
  */
 #include "Marker.h"
 #include "Partial.h"
-
-#if defined(NO_TEMPLATE_MEMBERS)
 #include "PartialList.h"
-#endif
  
 #include <string>
 #include <vector>
@@ -310,6 +307,7 @@ private:
 template< typename Iter >
 SpcFile::SpcFile( Iter begin_partials, Iter end_partials, double midiNoteNum  ) :
 #else
+inline
 SpcFile::SpcFile( PartialList::const_iterator begin_partials, 
 				  PartialList::const_iterator end_partials,
 				  double midiNoteNum ) :
@@ -347,6 +345,7 @@ SpcFile::SpcFile( PartialList::const_iterator begin_partials,
 template<typename Iter>
 void SpcFile::addPartials( Iter begin_partials, Iter end_partials  )
 #else
+inline
 void SpcFile::addPartials( PartialList::const_iterator begin_partials, 
 						   PartialList::const_iterator end_partials  )
 #endif

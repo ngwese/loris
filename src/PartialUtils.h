@@ -1084,6 +1084,8 @@ private:
 
 //	-- comparitors --
 
+typedef std::binary_function< const Partial, const Partial, bool > PartialComparitor;
+
 // ---------------------------------------------------------------------------
 //	compareLabelLess
 //	
@@ -1091,8 +1093,7 @@ private:
 //! argument has a label whose 32-bit integer representation is less than
 //! that of the second Partial argument's label, and false otherwise.
 //
-class compareLabelLess : 
-	public std::binary_function< const Partial, const Partial, bool >
+class compareLabelLess : public PartialComparitor
 {
 public:
    //! Compare two Partials, return true if its first Partial
