@@ -381,7 +381,20 @@ fi
 
 AM_CONDITIONAL([HAVE_CSOUND], [test -n "$HAVE_CSOUND"])
 
+dnl----------------------------------------------------------------
+dnl Check whether to build command line utilities
+dnl----------------------------------------------------------------
 
+AC_ARG_WITH(utils,
+    AC_HELP_STRING( [--with-utils],
+                    [build command line utilties (default is YES)] ),
+    [BUILD_UTILS="$withval"], [BUILD_UTILS="yes"])
+    
+AM_CONDITIONAL([BUILD_UTILS], [test "$BUILD_UTILS" == "yes"])
+
+if test "$BUILD_UTILS" == "yes"; then
+    AC_MSG_RESULT(building command line utilties)
+fi
 
 dnl----------------------------------------------------------------
 dnl Check for Loris debugging flag
@@ -395,7 +408,7 @@ AH_TEMPLATE([Debug_Loris],
             [Define to enable internal Loris debugging code (not recommended).])
 
 if test -n "$DEBUG_LORIS"; then
-    if test "$DEBUG_LORIS"="yes"; then
+    if test "$DEBUG_LORIS" == "yes"; then
         AC_MSG_RESULT(enabling debugging code (defining Debug_Loris))
         AC_DEFINE([Debug_Loris])
     else
@@ -403,6 +416,12 @@ if test -n "$DEBUG_LORIS"; then
         AC_DEFINE([Debug_Loris], "$DEBUG_LORIS")
     fi
 fi
+
+
+AC_ARG_ENABLE(debugloris,
+    AC_HELP_STRING( [--enable-debugloris],
+                    [enable internal Loris debugging code (not recommended)] ),
+    [DEBUG_LORIS="$enableval" ], [DEBUG_LORIS=] )
 
 dnl----------------------------------------------------------------
 dnl Generate Makefiles
@@ -424,6 +443,11 @@ else
     echo See "./configure --help".
 fi
 
+if test "$BUILD_UTILS" == "yes" ; then
+    echo Command line utilities: Enabled.
+else
+    echo Command line utilities: Disabled.
+fi
 
 if test -n "$PYTHON" ; then
     echo Python support: Enabled.
