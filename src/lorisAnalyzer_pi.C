@@ -103,12 +103,12 @@ void analyzer_configure( double resolution, double windowWidth )
 	{
       if ( 0 == ptr_instance )
       {
-         debugger << "creating Analyzer" << endl;         
+         // debugger << "creating Analyzer" << endl;         
          ptr_instance = new Analyzer( resolution, windowWidth );
       }
       else
       {
-         debugger << "configuring Analyzer" << endl;         
+         // debugger << "configuring Analyzer" << endl;         
          ptr_instance->configure( resolution, windowWidth );
       }
 	}

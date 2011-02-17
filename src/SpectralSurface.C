@@ -122,7 +122,7 @@ findemfaster( double freq, double time, const std::vector< Partial > & parray )
 			p2 = 0;
 		}
 	}
-	// debugger << "findemfaster caching " <<  cacheLastHit << endl;
+
 	return std::make_pair(p1, p2);
 }
 

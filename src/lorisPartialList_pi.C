@@ -90,7 +90,6 @@ PartialList * createPartialList( void )
 {
 	try 
 	{
-		debugger << "creating empty PartialList" << endl;
 		return new PartialList;
 	}
 	catch( Exception & ex ) 
@@ -119,8 +118,6 @@ void destroyPartialList( PartialList * ptr_this )
 	try 
 	{
 		ThrowIfNull((PartialList *) ptr_this);
-
-		debugger << "deleting PartialList containing " << ptr_this->size() << " Partials" << endl;
 		delete ptr_this;
 	}
 	catch( Exception & ex ) 
@@ -179,8 +176,6 @@ void partialList_copy( PartialList * dst, const PartialList * src )
 	{
 		ThrowIfNull((PartialList *) dst);
 		ThrowIfNull((PartialList *) src);
-
-		debugger << "copying PartialList containing " << src->size() << " Partials" << endl;
 		*dst = *src;
 	}
 	catch( Exception & ex ) 
@@ -238,9 +233,6 @@ void partialList_splice( PartialList * dst, PartialList * src )
 	{
 		ThrowIfNull((PartialList *) dst);
 		ThrowIfNull((PartialList *) src);
-
-		debugger << "splicing PartialList containing " << src->size() << " Partials" 
-				 << " into PartialList containing " << dst->size() << " Partials"<< endl;
 
         dst->absorb( dst->end(), *src );
 

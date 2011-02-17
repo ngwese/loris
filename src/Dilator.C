@@ -169,9 +169,6 @@ Dilator::warpTime( double currentTime ) const
 void
 Dilator::dilate( Partial & p ) const
 {
-	debugger << "dilating Partial having " << p.numBreakpoints() 
-			 << " Breakpoints" << endl;
-
 	//	sanity check:
 	Assert( _initial.size() == _target.size() );
 	

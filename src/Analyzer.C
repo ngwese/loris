@@ -751,7 +751,6 @@ Analyzer::ampFloor( void ) const
 double 
 Analyzer::cropTime( void ) const 
 { 
-    // debugger << "Analyzer::cropTime() is a deprecated member, and will be removed in a future Loris release." << endl;
     return m_cropTime; 
 }
 
@@ -891,7 +890,6 @@ void
 Analyzer::setCropTime( double x ) 
 { 
     VERIFY_ARG( setCropTime, x > 0 );
-   // debugger << "Analyzer::setCropTime() is a deprecated member, and will be removed in a future Loris release." << endl;
     m_cropTime = x; 
 }
 

@@ -69,6 +69,7 @@ CPP_SRC = AiffData.C	\
 		Partial.h \
 		PartialBuilder.C	\
 		PartialBuilder.h	\
+		PartialList.C \
 		PartialList.h \
 		PartialPtrs.h \
 		PartialUtils.C \
@@ -132,7 +133,7 @@ pkginclude_HEADERS = \
 				Distiller.h	\
 				Envelope.h	\
 				Exception.h	\
-                F0Estimate.h \
+                		F0Estimate.h \
 				Filter.h	\
 				FourierTransform.h	\
 				FrequencyReference.h \

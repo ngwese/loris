@@ -309,10 +309,10 @@ static bool distillSorter( const Partial & lhs, const Partial & rhs )
 Partial 
 Distiller::distillOne( PartialList & partials )                            
 {
-    
+    /*
 	debugger << "Distiller found " << partials.size()
 			 << " Partials labeled " << partials.front().label() << endl;
-
+    */
 	Partial newp;
     newp.setLabel( partials.front().label() );
 
@@ -438,8 +438,6 @@ static bool local_compare_label_less( const Partial & lhs, const Partial & rhs )
 //
 PartialList::iterator Distiller::distill_list( PartialList & partials )
 {  
-    debugger << "--- in distill_list" << endl; 
-
     //  sort the Partials by label, this is why it
     //  is so much better to distill a list!    
     partials.sort( local_compare_label_less );

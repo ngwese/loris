@@ -382,7 +382,7 @@ Morpher::crossfade( PartialList::const_iterator beginSrc,
                     Partial::label_type label /* default 0 */ )
 {
     Partial nullPartial;
-    debugger << "crossfading unlabeled (labeled 0) Partials" << endl;
+    // debugger << "crossfading unlabeled (labeled 0) Partials" << endl;
     
     long debugCounter;
 
@@ -419,7 +419,7 @@ Morpher::crossfade( PartialList::const_iterator beginSrc,
             }
         }
     }
-    debugger << "kept " << debugCounter << " from sound 1" << endl;
+    // debugger << "kept " << debugCounter << " from sound 1" << endl;
 
     //    crossfade Partials corresponding to a morph weight of 1:
     debugCounter = 0;
@@ -453,7 +453,7 @@ Morpher::crossfade( PartialList::const_iterator beginSrc,
             }
         }
     }
-    debugger << "kept " << debugCounter << " from sound 2" << endl;
+    // debugger << "kept " << debugCounter << " from sound 2" << endl;
 }
 
 // ---------------------------------------------------------------------------
@@ -1077,7 +1077,6 @@ void Morpher::morph_aux( PartialCorrespondence & correspondence  )
                    << " and " << ( ( 0 < tgt.numBreakpoints() )?( 1 ):( 0 ) )
                    << " partials with label " <<    label << endl;
                    
-        //  &^)     HEY LOOKIE HERE!!!!!!!!!!!!!                   
         
         //  ensure that Partials begin and end at zero
         //  amplitude to solve the problem of Nulls 

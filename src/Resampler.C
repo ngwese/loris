@@ -143,11 +143,6 @@ void Resampler::setPhaseCorrect( bool correctPhase )
 void 
 Resampler::resample( Partial & p ) const
 {
-	debugger << "resampling Partial labeled " << p.label()
-	         << " having " << p.numBreakpoints() 
-			 << " Breakpoints" << endl;
-
-
 	//	create the new Partial:
 	Partial newp;
 	newp.setLabel( p.label() );
@@ -169,15 +164,10 @@ Resampler::resample( Partial & p ) const
                 
         newp.insert( insertTime, newbp );
 
-        debugger << "inserted Breakpoint having amplitude " << newbp.amplitude() 
-                 << " at time " << insertTime << endl;
 	}
 	
 	//	store the new Partial:
 	p = newp;
-    
-	debugger << "resampled Partial has " << p.numBreakpoints() 
-			 << " Breakpoints" << endl;
     
     
 	if ( phaseCorrect_ )
@@ -212,11 +202,6 @@ Resampler::resample( Partial & p ) const
 void 
 Resampler::resample( Partial & p, const LinearEnvelope & timingEnv ) const
 {
-	debugger << "resampling Partial labeled " << p.label()
-	         << " having " << p.numBreakpoints() 
-			 << " Breakpoints" << endl;
-
-
     Assert(  0 != timingEnv.size() );
     
 	//	create the new Partial:
@@ -240,10 +225,6 @@ Resampler::resample( Partial & p, const LinearEnvelope & timingEnv ) const
         Breakpoint newbp = p.parametersAt( sampleTime );
                 
         newp.insert( insertTime, newbp );                
-
-        debugger << "inserted Breakpoint having amplitude " << newbp.amplitude() 
-                 << " at time " << insertTime << endl;
-
 	}
 		
 	//  remove excess null Breakpoints at the ends of the newly-formed
@@ -275,9 +256,7 @@ Resampler::resample( Partial & p, const LinearEnvelope & timingEnv ) const
     
 	//	store the new Partial:
     p = newp;
-    
-    debugger << "resampled Partial has " << p.numBreakpoints() 
-			 << " Breakpoints" << endl;
+
 }
 
 // ---------------------------------------------------------------------------
@@ -294,10 +273,6 @@ Resampler::resample( Partial & p, const LinearEnvelope & timingEnv ) const
 //
 void Resampler::quantize( Partial & p ) const
 {
-	debugger << "quantizing Partial labeled " << p.label()
-	         << " having " << p.numBreakpoints() 
-			 << " Breakpoints" << endl;
-
     //  for phase-correct quantization, first make the phases correct by
     //  fixing them from the initial phase (ideally this should have
     //  no effect but there's no way to be phase-correct after quantization
@@ -372,10 +347,6 @@ void Resampler::quantize( Partial & p ) const
     {
         fixFrequency( newp, 5 );
     }
-    
-    
-	debugger << "quantized Partial has " << newp.numBreakpoints() 
-			 << " Breakpoints" << endl;
 
 	//	store the new Partial:
 	p = newp;

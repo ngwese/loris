@@ -114,14 +114,7 @@ FrequencyReference::FrequencyReference( PartialList::const_iterator begin,
 	if ( maxFreq < minFreq )
 	{
 		std::swap( minFreq, maxFreq );
-    }
-    
-#ifdef Loris_Debug
-	debugger << "Finding frequency reference envelope in range " <<
-	debugger << minFreq << " to " << maxFreq << " Hz, from " <<
-	debugger << std::distance(begin,end) << " Partials" << std::endl;
-#endif
-
+    }    
 	
 	FundamentalFromPartials est = createEstimator();
 	std::pair< double, double > span = PartialUtils::timeSpan( begin, end );
@@ -159,11 +152,6 @@ FrequencyReference::FrequencyReference( PartialList::const_iterator begin,
 		std::swap( minFreq, maxFreq );
 	}
 	
-#ifdef Loris_Debug
-	debugger << "Finding frequency reference envelope in range " <<
-	debugger << minFreq << " to " << maxFreq << " Hz, from " <<
-	debugger << std::distance(begin,end) << " Partials" << std::endl;
-#endif
     
 	FundamentalFromPartials est = createEstimator();
 	std::pair< double, double > span = PartialUtils::timeSpan( begin, end );

@@ -300,7 +300,6 @@ template< >
 inline
 PartialList::iterator Distiller::distill( PartialList & partials )
 {
-    debugger << "using PartialList version of distill to avoid copying" << endl;
     return distill_list( partials );
 }
 #else

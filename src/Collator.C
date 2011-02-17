@@ -117,9 +117,6 @@ struct ends_before : public std::unary_function< const Partial, bool >
 //
 void Collator::collateAux( PartialList & unlabeled  )
 {
-	debugger << "Collator found " << unlabeled.size() 
-			 << " unlabeled Partials, collating..." << endl;
-	
 	// 	sort Partials by end time:
 	// 	thanks to Ulrike Axen for this optimal algorithm!
 	unlabeled.sort( ends_earlier );

@@ -317,7 +317,6 @@ void SpectralSurface::scaleAmplitudes( PartialList::iterator b,
 {	
 	while ( b != e )
 	{
-		// debugger << b->label() << endl;
         scaleAmplitudes( *b );
         ++b;
 	}	
@@ -358,7 +357,6 @@ void SpectralSurface::setAmplitudes( PartialList::iterator b,
 {	
 	while ( b != e )
 	{
-		// debugger << b->label() << endl;
         setAmplitudes( *b );
         ++b;
 	}	
