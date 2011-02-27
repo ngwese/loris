@@ -661,7 +661,7 @@ void importSdif( const char * path, PartialList * partials )
 
 		notifier << "importing Partials from " << path << endl;
 		SdifFile imp( path );
-		partials->absorb( partials->end(), imp.partials() );
+		partials->splice( partials->end(), imp.partials() );
 	}
 	catch( Exception & ex ) 
 	{
@@ -801,7 +801,7 @@ void morph( const PartialList * src0, const PartialList * src1,
 		m.morph( src0->begin(), src0->end(), src1->begin(), src1->end() );
 				
 		//	splice the morphed Partials into dst:
-        dst->absorb( dst->end(), m.partials() );
+        dst->splice( dst->end(), m.partials() );
 
 	}
 	catch( Exception & ex ) 
@@ -889,7 +889,7 @@ void morphWithReference( const PartialList * src0,
 		m.morph( src0->begin(), src0->end(), src1->begin(), src1->end() );
 				
 		//	splice the morphed Partials into dst:
-        dst->absorb( dst->end(), m.partials() );
+        dst->splice( dst->end(), m.partials() );
 	}
 	catch( Exception & ex ) 
 	{

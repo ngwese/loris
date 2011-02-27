@@ -30,8 +30,9 @@
  *
  * This strategy attemps to follow a reference frequency envelope when 
  * forming Partials, by prewarping all peak frequencies according to the
- * (inverse of) frequency reference envelope. At the end of the analysis, 
- * Partial frequencies need to be un-warped by calling fixPartialFrequencies().
+ * (inverse of) frequency reference envelope. The frequency warping is 
+ * performed only when computing frequency distances (differences), so 
+ * the stored Partial frequencies remain correct.
  *
  * Kelly Fitz, 28 May 2003
  * loris@cerlsoundgroup.org
@@ -89,16 +90,12 @@ public:
     //
     //	This is similar to the basic MQ partial formation strategy, except that
     //	before matching, all frequencies are normalized by the value of the 
-    //	warping envelope at the time of the current frame. This means that
-    //	the frequency envelopes of all the Partials are warped, and need to 
-    //	be un-normalized by calling finishBuilding at the end of the building
-    //  process.
-	void buildPartials( Peaks & peaks, double frameTime );
+    //	warping envelope at the time of the current frame. 
+    void buildPartials( Peaks & peaks, double frameTime );
 
     //  finishBuilding
     //
-	//	Un-do the frequency warping performed in buildPartials, and return 
-	//	the Partials that were built. After calling finishBuilding, the
+	//	Return the Partials that were built. After calling finishBuilding, the
     //  builder is returned to its initial state, and ready to build another
     //  set of Partials. 
 	PartialList finishBuilding( void );
@@ -107,7 +104,7 @@ private:
 
 // --- auxiliary member functions ---
 
-    double freq_distance( const Partial & partial, const SpectralPeak & pk );
+    double warped_freq_distance( const Partial & partial, const SpectralPeak & pk );
 
     bool better_match( const Partial & part, const SpectralPeak & pk1,
 		   	           const SpectralPeak & pk2 );

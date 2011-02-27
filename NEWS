@@ -3,7 +3,8 @@ synthesis, and morphing, developed by Kelly Fitz and Lippold Haken
 at the CERL Sound Group. Loris includes a C++ class library, a
 Python module, a C-linkable interface, and documentation.
 
-Loris 1.8 includes minor bug fixes and API enhancements. 
+Loris 1.9 includes ...
+
 A detailed list of major changes is given in the change 
 history, below. 
 
@@ -21,6 +22,15 @@ Loris is Copyright (c) 1999-2011 by Kelly Fitz and Lippold Haken.
 
 
 History of visible changes, organized by release number:
+
+-------------------------------------------------------
+changes since 1.8 release:
+
+- Added configuration option to build (or not build) the command
+line utilities.
+
+- Converted PartialList from a typedef into a class (some changes 
+to the C++ interface, no changes to procedural or Python interfaces).
 
 -------------------------------------------------------
 changes since 1.7 release:

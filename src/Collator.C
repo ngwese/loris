@@ -181,7 +181,7 @@ void Collator::collateAux( PartialList & unlabeled  )
 		}
 	}
 	
-	debugger << "...now have " << unlabeled.size() << endl;
+	// debugger << "...now have " << unlabeled.size() << endl;
 }
 
 }	//	end of namespace Loris

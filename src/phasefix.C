@@ -314,8 +314,10 @@ void fixPhaseBetween( Partial::iterator b, Partial::iterator e )
     {
         // Preconditions not met, cannot fix the phase travel.
         // Should raise exception?
+        /*
         debugger << "cannot fix phase between " << b.time() << " and " << e.time()
                  << ", there are no Breakpoints between those times" << endl;
+        */
     }
 
 }
@@ -403,8 +405,10 @@ void matchPhaseFwd( Breakpoint & bp0, Breakpoint & bp1,
         double ftgt = ( travel / ( Pi * dt ) ) - f0;
         
         #ifdef Loris_Debug
+        /*
         debugger << "matchPhaseFwd: correcting " << bp1.frequency() << " to " << ftgt 
                  << " (phase " << wrapPi( bp1.phase() ) << "), ";
+        */
         #endif
         
         //	If the target is not a null breakpoint, may need to 
@@ -424,9 +428,7 @@ void matchPhaseFwd( Breakpoint & bp0, Breakpoint & bp1,
         double phi = wrapPi( bp0.phase() + phaseTravel( bp0, bp1, dt ) );
         bp1.setPhase( phi );
 
-        #ifdef Loris_Debug
-        debugger << "achieved " << ftgt << " (phase " << phi << ")" << endl;
-        #endif
+        // debugger << "achieved " << ftgt << " (phase " << phi << ")" << endl;
     }
 }
 

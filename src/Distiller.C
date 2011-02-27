@@ -443,7 +443,8 @@ PartialList::iterator Distiller::distill_list( PartialList & partials )
     partials.sort( local_compare_label_less );
 
     //  temporary containers of distilled and unlabeled Partials:
-    PartialList distilled, unlabeled; 
+    PartialList distilled;
+    PartialList unlabeled; 
 	
 	PartialList::iterator lower = partials.begin();
 	while ( lower != partials.end() )
@@ -471,6 +472,14 @@ PartialList::iterator Distiller::distill_list( PartialList & partials )
             //  append the new Partial to the distilled list, the Partials
             //  are already sorted in label order (above):
             distilled.insert( distilled.end(), newp );
+ 
+            //  alternatively, insert the distilled Partial before upper, 
+            //  don't need a separate list for distilled Partials, but 
+            //  the code is easier to read and debug, and is no less efficient
+            //  with a separate distilled list.
+            //
+            // partials.insert( upper, newp );
+
 
         }
         else
@@ -487,15 +496,16 @@ PartialList::iterator Distiller::distill_list( PartialList & partials )
     //  extracted and distilled, and unlabled Partials extracted to 
     //  the list "unlabeled"
     Assert( partials.empty() );
-
-        
-    //  absorb the distilled Partials:
-    partials.clear();
-    partials.absorb( partials.begin(), distilled );
+            
+    //  splice in the distilled Partials:
+    //  (if we just assign the list, the opertions below
+    //  will trigger a clone of the whole list)
+    partials.splice( partials.begin(), distilled );
     
-    //  remember where the unlabeled Partials start:
+    //  remember where the unlabeled Partials start, and
+    //  splice in the unlabeled Partials:
     PartialList::iterator beginUnlabeled = partials.end(); 
-    partials.absorb( beginUnlabeled, unlabeled );
+    partials.splice( beginUnlabeled, unlabeled );
 
     return beginUnlabeled;
 }

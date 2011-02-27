@@ -234,7 +234,7 @@ void partialList_splice( PartialList * dst, PartialList * src )
 		ThrowIfNull((PartialList *) dst);
 		ThrowIfNull((PartialList *) src);
 
-        dst->absorb( dst->end(), *src );
+        dst->splice( dst->end(), *src );
 
 	}
 	catch( Exception & ex ) 

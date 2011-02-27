@@ -36,23 +36,21 @@
 #endif
 
 #include "PartialList.h"
-
 #include "Notifier.h"
 
 
 //	begin namespace
 namespace Loris {
 
-
-
 // ---------------------------------------------------------------------------
 //	constructor (default)
 // ---------------------------------------------------------------------------
 //! Construct an empty PartialList
 //
-PartialList::PartialList( void )
+PartialList::PartialList( void ) :
+    mList( new list_of_Partials_type )
 {
-    debugger << "PartialList default constructor" << endl; 
+    // debugger << " -- PartialList default constructor" << endl; 
 }
 
 // ---------------------------------------------------------------------------
@@ -63,7 +61,7 @@ PartialList::PartialList( void )
 PartialList::PartialList( const PartialList & rhs ) :
     mList( rhs.mList )    
 {
-    debugger << "PartialList copy " << rhs.size() << " Partials" << endl; 
+    // debugger << " -- PartialList copy " << rhs.size() << " Partials" << endl; 
 }
 
 // ---------------------------------------------------------------------------
@@ -73,7 +71,7 @@ PartialList::PartialList( const PartialList & rhs ) :
 //
 PartialList::~PartialList( void )
 {
-    debugger << "PartialList destroy " << mList.size() << " Partials" << endl; 
+    // debugger << " -- PartialList destroy " << size() << " Partials" << endl; 
 }
 
 // ---------------------------------------------------------------------------
@@ -84,7 +82,7 @@ PartialList::~PartialList( void )
 PartialList &
 PartialList::operator=( const PartialList & rhs )
 {
-    debugger << "PartialList assign " << rhs.size() << " Partials" << endl; 
+    // debugger << " -- PartialList assign " << rhs.size() << " Partials" << endl; 
     
     mList = rhs.mList;
     
@@ -107,15 +105,15 @@ PartialList
 PartialList::extract( iterator b, iterator e )
 {
     PartialList ret;
-    ret.mList.splice( ret.begin(), mList, b, e );        
+    ret.mList->splice( ret.begin(), *mList, b, e );        
     
-    debugger << "PartialList extract " << ret.size() << " Partials" << endl; 
+    // debugger << " -- PartialList extract " << ret.size() << " Partials" << endl; 
     
     return ret;
 }
 
 // ---------------------------------------------------------------------------
-//	absorb
+//	splice
 // ---------------------------------------------------------------------------
 //!  Transfer the Partials from one List to this List.
 //!
@@ -137,9 +135,11 @@ PartialList::extract( iterator b, iterator e )
 //  extract (above) the unlabeled ones, and adopt them into the distilled
 //  List (at the end) as the last step in the distill operation.
 void 
-PartialList::absorb( iterator pos, PartialList & other )
+PartialList::splice( iterator pos, PartialList & other )
 {
-    mList.splice( pos, other.mList );
+    // debugger << " -- PartialList absorb " << other.size() << " Partials" << endl; 
+
+    mList->splice( pos, *other.mList );
 }
 
 }	//	end of namespace Loris

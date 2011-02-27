@@ -39,6 +39,16 @@
 #include "PartialList.h"
 // #include "SpectralPeaks.h"
 
+//  TODO
+//
+//  analyze() should return Partials, not accumulate them.
+//  The accumulation isn't really happening anyway:
+//      m_partials = builder.finishBuilding(); (line 701 Analyzer.C)
+//  This assignment obliterates the previous contents of m_partials 
+//  anyway! Just return them at the end of analyze, now that copying
+//  lists is free (using COW pointer).
+
+
 //  begin namespace
 namespace Loris {
 

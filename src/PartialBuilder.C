@@ -114,14 +114,16 @@ static inline double end_frequency( const Partial & partial )
 }
 
 // ---------------------------------------------------------------------------
-//	freq_distance
+//	warped_freq_distance
 // ---------------------------------------------------------------------------
 //	Helper function, used in formPartials().
 //	Returns the (positive) frequency distance between a Breakpoint 
 //	and the last Breakpoint in a Partial.
 //
+//  Compute distance using warped frequencies
+//
 inline double 
-PartialBuilder::freq_distance( const Partial & partial, const SpectralPeak & pk )
+PartialBuilder::warped_freq_distance( const Partial & partial, const SpectralPeak & pk )
 {
     double normBpFreq = pk.frequency() / mFreqWarping->valueAt( pk.time() );
     
@@ -149,7 +151,7 @@ bool PartialBuilder::better_match( const Partial & part, const SpectralPeak & pk
 {
 	Assert( part.numBreakpoints() > 0 );
 	
-	return freq_distance( part, pk1 ) < freq_distance( part, pk2 );
+	return warped_freq_distance( part, pk1 ) < warped_freq_distance( part, pk2 );
 }	                                   
                                    
 bool PartialBuilder::better_match( const Partial & part1, 
@@ -158,7 +160,7 @@ bool PartialBuilder::better_match( const Partial & part1,
 	Assert( part1.numBreakpoints() > 0 );
 	Assert( part2.numBreakpoints() > 0 );
 	
-	return freq_distance( part1, pk ) < freq_distance( part2, pk );
+	return warped_freq_distance( part1, pk ) < warped_freq_distance( part2, pk );
 }	
 
 // --- Partial building members ---
@@ -172,10 +174,7 @@ bool PartialBuilder::better_match( const Partial & part1,
 //
 //	This is similar to the basic MQ partial formation strategy, except that
 //	before matching, all frequencies are normalized by the value of the 
-//	warping envelope at the time of the current frame. This means that
-//	the frequency envelopes of all the Partials are warped, and need to 
-//	be un-normalized by calling finishBuilding at the end of the building
-//  process.
+//	warping envelope at the time of the current frame. 
 //
 void 
 PartialBuilder::buildPartials( Peaks & peaks, double frameTime )
@@ -293,8 +292,7 @@ PartialBuilder::buildPartials( Peaks & peaks, double frameTime )
 // ---------------------------------------------------------------------------
 //	finishBuilding
 // ---------------------------------------------------------------------------
-//	Un-do the frequency warping performed in buildPartials, and return 
-//	the Partials that were built. After calling finishBuilding, the
+//	Return the Partials that were built. After calling finishBuilding, the
 //  builder is returned to its initial state, and ready to build another
 //  set of Partials. 
 //
@@ -302,7 +300,7 @@ PartialList
 PartialBuilder::finishBuilding( void )
 {	
     //  return the collected Partials:
-	PartialList product( mCollectedPartials );
+	PartialList product = mCollectedPartials;
     
     //  reset the builder state:
     mCollectedPartials.clear();

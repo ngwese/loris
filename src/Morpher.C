@@ -1073,10 +1073,11 @@ void Morpher::morph_aux( PartialCorrespondence & correspondence  )
         //  one of those Partials must have some Breakpoints
         Assert( src.numBreakpoints() != 0 || tgt.numBreakpoints() != 0 );
 
+        /*
         debugger << "morphing " << ( ( 0 < src.numBreakpoints() )?( 1 ):( 0 ) )
                    << " and " << ( ( 0 < tgt.numBreakpoints() )?( 1 ):( 0 ) )
-                   << " partials with label " <<    label << endl;
-                   
+                   << " partials with label " <<    label << endl;                   
+        */
         
         //  ensure that Partials begin and end at zero
         //  amplitude to solve the problem of Nulls 

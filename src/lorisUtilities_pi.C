@@ -308,17 +308,17 @@ void extractIf( PartialList * src, PartialList * dst,
 		ThrowIfNull((PartialList *) src);
 		ThrowIfNull((PartialList *) dst);
         
-        /*
-		std::list< Partial >::iterator it = 
+        std::list< Partial >::iterator it = 
 			std::stable_partition( src->begin(), src->end(), 
 								   std::not1( PredWithPointer( predicate, data ) ) );
 		
+        PartialList tmp = src->extract( it, src->end() );
+		dst->splice( dst->end(), tmp );
+		/*
 		stable_partition should work, but seems sometimes to hang, 
 		especially when there are lots and lots of Partials. Do it
-		efficiently by hand instead.
+        by hand instead.
 		
-		dst->splice( dst->end(), *src, it, src->end() );
-		*/
 		std::list< Partial >::iterator it;
 		for ( it = std::find_if( src->begin(), src->end(), PredWithPointer( predicate, data ) );
 		      it != src->end(); 
@@ -328,8 +328,9 @@ void extractIf( PartialList * src, PartialList * dst,
 	        //  before the increment, so it is not corrupted
 	        //  by the splice, it is advanced to the next
 	        //  position before the splice is performed.
-	        dst->absorb( dst->end(), *src, it++ );
+	        dst->splice( dst->end(), *src, it++ );
 	    }
+		*/
 		
 	}
 	catch( Exception & ex ) 
@@ -361,17 +362,18 @@ void extractLabeled( PartialList * src, long label, PartialList * dst )
 		ThrowIfNull((PartialList *) src);
 		ThrowIfNull((PartialList *) dst);
     
-        /*
-		std::list< Partial >::iterator it = 
+        std::list< Partial >::iterator it = 
 			std::stable_partition( src->begin(), src->end(), 
 								        std::not1( PartialUtils::isLabelEqual(label) ) );
 		
+        PartialList tmp = src->extract( it, src->end() );
+		dst->splice( dst->end(), tmp );
+		
+		/*
 		stable_partition should work, but seems sometimes to hang, 
 		especially when there are lots and lots of Partials. Do it
-		efficiently by hand instead.
+        by hand instead.
 		
-		dst->splice( dst->end(), *src, it, src->end() );
-		*/
 		std::list< Partial >::iterator it;
 		for ( it = std::find_if( src->begin(), src->end(), PartialUtils::isLabelEqual(label) );
 		      it != src->end(); 
@@ -381,8 +383,10 @@ void extractLabeled( PartialList * src, long label, PartialList * dst )
 	        //  before the increment, so it is not corrupted
 	        //  by the splice, it is advanced to the next
 	        //  position before the splice is performed.
-	        dst->absorb( dst->end(), *src, it++ );
+	        dst->splice( dst->end(), *src, it++ );
 	    }
+        */
+		
 	}
 	catch( Exception & ex ) 
 	{
