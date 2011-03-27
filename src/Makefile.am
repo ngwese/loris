@@ -76,6 +76,7 @@ CPP_SRC = AiffData.C	\
 		PartialUtils.h \
 		phasefix.C	\
 		phasefix.h	\
+		PtrCopyOnWrite.h \
 		ReassignedSpectrum.C \
 		ReassignedSpectrum.h \
 		Resampler.C \
@@ -133,7 +134,7 @@ pkginclude_HEADERS = \
 				Distiller.h	\
 				Envelope.h	\
 				Exception.h	\
-                		F0Estimate.h \
+				F0Estimate.h \
 				Filter.h	\
 				FourierTransform.h	\
 				FrequencyReference.h \
@@ -152,6 +153,7 @@ pkginclude_HEADERS = \
 				PartialList.h	\
 				PartialPtrs.h	\
 				PartialUtils.h	\
+				PtrCopyOnWrite.h \
 				ReassignedSpectrum.h	\
 				Resampler.h \
 				SdifFile.h	\
