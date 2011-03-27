@@ -113,4 +113,4 @@ TESTS = $(check_PROGRAMS) $(check_SCRIPTS)
 CLEANFILES = $(PYTHON_TEST) $(CSOUND_TEST)
 
 clean-local:
-	-rm -fr *.ctest.* *.pytest.* *.pi.* tmp.sdif csound_opcode_test.aiff
+	-rm -fr *.ctest.* *.pytest.* *.pi.* tmp.sdif csound_opcode_test.aiff flutefundamental.aiff
