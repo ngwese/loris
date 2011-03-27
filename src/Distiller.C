@@ -493,7 +493,7 @@ PartialList::iterator Distiller::distill_list( PartialList & partials )
         
     //  invariant:
     //  the PartialList should be empty, all labeled Partials having been
-    //  extracted and distilled, and unlabled Partials extracted to 
+    //  extracted and distilled, and unlabeled Partials extracted to 
     //  the list "unlabeled"
     Assert( partials.empty() );
             
