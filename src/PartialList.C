@@ -122,27 +122,6 @@ PartialList::extract( iterator b, iterator e )
     return ret;
 }
 
-// ---------------------------------------------------------------------------
-//	splice
-// ---------------------------------------------------------------------------
-//! Transfer the Partials from one List to this List, same as std::list::.splice
-//!
-//! \param  pos is the position in this List at which to insert the absorbed 
-//!         Partials
-//! \param  other is the List of Partials to absorb into this List
-//! \post   other is an empty List, its former contents have been transfered 
-//!         to this List
-//! \pre    pos is a valid position in this List
-//!
-//! \sa std::list::splice
-//
-void 
-PartialList::splice( iterator pos, PartialList & other )
-{
-    // debugger << " -- PartialList splice " << other.size() << " Partials" << endl; 
-
-    mList->splice( pos, *other.mList );
-}
 
 }	//	end of namespace Loris
 

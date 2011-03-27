@@ -99,6 +99,7 @@ public:
     typedef std::list< Partial >::const_iterator const_iterator;
     typedef std::list< Partial >::reference reference;
     typedef std::list< Partial >::const_reference const_reference;
+    typedef std::list< Partial >::value_type value_type;
     
     
 //  --- lifecycle ---
@@ -267,20 +268,65 @@ public:
                 
     //  splicing
     
+    //! Same as the corresponding member of std::list.    
     //! Transfer the Partials from one List to this List, same as std::list::.splice
     //!
     //! \param  pos is the position in this List at which to insert the absorbed 
     //!         Partials
     //! \param  other is the List of Partials to absorb into this List
+    //!
     //! \post   other is an empty List, its former contents have been transfered 
     //!         to this List
     //! \pre    pos is a valid position in this List
     //!
     //! \sa std::list::splice
     //
-    void splice( iterator pos, PartialList & other );    
+    void splice( iterator pos, PartialList & other )
+    {
+        mList->splice( pos, *other.mList );
+    }
+ 
+    //! Same as the corresponding member of std::list.    
+    //! Transfer the Partials from one List to this List, same as std::list::.splice
+    //!
+    //! \param  pos is the position in this List at which to insert the absorbed 
+    //!         Partials
+    //! \param  other is the List of Partials to absorb into this List
+    //! \param  first is the beginning of the sequence in other to transfer to this list
+    //!
+    //! \post   other is an empty List, its former contents have been transfered 
+    //!         to this List
+    //! \pre    pos is a valid position in this List
+    //! \pre    first is a valid position on other
+    //!
+    //! \sa std::list::splice
+    //
+    void splice( iterator pos, PartialList & other, iterator first)
+    {
+        mList->splice( pos, *other.mList, first );
+    }       
     
-
+    //! Same as the corresponding member of std::list.    
+    //! Transfer the Partials from one List to this List, same as std::list::.splice
+    //!
+    //! \param  pos is the position in this List at which to insert the absorbed 
+    //!         Partials
+    //! \param  other is the List of Partials to absorb into this List
+    //! \param  first is the beginning of the sequence in other to transfer to this list
+    //! \param  last is the end of the sequence in other to transfer to this list
+    //!
+    //! \post   other is an empty List, its former contents have been transfered 
+    //!         to this List
+    //! \pre    pos is a valid position in this List
+    //! \pre    [first,last) is a valid sequence in other
+    //!
+    //! \sa std::list::splice
+    //
+    void splice( iterator pos, PartialList & other, iterator first, iterator last )
+    {
+        mList->splice( pos, *other.mList, first, last );
+    }           
+    
 };  //   end of class PartialList
 
 
