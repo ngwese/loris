@@ -58,6 +58,7 @@
 
 #include "Analyzer.h"
 #include "Notifier.h"
+#include "PartialList.h"
 
 using namespace Loris;
 

@@ -39,14 +39,6 @@
 #include "PartialList.h"
 // #include "SpectralPeaks.h"
 
-//  TODO
-//
-//  analyze() should return Partials, not accumulate them.
-//  The accumulation isn't really happening anyway:
-//      m_partials = builder.finishBuilding(); (line 701 Analyzer.C)
-//  This assignment obliterates the previous contents of m_partials 
-//  anyway! Just return them at the end of analyze, now that copying
-//  lists is free (using COW pointer).
 
 
 //  begin namespace
@@ -540,7 +532,7 @@ private:
                                 //!  the main lobe width more explicitly highlights
                                 //!  the critical interaction with resolution
     
-    // std::auto_ptr< Envelope > m_freqFloorEnv; 
+    // std::auto_ptr< Envelope > m_freqFloorEnv; someday...
     double m_freqFloor;         //!  lowest frequency (Hz) component extracted
                                 //!  in spectral analysis
     
@@ -586,7 +578,12 @@ private:
 	//	analysis. If analysis were ever to be made into a 
 	//	template method, these would be the operations that
 	//	derived classes could override. Or each of these could
-	//	be represented by a strategy class.
+	//	be represented by a policy class (more or less the 
+    //  design strategy that has been pursued so far). In this 
+    //  case, it would be necessary for derived classes to be 
+    //  able to provide their own implementations of the policy 
+    //  class somehow (e.g. virtual members that instantiate the
+    //  policy classes).
 
 	//!	Compute the spectrum of the next sequence of samples.
 	void computeSpectrum( void );
