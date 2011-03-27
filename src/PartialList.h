@@ -34,13 +34,10 @@
  *
  */
  
-//	Seems like we shouldn't need to include Partial.h, but 
-//	without it, I can't instantiate a PartialList. I need
-//	a definition of Partial for PartialList to be unambiguous.
+
 #include "Partial.h"
 
 #include "Notifier.h"
-
 #include "PtrCopyOnWrite.h"
 
 #include <functional>
@@ -52,9 +49,12 @@ namespace Loris {
 // ---------------------------------------------------------------------------
 //	clone (non-member)
 // ---------------------------------------------------------------------------
-//  Cloning operation used by the reference-counting copy-on-write pointer 
-//  class that is used to maintain the std::list and avoid unnecessary 
-//  copying.
+//! Cloning operation used by the reference-counting copy-on-write pointer 
+//! class that is used to maintain the std::list and avoid unnecessary 
+//! copying. Specialization of the template cone function in PtrCopyOnWrite.h.
+//! This is the operation that is invoked when the underlying container needs
+//! to be duplicated, any time non-const access is required of a shared 
+//! instance.
 //
 template <> 
 inline std::list< Partial > * 
@@ -68,20 +68,26 @@ clone< std::list< Partial > >( const std::list< Partial > * tp )
 // ---------------------------------------------------------------------------
 //	class PartialList
 //
-//	PartialList is a typedef for a std::list<> of Loris Partials. The
-//	oscciated bidirectional iterators are also defined as
-//	PartialListIterator and PartialListConstIterator. Since these are
-//	simply typedefs, they classes have identical interfaces to std::list,
-//	std::list::iterator, and std::list::const_iterator, respectively.
+//!	PartialList is a wrapper for a std::list<> of Loris Partials. 
+//! PartialList implements many members of the std::list interface
+//! by simply forwarding them to the underlying container.
+//!
+//!	The associated bidirectional iterators are also defined as
+//!	PartialListIterator and PartialListConstIterator. 
 //
-
 class PartialList
 { 
+
 private: 
+//  --- private types ---
 
     typedef std::list< Partial > list_of_Partials_type;
     typedef Ptr< list_of_Partials_type > list_ptr_type;
 
+//  --- member variables ---
+
+    //! Smart pointer with copy-on-write behavior, wrapping the
+    //! underlying container of Partials. 
     list_ptr_type mList;    
     
 public:
@@ -97,10 +103,17 @@ public:
     
 //  --- lifecycle ---
 
-    //  construct an empty list
-    PartialList( void ); 
+    //!  Construct an empty PartialList
+    PartialList( void );     
     
-    
+    //! Construct a PartialList containing copies of the Partials in the
+    //! range [b,e). Partials in the specified range are copied (immediately),
+    //! not shared through the smart pointer. 
+    //!
+    //! If NO_TEMPLATE_MEMBERS, b and e must be PartialList::iterators.
+    //! Otherwise, they may be iterators on any sequence of Partials.
+    //!
+    //! Same as std::list range constructor.
 #if ! defined(NO_TEMPLATE_MEMBERS)
     template<class InIt>
     PartialList( InIt b, InIt e ) :
@@ -111,124 +124,27 @@ public:
     {
     }
     
-    
+    //! Construct a PartialList that is a copy of another.
+    //! Partials are not immediately copied, the underlying
+    //! container is shared throught the smart pointer until
+    //! non-const access is required (through any non-const 
+    //! member function).
     PartialList( const PartialList & rhs );
+    
+    //! Destroy a PartialList. The underlying container is
+    //! destroyed only if it is not referenced by any other 
+    //! PartialList.
     ~PartialList( void );
+    
+    //! Assign the contents of a PartialList to this PartialList.
+    //! Partials are not immediately copied, the underlying
+    //! container is shared throught the smart pointer until
+    //! non-const access is required (through any non-const 
+    //! member function).
     PartialList & operator=( const PartialList & rhs );
     
-
-//  --- std::list interface ---
-
-    //  PartialList implements many members of the std::list interface
-    //  by simply forwarding them to mList
     
-    //  iterator access
-    
-    //! See std::list.
-    iterator begin( void ) { return mList->begin(); }
-    //! See std::list.
-    iterator end( void ) { return mList->end(); }
-    
-    //! See std::list.
-    const_iterator begin( void ) const { return mList->begin(); }
-    //! See std::list.
-    const_iterator end( void ) const { return mList->end(); }
-    
-    
-    //  container access and mutation
-    
-    //! See std::list.
-    Partial & front( void ) 
-        { return mList->front(); }
-    //! See std::list.
-    const Partial & front( void ) const 
-        { return mList->front(); }
-
-    //! See std::list.
-    Partial & back( void ) 
-        { return mList->back(); }
-    //! See std::list.
-    const Partial & back( void ) const 
-        { return mList->back(); }
-    
-    //! See std::list.
-    void push_back( const Partial & val ) 
-        { mList->push_back( val ); }
-    //! See std::list.
-    void push_front( const Partial & val ) 
-        { mList->push_front( val ); }
-    
-    //! See std::list.
-    iterator insert(iterator where, const Partial & val ) 
-        { return mList->insert( where, val ); }
-    
-    //! See std::list.
-#if ! defined(NO_TEMPLATE_MEMBERS)
-    template<class InIt>
-    void insert( iterator where, InIt first, InIt last )
-        { return mList->insert( where, first, last ); }
-#else
-    void insert( iterator where, const_iterator first, const_iterator last )
-        { return mList->insert( where, first, last ); }
-    void insert( iterator where, iterator first, iterator last )
-        { return mList->insert( where, first, last ); }
-#endif
-
-    
-    //! See std::list.
-    iterator erase( iterator where )
-        { return mList->erase( where ); }
-    
-    //! See std::list.
-    iterator erase( iterator first, iterator last )
-        { return mList->erase( first, last ); }
-    
-    //! See std::list.
-    //
-    //  HEY opportunity for improvement here, this will trigger a clone operation
-    //  in the COW pointer, but there is no reason to copy a bunch of Partials 
-    //  just to delete them! Should be able to re-bind the Ptr to an empty list.
-    void clear( void ) 
-        { 
-            //mList->clear(); 
-            mList = list_ptr_type( new list_of_Partials_type );
-        }
-
-    //  query
-    
-    //! See std::list.
-    bool empty( void ) const
-        { return mList->empty();}
-    
-    //! See std::list.
-    size_type size( void ) const 
-        { return mList->size(); }
-    
-    
-    //  sorting
-    
-    //! See std::list.
-#if ! defined(NO_TEMPLATE_MEMBERS)
-    template<class Comparitor>
-    void sort( Comparitor c )
-    {
-        mList->sort( c );
-    }
-#else
-    void sort( bool ( * c )( const Partial &, const Partial & ) )
-    {
-        mList->sort( c );
-    }
-#endif
-    
-    
-    //  --- splice operations ---
-    
-    //  these are operations that occur in Loris that are implemented using 
-    //  std::list::splice, but I don't want to actually support splice, I 
-    //  prefer the more explicit operations. In some cases, splicing is 
-    //  only used because copying expensive -- might be better to make 
-    //  the underlying data shared using smart pointers.
+//  --- access and mutation ---    
     
     //  extract
     //! Remove a range of Partials from this List and return a new List containing
@@ -241,8 +157,116 @@ public:
     //! \pre    [b,e) must describe a valid range of Partials in this List
     PartialList extract( iterator b, iterator e );
     
-            
-    //  splice
+    
+//  --- std::list interface ---
+
+    //  PartialList implements many members of the std::list interface
+    //  by simply forwarding them to the underlying container.
+    
+    //  iterator access
+    
+    //! Same as the corresponding member of std::list.
+    iterator begin( void ) { return mList->begin(); }
+    //! Same as the corresponding member of std::list.
+    iterator end( void ) { return mList->end(); }
+    
+    //! Same as the corresponding member of std::list.
+    const_iterator begin( void ) const { return mList->begin(); }
+    //! Same as the corresponding member of std::list.
+    const_iterator end( void ) const { return mList->end(); }
+    
+    
+    //  container access and mutation
+    
+    //! Same as the corresponding member of std::list.
+    Partial & front( void ) 
+        { return mList->front(); }
+    //! Same as the corresponding member of std::list.
+    const Partial & front( void ) const 
+        { return mList->front(); }
+
+    //! Same as the corresponding member of std::list.
+    Partial & back( void ) 
+        { return mList->back(); }
+    //! Same as the corresponding member of std::list.
+    const Partial & back( void ) const 
+        { return mList->back(); }
+    
+    //! Same as the corresponding member of std::list.
+    void push_back( const Partial & val ) 
+        { mList->push_back( val ); }
+    //! Same as the corresponding member of std::list.
+    void push_front( const Partial & val ) 
+        { mList->push_front( val ); }
+    
+    //! Same as the corresponding member of std::list.
+    iterator insert(iterator where, const Partial & val ) 
+        { return mList->insert( where, val ); }
+    
+    //! Same as the corresponding member of std::list.    
+#if ! defined(NO_TEMPLATE_MEMBERS)
+    template<class InIt>
+    void insert( iterator where, InIt first, InIt last )
+        { return mList->insert( where, first, last ); }
+#else
+    void insert( iterator where, const_iterator first, const_iterator last )
+        { return mList->insert( where, first, last ); }
+        
+    void insert( iterator where, iterator first, iterator last )
+        { return mList->insert( where, first, last ); }
+#endif
+
+    
+    //! Same as the corresponding member of std::list.
+    iterator erase( iterator where )
+        { return mList->erase( where ); }
+    
+    //! Same as the corresponding member of std::list.
+    iterator erase( iterator first, iterator last )
+        { return mList->erase( first, last ); }
+    
+    //! Same as the corresponding member of std::list.
+    void clear( void ) 
+    { 
+        //mList->clear();
+        //  possibly more efficient to construct a new list, if the
+        //  Partials are shared with another PartialList, clear will
+        //  trigger a copy immediately before erasing all of the 
+        //  Partials.
+        mList = list_ptr_type( new list_of_Partials_type );
+    }
+
+
+    //  query
+    
+    //! Same as the corresponding member of std::list.
+    bool empty( void ) const
+        { return mList->empty();}
+    
+    //! Same as the corresponding member of std::list.
+    size_type size( void ) const 
+        { return mList->size(); }
+    
+    
+    //  sorting
+    
+    //! Same as the corresponding member of std::list.    
+#if ! defined(NO_TEMPLATE_MEMBERS)
+    template<class Comparitor>
+    void sort( Comparitor c )
+    {
+        mList->sort( c );
+    }
+#else
+    void sort( bool ( * c )( const Partial &, const Partial & ) )
+    {
+        mList->sort( c );
+    }
+#endif
+        
+                
+    //  splicing
+    
     //! Transfer the Partials from one List to this List, same as std::list::.splice
     //!
     //! \param  pos is the position in this List at which to insert the absorbed 
@@ -251,21 +275,17 @@ public:
     //! \post   other is an empty List, its former contents have been transfered 
     //!         to this List
     //! \pre    pos is a valid position in this List
+    //!
+    //! \sa std::list::splice
     //
-    void splice( iterator pos, PartialList & adoptThese );    
-        //  use in the procedural interface to return 
-        //  Partials generated by an operation like analysis or morphing.
-        //  In this case, probably the operation we want is just to return 
-        //  a newly created List, but this would not be desirable in C
-        //  (don't want to allocate a List).
-        //
-        //  Also used in the Distiller to construct a List of distilled Partials
-        //  with unlabeled Partials at the end of the List. Instead of this, could
-        //  extract (above) the unlabeled ones, and adopt them into the distilled
-        //  List (at the end) as the last step in the distill operation.
+    void splice( iterator pos, PartialList & other );    
     
 
 };  //   end of class PartialList
+
+
+
+// --- typedefs for iterators ---
 
 typedef PartialList::iterator PartialListIterator;
 typedef PartialList::const_iterator PartialListConstIterator;

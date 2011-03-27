@@ -38,89 +38,202 @@
 #include <stdexcept>
 
 
-//	begin namespace
+//  begin namespace
 namespace Loris {
 
-template <class T> class Ptr {
+// ---------------------------------------------------------------------------
+//  template class Ptr
+//
+//! Reference counting smart pointer template class supporting copy-on-write 
+//! semantics, mostly copied from Koenig and Moo, Accelerated C++.
+    
+template <class T> class Ptr 
+{
+
 public:
-	// new member to copy the object conditionally when needed
-	void make_unique() {
-		if (*refptr != 1) {
-			--*refptr;
-			refptr = new size_t(1);
-			p = p? clone(p): 0;
-		}
-	}
+    
+//  --- lifecycle ---
+    
+    //! Construct a new pointer to nothing
+    Ptr(): refptr(new size_t(1)), p(0) { }
+    
+    //! Construct a new pointer an initialize it to point to something, 
+    //! first counted reference.
+    Ptr(T* t): refptr(new size_t(1)), p(t) { }
+    
+    //! Construct a new pointer and initialize it to point to a shared
+    //! resource, increment the reference count.
+    Ptr(const Ptr& h): refptr(h.refptr), p(h.p) { ++*refptr; }
 
-	// the rest of the class looks like `Ref_handle' except for its name
-	Ptr(): refptr(new size_t(1)), p(0) { }
-	Ptr(T* t): refptr(new size_t(1)), p(t) { }
-	Ptr(const Ptr& h): refptr(h.refptr), p(h.p) { ++*refptr; }
+    //! Assignment
+    //! Release any previously-managed resources, if there were no other 
+    //! references, and share a reference to a resource with rhs.
+    Ptr& operator=(const Ptr&);    
+    
+    //! Destructor
+    //! Release any managed resources, if there were no other references, 
+    //! otherwise just decrement the reference count.
+    ~Ptr();                        
+    
+    //! Conversion to bool, return true if Ptr is bound to some object,
+    //! false otherwise.
+    operator bool( void ) const { return p; }
+    
+    //! Dereference 
+    //! Non-const dereference triggers a copy of a shared resource through 
+    //! make_unique. Const dereference does not, shared resource remains shared.    
+    T& operator*( void );          
+    
+    //! Dereference 
+    //! Non-const dereference triggers a copy of a shared resource through 
+    //! make_unique. Const dereference does not, shared resource remains shared.    
+    T* operator->( void );         
 
-	Ptr& operator=(const Ptr&);    // implemented analogously to 14.2/261
-	~Ptr();                        // implemented analogously to 14.2/262
-	operator bool() const { return p; }
-	T& operator*() ;          // implemented analogously to 14.2/261
-	T* operator->() ;         // implemented analogously to 14.2/261
-
-    //  kelly added
-    const T& operator*() const;          // implemented analogously to 14.2/261
-	const T* operator->() const;         // implemented analogously to 14.2/261
+    //! Dereference 
+    //! Non-const dereference triggers a copy of a shared resource through 
+    //! make_unique. Const dereference does not, shared resource remains shared.    
+    const T& operator*( void ) const;          
+    
+    //! Dereference 
+    //! Non-const dereference triggers a copy of a shared resource through 
+    //! make_unique. Const dereference does not, shared resource remains shared.    
+    const T* operator->(void ) const;       
 
 
 private:
-	T* p;
-#ifdef _MSC_VER
-	size_t* refptr;
-#else
-	std::size_t* refptr;
-#endif
-};
+    
+    //	-- implementation --
 
+    T* p;                   //! managed resource
+    
+    
+#ifdef _MSC_VER
+    size_t* refptr;         //! shared reference counter
+#else
+    std::size_t* refptr;    //! shared reference counter
+#endif
+    
+
+    
+    //! Private member to copy the shared resource 
+    //! conditionally when needed. Invoked automatically
+    //! when (before) non-const access is granted.
+    //! Invokes template clone() function (non-member) which
+    //! must be implemented for the managed type. Default
+    //! implementation invokes a clone() member function.
+    void make_unique( void ) 
+    {
+        if (*refptr != 1) 
+        {
+            --*refptr;
+            refptr = new size_t(1);
+            p = p? clone(p): 0;
+        }
+    }
+    
+};  //  end of class Ptr
+    
+
+// ---------------------------------------------------------------------------
+//  clone - default template implementation
+// ---------------------------------------------------------------------------
+//  Implement this function for any managed (by Ptr) type that does not 
+//  support a clone() operation.
+//
 template <class T> T* clone(const T* tp)
 {
-	return tp->clone();
+    return tp->clone();
 }
 
 
 
+// ---------------------------------------------------------------------------
+//  pointer dereference 
+// ---------------------------------------------------------------------------
+//  Non-const dereference triggers a copy of a shared resource through 
+//  make_unique. Const dereference does not, shared resource remains shared.
+    
 template<class T>
-T& Ptr<T>::operator*() { make_unique(); if (p) return *p; throw std::runtime_error("unbound Ptr"); }
+T& Ptr<T>::operator*( void ) 
+{ 
+    make_unique(); 
+    if (p) 
+    {
+        return *p; 
+    }
+    throw std::runtime_error("unbound Ptr"); 
+}
 
 template<class T>
-T* Ptr<T>::operator->()  { make_unique(); if (p) return p; throw std::runtime_error("unbound Ptr"); }
+T* Ptr<T>::operator->( void )  
+{ 
+    make_unique(); 
+    if (p) 
+    {
+        return p; 
+    }
+    throw std::runtime_error("unbound Ptr"); 
+}
 
 template<class T>
-const T& Ptr<T>::operator*() const { if (p) return *p; throw std::runtime_error("unbound Ptr"); }
+const T& Ptr<T>::operator*( void ) const 
+{ 
+    if (p) 
+    {
+        return *p; 
+    }
+    throw std::runtime_error("unbound Ptr"); 
+}
 
 template<class T>
-const T* Ptr<T>::operator->() const { if (p) return p; throw std::runtime_error("unbound Ptr"); }
+const T* Ptr<T>::operator->( void ) const 
+{ 
+    if (p) 
+    {
+        return p; 
+    }
+    throw std::runtime_error("unbound Ptr");  
+}
 
+// ---------------------------------------------------------------------------
+//  assignment 
+// ---------------------------------------------------------------------------
+//  Release any previously-managed resources, if there were no other 
+//  references, and share a reference to a resource with rhs.
+//
 template<class T>
-Ptr<T>& Ptr<T>::operator=(const Ptr& rhs)
+Ptr<T>& Ptr<T>::operator=( const Ptr& rhs )
 {
-        ++*rhs.refptr;
-        // \f2free the lhs, destroying pointers if appropriate\fP
-        if (--*refptr == 0) {
-                delete refptr;
-                delete p;
-        }
+    ++*rhs.refptr;
+    // free the lhs, destroying pointers if appropriate
+    if (--*refptr == 0) 
+    {
+        delete refptr;
+        delete p;
+    }
 
-        // \f2copy in values from the right-hand side\fP
-        refptr = rhs.refptr;
-        p = rhs.p;
-        return *this;
+    // copy in values from the right-hand side
+    refptr = rhs.refptr;
+    p = rhs.p;
+    return *this;
 }
 
+// ---------------------------------------------------------------------------
+//  destructor 
+// ---------------------------------------------------------------------------
+//  Release any managed resources, if there were no other references, 
+//  otherwise just decrement the reference count.
+//
 template<class T> Ptr<T>::~Ptr()
 {
-        if (--*refptr == 0) {
-                delete refptr;
-                delete p;
-        }
+    if (--*refptr == 0) 
+    {
+        delete refptr;
+        delete p;
+    }
 }
 
-}	//	end of namespace Loris
+}   //  end of namespace Loris
 
 #endif  /* def INCLUDE_PTRCOPYONWRITE_H */
 
