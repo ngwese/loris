@@ -172,11 +172,45 @@ public:
 	void resample( PartialList & plist  ) const;
 
 	//!	Function call operator: same as resample( plist ).
-
 	void operator()( PartialList & plist  ) const
 	{ 
 	   resample( plist ); 
 	}
+ 
+    /*
+    
+    // Cannot remove empties without access to the container!
+    
+ 	//! Resample all Partials in the specified (half-open) range using this
+	//! Resampler's stored quanitization interval. The Breakpoint times in 
+	//! resampled Partials will comprise a contiguous sequence of all integer 
+	//! multiples of the sampling interval, starting and ending with the nearest 
+	//! multiples to the ends of the Partial. If phase correct resampling is 
+	//! specified (the default)≤ frequencies and phases are corrected to be in 
+    //! agreement and to match as nearly as possible the resampled phases. 
+    //! 
+    //! Resampling is performed in-place. 
+	//!	
+	//!	\param begin is the beginning of the range of Partials to resample
+	//!	\param end is (one-past) the end of the range of Partials to resample
+	//!	
+	//!	If compiled with NO_TEMPLATE_MEMBERS defined, then begin and end
+	//!	must be PartialList::iterators, otherwise they can be any type
+	//!	of iterators over a sequence of Partials.
+#if ! defined(NO_TEMPLATE_MEMBERS)
+	template<typename Iter>
+	void resample( Iter begin, Iter end ) const
+#else
+   inline 
+	void resample( PartialList::iterator begin, PartialList::iterator end  ) const
+#endif	 
+    {
+        while ( begin != end )
+        {
+            resample( *begin++ );
+        }
+    }
+    */
  
 	//! Resample all Partials in the specified PartialList using this
 	//! Resampler's stored quanitization interval. The Breakpoint times in 
@@ -200,9 +234,55 @@ public:
     //! \param  timingEnv is the timing envelope, a map of Breakpoint 
     //!         times in resampled Partials onto parameter sampling 
     //!         instants in the original Partials.
-
 	void resample( PartialList & plist,
 	               const LinearEnvelope & timingEnv ) const;
+
+	/*
+    
+    // Cannot remove empties without access to the container!
+    
+ 	//! Resample all Partials in the specified (half-open) range using this
+	//! Resampler's stored quanitization interval. The Breakpoint times in 
+	//! resampled Partials will comprise a contiguous sequence of all integer 
+	//! multiples of the sampling interval, starting and ending with the nearest 
+	//! multiples to the ends of the Partial. If phase correct resampling is 
+	//! specified (the default)≤ frequencies and phases are corrected to be in 
+    //! agreement and to match as nearly as possible the resampled phases. 
+    //!
+    //! The timing envelope represents a warping of the time axis that is 
+    //! applied during resampling. The Breakpoint times in resampled Partials 
+    //! will a comprise contiguous sequence of all integer multiples of the 
+    //! sampling interval between the first and last breakpoints in the timing 
+    //! envelope, and each Breakpoint will represent the parameters of the 
+    //! original Partial at the time that is the value of the timing envelope 
+    //! at that instant. 
+    //! 
+    //! Resampling is performed in-place. 
+	//!	
+	//!	\param  begin is the beginning of the range of Partials to resample
+	//!	\param  end is (one-past) the end of the range of Partials to resample
+    //! \param  timingEnv is the timing envelope, a map of Breakpoint 
+    //!         times in resampled Partials onto parameter sampling 
+    //!         instants in the original Partials.
+	//!	
+	//!	If compiled with NO_TEMPLATE_MEMBERS defined, then begin and end
+	//!	must be PartialList::iterators, otherwise they can be any type
+	//!	of iterators over a sequence of Partials.
+#if ! defined(NO_TEMPLATE_MEMBERS)
+	template<typename Iter>
+	void resample( Iter begin, Iter end, const LinearEnvelope & timingEnv ) const
+#else
+   inline 
+	void resample( PartialList::iterator begin, PartialList::iterator end,
+	               const LinearEnvelope & timingEnv) const
+#endif	 
+    {
+        while ( begin != end )
+        {
+            resample( *begin++, timingEnv );
+        }
+    }
+    */
 
     //! Quantize all Partials in the specified PartialList.
     //! Each Breakpoint in the Partials is replaced by a Breakpoint
@@ -210,10 +290,39 @@ public:
     //! integer multiple of the of the resampling interval.
     //!	
 	//!	\param plist is the container of Partials to quantize
-
 	void quantize( PartialList & plist  ) const;
+	
    	 
-
+    /*
+    
+    // Cannot remove empties without access to the container!
+    
+ 	//! Quantize all Partials in the specified (half-open) range.
+    //! Each Breakpoint in the Partials is replaced by a Breakpoint
+    //! constructed by resampling the Partial at the nearest
+    //! integer multiple of the of the resampling interval.
+    //!	
+    //!	\param begin is the beginning of the range of Partials to quantize
+    //!	\param end is (one-past) the end of the range of Partials to quantize
+    //!	
+    //!	If compiled with NO_TEMPLATE_MEMBERS defined, then begin and end
+    //!	must be PartialList::iterators, otherwise they can be any type
+    //!	of iterators over a sequence of Partials.
+#if ! defined(NO_TEMPLATE_MEMBERS)
+	template<typename Iter>
+	void quantize( Iter begin, Iter end ) const
+#else
+   inline 
+	void quantize( PartialList::iterator begin, PartialList::iterator end  ) const
+#endif	
+    {
+        while ( begin != end )
+        {
+            quantize( *begin++ );
+        }
+    }
+    */
+    
 //	--- instance variables ---
 private:
     
