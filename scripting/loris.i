@@ -1662,26 +1662,24 @@ instance.") Analyzer;
 If specified, use a frequency envelope as a fundamental reference for
 Partial formation.") analyze;
 
-		PartialList * analyze( const std::vector< double > & vec, double srate )
+		PartialList analyze( const std::vector< double > & vec, double srate )
 		{
-			PartialList * partials = new PartialList();
+			PartialList partials;
 			if ( ! vec.empty() )
 			{
-				self->analyze( vec, srate );
+				partials = self->analyze( vec, srate );
 			}
-			partials->splice( partials->end(), self->partials() );
 			return partials;
 		}
 		 
-		PartialList * analyze( const std::vector< double > & vec, double srate, 
-                               Envelope * env )
+		PartialList analyze( const std::vector< double > & vec, double srate, 
+                             Envelope * env )
 		{
-			PartialList * partials = new PartialList();
+			PartialList partials;
 			if ( ! vec.empty() )
 			{
-				self->analyze( vec, srate, *env );
+				partials = self->analyze( vec, srate, *env );
 			}
-			partials->splice( partials->end(), self->partials() );
 			return partials;
 		}
 	}

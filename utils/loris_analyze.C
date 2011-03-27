@@ -48,6 +48,7 @@
 #include "Collator.h"
 #include "Distiller.h"
 #include "FrequencyReference.h"
+#include "PartialList.h"
 #include "PartialUtils.h"
 #include "Resampler.h"
 #include "SdifFile.h"
@@ -980,7 +981,7 @@ int main( int argc, char * argv[] )
         }
         
         cout << "* performing analysis" << endl;
-        gAnalyzer->analyze( samples, analysisRate );
+        Loris::PartialList partials = gAnalyzer->analyze( samples, analysisRate );
         cout << "* analysis complete" << endl;  
         
         //	check or distilling or sifting
@@ -989,61 +990,61 @@ int main( int argc, char * argv[] )
             Loris::LinearEnvelope ref = gAnalyzer->fundamentalEnv();    
             
             Loris::Channelizer chan( ref, 1 );
-            cout << "* channelizing " << gAnalyzer->partials().size() 
+            cout << "* channelizing " << partials.size() 
                  << " partials" << endl;
-            chan.channelize( gAnalyzer->partials().begin(), 
-                             gAnalyzer->partials().end() );
+            chan.channelize( partials.begin(), 
+                             partials.end() );
 								  
 			if ( gDistill > 0 )
 			{
 				Loris::PartialList::iterator it =           
-					std::remove_if( gAnalyzer->partials().begin(), 
-									gAnalyzer->partials().end(), 
+					std::remove_if( partials.begin(), 
+									partials.end(), 
 									Loris::PartialUtils::isLabelEqual( 0 ) );
 									
-				if ( it != gAnalyzer->partials().end() )
+				if ( it != partials.end() )
 				{
 					cout << "* removing unlabeled partials" << endl;
-					gAnalyzer->partials().erase( it, gAnalyzer->partials().end() );
+					partials.erase( it, partials.end() );
 				}
 				
-				cout << "* distilling " << gAnalyzer->partials().size() 
+				cout << "* distilling " << partials.size() 
 					  << " partials" << endl;
-				Loris::Distiller::distill( gAnalyzer->partials(),
+				Loris::Distiller::distill( partials,
 										   Loris::Distiller::DefaultFadeTimeMs/1000.0, 
 										   Loris::Distiller::DefaultSilentTimeMs/1000.0 );
 			}
 			else
 			{
-				cout << "* sifting " << gAnalyzer->partials().size() 
+				cout << "* sifting " << partials.size() 
 					  << " partials" << endl;
-				Loris::Sieve::sift( gAnalyzer->partials().begin(), 
-									gAnalyzer->partials().end(), 
+				Loris::Sieve::sift( partials.begin(), 
+									partials.end(), 
 									Loris::Sieve::DefaultFadeTimeMs/1000.0 );
 													
 				Loris::PartialList::iterator it =           
-					std::remove_if( gAnalyzer->partials().begin(), 
-									gAnalyzer->partials().end(), 
+					std::remove_if( partials.begin(), 
+									partials.end(), 
 									Loris::PartialUtils::isLabelEqual( 0 ) );
 									
-				if ( it != gAnalyzer->partials().end() )
+				if ( it != partials.end() )
 				{
 					cout << "* removing unlabeled partials" << endl;
-					gAnalyzer->partials().erase( it, gAnalyzer->partials().end() );
+					partials.erase( it, partials.end() );
 				}
 				
-				cout << "* distilling " << gAnalyzer->partials().size() 
+				cout << "* distilling " << partials.size() 
 					  << " partials" << endl;
-				Loris::Distiller::distill( gAnalyzer->partials(),
+				Loris::Distiller::distill( partials,
 										   Loris::Distiller::DefaultFadeTimeMs/1000.0, 
 										   Loris::Distiller::DefaultSilentTimeMs/1000.0 );
 			}
         }
         else if ( gCollate )
         {
-            cout << "* collating " << gAnalyzer->partials().size();
+            cout << "* collating " << partials.size();
             cout << " partials" << endl;
-            Loris::Collator::collate( gAnalyzer->partials(),
+            Loris::Collator::collate( partials,
 								      Loris::Collator::DefaultFadeTimeMs/1000.0, 
 									  Loris::Collator::DefaultSilentTimeMs/1000.0 );
         }
@@ -1051,26 +1052,26 @@ int main( int argc, char * argv[] )
         if ( gResample > 0 )
         {
             Loris::Resampler resamp( gResample );
-            cout << "* resampling " << gAnalyzer->partials().size() 
+            cout << "* resampling " << partials.size() 
                  << " partials at " << 1000*gResample << " ms intervals" << endl;
-            resamp.resample( gAnalyzer->partials() );
+            resamp.resample( partials );
         }
             
-        cout << "* exporting " << gAnalyzer->partials().size(); 
+        cout << "* exporting " << partials.size(); 
         cout << " partials to " << gOutFileName << endl;
-        Loris::SdifFile outfile( gAnalyzer->partials().begin(), 
-                                 gAnalyzer->partials().end() );
+        Loris::SdifFile outfile( partials.begin(), 
+                                 partials.end() );
         outfile.markers() = markers;
         outfile.write( gOutFileName );
         
         if ( ! gTestFileName.empty() )
         {
             cout << "* exporting rendered partials to " << gTestFileName << endl;
-            Loris::PartialUtils::crop( gAnalyzer->partials().begin(),
-                                       gAnalyzer->partials().end(),
+            Loris::PartialUtils::crop( partials.begin(),
+                                       partials.end(),
                                        0, 99999999. );
-            Loris::AiffFile testfile( gAnalyzer->partials().begin(), 
-                                      gAnalyzer->partials().end(), gRate );
+            Loris::AiffFile testfile( partials.begin(), 
+                                      partials.end(), gRate );
             testfile.markers() = markers;
             testfile.write( gTestFileName );
         }

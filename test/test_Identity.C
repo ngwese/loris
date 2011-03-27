@@ -157,8 +157,8 @@ static void one_partial( void )
 	anal.setAmpFloor( -50 );
 	anal.setBwRegionWidth( 0 );
     cout << "Using analysis window width " << anal.windowWidth() << " Hz" << endl;
-	anal.analyze( v, 44100 );
-	PartialList & partials = anal.partials();
+	
+	PartialList partials = anal.analyze( v, 44100 );
 	
 	//  need to distill, because the fake partial fades out
 	//  and back in again
@@ -287,8 +287,8 @@ static void two_partials( void )
 	anal.setAmpFloor( -50 );
 	anal.setBwRegionWidth( 0 );
     cout << "Using analysis window width " << anal.windowWidth() << " Hz" << endl;
-	anal.analyze( v, 44100 );
-	PartialList & partials = anal.partials();
+	
+	PartialList partials = anal.analyze( v, 44100 );
 	
 	/*
 	// no need to distill, these partials should pop right out

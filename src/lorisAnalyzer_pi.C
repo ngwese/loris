@@ -158,10 +158,10 @@ void analyze( const double * buffer, unsigned int bufferSize,
 					ptr_instance->freqResolution() << endl;
 		if ( bufferSize > 0 )
 		{
-			ptr_instance->analyze( buffer, buffer + bufferSize, srate );
+			PartialList pp = ptr_instance->analyze( buffer, buffer + bufferSize, srate );
 		
 			//	splice the Partials into the destination list:
-        	partials->splice( partials->end(), ptr_instance->partials() );
+        	partials->splice( partials->end(), pp );
             
 		}
 	}

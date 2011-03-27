@@ -214,7 +214,7 @@ public:
     //! 
     //! \param  vec is a vector of floating point samples
     //! \param  srate is the sample rate of the samples in the vector 
-    void analyze( const std::vector<double> & vec, double srate );
+    PartialList analyze( const std::vector<double> & vec, double srate );
     
     //! Analyze a range of (mono) samples at the given sample rate      
     //! (in Hz) and store the extracted Partials in the Analyzer's
@@ -224,7 +224,7 @@ public:
     //! \param  bufEnd is (one-past) the end of a buffer of floating point 
     //!         samples
     //! \param  srate is the sample rate of the samples in the buffer
-    void analyze( const double * bufBegin, const double * bufEnd, double srate );
+    PartialList analyze( const double * bufBegin, const double * bufEnd, double srate );
     
 //  -- tracking analysis --
 
@@ -237,7 +237,7 @@ public:
     //! \param  srate is the sample rate of the samples in the vector
     //! \param  reference is an Envelope having the approximate
     //!         frequency contour expected of the resulting Partials.
-    void analyze( const std::vector<double> & vec, double srate, 
+    PartialList analyze( const std::vector<double> & vec, double srate, 
                   const Envelope & reference );
     
     //! Analyze a range of (mono) samples at the given sample rate      
@@ -251,7 +251,7 @@ public:
     //! \param  srate is the sample rate of the samples in the buffer
     //! \param  reference is an Envelope having the approximate
     //!         frequency contour expected of the resulting Partials.
-    void analyze( const double * bufBegin, const double * bufEnd, double srate,
+    PartialList analyze( const double * bufBegin, const double * bufEnd, double srate,
                   const Envelope & reference );
     
 //  -- parameter access --
@@ -458,16 +458,6 @@ public:
         }
            
 
-//  -- PartialList access --
-
-    //! Return a mutable reference to this Analyzer's list of 
-    //! analyzed Partials. 
-    PartialList & partials( void );
-
-    //! Return an immutable (const) reference to this Analyzer's 
-    //! list of analyzed Partials. 
-    const PartialList & partials( void ) const;
-
 //  -- envelope access --
 
     enum { Default_FundamentalEnv_ThreshDb = -60, 
@@ -560,7 +550,6 @@ private:
     bool m_phaseCorrect;        //!  flag indicating that phases/frequencies should be
                                 //!  made consistent at the end of the analysis
                             
-    PartialList m_partials;     //!  collect Partials here
         
     //! builder object for constructing a fundamental frequency
     //! estimate during analysis

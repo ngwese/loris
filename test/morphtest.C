@@ -85,8 +85,8 @@ int main( void )
         Analyzer a( 415*.8, 415*1.6 );
         a.setFreqDrift( 30 );
         a.setAmpFloor( -90 );
-        a.analyze( f.samples(), f.sampleRate() );
-        PartialList clar = a.partials();
+        
+        PartialList clar = a.analyze( f.samples(), f.sampleRate() );
 
         // channelize and distill
         cout << "distilling" << endl;
@@ -125,8 +125,8 @@ int main( void )
 		cout << "Analyzer will build a fundamental frequency estimate for the flute" << endl;
         a.buildFundamentalEnv( 270, 310 );
 		a.buildAmpEnv( true );
-        a.analyze( f.samples(), f.sampleRate() );
-        PartialList flut = a.partials();
+        
+        PartialList flut = a.analyze( f.samples(), f.sampleRate() );
 
 		LinearEnvelope fund = a.fundamentalEnv();
 		double est_time = fund.begin()->first;

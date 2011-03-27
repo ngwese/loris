@@ -172,9 +172,8 @@ int main( int argc, char * argv[] )
         cout << "amplitude threshold is " << anal.ampFloor() << endl;    
         cout << "lower bound is " << fmin << endl;
         cout << "upper bound is " << fmax << endl;
-        
-        anal.analyze( buf, rate );
-        PartialList plist = anal.partials();
+                
+        PartialList plist = anal.analyze( buf, rate );
         LinearEnvelope est1 = anal.fundamentalEnv();
 
         x = dumpEnvelope( est1 );
