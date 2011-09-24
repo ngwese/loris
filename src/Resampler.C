@@ -127,22 +127,31 @@ void Resampler::setPhaseCorrect( bool correctPhase )
 // ---------------------------------------------------------------------------
 //	resample
 // ---------------------------------------------------------------------------
-//! Resample a Partial using this Resampler's stored quanitization interval.
-//! If sparse resampling (the default) has be selected, Breakpoint times
-//! are quantized to integer multiples of the resampling interval.
-//! If dense resampling is selected, a Breakpoint will be provided at
-//! every integer multiple of the resampling interval in the time span of
-//! the Partial, starting and ending with the nearest multiples to the
-//! ends of the Partial. Frequencies and phases are corrected to be in 
-//! agreement and to match as nearly as possible the resampled phases if
-//! phase correct resampling is specified (the default). Resampling
-//! is performed in-place. 
+//! Resample the specified Partial using the stored quanitization interval. 
+//! The Breakpoint times will comprise a contiguous sequence of all integer 
+//! multiples of the sampling interval, starting and ending with the nearest 
+//! multiples to the ends of the Partial. If phase correct resampling is 
+//! specified (the default)≤ frequencies and phases are corrected to be in 
+//! agreement and to match as nearly as possible the resampled phases. 
+//!
+//! Resampling is performed in-place. 
 //!
 //! \param  p is the Partial to resample
 //
 void 
 Resampler::resample( Partial & p ) const
 {
+    //  for phase-correct resampling, first make the phases correct by
+    //  fixing them from the initial phase (ideally this should have
+    //  no effect but there's no way to be phase-correct after resampling
+    //  unless the phases start correct), then resample the Breakpoint
+    //  times, then afterwards, adjust the frequencies to match
+    //  the interpolated phases:
+    if ( phaseCorrect_ )
+    {
+        fixPhaseForward( p.begin(), --p.end() );
+    }
+    
 	//	create the new Partial:
 	Partial newp;
 	newp.setLabel( p.label() );
@@ -179,16 +188,22 @@ Resampler::resample( Partial & p ) const
 // ---------------------------------------------------------------------------
 //	resample
 // ---------------------------------------------------------------------------
-//! Resample a Partial using this Resampler's stored quanitization interval.
-//! If sparse resampling (the default) has be selected, Breakpoint times
-//! are quantized to integer multiples of the resampling interval.
-//! If dense resampling is selected, a Breakpoint will be provided at
-//! every integer multiple of the resampling interval in the time span of
-//! the Partial, starting and ending with the nearest multiples to the
-//! ends of the Partial. Frequencies and phases are corrected to be in 
-//! agreement and to match as nearly as possible the resampled phases if
-//! phase correct resampling is specified (the default). Resampling
-//! is performed in-place. 
+//! Resample the specified Partial using the stored quanitization interval. 
+//! The Breakpoint times will comprise a contiguous sequence of all integer 
+//! multiples of the sampling interval, starting and ending with the nearest 
+//! multiples to the ends of the Partial. If phase correct resampling is 
+//! specified (the default)≤ frequencies and phases are corrected to be in 
+//! agreement and to match as nearly as possible the resampled phases. 
+//!
+//! The timing envelope represents a warping of the time axis that is 
+//! applied during resampling. The Breakpoint times in resampled Partials 
+//! will a comprise contiguous sequence of all integer multiples of the 
+//! sampling interval between the first and last breakpoints in the timing 
+//! envelope, and each Breakpoint will represent the parameters of the 
+//! original Partial at the time that is the value of the timing envelope 
+//! at that instant. 
+//! 
+//! Resampling is performed in-place. 
 //!
 //! \param  p is the Partial to resample
 //!
@@ -262,12 +277,12 @@ Resampler::resample( Partial & p, const LinearEnvelope & timingEnv ) const
 // ---------------------------------------------------------------------------
 //	quantize
 // ---------------------------------------------------------------------------
-//! The Breakpoint times in the resampled Partial will comprise a  
-//! sparse sequence of integer multiples of the sampling interval,
-//! beginning with the multiple nearest to the Partial's start time and
-//! ending with the multiple nearest to the Partial's end time, and including
-//! only multiples that are near to Breakpoint times in the original Partial.
-//! Resampling is performed in-place. 
+//! Quantize the Breakpoint times using the specified Partial using the 
+//! stored quanitization interval. Each Breakpoint in the Partial is 
+//! replaced by a Breakpoint constructed by resampling the Partial at 
+//! the nearest integer multiple of the of the resampling interval.
+//! 
+//! Quantization is performed in-place. 
 //!
 //! \param  p is the Partial to resample
 //
