@@ -16,7 +16,7 @@ rm -f config.cache
 rm -f acconfig.h
 mkdir -p config
 echo "- libtoolize (automake doesn't always work)"
-/usr/bin/glibtoolize --force --automake --copy
+libtoolize --force --automake --copy
 echo "- aclocal."
 aclocal -I config
 echo "- autoconf."
