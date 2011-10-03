@@ -285,9 +285,6 @@ public:
 	//!	\param	other is the Partial to absorb.
 	void absorb( const Partial & other );
 
-	//!	Set the label for this Partial to the specified 32-bit value.
-	void setLabel( label_type l );
-
 	//!	Remove the Breakpoint at the position of the given
 	//!	iterator, invalidating the iterator. Return a 
 	//!	iterator referring to the next valid position, or to
@@ -299,7 +296,30 @@ public:
 	//!			pair after the one that was removed.
 	//!	\post	The iterator pos is invalid. 
 	iterator erase( iterator pos );
-	 
+	
+
+	//!	Insert a null (zero-amplitude) Breakpoint preceeding the first 
+	//!	Breakpoint in the Partial by fadeTime seconds, only of that 
+	//! first Breakpoint has non-zero amplitude. Otherwise, do nothing.
+	//! If the requested insert time is negative (fadeTime > startTime),
+	//! then the new null Breakpoint is inserted at time 0. If startTime
+	//! is 0, then do nothing, as no fade in is possible.
+	//!
+	//! \param	fadeTime the time (in seconds) by which the new null Breakpoint
+	//!			should preceed the first Breakpoint in the Partial
+	//!
+	void fadeIn( double fadeTime );
+	
+	//!	Insert a null (zero-amplitude) Breakpoint following the last 
+	//!	Breakpoint in the Partial by fadeTime seconds, only of that 
+	//! last Breakpoint has non-zero amplitude. Otherwise, do nothing.
+	//!
+	//! \param	fadeTime the time (in seconds) by which the new null Breakpoint
+	//!			should follow the last Breakpoint in the Partial
+	//!
+	void fadeOut( double fadeTime );	
+	
+	
 	//!	Return an iterator refering to the position of the
 	//!	Breakpoint in this Partial nearest the specified time.
 	//!	
@@ -316,6 +336,9 @@ public:
 	//!			pair nearest (in time) to the specified time.
 	const_iterator findNearest( double time ) const;
 
+	//!	Set the label for this Partial to the specified 32-bit value.
+	void setLabel( label_type l );
+	
 	//!	Break this Partial at the specified position (iterator).
 	//!	The Breakpoint at the specified position becomes the first
 	//!	Breakpoint in a new Partial. Breakpoints at the specified

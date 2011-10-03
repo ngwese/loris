@@ -37,6 +37,7 @@
 
 #include "Partial.h"
 #include "Breakpoint.h"
+#include "BreakpointUtils.h"
 #include "LorisExceptions.h"
 #include "Notifier.h"
 
@@ -562,6 +563,51 @@ Partial::erase( iterator pos )
 	}
 	return pos;
 }
+	
+// ---------------------------------------------------------------------------
+//	fadeIn
+// ---------------------------------------------------------------------------
+//!	Insert a null (zero-amplitude) Breakpoint preceeding the first 
+//!	Breakpoint in the Partial by fadeTime seconds, only of that 
+//! first Breakpoint has non-zero amplitude. Otherwise, do nothing.
+//! If the requested insert time is negative (fadeTime > startTime),
+//! then the new null Breakpoint is inserted at time 0. If startTime
+//! is 0, then do nothing, as no fade in is possible.
+//!
+//! \param	fadeTime the time (in seconds) by which the new null Breakpoint
+//!			should preceed the first Breakpoint in the Partial
+//!
+void Partial::fadeIn( double fadeTime )
+{
+	const Breakpoint & bp = first();
+	double t0 = startTime();
+	if ( 0 != bp.amplitude() && 0 < t0 )
+	{
+		insert( std::max( 0., t0 - fadeTime ),
+				BreakpointUtils::makeNullBefore( bp, fadeTime ) );
+	}	
+}
+
+// ---------------------------------------------------------------------------
+//	fadeOut
+// ---------------------------------------------------------------------------
+//!	Insert a null (zero-amplitude) Breakpoint following the last 
+//!	Breakpoint in the Partial by fadeTime seconds, only of that 
+//! last Breakpoint has non-zero amplitude. Otherwise, do nothing.
+//!
+//! \param	fadeTime the time (in seconds) by which the new null Breakpoint
+//!			should follow the last Breakpoint in the Partial
+//!
+void Partial::fadeOut( double fadeTime )
+{
+	const Breakpoint & bp = last();
+	if ( 0 != bp.amplitude() )
+	{
+		insert( endTime() + fadeTime,
+			    BreakpointUtils::makeNullAfter( bp, fadeTime ) );
+	}		
+}
+
 
 // ---------------------------------------------------------------------------
 //	split
