@@ -29,10 +29,10 @@ MAINTAINERCLEANFILES = Makefile.in
 # installing the Python module
 #
 if BUILD_PYTHON
-pythonsitepkgdir = $(pyexecdir)
+
 pyexec_PYTHON = loris.py
 
-pythonsitepkg_LTLIBRARIES = _loris.la
+pyexec_LTLIBRARIES = _loris.la
 nodist__loris_la_SOURCES = $(PYTHON_WRAPPER)
 _loris_la_CXXFLAGS = -I$(top_srcdir)/src $(PYFLAGS) 
 _loris_la_LIBADD = $(top_builddir)/src/libloris.la 
