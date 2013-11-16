@@ -16,7 +16,7 @@ AC_INIT(Loris, 1.9, loris@cerlsoundgroup.org, loris)
 AC_CONFIG_AUX_DIR(config)
 AC_SUBST(ac_aux_dir)
 AM_INIT_AUTOMAKE(1.6)
-AM_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADERS(config.h)
 
 dnl LT_INIT
 dnl LT_INIT doesn't seem to work?
