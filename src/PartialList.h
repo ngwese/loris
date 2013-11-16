@@ -208,13 +208,13 @@ public:
 #if ! defined(NO_TEMPLATE_MEMBERS)
     template<class InIt>
     void insert( iterator where, InIt first, InIt last )
-        { return mList->insert( where, first, last ); }
+        { mList->insert( where, first, last ); }
 #else
     void insert( iterator where, const_iterator first, const_iterator last )
-        { return mList->insert( where, first, last ); }
+        { mList->insert( where, first, last ); }
         
     void insert( iterator where, iterator first, iterator last )
-        { return mList->insert( where, first, last ); }
+        { mList->insert( where, first, last ); }
 #endif
 
     
