@@ -291,11 +291,9 @@ and returns a LinearEnvelope that samples the estimator at the
 specified time interval (in seconds). Default values are used 
 to configure the estimator. Only estimates in the specified 
 frequency range will be considered valid, estimates outside this 
-range will be ignored.
-
-Clients are responsible for disposing of the newly-constructed 
-LinearEnvelope.") createF0Estimate;
+range will be ignored.") createF0Estimate;
    
+%newobject createF0Estimate;   
 LinearEnvelope * 
 createF0Estimate( PartialList * partials, double minFreq, double maxFreq, 
                   double interval );
