@@ -69,6 +69,9 @@ const double Morpher::DefaultAmpShape = 1E-5;
 const double Morpher::DefaultBreakpointGap = 1E-4; // minimum time (sec) between Breakpoints in 
                                                    // morphed Partials
 
+const bool Morpher::DefaultDoLogAmplitudeMorphing = true;
+const bool Morpher::DefaultDoLogFrequencyMorphing = false;
+
 // helper declarations
 static inline bool partial_is_nonnull( const Partial & p );
 
@@ -89,8 +92,8 @@ Morpher::Morpher( const Envelope & f ) :
     _freqFixThresholdDb( DefaultFixThreshold ),
     _logMorphShape( DefaultAmpShape ),
     _minBreakpointGapSec( DefaultBreakpointGap ),
-    _doLogAmpMorphing( true ),
-    _doLogFreqMorphing( false )
+    _doLogAmpMorphing( DefaultDoLogAmplitudeMorphing ),
+    _doLogFreqMorphing( DefaultDoLogFrequencyMorphing )
 {
 }
 
@@ -107,8 +110,8 @@ Morpher::Morpher( const Envelope & ff, const Envelope & af, const Envelope & bwf
     _freqFixThresholdDb( DefaultFixThreshold ),
     _logMorphShape( DefaultAmpShape ),
     _minBreakpointGapSec( DefaultBreakpointGap ),
-    _doLogAmpMorphing( true ),
-    _doLogFreqMorphing( false )
+    _doLogAmpMorphing( DefaultDoLogAmplitudeMorphing ),
+    _doLogFreqMorphing( DefaultDoLogFrequencyMorphing )
 {
 }
 

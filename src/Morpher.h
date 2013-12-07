@@ -501,6 +501,14 @@ public:
     //! morphed Partials. 
     //! Change from default using setMinBreakpointGap.
     static const double DefaultBreakpointGap;
+    
+    //! Default logarithmic amplitude morphing flag.
+    //! By default, amplitude morphing is in log domain (true).
+    static const bool DefaultDoLogAmplitudeMorphing; // = true
+    
+    //! Default logarithmic frequency morphing flag.
+    //! By default, frequency morphing is NOT in log domain (false).
+    static const bool DefaultDoLogFrequencyMorphing; // = false
 
 private:
     
