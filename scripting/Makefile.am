@@ -11,10 +11,15 @@
 
 PYTHON_WRAPPER = loris_python_wrap.C
 SWIG_INTERFACE = $(top_srcdir)/scripting/loris.i
-ALL_IFILES = $(SWIG_INTERFACE) $(top_srcdir)/scripting/lorisPartialList.i \
-             $(top_srcdir)/scripting/lorisFundamental.i \
-             $(top_srcdir)/scripting/lorisEnvelope.i \
+ALL_IFILES = $(SWIG_INTERFACE) \
+             $(top_srcdir)/scripting/lorisAnalyzer.i \
              $(top_srcdir)/scripting/lorisChannelizer.i \
+             $(top_srcdir)/scripting/lorisEnvelope.i \
+             $(top_srcdir)/scripting/lorisFileIO.i \
+             $(top_srcdir)/scripting/lorisFundamental.i \
+             $(top_srcdir)/scripting/lorisMorph.i \
+             $(top_srcdir)/scripting/lorisPartialList.i \
+             $(top_srcdir)/scripting/lorisPartialListOps.i \
              $(top_srcdir)/scripting/lorisSynthesizer.i
 
 
