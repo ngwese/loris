@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Loris is Copyright (c) 1999-2011 by Kelly Fitz and Lippold Haken
+# Loris is Copyright (c) 1999-2014 by Kelly Fitz and Lippold Haken
 # <loris@cerlsoundgroup.org>
 
 #  
@@ -15,8 +15,8 @@
 rm -f config.cache
 rm -f acconfig.h
 mkdir -p config
-echo "- libtoolize (automake doesn't always work)"
-libtoolize --force --automake --copy
+echo "- glibtoolize (automake doesn't always work)"
+glibtoolize --force --automake --copy
 echo "- aclocal."
 aclocal -I config
 echo "- autoconf."

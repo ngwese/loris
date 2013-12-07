@@ -1,4 +1,4 @@
-dnl Loris is Copyright (c) 1999-2011 by Kelly Fitz and Lippold Haken 
+dnl Loris is Copyright (c) 1999-2014 by Kelly Fitz and Lippold Haken 
 dnl <loris@cerlsoundgroup.org>
 dnl  
 dnl This file is free software; as a special exception the author gives

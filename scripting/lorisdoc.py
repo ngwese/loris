@@ -11,7 +11,7 @@
 	The primary distribution point for Loris is SourceForge
 	(http://loris.sourceforge.net) and its mirrors.
 
-	Loris is Copyright (c) 1999-2011 by Kelly Fitz and Lippold Haken
+	Loris is Copyright (c) 1999-2014 by Kelly Fitz and Lippold Haken
 """
 import loris
 
