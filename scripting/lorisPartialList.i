@@ -46,7 +46,6 @@
 %newobject *::findAfter;
 %newobject *::findNearest;
 	
-
 /* ***************** inserted C++ code ***************** */
 %{
 
@@ -118,12 +117,30 @@ struct SwigPartialIterator
 /* ***************** end of inserted C++ code ***************** */
 
 /* *********** exception handling for new iterators *********** */
+
 /*	Exception handling code copied from the SWIG manual. 
 	Tastes great, less filling.
 	Defined in loris.i.
 */
 
 %include exception.i
+%exception __next__
+{
+    char * err;
+    clear_exception();
+    $action
+    if ((err = check_exception()))
+    {
+#if defined(SWIGPYTHON)
+		PyErr_SetString(PyExc_StopIteration, err);
+		return NULL;
+#else
+        SWIG_exception( SWIG_ValueError, err );
+#endif
+    }
+}
+
+// dumb, appears that I have to duplicate this?
 %exception next
 {
     char * err;
@@ -132,17 +149,14 @@ struct SwigPartialIterator
     if ((err = check_exception()))
     {
 #if defined(SWIGPYTHON)
-		%#ifndef NO_PYTHON_EXC_STOPITER
-		PyErr_SetString( PyExc_StopIteration, err );
+		PyErr_SetString(PyExc_StopIteration, err);
 		return NULL;
-		%#else
-		SWIG_exception( SWIG_ValueError, err );
-		%#endif
 #else
         SWIG_exception( SWIG_ValueError, err );
 #endif
     }
 }
+
 
 %exception PartialList::erase
 {
@@ -156,6 +170,7 @@ struct SwigPartialIterator
 }
 
 /* ******** end of exception handling for new iterators ******** */
+
 
 /* ***************** new PartialList iterator ****************** */
 
@@ -182,7 +197,7 @@ been returned by this iterator.") next;
 
 	Partial * next( void );
 
-#ifdef SIWGPYTHON
+#ifdef SWIGPYTHON
     %extend
     {
 %feature("docstring",
@@ -200,6 +215,16 @@ been returned by this iterator.") next;
         {
             return self;
         }
+        
+%feature("docstring",
+"Return the next Partial in the PartialList that has not yet
+been returned by this iterator.") __next__;
+
+        Partial * __next__( void )
+        {
+            return self->next();
+        }
+                
     }
 #endif
 };
@@ -230,13 +255,13 @@ been returned by this iterator.") next;
 
 	BreakpointPosition * next( void );
 	
-#ifdef SIWGPYTHON
+#ifdef SWIGPYTHON
     %extend
     {
  %feature("docstring",
 "Return this iterator.") __iter__;
 
-       SwigPartialIterator * __iter__( void )
+        SwigPartialIterator * __iter__( void )
         {
             return self;
         }
@@ -248,6 +273,16 @@ been returned by this iterator.") next;
         {
             return self;
         }
+        
+%feature("docstring",
+"Return the next Breakpoint in the Partial that has not yet
+been returned by this iterator.") __next__;
+
+        BreakpointPosition * __next__( void )
+        {
+            return self->next();
+        }
+        
     }
 #endif
 };

@@ -80,9 +80,10 @@ if DARWIN
 SET_DARWIN_ENV = "env DYLD_LIBRARY_PATH=$(top_builddir)/src/.libs"
 endif
 
+.PHONY: $(PYTHON_TEST)
 $(PYTHON_TEST):
 	echo "$(SET_PYTHON_ENV) $(SET_DARWIN_ENV) \
-              $(PYTHON) $(top_srcdir)/test/morphtest.py" >> $@
+              $(PYTHON) $(top_srcdir)/test/morphtest.py" > $@
 	chmod +x $@
 endif
 

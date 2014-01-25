@@ -38,24 +38,31 @@ Generates a simple linear morph between a
 clarinet and a flute using the Loris
 extension module for Python.
 """
-print __doc__
+
+# suport Python 2 (>=2.6) and 3
+from __future__ import print_function
+
+
+
+print( __doc__ )
 
 import loris, os, time
 
-print ' Using Loris version', loris.version()
+
+print( ' Using Loris version', loris.version() )
 
 path = os.getcwd()
-print '(in %s)' % path
+print( '(in %s)' % path )
 try:    
     path = os.environ['srcdir']
 except:
     path = os.path.join(os.pardir, 'test')
-print '(looking for sources in %s)' % path
+print( '(looking for sources in %s)' % path )
 
 #
 #   analyze clarinet tone
 #
-print 'analyzing clarinet 4G# (%s)' % time.ctime(time.time())
+print( 'analyzing clarinet 4G# (%s)' % time.ctime(time.time()) )
 a = loris.Analyzer( 390 )
 a.setFreqDrift( 30 )
 a.setAmpFloor( -80 )
@@ -66,21 +73,20 @@ samplerate = cf.sampleRate()
 
 clar = a.analyze( v, samplerate )
 
-print 'checking SDIF export/import'
-print clar.size() , "partials to export"
+print( 'checking SDIF export/import' )
+print( clar.size() , "partials to export" )
 loris.exportSdif( 'clarinet.pytest.sdif', clar )
 clar = loris.importSdif( 'clarinet.pytest.sdif' )
-print clar.size() , "partials imported"
+print( clar.size() , "partials imported" )
 
 try:
-    print 'making a bogus attempt at writing an Spc file --'
-    print 'this will fail because the Partials are unchannelized'
+    print( 'making a bogus attempt at writing an Spc file --' )
+    print( 'this will fail because the Partials are unchannelized' )
     loris.exportSpc( 'bad_spc_file.pytest.spc', clar, 90 )
-except:
+except Exception as e:
     import sys
-    print 'caught:', sys.exc_type
-    print 'error is:' , sys.exc_value
-    print 'OK, moving on!'
+    print( 'caught Exception, error is:' , e.args[0] )
+    print( 'OK, moving on!' )
 
 loris.channelize( clar, 415 )
 loris.distill( clar )
@@ -104,9 +110,9 @@ else:
         f = f + it.next().frequency()
         n = n + 1
         
-print "avg frequency of first distilled clarinet partial is", f/n
+print( "avg frequency of first distilled clarinet partial is", f/n )
 
-print 'shifting pitch of clarinet'
+print( 'shifting pitch of clarinet' )
 loris.shiftPitch( clar, loris.LinearEnvelope( -600 ) )
 
 # check clarinet synthesis:
@@ -115,7 +121,7 @@ loris.exportAiff( 'clarOK.pytest.aiff', loris.synthesize( clar, samplerate ), sa
 #
 #   analyze flute tone
 #
-print 'analyzing flute 4D (%s)' % time.ctime(time.time())
+print( 'analyzing flute 4D (%s)' % time.ctime(time.time()) )
 a = loris.Analyzer( 270 )       # reconfigure Analyzer
 a.setFreqDrift( 30 )
 v = loris.AiffFile( os.path.join(path, 'flute.aiff') ).samples()
@@ -133,7 +139,7 @@ loris.exportAiff( 'flutOK.pytest.aiff', loris.synthesize( flut, samplerate ), sa
 # frequency of the first partial in the
 # flute analysis:
 fund = loris.copyLabeled( flut, 1 );
-print "avg frequency of first distilled flute partial is", loris.weightedAvgFrequency( fund.first() )
+print( "avg frequency of first distilled flute partial is", loris.weightedAvgFrequency( fund.first() ) )
 
 #
 #   perform temporal dilation
@@ -142,16 +148,16 @@ flute_times = [0.4, 1.]
 clar_times = [0.2, 1.]
 tgt_times = [0.3, 1.2]
 
-print 'dilating sounds to match', tgt_times, '(%s)' % time.ctime(time.time())
-print 'flute times:', flute_times
+print( 'dilating sounds to match', tgt_times, '(%s)' % time.ctime(time.time()))
+print( 'flute times:', flute_times )
 loris.dilate( flut, flute_times, tgt_times )
-print 'clarinet times:', clar_times
+print( 'clarinet times:', clar_times )
 loris.dilate( clar, clar_times, tgt_times )
 
 #
 #   perform morph
 #
-print 'morphing flute and clarinet (%s)' % time.ctime(time.time())
+print( 'morphing flute and clarinet (%s)' % time.ctime(time.time()) )
 mf = loris.LinearEnvelope()
 mf.insertBreakpoint( 0.6, 0 )
 mf.insertBreakpoint( 2, 1 )
@@ -175,17 +181,17 @@ for p in flut:
 morphlabels = set()
 for p in m:
 	morphlabels.add( p.label() )
-print 'found', len(morphlabels), 'labeled partials in the morph'
+print( 'found', len(morphlabels), 'labeled partials in the morph' )
 
 # use set algebra to check that all labels in the sources
 # appear in the morph, and no others do
-print 'checking Partial labels in morph...'
+print( 'checking Partial labels in morph...' )
 x = ( clarlabels | flutlabels ) ^ morphlabels
 if len(x) > 0:
 	raise 'ERROR in morphtest: morph does not have the right partial labels'
 else:
-	print 'all partial labels present in the sources are found in the morph'
-	print 'and all the labels in the morph are in (at least) one of the sources'
+	print( 'all partial labels present in the sources are found in the morph' )
+	print( 'and all the labels in the morph are in (at least) one of the sources' )
 		
 
 [clbeg, clend] = loris.timeSpan( clar )
@@ -204,6 +210,6 @@ if not ( mbeg == clbeg ):
 if not ( mend == flend ):
 	raise 'ERROR in morphtest: morph end (%f) not equal to flute end (%f)'%(mend,flend)
 	
-print 'morphed partials pass sanity tests'
+print( 'morphed partials pass sanity tests' )
 
-print 'done (%s)' % time.ctime(time.time())
+print( 'done (%s)' % time.ctime(time.time()) )

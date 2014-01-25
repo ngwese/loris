@@ -9,7 +9,7 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-EXTRA_DIST = tryit.csd trymorph.csd lorisgens5.C lorisgens5.h lorisgens4.C lorisgens4.h
+EXTRA_DIST = tryit.csd trymorph.csd lorisgens5.C lorisgens5.h 
 
 MAINTAINERCLEANFILES = Makefile.in
 
@@ -17,11 +17,6 @@ if HAVE_CSOUND5
 # source code for the Csound5 opcodes
 CSOUND_SRC = lorisgens5.C lorisgens5.h
 # CSOUND_SRC = extendedgens5.C extendedgens5.h
-endif
-
-if HAVE_CSOUND4
-# source code for the Csound4 opcodes
-CSOUND_SRC = lorisgens4.C lorisgens4.h
 endif
 
 # build a convenience library containing the Csound opcodes

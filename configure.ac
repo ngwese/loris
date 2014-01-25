@@ -252,9 +252,6 @@ AC_MSG_RESULT(----- Language Checks -----)
 dnl----------------------------------------------------------------
 dnl Look for Python
 dnl----------------------------------------------------------------
-dnl This new way is not as flexible as the old way, but it much 
-dnl easier to maintain. Thanks to John Ramsdell for helping to
-dnl clean this up.
 
 AC_ARG_VAR([PYTHON], 
        [Path to python when available])
@@ -274,30 +271,18 @@ if test "$USEPYTHON" == "yes" ; then
     if test -n "$PYTHON" ; then
         dnl use automake tools for finding python, set 
         dnl installation directory for extension modules
-        AM_PATH_PYTHON(1.5)
+        AM_PATH_PYTHON(2.6)
         
         dnl look for the header Python.h
-        PYBINDIR="`AS_DIRNAME([$PYTHON])`"
-        PYPREFDIR="`AS_DIRNAME([$PYBINDIR])`"
-        PYINCLUDE="$PYPREFDIR/include/python$PYTHON_VERSION"  
+        dnl 
+        dnl I got this trick from the AX_PYTHON macro
+        PYINCLUDE=`$PYTHON -c "from distutils.sysconfig import *; print(get_config_var('CONFINCLUDEPY'))"`
 
         dnl try compiling with $PYINCLUDE in the header path
         SAVEFLAGS="$CPPFLAGS"
         CPPFLAGS="-I$PYINCLUDE $CPPFLAGS"
         AC_MSG_CHECKING(for Python.h header file)
         AC_CHECK_HEADERS([Python.h],[
-            dnl check whether this version of Python supports
-            dnl the new style of iterators
-            AC_MSG_CHECKING(for PyExc_StopIteration defined in Python.h)
-            AC_TRY_COMPILE( [ #include <Python.h>;], 
-                            [ PyErr_SetString( PyExc_StopIteration, ""); ], 
-                [
-                    AC_MSG_RESULT(yep)
-                    PYFLAGS="-I$PYINCLUDE"  
-                ], [
-                    AC_MSG_RESULT(nope)
-                    PYFLAGS="-I$PYINCLUDE -DNO_PYTHON_EXC_STOPITER"
-                ] )     
         ],[
             AC_MSG_WARN([Cannot find Python headers. Python support disabled.])
             PYTHON=
@@ -309,7 +294,12 @@ if test "$USEPYTHON" == "yes" ; then
 fi
 
 AM_CONDITIONAL(BUILD_PYTHON, test -n "$PYTHON")
+
+dnl AC_MSG_RESULT(PYINCLUDE is $PYINCLUDE)
+dnl AC_MSG_RESULT(PYFLAGS is $PYFLAGS)
+
 AC_SUBST(PYFLAGS)
+AC_SUBST(PYINCLUDE)
 
 dnl----------------------------------------------------------------
 dnl Look for csound.
@@ -331,47 +321,7 @@ fi
 
 AM_CONDITIONAL([HAVE_CSOUND5], [test -n "$FOUND_CSOUND5"])
 
-AC_ARG_VAR([CSOUND_CONFIG], 
-       [Path to the Csound4 configuration script when available (Linux only)])
-
-
-dnl This configure code, parts provided by John Ramsdell,
-dnl works for Csound GBS versions 4.23f12gbs.10 or later.
-
-AC_ARG_WITH(csound4,
-    AC_HELP_STRING( [--with-csound4],
-                    [build Csound 4 opcodes (default is NO)] ),
-    [USECSOUND4="$withval"], [USECSOUND4="no"])
-
 if test "$FOUND_CSOUND5" == "yes" ; then
-	USECSOUND4="no"
-fi
-
-if test "$USECSOUND4" == "yes" ; then
-    AC_PATH_PROG([CSOUND_CONFIG], [csound-config])
-    FOUND_CSOUND4="$CSOUND_CONFIG"
-
-    dnl try to use csound config to get build flags
-    dnl for the csound opcodes
-    if test -n "$CSOUND_CONFIG"; then
-        CSOUND_CXXFLAGS="`$CSOUND_CONFIG --cflags`"
-        
-        CSOUND_PREFIX="`$CSOUND_CONFIG --prefix`"   
-    else
-        AC_CHECK_HEADERS([csound/cs.h],
-            FOUND_CSOUND4="yes",
-            AC_MSG_WARN([Cannot find Csound4 headers. Csound4 support disabled.]))
-    fi
-fi
-AC_SUBST([CSOUND_CXXFLAGS])
-AC_SUBST([CSOUND_PREFIX])
-
-AM_CONDITIONAL([HAVE_CSOUND4], [test -n "$FOUND_CSOUND4"])
-
-if test "$FOUND_CSOUND5" == "yes" ; then
-	HAVE_CSOUND="yes"
-fi
-if test "$FOUND_CSOUND4" == "yes" ; then
 	HAVE_CSOUND="yes"
 fi
 
@@ -467,7 +417,7 @@ if test -n "$HAVE_CSOUND" ; then
     echo   or libloris.dylib on Mac OS X
 else
     echo Csound support: Disabled.
-    echo Define CSOUND_CONFIG or add something to CPPFLAGS to enable.  
+    echo Add something to CPPFLAGS to enable.  
 	echo See "./configure --help".
 fi
 

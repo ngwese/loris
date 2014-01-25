@@ -89,12 +89,8 @@ struct SwigLinEnvIterator
     if ((err = check_exception()))
     {
 #if defined(SWIGPYTHON)
-		%#ifndef NO_PYTHON_EXC_STOPITER
 		PyErr_SetString( PyExc_StopIteration, err );
 		return NULL;
-		%#else
-		SWIG_exception( SWIG_ValueError, err );
-		%#endif
 #else
         SWIG_exception( SWIG_ValueError, err );
 #endif
