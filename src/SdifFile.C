@@ -306,7 +306,7 @@ static SDIFresult SDIF_Write2(const void *block, size_t n, FILE *f) {
     if ((n << 1) > BUFSIZE) {
 	/* Too big for buffer */
 	int num = BUFSIZE >> 1;
-	if (r = SDIF_Write2(block, num, f)) return r;
+	if ((r = SDIF_Write2(block, num, f))) return r;
 	return SDIF_Write2(((char *) block) + (num<<1), n-num, f);
     }
 
@@ -333,7 +333,7 @@ static SDIFresult SDIF_Write4(const void *block, size_t n, FILE *f) {
     if ((n << 2) > BUFSIZE) 
     {
 		int num = BUFSIZE >> 2;
-		if (r = SDIF_Write4(block, num, f)) return r;
+		if ((r = SDIF_Write4(block, num, f))) return r;
 		return SDIF_Write4(((char *) block) + (num<<2), n-num, f);
     }
 
@@ -361,7 +361,7 @@ static SDIFresult SDIF_Write8(const void *block, size_t n, FILE *f) {
 
     if ((n << 3) > BUFSIZE) {
 	int num = BUFSIZE >> 3;
-	if (r = SDIF_Write8(block, num, f)) return r;
+	if ((r = SDIF_Write8(block, num, f))) return r;
 	return SDIF_Write8(((char *) block) + (num<<3), n-num, f);
     }
 
@@ -397,7 +397,7 @@ static SDIFresult SDIF_Read2(void *block, size_t n, FILE *f) {
 
     if ((n << 1) > BUFSIZE) {
 	int num = BUFSIZE >> 1;
-	if (r = SDIF_Read2(block, num, f)) return r;
+	if ((r = SDIF_Read2(block, num, f))) return r;
 	return SDIF_Read2(((char *) block) + (num<<1), n-num, f);
     }
 
@@ -424,7 +424,7 @@ static SDIFresult SDIF_Read4(void *block, size_t n, FILE *f) {
 
     if ((n << 2) > BUFSIZE) {
 	int num = BUFSIZE >> 2;
-	if (r = SDIF_Read4(block, num, f)) return r;
+	if ((r = SDIF_Read4(block, num, f))) return r;
 	return SDIF_Read4(((char *) block) + (num<<2), n-num, f);
     }
 
@@ -454,7 +454,7 @@ static SDIFresult SDIF_Read8(void *block, size_t n, FILE *f) {
 
     if ((n << 3) > BUFSIZE) {
 	int num = BUFSIZE >> 3;
-	if (r = SDIF_Read8(block, num, f)) return r;
+	if ((r = SDIF_Read8(block, num, f))) return r;
 	return SDIF_Read8(((char *) block) + (num<<3), n-num, f);
     }
 
@@ -547,10 +547,10 @@ static void SDIF_FillGlobalHeader(SDIF_GlobalHeader *h) {
 static SDIFresult SDIF_WriteGlobalHeader(const SDIF_GlobalHeader *h, FILE *f) {
 #if !defined(WORDS_BIGENDIAN)
     SDIFresult r;
-    if (r = SDIF_Write1(&(h->SDIF), 4, f)) return r;
-    if (r = SDIF_Write4(&(h->size), 1, f)) return r;
-    if (r = SDIF_Write4(&(h->SDIFversion), 1, f)) return r;
-    if (r = SDIF_Write4(&(h->SDIFStandardTypesVersion), 1, f)) return r;
+    if ((r = SDIF_Write1(&(h->SDIF), 4, f))) return r;
+    if ((r = SDIF_Write4(&(h->size), 1, f))) return r;
+    if ((r = SDIF_Write4(&(h->SDIFversion), 1, f))) return r;
+    if ((r = SDIF_Write4(&(h->SDIFStandardTypesVersion), 1, f))) return r;
     return ESDIF_SUCCESS;
 #else
 
@@ -569,10 +569,10 @@ static SDIFresult SDIF_ReadFrameHeader(SDIF_FrameHeader *fh, FILE *f) {
 	}
 	return ESDIF_READ_FAILED;
     }
-    if (r = SDIF_Read4(&(fh->size),1,f)) return r;
-    if (r = SDIF_Read8(&(fh->time),1,f)) return r;
-    if (r = SDIF_Read4(&(fh->streamID),1,f)) return r;
-    if (r = SDIF_Read4(&(fh->matrixCount),1,f)) return r;
+    if ((r = SDIF_Read4(&(fh->size),1,f))) return r;
+    if ((r = SDIF_Read8(&(fh->time),1,f))) return r;
+    if ((r = SDIF_Read4(&(fh->streamID),1,f))) return r;
+    if ((r = SDIF_Read4(&(fh->matrixCount),1,f))) return r;
     return ESDIF_SUCCESS;
 #else
     size_t amount_read;
@@ -595,11 +595,11 @@ static SDIFresult SDIF_WriteFrameHeader(const SDIF_FrameHeader *fh, FILE *f) {
 #if !defined(WORDS_BIGENDIAN)
     SDIFresult r;
 
-    if (r = SDIF_Write1(&(fh->frameType),4,f)) return r;
-    if (r = SDIF_Write4(&(fh->size),1,f)) return r;
-    if (r = SDIF_Write8(&(fh->time),1,f)) return r;
-    if (r = SDIF_Write4(&(fh->streamID),1,f)) return r;
-    if (r = SDIF_Write4(&(fh->matrixCount),1,f)) return r;
+    if ((r = SDIF_Write1(&(fh->frameType),4,f))) return r;
+    if ((r = SDIF_Write4(&(fh->size),1,f))) return r;
+    if ((r = SDIF_Write8(&(fh->time),1,f))) return r;
+    if ((r = SDIF_Write4(&(fh->streamID),1,f))) return r;
+    if ((r = SDIF_Write4(&(fh->matrixCount),1,f))) return r;
 #ifdef __WIN32__
     fflush(f);
 #endif
@@ -661,10 +661,10 @@ static SDIFresult SDIF_SkipFrame(const SDIF_FrameHeader *head, FILE *f) {
 static SDIFresult SDIF_ReadMatrixHeader(SDIF_MatrixHeader *m, FILE *f) {
 #if !defined(WORDS_BIGENDIAN)
     SDIFresult r;
-    if (r = SDIF_Read1(&(m->matrixType),4,f)) return r;
-    if (r = SDIF_Read4(&(m->matrixDataType),1,f)) return r;
-    if (r = SDIF_Read4(&(m->rowCount),1,f)) return r;
-    if (r = SDIF_Read4(&(m->columnCount),1,f)) return r;
+    if ((r = SDIF_Read1(&(m->matrixType),4,f))) return r;
+    if ((r = SDIF_Read4(&(m->matrixDataType),1,f))) return r;
+    if ((r = SDIF_Read4(&(m->rowCount),1,f))) return r;
+    if ((r = SDIF_Read4(&(m->columnCount),1,f))) return r;
     return ESDIF_SUCCESS;
 #else
     if (fread(m, sizeof(*m), 1, f) == 1) {
@@ -679,10 +679,10 @@ static SDIFresult SDIF_ReadMatrixHeader(SDIF_MatrixHeader *m, FILE *f) {
 static SDIFresult SDIF_WriteMatrixHeader(const SDIF_MatrixHeader *m, FILE *f) {
 #if !defined(WORDS_BIGENDIAN)
     SDIFresult r;
-    if (r = SDIF_Write1(&(m->matrixType),4,f)) return r;
-    if (r = SDIF_Write4(&(m->matrixDataType),1,f)) return r;
-    if (r = SDIF_Write4(&(m->rowCount),1,f)) return r;
-    if (r = SDIF_Write4(&(m->columnCount),1,f)) return r;
+    if ((r = SDIF_Write1(&(m->matrixType),4,f))) return r;
+    if ((r = SDIF_Write4(&(m->matrixDataType),1,f))) return r;
+    if ((r = SDIF_Write4(&(m->rowCount),1,f))) return r;
+    if ((r = SDIF_Write4(&(m->columnCount),1,f))) return r;
     return ESDIF_SUCCESS;
 #else
     return (fwrite(m, sizeof(*m), 1, f) == 1) ? ESDIF_SUCCESS:ESDIF_READ_FAILED;
@@ -749,16 +749,16 @@ static SDIFresult SDIF_WriteMatrixData(FILE *f, const SDIF_MatrixHeader *head, v
 	SDIFresult r;
     switch (datumSize) {
         case 1:
-            if (r = SDIF_Write1(data, numItems, f)) return r;
+            if ((r = SDIF_Write1(data, numItems, f))) return r;
             break;
         case 2:
-            if (r = SDIF_Write2(data, numItems, f)) return r;
+            if ((r = SDIF_Write2(data, numItems, f))) return r;
             break;
         case 4:
-            if (r = SDIF_Write4(data, numItems, f)) return r;
+            if ((r = SDIF_Write4(data, numItems, f))) return r;
             break;
         case 8:
-            if (r = SDIF_Write8(data, numItems, f)) return r;
+            if ((r = SDIF_Write8(data, numItems, f))) return r;
             break;
         default:
             return ESDIF_BAD_MATRIX_DATA_TYPE;
