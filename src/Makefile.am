@@ -1,4 +1,4 @@
-# Loris is Copyright (c) 1999-2014 by Kelly Fitz and Lippold Haken
+# Loris is Copyright (c) 1999-2016 by Kelly Fitz and Lippold Haken
 # <loris@cerlsoundgroup.org>
 #  
 # This file is free software; as a special exception the author gives
@@ -111,7 +111,7 @@ endif
 
 lib_LTLIBRARIES = libloris.la
 libloris_la_SOURCES = $(CPP_SRC) $(PI_SRC)
-libloris_la_CPPFLAGS = $(INCLUDE_FFTW) $(default_includes)
+libloris_la_CPPFLAGS = $(INCLUDE_FFTW) $(default_includes) -Wno-comment
 libloris_la_LIBADD = $(LINK_FFTW) $(CSOUND_LIB)
 
 # the library version for Loris 1.8 is 13:0:0

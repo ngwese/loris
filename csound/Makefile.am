@@ -1,4 +1,4 @@
-# Loris is Copyright (c) 1999-2014 by Kelly Fitz and Lippold Haken
+# Loris is Copyright (c) 1999-2016 by Kelly Fitz and Lippold Haken
 # <loris@cerlsoundgroup.org>
 #  
 # This file is free software; as a special exception the author gives
@@ -23,5 +23,5 @@ endif
 if HAVE_CSOUND
 noinst_LTLIBRARIES = liblorisops.la
 liblorisops_la_SOURCES = $(CSOUND_SRC)
-liblorisops_la_CXXFLAGS = $(CSOUND_CXXFLAGS) $(AM_CXXFLAGS) -I$(top_srcdir)/src
+liblorisops_la_CXXFLAGS = $(CSOUND_CXXFLAGS) $(AM_CXXFLAGS) -I$(top_srcdir)/src -Wno-comment
 endif

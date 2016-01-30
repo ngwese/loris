@@ -1,4 +1,4 @@
-# Loris is Copyright (c) 1999-2014 by Kelly Fitz and Lippold Haken
+# Loris is Copyright (c) 1999-2016 by Kelly Fitz and Lippold Haken
 # <loris@cerlsoundgroup.org>
 #  
 # This file is free software; as a special exception the author gives
@@ -14,7 +14,7 @@ EXTRA_DIST = clarinet.aiff flute.aiff fromKyma.spc morphtest.py \
 
 MAINTAINERCLEANFILES = Makefile.in
 
-AM_CPPFLAGS = -I$(top_srcdir)/src
+AM_CPPFLAGS = -I$(top_srcdir)/src -Wno-comment
 
 # simple morphing test
 test_cpp_SOURCES = morphtest.C
