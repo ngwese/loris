@@ -11,7 +11,7 @@ dnl implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 
 dnl initialization
-AC_INIT(Loris, 1.9, loris@cerlsoundgroup.org, loris)
+AC_INIT([Loris],[1.9],[loris@cerlsoundgroup.org],[loris])
 
 AC_CONFIG_AUX_DIR(config)
 AC_SUBST(ac_aux_dir)
@@ -52,8 +52,8 @@ dnl----------------------------------------------------------------
 
 AC_MSG_RESULT(----- Program Checks -----)
 AC_PROG_CXX
-AM_PROG_LIBTOOL
-AC_LIBTOOL_CXX
+LT_INIT
+LT_LANG([C++])
 
 AC_ARG_VAR([DOXYGEN], 
        [Path to doxygen when available])
@@ -118,7 +118,7 @@ dnl----------------------------------------------------------------
 
 AC_MSG_RESULT(----- Compiler Feature Checks -----)
 AC_LANG_SAVE
-AC_LANG_CPLUSPLUS
+AC_LANG([C++])
 
 dnl SIZEOF buildin integer types, min is the minmimum according ISO
 dnl SIZEOF_BOOL
@@ -152,11 +152,11 @@ dnl Check for isfinite macro (C99 standard, not in Visual Studio).
 AH_TEMPLATE([HAVE_ISFINITE],
             [Define 1 if the isfinite macro is defined in cmath, 0 otherwise.])
 AC_MSG_CHECKING(for isfinite defined in cmath)
-AC_TRY_COMPILE([ #include <cmath>;], [bool b = std::isfinite(0);], [
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ #include <cmath>;]], [[bool b = std::isfinite(0);]])],[
     AC_MSG_RESULT(yep)
-    AC_DEFINE([HAVE_ISFINITE], 1) ], [
+    AC_DEFINE([HAVE_ISFINITE], 1) ],[
     AC_MSG_RESULT(nope using local definition of infinite)
-    AC_DEFINE([HAVE_ISFINITE], 0) ] )
+    AC_DEFINE([HAVE_ISFINITE], 0)  ])
 
 
 dnl Check for endian-ness of system.
@@ -166,11 +166,11 @@ dnl Check for a definition of M_PI in cmath, if not use our own.
 AH_TEMPLATE([HAVE_M_PI],
             [Define 1 if M_PI defined in cmath, 0 otherwise.])
 AC_MSG_CHECKING(for M_PI defined in cmath)
-AC_TRY_COMPILE([ #include <cmath>;], [double pi = M_PI;], [
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ #include <cmath>;]], [[double pi = M_PI;]])],[
     AC_MSG_RESULT(yep)
-    AC_DEFINE([HAVE_M_PI], 1) ], [
+    AC_DEFINE([HAVE_M_PI], 1) ],[
     AC_MSG_RESULT(nope using local definition of pi)
-    AC_DEFINE([HAVE_M_PI], 0) ] )
+    AC_DEFINE([HAVE_M_PI], 0)  ])
 
 
 dnl check whether template member functions should
@@ -210,8 +210,7 @@ dnl
 dnl----------------------------------------------------------------
 
 AC_ARG_WITH(fftw,
-    AC_HELP_STRING( [--with-fftw],
-                    [use FFTW library if available (default is YES)] ),
+    AS_HELP_STRING([--with-fftw],[use FFTW library if available (default is YES) ]),
     [TRYFFTW="$withval"], [TRYFFTW="yes"])
 
 if test "$TRYFFTW" == "yes" ; then
@@ -257,8 +256,7 @@ AC_ARG_VAR([PYTHON],
        [Path to python when available])
 
 AC_ARG_WITH(python,
-    AC_HELP_STRING( [--with-python],
-                    [build Python module (default is YES)] ),
+    AS_HELP_STRING([--with-python],[build Python module (default is YES) ]),
     [USEPYTHON="$withval"], [USEPYTHON="yes"])
 
 if test -z "$SWIG" ; then
@@ -309,8 +307,7 @@ dnl opcodes. Prefer Csound5.
 dnl----------------------------------------------------------------
 
 AC_ARG_WITH(csound,
-    AC_HELP_STRING( [--with-csound5],
-                    [build Csound5 opcodes (default is YES)] ),
+    AS_HELP_STRING([--with-csound5],[build Csound5 opcodes (default is YES) ]),
     [USECSOUND5="$withval"], [USECSOUND5="yes"])
     
 if test "$USECSOUND5" == "yes" ; then
@@ -336,8 +333,7 @@ dnl Check whether to build command line utilities
 dnl----------------------------------------------------------------
 
 AC_ARG_WITH(utils,
-    AC_HELP_STRING( [--with-utils],
-                    [build command line utilties (default is YES)] ),
+    AS_HELP_STRING([--with-utils],[build command line utilties (default is YES) ]),
     [BUILD_UTILS="$withval"], [BUILD_UTILS="yes"])
     
 AM_CONDITIONAL([BUILD_UTILS], [test "$BUILD_UTILS" == "yes"])
@@ -350,8 +346,7 @@ dnl----------------------------------------------------------------
 dnl Check for Loris debugging flag
 dnl----------------------------------------------------------------
 AC_ARG_ENABLE(debugloris,
-    AC_HELP_STRING( [--enable-debugloris],
-                    [enable internal Loris debugging code (not recommended)] ),
+    AS_HELP_STRING([--enable-debugloris],[enable internal Loris debugging code (not recommended) ]),
     [DEBUG_LORIS="$enableval" ], [DEBUG_LORIS=] )
 
 AH_TEMPLATE([Debug_Loris],
@@ -369,8 +364,7 @@ fi
 
 
 AC_ARG_ENABLE(debugloris,
-    AC_HELP_STRING( [--enable-debugloris],
-                    [enable internal Loris debugging code (not recommended)] ),
+    AS_HELP_STRING([--enable-debugloris],[enable internal Loris debugging code (not recommended) ]),
     [DEBUG_LORIS="$enableval" ], [DEBUG_LORIS=] )
 
 dnl----------------------------------------------------------------
@@ -379,9 +373,10 @@ dnl----------------------------------------------------------------
 
 AC_MSG_RESULT(----- Creating Output Files -----)
 
-AC_OUTPUT(Makefile doc/Makefile src/Makefile \
+AC_CONFIG_FILES([Makefile doc/Makefile src/Makefile \
 scripting/Makefile csound/Makefile test/Makefile \
-utils/Makefile )
+utils/Makefile ])
+AC_OUTPUT
 
 AC_MSG_RESULT(----- Configuration Summary -----)
 
