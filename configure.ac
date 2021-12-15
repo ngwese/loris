@@ -13,6 +13,7 @@ dnl implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 dnl initialization
 AC_INIT([Loris],[1.9],[loris@cerlsoundgroup.org],[loris])
 
+AC_CONFIG_MACRO_DIRS([m4])
 AC_CONFIG_AUX_DIR(config)
 AC_SUBST(ac_aux_dir)
 AM_INIT_AUTOMAKE(1.6)
@@ -52,6 +53,9 @@ dnl----------------------------------------------------------------
 
 AC_MSG_RESULT(----- Program Checks -----)
 AC_PROG_CXX
+
+AX_CXX_COMPILE_STDCXX_11([noext], [mandatory])
+
 LT_INIT
 LT_LANG([C++])
 
