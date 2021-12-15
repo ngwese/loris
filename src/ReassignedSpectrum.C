@@ -638,10 +638,9 @@ ReassignedSpectrum::buildReassignmentWindows( const std::vector< double > & wind
 	
     // Scale the window so that the reported magnitudes
 	// are correct.
-	double winsum = std::accumulate( window.begin(), window.end(), 0. );    
-    std::transform( window.begin(), window.end(), mWindow.begin(), 
-			        std::bind1st( std::multiplies<double>(), 2/winsum ) );                    
-    
+	double winsum = std::accumulate( window.begin(), window.end(), 0. );
+    std::transform( window.begin(), window.end(), mWindow.begin(),
+					[winsum](double v) { return (2/winsum) * v; });
 
     //  Construct the ramped windows from the scaled window.
 	std::vector< double > tramp = mWindow;
@@ -668,10 +667,10 @@ ReassignedSpectrum::buildReassignmentWindows( const std::vector< double > & wind
     mCplxWin_Wd_Wt.resize( mWindow.size(), 0. );
 
 	std::transform( framp.begin(), framp.end(), tramp.begin(),
-					mCplxWin_Wd_Wt.begin(), make_complex< double >() );	
-    
+					mCplxWin_Wd_Wt.begin(), make_complex< double >() );
+
 	std::transform( mWindow.begin(), mWindow.end(), tframp.begin(),
-					mCplxWin_W_Wtd.begin(), make_complex< double >() );	
+					mCplxWin_W_Wtd.begin(), make_complex< double >() );
 }
 
 // ---------------------------------------------------------------------------
@@ -696,19 +695,19 @@ ReassignedSpectrum::buildReassignmentWindows( const std::vector< double > & wind
 	
     // Scale the windows so that the reported magnitudes
 	// are correct.
-	double winsum = std::accumulate( window.begin(), window.end(), 0. );    
-    std::transform( window.begin(), window.end(), mWindow.begin(), 
-			        std::bind1st( std::multiplies<double>(), 2/winsum ) ); 
-                    
-                        
+	double winsum = std::accumulate( window.begin(), window.end(), 0. );
+    std::transform( window.begin(), window.end(), mWindow.begin(),
+					[winsum](double v) { return (2/winsum) * v; });
+
+
     //  The fancy frequency reassignment window needs to scale the
     //  time derivative window by N (its length) / 2pi, in addition
     //  to scaling by 2/winsum to match the amplitude scaling above.
     const double fancyScale = windowDerivative.size() / ( winsum * Pi );
 	std::vector< double > framp( windowDerivative.size(), 0 );
-	std::transform( windowDerivative.begin(), windowDerivative.end(), framp.begin(), 
-			        std::bind1st( std::multiplies<double>(), fancyScale ) );
-                    
+	std::transform( windowDerivative.begin(), windowDerivative.end(), framp.begin(),
+					[fancyScale](double v) { return fancyScale * v; });
+
 
     //  Construct the ramped windows from the scaled window.
 	std::vector< double > tramp = mWindow;
