@@ -1,8 +1,8 @@
 #ifndef INCLUDE_FILTER_H
 #define INCLUDE_FILTER_H
 /*
- * This is the Loris C++ Class Library, implementing analysis, 
- * manipulation, and synthesis of digitized sounds using the Reassigned 
+ * This is the Loris C++ Class Library, implementing analysis,
+ * manipulation, and synthesis of digitized sounds using the Reassigned
  * Bandwidth-Enhanced Additive Sound Model.
  *
  * Loris is Copyright (c) 1999-2016 by Kelly Fitz and Lippold Haken
@@ -24,8 +24,8 @@
  *
  * Filter.h
  *
- * Definition of class Loris::Filter, a generic digital filter of 
- * arbitrary order having both feed-forward and feedback coefficients. 
+ * Definition of class Loris::Filter, a generic digital filter of
+ * arbitrary order having both feed-forward and feedback coefficients.
  *
  * Kelly Fitz, 1 Sept 1999
  * revised 9 Oct 2009
@@ -49,7 +49,7 @@ namespace Loris {
 //  class Filter
 //
 //! Filter is an Direct Form II realization of a filter specified
-//! by its difference equation coefficients and (optionally) gain,  
+//! by its difference equation coefficients and (optionally) gain,
 //! applied to the filter output (defaults to 1.). Coefficients are
 //! specified and stored in order of increasing delay.
 //!
@@ -61,134 +61,127 @@ namespace Loris {
 //!                               -1               -na
 //!                   a[0] + a[1]z  + ... + a[na] z
 //!
-//! where b[k] are the feed forward coefficients, and a[k] are the feedback 
+//! where b[k] are the feed forward coefficients, and a[k] are the feedback
 //! coefficients. If a[0] is not 1, then both a and b are normalized by a[0].
 //! G is the additional filter gain, and is unity if unspecified.
 //!
 //!
-//! Filter is implemented using a std::deque to store the filter state, 
+//! Filter is implemented using a std::deque to store the filter state,
 //! and relies on the efficiency of that class. If deque is not implemented
 //! using some sort of circular buffer (as it should be -- deque is guaranteed
 //! to be efficient for repeated insertion and removal at both ends), then
 //! this filter class will be slow.
 //
-class Filter
-{
+class Filter {
 public:
+  //  --- lifecycle ---
 
-//  --- lifecycle ---
+  //  default construction
+  //! Construct a filter with an all-pass unity gain response.
+  Filter(void);
 
-    //  default construction
-    //! Construct a filter with an all-pass unity gain response.    
-    Filter( void );
-    
-    //  initialized construction
-    //! Initialize a Filter having the specified coefficients, and
-    //! order equal to the larger of the two coefficient ranges.
-    //! Coefficients in the sequences are stored in increasing order
-    //! (lowest order coefficient first).
-    //!
-    //! If template members are allowed, then the coefficients
-    //! can be stored in any kind of iterator range, otherwise,
-    //! they must be in an array of doubles.
-    //!
-    //! \param ffwdbegin is the beginning of a sequence of feed-forward coefficients
-    //! \param ffwdend is the end of a sequence of feed-forward coefficients
-    //! \param fbackbegin is the beginning of a sequence of feedback coefficients
-    //! \param fbackend is the end of a sequence of feedback coefficients   
-    //! \param gain is an optional gain scale applied to the filtered signal
-    //
+  //  initialized construction
+  //! Initialize a Filter having the specified coefficients, and
+  //! order equal to the larger of the two coefficient ranges.
+  //! Coefficients in the sequences are stored in increasing order
+  //! (lowest order coefficient first).
+  //!
+  //! If template members are allowed, then the coefficients
+  //! can be stored in any kind of iterator range, otherwise,
+  //! they must be in an array of doubles.
+  //!
+  //! \param ffwdbegin is the beginning of a sequence of feed-forward
+  //! coefficients \param ffwdend is the end of a sequence of feed-forward
+  //! coefficients \param fbackbegin is the beginning of a sequence of feedback
+  //! coefficients \param fbackend is the end of a sequence of feedback
+  //! coefficients \param gain is an optional gain scale applied to the filtered
+  //! signal
+  //
 #if !defined(NO_TEMPLATE_MEMBERS)
-    template<typename IterT1, typename IterT2>
-    Filter( IterT1 ffwdbegin, IterT1 ffwdend,   //  feed-forward coeffs
-            IterT2 fbackbegin, IterT2 fbackend, //  feedback coeffs
-            double gain = 1. );
+  template <typename IterT1, typename IterT2>
+  Filter(IterT1 ffwdbegin, IterT1 ffwdend,   //  feed-forward coeffs
+         IterT2 fbackbegin, IterT2 fbackend, //  feedback coeffs
+         double gain = 1.);
 #else
-    Filter( const double * ffwdbegin, const double * ffwdend, //    feed-forward coeffs
-            const double * fbackbegin, const double * fbackend, //  feedback coeffs
-            double gain = 1. );
+  Filter(const double *ffwdbegin,
+         const double *ffwdend, //    feed-forward coeffs
+         const double *fbackbegin, const double *fbackend, //  feedback coeffs
+         double gain = 1.);
 #endif
 
-    
-    // copy constructor 
-    //! Make a copy of another digital filter. 
-    //! Do not copy the filter state (delay line).
-    Filter( const Filter & other );
-    
-    //  assignment operator
-    //! Make a copy of another digital filter. 
-    //! Do not copy the filter state (delay line).
-    Filter & operator=( const Filter & rhs );
-    
-    //! Destructor is virtual to enable subclassing. Subclasses may specialize
-    //! construction, and may add functionality, but for efficiency, the filtering
-    //! operation is non-virtual.
-    ~Filter( void );
-    
+  // copy constructor
+  //! Make a copy of another digital filter.
+  //! Do not copy the filter state (delay line).
+  Filter(const Filter &other);
 
-//  --- filtering ---
+  //  assignment operator
+  //! Make a copy of another digital filter.
+  //! Do not copy the filter state (delay line).
+  Filter &operator=(const Filter &rhs);
 
-    //! Compute a filtered sample from the next input sample.
-    //!
-    //!	\param input is the next input sample
-    //! \return the next output sample
-    double apply( double input );
+  //! Destructor is virtual to enable subclassing. Subclasses may specialize
+  //! construction, and may add functionality, but for efficiency, the filtering
+  //! operation is non-virtual.
+  ~Filter(void);
 
-    //! Function call operator, same as sample().
-    //!
-    //! \sa apply
-    double operator() ( double input ) { return apply(input); }    
+  //  --- filtering ---
 
-//  --- access/mutation ---
+  //! Compute a filtered sample from the next input sample.
+  //!
+  //!	\param input is the next input sample
+  //! \return the next output sample
+  double apply(double input);
 
-	//!	Provide access to the numerator (feed-forward) coefficients
-	//! of this filter. The coefficients are stored in order of increasing
-	//! delay (lowest order coefficient first).
-	
-	std::vector< double > numerator( void );
+  //! Function call operator, same as sample().
+  //!
+  //! \sa apply
+  double operator()(double input) { return apply(input); }
 
-	//!	Provide access to the numerator (feed-forward) coefficients
-	//! of this filter. The coefficients are stored in order of increasing
-	//! delay (lowest order coefficient first).
-	
-	const std::vector< double > numerator( void ) const;
-    
-	//!	Provide access to the denominator (feedback) coefficients
-	//! of this filter. The coefficients are stored in order of increasing
-	//! delay (lowest order coefficient first).
-	
-	std::vector< double > denominator( void );
+  //  --- access/mutation ---
 
-	//!	Provide access to the denominator (feedback) coefficients
-	//! of this filter. The coefficients are stored in order of increasing
-	//! delay (lowest order coefficient first).
-	
-	const std::vector< double > denominator( void ) const;
-	
-    
-    //! Clear the filter state. 
-    void clear( void );
+  //!	Provide access to the numerator (feed-forward) coefficients
+  //! of this filter. The coefficients are stored in order of increasing
+  //! delay (lowest order coefficient first).
 
-    
-private:    
-    
-//  --- implementation ---
+  std::vector<double> numerator(void);
 
-    //! single delay line for Direct-Form II implementation
-    std::deque< double > m_delayline;
-        
-    //! feed-forward coefficients
-    std::vector< double > m_ffwdcoefs;  
+  //!	Provide access to the numerator (feed-forward) coefficients
+  //! of this filter. The coefficients are stored in order of increasing
+  //! delay (lowest order coefficient first).
 
-    //! feedback coefficients
-    std::vector< double > m_fbackcoefs; 
-    
-    //! filter gain (applied to output)
-    double m_gain;      
+  const std::vector<double> numerator(void) const;
 
-};  //  end of class Filter
+  //!	Provide access to the denominator (feedback) coefficients
+  //! of this filter. The coefficients are stored in order of increasing
+  //! delay (lowest order coefficient first).
 
+  std::vector<double> denominator(void);
 
+  //!	Provide access to the denominator (feedback) coefficients
+  //! of this filter. The coefficients are stored in order of increasing
+  //! delay (lowest order coefficient first).
+
+  const std::vector<double> denominator(void) const;
+
+  //! Clear the filter state.
+  void clear(void);
+
+private:
+  //  --- implementation ---
+
+  //! single delay line for Direct-Form II implementation
+  std::deque<double> m_delayline;
+
+  //! feed-forward coefficients
+  std::vector<double> m_ffwdcoefs;
+
+  //! feedback coefficients
+  std::vector<double> m_fbackcoefs;
+
+  //! filter gain (applied to output)
+  double m_gain;
+
+}; //  end of class Filter
 
 // ---------------------------------------------------------------------------
 //  constructor
@@ -205,45 +198,45 @@ private:
 //! \param ffwdbegin is the beginning of a sequence of feed-forward coefficients
 //! \param ffwdend is the end of a sequence of feed-forward coefficients
 //! \param fbackbegin is the beginning of a sequence of feedback coefficients
-//! \param fbackend is the end of a sequence of feedback coefficients   
+//! \param fbackend is the end of a sequence of feedback coefficients
 //! \param gain is an optional gain scale applied to the filtered signal
 //
 #if !defined(NO_TEMPLATE_MEMBERS)
-template<typename IterT1, typename IterT2>
-Filter::Filter( IterT1 ffwdbegin, IterT1 ffwdend,   //  feed-forward coeffs
-                IterT2 fbackbegin, IterT2 fbackend, //  feedback coeffs
-                double gain ) :
+template <typename IterT1, typename IterT2>
+Filter::Filter(IterT1 ffwdbegin, IterT1 ffwdend,   //  feed-forward coeffs
+               IterT2 fbackbegin, IterT2 fbackend, //  feedback coeffs
+               double gain)
+    :
 #else
-inline 
-Filter::Filter( const double * ffwdbegin, const double * ffwdend, //    feed-forward coeffs
-                const double * fbackbegin, const double * fbackend, //  feedback coeffs
-                double gain ) :
+inline Filter::Filter(const double *ffwdbegin,
+                      const double *ffwdend, //    feed-forward coeffs
+                      const double *fbackbegin,
+                      const double *fbackend, //  feedback coeffs
+                      double gain)
+    :
 #endif
-    m_ffwdcoefs( ffwdbegin, ffwdend ),
-    m_fbackcoefs( fbackbegin, fbackend ),
-    m_delayline( std::max( ffwdend-ffwdbegin, fbackend-fbackbegin ) - 1, 0. ),
-    m_gain( gain )
-{
-    if ( *fbackbegin == 0. )
-    {
-        Throw( InvalidObject, 
-               "Tried to create a Filter with feeback coefficient at zero delay equal to 0.0" );
-    }
+      m_ffwdcoefs(ffwdbegin, ffwdend), m_fbackcoefs(fbackbegin, fbackend),
+      m_delayline(std::max(ffwdend - ffwdbegin, fbackend - fbackbegin) - 1, 0.),
+      m_gain(gain) {
+  if (*fbackbegin == 0.) {
+    Throw(InvalidObject, "Tried to create a Filter with feeback coefficient at "
+                         "zero delay equal to 0.0");
+  }
 
-    //  normalize the coefficients by 1/a[0], if a[0] is not equal to 1.0
-    //  (already checked for a[0] == 0 above)
-    if ( *fbackbegin != 1. )
-    {
-        auto fn = [fbackbegin](double c) { return c / *fbackbegin; };
-        //  scale all filter coefficients by a[0]:
-        std::transform( m_ffwdcoefs.begin(), m_ffwdcoefs.end(), m_ffwdcoefs.begin(), fn);
-        std::transform( m_fbackcoefs.begin(), m_fbackcoefs.end(), m_fbackcoefs.begin(), fn);
+  //  normalize the coefficients by 1/a[0], if a[0] is not equal to 1.0
+  //  (already checked for a[0] == 0 above)
+  if (*fbackbegin != 1.) {
+    auto fn = [fbackbegin](double c) { return c / *fbackbegin; };
+    //  scale all filter coefficients by a[0]:
+    std::transform(m_ffwdcoefs.begin(), m_ffwdcoefs.end(), m_ffwdcoefs.begin(),
+                   fn);
+    std::transform(m_fbackcoefs.begin(), m_fbackcoefs.end(),
+                   m_fbackcoefs.begin(), fn);
 
-        m_fbackcoefs[0] = 1.;
-    }
+    m_fbackcoefs[0] = 1.;
+  }
 }
 
-
-}   //  end of namespace Loris
+} //  end of namespace Loris
 
 #endif /* ndef INCLUDE_FILTER_H */

@@ -1,17 +1,16 @@
-/* 
-	config.h for windows
+/*
+        config.h for windows
 
    Normally generated from config.h.in by configure, but this
    one is hand-written for Visual C++ (2008).  Include this
    as a prefix to all source files in Loris build projects, or
-   define HAVE_CONFIG_H and put this header in your project 
+   define HAVE_CONFIG_H and put this header in your project
    include path, or define these symbols in the "PreprocessorDefinitions"
    properties.
-   
-   Some of these symbols can be defined or un-defined to customize
-   your build. 
-*/
 
+   Some of these symbols can be defined or un-defined to customize
+   your build.
+*/
 
 /* Define to enable internal Loris debugging code (not recommended). */
 /* #undef Debug_Loris */

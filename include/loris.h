@@ -1,75 +1,75 @@
 #ifndef INCLUDE_LORIS_H
 #define INCLUDE_LORIS_H
-/*
- * This is the Loris C++ Class Library, implementing analysis, 
- * manipulation, and synthesis of digitized sounds using the Reassigned 
- * Bandwidth-Enhanced Additive Sound Model.
- *
- * Loris is Copyright (c) 1999-2016 by Kelly Fitz and Lippold Haken
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY, without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- *
- *    loris.h for windows
- *
- *    Header specifying C-linkable procedural interface for Loris. 
- *
- *    Main components of this interface:
- *    - version identification symbols
- *    - type declarations
- *    - Analyzer configuration
- *    - LinearEnvelope (formerly BreakpointEnvelope) operations
- *    - PartialList operations
- *    - Partial operations
- *    - Breakpoint operations
- *    - sound modeling functions for preparing PartialLists
- *    - utility functions for manipulating PartialLists
- *    - notification and exception handlers (all exceptions must be caught and
- *        handled internally, clients can specify an exception handler and 
- *        a notification function. The default one in Loris uses printf()).
- *
- *    loris.h is normally generated automatically from loris.h.in, but
- * 	  this one is provided for windows visual C++ projects, which cannot
- *    process loris.h.in.
- *
- * Kelly Fitz, 25 Jan 2009
- * loris@cerlsoundgroup.org
- *
- * http://www.cerlsoundgroup.org/Loris/
- *
- */
+//
+// This is the Loris C++ Class Library, implementing analysis, 
+// manipulation, and synthesis of digitized sounds using the Reassigned
+// Bandwidth-Enhanced Additive Sound Model.
+//
+// Loris is Copyright (c) 1999-2016 by Kelly Fitz and Lippold Haken
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY, without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//
+//
+//    loris.h for windows
+//
+//    Header specifying C-linkable procedural interface for Loris. 
+//
+//    Main components of this interface:
+//    - version identification symbols
+//    - type declarations
+//    - Analyzer configuration
+//    - LinearEnvelope (formerly BreakpointEnvelope) operations
+//    - PartialList operations
+//    - Partial operations
+//    - Breakpoint operations
+//    - sound modeling functions for preparing PartialLists
+//    - utility functions for manipulating PartialLists
+//    - notification and exception handlers (all exceptions must be caught and
+//        handled internally, clients can specify an exception handler and
+//        a notification function. The default one in Loris uses printf()).
+//
+//    loris.h is normally generated automatically from loris.h.in, but
+// 	  this one is provided for windows visual C++ projects, which cannot
+//    process loris.h.in.
+//
+// Kelly Fitz, 25 Jan 2009
+// loris@cerlsoundgroup.org
+//
+// http://www.cerlsoundgroup.org/Loris/
+//
+//
  
-/* ---------------------------------------------------------------- */
-/*      Version
-/*
-/*  Define symbols that facilitate version/release identification.
- */
+// ----------------------------------------------------------------
+//      Version
+//
+//  Define symbols that facilitate version/release identification.
+//
  
 #define LORIS_MAJOR_VERSION 1
 #define LORIS_MINOR_VERSION 10
 #define LORIS_SUBMINOR_VERSION 0
 #define LORIS_VERSION_STR "Loris 1.10.0"
 
-/* ---------------------------------------------------------------- */
-/*      Types
-/*
-/* The (class) types Breakpoint, LinearEnvelope, Partial, 
-   and PartialList are imported from the Loris namespace.
-   The first three are classes, the latter is a typedef
-   for std::list< Loris::Partial >. 
- */
+// ----------------------------------------------------------------
+//      Types
+//
+// The (class) types Breakpoint, LinearEnvelope, Partial,
+// and PartialList are imported from the Loris namespace.
+// The first three are classes, the latter is a typedef
+// for std::list< Loris::Partial >.
+//
 #if defined(__cplusplus)
     //    include std library list header, declaring templates
     //    is too painful and fragile:
@@ -81,10 +81,7 @@
         class Breakpoint;
         class LinearEnvelope;
         class Partial;
-      
         class PartialList;
-        //    this typedef has to be copied from PartialList.h
-        //typedef std::list< Loris::Partial > PartialList;
     }
    
    // import those names into the global namespace
@@ -112,25 +109,25 @@
     extern "C" {
 #endif
 
-/* ---------------------------------------------------------------- */
-/*      Analyzer configuration
-/*
-/*  An Analyzer represents a configuration of parameters for
-    performing Reassigned Bandwidth-Enhanced Additive Analysis
-    of sampled waveforms. This analysis process yields a collection 
-    of Partials, each having a trio of synchronous, non-uniformly-
-    sampled breakpoint envelopes representing the time-varying 
-    frequency, amplitude, and noisiness of a single bandwidth-
-    enhanced sinusoid. 
+// ----------------------------------------------------------------
+// Analyzer configuration
+//
+// An Analyzer represents a configuration of parameters for
+// performing Reassigned Bandwidth-Enhanced Additive Analysis
+// of sampled waveforms. This analysis process yields a collection
+// of Partials, each having a trio of synchronous, non-uniformly-
+// sampled breakpoint envelopes representing the time-varying
+// frequency, amplitude, and noisiness of a single bandwidth-
+// enhanced sinusoid.
 
-    For more information about Reassigned Bandwidth-Enhanced 
-    Analysis and the Reassigned Bandwidth-Enhanced Additive Sound 
-    Model, refer to the Loris website: www.cerlsoundgroup.org/Loris/.
-    
-    In the procedural interface, there is only one Analyzer. 
-    It must be configured by calling analyzer_configure before
-    any of the other analyzer operations can be performed.
- */
+// For more information about Reassigned Bandwidth-Enhanced
+// Analysis and the Reassigned Bandwidth-Enhanced Additive Sound
+// Model, refer to the Loris website: www.cerlsoundgroup.org/Loris/.
+
+// In the procedural interface, there is only one Analyzer.
+// It must be configured by calling analyzer_configure before
+// any of the other analyzer operations can be performed.
+//
 
 void analyze( const double * buffer, unsigned int bufferSize, 
               double srate, PartialList * partials );
@@ -295,16 +292,16 @@ double analyzer_getBwConvergenceTolerance( void );
  */
 
 
-/* ---------------------------------------------------------------- */
-/*      LinearEnvelope object interface                                
-/*
-/*  A LinearEnvelope represents a linear segment breakpoint 
-    function with infinite extension at each end (that is, the 
-    values past either end of the breakpoint function have the 
-    values at the nearest end).
+// ----------------------------------------------------------------
+//      LinearEnvelope object interface
+//
+//  A LinearEnvelope represents a linear segment breakpoint
+// function with infinite extension at each end (that is, the
+// values past either end of the breakpoint function have the
+// values at the nearest end).
 
-    In C++, a LinearEnvelope is a Loris::LinearEnvelope.
- */
+// In C++, a LinearEnvelope is a Loris::LinearEnvelope.
+//
  
 LinearEnvelope * createLinearEnvelope( void );
 /*  Construct and return a new LinearEnvelope having no 
@@ -336,21 +333,21 @@ double linearEnvelope_valueAt( const LinearEnvelope * ptr_this,
     specified time.                            
  */
 
-/* ---------------------------------------------------------------- */
-/*      PartialList object interface
-/*
-/*  A PartialList represents a collection of Bandwidth-Enhanced 
-    Partials, each having a trio of synchronous, non-uniformly-
-    sampled breakpoint envelopes representing the time-varying 
-    frequency, amplitude, and noisiness of a single bandwidth-
-    enhanced sinusoid.
+//----------------------------------------------------------------
+//     PartialList object interface
+//
+// A PartialList represents a collection of Bandwidth-Enhanced
+// Partials, each having a trio of synchronous, non-uniformly-
+// sampled breakpoint envelopes representing the time-varying
+// frequency, amplitude, and noisiness of a single bandwidth-
+// enhanced sinusoid.
+//
+// For more information about Bandwidth-Enhanced Partials and the
+// Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
+// the Loris website: www.cerlsoundgroup.org/Loris/.
+//
+// In C++, a PartialList is a Loris::PartialList.
 
-    For more information about Bandwidth-Enhanced Partials and the  
-    Reassigned Bandwidth-Enhanced Additive Sound Model, refer to
-    the Loris website: www.cerlsoundgroup.org/Loris/.
-
-    In C++, a PartialList is a Loris::PartialList.
- */ 
 PartialList * createPartialList( void );
 /*  Return a new empty PartialList.
  */
@@ -381,18 +378,18 @@ void partialList_splice( PartialList * ptr_this,
     this PartialList, leaving the source empty.
  */
  
-/* ---------------------------------------------------------------- */
-/*      Partial object interface
-/*
-/*  A Partial represents a single component in the
-    reassigned bandwidth-enhanced additive model. A Partial consists of a
-    chain of Breakpoints describing the time-varying frequency, amplitude,
-    and bandwidth (or noisiness) envelopes of the component, and a 4-byte
-    label. The Breakpoints are non-uniformly distributed in time. For more
-    information about Reassigned Bandwidth-Enhanced Analysis and the
-    Reassigned Bandwidth-Enhanced Additive Sound Model, refer to the Loris
-    website: www.cerlsoundgroup.org/Loris/.
- */ 
+// ----------------------------------------------------------------
+// Partial object interface
+//
+// A Partial represents a single component in the
+// reassigned bandwidth-enhanced additive model. A Partial consists of a
+// chain of Breakpoints describing the time-varying frequency, amplitude,
+// and bandwidth (or noisiness) envelopes of the component, and a 4-byte
+// label. The Breakpoints are non-uniformly distributed in time. For more
+// information about Reassigned Bandwidth-Enhanced Analysis and the
+// Reassigned Bandwidth-Enhanced Additive Sound Model, refer to the Loris
+// website: www.cerlsoundgroup.org/Loris/.
+
 
 double partial_startTime( const Partial * p );
 /*  Return the start time (seconds) for the specified Partial.
@@ -447,22 +444,21 @@ void partial_setLabel( Partial * p, int label );
 /*   Assign a new integer label to the specified Partial.
  */
 
-/* ---------------------------------------------------------------- */
-/*      Breakpoint object interface
-/*
-/*  A Breakpoint represents a single breakpoint in the
-    Partial parameter (frequency, amplitude, bandwidth) envelope.
-    Instantaneous phase is also stored, but is only used at the onset of 
-    a partial, or when it makes a transition from zero to nonzero amplitude.
-    
-    Loris Partials represent reassigned bandwidth-enhanced model components.
-    A Partial consists of a chain of Breakpoints describing the time-varying
-    frequency, amplitude, and bandwidth (noisiness) of the component.
-    For more information about Reassigned Bandwidth-Enhanced 
-    Analysis and the Reassigned Bandwidth-Enhanced Additive Sound 
-    Model, refer to the Loris website: 
-    www.cerlsoundgroup.org/Loris/.
- */ 
+// ----------------------------------------------------------------
+// Breakpoint object interface
+//
+// A Breakpoint represents a single breakpoint in the
+// Partial parameter (frequency, amplitude, bandwidth) envelope.
+// Instantaneous phase is also stored, but is only used at the onset of
+// a partial, or when it makes a transition from zero to nonzero amplitude.
+//
+// Loris Partials represent reassigned bandwidth-enhanced model components.
+// A Partial consists of a chain of Breakpoints describing the time-varying
+// frequency, amplitude, and bandwidth (noisiness) of the component.
+// For more information about Reassigned Bandwidth-Enhanced
+// Analysis and the Reassigned Bandwidth-Enhanced Additive Sound
+// Model, refer to the Loris website:
+// www.cerlsoundgroup.org/Loris/.
 
 double breakpoint_getAmplitude( const Breakpoint * bp );
 /*   Return the (absolute) amplitude of the specified Breakpoint.
@@ -496,12 +492,12 @@ void breakpoint_setPhase( Breakpoint * bp, double phi );
 /*  Assign a new phase (radians) to the specified Breakpoint.
  */
 
-/* ---------------------------------------------------------------- */
-/*      non-object-based procedures
-/*
-/*  Operations in Loris that need not be accessed though object
-    interfaces are represented as simple functions.
- */
+//----------------------------------------------------------------
+// non-object-based procedures
+//
+// Operations in Loris that need not be accessed though object
+// interfaces are represented as simple functions.
+//
 
 void channelize( PartialList * partials, 
                  LinearEnvelope * refFreqEnvelope, int refLabel );
@@ -766,12 +762,12 @@ synthesize( const PartialList * partials,
     latest sample in the buffer that was modified.
  */
 
-/* ---------------------------------------------------------------- */
-/*      utility functions
-/*
-/*  Operations for transforming and manipulating collections
-    of Partials.
- */
+// ----------------------------------------------------------------
+// utility functions
+//
+// Operations for transforming and manipulating collections
+// of Partials.
+//
 
 double avgAmplitude( const Partial * p );
 /*  Return the average amplitude over all Breakpoints in this Partial.
@@ -996,13 +992,13 @@ double weightedAvgFrequency( const Partial * p );
     has no Breakpoints.
  */
  
-/* ---------------------------------------------------------------- */
-/*      Notification and exception handlers                            
-/*
-/*  An exception handler and a notifier may be specified. Both 
-    are functions taking a const char * argument and returning
-    void.
- */
+// ----------------------------------------------------------------
+// Notification and exception handlers
+//
+//  An exception handler and a notifier may be specified. Both
+// are functions taking a const char * argument and returning
+// void.
+//
 
 void setExceptionHandler( void(*f)(const char *) );
 /*  Specify a function to call when reporting exceptions. The 

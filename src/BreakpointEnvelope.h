@@ -1,8 +1,8 @@
 #ifndef INCLUDE_BREAKPOINTENVELOPE_H
 #define INCLUDE_BREAKPOINTENVELOPE_H
 /*
- * This is the Loris C++ Class Library, implementing analysis, 
- * manipulation, and synthesis of digitized sounds using the Reassigned 
+ * This is the Loris C++ Class Library, implementing analysis,
+ * manipulation, and synthesis of digitized sounds using the Reassigned
  * Bandwidth-Enhanced Additive Sound Model.
  *
  * Loris is Copyright (c) 1999-2016 by Kelly Fitz and Lippold Haken
@@ -40,7 +40,7 @@
 //	begin namespace
 namespace Loris {
 
-   typedef LinearEnvelope BreakpointEnvelope;
+typedef LinearEnvelope BreakpointEnvelope;
 
 }
 

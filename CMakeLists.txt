@@ -112,4 +112,28 @@ endif()
  
  install(FILES include/loris.h DESTINATION include/loris)
 
+#--------------------------------------------------------------------
+ # Including custom cmake rules
+ #--------------------------------------------------------------------
+ 
+ set(ALL_SOURCES
+     ${LORIS_SOURCES}
+     ${LORIS_HEADERS_PRIVATE}
+     ${LORIS_HEADERS}
+     )
+ 
+ # Adding clang-format target if executable is found
+ find_program(CLANG_FORMAT "clang-format")
+ if(CLANG_FORMAT)
+   add_custom_target(
+     clang-format
+     COMMAND /opt/homebrew/bin/clang-format
+     -i
+     --verbose
+     -style=file
+     ${ALL_SOURCES}
+     )
+ endif()
+ 
+ 
 

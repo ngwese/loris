@@ -1,8 +1,8 @@
 #ifndef INCLUDE_SPECTRALPEAKSELECTOR_H
 #define INCLUDE_SPECTRALPEAKSELECTOR_H
 /*
- * This is the Loris C++ Class Library, implementing analysis, 
- * manipulation, and synthesis of digitized sounds using the Reassigned 
+ * This is the Loris C++ Class Library, implementing analysis,
+ * manipulation, and synthesis of digitized sounds using the Reassigned
  * Bandwidth-Enhanced Additive Sound Model.
  *
  * Loris is Copyright (c) 1999-2016 by Kelly Fitz and Lippold Haken
@@ -33,7 +33,7 @@
  * http://www.cerlsoundgroup.org/Loris/
  *
  */
- 
+
 #include "SpectralPeaks.h"
 
 //	begin namespace
@@ -44,47 +44,43 @@ class ReassignedSpectrum;
 // ---------------------------------------------------------------------------
 //	class SpectralPeakSelector
 //
-//	A class representing the process of selecting 
+//	A class representing the process of selecting
 //	peaks (ridges) on a reassigned time-frequency surface.
 //
-class SpectralPeakSelector
-{
-// --- interface ---
+class SpectralPeakSelector {
+  // --- interface ---
 public:
-	//	construction:
-	SpectralPeakSelector( double srate, double maxTimeCorrection );
+  //	construction:
+  SpectralPeakSelector(double srate, double maxTimeCorrection);
 
-	//	Collect and return magnitude peaks in the lower half of the spectrum, 
-	//	ignoring those having frequencies below the specified minimum (in Hz), and
-	//	those having large time corrections.
-    //
-    //  If the minimumFrequency is unspecified, 0 Hz is used.
-	//
-    //  There are two strategies for doing. Probably each one should be a 
-    //  separate class, but for now, they are just separate functions.
-    Peaks selectPeaks( ReassignedSpectrum & spectrum, double minFrequency = 0 );
-    
-    	
-// --- implementation ---
+  //	Collect and return magnitude peaks in the lower half of the spectrum,
+  //	ignoring those having frequencies below the specified minimum (in Hz),
+  // and 	those having large time corrections.
+  //
+  //  If the minimumFrequency is unspecified, 0 Hz is used.
+  //
+  //  There are two strategies for doing. Probably each one should be a
+  //  separate class, but for now, they are just separate functions.
+  Peaks selectPeaks(ReassignedSpectrum &spectrum, double minFrequency = 0);
+
+  // --- implementation ---
 private:
+  //  There are two strategies for doing. Probably each one should be a
+  //  separate class, but for now, they are just separate functions.
+  //
+  //  Currently, the reassignment minima are used.
 
-    //  There are two strategies for doing. Probably each one should be a 
-    //  separate class, but for now, they are just separate functions.
-    //
-    //  Currently, the reassignment minima are used.
-    
-    Peaks selectReassignmentMinima( ReassignedSpectrum & spectrum, double minFrequency );
-    Peaks selectMagnitudePeaks( ReassignedSpectrum & spectrum, double minFrequency );
-        
+  Peaks selectReassignmentMinima(ReassignedSpectrum &spectrum,
+                                 double minFrequency);
+  Peaks selectMagnitudePeaks(ReassignedSpectrum &spectrum, double minFrequency);
 
-// --- member data ---
-	
-	double mSampleRate;
-	double mMaxTimeOffset;
+  // --- member data ---
 
-	
-};	//	end of class SpectralPeakSelector
+  double mSampleRate;
+  double mMaxTimeOffset;
 
-}	//	end of namespace Loris
+}; //	end of class SpectralPeakSelector
+
+} // namespace Loris
 
 #endif /* ndef INCLUDE_SPECTRALPEAKSELECTOR_H */

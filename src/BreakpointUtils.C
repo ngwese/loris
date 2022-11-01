@@ -1,6 +1,6 @@
 /*
- * This is the Loris C++ Class Library, implementing analysis, 
- * manipulation, and synthesis of digitized sounds using the Reassigned 
+ * This is the Loris C++ Class Library, implementing analysis,
+ * manipulation, and synthesis of digitized sounds using the Reassigned
  * Bandwidth-Enhanced Additive Sound Model.
  *
  * Loris is Copyright (c) 1999-2016 by Kelly Fitz and Lippold Haken
@@ -22,7 +22,8 @@
  *
  * BreakpointUtils.C
  *
- * Out-of-line Breakpoint utility functions collected in namespace BreakpointUtils.
+ * Out-of-line Breakpoint utility functions collected in namespace
+ * BreakpointUtils.
  *
  * Kelly Fitz, 19 June 2003
  * loris@cerlsoundgroup.org
@@ -32,17 +33,17 @@
  */
 
 #if HAVE_CONFIG_H
-	#include "config.h"
+#include "config.h"
 #endif
 
-#include "BreakpointUtils.h"
 #include "Breakpoint.h"
+#include "BreakpointUtils.h"
 
 #include <cmath>
 #if defined(HAVE_M_PI) && (HAVE_M_PI)
-	const double Pi = M_PI;
+const double Pi = M_PI;
 #else
-	const double Pi = 3.14159265358979324;
+const double Pi = 3.14159265358979324;
 #endif
 
 //	begin namespace
@@ -51,39 +52,37 @@ namespace Loris {
 // ---------------------------------------------------------------------------
 //	makeNullBefore
 // ---------------------------------------------------------------------------
-// 	Return a null (zero-amplitude) Breakpoint to preceed the specified 
+// 	Return a null (zero-amplitude) Breakpoint to preceed the specified
 //	Breakpoint, useful for fading in a Partial.
 //
-Breakpoint 
-BreakpointUtils::makeNullBefore( const Breakpoint & bp, double fadeTime )
-{
-	Breakpoint ret( bp );
-	// adjust phase
-	double dp = 2. * Pi * fadeTime * bp.frequency();
-	ret.setPhase( std::fmod( bp.phase() - dp, 2. * Pi ) );
-	ret.setAmplitude(0.);
-	ret.setBandwidth(0.);
-	
-	return ret;
+Breakpoint BreakpointUtils::makeNullBefore(const Breakpoint &bp,
+                                           double fadeTime) {
+  Breakpoint ret(bp);
+  // adjust phase
+  double dp = 2. * Pi * fadeTime * bp.frequency();
+  ret.setPhase(std::fmod(bp.phase() - dp, 2. * Pi));
+  ret.setAmplitude(0.);
+  ret.setBandwidth(0.);
+
+  return ret;
 }
 
 // ---------------------------------------------------------------------------
 //	makeNullAfter
 // ---------------------------------------------------------------------------
-// 	Return a null (zero-amplitude) Breakpoint to succeed the specified 
+// 	Return a null (zero-amplitude) Breakpoint to succeed the specified
 //	Breakpoint, useful for fading out a Partial.
 //
-Breakpoint 
-BreakpointUtils::makeNullAfter( const Breakpoint & bp, double fadeTime )
-{
-	Breakpoint ret( bp );
-	// adjust phase
-	double dp = 2. * Pi * fadeTime * bp.frequency();
-	ret.setPhase( std::fmod( bp.phase() + dp, 2. * Pi ) );
-	ret.setAmplitude(0.);
-	ret.setBandwidth(0.);
+Breakpoint BreakpointUtils::makeNullAfter(const Breakpoint &bp,
+                                          double fadeTime) {
+  Breakpoint ret(bp);
+  // adjust phase
+  double dp = 2. * Pi * fadeTime * bp.frequency();
+  ret.setPhase(std::fmod(bp.phase() + dp, 2. * Pi));
+  ret.setAmplitude(0.);
+  ret.setBandwidth(0.);
 
-	return ret;
+  return ret;
 }
 
-}	//	end of namespace Loris
+} // namespace Loris
