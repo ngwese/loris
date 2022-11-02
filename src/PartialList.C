@@ -1,6 +1,6 @@
 /*
- * This is the Loris C++ Class Library, implementing analysis, 
- * manipulation, and synthesis of digitized sounds using the Reassigned 
+ * This is the Loris C++ Class Library, implementing analysis,
+ * manipulation, and synthesis of digitized sounds using the Reassigned
  * Bandwidth-Enhanced Additive Sound Model.
  *
  * Loris is Copyright (c) 1999-2016 by Kelly Fitz and Lippold Haken
@@ -32,12 +32,11 @@
  */
 
 #if HAVE_CONFIG_H
-	#include "config.h"
+#include "config.h"
 #endif
 
-#include "PartialList.h"
 #include "Notifier.h"
-
+#include "PartialList.h"
 
 //	begin namespace
 namespace Loris {
@@ -47,10 +46,8 @@ namespace Loris {
 // ---------------------------------------------------------------------------
 //! Construct an empty PartialList
 //
-PartialList::PartialList( void ) :
-    mList( new list_of_Partials_type )
-{
-    // debugger << " -- PartialList default constructor" << endl; 
+PartialList::PartialList(void) : mList(new list_of_Partials_type) {
+  // debugger << " -- PartialList default constructor" << endl;
 }
 
 // ---------------------------------------------------------------------------
@@ -59,25 +56,22 @@ PartialList::PartialList( void ) :
 //! Construct a PartialList that is a copy of another.
 //! Partials are not immediately copied, the underlying
 //! container is shared throught the smart pointer until
-//! non-const access is required (through any non-const 
+//! non-const access is required (through any non-const
 //! member function).
 //
-PartialList::PartialList( const PartialList & rhs ) :
-    mList( rhs.mList )    
-{
-    // debugger << " -- PartialList copy " << rhs.size() << " Partials" << endl; 
+PartialList::PartialList(const PartialList &rhs) : mList(rhs.mList) {
+  // debugger << " -- PartialList copy " << rhs.size() << " Partials" << endl;
 }
 
 // ---------------------------------------------------------------------------
 //	destructor
 // ---------------------------------------------------------------------------
 //! Destroy a PartialList. The underlying container is
-//! destroyed only if it is not referenced by any other 
+//! destroyed only if it is not referenced by any other
 //! PartialList.
 //
-PartialList::~PartialList( void )
-{
-    // debugger << " -- PartialList destroy " << size() << " Partials" << endl; 
+PartialList::~PartialList(void) {
+  // debugger << " -- PartialList destroy " << size() << " Partials" << endl;
 }
 
 // ---------------------------------------------------------------------------
@@ -86,17 +80,15 @@ PartialList::~PartialList( void )
 //! Assign the contents of a PartialList to this PartialList.
 //! Partials are not immediately copied, the underlying
 //! container is shared throught the smart pointer until
-//! non-const access is required (through any non-const 
+//! non-const access is required (through any non-const
 //! member function).
 //
-PartialList &
-PartialList::operator=( const PartialList & rhs )
-{
-    // debugger << " -- PartialList assign " << rhs.size() << " Partials" << endl; 
-    
-    mList = rhs.mList;
-    
-    return *this;
+PartialList &PartialList::operator=(const PartialList &rhs) {
+  // debugger << " -- PartialList assign " << rhs.size() << " Partials" << endl;
+
+  mList = rhs.mList;
+
+  return *this;
 }
 
 // ---------------------------------------------------------------------------
@@ -107,22 +99,18 @@ PartialList::operator=( const PartialList & rhs )
 //!
 //! \param  b beginning of a range of Partials in this PartialList
 //! \param  e end of a range of Partials in this PartialList
-//! \return a new PartialList containing the Partials in the half-open range [b,e)
-//! \post   Partials in the range [b,e) are removed from this List
-//! \pre    [b,e) must describe a valid range of Partials in this List
+//! \return a new PartialList containing the Partials in the half-open range
+//! [b,e) \post   Partials in the range [b,e) are removed from this List \pre
+//! [b,e) must describe a valid range of Partials in this List
 //
-PartialList 
-PartialList::extract( iterator b, iterator e )
-{
-    PartialList ret;
-    ret.mList->splice( ret.begin(), *mList, b, e );        
-    
-    // debugger << " -- PartialList extract " << ret.size() << " Partials" << endl; 
-    
-    return ret;
+PartialList PartialList::extract(iterator b, iterator e) {
+  PartialList ret;
+  ret.mList->splice(ret.begin(), *mList, b, e);
+
+  // debugger << " -- PartialList extract " << ret.size() << " Partials" <<
+  // endl;
+
+  return ret;
 }
 
-
-}	//	end of namespace Loris
-
-
+} // namespace Loris

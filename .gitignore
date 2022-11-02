@@ -13,3 +13,5 @@ autom4te.cache/
 aclocal.m4
 configure
 m4/
+build/
+.DS_Store
